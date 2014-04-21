@@ -1000,6 +1000,8 @@ VfatWrite(
         if(!(*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
         {
             LARGE_INTEGER SystemTime;
+            ULONG Filter;
+
             // set dates and times
             KeQuerySystemTime (&SystemTime);
             if (Fcb->Flags & FCB_IS_FATX_ENTRY)
@@ -1019,6 +1021,20 @@ VfatWrite(
             }
             /* set date and times to dirty */
             Fcb->Flags |= FCB_IS_DIRTY;
+
+            /* Time to notify the OS */
+            Filter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES;
+            if (ByteOffset.QuadPart != OldFileSize.QuadPart) Filter |= FILE_NOTIFY_CHANGE_SIZE;
+
+            FsRtlNotifyFullReportChange(IrpContext->DeviceExt->NotifySync,
+                                        &(IrpContext->DeviceExt->NotifyList),
+                                        (PSTRING)&Fcb->PathNameU,
+                                        Fcb->PathNameU.Length - Fcb->LongNameU.Length,
+                                        NULL,
+                                        NULL,
+                                        Filter,
+                                        FILE_ACTION_MODIFIED,
+                                        NULL);
         }
     }
 

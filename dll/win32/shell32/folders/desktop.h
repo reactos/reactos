@@ -40,6 +40,7 @@ class CDesktopFolder :
         BOOL fAcceptFmt;       /* flag for pending Drop */
         BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
         void SF_RegisterClipFmt();
+        virtual HRESULT WINAPI _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
 
     public:
         CDesktopFolder();

@@ -1438,7 +1438,10 @@ ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 /*
  * @implemented
  */
-BOOL WINAPI EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
+EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
 {
    BOOL Hook, Ret = FALSE;
 
@@ -1499,7 +1502,9 @@ RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
    BOOL Hook, Ret = FALSE;
@@ -1528,7 +1533,9 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 /*
  * @implemented
  */
-INT WINAPI
+INT
+WINAPI
+DECLSPEC_HOTPATCH
 GetScrollPos(HWND Wnd, INT Bar)
 {
   PWND pwnd;
@@ -1563,7 +1570,9 @@ GetScrollPos(HWND Wnd, INT Bar)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 {
   PWND pwnd;
@@ -1615,7 +1624,9 @@ RealSetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 /*
  * @implemented
  */
-INT WINAPI
+INT
+WINAPI
+DECLSPEC_HOTPATCH
 SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 {
    BOOL Hook;
@@ -1646,7 +1657,9 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 /*
  * @implemented
  */
-INT WINAPI
+INT
+WINAPI
+DECLSPEC_HOTPATCH
 SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 {
   SCROLLINFO ScrollInfo;
@@ -1661,7 +1674,9 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 SetScrollRange(HWND hWnd, INT nBar, INT nMinPos, INT nMaxPos, BOOL bRedraw)
 {
   PWND pWnd;

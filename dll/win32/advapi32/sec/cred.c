@@ -2008,18 +2008,13 @@ BOOL WINAPI CredMarshalCredentialW( CRED_MARSHAL_TYPE type, PVOID cred, LPWSTR *
     {
     case CertCredential:
     {
-        char hash[CERT_HASH_LENGTH + 2];
-
-        memcpy( hash, cert->rgbHashOfCert, sizeof(cert->rgbHashOfCert) );
-        memset( hash + sizeof(cert->rgbHashOfCert), 0, sizeof(hash) - sizeof(cert->rgbHashOfCert) );
-
-        size = sizeof(hash) * 4 / 3;
+        size = (sizeof(cert->rgbHashOfCert) + 2) * 4 / 3;
         if (!(p = HeapAlloc( GetProcessHeap(), 0, (size + 4) * sizeof(WCHAR) ))) return FALSE;
         p[0] = '@';
         p[1] = '@';
         p[2] = 'A' + type;
-        len = cred_encode( (const char *)hash, sizeof(hash), p + 3 );
-        p[len] = 0;
+        len = cred_encode( (const char *)cert->rgbHashOfCert, sizeof(cert->rgbHashOfCert), p + 3 );
+        p[len + 3] = 0;
         break;
     }
     case UsernameTargetCredential:
@@ -2105,7 +2100,6 @@ static BOOL cred_decode( const WCHAR *cred, unsigned int len, char *buf )
 
         buf[i + 0] = (c1 << 6) | c0;
         buf[i + 1] = (c2 << 4) | (c1 >> 2);
-        buf[i + 2] = c2 >> 4;
     }
     else if (len == 2)
     {
@@ -2113,16 +2107,10 @@ static BOOL cred_decode( const WCHAR *cred, unsigned int len, char *buf )
         if ((c1 = char_decode( p[1] )) > 63) return FALSE;
 
         buf[i + 0] = (c1 << 6) | c0;
-        buf[i + 1] = c1 >> 2;
-        buf[i + 2] = 0;
     }
     else if (len == 1)
     {
-        if ((c0 = char_decode( p[0] )) > 63) return FALSE;
-
-        buf[i + 0] = c0;
-        buf[i + 1] = 0;
-        buf[i + 2] = 0;
+        return FALSE;
     }
     return TRUE;
 }
@@ -2136,17 +2124,19 @@ BOOL WINAPI CredUnmarshalCredentialW( LPCWSTR cred, PCRED_MARSHAL_TYPE type, PVO
 
     TRACE("%s, %p, %p\n", debugstr_w(cred), type, out);
 
-    if (!cred || cred[0] != '@' || cred[1] != '@' || !cred[2] || !cred[3])
+    if (!cred || cred[0] != '@' || cred[1] != '@' ||
+        char_decode( cred[2] ) > 63)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
     len = strlenW( cred + 3 );
-    switch (cred[2] - 'A')
+    *type = char_decode( cred[2] );
+    switch (*type)
     {
     case CertCredential:
     {
-        char hash[CERT_HASH_LENGTH + 2];
+        char hash[CERT_HASH_LENGTH];
         CERT_CREDENTIAL_INFO *cert;
 
         if (len != 27 || !cred_decode( cred + 3, len, hash ))
@@ -2157,17 +2147,16 @@ BOOL WINAPI CredUnmarshalCredentialW( LPCWSTR cred, PCRED_MARSHAL_TYPE type, PVO
         if (!(cert = HeapAlloc( GetProcessHeap(), 0, sizeof(*cert) ))) return FALSE;
         memcpy( cert->rgbHashOfCert, hash, sizeof(cert->rgbHashOfCert) );
         cert->cbSize = sizeof(*cert);
-        *type = CertCredential;
         *out = cert;
         break;
     }
     case UsernameTargetCredential:
     {
         USERNAME_TARGET_CREDENTIAL_INFO *target;
-        ULONGLONG size = 0;
+        DWORD size;
 
         if (len < 9 || !cred_decode( cred + 3, 6, (char *)&size ) ||
-            !size || size % sizeof(WCHAR) || size > INT_MAX)
+            size % sizeof(WCHAR) || len - 6 != (size * 4 + 2) / 3)
         {
             SetLastError( ERROR_INVALID_PARAMETER );
             return FALSE;
@@ -2181,7 +2170,6 @@ BOOL WINAPI CredUnmarshalCredentialW( LPCWSTR cred, PCRED_MARSHAL_TYPE type, PVO
         }
         target->UserName = (WCHAR *)(target + 1);
         target->UserName[size / sizeof(WCHAR)] = 0;
-        *type = UsernameTargetCredential;
         *out = target;
         break;
     }
@@ -2189,7 +2177,8 @@ BOOL WINAPI CredUnmarshalCredentialW( LPCWSTR cred, PCRED_MARSHAL_TYPE type, PVO
         FIXME("BinaryBlobCredential not implemented\n");
         return FALSE;
     default:
-        WARN("unhandled type %u\n", cred[2] - 'A');
+        WARN("unhandled type %u\n", *type);
+        SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
     return TRUE;
@@ -2213,7 +2202,7 @@ BOOL WINAPI CredIsMarshaledCredentialW(LPCWSTR name)
 
     if (name && name[0] == '@' && name[1] == '@' && name[2] > 'A' && name[3])
     {
-        char hash[CERT_HASH_LENGTH + 2];
+        char hash[CERT_HASH_LENGTH];
         int len = strlenW(name + 3 );
         DWORD size;
 

@@ -132,32 +132,32 @@ DefaultLanguage  = 00000409
 
 [Computer]
 pci_up = "Standard PC Uniprocessor"
-pci_mp = "Standard PC Multiprocessor"
+;pci_mp = "Standard PC Multiprocessor"
 acpi_up = "ACPI PC Uniprocessor"
-acpi_mp = "ACPI PC Multiprocessor"
+;acpi_mp = "ACPI PC Multiprocessor"
 
 [Map.Computer]
 ;<id> = <pnp id string>
 pci_up = "PC UP"
-pci_mp = "PC MP"
+;pci_mp = "PC MP"
 acpi_up = "ACPI UP"
-acpi_mp = "ACPI MP"
+;acpi_mp = "ACPI MP"
 
 [Files.pci_up]
 ntoskrnl.exe=,,,,,,,,,,,,2
 hal.dll=,,,,,,,,,,,,2
 
-[Files.pci_mp]
-ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-halmps.dll=,,,,,,,,,,hal.dll,,2
+;[Files.pci_mp]
+;ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
+;halmps.dll=,,,,,,,,,,hal.dll,,2
 
 [Files.acpi_up]
 ntoskrnl.exe=,,,,,,,,,,,,2
 halacpi.dll=,,,,,,,,,,hal.dll,,2
 
-[Files.acpi_mp]
-ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-halacpi.dll=,,,,,,,,,,hal.dll,,2
+;[Files.acpi_mp]
+;ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
+;halacpi.dll=,,,,,,,,,,hal.dll,,2
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<hight>,<width>,<bpp>

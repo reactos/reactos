@@ -76,6 +76,9 @@
 #ifdef LANGUAGE_RU_RU
     #include "lang/wldap32_Ru.rc"
 #endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/wldap32_Sq.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/wldap32_Uk.rc"
 #endif

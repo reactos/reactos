@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -176,7 +176,7 @@ AcpiNsInitializeObjects (
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
         "**** Starting initialization of namespace objects ****\n"));
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "Completing Region/Field/Buffer/Package initialization:"));
+        "Completing Region/Field/Buffer/Package initialization:\n"));
 
     /* Set all init info to zero */
 
@@ -193,7 +193,7 @@ AcpiNsInitializeObjects (
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nInitialized %u/%u Regions %u/%u Fields %u/%u "
+        "    Initialized %u/%u Regions %u/%u Fields %u/%u "
         "Buffers %u/%u Packages (%u nodes)\n",
         Info.OpRegionInit,  Info.OpRegionCount,
         Info.FieldInit,     Info.FieldCount,
@@ -201,9 +201,8 @@ AcpiNsInitializeObjects (
         Info.PackageInit,   Info.PackageCount, Info.ObjectCount));
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%u Control Methods found\n", Info.MethodCount));
-    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-        "%u Op Regions found\n", Info.OpRegionCount));
+        "%u Control Methods found\n%u Op Regions found\n",
+        Info.MethodCount, Info.OpRegionCount));
 
     return_ACPI_STATUS (AE_OK);
 }
@@ -244,7 +243,7 @@ AcpiNsInitializeDevices (
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
         "Initializing Device/Processor/Thermal objects "
-        "by executing _INI methods:"));
+        "and executing _INI/_STA methods:\n"));
 
     /* Tree analysis: find all subtrees that contain _INI methods */
 
@@ -270,7 +269,7 @@ AcpiNsInitializeDevices (
      * part of the ACPI specification.
      */
     Info.EvaluateInfo->PrefixNode = AcpiGbl_RootNode;
-    Info.EvaluateInfo->Pathname = METHOD_NAME__INI;
+    Info.EvaluateInfo->RelativePathname = METHOD_NAME__INI;
     Info.EvaluateInfo->Parameters = NULL;
     Info.EvaluateInfo->Flags = ACPI_IGNORE_RETURN_VALUE;
 
@@ -302,7 +301,7 @@ AcpiNsInitializeDevices (
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "\nExecuted %u _INI methods requiring %u _STA executions "
+        "    Executed %u _INI methods requiring %u _STA executions "
         "(examined %u objects)\n",
         Info.Num_INI, Info.Num_STA, Info.DeviceCount));
 
@@ -326,7 +325,7 @@ ErrorExit:
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Callback from AcpiWalkNamespace.  Invoked for every object
+ * DESCRIPTION: Callback from AcpiWalkNamespace. Invoked for every object
  *              within the  namespace.
  *
  *              Currently, the only objects that require initialization are:
@@ -368,28 +367,34 @@ AcpiNsInitOneObject (
     switch (Type)
     {
     case ACPI_TYPE_REGION:
+
         Info->OpRegionCount++;
         break;
 
     case ACPI_TYPE_BUFFER_FIELD:
+
         Info->FieldCount++;
         break;
 
     case ACPI_TYPE_LOCAL_BANK_FIELD:
+
         Info->FieldCount++;
         break;
 
     case ACPI_TYPE_BUFFER:
+
         Info->BufferCount++;
         break;
 
     case ACPI_TYPE_PACKAGE:
+
         Info->PackageCount++;
         break;
 
     default:
 
         /* No init required, just exit now */
+
         return (AE_OK);
     }
 
@@ -441,7 +446,9 @@ AcpiNsInitOneObject (
         break;
 
     default:
+
         /* No other types can get here */
+
         break;
     }
 
@@ -450,15 +457,6 @@ AcpiNsInitOneObject (
         ACPI_EXCEPTION ((AE_INFO, Status,
             "Could not execute arguments for [%4.4s] (%s)",
             AcpiUtGetNodeName (Node), AcpiUtGetTypeName (Type)));
-    }
-
-    /*
-     * Print a dot for each object unless we are going to print the entire
-     * pathname
-     */
-    if (!(AcpiDbgLevel & ACPI_LV_INIT_NAMES))
-    {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT, "."));
     }
 
     /*
@@ -537,6 +535,7 @@ AcpiNsFindIniMethods (
         break;
 
     default:
+
         break;
     }
 
@@ -690,8 +689,9 @@ AcpiNsInitOneDevice (
     ACPI_DEBUG_EXEC (AcpiUtDisplayInitPathname (
         ACPI_TYPE_METHOD, DeviceNode, METHOD_NAME__INI));
 
+    ACPI_MEMSET (Info, 0, sizeof (ACPI_EVALUATE_INFO));
     Info->PrefixNode = DeviceNode;
-    Info->Pathname = METHOD_NAME__INI;
+    Info->RelativePathname = METHOD_NAME__INI;
     Info->Parameters = NULL;
     Info->Flags = ACPI_IGNORE_RETURN_VALUE;
 
@@ -699,12 +699,6 @@ AcpiNsInitOneDevice (
     if (ACPI_SUCCESS (Status))
     {
         WalkInfo->Num_INI++;
-
-        if ((AcpiDbgLevel <= ACPI_LV_ALL_EXCEPTIONS) &&
-            (!(AcpiDbgLevel & ACPI_LV_INFO)))
-        {
-            ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT, "."));
-        }
     }
 
 #ifdef ACPI_DEBUG_OUTPUT
@@ -712,7 +706,7 @@ AcpiNsInitOneDevice (
     {
         /* Ignore error and move on to next device */
 
-        char *ScopeName = AcpiNsGetExternalPathname (Info->ResolvedNode);
+        char *ScopeName = AcpiNsGetExternalPathname (Info->Node);
 
         ACPI_EXCEPTION ((AE_INFO, Status, "during %s._INI execution",
             ScopeName));

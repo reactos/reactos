@@ -101,63 +101,58 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
     LONG ActivePrefetches;
 } PFSN_PREFETCHER_GLOBALS, *PPFSN_PREFETCHER_GLOBALS;
 
-typedef struct _BCB
+typedef struct _ROS_SHARED_CACHE_MAP
 {
-    LIST_ENTRY BcbSegmentListHead;
-    LIST_ENTRY BcbRemoveListEntry;
-    BOOLEAN RemoveOnClose;
+    LIST_ENTRY CacheMapVacbListHead;
     ULONG TimeStamp;
     PFILE_OBJECT FileObject;
-    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER SectionSize;
     LARGE_INTEGER FileSize;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
-    KSPIN_LOCK BcbLock;
+    KSPIN_LOCK CacheMapLock;
     ULONG RefCount;
 #if DBG
-	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
+    BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
-} BCB, *PBCB;
+} ROS_SHARED_CACHE_MAP, *PROS_SHARED_CACHE_MAP;
 
-typedef struct _CACHE_SEGMENT
+typedef struct _ROS_VACB
 {
-    /* Base address of the region where the cache segment data is mapped. */
+    /* Base address of the region where the view's data is mapped. */
     PVOID BaseAddress;
-    /*
-     * Memory area representing the region where the cache segment data is
-     * mapped.
-     */
+    /* Memory area representing the region where the view's data is mapped. */
     struct _MEMORY_AREA* MemoryArea;
-    /* Are the contents of the cache segment data valid. */
+    /* Are the contents of the view valid. */
     BOOLEAN Valid;
-    /* Are the contents of the cache segment data newer than those on disk. */
+    /* Are the contents of the view newer than those on disk. */
     BOOLEAN Dirty;
     /* Page out in progress */
     BOOLEAN PageOut;
     ULONG MappedCount;
-    /* Entry in the list of segments for this BCB. */
-    LIST_ENTRY BcbSegmentListEntry;
-    /* Entry in the list of segments which are dirty. */
-    LIST_ENTRY DirtySegmentListEntry;
-    /* Entry in the list of segments. */
-    LIST_ENTRY CacheSegmentListEntry;
-    LIST_ENTRY CacheSegmentLRUListEntry;
-    /* Offset in the file which this cache segment maps. */
-    ULONG FileOffset;
+    /* Entry in the list of VACBs for this shared cache map. */
+    LIST_ENTRY CacheMapVacbListEntry;
+    /* Entry in the list of VACBs which are dirty. */
+    LIST_ENTRY DirtyVacbListEntry;
+    /* Entry in the list of VACBs. */
+    LIST_ENTRY VacbListEntry;
+    LIST_ENTRY VacbLruListEntry;
+    /* Offset in the file which this view maps. */
+    LARGE_INTEGER FileOffset;
     /* Mutex */
     KMUTEX Mutex;
     /* Number of references. */
     ULONG ReferenceCount;
-    /* Pointer to the BCB for the file which this cache segment maps data for. */
-    PBCB Bcb;
-    /* Pointer to the next cache segment in a chain. */
-    struct _CACHE_SEGMENT* NextInChain;
-} CACHE_SEGMENT, *PCACHE_SEGMENT;
+    /* Pointer to the shared cache map for the file which this view maps data for. */
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    /* Pointer to the next VACB in a chain. */
+    struct _ROS_VACB *NextInChain;
+} ROS_VACB, *PROS_VACB;
 
 typedef struct _INTERNAL_BCB
 {
     PUBLIC_BCB PFCB;
-    PCACHE_SEGMENT CacheSegment;
+    PROS_VACB Vacb;
     BOOLEAN Dirty;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
@@ -185,17 +180,17 @@ CcMdlWriteComplete2(
 
 NTSTATUS
 NTAPI
-CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment);
+CcRosFlushVacb(PROS_VACB Vacb);
 
 NTSTATUS
 NTAPI
-CcRosGetCacheSegment(
-    PBCB Bcb,
+CcRosGetVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
-    PULONG BaseOffset,
+    PULONGLONG BaseOffset,
     PVOID *BaseAddress,
     PBOOLEAN UptoDate,
-    PCACHE_SEGMENT *CacheSeg
+    PROS_VACB *Vacb
 );
 
 VOID
@@ -204,11 +199,11 @@ CcInitView(VOID);
 
 NTSTATUS
 NTAPI
-ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
+CcReadVirtualAddress(PROS_VACB Vacb);
 
 NTSTATUS
 NTAPI
-WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
+CcWriteVirtualAddress(PROS_VACB Vacb);
 
 BOOLEAN
 NTAPI
@@ -216,26 +211,26 @@ CcInitializeCacheManager(VOID);
 
 NTSTATUS
 NTAPI
-CcRosUnmapCacheSegment(
-    PBCB Bcb,
+CcRosUnmapVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
     BOOLEAN NowDirty
 );
 
-PCACHE_SEGMENT
+PROS_VACB
 NTAPI
-CcRosLookupCacheSegment(
-    PBCB Bcb,
+CcRosLookupVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset
 );
 
 NTSTATUS
 NTAPI
-CcRosGetCacheSegmentChain(
-    PBCB Bcb,
+CcRosGetVacbChain(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
     ULONG Length,
-    PCACHE_SEGMENT* CacheSeg
+    PROS_VACB *Vacb
 );
 
 VOID
@@ -244,8 +239,8 @@ CcInitCacheZeroPage(VOID);
 
 NTSTATUS
 NTAPI
-CcRosMarkDirtyCacheSegment(
-    PBCB Bcb,
+CcRosMarkDirtyVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset
 );
 
@@ -267,13 +262,13 @@ CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 VOID
 NTAPI
-CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
+CcRosRemoveIfClosed(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 NTSTATUS
 NTAPI
-CcRosReleaseCacheSegment(
-    BCB* Bcb,
-    CACHE_SEGMENT *CacheSeg,
+CcRosReleaseVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    PROS_VACB Vacb,
     BOOLEAN Valid,
     BOOLEAN Dirty,
     BOOLEAN Mapped
@@ -281,12 +276,12 @@ CcRosReleaseCacheSegment(
 
 NTSTATUS
 NTAPI
-CcRosRequestCacheSegment(
-    BCB *Bcb,
+CcRosRequestVacb(
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
     PVOID* BaseAddress,
     PBOOLEAN UptoDate,
-    CACHE_SEGMENT **CacheSeg
+    PROS_VACB *Vacb
 );
 
 NTSTATUS
@@ -309,10 +304,10 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
 FORCEINLINE
 BOOLEAN
-DoSegmentsIntersect(
-    _In_ ULONG Offset1,
+DoRangesIntersect(
+    _In_ ULONGLONG Offset1,
     _In_ ULONG Length1,
-    _In_ ULONG Offset2,
+    _In_ ULONGLONG Offset2,
     _In_ ULONG Length2)
 {
     if (Offset1 + Length1 <= Offset2)
@@ -324,10 +319,10 @@ DoSegmentsIntersect(
 
 FORCEINLINE
 BOOLEAN
-IsPointInSegment(
-    _In_ ULONG Offset1,
+IsPointInRange(
+    _In_ ULONGLONG Offset1,
     _In_ ULONG Length1,
-    _In_ ULONG Point)
+    _In_ ULONGLONG Point)
 {
-    return DoSegmentsIntersect(Offset1, Length1, Point, 1);
+    return DoRangesIntersect(Offset1, Length1, Point, 1);
 }

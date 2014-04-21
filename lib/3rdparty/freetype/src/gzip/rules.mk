@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2002, 2003 by
+# Copyright 2002, 2003, 2013 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -27,49 +27,52 @@ else
 endif
 
 
-# gzip support sources (i.e., C files)
+# gzip support sources
 #
-GZIP_DRV_SRC := $(GZIP_DIR)/ftgzip.c
-
-# gzip support headers
+# All source and header files get loaded by `ftgzip.c' only if SYTEM_ZLIB is
+# not defined (regardless whether we have a `single' or a `multi' build).
+# However, it doesn't harm if we add everything as a dependency
+# unconditionally.
 #
-GZIP_DRV_H :=
+GZIP_DRV_SRCS := $(GZIP_DIR)/adler32.c  \
+                 $(GZIP_DIR)/infblock.c \
+                 $(GZIP_DIR)/infblock.h \
+                 $(GZIP_DIR)/infcodes.c \
+                 $(GZIP_DIR)/infcodes.h \
+                 $(GZIP_DIR)/inffixed.h \
+                 $(GZIP_DIR)/inflate.c  \
+                 $(GZIP_DIR)/inftrees.c \
+                 $(GZIP_DIR)/inftrees.h \
+                 $(GZIP_DIR)/infutil.c  \
+                 $(GZIP_DIR)/infutil.h  \
+                 $(GZIP_DIR)/zconf.h    \
+                 $(GZIP_DIR)/zlib.h     \
+                 $(GZIP_DIR)/zutil.c    \
+                 $(GZIP_DIR)/zutil.h
 
 
 # gzip driver object(s)
 #
-#   GZIP_DRV_OBJ_M is used during `multi' builds
-#   GZIP_DRV_OBJ_S is used during `single' builds
+#   GZIP_DRV_OBJ is used during both `single' and `multi' builds
 #
-ifeq ($(SYSTEM_ZLIB),)
-  GZIP_DRV_OBJ_M := $(GZIP_DRV_SRC:$(GZIP_DIR)/%.c=$(OBJ_DIR)/%.$O)
-else
-  GZIP_DRV_OBJ_M := $(OBJ_DIR)/ftgzip.$O
-endif
-GZIP_DRV_OBJ_S := $(OBJ_DIR)/ftgzip.$O
+GZIP_DRV_OBJ := $(OBJ_DIR)/ftgzip.$O
 
-# gzip support source file for single build
+
+# gzip main source file
 #
-GZIP_DRV_SRC_S := $(GZIP_DIR)/ftgzip.c
+GZIP_DRV_SRC := $(GZIP_DIR)/ftgzip.c
 
 
-# gzip support - single object
+# gzip support - object
 #
-$(GZIP_DRV_OBJ_S): $(GZIP_DRV_SRC_S) $(GZIP_DRV_SRC) $(FREETYPE_H) \
-                   $(GZIP_DRV_H)
-	$(GZIP_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $(GZIP_DRV_SRC_S))
-
-
-# gzip support - multiple objects
-#
-$(OBJ_DIR)/%.$O: $(GZIP_DIR)/%.c $(FREETYPE_H) $(GZIP_DRV_H)
-	$(GZIP_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
+$(GZIP_DRV_OBJ): $(GZIP_DRV_SRC) $(GZIP_DRV_SRCS) $(FREETYPE_H)
+	$(GZIP_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $(GZIP_DRV_SRC))
 
 
 # update main driver object lists
 #
-DRV_OBJS_S += $(GZIP_DRV_OBJ_S)
-DRV_OBJS_M += $(GZIP_DRV_OBJ_M)
+DRV_OBJS_S += $(GZIP_DRV_OBJ)
+DRV_OBJS_M += $(GZIP_DRV_OBJ)
 
 
 # EOF

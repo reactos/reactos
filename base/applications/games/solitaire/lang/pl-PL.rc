@@ -5,6 +5,7 @@
  *    Updated by Caemyr (olaf_siejka@o2.pl), Nov, 2008
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    updated by Wojciech Kozłowski (wojo664@gmail.com) (April, 2014)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -19,8 +20,13 @@ BEGIN
     GROUPBOX "Karty", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Rozdaj &jedną", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Rozdaj &dwie", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    AUTOCHECKBOX "&Pokazuj czas gry", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Punktowanie", -1, 100, 7, 75, 53
+    AUTORADIOBUTTON "&Standardowe", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
+	 AUTORADIOBUTTON "&Brak", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    AUTOCHECKBOX "&Pokazuj czas gry", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "Pokazuj pa&sek stanu", IDC_OPT_STATUSBAR, 7, 66, 77, 10, WS_TABSTOP
+    AUTOCHECKBOX "Pamiętaj punkty", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 101, 97, 50, 14
 END
@@ -51,10 +57,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Pasjans"
-    IDS_SOL_ABOUT "Pasjans by J. Brown\n\nCardLib version 1.0."
+    IDS_SOL_ABOUT "Pasjans - autor: J. Brown\n\nCardLib wersja 1.0."
     IDS_SOL_QUIT "Zakończyć aktualną grę?"
     IDS_SOL_WIN "Gratulacje, wygrałeś!"
     IDS_SOL_DEAL "Nowe rozdanie?"
+    IDS_SOL_SCORE "Wynik: %d"
+    IDS_SOL_TIME "Czas: %d"
 END
 
 /* Menus */

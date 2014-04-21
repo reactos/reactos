@@ -24,8 +24,8 @@
   /*                                                                       */
   /* - copy `src/raster/ftraster.c' (this file) to your current directory  */
   /*                                                                       */
-  /* - copy `include/freetype/ftimage.h' and `src/raster/ftmisc.h'         */
-  /*   to your current directory                                           */
+  /* - copy `include/ftimage.h' and `src/raster/ftmisc.h' to your current  */
+  /*   directory                                                           */
   /*                                                                       */
   /* - compile `ftraster' with the _STANDALONE_ macro defined, as in       */
   /*                                                                       */

@@ -359,7 +359,7 @@ static HRESULT Stream_ReadChunk(IStream* stm, LPVOID *data)
     if (FAILED(hr) || count != sizeof(size))
         return E_FAIL;
 
-    chunk = (sized_chunk *)HeapAlloc(GetProcessHeap(), 0, size);
+    chunk = static_cast<sized_chunk *>(HeapAlloc(GetProcessHeap(), 0, size));
     if (!chunk)
         return E_OUTOFMEMORY;
 
@@ -421,7 +421,7 @@ static HRESULT Stream_LoadLocation(IStream *stm,
     if (FAILED(hr))
         return hr;
 
-    LOCATION_INFO *loc = (LOCATION_INFO*) p;
+    LOCATION_INFO *loc = reinterpret_cast<LOCATION_INFO *>(p);
     if (loc->dwTotalSize < sizeof(LOCATION_INFO))
     {
         HeapFree(GetProcessHeap(), 0, p);
@@ -721,7 +721,7 @@ static HRESULT Stream_WriteLocationInfo(IStream* stm, LPCWSTR path,
     DWORD total_size = sizeof(*loc) + volume_info_size + path_size + final_path_size;
 
     /* create pointers to everything */
-    loc = (LOCATION_INFO *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, total_size);
+    loc = static_cast<LOCATION_INFO *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, total_size));
     vol = (LOCAL_VOLUME_INFO*) &loc[1];
     LPSTR szLabel = (LPSTR) &vol[1];
     LPSTR szPath = &szLabel[label_size];
@@ -1954,7 +1954,7 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
 
 INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    CShellLink *pThis = (CShellLink *)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    CShellLink *pThis = reinterpret_cast<CShellLink *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
 
     switch(uMsg)
     {
@@ -1966,7 +1966,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 
             TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n", hwndDlg, lParam, ppsp->lParam);
 
-            pThis = (CShellLink *)ppsp->lParam;
+            pThis = reinterpret_cast<CShellLink *>(ppsp->lParam);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pThis);
 
             TRACE("sArgs: %S sComponent: %S sDescription: %S sIcoPath: %S sPath: %S sPathRel: %S sProduct: %S sWorkDir: %S\n", pThis->sArgs, pThis->sComponent, pThis->sDescription,
@@ -2166,6 +2166,68 @@ HRESULT WINAPI CShellLink::GetSite(REFIID iid, void ** ppvSite)
         return E_FAIL;
 
     return site->QueryInterface(iid, ppvSite);
+}
+
+HRESULT WINAPI CShellLink::DragEnter(IDataObject *pDataObject,
+    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
+    LPCITEMIDLIST pidlLast;
+    IShellFolder *psf;
+
+    HRESULT hr = SHBindToParent(pPidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IDropTarget, NULL, (LPVOID*)&mDropTarget);
+
+        if (SUCCEEDED(hr))
+            hr = mDropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
+        else 
+            *pdwEffect = DROPEFFECT_NONE;
+
+        psf->Release();
+    }
+    else
+        *pdwEffect = DROPEFFECT_NONE;
+
+    return S_OK;
+}
+
+
+
+HRESULT WINAPI CShellLink::DragOver(DWORD dwKeyState, POINTL pt,
+    DWORD *pdwEffect)
+{
+    TRACE("(%p)\n", this);
+    HRESULT hr = S_OK;
+    if (mDropTarget)
+        hr = mDropTarget->DragOver(dwKeyState, pt, pdwEffect);
+    return hr;
+}
+
+HRESULT WINAPI CShellLink::DragLeave()
+{
+    TRACE("(%p)\n", this);
+    HRESULT hr = S_OK;
+    if (mDropTarget)
+    {
+        hr = mDropTarget->DragLeave();
+        mDropTarget->Release();
+    }
+
+    return hr;
+}
+
+HRESULT WINAPI CShellLink::Drop(IDataObject *pDataObject,
+    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    TRACE("(%p)\n", this);
+    HRESULT hr = S_OK;
+    if (mDropTarget)
+        hr = mDropTarget->Drop(pDataObject, dwKeyState, pt, pdwEffect);
+
+    return hr;
 }
 
 /**************************************************************************

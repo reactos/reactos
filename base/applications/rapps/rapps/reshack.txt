@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Resource Hacker
@@ -13,6 +14,9 @@ CDPath = none
 
 [Section.0407]
 Description = Resource Hacker ist ein Freeware-Tool zum anzeigen, ändern, umbenennen, hinzufügen, löschen und extrahieren von Ressourcen in 32-Bit & 64-Bit-Windows Anwendungen und Ressourcen-Dateien (*. Res).
+
+[Section.0415]
+Description = Resource Hacker to darmowe narzędzie do podglądu, modyfikacji, zmiany nazw, dodawania, kasowania i wypakowywania zasobów w plikach wykonywalnych 32bit i 64bit, oraz w plikach zasobów (*.res).
 
 [Section.0418]
 Licence = Gratuită

@@ -101,6 +101,11 @@ RtlpGetLengthOfRunClear(
     BITMAP_INDEX Value, BitPos, Length;
     PBITMAP_BUFFER Buffer, MaxBuffer;
 
+    /* If we are already at the end, the length of the run is zero */
+    ASSERT(StartingIndex <= BitMapHeader->SizeOfBitMap);
+    if (StartingIndex >= BitMapHeader->SizeOfBitMap)
+        return 0;
+
     /* Calculate positions */
     Buffer = BitMapHeader->Buffer + StartingIndex / _BITCOUNT;
     BitPos = StartingIndex & (_BITCOUNT - 1);
@@ -149,6 +154,11 @@ RtlpGetLengthOfRunSet(
 {
     BITMAP_INDEX InvValue, BitPos, Length;
     PBITMAP_BUFFER Buffer, MaxBuffer;
+
+    /* If we are already at the end, the length of the run is zero */
+    ASSERT(StartingIndex <= BitMapHeader->SizeOfBitMap);
+    if (StartingIndex >= BitMapHeader->SizeOfBitMap)
+        return 0;
 
     /* Calculate positions */
     Buffer = BitMapHeader->Buffer + StartingIndex / _BITCOUNT;
@@ -467,8 +477,11 @@ RtlNumberOfSetBits(
         BitCount += BitCountTable[*Byte++];
     }
 
-    Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
-    BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
+    if (BitMapHeader->SizeOfBitMap & 7)
+    {
+        Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
+        BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
+    }
 
     return BitCount;
 }

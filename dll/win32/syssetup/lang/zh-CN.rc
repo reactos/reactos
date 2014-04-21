@@ -46,7 +46,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "安装程序会创建一个称为 Administrator (系统管理员)的用户帐户。需要完全控制计算机时，可以使用这个帐户。", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "请键入不超过14个字符的系统管理员密码。", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "请键入不超过127个字符的系统管理员密码。", IDC_STATIC, 54, 87, 250, 8
     LTEXT "系统管理员密码(&A):", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "确认密码(&O):", IDC_STATIC, 54, 123, 75, 8
@@ -148,6 +148,13 @@ BEGIN
     IDS_DLLINSTALL_FAILED "DllInstall 失败: "
     IDS_TIMEOUT "Timeout during registration"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE

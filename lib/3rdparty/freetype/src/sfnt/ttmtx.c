@@ -183,20 +183,23 @@
   /*    tt_face_get_metrics                                                */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Returns the horizontal or vertical metrics in font units for a     */
-  /*    given glyph.  The metrics are the left side bearing (resp. top     */
-  /*    side bearing) and advance width (resp. advance height).            */
+  /*    Return the horizontal or vertical metrics in font units for a      */
+  /*    given glyph.  The values are the left side bearing (top side       */
+  /*    bearing for vertical metrics) and advance width (advance height    */
+  /*    for vertical metrics).                                             */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    header  :: A pointer to either the horizontal or vertical metrics  */
-  /*               structure.                                              */
+  /*    face     :: A pointer to the TrueType face structure.              */
   /*                                                                       */
-  /*    idx     :: The glyph index.                                        */
+  /*    vertical :: If set to TRUE, get vertical metrics.                  */
+  /*                                                                       */
+  /*    gindex   :: The glyph index.                                       */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    bearing :: The bearing, either left side or top side.              */
+  /*    abearing :: The bearing, either left side or top side.             */
   /*                                                                       */
-  /*    advance :: The advance width resp. advance height.                 */
+  /*    aadvance :: The advance width or advance height, depending on      */
+  /*                the `vertical' flag.                                   */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
   tt_face_get_metrics( TT_Face     face,

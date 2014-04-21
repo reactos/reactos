@@ -600,6 +600,8 @@ VfatMount(
     VolumeFcb->Flags |= VCB_IS_DIRTY;
 
     FsRtlNotifyVolumeEvent(DeviceExt->FATFileObject, FSRTL_VOLUME_MOUNT);
+    FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
+    InitializeListHead(&DeviceExt->NotifyList);
 
     Status = STATUS_SUCCESS;
 
@@ -615,8 +617,6 @@ ByeBye:
             vfatDestroyCCB(Ccb);
         if (DeviceObject)
             IoDeleteDevice(DeviceObject);
-        if (VolumeFcb)
-            vfatDestroyFCB(VolumeFcb);
     }
 
     return Status;

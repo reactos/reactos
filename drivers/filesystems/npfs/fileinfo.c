@@ -440,6 +440,7 @@ NpCommonQueryInformation(IN PDEVICE_OBJECT DeviceObject,
             NpQueryInternalInfo(Ccb, &AllInfo->InternalInformation, &Length);
             NpQueryEaInfo(Ccb, &AllInfo->EaInformation, &Length);
             NpQueryPositionInfo(Ccb, &AllInfo->PositionInformation, &Length, NamedPipeEnd);
+            Status = NpQueryNameInfo(Ccb, &AllInfo->NameInformation, &Length);
             Length += 96;
             break;
 

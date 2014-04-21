@@ -144,6 +144,17 @@
 
 #include FT_CONFIG_STANDARD_LIBRARY_H
 
+  /* The dump functions are used in the `ftgrid' demo program, too. */
+#define AF_DUMP( varformat )          \
+          do                          \
+          {                           \
+            if ( to_stdout )          \
+              printf varformat;       \
+            else                      \
+              FT_TRACE7( varformat ); \
+          } while ( 0 )
+
+
   static const char*
   af_dir_str( AF_Direction  dir )
   {
@@ -179,34 +190,35 @@
   extern "C" {
 #endif
   void
-  af_glyph_hints_dump_points( AF_GlyphHints  hints )
+  af_glyph_hints_dump_points( AF_GlyphHints  hints,
+                              FT_Bool        to_stdout )
   {
     AF_Point  points = hints->points;
     AF_Point  limit  = points + hints->num_points;
     AF_Point  point;
 
 
-    FT_TRACE7(( "Table of points:\n"
-                "  [ index |  xorg |  yorg | xscale | yscale"
-                " |  xfit |  yfit |  flags ]\n" ));
+    AF_DUMP(( "Table of points:\n"
+              "  [ index |  xorg |  yorg | xscale | yscale"
+              " |  xfit |  yfit |  flags ]\n" ));
 
     for ( point = points; point < limit; point++ )
-      FT_TRACE7(( "  [ %5d | %5d | %5d | %6.2f | %6.2f"
-                  " | %5.2f | %5.2f | %c%c%c%c%c%c ]\n",
-                  point - points,
-                  point->fx,
-                  point->fy,
-                  point->ox / 64.0,
-                  point->oy / 64.0,
-                  point->x / 64.0,
-                  point->y / 64.0,
-                  ( point->flags & AF_FLAG_WEAK_INTERPOLATION ) ? 'w' : ' ',
-                  ( point->flags & AF_FLAG_INFLECTION )         ? 'i' : ' ',
-                  ( point->flags & AF_FLAG_EXTREMA_X )          ? '<' : ' ',
-                  ( point->flags & AF_FLAG_EXTREMA_Y )          ? 'v' : ' ',
-                  ( point->flags & AF_FLAG_ROUND_X )            ? '(' : ' ',
-                  ( point->flags & AF_FLAG_ROUND_Y )            ? 'u' : ' '));
-    FT_TRACE7(( "\n" ));
+      AF_DUMP(( "  [ %5d | %5d | %5d | %6.2f | %6.2f"
+                " | %5.2f | %5.2f | %c%c%c%c%c%c ]\n",
+                point - points,
+                point->fx,
+                point->fy,
+                point->ox / 64.0,
+                point->oy / 64.0,
+                point->x / 64.0,
+                point->y / 64.0,
+                ( point->flags & AF_FLAG_WEAK_INTERPOLATION ) ? 'w' : ' ',
+                ( point->flags & AF_FLAG_INFLECTION )         ? 'i' : ' ',
+                ( point->flags & AF_FLAG_EXTREMA_X )          ? '<' : ' ',
+                ( point->flags & AF_FLAG_EXTREMA_Y )          ? 'v' : ' ',
+                ( point->flags & AF_FLAG_ROUND_X )            ? '(' : ' ',
+                ( point->flags & AF_FLAG_ROUND_Y )            ? 'u' : ' '));
+    AF_DUMP(( "\n" ));
   }
 #ifdef __cplusplus
   }
@@ -247,7 +259,8 @@
   extern "C" {
 #endif
   void
-  af_glyph_hints_dump_segments( AF_GlyphHints  hints )
+  af_glyph_hints_dump_segments( AF_GlyphHints  hints,
+                                FT_Bool        to_stdout )
   {
     FT_Int  dimension;
 
@@ -262,34 +275,34 @@
       AF_Segment    seg;
 
 
-      FT_TRACE7(( "Table of %s segments:\n",
-                  dimension == AF_DIMENSION_HORZ ? "vertical"
-                                                 : "horizontal" ));
+      AF_DUMP(( "Table of %s segments:\n",
+                dimension == AF_DIMENSION_HORZ ? "vertical"
+                                               : "horizontal" ));
       if ( axis->num_segments )
-        FT_TRACE7(( "  [ index |  pos  |  dir  | from"
-                    " |  to  | link | serif | edge"
-                    " | height | extra |    flags    ]\n" ));
+        AF_DUMP(( "  [ index |  pos  |  dir  | from"
+                  " |  to  | link | serif | edge"
+                  " | height | extra |    flags    ]\n" ));
       else
-        FT_TRACE7(( "  (none)\n" ));
+        AF_DUMP(( "  (none)\n" ));
 
       for ( seg = segments; seg < limit; seg++ )
-        FT_TRACE7(( "  [ %5d | %5.2g | %5s | %4d"
-                    " | %4d | %4d | %5d | %4d"
-                    " | %6d | %5d | %11s ]\n",
-                    seg - segments,
-                    dimension == AF_DIMENSION_HORZ
-                                 ? (int)seg->first->ox / 64.0
-                                 : (int)seg->first->oy / 64.0,
-                    af_dir_str( (AF_Direction)seg->dir ),
-                    AF_INDEX_NUM( seg->first, points ),
-                    AF_INDEX_NUM( seg->last, points ),
-                    AF_INDEX_NUM( seg->link, segments ),
-                    AF_INDEX_NUM( seg->serif, segments ),
-                    AF_INDEX_NUM( seg->edge, edges ),
-                    seg->height,
-                    seg->height - ( seg->max_coord - seg->min_coord ),
-                    af_edge_flags_to_string( (AF_Edge_Flags)seg->flags ) ));
-      FT_TRACE7(( "\n" ));
+        AF_DUMP(( "  [ %5d | %5.2g | %5s | %4d"
+                  " | %4d | %4d | %5d | %4d"
+                  " | %6d | %5d | %11s ]\n",
+                  seg - segments,
+                  dimension == AF_DIMENSION_HORZ
+                               ? (int)seg->first->ox / 64.0
+                               : (int)seg->first->oy / 64.0,
+                  af_dir_str( (AF_Direction)seg->dir ),
+                  AF_INDEX_NUM( seg->first, points ),
+                  AF_INDEX_NUM( seg->last, points ),
+                  AF_INDEX_NUM( seg->link, segments ),
+                  AF_INDEX_NUM( seg->serif, segments ),
+                  AF_INDEX_NUM( seg->edge, edges ),
+                  seg->height,
+                  seg->height - ( seg->max_coord - seg->min_coord ),
+                  af_edge_flags_to_string( (AF_Edge_Flags)seg->flags ) ));
+      AF_DUMP(( "\n" ));
     }
   }
 #ifdef __cplusplus
@@ -366,7 +379,8 @@
   extern "C" {
 #endif
   void
-  af_glyph_hints_dump_edges( AF_GlyphHints  hints )
+  af_glyph_hints_dump_edges( AF_GlyphHints  hints,
+                             FT_Bool        to_stdout )
   {
     FT_Int  dimension;
 
@@ -383,94 +397,35 @@
        *  note: AF_DIMENSION_HORZ corresponds to _vertical_ edges
        *        since they have a constant X coordinate.
        */
-      FT_TRACE7(( "Table of %s edges:\n",
-                  dimension == AF_DIMENSION_HORZ ? "vertical"
-                                                 : "horizontal" ));
+      AF_DUMP(( "Table of %s edges:\n",
+                dimension == AF_DIMENSION_HORZ ? "vertical"
+                                               : "horizontal" ));
       if ( axis->num_edges )
-        FT_TRACE7(( "  [ index |  pos  |  dir  | link"
-                    " | serif | blue | opos  |  pos  |    flags    ]\n" ));
+        AF_DUMP(( "  [ index |  pos  |  dir  | link"
+                  " | serif | blue | opos  |  pos  |    flags    ]\n" ));
       else
-        FT_TRACE7(( "  (none)\n" ));
+        AF_DUMP(( "  (none)\n" ));
 
       for ( edge = edges; edge < limit; edge++ )
-        FT_TRACE7(( "  [ %5d | %5.2g | %5s | %4d"
-                    " | %5d |   %c  | %5.2f | %5.2f | %11s ]\n",
-                    edge - edges,
-                    (int)edge->opos / 64.0,
-                    af_dir_str( (AF_Direction)edge->dir ),
-                    AF_INDEX_NUM( edge->link, edges ),
-                    AF_INDEX_NUM( edge->serif, edges ),
-                    edge->blue_edge ? 'y' : 'n',
-                    edge->opos / 64.0,
-                    edge->pos / 64.0,
-                    af_edge_flags_to_string( (AF_Edge_Flags)edge->flags ) ));
-      FT_TRACE7(( "\n" ));
+        AF_DUMP(( "  [ %5d | %5.2g | %5s | %4d"
+                  " | %5d |   %c  | %5.2f | %5.2f | %11s ]\n",
+                  edge - edges,
+                  (int)edge->opos / 64.0,
+                  af_dir_str( (AF_Direction)edge->dir ),
+                  AF_INDEX_NUM( edge->link, edges ),
+                  AF_INDEX_NUM( edge->serif, edges ),
+                  edge->blue_edge ? 'y' : 'n',
+                  edge->opos / 64.0,
+                  edge->pos / 64.0,
+                  af_edge_flags_to_string( (AF_Edge_Flags)edge->flags ) ));
+      AF_DUMP(( "\n" ));
     }
   }
 #ifdef __cplusplus
   }
 #endif
 
-#else /* !FT_DEBUG_AUTOFIT */
-
-  /* these empty stubs are only used to link the `ftgrid' test program */
-  /* if debugging is disabled                                          */
-
-#ifdef __cplusplus
-  extern "C" {
-#endif
-
-  void
-  af_glyph_hints_dump_points( AF_GlyphHints  hints )
-  {
-    FT_UNUSED( hints );
-  }
-
-
-  void
-  af_glyph_hints_dump_segments( AF_GlyphHints  hints )
-  {
-    FT_UNUSED( hints );
-  }
-
-
-  FT_Error
-  af_glyph_hints_get_num_segments( AF_GlyphHints  hints,
-                                   FT_Int         dimension,
-                                   FT_Int*        num_segments )
-  {
-    FT_UNUSED( hints );
-    FT_UNUSED( dimension );
-    FT_UNUSED( num_segments );
-
-    return 0;
-  }
-
-
-  FT_Error
-  af_glyph_hints_get_segment_offset( AF_GlyphHints  hints,
-                                     FT_Int         dimension,
-                                     FT_Int         idx,
-                                     FT_Pos*        offset )
-  {
-    FT_UNUSED( hints );
-    FT_UNUSED( dimension );
-    FT_UNUSED( idx );
-    FT_UNUSED( offset );
-
-    return 0;
-  }
-
-
-  void
-  af_glyph_hints_dump_edges( AF_GlyphHints  hints )
-  {
-    FT_UNUSED( hints );
-  }
-
-#ifdef __cplusplus
-  }
-#endif
+#undef AF_DUMP
 
 #endif /* !FT_DEBUG_AUTOFIT */
 
@@ -740,6 +695,12 @@
         FT_Pos        in_y   = 0;
         AF_Direction  in_dir = AF_DIR_NONE;
 
+        FT_Pos  last_good_in_x = 0;
+        FT_Pos  last_good_in_y = 0;
+
+        FT_UInt  units_per_em = hints->metrics->scaler.face->units_per_EM;
+        FT_Int   near_limit   = 20 * units_per_em / 2048;
+
 
         for ( point = points; point < point_limit; point++ )
         {
@@ -749,14 +710,58 @@
 
           if ( point == first )
           {
-            prev   = first->prev;
-            in_x   = first->fx - prev->fx;
-            in_y   = first->fy - prev->fy;
+            prev = first->prev;
+
+            in_x = first->fx - prev->fx;
+            in_y = first->fy - prev->fy;
+
+            last_good_in_x = in_x;
+            last_good_in_y = in_y;
+
+            if ( FT_ABS( in_x ) + FT_ABS( in_y ) < near_limit )
+            {
+              /* search first non-near point to get a good `in_dir' value */
+
+              AF_Point  point_ = prev;
+
+
+              while ( point_ != first )
+              {
+                AF_Point  prev_ = point_->prev;
+
+                FT_Pos  in_x_ = point_->fx - prev_->fx;
+                FT_Pos  in_y_ = point_->fy - prev_->fy;
+
+
+                if ( FT_ABS( in_x_ ) + FT_ABS( in_y_ ) >= near_limit )
+                {
+                  last_good_in_x = in_x_;
+                  last_good_in_y = in_y_;
+
+                  break;
+                }
+
+                point_ = prev_;
+              }
+            }
+
             in_dir = af_direction_compute( in_x, in_y );
             first  = prev + 1;
           }
 
           point->in_dir = (FT_Char)in_dir;
+
+          /* check whether the current point is near to the previous one */
+          /* (value 20 in `near_limit' is heuristic; we use Taxicab      */
+          /* metrics for the test)                                       */
+
+          if ( FT_ABS( in_x ) + FT_ABS( in_y ) < near_limit )
+            point->flags |= AF_FLAG_NEAR;
+          else
+          {
+            last_good_in_x = in_x;
+            last_good_in_y = in_y;
+          }
 
           next  = point->next;
           out_x = next->fx - point->fx;
@@ -765,23 +770,43 @@
           in_dir         = af_direction_compute( out_x, out_y );
           point->out_dir = (FT_Char)in_dir;
 
-          /* check for weak points */
+          /* Check for weak points.  The remaining points not collected */
+          /* in edges are then implicitly classified as strong points.  */
 
           if ( point->flags & AF_FLAG_CONTROL )
           {
+            /* control points are always weak */
           Is_Weak_Point:
             point->flags |= AF_FLAG_WEAK_INTERPOLATION;
           }
           else if ( point->out_dir == point->in_dir )
           {
             if ( point->out_dir != AF_DIR_NONE )
+            {
+              /* current point lies on a horizontal or          */
+              /* vertical segment (but doesn't start or end it) */
               goto Is_Weak_Point;
+            }
 
-            if ( ft_corner_is_flat( in_x, in_y, out_x, out_y ) )
+            /* test whether `in' and `out' direction is approximately */
+            /* the same (and use the last good `in' vector in case    */
+            /* the current point is near to the previous one)         */
+            if ( ft_corner_is_flat(
+                   point->flags & AF_FLAG_NEAR ? last_good_in_x : in_x,
+                   point->flags & AF_FLAG_NEAR ? last_good_in_y : in_y,
+                   out_x,
+                   out_y ) )
+            {
+              /* current point lies on a straight, diagonal line */
+              /* (more or less)                                  */
               goto Is_Weak_Point;
+            }
           }
           else if ( point->in_dir == -point->out_dir )
+          {
+            /* current point forms a spike */
             goto Is_Weak_Point;
+          }
 
           in_x = out_x;
           in_y = out_y;

@@ -612,20 +612,27 @@ DoAdminUnlock(
     ULONG Size;
     ULONG i;
     NTSTATUS Status;
+    NTSTATUS SubStatus = STATUS_SUCCESS;
 
     TRACE("(%S %S %S)\n", UserName, Domain, Password);
 
-    if (!ConnectToLsa(pgContext))
-        return FALSE;
-
-    if (!MyLogonUser(pgContext->LsaHandle,
-                     pgContext->AuthenticationPackage,
-                     UserName,
-                     Domain,
-                     Password,
-                     &pgContext->UserToken))
+    Status = ConnectToLsa(pgContext);
+    if (!NT_SUCCESS(Status))
     {
-        WARN("LogonUserW() failed\n");
+        WARN("ConnectToLsa() failed\n");
+        return FALSE;
+    }
+
+    Status = MyLogonUser(pgContext->LsaHandle,
+                         pgContext->AuthenticationPackage,
+                         UserName,
+                         Domain,
+                         Password,
+                         &pgContext->UserToken,
+                         &SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("MyLogonUser() failed\n");
         return FALSE;
     }
 
@@ -679,8 +686,41 @@ done:
 }
 
 
-BOOL
+NTSTATUS
 DoLoginTasks(
+    IN OUT PGINA_CONTEXT pgContext,
+    IN PWSTR UserName,
+    IN PWSTR Domain,
+    IN PWSTR Password,
+    OUT PNTSTATUS SubStatus)
+{
+    NTSTATUS Status;
+
+    Status = ConnectToLsa(pgContext);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("ConnectToLsa() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = MyLogonUser(pgContext->LsaHandle,
+                         pgContext->AuthenticationPackage,
+                         UserName,
+                         Domain,
+                         Password,
+                         &pgContext->UserToken,
+                         SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("MyLogonUser() failed (Status 0x%08lx)\n", Status);
+    }
+
+    return Status;
+}
+
+
+BOOL
+CreateProfile(
     IN OUT PGINA_CONTEXT pgContext,
     IN PWSTR UserName,
     IN PWSTR Domain,
@@ -693,20 +733,6 @@ DoLoginTasks(
     DWORD cbStats, cbSize;
     DWORD dwLength;
     BOOL bResult;
-
-    if (!ConnectToLsa(pgContext))
-        return FALSE;
-
-    if (!MyLogonUser(pgContext->LsaHandle,
-                     pgContext->AuthenticationPackage,
-                     UserName,
-                     Domain,
-                     Password,
-                     &pgContext->UserToken))
-    {
-        WARN("LogonUserW() failed\n");
-        goto cleanup;
-    }
 
     /* Store the logon time in the context */
     GetLocalTime(&pgContext->LogonTime);
@@ -807,6 +833,8 @@ DoAutoLogon(
     LPWSTR Password = NULL;
     BOOL result = FALSE;
     LONG rc;
+    NTSTATUS Status;
+    NTSTATUS SubStatus = STATUS_SUCCESS;
 
     TRACE("DoAutoLogon(): AutoLogonState = %lu\n",
         pgContext->AutoLogonState);
@@ -869,8 +897,15 @@ DoAutoLogon(
         if (rc != ERROR_SUCCESS)
             goto cleanup;
 
-        result = DoLoginTasks(pgContext, UserName, Domain, Password);
+        Status = DoLoginTasks(pgContext, UserName, Domain, Password, &SubStatus);
+        if (!NT_SUCCESS(Status))
+        {
+            /* FIXME: Handle errors!!! */
+            result = FALSE;
+            goto cleanup;
+        }
 
+        result = CreateProfile(pgContext, UserName, Domain, Password);
         if (result == TRUE)
         {
             ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));

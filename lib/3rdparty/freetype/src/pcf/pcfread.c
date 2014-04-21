@@ -1096,7 +1096,7 @@ THE SOFTWARE.
   pcf_load_font( FT_Stream  stream,
                  PCF_Face   face )
   {
-    FT_Error   error  = FT_Err_Ok;
+    FT_Error   error;
     FT_Memory  memory = FT_FACE( face )->memory;
     FT_Bool    hasBDFAccelerators;
 

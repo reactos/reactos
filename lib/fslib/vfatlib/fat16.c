@@ -72,7 +72,7 @@ Fat16WriteBootSector(IN HANDLE FileHandle,
     /* Copy FAT16 BPB to new bootsector */
     memcpy(&NewBootSector->OEMName[0],
            &BootSector->OEMName[0],
-           59); /* FAT16 BPB length (up to (not including) Res2) */
+           FIELD_OFFSET(FAT16_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT16_BOOT_SECTOR, OEMName)); /* FAT16 BPB length (up to (not including) Res2) */
 
     /* Write the boot sector signature */
     NewBootSector->Signature1 = 0xAA550000;

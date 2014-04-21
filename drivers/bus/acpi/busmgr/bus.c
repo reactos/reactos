@@ -827,7 +827,7 @@ acpi_bus_match (
 			goto Done;
 
 	if (device->flags.compatible_ids) {
-		ACPI_DEVICE_ID_LIST *cid_list = device->pnp.cid_list;
+		ACPI_PNP_DEVICE_ID_LIST *cid_list = device->pnp.cid_list;
 		int i;
 
 		/* compare multiple _CID entries against driver ids */
@@ -1140,7 +1140,7 @@ acpi_bus_add (
 	ACPI_DEVICE_INFO	*info;
 	char			*hid = NULL;
 	char			*uid = NULL;
-	ACPI_DEVICE_ID_LIST *cid_list = NULL;
+	ACPI_PNP_DEVICE_ID_LIST *cid_list = NULL;
 	int			i = 0;
 	char			static_uid_buffer[5];
 

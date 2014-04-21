@@ -1,4 +1,4 @@
-/*
+﻿/*
  *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
  *    Use ReactOS forum PM or IRC to contact me
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
@@ -26,7 +26,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "O&dśwież", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Ak&tualizuj bazę programów", ID_RESETDB
     END
     POPUP "Pomoc"
     BEGIN
@@ -56,7 +56,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Odśwież", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Ak&tualizuj bazę programów", ID_RESETDB
     END
 END
 

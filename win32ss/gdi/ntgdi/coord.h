@@ -150,4 +150,5 @@ GreModifyWorldTransform(
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
 int APIENTRY IntGdiSetMapMode(PDC, int);
-
+BOOL FASTCALL GreLPtoDP(HDC, LPPOINT, INT);
+BOOL FASTCALL GreDPtoLP(HDC, LPPOINT, INT);

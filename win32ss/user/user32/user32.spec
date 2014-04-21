@@ -387,7 +387,7 @@
 @ stdcall GrayStringA(long long ptr long long long long long long)
 @ stdcall GrayStringW(long long ptr long long long long long long)
 @ stdcall HideCaret(long) NtUserHideCaret
-@ stdcall HiliteMenuItem(long long long long) NtUserHiliteMenuItem
+@ stdcall HiliteMenuItem(long long long long) ; Use both ReactOS and wine  NtUserHiliteMenuItem
 @ stdcall IMPGetIMEA(long ptr)
 @ stdcall IMPGetIMEW(long ptr)
 @ stdcall IMPQueryIMEA(ptr)

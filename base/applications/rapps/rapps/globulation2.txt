@@ -1,5 +1,5 @@
 ﻿; UTF-8
-
+; PL translation by wojo664
 [Section]
 Name = Globulation2
 Version = 0.9.4.4
@@ -16,6 +16,9 @@ Description = Globulation 2 ist ein Echtzeitstrategiespiel. Das Spiel vereinfach
 
 [Section.0410]
 Description = Globulation 2 è un gioco di strategia in tempo reale.
+
+[Section.0415]
+Description = Globulation 2 to gra strategiczna czasu rzeczywistego. Gra minimalizuje zarządzanie automatycznie przydzielając zadania jednostkom.
 
 [Section.0418]
 Description = Globulation 2 este un joc de strategie în timp real. Jocul minimizează microgestiunea prin alocarea automată de sarcini unităților.

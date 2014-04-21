@@ -119,7 +119,7 @@ CreateSearchBar(VOID)
     hSearchBar = CreateWindowExW(WS_EX_CLIENTEDGE,
                                  L"Edit",
                                  NULL,
-                                 WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOVSCROLL, 
+                                 WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL, 
                                  0,
                                  5,
                                  200,

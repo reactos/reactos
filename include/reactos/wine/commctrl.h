@@ -63,7 +63,6 @@ typedef LVFINDINFOA *LPLVFINDINFOA;
 typedef LVFINDINFOW *LPLVFINDINFOW;
 
 #define SB_SETBORDERS (WM_USER+5)
-#define TBSTYLE_EX_UNDOC1 0x00000004 /* similar to TBSTYLE_WRAPABLE */
 
 /* these are undocumented and the names are guesses */
 typedef struct

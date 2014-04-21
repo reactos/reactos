@@ -70,6 +70,8 @@ static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
 
+static WCHAR DestinationDriveLetter;
+
 /* Path to the active partition (boot manager) */
 static UNICODE_STRING SystemRootPath;
 
@@ -1472,6 +1474,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
+        else if (IsListEmpty (&PartitionList->DiskListHead))
+        {
+            MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
     }
 
     DrawPartitionList(PartitionList);
@@ -1517,6 +1524,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                                    MaxSize,
                                    TRUE);
 
+                DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter[0];
+
                 return SELECT_FILE_SYSTEM_PAGE;
             }
         }
@@ -1527,6 +1536,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
+
+            DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter[0];
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
@@ -1583,6 +1594,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                                    0ULL,
                                    TRUE);
             }
+
+            DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter[0];
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
@@ -2383,8 +2396,10 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                     }
                 }
             }
+#if 0
             else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
                 PartEntry->PartInfo[PartNum].PartitionType = PARTITION_EXT2;
+#endif
             else if (!FileSystemList->Selected->FormatFunc)
                 return QUIT_PAGE;
 
@@ -3329,6 +3344,9 @@ RegistryPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
+
+    /* Set the default pagefile entry */
+    SetDefaultPagefile(DestinationDriveLetter);
 
     /* Update the mounted devices list */
     SetMountedDeviceValues(PartitionList);

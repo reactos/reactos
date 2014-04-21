@@ -314,7 +314,7 @@ xmlSplitQName2(const xmlChar *name, xmlChar **prefix) {
  * parse an XML qualified name string,i
  *
  * returns NULL if it is not a Qualified Name, otherwise, update len
- *         with the lenght in byte of the prefix and return a pointer
+ *         with the length in byte of the prefix and return a pointer
  *         to the start of the name without the prefix
  */
 

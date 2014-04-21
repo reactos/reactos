@@ -18,6 +18,9 @@
 
 /* just a wrapper for shldisp.idl */
 
+#pragma makedep proxy
+#pragma makedep register
+
 #include "shldisp.idl"
 
 [

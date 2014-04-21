@@ -27,6 +27,12 @@
 #include <guiddef.h>
 #endif
 
+#include <builddir.h>
+
+#if !defined(__RELFILE__)
+#define __RELFILE__ __FILE__
+#endif
+
 #ifdef __WINE_WINE_TEST_H
 #error This file should not be used in Wine tests
 #endif
@@ -91,7 +97,7 @@ struct __wine_debug_channel
        __WINE_DBG_LOG
 
 #define __WINE_DBG_LOG(args...) \
-    wine_dbg_log( __dbcl, __dbch, __FUNCTION__, args); } } while(0)
+    ros_dbg_log( __dbcl, __dbch, __RELFILE__, __FUNCTION__, __LINE__, args); } } while(0)
 
 #define __WINE_PRINTF_ATTR(fmt,args) /*__attribute__((format (printf,fmt,args)))*/
 
@@ -137,7 +143,7 @@ struct __wine_debug_channel
 
 #define __WINE_DPRINTF(dbcl,dbch) \
     (!__WINE_GET_DEBUGGING(dbcl,(dbch)) || \
-     (wine_dbg_log(__WINE_DBCL##dbcl,(dbch),__FILE__,"%d: ",__LINE__) == -1)) ? \
+     (ros_dbg_log(__WINE_DBCL##dbcl,(dbch),__FILE__,"",__LINE__,"") == -1)) ? \
      (void)0 : (void)wine_dbg_printf
 
 #define __WINE_PRINTF_ATTR(fmt, args)
@@ -152,7 +158,7 @@ struct __wine_debug_functions
     const char * (*dbgstr_wn)( const WCHAR *s, int n );
     int (*dbg_vprintf)( const char *format, va_list args );
     int (*dbg_vlog)( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                     const char *function, const char *format, va_list args );
+                     const char *file, const char *function, const int line, const char *format, va_list args );
 };
 
 extern unsigned char __wine_dbg_get_channel_flags( struct __wine_debug_channel *channel );
@@ -175,6 +181,9 @@ extern const char *wine_dbg_sprintf( const char *format, ... ) __WINE_PRINTF_ATT
 extern int wine_dbg_printf( const char *format, ... ) __WINE_PRINTF_ATTR(1,2);
 extern int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *ch, const char *func,
                          const char *format, ... ) __WINE_PRINTF_ATTR(4,5);
+/* ReactOS compliant debug format */
+extern int ros_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *ch, const char *file,
+                         const char *func, const int line, const char *format, ... ) __WINE_PRINTF_ATTR(6,7);
 
 static __inline const char *wine_dbgstr_a( const char *s )
 {

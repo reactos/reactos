@@ -101,7 +101,7 @@ LsarpLookupPrivilegeName(PLUID Value,
             NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
 
             NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
-            if (NameBuffer == NULL)
+            if (NameBuffer->Buffer == NULL)
             {
                 MIDL_user_free(NameBuffer);
                 return STATUS_NO_MEMORY;
@@ -257,7 +257,7 @@ LsapLookupAccountRightName(ULONG RightValue,
             NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
 
             NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
-            if (NameBuffer == NULL)
+            if (NameBuffer->Buffer == NULL)
             {
                 MIDL_user_free(NameBuffer);
                 return STATUS_INSUFFICIENT_RESOURCES;

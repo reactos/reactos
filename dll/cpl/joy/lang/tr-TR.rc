@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -72,7 +72,7 @@ BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 24, 20, 20
     DEFPUSHBUTTON "Tamam", IDOK, 106, 65, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 163, 65, 50, 14
-    LTEXT "Daha eski çizeylemlerle kullanmak için bir aygıt seçiniz.", -1, 7, 7, 208, 10
+    LTEXT "Daha eski izlencelerle kullanmak için bir aygıt seçiniz.", -1, 7, 7, 208, 10
     LTEXT "&Yeğlenen Aygıt:", -1, 34, 24, 70, 10
     COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END

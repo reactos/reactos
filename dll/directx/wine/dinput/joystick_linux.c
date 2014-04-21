@@ -160,7 +160,7 @@ static INT find_joystick_devices(void)
 
         if (ioctl(fd, JSIOCGAXMAP, axes_map) < 0)
         {
-            WARN("ioctl(%s,JSIOCGNAME) failed: %s\n", joydev.device, strerror(errno));
+            WARN("ioctl(%s,JSIOCGAXMAP) failed: %s\n", joydev.device, strerror(errno));
             joydev.dev_axes_map = NULL;
         }
         else
@@ -669,8 +669,7 @@ static void joy_polldev(LPDIRECTINPUTDEVICE8A iface)
             }
         }
         if (inst_id >= 0)
-            queue_event(iface, inst_id,
-                        value, jse.time, This->generic.base.dinput->evsequence++);
+            queue_event(iface, inst_id, value, GetCurrentTime(), This->generic.base.dinput->evsequence++);
     }
 }
 

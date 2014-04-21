@@ -1,4 +1,4 @@
-/* Translated by Fulea Ștefan */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -49,8 +49,8 @@ BEGIN
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
         POPUP "&Navigare", FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "Î&napoi\tAlt+Left Arrow", IDM_GOTO_BACK
-            MENUITEM "Îna&poi\tAlt+Right Arrow", IDM_GOTO_FORWARD
+            MENUITEM "Înap&oi\tAlt+Left Arrow", IDM_GOTO_BACK
+            MENUITEM "În&ainte\tAlt+Right Arrow", IDM_GOTO_FORWARD
             MENUITEM "Un nivel în s&us", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Pagină &inițială\tAlt+Home", IDM_GOTO_HOMEPAGE

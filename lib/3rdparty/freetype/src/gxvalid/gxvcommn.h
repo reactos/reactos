@@ -318,7 +318,7 @@ FT_BEGIN_HEADER
           FT_BEGIN_STMNT                  \
             {                             \
               if ( (a) & 3 )              \
-                FT_INVALID_OFFSET ;       \
+                FT_INVALID_OFFSET;        \
             }                             \
           FT_END_STMNT
 

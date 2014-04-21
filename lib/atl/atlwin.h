@@ -360,7 +360,7 @@ public:
 	}
 };
 
-_declspec(selectany) RECT CWindow::rcDefault = { CW_USEDEFAULT, CW_USEDEFAULT, 0, 0 };
+__declspec(selectany) RECT CWindow::rcDefault = { CW_USEDEFAULT, CW_USEDEFAULT, 0, 0 };
 
 template <class TBase = CWindow, class TWinTraits = CControlWinTraits>
 class CWindowImplBaseT : public TBase, public CMessageMap

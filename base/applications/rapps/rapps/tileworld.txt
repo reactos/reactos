@@ -35,8 +35,7 @@ Description = Clonă a Chip's Challenge, creată inițial pentru Atari Lynx. Inc
 Size = 1,16 Mo
 
 [Section.041f]
-Name = Karolu Dünyâ
-Description = Başlangıçta Atari Lynx için yapılan Çip'in Düellosu adlı oyunun iyi bir taklidi. Ücretsiz CCLP2 Çizge Paketi'ni de kapsadığından bunun ruhsatlı özgününe gerek yoktur.
+Description = Başlangıçta Atari Lynx için yapılan Chip's Challenge adlı oyunun iyi bir taklidi. Ücretsiz CCLP2 Çizge Paketi'ni de kapsadığından bunun telifli özgününe gerek yoktur.
 Size = 1,16 MB
 
 [Section.0422]

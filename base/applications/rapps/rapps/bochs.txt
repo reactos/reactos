@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Bochs
@@ -13,6 +14,9 @@ CDPath = none
 
 [Section.0407]
 Description = Bochs ist ein portabler Open-Source IA-32 (x86) PC-Emulator geschrieben in C++, der auf den meisten populären Plattformen läuft. 
+
+[Section.0415]
+Description = Bochs to przenośny (portable) emulator platformy IA-32 (x86) napisany w C++, działa na wielu popularnych platformach sprzętowych.
 
 [Section.0418]
 Description = Bochs este un emulator PC (x86) cu surse publice și portabilitate înaltă, scris în C++, compatibil cu majoritatea platformelor.

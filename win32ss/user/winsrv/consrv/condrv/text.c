@@ -298,7 +298,7 @@ ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale)
 {
     DWORD Size = (Console->ActiveBuffer->CursorInfo.dwSize * Scale + 99) / 100;
     /* If line input in progress, perhaps adjust for insert toggle */
-    if (Console->LineBuffer && !Console->LineComplete && Console->LineInsertToggle)
+    if (Console->LineBuffer && !Console->LineComplete && (Console->InsertMode ? !Console->LineInsertToggle : Console->LineInsertToggle))
         return (Size * 2 <= Scale) ? (Size * 2) : (Size / 2);
     return Size;
 }
@@ -580,6 +580,78 @@ ConioWriteConsole(PCONSOLE Console,
     {
         TermWriteStream(Console, &UpdateRect, CursorStartX, CursorStartY,
                         ScrolledLines, Buffer, Length);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS NTAPI
+ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
+                                   IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                   IN USHORT NewScreenAttrib,
+                                   IN USHORT NewPopupAttrib)
+{
+    DWORD X, Y, Length;
+    PCHAR_INFO Ptr;
+
+    COORD  TopLeft = {0};
+    ULONG  NumCodesToWrite = Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y;
+    USHORT OldScreenAttrib = Buffer->ScreenDefaultAttrib;
+
+    if (Console == NULL || Buffer == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
+
+    X = TopLeft.X;
+    Y = (TopLeft.Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
+    Length = NumCodesToWrite;
+    // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work
+    // Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X]; // May work
+
+    while (Length--)
+    {
+        // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work either
+        Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X];
+
+        /*
+         * Change the current colors only if they are the old ones.
+         */
+
+        /* Foreground color */
+        if ((Ptr->Attributes & 0x0F) == (OldScreenAttrib & 0x0F))
+            Ptr->Attributes = (Ptr->Attributes & 0xFFF0) | (NewScreenAttrib & 0x0F);
+
+        /* Background color */
+        if ((Ptr->Attributes & 0xF0) == (OldScreenAttrib & 0xF0))
+            Ptr->Attributes = (Ptr->Attributes & 0xFF0F) | (NewScreenAttrib & 0xF0);
+
+        // ++Ptr;
+
+        if (++X == Buffer->ScreenBufferSize.X)
+        {
+            X = 0;
+
+            if (++Y == Buffer->ScreenBufferSize.Y)
+            {
+                Y = 0;
+            }
+        }
+    }
+
+    /* Save foreground and background colors for both screen and popup */
+    Buffer->ScreenDefaultAttrib = (NewScreenAttrib & 0x00FF);
+    Buffer->PopupDefaultAttrib  = (NewPopupAttrib  & 0x00FF);
+
+    /* Refresh the display if needed */
+    if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
+    {
+        SMALL_RECT UpdateRect;
+        ConioComputeUpdateRect(Buffer, &UpdateRect, &TopLeft, NumCodesToWrite);
+        TermDrawRegion(Console, &UpdateRect);
     }
 
     return STATUS_SUCCESS;
@@ -947,7 +1019,6 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     PWCHAR tmpString = NULL;
     DWORD X, Y, Length; // , Written = 0;
     ULONG CodeSize;
-    SMALL_RECT UpdateRect;
     PCHAR_INFO Ptr;
 
     if (Console == NULL || Buffer == NULL ||
@@ -1046,6 +1117,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
 
     if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
     {
+        SMALL_RECT UpdateRect;
         ConioComputeUpdateRect(Buffer, &UpdateRect, WriteCoord, NumCodesToWrite);
         TermDrawRegion(Console, &UpdateRect);
     }
@@ -1071,7 +1143,6 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 {
     DWORD X, Y, Length; // , Written = 0;
     PCHAR_INFO Ptr;
-    SMALL_RECT UpdateRect;
 
     if (Console == NULL || Buffer == NULL || Code == NULL ||
         WriteCoord == NULL /* || CodesWritten == NULL */)
@@ -1144,6 +1215,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 
     if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
     {
+        SMALL_RECT UpdateRect;
         ConioComputeUpdateRect(Buffer, &UpdateRect, WriteCoord, NumCodesToWrite);
         TermDrawRegion(Console, &UpdateRect);
     }
@@ -1153,26 +1225,33 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
-ConDrvGetConsoleScreenBufferInfo(IN PCONSOLE Console,
-                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                 OUT PCONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo)
+ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
+                                 IN  PTEXTMODE_SCREEN_BUFFER Buffer,
+                                 OUT PCOORD ScreenBufferSize,
+                                 OUT PCOORD CursorPosition,
+                                 OUT PCOORD ViewOrigin,
+                                 OUT PCOORD ViewSize,
+                                 OUT PCOORD MaximumViewSize,
+                                 OUT PWORD  Attributes)
 {
-    if (Console == NULL || Buffer == NULL || ScreenBufferInfo == NULL)
+    if (Console == NULL || Buffer == NULL || ScreenBufferSize == NULL ||
+        CursorPosition  == NULL || ViewOrigin == NULL || ViewSize == NULL ||
+        MaximumViewSize == NULL || Attributes == NULL)
+    {
         return STATUS_INVALID_PARAMETER;
+    }
 
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
 
-    ScreenBufferInfo->dwSize              = Buffer->ScreenBufferSize;
-    ScreenBufferInfo->dwCursorPosition    = Buffer->CursorPosition;
-    ScreenBufferInfo->wAttributes         = Buffer->ScreenDefaultAttrib;
-    ScreenBufferInfo->srWindow.Left       = Buffer->ViewOrigin.X;
-    ScreenBufferInfo->srWindow.Top        = Buffer->ViewOrigin.Y;
-    ScreenBufferInfo->srWindow.Right      = Buffer->ViewOrigin.X + Buffer->ViewSize.X - 1;
-    ScreenBufferInfo->srWindow.Bottom     = Buffer->ViewOrigin.Y + Buffer->ViewSize.Y - 1;
+    *ScreenBufferSize = Buffer->ScreenBufferSize;
+    *CursorPosition   = Buffer->CursorPosition;
+    *ViewOrigin       = Buffer->ViewOrigin;
+    *ViewSize         = Buffer->ViewSize;
+    *Attributes       = Buffer->ScreenDefaultAttrib;
 
     // FIXME: Refine the computation
-    ScreenBufferInfo->dwMaximumWindowSize = Buffer->ScreenBufferSize;
+    *MaximumViewSize  = Buffer->ScreenBufferSize;
 
     return STATUS_SUCCESS;
 }
@@ -1180,7 +1259,7 @@ ConDrvGetConsoleScreenBufferInfo(IN PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                              IN WORD Attribute)
+                              IN WORD Attributes)
 {
     if (Console == NULL || Buffer == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1188,7 +1267,7 @@ ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
 
-    Buffer->ScreenDefaultAttrib = Attribute;
+    Buffer->ScreenDefaultAttrib = Attributes;
     return STATUS_SUCCESS;
 }
 

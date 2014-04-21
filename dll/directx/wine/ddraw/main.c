@@ -402,9 +402,9 @@ HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *contex
         FIXME("flags 0x%08x not handled\n", flags & ~DDENUM_ATTACHEDSECONDARYDEVICES);
 
     TRACE("Enumerating ddraw interfaces\n");
-    if (!(wined3d = wined3d_create(7, WINED3D_LEGACY_DEPTH_BIAS)))
+    if (!(wined3d = wined3d_create(WINED3D_LEGACY_DEPTH_BIAS)))
     {
-        if (!(wined3d = wined3d_create(7, WINED3D_LEGACY_DEPTH_BIAS | WINED3D_NO3D)))
+        if (!(wined3d = wined3d_create(WINED3D_LEGACY_DEPTH_BIAS | WINED3D_NO3D)))
         {
             WARN("Failed to create a wined3d object.\n");
             return E_FAIL;

@@ -13,12 +13,6 @@ add_library(vga SHARED
 
 target_link_libraries(vga libcntpr)
 
-# FIXME: http://www.cmake.org/Bug/view.php?id=12998
-if(NOT MSVC)
-    #allow_warnings(vga)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
 set_module_type(vga kernelmodedriver)
 add_importlibs(vga videoprt)
 

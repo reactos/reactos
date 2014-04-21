@@ -6,7 +6,7 @@
 @ cdecl wined3d_check_device_format_conversion(ptr long long long long)
 @ cdecl wined3d_check_device_multisample_type(ptr long long long long long ptr)
 @ cdecl wined3d_check_device_type(ptr long long long long long)
-@ cdecl wined3d_create(long long)
+@ cdecl wined3d_create(long)
 @ cdecl wined3d_decref(ptr)
 @ cdecl wined3d_enum_adapter_modes(ptr long long long long ptr)
 @ cdecl wined3d_get_adapter_count(ptr)
@@ -170,12 +170,9 @@
 @ cdecl wined3d_query_incref(ptr)
 @ cdecl wined3d_query_issue(ptr long)
 
-@ cdecl wined3d_resource_free_private_data(ptr ptr)
 @ cdecl wined3d_resource_get_desc(ptr ptr)
 @ cdecl wined3d_resource_get_parent(ptr)
-@ cdecl wined3d_resource_get_private_data(ptr ptr ptr ptr)
 @ cdecl wined3d_resource_set_parent(ptr ptr)
-@ cdecl wined3d_resource_set_private_data(ptr ptr ptr long long)
 
 @ cdecl wined3d_rendertarget_view_create(ptr ptr ptr)
 @ cdecl wined3d_rendertarget_view_decref(ptr)

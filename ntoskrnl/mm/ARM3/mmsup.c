@@ -89,7 +89,8 @@ MmAdjustWorkingSetSize(IN SIZE_T WorkingSetMinimumInBytes,
     /* Check if the new minimum exceeds the new maximum */
     if (MinimumWorkingSetSize > MaximumWorkingSetSize)
     {
-        DPRINT1("MinimumWorkingSetSize > MaximumWorkingSetSize\n");
+        DPRINT1("MinimumWorkingSetSize (%lu) > MaximumWorkingSetSize (%lu)\n",
+                MinimumWorkingSetSize, MaximumWorkingSetSize);
         Status = STATUS_BAD_WORKING_SET_LIMIT;
         goto Cleanup;
     }

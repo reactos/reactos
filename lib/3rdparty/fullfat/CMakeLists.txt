@@ -17,7 +17,6 @@ list(APPEND SOURCE
     ff_time.c)
 
 add_library(fullfat ${SOURCE})
-allow_warnings(fullfat)
 add_dependencies(fullfat bugcodes)
 
 if(NOT MSVC)

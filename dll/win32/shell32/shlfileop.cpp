@@ -42,7 +42,7 @@ static const WCHAR wWildcardChars[] = {'*','?',0};
 static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec);
 static DWORD SHNotifyRemoveDirectoryW(LPCWSTR path);
 static DWORD SHNotifyDeleteFileW(LPCWSTR path);
-static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest);
+static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest, BOOL isdir);
 static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists);
 static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly);
 
@@ -531,7 +531,7 @@ EXTERN_C DWORD WINAPI Win32DeleteFileW(LPCWSTR path)
  * RETURNS
  *  ERORR_SUCCESS if successful
  */
-static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest)
+static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest, BOOL isdir)
 {
     BOOL ret;
 
@@ -559,7 +559,8 @@ static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest)
     }
     if (ret)
     {
-        SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW, src, dest);
+        SHChangeNotify(isdir ? SHCNE_MKDIR : SHCNE_CREATE, SHCNF_PATHW, dest, NULL);
+        SHChangeNotify(isdir ? SHCNE_RMDIR : SHCNE_DELETE, SHCNF_PATHW, src, NULL);
         return ERROR_SUCCESS;
     }
     return GetLastError();
@@ -1474,7 +1475,10 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom)
         {
             BOOL bDelete;
             if (TRASH_TrashFile(fileEntry->szFullPath))
+            {
+                SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, fileEntry->szFullPath, NULL);
                 continue;
+            }
 
             /* Note: Windows silently deletes the file in such a situation, we show a dialog */
             if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (lpFileOp->fFlags & FOF_WANTNUKEWARNING))
@@ -1491,7 +1495,10 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom)
 
         /* delete the file or directory */
         if (IsAttribFile(fileEntry->attributes))
+        {
             bPathExists = DeleteFileW(fileEntry->szFullPath);
+            SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, fileEntry->szFullPath, NULL);
+        }
         else
             bPathExists = SHELL_DeleteDirectoryW(lpFileOp->hwnd, fileEntry->szFullPath, FALSE);
 
@@ -1548,7 +1555,7 @@ static void move_to_dir(LPSHFILEOPSTRUCTW lpFileOp, const FILE_ENTRY *feFrom, co
     PathCombineW(szDestPath, feTo->szFullPath, feFrom->szFilename);
 
     if (IsAttribFile(feFrom->attributes))
-        SHNotifyMoveFileW(feFrom->szFullPath, szDestPath);
+        SHNotifyMoveFileW(feFrom->szFullPath, szDestPath, FALSE);
     else if (!(lpFileOp->fFlags & FOF_FILESONLY && feFrom->bFromWildcard))
         move_dir_to_dir(lpFileOp, feFrom, szDestPath);
 }
@@ -1599,7 +1606,7 @@ static HRESULT move_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom, c
         if (fileDest->bExists && IsAttribDir(fileDest->attributes))
             move_to_dir(lpFileOp, entryToMove, fileDest);
         else
-            SHNotifyMoveFileW(entryToMove->szFullPath, fileDest->szFullPath);
+            SHNotifyMoveFileW(entryToMove->szFullPath, fileDest->szFullPath, IsAttribDir(entryToMove->attributes));
     }
 
     return ERROR_SUCCESS;
@@ -1628,7 +1635,7 @@ static HRESULT rename_files(LPSHFILEOPSTRUCTW lpFileOp, const FILE_LIST *flFrom,
     if (feTo->bExists)
         return ERROR_ALREADY_EXISTS;
 
-    return SHNotifyMoveFileW(feFrom->szFullPath, feTo->szFullPath);
+    return SHNotifyMoveFileW(feFrom->szFullPath, feTo->szFullPath, IsAttribDir(feFrom->attributes));
 }
 
 /* alert the user if an unsupported flag is used */

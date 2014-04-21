@@ -4,7 +4,7 @@
 Name = Microsoft Visual C++ 2010 Redistributable Package
 Version = 8.0
 Licence = Unknown
-Description = Visual Studio 2010 Runtime. Contains: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Microsoft Visual Studio 2010 Runtime. Contains: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 Size = 4.8 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=5555
@@ -13,44 +13,44 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = Visual Studio 2010 Laufzeitsystem. Beinhaltet: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Microsoft Visual Studio 2010 Laufzeitsystem. Beinhaltet: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 
 [Section.040a]
 Licence = Desconocida
-Description = Librerias Visual Studio 2010. Incluye: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Librerias Microsoft Visual Studio 2010. Incluye: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 
 [Section.040c]
 Licence = Inconnue
-Description = Bibliothèque Visual Studio 2010. Contient: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Bibliothèque Microsoft Visual Studio 2010. Contient: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 Size = 4.8 Mo
 
 [Section.0410]
 Licence = Sconosciuta
-Description = Libreria Visual Studio 2010. Include: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Libreria Microsoft Visual Studio 2010. Include: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 
 [Section.0413]
 Licence = Ongekend
-Description = Visual Studio 2010 Runtime. Bevat: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Microsoft Visual Studio 2010 Runtime. Bevat: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 
 [Section.0415]
 Licence = Nieznana
-Description = Biblioteki uruchomieniowe Visual Studio 2010. Zawiera: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2010. Zawiera: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 
 [Section.0418]
 Licence = Necunoscută
-Description = Visual Studio 2010 Runtime. Conține: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Microsoft Visual Studio 2010 Runtime. Conține: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 Size = 4,8 Mo
 
 [Section.041f]
-Name = Mikroyazılım Basarî C++ 2010 Yeniden Dağıtılabilir Paket
+Name = Microsoft Visual C++ 2010 Yeniden Dağıtılabilir Paket
 Licence = Bilinmiyor
-Description = Basarî Stüdyo 2010 Yürütücüsü. Şunları içerir: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Microsoft Visual Studio 2010 Yürütücüsü. Şunları içerir: atl100.dll, mfc100.dll, mfc100u.dll, mfcm100.dll, mfcm100u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 Size = 4,8 MB
 
 [Section.0422]
 Licence = Невідома
-Description = Бібліотеки Visual Studio 2010. включає: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Бібліотеки Microsoft Visual Studio 2010. включає: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 
 [Section.0813]
 Licence = Ongekend
-Description = Visual Studio 2010 Runtime. Bevat: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+Description = Microsoft Visual Studio 2010 Runtime. Bevat: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.

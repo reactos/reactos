@@ -205,7 +205,7 @@ typedef enum
 
 /* Used to find undocumented extended styles */
 #define TBSTYLE_EX_ALL (TBSTYLE_EX_DRAWDDARROWS | \
-                        TBSTYLE_EX_UNDOC1 | \
+                        TBSTYLE_EX_VERTICAL | \
                         TBSTYLE_EX_MIXEDBUTTONS | \
                         TBSTYLE_EX_DOUBLEBUFFER | \
                         TBSTYLE_EX_HIDECLIPPEDBUTTONS)
@@ -843,8 +843,11 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
         /* empirical tests show that iBitmap can/will be non-zero    */
         /* when drawing the vertical bar...      */
         if ((dwStyle & TBSTYLE_FLAT) /* && (btnPtr->iBitmap == 0) */) {
-            if (dwStyle & CCS_VERT)
-               TOOLBAR_DrawFlatHorizontalSeparator (&rc, hdc, infoPtr);
+            if (dwStyle & CCS_VERT) {
+                RECT rcsep = rc;
+                InflateRect(&rcsep, -infoPtr->szPadding.cx, -infoPtr->szPadding.cy);
+                TOOLBAR_DrawFlatHorizontalSeparator (&rcsep, hdc, infoPtr);
+            }
 	    else
 		TOOLBAR_DrawFlatSeparator (&rc, hdc, infoPtr);
 	}
@@ -1257,7 +1260,7 @@ TOOLBAR_CalcStrings (const TOOLBAR_INFO *infoPtr, LPSIZE lpSize)
 * the toolbar wrapping on its own, it can use the TBSTYLE_WRAPABLE
 * flag, and set the TBSTATE_WRAP flags manually on the appropriate items.
 *
-* Note: TBSTYLE_WRAPABLE or TBSTYLE_EX_UNDOC1 can be used also to allow
+* Note: TBSTYLE_WRAPABLE or TBSTYLE_EX_VERTICAL can be used also to allow
 * vertical toolbar lists.
 */
 
@@ -1273,7 +1276,7 @@ TOOLBAR_WrapToolbar(TOOLBAR_INFO *infoPtr)
     /*	no layout is necessary. Applications may use this style */
     /*	to perform their own layout on the toolbar. 		*/
     if( !(infoPtr->dwStyle & TBSTYLE_WRAPABLE) &&
-	!(infoPtr->dwExStyle & TBSTYLE_EX_UNDOC1) )  return;
+	!(infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL) )  return;
 
     btnPtr = infoPtr->buttons;
     x  = infoPtr->nIndent;
@@ -1662,7 +1665,7 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 	if (btnPtr->fsStyle & BTNS_SEP) {
 	    if (infoPtr->dwStyle & CCS_VERT) {
                 cy = (btnPtr->iBitmap > 0) ? btnPtr->iBitmap : SEPARATOR_WIDTH;
-                cx = (btnPtr->cx > 0) ? btnPtr->cx : infoPtr->nWidth;
+                cx = (btnPtr->cx > 0) ? btnPtr->cx : infoPtr->nButtonWidth;
 	    }
 	    else
                 cx = (btnPtr->cx > 0) ? btnPtr->cx :
@@ -3023,7 +3026,7 @@ TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
     cy = TOP_BORDER + infoPtr->nRows * infoPtr->nButtonHeight + BOTTOM_BORDER;
     cx = parent_rect.right - parent_rect.left;
 
-    if ((infoPtr->dwStyle & TBSTYLE_WRAPABLE) || (infoPtr->dwExStyle & TBSTYLE_EX_UNDOC1))
+    if ((infoPtr->dwStyle & TBSTYLE_WRAPABLE) || (infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL))
     {
         TOOLBAR_LayoutToolbar(infoPtr);
         InvalidateRect( infoPtr->hwndSelf, NULL, TRUE );
@@ -3333,7 +3336,7 @@ TOOLBAR_GetButtonInfoT(const TOOLBAR_INFO *infoPtr, INT Id, LPTBBUTTONINFOW lpTb
     if (lpTbInfo == NULL)
 	return -1;
 
-    /* MSDN documents a iImageLabel field added in Vista but it is not present in
+    /* MSDN documents an iImageLabel field added in Vista but it is not present in
      * the headers and tests shows that even with comctl 6 Vista accepts only the
      * original TBBUTTONINFO size
      */
@@ -4132,7 +4135,7 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, const TBSAVEPARAMSW *lpSave)
                 {
                     /* separator */
                     nmtbr.tbButton.fsStyle = TBSTYLE_SEP;
-                    /* when inserting separators, iBitmap controls it's size.
+                    /* when inserting separators, iBitmap controls its size.
                        0 sets default size (width) */
                     nmtbr.tbButton.iBitmap = 0;
                 }

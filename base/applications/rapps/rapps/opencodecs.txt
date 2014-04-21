@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL trans by wojo664
 
 [Section]
 Name = xiph.org OpenCodecs
@@ -16,6 +17,9 @@ Description = DirectShow Filter für Ogg Vorbis, Speex, Theora, FLAC, und WebM D
 
 [Section.0410]
 Description = I filtri DirectShow per la Ogg Vorbis, Speex, Theora, FLAC e formati di file WebM.
+
+[Section.0415]
+Description = Filtry DirectShow dla Ogg Vorbis, Speex, Theora, FLAC, i plików w formacie WebM.
 
 [Section.0418]
 Description = Filtrele DirectShow pentru formatele de fișiere Ogg Vorbis, Speex, Theora, FLAC și WebM.

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -10,7 +10,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_EXIT
     END
-    POPUP "&Yazılım"
+    POPUP "Y&azılım"
     BEGIN
         MENUITEM "&Kur", ID_INSTALL
         MENUITEM "K&aldır", ID_UNINSTALL
@@ -20,12 +20,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Y&azılım Veritabanını Yenile", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile", ID_RESETDB
     END
-    POPUP "Y&ardım"
+    POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", ID_HELP, GRAYED
-        MENUITEM "&Hakkında", ID_ABOUT
+        MENUITEM "&Yardım", ID_HELP, GRAYED
+        MENUITEM "&Üzerine...", ID_ABOUT
     END
 END
 
@@ -33,8 +33,8 @@ IDR_LINKMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Tarayıcıda Aç", ID_OPEN_LINK
-        MENUITEM "&Panoya Çoğalt", ID_COPY_LINK
+        MENUITEM "&Bağlantıyı Tarayıcıda Aç", ID_OPEN_LINK
+        MENUITEM "&Bağlantıyı Panoya Çoğalt", ID_COPY_LINK
     END
 END
 
@@ -50,7 +50,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Y&azılım Veritabanını Yenile", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile", ID_RESETDB
     END
 END
 
@@ -61,25 +61,25 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Umûmî", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Her Başlangıçta Erişilebilir Yazılım Dizelgesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Yazılımların Kuruluş ve Kaldırılışlarını Kaydet", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&Başlangıçta Erişilebilir İzlencelerin Dizelgesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&İzlencelerin Kuruluşlarını ve Kaldırılışlarını Kaydet", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
-    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Seç", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "&Kurulumdan Sonra Yazılımın Kurulum Kütüğünü Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    PUSHBUTTON "Öntanımlılar", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+    AUTOCHECKBOX "&Kurulumdan Sonra İzlencenin Kurulum Kütüğünü Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    PUSHBUTTON "Ön Tanımlılar", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
     PUSHBUTTON "Tamam", IDOK, 116, 124, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Yazılım Kurulumu"
+CAPTION "İzlence Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "&Bir Diskten Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Bir Diskten (CD'den veyâ DVD'den) Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&İndir ve Kur", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 150, 78, 60, 14
@@ -97,10 +97,10 @@ END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Hakkında"
+CAPTION "Üzerine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Yazılım Yöneticisi\nTelif Hakkı: 2009 - \nDmitry Chapyshev (dmitry@reactos.org) eliyle yazılmıştır.", IDC_STATIC, 48, 7, 130, 39
+    LTEXT "ReactOS Uygulama Yöneticisi\nTelif Hakkı: 2009 - \nDmitry Chapyshev (dmitry@reactos.org) eliyle yazılmıştır.", IDC_STATIC, 48, 7, 130, 39
     PUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -117,24 +117,24 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_NAME "Yazılımın Adı"
+    IDS_APP_NAME "Ad"
     IDS_APP_INST_VERSION "Sürüm"
-    IDS_APP_DESCRIPTION "Ek Bilgi"
+    IDS_APP_DESCRIPTION "Açıklama"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO_VERSION "\nSürüm: "
-    IDS_INFO_DESCRIPTION "\nEk Bilgi: "
-    IDS_INFO_PUBLISHER "\nYayımcı: "
+    IDS_INFO_VERSION "\nSürümü: "
+    IDS_INFO_DESCRIPTION "\nAçıklaması: "
+    IDS_INFO_PUBLISHER "\nYayımcısı: "
     IDS_INFO_HELPLINK "\nYardım Bağlantısı: "
     IDS_INFO_HELPPHONE "\nYardım Telefonu: "
-    IDS_INFO_README "\nBenioku: "
+    IDS_INFO_README "\nBenioku Kütüğü: "
     IDS_INFO_REGOWNER "\nKayıtlı Olduğu Kullanıcısı: "
     IDS_INFO_PRODUCTID "\nÜrün Kimliği: "
     IDS_INFO_CONTACT "\nİletişim: "
     IDS_INFO_UPDATEINFO "\nYenileme Bilgisi: "
-    IDS_INFO_INFOABOUT "\nHakkında Bilgi: "
+    IDS_INFO_INFOABOUT "\nÜzerine Bilgisi: "
     IDS_INFO_COMMENTS "\nYorumlar: "
     IDS_INFO_INSTLOCATION "\nKurulum Konumu: "
     IDS_INFO_INSTALLSRC "\nKurulum Kaynağı: "
@@ -145,11 +145,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_AINFO_VERSION "\nSürüm: "
-    IDS_AINFO_DESCRIPTION "\nEk Bilgi: "
-    IDS_AINFO_SIZE "\nBoyut: "
-    IDS_AINFO_URLSITE "\nAna Sayfa: "
-    IDS_AINFO_LICENCE "\nRuhsat: "
+    IDS_AINFO_VERSION "\nSürümü: "
+    IDS_AINFO_DESCRIPTION "\nAçıklaması: "
+    IDS_AINFO_SIZE "\nBüyüklüğü: "
+    IDS_AINFO_URLSITE "\nAna Sayfası: "
+    IDS_AINFO_LICENCE "\nRuhsatı: "
 END
 
 STRINGTABLE
@@ -159,7 +159,7 @@ BEGIN
     IDS_CAT_DRIVERS "Sürücüler"
     IDS_CAT_EDU "Eğitim"
     IDS_CAT_ENGINEER "Mühendislik"
-    IDS_CAT_FINANCE "Mâli"
+    IDS_CAT_FINANCE "Mâlî"
     IDS_CAT_GAMES "Oyun ve Eğlence"
     IDS_CAT_GRAPHICS "Çizge"
     IDS_CAT_INTERNET "Ağ"
@@ -173,22 +173,22 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Yazılım Yöneticisi"
+    IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
     IDS_SEARCH_TEXT "Ara"
     IDS_INSTALL "Kur"
     IDS_UNINSTALL "Kaldır"
     IDS_MODIFY "Değiştir"
-    IDS_APPS_COUNT "Yazılım Sayısı: %d"
-    IDS_WELCOME_TITLE "ReactOS Yazılım Yöneticisi'ne hoşgeldiniz.\n\n"
-    IDS_WELCOME_TEXT "Soldaki herhangi bir ulamı seçip ulamdaki herhangi bir yazılımı kaldırabilir veyâ kurabilrisiniz.\nReactOS'un örütbağ sitesi: "
+    IDS_APPS_COUNT "Uygulama Sayısı: %d"
+    IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoşgeldiniz.\n\n"
+    IDS_WELCOME_TEXT "Solda bir ulam seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un Umûmî Ağ sitesi: "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Kurulanlar"
-    IDS_AVAILABLEFORINST "Kurulabilenler"
-    IDS_UPDATES "Yenilemeler"
-    IDS_APPLICATIONS "Yazılımlar"
-    IDS_CHOOSE_FOLDER_TEXT "İndirme dizinini seçiniz:"
+    IDS_AVAILABLEFORINST "Kurulum İçin Bulunanlar"
+    IDS_UPDATES "Şimdikileştirmeler"
+    IDS_APPLICATIONS "Uygulamalar"
+    IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
-    IDS_APP_REG_REMOVE "Bu yazılımın bilgilerini Değer Defteri'nden kaldırmayı onaylıyor musunuz?"
+    IDS_APP_REG_REMOVE "Kurulan izlencenin girişini Değer Defteri'nden silmeyi doğruluyor musunuz?"
     IDS_INFORMATION "Bilgi"
-    IDS_UNABLE_TO_REMOVE "Bu yazılımın bilgileri Değer Defteri'nden kaldırılamıyor."
+    IDS_UNABLE_TO_REMOVE "İzlencenin girişi Değer Defteri'nden silinemiyor."
 END

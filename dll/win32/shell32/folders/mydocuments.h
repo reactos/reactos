@@ -26,12 +26,14 @@ class CMyDocsFolder :
     public CComCoClass<CMyDocsFolder, &CLSID_MyDocuments>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2
+    public IPersistFolder2,
+    public IDropTarget
 {
     private:
         /* both paths are parsible from the MyDocuments */
         LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
+        IDropTarget *mFSDropTarget;
     public:
         CMyDocsFolder();
         ~CMyDocsFolder();
@@ -67,6 +69,12 @@ class CMyDocsFolder :
         // IPersistFolder2
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
 
+        // IDropTarget
+        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        virtual HRESULT WINAPI DragLeave();
+        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+
         DECLARE_REGISTRY_RESOURCEID(IDR_MYDOCUMENTS)
         DECLARE_NOT_AGGREGATABLE(CMyDocsFolder)
 
@@ -78,6 +86,7 @@ class CMyDocsFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         END_COM_MAP()
 };
 

@@ -45,7 +45,7 @@ typedef struct _SETUPDATA
     WCHAR OwnerName[51];
     WCHAR OwnerOrganization[51];
     WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];  /* max. 15 characters */
-    WCHAR AdminPassword[15];              /* max. 14 characters */
+    WCHAR AdminPassword[128];              /* max. 127 characters */
     BOOL  UnattendSetup;
     BOOL  DisableVmwInst;
 

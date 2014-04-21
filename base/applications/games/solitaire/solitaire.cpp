@@ -14,11 +14,20 @@ HWND        hwndStatus;
 HINSTANCE    hInstance;
 
 TCHAR szAppName[128];
+TCHAR szScore[64];
+TCHAR szTime[64];
 TCHAR MsgQuit[128];
 TCHAR MsgAbout[128];
 TCHAR MsgWin[128];
 TCHAR MsgDeal[128];
 DWORD dwOptions = OPTION_THREE_CARDS;
+
+DWORD dwTime;
+DWORD dwWasteCount;
+DWORD dwWasteTreshold;
+DWORD dwPrevMode;
+long lScore;
+UINT_PTR PlayTimer = 0;
 
 CardWindow SolWnd;
 
@@ -115,6 +124,60 @@ VOID SaveSettings(VOID)
     RegCloseKey(hKey);
 }
 
+// Returns 0 for no points, 1 for Standard and 2 for Vegas
+int GetScoreMode(void)
+{
+    if ((dwOptions & OPTION_SCORE_STD) && (dwOptions & OPTION_SCORE_VEGAS))
+    {
+        return SCORE_NONE;
+    }
+
+    if (dwOptions & OPTION_SCORE_STD)
+    {
+        return SCORE_STD;
+    }
+
+    if (dwOptions & OPTION_SCORE_VEGAS)
+    {
+        return SCORE_VEGAS;
+    }
+
+    return 0;
+}
+
+void UpdateStatusBar(void)
+{
+    TCHAR szStatusText[128];
+    TCHAR szTempText[64];
+
+    ZeroMemory(szStatusText, sizeof(szStatusText) / sizeof(TCHAR));
+
+    if (GetScoreMode() != SCORE_NONE)
+    {
+        _stprintf(szStatusText, szScore, lScore);
+        _tcscat(szStatusText, _T("   "));
+    }
+
+    if (dwOptions & OPTION_SHOW_TIME)
+    {
+        _stprintf(szTempText, szTime, dwTime);
+        _tcscat(szStatusText, szTempText);
+    }
+
+    SendMessage(hwndStatus, SB_SETTEXT, 0 | SBT_NOBORDERS, (LPARAM)(LPTSTR)szStatusText);
+}
+
+void SetPlayTimer(void)
+{
+    if (dwOptions & OPTION_SHOW_TIME)
+    {
+        if (!PlayTimer)
+        {
+            PlayTimer = SetTimer(hwndMain, IDT_PLAYTIMER, 1000, NULL);
+        }
+    }
+}
+
 //
 //    Main entry point
 //
@@ -135,6 +198,9 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     LoadString(hInst, IDS_SOL_QUIT, MsgQuit, sizeof(MsgQuit) / sizeof(MsgQuit[0]));
     LoadString(hInst, IDS_SOL_WIN, MsgWin, sizeof(MsgWin) / sizeof(MsgWin[0]));
     LoadString(hInst, IDS_SOL_DEAL, MsgDeal, sizeof(MsgDeal) / sizeof(MsgDeal[0]));
+
+    LoadString(hInst, IDS_SOL_SCORE, szScore, sizeof(szScore) / sizeof(TCHAR));
+    LoadString(hInst, IDS_SOL_TIME, szTime, sizeof(szTime) / sizeof(TCHAR));
 
     //Window class for the main application parent window
     wndclass.style            = 0;//CS_HREDRAW | CS_VREDRAW;
@@ -160,6 +226,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 
     LoadSettings();
 
+    dwPrevMode = GetScoreMode();
+
     //Construct the path to our help file
     MakePath(szHelpPath, MAX_PATH, _T(".hlp"));
 
@@ -177,6 +245,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
                 NULL);                    // creation parameters
 
     hwndMain = hwnd;
+
+    UpdateStatusBar();
 
     ShowWindow(hwnd, iCmdShow);
     UpdateWindow(hwnd);
@@ -200,6 +270,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 
 INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    HWND hCtrl;
+
     switch (uMsg)
     {
     case WM_INITDIALOG:
@@ -209,11 +281,47 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         CheckDlgButton(hDlg,
                        IDC_OPT_STATUSBAR,
                        (dwOptions & OPTION_SHOW_STATUS) ? BST_CHECKED : BST_UNCHECKED);
+
+        CheckDlgButton(hDlg,
+                       IDC_OPT_SHOWTIME,
+                       (dwOptions & OPTION_SHOW_TIME) ? BST_CHECKED : BST_UNCHECKED);
+
+        CheckDlgButton(hDlg,
+                       IDC_OPT_KEEPSCORE,
+                       (dwOptions & OPTION_KEEP_SCORE) ? BST_CHECKED : BST_UNCHECKED);
+
+        hCtrl = GetDlgItem(hDlg, IDC_OPT_KEEPSCORE);
+
+        if (GetScoreMode() == SCORE_NONE)
+        {
+            CheckRadioButton(hDlg, IDC_OPT_STANDARD, IDC_OPT_NOSCORE, IDC_OPT_NOSCORE);
+            EnableWindow(hCtrl, FALSE);
+        }
+        else if (GetScoreMode() == SCORE_STD)
+        {
+            CheckRadioButton(hDlg, IDC_OPT_STANDARD, IDC_OPT_NOSCORE, IDC_OPT_STANDARD);
+            EnableWindow(hCtrl, FALSE);
+        }
+        else if (GetScoreMode() == SCORE_VEGAS)
+        {
+            CheckRadioButton(hDlg, IDC_OPT_STANDARD, IDC_OPT_NOSCORE, IDC_OPT_VEGAS);
+            EnableWindow(hCtrl, TRUE);
+        }
         return TRUE;
 
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
+        case IDC_OPT_NOSCORE:
+        case IDC_OPT_STANDARD:
+        case IDC_OPT_VEGAS:
+            hCtrl = GetDlgItem(hDlg, IDC_OPT_KEEPSCORE);
+            if (wParam == IDC_OPT_VEGAS)
+                EnableWindow(hCtrl, TRUE);
+            else
+                EnableWindow(hCtrl, FALSE);
+            return TRUE;
+ 
         case IDOK:
             dwOptions &= ~OPTION_THREE_CARDS;
             if (IsDlgButtonChecked(hDlg, IDC_OPT_DRAWTHREE) == BST_CHECKED)
@@ -223,6 +331,34 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 dwOptions |= OPTION_SHOW_STATUS;
             else
                 dwOptions &= ~OPTION_SHOW_STATUS;
+
+            if (IsDlgButtonChecked(hDlg, IDC_OPT_SHOWTIME) == BST_CHECKED)
+                dwOptions |= OPTION_SHOW_TIME;
+            else
+                dwOptions &= ~OPTION_SHOW_TIME;
+
+            if (IsDlgButtonChecked(hDlg, IDC_OPT_KEEPSCORE) == BST_CHECKED)
+                dwOptions |= OPTION_KEEP_SCORE;
+            else
+                dwOptions &= ~OPTION_KEEP_SCORE;
+
+            if (IsDlgButtonChecked(hDlg, IDC_OPT_STANDARD) == BST_CHECKED)
+            {
+                dwOptions |= OPTION_SCORE_STD;
+                dwOptions &= ~OPTION_SCORE_VEGAS;
+            }
+            else if (IsDlgButtonChecked(hDlg, IDC_OPT_VEGAS) == BST_CHECKED)
+            {
+                dwOptions |= OPTION_SCORE_VEGAS;
+                dwOptions &= ~OPTION_SCORE_STD;
+            }
+            else if (IsDlgButtonChecked(hDlg, IDC_OPT_NOSCORE) == BST_CHECKED)
+            {
+                dwOptions |= OPTION_SCORE_VEGAS;
+                dwOptions |= OPTION_SCORE_STD;
+            }
+
+            UpdateStatusBar();
 
             EndDialog(hDlg, TRUE);
             return TRUE;
@@ -241,9 +377,13 @@ VOID ShowGameOptionsDlg(HWND hwnd)
     DWORD dwOldOptions = dwOptions;
     RECT rcMain, rcStatus;
 
+    int iOldScoreMode = GetScoreMode();
+
     if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc))
     {
-        if ((dwOldOptions & OPTION_THREE_CARDS) != (dwOptions & OPTION_THREE_CARDS))
+        if (((dwOldOptions & OPTION_THREE_CARDS) != (dwOptions & OPTION_THREE_CARDS)) ||
+            ((dwOldOptions & OPTION_SHOW_TIME) != (dwOptions & OPTION_SHOW_TIME)) ||
+            (iOldScoreMode != GetScoreMode()))
             NewGame();
 
         if ((dwOldOptions & OPTION_SHOW_STATUS) != (dwOptions & OPTION_SHOW_STATUS))
@@ -458,7 +598,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
         {
-            int parts[] = { 100, -1 };
+            int parts[] = { 150, -1 };
             RECT rcStatus;
 
             hwndStatus = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, _T("Ready"), hwnd, 0);
@@ -494,6 +634,25 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
             PostQuitMessage(0);
+            return 0;
+
+        case WM_TIMER:
+            if (!fGameStarted)
+            {
+                KillTimer(hwndMain, IDT_PLAYTIMER);
+                PlayTimer = 0;
+            }
+            else if (dwOptions & OPTION_SHOW_TIME)
+            {
+                if (((dwTime + 1) % 10 == 0) && (GetScoreMode() == SCORE_STD))
+                {
+                    lScore = lScore >= 2 ? lScore - 2 : 0;
+                }
+
+                dwTime++;
+            }
+
+            UpdateStatusBar();
             return 0;
 
         case WM_SIZE:

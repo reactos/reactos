@@ -21,35 +21,35 @@ When porting a new DLL from Wine to ReactOS, please do the following steps
 
 The following build tools are shared with Wine.
 
-reactos/tools/unicode             # Synced to Wine-1.7.1
-reactos/tools/widl                # Synced to Wine-1.5.11
+reactos/tools/unicode             # Synced to Wine-1.7.17
+reactos/tools/widl                # Synced to Wine-1.7.17
 reactos/tools/wpp                 # Synced to Wine-1.7.1
 
 The following libraries are shared with Wine.
 
-reactos/dll/directx/wine/amstream       # Synced to Wine-1.7.1
-reactos/dll/directx/wine/d3d8           # Synced to Wine-1.7.11
-reactos/dll/directx/wine/d3d9           # Synced to Wine-1.7.11
-reactos/dll/directx/wine/d3dcompiler_43 # Synced to Wine-1.7.1
-reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to Wine-1.7.1
-reactos/dll/directx/wine/d3dxof         # Synced to Wine-1.7.1
-reactos/dll/directx/wine/ddraw          # Synced to Wine-1.7.11
-reactos/dll/directx/wine/devenum        # Synced to Wine-1.7.1
-reactos/dll/directx/wine/dinput         # Synced to Wine-1.7.1
-reactos/dll/directx/wine/dinput8        # Synced to Wine-1.7.1
-reactos/dll/directx/wine/dmusic         # Synced to Wine-1.7.1
+reactos/dll/directx/wine/amstream       # Synced to Wine-1.7.17
+reactos/dll/directx/wine/d3d8           # Synced to Wine-1.7.17
+reactos/dll/directx/wine/d3d9           # Synced to Wine-1.7.17
+reactos/dll/directx/wine/d3dcompiler_43 # Synced to Wine-1.7.17
+reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to Wine-1.7.17
+reactos/dll/directx/wine/d3dxof         # Synced to Wine-1.7.17
+reactos/dll/directx/wine/ddraw          # Synced to Wine-1.7.17
+reactos/dll/directx/wine/devenum        # Synced to Wine-1.7.17
+reactos/dll/directx/wine/dinput         # Synced to Wine-1.7.17
+reactos/dll/directx/wine/dinput8        # Synced to Wine-1.7.17
+reactos/dll/directx/wine/dmusic         # Synced to Wine-1.7.17
 reactos/dll/directx/wine/dplay          # Synced to Wine-1.7.1
-reactos/dll/directx/wine/dplayx         # Synced to Wine-1.7.1
+reactos/dll/directx/wine/dplayx         # Synced to Wine-1.7.17
 reactos/dll/directx/wine/dsound         # Synced to Wine-1.5.26
-reactos/dll/directx/wine/dxdiagn        # Synced to Wine-1.7.1
-reactos/dll/directx/wine/dxgi           # Synced to Wine-1.7.1
+reactos/dll/directx/wine/dxdiagn        # Synced to Wine-1.7.17
+reactos/dll/directx/wine/dxgi           # Synced to Wine-1.7.17
 reactos/dll/directx/wine/msdmo          # Synced to Wine-1.7.1
-reactos/dll/directx/wine/qedit          # Synced to Wine-1.7.1
-reactos/dll/directx/wine/quartz         # Synced to Wine-1.7.1
-reactos/dll/directx/wine/wined3d        # Synced to Wine-1.7.11
+reactos/dll/directx/wine/qedit          # Synced to Wine-1.7.17
+reactos/dll/directx/wine/quartz         # Synced to Wine-1.7.17
+reactos/dll/directx/wine/wined3d        # Synced to Wine-1.7.17
 
 reactos/dll/win32/activeds         # Synced to Wine-1.7.1
-reactos/dll/win32/actxprxy         # Synced to Wine-1.7.1
+reactos/dll/win32/actxprxy         # Synced to Wine-1.7.17
 reactos/dll/win32/advpack          # Synced to Wine-1.7.1
 reactos/dll/win32/atl              # Synced to Wine-1.7.1
 reactos/dll/win32/atl100           # Synced to Wine-1.7.1
@@ -167,7 +167,7 @@ reactos/dll/win32/riched20         # Synced to Wine-1.7.1
 reactos/dll/win32/riched32         # Synced to Wine-1.7.1
 reactos/dll/win32/rpcrt4           # Synced to Wine-1.7.1
 reactos/dll/win32/rsabase          # Synced to Wine-1.7.1
-reactos/dll/win32/rsaenh           # Synced to Wine-1.7.1
+reactos/dll/win32/rsaenh           # Synced to Wine-1.7.17
 reactos/dll/win32/sccbase          # Synced to Wine-1.7.1
 reactos/dll/win32/schannel         # Synced to Wine-1.7.1
 reactos/dll/win32/scrrun           # Synced to Wine-1.7.1
@@ -195,7 +195,7 @@ reactos/dll/win32/unicows          # Synced to Wine-1.3.32 (Win9x only, why do w
 reactos/dll/win32/updspapi         # Synced to Wine-1.7.1
 reactos/dll/win32/url              # Synced to Wine-1.7.1
 reactos/dll/win32/urlmon           # Synced to Wine-1.7.1
-reactos/dll/win32/usp10            # Synced to Wine-1.7.1
+reactos/dll/win32/usp10            # Synced to Wine-1.7.14
 reactos/dll/win32/uxtheme          # Forked
 reactos/dll/win32/vbscript         # Synced to Wine-1.7.1
 reactos/dll/win32/version          # Synced to Wine-1.7.1
@@ -246,7 +246,7 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
-reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.1
+reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.17
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # Synced to Wine-1.7.1

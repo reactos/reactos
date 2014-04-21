@@ -2,8 +2,7 @@
 
 [Section]
 Name = AlReader
-Version = 110502
-Description = A FB2 eBook Reader.
+Description = A FB2 eBook Reader. Read formats: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Supported ZIP and GZ archives.
 URLSite = http://www.alreader.com
 Size = 4.6 MB
 Category = 6
@@ -11,10 +10,13 @@ URLDownload = http://svn.reactos.org/packages/AlReader2Setup.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein FB2 eBook Reader.
+Description = Ein FB2 eBook Reader. Unterstützung für folgende Formate: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. ZIP und GZ Archive werden ebenfalls unterstützt.
 
 [Section.0410]
 Description = Un eBook Reader.
+
+[Section.0415]
+Description = Czytnik eBooków. Obsługuje formaty: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Obsługiwane są także pliki w archivach ZIP i GZ.
 
 [Section.0418]
 Description = Cititor de cărți electronice în format FB2.

@@ -411,6 +411,7 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	xmlParserInputPtr input = NULL;
 	xmlCharEncoding enc;
 	int oldcharset;
+	const xmlChar *oldencoding;
 
 	/*
 	 * Ask the Entity resolver to load the damn thing
@@ -432,6 +433,8 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	oldinputMax = ctxt->inputMax;
 	oldinputTab = ctxt->inputTab;
 	oldcharset = ctxt->charset;
+	oldencoding = ctxt->encoding;
+	ctxt->encoding = NULL;
 
 	ctxt->inputTab = (xmlParserInputPtr *)
 	                 xmlMalloc(5 * sizeof(xmlParserInputPtr));
@@ -442,6 +445,7 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	    ctxt->inputMax = oldinputMax;
 	    ctxt->inputTab = oldinputTab;
 	    ctxt->charset = oldcharset;
+	    ctxt->encoding = oldencoding;
 	    return;
 	}
 	ctxt->inputNr = 0;
@@ -487,6 +491,11 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	ctxt->inputMax = oldinputMax;
 	ctxt->inputTab = oldinputTab;
 	ctxt->charset = oldcharset;
+	if ((ctxt->encoding != NULL) &&
+	    ((ctxt->dict == NULL) ||
+	     (!xmlDictOwns(ctxt->dict, ctxt->encoding))))
+	    xmlFree((xmlChar *) ctxt->encoding);
+	ctxt->encoding = oldencoding;
 	/* ctxt->wellFormed = oldwellFormed; */
     }
 }
@@ -591,6 +600,7 @@ xmlSAX2GetEntity(void *ctx, const xmlChar *name)
 	 * parse the external entity
 	 */
 	xmlNodePtr children;
+	unsigned long oldnbent = ctxt->nbentities;
 
         val = xmlParseCtxtExternalEntity(ctxt, ret->URI,
 		                         ret->ExternalID, &children);
@@ -603,8 +613,11 @@ xmlSAX2GetEntity(void *ctx, const xmlChar *name)
 	    return(NULL);
 	}
 	ret->owner = 1;
-	if (ret->checked == 0)
-	    ret->checked = 1;
+	if (ret->checked == 0) {
+	    ret->checked = (ctxt->nbentities - oldnbent + 1) * 2;
+	    if ((ret->content != NULL) && (xmlStrchr(ret->content, '<')))
+	        ret->checked |= 1;
+	}
     }
     return(ret);
 }
@@ -2202,7 +2215,7 @@ xmlSAX2StartElementNs(void *ctx,
 	  (ctxt->myDoc->intSubset->elements == NULL) &&
 	  (ctxt->myDoc->intSubset->attributes == NULL) &&
 	  (ctxt->myDoc->intSubset->entities == NULL)))) {
-	xmlErrValid(ctxt, XML_ERR_NO_DTD,
+	xmlErrValid(ctxt, XML_DTD_NO_DTD,
 	  "Validation failed: no DTD found !", NULL, NULL);
 	ctxt->validate = 0;
     }

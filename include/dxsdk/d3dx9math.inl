@@ -27,7 +27,7 @@ inline D3DXVECTOR2::D3DXVECTOR2()
 {
 }
 
-inline D3DXVECTOR2::D3DXVECTOR2(CONST FLOAT *pf)
+inline D3DXVECTOR2::D3DXVECTOR2(const FLOAT *pf)
 {
     if(!pf) return;
     x = pf[0];
@@ -45,19 +45,19 @@ inline D3DXVECTOR2::operator FLOAT* ()
     return (FLOAT*)&x;
 }
 
-inline D3DXVECTOR2::operator CONST FLOAT* () const
+inline D3DXVECTOR2::operator const FLOAT* () const
 {
-    return (CONST FLOAT*)&x;
+    return (const FLOAT*)&x;
 }
 
-inline D3DXVECTOR2& D3DXVECTOR2::operator += (CONST D3DXVECTOR2& v)
+inline D3DXVECTOR2& D3DXVECTOR2::operator += (const D3DXVECTOR2& v)
 {
     x += v.x;
     y += v.y;
     return *this;
 }
 
-inline D3DXVECTOR2& D3DXVECTOR2::operator -= (CONST D3DXVECTOR2& v)
+inline D3DXVECTOR2& D3DXVECTOR2::operator -= (const D3DXVECTOR2& v)
 {
     x -= v.x;
     y -= v.y;
@@ -88,12 +88,12 @@ inline D3DXVECTOR2 D3DXVECTOR2::operator - () const
     return D3DXVECTOR2(-x, -y);
 }
 
-inline D3DXVECTOR2 D3DXVECTOR2::operator + (CONST D3DXVECTOR2& v) const
+inline D3DXVECTOR2 D3DXVECTOR2::operator + (const D3DXVECTOR2& v) const
 {
     return D3DXVECTOR2(x + v.x, y + v.y);
 }
 
-inline D3DXVECTOR2 D3DXVECTOR2::operator - (CONST D3DXVECTOR2& v) const
+inline D3DXVECTOR2 D3DXVECTOR2::operator - (const D3DXVECTOR2& v) const
 {
     return D3DXVECTOR2(x - v.x, y - v.y);
 }
@@ -108,17 +108,17 @@ inline D3DXVECTOR2 D3DXVECTOR2::operator / (FLOAT f) const
     return D3DXVECTOR2(x / f, y / f);
 }
 
-inline D3DXVECTOR2 operator * (FLOAT f, CONST D3DXVECTOR2& v)
+inline D3DXVECTOR2 operator * (FLOAT f, const D3DXVECTOR2& v)
 {
     return D3DXVECTOR2(f * v.x, f * v.y);
 }
 
-inline BOOL D3DXVECTOR2::operator == (CONST D3DXVECTOR2& v) const
+inline BOOL D3DXVECTOR2::operator == (const D3DXVECTOR2& v) const
 {
     return x == v.x && y == v.y;
 }
 
-inline BOOL D3DXVECTOR2::operator != (CONST D3DXVECTOR2& v) const
+inline BOOL D3DXVECTOR2::operator != (const D3DXVECTOR2& v) const
 {
     return x != v.x || y != v.y;
 }
@@ -127,7 +127,7 @@ inline D3DXVECTOR3::D3DXVECTOR3()
 {
 }
 
-inline D3DXVECTOR3::D3DXVECTOR3(CONST FLOAT *pf)
+inline D3DXVECTOR3::D3DXVECTOR3(const FLOAT *pf)
 {
     if(!pf) return;
     x = pf[0];
@@ -135,7 +135,7 @@ inline D3DXVECTOR3::D3DXVECTOR3(CONST FLOAT *pf)
     z = pf[2];
 }
 
-inline D3DXVECTOR3::D3DXVECTOR3(CONST D3DVECTOR& v)
+inline D3DXVECTOR3::D3DXVECTOR3(const D3DVECTOR& v)
 {
     x = v.x;
     y = v.y;
@@ -154,12 +154,12 @@ inline D3DXVECTOR3::operator FLOAT* ()
     return (FLOAT*)&x;
 }
 
-inline D3DXVECTOR3::operator CONST FLOAT* () const
+inline D3DXVECTOR3::operator const FLOAT* () const
 {
-    return (CONST FLOAT*)&x;
+    return (const FLOAT*)&x;
 }
 
-inline D3DXVECTOR3& D3DXVECTOR3::operator += (CONST D3DXVECTOR3& v)
+inline D3DXVECTOR3& D3DXVECTOR3::operator += (const D3DXVECTOR3& v)
 {
     x += v.x;
     y += v.y;
@@ -167,7 +167,7 @@ inline D3DXVECTOR3& D3DXVECTOR3::operator += (CONST D3DXVECTOR3& v)
     return *this;
 }
 
-inline D3DXVECTOR3& D3DXVECTOR3::operator -= (CONST D3DXVECTOR3& v)
+inline D3DXVECTOR3& D3DXVECTOR3::operator -= (const D3DXVECTOR3& v)
 {
     x -= v.x;
     y -= v.y;
@@ -201,12 +201,12 @@ inline D3DXVECTOR3 D3DXVECTOR3::operator - () const
     return D3DXVECTOR3(-x, -y, -z);
 }
 
-inline D3DXVECTOR3 D3DXVECTOR3::operator + (CONST D3DXVECTOR3& v) const
+inline D3DXVECTOR3 D3DXVECTOR3::operator + (const D3DXVECTOR3& v) const
 {
     return D3DXVECTOR3(x + v.x, y + v.y, z + v.z);
 }
 
-inline D3DXVECTOR3 D3DXVECTOR3::operator - (CONST D3DXVECTOR3& v) const
+inline D3DXVECTOR3 D3DXVECTOR3::operator - (const D3DXVECTOR3& v) const
 {
     return D3DXVECTOR3(x - v.x, y - v.y, z - v.z);
 }
@@ -221,17 +221,17 @@ inline D3DXVECTOR3 D3DXVECTOR3::operator / (FLOAT f) const
     return D3DXVECTOR3(x / f, y / f, z / f);
 }
 
-inline D3DXVECTOR3 operator * (FLOAT f, CONST D3DXVECTOR3& v)
+inline D3DXVECTOR3 operator * (FLOAT f, const D3DXVECTOR3& v)
 {
     return D3DXVECTOR3(f * v.x, f * v.y, f * v.z);
 }
 
-inline BOOL D3DXVECTOR3::operator == (CONST D3DXVECTOR3& v) const
+inline BOOL D3DXVECTOR3::operator == (const D3DXVECTOR3& v) const
 {
     return x == v.x && y == v.y && z == v.z;
 }
 
-inline BOOL D3DXVECTOR3::operator != (CONST D3DXVECTOR3& v) const
+inline BOOL D3DXVECTOR3::operator != (const D3DXVECTOR3& v) const
 {
     return x != v.x || y != v.y || z != v.z;
 }
@@ -240,7 +240,7 @@ inline D3DXVECTOR4::D3DXVECTOR4()
 {
 }
 
-inline D3DXVECTOR4::D3DXVECTOR4(CONST FLOAT *pf)
+inline D3DXVECTOR4::D3DXVECTOR4(const FLOAT *pf)
 {
     if(!pf) return;
     x = pf[0];
@@ -262,12 +262,12 @@ inline D3DXVECTOR4::operator FLOAT* ()
     return (FLOAT*)&x;
 }
 
-inline D3DXVECTOR4::operator CONST FLOAT* () const
+inline D3DXVECTOR4::operator const FLOAT* () const
 {
-    return (CONST FLOAT*)&x;
+    return (const FLOAT*)&x;
 }
 
-inline D3DXVECTOR4& D3DXVECTOR4::operator += (CONST D3DXVECTOR4& v)
+inline D3DXVECTOR4& D3DXVECTOR4::operator += (const D3DXVECTOR4& v)
 {
     x += v.x;
     y += v.y;
@@ -276,7 +276,7 @@ inline D3DXVECTOR4& D3DXVECTOR4::operator += (CONST D3DXVECTOR4& v)
     return *this;
 }
 
-inline D3DXVECTOR4& D3DXVECTOR4::operator -= (CONST D3DXVECTOR4& v)
+inline D3DXVECTOR4& D3DXVECTOR4::operator -= (const D3DXVECTOR4& v)
 {
     x -= v.x;
     y -= v.y;
@@ -313,12 +313,12 @@ inline D3DXVECTOR4 D3DXVECTOR4::operator - () const
     return D3DXVECTOR4(-x, -y, -z, -w);
 }
 
-inline D3DXVECTOR4 D3DXVECTOR4::operator + (CONST D3DXVECTOR4& v) const
+inline D3DXVECTOR4 D3DXVECTOR4::operator + (const D3DXVECTOR4& v) const
 {
     return D3DXVECTOR4(x + v.x, y + v.y, z + v.z, w + v.w);
 }
 
-inline D3DXVECTOR4 D3DXVECTOR4::operator - (CONST D3DXVECTOR4& v) const
+inline D3DXVECTOR4 D3DXVECTOR4::operator - (const D3DXVECTOR4& v) const
 {
     return D3DXVECTOR4(x - v.x, y - v.y, z - v.z, w - v.w);
 }
@@ -333,17 +333,17 @@ inline D3DXVECTOR4 D3DXVECTOR4::operator / (FLOAT f) const
     return D3DXVECTOR4(x / f, y / f, z / f, w / f);
 }
 
-inline D3DXVECTOR4 operator * (FLOAT f, CONST D3DXVECTOR4& v)
+inline D3DXVECTOR4 operator * (FLOAT f, const D3DXVECTOR4& v)
 {
     return D3DXVECTOR4(f * v.x, f * v.y, f * v.z, f * v.w);
 }
 
-inline BOOL D3DXVECTOR4::operator == (CONST D3DXVECTOR4& v) const
+inline BOOL D3DXVECTOR4::operator == (const D3DXVECTOR4& v) const
 {
     return x == v.x && y == v.y && z == v.z && w == v.w;
 }
 
-inline BOOL D3DXVECTOR4::operator != (CONST D3DXVECTOR4& v) const
+inline BOOL D3DXVECTOR4::operator != (const D3DXVECTOR4& v) const
 {
     return x != v.x || y != v.y || z != v.z || w != v.w;
 }
@@ -352,13 +352,13 @@ inline D3DXMATRIX::D3DXMATRIX()
 {
 }
 
-inline D3DXMATRIX::D3DXMATRIX(CONST FLOAT *pf)
+inline D3DXMATRIX::D3DXMATRIX(const FLOAT *pf)
 {
     if(!pf) return;
     memcpy(&_11, pf, sizeof(D3DXMATRIX));
 }
 
-inline D3DXMATRIX::D3DXMATRIX(CONST D3DMATRIX& mat)
+inline D3DXMATRIX::D3DXMATRIX(const D3DMATRIX& mat)
 {
     memcpy(&_11, &mat, sizeof(D3DXMATRIX));
 }
@@ -389,18 +389,18 @@ inline D3DXMATRIX::operator FLOAT* ()
     return (FLOAT*)&_11;
 }
 
-inline D3DXMATRIX::operator CONST FLOAT* () const
+inline D3DXMATRIX::operator const FLOAT* () const
 {
-    return (CONST FLOAT*)&_11;
+    return (const FLOAT*)&_11;
 }
 
-inline D3DXMATRIX& D3DXMATRIX::operator *= (CONST D3DXMATRIX& mat)
+inline D3DXMATRIX& D3DXMATRIX::operator *= (const D3DXMATRIX& mat)
 {
     D3DXMatrixMultiply(this, this, &mat);
     return *this;
 }
 
-inline D3DXMATRIX& D3DXMATRIX::operator += (CONST D3DXMATRIX& mat)
+inline D3DXMATRIX& D3DXMATRIX::operator += (const D3DXMATRIX& mat)
 {
     _11 += mat._11; _12 += mat._12; _13 += mat._13; _14 += mat._14;
     _21 += mat._21; _22 += mat._22; _23 += mat._23; _24 += mat._24;
@@ -409,7 +409,7 @@ inline D3DXMATRIX& D3DXMATRIX::operator += (CONST D3DXMATRIX& mat)
     return *this;
 }
 
-inline D3DXMATRIX& D3DXMATRIX::operator -= (CONST D3DXMATRIX& mat)
+inline D3DXMATRIX& D3DXMATRIX::operator -= (const D3DXMATRIX& mat)
 {
     _11 -= mat._11; _12 -= mat._12; _13 -= mat._13; _14 -= mat._14;
     _21 -= mat._21; _22 -= mat._22; _23 -= mat._23; _24 -= mat._24;
@@ -450,14 +450,14 @@ inline D3DXMATRIX D3DXMATRIX::operator - () const
                       -_41, -_42, -_43, -_44);
 }
 
-inline D3DXMATRIX D3DXMATRIX::operator * (CONST D3DXMATRIX& mat) const
+inline D3DXMATRIX D3DXMATRIX::operator * (const D3DXMATRIX& mat) const
 {
     D3DXMATRIX buf;
     D3DXMatrixMultiply(&buf, this, &mat);
     return buf;
 }
 
-inline D3DXMATRIX D3DXMATRIX::operator + (CONST D3DXMATRIX& mat) const
+inline D3DXMATRIX D3DXMATRIX::operator + (const D3DXMATRIX& mat) const
 {
     return D3DXMATRIX(_11 + mat._11, _12 + mat._12, _13 + mat._13, _14 + mat._14,
                       _21 + mat._21, _22 + mat._22, _23 + mat._23, _24 + mat._24,
@@ -465,7 +465,7 @@ inline D3DXMATRIX D3DXMATRIX::operator + (CONST D3DXMATRIX& mat) const
                       _41 + mat._41, _42 + mat._42, _43 + mat._43, _44 + mat._44);
 }
 
-inline D3DXMATRIX D3DXMATRIX::operator - (CONST D3DXMATRIX& mat) const
+inline D3DXMATRIX D3DXMATRIX::operator - (const D3DXMATRIX& mat) const
 {
     return D3DXMATRIX(_11 - mat._11, _12 - mat._12, _13 - mat._13, _14 - mat._14,
                       _21 - mat._21, _22 - mat._22, _23 - mat._23, _24 - mat._24,
@@ -490,7 +490,7 @@ inline D3DXMATRIX D3DXMATRIX::operator / (FLOAT f) const
                       _41 * inv, _42 * inv, _43 * inv, _44 * inv);
 }
 
-inline D3DXMATRIX operator * (FLOAT f, CONST D3DXMATRIX& mat)
+inline D3DXMATRIX operator * (FLOAT f, const D3DXMATRIX& mat)
 {
     return D3DXMATRIX(f * mat._11, f * mat._12, f * mat._13, f * mat._14,
                       f * mat._21, f * mat._22, f * mat._23, f * mat._24,
@@ -498,12 +498,12 @@ inline D3DXMATRIX operator * (FLOAT f, CONST D3DXMATRIX& mat)
                       f * mat._41, f * mat._42, f * mat._43, f * mat._44);
 }
 
-inline BOOL D3DXMATRIX::operator == (CONST D3DXMATRIX& mat) const
+inline BOOL D3DXMATRIX::operator == (const D3DXMATRIX& mat) const
 {
     return (memcmp(this, &mat, sizeof(D3DXMATRIX)) == 0);
 }
 
-inline BOOL D3DXMATRIX::operator != (CONST D3DXMATRIX& mat) const
+inline BOOL D3DXMATRIX::operator != (const D3DXMATRIX& mat) const
 {
     return (memcmp(this, &mat, sizeof(D3DXMATRIX)) != 0);
 }
@@ -512,7 +512,7 @@ inline D3DXQUATERNION::D3DXQUATERNION()
 {
 }
 
-inline D3DXQUATERNION::D3DXQUATERNION(CONST FLOAT *pf)
+inline D3DXQUATERNION::D3DXQUATERNION(const FLOAT *pf)
 {
     if(!pf) return;
     x = pf[0];
@@ -534,12 +534,12 @@ inline D3DXQUATERNION::operator FLOAT* ()
     return (FLOAT*)&x;
 }
 
-inline D3DXQUATERNION::operator CONST FLOAT* () const
+inline D3DXQUATERNION::operator const FLOAT* () const
 {
-    return (CONST FLOAT*)&x;
+    return (const FLOAT*)&x;
 }
 
-inline D3DXQUATERNION& D3DXQUATERNION::operator += (CONST D3DXQUATERNION& quat)
+inline D3DXQUATERNION& D3DXQUATERNION::operator += (const D3DXQUATERNION& quat)
 {
     x += quat.x;
     y += quat.y;
@@ -548,7 +548,7 @@ inline D3DXQUATERNION& D3DXQUATERNION::operator += (CONST D3DXQUATERNION& quat)
     return *this;
 }
 
-inline D3DXQUATERNION& D3DXQUATERNION::operator -= (CONST D3DXQUATERNION& quat)
+inline D3DXQUATERNION& D3DXQUATERNION::operator -= (const D3DXQUATERNION& quat)
 {
     x -= quat.x;
     y -= quat.y;
@@ -557,7 +557,7 @@ inline D3DXQUATERNION& D3DXQUATERNION::operator -= (CONST D3DXQUATERNION& quat)
     return *this;
 }
 
-inline D3DXQUATERNION& D3DXQUATERNION::operator *= (CONST D3DXQUATERNION& quat)
+inline D3DXQUATERNION& D3DXQUATERNION::operator *= (const D3DXQUATERNION& quat)
 {
     D3DXQuaternionMultiply(this, this, &quat);
     return *this;
@@ -592,17 +592,17 @@ inline D3DXQUATERNION D3DXQUATERNION::operator - () const
     return D3DXQUATERNION(-x, -y, -z, -w);
 }
 
-inline D3DXQUATERNION D3DXQUATERNION::operator + (CONST D3DXQUATERNION& quat) const
+inline D3DXQUATERNION D3DXQUATERNION::operator + (const D3DXQUATERNION& quat) const
 {
     return D3DXQUATERNION(x + quat.x, y + quat.y, z + quat.z, w + quat.w);
 }
 
-inline D3DXQUATERNION D3DXQUATERNION::operator - (CONST D3DXQUATERNION& quat) const
+inline D3DXQUATERNION D3DXQUATERNION::operator - (const D3DXQUATERNION& quat) const
 {
     return D3DXQUATERNION(x - quat.x, y - quat.y, z - quat.z, w - quat.w);
 }
 
-inline D3DXQUATERNION D3DXQUATERNION::operator * (CONST D3DXQUATERNION& quat) const
+inline D3DXQUATERNION D3DXQUATERNION::operator * (const D3DXQUATERNION& quat) const
 {
     D3DXQUATERNION buf;
     D3DXQuaternionMultiply(&buf, this, &quat);
@@ -620,17 +620,17 @@ inline D3DXQUATERNION D3DXQUATERNION::operator / (FLOAT f) const
     return D3DXQUATERNION(x * inv, y * inv, z * inv, w * inv);
 }
 
-inline D3DXQUATERNION operator * (FLOAT f, CONST D3DXQUATERNION& quat)
+inline D3DXQUATERNION operator * (FLOAT f, const D3DXQUATERNION& quat)
 {
     return D3DXQUATERNION(f * quat.x, f * quat.y, f * quat.z, f * quat.w);
 }
 
-inline BOOL D3DXQUATERNION::operator == (CONST D3DXQUATERNION& quat) const
+inline BOOL D3DXQUATERNION::operator == (const D3DXQUATERNION& quat) const
 {
     return x == quat.x && y == quat.y && z == quat.z && w == quat.w;
 }
 
-inline BOOL D3DXQUATERNION::operator != (CONST D3DXQUATERNION& quat) const
+inline BOOL D3DXQUATERNION::operator != (const D3DXQUATERNION& quat) const
 {
     return x != quat.x || y != quat.y || z != quat.z || w != quat.w;
 }
@@ -639,7 +639,7 @@ inline D3DXPLANE::D3DXPLANE()
 {
 }
 
-inline D3DXPLANE::D3DXPLANE(CONST FLOAT *pf)
+inline D3DXPLANE::D3DXPLANE(const FLOAT *pf)
 {
     if(!pf) return;
     a = pf[0];
@@ -661,9 +661,9 @@ inline D3DXPLANE::operator FLOAT* ()
     return (FLOAT*)&a;
 }
 
-inline D3DXPLANE::operator CONST FLOAT* () const
+inline D3DXPLANE::operator const FLOAT* () const
 {
-    return (CONST FLOAT*)&a;
+    return (const FLOAT*)&a;
 }
 
 inline D3DXPLANE D3DXPLANE::operator + () const
@@ -676,12 +676,12 @@ inline D3DXPLANE D3DXPLANE::operator - () const
     return D3DXPLANE(-a, -b, -c, -d);
 }
 
-inline BOOL D3DXPLANE::operator == (CONST D3DXPLANE& pl) const
+inline BOOL D3DXPLANE::operator == (const D3DXPLANE& pl) const
 {
     return a == pl.a && b == pl.b && c == pl.c && d == pl.d;
 }
 
-inline BOOL D3DXPLANE::operator != (CONST D3DXPLANE& pl) const
+inline BOOL D3DXPLANE::operator != (const D3DXPLANE& pl) const
 {
     return a != pl.a || b != pl.b || c != pl.c || d != pl.d;
 }
@@ -692,14 +692,14 @@ inline D3DXCOLOR::D3DXCOLOR()
 
 inline D3DXCOLOR::D3DXCOLOR(DWORD col)
 {
-    CONST FLOAT f = 1.0f / 255.0f;
+    const FLOAT f = 1.0f / 255.0f;
     r = f * (FLOAT)(unsigned char)(col >> 16);
     g = f * (FLOAT)(unsigned char)(col >>  8);
     b = f * (FLOAT)(unsigned char)col;
     a = f * (FLOAT)(unsigned char)(col >> 24);
 }
 
-inline D3DXCOLOR::D3DXCOLOR(CONST FLOAT *pf)
+inline D3DXCOLOR::D3DXCOLOR(const FLOAT *pf)
 {
     if(!pf) return;
     r = pf[0];
@@ -708,7 +708,7 @@ inline D3DXCOLOR::D3DXCOLOR(CONST FLOAT *pf)
     a = pf[3];
 }
 
-inline D3DXCOLOR::D3DXCOLOR(CONST D3DCOLORVALUE& col)
+inline D3DXCOLOR::D3DXCOLOR(const D3DCOLORVALUE& col)
 {
     r = col.r;
     g = col.g;
@@ -739,9 +739,9 @@ inline D3DXCOLOR::operator FLOAT * ()
     return (FLOAT*)&r;
 }
 
-inline D3DXCOLOR::operator CONST FLOAT * () const
+inline D3DXCOLOR::operator const FLOAT * () const
 {
-    return (CONST FLOAT*)&r;
+    return (const FLOAT*)&r;
 }
 
 inline D3DXCOLOR::operator D3DCOLORVALUE * ()
@@ -749,9 +749,9 @@ inline D3DXCOLOR::operator D3DCOLORVALUE * ()
     return (D3DCOLORVALUE*)&r;
 }
 
-inline D3DXCOLOR::operator CONST D3DCOLORVALUE * () const
+inline D3DXCOLOR::operator const D3DCOLORVALUE * () const
 {
-    return (CONST D3DCOLORVALUE*)&r;
+    return (const D3DCOLORVALUE*)&r;
 }
 
 inline D3DXCOLOR::operator D3DCOLORVALUE& ()
@@ -759,12 +759,12 @@ inline D3DXCOLOR::operator D3DCOLORVALUE& ()
     return *((D3DCOLORVALUE*)&r);
 }
 
-inline D3DXCOLOR::operator CONST D3DCOLORVALUE& () const
+inline D3DXCOLOR::operator const D3DCOLORVALUE& () const
 {
-    return *((CONST D3DCOLORVALUE*)&r);
+    return *((const D3DCOLORVALUE*)&r);
 }
 
-inline D3DXCOLOR& D3DXCOLOR::operator += (CONST D3DXCOLOR& col)
+inline D3DXCOLOR& D3DXCOLOR::operator += (const D3DXCOLOR& col)
 {
     r += col.r;
     g += col.g;
@@ -773,7 +773,7 @@ inline D3DXCOLOR& D3DXCOLOR::operator += (CONST D3DXCOLOR& col)
     return *this;
 }
 
-inline D3DXCOLOR& D3DXCOLOR::operator -= (CONST D3DXCOLOR& col)
+inline D3DXCOLOR& D3DXCOLOR::operator -= (const D3DXCOLOR& col)
 {
     r -= col.r;
     g -= col.g;
@@ -811,12 +811,12 @@ inline D3DXCOLOR D3DXCOLOR::operator - () const
     return D3DXCOLOR(-r, -g, -b, -a);
 }
 
-inline D3DXCOLOR D3DXCOLOR::operator + (CONST D3DXCOLOR& col) const
+inline D3DXCOLOR D3DXCOLOR::operator + (const D3DXCOLOR& col) const
 {
     return D3DXCOLOR(r + col.r, g + col.g, b + col.b, a + col.a);
 }
 
-inline D3DXCOLOR D3DXCOLOR::operator - (CONST D3DXCOLOR& col) const
+inline D3DXCOLOR D3DXCOLOR::operator - (const D3DXCOLOR& col) const
 {
     return D3DXCOLOR(r - col.r, g - col.g, b - col.b, a - col.a);
 }
@@ -832,17 +832,17 @@ inline D3DXCOLOR D3DXCOLOR::operator / (FLOAT f) const
     return D3DXCOLOR(r * inv, g * inv, b * inv, a * inv);
 }
 
-inline D3DXCOLOR operator * (FLOAT f, CONST D3DXCOLOR& col)
+inline D3DXCOLOR operator * (FLOAT f, const D3DXCOLOR& col)
 {
     return D3DXCOLOR(f * col.r, f * col.g, f * col.b, f * col.a);
 }
 
-inline BOOL D3DXCOLOR::operator == (CONST D3DXCOLOR& col) const
+inline BOOL D3DXCOLOR::operator == (const D3DXCOLOR& col) const
 {
     return r == col.r && g == col.g && b == col.b && a == col.a;
 }
 
-inline BOOL D3DXCOLOR::operator != (CONST D3DXCOLOR& col) const
+inline BOOL D3DXCOLOR::operator != (const D3DXCOLOR& col) const
 {
     return r != col.r || g != col.g || b != col.b || a != col.a;
 }
@@ -856,7 +856,7 @@ inline D3DXFLOAT16::D3DXFLOAT16(FLOAT f)
     D3DXFloat32To16Array(this, &f, 1);
 }
 
-inline D3DXFLOAT16::D3DXFLOAT16(CONST D3DXFLOAT16 &f)
+inline D3DXFLOAT16::D3DXFLOAT16(const D3DXFLOAT16 &f)
 {
     value = f.value;
 }
@@ -868,12 +868,12 @@ inline D3DXFLOAT16::operator FLOAT ()
     return f;
 }
 
-inline BOOL D3DXFLOAT16::operator == (CONST D3DXFLOAT16 &f) const
+inline BOOL D3DXFLOAT16::operator == (const D3DXFLOAT16 &f) const
 {
     return value == f.value;
 }
 
-inline BOOL D3DXFLOAT16::operator != (CONST D3DXFLOAT16 &f) const
+inline BOOL D3DXFLOAT16::operator != (const D3DXFLOAT16 &f) const
 {
     return value != f.value;
 }
@@ -882,7 +882,7 @@ inline BOOL D3DXFLOAT16::operator != (CONST D3DXFLOAT16 &f) const
 
 /*_______________D3DXCOLOR_____________________*/
 
-static inline D3DXCOLOR* D3DXColorAdd(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1, CONST D3DXCOLOR *pc2)
+static inline D3DXCOLOR* D3DXColorAdd(D3DXCOLOR *pout, const D3DXCOLOR *pc1, const D3DXCOLOR *pc2)
 {
     if ( !pout || !pc1 || !pc2 ) return NULL;
     pout->r = (pc1->r) + (pc2->r);
@@ -892,7 +892,7 @@ static inline D3DXCOLOR* D3DXColorAdd(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1, CON
     return pout;
 }
 
-static inline D3DXCOLOR* D3DXColorLerp(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1, CONST D3DXCOLOR *pc2, FLOAT s)
+static inline D3DXCOLOR* D3DXColorLerp(D3DXCOLOR *pout, const D3DXCOLOR *pc1, const D3DXCOLOR *pc2, FLOAT s)
 {
     if ( !pout || !pc1 || !pc2 ) return NULL;
     pout->r = (1-s) * (pc1->r) + s *(pc2->r);
@@ -902,7 +902,7 @@ static inline D3DXCOLOR* D3DXColorLerp(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1, CO
     return pout;
 }
 
-static inline D3DXCOLOR* D3DXColorModulate(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1, CONST D3DXCOLOR *pc2)
+static inline D3DXCOLOR* D3DXColorModulate(D3DXCOLOR *pout, const D3DXCOLOR *pc1, const D3DXCOLOR *pc2)
 {
     if ( !pout || !pc1 || !pc2 ) return NULL;
     pout->r = (pc1->r) * (pc2->r);
@@ -912,7 +912,7 @@ static inline D3DXCOLOR* D3DXColorModulate(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1
     return pout;
 }
 
-static inline D3DXCOLOR* D3DXColorNegative(D3DXCOLOR *pout, CONST D3DXCOLOR *pc)
+static inline D3DXCOLOR* D3DXColorNegative(D3DXCOLOR *pout, const D3DXCOLOR *pc)
 {
     if ( !pout || !pc ) return NULL;
     pout->r = 1.0f - pc->r;
@@ -922,7 +922,7 @@ static inline D3DXCOLOR* D3DXColorNegative(D3DXCOLOR *pout, CONST D3DXCOLOR *pc)
     return pout;
 }
 
-static inline D3DXCOLOR* D3DXColorScale(D3DXCOLOR *pout, CONST D3DXCOLOR *pc, FLOAT s)
+static inline D3DXCOLOR* D3DXColorScale(D3DXCOLOR *pout, const D3DXCOLOR *pc, FLOAT s)
 {
     if ( !pout || !pc ) return NULL;
     pout->r = s* (pc->r);
@@ -932,7 +932,7 @@ static inline D3DXCOLOR* D3DXColorScale(D3DXCOLOR *pout, CONST D3DXCOLOR *pc, FL
     return pout;
 }
 
-static inline D3DXCOLOR* D3DXColorSubtract(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1, CONST D3DXCOLOR *pc2)
+static inline D3DXCOLOR* D3DXColorSubtract(D3DXCOLOR *pout, const D3DXCOLOR *pc1, const D3DXCOLOR *pc2)
 {
     if ( !pout || !pc1 || !pc2 ) return NULL;
     pout->r = (pc1->r) - (pc2->r);
@@ -944,7 +944,7 @@ static inline D3DXCOLOR* D3DXColorSubtract(D3DXCOLOR *pout, CONST D3DXCOLOR *pc1
 
 /*_______________D3DXVECTOR2________________________*/
 
-static inline D3DXVECTOR2* D3DXVec2Add(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
+static inline D3DXVECTOR2* D3DXVec2Add(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x + pv2->x;
@@ -952,31 +952,31 @@ static inline D3DXVECTOR2* D3DXVec2Add(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1
     return pout;
 }
 
-static inline FLOAT D3DXVec2CCW(CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
+static inline FLOAT D3DXVec2CCW(const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2)
 {
     if ( !pv1 || !pv2) return 0.0f;
     return ( (pv1->x) * (pv2->y) - (pv1->y) * (pv2->x) );
 }
 
-static inline FLOAT D3DXVec2Dot(CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
+static inline FLOAT D3DXVec2Dot(const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2)
 {
     if ( !pv1 || !pv2) return 0.0f;
     return ( (pv1->x * pv2->x + pv1->y * pv2->y) );
 }
 
-static inline FLOAT D3DXVec2Length(CONST D3DXVECTOR2 *pv)
+static inline FLOAT D3DXVec2Length(const D3DXVECTOR2 *pv)
 {
     if (!pv) return 0.0f;
     return sqrtf( pv->x * pv->x + pv->y * pv->y );
 }
 
-static inline FLOAT D3DXVec2LengthSq(CONST D3DXVECTOR2 *pv)
+static inline FLOAT D3DXVec2LengthSq(const D3DXVECTOR2 *pv)
 {
     if (!pv) return 0.0f;
     return( (pv->x) * (pv->x) + (pv->y) * (pv->y) );
 }
 
-static inline D3DXVECTOR2* D3DXVec2Lerp(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2, FLOAT s)
+static inline D3DXVECTOR2* D3DXVec2Lerp(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2, FLOAT s)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = (1-s) * (pv1->x) + s * (pv2->x);
@@ -984,7 +984,7 @@ static inline D3DXVECTOR2* D3DXVec2Lerp(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv
     return pout;
 }
 
-static inline D3DXVECTOR2* D3DXVec2Maximize(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
+static inline D3DXVECTOR2* D3DXVec2Maximize(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x > pv2->x ? pv1->x : pv2->x;
@@ -992,7 +992,7 @@ static inline D3DXVECTOR2* D3DXVec2Maximize(D3DXVECTOR2 *pout, CONST D3DXVECTOR2
     return pout;
 }
 
-static inline D3DXVECTOR2* D3DXVec2Minimize(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
+static inline D3DXVECTOR2* D3DXVec2Minimize(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x < pv2->x ? pv1->x : pv2->x;
@@ -1000,7 +1000,7 @@ static inline D3DXVECTOR2* D3DXVec2Minimize(D3DXVECTOR2 *pout, CONST D3DXVECTOR2
     return pout;
 }
 
-static inline D3DXVECTOR2* D3DXVec2Scale(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv, FLOAT s)
+static inline D3DXVECTOR2* D3DXVec2Scale(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv, FLOAT s)
 {
     if ( !pout || !pv) return NULL;
     pout->x = s * (pv->x);
@@ -1008,7 +1008,7 @@ static inline D3DXVECTOR2* D3DXVec2Scale(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *p
     return pout;
 }
 
-static inline D3DXVECTOR2* D3DXVec2Subtract(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
+static inline D3DXVECTOR2* D3DXVec2Subtract(D3DXVECTOR2 *pout, const D3DXVECTOR2 *pv1, const D3DXVECTOR2 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x - pv2->x;
@@ -1018,7 +1018,7 @@ static inline D3DXVECTOR2* D3DXVec2Subtract(D3DXVECTOR2 *pout, CONST D3DXVECTOR2
 
 /*__________________D3DXVECTOR3_______________________*/
 
-static inline D3DXVECTOR3* D3DXVec3Add(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
+static inline D3DXVECTOR3* D3DXVec3Add(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x + pv2->x;
@@ -1027,7 +1027,7 @@ static inline D3DXVECTOR3* D3DXVec3Add(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1
     return pout;
 }
 
-static inline D3DXVECTOR3* D3DXVec3Cross(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
+static inline D3DXVECTOR3* D3DXVec3Cross(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2)
 {
     D3DXVECTOR3 temp;
 
@@ -1039,25 +1039,25 @@ static inline D3DXVECTOR3* D3DXVec3Cross(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *p
     return pout;
 }
 
-static inline FLOAT D3DXVec3Dot(CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
+static inline FLOAT D3DXVec3Dot(const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2)
 {
     if ( !pv1 || !pv2 ) return 0.0f;
     return (pv1->x) * (pv2->x) + (pv1->y) * (pv2->y) + (pv1->z) * (pv2->z);
 }
 
-static inline FLOAT D3DXVec3Length(CONST D3DXVECTOR3 *pv)
+static inline FLOAT D3DXVec3Length(const D3DXVECTOR3 *pv)
 {
     if (!pv) return 0.0f;
     return sqrtf( pv->x * pv->x + pv->y * pv->y + pv->z * pv->z );
 }
 
-static inline FLOAT D3DXVec3LengthSq(CONST D3DXVECTOR3 *pv)
+static inline FLOAT D3DXVec3LengthSq(const D3DXVECTOR3 *pv)
 {
     if (!pv) return 0.0f;
     return (pv->x) * (pv->x) + (pv->y) * (pv->y) + (pv->z) * (pv->z);
 }
 
-static inline D3DXVECTOR3* D3DXVec3Lerp(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2, FLOAT s)
+static inline D3DXVECTOR3* D3DXVec3Lerp(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2, FLOAT s)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = (1-s) * (pv1->x) + s * (pv2->x);
@@ -1066,7 +1066,7 @@ static inline D3DXVECTOR3* D3DXVec3Lerp(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv
     return pout;
 }
 
-static inline D3DXVECTOR3* D3DXVec3Maximize(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
+static inline D3DXVECTOR3* D3DXVec3Maximize(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x > pv2->x ? pv1->x : pv2->x;
@@ -1075,7 +1075,7 @@ static inline D3DXVECTOR3* D3DXVec3Maximize(D3DXVECTOR3 *pout, CONST D3DXVECTOR3
     return pout;
 }
 
-static inline D3DXVECTOR3* D3DXVec3Minimize(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
+static inline D3DXVECTOR3* D3DXVec3Minimize(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x < pv2->x ? pv1->x : pv2->x;
@@ -1084,7 +1084,7 @@ static inline D3DXVECTOR3* D3DXVec3Minimize(D3DXVECTOR3 *pout, CONST D3DXVECTOR3
     return pout;
 }
 
-static inline D3DXVECTOR3* D3DXVec3Scale(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv, FLOAT s)
+static inline D3DXVECTOR3* D3DXVec3Scale(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv, FLOAT s)
 {
     if ( !pout || !pv) return NULL;
     pout->x = s * (pv->x);
@@ -1093,7 +1093,7 @@ static inline D3DXVECTOR3* D3DXVec3Scale(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *p
     return pout;
 }
 
-static inline D3DXVECTOR3* D3DXVec3Subtract(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
+static inline D3DXVECTOR3* D3DXVec3Subtract(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv1, const D3DXVECTOR3 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x - pv2->x;
@@ -1103,7 +1103,7 @@ static inline D3DXVECTOR3* D3DXVec3Subtract(D3DXVECTOR3 *pout, CONST D3DXVECTOR3
 }
 /*__________________D3DXVECTOR4_______________________*/
 
-static inline D3DXVECTOR4* D3DXVec4Add(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
+static inline D3DXVECTOR4* D3DXVec4Add(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x + pv2->x;
@@ -1113,25 +1113,25 @@ static inline D3DXVECTOR4* D3DXVec4Add(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1
     return pout;
 }
 
-static inline FLOAT D3DXVec4Dot(CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
+static inline FLOAT D3DXVec4Dot(const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2)
 {
     if (!pv1 || !pv2 ) return 0.0f;
     return (pv1->x) * (pv2->x) + (pv1->y) * (pv2->y) + (pv1->z) * (pv2->z) + (pv1->w) * (pv2->w);
 }
 
-static inline FLOAT D3DXVec4Length(CONST D3DXVECTOR4 *pv)
+static inline FLOAT D3DXVec4Length(const D3DXVECTOR4 *pv)
 {
     if (!pv) return 0.0f;
     return sqrtf( pv->x * pv->x + pv->y * pv->y + pv->z * pv->z + pv->w * pv->w );
 }
 
-static inline FLOAT D3DXVec4LengthSq(CONST D3DXVECTOR4 *pv)
+static inline FLOAT D3DXVec4LengthSq(const D3DXVECTOR4 *pv)
 {
     if (!pv) return 0.0f;
     return (pv->x) * (pv->x) + (pv->y) * (pv->y) + (pv->z) * (pv->z) + (pv->w) * (pv->w);
 }
 
-static inline D3DXVECTOR4* D3DXVec4Lerp(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2, FLOAT s)
+static inline D3DXVECTOR4* D3DXVec4Lerp(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2, FLOAT s)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = (1-s) * (pv1->x) + s * (pv2->x);
@@ -1142,7 +1142,7 @@ static inline D3DXVECTOR4* D3DXVec4Lerp(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv
 }
 
 
-static inline D3DXVECTOR4* D3DXVec4Maximize(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
+static inline D3DXVECTOR4* D3DXVec4Maximize(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x > pv2->x ? pv1->x : pv2->x;
@@ -1152,7 +1152,7 @@ static inline D3DXVECTOR4* D3DXVec4Maximize(D3DXVECTOR4 *pout, CONST D3DXVECTOR4
     return pout;
 }
 
-static inline D3DXVECTOR4* D3DXVec4Minimize(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
+static inline D3DXVECTOR4* D3DXVec4Minimize(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x < pv2->x ? pv1->x : pv2->x;
@@ -1162,7 +1162,7 @@ static inline D3DXVECTOR4* D3DXVec4Minimize(D3DXVECTOR4 *pout, CONST D3DXVECTOR4
     return pout;
 }
 
-static inline D3DXVECTOR4* D3DXVec4Scale(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv, FLOAT s)
+static inline D3DXVECTOR4* D3DXVec4Scale(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv, FLOAT s)
 {
     if ( !pout || !pv) return NULL;
     pout->x = s * (pv->x);
@@ -1172,7 +1172,7 @@ static inline D3DXVECTOR4* D3DXVec4Scale(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *p
     return pout;
 }
 
-static inline D3DXVECTOR4* D3DXVec4Subtract(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
+static inline D3DXVECTOR4* D3DXVec4Subtract(D3DXVECTOR4 *pout, const D3DXVECTOR4 *pv1, const D3DXVECTOR4 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
     pout->x = pv1->x - pv2->x;
@@ -1231,19 +1231,19 @@ static inline BOOL D3DXMatrixIsIdentity(D3DXMATRIX *pm)
 
 /*__________________D3DXPLANE____________________*/
 
-static inline FLOAT D3DXPlaneDot(CONST D3DXPLANE *pp, CONST D3DXVECTOR4 *pv)
+static inline FLOAT D3DXPlaneDot(const D3DXPLANE *pp, const D3DXVECTOR4 *pv)
 {
     if ( !pp || !pv ) return 0.0f;
     return ( (pp->a) * (pv->x) + (pp->b) * (pv->y) + (pp->c) * (pv->z) + (pp->d) * (pv->w) );
 }
 
-static inline FLOAT D3DXPlaneDotCoord(CONST D3DXPLANE *pp, CONST D3DXVECTOR4 *pv)
+static inline FLOAT D3DXPlaneDotCoord(const D3DXPLANE *pp, const D3DXVECTOR4 *pv)
 {
     if ( !pp || !pv ) return 0.0f;
     return ( (pp->a) * (pv->x) + (pp->b) * (pv->y) + (pp->c) * (pv->z) + (pp->d) );
 }
 
-static inline FLOAT D3DXPlaneDotNormal(CONST D3DXPLANE *pp, CONST D3DXVECTOR4 *pv)
+static inline FLOAT D3DXPlaneDotNormal(const D3DXPLANE *pp, const D3DXVECTOR4 *pv)
 {
     if ( !pp || !pv ) return 0.0f;
     return ( (pp->a) * (pv->x) + (pp->b) * (pv->y) + (pp->c) * (pv->z) );
@@ -1251,7 +1251,7 @@ static inline FLOAT D3DXPlaneDotNormal(CONST D3DXPLANE *pp, CONST D3DXVECTOR4 *p
 
 /*__________________D3DXQUATERNION____________________*/
 
-static inline D3DXQUATERNION* D3DXQuaternionConjugate(D3DXQUATERNION *pout, CONST D3DXQUATERNION *pq)
+static inline D3DXQUATERNION* D3DXQuaternionConjugate(D3DXQUATERNION *pout, const D3DXQUATERNION *pq)
 {
     if ( !pout || !pq) return NULL;
     pout->x = -pq->x;
@@ -1261,7 +1261,7 @@ static inline D3DXQUATERNION* D3DXQuaternionConjugate(D3DXQUATERNION *pout, CONS
     return pout;
 }
 
-static inline FLOAT D3DXQuaternionDot(CONST D3DXQUATERNION *pq1, CONST D3DXQUATERNION *pq2)
+static inline FLOAT D3DXQuaternionDot(const D3DXQUATERNION *pq1, const D3DXQUATERNION *pq2)
 {
     if ( !pq1 || !pq2 ) return 0.0f;
     return (pq1->x) * (pq2->x) + (pq1->y) * (pq2->y) + (pq1->z) * (pq2->z) + (pq1->w) * (pq2->w);
@@ -1283,13 +1283,13 @@ static inline BOOL D3DXQuaternionIsIdentity(D3DXQUATERNION *pq)
     return ( (pq->x == 0.0f) && (pq->y == 0.0f) && (pq->z == 0.0f) && (pq->w == 1.0f) );
 }
 
-static inline FLOAT D3DXQuaternionLength(CONST D3DXQUATERNION *pq)
+static inline FLOAT D3DXQuaternionLength(const D3DXQUATERNION *pq)
 {
     if (!pq) return 0.0f;
     return sqrtf( pq->x * pq->x + pq->y * pq->y + pq->z * pq->z + pq->w * pq->w );
 }
 
-static inline FLOAT D3DXQuaternionLengthSq(CONST D3DXQUATERNION *pq)
+static inline FLOAT D3DXQuaternionLengthSq(const D3DXQUATERNION *pq)
 {
     if (!pq) return 0.0f;
     return (pq->x) * (pq->x) + (pq->y) * (pq->y) + (pq->z) * (pq->z) + (pq->w) * (pq->w);

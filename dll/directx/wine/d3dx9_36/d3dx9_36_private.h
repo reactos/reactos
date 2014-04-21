@@ -84,7 +84,7 @@ struct pixel_format_desc {
 };
 
 HRESULT map_view_of_file(const WCHAR *filename, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
-HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, LPVOID *buffer, DWORD *length) DECLSPEC_HIDDEN;
+HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
 
 HRESULT write_buffer_to_file(const WCHAR *filename, ID3DXBuffer *buffer) DECLSPEC_HIDDEN;
 
@@ -104,7 +104,8 @@ void point_filter_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slic
     const struct pixel_format_desc *dst_format, D3DCOLOR color_key, const PALETTEENTRY *palette) DECLSPEC_HIDDEN;
 
 HRESULT load_texture_from_dds(IDirect3DTexture9 *texture, const void *src_data, const PALETTEENTRY *palette,
-    DWORD filter, D3DCOLOR color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
+        DWORD filter, D3DCOLOR color_key, const D3DXIMAGE_INFO *src_info, unsigned int skip_levels,
+        unsigned int *loaded_miplevels) DECLSPEC_HIDDEN;
 HRESULT load_cube_texture_from_dds(IDirect3DCubeTexture9 *cube_texture, const void *src_data,
     const PALETTEENTRY *palette, DWORD filter, D3DCOLOR color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
 HRESULT load_volume_from_dds(IDirect3DVolume9 *dst_volume, const PALETTEENTRY *dst_palette,
@@ -114,6 +115,7 @@ HRESULT load_volume_texture_from_dds(IDirect3DVolumeTexture9 *volume_texture, co
     const PALETTEENTRY *palette, DWORD filter, DWORD color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
 
 unsigned short float_32_to_16(const float in) DECLSPEC_HIDDEN;
+float float_16_to_32(const unsigned short in) DECLSPEC_HIDDEN;
 
 /* debug helpers */
 const char *debug_d3dxparameter_class(D3DXPARAMETER_CLASS c) DECLSPEC_HIDDEN;
@@ -121,6 +123,7 @@ const char *debug_d3dxparameter_type(D3DXPARAMETER_TYPE t) DECLSPEC_HIDDEN;
 const char *debug_d3dxparameter_registerset(D3DXREGISTER_SET r) DECLSPEC_HIDDEN;
 
 /* parameter type conversion helpers */
-void set_number(LPVOID outdata, D3DXPARAMETER_TYPE outtype, LPCVOID indata, D3DXPARAMETER_TYPE intype) DECLSPEC_HIDDEN;
+void set_number(void *outdata, D3DXPARAMETER_TYPE outtype,
+        const void *indata, D3DXPARAMETER_TYPE intype) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_D3DX9_36_PRIVATE_H */

@@ -189,7 +189,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->Affinity = 1 << Number;
     InitThread->WaitIrql = DISPATCH_LEVEL;
     InitProcess->ActiveProcessors = 1 << Number;
-    
+
     /* HACK for MmUpdatePageDir */
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
@@ -228,11 +228,8 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         Prcb->DpcStack = DpcStack;
     }
 
-    /* Free Initial Memory */
-    // MiFreeInitMemory();
-
     KfRaiseIrql(DISPATCH_LEVEL);
-    
+
     KeSetPriorityThread(InitThread, 0);
     /* Setup decrementer exception */
     KiSetupDecrementerTrap();
@@ -297,7 +294,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Skip initial setup if this isn't the Boot CPU */
     if (Cpu) goto AppCpuInit;
-    
+
     /* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,

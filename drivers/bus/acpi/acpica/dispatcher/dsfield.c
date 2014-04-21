@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -129,11 +129,86 @@
 
 /* Local prototypes */
 
+#ifdef ACPI_ASL_COMPILER
+#include "acdisasm.h"
+
+static ACPI_STATUS
+AcpiDsCreateExternalRegion (
+    ACPI_STATUS             LookupStatus,
+    ACPI_PARSE_OBJECT       *Op,
+    char                    *Path,
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_NAMESPACE_NODE     **Node);
+#endif
+
 static ACPI_STATUS
 AcpiDsGetFieldNames (
     ACPI_CREATE_FIELD_INFO  *Info,
     ACPI_WALK_STATE         *WalkState,
     ACPI_PARSE_OBJECT       *Arg);
+
+
+#ifdef ACPI_ASL_COMPILER
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiDsCreateExternalRegion (iASL Disassembler only)
+ *
+ * PARAMETERS:  LookupStatus    - Status from NsLookup operation
+ *              Op              - Op containing the Field definition and args
+ *              Path            - Pathname of the region
+ *  `           WalkState       - Current method state
+ *              Node            - Where the new region node is returned
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Add region to the external list if NOT_FOUND. Create a new
+ *              region node/object.
+ *
+ ******************************************************************************/
+
+static ACPI_STATUS
+AcpiDsCreateExternalRegion (
+    ACPI_STATUS             LookupStatus,
+    ACPI_PARSE_OBJECT       *Op,
+    char                    *Path,
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_NAMESPACE_NODE     **Node)
+{
+    ACPI_STATUS             Status;
+    ACPI_OPERAND_OBJECT     *ObjDesc;
+
+
+    if (LookupStatus != AE_NOT_FOUND)
+    {
+        return (LookupStatus);
+    }
+
+    /*
+     * Table disassembly:
+     * OperationRegion not found. Generate an External for it, and
+     * insert the name into the namespace.
+     */
+    AcpiDmAddOpToExternalList (Op, Path, ACPI_TYPE_REGION, 0, 0);
+    Status = AcpiNsLookup (WalkState->ScopeInfo, Path, ACPI_TYPE_REGION,
+       ACPI_IMODE_LOAD_PASS1, ACPI_NS_SEARCH_PARENT, WalkState, Node);
+    if (ACPI_FAILURE (Status))
+    {
+        return (Status);
+    }
+
+    /* Must create and install a region object for the new node */
+
+    ObjDesc = AcpiUtCreateInternalObject (ACPI_TYPE_REGION);
+    if (!ObjDesc)
+    {
+        return (AE_NO_MEMORY);
+    }
+
+    ObjDesc->Region.Node = *Node;
+    Status = AcpiNsAttachObject (*Node, ObjDesc, ACPI_TYPE_REGION);
+    return (Status);
+}
+#endif
 
 
 /*******************************************************************************
@@ -149,8 +224,8 @@ AcpiDsGetFieldNames (
  *              CreateBitFieldOp,
  *              CreateByteFieldOp,
  *              CreateWordFieldOp,
- *              CreateDWordFieldOp,
- *              CreateQWordFieldOp,
+ *              CreateDwordFieldOp,
+ *              CreateQwordFieldOp,
  *              CreateFieldOp       (all of which define a field in a buffer)
  *
  ******************************************************************************/
@@ -302,7 +377,7 @@ Cleanup:
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Process all named fields in a field declaration.  Names are
+ * DESCRIPTION: Process all named fields in a field declaration. Names are
  *              entered into the namespace.
  *
  ******************************************************************************/
@@ -315,6 +390,7 @@ AcpiDsGetFieldNames (
 {
     ACPI_STATUS             Status;
     UINT64                  Position;
+    ACPI_PARSE_OBJECT       *Child;
 
 
     ACPI_FUNCTION_TRACE_PTR (DsGetFieldNames, Info);
@@ -329,10 +405,11 @@ AcpiDsGetFieldNames (
     while (Arg)
     {
         /*
-         * Three types of field elements are handled:
-         * 1) Offset - specifies a bit offset
-         * 2) AccessAs - changes the access mode
-         * 3) Name - Enters a new named field into the namespace
+         * Four types of field elements are handled:
+         * 1) Name - Enters a new named field into the namespace
+         * 2) Offset - specifies a bit offset
+         * 3) AccessAs - changes the access mode/attributes
+         * 4) Connection - Associate a resource template with the field
          */
         switch (Arg->Common.AmlOpcode)
         {
@@ -351,24 +428,67 @@ AcpiDsGetFieldNames (
             Info->FieldBitPosition = (UINT32) Position;
             break;
 
-
         case AML_INT_ACCESSFIELD_OP:
-
+        case AML_INT_EXTACCESSFIELD_OP:
             /*
-             * Get a new AccessType and AccessAttribute -- to be used for all
-             * field units that follow, until field end or another AccessAs
-             * keyword.
+             * Get new AccessType, AccessAttribute, and AccessLength fields
+             * -- to be used for all field units that follow, until the
+             * end-of-field or another AccessAs keyword is encountered.
+             * NOTE. These three bytes are encoded in the integer value
+             * of the parseop for convenience.
              *
              * In FieldFlags, preserve the flag bits other than the
-             * ACCESS_TYPE bits
+             * ACCESS_TYPE bits.
              */
+
+            /* AccessType (ByteAcc, WordAcc, etc.) */
+
             Info->FieldFlags = (UINT8)
                 ((Info->FieldFlags & ~(AML_FIELD_ACCESS_TYPE_MASK)) |
-                ((UINT8) ((UINT32) Arg->Common.Value.Integer >> 8)));
+                ((UINT8) ((UINT32) (Arg->Common.Value.Integer & 0x07))));
 
-            Info->Attribute = (UINT8) (Arg->Common.Value.Integer);
+            /* AccessAttribute (AttribQuick, AttribByte, etc.) */
+
+            Info->Attribute = (UINT8) ((Arg->Common.Value.Integer >> 8) & 0xFF);
+
+            /* AccessLength (for serial/buffer protocols) */
+
+            Info->AccessLength = (UINT8) ((Arg->Common.Value.Integer >> 16) & 0xFF);
             break;
 
+        case AML_INT_CONNECTION_OP:
+            /*
+             * Clear any previous connection. New connection is used for all
+             * fields that follow, similar to AccessAs
+             */
+            Info->ResourceBuffer = NULL;
+            Info->ConnectionNode = NULL;
+
+            /*
+             * A Connection() is either an actual resource descriptor (buffer)
+             * or a named reference to a resource template
+             */
+            Child = Arg->Common.Value.Arg;
+            if (Child->Common.AmlOpcode == AML_INT_BYTELIST_OP)
+            {
+                Info->ResourceBuffer = Child->Named.Data;
+                Info->ResourceLength = (UINT16) Child->Named.Value.Integer;
+            }
+            else
+            {
+                /* Lookup the Connection() namepath, it should already exist */
+
+                Status = AcpiNsLookup (WalkState->ScopeInfo,
+                            Child->Common.Value.Name, ACPI_TYPE_ANY,
+                            ACPI_IMODE_EXECUTE, ACPI_NS_DONT_OPEN_SCOPE,
+                            WalkState, &Info->ConnectionNode);
+                if (ACPI_FAILURE (Status))
+                {
+                    ACPI_ERROR_NAMESPACE (Child->Common.Value.Name, Status);
+                    return_ACPI_STATUS (Status);
+                }
+            }
+            break;
 
         case AML_INT_NAMEDFIELD_OP:
 
@@ -420,7 +540,6 @@ AcpiDsGetFieldNames (
             Info->FieldBitPosition += Info->FieldBitLength;
             break;
 
-
         default:
 
             ACPI_ERROR ((AE_INFO,
@@ -466,17 +585,24 @@ AcpiDsCreateField (
     /* First arg is the name of the parent OpRegion (must already exist) */
 
     Arg = Op->Common.Value.Arg;
+
     if (!RegionNode)
     {
         Status = AcpiNsLookup (WalkState->ScopeInfo, Arg->Common.Value.Name,
                         ACPI_TYPE_REGION, ACPI_IMODE_EXECUTE,
                         ACPI_NS_SEARCH_PARENT, WalkState, &RegionNode);
+#ifdef ACPI_ASL_COMPILER
+        Status = AcpiDsCreateExternalRegion (Status, Arg,
+            Arg->Common.Value.Name, WalkState, &RegionNode);
+#endif
         if (ACPI_FAILURE (Status))
         {
             ACPI_ERROR_NAMESPACE (Arg->Common.Value.Name, Status);
             return_ACPI_STATUS (Status);
         }
     }
+
+    ACPI_MEMSET (&Info, 0, sizeof (ACPI_CREATE_FIELD_INFO));
 
     /* Second arg is the field flags */
 
@@ -490,7 +616,6 @@ AcpiDsCreateField (
     Info.RegionNode = RegionNode;
 
     Status = AcpiDsGetFieldNames (&Info, WalkState, Arg->Common.Next);
-
     return_ACPI_STATUS (Status);
 }
 
@@ -546,21 +671,25 @@ AcpiDsInitFieldObjects (
     switch (WalkState->Opcode)
     {
     case AML_FIELD_OP:
+
         Arg = AcpiPsGetArg (Op, 2);
         Type = ACPI_TYPE_LOCAL_REGION_FIELD;
         break;
 
     case AML_BANK_FIELD_OP:
+
         Arg = AcpiPsGetArg (Op, 4);
         Type = ACPI_TYPE_LOCAL_BANK_FIELD;
         break;
 
     case AML_INDEX_FIELD_OP:
+
         Arg = AcpiPsGetArg (Op, 3);
         Type = ACPI_TYPE_LOCAL_INDEX_FIELD;
         break;
 
     default:
+
         return_ACPI_STATUS (AE_BAD_PARAMETER);
     }
 
@@ -586,8 +715,8 @@ AcpiDsInitFieldObjects (
     while (Arg)
     {
         /*
-         * Ignore OFFSET and ACCESSAS terms here; we are only interested in the
-         * field names in order to enter them into the namespace.
+         * Ignore OFFSET/ACCESSAS/CONNECTION terms here; we are only interested
+         * in the field names in order to enter them into the namespace.
          */
         if (Arg->Common.AmlOpcode == AML_INT_NAMEDFIELD_OP)
         {
@@ -655,6 +784,10 @@ AcpiDsCreateBankField (
         Status = AcpiNsLookup (WalkState->ScopeInfo, Arg->Common.Value.Name,
                         ACPI_TYPE_REGION, ACPI_IMODE_EXECUTE,
                         ACPI_NS_SEARCH_PARENT, WalkState, &RegionNode);
+#ifdef ACPI_ASL_COMPILER
+        Status = AcpiDsCreateExternalRegion (Status, Arg,
+            Arg->Common.Value.Name, WalkState, &RegionNode);
+#endif
         if (ACPI_FAILURE (Status))
         {
             ACPI_ERROR_NAMESPACE (Arg->Common.Value.Name, Status);
@@ -769,8 +902,5 @@ AcpiDsCreateIndexField (
     Info.RegionNode = RegionNode;
 
     Status = AcpiDsGetFieldNames (&Info, WalkState, Arg->Common.Next);
-
     return_ACPI_STATUS (Status);
 }
-
-

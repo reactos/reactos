@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -91,8 +91,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_WIZARD_NAME "VMware(r) algılandı."
-    IDS_FAILEDTOLOCATEDRIVERS "ReactOS Kur, gerekli kütükleri bulamadı.\nVMWare(r) Araç CD'sini bağladığınızı onaylayın."
-    IDS_FAILEDTOCOPYFILES "ReactOS Kur, gerekli kütükleri çoğaltamadı.\nVMWare(r) Araç CD'sini bağladığınızı onaylayın.\n"
+    IDS_FAILEDTOLOCATEDRIVERS "ReactOS Kur, gerekli kütükleri bulamadı.\nVMWare(r) Araç CD'sini bağladığınızı doğrulayınız."
+    IDS_FAILEDTOCOPYFILES "ReactOS Kur, gerekli kütükleri çoğaltamadı.\nVMWare(r) Araç CD'sini bağladığınızı doğrulayınız.\n"
     IDS_FAILEDTOACTIVATEDRIVER "VMware(r) SVGA sürücüsünün etkinleştirilmesi başarısız oldu."
     IDS_FAILEDTOSELVGADRIVER "ReactOS VGA sürücüsünün etkinleştirilmesi başarısız oldu."
     IDS_FAILEDTOSELVBEDRIVER "ReactOS VBE sürücüsünün etkinleştirilmesi başarısız oldu."

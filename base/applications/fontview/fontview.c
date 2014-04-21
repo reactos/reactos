@@ -34,8 +34,8 @@ LPCWSTR g_fileName;
 
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
-/* Tye definition for the GetFontResourceInfo function */
-typedef BOOL (WINAPI *PGFRI)(LPCWSTR, DWORD *, LPVOID, DWORD);
+/* GetFontResourceInfoW is undocumented */
+BOOL WINAPI GetFontResourceInfoW(LPCWSTR lpFileName, DWORD *pdwBufSize, void* lpBuffer, DWORD dwType);
 
 DWORD
 FormatString(
@@ -97,8 +97,6 @@ WinMain (HINSTANCE hThisInstance,
 	HWND hMainWnd;
 	MSG msg;
 	WNDCLASSEXW wincl;
-	HINSTANCE hDLL;
-	PGFRI GetFontResourceInfoW;
 	LPCWSTR fileName;
     
     switch (GetUserDefaultUILanguage())
@@ -164,10 +162,6 @@ WinMain (HINSTANCE hThisInstance,
 		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
-
-	/* Load the GetFontResourceInfo function from gdi32.dll */
-	hDLL = LoadLibraryW(L"GDI32.DLL");
-	GetFontResourceInfoW = (PGFRI)GetProcAddress(hDLL, "GetFontResourceInfoW");
 
 	/* Get the font name */
 	dwSize = sizeof(g_ExtLogFontW.elfFullName);

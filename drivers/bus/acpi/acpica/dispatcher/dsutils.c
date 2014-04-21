@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -136,7 +136,7 @@
  *
  * RETURN:      None.
  *
- * DESCRIPTION: Clear and remove a reference on an implicit return value.  Used
+ * DESCRIPTION: Clear and remove a reference on an implicit return value. Used
  *              to delete "stale" return values (if enabled, the return value
  *              from every operator is saved at least momentarily, in case the
  *              parent method exits.)
@@ -189,7 +189,7 @@ AcpiDsClearImplicitReturn (
  *
  * DESCRIPTION: Implements the optional "implicit return".  We save the result
  *              of every ASL operator and control method invocation in case the
- *              parent method exit.  Before storing a new return value, we
+ *              parent method exit. Before storing a new return value, we
  *              delete the previous return value.
  *
  ******************************************************************************/
@@ -292,7 +292,7 @@ AcpiDsIsResultUsed (
      *
      * If there is no parent, or the parent is a ScopeOp, we are executing
      * at the method level. An executing method typically has no parent,
-     * since each method is parsed separately.  A method invoked externally
+     * since each method is parsed separately. A method invoked externally
      * via ExecuteControlMethod has a ScopeOp as the parent.
      */
     if ((!Op->Common.Parent) ||
@@ -317,7 +317,7 @@ AcpiDsIsResultUsed (
     }
 
     /*
-     * Decide what to do with the result based on the parent.  If
+     * Decide what to do with the result based on the parent. If
      * the parent opcode will not use the result, delete the object.
      * Otherwise leave it as is, it will be deleted when it is used
      * as an operand later.
@@ -336,7 +336,6 @@ AcpiDsIsResultUsed (
 
         case AML_IF_OP:
         case AML_WHILE_OP:
-
             /*
              * If we are executing the predicate AND this is the predicate op,
              * we will use the return value
@@ -349,7 +348,9 @@ AcpiDsIsResultUsed (
             break;
 
         default:
+
             /* Ignore other control opcodes */
+
             break;
         }
 
@@ -357,15 +358,12 @@ AcpiDsIsResultUsed (
 
         goto ResultNotUsed;
 
-
     case AML_CLASS_CREATE:
-
         /*
          * These opcodes allow TermArg(s) as operands and therefore
-         * the operands can be method calls.  The result is used.
+         * the operands can be method calls. The result is used.
          */
         goto ResultUsed;
-
 
     case AML_CLASS_NAMED_OBJECT:
 
@@ -379,16 +377,14 @@ AcpiDsIsResultUsed (
         {
             /*
              * These opcodes allow TermArg(s) as operands and therefore
-             * the operands can be method calls.  The result is used.
+             * the operands can be method calls. The result is used.
              */
             goto ResultUsed;
         }
 
         goto ResultNotUsed;
 
-
     default:
-
         /*
          * In all other cases. the parent will actually use the return
          * object, so keep it.
@@ -426,9 +422,9 @@ ResultNotUsed:
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Used after interpretation of an opcode.  If there is an internal
+ * DESCRIPTION: Used after interpretation of an opcode. If there is an internal
  *              result descriptor, check if the parent opcode will actually use
- *              this result.  If not, delete the result now so that it will
+ *              this result. If not, delete the result now so that it will
  *              not become orphaned.
  *
  ******************************************************************************/
@@ -480,7 +476,7 @@ AcpiDsDeleteResultIfNotUsed (
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Resolve all operands to their values.  Used to prepare
+ * DESCRIPTION: Resolve all operands to their values. Used to prepare
  *              arguments to a control method invocation (a call from one
  *              method to another.)
  *
@@ -499,7 +495,7 @@ AcpiDsResolveOperands (
 
     /*
      * Attempt to resolve each of the valid operands
-     * Method arguments are passed by reference, not by value.  This means
+     * Method arguments are passed by reference, not by value. This means
      * that the actual objects are passed, not copies of the objects.
      */
     for (i = 0; i < WalkState->NumOperands; i++)
@@ -566,7 +562,7 @@ AcpiDsClearOperands (
  * RETURN:      Status
  *
  * DESCRIPTION: Translate a parse tree object that is an argument to an AML
- *              opcode to the equivalent interpreter object.  This may include
+ *              opcode to the equivalent interpreter object. This may include
  *              looking up a name or entering a new name into the internal
  *              namespace.
  *
@@ -612,11 +608,11 @@ AcpiDsCreateOperand (
         /* All prefixes have been handled, and the name is in NameString */
 
         /*
-         * Special handling for BufferField declarations.  This is a deferred
+         * Special handling for BufferField declarations. This is a deferred
          * opcode that unfortunately defines the field name as the last
-         * parameter instead of the first.  We get here when we are performing
+         * parameter instead of the first. We get here when we are performing
          * the deferred execution, so the actual name of the field is already
-         * in the namespace.  We don't want to attempt to look it up again
+         * in the namespace. We don't want to attempt to look it up again
          * because we may be executing in a different scope than where the
          * actual opcode exists.
          */
@@ -723,8 +719,8 @@ AcpiDsCreateOperand (
             /*
              * If the name is null, this means that this is an
              * optional result parameter that was not specified
-             * in the original ASL.  Create a Zero Constant for a
-             * placeholder.  (Store to a constant is a Noop.)
+             * in the original ASL. Create a Zero Constant for a
+             * placeholder. (Store to a constant is a Noop.)
              */
             Opcode = AML_ZERO_OP;       /* Has no arguments! */
 
@@ -855,16 +851,16 @@ AcpiDsCreateOperands (
         Index++;
     }
 
+    ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
+        "NumOperands %d, ArgCount %d, Index %d\n",
+        WalkState->NumOperands, ArgCount, Index));
+
+    /* Create the interpreter arguments, in reverse order */
+
     Index--;
-
-    /* It is the appropriate order to get objects from the Result stack */
-
     for (i = 0; i < ArgCount; i++)
     {
         Arg = Arguments[Index];
-
-        /* Force the filling of the operand stack in inverse order */
-
         WalkState->OperandIndex = (UINT8) Index;
 
         Status = AcpiDsCreateOperand (WalkState, Arg, Index);
@@ -873,10 +869,10 @@ AcpiDsCreateOperands (
             goto Cleanup;
         }
 
+        ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
+            "Created Arg #%u (%p) %u args total\n",
+            Index, Arg, ArgCount));
         Index--;
-
-        ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH, "Arg #%u (%p) done, Arg1=%p\n",
-            Index, Arg, FirstArg));
     }
 
     return_ACPI_STATUS (Status);

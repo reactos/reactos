@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Pingus
@@ -16,6 +17,9 @@ Description = Pingus ist ein freies Lemings-ähnliches Puzzle Spiel.
 
 [Section.0410]
 Description = Pingus è un gioco gratuito simile a Lemmings.
+
+[Section.0415]
+Description = Pingus to darmowa gra logiczna podobna do gry Lemmings
 
 [Section.0418]
 Description = Pingus este un joc-enigmă asemănător cu Lemmings.

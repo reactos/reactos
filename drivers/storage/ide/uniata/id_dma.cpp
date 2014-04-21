@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2012 Alexander A. Telyatnikov (Alter)
+Copyright (c) 2002-2014 Alexander A. Telyatnikov (Alter)
 
 Module Name:
     id_dma.cpp
@@ -296,7 +296,7 @@ AtapiDmaSetup(
         KdPrint2((PRINT_PREFIX "  get Phys(PRD=%x)\n", &(AtaReq->dma_tab) ));
         dma_base = AtapiVirtToPhysAddr(HwDeviceExtension, NULL, (PUCHAR)&(AtaReq->dma_tab) /*chan->dma_tab*/, &i, &dma_baseu);
     }
-    if(dma_baseu) {
+    if(dma_baseu && i) {
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: SRB built-in PRD above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));
         if(!deviceExtension->Host64) {
             dma_base = chan->DB_PRD_PhAddr;
@@ -312,8 +312,8 @@ AtapiDmaSetup(
 
     KdPrint2((PRINT_PREFIX "  get Phys(data[0]=%x)\n", data ));
     dma_base = AtapiVirtToPhysAddr(HwDeviceExtension, Srb, data, &dma_count, &dma_baseu);
-    if(dma_baseu) {
-        KdPrint2((PRINT_PREFIX "AtapiDmaSetup: 1st block of buffer above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));
+    if(dma_baseu && dma_count) {
+        KdPrint2((PRINT_PREFIX "AtapiDmaSetup: 1st block of buffer above 4Gb: %8.8x%8.8x cnt=%x\n", dma_baseu, dma_base, dma_count));
         if(!deviceExtension->Host64) {
 retry_DB_IO:
             use_DB_IO = TRUE;
@@ -378,8 +378,8 @@ retry_DB_IO:
         }
         KdPrint2((PRINT_PREFIX "  get Phys(data[n=%d]=%x)\n", i, data ));
         dma_base = AtapiVirtToPhysAddr(HwDeviceExtension, Srb, data, &dma_count, &dma_baseu);
-        if(dma_baseu) {
-            KdPrint2((PRINT_PREFIX "AtapiDmaSetup: block of buffer above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));
+        if(dma_baseu && dma_count) {
+            KdPrint2((PRINT_PREFIX "AtapiDmaSetup: block of buffer above 4Gb: %8.8x%8.8x, cnt=%x\n", dma_baseu, dma_base, dma_count));
             if(!deviceExtension->Host64) {
                 if(use_DB_IO) {
                     KdPrint2((PRINT_PREFIX "AtapiDmaSetup: *ERROR* special buffer above 4Gb: %8.8x%8.8x\n", dma_baseu, dma_base));

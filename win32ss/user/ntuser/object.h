@@ -19,6 +19,7 @@ BOOL FASTCALL UserObjectInDestroy(HANDLE);
 void DbgUserDumpHandleTable();
 VOID FASTCALL UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner);
 HANDLE FASTCALL ValidateHandleNoErr(HANDLE handle, HANDLE_TYPE type);
+PVOID FASTCALL ValidateHandle(HANDLE handle, HANDLE_TYPE type);
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)

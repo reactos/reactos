@@ -48,7 +48,7 @@ BOOL DeleteDirectory(LPWSTR lpszDir)
     fileop.hNameMappings         = NULL;
 
     ret = SHFileOperation(&fileop);
-    HeapFree(GetProcessHeap(), 0, &pszFrom);
+    HeapFree(GetProcessHeap(), 0, pszFrom);
     return (ret == 0);
 }
 

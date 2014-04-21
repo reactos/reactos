@@ -46,7 +46,7 @@ Description = MFC 4 este necesară unor aplicații. Conține: mfc40.dll, msvcrt4
 Size = 865,04 ko
 
 [Section.041f]
-Name = OLE Görüntüleyicisi ve Mikroyazılım Ana Sınıfları (MFC) Sürüm 4
+Name = OLE Görüntüleyicisi ve Microsoft Ana Sınıfları (MFC) Sürüm 4
 Licence = Bilinmiyor
 Description = Birtakım uygulamalar için gereklidir. Şunları içerir: mfc40.dll, msvcrt40.dll.
 Size = 865,04 KB

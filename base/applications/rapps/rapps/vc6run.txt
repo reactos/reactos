@@ -4,7 +4,7 @@
 Name = Microsoft Visual C++ 6 Redistributable Package
 Version = 6.0
 Licence = Unknown
-Description = Visual Studio 6 Runtime. Contains: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Microsoft Visual Studio 6 Runtime. Contains: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 Size = 1.75 MB
 Category = 14
 URLSite = http://support.microsoft.com/kb/259403/
@@ -13,44 +13,44 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = Visual Studio 6 Laufzeitsystem. Beinhaltet: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Microsoft Visual Studio 6 Laufzeitsystem. Beinhaltet: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
 [Section.040a]
 Licence = Desconocida
-Description = Librerias Visual Studio 2006. Incluye: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Librerias Microsoft Visual Studio 6. Incluye: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
 [Section.040c]
 Licence = Inconnue
-Description = Bibliothèque Visual Studio 6. Contient: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Bibliothèque Microsoft Visual Studio 6. Contient: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 Size = 1,75 Mo
 
 [Section.0410]
 Licence = Sconosciuta
-Description = Visual Studio 6 Runtime. Contiene: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Microsoft Visual Studio 6 Runtime. Contiene: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
 [Section.0413]
 Licence = Ongekend
-Description = Visual Studio 6 Runtime. Bevat: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Microsoft Visual Studio 6 Runtime. Bevat: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
 [Section.0415]
 Licence = Nieznana
-Description = Biblioteki uruchomieniowe Visual Studio 6. Zawiera: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Biblioteki uruchomieniowe Microsoft Visual Studio 6. Zawiera: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
 [Section.0418]
 Licence = Necunoscută
-Description = Visual Studio 6 Runtime. Conține: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Microsoft Visual Studio 6 Runtime. Conține: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 Size = 1,75 Mo
 
 [Section.041f]
-Name = Mikroyazılım Basarî C++ 6 Yeniden Dağıtılabilir Paket
+Name = Microsoft Visual C++ 6 Yeniden Dağıtılabilir Paket
 Licence = Bilinmiyor
-Description = Basarî Stüdyo 6 Yürütücüsü. Şunları içerir: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Microsoft Visual Studio 6 Yürütücüsü. Şunları içerir: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 Size = 1,75 MB
 
 [Section.0422]
 Licence = Невідома
-Description = Бібліотеки Visual Studio 6. включає: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Бібліотеки Microsoft Visual Studio 6. включає: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
 [Section.0813]
 Licence = Ongekend
-Description = Visual Studio 6 Runtime. Bevat: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Microsoft Visual Studio 6 Runtime. Bevat: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.

@@ -3,6 +3,7 @@
 /* Written 1998 by Roman Hodek */
 
 #include "vfatlib.h"
+#include <limits.h>
 
 #define NDEBUG
 #include <debug.h>

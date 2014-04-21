@@ -78,6 +78,7 @@ CMyDocsFolder::CMyDocsFolder()
 {
     pidlRoot = NULL;
     sPathTarget = NULL;
+    mFSDropTarget = NULL;
 }
 
 CMyDocsFolder::~CMyDocsFolder()
@@ -85,6 +86,7 @@ CMyDocsFolder::~CMyDocsFolder()
     TRACE ("-- destroying IShellFolder(%p)\n", this);
     SHFree(pidlRoot);
     HeapFree(GetProcessHeap(), 0, sPathTarget);
+    mFSDropTarget->Release();
 }
 
 HRESULT WINAPI CMyDocsFolder::FinalConstruct()
@@ -97,6 +99,29 @@ HRESULT WINAPI CMyDocsFolder::FinalConstruct()
     pidlRoot = _ILCreateMyDocuments();    /* my qualified pidl */
     sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
     wcscpy(sPathTarget, szMyPath);
+
+    LPITEMIDLIST pidl = NULL;
+
+    WCHAR szPath[MAX_PATH];
+    lstrcpynW(szPath, sPathTarget, MAX_PATH);
+    PathAddBackslashW(szPath);
+    CComPtr<IShellFolder> psfDesktop = NULL;
+    
+    HRESULT hr = SHGetDesktopFolder(&psfDesktop);
+    if (SUCCEEDED(hr))
+        hr = psfDesktop->ParseDisplayName(NULL, NULL, szPath, NULL, &pidl, NULL);
+    else
+        ERR("Error getting desktop folder\n");
+
+    if (SUCCEEDED(hr))
+    {
+        hr = psfDesktop->BindToObject(pidl, NULL, IID_IDropTarget, (LPVOID*) &mFSDropTarget);
+        CoTaskMemFree(pidl);
+        if (FAILED(hr))
+            ERR("Error Binding");
+    }
+    else
+        ERR("Error creating from %s\n", debugstr_w(szPath));
 
     return S_OK;
 }
@@ -271,8 +296,7 @@ HRESULT WINAPI CMyDocsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 
     if (IsEqualIID (riid, IID_IDropTarget))
     {
-        WARN ("IDropTarget not implemented\n");
-        hr = E_NOTIMPL;
+        hr = this->QueryInterface (IID_IDropTarget, ppvOut);
     }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
@@ -678,4 +702,27 @@ HRESULT WINAPI CMyDocsFolder::GetCurFolder(LPITEMIDLIST *pidl)
     if (!pidl) return E_POINTER;
     *pidl = ILClone (pidlRoot);
     return S_OK;
+}
+
+HRESULT WINAPI CMyDocsFolder::DragEnter(IDataObject *pDataObject,
+                                    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    return mFSDropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
+}
+
+HRESULT WINAPI CMyDocsFolder::DragOver(DWORD dwKeyState, POINTL pt,
+                                   DWORD *pdwEffect)
+{
+    return mFSDropTarget->DragOver(dwKeyState, pt, pdwEffect);
+}
+
+HRESULT WINAPI CMyDocsFolder::DragLeave()
+{
+    return mFSDropTarget->DragLeave();
+}
+
+HRESULT WINAPI CMyDocsFolder::Drop(IDataObject *pDataObject,
+                               DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    return mFSDropTarget->Drop(pDataObject, dwKeyState, pt, pdwEffect);
 }

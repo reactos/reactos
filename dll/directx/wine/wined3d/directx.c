@@ -50,6 +50,7 @@ enum wined3d_display_driver
     DRIVER_NVIDIA_GEFORCE2MX,
     DRIVER_NVIDIA_GEFORCEFX,
     DRIVER_NVIDIA_GEFORCE6,
+    DRIVER_VMWARE,
     DRIVER_UNKNOWN
 };
 
@@ -66,7 +67,6 @@ enum wined3d_gl_vendor
     GL_VENDOR_UNKNOWN,
     GL_VENDOR_APPLE,
     GL_VENDOR_FGLRX,
-    GL_VENDOR_INTEL,
     GL_VENDOR_MESA,
     GL_VENDOR_NVIDIA,
 };
@@ -91,6 +91,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_APPLE_ycbcr_422",                  APPLE_YCBCR_422               },
 
     /* ARB */
+    {"GL_ARB_blend_func_extended",          ARB_BLEND_FUNC_EXTENDED       },
     {"GL_ARB_color_buffer_float",           ARB_COLOR_BUFFER_FLOAT        },
     {"GL_ARB_debug_output",                 ARB_DEBUG_OUTPUT              },
     {"GL_ARB_depth_buffer_float",           ARB_DEPTH_BUFFER_FLOAT        },
@@ -136,6 +137,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_texture_non_power_of_two",     ARB_TEXTURE_NON_POWER_OF_TWO  },
     {"GL_ARB_texture_rectangle",            ARB_TEXTURE_RECTANGLE         },
     {"GL_ARB_texture_rg",                   ARB_TEXTURE_RG                },
+    {"GL_ARB_timer_query",                  ARB_TIMER_QUERY               },
     {"GL_ARB_vertex_array_bgra",            ARB_VERTEX_ARRAY_BGRA         },
     {"GL_ARB_vertex_blend",                 ARB_VERTEX_BLEND              },
     {"GL_ARB_vertex_buffer_object",         ARB_VERTEX_BUFFER_OBJECT      },
@@ -601,7 +603,7 @@ static BOOL match_dx10_capable(const struct wined3d_gl_info *gl_info, const char
     /* DX9 cards support 40 single float varyings in hardware, most drivers report 32. ATI misreports
      * 44 varyings. So assume that if we have more than 44 varyings we have a dx10 card.
      * This detection is for the gl_ClipPos varying quirk. If a d3d9 card really supports more than 44
-     * varyings and we subtract one in dx9 shaders its not going to hurt us because the dx9 limit is
+     * varyings and we subtract one in dx9 shaders it's not going to hurt us because the dx9 limit is
      * hardcoded
      *
      * dx10 cards usually have 64 varyings */
@@ -1166,6 +1168,9 @@ static const struct driver_version_information driver_version_table[] =
     {DRIVER_NVIDIA_GEFORCEFX,   DRIVER_MODEL_NT5X,  "nv4_disp.dll", 14, 11, 7516},
     {DRIVER_NVIDIA_GEFORCE6,    DRIVER_MODEL_NT5X,  "nv4_disp.dll", 15, 12, 6658},
     {DRIVER_NVIDIA_GEFORCE6,    DRIVER_MODEL_NT6X,  "nvd3dum.dll",  15, 12, 6658},
+
+    /* VMware */
+    {DRIVER_VMWARE,             DRIVER_MODEL_NT5X,  "vm3dum.dll",   14, 1,  1134},
 };
 
 struct gpu_description
@@ -1256,6 +1261,9 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX670,     "NVIDIA GeForce GTX 670",           DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX670MX,   "NVIDIA GeForce GTX 670MX",         DRIVER_NVIDIA_GEFORCE6,  3072},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX680,     "NVIDIA GeForce GTX 680",           DRIVER_NVIDIA_GEFORCE6,  2048},
+    {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX750,     "NVIDIA GeForce GTX 750",           DRIVER_NVIDIA_GEFORCE6,  1024},
+    {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX750TI,   "NVIDIA GeForce GTX 750 Ti",        DRIVER_NVIDIA_GEFORCE6,  2048},
+    {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX760,     "NVIDIA Geforce GTX 760",           DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX765M,    "NVIDIA GeForce GTX 765M",          DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX770M,    "NVIDIA GeForce GTX 770M",          DRIVER_NVIDIA_GEFORCE6,  3072},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX770,     "NVIDIA GeForce GTX 770",           DRIVER_NVIDIA_GEFORCE6,  2048},
@@ -1294,6 +1302,10 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD7700,         "AMD Radeon HD 7700 Series",        DRIVER_AMD_R600,         1024},
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD7800,         "AMD Radeon HD 7800 Series",        DRIVER_AMD_R600,         2048},
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD7900,         "AMD Radeon HD 7900 Series",        DRIVER_AMD_R600,         2048},
+
+    /* VMware */
+    {HW_VENDOR_VMWARE,     CARD_VMWARE_SVGA3D,             "VMware SVGA 3D (Microsoft Corporation - WDDM)",             DRIVER_VMWARE,        1024},
+
     /* Intel cards */
     {HW_VENDOR_INTEL,      CARD_INTEL_830M,                "Intel(R) 82830M Graphics Controller",                       DRIVER_INTEL_GMA800,  32 },
     {HW_VENDOR_INTEL,      CARD_INTEL_855GM,               "Intel(R) 82852/82855 GM/GME Graphics Controller",           DRIVER_INTEL_GMA800,  32 },
@@ -1376,7 +1388,7 @@ static void init_driver_info(struct wined3d_driver_info *driver_info,
     }
     driver_info->device = device;
 
-    /* Set a default amount of video memory (64MB). In general this code isn't used unless the user
+    /* Set a default amount of video memory (64 MB). In general this code isn't used unless the user
      * overrides the pci ids to a card which is not in our database. */
     driver_info->vidmem = WINE_DEFAULT_VIDMEM;
 
@@ -1567,20 +1579,16 @@ static enum wined3d_gl_vendor wined3d_guess_gl_vendor(const struct wined3d_gl_in
     if (strstr(gl_vendor_string, "ATI"))
         return GL_VENDOR_FGLRX;
 
-    if (strstr(gl_vendor_string, "Intel(R)")
-            /* Intel switched from Intel(R) to Intel® recently, so just match Intel. */
-            || strstr(gl_renderer, "Intel")
-            || strstr(gl_vendor_string, "Intel Inc."))
-        return GL_VENDOR_INTEL;
-
     if (strstr(gl_vendor_string, "Mesa")
             || strstr(gl_vendor_string, "X.Org")
             || strstr(gl_vendor_string, "Advanced Micro Devices, Inc.")
             || strstr(gl_vendor_string, "DRI R300 Project")
             || strstr(gl_vendor_string, "Tungsten Graphics, Inc")
             || strstr(gl_vendor_string, "VMware, Inc.")
+            || strstr(gl_vendor_string, "Intel")
             || strstr(gl_renderer, "Mesa")
-            || strstr(gl_renderer, "Gallium"))
+            || strstr(gl_renderer, "Gallium")
+            || strstr(gl_renderer, "Intel"))
         return GL_VENDOR_MESA;
 
     FIXME("Received unrecognized GL_VENDOR %s. Returning GL_VENDOR_UNKNOWN.\n",
@@ -1613,6 +1621,9 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
             || strstr(gl_renderer, "i915")
             || strstr(gl_vendor_string, "Intel Inc."))
         return HW_VENDOR_INTEL;
+
+    if (strstr(gl_renderer, "SVGA3D"))
+        return HW_VENDOR_VMWARE;
 
     if (strstr(gl_vendor_string, "Mesa")
             || strstr(gl_vendor_string, "Brian Paul")
@@ -1665,6 +1676,9 @@ static enum wined3d_pci_device select_card_nvidia_binary(const struct wined3d_gl
             {"GTX 770M",    CARD_NVIDIA_GEFORCE_GTX770M},   /* Geforce 700 - midend high mobile */
             {"GTX 770",     CARD_NVIDIA_GEFORCE_GTX770},    /* Geforce 700 - highend */
             {"GTX 765M",    CARD_NVIDIA_GEFORCE_GTX765M},   /* Geforce 700 - midend high mobile */
+            {"GTX 760",     CARD_NVIDIA_GEFORCE_GTX760},    /* Geforce 700 - midend high  */
+            {"GTX 750 Ti",  CARD_NVIDIA_GEFORCE_GTX750TI},  /* Geforce 700 - midend */
+            {"GTX 750",     CARD_NVIDIA_GEFORCE_GTX750},    /* Geforce 700 - midend */
             {"GTX 680",     CARD_NVIDIA_GEFORCE_GTX680},    /* Geforce 600 - highend */
             {"GTX 670MX",   CARD_NVIDIA_GEFORCE_GTX670MX},  /* Geforce 600 - highend */
             {"GTX 670",     CARD_NVIDIA_GEFORCE_GTX670},    /* Geforce 600 - midend high */
@@ -1971,7 +1985,7 @@ static enum wined3d_pci_device select_card_amd_binary(const struct wined3d_gl_in
             return CARD_AMD_RADEON_X700;
         }
 
-        /* Radeon Xpress Series - onboard, DX9b, Shader 2.0, 300-400MHz */
+        /* Radeon Xpress Series - onboard, DX9b, Shader 2.0, 300-400 MHz */
         if (strstr(gl_renderer, "Radeon Xpress"))
         {
             return CARD_AMD_RADEON_XPRESS_200M;
@@ -2119,7 +2133,7 @@ static enum wined3d_pci_device select_card_amd_mesa(const struct wined3d_gl_info
         {"R420",        CARD_AMD_RADEON_X700},
         {"R410",        CARD_AMD_RADEON_X700},
         {"RV410",       CARD_AMD_RADEON_X700},
-        /* Radeon Xpress - onboard, DX9b, Shader 2.0, 300-400MHz */
+        /* Radeon Xpress - onboard, DX9b, Shader 2.0, 300-400 MHz */
         {"RS740",       CARD_AMD_RADEON_XPRESS_200M},
         {"RS690",       CARD_AMD_RADEON_XPRESS_200M},
         {"RS600",       CARD_AMD_RADEON_XPRESS_200M},
@@ -2158,6 +2172,8 @@ static enum wined3d_pci_device select_card_nvidia_mesa(const struct wined3d_gl_i
     }
     cards[] =
     {
+        /* Maxwell */
+        {"NV117",   CARD_NVIDIA_GEFORCE_GTX750},
         /* Kepler */
         {"NVE6",    CARD_NVIDIA_GEFORCE_GTX770M},
         {"NVE4",    CARD_NVIDIA_GEFORCE_GTX680},
@@ -2236,29 +2252,40 @@ static enum wined3d_pci_device select_card_nvidia_mesa(const struct wined3d_gl_i
     return PCI_DEVICE_NONE;
 }
 
+static enum wined3d_pci_device select_card_vmware(const struct wined3d_gl_info *gl_info, const char *gl_renderer)
+{
+    if (strstr(gl_renderer, "SVGA3D"))
+        return CARD_VMWARE_SVGA3D;
+
+    return PCI_DEVICE_NONE;
+}
+
 static const struct gl_vendor_selection
 {
     enum wined3d_gl_vendor gl_vendor;
     const char *description;        /* Description of the card selector i.e. Apple OS/X Intel */
     enum wined3d_pci_device (*select_card)(const struct wined3d_gl_info *gl_info, const char *gl_renderer);
 }
-nvidia_gl_vendor_table[] =
-{
-    {GL_VENDOR_NVIDIA, "Nvidia binary driver", select_card_nvidia_binary},
-    {GL_VENDOR_APPLE, "Apple OSX NVidia binary driver", select_card_nvidia_binary},
-    {GL_VENDOR_MESA, "Mesa Nouveau driver", select_card_nvidia_mesa},
-},
 amd_gl_vendor_table[] =
 {
-    {GL_VENDOR_APPLE, "Apple OSX AMD/ATI binary driver", select_card_amd_binary},
-    {GL_VENDOR_FGLRX, "AMD/ATI binary driver", select_card_amd_binary},
-    {GL_VENDOR_MESA, "Mesa AMD/ATI driver", select_card_amd_mesa},
+    {GL_VENDOR_APPLE,   "Apple OSX AMD/ATI binary driver",  select_card_amd_binary},
+    {GL_VENDOR_FGLRX,   "AMD/ATI binary driver",            select_card_amd_binary},
+    {GL_VENDOR_MESA,    "Mesa AMD/ATI driver",              select_card_amd_mesa},
+},
+nvidia_gl_vendor_table[] =
+{
+    {GL_VENDOR_APPLE,   "Apple OSX NVidia binary driver",   select_card_nvidia_binary},
+    {GL_VENDOR_MESA,    "Mesa Nouveau driver",              select_card_nvidia_mesa},
+    {GL_VENDOR_NVIDIA,  "Nvidia binary driver",             select_card_nvidia_binary},
+},
+vmware_gl_vendor_table[] =
+{
+    {GL_VENDOR_MESA,    "VMware driver",                    select_card_vmware},
 },
 intel_gl_vendor_table[] =
 {
-    {GL_VENDOR_APPLE, "Apple OSX Intel binary driver", select_card_intel},
-    {GL_VENDOR_INTEL, "Mesa Intel driver", select_card_intel},
-    {GL_VENDOR_MESA, "Mesa Intel driver", select_card_intel},
+    {GL_VENDOR_APPLE,   "Apple OSX Intel binary driver",    select_card_intel},
+    {GL_VENDOR_MESA,    "Mesa Intel driver",                select_card_intel},
 };
 
 static enum wined3d_pci_device select_card_fallback_nvidia(const struct wined3d_gl_info *gl_info)
@@ -2331,14 +2358,17 @@ static const struct
 }
 card_vendor_table[] =
 {
-    {HW_VENDOR_NVIDIA,  "Nvidia",  nvidia_gl_vendor_table,
-            sizeof(nvidia_gl_vendor_table) / sizeof(nvidia_gl_vendor_table[0]),
-            select_card_fallback_nvidia},
-    {HW_VENDOR_AMD,     "AMD",     amd_gl_vendor_table,
-            sizeof(amd_gl_vendor_table) / sizeof(amd_gl_vendor_table[0]),
+    {HW_VENDOR_AMD,         "AMD",      amd_gl_vendor_table,
+            sizeof(amd_gl_vendor_table) / sizeof(*amd_gl_vendor_table),
             select_card_fallback_amd},
-    {HW_VENDOR_INTEL,   "Intel",   intel_gl_vendor_table,
-            sizeof(intel_gl_vendor_table) / sizeof(intel_gl_vendor_table[0]),
+    {HW_VENDOR_NVIDIA,      "Nvidia",   nvidia_gl_vendor_table,
+            sizeof(nvidia_gl_vendor_table) / sizeof(*nvidia_gl_vendor_table),
+            select_card_fallback_nvidia},
+    {HW_VENDOR_VMWARE,      "VMware",   vmware_gl_vendor_table,
+            sizeof(vmware_gl_vendor_table) / sizeof(*vmware_gl_vendor_table),
+            select_card_fallback_amd},
+    {HW_VENDOR_INTEL,       "Intel",    intel_gl_vendor_table,
+            sizeof(intel_gl_vendor_table) / sizeof(*intel_gl_vendor_table),
             select_card_fallback_intel},
 };
 
@@ -2937,6 +2967,15 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter)
         if (!counter_bits)
             gl_info->supported[ARB_OCCLUSION_QUERY] = FALSE;
     }
+    if (gl_info->supported[ARB_TIMER_QUERY])
+    {
+        GLint counter_bits;
+
+        GL_EXTCALL(glGetQueryivARB(GL_TIMESTAMP, GL_QUERY_COUNTER_BITS_ARB, &counter_bits));
+        TRACE("Timestamp query counter has %d bits.\n", counter_bits);
+        if (!counter_bits)
+            gl_info->supported[ARB_TIMER_QUERY] = FALSE;
+    }
     if (!gl_info->supported[ATI_TEXTURE_MIRROR_ONCE] && gl_info->supported[EXT_TEXTURE_MIRROR_CLAMP])
     {
         TRACE(" IMPLIED: ATI_texture_mirror_once support (by EXT_texture_mirror_clamp).\n");
@@ -3411,7 +3450,7 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
         const char *name = adapter->driver_info.name;
         len = min(strlen(name), identifier->driver_size - 1);
         memcpy(identifier->driver, name, len);
-        identifier->driver[len] = '\0';
+        memset(&identifier->driver[len], 0, identifier->driver_size - len);
     }
 
     if (identifier->description_size)
@@ -3419,7 +3458,7 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
         const char *description = adapter->driver_info.description;
         len = min(strlen(description), identifier->description_size - 1);
         memcpy(identifier->description, description, len);
-        identifier->description[len] = '\0';
+        memset(&identifier->description[len], 0, identifier->description_size - len);
     }
 
     /* Note that d3d8 doesn't supply a device name. */
@@ -3998,8 +4037,7 @@ HRESULT CDECL wined3d_check_device_type(const struct wined3d *wined3d, UINT adap
         enum wined3d_device_type device_type, enum wined3d_format_id display_format,
         enum wined3d_format_id backbuffer_format, BOOL windowed)
 {
-    UINT mode_count;
-    HRESULT hr;
+    BOOL present_conversion = wined3d->flags & WINED3D_PRESENT_CONVERSION;
 
     TRACE("wined3d %p, adapter_idx %u, device_type %s, display_format %s, backbuffer_format %s, windowed %#x.\n",
             wined3d, adapter_idx, debug_d3ddevicetype(device_type), debug_d3dformat(display_format),
@@ -4012,10 +4050,7 @@ HRESULT CDECL wined3d_check_device_type(const struct wined3d *wined3d, UINT adap
      * combination is available on the given adapter. In fullscreen mode microsoft specified
      * that the display format shouldn't provide alpha and that ignoring alpha the backbuffer
      * and display format should match exactly.
-     * In windowed mode format conversion can occur and this depends on the driver. When format
-     * conversion is done, this function should nevertheless fail and applications need to use
-     * CheckDeviceFormatConversion.
-     * At the moment we assume that fullscreen and windowed have the same capabilities. */
+     * In windowed mode format conversion can occur and this depends on the driver. */
 
     /* There are only 4 display formats. */
     if (!(display_format == WINED3DFMT_B5G6R5_UNORM
@@ -4027,72 +4062,88 @@ HRESULT CDECL wined3d_check_device_type(const struct wined3d *wined3d, UINT adap
         return WINED3DERR_NOTAVAILABLE;
     }
 
-    /* If the requested display format is not available, don't continue. */
-    mode_count = wined3d_get_adapter_mode_count(wined3d, adapter_idx,
-            display_format, WINED3D_SCANLINE_ORDERING_UNKNOWN);
-    if (!mode_count)
+    if (!windowed)
     {
-        TRACE("No available modes for display format %s.\n", debug_d3dformat(display_format));
-        return WINED3DERR_NOTAVAILABLE;
-    }
+        /* If the requested display format is not available, don't continue. */
+        if (!wined3d_get_adapter_mode_count(wined3d, adapter_idx,
+                display_format, WINED3D_SCANLINE_ORDERING_UNKNOWN))
+        {
+            TRACE("No available modes for display format %s.\n", debug_d3dformat(display_format));
+            return WINED3DERR_NOTAVAILABLE;
+        }
 
-    /* Windowed mode allows you to specify WINED3DFMT_UNKNOWN for the backbuffer format,
-     * it means 'reuse' the display format for the backbuffer. */
-    if (!windowed && backbuffer_format == WINED3DFMT_UNKNOWN)
-    {
-        TRACE("backbuffer_format WINED3FMT_UNKNOWN only available in windowed mode.\n");
-        return WINED3DERR_NOTAVAILABLE;
+        present_conversion = FALSE;
     }
-
-    /* In FULLSCREEN mode WINED3DFMT_B5G6R5_UNORM can only be mixed with
-     * backbuffer format WINED3DFMT_B5G6R5_UNORM. */
-    if (display_format == WINED3DFMT_B5G6R5_UNORM && backbuffer_format != WINED3DFMT_B5G6R5_UNORM)
+    else if (display_format == WINED3DFMT_B10G10R10A2_UNORM)
     {
-        TRACE("Unsupported display/backbuffer format combination %s / %s.\n",
+        /* WINED3DFMT_B10G10R10A2_UNORM is only allowed in fullscreen mode. */
+        TRACE("Unsupported format combination %s / %s in windowed mode.\n",
                 debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
         return WINED3DERR_NOTAVAILABLE;
     }
 
-    /* In FULLSCREEN mode WINED3DFMT_B5G5R5X1_UNORM can only be mixed with
-     * backbuffer formats WINED3DFMT_B5G5R5X1_UNORM and
-     * WINED3DFMT_B5G5R5A1_UNORM. */
-    if (display_format == WINED3DFMT_B5G5R5X1_UNORM
-            && !(backbuffer_format == WINED3DFMT_B5G5R5X1_UNORM || backbuffer_format == WINED3DFMT_B5G5R5A1_UNORM))
+    if (present_conversion)
     {
-        TRACE("Unsupported display/backbuffer format combination %s / %s.\n",
-                debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
+        /* Use the display format as back buffer format if the latter is
+         * WINED3DFMT_UNKNOWN. */
+        if (backbuffer_format == WINED3DFMT_UNKNOWN)
+            backbuffer_format = display_format;
+
+        if (FAILED(wined3d_check_device_format_conversion(wined3d, adapter_idx,
+                device_type, backbuffer_format, display_format)))
+        {
+            TRACE("Format conversion from %s to %s not supported.\n",
+                    debug_d3dformat(backbuffer_format), debug_d3dformat(display_format));
+            return WINED3DERR_NOTAVAILABLE;
+        }
+    }
+    else
+    {
+        /* When format conversion from the back buffer format to the display
+         * format is not allowed, only a limited number of combinations are
+         * valid. */
+
+        if (display_format == WINED3DFMT_B5G6R5_UNORM && backbuffer_format != WINED3DFMT_B5G6R5_UNORM)
+        {
+            TRACE("Unsupported format combination %s / %s.\n",
+                    debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
+            return WINED3DERR_NOTAVAILABLE;
+        }
+
+        if (display_format == WINED3DFMT_B5G5R5X1_UNORM
+                && !(backbuffer_format == WINED3DFMT_B5G5R5X1_UNORM || backbuffer_format == WINED3DFMT_B5G5R5A1_UNORM))
+        {
+            TRACE("Unsupported format combination %s / %s.\n",
+                    debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
+            return WINED3DERR_NOTAVAILABLE;
+        }
+
+        if (display_format == WINED3DFMT_B8G8R8X8_UNORM
+                && !(backbuffer_format == WINED3DFMT_B8G8R8X8_UNORM || backbuffer_format == WINED3DFMT_B8G8R8A8_UNORM))
+        {
+            TRACE("Unsupported format combination %s / %s.\n",
+                    debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
+            return WINED3DERR_NOTAVAILABLE;
+        }
+
+        if (display_format == WINED3DFMT_B10G10R10A2_UNORM
+                && backbuffer_format != WINED3DFMT_B10G10R10A2_UNORM)
+        {
+            TRACE("Unsupported format combination %s / %s.\n",
+                    debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
+            return WINED3DERR_NOTAVAILABLE;
+        }
+    }
+
+    /* Validate that the back buffer format is usable for render targets. */
+    if (FAILED(wined3d_check_device_format(wined3d, adapter_idx, device_type, display_format,
+            WINED3DUSAGE_RENDERTARGET, WINED3D_RTYPE_SURFACE, backbuffer_format)))
+    {
+        TRACE("Format %s not allowed for render targets.\n", debug_d3dformat(backbuffer_format));
         return WINED3DERR_NOTAVAILABLE;
     }
 
-    /* In FULLSCREEN mode WINED3DFMT_B8G8R8X8_UNORM can only be mixed with
-     * backbuffer formats WINED3DFMT_B8G8R8X8_UNORM and
-     * WINED3DFMT_B8G8R8A8_UNORM. */
-    if (display_format == WINED3DFMT_B8G8R8X8_UNORM
-            && !(backbuffer_format == WINED3DFMT_B8G8R8X8_UNORM || backbuffer_format == WINED3DFMT_B8G8R8A8_UNORM))
-    {
-        TRACE("Unsupported display/backbuffer format combination %s / %s.\n",
-                debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
-        return WINED3DERR_NOTAVAILABLE;
-    }
-
-    /* WINED3DFMT_B10G10R10A2_UNORM is only allowed in fullscreen mode and it
-     * can only be mixed with backbuffer format WINED3DFMT_B10G10R10A2_UNORM. */
-    if (display_format == WINED3DFMT_B10G10R10A2_UNORM
-            && (backbuffer_format != WINED3DFMT_B10G10R10A2_UNORM || windowed))
-    {
-        TRACE("Unsupported display/backbuffer format combination %s / %s.\n",
-                debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
-        return WINED3DERR_NOTAVAILABLE;
-    }
-
-    /* Use CheckDeviceFormat to see if the backbuffer_format is usable with the given display_format */
-    hr = wined3d_check_device_format(wined3d, adapter_idx, device_type, display_format,
-            WINED3DUSAGE_RENDERTARGET, WINED3D_RTYPE_SURFACE, backbuffer_format);
-    if (FAILED(hr))
-        TRACE("Unsupported display/backbuffer format combination %s / %s.\n",
-                debug_d3dformat(display_format), debug_d3dformat(backbuffer_format));
-
-    return hr;
+    return WINED3D_OK;
 }
 
 HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapter_idx,
@@ -4197,6 +4248,8 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                       WINED3DPCMPCAPS_NEVER        |
                       WINED3DPCMPCAPS_NOTEQUAL;
 
+    /* WINED3DPBLENDCAPS_BOTHINVSRCALPHA and WINED3DPBLENDCAPS_BOTHSRCALPHA
+     * are legacy settings for srcblend only. */
     caps->SrcBlendCaps  =  WINED3DPBLENDCAPS_BOTHINVSRCALPHA |
                            WINED3DPBLENDCAPS_BOTHSRCALPHA    |
                            WINED3DPBLENDCAPS_DESTALPHA       |
@@ -4221,12 +4274,9 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                            WINED3DPBLENDCAPS_SRCALPHA        |
                            WINED3DPBLENDCAPS_SRCCOLOR        |
                            WINED3DPBLENDCAPS_ZERO;
-    /* NOTE: WINED3DPBLENDCAPS_SRCALPHASAT is not supported as dest blend factor,
-     * according to the glBlendFunc manpage
-     *
-     * WINED3DPBLENDCAPS_BOTHINVSRCALPHA and WINED3DPBLENDCAPS_BOTHSRCALPHA are
-     * legacy settings for srcblend only
-     */
+
+    if (gl_info->supported[ARB_BLEND_FUNC_EXTENDED])
+        caps->DestBlendCaps |= WINED3DPBLENDCAPS_SRCALPHASAT;
 
     if (gl_info->supported[EXT_BLEND_COLOR])
     {
@@ -4439,8 +4489,8 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     caps->MaxAnisotropy = gl_info->limits.anisotropy;
     caps->MaxPointSize = gl_info->limits.pointsize_max;
 
-    caps->MaxPrimitiveCount   = 0xfffff; /* For now set 2^20-1 which is used by most >=Geforce3/Radeon8500 cards */
-    caps->MaxVertexIndex      = 0xfffff;
+    caps->MaxPrimitiveCount   = 0x555555; /* Taken from an AMD Radeon HD 5700 (Evergreen) GPU. */
+    caps->MaxVertexIndex      = 0xffffff; /* Taken from an AMD Radeon HD 5700 (Evergreen) GPU. */
     caps->MaxStreams          = MAX_STREAMS;
     caps->MaxStreamStride     = 1024;
 
@@ -4504,6 +4554,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
 
         caps->MaxVShaderInstructionsExecuted    = 65535; /* VS 3.0 needs at least 65535, some cards even use 2^32-1 */
         caps->MaxVertexShader30InstructionSlots = max(512, adapter->gl_info.limits.arb_vs_instructions);
+        caps->VertexTextureFilterCaps = WINED3DPTFILTERCAPS_MINFPOINT | WINED3DPTFILTERCAPS_MAGFPOINT;
     }
     else if (caps->VertexShaderVersion == 2)
     {
@@ -5170,9 +5221,8 @@ const struct wined3d_parent_ops wined3d_null_parent_ops =
     wined3d_null_wined3d_object_destroyed,
 };
 
-HRESULT wined3d_init(struct wined3d *wined3d, UINT version, DWORD flags)
+HRESULT wined3d_init(struct wined3d *wined3d, DWORD flags)
 {
-    wined3d->dxVersion = version;
     wined3d->ref = 1;
     wined3d->flags = flags;
 

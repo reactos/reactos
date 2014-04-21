@@ -285,6 +285,11 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
     LARGE_INTEGER DueTime, NewDueTime, InterruptTime;
     ULONG Hand = 0;
 
+    if (Thread->WaitNext)
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    else
+        ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+
     /* If this is a user-mode wait of 0 seconds, yield execution */
     if (!(Interval->QuadPart) && (WaitMode != KernelMode))
     {
@@ -292,7 +297,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
         if (!(Alertable) && !(Thread->ApcState.UserApcPending))
         {
             /* Yield execution */
-            NtYieldExecution();
+            return NtYieldExecution();
         }
     }
 

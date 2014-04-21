@@ -1,0 +1,19 @@
+﻿; UTF-8
+
+[Section]
+Name = PeaZip
+Version = 5.3.0
+Licence = LGPL v3, OpenCandy EULA
+Description = PeaZip is a free, cross-platform, open source file and archive manager. It supports over 150 archive formats.
+Size = 5.8 MB
+Category = 12
+URLSite = http://peazip.sourceforge.net/
+URLDownload = http://sourceforge.net/projects/peazip/files/5.3.0/peazip-5.3.0.WINDOWS.exe
+CDPath = none
+
+[Section.0407]
+Description = PeaZip ist ein freier, plattformübergreifender, quelloffener Datei- und Archivmanager. Er unterstützt über 150 Archiv-Formate.
+
+[Section.041f]
+Description = PeaZip; ücretsiz, çapraz platform, açık kaynak bir kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
+Size = 5,8 MB

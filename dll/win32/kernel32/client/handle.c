@@ -50,10 +50,7 @@ GetHandleInformation(IN HANDLE hObject,
 
     if (IsConsoleHandle(hObject))
     {
-        /* FIXME: GetConsoleHandleInformation required */
-        UNIMPLEMENTED;
-        BaseSetLastNTError(STATUS_NOT_IMPLEMENTED);
-        return FALSE;
+        return GetConsoleHandleInformation(hObject, lpdwFlags);
     }
 
     Status = NtQueryObject(hObject,
@@ -91,10 +88,7 @@ SetHandleInformation(IN HANDLE hObject,
 
     if (IsConsoleHandle(hObject))
     {
-        /* FIXME: SetConsoleHandleInformation required */
-        UNIMPLEMENTED;
-        BaseSetLastNTError(STATUS_NOT_IMPLEMENTED);
-        return FALSE;
+        return SetConsoleHandleInformation(hObject, dwMask, dwFlags);
     }
 
     Status = NtQueryObject(hObject,

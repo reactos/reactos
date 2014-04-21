@@ -816,7 +816,7 @@ BOOLEAN CDefView::LV_RenameItem(LPCITEMIDLIST pidlOld, LPCITEMIDLIST pidlNew)
 INT CALLBACK CDefView::fill_list( LPVOID ptr, LPVOID arg )
 {
     LPITEMIDLIST pidl = (LPITEMIDLIST)ptr;
-    CDefView *pThis = (CDefView *)arg;
+    CDefView *pThis = static_cast<CDefView *>(arg);
     /* in a commdlg This works as a filemask*/
     if (pThis->IncludeObject(pidl) == S_OK)
         pThis->LV_AddItem(pidl);
@@ -1807,9 +1807,13 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             break;
 
         case SHCNE_UPDATEITEM:
+            LV_RenameItem(Pidls[0], Pidls[0]);
+            break;
+
+        case SHCNE_UPDATEDIR:
+            Refresh();
             break;
     }
-
     return TRUE;
 }
 
@@ -2493,12 +2497,10 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
     {
         m_pCurDropTarget->Drop(pDataObject, grfKeyState, pt, pdwEffect);
         m_pCurDropTarget.Release();
-
-        this->Refresh();
     }
 
-    m_pCurDataObject.Release();    m_iDragOverItem = 0;
-
+    m_pCurDataObject.Release();    
+    m_iDragOverItem = 0;
     return S_OK;
 }
 

@@ -241,16 +241,13 @@ NpImpersonate(IN PDEVICE_OBJECT DeviceObject,
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
-    if (NodeTypeCode == NPFS_NTC_CCB)
+    if (NodeTypeCode == NPFS_NTC_CCB && NamedPipeEnd == FILE_PIPE_SERVER_END)
     {
-        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
-        {
-            Status = NpImpersonateClientContext(Ccb);
-        }
-        else
-        {
-            Status = STATUS_ILLEGAL_FUNCTION;
-        }
+        Status = NpImpersonateClientContext(Ccb);
+    }
+    else
+    {
+        Status = STATUS_ILLEGAL_FUNCTION;
     }
 
     return Status;

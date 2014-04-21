@@ -508,6 +508,13 @@ XMLPUBFUN int XMLCALL
  */
 XMLPUBFUN long XMLCALL
 		    xmlXPathOrderDocElems	(xmlDocPtr doc);
+XMLPUBFUN int XMLCALL
+		    xmlXPathSetContextNode	(xmlNodePtr node,
+						 xmlXPathContextPtr ctx);
+XMLPUBFUN xmlXPathObjectPtr XMLCALL
+		    xmlXPathNodeEval		(xmlNodePtr node,
+						 const xmlChar *str,
+						 xmlXPathContextPtr ctx);
 XMLPUBFUN xmlXPathObjectPtr XMLCALL
 		    xmlXPathEval		(const xmlChar *str,
 						 xmlXPathContextPtr ctx);

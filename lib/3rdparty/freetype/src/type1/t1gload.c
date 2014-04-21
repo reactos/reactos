@@ -300,6 +300,8 @@
       goto Exit;
     }
 
+    FT_TRACE1(( "T1_Load_Glyph: glyph index %d\n", glyph_index ));
+
     FT_ASSERT( ( face->len_buildchar == 0 ) == ( face->buildchar == NULL ) );
 
     if ( load_flags & FT_LOAD_NO_RECURSE )

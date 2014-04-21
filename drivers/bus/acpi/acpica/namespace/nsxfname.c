@@ -9,13 +9,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -32,7 +32,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -44,11 +44,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -56,7 +56,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -81,10 +81,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -93,14 +93,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -115,6 +115,7 @@
  *****************************************************************************/
 
 #define __NSXFNAME_C__
+#define EXPORT_ACPI_INTERFACES
 
 #include "acpi.h"
 #include "accommon.h"
@@ -130,8 +131,8 @@
 
 static char *
 AcpiNsCopyDeviceId (
-    ACPI_DEVICE_ID          *Dest,
-    ACPI_DEVICE_ID          *Source,
+    ACPI_PNP_DEVICE_ID      *Dest,
+    ACPI_PNP_DEVICE_ID      *Source,
     char                    *StringArea);
 
 
@@ -147,8 +148,8 @@ AcpiNsCopyDeviceId (
  * RETURN:      Status
  *
  * DESCRIPTION: This routine will search for a caller specified name in the
- *              name space.  The caller can restrict the search region by
- *              specifying a non NULL parent.  The parent value is itself a
+ *              name space. The caller can restrict the search region by
+ *              specifying a non NULL parent. The parent value is itself a
  *              namespace handle.
  *
  ******************************************************************************/
@@ -192,7 +193,7 @@ AcpiGetHandle (
      *
      * Error for <null Parent + relative path>
      */
-    if (AcpiNsValidRootPrefix (Pathname[0]))
+    if (ACPI_IS_ROOT_PREFIX (Pathname[0]))
     {
         /* Pathname is fully qualified (starts with '\') */
 
@@ -236,7 +237,7 @@ ACPI_EXPORT_SYMBOL (AcpiGetHandle)
  * RETURN:      Pointer to a string containing the fully qualified Name.
  *
  * DESCRIPTION: This routine returns the fully qualified name associated with
- *              the Handle parameter.  This and the AcpiPathnameToHandle are
+ *              the Handle parameter. This and the AcpiPathnameToHandle are
  *              complementary functions.
  *
  ******************************************************************************/
@@ -249,6 +250,7 @@ AcpiGetName (
 {
     ACPI_STATUS             Status;
     ACPI_NAMESPACE_NODE     *Node;
+    char                    *NodeName;
 
 
     /* Parameter validation */
@@ -299,8 +301,8 @@ AcpiGetName (
 
     /* Just copy the ACPI name from the Node and zero terminate it */
 
-    ACPI_STRNCPY (Buffer->Pointer, AcpiUtGetNodeName (Node),
-                ACPI_NAME_SIZE);
+    NodeName = AcpiUtGetNodeName (Node);
+    ACPI_MOVE_NAME (Buffer->Pointer, NodeName);
     ((char *) Buffer->Pointer) [ACPI_NAME_SIZE] = 0;
     Status = AE_OK;
 
@@ -318,23 +320,24 @@ ACPI_EXPORT_SYMBOL (AcpiGetName)
  *
  * FUNCTION:    AcpiNsCopyDeviceId
  *
- * PARAMETERS:  Dest                - Pointer to the destination DEVICE_ID
- *              Source              - Pointer to the source DEVICE_ID
+ * PARAMETERS:  Dest                - Pointer to the destination PNP_DEVICE_ID
+ *              Source              - Pointer to the source PNP_DEVICE_ID
  *              StringArea          - Pointer to where to copy the dest string
  *
  * RETURN:      Pointer to the next string area
  *
- * DESCRIPTION: Copy a single DEVICE_ID, including the string data.
+ * DESCRIPTION: Copy a single PNP_DEVICE_ID, including the string data.
  *
  ******************************************************************************/
 
 static char *
 AcpiNsCopyDeviceId (
-    ACPI_DEVICE_ID          *Dest,
-    ACPI_DEVICE_ID          *Source,
+    ACPI_PNP_DEVICE_ID      *Dest,
+    ACPI_PNP_DEVICE_ID      *Source,
     char                    *StringArea)
 {
-    /* Create the destination DEVICE_ID */
+
+    /* Create the destination PNP_DEVICE_ID */
 
     Dest->String = StringArea;
     Dest->Length = Source->Length;
@@ -359,8 +362,8 @@ AcpiNsCopyDeviceId (
  *              namespace node and possibly by running several standard
  *              control methods (Such as in the case of a device.)
  *
- * For Device and Processor objects, run the Device _HID, _UID, _CID, _STA,
- * _ADR, _SxW, and _SxD methods.
+ * For Device and Processor objects, run the Device _HID, _UID, _CID, _SUB,
+ * _STA, _ADR, _SxW, and _SxD methods.
  *
  * Note: Allocates the return buffer, must be freed by the caller.
  *
@@ -373,9 +376,10 @@ AcpiGetObjectInfo (
 {
     ACPI_NAMESPACE_NODE     *Node;
     ACPI_DEVICE_INFO        *Info;
-    ACPI_DEVICE_ID_LIST     *CidList = NULL;
-    ACPI_DEVICE_ID          *Hid = NULL;
-    ACPI_DEVICE_ID          *Uid = NULL;
+    ACPI_PNP_DEVICE_ID_LIST *CidList = NULL;
+    ACPI_PNP_DEVICE_ID      *Hid = NULL;
+    ACPI_PNP_DEVICE_ID      *Uid = NULL;
+    ACPI_PNP_DEVICE_ID      *Sub = NULL;
     char                    *NextIdString;
     ACPI_OBJECT_TYPE        Type;
     ACPI_NAME               Name;
@@ -396,7 +400,7 @@ AcpiGetObjectInfo (
     Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
     if (ACPI_FAILURE (Status))
     {
-        goto Cleanup;
+        return (Status);
     }
 
     Node = AcpiNsValidateHandle (Handle);
@@ -428,7 +432,7 @@ AcpiGetObjectInfo (
     {
         /*
          * Get extra info for ACPI Device/Processor objects only:
-         * Run the Device _HID, _UID, and _CID methods.
+         * Run the Device _HID, _UID, _SUB, and _CID methods.
          *
          * Note: none of these methods are required, so they may or may
          * not be present for this device. The Info->Valid bitfield is used
@@ -453,6 +457,15 @@ AcpiGetObjectInfo (
             Valid |= ACPI_VALID_UID;
         }
 
+        /* Execute the Device._SUB method */
+
+        Status = AcpiUtExecute_SUB (Node, &Sub);
+        if (ACPI_SUCCESS (Status))
+        {
+            InfoSize += Sub->Length;
+            Valid |= ACPI_VALID_SUB;
+        }
+
         /* Execute the Device._CID method */
 
         Status = AcpiUtExecute_CID (Node, &CidList);
@@ -460,7 +473,7 @@ AcpiGetObjectInfo (
         {
             /* Add size of CID strings and CID pointer array */
 
-            InfoSize += (CidList->ListSize - sizeof (ACPI_DEVICE_ID_LIST));
+            InfoSize += (CidList->ListSize - sizeof (ACPI_PNP_DEVICE_ID_LIST));
             Valid |= ACPI_VALID_CID;
         }
     }
@@ -485,9 +498,14 @@ AcpiGetObjectInfo (
          * Get extra info for ACPI Device/Processor objects only:
          * Run the _STA, _ADR and, SxW, and _SxD methods.
          *
-         * Note: none of these methods are required, so they may or may
+         * Notes: none of these methods are required, so they may or may
          * not be present for this device. The Info->Valid bitfield is used
          * to indicate which methods were found and run successfully.
+         *
+         * For _STA, if the method does not exist, then (as per the ACPI
+         * specification), the returned CurrentStatus flags will indicate
+         * that the device is present/functional/enabled. Otherwise, the
+         * CurrentStatus flags reflect the value returned from _STA.
          */
 
         /* Execute the Device._STA method */
@@ -535,14 +553,15 @@ AcpiGetObjectInfo (
     NextIdString = ACPI_CAST_PTR (char, Info->CompatibleIdList.Ids);
     if (CidList)
     {
-        /* Point past the CID DEVICE_ID array */
+        /* Point past the CID PNP_DEVICE_ID array */
 
-        NextIdString += ((ACPI_SIZE) CidList->Count * sizeof (ACPI_DEVICE_ID));
+        NextIdString += ((ACPI_SIZE) CidList->Count * sizeof (ACPI_PNP_DEVICE_ID));
     }
 
     /*
-     * Copy the HID, UID, and CIDs to the return buffer. The variable-length
-     * strings are copied to the reserved area at the end of the buffer.
+     * Copy the HID, UID, SUB, and CIDs to the return buffer.
+     * The variable-length strings are copied to the reserved area
+     * at the end of the buffer.
      *
      * For HID and CID, check if the ID is a PCI Root Bridge.
      */
@@ -561,6 +580,12 @@ AcpiGetObjectInfo (
     {
         NextIdString = AcpiNsCopyDeviceId (&Info->UniqueId,
             Uid, NextIdString);
+    }
+
+    if (Sub)
+    {
+        NextIdString = AcpiNsCopyDeviceId (&Info->SubsystemId,
+            Sub, NextIdString);
     }
 
     if (CidList)
@@ -602,6 +627,10 @@ Cleanup:
     if (Uid)
     {
         ACPI_FREE (Uid);
+    }
+    if (Sub)
+    {
+        ACPI_FREE (Sub);
     }
     if (CidList)
     {

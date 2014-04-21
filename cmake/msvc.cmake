@@ -43,6 +43,7 @@ add_compile_flags("/wd4290")
 
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
+# - C4020: too many actual parameters
 # - C4022: pointer type mismatch for parameter
 # - TODO: C4028: formal parameter different from declaration
 # - C4047: different level of indirection
@@ -52,10 +53,11 @@ add_compile_flags("/wd4290")
 # - C4113: parameter lists differ
 # - C4129: unrecognized escape sequence
 # - TODO: C4133: incompatible types
+# - C4163: 'identifier': not available as an intrinsic function
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
 # - C4603: macro is not defined or definition is different after precompiled header use
-add_compile_flags("/we4013 /we4022 /we4047 /we4098 /we4113 /we4129 /we4229 /we4700 /we4603")
+add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603")
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
@@ -91,10 +93,16 @@ else()
 endif()
 
 if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
-    # for VS builds we'll only have en-US in resource files
+    # For VS builds we'll only have en-US in resource files
     add_definitions(/DLANGUAGE_EN_US)
 else()
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
+    # Only VS 10+ resource compiler supports /nologo
+    if(MSVC_VERSION GREATER 1599)
+        set(rc_nologo_flag "/nologo")
+    else()
+        set(rc_nologo_flag)
+    endif()
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_nologo_flag} <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
     set(CMAKE_ASM_COMPILE_OBJECT
         "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
         "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
@@ -121,7 +129,14 @@ set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
 if(PCH)
     macro(add_pch _target _pch _sources)
-        set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_target}.pch)
+
+        # Workaround for the MSVC toolchain (MSBUILD) /MP bug
+        set(_temp_gch ${CMAKE_CURRENT_BINARY_DIR}/${_target}.pch)
+        if(MSVC_IDE)
+            file(TO_NATIVE_PATH ${_temp_gch} _gch)
+        else()
+            set(_gch ${_temp_gch})
+        endif()
 
         if(IS_CPP)
             set(_pch_language CXX)
@@ -205,7 +220,7 @@ function(set_module_type_toolchain MODULE TYPE)
     endif()
 endfunction()
 
-#define those for having real libraries
+# Define those for having real libraries
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
 set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <SOURCE>")
 function(add_delay_importlibs _module)
@@ -238,12 +253,12 @@ function(generate_import_lib _libname _dllname _spec_file)
             COMMAND ${CMAKE_ASM_COMPILER} /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file}
             DEPENDS ${_asm_stubs_file})
     else()
-        # be clear about the "language"
+        # Be clear about the "language"
         # Thanks MS for creating a stupid linker
         set_source_files_properties(${_asm_stubs_file} PROPERTIES LANGUAGE "STUB_ASM")
     endif()
 
-    # add our library
+    # Add our library
     if(MSVC_IDE)
         add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file}.obj)
         set_source_files_properties(${_asm_stubs_file}.obj PROPERTIES EXTERNAL_OBJECT 1)
@@ -265,7 +280,7 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 function(spec2def _dllname _spec_file)
-    # do we also want to add importlib targets?
+    # Do we also want to add importlib targets?
     if(${ARGC} GREATER 2)
         if(${ARGN} STREQUAL "ADD_IMPORTLIB")
             set(__add_importlib TRUE)
@@ -274,15 +289,15 @@ function(spec2def _dllname _spec_file)
         endif()
     endif()
 
-    # get library basename
+    # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
 
-    # error out on anything else than spec
+    # Error out on anything else than spec
     if(NOT ${_spec_file} MATCHES ".*\\.spec")
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
-    #generate def for the DLL and C stubs file
+    # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
@@ -294,10 +309,10 @@ function(spec2def _dllname _spec_file)
 endfunction()
 
 macro(macro_mc FLAG FILE)
-    set(COMMAND_MC ${CMAKE_MC_COMPILER} ${FLAG} -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+    set(COMMAND_MC ${CMAKE_MC_COMPILER} ${FLAG} -b ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
 endmacro()
 
-#pseh workaround
+# PSEH workaround
 set(PSEH_LIB "pseh")
 
 # Use a full path for the x86 version of ml when using x64 VS.
@@ -343,9 +358,9 @@ macro(add_asm_files _target)
         get_directory_property(_defines COMPILE_DEFINITIONS)
         foreach(_source_file ${ARGN})
             get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
+            get_filename_component(_source_file_full_path ${_source_file} ABSOLUTE)
             set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.tmp)
             set(_object_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.obj)
-            set(_source_file_full_path ${CMAKE_CURRENT_SOURCE_DIR}/${_source_file})
             get_source_file_property(_defines_semicolon_list ${_source_file_full_path} COMPILE_DEFINITIONS)
             unset(_source_file_defines)
             foreach(_define ${_defines_semicolon_list})

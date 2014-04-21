@@ -131,6 +131,7 @@ BaseDispatchApc(IN PAPCFUNC ApcRoutine,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 CreateThread(IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
              IN DWORD dwStackSize,
              IN LPTHREAD_START_ROUTINE lpStartAddress,

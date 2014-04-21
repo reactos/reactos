@@ -23,5 +23,6 @@ set_source_files_properties(devenum.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT
 set_module_type(devenum win32dll UNICODE)
 target_link_libraries(devenum strmiids uuid wine)
 add_importlibs(devenum advapi32 ole32 oleaut32 winmm user32 avicap32 msvcrt kernel32 ntdll)
+add_delay_importlibs(devenum msvfw32)
 add_pch(devenum devenum_private.h SOURCE)
 add_cd_file(TARGET devenum DESTINATION reactos/system32 FOR all)

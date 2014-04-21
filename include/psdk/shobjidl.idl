@@ -3813,6 +3813,137 @@ interface ICustomDestinationList : IUnknown
     HRESULT AbortList();
 }
 
+[
+    uuid(ddefe873-6997-4e68-be26-39b633adbe12),
+    object,
+    pointer_default(unique)
+]
+interface IQueryCancelAutoPlay : IUnknown
+{
+    HRESULT AllowAutoPlay([in, string] LPCWSTR path,
+                          [in] DWORD content_type,
+                          [in, string] LPCWSTR label,
+                          [in] DWORD serial_number);
+}
+
+[
+    uuid(d594d0d8-8da7-457b-b3b4-ce5dbaac0b88),
+    pointer_default(unique)
+]
+interface ITransferAdviseSink : IUnknown
+{
+    [v1_enum] enum _TRANSFER_ADVISE_STATE
+    {
+        TS_NONE          = 0,
+        TS_PERFORMING    = 1,
+        TS_PREPARING     = 2,
+        TS_INDETERMINATE = 4
+    };
+    typedef DWORD TRANSFER_ADVISE_STATE;
+
+    HRESULT UpdateProgress([in] ULONGLONG size_current,
+                           [in] ULONGLONG size_total,
+                           [in] INT files_current,
+                           [in] INT files_total,
+                           [in] INT folders_current,
+                           [in] INT folders_total);
+    HRESULT UpdateTransferState([in] TRANSFER_ADVISE_STATE state);
+    HRESULT ConfirmOverwrite([in] IShellItem *source,
+                             [in] IShellItem *dest_parent,
+                             [in, string] LPCWSTR name);
+    HRESULT ConfirmEncryptLoss([in] IShellItem *source);
+    HRESULT FileFailure([in] IShellItem *item,
+                        [in, unique, string] LPCWSTR itemname,
+                        [in] HRESULT hr,
+                        [out, unique, size_is(crename)] LPWSTR rename,
+                        [in] ULONG crename);
+    HRESULT SubStreamFailure([in] IShellItem *item,
+                             [in, string] LPCWSTR stream,
+                             [in] HRESULT hr);
+    HRESULT PropertyFailure([in] IShellItem *item,
+                            [in, unique] const PROPERTYKEY *key,
+                            [in] HRESULT hr);
+}
+
+[v1_enum] enum _TRANSFER_SOURCE_FLAGS
+{
+    TSF_NORMAL                     = 0,
+    TSF_FAIL_EXIST                 = 0,
+    TSF_RENAME_EXIST               = 0x1,
+    TSF_OVERWRITE_EXIST            = 0x2,
+    TSF_ALLOW_DECRYPTION           = 0x4,
+    TSF_NO_SECURITY                = 0x8,
+    TSF_COPY_CREATION_TIME         = 0x10,
+    TSF_COPY_WRITE_TIME            = 0x20,
+    TSF_USE_FULL_ACCESS            = 0x40,
+    TSF_DELETE_RECYCLE_IF_POSSIBLE = 0x80,
+    TSF_COPY_HARD_LINK             = 0x100,
+    TSF_COPY_LOCALIZED_NAME        = 0x200,
+    TSF_MOVE_AS_COPY_DELETE        = 0x400,
+    TSF_SUSPEND_SHELLEVENTS        = 0x800
+};
+typedef DWORD TRANSFER_SOURCE_FLAGS;
+
+[
+    uuid(00adb003-bde9-45c6-8e29-d09f9353e108),
+    object,
+    pointer_default(unique)
+]
+interface ITransferSource : IUnknown
+{
+    HRESULT Advise([in] ITransferAdviseSink *sink, [out] DWORD *cookie);
+    HRESULT Unadvise([in] DWORD cookie);
+    HRESULT SetProperties([in] IPropertyChangeArray *array);
+    HRESULT OpenItem([in] IShellItem *item,
+                     [in] TRANSFER_SOURCE_FLAGS flags,
+                     [in] REFIID riid,
+                     [out, iid_is(riid)] void **ppv);
+    HRESULT MoveItem([in] IShellItem *item,
+                     [in] IShellItem *parent_dest,
+                     [in, string] LPCWSTR name_dest,
+                     [in] TRANSFER_SOURCE_FLAGS flags,
+                     [out] IShellItem **newitem);
+    HRESULT RecycleItem([in] IShellItem *source,
+                        [in] IShellItem *parent_dest,
+                        [in] TRANSFER_SOURCE_FLAGS flags,
+                        [out] IShellItem **new_dest);
+    HRESULT RemoveItem([in] IShellItem *source, [in] TRANSFER_SOURCE_FLAGS flags);
+    HRESULT RenameItem([in] IShellItem *source,
+                       [in, string] LPCWSTR newname,
+                       [in] TRANSFER_SOURCE_FLAGS flags,
+                       [out] IShellItem **new_dest);
+    HRESULT LinkItem([in] IShellItem *source,
+                     [in] IShellItem *parent_dest,
+                     [in, unique, string] LPCWSTR new_name,
+                     [in] TRANSFER_SOURCE_FLAGS flags,
+                     [out] IShellItem **new_dest);
+    HRESULT ApplyPropertiesToItem([in] IShellItem *source, [out] IShellItem **newitem);
+    HRESULT GetDefaultDestinationName([in] IShellItem *source,
+                                      [in] IShellItem *parent_dest,
+                                      [out, string] LPWSTR *dest_name);
+    HRESULT EnterFolder([in] IShellItem *child_folder);
+    HRESULT LeaveFolder([in] IShellItem *child_folder);
+}
+
+[
+    uuid(48addd32-3ca5-4124-abe3-b5a72531b207),
+    object,
+    pointer_default(unique)
+]
+interface ITransferDestination : IUnknown
+{
+    HRESULT Advise([in] ITransferAdviseSink *sink, [out] DWORD *cookie);
+    HRESULT Unadvise([in] DWORD cookie);
+    HRESULT CreateItem([in, string] LPCWSTR name,
+                       [in] DWORD attr,
+                       [in] ULONGLONG size,
+                       [in] TRANSFER_SOURCE_FLAGS flags,
+                       [in] REFIID riid,
+                       [out, iid_is(riid)] void **ppv,
+                       [in] REFIID resources,
+                       [out, iid_is(riid)] void **presources);
+}
+
 /*****************************************************************************
  * ShellObjects typelibrary
  */
@@ -3892,6 +4023,14 @@ library ShellObjects
     ]
     coclass DestinationList {
         interface ICustomDestinationList;
+    }
+
+    [
+        uuid(331f1768-05a9-4ddd-b86e-dae34ddc998a)
+    ]
+    coclass QueryCancelAutoPlay
+    {
+        interface IQueryCancelAutoPlay;
     }
 
     [

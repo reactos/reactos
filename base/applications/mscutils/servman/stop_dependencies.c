@@ -238,9 +238,7 @@ DoInitDependsDialog(PMAIN_WND_INFO pInfo,
                 bRet = TRUE;
             }
 
-            HeapFree(ProcessHeap,
-                     0,
-                     lpPartialStr);
+            LocalFree(lpPartialStr);
         }
 
         /* Display the list of services which need stopping */

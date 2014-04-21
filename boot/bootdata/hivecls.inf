@@ -45,7 +45,7 @@ HKCR,"anifile","",0x00000000,"Animated Cursor"
 HKCR,"anifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\main.cpl,-1039"
 HKCR,"anifile\DefaultIcon","",0x00000000,"%1"
 
-; DOS Batch-Files
+; DOS Batch Files
 HKCR,".bat","",0x00000000,"batfile"
 HKCR,"batfile","",0x00000000,"DOS Batch File"
 HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-158"
@@ -53,6 +53,7 @@ HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 
+; ReactOS Cmd Script Files
 HKCR,".cmd","",0x00000000,"cmdfile"
 HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
 HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-159"
@@ -60,11 +61,12 @@ HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153
 HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 
-; Get DOS Applications a Icon 
+; DOS Applications
 HKCR,".com","",0x00000000,"comfile"
 HKCR,"comfile","",0x00000000,"DOS Application"
 HKCR,"comfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-160"
 HKCR,"comfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-3"
+HKCR,"comfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; Control Panel extensions
 HKCR,".cpl","",0x00000000,"cplfile"
@@ -93,13 +95,14 @@ HKCR,"drvfile","",0x00000000,"Device Driver"
 HKCR,"drvfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-164"
 HKCR,"drvfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
-; Applicatons
+; Applications
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile","",0x00000000,"ReactOS Application"
 HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-165"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 HKCR,"exefile\shell\runas\command","",0x00020000,"""%1"" %*"
+HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
@@ -191,6 +194,7 @@ HKCR,"lnkfile","NeverShowExt",0x00000000,""
 HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
 HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\IconHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
+HKCR,"lnkfile\shellex\DropHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\ContextMenuHandlers\{00021401-0000-0000-C000-000000000046}","",0x00000000,""
 HKCR,"lnkfile\shellex\PropertySheetHandlers\Shellink Property Page", "", 0x00000000, "{00021401-0000-0000-C000-000000000046}"
 

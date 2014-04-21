@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/colors.c
- * PURPOSE:         displays colors dialog
+ * PURPOSE:         Colors dialog
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
@@ -22,10 +22,7 @@ PaintStaticControls(HWND hwndDlg,
     index = min(drawItem->CtlID - IDC_STATIC_COLOR1,
                 sizeof(pConInfo->ci.Colors) / sizeof(pConInfo->ci.Colors[0]) - 1);
     hBrush = CreateSolidBrush(pConInfo->ci.Colors[index]);
-    if (!hBrush)
-    {
-        return FALSE;
-    }
+    if (!hBrush) return FALSE;
 
     FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
     DeleteObject((HGDIOBJ)hBrush);
@@ -44,7 +41,6 @@ ColorsProc(HWND hwndDlg,
            LPARAM lParam)
 {
     PCONSOLE_PROPS pConInfo;
-    LPDRAWITEMSTRUCT drawItem;
     DWORD colorIndex;
     COLORREF color;
 
@@ -58,9 +54,9 @@ ColorsProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
 
             /* Set the valid range of the colour indicators */
-            SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_RED), UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
-            SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_GREEN), UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
-            SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_BLUE), UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
+            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_COLOR_RED  , UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
+            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_COLOR_GREEN, UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
+            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_COLOR_BLUE , UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
 
             /* Select by default the screen background option */
             CheckRadioButton(hwndDlg, IDC_RADIO_SCREEN_TEXT, IDC_RADIO_POPUP_BACKGROUND, IDC_RADIO_SCREEN_BACKGROUND);
@@ -71,16 +67,15 @@ ColorsProc(HWND hwndDlg,
 
         case WM_DRAWITEM:
         {
-            drawItem = (LPDRAWITEMSTRUCT)lParam;
+            LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
+
             if (drawItem->CtlID >= IDC_STATIC_COLOR1 && drawItem->CtlID <= IDC_STATIC_COLOR16)
-            {
                 return PaintStaticControls(hwndDlg, pConInfo, drawItem);
-            }
-            else if (drawItem->CtlID == IDC_STATIC_SCREEN_COLOR || drawItem->CtlID == IDC_STATIC_POPUP_COLOR)
-            {
-                PaintText(drawItem, pConInfo);
-                return TRUE;
-            }
+            else if (drawItem->CtlID == IDC_STATIC_SCREEN_COLOR)
+                return PaintText(drawItem, pConInfo, Screen);
+            else if (drawItem->CtlID == IDC_STATIC_POPUP_COLOR)
+                return PaintText(drawItem, pConInfo, Popup);
+
             break;
         }
 
@@ -90,7 +85,6 @@ ColorsProc(HWND hwndDlg,
             {
                 case PSN_APPLY:
                 {
-                    // LPPSHNOTIFY lppsn;
                     if (!pConInfo->AppliedConfig)
                     {
                         return ApplyConsoleInfo(hwndDlg, pConInfo);
@@ -114,23 +108,17 @@ ColorsProc(HWND hwndDlg,
 
                     if (lpnmud->hdr.idFrom == IDC_UPDOWN_COLOR_RED)
                     {
-                        if (lpnmud->iPos < 0) lpnmud->iPos = 0;
-                        else if (lpnmud->iPos > 255) lpnmud->iPos = 255;
-
+                        lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 0), 255);
                         color = RGB(lpnmud->iPos, GetGValue(color), GetBValue(color));
                     }
                     else if (lpnmud->hdr.idFrom == IDC_UPDOWN_COLOR_GREEN)
                     {
-                        if (lpnmud->iPos < 0) lpnmud->iPos = 0;
-                        else if (lpnmud->iPos > 255) lpnmud->iPos = 255;
-
+                        lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 0), 255);
                         color = RGB(GetRValue(color), lpnmud->iPos, GetBValue(color));
                     }
                     else if (lpnmud->hdr.idFrom == IDC_UPDOWN_COLOR_BLUE)
                     {
-                        if (lpnmud->iPos < 0) lpnmud->iPos = 0;
-                        else if (lpnmud->iPos > 255) lpnmud->iPos = 255;
-
+                        lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 0), 255);
                         color = RGB(GetRValue(color), GetGValue(color), lpnmud->iPos);
                     }
                     else
@@ -141,7 +129,7 @@ ColorsProc(HWND hwndDlg,
                     pConInfo->ci.Colors[colorIndex] = color;
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + colorIndex), NULL, TRUE);
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
+                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
 
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
@@ -162,15 +150,15 @@ ColorsProc(HWND hwndDlg,
                     color = pConInfo->ci.Colors[colorIndex];
 
                     /* Set the values of the colour indicators */
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
                     SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
 
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     pConInfo->ActiveStaticControl = colorIndex;
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
+                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
                     break;
                 }
 
@@ -181,15 +169,15 @@ ColorsProc(HWND hwndDlg,
                     color = pConInfo->ci.Colors[colorIndex];
 
                     /* Set the values of the colour indicators */
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
                     SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
 
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     pConInfo->ActiveStaticControl = colorIndex;
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
+                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
                     break;
                 }
 
@@ -200,15 +188,15 @@ ColorsProc(HWND hwndDlg,
                     color = pConInfo->ci.Colors[colorIndex];
 
                     /* Set the values of the colour indicators */
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
                     SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
 
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     pConInfo->ActiveStaticControl = colorIndex;
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
+                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
                     break;
                 }
 
@@ -219,17 +207,93 @@ ColorsProc(HWND hwndDlg,
                     color = pConInfo->ci.Colors[colorIndex];
 
                     /* Set the values of the colour indicators */
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
                     SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(color), FALSE);
+                    SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
 
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     pConInfo->ActiveStaticControl = colorIndex;
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
+                    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
                     break;
                 }
+
+                case IDC_EDIT_COLOR_RED:
+                {
+                    if (HIWORD(wParam) == EN_KILLFOCUS)
+                    {
+                        DWORD red;
+
+                        /* Get the current color */
+                        colorIndex = pConInfo->ActiveStaticControl;
+                        color = pConInfo->ci.Colors[colorIndex];
+
+                        red = GetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, NULL, FALSE);
+                        red = min(max(red, 0), 255);
+
+                        color = RGB(red, GetGValue(color), GetBValue(color));
+
+                        pConInfo->ci.Colors[colorIndex] = color;
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + colorIndex), NULL, TRUE);
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+                }
+
+                case IDC_EDIT_COLOR_GREEN:
+                {
+                    if (HIWORD(wParam) == EN_KILLFOCUS)
+                    {
+                        DWORD green;
+
+                        /* Get the current color */
+                        colorIndex = pConInfo->ActiveStaticControl;
+                        color = pConInfo->ci.Colors[colorIndex];
+
+                        green = GetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, NULL, FALSE);
+                        green = min(max(green, 0), 255);
+
+                        color = RGB(GetRValue(color), green, GetBValue(color));
+
+                        pConInfo->ci.Colors[colorIndex] = color;
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + colorIndex), NULL, TRUE);
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+                }
+
+                case IDC_EDIT_COLOR_BLUE:
+                {
+                    if (HIWORD(wParam) == EN_KILLFOCUS)
+                    {
+                        DWORD blue;
+
+                        /* Get the current color */
+                        colorIndex = pConInfo->ActiveStaticControl;
+                        color = pConInfo->ci.Colors[colorIndex];
+
+                        blue = GetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, NULL, FALSE);
+                        blue = min(max(blue, 0), 255);
+
+                        color = RGB(GetRValue(color), GetGValue(color), blue);
+
+                        pConInfo->ci.Colors[colorIndex] = color;
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + colorIndex), NULL, TRUE);
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
+                        InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+                }
+
             }
 
             if ( HIWORD(wParam) == STN_CLICKED &&
@@ -245,9 +309,9 @@ ColorsProc(HWND hwndDlg,
 
                 color = pConInfo->ci.Colors[colorIndex];
 
-                SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(color), FALSE);
+                SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
                 SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(color), FALSE);
+                SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
 
                 /* Update global struct */
                 if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_SCREEN_TEXT))
@@ -271,7 +335,7 @@ ColorsProc(HWND hwndDlg,
                 pConInfo->ActiveStaticControl = colorIndex;
                 InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
                 InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
+                InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
 
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 break;

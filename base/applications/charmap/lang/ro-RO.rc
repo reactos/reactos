@@ -1,8 +1,7 @@
 /*
  * FILE:             base/applications/charmap/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * LAST CHANGE:      2011-12-19  corrections
+ * TRANSLATOR:       Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -42,11 +41,11 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 270, 182
-CAPTION "Despre Harta caracterelor"
+CAPTION "Despre"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Harta caracterelor v0.1\nDrept de autor (C) 2007 Ged Murphy (gedmurphy@reactos.org)\nTraducere de Fulea Ștefan", IDC_STATIC, 48, 7, 210, 36
+    LTEXT "Hartă a caracterelor v0.1\nDrept de autor (C) 2007 Ged Murphy (gedmurphy@reactos.org)\nTraducere de Ștefan Fulea (stefan.fulea@mail.md)", IDC_STATIC, 48, 7, 210, 36
     PUSHBUTTON "Î&nchide", IDOK, 105, 162, 44, 15
     ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 254, 107, WS_VISIBLE | WS_VSCROLL |
@@ -57,5 +56,5 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE "Această aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_ABOUT "&Despre…"
-    IDS_TITLE "Harta caracterelor"
+    IDS_TITLE "Hartă a caracterelor"
 END

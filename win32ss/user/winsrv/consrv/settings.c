@@ -267,17 +267,17 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
         }
         else if (!wcscmp(szValueName, L"HistoryNoDup"))
         {
-            ConsoleInfo->HistoryNoDup = (BOOLEAN)Value;
+            ConsoleInfo->HistoryNoDup = !!Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"QuickEdit"))
         {
-            ConsoleInfo->QuickEdit = (BOOLEAN)Value;
+            ConsoleInfo->QuickEdit = !!Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"InsertMode"))
         {
-            ConsoleInfo->InsertMode = (BOOLEAN)Value;
+            ConsoleInfo->InsertMode = !!Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"ScreenBufferSize"))
@@ -421,7 +421,7 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
 
     memcpy(ConsoleInfo->Colors, s_Colors, sizeof(s_Colors));
 
-    // ConsoleInfo->CodePage;
+    ConsoleInfo->CodePage = 0;
 
     ConsoleInfo->ConsoleTitle[0] = L'\0';
 
@@ -436,7 +436,11 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
     }
 }
 
-
+NTSTATUS NTAPI
+ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
+                                   IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                   IN USHORT NewScreenAttrib,
+                                   IN USHORT NewPopupAttrib);
 /*
  * NOTE: This function explicitely references Console->ActiveBuffer.
  * It is possible that it should go into some frontend...
@@ -455,25 +459,9 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
     Console->QuickEdit  = ConsoleInfo->QuickEdit;
     Console->InsertMode = ConsoleInfo->InsertMode;
 
-    /*
-     * Apply foreground and background colors for both screen and popup
-     * and copy the new palette.
-     */
-    if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
-    {
-        PTEXTMODE_SCREEN_BUFFER Buffer = (PTEXTMODE_SCREEN_BUFFER)ActiveBuffer;
-
-        Buffer->ScreenDefaultAttrib = ConsoleInfo->ScreenAttrib;
-        Buffer->PopupDefaultAttrib  = ConsoleInfo->PopupAttrib;
-    }
-    else // if (Console->ActiveBuffer->Header.Type == GRAPHICS_BUFFER)
-    {
-    }
-
+    /* Copy the new console palette */
     // FIXME: Possible buffer overflow if s_colors is bigger than pConInfo->Colors.
     memcpy(Console->Colors, ConsoleInfo->Colors, sizeof(s_Colors));
-
-    // TODO: Really update the screen attributes as FillConsoleOutputAttribute does.
 
     /* Apply cursor size */
     ActiveBuffer->CursorInfo.bVisible = (ConsoleInfo->CursorSize != 0);
@@ -537,6 +525,12 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
 
             if (SizeChanged) TermResizeTerminal(Console);
         }
+
+        /* Apply foreground and background colors for both screen and popup */
+        ConDrvChangeScreenBufferAttributes(Console,
+                                           Buffer,
+                                           ConsoleInfo->ScreenAttrib,
+                                           ConsoleInfo->PopupAttrib);
     }
     else // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
     {

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (specification).       */
 /*                                                                         */
-/*  Copyright 2003-2007, 2012 by                                           */
+/*  Copyright 2003-2007, 2012, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,9 +25,21 @@
 FT_BEGIN_HEADER
 
 
-  /* the latin-specific script class */
+  /* the `latin' writing system */
 
-  AF_DECLARE_SCRIPT_CLASS( af_latin2_script_class )
+  AF_DECLARE_WRITING_SYSTEM_CLASS( af_latin2_writing_system_class )
+
+
+  /* the latin-specific script classes */
+
+  AF_DECLARE_SCRIPT_CLASS( af_ltn2_script_class )  /* XXX */
+#if 0
+  AF_DECLARE_SCRIPT_CLASS( af_arm2_script_class )
+  AF_DECLARE_SCRIPT_CLASS( af_cyr2_script_class )
+  AF_DECLARE_SCRIPT_CLASS( af_grk2_script_class )
+  AF_DECLARE_SCRIPT_CLASS( af_hbr2_script_class )
+#endif
+
 
 /* */
 

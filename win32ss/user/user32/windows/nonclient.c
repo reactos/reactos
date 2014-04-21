@@ -980,26 +980,44 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
 LRESULT
 DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+    PWND Wnd = ValidateHwnd(hWnd);
+
     switch (wParam)
     {
         case HTCAPTION:
         {
-	        HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
-	        if ( NtUserCallHwndLock(hTopWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE) ||
-                    GetActiveWindow() == hTopWnd)
-	        {
-	            SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
-	        }
-	        break;
+            HWND hTopWnd = hWnd, parent;
+            while(1)
+            {
+                if ((GetWindowLongW( hTopWnd, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) != WS_CHILD)
+                    break;
+                parent = GetAncestor( hTopWnd, GA_PARENT );
+                if (!parent || parent == GetDesktopWindow()) break;
+                hTopWnd = parent;
+            }
+
+            if ( NtUserCallHwndLock(hTopWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE) ||
+                 GetActiveWindow() == hTopWnd)
+            {
+               SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
+            }
+            break;
         }
         case HTSYSMENU:
         {
           LONG style = GetWindowLongPtrW( hWnd, GWL_STYLE );
           if (style & WS_SYSMENU)
-            {
-	      SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
-			   lParam);
-	    }
+          {
+              if( Wnd && !(style & WS_MINIMIZE) )
+              {
+                RECT rect;
+                HDC hDC = GetWindowDC(hWnd);
+                UserGetInsideRectNC(Wnd, &rect);
+                UserDrawSysMenuButton(hWnd, hDC, &rect, TRUE);
+                ReleaseDC( hWnd, hDC );
+              }
+	      SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, lParam);
+	  }
 	  break;
         }
         case HTMENU:
@@ -1070,7 +1088,14 @@ DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
     case HTSYSMENU:
     {
-      SendMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+      HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
+      UINT state = GetMenuState(hSysMenu, SC_CLOSE, MF_BYCOMMAND);
+                  
+      /* If the close item of the sysmenu is disabled or not present do nothing */
+      if ((state & (MF_DISABLED | MF_GRAYED)) || (state == 0xFFFFFFFF))
+          break;
+
+      SendMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, lParam);
       break;
     }
     default:
@@ -1108,10 +1133,10 @@ LRESULT NC_HandleNCRButtonDown( HWND hwnd, WPARAM wParam, LPARAM lParam )
           if (hwnd != GetCapture()) return 0;
       }
       ReleaseCapture();
-      if (hittest == HTCAPTION || hittest == HTSYSMENU)
+      if (hittest == HTCAPTION || hittest == HTSYSMENU || hittest == HTHSCROLL || hittest == HTVSCROLL)
       {
-         ERR("Msg pt %x and Msg.lParam %x and lParam %x\n",MAKELONG(msg.pt.x,msg.pt.y),msg.lParam,lParam);
-         SendMessageW( hwnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, msg.lParam );
+         TRACE("Msg pt %x and Msg.lParam %x and lParam %x\n",MAKELONG(msg.pt.x,msg.pt.y),msg.lParam,lParam);
+         SendMessageW( hwnd, WM_CONTEXTMENU, (WPARAM)hwnd, MAKELONG(msg.pt.x,msg.pt.y));
       }
       break;
   }
@@ -1233,7 +1258,9 @@ RealAdjustWindowRectEx(LPRECT lpRect,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 AdjustWindowRectEx(LPRECT lpRect,
 		   DWORD dwStyle,
 		   BOOL bMenu,
@@ -1266,7 +1293,9 @@ AdjustWindowRectEx(LPRECT lpRect,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 AdjustWindowRect(LPRECT lpRect,
 		 DWORD dwStyle,
 		 BOOL bMenu)

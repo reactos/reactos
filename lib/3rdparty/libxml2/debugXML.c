@@ -354,7 +354,6 @@ xmlCtxtGenericNodeCheck(xmlDebugCtxtPtr ctxt, xmlNodePtr node) {
 	(node->type != XML_ELEMENT_DECL) &&
 	(node->type != XML_ATTRIBUTE_DECL) &&
 	(node->type != XML_DTD_NODE) &&
-	(node->type != XML_ELEMENT_DECL) &&
 	(node->type != XML_HTML_DOCUMENT_NODE) &&
 	(node->type != XML_DOCUMENT_NODE)) {
 	if (node->content != NULL)

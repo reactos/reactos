@@ -437,6 +437,7 @@ StartProcedure(
         Status = EnableInterrupts(DeviceExtension, FlagsToDisable, FlagsToEnable);
         if (!NT_SUCCESS(Status))
         {
+            WARN_(I8042PRT, "EnableInterrupts failed: %lx\n", Status);
             DeviceExtension->Flags &= ~(KEYBOARD_PRESENT | MOUSE_PRESENT);
             return Status;
         }
@@ -454,6 +455,10 @@ StartProcedure(
         {
             DeviceExtension->Flags |= KEYBOARD_INITIALIZED;
         }
+        else
+        {
+            WARN_(I8042PRT, "i8042ConnectKeyboardInterrupt failed: %lx\n", Status);
+        }
     }
 
     if (DeviceExtension->Flags & MOUSE_PRESENT &&
@@ -467,7 +472,11 @@ StartProcedure(
         {
             DeviceExtension->Flags |= MOUSE_INITIALIZED;
         }
-
+        else
+        {
+            WARN_(I8042PRT, "i8042ConnectMouseInterrupt failed: %lx\n", Status);
+        }
+        
         /* Start the mouse */
         Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
         i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
@@ -533,7 +542,7 @@ i8042PnpStartDevice(
             {
                 if (ResourceDescriptor->u.Port.Length == 1)
                 {
-                    /* We assume that the first ressource will
+                    /* We assume that the first resource will
                      * be the control port and the second one
                      * will be the data port...
                      */
@@ -551,8 +560,8 @@ i8042PnpStartDevice(
                     }
                     else
                     {
-                        WARN_(I8042PRT, "Too much I/O ranges provided: 0x%lx\n", ResourceDescriptor->u.Port.Length);
-                        return STATUS_INVALID_PARAMETER;
+                        /* FIXME: implement PS/2 Active Multiplexing */
+                        ERR_(I8042PRT, "Unhandled I/O ranges provided: 0x%lx\n", ResourceDescriptor->u.Port.Length);
                     }
                 }
                 else

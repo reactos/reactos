@@ -16,7 +16,6 @@
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
-#pragma alloc_text(INIT, MiInitPageDirectoryMap)
 #endif
 
 
@@ -40,22 +39,10 @@
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
 #define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
-#define HYPERSPACE          (0xc0400000)
-#define IS_HYPERSPACE(v)    (((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < HYPERSPACE + 0x400000))
+#define IS_HYPERSPACE(v)    (((ULONG)(v) >= HYPER_SPACE && (ULONG)(v) <= HYPER_SPACE_END))
 
 #define PTE_TO_PFN(X)  ((X) >> PAGE_SHIFT)
 #define PFN_TO_PTE(X)  ((X) << PAGE_SHIFT)
-
-#if defined(__GNUC__)
-#define PTE_TO_PAGE(X) ((LARGE_INTEGER)(LONGLONG)(PAGE_MASK(X)))
-#else
-__inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
-{
-    LARGE_INTEGER dummy;
-    dummy.QuadPart = (LONGLONG)(PAGE_MASK(npage));
-    return dummy;
-}
-#endif
 
 const
 ULONG
@@ -602,35 +589,6 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
          * we do not need to flush the TLB here when setting it */
         MmUnmapPageTable(Pt);
     }
-}
-
-VOID
-NTAPI
-MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
-{
-    PULONG Pt;
-    ULONG Pte;
-
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-    if (Pt == NULL)
-    {
-        //HACK to get DPH working, waiting for MM rewrite :-/
-        //KeBugCheck(MEMORY_MANAGEMENT);
-        return;
-    }
-
-    /* Do not mark a 0 page as present */
-    if(0 == InterlockedCompareExchangePte(Pt, 0, 0))
-        return;
-
-    do
-    {
-        Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_PRESENT, Pte));
-
-    /* We don't need to flush the TLB here because it
-     * won't cache translations for non-present pages */
-    MmUnmapPageTable(Pt);
 }
 
 BOOLEAN

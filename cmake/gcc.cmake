@@ -31,6 +31,11 @@ if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags_language("-std=gnu89" "C")
+    add_compile_flags("-Wno-microsoft")
+endif()
+
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
 
 #bug
@@ -40,13 +45,19 @@ set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
  if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
 string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
-add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
+
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
+endif()
 
 # Debugging
 if(SEPARATE_DBG)
     add_compile_flags("-gdwarf-2 -g2")
 else()
-    add_compile_flags("-gdwarf-2 -gstrict-dwarf -femit-struct-debug-detailed=none -feliminate-unused-debug-symbols")
+    add_compile_flags("-gdwarf-2 -gstrict-dwarf")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_flags("-femit-struct-debug-detailed=none -feliminate-unused-debug-symbols")
+    endif()
 endif()
 
 # For some reason, cmake sets -fPIC, and we don't want it
@@ -62,9 +73,18 @@ else()
 endif()
 
 # Warnings, errors
-add_compile_flags("-Werror -Wall -Wpointer-arith")
-add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value -Wno-maybe-uninitialized")
-add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=narrowing")
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags("-Werror")
+endif()
+
+add_compile_flags("-Wall -Wpointer-arith")
+add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
+
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_flags("-Wno-maybe-uninitialized")
+    add_compile_flags("-Wno-error=unused-but-set-variable")
+endif()
+
 add_compile_flags("-Wtype-limits -Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
@@ -96,7 +116,10 @@ if(LTCG)
 endif()
 
 if(ARCH STREQUAL "i386")
-    add_compile_flags("-mpreferred-stack-boundary=3 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+    add_compile_flags("-fno-optimize-sibling-calls -fno-omit-frame-pointer")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_flags("-mpreferred-stack-boundary=3 -fno-set-stack-executable")
+    endif()
     # FIXME: this doesn't work. CMAKE_BUILD_TYPE is always "Debug"
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_flags("-momit-leaf-frame-pointer")
@@ -115,7 +138,7 @@ endif()
 
 add_definitions(-D_inline=__inline)
 
-# alternative arch name
+# Alternative arch name
 if(ARCH STREQUAL "amd64")
     set(ARCH2 x86_64)
 else()
@@ -174,9 +197,13 @@ endif()
 set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> -Wa,--compress-debug-sections <FLAGS> -o <OBJECT> -c <SOURCE>")
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(_compress_debug_sections_flag "-Wa,--compress-debug-sections")
+endif()
+
+SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <FLAGS> -o <OBJECT> -c <SOURCE>")
 SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -Wa,--compress-debug-sections -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
 set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
@@ -240,18 +267,18 @@ if(NOT ARCH STREQUAL "i386")
 endif()
 
 function(generate_import_lib _libname _dllname _spec_file)
-    # generate the def for the import lib
+    # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
-    #create normal importlib
+    # Create normal importlib
     _add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
 
-    #create delayed importlib
+    # Create delayed importlib
     _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set_target_properties(${_libname}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
 endfunction()
@@ -260,7 +287,7 @@ endfunction()
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
 function(spec2def _dllname _spec_file)
-    # do we also want to add importlib targets?
+    # Do we also want to add importlib targets?
     if(${ARGC} GREATER 2)
         if(${ARGN} STREQUAL "ADD_IMPORTLIB")
             set(__add_importlib TRUE)
@@ -269,15 +296,15 @@ function(spec2def _dllname _spec_file)
         endif()
     endif()
 
-    # get library basename
+    # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
 
-    # error out on anything else than spec
+    # Error out on anything else than spec
     if(NOT ${_spec_file} MATCHES ".*\\.spec")
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
-    # generate exports def and stubs C file for the module
+    # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
@@ -292,11 +319,12 @@ macro(macro_mc FLAG FILE)
     set(COMMAND_MC ${CMAKE_MC_COMPILER} ${FLAG} -b ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
 endmacro()
 
-#pseh lib, needed with mingw
+# PSEH lib, needed with mingw
 set(PSEH_LIB "pseh")
 
 # Macros
 if(PCH)
+    add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
     macro(add_pch _target _pch _sources)
         # When including x.h GCC looks for x.h.gch first
         set(_pch_final_name "${_target}_pch.h")
@@ -324,7 +352,7 @@ if(PCH)
         # Include the gch in the specified source files, skipping the pch file itself
         list(REMOVE_ITEM ${_sources} ${_pch})
         foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -Winvalid-pch -Werror=invalid-pch -include ${_pch_final_name}")
+            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${_pch_final_name}")
             set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
         endforeach()
     endmacro()
@@ -360,4 +388,3 @@ endfunction()
 macro(add_asm_files _target)
     list(APPEND ${_target} ${ARGN})
 endmacro()
-

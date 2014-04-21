@@ -50,6 +50,7 @@ static const struct wined3d_format_channels formats[] =
     {WINED3DFMT_UYVY,                       0,  0,  0,  0,   0,  0,  0,  0,    2,   0,     0},
     {WINED3DFMT_YUY2,                       0,  0,  0,  0,   0,  0,  0,  0,    2,   0,     0},
     {WINED3DFMT_YV12,                       0,  0,  0,  0,   0,  0,  0,  0,    1,   0,     0},
+    {WINED3DFMT_NV12,                       0,  0,  0,  0,   0,  0,  0,  0,    1,   0,     0},
     {WINED3DFMT_DXT1,                       0,  0,  0,  0,   0,  0,  0,  0,    1,   0,     0},
     {WINED3DFMT_DXT2,                       0,  0,  0,  0,   0,  0,  0,  0,    1,   0,     0},
     {WINED3DFMT_DXT3,                       0,  0,  0,  0,   0,  0,  0,  0,    1,   0,     0},
@@ -662,6 +663,10 @@ static const struct wined3d_format_texture_info format_texture_info[] =
             WINED3DFMT_FLAG_TEXTURE | WINED3DFMT_FLAG_FILTERING,
             APPLE_YCBCR_422,            NULL},
     {WINED3DFMT_YV12,                   GL_ALPHA,                         GL_ALPHA,                               0,
+            GL_ALPHA,                   GL_UNSIGNED_BYTE,                 0,
+            WINED3DFMT_FLAG_FILTERING,
+            WINED3D_GL_EXT_NONE,        NULL},
+    {WINED3DFMT_NV12,                   GL_ALPHA,                         GL_ALPHA,                               0,
             GL_ALPHA,                   GL_UNSIGNED_BYTE,                 0,
             WINED3DFMT_FLAG_FILTERING,
             WINED3D_GL_EXT_NONE,        NULL},
@@ -1832,6 +1837,12 @@ static void apply_format_fixups(struct wined3d_adapter *adapter, struct wined3d_
     gl_info->formats[idx].height_scale.denominator = 2;
     gl_info->formats[idx].color_fixup = create_complex_fixup_desc(COMPLEX_FIXUP_YV12);
 
+    idx = getFmtIdx(WINED3DFMT_NV12);
+    gl_info->formats[idx].flags |= WINED3DFMT_FLAG_HEIGHT_SCALE;
+    gl_info->formats[idx].height_scale.numerator = 3;
+    gl_info->formats[idx].height_scale.denominator = 2;
+    gl_info->formats[idx].color_fixup = create_complex_fixup_desc(COMPLEX_FIXUP_NV12);
+
     if (gl_info->supported[ARB_FRAGMENT_PROGRAM])
     {
         idx = getFmtIdx(WINED3DFMT_P8_UINT);
@@ -2068,6 +2079,7 @@ const char *debug_d3dformat(enum wined3d_format_id format_id)
         FMT_TO_STR(WINED3DFMT_UYVY);
         FMT_TO_STR(WINED3DFMT_YUY2);
         FMT_TO_STR(WINED3DFMT_YV12);
+        FMT_TO_STR(WINED3DFMT_NV12);
         FMT_TO_STR(WINED3DFMT_DXT1);
         FMT_TO_STR(WINED3DFMT_DXT2);
         FMT_TO_STR(WINED3DFMT_DXT3);
@@ -2771,6 +2783,7 @@ static const char *debug_complex_fixup(enum complex_fixup fixup)
         WINED3D_TO_STR(COMPLEX_FIXUP_YUY2);
         WINED3D_TO_STR(COMPLEX_FIXUP_UYVY);
         WINED3D_TO_STR(COMPLEX_FIXUP_YV12);
+        WINED3D_TO_STR(COMPLEX_FIXUP_NV12);
         WINED3D_TO_STR(COMPLEX_FIXUP_P8);
 #undef WINED3D_TO_STR
         default:

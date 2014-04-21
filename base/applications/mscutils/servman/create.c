@@ -65,9 +65,7 @@ DoCreate(PCREATE_DATA Data)
             {
                 DisplayString(lpSuccess);
 
-                HeapFree(ProcessHeap,
-                         0,
-                         lpSuccess);
+                LocalFree(lpSuccess);
             }
 
             CloseServiceHandle(hSc);

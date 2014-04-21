@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -114,6 +114,7 @@
  *****************************************************************************/
 
 #define __UTGLOBAL_C__
+#define EXPORT_ACPI_INTERFACES
 #define DEFINE_ACPI_GLOBALS
 
 #include "acpi.h"
@@ -129,12 +130,7 @@
  *
  ******************************************************************************/
 
-/*
- * We want the debug switches statically initialized so they
- * are already set when the debugger is entered.
- */
-
-/* Debug switch - level and trace mask */
+/* Debug output control masks */
 
 #ifdef ACPI_DEBUG_OUTPUT
 UINT32                      AcpiDbgLevel = ACPI_DEBUG_DEFAULT;
@@ -142,24 +138,24 @@ UINT32                      AcpiDbgLevel = ACPI_DEBUG_DEFAULT;
 UINT32                      AcpiDbgLevel = ACPI_NORMAL_DEFAULT;
 #endif
 
-/* Debug switch - layer (component) mask */
-
 UINT32                      AcpiDbgLayer = ACPI_COMPONENT_DEFAULT;
-UINT32                      AcpiGbl_NestingLevel = 0;
 
-/* Debugger globals */
+/* AcpiGbl_FADT is a local copy of the FADT, converted to a common format. */
 
-BOOLEAN                     AcpiGbl_DbTerminateThreads = FALSE;
-BOOLEAN                     AcpiGbl_AbortMethod = FALSE;
-BOOLEAN                     AcpiGbl_MethodExecuting = FALSE;
+ACPI_TABLE_FADT             AcpiGbl_FADT;
+UINT32                      AcpiGbl_TraceFlags;
+ACPI_NAME                   AcpiGbl_TraceMethodName;
+BOOLEAN                     AcpiGbl_SystemAwakeAndRunning;
+UINT32                      AcpiCurrentGpeCount;
 
-/* System flags */
+/*
+ * ACPI 5.0 introduces the concept of a "reduced hardware platform", meaning
+ * that the ACPI hardware is no longer required. A flag in the FADT indicates
+ * a reduced HW machine, and that flag is duplicated here for convenience.
+ */
+BOOLEAN                     AcpiGbl_ReducedHardware;
 
-UINT32                      AcpiGbl_StartupFlags = 0;
-
-/* System starts uninitialized */
-
-BOOLEAN                     AcpiGbl_Shutdown = TRUE;
+/* Various state name strings */
 
 const char                  *AcpiGbl_SleepStateNames[ACPI_S_STATE_COUNT] =
 {
@@ -227,6 +223,7 @@ const ACPI_PREDEFINED_NAMES     AcpiGbl_PreDefinedNames[] =
 };
 
 
+#if (!ACPI_REDUCED_HARDWARE)
 /******************************************************************************
  *
  * Event and Hardware globals
@@ -271,6 +268,7 @@ ACPI_FIXED_EVENT_INFO       AcpiGbl_FixedEventInfo[ACPI_NUM_FIXED_EVENTS] =
     /* ACPI_EVENT_SLEEP_BUTTON  */  {ACPI_BITREG_SLEEP_BUTTON_STATUS,   ACPI_BITREG_SLEEP_BUTTON_ENABLE, ACPI_BITMASK_SLEEP_BUTTON_STATUS,   ACPI_BITMASK_SLEEP_BUTTON_ENABLE},
     /* ACPI_EVENT_RTC           */  {ACPI_BITREG_RT_CLOCK_STATUS,       ACPI_BITREG_RT_CLOCK_ENABLE,     ACPI_BITMASK_RT_CLOCK_STATUS,       ACPI_BITMASK_RT_CLOCK_ENABLE},
 };
+#endif /* !ACPI_REDUCED_HARDWARE */
 
 
 /*******************************************************************************
@@ -281,8 +279,9 @@ ACPI_FIXED_EVENT_INFO       AcpiGbl_FixedEventInfo[ACPI_NUM_FIXED_EVENTS] =
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Init ACPICA globals.  All globals that require specific
- *              initialization should be initialized here!
+ * DESCRIPTION: Initialize ACPICA globals. All globals that require specific
+ *              initialization should be initialized here. This allows for
+ *              a warm restart.
  *
  ******************************************************************************/
 
@@ -303,6 +302,13 @@ AcpiUtInitGlobals (
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
+    }
+
+    /* Address Range lists */
+
+    for (i = 0; i < ACPI_ADDRESS_RANGE_MAX; i++)
+    {
+        AcpiGbl_AddressRangeList[i] = NULL;
     }
 
     /* Mutex locked flags */
@@ -334,7 +340,9 @@ AcpiUtInitGlobals (
         AcpiFixedEventCount[i]              = 0;
     }
 
-    /* GPE support */
+#if (!ACPI_REDUCED_HARDWARE)
+
+    /* GPE/SCI support */
 
     AcpiGbl_AllGpesInitialized          = FALSE;
     AcpiGbl_GpeXruptListHead            = NULL;
@@ -342,15 +350,19 @@ AcpiUtInitGlobals (
     AcpiGbl_GpeFadtBlocks[1]            = NULL;
     AcpiCurrentGpeCount                 = 0;
 
+    AcpiGbl_GlobalEventHandler          = NULL;
+    AcpiGbl_SciHandlerList              = NULL;
+
+#endif /* !ACPI_REDUCED_HARDWARE */
+
     /* Global handlers */
 
-    AcpiGbl_SystemNotify.Handler        = NULL;
-    AcpiGbl_DeviceNotify.Handler        = NULL;
+    AcpiGbl_GlobalNotify[0].Handler     = NULL;
+    AcpiGbl_GlobalNotify[1].Handler     = NULL;
     AcpiGbl_ExceptionHandler            = NULL;
     AcpiGbl_InitHandler                 = NULL;
     AcpiGbl_TableHandler                = NULL;
     AcpiGbl_InterfaceHandler            = NULL;
-    AcpiGbl_GlobalEventHandler          = NULL;
 
     /* Global Lock support */
 
@@ -364,7 +376,6 @@ AcpiUtInitGlobals (
 
     AcpiGbl_DSDT                        = NULL;
     AcpiGbl_CmSingleStep                = FALSE;
-    AcpiGbl_DbTerminateThreads          = FALSE;
     AcpiGbl_Shutdown                    = FALSE;
     AcpiGbl_NsLookupCount               = 0;
     AcpiGbl_PsFindCount                 = 0;
@@ -376,7 +387,6 @@ AcpiUtInitGlobals (
     AcpiGbl_TraceDbgLayer               = 0;
     AcpiGbl_DebuggerConfiguration       = DEBUGGER_THREADING;
     AcpiGbl_DbOutputFlags               = ACPI_DB_CONSOLE_OUTPUT;
-    AcpiGbl_OsiData                     = 0;
     AcpiGbl_OsiMutex                    = NULL;
     AcpiGbl_RegMethodsExecuted          = FALSE;
 
@@ -400,6 +410,8 @@ AcpiUtInitGlobals (
 
 #ifdef ACPI_DISASSEMBLER
     AcpiGbl_ExternalList                = NULL;
+    AcpiGbl_NumExternalMethods          = 0;
+    AcpiGbl_ResolvedExternalMethods     = 0;
 #endif
 
 #ifdef ACPI_DEBUG_OUTPUT
@@ -409,6 +421,10 @@ AcpiUtInitGlobals (
 #ifdef ACPI_DBG_TRACK_ALLOCATIONS
     AcpiGbl_DisplayFinalMemStats        = FALSE;
     AcpiGbl_DisableMemTracking          = FALSE;
+#endif
+
+#ifdef ACPI_DEBUGGER
+    AcpiGbl_DbTerminateThreads          = FALSE;
 #endif
 
     return_ACPI_STATUS (AE_OK);

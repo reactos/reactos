@@ -114,7 +114,7 @@ DiskGetBootPath(char *BootPath, unsigned Size)
     {
         /* This is a floppy */
 
-        if (Size <= sizeof(Path) + 7 + strlen(Device))
+        if (Size <= sizeof(Path) + 7 + sizeof(Device))
         {
             return FALSE;
         }
@@ -142,7 +142,7 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 
         FrldrBootPartition = BootPartition;
 
-        if (Size <= sizeof(Path) + 18 + strlen(Device) + strlen(Partition))
+        if (Size <= sizeof(Path) + 18 + sizeof(Device) + sizeof(Partition))
         {
             return FALSE;
         }
@@ -165,7 +165,7 @@ DiskGetBootPath(char *BootPath, unsigned Size)
     {
         /* This is a CD-ROM drive */
 
-        if (Size <= sizeof(Path) + 7 + strlen(Device))
+        if (Size <= sizeof(Path) + 7 + sizeof(Device))
         {
             return FALSE;
         }

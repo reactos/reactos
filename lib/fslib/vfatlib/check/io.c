@@ -211,7 +211,7 @@ void fs_write(loff_t pos,int size,void *data)
         const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;
         const loff_t seekpos_aligned = pos - (pos % 512);
         const size_t seek_delta = (size_t)(pos - seekpos_aligned);
-        boolean use_read = (seek_delta != 0) || ((readsize_aligned-size) != 0);
+        BOOLEAN use_read = (seek_delta != 0) || ((readsize_aligned-size) != 0);
 
         /* Aloc temp buffer if write is not aligned */
         if (use_read)

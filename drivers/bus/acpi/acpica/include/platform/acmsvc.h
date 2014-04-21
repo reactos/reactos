@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -202,11 +202,67 @@
 }
 #endif
 
+
+/* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
+
 #ifdef ACPI_APPLICATION
 #define ACPI_FLUSH_CPU_CACHE()
 #else
 #define ACPI_FLUSH_CPU_CACHE()  __asm {WBINVD}
 #endif
+
+/*
+ * Global Lock acquire/release code
+ *
+ * Note: Handles case where the FACS pointer is null
+ */
+#define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq)  __asm \
+{                                                   \
+        __asm mov           eax, 0xFF               \
+        __asm mov           ecx, FacsPtr            \
+        __asm or            ecx, ecx                \
+        __asm jz            exit_acq                \
+        __asm lea           ecx, [ecx].GlobalLock   \
+                                                    \
+        __asm acq10:                                \
+        __asm mov           eax, [ecx]              \
+        __asm mov           edx, eax                \
+        __asm and           edx, 0xFFFFFFFE         \
+        __asm bts           edx, 1                  \
+        __asm adc           edx, 0                  \
+        __asm lock cmpxchg  dword ptr [ecx], edx    \
+        __asm jnz           acq10                   \
+                                                    \
+        __asm cmp           dl, 3                   \
+        __asm sbb           eax, eax                \
+                                                    \
+        __asm exit_acq:                             \
+        __asm mov           Acq, al                 \
+}
+
+#define ACPI_RELEASE_GLOBAL_LOCK(FacsPtr, Pnd) __asm \
+{                                                   \
+        __asm xor           eax, eax                \
+        __asm mov           ecx, FacsPtr            \
+        __asm or            ecx, ecx                \
+        __asm jz            exit_rel                \
+        __asm lea           ecx, [ecx].GlobalLock   \
+                                                    \
+        __asm Rel10:                                \
+        __asm mov           eax, [ecx]              \
+        __asm mov           edx, eax                \
+        __asm and           edx, 0xFFFFFFFC         \
+        __asm lock cmpxchg  dword ptr [ecx], edx    \
+        __asm jnz           Rel10                   \
+                                                    \
+        __asm cmp           dl, 3                   \
+        __asm and           eax, 1                  \
+                                                    \
+        __asm exit_rel:                             \
+        __asm mov           Pnd, al                 \
+}
+
+
 /* warn C4100: unreferenced formal parameter */
 #pragma warning(disable:4100)
 
@@ -221,6 +277,24 @@
 
 #if _MSC_VER > 1200 /* Versions above VC++ 6 */
 #pragma warning( disable : 4295 ) /* needed for acpredef.h array */
+#endif
+
+
+/* Debug support. Must be last in this file, do not move. */
+
+#ifdef _DEBUG
+#include <crtdbg.h>
+
+/*
+ * Debugging memory corruption issues with windows:
+ * Add #include <crtdbg.h> to accommon.h if necessary.
+ * Add _ASSERTE(_CrtCheckMemory()); where needed to test memory integrity.
+ * This can quickly localize the memory corruption.
+ */
+#define ACPI_DEBUG_INITIALIZE() \
+    _CrtSetDbgFlag (_CRTDBG_CHECK_ALWAYS_DF | \
+        _CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_CRT_DF | \
+        _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG))
 #endif
 
 #endif /* __ACMSVC_H__ */

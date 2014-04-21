@@ -69,6 +69,8 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *sch
     int LTpenplus = 0;
     int RTpenplus = 0;
     int RBpenplus = 0;
+    HBRUSH hbr;
+
     /* Init some vars */
     LTInnerPen = LTOuterPen = RBInnerPen = RBOuterPen = (HPEN)GetStockObject(NULL_PEN);
     SavePen = (HPEN)SelectObject(hdc, LTInnerPen);
@@ -88,76 +90,84 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *sch
     if((uFlags & BF_TOPLEFT) == BF_TOPLEFT)
         LTpenplus = 1;
 
-    if(LTInnerI != -1)
-        LTInnerPen = GetStockObject(DC_PEN);
-    if(LTOuterI != -1)
-        LTOuterPen = GetStockObject(DC_PEN);
-    if(RBInnerI != -1)
-        RBInnerPen = GetStockObject(DC_PEN);
-    if(RBOuterI != -1)
-        RBOuterPen = GetStockObject(DC_PEN);
-    {
-        HBRUSH hbr;
+    if((uFlags & MY_BF_ACTIVEBORDER))
+        hbr = CreateSolidBrush(scheme->crColor[COLOR_ACTIVEBORDER]);
+    else
+        hbr = CreateSolidBrush(scheme->crColor[COLOR_BTNFACE]);
 
-        if((uFlags & MY_BF_ACTIVEBORDER))
-            hbr = CreateSolidBrush(scheme->crColor[COLOR_ACTIVEBORDER]);
-        else
-            hbr = CreateSolidBrush(scheme->crColor[COLOR_BTNFACE]);
-        FillRect(hdc, &InnerRect, hbr);
-        DeleteObject(hbr);
-    }
+    FillRect(hdc, &InnerRect, hbr);
+    DeleteObject(hbr);
+
     MoveToEx(hdc, 0, 0, &SavePoint);
 
     /* Draw the outer edge */
-    SelectObject(hdc, LTOuterPen);
-    SetDCPenColor(hdc, scheme->crColor[LTOuterI]);
-    if(uFlags & BF_TOP)
+    if(LTOuterI != -1)
     {
-        MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
-        LineTo(hdc, InnerRect.right, InnerRect.top);
+        LTOuterPen = GetStockObject(DC_PEN);
+        SelectObject(hdc, LTOuterPen);
+        SetDCPenColor(hdc, scheme->crColor[LTOuterI]);
+        if(uFlags & BF_TOP)
+        {
+            MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
+            LineTo(hdc, InnerRect.right, InnerRect.top);
+        }
+        if(uFlags & BF_LEFT)
+        {
+            MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
+            LineTo(hdc, InnerRect.left, InnerRect.bottom);
+        }
     }
-    if(uFlags & BF_LEFT)
+
+    if(RBOuterI != -1)
     {
-        MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
-        LineTo(hdc, InnerRect.left, InnerRect.bottom);
-    }
-    SelectObject(hdc, RBOuterPen);
-    SetDCPenColor(hdc, scheme->crColor[RBOuterI]);
-    if(uFlags & BF_BOTTOM)
-    {
-        MoveToEx(hdc, InnerRect.left, InnerRect.bottom-1, NULL);
-        LineTo(hdc, InnerRect.right, InnerRect.bottom-1);
-    }
-    if(uFlags & BF_RIGHT)
-    {
-        MoveToEx(hdc, InnerRect.right-1, InnerRect.top, NULL);
-        LineTo(hdc, InnerRect.right-1, InnerRect.bottom);
+        RBOuterPen = GetStockObject(DC_PEN);
+        SelectObject(hdc, RBOuterPen);
+        SetDCPenColor(hdc, scheme->crColor[RBOuterI]);
+        if(uFlags & BF_BOTTOM)
+        {
+            MoveToEx(hdc, InnerRect.left, InnerRect.bottom-1, NULL);
+            LineTo(hdc, InnerRect.right, InnerRect.bottom-1);
+        }
+        if(uFlags & BF_RIGHT)
+        {
+            MoveToEx(hdc, InnerRect.right-1, InnerRect.top, NULL);
+            LineTo(hdc, InnerRect.right-1, InnerRect.bottom);
+        }
     }
 
     /* Draw the inner edge */
-    SelectObject(hdc, LTInnerPen);
-    SetDCPenColor(hdc, scheme->crColor[LTInnerI]);
-    if(uFlags & BF_TOP)
+    if(LTInnerI != -1)
     {
-        MoveToEx(hdc, InnerRect.left+LTpenplus, InnerRect.top+1, NULL);
-        LineTo(hdc, InnerRect.right-RTpenplus, InnerRect.top+1);
+        LTInnerPen = GetStockObject(DC_PEN);
+        SelectObject(hdc, LTInnerPen);
+        SetDCPenColor(hdc, scheme->crColor[LTInnerI]);
+        if(uFlags & BF_TOP)
+        {
+            MoveToEx(hdc, InnerRect.left+LTpenplus, InnerRect.top+1, NULL);
+            LineTo(hdc, InnerRect.right-RTpenplus, InnerRect.top+1);
+        }
+        if(uFlags & BF_LEFT)
+        {
+            MoveToEx(hdc, InnerRect.left+1, InnerRect.top+LTpenplus, NULL);
+            LineTo(hdc, InnerRect.left+1, InnerRect.bottom-LBpenplus);
+        }
     }
-    if(uFlags & BF_LEFT)
+
+    if(RBInnerI != -1)
     {
-        MoveToEx(hdc, InnerRect.left+1, InnerRect.top+LTpenplus, NULL);
-        LineTo(hdc, InnerRect.left+1, InnerRect.bottom-LBpenplus);
-    }
-    SelectObject(hdc, RBInnerPen);
-    SetDCPenColor(hdc, scheme->crColor[RBInnerI]);
-    if(uFlags & BF_BOTTOM)
-    {
-        MoveToEx(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2, NULL);
-        LineTo(hdc, InnerRect.right-RBpenplus, InnerRect.bottom-2);
-    }
-    if(uFlags & BF_RIGHT)
-    {
-        MoveToEx(hdc, InnerRect.right-2, InnerRect.top+RTpenplus, NULL);
-        LineTo(hdc, InnerRect.right-2, InnerRect.bottom-RBpenplus);
+        RBInnerPen = GetStockObject(DC_PEN);
+        SelectObject(hdc, RBInnerPen);
+        SetDCPenColor(hdc, scheme->crColor[RBInnerI]);
+        if(uFlags & BF_BOTTOM)
+        {
+            MoveToEx(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2, NULL);
+            LineTo(hdc, InnerRect.right-RBpenplus, InnerRect.bottom-2);
+        }
+        if(uFlags & BF_RIGHT)
+        {
+            MoveToEx(hdc, InnerRect.right-2, InnerRect.top+RTpenplus, NULL);
+            LineTo(hdc, InnerRect.right-2, InnerRect.bottom-RBpenplus);
+        }
     }
 
     if (uFlags & BF_ADJUST)
@@ -245,6 +255,8 @@ MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
     case DFCS_CAPTIONRESTORE:
         Symbol = '2';
         break;
+    default:
+        return FALSE;
     }
     MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT | BF_MIDDLE | BF_SOFT, scheme);
     ZeroMemory(&lf, sizeof(LOGFONT));
@@ -313,6 +325,9 @@ MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
     case DFCS_SCROLLRIGHT:
         Symbol = '4';
         break;
+
+    default:
+        return FALSE;
     }
     MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT, scheme);
     ZeroMemory(&lf, sizeof(LOGFONT));

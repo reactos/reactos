@@ -22,7 +22,7 @@ add_library(winmm SHARED
     winmm_res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winmm.def)
 
-set_module_type(winmm win32dll)
+set_module_type(winmm win32dll HOTPATCHABLE)
 target_link_libraries(winmm wine ${PSEH_LIB})
 add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(winmm winemm.h SOURCE)

@@ -48,7 +48,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Asistentul va crea un cont de utilizator cu numele Administrator. Îl puteți folosi când veți avea nevoie de control complet asupra calculatorului.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Introduceți o parolă pentru Administrator de maxim 14 caractere.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Introduceți o parolă pentru Administrator de maxim 127 caractere.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Parolă administrator:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Confirmarea parolei:", IDC_STATIC, 54, 123, 105, 8
@@ -127,15 +127,15 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Conștientizări"
     IDS_ACKSUBTITLE "Contribuții aduse și informații despre licență"
-    IDS_OWNERTITLE "Personalizarea sistemului de operare"
+    IDS_OWNERTITLE "Personalizare sistem"
     IDS_OWNERSUBTITLE "Asistentul va folosi câteva informații pentru a personaliza ReactOS."
-    IDS_COMPUTERTITLE "Numele calculatorului și parola de administrator"
+    IDS_COMPUTERTITLE "Nume calculator și parolă de administrator"
     IDS_COMPUTERSUBTITLE "Pentru calculator sunt necesare un nume și o parolă de administrator."
     IDS_LOCALETITLE "Particularizări regionale"
     IDS_LOCALESUBTITLE "Particularizarea ReactOS pentru anumite regiuni sau limbi."
     IDS_DATETIMETITLE "Dată și oră"
     IDS_DATETIMESUBTITLE "Stabiliți data și ora corectă pentru calculator."
-    IDS_PROCESSTITLE "Înregistrarea componentelor"
+    IDS_PROCESSTITLE "Înregistrare componente"
     IDS_PROCESSSUBTITLE "Așteptați…"
 END
 
@@ -150,6 +150,13 @@ BEGIN
     IDS_DLLINSTALL_FAILED "DllInstall a eșuat: "
     IDS_TIMEOUT "Timp expirat în timpul înregistrării"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE

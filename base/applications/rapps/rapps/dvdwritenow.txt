@@ -1,5 +1,5 @@
 ﻿; UTF-8
-
+; PL translation by wojo664
 [Section]
 Name = DVD Write Now
 Version = 1.5.12 sp2
@@ -16,6 +16,9 @@ Description = Eine kostenlose CD/DVD Brennsoftware. Sobald es installiert ist, k
 
 [Section.0410]
 Description = Un software di masterizzazione CD/DVD diretto e gratuito. Una volta installato, è possibile utilizzare il CD/DVD RW da flash USB o dischi rigidi rimovibili. Insieme a questo è possibile scrivere CD/DVD RW registrati con filesystem UDF. È anche possibile leggere i dischi UDF creati con altri software. (Microsoft DVD-ROM, dischi RW registrati con InCD Ahead). Il programma ha bisogno di un programma di decompressione ZIP per installarlo.
+
+[Section.0415]
+Description = Darmowe oprogramowanie do nagrywania CD/DVD. Po zainstalowaniu, możesz używać płyty CD RW i DVD RW tak, jak dyski przenośne / pendrive. Możesz także zapisywać (i odczytywać dyski utworzone przez inne programy) dane do dysków RW zapisanych w systemie UDF. Wymaga programu archiwizującego do wypakowania i instalacji.  
 
 [Section.0418]
 Licence = Gratuită

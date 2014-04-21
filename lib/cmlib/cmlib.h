@@ -23,15 +23,23 @@
     #define strcasecmp _stricmp
     #endif//_WIN32
 
-    #ifndef _MSC_VER
+    #if (!defined(_MSC_VER) || (_MSC_VER < 1500))
     #define _In_
     #define _Out_
     #define _Inout_
+    #define _In_opt_
+    #define _In_range_(x, y)
     #endif
+
+    #define __drv_aliasesMem
 
     #ifndef min
     #define min(a, b)  (((a) < (b)) ? (a) : (b))
     #endif
+
+    // #ifndef max
+    // #define max(a, b)  (((a) > (b)) ? (a) : (b))
+    // #endif
 
     // Definitions copied from <ntstatus.h>
     // We only want to include host headers, so we define them manually

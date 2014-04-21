@@ -727,6 +727,7 @@ ata_check_unit(
                 }
                 */
 
+                addr.Length = sizeof(addr);
                 addr.PortNumber = -1;
                 addr.PathId   = inquiryData->PathId;
                 addr.TargetId = inquiryData->TargetId;
@@ -986,12 +987,14 @@ ata_adapter_info(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length     = sizeof(addr);
     addr.PortNumber = bus_id;
 
     len = sizeof(ADAPTERINFO)+sizeof(CHANINFO)*AHCI_MAX_PORT;
     if(!g_AdapterInfo) {
         AdapterInfo = (PADAPTERINFO)GlobalAlloc(GMEM_FIXED, len);
         if(!AdapterInfo) {
+            ata_close_dev(h);
             return FALSE;
         }
     } else {
@@ -1111,6 +1114,7 @@ ata_mode(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length   = sizeof(addr);
     addr.PortNumber = bus_id;
     addr.PathId   = (UCHAR)(dev_id >> 16);
     addr.TargetId = (UCHAR)(dev_id >> 8);
@@ -1155,6 +1159,7 @@ ata_reset(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length   = sizeof(addr);
     addr.PortNumber = bus_id;
     addr.PathId   = (UCHAR)(dev_id >> 16);
     addr.TargetId = (UCHAR)(dev_id >> 8);
@@ -1213,6 +1218,7 @@ ata_hide(
     h = ata_open_dev(dev_name);
     if(!h)
         return FALSE;
+    addr.Length   = sizeof(addr);
     addr.PortNumber = bus_id;
     addr.PathId   = (UCHAR)(dev_id >> 16);
     addr.TargetId = (UCHAR)(dev_id >> 8);
@@ -1268,6 +1274,7 @@ ata_scan(
     if((UCHAR)(dev_id) != 0xff &&
        (UCHAR)(dev_id >> 8) != 0xff) {
 
+        addr.Length   = sizeof(addr);
         addr.PortNumber = bus_id;
         addr.PathId   = (UCHAR)(dev_id >> 16);
         addr.TargetId = 0;

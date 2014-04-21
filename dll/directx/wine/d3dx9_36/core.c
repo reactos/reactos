@@ -76,7 +76,7 @@ static ULONG WINAPI ID3DXBufferImpl_Release(ID3DXBuffer *iface)
     return ref;
 }
 
-static LPVOID WINAPI ID3DXBufferImpl_GetBufferPointer(ID3DXBuffer *iface)
+static void * WINAPI ID3DXBufferImpl_GetBufferPointer(ID3DXBuffer *iface)
 {
     struct ID3DXBufferImpl *This = impl_from_ID3DXBuffer(iface);
 

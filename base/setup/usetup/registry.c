@@ -763,4 +763,38 @@ SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset
   return TRUE;
 }
 
+
+VOID
+SetDefaultPagefile(WCHAR Drive)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"PagingFiles");
+    WCHAR ValueBuffer[] = L"?:\\pagefile.sys 0 0\0";
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return;
+
+    ValueBuffer[0] = Drive;
+
+    NtSetValueKey(KeyHandle,
+                  &ValueName,
+                  0,
+                  REG_MULTI_SZ,
+                  (PVOID)&ValueBuffer,
+                  sizeof(ValueBuffer));
+
+    NtClose(KeyHandle);
+}
+
 /* EOF */

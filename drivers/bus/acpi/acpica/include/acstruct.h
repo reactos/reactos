@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -126,7 +126,7 @@
 
 
 /*
- * Walk state - current state of a parse tree walk.  Used for both a leisurely
+ * Walk state - current state of a parse tree walk. Used for both a leisurely
  * stroll through the tree (for whatever reason), and for control method
  * execution.
  */
@@ -211,6 +211,9 @@ typedef struct acpi_init_walk_info
     UINT32                          TableIndex;
     UINT32                          ObjectCount;
     UINT32                          MethodCount;
+    UINT32                          SerialMethodCount;
+    UINT32                          NonSerialMethodCount;
+    UINT32                          SerializedMethodCount;
     UINT32                          DeviceCount;
     UINT32                          OpRegionCount;
     UINT32                          FieldCount;
@@ -267,27 +270,43 @@ typedef union acpi_aml_operands
 
 
 /*
- * Structure used to pass object evaluation parameters.
+ * Structure used to pass object evaluation information and parameters.
  * Purpose is to reduce CPU stack use.
  */
 typedef struct acpi_evaluate_info
 {
-    ACPI_NAMESPACE_NODE             *PrefixNode;
-    char                            *Pathname;
-    ACPI_OPERAND_OBJECT             *ObjDesc;
-    ACPI_OPERAND_OBJECT             **Parameters;
-    ACPI_NAMESPACE_NODE             *ResolvedNode;
-    ACPI_OPERAND_OBJECT             *ReturnObject;
-    UINT8                           ParamCount;
-    UINT8                           PassNumber;
-    UINT8                           ReturnObjectType;
-    UINT8                           Flags;
+    /* The first 3 elements are passed by the caller to AcpiNsEvaluate */
+
+    ACPI_NAMESPACE_NODE             *PrefixNode;        /* Input: starting node */
+    char                            *RelativePathname;  /* Input: path relative to PrefixNode */
+    ACPI_OPERAND_OBJECT             **Parameters;       /* Input: argument list */
+
+    ACPI_NAMESPACE_NODE             *Node;              /* Resolved node (PrefixNode:RelativePathname) */
+    ACPI_OPERAND_OBJECT             *ObjDesc;           /* Object attached to the resolved node */
+    char                            *FullPathname;      /* Full pathname of the resolved node */
+
+    const ACPI_PREDEFINED_INFO      *Predefined;        /* Used if Node is a predefined name */
+    ACPI_OPERAND_OBJECT             *ReturnObject;      /* Object returned from the evaluation */
+    union acpi_operand_object       *ParentPackage;     /* Used if return object is a Package */
+
+    UINT32                          ReturnFlags;        /* Used for return value analysis */
+    UINT32                          ReturnBtype;        /* Bitmapped type of the returned object */
+    UINT16                          ParamCount;         /* Count of the input argument list */
+    UINT8                           PassNumber;         /* Parser pass number */
+    UINT8                           ReturnObjectType;   /* Object type of the returned object */
+    UINT8                           NodeFlags;          /* Same as Node->Flags */
+    UINT8                           Flags;              /* General flags */
 
 } ACPI_EVALUATE_INFO;
 
 /* Values for Flags above */
 
-#define ACPI_IGNORE_RETURN_VALUE        1
+#define ACPI_IGNORE_RETURN_VALUE    1
+
+/* Defines for ReturnFlags field above */
+
+#define ACPI_OBJECT_REPAIRED        1
+#define ACPI_OBJECT_WRAPPED         2
 
 
 /* Info used by AcpiNsInitializeDevices */

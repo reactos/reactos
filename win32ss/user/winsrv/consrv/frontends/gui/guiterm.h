@@ -11,12 +11,8 @@
 
 #pragma once
 
-#define CONGUI_MIN_WIDTH      10
-#define CONGUI_MIN_HEIGHT     10
-#define CONGUI_UPDATE_TIME    0
-#define CONGUI_UPDATE_TIMER   1
-
-#define CURSOR_BLINK_TIME 500
+#include "guisettings.h"
+#include "conwnd.h"
 
 NTSTATUS FASTCALL GuiInitConsole(PCONSOLE Console,
                                  /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,

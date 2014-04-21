@@ -74,7 +74,6 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
 
 fail:
     ReportLastError();
-    if (pServiceInfo) HeapFree(GetProcessHeap(), 0, pServiceInfo);
     if (hSc) CloseServiceHandle(hSc);
     if (hSCManager) CloseServiceHandle(hSCManager);
     return FALSE;

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -19,6 +19,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Öntanımlı Donanım Ayarlarını Kullan"
+    IDS_USEDEFFRQUENCY "Ön Tanımlı Donanım Ayarlarını Kullan"
     IDS_FREQFMT "%u Hertz"
 END

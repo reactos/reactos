@@ -58,7 +58,7 @@
 #endif
 
 
-    FT_TRACE4(( "cid_load_glyph: glyph index %d\n", glyph_index ));
+    FT_TRACE1(( "cid_load_glyph: glyph index %d\n", glyph_index ));
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 

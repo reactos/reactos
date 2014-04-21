@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = PSPad
@@ -23,6 +24,9 @@ Size = 4,46 Mo
 
 [Section.0410]
 Description = Un editor di testo.
+
+Section.0415]
+Description = Edytor tekstu.
 
 [Section.0413]
 Description = Een teksteditor.

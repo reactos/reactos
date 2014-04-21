@@ -35,7 +35,7 @@ Description = Motor de execuție pentru jocuri SCUMM.
 Size = 6,28 Mo
 
 [Section.041f]
-Description = ReactOS üzerinde Sam ve Max, Dokunaç Günü vb.
+Description = ReactOS üzerinde Sam ve Max, Day of the Tentacle vb.
 Size = 6,28 MB
 
 [Section.0422]

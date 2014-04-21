@@ -224,7 +224,7 @@ typedef struct _FRONTEND_VTBL
      */
     VOID (NTAPI *ChangeTitle)(IN OUT PFRONTEND This);
     BOOL (NTAPI *ChangeIcon)(IN OUT PFRONTEND This,
-                             HICON hWindowIcon);
+                             HICON IconHandle);
     HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
                                               PCOORD pSize);
@@ -237,10 +237,10 @@ typedef struct _FRONTEND_VTBL
     INT   (NTAPI *ShowMouseCursor)(IN OUT PFRONTEND This,
                                    BOOL Show);
     BOOL  (NTAPI *SetMouseCursor)(IN OUT PFRONTEND This,
-                                  HCURSOR hCursor);
+                                  HCURSOR CursorHandle);
     HMENU (NTAPI *MenuControl)(IN OUT PFRONTEND This,
-                               UINT cmdIdLow,
-                               UINT cmdIdHigh);
+                               UINT CmdIdLow,
+                               UINT CmdIdHigh);
     BOOL  (NTAPI *SetMenuClose)(IN OUT PFRONTEND This,
                                 BOOL Enable);
 
@@ -282,6 +282,8 @@ typedef struct _CONSOLE
     CONSOLE_STATE State;                    /* State of the console */
 
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
+    PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when all the other processes have been detached from the console */
+    BOOLEAN NotifyLastClose;                /* TRUE if the console should send a control event to the last attached process after all the others detached, if it wanted to be notified */
 
     FRONTEND TermIFace;                     /* Frontend-specific interface */
 
@@ -327,6 +329,7 @@ typedef struct _CONSOLE
 
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
+    BOOLEAN NotifyLastClose;                /* TRUE if the console should send a control event when a process detaches, and only one process is still attached to it */
 
     COLORREF Colors[16];                    /* Colour palette */
 
@@ -344,7 +347,7 @@ VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
 NTSTATUS NTAPI
 ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
                               IN ULONG ProcessGroupId,
-                              IN ULONG Event);
+                              IN ULONG CtrlEvent);
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);

@@ -119,7 +119,7 @@ static HRESULT WINAPI XFCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter
 static HRESULT WINAPI XFCF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
 {
     IClassFactoryImpl *This = impl_from_IClassFactory(iface);
-    FIXME("(%p)->(%d),stub!\n",This,dolock);
+    FIXME("(%p)->(%d), stub!\n",This,dolock);
     return S_OK;
 }
 

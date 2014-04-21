@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = HxD
@@ -16,6 +17,9 @@ Description = Ein guter HEX Editor. Zum extrahieren wird 7-Zip oder ein ähnlich
 Size = 854 kB
 URLSite = http://mh-nexus.de/de/
 URLDownload = http://mh-nexus.de/downloads/HxDSetupDE.zip
+
+[Section.0415]
+Description = Dobry edytor Hex. Do wypakowania pliku potrzebny jest program archiwizujący np. 7-Zip.
 
 [Section.0418]
 Licence = Gratuită

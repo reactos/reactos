@@ -37,7 +37,7 @@ Size = 249,02 ko
 
 [Section.041f]
 Licence = Ücretsiz
-Description = glidewrapper, ReactOS'ta Şeytan 2'yi çalıştırmak için gereklidir.
+Description = glidewrapper, ReactOS'ta Diablo 2'yi çalıştırmak için gereklidir.
 Size = 249,02 KB
 
 [Section.0422]

@@ -2247,6 +2247,7 @@ xmlBufNodeDump(xmlBufPtr buf, xmlDocPtr doc, xmlNodePtr cur, int level,
     size_t use;
     int ret;
     xmlOutputBufferPtr outbuf;
+    int oldalloc;
 
     xmlInitParser();
 
@@ -2278,7 +2279,10 @@ xmlBufNodeDump(xmlBufPtr buf, xmlDocPtr doc, xmlNodePtr cur, int level,
     outbuf->written = 0;
 
     use = xmlBufUse(buf);
+    oldalloc = xmlBufGetAllocationScheme(buf);
+    xmlBufSetAllocationScheme(buf, XML_BUFFER_ALLOC_DOUBLEIT);
     xmlNodeDumpOutput(outbuf, doc, cur, level, format, NULL);
+    xmlBufSetAllocationScheme(buf, oldalloc);
     xmlFree(outbuf);
     ret = xmlBufUse(buf) - use;
     return (ret);

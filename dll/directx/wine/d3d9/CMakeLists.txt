@@ -29,7 +29,7 @@ add_library(d3d9 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def)
 
-set_module_type(d3d9 win32dll UNICODE)
+set_module_type(d3d9 win32dll UNICODE HOTPATCHABLE)
 target_link_libraries(d3d9 wine)
 add_importlibs(d3d9 wined3d msvcrt kernel32 ntdll)
 add_pch(d3d9 d3d9_private.h SOURCE)

@@ -34,9 +34,9 @@
 #define IDC_STATIC_SELECT_FONT_PREVIEW 401
 #define IDC_FONT_SIZE_X                402
 #define IDC_FONT_SIZE_Y                403
-#define IDC_LBOX_FONTS                 404
+#define IDC_LBOX_FONTSIZE              404
 #define IDC_STATIC_FONT_WINDOW_PREVIEW 405
-#define IDC_LBOX_TYPE                  406
+#define IDC_LBOX_FONTTYPE              406
 #define IDC_GROUPBOX_FONT_NAME         407
 
 /* Layout dialog */

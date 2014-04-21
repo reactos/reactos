@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -29,7 +29,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sesler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ses düzenleri, ReactOS'un ve çizeylemlerin içindeki olaylara sesler atayan sesler takımıdır. Var olan bir düzeni seçebilir veyâ değiştirdiğinizi kaydedebilirsiniz.", -1, 8, 7, 230, 30
+    LTEXT "Ses düzenleri, ReactOS'un ve izlencelerin içindeki olaylara sesler atayan sesler takımıdır. Var olan bir düzeni seçebilir veyâ değiştirdiğinizi kaydedebilirsiniz.", -1, 8, 7, 230, 30
     LTEXT "&Ses Düzeni:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -50,7 +50,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kayıttan Yürütme", -1, 7, 7, 230, 60
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
-    LTEXT "&Öntanımlı Aygıt:", -1, 50, 20, 80, 9
+    LTEXT "&Ön Tanımlı Aygıt:", -1, 50, 20, 80, 9
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Ses Düzeyi...", IDC_VOLUME1_BTN, 85, 47, 70, 15
     PUSHBUTTON "&Gelişmiş...", IDC_ADV2_BTN, 160, 47, 70, 15
@@ -65,8 +65,8 @@ BEGIN
     LTEXT "Ön&tanımlı Aygıt:", -1, 50, 158, 80, 9
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "Ses &Düzeyi...", IDC_VOLUME3_BTN, 85, 185, 70, 15
-    PUSHBUTTON "&Hakkında...", IDC_ADV3_BTN, 160, 185, 70, 15
-    CHECKBOX "&Yalnızca Öntanımlı Aygıtları Kullan", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+    PUSHBUTTON "&Üzerine...", IDC_ADV3_BTN, 160, 185, 70, 15
+    CHECKBOX "&Yalnızca Ön Tanımlı Aygıtları Kullan", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -77,7 +77,7 @@ BEGIN
     LTEXT "Bu ayarlar, seçili yürütme veyâ kaydetme aygıtının ses düzeyini ve gelişmiş seçeneklerini denetler.", -1, 8, 7, 230, 40
     GROUPBOX "Yürütme", -1, 7, 37, 230, 60
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
-    LTEXT "&Öntanımlı Aygıt:", -1, 50, 50, 80, 9
+    LTEXT "&Ön Tanımlı Aygıt:", -1, 50, 50, 80, 9
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Ses Düzeyi...", IDC_VOLUME4_BTN, 85, 77, 70, 15
     PUSHBUTTON "&Gelişmiş...", IDC_ADV4_BTN, 160, 77, 70, 15
@@ -215,7 +215,7 @@ BEGIN
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
     LTEXT "Yüksek", 9502, 202, 164, 17, 8
     AUTOCHECKBOX "&Tüm sürgüleri aynı anda devindir.", 9504, 5, 185, 216, 9
-    PUSHBUTTON "&Öntanımlılara Geri Dön", 9505, 110, 199, 110, 14
+    PUSHBUTTON "&Ön Tanımlılara Geri Dön", 9505, 110, 199, 110, 14
 END
 
 IDD_SETUP2 DIALOG 0, 0, 227, 206
@@ -225,7 +225,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Ses", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "ReactOS Ses Hizmeti şimdi etkinleştirildi. Bununla birlikte ReactOS'u yeniden başlatana kadar sesler düzgün bir şekilde çalınamayabilir. Eğer şimdi bilgisayarı yeniden başlatmak isterseniz ilk önce çalışmalarınızı kaydediniz, ardından tüm çizeylemleri kapatınız.", 10261, 60, 25, 150, 50
+    LTEXT "ReactOS Ses Hizmeti şimdi etkinleştirildi. Bununla birlikte ReactOS'u yeniden başlatana dek sesler düzgün bir şekilde çalınamayabilir. Eğer şimdi bilgisayarı yeniden başlatmak isterseniz ilk önce çalışmalarınızı kaydediniz, ardından tüm izlenceleri kapatınız.", 10261, 60, 25, 150, 50
     LTEXT "ReactOS'u yeniden başlatmak için ""Tamam"" düğmesine tıklayınız.", 10262, 60, 75, 150, 20
     LTEXT "Eğer iptal ederseniz ReactOS Ses'in uygun bir şekilde çalışması için bilgisayarı yeniden başlatmaya gereksinim duyacaksınız.", 10263, 60, 100, 150, 40
 END
@@ -236,8 +236,8 @@ BEGIN
     IDS_CPLDESCRIPTION "Bilgisayarın ses düzenini değiştirir ve hoparlörlerle kayıt aygıtları için ayarları yapılandırır."
     IDS_NO_SOUND "(Yok)"
     IDS_NO_DEVICES "Aygıt Yok"
-    5825 "Çizeylem Yanlışlığı"
-    5826 "Çizeylemi Kapatma"
+    5825 "İzlence Yanlışlığı"
+    5826 "İzlenceyi Kapatma"
     5827 "Çok Az Kalan Pil Uyarısı"
     5828 "Aygıt Bağlandı"
     5829 "Aygıt Çıkarıldı"
@@ -250,12 +250,12 @@ BEGIN
     5836 "Simge Durumuna Küçültme"
     5837 "Yeni E-Posta Bildirimi"
     5838 "Gezinmeyi Başlatma"
-    5839 "Çizeylem Açma"
+    5839 "İzlence Açma"
     5840 "Yazdırma Bitirildi"
     5841 "Aşağı Geri Getirme"
     5842 "Yukarı Geri Getirme"
     5843 "Yıldız İmi"
-    5844 "Öntanımlı Ses"
+    5844 "Ön Tanımlı Ses"
     5845 "Ünlem"
     5846 "ReactOS'tan Çıkma"
     5847 "Önemli Durma"

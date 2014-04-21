@@ -19,327 +19,289 @@
 
 #include "d3dx9_36_private.h"
 
-typedef struct ID3DXLineImpl {
+struct d3dx9_line
+{
     ID3DXLine ID3DXLine_iface;
     LONG ref;
 
     IDirect3DDevice9 *device;
     IDirect3DStateBlock9 *state;
-} ID3DXLineImpl;
+};
 
-static inline ID3DXLineImpl *impl_from_ID3DXLine(ID3DXLine *iface)
+static inline struct d3dx9_line *impl_from_ID3DXLine(ID3DXLine *iface)
 {
-    return CONTAINING_RECORD(iface, ID3DXLineImpl, ID3DXLine_iface);
+    return CONTAINING_RECORD(iface, struct d3dx9_line, ID3DXLine_iface);
 }
 
-/*** IUnknown methods ***/
-static HRESULT WINAPI ID3DXLineImpl_QueryInterface(ID3DXLine* iface, REFIID riid, LPVOID* object)
+static HRESULT WINAPI d3dx9_line_QueryInterface(ID3DXLine *iface, REFIID riid, void **out)
 {
-    TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), object);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_ID3DXLine))
+    if (IsEqualGUID(riid, &IID_ID3DXLine)
+            || IsEqualGUID(riid, &IID_IUnknown))
     {
         ID3DXLine_AddRef(iface);
-        *object = iface;
+        *out = iface;
         return S_OK;
     }
 
-    ERR("Interface %s not found\n", debugstr_guid(riid));
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
 
+    *out = NULL;
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI ID3DXLineImpl_AddRef(ID3DXLine* iface)
+static ULONG WINAPI d3dx9_line_AddRef(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
+    struct d3dx9_line *line = impl_from_ID3DXLine(iface);
+    ULONG refcount = InterlockedIncrement(&line->ref);
 
-    TRACE("(%p)->(): AddRef from %u\n", This, This->ref);
+    TRACE("%p increasing refcount to %u.\n", line, refcount);
 
-    return InterlockedIncrement(&This->ref);
+    return refcount;
 }
 
-static ULONG WINAPI ID3DXLineImpl_Release(ID3DXLine* iface)
+static ULONG WINAPI d3dx9_line_Release(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    struct d3dx9_line *line = impl_from_ID3DXLine(iface);
+    ULONG refcount = InterlockedDecrement(&line->ref);
 
-    TRACE("(%p)->(): Release from %u\n", This, ref + 1);
+    TRACE("%p decreasing refcount to %u.\n", line, refcount);
 
-    if (!ref)
+    if (!refcount)
     {
-        IDirect3DDevice9_Release(This->device);
-        HeapFree(GetProcessHeap(), 0, This);
+        IDirect3DDevice9_Release(line->device);
+        HeapFree(GetProcessHeap(), 0, line);
     }
 
-    return ref;
+    return refcount;
 }
 
-/*** ID3DXLine methods ***/
-static HRESULT WINAPI ID3DXLineImpl_GetDevice(struct ID3DXLine *iface, struct IDirect3DDevice9 **device)
+static HRESULT WINAPI d3dx9_line_GetDevice(struct ID3DXLine *iface, struct IDirect3DDevice9 **device)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
+    struct d3dx9_line *line = impl_from_ID3DXLine(iface);
 
-    TRACE ("(%p)->(%p)\n", This, device);
+    TRACE("iface %p, device %p.\n", iface, line);
 
-    if (device == NULL) return D3DERR_INVALIDCALL;
+    if (!device)
+        return D3DERR_INVALIDCALL;
 
-    *device = This->device;
-    IDirect3DDevice9_AddRef(This->device);
+    *device = line->device;
+    IDirect3DDevice9_AddRef(line->device);
 
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_Begin(ID3DXLine* iface)
+static HRESULT WINAPI d3dx9_line_Begin(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    HRESULT hr;
+    struct d3dx9_line *line = impl_from_ID3DXLine(iface);
     D3DXMATRIX identity, projection;
     D3DVIEWPORT9 vp;
 
-    TRACE ("(%p)->()\n", This);
+    TRACE("iface %p.\n", iface);
 
-    if (This->state != NULL) /* We already began. Return error. */
+    if (line->state)
         return D3DERR_INVALIDCALL;
 
-    hr = IDirect3DDevice9_CreateStateBlock(This->device, D3DSBT_ALL, &This->state);
-    if (FAILED(hr)) return D3DXERR_INVALIDDATA;
+    if (FAILED(IDirect3DDevice9_CreateStateBlock(line->device, D3DSBT_ALL, &line->state)))
+        return D3DXERR_INVALIDDATA;
 
-    hr = IDirect3DDevice9_GetViewport(This->device, &vp);
-    if (FAILED(hr)) goto failed;
+    if (FAILED(IDirect3DDevice9_GetViewport(line->device, &vp)))
+        goto failed;
 
     D3DXMatrixIdentity(&identity);
-    D3DXMatrixOrthoOffCenterLH(&projection,
-                               0.0, vp.Width, /* Min and max x */
-                               vp.Height, 0.0, /* Min and max y. Screen y is on top so this is inverted */
-                               0.0, 1.0); /* Min and max z */
+    D3DXMatrixOrthoOffCenterLH(&projection, 0.0, (FLOAT)vp.Width, (FLOAT)vp.Height, 0.0, 0.0, 1.0);
 
-    hr = IDirect3DDevice9_SetTransform(This->device, D3DTS_WORLD, &identity);
-    if (FAILED(hr)) goto failed;
+    if (FAILED(IDirect3DDevice9_SetTransform(line->device, D3DTS_WORLD, &identity)))
+        goto failed;
+    if (FAILED(IDirect3DDevice9_SetTransform(line->device, D3DTS_VIEW, &identity)))
+        goto failed;
+    if (FAILED(IDirect3DDevice9_SetTransform(line->device, D3DTS_PROJECTION, &projection)))
+        goto failed;
 
-    hr = IDirect3DDevice9_SetTransform(This->device, D3DTS_VIEW, &identity);
-    if (FAILED(hr)) goto failed;
-
-    hr = IDirect3DDevice9_SetTransform(This->device, D3DTS_PROJECTION, &projection);
-    if (FAILED(hr)) goto failed;
-
-    /* Windows sets similar states so we do the same */
-
-    hr = IDirect3DDevice9_SetRenderState(This->device, D3DRS_LIGHTING, FALSE);
-    if (FAILED(hr)) goto failed;
-
-    hr = IDirect3DDevice9_SetRenderState(This->device, D3DRS_FOGENABLE, FALSE);
-    if (FAILED(hr)) goto failed;
-
-    hr = IDirect3DDevice9_SetRenderState(This->device, D3DRS_SHADEMODE, D3DSHADE_FLAT);
-    if (FAILED(hr)) goto failed;
-
-    hr = IDirect3DDevice9_SetRenderState(This->device, D3DRS_ALPHABLENDENABLE, TRUE);
-    if (FAILED(hr)) goto failed;
-
-    hr = IDirect3DDevice9_SetRenderState(This->device, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-    if (FAILED(hr)) goto failed;
-
-    hr = IDirect3DDevice9_SetRenderState(This->device, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-    if (FAILED(hr)) goto failed;
+    if (FAILED(IDirect3DDevice9_SetRenderState(line->device, D3DRS_LIGHTING, FALSE)))
+        goto failed;
+    if (FAILED(IDirect3DDevice9_SetRenderState(line->device, D3DRS_FOGENABLE, FALSE)))
+        goto failed;
+    if (FAILED(IDirect3DDevice9_SetRenderState(line->device, D3DRS_SHADEMODE, D3DSHADE_FLAT)))
+        goto failed;
+    if (FAILED(IDirect3DDevice9_SetRenderState(line->device, D3DRS_ALPHABLENDENABLE, TRUE)))
+        goto failed;
+    if (FAILED(IDirect3DDevice9_SetRenderState(line->device, D3DRS_SRCBLEND, D3DBLEND_SRCALPHA)))
+        goto failed;
+    if (FAILED(IDirect3DDevice9_SetRenderState(line->device, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA)))
+        goto failed;
 
     return D3D_OK;
+
 failed:
-    IDirect3DStateBlock9_Apply(This->state);
-    IDirect3DStateBlock9_Release(This->state);
-    This->state = NULL;
+    IDirect3DStateBlock9_Apply(line->state);
+    IDirect3DStateBlock9_Release(line->state);
+    line->state = NULL;
     return D3DXERR_INVALIDDATA;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_Draw(ID3DXLine* iface, CONST D3DXVECTOR2* vertexlist, DWORD vertexlistcount, D3DCOLOR color)
+static HRESULT WINAPI d3dx9_line_Draw(ID3DXLine *iface, const D3DXVECTOR2 *vertex_list,
+        DWORD vertex_list_count, D3DCOLOR color)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(%p, %u, %#x): stub\n", This, vertexlist, vertexlistcount, color);
+    FIXME("iface %p, vertex_list %p, vertex_list_count %u, color 0x%08x stub!\n",
+            iface, vertex_list, vertex_list_count, color);
 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_DrawTransform(ID3DXLine* iface, CONST D3DXVECTOR3* vertexlist, DWORD vertexlistcount,
-                                                  CONST D3DXMATRIX* transform, D3DCOLOR color)
+static HRESULT WINAPI d3dx9_line_DrawTransform(ID3DXLine *iface, const D3DXVECTOR3 *vertex_list,
+        DWORD vertex_list_count, const D3DXMATRIX *transform, D3DCOLOR color)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(%p, %u, %p, %#x): stub\n", This, vertexlist, vertexlistcount, transform, color);
+    FIXME("iface %p, vertex_list %p, vertex_list_count %u, transform %p, color 0x%08x stub!\n",
+            iface, vertex_list, vertex_list_count, transform, color);
 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_SetPattern(ID3DXLine* iface, DWORD pattern)
+static HRESULT WINAPI d3dx9_line_SetPattern(ID3DXLine *iface, DWORD pattern)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(%#x): stub\n", This, pattern);
+    FIXME("iface %p, pattern 0x%08x stub!\n", iface, pattern);
 
     return E_NOTIMPL;
 }
 
-static DWORD WINAPI ID3DXLineImpl_GetPattern(ID3DXLine* iface)
+static DWORD WINAPI d3dx9_line_GetPattern(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
+    FIXME("iface %p stub!\n", iface);
 
-    FIXME("(%p)->(): stub\n", This);
-
-    return 0xFFFFFFFF;
+    return 0xffffffff;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_SetPatternScale(ID3DXLine* iface, FLOAT scale)
+static HRESULT WINAPI d3dx9_line_SetPatternScale(ID3DXLine *iface, float scale)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(%f): stub\n", This, scale);
+    FIXME("iface %p, scale %.8e stub!\n", iface, scale);
 
     return E_NOTIMPL;
 }
 
-static FLOAT WINAPI ID3DXLineImpl_GetPatternScale(ID3DXLine* iface)
+static float WINAPI d3dx9_line_GetPatternScale(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(): stub\n", This);
+    FIXME("iface %p stub!\n", iface);
 
     return 1.0f;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_SetWidth(ID3DXLine* iface, FLOAT width)
+static HRESULT WINAPI d3dx9_line_SetWidth(ID3DXLine *iface, float width)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(%f): stub\n", This, width);
+    FIXME("iface %p, width %.8e stub!\n", iface, width);
 
     return E_NOTIMPL;
 }
 
-static FLOAT WINAPI ID3DXLineImpl_GetWidth(ID3DXLine* iface)
+static float WINAPI d3dx9_line_GetWidth(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(): stub\n", This);
+    FIXME("iface %p stub!\n", iface);
 
     return 1.0f;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_SetAntialias(ID3DXLine* iface, BOOL antialias)
+static HRESULT WINAPI d3dx9_line_SetAntialias(ID3DXLine *iface, BOOL antialias)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(%u): stub\n", This, antialias);
+    FIXME("iface %p, antialias %#x stub!\n", iface, antialias);
 
     return E_NOTIMPL;
 }
 
-static BOOL WINAPI ID3DXLineImpl_GetAntialias(ID3DXLine* iface)
+static BOOL WINAPI d3dx9_line_GetAntialias(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(): stub\n", This);
+    FIXME("iface %p stub!\n", iface);
 
     return FALSE;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_SetGLLines(ID3DXLine* iface, BOOL gl_lines)
+static HRESULT WINAPI d3dx9_line_SetGLLines(ID3DXLine *iface, BOOL gl_lines)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(%u): stub\n", This, gl_lines);
+    FIXME("iface %p, gl_lines %#x stub!\n", iface, gl_lines);
 
     return E_NOTIMPL;
 }
 
-static BOOL WINAPI ID3DXLineImpl_GetGLLines(ID3DXLine* iface)
+static BOOL WINAPI d3dx9_line_GetGLLines(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(): stub\n", This);
+    FIXME("iface %p stub!\n", iface);
 
     return FALSE;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_End(ID3DXLine* iface)
+static HRESULT WINAPI d3dx9_line_End(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
+    struct d3dx9_line *line = impl_from_ID3DXLine(iface);
 
     HRESULT hr;
 
-    TRACE ("(%p)->()\n", This);
+    TRACE("iface %p.\n", iface);
 
-    if (This->state == NULL) /* We haven't begun yet. */
+    if (!line->state)
         return D3DERR_INVALIDCALL;
 
-    hr = IDirect3DStateBlock9_Apply(This->state);
-    IDirect3DStateBlock9_Release(This->state);
-    This->state = NULL;
+    hr = IDirect3DStateBlock9_Apply(line->state);
+    IDirect3DStateBlock9_Release(line->state);
+    line->state = NULL;
 
-    if (FAILED(hr)) return D3DXERR_INVALIDDATA;
-    else return D3D_OK;
+    if (FAILED(hr))
+        return D3DXERR_INVALIDDATA;
+
+    return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXLineImpl_OnLostDevice(ID3DXLine* iface)
+static HRESULT WINAPI d3dx9_line_OnLostDevice(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(): stub\n", This);
+    FIXME("iface %p stub!\n", iface);
 
     return E_NOTIMPL;
 }
-static HRESULT WINAPI ID3DXLineImpl_OnResetDevice(ID3DXLine* iface)
+static HRESULT WINAPI d3dx9_line_OnResetDevice(ID3DXLine *iface)
 {
-    ID3DXLineImpl *This = impl_from_ID3DXLine(iface);
-
-    FIXME("(%p)->(): stub\n", This);
+    FIXME("iface %p stub!\n", iface);
 
     return E_NOTIMPL;
 }
 
-static const struct ID3DXLineVtbl ID3DXLine_Vtbl =
+static const struct ID3DXLineVtbl d3dx9_line_vtbl =
 {
-    /*** IUnknown methods ***/
-    ID3DXLineImpl_QueryInterface,
-    ID3DXLineImpl_AddRef,
-    ID3DXLineImpl_Release,
-    /*** ID3DXLine methods ***/
-    ID3DXLineImpl_GetDevice,
-    ID3DXLineImpl_Begin,
-    ID3DXLineImpl_Draw,
-    ID3DXLineImpl_DrawTransform,
-    ID3DXLineImpl_SetPattern,
-    ID3DXLineImpl_GetPattern,
-    ID3DXLineImpl_SetPatternScale,
-    ID3DXLineImpl_GetPatternScale,
-    ID3DXLineImpl_SetWidth,
-    ID3DXLineImpl_GetWidth,
-    ID3DXLineImpl_SetAntialias,
-    ID3DXLineImpl_GetAntialias,
-    ID3DXLineImpl_SetGLLines,
-    ID3DXLineImpl_GetGLLines,
-    ID3DXLineImpl_End,
-    ID3DXLineImpl_OnLostDevice,
-    ID3DXLineImpl_OnResetDevice
+    d3dx9_line_QueryInterface,
+    d3dx9_line_AddRef,
+    d3dx9_line_Release,
+    d3dx9_line_GetDevice,
+    d3dx9_line_Begin,
+    d3dx9_line_Draw,
+    d3dx9_line_DrawTransform,
+    d3dx9_line_SetPattern,
+    d3dx9_line_GetPattern,
+    d3dx9_line_SetPatternScale,
+    d3dx9_line_GetPatternScale,
+    d3dx9_line_SetWidth,
+    d3dx9_line_GetWidth,
+    d3dx9_line_SetAntialias,
+    d3dx9_line_GetAntialias,
+    d3dx9_line_SetGLLines,
+    d3dx9_line_GetGLLines,
+    d3dx9_line_End,
+    d3dx9_line_OnLostDevice,
+    d3dx9_line_OnResetDevice,
 };
 
 HRESULT WINAPI D3DXCreateLine(struct IDirect3DDevice9 *device, struct ID3DXLine **line)
 {
-    ID3DXLineImpl* object;
+    struct d3dx9_line *object;
 
-    TRACE("(%p, %p)\n", device, line);
+    TRACE("device %p, line %p.\n", device, line);
 
     if (!device || !line)
         return D3DERR_INVALIDCALL;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ID3DXLineImpl));
-    if (!object)
+    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    object->ID3DXLine_iface.lpVtbl = &ID3DXLine_Vtbl;
+    object->ID3DXLine_iface.lpVtbl = &d3dx9_line_vtbl;
     object->ref = 1;
     object->device = device;
-    object->state = NULL; /* We only initialize it on Begin */
     IDirect3DDevice9_AddRef(device);
 
     *line = &object->ID3DXLine_iface;

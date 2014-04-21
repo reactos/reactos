@@ -1,26 +1,29 @@
 ﻿; UTF-8
-
+; PL translation by wojo664
 [Section]
 Name = QB64 (SDL version)
-Version = 0.954
+Version = 0.980
 Licence = Freeware
 Description = QB64 is a self-hosting BASIC compiler for Microsoft Windows, Linux and Mac OS X, designed to be compatible with Microsoft QBasic and Microsoft QuickBASIC. You need 7-Zip or a similar utility to extract it.
-Size = 33.1 MB
+Size = 39.0 MB
 Category = 7
 URLSite = http://www.qb64.net/
-URLDownload = http://www.qb64.net/qb64v0954-win.7z
+URLDownload = http://www.qb64.net/qb64v0980-win.7z
 CDPath = none
 
 [Section.0407]
 Description = QB64 ist ein Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
 
+[Section.0415]
+Description = QB64 to kompilator BASIC zdolny do kompilacji własnego kodu źródłowego. Działa w systemach Windows, Linux i Mac OS X. Jest kompatybilny z Microsoft QBasic i QuickBASIC. Wymaga programu archiwizującego do wypakowania.
+
 [Section.0418]
 Licence = Gratuită
 Description = QB64 este un compilator BASIC auto-compilabil pentru Windows, Linux și Mac OS X, conceput pentru a fi compatibil cu Microsoft QBasic și Microsoft QuickBASIC. Este necesar un utilitar de derarhivare de tip ZIP.
-Size = 33,1 Mo
+Size = 39,0 Mo
 
 [Section.041f]
 Name = QB64 (SDL Sürümü)
 Licence = Ücretsiz
 Description = QB64; Mikroyazılım Pencereler, Linux ve Mac OS X için yapılmış, Mikroyazılım QBasic ve Mikroyazılım QuickBASIC ile uyumlu olarak tasarlanan, kendi kendini derleyen bir BASIC derleyicisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
-Size = 33,1 MB
+Size = 39,0 MB

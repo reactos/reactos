@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Hover!
@@ -15,6 +16,9 @@ Description = Das klassische Hover CTF Spiel, dass auf der Windows 95 CD zu find
 
 [Section.0410]
 Description = Il classico gioco Hover CTF che trovate sul CD di Windows 95.
+
+[Section.0415]
+Description = Klasyczna gra Hover CTF znaleziona na dysku Windows 95
 
 [Section.0418]
 Description = Jocul clasic Hover CTF, care se găsea pe CD-ul Windows 95.

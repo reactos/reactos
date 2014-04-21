@@ -20,7 +20,6 @@ if(NOT MSVC)
     endif()
 
     add_library(pseh ${SOURCE})
-    allow_warnings(pseh)
     target_link_libraries(pseh chkstk)
     add_dependencies(pseh psdk)
 

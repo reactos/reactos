@@ -1,18 +1,22 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Lazarus
-Version = 1.0.14
+Version = 1.2
 Licence = modified LGPL, GPL
 Description = A cross-platform integrated development environment (IDE) that lets you create visual (GUI) and non-visual Object Pascal programs, and uses the Free Pascal compiler to generate your executable.
-Size = 111 MB
+Size = 112 MB
 Category = 7
 URLSite = http://www.lazarus.freepascal.org/
-URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.0.14/lazarus-1.0.14-fpc-2.6.2-win32.exe
+URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.2/lazarus-1.2.0-fpc-2.6.2-win32.exe
 CDPath = none
 
 [Section.0407]
 Description = Eine plattformunabhängige, integrierte Entwicklungsumgebung (IDE), mit der man grafische (GUI) und nicht-grafische Pascal-Programme erstellen kann. Es verwendet den Free Pascal Compiler um die Programme zu erzeugen.
+
+[Section.0415]
+Description = Wielopratformowe zintegrowane środowisko programistyczne (IDE) które pozwala na tworzenie graficznych (GUI) i niegraficznych (działających w konsoli) programów obiektowych w języku Pascal. Program używa darmowego kompilatora Free Pascal.
 
 [Section.0410]
 Description = Un ambiente di sviluppo integrato (IDE) cross-platform che consente di creare interfacce grafiche (GUI) e programmi non visivi Object Pascal, e utilizza il compilatore Free Pascal per generare l'eseguibile.
@@ -20,7 +24,7 @@ Description = Un ambiente di sviluppo integrato (IDE) cross-platform che consent
 [Section.0418]
 Licence = GPL, LGPL modificată
 Description = Un mediu integrat de dezvoltare (IDE) multi-platformă care vă permite crearea de programe Object Pascal, atât vizuale (GUI) cât și ne-vizuale, și utilizează compilatorul Free Pascal pentru a genera executabile.
-Size = 111 Mo
+Size = 112 Mo
 
 [Section.041f]
 Licence = Değiştirilmiş LGPL, GPL

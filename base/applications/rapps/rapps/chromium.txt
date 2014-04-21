@@ -1,5 +1,5 @@
 ﻿; UTF-8
-
+; PL translation by wojo664
 [Section]
 Name = Chromium B.S.U.
 Version = 0.9.13.2
@@ -16,6 +16,9 @@ Description = Chromium B.S.U. ist ein Arcade-Style, Top-Scrolling Space Shooter.
 
 [Section.0410]
 Description = Cromo B.S.U. è sparatutto spaziale.
+
+[Section.0415]
+Description = Chromium B.S.U to gra w stylu Arcade, z widokiem z góry.
 
 [Section.0418]
 Description = Chromium B.S.U. este un joc de vânătoare în spațiul cosmic (arcadă 2D).

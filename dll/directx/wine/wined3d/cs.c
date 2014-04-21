@@ -937,5 +937,6 @@ void wined3d_cs_destroy(struct wined3d_cs *cs)
 {
     state_cleanup(&cs->state);
     HeapFree(GetProcessHeap(), 0, cs->fb.render_targets);
+    HeapFree(GetProcessHeap(), 0, cs->data);
     HeapFree(GetProcessHeap(), 0, cs);
 }

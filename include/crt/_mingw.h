@@ -215,6 +215,15 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define _DECLSPEC_INTRIN_TYPE
 #endif
 
+/* Define to a function attribute for Microsoft hotpatch assembly prefix. */
+#ifndef DECLSPEC_HOTPATCH
+#ifdef _MSC_VER
+#define DECLSPEC_HOTPATCH
+#else
+#define DECLSPEC_HOTPATCH __attribute__((__ms_hook_prologue__))
+#endif
+#endif /* DECLSPEC_HOTPATCH */
+
 #include "_mingw_mac.h"
 
 #endif /* !_INC_MINGW */

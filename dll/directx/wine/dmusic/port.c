@@ -685,7 +685,7 @@ HRESULT DMUSIC_CreateSynthPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkou
     HRESULT hr = E_FAIL;
     int i;
 
-    TRACE("(%p,%p,%p,%p,%p%d)\n", guid, object, unkouter, port_params, port_caps, device);
+    TRACE("(%p,%p,%p,%p,%p,%d)\n", guid, object, unkouter, port_params, port_caps, device);
 
     *object = NULL;
 

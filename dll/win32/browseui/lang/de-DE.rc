@@ -1,0 +1,256 @@
+/*
+ * Copyright 2009 Andrew Hill
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+/* Menus */
+
+IDM_CABINET_CONTEXTMENU MENUEX
+BEGIN
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Standardschaltflächen", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Adressleiste", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Links", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "S&ymbolleisten fixieren", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Anpassen...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "Symboltitel", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "Schaltfläche Wechseln zu", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "&Datei", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Schließen", IDM_FILE_CLOSE
+    END
+    POPUP "&Bearbeiten", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+    END
+    POPUP "&Ansicht", FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "&Symbolleisten", IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "S&tatusleiste", IDM_VIEW_STATUSBAR
+        POPUP "&Explorerleiste", IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "Su&chen\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Favoriten\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "Medien", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Verlauf\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "&Ordner", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "&Wechseln zu", FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "&Zurück\tAlt+Left Arrow", IDM_GOTO_BACK
+            MENUITEM "&Vorwärts\tAlt+Right Arrow", IDM_GOTO_FORWARD
+            MENUITEM "Ü&bergeordneter Ordner", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Startseite\tAlt+Home", IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "&Aktualisieren", IDM_VIEW_REFRESH
+    END
+    POPUP "F&avoriten", FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "&Zu Favoriten hinzufügen...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "Fav&oriten verwalten...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(Leer)", IDM_FAVORITES_EMPTY
+    END
+    POPUP "E&xtras", FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "&Netzlaufwerk verbinden...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "Netzlaufwerk &trennen...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Synchronisieren...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Ordneroptionen...", IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "&?", FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "Ist dies eine &legale ReactOS-Kopie?", IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "Inf&o", IDM_HELP_ABOUT
+    END
+END
+
+/* Dialogs */
+
+IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Te&xt Optionen:", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Symboloptio&nen:", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+/* Accelerators */
+
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    800 "Enthält Befehle, um das ausgewählte Objekt zu bearbeiten."
+END
+
+STRINGTABLE
+BEGIN
+    864 "Enthält Befehle zum Bearbeiten."
+END
+
+STRINGTABLE
+BEGIN
+    928 "Enthält Befehle, um die Ansicht zu bearbeiten."
+END
+
+STRINGTABLE
+BEGIN
+    992 "Enthält Werkzeugbefehle."
+END
+
+STRINGTABLE
+BEGIN
+    1056 "Enthält Befehle, um die Hilfe anzuzeigen."
+END
+
+STRINGTABLE
+BEGIN
+    9025 "Schließt das Fenster."
+    9026 "Wechselt zur übergeordneten Ebene."
+END
+
+STRINGTABLE
+BEGIN
+    9121 "Verbindet ein Netzlaufwerk."
+    9122 "Trennt ein Netzlaufwerk."
+END
+
+STRINGTABLE
+BEGIN
+    9250 "Zeigt Programminformationen, Versionsnummer, und Copyright-Informationen."
+    9252 "Zeigt Informationen zum Debuggen."
+END
+
+STRINGTABLE
+BEGIN
+    9281 "Wechselt zur vorherigen Seite."
+    9282 "Wechselt zur nächsten Seite."
+    9283 "Erlaubt es Ihnen Einstellungen zu ändern."
+    9285 "Wechselt zur Startseite."
+END
+
+STRINGTABLE
+BEGIN
+    9362 "Öffnet den Ordner Favoriten."
+    9363 "Fügt die aktuelle Seite der Favoritenliste hinzu."
+END
+
+STRINGTABLE
+BEGIN
+    9505 "Zeigt oder versteckt Symbolleisten."
+    9506 "Zeigt oder versteckt die Statusleiste."
+    9508 "Zeigt oder versteckt die Standardschaltfächensymbole."
+    9509 "Zeigt die Adressleiste."
+    9510 "Zeigt die Quick Links Leiste."
+    9516 "Fixiert Größe und Position der Symbolleisten."
+END
+
+STRINGTABLE
+BEGIN
+    9533 "Passt die Symbolleiste an."
+END
+
+STRINGTABLE
+BEGIN
+    9552 "Zeigt oder versteckt die Explorer-Leiste."
+    9553 "Zeigt die Suchleiste."
+    9554 "Zeigt die Favoritenleiste."
+    9555 "Zeigt die Verlaufsleiste."
+    9557 "Zeigt die Ordnerleiste."
+    9559 "Zeigt die Medienleiste."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMALLICONS "Kleine Symbole"
+    IDS_LARGEICONS "Große Symbole"
+    IDS_SHOWTEXTLABELS "Symboltitel anzeigen"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTEXTLABELS "Keine Symboltitel"
+    IDS_SELECTIVETEXTONRIGHT "Symboltitel rechts"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GOBUTTONLABEL "|Wechseln zu||"
+    IDS_GOBUTTONTIPTEMPLATE "Wechseln zu ""%s"""
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHLABEL "Suchen"
+    IDS_ADDRESSBANDLABEL "A&dresse"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FOLDERSLABEL "Ordner"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HISTORYTEXT "&Verlauf\tCtrl+H"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UP "Aufwärts"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK "Zurück"
+    IDS_FORWARD "Vorwärts"
+END

@@ -123,7 +123,7 @@ MMRESULT WINAPI joyConfigChanged(DWORD flags)
 /**************************************************************************
  * 				joyGetNumDevs		[WINMM.@]
  */
-UINT WINAPI joyGetNumDevs(void)
+UINT WINAPI DECLSPEC_HOTPATCH joyGetNumDevs(void)
 {
     UINT	ret = 0;
     int		i;
@@ -139,7 +139,7 @@ UINT WINAPI joyGetNumDevs(void)
 /**************************************************************************
  * 				joyGetDevCapsW		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
+MMRESULT WINAPI DECLSPEC_HOTPATCH joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
 {
     if (wID >= MAXJOYSTICK)	return JOYERR_PARMS;
     if (!JOY_LoadDriver(wID))	return MMSYSERR_NODRIVER;
@@ -153,7 +153,7 @@ MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
 /**************************************************************************
  * 				joyGetDevCapsA		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
+MMRESULT WINAPI DECLSPEC_HOTPATCH joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
 {
     JOYCAPSW	jcw;
     MMRESULT	ret;
@@ -202,7 +202,7 @@ MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
 /**************************************************************************
  *                              joyGetPosEx             [WINMM.@]
  */
-MMRESULT WINAPI joyGetPosEx(UINT wID, LPJOYINFOEX lpInfo)
+MMRESULT WINAPI DECLSPEC_HOTPATCH joyGetPosEx(UINT wID, LPJOYINFOEX lpInfo)
 {
     TRACE("(%d, %p);\n", wID, lpInfo);
 

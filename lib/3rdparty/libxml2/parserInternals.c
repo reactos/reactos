@@ -1201,7 +1201,7 @@ xmlSwitchInputEncodingInt(xmlParserCtxtPtr ctxt, xmlParserInputPtr input,
                 /*
                  * convert as much as possible of the buffer
                  */
-                nbchars = xmlCharEncInput(input->buf);
+                nbchars = xmlCharEncInput(input->buf, 1);
             } else {
                 /*
                  * convert just enough to get
@@ -1253,7 +1253,7 @@ xmlSwitchInputEncoding(xmlParserCtxtPtr ctxt, xmlParserInputPtr input,
  * xmlSwitchToEncodingInt:
  * @ctxt:  the parser context
  * @handler:  the encoding handler
- * @len: the lenght to convert or -1
+ * @len: the length to convert or -1
  *
  * change the input functions when discovering the character encoding
  * of a given entity, and convert only @len bytes of the output, this
@@ -1719,6 +1719,8 @@ xmlInitParserCtxt(xmlParserCtxtPtr ctxt)
     ctxt->charset = XML_CHAR_ENCODING_UTF8;
     ctxt->catalogs = NULL;
     ctxt->nbentities = 0;
+    ctxt->sizeentities = 0;
+    ctxt->sizeentcopy = 0;
     ctxt->input_id = 1;
     xmlInitNodeInfoSeq(&ctxt->node_seq);
     return(0);

@@ -28,11 +28,11 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  tt_face_load_eblc( TT_Face    face,
+  tt_face_load_sbit( TT_Face    face,
                      FT_Stream  stream );
 
   FT_LOCAL( void )
-  tt_face_free_eblc( TT_Face  face );
+  tt_face_free_sbit( TT_Face  face );
 
 
   FT_LOCAL( FT_Error )

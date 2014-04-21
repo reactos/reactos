@@ -420,6 +420,7 @@ FtfdQueryFontTree(
     if (!pGlyphSet)
     {
         DbgPrint("EngAllocMem() failed.\n");
+        EngFreeMem(pcp);
         return NULL;
     }
 

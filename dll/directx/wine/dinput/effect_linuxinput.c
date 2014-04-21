@@ -57,7 +57,7 @@ struct LinuxInputEffectImpl
 
     struct ff_effect    effect; /* Effect data */
     int                 gain;   /* Effect gain */
-    int                 first_axis_is_x;
+    BOOL                first_axis_is_x;
     int*                fd;     /* Parent device */
     struct list        *entry;  /* Entry into the parent's list of effects */
 };

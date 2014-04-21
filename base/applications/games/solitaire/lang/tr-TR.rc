@@ -3,7 +3,7 @@
  * LICENSE:    Freeware, permission to use under Public Domain
  * FILE:       base/applications/games/solitaire/lang/tr-TR.rc
  * PURPOSE:    Turkish Resource File for ReactOS Solitaire
- * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -16,16 +16,21 @@ CAPTION "Seçenekler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kâğıtlar", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "T&ekli Çek", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Tekli Çek", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Üçlü Çek", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    AUTOCHECKBOX "&Süreyi Göster", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Scoring", -1, 100, 7, 75, 53
+    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
+    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    AUTOCHECKBOX "&Süreyi Göster", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "&Durum Çubuğu", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 35, 97, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Deste Seç"
+CAPTION "Kâğıt Arkalığı Seçme"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -51,9 +56,11 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
     IDS_SOL_ABOUT "Solitaire, J Brown eliyle yapılmıştır.\n\nCardLib sürümü: 1.0"
-    IDS_SOL_QUIT "Bu oyundan çıkmak ister misiniz?"
+    IDS_SOL_QUIT "Bu oyundan çıkılsın mı?"
     IDS_SOL_WIN "Tebrikler, kazandınız!"
-    IDS_SOL_DEAL "Tekrar dağıtılsın mı?"
+    IDS_SOL_DEAL "Yine dağıtılsın mı?"
+    IDS_SOL_SCORE "Score: %d"
+    IDS_SOL_TIME "Time: %d"
 END
 
 /* Menus */
@@ -71,8 +78,8 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&Hakkında", IDM_HELP_ABOUT
+        MENUITEM "&İçindekiler\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
     END
 END
 

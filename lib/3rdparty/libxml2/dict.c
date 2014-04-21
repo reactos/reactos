@@ -143,7 +143,7 @@ static int xmlDictInitialized = 0;
 /*
  * Internal data for random function, protected by xmlDictMutex
  */
-unsigned int rand_seed = 0;
+static unsigned int rand_seed = 0;
 #endif
 #endif
 
@@ -151,13 +151,28 @@ unsigned int rand_seed = 0;
  * xmlInitializeDict:
  *
  * Do the dictionary mutex initialization.
- * this function is not thread safe, initialization should
- * preferably be done once at startup
+ * this function is deprecated
  *
  * Returns 0 if initialization was already done, and 1 if that
  * call led to the initialization
  */
 int xmlInitializeDict(void) {
+    return(0);
+}
+
+/**
+ * __xmlInitializeDict:
+ *
+ * This function is not public
+ * Do the dictionary mutex initialization.
+ * this function is not thread safe, initialization should
+ * normally be done once at setup when called from xmlOnceInit()
+ * we may also land in this code if thread support is not compiled in
+ *
+ * Returns 0 if initialization was already done, and 1 if that
+ * call led to the initialization
+ */
+int __xmlInitializeDict(void) {
     if (xmlDictInitialized)
         return(1);
 
@@ -183,7 +198,7 @@ int __xmlRandom(void) {
     int ret;
 
     if (xmlDictInitialized == 0)
-        xmlInitializeDict();
+        __xmlInitializeDict();
 
     xmlRMutexLock(xmlDictMutex);
 #ifdef HAVE_RAND_R
@@ -522,7 +537,7 @@ xmlDictCreate(void) {
     xmlDictPtr dict;
 
     if (!xmlDictInitialized)
-        if (!xmlInitializeDict())
+        if (!__xmlInitializeDict())
             return(NULL);
 
 #ifdef DICT_DEBUG_PATTERNS
@@ -590,7 +605,7 @@ xmlDictCreateSub(xmlDictPtr sub) {
 int
 xmlDictReference(xmlDictPtr dict) {
     if (!xmlDictInitialized)
-        if (!xmlInitializeDict())
+        if (!__xmlInitializeDict())
             return(-1);
 
     if (dict == NULL) return -1;
@@ -754,7 +769,7 @@ xmlDictFree(xmlDictPtr dict) {
 	return;
 
     if (!xmlDictInitialized)
-        if (!xmlInitializeDict())
+        if (!__xmlInitializeDict())
             return;
 
     /* decrement the counter, it may be shared by a parser and docs */

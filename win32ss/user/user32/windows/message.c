@@ -1908,7 +1908,9 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 /*
  * @implemented
  */
-LRESULT WINAPI
+LRESULT
+WINAPI
+DECLSPEC_HOTPATCH
 DispatchMessageA(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -2000,7 +2002,9 @@ DispatchMessageA(CONST MSG *lpmsg)
 /*
  * @implemented
  */
-LRESULT WINAPI
+LRESULT
+WINAPI
+DECLSPEC_HOTPATCH
 DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -2100,7 +2104,9 @@ IntConvertMsgToAnsi(LPMSG lpMsg)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetMessageA(LPMSG lpMsg,
             HWND hWnd,
             UINT wMsgFilterMin,
@@ -2128,7 +2134,9 @@ GetMessageA(LPMSG lpMsg,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 GetMessageW(LPMSG lpMsg,
             HWND hWnd,
             UINT wMsgFilterMin,
@@ -2191,7 +2199,9 @@ PeekMessageWorker( PMSG pMsg,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
 PeekMessageA(LPMSG lpMsg,
 	     HWND hWnd,
 	     UINT wMsgFilterMin,
@@ -2217,6 +2227,7 @@ PeekMessageA(LPMSG lpMsg,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 PeekMessageW(
   LPMSG lpMsg,
   HWND hWnd,
@@ -2919,6 +2930,17 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           return STATUS_INFO_LENGTH_MISMATCH;
         }
       KMMsg.lParam = (LPARAM) ((char *) CallbackArgs + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS));
+     switch(KMMsg.message)
+     {
+        case WM_SIZING:
+        {
+           PRECT prect = (PRECT) KMMsg.lParam;
+           ERR("WM_SIZING 1 t %d l %d r %d b %d\n",prect->top,prect->left,prect->right,prect->bottom);
+           break;
+        }
+        default:
+           break;
+     }
     }
   else
     {
@@ -2954,6 +2976,20 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
     }
 
+  if (0 <= CallbackArgs->lParamBufferSize)
+  {
+     switch(KMMsg.message)
+     {
+        case WM_SIZING:
+        {
+           PRECT prect = (PRECT) KMMsg.lParam;
+           ERR("WM_SIZING 2 t %d l %d r %d b %d\n",prect->top,prect->left,prect->right,prect->bottom);
+           break;
+        }
+        default:
+           break;
+     }
+  }
   return ZwCallbackReturn(CallbackArgs, ArgumentLength, STATUS_SUCCESS);
 }
 

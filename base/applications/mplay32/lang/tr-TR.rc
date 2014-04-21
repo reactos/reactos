@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -15,11 +15,11 @@ BEGIN
     BEGIN
         MENUITEM "&Husûsiyetler", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Ses Düzeyi Denetleyicisi", IDM_VOLUMECTL
+        MENUITEM "&Ses Düzeyi Denetimi", IDM_VOLUMECTL
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında", IDM_ABOUT
+        MENUITEM "&Üzerine...", IDM_ABOUT
     END
 END
 
@@ -29,12 +29,12 @@ BEGIN
     IDS_TOOLTIP_PLAY "Çal"
     IDS_TOOLTIP_STOP "Durdur"
     IDS_TOOLTIP_EJECT "Çıkar"
-    IDS_TOOLTIP_BACKWARD "Bir Önceki"
+    IDS_TOOLTIP_BACKWARD "Bir Öncekine Geç"
     IDS_TOOLTIP_SEEKBACK "Geri Sar"
     IDS_TOOLTIP_SEEKFORW "İleri Sar"
-    IDS_TOOLTIP_FORWARD "Bir Sonraki"
+    IDS_TOOLTIP_FORWARD "Bir Sonrakine Geç"
     IDS_APPTITLE "Ortam Oynatıcısı"
     IDS_PLAY "Çal"
-    IDS_DEFAULTMCIERRMSG "Bu yanlışlığın tanımı yoktur."
+    IDS_DEFAULTMCIERRMSG "Bu yanlışlığın hiçbir tanımı yoktur."
     IDS_UNKNOWNFILEEXT "Verilen kütük türünden aygıt türü belirlenemiyor."
 END

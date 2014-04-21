@@ -92,12 +92,12 @@ int asmshader_lex(void);
         DWORD           mod;
         DWORD           shift;
     } modshift;
-    BWRITER_COMPARISON_TYPE comptype;
+    enum bwriter_comparison_type comptype;
     struct {
         DWORD           dclusage;
         unsigned int    regnum;
     } declaration;
-    BWRITERSAMPLER_TEXTURE_TYPE samplertype;
+    enum bwritersampler_texture_type samplertype;
     struct rel_reg      rel_reg;
     struct src_regs     sregs;
 }

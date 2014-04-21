@@ -46,7 +46,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 140, 35, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. Si potrà usare questo account se si necessita l'accesso completo al computer.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Scrivere una password per Administrator che sia lunga al massimo 14 caratteri.", IDC_STATIC, 26, 87, 280, 8
+    LTEXT "Scrivere una password per Administrator che sia lunga al massimo 127 caratteri.", IDC_STATIC, 26, 87, 280, 8
     LTEXT "Password per &Administrator:", IDC_STATIC, 29, 105, 95, 8
     EDITTEXT IDC_ADMINPASSWORD1, 140, 100, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "C&onfermare la password:", IDC_STATIC, 29, 125, 95, 8
@@ -148,6 +148,13 @@ IDS_REACTOS_SETUP "Installazione di ReactOS"
     IDS_DLLINSTALL_FAILED "DllInstall fallito: "
     IDS_TIMEOUT "Tempo scaduto durante la registrazione"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE

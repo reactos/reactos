@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = PhotoFiltre 7
@@ -13,6 +14,9 @@ CDPath = none
 
 [Section.0407]
 Description = Version mit Layers, aber eingeschänkter als die Studio-X Version. PhotoFiltre Studio ist ein komplettes Bildretuschier-Programm.
+
+[Section.0415]
+Description = Ta wersja obsługuje warstwy, ale ma większe ograniczenia od Studio X. PhotoFiltre Studio to program do retuszu zdjęć.
 
 [Section.0418]
 Licence = Gratuită

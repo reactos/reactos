@@ -1,7 +1,7 @@
 ﻿; UTF-8
 
 [Section]
-Name = Word Viewer
+Name = Microsoft Word Viewer
 Version = 2010
 Licence = Unknown
 Description = Microsoft Word Viewer
@@ -47,7 +47,9 @@ Size = 24,56 Mo
 URLDownload = http://download.microsoft.com/download/1/2/3/123d3dc8-6f3f-473f-ac1d-3e38969605e8/wordview_ro-ro.exe
 
 [Section.041f]
+Name = Microsoft Word Görüntüleyici
 Licence = Bilinmiyor
+Description = Microsoft Word Görüntüleyici
 Size = 24.55 MB
 URLDownload = http://download.microsoft.com/download/7/6/e/76efefb4-9575-4903-ac2a-180c280ab6c7/wordview_tr-tr.exe
 

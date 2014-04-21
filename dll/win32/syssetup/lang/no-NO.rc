@@ -46,7 +46,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Installasjonen vil lage en brukerkonto som blir kalt Administrator. Du kan bruke denne kontoen hvis du trenger full adgang til din datamaskin.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Skriv inn et Administrator passord som er 14 karakterer eller mindre.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Skriv inn et Administrator passord som er 127 karakterer eller mindre.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Administrator passord:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "B&ekreft passord:", IDC_STATIC, 54, 123, 75, 8
@@ -148,6 +148,13 @@ BEGIN
     IDS_DLLINSTALL_FAILED "DllInstall feilet: "
     IDS_TIMEOUT "Tidsavbrudd under registrering"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE

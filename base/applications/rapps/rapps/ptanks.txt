@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; PL translation by wojo664
 
 [Section]
 Name = Pocket Tanks
@@ -13,6 +14,9 @@ CDPath = none
 
 [Section.0407]
 Description = Das schnellste Artillerie-Spiel, das Sie jemals gespielt haben.
+
+[Section.0415]
+Description = Szybka gra artyleryjska 
 
 [Section.0418]
 Licence = Versiune de evaluare

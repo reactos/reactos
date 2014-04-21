@@ -4027,6 +4027,8 @@ typedef BOOL
 #define EXPORT_PRIVATE_KEYS                   0x00000004
 #define PKCS12_EXPORT_RESERVED_MASK           0xffff0000
 
+#define CRYPT_USERDATA 0x00000001
+
 /* function declarations */
 /* advapi32.dll */
 WINADVAPI

@@ -49,7 +49,6 @@ IDR_REGTREEOPTIONS REGISTRY "res/regtreeoptions.rgs"
 //#include "lang/ca-ES.rc"
 //#include "lang/cs-CZ.rc"
 //#include "lang/da-DK.rc"
-//#include "lang/de-DE.rc"
 //#include "lang/el-GR.rc"
 //#include "lang/en-GB.rc"
 //#include "lang/fi-FI.rc"
@@ -73,6 +72,9 @@ IDR_REGTREEOPTIONS REGISTRY "res/regtreeoptions.rgs"
 /* UTF-8 */
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"

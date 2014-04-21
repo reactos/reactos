@@ -8,13 +8,13 @@
  *
  * 1. Copyright Notice
  *
- * Some or all of this work - Copyright (c) 1999 - 2011, Intel Corp.
+ * Some or all of this work - Copyright (c) 1999 - 2014, Intel Corp.
  * All rights reserved.
  *
  * 2. License
  *
  * 2.1. This is your license from Intel Corp. under its intellectual property
- * rights.  You may have additional license terms from the party that provided
+ * rights. You may have additional license terms from the party that provided
  * you this software, covering your right to use that party's intellectual
  * property rights.
  *
@@ -31,7 +31,7 @@
  * offer to sell, and import the Covered Code and derivative works thereof
  * solely to the minimum extent necessary to exercise the above copyright
  * license, and in no event shall the patent license extend to any additions
- * to or modifications of the Original Intel Code.  No other license or right
+ * to or modifications of the Original Intel Code. No other license or right
  * is granted directly or by implication, estoppel or otherwise;
  *
  * The above copyright and patent license is granted only if the following
@@ -43,11 +43,11 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification with rights to further distribute source must include
  * the above Copyright Notice, the above License, this list of Conditions,
- * and the following Disclaimer and Export Compliance provision.  In addition,
+ * and the following Disclaimer and Export Compliance provision. In addition,
  * Licensee must cause all Covered Code to which Licensee contributes to
  * contain a file documenting the changes Licensee made to create that Covered
- * Code and the date of any change.  Licensee must include in that file the
- * documentation of any changes made by any predecessor Licensee.  Licensee
+ * Code and the date of any change. Licensee must include in that file the
+ * documentation of any changes made by any predecessor Licensee. Licensee
  * must include a prominent statement that the modification is derived,
  * directly or indirectly, from Original Intel Code.
  *
@@ -55,7 +55,7 @@
  * Redistribution of source code of any substantial portion of the Covered
  * Code or modification without rights to further distribute source must
  * include the following Disclaimer and Export Compliance provision in the
- * documentation and/or other materials provided with distribution.  In
+ * documentation and/or other materials provided with distribution. In
  * addition, Licensee may not authorize further sublicense of source of any
  * portion of the Covered Code, and must include terms to the effect that the
  * license from Licensee to its licensee is limited to the intellectual
@@ -80,10 +80,10 @@
  * 4. Disclaimer and Export Compliance
  *
  * 4.1. INTEL MAKES NO WARRANTY OF ANY KIND REGARDING ANY SOFTWARE PROVIDED
- * HERE.  ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
- * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT,  ASSISTANCE,
- * INSTALLATION, TRAINING OR OTHER SERVICES.  INTEL WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.  INTEL SPECIFICALLY DISCLAIMS ANY
+ * HERE. ANY SOFTWARE ORIGINATING FROM INTEL OR DERIVED FROM INTEL SOFTWARE
+ * IS PROVIDED "AS IS," AND INTEL WILL NOT PROVIDE ANY SUPPORT, ASSISTANCE,
+ * INSTALLATION, TRAINING OR OTHER SERVICES. INTEL WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS. INTEL SPECIFICALLY DISCLAIMS ANY
  * IMPLIED WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A
  * PARTICULAR PURPOSE.
  *
@@ -92,14 +92,14 @@
  * COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, OR FOR ANY INDIRECT,
  * SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THIS AGREEMENT, UNDER ANY
  * CAUSE OF ACTION OR THEORY OF LIABILITY, AND IRRESPECTIVE OF WHETHER INTEL
- * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.  THESE LIMITATIONS
+ * HAS ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. THESE LIMITATIONS
  * SHALL APPLY NOTWITHSTANDING THE FAILURE OF THE ESSENTIAL PURPOSE OF ANY
  * LIMITED REMEDY.
  *
  * 4.3. Licensee shall not export, either directly or indirectly, any of this
  * software or system incorporating such software without first obtaining any
  * required license or other approval from the U. S. Department of Commerce or
- * any other agency or department of the United States Government.  In the
+ * any other agency or department of the United States Government. In the
  * event Licensee exports any such software from the United States or
  * re-exports any such software from a foreign destination, Licensee shall
  * ensure that the distribution and export/re-export of the software is in
@@ -117,9 +117,9 @@
  * These procedures are used for tracking memory leaks in the subsystem, and
  * they get compiled out when the ACPI_DBG_TRACK_ALLOCATIONS is not set.
  *
- * Each memory allocation is tracked via a doubly linked list.  Each
+ * Each memory allocation is tracked via a doubly linked list. Each
  * element contains the caller's component, module name, function name, and
- * line number.  AcpiUtAllocate and AcpiUtAllocateZeroed call
+ * line number. AcpiUtAllocate and AcpiUtAllocateZeroed call
  * AcpiUtTrackAllocation to add an element to the list; deletion
  * occurs in the body of AcpiUtFree.
  */
@@ -134,11 +134,12 @@
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("uttrack")
 
+
 /* Local prototypes */
 
 static ACPI_DEBUG_MEM_BLOCK *
 AcpiUtFindAllocation (
-    void                    *Allocation);
+    ACPI_DEBUG_MEM_BLOCK    *Allocation);
 
 static ACPI_STATUS
 AcpiUtTrackAllocation (
@@ -222,10 +223,23 @@ AcpiUtAllocateAndTrack (
     ACPI_STATUS             Status;
 
 
-    Allocation = AcpiUtAllocate (Size + sizeof (ACPI_DEBUG_MEM_HEADER),
-                    Component, Module, Line);
+    /* Check for an inadvertent size of zero bytes */
+
+    if (!Size)
+    {
+        ACPI_WARNING ((Module, Line,
+            "Attempt to allocate zero bytes, allocating 1 byte"));
+        Size = 1;
+    }
+
+    Allocation = AcpiOsAllocate (Size + sizeof (ACPI_DEBUG_MEM_HEADER));
     if (!Allocation)
     {
+        /* Report allocation error */
+
+        ACPI_WARNING ((Module, Line,
+            "Could not allocate size %u", (UINT32) Size));
+
         return (NULL);
     }
 
@@ -275,8 +289,16 @@ AcpiUtAllocateZeroedAndTrack (
     ACPI_STATUS             Status;
 
 
-    Allocation = AcpiUtAllocateZeroed (Size + sizeof (ACPI_DEBUG_MEM_HEADER),
-                    Component, Module, Line);
+    /* Check for an inadvertent size of zero bytes */
+
+    if (!Size)
+    {
+        ACPI_WARNING ((Module, Line,
+            "Attempt to allocate zero bytes, allocating 1 byte"));
+        Size = 1;
+    }
+
+    Allocation = AcpiOsAllocateZeroed (Size + sizeof (ACPI_DEBUG_MEM_HEADER));
     if (!Allocation)
     {
         /* Report allocation error */
@@ -357,7 +379,8 @@ AcpiUtFreeAndTrack (
     }
 
     AcpiOsFree (DebugBlock);
-    ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS, "%p freed\n", Allocation));
+    ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS, "%p freed (block %p)\n",
+        Allocation, DebugBlock));
     return_VOID;
 }
 
@@ -368,29 +391,52 @@ AcpiUtFreeAndTrack (
  *
  * PARAMETERS:  Allocation              - Address of allocated memory
  *
- * RETURN:      A list element if found; NULL otherwise.
+ * RETURN:      Three cases:
+ *              1) List is empty, NULL is returned.
+ *              2) Element was found. Returns Allocation parameter.
+ *              3) Element was not found. Returns position where it should be
+ *                  inserted into the list.
  *
  * DESCRIPTION: Searches for an element in the global allocation tracking list.
+ *              If the element is not found, returns the location within the
+ *              list where the element should be inserted.
+ *
+ *              Note: The list is ordered by larger-to-smaller addresses.
+ *
+ *              This global list is used to detect memory leaks in ACPICA as
+ *              well as other issues such as an attempt to release the same
+ *              internal object more than once. Although expensive as far
+ *              as cpu time, this list is much more helpful for finding these
+ *              types of issues than using memory leak detectors outside of
+ *              the ACPICA code.
  *
  ******************************************************************************/
 
 static ACPI_DEBUG_MEM_BLOCK *
 AcpiUtFindAllocation (
-    void                    *Allocation)
+    ACPI_DEBUG_MEM_BLOCK    *Allocation)
 {
     ACPI_DEBUG_MEM_BLOCK    *Element;
 
 
-    ACPI_FUNCTION_ENTRY ();
-
-
     Element = AcpiGbl_GlobalList->ListHead;
-
-    /* Search for the address. */
-
-    while (Element)
+    if (!Element)
     {
-        if (Element == Allocation)
+        return (NULL);
+    }
+
+    /*
+     * Search for the address.
+     *
+     * Note: List is ordered by larger-to-smaller addresses, on the
+     * assumption that a new allocation usually has a larger address
+     * than previous allocations.
+     */
+    while (Element > Allocation)
+    {
+        /* Check for end-of-list */
+
+        if (!Element->Next)
         {
             return (Element);
         }
@@ -398,7 +444,12 @@ AcpiUtFindAllocation (
         Element = Element->Next;
     }
 
-    return (NULL);
+    if (Element == Allocation)
+    {
+        return (Element);
+    }
+
+    return (Element->Previous);
 }
 
 
@@ -413,7 +464,7 @@ AcpiUtFindAllocation (
  *              Module              - Source file name of caller
  *              Line                - Line number of caller
  *
- * RETURN:      None.
+ * RETURN:      Status
  *
  * DESCRIPTION: Inserts an element into the global allocation tracking list.
  *
@@ -449,23 +500,19 @@ AcpiUtTrackAllocation (
     }
 
     /*
-     * Search list for this address to make sure it is not already on the list.
-     * This will catch several kinds of problems.
+     * Search the global list for this address to make sure it is not
+     * already present. This will catch several kinds of problems.
      */
     Element = AcpiUtFindAllocation (Allocation);
-    if (Element)
+    if (Element == Allocation)
     {
         ACPI_ERROR ((AE_INFO,
-            "UtTrackAllocation: Allocation already present in list! (%p)",
+            "UtTrackAllocation: Allocation (%p) already present in global list!",
             Allocation));
-
-        ACPI_ERROR ((AE_INFO, "Element %p Address %p",
-            Element, Allocation));
-
         goto UnlockAndExit;
     }
 
-    /* Fill in the instance data. */
+    /* Fill in the instance data */
 
     Allocation->Size      = (UINT32) Size;
     Allocation->AllocType = AllocType;
@@ -475,17 +522,34 @@ AcpiUtTrackAllocation (
     ACPI_STRNCPY (Allocation->Module, Module, ACPI_MAX_MODULE_NAME);
     Allocation->Module[ACPI_MAX_MODULE_NAME-1] = 0;
 
-    /* Insert at list head */
-
-    if (MemList->ListHead)
+    if (!Element)
     {
-        ((ACPI_DEBUG_MEM_BLOCK *)(MemList->ListHead))->Previous = Allocation;
+        /* Insert at list head */
+
+        if (MemList->ListHead)
+        {
+            ((ACPI_DEBUG_MEM_BLOCK *)(MemList->ListHead))->Previous = Allocation;
+        }
+
+        Allocation->Next = MemList->ListHead;
+        Allocation->Previous = NULL;
+
+        MemList->ListHead = Allocation;
     }
+    else
+    {
+        /* Insert after element */
 
-    Allocation->Next = MemList->ListHead;
-    Allocation->Previous = NULL;
+        Allocation->Next = Element->Next;
+        Allocation->Previous = Element;
 
-    MemList->ListHead = Allocation;
+        if (Element->Next)
+        {
+            (Element->Next)->Previous = Allocation;
+        }
+
+        Element->Next = Allocation;
+    }
 
 
 UnlockAndExit:
@@ -503,7 +567,7 @@ UnlockAndExit:
  *              Module              - Source file name of caller
  *              Line                - Line number of caller
  *
- * RETURN:
+ * RETURN:      Status
  *
  * DESCRIPTION: Deletes an element from the global allocation tracking list.
  *
@@ -520,12 +584,12 @@ AcpiUtRemoveAllocation (
     ACPI_STATUS             Status;
 
 
-    ACPI_FUNCTION_TRACE (UtRemoveAllocation);
+    ACPI_FUNCTION_NAME (UtRemoveAllocation);
 
 
     if (AcpiGbl_DisableMemTracking)
     {
-        return_ACPI_STATUS (AE_OK);
+        return (AE_OK);
     }
 
     MemList = AcpiGbl_GlobalList;
@@ -536,13 +600,13 @@ AcpiUtRemoveAllocation (
         ACPI_ERROR ((Module, Line,
             "Empty allocation list, nothing to free!"));
 
-        return_ACPI_STATUS (AE_OK);
+        return (AE_OK);
     }
 
     Status = AcpiUtAcquireMutex (ACPI_MTX_MEMORY);
     if (ACPI_FAILURE (Status))
     {
-        return_ACPI_STATUS (Status);
+        return (Status);
     }
 
     /* Unlink */
@@ -561,15 +625,15 @@ AcpiUtRemoveAllocation (
         (Allocation->Next)->Previous = Allocation->Previous;
     }
 
+    ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS, "Freeing %p, size 0%X\n",
+        &Allocation->UserSpace, Allocation->Size));
+
     /* Mark the segment as deleted */
 
     ACPI_MEMSET (&Allocation->UserSpace, 0xEA, Allocation->Size);
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS, "Freeing size 0%X\n",
-        Allocation->Size));
-
     Status = AcpiUtReleaseMutex (ACPI_MTX_MEMORY);
-    return_ACPI_STATUS (Status);
+    return (Status);
 }
 
 
@@ -577,7 +641,7 @@ AcpiUtRemoveAllocation (
  *
  * FUNCTION:    AcpiUtDumpAllocationInfo
  *
- * PARAMETERS:
+ * PARAMETERS:  None
  *
  * RETURN:      None
  *
@@ -638,7 +702,7 @@ AcpiUtDumpAllocationInfo (
  * FUNCTION:    AcpiUtDumpAllocations
  *
  * PARAMETERS:  Component           - Component(s) to dump info for.
- *              Module              - Module to dump info for.  NULL means all.
+ *              Module              - Module to dump info for. NULL means all.
  *
  * RETURN:      None
  *
@@ -662,7 +726,7 @@ AcpiUtDumpAllocations (
 
     if (AcpiGbl_DisableMemTracking)
     {
-        return;
+        return_VOID;
     }
 
     /*
@@ -670,7 +734,7 @@ AcpiUtDumpAllocations (
      */
     if (ACPI_FAILURE (AcpiUtAcquireMutex (ACPI_MTX_MEMORY)))
     {
-        return;
+        return_VOID;
     }
 
     Element = AcpiGbl_GlobalList->ListHead;
@@ -705,27 +769,31 @@ AcpiUtDumpAllocations (
                     switch (ACPI_GET_DESCRIPTOR_TYPE (Descriptor))
                     {
                     case ACPI_DESC_TYPE_OPERAND:
-                        if (Element->Size == sizeof (ACPI_DESC_TYPE_OPERAND))
+
+                        if (Element->Size == sizeof (ACPI_OPERAND_OBJECT))
                         {
                             DescriptorType = ACPI_DESC_TYPE_OPERAND;
                         }
                         break;
 
                     case ACPI_DESC_TYPE_PARSER:
-                        if (Element->Size == sizeof (ACPI_DESC_TYPE_PARSER))
+
+                        if (Element->Size == sizeof (ACPI_PARSE_OBJECT))
                         {
                             DescriptorType = ACPI_DESC_TYPE_PARSER;
                         }
                         break;
 
                     case ACPI_DESC_TYPE_NAMED:
-                        if (Element->Size == sizeof (ACPI_DESC_TYPE_NAMED))
+
+                        if (Element->Size == sizeof (ACPI_NAMESPACE_NODE))
                         {
                             DescriptorType = ACPI_DESC_TYPE_NAMED;
                         }
                         break;
 
                     default:
+
                         break;
                     }
 
@@ -734,22 +802,26 @@ AcpiUtDumpAllocations (
                     switch (DescriptorType)
                     {
                     case ACPI_DESC_TYPE_OPERAND:
+
                         AcpiOsPrintf ("%12.12s  RefCount 0x%04X\n",
                             AcpiUtGetTypeName (Descriptor->Object.Common.Type),
                             Descriptor->Object.Common.ReferenceCount);
                         break;
 
                     case ACPI_DESC_TYPE_PARSER:
+
                         AcpiOsPrintf ("AmlOpcode 0x%04hX\n",
                             Descriptor->Op.Asl.AmlOpcode);
                         break;
 
                     case ACPI_DESC_TYPE_NAMED:
+
                         AcpiOsPrintf ("%4.4s\n",
                             AcpiUtGetNodeName (&Descriptor->Node));
                         break;
 
                     default:
+
                         AcpiOsPrintf ( "\n");
                         break;
                     }
@@ -780,4 +852,3 @@ AcpiUtDumpAllocations (
 }
 
 #endif  /* ACPI_DBG_TRACK_ALLOCATIONS */
-

@@ -24,6 +24,28 @@ APPLET Applets[NUM_APPLETS] =
 
 #define MAX_SYSTEM_PAGES    32
 
+
+INT
+ResourceMessageBox(
+    IN HINSTANCE hInstance,
+    IN HWND hwnd,
+    IN UINT uType,
+    IN UINT uCaption,
+    IN UINT uText)
+{
+    WCHAR szCaption[256];
+    WCHAR szText[256];
+
+    LoadStringW(hInstance, uCaption, szCaption, 256);
+    LoadStringW(hInstance, uText, szText, 256);
+
+    return MessageBoxW(hwnd,
+                       szText,
+                       szCaption,
+                       uType);
+}
+
+
 static BOOL CALLBACK
 PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 {

@@ -931,7 +931,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
          if(NewMenu)
          {
             Window->SystemMenu = NewMenu->MenuInfo.Self;
-            NewMenu->MenuInfo.Flags |= MF_SYSMENU;
+            NewMenu->MenuInfo.Flags |= MNF_SYSDESKMN;
             NewMenu->MenuInfo.Wnd = Window->head.h;
             ret = NewMenu;
             //IntReleaseMenuObject(NewMenu);
@@ -950,7 +950,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
             UserDestroyMenu(hSysMenu);
             return NULL;
          }
-         SysMenu->MenuInfo.Flags |= MF_SYSMENU;
+         SysMenu->MenuInfo.Flags |= MNF_SYSDESKMN;
          SysMenu->MenuInfo.Wnd = Window->head.h;
          hNewMenu = co_IntLoadSysMenuTemplate();
          if(!hNewMenu)
@@ -970,13 +970,14 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
          NewMenu = IntCloneMenu(Menu);
          if(NewMenu)
          {
-            NewMenu->MenuInfo.Flags |= MF_SYSMENU | MF_POPUP;
+            NewMenu->MenuInfo.Flags |= MNF_SYSDESKMN | MNF_POPUP;
+            NewMenu->MenuInfo.dwStyle = MNS_CHECKORBMP;
             IntReleaseMenuObject(NewMenu);
             UserSetMenuDefaultItem(NewMenu, SC_CLOSE, FALSE);
 
             ItemInfo.cbSize = sizeof(MENUITEMINFOW);
             ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
-            ItemInfo.fType = MF_POPUP;
+            ItemInfo.fType = 0;
             ItemInfo.fState = MFS_ENABLED;
             ItemInfo.dwTypeData = NULL;
             ItemInfo.cch = 0;
@@ -1352,7 +1353,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    co_WinPosSetWindowPos( Wnd,
                          (0 == (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOP : HWND_TOPMOST),
                           pt.x, pt.y, 0, 0, swFlags);
-   //ERR("IntSetParent SetWindowPos 2\n");
+   //ERR("IntSetParent SetWindowPos 2 X %d Y %d\n",pt.x, pt.y);
    if (WasVisible) co_WinPosShowWindow(Wnd, SW_SHOWNORMAL);
 
    return WndOldParent;
@@ -1426,7 +1427,7 @@ IntSetSystemMenu(PWND Window, PMENU_OBJECT Menu)
       OldMenu = IntGetMenuObject(Window->SystemMenu);
       if(OldMenu)
       {
-         OldMenu->MenuInfo.Flags &= ~ MF_SYSMENU;
+         OldMenu->MenuInfo.Flags &= ~ MNF_SYSDESKMN;
          IntReleaseMenuObject(OldMenu);
       }
    }
@@ -1435,7 +1436,7 @@ IntSetSystemMenu(PWND Window, PMENU_OBJECT Menu)
    {
       /* FIXME: Check window style, propably return FALSE? */
       Window->SystemMenu = Menu->MenuInfo.Self;
-      Menu->MenuInfo.Flags |= MF_SYSMENU;
+      Menu->MenuInfo.Flags |= MNF_SYSDESKMN;
    }
    else
       Window->SystemMenu = (HMENU)0;
@@ -1741,12 +1742,12 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
 
 /* Allocates and initializes a window */
 PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
-                                        PLARGE_STRING WindowName,
-                                        PCLS Class,
-                                        PWND ParentWindow,
-                                        PWND OwnerWindow,
-                                        PVOID acbiBuffer,
-                                        PDESKTOP pdeskCreated)
+                              PLARGE_STRING WindowName,
+                              PCLS Class,
+                              PWND ParentWindow,
+                              PWND OwnerWindow,
+                              PVOID acbiBuffer,
+                              PDESKTOP pdeskCreated)
 {
    PWND pWnd = NULL;
    HWND hWnd;
@@ -1758,8 +1759,9 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pti = pdeskCreated ? gptiDesktopThread : GetW32ThreadInfo();
 
    if (!(Cs->dwExStyle & WS_EX_LAYOUTRTL))
-   {
-      if (ParentWindow)
+   {      // Need both here for wine win.c test_CreateWindow.
+      //if (Cs->hwndParent && ParentWindow)
+      if (ParentWindow) // It breaks more tests..... WIP.
       {
          if ( (Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD &&
               ParentWindow->ExStyle & WS_EX_LAYOUTRTL &&
@@ -2313,6 +2315,17 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                         ParentWindow->rcClient.top);
    }
 */
+   /* correct child window coordinates if mirroring on parent is enabled */
+   if (ParentWindow != NULL)
+   {
+      if ( ((Cs->style & WS_CHILD) == WS_CHILD) && 
+          ((ParentWindow->ExStyle & WS_EX_LAYOUTRTL) ==  WS_EX_LAYOUTRTL))
+      {
+          Window->rcWindow.right = ParentWindow->rcClient.right - (Window->rcWindow.left - ParentWindow->rcClient.left);
+          Window->rcWindow.left = Window->rcWindow.right - Size.cx;
+      }
+   }
+
    Window->rcClient = Window->rcWindow;
 
    /* Link the window */
@@ -2559,6 +2572,16 @@ NtUserCreateWindowEx(
     lstrClassName.Buffer = NULL;
 
     ASSERT(plstrWindowName);
+
+    if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD) 
+    {
+        /* check hMenu is valid handle */
+        if (hMenu && !ValidateHandle(hMenu, TYPE_MENU))
+        {
+            /* error is set in ValidateHandle */
+            return NULL;
+        }
+    } 
 
     /* Copy the window name to kernel mode */
     Status = ProbeAndCaptureLargeString(&lstrWindowName, plstrWindowName);
@@ -3237,7 +3260,40 @@ CLEANUP:
    END_CLEANUP;
 }
 
+////
+//// ReactOS work around! Keep it the sames as in Combo.c and Controls.h
+////
+/* combo state struct */
+typedef struct
+{
+   HWND           self;
+   HWND           owner;
+   UINT           dwStyle;
+   HWND           hWndEdit;
+   HWND           hWndLBox;
+   UINT           wState;
+   HFONT          hFont;
+   RECT           textRect;
+   RECT           buttonRect;
+   RECT           droppedRect;
+   INT            droppedIndex;
+   INT            fixedOwnerDrawHeight;
+   INT            droppedWidth;   /* last two are not used unless set */
+   INT            editHeight;     /* explicitly */
+   LONG           UIState;
+} HEADCOMBO,*LPHEADCOMBO;
 
+// Window Extra data container.
+typedef struct _WND2CBOX
+{
+  WND;
+  LPHEADCOMBO pCBox;
+} WND2CBOX, *PWND2CBOX;
+
+#define CBF_BUTTONDOWN          0x0002
+////
+////
+////
 BOOL
 APIENTRY
 NtUserGetComboBoxInfo(
@@ -3245,6 +3301,9 @@ NtUserGetComboBoxInfo(
    PCOMBOBOXINFO pcbi)
 {
    PWND Wnd;
+   PPROCESSINFO ppi;
+   BOOL NotSameppi = FALSE;
+   BOOL Ret = TRUE;
    DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserGetComboBoxInfo\n");
@@ -3270,22 +3329,95 @@ NtUserGetComboBoxInfo(
    }
    _SEH2_END;
 
+   if (pcbi->cbSize < sizeof(COMBOBOXINFO))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      RETURN(FALSE);
+   }
+
    // Pass the user pointer, it was already probed.
-   RETURN( (BOOL) co_IntSendMessage( Wnd->head.h, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
+   if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_COMBOBOX]) && Wnd->fnid != FNID_COMBOBOX)
+   {
+      RETURN( (BOOL) co_IntSendMessage( Wnd->head.h, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
+   }
+
+   ppi = PsGetCurrentProcessWin32Process();
+   NotSameppi = ppi != Wnd->head.pti->ppi;
+   if (NotSameppi)
+   {
+      KeAttachProcess(&Wnd->head.pti->ppi->peProcess->Pcb);
+   }
+
+   _SEH2_TRY
+   {
+      LPHEADCOMBO lphc = ((PWND2CBOX)Wnd)->pCBox;
+      pcbi->rcItem = lphc->textRect;
+      pcbi->rcButton = lphc->buttonRect;
+      pcbi->stateButton = 0;
+      if (lphc->wState & CBF_BUTTONDOWN)
+         pcbi->stateButton |= STATE_SYSTEM_PRESSED;
+      if (RECTL_bIsEmptyRect(&lphc->buttonRect))
+         pcbi->stateButton |= STATE_SYSTEM_INVISIBLE;
+      pcbi->hwndCombo = lphc->self;
+      pcbi->hwndItem = lphc->hWndEdit;
+      pcbi->hwndList = lphc->hWndLBox;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Ret = FALSE;
+      SetLastNtError(_SEH2_GetExceptionCode());
+   }
+   _SEH2_END;
+   
+   RETURN( Ret);
 
 CLEANUP:
+   if (NotSameppi) KeDetachProcess();
    TRACE("Leave NtUserGetComboBoxInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
 
+////
+//// ReactOS work around! Keep it the sames as in Listbox.c
+////
+/* Listbox structure */
+typedef struct
+{
+    HWND        self;           /* Our own window handle */
+    HWND        owner;          /* Owner window to send notifications to */
+    UINT        style;          /* Window style */
+    INT         width;          /* Window width */
+    INT         height;         /* Window height */
+    VOID       *items;          /* Array of items */
+    INT         nb_items;       /* Number of items */
+    INT         top_item;       /* Top visible item */
+    INT         selected_item;  /* Selected item */
+    INT         focus_item;     /* Item that has the focus */
+    INT         anchor_item;    /* Anchor item for extended selection */
+    INT         item_height;    /* Default item height */
+    INT         page_size;      /* Items per listbox page */
+    INT         column_width;   /* Column width for multi-column listboxes */
+} LB_DESCR;
 
+// Window Extra data container.
+typedef struct _WND2LB
+{
+  WND;
+  LB_DESCR * pLBiv;
+} WND2LB, *PWND2LB;
+////
+////
+////
 DWORD
 APIENTRY
 NtUserGetListBoxInfo(
    HWND hWnd)
 {
    PWND Wnd;
+   PPROCESSINFO ppi;
+   BOOL NotSameppi = FALSE;
+   DWORD Ret = 0;
    DECLARE_RETURN(DWORD);
 
    TRACE("Enter NtUserGetListBoxInfo\n");
@@ -3296,9 +3428,39 @@ NtUserGetListBoxInfo(
       RETURN( 0 );
    }
 
-   RETURN( (DWORD) co_IntSendMessage( Wnd->head.h, LB_GETLISTBOXINFO, 0, 0 ));
+   if ((Wnd->pcls->atomClassName != gpsi->atomSysClass[ICLS_LISTBOX]) && Wnd->fnid != FNID_LISTBOX)
+   {
+      RETURN( (DWORD) co_IntSendMessage( Wnd->head.h, LB_GETLISTBOXINFO, 0, 0 ));
+   }
+
+   // wine lisbox:test_GetListBoxInfo lb_getlistboxinfo = 0, should not send a message!
+   ppi = PsGetCurrentProcessWin32Process();
+   NotSameppi = ppi != Wnd->head.pti->ppi;
+   if (NotSameppi)
+   {
+      KeAttachProcess(&Wnd->head.pti->ppi->peProcess->Pcb);
+   }
+
+   _SEH2_TRY
+   {
+      LB_DESCR *descr = ((PWND2LB)Wnd)->pLBiv;
+      // See Controls ListBox.c:LB_GETLISTBOXINFO must match...
+      if (descr->style & LBS_MULTICOLUMN) //// ReactOS
+         Ret = descr->page_size * descr->column_width;
+      else
+         Ret = descr->page_size;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Ret = 0;
+      SetLastNtError(_SEH2_GetExceptionCode());
+   }
+   _SEH2_END;
+   
+   RETURN( Ret);
 
 CLEANUP:
+   if (NotSameppi) KeDetachProcess();
    TRACE("Leave NtUserGetListBoxInfo, ret=%lu\n", _ret_);
    UserLeave();
    END_CLEANUP;

@@ -395,7 +395,7 @@ BOOL d3d8_init(struct d3d8 *d3d8)
     d3d8->refcount = 1;
 
     wined3d_mutex_lock();
-    d3d8->wined3d = wined3d_create(8, flags);
+    d3d8->wined3d = wined3d_create(flags);
     wined3d_mutex_unlock();
     if (!d3d8->wined3d)
         return FALSE;

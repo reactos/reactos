@@ -21,6 +21,12 @@
 
 #include "strmbase_private.h"
 
+#define NO_SHLWAPI_PATH
+#define NO_SHLWAPI_STRFCNS
+#define NO_SHLWAPI_GDI
+#define NO_SHLWAPI_STREAM
+#include <shlwapi.h>
+
 extern const int g_cTemplates;
 extern const FactoryTemplate g_Templates[];
 
@@ -36,76 +42,6 @@ static const WCHAR clsid_keyname[] = {'C','L','S','I','D',0 };
 static const WCHAR ips32_keyname[] = {'I','n','P','r','o','c','S','e','r','v','e','r','3','2',0};
 static const WCHAR tmodel_keyname[] = {'T','h','r','e','a','d','i','n','g','M','o','d','e','l',0};
 static const WCHAR tmodel_both[] = {'B','o','t','h',0};
-
-#ifdef __REACTOS__
-static LSTATUS WINAPI RegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey)
-{
-    LONG ret;
-    DWORD dwMaxSubkeyLen, dwMaxValueLen;
-    DWORD dwMaxLen, dwSize;
-    WCHAR szNameBuf[MAX_PATH], *lpszName = szNameBuf;
-    HKEY hSubKey = hKey;
-
-    TRACE("(hkey=%p,%p %s)\n", hKey, lpszSubKey, debugstr_w(lpszSubKey));
-
-    if(lpszSubKey)
-    {
-        ret = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_READ, &hSubKey);
-        if (ret) return ret;
-    }
-
-    /* Get highest length for keys, values */
-    ret = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
-            &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
-    if (ret) goto cleanup;
-
-    dwMaxSubkeyLen++;
-    dwMaxValueLen++;
-    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
-    if (dwMaxLen > sizeof(szNameBuf)/sizeof(WCHAR))
-    {
-        /* Name too big: alloc a buffer for it */
-        if (!(lpszName = HeapAlloc( GetProcessHeap(), 0, dwMaxLen*sizeof(WCHAR))))
-        {
-            ret = ERROR_NOT_ENOUGH_MEMORY;
-            goto cleanup;
-        }
-    }
-
-
-    /* Recursively delete all the subkeys */
-    while (TRUE)
-    {
-        dwSize = dwMaxLen;
-        if (RegEnumKeyExW(hSubKey, 0, lpszName, &dwSize, NULL,
-                          NULL, NULL, NULL)) break;
-
-        ret = RegDeleteTreeW(hSubKey, lpszName);
-        if (ret) goto cleanup;
-    }
-
-    if (lpszSubKey)
-        ret = RegDeleteKeyW(hKey, lpszSubKey);
-    else
-        while (TRUE)
-        {
-            dwSize = dwMaxLen;
-            if (RegEnumValueW(hKey, 0, lpszName, &dwSize,
-                  NULL, NULL, NULL, NULL)) break;
-
-            ret = RegDeleteValueW(hKey, lpszName);
-            if (ret) goto cleanup;
-        }
-
-cleanup:
-    /* Free buffer if allocated */
-    if (lpszName != szNameBuf)
-        HeapFree( GetProcessHeap(), 0, lpszName);
-    if(lpszSubKey)
-        RegCloseKey(hSubKey);
-    return ret;
-}
-#endif
 
 /*
  * SetupRegisterClass()
@@ -174,7 +110,7 @@ static HRESULT SetupRegisterAllClasses(const FactoryTemplate * pList, int num,
                                         pList->m_Name, szFileName,
                                         ips32_keyname, tmodel_both);
             else
-                hr = RegDeleteTreeW(hkey, szCLSID);
+                hr = SHDeleteKeyW(hkey, szCLSID);
         }
     }
     RegCloseKey(hkey);

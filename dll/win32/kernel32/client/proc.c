@@ -3874,7 +3874,7 @@ StartScan:
     {
         /* Acquire the required privilege so that the kernel won't fail the call */
         PrivilegeValue = SE_LOCK_MEMORY_PRIVILEGE;
-        Status = RtlAcquirePrivilege(&PrivilegeValue, TRUE, FALSE, &PrivilegeState);
+        Status = RtlAcquirePrivilege(&PrivilegeValue, 1, 0, &PrivilegeState);
         if (NT_SUCCESS(Status))
         {
             /* Remember to release it later */
@@ -4607,6 +4607,7 @@ Quickie:
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 CreateProcessW(LPCWSTR lpApplicationName,
                LPWSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -4775,6 +4776,7 @@ CreateProcessInternalA(HANDLE hToken,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 CreateProcessA(LPCSTR lpApplicationName,
                LPSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,

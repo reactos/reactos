@@ -144,8 +144,10 @@ static char *wpp_lookup_mem(const char *filename, int type, const char *parent_n
     char *path;
     int i;
 
+    TRACE("Looking for include %s.\n", debugstr_a(filename));
+
     parent_include = NULL;
-    if(parent_name[0] != '\0')
+    if (strcmp(parent_name, initial_filename))
     {
         for(i = 0; i < includes_size; i++)
         {
@@ -157,7 +159,7 @@ static char *wpp_lookup_mem(const char *filename, int type, const char *parent_n
         }
         if(parent_include == NULL)
         {
-            ERR("Parent include file missing\n");
+            ERR("Parent include %s missing.\n", debugstr_a(parent_name));
             return NULL;
         }
     }
@@ -173,6 +175,8 @@ static void *wpp_open_mem(const char *filename, int type)
     struct mem_file_desc *desc;
     HRESULT hr;
 
+    TRACE("Opening include %s.\n", debugstr_a(filename));
+
     if(!strcmp(filename, initial_filename))
     {
         current_shader.pos = 0;
@@ -184,11 +188,8 @@ static void *wpp_open_mem(const char *filename, int type)
     if(!desc)
         return NULL;
 
-    hr = ID3DInclude_Open(current_include,
-                          type ? D3D_INCLUDE_LOCAL : D3D_INCLUDE_SYSTEM,
-                          filename, parent_include, (LPCVOID *)&desc->buffer,
-                          &desc->size);
-    if(FAILED(hr))
+    if (FAILED(hr = ID3DInclude_Open(current_include, type ? D3D_INCLUDE_LOCAL : D3D_INCLUDE_SYSTEM,
+            filename, parent_include, (const void **)&desc->buffer, &desc->size)))
     {
         HeapFree(GetProcessHeap(), 0, desc);
         return NULL;

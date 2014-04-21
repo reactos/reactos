@@ -35,7 +35,7 @@ Description = Un lector audio simplu și ușor.
 Size = 1,89 Mo
 
 [Section.041f]
-Name = Tilki Ses Oynatıcısı
+Name = Fox Ses Oynatıcısı
 Description = Bayağı ve yeğni bir ses oynatıcısı.
 Size = 1,89 MB
 

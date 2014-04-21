@@ -54,6 +54,19 @@ ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
     }
 }
 
+static VOID FASTCALL
+ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
+{
+    if (InputEvent->EventType == KEY_EVENT)
+    {
+        CHAR AsciiChar = InputEvent->Event.KeyEvent.uChar.AsciiChar;
+        InputEvent->Event.KeyEvent.uChar.AsciiChar = 0;
+        ConsoleInputAnsiCharToUnicodeChar(Console,
+                                          &InputEvent->Event.KeyEvent.uChar.UnicodeChar,
+                                          &AsciiChar);
+    }
+}
+
 NTSTATUS FASTCALL
 ConioAddInputEvent(PCONSOLE Console,
                    PINPUT_RECORD InputEvent,
@@ -260,7 +273,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
 
             Console->LineComplete = FALSE;
             Console->LineUpPressed = FALSE;
-            Console->LineInsertToggle = 0;
+            Console->LineInsertToggle = Console->InsertMode;
             Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
             Console->LineSize = ReadControl->nInitialChars;
             Console->LinePos = Console->LineSize;
@@ -465,12 +478,9 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
 
     for (i = (NumEventsWritten ? *NumEventsWritten : 0); i < NumEventsToWrite && NT_SUCCESS(Status); ++i)
     {
-        if (InputRecord->EventType == KEY_EVENT && !Unicode)
+        if (!Unicode)
         {
-            CHAR AsciiChar = InputRecord->Event.KeyEvent.uChar.AsciiChar;
-            ConsoleInputAnsiCharToUnicodeChar(Console,
-                                              &InputRecord->Event.KeyEvent.uChar.UnicodeChar,
-                                              &AsciiChar);
+            ConioInputEventToUnicode(Console, InputRecord);
         }
 
         Status = ConioAddInputEvent(Console, InputRecord++, AppendToEnd);
@@ -509,24 +519,24 @@ ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvGetConsoleNumberOfInputEvents(IN PCONSOLE Console,
                                     IN PCONSOLE_INPUT_BUFFER InputBuffer,
-                                    OUT PULONG NumEvents)
+                                    OUT PULONG NumberOfEvents)
 {
     PLIST_ENTRY CurrentInput;
 
-    if (Console == NULL || InputBuffer == NULL || NumEvents == NULL)
+    if (Console == NULL || InputBuffer == NULL || NumberOfEvents == NULL)
         return STATUS_INVALID_PARAMETER;
 
     /* Validity check */
     ASSERT(Console == InputBuffer->Header.Console);
 
-    *NumEvents = 0;
+    *NumberOfEvents = 0;
 
     /* If there are any events ... */
     CurrentInput = InputBuffer->InputEvents.Flink;
     while (CurrentInput != &InputBuffer->InputEvents)
     {
         CurrentInput = CurrentInput->Flink;
-        (*NumEvents)++;
+        (*NumberOfEvents)++;
     }
 
     return STATUS_SUCCESS;

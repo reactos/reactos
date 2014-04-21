@@ -439,12 +439,12 @@ CSR_API(SrvGetConsoleMode)
     PCONSOLE_IO_OBJECT Object;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                             ConsoleModeRequest->ConsoleHandle,
+                             ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_READ, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvGetConsoleMode(Object->Console, Object,
-                                  &ConsoleModeRequest->ConsoleMode);
+                                  &ConsoleModeRequest->Mode);
 
     ConSrvReleaseObject(Object, TRUE);
     return Status;
@@ -461,12 +461,12 @@ CSR_API(SrvSetConsoleMode)
     PCONSOLE_IO_OBJECT Object;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                             ConsoleModeRequest->ConsoleHandle,
+                             ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_WRITE, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvSetConsoleMode(Object->Console, Object,
-                                  ConsoleModeRequest->ConsoleMode);
+                                  ConsoleModeRequest->Mode);
 
     ConSrvReleaseObject(Object, TRUE);
     return Status;
@@ -474,7 +474,8 @@ CSR_API(SrvSetConsoleMode)
 
 NTSTATUS NTAPI
 ConDrvGetConsoleTitle(IN PCONSOLE Console,
-                      IN OUT PWCHAR Title,
+                      IN BOOLEAN Unicode,
+                      IN OUT PVOID TitleBuffer,
                       IN OUT PULONG BufLength);
 CSR_API(SrvGetConsoleTitle)
 {
@@ -498,6 +499,7 @@ CSR_API(SrvGetConsoleTitle)
     }
 
     Status = ConDrvGetConsoleTitle(Console,
+                                   TitleRequest->Unicode,
                                    TitleRequest->Title,
                                    &TitleRequest->Length);
 
@@ -507,7 +509,8 @@ CSR_API(SrvGetConsoleTitle)
 
 NTSTATUS NTAPI
 ConDrvSetConsoleTitle(IN PCONSOLE Console,
-                      IN PWCHAR Title,
+                      IN BOOLEAN Unicode,
+                      IN PVOID TitleBuffer,
                       IN ULONG BufLength);
 CSR_API(SrvSetConsoleTitle)
 {
@@ -531,9 +534,9 @@ CSR_API(SrvSetConsoleTitle)
     }
 
     Status = ConDrvSetConsoleTitle(Console,
+                                   TitleRequest->Unicode,
                                    TitleRequest->Title,
                                    TitleRequest->Length);
-
     if (NT_SUCCESS(Status)) TermChangeTitle(Console);
 
     ConSrvReleaseConsole(Console, TRUE);
@@ -543,22 +546,22 @@ CSR_API(SrvSetConsoleTitle)
 NTSTATUS NTAPI
 ConDrvGetConsoleCP(IN PCONSOLE Console,
                    OUT PUINT CodePage,
-                   IN BOOLEAN InputCP);
+                   IN BOOLEAN OutputCP);
 CSR_API(SrvGetConsoleCP)
 {
     NTSTATUS Status;
-    PCONSOLE_GETSETINPUTOUTPUTCP ConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleCPRequest;
+    PCONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleCPRequest;
     PCONSOLE Console;
 
     DPRINT("SrvGetConsoleCP, getting %s Code Page\n",
-            ConsoleCPRequest->InputCP ? "Input" : "Output");
+            GetConsoleCPRequest->OutputCP ? "Output" : "Input");
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvGetConsoleCP(Console,
-                                &ConsoleCPRequest->CodePage,
-                                ConsoleCPRequest->InputCP);
+                                &GetConsoleCPRequest->CodePage,
+                                GetConsoleCPRequest->OutputCP);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
@@ -567,22 +570,22 @@ CSR_API(SrvGetConsoleCP)
 NTSTATUS NTAPI
 ConDrvSetConsoleCP(IN PCONSOLE Console,
                    IN UINT CodePage,
-                   IN BOOLEAN InputCP);
+                   IN BOOLEAN OutputCP);
 CSR_API(SrvSetConsoleCP)
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
-    PCONSOLE_GETSETINPUTOUTPUTCP ConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleCPRequest;
+    PCONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleCPRequest;
     PCONSOLE Console;
 
     DPRINT("SrvSetConsoleCP, setting %s Code Page\n",
-            ConsoleCPRequest->InputCP ? "Input" : "Output");
+            SetConsoleCPRequest->OutputCP ? "Output" : "Input");
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvSetConsoleCP(Console,
-                                ConsoleCPRequest->CodePage,
-                                ConsoleCPRequest->InputCP);
+                                SetConsoleCPRequest->CodePage,
+                                SetConsoleCPRequest->OutputCP);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
@@ -600,8 +603,8 @@ CSR_API(SrvGetConsoleProcessList)
     PCONSOLE Console;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID)&GetProcessListRequest->pProcessIds,
-                                  GetProcessListRequest->nMaxIds,
+                                  (PVOID)&GetProcessListRequest->ProcessIdsList,
+                                  GetProcessListRequest->ProcessCount,
                                   sizeof(DWORD)))
     {
         return STATUS_INVALID_PARAMETER;
@@ -611,9 +614,9 @@ CSR_API(SrvGetConsoleProcessList)
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvGetConsoleProcessList(Console,
-                                         GetProcessListRequest->pProcessIds,
-                                         GetProcessListRequest->nMaxIds,
-                                         &GetProcessListRequest->nProcessIdsTotal);
+                                         GetProcessListRequest->ProcessIdsList,
+                                         GetProcessListRequest->ProcessCount,
+                                         &GetProcessListRequest->ProcessCount);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
@@ -629,8 +632,8 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvConsoleProcessCtrlEvent(Console,
-                                           GenerateCtrlEventRequest->ProcessGroup,
-                                           GenerateCtrlEventRequest->Event);
+                                           GenerateCtrlEventRequest->ProcessGroupId,
+                                           GenerateCtrlEventRequest->CtrlEvent);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
@@ -638,8 +641,27 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
 
 CSR_API(SrvConsoleNotifyLastClose)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Only one process is allowed to be registered for last close notification */
+    if (!Console->NotifyLastClose)
+    {
+        Console->NotifiedLastCloseProcess = ProcessData;
+        Console->NotifyLastClose = TRUE;
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_ACCESS_DENIED;
+    }
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 

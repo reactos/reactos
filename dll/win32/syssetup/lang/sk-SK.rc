@@ -52,7 +52,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Inštalátor vytvorí na počítači používateľský účet nazvaný Administrator. Tento účet môžete použiť, keď budete potrebovať plný prístup k Vášmu počítaču.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Zadajte heslo účtu Administrator v dĺžke 14 znakov alebo menej.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Zadajte heslo účtu Administrator v dĺžke 127 znakov alebo menej.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Heslo:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Potvrdiť heslo:", IDC_STATIC, 54, 123, 75, 8
@@ -154,6 +154,13 @@ BEGIN
     IDS_DLLINSTALL_FAILED "DllInstall zlyhal: "
     IDS_TIMEOUT "Vypršal časový limit registrácie"
     IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administrator"
 END
 
 STRINGTABLE

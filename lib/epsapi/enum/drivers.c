@@ -100,6 +100,7 @@ PsaCaptureSystemModules(OUT PRTL_PROCESS_MODULES *SystemModules)
        ignore the buffer's content at this point, there's no point in a realloc,
        that could end up copying a large chunk of data we'd discard anyway */
     PsaiFree(psmModules);
+    psmModules = NULL;
     pTmp = PsaiMalloc(nSize);
 
     if(pTmp == NULL)
@@ -138,7 +139,7 @@ PsaCaptureSystemModules(OUT PRTL_PROCESS_MODULES *SystemModules)
   } while(0);
 #endif
   /* in case of failure, free the buffer */
-  if(!NT_SUCCESS(Status))
+  if(!NT_SUCCESS(Status) && psmModules != NULL)
   {
     PsaiFree(psmModules);
   }

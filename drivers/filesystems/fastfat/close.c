@@ -28,7 +28,7 @@ VfatCloseFile(
     NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("VfatCloseFile(DeviceExt %p, FileObject %p)\n",
-           DeviceExt, FileObject);
+            DeviceExt, FileObject);
 
     /* FIXME : update entry in directory? */
     pCcb = (PVFATCCB) (FileObject->FsContext2);
@@ -52,6 +52,17 @@ VfatCloseFile(
             if (pFcb->Flags & FCB_DELETE_PENDING)
             {
                 VfatDelEntry(DeviceExt, pFcb);
+
+                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                            &(DeviceExt->NotifyList),
+                                            (PSTRING)&pFcb->PathNameU,
+                                            pFcb->PathNameU.Length - pFcb->LongNameU.Length,
+                                            NULL,
+                                            NULL,
+                                            ((*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                            FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                            FILE_ACTION_REMOVED,
+                                            NULL);
             }
             else
             {

@@ -310,6 +310,7 @@ struct _xmlParserCtxt {
     xmlParserNodeInfo *nodeInfoTab;   /* array of nodeInfos */
 
     int                input_id;      /* we need to label inputs */
+    unsigned long      sizeentcopy;   /* volume of entity copy */
 };
 
 /**

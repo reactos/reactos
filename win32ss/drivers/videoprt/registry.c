@@ -309,7 +309,7 @@ IntSetupDeviceSettingsKey(
                                      &DevInstRegKey);
     if (Status != STATUS_SUCCESS)
     {
-        ERR_(VIDEOPRT, "Failed to open device software key. Status 0x%lx", Status);
+        ERR_(VIDEOPRT, "Failed to open device software key. Status 0x%lx\n", Status);
         return Status;
     }
 
@@ -326,7 +326,7 @@ IntSetupDeviceSettingsKey(
 
     if (Status != STATUS_SUCCESS)
     {
-        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx", Status);
+        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
         return Status;
     }
 
@@ -339,7 +339,7 @@ IntSetupDeviceSettingsKey(
     Status = ZwOpenKey(&SourceKeyHandle, KEY_WRITE, &ObjectAttributes);
     if (Status != STATUS_SUCCESS)
     {
-        ERR_(VIDEOPRT, "ZwOpenKey failed for settings key: status 0x%lx", Status);
+        ERR_(VIDEOPRT, "ZwOpenKey failed for settings key: status 0x%lx\n", Status);
         ObCloseHandle(DestKeyHandle, KernelMode);
         return Status;
     }
@@ -615,7 +615,7 @@ IntCreateRegistryPath(
     }
     else
     {
-        WARN_(VIDEOPRT, "Unparsable registry path %wZ", DriverRegistryPath);
+        WARN_(VIDEOPRT, "Unparsable registry path %wZ\n", DriverRegistryPath);
     }
 
     /* If path doesn't point to *ControlSet*, use DriverRegistryPath directly */

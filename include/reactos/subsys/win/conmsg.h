@@ -197,10 +197,24 @@ C_ASSERT(sizeof(CONSRV_API_CONNECTINFO) == 0x638);
 
 typedef struct
 {
-    ULONG  nMaxIds;
-    ULONG  nProcessIdsTotal;
-    PDWORD pProcessIds;
+    HANDLE ConsoleHandle;
+    ULONG  ProcessCount;
+    PDWORD ProcessIdsList;
 } CONSOLE_GETPROCESSLIST, *PCONSOLE_GETPROCESSLIST;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    DWORD  CtrlEvent;
+    DWORD  ProcessGroupId;
+} CONSOLE_GENERATECTRLEVENT, *PCONSOLE_GENERATECTRLEVENT;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+} CONSOLE_NOTIFYLASTCLOSE, *PCONSOLE_NOTIFYLASTCLOSE;
+
+
 
 typedef struct
 {
@@ -262,18 +276,26 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    CONSOLE_SCREEN_BUFFER_INFO Info;
+    COORD  ScreenBufferSize;
+    COORD  CursorPosition;
+    COORD  ViewOrigin;
+    WORD   Attributes;
+    COORD  ViewSize;
+    COORD  MaximumViewSize;
 } CONSOLE_GETSCREENBUFFERINFO, *PCONSOLE_GETSCREENBUFFERINFO;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    COORD Position;
+    COORD  Position;
 } CONSOLE_SETCURSORPOSITION, *PCONSOLE_SETCURSORPOSITION;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     BOOL   Show;
     INT    RefCount;
@@ -281,39 +303,49 @@ typedef struct
 
 typedef struct
 {
+    HANDLE  ConsoleHandle;
     HANDLE  OutputHandle;
-    HCURSOR hCursor;
+    HCURSOR CursorHandle;
 } CONSOLE_SETCURSOR, *PCONSOLE_SETCURSOR;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     CONSOLE_CURSOR_INFO Info;
+/*
+    DWORD   Size;
+    BOOLEAN Visible;
+*/
 } CONSOLE_GETSETCURSORINFO, *PCONSOLE_GETSETCURSORINFO;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    WORD Attrib;
+    WORD   Attributes;
 } CONSOLE_SETTEXTATTRIB, *PCONSOLE_SETTEXTATTRIB;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;   /* A valid input or output console handle */
-    DWORD ConsoleMode;
+    HANDLE ConsoleHandle;
+    HANDLE Handle;
+    DWORD  Mode;
 } CONSOLE_GETSETCONSOLEMODE, *PCONSOLE_GETSETCONSOLEMODE;
 
 typedef struct
 {
-    // HANDLE OutputHandle;
-    DWORD  DisplayMode;
+    HANDLE ConsoleHandle;
+    DWORD  DisplayMode; // ModeFlags
 } CONSOLE_GETDISPLAYMODE, *PCONSOLE_GETDISPLAYMODE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    DWORD  DisplayMode;
+    DWORD  DisplayMode; // ModeFlags
     COORD  NewSBDim;
+    HANDLE EventHandle;
 } CONSOLE_SETDISPLAYMODE, *PCONSOLE_SETDISPLAYMODE;
 
 /*
@@ -324,39 +356,47 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
+    DWORD  Flags;
     DWORD  State;
 } CONSOLE_GETSETHWSTATE, *PCONSOLE_GETSETHWSTATE;
 
 
+
 typedef struct
 {
-    HANDLE OutputHandle;     /* Handle to newly created screen buffer */
+    HANDLE ConsoleHandle;
+    DWORD  DesiredAccess;
+    BOOL   InheritHandle;
+    DWORD  ShareMode;
     DWORD  ScreenBufferType; /* Type of the screen buffer: CONSOLE_TEXTMODE_BUFFER or CONSOLE_GRAPHICS_BUFFER */
     /*
-     * If we are creating a graphics screen buffer,
-     * this structure holds the initialization information.
+     * This structure holds the initialization information
+     * for graphics screen buffers.
      */
     CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
-
-    DWORD Access;
-    DWORD ShareMode;
-    BOOL  Inheritable;
+    HANDLE hMutex;
+    PVOID  lpBitMap;
+    HANDLE OutputHandle;     /* Handle to newly created screen buffer */
 } CONSOLE_CREATESCREENBUFFER, *PCONSOLE_CREATESCREENBUFFER;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;  /* Handle to screen buffer to switch to */
 } CONSOLE_SETACTIVESCREENBUFFER, *PCONSOLE_SETACTIVESCREENBUFFER;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     SMALL_RECT Region;
 } CONSOLE_INVALIDATEDIBITS, *PCONSOLE_INVALIDATEDIBITS;
 
 typedef struct
 {
+    HANDLE   ConsoleHandle;
     HANDLE   OutputHandle;
     HPALETTE PaletteHandle;
     UINT     Usage;
@@ -364,8 +404,10 @@ typedef struct
 
 typedef struct
 {
-    DWORD Length;
-    PWCHAR Title;
+    HANDLE  ConsoleHandle;
+    DWORD   Length;
+    PVOID   Title;
+    BOOLEAN Unicode;
 } CONSOLE_GETSETCONSOLETITLE, *PCONSOLE_GETSETCONSOLETITLE;
 
 typedef struct
@@ -381,6 +423,7 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
 } CONSOLE_FLUSHINPUTBUFFER, *PCONSOLE_FLUSHINPUTBUFFER;
 
@@ -501,20 +544,49 @@ typedef struct
 typedef struct
 {
     HANDLE ConsoleHandle;
+    HANDLE InputHandle;
+    DWORD  NumberOfEvents;
+} CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
+
+
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE Handle;
 } CONSOLE_CLOSEHANDLE, *PCONSOLE_CLOSEHANDLE;
 
 typedef struct
 {
+    BOOL   IsValid;
     HANDLE ConsoleHandle;
+    HANDLE Handle;
 } CONSOLE_VERIFYHANDLE, *PCONSOLE_VERIFYHANDLE;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
-    DWORD Access;
-    BOOL Inheritable;
-    DWORD Options;
+    HANDLE  ConsoleHandle;
+    HANDLE  SourceHandle;
+    DWORD   DesiredAccess;
+    BOOLEAN InheritHandle;
+    DWORD   Options;
+    HANDLE  TargetHandle;
 } CONSOLE_DUPLICATEHANDLE, *PCONSOLE_DUPLICATEHANDLE;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE Handle;
+    DWORD  Flags;
+} CONSOLE_GETHANDLEINFO, *PCONSOLE_GETHANDLEINFO;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE Handle;
+    DWORD  Mask;
+    DWORD  Flags;
+} CONSOLE_SETHANDLEINFO, *PCONSOLE_SETHANDLEINFO;
 
 /*
  * Type of handles.
@@ -529,33 +601,39 @@ typedef struct
 {
     HANDLE ConsoleHandle;
     CONSOLE_HANDLE_TYPE HandleType;
-    DWORD Access;
-    BOOL Inheritable;
-    DWORD ShareMode;
+    DWORD  DesiredAccess;
+    BOOL   InheritHandle;
+    DWORD  ShareMode;
+    HANDLE Handle;
 } CONSOLE_OPENCONSOLE, *PCONSOLE_OPENCONSOLE;
+
 
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     COORD  Size;
 } CONSOLE_GETLARGESTWINDOWSIZE, *PCONSOLE_GETLARGESTWINDOWSIZE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    DWORD  dwCmdIdLow;
-    DWORD  dwCmdIdHigh;
-    HMENU  hMenu;
+    DWORD  CmdIdLow;
+    DWORD  CmdIdHigh;
+    HMENU  MenuHandle;
 } CONSOLE_MENUCONTROL, *PCONSOLE_MENUCONTROL;
 
 typedef struct
 {
-    BOOL Enable;
+    HANDLE ConsoleHandle;
+    BOOL   Enable;
 } CONSOLE_SETMENUCLOSE, *PCONSOLE_SETMENUCLOSE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     BOOL   Absolute;
     SMALL_RECT WindowRect; // New console window position in the screen-buffer frame (Absolute == TRUE)
@@ -564,12 +642,14 @@ typedef struct
 
 typedef struct
 {
-    HWND WindowHandle;
+    HANDLE ConsoleHandle;
+    HWND   WindowHandle;
 } CONSOLE_GETWINDOW, *PCONSOLE_GETWINDOW;
 
 typedef struct
 {
-    HICON WindowIcon;
+    HANDLE ConsoleHandle;
+    HICON  IconHandle;
 } CONSOLE_SETICON, *PCONSOLE_SETICON;
 
 
@@ -647,32 +727,31 @@ typedef struct
 
 typedef struct
 {
-    DWORD Event;
-    DWORD ProcessGroup;
-} CONSOLE_GENERATECTRLEVENT, *PCONSOLE_GENERATECTRLEVENT;
-
-typedef struct
-{
-    HANDLE InputHandle;
-    DWORD NumInputEvents;
-} CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
-
-typedef struct
-{
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-    COORD Size;
+    COORD  Size;
 } CONSOLE_SETSCREENBUFFERSIZE, *PCONSOLE_SETSCREENBUFFERSIZE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     CONSOLE_SELECTION_INFO Info;
 } CONSOLE_GETSELECTIONINFO, *PCONSOLE_GETSELECTIONINFO;
 
 typedef struct
 {
-    BOOL InputCP;   // TRUE : Input Code Page ; FALSE : Output Code Page
-    UINT CodePage;
-} CONSOLE_GETSETINPUTOUTPUTCP, *PCONSOLE_GETSETINPUTOUTPUTCP;
+    HANDLE ConsoleHandle;
+    UINT   CodePage;
+    BOOL   OutputCP;    // TRUE : Output Code Page ; FALSE : Input Code Page
+} CONSOLE_GETINPUTOUTPUTCP, *PCONSOLE_GETINPUTOUTPUTCP;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    UINT   CodePage;
+    BOOL   OutputCP;    // TRUE : Output Code Page ; FALSE : Input Code Page
+    HANDLE EventHandle;
+} CONSOLE_SETINPUTOUTPUTCP, *PCONSOLE_SETINPUTOUTPUTCP;
 
 typedef struct _CONSOLE_API_MESSAGE
 {
@@ -689,14 +768,18 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_ATTACHCONSOLE AttachConsoleRequest;
         CONSOLE_FREECONSOLE FreeConsoleRequest;
 
-        /* Process list */
+        /* Processes */
         CONSOLE_GETPROCESSLIST GetProcessListRequest;
+        CONSOLE_GENERATECTRLEVENT GenerateCtrlEventRequest;
+        CONSOLE_NOTIFYLASTCLOSE NotifyLastCloseRequest;
 
         /* Handles */
         CONSOLE_OPENCONSOLE OpenConsoleRequest;
         CONSOLE_CLOSEHANDLE CloseHandleRequest;
         CONSOLE_VERIFYHANDLE VerifyHandleRequest;
         CONSOLE_DUPLICATEHANDLE DuplicateHandleRequest;
+        CONSOLE_GETHANDLEINFO GetHandleInfoRequest;
+        CONSOLE_SETHANDLEINFO SetHandleInfoRequest;
 
         /* Cursor */
         CONSOLE_SHOWCURSOR ShowCursorRequest;
@@ -736,6 +819,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETINPUT GetInputRequest;               // SrvGetConsoleInput / PeekConsoleInput & ReadConsoleInput
         CONSOLE_READOUTPUT ReadOutputRequest;           // SrvReadConsoleOutput / ReadConsoleOutput
         CONSOLE_READOUTPUTCODE ReadOutputCodeRequest;   // SrvReadConsoleOutputString / ReadConsoleOutputAttribute & ReadConsoleOutputCharacter
+        CONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest;
 
         /* Write */
         CONSOLE_WRITECONSOLE WriteConsoleRequest;       // SrvWriteConsole / WriteConsole
@@ -760,11 +844,9 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
         CONSOLE_GETSETHISTORYINFO HistoryInfoRequest;
 
-        CONSOLE_GENERATECTRLEVENT GenerateCtrlEventRequest;
-        CONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest;
-
         /* Input and Output Code Pages */
-        CONSOLE_GETSETINPUTOUTPUTCP ConsoleCPRequest;
+        CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
+        CONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 

@@ -385,6 +385,10 @@
     FT_Long  l;
 
 
+    /* Short-circuit transparent color to avoid div-by-zero. */
+    if ( !a )
+      return 0;
+
     /*
      * Luminosity for sRGB is defined using ~0.2126,0.7152,0.0722
      * coefficients for RGB channels *on the linear colors*.
