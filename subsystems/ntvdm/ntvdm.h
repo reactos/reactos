@@ -29,6 +29,8 @@
 
 #include <debug.h>
 
+DWORD WINAPI SetLastConsoleEventActive(VOID);
+
 /* FUNCTIONS ******************************************************************/
 
 VOID DisplayMessage(LPCWSTR Format, ...);

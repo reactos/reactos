@@ -34,6 +34,7 @@ static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
 static CONSOLE_CURSOR_INFO         OrgConsoleCursorInfo;
 static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
+static HANDLE CommandThread = NULL;
 
 static HMENU hConsoleMenu  = NULL;
 static INT   VdmMenuPos    = -1;
@@ -196,6 +197,11 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
             EmulatorInterrupt(0x23);
             break;
         }
+        case CTRL_LAST_CLOSE_EVENT:
+        {
+            if (CommandThread) TerminateThread(CommandThread, 0);
+            break;
+        }
         default:
         {
             /* Stop the VDM if the user logs out or closes the console */
@@ -278,6 +284,9 @@ BOOL ConsoleInit(VOID)
 {
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+
+    /* Enable the CTRL_LAST_CLOSE_EVENT */
+    SetLastConsoleEventActive();
 
     /* Get the input handle to the real console, and check for success */
     ConsoleInput = CreateFileW(L"CONIN$",
@@ -368,10 +377,8 @@ VOID ConsoleCleanup(VOID)
     if (ConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
 }
 
-INT wmain(INT argc, WCHAR *argv[])
+DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 {
-#ifndef STANDALONE
-
     VDM_COMMAND_INFO CommandInfo;
     CHAR CmdLine[MAX_PATH];
     CHAR AppName[MAX_PATH];
@@ -379,7 +386,50 @@ INT wmain(INT argc, WCHAR *argv[])
     CHAR Desktop[MAX_PATH];
     CHAR Title[MAX_PATH];
 
-#else
+    UNREFERENCED_PARAMETER(Parameter);
+
+    while (TRUE)
+    {
+        /* Clear the structure */
+        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+
+        /* Initialize the structure members */
+        CommandInfo.VDMState = VDM_NOT_LOADED;
+        CommandInfo.CmdLine = CmdLine;
+        CommandInfo.CmdLen = sizeof(CmdLine);
+        CommandInfo.AppName = AppName;
+        CommandInfo.AppLen = sizeof(AppName);
+        CommandInfo.PifFile = PifFile;
+        CommandInfo.PifLen = sizeof(PifFile);
+        CommandInfo.Desktop = Desktop;
+        CommandInfo.DesktopLen = sizeof(Desktop);
+        CommandInfo.Title = Title;
+        CommandInfo.TitleLen = sizeof(Title);
+
+        /* Wait for the next available VDM */
+        if (!GetNextVDMCommand(&CommandInfo)) break;
+
+        /* Start the process from the command line */
+        DPRINT1("Starting '%s'...\n", AppName);
+        if (!DosCreateProcess(AppName, 0))
+        {
+            DisplayMessage(L"Could not start '%S'", AppName);
+            break;
+        }
+
+        /* Start simulation */
+        EmulatorSimulate();
+
+        /* Perform another screen refresh */
+        VgaRefreshDisplay();
+    }
+
+    return 0;
+}
+
+INT wmain(INT argc, WCHAR *argv[])
+{
+#ifdef STANDALONE
 
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
 
@@ -428,41 +478,19 @@ INT wmain(INT argc, WCHAR *argv[])
 
 #ifndef STANDALONE
 
-    while (TRUE)
+    /* Create the GetNextVDMCommand thread */
+    CommandThread = CreateThread(NULL, 0, &CommandThreadProc, NULL, 0, NULL);
+    if (CommandThread == NULL)
     {
-        /* Clear the structure */
-        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
-
-        /* Initialize the structure members */
-        CommandInfo.VDMState = VDM_NOT_LOADED;
-        CommandInfo.CmdLine = CmdLine;
-        CommandInfo.CmdLen = sizeof(CmdLine);
-        CommandInfo.AppName = AppName;
-        CommandInfo.AppLen = sizeof(AppName);
-        CommandInfo.PifFile = PifFile;
-        CommandInfo.PifLen = sizeof(PifFile);
-        CommandInfo.Desktop = Desktop;
-        CommandInfo.DesktopLen = sizeof(Desktop);
-        CommandInfo.Title = Title;
-        CommandInfo.TitleLen = sizeof(Title);
-
-        /* Wait for the next available VDM */
-        if (!GetNextVDMCommand(&CommandInfo)) break;
-
-        /* Start the process from the command line */
-        DPRINT1("Starting '%s'...\n", AppName);
-        if (!DosCreateProcess(AppName, 0))
-        {
-            DisplayMessage(L"Could not start '%S'", AppName);
-            goto Cleanup;
-        }
-
-        /* Start simulation */
-        EmulatorSimulate();
-
-        /* Perform another screen refresh */
-        VgaRefreshDisplay();
+        wprintf(L"FATAL: Failed to create the command processing thread: %d\n", GetLastError());
+        goto Cleanup;
     }
+
+    /* Wait for the command thread to exit */
+    WaitForSingleObject(CommandThread, INFINITE);
+
+    /* Close the thread handle */
+    CloseHandle(CommandThread);
 
 #else
 
