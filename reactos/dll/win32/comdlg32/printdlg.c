@@ -1473,7 +1473,7 @@ static LRESULT PRINTDLG_WMInitDialog(HWND hDlg,
        PrintStructures->hNoCollateIcon == 0 ||
        PrintStructures->hPortraitIcon == 0 ||
        PrintStructures->hLandscapeIcon == 0) {
-        ERR("no icon in resourcefile\n");
+        ERR("no icon in resource file\n");
 	COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
 	EndDialog(hDlg, FALSE);
     }
@@ -1581,7 +1581,7 @@ static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg,
        PrintStructures->hNoCollateIcon == 0 ||
        PrintStructures->hPortraitIcon == 0 ||
        PrintStructures->hLandscapeIcon == 0) {
-        ERR("no icon in resourcefile\n");
+        ERR("no icon in resource file\n");
 	COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
 	EndDialog(hDlg, FALSE);
     }
@@ -2241,7 +2241,7 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
     }
 
     if(lppd->lStructSize != sizeof(PRINTDLGA)) {
-        WARN("structure size failure !!!\n");
+        WARN("structure size failure!!!\n");
 	COMDLG32_SetCommDlgExtendedError(CDERR_STRUCTSIZE);
 	return FALSE;
     }
@@ -2392,7 +2392,7 @@ BOOL WINAPI PrintDlgW(LPPRINTDLGW lppd)
     }
 
     if(lppd->lStructSize != sizeof(PRINTDLGW)) {
-        WARN("structure size failure !!!\n");
+        WARN("structure size failure!!!\n");
 	COMDLG32_SetCommDlgExtendedError(CDERR_STRUCTSIZE);
 	return FALSE;
     }
