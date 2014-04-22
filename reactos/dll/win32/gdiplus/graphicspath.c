@@ -854,7 +854,7 @@ static GpStatus format_string_callback(HDC dc,
     for (i = index; i < length; ++i)
     {
         GLYPHMETRICS gm;
-        TTPOLYGONHEADER *ph = NULL;
+        TTPOLYGONHEADER *ph = NULL, *origph;
         char *start;
         DWORD len, ofs = 0;
         len = GetGlyphOutlineW(dc, string[i], GGO_BEZIER, &gm, 0, NULL, &identity);
@@ -863,7 +863,7 @@ static GpStatus format_string_callback(HDC dc,
             status = GenericError;
             break;
         }
-        ph = GdipAlloc(len);
+        origph = ph = GdipAlloc(len);
         start = (char *)ph;
         if (!ph || !lengthen_path(path, len / sizeof(POINTFX)))
         {
@@ -917,7 +917,7 @@ static GpStatus format_string_callback(HDC dc,
         x += gm.gmCellIncX * args->scale;
         y += gm.gmCellIncY * args->scale;
 
-        GdipFree(ph);
+        GdipFree(origph);
         if (status != Ok)
             break;
     }
@@ -1837,8 +1837,9 @@ static void widen_cap(const GpPointF *endpoint, const GpPointF *nextpoint,
     }
 }
 
-static void widen_open_figure(GpPath *path, GpPen *pen, int start, int end,
-    path_list_node_t **last_point)
+static void widen_open_figure(const GpPointF *points, GpPen *pen, int start, int end,
+    GpLineCap start_cap, GpCustomLineCap *start_custom, GpLineCap end_cap,
+    GpCustomLineCap *end_custom, path_list_node_t **last_point)
 {
     int i;
     path_list_node_t *prev_point;
@@ -1848,22 +1849,22 @@ static void widen_open_figure(GpPath *path, GpPen *pen, int start, int end,
 
     prev_point = *last_point;
 
-    widen_cap(&path->pathdata.Points[start], &path->pathdata.Points[start+1],
-        pen, pen->startcap, pen->customstart, FALSE, TRUE, last_point);
+    widen_cap(&points[start], &points[start+1],
+        pen, start_cap, start_custom, FALSE, TRUE, last_point);
 
     for (i=start+1; i<end; i++)
-        widen_joint(&path->pathdata.Points[i-1], &path->pathdata.Points[i],
-            &path->pathdata.Points[i+1], pen, last_point);
+        widen_joint(&points[i-1], &points[i],
+            &points[i+1], pen, last_point);
 
-    widen_cap(&path->pathdata.Points[end], &path->pathdata.Points[end-1],
-        pen, pen->endcap, pen->customend, TRUE, TRUE, last_point);
+    widen_cap(&points[end], &points[end-1],
+        pen, end_cap, end_custom, TRUE, TRUE, last_point);
 
     for (i=end-1; i>start; i--)
-        widen_joint(&path->pathdata.Points[i+1], &path->pathdata.Points[i],
-            &path->pathdata.Points[i-1], pen, last_point);
+        widen_joint(&points[i+1], &points[i],
+            &points[i-1], pen, last_point);
 
-    widen_cap(&path->pathdata.Points[start], &path->pathdata.Points[start+1],
-        pen, pen->startcap, pen->customstart, TRUE, FALSE, last_point);
+    widen_cap(&points[start], &points[start+1],
+        pen, start_cap, start_custom, TRUE, FALSE, last_point);
 
     prev_point->next->type = PathPointTypeStart;
     (*last_point)->type |= PathPointTypeCloseSubpath;
@@ -1911,6 +1912,134 @@ static void widen_closed_figure(GpPath *path, GpPen *pen, int start, int end,
     (*last_point)->type |= PathPointTypeCloseSubpath;
 }
 
+static void widen_dashed_figure(GpPath *path, GpPen *pen, int start, int end,
+    int closed, path_list_node_t **last_point)
+{
+    int i, j;
+    REAL dash_pos=0.0;
+    int dash_index=0;
+    const REAL *dash_pattern;
+    int dash_count;
+    GpPointF *tmp_points;
+    REAL segment_dy;
+    REAL segment_dx;
+    REAL segment_length;
+    REAL segment_pos;
+    int num_tmp_points=0;
+    int draw_start_cap=0;
+    static const REAL dash_dot_dot[6] = { 3.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+
+    if (end <= start)
+        return;
+
+    switch (pen->dash)
+    {
+    case DashStyleDash:
+    default:
+        dash_pattern = dash_dot_dot;
+        dash_count = 2;
+        break;
+    case DashStyleDot:
+        dash_pattern = &dash_dot_dot[2];
+        dash_count = 2;
+        break;
+    case DashStyleDashDot:
+        dash_pattern = dash_dot_dot;
+        dash_count = 4;
+        break;
+    case DashStyleDashDotDot:
+        dash_pattern = dash_dot_dot;
+        dash_count = 6;
+        break;
+    case DashStyleCustom:
+        dash_pattern = pen->dashes;
+        dash_count = pen->numdashes;
+        break;
+    }
+
+    tmp_points = GdipAlloc((end - start + 2) * sizeof(GpPoint));
+    if (!tmp_points) return; /* FIXME */
+
+    if (!closed)
+        draw_start_cap = 1;
+
+    for (j=start; j <= end; j++)
+    {
+        if (j == start)
+        {
+            if (closed)
+                i = end;
+            else
+                continue;
+        }
+        else
+            i = j-1;
+
+        segment_dy = path->pathdata.Points[j].Y - path->pathdata.Points[i].Y;
+        segment_dx = path->pathdata.Points[j].X - path->pathdata.Points[i].X;
+        segment_length = sqrtf(segment_dy*segment_dy + segment_dx*segment_dx);
+        segment_pos = 0.0;
+
+        while (1)
+        {
+            if (dash_pos == 0.0)
+            {
+                if ((dash_index % 2) == 0)
+                {
+                    /* start dash */
+                    num_tmp_points = 1;
+                    tmp_points[0].X = path->pathdata.Points[i].X + segment_dx * segment_pos / segment_length;
+                    tmp_points[0].Y = path->pathdata.Points[i].Y + segment_dy * segment_pos / segment_length;
+                }
+                else
+                {
+                    /* end dash */
+                    tmp_points[num_tmp_points].X = path->pathdata.Points[i].X + segment_dx * segment_pos / segment_length;
+                    tmp_points[num_tmp_points].Y = path->pathdata.Points[i].Y + segment_dy * segment_pos / segment_length;
+
+                    widen_open_figure(tmp_points, pen, 0, num_tmp_points,
+                        draw_start_cap ? pen->startcap : LineCapFlat, pen->customstart,
+                        LineCapFlat, NULL, last_point);
+                    draw_start_cap = 0;
+                    num_tmp_points = 0;
+                }
+            }
+
+            if (dash_pattern[dash_index] - dash_pos > segment_length - segment_pos)
+            {
+                /* advance to next segment */
+                if ((dash_index % 2) == 0)
+                {
+                    tmp_points[num_tmp_points] = path->pathdata.Points[j];
+                    num_tmp_points++;
+                }
+                dash_pos += segment_length - segment_pos;
+                break;
+            }
+            else
+            {
+                /* advance to next dash in pattern */
+                segment_pos += dash_pattern[dash_index] - dash_pos;
+                dash_pos = 0.0;
+                if (++dash_index == dash_count)
+                    dash_index = 0;
+                continue;
+            }
+        }
+    }
+
+    if (dash_index % 2 == 0 && num_tmp_points != 0)
+    {
+        /* last dash overflows last segment */
+        tmp_points[num_tmp_points] = path->pathdata.Points[end];
+        widen_open_figure(tmp_points, pen, 0, num_tmp_points,
+            draw_start_cap ? pen->startcap : LineCapFlat, pen->customstart,
+            closed ? LineCapFlat : pen->endcap, pen->customend, last_point);
+    }
+
+    GdipFree(tmp_points);
+}
+
 GpStatus WINGDIPAPI GdipWidenPath(GpPath *path, GpPen *pen, GpMatrix *matrix,
     REAL flatness)
 {
@@ -1952,9 +2081,6 @@ GpStatus WINGDIPAPI GdipWidenPath(GpPath *path, GpPen *pen, GpMatrix *matrix,
         if (pen->join == LineJoinRound)
             FIXME("unimplemented line join %d\n", pen->join);
 
-        if (pen->dash != DashStyleSolid)
-            FIXME("unimplemented dash style %d\n", pen->dash);
-
         if (pen->align != PenAlignmentCenter)
             FIXME("unimplemented pen alignment %d\n", pen->align);
 
@@ -1967,12 +2093,18 @@ GpStatus WINGDIPAPI GdipWidenPath(GpPath *path, GpPen *pen, GpMatrix *matrix,
 
             if ((type&PathPointTypeCloseSubpath) == PathPointTypeCloseSubpath)
             {
-                widen_closed_figure(flat_path, pen, subpath_start, i, &last_point);
+                if (pen->dash != DashStyleSolid)
+                    widen_dashed_figure(flat_path, pen, subpath_start, i, 1, &last_point);
+                else
+                    widen_closed_figure(flat_path, pen, subpath_start, i, &last_point);
             }
             else if (i == flat_path->pathdata.Count-1 ||
                 (flat_path->pathdata.Types[i+1]&PathPointTypePathTypeMask) == PathPointTypeStart)
             {
-                widen_open_figure(flat_path, pen, subpath_start, i, &last_point);
+                if (pen->dash != DashStyleSolid)
+                    widen_dashed_figure(flat_path, pen, subpath_start, i, 0, &last_point);
+                else
+                    widen_open_figure(flat_path->pathdata.Points, pen, subpath_start, i, pen->startcap, pen->customstart, pen->endcap, pen->customend, &last_point);
             }
         }
 
