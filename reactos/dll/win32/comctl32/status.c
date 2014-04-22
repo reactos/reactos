@@ -687,10 +687,12 @@ STATUSBAR_SetParts (STATUS_INFO *infoPtr, INT count, LPINT parts)
     if (infoPtr->hwndToolTip) {
 	INT nTipCount;
 	TTTOOLINFOW ti;
+	WCHAR wEmpty = 0;
 
 	ZeroMemory (&ti, sizeof(TTTOOLINFOW));
 	ti.cbSize = sizeof(TTTOOLINFOW);
 	ti.hwnd = infoPtr->Self;
+	ti.lpszText = &wEmpty;
 
 	nTipCount = SendMessageW (infoPtr->hwndToolTip, TTM_GETTOOLCOUNT, 0, 0);
 	if (nTipCount < infoPtr->numParts) {

@@ -238,22 +238,29 @@ static inline LRESULT TAB_SetCurSel (TAB_INFO *infoPtr, INT iItem)
 
   TRACE("(%p %d)\n", infoPtr, iItem);
 
-  if (iItem < 0)
-      infoPtr->iSelected = -1;
-  else if (iItem >= infoPtr->uNumItem)
+  if (iItem >= (INT)infoPtr->uNumItem)
       return -1;
-  else {
-      if (prevItem != iItem) {
-          if (prevItem != -1)
-              TAB_GetItem(infoPtr, prevItem)->dwState &= ~TCIS_BUTTONPRESSED;
-          TAB_GetItem(infoPtr, iItem)->dwState |= TCIS_BUTTONPRESSED;
 
+  if (prevItem != iItem) {
+      if (prevItem != -1)
+          TAB_GetItem(infoPtr, prevItem)->dwState &= ~TCIS_BUTTONPRESSED;
+
+      if (iItem >= 0)
+      {
+          TAB_GetItem(infoPtr, iItem)->dwState |= TCIS_BUTTONPRESSED;
           infoPtr->iSelected = iItem;
           infoPtr->uFocus = iItem;
-          TAB_EnsureSelectionVisible(infoPtr);
-          TAB_InvalidateTabArea(infoPtr);
       }
+      else
+      {
+          infoPtr->iSelected = -1;
+          infoPtr->uFocus = -1;
+      }
+
+      TAB_EnsureSelectionVisible(infoPtr);
+      TAB_InvalidateTabArea(infoPtr);
   }
+
   return prevItem;
 }
 
