@@ -3221,8 +3221,10 @@ static void test_tiff_properties(void)
         ok(td[i].id == prop_item->id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item->id);
         prop_size -= sizeof(*prop_item);
         ok(prop_item->length == prop_size, "%u: expected length %u, got %u\n", i, prop_size, prop_item->length);
-        ok(td[i].length == prop_item->length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
-        ok(td[i].length == prop_size, "%u: expected length %u, got %u\n", i, td[i].length, prop_size);
+        ok(td[i].length == prop_item->length || broken(td[i].id == 0xf00f && td[i].length == prop_item->length+1) /* XP */,
+           "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
+        ok(td[i].length == prop_size || broken(td[i].id == 0xf00f && td[i].length == prop_size+1) /* XP */,
+           "%u: expected length %u, got %u\n", i, td[i].length, prop_size);
         if (td[i].length == prop_item->length)
         {
             int match = memcmp(td[i].value, prop_item->value, td[i].length) == 0;
@@ -3231,10 +3233,10 @@ static void test_tiff_properties(void)
             {
                 UINT j;
                 BYTE *data = prop_item->value;
-                printf("id %#x:", prop_item->id);
+                trace("id %#x:", prop_item->id);
                 for (j = 0; j < prop_item->length; j++)
-                    printf(" %02x", data[j]);
-                printf("\n");
+                    trace(" %02x", data[j]);
+                trace("\n");
             }
         }
         HeapFree(GetProcessHeap(), 0, prop_item);
@@ -3337,10 +3339,10 @@ static void test_GdipGetAllPropertyItems(void)
             {
                 UINT j;
                 BYTE *data = prop_item->value;
-                printf("id %#x:", prop_item->id);
+                trace("id %#x:", prop_item->id);
                 for (j = 0; j < prop_item->length; j++)
-                    printf(" %02x", data[j]);
-                printf("\n");
+                    trace(" %02x", data[j]);
+                trace("\n");
             }
         }
         HeapFree(GetProcessHeap(), 0, prop_item);
@@ -3399,10 +3401,10 @@ static void test_GdipGetAllPropertyItems(void)
             {
                 UINT j;
                 BYTE *data = prop_item[i].value;
-                printf("id %#x:", prop_item[i].id);
+                trace("id %#x:", prop_item[i].id);
                 for (j = 0; j < prop_item[i].length; j++)
-                    printf(" %02x", data[j]);
-                printf("\n");
+                    trace(" %02x", data[j]);
+                trace("\n");
             }
         }
         item_data += prop_item[i].length;
@@ -3631,10 +3633,10 @@ static void test_bitmapbits(void)
                 if (!match)
                 {
                     BYTE *bits = data.Scan0;
-                    printf("%u: data mismatch for format %#x:", i, td[i].format);
+                    trace("%u: data mismatch for format %#x:", i, td[i].format);
                     for (j = 0; j < td[i].size; j++)
-                        printf(" %02x", bits[j]);
-                    printf("\n");
+                        trace(" %02x", bits[j]);
+                    trace("\n");
                 }
             }
             else
@@ -3662,10 +3664,10 @@ static void test_bitmapbits(void)
             {
                 UINT j;
                 BYTE *bits = data.Scan0;
-                printf("%u: data mismatch for format %#x:", i, td[i].format);
+                trace("%u: data mismatch for format %#x:", i, td[i].format);
                 for (j = 0; j < 48; j++)
-                    printf(" %02x", bits[j]);
-                printf("\n");
+                    trace(" %02x", bits[j]);
+                trace("\n");
             }
         }
 
@@ -3717,8 +3719,8 @@ static void test_DrawImage(void)
         UINT i, size = sizeof(white_2x2);
         BYTE *bits = white_2x2;
         for (i = 0; i < size; i++)
-            printf(" %02x", bits[i]);
-        printf("\n");
+            trace(" %02x", bits[i]);
+        trace("\n");
     }
 
     status = GdipDeleteGraphics(graphics);
@@ -3769,8 +3771,8 @@ static void test_GdipDrawImagePointRect(void)
         UINT i, size = sizeof(white_2x2);
         BYTE *bits = white_2x2;
         for (i = 0; i < size; i++)
-            printf(" %02x", bits[i]);
-        printf("\n");
+            trace(" %02x", bits[i]);
+        trace("\n");
     }
 
     status = GdipDeleteGraphics(graphics);
@@ -3817,7 +3819,7 @@ static void test_image_format(void)
         else
         {
             expect(Ok, status);
-            ret = GetObject(hbitmap, sizeof(bm), &bm);
+            ret = GetObjectW(hbitmap, sizeof(bm), &bm);
             expect(sizeof(bm), ret);
             expect(0, bm.bmType);
             expect(1, bm.bmWidth);
@@ -3976,8 +3978,8 @@ static void test_DrawImage_scale(void)
             UINT i, size = sizeof(dst_8x1);
             const BYTE *bits = dst_8x1;
             for (i = 0; i < size; i++)
-                printf(" %02x", bits[i]);
-            printf("\n");
+                trace(" %02x", bits[i]);
+            trace("\n");
         }
     }
 
@@ -4102,10 +4104,10 @@ static void test_gif_properties(void)
             {
                 UINT j;
                 BYTE *data = prop_item->value;
-                printf("id %#x:", prop_item->id);
+                trace("id %#x:", prop_item->id);
                 for (j = 0; j < prop_item->length; j++)
-                    printf(" %02x", data[j]);
-                printf("\n");
+                    trace(" %02x", data[j]);
+                trace("\n");
             }
         }
         HeapFree(GetProcessHeap(), 0, prop_item);
@@ -4164,10 +4166,10 @@ static void test_gif_properties(void)
             {
                 UINT j;
                 BYTE *data = prop_item[i].value;
-                printf("id %#x:", prop_item[i].id);
+                trace("id %#x:", prop_item[i].id);
                 for (j = 0; j < prop_item[i].length; j++)
-                    printf(" %02x", data[j]);
-                printf("\n");
+                    trace(" %02x", data[j]);
+                trace("\n");
             }
         }
         item_data += prop_item[i].length;
@@ -4248,6 +4250,32 @@ static void test_ARGB_conversion(void)
     GdipDisposeImage((GpImage *)bitmap);
 }
 
+
+static void test_CloneBitmapArea(void)
+{
+    GpStatus status;
+    GpBitmap *bitmap, *copy;
+    BitmapData data, data2;
+
+    status = GdipCreateBitmapFromScan0(1, 1, 0, PixelFormat24bppRGB, NULL, &bitmap);
+    expect(Ok, status);
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead | ImageLockModeWrite, PixelFormat24bppRGB, &data);
+    expect(Ok, status);
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat24bppRGB, &data2);
+    expect(WrongState, status);
+
+    status = GdipCloneBitmapAreaI(0, 0, 1, 1, PixelFormat24bppRGB, bitmap, &copy);
+    expect(Ok, status);
+
+    status = GdipBitmapUnlockBits(bitmap, &data);
+    expect(Ok, status);
+
+    GdipDisposeImage((GpImage *)copy);
+    GdipDisposeImage((GpImage *)bitmap);
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -4260,6 +4288,7 @@ START_TEST(image)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_CloneBitmapArea();
     test_ARGB_conversion();
     test_DrawImage_scale();
     test_image_format();
