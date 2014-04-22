@@ -617,7 +617,7 @@ static void POP3Transport_CallbackRecvPASSResp(IInternetTransport *iface, char *
 
 static void POP3Transport_CallbackProcessUSERResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
 {
-    static char pass[] = "PASS ";
+    static const char pass[] = "PASS ";
     POP3Transport *This = (POP3Transport *)iface;
     POP3RESPONSE response;
     char *command;
@@ -658,7 +658,7 @@ static void POP3Transport_CallbackRecvUSERResp(IInternetTransport *iface, char *
 
 static void POP3Transport_CallbackSendUSERCmd(IInternetTransport *iface, char *pBuffer, int cbBuffer)
 {
-    static char user[] = "USER ";
+    static const char user[] = "USER ";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -854,7 +854,7 @@ static HRESULT WINAPI POP3Transport_CommandAUTH(IPOP3Transport *iface, LPSTR psz
 
 static HRESULT WINAPI POP3Transport_CommandUSER(IPOP3Transport *iface, LPSTR username)
 {
-    static char user[] = "USER ";
+    static const char user[] = "USER ";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -877,7 +877,7 @@ static HRESULT WINAPI POP3Transport_CommandUSER(IPOP3Transport *iface, LPSTR use
 
 static HRESULT WINAPI POP3Transport_CommandPASS(IPOP3Transport *iface, LPSTR password)
 {
-    static char pass[] = "PASS ";
+    static const char pass[] = "PASS ";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -901,7 +901,7 @@ static HRESULT WINAPI POP3Transport_CommandPASS(IPOP3Transport *iface, LPSTR pas
 static HRESULT WINAPI POP3Transport_CommandLIST(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char list[] = "LIST %u\r\n";
+    static const char list[] = "LIST %u\r\n";
     static char list_all[] = "LIST\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
@@ -928,7 +928,7 @@ static HRESULT WINAPI POP3Transport_CommandLIST(
 static HRESULT WINAPI POP3Transport_CommandTOP(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId, DWORD cPreviewLines)
 {
-    static char top[] = "TOP %u %u\r\n";
+    static const char top[] = "TOP %u %u\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -950,7 +950,7 @@ static HRESULT WINAPI POP3Transport_CommandTOP(
 
 static HRESULT WINAPI POP3Transport_CommandQUIT(IPOP3Transport *iface)
 {
-    static char command[] = "QUIT\r\n";
+    static const char command[] = "QUIT\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("()\n");
@@ -963,7 +963,7 @@ static HRESULT WINAPI POP3Transport_CommandQUIT(IPOP3Transport *iface)
 
 static HRESULT WINAPI POP3Transport_CommandSTAT(IPOP3Transport *iface)
 {
-    static char stat[] = "STAT\r\n";
+    static const char stat[] = "STAT\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("\n");
@@ -975,7 +975,7 @@ static HRESULT WINAPI POP3Transport_CommandSTAT(IPOP3Transport *iface)
 
 static HRESULT WINAPI POP3Transport_CommandNOOP(IPOP3Transport *iface)
 {
-    static char noop[] = "NOOP\r\n";
+    static const char noop[] = "NOOP\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("\n");
@@ -987,7 +987,7 @@ static HRESULT WINAPI POP3Transport_CommandNOOP(IPOP3Transport *iface)
 
 static HRESULT WINAPI POP3Transport_CommandRSET(IPOP3Transport *iface)
 {
-    static char rset[] = "RSET\r\n";
+    static const char rset[] = "RSET\r\n";
     POP3Transport *This = (POP3Transport *)iface;
 
     TRACE("\n");
@@ -1000,7 +1000,7 @@ static HRESULT WINAPI POP3Transport_CommandRSET(IPOP3Transport *iface)
 static HRESULT WINAPI POP3Transport_CommandUIDL(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char uidl[] = "UIDL %u\r\n";
+    static const char uidl[] = "UIDL %u\r\n";
     static char uidl_all[] = "UIDL\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
@@ -1027,7 +1027,7 @@ static HRESULT WINAPI POP3Transport_CommandUIDL(
 static HRESULT WINAPI POP3Transport_CommandDELE(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char dele[] = "DELE %u\r\n";
+    static const char dele[] = "DELE %u\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
@@ -1049,7 +1049,7 @@ static HRESULT WINAPI POP3Transport_CommandDELE(
 static HRESULT WINAPI POP3Transport_CommandRETR(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char retr[] = "RETR %u\r\n";
+    static const char retr[] = "RETR %u\r\n";
     POP3Transport *This = (POP3Transport *)iface;
     char *command;
     int len;
