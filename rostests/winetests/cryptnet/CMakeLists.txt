@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_executable(cryptnet_winetest cryptnet.c testlist.c)
 set_module_type(cryptnet_winetest win32cui)
 add_importlibs(cryptnet_winetest cryptnet crypt32 msvcrt kernel32)
