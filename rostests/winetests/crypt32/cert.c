@@ -351,7 +351,7 @@ static void checkHash(const BYTE *data, DWORD dataLen, ALG_ID algID,
      dwSizeWithNull,size);
 }
 
-static CHAR cspNameA[] = "WineCryptTemp";
+static const CHAR cspNameA[] = "WineCryptTemp";
 static WCHAR cspNameW[] = { 'W','i','n','e','C','r','y','p','t','T','e','m','p',0 };
 static const BYTE v1CertWithPubKey[] = {
 0x30,0x81,0x95,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,0x15,0x31,0x13,0x30,
@@ -660,7 +660,6 @@ static void testCreateCert(void)
      selfSignedCert, sizeof(selfSignedCert));
     ok(cert != NULL, "creating cert failed: %08x\n", GetLastError());
     /* Even in-memory certs are expected to have a store associated with them */
-    todo_wine
     ok(cert->hCertStore != NULL, "expected created cert to have a store\n");
     /* The cert doesn't have the archived property set (which would imply it
      * doesn't show up in enumerations.)
@@ -681,8 +680,8 @@ static void testCreateCert(void)
 
 static void testDupCert(void)
 {
-    HCERTSTORE store;
-    PCCERT_CONTEXT context, dupContext;
+    PCCERT_CONTEXT context, dupContext, storeContext, storeContext2, context2;
+    HCERTSTORE store, store2;
     BOOL ret;
 
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
@@ -720,9 +719,86 @@ static void testDupCert(void)
     }
     CertCloseStore(store, 0);
 
+    context = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert, sizeof(bigCert));
+    ok(context != NULL, "CertCreateCertificateContext failed\n");
+
+    dupContext = CertDuplicateCertificateContext(context);
+    ok(dupContext == context, "context != dupContext\n");
+
+    ret = CertFreeCertificateContext(dupContext);
+    ok(ret, "CertFreeCertificateContext failed\n");
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed: %d\n", GetLastError());
+
+    ret = CertAddCertificateContextToStore(store, context, CERT_STORE_ADD_NEW, &storeContext);
+    ok(ret, "CertAddCertificateContextToStore failed\n");
+    ok(storeContext != NULL && storeContext != context, "unexpected storeContext\n");
+    ok(storeContext->hCertStore == store, "unexpected hCertStore\n");
+
+    ok(storeContext->pbCertEncoded != context->pbCertEncoded, "unexpected pbCertEncoded\n");
+    ok(storeContext->cbCertEncoded == context->cbCertEncoded, "unexpected cbCertEncoded\n");
+    ok(storeContext->pCertInfo != context->pCertInfo, "unexpected pCertInfo\n");
+
+    store2 = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store2 != NULL, "CertOpenStore failed: %d\n", GetLastError());
+
+    ret = CertAddCertificateContextToStore(store2, storeContext, CERT_STORE_ADD_NEW, &storeContext2);
+    ok(ret, "CertAddCertificateContextToStore failed\n");
+    ok(storeContext2 != NULL && storeContext2 != storeContext, "unexpected storeContext\n");
+    ok(storeContext2->hCertStore == store2, "unexpected hCertStore\n");
+
+    ok(storeContext2->pbCertEncoded != storeContext->pbCertEncoded, "unexpected pbCertEncoded\n");
+    ok(storeContext2->cbCertEncoded == storeContext->cbCertEncoded, "unexpected cbCertEncoded\n");
+    ok(storeContext2->pCertInfo != storeContext->pCertInfo, "unexpected pCertInfo\n");
+
+    CertFreeCertificateContext(storeContext2);
+    CertFreeCertificateContext(storeContext);
+
+    context2 = CertCreateCertificateContext(X509_ASN_ENCODING, certWithUsage, sizeof(certWithUsage));
+    ok(context2 != NULL, "CertCreateCertificateContext failed\n");
+
+    ok(context2->hCertStore == context->hCertStore, "Unexpected hCertStore\n");
+
+    CertFreeCertificateContext(context2);
+    ret = CertFreeCertificateContext(context);
+    ok(ret, "CertFreeCertificateContext failed\n");
+
+    CertCloseStore(store, 0);
+    CertCloseStore(store2, 0);
+
     SetLastError(0xdeadbeef);
     context = CertDuplicateCertificateContext(NULL);
     ok(context == NULL, "Expected context to be NULL\n");
+
+    ret = CertFreeCertificateContext(NULL);
+    ok(ret, "CertFreeCertificateContext failed\n");
+}
+
+static void testLinkCert(void)
+{
+    const CERT_CONTEXT *context, *link;
+    HCERTSTORE store;
+    BOOL ret;
+
+    context = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert, sizeof(bigCert));
+    ok(context != NULL, "CertCreateCertificateContext failed\n");
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed: %d\n", GetLastError());
+
+    ret = CertAddCertificateLinkToStore(store, context, CERT_STORE_ADD_NEW, &link);
+    ok(ret, "CertAddCertificateContextToStore failed\n");
+    ok(link != NULL && link != context, "unexpected storeContext\n");
+    ok(link->hCertStore == store, "unexpected hCertStore\n");
+
+    ok(link->pbCertEncoded == context->pbCertEncoded, "unexpected pbCertEncoded\n");
+    ok(link->cbCertEncoded == context->cbCertEncoded, "unexpected cbCertEncoded\n");
+    ok(link->pCertInfo == context->pCertInfo, "unexpected pCertInfo\n");
+
+    CertFreeCertificateContext(link);
+
+    CertCloseStore(store, 0);
 }
 
 static BYTE subjectName3[] = { 0x30, 0x15, 0x31, 0x13, 0x30, 0x11, 0x06,
@@ -3648,7 +3724,7 @@ static void testAcquireCertPrivateKey(void)
      &keyProvInfo);
     ret = pCryptAcquireCertificatePrivateKey(cert, 0, NULL, &csp, &keySpec,
      &callerFree);
-    ok(!ret && GetLastError() == CRYPT_E_NO_KEY_PROPERTY,
+    ok(!ret && (GetLastError() == CRYPT_E_NO_KEY_PROPERTY || GetLastError() == NTE_BAD_KEYSET /* win8 */),
      "Expected CRYPT_E_NO_KEY_PROPERTY, got %08x\n", GetLastError());
 
     pCryptAcquireContextA(&csp, cspNameA, MS_DEF_PROV_A, PROV_RSA_FULL,
@@ -3903,6 +3979,7 @@ START_TEST(cert)
     testFindCert();
     testGetSubjectCert();
     testGetIssuerCert();
+    testLinkCert();
 
     testCryptHashCert();
     testCertSigs();

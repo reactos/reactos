@@ -120,6 +120,7 @@ static void testCreateCRL(void)
 static void testDupCRL(void)
 {
     PCCRL_CONTEXT context, dupContext;
+    BOOL res;
 
     context = CertDuplicateCRLContext(NULL);
     ok(context == NULL, "expected NULL\n");
@@ -128,15 +129,22 @@ static void testDupCRL(void)
     dupContext = CertDuplicateCRLContext(context);
     ok(dupContext != NULL, "expected a context\n");
     ok(dupContext == context, "expected identical context addresses\n");
-    CertFreeCRLContext(dupContext);
-    CertFreeCRLContext(context);
+
+    res = CertFreeCRLContext(dupContext);
+    ok(res, "CertFreeCRLContext failed\n");
+
+    res = CertFreeCRLContext(context);
+    ok(res, "CertFreeCRLContext failed\n");
+
+    res = CertFreeCRLContext(NULL);
+    ok(res, "CertFreeCRLContext failed\n");
 }
 
 static void testAddCRL(void)
 {
     HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
-    PCCRL_CONTEXT context;
+    PCCRL_CONTEXT context, context2;
     BOOL ret;
     DWORD GLE;
 
@@ -220,6 +228,24 @@ static void testAddCRL(void)
      sizeof(newerCRL), CERT_STORE_ADD_NEWER, NULL);
     ok(ret, "CertAddEncodedCRLToStore failed: %08x\n", GetLastError());
 
+    CertCloseStore(store, 0);
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    context = CertCreateCRLContext(X509_ASN_ENCODING, CRL, sizeof(CRL));
+    ok(context != NULL, "CertCreateCRLContext failed\n");
+
+    ret = CertAddCRLContextToStore(store, context, CERT_STORE_ADD_NEW, &context2);
+    ok(ret, "CertAddCRLContextToStore failed\n");
+    ok(context2 != NULL && context2 != context, "unexpected context2\n");
+
+    ok(context->pbCrlEncoded != context2->pbCrlEncoded, "Unexpected pbCrlEncoded\n");
+    ok(context->cbCrlEncoded == context2->cbCrlEncoded, "Unexpected cbCrlEncoded\n");
+    ok(context->pCrlInfo != context2->pCrlInfo, "Unexpected pCrlInfo\n");
+
+    CertFreeCRLContext(context2);
+    CertFreeCRLContext(context);
     CertCloseStore(store, 0);
 }
 

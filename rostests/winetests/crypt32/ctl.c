@@ -190,6 +190,7 @@ static void testCreateCTL(void)
 static void testDupCTL(void)
 {
     PCCTL_CONTEXT context, dupContext;
+    BOOL res;
 
     context = CertDuplicateCTLContext(NULL);
     ok(context == NULL, "expected NULL\n");
@@ -198,8 +199,15 @@ static void testDupCTL(void)
     dupContext = CertDuplicateCTLContext(context);
     ok(dupContext != NULL, "expected a context\n");
     ok(dupContext == context, "expected identical context addresses\n");
-    CertFreeCTLContext(dupContext);
-    CertFreeCTLContext(context);
+
+    res = CertFreeCTLContext(dupContext);
+    ok(res, "CertFreeCTLContext failed\n");
+
+    res = CertFreeCTLContext(context);
+    ok(res, "CertFreeCTLContext failed\n");
+
+    res = CertFreeCTLContext(NULL);
+    ok(res, "CertFreeCTLContext failed\n");
 }
 
 static void checkHash(const BYTE *data, DWORD dataLen, ALG_ID algID,

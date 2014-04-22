@@ -93,6 +93,26 @@ static const BYTE bigCert2[] = { 0x30, 0x7a, 0x02, 0x01, 0x01, 0x30, 0x02, 0x06,
  0x4c, 0x61, 0x6e, 0x67, 0x00, 0x30, 0x07, 0x30, 0x02, 0x06, 0x00, 0x03, 0x01,
  0x00, 0xa3, 0x16, 0x30, 0x14, 0x30, 0x12, 0x06, 0x03, 0x55, 0x1d, 0x13, 0x01,
  0x01, 0xff, 0x04, 0x08, 0x30, 0x06, 0x01, 0x01, 0xff, 0x02, 0x01, 0x01 };
+static const BYTE signedCTLWithCTLInnerContent[] = {
+0x30,0x82,0x01,0x0f,0x06,0x09,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x07,0x02,
+0xa0,0x82,0x01,0x00,0x30,0x81,0xfd,0x02,0x01,0x01,0x31,0x0e,0x30,0x0c,0x06,
+0x08,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x02,0x05,0x05,0x00,0x30,0x30,0x06,0x09,
+0x2b,0x06,0x01,0x04,0x01,0x82,0x37,0x0a,0x01,0xa0,0x23,0x30,0x21,0x30,0x00,
+0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,
+0x30,0x5a,0x30,0x0c,0x06,0x08,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x02,0x05,0x05,
+0x00,0x31,0x81,0xb5,0x30,0x81,0xb2,0x02,0x01,0x01,0x30,0x1a,0x30,0x15,0x31,
+0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,
+0x4c,0x61,0x6e,0x67,0x00,0x02,0x01,0x01,0x30,0x0c,0x06,0x08,0x2a,0x86,0x48,
+0x86,0xf7,0x0d,0x02,0x05,0x05,0x00,0xa0,0x3b,0x30,0x18,0x06,0x09,0x2a,0x86,
+0x48,0x86,0xf7,0x0d,0x01,0x09,0x03,0x31,0x0b,0x06,0x09,0x2b,0x06,0x01,0x04,
+0x01,0x82,0x37,0x0a,0x01,0x30,0x1f,0x06,0x09,0x2a,0x86,0x48,0x86,0xf7,0x0d,
+0x01,0x09,0x04,0x31,0x12,0x04,0x10,0x54,0x71,0xbc,0xe1,0x56,0x31,0xa2,0xf9,
+0x65,0x70,0x34,0xf8,0xe2,0xe9,0xb4,0xf4,0x30,0x04,0x06,0x00,0x05,0x00,0x04,
+0x40,0x2f,0x1b,0x9f,0x5a,0x4a,0x15,0x73,0xfa,0xb1,0x93,0x3d,0x09,0x52,0xdf,
+0x6b,0x98,0x4b,0x13,0x5e,0xe7,0xbf,0x65,0xf4,0x9c,0xc2,0xb1,0x77,0x09,0xb1,
+0x66,0x4d,0x72,0x0d,0xb1,0x1a,0x50,0x20,0xe0,0x57,0xa2,0x39,0xc7,0xcd,0x7f,
+0x8e,0xe7,0x5f,0x76,0x2b,0xd1,0x6a,0x82,0xb3,0x30,0x25,0x61,0xf6,0x25,0x23,
+0x57,0x6c,0x0b,0x47,0xb8 };
 
 
 static BOOL (WINAPI *pCertAddStoreToCollection)(HCERTSTORE,HCERTSTORE,DWORD,DWORD);
@@ -103,6 +123,15 @@ static BOOL (WINAPI *pCertGetStoreProperty)(HCERTSTORE,DWORD,void*,DWORD*);
 static void (WINAPI *pCertRemoveStoreFromCollection)(HCERTSTORE,HCERTSTORE);
 static BOOL (WINAPI *pCertSetStoreProperty)(HCERTSTORE,DWORD,DWORD,const void*);
 static BOOL (WINAPI *pCertAddCertificateLinkToStore)(HCERTSTORE,PCCERT_CONTEXT,DWORD,PCCERT_CONTEXT*);
+
+#define test_store_is_empty(store) _test_store_is_empty(__LINE__,store)
+static void _test_store_is_empty(unsigned line, HCERTSTORE store)
+{
+    const CERT_CONTEXT *cert;
+
+    cert = CertEnumCertificatesInStore(store, NULL);
+    ok_(__FILE__,line)(!cert && GetLastError() == CRYPT_E_NOT_FOUND, "store is not empty\n");
+}
 
 static void testMemStore(void)
 {
@@ -2498,6 +2527,176 @@ static DWORD countCRLsInStore(HCERTSTORE store)
     return crls;
 }
 
+static void testEmptyStore(void)
+{
+    const CERT_CONTEXT *cert, *cert2, *cert3;
+    const CRL_CONTEXT *crl;
+    const CTL_CONTEXT *ctl;
+    HCERTSTORE store;
+    BOOL res;
+
+    cert = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert, sizeof(bigCert));
+    ok(cert != NULL, "CertCreateCertificateContext failed\n");
+    ok(cert->hCertStore != NULL, "cert->hCertStore == NULL\n");
+    if(!cert->hCertStore) {
+        CertFreeCertificateContext(cert);
+        return;
+    }
+
+    test_store_is_empty(cert->hCertStore);
+
+    cert2 = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert2, sizeof(bigCert2));
+    ok(cert2 != NULL, "CertCreateCertificateContext failed\n");
+    ok(cert2->hCertStore == cert->hCertStore, "Unexpected hCertStore\n");
+
+    test_store_is_empty(cert2->hCertStore);
+
+    res = CertAddCertificateContextToStore(cert->hCertStore, cert2, CERT_STORE_ADD_NEW, &cert3);
+    ok(res, "CertAddCertificateContextToStore failed\n");
+    todo_wine
+    ok(cert3 && cert3 != cert2, "Unexpected cert3\n");
+    ok(cert3->hCertStore == cert->hCertStore, "Unexpected hCertStore\n");
+
+    test_store_is_empty(cert->hCertStore);
+
+    res = CertDeleteCertificateFromStore(cert3);
+    ok(res, "CertDeleteCertificateContextFromStore failed\n");
+    ok(cert3->hCertStore == cert->hCertStore, "Unexpected hCertStore\n");
+
+    CertFreeCertificateContext(cert3);
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    res = CertAddCertificateContextToStore(store, cert2, CERT_STORE_ADD_NEW, &cert3);
+    ok(res, "CertAddCertificateContextToStore failed\n");
+    ok(cert3 && cert3 != cert2, "Unexpected cert3\n");
+    ok(cert3->hCertStore == store, "Unexpected hCertStore\n");
+
+    res = CertDeleteCertificateFromStore(cert3);
+    ok(res, "CertDeleteCertificateContextFromStore failed\n");
+    ok(cert3->hCertStore == store, "Unexpected hCertStore\n");
+
+    CertFreeCertificateContext(cert3);
+
+    CertCloseStore(store, 0);
+
+    res = CertCloseStore(cert->hCertStore, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(!res && GetLastError() == E_UNEXPECTED, "CertCloseStore returned: %x(%x)\n", res, GetLastError());
+
+    res = CertCloseStore(cert->hCertStore, 0);
+    ok(!res && GetLastError() == E_UNEXPECTED, "CertCloseStore returned: %x(%x)\n", res, GetLastError());
+
+    CertFreeCertificateContext(cert2);
+
+    crl = CertCreateCRLContext(X509_ASN_ENCODING, signedCRL, sizeof(signedCRL));
+    ok(crl != NULL, "CertCreateCRLContext failed\n");
+    ok(crl->hCertStore == cert->hCertStore, "unexpected hCertStore\n");
+
+    CertFreeCRLContext(crl);
+
+    ctl = CertCreateCTLContext(X509_ASN_ENCODING, signedCTLWithCTLInnerContent, sizeof(signedCTLWithCTLInnerContent));
+    ok(ctl != NULL, "CertCreateCTLContext failed\n");
+    ok(ctl->hCertStore == cert->hCertStore, "unexpected hCertStore\n");
+
+    CertFreeCTLContext(ctl);
+
+    CertFreeCertificateContext(cert);
+}
+
+static void testCloseStore(void)
+{
+    const CERT_CONTEXT *cert;
+    const CRL_CONTEXT *crl;
+    const CTL_CONTEXT *ctl;
+    HCERTSTORE store, store2;
+    BOOL res;
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    res = CertCloseStore(store, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(res, "CertCloseStore failed\n");
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    store2 = CertDuplicateStore(store);
+    ok(store2 != NULL, "CertCloneStore failed\n");
+    ok(store2 == store, "unexpected store2\n");
+
+    res = CertCloseStore(store, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(!res && GetLastError() == CRYPT_E_PENDING_CLOSE, "CertCloseStore failed\n");
+
+    res = CertCloseStore(store2, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(res, "CertCloseStore failed\n");
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    res = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, bigCert,
+     sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &cert);
+    ok(res, "CertAddEncodedCertificateToStore failed\n");
+
+    /* There is still a reference from cert */
+    res = CertCloseStore(store, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(!res && GetLastError() == CRYPT_E_PENDING_CLOSE, "CertCloseStore failed\n");
+
+    res = CertFreeCertificateContext(cert);
+    ok(res, "CertFreeCertificateContext failed\n");
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    res = CertAddEncodedCRLToStore(store, X509_ASN_ENCODING, signedCRL,
+     sizeof(signedCRL), CERT_STORE_ADD_ALWAYS, &crl);
+    ok(res, "CertAddEncodedCRLToStore failed\n");
+
+    /* There is still a reference from CRL */
+    res = CertCloseStore(store, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(!res && GetLastError() == CRYPT_E_PENDING_CLOSE, "CertCloseStore failed\n");
+
+    res = CertFreeCRLContext(crl);
+    ok(res, "CertFreeCRLContext failed\n");
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    res = CertAddEncodedCTLToStore(store, X509_ASN_ENCODING, signedCTLWithCTLInnerContent,
+     sizeof(signedCTLWithCTLInnerContent), CERT_STORE_ADD_ALWAYS, &ctl);
+    ok(res, "CertAddEncodedCTLToStore failed\n");
+
+    /* There is still a reference from CTL */
+    res = CertCloseStore(store, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(!res && GetLastError() == CRYPT_E_PENDING_CLOSE, "CertCloseStore returned: %x(%u)\n", res, GetLastError());
+
+    res = CertFreeCTLContext(ctl);
+    ok(res, "CertFreeCTLContext failed\n");
+
+    /* Add all kinds of contexts, then release external references and make sure that store is properly closed. */
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    res = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, bigCert,
+     sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &cert);
+    ok(res, "CertAddEncodedCertificateToStore failed\n");
+
+    res = CertAddEncodedCRLToStore(store, X509_ASN_ENCODING, signedCRL,
+     sizeof(signedCRL), CERT_STORE_ADD_ALWAYS, &crl);
+    ok(res, "CertAddEncodedCRLToStore failed\n");
+
+    res = CertAddEncodedCTLToStore(store, X509_ASN_ENCODING, signedCTLWithCTLInnerContent,
+     sizeof(signedCTLWithCTLInnerContent), CERT_STORE_ADD_ALWAYS, &ctl);
+    ok(res, "CertAddEncodedCTLToStore failed\n");
+
+    CertFreeCertificateContext(cert);
+    CertFreeCRLContext(crl);
+    CertFreeCTLContext(ctl);
+
+    res = CertCloseStore(store, CERT_CLOSE_STORE_CHECK_FLAG);
+    ok(res, "CertCloseStore failed\n");
+}
+
 static void test_I_UpdateStore(void)
 {
     HMODULE lib = GetModuleHandleA("crypt32");
@@ -2596,6 +2795,7 @@ START_TEST(store)
     testFileNameStore();
     testMessageStore();
     testSerializedStore();
+    testCloseStore();
 
     testCertOpenSystemStore();
     testCertEnumSystemStore();
@@ -2603,6 +2803,8 @@ START_TEST(store)
 
     testAddSerialized();
     testAddCertificateLink();
+
+    testEmptyStore();
 
     test_I_UpdateStore();
 }
