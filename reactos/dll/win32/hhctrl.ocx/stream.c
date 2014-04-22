@@ -105,12 +105,52 @@ BOOL next_content(stream_t *stream, strbuf_t *buf)
     return TRUE;
 }
 
+static BOOL find_node_end(stream_t *stream, strbuf_t *buf)
+{
+    int tag_count = 0, b = buf->len;
+    char *p;
+
+    while(1)
+    {
+        if(!stream_chr(stream, buf, '>'))
+            return FALSE;
+        if(buf->len == 0)
+            break;
+        p = &buf->buf[b];
+        while((p = memchr(p+1, '"', buf->len-(p-buf->buf))) != NULL)
+            tag_count++;
+        b = buf->len;
+        if(tag_count % 2 != 0)
+        {
+            if(!stream_chr(stream, buf, '"'))
+                return FALSE;
+            tag_count++;
+        }
+        else
+            break;
+    }
+    return TRUE;
+}
+
 BOOL next_node(stream_t *stream, strbuf_t *buf)
 {
+    strbuf_t tmpbuf;
+
+    /* search through the end of the current node */
+    strbuf_init(&tmpbuf);
+    if(!find_node_end(stream, &tmpbuf))
+    {
+        strbuf_free(&tmpbuf);
+        return FALSE;
+    }
+    strbuf_free(&tmpbuf);
+
+    /* find the beginning of the next node */
     if(!stream_chr(stream, NULL, '<'))
         return FALSE;
 
-    if(!stream_chr(stream, buf, '>'))
+    /* read out the data of the next node */
+    if(!find_node_end(stream, buf))
         return FALSE;
 
     strbuf_append(buf, ">", 2);
