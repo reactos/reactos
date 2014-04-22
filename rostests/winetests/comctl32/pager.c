@@ -103,7 +103,7 @@ static BOOL register_parent_wnd_class(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(NULL);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "Pager test parent class";
@@ -115,7 +115,7 @@ static HWND create_parent_window(void)
     if (!register_parent_wnd_class())
         return NULL;
 
-    return CreateWindow("Pager test parent class", "Pager test parent window",
+    return CreateWindowA("Pager test parent class", "Pager test parent window",
                         WS_OVERLAPPED | WS_VISIBLE,
                         0, 0, 200, 200, 0, NULL, GetModuleHandleA(NULL), NULL );
 }

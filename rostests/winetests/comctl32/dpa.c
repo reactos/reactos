@@ -45,24 +45,24 @@ typedef struct _STREAMDATA
     DWORD dwItems;
 } STREAMDATA, *PSTREAMDATA;
 
-static HDPA    (WINAPI *pDPA_Clone)(const HDPA,const HDPA);
+static HDPA    (WINAPI *pDPA_Clone)(const HDPA,HDPA);
 static HDPA    (WINAPI *pDPA_Create)(INT);
 static HDPA    (WINAPI *pDPA_CreateEx)(INT,HANDLE);
-static PVOID   (WINAPI *pDPA_DeleteAllPtrs)(const HDPA);
-static PVOID   (WINAPI *pDPA_DeletePtr)(const HDPA,INT);
-static BOOL    (WINAPI *pDPA_Destroy)(const HDPA);
+static PVOID   (WINAPI *pDPA_DeleteAllPtrs)(HDPA);
+static PVOID   (WINAPI *pDPA_DeletePtr)(HDPA,INT);
+static BOOL    (WINAPI *pDPA_Destroy)(HDPA);
 static VOID    (WINAPI *pDPA_DestroyCallback)(HDPA,PFNDPAENUMCALLBACK,PVOID);
 static VOID    (WINAPI *pDPA_EnumCallback)(HDPA,PFNDPAENUMCALLBACK,PVOID); 
-static INT     (WINAPI *pDPA_GetPtr)(const HDPA,INT);
-static INT     (WINAPI *pDPA_GetPtrIndex)(const HDPA,PVOID);
+static INT     (WINAPI *pDPA_GetPtr)(HDPA,INT);
+static INT     (WINAPI *pDPA_GetPtrIndex)(HDPA,PVOID);
 static BOOL    (WINAPI *pDPA_Grow)(HDPA,INT);
-static INT     (WINAPI *pDPA_InsertPtr)(const HDPA,INT,PVOID);
+static INT     (WINAPI *pDPA_InsertPtr)(HDPA,INT,PVOID);
 static HRESULT (WINAPI *pDPA_LoadStream)(HDPA*,PFNDPASTREAM,IStream*,LPVOID);
-static BOOL    (WINAPI *pDPA_Merge)(const HDPA,const HDPA,DWORD,PFNDPACOMPARE,PFNDPAMERGE,LPARAM);
+static BOOL    (WINAPI *pDPA_Merge)(HDPA,HDPA,DWORD,PFNDPACOMPARE,PFNDPAMERGE,LPARAM);
 static HRESULT (WINAPI *pDPA_SaveStream)(HDPA,PFNDPASTREAM,IStream*,LPVOID);
 static INT     (WINAPI *pDPA_Search)(HDPA,PVOID,INT,PFNDPACOMPARE,LPARAM,UINT);
-static BOOL    (WINAPI *pDPA_SetPtr)(const HDPA,INT,PVOID);
-static BOOL    (WINAPI *pDPA_Sort)(const HDPA,PFNDPACOMPARE,LPARAM);
+static BOOL    (WINAPI *pDPA_SetPtr)(HDPA,INT,PVOID);
+static BOOL    (WINAPI *pDPA_Sort)(HDPA,PFNDPACOMPARE,LPARAM);
 
 #define COMCTL32_GET_PROC(func, ord) \
   ((p ## func = (PVOID)GetProcAddress(hcomctl32,(LPCSTR)ord)) ? 1 \

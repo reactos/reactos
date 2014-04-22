@@ -73,7 +73,7 @@ static void flush_events(void)
     while (diff > 0)
     {
         if (MsgWaitForMultipleObjects( 0, NULL, FALSE, min_timeout, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
-        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        while (PeekMessageA( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
         diff = time - GetTickCount();
     }
 }
@@ -248,8 +248,8 @@ START_TEST(syslink)
 
     /* Make the SysLink control visible */
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
-    oldstyle = GetWindowLong(hWndSysLink, GWL_STYLE);
-    SetWindowLong(hWndSysLink, GWL_STYLE, oldstyle | WS_VISIBLE);
+    oldstyle = GetWindowLongA(hWndSysLink, GWL_STYLE);
+    SetWindowLongA(hWndSysLink, GWL_STYLE, oldstyle | WS_VISIBLE);
     RedrawWindow(hWndSysLink, NULL, NULL, RDW_INVALIDATE);
     flush_events();
     ok_sequence(sequences, SYSLINK_SEQ_INDEX, visible_syslink_wnd_seq, "visible SysLink", TRUE);

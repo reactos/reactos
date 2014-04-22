@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 
 #include "windef.h"
@@ -27,7 +26,7 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "winreg.h"
-#include "commctrl.h" 
+#include "wine/commctrl.h"
 
 #include "wine/test.h"
 #include "v6util.h"
@@ -52,8 +51,8 @@ static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 static struct msg_sequence *item_sequence[1];
 
 static const struct message FillRootSeq[] = {
-    { TVM_INSERTITEM, sent },
-    { TVM_INSERTITEM, sent },
+    { TVM_INSERTITEMA, sent },
+    { TVM_INSERTITEMA, sent },
     { 0 }
 };
 
@@ -85,8 +84,8 @@ static const struct message getitemtext_seq[] = {
 };
 
 static const struct message focus_seq[] = {
-    { TVM_INSERTITEM, sent },
-    { TVM_INSERTITEM, sent },
+    { TVM_INSERTITEMA, sent },
+    { TVM_INSERTITEMA, sent },
     { TVM_SELECTITEM, sent|wparam, 9 },
     /* The following end up out of order in wine */
     { WM_WINDOWPOSCHANGING, sent|defwinproc },
@@ -330,13 +329,13 @@ static void fill_tree(HWND hTree)
     ins.hInsertAfter = TVI_ROOT;
     U(ins).item.mask = TVIF_TEXT;
     U(ins).item.pszText = root;
-    hRoot = TreeView_InsertItem(hTree, &ins);
+    hRoot = TreeView_InsertItemA(hTree, &ins);
 
     ins.hParent = hRoot;
     ins.hInsertAfter = TVI_FIRST;
     U(ins).item.mask = TVIF_TEXT;
     U(ins).item.pszText = child;
-    hChild = TreeView_InsertItem(hTree, &ins);
+    hChild = TreeView_InsertItemA(hTree, &ins);
 }
 
 static void test_fillroot(void)
@@ -352,9 +351,9 @@ static void test_fillroot(void)
 
     Clear();
     AddItem('A');
-    assert(hRoot);
+    ok(hRoot != NULL, "failed to set root\n");
     AddItem('B');
-    assert(hChild);
+    ok(hChild != NULL, "failed to set child\n");
     AddItem('.');
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, FillRootSeq, "FillRoot", FALSE);
     ok(!strcmp(sequence, "AB."), "Item creation\n");
@@ -362,7 +361,7 @@ static void test_fillroot(void)
     /* UMLPad 1.15 depends on this being not -1 (I_IMAGECALLBACK) */
     tvi.hItem = hRoot;
     tvi.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE;
-    SendMessage( hTree, TVM_GETITEMA, 0, (LPARAM)&tvi );
+    SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&tvi);
     ok(tvi.iImage == 0, "tvi.iImage=%d\n", tvi.iImage);
     ok(tvi.iSelectedImage == 0, "tvi.iSelectedImage=%d\n", tvi.iSelectedImage);
 
@@ -383,20 +382,20 @@ static void test_callback(void)
 
     hTree = create_treeview_control(0);
 
-    ret = TreeView_DeleteAllItems(hTree);
+    ret = SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)TVI_ROOT);
     expect(TRUE, ret);
     ins.hParent = TVI_ROOT;
     ins.hInsertAfter = TVI_ROOT;
     U(ins).item.mask = TVIF_TEXT;
-    U(ins).item.pszText = LPSTR_TEXTCALLBACK;
-    hRoot = TreeView_InsertItem(hTree, &ins);
-    assert(hRoot);
+    U(ins).item.pszText = LPSTR_TEXTCALLBACKA;
+    hRoot = TreeView_InsertItemA(hTree, &ins);
+    ok(hRoot != NULL, "failed to set root\n");
 
     tvi.hItem = hRoot;
     tvi.mask = TVIF_TEXT;
     tvi.pszText = buf;
     tvi.cchTextMax = sizeof(buf)/sizeof(buf[0]);
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     ok(strcmp(tvi.pszText, TEST_CALLBACK_TEXT) == 0, "Callback item text mismatch %s vs %s\n",
         tvi.pszText, TEST_CALLBACK_TEXT);
@@ -405,31 +404,31 @@ static void test_callback(void)
     ins.hInsertAfter = TVI_FIRST;
     U(ins).item.mask = TVIF_TEXT;
     U(ins).item.pszText = test_string;
-    hItem1 = TreeView_InsertItem(hTree, &ins);
-    assert(hItem1);
+    hItem1 = TreeView_InsertItemA(hTree, &ins);
+    ok(hItem1 != NULL, "failed to set Item1\n");
 
     tvi.hItem = hItem1;
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     ok(strcmp(tvi.pszText, test_string) == 0, "Item text mismatch %s vs %s\n",
         tvi.pszText, test_string);
 
     /* undocumented: pszText of NULL also means LPSTR_CALLBACK: */
     tvi.pszText = NULL;
-    ret = TreeView_SetItem(hTree, &tvi);
+    ret = TreeView_SetItemA(hTree, &tvi);
     expect(TRUE, ret);
     tvi.pszText = buf;
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     ok(strcmp(tvi.pszText, TEST_CALLBACK_TEXT) == 0, "Item text mismatch %s vs %s\n",
         tvi.pszText, TEST_CALLBACK_TEXT);
 
     U(ins).item.pszText = NULL;
-    hItem2 = TreeView_InsertItem(hTree, &ins);
-    assert(hItem2);
+    hItem2 = TreeView_InsertItemA(hTree, &ins);
+    ok(hItem2 != NULL, "failed to set Item2\n");
     tvi.hItem = hItem2;
     memset(buf, 0, sizeof(buf));
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     ok(strcmp(tvi.pszText, TEST_CALLBACK_TEXT) == 0, "Item text mismatch %s vs %s\n",
         tvi.pszText, TEST_CALLBACK_TEXT);
@@ -438,7 +437,7 @@ static void test_callback(void)
     g_disp_A_to_W = TRUE;
     tvi.hItem = hItem2;
     memset(buf, 0, sizeof(buf));
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     ok(strcmp(tvi.pszText, test2A) == 0, "got %s, expected %s\n",
         tvi.pszText, test2A);
@@ -456,7 +455,7 @@ static void test_callback(void)
     tvi.hItem = hRoot;
     tvi.mask = TVIF_STATE;
     tvi.state = TVIS_SELECTED;
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     ok(tvi.state == INDEXTOSTATEIMAGEMASK(1), "got 0x%x\n", tvi.state);
 
@@ -468,7 +467,7 @@ static void test_callback(void)
     tvi.state     = TVIS_FOCUSED;
     tvi.stateMask = TVIS_FOCUSED;
     tvi.iImage    = I_IMAGECALLBACK;
-    ret = TreeView_SetItem(hTree, &tvi);
+    ret = TreeView_SetItemA(hTree, &tvi);
     expect(TRUE, ret);
 
     /* ask for item image index through callback - state is also set with state image index */
@@ -477,7 +476,7 @@ static void test_callback(void)
     tvi.hItem = hRoot;
     tvi.mask = TVIF_IMAGE;
     tvi.state = 0;
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     ok(tvi.state == (INDEXTOSTATEIMAGEMASK(1) | TVIS_FOCUSED), "got 0x%x\n", tvi.state);
 
@@ -492,7 +491,7 @@ static void test_callback(void)
     tvi.mask = TVIF_IMAGE;
     tvi.state = INDEXTOSTATEIMAGEMASK(1);
     tvi.stateMask = 0;
-    ret = TreeView_GetItem(hTree, &tvi);
+    ret = TreeView_GetItemA(hTree, &tvi);
     expect(TRUE, ret);
     /* handler sets TVIS_SELECTED as well */
     ok(tvi.state == (TVIS_FOCUSED | TVIS_SELECTED | INDEXTOSTATEIMAGEMASK(2) | INDEXTOOVERLAYMASK(3)), "got 0x%x\n", tvi.state);
@@ -514,23 +513,23 @@ static void test_select(void)
 
     /* root-none select tests */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    r = TreeView_SelectItem(hTree, NULL);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, 0);
     expect(TRUE, r);
     Clear();
     AddItem('1');
-    r = TreeView_SelectItem(hTree, hRoot);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, r);
     AddItem('2');
-    r = TreeView_SelectItem(hTree, hRoot);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, r);
     AddItem('3');
-    r = TreeView_SelectItem(hTree, NULL);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, 0);
     expect(TRUE, r);
     AddItem('4');
-    r = TreeView_SelectItem(hTree, NULL);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, 0);
     expect(TRUE, r);
     AddItem('5');
-    r = TreeView_SelectItem(hTree, hRoot);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, r);
     AddItem('.');
     ok(!strcmp(sequence, "1(nR)nR23(Rn)Rn45(nR)nR."), "root-none select test\n");
@@ -539,24 +538,24 @@ static void test_select(void)
 
     /* root-child select tests */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    r = TreeView_SelectItem(hTree, NULL);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, 0);
     expect(TRUE, r);
 
     Clear();
     AddItem('1');
-    r = TreeView_SelectItem(hTree, hRoot);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, r);
     AddItem('2');
-    r = TreeView_SelectItem(hTree, hRoot);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, r);
     AddItem('3');
-    r = TreeView_SelectItem(hTree, hChild);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hChild);
     expect(TRUE, r);
     AddItem('4');
-    r = TreeView_SelectItem(hTree, hChild);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hChild);
     expect(TRUE, r);
     AddItem('5');
-    r = TreeView_SelectItem(hTree, hRoot);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, r);
     AddItem('.');
     ok(!strcmp(sequence, "1(nR)nR23(RC)RC45(CR)CR."), "root-child select test\n");
@@ -587,8 +586,8 @@ static void test_getitemtext(void)
     U(ins).item.mask = 0;
     U(ins).item.pszText = NULL;
     U(ins).item.cchTextMax = 0;
-    hChild = TreeView_InsertItem(hTree, &ins);
-    assert(hChild);
+    hChild = TreeView_InsertItemA(hTree, &ins);
+    ok(hChild != NULL, "failed to set hChild\n");
 
     /* retrieve it with TVIF_TEXT mask */
     tvi.hItem = hChild;
@@ -627,17 +626,17 @@ static void test_focus(void)
     ins.hInsertAfter = hChild;
     U(ins).item.mask = TVIF_TEXT;
     U(ins).item.pszText = child1;
-    hChild1 = TreeView_InsertItem(hTree, &ins);
-    assert(hChild1);
+    hChild1 = TreeView_InsertItemA(hTree, &ins);
+    ok(hChild1 != NULL, "failed to set hChild1\n");
     ins.hInsertAfter = hChild1;
     U(ins).item.mask = TVIF_TEXT;
     U(ins).item.pszText = child2;
-    hChild2 = TreeView_InsertItem(hTree, &ins);
-    assert(hChild2);
+    hChild2 = TreeView_InsertItemA(hTree, &ins);
+    ok(hChild2 != NULL, "failed to set hChild2\n");
 
     ShowWindow(hMainWnd,SW_SHOW);
     SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hChild);
-    hEdit = TreeView_EditLabel(hTree, hChild);
+    hEdit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hChild);
     ScrollWindowEx(hTree, -10, 0, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN);
     ok(GetFocus() == hEdit, "Edit control should have focus\n");
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, focus_seq, "focus test", TRUE);
@@ -656,21 +655,21 @@ static void test_get_set_bkcolor(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* If the value is -1, the control is using the system color for the background color. */
-    crColor = (COLORREF)SendMessage( hTree, TVM_GETBKCOLOR, 0, 0 );
+    crColor = SendMessageA(hTree, TVM_GETBKCOLOR, 0, 0);
     ok(crColor == ~0u, "Default background color reported as 0x%.8x\n", crColor);
 
     /* Test for black background */
-    SendMessage( hTree, TVM_SETBKCOLOR, 0, RGB(0,0,0) );
-    crColor = (COLORREF)SendMessage( hTree, TVM_GETBKCOLOR, 0, 0 );
+    SendMessageA(hTree, TVM_SETBKCOLOR, 0, RGB(0,0,0));
+    crColor = SendMessageA(hTree, TVM_GETBKCOLOR, 0, 0);
     ok(crColor == RGB(0,0,0), "Black background color reported as 0x%.8x\n", crColor);
 
     /* Test for white background */
-    SendMessage( hTree, TVM_SETBKCOLOR, 0, RGB(255,255,255) );
-    crColor = (COLORREF)SendMessage( hTree, TVM_GETBKCOLOR, 0, 0 );
+    SendMessageA(hTree, TVM_SETBKCOLOR, 0, RGB(255,255,255));
+    crColor = SendMessageA(hTree, TVM_GETBKCOLOR, 0, 0);
     ok(crColor == RGB(255,255,255), "White background color reported as 0x%.8x\n", crColor);
 
     /* Reset the default background */
-    SendMessage( hTree, TVM_SETBKCOLOR, 0, -1 );
+    SendMessageA(hTree, TVM_SETBKCOLOR, 0, -1);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_bkcolor_seq,
         "test get set bkcolor", FALSE);
@@ -689,8 +688,8 @@ static void test_get_set_imagelist(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Test a NULL HIMAGELIST */
-    SendMessage( hTree, TVM_SETIMAGELIST, TVSIL_NORMAL, 0 );
-    himl = (HIMAGELIST)SendMessage( hTree, TVM_GETIMAGELIST, TVSIL_NORMAL, 0 );
+    SendMessageA(hTree, TVM_SETIMAGELIST, TVSIL_NORMAL, 0);
+    himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_NORMAL, 0);
     ok(himl == NULL, "NULL image list, reported as %p, expected 0.\n", himl);
 
     /* TODO: Test an actual image list */
@@ -714,13 +713,13 @@ static void test_get_set_indent(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Finding the minimum indent */
-    SendMessage( hTree, TVM_SETINDENT, 0, 0 );
-    ulMinIndent = (int)SendMessage( hTree, TVM_GETINDENT, 0, 0 );
+    SendMessageA(hTree, TVM_SETINDENT, 0, 0);
+    ulMinIndent = SendMessageA(hTree, TVM_GETINDENT, 0, 0);
 
     /* Checking an indent that is more than twice the default indent */
     ulMoreThanTwiceMin = 2*ulMinIndent+1;
-    SendMessage( hTree, TVM_SETINDENT, ulMoreThanTwiceMin, 0 );
-    ulIndent = (DWORD)SendMessage( hTree, TVM_GETINDENT, 0, 0 );
+    SendMessageA(hTree, TVM_SETINDENT, ulMoreThanTwiceMin, 0);
+    ulIndent = SendMessageA(hTree, TVM_GETINDENT, 0, 0);
     ok(ulIndent == ulMoreThanTwiceMin, "Indent reported as %d, expected %d\n", ulIndent, ulMoreThanTwiceMin);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_indent_seq,
@@ -739,8 +738,8 @@ static void test_get_set_insertmark(void)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    SendMessage( hTree, TVM_SETINSERTMARKCOLOR, 0, crColor );
-    crColor = (COLORREF)SendMessage( hTree, TVM_GETINSERTMARKCOLOR, 0, 0 );
+    SendMessageA(hTree, TVM_SETINSERTMARKCOLOR, 0, crColor);
+    crColor = SendMessageA(hTree, TVM_GETINSERTMARKCOLOR, 0, 0);
     ok(crColor == RGB(0,0,0), "Insert mark color reported as 0x%.8x, expected 0x00000000\n", crColor);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_insertmarkcolor_seq,
@@ -764,7 +763,7 @@ static void test_get_set_item(void)
     tviRoot.mask  = TVIF_STATE;
     tviRoot.state = TVIS_FOCUSED;
     tviRoot.stateMask = TVIS_FOCUSED;
-    ret = SendMessage( hTree, TVM_SETITEMA, 0, (LPARAM)&tviRoot );
+    ret = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&tviRoot);
     expect(TRUE, ret);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -776,24 +775,24 @@ static void test_get_set_item(void)
     tviRoot.stateMask = 0;
     tviRoot.cchTextMax = nBufferSize;
     tviRoot.pszText = szBuffer;
-    ret = SendMessage( hTree, TVM_GETITEMA, 0, (LPARAM)&tviRoot );
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&tviRoot);
     expect(TRUE, ret);
     ok(!strcmp("Root", szBuffer), "GetItem: szBuffer=\"%s\", expected \"Root\"\n", szBuffer);
     ok(tviRoot.state == TVIS_FOCUSED, "got 0x%0x\n", tviRoot.state);
 
     /* Change the root text */
-    strncpy(szBuffer, "Testing123", nBufferSize);
-    ret = SendMessage( hTree, TVM_SETITEMA, 0, (LPARAM)&tviRoot );
+    lstrcpynA(szBuffer, "Testing123", nBufferSize);
+    ret = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&tviRoot);
     expect(TRUE, ret);
     memset(szBuffer, 0, nBufferSize);
-    ret = SendMessage( hTree, TVM_GETITEMA, 0, (LPARAM)&tviRoot );
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&tviRoot);
     expect(TRUE, ret);
     ok(!strcmp("Testing123", szBuffer), "GetItem: szBuffer=\"%s\", expected \"Testing123\"\n", szBuffer);
 
     /* Reset the root text */
     memset(szBuffer, 0, nBufferSize);
-    strncpy(szBuffer, "Root", nBufferSize);
-    ret = SendMessage( hTree, TVM_SETITEMA, 0, (LPARAM)&tviRoot );
+    lstrcpynA(szBuffer, "Root", nBufferSize);
+    ret = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&tviRoot);
     expect(TRUE, ret);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_item_seq,
@@ -805,7 +804,7 @@ static void test_get_set_item(void)
     tviRoot.hItem = hRoot;
     tviRoot.mask = TVIF_STATE;
     tviRoot.state = 0;
-    ret = SendMessage( hTree2, TVM_GETITEMA, 0, (LPARAM)&tviRoot );
+    ret = SendMessageA(hTree2, TVM_GETITEMA, 0, (LPARAM)&tviRoot);
     expect(TRUE, ret);
     ok(tviRoot.state == TVIS_FOCUSED, "got state 0x%0x\n", tviRoot.state);
 
@@ -825,50 +824,50 @@ static void test_get_set_itemheight(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Assuming default height to begin with */
-    ulOldHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    ulOldHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
 
     /* Explicitly setting and getting the default height */
-    SendMessage( hTree, TVM_SETITEMHEIGHT, -1, 0 );
-    ulNewHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    SendMessageA(hTree, TVM_SETITEMHEIGHT, -1, 0);
+    ulNewHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
     ok(ulNewHeight == ulOldHeight, "Default height not set properly, reported %d, expected %d\n", ulNewHeight, ulOldHeight);
 
     /* Explicitly setting and getting the height of twice the normal */
-    SendMessage( hTree, TVM_SETITEMHEIGHT, 2*ulOldHeight, 0 );
-    ulNewHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    SendMessageA(hTree, TVM_SETITEMHEIGHT, 2*ulOldHeight, 0);
+    ulNewHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
     ok(ulNewHeight == 2*ulOldHeight, "New height not set properly, reported %d, expected %d\n", ulNewHeight, 2*ulOldHeight);
 
     /* Assuming tree doesn't have TVS_NONEVENHEIGHT set, so a set of 9 will round down to 8 */
-    SendMessage( hTree, TVM_SETITEMHEIGHT, 9, 0 );
-    ulNewHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    SendMessageA(hTree, TVM_SETITEMHEIGHT, 9, 0);
+    ulNewHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
     ok(ulNewHeight == 8, "Uneven height not set properly, reported %d, expected %d\n", ulNewHeight, 8);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_itemheight_seq,
         "test get set item height", FALSE);
 
     /* without TVS_NONEVENHEIGHT */
-    SetWindowLong(hTree, GWL_STYLE, GetWindowLong(hTree, GWL_STYLE) & ~TVS_NONEVENHEIGHT);
+    SetWindowLongA(hTree, GWL_STYLE, GetWindowLongA(hTree, GWL_STYLE) & ~TVS_NONEVENHEIGHT);
     /* odd value */
-    ulOldHeight = SendMessage( hTree, TVM_SETITEMHEIGHT, 3, 0);
+    ulOldHeight = SendMessageA(hTree, TVM_SETITEMHEIGHT, 3, 0);
     ok(ulOldHeight == 8, "got %d, expected %d\n", ulOldHeight, 8);
-    ulNewHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    ulNewHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
     ok(ulNewHeight == 2, "got %d, expected %d\n", ulNewHeight, 2);
 
-    ulOldHeight = SendMessage( hTree, TVM_SETITEMHEIGHT, 4, 0);
+    ulOldHeight = SendMessageA(hTree, TVM_SETITEMHEIGHT, 4, 0);
     ok(ulOldHeight == 2, "got %d, expected %d\n", ulOldHeight, 2);
-    ulNewHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    ulNewHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
     ok(ulNewHeight == 4, "got %d, expected %d\n", ulNewHeight, 4);
 
     /* with TVS_NONEVENHEIGHT */
-    SetWindowLong(hTree, GWL_STYLE, GetWindowLong(hTree, GWL_STYLE) | TVS_NONEVENHEIGHT);
+    SetWindowLongA(hTree, GWL_STYLE, GetWindowLongA(hTree, GWL_STYLE) | TVS_NONEVENHEIGHT);
     /* odd value */
-    ulOldHeight = SendMessage( hTree, TVM_SETITEMHEIGHT, 3, 0);
+    ulOldHeight = SendMessageA(hTree, TVM_SETITEMHEIGHT, 3, 0);
     ok(ulOldHeight == 4, "got %d, expected %d\n", ulOldHeight, 4);
-    ulNewHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    ulNewHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
     ok(ulNewHeight == 3, "got %d, expected %d\n", ulNewHeight, 3);
     /* even value */
-    ulOldHeight = SendMessage( hTree, TVM_SETITEMHEIGHT, 10, 0);
+    ulOldHeight = SendMessageA(hTree, TVM_SETITEMHEIGHT, 10, 0);
     ok(ulOldHeight == 3, "got %d, expected %d\n", ulOldHeight, 3);
-    ulNewHeight = (int) SendMessage( hTree, TVM_GETITEMHEIGHT, 0, 0 );
+    ulNewHeight = SendMessageA(hTree, TVM_GETITEMHEIGHT, 0, 0);
     ok(ulNewHeight == 10, "got %d, expected %d\n", ulNewHeight, 10);
 
     DestroyWindow(hTree);
@@ -885,8 +884,8 @@ static void test_get_set_scrolltime(void)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    SendMessage( hTree, TVM_SETSCROLLTIME, ulExpectedTime, 0 );
-    ulTime = (int)SendMessage( hTree, TVM_GETSCROLLTIME, 0, 0 );
+    SendMessageA(hTree, TVM_SETSCROLLTIME, ulExpectedTime, 0);
+    ulTime = SendMessageA(hTree, TVM_GETSCROLLTIME, 0, 0);
     ok(ulTime == ulExpectedTime, "Scroll time reported as %d, expected %d\n", ulTime, ulExpectedTime);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_scrolltime_seq,
@@ -906,21 +905,21 @@ static void test_get_set_textcolor(void)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    crColor = (COLORREF)SendMessage( hTree, TVM_GETTEXTCOLOR, 0, 0 );
+    crColor = SendMessageA(hTree, TVM_GETTEXTCOLOR, 0, 0);
     ok(crColor == ~0u, "Default text color reported as 0x%.8x\n", crColor);
 
     /* Test for black text */
-    SendMessage( hTree, TVM_SETTEXTCOLOR, 0, RGB(0,0,0) );
-    crColor = (COLORREF)SendMessage( hTree, TVM_GETTEXTCOLOR, 0, 0 );
+    SendMessageA(hTree, TVM_SETTEXTCOLOR, 0, RGB(0,0,0));
+    crColor = SendMessageA(hTree, TVM_GETTEXTCOLOR, 0, 0);
     ok(crColor == RGB(0,0,0), "Black text color reported as 0x%.8x\n", crColor);
 
     /* Test for white text */
-    SendMessage( hTree, TVM_SETTEXTCOLOR, 0, RGB(255,255,255) );
-    crColor = (COLORREF)SendMessage( hTree, TVM_GETTEXTCOLOR, 0, 0 );
+    SendMessageA(hTree, TVM_SETTEXTCOLOR, 0, RGB(255,255,255));
+    crColor = SendMessageA(hTree, TVM_GETTEXTCOLOR, 0, 0);
     ok(crColor == RGB(255,255,255), "White text color reported as 0x%.8x\n", crColor);
 
     /* Reset the default text color */
-    SendMessage( hTree, TVM_SETTEXTCOLOR, 0, CLR_NONE );
+    SendMessageA(hTree, TVM_SETTEXTCOLOR, 0, CLR_NONE);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_textcolor_seq,
         "test get set text color", FALSE);
@@ -940,12 +939,13 @@ static void test_get_set_tooltips(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* show even WS_POPUP treeview don't send NM_TOOLTIPSCREATED */
-    hPopupTreeView = CreateWindow(WC_TREEVIEW, NULL, WS_POPUP|WS_VISIBLE, 0, 0, 100, 100, hMainWnd, NULL, NULL, NULL);
+    hPopupTreeView = CreateWindowA(WC_TREEVIEWA, NULL, WS_POPUP|WS_VISIBLE, 0, 0, 100, 100,
+            hMainWnd, NULL, NULL, NULL);
     DestroyWindow(hPopupTreeView);
 
     /* Testing setting a NULL ToolTip */
-    SendMessage( hTree, TVM_SETTOOLTIPS, 0, 0 );
-    hwndLastToolTip = (HWND)SendMessage( hTree, TVM_GETTOOLTIPS, 0, 0 );
+    SendMessageA(hTree, TVM_SETTOOLTIPS, 0, 0);
+    hwndLastToolTip = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
     ok(hwndLastToolTip == NULL, "NULL tool tip, reported as 0x%p, expected 0.\n", hwndLastToolTip);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_tooltips_seq,
@@ -957,31 +957,31 @@ static void test_get_set_tooltips(void)
 
 static void test_get_set_unicodeformat(void)
 {
-    BOOL bPreviousSetting = 0;
-    BOOL bNewSetting = 0;
+    BOOL bPreviousSetting = FALSE;
+    BOOL bNewSetting = FALSE;
     HWND hTree;
 
     hTree = create_treeview_control(0);
     fill_tree(hTree);
 
     /* Check that an invalid format returned by NF_QUERY defaults to ANSI */
-    bPreviousSetting = (BOOL)SendMessage( hTree, TVM_GETUNICODEFORMAT, 0, 0 );
-    ok(bPreviousSetting == 0, "Format should be ANSI.\n");
+    bPreviousSetting = SendMessageA(hTree, TVM_GETUNICODEFORMAT, 0, 0);
+    ok(bPreviousSetting == FALSE, "Format should be ANSI.\n");
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Set to Unicode */
-    bPreviousSetting = (BOOL)SendMessage( hTree, TVM_SETUNICODEFORMAT, 1, 0 );
-    bNewSetting = (BOOL)SendMessage( hTree, TVM_GETUNICODEFORMAT, 0, 0 );
-    ok(bNewSetting == 1, "Unicode setting did not work.\n");
+    bPreviousSetting = SendMessageA(hTree, TVM_SETUNICODEFORMAT, 1, 0);
+    bNewSetting = SendMessageA(hTree, TVM_GETUNICODEFORMAT, 0, 0);
+    ok(bNewSetting == TRUE, "Unicode setting did not work.\n");
 
     /* Set to ANSI */
-    SendMessage( hTree, TVM_SETUNICODEFORMAT, 0, 0 );
-    bNewSetting = (BOOL)SendMessage( hTree, TVM_GETUNICODEFORMAT, 0, 0 );
-    ok(bNewSetting == 0, "ANSI setting did not work.\n");
+    SendMessageA(hTree, TVM_SETUNICODEFORMAT, 0, 0);
+    bNewSetting = SendMessageA(hTree, TVM_GETUNICODEFORMAT, 0, 0);
+    ok(bNewSetting == FALSE, "ANSI setting did not work.\n");
 
     /* Revert to original setting */
-    SendMessage( hTree, TVM_SETUNICODEFORMAT, bPreviousSetting, 0 );
+    SendMessageA(hTree, TVM_SETUNICODEFORMAT, bPreviousSetting, 0);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_unicodeformat_seq,
         "test get set unicode format", FALSE);
@@ -1052,7 +1052,7 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
             case TVN_GETDISPINFOA: {
                 NMTVDISPINFOA *disp = (NMTVDISPINFOA *)lParam;
                 if (disp->item.mask & TVIF_TEXT) {
-                    lstrcpyn(disp->item.pszText, TEST_CALLBACK_TEXT, disp->item.cchTextMax);
+                    lstrcpynA(disp->item.pszText, TEST_CALLBACK_TEXT, disp->item.cchTextMax);
                 }
 
                 if (g_disp_A_to_W && (disp->item.mask & TVIF_TEXT)) {
@@ -1073,7 +1073,7 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
 
                 break;
               }
-            case TVN_BEGINLABELEDIT:
+            case TVN_BEGINLABELEDITA:
               {
                 if (g_beginedit_alter_text)
                 {
@@ -1088,7 +1088,7 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
                 break;
               }
 
-            case TVN_ENDLABELEDIT: return TRUE;
+            case TVN_ENDLABELEDITA: return TRUE;
             case TVN_ITEMEXPANDINGA:
                 ok(pTreeView->itemNew.mask ==
                    (TVIF_HANDLE | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM | TVIF_STATE),
@@ -1120,14 +1120,18 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
                 }
                 if (g_get_rect_in_expand)
                 {
-                  visibleItem = TreeView_GetNextItem(pHdr->hwndFrom, NULL, TVGN_FIRSTVISIBLE);
+                  visibleItem = (HTREEITEM)SendMessageA(pHdr->hwndFrom, TVM_GETNEXTITEM,
+                          TVGN_FIRSTVISIBLE, 0);
                   ok(pTreeView->itemNew.hItem == visibleItem, "expanded item == first visible item\n");
                   *(HTREEITEM*)&rect = visibleItem;
-                  ok(SendMessage(pHdr->hwndFrom, TVM_GETITEMRECT, TRUE, (LPARAM)&rect), "Failed to get rect for first visible item.\n");
-                  visibleItem = TreeView_GetNextItem(pHdr->hwndFrom, visibleItem, TVGN_NEXTVISIBLE);
+                  ok(SendMessageA(pHdr->hwndFrom, TVM_GETITEMRECT, TRUE, (LPARAM)&rect),
+                          "Failed to get rect for first visible item.\n");
+                  visibleItem = (HTREEITEM)SendMessageA(pHdr->hwndFrom, TVM_GETNEXTITEM,
+                          TVGN_NEXTVISIBLE, (LPARAM)visibleItem);
                   *(HTREEITEM*)&rect = visibleItem;
                   ok(visibleItem != NULL, "There must be a visible item after the first visisble item.\n");
-                  ok(SendMessage(pHdr->hwndFrom, TVM_GETITEMRECT, TRUE, (LPARAM)&rect), "Failed to get rect for second visible item.\n");
+                  ok(SendMessageA(pHdr->hwndFrom, TVM_GETITEMRECT, TRUE, (LPARAM)&rect),
+                          "Failed to get rect for second visible item.\n");
                 }
                 break;
             case TVN_DELETEITEMA:
@@ -1184,54 +1188,61 @@ static void test_expandinvisible(void)
      *
      */
 
-    ret = TreeView_DeleteAllItems(hTree);
+    ret = SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)TVI_ROOT);
     ok(ret == TRUE, "ret\n");
     ins.hParent = TVI_ROOT;
     ins.hInsertAfter = TVI_ROOT;
     U(ins).item.mask = TVIF_TEXT;
     U(ins).item.pszText = nodeText[0];
-    node[0] = TreeView_InsertItem(hTree, &ins);
-    assert(node[0]);
+    node[0] = TreeView_InsertItemA(hTree, &ins);
+    ok(node[0] != NULL, "failed to set node[0]\n");
 
     ins.hInsertAfter = TVI_LAST;
     U(ins).item.mask = TVIF_TEXT;
     ins.hParent = node[0];
 
     U(ins).item.pszText = nodeText[1];
-    node[1] = TreeView_InsertItem(hTree, &ins);
-    assert(node[1]);
+    node[1] = TreeView_InsertItemA(hTree, &ins);
+    ok(node[1] != NULL, "failed to set node[1]\n");
     U(ins).item.pszText = nodeText[4];
-    node[4] = TreeView_InsertItem(hTree, &ins);
-    assert(node[4]);
+    node[4] = TreeView_InsertItemA(hTree, &ins);
+    ok(node[4] != NULL, "failed to set node[4]\n");
 
     ins.hParent = node[1];
 
     U(ins).item.pszText = nodeText[2];
-    node[2] = TreeView_InsertItem(hTree, &ins);
-    assert(node[2]);
+    node[2] = TreeView_InsertItemA(hTree, &ins);
+    ok(node[2] != NULL, "failed to set node[2]\n");
     U(ins).item.pszText = nodeText[3];
-    node[3] = TreeView_InsertItem(hTree, &ins);
-    assert(node[3]);
+    node[3] = TreeView_InsertItemA(hTree, &ins);
+    ok(node[3] != NULL, "failed to set node[3]\n");
 
-
-    nodeVisible = TreeView_GetItemRect(hTree, node[1], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[1];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 1 should not be visible.\n");
-    nodeVisible = TreeView_GetItemRect(hTree, node[2], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[2];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 2 should not be visible.\n");
-    nodeVisible = TreeView_GetItemRect(hTree, node[3], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[3];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 3 should not be visible.\n");
-    nodeVisible = TreeView_GetItemRect(hTree, node[4], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[4];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 4 should not be visible.\n");
 
-    ok(TreeView_Expand(hTree, node[1], TVE_EXPAND), "Expand of node 1 failed.\n");
+    ok(SendMessageA(hTree, TVM_EXPAND, TVE_EXPAND, (LPARAM)node[1]), "Expand of node 1 failed.\n");
 
-    nodeVisible = TreeView_GetItemRect(hTree, node[1], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[1];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 1 should not be visible.\n");
-    nodeVisible = TreeView_GetItemRect(hTree, node[2], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[2];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 2 should not be visible.\n");
-    nodeVisible = TreeView_GetItemRect(hTree, node[3], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[3];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 3 should not be visible.\n");
-    nodeVisible = TreeView_GetItemRect(hTree, node[4], &dummyRect, FALSE);
+    *(HTREEITEM *)&dummyRect = node[4];
+    nodeVisible = SendMessageA(hTree, TVM_GETITEMRECT, FALSE, (LPARAM)&dummyRect);
     ok(!nodeVisible, "Node 4 should not be visible.\n");
 
     DestroyWindow(hTree);
@@ -1249,47 +1260,47 @@ static void test_itemedit(void)
     fill_tree(hTree);
 
     /* try with null item */
-    edit = (HWND)SendMessage(hTree, TVM_EDITLABELA, 0, 0);
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, 0);
     ok(!IsWindow(edit), "Expected valid handle\n");
 
     /* trigger edit */
-    edit = (HWND)SendMessage(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
     ok(IsWindow(edit), "Expected valid handle\n");
-    /* item shouldn't be selected automatically after TVM_EDITLABEL */
-    r = SendMessage(hTree, TVM_GETITEMSTATE, (WPARAM)hRoot, TVIS_SELECTED);
+    /* item shouldn't be selected automatically after TVM_EDITLABELA */
+    r = SendMessageA(hTree, TVM_GETITEMSTATE, (WPARAM)hRoot, TVIS_SELECTED);
     expect(0, r);
     /* try to cancel with wrong edit handle */
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), 0);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), 0);
     expect(0, r);
     ok(IsWindow(edit), "Expected edit control to be valid\n");
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
     expect(0, r);
     ok(!IsWindow(edit), "Expected edit control to be destroyed\n");
     /* try to cancel without creating edit */
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), 0);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), 0);
     expect(0, r);
 
     /* try to cancel with wrong (not null) handle */
-    edit = (HWND)SendMessage(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
     ok(IsWindow(edit), "Expected valid handle\n");
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)hTree);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)hTree);
     expect(0, r);
     ok(IsWindow(edit), "Expected edit control to be valid\n");
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
     expect(0, r);
 
     /* remove selection after starting edit */
-    r = TreeView_SelectItem(hTree, hRoot);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, r);
-    edit = (HWND)SendMessage(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
+    edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
     ok(IsWindow(edit), "Expected valid handle\n");
-    r = TreeView_SelectItem(hTree, NULL);
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, 0);
     expect(TRUE, r);
     /* alter text */
     strcpy(buffA, "x");
-    r = SendMessage(edit, WM_SETTEXT, 0, (LPARAM)buffA);
+    r = SendMessageA(edit, WM_SETTEXT, 0, (LPARAM)buffA);
     expect(TRUE, r);
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
     expect(0, r);
     ok(!IsWindow(edit), "Expected edit control to be destroyed\n");
     /* check that text is saved */
@@ -1297,7 +1308,7 @@ static void test_itemedit(void)
     item.hItem = hRoot;
     item.pszText = buffA;
     item.cchTextMax = sizeof(buffA)/sizeof(CHAR);
-    r = SendMessage(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    r = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
     expect(TRUE, r);
     ok(!strcmp("x", buffA), "Expected item text to change\n");
 
@@ -1305,14 +1316,14 @@ static void test_itemedit(void)
     edit = (HWND)SendMessageA(hTree, TVM_EDITLABELA, 0, (LPARAM)hRoot);
     ok(IsWindow(edit), "Expected valid handle\n");
     ok(IsWindowUnicode(edit), "got ansi window\n");
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
     expect(0, r);
     ok(!IsWindow(edit), "expected invalid handle\n");
 
     edit = (HWND)SendMessageA(hTree, TVM_EDITLABELW, 0, (LPARAM)hRoot);
     ok(IsWindow(edit), "Expected valid handle\n");
     ok(IsWindowUnicode(edit), "got ansi window\n");
-    r = SendMessage(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
+    r = SendMessageA(hTree, WM_COMMAND, MAKEWPARAM(0, EN_KILLFOCUS), (LPARAM)edit);
     expect(0, r);
 
     /* alter text during TVM_BEGINLABELEDIT, check that it's preserved */
@@ -1322,7 +1333,7 @@ static void test_itemedit(void)
     item.hItem = hRoot;
     item.pszText = buffA;
     item.cchTextMax = 0;
-    r = SendMessage(hTree, TVM_SETITEMA, 0, (LPARAM)&item);
+    r = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&item);
     expect(TRUE, r);
 
     g_beginedit_alter_text = TRUE;
@@ -1341,7 +1352,7 @@ static void test_treeview_classinfo(void)
     WNDCLASSA cls;
 
     memset(&cls, 0, sizeof(cls));
-    GetClassInfo(GetModuleHandleA("comctl32.dll"), WC_TREEVIEWA, &cls);
+    GetClassInfoA(GetModuleHandleA("comctl32.dll"), WC_TREEVIEWA, &cls);
     ok(cls.hbrBackground == NULL, "Expected NULL background brush, got %p\n", cls.hbrBackground);
     ok(cls.style == (CS_GLOBALCLASS | CS_DBLCLKS), "Expected got %x\n", cls.style);
     expect(0, cls.cbClsExtra);
@@ -1355,7 +1366,7 @@ static void test_get_linecolor(void)
     hTree = create_treeview_control(0);
 
     /* newly created control has default color */
-    clr = (COLORREF)SendMessage(hTree, TVM_GETLINECOLOR, 0, 0);
+    clr = SendMessageA(hTree, TVM_GETLINECOLOR, 0, 0);
     if (clr == 0)
         win_skip("TVM_GETLINECOLOR is not supported on comctl32 < 5.80\n");
     else
@@ -1372,7 +1383,7 @@ static void test_get_insertmarkcolor(void)
     hTree = create_treeview_control(0);
 
     /* newly created control has default color */
-    clr = (COLORREF)SendMessage(hTree, TVM_GETINSERTMARKCOLOR, 0, 0);
+    clr = SendMessageA(hTree, TVM_GETINSERTMARKCOLOR, 0, 0);
     if (clr == 0)
         win_skip("TVM_GETINSERTMARKCOLOR is not supported on comctl32 < 5.80\n");
     else
@@ -1451,7 +1462,7 @@ static void test_expandnotify(void)
     hTree = create_treeview_control(0);
     fill_tree(hTree);
     g_get_rect_in_expand = TRUE;
-    ret = TreeView_Select(hTree, hChild, TVGN_CARET);
+    ret = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hChild);
     expect(TRUE, ret);
     g_get_rect_in_expand = FALSE;
 
@@ -1581,7 +1592,7 @@ static void test_TVS_SINGLEEXPAND(void)
     BOOL ret;
 
     hTree = create_treeview_control(0);
-    SetWindowLongA(hTree, GWL_STYLE, GetWindowLong(hTree, GWL_STYLE) | TVS_SINGLEEXPAND);
+    SetWindowLongA(hTree, GWL_STYLE, GetWindowLongA(hTree, GWL_STYLE) | TVS_SINGLEEXPAND);
     /* to avoid painting related notifications */
     ShowWindow(hTree, SW_HIDE);
     fill_tree(hTree);
@@ -1645,7 +1656,7 @@ static void test_delete_items(void)
 
     /* check delete order */
     flush_sequences(item_sequence, 1);
-    ret = SendMessage(hTree, TVM_DELETEITEM, 0, 0);
+    ret = SendMessageA(hTree, TVM_DELETEITEM, 0, 0);
     ok(ret == TRUE, "got %d\n", ret);
 
     msg = item_sequence[0]->sequence;
@@ -1672,7 +1683,7 @@ static void test_cchildren(void)
     hTree = create_treeview_control(0);
     fill_tree(hTree);
 
-    ret = SendMessage(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
+    ret = SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
     expect(TRUE, ret);
 
     /* check cChildren - automatic mode */
@@ -1700,7 +1711,7 @@ static void test_cchildren(void)
     ret = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&item);
     expect(TRUE, ret);
 
-    ret = SendMessage(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
+    ret = SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
     expect(TRUE, ret);
 
     /* check cChildren */
@@ -1746,18 +1757,18 @@ static void test_htreeitem_layout(void)
     ins.hParent = hChild;
     ins.hInsertAfter = TVI_FIRST;
     U(ins).item.mask = 0;
-    item1 = TreeView_InsertItem(hTree, &ins);
+    item1 = TreeView_InsertItemA(hTree, &ins);
 
     check_item(item1, hChild, 0, 0);
 
     ins.hParent = hRoot;
     ins.hInsertAfter = TVI_FIRST;
     U(ins).item.mask = 0;
-    item2 = TreeView_InsertItem(hTree, &ins);
+    item2 = TreeView_InsertItemA(hTree, &ins);
 
     check_item(item2, hRoot, hChild, 0);
 
-    SendMessage(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
+    SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
 
     /* without children now */
     check_item(hRoot, ((struct _ITEM_DATA*)hRoot)->parent, 0, item2);
@@ -1771,6 +1782,7 @@ static void test_TVS_CHECKBOXES(void)
     HWND hTree, hTree2;
     TVITEMA item;
     DWORD ret;
+    MSG msg;
 
     hTree = create_treeview_control(0);
     fill_tree(hTree);
@@ -1841,16 +1853,10 @@ static void test_TVS_CHECKBOXES(void)
     DestroyWindow(hTree);
 
     /* the same, but initially created with TVS_CHECKBOXES */
-    hTree = create_treeview_control(0);
-    fill_tree(hTree);
-    himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
-    ok(himl == NULL, "got %p\n", himl);
-    DestroyWindow(hTree);
-
     hTree = create_treeview_control(TVS_CHECKBOXES);
     fill_tree(hTree);
     himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
-    todo_wine ok(himl == NULL, "got %p\n", himl);
+    ok(himl == NULL, "got %p\n", himl);
 
     item.hItem = hRoot;
     item.mask = TVIF_STATE;
@@ -1867,6 +1873,90 @@ static void test_TVS_CHECKBOXES(void)
     ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
     expect(TRUE, ret);
     ok(item.state == INDEXTOSTATEIMAGEMASK(1), "got 0x%x\n", item.state);
+
+    item.hItem = hChild;
+    item.mask = TVIF_STATE;
+    item.state = INDEXTOSTATEIMAGEMASK(2);
+    item.stateMask = TVIS_STATEIMAGEMASK;
+    ret = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+
+    item.hItem = hChild;
+    item.mask = TVIF_STATE;
+    item.state = 0;
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    ok(item.state == INDEXTOSTATEIMAGEMASK(2), "got 0x%x\n", item.state);
+
+    while(GetMessageA(&msg, 0, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+
+        if((msg.hwnd == hTree) && (msg.message == WM_PAINT))
+            break;
+    }
+
+    item.hItem = hChild;
+    item.mask = TVIF_STATE;
+    item.state = 0;
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    ok(item.state == INDEXTOSTATEIMAGEMASK(1), "got 0x%x\n", item.state);
+
+    himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl != NULL, "got %p\n", himl);
+
+    DestroyWindow(hTree);
+
+    /* check what happens if TVSIL_STATE image list is removed */
+    hTree = create_treeview_control(0);
+    fill_tree(hTree);
+    himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl == NULL, "got %p\n", himl);
+
+    SetWindowLongA(hTree, GWL_STYLE, GetWindowLongA(hTree, GWL_STYLE) | TVS_CHECKBOXES);
+    himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl != NULL, "got %p\n", himl);
+
+    himl2 = (HIMAGELIST)SendMessageA(hTree, TVM_SETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl2 == himl, "got %p\n", himl2);
+
+    himl2 = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl2 == NULL, "got %p\n", himl2);
+
+    item.hItem = hChild;
+    item.mask = TVIF_STATE;
+    item.state = INDEXTOSTATEIMAGEMASK(2);
+    item.stateMask = TVIS_STATEIMAGEMASK;
+    ret = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+
+    item.hItem = hChild;
+    item.mask = TVIF_STATE;
+    item.state = 0;
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    ok(item.state == INDEXTOSTATEIMAGEMASK(2), "got 0x%x\n", item.state);
+
+    while(GetMessageA(&msg, 0, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+
+        if((msg.hwnd == hTree) && (msg.message == WM_PAINT))
+            break;
+    }
+
+    item.hItem = hChild;
+    item.mask = TVIF_STATE;
+    item.state = 0;
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    ok(item.state == INDEXTOSTATEIMAGEMASK(1), "got 0x%x\n", item.state);
+
+    himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl != NULL, "got %p\n", himl);
 
     DestroyWindow(hTree);
 }
@@ -1920,13 +2010,13 @@ static void test_TVM_HITTEST(void)
     fill_tree(hTree);
 
     *(HTREEITEM*)&rc = hRoot;
-    ret = SendMessage(hTree, TVM_GETITEMRECT, TRUE, (LPARAM)&rc);
+    ret = SendMessageA(hTree, TVM_GETITEMRECT, TRUE, (LPARAM)&rc);
     expect(TRUE, (BOOL)ret);
 
     ht.pt.x = rc.left-1;
     ht.pt.y = rc.top;
 
-    ret = SendMessage(hTree, TVM_HITTEST, 0, (LPARAM)&ht);
+    ret = SendMessageA(hTree, TVM_HITTEST, 0, (LPARAM)&ht);
     ok((HTREEITEM)ret == hRoot, "got %p, expected %p\n", (HTREEITEM)ret, hRoot);
     ok(ht.hItem == hRoot, "got %p, expected %p\n", ht.hItem, hRoot);
     ok(ht.flags == TVHT_ONITEMBUTTON, "got %d, expected %d\n", ht.flags, TVHT_ONITEMBUTTON);
@@ -1935,13 +2025,13 @@ static void test_TVM_HITTEST(void)
     expect(TRUE, (BOOL)ret);
 
     *(HTREEITEM*)&rc = hChild;
-    ret = SendMessage(hTree, TVM_GETITEMRECT, TRUE, (LPARAM)&rc);
+    ret = SendMessageA(hTree, TVM_GETITEMRECT, TRUE, (LPARAM)&rc);
     expect(TRUE, (BOOL)ret);
 
     ht.pt.x = rc.left-1;
     ht.pt.y = rc.top;
 
-    ret = SendMessage(hTree, TVM_HITTEST, 0, (LPARAM)&ht);
+    ret = SendMessageA(hTree, TVM_HITTEST, 0, (LPARAM)&ht);
     ok((HTREEITEM)ret == hChild, "got %p, expected %p\n", (HTREEITEM)ret, hChild);
     ok(ht.hItem == hChild, "got %p, expected %p\n", ht.hItem, hChild);
     /* Wine returns item button here, but this item has no button */
@@ -1972,7 +2062,6 @@ START_TEST(treeview)
 
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
-    HWND hwnd;
   
     hComctl32 = GetModuleHandleA("comctl32.dll");
     pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
@@ -1994,7 +2083,7 @@ START_TEST(treeview)
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursorA(NULL, IDC_IBEAM);
+    wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = "MyTestWnd";
@@ -2043,21 +2132,6 @@ START_TEST(treeview)
         DestroyWindow(hMainWnd);
         return;
     }
-
-    /* this is a XP SP3 failure workaround */
-    hwnd = CreateWindowExA(0, WC_TREEVIEW, "foo",
-                           WS_CHILD | WS_BORDER | WS_VISIBLE,
-                           0, 0, 100, 100,
-                           hMainWnd, NULL, GetModuleHandleA(NULL), NULL);
-    if (!IsWindow(hwnd))
-    {
-        win_skip("FIXME: failed to create TreeView window.\n");
-        unload_v6_module(ctx_cookie, hCtx);
-        DestroyWindow(hMainWnd);
-        return;
-    }
-    else
-        DestroyWindow(hwnd);
 
     /* comctl32 version 6 tests start here */
     test_expandedimage();

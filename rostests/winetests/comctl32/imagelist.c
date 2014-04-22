@@ -34,7 +34,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
-//#include "winuser.h"
+#include <winuser.h>
 #include <objbase.h>
 #include <commctrl.h> /* must be included after objbase.h to get ImageList_Write */
 #include <initguid.h>
@@ -138,7 +138,7 @@ static HWND create_a_window(void)
     char className[] = "bmwnd";
     char winName[]   = "Test Bitmap";
     HWND hWnd;
-    static int registered = 0;
+    static BOOL registered = FALSE;
 
     if (!registered)
     {
@@ -149,14 +149,14 @@ static HWND create_a_window(void)
         cls.cbClsExtra    = 0;
         cls.cbWndExtra    = 0;
         cls.hInstance     = 0;
-        cls.hIcon         = LoadIconA (0, IDI_APPLICATION);
-        cls.hCursor       = LoadCursorA (0, IDC_ARROW);
+        cls.hIcon         = LoadIconA(0, (LPCSTR)IDI_APPLICATION);
+        cls.hCursor       = LoadCursorA(0, (LPCSTR)IDC_ARROW);
         cls.hbrBackground = GetStockObject (WHITE_BRUSH);
         cls.lpszMenuName  = 0;
         cls.lpszClassName = className;
 
         RegisterClassA (&cls);
-        registered = 1;
+        registered = TRUE;
     }
 
     /* Setup window */
@@ -813,7 +813,8 @@ static ULONG check_bitmap_data(const char *bm_data, ULONG bm_data_size,
 
     image_size = DIB_GetWidthBytes(bmih->biWidth, bmih->biBitCount) * bmih->biHeight;
     ok(bmih->biSizeImage == image_size, "wrong biSizeImage %u\n", bmih->biSizeImage);
-#if 0
+
+if (0)
 {
     char fname[256];
     FILE *f;
@@ -822,7 +823,7 @@ static ULONG check_bitmap_data(const char *bm_data, ULONG bm_data_size,
     fwrite(bm_data, 1, bm_data_size, f);
     fclose(f);
 }
-#endif
+
     return hdr_size + image_size;
 }
 
@@ -871,7 +872,7 @@ static HBITMAP create_bitmap(INT cx, INT cy, COLORREF color, const char *comment
     FillRect(hdc, &rc, hbrush);
     DeleteObject(hbrush);
 
-    DrawText(hdc, comment, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextA(hdc, comment, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     SelectObject(hdc, hbmp_old);
     DeleteDC(hdc);
@@ -1221,7 +1222,7 @@ static void test_shell_imagelist(void)
     int cx, cy;
 
     /* Try to load function from shell32 */
-    hShell32 = LoadLibrary("shell32.dll");
+    hShell32 = LoadLibraryA("shell32.dll");
     pSHGetImageList = (void*)GetProcAddress(hShell32, (LPCSTR) 727);
 
     if (!pSHGetImageList)
@@ -2068,7 +2069,7 @@ START_TEST(imagelist)
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
 
-    HMODULE hComCtl32 = GetModuleHandle("comctl32.dll");
+    HMODULE hComCtl32 = GetModuleHandleA("comctl32.dll");
     pImageList_Create = NULL;   /* These are not needed for non-v6.0 tests*/
     pImageList_Add = NULL;
     pImageList_DrawIndirect = (void*)GetProcAddress(hComCtl32, "ImageList_DrawIndirect");
