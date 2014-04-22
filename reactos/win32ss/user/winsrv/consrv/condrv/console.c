@@ -1091,6 +1091,16 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
     return STATUS_SUCCESS;
 }
 
+PCONSOLE_PROCESS_DATA NTAPI
+ConDrvGetConsoleLeaderProcess(IN PCONSOLE Console)
+{
+    if (Console == NULL) return NULL;
+
+    return CONTAINING_RECORD(Console->ProcessList.Blink,
+                             CONSOLE_PROCESS_DATA,
+                             ConsoleLink);
+}
+
 NTSTATUS NTAPI
 ConDrvGetConsoleProcessList(IN PCONSOLE Console,
                             IN OUT PULONG ProcessIdsList,

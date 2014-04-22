@@ -356,9 +356,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     NtUnmapViewOfSection(NtCurrentProcess(), pSharedInfo);
 
     /* Get the console leader process, our client */
-    ProcessData = CONTAINING_RECORD(Console->ProcessList.Blink,
-                                    CONSOLE_PROCESS_DATA,
-                                    ConsoleLink);
+    ProcessData = ConDrvGetConsoleLeaderProcess(Console);
 
     /* Duplicate the section handle for the client */
     Status = NtDuplicateObject(NtCurrentProcess(),
@@ -430,9 +428,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     PGUI_CONSOLE_INFO GuiInfo = NULL;
 
     /* Get the console leader process, our client */
-    ProcessData = CONTAINING_RECORD(Console->ProcessList.Blink,
-                                    CONSOLE_PROCESS_DATA,
-                                    ConsoleLink);
+    ProcessData = ConDrvGetConsoleLeaderProcess(Console);
 
     /* Duplicate the section handle for ourselves */
     Status = NtDuplicateObject(ProcessData->Process->ProcessHandle,

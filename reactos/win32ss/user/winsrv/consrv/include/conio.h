@@ -343,6 +343,11 @@ typedef struct _CONSOLE
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
 
+PCONSOLE_PROCESS_DATA NTAPI
+ConDrvGetConsoleLeaderProcess(IN PCONSOLE Console);
+NTSTATUS
+ConDrvConsoleCtrlEvent(IN ULONG CtrlEvent,
+                       IN PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS NTAPI
 ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
                               IN ULONG ProcessGroupId,
