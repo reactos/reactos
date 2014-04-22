@@ -240,8 +240,8 @@ static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
     DWORD attrs;
     BOOL res;
 
-    handle = CreateFile(pszName, GENERIC_READ, FILE_SHARE_READ, NULL,
-                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    handle = CreateFileA(pszName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
     ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszName);
 
@@ -251,7 +251,7 @@ static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
     FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &filetime);
     FileTimeToDosDateTime(&filetime, pdate, ptime);
 
-    attrs = GetFileAttributes(pszName);
+    attrs = GetFileAttributesA(pszName);
     ok(attrs != INVALID_FILE_ATTRIBUTES, "Failed to GetFileAttributes\n");
 
     return (INT_PTR)handle;
@@ -623,7 +623,7 @@ static void test_Extract(void)
 
     /* first file exists */
     createTestFile("dest\\a.txt");
-    SetFileAttributes("dest\\a.txt", FILE_ATTRIBUTE_READONLY);
+    SetFileAttributesA("dest\\a.txt", FILE_ATTRIBUTE_READONLY);
     ZeroMemory(&session, sizeof(SESSION));
     lstrcpyA(session.Destination, "dest");
     session.Operation = EXTRACT_FILLFILELIST | EXTRACT_EXTRACTFILES;
@@ -665,7 +665,7 @@ static void test_Extract(void)
 
     /* third file exists */
     createTestFile("dest\\testdir\\c.txt");
-    SetFileAttributes("dest\\testdir\\c.txt", FILE_ATTRIBUTE_READONLY);
+    SetFileAttributesA("dest\\testdir\\c.txt", FILE_ATTRIBUTE_READONLY);
     ZeroMemory(&session, sizeof(SESSION));
     lstrcpyA(session.Destination, "dest");
     session.Operation = EXTRACT_FILLFILELIST | EXTRACT_EXTRACTFILES;
