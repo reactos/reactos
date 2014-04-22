@@ -33,8 +33,6 @@
 #include "rpcdce.h"
 #include "secext.h"
 
-typedef long NTSTATUS;
-
 typedef unsigned int unsigned32;
 typedef struct twr_t
     {
