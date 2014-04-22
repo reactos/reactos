@@ -1480,6 +1480,7 @@ typedef enum {
 #define MAXBYTE	0xff
 #define MAXWORD	0xffff
 #define MAXDWORD	0xffffffff
+#define MAXLONGLONG (((LONGLONG)0x7fffffff << 32) | 0xffffffff)
 #define PROCESSOR_INTEL_386 386
 #define PROCESSOR_INTEL_486 486
 #define PROCESSOR_INTEL_PENTIUM 586
