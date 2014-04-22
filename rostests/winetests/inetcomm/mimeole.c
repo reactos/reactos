@@ -32,7 +32,7 @@
 
 #include "wine/test.h"
 
-static char msg1[] =
+static const char msg1[] =
     "MIME-Version: 1.0\r\n"
     "Content-Type: multipart/mixed;\r\n"
     " boundary=\"------------1.5.0.6\";\r\n"
@@ -224,7 +224,7 @@ static void test_CreateMessage(void)
     char text[] = "text";
     HBODY *body_list;
     PROPVARIANT prop;
-    static char att_pritype[] = "att:pri-content-type";
+    static const char att_pritype[] = "att:pri-content-type";
 
     hr = MimeOleCreateMessage(NULL, &msg);
     ok(hr == S_OK, "ret %08x\n", hr);
