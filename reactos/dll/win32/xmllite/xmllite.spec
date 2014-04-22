@@ -3,4 +3,4 @@
 @ stdcall CreateXmlReaderInputWithEncodingName(ptr ptr ptr long ptr ptr)
 @ stdcall CreateXmlWriter(ptr ptr ptr)
 @ stub CreateXmlWriterOutputWithEncodingCodePage
-@ stub CreateXmlWriterOutputWithEncodingName
+@ stdcall CreateXmlWriterOutputWithEncodingName(ptr ptr wstr ptr)
