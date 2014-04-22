@@ -20,7 +20,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-COLORREF RGBFromAttrib2(PCONSOLE Console, WORD Attribute)
+COLORREF PaletteRGBFromAttrib(PCONSOLE Console, WORD Attribute)
 {
     HPALETTE hPalette = Console->ActiveBuffer->PaletteHandle;
     PALETTEENTRY pe;
@@ -39,8 +39,6 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
      * This function supposes that the system clipboard was opened.
      */
 
-    PCONSOLE Console = Buffer->Header.Console;
-
     /*
      * Pressing the Shift key while copying text, allows us to copy
      * text without newline characters (inline-text copy mode).
@@ -53,13 +51,13 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     ULONG selWidth, selHeight;
     ULONG xPos, yPos, size;
 
-    selWidth  = Console->Selection.srSelection.Right - Console->Selection.srSelection.Left + 1;
-    selHeight = Console->Selection.srSelection.Bottom - Console->Selection.srSelection.Top + 1;
+    selWidth  = GuiData->Selection.srSelection.Right - GuiData->Selection.srSelection.Left + 1;
+    selHeight = GuiData->Selection.srSelection.Bottom - GuiData->Selection.srSelection.Top + 1;
     DPRINT("Selection is (%d|%d) to (%d|%d)\n",
-           Console->Selection.srSelection.Left,
-           Console->Selection.srSelection.Top,
-           Console->Selection.srSelection.Right,
-           Console->Selection.srSelection.Bottom);
+           GuiData->Selection.srSelection.Left,
+           GuiData->Selection.srSelection.Top,
+           GuiData->Selection.srSelection.Right,
+           GuiData->Selection.srSelection.Bottom);
 
 #ifdef IS_WHITESPACE
 #undef IS_WHITESPACE
@@ -99,8 +97,8 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
         ULONG length = selWidth;
 
         ptr = ConioCoordToPointer(Buffer,
-                                  Console->Selection.srSelection.Left,
-                                  Console->Selection.srSelection.Top + yPos);
+                                  GuiData->Selection.srSelection.Left,
+                                  GuiData->Selection.srSelection.Top + yPos);
 
         /* Trim whitespace from the right */
         while (length > 0)
@@ -230,6 +228,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
 
     if (Buffer->Buffer == NULL) return;
 
+    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+
     rcFramebuffer->left   = Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->left;
     rcFramebuffer->top    = Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->top;
     rcFramebuffer->right  = Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->right;
@@ -245,8 +245,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
 
     LastAttribute = ConioCoordToPointer(Buffer, LeftChar, TopLine)->Attributes;
 
-    SetTextColor(GuiData->hMemDC, RGBFromAttrib2(Console, TextAttribFromAttrib(LastAttribute)));
-    SetBkColor(GuiData->hMemDC, RGBFromAttrib2(Console, BkgdAttribFromAttrib(LastAttribute)));
+    SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
+    SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
 
     OldFont = SelectObject(GuiData->hMemDC, GuiData->Font);
 
@@ -275,8 +275,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                 Attribute = From->Attributes;
                 if (Attribute != LastAttribute)
                 {
-                    SetTextColor(GuiData->hMemDC, RGBFromAttrib2(Console, TextAttribFromAttrib(Attribute)));
-                    SetBkColor(GuiData->hMemDC, RGBFromAttrib2(Console, BkgdAttribFromAttrib(Attribute)));
+                    SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
+                    SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(Attribute)));
                     LastAttribute = Attribute;
                 }
             }
@@ -308,7 +308,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
             Attribute = ConioCoordToPointer(Buffer, Buffer->CursorPosition.X, Buffer->CursorPosition.Y)->Attributes;
             if (Attribute == DEFAULT_SCREEN_ATTRIB) Attribute = Buffer->ScreenDefaultAttrib;
 
-            CursorBrush = CreateSolidBrush(RGBFromAttrib2(Console, TextAttribFromAttrib(Attribute)));
+            CursorBrush = CreateSolidBrush(PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
             OldBrush    = SelectObject(GuiData->hMemDC, CursorBrush);
 
             PatBlt(GuiData->hMemDC,
@@ -323,6 +323,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     }
 
     SelectObject(GuiData->hMemDC, OldFont);
+
+    LeaveCriticalSection(&Console->Lock);
 }
 
 /* EOF */

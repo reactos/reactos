@@ -575,11 +575,6 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->LineInsertToggle = Console->InsertMode;
     // LineWakeupMask
 
-    // FIXME: This is terminal-specific !! VV
-    RtlZeroMemory(&Console->Selection, sizeof(CONSOLE_SELECTION_INFO));
-    Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
-    // dwSelectionCursor
-
     /* Set-up the code page */
     Console->CodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
 

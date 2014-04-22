@@ -228,6 +228,8 @@ typedef struct _FRONTEND_VTBL
     HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
                                               PCOORD pSize);
+    BOOL (NTAPI *GetSelectionInfo)(IN OUT PFRONTEND This,
+                                   PCONSOLE_SELECTION_INFO pSelectionInfo);
     BOOL (NTAPI *SetPalette)(IN OUT PFRONTEND This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);
@@ -304,9 +306,6 @@ typedef struct _CONSOLE
     BOOLEAN QuickEdit;
     BOOLEAN InsertMode;
     UINT CodePage;
-
-    CONSOLE_SELECTION_INFO Selection;       /* Contains information about the selection */
-    COORD dwSelectionCursor;                /* Selection cursor position, most of the time different from Selection.dwSelectionAnchor */
 
 /******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
