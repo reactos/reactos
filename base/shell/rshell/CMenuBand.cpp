@@ -715,23 +715,23 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
     if (popup == NULL)
         return E_FAIL;
 
-    DbgPrint("Before Query\n");
+    TRACE("Before Query\n");
     hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY(hr))
     {
-        DbgPrint("Query failed\n");
+        TRACE("Query failed\n");
         DestroyMenu(popup);
         return hr;
     }
 
     HWND hwnd = m_menuOwner ? m_menuOwner : m_topLevelWindow;
 
-    DbgPrint("Before Tracking\n");
+    TRACE("Before Tracking\n");
     uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, hwnd, NULL);
 
     if (uCommand != 0)
     {
-        DbgPrint("Before InvokeCommand\n");
+        TRACE("Before InvokeCommand\n");
         CMINVOKECOMMANDINFO cmi = { 0 };
         cmi.cbSize = sizeof(cmi);
         cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
@@ -740,7 +740,7 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
     }
     else
     {
-        DbgPrint("TrackPopupMenu failed. Code=%d, LastError=%d\n", uCommand, GetLastError());
+        TRACE("TrackPopupMenu failed. Code=%d, LastError=%d\n", uCommand, GetLastError());
         hr = S_FALSE;
     }
 

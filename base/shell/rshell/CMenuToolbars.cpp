@@ -131,7 +131,7 @@ LRESULT CMenuToolbarBase::SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         return IsTrackedItem(wParam);
     case WM_USER_CHANGETRACKEDITEM:
         m_SubclassOld(hWnd, uMsg, wParam, lParam);
-        return ChangeTrackedItem(wParam, lParam);
+        return ChangeTrackedItem(wParam, LOWORD(lParam), HIWORD(lParam));
 
     case WM_COMMAND:
         OnWinEvent(hWnd, uMsg, wParam, lParam, &lr);
@@ -604,6 +604,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
         SendMessage(m_hwndToolbar, TB_SETHOTITEM, (WPARAM) -1, 0);
     }
 
+    TRACE("Hot item changed from %p %p, to %p %p\n", m_hotBar, m_hotItem, toolbar, item);
     m_hotBar = toolbar;
     m_hotItem = item;
 
@@ -690,7 +691,7 @@ HRESULT CMenuToolbarBase::IsTrackedItem(INT index)
     return S_FALSE;
 }
 
-HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking)
+HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking, BOOL mouse)
 {
     TBBUTTON btn;
 
@@ -703,9 +704,9 @@ HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking)
     if (!SendMessage(m_hwndToolbar, TB_GETBUTTON, index, reinterpret_cast<LPARAM>(&btn)))
         return E_FAIL;
 
-    DbgPrint("ChangeTrackedItem %d, %d\n", index, wasTracking);
+    TRACE("ChangeTrackedItem %d, %d\n", index, wasTracking);
     m_isTrackingPopup = wasTracking;
-    return m_menuBand->_ChangeHotItem(this, btn.idCommand, HICF_MOUSE);
+    return m_menuBand->_ChangeHotItem(this, btn.idCommand, mouse ? HICF_MOUSE : 0);
 }
 
 HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* childShellMenu)
@@ -912,13 +913,13 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
             {
                 if (prev != btn.idCommand)
                 {
-                    DbgPrint("Setting Hot item to %d\n", index);
+                    TRACE("Setting Hot item to %d\n", index);
                     if (!(m_initFlags & SMINIT_VERTICAL) && m_isTrackingPopup)
                     {
                         HWND tlw;
                         m_menuBand->_GetTopLevelWindow(&tlw);
                         SendMessage(tlw, WM_CANCELMODE, 0, 0);
-                        PostMessage(m_hwndToolbar, WM_USER_CHANGETRACKEDITEM, index, m_isTrackingPopup);
+                        PostMessage(m_hwndToolbar, WM_USER_CHANGETRACKEDITEM, index, MAKELPARAM(m_isTrackingPopup, FALSE));
                     }
                     else
                         m_menuBand->_ChangeHotItem(this, btn.idCommand, 0);

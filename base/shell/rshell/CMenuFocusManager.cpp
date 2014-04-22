@@ -288,7 +288,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
             DisableMouseTrack(NULL, FALSE);
             if (isTracking && iHitTestResult>=0 && m_current->type == TrackedMenuEntry)
                 SendMessage(entry->hwnd, WM_CANCELMODE, 0, 0);
-            PostMessage(child, WM_USER_CHANGETRACKEDITEM, iHitTestResult, isTracking);
+            PostMessage(child, WM_USER_CHANGETRACKEDITEM, iHitTestResult, MAKELPARAM(isTracking, TRUE));
             if (m_current->type == TrackedMenuEntry)
                 return FALSE;
         }
@@ -359,13 +359,13 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM hookWParam, LPARAM ho
             callNext = ProcessMouseMove(msg);
             break;
         case WM_INITMENUPOPUP:
-            DbgPrint("WM_INITMENUPOPUP %p %p\n", msg->wParam, msg->lParam);
+            TRACE("WM_INITMENUPOPUP %p %p\n", msg->wParam, msg->lParam);
             m_selectedMenu = reinterpret_cast<HMENU>(msg->lParam);
             m_selectedItem = -1;
             m_selectedItemFlags = 0;
             break;
         case WM_MENUSELECT:
-            DbgPrint("WM_MENUSELECT %p %p\n", msg->wParam, msg->lParam);
+            TRACE("WM_MENUSELECT %p %p\n", msg->wParam, msg->lParam);
             m_selectedMenu = reinterpret_cast<HMENU>(msg->lParam);
             m_selectedItem = GET_X_LPARAM(msg->wParam);
             m_selectedItemFlags = HIWORD(msg->wParam);
@@ -621,7 +621,7 @@ HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    DbgPrint("PushTrackedPopup %p\n", popup);
+    TRACE("PushTrackedPopup %p\n", popup);
     m_selectedMenu = popup;
     m_selectedItem = -1;
     m_selectedItemFlags = 0;

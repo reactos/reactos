@@ -78,7 +78,7 @@ public:
     HRESULT KeyboardItemChange(DWORD changeType);
 
     HRESULT IsTrackedItem(INT index);
-    HRESULT ChangeTrackedItem(INT index, BOOL wasTracking);
+    HRESULT ChangeTrackedItem(INT index, BOOL wasTracking, BOOL mouse);
 
     HRESULT GetSizes(SIZE* pMinSize, SIZE* pMaxSize, SIZE* pIntegralSize);
     HRESULT SetPosSize(int x, int y, int cx, int cy);
