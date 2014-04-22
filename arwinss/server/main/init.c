@@ -17,7 +17,7 @@
 #include <handle.h>
 #include <user.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 void init_directories(void);
@@ -56,7 +56,7 @@ UserCreateThreadInfo(PETHREAD Thread)
         /* FIXME - lock the process */
         Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(THREADINFO),
-                                            't23W');
+                                            USERTAG_THREADINFO);
 
         if (!Win32Thread)
             return STATUS_NO_MEMORY;
@@ -93,14 +93,14 @@ UserDestroyThreadInfo(PETHREAD Thread)
     DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Tcb.Teb->ClientId.UniqueThread, KeGetCurrentIrql());
 
     /* USER thread-level cleanup */
-    UserEnterExclusive();
     cleanup_clipboard_thread(Win32Thread);
     destroy_thread_windows(Win32Thread);
     free_msg_queue(Win32Thread);
     close_thread_desktop(Win32Thread);
-    UserLeave();
 
-    PsSetThreadWin32Thread(Thread, NULL, NULL);
+    /* Free THREADINFO */
+    PsSetThreadWin32Thread(Thread, NULL, Win32Thread);
+    ExFreePoolWithTag(Win32Thread, USERTAG_THREADINFO);
 
     return STATUS_SUCCESS;
 }
@@ -125,7 +125,8 @@ Win32kProcessCallout(PEPROCESS Process,
         /* Allocate one if needed */
         /* FIXME - lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
-            sizeof(PROCESSINFO), 'p23W');
+                                             sizeof(PROCESSINFO),
+                                             USERTAG_PROCESSINFO);
 
         if (!Win32Process) return STATUS_NO_MEMORY;
 
@@ -181,6 +182,10 @@ Win32kProcessCallout(PEPROCESS Process,
             ZwClose(Win32Process->idle_event_handle);
         }
 
+        /* Free the PROCESSINFO */
+        PsSetProcessWin32Process(Process, NULL, Win32Process);
+        ExFreePoolWithTag(Win32Process, USERTAG_PROCESSINFO);
+
         UserLeave();
     }
 
@@ -195,7 +200,11 @@ Win32kThreadCallout(PETHREAD Thread,
 {
     NTSTATUS Status;
 
-    DPRINT("Enter Win32kThreadCallback, current thread id %d, process id %d\n", PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueThread, PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueProcess);
+    UserEnterExclusive();
+
+    DPRINT("Enter Win32kThreadCallback, current thread id %d, process id %d, type %d\n",
+        PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueThread,
+        PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueProcess, Type);
 
     ASSERT(NtCurrentTeb());
 
@@ -209,6 +218,8 @@ Win32kThreadCallout(PETHREAD Thread,
     }
 
     DPRINT("Leave Win32kThreadCallback\n");
+
+    UserLeave();
 
     return Status;
 }

@@ -1,6 +1,6 @@
-#ifndef _WIN32K_TAGS_H
-#define _WIN32K_TAGS_H
+#pragma once
 
+/* GDI objects from the handle table */
 #define TAG_BRUSHOBJ    'OHRB' /* brush object */
 #define TAG_CLIP        'PILC' /* clipping */
 #define TAG_CLIPOBJ     'OPLC' /* clip object */
@@ -19,6 +19,8 @@
 #define TAG_PENSTYLES   'ytsG' /* pen styles */
 #define TAG_BRUSH       '@alG'
 #define TAG_BITMAP      'PMTB' /* bitmap */
-#define GDITAG_RBRUSH   'rbdG'
 
-#endif /* _WIN32K_TAGS_H */
+/* Official tags */
+#define GDITAG_RBRUSH   'rbdG'
+#define USERTAG_PROCESSINFO              'ipsU'
+#define USERTAG_THREADINFO               'itsU'
