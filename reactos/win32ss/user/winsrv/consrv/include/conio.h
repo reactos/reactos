@@ -282,8 +282,8 @@ typedef struct _CONSOLE
     CONSOLE_STATE State;                    /* State of the console */
 
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
-    PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when all the other processes have been detached from the console */
-    BOOLEAN NotifyLastClose;                /* TRUE if the console should send a control event to the last attached process after all the others detached, if it wanted to be notified */
+    PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when the console leader process is killed */
+    BOOLEAN NotifyLastClose;                /* TRUE if the console should send a control event when the console leader process is killed */
 
     FRONTEND TermIFace;                     /* Frontend-specific interface */
 
