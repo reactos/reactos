@@ -375,6 +375,8 @@ HRESULT WINAPI HlinkUpdateStackItem(IHlinkFrame *frame, IHlinkBrowseContext *bc,
 HRESULT WINAPI HlinkParseDisplayName(LPBC pibc, LPCWSTR pwzDisplayName, BOOL fNoForceAbs,
         ULONG *pcchEaten, IMoniker **ppimk)
 {
+    static const WCHAR file_colonW[] = {'f','i','l','e',':'};
+    ULONG eaten = 0;
     HRESULT hres;
 
     TRACE("(%p %s %x %p %p)\n", pibc, debugstr_w(pwzDisplayName), fNoForceAbs, pcchEaten, ppimk);
@@ -382,17 +384,27 @@ HRESULT WINAPI HlinkParseDisplayName(LPBC pibc, LPCWSTR pwzDisplayName, BOOL fNo
     if(fNoForceAbs)
         FIXME("Unsupported fNoForceAbs\n");
 
-    hres = MkParseDisplayNameEx(pibc, pwzDisplayName, pcchEaten, ppimk);
-    if(SUCCEEDED(hres))
-        return hres;
+    if(!strncmpiW(pwzDisplayName, file_colonW, sizeof(file_colonW)/sizeof(WCHAR))) {
+        pwzDisplayName += sizeof(file_colonW)/sizeof(WCHAR);
+        eaten += sizeof(file_colonW)/sizeof(WCHAR);
 
-    hres = MkParseDisplayName(pibc, pwzDisplayName, pcchEaten, ppimk);
-    if(SUCCEEDED(hres))
-        return hres;
+        while(*pwzDisplayName == '/') {
+            pwzDisplayName++;
+            eaten++;
+        }
+    }else {
+        hres = MkParseDisplayNameEx(pibc, pwzDisplayName, pcchEaten, ppimk);
+        if(SUCCEEDED(hres))
+            return hres;
+
+        hres = MkParseDisplayName(pibc, pwzDisplayName, pcchEaten, ppimk);
+        if(SUCCEEDED(hres))
+            return hres;
+    }
 
     hres = CreateFileMoniker(pwzDisplayName, ppimk);
     if(SUCCEEDED(hres))
-        *pcchEaten = strlenW(pwzDisplayName);
+        *pcchEaten = eaten + strlenW(pwzDisplayName);
 
     return hres;
 }
