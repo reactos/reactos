@@ -118,7 +118,7 @@ static void testGetUserNameExA(void)
     }
 
     if (0) /* Crashes on Windows */
-        rc = pGetUserNameExA(NameSamCompatible, NULL, NULL);
+        pGetUserNameExA(NameSamCompatible, NULL, NULL);
 
     size = 0;
     rc = pGetUserNameExA(NameSamCompatible, NULL, &size);
@@ -128,7 +128,7 @@ static void testGetUserNameExA(void)
     if (0) /* Crashes on Windows with big enough size */
     {
         /* Returned size is already big enough */
-        rc = pGetUserNameExA(NameSamCompatible, NULL, &size);
+        pGetUserNameExA(NameSamCompatible, NULL, &size);
     }
 
     size = 0;
@@ -165,7 +165,7 @@ static void testGetUserNameExW(void)
     }
 
     if (0) /* Crashes on Windows */
-        rc = pGetUserNameExW(NameSamCompatible, NULL, NULL);
+        pGetUserNameExW(NameSamCompatible, NULL, NULL);
 
     size = 0;
     rc = pGetUserNameExW(NameSamCompatible, NULL, &size);
@@ -175,7 +175,7 @@ static void testGetUserNameExW(void)
     if (0) /* Crashes on Windows with big enough size */
     {
         /* Returned size is already big enough */
-        rc = pGetUserNameExW(NameSamCompatible, NULL, &size);
+        pGetUserNameExW(NameSamCompatible, NULL, &size);
     }
 
     size = 0;
@@ -198,14 +198,12 @@ static void test_InitSecurityInterface(void)
     sftA = pInitSecurityInterfaceA();
     ok(sftA != NULL, "pInitSecurityInterfaceA failed\n");
     ok(sftA->dwVersion == SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION, "wrong dwVersion %d in security function table\n", sftA->dwVersion);
-    ok(!sftA->Reserved2 || broken(sftA->Reserved2 != NULL) /* WinME */,
+    ok(!sftA->Reserved2,
        "Reserved2 should be NULL instead of %p in security function table\n",
        sftA->Reserved2);
-    ok(sftA->Reserved3 == sftA->EncryptMessage ||
-       broken(sftA->Reserved3 != sftA->EncryptMessage) /* Win9x */,
+    ok(sftA->Reserved3 == sftA->EncryptMessage,
        "Reserved3 should be equal to EncryptMessage in the security function table\n");
-    ok(sftA->Reserved4 == sftA->DecryptMessage ||
-       broken(sftA->Reserved4 != sftA->DecryptMessage) /* Win9x */,
+    ok(sftA->Reserved4 == sftA->DecryptMessage,
        "Reserved4 should be equal to DecryptMessage in the security function table\n");
 
     if (!pInitSecurityInterfaceW)
