@@ -1493,7 +1493,7 @@ HRESULT WINAPI AVISaveVA(LPCSTR szFile, CLSID *pclsidHandler,
   HRESULT hr;
   int     len;
 
-  TRACE("%s,%p,%p,%d,%p,%p)\n", debugstr_a(szFile), pclsidHandler,
+  TRACE("(%s,%p,%p,%d,%p,%p)\n", debugstr_a(szFile), pclsidHandler,
 	lpfnCallback, nStream, ppavi, plpOptions);
 
   if (szFile == NULL || ppavi == NULL || plpOptions == NULL)
