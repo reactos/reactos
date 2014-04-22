@@ -55,7 +55,7 @@ reactos/dll/win32/atl              # Synced to Wine-1.7.1
 reactos/dll/win32/atl100           # Synced to Wine-1.7.1
 reactos/dll/win32/atl80            # Synced to Wine-1.7.1
 reactos/dll/win32/avifil32         # Synced to Wine-1.7.17
-reactos/dll/win32/bcrypt           # Synced to Wine-1.7.1
+reactos/dll/win32/bcrypt           # Synced to Wine-1.7.17
 reactos/dll/win32/browseui         # Out of sync
 reactos/dll/win32/cabinet          # Synced to Wine-1.7.1
 reactos/dll/win32/clusapi          # Synced to Wine-1.7.1
