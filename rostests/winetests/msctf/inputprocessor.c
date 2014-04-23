@@ -938,7 +938,8 @@ static void test_EnumLanguageProfiles(void)
             {
                 found = TRUE;
                 ok(profile.langid == gLangid, "LangId Incorrect\n");
-                ok(IsEqualGUID(&profile.catid,&GUID_TFCAT_TIP_KEYBOARD), "CatId Incorrect\n");
+                ok(IsEqualGUID(&profile.catid,&GUID_TFCAT_TIP_KEYBOARD) ||
+                   broken(IsEqualGUID(&profile.catid,&GUID_NULL) /* Win8 */), "CatId Incorrect\n");
                 ok(IsEqualGUID(&profile.guidProfile,&CLSID_FakeService), "guidProfile Incorrect\n");
             }
         }
@@ -2000,10 +2001,10 @@ static void processPendingMessages(void)
     {
         if (MsgWaitForMultipleObjects(0, NULL, FALSE, min_timeout, QS_ALLINPUT) == WAIT_TIMEOUT)
             break;
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+        while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            DispatchMessageW(&msg);
         }
         diff = time - GetTickCount();
     }
@@ -2032,11 +2033,11 @@ static void test_AssociateFocus(void)
     hr = ITfThreadMgr_CreateDocumentMgr(g_tm,&dm2);
     ok(SUCCEEDED(hr),"CreateDocumentMgr failed\n");
 
-    wnd1 = CreateWindow("edit",NULL,WS_POPUP,0,0,200,60,NULL,NULL,NULL,NULL);
+    wnd1 = CreateWindowA("edit",NULL,WS_POPUP,0,0,200,60,NULL,NULL,NULL,NULL);
     ok(wnd1!=NULL,"Unable to create window 1\n");
-    wnd2 = CreateWindow("edit",NULL,WS_POPUP,0,65,200,60,NULL,NULL,NULL,NULL);
+    wnd2 = CreateWindowA("edit",NULL,WS_POPUP,0,65,200,60,NULL,NULL,NULL,NULL);
     ok(wnd2!=NULL,"Unable to create window 2\n");
-    wnd3 = CreateWindow("edit",NULL,WS_POPUP,0,130,200,60,NULL,NULL,NULL,NULL);
+    wnd3 = CreateWindowA("edit",NULL,WS_POPUP,0,130,200,60,NULL,NULL,NULL,NULL);
     ok(wnd3!=NULL,"Unable to create window 3\n");
 
     processPendingMessages();
@@ -2075,20 +2076,15 @@ static void test_AssociateFocus(void)
     processPendingMessages();
 
     ITfThreadMgr_GetFocus(g_tm, &dmcheck);
-    if (dmcheck != NULL)
-    {
-        ok(dmcheck == dm1, "Expected DocumentMgr not focused\n");
-        ITfDocumentMgr_Release(dmcheck);
-    }
-    else
-    {
-        /* Sometimes we need to explicitly set focus on Win7 */
-        test_CurrentFocus = dm1;
-        test_PrevFocus = FOCUS_IGNORE;
-        test_OnSetFocus = SINK_EXPECTED;
-        ITfThreadMgr_SetFocus(g_tm, dm1);
-        sink_check_ok(&test_OnSetFocus,"OnSetFocus");
-    }
+    ok(dmcheck == dm1 || broken(dmcheck == dmorig /* Win7+ */), "Expected DocumentMgr not focused\n");
+    ITfDocumentMgr_Release(dmcheck);
+
+    /* We need to explicitly set focus on Win7+ */
+    test_CurrentFocus = dm1;
+    test_PrevFocus = FOCUS_IGNORE;
+    test_OnSetFocus = SINK_OPTIONAL; /* Doesn't always fire on Win7+ */
+    ITfThreadMgr_SetFocus(g_tm, dm1);
+    sink_check_ok(&test_OnSetFocus, "OnSetFocus");
 
     hr = ITfThreadMgr_AssociateFocus(g_tm,wnd2,dm2,&olddm);
     ok(SUCCEEDED(hr),"AssociateFocus failed\n");
@@ -2133,7 +2129,7 @@ static void test_AssociateFocus(void)
 
     test_CurrentFocus = dmorig;
     test_PrevFocus = dm1;
-    test_OnSetFocus  = SINK_EXPECTED;
+    test_OnSetFocus  = SINK_OPTIONAL; /* Doesn't always fire on Win7+ */
     test_ACP_GetStatus = SINK_IGNORE;
     ITfThreadMgr_SetFocus(g_tm,dmorig);
     sink_check_ok(&test_OnSetFocus,"OnSetFocus");
