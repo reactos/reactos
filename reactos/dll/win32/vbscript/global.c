@@ -144,8 +144,11 @@ static inline HRESULT return_date(VARIANT *res, double date)
     return S_OK;
 }
 
-static HRESULT to_int(VARIANT *v, int *ret)
+HRESULT to_int(VARIANT *v, int *ret)
 {
+    if(V_VT(v) == (VT_BYREF|VT_VARIANT))
+        v = V_VARIANTREF(v);
+
     switch(V_VT(v)) {
     case VT_I2:
         *ret = V_I2(v);
@@ -1857,6 +1860,75 @@ static const builtin_prop_t global_props[] = {
     {DISPID_GLOBAL_VBMSGBOXRTLREADING,     NULL, BP_GET, VT_I4, MB_RTLREADING}
 };
 
+static HRESULT Err_Description(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT Err_HelpContext(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT Err_HelpFile(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT Err_Number(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
+{
+    HRESULT hres;
+
+    TRACE("\n");
+
+    if(!This->desc)
+        return E_UNEXPECTED;
+
+    if(args_cnt) {
+        FIXME("setter not implemented\n");
+        return E_NOTIMPL;
+    }
+
+    hres = This->desc->ctx->err_number;
+    return return_int(res, HRESULT_FACILITY(hres) == FACILITY_VBS ? HRESULT_CODE(hres) : hres);
+}
+
+static HRESULT Err_Source(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT Err_Clear(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
+{
+    TRACE("\n");
+
+    if(!This->desc)
+        return E_UNEXPECTED;
+
+    This->desc->ctx->err_number = S_OK;
+    return S_OK;
+}
+
+static HRESULT Err_Raise(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static const builtin_prop_t err_props[] = {
+    {DISPID_ERR_DESCRIPTION,  Err_Description, BP_GETPUT},
+    {DISPID_ERR_HELPCONTEXT,  Err_HelpContext, BP_GETPUT},
+    {DISPID_ERR_HELPFILE,     Err_HelpFile, BP_GETPUT},
+    {DISPID_ERR_NUMBER,       Err_Number, BP_GETPUT},
+    {DISPID_ERR_SOURCE,       Err_Source, BP_GETPUT},
+    {DISPID_ERR_CLEAR,        Err_Clear},
+    {DISPID_ERR_RAISE,        Err_Raise, 0, 5},
+};
+
 HRESULT init_global(script_ctx_t *ctx)
 {
     HRESULT hres;
@@ -1877,5 +1949,13 @@ HRESULT init_global(script_ctx_t *ctx)
     if(FAILED(hres))
         return hres;
 
-    return init_err(ctx);
+    ctx->err_desc.ctx = ctx;
+    ctx->err_desc.builtin_prop_cnt = sizeof(err_props)/sizeof(*err_props);
+    ctx->err_desc.builtin_props = err_props;
+
+    hres = get_typeinfo(ErrObj_tid, &ctx->err_desc.typeinfo);
+    if(FAILED(hres))
+        return hres;
+
+    return create_vbdisp(&ctx->err_desc, &ctx->err_obj);
 }
