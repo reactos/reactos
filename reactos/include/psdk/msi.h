@@ -657,7 +657,7 @@ INSTALLSTATE WINAPI MsiQueryProductStateW(_In_ LPCWSTR);
 
 UINT WINAPI MsiConfigureProductA(_In_ LPCSTR, _In_ int, _In_ INSTALLSTATE);
 UINT WINAPI MsiConfigureProductW(_In_ LPCWSTR, _In_ int, _In_ INSTALLSTATE);
-#define     MsiConfigureProduct WINELIB_NAME_AW(MsiConfigureProduct);
+#define     MsiConfigureProduct WINELIB_NAME_AW(MsiConfigureProduct)
 
 UINT
 WINAPI
@@ -675,7 +675,7 @@ MsiConfigureProductExW(
   _In_ INSTALLSTATE,
   _In_opt_ LPCWSTR);
 
-#define     MsiConfigureProductEx WINELIB_NAME_AW(MsiConfigureProductEx);
+#define     MsiConfigureProductEx WINELIB_NAME_AW(MsiConfigureProductEx)
 
 UINT
 WINAPI
@@ -691,7 +691,7 @@ MsiConfigureFeatureW(
   _In_ LPCWSTR,
   _In_ INSTALLSTATE);
 
-#define     MsiConfigureFeature WINELIB_NAME_AW(MsiConfigureFeature);
+#define     MsiConfigureFeature WINELIB_NAME_AW(MsiConfigureFeature)
 
 UINT
 WINAPI

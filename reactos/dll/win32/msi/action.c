@@ -195,19 +195,20 @@ static int parse_prop( const WCHAR *str, WCHAR *value, int *quotes )
     enum parse_state state = state_quote;
     const WCHAR *p;
     WCHAR *out = value;
-    int ignore, in_quotes = 0, count = 0, len = 0;
+    BOOL ignore, in_quotes = FALSE;
+    int count = 0, len = 0;
 
     for (p = str; *p; p++)
     {
-        ignore = 0;
+        ignore = FALSE;
         switch (state)
         {
         case state_whitespace:
             switch (*p)
             {
             case ' ':
-                in_quotes = 1;
-                ignore = 1;
+                in_quotes = TRUE;
+                ignore = TRUE;
                 len++;
                 break;
             case '"':
@@ -217,7 +218,7 @@ static int parse_prop( const WCHAR *str, WCHAR *value, int *quotes )
                 break;
             default:
                 state = state_token;
-                in_quotes = 1;
+                in_quotes = TRUE;
                 len++;
                 break;
             }
@@ -234,12 +235,12 @@ static int parse_prop( const WCHAR *str, WCHAR *value, int *quotes )
             case ' ':
                 state = state_whitespace;
                 if (!count) goto done;
-                in_quotes = 1;
+                in_quotes = TRUE;
                 len++;
                 break;
             default:
-                if (!count) in_quotes = 0;
-                else in_quotes = 1;
+                if (!count) in_quotes = FALSE;
+                else in_quotes = TRUE;
                 len++;
                 break;
             }
@@ -255,13 +256,13 @@ static int parse_prop( const WCHAR *str, WCHAR *value, int *quotes )
             case ' ':
                 state = state_whitespace;
                 if (!count || (count > 1 && !len)) goto done;
-                in_quotes = 1;
+                in_quotes = TRUE;
                 len++;
                 break;
             default:
                 state = state_token;
-                if (!count) in_quotes = 0;
-                else in_quotes = 1;
+                if (!count) in_quotes = FALSE;
+                else in_quotes = TRUE;
                 len++;
                 break;
             }
@@ -407,41 +408,21 @@ static BOOL ui_sequence_exists( MSIPACKAGE *package )
 
 UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace)
 {
-    LPWSTR source, check;
+    WCHAR *source, *check, *p, *db;
+    DWORD len;
 
-    if (msi_get_property_int( package->db, szInstalled, 0 ))
+    if (!(db = msi_dup_property( package->db, szOriginalDatabase )))
+        return ERROR_OUTOFMEMORY;
+
+    if (!(p = strrchrW( db, '\\' )) && !(p = strrchrW( db, '/' )))
     {
-        HKEY hkey;
-
-        MSIREG_OpenInstallProps( package->ProductCode, package->Context, NULL, &hkey, FALSE );
-        source = msi_reg_get_val_str( hkey, INSTALLPROPERTY_INSTALLSOURCEW );
-        RegCloseKey( hkey );
+        msi_free(db);
+        return ERROR_SUCCESS;
     }
-    else
-    {
-        LPWSTR p, db;
-        DWORD len;
-
-        db = msi_dup_property( package->db, szOriginalDatabase );
-        if (!db)
-            return ERROR_OUTOFMEMORY;
-
-        p = strrchrW( db, '\\' );
-        if (!p)
-        {
-            p = strrchrW( db, '/' );
-            if (!p)
-            {
-                msi_free(db);
-                return ERROR_SUCCESS;
-            }
-        }
-
-        len = p - db + 2;
-        source = msi_alloc( len * sizeof(WCHAR) );
-        lstrcpynW( source, db, len );
-        msi_free( db );
-    }
+    len = p - db + 2;
+    source = msi_alloc( len * sizeof(WCHAR) );
+    lstrcpynW( source, db, len );
+    msi_free( db );
 
     check = msi_dup_property( package->db, szSourceDir );
     if (!check || replace)
@@ -1890,7 +1871,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
                 component->anyAbsent = 1;
                 break;
             case INSTALLSTATE_ADVERTISED:
-                component->hasAdvertiseFeature = 1;
+                component->hasAdvertisedFeature = 1;
                 break;
             case INSTALLSTATE_SOURCE:
                 component->hasSourceFeature = 1;
@@ -1900,7 +1881,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
                 break;
             case INSTALLSTATE_DEFAULT:
                 if (feature->Attributes & msidbFeatureAttributesFavorAdvertise)
-                    component->hasAdvertiseFeature = 1;
+                    component->hasAdvertisedFeature = 1;
                 else if (feature->Attributes & msidbFeatureAttributesFavorSource)
                     component->hasSourceFeature = 1;
                 else
@@ -1945,7 +1926,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
             component->ActionRequest = INSTALLSTATE_SOURCE;
             continue;
         }
-        if (component->hasAdvertiseFeature)
+        if (component->hasAdvertisedFeature)
         {
             component->Action = INSTALLSTATE_ADVERTISED;
             component->ActionRequest = INSTALLSTATE_ADVERTISED;
@@ -3181,8 +3162,6 @@ static UINT ACTION_RemoveRegistryValues( MSIPACKAGE *package )
 
 static UINT ACTION_InstallInitialize(MSIPACKAGE *package)
 {
-    package->script->CurrentlyScripting = TRUE;
-
     return ERROR_SUCCESS;
 }
 
@@ -3569,9 +3548,29 @@ static UINT ACTION_ProcessComponents(MSIPACKAGE *package)
             if (comp->num_clients <= 0)
             {
                 if (package->Context == MSIINSTALLCONTEXT_MACHINE)
-                    MSIREG_DeleteUserDataComponentKey( comp->ComponentId, szLocalSid );
+                    rc = MSIREG_DeleteUserDataComponentKey( comp->ComponentId, szLocalSid );
                 else
-                    MSIREG_DeleteUserDataComponentKey( comp->ComponentId, NULL );
+                    rc = MSIREG_DeleteUserDataComponentKey( comp->ComponentId, NULL );
+
+                if (rc != ERROR_SUCCESS) WARN( "failed to delete component key %u\n", rc );
+            }
+            else
+            {
+                LONG res;
+
+                if (package->Context == MSIINSTALLCONTEXT_MACHINE)
+                    rc = MSIREG_OpenUserDataComponentKey( comp->ComponentId, szLocalSid, &hkey, FALSE );
+                else
+                    rc = MSIREG_OpenUserDataComponentKey( comp->ComponentId, NULL, &hkey, FALSE );
+
+                if (rc != ERROR_SUCCESS)
+                {
+                    WARN( "failed to open component key %u\n", rc );
+                    continue;
+                }
+                res = RegDeleteValueW( hkey, squished_pc );
+                RegCloseKey(hkey);
+                if (res) WARN( "failed to delete component value %d\n", res );
             }
         }
 
@@ -3823,7 +3822,7 @@ static WCHAR *get_link_file( MSIPACKAGE *package, MSIRECORD *row )
     filename = msi_dup_record_field( row, 3 );
     msi_reduce_to_long_filename( filename );
 
-    extension = strchrW( filename, '.' );
+    extension = strrchrW( filename, '.' );
     if (!extension || strcmpiW( extension, szlnk ))
     {
         int len = strlenW( filename );
@@ -5294,9 +5293,6 @@ static UINT ACTION_InstallFinalize(MSIPACKAGE *package)
     UINT rc;
     WCHAR *remove;
 
-    /* turn off scheduling */
-    package->script->CurrentlyScripting= FALSE;
-
     /* first do the same as an InstallExecute */
     rc = ACTION_InstallExecute(package);
     if (rc != ERROR_SUCCESS)
@@ -5801,7 +5797,11 @@ static UINT ITERATE_InstallService(MSIRECORD *rec, LPVOID param)
         ERR("Query failed\n");
         goto done;
     }
-    key = MSI_RecordGetString(row, 6);
+    if (!(key = MSI_RecordGetString(row, 6)))
+    {
+        msiobj_release(&row->hdr);
+        goto done;
+    }
     file = msi_get_loaded_file(package, key);
     msiobj_release(&row->hdr);
     if (!file)
@@ -7822,8 +7822,6 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     }
     else
         rc = ACTION_ProcessExecSequence(package, FALSE);
-
-    package->script->CurrentlyScripting = FALSE;
 
     /* process the ending type action */
     if (rc == ERROR_SUCCESS)

@@ -816,7 +816,7 @@ UINT SQL_getstring( void *info, const struct sql_str *strdata, LPWSTR *str )
         ( (p[0]=='\'') && (p[len-1]!='\'') ) )
         return ERROR_FUNCTION_FAILED;
 
-    /* if there's quotes, remove them */
+    /* if there are quotes, remove them */
     if( ( (p[0]=='`') && (p[len-1]=='`') ) ||
         ( (p[0]=='\'') && (p[len-1]=='\'') ) )
     {
