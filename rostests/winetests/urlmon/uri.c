@@ -695,7 +695,7 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
     },
-    /* URI is considered opaque since CREATE_NO_CRACK_UNKNOWN_SCHEMES is set and its an unknown scheme. */
+    /* URI is considered opaque since CREATE_NO_CRACK_UNKNOWN_SCHEMES is set and it's an unknown scheme. */
     {   "zip://google.com", Uri_CREATE_NO_CRACK_UNKNOWN_SCHEMES, S_OK, FALSE,
         {
             {"zip:/.//google.com",S_OK,FALSE},
@@ -903,7 +903,7 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
     },
-    /* Allowed to have invalid % encoded because its an unknown scheme type. */
+    /* Allowed to have invalid % encoded because it's an unknown scheme type. */
     {   "zip://%xy:word@winehq.org/", 0, S_OK, FALSE,
         {
             {"zip://%xy:word@winehq.org/",S_OK,FALSE},
@@ -1934,7 +1934,7 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
     },
-    /* Since foo isn't a recognized 3 character TLD its considered the domain name. */
+    /* Since foo isn't a recognized 3 character TLD it's considered the domain name. */
     {   "http://google.foo.uk", 0, S_OK, FALSE,
         {
             {"http://google.foo.uk/",S_OK,FALSE},
@@ -4078,7 +4078,7 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
     },
-    /* Res doesn't get forbidden characters percent encoded in it's path. */
+    /* Res doesn't get forbidden characters percent encoded in its path. */
     {   "res://c:\\test/tes<|>t", 0, S_OK, FALSE,
         {
             {"res://c:\\test/tes<|>t",S_OK,FALSE},
@@ -4602,7 +4602,7 @@ static const invalid_uri invalid_uri_tests[] = {
     {"*a*b*c*d://not.valid.com",0,FALSE},
     /* Not allowed to have invalid % encoded data. */
     {"ftp://google.co%XX/",0,FALSE},
-    /* To many h16 components. */
+    /* Too many h16 components. */
     {"http://[1:2:3:4:5:6:7:8:9]",0,FALSE},
     /* Not enough room for IPv4 address. */
     {"http://[1:2:3:4:5:6:7:192.0.1.0]",0,FALSE},
@@ -4614,8 +4614,6 @@ static const invalid_uri invalid_uri_tests[] = {
     {"http://[::192.0]",0,FALSE},
     /* Can't have elision of 1 h16 at beginning of address. */
     {"http://[::2:3:4:5:6:7:8]",0,FALSE},
-    /* Can't have elision of 1 h16 at end of address. */
-    {"http://[1:2:3:4:5:6:7::]",0,FALSE},
     /* Expects a valid IP Literal. */
     {"ftp://[not.valid.uri]/",0,FALSE},
     /* Expects valid port for a known scheme type. */
@@ -7425,12 +7423,16 @@ static void test_IUri_GetPropertyBSTR(void) {
         hr = IUri_GetPropertyBSTR(uri, Uri_PROPERTY_RAW_URI, NULL, 0);
         ok(hr == E_POINTER, "Error: GetPropertyBSTR returned 0x%08x, expected 0x%08x.\n", hr, E_POINTER);
 
-        /* Make sure it handles a invalid Uri_PROPERTY's correctly. */
+        /* Make sure it handles an invalid Uri_PROPERTY correctly. */
         hr = IUri_GetPropertyBSTR(uri, Uri_PROPERTY_PORT, &received, 0);
-        ok(hr == S_OK, "Error: GetPropertyBSTR returned 0x%08x, expected 0x%08x.\n", hr, S_OK);
-        ok(received != NULL, "Error: Expected the string not to be NULL.\n");
-        ok(!SysStringLen(received), "Error: Expected the string to be of len=0 but it was %d instead.\n", SysStringLen(received));
-        SysFreeString(received);
+        ok(hr == E_INVALIDARG /* IE10 */ || broken(hr == S_OK), "Error: GetPropertyBSTR returned 0x%08x, expected E_INVALIDARG or S_OK.\n", hr);
+        if(SUCCEEDED(hr)) {
+            ok(received != NULL, "Error: Expected the string not to be NULL.\n");
+            ok(!SysStringLen(received), "Error: Expected the string to be of len=0 but it was %d instead.\n", SysStringLen(received));
+            SysFreeString(received);
+        }else {
+            ok(!received, "received = %s\n", wine_dbgstr_w(received));
+        }
 
         /* Make sure it handles the ZONE property correctly. */
         received = NULL;
@@ -8136,11 +8138,10 @@ static void test_IUri_GetPropertyLength(void) {
             DWORD j;
 
             for(j = Uri_PROPERTY_STRING_START; j <= Uri_PROPERTY_STRING_LAST; ++j) {
-                DWORD expectedLen, brokenLen, receivedLen;
+                DWORD expectedLen, receivedLen;
                 uri_str_property prop = test.str_props[j];
 
-                expectedLen = lstrlen(prop.value);
-                brokenLen = lstrlen(prop.broken_value);
+                expectedLen = lstrlenA(prop.value);
 
                 /* This won't be necessary once GetPropertyLength is implemented. */
                 receivedLen = -1;
@@ -8152,14 +8153,14 @@ static void test_IUri_GetPropertyLength(void) {
                                 hr, prop.expected, i, j);
                     }
                     todo_wine {
-                        ok(receivedLen == expectedLen || broken(receivedLen == brokenLen),
+                        ok(receivedLen == expectedLen || broken(prop.broken_value && receivedLen == lstrlenA(prop.broken_value)),
                                 "Error: Expected a length of %d but got %d on uri_tests[%d].str_props[%d].\n",
                                 expectedLen, receivedLen, i, j);
                     }
                 } else {
                     ok(hr == prop.expected, "Error: GetPropertyLength returned 0x%08x, expected 0x%08x on uri_tests[%d].str_props[%d].\n",
                             hr, prop.expected, i, j);
-                    ok(receivedLen == expectedLen || broken(receivedLen == brokenLen),
+                    ok(receivedLen == expectedLen || broken(prop.broken_value && receivedLen == lstrlenA(prop.broken_value)),
                             "Error: Expected a length of %d but got %d on uri_tests[%d].str_props[%d].\n",
                             expectedLen, receivedLen, i, j);
                 }
@@ -8966,6 +8967,7 @@ static void test_IUriBuilder_GetFragment(IUriBuilder *builder, const uri_builder
     if(prop) {
         /* Use expected_value unless it's NULL, then use value. */
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
+        DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetFragment(builder, &len, &received);
         if(prop->todo) {
             todo_wine {
@@ -8979,9 +8981,9 @@ static void test_IUriBuilder_GetFragment(IUriBuilder *builder, const uri_builder
                         expected, wine_dbgstr_w(received), test_index);
                 }
                 todo_wine {
-                    ok(lstrlen(expected) == len,
+                    ok(expected_len == len,
                         "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        lstrlen(expected), len, test_index);
+                        expected_len, len, test_index);
                 }
             }
         } else {
@@ -8990,9 +8992,9 @@ static void test_IUriBuilder_GetFragment(IUriBuilder *builder, const uri_builder
                 hr, (expected ? S_OK : S_FALSE), test_index);
             ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
                 expected, wine_dbgstr_w(received), test_index);
-            ok(lstrlen(expected) == len,
+            ok(expected_len == len,
                 "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                lstrlen(expected), len, test_index);
+                expected_len, len, test_index);
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9075,6 +9077,7 @@ static void test_IUriBuilder_GetHost(IUriBuilder *builder, const uri_builder_tes
     if(prop) {
         /* Use expected_value unless it's NULL, then use value. */
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
+        DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetHost(builder, &len, &received);
         if(prop->todo) {
             todo_wine {
@@ -9088,9 +9091,9 @@ static void test_IUriBuilder_GetHost(IUriBuilder *builder, const uri_builder_tes
                         expected, wine_dbgstr_w(received), test_index);
                 }
                 todo_wine {
-                    ok(lstrlen(expected) == len,
+                    ok(expected_len == len,
                         "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        lstrlen(expected), len, test_index);
+                        expected_len, len, test_index);
                 }
             }
         } else {
@@ -9099,9 +9102,9 @@ static void test_IUriBuilder_GetHost(IUriBuilder *builder, const uri_builder_tes
                 hr, (expected ? S_OK : S_FALSE), test_index);
             ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
                 expected, wine_dbgstr_w(received), test_index);
-            ok(lstrlen(expected) == len,
+            ok(expected_len == len,
                 "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                lstrlen(expected), len, test_index);
+                expected_len, len, test_index);
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9184,6 +9187,7 @@ static void test_IUriBuilder_GetPassword(IUriBuilder *builder, const uri_builder
     if(prop) {
         /* Use expected_value unless it's NULL, then use value. */
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
+        DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetPassword(builder, &len, &received);
         if(prop->todo) {
             todo_wine {
@@ -9197,9 +9201,9 @@ static void test_IUriBuilder_GetPassword(IUriBuilder *builder, const uri_builder
                         expected, wine_dbgstr_w(received), test_index);
                 }
                 todo_wine {
-                    ok(lstrlen(expected) == len,
+                    ok(expected_len == len,
                         "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        lstrlen(expected), len, test_index);
+                        expected_len, len, test_index);
                 }
             }
         } else {
@@ -9208,9 +9212,9 @@ static void test_IUriBuilder_GetPassword(IUriBuilder *builder, const uri_builder
                 hr, (expected ? S_OK : S_FALSE), test_index);
             ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
                 expected, wine_dbgstr_w(received), test_index);
-            ok(lstrlen(expected) == len,
+            ok(expected_len == len,
                 "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                lstrlen(expected), len, test_index);
+                expected_len, len, test_index);
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9293,6 +9297,7 @@ static void test_IUriBuilder_GetPath(IUriBuilder *builder, const uri_builder_tes
     if(prop) {
         /* Use expected_value unless it's NULL, then use value. */
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
+        DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetPath(builder, &len, &received);
         if(prop->todo) {
             todo_wine {
@@ -9306,9 +9311,9 @@ static void test_IUriBuilder_GetPath(IUriBuilder *builder, const uri_builder_tes
                         expected, wine_dbgstr_w(received), test_index);
                 }
                 todo_wine {
-                    ok(lstrlen(expected) == len,
+                    ok(expected_len == len,
                         "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        lstrlen(expected), len, test_index);
+                        expected_len, len, test_index);
                 }
             }
         } else {
@@ -9317,9 +9322,9 @@ static void test_IUriBuilder_GetPath(IUriBuilder *builder, const uri_builder_tes
                 hr, (expected ? S_OK : S_FALSE), test_index);
             ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
                 expected, wine_dbgstr_w(received), test_index);
-            ok(lstrlen(expected) == len,
+            ok(expected_len == len,
                 "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                lstrlen(expected), len, test_index);
+                expected_len, len, test_index);
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9487,6 +9492,7 @@ static void test_IUriBuilder_GetQuery(IUriBuilder *builder, const uri_builder_te
     if(prop) {
         /* Use expected_value unless it's NULL, then use value. */
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
+        DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetQuery(builder, &len, &received);
         if(prop->todo) {
             todo_wine {
@@ -9500,9 +9506,9 @@ static void test_IUriBuilder_GetQuery(IUriBuilder *builder, const uri_builder_te
                         expected, wine_dbgstr_w(received), test_index);
                 }
                 todo_wine {
-                    ok(lstrlen(expected) == len,
+                    ok(expected_len == len,
                         "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        lstrlen(expected), len, test_index);
+                        expected_len, len, test_index);
                 }
             }
         } else {
@@ -9511,9 +9517,9 @@ static void test_IUriBuilder_GetQuery(IUriBuilder *builder, const uri_builder_te
                 hr, (expected ? S_OK : S_FALSE), test_index);
             ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
                 expected, wine_dbgstr_w(received), test_index);
-            ok(lstrlen(expected) == len,
+            ok(expected_len == len,
                 "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                lstrlen(expected), len, test_index);
+                expected_len, len, test_index);
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9596,6 +9602,7 @@ static void test_IUriBuilder_GetSchemeName(IUriBuilder *builder, const uri_build
     if(prop) {
         /* Use expected_value unless it's NULL, then use value. */
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
+        DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetSchemeName(builder, &len, &received);
         if(prop->todo) {
             todo_wine {
@@ -9609,9 +9616,9 @@ static void test_IUriBuilder_GetSchemeName(IUriBuilder *builder, const uri_build
                         expected, wine_dbgstr_w(received), test_index);
                 }
                 todo_wine {
-                    ok(lstrlen(expected) == len,
+                    ok(expected_len == len,
                         "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        lstrlen(expected), len, test_index);
+                        expected_len, len, test_index);
                 }
             }
         } else {
@@ -9620,9 +9627,9 @@ static void test_IUriBuilder_GetSchemeName(IUriBuilder *builder, const uri_build
                 hr, (expected ? S_OK : S_FALSE), test_index);
             ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
                 expected, wine_dbgstr_w(received), test_index);
-            ok(lstrlen(expected) == len,
+            ok(expected_len == len,
                 "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                lstrlen(expected), len, test_index);
+                expected_len, len, test_index);
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9705,6 +9712,7 @@ static void test_IUriBuilder_GetUserName(IUriBuilder *builder, const uri_builder
     if(prop && prop->value && *prop->value) {
         /* Use expected_value unless it's NULL, then use value. */
         LPCSTR expected = prop->expected_value ? prop->expected_value : prop->value;
+        DWORD expected_len = expected ? strlen(expected) : 0;
         hr = IUriBuilder_GetUserName(builder, &len, &received);
         if(prop->todo) {
             todo_wine {
@@ -9718,9 +9726,9 @@ static void test_IUriBuilder_GetUserName(IUriBuilder *builder, const uri_builder
                         expected, wine_dbgstr_w(received), test_index);
                 }
                 todo_wine {
-                    ok(lstrlen(expected) == len,
+                    ok(expected_len == len,
                         "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                        lstrlen(expected), len, test_index);
+                        expected_len, len, test_index);
                 }
             }
         } else {
@@ -9729,9 +9737,9 @@ static void test_IUriBuilder_GetUserName(IUriBuilder *builder, const uri_builder
                 hr, (expected ? S_OK : S_FALSE), test_index);
             ok(!strcmp_aw(expected, received), "Error: Expected %s but got %s on uri_builder_tests[%d].\n",
                 expected, wine_dbgstr_w(received), test_index);
-            ok(lstrlen(expected) == len,
+            ok(expected_len == len,
                 "Error: Expected the length to be %d, but was %d instead on uri_builder_tests[%d].\n",
-                lstrlen(expected), len, test_index);
+                expected_len, len, test_index);
         }
     } else {
         /* The property wasn't set earlier, so it should return whatever
@@ -9946,7 +9954,7 @@ static void test_IUriBuilder_HasBeenModified(void) {
             hr = IUriBuilder_SetIUri(builder, uri);
             ok(hr == S_OK, "Error: IUriBuilder_SetIUri returned 0x%08x, expected 0x%08x.\n", hr, S_OK);
 
-            /* IUriBuilder already had 'uri' as it's IUri property and so Windows doesn't
+            /* IUriBuilder already had 'uri' as its IUri property and so Windows doesn't
              * reset any of the changes that were made to the IUriBuilder.
              */
             hr = IUriBuilder_HasBeenModified(builder, &received);
@@ -10069,7 +10077,7 @@ static void test_IUriBuilder_IUriProperty(void) {
             if(test) IUri_Release(test);
 
             /* Still returns the same IUri, even though the base one wasn't created with CREATE_CANONICALIZE
-             * explicitly set (because it's a default flags).
+             * explicitly set (because it's a default flag).
              */
             test = NULL;
             hr = IUriBuilder_CreateUri(builder, Uri_CREATE_CANONICALIZE, 0, 0, &test);
@@ -10117,7 +10125,7 @@ static void test_IUriBuilder_IUriProperty(void) {
             if(test) IUri_Release(test);
 
             /* Still returns the same IUri, even though the base one wasn't created with CREATE_CANONICALIZE
-             * explicitly set (because it's a default flags).
+             * explicitly set (because it's a default flag).
              */
             test = NULL;
             hr = IUriBuilder_CreateUriWithFlags(builder, Uri_CREATE_CANONICALIZE, 0, 0, 0, &test);
@@ -11298,7 +11306,6 @@ static void test_IPersistStream(void)
         ok(props == 0, "%d) Not all properties were processed %d. Next property type: %d\n",
                 i, props, dw_data[0]);
 
-        IPersistStream_Release(persist_stream);
         IUri_Release(uri);
 
         hr = IStream_Seek(stream, no_off, STREAM_SEEK_SET, NULL);
@@ -11306,6 +11313,8 @@ static void test_IPersistStream(void)
         hr = IPersistStream_GetClassID(persist_stream, &curi);
         ok(hr == S_OK, "%d) GetClassID failed 0x%08x, expected S_OK.\n", i, hr);
         ok(IsEqualCLSID(&curi, &CLSID_CUri), "%d) GetClassID returned incorrect CLSID.\n", i);
+        IPersistStream_Release(persist_stream);
+
         hr = CoCreateInstance(&curi, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
                 &IID_IUri, (void**)&uri);
         ok(hr == S_OK, "%d) Error creating uninitialized Uri: 0x%08x.\n", i, hr);
@@ -11321,6 +11330,7 @@ static void test_IPersistStream(void)
                 "%d) Expected %s but got %s.\n", i, test->str_props[Uri_PROPERTY_RAW_URI].value,
                 wine_dbgstr_w(raw_uri));
         SysFreeString(raw_uri);
+        IPersistStream_Release(persist_stream);
 
         hr = IUri_QueryInterface(uri, &IID_IMarshal, (void**)&marshal);
         ok(hr == S_OK, "%d) QueryInterface(IID_IMarshal) failed 0x%08x, expected S_OK.\n", i, hr);
@@ -11394,7 +11404,6 @@ static void test_IPersistStream(void)
 
         IMarshal_Release(marshal);
         IStream_Release(stream);
-        IPersistStream_Release(persist_stream);
         IUri_Release(uri);
         heap_free(uriW);
     }
@@ -11495,7 +11504,7 @@ static void test_UninitializedUri(void)
 START_TEST(uri) {
     HMODULE hurlmon;
 
-    hurlmon = GetModuleHandle("urlmon.dll");
+    hurlmon = GetModuleHandleA("urlmon.dll");
     pCoInternetGetSession = (void*) GetProcAddress(hurlmon, "CoInternetGetSession");
     pCreateUri = (void*) GetProcAddress(hurlmon, "CreateUri");
     pCreateUriWithFragment = (void*) GetProcAddress(hurlmon, "CreateUriWithFragment");
