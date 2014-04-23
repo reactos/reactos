@@ -317,6 +317,9 @@ HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
                 *r = jsval_disp(disp);
                 return S_OK;
             }
+        }else {
+            *r = jsval_disp(NULL);
+            return S_OK;
         }
         /* fall through */
     default:
