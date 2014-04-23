@@ -15,7 +15,7 @@ if /I "%1" == "arm_hosttools" (
     call %2 x86
 
     :: Configure host tools for x86
-    cmake -G %3 -DARCH=i386 %~dp0
+    cmake -G %3 -DARCH:STRING=i386 %~dp0
     exit
 )
 
@@ -148,7 +148,7 @@ if "%ARCH%" == "arm" (
     :: Launch new script instance for x86 host tools configuration
     start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
 ) else (
-    cmake -G %CMAKE_GENERATOR% -DARCH=%ARCH% "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
 )
 
 cd..
@@ -160,11 +160,11 @@ if EXIST CMakeCache.txt (
 )
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
-    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 ) else if "%BUILD_ENVIRONMENT%" == "Clang" (
-    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-clang.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-clang.cmake -DARCH:STRING=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 ) else (
-    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 )
 
 cd..
