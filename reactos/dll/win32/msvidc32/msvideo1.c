@@ -71,7 +71,7 @@ typedef BYTE uint8_t;
 
 typedef struct Msvideo1Context {
     DWORD dwMagic;
-    int mode_8bit;  /* if it's not 8-bit, it's 16-bit */
+    BOOL mode_8bit;  /* if it's not 8-bit, it's 16-bit */
 } Msvideo1Context;
 
 static void 
@@ -374,12 +374,12 @@ static LRESULT CRAM_DecompressBegin( Msvideo1Context *info, LPBITMAPINFO in, LPB
 
     TRACE("bitmap is %d bpp\n", in->bmiHeader.biBitCount);
     if( in->bmiHeader.biBitCount == 8 )
-        info->mode_8bit = 1;
+        info->mode_8bit = TRUE;
     else if( in->bmiHeader.biBitCount == 16 )
-        info->mode_8bit = 0;
+        info->mode_8bit = FALSE;
     else
     {
-        info->mode_8bit = 0;
+        info->mode_8bit = FALSE;
         FIXME("Unsupported output format %i\n", in->bmiHeader.biBitCount);
     }
 
