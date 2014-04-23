@@ -76,27 +76,27 @@ static void test_suminfo(void)
     FILETIME ft;
     char buf[0x10];
 
-    DeleteFile(msifile);
+    DeleteFileA(msifile);
 
     /* just MsiOpenDatabase should not create a file */
-    r = MsiOpenDatabase(msifile, MSIDBOPEN_CREATE, &hdb);
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_CREATE, &hdb);
     ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
 
-    r = MsiGetSummaryInformation(hdb, NULL, 0, NULL);
+    r = MsiGetSummaryInformationA(hdb, NULL, 0, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "MsiGetSummaryInformation wrong error\n");
 
-    r = MsiGetSummaryInformation(hdb, NULL, 0, &hsuminfo);
+    r = MsiGetSummaryInformationA(hdb, NULL, 0, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed %u\n", r);
 
     r = MsiCloseHandle(hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
-    r = MsiGetSummaryInformation(0, "", 0, &hsuminfo);
+    r = MsiGetSummaryInformationA(0, "", 0, &hsuminfo);
     todo_wine
     ok(r == ERROR_INSTALL_PACKAGE_INVALID || r == ERROR_INSTALL_PACKAGE_OPEN_FAILED,
        "MsiGetSummaryInformation failed %u\n", r);
 
-    r = MsiGetSummaryInformation(hdb, "", 0, &hsuminfo);
+    r = MsiGetSummaryInformationA(hdb, "", 0, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed %u\n", r);
 
     r = MsiSummaryInfoGetPropertyCount(0, NULL);
@@ -110,23 +110,23 @@ static void test_suminfo(void)
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
     ok(count == 0, "count should be zero\n");
 
-    r = MsiSummaryInfoGetProperty(hsuminfo, 0, NULL, NULL, NULL, 0, NULL);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, 0, NULL, NULL, NULL, 0, NULL);
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
 
-    r = MsiSummaryInfoGetProperty(hsuminfo, -1, NULL, NULL, NULL, 0, NULL);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, -1, NULL, NULL, NULL, 0, NULL);
     ok(r == ERROR_UNKNOWN_PROPERTY, "MsiSummaryInfoGetProperty wrong error\n");
 
-    r = MsiSummaryInfoGetProperty(hsuminfo, PID_SECURITY+1, NULL, NULL, NULL, 0, NULL);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_SECURITY+1, NULL, NULL, NULL, 0, NULL);
     ok(r == ERROR_UNKNOWN_PROPERTY, "MsiSummaryInfoGetProperty wrong error\n");
 
     type = -1;
-    r = MsiSummaryInfoGetProperty(hsuminfo, 0, &type, NULL, NULL, 0, NULL);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, 0, &type, NULL, NULL, 0, NULL);
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
     ok(type == 0, "wrong type\n");
 
     type = -1;
     val = 1234;
-    r = MsiSummaryInfoGetProperty(hsuminfo, 0, &type, &val, NULL, 0, NULL);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, 0, &type, &val, NULL, 0, NULL);
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
     ok(type == 0, "wrong type\n");
     ok(val == 1234, "wrong val\n");
@@ -134,73 +134,73 @@ static void test_suminfo(void)
     buf[0]='x';
     buf[1]=0;
     sz = 0x10;
-    r = MsiSummaryInfoGetProperty(hsuminfo, PID_REVNUMBER, &type, &val, NULL, buf, &sz);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_REVNUMBER, &type, &val, NULL, buf, &sz);
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
     ok(buf[0]=='x', "cleared buffer\n");
     ok(sz == 0x10, "count wasn't zero\n");
     ok(type == VT_EMPTY, "should be empty\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "Mike");
     ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TITLE, VT_LPSTR, 1, NULL, "JungAh");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TITLE, VT_LPSTR, 1, NULL, "JungAh");
     ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TITLE, VT_LPSTR, 1, &ft, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TITLE, VT_LPSTR, 1, &ft, "Mike");
     ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_CODEPAGE, VT_I2, 1, &ft, "JungAh");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_CODEPAGE, VT_I2, 1, &ft, "JungAh");
     ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty wrong error\n");
 
     r = MsiCloseHandle(hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
     /* try again with the update count set */
-    r = MsiGetSummaryInformation(hdb, NULL, 1, &hsuminfo);
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, 0, VT_LPSTR, 1, NULL, NULL);
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, 0, VT_LPSTR, 1, NULL, NULL);
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_CODEPAGE, VT_LPSTR, 1, NULL, NULL);
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_CODEPAGE, VT_LPSTR, 1, NULL, NULL);
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TITLE, VT_I4, 0, NULL, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TITLE, VT_I4, 0, NULL, "Mike");
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_I4, 0, NULL, "JungAh");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_I4, 0, NULL, "JungAh");
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_KEYWORDS, VT_I2, 0, NULL, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_KEYWORDS, VT_I2, 0, NULL, "Mike");
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_COMMENTS, VT_FILETIME, 0, NULL, "JungAh");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_COMMENTS, VT_FILETIME, 0, NULL, "JungAh");
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TEMPLATE, VT_I2, 0, NULL, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TEMPLATE, VT_I2, 0, NULL, "Mike");
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_LASTAUTHOR, VT_LPSTR, 0, NULL, NULL);
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_LASTAUTHOR, VT_LPSTR, 0, NULL, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_LASTSAVE_DTM, VT_FILETIME, 0, NULL, NULL);
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_LASTSAVE_DTM, VT_FILETIME, 0, NULL, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_LASTAUTHOR, VT_LPWSTR, 0, NULL, "h\0i\0\0");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_LASTAUTHOR, VT_LPWSTR, 0, NULL, "h\0i\0\0");
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_REVNUMBER, VT_I4, 0, NULL, "Jungah");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_REVNUMBER, VT_I4, 0, NULL, "Jungah");
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_PAGECOUNT, VT_LPSTR, 1, NULL, NULL);
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_PAGECOUNT, VT_LPSTR, 1, NULL, NULL);
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "Mike");
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty failed\n");
 
     sz = 2;
     strcpy(buf,"x");
-    r = MsiSummaryInfoGetProperty(hsuminfo, PID_TITLE, &type, NULL, NULL, buf, &sz );
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_TITLE, &type, NULL, NULL, buf, &sz );
     ok(r == ERROR_MORE_DATA, "MsiSummaryInfoSetProperty failed\n");
     ok(sz == 4, "count was wrong\n");
     ok(type == VT_LPSTR, "type was wrong\n");
@@ -208,38 +208,38 @@ static void test_suminfo(void)
 
     sz = 4;
     strcpy(buf,"x");
-    r = MsiSummaryInfoGetProperty(hsuminfo, PID_TITLE, &type, NULL, NULL, buf, &sz );
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_TITLE, &type, NULL, NULL, buf, &sz );
     ok(r == ERROR_MORE_DATA, "MsiSummaryInfoSetProperty failed\n");
     ok(sz == 4, "count was wrong\n");
     ok(type == VT_LPSTR, "type was wrong\n");
     ok(!strcmp(buf,"Mik"), "buffer was wrong\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "JungAh");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "JungAh");
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty failed\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_CODEPAGE, VT_I2, 1, &ft, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_CODEPAGE, VT_I2, 1, &ft, "Mike");
     ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty wrong error\n");
 
     r = MsiCloseHandle(hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
     /* try again with a higher update count */
-    r = MsiGetSummaryInformation(hdb, NULL, 10, &hsuminfo);
+    r = MsiGetSummaryInformationA(hdb, NULL, 10, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "JungAh");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "JungAh");
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty failed\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_CODEPAGE, VT_LPSTR, 1, NULL, NULL);
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_CODEPAGE, VT_LPSTR, 1, NULL, NULL);
     ok(r == ERROR_DATATYPE_MISMATCH, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_CODEPAGE, VT_I2, 1, NULL, NULL);
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_CODEPAGE, VT_I2, 1, NULL, NULL);
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_CODEPAGE, VT_I2, 1, &ft, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_CODEPAGE, VT_I2, 1, &ft, "Mike");
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
 
     r = MsiSummaryInfoPersist(hsuminfo);
@@ -254,10 +254,10 @@ static void test_suminfo(void)
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
     /* filename, non-zero update count */
-    r = MsiGetSummaryInformation(0, msifile, 1, &hsuminfo);
+    r = MsiGetSummaryInformationA(0, msifile, 1, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
 
     r = MsiSummaryInfoPersist(hsuminfo);
@@ -267,10 +267,10 @@ static void test_suminfo(void)
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed %u\n", r);
 
     /* filename, zero update count */
-    r = MsiGetSummaryInformation(0, msifile, 0, &hsuminfo);
+    r = MsiGetSummaryInformationA(0, msifile, 0, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed %u\n", r);
 
-    r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
     todo_wine ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty wrong error, %u\n", r);
 
     r = MsiSummaryInfoPersist(hsuminfo);
@@ -279,7 +279,7 @@ static void test_suminfo(void)
     r = MsiCloseHandle(hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
-    r = DeleteFile(msifile);
+    r = DeleteFileA(msifile);
     ok(r, "DeleteFile failed\n");
 }
 
@@ -404,17 +404,17 @@ static void test_summary_binary(void)
     DWORD sz;
     char sval[20];
 
-    DeleteFile( msifile );
+    DeleteFileA( msifile );
 
     test_create_database_binary();
 
-    ok( INVALID_FILE_ATTRIBUTES != GetFileAttributes(msifile), "file doesn't exist!\n");
+    ok(GetFileAttributesA(msifile) != INVALID_FILE_ATTRIBUTES, "file doesn't exist!\n");
 
     /* just MsiOpenDatabase should not create a file */
-    r = MsiOpenDatabase(msifile, MSIDBOPEN_READONLY, &hdb);
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_READONLY, &hdb);
     ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
 
-    r = MsiGetSummaryInformation(hdb, NULL, 0, &hsuminfo);
+    r = MsiGetSummaryInformationA(hdb, NULL, 0, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
 
     /*
@@ -426,7 +426,7 @@ static void test_summary_binary(void)
     sz = sizeof sval;
     sval[0] = 0;
     type = 0;
-    r = MsiSummaryInfoGetProperty(hsuminfo, PID_LASTPRINTED, &type, NULL, NULL, sval, &sz);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_LASTPRINTED, &type, NULL, NULL, sval, &sz);
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetProperty failed\n");
     ok(!lstrcmpA(sval, "") || !lstrcmpA(sval, "7"),
         "Expected empty string or \"7\", got \"%s\"\n", sval);
@@ -436,7 +436,7 @@ static void test_summary_binary(void)
     }
 
     ival = -1;
-    r = MsiSummaryInfoGetProperty(hsuminfo, PID_WORDCOUNT, &type, &ival, NULL, NULL, NULL);
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_WORDCOUNT, &type, &ival, NULL, NULL, NULL);
     ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetProperty failed\n");
     todo_wine ok( ival == 0, "value incorrect\n");
 
@@ -446,7 +446,7 @@ static void test_summary_binary(void)
     ok(r == ERROR_SUCCESS, "getpropcount failed\n");
     todo_wine ok(count == 10, "prop count incorrect\n");
 
-    r = MsiSummaryInfoSetProperty( hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "Mike" );
+    r = MsiSummaryInfoSetPropertyA( hsuminfo, PID_TITLE, VT_LPSTR, 0, NULL, "Mike" );
     ok(r == ERROR_FUNCTION_FAILED, "MsiSummaryInfoSetProperty failed %u\n", r);
 
     r = MsiSummaryInfoPersist( hsuminfo );
@@ -455,7 +455,7 @@ static void test_summary_binary(void)
     MsiCloseHandle( hsuminfo );
     MsiCloseHandle( hdb );
 
-    DeleteFile( msifile );
+    DeleteFileA( msifile );
 }
 
 START_TEST(suminfo)
