@@ -67,16 +67,16 @@ static const WCHAR cmd_AddPortW[] = {'A','d','d','P','o','r','t',0};
 static const WCHAR cmd_ConfigureLPTPortCommandOKW[] = {'C','o','n','f','i','g','u','r','e',
                                     'L','P','T','P','o','r','t',
                                     'C','o','m','m','a','n','d','O','K',0};
-static WCHAR cmd_DeletePortW[] = {'D','e','l','e','t','e','P','o','r','t',0};
-static WCHAR cmd_GetTransmissionRetryTimeoutW[] = {'G','e','t',
+static const WCHAR cmd_DeletePortW[] = {'D','e','l','e','t','e','P','o','r','t',0};
+static const WCHAR cmd_GetTransmissionRetryTimeoutW[] = {'G','e','t',
                                     'T','r','a','n','s','m','i','s','s','i','o','n',
                                     'R','e','t','r','y','T','i','m','e','o','u','t',0};
 
-static WCHAR cmd_MonitorUIW[] = {'M','o','n','i','t','o','r','U','I',0};
-static WCHAR cmd_MonitorUI_lcaseW[] = {'m','o','n','i','t','o','r','u','i',0};
-static WCHAR cmd_PortIsValidW[] = {'P','o','r','t','I','s','V','a','l','i','d',0};
+static const WCHAR cmd_MonitorUIW[] = {'M','o','n','i','t','o','r','U','I',0};
+static const WCHAR cmd_MonitorUI_lcaseW[] = {'m','o','n','i','t','o','r','u','i',0};
+static const WCHAR cmd_PortIsValidW[] = {'P','o','r','t','I','s','V','a','l','i','d',0};
 static WCHAR does_not_existW[] = {'d','o','e','s','_','n','o','t','_','e','x','i','s','t',0};
-static CHAR  emptyA[] = "";
+static const CHAR emptyA[] = "";
 static WCHAR emptyW[] = {0};
 static WCHAR LocalPortW[] = {'L','o','c','a','l',' ','P','o','r','t',0};
 static WCHAR Monitors_LocalPortW[] = {
@@ -87,32 +87,32 @@ static WCHAR Monitors_LocalPortW[] = {
                                 'M','o','n','i','t','o','r','s','\\',
                                 'L','o','c','a','l',' ','P','o','r','t',0};
 
-static CHAR  num_0A[] = "0";
+static const CHAR num_0A[] = "0";
 static WCHAR num_0W[] = {'0',0};
-static CHAR  num_1A[] = "1";
+static const CHAR num_1A[] = "1";
 static WCHAR num_1W[] = {'1',0};
-static CHAR  num_999999A[] = "999999";
+static const CHAR num_999999A[] = "999999";
 static WCHAR num_999999W[] = {'9','9','9','9','9','9',0};
-static CHAR  num_1000000A[] = "1000000";
+static const CHAR num_1000000A[] = "1000000";
 static WCHAR num_1000000W[] = {'1','0','0','0','0','0','0',0};
 
-static WCHAR portname_comW[]  = {'C','O','M',0};
+static const WCHAR portname_comW[]  = {'C','O','M',0};
 static WCHAR portname_com1W[] = {'C','O','M','1',':',0};
 static WCHAR portname_com2W[] = {'C','O','M','2',':',0};
 static WCHAR portname_fileW[] = {'F','I','L','E',':',0};
-static WCHAR portname_lptW[]  = {'L','P','T',0};
+static const WCHAR portname_lptW[]  = {'L','P','T',0};
 static WCHAR portname_lpt1W[] = {'L','P','T','1',':',0};
 static WCHAR portname_lpt2W[] = {'L','P','T','2',':',0};
 static WCHAR server_does_not_existW[] = {'\\','\\','d','o','e','s','_','n','o','t','_','e','x','i','s','t',0};
 
-static CHAR  TransmissionRetryTimeoutA[] = {'T','r','a','n','s','m','i','s','s','i','o','n',
+static const CHAR TransmissionRetryTimeoutA[] = {'T','r','a','n','s','m','i','s','s','i','o','n',
                                     'R','e','t','r','y','T','i','m','e','o','u','t',0};
 
-static CHAR  WinNT_CV_WindowsA[] = {'S','o','f','t','w','a','r','e','\\',
-                                    'M','i','c','r','o','s','o','f','t','\\',
-                                    'W','i','n','d','o','w','s',' ','N','T','\\',
-                                    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-                                    'W','i','n','d','o','w','s',0};
+static const CHAR WinNT_CV_WindowsA[] = {'S','o','f','t','w','a','r','e','\\',
+                                         'M','i','c','r','o','s','o','f','t','\\',
+                                         'W','i','n','d','o','w','s',' ','N','T','\\',
+                                         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+                                         'W','i','n','d','o','w','s',0};
 static WCHAR wineW[] = {'W','i','n','e',0};
 
 static WCHAR tempdirW[MAX_PATH];
