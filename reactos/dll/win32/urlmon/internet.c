@@ -631,22 +631,17 @@ static HRESULT load_process_feature(INTERNETFEATURELIST feature)
 
 static HRESULT get_feature_from_process(INTERNETFEATURELIST feature)
 {
-    HRESULT hres;
+    HRESULT hres = S_OK;
 
     EnterCriticalSection(&process_features_cs);
 
     /* Try loading the feature from the registry, if it hasn't already
      * been done.
      */
-    if(process_feature_controls[feature].check_registry) {
+    if(process_feature_controls[feature].check_registry)
         hres = load_process_feature(feature);
-        if(FAILED(hres)) {
-            LeaveCriticalSection(&process_features_cs);
-            return hres;
-        }
-    }
-
-    hres = process_feature_controls[feature].enabled ? S_OK : S_FALSE;
+    if(SUCCEEDED(hres))
+        hres = process_feature_controls[feature].enabled ? S_OK : S_FALSE;
 
     LeaveCriticalSection(&process_features_cs);
 

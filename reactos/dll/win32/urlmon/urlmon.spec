@@ -95,6 +95,7 @@
 @ stub WriteHitLogging
 @ stub ZonesReInit
 
+108 stdcall @() IsInternetESCEnabledLocal
 111 stdcall @(wstr) IsProtectedModeURL
 328 stdcall @(ptr ptr) propsys.VariantCompare
 329 stdcall @(ptr ptr) propsys.VariantToGUID

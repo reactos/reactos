@@ -566,7 +566,7 @@ void find_domain_name(const WCHAR *host, DWORD host_len,
         DWORD i;
         /* If the sec_last_tld is 3 characters long it HAS to be on the list of
          * recognized to still be considered part of the TLD name, otherwise
-         * its considered the domain name.
+         * it's considered the domain name.
          *  Ex: www.google.com.uk -> google.com.uk as the domain name.
          *      www.google.foo.uk -> foo.uk as the domain name.
          */
@@ -1610,7 +1610,7 @@ static BOOL parse_ipv6address(const WCHAR **ptr, parse_data *data, DWORD flags) 
                 /* An IPv6 address can have no more than 8 h16 components. */
                 if(ip.h16_count >= 8) {
                     *ptr = start;
-                    TRACE("(%p %p %x): Not a IPv6 address, to many h16 components.\n",
+                    TRACE("(%p %p %x): Not a IPv6 address, too many h16 components.\n",
                         ptr, data, flags);
                     return FALSE;
                 }
@@ -1896,7 +1896,7 @@ static BOOL parse_path_hierarchical(const WCHAR **ptr, parse_data *data, DWORD f
     return TRUE;
 }
 
-/* Parses the path of an opaque URI (much less strict then the parser
+/* Parses the path of an opaque URI (much less strict than the parser
  * for a hierarchical URI).
  *
  * NOTE:
@@ -4271,16 +4271,16 @@ static HRESULT WINAPI Uri_GetPropertyBSTR(IUri *iface, Uri_PROPERTY uriProp, BST
         return E_POINTER;
 
     if(uriProp > Uri_PROPERTY_STRING_LAST) {
-        /* Windows allocates an empty BSTR for invalid Uri_PROPERTY's. */
-        *pbstrProperty = SysAllocStringLen(NULL, 0);
-        if(!(*pbstrProperty))
-            return E_OUTOFMEMORY;
-
         /* It only returns S_FALSE for the ZONE property... */
-        if(uriProp == Uri_PROPERTY_ZONE)
+        if(uriProp == Uri_PROPERTY_ZONE) {
+            *pbstrProperty = SysAllocStringLen(NULL, 0);
+            if(!(*pbstrProperty))
+                return E_OUTOFMEMORY;
             return S_FALSE;
-        else
-            return S_OK;
+        }
+
+        *pbstrProperty = NULL;
+        return E_INVALIDARG;
     }
 
     /* Don't have support for flags yet. */
@@ -6031,7 +6031,7 @@ static HRESULT WINAPI UriBuilder_SetIUri(IUriBuilder *iface, IUri *pIUri)
         Uri *uri;
 
         if((uri = get_uri_obj(pIUri))) {
-            /* Only reset the builder if it's Uri isn't the same as
+            /* Only reset the builder if its Uri isn't the same as
              * the Uri passed to the function.
              */
             if(This->uri != uri) {
@@ -6048,7 +6048,7 @@ static HRESULT WINAPI UriBuilder_SetIUri(IUriBuilder *iface, IUri *pIUri)
             return E_NOTIMPL;
         }
     } else if(This->uri)
-        /* Only reset the builder if it's Uri isn't NULL. */
+        /* Only reset the builder if its Uri isn't NULL. */
         reset_builder(This);
 
     return S_OK;
@@ -6534,7 +6534,7 @@ static HRESULT combine_uri(Uri *base, Uri *relative, DWORD flags, IUri **result,
                 data.path_len = proc_uri->path_len;
             } else if(!data.is_opaque) {
                 /* Just set the path as a '/' if the base didn't have
-                 * one and if it's an hierarchical URI.
+                 * one and if it's a hierarchical URI.
                  */
                 static const WCHAR slashW[] = {'/',0};
                 data.path = slashW;

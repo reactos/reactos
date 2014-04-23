@@ -512,6 +512,7 @@ HRESULT protocol_abort(Protocol *protocol, HRESULT reason)
     if(!protocol->protocol_sink)
         return S_OK;
 
+    /* NOTE: IE10 returns S_OK here */
     if(protocol->flags & FLAG_RESULT_REPORTED)
         return INET_E_RESULT_DISPATCHED;
 
