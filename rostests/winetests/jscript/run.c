@@ -1163,7 +1163,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         return S_OK;
 
     case DISPID_GLOBAL_TESTARGTYPES: {
-        VARIANT args[3];
+        VARIANT args[4];
         DISPPARAMS dp = {args, NULL, sizeof(args)/sizeof(*args), 0};
         HRESULT hres;
 
@@ -1197,6 +1197,8 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         V_INT(args+1) = 22;
         V_VT(args+2) = VT_UNKNOWN;
         V_UNKNOWN(args+2) = (IUnknown*)&testObj;
+        V_VT(args+3) = VT_UNKNOWN;
+        V_UNKNOWN(args+3) = NULL;
         hres = IDispatch_Invoke(V_DISPATCH(pdp->rgvarg), DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dp, NULL, NULL, NULL);
         ok(hres == S_OK, "Invoke failed: %08x\n", hres);
 
@@ -1746,7 +1748,7 @@ static BSTR get_script_from_file(const char *filename)
 
     size = GetFileSize(file, NULL);
 
-    map = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
     CloseHandle(file);
     if(map == INVALID_HANDLE_VALUE) {
         trace("Could not create file mapping: %u\n", GetLastError());
@@ -2147,10 +2149,12 @@ static BOOL run_tests(void)
     CHECK_CALLED(global_propargput_i);
 
     SET_EXPECT(global_testargtypes_i);
-    parse_script_a("testArgTypes(dispUnk, intProp(), intProp, getShort(), shortProp, function(d,i,s) {"
+    parse_script_a("testArgTypes(dispUnk, intProp(), intProp, getShort(), shortProp, function(nullunk,d,i,s) {"
                    "    ok(getVT(i) === 'VT_I4', 'getVT(i) = ' + getVT(i));"
                    "    ok(getVT(s) === 'VT_I4', 'getVT(s) = ' + getVT(s));"
                    "    ok(getVT(d) === 'VT_DISPATCH', 'getVT(d) = ' + getVT(d));"
+                   "    ok(getVT(nullunk) === 'VT_DISPATCH', 'getVT(nullunk) = ' + getVT(nullunk));"
+                   "    ok(nullunk === null, 'nullunk !== null');"
                    "});");
     CHECK_CALLED(global_testargtypes_i);
 

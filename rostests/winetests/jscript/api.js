@@ -2357,6 +2357,13 @@ testSyntaxError("ok(false, 'unexpected execution'); while(true) continue some_la
 testSyntaxError("ok(false, 'unexpected execution'); some_label: { while(true) continue some_label; }", "E_INVALID_CONTINUE");
 testSyntaxError("ok(false, 'unexpected execution'); some_label: { some_label: while(true); }", "E_LABEL_REDEFINED");
 testSyntaxError("return;", "E_MISPLACED_RETURN");
+testSyntaxError("001.5;", "E_SEMICOLON");
+testSyntaxError("001.5", "E_SEMICOLON");
+testSyntaxError("0a", "E_SEMICOLON");
+testSyntaxError("01a", "E_SEMICOLON");
+testSyntaxError("0x1r", "E_SEMICOLON");
+testSyntaxError("1a", "E_SEMICOLON");
+testSyntaxError("1_", "E_SEMICOLON");
 
 // ReferenceError tests
 testException(function() {test = function() {}}, "E_ILLEGAL_ASSIGN");
