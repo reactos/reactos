@@ -840,7 +840,7 @@ static int CALLBACK enumFontProc( const LOGFONTA *lpelfe, const TEXTMETRICA *lpn
         return 1;
 
     i = rp->range;
-    while (i > sizeof(DWORD)*8)
+    while (i >= sizeof(DWORD)*8)
     {
         idx++;
         i -= (sizeof(DWORD)*8);
