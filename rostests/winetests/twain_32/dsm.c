@@ -36,12 +36,12 @@ static BOOL dsm_RegisterWindowClasses(void)
     BOOL rc;
 
     cls.style = 0;
-    cls.lpfnWndProc = DefWindowProc;
+    cls.lpfnWndProc = DefWindowProcA;
     cls.cbClsExtra = 0;
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "TWAIN_dsm_class";
@@ -861,9 +861,8 @@ START_TEST(dsm)
     appid.ProtocolMinor = TWON_PROTOCOLMINOR;
     appid.SupportedGroups = DG_CONTROL | DG_IMAGE;
 
-    hwnd = CreateWindow("TWAIN_dsm_class", "Twain Test", 0,
-                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                        NULL, NULL, GetModuleHandleA(0), NULL);
+    hwnd = CreateWindowA("TWAIN_dsm_class", "Twain Test", 0, CW_USEDEFAULT, CW_USEDEFAULT,
+                         CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, GetModuleHandleA(NULL), NULL);
 
     rc = pDSM_Entry(&appid, NULL, DG_CONTROL, DAT_PARENT, MSG_OPENDSM, (TW_MEMREF) &hwnd);
     ok(rc == TWRC_SUCCESS, "MSG_OPENDSM returned %d\n", rc);
