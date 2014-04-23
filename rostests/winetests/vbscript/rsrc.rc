@@ -19,6 +19,9 @@
 /* @makedep: api.vbs */
 api.vbs 40 "api.vbs"
 
+/* @makedep: error.vbs */
+error.vbs 40 "error.vbs"
+
 /* @makedep: lang.vbs */
 lang.vbs 40 "lang.vbs"
 

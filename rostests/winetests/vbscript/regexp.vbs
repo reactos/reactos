@@ -168,4 +168,10 @@ Call ok(submatch.Count = 2, "submatch.Count = " & submatch.Count)
 Call ok(submatch.Item(0) = "a", "submatch.Item(0) = " & submatch.Item(0))
 Call ok(submatch.Item(1) = "b", "submatch.Item(0) = " & submatch.Item(1))
 
+Set x = new regexp
+Call ok(x.Pattern = "", "RegExp.Pattern = " & x.Pattern)
+Call ok(x.IgnoreCase = false, "RegExp.IgnoreCase = " & x.IgnoreCase)
+Call ok(x.Global = false, "RegExp.Global = " & x.Global)
+Call ok(x.Multiline = false, "RegExp.Multiline = " & x.Multiline)
+
 Call reportSuccess()

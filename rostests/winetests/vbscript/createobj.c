@@ -125,18 +125,6 @@ const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY =
 
 #define VB_E_CANNOT_CREATE_OBJ 0x800a01ad
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 static BSTR a2bstr(const char *str)
 {
     BSTR ret;
@@ -444,7 +432,7 @@ static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown
     CHECK_EXPECT(CreateInstance);
 
     ok(!outer, "outer = %p\n", outer);
-    ok(IsEqualGUID(&IID_IUnknown, riid), "unexpected riid %s\n", debugstr_guid(riid));
+    ok(IsEqualGUID(&IID_IUnknown, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
 
     if(SUCCEEDED(CreateInstance_hres))
         *ppv = &testObj;
@@ -500,7 +488,7 @@ static HRESULT WINAPI InternetHostSecurityManager_ProcessUrlAction(IInternetHost
     ok(cbPolicy == sizeof(DWORD), "cbPolicy = %d\n", cbPolicy);
     ok(pContext != NULL, "pContext == NULL\n");
     ok(cbContext == sizeof(GUID), "cbContext = %d\n", cbContext);
-    ok(IsEqualGUID(pContext, &CLSID_TestObj), "pContext = %s\n", debugstr_guid((const IID*)pContext));
+    ok(IsEqualGUID(pContext, &CLSID_TestObj), "pContext = %s\n", wine_dbgstr_guid((const IID*)pContext));
     ok(!dwFlags, "dwFlags = %x\n", dwFlags);
     ok(!dwReserved, "dwReserved = %x\n", dwReserved);
 
@@ -517,7 +505,7 @@ static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHos
 
     CHECK_EXPECT(QueryCustomPolicy);
 
-    ok(IsEqualGUID(&GUID_CUSTOM_CONFIRMOBJECTSAFETY, guidKey), "guidKey = %s\n", debugstr_guid(guidKey));
+    ok(IsEqualGUID(&GUID_CUSTOM_CONFIRMOBJECTSAFETY, guidKey), "guidKey = %s\n", wine_dbgstr_guid(guidKey));
 
     ok(ppPolicy != NULL, "ppPolicy == NULL\n");
     ok(pcbPolicy != NULL, "pcbPolicy == NULL\n");
@@ -582,13 +570,13 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface,
             CHECK_EXPECT(Host_QS_SecMgr);
         else
             CHECK_EXPECT(Caller_QS_SecMgr);
-        ok(IsEqualGUID(&IID_IInternetHostSecurityManager, riid), "unexpected riid %s\n", debugstr_guid(riid));
+        ok(IsEqualGUID(&IID_IInternetHostSecurityManager, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
         if(SUCCEEDED(QS_SecMgr_hres))
             *ppv = &InternetHostSecurityManager;
         return QS_SecMgr_hres;
     }
 
-    ok(0, "unexpected service %s\n", debugstr_guid(guidService));
+    ok(0, "unexpected service %s\n", wine_dbgstr_guid(guidService));
     return E_NOINTERFACE;
 }
 
@@ -1008,7 +996,7 @@ static void test_GetObject(void)
     SET_EXPECT(SetSite);
     SET_EXPECT(reportSuccess);
     hres = parse_script_ae(parser, "Call GetObject(\"clsid:" TESTOBJINST_CLSID "\").reportSuccess()");
-    if(hres == 0x8007007e) { /* Workaround for broken win2k */
+    if(hres == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND)) { /* Workaround for broken win2k */
         win_skip("got unexpected error %08x\n", hres);
         CLEAR_CALLED(QI_IObjectWithSite);
         CLEAR_CALLED(SetSite);
@@ -1016,6 +1004,7 @@ static void test_GetObject(void)
         IActiveScriptParse_Release(parser);
         return;
     }
+    ok(hres == S_OK, "hres = %08x\n", hres);
     CHECK_CALLED(QI_IObjectWithSite);
     CHECK_CALLED(SetSite);
     CHECK_CALLED(reportSuccess);
@@ -1050,7 +1039,7 @@ static BOOL init_key(const char *key_name, const char *def_value, BOOL init)
     DWORD res;
 
     if(!init) {
-        RegDeleteKey(HKEY_CLASSES_ROOT, key_name);
+        RegDeleteKeyA(HKEY_CLASSES_ROOT, key_name);
         return TRUE;
     }
 
@@ -1111,12 +1100,13 @@ START_TEST(createobj)
     CoInitialize(NULL);
 
     if(check_vbscript()) {
-        register_activex();
-
-        test_CreateObject();
-        test_GetObject();
-
-        init_registry(FALSE);
+        if(register_activex()) {
+            test_CreateObject();
+            test_GetObject();
+            init_registry(FALSE);
+        }else {
+            skip("Could not register ActiveX object.\n");
+        }
     }else {
         win_skip("Broken engine, probably too old\n");
     }
