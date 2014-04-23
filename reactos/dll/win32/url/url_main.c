@@ -92,8 +92,7 @@ BOOL WINAPI InetIsOffline(DWORD flags)
  * int nShowCmd - How to display the operation.
  */
 
-HRESULT WINAPI FileProtocolHandlerA(HWND hWnd, HINSTANCE hInst, LPCSTR pszUrl,
-        int nShowCmd)
+void WINAPI FileProtocolHandlerA(HWND hWnd, HINSTANCE hInst, LPCSTR pszUrl, int nShowCmd)
 {
     CHAR pszPath[MAX_PATH];
     DWORD size = MAX_PATH;
@@ -101,12 +100,7 @@ HRESULT WINAPI FileProtocolHandlerA(HWND hWnd, HINSTANCE hInst, LPCSTR pszUrl,
 
     TRACE("(%p, %s, %d)\n",hWnd,debugstr_a(pszUrl),nShowCmd);
 
-    if(createpath != S_OK)
-        return E_FAIL;
-
-    ShellExecuteA(hWnd,NULL,pszPath,NULL,NULL,nShowCmd);
-
-    return S_OK;
+    ShellExecuteA(hWnd, NULL, createpath==S_OK ? pszPath : pszUrl, NULL, NULL, nShowCmd);
 }
 
 /***********************************************************************
