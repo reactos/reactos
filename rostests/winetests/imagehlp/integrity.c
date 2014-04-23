@@ -36,7 +36,7 @@ static BOOL (WINAPI *pImageGetCertificateData)(HANDLE, DWORD, LPWIN_CERTIFICATE,
 static BOOL (WINAPI *pImageGetCertificateHeader)(HANDLE, DWORD, LPWIN_CERTIFICATE);
 static BOOL (WINAPI *pImageRemoveCertificate)(HANDLE, DWORD);
 
-static char test_cert_data[] =
+static const char test_cert_data[] =
 {0x30,0x82,0x02,0xE1,0x06,0x09,0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x07,0x02
 ,0xA0,0x82,0x02,0xD2,0x30,0x82,0x02,0xCE,0x02,0x01,0x01,0x31,0x00,0x30,0x0B
 ,0x06,0x09,0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x07,0x01,0xA0,0x82,0x02,0xB4
@@ -88,7 +88,7 @@ static char test_cert_data[] =
 ,0x46,0xCA,0xEB,0xEA,0x67,0x89,0x49,0x7C,0x43,0xA2,0x52,0xD9,0x41,0xCC,0x65
 ,0xED,0x2D,0xA1,0x00,0x31,0x00};
 
-static char test_cert_data_2[] = {0xDE,0xAD,0xBE,0xEF,0x01,0x02,0x03};
+static const char test_cert_data_2[] = {0xDE,0xAD,0xBE,0xEF,0x01,0x02,0x03};
 
 static BOOL copy_dll_file(void)
 {
@@ -107,10 +107,10 @@ static BOOL copy_dll_file(void)
     lstrcatA(sys_dir, "imagehlp.dll");
 
     /* Copy DLL to a temp file */
-    GetTempPath(MAX_PATH, temp_path);
-    GetTempFileName(temp_path, "img", 0, test_dll_path);
+    GetTempPathA(MAX_PATH, temp_path);
+    GetTempFileNameA(temp_path, "img", 0, test_dll_path);
 
-    if (CopyFile(sys_dir, test_dll_path, FALSE) == 0)
+    if (CopyFileA(sys_dir, test_dll_path, FALSE) == 0)
     {
         skip("Unable to create copy of imagehlp.dll for tests.\n");
         return FALSE;
@@ -135,7 +135,7 @@ static DWORD get_file_size(void)
     return filesize;
 }
 
-static void test_add_certificate(char *cert_data, int len)
+static void test_add_certificate(const char *cert_data, int len)
 {
     HANDLE hFile;
     LPWIN_CERTIFICATE cert;
@@ -173,12 +173,13 @@ static void test_add_certificate(char *cert_data, int len)
     CloseHandle(hFile);
 }
 
-static void test_get_certificate(char *cert_data, int index)
+static void test_get_certificate(const char *cert_data, int index)
 {
     HANDLE hFile;
     LPWIN_CERTIFICATE cert;
     DWORD cert_len = 0;
-    DWORD err, ret;
+    DWORD err;
+    BOOL ret;
 
     hFile = CreateFileA(test_dll_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -295,5 +296,5 @@ START_TEST(integrity)
     ok(file_size == file_size_orig, "File size different after add and remove (old: %d; new: %d)\n", file_size_orig, file_size);
 
     FreeLibrary(hImageHlp);
-    DeleteFile(test_dll_path);
+    DeleteFileA(test_dll_path);
 }
