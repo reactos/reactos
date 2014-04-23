@@ -47,6 +47,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_fsrtl/FsRtlExpression.c
     ntos_fsrtl/FsRtlMcb.c
     ntos_fsrtl/FsRtlTunnel.c
+    ntos_io/IoCreateFile.c
     ntos_io/IoDeviceInterface.c
     ntos_io/IoEvent.c
     ntos_io/IoInterrupt.c
