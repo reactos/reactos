@@ -1253,6 +1253,15 @@ DWORD WINAPI lineNegotiateExtVersion(HLINEAPP hLineApp, DWORD dwDeviceID, DWORD 
 }
 
 /***********************************************************************
+ *		lineOpenW (TAPI32.@)
+ */
+DWORD WINAPI lineOpenW(HLINEAPP hLineApp, DWORD dwDeviceID, LPHLINE lphLine, DWORD dwAPIVersion, DWORD dwExtVersion, DWORD dwCallbackInstance, DWORD dwPrivileges, DWORD dwMediaModes, LPLINECALLPARAMS lpCallParams)
+{
+    FIXME("stub.\n");
+    return 0;
+}
+
+/***********************************************************************
  *		lineOpen (TAPI32.@)
  */
 DWORD WINAPI lineOpenA(HLINEAPP hLineApp, DWORD dwDeviceID, LPHLINE lphLine, DWORD dwAPIVersion, DWORD dwExtVersion, DWORD dwCallbackInstance, DWORD dwPrivileges, DWORD dwMediaModes, LPLINECALLPARAMS lpCallParams)
