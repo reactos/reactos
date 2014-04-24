@@ -730,16 +730,14 @@ static const IWICBitmapEncoderVtbl IcnsEncoder_Vtbl = {
     IcnsEncoder_GetMetadataQueryWriter
 };
 
-HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT IcnsEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     IcnsEncoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(IcnsEncoder));
     if (!This) return E_OUTOFMEMORY;
@@ -763,7 +761,7 @@ HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 #else /* !defined(HAVE_APPLICATIONSERVICES_APPLICATIONSERVICES_H) ||
          MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4 */
 
-HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT IcnsEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to save ICNS picture, but ICNS support is not compiled in.\n");
     return E_FAIL;

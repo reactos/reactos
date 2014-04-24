@@ -129,9 +129,9 @@ static const MetadataHandlerVtbl LSDReader_Vtbl = {
     load_LSD_metadata
 };
 
-HRESULT LSDReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv)
+HRESULT LSDReader_CreateInstance(REFIID iid, void **ppv)
 {
-    return MetadataReader_Create(&LSDReader_Vtbl, pUnkOuter, iid, ppv);
+    return MetadataReader_Create(&LSDReader_Vtbl, iid, ppv);
 }
 
 #include "pshpack1.h"
@@ -227,9 +227,9 @@ static const MetadataHandlerVtbl IMDReader_Vtbl = {
     load_IMD_metadata
 };
 
-HRESULT IMDReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv)
+HRESULT IMDReader_CreateInstance(REFIID iid, void **ppv)
 {
-    return MetadataReader_Create(&IMDReader_Vtbl, pUnkOuter, iid, ppv);
+    return MetadataReader_Create(&IMDReader_Vtbl, iid, ppv);
 }
 
 static HRESULT load_GCE_metadata(IStream *stream, const GUID *vendor, DWORD options,
@@ -305,9 +305,9 @@ static const MetadataHandlerVtbl GCEReader_Vtbl = {
     load_GCE_metadata
 };
 
-HRESULT GCEReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv)
+HRESULT GCEReader_CreateInstance(REFIID iid, void **ppv)
 {
-    return MetadataReader_Create(&GCEReader_Vtbl, pUnkOuter, iid, ppv);
+    return MetadataReader_Create(&GCEReader_Vtbl, iid, ppv);
 }
 
 static HRESULT load_APE_metadata(IStream *stream, const GUID *vendor, DWORD options,
@@ -412,9 +412,9 @@ static const MetadataHandlerVtbl APEReader_Vtbl = {
     load_APE_metadata
 };
 
-HRESULT APEReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv)
+HRESULT APEReader_CreateInstance(REFIID iid, void **ppv)
 {
-    return MetadataReader_Create(&APEReader_Vtbl, pUnkOuter, iid, ppv);
+    return MetadataReader_Create(&APEReader_Vtbl, iid, ppv);
 }
 
 static HRESULT load_GifComment_metadata(IStream *stream, const GUID *vendor, DWORD options,
@@ -506,9 +506,9 @@ static const MetadataHandlerVtbl GifCommentReader_Vtbl = {
     load_GifComment_metadata
 };
 
-HRESULT GifCommentReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv)
+HRESULT GifCommentReader_CreateInstance(REFIID iid, void **ppv)
 {
-    return MetadataReader_Create(&GifCommentReader_Vtbl, pUnkOuter, iid, ppv);
+    return MetadataReader_Create(&GifCommentReader_Vtbl, iid, ppv);
 }
 
 static IStream *create_stream(const void *data, int data_size)
@@ -1079,7 +1079,7 @@ static int _gif_inputfunc(GifFileType *gif, GifByteType *data, int len) {
     }
 
     hr = IStream_Read(stream, data, len, &bytesread);
-    if (hr != S_OK) bytesread = 0;
+    if (FAILED(hr)) bytesread = 0;
     return bytesread;
 }
 
@@ -1402,16 +1402,14 @@ static const IWICMetadataBlockReaderVtbl GifDecoder_BlockVtbl =
     GifDecoder_Block_GetEnumerator
 };
 
-HRESULT GifDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT GifDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     GifDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(GifDecoder));
     if (!This) return E_OUTOFMEMORY;

@@ -1256,16 +1256,14 @@ static const IWICFormatConverterVtbl FormatConverter_Vtbl = {
     FormatConverter_CanConvert
 };
 
-HRESULT FormatConverter_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT FormatConverter_CreateInstance(REFIID iid, void** ppv)
 {
     FormatConverter *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(FormatConverter));
     if (!This) return E_OUTOFMEMORY;

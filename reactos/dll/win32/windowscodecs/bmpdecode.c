@@ -1169,16 +1169,14 @@ static HRESULT BmpDecoder_Create(int packed, int icoframe, BmpDecoder **ppDecode
     return S_OK;
 }
 
-static HRESULT BmpDecoder_Construct(int packed, int icoframe, IUnknown *pUnkOuter, REFIID iid, void** ppv)
+static HRESULT BmpDecoder_Construct(int packed, int icoframe, REFIID iid, void** ppv)
 {
     BmpDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     ret = BmpDecoder_Create(packed, icoframe, &This);
     if (FAILED(ret)) return ret;
@@ -1189,14 +1187,14 @@ static HRESULT BmpDecoder_Construct(int packed, int icoframe, IUnknown *pUnkOute
     return ret;
 }
 
-HRESULT BmpDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT BmpDecoder_CreateInstance(REFIID iid, void** ppv)
 {
-    return BmpDecoder_Construct(FALSE, FALSE, pUnkOuter, iid, ppv);
+    return BmpDecoder_Construct(FALSE, FALSE, iid, ppv);
 }
 
-HRESULT DibDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT DibDecoder_CreateInstance(REFIID iid, void** ppv)
 {
-    return BmpDecoder_Construct(TRUE, FALSE, pUnkOuter, iid, ppv);
+    return BmpDecoder_Construct(TRUE, FALSE, iid, ppv);
 }
 
 HRESULT IcoDibDecoder_CreateInstance(BmpDecoder **ppDecoder)

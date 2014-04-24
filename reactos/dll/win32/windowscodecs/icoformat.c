@@ -216,7 +216,7 @@ static HRESULT ReadIcoDib(IStream *stream, IcoFrameDecode *result)
     IWICBitmapFrameDecode *framedecode;
     WICPixelFormatGUID pixelformat;
     IWICBitmapSource *source;
-    int has_alpha=FALSE; /* if TRUE, alpha data might be in the image data */
+    BOOL has_alpha=FALSE; /* if TRUE, alpha data might be in the image data */
     WICRect rc;
 
     hr = IcoDibDecoder_CreateInstance(&bmp_decoder);
@@ -381,7 +381,7 @@ static HRESULT ReadIcoPng(IStream *stream, IcoFrameDecode *result)
     WICRect rect;
     HRESULT hr;
 
-    hr = PngDecoder_CreateInstance(NULL, &IID_IWICBitmapDecoder, (void**)&decoder);
+    hr = PngDecoder_CreateInstance(&IID_IWICBitmapDecoder, (void**)&decoder);
     if (FAILED(hr))
         goto end;
     hr = IWICBitmapDecoder_Initialize(decoder, stream, WICDecodeMetadataCacheOnLoad);
@@ -722,16 +722,14 @@ static const IWICBitmapDecoderVtbl IcoDecoder_Vtbl = {
     IcoDecoder_GetFrame
 };
 
-HRESULT IcoDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT IcoDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     IcoDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(IcoDecoder));
     if (!This) return E_OUTOFMEMORY;
