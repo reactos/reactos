@@ -112,7 +112,7 @@ static void test_ClassIDs(void)
   DWORD dwLen;
   BOOL bRet;
   int i = 0;
-  int is_vista = 0;
+  BOOL is_vista = FALSE;
 
   if (!pSHLWAPI_269 || !pSHLWAPI_23)
     return;
@@ -120,7 +120,7 @@ static void test_ClassIDs(void)
   while (*guids)
   {
     dwLen = pSHLWAPI_23(*guids, szBuff, 256);
-    if (!i && dwLen == S_OK) is_vista = 1;  /* seems to return an HRESULT on vista */
+    if (!i && dwLen == S_OK) is_vista = TRUE;  /* seems to return an HRESULT on vista */
     ok(dwLen == (is_vista ? S_OK : 39), "wrong size %u for id %d\n", dwLen, i);
 
     bRet = pSHLWAPI_269(szBuff, &guid);

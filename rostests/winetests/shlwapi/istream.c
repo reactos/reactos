@@ -41,6 +41,7 @@ static HRESULT (WINAPI *pSHCreateStreamOnFileA)(LPCSTR file, DWORD mode, IStream
 static HRESULT (WINAPI *pSHCreateStreamOnFileW)(LPCWSTR file, DWORD mode, IStream **stream);
 static HRESULT (WINAPI *pSHCreateStreamOnFileEx)(LPCWSTR file, DWORD mode, DWORD attributes, BOOL create, IStream *template, IStream **stream);
 
+static BOOL is_win2000_IE5 = FALSE;
 
 static void test_IStream_invalid_operations(IStream * stream, DWORD mode)
 {
@@ -82,40 +83,53 @@ static void test_IStream_invalid_operations(IStream * stream, DWORD mode)
 
     ret = stream->lpVtbl->Write(stream, NULL, 0, &count);
     if (mode == STGM_READ)
-        ok(ret == STG_E_ACCESSDENIED /* XP */ || ret == S_OK /* 2000 */,
-           "expected STG_E_ACCESSDENIED or S_OK, got 0x%08x\n", ret);
+    {
+        ok(ret == STG_E_ACCESSDENIED /* XP */ || broken(ret == S_OK) /* Win2000 + IE5 */,
+           "expected STG_E_ACCESSDENIED, got 0x%08x\n", ret);
+        if (ret == S_OK)
+            is_win2000_IE5 = TRUE;
+    }
     else
         ok(ret == S_OK, "expected S_OK, got 0x%08x\n", ret);
+
+    /* IStream::Write calls below hang under Win2000 + IE5, Win2000 + IE6 SP1
+     * and newer Windows versions pass these tests.
+     */
+    if (is_win2000_IE5)
+    {
+        win_skip("broken IStream::Write implementation (win2000)\n");
+        return;
+    }
 
     strcpy(data, "Hello");
     ret = stream->lpVtbl->Write(stream, data, 5, NULL);
     if (mode == STGM_READ)
-        ok(ret == STG_E_ACCESSDENIED /* XP */ || ret == S_OK /* 2000 */,
-           "expected STG_E_ACCESSDENIED or S_OK, got 0x%08x\n", ret);
+        ok(ret == STG_E_ACCESSDENIED,
+           "expected STG_E_ACCESSDENIED, got 0x%08x\n", ret);
     else
         ok(ret == S_OK, "expected S_OK, got 0x%08x\n", ret);
 
     strcpy(data, "Hello");
     ret = stream->lpVtbl->Write(stream, data, 0, NULL);
     if (mode == STGM_READ)
-        ok(ret == STG_E_ACCESSDENIED /* XP */ || ret == S_OK /* 2000 */,
-           "expected STG_E_ACCESSDENIED or S_OK, got 0x%08x\n", ret);
+        ok(ret == STG_E_ACCESSDENIED,
+           "expected STG_E_ACCESSDENIED, got 0x%08x\n", ret);
     else
         ok(ret == S_OK, "expected S_OK, got 0x%08x\n", ret);
 
     strcpy(data, "Hello");
     ret = stream->lpVtbl->Write(stream, data, 0, &count);
     if (mode == STGM_READ)
-        ok(ret == STG_E_ACCESSDENIED /* XP */ || ret == S_OK /* 2000 */,
-           "expected STG_E_ACCESSDENIED or S_OK, got 0x%08x\n", ret);
+        ok(ret == STG_E_ACCESSDENIED,
+           "expected STG_E_ACCESSDENIED, got 0x%08x\n", ret);
     else
         ok(ret == S_OK, "expected S_OK, got 0x%08x\n", ret);
 
     strcpy(data, "Hello");
     ret = stream->lpVtbl->Write(stream, data, 3, &count);
     if (mode == STGM_READ)
-        ok(ret == STG_E_ACCESSDENIED /* XP */ || ret == S_OK /* 2000 */,
-           "expected STG_E_ACCESSDENIED or S_OK, got 0x%08x\n", ret);
+        ok(ret == STG_E_ACCESSDENIED,
+           "expected STG_E_ACCESSDENIED, got 0x%08x\n", ret);
     else
         ok(ret == S_OK, "expected S_OK, got 0x%08x\n", ret);
 
@@ -125,8 +139,8 @@ static void test_IStream_invalid_operations(IStream * stream, DWORD mode)
     ok(ret == S_OK, "expected S_OK, got 0x%08x\n", ret);
 
     ret = IStream_Seek(stream, zero, 20, NULL);
-    ok(ret == E_INVALIDARG /* XP */ || ret == S_OK /* 2000 */,
-       "expected E_INVALIDARG or S_OK, got 0x%08x\n", ret);
+    ok(ret == E_INVALIDARG,
+       "expected E_INVALIDARG, got 0x%08x\n", ret);
 
     /* IStream::CopyTo */
 
@@ -178,7 +192,7 @@ static void test_IStream_invalid_operations(IStream * stream, DWORD mode)
     /* IStream::Stat */
 
     ret = IStream_Stat(stream, NULL, 0);
-    ok(ret == STG_E_INVALIDPOINTER /* XP */ || ret == E_NOTIMPL /* 2000 */,
+    ok(ret == STG_E_INVALIDPOINTER,
        "expected STG_E_INVALIDPOINTER or E_NOTIMPL, got 0x%08x\n", ret);
 
     /* IStream::Clone */
@@ -196,6 +210,55 @@ static void test_IStream_invalid_operations(IStream * stream, DWORD mode)
     }
 }
 
+
+static void test_stream_read_write(IStream *stream, DWORD mode)
+{
+    static const LARGE_INTEGER start;
+    HRESULT ret;
+    unsigned char buf[16];
+    DWORD written, count;
+
+    /* IStream_Read/Write from the COBJMACROS is undefined by shlwapi.h */
+
+    written = 0xdeadbeaf;
+    ret = stream->lpVtbl->Write(stream, "\x5e\xa7", 2, &written);
+    if (mode == STGM_WRITE || mode == STGM_READWRITE)
+    {
+        ok(ret == S_OK, "IStream_Write error %#x (access %#x)\n", ret, mode);
+        ok(written == 2, "expected 2, got %u\n", written);
+    }
+    else
+    {
+        ok(ret == STG_E_ACCESSDENIED || broken(ret == S_OK) /* win2000 */, "expected STG_E_ACCESSDENIED, got %#x (access %#x)\n", ret, mode);
+        ok(written == 0xdeadbeaf || broken(written == 2) /* win2000 */, "expected 0xdeadbeaf, got %#x\n", written);
+        written = 0;
+        if (ret == S_OK) return; /* no point in further testing */
+    }
+
+    ret = stream->lpVtbl->Seek(stream, start, STREAM_SEEK_SET, NULL);
+    ok(ret == S_OK, "Seek error %#x\n", ret);
+
+    count = 0xdeadbeaf;
+    ret = stream->lpVtbl->Read(stream, buf, 2, &count);
+    if (written != 0)
+    {
+        ok(ret == S_OK || broken(ret == S_FALSE) /* win2000 */, "IStream_Read error %#x (access %#x, written %u)\n", ret, mode, written);
+        if (ret == S_OK && (mode == STGM_WRITE || mode == STGM_READWRITE))
+        {
+            ok(count == 2, "expected 2, got %u\n", count);
+            ok(buf[0] == 0x5e && buf[1] == 0xa7, "expected 5ea7, got %02x%02x\n", buf[0], buf[1]);
+        }
+        else
+            ok(count == 0, "expected 0, got %u\n", count);
+    }
+    else
+    {
+todo_wine
+        ok(ret == S_FALSE, "expected S_FALSE, got %#x (access %#x, written %u)\n", ret, mode, written);
+        ok(count == 0, "expected 0, got %u\n", count);
+    }
+
+}
 
 static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)
 {
@@ -226,10 +289,11 @@ static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)
        "or HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME), got 0x%08x\n", ret);
     ok(stream == NULL, "SHCreateStreamOnFileA: expected a NULL IStream object, got %p\n", stream);
 
-#if 0 /* This test crashes on WinXP SP2 */
+if (0) /* This test crashes on WinXP SP2 */
+{
     ret = (*pSHCreateStreamOnFileA)(test_file, mode | stgm, NULL);
     ok(ret == E_INVALIDARG, "SHCreateStreamOnFileA: expected E_INVALIDARG, got 0x%08x\n", ret);
-#endif
+}
 
     stream = NULL;
     ret = (*pSHCreateStreamOnFileA)(test_file, mode | STGM_CONVERT | stgm, &stream);
@@ -288,6 +352,8 @@ static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)
 
     if (stream) {
         BOOL delret;
+
+        test_stream_read_write(stream, mode);
         test_IStream_invalid_operations(stream, mode);
 
         refcount = IStream_Release(stream);
@@ -398,6 +464,8 @@ static void test_SHCreateStreamOnFileW(DWORD mode, DWORD stgm)
 
     if (stream) {
         BOOL delret;
+
+        test_stream_read_write(stream, mode);
         test_IStream_invalid_operations(stream, mode);
 
         refcount = IStream_Release(stream);
@@ -594,6 +662,52 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
 }
 
 
+static void test_SHCreateStreamOnFileEx_CopyTo(void)
+{
+    HRESULT ret;
+    IStream *src, *dst;
+    WCHAR tmpPath[MAX_PATH];
+    WCHAR srcFileName[MAX_PATH];
+    WCHAR dstFileName[MAX_PATH];
+    ULARGE_INTEGER count, read, written;
+    LARGE_INTEGER distance;
+    static const char srcContents[1];
+    static const WCHAR prefix[] = { 'T', 'S', 'T', 0 };
+
+    GetTempPathW(MAX_PATH, tmpPath);
+    GetTempFileNameW(tmpPath, prefix, 0, srcFileName);
+    GetTempFileNameW(tmpPath, prefix, 0, dstFileName);
+
+    ret = pSHCreateStreamOnFileEx(srcFileName, STGM_CREATE | STGM_READWRITE | STGM_DELETEONRELEASE, FILE_ATTRIBUTE_TEMPORARY, FALSE, NULL, &src);
+    ok(SUCCEEDED(ret), "SHCreateStreamOnFileEx failed with ret=0x%08x\n", ret);
+
+    written.QuadPart = 0;
+    ret = IStream_Write(src, srcContents, sizeof(srcContents), &U(written).LowPart);
+    ok(SUCCEEDED(ret), "ISequentialStream_Write failed with ret=0x%08x\n", ret);
+
+    distance.QuadPart = 0;
+    ret = IStream_Seek(src, distance, STREAM_SEEK_SET, &written);
+    ok(SUCCEEDED(ret), "ISequentialStream_Seek failed with ret=0x%08x\n", ret);
+
+    ret = pSHCreateStreamOnFileEx(dstFileName, STGM_CREATE | STGM_READWRITE | STGM_DELETEONRELEASE, FILE_ATTRIBUTE_TEMPORARY, FALSE, NULL, &dst);
+    ok(SUCCEEDED(ret), "SHCreateStreamOnFileEx failed with ret=0x%08x\n", ret);
+
+    /* Test using a count larger than the source file, so that the Read operation will fall short */
+    count.QuadPart = 2;
+
+    ret = IStream_CopyTo(src, dst, count, &read, &written);
+    ok(SUCCEEDED(ret), "CopyTo failed with ret=0x%08x\n", ret);
+
+    ok(read.QuadPart == 1, "read does not match size: %d != 1\n", U(read).LowPart);
+    ok(written.QuadPart == 1, "written does not match size: %d != 1\n", U(written).LowPart);
+
+    IStream_Release(dst);
+    IStream_Release(src);
+    DeleteFileW( srcFileName );
+    DeleteFileW( dstFileName );
+}
+
+
 START_TEST(istream)
 {
     static const DWORD stgm_access[] = {
@@ -622,7 +736,7 @@ START_TEST(istream)
 
     int i, j, k;
 
-    hShlwapi = GetModuleHandleA("shlwapi.dll");
+    hShlwapi = LoadLibraryA("shlwapi.dll");
 
     pSHCreateStreamOnFileA = (void*)GetProcAddress(hShlwapi, "SHCreateStreamOnFileA");
     pSHCreateStreamOnFileW = (void*)GetProcAddress(hShlwapi, "SHCreateStreamOnFileW");
@@ -651,4 +765,6 @@ START_TEST(istream)
             }
         }
     }
+
+    if (pSHCreateStreamOnFileEx) test_SHCreateStreamOnFileEx_CopyTo();
 }

@@ -43,8 +43,8 @@ static DWORD (WINAPI *pSHRegGetPathA)(HKEY,LPCSTR,LPCSTR,LPSTR,DWORD);
 static LSTATUS (WINAPI *pSHRegGetValueA)(HKEY,LPCSTR,LPCSTR,SRRF,LPDWORD,LPVOID,LPDWORD);
 static LSTATUS (WINAPI *pSHRegCreateUSKeyW)(LPCWSTR,REGSAM,HUSKEY,PHUSKEY,DWORD);
 
-static char sTestpath1[] = "%LONGSYSTEMVAR%\\subdir1";
-static char sTestpath2[] = "%FOO%\\subdir1";
+static const char sTestpath1[] = "%LONGSYSTEMVAR%\\subdir1";
+static const char sTestpath2[] = "%FOO%\\subdir1";
 
 static const char * sEnvvar1 = "bar";
 static const char * sEnvvar2 = "ImARatherLongButIndeedNeededString";
@@ -412,15 +412,15 @@ static void test_SHDeleteKey(void)
 
     if (!RegOpenKeyA(HKEY_CURRENT_USER, REG_TEST_KEY, &hKeyTest))
     {
-        if (!RegCreateKey(hKeyTest, "ODBC", &hKeyS))
+        if (!RegCreateKeyA(hKeyTest, "ODBC", &hKeyS))
         {
             HKEY hKeyO;
 
-            if (!RegCreateKey(hKeyS, "ODBC.INI", &hKeyO))
+            if (!RegCreateKeyA(hKeyS, "ODBC.INI", &hKeyO))
             {
                 RegCloseKey (hKeyO);
 
-                if (!RegCreateKey(hKeyS, "ODBCINST.INI", &hKeyO))
+                if (!RegCreateKeyA(hKeyS, "ODBCINST.INI", &hKeyO))
                 {
                     RegCloseKey (hKeyO);
                     sysfail = 0;

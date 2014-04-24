@@ -44,6 +44,8 @@ static const WCHAR invalid[] = { 'i','n','v','a','l','i','d',0 };
 
 static void test_getstring_bad(void)
 {
+    static const WCHAR openwith[] = {'O','p','e','n','W','i','t','h','.','e','x','e',0};
+    WCHAR buf[MAX_PATH];
     HRESULT hr;
     DWORD len;
 
@@ -53,47 +55,71 @@ static void test_getstring_bad(void)
         return;
     }
 
+    len = 0xdeadbeef;
     hr = pAssocQueryStringW(0, ASSOCSTR_EXECUTABLE, NULL, open, NULL, &len);
     expect_hr(E_INVALIDARG, hr);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    len = 0xdeadbeef;
     hr = pAssocQueryStringW(0, ASSOCSTR_EXECUTABLE, badBad, open, NULL, &len);
     ok(hr == E_FAIL ||
        hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION), /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */
        "Unexpected result : %08x\n", hr);
-    hr = pAssocQueryStringW(0, ASSOCSTR_EXECUTABLE, dotBad, open, NULL, &len);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    len = sizeof(buf)/sizeof(buf[0]);
+    hr = pAssocQueryStringW(0, ASSOCSTR_EXECUTABLE, dotBad, open, buf, &len);
     ok(hr == E_FAIL ||
-       hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION), /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */
+       hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION) /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */ ||
+       hr == S_OK /* Win8 */,
        "Unexpected result : %08x\n", hr);
-    hr = pAssocQueryStringW(0, ASSOCSTR_EXECUTABLE, dotHtml, invalid, NULL,
-                           &len);
+    if (hr == S_OK)
+    {
+        ok(len < sizeof(buf)/sizeof(buf[0]), "got %u\n", len);
+        ok(!lstrcmpiW(buf + len - sizeof(openwith)/sizeof(openwith[0]), openwith), "wrong data\n");
+    }
+
+    len = 0xdeadbeef;
+    hr = pAssocQueryStringW(0, ASSOCSTR_EXECUTABLE, dotHtml, invalid, NULL, &len);
     ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
        hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION), /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */
        "Unexpected result : %08x\n", hr);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
     hr = pAssocQueryStringW(0, ASSOCSTR_EXECUTABLE, dotHtml, open, NULL, NULL);
     ok(hr == E_UNEXPECTED ||
        hr == E_INVALIDARG, /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */
        "Unexpected result : %08x\n", hr);
 
+    len = 0xdeadbeef;
     hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, NULL, open, NULL, &len);
     expect_hr(E_INVALIDARG, hr);
-    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, badBad, open, NULL,
-                           &len);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    len = 0xdeadbeef;
+    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, badBad, open, NULL, &len);
     ok(hr == E_FAIL ||
        hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION), /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */
        "Unexpected result : %08x\n", hr);
-    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotBad, open, NULL,
-                           &len);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    len = 0xdeadbeef;
+    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotBad, open, NULL, &len);
     ok(hr == E_FAIL ||
        hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION) /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */ ||
        hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), /* Win8 */
        "Unexpected result : %08x\n", hr);
-    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotHtml, invalid, NULL,
-                           &len);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    len = 0xdeadbeef;
+    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotHtml, invalid, NULL, &len);
     ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
        hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION) || /* W2K/Vista/W2K8 */
        hr == E_FAIL, /* Win9x/WinMe/NT4 */
        "Unexpected result : %08x\n", hr);
-    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotHtml, open, NULL,
-                           NULL);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotHtml, open, NULL, NULL);
     ok(hr == E_UNEXPECTED ||
        hr == E_INVALIDARG, /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */
        "Unexpected result : %08x\n", hr);
