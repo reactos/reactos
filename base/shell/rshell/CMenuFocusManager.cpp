@@ -442,6 +442,9 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
                 case VK_RMENU:
                     m_current->mb->_MenuItemHotTrack(MPOS_FULLCANCEL);
                     break;
+                case VK_RETURN:
+                    m_current->mb->_MenuItemHotTrack(MPOS_EXECUTE);
+                    break;
                 case VK_LEFT:
                     m_current->mb->_MenuItemHotTrack(VK_LEFT);
                     break;
@@ -455,6 +458,9 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
                     m_current->mb->_MenuItemHotTrack(VK_DOWN);
                     break;
                 }
+                msg->message = WM_NULL;
+                msg->lParam = 0;
+                msg->wParam = 0;
             }
             break;
         }

@@ -814,9 +814,16 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
 
     *theResult = 0;
 
+    INT iItem = (INT)wParam;
+
+    return ExecuteItem(iItem);
+}
+
+HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)
+{
     m_menuBand->_KillPopupTimers();
 
-    if (PopupItem(wParam) == S_OK)
+    if (PopupItem(iItem) == S_OK)
     {
         TRACE("PopupItem returned S_OK\n");
         return S_FALSE;
@@ -829,7 +836,6 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    INT iItem = wParam;
     INT index;
     DWORD_PTR data;
 

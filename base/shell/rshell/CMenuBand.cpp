@@ -868,6 +868,10 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
 
     switch (changeType)
     {
+    case MPOS_EXECUTE:
+        m_hotBar->ExecuteItem(m_hotItem);
+        break;
+
     case MPOS_SELECTLEFT:
         if (m_parentBand && m_parentBand->_IsPopup()==S_FALSE)
             return m_parentBand->_MenuItemHotTrack(VK_LEFT);

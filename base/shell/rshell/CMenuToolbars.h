@@ -77,6 +77,8 @@ public:
 
     HRESULT KeyboardItemChange(DWORD changeType);
 
+    HRESULT ExecuteItem(INT iItem);
+
     HRESULT IsTrackedItem(INT index);
     HRESULT ChangeTrackedItem(INT index, BOOL wasTracking, BOOL mouse);
 
