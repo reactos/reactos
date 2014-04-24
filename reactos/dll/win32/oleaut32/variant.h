@@ -121,7 +121,7 @@ typedef struct tagVARIANT_NUMBER_CHARS
   WCHAR cCurrencyDigitSeparator;
 } VARIANT_NUMBER_CHARS;
 
-
+unsigned int get_type_size(ULONG*, VARTYPE);
 BOOL VARIANT_GetLocalisedText(LANGID, DWORD, WCHAR *) DECLSPEC_HIDDEN;
 HRESULT VARIANT_ClearInd(VARIANTARG *) DECLSPEC_HIDDEN;
 BOOL get_date_format(LCID, DWORD, const SYSTEMTIME *,

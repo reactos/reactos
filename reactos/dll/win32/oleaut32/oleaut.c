@@ -860,7 +860,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
     static const WCHAR oanocacheW[] = {'o','a','n','o','c','a','c','h','e',0};
 
-    bstr_cache_enabled = !GetEnvironmentVariableW(oanocacheW, NULL, 0);
+    if(fdwReason == DLL_PROCESS_ATTACH)
+        bstr_cache_enabled = !GetEnvironmentVariableW(oanocacheW, NULL, 0);
 
     return OLEAUTPS_DllMain( hInstDll, fdwReason, lpvReserved );
 }
@@ -887,6 +888,6 @@ HRESULT WINAPI DllUnregisterServer(void)
 HCURSOR WINAPI OleIconToCursor( HINSTANCE hinstExe, HICON hIcon)
 {
     FIXME("(%p,%p), partially implemented.\n",hinstExe,hIcon);
-    /* FIXME: make a extended conversation from HICON to HCURSOR */
+    /* FIXME: make an extended conversation from HICON to HCURSOR */
     return CopyCursor(hIcon);
 }
