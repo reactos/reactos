@@ -1,6 +1,7 @@
 /*
  *
  * Copyright 2012 Alistair Leslie-Hughes
+ * Copyright 2014 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,6 +33,17 @@
 #include "scrrun.h"
 
 static IFileSystem3 *fs3;
+
+static inline ULONG get_refcount(IUnknown *iface)
+{
+    IUnknown_AddRef(iface);
+    return IUnknown_Release(iface);
+}
+
+static const WCHAR crlfW[] = {'\r','\n',0};
+
+#define GET_REFCOUNT(iface) \
+    get_refcount((IUnknown*)iface)
 
 static void test_interfaces(void)
 {
@@ -117,29 +129,38 @@ static void test_interfaces(void)
 
 static void test_createfolder(void)
 {
+    WCHAR pathW[MAX_PATH], buffW[MAX_PATH];
     HRESULT hr;
-    WCHAR pathW[MAX_PATH];
     BSTR path;
     IFolder *folder;
+    BOOL ret;
+
+    GetTempPathW(MAX_PATH, pathW);
+    GetTempFileNameW(pathW, NULL, 0, buffW);
+    DeleteFileW(buffW);
+    ret = CreateDirectoryW(buffW, NULL);
+    ok(ret, "got %d, %d\n", ret, GetLastError());
 
     /* create existing directory */
-    GetCurrentDirectoryW(sizeof(pathW)/sizeof(WCHAR), pathW);
-    path = SysAllocString(pathW);
+    path = SysAllocString(buffW);
     folder = (void*)0xdeabeef;
     hr = IFileSystem3_CreateFolder(fs3, path, &folder);
     ok(hr == CTL_E_FILEALREADYEXISTS, "got 0x%08x\n", hr);
     ok(folder == NULL, "got %p\n", folder);
     SysFreeString(path);
+    RemoveDirectoryW(buffW);
 }
 
 static void test_textstream(void)
 {
-    static WCHAR testfileW[] = {'t','e','s','t','f','i','l','e','.','t','x','t',0};
+    static const WCHAR testfileW[] = {'t','e','s','t','f','i','l','e','.','t','x','t',0};
     ITextStream *stream;
     VARIANT_BOOL b;
+    DWORD written;
     HANDLE file;
     HRESULT hr;
     BSTR name, data;
+    BOOL ret;
 
     file = CreateFileW(testfileW, GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     CloseHandle(file);
@@ -150,15 +171,46 @@ static void test_textstream(void)
     ok(hr == S_OK, "got 0x%08x, expected 0x%08x\n", hr, S_OK);
     ok(b == VARIANT_TRUE, "got %x\n", b);
 
+    /* different mode combinations */
+    hr = IFileSystem3_OpenTextFile(fs3, name, ForWriting | ForAppending, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = IFileSystem3_OpenTextFile(fs3, name, ForReading | ForAppending, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = IFileSystem3_OpenTextFile(fs3, name, ForWriting | ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = IFileSystem3_OpenTextFile(fs3, name, ForAppending, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = ITextStream_Read(stream, 1, &data);
+    ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, name, ForWriting, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = ITextStream_Read(stream, 1, &data);
+    ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
+    ITextStream_Release(stream);
+
     hr = IFileSystem3_OpenTextFile(fs3, name, ForReading, VARIANT_FALSE, TristateFalse, &stream);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
+    /* try to write when open for reading */
+    hr = ITextStream_WriteLine(stream, name);
+    ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
+
+    hr = ITextStream_Write(stream, name);
+    ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
+
+    hr = ITextStream_get_AtEndOfStream(stream, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
     b = 10;
     hr = ITextStream_get_AtEndOfStream(stream, &b);
-todo_wine {
-    ok(hr == S_FALSE || broken(hr == S_OK), "got 0x%08x\n", hr);
+    ok(hr == S_OK || broken(hr == S_FALSE), "got 0x%08x\n", hr);
     ok(b == VARIANT_TRUE, "got 0x%x\n", b);
-}
+
     ITextStream_Release(stream);
 
     hr = IFileSystem3_OpenTextFile(fs3, name, ForWriting, VARIANT_FALSE, TristateFalse, &stream);
@@ -166,10 +218,9 @@ todo_wine {
 
     b = 10;
     hr = ITextStream_get_AtEndOfStream(stream, &b);
-todo_wine {
     ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
     ok(b == VARIANT_TRUE || broken(b == 10), "got 0x%x\n", b);
-}
+
     b = 10;
     hr = ITextStream_get_AtEndOfLine(stream, &b);
 todo_wine {
@@ -189,14 +240,12 @@ todo_wine {
 
     hr = IFileSystem3_OpenTextFile(fs3, name, ForAppending, VARIANT_FALSE, TristateFalse, &stream);
     ok(hr == S_OK, "got 0x%08x\n", hr);
-    SysFreeString(name);
 
     b = 10;
     hr = ITextStream_get_AtEndOfStream(stream, &b);
-todo_wine {
     ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
     ok(b == VARIANT_TRUE || broken(b == 10), "got 0x%x\n", b);
-}
+
     b = 10;
     hr = ITextStream_get_AtEndOfLine(stream, &b);
 todo_wine {
@@ -214,6 +263,21 @@ todo_wine {
 
     ITextStream_Release(stream);
 
+    /* now with non-empty file */
+    file = CreateFileW(testfileW, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ret = WriteFile(file, testfileW, sizeof(testfileW), &written, NULL);
+    ok(ret && written == sizeof(testfileW), "got %d\n", ret);
+    CloseHandle(file);
+
+    hr = IFileSystem3_OpenTextFile(fs3, name, ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    b = 10;
+    hr = ITextStream_get_AtEndOfStream(stream, &b);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(b == VARIANT_FALSE, "got 0x%x\n", b);
+    ITextStream_Release(stream);
+
+    SysFreeString(name);
     DeleteFileW(testfileW);
 }
 
@@ -411,7 +475,7 @@ static void test_GetAbsolutePathName(void)
     hr = IFileSystem3_GetAbsolutePathName(fs3, NULL, &result);
     ok(hr == S_OK, "GetAbsolutePathName returned %x, expected S_OK\n", hr);
     GetFullPathNameW(cur_dir, MAX_PATH, buf, NULL);
-    ok(!lstrcmpW(buf, result), "result = %s, expected %s\n", wine_dbgstr_w(result), wine_dbgstr_w(buf));
+    ok(!lstrcmpiW(buf, result), "result = %s, expected %s\n", wine_dbgstr_w(result), wine_dbgstr_w(buf));
     SysFreeString(result);
 
     find = FindFirstFileW(dir_match2, &fdata);
@@ -425,26 +489,26 @@ static void test_GetAbsolutePathName(void)
     hr = IFileSystem3_GetAbsolutePathName(fs3, path, &result);
     ok(hr == S_OK, "GetAbsolutePathName returned %x, expected S_OK\n", hr);
     GetFullPathNameW(dir_match1, MAX_PATH, buf2, NULL);
-    ok(!lstrcmpW(buf2, result), "result = %s, expected %s\n", wine_dbgstr_w(result), wine_dbgstr_w(buf2));
+    ok(!lstrcmpiW(buf2, result), "result = %s, expected %s\n", wine_dbgstr_w(result), wine_dbgstr_w(buf2));
     SysFreeString(result);
 
     ok(CreateDirectoryW(dir1, NULL), "CreateDirectory(%s) failed\n", wine_dbgstr_w(dir1));
     hr = IFileSystem3_GetAbsolutePathName(fs3, path, &result);
     ok(hr == S_OK, "GetAbsolutePathName returned %x, expected S_OK\n", hr);
     GetFullPathNameW(dir1, MAX_PATH, buf, NULL);
-    ok(!lstrcmpW(buf, result) || broken(!lstrcmpW(buf2, result)), "result = %s, expected %s\n",
+    ok(!lstrcmpiW(buf, result) || broken(!lstrcmpiW(buf2, result)), "result = %s, expected %s\n",
                 wine_dbgstr_w(result), wine_dbgstr_w(buf));
     SysFreeString(result);
 
     ok(CreateDirectoryW(dir2, NULL), "CreateDirectory(%s) failed\n", wine_dbgstr_w(dir2));
     hr = IFileSystem3_GetAbsolutePathName(fs3, path, &result);
     ok(hr == S_OK, "GetAbsolutePathName returned %x, expected S_OK\n", hr);
-    if(!lstrcmpW(buf, result) || !lstrcmpW(buf2, result)) {
-        ok(!lstrcmpW(buf, result) || broken(!lstrcmpW(buf2, result)), "result = %s, expected %s\n",
+    if(!lstrcmpiW(buf, result) || !lstrcmpiW(buf2, result)) {
+        ok(!lstrcmpiW(buf, result) || broken(!lstrcmpiW(buf2, result)), "result = %s, expected %s\n",
                 wine_dbgstr_w(result), wine_dbgstr_w(buf));
     }else {
         GetFullPathNameW(dir2, MAX_PATH, buf, NULL);
-        ok(!lstrcmpW(buf, result), "result = %s, expected %s\n",
+        ok(!lstrcmpiW(buf, result), "result = %s, expected %s\n",
                 wine_dbgstr_w(result), wine_dbgstr_w(buf));
     }
     SysFreeString(result);
@@ -454,7 +518,7 @@ static void test_GetAbsolutePathName(void)
     hr = IFileSystem3_GetAbsolutePathName(fs3, path, &result);
     ok(hr == S_OK, "GetAbsolutePathName returned %x, expected S_OK\n", hr);
     GetFullPathNameW(dir_match2, MAX_PATH, buf, NULL);
-    ok(!lstrcmpW(buf, result), "result = %s, expected %s\n", wine_dbgstr_w(result), wine_dbgstr_w(buf));
+    ok(!lstrcmpiW(buf, result), "result = %s, expected %s\n", wine_dbgstr_w(result), wine_dbgstr_w(buf));
     SysFreeString(result);
     SysFreeString(path);
 
@@ -651,6 +715,1009 @@ static void test_CopyFolder(void)
     SysFreeString(bsrc);
 }
 
+static BSTR bstr_from_str(const char *str)
+{
+    int len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    BSTR ret = SysAllocStringLen(NULL, len - 1);  /* NUL character added automatically */
+    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    return ret;
+}
+
+struct buildpath_test
+{
+    const char *path;
+    const char *name;
+    const char *result;
+};
+
+static struct buildpath_test buildpath_data[] =
+{
+    { "C:\\path", "..\\name.tmp", "C:\\path\\..\\name.tmp" },
+    { "C:\\path", "\\name.tmp", "C:\\path\\name.tmp" },
+    { "C:\\path", "name.tmp", "C:\\path\\name.tmp" },
+    { "C:\\path\\", "name.tmp", "C:\\path\\name.tmp" },
+    { "C:\\path", "\\\\name.tmp", "C:\\path\\\\name.tmp" },
+    { "C:\\path\\", "\\name.tmp", "C:\\path\\name.tmp" },
+    { "C:\\path\\", "\\\\name.tmp", "C:\\path\\\\name.tmp" },
+    { "C:\\path\\\\", "\\\\name.tmp", "C:\\path\\\\\\name.tmp" },
+    { "C:\\\\", "\\name.tmp", "C:\\\\name.tmp" },
+    { "C:", "name.tmp", "C:name.tmp" },
+    { "C:", "\\\\name.tmp", "C:\\\\name.tmp" },
+    { NULL }
+};
+
+static void test_BuildPath(void)
+{
+    struct buildpath_test *ptr = buildpath_data;
+    BSTR ret, path;
+    HRESULT hr;
+    int i = 0;
+
+    hr = IFileSystem3_BuildPath(fs3, NULL, NULL, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    ret = (BSTR)0xdeadbeef;
+    hr = IFileSystem3_BuildPath(fs3, NULL, NULL, &ret);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(*ret == 0, "got %p\n", ret);
+    SysFreeString(ret);
+
+    ret = (BSTR)0xdeadbeef;
+    path = bstr_from_str("path");
+    hr = IFileSystem3_BuildPath(fs3, path, NULL, &ret);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(ret, path), "got %s\n", wine_dbgstr_w(ret));
+    SysFreeString(ret);
+    SysFreeString(path);
+
+    ret = (BSTR)0xdeadbeef;
+    path = bstr_from_str("path");
+    hr = IFileSystem3_BuildPath(fs3, NULL, path, &ret);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(ret, path), "got %s\n", wine_dbgstr_w(ret));
+    SysFreeString(ret);
+    SysFreeString(path);
+
+    while (ptr->path)
+    {
+        BSTR name, result;
+
+        ret = NULL;
+        path = bstr_from_str(ptr->path);
+        name = bstr_from_str(ptr->name);
+        result = bstr_from_str(ptr->result);
+        hr = IFileSystem3_BuildPath(fs3, path, name, &ret);
+        ok(hr == S_OK, "%d: got 0x%08x\n", i, hr);
+        if (hr == S_OK)
+        {
+            ok(!lstrcmpW(ret, result), "%d: got wrong path %s, expected %s\n", i, wine_dbgstr_w(ret),
+                wine_dbgstr_w(result));
+            SysFreeString(ret);
+        }
+        SysFreeString(path);
+        SysFreeString(name);
+        SysFreeString(result);
+
+        i++;
+        ptr++;
+    }
+}
+
+static void test_GetFolder(void)
+{
+    static const WCHAR dummyW[] = {'d','u','m','m','y',0};
+    WCHAR buffW[MAX_PATH];
+    IFolder *folder;
+    HRESULT hr;
+    BSTR str;
+
+    folder = (void*)0xdeadbeef;
+    hr = IFileSystem3_GetFolder(fs3, NULL, &folder);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(folder == NULL, "got %p\n", folder);
+
+    hr = IFileSystem3_GetFolder(fs3, NULL, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    /* something that doesn't exist */
+    str = SysAllocString(dummyW);
+
+    hr = IFileSystem3_GetFolder(fs3, str, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    folder = (void*)0xdeadbeef;
+    hr = IFileSystem3_GetFolder(fs3, str, &folder);
+    ok(hr == CTL_E_PATHNOTFOUND, "got 0x%08x\n", hr);
+    ok(folder == NULL, "got %p\n", folder);
+    SysFreeString(str);
+
+    GetWindowsDirectoryW(buffW, MAX_PATH);
+    str = SysAllocString(buffW);
+    hr = IFileSystem3_GetFolder(fs3, str, &folder);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    SysFreeString(str);
+    IFolder_Release(folder);
+}
+
+/* Please keep the tests for IFolderCollection and IFileCollection in sync */
+static void test_FolderCollection(void)
+{
+    static const WCHAR fooW[] = {'f','o','o',0};
+    static const WCHAR aW[] = {'\\','a',0};
+    static const WCHAR bW[] = {'\\','b',0};
+    static const WCHAR cW[] = {'\\','c',0};
+    IFolderCollection *folders;
+    WCHAR buffW[MAX_PATH], pathW[MAX_PATH];
+    IEnumVARIANT *enumvar, *clone;
+    LONG count, ref, ref2, i;
+    IUnknown *unk, *unk2;
+    IFolder *folder;
+    ULONG fetched;
+    VARIANT var, var2[2];
+    HRESULT hr;
+    BSTR str;
+    int found_a = 0, found_b = 0, found_c = 0;
+
+    GetTempPathW(MAX_PATH, pathW);
+    GetTempFileNameW(pathW, fooW, 0, buffW);
+    DeleteFileW(buffW);
+    CreateDirectoryW(buffW, NULL);
+
+    str = SysAllocString(buffW);
+    hr = IFileSystem3_GetFolder(fs3, str, &folder);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    SysFreeString(str);
+
+    hr = IFolder_get_SubFolders(folder, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IFolder_get_Path(folder, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IFolder_get_Path(folder, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(buffW, str), "got %s, expected %s\n", wine_dbgstr_w(str), wine_dbgstr_w(buffW));
+    SysFreeString(str);
+
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, aW);
+    CreateDirectoryW(pathW, NULL);
+
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, bW);
+    CreateDirectoryW(pathW, NULL);
+
+    hr = IFolder_get_SubFolders(folder, &folders);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    IFolder_Release(folder);
+
+    count = 0;
+    hr = IFolderCollection_get_Count(folders, &count);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(count == 2, "got %d\n", count);
+
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, cW);
+    CreateDirectoryW(pathW, NULL);
+
+    /* every time property is requested it scans directory */
+    count = 0;
+    hr = IFolderCollection_get_Count(folders, &count);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(count == 3, "got %d\n", count);
+
+    hr = IFolderCollection_get__NewEnum(folders, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IFolderCollection_QueryInterface(folders, &IID_IEnumVARIANT, (void**)&unk);
+    ok(hr == E_NOINTERFACE, "got 0x%08x\n", hr);
+
+    /* NewEnum creates new instance each time it's called */
+    ref = GET_REFCOUNT(folders);
+
+    unk = NULL;
+    hr = IFolderCollection_get__NewEnum(folders, &unk);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    ref2 = GET_REFCOUNT(folders);
+    ok(ref2 == ref + 1, "got %d, %d\n", ref2, ref);
+
+    unk2 = NULL;
+    hr = IFolderCollection_get__NewEnum(folders, &unk2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(unk != unk2, "got %p, %p\n", unk2, unk);
+    IUnknown_Release(unk2);
+
+    /* now get IEnumVARIANT */
+    ref = GET_REFCOUNT(folders);
+    hr = IUnknown_QueryInterface(unk, &IID_IEnumVARIANT, (void**)&enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ref2 = GET_REFCOUNT(folders);
+    ok(ref2 == ref, "got %d, %d\n", ref2, ref);
+
+    /* clone enumerator */
+    hr = IEnumVARIANT_Clone(enumvar, &clone);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(clone != enumvar, "got %p, %p\n", enumvar, clone);
+    IEnumVARIANT_Release(clone);
+
+    hr = IEnumVARIANT_Reset(enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    for (i = 0; i < 3; i++)
+    {
+        VariantInit(&var);
+        fetched = 0;
+        hr = IEnumVARIANT_Next(enumvar, 1, &var, &fetched);
+        ok(hr == S_OK, "%d: got 0x%08x\n", i, hr);
+        ok(fetched == 1, "%d: got %d\n", i, fetched);
+        ok(V_VT(&var) == VT_DISPATCH, "%d: got type %d\n", i, V_VT(&var));
+
+        hr = IDispatch_QueryInterface(V_DISPATCH(&var), &IID_IFolder, (void**)&folder);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        str = NULL;
+        hr = IFolder_get_Name(folder, &str);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        if (!lstrcmpW(str, aW + 1))
+            found_a++;
+        else if (!lstrcmpW(str, bW + 1))
+            found_b++;
+        else if (!lstrcmpW(str, cW + 1))
+            found_c++;
+        else
+            ok(0, "unexpected folder %s was found\n", wine_dbgstr_w(str));
+        SysFreeString(str);
+
+        IFolder_Release(folder);
+        VariantClear(&var);
+    }
+
+    ok(found_a == 1 && found_b == 1 && found_c == 1,
+       "each folder should be found 1 time instead of %d/%d/%d\n",
+       found_a, found_b, found_c);
+
+    VariantInit(&var);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 1, &var, &fetched);
+    ok(hr == S_FALSE, "got 0x%08x\n", hr);
+    ok(fetched == 0, "got %d\n", fetched);
+
+    hr = IEnumVARIANT_Reset(enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IEnumVARIANT_Skip(enumvar, 2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IEnumVARIANT_Skip(enumvar, 0);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    VariantInit(&var2[0]);
+    VariantInit(&var2[1]);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 0, var2, &fetched);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(fetched == 0, "got %d\n", fetched);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 2, var2, &fetched);
+    ok(hr == S_FALSE, "got 0x%08x\n", hr);
+    ok(fetched == 1, "got %d\n", fetched);
+    ok(V_VT(&var2[0]) == VT_DISPATCH, "got type %d\n", V_VT(&var2[0]));
+    VariantClear(&var2[0]);
+    VariantClear(&var2[1]);
+
+    IEnumVARIANT_Release(enumvar);
+    IUnknown_Release(unk);
+
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, aW);
+    RemoveDirectoryW(pathW);
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, bW);
+    RemoveDirectoryW(pathW);
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, cW);
+    RemoveDirectoryW(pathW);
+    RemoveDirectoryW(buffW);
+
+    IFolderCollection_Release(folders);
+}
+
+/* Please keep the tests for IFolderCollection and IFileCollection in sync */
+static void test_FileCollection(void)
+{
+    static const WCHAR fooW[] = {'\\','f','o','o',0};
+    static const WCHAR aW[] = {'\\','a',0};
+    static const WCHAR bW[] = {'\\','b',0};
+    static const WCHAR cW[] = {'\\','c',0};
+    WCHAR buffW[MAX_PATH], pathW[MAX_PATH];
+    IFolder *folder;
+    IFileCollection *files;
+    IFile *file;
+    IEnumVARIANT *enumvar, *clone;
+    LONG count, ref, ref2, i;
+    IUnknown *unk, *unk2;
+    ULONG fetched;
+    VARIANT var, var2[2];
+    HRESULT hr;
+    BSTR str;
+    HANDLE file_a, file_b, file_c;
+    int found_a = 0, found_b = 0, found_c = 0;
+
+    GetTempPathW(MAX_PATH, pathW);
+    GetTempFileNameW(pathW, fooW, 0, buffW);
+    DeleteFileW(buffW);
+    CreateDirectoryW(buffW, NULL);
+
+    str = SysAllocString(buffW);
+    hr = IFileSystem3_GetFolder(fs3, str, &folder);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    SysFreeString(str);
+
+    hr = IFolder_get_Files(folder, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, aW);
+    file_a = CreateFileW(pathW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                         FILE_FLAG_DELETE_ON_CLOSE, 0);
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, bW);
+    file_b = CreateFileW(pathW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                         FILE_FLAG_DELETE_ON_CLOSE, 0);
+
+    hr = IFolder_get_Files(folder, &files);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    IFolder_Release(folder);
+
+    count = 0;
+    hr = IFileCollection_get_Count(files, &count);
+todo_wine
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+todo_wine
+    ok(count == 2, "got %d\n", count);
+
+    lstrcpyW(pathW, buffW);
+    lstrcatW(pathW, cW);
+    file_c = CreateFileW(pathW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                         FILE_FLAG_DELETE_ON_CLOSE, 0);
+
+    /* every time property is requested it scans directory */
+    count = 0;
+    hr = IFileCollection_get_Count(files, &count);
+todo_wine
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+todo_wine
+    ok(count == 3, "got %d\n", count);
+
+    hr = IFileCollection_get__NewEnum(files, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = IFileCollection_QueryInterface(files, &IID_IEnumVARIANT, (void**)&unk);
+    ok(hr == E_NOINTERFACE, "got 0x%08x\n", hr);
+
+    /* NewEnum creates new instance each time it's called */
+    ref = GET_REFCOUNT(files);
+
+    unk = NULL;
+    hr = IFileCollection_get__NewEnum(files, &unk);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    ref2 = GET_REFCOUNT(files);
+    ok(ref2 == ref + 1, "got %d, %d\n", ref2, ref);
+
+    unk2 = NULL;
+    hr = IFileCollection_get__NewEnum(files, &unk2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(unk != unk2, "got %p, %p\n", unk2, unk);
+    IUnknown_Release(unk2);
+
+    /* now get IEnumVARIANT */
+    ref = GET_REFCOUNT(files);
+    hr = IUnknown_QueryInterface(unk, &IID_IEnumVARIANT, (void**)&enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ref2 = GET_REFCOUNT(files);
+    ok(ref2 == ref, "got %d, %d\n", ref2, ref);
+
+    /* clone enumerator */
+    hr = IEnumVARIANT_Clone(enumvar, &clone);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(clone != enumvar, "got %p, %p\n", enumvar, clone);
+    IEnumVARIANT_Release(clone);
+
+    hr = IEnumVARIANT_Reset(enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    for (i = 0; i < 3; i++)
+    {
+        VariantInit(&var);
+        fetched = 0;
+        hr = IEnumVARIANT_Next(enumvar, 1, &var, &fetched);
+        ok(hr == S_OK, "%d: got 0x%08x\n", i, hr);
+        ok(fetched == 1, "%d: got %d\n", i, fetched);
+        ok(V_VT(&var) == VT_DISPATCH, "%d: got type %d\n", i, V_VT(&var));
+
+        hr = IDispatch_QueryInterface(V_DISPATCH(&var), &IID_IFile, (void **)&file);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        str = NULL;
+        hr = IFile_get_Name(file, &str);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        if (!lstrcmpW(str, aW + 1))
+            found_a++;
+        else if (!lstrcmpW(str, bW + 1))
+            found_b++;
+        else if (!lstrcmpW(str, cW + 1))
+            found_c++;
+        else
+            ok(0, "unexpected file %s was found\n", wine_dbgstr_w(str));
+        SysFreeString(str);
+
+        IFile_Release(file);
+        VariantClear(&var);
+    }
+
+    ok(found_a == 1 && found_b == 1 && found_c == 1,
+       "each file should be found 1 time instead of %d/%d/%d\n",
+       found_a, found_b, found_c);
+
+    VariantInit(&var);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 1, &var, &fetched);
+    ok(hr == S_FALSE, "got 0x%08x\n", hr);
+    ok(fetched == 0, "got %d\n", fetched);
+
+    hr = IEnumVARIANT_Reset(enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IEnumVARIANT_Skip(enumvar, 2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IEnumVARIANT_Skip(enumvar, 0);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    VariantInit(&var2[0]);
+    VariantInit(&var2[1]);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 0, var2, &fetched);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(fetched == 0, "got %d\n", fetched);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 2, var2, &fetched);
+    ok(hr == S_FALSE, "got 0x%08x\n", hr);
+    ok(fetched == 1, "got %d\n", fetched);
+    ok(V_VT(&var2[0]) == VT_DISPATCH, "got type %d\n", V_VT(&var2[0]));
+    VariantClear(&var2[0]);
+    VariantClear(&var2[1]);
+
+    IEnumVARIANT_Release(enumvar);
+    IUnknown_Release(unk);
+
+    CloseHandle(file_a);
+    CloseHandle(file_b);
+    CloseHandle(file_c);
+    RemoveDirectoryW(buffW);
+
+    IFileCollection_Release(files);
+}
+
+static void test_DriveCollection(void)
+{
+    IDriveCollection *drives;
+    IEnumVARIANT *enumvar;
+    ULONG fetched;
+    VARIANT var;
+    HRESULT hr;
+    LONG count;
+
+    hr = IFileSystem3_get_Drives(fs3, &drives);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IDriveCollection_get__NewEnum(drives, (IUnknown**)&enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IDriveCollection_get_Count(drives, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    count = 0;
+    hr = IDriveCollection_get_Count(drives, &count);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(count > 0, "got %d\n", count);
+
+    V_VT(&var) = VT_EMPTY;
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 0, &var, &fetched);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(fetched == 0, "got %d\n", fetched);
+
+    hr = IEnumVARIANT_Skip(enumvar, 0);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IEnumVARIANT_Skip(enumvar, count);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IEnumVARIANT_Skip(enumvar, 1);
+    ok(hr == S_FALSE, "got 0x%08x\n", hr);
+
+    /* reset and iterate again */
+    hr = IEnumVARIANT_Reset(enumvar);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    while (IEnumVARIANT_Next(enumvar, 1, &var, &fetched) == S_OK) {
+        IDrive *drive = (IDrive*)V_DISPATCH(&var);
+        DriveTypeConst type;
+        BSTR str;
+
+        hr = IDrive_get_DriveType(drive, &type);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IDrive_get_DriveLetter(drive, NULL);
+        ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+        hr = IDrive_get_DriveLetter(drive, &str);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(SysStringLen(str) == 1, "got string %s\n", wine_dbgstr_w(str));
+        SysFreeString(str);
+
+        hr = IDrive_get_IsReady(drive, NULL);
+        ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+        hr = IDrive_get_TotalSize(drive, NULL);
+        ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+        hr = IDrive_get_AvailableSpace(drive, NULL);
+        ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+        hr = IDrive_get_FreeSpace(drive, NULL);
+        ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+        if (type == Fixed) {
+            VARIANT_BOOL ready = VARIANT_FALSE;
+            VARIANT size;
+
+            hr = IDrive_get_IsReady(drive, &ready);
+            ok(hr == S_OK, "got 0x%08x\n", hr);
+            ok(ready == VARIANT_TRUE, "got %x\n", ready);
+
+            V_VT(&size) = VT_EMPTY;
+            hr = IDrive_get_TotalSize(drive, &size);
+            ok(hr == S_OK, "got 0x%08x\n", hr);
+            ok(V_VT(&size) == VT_R8, "got %d\n", V_VT(&size));
+            ok(V_R8(&size) > 0, "got %f\n", V_R8(&size));
+
+            V_VT(&size) = VT_EMPTY;
+            hr = IDrive_get_AvailableSpace(drive, &size);
+            ok(hr == S_OK, "got 0x%08x\n", hr);
+            ok(V_VT(&size) == VT_R8, "got %d\n", V_VT(&size));
+            ok(V_R8(&size) > 0, "got %f\n", V_R8(&size));
+
+            V_VT(&size) = VT_EMPTY;
+            hr = IDrive_get_FreeSpace(drive, &size);
+            ok(hr == S_OK, "got 0x%08x\n", hr);
+            ok(V_VT(&size) == VT_R8, "got %d\n", V_VT(&size));
+            ok(V_R8(&size) > 0, "got %f\n", V_R8(&size));
+        }
+        VariantClear(&var);
+    }
+
+    IEnumVARIANT_Release(enumvar);
+    IDriveCollection_Release(drives);
+}
+
+static void test_CreateTextFile(void)
+{
+    static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
+    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
+    static const WCHAR bomAW[] = {0xff,0xfe,0};
+    WCHAR pathW[MAX_PATH], dirW[MAX_PATH];
+    ITextStream *stream;
+    BSTR nameW, str;
+    HANDLE file;
+    HRESULT hr;
+    BOOL ret;
+
+    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    lstrcatW(pathW, scrrunW);
+    lstrcpyW(dirW, pathW);
+    lstrcatW(pathW, testfileW);
+
+    /* dir doesn't exist */
+    nameW = SysAllocString(pathW);
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_FALSE, VARIANT_FALSE, &stream);
+    ok(hr == CTL_E_PATHNOTFOUND, "got 0x%08x\n", hr);
+
+    ret = CreateDirectoryW(dirW, NULL);
+    ok(ret, "got %d, %d\n", ret, GetLastError());
+
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_FALSE, VARIANT_FALSE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_Read(stream, 1, &str);
+    ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
+
+    ITextStream_Release(stream);
+
+    /* check it's created */
+    file = CreateFileW(pathW, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "got %p\n", file);
+    CloseHandle(file);
+
+    /* try to create again with no-overwrite mode */
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_FALSE, VARIANT_FALSE, &stream);
+    ok(hr == CTL_E_FILEALREADYEXISTS, "got 0x%08x\n", hr);
+
+    /* now overwrite */
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_TRUE, VARIANT_FALSE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ITextStream_Release(stream);
+
+    /* overwrite in Unicode mode, check for BOM */
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_TRUE, VARIANT_TRUE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = ITextStream_ReadAll(stream, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(str, bomAW), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    DeleteFileW(nameW);
+    RemoveDirectoryW(dirW);
+    SysFreeString(nameW);
+}
+
+static void test_WriteLine(void)
+{
+    static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
+    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
+    WCHAR pathW[MAX_PATH], dirW[MAX_PATH];
+    WCHAR buffW[MAX_PATH], buff2W[MAX_PATH];
+    char buffA[MAX_PATH];
+    ITextStream *stream;
+    DWORD r, len;
+    HANDLE file;
+    BSTR nameW;
+    HRESULT hr;
+    BOOL ret;
+
+    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    lstrcatW(pathW, scrrunW);
+    lstrcpyW(dirW, pathW);
+    lstrcatW(pathW, testfileW);
+
+    ret = CreateDirectoryW(dirW, NULL);
+    ok(ret, "got %d, %d\n", ret, GetLastError());
+
+    /* create as ASCII file first */
+    nameW = SysAllocString(pathW);
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_FALSE, VARIANT_FALSE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_WriteLine(stream, nameW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ITextStream_Release(stream);
+
+    /* check contents */
+    file = CreateFileW(pathW, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "got %p\n", file);
+    r = 0;
+    ret = ReadFile(file, buffA, sizeof(buffA), &r, NULL);
+    ok(ret && r, "read %d, got %d, %d\n", r, ret, GetLastError());
+
+    len = MultiByteToWideChar(CP_ACP, 0, buffA, r, buffW, sizeof(buffW)/sizeof(WCHAR));
+    buffW[len] = 0;
+    lstrcpyW(buff2W, nameW);
+    lstrcatW(buff2W, crlfW);
+    ok(!lstrcmpW(buff2W, buffW), "got %s, expected %s\n", wine_dbgstr_w(buffW), wine_dbgstr_w(buff2W));
+    CloseHandle(file);
+    DeleteFileW(nameW);
+
+    /* same for unicode file */
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_FALSE, VARIANT_TRUE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_WriteLine(stream, nameW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ITextStream_Release(stream);
+
+    /* check contents */
+    file = CreateFileW(pathW, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "got %p\n", file);
+    r = 0;
+    ret = ReadFile(file, buffW, sizeof(buffW), &r, NULL);
+    ok(ret && r, "read %d, got %d, %d\n", r, ret, GetLastError());
+    buffW[r/sizeof(WCHAR)] = 0;
+
+    buff2W[0] = 0xfeff;
+    buff2W[1] = 0;
+    lstrcatW(buff2W, nameW);
+    lstrcatW(buff2W, crlfW);
+    ok(!lstrcmpW(buff2W, buffW), "got %s, expected %s\n", wine_dbgstr_w(buffW), wine_dbgstr_w(buff2W));
+    CloseHandle(file);
+    DeleteFileW(nameW);
+
+    RemoveDirectoryW(dirW);
+    SysFreeString(nameW);
+}
+
+static void test_ReadAll(void)
+{
+    static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
+    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
+    static const WCHAR secondlineW[] = {'s','e','c','o','n','d',0};
+    static const WCHAR aW[] = {'A',0};
+    WCHAR pathW[MAX_PATH], dirW[MAX_PATH], buffW[500];
+    ITextStream *stream;
+    BSTR nameW;
+    HRESULT hr;
+    BOOL ret;
+    BSTR str;
+
+    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    lstrcatW(pathW, scrrunW);
+    lstrcpyW(dirW, pathW);
+    lstrcatW(pathW, testfileW);
+
+    ret = CreateDirectoryW(dirW, NULL);
+    ok(ret, "got %d, %d\n", ret, GetLastError());
+
+    /* Unicode file -> read with ascii stream */
+    nameW = SysAllocString(pathW);
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_FALSE, VARIANT_TRUE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_WriteLine(stream, nameW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = SysAllocString(secondlineW);
+    hr = ITextStream_WriteLine(stream, str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    SysFreeString(str);
+
+    hr = ITextStream_ReadAll(stream, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_ReadAll(stream, &str);
+    ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
+    ok(str == NULL || broken(str == (void*)0xdeadbeef) /* win2k */, "got %p\n", str);
+
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_ReadAll(stream, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    /* Buffer content is not interpreted - BOM is kept, all data is converted to WCHARs */
+    str = NULL;
+    hr = ITextStream_ReadAll(stream, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+    ok(str[0] == 0x00ff && str[1] == 0x00fe, "got %s, %d\n", wine_dbgstr_w(str), SysStringLen(str));
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    /* Unicode file -> read with unicode stream */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateTrue, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    lstrcpyW(buffW, nameW);
+    lstrcatW(buffW, crlfW);
+    lstrcatW(buffW, secondlineW);
+    lstrcatW(buffW, crlfW);
+    str = NULL;
+    hr = ITextStream_ReadAll(stream, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    /* ReadAll one more time */
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_ReadAll(stream, &str);
+    ok(hr == CTL_E_ENDOFFILE, "got 0x%08x\n", hr);
+    ok(str == NULL || broken(str == (void*)0xdeadbeef) /* win2k */, "got %p\n", str);
+
+    /* ReadLine fails the same way */
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_ReadLine(stream, &str);
+    ok(hr == CTL_E_ENDOFFILE, "got 0x%08x\n", hr);
+    ok(str == NULL || broken(str == (void*)0xdeadbeef) /* win2k */, "got %p\n", str);
+    ITextStream_Release(stream);
+
+    /* Open again and skip first line before ReadAll */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateTrue, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = NULL;
+    hr = ITextStream_ReadLine(stream, &str);
+todo_wine {
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(str != NULL, "got %p\n", str);
+}
+    SysFreeString(str);
+
+    lstrcpyW(buffW, secondlineW);
+    lstrcatW(buffW, crlfW);
+    str = NULL;
+    hr = ITextStream_ReadAll(stream, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+todo_wine
+    ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    /* ASCII file, read with Unicode stream */
+    /* 1. one byte content, not enough for Unicode read */
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_TRUE, VARIANT_FALSE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    str = SysAllocString(aW);
+    hr = ITextStream_Write(stream, str);
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateTrue, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_ReadAll(stream, &str);
+    ok(hr == CTL_E_ENDOFFILE, "got 0x%08x\n", hr);
+    ok(str == NULL || broken(str == (void*)0xdeadbeef) /* win2k */, "got %p\n", str);
+
+    ITextStream_Release(stream);
+
+    DeleteFileW(nameW);
+    RemoveDirectoryW(dirW);
+    SysFreeString(nameW);
+}
+
+static void test_Read(void)
+{
+    static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
+    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
+    static const WCHAR secondlineW[] = {'s','e','c','o','n','d',0};
+    static const WCHAR aW[] = {'A',0};
+    WCHAR pathW[MAX_PATH], dirW[MAX_PATH], buffW[500];
+    ITextStream *stream;
+    BSTR nameW;
+    HRESULT hr;
+    BOOL ret;
+    BSTR str;
+
+    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    lstrcatW(pathW, scrrunW);
+    lstrcpyW(dirW, pathW);
+    lstrcatW(pathW, testfileW);
+
+    ret = CreateDirectoryW(dirW, NULL);
+    ok(ret, "got %d, %d\n", ret, GetLastError());
+
+    /* Unicode file -> read with ascii stream */
+    nameW = SysAllocString(pathW);
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_FALSE, VARIANT_TRUE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_WriteLine(stream, nameW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = SysAllocString(secondlineW);
+    hr = ITextStream_WriteLine(stream, str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    SysFreeString(str);
+
+    hr = ITextStream_Read(stream, 0, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = ITextStream_Read(stream, 1, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    hr = ITextStream_Read(stream, -1, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, 1, &str);
+    ok(hr == CTL_E_BADFILEMODE, "got 0x%08x\n", hr);
+    ok(str == NULL, "got %p\n", str);
+
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITextStream_Read(stream, 1, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, -1, &str);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(str == NULL, "got %p\n", str);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, 0, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(str == NULL, "got %p\n", str);
+
+    /* Buffer content is not interpreted - BOM is kept, all data is converted to WCHARs */
+    str = NULL;
+    hr = ITextStream_Read(stream, 2, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(str[0] == 0x00ff && str[1] == 0x00fe, "got %s, %d\n", wine_dbgstr_w(str), SysStringLen(str));
+    ok(SysStringLen(str) == 2, "got %d\n", SysStringLen(str));
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    /* Unicode file -> read with unicode stream */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateTrue, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    lstrcpyW(buffW, nameW);
+    lstrcatW(buffW, crlfW);
+    lstrcatW(buffW, secondlineW);
+    lstrcatW(buffW, crlfW);
+    str = NULL;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    /* ReadAll one more time */
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, 10, &str);
+    ok(hr == CTL_E_ENDOFFILE, "got 0x%08x\n", hr);
+    ok(str == NULL, "got %p\n", str);
+
+    /* ReadLine fails the same way */
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_ReadLine(stream, &str);
+    ok(hr == CTL_E_ENDOFFILE, "got 0x%08x\n", hr);
+    ok(str == NULL || broken(str == (void*)0xdeadbeef), "got %p\n", str);
+    ITextStream_Release(stream);
+
+    /* Open again and skip first line before ReadAll */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateTrue, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = NULL;
+    hr = ITextStream_ReadLine(stream, &str);
+todo_wine {
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(str != NULL, "got %p\n", str);
+}
+    SysFreeString(str);
+
+    lstrcpyW(buffW, secondlineW);
+    lstrcatW(buffW, crlfW);
+    str = NULL;
+    hr = ITextStream_Read(stream, 100, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+todo_wine
+    ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    /* ASCII file, read with Unicode stream */
+    /* 1. one byte content, not enough for Unicode read */
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_TRUE, VARIANT_FALSE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    str = SysAllocString(aW);
+    hr = ITextStream_Write(stream, str);
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateTrue, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == CTL_E_ENDOFFILE, "got 0x%08x\n", hr);
+    ok(str == NULL, "got %p\n", str);
+
+    ITextStream_Release(stream);
+
+    DeleteFileW(nameW);
+    RemoveDirectoryW(dirW);
+    SysFreeString(nameW);
+}
+
 START_TEST(filesystem)
 {
     HRESULT hr;
@@ -674,6 +1741,15 @@ START_TEST(filesystem)
     test_GetAbsolutePathName();
     test_GetFile();
     test_CopyFolder();
+    test_BuildPath();
+    test_GetFolder();
+    test_FolderCollection();
+    test_FileCollection();
+    test_DriveCollection();
+    test_CreateTextFile();
+    test_WriteLine();
+    test_ReadAll();
+    test_Read();
 
     IFileSystem3_Release(fs3);
 
