@@ -1,7 +1,7 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
 #define STANDALONE
-#include "wine/test.h"
+#include <wine/test.h>
 
 extern void func_bitmap(void);
 extern void func_bmpformat(void);

@@ -281,18 +281,6 @@ static const char png_color_profile[] = {
 
 static IWICImagingFactory *factory;
 
-static const char *debugstr_guid(const GUID *guid)
-{
-    static char buf[50];
-
-    if (!guid) return "(null)";
-    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            guid->Data1, guid->Data2, guid->Data3, guid->Data4[0],
-            guid->Data4[1], guid->Data4[2], guid->Data4[3], guid->Data4[4],
-            guid->Data4[5], guid->Data4[6], guid->Data4[7]);
-    return buf;
-}
-
 static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size)
 {
     HGLOBAL hmem;
@@ -316,7 +304,7 @@ static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size
     hr = IWICBitmapDecoder_GetContainerFormat(decoder, &format);
     ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
     ok(IsEqualGUID(&format, &GUID_ContainerFormatPng),
-       "wrong container format %s\n", debugstr_guid(&format));
+       "wrong container format %s\n", wine_dbgstr_guid(&format));
 
     IStream_Release(stream);
 
@@ -569,7 +557,7 @@ static void test_png_palette(void)
     hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
     ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat1bppIndexed),
-       "got wrong format %s\n", debugstr_guid(&format));
+       "got wrong format %s\n", wine_dbgstr_guid(&format));
 
     hr = IWICImagingFactory_CreatePalette(factory, &palette);
     ok(hr == S_OK, "CreatePalette error %#x\n", hr);

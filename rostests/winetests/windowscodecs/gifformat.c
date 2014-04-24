@@ -63,18 +63,6 @@ static const char gif_local_palette[] = {
 
 static IWICImagingFactory *factory;
 
-static const char *debugstr_guid(const GUID *guid)
-{
-    static char buf[50];
-
-    if (!guid) return "(null)";
-    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            guid->Data1, guid->Data2, guid->Data3, guid->Data4[0],
-            guid->Data4[1], guid->Data4[2], guid->Data4[3], guid->Data4[4],
-            guid->Data4[5], guid->Data4[6], guid->Data4[7]);
-    return buf;
-}
-
 static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size)
 {
     HGLOBAL hmem;
@@ -98,7 +86,7 @@ static IWICBitmapDecoder *create_decoder(const void *image_data, UINT image_size
     hr = IWICBitmapDecoder_GetContainerFormat(decoder, &format);
     ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
     ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
-       "wrong container format %s\n", debugstr_guid(&format));
+       "wrong container format %s\n", wine_dbgstr_guid(&format));
 
     IStream_Release(stream);
 
@@ -144,7 +132,7 @@ static void test_global_gif_palette(void)
     hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
     ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat8bppIndexed),
-       "wrong pixel format %s\n", debugstr_guid(&format));
+       "wrong pixel format %s\n", wine_dbgstr_guid(&format));
 
     hr = IWICBitmapFrameDecode_CopyPalette(frame, palette);
     ok(hr == S_OK, "CopyPalette error %#x\n", hr);
@@ -206,7 +194,7 @@ static void test_global_gif_palette_2frames(void)
     hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
     ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat8bppIndexed),
-       "wrong pixel format %s\n", debugstr_guid(&format));
+       "wrong pixel format %s\n", wine_dbgstr_guid(&format));
 
     hr = IWICBitmapFrameDecode_CopyPalette(frame, palette);
     ok(hr == S_OK, "CopyPalette error %#x\n", hr);
@@ -249,7 +237,7 @@ static void test_global_gif_palette_2frames(void)
     hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
     ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat8bppIndexed),
-       "wrong pixel format %s\n", debugstr_guid(&format));
+       "wrong pixel format %s\n", wine_dbgstr_guid(&format));
 
     hr = IWICBitmapFrameDecode_CopyPalette(frame, palette);
     ok(hr == S_OK, "CopyPalette error %#x\n", hr);
@@ -319,7 +307,7 @@ static void test_local_gif_palette(void)
     hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
     ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat8bppIndexed),
-       "wrong pixel format %s\n", debugstr_guid(&format));
+       "wrong pixel format %s\n", wine_dbgstr_guid(&format));
 
     hr = IWICBitmapFrameDecode_CopyPalette(frame, palette);
     ok(hr == S_OK, "CopyPalette error %#x\n", hr);

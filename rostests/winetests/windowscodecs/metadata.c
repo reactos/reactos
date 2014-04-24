@@ -182,21 +182,6 @@ static const char animatedgif[] = {
 0x21,0x01,0x0C,'p','l','a','i','n','t','e','x','t',' ','#','2',0x00,0x3B
 };
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    if(!riid)
-        return "(null)";
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 static IStream *create_stream(const char *data, int data_size)
 {
     HRESULT hr;
@@ -372,7 +357,7 @@ static void test_metadata_tEXt(void)
 
     hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
     ok(hr == S_OK, "GetMetadataFormat failed, hr=%x\n", hr);
-    ok(IsEqualGUID(&format, &GUID_MetadataFormatChunktEXt), "unexpected format %s\n", debugstr_guid(&format));
+    ok(IsEqualGUID(&format, &GUID_MetadataFormatChunktEXt), "unexpected format %s\n", wine_dbgstr_guid(&format));
 
     hr = IWICMetadataReader_GetMetadataFormat(reader, NULL);
     ok(hr == E_INVALIDARG, "GetMetadataFormat failed, hr=%x\n", hr);
@@ -731,7 +716,7 @@ static void test_metadata_IFD(void)
 
     hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
     ok(hr == S_OK, "GetMetadataFormat error %#x\n", hr);
-    ok(IsEqualGUID(&format, &GUID_MetadataFormatIfd), "unexpected format %s\n", debugstr_guid(&format));
+    ok(IsEqualGUID(&format, &GUID_MetadataFormatIfd), "unexpected format %s\n", wine_dbgstr_guid(&format));
 
     hr = IWICMetadataReader_GetMetadataFormat(reader, NULL);
     ok(hr == E_INVALIDARG, "GetMetadataFormat should fail\n");
@@ -875,7 +860,7 @@ todo_wine
 
         hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
         ok(hr == S_OK, "GetMetadataFormat failed, hr=%x\n", hr);
-        ok(IsEqualGUID(&format, &GUID_MetadataFormatChunktEXt), "unexpected format %s\n", debugstr_guid(&format));
+        ok(IsEqualGUID(&format, &GUID_MetadataFormatChunktEXt), "unexpected format %s\n", wine_dbgstr_guid(&format));
 
         IWICMetadataReader_Release(reader);
     }
@@ -893,7 +878,7 @@ todo_wine
 
         hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
         ok(hr == S_OK, "GetMetadataFormat failed, hr=%x\n", hr);
-        ok(IsEqualGUID(&format, &GUID_MetadataFormatUnknown), "unexpected format %s\n", debugstr_guid(&format));
+        ok(IsEqualGUID(&format, &GUID_MetadataFormatUnknown), "unexpected format %s\n", wine_dbgstr_guid(&format));
 
         IWICMetadataReader_Release(reader);
     }
@@ -1104,7 +1089,7 @@ static void test_metadata_gif(void)
         hr = IWICMetadataBlockReader_GetContainerFormat(blockreader, &format);
         ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
         ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
-           "wrong container format %s\n", debugstr_guid(&format));
+           "wrong container format %s\n", wine_dbgstr_guid(&format));
 
         hr = IWICMetadataBlockReader_GetCount(blockreader, &count);
         ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1117,7 +1102,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatLSD), /* Logical Screen Descriptor */
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1149,7 +1134,7 @@ static void test_metadata_gif(void)
         hr = IWICMetadataBlockReader_GetContainerFormat(blockreader, &format);
         ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
         ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
-           "wrong container format %s\n", debugstr_guid(&format));
+           "wrong container format %s\n", wine_dbgstr_guid(&format));
 
         hr = IWICMetadataBlockReader_GetCount(blockreader, NULL);
         ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
@@ -1165,7 +1150,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatIMD), /* Image Descriptor */
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1205,7 +1190,7 @@ static void test_metadata_gif(void)
         hr = IWICMetadataBlockReader_GetContainerFormat(blockreader, &format);
         ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
         ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
-           "wrong container format %s\n", debugstr_guid(&format));
+           "wrong container format %s\n", wine_dbgstr_guid(&format));
 
         hr = IWICMetadataBlockReader_GetCount(blockreader, &count);
         ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1218,7 +1203,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatLSD), /* Logical Screen Descriptor */
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1236,7 +1221,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatAPE), /* Application Extension */
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1254,7 +1239,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatGifComment), /* Comment Extension */
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1272,7 +1257,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatUnknown),
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1304,7 +1289,7 @@ static void test_metadata_gif(void)
         hr = IWICMetadataBlockReader_GetContainerFormat(blockreader, &format);
         ok(hr == S_OK, "GetContainerFormat error %#x\n", hr);
         ok(IsEqualGUID(&format, &GUID_ContainerFormatGif),
-           "wrong container format %s\n", debugstr_guid(&format));
+           "wrong container format %s\n", wine_dbgstr_guid(&format));
 
         hr = IWICMetadataBlockReader_GetCount(blockreader, NULL);
         ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
@@ -1320,7 +1305,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatIMD), /* Image Descriptor */
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1338,7 +1323,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatGifComment), /* Comment Extension */
-                "wrong metadata format %s\n", debugstr_guid(&format));
+                "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1357,7 +1342,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatUnknown),
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1375,7 +1360,7 @@ static void test_metadata_gif(void)
         {
             hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
             ok(IsEqualGUID(&format, &GUID_MetadataFormatGCE), /* Graphic Control Extension */
-               "wrong metadata format %s\n", debugstr_guid(&format));
+               "wrong metadata format %s\n", wine_dbgstr_guid(&format));
 
             hr = IWICMetadataReader_GetCount(reader, &count);
             ok(hr == S_OK, "GetCount error %#x\n", hr);
@@ -1455,14 +1440,14 @@ static void test_metadata_LSD(void)
 
         hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
         ok(hr == S_OK, "GetMetadataFormat error %#x\n", hr);
-        ok(IsEqualGUID(&format, &GUID_MetadataFormatLSD), "wrong format %s\n", debugstr_guid(&format));
+        ok(IsEqualGUID(&format, &GUID_MetadataFormatLSD), "wrong format %s\n", wine_dbgstr_guid(&format));
 
         hr = IWICMetadataReader_GetMetadataHandlerInfo(reader, &info);
         ok(hr == S_OK, "GetMetadataHandlerInfo error %#x\n", hr);
 
         hr = IWICMetadataHandlerInfo_GetCLSID(info, &id);
         ok(hr == S_OK, "GetCLSID error %#x\n", hr);
-        ok(IsEqualGUID(&id, &CLSID_WICLSDMetadataReader), "wrong CLSID %s\n", debugstr_guid(&id));
+        ok(IsEqualGUID(&id, &CLSID_WICLSDMetadataReader), "wrong CLSID %s\n", wine_dbgstr_guid(&id));
 
         hr = IWICMetadataHandlerInfo_GetFriendlyName(info, 64, name, &dummy);
         ok(hr == S_OK, "GetFriendlyName error %#x\n", hr);
@@ -1533,14 +1518,14 @@ static void test_metadata_IMD(void)
 
         hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
         ok(hr == S_OK, "GetMetadataFormat error %#x\n", hr);
-        ok(IsEqualGUID(&format, &GUID_MetadataFormatIMD), "wrong format %s\n", debugstr_guid(&format));
+        ok(IsEqualGUID(&format, &GUID_MetadataFormatIMD), "wrong format %s\n", wine_dbgstr_guid(&format));
 
         hr = IWICMetadataReader_GetMetadataHandlerInfo(reader, &info);
         ok(hr == S_OK, "GetMetadataHandlerInfo error %#x\n", hr);
 
         hr = IWICMetadataHandlerInfo_GetCLSID(info, &id);
         ok(hr == S_OK, "GetCLSID error %#x\n", hr);
-        ok(IsEqualGUID(&id, &CLSID_WICIMDMetadataReader), "wrong CLSID %s\n", debugstr_guid(&id));
+        ok(IsEqualGUID(&id, &CLSID_WICIMDMetadataReader), "wrong CLSID %s\n", wine_dbgstr_guid(&id));
 
         hr = IWICMetadataHandlerInfo_GetFriendlyName(info, 64, name, &dummy);
         ok(hr == S_OK, "GetFriendlyName error %#x\n", hr);
@@ -1608,14 +1593,14 @@ static void test_metadata_GCE(void)
 
         hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
         ok(hr == S_OK, "GetMetadataFormat error %#x\n", hr);
-        ok(IsEqualGUID(&format, &GUID_MetadataFormatGCE), "wrong format %s\n", debugstr_guid(&format));
+        ok(IsEqualGUID(&format, &GUID_MetadataFormatGCE), "wrong format %s\n", wine_dbgstr_guid(&format));
 
         hr = IWICMetadataReader_GetMetadataHandlerInfo(reader, &info);
         ok(hr == S_OK, "GetMetadataHandlerInfo error %#x\n", hr);
 
         hr = IWICMetadataHandlerInfo_GetCLSID(info, &id);
         ok(hr == S_OK, "GetCLSID error %#x\n", hr);
-        ok(IsEqualGUID(&id, &CLSID_WICGCEMetadataReader), "wrong CLSID %s\n", debugstr_guid(&id));
+        ok(IsEqualGUID(&id, &CLSID_WICGCEMetadataReader), "wrong CLSID %s\n", wine_dbgstr_guid(&id));
 
         hr = IWICMetadataHandlerInfo_GetFriendlyName(info, 64, name, &dummy);
         ok(hr == S_OK, "GetFriendlyName error %#x\n", hr);
@@ -1681,7 +1666,7 @@ static void test_metadata_APE(void)
 
         hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
         ok(hr == S_OK, "GetMetadataFormat error %#x\n", hr);
-        ok(IsEqualGUID(&format, &GUID_MetadataFormatAPE), "wrong format %s\n", debugstr_guid(&format));
+        ok(IsEqualGUID(&format, &GUID_MetadataFormatAPE), "wrong format %s\n", wine_dbgstr_guid(&format));
 
         PropVariantInit(&value);
         id.vt = VT_LPWSTR;
@@ -1700,7 +1685,7 @@ static void test_metadata_APE(void)
 
         hr = IWICMetadataHandlerInfo_GetCLSID(info, &clsid);
         ok(hr == S_OK, "GetCLSID error %#x\n", hr);
-        ok(IsEqualGUID(&clsid, &CLSID_WICAPEMetadataReader), "wrong CLSID %s\n", debugstr_guid(&clsid));
+        ok(IsEqualGUID(&clsid, &CLSID_WICAPEMetadataReader), "wrong CLSID %s\n", wine_dbgstr_guid(&clsid));
 
         hr = IWICMetadataHandlerInfo_GetFriendlyName(info, 64, name, &dummy);
         ok(hr == S_OK, "GetFriendlyName error %#x\n", hr);
@@ -1765,7 +1750,7 @@ static void test_metadata_GIF_comment(void)
 
         hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
         ok(hr == S_OK, "GetMetadataFormat error %#x\n", hr);
-        ok(IsEqualGUID(&format, &GUID_MetadataFormatGifComment), "wrong format %s\n", debugstr_guid(&format));
+        ok(IsEqualGUID(&format, &GUID_MetadataFormatGifComment), "wrong format %s\n", wine_dbgstr_guid(&format));
 
         PropVariantInit(&value);
         id.vt = VT_LPWSTR;
@@ -1782,7 +1767,7 @@ static void test_metadata_GIF_comment(void)
 
         hr = IWICMetadataHandlerInfo_GetCLSID(info, &clsid);
         ok(hr == S_OK, "GetCLSID error %#x\n", hr);
-        ok(IsEqualGUID(&clsid, &CLSID_WICGifCommentMetadataReader), "wrong CLSID %s\n", debugstr_guid(&clsid));
+        ok(IsEqualGUID(&clsid, &CLSID_WICGifCommentMetadataReader), "wrong CLSID %s\n", wine_dbgstr_guid(&clsid));
 
         hr = IWICMetadataHandlerInfo_GetFriendlyName(info, 64, name, &dummy);
         ok(hr == S_OK, "GetFriendlyName error %#x\n", hr);

@@ -36,21 +36,6 @@
 #include <initguid.h>
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
-static const char *debugstr_guid(GUID *guid)
-{
-    static char buf[50];
-
-    if(!guid)
-        return "(null)";
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            guid->Data1, guid->Data2, guid->Data3, guid->Data4[0],
-            guid->Data4[1], guid->Data4[2], guid->Data4[3], guid->Data4[4],
-            guid->Data4[5], guid->Data4[6], guid->Data4[7]);
-
-    return buf;
-}
-
 static HRESULT get_component_info(const GUID *clsid, IWICComponentInfo **result)
 {
     IWICImagingFactory *factory;
@@ -68,7 +53,7 @@ static HRESULT get_component_info(const GUID *clsid, IWICComponentInfo **result)
     return hr;
 }
 
-static int is_pixelformat(GUID *format)
+static BOOL is_pixelformat(GUID *format)
 {
     IWICComponentInfo *info;
     HRESULT hr;
@@ -275,7 +260,7 @@ static void test_pixelformat_info(void)
     memset(&guid, 0xaa, sizeof(guid));
     hr = IWICComponentInfo_GetCLSID(info, &guid);
     ok(hr == S_OK, "GetCLSID failed, hr=%x\n", hr);
-    ok(IsEqualGUID(&guid, &GUID_WICPixelFormat32bppBGRA), "unexpected CLSID %s\n", debugstr_guid(&guid));
+    ok(IsEqualGUID(&guid, &GUID_WICPixelFormat32bppBGRA), "unexpected CLSID %s\n", wine_dbgstr_guid(&guid));
 
     hr = IWICComponentInfo_GetComponentType(info, NULL);
     ok(hr == E_INVALIDARG, "GetComponentType failed, hr=%x\n", hr);
@@ -305,7 +290,7 @@ static void test_pixelformat_info(void)
     hr = IWICComponentInfo_GetVendorGUID(info, &guid);
     ok(hr == S_OK, "GetVendorGUID failed, hr=%x\n", hr);
     ok(IsEqualGUID(&guid, &GUID_VendorMicrosoft) ||
-       broken(IsEqualGUID(&guid, &GUID_NULL)) /* XP */, "unexpected GUID %s\n", debugstr_guid(&guid));
+       broken(IsEqualGUID(&guid, &GUID_NULL)) /* XP */, "unexpected GUID %s\n", wine_dbgstr_guid(&guid));
 
     len = 0xdeadbeef;
     hr = IWICComponentInfo_GetVersion(info, 0, NULL, &len);
@@ -364,7 +349,7 @@ static void test_pixelformat_info(void)
         memset(&guid, 0xaa, sizeof(guid));
         hr = IWICPixelFormatInfo_GetFormatGUID(pixelformat_info, &guid);
         ok(hr == S_OK, "GetFormatGUID failed, hr=%x\n", hr);
-        ok(IsEqualGUID(&guid, &GUID_WICPixelFormat32bppBGRA), "unexpected GUID %s\n", debugstr_guid(&guid));
+        ok(IsEqualGUID(&guid, &GUID_WICPixelFormat32bppBGRA), "unexpected GUID %s\n", wine_dbgstr_guid(&guid));
 
         IWICPixelFormatInfo_Release(pixelformat_info);
     }

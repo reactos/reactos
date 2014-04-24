@@ -343,7 +343,7 @@ static void test_default_converter(void)
 {
     BitmapTestSrc *src_obj;
     IWICFormatConverter *converter;
-    BOOL can_convert=1;
+    BOOL can_convert = TRUE;
     HRESULT hr;
 
     CreateTestBitmap(&testdata_32bppBGRA, &src_obj);
@@ -652,18 +652,18 @@ START_TEST(converter)
 {
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
-    test_conversion(&testdata_32bppBGRA, &testdata_32bppBGR, "BGRA -> BGR", 0);
-    test_conversion(&testdata_32bppBGR, &testdata_32bppBGRA, "BGR -> BGRA", 0);
-    test_conversion(&testdata_32bppBGRA, &testdata_32bppBGRA, "BGRA -> BGRA", 0);
+    test_conversion(&testdata_32bppBGRA, &testdata_32bppBGR, "BGRA -> BGR", FALSE);
+    test_conversion(&testdata_32bppBGR, &testdata_32bppBGRA, "BGR -> BGRA", FALSE);
+    test_conversion(&testdata_32bppBGRA, &testdata_32bppBGRA, "BGRA -> BGRA", FALSE);
 
-    test_conversion(&testdata_24bppBGR, &testdata_24bppBGR, "24bppBGR -> 24bppBGR", 0);
-    test_conversion(&testdata_24bppBGR, &testdata_24bppRGB, "24bppBGR -> 24bppRGB", 0);
+    test_conversion(&testdata_24bppBGR, &testdata_24bppBGR, "24bppBGR -> 24bppBGR", FALSE);
+    test_conversion(&testdata_24bppBGR, &testdata_24bppRGB, "24bppBGR -> 24bppRGB", FALSE);
 
-    test_conversion(&testdata_24bppRGB, &testdata_24bppRGB, "24bppRGB -> 24bppRGB", 0);
-    test_conversion(&testdata_24bppRGB, &testdata_24bppBGR, "24bppRGB -> 24bppBGR", 0);
+    test_conversion(&testdata_24bppRGB, &testdata_24bppRGB, "24bppRGB -> 24bppRGB", FALSE);
+    test_conversion(&testdata_24bppRGB, &testdata_24bppBGR, "24bppRGB -> 24bppBGR", FALSE);
 
-    test_conversion(&testdata_32bppBGR, &testdata_24bppRGB, "32bppBGR -> 24bppRGB", 0);
-    test_conversion(&testdata_24bppRGB, &testdata_32bppBGR, "24bppRGB -> 32bppBGR", 0);
+    test_conversion(&testdata_32bppBGR, &testdata_24bppRGB, "32bppBGR -> 24bppRGB", FALSE);
+    test_conversion(&testdata_24bppRGB, &testdata_32bppBGR, "24bppRGB -> 32bppBGR", FALSE);
 
     test_invalid_conversion();
     test_default_converter();
