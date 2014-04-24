@@ -23,8 +23,8 @@ KernelModeTest(IN PVOID Context)
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    PFILE_OBJECT ParentFileObject, TargetFileObject;
     HANDLE ParentHandle, SystemRootHandle, TargetHandle;
+    PFILE_OBJECT ParentFileObject, TargetFileObject, SystemRootFileObject;
 
     UNREFERENCED_PARAMETER(Context);
 
@@ -117,6 +117,7 @@ KernelModeTest(IN PVOID Context)
              * CCB must be != NULL, otherwise it means open failed
              */
             ok(ParentFileObject != TargetFileObject, "Diverted file object must be different\n");
+            ok_eq_pointer(ParentFileObject->RelatedFileObject, NULL);
             ok_eq_pointer(ParentFileObject->FsContext, TargetFileObject->FsContext);
             ok(ParentFileObject->FsContext2 != 0x0, "Parent must be open!\n");
             ok(ParentFileObject->FsContext2 != TargetFileObject->FsContext2, "Parent open must have its own context!\n");
@@ -184,6 +185,20 @@ KernelModeTest(IN PVOID Context)
                 ok(ParentFileObject->FsContext2 != 0x0, "Parent must be open!\n");
                 ok(ParentFileObject->FsContext2 != TargetFileObject->FsContext2, "Parent open must have its own context!\n");
                 ok_eq_long(RtlCompareUnicodeString(&ParentFileObject->FileName, &TargetFileObject->FileName, FALSE), 0);
+                Status = ObReferenceObjectByHandle(SystemRootHandle,
+                                                   FILE_READ_DATA,
+                                                   IoFileObjectType,
+                                                   KernelMode,
+                                                   (PVOID *)&SystemRootFileObject,
+                                                   NULL);
+                ok_eq_hex(Status, STATUS_SUCCESS);
+                if (Status == STATUS_SUCCESS)
+                {
+                    ok_eq_pointer(ParentFileObject->RelatedFileObject, SystemRootFileObject);
+                    ok(ParentFileObject->RelatedFileObject != TargetFileObject, "File objects must be different\n");
+                    ok(SystemRootFileObject != TargetFileObject, "File objects must be different\n");
+                    ObDereferenceObject(SystemRootFileObject);
+                }
                 ObDereferenceObject(ParentFileObject);
             }
             ok_eq_long(IoStatusBlock.Information, FILE_EXISTS);
@@ -233,6 +248,7 @@ KernelModeTest(IN PVOID Context)
         if (Status == STATUS_SUCCESS)
         {
             ok(ParentFileObject != TargetFileObject, "Diverted file object must be different\n");
+            ok_eq_pointer(ParentFileObject->RelatedFileObject, NULL);
             ok_eq_pointer(ParentFileObject->FsContext, TargetFileObject->FsContext);
             ok(ParentFileObject->FsContext2 != 0x0, "Parent must be open!\n");
             ok(ParentFileObject->FsContext2 != TargetFileObject->FsContext2, "Parent open must have its own context!\n");
@@ -298,6 +314,20 @@ KernelModeTest(IN PVOID Context)
                 ok(ParentFileObject->FsContext2 != 0x0, "Parent must be open!\n");
                 ok(ParentFileObject->FsContext2 != TargetFileObject->FsContext2, "Parent open must have its own context!\n");
                 ok_eq_long(RtlCompareUnicodeString(&ParentFileObject->FileName, &TargetFileObject->FileName, FALSE), 0);
+                Status = ObReferenceObjectByHandle(SystemRootHandle,
+                                                   FILE_READ_DATA,
+                                                   IoFileObjectType,
+                                                   KernelMode,
+                                                   (PVOID *)&SystemRootFileObject,
+                                                   NULL);
+                ok_eq_hex(Status, STATUS_SUCCESS);
+                if (Status == STATUS_SUCCESS)
+                {
+                    ok_eq_pointer(ParentFileObject->RelatedFileObject, SystemRootFileObject);
+                    ok(ParentFileObject->RelatedFileObject != TargetFileObject, "File objects must be different\n");
+                    ok(SystemRootFileObject != TargetFileObject, "File objects must be different\n");
+                    ObDereferenceObject(SystemRootFileObject);
+                }
                 ObDereferenceObject(ParentFileObject);
             }
             ok_eq_long(IoStatusBlock.Information, FILE_DOES_NOT_EXIST);
