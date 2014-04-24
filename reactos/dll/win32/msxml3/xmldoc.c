@@ -188,7 +188,7 @@ static HRESULT WINAPI xmldoc_get_root(IXMLDocument *iface, IXMLElement **p)
     if (!(root = xmlDocGetRootElement(This->xmldoc)))
         return E_FAIL;
 
-    return XMLElement_create((IUnknown *)This, root, (LPVOID *)p, FALSE);
+    return XMLElement_create(root, (LPVOID *)p, FALSE);
 }
 
 static HRESULT WINAPI xmldoc_get_fileSize(IXMLDocument *iface, BSTR *p)
@@ -500,7 +500,7 @@ static HRESULT WINAPI xmldoc_createElement(IXMLDocument *iface, VARIANT vType,
     node->type = type_msxml_to_libxml(V_I4(&vType));
 
     /* FIXME: create xmlNodePtr based on vType and var1 */
-    return XMLElement_create((IUnknown *)iface, node, (LPVOID *)ppElem, TRUE);
+    return XMLElement_create(node, (LPVOID *)ppElem, TRUE);
 }
 
 static const struct IXMLDocumentVtbl xmldoc_vtbl =
@@ -672,11 +672,11 @@ static const IPersistStreamInitVtbl xmldoc_IPersistStreamInit_VTable =
   xmldoc_IPersistStreamInit_InitNew
 };
 
-HRESULT XMLDocument_create(IUnknown *pUnkOuter, LPVOID *ppObj)
+HRESULT XMLDocument_create(LPVOID *ppObj)
 {
     xmldoc *doc;
 
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
+    TRACE("(%p)\n", ppObj);
 
     doc = heap_alloc(sizeof (*doc));
     if(!doc)
@@ -697,7 +697,7 @@ HRESULT XMLDocument_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 
 #else
 
-HRESULT XMLDocument_create(IUnknown *pUnkOuter, LPVOID *ppObj)
+HRESULT XMLDocument_create(LPVOID *ppObj)
 {
     MESSAGE("This program tried to use an XMLDocument object, but\n"
             "libxml2 support was not present at compile time.\n");

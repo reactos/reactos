@@ -599,7 +599,7 @@ static HRESULT WINAPI domtext_put_data(
     BSTR data)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
-    static WCHAR rnW[] = {'\r','\n',0};
+    static const WCHAR rnW[] = {'\r','\n',0};
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(data));
 

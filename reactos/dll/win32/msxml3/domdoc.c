@@ -64,6 +64,7 @@ typedef struct {
     xmlChar const* selectNsStr;
     LONG selectNsStr_len;
     BOOL XPath;
+    WCHAR *url;
 } domdoc_properties;
 
 typedef struct ConnectionPoint ConnectionPoint;
@@ -107,10 +108,9 @@ struct domdoc
     VARIANT_BOOL validating;
     VARIANT_BOOL resolving;
     domdoc_properties* properties;
-    bsc_t *bsc;
     HRESULT error;
 
-    /* IObjectWithSite*/
+    /* IObjectWithSite */
     IUnknown *site;
 
     /* IObjectSafety */
@@ -276,6 +276,9 @@ static domdoc_properties *create_properties(MSXML_VERSION version)
     properties->version = version;
     properties->XPath = (version == MSXML4 || version == MSXML6);
 
+    /* document url */
+    properties->url = NULL;
+
     return properties;
 }
 
@@ -310,6 +313,16 @@ static domdoc_properties* copy_properties(domdoc_properties const* properties)
             list_add_tail(&pcopy->selectNsList, &new_ns->entry);
         }
 
+        if (properties->url)
+        {
+            int len = strlenW(properties->url);
+
+            pcopy->url = CoTaskMemAlloc((len+1)*sizeof(WCHAR));
+            memcpy(pcopy->url, properties->url, len*sizeof(WCHAR));
+            pcopy->url[len] = 0;
+        }
+        else
+            pcopy->url = NULL;
     }
 
     return pcopy;
@@ -323,6 +336,7 @@ static void free_properties(domdoc_properties* properties)
             IXMLDOMSchemaCollection2_Release(properties->schemaCache);
         clear_selectNsList(&properties->selectNsList);
         heap_free((xmlChar*)properties->selectNsStr);
+        CoTaskMemFree(properties->url);
         heap_free(properties);
     }
 }
@@ -917,9 +931,6 @@ static ULONG WINAPI domdoc_Release( IXMLDOMDocument3 *iface )
     if ( ref == 0 )
     {
         int eid;
-
-        if(This->bsc)
-            detach_bsc(This->bsc);
 
         if (This->site)
             IUnknown_Release( This->site );
@@ -2045,7 +2056,7 @@ static HRESULT domdoc_onDataAvailable(void *obj, char *ptr, DWORD len)
         return attach_xmldoc(This, xmldoc);
     }
 
-    return S_OK;
+    return E_FAIL;
 }
 
 static HRESULT domdoc_load_moniker(domdoc *This, IMoniker *mon)
@@ -2057,14 +2068,7 @@ static HRESULT domdoc_load_moniker(domdoc *This, IMoniker *mon)
     if(FAILED(hr))
         return hr;
 
-    if(This->bsc) {
-        hr = detach_bsc(This->bsc);
-        if(FAILED(hr))
-            return hr;
-    }
-
-    This->bsc = bsc;
-    return S_OK;
+    return detach_bsc(bsc);
 }
 
 static HRESULT WINAPI domdoc_load(
@@ -2188,10 +2192,15 @@ static HRESULT WINAPI domdoc_load(
     {
         IMoniker *mon;
 
+        CoTaskMemFree(This->properties->url);
+        This->properties->url = NULL;
+
         hr = create_moniker_from_url( filename, &mon);
         if ( SUCCEEDED(hr) )
         {
             hr = domdoc_load_moniker( This, mon );
+            if (hr == S_OK)
+                IMoniker_GetDisplayName(mon, NULL, NULL, &This->properties->url);
             IMoniker_Release(mon);
         }
 
@@ -2254,11 +2263,25 @@ static HRESULT WINAPI domdoc_get_parseError(
 
 static HRESULT WINAPI domdoc_get_url(
     IXMLDOMDocument3 *iface,
-    BSTR* urlString )
+    BSTR* url )
 {
     domdoc *This = impl_from_IXMLDOMDocument3(iface);
-    FIXME("(%p)->(%p)\n", This, urlString);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, url);
+
+    if (!url)
+        return E_INVALIDARG;
+
+    if (This->properties->url)
+    {
+        *url = SysAllocString(This->properties->url);
+        if (!*url)
+            return E_OUTOFMEMORY;
+
+        return S_OK;
+    }
+    else
+        return return_null_bstr(url);
 }
 
 
@@ -2581,7 +2604,7 @@ static HRESULT WINAPI domdoc_get_namespaces(
 
     if (!This->namespaces)
     {
-        hr = SchemaCache_create(This->properties->version, NULL, (void**)&This->namespaces);
+        hr = SchemaCache_create(This->properties->version, (void**)&This->namespaces);
         if (hr != S_OK) return hr;
 
         hr = cache_from_doc_ns(This->namespaces, &This->node);
@@ -3533,7 +3556,6 @@ HRESULT get_domdoc_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument3 **document)
     doc->error = S_OK;
     doc->site = NULL;
     doc->safeopt = 0;
-    doc->bsc = NULL;
     doc->cp_list = NULL;
     doc->namespaces = NULL;
     memset(doc->events, 0, sizeof(doc->events));
@@ -3552,12 +3574,12 @@ HRESULT get_domdoc_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument3 **document)
     return S_OK;
 }
 
-HRESULT DOMDocument_create(MSXML_VERSION version, IUnknown *pUnkOuter, void **ppObj)
+HRESULT DOMDocument_create(MSXML_VERSION version, void **ppObj)
 {
     xmlDocPtr xmldoc;
     HRESULT hr;
 
-    TRACE("(%d, %p, %p)\n", version, pUnkOuter, ppObj);
+    TRACE("(%d, %p)\n", version, ppObj);
 
     xmldoc = xmlNewDoc(NULL);
     if(!xmldoc)
@@ -3593,7 +3615,7 @@ IUnknown* create_domdoc( xmlNodePtr document )
 
 #else
 
-HRESULT DOMDocument_create(MSXML_VERSION version, IUnknown *pUnkOuter, void **ppObj)
+HRESULT DOMDocument_create(MSXML_VERSION version, void **ppObj)
 {
     MESSAGE("This program tried to use a DOMDocument object, but\n"
             "libxml2 support was not present at compile time.\n");
