@@ -22,6 +22,9 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
+#define COBJMACROS
+#define CONST_VTABLE
+
 #include <wine/test.h>
 //#include <windef.h>
 //#include <winbase.h>
@@ -273,7 +276,74 @@ static void test_DispGetParam(void)
     VariantClear(&result);
 }
 
+static HRESULT WINAPI unk_QI(IUnknown *iface, REFIID riid, void **obj)
+{
+    if (IsEqualIID(riid, &IID_IUnknown))
+    {
+        *obj = iface;
+        return S_OK;
+    }
+    else
+    {
+        *obj = NULL;
+        return E_NOINTERFACE;
+    }
+}
+
+static ULONG WINAPI unk_AddRef(IUnknown *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI unk_Release(IUnknown *iface)
+{
+    return 1;
+}
+
+static const IUnknownVtbl unkvtbl =
+{
+    unk_QI,
+    unk_AddRef,
+    unk_Release
+};
+
+static IUnknown test_unk = { &unkvtbl };
+
+static void test_CreateStdDispatch(void)
+{
+    static const WCHAR stdole2W[] = {'s','t','d','o','l','e','2','.','t','l','b',0};
+    ITypeLib *tl;
+    ITypeInfo *ti;
+    IUnknown *unk;
+    HRESULT hr;
+
+    hr = CreateStdDispatch(NULL, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = CreateStdDispatch(NULL, NULL, NULL, &unk);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    hr = LoadTypeLib(stdole2W, &tl);
+    ok(hr == S_OK, "got %08x\n", hr);
+    hr = ITypeLib_GetTypeInfoOfGuid(tl, &IID_IUnknown, &ti);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ITypeLib_Release(tl);
+
+    hr = CreateStdDispatch(NULL, &test_unk, NULL, &unk);
+    ok(hr == E_INVALIDARG, "got %08x\n", hr);
+
+    hr = CreateStdDispatch(NULL, NULL, ti, &unk);
+    ok(hr == E_INVALIDARG, "got %08x\n", hr);
+
+    hr = CreateStdDispatch(NULL, &test_unk, ti, &unk);
+    ok(hr == S_OK, "got %08x\n", hr);
+    IUnknown_Release(unk);
+
+    ITypeInfo_Release(ti);
+}
+
 START_TEST(dispatch)
 {
     test_DispGetParam();
+    test_CreateStdDispatch();
 }

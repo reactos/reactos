@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep ident
+#pragma makedep typelib
+
 import "oaidl.idl"; /* needed by widl */
 
 [
@@ -134,5 +137,9 @@ library register_test
     {
         [propget, id(DISPID_VALUE)]
         LONG test([in] LONG i);
+        [propputref, id(1)]
+        LONG testprop([in] LONG *i);
+        [propputref, id(2)]
+        LONG testprop2([in] IUnknown *i);
     }
 }

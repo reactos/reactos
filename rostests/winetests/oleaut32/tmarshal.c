@@ -41,7 +41,7 @@
 static HRESULT (WINAPI *pVarAdd)(LPVARIANT,LPVARIANT,LPVARIANT);
 
 
-#define ok_ole_success(hr, func) ok(hr == S_OK, #func " failed with error 0x%08lx\n", (unsigned long int)hr)
+#define ok_ole_success(hr, func) ok(hr == S_OK, #func " failed with error 0x%08x\n", hr)
 
 /* ULL suffix is not portable */
 #define ULL_CONST(dw1, dw2) ((((ULONGLONG)dw1) << 32) | (ULONGLONG)dw2)
@@ -89,11 +89,11 @@ static DWORD CALLBACK host_object_proc(LPVOID p)
     ok_ole_success(hr, CoMarshalInterface);
 
     /* force the message queue to be created before signaling parent thread */
-    PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+    PeekMessageA(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 
     SetEvent(data->marshal_event);
 
-    while (GetMessage(&msg, NULL, 0, 0))
+    while (GetMessageA(&msg, NULL, 0, 0))
     {
         if (msg.hwnd == NULL && msg.message == RELEASEMARSHALDATA)
         {
@@ -102,7 +102,7 @@ static DWORD CALLBACK host_object_proc(LPVOID p)
             SetEvent((HANDLE)msg.lParam);
         }
         else
-            DispatchMessage(&msg);
+            DispatchMessageA(&msg);
     }
 
     HeapFree(GetProcessHeap(), 0, data);
@@ -115,7 +115,7 @@ static DWORD CALLBACK host_object_proc(LPVOID p)
 static DWORD start_host_object2(IStream *stream, REFIID riid, IUnknown *object, MSHLFLAGS marshal_flags, IMessageFilter *filter, HANDLE *thread)
 {
     DWORD tid = 0;
-    HANDLE marshal_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    HANDLE marshal_event = CreateEventA(NULL, FALSE, FALSE, NULL);
     struct host_object_data *data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data));
 
     data->stream = stream;
@@ -144,8 +144,8 @@ static DWORD start_host_object(IStream *stream, REFIID riid, IUnknown *object, M
  * same thread that marshaled the interface in the first place. */
 static void release_host_object(DWORD tid)
 {
-    HANDLE event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    PostThreadMessage(tid, RELEASEMARSHALDATA, 0, (LPARAM)event);
+    HANDLE event = CreateEventA(NULL, FALSE, FALSE, NULL);
+    PostThreadMessageA(tid, RELEASEMARSHALDATA, 0, (LPARAM)event);
     WaitForSingleObject(event, INFINITE);
     CloseHandle(event);
 }
@@ -153,7 +153,7 @@ static void release_host_object(DWORD tid)
 
 static void end_host_object(DWORD tid, HANDLE thread)
 {
-    BOOL ret = PostThreadMessage(tid, WM_QUIT, 0, 0);
+    BOOL ret = PostThreadMessageA(tid, WM_QUIT, 0, 0);
     ok(ret, "PostThreadMessage failed with error %d\n", GetLastError());
     /* be careful of races - don't return until hosting thread has terminated */
     WaitForSingleObject(thread, INFINITE);
@@ -730,9 +730,8 @@ static BOOL mystruct_uint_ordered(MYSTRUCT *mystruct)
     int i;
     for (i = 0; i < sizeof(mystruct->uarr)/sizeof(mystruct->uarr[0]); i++)
         if (mystruct->uarr[i] != i)
-            return 0;
-
-    return 1;
+            return FALSE;
+    return TRUE;
 }
 
 static HRESULT WINAPI Widget_StructArgs(
@@ -835,7 +834,7 @@ static HRESULT WINAPI Widget_put_prop_req_arg(
     return S_OK;
 }
 
-static HRESULT WINAPI Widget_do_restrict(IWidget* iface, INT *i)
+static HRESULT WINAPI Widget__restrict(IWidget* iface, INT *i)
 {
     trace("restrict\n");
     *i = DISPID_TM_RESTRICTED;
@@ -885,7 +884,7 @@ static const struct IWidgetVtbl Widget_VTable =
     Widget_ByRefUInt,
     Widget_put_prop_opt_arg,
     Widget_put_prop_req_arg,
-    Widget_do_restrict,
+    Widget__restrict,
     Widget_neg_restrict
 };
 
@@ -1204,7 +1203,7 @@ static void test_typelibmarshal(void)
 {
     static const WCHAR szCat[] = { 'C','a','t',0 };
     static const WCHAR szTestTest[] = { 'T','e','s','t','T','e','s','t',0 };
-    static WCHAR szSuperman[] = { 'S','u','p','e','r','m','a','n',0 };
+    static const WCHAR szSuperman[] = { 'S','u','p','e','r','m','a','n',0 };
     HRESULT hr;
     IKindaEnumWidget *pKEW = KindaEnumWidget_Create();
     IWidget *pWidget;

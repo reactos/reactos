@@ -17,6 +17,9 @@
  *
  */
 
+#pragma makedep ident
+#pragma makedep typelib
+
 #include "tmarshal_dispids.h"
 import "ocidl.idl";
 

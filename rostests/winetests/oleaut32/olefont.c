@@ -71,7 +71,7 @@ static void test_ifont_size(LONG lo_size, LONG hi_size,
 	LPVOID pvObj = NULL;
 	IFont* ifnt = NULL;
 	HFONT hfont;
-	LOGFONT lf;
+	LOGFONTA lf;
 	CY psize;
 	HRESULT hres;
         DWORD rtnval;
@@ -82,9 +82,9 @@ static void test_ifont_size(LONG lo_size, LONG hi_size,
 	S(fd.cySize).Hi   = hi_size;
 	fd.sWeight        = 0;
 	fd.sCharset       = 0;
-	fd.fItalic        = 0;
-	fd.fUnderline     = 0;
-	fd.fStrikethrough = 0;
+        fd.fItalic        = FALSE;
+        fd.fUnderline     = FALSE;
+        fd.fStrikethrough = FALSE;
 
 	/* Create font, test that it worked. */
 	hres = pOleCreateFontIndirect(&fd, &IID_IFont, &pvObj);
@@ -93,13 +93,10 @@ static void test_ifont_size(LONG lo_size, LONG hi_size,
 		test_name, hres);
 	ok(pvObj != NULL,"%s: OCFI returns NULL.\n", test_name);
 
-	/* If scaling ration specified, change ratio. */
-        if(ratio_logical && ratio_himetric)
-        {
-          hres = IFont_SetRatio(ifnt, ratio_logical, ratio_himetric);
-          ok(hres == S_OK,"%s: IFont_SetRatio returns 0x%08x instead of S_OK.\n",
-            test_name, hres);
-        }
+        /* Change the scaling ratio */
+        hres = IFont_SetRatio(ifnt, ratio_logical, ratio_himetric);
+        ok((ratio_logical && ratio_himetric) ? hres == S_OK : hres == E_FAIL,
+           "%s: IFont_SetRatio unexpectedly returned 0x%08x.\n", test_name, hres);
 
 	/* Read back size. */
 	hres = IFont_get_Size(ifnt, &psize);
@@ -115,7 +112,7 @@ static void test_ifont_size(LONG lo_size, LONG hi_size,
 	hres = IFont_get_hFont (ifnt, &hfont);
 	ok(hres == S_OK, "%s: IFont_get_hFont returns 0x%08x instead of S_OK.\n",
 		test_name, hres);
-	rtnval = GetObject (hfont, sizeof(LOGFONT), &lf);
+	rtnval = GetObjectA(hfont, sizeof(LOGFONTA), &lf);
         ok(rtnval > 0, "GetObject(hfont) failed\n");
 
         /* Since font scaling may encounter rounding errors, allow 1 pixel deviation. */
@@ -156,6 +153,41 @@ static void test_ifont_sizes(void)
     test_ifont_size(180000, 0, 144, 2540, -36, "ratio2");  /* another ratio */
     test_ifont_size(180000, 0, 72,  1270, -36, "ratio3");  /* yet another ratio */
     test_ifont_size(186000, 0, 72,  2540, -19, "rounding+ratio"); /* test rounding with ratio */
+
+    /* test various combinations of logical == himetric */
+    test_ifont_size(180000, 0, 10, 10, -635, "identical ratio 1");
+    test_ifont_size(240000, 0, 10, 10, -848, "identical ratio 2");
+    test_ifont_size(300000, 0, 10, 10, -1058, "identical ratio 3");
+
+    /* test various combinations of logical and himetric both set to 1 */
+    test_ifont_size(180000, 0, 1, 1, -24, "1:1 ratio 1");
+    test_ifont_size(240000, 0, 1, 1, -32, "1:1 ratio 2");
+    test_ifont_size(300000, 0, 1, 1, -40, "1:1 ratio 3");
+
+    /* test various combinations of logical set to 1 */
+    test_ifont_size(180000, 0, 1, 0, -24, "1:0 ratio 1");
+    test_ifont_size(240000, 0, 1, 0, -32, "1:0 ratio 2");
+    test_ifont_size(300000, 0, 1, 0, -40, "1:0 ratio 3");
+
+    /* test various combinations of himetric set to 1 */
+    test_ifont_size(180000, 0, 0, 1, -24, "0:1 ratio 1");
+    test_ifont_size(240000, 0, 0, 1, -32, "0:1 ratio 2");
+    test_ifont_size(300000, 0, 0, 1, -40, "0:1 ratio 3");
+
+    /* test various combinations of 2:1 logical:himetric */
+    test_ifont_size(180000, 0, 2, 1, -1270, "2:1 ratio 1");
+    test_ifont_size(240000, 0, 2, 1, -1694, "2:1 ratio 2");
+    test_ifont_size(300000, 0, 2, 1, -2117, "2:1 ratio 3");
+
+    /* test various combinations of 1:2 logical:himetric */
+    test_ifont_size(180000, 0, 1, 2, -318, "1:2 ratio 1");
+    test_ifont_size(240000, 0, 1, 2, -424, "1:2 ratio 2");
+    test_ifont_size(300000, 0, 1, 2, -529, "1:2 ratio 3");
+
+    /* test various combinations of logical and himetric both set to 2 */
+    test_ifont_size(180000, 0, 2, 2, -635, "2:2 ratio 1");
+    test_ifont_size(240000, 0, 2, 2, -848, "2:2 ratio 2");
+    test_ifont_size(300000, 0, 2, 2, -1058, "2:2 ratio 3");
 }
 
 static void test_QueryInterface(void)
@@ -234,10 +266,7 @@ static void test_type_info(void)
 	IFontDisp_Release(fontdisp);
 }
 
-static HRESULT WINAPI FontEventsDisp_QueryInterface(
-        IFontEventsDisp *iface,
-    /* [in] */ REFIID riid,
-    /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
+static HRESULT WINAPI FontEventsDisp_QueryInterface(IFontEventsDisp *iface, REFIID riid, void **ppvObject)
 {
     if (IsEqualIID(riid, &IID_IFontEventsDisp) || IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDispatch))
     {
@@ -264,26 +293,48 @@ static ULONG WINAPI FontEventsDisp_Release(
     return 1;
 }
 
-static int fonteventsdisp_invoke_called = 0;
+static HRESULT WINAPI FontEventsDisp_GetTypeInfoCount(IFontEventsDisp *iface, UINT *pctinfo)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI FontEventsDisp_GetTypeInfo(IFontEventsDisp *iface, UINT itinfo, LCID lcid, ITypeInfo **pptinfo)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI FontEventsDisp_GetIDsOfNames(IFontEventsDisp *iface, REFIID riid, LPOLESTR *names, UINT cNames, LCID lcid,
+    DISPID *dispid)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static int fonteventsdisp_invoke_called;
+static BSTR fonteventsdisp_invoke_arg0;
 
 static HRESULT WINAPI FontEventsDisp_Invoke(
-        IFontEventsDisp __RPC_FAR * iface,
-    /* [in] */ DISPID dispIdMember,
-    /* [in] */ REFIID riid,
-    /* [in] */ LCID lcid,
-    /* [in] */ WORD wFlags,
-    /* [out][in] */ DISPPARAMS __RPC_FAR *pDispParams,
-    /* [out] */ VARIANT __RPC_FAR *pVarResult,
-    /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
-    /* [out] */ UINT __RPC_FAR *puArgErr)
+        IFontEventsDisp *iface,
+        DISPID dispid,
+        REFIID riid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS *pDispParams,
+        VARIANT *pVarResult,
+        EXCEPINFO *pExcepInfo,
+        UINT *puArgErr)
 {
-    static const WCHAR wszBold[] = {'B','o','l','d',0};
-    ok(wFlags == INVOKE_FUNC, "invoke flags should have been INVOKE_FUNC instead of 0x%x\n", wFlags);
-    ok(dispIdMember == DISPID_FONT_CHANGED, "dispIdMember should have been DISPID_FONT_CHANGED instead of 0x%x\n", dispIdMember);
-    ok(pDispParams->cArgs == 1, "pDispParams->cArgs should have been 1 instead of %d\n", pDispParams->cArgs);
-    ok(V_VT(&pDispParams->rgvarg[0]) == VT_BSTR, "VT of first param should have been VT_BSTR instead of %d\n", V_VT(&pDispParams->rgvarg[0]));
-    ok(!lstrcmpW(V_BSTR(&pDispParams->rgvarg[0]), wszBold), "String in first param should have been \"Bold\"\n");
+    VARIANTARG *arg0 = &pDispParams->rgvarg[0];
 
+    ok(dispid == DISPID_FONT_CHANGED, "expected DISPID_FONT_CHANGED instead of 0x%x\n", dispid);
+    ok(IsEqualGUID(riid, &GUID_NULL), "got riid %s\n", wine_dbgstr_guid(riid));
+    ok(wFlags == INVOKE_FUNC, "expected INVOKE_FUNC instead of 0x%x\n", wFlags);
+    ok(pDispParams->cArgs == 1, "expected arg count 1, got %d\n", pDispParams->cArgs);
+    ok(V_VT(arg0) == VT_BSTR, "expected VT_BSTR, got %d\n", V_VT(arg0));
+
+    fonteventsdisp_invoke_arg0 = SysAllocString(V_BSTR(arg0));
     fonteventsdisp_invoke_called++;
     return S_OK;
 }
@@ -293,16 +344,43 @@ static IFontEventsDispVtbl FontEventsDisp_Vtbl =
     FontEventsDisp_QueryInterface,
     FontEventsDisp_AddRef,
     FontEventsDisp_Release,
-    NULL,
-    NULL,
-    NULL,
+    FontEventsDisp_GetTypeInfoCount,
+    FontEventsDisp_GetTypeInfo,
+    FontEventsDisp_GetIDsOfNames,
     FontEventsDisp_Invoke
 };
 
 static IFontEventsDisp FontEventsDisp = { &FontEventsDisp_Vtbl };
 
+    struct font_dispid
+    {
+        DISPID dispid;
+        const WCHAR *name;
+    };
+
 static void test_font_events_disp(void)
 {
+    static const WCHAR nameW[] = {'N','a','m','e',0};
+    static const WCHAR sizeW[] = {'S','i','z','e',0};
+    static const WCHAR boldW[] = {'B','o','l','d',0};
+    static const WCHAR italicW[] = {'I','t','a','l','i','c',0};
+    static const WCHAR underlineW[] = {'U','n','d','e','r','l','i','n','e',0};
+    static const WCHAR strikeW[] = {'S','t','r','i','k','e','t','h','r','o','u','g','h',0};
+    static const WCHAR weightW[] = {'W','e','i','g','h','t',0};
+    static const WCHAR charsetW[] = {'C','h','a','r','s','e','t',0};
+
+    static const struct font_dispid font_dispids[] =
+    {
+        { DISPID_FONT_NAME, nameW },
+        { DISPID_FONT_SIZE, sizeW },
+        { DISPID_FONT_BOLD, boldW },
+        { DISPID_FONT_ITALIC, italicW },
+        { DISPID_FONT_UNDER, underlineW },
+        { DISPID_FONT_STRIKE, strikeW },
+        { DISPID_FONT_WEIGHT, weightW },
+        { DISPID_FONT_CHARSET, charsetW }
+    };
+
     IFont *pFont;
     IFont *pFont2;
     IConnectionPointContainer *pCPC;
@@ -313,6 +391,7 @@ static void test_font_events_disp(void)
     IFontDisp *pFontDisp;
     DISPPARAMS dispparams;
     VARIANTARG vararg;
+    INT i;
 
     fontdesc.cbSizeofstruct = sizeof(fontdesc);
     fontdesc.lpstrName = MSSansSerif_font;
@@ -337,6 +416,7 @@ static void test_font_events_disp(void)
     EXPECT_HR(hr, S_OK);
     IConnectionPoint_Release(pCP);
 
+    fonteventsdisp_invoke_called = 0;
     hr = IFont_put_Bold(pFont, TRUE);
     EXPECT_HR(hr, S_OK);
 
@@ -345,30 +425,73 @@ static void test_font_events_disp(void)
     hr = IFont_QueryInterface(pFont, &IID_IFontDisp, (void **)&pFontDisp);
     EXPECT_HR(hr, S_OK);
 
-    V_VT(&vararg) = VT_BOOL;
-    V_BOOL(&vararg) = VARIANT_FALSE;
-    dispparams.cNamedArgs = 0;
-    dispparams.rgdispidNamedArgs = NULL;
-    dispparams.cArgs = 1;
-    dispparams.rgvarg = &vararg;
-    hr = IFontDisp_Invoke(pFontDisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
-    EXPECT_HR(hr, S_OK);
+    for (i = 0; i < sizeof(font_dispids)/sizeof(font_dispids[0]); i++)
+    {
+        switch (font_dispids[i].dispid)
+        {
+        case DISPID_FONT_NAME:
+        {
+            static const WCHAR arialW[] = {'A','r','i','a','l',0};
+            V_VT(&vararg) = VT_BSTR;
+            V_BSTR(&vararg) = SysAllocString(arialW);
+            break;
+        }
+        case DISPID_FONT_SIZE:
+            V_VT(&vararg) = VT_CY;
+            S(V_CY(&vararg)).Lo = 25;
+            S(V_CY(&vararg)).Hi = 0;
+            break;
+        case DISPID_FONT_BOLD:
+            V_VT(&vararg) = VT_BOOL;
+            V_BOOL(&vararg) = VARIANT_FALSE;
+            break;
+        case DISPID_FONT_ITALIC:
+        case DISPID_FONT_UNDER:
+        case DISPID_FONT_STRIKE:
+            V_VT(&vararg) = VT_BOOL;
+            V_BOOL(&vararg) = VARIANT_TRUE;
+            break;
+        case DISPID_FONT_WEIGHT:
+            V_VT(&vararg) = VT_I2;
+            V_I2(&vararg) = FW_BLACK;
+            break;
+        case DISPID_FONT_CHARSET:
+            V_VT(&vararg) = VT_I2;
+            V_I2(&vararg) = 1;
+            break;
+        default:
+            ;
+        }
+
+        dispparams.cNamedArgs = 0;
+        dispparams.rgdispidNamedArgs = NULL;
+        dispparams.cArgs = 1;
+        dispparams.rgvarg = &vararg;
+        fonteventsdisp_invoke_called = 0;
+        hr = IFontDisp_Invoke(pFontDisp, font_dispids[i].dispid, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
+        ok(hr == S_OK, "dispid=%d, got 0x%08x\n", font_dispids[i].dispid, hr);
+        ok(fonteventsdisp_invoke_called == 1, "dispid=%d, DISPID_FONT_CHANGED not called, got %d\n", font_dispids[i].dispid,
+            fonteventsdisp_invoke_called);
+        if (hr == S_OK)
+        {
+            ok(!lstrcmpW(font_dispids[i].name, fonteventsdisp_invoke_arg0), "dispid=%d, got %s, expected %s\n",
+                font_dispids[i].dispid, wine_dbgstr_w(fonteventsdisp_invoke_arg0), wine_dbgstr_w(font_dispids[i].name));
+            SysFreeString(fonteventsdisp_invoke_arg0);
+        }
+        VariantClear(&vararg);
+    }
 
     IFontDisp_Release(pFontDisp);
-
-    ok(fonteventsdisp_invoke_called == 2, "IFontEventDisp::Invoke was called %d times instead of twice\n",
-        fonteventsdisp_invoke_called);
 
     hr = IFont_Clone(pFont, &pFont2);
     EXPECT_HR(hr, S_OK);
     IFont_Release(pFont);
 
+    /* this test shows that the notification routine isn't called again */
+    fonteventsdisp_invoke_called = 0;
     hr = IFont_put_Bold(pFont2, FALSE);
     EXPECT_HR(hr, S_OK);
-
-    /* this test shows that the notification routine isn't called again */
-    ok(fonteventsdisp_invoke_called == 2, "IFontEventDisp::Invoke was called %d times instead of twice\n",
-        fonteventsdisp_invoke_called);
+    ok(fonteventsdisp_invoke_called == 0, "got %d\n", fonteventsdisp_invoke_called);
 
     IFont_Release(pFont2);
 }
@@ -544,9 +667,9 @@ static void test_IsEqual(void)
     S(fd.cySize).Hi   = 100;
     fd.sWeight        = 0;
     fd.sCharset       = 0;
-    fd.fItalic        = 0;
-    fd.fUnderline     = 0;
-    fd.fStrikethrough = 0;
+    fd.fItalic        = FALSE;
+    fd.fUnderline     = FALSE;
+    fd.fStrikethrough = FALSE;
 
     /* Create font */
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt);
@@ -609,30 +732,30 @@ static void test_IsEqual(void)
     IFont_Release(ifnt2);
 
     /* Test italic setting */
-    fd.fItalic = 1;
+    fd.fItalic = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt2);
     hres = IFont_IsEqual(ifnt,ifnt2);
     ok(hres == S_FALSE,
         "IFont_IsEqual: (Italic) Expected S_FALSE but got 0x%08x\n",hres);
-    fd.fItalic = 0;
+    fd.fItalic = FALSE;
     IFont_Release(ifnt2);
 
     /* Test underline setting */
-    fd.fUnderline = 1;
+    fd.fUnderline = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt2);
     hres = IFont_IsEqual(ifnt,ifnt2);
     ok(hres == S_FALSE,
         "IFont_IsEqual: (Underline) Expected S_FALSE but got 0x%08x\n",hres);
-    fd.fUnderline = 0;
+    fd.fUnderline = FALSE;
     IFont_Release(ifnt2);
 
     /* Test strikethrough setting */
-    fd.fStrikethrough = 1;
+    fd.fStrikethrough = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt2);
     hres = IFont_IsEqual(ifnt,ifnt2);
     ok(hres == S_FALSE,
         "IFont_IsEqual: (Strikethrough) Expected S_FALSE but got 0x%08x\n",hres);
-    fd.fStrikethrough = 0;
+    fd.fStrikethrough = FALSE;
     IFont_Release(ifnt2);
 
     /* Free IFont. */
@@ -657,9 +780,9 @@ static void test_ReleaseHfont(void)
     S(fd.cySize).Hi   = 100;
     fd.sWeight        = 0;
     fd.sCharset       = 0;
-    fd.fItalic        = 0;
-    fd.fUnderline     = 0;
-    fd.fStrikethrough = 0;
+    fd.fItalic        = FALSE;
+    fd.fUnderline     = FALSE;
+    fd.fStrikethrough = FALSE;
 
     /* Create HFONTs and IFONTs */
     pOleCreateFontIndirect(&fd, &IID_IFont, &pvObj1);
@@ -727,9 +850,9 @@ static void test_AddRefHfont(void)
     S(fd.cySize).Hi   = 100;
     fd.sWeight        = 0;
     fd.sCharset       = 0;
-    fd.fItalic        = 0;
-    fd.fUnderline     = 0;
-    fd.fStrikethrough = 0;
+    fd.fItalic        = FALSE;
+    fd.fUnderline     = FALSE;
+    fd.fStrikethrough = FALSE;
 
     /* Create HFONTs and IFONTs */
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt1);
@@ -818,7 +941,7 @@ static void test_AddRefHfont(void)
     IFont_Release(ifnt2);
 
     /* Need to make a new IFONT for testing */
-    fd.fUnderline = 1;
+    fd.fUnderline = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt3);
     IFont_get_hFont(ifnt3,&hfnt3);
 
