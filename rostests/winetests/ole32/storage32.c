@@ -254,7 +254,7 @@ static void test_create_storage_modes(void)
 static void test_stgcreatestorageex(void)
 {
    HRESULT (WINAPI *pStgCreateStorageEx)(const WCHAR* pwcsName, DWORD grfMode, DWORD stgfmt, DWORD grfAttrs, STGOPTIONS* pStgOptions, void* reserved, REFIID riid, void** ppObjectOpen);
-   HMODULE hOle32 = GetModuleHandle("ole32");
+   HMODULE hOle32 = GetModuleHandleA("ole32");
    IStorage *stg = NULL;
    STGOPTIONS stgoptions = {1, 0, 4096};
    HRESULT r;
@@ -933,7 +933,48 @@ static void test_storage_refcount(void)
         r = IStorage_Release(stg);
         ok(r == 0, "wrong ref count\n");
     }
-    IStorage_Release(stgprio);
+
+    /* Multiple STGM_PRIORITY opens are possible. */
+    r = StgOpenStorage( filename, NULL, STGM_PRIORITY, NULL, 0, &stg);
+    ok(r==S_OK, "StgOpenStorage failed with error 0x%08x\n", r);
+    if(stg)
+    {
+        r = IStorage_Release(stg);
+        ok(r == 0, "wrong ref count\n");
+    }
+
+    r = StgOpenStorage( NULL, stgprio, STGM_TRANSACTED|STGM_SHARE_DENY_WRITE|STGM_READWRITE, NULL, 0, &stg);
+    ok(r==S_OK, "StgOpenStorage failed with error 0x%08x\n", r);
+    if(stg)
+    {
+        static const WCHAR stgname[] = { ' ',' ',' ','2','9',0 };
+        IStorage *stg2;
+        STATSTG statstg;
+
+        r = IStorage_Stat( stg, &statstg, STATFLAG_NONAME );
+        ok(r == S_OK, "Stat should have succeeded instead of returning 0x%08x\n", r);
+        ok(statstg.type == STGTY_STORAGE, "Statstg type should have been STGTY_STORAGE instead of %d\n", statstg.type);
+        ok(U(statstg.cbSize).LowPart == 0, "Statstg cbSize.LowPart should have been 0 instead of %d\n", U(statstg.cbSize).LowPart);
+        ok(U(statstg.cbSize).HighPart == 0, "Statstg cbSize.HighPart should have been 0 instead of %d\n", U(statstg.cbSize).HighPart);
+        ok(statstg.grfMode == (STGM_TRANSACTED|STGM_SHARE_DENY_WRITE|STGM_READWRITE),
+            "Statstg grfMode should have been 0x10022 instead of 0x%x\n", statstg.grfMode);
+        ok(statstg.grfLocksSupported == 0, "Statstg grfLocksSupported should have been 0 instead of %d\n", statstg.grfLocksSupported);
+        ok(IsEqualCLSID(&statstg.clsid, &test_stg_cls), "Statstg clsid is not test_stg_cls\n");
+        ok(statstg.grfStateBits == 0, "Statstg grfStateBits should have been 0 instead of %d\n", statstg.grfStateBits);
+        ok(statstg.reserved == 0, "Statstg reserved should have been 0 instead of %d\n", statstg.reserved);
+
+        r = IStorage_CreateStorage( stg, stgname, STGM_SHARE_EXCLUSIVE, 0, 0, &stg2 );
+        ok(r == S_OK, "CreateStorage should have succeeded instead of returning 0x%08x\n", r);
+
+        IStorage_Release(stg2);
+
+        r = IStorage_Commit( stg, 0 );
+        ok(r == S_OK, "Commit should have succeeded instead of returning 0x%08x\n", r);
+
+        r = IStorage_Release(stg);
+        ok(r == 0, "wrong ref count\n");
+    }
+    /* IStorage_Release(stgprio) not necessary because StgOpenStorage released it. */
 
     DeleteFileA(filenameA);
 }
@@ -2178,7 +2219,7 @@ static void test_fmtusertypestg(void)
     static const char fileA[]  = {'f','m','t','t','e','s','t',0};
     static const WCHAR fileW[] = {'f','m','t','t','e','s','t',0};
     static WCHAR userTypeW[] = {'S','t','g','U','s','r','T','y','p','e',0};
-    static WCHAR strmNameW[] = {1,'C','o','m','p','O','b','j',0};
+    static const WCHAR strmNameW[] = {1,'C','o','m','p','O','b','j',0};
 
     hr = StgCreateDocfile( fileW, STGM_CREATE | STGM_SHARE_EXCLUSIVE | STGM_READWRITE, 0, &stg);
     ok(hr == S_OK, "should succeed, res=%x\n", hr);
@@ -3086,19 +3127,21 @@ if (hr == S_OK) {
     /* writer mode */
     hr = StgOpenStorage(fileW, NULL, STGM_DIRECT_SWMR | STGM_READWRITE | STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     ok(hr == S_OK, "got %08x\n", hr);
+    if(hr == S_OK)
+    {
+        ref = IStorage_AddRef(stg);
+        IStorage_Release(stg);
 
-    ref = IStorage_AddRef(stg);
-    IStorage_Release(stg);
+        hr = IStorage_QueryInterface(stg, &IID_IDirectWriterLock, (void**)&dwlock);
+        ok(hr == S_OK, "got %08x\n", hr);
 
-    hr = IStorage_QueryInterface(stg, &IID_IDirectWriterLock, (void**)&dwlock);
-    ok(hr == S_OK, "got %08x\n", hr);
+        ref2 = IStorage_AddRef(stg);
+        IStorage_Release(stg);
+        ok(ref2 == ref + 1, "got %u\n", ref2);
 
-    ref2 = IStorage_AddRef(stg);
-    IStorage_Release(stg);
-    ok(ref2 == ref + 1, "got %u\n", ref2);
-
-    IDirectWriterLock_Release(dwlock);
-    IStorage_Release(stg);
+        IDirectWriterLock_Release(dwlock);
+        IStorage_Release(stg);
+    }
 
     DeleteFileW(fileW);
 }

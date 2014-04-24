@@ -69,18 +69,6 @@ DEFINE_EXPECT(CF_QueryInterface_ClassFactory);
 DEFINE_EXPECT(CF_CreateInstance);
 DEFINE_EXPECT(CF_QueryInterface_IMarshal);
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 static HRESULT create_storage(IStorage **stg)
 {
     HRESULT hr;
@@ -199,7 +187,7 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID r
         return S_OK;
     }
 
-    ok(0, "unexpected interface: %s\n", debugstr_guid(riid));
+    ok(0, "unexpected interface: %s\n", wine_dbgstr_guid(riid));
     *ppv = NULL;
     return E_NOINTERFACE;
 }
@@ -220,7 +208,7 @@ static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface,
     CHECK_EXPECT(CF_CreateInstance);
 
     ok(pUnkOuter == NULL, "pUnkOuter != NULL\n");
-    todo_wine ok(IsEqualGUID(riid, &IID_IUnknown), "riid = %s\n", debugstr_guid(riid));
+    todo_wine ok(IsEqualGUID(riid, &IID_IUnknown), "riid = %s\n", wine_dbgstr_guid(riid));
     if(IsEqualGUID(riid, &IID_IOleObject)) {
         *ppv = NULL;
         return E_NOINTERFACE;
@@ -257,7 +245,7 @@ static void test_default_handler_run(void)
     DWORD class_reg;
     HRESULT hres;
 
-    if(!GetProcAddress(GetModuleHandle("ole32"), "CoRegisterSurrogateEx")) {
+    if(!GetProcAddress(GetModuleHandleA("ole32"), "CoRegisterSurrogateEx")) {
         win_skip("skipping OleCreateDefaultHandler tests\n");
         return;
     }

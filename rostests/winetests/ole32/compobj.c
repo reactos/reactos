@@ -37,7 +37,7 @@
 //#include "objbase.h"
 //#include "shlguid.h"
 #include <ole2.h>
-//#include "urlmon.h" /* for CLSID_FileProtocol */
+#include <urlmon.h> /* for CLSID_FileProtocol */
 
 #include <ctxtcall.h>
 
@@ -68,31 +68,25 @@ static const GUID IID_Testiface = { 0x22222222, 0x1234, 0x1234, { 0x12, 0x34, 0x
 static const GUID IID_Testiface2 = { 0x32222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
 static const GUID IID_Testiface3 = { 0x42222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
 static const GUID IID_Testiface4 = { 0x52222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
+static const GUID IID_Testiface5 = { 0x62222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
+static const GUID IID_Testiface6 = { 0x72222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
 static const GUID IID_TestPS = { 0x66666666, 0x8888, 0x7777, { 0x66, 0x66, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 } };
 
-static WCHAR stdfont[] = {'S','t','d','F','o','n','t',0};
+DEFINE_GUID(CLSID_InProcFreeMarshaler, 0x0000033a,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+
+static const WCHAR stdfont[] = {'S','t','d','F','o','n','t',0};
 static const WCHAR wszNonExistent[] = {'N','o','n','E','x','i','s','t','e','n','t',0};
-static WCHAR wszCLSID_StdFont[] =
+static const WCHAR wszCLSID_StdFont[] =
 {
     '{','0','b','e','3','5','2','0','3','-','8','f','9','1','-','1','1','c','e','-',
     '9','d','e','3','-','0','0','a','a','0','0','4','b','b','8','5','1','}',0
 };
 static const WCHAR progidW[] = {'P','r','o','g','I','d','.','P','r','o','g','I','d',0};
+static const WCHAR cf_brokenW[] = {'{','0','0','0','0','0','0','0','1','-','0','0','0','0','-','0','0','0','0','-',
+                                    'c','0','0','0','-','0','0','0','0','0','0','0','0','0','0','4','6','}','a',0};
 
 DEFINE_GUID(IID_IWineTest, 0x5201163f, 0x8164, 0x4fd0, 0xa1, 0xa2, 0x5d, 0x5a, 0x36, 0x54, 0xd3, 0xbd);
 DEFINE_GUID(CLSID_WineOOPTest, 0x5201163f, 0x8164, 0x4fd0, 0xa1, 0xa2, 0x5d, 0x5a, 0x36, 0x54, 0xd3, 0xbd);
-
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
 
 static LONG cLocks;
 
@@ -207,7 +201,13 @@ static HANDLE activate_context(const char *manifest, ULONG_PTR *cookie)
     actctx.lpSource = path;
 
     handle = pCreateActCtxW(&actctx);
-    ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+    ok(handle != INVALID_HANDLE_VALUE || broken(handle == INVALID_HANDLE_VALUE) /* some old XP/2k3 versions */,
+        "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        win_skip("activation context generation failed, some tests will be skipped\n");
+        handle = NULL;
+    }
 
     ok(actctx.cbSize == sizeof(ACTCTXW), "actctx.cbSize=%d\n", actctx.cbSize);
     ok(actctx.dwFlags == 0, "actctx.dwFlags=%d\n", actctx.dwFlags);
@@ -221,8 +221,11 @@ static HANDLE activate_context(const char *manifest, ULONG_PTR *cookie)
 
     DeleteFileA("file.manifest");
 
-    ret = pActivateActCtx(handle, cookie);
-    ok(ret, "ActivateActCtx failed: %u\n", GetLastError());
+    if (handle)
+    {
+        ret = pActivateActCtx(handle, cookie);
+        ok(ret, "ActivateActCtx failed: %u\n", GetLastError());
+    }
 
     return handle;
 }
@@ -232,6 +235,14 @@ static const char actctx_manifest[] =
 "<assemblyIdentity version=\"1.2.3.4\"  name=\"Wine.Test\" type=\"win32\""
 " publicKeyToken=\"6595b6414666f1df\" />"
 "<file name=\"testlib.dll\">"
+"    <comClass"
+"              clsid=\"{0000033a-0000-0000-c000-000000000046}\""
+"              progid=\"FTMarshal\""
+"    />"
+"    <comClass"
+"              clsid=\"{5201163f-8164-4fd0-a1a2-5d5a3654d3bd}\""
+"              progid=\"WineOOPTest\""
+"    />"
 "    <comClass description=\"Test com class\""
 "              clsid=\"{12345678-1234-1234-1234-56789abcdef0}\""
 "              progid=\"ProgId.ProgId\""
@@ -245,6 +256,9 @@ static const char actctx_manifest[] =
 "    <comClass clsid=\"{0be35203-8f91-11ce-9de3-00aa004bb852}\""
 "              progid=\"StdFont\""
 "    />"
+"    <comClass clsid=\"{62222222-1234-1234-1234-56789abcdef0}\" >"
+"        <progid>ProgId.ProgId.1</progid>"
+"    </comClass>"
 "    <comInterfaceProxyStub "
 "        name=\"Iifaceps\""
 "        iid=\"{22222222-1234-1234-1234-56789abcdef0}\""
@@ -265,6 +279,12 @@ static const char actctx_manifest[] =
 "        iid=\"{52222222-1234-1234-1234-56789abcdef0}\""
 "        proxyStubClsid32=\"{00000000-0000-0000-0000-000000000000}\""
 "    />"
+"    <clrClass "
+"        clsid=\"{72222222-1234-1234-1234-56789abcdef0}\""
+"        name=\"clrclass\""
+"    >"
+"        <progid>clrprogid.1</progid>"
+"    </clrClass>"
 "</assembly>";
 
 DEFINE_GUID(CLSID_Testclass, 0x12345678, 0x1234, 0x1234, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0);
@@ -297,21 +317,23 @@ static void test_ProgIDFromCLSID(void)
         static const WCHAR customfontW[] = {'C','u','s','t','o','m','F','o','n','t',0};
 
         hr = ProgIDFromCLSID(&CLSID_non_existent, &progid);
-todo_wine
         ok(hr == S_OK, "got 0x%08x\n", hr);
-        if (hr == S_OK)
-        {
-            ok(!lstrcmpiW(progid, progidW), "got %s\n", wine_dbgstr_w(progid));
-            CoTaskMemFree(progid);
-        }
+        ok(!lstrcmpiW(progid, progidW), "got %s\n", wine_dbgstr_w(progid));
+        CoTaskMemFree(progid);
 
         /* try something registered and redirected */
         progid = NULL;
         hr = ProgIDFromCLSID(&CLSID_StdFont, &progid);
         ok(hr == S_OK, "got 0x%08x\n", hr);
-todo_wine
         ok(!lstrcmpiW(progid, customfontW), "got wrong progid %s\n", wine_dbgstr_w(progid));
         CoTaskMemFree(progid);
+
+        /* classes without default progid, progid list is not used */
+        hr = ProgIDFromCLSID(&IID_Testiface5, &progid);
+        ok(hr == REGDB_E_CLASSNOTREG, "got 0x%08x\n", hr);
+
+        hr = ProgIDFromCLSID(&IID_Testiface6, &progid);
+        ok(hr == REGDB_E_CLASSNOTREG, "got 0x%08x\n", hr);
 
         pDeactivateActCtx(0, cookie);
         pReleaseActCtx(handle);
@@ -354,14 +376,20 @@ static void test_CLSIDFromProgID(void)
     {
         GUID clsid1;
 
+        memset(&clsid, 0xcc, sizeof(clsid));
+        hr = CLSIDFromProgID(wszNonExistent, &clsid);
+        ok(hr == CO_E_CLASSSTRING, "got 0x%08x\n", hr);
+        ok(IsEqualCLSID(&clsid, &CLSID_NULL), "should have zero CLSID on failure\n");
+
+        /* CLSIDFromString() doesn't check activation context */
+        hr = CLSIDFromString(progidW, &clsid);
+        ok(hr == CO_E_CLASSSTRING, "got 0x%08x\n", hr);
+
         clsid = CLSID_NULL;
         hr = CLSIDFromProgID(progidW, &clsid);
-todo_wine
-        ok(hr == S_OK, "got 0x%08x\n", hr);
-        if (hr == S_OK)
-            /* it returns generated CLSID here */
-            ok(!IsEqualCLSID(&clsid, &CLSID_non_existent) && !IsEqualCLSID(&clsid, &CLSID_NULL),
-                "got wrong clsid %s\n", debugstr_guid(&clsid));
+        /* it returns generated CLSID here */
+        ok(!IsEqualCLSID(&clsid, &CLSID_non_existent) && !IsEqualCLSID(&clsid, &CLSID_NULL),
+                 "got wrong clsid %s\n", wine_dbgstr_guid(&clsid));
 
         /* duplicate progid present in context - returns generated guid here too */
         clsid = CLSID_NULL;
@@ -370,9 +398,8 @@ todo_wine
         clsid1 = CLSID_StdFont;
         /* that's where it differs from StdFont */
         clsid1.Data4[7] = 0x52;
-todo_wine
         ok(!IsEqualCLSID(&clsid, &CLSID_StdFont) && !IsEqualCLSID(&clsid, &CLSID_NULL) && !IsEqualCLSID(&clsid, &clsid1),
-            "got %s\n", debugstr_guid(&clsid));
+            "got %s\n", wine_dbgstr_guid(&clsid));
 
         pDeactivateActCtx(0, cookie);
         pReleaseActCtx(handle);
@@ -389,9 +416,16 @@ static void test_CLSIDFromString(void)
     ok_ole_success(hr, "CLSIDFromString");
     ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
 
+    memset(&clsid, 0xab, sizeof(clsid));
     hr = CLSIDFromString(NULL, &clsid);
-    ok_ole_success(hr, "CLSIDFromString");
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(IsEqualCLSID(&clsid, &CLSID_NULL), "clsid wasn't equal to CLSID_NULL\n");
+
+    /* string is longer, but starts with a valid CLSID */
+    memset(&clsid, 0, sizeof(clsid));
+    hr = CLSIDFromString(cf_brokenW, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "got 0x%08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &IID_IClassFactory), "got %s\n", wine_dbgstr_guid(&clsid));
 
     lstrcpyW(wszCLSID_Broken, wszCLSID_StdFont);
     for(i = lstrlenW(wszCLSID_StdFont); i < 49; i++)
@@ -446,6 +480,68 @@ static void test_CLSIDFromString(void)
     ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
     ok(clsid.Data1 == 0xb, "Got %08x\n", clsid.Data1);
     ok(clsid.Data2 == 0xcccc, "Got %04x\n", clsid.Data2);
+}
+
+static void test_IIDFromString(void)
+{
+    static const WCHAR cfW[] = {'{','0','0','0','0','0','0','0','1','-','0','0','0','0','-','0','0','0','0','-',
+                                    'c','0','0','0','-','0','0','0','0','0','0','0','0','0','0','4','6','}',0};
+    static const WCHAR brokenW[] = {'{','0','0','0','0','0','0','0','1','-','0','0','0','0','-','0','0','0','0','-',
+                                        'g','0','0','0','-','0','0','0','0','0','0','0','0','0','0','4','6','}',0};
+    static const WCHAR broken2W[] = {'{','0','0','0','0','0','0','0','1','=','0','0','0','0','-','0','0','0','0','-',
+                                        'g','0','0','0','-','0','0','0','0','0','0','0','0','0','0','4','6','}',0};
+    static const WCHAR broken3W[] = {'b','r','o','k','e','n','0','0','1','=','0','0','0','0','-','0','0','0','0','-',
+                                        'g','0','0','0','-','0','0','0','0','0','0','0','0','0','0','4','6','}',0};
+    HRESULT hr;
+    IID iid;
+
+    hr = IIDFromString(wszCLSID_StdFont, &iid);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(IsEqualIID(&iid, &CLSID_StdFont), "got iid %s\n", wine_dbgstr_guid(&iid));
+
+    memset(&iid, 0xab, sizeof(iid));
+    hr = IIDFromString(NULL, &iid);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(IsEqualIID(&iid, &CLSID_NULL), "got iid %s\n", wine_dbgstr_guid(&iid));
+
+    hr = IIDFromString(cfW, &iid);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(IsEqualIID(&iid, &IID_IClassFactory), "got iid %s\n", wine_dbgstr_guid(&iid));
+
+    /* string starts with a valid IID but is longer */
+    memset(&iid, 0xab, sizeof(iid));
+    hr = IIDFromString(cf_brokenW, &iid);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(iid.Data1 == 0xabababab, "Got %08x\n", iid.Data1);
+
+    /* invalid IID in a valid format */
+    memset(&iid, 0xab, sizeof(iid));
+    hr = IIDFromString(brokenW, &iid);
+    ok(hr == CO_E_IIDSTRING, "got 0x%08x\n", hr);
+    ok(iid.Data1 == 0x00000001, "Got %08x\n", iid.Data1);
+
+    memset(&iid, 0xab, sizeof(iid));
+    hr = IIDFromString(broken2W, &iid);
+    ok(hr == CO_E_IIDSTRING, "got 0x%08x\n", hr);
+    ok(iid.Data1 == 0x00000001, "Got %08x\n", iid.Data1);
+
+    /* format is broken, but string length is okay */
+    memset(&iid, 0xab, sizeof(iid));
+    hr = IIDFromString(broken3W, &iid);
+    ok(hr == CO_E_IIDSTRING, "got 0x%08x\n", hr);
+    ok(iid.Data1 == 0xabababab, "Got %08x\n", iid.Data1);
+
+    /* invalid string */
+    memset(&iid, 0xab, sizeof(iid));
+    hr = IIDFromString(wszNonExistent, &iid);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(iid.Data1 == 0xabababab, "Got %08x\n", iid.Data1);
+
+    /* valid ProgID */
+    memset(&iid, 0xab, sizeof(iid));
+    hr = IIDFromString(stdfont, &iid);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(iid.Data1 == 0xabababab, "Got %08x\n", iid.Data1);
 }
 
 static void test_StringFromGUID2(void)
@@ -539,10 +635,10 @@ static void test_CoCreateInstance(void)
     /* show that COM doesn't have to be initialized for multi-threaded apartments if another
        thread has already done so */
 
-    info.wait = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
-    info.stop = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
     thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
@@ -570,8 +666,9 @@ static void test_CoCreateInstance(void)
 static void test_CoGetClassObject(void)
 {
     HRESULT hr;
-    HANDLE thread;
+    HANDLE thread, handle;
     DWORD tid, exitcode;
+    ULONG_PTR cookie;
     IUnknown *pUnk;
     struct info info;
     REFCLSID rclsid = &CLSID_InternetZoneManager;
@@ -590,10 +687,10 @@ static void test_CoGetClassObject(void)
     /* show that COM doesn't have to be initialized for multi-threaded apartments if another
        thread has already done so */
 
-    info.wait = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
-    info.stop = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
     thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
@@ -635,7 +732,7 @@ static void test_CoGetClassObject(void)
     {
         IUnknown_Release(pUnk);
 
-        res = RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Classes", 0, NULL, 0,
+        res = RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\Classes", 0, NULL, 0,
                              KEY_ALL_ACCESS, NULL, &hkey, NULL);
         ok(!res, "RegCreateKeyEx returned %d\n", res);
 
@@ -651,26 +748,42 @@ static void test_CoGetClassObject(void)
         if (hr == S_OK) IUnknown_Release(pUnk);
         RegCloseKey(hkey);
     }
+
+    hr = CoGetClassObject(&CLSID_InProcFreeMarshaler, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void **)&pUnk);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    IUnknown_Release(pUnk);
+
+    /* context redefines FreeMarshaler CLSID */
+    if ((handle = activate_context(actctx_manifest, &cookie)))
+    {
+        hr = CoGetClassObject(&CLSID_InProcFreeMarshaler, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void **)&pUnk);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        IUnknown_Release(pUnk);
+
+        pDeactivateActCtx(0, cookie);
+        pReleaseActCtx(handle);
+    }
+
     CoUninitialize();
 }
 
 static ATOM register_dummy_class(void)
 {
-    WNDCLASS wc =
+    WNDCLASSA wc =
     {
         0,
-        DefWindowProc,
+        DefWindowProcA,
         0,
         0,
-        GetModuleHandle(NULL),
+        GetModuleHandleA(NULL),
         NULL,
-        LoadCursor(NULL, IDC_ARROW),
+        LoadCursorA(NULL, (LPSTR)IDC_ARROW),
         (HBRUSH)(COLOR_BTNFACE+1),
         NULL,
-        TEXT("WineOleTestClass"),
+        "WineOleTestClass",
     };
 
-    return RegisterClass(&wc);
+    return RegisterClassA(&wc);
 }
 
 static void test_ole_menu(void)
@@ -678,7 +791,7 @@ static void test_ole_menu(void)
 	HWND hwndFrame;
 	HRESULT hr;
 
-	hwndFrame = CreateWindow(MAKEINTATOM(register_dummy_class()), "Test", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, NULL, NULL);
+	hwndFrame = CreateWindowA((LPCSTR)MAKEINTATOM(register_dummy_class()), "Test", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, NULL, NULL);
 	hr = OleSetMenuDescriptor(NULL, hwndFrame, NULL, NULL, NULL);
 	todo_wine ok_ole_success(hr, "OleSetMenuDescriptor");
 
@@ -974,8 +1087,8 @@ static void test_CoGetPSClsid(void)
     hr = CoGetPSClsid(&IID_IClassFactory, &clsid);
     ok_ole_success(hr, "CoGetPSClsid");
 
-    res = RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Classes", 0, NULL, 0,
-                         KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    res = RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\Classes", 0, NULL, 0,
+                          KEY_ALL_ACCESS, NULL, &hkey, NULL);
     ok(!res, "RegCreateKeyEx returned %d\n", res);
 
     res = pRegOverridePredefKey(HKEY_CLASSES_ROOT, hkey);
@@ -995,27 +1108,34 @@ static void test_CoGetPSClsid(void)
 
     if ((handle = activate_context(actctx_manifest, &cookie)))
     {
-todo_wine {
         memset(&clsid, 0, sizeof(clsid));
         hr = CoGetPSClsid(&IID_Testiface, &clsid);
         ok(hr == S_OK, "got 0x%08x\n", hr);
-        ok(IsEqualGUID(&clsid, &IID_Testiface), "got clsid %s\n", debugstr_guid(&clsid));
+        ok(IsEqualGUID(&clsid, &IID_Testiface), "got clsid %s\n", wine_dbgstr_guid(&clsid));
 
         memset(&clsid, 0, sizeof(clsid));
         hr = CoGetPSClsid(&IID_Testiface2, &clsid);
         ok(hr == S_OK, "got 0x%08x\n", hr);
-        ok(IsEqualGUID(&clsid, &IID_Testiface2), "got clsid %s\n", debugstr_guid(&clsid));
+        ok(IsEqualGUID(&clsid, &IID_Testiface2), "got clsid %s\n", wine_dbgstr_guid(&clsid));
 
         memset(&clsid, 0, sizeof(clsid));
         hr = CoGetPSClsid(&IID_Testiface3, &clsid);
         ok(hr == S_OK, "got 0x%08x\n", hr);
-        ok(IsEqualGUID(&clsid, &IID_TestPS), "got clsid %s\n", debugstr_guid(&clsid));
+        ok(IsEqualGUID(&clsid, &IID_TestPS), "got clsid %s\n", wine_dbgstr_guid(&clsid));
 
         memset(&clsid, 0xaa, sizeof(clsid));
         hr = CoGetPSClsid(&IID_Testiface4, &clsid);
         ok(hr == S_OK, "got 0x%08x\n", hr);
-        ok(IsEqualGUID(&clsid, &GUID_NULL), "got clsid %s\n", debugstr_guid(&clsid));
-}
+        ok(IsEqualGUID(&clsid, &GUID_NULL), "got clsid %s\n", wine_dbgstr_guid(&clsid));
+
+        /* register same interface and try to get CLSID back */
+        hr = CoRegisterPSClsid(&IID_Testiface, &IID_Testiface4);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        memset(&clsid, 0, sizeof(clsid));
+        hr = CoGetPSClsid(&IID_Testiface, &clsid);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(IsEqualGUID(&clsid, &IID_Testiface4), "got clsid %s\n", wine_dbgstr_guid(&clsid));
+
         pDeactivateActCtx(0, cookie);
         pReleaseActCtx(handle);
     }
@@ -1138,6 +1258,8 @@ static void test_CoMarshalInterThreadInterfaceInStream(void)
 
 static void test_CoRegisterClassObject(void)
 {
+    ULONG_PTR ctxcookie;
+    HANDLE handle;
     DWORD cookie;
     HRESULT hr;
     IClassFactory *pcf;
@@ -1212,6 +1334,33 @@ static void test_CoRegisterClassObject(void)
     /* crashes with at least win9x DCOM! */
     if (0)
         CoRevokeClassObject(cookie);
+
+    /* test that object is accessible */
+    hr = CoRegisterClassObject(&CLSID_WineOOPTest, (IUnknown *)&Test_ClassFactory, CLSCTX_INPROC_SERVER,
+        REGCLS_MULTIPLEUSE, &cookie);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = CoGetClassObject(&CLSID_WineOOPTest, CLSCTX_INPROC_SERVER, NULL, &IID_IClassFactory, (void**)&pcf);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    IClassFactory_Release(pcf);
+
+    /* context now contains CLSID_WineOOPTest, test if registered one could still be used */
+    if ((handle = activate_context(actctx_manifest, &ctxcookie)))
+    {
+        hr = CoGetClassObject(&CLSID_WineOOPTest, CLSCTX_INPROC_SERVER, NULL, &IID_IClassFactory, (void**)&pcf);
+todo_wine
+        ok(hr == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND), "got 0x%08x\n", hr);
+
+        pDeactivateActCtx(0, ctxcookie);
+        pReleaseActCtx(handle);
+    }
+
+    hr = CoGetClassObject(&CLSID_WineOOPTest, CLSCTX_INPROC_SERVER, NULL, &IID_IClassFactory, (void**)&pcf);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    IClassFactory_Release(pcf);
+
+    hr = CoRevokeClassObject(cookie);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
 
     CoUninitialize();
 }
@@ -1394,7 +1543,7 @@ static DWORD CALLBACK free_libraries_thread(LPVOID p)
 
 static inline BOOL is_module_loaded(const char *module)
 {
-    return GetModuleHandle(module) != 0;
+    return GetModuleHandleA(module) != 0;
 }
 
 static void test_CoFreeUnusedLibraries(void)
@@ -1466,10 +1615,10 @@ static void test_CoGetObjectContext(void)
     /* show that COM doesn't have to be initialized for multi-threaded apartments if another
        thread has already done so */
 
-    info.wait = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
-    info.stop = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
     thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
@@ -1685,10 +1834,10 @@ static void test_CoGetContextToken(void)
     /* show that COM doesn't have to be initialized for multi-threaded apartments if another
        thread has already done so */
 
-    info.wait = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
-    info.stop = CreateEvent(NULL, TRUE, FALSE, NULL);
+    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
     ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
     thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
@@ -1817,21 +1966,18 @@ static void test_OleRegGetMiscStatus(void)
     {
         status = 0;
         hr = OleRegGetMiscStatus(&CLSID_Testclass, DVASPECT_ICON, &status);
-todo_wine {
         ok(hr == S_OK, "got 0x%08x\n", hr);
         ok(status == OLEMISC_RECOMPOSEONRESIZE, "got 0x%08x\n", status);
-}
+
         /* context data takes precedence over registration info */
         status = 0;
         hr = OleRegGetMiscStatus(&CLSID_StdFont, DVASPECT_ICON, &status);
         ok(hr == S_OK, "got 0x%08x\n", hr);
-todo_wine
         ok(status == OLEMISC_RECOMPOSEONRESIZE, "got 0x%08x\n", status);
 
         /* there's no such attribute in context */
         status = -1;
         hr = OleRegGetMiscStatus(&CLSID_Testclass, DVASPECT_DOCPRINT, &status);
-todo_wine
         ok(hr == S_OK, "got 0x%08x\n", hr);
         ok(status == 0, "got 0x%08x\n", status);
 
@@ -1869,9 +2015,13 @@ START_TEST(compobj)
         return;
     }
 
+    if (!pCreateActCtxW)
+        win_skip("Activation contexts are not supported, some tests will be skipped.\n");
+
     test_ProgIDFromCLSID();
     test_CLSIDFromProgID();
     test_CLSIDFromString();
+    test_IIDFromString();
     test_StringFromGUID2();
     test_CoCreateInstance();
     test_ole_menu();

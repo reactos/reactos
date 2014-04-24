@@ -24,6 +24,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winuser.h>
 #define COBJMACROS
 #include <objbase.h>
 #include <wine/test.h>

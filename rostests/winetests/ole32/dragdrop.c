@@ -36,6 +36,40 @@
 
 #include <wine/test.h>
 
+#define DEFINE_EXPECT(func) \
+    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
+
+#define SET_EXPECT(func) \
+    expect_ ## func = TRUE
+
+#define CHECK_EXPECT2(func) \
+    do { \
+        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_EXPECT(func) \
+    do { \
+        CHECK_EXPECT2(func); \
+        expect_ ## func = FALSE; \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_ ## func, "expected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
+
+DEFINE_EXPECT(DataObject_EnumFormatEtc);
+DEFINE_EXPECT(EnumFORMATETC_Next);
+DEFINE_EXPECT(EnumFORMATETC_Reset);
+DEFINE_EXPECT(DataObject_QueryGetData);
+DEFINE_EXPECT(DropSource_QueryContinueDrag);
+DEFINE_EXPECT(DropTarget_DragEnter);
+DEFINE_EXPECT(DropSource_GiveFeedback);
+DEFINE_EXPECT(DropTarget_Drop);
+DEFINE_EXPECT(DropTarget_DragLeave);
+
 static int droptarget_refs;
 
 /* helper macros to make tests a bit leaner */
@@ -73,7 +107,9 @@ static HRESULT WINAPI DropTarget_DragEnter(IDropTarget* iface,
                                            DWORD grfKeyState, POINTL pt,
                                            DWORD* pdwEffect)
 {
-    return E_NOTIMPL;
+    CHECK_EXPECT(DropTarget_DragEnter);
+    *pdwEffect = DROPEFFECT_COPY;
+    return S_OK;
 }
 
 static HRESULT WINAPI DropTarget_DragOver(IDropTarget* iface,
@@ -81,11 +117,14 @@ static HRESULT WINAPI DropTarget_DragOver(IDropTarget* iface,
                                           POINTL pt,
                                           DWORD* pdwEffect)
 {
-    return E_NOTIMPL;
+    ok(0, "unexpected call\n");
+    *pdwEffect = DROPEFFECT_COPY;
+    return S_OK;
 }
 
 static HRESULT WINAPI DropTarget_DragLeave(IDropTarget* iface)
 {
+    CHECK_EXPECT(DropTarget_DragLeave);
     return E_NOTIMPL;
 }
 
@@ -93,7 +132,8 @@ static HRESULT WINAPI DropTarget_Drop(IDropTarget* iface,
                                       IDataObject* pDataObj, DWORD grfKeyState,
                                       POINTL pt, DWORD* pdwEffect)
 {
-    return E_NOTIMPL;
+    CHECK_EXPECT(DropTarget_Drop);
+    return 0xbeefbeef;
 }
 
 static const IDropTargetVtbl DropTarget_VTbl =
@@ -109,7 +149,6 @@ static const IDropTargetVtbl DropTarget_VTbl =
 
 static IDropTarget DropTarget = { &DropTarget_VTbl };
 
-/** stub IDropSource **/
 static HRESULT WINAPI DropSource_QueryInterface(IDropSource *iface, REFIID riid, void **ppObj)
 {
     if (IsEqualIID(riid, &IID_IUnknown) ||
@@ -137,7 +176,7 @@ static HRESULT WINAPI DropSource_QueryContinueDrag(
     BOOL fEscapePressed,
     DWORD grfKeyState)
 {
-    /* always drop */
+    CHECK_EXPECT(DropSource_QueryContinueDrag);
     return DRAGDROP_S_DROP;
 }
 
@@ -145,6 +184,7 @@ static HRESULT WINAPI DropSource_GiveFeedback(
     IDropSource *iface,
     DWORD dwEffect)
 {
+    CHECK_EXPECT(DropSource_GiveFeedback);
     return DRAGDROP_S_USEDEFAULTCURSORS;
 }
 
@@ -158,7 +198,75 @@ static const IDropSourceVtbl dropsource_vtbl = {
 
 static IDropSource DropSource = { &dropsource_vtbl };
 
-/** IDataObject stub **/
+static HRESULT WINAPI EnumFORMATETC_QueryInterface(IEnumFORMATETC *iface,
+        REFIID riid, void **ppvObj)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static ULONG WINAPI EnumFORMATETC_AddRef(IEnumFORMATETC *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI EnumFORMATETC_Release(IEnumFORMATETC *iface)
+{
+    return 1;
+}
+
+static BOOL formats_enumerated;
+static HRESULT WINAPI EnumFORMATETC_Next(IEnumFORMATETC *iface,
+        ULONG celt, FORMATETC *rgelt, ULONG *pceltFetched)
+{
+    static FORMATETC format = { CF_TEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+
+    CHECK_EXPECT2(EnumFORMATETC_Next);
+
+    ok(celt == 1, "celt = %d\n", celt);
+    ok(rgelt != NULL, "rgelt == NULL\n");
+    ok(pceltFetched == NULL, "pceltFetched != NULL\n");
+
+    if(formats_enumerated)
+        return S_FALSE;
+
+    *rgelt = format;
+    formats_enumerated = TRUE;
+    return S_OK;
+}
+
+static HRESULT WINAPI EnumFORMATETC_Skip(IEnumFORMATETC *iface, ULONG celt)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumFORMATETC_Reset(IEnumFORMATETC *iface)
+{
+    CHECK_EXPECT(EnumFORMATETC_Reset);
+    formats_enumerated = FALSE;
+    return S_OK;
+}
+
+static HRESULT WINAPI EnumFORMATETC_Clone(IEnumFORMATETC *iface,
+        IEnumFORMATETC **ppenum)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static const IEnumFORMATETCVtbl enumformatetc_vtbl = {
+    EnumFORMATETC_QueryInterface,
+    EnumFORMATETC_AddRef,
+    EnumFORMATETC_Release,
+    EnumFORMATETC_Next,
+    EnumFORMATETC_Skip,
+    EnumFORMATETC_Reset,
+    EnumFORMATETC_Clone
+};
+
+static IEnumFORMATETC EnumFORMATETC = { &enumformatetc_vtbl };
+
 static HRESULT WINAPI DataObject_QueryInterface(
     IDataObject *iface,
     REFIID riid,
@@ -171,6 +279,8 @@ static HRESULT WINAPI DataObject_QueryInterface(
         IDataObject_AddRef(iface);
         return S_OK;
     }
+
+    trace("DataObject_QueryInterface: %s\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -189,6 +299,7 @@ static HRESULT WINAPI DataObject_GetData(
     FORMATETC *pformatetcIn,
     STGMEDIUM *pmedium)
 {
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -197,6 +308,7 @@ static HRESULT WINAPI DataObject_GetDataHere(
     FORMATETC *pformatetc,
     STGMEDIUM *pmedium)
 {
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -204,6 +316,7 @@ static HRESULT WINAPI DataObject_QueryGetData(
     IDataObject *iface,
     FORMATETC *pformatetc)
 {
+    CHECK_EXPECT(DataObject_QueryGetData);
     return S_OK;
 }
 
@@ -212,6 +325,7 @@ static HRESULT WINAPI DataObject_GetCanonicalFormatEtc(
     FORMATETC *pformatectIn,
     FORMATETC *pformatetcOut)
 {
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -221,6 +335,7 @@ static HRESULT WINAPI DataObject_SetData(
     STGMEDIUM *pmedium,
     BOOL fRelease)
 {
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -229,6 +344,9 @@ static HRESULT WINAPI DataObject_EnumFormatEtc(
     DWORD dwDirection,
     IEnumFORMATETC **ppenumFormatEtc)
 {
+    CHECK_EXPECT(DataObject_EnumFormatEtc);
+    *ppenumFormatEtc = &EnumFORMATETC;
+    formats_enumerated = FALSE;
     return S_OK;
 }
 
@@ -239,6 +357,7 @@ static HRESULT WINAPI DataObject_DAdvise(
     IAdviseSink *pAdvSink,
     DWORD *pdwConnection)
 {
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -246,6 +365,7 @@ static HRESULT WINAPI DataObject_DUnadvise(
     IDataObject *iface,
     DWORD dwConnection)
 {
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -253,6 +373,7 @@ static HRESULT WINAPI DataObject_EnumDAdvise(
     IDataObject *iface,
     IEnumSTATDATA **ppenumAdvise)
 {
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -275,21 +396,21 @@ static IDataObject DataObject = { &dataobject_vtbl };
 
 static ATOM register_dummy_class(void)
 {
-    WNDCLASS wc =
+    WNDCLASSA wc =
     {
         0,
-        DefWindowProc,
+        DefWindowProcA,
         0,
         0,
-        GetModuleHandle(NULL),
+        GetModuleHandleA(NULL),
         NULL,
-        LoadCursor(NULL, IDC_ARROW),
+        LoadCursorA(NULL, (LPSTR)IDC_ARROW),
         (HBRUSH)(COLOR_BTNFACE+1),
         NULL,
-        TEXT("WineOleTestClass"),
+        "WineOleTestClass",
     };
 
-    return RegisterClass(&wc);
+    return RegisterClassA(&wc);
 }
 
 static void test_Register_Revoke(void)
@@ -367,9 +488,10 @@ static void test_DoDragDrop(void)
     DWORD effect;
     HRESULT hr;
     HWND hwnd;
+    RECT rect;
 
-    hwnd = CreateWindowA("WineOleTestClass", "Test", 0,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
+    hwnd = CreateWindowExA(WS_EX_TOPMOST, "WineOleTestClass", "Test", 0,
+        CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL,
         NULL, NULL, NULL);
     ok(IsWindow(hwnd), "failed to create window\n");
 
@@ -400,6 +522,47 @@ static void test_DoDragDrop(void)
 
     hr = DoDragDrop(&DataObject, NULL, 0, &effect);
     ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    ShowWindow(hwnd, SW_SHOW);
+    GetWindowRect(hwnd, &rect);
+    ok(SetCursorPos(rect.left+50, rect.top+50), "SetCursorPos failed\n");
+    SET_EXPECT(DataObject_EnumFormatEtc);
+    SET_EXPECT(EnumFORMATETC_Next);
+    SET_EXPECT(EnumFORMATETC_Reset);
+    SET_EXPECT(DataObject_QueryGetData);
+    SET_EXPECT(DropSource_QueryContinueDrag);
+    SET_EXPECT(DropTarget_DragEnter);
+    SET_EXPECT(DropSource_GiveFeedback);
+    SET_EXPECT(DropTarget_Drop);
+    hr = DoDragDrop(&DataObject, &DropSource, DROPEFFECT_COPY, &effect);
+    ok(hr == 0xbeefbeef, "got 0x%08x\n", hr);
+    todo_wine CHECK_CALLED(DataObject_EnumFormatEtc);
+    todo_wine CHECK_CALLED(EnumFORMATETC_Next);
+    todo_wine CHECK_CALLED(EnumFORMATETC_Reset);
+    todo_wine CHECK_CALLED(DataObject_QueryGetData);
+    CHECK_CALLED(DropSource_QueryContinueDrag);
+    CHECK_CALLED(DropTarget_DragEnter);
+    CHECK_CALLED(DropSource_GiveFeedback);
+    CHECK_CALLED(DropTarget_Drop);
+
+    SET_EXPECT(DataObject_EnumFormatEtc);
+    SET_EXPECT(EnumFORMATETC_Next);
+    SET_EXPECT(EnumFORMATETC_Reset);
+    SET_EXPECT(DataObject_QueryGetData);
+    SET_EXPECT(DropSource_QueryContinueDrag);
+    SET_EXPECT(DropTarget_DragEnter);
+    SET_EXPECT(DropSource_GiveFeedback);
+    SET_EXPECT(DropTarget_DragLeave);
+    hr = DoDragDrop(&DataObject, &DropSource, 0, &effect);
+    ok(hr == DRAGDROP_S_DROP, "got 0x%08x\n", hr);
+    todo_wine CHECK_CALLED(DataObject_EnumFormatEtc);
+    todo_wine CHECK_CALLED(EnumFORMATETC_Next);
+    todo_wine CHECK_CALLED(EnumFORMATETC_Reset);
+    todo_wine CHECK_CALLED(DataObject_QueryGetData);
+    CHECK_CALLED(DropSource_QueryContinueDrag);
+    CHECK_CALLED(DropTarget_DragEnter);
+    CHECK_CALLED(DropSource_GiveFeedback);
+    CHECK_CALLED(DropTarget_DragLeave);
 
     OleUninitialize();
 

@@ -247,8 +247,8 @@ static void test_marshal_HGLOBAL(void)
 static HENHMETAFILE create_emf(void)
 {
     const RECT rect = {0, 0, 100, 100};
-    HDC hdc = CreateEnhMetaFile(NULL, NULL, &rect, "HENHMETAFILE Marshaling Test\0Test\0\0");
-    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
+    HDC hdc = CreateEnhMetaFileA(NULL, NULL, &rect, "HENHMETAFILE Marshaling Test\0Test\0\0");
+    ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
     return CloseEnhMetaFile(hdc);
 }
 
@@ -319,8 +319,8 @@ static void test_marshal_HENHMETAFILE(void)
 static HMETAFILE create_mf(void)
 {
     RECT rect = {0, 0, 100, 100};
-    HDC hdc = CreateMetaFile(NULL);
-    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
+    HDC hdc = CreateMetaFileA(NULL);
+    ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
     return CloseMetaFile(hdc);
 }
 
