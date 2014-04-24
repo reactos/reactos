@@ -71,7 +71,7 @@ public:
     HRESULT ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DWORD dwFlags);
     HRESULT ChangePopupItem(CMenuToolbarBase * toolbar, INT item);
 
-    HRESULT PopupSubMenu(UINT itemId, UINT index, IShellMenu* childShellMenu);
+    HRESULT PopupSubMenu(UINT itemId, UINT index, IShellMenu* childShellMenu, BOOL keyInitiated);
     HRESULT PopupSubMenu(UINT itemId, UINT index, HMENU menu);
     HRESULT TrackContextMenu(IContextMenu* contextMenu, POINT pt);
 
@@ -92,7 +92,7 @@ public:
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) = 0;
     
     HRESULT CancelCurrentPopup();
-    HRESULT PopupItem(INT iItem);
+    HRESULT PopupItem(INT iItem, BOOL keyInitiated);
     HRESULT GetDataFromId(INT iItem, INT* pIndex, DWORD_PTR* pData);
 
     HRESULT KillPopupTimer();
@@ -102,7 +102,7 @@ protected:
 
     virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax) = 0;
     virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData) = 0;
-    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData) = 0;
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated) = 0;
     virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData) = 0;
     virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt) = 0;
 
@@ -144,7 +144,7 @@ protected:
 
     virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax);
     virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated);
     virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData);
     virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt);
 };
@@ -171,7 +171,7 @@ protected:
 
     virtual HRESULT InternalGetTooltip(INT iItem, INT index, DWORD_PTR dwData, LPWSTR pszText, INT cchTextMax);
     virtual HRESULT InternalExecuteItem(INT iItem, INT index, DWORD_PTR dwData);
-    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData);
+    virtual HRESULT InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated);
     virtual HRESULT InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData);
     virtual HRESULT InternalContextMenu(INT iItem, INT index, DWORD_PTR dwData, POINT pt);
 };

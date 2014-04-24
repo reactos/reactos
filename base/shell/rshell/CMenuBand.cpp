@@ -463,6 +463,18 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
         {
             return S_FALSE;
         }
+        else if (nCmdID == 5) // select an item
+        {
+            if (nCmdexecopt == 0) // first
+            {
+                _KeyboardItemChange(VK_HOME);
+            }
+            else if (nCmdexecopt == -2) // last
+            {
+                _KeyboardItemChange(VK_END);
+            }
+            return S_FALSE;
+        }
 
         return S_FALSE;
     }
@@ -794,14 +806,14 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
     if (!tb)
     {
         // If no hot item was selected choose the appropriate toolbar
-        if (change == VK_UP)
+        if (change == VK_UP || change == VK_END)
         {
             if (m_staticToolbar)
                 tb = m_staticToolbar;
             else
                 tb = m_SFToolbar;
         }
-        else if (change == VK_DOWN)
+        else if (change == VK_DOWN || change == VK_HOME)
         {
             if (m_SFToolbar)
                 tb = m_SFToolbar;
@@ -882,7 +894,7 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
         return m_subMenuParent->OnSelect(MPOS_CANCELLEVEL);
 
     case MPOS_SELECTRIGHT:
-        if (m_hotBar && m_hotItem >= 0 && m_hotBar->PopupItem(m_hotItem) == S_OK)
+        if (m_hotBar && m_hotItem >= 0 && m_hotBar->PopupItem(m_hotItem, TRUE) == S_OK)
             return S_FALSE;
         if (m_parentBand)
             return m_parentBand->_MenuItemHotTrack(VK_RIGHT);
@@ -895,6 +907,8 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
             return S_OK;
         return m_subMenuParent->OnSelect(changeType);
     }
+
+    return S_OK;
 }
 
 HRESULT CMenuBand::_CancelCurrentPopup()
@@ -906,7 +920,7 @@ HRESULT CMenuBand::_CancelCurrentPopup()
     return hr;
 }
 
-HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude)
+HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude, BOOL keyInitiated)
 {
     HRESULT hr = 0;
     IBandSite* pBandSite;
@@ -942,7 +956,12 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
     else
         IUnknown_SetSite(popup, m_site);
 
-    popup->Popup(pAt, pExclude, MPPF_RIGHT);
+    DWORD flags = MPPF_RIGHT;
+
+    if (keyInitiated && m_dwFlags & SMINIT_VERTICAL)
+        flags |= MPPF_INITIALSELECT;
+
+    popup->Popup(pAt, pExclude, flags);
 
     return S_OK;
 }

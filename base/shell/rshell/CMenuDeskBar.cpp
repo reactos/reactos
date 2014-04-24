@@ -370,6 +370,13 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
 
     UIActivateIO(TRUE, NULL);
 
+    if (dwFlags & (MPPF_INITIALSELECT | MPPF_FINALSELECT))
+    {
+        const int CMD_SELECT = 5;
+        int CMD_SELECT_OPTS = dwFlags & MPPF_INITIALSELECT ? 0 : -2;
+        IUnknown_QueryServiceExec(m_Client, SID_SMenuBandChild, &CLSID_MenuBand, CMD_SELECT, CMD_SELECT_OPTS, NULL, NULL);
+    }
+
     return S_OK;
 }
 

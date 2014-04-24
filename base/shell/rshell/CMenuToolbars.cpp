@@ -558,7 +558,7 @@ HRESULT CMenuToolbarBase::OnPopupTimer(DWORD timerId)
         return S_FALSE;
 
     // Returns S_FALSE if the current item did not show a submenu
-    HRESULT hr = PopupItem(m_hotItem);
+    HRESULT hr = PopupItem(m_hotItem, FALSE);
     if (hr != S_FALSE)
         return hr;
 
@@ -613,7 +613,7 @@ HRESULT CMenuToolbarBase::ChangeHotItem(CMenuToolbarBase * toolbar, INT item, DW
         if (m_isTrackingPopup && !(m_initFlags & SMINIT_VERTICAL))
         {
             // If the menubar has an open submenu, switch to the new item's submenu immediately
-            PopupItem(m_hotItem);
+            PopupItem(m_hotItem, FALSE);
         }
         else if (dwFlags & HICF_MOUSE)
         {
@@ -709,7 +709,7 @@ HRESULT CMenuToolbarBase::ChangeTrackedItem(INT index, BOOL wasTracking, BOOL mo
     return m_menuBand->_ChangeHotItem(this, btn.idCommand, mouse ? HICF_MOUSE : 0);
 }
 
-HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* childShellMenu)
+HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* childShellMenu, BOOL keyInitiated)
 {
     // Calculate the submenu position and exclude area
     RECT rc = { 0 };
@@ -743,7 +743,7 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* child
     m_isTrackingPopup = TRUE;
 
     m_menuBand->_ChangePopupItem(this, iItem);
-    m_menuBand->_OnPopupSubMenu(childShellMenu, &pt, &rcl);
+    m_menuBand->_OnPopupSubMenu(childShellMenu, &pt, &rcl, keyInitiated);
 
     return S_OK;
 }
@@ -816,7 +816,7 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
 
     INT iItem = (INT)wParam;
 
-    if (PopupItem(iItem) == S_OK)
+    if (PopupItem(iItem, FALSE) == S_OK)
     {
         TRACE("PopupItem returned S_OK\n");
         return S_FALSE;
@@ -1056,7 +1056,7 @@ HRESULT CMenuToolbarBase::CancelCurrentPopup()
     return m_menuBand->_CancelCurrentPopup();
 }
 
-HRESULT CMenuToolbarBase::PopupItem(INT iItem)
+HRESULT CMenuToolbarBase::PopupItem(INT iItem, BOOL keyInitiated)
 {
     INT index;
     DWORD_PTR dwData;
@@ -1086,7 +1086,7 @@ HRESULT CMenuToolbarBase::PopupItem(INT iItem)
         m_menuBand->_ChangeHotItem(this, iItem, 0);
     }
 
-    return InternalPopupItem(iItem, index, dwData);
+    return InternalPopupItem(iItem, index, dwData, keyInitiated);
 }
 
 CMenuStaticToolbar::CMenuStaticToolbar(CMenuBand *menuBand) :
@@ -1209,7 +1209,7 @@ HRESULT CMenuStaticToolbar::InternalExecuteItem(INT iItem, INT index, DWORD_PTR 
     return m_menuBand->_CallCBWithItemId(iItem, SMC_EXEC, 0, 0);
 }
 
-HRESULT CMenuStaticToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuStaticToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated)
 {
     SMINFO * nfo = reinterpret_cast<SMINFO*>(dwData);
     if (!nfo)
@@ -1226,7 +1226,7 @@ HRESULT CMenuStaticToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dw
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        return PopupSubMenu(iItem, index, shellMenu);
+        return PopupSubMenu(iItem, index, shellMenu, keyInitiated);
     }
 }
 
@@ -1376,7 +1376,7 @@ HRESULT CMenuSFToolbar::InternalExecuteItem(INT iItem, INT index, DWORD_PTR data
     return m_menuBand->_CallCBWithItemPidl(reinterpret_cast<LPITEMIDLIST>(data), SMC_SFEXEC, 0, 0);
 }
 
-HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData)
+HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData, BOOL keyInitiated)
 {
     HRESULT hr;
     UINT uId;
@@ -1410,7 +1410,7 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return PopupSubMenu(iItem, index, shellMenu);
+    return PopupSubMenu(iItem, index, shellMenu, keyInitiated);
 }
 
 HRESULT CMenuSFToolbar::InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData)

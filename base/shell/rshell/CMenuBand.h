@@ -182,7 +182,7 @@ public:
     HRESULT _ChangePopupItem(CMenuToolbarBase * tb, INT id);
     HRESULT _MenuItemHotTrack(DWORD changeType);
     HRESULT _CancelCurrentPopup();
-    HRESULT _OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude);
+    HRESULT _OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude, BOOL mouseInitiated);
     HRESULT _DisableMouseTrack(BOOL bDisable);
     HRESULT _SetChildBand(CMenuBand * child);
     HRESULT _SetParentBand(CMenuBand * parent);
