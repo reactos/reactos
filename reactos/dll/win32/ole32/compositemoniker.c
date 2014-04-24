@@ -22,7 +22,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-#define  BLOCK_TAB_SIZE 5 /* represent the first size table and it's increment block size */
+#define  BLOCK_TAB_SIZE 5 /* represent the first size table and its increment block size */
 
 /* CompositeMoniker data structure */
 typedef struct CompositeMonikerImpl{
@@ -141,7 +141,7 @@ CompositeMonikerImpl_Release(IMoniker* iface)
 
     ref = InterlockedDecrement(&This->ref);
 
-    /* destroy the object if there's no more reference on it */
+    /* destroy the object if there are no more references to it */
     if (ref == 0){
 
         /* release all the components before destroying this object */
@@ -1527,7 +1527,7 @@ EnumMonikerImpl_Release(IEnumMoniker* iface)
 
     ref = InterlockedDecrement(&This->ref);
 
-    /* destroy the object if there's no more reference on it */
+    /* destroy the object if there are no more references to it */
     if (ref == 0) {
 
         for(i=0;i<This->tabSize;i++)
@@ -1923,10 +1923,12 @@ CreateGenericComposite(IMoniker *pmkFirst, IMoniker *pmkRest, IMoniker **ppmkCom
     if (pmkFirst==NULL && pmkRest!=NULL){
 
         *ppmkComposite=pmkRest;
+        IMoniker_AddRef(pmkRest);
         return S_OK;
     }
     else if (pmkFirst!=NULL && pmkRest==NULL){
         *ppmkComposite=pmkFirst;
+        IMoniker_AddRef(pmkFirst);
         return S_OK;
     }
     else  if (pmkFirst==NULL && pmkRest==NULL)

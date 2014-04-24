@@ -62,6 +62,82 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 };
 static CRITICAL_SECTION csApartment = { &critsect_debug, -1, 0, 0, 0, 0 };
 
+enum comclass_threadingmodel
+{
+    ThreadingModel_Apartment = 1,
+    ThreadingModel_Free      = 2,
+    ThreadingModel_No        = 3,
+    ThreadingModel_Both      = 4,
+    ThreadingModel_Neutral   = 5
+};
+
+enum comclass_miscfields
+{
+    MiscStatus          = 1,
+    MiscStatusIcon      = 2,
+    MiscStatusContent   = 4,
+    MiscStatusThumbnail = 8,
+    MiscStatusDocPrint  = 16
+};
+
+struct comclassredirect_data
+{
+    ULONG size;
+    BYTE  res;
+    BYTE  miscmask;
+    BYTE  res1[2];
+    DWORD model;
+    GUID  clsid;
+    GUID  alias;
+    GUID  clsid2;
+    GUID  tlbid;
+    ULONG name_len;
+    ULONG name_offset;
+    ULONG progid_len;
+    ULONG progid_offset;
+    ULONG clrdata_len;
+    ULONG clrdata_offset;
+    DWORD miscstatus;
+    DWORD miscstatuscontent;
+    DWORD miscstatusthumbnail;
+    DWORD miscstatusicon;
+    DWORD miscstatusdocprint;
+};
+
+struct ifacepsredirect_data
+{
+    ULONG size;
+    DWORD mask;
+    GUID  iid;
+    ULONG nummethods;
+    GUID  tlbid;
+    GUID  base;
+    ULONG name_len;
+    ULONG name_offset;
+};
+
+struct progidredirect_data
+{
+    ULONG size;
+    DWORD reserved;
+    ULONG clsid_offset;
+};
+
+struct class_reg_data
+{
+    union
+    {
+        struct
+        {
+            struct comclassredirect_data *data;
+            void *section;
+            HANDLE hactctx;
+        } actctx;
+        HKEY hkey;
+    } u;
+    BOOL hkey;
+};
+
 struct registered_psclsid
 {
     struct list entry;
@@ -122,6 +198,71 @@ static CRITICAL_SECTION_DEBUG class_cs_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": csRegisteredClassList") }
 };
 static CRITICAL_SECTION csRegisteredClassList = { &class_cs_debug, -1, 0, 0, 0, 0 };
+
+static inline enum comclass_miscfields dvaspect_to_miscfields(DWORD aspect)
+{
+    switch (aspect)
+    {
+    case DVASPECT_CONTENT:
+        return MiscStatusContent;
+    case DVASPECT_THUMBNAIL:
+        return MiscStatusThumbnail;
+    case DVASPECT_ICON:
+        return MiscStatusIcon;
+    case DVASPECT_DOCPRINT:
+        return MiscStatusDocPrint;
+    default:
+        return MiscStatus;
+    };
+}
+
+BOOL actctx_get_miscstatus(const CLSID *clsid, DWORD aspect, DWORD *status)
+{
+    ACTCTX_SECTION_KEYED_DATA data;
+
+    data.cbSize = sizeof(data);
+    if (FindActCtxSectionGuid(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION,
+                              clsid, &data))
+    {
+        struct comclassredirect_data *comclass = (struct comclassredirect_data*)data.lpData;
+        enum comclass_miscfields misc = dvaspect_to_miscfields(aspect);
+
+        if (!(comclass->miscmask & misc))
+        {
+            if (!(comclass->miscmask & MiscStatus))
+            {
+                *status = 0;
+                return TRUE;
+            }
+            misc = MiscStatus;
+        }
+
+        switch (misc)
+        {
+        case MiscStatus:
+            *status = comclass->miscstatus;
+            break;
+        case MiscStatusIcon:
+            *status = comclass->miscstatusicon;
+            break;
+        case MiscStatusContent:
+            *status = comclass->miscstatuscontent;
+            break;
+        case MiscStatusThumbnail:
+            *status = comclass->miscstatusthumbnail;
+            break;
+        case MiscStatusDocPrint:
+            *status = comclass->miscstatusdocprint;
+            break;
+        default:
+           ;
+        };
+
+        return TRUE;
+    }
+    else
+        return FALSE;
+}
 
 /* wrapper for NtCreateKey that creates the key recursively if necessary */
 static NTSTATUS create_key( HKEY *retkey, ACCESS_MASK access, OBJECT_ATTRIBUTES *attr )
@@ -320,7 +461,7 @@ static HRESULT COMPOBJ_DllList_Add(LPCWSTR library_name, OpenDll **ret)
     DllCanUnloadNowFunc DllCanUnloadNow;
     DllGetClassObjectFunc DllGetClassObject;
 
-    TRACE("\n");
+    TRACE("%s\n", debugstr_w(library_name));
 
     *ret = COMPOBJ_DllList_Get(library_name);
     if (*ret) return S_OK;
@@ -1203,14 +1344,17 @@ static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
  *
  *	Reads a registry value and expands it when necessary
  */
-static DWORD COM_RegReadPath(HKEY hkeyroot, WCHAR * dst, DWORD dstlen)
+static DWORD COM_RegReadPath(const struct class_reg_data *regdata, WCHAR *dst, DWORD dstlen)
 {
-	DWORD ret;
+    DWORD ret;
+
+    if (regdata->hkey)
+    {
 	DWORD keytype;
 	WCHAR src[MAX_PATH];
 	DWORD dwLength = dstlen * sizeof(WCHAR);
 
-        if( (ret = RegQueryValueExW(hkeyroot, NULL, NULL, &keytype, (LPBYTE)src, &dwLength)) == ERROR_SUCCESS ) {
+        if( (ret = RegQueryValueExW(regdata->u.hkey, NULL, NULL, &keytype, (BYTE*)src, &dwLength)) == ERROR_SUCCESS ) {
             if (keytype == REG_EXPAND_SZ) {
               if (dstlen <= ExpandEnvironmentStringsW(src, dst, dstlen)) ret = ERROR_MORE_DATA;
             } else {
@@ -1228,11 +1372,24 @@ static DWORD COM_RegReadPath(HKEY hkeyroot, WCHAR * dst, DWORD dstlen)
             }
         }
 	return ret;
+    }
+    else
+    {
+        ULONG_PTR cookie;
+        WCHAR *nameW;
+
+        *dst = 0;
+        nameW = (WCHAR*)((BYTE*)regdata->u.actctx.section + regdata->u.actctx.data->name_offset);
+        ActivateActCtx(regdata->u.actctx.hactctx, &cookie);
+        ret = SearchPathW(NULL, nameW, NULL, dstlen, dst, NULL);
+        DeactivateActCtx(0, cookie);
+        return !*dst;
+    }
 }
 
 struct host_object_params
 {
-    HKEY hkeydll;
+    struct class_reg_data regdata;
     CLSID clsid; /* clsid of object to marshal */
     IID iid; /* interface to marshal */
     HANDLE event; /* event signalling when ready for multi-threaded case */
@@ -1251,7 +1408,7 @@ static HRESULT apartment_hostobject(struct apartment *apt,
 
     TRACE("clsid %s, iid %s\n", debugstr_guid(&params->clsid), debugstr_guid(&params->iid));
 
-    if (COM_RegReadPath(params->hkeydll, dllpath, ARRAYSIZE(dllpath)) != ERROR_SUCCESS)
+    if (COM_RegReadPath(&params->regdata, dllpath, ARRAYSIZE(dllpath)) != ERROR_SUCCESS)
     {
         /* failure: CLSID is not found in registry */
         WARN("class %s not registered inproc\n", debugstr_guid(&params->clsid));
@@ -1348,7 +1505,7 @@ static DWORD CALLBACK apartment_hostobject_thread(LPVOID p)
  * caller of this function */
 static HRESULT apartment_hostobject_in_hostapt(
     struct apartment *apt, BOOL multi_threaded, BOOL main_apartment,
-    HKEY hkeydll, REFCLSID rclsid, REFIID riid, void **ppv)
+    const struct class_reg_data *regdata, REFCLSID rclsid, REFIID riid, void **ppv)
 {
     struct host_object_params params;
     HWND apartment_hwnd = NULL;
@@ -1418,7 +1575,7 @@ static HRESULT apartment_hostobject_in_hostapt(
         }
     }
 
-    params.hkeydll = hkeydll;
+    params.regdata = *regdata;
     params.clsid = *rclsid;
     params.iid = *riid;
     hr = CreateStreamOnHGlobal(NULL, TRUE, &params.stream);
@@ -1453,6 +1610,29 @@ static HRESULT apartment_hostobject_in_hostapt(
     IStream_Release(params.stream);
     return hr;
 }
+
+#ifndef __REACTOS__
+static BOOL WINAPI register_class( INIT_ONCE *once, void *param, void **context )
+{
+    WNDCLASSW wclass;
+
+    /* Dispatching to the correct thread in an apartment is done through
+     * window messages rather than RPC transports. When an interface is
+     * marshalled into another apartment in the same process, a window of the
+     * following class is created. The *caller* of CoMarshalInterface (i.e., the
+     * application) is responsible for pumping the message loop in that thread.
+     * The WM_USER messages which point to the RPCs are then dispatched to
+     * apartment_wndproc by the user's code from the apartment in which the
+     * interface was unmarshalled.
+     */
+    memset(&wclass, 0, sizeof(wclass));
+    wclass.lpfnWndProc = apartment_wndproc;
+    wclass.hInstance = hProxyDll;
+    wclass.lpszClassName = wszAptWinClass;
+    RegisterClassW(&wclass);
+    return TRUE;
+}
+#endif
 
 /* create a window for the apartment or return the current one if one has
  * already been created */
@@ -1492,6 +1672,8 @@ void apartment_joinmta(void)
     COM_CurrentInfo()->apt = MTA;
 }
 
+#ifdef __REACTOS__
+
 static void COMPOBJ_InitProcess( void )
 {
     WNDCLASSW wclass;
@@ -1516,6 +1698,8 @@ static void COMPOBJ_UninitProcess( void )
 {
     UnregisterClassW(wszAptWinClass, hProxyDll);
 }
+
+#endif
 
 static void COM_TlsDestroy(void)
 {
@@ -1883,9 +2067,103 @@ static inline BOOL is_valid_hex(WCHAR c)
     return TRUE;
 }
 
+static const BYTE guid_conv_table[256] =
+{
+  0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x00 */
+  0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x10 */
+  0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x20 */
+  0,   1,   2,   3,   4,   5,   6, 7, 8, 9, 0, 0, 0, 0, 0, 0, /* 0x30 */
+  0, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x40 */
+  0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0x50 */
+  0, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf                             /* 0x60 */
+};
+
+/* conversion helper for CLSIDFromString/IIDFromString */
+static BOOL guid_from_string(LPCWSTR s, GUID *id)
+{
+  int	i;
+
+  if (!s || s[0]!='{') {
+    memset( id, 0, sizeof (CLSID) );
+    if(!s) return TRUE;
+    return FALSE;
+  }
+
+  TRACE("%s -> %p\n", debugstr_w(s), id);
+
+  /* in form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} */
+
+  id->Data1 = 0;
+  for (i = 1; i < 9; i++) {
+    if (!is_valid_hex(s[i])) return FALSE;
+    id->Data1 = (id->Data1 << 4) | guid_conv_table[s[i]];
+  }
+  if (s[9]!='-') return FALSE;
+
+  id->Data2 = 0;
+  for (i = 10; i < 14; i++) {
+    if (!is_valid_hex(s[i])) return FALSE;
+    id->Data2 = (id->Data2 << 4) | guid_conv_table[s[i]];
+  }
+  if (s[14]!='-') return FALSE;
+
+  id->Data3 = 0;
+  for (i = 15; i < 19; i++) {
+    if (!is_valid_hex(s[i])) return FALSE;
+    id->Data3 = (id->Data3 << 4) | guid_conv_table[s[i]];
+  }
+  if (s[19]!='-') return FALSE;
+
+  for (i = 20; i < 37; i+=2) {
+    if (i == 24) {
+      if (s[i]!='-') return FALSE;
+      i++;
+    }
+    if (!is_valid_hex(s[i]) || !is_valid_hex(s[i+1])) return FALSE;
+    id->Data4[(i-20)/2] = guid_conv_table[s[i]] << 4 | guid_conv_table[s[i+1]];
+  }
+
+  if (s[37] == '}' && s[38] == '\0')
+    return TRUE;
+
+  return FALSE;
+}
+
+/*****************************************************************************/
+
+static HRESULT clsid_from_string_reg(LPCOLESTR progid, CLSID *clsid)
+{
+    static const WCHAR clsidW[] = { '\\','C','L','S','I','D',0 };
+    WCHAR buf2[CHARS_IN_GUID];
+    LONG buf2len = sizeof(buf2);
+    HKEY xhkey;
+    WCHAR *buf;
+
+    memset(clsid, 0, sizeof(*clsid));
+    buf = HeapAlloc( GetProcessHeap(),0,(strlenW(progid)+8) * sizeof(WCHAR) );
+    if (!buf) return E_OUTOFMEMORY;
+    strcpyW( buf, progid );
+    strcatW( buf, clsidW );
+    if (open_classes_key(HKEY_CLASSES_ROOT, buf, MAXIMUM_ALLOWED, &xhkey))
+    {
+        HeapFree(GetProcessHeap(),0,buf);
+        WARN("couldn't open key for ProgID %s\n", debugstr_w(progid));
+        return CO_E_CLASSSTRING;
+    }
+    HeapFree(GetProcessHeap(),0,buf);
+
+    if (RegQueryValueW(xhkey,NULL,buf2,&buf2len))
+    {
+        RegCloseKey(xhkey);
+        WARN("couldn't query clsid value for ProgID %s\n", debugstr_w(progid));
+        return CO_E_CLASSSTRING;
+    }
+    RegCloseKey(xhkey);
+    return guid_from_string(buf2, clsid) ? S_OK : CO_E_CLASSSTRING;
+}
+
 /******************************************************************************
  *		CLSIDFromString	[OLE32.@]
- *		IIDFromString   [OLE32.@]
  *
  * Converts a unique identifier from its string representation into
  * the GUID struct.
@@ -1901,87 +2179,61 @@ static inline BOOL is_valid_hex(WCHAR c)
  * SEE ALSO
  *  StringFromCLSID
  */
-static HRESULT __CLSIDFromString(LPCWSTR s, LPCLSID id)
-{
-  int	i;
-  BYTE table[256];
-
-  if (!s || s[0]!='{') {
-    memset( id, 0, sizeof (CLSID) );
-    if(!s) return S_OK;
-    return CO_E_CLASSSTRING;
-  }
-
-  TRACE("%s -> %p\n", debugstr_w(s), id);
-
-  /* quick lookup table */
-  memset(table, 0, 256);
-
-  for (i = 0; i < 10; i++) {
-    table['0' + i] = i;
-  }
-  for (i = 0; i < 6; i++) {
-    table['A' + i] = i+10;
-    table['a' + i] = i+10;
-  }
-
-  /* in form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} */
-
-  id->Data1 = 0;
-  for (i = 1; i < 9; i++) {
-    if (!is_valid_hex(s[i])) return CO_E_CLASSSTRING;
-    id->Data1 = (id->Data1 << 4) | table[s[i]];
-  }
-  if (s[9]!='-') return CO_E_CLASSSTRING;
-
-  id->Data2 = 0;
-  for (i = 10; i < 14; i++) {
-    if (!is_valid_hex(s[i])) return CO_E_CLASSSTRING;
-    id->Data2 = (id->Data2 << 4) | table[s[i]];
-  }
-  if (s[14]!='-') return CO_E_CLASSSTRING;
-
-  id->Data3 = 0;
-  for (i = 15; i < 19; i++) {
-    if (!is_valid_hex(s[i])) return CO_E_CLASSSTRING;
-    id->Data3 = (id->Data3 << 4) | table[s[i]];
-  }
-  if (s[19]!='-') return CO_E_CLASSSTRING;
-
-  for (i = 20; i < 37; i+=2) {
-    if (i == 24) {
-      if (s[i]!='-') return CO_E_CLASSSTRING;
-      i++;
-    }
-    if (!is_valid_hex(s[i]) || !is_valid_hex(s[i+1])) return CO_E_CLASSSTRING;
-    id->Data4[(i-20)/2] = table[s[i]] << 4 | table[s[i+1]];
-  }
-
-  if (s[37] == '}' && s[38] == '\0')
-    return S_OK;
-
-  return CO_E_CLASSSTRING;
-}
-
-/*****************************************************************************/
-
 HRESULT WINAPI CLSIDFromString(LPCOLESTR idstr, LPCLSID id )
 {
-    HRESULT ret;
+    HRESULT ret = CO_E_CLASSSTRING;
+    CLSID tmp_id;
 
     if (!id)
         return E_INVALIDARG;
 
-    ret = __CLSIDFromString(idstr, id);
-    if(ret != S_OK) { /* It appears a ProgID is also valid */
-        CLSID tmp_id;
-        ret = CLSIDFromProgID(idstr, &tmp_id);
-        if(SUCCEEDED(ret))
-            *id = tmp_id;
-    }
+    if (guid_from_string(idstr, id))
+        return S_OK;
+
+    /* It appears a ProgID is also valid */
+    ret = clsid_from_string_reg(idstr, &tmp_id);
+    if(SUCCEEDED(ret))
+        *id = tmp_id;
+
     return ret;
 }
 
+/******************************************************************************
+ *		IIDFromString   [OLE32.@]
+ *
+ * Converts a interface identifier from its string representation into
+ * the IID struct.
+ *
+ * PARAMS
+ *  idstr [I] The string representation of the GUID.
+ *  id    [O] IID converted from the string.
+ *
+ * RETURNS
+ *   S_OK on success
+ *   CO_E_IIDSTRING if idstr is not a valid IID
+ *
+ * SEE ALSO
+ *  StringFromIID
+ */
+HRESULT WINAPI IIDFromString(LPCOLESTR s, IID *iid)
+{
+  TRACE("%s -> %p\n", debugstr_w(s), iid);
+
+  if (!s)
+  {
+      memset(iid, 0, sizeof(*iid));
+      return S_OK;
+  }
+
+  /* length mismatch is a special case */
+  if (strlenW(s) + 1 != CHARS_IN_GUID)
+      return E_INVALIDARG;
+
+  if (s[0] != '{')
+      return CO_E_IIDSTRING;
+
+  return guid_from_string(s, iid) ? S_OK : CO_E_IIDSTRING;
+}
 
 /******************************************************************************
  *		StringFromCLSID	[OLE32.@]
@@ -2003,11 +2255,7 @@ HRESULT WINAPI CLSIDFromString(LPCOLESTR idstr, LPCLSID id )
  */
 HRESULT WINAPI StringFromCLSID(REFCLSID id, LPOLESTR *idstr)
 {
-    HRESULT ret;
-    LPMALLOC mllc;
-
-    if ((ret = CoGetMalloc(0,&mllc))) return ret;
-    if (!(*idstr = IMalloc_Alloc( mllc, CHARS_IN_GUID * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+    if (!(*idstr = CoTaskMemAlloc(CHARS_IN_GUID * sizeof(WCHAR)))) return E_OUTOFMEMORY;
     StringFromGUID2( id, *idstr, CHARS_IN_GUID );
     return S_OK;
 }
@@ -2123,20 +2371,39 @@ HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey
  *   E_OUTOFMEMORY
  *   REGDB_E_CLASSNOTREG if the given clsid has no associated ProgID
  */
-HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *ppszProgID)
+HRESULT WINAPI DECLSPEC_HOTPATCH ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *ppszProgID)
 {
     static const WCHAR wszProgID[] = {'P','r','o','g','I','D',0};
+    ACTCTX_SECTION_KEYED_DATA data;
     HKEY     hkey;
     HRESULT  ret;
     LONG progidlen = 0;
 
     if (!ppszProgID)
-    {
-        ERR("ppszProgId isn't optional\n");
         return E_INVALIDARG;
-    }
 
     *ppszProgID = NULL;
+
+    data.cbSize = sizeof(data);
+    if (FindActCtxSectionGuid(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION,
+                              clsid, &data))
+    {
+        struct comclassredirect_data *comclass = (struct comclassredirect_data*)data.lpData;
+        if (comclass->progid_len)
+        {
+            WCHAR *ptrW;
+
+            *ppszProgID = CoTaskMemAlloc(comclass->progid_len + sizeof(WCHAR));
+            if (!*ppszProgID) return E_OUTOFMEMORY;
+
+            ptrW = (WCHAR*)((BYTE*)comclass + comclass->progid_offset);
+            memcpy(*ppszProgID, ptrW, comclass->progid_len + sizeof(WCHAR));
+            return S_OK;
+        }
+        else
+            return REGDB_E_CLASSNOTREG;
+    }
+
     ret = COM_OpenKeyForCLSID(clsid, wszProgID, KEY_READ, &hkey);
     if (FAILED(ret))
         return ret;
@@ -2176,42 +2443,24 @@ HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *ppszProgID)
  *	Success: S_OK
  *  Failure: CO_E_CLASSSTRING - the given ProgID cannot be found.
  */
-HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID clsid)
+HRESULT WINAPI DECLSPEC_HOTPATCH CLSIDFromProgID(LPCOLESTR progid, LPCLSID clsid)
 {
-    static const WCHAR clsidW[] = { '\\','C','L','S','I','D',0 };
-    WCHAR buf2[CHARS_IN_GUID];
-    LONG buf2len = sizeof(buf2);
-    HKEY xhkey;
-    WCHAR *buf;
+    ACTCTX_SECTION_KEYED_DATA data;
 
     if (!progid || !clsid)
-    {
-        ERR("neither progid (%p) nor clsid (%p) are optional\n", progid, clsid);
         return E_INVALIDARG;
-    }
 
-    /* initialise clsid in case of failure */
-    memset(clsid, 0, sizeof(*clsid));
-
-    buf = HeapAlloc( GetProcessHeap(),0,(strlenW(progid)+8) * sizeof(WCHAR) );
-    strcpyW( buf, progid );
-    strcatW( buf, clsidW );
-    if (open_classes_key(HKEY_CLASSES_ROOT, buf, MAXIMUM_ALLOWED, &xhkey))
+    data.cbSize = sizeof(data);
+    if (FindActCtxSectionStringW(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_PROGID_REDIRECTION,
+                                 progid, &data))
     {
-        HeapFree(GetProcessHeap(),0,buf);
-        WARN("couldn't open key for ProgID %s\n", debugstr_w(progid));
-        return CO_E_CLASSSTRING;
+        struct progidredirect_data *progiddata = (struct progidredirect_data*)data.lpData;
+        CLSID *alias = (CLSID*)((BYTE*)data.lpSectionBase + progiddata->clsid_offset);
+        *clsid = *alias;
+        return S_OK;
     }
-    HeapFree(GetProcessHeap(),0,buf);
 
-    if (RegQueryValueW(xhkey,NULL,buf2,&buf2len))
-    {
-        RegCloseKey(xhkey);
-        WARN("couldn't query clsid value for ProgID %s\n", debugstr_w(progid));
-        return CO_E_CLASSSTRING;
-    }
-    RegCloseKey(xhkey);
-    return __CLSIDFromString(buf2,clsid);
+    return clsid_from_string_reg(progid, clsid);
 }
 
 /******************************************************************************
@@ -2270,6 +2519,7 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
     HKEY hkey;
     APARTMENT *apt = COM_CurrentApt();
     struct registered_psclsid *registered_psclsid;
+    ACTCTX_SECTION_KEYED_DATA data;
 
     TRACE("() riid=%s, pclsid=%p\n", debugstr_guid(riid), pclsid);
 
@@ -2280,10 +2530,7 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
     }
 
     if (!pclsid)
-    {
-        ERR("pclsid isn't optional\n");
         return E_INVALIDARG;
-    }
 
     EnterCriticalSection(&apt->cs);
 
@@ -2296,6 +2543,15 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
         }
 
     LeaveCriticalSection(&apt->cs);
+
+    data.cbSize = sizeof(data);
+    if (FindActCtxSectionGuid(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_INTERFACE_REDIRECTION,
+                              riid, &data))
+    {
+        struct ifacepsredirect_data *ifaceps = (struct ifacepsredirect_data*)data.lpData;
+        *pclsid = ifaceps->iid;
+        return S_OK;
+    }
 
     /* Interface\\{string form of riid}\\ProxyStubClsid32 */
     strcpyW(path, wszInterface);
@@ -2561,19 +2817,36 @@ HRESULT WINAPI CoRegisterClassObject(
   return S_OK;
 }
 
-static void get_threading_model(HKEY key, LPWSTR value, DWORD len)
+static enum comclass_threadingmodel get_threading_model(const struct class_reg_data *data)
 {
-    static const WCHAR wszThreadingModel[] = {'T','h','r','e','a','d','i','n','g','M','o','d','e','l',0};
-    DWORD keytype;
-    DWORD ret;
-    DWORD dwLength = len * sizeof(WCHAR);
+    if (data->hkey)
+    {
+        static const WCHAR wszThreadingModel[] = {'T','h','r','e','a','d','i','n','g','M','o','d','e','l',0};
+        static const WCHAR wszApartment[] = {'A','p','a','r','t','m','e','n','t',0};
+        static const WCHAR wszFree[] = {'F','r','e','e',0};
+        static const WCHAR wszBoth[] = {'B','o','t','h',0};
+        WCHAR threading_model[10 /* strlenW(L"apartment")+1 */];
+        DWORD dwLength = sizeof(threading_model);
+        DWORD keytype;
+        DWORD ret;
 
-    ret = RegQueryValueExW(key, wszThreadingModel, NULL, &keytype, (LPBYTE)value, &dwLength);
-    if ((ret != ERROR_SUCCESS) || (keytype != REG_SZ))
-        value[0] = '\0';
+        ret = RegQueryValueExW(data->u.hkey, wszThreadingModel, NULL, &keytype, (BYTE*)threading_model, &dwLength);
+        if ((ret != ERROR_SUCCESS) || (keytype != REG_SZ))
+            threading_model[0] = '\0';
+
+        if (!strcmpiW(threading_model, wszApartment)) return ThreadingModel_Apartment;
+        if (!strcmpiW(threading_model, wszFree)) return ThreadingModel_Free;
+        if (!strcmpiW(threading_model, wszBoth)) return ThreadingModel_Both;
+
+        /* there's not specific handling for this case */
+        if (threading_model[0]) return ThreadingModel_Neutral;
+        return ThreadingModel_No;
+    }
+    else
+        return data->u.actctx.data->model;
 }
 
-static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll,
+static HRESULT get_inproc_class_object(APARTMENT *apt, const struct class_reg_data *regdata,
                                        REFCLSID rclsid, REFIID riid,
                                        BOOL hostifnecessary, void **ppv)
 {
@@ -2582,37 +2855,30 @@ static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll,
 
     if (hostifnecessary)
     {
-        static const WCHAR wszApartment[] = {'A','p','a','r','t','m','e','n','t',0};
-        static const WCHAR wszFree[] = {'F','r','e','e',0};
-        static const WCHAR wszBoth[] = {'B','o','t','h',0};
-        WCHAR threading_model[10 /* strlenW(L"apartment")+1 */];
+        enum comclass_threadingmodel model = get_threading_model(regdata);
 
-        get_threading_model(hkeydll, threading_model, ARRAYSIZE(threading_model));
-        /* "Apartment" */
-        if (!strcmpiW(threading_model, wszApartment))
+        if (model == ThreadingModel_Apartment)
         {
             apartment_threaded = TRUE;
             if (apt->multi_threaded)
-                return apartment_hostobject_in_hostapt(apt, FALSE, FALSE, hkeydll, rclsid, riid, ppv);
+                return apartment_hostobject_in_hostapt(apt, FALSE, FALSE, regdata, rclsid, riid, ppv);
         }
-        /* "Free" */
-        else if (!strcmpiW(threading_model, wszFree))
+        else if (model == ThreadingModel_Free)
         {
             apartment_threaded = FALSE;
             if (!apt->multi_threaded)
-                return apartment_hostobject_in_hostapt(apt, TRUE, FALSE, hkeydll, rclsid, riid, ppv);
+                return apartment_hostobject_in_hostapt(apt, TRUE, FALSE, regdata, rclsid, riid, ppv);
         }
         /* everything except "Apartment", "Free" and "Both" */
-        else if (strcmpiW(threading_model, wszBoth))
+        else if (model != ThreadingModel_Both)
         {
             apartment_threaded = TRUE;
             /* everything else is main-threaded */
-            if (threading_model[0])
-                FIXME("unrecognised threading model %s for object %s, should be main-threaded?\n",
-                    debugstr_w(threading_model), debugstr_guid(rclsid));
+            if (model != ThreadingModel_No)
+                FIXME("unrecognised threading model %d for object %s, should be main-threaded?\n", model, debugstr_guid(rclsid));
 
             if (apt->multi_threaded || !apt->main)
-                return apartment_hostobject_in_hostapt(apt, FALSE, TRUE, hkeydll, rclsid, riid, ppv);
+                return apartment_hostobject_in_hostapt(apt, FALSE, TRUE, regdata, rclsid, riid, ppv);
         }
         else
             apartment_threaded = FALSE;
@@ -2620,7 +2886,7 @@ static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll,
     else
         apartment_threaded = !apt->multi_threaded;
 
-    if (COM_RegReadPath(hkeydll, dllpath, ARRAYSIZE(dllpath)) != ERROR_SUCCESS)
+    if (COM_RegReadPath(regdata, dllpath, ARRAYSIZE(dllpath)) != ERROR_SUCCESS)
     {
         /* failure: CLSID is not found in registry */
         WARN("class %s not registered inproc\n", debugstr_guid(rclsid));
@@ -2657,11 +2923,12 @@ static HRESULT get_inproc_class_object(APARTMENT *apt, HKEY hkeydll,
  * SEE ALSO
  *  CoCreateInstance()
  */
-HRESULT WINAPI CoGetClassObject(
+HRESULT WINAPI DECLSPEC_HOTPATCH CoGetClassObject(
     REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO *pServerInfo,
     REFIID iid, LPVOID *ppv)
 {
-    LPUNKNOWN	regClassObject;
+    struct class_reg_data clsreg;
+    IUnknown *regClassObject;
     HRESULT	hres = E_UNEXPECTED;
     APARTMENT  *apt;
     BOOL release_apt = FALSE;
@@ -2686,6 +2953,39 @@ HRESULT WINAPI CoGetClassObject(
     if (pServerInfo) {
 	FIXME("pServerInfo->name=%s pAuthInfo=%p\n",
               debugstr_w(pServerInfo->pwszName), pServerInfo->pAuthInfo);
+    }
+
+    if (CLSCTX_INPROC_SERVER & dwClsContext)
+    {
+        if (IsEqualCLSID(rclsid, &CLSID_InProcFreeMarshaler))
+        {
+            if (release_apt) apartment_release(apt);
+            return FTMarshalCF_Create(iid, ppv);
+        }
+    }
+
+    if (CLSCTX_INPROC & dwClsContext)
+    {
+        ACTCTX_SECTION_KEYED_DATA data;
+
+        data.cbSize = sizeof(data);
+        /* search activation context first */
+        if (FindActCtxSectionGuid(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX, NULL,
+                                  ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION,
+                                  rclsid, &data))
+        {
+            struct comclassredirect_data *comclass = (struct comclassredirect_data*)data.lpData;
+
+            clsreg.u.actctx.hactctx = data.hActCtx;
+            clsreg.u.actctx.data = data.lpData;
+            clsreg.u.actctx.section = data.lpSectionBase;
+            clsreg.hkey = FALSE;
+
+            hres = get_inproc_class_object(apt, &clsreg, &comclass->clsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
+            ReleaseActCtx(data.hActCtx);
+            if (release_apt) apartment_release(apt);
+            return hres;
+        }
     }
 
     /*
@@ -2714,12 +3014,6 @@ HRESULT WINAPI CoGetClassObject(
         static const WCHAR wszInprocServer32[] = {'I','n','p','r','o','c','S','e','r','v','e','r','3','2',0};
         HKEY hkey;
 
-        if (IsEqualCLSID(rclsid, &CLSID_InProcFreeMarshaler))
-        {
-            if (release_apt) apartment_release(apt);
-            return FTMarshalCF_Create(iid, ppv);
-        }
-
         hres = COM_OpenKeyForCLSID(rclsid, wszInprocServer32, KEY_READ, &hkey);
         if (FAILED(hres))
         {
@@ -2734,8 +3028,10 @@ HRESULT WINAPI CoGetClassObject(
 
         if (SUCCEEDED(hres))
         {
-            hres = get_inproc_class_object(apt, hkey, rclsid, iid,
-                !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
+            clsreg.u.hkey = hkey;
+            clsreg.hkey = TRUE;
+
+            hres = get_inproc_class_object(apt, &clsreg, rclsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
             RegCloseKey(hkey);
         }
 
@@ -2768,8 +3064,10 @@ HRESULT WINAPI CoGetClassObject(
 
         if (SUCCEEDED(hres))
         {
-            hres = get_inproc_class_object(apt, hkey, rclsid, iid,
-                !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
+            clsreg.u.hkey = hkey;
+            clsreg.hkey = TRUE;
+
+            hres = get_inproc_class_object(apt, &clsreg, rclsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
             RegCloseKey(hkey);
         }
 
@@ -2850,7 +3148,7 @@ HRESULT WINAPI CoResumeClassObjects(void)
  * SEE ALSO
  *  CoGetClassObject()
  */
-HRESULT WINAPI CoCreateInstance(
+HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstance(
     REFCLSID rclsid,
     LPUNKNOWN pUnkOuter,
     DWORD dwClsContext,
@@ -2925,10 +3223,40 @@ HRESULT WINAPI CoCreateInstance(
     return hres;
 }
 
+static void init_multi_qi(DWORD count, MULTI_QI *mqi)
+{
+  ULONG i;
+
+  for (i = 0; i < count; i++)
+  {
+      mqi[i].pItf = NULL;
+      mqi[i].hr = E_NOINTERFACE;
+  }
+}
+
+static HRESULT return_multi_qi(IUnknown *unk, DWORD count, MULTI_QI *mqi)
+{
+  ULONG index, fetched = 0;
+
+  for (index = 0; index < count; index++)
+  {
+    mqi[index].hr = IUnknown_QueryInterface(unk, mqi[index].pIID, (void**)&mqi[index].pItf);
+    if (mqi[index].hr == S_OK)
+      fetched++;
+  }
+
+  IUnknown_Release(unk);
+
+  if (fetched == 0)
+    return E_NOINTERFACE;
+
+  return fetched == count ? S_OK : CO_S_NOTALLINTERFACES;
+}
+
 /***********************************************************************
  *           CoCreateInstanceEx [OLE32.@]
  */
-HRESULT WINAPI CoCreateInstanceEx(
+HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstanceEx(
   REFCLSID      rclsid,
   LPUNKNOWN     pUnkOuter,
   DWORD         dwClsContext,
@@ -2938,8 +3266,6 @@ HRESULT WINAPI CoCreateInstanceEx(
 {
   IUnknown* pUnk = NULL;
   HRESULT   hr;
-  ULONG     index;
-  ULONG     successCount = 0;
 
   /*
    * Sanity check
@@ -2950,14 +3276,7 @@ HRESULT WINAPI CoCreateInstanceEx(
   if (pServerInfo!=NULL)
     FIXME("() non-NULL pServerInfo not supported!\n");
 
-  /*
-   * Initialize all the "out" parameters.
-   */
-  for (index = 0; index < cmq; index++)
-  {
-    pResults[index].pItf = NULL;
-    pResults[index].hr   = E_NOINTERFACE;
-  }
+  init_multi_qi(cmq, pResults);
 
   /*
    * Get the object and get its IUnknown pointer.
@@ -2971,31 +3290,133 @@ HRESULT WINAPI CoCreateInstanceEx(
   if (hr != S_OK)
     return hr;
 
-  /*
-   * Then, query for all the interfaces requested.
-   */
-  for (index = 0; index < cmq; index++)
-  {
-    pResults[index].hr = IUnknown_QueryInterface(pUnk,
-						 pResults[index].pIID,
-						 (VOID**)&(pResults[index].pItf));
+  return return_multi_qi(pUnk, cmq, pResults);
+}
 
-    if (pResults[index].hr == S_OK)
-      successCount++;
+/***********************************************************************
+ *           CoGetInstanceFromFile [OLE32.@]
+ */
+HRESULT WINAPI CoGetInstanceFromFile(
+  COSERVERINFO *server_info,
+  CLSID        *rclsid,
+  IUnknown     *outer,
+  DWORD         cls_context,
+  DWORD         grfmode,
+  OLECHAR      *filename,
+  DWORD         count,
+  MULTI_QI     *results
+)
+{
+  IPersistFile *pf = NULL;
+  IUnknown* unk = NULL;
+  CLSID clsid;
+  HRESULT hr;
+
+  if (count == 0 || !results)
+    return E_INVALIDARG;
+
+  if (server_info)
+    FIXME("() non-NULL server_info not supported\n");
+
+  init_multi_qi(count, results);
+
+  /* optionaly get CLSID from a file */
+  if (!rclsid)
+  {
+    hr = GetClassFile(filename, &clsid);
+    if (FAILED(hr))
+    {
+      ERR("failed to get CLSID from a file\n");
+      return hr;
+    }
+
+    rclsid = &clsid;
   }
 
-  /*
-   * Release our temporary unknown pointer.
-   */
-  IUnknown_Release(pUnk);
+  hr = CoCreateInstance(rclsid,
+			outer,
+			cls_context,
+			&IID_IUnknown,
+			(void**)&unk);
 
-  if (successCount == 0)
-    return E_NOINTERFACE;
+  if (hr != S_OK)
+    return hr;
 
-  if (successCount!=cmq)
-    return CO_S_NOTALLINTERFACES;
+  /* init from file */
+  hr = IUnknown_QueryInterface(unk, &IID_IPersistFile, (void**)&pf);
+  if (FAILED(hr))
+      ERR("failed to get IPersistFile\n");
 
-  return S_OK;
+  if (pf)
+  {
+      IPersistFile_Load(pf, filename, grfmode);
+      IPersistFile_Release(pf);
+  }
+
+  return return_multi_qi(unk, count, results);
+}
+
+/***********************************************************************
+ *           CoGetInstanceFromIStorage [OLE32.@]
+ */
+HRESULT WINAPI CoGetInstanceFromIStorage(
+  COSERVERINFO *server_info,
+  CLSID        *rclsid,
+  IUnknown     *outer,
+  DWORD         cls_context,
+  IStorage     *storage,
+  DWORD         count,
+  MULTI_QI     *results
+)
+{
+  IPersistStorage *ps = NULL;
+  IUnknown* unk = NULL;
+  STATSTG stat;
+  HRESULT hr;
+
+  if (count == 0 || !results || !storage)
+    return E_INVALIDARG;
+
+  if (server_info)
+    FIXME("() non-NULL server_info not supported\n");
+
+  init_multi_qi(count, results);
+
+  /* optionaly get CLSID from a file */
+  if (!rclsid)
+  {
+    memset(&stat.clsid, 0, sizeof(stat.clsid));
+    hr = IStorage_Stat(storage, &stat, STATFLAG_NONAME);
+    if (FAILED(hr))
+    {
+      ERR("failed to get CLSID from a file\n");
+      return hr;
+    }
+
+    rclsid = &stat.clsid;
+  }
+
+  hr = CoCreateInstance(rclsid,
+			outer,
+			cls_context,
+			&IID_IUnknown,
+			(void**)&unk);
+
+  if (hr != S_OK)
+    return hr;
+
+  /* init from IStorage */
+  hr = IUnknown_QueryInterface(unk, &IID_IPersistStorage, (void**)&ps);
+  if (FAILED(hr))
+      ERR("failed to get IPersistStorage\n");
+
+  if (ps)
+  {
+      IPersistStorage_Load(ps, storage);
+      IPersistStorage_Release(ps);
+  }
+
+  return return_multi_qi(unk, count, results);
 }
 
 /***********************************************************************
@@ -3074,7 +3495,7 @@ void WINAPI CoFreeAllLibraries(void)
  * SEE ALSO
  *  CoLoadLibrary, CoFreeAllLibraries, CoFreeLibrary
  */
-void WINAPI CoFreeUnusedLibrariesEx(DWORD dwUnloadDelay, DWORD dwReserved)
+void WINAPI DECLSPEC_HOTPATCH CoFreeUnusedLibrariesEx(DWORD dwUnloadDelay, DWORD dwReserved)
 {
     struct apartment *apt = COM_CurrentApt();
     if (!apt)
@@ -3098,7 +3519,7 @@ void WINAPI CoFreeUnusedLibrariesEx(DWORD dwUnloadDelay, DWORD dwReserved)
  * SEE ALSO
  *  CoLoadLibrary, CoFreeAllLibraries, CoFreeLibrary
  */
-void WINAPI CoFreeUnusedLibraries(void)
+void WINAPI DECLSPEC_HOTPATCH CoFreeUnusedLibraries(void)
 {
     CoFreeUnusedLibrariesEx(INFINITE, 0);
 }
@@ -4532,9 +4953,13 @@ HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     hres = COM_OpenKeyForCLSID(rclsid, wszInprocHandler32, KEY_READ, &hkey);
     if (SUCCEEDED(hres))
     {
+        struct class_reg_data regdata;
         WCHAR dllpath[MAX_PATH+1];
 
-        if (COM_RegReadPath(hkey, dllpath, ARRAYSIZE(dllpath)) == ERROR_SUCCESS)
+        regdata.u.hkey = hkey;
+        regdata.hkey = TRUE;
+
+        if (COM_RegReadPath(&regdata, dllpath, ARRAYSIZE(dllpath)) == ERROR_SUCCESS)
         {
             static const WCHAR wszOle32[] = {'o','l','e','3','2','.','d','l','l',0};
             if (!strcmpiW(dllpath, wszOle32))

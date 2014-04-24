@@ -1375,8 +1375,8 @@ static HRESULT PropertyStorage_ReadFromStream(PropertyStorage_impl *This)
         goto end;
     }
     /* wackiness alert: if the format ID is FMTID_DocSummaryInformation, there
-     * follow not one, but two sections.  The first is the standard properties
-     * for the document summary information, and the second is user-defined
+     * follows not one, but two sections.  The first contains the standard properties
+     * for the document summary information, and the second consists of user-defined
      * properties.  This is the only case in which multiple sections are
      * allowed.
      * Reading the second stream isn't implemented yet.
@@ -2746,7 +2746,7 @@ BOOLEAN WINAPI StgConvertPropertyToVariant(const SERIALIZEDPROPERTYVALUE* prop,
         PropVariantInit(pvar);
     }
 
-    return 0;
+    return FALSE;
 }
 
 SERIALIZEDPROPERTYVALUE* WINAPI StgConvertVariantToProperty(const PROPVARIANT *pvar,

@@ -19,6 +19,9 @@
 /* see the official DCOM specification
  * (there's a copy at http://www.grimes.demon.co.uk/DCOM/DCOMSpec.htm) */
 
+#pragma makedep proxy
+#pragma makedep register
+
 import "unknwn.idl";
 
 [
