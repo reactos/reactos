@@ -38,7 +38,7 @@ extern HINSTANCE shlwapi_hInstance;
 extern DWORD SHLWAPI_ThreadRef_index;
 
 HRESULT WINAPI IUnknown_QueryService(IUnknown*,REFGUID,REFIID,LPVOID*);
-HRESULT WINAPI SHInvokeCommand(HWND,IShellFolder*,LPCITEMIDLIST,BOOL);
+HRESULT WINAPI SHInvokeCommand(HWND,IShellFolder*,LPCITEMIDLIST,DWORD);
 BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
 
 /*
@@ -2911,7 +2911,7 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
 HRESULT WINAPI SHInvokeDefaultCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl)
 {
     TRACE("%p %p %p\n", hWnd, lpFolder, lpApidl);
-    return SHInvokeCommand(hWnd, lpFolder, lpApidl, FALSE);
+    return SHInvokeCommand(hWnd, lpFolder, lpApidl, 0);
 }
 
 /*************************************************************************
@@ -3459,19 +3459,19 @@ UINT WINAPI SHDefExtractIconWrapW(LPCWSTR pszIconFile, int iIndex, UINT uFlags, 
  *  hWnd           [I] Window displaying the shell folder
  *  lpFolder       [I] IShellFolder interface
  *  lpApidl        [I] Id for the particular folder desired
- *  bInvokeDefault [I] Whether to invoke the default menu item
+ *  dwCommandId    [I] The command ID to invoke (0=invoke default)
  *
  * RETURNS
  *  Success: S_OK. If bInvokeDefault is TRUE, the default menu action was
  *           executed.
  *  Failure: An HRESULT error code indicating the error.
  */
-HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, BOOL bInvokeDefault)
+HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, DWORD dwCommandId)
 {
   IContextMenu *iContext;
   HRESULT hRet;
 
-  TRACE("(%p, %p, %p, %d)\n", hWnd, lpFolder, lpApidl, bInvokeDefault);
+  TRACE("(%p, %p, %p, %u)\n", hWnd, lpFolder, lpApidl, dwCommandId);
 
   if (!lpFolder)
     return E_FAIL;
@@ -3485,16 +3485,16 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
     if ((hMenu = CreatePopupMenu()))
     {
       HRESULT hQuery;
-      DWORD dwDefaultId = 0;
 
       /* Add the context menu entries to the popup */
       hQuery = IContextMenu_QueryContextMenu(iContext, hMenu, 0, 1, 0x7FFF,
-                                             bInvokeDefault ? CMF_NORMAL : CMF_DEFAULTONLY);
+                                             dwCommandId ? CMF_NORMAL : CMF_DEFAULTONLY);
 
       if (SUCCEEDED(hQuery))
       {
-        if (bInvokeDefault &&
-            (dwDefaultId = GetMenuDefaultItem(hMenu, 0, 0)) != (UINT)-1)
+        if (!dwCommandId)
+          dwCommandId = GetMenuDefaultItem(hMenu, 0, 0);
+        if (dwCommandId != (UINT)-1)
         {
           CMINVOKECOMMANDINFO cmIci;
           /* Invoke the default item */
@@ -3502,8 +3502,8 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
           cmIci.cbSize = sizeof(cmIci);
           cmIci.fMask = CMIC_MASK_ASYNCOK;
           cmIci.hwnd = hWnd;
-          cmIci.lpVerb = MAKEINTRESOURCEA(dwDefaultId);
-          cmIci.nShow = SW_SCROLLCHILDREN;
+          cmIci.lpVerb = MAKEINTRESOURCEA(dwCommandId);
+          cmIci.nShow = SW_SHOWNORMAL;
 
           hRet = IContextMenu_InvokeCommand(iContext, &cmIci);
         }
