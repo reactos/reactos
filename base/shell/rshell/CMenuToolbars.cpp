@@ -816,13 +816,6 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
 
     INT iItem = (INT)wParam;
 
-    return ExecuteItem(iItem);
-}
-
-HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)
-{
-    m_menuBand->_KillPopupTimers();
-
     if (PopupItem(iItem) == S_OK)
     {
         TRACE("PopupItem returned S_OK\n");
@@ -831,10 +824,12 @@ HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)
 
     TRACE("Executing...\n");
 
-    HRESULT hr = m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
+    return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
+}
 
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)
+{
+    m_menuBand->_KillPopupTimers();
 
     INT index;
     DWORD_PTR data;
