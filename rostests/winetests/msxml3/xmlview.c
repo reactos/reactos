@@ -249,9 +249,9 @@ static void test_Load(void)
     IBindCtx_Release(bctx);
     IMoniker_Release(mon);
 
-    while(!loaded && GetMessage(&msg, NULL, 0, 0)) {
+    while(!loaded && GetMessageA(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageA(&msg);
     }
 
     hres = IHTMLDocument2_get_body(html_doc, &elem);

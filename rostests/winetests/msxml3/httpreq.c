@@ -57,6 +57,8 @@ static void _expect_ref(IUnknown* obj, ULONG ref, int line)
 DEFINE_GUID(SID_SContainerDispatch, 0xb722be00, 0x4e68, 0x101b, 0xa2, 0xbc, 0x00, 0xaa, 0x00, 0x40, 0x47, 0x70);
 DEFINE_GUID(SID_UnknownSID, 0x75dd09cb, 0x6c40, 0x11d5, 0x85, 0x43, 0x00, 0xc0, 0x4f, 0xa0, 0xfb, 0xa3);
 
+static BOOL g_enablecallchecks;
+
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
 
@@ -65,7 +67,8 @@ DEFINE_GUID(SID_UnknownSID, 0x75dd09cb, 0x6c40, 0x11d5, 0x85, 0x43, 0x00, 0xc0, 
 
 #define CHECK_EXPECT2(func) \
     do { \
-        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        if (g_enablecallchecks) \
+            ok(expect_ ##func, "unexpected call " #func "\n"); \
         called_ ## func = TRUE; \
     }while(0)
 
@@ -89,21 +92,6 @@ DEFINE_EXPECT(sp_queryservice_SID_secmgr_secmgr);
 DEFINE_EXPECT(htmldoc2_get_all);
 DEFINE_EXPECT(htmldoc2_get_url);
 DEFINE_EXPECT(collection_get_length);
-
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    if(!riid)
-        return "(null)";
-
-    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
 
 static int g_unexpectedcall, g_expectedcall;
 
@@ -1102,7 +1090,7 @@ static HRESULT WINAPI sp_QueryInterface(IServiceProvider *iface, REFIID riid, vo
         return S_OK;
     }
 
-    ok(0, "unexpected query interface: %s\n", debugstr_guid(riid));
+    ok(0, "unexpected query interface: %s\n", wine_dbgstr_guid(riid));
 
     return E_NOINTERFACE;
 }
@@ -1153,8 +1141,15 @@ static HRESULT WINAPI sp_QueryService(IServiceProvider *iface, REFGUID service, 
     {
         /* FIXME: unidentified service id */
     }
+    else if ((IsEqualGUID(service, &IID_IInternetProtocol) && IsEqualGUID(riid, &IID_IInternetProtocol)) ||
+             (IsEqualGUID(service, &IID_IHttpNegotiate2) && IsEqualGUID(riid, &IID_IHttpNegotiate2)) ||
+             (IsEqualGUID(service, &IID_IGetBindHandle) && IsEqualGUID(riid, &IID_IGetBindHandle)) ||
+             (IsEqualGUID(service, &IID_IBindStatusCallback) && IsEqualGUID(riid, &IID_IBindStatusCallback)) ||
+             (IsEqualGUID(service, &IID_IWindowForBindingUI) && IsEqualGUID(riid, &IID_IWindowForBindingUI)))
+    {
+    }
     else
-        ok(0, "unexpected request: sid %s, riid %s\n", debugstr_guid(service), debugstr_guid(riid));
+        ok(0, "unexpected request: sid %s, riid %s\n", wine_dbgstr_guid(service), wine_dbgstr_guid(riid));
 
     return E_NOTIMPL;
 }
@@ -1371,6 +1366,8 @@ static void set_xhr_site(IXMLHttpRequest *xhr)
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site);
     ok(hr == S_OK, "Could not get IObjectWithSite iface: %08x\n", hr);
 
+    g_enablecallchecks = TRUE;
+
     SET_EXPECT(site_qi_IServiceProvider);
     SET_EXPECT(sp_queryservice_SID_SBindHost);
     SET_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
@@ -1393,19 +1390,23 @@ static void set_xhr_site(IXMLHttpRequest *xhr)
 todo_wine
     CHECK_CALLED(sp_queryservice_SID_SBindHost);
     CHECK_CALLED(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-todo_wine {
     CHECK_CALLED(sp_queryservice_SID_secmgr_htmldoc2);
+todo_wine
     CHECK_CALLED(sp_queryservice_SID_secmgr_xmldomdoc);
     /* this one isn't very reliable
     CHECK_CALLED(sp_queryservice_SID_secmgr_secmgr); */
-
+todo_wine {
     CHECK_CALLED(htmldoc2_get_all);
     CHECK_CALLED(collection_get_length);
+}
     CHECK_CALLED(htmldoc2_get_url);
 
+todo_wine {
     CHECK_CALLED(site_qi_IXMLDOMDocument);
     CHECK_CALLED(site_qi_IOleClientSite);
 }
+
+    g_enablecallchecks = FALSE;
 
     IObjectWithSite_Release(obj_site);
 }
@@ -1427,10 +1428,12 @@ static void _test_open(unsigned line, IXMLHttpRequest *xhr, const char *method, 
 static void test_XMLHTTP(void)
 {
     static const char bodyA[] = "mode=Test";
-    static const char urlA[] = "http://crossover.codeweavers.com/posttest.php";
-    static const char xmltestA[] = "http://crossover.codeweavers.com/xmltest.xml";
+    static const char urlA[] = "http://test.winehq.org/tests/post.php";
+    static const char xmltestA[] = "http://test.winehq.org/tests/xmltest.xml";
+    static const char referertesturl[] = "http://test.winehq.org/tests/referer.php";
     static const WCHAR wszExpectedResponse[] = {'F','A','I','L','E','D',0};
     static const CHAR xmltestbodyA[] = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<a>TEST</a>\n";
+    static const WCHAR norefererW[] = {'n','o',' ','r','e','f','e','r','e','r',' ','s','e','t',0};
 
     IXMLHttpRequest *xhr;
     IObjectWithSite *obj_site, *obj_site2;
@@ -1562,7 +1565,7 @@ static void test_XMLHTTP(void)
     hr = IXMLHttpRequest_send(xhr, varbody);
     if (hr == INET_E_RESOURCE_NOT_FOUND)
     {
-        skip("No connection could be made with crossover.codeweavers.com\n");
+        skip("No connection could be made with test.winehq.org\n");
         IXMLHttpRequest_Release(xhr);
         return;
     }
@@ -1639,7 +1642,7 @@ static void test_XMLHTTP(void)
     hr = IXMLHttpRequest_send(xhr, varbody);
     if (hr == INET_E_RESOURCE_NOT_FOUND)
     {
-        skip("No connection could be made with crossover.codeweavers.com\n");
+        skip("No connection could be made with test.winehq.org\n");
         IXMLHttpRequest_Release(xhr);
         return;
     }
@@ -1692,6 +1695,17 @@ static void test_XMLHTTP(void)
 
     IDispatch_Release(event);
 
+    /* test if referrer header is sent */
+    test_open(xhr, "GET", referertesturl, S_OK);
+
+    V_VT(&varbody) = VT_EMPTY;
+    hr = IXMLHttpRequest_send(xhr, varbody);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IXMLHttpRequest_get_responseText(xhr, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(str, norefererW), "got response text %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
     /* interaction with object site */
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site);
     EXPECT_HR(hr, S_OK);
@@ -1706,10 +1720,20 @@ static void test_XMLHTTP(void)
 
     set_xhr_site(xhr);
 
-    /* try to set site another time */
-    SET_EXPECT(site_qi_IServiceProvider);
-    SET_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
+    test_open(xhr, "GET", "tests/referer.php", S_OK);
+    str1 = a2bstr("http://test.winehq.org/");
 
+    V_VT(&varbody) = VT_EMPTY;
+    hr = IXMLHttpRequest_send(xhr, varbody);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXMLHttpRequest_get_responseText(xhr, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(str, str1), "got response text %s, expected %s\n", wine_dbgstr_w(str), wine_dbgstr_w(str1));
+    SysFreeString(str);
+    SysFreeString(str1);
+
+    /* try to set site another time */
     hr = IObjectWithSite_SetSite(obj_site, &testsite);
     EXPECT_HR(hr, S_OK);
 

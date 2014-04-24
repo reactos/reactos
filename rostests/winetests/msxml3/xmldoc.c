@@ -43,8 +43,8 @@
 static void create_xml_file(LPCSTR filename)
 {
     DWORD dwNumberOfBytesWritten;
-    HANDLE hf = CreateFile(filename, GENERIC_WRITE, 0, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     static const char data[] =
         "<?xml version=\"1.0\" ?>\n"
@@ -66,8 +66,8 @@ static void create_stream_on_file(IStream **stream, LPCSTR path)
     HRESULT hr;
     DWORD file_size, read;
 
-    hfile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL,
-                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    hfile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     ok(hfile != INVALID_HANDLE_VALUE, "Expected a valid file handle\n");
     file_size = GetFileSize(hfile, NULL);
 
@@ -732,6 +732,11 @@ static void test_xmlelem_collection(void)
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(unk != NULL, "Expected non-NULL unk\n");
 
+    enumVar = (void *)0xdeadbeef;
+    hr = IUnknown_QueryInterface(unk, &IID_IXMLElementCollection, (LPVOID *)&enumVar);
+    ok(hr == E_NOINTERFACE, "Expected E_NOINTERFACE, got %08x\n", hr);
+    ok(enumVar == NULL || broken(enumVar == (void *)0xdeadbeef) /* XP */, "Expected NULL, got %p\n", enumVar);
+
     hr = IUnknown_QueryInterface(unk, &IID_IEnumVARIANT, (LPVOID *)&enumVar);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(enumVar != NULL, "Expected non-NULL enumVar\n");
@@ -898,7 +903,7 @@ static void test_xmlelem(void)
 
     hr = IXMLElement_get_tagName(element, &str);
     EXPECT_HR(hr, S_OK);
-    ok(lstrlenW(str) == 0, "Expected empty tag name\n");
+    ok(!str, "Expected empty tag name, got %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
     parent = (IXMLElement *)0xdeadbeef;

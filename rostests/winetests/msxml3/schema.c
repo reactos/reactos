@@ -34,6 +34,7 @@
 #include <winnls.h>
 #include <ole2.h>
 #include <msxml2.h>
+#undef CLSID_DOMDocument
 #include <msxml2did.h>
 #include <dispex.h>
 
@@ -1423,6 +1424,7 @@ static void test_validate_on_load(void)
 
 static void test_obj_dispex(IUnknown *obj)
 {
+    static const WCHAR testW[] = {'t','e','s','t','p','r','o','p',0};
     static const WCHAR starW[] = {'*',0};
     DISPID dispid = DISPID_SAX_XMLREADER_GETFEATURE;
     IDispatchEx *dispex;
@@ -1461,9 +1463,15 @@ static void test_obj_dispex(IUnknown *obj)
     hr = IDispatchEx_GetNextDispID(dispex, fdexEnumDefault, DISPID_XMLDOM_SCHEMACOLLECTION_ADD, &dispid);
     EXPECT_HR(hr, E_NOTIMPL);
 
+    unk = (IUnknown*)0xdeadbeef;
     hr = IDispatchEx_GetNameSpaceParent(dispex, &unk);
     EXPECT_HR(hr, E_NOTIMPL);
-    if (hr == S_OK && unk) IUnknown_Release(unk);
+    ok(unk == (IUnknown*)0xdeadbeef, "got %p\n", unk);
+
+    name = SysAllocString(testW);
+    hr = IDispatchEx_GetDispID(dispex, name, fdexNameEnsure, &dispid);
+    ok(hr == DISP_E_UNKNOWNNAME, "got 0x%08x\n", hr);
+    SysFreeString(name);
 
     IDispatchEx_Release(dispex);
 }
@@ -1503,8 +1511,14 @@ static void test_dispex(void)
     ok(V_DISPATCH(&ret) == (void*)0x1, "got %p\n", V_DISPATCH(&ret));
 
     IDispatchEx_Release(dispex);
-
     IXMLDOMSchemaCollection_Release(cache);
+
+    cache = create_cache_version(60, &IID_IXMLDOMSchemaCollection);
+    if (cache)
+    {
+        test_obj_dispex((IUnknown*)cache);
+        IXMLDOMSchemaCollection_Release(cache);
+    }
 }
 
 static void test_get(void)
