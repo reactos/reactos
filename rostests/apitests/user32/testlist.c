@@ -14,6 +14,7 @@ extern void func_GetIconInfo(void);
 extern void func_GetKeyState(void);
 extern void func_GetPeekMessage(void);
 extern void func_GetSystemMetrics(void);
+extern void func_GetUserObjectInformation(void);
 extern void func_InitializeLpkHooks(void);
 extern void func_LoadImage(void);
 extern void func_LookupIconIdFromDirectoryEx(void);
@@ -40,6 +41,7 @@ const struct test winetest_testlist[] =
     { "GetKeyState", func_GetKeyState },
     { "GetPeekMessage", func_GetPeekMessage },
     { "GetSystemMetrics", func_GetSystemMetrics },
+    { "GetUserObjectInformation", func_GetUserObjectInformation },
     { "InitializeLpkHooks", func_InitializeLpkHooks },
     { "LoadImage", func_LoadImage },
     { "LookupIconIdFromDirectoryEx", func_LookupIconIdFromDirectoryEx },
