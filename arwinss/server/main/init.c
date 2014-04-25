@@ -113,14 +113,20 @@ Win32kProcessCallout(PEPROCESS Process,
     PPROCESSINFO Win32Process;
     NTSTATUS Status;
 
-    DPRINT("Enter Win32kProcessCallback\n");
-
     /* Get the Win32 Process */
     Win32Process = PsGetProcessWin32Process(Process);
-    DPRINT("Win32Process %p, Create %d\n", Win32Process, Create);
-    if (Create && !Win32Process)
+    DPRINT("Win32kProcessCallback(): Win32Process %p, Create %d\n", Win32Process, Create);
+    if (Create)
     {
         DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
+
+        /* We might be called with an already allocated win32 process */
+        if (Win32Process)
+        {
+            /* There is no more to do for us (this is a success code!) */
+            Status = STATUS_ALREADY_WIN32;
+            return Status;
+        }
 
         /* Allocate one if needed */
         /* FIXME - lock the process */
@@ -189,7 +195,6 @@ Win32kProcessCallout(PEPROCESS Process,
         UserLeave();
     }
 
-    DPRINT("Leave Win32kProcessCallback\n");
     return STATUS_SUCCESS;
 }
 
