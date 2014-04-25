@@ -28,6 +28,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(menusite);
 extern "C"
 HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
 {
+    HRESULT hr;
 #if USE_SYSTEM_MENUSITE
     hr = CoCreateInstance(CLSID_MenuBandSite,
         NULL,
@@ -41,13 +42,13 @@ HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
     if (!site)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = site->QueryInterface(riid, ppv);
+    hr = site->QueryInterface(riid, ppv);
 
     if (FAILED_UNEXPECTEDLY(hr))
         site->Release();
+#endif
 
     return hr;
-#endif
 }
 
 CMenuSite::CMenuSite() :

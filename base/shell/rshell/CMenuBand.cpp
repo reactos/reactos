@@ -35,6 +35,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 extern "C"
 HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 {
+    HRESULT hr;
 #if USE_SYSTEM_MENUBAND
     hr = CoCreateInstance(CLSID_MenuBand,
         NULL,
@@ -48,13 +49,13 @@ HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
     if (!site)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = site->QueryInterface(riid, ppv);
+    hr = site->QueryInterface(riid, ppv);
 
     if (FAILED_UNEXPECTEDLY(hr))
         site->Release();
+#endif
 
     return hr;
-#endif
 }
 
 CMenuBand::CMenuBand() :
@@ -308,6 +309,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
 
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
     DWORD dwBandID,
     DWORD dwViewMode,
@@ -337,20 +339,20 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetBandInfo(
 
     if (m_dwFlags & SMINIT_VERTICAL)
     {
-        pdbi->ptMinSize.x = max(minStatic.cx, minStatic.cx) + 20;
-        pdbi->ptMinSize.y = minStatic.cy + minStatic.cy;
+        pdbi->ptMinSize.x = max(minStatic.cx, minShlFld.cx) + 20;
+        pdbi->ptMinSize.y = minStatic.cy + minShlFld.cy;
         pdbi->ptMaxSize.x = max(maxStatic.cx, maxShlFld.cx) + 20;
         pdbi->ptMaxSize.y = maxStatic.cy + maxShlFld.cy;
         pdbi->dwModeFlags = DBIMF_VARIABLEHEIGHT;
     }
     else
     {
-        pdbi->ptMinSize.x = minStatic.cx + minStatic.cx;
-        pdbi->ptMinSize.y = max(minStatic.cy, minStatic.cy);
+        pdbi->ptMinSize.x = minStatic.cx + minShlFld.cx;
+        pdbi->ptMinSize.y = max(minStatic.cy, minShlFld.cy);
         pdbi->ptMaxSize.x = maxStatic.cx + maxShlFld.cx;
         pdbi->ptMaxSize.y = max(maxStatic.cy, maxShlFld.cy);
     }
-    pdbi->ptIntegral.x = max(intStatic.cx, intStatic.cx);
+    pdbi->ptIntegral.x = max(intStatic.cx, intShlFld.cx);
     pdbi->ptIntegral.y = max(intStatic.cy, intShlFld.cy);
     pdbi->ptActual = pdbi->ptMinSize;
 
@@ -469,7 +471,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
             {
                 _KeyboardItemChange(VK_HOME);
             }
-            else if (nCmdexecopt == -2) // last
+            else // last
             {
                 _KeyboardItemChange(VK_END);
             }

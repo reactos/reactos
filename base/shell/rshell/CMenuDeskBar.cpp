@@ -30,6 +30,7 @@ const static GUID CGID_MenuDeskBar = { 0x5C9F0A12, 0x959E, 0x11D0, { 0xA3, 0xA4,
 extern "C"
 HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
 {
+    HRESULT hr;
 #if USE_SYSTEM_MENUDESKBAR
     hr = CoCreateInstance(CLSID_MenuDeskBar,
         NULL,
@@ -43,13 +44,13 @@ HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
     if (!deskbar)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = deskbar->QueryInterface(riid, ppv);
+    hr = deskbar->QueryInterface(riid, ppv);
 
     if (FAILED_UNEXPECTEDLY(hr))
         deskbar->Release();
 
-    return hr;
 #endif
+    return hr;
 }
 
 CMenuDeskBar::CMenuDeskBar() :
