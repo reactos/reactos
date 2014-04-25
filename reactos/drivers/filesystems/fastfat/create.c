@@ -550,7 +550,7 @@ VfatCreateFile(
 
     if (!NT_SUCCESS(Status) && ParentFcb == NULL)
     {
-        DPRINT1("VfatOpenFile faild for '%wZ', status %x\n", &PathNameU, Status);
+        DPRINT1("VfatOpenFile failed for '%wZ', status %x\n", &PathNameU, Status);
         return Status;
     }
 
