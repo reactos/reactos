@@ -370,5 +370,12 @@ BOOL WINAPI ClientThreadSetup()
 
 BOOL WINAPI UnregisterUserApiHook(VOID)
 {
+    TRACE(": stub\n");
+    return TRUE;
+}
+
+BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah)
+{
+    TRACE(": stub\n");
     return TRUE;
 }
