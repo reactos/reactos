@@ -1305,11 +1305,10 @@ void CShellBrowser::RepositionBars()
     RECT                                    statusRect;
     RECT                                    toolbarRect;
     int                                     x;
-    HRESULT                                 hResult;
 
     GetClientRect(&clientRect);
 
-    if (fStatusBarVisible)
+    if (fStatusBarVisible && fStatusBar)
     {
         ::GetWindowRect(fStatusBar, &statusRect);
         ::SetWindowPos(fStatusBar, NULL, clientRect.left, clientRect.bottom - (statusRect.bottom - statusRect.top),
@@ -1320,14 +1319,9 @@ void CShellBrowser::RepositionBars()
 
     for (x = 0; x < 3; x++)
     {
-        CComPtr<IOleWindow>                 oleWindow;
-
         if (fClientBars[x].hwnd == NULL && fClientBars[x].clientBar != NULL)
         {
-            hResult = fClientBars[x].clientBar->QueryInterface(
-                IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-            if (SUCCEEDED(hResult))
-                hResult = oleWindow->GetWindow(&fClientBars[x].hwnd);
+            IUnknown_GetWindow(fClientBars[x].clientBar, &fClientBars[x].hwnd);
         }
         if (fClientBars[x].hwnd != NULL)
         {

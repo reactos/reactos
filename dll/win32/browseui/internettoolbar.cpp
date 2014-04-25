@@ -817,7 +817,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetSizeMax(ULARGE_INTEGER *pcbSize)
 HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
 {
     CComPtr<IShellMenu>                     menuBar;
-    //CComPtr<IUnknown>                       logoBar;
+    CComPtr<IUnknown>                       logoBar;
     CComPtr<IUnknown>                       toolsBar;
     CComPtr<IUnknown>                       navigationBar;
     CComPtr<IOleWindow>                     menuOleWindow;
@@ -825,6 +825,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     CComPtr<IOleWindow>                     navigationOleWindow;
     HRESULT                                 hResult;
 
+    /* Create and attach the menubar to the rebar */
     hResult = CreateMenuBar(&menuBar);
     if (FAILED(hResult))
         return hResult;
@@ -835,15 +836,15 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = menuOleWindow->GetWindow(&fMenuBandWindow);
     fMenuBar.Attach(menuBar.Detach());                  // transfer the ref count
 
-    /* FIXME
+    /* Create and attach the brand/logo to the rebar */
     hResult = CreateBrandBand(&logoBar);
     if (FAILED(hResult))
         return hResult;
     AddDockItem(logoBar, ITBBID_BRANDBAND,
         CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
     fLogoBar.Attach(logoBar.Detach());                  // transfer the ref count
-    */
 
+    /* Create and attach the standard toolbar to the rebar */
     hResult = CreateToolsBar(&toolsBar);
     if (FAILED(hResult))
         return hResult;
@@ -856,6 +857,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     if (FAILED(hResult))
         return hResult;
 
+    /* Create and attach the address/navigation toolbar to the rebar */
     hResult = CreateAddressBand(&navigationBar);
     if (FAILED(hResult))
         return hResult;

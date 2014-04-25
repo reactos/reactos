@@ -24,10 +24,9 @@ Implements the toolbar band of a cabinet window
 
 #include "precomp.h"
 
-/*
-TODO:
-  **Fix GetBandInfo to calculate size correctly
-*/
+/* FIXME, I can't include windowsx because it conflicts with some #defines */
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 class CToolsBand :
     public CWindowImpl<CToolsBand, CWindow, CControlWinTraits>,
@@ -108,25 +107,43 @@ CToolsBand::~CToolsBand()
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi)
 {
+    RECT actualRect;
+    POINTL actualSize;
+    POINTL idealSize;
+    POINTL maxSize;
+    POINTL itemSize;
+
+    ::GetWindowRect(m_hWnd, &actualRect);
+    actualSize.x = actualRect.right - actualRect.left;
+    actualSize.y = actualRect.bottom - actualRect.top;
+
+    /* Obtain the ideal size, to be used as min and max */
+    SendMessageW(m_hWnd, TB_AUTOSIZE, 0, 0);
+    SendMessageW(m_hWnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&maxSize));
+
+    idealSize = maxSize;
+    SendMessageW(m_hWnd, TB_GETIDEALSIZE, FALSE, reinterpret_cast<LPARAM>(&idealSize));
+
+    /* Obtain the button size, to be used as the integral size */
+    DWORD size = SendMessageW(m_hWnd, TB_GETBUTTONSIZE, 0, 0);
+    itemSize.x = GET_X_LPARAM(size);
+    itemSize.y = GET_Y_LPARAM(size);
+
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
-        pdbi->ptMinSize.x = 400;
-        pdbi->ptMinSize.y = 38;
+        pdbi->ptMinSize = idealSize;
     }
     if (pdbi->dwMask & DBIM_MAXSIZE)
     {
-        pdbi->ptMaxSize.x = 0;
-        pdbi->ptMaxSize.y = 0;
+        pdbi->ptMaxSize = maxSize;
     }
     if (pdbi->dwMask & DBIM_INTEGRAL)
     {
-        pdbi->ptIntegral.x = 0;
-        pdbi->ptIntegral.y = 0;
+        pdbi->ptIntegral = itemSize;
     }
     if (pdbi->dwMask & DBIM_ACTUAL)
     {
-        pdbi->ptActual.x = 400;
-        pdbi->ptActual.y = 38;
+        pdbi->ptActual = actualSize;
     }
     if (pdbi->dwMask & DBIM_TITLE)
         wcscpy(pdbi->wszTitle, L"");
