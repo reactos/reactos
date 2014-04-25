@@ -736,6 +736,9 @@ NtUserGetObjectInformation(
    }
 
 Exit:
+   if (Status == STATUS_SUCCESS && nLength < nDataSize)
+      Status = STATUS_BUFFER_TOO_SMALL;
+
    _SEH2_TRY
    {
       if (nLengthNeeded)
@@ -745,10 +748,7 @@ Exit:
       if (Status == STATUS_SUCCESS)
       {
          TRACE("Trying to copy data to caller (len = %lu, len needed = %lu)\n", nLength, nDataSize);
-         if (nLength >= nDataSize)
-            RtlCopyMemory(pvInformation, pvData, nDataSize);
-         else
-            Status = STATUS_BUFFER_TOO_SMALL;
+         RtlCopyMemory(pvInformation, pvData, nDataSize);
       }
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
