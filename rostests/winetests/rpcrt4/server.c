@@ -53,6 +53,9 @@ static char *domain_and_user;
 /* type check statements generated in header file */
 fnprintf *p_printf = printf;
 
+static const WCHAR helloW[] = { 'H','e','l','l','o',0 };
+static const WCHAR worldW[] = { 'W','o','r','l','d','!',0 };
+
 static void InitFunctionPointers(void)
 {
     HMODULE hrpcrt4 = GetModuleHandleA("rpcrt4.dll");
@@ -569,6 +572,34 @@ void __cdecl s_get_name(name_t *name)
   /* ensure nul-termination */
   if (name->size < sizeof(bossman))
     name->name[name->size - 1] = 0;
+}
+
+void __cdecl s_get_names(int *n, str_array_t *names)
+{
+  str_array_t list;
+
+  list = MIDL_user_allocate(2 * sizeof(list[0]));
+  list[0] = MIDL_user_allocate(6);
+  strcpy(list[0], "Hello");
+  list[1] = MIDL_user_allocate(7);
+  strcpy(list[1], "World!");
+
+  *names = list;
+  *n = 2;
+}
+
+void __cdecl s_get_namesw(int *n, wstr_array_t *names)
+{
+  wstr_array_t list;
+
+  list = MIDL_user_allocate(2 * sizeof(list[0]));
+  list[0] = MIDL_user_allocate(sizeof(helloW));
+  lstrcpyW(list[0], helloW);
+  list[1] = MIDL_user_allocate(sizeof(worldW));
+  lstrcpyW(list[1], worldW);
+
+  *names = list;
+  *n = 2;
 }
 
 int __cdecl s_sum_pcarr2(int n, int **pa)
@@ -1190,12 +1221,36 @@ pointer_tests(void)
 
   if (!old_windows_version)
   {
+      int n;
+      str_array_t names;
+      wstr_array_t namesw;
+
       name.size = 10;
       name.name = buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, name.size);
       get_name(&name);
       ok(name.name == buffer, "[in,out] pointer should have stayed as %p but instead changed to %p\n", name.name, buffer);
       ok(!strcmp(name.name, "Jeremy Wh"), "name didn't unmarshall properly, expected \"Jeremy Wh\", but got \"%s\"\n", name.name);
       HeapFree(GetProcessHeap(), 0, name.name);
+
+      n = -1;
+      names = NULL;
+      get_names(&n, &names);
+      ok(n == 2, "expected 2, got %d\n", n);
+      ok(!strcmp(names[0], "Hello"), "expected Hello, got %s\n", names[0]);
+      ok(!strcmp(names[1], "World!"), "expected World!, got %s\n", names[1]);
+      MIDL_user_free(names[0]);
+      MIDL_user_free(names[1]);
+      MIDL_user_free(names);
+
+      n = -1;
+      namesw = NULL;
+      get_namesw(&n, &namesw);
+      ok(n == 2, "expected 2, got %d\n", n);
+      ok(!lstrcmpW(namesw[0], helloW), "expected Hello, got %s\n", wine_dbgstr_w(namesw[0]));
+      ok(!lstrcmpW(namesw[1], worldW), "expected World!, got %s\n", wine_dbgstr_w(namesw[1]));
+      MIDL_user_free(namesw[0]);
+      MIDL_user_free(namesw[1]);
+      MIDL_user_free(namesw);
   }
 
   pa2 = a;
@@ -1492,58 +1547,58 @@ client(const char *test)
 
   if (strcmp(test, "tcp_basic") == 0)
   {
-    ok(RPC_S_OK == RpcStringBindingCompose(NULL, iptcp, address, port, NULL, &binding), "RpcStringBindingCompose\n");
-    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+    ok(RPC_S_OK == RpcStringBindingComposeA(NULL, iptcp, address, port, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBindingA(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
     run_tests();
     authinfo_test(RPC_PROTSEQ_TCP, 0);
 
-    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
   }
   else if (strcmp(test, "tcp_secure") == 0)
   {
-    ok(RPC_S_OK == RpcStringBindingCompose(NULL, iptcp, address, port, NULL, &binding), "RpcStringBindingCompose\n");
-    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+    ok(RPC_S_OK == RpcStringBindingComposeA(NULL, iptcp, address, port, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBindingA(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
     set_auth_info(IServer_IfHandle);
     authinfo_test(RPC_PROTSEQ_TCP, 1);
 
-    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
   }
   else if (strcmp(test, "ncalrpc_basic") == 0)
   {
-    ok(RPC_S_OK == RpcStringBindingCompose(NULL, ncalrpc, NULL, guid, NULL, &binding), "RpcStringBindingCompose\n");
-    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+    ok(RPC_S_OK == RpcStringBindingComposeA(NULL, ncalrpc, NULL, guid, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBindingA(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
     run_tests(); /* can cause RPC_X_BAD_STUB_DATA exception */
     authinfo_test(RPC_PROTSEQ_LRPC, 0);
 
-    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
   }
   else if (strcmp(test, "ncalrpc_secure") == 0)
   {
-    ok(RPC_S_OK == RpcStringBindingCompose(NULL, ncalrpc, NULL, guid, NULL, &binding), "RpcStringBindingCompose\n");
-    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+    ok(RPC_S_OK == RpcStringBindingComposeA(NULL, ncalrpc, NULL, guid, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBindingA(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
     set_auth_info(IServer_IfHandle);
     authinfo_test(RPC_PROTSEQ_LRPC, 1);
 
-    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
   }
   else if (strcmp(test, "np_basic") == 0)
   {
-    ok(RPC_S_OK == RpcStringBindingCompose(NULL, np, address_np, pipe, NULL, &binding), "RpcStringBindingCompose\n");
-    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+    ok(RPC_S_OK == RpcStringBindingComposeA(NULL, np, address_np, pipe, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBindingA(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
     run_tests();
     authinfo_test(RPC_PROTSEQ_NMP, 0);
     stop();
 
-    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcStringFreeA(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
   }
 }
@@ -1560,13 +1615,13 @@ server(void)
   RPC_STATUS status, iptcp_status, np_status, ncalrpc_status;
   DWORD ret;
 
-  iptcp_status = RpcServerUseProtseqEp(iptcp, 20, port, NULL);
+  iptcp_status = RpcServerUseProtseqEpA(iptcp, 20, port, NULL);
   ok(iptcp_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_ip_tcp) failed with status %d\n", iptcp_status);
 
-  ncalrpc_status = RpcServerUseProtseqEp(ncalrpc, 0, guid, NULL);
+  ncalrpc_status = RpcServerUseProtseqEpA(ncalrpc, 0, guid, NULL);
   ok(ncalrpc_status == RPC_S_OK, "RpcServerUseProtseqEp(ncalrpc) failed with status %d\n", ncalrpc_status);
 
-  np_status = RpcServerUseProtseqEp(np, 0, pipe, NULL);
+  np_status = RpcServerUseProtseqEpA(np, 0, pipe, NULL);
   if (np_status == RPC_S_PROTSEQ_NOT_SUPPORTED)
     skip("Protocol sequence ncacn_np is not supported\n");
   else
@@ -1584,7 +1639,7 @@ server(void)
   ok(status == RPC_S_OK, "RpcServerRegisterIf failed with status %d\n", status);
   status = RpcServerListen(1, 20, TRUE);
   ok(status == RPC_S_OK, "RpcServerListen failed with status %d\n", status);
-  stop_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+  stop_event = CreateEventW(NULL, FALSE, FALSE, NULL);
   ok(stop_event != NULL, "CreateEvent failed with error %d\n", GetLastError());
 
   if (iptcp_status == RPC_S_OK)

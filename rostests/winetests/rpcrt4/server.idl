@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep client
+#pragma makedep server
+
 #include "server_defines.h"
 
 typedef struct tag_vector
@@ -324,6 +327,11 @@ cpp_quote("#endif")
     unsigned int size;
   } name_t;
   void get_name([in,out] name_t *name);
+
+  typedef char **str_array_t;
+  void get_names([out] int *n, [out, string, size_is(,*n)] str_array_t *names);
+  typedef WCHAR **wstr_array_t;
+  void get_namesw([out] int *n, [out, string, size_is(,*n)] wstr_array_t *names);
 
   int sum_pcarr2(int n, [size_is(, n)] int **pa);
   int sum_L1_norms(int n, [size_is(n)] vector_t *vs);

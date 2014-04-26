@@ -2092,7 +2092,7 @@ static void test_ndr_buffer(void)
 
     StubDesc.RpcInterfaceInformation = (void *)&IFoo___RpcServerInterface;
 
-    status = RpcServerUseProtseqEp(ncalrpc, 20, endpoint, NULL);
+    status = RpcServerUseProtseqEpA(ncalrpc, 20, endpoint, NULL);
     ok(RPC_S_OK == status, "RpcServerUseProtseqEp failed with status %u\n", status);
     status = RpcServerRegisterIf(IFoo_v0_0_s_ifspec, NULL, NULL);
     ok(RPC_S_OK == status, "RpcServerRegisterIf failed with status %u\n", status);
@@ -2104,12 +2104,12 @@ static void test_ndr_buffer(void)
         return;
     }
 
-    status = RpcStringBindingCompose(NULL, ncalrpc, NULL, endpoint, NULL, &binding);
+    status = RpcStringBindingComposeA(NULL, ncalrpc, NULL, endpoint, NULL, &binding);
     ok(status == RPC_S_OK, "RpcStringBindingCompose failed (%u)\n", status);
 
-    status = RpcBindingFromStringBinding(binding, &Handle);
+    status = RpcBindingFromStringBindingA(binding, &Handle);
     ok(status == RPC_S_OK, "RpcBindingFromStringBinding failed (%u)\n", status);
-    RpcStringFree(&binding);
+    RpcStringFreeA(&binding);
 
     NdrClientInitializeNew(&RpcMessage, &StubMsg, &StubDesc, 5);
 
@@ -2208,7 +2208,7 @@ static void test_NdrGetUserMarshalInfo(void)
     RPC_MESSAGE rpc_msg;
     RPC_STATUS (RPC_ENTRY *pNdrGetUserMarshalInfo)(ULONG *,ULONG,NDR_USER_MARSHAL_INFO *);
 
-    pNdrGetUserMarshalInfo = (void *)GetProcAddress(GetModuleHandle("rpcrt4.dll"), "NdrGetUserMarshalInfo");
+    pNdrGetUserMarshalInfo = (void *)GetProcAddress(GetModuleHandleA("rpcrt4.dll"), "NdrGetUserMarshalInfo");
     if (!pNdrGetUserMarshalInfo)
     {
         skip("NdrGetUserMarshalInfo not exported\n");
