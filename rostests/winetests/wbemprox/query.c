@@ -46,7 +46,7 @@ static HRESULT exec_query( IWbemServices *services, const WCHAR *str, IEnumWbemC
         {
             VARIANT var;
 
-            IEnumWbemClassObject_Next( *result, WBEM_INFINITE, 1, &obj, &count );
+            IEnumWbemClassObject_Next( *result, 10000, 1, &obj, &count );
             if (!count) break;
 
             if (IWbemClassObject_Get( obj, captionW, 0, &var, NULL, NULL ) == WBEM_S_NO_ERROR)
@@ -616,6 +616,40 @@ static void test_query_async( IWbemServices *services )
     SysFreeString( query );
 }
 
+static void test_GetNames( IWbemServices *services )
+{
+    static const WCHAR queryW[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','W','i','n','3','2','_',
+         'O','p','e','r','a','t','i','n','g','S','y','s','t','e','m',0};
+    BSTR wql = SysAllocString( wqlW ), query = SysAllocString( queryW );
+    IEnumWbemClassObject *result;
+    HRESULT hr;
+
+    hr = IWbemServices_ExecQuery( services, wql, query, 0, NULL, &result );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    for (;;)
+    {
+        IWbemClassObject *obj;
+        SAFEARRAY *names;
+        ULONG count;
+        VARIANT val;
+
+        IEnumWbemClassObject_Next( result, 10000, 1, &obj, &count );
+        if (!count) break;
+
+        VariantInit( &val );
+        hr = IWbemClassObject_GetNames( obj, NULL, WBEM_FLAG_NONSYSTEM_ONLY, &val, &names );
+        ok( hr == S_OK, "got %08x\n", hr );
+
+        SafeArrayDestroy( names );
+        IWbemClassObject_Release( obj );
+    }
+    IEnumWbemClassObject_Release( result );
+    SysFreeString( query );
+    SysFreeString( wql );
+}
+
 START_TEST(query)
 {
     static const WCHAR cimv2W[] = {'R','O','O','T','\\','C','I','M','V','2',0};
@@ -654,6 +688,7 @@ START_TEST(query)
     test_StdRegProv( services );
     test_notification_query_async( services );
     test_query_async( services );
+    test_GetNames( services );
 
     SysFreeString( path );
     IWbemServices_Release( services );
