@@ -688,7 +688,7 @@ static HRESULT WINAPI DocObjectService_FireBeforeNavigate2(
     V_VT(params+3) = (VT_BYREF|VT_VARIANT);
     V_VARIANTREF(params+3) = &var_frame_name;
     V_VT(&var_frame_name) = VT_BSTR;
-    V_BSTR(&var_frame_name) = NULL;
+    V_BSTR(&var_frame_name) = lpszFrameName ? SysAllocString(lpszFrameName) : NULL;
 
     V_VT(params+4) = (VT_BYREF|VT_VARIANT);
     V_VARIANTREF(params+4) = &var_flags;
@@ -709,6 +709,7 @@ static HRESULT WINAPI DocObjectService_FireBeforeNavigate2(
 
     SysFreeString(V_BSTR(&var_url));
     SysFreeString(V_BSTR(&var_headers));
+    SysFreeString(V_BSTR(&var_frame_name));
     SafeArrayDestroy(post_data);
 
     *pfCancel = !!cancel;
