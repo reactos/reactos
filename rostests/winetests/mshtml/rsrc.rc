@@ -31,6 +31,15 @@ events.html HTML "events.html"
 /* @makedep: externscr.js */
 externscr.js HTML "externscr.js"
 
+/* @makedep: nav_test.html */
+nav_test.html HTML "nav_test.html"
+
+/* @makedep: blank.html */
+blank.html HTML "blank.html"
+
+/* @makedep: blank.html */
+blank2.html HTML "blank.html"
+
 /* @makedep: test_tlb.tlb */
 1 TYPELIB test_tlb.tlb
 

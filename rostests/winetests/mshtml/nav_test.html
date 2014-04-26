@@ -1,0 +1,42 @@
+<html>
+<head>
+<script>
+function ok(b,m) {
+    return external.ok(b, m);
+}
+
+function nav_back_test() {
+    external.trace("Running _parent navigation tests...");
+
+    var iframe = document.getElementById("testframe");
+    var subframe = iframe.contentWindow.document.createElement("iframe");
+
+    subframe.onload = function() {
+        var doc = subframe.contentWindow.document;
+        doc.body.innerHTML = '<a href="blank2.html" id="aid" target="_parent">test</a>';
+        doc.getElementById("aid").click();
+    }
+
+    iframe.onload = function() {
+        var href = iframe.contentWindow.location.href;
+	ok(/.*blank2.html/.test(href), "Unexpected href " + href);
+	next_test();
+    }
+
+    iframe.contentWindow.document.body.appendChild(subframe);
+    subframe.src = "blank.html";
+}
+
+var tests = [
+    nav_back_test,
+    function() { external.reportSuccess(); }
+];
+
+function next_test() {
+   window.setTimeout(tests.shift(), 0);
+}
+</script>
+<body onload="next_test()">
+<iframe src="about:blank" id="testframe"></iframe>
+</body>
+</html>

@@ -1,7 +1,7 @@
 <html>
 <head>
 <script>
-var testevent_divid2_called = false, cnt=0;
+var testevent_divid2_called = false, testevent_document_called = false, cnt=0;
 
 function ok(b,m) {
     return external.ok(b, m);
@@ -71,8 +71,11 @@ function test_scriptfor() {
     ok("onclick" in div, "testevent not in div");
     ok(typeof(div.onclick) === "function", "typeof(div.onclick) = " + typeof(div.onclick));
     ok(testevent_divid2_called === false, "testevent_divid2_called = " + testevent_divid2_called);
+    ok(typeof(document.onclick) === "function", "typeof(document.onclick) = " + typeof(document.onclick));
+    ok(testevent_document_called === false, "testevent_document_called = " + testevent_document_called);
     div.click();
     ok(testevent_divid2_called === true, "testevent_divid2_called = " + testevent_divid2_called);
+    ok(testevent_document_called === true, "testevent_document_called = " + testevent_document_called);
 
     ok(!("ontest" in div), "testevent in div");
     ok(typeof(div.ontest) === "undefined", "typeof(div.ontest) = " + typeof(div.ontest));
@@ -135,6 +138,9 @@ function runTests(t) {
 <div id="divid2"></div>
 <script event="onclick" for="divid2">
     testevent_divid2_called = true;
+</script>
+<script event="onclick" for="document">
+    testevent_document_called = true;
 </script>
 <script event="ontest" for="divid2">
     ok(false, "unexpected ontest");

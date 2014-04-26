@@ -24,10 +24,10 @@ static BOOL is_ie_hardened(void)
     DWORD ie_harden, type, size;
 
     ie_harden = 0;
-    if(RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap",
+    if(RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap",
                     0, KEY_QUERY_VALUE, &zone_map) == ERROR_SUCCESS) {
         size = sizeof(DWORD);
-        if (RegQueryValueEx(zone_map, "IEHarden", NULL, &type, (LPBYTE) &ie_harden, &size) != ERROR_SUCCESS ||
+        if (RegQueryValueExA(zone_map, "IEHarden", NULL, &type, (LPBYTE) &ie_harden, &size) != ERROR_SUCCESS ||
             type != REG_DWORD) {
             ie_harden = 0;
         }

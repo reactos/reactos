@@ -25,7 +25,7 @@
 //#include "windef.h"
 //#include "winbase.h"
 //#include "ole2.h"
-//#include "urlmon.h"
+#include <urlmon.h>
 #include <shlwapi.h>
 #include <wininet.h>
 
@@ -77,18 +77,6 @@ static const WCHAR javascript_test_url[] = {'j','a','v','a','s','c','r','i','p',
 static WCHAR res_url_base[INTERNET_MAX_URL_LENGTH] = {'r','e','s',':','/','/'};
 static unsigned res_url_base_len;
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 static HRESULT WINAPI ProtocolSink_QueryInterface(IInternetProtocolSink *iface, REFIID riid, void **ppv)
 {
     if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IInternetProtocolSink, riid)) {
@@ -97,7 +85,7 @@ static HRESULT WINAPI ProtocolSink_QueryInterface(IInternetProtocolSink *iface, 
     }
 
     *ppv = NULL;
-    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
+    ok(0, "unexpected riid %s\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -184,7 +172,7 @@ static HRESULT WINAPI BindInfo_QueryInterface(IInternetBindInfo *iface, REFIID r
     }
 
     *ppv = NULL;
-    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
+    ok(0, "unexpected riid %s\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
