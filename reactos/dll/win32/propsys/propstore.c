@@ -190,7 +190,7 @@ static HRESULT WINAPI PropertyStore_GetAt(IPropertyStoreCache *iface,
 }
 
 static HRESULT PropertyStore_LookupValue(PropertyStore *This, REFPROPERTYKEY key,
-    int insert, propstore_value **result)
+                                         BOOL insert, propstore_value **result)
 {
     propstore_format *format=NULL, *format_candidate;
     propstore_value *value=NULL, *value_candidate;
@@ -268,7 +268,7 @@ static HRESULT WINAPI PropertyStore_GetValue(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(pv, &value->propvar);
@@ -295,7 +295,7 @@ static HRESULT WINAPI PropertyStore_SetValue(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 1, &value);
+    hr = PropertyStore_LookupValue(This, key, TRUE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(&temp, propvar);
@@ -328,7 +328,7 @@ static HRESULT WINAPI PropertyStore_GetState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         *pstate = value->state;
@@ -352,7 +352,7 @@ static HRESULT WINAPI PropertyStore_GetValueAndState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(ppropvar, &value->propvar);
@@ -382,7 +382,7 @@ static HRESULT WINAPI PropertyStore_SetState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 0, &value);
+    hr = PropertyStore_LookupValue(This, key, FALSE, &value);
 
     if (SUCCEEDED(hr))
         value->state = pstate;
@@ -404,7 +404,7 @@ static HRESULT WINAPI PropertyStore_SetValueAndState(IPropertyStoreCache *iface,
 
     EnterCriticalSection(&This->lock);
 
-    hr = PropertyStore_LookupValue(This, key, 1, &value);
+    hr = PropertyStore_LookupValue(This, key, TRUE, &value);
 
     if (SUCCEEDED(hr))
         hr = PropVariantCopy(&temp, ppropvar);
