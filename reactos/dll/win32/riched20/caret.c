@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+
 #include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
@@ -55,7 +56,19 @@ int ME_GetSelectionOfs(ME_TextEditor *editor, int *from, int *to)
 
 int ME_GetSelection(ME_TextEditor *editor, ME_Cursor **from, ME_Cursor **to)
 {
-  if (ME_GetCursorOfs(&editor->pCursors[0]) < ME_GetCursorOfs(&editor->pCursors[1]))
+  int from_ofs = ME_GetCursorOfs( &editor->pCursors[0] );
+  int to_ofs   = ME_GetCursorOfs( &editor->pCursors[1] );
+  BOOL swap = (from_ofs > to_ofs);
+
+  if (from_ofs == to_ofs)
+  {
+      /* If cursor[0] is at the beginning of a run and cursor[1] at the end
+         of the prev run then we need to swap. */
+      if (editor->pCursors[0].nOffset < editor->pCursors[1].nOffset)
+          swap = TRUE;
+  }
+
+  if (!swap)
   {
     *from = &editor->pCursors[0];
     *to = &editor->pCursors[1];
@@ -127,7 +140,6 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
     ME_SetCursorToStart(editor, &editor->pCursors[1]);
     ME_SetCursorToEnd(editor, &editor->pCursors[0]);
     ME_InvalidateSelection(editor);
-    ME_ClearTempStyle(editor);
     return len + 1;
   }
 
@@ -150,7 +162,6 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
           editor->pCursors[1] = editor->pCursors[0];
           ME_Repaint(editor);
       }
-      ME_ClearTempStyle(editor);
       return end;
     }
 
@@ -179,7 +190,6 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
     ME_SetCursorToEnd(editor, &editor->pCursors[0]);
     editor->pCursors[1] = editor->pCursors[0];
     ME_InvalidateSelection(editor);
-    ME_ClearTempStyle(editor);
     return len;
   }
 
@@ -283,13 +293,15 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
                            int nChars, BOOL bForce)
 {
   ME_Cursor c = *start;
-  int nOfs = ME_GetCursorOfs(start);
+  int nOfs = ME_GetCursorOfs(start), text_len = ME_GetTextLength( editor );
   int shift = 0;
   int totalChars = nChars;
   ME_DisplayItem *start_para;
+  BOOL delete_all = FALSE;
 
   /* Prevent deletion past last end of paragraph run. */
-  nChars = min(nChars, ME_GetTextLength(editor) - nOfs);
+  nChars = min(nChars, text_len - nOfs);
+  if (nChars == text_len) delete_all = TRUE;
   start_para = c.pPara;
 
   if (!bForce)
@@ -423,6 +435,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
       continue;
     }
   }
+  if (delete_all) ME_SetDefaultParaFormat( start_para->member.para.pFmt );
   return TRUE;
 }
 
@@ -526,7 +539,7 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
       ME_InternalInsertTextFromCursor(editor, nCursor, &tab, 1, style, MERF_TAB);
       pos++;
     } else { /* handle EOLs */
-      ME_DisplayItem *tp, *end_run;
+      ME_DisplayItem *tp, *end_run, *run, *prev;
       ME_Style *tmp_style;
       int eol_len = 0;
 
@@ -560,17 +573,43 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
         }
 
         p = &editor->pCursors[nCursor];
-        if (p->nOffset)
-          ME_SplitRunSimple(editor, p);
+
+        if (p->nOffset == p->pRun->member.run.len)
+        {
+           run = ME_FindItemFwd( p->pRun, diRun );
+           if (!run) run = p->pRun;
+        }
+        else
+        {
+          if (p->nOffset) ME_SplitRunSimple(editor, p);
+          run = p->pRun;
+        }
+
         tmp_style = ME_GetInsertStyle(editor, nCursor);
         /* ME_SplitParagraph increases style refcount */
-        tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style, eol_str, eol_len, 0);
-        p->pRun = ME_FindItemFwd(tp, diRun);
-        p->pPara = tp;
+        tp = ME_SplitParagraph(editor, run, run->member.run.style, eol_str, eol_len, 0);
+
         end_run = ME_FindItemBack(tp, diRun);
         ME_ReleaseStyle(end_run->member.run.style);
         end_run->member.run.style = tmp_style;
-        p->nOffset = 0;
+
+        /* Move any cursors that were at the end of the previous run to the beginning of the new para */
+        prev = ME_FindItemBack( end_run, diRun );
+        if (prev)
+        {
+          int i;
+          for (i = 0; i < editor->nCursors; i++)
+          {
+            if (editor->pCursors[i].pRun == prev &&
+                editor->pCursors[i].nOffset == prev->member.run.len)
+            {
+              editor->pCursors[i].pPara = tp;
+              editor->pCursors[i].pRun = run;
+              editor->pCursors[i].nOffset = 0;
+            }
+          }
+        }
+
       }
     }
     len -= pos - str;
@@ -865,7 +904,7 @@ static ME_DisplayItem* ME_FindPixelPosInTableRow(int x, int y,
 }
 
 static BOOL ME_FindRunInRow(ME_TextEditor *editor, ME_DisplayItem *pRow,
-                            int x, ME_Cursor *cursor, int *pbCaretAtEnd)
+                            int x, ME_Cursor *cursor, BOOL *pbCaretAtEnd)
 {
   ME_DisplayItem *pNext, *pLastRun;
   ME_Row *row = &pRow->member.row;
@@ -925,7 +964,7 @@ static BOOL ME_FindPixelPos(ME_TextEditor *editor, int x, int y,
   y -= editor->rcFormat.top;
 
   if (is_eol)
-    *is_eol = 0;
+    *is_eol = FALSE;
 
   /* find paragraph */
   for (; p != editor->pBuffer->pLast; p = p->member.para.next_para)
@@ -1070,8 +1109,7 @@ static void ME_ExtendAnchorSelection(ME_TextEditor *editor)
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum)
 {
   ME_Cursor tmp_cursor;
-  int is_selection = 0;
-  BOOL is_shift;
+  BOOL is_selection = FALSE, is_shift;
 
   editor->nUDArrowX = -1;
 
@@ -1128,7 +1166,6 @@ void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum)
   ME_InvalidateSelection(editor);
   ITextHost_TxShowCaret(editor->texthost, FALSE);
   ME_ShowCaret(editor);
-  ME_ClearTempStyle(editor);
   ME_SendSelChange(editor);
 }
 
@@ -1447,7 +1484,9 @@ void ME_DeleteSelection(ME_TextEditor *editor)
 {
   int from, to;
   int nStartCursor = ME_GetSelectionOfs(editor, &from, &to);
+  int nEndCursor = nStartCursor ^ 1;
   ME_DeleteTextAtCursor(editor, nStartCursor, to - from);
+  editor->pCursors[nEndCursor] = editor->pCursors[nStartCursor];
 }
 
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor)
@@ -1495,14 +1534,14 @@ ME_ArrowKey(ME_TextEditor *editor, int nVKey, BOOL extend, BOOL ctrl)
   ME_CheckCharOffsets(editor);
   switch(nVKey) {
     case VK_LEFT:
-      editor->bCaretAtEnd = 0;
+      editor->bCaretAtEnd = FALSE;
       if (ctrl)
         success = ME_MoveCursorWords(editor, &tmp_curs, -1);
       else
         success = ME_MoveCursorChars(editor, &tmp_curs, -1);
       break;
     case VK_RIGHT:
-      editor->bCaretAtEnd = 0;
+      editor->bCaretAtEnd = FALSE;
       if (ctrl)
         success = ME_MoveCursorWords(editor, &tmp_curs, +1);
       else
@@ -1525,7 +1564,7 @@ ME_ArrowKey(ME_TextEditor *editor, int nVKey, BOOL extend, BOOL ctrl)
         ME_ArrowCtrlHome(editor, &tmp_curs);
       else
         ME_ArrowHome(editor, &tmp_curs);
-      editor->bCaretAtEnd = 0;
+      editor->bCaretAtEnd = FALSE;
       break;
     }
     case VK_END:

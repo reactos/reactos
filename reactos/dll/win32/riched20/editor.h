@@ -47,6 +47,7 @@
 #include <richole.h>
 #include <imm.h>
 #include <textserv.h>
+#include <usp10.h>
 
 #include <wine/debug.h>
 #include <wine/list.h>
@@ -128,7 +129,6 @@ ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass
 ME_DisplayItem *ME_MakeDI(ME_DIType type) DECLSPEC_HIDDEN;
 void ME_DestroyDisplayItem(ME_DisplayItem *item) DECLSPEC_HIDDEN;
 void ME_DumpDocument(ME_TextBuffer *buffer) DECLSPEC_HIDDEN;
-const char *ME_GetDITypeName(ME_DIType type) DECLSPEC_HIDDEN;
 
 /* string.c */
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars) DECLSPEC_HIDDEN;
@@ -141,9 +141,11 @@ int ME_CallWordBreakProc(ME_TextEditor *editor, WCHAR *str, INT len, INT start, 
 void ME_StrDeleteV(ME_String *s, int nVChar, int nChars) DECLSPEC_HIDDEN;
 BOOL ME_InsertString(ME_String *s, int ofs, const WCHAR *insert, int len) DECLSPEC_HIDDEN;
 
+#define CP_UNICODE 1200
+
 /* smart helpers for A<->W conversions, they reserve/free memory and call MultiByte<->WideChar functions */
-LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz) DECLSPEC_HIDDEN;
-void ME_EndToUnicode(BOOL unicode, LPVOID psz) DECLSPEC_HIDDEN;
+LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len) DECLSPEC_HIDDEN;
+void ME_EndToUnicode(LONG codepage, LPVOID psz) DECLSPEC_HIDDEN;
 
 static inline int ME_IsWSpace(WCHAR ch)
 {
@@ -177,7 +179,7 @@ int ME_CharFromPointContext(ME_Context *c, int cx, ME_Run *run, BOOL closest, BO
 int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run, BOOL closest, BOOL visual_order) DECLSPEC_HIDDEN;
 int ME_PointFromCharContext(ME_Context *c, ME_Run *pRun, int nOffset, BOOL visual_order) DECLSPEC_HIDDEN;
 int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset, BOOL visual_order) DECLSPEC_HIDDEN;
-int ME_CanJoinRuns(const ME_Run *run1, const ME_Run *run2) DECLSPEC_HIDDEN;
+BOOL ME_CanJoinRuns(const ME_Run *run1, const ME_Run *run2) DECLSPEC_HIDDEN;
 void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_Cursor *cursor) DECLSPEC_HIDDEN;
 void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run) DECLSPEC_HIDDEN;
@@ -290,7 +292,7 @@ void ME_RTFParAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_RTFTblAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_RTFSpecialCharHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
 void ME_StreamInFill(ME_InStream *stream) DECLSPEC_HIDDEN;
-extern int me_debug DECLSPEC_HIDDEN;
+extern BOOL me_debug DECLSPEC_HIDDEN;
 
 /* table.c */
 BOOL ME_IsInTable(ME_DisplayItem *pItem) DECLSPEC_HIDDEN;

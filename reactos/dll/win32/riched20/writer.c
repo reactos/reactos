@@ -23,6 +23,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
+
 static BOOL
 ME_StreamOutRTFText(ME_OutStream *pStream, const WCHAR *text, LONG nChars);
 

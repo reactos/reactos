@@ -34,7 +34,7 @@
  *
  * Richedit version 4.1:
  *   Tables are implemented such that cells can contain multiple paragraphs,
- *   each with it's own paragraph format, and cells may even contain tables
+ *   each with its own paragraph format, and cells may even contain tables
  *   nested within the cell.
  *
  *   There is also a paragraph at the start of each table row that contains

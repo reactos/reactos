@@ -1129,7 +1129,7 @@ struct _RTF_Info {
     char *pushedTextBuf;
 
     int	prevChar;
-    int	bumpLine;
+    BOOL bumpLine;
 
     /* Document-wide attributes */
     RTFFont	*fontList;	/* these lists MUST be */
