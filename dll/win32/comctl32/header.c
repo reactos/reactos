@@ -872,7 +872,7 @@ HEADER_SendNotifyWithIntFieldT(const HEADER_INFO *infoPtr, UINT code, INT iItem,
  * Prepare callback items
  *   depends on NMHDDISPINFOW having same structure as NMHDDISPINFOA 
  *   (so we handle the two cases only doing a specific cast for pszText).
- * Checks if any of the required field are callback. If there are sends a 
+ * Checks if any of the required fields is a callback. If this is the case sends a
  * NMHDISPINFO notify to retrieve these items. The items are stored in the
  * HEADER_ITEM pszText and iImage fields. They should be freed with
  * HEADER_FreeCallbackItems.

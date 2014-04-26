@@ -1279,16 +1279,14 @@ static const IWICMetadataBlockReaderVtbl TiffFrameDecode_BlockVtbl =
     TiffFrameDecode_Block_GetEnumerator
 };
 
-HRESULT TiffDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     HRESULT ret;
     TiffDecoder *This;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     if (!load_libtiff())
     {
@@ -2023,16 +2021,14 @@ static const IWICBitmapEncoderVtbl TiffEncoder_Vtbl = {
     TiffEncoder_GetMetadataQueryWriter
 };
 
-HRESULT TiffEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     TiffEncoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     if (!load_libtiff())
     {
@@ -2062,13 +2058,13 @@ HRESULT TiffEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 
 #else /* !SONAME_LIBTIFF */
 
-HRESULT TiffDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to load TIFF picture, but Wine was compiled without TIFF support.\n");
     return E_FAIL;
 }
 
-HRESULT TiffEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TiffEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to save TIFF picture, but Wine was compiled without TIFF support.\n");
     return E_FAIL;

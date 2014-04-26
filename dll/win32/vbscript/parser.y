@@ -57,7 +57,8 @@ static statement_t *new_onerror_statement(parser_ctx_t*,BOOL);
 static statement_t *new_const_statement(parser_ctx_t*,const_decl_t*);
 static statement_t *new_select_statement(parser_ctx_t*,expression_t*,case_clausule_t*);
 
-static dim_decl_t *new_dim_decl(parser_ctx_t*,const WCHAR*,dim_decl_t*);
+static dim_decl_t *new_dim_decl(parser_ctx_t*,const WCHAR*,BOOL,dim_list_t*);
+static dim_list_t *new_dim(parser_ctx_t*,unsigned,dim_list_t*);
 static elseif_decl_t *new_elseif_decl(parser_ctx_t*,expression_t*,statement_t*);
 static function_decl_t *new_function_decl(parser_ctx_t*,const WCHAR*,function_type_t,unsigned,arg_decl_t*,statement_t*);
 static arg_decl_t *new_argument_decl(parser_ctx_t*,const WCHAR*,BOOL);
@@ -66,7 +67,7 @@ static case_clausule_t *new_case_clausule(parser_ctx_t*,expression_t*,statement_
 
 static class_decl_t *new_class_decl(parser_ctx_t*);
 static class_decl_t *add_class_function(parser_ctx_t*,class_decl_t*,function_decl_t*);
-static class_decl_t *add_variant_prop(parser_ctx_t*,class_decl_t*,const WCHAR*,unsigned);
+static class_decl_t *add_dim_prop(parser_ctx_t*,class_decl_t*,dim_decl_t*,unsigned);
 
 static statement_t *link_statements(statement_t*,statement_t*);
 
@@ -91,6 +92,7 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
     member_expression_t *member;
     elseif_decl_t *elseif;
     dim_decl_t *dim_decl;
+    dim_list_t *dim_list;
     function_decl_t *func_decl;
     arg_decl_t *arg_decl;
     class_decl_t *class_decl;
@@ -132,8 +134,9 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
 %type <func_decl> FunctionDecl PropertyDecl
 %type <elseif> ElseIfs_opt ElseIfs ElseIf
 %type <class_decl> ClassDeclaration ClassBody
-%type <uint> Storage Storage_opt
-%type <dim_decl> DimDeclList
+%type <uint> Storage Storage_opt IntegerValue
+%type <dim_decl> DimDeclList DimDecl
+%type <dim_list> DimList
 %type <const_decl> ConstDecl ConstDeclList
 %type <string> Identifier
 %type <case_clausule> CaseClausules
@@ -202,16 +205,25 @@ SimpleStatement
                                             { $$ = new_forto_statement(ctx, $2, $4, $6, $7, $9); CHECK_ERROR; }
     | tFOR tEACH Identifier tIN Expression tNL StatementsNl_opt tNEXT
                                             { $$ = new_foreach_statement(ctx, $3, $5, $7); }
-    | tSELECT tCASE Expression tNL CaseClausules tEND tSELECT
+    | tSELECT tCASE Expression StSep CaseClausules tEND tSELECT
                                             { $$ = new_select_statement(ctx, $3, $5); }
 
 MemberExpression
     : Identifier                            { $$ = new_member_expression(ctx, NULL, $1); CHECK_ERROR; }
     | CallExpression '.' Identifier         { $$ = new_member_expression(ctx, $1, $3); CHECK_ERROR; }
 
-DimDeclList /* FIXME: Support arrays */
-    : Identifier                            { $$ = new_dim_decl(ctx, $1, NULL); CHECK_ERROR; }
-    | Identifier ',' DimDeclList            { $$ = new_dim_decl(ctx, $1, $3); CHECK_ERROR; }
+DimDeclList
+    : DimDecl                               { $$ = $1; }
+    | DimDecl ',' DimDeclList               { $1->next = $3; $$ = $1; }
+
+DimDecl
+    : Identifier                            { $$ = new_dim_decl(ctx, $1, FALSE, NULL); CHECK_ERROR; }
+    | Identifier '(' DimList ')'            { $$ = new_dim_decl(ctx, $1, TRUE, $3); CHECK_ERROR; }
+    | Identifier tEMPTYBRACKETS             { $$ = new_dim_decl(ctx, $1, TRUE, NULL); CHECK_ERROR; }
+
+DimList
+    : IntegerValue                          { $$ = new_dim(ctx, $1, NULL); }
+    | IntegerValue ',' DimList              { $$ = new_dim(ctx, $1, $3); }
 
 ConstDeclList
     : ConstDecl                             { $$ = $1; }
@@ -261,8 +273,8 @@ Else_opt
 
 CaseClausules
     : /* empty */                          { $$ = NULL; }
-    | tCASE tELSE tNL StatementsNl         { $$ = new_case_clausule(ctx, NULL, $4, NULL); }
-    | tCASE ExpressionList tNL StatementsNl_opt CaseClausules
+    | tCASE tELSE StSep StatementsNl       { $$ = new_case_clausule(ctx, NULL, $4, NULL); }
+    | tCASE ExpressionList StSep StatementsNl_opt CaseClausules
                                            { $$ = new_case_clausule(ctx, $2, $4, $5); }
 
 Arguments_opt
@@ -369,6 +381,10 @@ NumericLiteralExpression
     | tLong                         { $$ = new_long_expression(ctx, EXPR_ULONG, $1); CHECK_ERROR; }
     | tDouble                       { $$ = new_double_expression(ctx, $1); CHECK_ERROR; }
 
+IntegerValue
+    : tShort                        { $$ = $1; }
+    | '0'                           { $$ = 0; }
+    | tLong                         { $$ = $1; }
 
 PrimaryExpression
     : '(' Expression ')'            { $$ = new_unary_expression(ctx, EXPR_BRACKETS, $2); }
@@ -380,7 +396,10 @@ ClassDeclaration
 ClassBody
     : /* empty */                               { $$ = new_class_decl(ctx); }
     | FunctionDecl tNL ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
-    | Storage tIdentifier tNL ClassBody         { $$ = add_variant_prop(ctx, $4, $2, $1); CHECK_ERROR; }
+    /* FIXME: We should use DimDecl here to support arrays, but that conflicts with PropertyDecl. */
+    | Storage tIdentifier tNL ClassBody         { dim_decl_t *dim_decl = new_dim_decl(ctx, $2, FALSE, NULL); CHECK_ERROR;
+                                                  $$ = add_dim_prop(ctx, $4, dim_decl, $1); CHECK_ERROR; }
+    | tDIM DimDecl tNL ClassBody                { $$ = add_dim_prop(ctx, $4, $2, 0); CHECK_ERROR; }
     | PropertyDecl tNL ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
 
 PropertyDecl
@@ -415,14 +434,20 @@ ArgumentDeclList
     | ArgumentDecl ',' ArgumentDeclList         { $1->next = $3; $$ = $1; }
 
 ArgumentDecl
-    : Identifier                                { $$ = new_argument_decl(ctx, $1, TRUE); }
-    | tBYREF Identifier                         { $$ = new_argument_decl(ctx, $2, TRUE); }
-    | tBYVAL Identifier                         { $$ = new_argument_decl(ctx, $2, FALSE); }
+    : Identifier EmptyBrackets_opt              { $$ = new_argument_decl(ctx, $1, TRUE); }
+    | tBYREF Identifier EmptyBrackets_opt       { $$ = new_argument_decl(ctx, $2, TRUE); }
+    | tBYVAL Identifier EmptyBrackets_opt       { $$ = new_argument_decl(ctx, $2, FALSE); }
 
 /* 'property' may be both keyword and identifier, depending on context */
 Identifier
     : tIdentifier    { $$ = $1; }
     | tPROPERTY      { $$ = propertyW; }
+
+/* Some statements accept both new line and ':' as a separator */
+StSep
+    : tNL
+    | ':'
+
 %%
 
 static int parser_error(parser_ctx_t *ctx, const char *str)
@@ -619,7 +644,7 @@ static statement_t *new_set_statement(parser_ctx_t *ctx, member_expression_t *le
     return &stat->stat;
 }
 
-static dim_decl_t *new_dim_decl(parser_ctx_t *ctx, const WCHAR *name, dim_decl_t *next)
+static dim_decl_t *new_dim_decl(parser_ctx_t *ctx, const WCHAR *name, BOOL is_array, dim_list_t *dims)
 {
     dim_decl_t *decl;
 
@@ -628,8 +653,23 @@ static dim_decl_t *new_dim_decl(parser_ctx_t *ctx, const WCHAR *name, dim_decl_t
         return NULL;
 
     decl->name = name;
-    decl->next = next;
+    decl->is_array = is_array;
+    decl->dims = dims;
+    decl->next = NULL;
     return decl;
+}
+
+static dim_list_t *new_dim(parser_ctx_t *ctx, unsigned val, dim_list_t *next)
+{
+    dim_list_t *ret;
+
+    ret = parser_alloc(ctx, sizeof(*ret));
+    if(!ret)
+        return NULL;
+
+    ret->val = val;
+    ret->next = next;
+    return ret;
 }
 
 static statement_t *new_dim_statement(parser_ctx_t *ctx, dim_decl_t *decls)
@@ -860,24 +900,17 @@ static class_decl_t *add_class_function(parser_ctx_t *ctx, class_decl_t *class_d
     return class_decl;
 }
 
-static class_decl_t *add_variant_prop(parser_ctx_t *ctx, class_decl_t *class_decl, const WCHAR *identifier, unsigned storage_flags)
+static class_decl_t *add_dim_prop(parser_ctx_t *ctx, class_decl_t *class_decl, dim_decl_t *dim_decl, unsigned storage_flags)
 {
-    class_prop_decl_t *prop;
-
     if(storage_flags & STORAGE_IS_DEFAULT) {
         FIXME("variant prop van't be default value\n");
         ctx->hres = E_FAIL;
         return NULL;
     }
 
-    prop = parser_alloc(ctx, sizeof(*prop));
-    if(!prop)
-        return NULL;
-
-    prop->name = identifier;
-    prop->is_public = !(storage_flags & STORAGE_IS_PRIVATE);
-    prop->next = class_decl->props;
-    class_decl->props = prop;
+    dim_decl->is_public = !(storage_flags & STORAGE_IS_PRIVATE);
+    dim_decl->next = class_decl->props;
+    class_decl->props = dim_decl;
     return class_decl;
 }
 

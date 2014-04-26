@@ -41,11 +41,22 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
                 * FUNCTION: Cleans up after a file has been closed.
                 */
 {
+    PFCB Fcb;
 
     DPRINT("CdfsCleanupFile(DeviceExt %p, FileObject %p)\n",
         DeviceExt,
         FileObject);
 
+    Fcb = FileObject->FsContext;
+    if (!Fcb)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Notify about the cleanup */
+    FsRtlNotifyCleanup(DeviceExt->NotifySync,
+                       &(DeviceExt->NotifyList),
+                       FileObject->FsContext2);
 
     /* Uninitialize file cache if initialized for this file object. */
     if (FileObject->SectionObjectPointer && FileObject->SectionObjectPointer->SharedCacheMap)

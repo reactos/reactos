@@ -78,6 +78,21 @@ interface IXmlReader : IUnknown
     BOOL IsEOF(void);
 }
 
+/* IXmlResolver */
+[
+  local,
+  object,
+  uuid(7279fc82-709d-4095-b63d-69fe4b0d9030),
+  pointer_default(unique)
+]
+interface IXmlResolver : IUnknown
+{
+    HRESULT ResolveUri([in] LPCWSTR base_uri,
+                       [in] LPCWSTR public_id,
+                       [in] LPCWSTR system_id,
+                       [out] IUnknown **input);
+}
+
 /* IXmlReader state */
 typedef enum XmlReadState
 {
@@ -278,3 +293,10 @@ interface IXmlWriter : IUnknown
     HRESULT WriteWhitespace([in] LPCWSTR pwszWhitespace);
     HRESULT Flush();
 }
+
+/* IXmlWriter construction */
+cpp_quote("STDAPI CreateXmlWriter(REFIID riid, void **ppvObject, IMalloc *pMalloc);")
+
+cpp_quote("typedef IUnknown IXmlWriterOutput;")
+cpp_quote("STDAPI CreateXmlWriterOutputWithEncodingName(IUnknown *stream, IMalloc *pMalloc,")
+cpp_quote("                                             LPCWSTR encoding, IXmlWriterOutput **output);")

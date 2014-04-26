@@ -215,9 +215,11 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         {
             /* it's root : complete essentials fields then return ok */
             RtlZeroMemory(Fcb, sizeof(FCB));
+            RtlInitEmptyUnicodeString(&Fcb->PathName, Fcb->PathNameBuffer, sizeof(Fcb->PathNameBuffer));
 
-            Fcb->PathName[0] = '\\';
-            Fcb->ObjectName = &Fcb->PathName[1];
+            Fcb->PathNameBuffer[0] = '\\';
+            Fcb->PathName.Length = sizeof(WCHAR);
+            Fcb->ObjectName = &Fcb->PathNameBuffer[1];
             Fcb->Entry.ExtentLocationL = DeviceExt->CdInfo.RootStart;
             Fcb->Entry.DataLengthL = DeviceExt->CdInfo.RootSize;
             Fcb->Entry.FileFlags = 0x02; //FILE_ATTRIBUTE_DIRECTORY;
@@ -226,7 +228,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
                 *pDirIndex = 0;
             if (pOffset)
                 *pOffset = 0;
-            DPRINT("CdfsFindFile: new Pathname %S, new Objectname %S)\n",Fcb->PathName, Fcb->ObjectName);
+            DPRINT("CdfsFindFile: new Pathname %wZ, new Objectname %S)\n",&Fcb->PathName, Fcb->ObjectName);
             return STATUS_SUCCESS;
         }
     }
@@ -303,12 +305,12 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         if (FsRtlIsNameInExpression(&FileToFindUpcase, &LongName, TRUE, NULL) ||
             FsRtlIsNameInExpression(&FileToFindUpcase, &ShortName, TRUE, NULL))
         {
-            if (Parent->PathName[0])
+            if (Parent->PathName.Buffer[0])
             {
-                len = wcslen(Parent->PathName);
-                memcpy(Fcb->PathName, Parent->PathName, len*sizeof(WCHAR));
-                Fcb->ObjectName=&Fcb->PathName[len];
-                if (len != 1 || Fcb->PathName[0] != '\\')
+                RtlCopyUnicodeString(&Fcb->PathName, &Parent->PathName);
+                len = Parent->PathName.Length / sizeof(WCHAR);
+                Fcb->ObjectName=&Fcb->PathName.Buffer[len];
+                if (len != 1 || Fcb->PathName.Buffer[0] != '\\')
                 {
                     Fcb->ObjectName[0] = '\\';
                     Fcb->ObjectName = &Fcb->ObjectName[1];
@@ -316,16 +318,16 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             }
             else
             {
-                Fcb->ObjectName=Fcb->PathName;
+                Fcb->ObjectName=Fcb->PathName.Buffer;
                 Fcb->ObjectName[0]='\\';
                 Fcb->ObjectName=&Fcb->ObjectName[1];
             }
 
-            DPRINT("PathName '%S'  ObjectName '%S'\n", Fcb->PathName, Fcb->ObjectName);
+            DPRINT("PathName '%wZ'  ObjectName '%S'\n", &Fcb->PathName, Fcb->ObjectName);
 
             memcpy(&Fcb->Entry, Record, sizeof(DIR_RECORD));
             wcsncpy(Fcb->ObjectName, name, min(wcslen(name) + 1,
-                MAX_PATH - wcslen(Fcb->PathName) + wcslen(Fcb->ObjectName)));
+                MAX_PATH - (Fcb->PathName.Length / sizeof(WCHAR)) + wcslen(Fcb->ObjectName)));
 
             /* Copy short name */
             Fcb->ShortNameU.Length = ShortName.Length;
@@ -338,8 +340,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             if (pOffset)
                 *pOffset = Offset;
 
-            DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %u\n",
-                Fcb->PathName, Fcb->ObjectName, DirIndex);
+            DPRINT("FindFile: new Pathname %wZ, new Objectname %S, DirIndex %u\n",
+                &Fcb->PathName, Fcb->ObjectName, DirIndex);
 
             RtlFreeUnicodeString(&FileToFindUpcase);
             CcUnpinData(Context);
@@ -572,6 +574,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     DeviceExtension = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = Stack->FileObject;
+    RtlInitEmptyUnicodeString(&TempFcb.PathName, TempFcb.PathNameBuffer, sizeof(TempFcb.PathNameBuffer));
 
     Ccb = (PCCB)FileObject->FsContext2;
     Fcb = (PFCB)FileObject->FsContext;
@@ -646,7 +649,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     }
     DPRINT("Buffer = %p  tofind = %wZ\n", Buffer, &Ccb->DirectorySearchPattern);
 
-    TempFcb.ObjectName = TempFcb.PathName;
+    TempFcb.ObjectName = TempFcb.PathName.Buffer;
     while (Status == STATUS_SUCCESS && BufferLength > 0)
     {
         Status = CdfsFindFile(DeviceExtension,
@@ -746,6 +749,39 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 }
 
 
+static NTSTATUS
+CdfsNotifyChangeDirectory(PDEVICE_OBJECT DeviceObject,
+                          PIRP Irp)
+{
+    PDEVICE_EXTENSION DeviceExtension;
+    PFCB Fcb;
+    PCCB Ccb;
+    PIO_STACK_LOCATION Stack;
+    PFILE_OBJECT FileObject;
+
+    DPRINT("CdfsNotifyChangeDirectory() called\n");
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    FileObject = Stack->FileObject;
+
+    Ccb = (PCCB)FileObject->FsContext2;
+    Fcb = (PFCB)FileObject->FsContext;
+ 
+    FsRtlNotifyFullChangeDirectory(DeviceExtension->NotifySync,
+                                   &(DeviceExtension->NotifyList),
+                                   Ccb,
+                                   (PSTRING)&(Fcb->PathName),
+                                   BooleanFlagOn(Stack->Flags, SL_WATCH_TREE),
+                                   FALSE,
+                                   Stack->Parameters.NotifyDirectory.CompletionFilter,
+                                   Irp,
+                                   NULL,
+                                   NULL);
+
+    return STATUS_PENDING;
+}
+
 
 NTSTATUS NTAPI
 CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
@@ -767,8 +803,8 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
         break;
 
     case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-        DPRINT1("IRP_MN_NOTIFY_CHANGE_DIRECTORY\n");
-        Status = STATUS_NOT_IMPLEMENTED;
+        Status = CdfsNotifyChangeDirectory(DeviceObject,
+            Irp);
         break;
 
     default:
@@ -780,7 +816,10 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    if (Status != STATUS_PENDING)
+    {
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
     FsRtlExitFileSystem();
 
     return(Status);

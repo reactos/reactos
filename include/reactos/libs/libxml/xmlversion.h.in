@@ -98,6 +98,15 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #endif
 
 /**
+ * LIBXML_THREAD_ALLOC_ENABLED:
+ *
+ * Whether the allocation hooks are per-thread
+ */
+#if @WITH_THREAD_ALLOC@
+#define LIBXML_THREAD_ALLOC_ENABLED
+#endif
+
+/**
  * LIBXML_TREE_ENABLED:
  *
  * Whether the DOM like tree manipulation API support is configured in

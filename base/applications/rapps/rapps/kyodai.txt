@@ -1,5 +1,5 @@
 ﻿; UTF-8
-
+; PL translation by wojo664
 [Section]
 Name = Kyodai Mahjongg
 Version = 21.42
@@ -15,6 +15,9 @@ Description = Eines der besten Mahjongg Solitaire Spiele im Netz.
 
 [Section.0410]
 Description = Uno dei migliori giochi di Mahjongg Solitaire.
+
+[Section.0415]
+Description = Jedna z najlepszych gier Mahjongg Solitaire.
 
 [Section.0418]
 Licence = Versiune de evaluare

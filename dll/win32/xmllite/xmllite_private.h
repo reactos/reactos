@@ -55,4 +55,29 @@ static inline BOOL heap_free(void *mem)
     return HeapFree(GetProcessHeap(), 0, mem);
 }
 
+static inline void *m_alloc(IMalloc *imalloc, size_t len)
+{
+    if (imalloc)
+        return IMalloc_Alloc(imalloc, len);
+    else
+        return heap_alloc(len);
+}
+
+static inline void m_free(IMalloc *imalloc, void *mem)
+{
+    if (imalloc)
+        IMalloc_Free(imalloc, mem);
+    else
+        heap_free(mem);
+}
+
+typedef enum
+{
+    XmlEncoding_UTF16,
+    XmlEncoding_UTF8,
+    XmlEncoding_Unknown
+} xml_encoding;
+
+xml_encoding parse_encoding_name(const WCHAR *name, int len) DECLSPEC_HIDDEN;
+
 #endif /* __XMLLITE_PRIVATE__ */

@@ -1,5 +1,5 @@
 ﻿; UTF-8
-
+; PL translation by wojo664
 [Section]
 Name = Super DX-Ball
 Version = 1.1
@@ -14,12 +14,16 @@ CDPath = none
 [Section.0407]
 Description = Super DX-Ball ist ein lebendiges und buntes Brick-Breaking-Spiel.
 
+[Section.0415]
+Description = Super DX-Ball - pełna koloru i animacji gra polegająca na zbijaniu klocków.
+
 [Section.0418]
 Licence = Versiune de evaluare
 Description = Un joc ce implică spargerea de cărămizi.
 Size = 3,8 Mo
 
 [Section.041f]
+Name = Süper DX-Ball
 Licence = Kısıtlı
-Description = Super DX-Ball, canlı ve renkli bir tuğla kırma oyunudur.
+Description = Süper DX-Ball, canlı ve renkli bir tuğla kırma oyunudur.
 Size = 3,8 MB

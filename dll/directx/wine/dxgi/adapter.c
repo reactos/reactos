@@ -33,6 +33,7 @@ static HRESULT STDMETHODCALLTYPE dxgi_adapter_QueryInterface(IWineDXGIAdapter *i
     if (IsEqualGUID(riid, &IID_IUnknown)
             || IsEqualGUID(riid, &IID_IDXGIObject)
             || IsEqualGUID(riid, &IID_IDXGIAdapter)
+            || IsEqualGUID(riid, &IID_IDXGIAdapter1)
             || IsEqualGUID(riid, &IID_IWineDXGIAdapter))
     {
         IUnknown_AddRef(iface);
@@ -130,9 +131,9 @@ static HRESULT STDMETHODCALLTYPE dxgi_adapter_EnumOutputs(IWineDXGIAdapter *ifac
     return S_OK;
 }
 
-static HRESULT STDMETHODCALLTYPE dxgi_adapter_GetDesc(IWineDXGIAdapter *iface, DXGI_ADAPTER_DESC *desc)
+static HRESULT STDMETHODCALLTYPE dxgi_adapter_GetDesc1(IWineDXGIAdapter *iface, DXGI_ADAPTER_DESC1 *desc)
 {
-    struct dxgi_adapter *This = impl_from_IWineDXGIAdapter(iface);
+    struct dxgi_adapter *adapter = impl_from_IWineDXGIAdapter(iface);
     struct wined3d_adapter_identifier adapter_id;
     char description[128];
     struct wined3d *wined3d;
@@ -140,37 +141,56 @@ static HRESULT STDMETHODCALLTYPE dxgi_adapter_GetDesc(IWineDXGIAdapter *iface, D
 
     TRACE("iface %p, desc %p.\n", iface, desc);
 
-    if (!desc) return E_INVALIDARG;
+    if (!desc)
+        return E_INVALIDARG;
 
-    wined3d = IWineDXGIFactory_get_wined3d(This->parent);
+    wined3d = IWineDXGIFactory_get_wined3d(adapter->parent);
     adapter_id.driver_size = 0;
     adapter_id.description = description;
     adapter_id.description_size = sizeof(description);
     adapter_id.device_name_size = 0;
 
     EnterCriticalSection(&dxgi_cs);
-    hr = wined3d_get_adapter_identifier(wined3d, This->ordinal, 0, &adapter_id);
+    hr = wined3d_get_adapter_identifier(wined3d, adapter->ordinal, 0, &adapter_id);
     wined3d_decref(wined3d);
     LeaveCriticalSection(&dxgi_cs);
 
-    if (SUCCEEDED(hr))
-    {
-        if (!MultiByteToWideChar(CP_ACP, 0, description, -1, desc->Description, 128))
-        {
-            DWORD err = GetLastError();
-            ERR("Failed to translate description %s (%#x).\n", debugstr_a(description), err);
-            hr = E_FAIL;
-        }
+    if (FAILED(hr))
+        return hr;
 
-        desc->VendorId = adapter_id.vendor_id;
-        desc->DeviceId = adapter_id.device_id;
-        desc->SubSysId = adapter_id.subsystem_id;
-        desc->Revision = adapter_id.revision;
-        desc->DedicatedVideoMemory = adapter_id.video_memory;
-        desc->DedicatedSystemMemory = 0; /* FIXME */
-        desc->SharedSystemMemory = 0; /* FIXME */
-        memcpy(&desc->AdapterLuid, &adapter_id.adapter_luid, sizeof(desc->AdapterLuid));
+    if (!MultiByteToWideChar(CP_ACP, 0, description, -1, desc->Description, 128))
+    {
+        DWORD err = GetLastError();
+        ERR("Failed to translate description %s (%#x).\n", debugstr_a(description), err);
+        hr = E_FAIL;
     }
+
+    desc->VendorId = adapter_id.vendor_id;
+    desc->DeviceId = adapter_id.device_id;
+    desc->SubSysId = adapter_id.subsystem_id;
+    desc->Revision = adapter_id.revision;
+    desc->DedicatedVideoMemory = adapter_id.video_memory;
+    desc->DedicatedSystemMemory = 0; /* FIXME */
+    desc->SharedSystemMemory = 0; /* FIXME */
+    memcpy(&desc->AdapterLuid, &adapter_id.adapter_luid, sizeof(desc->AdapterLuid));
+    desc->Flags = 0;
+
+    return hr;
+}
+
+static HRESULT STDMETHODCALLTYPE dxgi_adapter_GetDesc(IWineDXGIAdapter *iface, DXGI_ADAPTER_DESC *desc)
+{
+    DXGI_ADAPTER_DESC1 desc1;
+    HRESULT hr;
+
+    TRACE("iface %p, desc %p.\n", iface, desc);
+
+    if (!desc)
+        return E_INVALIDARG;
+
+    if (FAILED(hr = dxgi_adapter_GetDesc1(iface, &desc1)))
+        return hr;
+    memcpy(desc, &desc1, sizeof(*desc));
 
     return hr;
 }
@@ -209,6 +229,8 @@ static const struct IWineDXGIAdapterVtbl dxgi_adapter_vtbl =
     dxgi_adapter_EnumOutputs,
     dxgi_adapter_GetDesc,
     dxgi_adapter_CheckInterfaceSupport,
+    /* IDXGIAdapter1 methods */
+    dxgi_adapter_GetDesc1,
     /* IWineDXGIAdapter methods */
     dxgi_adapter_get_ordinal,
 };

@@ -54,22 +54,61 @@ DEFINE_GUID(GUID_WineContainerFormatTga, 0x0c44fda1,0xa5c5,0x4298,0x96,0x85,0x47
 
 DEFINE_GUID(GUID_VendorWine, 0xddf46da1,0x7dc1,0x404e,0x98,0xf2,0xef,0xa4,0x8d,0xfc,0x95,0x0a);
 
-extern HRESULT FormatConverter_CreateInstance(IUnknown *pUnkOuter, REFIID riid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT ComponentFactory_CreateInstance(IUnknown *pUnkOuter, REFIID riid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT BmpDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID riid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT PngDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT BmpEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT DibDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT GifDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID riid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT IcoDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT JpegDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT JpegEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT TiffDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT TiffEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+DEFINE_GUID(IID_IMILBitmapSource,0x7543696a,0xbc8d,0x46b0,0x5f,0x81,0x8d,0x95,0x72,0x89,0x72,0xbe);
+#define INTERFACE IMILBitmapSource
+DECLARE_INTERFACE_(IMILBitmapSource,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IMILBitmapSource methods ***/
+    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *);
+    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *);
+    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *);
+    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *);
+    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *);
+    STDMETHOD_(HRESULT,UnknownMethod1)(THIS_ void **);
+};
+#undef INTERFACE
 
-extern HRESULT TgaDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+#define INTERFACE IMILUnknown1
+DECLARE_INTERFACE_(IMILUnknown1,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+};
+#undef INTERFACE
+
+#define INTERFACE IMILUnknown2
+DECLARE_INTERFACE_(IMILUnknown2,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** unknown methods ***/
+    STDMETHOD_(HRESULT,UnknownMethod1)(THIS_ void *, void *) PURE;
+};
+#undef INTERFACE
+
+extern HRESULT FormatConverter_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT ComponentFactory_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT BmpDecoder_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT PngDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT PngEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT BmpEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT DibDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT GifDecoder_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT IcoDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT JpegDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT JpegEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT TiffDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT TiffEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT IcnsEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT TgaDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 
 extern HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight,
     UINT stride, UINT datasize, BYTE *bits,
@@ -122,16 +161,16 @@ typedef struct _MetadataHandlerVtbl
         ULARGE_INTEGER *size);
 } MetadataHandlerVtbl;
 
-extern HRESULT MetadataReader_Create(const MetadataHandlerVtbl *vtable, IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT MetadataReader_Create(const MetadataHandlerVtbl *vtable, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 
-extern HRESULT UnknownMetadataReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT IfdMetadataReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
-extern HRESULT PngTextReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT LSDReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
-extern HRESULT IMDReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
-extern HRESULT GCEReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
-extern HRESULT APEReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
-extern HRESULT GifCommentReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+extern HRESULT UnknownMetadataReader_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT IfdMetadataReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+extern HRESULT PngTextReader_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT LSDReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+extern HRESULT IMDReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+extern HRESULT GCEReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+extern HRESULT APEReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+extern HRESULT GifCommentReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;
 
 extern HRESULT stream_initialize_from_filehandle(IWICStream *iface, HANDLE hfile) DECLSPEC_HIDDEN;
 

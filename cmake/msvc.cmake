@@ -56,8 +56,7 @@ add_compile_flags("/wd4290")
 # - C4163: 'identifier': not available as an intrinsic function
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
-# - C4603: macro is not defined or definition is different after precompiled header use
-add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603")
+add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700")
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses

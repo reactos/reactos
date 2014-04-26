@@ -199,7 +199,7 @@ static LPWSTR strdupW(LPCWSTR p)
 static BOOL apd_copyfile( WCHAR *pathname, WCHAR *file_part, apd_data_t *apd )
 {
     WCHAR *srcname;
-    DWORD res;
+    BOOL res;
 
     apd->src[apd->srclen] = '\0';
     apd->dst[apd->dstlen] = '\0';
@@ -222,9 +222,9 @@ static BOOL apd_copyfile( WCHAR *pathname, WCHAR *file_part, apd_data_t *apd )
 
     /* FIXME: handle APD_COPY_NEW_FILES */
     res = CopyFileW(srcname, apd->dst, FALSE);
-    TRACE("got %u with %u\n", res, GetLastError());
+    TRACE("got %d with %u\n", res, GetLastError());
 
-    return (apd->lazy) ? TRUE : res;
+    return apd->lazy || res;
 }
 
 /******************************************************************
@@ -234,7 +234,7 @@ static BOOL apd_copyfile( WCHAR *pathname, WCHAR *file_part, apd_data_t *apd )
  *
  * RETURNS
  *  the length (in WCHAR) of the serverpart (0 for the local computer)
- *  (-length), when the name is to long
+ *  (-length), when the name is too long
  *
  */
 static LONG copy_servername_from_name(LPCWSTR name, LPWSTR target)
@@ -1115,7 +1115,7 @@ static HMODULE driver_load(const printenv_t * env, LPWSTR dllname)
 
     if (!fpGetPrinterDriverDirectory(NULL, (LPWSTR) env->envname, 1,
                                      (LPBYTE) fullname, len, &len)) {
-        /* Should never Fail */
+        /* Should never fail */
         SetLastError(ERROR_BUFFER_OVERFLOW);
         return NULL;
     }
@@ -1319,7 +1319,7 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
     len = sizeof(apd.src) - sizeof(version3_subdirW) - sizeof(WCHAR);
     if (!fpGetPrinterDriverDirectory(NULL, (LPWSTR) env->envname, 1,
                                     (LPBYTE) apd.src, len, &len)) {
-        /* Should never Fail */
+        /* Should never fail */
         return FALSE;
     }
     memcpy(apd.dst, apd.src, len);

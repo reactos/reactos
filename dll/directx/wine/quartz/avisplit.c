@@ -47,7 +47,7 @@ typedef struct StreamData
     DWORD entries;
     AVISTDINDEX **stdindex;
     DWORD frames;
-    DWORD seek;
+    BOOL seek;
 
     /* Position, in index units */
     DWORD pos, pos_next, index, index_next;
@@ -431,7 +431,7 @@ static HRESULT AVISplitter_first_request(LPVOID iface)
         stream->index_next = stream->index;
 
         /* This was sent after stopped->paused or stopped->playing, so set seek */
-        stream->seek = 1;
+        stream->seek = TRUE;
 
         /* There should be a packet queued from AVISplitter_next_request last time
          * It needs to be done now because this is the only way to ensure that every
@@ -956,7 +956,7 @@ static HRESULT AVISplitter_InitializeStreams(AVISplitterImpl *This)
         DWORD y;
         DWORD64 frames = 0;
 
-        stream->seek = 1;
+        stream->seek = TRUE;
 
         if (stream->stdindex)
         {
@@ -1303,7 +1303,7 @@ static HRESULT WINAPI AVISplitter_seek(IMediaSeeking *iface)
         pin->dwSamplesProcessed = 0;
         stream->index = 0;
         stream->pos = 0;
-        stream->seek = 1;
+        stream->seek = TRUE;
         if (stream->stdindex)
         {
             DWORD y, z = 0;
@@ -1379,7 +1379,7 @@ static HRESULT WINAPI AVISplitter_seek(IMediaSeeking *iface)
             stream->index = 0;
         }
         stream->preroll = preroll;
-        stream->seek = 1;
+        stream->seek = TRUE;
     }
     LeaveCriticalSection(&This->Parser.filter.csFilter);
 

@@ -433,9 +433,11 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
 {
     static const WCHAR content_type_utf8W[] = {'C','o','n','t','e','n','t','-','T','y','p','e',':',' ',
         't','e','x','t','/','p','l','a','i','n',';','c','h','a','r','s','e','t','=','u','t','f','-','8','\r','\n',0};
+    static const WCHAR refererW[] = {'R','e','f','e','r','e','r',':',' ',0};
 
     BindStatusCallback *This = impl_from_IHttpNegotiate(iface);
     const struct httpheader *entry;
+    BSTR base_uri = NULL;
     WCHAR *buff, *ptr;
     int size = 0;
 
@@ -449,16 +451,39 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
     if (!list_empty(&This->request->reqheaders))
         size += This->request->reqheader_size*sizeof(WCHAR);
 
-    if (!size) return S_OK;
+    if (This->request->base_uri)
+    {
+        IUri_GetRawUri(This->request->base_uri, &base_uri);
+        size += SysStringLen(base_uri)*sizeof(WCHAR) + sizeof(refererW) + sizeof(crlfW);
+    }
+
+    if (!size)
+    {
+        SysFreeString(base_uri);
+        return S_OK;
+    }
 
     buff = CoTaskMemAlloc(size);
-    if (!buff) return E_OUTOFMEMORY;
+    if (!buff)
+    {
+        SysFreeString(base_uri);
+        return E_OUTOFMEMORY;
+    }
 
     ptr = buff;
     if (This->request->use_utf8_content)
     {
         lstrcpyW(ptr, content_type_utf8W);
         ptr += sizeof(content_type_utf8W)/sizeof(WCHAR)-1;
+    }
+
+    if (base_uri)
+    {
+        strcpyW(ptr, refererW);
+        strcatW(ptr, base_uri);
+        strcatW(ptr, crlfW);
+        ptr += strlenW(refererW) + SysStringLen(base_uri) + strlenW(crlfW);
+        SysFreeString(base_uri);
     }
 
     /* user headers */
@@ -1116,7 +1141,7 @@ static HRESULT httprequest_get_responseXML(httprequest *This, IDispatch **body)
     if (!body) return E_INVALIDARG;
     if (This->state != READYSTATE_COMPLETE) return E_FAIL;
 
-    hr = DOMDocument_create(MSXML_DEFAULT, NULL, (void**)&doc);
+    hr = DOMDocument_create(MSXML_DEFAULT, (void**)&doc);
     if (hr != S_OK) return hr;
 
     hr = httprequest_get_responseText(This, &str);
@@ -1546,6 +1571,8 @@ static void get_base_uri(httprequest *This)
         return;
 
     hr = IServiceProvider_QueryService(provider, &SID_SContainerDispatch, &IID_IHTMLDocument2, (void**)&doc);
+    if(FAILED(hr))
+        hr = IServiceProvider_QueryService(provider, &SID_SInternetHostSecurityManager, &IID_IHTMLDocument2, (void**)&doc);
     IServiceProvider_Release(provider);
     if(FAILED(hr))
         return;
@@ -1955,11 +1982,11 @@ static void init_httprequest(httprequest *req)
     req->safeopt = 0;
 }
 
-HRESULT XMLHTTPRequest_create(IUnknown *outer, void **obj)
+HRESULT XMLHTTPRequest_create(void **obj)
 {
     httprequest *req;
 
-    TRACE("(%p, %p)\n", outer, obj);
+    TRACE("(%p)\n", obj);
 
     req = heap_alloc( sizeof (*req) );
     if( !req )
@@ -1973,11 +2000,11 @@ HRESULT XMLHTTPRequest_create(IUnknown *outer, void **obj)
     return S_OK;
 }
 
-HRESULT ServerXMLHTTP_create(IUnknown *outer, void **obj)
+HRESULT ServerXMLHTTP_create(void **obj)
 {
     serverhttp *req;
 
-    TRACE("(%p, %p)\n", outer, obj);
+    TRACE("(%p)\n", obj);
 
     req = heap_alloc( sizeof (*req) );
     if( !req )
@@ -1996,14 +2023,14 @@ HRESULT ServerXMLHTTP_create(IUnknown *outer, void **obj)
 
 #else
 
-HRESULT XMLHTTPRequest_create(IUnknown *pUnkOuter, void **ppObj)
+HRESULT XMLHTTPRequest_create(void **ppObj)
 {
     MESSAGE("This program tried to use a XMLHTTPRequest object, but\n"
             "libxml2 support was not present at compile time.\n");
     return E_NOTIMPL;
 }
 
-HRESULT ServerXMLHTTP_create(IUnknown *outer, void **obj)
+HRESULT ServerXMLHTTP_create(void **obj)
 {
     MESSAGE("This program tried to use a ServerXMLHTTP object, but\n"
             "libxml2 support was not present at compile time.\n");

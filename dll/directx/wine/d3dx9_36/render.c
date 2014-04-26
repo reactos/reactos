@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Jأ³zef Kucia
+ * Copyright (C) 2012 Józef Kucia
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

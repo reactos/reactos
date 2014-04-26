@@ -138,8 +138,16 @@ typedef struct {
     expression_t *value_expr;
 } assign_statement_t;
 
+typedef struct _dim_list_t {
+    unsigned val;
+    struct _dim_list_t *next;
+} dim_list_t;
+
 typedef struct _dim_decl_t {
     const WCHAR *name;
+    BOOL is_array;
+    BOOL is_public; /* Used only for class members. */
+    dim_list_t *dims;
     struct _dim_decl_t *next;
 } dim_decl_t;
 
@@ -169,16 +177,10 @@ typedef struct {
     function_decl_t *func_decl;
 } function_statement_t;
 
-typedef struct _class_prop_decl_t {
-    BOOL is_public;
-    const WCHAR *name;
-    struct _class_prop_decl_t *next;
-} class_prop_decl_t;
-
 typedef struct _class_decl_t {
     const WCHAR *name;
     function_decl_t *funcs;
-    class_prop_decl_t *props;
+    dim_decl_t *props;
     struct _class_decl_t *next;
 } class_decl_t;
 

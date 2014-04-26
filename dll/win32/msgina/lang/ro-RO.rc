@@ -150,6 +150,8 @@ BEGIN
     IDS_LOGONTITLE "Mesaj de autentificare"
     IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă se face distincție între majuscule și minuscule."
     IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
+    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
+    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
 END
 
 /* Shutdown Dialog Strings */

@@ -176,7 +176,7 @@ static HRESULT WINAPI IDirectXFileImpl_CreateEnumObject(IDirectXFile* iface, LPV
     HGLOBAL resource_data;
     LPDXFILELOADRESOURCE lpdxflr = pvSource;
 
-    TRACE("Source in resource (module = %p, name = %s, type = %s\n", lpdxflr->hModule, debugstr_a(lpdxflr->lpName), debugstr_a(lpdxflr->lpType));
+    TRACE("Source in resource (module = %p, name = %s, type = %s)\n", lpdxflr->hModule, debugstr_a(lpdxflr->lpName), debugstr_a(lpdxflr->lpType));
 
     resource_info = FindResourceA(lpdxflr->hModule, lpdxflr->lpName, lpdxflr->lpType);
     if (!resource_info)

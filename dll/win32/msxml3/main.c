@@ -31,7 +31,9 @@
 #  ifdef HAVE_LIBXSLT_TRANSFORM_H
 #   include <libxslt/transform.h>
 #  endif
+#  include <libxslt/imports.h>
 #  include <libxslt/xsltutils.h>
+#  include <libxslt/variables.h>
 #  include <libxslt/xsltInternals.h>
 # endif
 #endif
@@ -48,7 +50,7 @@ void wineXmlCallbackLog(char const* caller, xmlErrorLevel lvl, char const* msg, 
 {
     enum __wine_debug_class dbcl;
     char buff[200];
-    static const int max_size = sizeof(buff) / sizeof(buff[0]);
+    const int max_size = sizeof(buff) / sizeof(buff[0]);
     int len;
 
     switch (lvl)
@@ -145,22 +147,19 @@ static int wineXmlFileCloseCallback (void * context)
     return CloseHandle(context) ? 0 : -1;
 }
 
-#endif
-
-
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-
-
 void* libxslt_handle = NULL;
 #ifdef SONAME_LIBXSLT
 # define DECL_FUNCPTR(f) typeof(f) * p##f = NULL
 DECL_FUNCPTR(xsltApplyStylesheet);
+DECL_FUNCPTR(xsltApplyStylesheetUser);
 DECL_FUNCPTR(xsltCleanupGlobals);
 DECL_FUNCPTR(xsltFreeStylesheet);
+DECL_FUNCPTR(xsltFreeTransformContext);
+DECL_FUNCPTR(xsltNewTransformContext);
+DECL_FUNCPTR(xsltNextImport);
 DECL_FUNCPTR(xsltParseStylesheetDoc);
+DECL_FUNCPTR(xsltQuoteUserParams);
+DECL_FUNCPTR(xsltSaveResultTo);
 # undef DECL_FUNCPTR
 #endif
 
@@ -178,9 +177,15 @@ static void init_libxslt(void)
         if (needed) { WARN("Can't find symbol %s\n", #f); goto sym_not_found; }
     LOAD_FUNCPTR(xsltInit, 0);
     LOAD_FUNCPTR(xsltApplyStylesheet, 1);
+    LOAD_FUNCPTR(xsltApplyStylesheetUser, 1);
     LOAD_FUNCPTR(xsltCleanupGlobals, 1);
     LOAD_FUNCPTR(xsltFreeStylesheet, 1);
+    LOAD_FUNCPTR(xsltFreeTransformContext, 1);
+    LOAD_FUNCPTR(xsltNewTransformContext, 1);
+    LOAD_FUNCPTR(xsltNextImport, 1);
     LOAD_FUNCPTR(xsltParseStylesheetDoc, 1);
+    LOAD_FUNCPTR(xsltQuoteUserParams, 1);
+    LOAD_FUNCPTR(xsltSaveResultTo, 1);
 #undef LOAD_FUNCPTR
 
     if (pxsltInit)
@@ -192,6 +197,15 @@ static void init_libxslt(void)
     libxslt_handle = NULL;
 #endif
 }
+
+#endif  /* HAVE_LIBXML2 */
+
+
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+    return S_FALSE;
+}
+
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
 {
@@ -214,11 +228,13 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
             WARN("Failed to register callbacks\n");
 
         schemasInit();
-#endif
         init_libxslt();
+#endif
         DisableThreadLibraryCalls(hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
+        if (reserved) break;
+#ifdef HAVE_LIBXML2
 #ifdef SONAME_LIBXSLT
         if (libxslt_handle)
         {
@@ -226,7 +242,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
             wine_dlclose(libxslt_handle, NULL, 0);
         }
 #endif
-#ifdef HAVE_LIBXML2
         /* Restore default Callbacks */
         xmlCleanupInputCallbacks();
         xmlRegisterDefaultInputCallbacks();

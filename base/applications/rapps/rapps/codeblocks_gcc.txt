@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Code::Blocks TDM-GCC (version 4.7.1, 32 bit)
+Version = 13.12
+Licence = GPLv3
+Description = A open source, cross-platform, powerful IDE. It contains TDM-GCC (version 4.7.1, 32 bit) compiler.
+Size = 97.8 MB
+Category = 7
+URLSite = http://www.codeblocks.org/
+URLDownload = http://sourceforge.net/projects/codeblocks/files/Binaries/13.12/Windows/codeblocks-13.12mingw-setup.exe
+CDPath = none
+
+[Section.0407]
+Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthält den TDM-GCC (version 4.7.1, 32 bit) Compiler.
+
+[Section.041f]
+Name = Code::Blocks TDM-GCC (sürüm 4.7.1, 32 bitlik)
+Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. TDM-GCC (sürüm 4.7.1, 32 bitlik) derleyicisini içerir.
+Size = 97,8 MB

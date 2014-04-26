@@ -4,6 +4,7 @@
  * FILE:       base/applications/games/solitaire/lang/it-IT.rc
  * PURPOSE:    Italian Language File for Solitaire
  * TRANSLATOR: Gabriel Ilardi
+ *             Marco Maria Emanuele Bartucci, 2014-04-19
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -18,8 +19,13 @@ BEGIN
     GROUPBOX "Carte", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Girane &Una", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Girane &Tre", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    AUTOCHECKBOX "&Visualizza il tempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Punteggio", -1, 100, 7, 75, 53
+    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
+    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    AUTOCHECKBOX "&Visualizza il tempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "&Barra di stato", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Mantieni il punteggio", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Annulla", IDCANCEL, 101, 97, 50, 14
 END
@@ -54,6 +60,8 @@ BEGIN
     IDS_SOL_QUIT "Chiudere la partita in corso?"
     IDS_SOL_WIN "Congratulazioni, hai vinto!!"
     IDS_SOL_DEAL "Nuova partita?"
+    IDS_SOL_SCORE "Punteggio: %d"
+    IDS_SOL_TIME "Tempo: %d"
 END
 
 /* Menus */

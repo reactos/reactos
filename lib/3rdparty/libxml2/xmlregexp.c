@@ -6838,7 +6838,7 @@ xmlExpRef(xmlExpNodePtr exp) {
  * xmlExpNewAtom:
  * @ctxt: the expression context
  * @name: the atom name
- * @len: the atom name lenght in byte (or -1);
+ * @len: the atom name length in byte (or -1);
  *
  * Get the atom associated to this name from that context
  *
@@ -6975,7 +6975,7 @@ tail:
  * @ctxt: the expression context
  * @exp: the expression
  * @langList: where to store the tokens
- * @len: the allocated lenght of @list
+ * @len: the allocated length of @list
  *
  * Find all the strings used in @exp and store them in @list
  *
@@ -7041,7 +7041,7 @@ tail:
  * @ctxt: the expression context
  * @exp: the expression
  * @tokList: where to store the tokens
- * @len: the allocated lenght of @list
+ * @len: the allocated length of @list
  *
  * Find all the strings that appears at the start of the languages
  * accepted by @exp and store them in @list. E.g. for (a, b) | c

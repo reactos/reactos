@@ -90,9 +90,14 @@ static ITypeInfo *typeinfos[LAST_tid];
 static REFIID tid_ids[] = {
     &IID_NULL,
     &IID_IDictionary,
+    &IID_IDrive,
+    &IID_IDriveCollection,
+    &IID_IFile,
+    &IID_IFileCollection,
     &IID_IFileSystem3,
     &IID_IFolder,
-    &IID_IFile
+    &IID_IFolderCollection,
+    &IID_ITextStream
 };
 
 static HRESULT load_typelib(void)

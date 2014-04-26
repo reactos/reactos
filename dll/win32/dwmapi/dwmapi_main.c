@@ -116,7 +116,9 @@ HRESULT WINAPI DwmFlush(void)
  */
 HRESULT WINAPI DwmSetWindowAttribute(HWND hwnd, DWORD attributenum, LPCVOID attribute, DWORD size)
 {
-    FIXME("(%p, %x, %p, %x) stub\n", hwnd, attributenum, attribute, size);
+    static BOOL once;
+
+    if (!once++) FIXME("(%p, %x, %p, %x) stub\n", hwnd, attributenum, attribute, size);
 
     return E_NOTIMPL;
 }

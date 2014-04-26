@@ -20,6 +20,12 @@
 
 #include "wincodecs_private.h"
 
+HRESULT WINAPI IPropertyBag2_Write_Proxy(IPropertyBag2 *iface,
+    ULONG cProperties, PROPBAG2 *ppropbag, VARIANT *pvarValue)
+{
+    return IPropertyBag2_Write(iface, cProperties, ppropbag, pvarValue);
+}
+
 HRESULT WINAPI IWICBitmapClipper_Initialize_Proxy_W(IWICBitmapClipper *iface,
     IWICBitmapSource *pISource, const WICRect *prc)
 {
@@ -614,5 +620,45 @@ HRESULT WINAPI WICCreateImagingFactory_Proxy(UINT SDKVersion, IWICImagingFactory
 {
     TRACE("%x, %p\n", SDKVersion, ppIImagingFactory);
 
-    return ComponentFactory_CreateInstance(NULL, &IID_IWICImagingFactory, (void**)ppIImagingFactory);
+    return ComponentFactory_CreateInstance(&IID_IWICImagingFactory, (void**)ppIImagingFactory);
+}
+
+HRESULT WINAPI WICSetEncoderFormat_Proxy(IWICBitmapSource *pSourceIn,
+    IWICPalette *pIPalette, IWICBitmapFrameEncode *pIFrameEncode,
+    IWICBitmapSource **ppSourceOut)
+{
+    HRESULT hr;
+    WICPixelFormatGUID pixelformat, framepixelformat;
+
+    TRACE("%p,%p,%p,%p\n", pSourceIn, pIPalette, pIFrameEncode, ppSourceOut);
+
+    if (pIPalette) FIXME("ignoring palette\n");
+
+    if (!pSourceIn || !pIFrameEncode || !ppSourceOut)
+        return E_INVALIDARG;
+
+    *ppSourceOut = NULL;
+
+    hr = IWICBitmapSource_GetPixelFormat(pSourceIn, &pixelformat);
+
+    if (SUCCEEDED(hr))
+    {
+        framepixelformat = pixelformat;
+        hr = IWICBitmapFrameEncode_SetPixelFormat(pIFrameEncode, &framepixelformat);
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        if (IsEqualGUID(&pixelformat, &framepixelformat))
+        {
+            *ppSourceOut = pSourceIn;
+            IWICBitmapSource_AddRef(pSourceIn);
+        }
+        else
+        {
+            hr = WICConvertBitmapSource(&framepixelformat, pSourceIn, ppSourceOut);
+        }
+    }
+
+    return hr;
 }

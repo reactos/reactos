@@ -299,7 +299,7 @@ static LONG WINAPI ICMStream_fnFindSample(IAVIStream *iface, LONG pos,
       return This->lLastKey;
     }
   } else if (flags & FIND_ANY) {
-    return pos; /* We really don't know, reread is to expensive, so guess. */
+    return pos; /* We really don't know, reread is too expensive, so guess. */
   } else if (flags & FIND_FORMAT) {
     if (flags & FIND_PREV)
       return 0;

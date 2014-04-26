@@ -58,10 +58,10 @@ struct handle_table
 
 void init_handle_table   (struct handle_table *lpTable) DECLSPEC_HIDDEN;
 void destroy_handle_table(struct handle_table *lpTable) DECLSPEC_HIDDEN;
-int  release_handle      (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
-int  copy_handle         (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy) DECLSPEC_HIDDEN;
-int  lookup_handle       (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject) DECLSPEC_HIDDEN;
-int  is_valid_handle     (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
+BOOL release_handle      (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
+BOOL copy_handle         (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy) DECLSPEC_HIDDEN;
+BOOL lookup_handle       (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject) DECLSPEC_HIDDEN;
+BOOL is_valid_handle     (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
 
 HCRYPTKEY new_object     (struct handle_table *lpTable, size_t cbSize, DWORD dwType, DESTRUCTOR destructor,
                            OBJECTHDR **ppObject) DECLSPEC_HIDDEN;

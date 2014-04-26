@@ -1009,7 +1009,7 @@ HRESULT VideoRenderer_create(IUnknown *pUnkOuter, void **ppv)
     pVideoRenderer->IUnknown_inner.lpVtbl = &IInner_VTable;
     pVideoRenderer->IAMFilterMiscFlags_iface.lpVtbl = &IAMFilterMiscFlags_Vtbl;
 
-    pVideoRenderer->init = 0;
+    pVideoRenderer->init = FALSE;
     ZeroMemory(&pVideoRenderer->SourceRect, sizeof(RECT));
     ZeroMemory(&pVideoRenderer->DestRect, sizeof(RECT));
     ZeroMemory(&pVideoRenderer->WindowPos, sizeof(RECT));

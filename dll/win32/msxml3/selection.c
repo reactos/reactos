@@ -160,7 +160,6 @@ static ULONG WINAPI domselection_Release(
         xmlXPathFreeObject(This->result);
         xmldoc_release(This->node->doc);
         if (This->enumvariant) IEnumVARIANT_Release(This->enumvariant);
-        release_dispex(&This->dispex);
         heap_free(This);
     }
 

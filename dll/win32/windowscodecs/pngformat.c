@@ -129,9 +129,9 @@ static const MetadataHandlerVtbl TextReader_Vtbl = {
     LoadTextMetadata
 };
 
-HRESULT PngTextReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT PngTextReader_CreateInstance(REFIID iid, void** ppv)
 {
-    return MetadataReader_Create(&TextReader_Vtbl, pUnkOuter, iid, ppv);
+    return MetadataReader_Create(&TextReader_Vtbl, iid, ppv);
 }
 
 #ifdef SONAME_LIBPNG
@@ -935,7 +935,9 @@ static HRESULT WINAPI PngDecoder_Block_GetContainerFormat(IWICMetadataBlockReade
 static HRESULT WINAPI PngDecoder_Block_GetCount(IWICMetadataBlockReader *iface,
     UINT *pcCount)
 {
-    FIXME("%p,%p: stub\n", iface, pcCount);
+    static int once;
+    TRACE("%p,%p\n", iface, pcCount);
+    if (!once++) FIXME("stub\n");
     return E_NOTIMPL;
 }
 
@@ -963,16 +965,14 @@ static const IWICMetadataBlockReaderVtbl PngDecoder_BlockVtbl = {
     PngDecoder_Block_GetEnumerator,
 };
 
-HRESULT PngDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT PngDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     PngDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     if (!libpng_handle && !load_libpng())
     {
@@ -1655,16 +1655,14 @@ static const IWICBitmapEncoderVtbl PngEncoder_Vtbl = {
     PngEncoder_GetMetadataQueryWriter
 };
 
-HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT PngEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     PngEncoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     if (!libpng_handle && !load_libpng())
     {
@@ -1703,13 +1701,13 @@ HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 
 #else /* !HAVE_PNG_H */
 
-HRESULT PngDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT PngDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to load PNG picture, but PNG support is not compiled in.\n");
     return E_FAIL;
 }
 
-HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT PngEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     ERR("Trying to save PNG picture, but PNG support is not compiled in.\n");
     return E_FAIL;

@@ -191,7 +191,7 @@ struct StorageBaseImpl
   /*
    * TRUE if this object has been invalidated
    */
-  int reverted;
+  BOOL reverted;
 
   /*
    * Index of the directory entry of this storage
@@ -213,8 +213,8 @@ struct StorageBaseImpl
    */
   DWORD stateBits;
 
-  BOOL             create;     /* Was the storage created or opened.
-                                  The behaviour of STGM_SIMPLE depends on this */
+  BOOL  create;     /* Was the storage created or opened.
+                       The behaviour of STGM_SIMPLE depends on this */
   /*
    * If this storage was opened in transacted mode, the object that implements
    * the transacted snapshot or cache.
@@ -514,8 +514,8 @@ typedef struct BlockChainBlock
 {
   ULONG index;
   ULONG sector;
-  int read;
-  int dirty;
+  BOOL  read;
+  BOOL  dirty;
   BYTE data[MAX_BIG_BLOCK_SIZE];
 } BlockChainBlock;
 

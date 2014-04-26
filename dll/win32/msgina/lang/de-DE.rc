@@ -148,6 +148,8 @@ BEGIN
     IDS_LOGONTITLE "Anmeldemeldung"
     IDS_LOGONWRONGUSERORPWD "Sie konnten nicht angemeldet werden. Prüfen Sie Benutzername und Domäne, und geben Sie das Passwort erneut ein. Bei Passworten wird Groß- und Kleinschreibung unterschieden."
     IDS_LOGONUSERDISABLED "Ihr Konto wurde deaktiviert. Wenden Sie sich an Ihren Systemadministrator."
+    IDS_PASSWORDMUSTCHANGE "Sie müssen Ihr Paasswort bei der ersten Anmeldung ändern."
+    IDS_PASSWORDEXPIRED "Ihr Passwort ist abgelaufen und muss geändert werden."
 END
 
 /* Shutdown Dialog Strings */

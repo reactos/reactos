@@ -18,7 +18,6 @@
 
 #include "jscript.h"
 
-#define LONGLONG_MAX (((LONGLONG)0x7fffffff<<32)|0xffffffff)
 
 static const WCHAR NaNW[] = {'N','a','N',0};
 static const WCHAR InfinityW[] = {'I','n','f','i','n','i','t','y',0};
@@ -543,7 +542,7 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
 
     while(isdigitW(*str)) {
         hlp = d*10 + *(str++) - '0';
-        if(d>LONGLONG_MAX/10 || hlp<0) {
+        if(d>MAXLONGLONG/10 || hlp<0) {
             exp++;
             break;
         }
@@ -562,7 +561,7 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
 
     while(isdigitW(*str)) {
         hlp = d*10 + *(str++) - '0';
-        if(d>LONGLONG_MAX/10 || hlp<0)
+        if(d>MAXLONGLONG/10 || hlp<0)
             break;
 
         d = hlp;

@@ -115,7 +115,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 87 "parser.y"
+#line 88 "parser.y"
 
     const WCHAR *string;
     statement_t *statement;
@@ -123,6 +123,7 @@ typedef union YYSTYPE
     member_expression_t *member;
     elseif_decl_t *elseif;
     dim_decl_t *dim_decl;
+    dim_list_t *dim_list;
     function_decl_t *func_decl;
     arg_decl_t *arg_decl;
     class_decl_t *class_decl;
@@ -136,7 +137,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 140 "parser.tab.h"
+#line 141 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

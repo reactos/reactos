@@ -578,7 +578,7 @@ static HRESULT CDECL reset_enum_callback(struct wined3d_resource *resource)
         }
 
         surface = wined3d_resource_get_parent(resource);
-        if (surface->refcount)
+        if (surface->resource.refcount)
         {
             WARN("Surface %p (resource %p) in pool D3DPOOL_DEFAULT blocks the Reset call.\n", surface, resource);
             return D3DERR_INVALIDCALL;
@@ -3063,7 +3063,7 @@ static HRESULT WINAPI d3d9_device_ComposeRects(IDirect3DDevice9Ex *iface,
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI d3d9_device_PresentEx(IDirect3DDevice9Ex *iface,
+static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_PresentEx(IDirect3DDevice9Ex *iface,
         const RECT *src_rect, const RECT *dst_rect, HWND dst_window_override,
         const RGNDATA *dirty_region, DWORD flags)
 {
@@ -3182,7 +3182,7 @@ static HRESULT WINAPI d3d9_device_CreateDepthStencilSurfaceEx(IDirect3DDevice9Ex
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI d3d9_device_ResetEx(IDirect3DDevice9Ex *iface,
+static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_ResetEx(IDirect3DDevice9Ex *iface,
         D3DPRESENT_PARAMETERS *present_parameters, D3DDISPLAYMODEEX *mode)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);

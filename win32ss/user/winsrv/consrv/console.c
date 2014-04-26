@@ -439,12 +439,12 @@ CSR_API(SrvGetConsoleMode)
     PCONSOLE_IO_OBJECT Object;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                             ConsoleModeRequest->ConsoleHandle,
+                             ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_READ, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvGetConsoleMode(Object->Console, Object,
-                                  &ConsoleModeRequest->ConsoleMode);
+                                  &ConsoleModeRequest->Mode);
 
     ConSrvReleaseObject(Object, TRUE);
     return Status;
@@ -461,12 +461,12 @@ CSR_API(SrvSetConsoleMode)
     PCONSOLE_IO_OBJECT Object;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                             ConsoleModeRequest->ConsoleHandle,
+                             ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_WRITE, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvSetConsoleMode(Object->Console, Object,
-                                  ConsoleModeRequest->ConsoleMode);
+                                  ConsoleModeRequest->Mode);
 
     ConSrvReleaseObject(Object, TRUE);
     return Status;
@@ -474,7 +474,8 @@ CSR_API(SrvSetConsoleMode)
 
 NTSTATUS NTAPI
 ConDrvGetConsoleTitle(IN PCONSOLE Console,
-                      IN OUT PWCHAR Title,
+                      IN BOOLEAN Unicode,
+                      IN OUT PVOID TitleBuffer,
                       IN OUT PULONG BufLength);
 CSR_API(SrvGetConsoleTitle)
 {
@@ -498,6 +499,7 @@ CSR_API(SrvGetConsoleTitle)
     }
 
     Status = ConDrvGetConsoleTitle(Console,
+                                   TitleRequest->Unicode,
                                    TitleRequest->Title,
                                    &TitleRequest->Length);
 
@@ -507,7 +509,8 @@ CSR_API(SrvGetConsoleTitle)
 
 NTSTATUS NTAPI
 ConDrvSetConsoleTitle(IN PCONSOLE Console,
-                      IN PWCHAR Title,
+                      IN BOOLEAN Unicode,
+                      IN PVOID TitleBuffer,
                       IN ULONG BufLength);
 CSR_API(SrvSetConsoleTitle)
 {
@@ -531,9 +534,9 @@ CSR_API(SrvSetConsoleTitle)
     }
 
     Status = ConDrvSetConsoleTitle(Console,
+                                   TitleRequest->Unicode,
                                    TitleRequest->Title,
                                    TitleRequest->Length);
-
     if (NT_SUCCESS(Status)) TermChangeTitle(Console);
 
     ConSrvReleaseConsole(Console, TRUE);
@@ -629,8 +632,8 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConDrvConsoleProcessCtrlEvent(Console,
-                                           GenerateCtrlEventRequest->ProcessGroup,
-                                           GenerateCtrlEventRequest->Event);
+                                           GenerateCtrlEventRequest->ProcessGroupId,
+                                           GenerateCtrlEventRequest->CtrlEvent);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
@@ -638,8 +641,27 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
 
 CSR_API(SrvConsoleNotifyLastClose)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Only one process is allowed to be registered for last close notification */
+    if (!Console->NotifyLastClose)
+    {
+        Console->NotifyLastClose = TRUE;
+        Console->NotifiedLastCloseProcess = ProcessData;
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_ACCESS_DENIED;
+    }
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 

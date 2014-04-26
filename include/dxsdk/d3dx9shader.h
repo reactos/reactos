@@ -1,5 +1,6 @@
 /*
  * Copyright 2008 Luis Busquets
+ * Copyright 2014 Kai Tietz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,7 +43,10 @@
 
 #define D3DXSHADER_USE_LEGACY_D3DX9_31_DLL        0x10000
 
-typedef LPCSTR D3DXHANDLE;
+#define D3DXCONSTTABLE_LARGEADDRESSAWARE          0x20000
+
+typedef const char *D3DXHANDLE;
+typedef D3DXHANDLE *LPD3DXHANDLE;
 
 typedef enum _D3DXREGISTER_SET
 {
@@ -91,14 +95,14 @@ typedef enum D3DXPARAMETER_TYPE
 
 typedef struct _D3DXCONSTANTTABLE_DESC
 {
-    LPCSTR Creator;
+    const char *Creator;
     DWORD Version;
     UINT Constants;
 } D3DXCONSTANTTABLE_DESC, *LPD3DXCONSTANTTABLE_DESC;
 
 typedef struct _D3DXCONSTANT_DESC
 {
-    LPCSTR Name;
+    const char *Name;
     D3DXREGISTER_SET RegisterSet;
     UINT RegisterIndex;
     UINT RegisterCount;
@@ -109,10 +113,14 @@ typedef struct _D3DXCONSTANT_DESC
     UINT Elements;
     UINT StructMembers;
     UINT Bytes;
-    LPCVOID DefaultValue;
+    const void *DefaultValue;
 } D3DXCONSTANT_DESC, *LPD3DXCONSTANT_DESC;
 
+#if D3DX_SDK_VERSION < 43
 DEFINE_GUID(IID_ID3DXConstantTable, 0x9dca3190, 0x38b9, 0x4fc3, 0x92, 0xe3, 0x39, 0xc6, 0xdd, 0xfb, 0x35, 0x8b);
+#else
+DEFINE_GUID(IID_ID3DXConstantTable, 0xab3c758f, 0x093e, 0x4356, 0xb7, 0x62, 0x4d, 0xb1, 0x8f, 0x1b, 0x3a, 0x01);
+#endif
 
 #undef INTERFACE
 #define INTERFACE ID3DXConstantTable
@@ -120,18 +128,18 @@ DEFINE_GUID(IID_ID3DXConstantTable, 0x9dca3190, 0x38b9, 0x4fc3, 0x92, 0xe3, 0x39
 DECLARE_INTERFACE_(ID3DXConstantTable, ID3DXBuffer)
 {
     /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID iid, LPVOID *ppv) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID iid, void **out) PURE;
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
     /*** ID3DXBuffer methods ***/
-    STDMETHOD_(LPVOID, GetBufferPointer)(THIS) PURE;
+    STDMETHOD_(void *, GetBufferPointer)(THIS) PURE;
     STDMETHOD_(DWORD, GetBufferSize)(THIS) PURE;
     /*** ID3DXConstantTable methods ***/
     STDMETHOD(GetDesc)(THIS_ D3DXCONSTANTTABLE_DESC *pDesc) PURE;
     STDMETHOD(GetConstantDesc)(THIS_ D3DXHANDLE hConstant, D3DXCONSTANT_DESC *pConstantDesc, UINT *pCount) PURE;
     STDMETHOD_(UINT, GetSamplerIndex)(THIS_ D3DXHANDLE hConstant) PURE;
     STDMETHOD_(D3DXHANDLE, GetConstant)(THIS_ D3DXHANDLE hConstant, UINT Index) PURE;
-    STDMETHOD_(D3DXHANDLE, GetConstantByName)(THIS_ D3DXHANDLE hConstant, LPCSTR pName) PURE;
+    STDMETHOD_(D3DXHANDLE, GetConstantByName)(THIS_ D3DXHANDLE constant, const char *name) PURE;
     STDMETHOD_(D3DXHANDLE, GetConstantElement)(THIS_ D3DXHANDLE hConstant, UINT Index) PURE;
     STDMETHOD(SetDefaults)(THIS_ struct IDirect3DDevice9 *device) PURE;
     STDMETHOD(SetValue)(THIS_ struct IDirect3DDevice9 *device, D3DXHANDLE constant,
@@ -228,9 +236,46 @@ DECLARE_INTERFACE_(ID3DXConstantTable, ID3DXBuffer)
 
 typedef struct ID3DXConstantTable *LPD3DXCONSTANTTABLE;
 
-typedef struct _D3DXMACRO {
-    LPCSTR Name;
-    LPCSTR Definition;
+typedef interface ID3DXTextureShader *LPD3DXTEXTURESHADER;
+
+DEFINE_GUID(IID_ID3DXTextureShader, 0x3e3d67f8, 0xaa7a, 0x405d, 0xa8, 0x57, 0xba, 0x1, 0xd4, 0x75, 0x84, 0x26);
+
+#define INTERFACE ID3DXTextureShader
+DECLARE_INTERFACE_(ID3DXTextureShader, IUnknown)
+{
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+    STDMETHOD(GetFunction)(THIS_ struct ID3DXBuffer **ppFunction) PURE;
+    STDMETHOD(GetConstantBuffer)(THIS_ struct ID3DXBuffer **ppConstantBuffer) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DXCONSTANTTABLE_DESC *pDesc) PURE;
+    STDMETHOD(GetConstantDesc)(THIS_ D3DXHANDLE hConstant, D3DXCONSTANT_DESC *pConstantDesc, UINT *pCount) PURE;
+    STDMETHOD_(D3DXHANDLE, GetConstant)(THIS_ D3DXHANDLE hConstant, UINT Index) PURE;
+    STDMETHOD_(D3DXHANDLE, GetConstantByName)(THIS_ D3DXHANDLE hConstant, const char *pName) PURE;
+    STDMETHOD_(D3DXHANDLE, GetConstantElement)(THIS_ D3DXHANDLE hConstant, UINT Index) PURE;
+    STDMETHOD(SetDefaults)(THIS) PURE;
+    STDMETHOD(SetValue)(THIS_ D3DXHANDLE hConstant, const void *pData, UINT Bytes) PURE;
+    STDMETHOD(SetBool)(THIS_ D3DXHANDLE hConstant, BOOL b) PURE;
+    STDMETHOD(SetBoolArray)(THIS_ D3DXHANDLE hConstant, const BOOL *pb, UINT Count) PURE;
+    STDMETHOD(SetInt)(THIS_ D3DXHANDLE hConstant, INT n) PURE;
+    STDMETHOD(SetIntArray)(THIS_ D3DXHANDLE hConstant, const INT *pn, UINT Count) PURE;
+    STDMETHOD(SetFloat)(THIS_ D3DXHANDLE hConstant, FLOAT f) PURE;
+    STDMETHOD(SetFloatArray)(THIS_ D3DXHANDLE hConstant, const FLOAT *pf, UINT Count) PURE;
+    STDMETHOD(SetVector)(THIS_ D3DXHANDLE hConstant, const D3DXVECTOR4 *pVector) PURE;
+    STDMETHOD(SetVectorArray)(THIS_ D3DXHANDLE hConstant, const D3DXVECTOR4 *pVector, UINT Count) PURE;
+    STDMETHOD(SetMatrix)(THIS_ D3DXHANDLE hConstant, const D3DXMATRIX *pMatrix) PURE;
+    STDMETHOD(SetMatrixArray)(THIS_ D3DXHANDLE hConstant, const D3DXMATRIX *pMatrix, UINT Count) PURE;
+    STDMETHOD(SetMatrixPointerArray)(THIS_ D3DXHANDLE hConstant, const D3DXMATRIX **ppMatrix, UINT Count) PURE;
+    STDMETHOD(SetMatrixTranspose)(THIS_ D3DXHANDLE hConstant, const D3DXMATRIX *pMatrix) PURE;
+    STDMETHOD(SetMatrixTransposeArray)(THIS_ D3DXHANDLE hConstant, const D3DXMATRIX *pMatrix, UINT Count) PURE;
+    STDMETHOD(SetMatrixTransposePointerArray)(THIS_ D3DXHANDLE hConstant, const D3DXMATRIX **ppMatrix, UINT Count) PURE;
+};
+#undef INTERFACE
+
+typedef struct _D3DXMACRO
+{
+    const char *Name;
+    const char *Definition;
 } D3DXMACRO, *LPD3DXMACRO;
 
 typedef struct _D3DXSEMANTIC {
@@ -249,8 +294,9 @@ typedef enum _D3DXINCLUDE_TYPE
 
 DECLARE_INTERFACE(ID3DXInclude)
 {
-    STDMETHOD(Open)(THIS_ D3DXINCLUDE_TYPE include_type, LPCSTR filename, LPCVOID parent_data, LPCVOID *data, UINT *bytes) PURE;
-    STDMETHOD(Close)(THIS_ LPCVOID data) PURE;
+    STDMETHOD(Open)(THIS_ D3DXINCLUDE_TYPE include_type, const char *filename,
+            const void *parent_data, const void **data, UINT *bytes) PURE;
+    STDMETHOD(Close)(THIS_ const void *data) PURE;
 };
 #undef INTERFACE
 
@@ -267,8 +313,8 @@ const char * WINAPI D3DXGetPixelShaderProfile(struct IDirect3DDevice9 *device);
 UINT WINAPI D3DXGetShaderSize(const DWORD *byte_code);
 DWORD WINAPI D3DXGetShaderVersion(const DWORD *byte_code);
 const char * WINAPI D3DXGetVertexShaderProfile(struct IDirect3DDevice9 *device);
-HRESULT WINAPI D3DXFindShaderComment(CONST DWORD* byte_code, DWORD fourcc, LPCVOID* data, UINT* size);
-HRESULT WINAPI D3DXGetShaderSamplers(CONST DWORD *byte_code, LPCSTR *samplers, UINT *count);
+HRESULT WINAPI D3DXFindShaderComment(const DWORD *byte_code, DWORD fourcc, const void **data, UINT *size);
+HRESULT WINAPI D3DXGetShaderSamplers(const DWORD *byte_code, const char **samplers, UINT *count);
 
 HRESULT WINAPI D3DXAssembleShaderFromFileA(const char *filename, const D3DXMACRO *defines,
         ID3DXInclude *include, DWORD flags, ID3DXBuffer **shader, ID3DXBuffer **error_messages);
@@ -288,6 +334,8 @@ HRESULT WINAPI D3DXAssembleShader(const char *data, UINT data_len, const D3DXMAC
 HRESULT WINAPI D3DXCompileShader(const char *src_data, UINT data_len, const D3DXMACRO *defines,
         ID3DXInclude *include, const char *function_name, const char *profile, DWORD flags,
         ID3DXBuffer **shader, ID3DXBuffer **error_messages, ID3DXConstantTable **constant_table);
+
+HRESULT WINAPI D3DXDisassembleShader(const DWORD *pShader, BOOL EnableColorCode, const char *pComments, struct ID3DXBuffer **ppDisassembly);
 
 HRESULT WINAPI D3DXCompileShaderFromFileA(const char *filename, const D3DXMACRO *defines,
         ID3DXInclude *include, const char *entrypoint, const char *profile, DWORD flags,
@@ -323,6 +371,11 @@ HRESULT WINAPI D3DXPreprocessShaderFromResourceW(HMODULE module, const WCHAR *re
 HRESULT WINAPI D3DXGetShaderConstantTableEx(const DWORD *byte_code, DWORD flags, ID3DXConstantTable **constant_table);
 
 HRESULT WINAPI D3DXGetShaderConstantTable(const DWORD *byte_code, ID3DXConstantTable **constant_table);
+
+HRESULT WINAPI D3DXGetShaderInputSemantics(const DWORD *pFunction, D3DXSEMANTIC *pSemantics, UINT *pCount);
+HRESULT WINAPI D3DXGetShaderOutputSemantics(const DWORD *pFunction, D3DXSEMANTIC *pSemantics, UINT *pCount);
+
+HRESULT WINAPI D3DXCreateTextureShader(const DWORD *pFunction, ID3DXTextureShader **ppTextureShader);
 
 #ifdef __cplusplus
 }

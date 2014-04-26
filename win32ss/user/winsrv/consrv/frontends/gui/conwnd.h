@@ -63,6 +63,8 @@ typedef struct _GUI_CONSOLE_DATA
 
     PCONSOLE Console;           /* Pointer to the owned console */
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to the active screen buffer (then maybe the previous Console member is redundant?? Or not...) */
+    CONSOLE_SELECTION_INFO Selection;       /* Contains information about the selection */
+    COORD dwSelectionCursor;                /* Selection cursor position, most of the time different from Selection.dwSelectionAnchor */
 
     GUI_CONSOLE_INFO GuiInfo;   /* GUI terminal settings */
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;

@@ -1,6 +1,6 @@
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libxslt)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libxslt
+                    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwin-iconv)
 
 add_definitions(
     -DHAVE_CONFIG_H
@@ -37,7 +37,7 @@ list(APPEND SOURCE
 
 add_library(libxslt SHARED ${SOURCE})
 set_module_type(libxslt win32dll)
-target_link_libraries(libxslt libxml2 iconv-static)
+target_link_libraries(libxslt libxml2 iconv-static zlib)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
 if(MSVC)
     add_importlibs(libxslt ntdll)

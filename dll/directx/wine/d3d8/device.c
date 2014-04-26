@@ -585,7 +585,7 @@ static HRESULT CDECL reset_enum_callback(struct wined3d_resource *resource)
         }
 
         surface = wined3d_resource_get_parent(resource);
-        if (surface->refcount)
+        if (surface->resource.refcount)
         {
             WARN("Surface %p (resource %p) in pool D3DPOOL_DEFAULT blocks the Reset call.\n", surface, resource);
             return D3DERR_DEVICELOST;

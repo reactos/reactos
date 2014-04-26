@@ -586,16 +586,14 @@ static const IWICBitmapEncoderVtbl BmpEncoder_Vtbl = {
     BmpEncoder_GetMetadataQueryWriter
 };
 
-HRESULT BmpEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT BmpEncoder_CreateInstance(REFIID iid, void** ppv)
 {
     BmpEncoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(BmpEncoder));
     if (!This) return E_OUTOFMEMORY;

@@ -239,11 +239,11 @@ static const ISWbemLocatorVtbl locator_vtbl =
     locator_get_Security_
 };
 
-HRESULT SWbemLocator_create( IUnknown *unk, void **obj )
+HRESULT SWbemLocator_create( void **obj )
 {
     struct locator *locator;
 
-    TRACE( "%p, %p\n", unk, obj );
+    TRACE( "%p\n", obj );
 
     if (!(locator = heap_alloc( sizeof(*locator) ))) return E_OUTOFMEMORY;
     locator->ISWbemLocator_iface.lpVtbl = &locator_vtbl;

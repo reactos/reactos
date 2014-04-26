@@ -94,6 +94,7 @@ enum complex_fixup
     COMPLEX_FIXUP_UYVY = 2,
     COMPLEX_FIXUP_YV12 = 3,
     COMPLEX_FIXUP_P8   = 4,
+    COMPLEX_FIXUP_NV12 = 5,
 };
 
 #include <pshpack2.h>
@@ -1053,6 +1054,16 @@ enum wined3d_event_query_result wined3d_event_query_finish(const struct wined3d_
 void wined3d_event_query_issue(struct wined3d_event_query *query, const struct wined3d_device *device) DECLSPEC_HIDDEN;
 BOOL wined3d_event_query_supported(const struct wined3d_gl_info *gl_info) DECLSPEC_HIDDEN;
 
+struct wined3d_timestamp_query
+{
+    struct list entry;
+    GLuint id;
+    struct wined3d_context *context;
+};
+
+void context_alloc_timestamp_query(struct wined3d_context *context, struct wined3d_timestamp_query *query) DECLSPEC_HIDDEN;
+void context_free_timestamp_query(struct wined3d_timestamp_query *query) DECLSPEC_HIDDEN;
+
 struct wined3d_context
 {
     const struct wined3d_gl_info *gl_info;
@@ -1093,7 +1104,10 @@ struct wined3d_context
     DWORD fixed_function_usage_map : 8; /* MAX_TEXTURES, 8 */
     DWORD lowest_disabled_stage : 4;    /* Max MAX_TEXTURES, 8 */
     DWORD rebind_fbo : 1;
-    DWORD padding : 19;
+    DWORD needs_set : 1;
+    DWORD hdc_is_private : 1;
+    DWORD hdc_has_format : 1;           /* only meaningful if hdc_is_private */
+    DWORD padding : 16;
     DWORD shader_update_mask;
     DWORD constant_update_mask;
     DWORD                   numbered_array_mask;
@@ -1111,6 +1125,7 @@ struct wined3d_context
     HGLRC restore_ctx;
     HDC restore_dc;
     int restore_pf;
+    HWND restore_pf_win;
     HGLRC                   glCtx;
     HWND                    win_handle;
     HDC                     hdc;
@@ -1140,6 +1155,11 @@ struct wined3d_context
     UINT free_event_query_size;
     UINT free_event_query_count;
     struct list event_queries;
+
+    GLuint *free_timestamp_queries;
+    UINT free_timestamp_query_size;
+    UINT free_timestamp_query_count;
+    struct list timestamp_queries;
 
     struct wined3d_stream_info stream_info;
 
@@ -1356,10 +1376,11 @@ struct wined3d_pixel_format
 
 enum wined3d_pci_vendor
 {
-    HW_VENDOR_SOFTWARE                 = 0x0000,
-    HW_VENDOR_AMD                      = 0x1002,
-    HW_VENDOR_NVIDIA                   = 0x10de,
-    HW_VENDOR_INTEL                    = 0x8086,
+    HW_VENDOR_SOFTWARE              = 0x0000,
+    HW_VENDOR_AMD                   = 0x1002,
+    HW_VENDOR_NVIDIA                = 0x10de,
+    HW_VENDOR_VMWARE                = 0x15ad,
+    HW_VENDOR_INTEL                 = 0x8086,
 };
 
 enum wined3d_pci_device
@@ -1477,9 +1498,14 @@ enum wined3d_pci_device
     CARD_NVIDIA_GEFORCE_GTX670      = 0x1189,
     CARD_NVIDIA_GEFORCE_GTX670MX    = 0x11a1,
     CARD_NVIDIA_GEFORCE_GTX680      = 0x1180,
+    CARD_NVIDIA_GEFORCE_GTX750      = 0x1381,
+    CARD_NVIDIA_GEFORCE_GTX750TI    = 0x1380,
+    CARD_NVIDIA_GEFORCE_GTX760      = 0x1187,
     CARD_NVIDIA_GEFORCE_GTX765M     = 0x11e2,
     CARD_NVIDIA_GEFORCE_GTX770M     = 0x11e0,
     CARD_NVIDIA_GEFORCE_GTX770      = 0x1184,
+
+    CARD_VMWARE_SVGA3D              = 0x0405,
 
     CARD_INTEL_830M                 = 0x3577,
     CARD_INTEL_855GM                = 0x3582,
@@ -1788,12 +1814,11 @@ struct wined3d
 {
     LONG ref;
     DWORD flags;
-    UINT dxVersion;
     UINT adapter_count;
     struct wined3d_adapter adapters[1];
 };
 
-HRESULT wined3d_init(struct wined3d *wined3d, UINT version, DWORD flags) DECLSPEC_HIDDEN;
+HRESULT wined3d_init(struct wined3d *wined3d, DWORD flags) DECLSPEC_HIDDEN;
 BOOL wined3d_register_window(HWND window, struct wined3d_device *device) DECLSPEC_HIDDEN;
 void wined3d_unregister_window(HWND window) DECLSPEC_HIDDEN;
 
@@ -2009,7 +2034,6 @@ struct wined3d_resource
     UINT size;
     DWORD priority;
     void *heap_memory;
-    struct list privateData;
     struct list resource_list_entry;
 
     void *parent;

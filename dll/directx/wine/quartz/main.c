@@ -69,6 +69,7 @@ static const struct object_creation_info object_creation[] =
     { &CLSID_MPEG1Splitter, MPEGSplitter_create },
     { &CLSID_VideoRenderer, VideoRenderer_create },
     { &CLSID_NullRenderer, NullRenderer_create },
+    { &CLSID_VideoMixingRenderer, VMR7Impl_create },
     { &CLSID_VideoMixingRenderer9, VMR9Impl_create },
     { &CLSID_VideoRendererDefault, VideoRendererDefault_create },
     { &CLSID_DSoundRender, DSoundRender_create },

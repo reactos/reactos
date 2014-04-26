@@ -78,7 +78,7 @@ struct JoyDev {
 	char *name;
 	GUID guid;
 
-	int has_ff;
+        BOOL has_ff;
         int num_effects;
 
 	/* data returned by EVIOCGBIT for caps, EV_ABS, EV_KEY, and EV_FF */
@@ -165,7 +165,7 @@ static void find_joydevs(void)
         char buf[MAX_PATH];
         struct JoyDev joydev = {0};
         int fd;
-        int no_ff_check = 0;
+        BOOL no_ff_check = FALSE;
         int j;
         struct JoyDev *new_joydevs;
         struct input_id device_id = {0};
@@ -175,7 +175,7 @@ static void find_joydevs(void)
         if ((fd = open(buf, O_RDWR)) == -1)
         {
             fd = open(buf, O_RDONLY);
-            no_ff_check = 1;
+            no_ff_check = TRUE;
         }
 
         if (fd == -1)
@@ -186,19 +186,19 @@ static void find_joydevs(void)
 
         if (ioctl(fd, EVIOCGBIT(0, sizeof(joydev.evbits)), joydev.evbits) == -1)
         {
-            WARN("ioct(EVIOCGBIT, 0) failed: %d %s\n", errno, strerror(errno));
+            WARN("ioctl(EVIOCGBIT, 0) failed: %d %s\n", errno, strerror(errno));
             close(fd);
             continue;
         }
         if (ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(joydev.absbits)), joydev.absbits) == -1)
         {
-            WARN("ioct(EVIOCGBIT, EV_ABS) failed: %d %s\n", errno, strerror(errno));
+            WARN("ioctl(EVIOCGBIT, EV_ABS) failed: %d %s\n", errno, strerror(errno));
             close(fd);
             continue;
         }
         if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(joydev.keybits)), joydev.keybits) == -1)
         {
-            WARN("ioct(EVIOCGBIT, EV_KEY) failed: %d %s\n", errno, strerror(errno));
+            WARN("ioctl(EVIOCGBIT, EV_KEY) failed: %d %s\n", errno, strerror(errno));
             close(fd);
             continue;
         }
@@ -256,7 +256,7 @@ static void find_joydevs(void)
             joydev.num_effects > 0)
         {
 	    TRACE(" ... with force feedback\n");
-	    joydev.has_ff = 1;
+            joydev.has_ff = TRUE;
         }
 #endif
 
@@ -277,7 +277,7 @@ static void find_joydevs(void)
 	}
 
         if (ioctl(fd, EVIOCGID, &device_id) == -1)
-            WARN("ioct(EVIOCGBIT, EV_ABS) failed: %d %s\n", errno, strerror(errno));
+            WARN("ioctl(EVIOCGID) failed: %d %s\n", errno, strerror(errno));
         else
         {
             joydev.vendor_id = device_id.vendor;
@@ -854,7 +854,7 @@ static void joy_polldev(LPDIRECTINPUTDEVICE8A iface)
 	}
         if (inst_id >= 0)
             queue_event(iface, inst_id,
-                        value, ie.time.tv_usec, This->generic.base.dinput->evsequence++);
+                        value, GetCurrentTime(), This->generic.base.dinput->evsequence++);
     }
 }
 

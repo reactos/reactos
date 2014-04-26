@@ -261,6 +261,10 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
+        '{B87BEB7B-8D29-423F-AE4D-6582C10175AC}' = s 'Video Mixing Renderer'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
         '{51B4ABF3-748F-4E3B-A276-C828330E926A}' = s 'Video Mixing Renderer 9'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }

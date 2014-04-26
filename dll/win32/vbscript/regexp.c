@@ -883,7 +883,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
 
 /*
  * Hack two bits in CompilerState.flags, for use within FindParenCount to flag
- * its being on the stack, and to propagate errors to its callers.
+ * it being on the stack, and to propagate errors to its callers.
  */
 #define JSREG_FIND_PAREN_COUNT  0x8000
 #define JSREG_FIND_PAREN_ERROR  0x4000

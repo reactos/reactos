@@ -117,6 +117,13 @@ DummyGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
 }
 
 static BOOL NTAPI
+DummyGetSelectionInfo(IN OUT PFRONTEND This,
+                      PCONSOLE_SELECTION_INFO pSelectionInfo)
+{
+    return TRUE;
+}
+
+static BOOL NTAPI
 DummySetPalette(IN OUT PFRONTEND This,
                 HPALETTE PaletteHandle,
                 UINT PaletteUsage)
@@ -183,6 +190,7 @@ static FRONTEND_VTBL DummyVtbl =
     DummyChangeIcon,
     DummyGetConsoleWindowHandle,
     DummyGetLargestConsoleWindowSize,
+    DummyGetSelectionInfo,
     DummySetPalette,
     DummyGetDisplayMode,
     DummySetDisplayMode,

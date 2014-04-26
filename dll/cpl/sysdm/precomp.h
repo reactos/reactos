@@ -52,8 +52,10 @@ typedef struct _PAGEFILE
 {
     TCHAR  szDrive[3];
     LPTSTR pszVolume;
-    UINT   InitialSize;
-    UINT   MaximumSize;
+    INT    OldMinSize;
+    INT    OldMaxSize;
+    INT    NewMinSize;
+    INT    NewMaxSize;
     UINT   FreeSize;
     BOOL   bUsed;
 } PAGEFILE, *PPAGEFILE;

@@ -178,14 +178,13 @@ static HRESULT WINAPI BasePinImp_GetMediaType(BasePin *This, int index, AM_MEDIA
     return S_OK;
 }
 
-static const  BasePinFuncTable input_BaseFuncTable = {
-    BasePinImpl_CheckMediaType,
-    NULL,
-    BasePinImp_GetMediaTypeVersion,
-    BasePinImp_GetMediaType
-};
-
 static const BaseInputPinFuncTable input_BaseInputFuncTable = {
+    {
+        BasePinImpl_CheckMediaType,
+        NULL,
+        BasePinImp_GetMediaTypeVersion,
+        BasePinImp_GetMediaType
+    },
     NULL
 };
 
@@ -354,7 +353,8 @@ static HRESULT WINAPI MediaStreamFilterImpl_AddMediaStream(IMediaStreamFilter* i
     /* Pin name is "I{guid MSPID_PrimaryVideo or MSPID_PrimaryAudio}" */
     info.achName[0] = 'I';
     StringFromGUID2(&purpose_id, info.achName + 1, 40);
-    hr = BaseInputPin_Construct(&MediaStreamFilter_InputPin_Vtbl, &info, &input_BaseFuncTable, &input_BaseInputFuncTable, &This->filter.csFilter, NULL, &This->pins[This->nb_streams]);
+    hr = BaseInputPin_Construct(&MediaStreamFilter_InputPin_Vtbl, sizeof(BaseInputPin), &info,
+            &input_BaseInputFuncTable, &This->filter.csFilter, NULL, &This->pins[This->nb_streams]);
     if (FAILED(hr))
         return hr;
 

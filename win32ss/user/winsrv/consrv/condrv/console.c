@@ -197,7 +197,7 @@ VOID ResetFrontEnd(IN PCONSOLE Console);
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static NTSTATUS
-ConDrvConsoleCtrlEventTimeout(IN ULONG Event,
+ConDrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
                               IN PCONSOLE_PROCESS_DATA ProcessData,
                               IN ULONG Timeout)
 {
@@ -215,7 +215,7 @@ ConDrvConsoleCtrlEventTimeout(IN ULONG Event,
             {
                 Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
                                             ProcessData->CtrlDispatcher,
-                                            UlongToPtr(Event), 0, NULL);
+                                            UlongToPtr(CtrlEvent), 0, NULL);
                 if (NULL == Thread)
                 {
                     Status = RtlGetLastNtStatus();
@@ -244,11 +244,11 @@ ConDrvConsoleCtrlEventTimeout(IN ULONG Event,
     return Status;
 }
 
-static NTSTATUS
-ConDrvConsoleCtrlEvent(IN ULONG Event,
+NTSTATUS
+ConDrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData)
 {
-    return ConDrvConsoleCtrlEventTimeout(Event, ProcessData, 0);
+    return ConDrvConsoleCtrlEventTimeout(CtrlEvent, ProcessData, 0);
 }
 
 VOID FASTCALL
@@ -535,6 +535,8 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->ReferenceCount = 0;
     InitializeCriticalSection(&Console->Lock);
     InitializeListHead(&Console->ProcessList);
+    Console->NotifiedLastCloseProcess = NULL;
+    Console->NotifyLastClose = FALSE;
 
     /* Initialize the frontend interface */
     ResetFrontEnd(Console);
@@ -572,11 +574,6 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->LineComplete = Console->LineUpPressed = FALSE;
     Console->LineInsertToggle = Console->InsertMode;
     // LineWakeupMask
-
-    // FIXME: This is terminal-specific !! VV
-    RtlZeroMemory(&Console->Selection, sizeof(CONSOLE_SELECTION_INFO));
-    Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
-    // dwSelectionCursor
 
     /* Set-up the code page */
     Console->CodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
@@ -879,7 +876,8 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      IN ULONG ConsoleMode)
 {
-#define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS   | ENABLE_INSERT_MODE  | ENABLE_QUICK_EDIT_MODE )
+#define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS   | \
+                                      ENABLE_INSERT_MODE      | ENABLE_QUICK_EDIT_MODE )
 #define CONSOLE_VALID_INPUT_MODES   ( ENABLE_PROCESSED_INPUT  | ENABLE_LINE_INPUT   | \
                                       ENABLE_ECHO_INPUT       | ENABLE_WINDOW_INPUT | \
                                       ENABLE_MOUSE_INPUT )
@@ -956,39 +954,80 @@ Quit:
 
 NTSTATUS NTAPI
 ConDrvGetConsoleTitle(IN PCONSOLE Console,
-                      IN OUT PWCHAR Title,
+                      IN BOOLEAN Unicode,
+                      IN OUT PVOID TitleBuffer,
                       IN OUT PULONG BufLength)
 {
     ULONG Length;
 
-    if (Console == NULL || Title == NULL || BufLength == NULL)
+    if (Console == NULL || TitleBuffer == NULL || BufLength == NULL)
         return STATUS_INVALID_PARAMETER;
 
     /* Copy title of the console to the user title buffer */
-    if (*BufLength >= sizeof(WCHAR))
+    if (Unicode)
     {
-        Length = min(*BufLength - sizeof(WCHAR), Console->Title.Length);
-        RtlCopyMemory(Title, Console->Title.Buffer, Length);
-        Title[Length / sizeof(WCHAR)] = L'\0';
+        if (*BufLength >= sizeof(WCHAR))
+        {
+            Length = min(*BufLength - sizeof(WCHAR), Console->Title.Length);
+            RtlCopyMemory(TitleBuffer, Console->Title.Buffer, Length);
+            ((PWCHAR)TitleBuffer)[Length / sizeof(WCHAR)] = L'\0';
+            *BufLength = Length;
+        }
+        else
+        {
+            *BufLength = Console->Title.Length;
+        }
     }
-
-    *BufLength = Console->Title.Length;
+    else
+    {
+        if (*BufLength >= sizeof(CHAR))
+        {
+            Length = min(*BufLength - sizeof(CHAR), Console->Title.Length / sizeof(WCHAR));
+            Length = WideCharToMultiByte(Console->CodePage, 0,
+                                         Console->Title.Buffer, Length,
+                                         TitleBuffer, Length,
+                                         NULL, NULL);
+            ((PCHAR)TitleBuffer)[Length] = '\0';
+            *BufLength = Length;
+        }
+        else
+        {
+            *BufLength = Console->Title.Length / sizeof(WCHAR);
+        }
+    }
 
     return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
 ConDrvSetConsoleTitle(IN PCONSOLE Console,
-                      IN PWCHAR Title,
+                      IN BOOLEAN Unicode,
+                      IN PVOID TitleBuffer,
                       IN ULONG BufLength)
 {
     PWCHAR Buffer;
+    ULONG  Length;
 
-    if (Console == NULL || Title == NULL)
+    if (Console == NULL || TitleBuffer == NULL)
         return STATUS_INVALID_PARAMETER;
 
+    if (Unicode)
+    {
+        /* Length is in bytes */
+        Length = BufLength;
+    }
+    else
+    {
+        /* Use the console input CP for the conversion */
+        Length = MultiByteToWideChar(Console->CodePage, 0,
+                                     TitleBuffer, BufLength,
+                                     NULL, 0);
+        /* The returned Length was in number of wchars, convert it in bytes */
+        Length *= sizeof(WCHAR);
+    }
+
     /* Allocate a new buffer to hold the new title (NULL-terminated) */
-    Buffer = ConsoleAllocHeap(0, BufLength + sizeof(WCHAR));
+    Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Length + sizeof(WCHAR));
     if (!Buffer) return STATUS_NO_MEMORY;
 
     /* Free the old title */
@@ -996,9 +1035,22 @@ ConDrvSetConsoleTitle(IN PCONSOLE Console,
 
     /* Copy title to console */
     Console->Title.Buffer = Buffer;
-    Console->Title.Length = BufLength;
+    Console->Title.Length = Length;
     Console->Title.MaximumLength = Console->Title.Length + sizeof(WCHAR);
-    RtlCopyMemory(Console->Title.Buffer, Title, Console->Title.Length);
+
+    if (Unicode)
+    {
+        RtlCopyMemory(Console->Title.Buffer, TitleBuffer, Console->Title.Length);
+    }
+    else
+    {
+        MultiByteToWideChar(Console->CodePage, 0,
+                            TitleBuffer, BufLength,
+                            Console->Title.Buffer,
+                            Console->Title.Length / sizeof(WCHAR));
+    }
+
+    /* NULL-terminate */
     Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
 
     // TermChangeTitle(Console);
@@ -1034,6 +1086,16 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
     return STATUS_SUCCESS;
 }
 
+PCONSOLE_PROCESS_DATA NTAPI
+ConDrvGetConsoleLeaderProcess(IN PCONSOLE Console)
+{
+    if (Console == NULL) return NULL;
+
+    return CONTAINING_RECORD(Console->ProcessList.Blink,
+                             CONSOLE_PROCESS_DATA,
+                             ConsoleLink);
+}
+
 NTSTATUS NTAPI
 ConDrvGetConsoleProcessList(IN PCONSOLE Console,
                             IN OUT PULONG ProcessIdsList,
@@ -1066,7 +1128,7 @@ ConDrvGetConsoleProcessList(IN PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
                               IN ULONG ProcessGroupId,
-                              IN ULONG Event)
+                              IN ULONG CtrlEvent)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PLIST_ENTRY current_entry;
@@ -1094,7 +1156,7 @@ ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
          */
         if (ProcessGroupId == 0 || current->Process->ProcessGroupId == ProcessGroupId)
         {
-            Status = ConDrvConsoleCtrlEvent(Event, current);
+            Status = ConDrvConsoleCtrlEvent(CtrlEvent, current);
         }
     }
 

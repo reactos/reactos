@@ -672,7 +672,7 @@ static HRESULT WINAPI d3d_viewport_Clear(IDirect3DViewport3 *iface,
     }
 
     if (This->active_device == NULL) {
-        ERR(" Trying to clear a viewport not attached to a device !\n");
+        ERR(" Trying to clear a viewport not attached to a device!\n");
         return D3DERR_VIEWPORTHASNODEVICE;
     }
     d3d_device3 = &This->active_device->IDirect3DDevice3_iface;
@@ -682,7 +682,7 @@ static HRESULT WINAPI d3d_viewport_Clear(IDirect3DViewport3 *iface,
     if (flags & D3DCLEAR_TARGET)
     {
         if (This->background == NULL) {
-            ERR(" Trying to clear the color buffer without background material !\n");
+            ERR(" Trying to clear the color buffer without background material!\n");
         }
         else
         {

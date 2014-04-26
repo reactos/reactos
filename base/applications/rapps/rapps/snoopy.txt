@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Snoopy
+Version = 1.0
+Licence = Freeware
+Description = The original C64 Snoopy remake.
+Size = 704 kB
+Category = 4
+URLSite = http://www.blueskied.com/snoopinfo.htm
+URLDownload = http://www.blueskied.com/snoop/Snoop_install.exe
+CDPath = none
+
+[Section.0407]
+Description = Das Original C64 Snoopy Remake.
+
+[Section.041f]
+Licence = Ücretsiz
+Description = Özgün C64 Snoppy'nın yeniden yapılmışı.
+Size = 704 KB

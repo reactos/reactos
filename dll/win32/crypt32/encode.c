@@ -2060,7 +2060,7 @@ static BOOL CRYPT_AsnEncodeNumericString(const CERT_NAME_VALUE *value,
     return ret;
 }
 
-static inline int isprintableW(WCHAR wc)
+static inline BOOL isprintableW(WCHAR wc)
 {
     return isalnumW(wc) || isspaceW(wc) || wc == '\'' || wc == '(' ||
      wc == ')' || wc == '+' || wc == ',' || wc == '-' || wc == '.' ||

@@ -12399,7 +12399,7 @@ xmlXPathNodeCollectAndTest(xmlXPathParserContextPtr ctxt,
 				break;
 			}
 		    } else if (cur->type == type) {
-			if (type == XML_NAMESPACE_DECL)
+			if (cur->type == XML_NAMESPACE_DECL)
 			    XP_TEST_HIT_NS
 			else
 			    XP_TEST_HIT
@@ -15076,6 +15076,49 @@ xmlXPathEval(const xmlChar *str, xmlXPathContextPtr ctx) {
 
     xmlXPathFreeParserContext(ctxt);
     return(res);
+}
+
+/**
+ * xmlXPathSetContextNode:
+ * @node: the node to to use as the context node
+ * @ctx:  the XPath context
+ *
+ * Sets 'node' as the context node. The node must be in the same
+ * document as that associated with the context.
+ *
+ * Returns -1 in case of error or 0 if successful
+ */
+int
+xmlXPathSetContextNode(xmlNodePtr node, xmlXPathContextPtr ctx) {
+    if ((node == NULL) || (ctx == NULL))
+        return(-1);
+
+    if (node->doc == ctx->doc) {
+        ctx->node = node;
+	return(0);
+    }
+    return(-1);
+}
+
+/**
+ * xmlXPathNodeEval:
+ * @node: the node to to use as the context node
+ * @str:  the XPath expression
+ * @ctx:  the XPath context
+ *
+ * Evaluate the XPath Location Path in the given context. The node 'node'
+ * is set as the context node. The context node is not restored.
+ *
+ * Returns the xmlXPathObjectPtr resulting from the evaluation or NULL.
+ *         the caller has to free the object.
+ */
+xmlXPathObjectPtr
+xmlXPathNodeEval(xmlNodePtr node, const xmlChar *str, xmlXPathContextPtr ctx) {
+    if (str == NULL)
+        return(NULL);
+    if (xmlXPathSetContextNode(node, ctx) < 0)
+        return(NULL);
+    return(xmlXPathEval(str, ctx));
 }
 
 /**

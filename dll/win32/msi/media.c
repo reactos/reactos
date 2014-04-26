@@ -126,7 +126,6 @@ static void CDECL cabinet_free(void *pv)
 
 static INT_PTR CDECL cabinet_open(char *pszFile, int oflag, int pmode)
 {
-    HANDLE handle;
     DWORD dwAccess = 0;
     DWORD dwShareMode = 0;
     DWORD dwCreateDisposition = OPEN_EXISTING;
@@ -152,12 +151,8 @@ static INT_PTR CDECL cabinet_open(char *pszFile, int oflag, int pmode)
     else if (oflag & _O_CREAT)
         dwCreateDisposition = CREATE_ALWAYS;
 
-    handle = CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
-                         dwCreateDisposition, 0, NULL);
-    if (handle == INVALID_HANDLE_VALUE)
-        return 0;
-
-    return (INT_PTR)handle;
+    return (INT_PTR)CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
+                                dwCreateDisposition, 0, NULL);
 }
 
 static UINT CDECL cabinet_read(INT_PTR hf, void *pv, UINT cb)
@@ -214,12 +209,12 @@ static INT_PTR CDECL cabinet_open_stream( char *pszFile, int oflag, int pmode )
     if (!cab)
     {
         WARN("failed to get cabinet stream\n");
-        return 0;
+        return -1;
     }
     if (!cab->stream[0] || !(encoded = encode_streamname( FALSE, cab->stream + 1 )))
     {
         WARN("failed to encode stream name\n");
-        return 0;
+        return -1;
     }
     if (msi_clone_open_stream( package_disk.package->db, cab->storage, encoded, &stream ) != ERROR_SUCCESS)
     {
@@ -228,7 +223,7 @@ static INT_PTR CDECL cabinet_open_stream( char *pszFile, int oflag, int pmode )
         {
             WARN("failed to open stream 0x%08x\n", hr);
             msi_free( encoded );
-            return 0;
+            return -1;
         }
     }
     msi_free( encoded );

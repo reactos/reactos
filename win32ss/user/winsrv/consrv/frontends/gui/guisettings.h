@@ -55,7 +55,7 @@ GuiConsoleGetDefaultSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
 VOID
 GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                                 BOOL Defaults);
-NTSTATUS
+VOID
 GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                      HANDLE hClientSection,
                      BOOL SaveSettings);

@@ -25,8 +25,6 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
      * This function supposes that the system clipboard was opened.
      */
 
-    PCONSOLE Console = Buffer->Header.Console;
-
     HDC hMemDC;
     HBITMAP  hBitmapTarget, hBitmapOld;
     HPALETTE hPalette, hPaletteOld;
@@ -34,13 +32,13 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 
     if (Buffer->BitMap == NULL) return;
 
-    selWidth  = Console->Selection.srSelection.Right - Console->Selection.srSelection.Left + 1;
-    selHeight = Console->Selection.srSelection.Bottom - Console->Selection.srSelection.Top + 1;
+    selWidth  = GuiData->Selection.srSelection.Right - GuiData->Selection.srSelection.Left + 1;
+    selHeight = GuiData->Selection.srSelection.Bottom - GuiData->Selection.srSelection.Top + 1;
     DPRINT1("Selection is (%d|%d) to (%d|%d)\n",
-           Console->Selection.srSelection.Left,
-           Console->Selection.srSelection.Top,
-           Console->Selection.srSelection.Right,
-           Console->Selection.srSelection.Bottom);
+           GuiData->Selection.srSelection.Left,
+           GuiData->Selection.srSelection.Top,
+           GuiData->Selection.srSelection.Right,
+           GuiData->Selection.srSelection.Bottom);
 
     hMemDC = CreateCompatibleDC(GuiData->hMemDC);
     if (hMemDC == NULL) return;
@@ -74,8 +72,8 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
     StretchDIBits(hMemDC,
                   0, 0,
                   selWidth, selHeight,
-                  Console->Selection.srSelection.Left,
-                  Console->Selection.srSelection.Top,
+                  GuiData->Selection.srSelection.Left,
+                  GuiData->Selection.srSelection.Top,
                   selWidth, selHeight,
                   Buffer->BitMap,
                   Buffer->BitMapInfo,
@@ -87,8 +85,8 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
                       0, 0,
                       selWidth, selHeight,
                       /* Coordinates / size of the corresponding image portion, in the graphics screen-buffer's frame */
-                      Console->Selection.srSelection.Left,
-                      Console->Selection.srSelection.Top,
+                      GuiData->Selection.srSelection.Left,
+                      GuiData->Selection.srSelection.Top,
                       0,
                       Buffer->ScreenBufferSize.Y, // == Buffer->BitMapInfo->bmiHeader.biHeight
                       Buffer->BitMap,
@@ -128,7 +126,12 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
                        PRECT rcView,
                        PRECT rcFramebuffer)
 {
+    PCONSOLE Console = Buffer->Header.Console;
+    // ASSERT(Console == GuiData->Console);
+
     if (Buffer->BitMap == NULL) return;
+
+    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
     rcFramebuffer->left   = Buffer->ViewOrigin.X * 1 + rcView->left;
     rcFramebuffer->top    = Buffer->ViewOrigin.Y * 1 + rcView->top;
@@ -160,6 +163,8 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 
     /* Release the mutex */
     NtReleaseMutant(Buffer->Mutex, NULL);
+
+    LeaveCriticalSection(&Console->Lock);
 }
 
 /* EOF */

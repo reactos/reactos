@@ -238,6 +238,8 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
 
     DPRINT("GuiConsoleShowConsoleProperties entered\n");
 
+    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+
     /*
      * Create a memory section to share with the applet, and map it.
      */
@@ -253,7 +255,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: Impossible to create a shared section ; Status = %lu\n", Status);
-        return;
+        goto Quit;
     }
 
     Status = NtMapViewOfSection(hSection,
@@ -269,8 +271,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
-        NtClose(hSection);
-        return;
+        goto Quit;
     }
 
 
@@ -356,9 +357,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     NtUnmapViewOfSection(NtCurrentProcess(), pSharedInfo);
 
     /* Get the console leader process, our client */
-    ProcessData = CONTAINING_RECORD(Console->ProcessList.Blink,
-                                    CONSOLE_PROCESS_DATA,
-                                    ConsoleLink);
+    ProcessData = ConDrvGetConsoleLeaderProcess(Console);
 
     /* Duplicate the section handle for the client */
     Status = NtDuplicateObject(NtCurrentProcess(),
@@ -410,11 +409,13 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
 
 Quit:
     /* We have finished, close the section handle */
-    NtClose(hSection);
+    if (hSection) NtClose(hSection);
+
+    LeaveCriticalSection(&Console->Lock);
     return;
 }
 
-NTSTATUS
+VOID
 GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                      HANDLE hClientSection,
                      BOOL SaveSettings)
@@ -429,10 +430,10 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     PTERMINAL_INFO TermInfo = NULL;
     PGUI_CONSOLE_INFO GuiInfo = NULL;
 
+    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+
     /* Get the console leader process, our client */
-    ProcessData = CONTAINING_RECORD(Console->ProcessList.Blink,
-                                    CONSOLE_PROCESS_DATA,
-                                    ConsoleLink);
+    ProcessData = ConDrvGetConsoleLeaderProcess(Console);
 
     /* Duplicate the section handle for ourselves */
     Status = NtDuplicateObject(ProcessData->Process->ProcessHandle,
@@ -443,7 +444,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error when mapping client handle, Status = %lu\n", Status);
-        return Status;
+        goto Quit;
     }
 
     /* Get a view of the shared section */
@@ -460,8 +461,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error when mapping view of file, Status = %lu\n", Status);
-        NtClose(hSection);
-        return Status;
+        goto Quit;
     }
 
     _SEH2_TRY
@@ -534,9 +534,14 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
 
 Quit:
     /* Finally, close the section and return */
-    NtUnmapViewOfSection(NtCurrentProcess(), pConInfo);
-    NtClose(hSection);
-    return Status;
+    if (hSection)
+    {
+        NtUnmapViewOfSection(NtCurrentProcess(), pConInfo);
+        NtClose(hSection);
+    }
+
+    LeaveCriticalSection(&Console->Lock);
+    return;
 }
 
 /* EOF */

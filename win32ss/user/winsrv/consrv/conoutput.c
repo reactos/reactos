@@ -232,8 +232,8 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         /* Get infos from the graphics buffer information structure */
         if (!CsrValidateMessageBuffer(ApiMessage,
                                       (PVOID*)&CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMapInfo,
-                                      1,
-                                      CreateScreenBufferRequest->GraphicsBufferInfo.dwBitMapInfoLength))
+                                      CreateScreenBufferRequest->GraphicsBufferInfo.dwBitMapInfoLength,
+                                      sizeof(BYTE)))
         {
             Status = STATUS_INVALID_PARAMETER;
             goto Quit;
@@ -242,11 +242,13 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         ScreenBufferInfo = &GraphicsInfo;
 
         /* Initialize shared variables */
-        CreateScreenBufferRequest->GraphicsBufferInfo.hMutex   = GraphicsInfo.Info.hMutex   = INVALID_HANDLE_VALUE;
-        CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMap = GraphicsInfo.Info.lpBitMap = NULL;
+        // CreateScreenBufferRequest->GraphicsBufferInfo.hMutex
+        CreateScreenBufferRequest->hMutex   = GraphicsInfo.Info.hMutex   = INVALID_HANDLE_VALUE;
+        // CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMap
+        CreateScreenBufferRequest->lpBitMap = GraphicsInfo.Info.lpBitMap = NULL;
 
         /* A graphics screen buffer is never inheritable */
-        CreateScreenBufferRequest->Inheritable = FALSE;
+        CreateScreenBufferRequest->InheritHandle = FALSE;
     }
 
     Status = ConDrvCreateScreenBuffer(&Buff,
@@ -261,8 +263,8 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     Status = ConSrvInsertObject(ProcessData,
                                 &CreateScreenBufferRequest->OutputHandle,
                                 &Buff->Header,
-                                CreateScreenBufferRequest->Access,
-                                CreateScreenBufferRequest->Inheritable,
+                                CreateScreenBufferRequest->DesiredAccess,
+                                CreateScreenBufferRequest->InheritHandle,
                                 CreateScreenBufferRequest->ShareMode);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -276,8 +278,10 @@ CSR_API(SrvCreateConsoleScreenBuffer)
          * Initialize the graphics buffer information structure
          * and give it back to the client.
          */
-        CreateScreenBufferRequest->GraphicsBufferInfo.hMutex   = Buffer->ClientMutex;
-        CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMap = Buffer->ClientBitMap;
+        // CreateScreenBufferRequest->GraphicsBufferInfo.hMutex
+        CreateScreenBufferRequest->hMutex   = Buffer->ClientMutex;
+        // CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMap
+        CreateScreenBufferRequest->lpBitMap = Buffer->ClientBitMap;
     }
 
 Quit:
@@ -720,7 +724,7 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
 NTSTATUS NTAPI
 ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                              IN WORD Attribute);
+                              IN WORD Attributes);
 CSR_API(SrvSetConsoleTextAttribute)
 {
     NTSTATUS Status;
@@ -736,7 +740,7 @@ CSR_API(SrvSetConsoleTextAttribute)
 
     Status = ConDrvSetConsoleTextAttribute(Buffer->Header.Console,
                                            Buffer,
-                                           SetTextAttribRequest->Attrib);
+                                           SetTextAttribRequest->Attributes);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;

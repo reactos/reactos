@@ -50,7 +50,6 @@
  *   - WM_QUERYNEWPALETTE
  *   - WM_RBUTTONDOWN
  *   - WM_RBUTTONUP
- *   - WM_SYSCOLORCHANGE
  *   - WM_VKEYTOITEM
  *   - WM_WININICHANGE
  *   Notifications:
@@ -2904,6 +2903,7 @@ REBAR_SizeToRect (REBAR_INFO *infoPtr, WPARAM flags, RECT *lpRect)
     TRACE("[%s]\n", wine_dbgstr_rect(lpRect));
     REBAR_SizeToHeight(infoPtr, get_rect_cy(infoPtr, lpRect));
 
+#ifdef __REACTOS__
     /* Note that this undocumented flag is available on comctl32 v6 or later */
     if ((flags & RBSTR_CHANGERECT) != 0)
     {
@@ -2911,6 +2911,7 @@ REBAR_SizeToRect (REBAR_INFO *infoPtr, WPARAM flags, RECT *lpRect)
         GetClientRect(infoPtr->hwndSelf, &rcRebar);
         lpRect->bottom = lpRect->top + (rcRebar.bottom - rcRebar.top);
     }
+#endif
     return TRUE;
 }
 
@@ -3378,7 +3379,7 @@ REBAR_NotifyFormat (REBAR_INFO *infoPtr, LPARAM cmd)
 	    ERR("wrong response to WM_NOTIFYFORMAT (%d), assuming ANSI\n", i);
 	    i = NFR_ANSI;
 	}
-        infoPtr->bUnicode = (i == NFR_UNICODE) ? 1 : 0;
+        infoPtr->bUnicode = (i == NFR_UNICODE);
 	return (LRESULT)i;
     }
     return (LRESULT)((infoPtr->bUnicode) ? NFR_UNICODE : NFR_ANSI);
@@ -3751,8 +3752,11 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_SYSCOLORCHANGE:
             COMCTL32_RefreshSysColors();
+#ifdef __REACTOS__
+            /* r51522 - Properly support WM_SYSCOLORCHANGE */
             infoPtr->clrBtnText = comctl32_color.clrBtnText;
             infoPtr->clrBtnFace = comctl32_color.clrBtnFace;
+#endif
             return 0;
 
 /*      case WM_VKEYTOITEM:     supported according to ControlSpy */

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
  *    Use ReactOS forum PM or IRC to contact me
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
@@ -26,7 +26,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "O&dśwież", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Ak&tualizuj bazę programów", ID_RESETDB
     END
     POPUP "Pomoc"
     BEGIN
@@ -56,7 +56,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Odśwież", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Ak&tualizuj bazę programów", ID_RESETDB
     END
 END
 
@@ -71,7 +71,7 @@ BEGIN
     AUTOCHECKBOX "Zap&isuj dziennik instalacji i usuwania programów", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "Pobieranie", -1, 4, 65, 240, 51
     LTEXT "Katalog dla pobranych plików:", -1, 16, 75, 100, 9
-    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "&Wybierz", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Usuń instalatory programów po ich zainstalowaniu", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     PUSHBUTTON "Domyślne", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14

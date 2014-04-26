@@ -196,7 +196,7 @@ static void add_dib_bits( HIMAGELIST himl, int pos, int count, int width, int he
 
     for (n = 0; n < count; n++)
     {
-        int has_alpha = 0;
+        BOOL has_alpha = FALSE;
 
         imagelist_point_from_index( himl, pos + n, &pt );
 
@@ -2876,7 +2876,7 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
 	himl->hbmImage = hbmNewBitmap;
     }
     else
-	ERR("Could not create new image bitmap !\n");
+	ERR("Could not create new image bitmap!\n");
 
     if (himl->hbmMask)
     {
@@ -3147,7 +3147,7 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
  */
 
 UINT WINAPI
-ImageList_SetColorTable (HIMAGELIST himl, UINT uStartIndex, UINT cEntries, CONST RGBQUAD * prgb)
+ImageList_SetColorTable(HIMAGELIST himl, UINT uStartIndex, UINT cEntries, const RGBQUAD *prgb)
 {
     return SetDIBColorTable(himl->hdcImage, uStartIndex, cEntries, prgb);
 }

@@ -58,7 +58,7 @@ typedef struct tagFD31_DATA
  */
 static BOOL FD31_Init(void)
 {
-    static BOOL initialized = 0;
+    static BOOL initialized = FALSE;
 
     if (!initialized) {
         hFolder  = LoadImageA( COMDLG32_hInstance, "FOLDER", IMAGE_ICON, 16, 16, LR_SHARED );
@@ -70,7 +70,7 @@ static BOOL FD31_Init(void)
 	if (hFolder == 0 || hFolder2 == 0 || hFloppy == 0 ||
 	    hHDisk == 0 || hCDRom == 0 || hNet == 0)
 	{
-	    ERR("Error loading icons !\n");
+	    ERR("Error loading icons!\n");
 	    return FALSE;
 	}
 	initialized = TRUE;

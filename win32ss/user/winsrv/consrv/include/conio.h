@@ -228,6 +228,8 @@ typedef struct _FRONTEND_VTBL
     HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
                                               PCOORD pSize);
+    BOOL (NTAPI *GetSelectionInfo)(IN OUT PFRONTEND This,
+                                   PCONSOLE_SELECTION_INFO pSelectionInfo);
     BOOL (NTAPI *SetPalette)(IN OUT PFRONTEND This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);
@@ -282,6 +284,8 @@ typedef struct _CONSOLE
     CONSOLE_STATE State;                    /* State of the console */
 
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
+    PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when the console leader process is killed */
+    BOOLEAN NotifyLastClose;                /* TRUE if the console should send a control event when the console leader process is killed */
 
     FRONTEND TermIFace;                     /* Frontend-specific interface */
 
@@ -302,9 +306,6 @@ typedef struct _CONSOLE
     BOOLEAN QuickEdit;
     BOOLEAN InsertMode;
     UINT CodePage;
-
-    CONSOLE_SELECTION_INFO Selection;       /* Contains information about the selection */
-    COORD dwSelectionCursor;                /* Selection cursor position, most of the time different from Selection.dwSelectionAnchor */
 
 /******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
@@ -341,10 +342,15 @@ typedef struct _CONSOLE
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
 
+PCONSOLE_PROCESS_DATA NTAPI
+ConDrvGetConsoleLeaderProcess(IN PCONSOLE Console);
+NTSTATUS
+ConDrvConsoleCtrlEvent(IN ULONG CtrlEvent,
+                       IN PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS NTAPI
 ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
                               IN ULONG ProcessGroupId,
-                              IN ULONG Event);
+                              IN ULONG CtrlEvent);
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);

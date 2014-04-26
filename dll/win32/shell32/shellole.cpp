@@ -710,3 +710,14 @@ EXTERN_C HRESULT WINAPI SHPropStgWriteMultiple(IPropertyStorage *pps, UINT *uCod
     hres = pps->WriteMultiple(cpspec, rgpspec, rgvar, propidNameFirst);
     return hres;
 }
+
+/*************************************************************************
+ *  SHCreateQueryCancelAutoPlayMoniker [SHELL32.@]
+ */
+HRESULT WINAPI SHCreateQueryCancelAutoPlayMoniker(IMoniker **moniker)
+{
+    TRACE("%p\n", moniker);
+
+    if (!moniker) return E_INVALIDARG;
+    return CreateClassMoniker(CLSID_QueryCancelAutoPlay, moniker);
+}

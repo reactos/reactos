@@ -1683,7 +1683,7 @@ struct hlsl_ir_node *make_assignment(struct hlsl_ir_node *left, enum parse_assig
 
 static int compare_hlsl_types_rb(const void *key, const struct wine_rb_entry *entry)
 {
-    const char *name = (const char *)key;
+    const char *name = key;
     const struct hlsl_type *type = WINE_RB_ENTRY_VALUE(entry, const struct hlsl_type, scope_entry);
 
     if (name == type->name)
@@ -1820,7 +1820,7 @@ static int compare_param_hlsl_types(const struct hlsl_type *t1, const struct hls
 
 static int compare_function_decl_rb(const void *key, const struct wine_rb_entry *entry)
 {
-    const struct list *params = (const struct list *)key;
+    const struct list *params = key;
     const struct hlsl_ir_function_decl *decl = WINE_RB_ENTRY_VALUE(entry, const struct hlsl_ir_function_decl, entry);
     int params_count = params ? list_count(params) : 0;
     int decl_params_count = decl->parameters ? list_count(decl->parameters) : 0;
@@ -1855,7 +1855,7 @@ static const struct wine_rb_functions hlsl_ir_function_decl_rb_funcs =
 
 static int compare_function_rb(const void *key, const struct wine_rb_entry *entry)
 {
-    const char *name = (const char *)key;
+    const char *name = key;
     const struct hlsl_ir_function *func = WINE_RB_ENTRY_VALUE(entry, const struct hlsl_ir_function,entry);
 
     return strcmp(name, func->name);

@@ -438,7 +438,6 @@ static ULONG WINAPI vbnamespacemanager_Release(IVBMXNamespaceManager *iface)
             free_ns_context(ctxt);
         }
 
-        release_dispex(&This->dispex);
         heap_free( This );
     }
 
@@ -622,12 +621,12 @@ static dispex_static_data_t namespacemanager_dispex = {
     namespacemanager_iface_tids
 };
 
-HRESULT MXNamespaceManager_create(IUnknown *outer, void **obj)
+HRESULT MXNamespaceManager_create(void **obj)
 {
     namespacemanager *This;
     struct nscontext *ctxt;
 
-    TRACE("(%p, %p)\n", outer, obj);
+    TRACE("(%p)\n", obj);
 
     This = heap_alloc( sizeof (*This) );
     if( !This )

@@ -19,6 +19,7 @@ IDI_DEVMGR ICON "resources/devmgr.ico"
 IDI_UP ICON "resources/up.ico"
 IDI_DOWN ICON "resources/down.ico"
 IDB_ROSBMP BITMAP "resources/rosbitmap.bmp"
+IDB_ROSMASK BITMAP "resources/rosbitmap_mask.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 

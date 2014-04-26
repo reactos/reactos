@@ -1160,18 +1160,11 @@ typedef struct _SYSTEM_TIMEOFDAY_INFORMATION {
 /* System Information Class 0x08 */
 
 typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION {
-#ifdef __WINESRC__
-    LARGE_INTEGER liIdleTime;
-    LARGE_INTEGER liKernelTime;
-    LARGE_INTEGER liUserTime;
-    DWORD dwSpare[5];
-#else
     LARGE_INTEGER IdleTime;
     LARGE_INTEGER KernelTime;
     LARGE_INTEGER UserTime;
     LARGE_INTEGER Reserved1[2];
     ULONG Reserved2;
-#endif
 } SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION, *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
 
 /* System Information Class 0x0b */
@@ -2454,6 +2447,9 @@ typedef struct _LDR_MODULE
 /* these ones is Wine specific */
 #define LDR_DONT_RESOLVE_REFS           0x40000000
 #define LDR_WINE_INTERNAL               0x80000000
+
+/* flag for LdrAddRefDll */
+#define LDR_ADDREF_DLL_PIN              0x00000001
 
 /* FIXME: to be checked */
 #define MAXIMUM_FILENAME_LENGTH 256

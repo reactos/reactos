@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Christmas Bound
+Version = 1.4
+Licence = Freeware
+Description = A game similar Frozen Fruits.
+Size = 892 kB
+Category = 4
+URLSite = http://www.blueskied.com/xmas/christmas_main.htm
+URLDownload = http://www.blueskied.com/xmas/ChristmasBound_setup.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein Spiel, ähnlich zu Frozen Fruits.
+
+[Section.041f]
+Licence = Ücretsiz
+Description = Frozen Fruits'e benzeyen bir oyun.
+Size = 892 KB

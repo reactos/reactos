@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Bound Around (Demo)
+Licence = Shareware
+Description = A game similar Frozen Fruits.
+Size = 1.95 MB
+Category = 4
+URLSite = http://www.blueskied.com/boundaround.htm
+URLDownload = http://www.blueskied.com/BoundAround_Demo.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein Spiel, ähnlich zu Frozen Fruits.
+
+[Section.041f]
+Name = Bound Around (Göstermelik)
+Licence = Kısıtlı
+Description = Frozen Fruits'e benzeyen bir oyun.
+Size = 1,95 MB

@@ -79,13 +79,20 @@ typedef enum {
 } vbdisp_invoke_type_t;
 
 typedef struct {
+    unsigned dim_cnt;
+    SAFEARRAYBOUND *bounds;
+} array_desc_t;
+
+typedef struct {
     BOOL is_public;
+    BOOL is_array;
     const WCHAR *name;
 } vbdisp_prop_desc_t;
 
 typedef struct {
     const WCHAR *name;
     BOOL is_public;
+    BOOL is_array;
     function_t *entries[VBDISP_ANY];
 } vbdisp_funcprop_desc_t;
 
@@ -112,6 +119,9 @@ typedef struct _class_desc_t {
     unsigned prop_cnt;
     vbdisp_prop_desc_t *props;
 
+    unsigned array_cnt;
+    array_desc_t *array_descs;
+
     unsigned builtin_prop_cnt;
     const builtin_prop_t *builtin_props;
     ITypeInfo *typeinfo;
@@ -128,6 +138,7 @@ struct _vbdisp_t {
     struct list entry;
 
     const class_desc_t *desc;
+    SAFEARRAY **arrays;
     VARIANT props[1];
 };
 
@@ -152,6 +163,8 @@ HRESULT disp_propput(script_ctx_t*,IDispatch*,DISPID,DISPPARAMS*) DECLSPEC_HIDDE
 void collect_objects(script_ctx_t*) DECLSPEC_HIDDEN;
 HRESULT create_procedure_disp(script_ctx_t*,vbscode_t*,IDispatch**) DECLSPEC_HIDDEN;
 HRESULT create_script_disp(script_ctx_t*,ScriptDisp**) DECLSPEC_HIDDEN;
+
+HRESULT to_int(VARIANT*,int*) DECLSPEC_HIDDEN;
 
 static inline unsigned arg_cnt(const DISPPARAMS *dp)
 {
@@ -187,6 +200,8 @@ struct _script_ctx_t {
     class_desc_t err_desc;
     vbdisp_t *err_obj;
 
+    HRESULT err_number;
+
     dynamic_var_t *global_vars;
     function_t *global_funcs;
     class_desc_t *classes;
@@ -220,9 +235,11 @@ typedef enum {
     X(assign_ident,   1, ARG_BSTR,    ARG_UINT)   \
     X(assign_member,  1, ARG_BSTR,    ARG_UINT)   \
     X(bool,           1, ARG_INT,     0)          \
+    X(catch,          1, ARG_ADDR,    ARG_UINT)    \
     X(case,           0, ARG_ADDR,    0)          \
     X(concat,         1, 0,           0)          \
     X(const,          1, ARG_BSTR,    0)          \
+    X(dim,            1, ARG_BSTR,    ARG_UINT)   \
     X(div,            1, 0,           0)          \
     X(double,         1, ARG_DOUBLE,  0)          \
     X(empty,          1, 0,           0)          \
@@ -318,6 +335,8 @@ struct _function_t {
     unsigned arg_cnt;
     var_desc_t *vars;
     unsigned var_cnt;
+    array_desc_t *array_descs;
+    unsigned array_cnt;
     unsigned code_off;
     vbscode_t *code_ctx;
     function_t *next;
@@ -342,7 +361,7 @@ struct _vbscode_t {
 
 void release_vbscode(vbscode_t*) DECLSPEC_HIDDEN;
 HRESULT compile_script(script_ctx_t*,const WCHAR*,const WCHAR*,vbscode_t**) DECLSPEC_HIDDEN;
-HRESULT exec_script(script_ctx_t*,function_t*,IDispatch*,DISPPARAMS*,VARIANT*) DECLSPEC_HIDDEN;
+HRESULT exec_script(script_ctx_t*,function_t*,vbdisp_t*,DISPPARAMS*,VARIANT*) DECLSPEC_HIDDEN;
 void release_dynamic_vars(dynamic_var_t*) DECLSPEC_HIDDEN;
 
 typedef struct {
@@ -376,6 +395,43 @@ static inline BOOL is_int32(double d)
 {
     return INT32_MIN <= d && d <= INT32_MAX && (double)(int)d == d;
 }
+
+HRESULT create_regexp(IDispatch**) DECLSPEC_HIDDEN;
+
+HRESULT map_hres(HRESULT) DECLSPEC_HIDDEN;
+
+#define FACILITY_VBS 0xa
+#define MAKE_VBSERROR(code) MAKE_HRESULT(SEVERITY_ERROR, FACILITY_VBS, code)
+
+#define VBSE_ILLEGAL_FUNC_CALL              5
+#define VBSE_OVERFLOW                       6
+#define VBSE_OUT_OF_MEMORY                  7
+#define VBSE_OUT_OF_BOUNDS                  9
+#define VBSE_ARRAY_LOCKED                  10
+#define VBSE_TYPE_MISMATCH                 13
+#define VBSE_FILE_NOT_FOUND                53
+#define VBSE_IO_ERROR                      57
+#define VBSE_FILE_ALREADY_EXISTS           58
+#define VBSE_DISK_FULL                     61
+#define VBSE_TOO_MANY_FILES                67
+#define VBSE_PERMISSION_DENIED             70
+#define VBSE_PATH_FILE_ACCESS              75
+#define VBSE_PATH_NOT_FOUND                76
+#define VBSE_OLE_NOT_SUPPORTED            430
+#define VBSE_OLE_NO_PROP_OR_METHOD        438
+#define VBSE_ACTION_NOT_SUPPORTED         445
+#define VBSE_NAMED_ARGS_NOT_SUPPORTED     446
+#define VBSE_LOCALE_SETTING_NOT_SUPPORTED 447
+#define VBSE_NAMED_PARAM_NOT_FOUND        448
+#define VBSE_INVALID_TYPELIB_VARIABLE     458
+#define VBSE_FUNC_ARITY_MISMATCH          450
+#define VBSE_PARAMETER_NOT_OPTIONAL       449
+#define VBSE_NOT_ENUM                     451
+#define VBSE_INVALID_DLL_FUNCTION_NAME    453
+#define VBSE_CANT_CREATE_TMP_FILE         322
+#define VBSE_OLE_FILE_NOT_FOUND           432
+#define VBSE_CANT_CREATE_OBJECT           429
+#define VBSE_SERVER_NOT_FOUND             462
 
 HRESULT WINAPI VBScriptFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI VBScriptRegExpFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
