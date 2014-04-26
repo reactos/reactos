@@ -379,6 +379,7 @@ VOID ConsoleCleanup(VOID)
 
 DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 {
+    DWORD Result;
     VDM_COMMAND_INFO CommandInfo;
     CHAR CmdLine[MAX_PATH];
     CHAR AppName[MAX_PATH];
@@ -414,14 +415,11 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 
         /* Start the process from the command line */
         DPRINT1("Starting '%s'...\n", AppName);
-        if (DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
-                              AppName,
-                              CmdLine,
-                              Env,
-                              NULL,
-                              NULL) != ERROR_SUCCESS)
+
+        Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE, AppName, CmdLine, Env, NULL, NULL);
+        if (Result != ERROR_SUCCESS)
         {
-            DisplayMessage(L"Could not start '%S'", AppName);
+            DisplayMessage(L"Could not start '%S'. Error: %u", AppName, Result);
             break;
         }
 
@@ -437,6 +435,8 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 
 INT wmain(INT argc, WCHAR *argv[])
 {
+    DWORD Result;
+
 #ifdef STANDALONE
     CHAR ApplicationName[MAX_PATH];
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
@@ -506,15 +506,17 @@ INT wmain(INT argc, WCHAR *argv[])
 #else
 
     /* Start the process from the command line */
-    DPRINT1("Starting '%s'...\n", CommandLine);
-    if (DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
-                          ApplicationName,
-                          CommandLine,
-                          GetEnvironmentStrings(),
-                          NULL,
-                          NULL) != ERROR_SUCCESS)
+    DPRINT1("Starting '%s'...\n", ApplicationName);
+
+    Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
+                               ApplicationName,
+                               CommandLine,
+                               GetEnvironmentStrings(),
+                               NULL,
+                               NULL);
+    if (Result != ERROR_SUCCESS)
     {
-        DisplayMessage(L"Could not start '%S'", ApplicationName);
+        DisplayMessage(L"Could not start '%S'. Error: %u", ApplicationName, Result);
         goto Cleanup;
     }
 

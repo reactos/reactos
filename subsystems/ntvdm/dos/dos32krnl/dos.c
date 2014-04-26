@@ -1283,6 +1283,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
                       LPCSTR ProgramName,
                       PDOS_EXEC_PARAM_BLOCK Parameters)
 {
+    DWORD Result;
     DWORD BinaryType;
     LPVOID Environment = NULL;
     VDM_COMMAND_INFO CommandInfo;
@@ -1361,14 +1362,15 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
             GetNextVDMCommand(&CommandInfo);
 
             /* Load the executable */
-            if (DosLoadExecutable(LoadType,
-                                  AppName,
-                                  CmdLine,
-                                  Env,
-                                  &Parameters->StackLocation,
-                                  &Parameters->EntryPoint) != ERROR_SUCCESS)
+            Result= DosLoadExecutable(LoadType,
+                                      AppName,
+                                      CmdLine,
+                                      Env,
+                                      &Parameters->StackLocation,
+                                      &Parameters->EntryPoint);
+            if (Result != ERROR_SUCCESS)
             {
-                DisplayMessage(L"Could not load '%S'", AppName);
+                DisplayMessage(L"Could not load '%S'. Error: %u", AppName, Result);
                 break;
             }
 
