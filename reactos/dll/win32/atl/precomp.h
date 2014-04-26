@@ -1,5 +1,5 @@
-#ifndef _ATL100_PCH_
-#define _ATL100_PCH_
+#ifndef _ATL_PCH_
+#define _ATL_PCH_
 
 #include <stdarg.h>
 
@@ -16,9 +16,10 @@
 #include <oleauto.h>
 
 #include <wine/atlbase.h>
+#include <wine/atlwin.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
-#endif /* _ATL100_PCH_ */
+#endif /* _ATL_PCH_ */

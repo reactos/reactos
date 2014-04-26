@@ -1,7 +1,7 @@
 /*
- * COM Classes for ATL
+ * Resource file for atl80
  *
- * Copyright 2010 Alexandre Julliard
+ * Copyright 2011 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,12 +18,5 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma makedep register
-
-[
-    helpstring("Registrar Class"),
-    progid("ATL.Registrar"),
-    threading(both),
-    uuid(44ec053a-400f-11d0-9dcd-00a0c90391d3)
-]
-coclass Registrar { interface IRegistrar; }
+/* @makedep: atl80.manifest */
+WINE_MANIFEST 24 atl80.manifest

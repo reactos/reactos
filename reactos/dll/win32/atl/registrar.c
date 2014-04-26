@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(atl);
+#include <precomp.h>
 
 /**************************************************************
  * ATLRegistrar implementation
@@ -490,15 +488,13 @@ static HRESULT file_register(Registrar *This, LPCOLESTR fileName, BOOL do_regist
     DWORD filelen, len;
     LPWSTR regstrw;
     LPSTR regstra;
-    LRESULT lres;
     HRESULT hres;
 
-    file = CreateFileW(fileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+    file = CreateFileW(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if(file != INVALID_HANDLE_VALUE) {
         filelen = GetFileSize(file, NULL);
         regstra = HeapAlloc(GetProcessHeap(), 0, filelen);
-        lres = ReadFile(file, regstra, filelen, NULL, NULL);
-        if(lres == ERROR_SUCCESS) {
+        if(ReadFile(file, regstra, filelen, NULL, NULL)) {
             len = MultiByteToWideChar(CP_ACP, 0, regstra, filelen, NULL, 0)+1;
             regstrw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
             MultiByteToWideChar(CP_ACP, 0, regstra, filelen, regstrw, len);
@@ -508,13 +504,13 @@ static HRESULT file_register(Registrar *This, LPCOLESTR fileName, BOOL do_regist
 
             HeapFree(GetProcessHeap(), 0, regstrw);
         }else {
-            WARN("Failed to read faile\n");
-            hres = HRESULT_FROM_WIN32(lres);
+            WARN("Failed to read file %s\n", debugstr_w(fileName));
+            hres = HRESULT_FROM_WIN32(GetLastError());
         }
         HeapFree(GetProcessHeap(), 0, regstra);
         CloseHandle(file);
     }else {
-        WARN("Could not open file\n");
+        WARN("Could not open file %s\n", debugstr_w(fileName));
         hres = HRESULT_FROM_WIN32(GetLastError());
     }
 

@@ -17,11 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #include <wingdi.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(atl100);
+#define ATLVer1Size FIELD_OFFSET(_ATL_MODULEW, dwAtlBuildVer)
+
+HINSTANCE atl_instance;
 
 typedef unsigned char cpp_bool;
 
@@ -296,17 +298,21 @@ HRESULT WINAPI AtlModuleAddTermFunc(_ATL_MODULE *pM, _ATL_TERMFUNC *pFunc, DWORD
 {
     _ATL_TERMFUNC_ELEM *termfunc_elem;
 
-    TRACE("(%p %p %ld)\n", pM, pFunc, dw);
+    TRACE("version %04x (%p %p %ld)\n", _ATL_VER, pM, pFunc, dw);
 
-    termfunc_elem = HeapAlloc(GetProcessHeap(), 0, sizeof(_ATL_TERMFUNC_ELEM));
-    termfunc_elem->pFunc = pFunc;
-    termfunc_elem->dw = dw;
-    termfunc_elem->pNext = pM->m_pTermFuncs;
+    if (_ATL_VER > _ATL_VER_30 || pM->cbSize > ATLVer1Size) {
+        termfunc_elem = HeapAlloc(GetProcessHeap(), 0, sizeof(_ATL_TERMFUNC_ELEM));
+        termfunc_elem->pFunc = pFunc;
+        termfunc_elem->dw = dw;
+        termfunc_elem->pNext = pM->m_pTermFuncs;
 
-    pM->m_pTermFuncs = termfunc_elem;
+        pM->m_pTermFuncs = termfunc_elem;
+    }
 
     return S_OK;
 }
+
+#if _ATL_VER > _ATL_VER_30
 
 /***********************************************************************
  *           AtlCallTermFunc              [atl100.@]
@@ -326,6 +332,8 @@ void WINAPI AtlCallTermFunc(_ATL_MODULE *pM)
 
     pM->m_pTermFuncs = NULL;
 }
+
+#endif
 
 /***********************************************************************
  *           AtlLoadTypeLib             [atl100.56]
@@ -383,12 +391,39 @@ HRESULT WINAPI AtlLoadTypeLib(HINSTANCE inst, LPCOLESTR lpszIndex,
     return S_OK;
 }
 
+#if _ATL_VER <= _ATL_VER_80
+
+/***********************************************************************
+ *           AtlRegisterTypeLib         [atl80.19]
+ */
+HRESULT WINAPI AtlRegisterTypeLib(HINSTANCE inst, const WCHAR *index)
+{
+    ITypeLib *typelib;
+    BSTR path;
+    HRESULT hres;
+
+    TRACE("(%p %s)\n", inst, debugstr_w(index));
+
+    hres = AtlLoadTypeLib(inst, index, &path, &typelib);
+    if(FAILED(hres))
+        return hres;
+
+    hres = RegisterTypeLib(typelib, path, NULL); /* FIXME: pass help directory */
+    ITypeLib_Release(typelib);
+    SysFreeString(path);
+    return hres;
+}
+
+#endif
+
+#if _ATL_VER > _ATL_VER_30
+
 /***********************************************************************
  *           AtlWinModuleInit                          [atl100.65]
  */
 HRESULT WINAPI AtlWinModuleInit(_ATL_WIN_MODULE *winmod)
 {
-    TRACE("(%p\n", winmod);
+    TRACE("(%p)\n", winmod);
 
     if(winmod->cbSize != sizeof(*winmod))
         return E_INVALIDARG;
@@ -499,7 +534,28 @@ HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE *module, DWORD c
     }
 
    return S_OK;
+}
 
+/***********************************************************************
+ *           AtlComModuleRevokeClassObjects   [atl100.20]
+ */
+HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
+{
+    _ATL_OBJMAP_ENTRY **iter;
+    HRESULT hres;
+
+    TRACE("(%p)\n", module);
+
+    if(!module)
+        return E_INVALIDARG;
+
+    for(iter = module->m_ppAutoObjMapFirst; iter < module->m_ppAutoObjMapLast; iter++) {
+        hres = CoRevokeClassObject((*iter)->dwRegister);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    return S_OK;
 }
 
 /***********************************************************************
@@ -553,6 +609,8 @@ HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeL
 
     return S_OK;
 }
+
+#endif
 
 /***********************************************************************
  *           AtlRegisterClassCategoriesHelper          [atl100.49]
@@ -757,6 +815,8 @@ HRESULT WINAPI AtlGetObjectSourceInterface(IUnknown *unk, GUID *libid, IID *iid,
     return hres;
 }
 
+#if _ATL_VER >= _ATL_VER90
+
 /***********************************************************************
  *           AtlSetPerUserRegistration [atl100.67]
  */
@@ -776,12 +836,15 @@ HRESULT WINAPI AtlGetPerUserRegistration(cpp_bool *pbEnabled)
     return S_OK;
 }
 
+#endif
+
 /***********************************************************************
  *           AtlGetVersion              [atl100.@]
  */
 DWORD WINAPI AtlGetVersion(void *pReserved)
 {
-   return _ATL_VER;
+    TRACE("version %04x (%p)\n", _ATL_VER, pReserved);
+    return _ATL_VER;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -790,6 +853,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
+        atl_instance = hinstDLL;
         DisableThreadLibraryCalls(hinstDLL);
         break;
     case DLL_PROCESS_DETACH:

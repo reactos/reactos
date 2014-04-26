@@ -1,5 +1,5 @@
-#ifndef _ATL100_PCH_
-#define _ATL100_PCH_
+#ifndef _ATL80_PCH_
+#define _ATL80_PCH_
 
 #include <stdarg.h>
 
@@ -21,4 +21,4 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
-#endif /* _ATL100_PCH_ */
+#endif /* _ATL80_PCH_ */
