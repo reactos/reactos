@@ -3,7 +3,6 @@
 #define STANDALONE
 #include <wine/test.h>
 
-extern void func_devclass(void);
 extern void func_devinst(void);
 extern void func_diskspace(void);
 extern void func_install(void);
@@ -15,7 +14,6 @@ extern void func_stringtable(void);
 
 const struct test winetest_testlist[] =
 {
-    { "devclass", func_devclass },
     { "devinst", func_devinst },
     { "diskspace", func_diskspace },
     { "install", func_install },

@@ -22,8 +22,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#undef __WINESRC__
-#undef __ROS_LONG64__
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -33,6 +31,10 @@
 #include "setupapi.h"
 
 #include "wine/test.h"
+
+#define ok_lasterr(err) \
+    ok( GetLastError() == (err), \
+        "Expected error %lx, got %lx\n", (DWORD)(err), GetLastError() )
 
 static GUID test_class_guid = { 0x4d36e967, 0xe325, 0x11ce, { 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18 } };
 static char test_class_name[MAX_CLASS_NAME_LEN] = "DiskDrive";
@@ -65,14 +67,12 @@ static void test_SetupDiBuildClassInfoList(void)
     SetLastError( 0xdeadbeef );
     ok( !SetupDiBuildClassInfoList( 0, NULL, 0, NULL ),
         "Fail expected" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected error %lx, got %lx", ERROR_INVALID_PARAMETER, GetLastError() );
+    ok_lasterr( ERROR_INVALID_PARAMETER );
 
     SetLastError( 0xdeadbeef );
     ok( !SetupDiBuildClassInfoList( 0, NULL, 0, &required_size ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-        "Expected error %lx, got %lx\n", ERROR_INSUFFICIENT_BUFFER, GetLastError() );
+    ok_lasterr( ERROR_INSUFFICIENT_BUFFER );
 
     guid_list = HeapAlloc( GetProcessHeap(), 0, ( required_size + 1 ) * sizeof( GUID ) );
     if ( !guid_list )
@@ -104,14 +104,12 @@ static void test_SetupDiClassGuidsFromNameA(void)
     SetLastError( 0xdeadbeef );
     ok( !SetupDiClassGuidsFromNameA( NULL, NULL, 0, NULL ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_PARAMETER, GetLastError() );
+    ok_lasterr( ERROR_INVALID_PARAMETER );
 
     SetLastError( 0xdeadbeef );
     ok( !SetupDiClassGuidsFromNameA( NULL, NULL, 0, &required_size ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_PARAMETER, GetLastError() );
+    ok_lasterr( ERROR_INVALID_PARAMETER );
 
     SetLastError( 0xdeadbeef );
     ok( SetupDiClassGuidsFromNameA( "", NULL, 0, &required_size ),
@@ -121,8 +119,7 @@ static void test_SetupDiClassGuidsFromNameA(void)
     SetLastError( 0xdeadbeef );
     ok( !SetupDiClassGuidsFromNameA( test_class_name, NULL, 0, &required_size ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-        "Expected error %lx, got %lx\n", ERROR_INSUFFICIENT_BUFFER, GetLastError() );
+    ok_lasterr( ERROR_INSUFFICIENT_BUFFER );
     ok( required_size > 0, "Expected > 0, got %lu\n", required_size );
 
     guid_list = HeapAlloc( GetProcessHeap(), 0, ( required_size + 1 ) * sizeof( GUID ) );
@@ -153,20 +150,17 @@ static void test_SetupDiClassNameFromGuidA(void)
     SetLastError( 0xdeadbeef );
     ok( !SetupDiClassNameFromGuidA( NULL, NULL, 0, NULL ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_CLASS,
-        "Expected error %x, got %lx\n", ERROR_INVALID_CLASS, GetLastError() );
+    ok_lasterr( ERROR_INVALID_CLASS );
 
     SetLastError( 0xdeadbeef );
     ok( !SetupDiClassNameFromGuidA( NULL, NULL, 0, &required_size ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_CLASS,
-        "Expected error %x, got %lx\n", ERROR_INVALID_CLASS, GetLastError() );
+    ok_lasterr( ERROR_INVALID_CLASS );
 
     SetLastError( 0xdeadbeef );
     ok( !SetupDiClassNameFromGuidA( &test_class_guid, NULL, 0, &required_size ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-        "Expected error %lx, got %lx\n", ERROR_INSUFFICIENT_BUFFER, GetLastError() );
+    ok_lasterr( ERROR_INSUFFICIENT_BUFFER );
     ok( required_size > 0, "Expected > 0, got %lu\n", required_size );
     ok( required_size < MAX_CLASS_NAME_LEN, "Expected < %u, got %lu\n", MAX_CLASS_NAME_LEN, required_size );
 
@@ -198,20 +192,17 @@ static void test_SetupDiGetClassDescriptionA(void)
     SetLastError( 0xdeadbeef );
     ok( !SetupDiGetClassDescriptionA( NULL, NULL, 0, NULL ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_PARAMETER, GetLastError() );
+    ok_lasterr( ERROR_INVALID_PARAMETER );
 
     SetLastError( 0xdeadbeef );
     ok( !SetupDiGetClassDescriptionA( NULL, NULL, 0, &required_size ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_PARAMETER, GetLastError() );
+    ok_lasterr( ERROR_INVALID_PARAMETER );
 
     SetLastError( 0xdeadbeef );
     ok( !SetupDiGetClassDescriptionA( &test_class_guid, NULL, 0, &required_size ),
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-        "Expected error %lx, got %lx\n", ERROR_INSUFFICIENT_BUFFER, GetLastError() );
+    ok_lasterr( ERROR_INSUFFICIENT_BUFFER );
     ok( required_size > 0, "Expected > 0, got %lu\n", required_size );
     ok( required_size < LINE_LEN, "Expected < %u, got %lu\n", LINE_LEN, required_size );
 
@@ -239,8 +230,7 @@ static void test_SetupDiGetClassDevsA(void)
     device_info = SetupDiGetClassDevs( NULL, NULL, NULL, 0 );
     ok( device_info == INVALID_HANDLE_VALUE,
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_PARAMETER, GetLastError() );
+    ok_lasterr( ERROR_INVALID_PARAMETER );
 
     SetLastError( 0xdeadbeef );
     device_info = SetupDiGetClassDevs( NULL, NULL, NULL, DIGCF_ALLCLASSES );
@@ -254,8 +244,7 @@ static void test_SetupDiGetClassDevsA(void)
     device_info = SetupDiGetClassDevs( NULL, NULL, NULL, DIGCF_DEVICEINTERFACE );
     ok( device_info == INVALID_HANDLE_VALUE,
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_PARAMETER, GetLastError() );
+    ok_lasterr( ERROR_INVALID_PARAMETER );
 
     SetLastError( 0xdeadbeef );
     device_info = SetupDiGetClassDevs( &test_class_guid, NULL, NULL, 0 );
@@ -269,8 +258,7 @@ static void test_SetupDiGetClassDevsA(void)
     device_info = SetupDiGetClassDevs( NULL, "(invalid enumerator)", NULL, DIGCF_ALLCLASSES );
     ok( device_info == INVALID_HANDLE_VALUE,
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_DATA,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_DATA, GetLastError() );
+    ok_lasterr( ERROR_INVALID_DATA );
 
     SetLastError( 0xdeadbeef );
     device_info = SetupDiGetClassDevs( NULL, "Root", NULL, DIGCF_ALLCLASSES );
@@ -290,29 +278,25 @@ static void test_SetupDiOpenClassRegKeyExA(void)
     hkey = SetupDiOpenClassRegKeyExA( NULL, 0, 0, NULL, NULL );
     ok( hkey == INVALID_HANDLE_VALUE,
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_FLAGS,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_FLAGS, GetLastError() );
+    ok_lasterr( ERROR_INVALID_FLAGS );
 
     SetLastError( 0xdeadbeef );
     hkey = SetupDiOpenClassRegKeyExA( NULL, 0, DIOCR_INSTALLER | DIOCR_INTERFACE, NULL, NULL );
     ok( hkey == INVALID_HANDLE_VALUE,
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_FLAGS,
-        "Expected error %lx, got %lx\n", ERROR_INVALID_FLAGS, GetLastError() );
+    ok_lasterr( ERROR_INVALID_FLAGS );
 
     SetLastError( 0xdeadbeef );
     hkey = SetupDiOpenClassRegKeyExA( NULL, 0, DIOCR_INSTALLER, NULL, NULL );
     ok( hkey == INVALID_HANDLE_VALUE,
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_CLASS,
-        "Expected error %x, got %lx\n", ERROR_INVALID_CLASS, GetLastError() );
+    ok_lasterr( ERROR_INVALID_CLASS );
 
     SetLastError( 0xdeadbeef );
     hkey = SetupDiOpenClassRegKeyExA( NULL, 0, DIOCR_INTERFACE, NULL, NULL );
     ok( hkey == INVALID_HANDLE_VALUE,
         "Fail expected\n" );
-    ok( GetLastError() == ERROR_INVALID_CLASS,
-        "Expected error %x, got %lx\n", ERROR_INVALID_CLASS, GetLastError() );
+    ok_lasterr( ERROR_INVALID_CLASS );
 
     SetLastError( 0xdeadbeef );
     hkey = SetupDiOpenClassRegKeyExA( NULL, KEY_QUERY_VALUE, DIOCR_INSTALLER, NULL, NULL );
