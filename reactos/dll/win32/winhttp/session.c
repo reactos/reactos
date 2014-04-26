@@ -1354,7 +1354,11 @@ BOOL WINAPI WinHttpDetectAutoProxyConfigUrl( DWORD flags, LPWSTR *url )
     FIXME("getaddrinfo not found at build time\n");
 #endif
     }
-    if (!ret) set_last_error( ERROR_WINHTTP_AUTODETECTION_FAILED );
+    if (!ret)
+    {
+        set_last_error( ERROR_WINHTTP_AUTODETECTION_FAILED );
+        *url = NULL;
+    }
     return ret;
 }
 
@@ -1597,11 +1601,11 @@ done:
     heap_free( hdr );
     if (!ret)
     {
-        heap_free( config->lpszAutoConfigUrl );
+        GlobalFree( config->lpszAutoConfigUrl );
         config->lpszAutoConfigUrl = NULL;
-        heap_free( config->lpszProxy );
+        GlobalFree( config->lpszProxy );
         config->lpszProxy = NULL;
-        heap_free( config->lpszProxyBypass );
+        GlobalFree( config->lpszProxyBypass );
         config->lpszProxyBypass = NULL;
     }
     return ret;
