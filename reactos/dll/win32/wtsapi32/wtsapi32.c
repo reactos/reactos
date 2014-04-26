@@ -87,7 +87,11 @@ BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version
     FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
           ppProcessInfo, pCount);
 
-    if (!ppProcessInfo || !pCount) return FALSE;
+    if (!ppProcessInfo || !pCount || Reserved != 0 || Version != 1)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     *pCount = 0;
     *ppProcessInfo = NULL;
@@ -120,7 +124,9 @@ BOOL WINAPI WTSEnumerateServersW(LPWSTR pDomainName, DWORD Reserved, DWORD Versi
 BOOL WINAPI WTSEnumerateSessionsA(HANDLE hServer, DWORD Reserved, DWORD Version,
     PWTS_SESSION_INFOA* ppSessionInfo, DWORD* pCount)
 {
-    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
+    static int once;
+
+    if (!once++) FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
           ppSessionInfo, pCount);
 
     if (!ppSessionInfo || !pCount) return FALSE;
@@ -153,7 +159,9 @@ BOOL WINAPI WTSEnumerateSessionsW(HANDLE hServer, DWORD Reserved, DWORD Version,
  */
 void WINAPI WTSFreeMemory(PVOID pMemory)
 {
-    FIXME("Stub %p\n", pMemory);
+    static int once;
+
+    if (!once++) FIXME("Stub %p\n", pMemory);
 }
 
 /************************************************************
