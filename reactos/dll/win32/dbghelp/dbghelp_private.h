@@ -569,7 +569,7 @@ struct cpu
     DWORD       frame_regno;
 
     /* address manipulation */
-    unsigned    (*get_addr)(HANDLE hThread, const CONTEXT* ctx,
+    BOOL        (*get_addr)(HANDLE hThread, const CONTEXT* ctx,
                             enum cpu_addr, ADDRESS64* addr);
 
     /* stack manipulation */
@@ -594,7 +594,6 @@ extern struct cpu*      dbghelp_current_cpu DECLSPEC_HIDDEN;
 
 /* dbghelp.c */
 extern struct process* process_find_by_handle(HANDLE hProcess) DECLSPEC_HIDDEN;
-extern HANDLE hMsvcrt DECLSPEC_HIDDEN;
 extern BOOL         validate_addr64(DWORD64 addr) DECLSPEC_HIDDEN;
 extern BOOL         pcs_callback(const struct process* pcs, ULONG action, void* data) DECLSPEC_HIDDEN;
 extern void*        fetch_buffer(struct process* pcs, unsigned size) DECLSPEC_HIDDEN;

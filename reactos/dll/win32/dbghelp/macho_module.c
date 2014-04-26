@@ -420,17 +420,32 @@ static BOOL macho_map_file(const WCHAR* filenameW, struct macho_file_map* fmap)
     RtlInitializeBitMap(&fmap->sect_is_code, fmap->sect_is_code_buff, MAX_SECT + 1);
 
     len = WideCharToMultiByte(CP_UNIXCP, 0, filenameW, -1, NULL, 0, NULL, NULL);
-    if (!(filename = HeapAlloc(GetProcessHeap(), 0, len))) return FALSE;
+    if (!(filename = HeapAlloc(GetProcessHeap(), 0, len)))
+    {
+        WARN("failed to allocate filename buffer\n");
+        return FALSE;
+    }
     WideCharToMultiByte(CP_UNIXCP, 0, filenameW, -1, filename, len, NULL, NULL);
 
     /* check that the file exists */
-    if (stat(filename, &statbuf) == -1 || S_ISDIR(statbuf.st_mode)) goto done;
+    if (stat(filename, &statbuf) == -1 || S_ISDIR(statbuf.st_mode))
+    {
+        TRACE("stat() failed or %s is directory: %s\n", debugstr_a(filename), strerror(errno));
+        goto done;
+    }
 
     /* Now open the file, so that we can mmap() it. */
-    if ((fmap->fd = open(filename, O_RDONLY)) == -1) goto done;
+    if ((fmap->fd = open(filename, O_RDONLY)) == -1)
+    {
+        TRACE("failed to open file %s: %d\n", debugstr_a(filename), errno);
+        goto done;
+    }
 
     if (read(fmap->fd, &fat_header, sizeof(fat_header)) != sizeof(fat_header))
+    {
+        TRACE("failed to read fat header: %d\n", errno);
         goto done;
+    }
     TRACE("... got possible fat header\n");
 
     /* Fat header is always in big-endian order. */
@@ -936,23 +951,52 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
      */
     if (macho_info->flags & MACHO_INFO_DEBUG_HEADER)
     {
-        static void* dyld_all_image_infos_addr;
+        PROCESS_BASIC_INFORMATION pbi;
+        NTSTATUS status;
 
-        /* This symbol should be in the same place in all processes. */
-        if (!dyld_all_image_infos_addr)
+        ret = FALSE;
+
+        /* Get address of PEB */
+        status = NtQueryInformationProcess(pcs->handle, ProcessBasicInformation,
+                                           &pbi, sizeof(pbi), NULL);
+        if (status == STATUS_SUCCESS)
         {
-            struct nlist nl[2];
-            memset(nl, 0, sizeof(nl));
-            nl[0].n_un.n_name = (char*)"_dyld_all_image_infos";
-            if (!nlist("/usr/lib/dyld", nl))
-                dyld_all_image_infos_addr = (void*)nl[0].n_value;
+            ULONG dyld_image_info;
+
+            /* Read dyld image info address from PEB */
+            if (ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved,
+                                  &dyld_image_info, sizeof(dyld_image_info), NULL))
+            {
+                TRACE("got dyld_image_info 0x%08x from PEB %p MacDyldImageInfo %p\n",
+                      dyld_image_info, pbi.PebBaseAddress, &pbi.PebBaseAddress->Reserved);
+                macho_info->dbg_hdr_addr = dyld_image_info;
+                ret = TRUE;
+            }
         }
 
-        if (dyld_all_image_infos_addr)
-            macho_info->dbg_hdr_addr = (unsigned long)dyld_all_image_infos_addr;
-        else
-            ret = FALSE;
-        TRACE("dbg_hdr_addr = 0x%08lx\n", macho_info->dbg_hdr_addr);
+        if (!ret)
+        {
+            static void* dyld_all_image_infos_addr;
+
+            /* Our next best guess is that dyld was loaded at its base address
+               and we can find the dyld image infos address by looking up its symbol. */
+            if (!dyld_all_image_infos_addr)
+            {
+                struct nlist nl[2];
+                memset(nl, 0, sizeof(nl));
+                nl[0].n_un.n_name = (char*)"_dyld_all_image_infos";
+                if (!nlist("/usr/lib/dyld", nl))
+                    dyld_all_image_infos_addr = (void*)nl[0].n_value;
+            }
+
+            if (dyld_all_image_infos_addr)
+            {
+                TRACE("got dyld_image_info %p from /usr/lib/dyld symbol table\n",
+                      dyld_all_image_infos_addr);
+                macho_info->dbg_hdr_addr = (unsigned long)dyld_all_image_infos_addr;
+                ret = TRUE;
+            }
+        }
     }
 
     if (macho_info->flags & MACHO_INFO_MODULE)
@@ -1011,7 +1055,7 @@ leave:
  *              macho_load_file_from_path
  * Tries to load a Mach-O file from a set of paths (separated by ':')
  */
-static BOOL macho_load_file_from_path(HANDLE hProcess,
+static BOOL macho_load_file_from_path(struct process* pcs,
                                       const WCHAR* filename,
                                       unsigned long load_addr,
                                       const char* path,
@@ -1022,7 +1066,7 @@ static BOOL macho_load_file_from_path(HANDLE hProcess,
     WCHAR*              pathW = NULL;
     unsigned            len;
 
-    TRACE("(%p, %s, 0x%08lx, %s, %p)\n", hProcess, debugstr_w(filename), load_addr,
+    TRACE("(%p/%p, %s, 0x%08lx, %s, %p)\n", pcs, pcs->handle, debugstr_w(filename), load_addr,
             debugstr_a(path), macho_info);
 
     if (!path) return FALSE;
@@ -1041,7 +1085,7 @@ static BOOL macho_load_file_from_path(HANDLE hProcess,
         strcpyW(fn, s);
         strcatW(fn, S_SlashW);
         strcatW(fn, filename);
-        ret = macho_load_file(hProcess, fn, load_addr, macho_info);
+        ret = macho_load_file(pcs, fn, load_addr, macho_info);
         HeapFree(GetProcessHeap(), 0, fn);
         if (ret) break;
         s = (t) ? (t+1) : NULL;
@@ -1057,7 +1101,7 @@ static BOOL macho_load_file_from_path(HANDLE hProcess,
  *
  * Tries to load a Mach-O file from the dll path
  */
-static BOOL macho_load_file_from_dll_path(HANDLE hProcess,
+static BOOL macho_load_file_from_dll_path(struct process* pcs,
                                           const WCHAR* filename,
                                           unsigned long load_addr,
                                           struct macho_info* macho_info)
@@ -1066,7 +1110,7 @@ static BOOL macho_load_file_from_dll_path(HANDLE hProcess,
     unsigned int index = 0;
     const char *path;
 
-    TRACE("(%p, %s, 0x%08lx, %p)\n", hProcess, debugstr_w(filename), load_addr,
+    TRACE("(%p/%p, %s, 0x%08lx, %p)\n", pcs, pcs->handle, debugstr_w(filename), load_addr,
             macho_info);
 
     while (!ret && (path = wine_dll_enum_load_path( index++ )))
@@ -1083,7 +1127,7 @@ static BOOL macho_load_file_from_dll_path(HANDLE hProcess,
         MultiByteToWideChar(CP_UNIXCP, 0, path, -1, name, len);
         strcatW( name, S_SlashW );
         strcatW( name, filename );
-        ret = macho_load_file(hProcess, name, load_addr, macho_info);
+        ret = macho_load_file(pcs, name, load_addr, macho_info);
         HeapFree( GetProcessHeap(), 0, name );
     }
     TRACE(" => %d\n", ret);
@@ -1101,7 +1145,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
 {
     BOOL                ret = FALSE;
     struct module*      module;
-    static WCHAR        S_libstdcPPW[] = {'l','i','b','s','t','d','c','+','+','\0'};
+    static const WCHAR  S_libstdcPPW[] = {'l','i','b','s','t','d','c','+','+','\0'};
     const WCHAR*        p;
 
     TRACE("(%p/%p, %s, 0x%08lx, %p)\n", pcs, pcs->handle, debugstr_w(filename), load_addr,

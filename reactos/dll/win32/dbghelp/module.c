@@ -23,6 +23,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
+#define DLLPREFIX ""
+
 const WCHAR        S_ElfW[]         = {'<','e','l','f','>','\0'};
 const WCHAR        S_WineLoaderW[]  = {'<','w','i','n','e','-','l','o','a','d','e','r','>','\0'};
 static const WCHAR S_DotSoW[]       = {'.','s','o','\0'};
@@ -47,7 +49,7 @@ static int match_ext(const WCHAR* ptr, size_t len)
     for (e = ext; *e; e++)
     {
         l = strlenW(*e);
-        if (l >= len) return FALSE;
+        if (l >= len) return 0;
         if (strncmpiW(&ptr[len - l], *e, l)) continue;
         return l;
     }
@@ -96,7 +98,7 @@ void module_set_module(struct module* module, const WCHAR* name)
 
 const WCHAR *get_wine_loader_name(void)
 {
-    static const int is_win64 = sizeof(void *) > sizeof(int); /* FIXME: should depend on target process */
+    static const BOOL is_win64 = sizeof(void *) > sizeof(int); /* FIXME: should depend on target process */
     static const WCHAR wineW[] = {'w','i','n','e',0};
     static const WCHAR suffixW[] = {'6','4',0};
     static const WCHAR *loader;
@@ -420,6 +422,16 @@ static BOOL module_is_container_loaded(const struct process* pcs,
     size_t              len;
     struct module*      module;
     PCWSTR              filename, modname;
+    static WCHAR*       dll_prefix;
+    static int          dll_prefix_len;
+
+    if (!dll_prefix)
+    {
+        dll_prefix_len = MultiByteToWideChar( CP_UNIXCP, 0, DLLPREFIX, -1, NULL, 0 );
+        dll_prefix = HeapAlloc( GetProcessHeap(), 0, dll_prefix_len * sizeof(WCHAR) );
+        MultiByteToWideChar( CP_UNIXCP, 0, DLLPREFIX, -1, dll_prefix, dll_prefix_len );
+        dll_prefix_len--;
+    }
 
     if (!base) return FALSE;
     filename = get_filename(ImageName, NULL);
@@ -432,6 +444,7 @@ static BOOL module_is_container_loaded(const struct process* pcs,
             base < module->module.BaseOfImage + module->module.ImageSize)
         {
             modname = get_filename(module->module.LoadedImageName, NULL);
+            if (dll_prefix_len && !strncmpW( modname, dll_prefix, dll_prefix_len )) modname += dll_prefix_len;
             if (!strncmpiW(modname, filename, len) &&
                 !memcmp(modname + len, S_DotSoW, 3 * sizeof(WCHAR)))
             {

@@ -2,7 +2,7 @@
  * File cpu_arm64.c
  *
  * Copyright (C) 2009 Eric Pouech
- * Copyright (C) 2010-2013 Andrأ© Hentschel
+ * Copyright (C) 2010-2013 André Hentschel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,8 +23,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-static unsigned arm64_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                               enum cpu_addr ca, ADDRESS64* addr)
+static BOOL arm64_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                           enum cpu_addr ca, ADDRESS64* addr)
 {
     addr->Mode    = AddrModeFlat;
     addr->Segment = 0; /* don't need segment */

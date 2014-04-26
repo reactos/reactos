@@ -60,25 +60,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  */
 
 unsigned   dbghelp_options = SYMOPT_UNDNAME;
-HANDLE     hMsvcrt = NULL;
-
-/***********************************************************************
- *           DllMain (DEBUGHLP.@)
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    switch (fdwReason)
-    {
-    case DLL_PROCESS_ATTACH:    break;
-    case DLL_PROCESS_DETACH:
-        if (hMsvcrt) FreeLibrary(hMsvcrt);
-        break;
-    case DLL_THREAD_ATTACH:     break;
-    case DLL_THREAD_DETACH:     break;
-    default:                    break;
-    }
-    return TRUE;
-}
 
 static struct process* process_first /* = NULL */;
 
