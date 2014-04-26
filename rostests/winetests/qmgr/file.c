@@ -65,7 +65,41 @@ static HRESULT addFileHelper(IBackgroundCopyJob* job,
     urlSize = MAX_PATH;
     UrlCreateFromPathW(test_remoteUrl, test_remoteUrl, &urlSize, 0);
     UrlUnescapeW(test_remoteUrl, NULL, &urlSize, URL_UNESCAPE_INPLACE);
-    return IBackgroundCopyJob_AddFile(test_job, test_remoteUrl, test_localFile);
+
+    return IBackgroundCopyJob_AddFile(job, test_remoteUrl, test_localFile);
+}
+
+static HRESULT test_create_manager(void)
+{
+    HRESULT hres;
+    IBackgroundCopyManager *manager = NULL;
+
+    /* Creating BITS instance */
+    hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL, CLSCTX_LOCAL_SERVER,
+                            &IID_IBackgroundCopyManager, (void **) &manager);
+
+    if(hres == HRESULT_FROM_WIN32(ERROR_SERVICE_DISABLED)) {
+        win_skip("Needed Service is disabled\n");
+        return hres;
+    }
+
+    if (hres == S_OK)
+    {
+        IBackgroundCopyJob *job;
+        GUID jobId;
+
+        hres = IBackgroundCopyManager_CreateJob(manager, test_displayName, BG_JOB_TYPE_DOWNLOAD, &jobId, &job);
+        if (hres == S_OK)
+        {
+            hres = addFileHelper(job, test_localName, test_remoteName);
+            if (hres != S_OK)
+                win_skip("AddFile() with file:// protocol failed. Tests will be skipped.\n");
+            IBackgroundCopyJob_Release(job);
+        }
+        IBackgroundCopyManager_Release(manager);
+    }
+
+    return hres;
 }
 
 /* Generic test setup */
@@ -129,11 +163,6 @@ static void test_GetRemoteName(void)
 
     hres = IBackgroundCopyFile_GetRemoteName(test_file, &name);
     ok(hres == S_OK, "GetRemoteName failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to get remote name of test_file.\n");
-        return;
-    }
     ok(lstrcmpW(name, test_remoteUrl) == 0, "Got incorrect remote name\n");
     CoTaskMemFree(name);
 }
@@ -146,11 +175,6 @@ static void test_GetLocalName(void)
 
     hres = IBackgroundCopyFile_GetLocalName(test_file, &name);
     ok(hres == S_OK, "GetLocalName failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to get local name of test_file.\n");
-        return;
-    }
     ok(lstrcmpW(name, test_localFile) == 0, "Got incorrect local name\n");
     CoTaskMemFree(name);
 }
@@ -163,11 +187,6 @@ static void test_GetProgress_PreTransfer(void)
 
     hres = IBackgroundCopyFile_GetProgress(test_file, &progress);
     ok(hres == S_OK, "GetProgress failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to get progress of test_file.\n");
-        return;
-    }
     ok(progress.BytesTotal == BG_SIZE_UNKNOWN, "Got incorrect total size: %x%08x\n",
        (DWORD)(progress.BytesTotal >> 32), (DWORD)progress.BytesTotal);
     ok(progress.BytesTransferred == 0, "Got incorrect number of transferred bytes: %x%08x\n",
@@ -186,14 +205,23 @@ START_TEST(file)
         0
     };
     const test_t *test;
+    int i;
 
     CoInitialize(NULL);
-    for (test = tests; *test; ++test)
+
+    if (FAILED(test_create_manager()))
+    {
+        CoUninitialize();
+        win_skip("Failed to create Manager instance, skipping tests\n");
+        return;
+    }
+
+    for (test = tests, i = 0; *test; ++test, ++i)
     {
         /* Keep state separate between tests. */
         if (!setup())
         {
-            skip("Unable to setup test\n");
+            ok(0, "tests:%d: Unable to setup test\n", i);
             break;
         }
         (*test)();
