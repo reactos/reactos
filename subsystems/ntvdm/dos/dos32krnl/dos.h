@@ -53,6 +53,13 @@ enum DOS_ALLOC_STRATEGY
     DOS_ALLOC_LAST_FIT
 };
 
+typedef enum
+{
+    DOS_LOAD_AND_EXECUTE = 0x00,
+    DOS_LOAD_ONLY = 0x01,
+    DOS_LOAD_OVERLAY = 0x03
+} DOS_EXEC_TYPE;
+
 #pragma pack(push, 1)
 
 typedef struct _DOS_MCB
@@ -136,6 +143,19 @@ typedef struct _DOS_FIND_FILE_BLOCK
     CHAR FileName[13];
 } DOS_FIND_FILE_BLOCK, *PDOS_FIND_FILE_BLOCK;
 
+typedef struct _DOS_EXEC_PARAM_BLOCK
+{
+    /* Input variables */
+    WORD Environment;
+    DWORD CommandLine;
+    DWORD FirstFcb;
+    DWORD SecondFcb;
+
+    /* Output variables */
+    DWORD StackLocation;
+    DWORD EntryPoint;
+} DOS_EXEC_PARAM_BLOCK, *PDOS_EXEC_PARAM_BLOCK;
+
 #pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
@@ -169,7 +189,19 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
 WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
 
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
-BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
+DWORD DosLoadExecutable(
+    IN DOS_EXEC_TYPE LoadType,
+    IN LPCSTR ExecutablePath,
+    IN LPCSTR CommandLine,
+    IN PVOID Environment,
+    OUT PDWORD StackLocation OPTIONAL,
+    OUT PDWORD EntryPoint OPTIONAL
+);
+WORD DosCreateProcess(
+    DOS_EXEC_TYPE LoadType,
+    LPCSTR ProgramName,
+    PDOS_EXEC_PARAM_BLOCK Parameters
+);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
 

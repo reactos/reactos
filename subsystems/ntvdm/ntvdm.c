@@ -385,6 +385,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
     CHAR PifFile[MAX_PATH];
     CHAR Desktop[MAX_PATH];
     CHAR Title[MAX_PATH];
+    CHAR Env[MAX_PATH];
 
     UNREFERENCED_PARAMETER(Parameter);
 
@@ -405,13 +406,20 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
         CommandInfo.DesktopLen = sizeof(Desktop);
         CommandInfo.Title = Title;
         CommandInfo.TitleLen = sizeof(Title);
+        CommandInfo.Env = Env;
+        CommandInfo.EnvLen = sizeof(Env);
 
         /* Wait for the next available VDM */
         if (!GetNextVDMCommand(&CommandInfo)) break;
 
         /* Start the process from the command line */
         DPRINT1("Starting '%s'...\n", AppName);
-        if (!DosCreateProcess(AppName, 0))
+        if (DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
+                              AppName,
+                              CmdLine,
+                              Env,
+                              NULL,
+                              NULL) != ERROR_SUCCESS)
         {
             DisplayMessage(L"Could not start '%S'", AppName);
             break;
@@ -430,17 +438,20 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 INT wmain(INT argc, WCHAR *argv[])
 {
 #ifdef STANDALONE
-
+    CHAR ApplicationName[MAX_PATH];
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
 
-    if (argc == 2 && argv[1] != NULL)
+    if (argc >= 2)
     {
-        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, CommandLine, sizeof(CommandLine), NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, ApplicationName, sizeof(ApplicationName), NULL, NULL);
+
+        if (argc >= 3) WideCharToMultiByte(CP_ACP, 0, argv[2], -1, CommandLine, sizeof(CommandLine), NULL, NULL);
+        else strcpy(CommandLine, "");
     }
     else
     {
         wprintf(L"\nReactOS Virtual DOS Machine\n\n"
-                L"Usage: NTVDM <executable>\n");
+                L"Usage: NTVDM <executable> [<parameters>]\n");
         return 0;
     }
 
@@ -496,9 +507,14 @@ INT wmain(INT argc, WCHAR *argv[])
 
     /* Start the process from the command line */
     DPRINT1("Starting '%s'...\n", CommandLine);
-    if (!DosCreateProcess(CommandLine, 0))
+    if (DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
+                          ApplicationName,
+                          CommandLine,
+                          GetEnvironmentStrings(),
+                          NULL,
+                          NULL) != ERROR_SUCCESS)
     {
-        DisplayMessage(L"Could not start '%S'", CommandLine);
+        DisplayMessage(L"Could not start '%S'", ApplicationName);
         goto Cleanup;
     }
 
