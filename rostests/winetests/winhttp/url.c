@@ -353,21 +353,21 @@ static void WinHttpCrackUrl_test( void )
     uc.dwExtraInfoLength = 20;
 
     ret = WinHttpCrackUrl( url1, 0, 0, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
-    ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme\n" );
-    ok( !memcmp( uc.lpszScheme, http, sizeof(http) ), "unexpected scheme\n" );
-    ok( uc.dwSchemeLength == 4, "unexpected scheme length\n" );
-    ok( !memcmp( uc.lpszUserName, username, sizeof(username) ), "unexpected username\n" );
-    ok( uc.dwUserNameLength == 8, "unexpected username length\n" );
-    ok( !memcmp( uc.lpszPassword, password, sizeof(password) ), "unexpected password\n" );
-    ok( uc.dwPasswordLength == 8, "unexpected password length\n" );
-    ok( !memcmp( uc.lpszHostName, winehq, sizeof(winehq) ), "unexpected hostname\n" );
-    ok( uc.dwHostNameLength == 14, "unexpected hostname length\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
+    ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme: %u\n", uc.nScheme );
+    ok( !memcmp( uc.lpszScheme, http, sizeof(http) ), "unexpected scheme: %s\n", wine_dbgstr_w(uc.lpszScheme) );
+    ok( uc.dwSchemeLength == 4, "unexpected scheme length: %u\n", uc.dwSchemeLength );
+    ok( !memcmp( uc.lpszUserName, username, sizeof(username) ), "unexpected username: %s\n", wine_dbgstr_w(uc.lpszUserName) );
+    ok( uc.dwUserNameLength == 8, "unexpected username length: %u\n", uc.dwUserNameLength );
+    ok( !memcmp( uc.lpszPassword, password, sizeof(password) ), "unexpected password: %s\n", wine_dbgstr_w(uc.lpszPassword) );
+    ok( uc.dwPasswordLength == 8, "unexpected password length: %u\n", uc.dwPasswordLength );
+    ok( !memcmp( uc.lpszHostName, winehq, sizeof(winehq) ), "unexpected hostname: %s\n", wine_dbgstr_w(uc.lpszHostName) );
+    ok( uc.dwHostNameLength == 14, "unexpected hostname length: %u\n", uc.dwHostNameLength );
     ok( uc.nPort == 80, "unexpected port: %u\n", uc.nPort );
-    ok( !memcmp( uc.lpszUrlPath, about, sizeof(about) ), "unexpected path\n" );
-    ok( uc.dwUrlPathLength == 11, "unexpected path length\n" );
-    ok( !memcmp( uc.lpszExtraInfo, query, sizeof(query) ), "unexpected extra info\n" );
-    ok( uc.dwExtraInfoLength == 6, "unexpected extra info length\n" );
+    ok( !memcmp( uc.lpszUrlPath, about, sizeof(about) ), "unexpected path: %s\n", wine_dbgstr_w(uc.lpszUrlPath) );
+    ok( uc.dwUrlPathLength == 11, "unexpected path length: %u\n", uc.dwUrlPathLength );
+    ok( !memcmp( uc.lpszExtraInfo, query, sizeof(query) ), "unexpected extra info: %s\n", wine_dbgstr_w(uc.lpszExtraInfo) );
+    ok( uc.dwExtraInfoLength == 6, "unexpected extra info length: %u\n", uc.dwExtraInfoLength );
 
     /* buffer of insufficient length */
     scheme[0] = 0;
@@ -376,15 +376,15 @@ static void WinHttpCrackUrl_test( void )
     SetLastError( 0xdeadbeef );
     ret = WinHttpCrackUrl( url1, 0, 0, &uc );
     error = GetLastError();
-    ok( !ret, "WinHttpCrackUrl failed\n" );
-    ok( error == ERROR_INSUFFICIENT_BUFFER, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
+    ok( error == ERROR_INSUFFICIENT_BUFFER, "got %u, expected ERROR_INSUFFICIENT_BUFFER\n", error );
     ok( uc.dwSchemeLength == 5, "unexpected scheme length: %u\n", uc.dwSchemeLength );
 
     /* no buffers */
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k1, 0, 0,&uc);
 
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme\n" );
     ok( uc.lpszScheme == url_k1,"unexpected scheme\n" );
     ok( uc.dwSchemeLength == 4, "unexpected scheme length\n" );
@@ -403,7 +403,7 @@ static void WinHttpCrackUrl_test( void )
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k2, 0, 0,&uc);
 
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme\n" );
     ok( uc.lpszScheme == url_k2, "unexpected scheme\n" );
     ok( uc.dwSchemeLength == 4, "unexpected scheme length\n" );
@@ -422,7 +422,7 @@ static void WinHttpCrackUrl_test( void )
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k3, 0, 0, &uc );
 
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nScheme == INTERNET_SCHEME_HTTPS, "unexpected scheme\n" );
     ok( uc.lpszScheme == url_k3, "unexpected scheme\n" );
     ok( uc.dwSchemeLength == 5, "unexpected scheme length\n" );
@@ -441,61 +441,61 @@ static void WinHttpCrackUrl_test( void )
     /* bad parameters */
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k4, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k5, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k6, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k7, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k8, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k9, 0, 0, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
-    ok( uc.lpszUrlPath == url_k9 + 14, "unexpected path\n" );
-    ok( uc.dwUrlPathLength == 0, "unexpected path length\n" );
-    ok( uc.lpszExtraInfo == url_k9 + 14, "unexpected extra info\n" );
-    ok( uc.dwExtraInfoLength == 0, "unexpected extra info length\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
+    ok( uc.lpszUrlPath == url_k9 + 14, "unexpected path: %s\n", wine_dbgstr_w(uc.lpszUrlPath) );
+    ok( uc.dwUrlPathLength == 0, "unexpected path length: %u\n", uc.dwUrlPathLength );
+    ok( uc.lpszExtraInfo == url_k9 + 14, "unexpected extra info: %s\n", wine_dbgstr_w(uc.lpszExtraInfo) );
+    ok( uc.dwExtraInfoLength == 0, "unexpected extra info length: %u\n", uc.dwExtraInfoLength );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url_k10, 0, 0, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
-    ok( uc.lpszUrlPath == url_k10 + 13, "unexpected path\n" );
-    ok( uc.dwUrlPathLength == 7, "unexpected path length\n" );
-    ok( uc.lpszExtraInfo == url_k10 + 20, "unexpected extra info\n" );
-    ok( uc.dwExtraInfoLength == 0, "unexpected extra info length\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
+    ok( uc.lpszUrlPath == url_k10 + 13, "unexpected path: %s\n", wine_dbgstr_w(uc.lpszUrlPath) );
+    ok( uc.dwUrlPathLength == 7, "unexpected path length: %u\n", uc.dwUrlPathLength );
+    ok( uc.lpszExtraInfo == url_k10 + 20, "unexpected extra info: %s\n", wine_dbgstr_w(uc.lpszExtraInfo) );
+    ok( uc.dwExtraInfoLength == 0, "unexpected extra info length: %u\n", uc.dwExtraInfoLength );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url5, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( empty, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     ret = WinHttpCrackUrl( url1, 0, 0, NULL );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     ret = WinHttpCrackUrl( NULL, 0, 0, &uc );
-    ok( !ret, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     /* decoding without buffers */
     reset_url_components( &uc );
     SetLastError(0xdeadbeef);
     ret = WinHttpCrackUrl( url8, 0, ICU_DECODE, &uc );
     error = GetLastError();
-    ok( !ret, "WinHttpCrackUrl failed\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "WinHttpCrackUrl failed\n" );
+    ok( !ret, "WinHttpCrackUrl succeeded\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u, expected ERROR_INVALID_PARAMETER\n", error );
 
     /* decoding with buffers */
     uc.lpszScheme = scheme;
@@ -538,7 +538,7 @@ static void WinHttpCrackUrl_test( void )
     path[0] = 0;
 
     ret = WinHttpCrackUrl( url7, 0, 0, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( !memcmp( uc.lpszHostName, winehq, sizeof(winehq) ), "unexpected host name: %s\n", wine_dbgstr_w(uc.lpszHostName) );
     ok( uc.dwHostNameLength == 14, "unexpected host name length: %d\n", uc.dwHostNameLength );
     ok( uc.nPort == 42, "unexpected port: %u\n", uc.nPort );
@@ -546,17 +546,17 @@ static void WinHttpCrackUrl_test( void )
     /* decoding without buffers */
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url9, 0, 0, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nPort == 0, "unexpected port: %u\n", uc.nPort );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url10, 0, 0, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nPort == 80, "unexpected port: %u\n", uc.nPort );
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url11, 0, 0, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nPort == 443, "unexpected port: %u\n", uc.nPort );
 
     reset_url_components( &uc );
@@ -575,7 +575,7 @@ static void WinHttpCrackUrl_test( void )
 
     reset_url_components( &uc );
     ret = WinHttpCrackUrl( url12, 0, 0, &uc);
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme\n" );
     ok( uc.lpszScheme == url12,"unexpected scheme\n" );
     ok( uc.dwSchemeLength == 4, "unexpected scheme length\n" );
@@ -603,7 +603,7 @@ static void WinHttpCrackUrl_test( void )
     uc.dwExtraInfoLength = 0;
     uc.nPort = 0;
     ret = WinHttpCrackUrl( url13, 0, ICU_DECODE, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
 
     uc.lpszScheme = scheme;
     uc.dwSchemeLength = 20;
@@ -619,7 +619,7 @@ static void WinHttpCrackUrl_test( void )
     uc.dwExtraInfoLength = 0;
     uc.nPort = 0;
     ret = WinHttpCrackUrl( url14, 0, ICU_ESCAPE|ICU_DECODE, &uc );
-    ok( ret, "WinHttpCrackUrl failed\n" );
+    ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( !lstrcmpW( uc.lpszHostName, hostnameW ), "unexpected host name\n" );
     ok( !lstrcmpW( uc.lpszUrlPath, pathW ), "unexpected path\n" );
 }

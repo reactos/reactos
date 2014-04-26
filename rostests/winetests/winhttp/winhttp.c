@@ -41,7 +41,7 @@
 
 static const WCHAR test_useragent[] =
     {'W','i','n','e',' ','R','e','g','r','e','s','s','i','o','n',' ','T','e','s','t',0};
-static const WCHAR test_server[] = {'w','i','n','e','h','q','.','o','r','g',0};
+static const WCHAR test_winehq[] = {'t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',0};
 static const WCHAR localhostW[] = {'l','o','c','a','l','h','o','s','t',0};
 
 static BOOL proxy_active(void)
@@ -146,7 +146,7 @@ static void test_QueryOption(void)
        "expected ERROR_WINHTTP_INCORRECT_HANDLE_TYPE, got %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    connection = WinHttpConnect(session, test_server, INTERNET_DEFAULT_HTTP_PORT, 0);
+    connection = WinHttpConnect(session, test_winehq, INTERNET_DEFAULT_HTTP_PORT, 0);
     ok(connection != NULL, "WinHttpConnect failed to open a connection, error: %u\n", GetLastError());
 
     feature = WINHTTP_DISABLE_COOKIES;
@@ -227,7 +227,7 @@ static void test_OpenRequest (void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %u.\n", GetLastError());
 
     /* Test with a valid server name */
-    connection = WinHttpConnect (session, test_server, INTERNET_DEFAULT_HTTP_PORT, 0);
+    connection = WinHttpConnect (session, test_winehq, INTERNET_DEFAULT_HTTP_PORT, 0);
     ok(connection != NULL, "WinHttpConnect failed to open a connection, error: %u.\n", GetLastError());
 
     request = WinHttpOpenRequest(connection, NULL, NULL, NULL, WINHTTP_NO_REFERER,
@@ -259,7 +259,6 @@ static void test_OpenRequest (void)
 
 static void test_empty_headers_param(void)
 {
-    static const WCHAR winehq[] = {'w','i','n','e','h','q','.','o','r','g',0};
     static const WCHAR empty[]  = {0};
     HINTERNET ses, con, req;
     BOOL ret;
@@ -267,7 +266,7 @@ static void test_empty_headers_param(void)
     ses = WinHttpOpen(test_useragent, 0, NULL, NULL, 0);
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
 
-    con = WinHttpConnect(ses, winehq, 80, 0);
+    con = WinHttpConnect(ses, test_winehq, 80, 0);
     ok(con != NULL, "failed to open a connection %u\n", GetLastError());
 
     req = WinHttpOpenRequest(con, NULL, NULL, NULL, NULL, NULL, 0);
@@ -283,22 +282,19 @@ static void test_empty_headers_param(void)
 
 static void test_SendRequest (void)
 {
+    static const WCHAR content_type[] =
+        {'C','o','n','t','e','n','t','-','T','y','p','e',':',' ','a','p','p','l','i','c','a','t','i','o','n',
+         '/','x','-','w','w','w','-','f','o','r','m','-','u','r','l','e','n','c','o','d','e','d',0};
+    static const WCHAR test_file[] = {'t','e','s','t','s','/','p','o','s','t','.','p','h','p',0};
+    static const WCHAR test_verb[] = {'P','O','S','T',0};
+    static CHAR post_data[] = "mode=Test";
+    static const char test_post[] = "mode => Test\0\n";
     HINTERNET session, request, connection;
     DWORD header_len, optional_len, total_len, bytes_rw, size;
     DWORD_PTR context;
     BOOL ret;
     CHAR buffer[256];
     int i;
-
-    static const WCHAR test_site[] = {'c','r','o','s','s','o','v','e','r','.',
-                                'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',0};
-    static const WCHAR content_type[] =
-        {'C','o','n','t','e','n','t','-','T','y','p','e',':',' ','a','p','p','l','i','c','a','t','i','o','n',
-         '/','x','-','w','w','w','-','f','o','r','m','-','u','r','l','e','n','c','o','d','e','d',0};
-    static const WCHAR test_file[] = {'/','p','o','s','t','t','e','s','t','.','p','h','p',0};
-    static const WCHAR test_verb[] = {'P','O','S','T',0};
-    static CHAR post_data[] = "mode=Test";
-    static CHAR test_post[] = "mode => Test\\0\n";
 
     header_len = -1L;
     total_len = optional_len = sizeof(post_data);
@@ -308,7 +304,7 @@ static void test_SendRequest (void)
         WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     ok(session != NULL, "WinHttpOpen failed to open session.\n");
 
-    connection = WinHttpConnect (session, test_site, INTERNET_DEFAULT_HTTP_PORT, 0);
+    connection = WinHttpConnect (session, test_winehq, INTERNET_DEFAULT_HTTP_PORT, 0);
     ok(connection != NULL, "WinHttpConnect failed to open a connection, error: %u.\n", GetLastError());
 
     request = WinHttpOpenRequest(connection, test_verb, test_file, NULL, WINHTTP_NO_REFERER,
@@ -355,8 +351,8 @@ static void test_SendRequest (void)
     ret = WinHttpReadData(request, buffer, sizeof(buffer) - 1, &bytes_rw);
     ok(ret == TRUE, "WinHttpReadData failed: %u.\n", GetLastError());
 
-    ok(bytes_rw == strlen(test_post), "Read %u bytes instead of %d.\n", bytes_rw, lstrlen(test_post));
-    ok(strncmp(buffer, test_post, bytes_rw) == 0, "Data read did not match, got '%s'.\n", buffer);
+    ok(bytes_rw == sizeof(test_post) - 1, "Read %u bytes\n", bytes_rw);
+    ok(!memcmp(buffer, test_post, sizeof(test_post) - 1), "Data read did not match.\n");
 
     ret = WinHttpCloseHandle(request);
     ok(ret == TRUE, "WinHttpCloseHandle failed on closing request, got %d.\n", ret);
@@ -413,15 +409,12 @@ static void test_WinHttpAddHeaders(void)
     WCHAR check_buffer[MAX_PATH];
     DWORD index, len, oldlen;
 
-    static const WCHAR test_site[] = {'c','r','o','s','s','o','v','e','r','.',
-                                'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',0};
     static const WCHAR test_file[] = {'/','p','o','s','t','t','e','s','t','.','p','h','p',0};
     static const WCHAR test_verb[] = {'P','O','S','T',0};
-
     static const WCHAR test_header_begin[] =
         {'P','O','S','T',' ','/','p','o','s','t','t','e','s','t','.','p','h','p',' ','H','T','T','P','/','1'};
     static const WCHAR full_path_test_header_begin[] =
-        {'P','O','S','T',' ','h','t','t','p',':','/','/','c','r','o','s','s','o','v','e','r','.','c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',':','8','0','/','p','o','s','t','t','e','s','t','.','p','h','p',' ','H','T','T','P','/','1'};
+        {'P','O','S','T',' ','h','t','t','p',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',':','8','0','/','p','o','s','t','.','p','h','p',' ','H','T','T','P','/','1'};
     static const WCHAR test_header_end[] = {'\r','\n','\r','\n',0};
     static const WCHAR test_header_name[] = {'W','a','r','n','i','n','g',0};
 
@@ -469,7 +462,7 @@ static void test_WinHttpAddHeaders(void)
         WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     ok(session != NULL, "WinHttpOpen failed to open session.\n");
 
-    connection = WinHttpConnect (session, test_site, INTERNET_DEFAULT_HTTP_PORT, 0);
+    connection = WinHttpConnect (session, test_winehq, INTERNET_DEFAULT_HTTP_PORT, 0);
     ok(connection != NULL, "WinHttpConnect failed to open a connection, error: %u.\n", GetLastError());
 
     request = WinHttpOpenRequest(connection, test_verb, test_file, NULL, WINHTTP_NO_REFERER,
@@ -816,8 +809,6 @@ static void CALLBACK cert_error(HINTERNET handle, DWORD_PTR ctx, DWORD status, L
 
 static void test_secure_connection(void)
 {
-    static const WCHAR google[] = {'w','w','w','.','g','o','o','g','l','e','.','c','o','m',0};
-
     HINTERNET ses, con, req;
     DWORD size, status, policy, bitness, read_size;
     BOOL ret;
@@ -832,7 +823,7 @@ static void test_secure_connection(void)
     ret = WinHttpSetOption(ses, WINHTTP_OPTION_REDIRECT_POLICY, &policy, sizeof(policy));
     ok(ret, "failed to set redirect policy %u\n", GetLastError());
 
-    con = WinHttpConnect(ses, google, 443, 0);
+    con = WinHttpConnect(ses, test_winehq, 443, 0);
     ok(con != NULL, "failed to open a connection %u\n", GetLastError());
 
     /* try without setting WINHTTP_FLAG_SECURE */
@@ -922,8 +913,6 @@ cleanup:
 static void test_request_parameter_defaults(void)
 {
     static const WCHAR empty[] = {0};
-    static const WCHAR codeweavers[] = {'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',0};
-
     HINTERNET ses, con, req;
     DWORD size, status, error;
     WCHAR *version;
@@ -932,7 +921,7 @@ static void test_request_parameter_defaults(void)
     ses = WinHttpOpen(test_useragent, 0, NULL, NULL, 0);
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
 
-    con = WinHttpConnect(ses, codeweavers, 0, 0);
+    con = WinHttpConnect(ses, test_winehq, 0, 0);
     ok(con != NULL, "failed to open a connection %u\n", GetLastError());
 
     req = WinHttpOpenRequest(con, NULL, NULL, NULL, NULL, NULL, 0);
@@ -1126,8 +1115,6 @@ static void test_Timeouts (void)
     BOOL ret;
     DWORD value, size;
     HINTERNET ses, req, con;
-    static const WCHAR codeweavers[] = {'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',0};
-
 
     ses = WinHttpOpen(test_useragent, 0, NULL, NULL, 0);
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
@@ -1288,7 +1275,7 @@ static void test_Timeouts (void)
     ok(ret, "%u\n", GetLastError());
     ok(value == 0xbeefdead, "Expected 0xbeefdead, got %u\n", value);
 
-    con = WinHttpConnect(ses, codeweavers, 0, 0);
+    con = WinHttpConnect(ses, test_winehq, 0, 0);
     ok(con != NULL, "failed to open a connection %u\n", GetLastError());
 
     /* Timeout values should match the last one set for session */
@@ -1717,11 +1704,8 @@ static void test_Timeouts (void)
 
 static void test_resolve_timeout(void)
 {
-    static const WCHAR codeweavers[] =
-        {'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',0};
     static const WCHAR nxdomain[] =
-        {'n','x','d','o','m','a','i','n','.','c','o','d','e','w','e','a','v','e','r','s','.','c','o','m',0};
-
+        {'n','x','d','o','m','a','i','n','.','w','i','n','e','h','q','.','o','r','g',0};
     HINTERNET ses, con, req;
     DWORD timeout;
     BOOL ret;
@@ -1743,6 +1727,11 @@ static void test_resolve_timeout(void)
 
         SetLastError(0xdeadbeef);
         ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
+        if(ret == 1)
+        {
+            skip("nxdomain returned success. Broken ISP redirects?\n");
+            return;
+        }
         ok(!ret, "sent request\n");
         ok(GetLastError() == ERROR_WINHTTP_NAME_NOT_RESOLVED,
            "expected ERROR_WINHTTP_NAME_NOT_RESOLVED got %u\n", GetLastError());
@@ -1761,7 +1750,7 @@ static void test_resolve_timeout(void)
     ret = WinHttpSetOption(ses, WINHTTP_OPTION_RESOLVE_TIMEOUT, &timeout, sizeof(timeout));
     ok(ret, "failed to set resolve timeout %u\n", GetLastError());
 
-    con = WinHttpConnect(ses, codeweavers, 0, 0);
+    con = WinHttpConnect(ses, test_winehq, 0, 0);
     ok(con != NULL, "failed to open a connection %u\n", GetLastError());
 
     req = WinHttpOpenRequest(con, NULL, NULL, NULL, NULL, NULL, 0);
@@ -1805,6 +1794,8 @@ struct server_info
     HANDLE event;
     int port;
 };
+
+#define BIG_BUFFER_LEN 0x2250
 
 static DWORD CALLBACK server_thread(LPVOID param)
 {
@@ -1862,6 +1853,13 @@ static DWORD CALLBACK server_thread(LPVOID param)
                 send(c, okmsg, sizeof okmsg - 1, 0);
             else
                 send(c, noauthmsg, sizeof noauthmsg - 1, 0);
+        }
+        if (strstr(buffer, "/big"))
+        {
+            char msg[BIG_BUFFER_LEN];
+            memset(msg, 'm', sizeof(msg));
+            send(c, okmsg, sizeof(okmsg) - 1, 0);
+            send(c, msg, sizeof(msg), 0);
         }
         if (strstr(buffer, "/no_headers"))
         {
@@ -2085,13 +2083,19 @@ static void test_no_headers(int port)
     ok(req != NULL, "failed to open a request %u\n", GetLastError());
 
     ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
-    ok(ret, "failed to send request %u\n", GetLastError());
-
-    SetLastError(0xdeadbeef);
-    ret = WinHttpReceiveResponse(req, NULL);
-    error = GetLastError();
-    ok(!ret, "expected failure\n");
-    ok(error == ERROR_WINHTTP_INVALID_SERVER_RESPONSE, "got %u\n", error);
+    if (!ret)
+    {
+        error = GetLastError();
+        ok(error == ERROR_WINHTTP_INVALID_SERVER_RESPONSE, "got %u\n", error);
+    }
+    else
+    {
+        SetLastError(0xdeadbeef);
+        ret = WinHttpReceiveResponse(req, NULL);
+        error = GetLastError();
+        ok(!ret, "expected failure\n");
+        ok(error == ERROR_WINHTTP_INVALID_SERVER_RESPONSE, "got %u\n", error);
+    }
 
     WinHttpCloseHandle(req);
     WinHttpCloseHandle(con);
@@ -2133,6 +2137,55 @@ static void test_bad_header( int port )
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
     WinHttpCloseHandle( ses );
+}
+
+static void test_multiple_reads(int port)
+{
+    static const WCHAR bigW[] = {'b','i','g',0};
+    HINTERNET ses, con, req;
+    DWORD total_len = 0;
+    BOOL ret;
+
+    ses = WinHttpOpen(test_useragent, 0, NULL, NULL, 0);
+    ok(ses != NULL, "failed to open session %u\n", GetLastError());
+
+    con = WinHttpConnect(ses, localhostW, port, 0);
+    ok(con != NULL, "failed to open a connection %u\n", GetLastError());
+
+    req = WinHttpOpenRequest(con, NULL, bigW, NULL, NULL, NULL, 0);
+    ok(req != NULL, "failed to open a request %u\n", GetLastError());
+
+    ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
+    ok(ret, "failed to send request %u\n", GetLastError());
+
+    ret = WinHttpReceiveResponse(req, NULL);
+    ok(ret == TRUE, "expected success\n");
+
+    for (;;)
+    {
+        DWORD len = 0xdeadbeef;
+        ret = WinHttpQueryDataAvailable( req, &len );
+        ok( ret, "WinHttpQueryDataAvailable failed with error %u\n", GetLastError() );
+        if (ret) ok( len != 0xdeadbeef, "WinHttpQueryDataAvailable return wrong length\n" );
+        if (len)
+        {
+            DWORD bytes_read;
+            char *buf = HeapAlloc( GetProcessHeap(), 0, len + 1 );
+
+            ret = WinHttpReadData( req, buf, len, &bytes_read );
+            ok( len == bytes_read, "only got %u of %u available\n", bytes_read, len );
+
+            HeapFree( GetProcessHeap(), 0, buf );
+            if (!bytes_read) break;
+            total_len += bytes_read;
+        }
+        if (!len) break;
+    }
+    ok(total_len == BIG_BUFFER_LEN, "got wrong length: 0x%x\n", total_len);
+
+    WinHttpCloseHandle(req);
+    WinHttpCloseHandle(con);
+    WinHttpCloseHandle(ses);
 }
 
 static void test_connection_info( int port )
@@ -2319,11 +2372,10 @@ static void test_IWinHttpRequest(void)
 {
     static const WCHAR usernameW[] = {'u','s','e','r','n','a','m','e',0};
     static const WCHAR passwordW[] = {'p','a','s','s','w','o','r','d',0};
-    static const WCHAR url1W[] = {'h','t','t','p',':','/','/','w','i','n','e','h','q','.','o','r','g',0};
-    static const WCHAR url2W[] = {'w','i','n','e','h','q','.','o','r','g',0};
-    static const WCHAR url3W[] = {'h','t','t','p',':','/','/','c','r','o','s','s','o','v','e','r','.',
-                                  'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m','/',
-                                  'p','o','s','t','t','e','s','t','.','p','h','p',0};
+    static const WCHAR url1W[] = {'h','t','t','p',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',0};
+    static const WCHAR url2W[] = {'t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',0};
+    static const WCHAR url3W[] = {'h','t','t','p',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.',
+                                  'o','r','g','/','t','e','s','t','s','/','p','o','s','t','.','p','h','p',0};
     static const WCHAR method1W[] = {'G','E','T',0};
     static const WCHAR method2W[] = {'I','N','V','A','L','I','D',0};
     static const WCHAR method3W[] = {'P','O','S','T',0};
@@ -2764,7 +2816,7 @@ if (0) /* crashes on some win2k systems */
     if (!ret)
     {
         ok( error == ERROR_WINHTTP_AUTODETECTION_FAILED, "got %u\n", error );
-        ok( url == (WCHAR *)0xdeadbeef, "got %p\n", url );
+        ok( !url || broken(url == (WCHAR *)0xdeadbeef), "got %p\n", url );
     }
     else
     {
@@ -2779,7 +2831,7 @@ if (0) /* crashes on some win2k systems */
     if (!ret)
     {
         ok( error == ERROR_WINHTTP_AUTODETECTION_FAILED, "got %u\n", error );
-        ok( url == (WCHAR *)0xdeadbeef, "got %p\n", url );
+        ok( !url || broken(url == (WCHAR *)0xdeadbeef), "got %p\n", url );
     }
     else
     {
@@ -2926,7 +2978,6 @@ static void test_WinHttpGetProxyForUrl(void)
 
 static void test_chunked_read(void)
 {
-    static const WCHAR host[] = {'t','e','s','t','.','w','i','n','e','h','q','.','o','r','g',0};
     static const WCHAR verb[] = {'/','t','e','s','t','c','h','u','n','k','e','d',0};
     static const WCHAR chunked[] = {'c','h','u','n','k','e','d',0};
     WCHAR header[32];
@@ -2940,7 +2991,7 @@ static void test_chunked_read(void)
     ok( ses != NULL, "WinHttpOpen failed with error %u\n", GetLastError() );
     if (!ses) goto done;
 
-    con = WinHttpConnect( ses, host, 0, 0 );
+    con = WinHttpConnect( ses, test_winehq, 0, 0 );
     ok( con != NULL, "WinHttpConnect failed with error %u\n", GetLastError() );
     if (!con) goto done;
 
@@ -3028,7 +3079,7 @@ START_TEST (winhttp)
     test_WinHttpGetProxyForUrl();
     test_chunked_read();
 
-    si.event = CreateEvent(NULL, 0, 0, NULL);
+    si.event = CreateEventW(NULL, 0, 0, NULL);
     si.port = 7532;
 
     thread = CreateThread(NULL, 0, server_thread, (LPVOID)&si, 0, NULL);
@@ -3044,6 +3095,7 @@ START_TEST (winhttp)
     test_no_headers(si.port);
     test_basic_authentication(si.port);
     test_bad_header(si.port);
+    test_multiple_reads(si.port);
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request(si.port, NULL, quitW);
