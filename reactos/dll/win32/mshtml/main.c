@@ -443,6 +443,8 @@ static HRESULT register_server(BOOL do_register)
 
     hres = pRegInstall(hInst, do_register ? "RegisterDll" : "UnregisterDll", &strtable);
 
+    FreeLibrary(hAdvpack);
+
     for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
         heap_free(pse[i].pszValue);
 

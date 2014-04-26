@@ -108,7 +108,7 @@ static int loose_hex_to_rgb(const WCHAR *hex)
         | comp_value(hex+2*dpc, dpc);
 }
 
-static HRESULT nscolor_to_str(LPCWSTR color, BSTR *ret)
+HRESULT nscolor_to_str(LPCWSTR color, BSTR *ret)
 {
     unsigned int i;
     int rgb = -1;
@@ -139,7 +139,7 @@ static HRESULT nscolor_to_str(LPCWSTR color, BSTR *ret)
     return S_OK;
 }
 
-static BOOL variant_to_nscolor(const VARIANT *v, nsAString *nsstr)
+BOOL variant_to_nscolor(const VARIANT *v, nsAString *nsstr)
 {
     switch(V_VT(v)) {
     case VT_BSTR:
@@ -587,18 +587,71 @@ static HRESULT WINAPI HTMLBodyElement_get_onunload(IHTMLBodyElement *iface, VARI
     return E_NOTIMPL;
 }
 
+static const WCHAR autoW[] = {'a','u','t','o',0};
+static const WCHAR hiddenW[] = {'h','i','d','d','e','n',0};
+static const WCHAR scrollW[] = {'s','c','r','o','l','l',0};
+static const WCHAR visibleW[] = {'v','i','s','i','b','l','e',0};
+static const WCHAR yesW[] = {'y','e','s',0};
+static const WCHAR noW[] = {'n','o',0};
+
 static HRESULT WINAPI HTMLBodyElement_put_scroll(IHTMLBodyElement *iface, BSTR v)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    static const WCHAR *val;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    /* Emulate with CSS visibility attribute */
+    if(!strcmpW(v, yesW)) {
+        val = scrollW;
+    }else if(!strcmpW(v, autoW)) {
+        val = visibleW;
+    }else if(!strcmpW(v, noW)) {
+        val = hiddenW;
+    }else {
+        WARN("Invalid argument %s\n", debugstr_w(v));
+        return E_INVALIDARG;
+    }
+
+    return set_elem_style(&This->textcont.element, STYLEID_OVERFLOW, val);
 }
 
 static HRESULT WINAPI HTMLBodyElement_get_scroll(IHTMLBodyElement *iface, BSTR *p)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    const WCHAR *ret = NULL;
+    BSTR overflow;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    /* Emulate with CSS visibility attribute */
+    hres = get_elem_style(&This->textcont.element, STYLEID_OVERFLOW, &overflow);
+    if(FAILED(hres))
+        return hres;
+
+    if(!overflow || !*overflow) {
+        *p = NULL;
+        hres = S_OK;
+    }else if(!strcmpW(overflow, visibleW) || !strcmpW(overflow, autoW)) {
+        ret = autoW;
+    }else if(!strcmpW(overflow, scrollW)) {
+        ret = yesW;
+    }else if(!strcmpW(overflow, hiddenW)) {
+        ret = noW;
+    }else {
+        TRACE("Defaulting %s to NULL\n", debugstr_w(overflow));
+        *p = NULL;
+        hres = S_OK;
+    }
+
+    SysFreeString(overflow);
+    if(ret) {
+        *p = SysAllocString(ret);
+        hres = *p ? S_OK : E_OUTOFMEMORY;
+    }
+
+    return hres;
 }
 
 static HRESULT WINAPI HTMLBodyElement_put_onselect(IHTMLBodyElement *iface, VARIANT v)

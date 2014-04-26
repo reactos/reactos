@@ -388,7 +388,7 @@ static void refresh_proc(task_t *_task)
         IOleCommandTarget_Exec(window->doc_obj->client_cmdtrg, &CGID_ShellDocView, 37, 0, &var, NULL);
     }
 
-    load_uri(task->window, task->window->uri, BINDING_REFRESH);
+    load_uri(task->window, task->window->uri, BINDING_REFRESH|BINDING_NOFRAG);
 }
 
 static void refresh_destr(task_t *_task)

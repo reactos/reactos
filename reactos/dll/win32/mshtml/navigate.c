@@ -161,7 +161,7 @@ static nsresult NSAPI nsInputStream_ReadSegments(nsIInputStream *iface,
 
     nsres = aWriter(&This->nsIInputStream_iface, aClousure, This->buf, 0, aCount, &written);
     if(NS_FAILED(nsres))
-        TRACE("aWritter failed: %08x\n", nsres);
+        TRACE("aWriter failed: %08x\n", nsres);
     else if(written != This->buf_size)
         FIXME("written %d != buf_size %d\n", written, This->buf_size);
 
@@ -202,6 +202,13 @@ static nsProtocolStream *create_nsprotocol_stream(void)
     ret->buf_size = 0;
 
     return ret;
+}
+
+static void release_request_data(request_data_t *request_data)
+{
+    heap_free(request_data->headers);
+    if(request_data->post_data)
+        GlobalFree(request_data->post_data);
 }
 
 static inline BSCallback *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
@@ -262,15 +269,13 @@ static ULONG WINAPI BindStatusCallback_Release(IBindStatusCallback *iface)
     TRACE("(%p) ref = %d\n", This, ref);
 
     if(!ref) {
-        if(This->post_data)
-            GlobalFree(This->post_data);
+        release_request_data(&This->request_data);
         if(This->mon)
             IMoniker_Release(This->mon);
         if(This->binding)
             IBinding_Release(This->binding);
         list_remove(&This->entry);
         list_init(&This->entry);
-        heap_free(This->headers);
 
         This->vtbl->destroy(This);
     }
@@ -336,6 +341,11 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallback *ifac
         This->binding = NULL;
     }
 
+    if(This->mon) {
+        IMoniker_Release(This->mon);
+        This->mon = NULL;
+    }
+
     list_remove(&This->entry);
     list_init(&This->entry);
     This->window = NULL;
@@ -367,15 +377,15 @@ static HRESULT WINAPI BindStatusCallback_GetBindInfo(IBindStatusCallback *iface,
     memset(pbindinfo, 0, size);
     pbindinfo->cbSize = size;
 
-    pbindinfo->cbstgmedData = This->post_data_len;
+    pbindinfo->cbstgmedData = This->request_data.post_data_len;
     pbindinfo->dwCodePage = CP_UTF8;
     pbindinfo->dwOptions = 0x80000;
 
-    if(This->post_data) {
+    if(This->request_data.post_data_len) {
         pbindinfo->dwBindVerb = BINDVERB_POST;
 
         pbindinfo->stgmedData.tymed = TYMED_HGLOBAL;
-        pbindinfo->stgmedData.u.hGlobal = This->post_data;
+        pbindinfo->stgmedData.u.hGlobal = This->request_data.post_data;
         pbindinfo->stgmedData.pUnkForRelease = (IUnknown*)&This->IBindStatusCallback_iface;
         IBindStatusCallback_AddRef(&This->IBindStatusCallback_iface);
     }
@@ -454,14 +464,14 @@ static HRESULT WINAPI HttpNegotiate_BeginningTransaction(IHttpNegotiate2 *iface,
     if(hres != S_FALSE)
         return hres;
 
-    if(This->headers) {
+    if(This->request_data.headers) {
         DWORD size;
 
-        size = (strlenW(This->headers)+1)*sizeof(WCHAR);
+        size = (strlenW(This->request_data.headers)+1)*sizeof(WCHAR);
         *pszAdditionalHeaders = CoTaskMemAlloc(size);
         if(!*pszAdditionalHeaders)
             return E_OUTOFMEMORY;
-        memcpy(*pszAdditionalHeaders, This->headers, size);
+        memcpy(*pszAdditionalHeaders, This->request_data.headers, size);
     }
 
     return S_OK;
@@ -799,9 +809,6 @@ HRESULT start_binding(HTMLInnerWindow *inner_window, BSCallback *bscallback, IBi
     if(str)
         IStream_Release(str);
 
-    IMoniker_Release(bscallback->mon);
-    bscallback->mon = NULL;
-
     return S_OK;
 }
 
@@ -975,7 +982,8 @@ HRESULT bind_mon_to_wstr(HTMLInnerWindow *window, IMoniker *mon, WCHAR **ret)
     return S_OK;
 }
 
-static HRESULT read_post_data_stream(nsChannelBSC *This, nsChannel *nschannel)
+static HRESULT read_post_data_stream(nsIInputStream *stream, BOOL contains_headers, struct list *headers_list,
+        request_data_t *request_data)
 {
     UINT64 available = 0;
     UINT32 data_len = 0;
@@ -983,24 +991,24 @@ static HRESULT read_post_data_stream(nsChannelBSC *This, nsChannel *nschannel)
     nsresult nsres;
     HRESULT hres = S_OK;
 
-    if(!nschannel->post_data_stream)
+    if(!stream)
         return S_OK;
 
-    nsres =  nsIInputStream_Available(nschannel->post_data_stream, &available);
+    nsres =  nsIInputStream_Available(stream, &available);
     if(NS_FAILED(nsres))
         return E_FAIL;
 
-    post_data = data = GlobalAlloc(0, available);
+    post_data = data = GlobalAlloc(0, available+1);
     if(!data)
         return E_OUTOFMEMORY;
 
-    nsres = nsIInputStream_Read(nschannel->post_data_stream, data, available, &data_len);
+    nsres = nsIInputStream_Read(stream, data, available, &data_len);
     if(NS_FAILED(nsres)) {
         GlobalFree(data);
         return E_FAIL;
     }
 
-    if(nschannel->post_data_contains_headers) {
+    if(contains_headers) {
         if(data_len >= 2 && data[0] == '\r' && data[1] == '\n') {
             post_data = data+2;
             data_len -= 2;
@@ -1012,21 +1020,23 @@ static HRESULT read_post_data_stream(nsChannelBSC *This, nsChannel *nschannel)
             post_data += data_len;
             for(ptr = data; ptr+4 < data+data_len; ptr++) {
                 if(!memcmp(ptr, "\r\n\r\n", 4)) {
-                    post_data = ptr+4;
+                    ptr += 2;
+                    post_data = ptr+2;
                     break;
                 }
             }
 
             data_len -= post_data-data;
 
-            size = MultiByteToWideChar(CP_ACP, 0, data, post_data-data, NULL, 0);
+            size = MultiByteToWideChar(CP_ACP, 0, data, ptr-data, NULL, 0);
             headers = heap_alloc((size+1)*sizeof(WCHAR));
             if(headers) {
-                MultiByteToWideChar(CP_ACP, 0, data, post_data-data, headers, size);
+                MultiByteToWideChar(CP_ACP, 0, data, ptr-data, headers, size);
                 headers[size] = 0;
-                hres = parse_headers(headers , &nschannel->request_headers);
+                if(headers_list)
+                    hres = parse_headers(headers, headers_list);
                 if(SUCCEEDED(hres))
-                    This->bsc.headers = headers;
+                    request_data->headers = headers;
                 else
                     heap_free(headers);
             }else {
@@ -1046,7 +1056,7 @@ static HRESULT read_post_data_stream(nsChannelBSC *This, nsChannel *nschannel)
     }else if(post_data != data) {
         char *new_data;
 
-        new_data = GlobalAlloc(0, data_len);
+        new_data = GlobalAlloc(0, data_len+1);
         if(new_data)
             memcpy(new_data, post_data, data_len);
         GlobalFree(data);
@@ -1055,9 +1065,10 @@ static HRESULT read_post_data_stream(nsChannelBSC *This, nsChannel *nschannel)
         post_data = new_data;
     }
 
-    This->bsc.post_data = post_data;
-    This->bsc.post_data_len = data_len;
-    TRACE("post_data = %s\n", debugstr_a(This->bsc.post_data));
+    post_data[data_len] = 0;
+    request_data->post_data = post_data;
+    request_data->post_data_len = data_len;
+    TRACE("post_data = %s\n", debugstr_an(request_data->post_data, request_data->post_data_len));
     return S_OK;
 }
 
@@ -1134,6 +1145,9 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
             }
         }
     }
+
+    if(!This->nschannel)
+        return S_OK;
 
     if(!This->nslistener) {
         BYTE buf[1024];
@@ -1370,10 +1384,12 @@ static HRESULT nsChannelBSC_start_binding(BSCallback *bsc)
 static HRESULT nsChannelBSC_init_bindinfo(BSCallback *bsc)
 {
     nsChannelBSC *This = nsChannelBSC_from_BSCallback(bsc);
+    nsChannel *nschannel = This->nschannel;
     HRESULT hres;
 
-    if(This->nschannel && This->nschannel->post_data_stream) {
-        hres = read_post_data_stream(This, This->nschannel);
+    if(nschannel && nschannel->post_data_stream) {
+        hres = read_post_data_stream(nschannel->post_data_stream, nschannel->post_data_contains_headers,
+                &nschannel->request_headers, &This->bsc.request_data);
         if(FAILED(hres))
             return hres;
     }
@@ -1518,7 +1534,7 @@ static HRESULT nsChannelBSC_stop_binding(BSCallback *bsc, HRESULT result)
     if(result != E_ABORT) {
         if(FAILED(result))
             handle_navigation_error(This, result);
-        else if(This->is_doc_channel) {
+        else if(This->is_doc_channel && This->nschannel) {
             result = async_stop_request(This);
             if(SUCCEEDED(result))
                 return S_OK;
@@ -1578,12 +1594,121 @@ static HRESULT handle_redirect(nsChannelBSC *This, const WCHAR *new_url)
     return hres;
 }
 
+static BOOL is_supported_doc_mime(const WCHAR *mime)
+{
+    char *nscat, *mimea;
+    BOOL ret;
+
+    mimea = heap_strdupWtoA(mime);
+    if(!mimea)
+        return FALSE;
+
+    nscat = get_nscategory_entry("Gecko-Content-Viewers", mimea);
+
+    ret = nscat != NULL && !strcmp(nscat, "@mozilla.org/content/document-loader-factory;1");
+
+    heap_free(mimea);
+    nsfree(nscat);
+    return ret;
+}
+
+static IUri *get_moniker_uri(IMoniker *mon)
+{
+    IUriContainer *uri_container;
+    IUri *ret = NULL;
+    HRESULT hres;
+
+    hres = IMoniker_QueryInterface(mon, &IID_IUriContainer, (void**)&uri_container);
+    if(SUCCEEDED(hres)) {
+        hres = IUriContainer_GetIUri(uri_container, &ret);
+        IUriContainer_Release(uri_container);
+        if(FAILED(hres))
+            return NULL;
+    }else {
+        FIXME("No IUriContainer\n");
+    }
+
+    return ret;
+}
+
+static void handle_extern_mime_navigation(nsChannelBSC *This)
+{
+    IWebBrowserPriv2IE9 *webbrowser_priv;
+    IOleCommandTarget *cmdtrg;
+    HTMLDocumentObj *doc_obj;
+    IBindCtx *bind_ctx;
+    IUri *uri;
+    VARIANT flags;
+    HRESULT hres;
+
+    if(!This->bsc.window || !This->bsc.window->base.outer_window || !This->bsc.window->base.outer_window->doc_obj)
+        return;
+
+    doc_obj = This->bsc.window->base.outer_window->doc_obj;
+
+    hres = IOleClientSite_QueryInterface(doc_obj->client, &IID_IOleCommandTarget, (void**)&cmdtrg);
+    if(SUCCEEDED(hres)) {
+        IOleCommandTarget_Exec(cmdtrg, &CGID_ShellDocView, 62, 0, NULL, NULL);
+        IOleCommandTarget_Release(cmdtrg);
+    }
+
+    set_document_navigation(doc_obj, FALSE);
+
+    if(!doc_obj->webbrowser) {
+        FIXME("unimplemented in non-webbrowser mode\n");
+        return;
+    }
+
+    uri = get_moniker_uri(This->bsc.mon);
+    if(!uri)
+        return;
+
+    hres = CreateBindCtx(0, &bind_ctx);
+    if(FAILED(hres)) {
+        IUri_Release(uri);
+        return;
+    }
+
+    V_VT(&flags) = VT_I4;
+    V_I4(&flags) = navHyperlink;
+
+    hres = IUnknown_QueryInterface(doc_obj->webbrowser, &IID_IWebBrowserPriv2IE8, (void**)&webbrowser_priv);
+    if(SUCCEEDED(hres)) {
+        hres = IWebBrowserPriv2IE9_NavigateWithBindCtx2(webbrowser_priv, uri, &flags, NULL, NULL, NULL, bind_ctx, NULL, 0);
+        IWebBrowserPriv2IE9_Release(webbrowser_priv);
+    }else {
+        IWebBrowserPriv *webbrowser_priv_old;
+        VARIANT uriv;
+
+        hres = IUnknown_QueryInterface(doc_obj->webbrowser, &IID_IWebBrowserPriv, (void**)&webbrowser_priv_old);
+        if(SUCCEEDED(hres)) {
+            V_VT(&uriv) = VT_BSTR;
+            IUri_GetDisplayUri(uri, &V_BSTR(&uriv));
+
+            hres = IWebBrowserPriv_NavigateWithBindCtx(webbrowser_priv_old, &uriv, &flags, NULL, NULL, NULL, bind_ctx, NULL);
+
+            SysFreeString(V_BSTR(&uriv));
+            IWebBrowserPriv_Release(webbrowser_priv_old);
+        }
+    }
+
+    IUri_Release(uri);
+}
+
 static HRESULT nsChannelBSC_on_progress(BSCallback *bsc, ULONG status_code, LPCWSTR status_text)
 {
     nsChannelBSC *This = nsChannelBSC_from_BSCallback(bsc);
 
     switch(status_code) {
     case BINDSTATUS_MIMETYPEAVAILABLE:
+        if(This->is_doc_channel && !is_supported_doc_mime(status_text)) {
+            FIXME("External MIME: %s\n", debugstr_w(status_text));
+
+            handle_extern_mime_navigation(This);
+
+            This->nschannel = NULL;
+        }
+
         if(!This->nschannel)
             return S_OK;
 
@@ -1707,32 +1832,38 @@ HRESULT create_channelbsc(IMoniker *mon, const WCHAR *headers, BYTE *post_data, 
         BOOL is_doc_binding, nsChannelBSC **retval)
 {
     nsChannelBSC *ret;
+    DWORD bindf;
 
     ret = heap_alloc_zero(sizeof(*ret));
     if(!ret)
         return E_OUTOFMEMORY;
 
-    init_bscallback(&ret->bsc, &nsChannelBSCVtbl, mon, BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA);
+    bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA;
+    if(post_data_size)
+        bindf |= BINDF_FORMS_SUBMIT | BINDF_PRAGMA_NO_CACHE | BINDF_HYPERLINK | BINDF_GETNEWESTVERSION;
+
+    init_bscallback(&ret->bsc, &nsChannelBSCVtbl, mon, bindf);
     ret->is_doc_channel = is_doc_binding;
 
     if(headers) {
-        ret->bsc.headers = heap_strdupW(headers);
-        if(!ret->bsc.headers) {
+        ret->bsc.request_data.headers = heap_strdupW(headers);
+        if(!ret->bsc.request_data.headers) {
             IBindStatusCallback_Release(&ret->bsc.IBindStatusCallback_iface);
             return E_OUTOFMEMORY;
         }
     }
 
     if(post_data) {
-        ret->bsc.post_data = GlobalAlloc(0, post_data_size);
-        if(!ret->bsc.post_data) {
-            heap_free(ret->bsc.headers);
+        ret->bsc.request_data.post_data = GlobalAlloc(0, post_data_size+1);
+        if(!ret->bsc.request_data.post_data) {
+            release_request_data(&ret->bsc.request_data);
             IBindStatusCallback_Release(&ret->bsc.IBindStatusCallback_iface);
             return E_OUTOFMEMORY;
         }
 
-        memcpy(ret->bsc.post_data, post_data, post_data_size);
-        ret->bsc.post_data_len = post_data_size;
+        memcpy(ret->bsc.request_data.post_data, post_data, post_data_size);
+        ((BYTE*)ret->bsc.request_data.post_data)[post_data_size] = 0;
+        ret->bsc.request_data.post_data_len = post_data_size;
     }
 
     TRACE("created %p\n", ret);
@@ -1815,7 +1946,7 @@ void abort_window_bindings(HTMLInnerWindow *window)
     }
 }
 
-HRESULT channelbsc_load_stream(HTMLInnerWindow *pending_window, IStream *stream)
+HRESULT channelbsc_load_stream(HTMLInnerWindow *pending_window, IMoniker *mon, IStream *stream)
 {
     nsChannelBSC *bscallback = pending_window->bscallback;
     HRESULT hres = S_OK;
@@ -1828,6 +1959,8 @@ HRESULT channelbsc_load_stream(HTMLInnerWindow *pending_window, IStream *stream)
     bscallback->nschannel->content_type = heap_strdupA("text/html");
     if(!bscallback->nschannel->content_type)
         return E_OUTOFMEMORY;
+
+    set_current_mon(pending_window->base.outer_window, mon, 0);
 
     bscallback->bsc.window = pending_window;
     if(stream)
@@ -1854,12 +1987,12 @@ void channelbsc_set_channel(nsChannelBSC *This, nsChannel *channel, nsIStreamLis
         This->nscontext = context;
     }
 
-    if(This->bsc.headers) {
+    if(This->bsc.request_data.headers) {
         HRESULT hres;
 
-        hres = parse_headers(This->bsc.headers, &channel->request_headers);
-        heap_free(This->bsc.headers);
-        This->bsc.headers = NULL;
+        hres = parse_headers(This->bsc.request_data.headers, &channel->request_headers);
+        heap_free(This->bsc.request_data.headers);
+        This->bsc.request_data.headers = NULL;
         if(FAILED(hres))
             WARN("parse_headers failed: %08x\n", hres);
     }
@@ -2053,7 +2186,7 @@ HRESULT super_navigate(HTMLOuterWindow *window, IUri *uri, DWORD flags, const WC
         }
     }
 
-    if(!(flags & BINDING_REFRESH) && window->uri_nofrag && !post_data_size) {
+    if(!(flags & BINDING_NOFRAG) && window->uri_nofrag && !post_data_size) {
         BOOL eq;
 
         hres = IUri_IsEqual(uri_nofrag, window->uri_nofrag, &eq);
@@ -2081,7 +2214,32 @@ HRESULT super_navigate(HTMLOuterWindow *window, IUri *uri, DWORD flags, const WC
     prepare_for_binding(&window->doc_obj->basedoc, mon, flags);
 
     hres = IUri_GetScheme(uri, &scheme);
-    if(SUCCEEDED(hres) && scheme != URL_SCHEME_JAVASCRIPT) {
+    if(SUCCEEDED(hres) && scheme == URL_SCHEME_JAVASCRIPT) {
+        navigate_javascript_task_t *task;
+
+        IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
+        IMoniker_Release(mon);
+
+        task = heap_alloc(sizeof(*task));
+        if(!task)
+            return E_OUTOFMEMORY;
+
+        /* Why silently? */
+        window->readystate = READYSTATE_COMPLETE;
+        if(!(flags & BINDING_FROMHIST))
+            call_docview_84(window->doc_obj);
+
+        IUri_AddRef(uri);
+        task->window = window;
+        task->uri = uri;
+        hres = push_task(&task->header, navigate_javascript_proc, navigate_javascript_task_destr, window->task_magic);
+    }else if(flags & BINDING_SUBMIT) {
+        hres = set_moniker(window, mon, uri, NULL, bsc, TRUE);
+        if(SUCCEEDED(hres))
+            hres = start_binding(window->pending_window, &bsc->bsc, NULL);
+        IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
+        IMoniker_Release(mon);
+    }else {
         navigate_task_t *task;
 
         task = heap_alloc(sizeof(*task));
@@ -2104,25 +2262,6 @@ HRESULT super_navigate(HTMLOuterWindow *window, IUri *uri, DWORD flags, const WC
         IUri_AddRef(uri);
         task->uri = uri;
         hres = push_task(&task->header, navigate_proc, navigate_task_destr, window->task_magic);
-    }else {
-        navigate_javascript_task_t *task;
-
-        IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
-        IMoniker_Release(mon);
-
-        task = heap_alloc(sizeof(*task));
-        if(!task)
-            return E_OUTOFMEMORY;
-
-        /* Why silently? */
-        window->readystate = READYSTATE_COMPLETE;
-        if(!(flags & BINDING_FROMHIST))
-            call_docview_84(window->doc_obj);
-
-        IUri_AddRef(uri);
-        task->window = window;
-        task->uri = uri;
-        hres = push_task(&task->header, navigate_javascript_proc, navigate_javascript_task_destr, window->task_magic);
     }
 
     return hres;
@@ -2207,7 +2346,8 @@ HRESULT hlink_frame_navigate(HTMLDocument *doc, LPCWSTR url, nsChannel *nschanne
     }
 
     if(nschannel)
-        read_post_data_stream(callback, nschannel);
+        read_post_data_stream(nschannel->post_data_stream, nschannel->post_data_contains_headers,
+                &nschannel->request_headers, &callback->bsc.request_data);
 
     hres = CreateAsyncBindCtx(0, &callback->bsc.IBindStatusCallback_iface, NULL, &bindctx);
     if(SUCCEEDED(hres))
@@ -2238,7 +2378,8 @@ HRESULT hlink_frame_navigate(HTMLDocument *doc, LPCWSTR url, nsChannel *nschanne
     return hres;
 }
 
-static HRESULT navigate_uri(HTMLOuterWindow *window, IUri *uri, const WCHAR *display_uri, DWORD flags)
+static HRESULT navigate_uri(HTMLOuterWindow *window, IUri *uri, const WCHAR *display_uri, const request_data_t *request_data,
+        DWORD flags)
 {
     nsWineURI *nsuri;
     HRESULT hres;
@@ -2246,18 +2387,22 @@ static HRESULT navigate_uri(HTMLOuterWindow *window, IUri *uri, const WCHAR *dis
     TRACE("%s\n", debugstr_w(display_uri));
 
     if(window->doc_obj && window->doc_obj->webbrowser && window == window->doc_obj->basedoc.window) {
+        DWORD post_data_len = request_data ? request_data->post_data_len : 0;
+        void *post_data = post_data_len ? request_data->post_data : NULL;
+        const WCHAR *headers = request_data ? request_data->headers : NULL;
+
         if(!(flags & BINDING_REFRESH)) {
             BOOL cancel = FALSE;
 
             hres = IDocObjectService_FireBeforeNavigate2(window->doc_obj->doc_object_service, NULL, display_uri, 0x40,
-                    NULL, NULL, 0, NULL, TRUE, &cancel);
+                    NULL, post_data, post_data_len ? post_data_len+1 : 0, headers, TRUE, &cancel);
             if(SUCCEEDED(hres) && cancel) {
                 TRACE("Navigation canceled\n");
                 return S_OK;
             }
         }
 
-        return super_navigate(window, uri, flags, NULL, NULL, 0);
+        return super_navigate(window, uri, flags, headers, post_data, post_data_len);
     }
 
     if(window->doc_obj && window == window->doc_obj->basedoc.window) {
@@ -2291,30 +2436,20 @@ HRESULT load_uri(HTMLOuterWindow *window, IUri *uri, DWORD flags)
     if(FAILED(hres))
         return hres;
 
-    hres = navigate_uri(window, uri, display_uri, flags);
+    hres = navigate_uri(window, uri, display_uri, NULL, flags);
     SysFreeString(display_uri);
     return hres;
 }
 
-HRESULT navigate_url(HTMLOuterWindow *window, const WCHAR *new_url, IUri *base_uri, DWORD flags)
+static HRESULT translate_uri(HTMLOuterWindow *window, IUri *orig_uri, BSTR *ret_display_uri, IUri **ret_uri)
 {
+    IUri *uri = NULL;
     BSTR display_uri;
-    IUri *uri;
     HRESULT hres;
 
-    if(new_url && base_uri)
-        hres = CoInternetCombineUrlEx(base_uri, new_url, URL_ESCAPE_SPACES_ONLY|URL_DONT_ESCAPE_EXTRA_INFO,
-                &uri, 0);
-    else
-        hres = create_uri(new_url, 0, &uri);
+    hres = IUri_GetDisplayUri(orig_uri, &display_uri);
     if(FAILED(hres))
         return hres;
-
-    hres = IUri_GetDisplayUri(uri, &display_uri);
-    if(FAILED(hres)) {
-        IUri_Release(uri);
-        return hres;
-    }
 
     if(window->doc_obj && window->doc_obj->hostui) {
         OLECHAR *translated_url = NULL;
@@ -2324,7 +2459,6 @@ HRESULT navigate_url(HTMLOuterWindow *window, const WCHAR *new_url, IUri *base_u
         if(hres == S_OK) {
             TRACE("%08x %s -> %s\n", hres, debugstr_w(display_uri), debugstr_w(translated_url));
             SysFreeString(display_uri);
-            IUri_Release(uri);
             hres = create_uri(translated_url, 0, &uri);
             CoTaskMemFree(translated_url);
             if(FAILED(hres))
@@ -2338,8 +2472,57 @@ HRESULT navigate_url(HTMLOuterWindow *window, const WCHAR *new_url, IUri *base_u
         }
     }
 
-    hres = navigate_uri(window, uri, display_uri, flags);
+    if(!uri) {
+        IUri_AddRef(orig_uri);
+        uri = orig_uri;
+    }
 
+    *ret_display_uri = display_uri;
+    *ret_uri = uri;
+    return S_OK;
+}
+
+HRESULT submit_form(HTMLOuterWindow *window, IUri *submit_uri, nsIInputStream *post_stream)
+{
+    request_data_t request_data = {NULL};
+    BSTR display_uri;
+    IUri *uri;
+    HRESULT hres;
+
+    hres = read_post_data_stream(post_stream, TRUE, NULL, &request_data);
+    if(FAILED(hres))
+        return hres;
+
+    hres = translate_uri(window, submit_uri, &display_uri, &uri);
+    if(SUCCEEDED(hres)) {
+        hres = navigate_uri(window, uri, display_uri, &request_data, BINDING_NAVIGATED|BINDING_SUBMIT);
+        IUri_Release(uri);
+        SysFreeString(display_uri);
+    }
+    release_request_data(&request_data);
+    return hres;
+}
+
+HRESULT navigate_url(HTMLOuterWindow *window, const WCHAR *new_url, IUri *base_uri, DWORD flags)
+{
+    IUri *uri, *nav_uri;
+    BSTR display_uri;
+    HRESULT hres;
+
+    if(new_url && base_uri)
+        hres = CoInternetCombineUrlEx(base_uri, new_url, URL_ESCAPE_SPACES_ONLY|URL_DONT_ESCAPE_EXTRA_INFO,
+                &nav_uri, 0);
+    else
+        hres = create_uri(new_url, 0, &nav_uri);
+    if(FAILED(hres))
+        return hres;
+
+    hres = translate_uri(window, nav_uri, &display_uri, &uri);
+    IUri_Release(nav_uri);
+    if(FAILED(hres))
+        return hres;
+
+    hres = navigate_uri(window, uri, display_uri, NULL, flags);
     IUri_Release(uri);
     SysFreeString(display_uri);
     return hres;

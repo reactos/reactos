@@ -292,7 +292,7 @@ static BOOL get_elem_clsid(nsIDOMElement *elem, CLSID *clsid)
         ERR("GetAttribute failed: %08x\n", nsres);
     }
 
-    nsAString_Finish(&attr_str);
+    nsAString_Finish(&val_str);
     return ret;
 }
 
@@ -540,7 +540,7 @@ static void check_codebase(HTMLInnerWindow *window, nsIDOMElement *nselem)
         ERR("GetAttribute failed: %08x\n", nsres);
     }
 
-    nsAString_Finish(&attr_str);
+    nsAString_Finish(&val_str);
     if(!uri)
         return;
 
@@ -618,6 +618,7 @@ static IUnknown *create_activex_object(HTMLInnerWindow *window, nsIDOMElement *n
     }
 
     hres = IClassFactory_CreateInstance(cf, NULL, &IID_IUnknown, (void**)&obj);
+    IClassFactory_Release(cf);
     if(FAILED(hres))
         return NULL;
 
@@ -654,7 +655,6 @@ static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, I
         HRESULT hres;
 
         hres = create_plugin_host(window->doc, nselem, obj, &clsid, &host);
-        nsIDOMElement_Release(nselem);
         IUnknown_Release(obj);
         if(SUCCEEDED(hres))
             instance->pdata = host;

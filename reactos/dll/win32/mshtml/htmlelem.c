@@ -1710,8 +1710,8 @@ static HRESULT HTMLElement_invoke(DispatchEx *dispex, DISPID id, LCID lcid,
 static HRESULT HTMLElement_populate_props(DispatchEx *dispex)
 {
     HTMLElement *This = impl_from_DispatchEx(dispex);
-    nsIDOMNamedNodeMap *attrs;
-    nsIDOMNode *node;
+    nsIDOMMozNamedAttrMap *attrs;
+    nsIDOMAttr *attr;
     nsAString nsstr;
     const PRUnichar *str;
     BSTR name;
@@ -1729,40 +1729,40 @@ static HRESULT HTMLElement_populate_props(DispatchEx *dispex)
     if(NS_FAILED(nsres))
         return E_FAIL;
 
-    nsres = nsIDOMNamedNodeMap_GetLength(attrs, &len);
+    nsres = nsIDOMMozNamedAttrMap_GetLength(attrs, &len);
     if(NS_FAILED(nsres)) {
-        nsIDOMNamedNodeMap_Release(attrs);
+        nsIDOMMozNamedAttrMap_Release(attrs);
         return E_FAIL;
     }
 
     nsAString_Init(&nsstr, NULL);
     for(i=0; i<len; i++) {
-        nsres = nsIDOMNamedNodeMap_Item(attrs, i, &node);
+        nsres = nsIDOMMozNamedAttrMap_Item(attrs, i, &attr);
         if(NS_FAILED(nsres))
             continue;
 
-        nsres = nsIDOMNode_GetNodeName(node, &nsstr);
+        nsres = nsIDOMAttr_GetNodeName(attr, &nsstr);
         if(NS_FAILED(nsres)) {
-            nsIDOMNode_Release(node);
+            nsIDOMAttr_Release(attr);
             continue;
         }
 
         nsAString_GetData(&nsstr, &str);
         name = SysAllocString(str);
         if(!name) {
-            nsIDOMNode_Release(node);
+            nsIDOMAttr_Release(attr);
             continue;
         }
 
         hres = IDispatchEx_GetDispID(&dispex->IDispatchEx_iface, name, fdexNameCaseInsensitive, &id);
         if(hres != DISP_E_UNKNOWNNAME) {
-            nsIDOMNode_Release(node);
+            nsIDOMAttr_Release(attr);
             SysFreeString(name);
             continue;
         }
 
-        nsres = nsIDOMNode_GetNodeValue(node, &nsstr);
-        nsIDOMNode_Release(node);
+        nsres = nsIDOMAttr_GetNodeValue(attr, &nsstr);
+        nsIDOMAttr_Release(attr);
         if(NS_FAILED(nsres)) {
             SysFreeString(name);
             continue;
@@ -1785,7 +1785,7 @@ static HRESULT HTMLElement_populate_props(DispatchEx *dispex)
     }
     nsAString_Finish(&nsstr);
 
-    nsIDOMNamedNodeMap_Release(attrs);
+    nsIDOMMozNamedAttrMap_Release(attrs);
     return S_OK;
 }
 

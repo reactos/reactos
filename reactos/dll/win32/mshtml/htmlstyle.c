@@ -74,6 +74,9 @@ static const WCHAR attrBorderWidth[] =
     {'b','o','r','d','e','r','-','w','i','d','t','h',0};
 static const WCHAR attrBottom[] =
     {'b','o','t','t','o','m',0};
+/* FIXME: Use unprefixed version (requires Gecko changes). */
+static const WCHAR attrBoxSizing[] =
+    {'-','m','o','z','-','b','o','x','-','s','i','z','i','n','g',0};
 static const WCHAR attrClear[] =
     {'c','l','e','a','r',0};
 static const WCHAR attrClip[] =
@@ -106,6 +109,8 @@ static const WCHAR attrLetterSpacing[] =
     {'l','e','t','t','e','r','-','s','p','a','c','i','n','g',0};
 static const WCHAR attrLineHeight[] =
     {'l','i','n','e','-','h','e','i','g','h','t',0};
+static const WCHAR attrListStyleType[] =
+    {'l','i','s','t','-','s','t','y','l','e','-','t','y','p','e',0};
 static const WCHAR attrMargin[] =
     {'m','a','r','g','i','n',0};
 static const WCHAR attrMarginBottom[] =
@@ -118,6 +123,8 @@ static const WCHAR attrMarginTop[] =
     {'m','a','r','g','i','n','-','t','o','p',0};
 static const WCHAR attrMinHeight[] =
     {'m','i','n','-','h','e','i','g','h','t',0};
+static const WCHAR attrOutline[] =
+    {'o','u','t','l','i','n','e',0};
 static const WCHAR attrOverflow[] =
     {'o','v','e','r','f','l','o','w',0};
 static const WCHAR attrOverflowX[] =
@@ -202,6 +209,7 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrBorderTopWidth,       DISPID_IHTMLSTYLE_BORDERTOPWIDTH},
     {attrBorderWidth,          DISPID_IHTMLSTYLE_BORDERWIDTH},
     {attrBottom,               DISPID_IHTMLSTYLE2_BOTTOM},
+    {attrBoxSizing,            DISPID_IHTMLSTYLE6_BOXSIZING},
     {attrClear,                DISPID_IHTMLSTYLE_CLEAR},
     {attrClip,                 DISPID_IHTMLSTYLE_CLIP},
     {attrColor,                DISPID_IHTMLSTYLE_COLOR},
@@ -218,12 +226,14 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrLeft,                 DISPID_IHTMLSTYLE_LEFT},
     {attrLetterSpacing,        DISPID_IHTMLSTYLE_LETTERSPACING},
     {attrLineHeight,           DISPID_IHTMLSTYLE_LINEHEIGHT},
+    {attrListStyleType,        DISPID_IHTMLSTYLE_LISTSTYLETYPE},
     {attrMargin,               DISPID_IHTMLSTYLE_MARGIN},
     {attrMarginBottom,         DISPID_IHTMLSTYLE_MARGINBOTTOM},
     {attrMarginLeft,           DISPID_IHTMLSTYLE_MARGINLEFT},
     {attrMarginRight,          DISPID_IHTMLSTYLE_MARGINRIGHT},
     {attrMarginTop,            DISPID_IHTMLSTYLE_MARGINTOP},
     {attrMinHeight,            DISPID_IHTMLSTYLE4_MINHEIGHT},
+    {attrOutline,              DISPID_IHTMLSTYLE6_OUTLINE},
     {attrOverflow,             DISPID_IHTMLSTYLE_OVERFLOW},
     {attrOverflowX,            DISPID_IHTMLSTYLE2_OVERFLOWX},
     {attrOverflowY,            DISPID_IHTMLSTYLE2_OVERFLOWY},
@@ -447,7 +457,7 @@ static HRESULT nsstyle_to_bstr(const WCHAR *val, DWORD flags, BSTR *p)
     DWORD len;
 
     if(!*val) {
-        *p = NULL;
+        *p = (flags & ATTR_NO_NULL) ? SysAllocStringLen(NULL, 0) : NULL;
         return S_OK;
     }
 
@@ -2144,15 +2154,19 @@ static HRESULT WINAPI HTMLStyle_get_visibility(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_listStyleType(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, STYLEID_LISTSTYLETYPE, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_listStyleType(IHTMLStyle *iface, BSTR *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_style_attr(This, STYLEID_LISTSTYLETYPE, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_listStylePosition(IHTMLStyle *iface, BSTR v)
@@ -3091,11 +3105,9 @@ static dispex_static_data_t HTMLStyle_dispex = {
     HTMLStyle_iface_tids
 };
 
-HRESULT HTMLStyle_Create(HTMLElement *elem, HTMLStyle **ret)
+static HRESULT get_style_from_elem(HTMLElement *elem, nsIDOMCSSStyleDeclaration **ret)
 {
     nsIDOMElementCSSInlineStyle *nselemstyle;
-    nsIDOMCSSStyleDeclaration *nsstyle;
-    HTMLStyle *style;
     nsresult nsres;
 
     if(!elem->nselem) {
@@ -3107,12 +3119,25 @@ HRESULT HTMLStyle_Create(HTMLElement *elem, HTMLStyle **ret)
             (void**)&nselemstyle);
     assert(nsres == NS_OK);
 
-    nsres = nsIDOMElementCSSInlineStyle_GetStyle(nselemstyle, &nsstyle);
+    nsres = nsIDOMElementCSSInlineStyle_GetStyle(nselemstyle, ret);
     nsIDOMElementCSSInlineStyle_Release(nselemstyle);
     if(NS_FAILED(nsres)) {
         ERR("GetStyle failed: %08x\n", nsres);
         return E_FAIL;
     }
+
+    return S_OK;
+}
+
+HRESULT HTMLStyle_Create(HTMLElement *elem, HTMLStyle **ret)
+{
+    nsIDOMCSSStyleDeclaration *nsstyle;
+    HTMLStyle *style;
+    HRESULT hres;
+
+    hres = get_style_from_elem(elem, &nsstyle);
+    if(FAILED(hres))
+        return hres;
 
     style = heap_alloc_zero(sizeof(HTMLStyle));
     if(!style) {
@@ -3133,4 +3158,32 @@ HRESULT HTMLStyle_Create(HTMLElement *elem, HTMLStyle **ret)
 
     *ret = style;
     return S_OK;
+}
+
+HRESULT get_elem_style(HTMLElement *elem, styleid_t styleid, BSTR *ret)
+{
+    nsIDOMCSSStyleDeclaration *style;
+    HRESULT hres;
+
+    hres = get_style_from_elem(elem, &style);
+    if(FAILED(hres))
+        return hres;
+
+    hres = get_nsstyle_attr(style, styleid, ret, 0);
+    nsIDOMCSSStyleDeclaration_Release(style);
+    return hres;
+}
+
+HRESULT set_elem_style(HTMLElement *elem, styleid_t styleid, const WCHAR *val)
+{
+    nsIDOMCSSStyleDeclaration *style;
+    HRESULT hres;
+
+    hres = get_style_from_elem(elem, &style);
+    if(FAILED(hres))
+        return hres;
+
+    hres = set_nsstyle_attr(style, styleid, val, 0);
+    nsIDOMCSSStyleDeclaration_Release(style);
+    return hres;
 }
