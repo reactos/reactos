@@ -44,7 +44,7 @@
 #include <atliface.h>
 
 static const char textA[] =
-"HKCR \n"
+"HKCU \n"
 "{ \n"
 "    ForceRemove eebf73c4-50fd-478f-bbcf-db212221227a \n"
 "    { \n"
@@ -74,7 +74,7 @@ static void test_registrar(void)
     hr = CoCreateInstance(&CLSID_Registrar, NULL, CLSCTX_INPROC_SERVER, &IID_IRegistrar, (void**)&registrar);
     if (FAILED(hr))
     {
-        skip("creating IRegistrar failed, hr = 0x%08X\n", hr);
+        win_skip("creating IRegistrar failed, hr = 0x%08X\n", hr);
         return;
     }
 
@@ -90,9 +90,14 @@ static void test_registrar(void)
 
         MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, count);
         hr = IRegistrar_StringRegister(registrar, textW);
-        ok(SUCCEEDED(hr), "IRegistrar_StringRegister failed, hr = 0x%08X\n", hr);
+        ok(hr == S_OK, "StringRegister failed: %08x\n", hr);
+        if (FAILED(hr))
+        {
+            IRegistrar_Release(registrar);
+            return;
+        }
 
-        lret = RegOpenKeyA(HKEY_CLASSES_ROOT, "eebf73c4-50fd-478f-bbcf-db212221227a", &key);
+        lret = RegOpenKeyA(HKEY_CURRENT_USER, "eebf73c4-50fd-478f-bbcf-db212221227a", &key);
         ok(lret == ERROR_SUCCESS, "error %d opening registry key\n", lret);
 
         size = sizeof(dword);
@@ -148,8 +153,9 @@ static void test_aggregation(void)
 
     hres = CoCreateInstance(&CLSID_Registrar, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
             &IID_IUnknown, (void**)&unk);
-    ok(hres == CLASS_E_NOAGGREGATION, "CoCreateInstance failed: %08x, expected CLASS_E_NOAGGREGATION\n", hres);
-    ok(!unk, "unk = %p\n", unk);
+    ok(hres == CLASS_E_NOAGGREGATION || broken(hres == E_INVALIDARG),
+            "CoCreateInstance failed: %08x, expected CLASS_E_NOAGGREGATION\n", hres);
+    ok(!unk || unk == (IUnknown*)0xdeadbeef, "unk = %p\n", unk);
 }
 
 START_TEST(registrar)
