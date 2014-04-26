@@ -41,21 +41,6 @@ static IID *pIID_ITextHost;
 static IID *pIID_ITextHost2;
 static PCreateTextServices pCreateTextServices;
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    if(!riid)
-        return "(null)";
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 /* Define C Macros for ITextServices calls. */
 
 /* Use a special table for x86 machines to convert the thiscall
@@ -79,7 +64,7 @@ static ITextServicesVtbl itextServicesStdcallVtbl;
 #define ITextServices_OnTxUIDeactivate(This) TXTSERV_VTABLE(This)->OnTxUIDeactivate(This)
 #define ITextServices_TxGetText(This,a) TXTSERV_VTABLE(This)->TxGetText(This,a)
 #define ITextServices_TxSetText(This,a) TXTSERV_VTABLE(This)->TxSetText(This,a)
-#define ITextServices_TxGetCurrentTargetX(This,a) TXTSERV_VTABLE(This)->TxGetCurrentTargetX(This,a)
+#define ITextServices_TxGetCurTargetX(This,a) TXTSERV_VTABLE(This)->TxGetCurTargetX(This,a)
 #define ITextServices_TxGetBaseLinePos(This,a) TXTSERV_VTABLE(This)->TxGetBaseLinePos(This,a)
 #define ITextServices_TxGetNaturalSize(This,a,b,c,d,e,f,g,h) TXTSERV_VTABLE(This)->TxGetNaturalSize(This,a,b,c,d,e,f,g,h)
 #define ITextServices_TxGetDropTarget(This,a) TXTSERV_VTABLE(This)->TxGetDropTarget(This,a)
@@ -720,7 +705,7 @@ static void test_TxGetNaturalSize(void) {
 
     /* Variables with the text metric information */
     INT charwidth_caps_text[26];
-    TEXTMETRIC tmInfo_text;
+    TEXTMETRICA tmInfo_text;
 
     if (!init_texthost())
         return;
@@ -730,9 +715,9 @@ static void test_TxGetNaturalSize(void) {
 
     /* Populate the metric strucs */
     SetMapMode(hdcDraw,MM_TEXT);
-    GetTextMetrics(hdcDraw, &tmInfo_text);
+    GetTextMetricsA(hdcDraw, &tmInfo_text);
     SetLastError(0xdeadbeef);
-    ret = GetCharWidth32(hdcDraw,'A','Z',charwidth_caps_text);
+    ret = GetCharWidth32A(hdcDraw,'A','Z',charwidth_caps_text);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
         win_skip("GetCharWidth32 is not available\n");
         goto cleanup;
@@ -805,11 +790,11 @@ DEFINE_GUID(expected_iid_itexthost2, 0x13e670f5,0x1a5a,0x11cf,0xab,0xeb,0x00,0xa
 static void test_IIDs(void)
 {
     ok(IsEqualIID(pIID_ITextServices, &expected_iid_itextservices),
-       "unexpected value for IID_ITextServices: %s\n", debugstr_guid(pIID_ITextServices));
+       "unexpected value for IID_ITextServices: %s\n", wine_dbgstr_guid(pIID_ITextServices));
     ok(IsEqualIID(pIID_ITextHost, &expected_iid_itexthost),
-       "unexpected value for IID_ITextHost: %s\n", debugstr_guid(pIID_ITextHost));
+       "unexpected value for IID_ITextHost: %s\n", wine_dbgstr_guid(pIID_ITextHost));
     ok(IsEqualIID(pIID_ITextHost2, &expected_iid_itexthost2),
-       "unexpected value for IID_ITextHost2: %s\n", debugstr_guid(pIID_ITextHost2));
+       "unexpected value for IID_ITextHost2: %s\n", wine_dbgstr_guid(pIID_ITextHost2));
 }
 
 /* Outer IUnknown for COM aggregation tests */
@@ -882,7 +867,7 @@ START_TEST( txtsrv )
 
     /* Must explicitly LoadLibrary(). The test has no references to functions in
      * RICHED20.DLL, so the linker doesn't actually link to it. */
-    hmoduleRichEdit = LoadLibrary("RICHED20.DLL");
+    hmoduleRichEdit = LoadLibraryA("riched20.dll");
     ok(hmoduleRichEdit != NULL, "error: %d\n", (int) GetLastError());
 
     pIID_ITextServices = (IID*)GetProcAddress(hmoduleRichEdit, "IID_ITextServices");
