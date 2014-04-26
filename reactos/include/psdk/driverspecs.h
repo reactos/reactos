@@ -85,10 +85,10 @@
 #define __drv_isCancelIRQL                          _IRQL_is_cancel_
 #define __drv_isObjectPointer
 #define __drv_KMDF
-#define __drv_maxFunctionIRQL
-#define __drv_maxIRQL
-#define __drv_minFunctionIRQL
-#define __drv_minIRQL
+#define __drv_maxFunctionIRQL(irql)
+#define __drv_maxIRQL(irql)
+#define __drv_minFunctionIRQL(irql)
+#define __drv_minIRQL(irql)
 #define __drv_Mode_impl(x)
 #define __drv_mustHold(kind)
 #define __drv_mustHoldCancelSpinLock
@@ -107,7 +107,7 @@
 #define __drv_out_deref(annotes)
 #define __drv_out(annotes)
 #define __drv_preferredFunction(func,why)
-#define __drv_raisesIRQL
+#define __drv_raisesIRQL(irql)
 #define __drv_releasesCancelSpinLock
 #define __drv_releasesCriticalRegion
 #define __drv_releasesExclusiveResource(kind)
@@ -116,7 +116,7 @@
 #define __drv_releasesResource(kind)
 #define __drv_releasesResourceGlobal(kind,param)
 #define __drv_reportError(why)
-#define __drv_requiresIRQL
+#define __drv_requiresIRQL(irql)
 #define __drv_restoresIRQL
 #define __drv_restoresIRQLGlobal
 #define __drv_ret(annotes)
@@ -159,7 +159,7 @@ __ANNOTATION(SAL_IoGetDmaAdapter(void);)
 #else
 
 /* Dummys */
-#define _Dispatch_type_
+#define _Dispatch_type_(type)
 #define _IRQL_always_function_max_(irql)
 #define _IRQL_always_function_min_(irql)
 #define _IRQL_is_cancel_
@@ -222,10 +222,10 @@ __ANNOTATION(SAL_IoGetDmaAdapter(void);)
 #define __drv_isCancelIRQL
 #define __drv_isObjectPointer
 #define __drv_KMDF
-#define __drv_maxFunctionIRQL
-#define __drv_maxIRQL
-#define __drv_minFunctionIRQL
-#define __drv_minIRQL
+#define __drv_maxFunctionIRQL(irql)
+#define __drv_maxIRQL(irql)
+#define __drv_minFunctionIRQL(irql)
+#define __drv_minIRQL(irql)
 #define __drv_Mode_impl(x)
 #define __drv_mustHold(kind)
 #define __drv_mustHoldCancelSpinLock
@@ -244,7 +244,7 @@ __ANNOTATION(SAL_IoGetDmaAdapter(void);)
 #define __drv_out_deref(annotes)
 #define __drv_out(annotes)
 #define __drv_preferredFunction(func,why)
-#define __drv_raisesIRQL
+#define __drv_raisesIRQL(irql)
 #define __drv_releasesCancelSpinLock
 #define __drv_releasesCriticalRegion
 #define __drv_releasesExclusiveResource(kind)
@@ -253,7 +253,7 @@ __ANNOTATION(SAL_IoGetDmaAdapter(void);)
 #define __drv_releasesResource(kind)
 #define __drv_releasesResourceGlobal(kind,param)
 #define __drv_reportError(why)
-#define __drv_requiresIRQL
+#define __drv_requiresIRQL(irql)
 #define __drv_restoresIRQL
 #define __drv_restoresIRQLGlobal
 #define __drv_ret(annotes)
