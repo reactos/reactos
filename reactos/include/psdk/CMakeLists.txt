@@ -18,6 +18,7 @@ list(APPEND SOURCE
 #   binres.idl
     bits.idl
     bits1_5.idl
+    bits3_0.idl
 #   cmdbas.idl
 #   cmdtxt.idl
     comcat.idl
