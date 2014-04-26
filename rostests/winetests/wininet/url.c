@@ -517,7 +517,7 @@ static void InternetCrackUrl_test(void)
     ret, GLE);
 
   copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 1024);
-  ret = InternetCrackUrl("about://host/blank", 0,0,&urlComponents);
+  ret = InternetCrackUrlA("about://host/blank", 0,0,&urlComponents);
   ok(ret, "InternetCrackUrl failed with %d\n", GetLastError());
   ok(!strcmp(urlComponents.lpszScheme, "about"), "lpszScheme was \"%s\" instead of \"about\"\n", urlComponents.lpszScheme);
   ok(!strcmp(urlComponents.lpszHostName, "host"), "lpszHostName was \"%s\" instead of \"host\"\n", urlComponents.lpszHostName);
@@ -526,7 +526,7 @@ static void InternetCrackUrl_test(void)
   /* try a NULL lpszUrl */
   SetLastError(0xdeadbeef);
   copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 1024);
-  ret = InternetCrackUrl(NULL, 0, 0, &urlComponents);
+  ret = InternetCrackUrlA(NULL, 0, 0, &urlComponents);
   GLE = GetLastError();
   ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
   ok(GLE == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GLE);
@@ -536,7 +536,7 @@ static void InternetCrackUrl_test(void)
    */
   SetLastError(0xdeadbeef);
   copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 1024);
-  ret = InternetCrackUrl("", 0, 0, &urlComponents);
+  ret = InternetCrackUrlA("", 0, 0, &urlComponents);
   GLE = GetLastError();
   ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
   ok(GLE != 0xdeadbeef && GLE != ERROR_SUCCESS, "Expected GLE to represent a failure\n");
@@ -746,7 +746,7 @@ static void InternetCrackUrlW_test(void)
     ok( urlpart[0] == 0, "urlpart should be empty\n");
 }
 
-static void fill_url_components(LPURL_COMPONENTS lpUrlComponents)
+static void fill_url_components(URL_COMPONENTSA *lpUrlComponents)
 {
     static CHAR http[]       = "http",
                 winehq[]     = "www.winehq.org",
@@ -755,7 +755,7 @@ static void fill_url_components(LPURL_COMPONENTS lpUrlComponents)
                 site_about[] = "/site/about",
                 empty[]      = "";
 
-    lpUrlComponents->dwStructSize = sizeof(URL_COMPONENTS);
+    lpUrlComponents->dwStructSize = sizeof(URL_COMPONENTSA);
     lpUrlComponents->lpszScheme = http;
     lpUrlComponents->dwSchemeLength = strlen(lpUrlComponents->lpszScheme);
     lpUrlComponents->nScheme = INTERNET_SCHEME_HTTP;
@@ -774,7 +774,7 @@ static void fill_url_components(LPURL_COMPONENTS lpUrlComponents)
 
 static void InternetCreateUrlA_test(void)
 {
-	URL_COMPONENTS urlComp;
+	URL_COMPONENTSA urlComp;
 	LPSTR szUrl;
 	DWORD len = -1;
 	BOOL ret;
@@ -802,7 +802,7 @@ static void InternetCreateUrlA_test(void)
 	ok(len == -1, "Expected len -1, got %d\n", len);
 
 	/* test zero'ed lpUrlComponents */
-	ZeroMemory(&urlComp, sizeof(URL_COMPONENTS));
+	ZeroMemory(&urlComp, sizeof(urlComp));
 	SetLastError(0xdeadbeef);
 	ret = InternetCreateUrlA(&urlComp, 0, NULL, &len);
 	ok(!ret, "Expected failure\n");
@@ -992,7 +992,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = http;
 	urlComp.dwSchemeLength = 0;
 	urlComp.nScheme = INTERNET_SCHEME_HTTP;
@@ -1017,7 +1017,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = https;
 	urlComp.dwSchemeLength = 0;
 	urlComp.nScheme = INTERNET_SCHEME_HTTP;
@@ -1042,7 +1042,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = about;
 	urlComp.dwSchemeLength = 5;
 	urlComp.lpszUrlPath = blank;
@@ -1058,7 +1058,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = about;
 	urlComp.lpszHostName = host;
 	urlComp.lpszUrlPath = blank;
@@ -1073,7 +1073,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.nPort = 8080;
 	urlComp.lpszScheme = about;
 	len = strlen(CREATE_URL11);
@@ -1086,7 +1086,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = http;
 	urlComp.dwSchemeLength = 0;
 	urlComp.nScheme = INTERNET_SCHEME_HTTP;
@@ -1103,7 +1103,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
     memset(&urlComp, 0, sizeof(urlComp));
-    urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+    urlComp.dwStructSize = sizeof(urlComp);
     urlComp.lpszScheme = http;
     urlComp.dwSchemeLength = strlen(urlComp.lpszScheme);
     urlComp.lpszHostName = localhost;
