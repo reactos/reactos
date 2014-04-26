@@ -60,8 +60,8 @@ reactos/dll/win32/browseui            # Out of sync
 reactos/dll/win32/cabinet             # Synced to Wine-1.7.17
 reactos/dll/win32/clusapi             # Synced to Wine-1.7.1
 reactos/dll/win32/comcat              # Synced to Wine-1.7.1
-reactos/dll/win32/comctl32            # Synced to Wine 1.7.17
-reactos/dll/win32/comdlg32            # Synced to Wine 1.7.17
+reactos/dll/win32/comctl32            # Synced to Wine-1.7.17
+reactos/dll/win32/comdlg32            # Synced to Wine-1.7.17
 reactos/dll/win32/compstui            # Synced to Wine-1.7.1
 reactos/dll/win32/credui              # Synced to Wine-1.7.1
 reactos/dll/win32/crypt32             # Synced to Wine-1.7.17
@@ -290,9 +290,9 @@ User32 -
   reactos/dll/win32/user32/controls/scrollbar.c # Forked
   reactos/dll/win32/user32/controls/static.c    # Synced to Wine-1_1_39
 
-  reactos/dll/win32/user32/include/dde_private.h # Synced to wine 1.1.24
+  reactos/dll/win32/user32/include/dde_private.h # Synced to Wine-1.1.24
 
-  reactos/dll/win32/user32/misc/dde.c           # Synced to wine 1.1.24 (dde_misc.c)
+  reactos/dll/win32/user32/misc/dde.c           # Synced to Wine-1.1.24 (dde_misc.c)
   reactos/dll/win32/user32/misc/ddeclient.c     # Synced to Wine-1_1_23
   reactos/dll/win32/user32/misc/ddeserver.c     # Synced to Wine-1_1_23
   reactos/dll/win32/user32/misc/exticon.c       # Synced to Wine-1_1_22
@@ -300,7 +300,7 @@ User32 -
   reactos/dll/win32/user32/misc/winhelp.c       # Last sync date unknown
   reactos/dll/win32/user32/misc/wsprintf.c      # Synced to Wine-1_1_23
 
-  reactos/dll/win32/user32/windows/cursoricon   # Forked from wine 1.2-rc7
+  reactos/dll/win32/user32/windows/cursoricon   # Forked from Wine-1.2-rc7
   reactos/dll/win32/user32/windows/defwnd.c     # Forked
   reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
   reactos/dll/win32/user32/windows/mdi.c        # Synced to Wine-1_1_40
