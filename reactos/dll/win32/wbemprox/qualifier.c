@@ -234,12 +234,11 @@ static const IWbemQualifierSetVtbl qualifier_set_vtbl =
     qualifier_set_EndEnumeration
 };
 
-HRESULT WbemQualifierSet_create(
-    IUnknown *pUnkOuter, const WCHAR *class, const WCHAR *member, LPVOID *ppObj )
+HRESULT WbemQualifierSet_create( const WCHAR *class, const WCHAR *member, LPVOID *ppObj )
 {
     struct qualifier_set *set;
 
-    TRACE("%p, %p\n", pUnkOuter, ppObj);
+    TRACE("%p\n", ppObj);
 
     if (!(set = heap_alloc( sizeof(*set) ))) return E_OUTOFMEMORY;
 

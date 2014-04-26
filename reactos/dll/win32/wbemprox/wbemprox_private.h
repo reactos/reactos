@@ -78,7 +78,8 @@ enum operator
     OP_NE      = 8,
     OP_ISNULL  = 9,
     OP_NOTNULL = 10,
-    OP_LIKE    = 11
+    OP_LIKE    = 11,
+    OP_NOT     = 12
 };
 
 struct expr;
@@ -211,7 +212,7 @@ void free_row_values( const struct table *, UINT ) DECLSPEC_HIDDEN;
 void clear_table( struct table * ) DECLSPEC_HIDDEN;
 void free_table( struct table * ) DECLSPEC_HIDDEN;
 UINT get_type_size( CIMTYPE ) DECLSPEC_HIDDEN;
-HRESULT eval_cond( const struct table *, UINT, const struct expr *, LONGLONG * ) DECLSPEC_HIDDEN;
+HRESULT eval_cond( const struct table *, UINT, const struct expr *, LONGLONG *, UINT * ) DECLSPEC_HIDDEN;
 HRESULT get_column_index( const struct table *, const WCHAR *, UINT * ) DECLSPEC_HIDDEN;
 HRESULT get_value( const struct table *, UINT, UINT, LONGLONG * ) DECLSPEC_HIDDEN;
 BSTR get_value_bstr( const struct table *, UINT, UINT ) DECLSPEC_HIDDEN;
@@ -224,7 +225,7 @@ HRESULT to_longlong( VARIANT *, LONGLONG *, CIMTYPE * ) DECLSPEC_HIDDEN;
 SAFEARRAY *to_safearray( const struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
 VARTYPE to_vartype( CIMTYPE ) DECLSPEC_HIDDEN;
 void destroy_array( struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
-HRESULT get_properties( const struct view *, SAFEARRAY ** ) DECLSPEC_HIDDEN;
+HRESULT get_properties( const struct view *, LONG, SAFEARRAY ** ) DECLSPEC_HIDDEN;
 HRESULT get_object( const WCHAR *, IWbemClassObject ** ) DECLSPEC_HIDDEN;
 BSTR get_method_name( const WCHAR *, UINT ) DECLSPEC_HIDDEN;
 BSTR get_property_name( const WCHAR *, UINT ) DECLSPEC_HIDDEN;
@@ -232,12 +233,12 @@ void set_variant( VARTYPE, LONGLONG, void *, VARIANT * ) DECLSPEC_HIDDEN;
 HRESULT create_signature( const WCHAR *, const WCHAR *, enum param_direction,
                           IWbemClassObject ** ) DECLSPEC_HIDDEN;
 
-HRESULT WbemLocator_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT WbemServices_create(IUnknown *, const WCHAR *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT WbemLocator_create(LPVOID *) DECLSPEC_HIDDEN;
+HRESULT WbemServices_create(const WCHAR *, LPVOID *) DECLSPEC_HIDDEN;
 HRESULT create_class_object(const WCHAR *, IEnumWbemClassObject *, UINT,
                             struct record *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT EnumWbemClassObject_create(IUnknown *, struct query *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT WbemQualifierSet_create(IUnknown *, const WCHAR *, const WCHAR *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT EnumWbemClassObject_create(struct query *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT WbemQualifierSet_create(const WCHAR *, const WCHAR *, LPVOID *) DECLSPEC_HIDDEN;
 
 HRESULT process_get_owner(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 HRESULT reg_enum_key(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
