@@ -710,7 +710,7 @@ IopGetBasicInformationFile(IN PFILE_OBJECT FileObject,
     if (DeviceObject->DriverObject->FastIoDispatch != NULL &&
         DeviceObject->DriverObject->FastIoDispatch->FastIoQueryBasicInfo != NULL &&
         DeviceObject->DriverObject->FastIoDispatch->FastIoQueryBasicInfo(FileObject,
-                                                                         (FileObject->Flags & FO_SYNCHRONOUS_IO),
+                                                                         ((FileObject->Flags & FO_SYNCHRONOUS_IO) != 0),
                                                                          BasicInfo,
                                                                          &IoStatusBlock,
                                                                          DeviceObject))
@@ -2446,7 +2446,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
     PFILE_COMPLETION_INFORMATION CompletionInfo = FileInformation;
     PIO_COMPLETION_CONTEXT Context;
     PFILE_RENAME_INFORMATION RenameInfo;
-    HANDLE TargetHandle = INVALID_HANDLE_VALUE;
+    HANDLE TargetHandle = NULL;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
@@ -2744,6 +2744,11 @@ NtSetInformationFile(IN HANDLE FileHandle,
                 Status = IoCallDriver(DeviceObject, Irp);
             }
         }
+        else
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            Irp->IoStatus.Status = Status;
+        }
     }
     else
     {
@@ -2836,7 +2841,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
         if (!LocalEvent) IopUnlockFileObject(FileObject);
     }
 
-    if (TargetHandle != INVALID_HANDLE_VALUE)
+    if (TargetHandle != NULL)
     {
         ObCloseHandle(TargetHandle, KernelMode);
     }
