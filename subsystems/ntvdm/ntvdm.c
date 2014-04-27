@@ -25,7 +25,7 @@
  * Activate this line if you want to run NTVDM in standalone mode with:
  * ntvdm.exe <program>
  */
-#define STANDALONE
+// #define STANDALONE
 
 /* VARIABLES ******************************************************************/
 
@@ -34,6 +34,7 @@ static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
 static CONSOLE_CURSOR_INFO         OrgConsoleCursorInfo;
 static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
+static BOOLEAN AcceptCommands = TRUE;
 static HANDLE CommandThread = NULL;
 
 static HMENU hConsoleMenu  = NULL;
@@ -199,7 +200,17 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
         }
         case CTRL_LAST_CLOSE_EVENT:
         {
-            if (CommandThread) TerminateThread(CommandThread, 0);
+            if (!VdmRunning)
+            {
+                /* Exit immediately */
+                if (CommandThread) TerminateThread(CommandThread, 0);
+            }
+            else
+            {
+                /* Stop accepting new commands */
+                AcceptCommands = FALSE;
+            }
+
             break;
         }
         default:
@@ -390,7 +401,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 
     UNREFERENCED_PARAMETER(Parameter);
 
-    while (TRUE)
+    while (AcceptCommands)
     {
         /* Clear the structure */
         ZeroMemory(&CommandInfo, sizeof(CommandInfo));
@@ -435,9 +446,9 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 
 INT wmain(INT argc, WCHAR *argv[])
 {
-    DWORD Result;
-
 #ifdef STANDALONE
+
+    DWORD Result;
     CHAR ApplicationName[MAX_PATH];
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
 
