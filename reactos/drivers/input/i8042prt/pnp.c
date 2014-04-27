@@ -112,7 +112,7 @@ i8042BasicDetect(
         }
         else if (Value == KBD_RESEND)
         {
-            TRACE_(I8042PRT, "Resending...\n", Value);
+            TRACE_(I8042PRT, "Resending...\n");
             KeStallExecutionProcessor(50);
         }
         else
@@ -390,7 +390,7 @@ static NTSTATUS
 StartProcedure(
     IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     UCHAR FlagsToDisable = 0;
     UCHAR FlagsToEnable = 0;
     KIRQL Irql;
@@ -495,7 +495,7 @@ i8042PnpStartDevice(
     PFDO_DEVICE_EXTENSION DeviceExtension;
     PPORT_DEVICE_EXTENSION PortDeviceExtension;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor, ResourceDescriptorTranslated;
-    INTERRUPT_DATA InterruptData;
+    INTERRUPT_DATA InterruptData = { NULL };
     BOOLEAN FoundDataPort = FALSE;
     BOOLEAN FoundControlPort = FALSE;
     BOOLEAN FoundIrq = FALSE;
@@ -685,7 +685,9 @@ i8042Pnp(
                     PDEVICE_RELATIONS DeviceRelations;
 
                     TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-                    DeviceRelations = ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
+                    DeviceRelations = ExAllocatePoolWithTag(PagedPool,
+                                                            sizeof(DEVICE_RELATIONS),
+                                                            I8042PRT_TAG);
                     if (DeviceRelations)
                     {
                         DeviceRelations->Count = 0;

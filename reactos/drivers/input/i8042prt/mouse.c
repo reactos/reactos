@@ -18,6 +18,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static KDEFERRED_ROUTINE i8042MouDpcRoutine;
+
 /*
  * These functions are callbacks for filter driver custom interrupt
  * service routines.
@@ -269,7 +271,8 @@ i8042MouDpcRoutine(
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
 
-	DeviceExtension = (PI8042_MOUSE_EXTENSION)DeferredContext;
+	__analysis_assume(DeferredContext != NULL);
+	DeviceExtension = DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
 	switch (DeviceExtension->MouseTimeoutState)
@@ -343,6 +346,7 @@ i8042MouDpcRoutine(
  * I'll just send the 'disable mouse port' command to the controller
  * and say the mouse doesn't exist.
  */
+static KDEFERRED_ROUTINE i8042DpcRoutineMouseTimeout;
 static VOID NTAPI
 i8042DpcRoutineMouseTimeout(
 	IN PKDPC Dpc,
@@ -358,7 +362,8 @@ i8042DpcRoutineMouseTimeout(
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
 
-	DeviceExtension = (PI8042_MOUSE_EXTENSION)DeferredContext;
+	__analysis_assume(DeferredContext != NULL);
+	DeviceExtension = DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
 	Irql = KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
@@ -906,7 +911,8 @@ i8042MouInterruptService(
 
 	UNREFERENCED_PARAMETER(Interrupt);
 
-	DeviceExtension = (PI8042_MOUSE_EXTENSION)Context;
+	__analysis_assume(Context != NULL);
+	DeviceExtension = Context;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 	Counter = PortDeviceExtension->Settings.PollStatusIterations;
 

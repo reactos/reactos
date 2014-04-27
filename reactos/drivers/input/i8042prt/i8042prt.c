@@ -19,7 +19,9 @@
 
 static DRIVER_STARTIO i8042StartIo;
 static DRIVER_DISPATCH IrpStub;
+_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
 static DRIVER_DISPATCH i8042DeviceControl;
+_Dispatch_type_(IRP_MJ_INTERNAL_DEVICE_CONTROL)
 static DRIVER_DISPATCH i8042InternalDeviceControl;
 DRIVER_INITIALIZE DriverEntry;
 
