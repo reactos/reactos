@@ -205,7 +205,7 @@ static
 DWORD WINAPI
 ThreadFunc(LPVOID Context)
 {
-    IBindStatusCallback *dl;
+    IBindStatusCallback *dl = NULL;
     WCHAR path[MAX_PATH];
     LPWSTR p;
     HWND Dlg = (HWND) Context;
@@ -262,6 +262,7 @@ ThreadFunc(LPVOID Context)
     /* download it */
     bTempfile = TRUE;
     dl = CreateDl(Context, &bCancelled);
+    if (dl == NULL) goto end;
 
     hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hOpen) goto end;
@@ -282,9 +283,7 @@ ThreadFunc(LPVOID Context)
         IBindStatusCallback_OnProgress(dl, dwCurrentBytesRead, dwContentLen, 0, AppInfo->szUrlDownload);
     }
     while (dwBytesRead);
-    
-    CloseHandle(hOut);
-    if (dl) IBindStatusCallback_Release(dl);
+
     if (bCancelled) goto end;
 
     ShowWindow(Dlg, SW_HIDE);
@@ -298,6 +297,8 @@ end:
     CloseHandle(hOut);
     InternetCloseHandle(hFile);
     InternetCloseHandle(hOpen);
+
+    if (dl) IBindStatusCallback_Release(dl);
 
     if (bTempfile)
     {
