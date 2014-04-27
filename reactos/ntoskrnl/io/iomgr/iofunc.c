@@ -662,6 +662,9 @@ IopGetFileInformation(IN PFILE_OBJECT FileObject,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* Init event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
     /* Setup the IRP */
     Irp->UserIosb = &IoStatusBlock;
     Irp->UserEvent = &Event;
