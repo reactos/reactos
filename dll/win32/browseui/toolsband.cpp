@@ -246,11 +246,11 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
         fDockSite->Release();
     if (pUnkSite == NULL)
         return S_OK;
-    hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&fDockSite));
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fDockSite));
     if (FAILED(hResult))
         return hResult;
     parentWindow = NULL;
-    hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
     if (SUCCEEDED(hResult))
     {
         oleWindow->GetWindow(&parentWindow);

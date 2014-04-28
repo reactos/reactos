@@ -142,7 +142,7 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Invoke(IUnknown *punk)
     CComPtr<IStream>                        globalStream;
     HRESULT                                 hResult;
 
-    hResult = punk->QueryInterface(IID_IPersistHistory, reinterpret_cast<void **>(&persistHistory));
+    hResult = punk->QueryInterface(IID_PPV_ARG(IPersistHistory, &persistHistory));
     if (FAILED(hResult))
         return hResult;
     hResult = CreateStreamOnHGlobal(fPersistState, FALSE, &globalStream);
@@ -167,10 +167,10 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     fPIDL = NULL;
     GlobalFree(fPersistState);
     fPersistState = NULL;
-    hResult = punk->QueryInterface(IID_ITravelLogClient, reinterpret_cast<void **>(&travelLogClient));
+    hResult = punk->QueryInterface(IID_PPV_ARG(ITravelLogClient, &travelLogClient));
     if (FAILED(hResult))
         return hResult;
-    hResult = punk->QueryInterface(IID_IPersistHistory, reinterpret_cast<void **>(&persistHistory));
+    hResult = punk->QueryInterface(IID_PPV_ARG(IPersistHistory, &persistHistory));
     if (FAILED(hResult))
         return hResult;
     globalStorage = GlobalAlloc(GMEM_FIXED, 0);
@@ -364,7 +364,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
     if (FAILED(hResult))
         return hResult;
-    return destinationEntry->QueryInterface(IID_ITravelEntry, reinterpret_cast<void **>(ppte));
+    return destinationEntry->QueryInterface(IID_PPV_ARG(ITravelEntry, ppte));
 }
 
 HRESULT STDMETHODCALLTYPE CTravelLog::FindTravelEntry(IUnknown *punk, LPCITEMIDLIST pidl, ITravelEntry **ppte)

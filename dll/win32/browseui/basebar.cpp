@@ -179,7 +179,7 @@ HRESULT CBaseBar::ReserveBorderSpace()
     RECT                                    neededBorderSpace;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&dockingWindowSite));
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
     if (FAILED(hResult))
         return hResult;
     hResult = dockingWindowSite->GetBorderDW(static_cast<IDeskBar *>(this), &availableBorderSpace);
@@ -272,7 +272,7 @@ HRESULT STDMETHODCALLTYPE CBaseBar::QueryService(REFGUID guidService, REFIID rii
 
     if (fSite == NULL)
         return E_FAIL;
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
     if (FAILED(hResult))
         return hResult;
     // called for SID_STopLevelBrowser, IID_IBrowserService to find top level browser
@@ -309,10 +309,10 @@ HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)
         fClient.Release();
     else
     {
-        hResult = punkClient->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&fClient));
+        hResult = punkClient->QueryInterface(IID_PPV_ARG(IUnknown, &fClient));
         if (FAILED(hResult))
             return hResult;
-        hResult = fSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+        hResult = fSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
         if (FAILED(hResult))
             return hResult;
         hResult = oleWindow->GetWindow(&ownerWindow);
@@ -471,7 +471,7 @@ LRESULT CBaseBar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     result = 0;
     if (fClient.p != NULL)
     {
-        hResult = fClient->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
+        hResult = fClient->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
         if (SUCCEEDED(hResult) && winEventHandler.p != NULL)
             hResult = winEventHandler->OnWinEvent(NULL, uMsg, wParam, lParam, &result);
     }

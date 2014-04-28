@@ -170,19 +170,19 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
     DWORD                                   thisBandID;
     HRESULT                                 hResult;
 
-    hResult = newBar->QueryInterface(IID_IPersist, reinterpret_cast<void **>(&persist));
+    hResult = newBar->QueryInterface(IID_PPV_ARG(IPersist, &persist));
     if (FAILED(hResult))
         return hResult;
-    hResult = newBar->QueryInterface(IID_IObjectWithSite, reinterpret_cast<void **>(&site));
+    hResult = newBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &site));
     if (FAILED(hResult))
         return hResult;
-    hResult = newBar->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+    hResult = newBar->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
     if (FAILED(hResult))
         return hResult;
-    hResult = newBar->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(&deskBand));
+    hResult = newBar->QueryInterface(IID_PPV_ARG(IDeskBand, &deskBand));
     if (FAILED(hResult))
         return hResult;
-    hResult = newBar->QueryInterface(IID_IDockingWindow, reinterpret_cast<void **>(&dockingWindow));
+    hResult = newBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
     if (FAILED(hResult))
         return hResult;
     hResult = site->SetSite(static_cast<IOleWindow *>(this));
@@ -266,7 +266,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryService(REFGUID guidService, REFIID
 
     if (fDeskBarSite == NULL)
         return E_FAIL;
-    hResult = fDeskBarSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+    hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
     if (FAILED(hResult))
         return hResult;
     // called for SID_STopLevelBrowser, IID_IBrowserService to find top level browser
@@ -290,7 +290,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
         notifyHeader = (NMHDR *)lParam;
         if (notifyHeader->hwndFrom == m_hWnd && notifyHeader->code == RBN_AUTOSIZE)
         {
-            hResult = fDeskBarSite->QueryInterface(IID_IDeskBar, reinterpret_cast<void **>(&deskBar));
+            hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
             GetClientRect(&newBounds);
             hResult = deskBar->OnPosRectChangeDB(&newBounds);
         }
@@ -298,7 +298,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
     if (fCurrentActiveBar != NULL)
     {
         hResult = fCurrentActiveBar->fTheBar->QueryInterface(
-            IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
+            IID_PPV_ARG(IWinEventHandler, &winEventHandler));
         if (SUCCEEDED(hResult) && winEventHandler.p != NULL)
             hResult = winEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
     }
@@ -325,10 +325,10 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
         fDeskBarSite.Release();
     else
     {
-        hResult = punkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+        hResult = punkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
         if (FAILED(hResult))
             return hResult;
-        hResult = punkSite->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&fDeskBarSite));
+        hResult = punkSite->QueryInterface(IID_PPV_ARG(IUnknown, &fDeskBarSite));
         if (FAILED(hResult))
             return hResult;
         hResult = oleWindow->GetWindow(&ownerWindow);

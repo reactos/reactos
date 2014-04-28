@@ -100,8 +100,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     CComPtr<IShellService>                  shellService;
     CComPtr<IUnknown>                       offset34;
     HWND                                    parentWindow;
-    IOleWindow                              *oleWindow;
-    HWND                                    toolbar;
+    HWND                                    combobox;
     static const TBBUTTON                   buttonInfo[] = { {0, 1, TBSTATE_ENABLED, 0} };
     HIMAGELIST                              normalImagelist;
     HIMAGELIST                              hotImageList;
@@ -112,28 +111,24 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     if (pUnkSite == NULL)
         return S_OK;
 
-    hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&fSite));
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fSite));
     if (FAILED(hResult))
         return hResult;
 
     // get window handle of parent
     parentWindow = NULL;
-    hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-    if (SUCCEEDED(hResult))
-    {
-        oleWindow->GetWindow(&parentWindow);
-        oleWindow->Release();
-    }
+    hResult = IUnknown_GetWindow(pUnkSite, &parentWindow);
+
     if (!::IsWindow(parentWindow))
         return E_FAIL;
 
     // create combo box ex
-    toolbar = CreateWindowEx(WS_EX_TOOLWINDOW, WC_COMBOBOXEXW, NULL, WS_CHILD | WS_VISIBLE |
+    combobox = CreateWindowEx(WS_EX_TOOLWINDOW, WC_COMBOBOXEXW, NULL, WS_CHILD | WS_VISIBLE |
                     WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY,
                     0, 0, 500, 250, parentWindow, (HMENU)0xa205, _AtlBaseModule.GetModuleInstance(), 0);
-    if (toolbar == NULL)
+    if (combobox == NULL)
         return E_FAIL;
-    SubclassWindow(toolbar);
+    SubclassWindow(combobox);
 
     SendMessage(CBEM_SETEXTENDEDSTYLE,
         CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT, CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT);
@@ -142,17 +137,17 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     fComboBox = reinterpret_cast<HWND>(SendMessage(CBEM_GETCOMBOCONTROL, 0, 0));
 #if 1
     hResult = CoCreateInstance(CLSID_AddressEditBox, NULL, CLSCTX_INPROC_SERVER,
-        IID_IAddressEditBox, reinterpret_cast<void **>(&fAddressEditBox));
+        IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
     if (FAILED(hResult))
         return hResult;
 #else
     // instantiate new version
 #endif
 
-    hResult = fAddressEditBox->QueryInterface(IID_IShellService, reinterpret_cast<void **>(&shellService));
+    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &shellService));
     if (FAILED(hResult))
         return hResult;
-    hResult = fAddressEditBox->Init(toolbar, fEditControl, 8, pUnkSite /*(IAddressBand *)this*/ );
+    hResult = fAddressEditBox->Init(combobox, fEditControl, 8, pUnkSite /*(IAddressBand *)this*/);
     if (FAILED(hResult))
         return hResult;
     hResult = shellService->SetOwner(pUnkSite);
@@ -239,7 +234,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::QueryStatus(
     CComPtr<IOleCommandTarget>              oleCommandTarget;
     HRESULT                                 hResult;
 
-    hResult = fAddressEditBox->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&oleCommandTarget));
+    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
     if (FAILED(hResult))
         return hResult;
     return oleCommandTarget->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
@@ -272,7 +267,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg
 
     if (fActivate)
     {
-        hResult = fSite->QueryInterface(IID_IInputObjectSite, reinterpret_cast<void **>(&inputObjectSite));
+        hResult = fSite->QueryInterface(IID_PPV_ARG(IInputObjectSite, &inputObjectSite));
         if (FAILED(hResult))
             return hResult;
         hResult = inputObjectSite->OnFocusChangeIS(static_cast<IDeskBand *>(this), fActivate);
@@ -300,7 +295,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
             }
             break;
     }
-    hResult = fAddressEditBox->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
+    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
     if (FAILED(hResult))
         return hResult;
     return winEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
@@ -313,7 +308,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::IsWindowOwner(HWND hWnd)
 
     if (fAddressEditBox)
     {
-        hResult = fAddressEditBox->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
+        hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
         if (FAILED(hResult))
             return hResult;
         return winEventHandler->IsWindowOwner(hWnd);
@@ -326,7 +321,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::FileSysChange(long param8, long paramC)
     CComPtr<IAddressBand>                   addressBand;
     HRESULT                                 hResult;
 
-    hResult = fAddressEditBox->QueryInterface(IID_IAddressBand, reinterpret_cast<void **>(&addressBand));
+    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IAddressBand, &addressBand));
     if (FAILED(hResult))
         return hResult;
     return addressBand->FileSysChange(param8, paramC);
@@ -337,7 +332,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Refresh(long param8)
     CComPtr<IAddressBand>                   addressBand;
     HRESULT                                 hResult;
 
-    hResult = fAddressEditBox->QueryInterface(IID_IAddressBand, reinterpret_cast<void **>(&addressBand));
+    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IAddressBand, &addressBand));
     if (FAILED(hResult))
         return hResult;
     return addressBand->Refresh(param8);

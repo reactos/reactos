@@ -43,7 +43,7 @@ HRESULT CBandProxy::FindBrowserWindow(IUnknown **browser)
 
     if (browser == NULL)
         return E_POINTER;
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
     if (FAILED(hResult))
         return hResult;
     hResult = serviceProvider->QueryService(
@@ -98,15 +98,15 @@ HRESULT STDMETHODCALLTYPE CBandProxy::NavigateToPIDL(LPCITEMIDLIST pidl)
     hResult = FindBrowserWindow(&webBrowserUnknown);
     if (FAILED(hResult))
         return hResult;
-    hResult = webBrowserUnknown->QueryInterface(IID_IWebBrowserApp, reinterpret_cast<void **>(&webBrowser));
+    hResult = webBrowserUnknown->QueryInterface(IID_PPV_ARG(IWebBrowser2, &webBrowser));
     if (FAILED(hResult))
         return hResult;
     hResult = webBrowser->put_Visible(TRUE);
-    hResult = webBrowser->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+    hResult = webBrowser->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
     if (SUCCEEDED(hResult))
     {
         hResult = serviceProvider->QueryService(SID_STopLevelBrowser,
-            IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+            IID_PPV_ARG(IOleWindow, &oleWindow));
         if (SUCCEEDED(hResult))
         {
             hResult = oleWindow->GetWindow(&browserWindow);
