@@ -261,18 +261,11 @@ GetEventCategory(IN LPCWSTR KeyName,
                               EVENT_MESSAGE_FILE_BUFFER,
                               NULL) != 0)
             {
-                if (lpMsgBuf)
-                {
-                    /* Trim the string */
-                    TrimNulls((LPWSTR)lpMsgBuf);
+                /* Trim the string */
+                TrimNulls(lpMsgBuf);
 
-                    /* Copy the category name */
-                    wcscpy(CategoryName, (LPCWSTR)lpMsgBuf);
-                }
-                else
-                {
-                    wcscpy(CategoryName, (LPCWSTR)lpMsgBuf);
-                }
+                /* Copy the category name */
+                wcscpy(CategoryName, lpMsgBuf);
             }
             else
             {
@@ -1118,14 +1111,14 @@ DisplayEvent(HWND hDlg)
 
     if (iIndex != -1)
     {
-        ListView_GetItemText(hwndListView, iIndex, 0, szEventType, sizeof(szEventType) * sizeof(WCHAR));
-        ListView_GetItemText(hwndListView, iIndex, 1, szDate, sizeof(szDate) * sizeof(WCHAR));
-        ListView_GetItemText(hwndListView, iIndex, 2, szTime, sizeof(szTime) * sizeof(WCHAR));
-        ListView_GetItemText(hwndListView, iIndex, 3, szSource, sizeof(szSource) * sizeof(WCHAR));
-        ListView_GetItemText(hwndListView, iIndex, 4, szCategory, sizeof(szCategory) * sizeof(WCHAR));
-        ListView_GetItemText(hwndListView, iIndex, 5, szEventID, sizeof(szEventID) * sizeof(WCHAR));
-        ListView_GetItemText(hwndListView, iIndex, 6, szUser, sizeof(szUser) * sizeof(WCHAR));
-        ListView_GetItemText(hwndListView, iIndex, 7, szComputer, sizeof(szComputer) * sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 0, szEventType, sizeof(szEventType) / sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 1, szDate, sizeof(szDate) / sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 2, szTime, sizeof(szTime) / sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 3, szSource, sizeof(szSource) / sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 4, szCategory, sizeof(szCategory) / sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 5, szEventID, sizeof(szEventID) / sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 6, szUser, sizeof(szUser) / sizeof(WCHAR));
+        ListView_GetItemText(hwndListView, iIndex, 7, szComputer, sizeof(szComputer) / sizeof(WCHAR));
 
         bEventData = !(pevlr->DataLength == 0);
 
