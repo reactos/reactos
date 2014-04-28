@@ -850,18 +850,20 @@ CSR_API(BaseSrvGetNextVDMCommand)
         GetNextVdmCommandRequest->iTask = ConsoleRecord->SessionId;
         GetNextVdmCommandRequest->WaitObjectForVDM = NULL;
 
-        // HACK: I'm not sure if this should happen...
-        for (i = ConsoleRecord->DosListHead.Flink; i != &ConsoleRecord->DosListHead; i = i->Flink)
+        if (!(GetNextVdmCommandRequest->VDMState & VDM_NOT_READY))
         {
-            DosRecord = CONTAINING_RECORD(i, VDM_DOS_RECORD, Entry);
-            if (DosRecord->State == VDM_NOT_READY)
+            for (i = ConsoleRecord->DosListHead.Flink; i != &ConsoleRecord->DosListHead; i = i->Flink)
             {
-                /* If NTVDM is asking for a new command, it means these are done */
-                DosRecord->State = VDM_READY; 
+                DosRecord = CONTAINING_RECORD(i, VDM_DOS_RECORD, Entry);
+                if (DosRecord->State == VDM_NOT_READY)
+                {
+                    /* If NTVDM is asking for a new command, it means these are done */
+                    DosRecord->State = VDM_READY; 
 
-                NtSetEvent(DosRecord->ServerEvent, NULL);
-                NtClose(DosRecord->ServerEvent);
-                DosRecord->ServerEvent = NULL;
+                    NtSetEvent(DosRecord->ServerEvent, NULL);
+                    NtClose(DosRecord->ServerEvent);
+                    DosRecord->ServerEvent = NULL;
+                }
             }
         }
 
