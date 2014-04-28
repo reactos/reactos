@@ -3632,7 +3632,10 @@ START_TEST(menu)
         test_menu_search_bycommand();
         test_CheckMenuRadioItem();
         test_menu_resource_layout();
-        //test_InsertMenu(); //// need more time...
+        if(!winetest_interactive)
+           skip("WIP turn off test for now.\n");
+        else
+        test_InsertMenu(); //// need more time...
         test_menualign();
     }
 
