@@ -146,7 +146,7 @@ HRESULT WINAPI SHCoCreateInstance(
             FreeLibrary( hLibrary );
         hres = E_ACCESSDENIED;
             goto end;
-        } else if (! SUCCEEDED(hres = DllGetClassObject(*myclsid, IID_IClassFactory, (LPVOID*)&pcf))) {
+        } else if (! SUCCEEDED(hres = DllGetClassObject(*myclsid, IID_PPV_ARG(IClassFactory, &pcf)))) {
             TRACE("GetClassObject failed 0x%08x\n", hres);
             goto end;
         }

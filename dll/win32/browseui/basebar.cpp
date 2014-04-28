@@ -430,21 +430,6 @@ HRESULT STDMETHODCALLTYPE CBaseBar::Save(IPropertyBag *pPropBag, BOOL fClearDirt
 
 LRESULT CBaseBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-/*    CComPtr<IOleWindow>                       oleWindow;
-    RECT                                    clientRect;
-    HRESULT                                 hResult;
-
-    if (fClientWindow == NULL && fClient.p != NULL)
-    {
-        hResult = fClient->QueryInterface(IID_IOleWindow, (void **)&oleWindow);
-        hResult = oleWindow->GetWindow(&fClientWindow);
-    }
-    if (fClientWindow != NULL)
-    {
-        GetClientRect(&clientRect);
-        ::SetWindowPos(fClientWindow, NULL, clientRect.left, clientRect.top, clientRect.right - clientRect.left - GetSystemMetrics(SM_CXFRAME),
-                    clientRect.bottom - clientRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
-    }*/
     return 0;
 }
 

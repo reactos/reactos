@@ -622,7 +622,9 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLI
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl == 1))
     {
-        hr = this->QueryInterface(IID_IDropTarget, (LPVOID *) & pObj);
+        IDropTarget * pDt = NULL;
+        hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
+        pObj = pDt;
     }
     else
         hr = E_NOINTERFACE;
@@ -1531,7 +1533,7 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
     }
     else 
     {
-        hr = psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom);
+        hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom));
         if (FAILED(hr))
         {
             ERR("no IShellFolder\n");

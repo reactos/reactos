@@ -651,9 +651,12 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     else if (IsEqualIID (riid, IID_IDropTarget))
     {
         /* only interested in attempting to bind to shell folders, not files, semicolon intentionate */
-        if (cidl == 1 && SUCCEEDED(hr = this->_GetDropTarget(apidl[0], (LPVOID*)&pObj)));
-        else
-            hr = this->QueryInterface(IID_IDropTarget, (LPVOID*)&pObj);
+        if (cidl != 1 || FAILED(hr = this->_GetDropTarget(apidl[0], (LPVOID*) &pObj)))
+        {
+            IDropTarget * pDt = NULL;
+            hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
+            pObj = pDt;
+        }
     }
     else if ((IsEqualIID(riid, IID_IShellLinkW) ||
               IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
@@ -1474,7 +1477,7 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
         if (SUCCEEDED(hr))
         {
             IDropTarget *pDT;
-            hr = this->BindToObject(pidl, NULL, IID_IDropTarget, (LPVOID*)&pDT);
+            hr = this->BindToObject(pidl, NULL, IID_PPV_ARG(IDropTarget, &pDT));
             CoTaskMemFree(pidl);
             if (SUCCEEDED(hr))
                 SHSimulateDrop(pDT, pDataObject, dwKeyState, NULL, pdwEffect);
@@ -1515,7 +1518,7 @@ HRESULT WINAPI CDesktopFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut
             if (SUCCEEDED(hr))
             {
                 IShellFolder *psf;
-                hr = this->BindToObject(pidlNext, NULL, IID_IShellFolder, (LPVOID*)&psf);
+                hr = this->BindToObject(pidlNext, NULL, IID_PPV_ARG(IShellFolder, &psf));
                 CoTaskMemFree(pidlNext);
                 if (SUCCEEDED(hr))
                 {

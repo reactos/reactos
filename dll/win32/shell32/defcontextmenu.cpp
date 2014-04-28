@@ -1185,7 +1185,7 @@ CDefaultContextMenu::DoCopyOrCut(
         return hr;
     }
 
-    hr = lpSV->GetItemObject(SVGIO_SELECTION, IID_IDataObject, (LPVOID*)&pDataObj);
+    hr = lpSV->GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IDataObject, &pDataObj));
     if (SUCCEEDED(hr))
     {
         hr = OleSetClipboard(pDataObj);

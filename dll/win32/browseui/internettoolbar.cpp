@@ -621,8 +621,7 @@ HRESULT CInternetToolbar::CreateBrandBand(IUnknown **logoBar)
 #if 1
     hResult = ::CreateBrandBand(IID_PPV_ARG(IUnknown, logoBar));
 #else
-    hResult = CoCreateInstance(CLSID_BrandBand, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown,
-        reinterpret_cast<void **>(logoBar));
+    hResult = CoCreateInstance(CLSID_BrandBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, logoBar));
 #endif
     if (FAILED(hResult))
         return hResult;
@@ -647,8 +646,7 @@ HRESULT CInternetToolbar::CreateAddressBand(IUnknown **toolsBar)
 #if 1
     hResult = ::CreateAddressBand(IID_PPV_ARG(IUnknown, toolsBar));
 #else
-    hResult = CoCreateInstance(CLSID_SH_AddressBand, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown,
-        reinterpret_cast<void **>(toolsBar));
+    hResult = CoCreateInstance(CLSID_SH_AddressBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, toolsBar));
 #endif
     if (FAILED(hResult))
         return hResult;
@@ -1403,8 +1401,7 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
         case gForwardCommandID:
             newMenu = CreatePopupMenu();
             hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-            hResult = serviceProvider->QueryService(SID_SShellBrowser, IID_IBrowserService,
-                reinterpret_cast<void **>(&browserService));
+            hResult = serviceProvider->QueryService(SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
             hResult = browserService->GetTravelLog(&travelLog);
             hResult = travelLog->InsertMenuEntries(browserService, newMenu, 0, 1, 9, TLMENUF_FORE);
             hResult = browserService->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &commandTarget));

@@ -474,11 +474,16 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
     {
         *ppvOut = NULL;
 
-        if (IsEqualIID (riid, IID_IContextMenu) && (cidl >= 1))
-            hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
+        if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1))
+        {
+            IContextMenu  * pCm = NULL;
+            hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, 0, NULL, &pCm);
+            pObj = pCm;
+        }
         else if (IsEqualIID (riid, IID_IDataObject))
         {
-            if (cidl >= 1) {
+            if (cidl >= 1) 
+            {
                 hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
             }
             else
@@ -503,9 +508,12 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         else if (IsEqualIID (riid, IID_IDropTarget))
         {
             /* only interested in attempting to bind to shell folders, not files (except exe), so if we fail, rebind to root */
-            if (cidl == 1 && SUCCEEDED(hr = this->_GetDropTarget(apidl[0], (LPVOID*)&pObj)));
-            else
-                hr = this->QueryInterface(IID_IDropTarget, (LPVOID*)&pObj);
+            if (cidl != 1 || FAILED(hr = this->_GetDropTarget(apidl[0], (LPVOID*) &pObj)))
+            {
+                IDropTarget * pDt = NULL;
+                hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
+                pObj = pDt;
+            }
         }
         else if ((IsEqualIID(riid, IID_IShellLinkW) ||
             IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
@@ -1529,7 +1537,7 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
         }
         else 
         {
-            hr = psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom);
+            hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom));
             if (FAILED(hr))
             {
                 ERR("no IShellFolder\n");
@@ -1549,7 +1557,7 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
             WCHAR wszPath[MAX_PATH];
             WCHAR wszTarget[MAX_PATH];
 
-            hr = this->QueryInterface(IID_IPersistFolder2, (LPVOID *) &ppf2);
+            hr = this->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
             if (SUCCEEDED(hr))
             {
                 hr = ppf2->GetCurFolder(&targetpidl);
@@ -1691,7 +1699,7 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
                 return E_FAIL;
             }
 
-            hr = this->QueryInterface(IID_IPersistFolder2, (LPVOID *) &ppf2);
+            hr = this->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
             if (SUCCEEDED(hr))
             {
                 hr = ppf2->GetCurFolder(&targetpidl);

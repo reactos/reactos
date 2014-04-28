@@ -119,7 +119,7 @@ void InitIconOverlays(void)
             {
 
                 CLSIDFromString(szValue, &clsid);
-                dwResult = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID*)&Overlay);
+                dwResult = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellIconOverlayIdentifier, &Overlay));
                 if (dwResult == S_OK)
                 {
                     Handlers[NumIconOverlayHandlers] = Overlay;

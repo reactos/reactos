@@ -244,11 +244,15 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIS
 
     if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1))
     {
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
+        IContextMenu  * pCm = NULL;
+        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, 0, NULL, &pCm);
+        pObj = pCm;
     }
     else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1))
     {
-        hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+        IDataObject * pDo = NULL;
+        hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, &pDo);
+        pObj = pDo;
     }
     else if (IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1))
     {
@@ -266,7 +270,9 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIS
     }
     else if (IsEqualIID(riid, IID_IDropTarget) && (cidl >= 1))
     {
-        hr = this->QueryInterface(IID_IDropTarget, (LPVOID *) & pObj);
+        IDropTarget * pDt = NULL;
+        hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
+        pObj = pDt;
     }
     else
         hr = E_NOINTERFACE;

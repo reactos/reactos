@@ -422,7 +422,9 @@ HRESULT WINAPI CFontsFolder::GetUIObjectOf(
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {
-        hr = this->QueryInterface(IID_IDropTarget, (LPVOID *) & pObj);
+        IDropTarget * pDt = NULL;
+        hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
+        pObj = pDt;
     }
     else
         hr = E_NOINTERFACE;

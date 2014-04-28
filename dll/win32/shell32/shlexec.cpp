@@ -1252,7 +1252,7 @@ static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
 
     TRACE("%p %p\n", obj, sei);
 
-    r = obj->QueryInterface(IID_IContextMenu, (LPVOID*) &cm);
+    r = obj->QueryInterface(IID_PPV_ARG(IContextMenu, &cm));
     if (FAILED(r))
         return r;
 
@@ -1342,7 +1342,7 @@ static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECU
     if (FAILED(r))
         goto end;
 
-    r = obj->QueryInterface(IID_IObjectWithSite, (LPVOID*) &ows);
+    r = obj->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ows));
     if (FAILED(r))
         goto end;
 

@@ -283,16 +283,16 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
     if (punk == NULL || fRebarWindow == NULL)
         return E_FAIL;
 
-    hRet = punk->QueryInterface(IID_IDeskBand, reinterpret_cast<PVOID *>(&DeskBand));
+    hRet = punk->QueryInterface(IID_PPV_ARG(IDeskBand, &DeskBand));
     if (!SUCCEEDED(hRet) || DeskBand == NULL)
         goto Cleanup;
-    hRet = punk->QueryInterface(IID_IObjectWithSite, reinterpret_cast<PVOID *>(&ObjWithSite));
+    hRet = punk->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ObjWithSite));
     if (!SUCCEEDED(hRet) || ObjWithSite == NULL)
         goto Cleanup;
-    hRet = punk->QueryInterface(IID_IOleWindow, reinterpret_cast<PVOID *>(&OleWindow));
+    hRet = punk->QueryInterface(IID_PPV_ARG(IOleWindow, &OleWindow));
     if (!SUCCEEDED(hRet) || OleWindow == NULL)
         goto Cleanup;
-    hRet = punk->QueryInterface(IID_IWinEventHandler, reinterpret_cast<PVOID *>(&WndEvtHandler));
+    hRet = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &WndEvtHandler));
     if (!SUCCEEDED(hRet) || WndEvtHandler == NULL)
         goto Cleanup;
 
@@ -627,7 +627,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetDeskBarSite(IUnknown *pUnk)
 
     fOleWindow.Release();
 
-    hRet = pUnk->QueryInterface(IID_IOleWindow, (PVOID *)&fOleWindow);
+    hRet = pUnk->QueryInterface(IID_PPV_ARG(IOleWindow, &fOleWindow));
     if (FAILED(hRet))
         return E_FAIL;
 

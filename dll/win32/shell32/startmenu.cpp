@@ -117,7 +117,7 @@ HRESULT STDMETHODCALLTYPE CStartMenu::Initialize()
     if (pBandSiteObj == NULL)
         return E_OUTOFMEMORY;
 
-    hr = pBandSiteObj->QueryInterface(IID_IBandSite, (VOID**)&m_pBandSite);
+    hr = pBandSiteObj->QueryInterface(IID_PPV_ARG(IBandSite, &m_pBandSite));
     if (FAILED(hr))
         return NULL;
 

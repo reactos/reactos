@@ -743,11 +743,11 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
         return E_FAIL;
 
 #if 0
-    hResult = CoCreateInstance(CLSID_InternetToolbar, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void **)&fClientBars[BIInternetToolbar].clientBar);
+    hResult = CoCreateInstance(CLSID_InternetToolbar, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &fClientBars[BIInternetToolbar].clientBar));
     if (FAILED(hResult))
         return hResult;
 #else
-    hResult = CreateInternetToolbar(IID_IUnknown, (void **)&fClientBars[BIInternetToolbar].clientBar);
+    hResult = CreateInternetToolbar(IID_PPV_ARG(IUnknown, &fClientBars[BIInternetToolbar].clientBar));
     if (FAILED(hResult))
         return hResult;
 #endif
@@ -903,8 +903,7 @@ HRESULT IEGetNameAndFlagsEx(LPITEMIDLIST pidl, SHGDNF uFlags, long param10,
     STRRET                                  L108;
     HRESULT                                 hResult;
 
-    hResult = SHBindToFolderIDListParent(NULL, pidl, &IID_IShellFolder,
-        reinterpret_cast<void **>(&parentFolder), &childPIDL);
+    hResult = SHBindToFolderIDListParent(NULL, pidl, &IID_PPV_ARG(IShellFolder, &parentFolder), &childPIDL);
     hResult = parentFolder->GetDisplayNameOf(childPIDL, uFlags, &L108);
     StrRetToBufW(&L108, childPIDL, pszBuf, cchBuf);
     if (rgfInOut)
@@ -1137,8 +1136,7 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     hResult = GetBaseBar(vertical, (IUnknown **)&theBaseBar);
     if (FAILED(hResult))
         return hResult;
-    hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown,
-        reinterpret_cast<void **>(&newBand));
+    hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &newBand));
     if (FAILED(hResult))
         return hResult;
     hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
@@ -1218,7 +1216,7 @@ HRESULT CShellBrowser::DoFolderOptions()
     m_PropSheet.phpage = m_psp;
 
 #if 0
-    hResult = CoCreateInstance(CLSID_GlobalFolderSettings, NULL, CLSCTX_INPROC_SERVER, IID_IGlobalFolderSettings, (void **)&globalSettings);
+    hResult = CoCreateInstance(CLSID_GlobalFolderSettings, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IGlobalFolderSettings, &globalSettings));
     if (FAILED(hResult))
         return E_FAIL;
     hResult = globalSettings->Get(&shellState, sizeof(shellState));
@@ -1601,8 +1599,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
     {
         if (fCurrentShellView.p != NULL)
         {
-            hResult = fCurrentShellView->QueryInterface(IID_IOleCommandTarget,
-                reinterpret_cast<void **>(&commandTarget));
+            hResult = fCurrentShellView->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &commandTarget));
             if (SUCCEEDED(hResult) && commandTarget.p != NULL)
                 return commandTarget->QueryStatus(NULL, 1, prgCmds, pCmdText);
         }

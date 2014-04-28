@@ -47,7 +47,7 @@ HRESULT CBandProxy::FindBrowserWindow(IUnknown **browser)
     if (FAILED(hResult))
         return hResult;
     hResult = serviceProvider->QueryService(
-        SID_IWebBrowserApp, IID_IWebBrowser2, reinterpret_cast<void **>(&webBrowser));
+        SID_IWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &webBrowser));
     if (FAILED(hResult))
         return hResult;
     *browser = webBrowser.Detach();
