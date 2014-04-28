@@ -617,7 +617,7 @@ VfatCreateFile(
             /* VfatOpenFile() doesn't like our name ends with \, so chomp it if there's one */
             if (RelatedFileObject->FileName.Buffer[RelatedFileObject->FileName.Length / sizeof(WCHAR) - 1] == L'\\')
             {
-                Chomp = FALSE;
+                Chomp = TRUE;
                 RelatedFileObject->FileName.Length -= sizeof(WCHAR);
             }
 
