@@ -156,7 +156,7 @@ ConSrvOpenUserSettings(DWORD ProcessId,
     TranslateConsoleName(szBuffer2, ConsoleTitle, MAX_PATH);
 
     /* Create the registry path */
-    wcsncat(szBuffer, szBuffer2, MAX_PATH);
+    wcsncat(szBuffer, szBuffer2, MAX_PATH - wcslen(szBuffer) - 1);
 
     /* Create or open the registry key */
     if (bCreate)
