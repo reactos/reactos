@@ -605,15 +605,18 @@ CsrCreateProcess(IN HANDLE hProcess,
     }
 
     /* Check if CreateProcess got CREATE_NEW_PROCESS_GROUP */
-    if ((Flags & CsrProcessCreateNewGroup) == 0)
+    if (Flags & CsrProcessCreateNewGroup)
     {
-        /* Create new data */
+        /*
+         * We create the process group leader of a new process group, therefore
+         * its process group ID and sequence number are its own ones.
+         */
         CsrProcess->ProcessGroupId = HandleToUlong(ClientId->UniqueProcess);
         CsrProcess->ProcessGroupSequence = CsrProcess->SequenceNumber;
     }
     else
     {
-        /* Copy it from the current process */
+        /* Inherit the process group ID and sequence number from the current process */
         CsrProcess->ProcessGroupId = CurrentProcess->ProcessGroupId;
         CsrProcess->ProcessGroupSequence = CurrentProcess->ProcessGroupSequence;
     }
