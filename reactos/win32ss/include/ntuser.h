@@ -3390,21 +3390,6 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 #define HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT 0x1005
 
-DWORD
-NTAPI
-NtUserBuildMenuItemList(
- HMENU hMenu,
- PVOID Buffer,
- ULONG nBufSize,
- DWORD Reserved);
-
-UINT
-NTAPI
-NtUserGetMenuDefaultItem(
-  HMENU hMenu,
-  UINT fByPos,
-  UINT gmdiFlags);
-
 BOOL
 NTAPI
 NtUserGetMonitorInfo(
@@ -3443,14 +3428,6 @@ typedef struct tagROSMENUINFO
     BOOL TimeToHide;    /* Request hiding when receiving a second click in the top-level menu item */
 } ROSMENUINFO, *PROSMENUINFO;
 
-BOOL
-NTAPI
-NtUserMenuInfo(
- HMENU hmenu,
- PROSMENUINFO lpmi,
- BOOL fsog
-);
-
 typedef struct tagROSMENUITEMINFO
 {
     /* ----------- MENUITEMINFOW ----------- */
@@ -3472,16 +3449,6 @@ typedef struct tagROSMENUITEMINFO
     LPWSTR lpstr;    /* Copy of the text pointer in MenuItem->Text */
     SIZE maxBmpSize;   /* Maximum size of the bitmap items in MIIM_BITMAP state */
 } ROSMENUITEMINFO, *PROSMENUITEMINFO;
-
-BOOL
-NTAPI
-NtUserMenuItemInfo(
- HMENU hMenu,
- UINT uItem,
- BOOL fByPosition,
- PROSMENUITEMINFO lpmii,
- BOOL fsog
-);
 
 HMONITOR
 NTAPI

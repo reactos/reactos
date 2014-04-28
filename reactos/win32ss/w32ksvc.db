@@ -681,11 +681,7 @@ NtGdiGetFontFamilyInfo                  4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
 #
-NtUserBuildMenuItemList                 4
-NtUserGetMenuDefaultItem                3
 NtUserGetMonitorInfo                    2
-NtUserMenuInfo                          3
-NtUserMenuItemInfo                      5
 NtUserMonitorFromPoint                  3
 NtUserMonitorFromRect                   2
 NtUserMonitorFromWindow                 2
