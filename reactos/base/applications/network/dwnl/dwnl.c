@@ -225,7 +225,7 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
                 if (This->szMimeType[0] != _T('\0'))
                     _tprintf(_T("Length: %I64u [%s]\n"), This->Size, This->szMimeType);
                 else
-                    _tprintf(_T("Length: %ull\n"), This->Size);
+                    _tprintf(_T("Length: %I64u\n"), This->Size);
             }
 
             _tprintf(_T("\n"));
