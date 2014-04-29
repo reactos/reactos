@@ -1662,9 +1662,6 @@ static void test_dllredirect_section(void)
 
 static void test_typelib_section(void)
 {
-    skip("test_typelib_section\n");
-    return;
-
     static const WCHAR helpW[] = {'h','e','l','p'};
     ACTCTX_SECTION_KEYED_DATA data, data2;
     struct guidsection_header *section;
@@ -1672,6 +1669,9 @@ static void test_typelib_section(void)
     ULONG_PTR cookie;
     HANDLE handle;
     BOOL ret;
+
+    skip("test_typelib_section\n");
+    return;
 
     /* use two dependent manifests, 4 'files' total */
     create_manifest_file("testdep1.manifest", manifest_wndcls1, -1, NULL, NULL);
