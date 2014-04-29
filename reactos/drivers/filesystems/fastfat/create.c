@@ -596,8 +596,8 @@ VfatCreateFile(
             /* Update FO just to keep file name */
             /* Skip first slash */
             ++idx;
-            PathNameU.Length = FileNameLen;
-            RtlMoveMemory(&PathNameU.Buffer[0], &PathNameU.Buffer[idx], PathNameU.Length);
+            FileObject->FileName.Length = FileNameLen;
+            RtlMoveMemory(&PathNameU.Buffer[0], &PathNameU.Buffer[idx], FileObject->FileName.Length);
         }
         else
         {
