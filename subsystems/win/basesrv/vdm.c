@@ -203,7 +203,7 @@ NTSTATUS NTAPI BaseSrvCreatePairWaitHandles(PHANDLE ServerEvent, PHANDLE ClientE
     return Status;
 }
 
-VOID BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
+VOID NTAPI BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
 {
     /* Free the allocated structure members */
     if (CommandInfo->CmdLine != NULL) RtlFreeHeap(BaseSrvHeap, 0, CommandInfo->CmdLine);
@@ -217,6 +217,61 @@ VOID BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
 
     /* Free the structure itself */
     RtlFreeHeap(BaseSrvHeap, 0, CommandInfo);
+}
+
+VOID NTAPI BaseSrvCleanupVdmRecords(ULONG ProcessId)
+{
+    PLIST_ENTRY i;
+    PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
+    PVDM_DOS_RECORD DosRecord;
+
+    /* Enter the critical section */
+    RtlEnterCriticalSection(&DosCriticalSection);
+
+    /* Search for a record that has the same process handle */
+    for (i = VDMConsoleListHead.Flink; i != &VDMConsoleListHead; i = i->Flink)
+    {
+        ConsoleRecord = CONTAINING_RECORD(i, VDM_CONSOLE_RECORD, Entry);
+
+        if (ConsoleRecord->ProcessId == ProcessId)
+        {
+            /* Cleanup the DOS records */
+            while (ConsoleRecord->DosListHead.Flink != &ConsoleRecord->DosListHead)
+            {
+                DosRecord = CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink,
+                                              VDM_DOS_RECORD,
+                                              Entry);
+
+                /* Set the event and close it */
+                NtSetEvent(DosRecord->ServerEvent, NULL);
+                NtClose(DosRecord->ServerEvent);
+
+                /* Remove the DOS entry */
+                if (DosRecord->CommandInfo) BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
+                RemoveEntryList(&DosRecord->Entry);
+                RtlFreeHeap(BaseSrvHeap, 0, DosRecord);
+            }
+
+            if (ConsoleRecord->CurrentDirs != NULL)
+            {
+                /* Free the current directories */
+                RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord->CurrentDirs);
+                ConsoleRecord->CurrentDirs = NULL;
+                ConsoleRecord->CurDirsLength = 0;
+            }
+
+            /* Close the event handle */
+            if (ConsoleRecord->ServerEvent) NtClose(ConsoleRecord->ServerEvent);
+
+            /* Remove the console record */
+            i = i->Blink;
+            RemoveEntryList(&ConsoleRecord->Entry);
+            RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
+        }
+    }
+
+    /* Leave the critical section */
+    RtlLeaveCriticalSection(&DosCriticalSection);
 }
 
 BOOLEAN NTAPI BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECORD DosRecord)
@@ -367,7 +422,7 @@ Cleanup:
 }
 
 NTSTATUS NTAPI BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
-                                  PBASE_GET_NEXT_VDM_COMMAND Message)
+                                      PBASE_GET_NEXT_VDM_COMMAND Message)
 {
     /* Copy the data */
     Message->iTask = CommandInfo->TaskId;
