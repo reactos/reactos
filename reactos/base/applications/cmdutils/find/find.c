@@ -125,11 +125,12 @@ find_str (char *sz, FILE *p, int invert_search,
 void
 usage (void)
 {
-  char szUsage[4096];
+  WCHAR wszUsage[4096];
+  char oemUsage[4096];
 
-  LoadStringA (GetModuleHandle (NULL), IDS_USAGE, szUsage, sizeof(szUsage) / sizeof(szUsage[0]));
-  CharToOemA (szUsage, szUsage);
-  fputs (szUsage, stdout);
+  LoadStringW (GetModuleHandleW (NULL), IDS_USAGE, wszUsage, sizeof(wszUsage) / sizeof(wszUsage[0]));
+  CharToOemW (wszUsage, oemUsage);
+  fputs (oemUsage, stdout);
 }
 
 
@@ -139,7 +140,8 @@ main (int argc, char **argv)
 {
   char *opt, *needle = NULL;
   int ret = 0;
-  char szMessage[4096];
+  WCHAR wszMessage[4096];
+  char oemMessage[4096];
 
   int invert_search = 0;		/* flag to invert the search */
   int count_lines = 0;			/* flag to whether/not count lines */
@@ -216,9 +218,9 @@ main (int argc, char **argv)
 	{
 	  /* We were not able to find a file. Display a message and
 	     set the exit status. */
-	  LoadStringA (GetModuleHandle (NULL), IDS_NO_SUCH_FILE, szMessage, sizeof(szMessage) / sizeof(szMessage[0]));
-	  CharToOemA (szMessage, szMessage);
-	  fprintf (stderr, szMessage, *argv);
+	  LoadStringW (GetModuleHandleW (NULL), IDS_NO_SUCH_FILE, wszMessage, sizeof(wszMessage) / sizeof(wszMessage[0]));
+	  CharToOemW (wszMessage, oemMessage);
+	  fprintf (stderr, oemMessage, *argv);
 	}
       else
         {
@@ -235,9 +237,9 @@ main (int argc, char **argv)
 	        }
  	      else
 	        {
-	          LoadString (GetModuleHandle (NULL), IDS_CANNOT_OPEN, szMessage, sizeof(szMessage) / sizeof(szMessage[0]));
-	          CharToOemA (szMessage, szMessage);
-	          fprintf (stderr, szMessage,
+	          LoadStringW (GetModuleHandleW (NULL), IDS_CANNOT_OPEN, wszMessage, sizeof(wszMessage) / sizeof(wszMessage[0]));
+	          CharToOemW (wszMessage, oemMessage);
+	          fprintf (stderr, oemMessage,
 		           finddata.name);
                 }
 	    }
