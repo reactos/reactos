@@ -1708,7 +1708,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 DWORD dwAttributes = SFGAO_CANLINK;
                 DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
 
-                if (SUCCEEDED(m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, (LPCITEMIDLIST*)m_apidl, IID_IDataObject, 0, (LPVOID *)&pda)))
+                if (SUCCEEDED(m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, (LPCITEMIDLIST*)m_apidl, IID_NULL_PPV_ARG(IDataObject, &pda))))
                 {
                     IDropSource * pds = (IDropSource *)this;    /* own DropSource interface */
 
@@ -2678,8 +2678,7 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
         SendMessageW(m_hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
 
         /* ... and bind m_pCurDropTarget to the IDropTarget interface of an UIObject of this object */
-        hr = m_pSFParent->GetUIObjectOf(m_hWndList, 1,
-                                      (LPCITEMIDLIST*)&lvItem.lParam, IID_IDropTarget, NULL, (LPVOID*)&m_pCurDropTarget);
+        hr = m_pSFParent->GetUIObjectOf(m_hWndList, 1, (LPCITEMIDLIST*)&lvItem.lParam, IID_NULL_PPV_ARG(IDropTarget, &m_pCurDropTarget));
     }
 
     /* If anything failed, m_pCurDropTarget should be NULL now, which ought to be a save state. */

@@ -1228,8 +1228,7 @@ static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
     if (FAILED(r))
         goto end;
 
-    shf->GetUIObjectOf(NULL, 1, &pidllast,
-                       IID_IDataObject, NULL, (LPVOID*) &dataobj);
+    shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IDataObject, &dataobj));
 
 end:
     if (pidl != sei->lpIDList)

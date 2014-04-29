@@ -1140,7 +1140,7 @@ static HRESULT SHELL_PidlGeticonLocationA(IShellFolder* psf, LPCITEMIDLIST pidl,
     {
         CComPtr<IExtractIconA> pei;
 
-        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IExtractIconA, NULL, (LPVOID*)&pei);
+        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IExtractIconA, &pei));
 
         if (SUCCEEDED(hr))
             hr = pei->GetIconLocation(0, pszIconPath, MAX_PATH, piIcon, NULL);
@@ -1410,7 +1410,7 @@ static HRESULT SHELL_PidlGeticonLocationW(IShellFolder* psf, LPCITEMIDLIST pidl,
     {
         CComPtr<IExtractIconW> pei;
 
-        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IExtractIconW, NULL, (LPVOID*)&pei);
+        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IExtractIconW, &pei));
 
         if (SUCCEEDED(hr))
             hr = pei->GetIconLocation(0, pszIconPath, MAX_PATH, piIcon, &wFlags);
@@ -2179,7 +2179,7 @@ HRESULT WINAPI CShellLink::DragEnter(IDataObject *pDataObject,
 
     if (SUCCEEDED(hr))
     {
-        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_IDropTarget, NULL, (LPVOID*)&mDropTarget);
+        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IDropTarget, &mDropTarget));
 
         if (SUCCEEDED(hr))
             hr = mDropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);

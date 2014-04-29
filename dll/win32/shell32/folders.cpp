@@ -235,7 +235,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             hr = SHGetDesktopFolder(&psfDesktop);
 
             if (SUCCEEDED(hr))
-                hr = psfDesktop->BindToObject(pSimplePidl, NULL, IID_IShellFolder2, (void**) &psfRecycleBin);
+                hr = psfDesktop->BindToObject(pSimplePidl, NULL, IID_PPV_ARG(IShellFolder2, &psfRecycleBin));
             if (SUCCEEDED(hr))
                 hr = psfRecycleBin->EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &EnumIDList);
 
@@ -379,7 +379,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
 
                 if (SUCCEEDED(SHGetDesktopFolder(&dsf)))
                 {
-                    HRESULT hr = dsf->GetUIObjectOf(NULL, 1, (LPCITEMIDLIST*)&pidl, IID_IShellLinkW, NULL, (LPVOID *)&psl);
+                    HRESULT hr = dsf->GetUIObjectOf(NULL, 1, (LPCITEMIDLIST*) &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
 
                     if (SUCCEEDED(hr))
                     {

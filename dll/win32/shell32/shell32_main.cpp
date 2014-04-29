@@ -566,7 +566,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     /* get the iconlocation */
     if (SUCCEEDED(hr) && (flags & SHGFI_ICONLOCATION ))
     {
-        UINT uDummy,uFlags;
+        UINT uFlags;
 
         if (flags & SHGFI_USEFILEATTRIBUTES)
         {
@@ -602,8 +602,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         else
         {
             hr = psfParent->GetUIObjectOf(0, 1,
-                (LPCITEMIDLIST*)&pidlLast, IID_IExtractIconW,
-                &uDummy, (LPVOID*)&pei);
+                (LPCITEMIDLIST*)&pidlLast, IID_NULL_PPV_ARG(IExtractIconW, &pei));
             if (SUCCEEDED(hr))
             {
                 hr = pei->GetIconLocation(uGilFlags,

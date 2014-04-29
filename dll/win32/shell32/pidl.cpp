@@ -686,8 +686,7 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
     CComPtr<IDataObject>        pDataObj;
     HRESULT hr;
 
-    hr = lpsf->GetUIObjectOf(0, 1, &pidlSimple,
-                             IID_IDataObject, 0, (LPVOID*)&pDataObj);
+    hr = lpsf->GetUIObjectOf(0, 1, &pidlSimple, IID_NULL_PPV_ARG(IDataObject, &pDataObj));
     if (SUCCEEDED(hr))
     {
         STGMEDIUM medium;

@@ -1358,8 +1358,6 @@ HRESULT CMenuSFToolbar::InternalContextMenu(INT iItem, INT index, DWORD_PTR dwDa
     CComPtr<IContextMenu> contextMenu = NULL;
     LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(dwData);
 
-#define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, reinterpret_cast<void**>((static_cast<Itype**>(ppType)))
-
     hr = m_shellFolder->GetUIObjectOf(GetToolbar(), 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &contextMenu));
     if (FAILED_UNEXPECTEDLY(hr))
     {
