@@ -584,7 +584,7 @@ VfatCreateFile(
             --idx;
         }
 
-        if (idx > 0)
+        if (idx > 0 || PathNameU.Buffer[0] == L'\\')
         {
             /* We don't want to include / in the name */
             FileNameLen = PathNameU.Length - ((idx + 1) * sizeof(WCHAR));
