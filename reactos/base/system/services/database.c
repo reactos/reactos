@@ -99,7 +99,7 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
     }
 
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
-    swprintf(szControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
+    swprintf(szControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%lu", ServiceCurrent);
 
     DPRINT("PipeName: %S\n", szControlPipeName);
 

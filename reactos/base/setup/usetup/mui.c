@@ -461,7 +461,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
         }
         else
         {
-            swprintf(szLangID, L"d%03u%s", uCount, MuiLayouts[uIndex].LangID);
+            swprintf(szLangID, L"d%03lu%s", uCount, MuiLayouts[uIndex].LangID);
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,

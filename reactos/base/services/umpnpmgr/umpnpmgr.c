@@ -1620,7 +1620,7 @@ DWORD PNP_CreateDevInst(
         dwInstanceNumber = 0;
         do
         {
-            swprintf(szGeneratedInstance, L"Root\\%ls\\%04d",
+            swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
                      pszDeviceID, dwInstanceNumber);
 
             /* Try to create a device instance with this ID */
@@ -2115,7 +2115,7 @@ DWORD PNP_HwProfFlags(
     else
     {
         swprintf(szKeyName,
-                 L"System\\CurrentControlSet\\HardwareProfiles\\%04u\\System\\CurrentControlSet\\Enum",
+                 L"System\\CurrentControlSet\\HardwareProfiles\\%04lu\\System\\CurrentControlSet\\Enum",
                  ulConfig);
     }
 
