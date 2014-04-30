@@ -952,7 +952,7 @@ static void test_InstallAssembly(void)
     GetWindowsDirectoryA(dllpath, MAX_PATH);
     strcat(dllpath, "\\assembly\\GAC_MSIL\\wine\\\\1.0.0.0__2d03617b1c31e2f5\\wine.dll");
 
-    attr = GetFileAttributes(dllpath);
+    attr = GetFileAttributesA(dllpath);
     ok(attr != INVALID_FILE_ATTRIBUTES, "Expected assembly to exist\n");
 
     /* uninstall the assembly from the GAC */
@@ -962,7 +962,7 @@ static void test_InstallAssembly(void)
     ok(disp == IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED,
        "Expected IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED, got %d\n", disp);
 
-    attr = GetFileAttributes(dllpath);
+    attr = GetFileAttributesA(dllpath);
     ok(attr == INVALID_FILE_ATTRIBUTES, "Expected assembly not to exist\n");
 
     disp = 0xf00dbad;
