@@ -893,7 +893,7 @@ static void REGPROC_print_error(void)
     status = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                             NULL, error_code, 0, (LPSTR) &lpMsgBuf, 0, NULL);
     if (!status) {
-        fprintf(stderr,"%S: Cannot display message for error %ld, status %ld\n",
+        fprintf(stderr,"%S: Cannot display message for error %lu, status %lu\n",
                 getAppName(), error_code, GetLastError());
         exit(1);
     }

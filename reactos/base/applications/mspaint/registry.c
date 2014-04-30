@@ -31,8 +31,8 @@ SetWallpaper(TCHAR * FileName, DWORD dwStyle, DWORD dwTile) //FIXME: Has to be c
         RegSetValueEx(hDesktop, _T("Wallpaper"), 0, REG_SZ, (LPBYTE) FileName,
                       _tcslen(FileName) * sizeof(TCHAR));
 
-        _stprintf(szStyle, _T("%i"), dwStyle);
-        _stprintf(szTile, _T("%i"), dwTile);
+        _stprintf(szStyle, _T("%lu"), dwStyle);
+        _stprintf(szTile, _T("%lu"), dwTile);
 
         RegSetValueEx(hDesktop, _T("WallpaperStyle"), 0, REG_SZ, (LPBYTE) szStyle,
                       _tcslen(szStyle) * sizeof(TCHAR));
