@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_executable(comcat_winetest comcat.c testlist.c)
 target_link_libraries(comcat_winetest uuid)
 set_module_type(comcat_winetest win32cui)
