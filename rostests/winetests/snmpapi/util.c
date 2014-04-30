@@ -32,7 +32,7 @@ static INT  (WINAPI *pSnmpUtilOctetsNCmp)(AsnOctetString*, AsnOctetString*, UINT
 
 static void InitFunctionPtrs(void)
 {
-    HMODULE hSnmpapi = GetModuleHandle("snmpapi.dll");
+    HMODULE hSnmpapi = GetModuleHandleA("snmpapi.dll");
 
 #define SNMPAPI_GET_PROC(func) \
     p ## func = (void*)GetProcAddress(hSnmpapi, #func); \
