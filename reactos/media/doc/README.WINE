@@ -185,8 +185,8 @@ reactos/dll/win32/slbcsp              # Synced to Wine-1.7.1
 reactos/dll/win32/snmpapi             # Synced to Wine-1.7.1
 reactos/dll/win32/softpub             # Synced to Wine-1.7.1
 reactos/dll/win32/spoolss             # Synced to Wine-1.7.1
-reactos/dll/win32/stdole2.tlb         # Synced to Wine-1.7.1
-reactos/dll/win32/stdole32.tlb        # Synced to Wine-1.7.1
+reactos/dll/win32/stdole2.tlb         # Synced to Wine-1.7.17
+reactos/dll/win32/stdole32.tlb        # Synced to Wine-1.7.17
 reactos/dll/win32/sti                 # Synced to Wine-1.7.1
 reactos/dll/win32/sxs                 # Synced to Wine-1.7.1
 reactos/dll/win32/tapi32              # Synced to Wine-1.7.17
