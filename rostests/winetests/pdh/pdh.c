@@ -63,7 +63,7 @@ static BOOL is_lang_english(void)
 
 static void init_function_ptrs( void )
 {
-    pdh = GetModuleHandle( "pdh" );
+    pdh = GetModuleHandleA( "pdh" );
     GETFUNCPTR( PdhAddEnglishCounterA )
     GETFUNCPTR( PdhAddEnglishCounterW )
     GETFUNCPTR( PdhCollectQueryDataWithTime )
