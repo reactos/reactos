@@ -30,8 +30,71 @@
 #include "errorrep.h"
 #include "wine/test.h"
 
-static char regpath_root[] = "Software\\Microsoft\\PCHealth\\ErrorReporting";
-static char regpath_exclude[] = "ExclusionList";
+static const char regpath_root[] = "Software\\Microsoft\\PCHealth\\ErrorReporting";
+static const char regpath_exclude[] = "ExclusionList";
+
+
+static BOOL is_process_limited(void)
+{
+    static BOOL (WINAPI *pCheckTokenMembership)(HANDLE,PSID,PBOOL) = NULL;
+    static BOOL (WINAPI *pOpenProcessToken)(HANDLE, DWORD, PHANDLE) = NULL;
+    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+    PSID Group;
+    BOOL IsInGroup;
+    HANDLE token;
+
+    if (!pOpenProcessToken)
+    {
+        HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
+        pOpenProcessToken = (void*)GetProcAddress(hadvapi32, "OpenProcessToken");
+        pCheckTokenMembership = (void*)GetProcAddress(hadvapi32, "CheckTokenMembership");
+        if (!pCheckTokenMembership || !pOpenProcessToken)
+        {
+            /* Win9x (power to the masses) or NT4 (no way to know) */
+            trace("missing pOpenProcessToken or CheckTokenMembership\n");
+            return FALSE;
+        }
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0, 0, 0, 0, 0, 0, &Group) ||
+        !pCheckTokenMembership(NULL, Group, &IsInGroup))
+    {
+        trace("Could not check if the current user is an administrator\n");
+        return FALSE;
+    }
+    if (!IsInGroup)
+    {
+        if (!AllocateAndInitializeSid(&NtAuthority, 2,
+                                      SECURITY_BUILTIN_DOMAIN_RID,
+                                      DOMAIN_ALIAS_RID_POWER_USERS,
+                                      0, 0, 0, 0, 0, 0, &Group) ||
+            !pCheckTokenMembership(NULL, Group, &IsInGroup))
+        {
+            trace("Could not check if the current user is a power user\n");
+            return FALSE;
+        }
+        if (!IsInGroup)
+        {
+            /* Only administrators and power users can be powerful */
+            return TRUE;
+        }
+    }
+
+    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    {
+        BOOL ret;
+        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
+        DWORD size;
+
+        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
+        CloseHandle(token);
+        return (ret && type == TokenElevationTypeLimited);
+    }
+    return FALSE;
+}
+
 
 /* ###### */
 
@@ -68,12 +131,20 @@ static void test_AddERExcludedApplicationA(void)
     SetLastError(0xdeadbeef);
     /* existence of the path doesn't matter this function succeeded */
     res = AddERExcludedApplicationA("winetest_faultrep.exe");
-    ok(res, "got %d and 0x%x (expected TRUE)\n", res, GetLastError());
+    if (is_process_limited())
+    {
+        /* LastError is not set! */
+        ok(!res, "AddERExcludedApplicationA should have failed got %d\n", res);
+    }
+    else
+    {
+        ok(res, "AddERExcludedApplicationA failed (le=0x%x)\n", GetLastError());
 
-    /* add, when already present */
-    SetLastError(0xdeadbeef);
-    res = AddERExcludedApplicationA("winetest_faultrep.exe");
-    ok(res, "got %d and 0x%x (expected TRUE)\n", res, GetLastError());
+        /* add, when already present */
+        SetLastError(0xdeadbeef);
+        res = AddERExcludedApplicationA("winetest_faultrep.exe");
+        ok(res, "AddERExcludedApplicationA failed (le=0x%x)\n", GetLastError());
+    }
 
     /* cleanup */
     RegDeleteValueA(hexclude, "winetest_faultrep.exe");
