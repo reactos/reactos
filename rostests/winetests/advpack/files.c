@@ -142,7 +142,7 @@ static void test_AddDelBackupEntry(void)
     /* create the INF file */
     res = pAddDelBackupEntry("one\0two\0three\0", "c:\\", "basename", AADBE_ADD_ENTRY);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
-    if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES)
+    if (GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES)
     {
         ok(check_ini_file_attr(path), "Expected ini file to be hidden\n");
         ok(DeleteFileA(path), "Expected path to exist\n");
@@ -317,8 +317,8 @@ static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
     DWORD attrs;
     BOOL res;
 
-    handle = CreateFile(pszName, GENERIC_READ, FILE_SHARE_READ, NULL,
-                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    handle = CreateFileA(pszName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
     ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszName);
 
@@ -328,7 +328,7 @@ static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
     FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &filetime);
     FileTimeToDosDateTime(&filetime, pdate, ptime);
 
-    attrs = GetFileAttributes(pszName);
+    attrs = GetFileAttributesA(pszName);
     ok(attrs != INVALID_FILE_ATTRIBUTES, "Failed to GetFileAttributes\n");
 
     return (INT_PTR)handle;
@@ -502,7 +502,7 @@ static void test_AdvInstallFile(void)
     HMODULE hmod;
     char destFolder[MAX_PATH];
 
-    hmod = LoadLibrary("setupapi.dll");
+    hmod = LoadLibraryA("setupapi.dll");
     if (!hmod)
     {
         skip("setupapi.dll not present\n");
@@ -558,7 +558,7 @@ START_TEST(files)
     init_function_pointers();
 
     GetCurrentDirectoryA(MAX_PATH, prev_path);
-    GetTempPath(MAX_PATH, temp_path);
+    GetTempPathA(MAX_PATH, temp_path);
     SetCurrentDirectoryA(temp_path);
 
     lstrcpyA(CURR_DIR, temp_path);

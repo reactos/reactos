@@ -65,8 +65,8 @@ static BOOL is_spapi_err(DWORD err)
 static void create_inf_file(LPCSTR filename)
 {
     DWORD dwNumberOfBytesWritten;
-    HANDLE hf = CreateFile(filename, GENERIC_WRITE, 0, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     static const char data[] =
         "[Version]\n"
@@ -131,10 +131,10 @@ static void test_RunSetupCommand(void)
     create_inf_file("one\\test.inf");
 
     /* try a full path to the INF, with working dir provided */
-    lstrcpy(path, CURR_DIR);
-    lstrcat(path, "\\one\\test.inf");
-    lstrcpy(dir, CURR_DIR);
-    lstrcat(dir, "\\one");
+    lstrcpyA(path, CURR_DIR);
+    lstrcatA(path, "\\one\\test.inf");
+    lstrcpyA(dir, CURR_DIR);
+    lstrcatA(dir, "\\one");
     hr = pRunSetupCommand(NULL, path, "DefaultInstall", dir, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
     ok(hr == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", hr);
 
@@ -212,9 +212,9 @@ static void test_LaunchINFSection(void)
     create_inf_file("one\\test.inf");
 
     /* try a full path to the INF */
-    lstrcpy(cmdline, CURR_DIR);
-    lstrcat(cmdline, "\\");
-    lstrcat(cmdline, "one\\test.inf,DefaultInstall,,4");
+    lstrcpyA(cmdline, CURR_DIR);
+    lstrcatA(cmdline, "\\");
+    lstrcatA(cmdline, "one\\test.inf,DefaultInstall,,4");
     hr = pLaunchINFSection(NULL, NULL, cmdline, 0);
     ok(hr == 0, "Expected 0, got %d\n", hr);
 
@@ -238,16 +238,16 @@ static void test_LaunchINFSectionEx(void)
     create_inf_file("test.inf");
 
     /* try an invalid CAB filename with an absolute INF name */
-    lstrcpy(cmdline, CURR_DIR);
-    lstrcat(cmdline, "\\");
-    lstrcat(cmdline, "test.inf,DefaultInstall,c:imacab.cab,4");
+    lstrcpyA(cmdline, CURR_DIR);
+    lstrcatA(cmdline, "\\");
+    lstrcatA(cmdline, "test.inf,DefaultInstall,c:imacab.cab,4");
     hr = pLaunchINFSectionEx(NULL, NULL, cmdline, 0);
     ok(hr == 0, "Expected 0, got %d\n", hr);
 
     /* try quoting the parameters */
-    lstrcpy(cmdline, "\"");
-    lstrcat(cmdline, CURR_DIR);
-    lstrcat(cmdline, "\\test.inf\",\"DefaultInstall\",\"c:,imacab.cab\",\"4\"");
+    lstrcpyA(cmdline, "\"");
+    lstrcatA(cmdline, CURR_DIR);
+    lstrcatA(cmdline, "\\test.inf\",\"DefaultInstall\",\"c:,imacab.cab\",\"4\"");
     hr = pLaunchINFSectionEx(NULL, NULL, cmdline, 0);
     ok(hr == 0, "Expected 0, got %d\n", hr);
 
@@ -257,7 +257,7 @@ static void test_LaunchINFSectionEx(void)
     if (winetest_interactive)
     {
         /* try an invalid CAB filename with a relative INF name */
-        lstrcpy(cmdline, "test.inf,DefaultInstall,c:imacab.cab,4");
+        lstrcpyA(cmdline, "test.inf,DefaultInstall,c:imacab.cab,4");
         hr = pLaunchINFSectionEx(NULL, NULL, cmdline, 0);
         ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %d\n", hr);
     }
@@ -280,7 +280,7 @@ START_TEST(install)
     }
 
     GetCurrentDirectoryA(MAX_PATH, prev_path);
-    GetTempPath(MAX_PATH, temp_path);
+    GetTempPathA(MAX_PATH, temp_path);
     SetCurrentDirectoryA(temp_path);
 
     lstrcpyA(CURR_DIR, temp_path);
