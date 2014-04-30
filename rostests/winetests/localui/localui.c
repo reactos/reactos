@@ -44,12 +44,12 @@ static BOOL  (WINAPI *pAddPortUI)(PCWSTR, HWND, PCWSTR, PWSTR *);
 static BOOL  (WINAPI *pConfigurePortUI)(PCWSTR, HWND, PCWSTR);
 static BOOL  (WINAPI *pDeletePortUI)(PCWSTR, HWND, PCWSTR);
 
-static WCHAR does_not_existW[] = {'d','o','e','s','_','n','o','t','_','e','x','i','s','t',0};
-static WCHAR emptyW[] = {0};
-static CHAR  fmt_comA[] = {'C','O','M','%','u',':',0};
-static CHAR  fmt_lptA[] = {'L','P','T','%','u',':',0};
-static WCHAR localportW[] = {'L','o','c','a','l',' ','P','o','r','t',0};
-static WCHAR portname_fileW[] = {'F','I','L','E',':',0};
+static const WCHAR does_not_existW[] = {'d','o','e','s','_','n','o','t','_','e','x','i','s','t',0};
+static const WCHAR emptyW[] = {0};
+static const CHAR  fmt_comA[] = {'C','O','M','%','u',':',0};
+static const CHAR  fmt_lptA[] = {'L','P','T','%','u',':',0};
+static const WCHAR localportW[] = {'L','o','c','a','l',' ','P','o','r','t',0};
+static const WCHAR portname_fileW[] = {'F','I','L','E',':',0};
 
 static LPBYTE pi_buffer;
 static DWORD pi_numports;
@@ -64,7 +64,7 @@ static LPWSTR   com_absent;
 
 /* ########################### */
 
-static PORT_INFO_2W * find_portinfo2(LPWSTR pPort)
+static PORT_INFO_2W * find_portinfo2(LPCWSTR pPort)
 {
     PORT_INFO_2W * pi;
     DWORD   res;
