@@ -217,7 +217,7 @@ ThreadFunc(LPVOID Context)
     BOOL bCab = FALSE;
     HINTERNET hOpen = NULL;
     HINTERNET hFile = NULL;
-    HANDLE hOut = NULL;
+    HANDLE hOut = INVALID_HANDLE_VALUE;
     unsigned char lpBuffer[4096];
     const LPWSTR lpszAgent = L"RApps/1.0";
 
@@ -284,6 +284,9 @@ ThreadFunc(LPVOID Context)
     }
     while (dwBytesRead);
 
+    CloseHandle(hOut);
+    hOut = INVALID_HANDLE_VALUE;
+
     if (bCancelled) goto end;
 
     ShowWindow(Dlg, SW_HIDE);
@@ -294,7 +297,7 @@ ThreadFunc(LPVOID Context)
         ShellExecuteW( NULL, L"open", path, NULL, NULL, SW_SHOWNORMAL );
     }
 end:
-    CloseHandle(hOut);
+    if (hOut != INVALID_HANDLE_VALUE) CloseHandle(hOut);
     InternetCloseHandle(hFile);
     InternetCloseHandle(hOpen);
 
