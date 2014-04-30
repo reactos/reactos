@@ -462,7 +462,11 @@ VfatCreateFile(
     RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
     RequestedOptions = Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
     PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;
+#if 0
     OpenTargetDir = (Stack->Flags & SL_OPEN_TARGET_DIRECTORY) ? TRUE : FALSE;
+#else
+    OpenTargetDir = FALSE;
+#endif
     FileObject = Stack->FileObject;
     DeviceExt = DeviceObject->DeviceExtension;
 
