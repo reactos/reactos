@@ -83,8 +83,8 @@ static void full_file_path_name_in_a_CWD(const char *src, char *dst, BOOL expect
   if(expect_short) 
   {
     memcpy(shortname, dst, MAX_PATH);
-    retval = GetShortPathName(shortname, dst, MAX_PATH-1);
-    ok(retval > 0, "GetShortPathName returned %d for '%s', GLE=%d\n",
+    retval = GetShortPathNameA(shortname, dst, MAX_PATH-1);
+    ok(retval > 0, "GetShortPathNameA returned %d for '%s', GLE=%d\n",
        retval, dst, GetLastError());
   }
 }
