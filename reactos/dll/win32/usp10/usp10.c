@@ -1605,12 +1605,12 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
      * item is set up to prevent random behaviour if the caller erroneously
      * checks the n+1 structure                                              */
     index++;
+    if (index + 1 > cMaxItems) return E_OUTOFMEMORY;
     memset(&pItems[index].a, 0, sizeof(SCRIPT_ANALYSIS));
 
     TRACE("index=%d cnt=%d iCharPos=%d\n", index, cnt, pItems[index].iCharPos);
 
     /*  Set one SCRIPT_STATE item being returned  */
-    if  (index + 1 > cMaxItems) return E_OUTOFMEMORY;
     if (pcItems) *pcItems = index;
 
     /*  Set SCRIPT_ITEM                                     */
