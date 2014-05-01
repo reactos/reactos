@@ -256,7 +256,7 @@ EngQuerySystemAttribute(
                                               NULL);
             if (!NT_SUCCESS(status))
             {
-                DPRINT1("Failed to query basic information: 0x%ls\n", status);
+                DPRINT1("Failed to query basic information: 0x%lx\n", status);
                 return FALSE;
             }
 
@@ -270,7 +270,7 @@ EngQuerySystemAttribute(
                                               NULL);
             if (!NT_SUCCESS(status))
             {
-                DPRINT1("Failed to query processor information: 0x%ls\n", status);
+                DPRINT1("Failed to query processor information: 0x%lx\n", status);
                 return FALSE;
             }
             *pCapability = spi.ProcessorFeatureBits;
