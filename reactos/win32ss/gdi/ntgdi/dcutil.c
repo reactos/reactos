@@ -236,8 +236,8 @@ GreSetStretchBltMode(HDC hDC, int iStretchMode)
        if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
 
        pdcattr->jStretchBltMode = iStretchMode;
+       DC_UnlockDc(pdc);
     }
-    DC_UnlockDc(pdc);
     return oSMode;
 }
 
