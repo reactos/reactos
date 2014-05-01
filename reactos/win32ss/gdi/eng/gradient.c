@@ -487,13 +487,11 @@ EngGradientFill(
     ULONG i;
     BOOL ret = FALSE;
 
-    if (!pco)
+    /* Check for NULL clip object */
+    if (pco == NULL)
     {
-        pco = IntEngCreateClipRegion(0, 0, prclExtents);
-        if (!pco)
-        {
-            return FALSE;
-        }
+        /* Use the trivial one instead */
+        pco = &gxcoTrivial.ClipObj;
     }
 
     switch(ulMode)
