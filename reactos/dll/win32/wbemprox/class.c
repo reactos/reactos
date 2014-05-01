@@ -507,7 +507,7 @@ static HRESULT WINAPI class_object_Next(
     TRACE("%p, %08x, %p, %p, %p, %p\n", iface, lFlags, strName, pVal, pType, plFlavor);
 
     if (!(property = get_property_name( co->name, co->index_property ))) return WBEM_S_NO_MORE_DATA;
-    if ((hr = get_propval( view, co->index, property, pVal, pType, plFlavor ) != S_OK))
+    if ((hr = get_propval( view, co->index, property, pVal, pType, plFlavor )) != S_OK)
     {
         SysFreeString( property );
         return hr;
