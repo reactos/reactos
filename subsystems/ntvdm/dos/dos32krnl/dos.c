@@ -1336,7 +1336,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
             ZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
             /* Initialize the structure members */
-            CommandInfo.VDMState = VDM_NOT_READY;
+            CommandInfo.VDMState = VDM_FLAG_NESTED_TASK | VDM_FLAG_DONT_WAIT;
             CommandInfo.CmdLine = CmdLine;
             CommandInfo.CmdLen = sizeof(CmdLine);
             CommandInfo.AppName = AppName;
@@ -1399,6 +1399,7 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
     PDOS_MCB CurrentMcb;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
+    VDM_COMMAND_INFO CommandInfo;
 
     DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X\n",
            Psp,
@@ -1443,6 +1444,22 @@ Done:
     {
         CurrentPsp = PspBlock->ParentPsp;
         if (CurrentPsp == SYSTEM_PSP) VdmRunning = FALSE;
+    }
+
+    // FIXME: This is probably not the best way to do it
+    /* Check if this was a nested DOS task */
+    if (VdmRunning)
+    {
+        /* Decrement the re-entry count */
+        CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
+        GetNextVDMCommand(&CommandInfo);
+
+        /* Clear the structure */
+        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+
+        /* Update the VDM state of the task */
+        CommandInfo.VDMState = VDM_FLAG_DONT_WAIT;
+        GetNextVDMCommand(&CommandInfo);
     }
 
     /* Save the return code - Normal termination */

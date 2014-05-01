@@ -390,6 +390,7 @@ VOID ConsoleCleanup(VOID)
 
 DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 {
+    BOOLEAN First = TRUE;
     DWORD Result;
     VDM_COMMAND_INFO CommandInfo;
     CHAR CmdLine[MAX_PATH];
@@ -407,7 +408,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
         ZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
         /* Initialize the structure members */
-        CommandInfo.VDMState = VDM_NOT_LOADED;
+        CommandInfo.VDMState = VDM_FLAG_DOS;
         CommandInfo.CmdLine = CmdLine;
         CommandInfo.CmdLen = sizeof(CmdLine);
         CommandInfo.AppName = AppName;
@@ -420,6 +421,12 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
         CommandInfo.TitleLen = sizeof(Title);
         CommandInfo.Env = Env;
         CommandInfo.EnvLen = sizeof(Env);
+
+        if (First)
+        {
+            CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
+            First = FALSE;
+        }
 
         /* Wait for the next available VDM */
         if (!GetNextVDMCommand(&CommandInfo)) break;

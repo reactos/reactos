@@ -48,11 +48,22 @@ typedef enum _VDM_ENTRY_CODE
 #define VDM_READY           0x04
 
 //
-// VDM Magic Values
+// VDM Flags
 //
+#define VDM_FLAG_FIRST_TASK     0x01
 #define VDM_FLAG_WOW            0x02
+#define VDM_FLAG_DOS            0x04
+#define VDM_FLAG_RETRY          0x08
 #define VDM_INC_REENTER_COUNT   0x10
 #define VDM_DEC_REENTER_COUNT   0x20
+#define VDM_FLAG_NESTED_TASK    0x40
+#define VDM_FLAG_DONT_WAIT      0x80
+#define VDM_GET_FIRST_COMMAND   0x100
+#define VDM_GET_ENVIRONMENT     0x400
+#define VDM_FLAG_SEPARATE_WOW   0x800
+#define VDM_LIST_WOW_PROCESSES  0x1000
+#define VDM_LIST_WOW_TASKS      0x4000
+#define VDM_ADD_WOW_TASK        0x8000
 
 typedef struct
 {

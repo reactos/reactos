@@ -905,21 +905,58 @@ CSR_API(BaseSrvGetNextVDMCommand)
         GetNextVdmCommandRequest->iTask = ConsoleRecord->SessionId;
         GetNextVdmCommandRequest->WaitObjectForVDM = NULL;
 
-        if (!(GetNextVdmCommandRequest->VDMState & VDM_NOT_READY))
+        if (GetNextVdmCommandRequest->VDMState & VDM_GET_FIRST_COMMAND)
         {
+            /* Check if the DOS record list is empty */
+            if (ConsoleRecord->DosListHead.Flink == &ConsoleRecord->DosListHead)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                goto Cleanup;
+            }
+
+            /* Get the first DOS record */
+            DosRecord = CONTAINING_RECORD(ConsoleRecord->DosListHead.Flink, VDM_DOS_RECORD, Entry);
+
+            /* Make sure its command information is still there */
+            if (DosRecord->CommandInfo == NULL)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                goto Cleanup;
+            }
+
+            /* Fill the command information */
+            Status = BaseSrvFillCommandInfo(DosRecord->CommandInfo, GetNextVdmCommandRequest);
+            goto Cleanup;
+        }
+
+        /* Check if we should set the state of a running DOS record to ready */
+        if (!(GetNextVdmCommandRequest->VDMState
+            & (VDM_FLAG_FIRST_TASK | VDM_FLAG_RETRY | VDM_FLAG_NESTED_TASK)))
+        {
+            /* Search for a DOS record that is currently running */
             for (i = ConsoleRecord->DosListHead.Flink; i != &ConsoleRecord->DosListHead; i = i->Flink)
             {
                 DosRecord = CONTAINING_RECORD(i, VDM_DOS_RECORD, Entry);
-                if (DosRecord->State == VDM_NOT_READY)
-                {
-                    /* If NTVDM is asking for a new command, it means these are done */
-                    DosRecord->State = VDM_READY; 
-
-                    NtSetEvent(DosRecord->ServerEvent, NULL);
-                    NtClose(DosRecord->ServerEvent);
-                    DosRecord->ServerEvent = NULL;
-                }
+                if (DosRecord->State == VDM_NOT_READY) break;
             }
+
+            /* Check if we found any */
+            if (i == &ConsoleRecord->DosListHead)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                goto Cleanup;
+            }
+
+            /* Set the exit code */
+            DosRecord->ExitCode = GetNextVdmCommandRequest->ExitCode;
+
+            /* Update the VDM state */
+            DosRecord->State = VDM_READY; 
+
+            /* Notify all waiting threads that the task is finished */
+            NtSetEvent(DosRecord->ServerEvent, NULL);
+            NtClose(DosRecord->ServerEvent);
+            DosRecord->ServerEvent = NULL;
         }
 
         /* Search for a DOS record that isn't loaded yet */
@@ -931,16 +968,40 @@ CSR_API(BaseSrvGetNextVDMCommand)
 
         if (i != &ConsoleRecord->DosListHead)
         {
-            /* Fill the command information */
-            Status = BaseSrvFillCommandInfo(DosRecord->CommandInfo, GetNextVdmCommandRequest);
-            if (!NT_SUCCESS(Status)) goto Cleanup;
+            /* DOS tasks which haven't been loaded yet should have a command info structure */
+            ASSERT(DosRecord->CommandInfo != NULL);
 
-            /* Free the command information, it's no longer needed */
-            BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
-            DosRecord->CommandInfo = NULL;
+            /* Check if the caller only wants environment data */
+            if (GetNextVdmCommandRequest->VDMState & VDM_GET_ENVIRONMENT)
+            {
+                if (GetNextVdmCommandRequest->EnvLen < DosRecord->CommandInfo->EnvLen)
+                {
+                    /* Not enough space was reserved */
+                    GetNextVdmCommandRequest->EnvLen = DosRecord->CommandInfo->EnvLen;
+                    Status = STATUS_BUFFER_OVERFLOW;
+                    goto Cleanup;
+                }
 
-            /* Update the VDM state */
-            DosRecord->State = VDM_NOT_READY;
+                /* Copy the environment data */
+                RtlMoveMemory(GetNextVdmCommandRequest->Env,
+                              DosRecord->CommandInfo->Env,
+                              DosRecord->CommandInfo->EnvLen);
+
+                /* Return the actual size to the caller */
+                GetNextVdmCommandRequest->EnvLen = DosRecord->CommandInfo->EnvLen;
+            }
+            else
+            {
+                /* Fill the command information */
+                Status = BaseSrvFillCommandInfo(DosRecord->CommandInfo, GetNextVdmCommandRequest);
+
+                /* Free the command information, it's no longer needed */
+                BaseSrvFreeVDMInfo(DosRecord->CommandInfo);
+                DosRecord->CommandInfo = NULL;
+
+                /* Update the VDM state */
+                GetNextVdmCommandRequest->VDMState = DosRecord->State = VDM_NOT_READY;
+            }
 
             Status = STATUS_SUCCESS;
             goto Cleanup;
@@ -954,21 +1015,25 @@ CSR_API(BaseSrvGetNextVDMCommand)
     }
 
     /* There is no command yet */
-    if (ConsoleRecord->ServerEvent)
+    if ((GetNextVdmCommandRequest->VDMState & (VDM_FLAG_DONT_WAIT | VDM_FLAG_RETRY))
+        != (VDM_FLAG_DONT_WAIT | VDM_FLAG_RETRY))
     {
-        /* Reset the event */
-        NtResetEvent(ConsoleRecord->ServerEvent, NULL);
-    }
-    else
-    {
-        /* Create a pair of wait handles */
-        Status = BaseSrvCreatePairWaitHandles(&ConsoleRecord->ServerEvent,
-                                              &ConsoleRecord->ClientEvent);
-        if (!NT_SUCCESS(Status)) goto Cleanup;
-    }
+        if (ConsoleRecord->ServerEvent)
+        {
+            /* Reset the event */
+            NtResetEvent(ConsoleRecord->ServerEvent, NULL);
+        }
+        else
+        {
+            /* Create a pair of wait handles */
+            Status = BaseSrvCreatePairWaitHandles(&ConsoleRecord->ServerEvent,
+                                                  &ConsoleRecord->ClientEvent);
+            if (!NT_SUCCESS(Status)) goto Cleanup;
+        }
 
-    /* Return the client event handle */
-    GetNextVdmCommandRequest->WaitObjectForVDM = ConsoleRecord->ClientEvent;
+        /* Return the client event handle */
+        GetNextVdmCommandRequest->WaitObjectForVDM = ConsoleRecord->ClientEvent;
+    }
 
 Cleanup:
     /* Leave the critical section */

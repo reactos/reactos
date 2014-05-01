@@ -1281,6 +1281,10 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
                         BaseSetLastNTError(Status);
                         goto Cleanup;
                     }
+
+                    /* Set the retry flag and clear the exit code */
+                    GetNextVdmCommand->VDMState |= VDM_FLAG_RETRY;
+                    GetNextVdmCommand->ExitCode = 0;
                 }
             }
             while (GetNextVdmCommand->WaitObjectForVDM != NULL);
