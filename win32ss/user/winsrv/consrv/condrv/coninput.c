@@ -256,7 +256,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (Buffer != NULL && NumCharsToRead >= 0) ||
+    ASSERT( (Buffer != NULL && NumCharsToRead >  0) ||
             (Buffer == NULL && NumCharsToRead == 0) );
 
     /* We haven't read anything (yet) */
@@ -402,7 +402,7 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (InputRecord != NULL && NumEventsToRead >= 0) ||
+    ASSERT( (InputRecord != NULL && NumEventsToRead >  0) ||
             (InputRecord == NULL && NumEventsToRead == 0) );
 
     // Do NOT do that !! Use the existing number of events already read, if any...
@@ -472,7 +472,7 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (InputRecord != NULL && NumEventsToWrite >= 0) ||
+    ASSERT( (InputRecord != NULL && NumEventsToWrite >  0) ||
             (InputRecord == NULL && NumEventsToWrite == 0) );
 
     // Do NOT do that !! Use the existing number of events already written, if any...

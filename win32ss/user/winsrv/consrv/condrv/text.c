@@ -829,7 +829,7 @@ ConDrvWriteConsole(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == ScreenBuffer->Header.Console);
-    ASSERT( (StringBuffer != NULL && NumCharsToWrite >= 0) ||
+    ASSERT( (StringBuffer != NULL && NumCharsToWrite >  0) ||
             (StringBuffer == NULL && NumCharsToWrite == 0) );
 
     // if (Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION))
@@ -909,7 +909,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == Buffer->Header.Console);
-    ASSERT( (StringBuffer != NULL && NumCodesToRead >= 0) ||
+    ASSERT( (StringBuffer != NULL && NumCodesToRead >  0) ||
             (StringBuffer == NULL && NumCodesToRead == 0) );
 
     switch (CodeType)
@@ -1033,7 +1033,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == Buffer->Header.Console);
-    ASSERT( (StringBuffer != NULL && NumCodesToWrite >= 0) ||
+    ASSERT( (StringBuffer != NULL && NumCodesToWrite >  0) ||
             (StringBuffer == NULL && NumCodesToWrite == 0) );
 
     switch (CodeType)
