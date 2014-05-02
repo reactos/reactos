@@ -16,16 +16,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#define ConSrvGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole)     \
-    ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), NULL,  \
-                    (Access), (LockConsole), INPUT_BUFFER)
-#define ConSrvGetInputBufferAndHandleEntry(ProcessData, Handle, Ptr, Entry, Access, LockConsole)    \
-    ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), (Entry),                   \
-                    (Access), (LockConsole), INPUT_BUFFER)
-#define ConSrvReleaseInputBuffer(Buff, IsConsoleLocked) \
-    ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
-
-
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
     WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
@@ -41,7 +31,7 @@ typedef struct ConsoleInput_t
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID FASTCALL
+static VOID
 ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
 {
     if (InputEvent->EventType == KEY_EVENT)
@@ -54,7 +44,7 @@ ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
     }
 }
 
-static VOID FASTCALL
+static VOID
 ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
 {
     if (InputEvent->EventType == KEY_EVENT)
@@ -67,7 +57,7 @@ ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
     }
 }
 
-NTSTATUS FASTCALL
+NTSTATUS
 ConioAddInputEvent(PCONSOLE Console,
                    PINPUT_RECORD InputEvent,
                    BOOLEAN AppendToEnd)
@@ -119,26 +109,26 @@ ConioAddInputEvent(PCONSOLE Console,
     }
 
     SetEvent(Console->InputBuffer.ActiveEvent);
-    CsrNotifyWait(&Console->InputBuffer.ReadWaitQueue,
+    CsrNotifyWait(&Console->ReadWaitQueue,
                   FALSE,
                   NULL,
                   NULL);
-    if (!IsListEmpty(&Console->InputBuffer.ReadWaitQueue))
+    if (!IsListEmpty(&Console->ReadWaitQueue))
     {
-        CsrDereferenceWait(&Console->InputBuffer.ReadWaitQueue);
+        CsrDereferenceWait(&Console->ReadWaitQueue);
     }
 
     return STATUS_SUCCESS;
 }
 
-NTSTATUS FASTCALL
+NTSTATUS
 ConioProcessInputEvent(PCONSOLE Console,
                        PINPUT_RECORD InputEvent)
 {
     return ConioAddInputEvent(Console, InputEvent, TRUE);
 }
 
-VOID FASTCALL
+VOID
 PurgeInputBuffer(PCONSOLE Console)
 {
     PLIST_ENTRY CurrentEntry;
@@ -176,7 +166,7 @@ ConDrvProcessKey(IN PCONSOLE Console,
          (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyStateCtrl & 0x80) )
     {
         DPRINT1("Console_Api Ctrl-C\n");
-        ConDrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
+        ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
 
         if (Console->LineBuffer && !Console->LineComplete)
         {

@@ -206,8 +206,8 @@ ResetFrontEnd(IN PCONSOLE Console)
     if (!Console) return;
 
     /* Reinitialize the frontend interface */
-    RtlZeroMemory(&Console->TermIFace, sizeof(Console->TermIFace));
-    Console->TermIFace.Vtbl = &DummyVtbl;
+    RtlZeroMemory(&Console->FrontEndIFace, sizeof(Console->FrontEndIFace));
+    Console->FrontEndIFace.Vtbl = &DummyVtbl;
 }
 
 /* EOF */

@@ -9,7 +9,7 @@
 
 #pragma once
 
-VOID FASTCALL PurgeInputBuffer(PCONSOLE Console);
+VOID PurgeInputBuffer(PCONSOLE Console);
 
 VOID NTAPI
 ConDrvProcessKey(IN PCONSOLE Console,

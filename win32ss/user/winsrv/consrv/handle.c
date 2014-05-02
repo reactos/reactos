@@ -72,7 +72,8 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
          */
         if (Object->Type == INPUT_BUFFER)
         {
-            PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
+            // PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
+            PCONSOLE Console = Object->Console;
 
             /*
              * Wake up all the writing waiters related to this handle for this
@@ -83,13 +84,13 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
              * whether or not they are related to this handle and if so, they
              * return.
              */
-            CsrNotifyWait(&InputBuffer->ReadWaitQueue,
+            CsrNotifyWait(&Console->ReadWaitQueue,
                           TRUE,
                           NULL,
                           (PVOID)Entry);
-            if (!IsListEmpty(&InputBuffer->ReadWaitQueue))
+            if (!IsListEmpty(&Console->ReadWaitQueue))
             {
-                CsrDereferenceWait(&InputBuffer->ReadWaitQueue);
+                CsrDereferenceWait(&Console->ReadWaitQueue);
             }
         }
 
@@ -290,7 +291,6 @@ ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
 }
 
 VOID
-FASTCALL
 ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
                  IN CONSOLE_IO_OBJECT_TYPE Type,
                  IN PCONSOLE Console)
@@ -306,7 +306,6 @@ ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
 }
 
 NTSTATUS
-FASTCALL
 ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                    PHANDLE Handle,
                    PCONSOLE_IO_OBJECT Object,
@@ -372,7 +371,6 @@ ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
 }
 
 NTSTATUS
-FASTCALL
 ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
                    HANDLE Handle)
 {
@@ -399,7 +397,6 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
 }
 
 NTSTATUS
-FASTCALL
 ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
                 HANDLE Handle,
                 PCONSOLE_IO_OBJECT* Object,
@@ -464,7 +461,6 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
 }
 
 VOID
-FASTCALL
 ConSrvReleaseObject(PCONSOLE_IO_OBJECT Object,
                     BOOL IsConsoleLocked)
 {
@@ -472,7 +468,6 @@ ConSrvReleaseObject(PCONSOLE_IO_OBJECT Object,
 }
 
 NTSTATUS
-FASTCALL
 ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                       PHANDLE pInputHandle,
                       PHANDLE pOutputHandle,
@@ -551,7 +546,6 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
 }
 
 NTSTATUS
-FASTCALL
 ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                      HANDLE ConsoleHandle,
                      BOOL CreateNewHandlesTable,
@@ -634,7 +628,6 @@ Quit:
 }
 
 VOID
-FASTCALL
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
     PCONSOLE Console;
@@ -649,7 +642,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
                               CONSOLE_RUNNING, TRUE))
     {
         /* Retrieve the console leader process */
-        PCONSOLE_PROCESS_DATA ConsoleLeaderProcess = ConDrvGetConsoleLeaderProcess(Console);
+        PCONSOLE_PROCESS_DATA ConsoleLeaderProcess = ConSrvGetConsoleLeaderProcess(Console);
 
         DPRINT("ConSrvRemoveConsole - Locking OK\n");
 
@@ -684,7 +677,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
                  * and then send the last close notification.
                  */
                 Console->NotifyLastClose = FALSE;
-                ConDrvConsoleCtrlEvent(CTRL_LAST_CLOSE_EVENT, Console->NotifiedLastCloseProcess);
+                ConSrvConsoleCtrlEvent(CTRL_LAST_CLOSE_EVENT, Console->NotifiedLastCloseProcess);
 
                 /* Only now, reset the pointer */
                 Console->NotifiedLastCloseProcess = NULL;

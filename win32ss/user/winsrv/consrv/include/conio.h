@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/include/conio.h
+ * FILE:            consrv/include/conio.h
  * PURPOSE:         Public Console I/O Interface
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
@@ -64,8 +64,6 @@ struct _CONSOLE_SCREEN_BUFFER
 
     LIST_ENTRY ListEntry;               /* Entry in console's list of buffers */
 
-    // PVOID Data;                         /* Private data for the frontend to use */
-
     COORD   ScreenBufferSize;           /* Size of this screen buffer. (Rows, Columns) for text-mode and (Width, Height) for graphics-mode */
     COORD   ViewSize;                   /* Associated "view" (i.e. console) size */
 
@@ -90,6 +88,8 @@ struct _CONSOLE_SCREEN_BUFFER
 //  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
 //  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
     USHORT Mode;                        /* Output buffer modes */
+
+    // PVOID Data;                         /* Private data for the frontend to use */
 };
 
 
@@ -125,8 +125,8 @@ typedef struct _TEXTMODE_BUFFER_INFO
     COORD   ScreenBufferSize;
     USHORT  ScreenAttrib;
     USHORT  PopupAttrib;
-    BOOLEAN IsCursorVisible;
     ULONG   CursorSize;
+    BOOLEAN IsCursorVisible;
 } TEXTMODE_BUFFER_INFO, *PTEXTMODE_BUFFER_INFO;
 
 typedef struct _TEXTMODE_SCREEN_BUFFER
@@ -158,6 +158,7 @@ typedef struct _GRAPHICS_SCREEN_BUFFER
     ULONG   BitMapUsage;            /* See the uUsage parameter of GetDIBits */
     HANDLE  hSection;               /* Handle to the memory shared section for the bitmap buffer */
     PVOID   BitMap;                 /* Our bitmap buffer */
+
     PVOID   ClientBitMap;           /* A copy of the client view of our bitmap buffer */
     HANDLE  Mutex;                  /* Our mutex, used to synchronize read / writes to the bitmap buffer */
     HANDLE  ClientMutex;            /* A copy of the client handle to our mutex */
@@ -173,97 +174,95 @@ typedef struct _CONSOLE_INPUT_BUFFER
     ULONG       InputBufferSize;    /* Size of this input buffer */
     LIST_ENTRY  InputEvents;        /* List head for input event queue */
     HANDLE      ActiveEvent;        /* Event set when an input event is added in its queue */
-    LIST_ENTRY  ReadWaitQueue;      /* List head for the queue of read wait blocks */
 
     USHORT      Mode;               /* Input buffer modes */
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
 
 
-typedef struct _FRONTEND FRONTEND, *PFRONTEND;
+typedef struct _TERMINAL TERMINAL, *PTERMINAL;
 /* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
-typedef struct _FRONTEND_VTBL
+typedef struct _TERMINAL_VTBL
 {
     /*
      * Internal interface (functions called by the console server only)
      */
-    NTSTATUS (NTAPI *InitFrontEnd)(IN OUT PFRONTEND This,
+    NTSTATUS (NTAPI *InitFrontEnd)(IN OUT PTERMINAL This,
                                    IN struct _CONSOLE* Console);
-    VOID (NTAPI *DeinitFrontEnd)(IN OUT PFRONTEND This);
+    VOID (NTAPI *DeinitFrontEnd)(IN OUT PTERMINAL This);
 
     /* Interface used for both text-mode and graphics screen buffers */
-    VOID (NTAPI *DrawRegion)(IN OUT PFRONTEND This,
+    VOID (NTAPI *DrawRegion)(IN OUT PTERMINAL This,
                              SMALL_RECT* Region);
     /* Interface used only for text-mode screen buffers */
-    VOID (NTAPI *WriteStream)(IN OUT PFRONTEND This,
+    VOID (NTAPI *WriteStream)(IN OUT PTERMINAL This,
                               SMALL_RECT* Block,
                               SHORT CursorStartX,
                               SHORT CursorStartY,
                               UINT ScrolledLines,
                               PWCHAR Buffer,
                               UINT Length);
-    BOOL (NTAPI *SetCursorInfo)(IN OUT PFRONTEND This,
+    BOOL (NTAPI *SetCursorInfo)(IN OUT PTERMINAL This,
                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (NTAPI *SetScreenInfo)(IN OUT PFRONTEND This,
+    BOOL (NTAPI *SetScreenInfo)(IN OUT PTERMINAL This,
                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                 SHORT OldCursorX,
                                 SHORT OldCursorY);
-    VOID (NTAPI *ResizeTerminal)(IN OUT PFRONTEND This);
-    VOID (NTAPI *SetActiveScreenBuffer)(IN OUT PFRONTEND This);
-    VOID (NTAPI *ReleaseScreenBuffer)(IN OUT PFRONTEND This,
+    VOID (NTAPI *ResizeTerminal)(IN OUT PTERMINAL This);
+    VOID (NTAPI *SetActiveScreenBuffer)(IN OUT PTERMINAL This);
+    VOID (NTAPI *ReleaseScreenBuffer)(IN OUT PTERMINAL This,
                                       IN PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (NTAPI *ProcessKeyCallback)(IN OUT PFRONTEND This,
+    BOOL (NTAPI *ProcessKeyCallback)(IN OUT PTERMINAL This,
                                      MSG* msg,
                                      BYTE KeyStateMenu,
                                      DWORD ShiftState,
                                      UINT VirtualKeyCode,
                                      BOOL Down);
-    VOID (NTAPI *RefreshInternalInfo)(IN OUT PFRONTEND This);
+    VOID (NTAPI *RefreshInternalInfo)(IN OUT PTERMINAL This);
 
     /*
      * External interface (functions corresponding to the Console API)
      */
-    VOID (NTAPI *ChangeTitle)(IN OUT PFRONTEND This);
-    BOOL (NTAPI *ChangeIcon)(IN OUT PFRONTEND This,
+    VOID (NTAPI *ChangeTitle)(IN OUT PTERMINAL This);
+    BOOL (NTAPI *ChangeIcon)(IN OUT PTERMINAL This,
                              HICON IconHandle);
-    HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
-    VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
+    HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PTERMINAL This);
+    VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PTERMINAL This,
                                               PCOORD pSize);
-    BOOL (NTAPI *GetSelectionInfo)(IN OUT PFRONTEND This,
+    BOOL (NTAPI *GetSelectionInfo)(IN OUT PTERMINAL This,
                                    PCONSOLE_SELECTION_INFO pSelectionInfo);
-    BOOL (NTAPI *SetPalette)(IN OUT PFRONTEND This,
+    BOOL (NTAPI *SetPalette)(IN OUT PTERMINAL This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);
-    ULONG (NTAPI *GetDisplayMode)(IN OUT PFRONTEND This);
-    BOOL  (NTAPI *SetDisplayMode)(IN OUT PFRONTEND This,
+    ULONG (NTAPI *GetDisplayMode)(IN OUT PTERMINAL This);
+    BOOL  (NTAPI *SetDisplayMode)(IN OUT PTERMINAL This,
                                   ULONG NewMode);
-    INT   (NTAPI *ShowMouseCursor)(IN OUT PFRONTEND This,
+    INT   (NTAPI *ShowMouseCursor)(IN OUT PTERMINAL This,
                                    BOOL Show);
-    BOOL  (NTAPI *SetMouseCursor)(IN OUT PFRONTEND This,
+    BOOL  (NTAPI *SetMouseCursor)(IN OUT PTERMINAL This,
                                   HCURSOR CursorHandle);
-    HMENU (NTAPI *MenuControl)(IN OUT PFRONTEND This,
+    HMENU (NTAPI *MenuControl)(IN OUT PTERMINAL This,
                                UINT CmdIdLow,
                                UINT CmdIdHigh);
-    BOOL  (NTAPI *SetMenuClose)(IN OUT PFRONTEND This,
+    BOOL  (NTAPI *SetMenuClose)(IN OUT PTERMINAL This,
                                 BOOL Enable);
 
 #if 0 // Possible future front-end interface
-    BOOL (NTAPI *GetFrontEndProperty)(IN OUT PFRONTEND This,
+    BOOL (NTAPI *GetFrontEndProperty)(IN OUT PTERMINAL This,
                                       ULONG Flag,
                                       PVOID Info,
                                       ULONG Size);
-    BOOL (NTAPI *SetFrontEndProperty)(IN OUT PFRONTEND This,
+    BOOL (NTAPI *SetFrontEndProperty)(IN OUT PTERMINAL This,
                                       ULONG Flag,
                                       PVOID Info /*,
                                       ULONG Size */);
 #endif
-} FRONTEND_VTBL, *PFRONTEND_VTBL;
+} TERMINAL_VTBL, *PTERMINAL_VTBL;
 
-struct _FRONTEND
+struct _TERMINAL
 {
-    PFRONTEND_VTBL Vtbl;        /* Virtual table */
+    PTERMINAL_VTBL Vtbl;        /* Virtual table */
     struct _CONSOLE* Console;   /* Console to which the frontend is attached to */
     PVOID Data;                 /* Private data  */
-    PVOID OldData;              /* Reserved      */
 };
 
 /*
@@ -277,20 +276,28 @@ typedef enum _CONSOLE_STATE
     CONSOLE_IN_DESTRUCTION  /* Console in destruction */
 } CONSOLE_STATE, *PCONSOLE_STATE;
 
+// HACK!!
+struct _CONSOLE;
+struct _WINSRV_CONSOLE;
+/* HACK: */ typedef struct _CONSOLE *PCONSOLE;
+#include "conio_winsrv.h"
+
 typedef struct _CONSOLE
 {
+/******************************* Console Set-up *******************************/
     LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     CRITICAL_SECTION Lock;
+
+    /**/WINSRV_CONSOLE;/**/ // HACK HACK!!
+
     CONSOLE_STATE State;                    /* State of the console */
+    TERMINAL TermIFace;                     /* Frontend-specific interface */
 
-    LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
-    PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when the console leader process is killed */
-    BOOLEAN NotifyLastClose;                /* TRUE if the console should send a control event when the console leader process is killed */
-
-    FRONTEND TermIFace;                     /* Frontend-specific interface */
+    ULONG ConsoleID;                        /* The ID of the console */
 
 /**************************** Input buffer and data ***************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
+    UINT CodePage;
 
     /** Put those things in TEXTMODE_SCREEN_BUFFER ?? **/
     PWCHAR LineBuffer;                      /* Current line being input, in line buffered mode */
@@ -303,16 +310,11 @@ typedef struct _CONSOLE
     ULONG LineWakeupMask;                   /* Bitmap of which control characters will end line input */
     /***************************************************/
 
-    BOOLEAN QuickEdit;
     BOOLEAN InsertMode;
-    UINT CodePage;
 
 /******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
-    BYTE PauseFlags;
-    HANDLE UnpauseEvent;
-    LIST_ENTRY WriteWaitQueue;              /* List head for the queue of write wait blocks */
     UINT OutputCodePage;
 
 /**************************** Aliases and Histories ***************************/
@@ -326,38 +328,39 @@ typedef struct _CONSOLE
     UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */
     UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
 
+    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
+
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
 
     COLORREF Colors[16];                    /* Colour palette */
 
-} CONSOLE, *PCONSOLE;
+} CONSOLE; // , *PCONSOLE;
 
-/* PauseFlags values (internal only) */
-#define PAUSED_FROM_KEYBOARD  0x1
-#define PAUSED_FROM_SCROLLBAR 0x2
-#define PAUSED_FROM_SELECTION 0x4
+// #include "conio_winsrv.h"
 
 /* console.c */
-VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
-VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
+VOID NTAPI
+ConDrvPause(PCONSOLE Console);
+VOID NTAPI
+ConDrvUnpause(PCONSOLE Console);
 
 PCONSOLE_PROCESS_DATA NTAPI
-ConDrvGetConsoleLeaderProcess(IN PCONSOLE Console);
+ConSrvGetConsoleLeaderProcess(IN PCONSOLE Console);
 NTSTATUS
-ConDrvConsoleCtrlEvent(IN ULONG CtrlEvent,
+ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS NTAPI
-ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
+ConSrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
                               IN ULONG ProcessGroupId,
                               IN ULONG CtrlEvent);
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
-NTSTATUS FASTCALL ConioAddInputEvent(PCONSOLE Console,
+NTSTATUS ConioAddInputEvent(PCONSOLE Console,
                                      PINPUT_RECORD InputEvent,
                                      BOOLEAN AppendToEnd);
-NTSTATUS FASTCALL ConioProcessInputEvent(PCONSOLE Console,
+NTSTATUS ConioProcessInputEvent(PCONSOLE Console,
                                          PINPUT_RECORD InputEvent);
 
 /* conoutput.c */
@@ -382,7 +385,7 @@ do {    \
     MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
 
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
+VOID ConioDrawConsole(PCONSOLE Console);
 NTSTATUS ConioResizeBuffer(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
@@ -391,7 +394,7 @@ NTSTATUS ConioWriteConsole(PCONSOLE Console,
                            PWCHAR Buffer,
                            DWORD Length,
                            BOOL Attrib);
-DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console,
+DWORD ConioEffectiveCursorSize(PCONSOLE Console,
                                         DWORD Scale);
 
 /* EOF */

@@ -51,7 +51,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
 
         RtlMoveMemory(CapturedInputInfo, InputInfo, sizeof(GET_INPUT_INFO));
 
-        if (!CsrCreateWait(&InputInfo->InputBuffer->ReadWaitQueue,
+        if (!CsrCreateWait(&InputInfo->InputBuffer->Header.Console->ReadWaitQueue,
                            WaitFunction,
                            InputInfo->CallingThread,
                            ApiMessage,

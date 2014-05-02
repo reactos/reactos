@@ -48,7 +48,7 @@ SetConWndConsoleLeaderCID(IN PGUI_CONSOLE_DATA GuiData)
     PCONSOLE_PROCESS_DATA ProcessData;
     CLIENT_ID ConsoleLeaderCID;
 
-    ProcessData = ConDrvGetConsoleLeaderProcess(GuiData->Console);
+    ProcessData = ConSrvGetConsoleLeaderProcess(GuiData->Console);
     ConsoleLeaderCID = ProcessData->Process->ClientId;
     SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_PID,
                       (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));
@@ -1155,7 +1155,7 @@ OnClose(PGUI_CONSOLE_DATA GuiData)
      * We shouldn't wait here, though, since the console lock is entered.
      * A copy of the thread list probably needs to be made.
      */
-    ConDrvConsoleProcessCtrlEvent(Console, 0, CTRL_CLOSE_EVENT);
+    ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_CLOSE_EVENT);
 
     LeaveCriticalSection(&Console->Lock);
     return FALSE;
@@ -1670,7 +1670,6 @@ OnMove(PGUI_CONSOLE_DATA GuiData)
 // HACK: This functionality is standard for general scrollbars. Don't add it by hand.
 
 VOID
-FASTCALL
 GuiConsoleHandleScrollbarMenu(VOID)
 {
     HMENU hMenu;

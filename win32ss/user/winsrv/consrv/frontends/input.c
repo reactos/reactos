@@ -20,7 +20,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static DWORD FASTCALL
+static DWORD
 ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
 {
     DWORD ssOut = 0;

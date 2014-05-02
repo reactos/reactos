@@ -18,9 +18,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// FIXME: Add this prototype to winternl.h / rtlfuncs.h / ...
-NTSTATUS NTAPI RtlGetLastNtStatus(VOID);
-
 
 /* GLOBALS ********************************************************************/
 
@@ -196,89 +193,21 @@ VOID ResetFrontEnd(IN PCONSOLE Console);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static NTSTATUS
-ConDrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
-                              IN PCONSOLE_PROCESS_DATA ProcessData,
-                              IN ULONG Timeout)
+VOID NTAPI
+ConDrvPause(PCONSOLE Console)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("ConDrvConsoleCtrlEventTimeout Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
-
-    if (ProcessData->CtrlDispatcher)
-    {
-        _SEH2_TRY
-        {
-            HANDLE Thread = NULL;
-
-            _SEH2_TRY
-            {
-                Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
-                                            ProcessData->CtrlDispatcher,
-                                            UlongToPtr(CtrlEvent), 0, NULL);
-                if (NULL == Thread)
-                {
-                    Status = RtlGetLastNtStatus();
-                    DPRINT1("Failed thread creation, Status = 0x%08lx\n", Status);
-                }
-                else
-                {
-                    DPRINT("ProcessData->CtrlDispatcher remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
-                    WaitForSingleObject(Thread, Timeout);
-                }
-            }
-            _SEH2_FINALLY
-            {
-                CloseHandle(Thread);
-            }
-            _SEH2_END;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-            DPRINT1("ConDrvConsoleCtrlEventTimeout - Caught an exception, Status = 0x%08lx\n", Status);
-        }
-        _SEH2_END;
-    }
-
-    return Status;
-}
-
-NTSTATUS
-ConDrvConsoleCtrlEvent(IN ULONG CtrlEvent,
-                       IN PCONSOLE_PROCESS_DATA ProcessData)
-{
-    return ConDrvConsoleCtrlEventTimeout(CtrlEvent, ProcessData, 0);
-}
-
-VOID FASTCALL
-ConioPause(PCONSOLE Console, UINT Flags)
-{
-    Console->PauseFlags |= Flags;
     if (!Console->UnpauseEvent)
         Console->UnpauseEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 }
 
-VOID FASTCALL
-ConioUnpause(PCONSOLE Console, UINT Flags)
+VOID NTAPI
+ConDrvUnpause(PCONSOLE Console)
 {
-    Console->PauseFlags &= ~Flags;
-
-    // if ((Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION)) == 0)
-    if (Console->PauseFlags == 0 && Console->UnpauseEvent)
+    if (Console->UnpauseEvent)
     {
         SetEvent(Console->UnpauseEvent);
         CloseHandle(Console->UnpauseEvent);
         Console->UnpauseEvent = NULL;
-
-        CsrNotifyWait(&Console->WriteWaitQueue,
-                      TRUE,
-                      NULL,
-                      NULL);
-        if (!IsListEmpty(&Console->WriteWaitQueue))
-        {
-            CsrDereferenceWait(&Console->WriteWaitQueue);
-        }
     }
 }
 
@@ -452,7 +381,9 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     HANDLE ConsoleHandle;
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
-    // WCHAR DefaultTitle[128];
+#if 0
+    WCHAR DefaultTitle[128];
+#endif
 
     if (NewConsoleHandle == NULL || NewConsole == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -463,61 +394,12 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     /*
      * Allocate a console structure
      */
-    Console = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(CONSOLE));
+    Console = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(*Console));
     if (NULL == Console)
     {
         DPRINT1("Not enough memory for console creation.\n");
         return STATUS_NO_MEMORY;
     }
-
-    /*
-     * Load the console settings
-     */
-
-    /* 1. Load the default settings */
-    // ConSrvGetDefaultSettings(ConsoleInfo, ProcessId);
-
-    // /* 2. Get the title of the console (initialize ConsoleInfo.ConsoleTitle) */
-    // Length = min(wcslen(ConsoleStartInfo->ConsoleTitle),
-                 // sizeof(ConsoleInfo.ConsoleTitle) / sizeof(ConsoleInfo.ConsoleTitle[0]) - 1);
-    // wcsncpy(ConsoleInfo.ConsoleTitle, ConsoleStartInfo->ConsoleTitle, Length);
-    // ConsoleInfo.ConsoleTitle[Length] = L'\0';
-
-    /*
-     * 4. Load the remaining console settings via the registry.
-     */
-#if 0
-    if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
-    {
-        /*
-         * Either we weren't created by an app launched via a shell-link,
-         * or we failed to load shell-link console properties.
-         * Therefore, load the console infos for the application from the registry.
-         */
-        ConSrvReadUserSettings(ConsoleInfo, ProcessId);
-
-        /*
-         * Now, update them with the properties the user might gave to us
-         * via the STARTUPINFO structure before calling CreateProcess
-         * (and which was transmitted via the ConsoleStartInfo structure).
-         * We therefore overwrite the values read in the registry.
-         */
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
-        {
-            ConsoleInfo->ScreenAttrib = (USHORT)ConsoleStartInfo->FillAttribute;
-        }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USECOUNTCHARS)
-        {
-            ConsoleInfo->ScreenBufferSize = ConsoleStartInfo->ScreenBufferSize;
-        }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USESIZE)
-        {
-            // ConsoleInfo->ConsoleSize = ConsoleStartInfo->ConsoleWindowSize;
-            ConsoleInfo->ConsoleSize.X = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cx;
-            ConsoleInfo->ConsoleSize.Y = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cy;
-        }
-    }
-#endif
 
     /*
      * Fix the screen buffer size if needed. The rule is:
@@ -534,9 +416,6 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->State = CONSOLE_INITIALIZING;
     Console->ReferenceCount = 0;
     InitializeCriticalSection(&Console->Lock);
-    InitializeListHead(&Console->ProcessList);
-    Console->NotifiedLastCloseProcess = NULL;
-    Console->NotifyLastClose = FALSE;
 
     /* Initialize the frontend interface */
     ResetFrontEnd(Console);
@@ -563,11 +442,9 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     Console->InputBuffer.InputBufferSize = 0; // FIXME!
     InitializeListHead(&Console->InputBuffer.InputEvents);
-    InitializeListHead(&Console->InputBuffer.ReadWaitQueue);
     Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
                                 ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
 
-    Console->QuickEdit  = ConsoleInfo->QuickEdit;
     Console->InsertMode = ConsoleInfo->InsertMode;
     Console->LineBuffer = NULL;
     Console->LineMaxSize = Console->LineSize = Console->LinePos = 0;
@@ -600,8 +477,6 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     }
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
-    InitializeListHead(&Console->WriteWaitQueue);
-    Console->PauseFlags = 0;
     Console->UnpauseEvent = NULL;
 
     /*
@@ -615,21 +490,25 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     /* Initialize the console title */
     ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo->ConsoleTitle);
-    // if (ConsoleInfo.ConsoleTitle[0] == L'\0')
-    // {
-        // if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, DefaultTitle, sizeof(DefaultTitle) / sizeof(DefaultTitle[0])))
-        // {
-            // ConsoleCreateUnicodeString(&Console->Title, DefaultTitle);
-        // }
-        // else
-        // {
-            // ConsoleCreateUnicodeString(&Console->Title, L"ReactOS Console");
-        // }
-    // }
-    // else
-    // {
+#if 0
+    if (ConsoleInfo.ConsoleTitle[0] == L'\0')
+    {
+        if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, DefaultTitle, sizeof(DefaultTitle) / sizeof(DefaultTitle[0])))
+        {
+            ConsoleCreateUnicodeString(&Console->Title, DefaultTitle);
+        }
+        else
+        {
+            ConsoleCreateUnicodeString(&Console->Title, L"ReactOS Console");
+        }
+    }
+    else
+    {
+#endif
         ConsoleCreateUnicodeString(&Console->Title, ConsoleInfo->ConsoleTitle);
-    // }
+#if 0
+    }
+#endif
 
     /* Lock the console until its initialization is finished */
     // EnterCriticalSection(&Console->Lock);
@@ -670,15 +549,15 @@ ConDrvRegisterFrontEnd(IN PCONSOLE Console,
     /* FIXME: Lock the console before ?? */
 
     /*
-     * Attach the frontend to the console. Use now the TermIFace of the console,
+     * Attach the frontend to the console. Use now the FrontEndIFace of the console,
      * and not the user-defined temporary FrontEnd pointer.
      */
-    Console->TermIFace = *FrontEnd;
-    Console->TermIFace.Console = Console;
+    Console->FrontEndIFace = *FrontEnd;
+    Console->FrontEndIFace.Console = Console;
 
     /* Initialize the frontend AFTER having attached it to the console */
     DPRINT("Finish initialization of frontend\n");
-    Status = Console->TermIFace.Vtbl->InitFrontEnd(&Console->TermIFace, Console);
+    Status = Console->FrontEndIFace.Vtbl->InitFrontEnd(&Console->FrontEndIFace, Console);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("FrontEnd initialization failed, Status = 0x%08lx\n", Status);
@@ -707,7 +586,7 @@ ConDrvDeregisterFrontEnd(IN PCONSOLE Console)
     /* FIXME: Lock the console before ?? */
 
     /* Deinitialize the frontend BEFORE detaching it from the console */
-    Console->TermIFace.Vtbl->DeinitFrontEnd(&Console->TermIFace/*, Console*/);
+    Console->FrontEndIFace.Vtbl->DeinitFrontEnd(&Console->FrontEndIFace/*, Console*/);
 
     /*
      * Detach the frontend from the console:
@@ -1084,83 +963,6 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
         Console->CodePage = CodePage;
 
     return STATUS_SUCCESS;
-}
-
-PCONSOLE_PROCESS_DATA NTAPI
-ConDrvGetConsoleLeaderProcess(IN PCONSOLE Console)
-{
-    if (Console == NULL) return NULL;
-
-    return CONTAINING_RECORD(Console->ProcessList.Blink,
-                             CONSOLE_PROCESS_DATA,
-                             ConsoleLink);
-}
-
-NTSTATUS NTAPI
-ConDrvGetConsoleProcessList(IN PCONSOLE Console,
-                            IN OUT PULONG ProcessIdsList,
-                            IN ULONG MaxIdListItems,
-                            OUT PULONG ProcessIdsTotal)
-{
-    PCONSOLE_PROCESS_DATA current;
-    PLIST_ENTRY current_entry;
-
-    if (Console == NULL || ProcessIdsList == NULL || ProcessIdsTotal == NULL)
-        return STATUS_INVALID_PARAMETER;
-
-    *ProcessIdsTotal = 0;
-
-    for (current_entry = Console->ProcessList.Flink;
-         current_entry != &Console->ProcessList;
-         current_entry = current_entry->Flink)
-    {
-        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
-        if (++(*ProcessIdsTotal) <= MaxIdListItems)
-        {
-            *ProcessIdsList++ = HandleToUlong(current->Process->ClientId.UniqueProcess);
-        }
-    }
-
-    return STATUS_SUCCESS;
-}
-
-// ConDrvGenerateConsoleCtrlEvent
-NTSTATUS NTAPI
-ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
-                              IN ULONG ProcessGroupId,
-                              IN ULONG CtrlEvent)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PLIST_ENTRY current_entry;
-    PCONSOLE_PROCESS_DATA current;
-
-    /* If the console is already being destroyed, just return */
-    if (!ConDrvValidateConsoleState(Console, CONSOLE_RUNNING))
-        return STATUS_UNSUCCESSFUL;
-
-    /*
-     * Loop through the process list, from the most recent process
-     * (the active one) to the oldest one (the first created, i.e.
-     * the console leader process), and for each, send an event
-     * (new processes are inserted at the head of the console process list).
-     */
-    current_entry = Console->ProcessList.Flink;
-    while (current_entry != &Console->ProcessList)
-    {
-        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
-        current_entry = current_entry->Flink;
-
-        /*
-         * Only processes belonging to the same process group are signaled.
-         * If the process group ID is zero, then all the processes are signaled.
-         */
-        if (ProcessGroupId == 0 || current->Process->ProcessGroupId == ProcessGroupId)
-        {
-            Status = ConDrvConsoleCtrlEvent(CtrlEvent, current);
-        }
-    }
-
-    return Status;
 }
 
 /* EOF */

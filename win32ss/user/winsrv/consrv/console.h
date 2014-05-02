@@ -8,9 +8,6 @@
 
 #pragma once
 
-// FIXME: Fix compilation
-struct _CONSOLE;
-
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT struct _CONSOLE** /* PCONSOLE* */ NewConsole,
@@ -18,8 +15,8 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   IN ULONG ConsoleLeaderProcessId);
 VOID NTAPI ConSrvDeleteConsole(struct _CONSOLE* /* PCONSOLE */ Console);
 
-NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
+NTSTATUS ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                    struct _CONSOLE** /* PCONSOLE* */ Console,
                                    BOOL LockConsole);
-VOID FASTCALL ConSrvReleaseConsole(struct _CONSOLE* /* PCONSOLE */ Console,
+VOID ConSrvReleaseConsole(struct _CONSOLE* /* PCONSOLE */ Console,
                                    BOOL WasConsoleLocked);

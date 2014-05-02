@@ -74,7 +74,7 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 }
 
 // ConDrvCreateConsoleScreenBuffer
-NTSTATUS FASTCALL
+NTSTATUS
 ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                          IN OUT PCONSOLE Console,
                          IN ULONG BufferType,
@@ -151,7 +151,7 @@ ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
     CONSOLE_SCREEN_BUFFER_Destroy(Buffer);
 }
 
-VOID FASTCALL
+VOID
 ConioDrawConsole(PCONSOLE Console)
 {
     SMALL_RECT Region;

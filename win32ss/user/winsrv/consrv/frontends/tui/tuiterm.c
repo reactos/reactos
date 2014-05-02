@@ -164,7 +164,7 @@ done:
 /**\
 \******************************************************************************/
 
-static BOOL FASTCALL
+static BOOL
 TuiSwapConsole(INT Next)
 {
     static PTUI_CONSOLE_DATA SwapConsole = NULL; /* Console we are thinking about swapping with */
@@ -231,7 +231,7 @@ TuiSwapConsole(INT Next)
     }
 }
 
-static VOID FASTCALL
+static VOID
 TuiCopyRect(PCHAR Dest, PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
 {
     UINT SrcDelta, DestDelta;
@@ -459,7 +459,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
         // return STATUS_INVALID_PARAMETER;
 
     // /* Initialize the console */
-    // Console->TermIFace.Vtbl = &TuiVtbl;
+    // Console->FrontEndIFace.Vtbl = &TuiVtbl;
 
     TuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(TUI_CONSOLE_DATA));
     if (!TuiData)
@@ -467,7 +467,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
         DPRINT1("CONSRV: Failed to create TUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
     }
-    // Console->TermIFace.Data = (PVOID)TuiData;
+    // Console->FrontEndIFace.Data = (PVOID)TuiData;
     TuiData->Console = Console;
     TuiData->hWindow = NULL;
 
@@ -525,7 +525,7 @@ static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
     // PCONSOLE Console = This->Console;
-    PTUI_CONSOLE_DATA TuiData = This->Data; // Console->TermIFace.Data;
+    PTUI_CONSOLE_DATA TuiData = This->Data; // Console->FrontEndIFace.Data;
 
     /* Close the notification window */
     DestroyWindow(TuiData->hWindow);
@@ -556,7 +556,7 @@ TuiDeinitFrontEnd(IN OUT PFRONTEND This)
     /* Switch to the next console */
     if (NULL != ActiveConsole) ConioDrawConsole(ActiveConsole->Console);
 
-    // Console->TermIFace.Data = NULL;
+    // Console->FrontEndIFace.Data = NULL;
     This->Data = NULL;
     DeleteCriticalSection(&TuiData->Lock);
     ConsoleFreeHeap(TuiData);

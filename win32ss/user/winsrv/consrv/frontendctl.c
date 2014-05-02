@@ -30,7 +30,7 @@
  *      with NT's, but values are not.
  */
 #if 0
-static NTSTATUS FASTCALL
+static NTSTATUS
 SetConsoleHardwareState(PCONSOLE Console, ULONG ConsoleHwState)
 {
     DPRINT1("Console Hardware State: %d\n", ConsoleHwState);

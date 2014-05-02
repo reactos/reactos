@@ -14,7 +14,7 @@
 #include "guisettings.h"
 #include "conwnd.h"
 
-NTSTATUS FASTCALL GuiInitConsole(PCONSOLE Console,
+NTSTATUS GuiInitConsole(PCONSOLE Console,
                                  /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
                                  PCONSOLE_INFO ConsoleInfo,
                                  DWORD ProcessId,

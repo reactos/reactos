@@ -151,7 +151,7 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
     ConsoleFreeHeap(Hist);
 }
 
-VOID FASTCALL
+VOID
 HistoryDeleteBuffers(PCONSOLE Console)
 {
     PLIST_ENTRY CurrentEntry;
@@ -244,7 +244,7 @@ LineInputRecallHistory(PCONSOLE Console, INT Offset)
                   Hist->Entries[Hist->Position].Buffer);
 }
 
-VOID FASTCALL
+VOID
 LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
 {
     UINT Pos = Console->LinePos;

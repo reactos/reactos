@@ -33,7 +33,7 @@ static CONSOLE_SCREEN_BUFFER_VTBL TextVtbl =
 };
 
 
-static VOID FASTCALL
+static VOID
 ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff);
 
 
@@ -126,7 +126,7 @@ ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
     return &Buff->Buffer[((Y + Buff->VirtualY) % Buff->ScreenBufferSize.Y) * Buff->ScreenBufferSize.X + X];
 }
 
-static VOID FASTCALL
+static VOID
 ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff)
 {
     PCHAR_INFO Ptr = ConioCoordToPointer(Buff, 0, Buff->CursorPosition.Y);
@@ -199,7 +199,7 @@ ConioGetUnion(OUT PSMALL_RECT Union,
     return TRUE;
 }
 
-static VOID FASTCALL
+static VOID
 ConioComputeUpdateRect(IN PTEXTMODE_SCREEN_BUFFER Buff,
                        IN OUT PSMALL_RECT UpdateRect,
                        IN PCOORD Start,
@@ -233,7 +233,7 @@ ConioComputeUpdateRect(IN PTEXTMODE_SCREEN_BUFFER Buff,
  * Move from one rectangle to another. We must be careful about the order that
  * this is done, to avoid overwriting parts of the source before they are moved.
  */
-static VOID FASTCALL
+static VOID
 ConioMoveRegion(PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                 PSMALL_RECT SrcRegion,
                 PSMALL_RECT DstRegion,
@@ -293,7 +293,7 @@ ConioMoveRegion(PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
     }
 }
 
-DWORD FASTCALL
+DWORD
 ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale)
 {
     DWORD Size = (Console->ActiveBuffer->CursorInfo.dwSize * Scale + 99) / 100;
@@ -422,7 +422,7 @@ ConioResizeBuffer(PCONSOLE Console,
     return STATUS_SUCCESS;
 }
 
-static VOID FASTCALL
+static VOID
 ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT ScrolledLines)
 {
     /* If we hit bottom, slide the viewable screen */
