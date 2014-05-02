@@ -39,6 +39,7 @@ static HMENU hConsoleMenu  = NULL;
 static INT   VdmMenuPos    = -1;
 static BOOLEAN ShowPointer = FALSE;
 
+ULONG SessionId = 0;
 HANDLE VdmTaskEvent = NULL;
 
 /*
@@ -382,6 +383,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
         ZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
         /* Initialize the structure members */
+        CommandInfo.TaskId = SessionId;
         CommandInfo.VDMState = VDM_FLAG_DOS;
         CommandInfo.CmdLine = CmdLine;
         CommandInfo.CmdLen = sizeof(CmdLine);
@@ -453,6 +455,20 @@ INT wmain(INT argc, WCHAR *argv[])
         wprintf(L"\nReactOS Virtual DOS Machine\n\n"
                 L"Usage: NTVDM <executable> [<parameters>]\n");
         return 0;
+    }
+
+#else
+    INT i;
+    WCHAR *endptr;
+
+    /* Parse the command line arguments */
+    for (i = 1; i < argc; i++)
+    {
+        if (wcsncmp(argv[i], L"-i", 2) == 0)
+        {
+            /* This is the session ID */
+            SessionId = wcstoul(argv[i] + 2, &endptr, 10);
+        }
     }
 
 #endif

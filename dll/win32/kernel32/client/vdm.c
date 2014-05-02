@@ -1149,6 +1149,7 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
             ZeroMemory(GetNextVdmCommand, sizeof(*GetNextVdmCommand));
 
             /* Setup the input parameters */
+            GetNextVdmCommand->iTask = CommandData->TaskId;
             GetNextVdmCommand->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
             GetNextVdmCommand->CmdLen = CommandData->CmdLen;
             GetNextVdmCommand->AppLen = CommandData->AppLen;

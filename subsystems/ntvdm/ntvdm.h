@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <conio.h>
+#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
@@ -33,6 +34,7 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 
 /* FUNCTIONS ******************************************************************/
 
+extern ULONG SessionId;
 extern HANDLE VdmTaskEvent;
 
 VOID DisplayMessage(LPCWSTR Format, ...);

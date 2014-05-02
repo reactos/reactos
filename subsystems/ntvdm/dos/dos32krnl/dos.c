@@ -1336,6 +1336,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
             ZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
             /* Initialize the structure members */
+            CommandInfo.TaskId = SessionId;
             CommandInfo.VDMState = VDM_FLAG_NESTED_TASK | VDM_FLAG_DONT_WAIT;
             CommandInfo.CmdLine = CmdLine;
             CommandInfo.CmdLen = sizeof(CmdLine);
@@ -1455,6 +1456,7 @@ Done:
     if (CurrentPsp != SYSTEM_PSP)
     {
         /* Decrement the re-entry count */
+        CommandInfo.TaskId = SessionId;
         CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
         GetNextVDMCommand(&CommandInfo);
 
@@ -1462,6 +1464,7 @@ Done:
         ZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
         /* Update the VDM state of the task */
+        CommandInfo.TaskId = SessionId;
         CommandInfo.VDMState = VDM_FLAG_DONT_WAIT;
         GetNextVDMCommand(&CommandInfo);
     }
