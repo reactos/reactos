@@ -268,7 +268,7 @@ UpdateViewMenu(PMAIN_WND_INFO Info)
 
     CheckMenuItem(hMenu,
                   IDC_SHOWHIDDEN,
-                  MF_BYCOMMAND | (Info->bShowHidden) ? MF_CHECKED : MF_UNCHECKED);
+                  MF_BYCOMMAND | (Info->bShowHidden ? MF_CHECKED : MF_UNCHECKED));
 }
 
 
