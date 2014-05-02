@@ -17,10 +17,10 @@
 /* GLOBALS ********************************************************************/
 
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
-    WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
 #define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    MultiByteToWideChar((Console)->CodePage, 0, (sChar), 1, (dWChar), 1)
+    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
 
 typedef struct ConsoleInput_t
 {
@@ -142,82 +142,6 @@ PurgeInputBuffer(PCONSOLE Console)
     }
 
     CloseHandle(Console->InputBuffer.ActiveEvent);
-}
-
-/*
- * This function explicitely references Console->ActiveBuffer
- * (and also makes use of keyboard functions...).
- * It is possible that it will move into frontends...
- */
-VOID NTAPI
-ConDrvProcessKey(IN PCONSOLE Console,
-                 IN BOOLEAN Down,
-                 IN UINT VirtualKeyCode,
-                 IN UINT VirtualScanCode,
-                 IN WCHAR UnicodeChar,
-                 IN ULONG ShiftState,
-                 IN BYTE KeyStateCtrl)
-{
-    INPUT_RECORD er;
-
-    /* process Ctrl-C and Ctrl-Break */
-    if ( Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
-         Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
-         (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyStateCtrl & 0x80) )
-    {
-        DPRINT1("Console_Api Ctrl-C\n");
-        ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
-
-        if (Console->LineBuffer && !Console->LineComplete)
-        {
-            /* Line input is in progress; end it */
-            Console->LinePos = Console->LineSize = 0;
-            Console->LineComplete = TRUE;
-        }
-        return;
-    }
-
-    if ( (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) != 0 &&
-         (VK_UP == VirtualKeyCode || VK_DOWN == VirtualKeyCode) )
-    {
-        if (!Down) return;
-
-        /* scroll up or down */
-        if (VK_UP == VirtualKeyCode)
-        {
-            /* only scroll up if there is room to scroll up into */
-            if (Console->ActiveBuffer->CursorPosition.Y != Console->ActiveBuffer->ScreenBufferSize.Y - 1)
-            {
-                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y - 1) %
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
-                Console->ActiveBuffer->CursorPosition.Y++;
-            }
-        }
-        else
-        {
-            /* only scroll down if there is room to scroll down into */
-            if (Console->ActiveBuffer->CursorPosition.Y != 0)
-            {
-                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
-                Console->ActiveBuffer->CursorPosition.Y--;
-            }
-        }
-
-        ConioDrawConsole(Console);
-        return;
-    }
-
-    er.EventType                        = KEY_EVENT;
-    er.Event.KeyEvent.bKeyDown          = Down;
-    er.Event.KeyEvent.wRepeatCount      = 1;
-    er.Event.KeyEvent.wVirtualKeyCode   = VirtualKeyCode;
-    er.Event.KeyEvent.wVirtualScanCode  = VirtualScanCode;
-    er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
-    er.Event.KeyEvent.dwControlKeyState = ShiftState;
-
-    ConioProcessInputEvent(Console, &er);
 }
 
 

@@ -13,12 +13,7 @@
 #include "consrv.h"
 
 #include <ndk/psfuncs.h>
-
 #include "procinit.h"
-
-#ifdef TUITERM_COMPILE
-#include "frontends/tui/tuiterm.h"
-#endif
 
 #define NDEBUG
 #include <debug.h>
@@ -27,69 +22,6 @@
 NTSTATUS NTAPI RtlGetLastNtStatus(VOID);
 
 /* GLOBALS ********************************************************************/
-
-/***************/
-#ifdef TUITERM_COMPILE
-NTSTATUS NTAPI
-TuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
-                IN OUT PCONSOLE_INFO ConsoleInfo,
-                IN OUT PVOID ExtraConsoleInfo,
-                IN ULONG ProcessId);
-NTSTATUS NTAPI
-TuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd);
-#endif
-
-NTSTATUS NTAPI
-GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
-                IN OUT PCONSOLE_INFO ConsoleInfo,
-                IN OUT PVOID ExtraConsoleInfo,
-                IN ULONG ProcessId);
-NTSTATUS NTAPI
-GuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd);
-/***************/
-
-typedef
-NTSTATUS (NTAPI *FRONTEND_LOAD)(IN OUT PFRONTEND FrontEnd,
-                                IN OUT PCONSOLE_INFO ConsoleInfo,
-                                IN OUT PVOID ExtraConsoleInfo,
-                                IN ULONG ProcessId);
-
-typedef
-NTSTATUS (NTAPI *FRONTEND_UNLOAD)(IN OUT PFRONTEND FrontEnd);
-
-/*
- * If we are not in GUI-mode, start the text-mode terminal emulator.
- * If we fail, try to start the GUI-mode terminal emulator.
- *
- * Try to open the GUI-mode terminal emulator. Two cases are possible:
- * - We are in GUI-mode, therefore GuiMode == TRUE, the previous test-case
- *   failed and we start GUI-mode terminal emulator.
- * - We are in text-mode, therefore GuiMode == FALSE, the previous test-case
- *   succeeded BUT we failed at starting text-mode terminal emulator.
- *   Then GuiMode was switched to TRUE in order to try to open the GUI-mode
- *   terminal emulator (Win32k will automatically switch to graphical mode,
- *   therefore no additional code is needed).
- */
-
-/*
- * NOTE: Each entry of the table should be retrieved when loading a front-end
- *       (examples of the CSR servers which register some data for CSRSS).
- */
-struct
-{
-    CHAR            FrontEndName[80];
-    FRONTEND_LOAD   FrontEndLoad;
-    FRONTEND_UNLOAD FrontEndUnload;
-} FrontEndLoadingMethods[] =
-{
-#ifdef TUITERM_COMPILE
-    {"TUI", TuiLoadFrontEnd,    TuiUnloadFrontEnd},
-#endif
-    {"GUI", GuiLoadFrontEnd,    GuiUnloadFrontEnd},
-
-//  {"Not found", 0, NULL}
-};
-
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -150,6 +82,14 @@ ConSrvReleaseConsole(PCONSOLE Console,
 }
 
 
+/* static */ NTSTATUS
+ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
+                   IN OUT PCONSOLE_INFO ConsoleInfo,
+                   IN OUT PVOID ExtraConsoleInfo,
+                   IN ULONG ProcessId);
+/* static */ NTSTATUS
+ConSrvUnloadFrontEnd(IN PFRONTEND FrontEnd);
+
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSOLE* NewConsole,
@@ -161,7 +101,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     PCONSOLE Console;
     CONSOLE_INFO ConsoleInfo;
     SIZE_T Length = 0;
-    ULONG i = 0;
+
     FRONTEND FrontEnd;
 
     if (NewConsole == NULL || ConsoleStartInfo == NULL)
@@ -182,39 +122,31 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     wcsncpy(ConsoleInfo.ConsoleTitle, ConsoleStartInfo->ConsoleTitle, Length);
     ConsoleInfo.ConsoleTitle[Length] = L'\0';
 
-
-    /*
-     * Choose an adequate terminal front-end to load, and load it
-     */
-    Status = STATUS_SUCCESS;
-    for (i = 0; i < sizeof(FrontEndLoadingMethods) / sizeof(FrontEndLoadingMethods[0]); ++i)
+#if 0
+    /* 3. Initialize the ConSrv terminal */
+    Status = ConSrvInitTerminal(&Terminal,
+                                &ConsoleInfo,
+                                ConsoleStartInfo,
+                                ConsoleLeaderProcessId);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT("CONSRV: Trying to load %s terminal emulator...\n", FrontEndLoadingMethods[i].FrontEndName);
-        Status = FrontEndLoadingMethods[i].FrontEndLoad(&FrontEnd,
-                                                        &ConsoleInfo,
-                                                        ConsoleStartInfo,
-                                                        ConsoleLeaderProcessId);
-        if (NT_SUCCESS(Status))
-        {
-            DPRINT("CONSRV: %s terminal emulator loaded successfully\n", FrontEndLoadingMethods[i].FrontEndName);
-            break;
-        }
-        else
-        {
-            DPRINT1("CONSRV: Loading %s terminal emulator failed, Status = 0x%08lx , continuing...\n", FrontEndLoadingMethods[i].FrontEndName, Status);
-        }
+        DPRINT1("CONSRV: Failed to initialize a terminal, Status = 0x%08lx\n", Status);
+        return Status;
     }
-
+    DPRINT("CONSRV: Terminal initialized\n");
+#else
+    Status = ConSrvLoadFrontEnd(&FrontEnd,
+                                &ConsoleInfo,
+                                ConsoleStartInfo,
+                                ConsoleLeaderProcessId);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CONSRV: Failed to initialize a frontend, Status = 0x%08lx\n", Status);
         return Status;
     }
-
     DPRINT("CONSRV: Frontend initialized\n");
+#endif
 
-
-/******************************************************************************/
     /*
      * 4. Load the remaining console settings via the registry.
      */
@@ -249,8 +181,8 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     /* Set-up the code page */
     ConsoleInfo.CodePage = GetOEMCP();
-/******************************************************************************/
 
+    /* Initialize a new console via the driver */
     Status = ConDrvInitConsole(&ConsoleHandle,
                                &Console,
                                &ConsoleInfo,
@@ -258,7 +190,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Creating a new console failed, Status = 0x%08lx\n", Status);
-        FrontEndLoadingMethods[i].FrontEndUnload(&FrontEnd);
+        ConSrvUnloadFrontEnd(&FrontEnd);
         return Status;
     }
 
@@ -266,20 +198,26 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     DPRINT("Console initialized\n");
 
     /*** Register ConSrv features ***/
+
+    /* Initialize process support */
     InitializeListHead(&Console->ProcessList);
     Console->NotifiedLastCloseProcess = NULL;
     Console->NotifyLastClose = FALSE;
+
+    /* Initialize pausing support */
+    Console->PauseFlags = 0;
     InitializeListHead(&Console->ReadWaitQueue);
     InitializeListHead(&Console->WriteWaitQueue);
-    Console->PauseFlags = 0;
-    Console->QuickEdit  = ConsoleInfo.QuickEdit;
 
+    Console->QuickEdit = ConsoleInfo.QuickEdit;
+
+    /* Attach the ConSrv terminal to the console */
     Status = ConDrvRegisterFrontEnd(Console, &FrontEnd);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to register frontend to the given console, Status = 0x%08lx\n", Status);
         ConDrvDeleteConsole(Console);
-        FrontEndLoadingMethods[i].FrontEndUnload(&FrontEnd);
+        ConSrvUnloadFrontEnd(&FrontEnd);
         return Status;
     }
     DPRINT("FrontEnd registered\n");

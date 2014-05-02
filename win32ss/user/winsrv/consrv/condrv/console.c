@@ -453,7 +453,7 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     // LineWakeupMask
 
     /* Set-up the code page */
-    Console->CodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
+    Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
 
     /* Initialize a new text-mode screen buffer with default settings */
     ScreenBufferInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;
@@ -862,7 +862,7 @@ ConDrvGetConsoleTitle(IN PCONSOLE Console,
         if (*BufLength >= sizeof(CHAR))
         {
             Length = min(*BufLength - sizeof(CHAR), Console->Title.Length / sizeof(WCHAR));
-            Length = WideCharToMultiByte(Console->CodePage, 0,
+            Length = WideCharToMultiByte(Console->InputCodePage, 0,
                                          Console->Title.Buffer, Length,
                                          TitleBuffer, Length,
                                          NULL, NULL);
@@ -898,7 +898,7 @@ ConDrvSetConsoleTitle(IN PCONSOLE Console,
     else
     {
         /* Use the console input CP for the conversion */
-        Length = MultiByteToWideChar(Console->CodePage, 0,
+        Length = MultiByteToWideChar(Console->InputCodePage, 0,
                                      TitleBuffer, BufLength,
                                      NULL, 0);
         /* The returned Length was in number of wchars, convert it in bytes */
@@ -923,7 +923,7 @@ ConDrvSetConsoleTitle(IN PCONSOLE Console,
     }
     else
     {
-        MultiByteToWideChar(Console->CodePage, 0,
+        MultiByteToWideChar(Console->InputCodePage, 0,
                             TitleBuffer, BufLength,
                             Console->Title.Buffer,
                             Console->Title.Length / sizeof(WCHAR));
@@ -944,7 +944,7 @@ ConDrvGetConsoleCP(IN PCONSOLE Console,
     if (Console == NULL || CodePage == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    *CodePage = (OutputCP ? Console->OutputCodePage : Console->CodePage);
+    *CodePage = (OutputCP ? Console->OutputCodePage : Console->InputCodePage);
 
     return STATUS_SUCCESS;
 }
@@ -960,7 +960,7 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
     if (OutputCP)
         Console->OutputCodePage = CodePage;
     else
-        Console->CodePage = CodePage;
+        Console->InputCodePage = CodePage;
 
     return STATUS_SUCCESS;
 }

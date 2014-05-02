@@ -85,6 +85,8 @@ typedef struct _FRONTEND_VTBL
 struct _FRONTEND
 {
     PFRONTEND_VTBL Vtbl;        /* Virtual table */
+    NTSTATUS (NTAPI *UnloadFrontEnd)(IN OUT PFRONTEND This);
+
     struct _CONSOLE* Console;   /* Console to which the frontend is attached to */
     PVOID Data;                 /* Private data  */
     PVOID OldData;              /* Reserved      */

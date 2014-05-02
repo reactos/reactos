@@ -297,7 +297,7 @@ typedef struct _CONSOLE
 
 /**************************** Input buffer and data ***************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
-    UINT CodePage;
+    UINT InputCodePage;
 
     /** Put those things in TEXTMODE_SCREEN_BUFFER ?? **/
     PWCHAR LineBuffer;                      /* Current line being input, in line buffered mode */
