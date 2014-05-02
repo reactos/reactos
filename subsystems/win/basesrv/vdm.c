@@ -29,6 +29,9 @@ NTSTATUS NTAPI BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD
     PLIST_ENTRY i;
     PVDM_CONSOLE_RECORD CurrentRecord = NULL;
 
+    /* NULL is not a valid console handle */
+    if (ConsoleHandle == NULL) return STATUS_INVALID_PARAMETER;
+
     /* Search for a record that has the same console handle */
     for (i = VDMConsoleListHead.Flink; i != &VDMConsoleListHead; i = i->Flink)
     {
