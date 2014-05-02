@@ -203,7 +203,7 @@ VOID EmulatorSimulate(VOID)
     }
     CpuCallLevel++;
 
-    CpuSimulate = TRUE;
+    VdmRunning = CpuSimulate = TRUE;
     while (VdmRunning && CpuSimulate) ClockUpdate();
 
     CpuCallLevel--;
