@@ -1341,7 +1341,7 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
             pidl = ILClone(m_idList);
             if (!pidl)
             {
-                (*(IUnknown**) ppv)->Release();
+                (*reinterpret_cast<IUnknown**>(ppv))->Release();
                 return E_FAIL;
             }
         }

@@ -528,6 +528,9 @@ HRESULT CInternetToolbar::ReserveBorderSpace()
     if (FAILED(hResult))
         return hResult;
     SendMessage(fMainReBar, RB_SIZETORECT, RBSTR_CHANGERECT, reinterpret_cast<LPARAM>(&availableBorderSpace));
+    // RBSTR_CHANGERECT does not seem to set the proper size in the rect.
+    // Let's make sure we fetch the actual size properly.
+    GetWindowRect(fMainReBar, &availableBorderSpace);
     neededBorderSpace.left = 0;
     neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
     if (!fLocked)
@@ -1095,7 +1098,6 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
     HWND                                    ownerWindow;
     HWND                                    dockContainer;
     HRESULT                                 hResult;
-    DWORD                                   style;
 
     if (pUnkSite == NULL)
     {
@@ -1125,9 +1127,11 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
         SubclassWindow(dockContainer);
 
         // create rebar in dock container
-        style = WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | RBS_VARHEIGHT |
-            RBS_BANDBORDERS | RBS_REGISTERDROP | RBS_AUTOSIZE | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_TOP;
-        fMainReBar = CreateWindow(REBARCLASSNAMEW, NULL, style,
+        DWORD style = WS_VISIBLE | WS_BORDER | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+                      RBS_VARHEIGHT | RBS_BANDBORDERS | RBS_REGISTERDROP | RBS_AUTOSIZE | RBS_DBLCLKTOGGLE |
+                      CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_TOP;
+        DWORD exStyle = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_TOOLWINDOW;
+        fMainReBar = CreateWindowEx(exStyle, REBARCLASSNAMEW, NULL, style,
                             0, 0, 700, 60, dockContainer, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
         if (fMainReBar == NULL)
             return E_FAIL;

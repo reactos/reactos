@@ -313,11 +313,11 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     /* CLSID_MergedFolder 26fdc864-be88-46e7-9235-032d8ea5162e */
     /* IID_IAugmentedShellFolder2 8db3b3f4-6cfe-11d1-8ae9-00c04fd918d0 */
     hr = SHGetFolderLocation(NULL, CSIDL_STARTMENU, 0, 0, &pidlStartMenuUser);
-    hr = shellFolder->BindToObject(pidlStartMenuUser, NULL, IID_IShellFolder, (void**) &psfStartMenuUser);
+    hr = shellFolder->BindToObject(pidlStartMenuUser, NULL, IID_PPV_ARG(IShellFolder, &psfStartMenuUser));
 
 #if MERGE_FOLDERS
     hr = SHGetFolderLocation(NULL, CSIDL_COMMON_STARTMENU, 0, 0, &pidlStartMenuAll);
-    hr = shellFolder->BindToObject(pidlStartMenuAll, NULL, IID_IShellFolder, (void**) &psfStartMenuAll);
+    hr = shellFolder->BindToObject(pidlStartMenuAll, NULL, IID_PPV_ARG(IShellFolder, &psfStartMenuAll));
 
     IShellFolder * psfMerged;
     hr = CMergedFolder_Constructor(psfStartMenuUser, psfStartMenuAll, IID_PPV_ARG(IShellFolder, &psfMerged));

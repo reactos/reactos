@@ -23,6 +23,12 @@
 #include <shellapi.h>
 #include <htiframe.h>
 
+extern "C"
+BOOL WINAPI Shell_GetImageLists(
+    _In_  HIMAGELIST *phiml,
+    _In_  HIMAGELIST *phimlSmall
+    );
+
 #include "newatlinterfaces.h"
 
 /*
@@ -708,8 +714,7 @@ CShellBrowser::CShellBrowser()
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
     fStatusBarVisible = true;
-    for (INT x = 0; x < 3; x++)
-        fClientBars[x].hwnd = NULL;
+    memset(fClientBars, 0, sizeof(fClientBars));
     fCurrentMenuBar = NULL;
     fHistoryObject = NULL;
     fHistoryStream = NULL;
@@ -920,7 +925,6 @@ long IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cch
 HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     LPCITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
 {
-    CComPtr<IOleCommandTarget>              oleCommandTarget;
     CComPtr<IObjectWithSite>                objectWithSite;
     CComPtr<IShellFolder>                   saveCurrentShellFolder;
     CComPtr<IShellView>                     saveCurrentShellView;
@@ -1006,10 +1010,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         saveCurrentShellView->DestroyViewWindow();
     fCurrentShellViewWindow = newShellViewWindow;
 
-    // get command target
-    oleCommandTarget.Release();
-    hResult = newShellView->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
-
     // no use
     saveCurrentShellView.Release();
     saveCurrentShellFolder.Release();
@@ -1029,7 +1029,18 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     }
 
     // completed
-    FireNavigateComplete(L"c:\\temp");      // TODO: use real path here
+    nameFlags = SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
+    hResult = IEGetNameAndFlags(fCurrentDirectoryPIDL, nameFlags, newTitle,
+        sizeof(newTitle) / sizeof(wchar_t), NULL);
+    if (SUCCEEDED(hResult))
+    {
+        FireNavigateComplete(newTitle);
+    }
+    else
+    {
+        FireNavigateComplete(L"ERROR");
+    }
+
     if (fCabinetState.fFullPathTitle)
         nameFlags = SHGDN_FORADDRESSBAR | SHGDN_FORPARSING;
     else
@@ -1037,7 +1048,26 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     hResult = IEGetNameAndFlags(fCurrentDirectoryPIDL, nameFlags, newTitle,
         sizeof(newTitle) / sizeof(wchar_t), NULL);
     if (SUCCEEDED(hResult))
+    {
         SetWindowText(newTitle);
+
+        LPCITEMIDLIST pidlChild;
+        INT index, indexOpen;
+        HIMAGELIST himlSmall, himlLarge;
+
+        CComPtr<IShellFolder> sf;
+        SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+
+        index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+
+        Shell_GetImageLists(&himlSmall, &himlLarge);
+
+        HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
+        HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
+
+        SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
+        SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
+    }
 
     // TODO: Update the window icon
 
@@ -1303,7 +1333,6 @@ void CShellBrowser::RepositionBars()
 {
     RECT                                    clientRect;
     RECT                                    statusRect;
-    RECT                                    toolbarRect;
     int                                     x;
 
     GetClientRect(&clientRect);
@@ -1319,28 +1348,39 @@ void CShellBrowser::RepositionBars()
 
     for (x = 0; x < 3; x++)
     {
-        if (fClientBars[x].hwnd == NULL && fClientBars[x].clientBar != NULL)
+        HWND hwnd = fClientBars[x].hwnd;
+        RECT borderSpace = fClientBars[x].borderSpace;
+        if (hwnd == NULL && fClientBars[x].clientBar != NULL)
         {
-            IUnknown_GetWindow(fClientBars[x].clientBar, &fClientBars[x].hwnd);
+            IUnknown_GetWindow(fClientBars[x].clientBar, &hwnd);
+            fClientBars[x].hwnd = hwnd;
         }
-        if (fClientBars[x].hwnd != NULL)
+        if (hwnd != NULL)
         {
-            toolbarRect = clientRect;
-            if (fClientBars[x].borderSpace.top != 0)
-                toolbarRect.bottom = toolbarRect.top + fClientBars[x].borderSpace.top;
-            else if (fClientBars[x].borderSpace.bottom != 0)
-                toolbarRect.top = toolbarRect.bottom - fClientBars[x].borderSpace.bottom;
-            if (fClientBars[x].borderSpace.left != 0)
-                toolbarRect.right = toolbarRect.left + fClientBars[x].borderSpace.left;
-            else if (fClientBars[x].borderSpace.right != 0)
-                toolbarRect.left = toolbarRect.right - fClientBars[x].borderSpace.right;
-            ::SetWindowPos(fClientBars[x].hwnd, NULL, toolbarRect.left, toolbarRect.top,
+            RECT toolbarRect = clientRect;
+            if (borderSpace.top != 0)
+            {
+                toolbarRect.bottom = toolbarRect.top + borderSpace.top;
+                clientRect.top += borderSpace.top;
+            }
+            else if (borderSpace.bottom != 0)
+            {
+                toolbarRect.top = toolbarRect.bottom - borderSpace.bottom;
+                clientRect.bottom -= borderSpace.bottom;
+            }
+            if (borderSpace.left != 0)
+            {
+                toolbarRect.right = toolbarRect.left + borderSpace.left;
+                clientRect.left += borderSpace.left;
+            }
+            else if (borderSpace.right != 0)
+            {
+                toolbarRect.left = toolbarRect.right - borderSpace.right;
+                clientRect.right -= borderSpace.right;
+            }
+            ::SetWindowPos(hwnd, NULL, toolbarRect.left, toolbarRect.top,
                                 toolbarRect.right - toolbarRect.left,
                                 toolbarRect.bottom - toolbarRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
-            clientRect.top += fClientBars[x].borderSpace.top;
-            clientRect.left += fClientBars[x].borderSpace.left;
-            clientRect.bottom += fClientBars[x].borderSpace.bottom;
-            clientRect.right += fClientBars[x].borderSpace.right;
         }
     }
     ::SetWindowPos(fCurrentShellViewWindow, NULL, clientRect.left, clientRect.top,
