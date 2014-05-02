@@ -32,8 +32,6 @@
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
-static CONSOLE_CURSOR_INFO         OrgConsoleCursorInfo;
-static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
 static BOOLEAN AcceptCommands = TRUE;
 static HANDLE CommandThread = NULL;
 
@@ -344,16 +342,6 @@ BOOL ConsoleInit(VOID)
         return FALSE;
     }
 
-    /* Save the original cursor and console screen buffer information */
-    if (!GetConsoleCursorInfo(ConsoleOutput, &OrgConsoleCursorInfo) ||
-        !GetConsoleScreenBufferInfo(ConsoleOutput, &OrgConsoleBufferInfo))
-    {
-        CloseHandle(ConsoleOutput);
-        CloseHandle(ConsoleInput);
-        wprintf(L"FATAL: Cannot save console cursor/screen-buffer info\n");
-        return FALSE;
-    }
-
     /* Initialize the UI */
     ConsoleInitUI();
 
@@ -362,26 +350,6 @@ BOOL ConsoleInit(VOID)
 
 VOID ConsoleCleanup(VOID)
 {
-    SMALL_RECT ConRect;
-
-    /* Restore the old screen buffer */
-    SetConsoleActiveScreenBuffer(ConsoleOutput);
-
-    /* Restore the original console size */
-    ConRect.Left   = 0;
-    ConRect.Top    = 0;
-    ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
-    ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
-    /*
-     * See the following trick explanation in vga.c:VgaEnterTextMode() .
-     */
-    SetConsoleScreenBufferSize(ConsoleOutput, OrgConsoleBufferInfo.dwSize);
-    SetConsoleWindowInfo(ConsoleOutput, TRUE, &ConRect);
-    SetConsoleScreenBufferSize(ConsoleOutput, OrgConsoleBufferInfo.dwSize);
-
-    /* Restore the original cursor shape */
-    SetConsoleCursorInfo(ConsoleOutput, &OrgConsoleCursorInfo);
-
     /* Restore the original input and output console modes */
     SetConsoleMode(ConsoleOutput, OrgConsoleOutputMode);
     SetConsoleMode(ConsoleInput , OrgConsoleInputMode );
@@ -428,11 +396,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
         CommandInfo.Env = Env;
         CommandInfo.EnvLen = sizeof(Env);
 
-        if (First)
-        {
-            CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
-            First = FALSE;
-        }
+        if (First) CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
 
         /* Wait for the next available VDM */
         if (!GetNextVDMCommand(&CommandInfo)) break;
@@ -447,12 +411,23 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
             break;
         }
 
+        /* Attach to the console */
+        if (!First) VgaAttachToConsole();
+
+        /* Perform a screen refresh */
+        VgaRefreshDisplay();
+
         /* Start simulation */
         SetEvent(VdmTaskEvent);
         EmulatorSimulate();
 
         /* Perform another screen refresh */
         VgaRefreshDisplay();
+
+        /* Detach from the console */
+        VgaDetachFromConsole(FALSE);
+
+        First = FALSE;
     }
 
     return 0;

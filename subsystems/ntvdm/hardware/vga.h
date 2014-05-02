@@ -250,6 +250,9 @@ typedef struct _VGA_REGISTERS
 
 /* FUNCTIONS ******************************************************************/
 
+BOOL VgaAttachToConsole(VOID);
+VOID VgaDetachFromConsole(BOOL ChangeMode);
+
 DWORD VgaGetVideoBaseAddress(VOID);
 DWORD VgaGetVideoLimitAddress(VOID);
 COORD VgaGetDisplayResolution(VOID);

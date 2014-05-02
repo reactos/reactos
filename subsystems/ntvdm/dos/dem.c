@@ -20,6 +20,9 @@
 #include "dem.h"
 #include "bop.h"
 
+#include "bios/bios.h"
+#include "hardware/vga.h"
+
 /* Extra PSDK/NDK Headers */
 #include <ndk/obtypes.h>
 
@@ -117,7 +120,7 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
             STARTUPINFOA StartupInfo;
             PROCESS_INFORMATION ProcessInformation;
 
-            /* Remove return carriage character */
+            /* NULL-terminate the command by removing the return carriage character */
             while (*CmdPtr != '\r') CmdPtr++;
             *CmdPtr = '\0';
 
@@ -135,7 +138,8 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
 
             StartupInfo.cb = sizeof(StartupInfo);
 
-            DosPrintCharacter('\n');
+            VgaRefreshDisplay();
+            VgaDetachFromConsole(FALSE);
 
             Result = CreateProcessA(NULL,
                                     CommandLine,
@@ -166,8 +170,10 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
                 DPRINT1("Failed when launched command '%s'\n");
                 dwExitCode = GetLastError();
             }
-            
-            DosPrintCharacter('\n');
+
+            VgaAttachToConsole();
+            VgaRefreshDisplay();
+            VidBiosSyncCursorPosition();
 
             setAL((UCHAR)dwExitCode);
 
