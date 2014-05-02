@@ -278,14 +278,17 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
         LoadImage(shell32Instance, MAKEINTRESOURCE(214),
             IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
 
-    DIBSECTION bitmapInfo;
-    GetObjectW(imageBitmap, sizeof(bitmapInfo), &bitmapInfo);
-    HIMAGELIST imageList = ImageList_Create(bitmapInfo.dsBm.bmHeight, bitmapInfo.dsBm.bmHeight, ILC_COLOR32, 4, 4);
+    if (imageBitmap)
+    {
+        DIBSECTION bitmapInfo;
+        GetObjectW(imageBitmap, sizeof(bitmapInfo), &bitmapInfo);
+        HIMAGELIST imageList = ImageList_Create(bitmapInfo.dsBm.bmHeight, bitmapInfo.dsBm.bmHeight, ILC_COLOR32, 4, 4);
 
-    ImageList_Add(imageList, imageBitmap, NULL);
-    DeleteObject(imageBitmap);
+        ImageList_Add(imageList, imageBitmap, NULL);
+        DeleteObject(imageBitmap);
 
-    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)imageList);
+        SendMessage(TB_SETIMAGELIST, 0, (LPARAM) imageList);
+    }
 
     SendMessage(TB_ADDBUTTONSW, numShownButtons, (LPARAM)&tbButtonsAdd);
 

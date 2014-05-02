@@ -849,7 +849,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = CreateToolsBar(&toolsBar);
     if (FAILED(hResult))
         return hResult;
-    AddDockItem(toolsBar, ITBBID_TOOLSBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS);
+    AddDockItem(toolsBar, ITBBID_TOOLSBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
     fControlsBar.Attach(toolsBar.Detach());             // transfer the ref count
     hResult = fControlsBar->QueryInterface(IID_PPV_ARG(IOleWindow, &toolbarOleWindow));
     if (FAILED(hResult))
@@ -862,7 +862,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = CreateAddressBand(&navigationBar);
     if (FAILED(hResult))
         return hResult;
-    AddDockItem(navigationBar, ITBBID_ADDRESSBAND, CDockSite::ITF_NEWBANDALWAYS);
+    AddDockItem(navigationBar, ITBBID_ADDRESSBAND, CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
     hResult = navigationBar->QueryInterface(IID_PPV_ARG(IOleWindow, &navigationOleWindow));
     hResult = navigationOleWindow->GetWindow(&fNavigationWindow);
     fNavigationBar.Attach(navigationBar.Detach());
