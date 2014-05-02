@@ -901,6 +901,13 @@ CSR_API(BaseSrvGetNextVDMCommand)
                                              &ConsoleRecord);
         }
 
+        /* Make sure we found the console record */
+        if (!NT_SUCCESS(Status))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            goto Cleanup;
+        }
+
         /* Return the session ID */
         GetNextVdmCommandRequest->iTask = ConsoleRecord->SessionId;
         GetNextVdmCommandRequest->WaitObjectForVDM = NULL;
