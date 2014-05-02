@@ -41,6 +41,8 @@ static HMENU hConsoleMenu  = NULL;
 static INT   VdmMenuPos    = -1;
 static BOOLEAN ShowPointer = FALSE;
 
+HANDLE VdmTaskEvent = NULL;
+
 /*
  * Those menu helpers were taken from the GUI frontend in winsrv.dll
  */
@@ -200,10 +202,11 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
         }
         case CTRL_LAST_CLOSE_EVENT:
         {
-            if (!VdmRunning)
+            if (WaitForSingleObject(VdmTaskEvent, 0) == WAIT_TIMEOUT)
             {
                 /* Exit immediately */
                 if (CommandThread) TerminateThread(CommandThread, 0);
+                EmulatorTerminate();
             }
             else
             {
@@ -243,6 +246,9 @@ DWORD WINAPI PumpConsoleInput(LPVOID Parameter)
 
     while (VdmRunning)
     {
+        /* Make sure the task event is signaled */
+        WaitForSingleObject(VdmTaskEvent, INFINITE);
+
         /* Wait for an input record */
         if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
         {
@@ -442,6 +448,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
         }
 
         /* Start simulation */
+        SetEvent(VdmTaskEvent);
         EmulatorSimulate();
 
         /* Perform another screen refresh */
@@ -476,6 +483,10 @@ INT wmain(INT argc, WCHAR *argv[])
 #endif
 
     DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
+
+    /* Create the task event */
+    VdmTaskEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    ASSERT(VdmTaskEvent != NULL);
 
     /* Initialize the console */
     if (!ConsoleInit())
@@ -539,6 +550,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     /* Start simulation */
+    SetEvent(VdmTaskEvent);
     EmulatorSimulate();
 
     /* Perform another screen refresh */

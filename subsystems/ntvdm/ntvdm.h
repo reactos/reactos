@@ -33,6 +33,8 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 
 /* FUNCTIONS ******************************************************************/
 
+extern HANDLE VdmTaskEvent;
+
 VOID DisplayMessage(LPCWSTR Format, ...);
 
 #endif // _NTVDM_H_

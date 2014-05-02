@@ -1075,7 +1075,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     /* Open a handle to the executable */
     FileHandle = CreateFileA(ExecutablePath,
                              GENERIC_READ,
-                             0,
+                             FILE_SHARE_READ,
                              NULL,
                              OPEN_EXISTING,
                              FILE_ATTRIBUTE_NORMAL,
@@ -1443,12 +1443,16 @@ Done:
     if (Psp == CurrentPsp)
     {
         CurrentPsp = PspBlock->ParentPsp;
-        if (CurrentPsp == SYSTEM_PSP) VdmRunning = FALSE;
+        if (CurrentPsp == SYSTEM_PSP)
+        {
+            ResetEvent(VdmTaskEvent);
+            EmulatorUnsimulate();
+        }
     }
 
     // FIXME: This is probably not the best way to do it
     /* Check if this was a nested DOS task */
-    if (VdmRunning)
+    if (CurrentPsp != SYSTEM_PSP)
     {
         /* Decrement the re-entry count */
         CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
@@ -2646,8 +2650,9 @@ VOID WINAPI DosBreakInterrupt(LPWORD Stack)
 {
     UNREFERENCED_PARAMETER(Stack);
 
-    /* Stop the VDM */
-    VdmRunning = FALSE;
+    /* Stop the VDM task */
+    ResetEvent(VdmTaskEvent);
+    EmulatorUnsimulate();
 }
 
 VOID WINAPI DosFastConOut(LPWORD Stack)
