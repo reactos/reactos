@@ -2784,6 +2784,9 @@ BOOLEAN DosKRNLInitialize(VOID)
     DosSystemFileTable[1] = GetStdHandle(STD_OUTPUT_HANDLE);
     DosSystemFileTable[2] = GetStdHandle(STD_ERROR_HANDLE);
 
+    /* Initialize the reference counts */
+    DosSftRefCount[0] = DosSftRefCount[1] = DosSftRefCount[2] = 1;
+
 #endif
 
     /* Initialize the callback context */
