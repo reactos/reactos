@@ -36,6 +36,9 @@ NTSTATUS NTAPI BaseSrvGetConsoleRecord(HANDLE ConsoleHandle, PVDM_CONSOLE_RECORD
         if (CurrentRecord->ConsoleHandle == ConsoleHandle) break;
     }
 
+    /* Check if nothing was found */
+    if (i == &VDMConsoleListHead) CurrentRecord = NULL;
+
     *Record = CurrentRecord;
     return CurrentRecord ? STATUS_SUCCESS : STATUS_NOT_FOUND;
 }
@@ -51,6 +54,9 @@ NTSTATUS NTAPI GetConsoleRecordBySessionId(ULONG TaskId, PVDM_CONSOLE_RECORD *Re
         CurrentRecord = CONTAINING_RECORD(i, VDM_CONSOLE_RECORD, Entry);
         if (CurrentRecord->SessionId == TaskId) break;
     }
+
+    /* Check if nothing was found */
+    if (i == &VDMConsoleListHead) CurrentRecord = NULL;
 
     *Record = CurrentRecord;
     return CurrentRecord ? STATUS_SUCCESS : STATUS_NOT_FOUND;
@@ -656,6 +662,7 @@ CSR_API(BaseSrvCheckVDM)
             InsertTailList(&VDMConsoleListHead, &ConsoleRecord->Entry);
         }
 
+        CheckVdmRequest->iTask = ConsoleRecord->SessionId;
         CheckVdmRequest->VDMState = NewConsoleRecord ? VDM_NOT_LOADED : VDM_READY;
         Status = STATUS_SUCCESS;
     }
