@@ -677,7 +677,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     if (!lpEnvironment)
     {
         /* Nope, create one */
-        Status = RtlCreateEnvironment(TRUE, (PWCHAR*)&Environment);
+        Status = RtlCreateEnvironment(TRUE, &Environment);
         if (!NT_SUCCESS(Status)) goto Quickie;
     }
     else
@@ -718,6 +718,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     p = NewEnvironment;
 
     /* FIXME: Code here */
+    DPRINT1("BaseCreateVDMEnvironment is half-plemented!\n");
 
     /* Terminate it */
     *p++ = UNICODE_NULL;
@@ -916,7 +917,7 @@ InternalGetBinaryType(HANDLE hFile)
       return BINARY_PE_EXE32;
     }
 
-    if(!memcmp(magic, "NE", 1))
+    if(!memcmp(magic, "NE", 2))
     {
       /* This is a Windows executable (NE) header.  This can
        * mean either a 16-bit OS/2 or a 16-bit Windows or even a
@@ -1603,12 +1604,15 @@ VDMConsoleOperation (
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-VDMOperationStarted (
-    DWORD   Unknown0
-    )
+VDMOperationStarted(IN ULONG Unknown0)
 {
-    STUB;
-    return 0;
+    DPRINT1("VDMOperationStarted(%d)\n", Unknown0);
+
+    return
+    BaseUpdateVDMEntry(VdmEntryUpdateControlCHandler,
+                       NULL,
+                       0,
+                       Unknown0);
 }
