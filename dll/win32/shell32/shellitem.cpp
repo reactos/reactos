@@ -122,20 +122,24 @@ HRESULT WINAPI CShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
     hr = get_parent_shellfolder(&parent_folder);
     if (SUCCEEDED(hr))
     {
-        if (sigdnName == SIGDN_PARENTRELATIVEEDITING)
+        switch (sigdnName)
+        {
+        case SIGDN_PARENTRELATIVEEDITING:
             uFlags = SHGDN_FOREDITING | SHGDN_INFOLDER;
-        else if (sigdnName == SIGDN_DESKTOPABSOLUTEEDITING)
+            break;
+        case SIGDN_DESKTOPABSOLUTEEDITING:
             uFlags = SHGDN_FOREDITING;
-        else if (sigdnName == SIGDN_PARENTRELATIVEEDITING)
-            uFlags = SHGDN_FOREDITING | SHGDN_INFOLDER;
-        else if (sigdnName == SIGDN_DESKTOPABSOLUTEEDITING)
-            uFlags = SHGDN_FOREDITING;
-        else if (sigdnName == SIGDN_PARENTRELATIVEPARSING)
+            break;
+        case SIGDN_PARENTRELATIVEPARSING:
             uFlags = SHGDN_FORPARSING | SHGDN_INFOLDER;
-        else if (sigdnName == SIGDN_DESKTOPABSOLUTEPARSING)
+            break;
+        case SIGDN_DESKTOPABSOLUTEPARSING:
             uFlags = SHGDN_FORPARSING;
-        else
+            break;
+        default:
             uFlags = SHGDN_NORMAL;
+            break;
+        }
 
         hr = parent_folder->GetDisplayNameOf(m_pidl, uFlags, &name);
         if (SUCCEEDED(hr))
