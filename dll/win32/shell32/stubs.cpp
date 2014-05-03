@@ -668,17 +668,6 @@ SHInvokePrinterCommandA(HWND hwnd,
 /*
  * Unimplemented
  */
-EXTERN_C HRESULT
-WINAPI
-SHCreateQueryCancelAutoPlayMoniker(IMoniker **ppmoniker)
-{
-    FIXME("SHCreateQueryCancelAutoPlayMoniker() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
@@ -692,9 +681,9 @@ SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
  */
 EXTERN_C BOOL
 WINAPI
-SHChangeNotifySuspendResume(BOOL bSuspend, 
-                            LPITEMIDLIST pidl, 
-                            BOOL bRecursive, 
+SHChangeNotifySuspendResume(BOOL bSuspend,
+                            LPITEMIDLIST pidl,
+                            BOOL bRecursive,
                             DWORD dwReserved)
 {
     FIXME("SHChangeNotifySuspendResume() stub\n");

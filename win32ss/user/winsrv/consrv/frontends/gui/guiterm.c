@@ -532,6 +532,10 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     /* There is no user-reserved menu id range by default */
     GuiData->CmdIdLow = GuiData->CmdIdHigh = 0;
 
+    /* Initialize the selection */
+    RtlZeroMemory(&GuiData->Selection, sizeof(CONSOLE_SELECTION_INFO));
+    GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
+
     /*
      * We need to wait until the GUI has been fully initialized
      * to retrieve custom settings i.e. WindowSize etc...
@@ -939,6 +943,21 @@ GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
 }
 
 static BOOL NTAPI
+GuiGetSelectionInfo(IN OUT PFRONTEND This,
+                    PCONSOLE_SELECTION_INFO pSelectionInfo)
+{
+    PGUI_CONSOLE_DATA GuiData = This->Data;
+
+    if (pSelectionInfo == NULL) return FALSE;
+
+    ZeroMemory(pSelectionInfo, sizeof(CONSOLE_SELECTION_INFO));
+    if (GuiData->Selection.dwFlags != CONSOLE_NO_SELECTION)
+        RtlCopyMemory(pSelectionInfo, &GuiData->Selection, sizeof(CONSOLE_SELECTION_INFO));
+
+    return TRUE;
+}
+
+static BOOL NTAPI
 GuiSetPalette(IN OUT PFRONTEND This,
               HPALETTE PaletteHandle,
               UINT PaletteUsage)
@@ -1084,6 +1103,7 @@ static FRONTEND_VTBL GuiVtbl =
     GuiChangeIcon,
     GuiGetConsoleWindowHandle,
     GuiGetLargestConsoleWindowSize,
+    GuiGetSelectionInfo,
     GuiSetPalette,
     GuiGetDisplayMode,
     GuiSetDisplayMode,

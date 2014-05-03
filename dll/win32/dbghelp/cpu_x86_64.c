@@ -83,8 +83,8 @@ typedef struct _UNWIND_INFO
 #define GetExceptionDataPtr(info) \
     ((PVOID)((PULONG)GetLanguageSpecificData(info) + 1)
 
-static unsigned x86_64_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                                enum cpu_addr ca, ADDRESS64* addr)
+static BOOL x86_64_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                            enum cpu_addr ca, ADDRESS64* addr)
 {
     addr->Mode = AddrModeFlat;
     switch (ca)

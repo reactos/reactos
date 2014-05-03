@@ -141,7 +141,7 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
     TRACE("%s\n", debugstr_w(lpszServerName));
 
     /* Validate server name first
-     * Check if there is sth. like
+     * Check if there is something like
      * pinger.macromedia.com:80
      * if yes, eliminate the :80....
      */

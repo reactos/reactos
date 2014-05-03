@@ -1385,7 +1385,7 @@ static expression_t *new_call_expression(parser_ctx_t *ctx, expression_t *expres
     return &ret->expr;
 }
 
-static int parser_error(const char *str)
+static int parser_error(parser_ctx_t *ctx, const char *str)
 {
     return 0;
 }

@@ -525,70 +525,27 @@ static BOOL FDI_read_entries(
         PMORE_ISCAB_INFO pmii)
 {
   int num_folders, num_files, header_resv, folder_resv = 0;
-  LONG base_offset, cabsize;
+  LONG cabsize;
   USHORT setid, cabidx, flags;
   cab_UBYTE buf[64], block_resv;
   char *prevname = NULL, *previnfo = NULL, *nextname = NULL, *nextinfo = NULL;
 
   TRACE("(fdi == ^%p, hf == %ld, pfdici == ^%p)\n", fdi, hf, pfdici);
 
-  /* 
-   * FIXME: I just noticed that I am memorizing the initial file pointer
-   * offset and restoring it before reading in the rest of the header
-   * information in the cabinet.  Perhaps that's correct -- that is, perhaps
-   * this API is supposed to support "streaming" cabinets which are embedded
-   * in other files, or cabinets which begin at file offsets other than zero.
-   * Otherwise, I should instead go to the absolute beginning of the file.
-   * (Either way, the semantics of wine's FDICopy require me to leave the
-   * file pointer where it is afterwards -- If Windows does not do so, we
-   * ought to duplicate the native behavior in the FDIIsCabinet API, not here.
-   * 
-   * So, the answer lies in Windows; will native cabinet.dll recognize a
-   * cabinet "file" embedded in another file?  Note that cabextract.c does
-   * support this, which implies that Microsoft's might.  I haven't tried it
-   * yet so I don't know.  ATM, most of wine's FDI cabinet routines (except
-   * this one) would not work in this way.  To fix it, we could just make the
-   * various references to absolute file positions in the code relative to an
-   * initial "beginning" offset.  Because the FDICopy API doesn't take a
-   * file-handle like this one, we would therein need to search through the
-   * file for the beginning of the cabinet (as we also do in cabextract.c).
-   * Note that this limits us to a maximum of one cabinet per. file: the first.
-   *
-   * So, in summary: either the code below is wrong, or the rest of fdi.c is
-   * wrong... I cannot imagine that both are correct ;)  One of these flaws
-   * should be fixed after determining the behavior on Windows.   We ought
-   * to check both FDIIsCabinet and FDICopy for the right behavior.
-   *
-   * -gmt
-   */
-
-  /* get basic offset & size info */
-  base_offset = FDI_getoffset(fdi, hf);
-
-  if (fdi->seek(hf, 0, SEEK_END) == -1) {
-    if (pmii) set_error( fdi, FDIERROR_NOT_A_CABINET, 0 );
-    return FALSE;
-  }
-
-  cabsize = FDI_getoffset(fdi, hf);
-
-  if ((cabsize == -1) || (base_offset == -1) || 
-      ( fdi->seek(hf, base_offset, SEEK_SET) == -1 )) {
-    if (pmii) set_error( fdi, FDIERROR_NOT_A_CABINET, 0 );
-    return FALSE;
-  }
-
   /* read in the CFHEADER */
   if (fdi->read(hf, buf, cfhead_SIZEOF) != cfhead_SIZEOF) {
     if (pmii) set_error( fdi, FDIERROR_NOT_A_CABINET, 0 );
     return FALSE;
   }
-  
+
   /* check basic MSCF signature */
   if (EndGetI32(buf+cfhead_Signature) != 0x4643534d) {
     if (pmii) set_error( fdi, FDIERROR_NOT_A_CABINET, 0 );
     return FALSE;
   }
+
+  /* get the cabinet size */
+  cabsize = EndGetI32(buf+cfhead_CabinetSize);
 
   /* get the number of folders */
   num_folders = EndGetI16(buf+cfhead_NumFolders);
@@ -2037,7 +1994,7 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
         FDICABINETINFO fdici;
         char emptystring = '\0';
         cab_UBYTE buf2[64];
-        int success = FALSE;
+        BOOL success = FALSE;
         struct fdi_folder *fol = NULL, *linkfol = NULL; 
         struct fdi_file   *file = NULL, *linkfile = NULL;
 

@@ -60,20 +60,20 @@ DWORD RPCRT4_GetHeaderSize(const RpcPktHdr *Header)
   return ret;
 }
 
-static int packet_has_body(const RpcPktHdr *Header)
+static BOOL packet_has_body(const RpcPktHdr *Header)
 {
     return (Header->common.ptype == PKT_FAULT) ||
            (Header->common.ptype == PKT_REQUEST) ||
            (Header->common.ptype == PKT_RESPONSE);
 }
 
-static int packet_has_auth_verifier(const RpcPktHdr *Header)
+static BOOL packet_has_auth_verifier(const RpcPktHdr *Header)
 {
     return !(Header->common.ptype == PKT_BIND_NACK) &&
            !(Header->common.ptype == PKT_SHUTDOWN);
 }
 
-static int packet_does_auth_negotiation(const RpcPktHdr *Header)
+static BOOL packet_does_auth_negotiation(const RpcPktHdr *Header)
 {
     switch (Header->common.ptype)
     {

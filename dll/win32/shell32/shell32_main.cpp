@@ -1098,7 +1098,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                 WCHAR szAuthorsText[20];
 
                 // Preload the ROS bitmap
-                hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_SHELL_ABOUT_LOGO_24BPP), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
                 if(hLogoBmp)
                 {

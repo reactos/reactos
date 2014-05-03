@@ -48,9 +48,7 @@ SetConWndConsoleLeaderCID(IN PGUI_CONSOLE_DATA GuiData)
     PCONSOLE_PROCESS_DATA ProcessData;
     CLIENT_ID ConsoleLeaderCID;
 
-    ProcessData = CONTAINING_RECORD(GuiData->Console->ProcessList.Blink,
-                                    CONSOLE_PROCESS_DATA,
-                                    ConsoleLink);
+    ProcessData = ConDrvGetConsoleLeaderProcess(GuiData->Console);
     ConsoleLeaderCID = ProcessData->Process->ClientId;
     SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_PID,
                       (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));
@@ -268,11 +266,15 @@ SendMenuEvent(PCONSOLE Console, UINT CmdId)
 {
     INPUT_RECORD er;
 
+    DPRINT1("Menu item ID: %d\n", CmdId);
+
+    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+
     er.EventType = MENU_EVENT;
     er.Event.MenuEvent.dwCommandId = CmdId;
-
-    DPRINT("Menu item ID: %d\n", CmdId);
     ConioProcessInputEvent(Console, &er);
+
+    LeaveCriticalSection(&Console->Lock);
 }
 
 static VOID
@@ -285,36 +287,34 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord);
 static VOID
 Mark(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
 
     /* Clear the old selection */
     // UpdateSelection(GuiData, NULL);
-    Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
+    GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
 
     /* Restart a new selection */
-    Console->dwSelectionCursor.X = ActiveBuffer->ViewOrigin.X;
-    Console->dwSelectionCursor.Y = ActiveBuffer->ViewOrigin.Y;
-    Console->Selection.dwSelectionAnchor = Console->dwSelectionCursor;
-    UpdateSelection(GuiData, &Console->Selection.dwSelectionAnchor);
+    GuiData->dwSelectionCursor.X = ActiveBuffer->ViewOrigin.X;
+    GuiData->dwSelectionCursor.Y = ActiveBuffer->ViewOrigin.Y;
+    GuiData->Selection.dwSelectionAnchor = GuiData->dwSelectionCursor;
+    UpdateSelection(GuiData, &GuiData->Selection.dwSelectionAnchor);
 }
 
 static VOID
 SelectAll(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
 
     /* Clear the old selection */
     // UpdateSelection(GuiData, NULL);
-    Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
+    GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
 
     /*
      * The selection area extends to the whole screen buffer's width.
      */
-    Console->Selection.dwSelectionAnchor.X = 0;
-    Console->Selection.dwSelectionAnchor.Y = 0;
-    Console->dwSelectionCursor.X = ActiveBuffer->ScreenBufferSize.X - 1;
+    GuiData->Selection.dwSelectionAnchor.X = 0;
+    GuiData->Selection.dwSelectionAnchor.Y = 0;
+    GuiData->dwSelectionCursor.X = ActiveBuffer->ScreenBufferSize.X - 1;
 
     /*
      * Determine whether the selection must extend to just some part
@@ -327,19 +327,19 @@ SelectAll(PGUI_CONSOLE_DATA GuiData)
          * We select all the characters from the first line
          * to the line where the cursor is positioned.
          */
-        Console->dwSelectionCursor.Y = ActiveBuffer->CursorPosition.Y;
+        GuiData->dwSelectionCursor.Y = ActiveBuffer->CursorPosition.Y;
     }
     else /* if (GetType(ActiveBuffer) == GRAPHICS_BUFFER) */
     {
         /*
          * We select all the screen buffer area.
          */
-        Console->dwSelectionCursor.Y = ActiveBuffer->ScreenBufferSize.Y - 1;
+        GuiData->dwSelectionCursor.Y = ActiveBuffer->ScreenBufferSize.Y - 1;
     }
 
     /* Restart a new selection */
-    Console->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION;
-    UpdateSelection(GuiData, &Console->dwSelectionCursor);
+    GuiData->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION;
+    UpdateSelection(GuiData, &GuiData->dwSelectionCursor);
 }
 
 static LRESULT
@@ -347,12 +347,6 @@ OnCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
     LRESULT Ret = TRUE;
     PCONSOLE Console = GuiData->Console;
-
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
-    {
-        Ret = FALSE;
-        goto Quit;
-    }
 
     /*
      * In case the selected menu item belongs to the user-reserved menu id range,
@@ -362,7 +356,7 @@ OnCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
     if (GuiData->CmdIdLow <= (UINT)wParam && (UINT)wParam <= GuiData->CmdIdHigh)
     {
         SendMenuEvent(Console, (UINT)wParam);
-        goto Unlock_Quit;
+        goto Quit;
     }
 
     /* ... otherwise, perform actions. */
@@ -405,8 +399,6 @@ OnCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
             break;
     }
 
-Unlock_Quit:
-    LeaveCriticalSection(&Console->Lock);
 Quit:
     if (!Ret)
         Ret = DefWindowProcW(GuiData->hWindow, WM_SYSCOMMAND, wParam, lParam);
@@ -645,12 +637,12 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
     er.Event.FocusEvent.bSetFocus = SetFocus;
     ConioProcessInputEvent(Console, &er);
 
+    LeaveCriticalSection(&Console->Lock);
+
     if (SetFocus)
         DPRINT1("TODO: Create console caret\n");
     else
         DPRINT1("TODO: Destroy console caret\n");
-
-    LeaveCriticalSection(&Console->Lock);
 }
 
 static VOID
@@ -673,7 +665,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
     PCONSOLE Console = GuiData->Console;
     RECT oldRect;
 
-    SmallRectToRect(GuiData, &oldRect, &Console->Selection.srSelection);
+    SmallRectToRect(GuiData, &oldRect, &GuiData->Selection.srSelection);
 
     if (coord != NULL)
     {
@@ -681,16 +673,16 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
         SMALL_RECT rc;
 
         /* Exchange left/top with right/bottom if required */
-        rc.Left   = min(Console->Selection.dwSelectionAnchor.X, coord->X);
-        rc.Top    = min(Console->Selection.dwSelectionAnchor.Y, coord->Y);
-        rc.Right  = max(Console->Selection.dwSelectionAnchor.X, coord->X);
-        rc.Bottom = max(Console->Selection.dwSelectionAnchor.Y, coord->Y);
+        rc.Left   = min(GuiData->Selection.dwSelectionAnchor.X, coord->X);
+        rc.Top    = min(GuiData->Selection.dwSelectionAnchor.Y, coord->Y);
+        rc.Right  = max(GuiData->Selection.dwSelectionAnchor.X, coord->X);
+        rc.Bottom = max(GuiData->Selection.dwSelectionAnchor.Y, coord->Y);
 
         SmallRectToRect(GuiData, &newRect, &rc);
 
-        if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
+        if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
         {
-            if (memcmp(&rc, &Console->Selection.srSelection, sizeof(SMALL_RECT)) != 0)
+            if (memcmp(&rc, &GuiData->Selection.srSelection, sizeof(SMALL_RECT)) != 0)
             {
                 HRGN rgn1, rgn2;
 
@@ -714,22 +706,22 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
             InvalidateRect(GuiData->hWindow, &newRect, FALSE);
         }
 
-        Console->Selection.dwFlags |= CONSOLE_SELECTION_NOT_EMPTY;
-        Console->Selection.srSelection = rc;
-        Console->dwSelectionCursor = *coord;
+        GuiData->Selection.dwFlags |= CONSOLE_SELECTION_NOT_EMPTY;
+        GuiData->Selection.srSelection = rc;
+        GuiData->dwSelectionCursor = *coord;
 
-        if ((Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) == 0)
+        if ((GuiData->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) == 0)
         {
             LPWSTR SelectionType, WindowTitle = NULL;
             SIZE_T Length = 0;
 
             /* Clear the old selection */
-            if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
+            if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
             {
                 InvalidateRect(GuiData->hWindow, &oldRect, FALSE);
             }
 
-            if (Console->Selection.dwFlags & CONSOLE_MOUSE_SELECTION)
+            if (GuiData->Selection.dwFlags & CONSOLE_MOUSE_SELECTION)
             {
                 SelectionType = L"Selection - ";
             }
@@ -745,19 +737,19 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
             SetWindowText(GuiData->hWindow, WindowTitle);
             ConsoleFreeHeap(WindowTitle);
 
-            Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS;
+            GuiData->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS;
             ConioPause(Console, PAUSED_FROM_SELECTION);
         }
     }
     else
     {
         /* Clear the selection */
-        if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
+        if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
         {
             InvalidateRect(GuiData->hWindow, &oldRect, FALSE);
         }
 
-        Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
+        GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
         ConioUnpause(Console, PAUSED_FROM_SELECTION);
 
         SetWindowText(GuiData->hWindow, Console->Title.Buffer);
@@ -779,17 +771,10 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 OnPaint(PGUI_CONSOLE_DATA GuiData)
 {
-    BOOL Success = TRUE;
-    PCONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     PAINTSTRUCT ps;
     RECT rcPaint;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
-    {
-        Success = FALSE;
-        goto Quit;
-    }
     ActiveBuffer = GuiData->ActiveBuffer;
 
     BeginPaint(GuiData->hWindow, &ps);
@@ -822,9 +807,9 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
                rcPaint.top,
                SRCCOPY);
 
-        if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
+        if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
         {
-            SmallRectToRect(GuiData, &rcPaint, &Console->Selection.srSelection);
+            SmallRectToRect(GuiData, &rcPaint, &GuiData->Selection.srSelection);
 
             /* Invert the selection */
             if (IntersectRect(&rcPaint, &ps.rcPaint, &rcPaint))
@@ -836,12 +821,6 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
         LeaveCriticalSection(&GuiData->Lock);
     }
     EndPaint(GuiData->hWindow, &ps);
-
-Quit:
-    if (Success)
-        LeaveCriticalSection(&Console->Lock);
-    else
-        DefWindowProcW(GuiData->hWindow, WM_PAINT, 0, 0);
 
     return;
 }
@@ -900,7 +879,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 
     ActiveBuffer = GuiData->ActiveBuffer;
 
-    if (Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS)
+    if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS)
     {
         WORD VirtualKeyCode = LOWORD(wParam);
 
@@ -920,7 +899,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             goto Quit;
         }
 
-        if ((Console->Selection.dwFlags & CONSOLE_MOUSE_SELECTION) == 0)
+        if ((GuiData->Selection.dwFlags & CONSOLE_MOUSE_SELECTION) == 0)
         {
             /* Keyboard selection mode */
             BOOL Interpreted = FALSE;
@@ -931,8 +910,8 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_LEFT:
                 {
                     Interpreted = TRUE;
-                    if (Console->dwSelectionCursor.X > 0)
-                        Console->dwSelectionCursor.X--;
+                    if (GuiData->dwSelectionCursor.X > 0)
+                        GuiData->dwSelectionCursor.X--;
 
                     break;
                 }
@@ -940,8 +919,8 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_RIGHT:
                 {
                     Interpreted = TRUE;
-                    if (Console->dwSelectionCursor.X < ActiveBuffer->ScreenBufferSize.X - 1)
-                        Console->dwSelectionCursor.X++;
+                    if (GuiData->dwSelectionCursor.X < ActiveBuffer->ScreenBufferSize.X - 1)
+                        GuiData->dwSelectionCursor.X++;
 
                     break;
                 }
@@ -949,8 +928,8 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_UP:
                 {
                     Interpreted = TRUE;
-                    if (Console->dwSelectionCursor.Y > 0)
-                        Console->dwSelectionCursor.Y--;
+                    if (GuiData->dwSelectionCursor.Y > 0)
+                        GuiData->dwSelectionCursor.Y--;
 
                     break;
                 }
@@ -958,8 +937,8 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_DOWN:
                 {
                     Interpreted = TRUE;
-                    if (Console->dwSelectionCursor.Y < ActiveBuffer->ScreenBufferSize.Y - 1)
-                        Console->dwSelectionCursor.Y++;
+                    if (GuiData->dwSelectionCursor.Y < ActiveBuffer->ScreenBufferSize.Y - 1)
+                        GuiData->dwSelectionCursor.Y++;
 
                     break;
                 }
@@ -967,24 +946,24 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_HOME:
                 {
                     Interpreted = TRUE;
-                    Console->dwSelectionCursor.X = 0;
-                    Console->dwSelectionCursor.Y = 0;
+                    GuiData->dwSelectionCursor.X = 0;
+                    GuiData->dwSelectionCursor.Y = 0;
                     break;
                 }
 
                 case VK_END:
                 {
                     Interpreted = TRUE;
-                    Console->dwSelectionCursor.Y = ActiveBuffer->ScreenBufferSize.Y - 1;
+                    GuiData->dwSelectionCursor.Y = ActiveBuffer->ScreenBufferSize.Y - 1;
                     break;
                 }
 
                 case VK_PRIOR:
                 {
                     Interpreted = TRUE;
-                    Console->dwSelectionCursor.Y -= ActiveBuffer->ViewSize.Y;
-                    if (Console->dwSelectionCursor.Y < 0)
-                        Console->dwSelectionCursor.Y = 0;
+                    GuiData->dwSelectionCursor.Y -= ActiveBuffer->ViewSize.Y;
+                    if (GuiData->dwSelectionCursor.Y < 0)
+                        GuiData->dwSelectionCursor.Y = 0;
 
                     break;
                 }
@@ -992,9 +971,9 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 case VK_NEXT:
                 {
                     Interpreted = TRUE;
-                    Console->dwSelectionCursor.Y += ActiveBuffer->ViewSize.Y;
-                    if (Console->dwSelectionCursor.Y >= ActiveBuffer->ScreenBufferSize.Y)
-                        Console->dwSelectionCursor.Y  = ActiveBuffer->ScreenBufferSize.Y - 1;
+                    GuiData->dwSelectionCursor.Y += ActiveBuffer->ViewSize.Y;
+                    if (GuiData->dwSelectionCursor.Y >= ActiveBuffer->ScreenBufferSize.Y)
+                        GuiData->dwSelectionCursor.Y  = ActiveBuffer->ScreenBufferSize.Y - 1;
 
                     break;
                 }
@@ -1006,9 +985,9 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             if (Interpreted)
             {
                 if (!MajPressed)
-                    Console->Selection.dwSelectionAnchor = Console->dwSelectionCursor;
+                    GuiData->Selection.dwSelectionAnchor = GuiData->dwSelectionCursor;
 
-                UpdateSelection(GuiData, &Console->dwSelectionCursor);
+                UpdateSelection(GuiData, &GuiData->dwSelectionCursor);
             }
             else if (!IsSystemKey(VirtualKeyCode))
             {
@@ -1034,7 +1013,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    if ((Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) == 0)
+    if ((GuiData->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) == 0)
     {
         MSG Message;
 
@@ -1267,7 +1246,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         goto Quit;
     }
 
-    if ( (Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) ||
+    if ( (GuiData->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) ||
          (Console->QuickEdit) )
     {
         switch (msg)
@@ -1276,13 +1255,13 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 /* Clear the old selection */
                 // UpdateSelection(GuiData, NULL);
-                Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
+                GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
 
                 /* Restart a new selection */
-                Console->Selection.dwSelectionAnchor = PointToCoord(GuiData, lParam);
+                GuiData->Selection.dwSelectionAnchor = PointToCoord(GuiData, lParam);
                 SetCapture(GuiData->hWindow);
-                Console->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
-                UpdateSelection(GuiData, &Console->Selection.dwSelectionAnchor);
+                GuiData->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
+                UpdateSelection(GuiData, &GuiData->Selection.dwSelectionAnchor);
 
                 break;
             }
@@ -1291,10 +1270,10 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 // COORD c;
 
-                if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
+                if (!(GuiData->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
 
                 // c = PointToCoord(GuiData, lParam);
-                Console->Selection.dwFlags &= ~CONSOLE_MOUSE_DOWN;
+                GuiData->Selection.dwFlags &= ~CONSOLE_MOUSE_DOWN;
                 // UpdateSelection(GuiData, &c);
                 ReleaseCapture();
 
@@ -1340,11 +1319,11 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                      * Update the selection started with the single
                      * left-click that preceded this double-click.
                      */
-                    Console->Selection.dwSelectionAnchor = cL;
-                    Console->dwSelectionCursor           = cR;
+                    GuiData->Selection.dwSelectionAnchor = cL;
+                    GuiData->dwSelectionCursor           = cR;
 
-                    Console->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
-                    UpdateSelection(GuiData, &Console->dwSelectionCursor);
+                    GuiData->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
+                    UpdateSelection(GuiData, &GuiData->dwSelectionCursor);
 
                     /* Ignore the next mouse move signal */
                     GuiData->IgnoreNextMouseSignal = TRUE;
@@ -1356,7 +1335,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             case WM_RBUTTONDOWN:
             case WM_RBUTTONDBLCLK:
             {
-                if (!(Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY))
+                if (!(GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY))
                 {
                     Paste(GuiData);
                 }
@@ -1375,7 +1354,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 COORD c;
 
                 if (!(wParam & MK_LBUTTON)) break;
-                if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
+                if (!(GuiData->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
 
                 c = PointToCoord(GuiData, lParam); /* TODO: Scroll buffer to bring c into view */
                 UpdateSelection(GuiData, &c);
@@ -1676,10 +1655,7 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 static VOID
 OnMove(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
     RECT rcWnd;
-
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
     // TODO: Simplify the code.
     // See: GuiConsoleNotifyWndProc() PM_CREATE_CONSOLE.
@@ -1688,8 +1664,6 @@ OnMove(PGUI_CONSOLE_DATA GuiData)
     GetWindowRect(GuiData->hWindow, &rcWnd);
     GuiData->GuiInfo.WindowOrigin.x = rcWnd.left;
     GuiData->GuiInfo.WindowOrigin.y = rcWnd.top;
-
-    LeaveCriticalSection(&Console->Lock);
 }
 
 /*
@@ -2044,20 +2018,16 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 /* Enable or disable the Copy and Paste items */
                 EnableMenuItem(hMenu, ID_SYSTEM_EDIT_COPY , MF_BYCOMMAND |
-                               ((Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
-                                (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY) ? MF_ENABLED : MF_GRAYED));
+                               ((GuiData->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
+                                (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY) ? MF_ENABLED : MF_GRAYED));
                 // FIXME: Following whether the active screen buffer is text-mode
                 // or graphics-mode, search for CF_UNICODETEXT or CF_BITMAP formats.
                 EnableMenuItem(hMenu, ID_SYSTEM_EDIT_PASTE, MF_BYCOMMAND |
-                               (!(Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
+                               (!(GuiData->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
                                 IsClipboardFormatAvailable(CF_UNICODETEXT) ? MF_ENABLED : MF_GRAYED));
             }
 
-            if (ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
-            {
-                SendMenuEvent(Console, WM_INITMENU);
-                LeaveCriticalSection(&Console->Lock);
-            }
+            SendMenuEvent(Console, WM_INITMENU);
             break;
         }
 
@@ -2065,11 +2035,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             if (HIWORD(wParam) == 0xFFFF) // Allow all the menu flags
             {
-                if (ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
-                {
-                    SendMenuEvent(Console, WM_MENUSELECT);
-                    LeaveCriticalSection(&Console->Lock);
-                }
+                SendMenuEvent(Console, WM_MENUSELECT);
             }
             break;
         }
@@ -2172,11 +2138,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case PM_APPLY_CONSOLE_INFO:
         {
-            if (ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
-            {
-                GuiApplyUserSettings(GuiData, (HANDLE)wParam, (BOOL)lParam);
-                LeaveCriticalSection(&Console->Lock);
-            }
+            GuiApplyUserSettings(GuiData, (HANDLE)wParam, (BOOL)lParam);
             break;
         }
 

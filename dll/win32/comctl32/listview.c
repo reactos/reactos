@@ -1118,7 +1118,7 @@ static inline BOOL ranges_delitem(RANGES ranges, INT nItem)
  * ITERATOR DOCUMENTATION
  *
  * The iterator functions allow for easy, and convenient iteration
- * over items of interest in the list. Typically, you create a
+ * over items of interest in the list. Typically, you create an
  * iterator, use it, and destroy it, as such:
  *   ITERATOR i;
  *
@@ -3670,8 +3670,8 @@ static void LISTVIEW_SetSelection(LISTVIEW_INFO *infoPtr, INT nItem)
 static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, BOOL space)
 {
   /* FIXME: pass in the state */
-  WORD wShift = HIWORD(GetKeyState(VK_SHIFT));
-  WORD wCtrl = HIWORD(GetKeyState(VK_CONTROL));
+  WORD wShift = GetKeyState(VK_SHIFT) & 0x8000;
+  WORD wCtrl = GetKeyState(VK_CONTROL) & 0x8000;
   BOOL bResult = FALSE;
 
   TRACE("nItem=%d, wShift=%d, wCtrl=%d\n", nItem, wShift, wCtrl);
@@ -4720,9 +4720,11 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
     if (infoPtr->uView == LV_VIEW_DETAILS && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
         rcLabel.bottom--;
 
+#ifdef __REACTOS__
     if ((!(lvItem.state & LVIS_SELECTED) || !infoPtr->bFocus) && (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTSHADOWTEXT))
         DrawShadowText(hdc, lvItem.pszText, -1, &rcLabel, uFormat, RGB(255, 255, 255), RGB(0, 0, 0), 2, 2);
     else
+#endif
         DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
 
 postpaint:
@@ -5383,9 +5385,8 @@ static HIMAGELIST LISTVIEW_CreateDragImage(LISTVIEW_INFO *infoPtr, INT iItem, LP
  */
 static BOOL LISTVIEW_DeleteAllItems(LISTVIEW_INFO *infoPtr, BOOL destroy)
 {
-    NMLISTVIEW nmlv;
     HDPA hdpaSubItems = NULL;
-    BOOL bSuppress;
+    BOOL suppress = FALSE;
     ITEMHDR *hdrItem;
     ITEM_INFO *lpItem;
     ITEM_ID *lpID;
@@ -5400,11 +5401,15 @@ static BOOL LISTVIEW_DeleteAllItems(LISTVIEW_INFO *infoPtr, BOOL destroy)
     SetRectEmpty(&infoPtr->rcFocus);
     /* But we are supposed to leave nHotItem as is! */
 
-
     /* send LVN_DELETEALLITEMS notification */
-    ZeroMemory(&nmlv, sizeof(NMLISTVIEW));
-    nmlv.iItem = -1;
-    bSuppress = notify_listview(infoPtr, LVN_DELETEALLITEMS, &nmlv);
+    if (!(infoPtr->dwStyle & LVS_OWNERDATA) || !destroy)
+    {
+        NMLISTVIEW nmlv;
+
+        memset(&nmlv, 0, sizeof(NMLISTVIEW));
+        nmlv.iItem = -1;
+        suppress = notify_listview(infoPtr, LVN_DELETEALLITEMS, &nmlv);
+    }
 
     for (i = infoPtr->nItemCount - 1; i >= 0; i--)
     {
@@ -5412,7 +5417,7 @@ static BOOL LISTVIEW_DeleteAllItems(LISTVIEW_INFO *infoPtr, BOOL destroy)
 	{
 	    /* send LVN_DELETEITEM notification, if not suppressed
 	       and if it is not a virtual listview */
-	    if (!bSuppress) notify_deleteitem(infoPtr, i);
+	    if (!suppress) notify_deleteitem(infoPtr, i);
 	    hdpaSubItems = DPA_GetPtr(infoPtr->hdpaItems, i);
 	    lpItem = DPA_GetPtr(hdpaSubItems, 0);
 	    /* free id struct */
@@ -7500,6 +7505,7 @@ static INT LISTVIEW_HitTest(const LISTVIEW_INFO *infoPtr, LPLVHITTESTINFO lpht, 
     WCHAR szDispText[DISP_TEXT_SIZE] = { '\0' };
     RECT rcBox, rcBounds, rcState, rcIcon, rcLabel, rcSearch;
     POINT Origin, Position, opt;
+    BOOL is_fullrow;
     LVITEMW lvItem;
     ITERATOR i;
     INT iItem;
@@ -7623,15 +7629,17 @@ static INT LISTVIEW_HitTest(const LISTVIEW_INFO *infoPtr, LPLVHITTESTINFO lpht, 
     TRACE("rcBounds=%s\n", wine_dbgstr_rect(&rcBounds));
     if (!PtInRect(&rcBounds, opt)) return -1;
 
+    /* That's a special case - row rectangle is used as item rectangle and
+       returned flags contain all item parts. */
+    is_fullrow = (infoPtr->uView == LV_VIEW_DETAILS) && ((infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT) || (infoPtr->dwStyle & LVS_OWNERDRAWFIXED));
+
     if (PtInRect(&rcIcon, opt))
 	lpht->flags |= LVHT_ONITEMICON;
     else if (PtInRect(&rcLabel, opt))
 	lpht->flags |= LVHT_ONITEMLABEL;
     else if (infoPtr->himlState && PtInRect(&rcState, opt))
 	lpht->flags |= LVHT_ONITEMSTATEICON;
-    /* special case for LVS_EX_FULLROWSELECT */
-    if (infoPtr->uView == LV_VIEW_DETAILS && infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT &&
-      !(lpht->flags & LVHT_ONITEM))
+    if (is_fullrow && !(lpht->flags & LVHT_ONITEM))
     {
 	lpht->flags = LVHT_ONITEM | LVHT_ABOVE;
     }
@@ -7639,9 +7647,7 @@ static INT LISTVIEW_HitTest(const LISTVIEW_INFO *infoPtr, LPLVHITTESTINFO lpht, 
 	lpht->flags &= ~LVHT_NOWHERE;
     TRACE("lpht->flags=0x%x\n", lpht->flags); 
 
-    if (select && !(infoPtr->uView == LV_VIEW_DETAILS &&
-                    ((infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT) ||
-                     (infoPtr->dwStyle & LVS_OWNERDRAWFIXED))))
+    if (select && !is_fullrow)
     {
         if (infoPtr->uView == LV_VIEW_DETAILS)
         {
@@ -8247,7 +8253,7 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
     INT max_cx = 0;
     HDITEMW hdi;
 
-    TRACE("(nColumn=%d, cx=%d\n", nColumn, cx);
+    TRACE("(nColumn=%d, cx=%d)\n", nColumn, cx);
 
     /* set column width only if in report or list mode */
     if (infoPtr->uView != LV_VIEW_DETAILS && infoPtr->uView != LV_VIEW_LIST) return FALSE;
@@ -8631,7 +8637,7 @@ static HIMAGELIST LISTVIEW_SetImageList(LISTVIEW_INFO *infoPtr, INT nType, HIMAG
     INT oldHeight = infoPtr->nItemHeight;
     HIMAGELIST himlOld = 0;
 
-    TRACE("(nType=%d, himl=%p\n", nType, himl);
+    TRACE("(nType=%d, himl=%p)\n", nType, himl);
 
     switch (nType)
     {
@@ -8786,7 +8792,7 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 {
     POINT Origin, Pt;
 
-    TRACE("(nItem=%d, pt=%s\n", nItem, wine_dbgstr_point(pt));
+    TRACE("(nItem=%d, pt=%s)\n", nItem, wine_dbgstr_point(pt));
 
     if (!pt || nItem < 0 || nItem >= infoPtr->nItemCount ||
 	!(infoPtr->uView == LV_VIEW_ICON || infoPtr->uView == LV_VIEW_SMALLICON)) return FALSE;

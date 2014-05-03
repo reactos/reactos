@@ -278,7 +278,7 @@ DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxSetText(ITextServices *iface, LPCWSTR
    return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetCurrentTargetX(ITextServices *iface, LONG *x)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetCurTargetX(ITextServices *iface, LONG *x)
 {
    ITextServicesImpl *This = impl_from_ITextServices(iface);
 
@@ -340,7 +340,7 @@ DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurrentTargetX,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurTargetX,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
@@ -364,7 +364,7 @@ static const ITextServicesVtbl textservices_vtbl =
    THISCALL(fnTextSrv_OnTxUIDeactivate),
    THISCALL(fnTextSrv_TxGetText),
    THISCALL(fnTextSrv_TxSetText),
-   THISCALL(fnTextSrv_TxGetCurrentTargetX),
+   THISCALL(fnTextSrv_TxGetCurTargetX),
    THISCALL(fnTextSrv_TxGetBaseLinePos),
    THISCALL(fnTextSrv_TxGetNaturalSize),
    THISCALL(fnTextSrv_TxGetDropTarget),

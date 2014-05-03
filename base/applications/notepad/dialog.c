@@ -965,7 +965,7 @@ static INT_PTR CALLBACK DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARA
     switch(uMsg) {
     case WM_INITDIALOG:
         hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-        _sntprintf(szText, SIZEOF(szText), _T("%d"), lParam);
+        _sntprintf(szText, SIZEOF(szText), _T("%ld"), lParam);
         SetWindowText(hTextBox, szText);
         break;
     case WM_COMMAND:

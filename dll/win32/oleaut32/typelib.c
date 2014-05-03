@@ -325,10 +325,23 @@ static WCHAR *get_lcid_subkey( LCID lcid, SYSKIND syskind, WCHAR *buffer )
 
 static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath, ITypeLib2 **ppTypeLib);
 
+struct tlibredirect_data
+{
+    ULONG  size;
+    DWORD  res;
+    ULONG  name_len;
+    ULONG  name_offset;
+    LANGID langid;
+    WORD   flags;
+    ULONG  help_len;
+    ULONG  help_offset;
+    WORD   major_version;
+    WORD   minor_version;
+};
 
 /* Get the path to a registered type library. Helper for QueryPathOfRegTypeLib. */
 static HRESULT query_typelib_path( REFGUID guid, WORD wMaj, WORD wMin,
-                                   SYSKIND syskind, LCID lcid, LPBSTR path )
+                                   SYSKIND syskind, LCID lcid, BSTR *path, BOOL redir )
 {
     HRESULT hr = TYPE_E_LIBNOTREGISTERED;
     LCID myLCID = lcid;
@@ -338,6 +351,30 @@ static HRESULT query_typelib_path( REFGUID guid, WORD wMaj, WORD wMin,
     LONG res;
 
     TRACE_(typelib)("(%s, %x.%x, 0x%x, %p)\n", debugstr_guid(guid), wMaj, wMin, lcid, path);
+
+    if (redir)
+    {
+        ACTCTX_SECTION_KEYED_DATA data;
+
+        data.cbSize = sizeof(data);
+        if (FindActCtxSectionGuid( 0, NULL, ACTIVATION_CONTEXT_SECTION_COM_TYPE_LIBRARY_REDIRECTION, guid, &data ))
+        {
+            struct tlibredirect_data *tlib = (struct tlibredirect_data*)data.lpData;
+            WCHAR *nameW;
+            DWORD len;
+
+            if (tlib->major_version != wMaj || tlib->minor_version < wMin)
+                return TYPE_E_LIBNOTREGISTERED;
+
+            nameW = (WCHAR*)((BYTE*)data.lpSectionBase + tlib->name_offset);
+            len = SearchPathW( NULL, nameW, NULL, sizeof(Path)/sizeof(WCHAR), Path, NULL );
+            if (!len) return TYPE_E_LIBNOTREGISTERED;
+
+            TRACE_(typelib)("got path from context %s\n", debugstr_w(Path));
+            *path = SysAllocString( Path );
+            return S_OK;
+        }
+    }
 
     if (!find_typelib_key( guid, &wMaj, &wMin )) return TYPE_E_LIBNOTREGISTERED;
     get_typelib_key( guid, wMaj, wMin, buffer );
@@ -410,12 +447,14 @@ static HRESULT query_typelib_path( REFGUID guid, WORD wMaj, WORD wMin,
  */
 HRESULT WINAPI QueryPathOfRegTypeLib( REFGUID guid, WORD wMaj, WORD wMin, LCID lcid, LPBSTR path )
 {
+    BOOL redir = TRUE;
 #ifdef _WIN64
-    HRESULT hres = query_typelib_path( guid, wMaj, wMin, SYS_WIN64, lcid, path );
+    HRESULT hres = query_typelib_path( guid, wMaj, wMin, SYS_WIN64, lcid, path, TRUE );
     if(SUCCEEDED(hres))
         return hres;
+    redir = FALSE;
 #endif
-    return query_typelib_path( guid, wMaj, wMin, SYS_WIN32, lcid, path );
+    return query_typelib_path( guid, wMaj, wMin, SYS_WIN32, lcid, path, redir );
 }
 
 /******************************************************************************
@@ -536,6 +575,20 @@ HRESULT WINAPI LoadRegTypeLib(
     {
         res= LoadTypeLib(bstr, ppTLib);
         SysFreeString(bstr);
+
+        if (*ppTLib)
+        {
+            TLIBATTR *attr;
+
+            res = ITypeLib_GetLibAttr(*ppTLib, &attr);
+            if (res == S_OK && (attr->wMajorVerNum != wVerMajor || attr->wMinorVerNum < wVerMinor))
+            {
+                ITypeLib_ReleaseTLibAttr(*ppTLib, attr);
+                ITypeLib_Release(*ppTLib);
+                *ppTLib = NULL;
+                res = TYPE_E_LIBNOTREGISTERED;
+            }
+        }
     }
 
     TRACE("(IID: %s) load %s (%p)\n",debugstr_guid(rguid), SUCCEEDED(res)? "SUCCESS":"FAILED", *ppTLib);
@@ -550,6 +603,57 @@ static const WCHAR FLAGSW[] = {'F','L','A','G','S',0};
 static const WCHAR HELPDIRW[] = {'H','E','L','P','D','I','R',0};
 static const WCHAR ProxyStubClsidW[] = {'P','r','o','x','y','S','t','u','b','C','l','s','i','d',0};
 static const WCHAR ProxyStubClsid32W[] = {'P','r','o','x','y','S','t','u','b','C','l','s','i','d','3','2',0};
+
+static void TLB_register_interface(TLIBATTR *libattr, LPOLESTR name, TYPEATTR *tattr, DWORD flag)
+{
+    WCHAR keyName[60];
+    HKEY key, subKey;
+
+    static const WCHAR PSOA[] = {'{','0','0','0','2','0','4','2','4','-',
+                                 '0','0','0','0','-','0','0','0','0','-','C','0','0','0','-',
+                                 '0','0','0','0','0','0','0','0','0','0','4','6','}',0};
+
+    get_interface_key( &tattr->guid, keyName );
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, keyName, 0, NULL, 0,
+                        KEY_WRITE | flag, NULL, &key, NULL) == ERROR_SUCCESS)
+    {
+        if (name)
+            RegSetValueExW(key, NULL, 0, REG_SZ,
+                           (BYTE *)name, (strlenW(name)+1) * sizeof(OLECHAR));
+
+        if (RegCreateKeyExW(key, ProxyStubClsidW, 0, NULL, 0,
+            KEY_WRITE | flag, NULL, &subKey, NULL) == ERROR_SUCCESS) {
+            RegSetValueExW(subKey, NULL, 0, REG_SZ,
+                           (const BYTE *)PSOA, sizeof PSOA);
+            RegCloseKey(subKey);
+        }
+
+        if (RegCreateKeyExW(key, ProxyStubClsid32W, 0, NULL, 0,
+            KEY_WRITE | flag, NULL, &subKey, NULL) == ERROR_SUCCESS) {
+            RegSetValueExW(subKey, NULL, 0, REG_SZ,
+                           (const BYTE *)PSOA, sizeof PSOA);
+            RegCloseKey(subKey);
+        }
+
+        if (RegCreateKeyExW(key, TypeLibW, 0, NULL, 0,
+            KEY_WRITE | flag, NULL, &subKey, NULL) == ERROR_SUCCESS)
+        {
+            WCHAR buffer[40];
+            static const WCHAR fmtver[] = {'%','x','.','%','x',0 };
+            static const WCHAR VersionW[] = {'V','e','r','s','i','o','n',0};
+
+            StringFromGUID2(&libattr->guid, buffer, 40);
+            RegSetValueExW(subKey, NULL, 0, REG_SZ,
+                           (BYTE *)buffer, (strlenW(buffer)+1) * sizeof(WCHAR));
+            sprintfW(buffer, fmtver, libattr->wMajorVerNum, libattr->wMinorVerNum);
+            RegSetValueExW(subKey, VersionW, 0, REG_SZ,
+                           (BYTE*)buffer, (strlenW(buffer)+1) * sizeof(WCHAR));
+            RegCloseKey(subKey);
+        }
+
+        RegCloseKey(key);
+    }
+}
 
 /******************************************************************************
  *		RegisterTypeLib	[OLEAUT32.163]
@@ -569,9 +673,6 @@ HRESULT WINAPI RegisterTypeLib(
      OLECHAR * szHelpDir)  /* [in] dir to the helpfile for the library,
 							 may be NULL*/
 {
-    static const WCHAR PSOA[] = {'{','0','0','0','2','0','4','2','4','-',
-                                 '0','0','0','0','-','0','0','0','0','-','C','0','0','0','-',
-                                 '0','0','0','0','0','0','0','0','0','0','4','6','}',0};
     HRESULT res;
     TLIBATTR *attr;
     WCHAR keyName[60];
@@ -744,47 +845,16 @@ HRESULT WINAPI RegisterTypeLib(
 		    if ((kind == TKIND_INTERFACE && (tattr->wTypeFlags & TYPEFLAG_FOLEAUTOMATION)) ||
                         kind == TKIND_DISPATCH)
 		    {
-			/* register interface<->typelib coupling */
-			get_interface_key( &tattr->guid, keyName );
-			if (RegCreateKeyExW(HKEY_CLASSES_ROOT, keyName, 0, NULL, 0,
-					    KEY_WRITE, NULL, &key, NULL) == ERROR_SUCCESS)
-			{
-			    if (name)
-				RegSetValueExW(key, NULL, 0, REG_SZ,
-					       (BYTE *)name, (strlenW(name)+1) * sizeof(OLECHAR));
+                        BOOL is_wow64;
+                        DWORD opposite = (sizeof(void*) == 8 ? KEY_WOW64_32KEY : KEY_WOW64_64KEY);
 
-			    if (RegCreateKeyExW(key, ProxyStubClsidW, 0, NULL, 0,
-				KEY_WRITE, NULL, &subKey, NULL) == ERROR_SUCCESS) {
-				RegSetValueExW(subKey, NULL, 0, REG_SZ,
-					       (const BYTE *)PSOA, sizeof PSOA);
-				RegCloseKey(subKey);
-			    }
+                        /* register interface<->typelib coupling */
+                        TLB_register_interface(attr, name, tattr, 0);
 
-			    if (RegCreateKeyExW(key, ProxyStubClsid32W, 0, NULL, 0,
-				KEY_WRITE, NULL, &subKey, NULL) == ERROR_SUCCESS) {
-				RegSetValueExW(subKey, NULL, 0, REG_SZ,
-					       (const BYTE *)PSOA, sizeof PSOA);
-				RegCloseKey(subKey);
-			    }
-
-			    if (RegCreateKeyExW(key, TypeLibW, 0, NULL, 0,
-				KEY_WRITE, NULL, &subKey, NULL) == ERROR_SUCCESS)
-			    {
-				WCHAR buffer[40];
-				static const WCHAR fmtver[] = {'%','x','.','%','x',0 };
-				static const WCHAR VersionW[] = {'V','e','r','s','i','o','n',0};
-
-				StringFromGUID2(&attr->guid, buffer, 40);
-				RegSetValueExW(subKey, NULL, 0, REG_SZ,
-					       (BYTE *)buffer, (strlenW(buffer)+1) * sizeof(WCHAR));
-				sprintfW(buffer, fmtver, attr->wMajorVerNum, attr->wMinorVerNum);
-				RegSetValueExW(subKey, VersionW, 0, REG_SZ,
-					       (BYTE*)buffer, (strlenW(buffer)+1) * sizeof(WCHAR));
-				RegCloseKey(subKey);
-			    }
-
-			    RegCloseKey(key);
-			}
+                        /* register TLBs into the opposite registry view, too */
+                        if(opposite == KEY_WOW64_32KEY ||
+                                 (IsWow64Process(GetCurrentProcess(), &is_wow64) && is_wow64))
+                            TLB_register_interface(attr, name, tattr, opposite);
 		    }
 
 		    ITypeInfo_ReleaseTypeAttr(tinfo, tattr);
@@ -847,7 +917,7 @@ HRESULT WINAPI UnRegisterTypeLib(
     }
 
     /* get the path to the typelib on disk */
-    if (query_typelib_path(libid, wVerMajor, wVerMinor, syskind, lcid, &tlibPath) != S_OK) {
+    if (query_typelib_path(libid, wVerMajor, wVerMinor, syskind, lcid, &tlibPath, FALSE) != S_OK) {
         result = E_INVALIDARG;
         goto end;
     }
@@ -1928,6 +1998,9 @@ static TLBString *TLB_append_str(struct list *string_list, BSTR new_str)
 {
     TLBString *str;
 
+    if(!new_str)
+        return NULL;
+
     LIST_FOR_EACH_ENTRY(str, string_list, TLBString, entry) {
         if (strcmpW(str->str, new_str) == 0)
             return str;
@@ -2297,24 +2370,17 @@ static void MSFT_ReadValue( VARIANT * pVar, int offset, TLBContext *pcx )
         case VT_BSTR    :{
             char * ptr;
             MSFT_ReadLEDWords(&size, sizeof(INT), pcx, DO_NOT_SEEK );
-	    if(size < 0) {
-                char next;
-                DWORD origPos = MSFT_Tell(pcx), nullPos;
-
-                do {
-                    MSFT_Read(&next, 1, pcx, DO_NOT_SEEK);
-                } while (next);
-                nullPos = MSFT_Tell(pcx);
-                size = nullPos - origPos;
-                MSFT_Seek(pcx, origPos);
-	    }
-            ptr = heap_alloc_zero(size);/* allocate temp buffer */
-            MSFT_Read(ptr, size, pcx, DO_NOT_SEEK);/* read string (ANSI) */
-            V_BSTR(pVar)=SysAllocStringLen(NULL,size);
-            /* FIXME: do we need a AtoW conversion here? */
-            V_UNION(pVar, bstrVal[size])='\0';
-            while(size--) V_UNION(pVar, bstrVal[size])=ptr[size];
-            heap_free(ptr);
+            if(size == -1){
+                V_BSTR(pVar) = NULL;
+            }else{
+                ptr = heap_alloc_zero(size);
+                MSFT_Read(ptr, size, pcx, DO_NOT_SEEK);
+                V_BSTR(pVar)=SysAllocStringLen(NULL,size);
+                /* FIXME: do we need a AtoW conversion here? */
+                V_UNION(pVar, bstrVal[size])='\0';
+                while(size--) V_UNION(pVar, bstrVal[size])=ptr[size];
+                heap_free(ptr);
+            }
 	}
 	size=-4; break;
     /* FIXME: this will not work AT ALL when the variant contains a pointer */
@@ -2380,7 +2446,7 @@ static void MSFT_GetTdesc(TLBContext *pcx, INT type, TYPEDESC *pTd)
     TRACE_(typelib)("vt type = %X\n", pTd->vt);
 }
 
-static int TLB_is_propgetput(INVOKEKIND invkind)
+static BOOL TLB_is_propgetput(INVOKEKIND invkind)
 {
     return (invkind == INVOKE_PROPERTYGET ||
         invkind == INVOKE_PROPERTYPUT ||
@@ -3110,7 +3176,7 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
 
     /* Read in NE header */
     nehdoffset = LZSeek( lzfd, 0, SEEK_CUR );
-    if ( sizeof(nehd) != LZRead( lzfd, (LPSTR)&nehd, sizeof(nehd) ) ) return 0;
+    if ( sizeof(nehd) != LZRead( lzfd, (LPSTR)&nehd, sizeof(nehd) ) ) return FALSE;
 
     resTabSize = nehd.ne_restab - nehd.ne_rsrctab;
     if ( !resTabSize )
@@ -3378,8 +3444,7 @@ static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath
 
     if(file != pszFileName) heap_free(file);
 
-    h = CreateFileW(pszPath, GENERIC_READ, 0, NULL, OPEN_ALWAYS,
-            FILE_ATTRIBUTE_NORMAL, NULL);
+    h = CreateFileW(pszPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if(h != INVALID_HANDLE_VALUE){
         FILE_NAME_INFORMATION *info;
         char data[MAX_PATH * sizeof(WCHAR) + sizeof(info->FileNameLength)];
@@ -3519,7 +3584,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
     cx.length = dwTLBLength;
 
     /* read header */
-    MSFT_ReadLEDWords((void*)&tlbHeader, sizeof(tlbHeader), &cx, 0);
+    MSFT_ReadLEDWords(&tlbHeader, sizeof(tlbHeader), &cx, 0);
     TRACE_(typelib)("header:\n");
     TRACE_(typelib)("\tmagic1=0x%08x ,magic2=0x%08x\n",tlbHeader.magic1,tlbHeader.magic2 );
     if (tlbHeader.magic1 != MSFT_SIGNATURE) {
@@ -3558,7 +3623,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
     pTypeLibImpl->ptr_size = get_ptr_size(pTypeLibImpl->syskind);
     pTypeLibImpl->ver_major = LOWORD(tlbHeader.version);
     pTypeLibImpl->ver_minor = HIWORD(tlbHeader.version);
-    pTypeLibImpl->libflags = (WORD) tlbHeader.flags & 0xffff;/* check mask */
+    pTypeLibImpl->libflags = ((WORD) tlbHeader.flags & 0xffff) /* check mask */ | LIBFLAG_FHASDISKIMAGE;
 
     pTypeLibImpl->set_lcid = tlbHeader.lcid2;
     pTypeLibImpl->lcid = tlbHeader.lcid;
@@ -4514,7 +4579,7 @@ static ITypeLib2* ITypeLib2_Constructor_SLTG(LPVOID pLib, DWORD dwTLBLength)
 
     len = SLTG_ReadLibBlk(pLibBlk, pTypeLibImpl);
 
-    /* Now there's 0x40 bytes of 0xffff with the numbers 0 to TypeInfoCount
+    /* Now there are 0x40 bytes of 0xffff with the numbers 0 to TypeInfoCount
        interspersed */
 
     len += 0x40;
@@ -5119,8 +5184,8 @@ static HRESULT WINAPI ITypeLib2_fnIsName(
     *pfName=FALSE;
 
 ITypeLib2_fnIsName_exit:
-    TRACE("(%p)slow! search for %s: %s found!\n", This,
-          debugstr_w(szNameBuf), *pfName?"NOT":"");
+    TRACE("(%p)slow! search for %s: %sfound!\n", This,
+          debugstr_w(szNameBuf), *pfName ? "" : "NOT ");
 
     return S_OK;
 }
@@ -5150,26 +5215,30 @@ static HRESULT WINAPI ITypeLib2_fnFindName(
         return E_INVALIDARG;
 
     len = (lstrlenW(name) + 1)*sizeof(WCHAR);
-    for(tic = 0; tic < This->TypeInfoCount; ++tic) {
+    for(tic = 0; count < *found && tic < This->TypeInfoCount; ++tic) {
         ITypeInfoImpl *pTInfo = This->typeinfos[tic];
         TLBVarDesc *var;
         UINT fdc;
 
-        if(!TLB_str_memcmp(name, pTInfo->Name, len)) goto ITypeLib2_fnFindName_exit;
+        if(!TLB_str_memcmp(name, pTInfo->Name, len)) {
+            memid[count] = MEMBERID_NIL;
+            goto ITypeLib2_fnFindName_exit;
+        }
+
         for(fdc = 0; fdc < pTInfo->cFuncs; ++fdc) {
             TLBFuncDesc *func = &pTInfo->funcdescs[fdc];
-            int pc;
 
-            if(!TLB_str_memcmp(name, func->Name, len)) goto ITypeLib2_fnFindName_exit;
-            for(pc = 0; pc < func->funcdesc.cParams; pc++) {
-                if(!TLB_str_memcmp(name, func->pParamDesc[pc].Name, len))
-                    goto ITypeLib2_fnFindName_exit;
+            if(!TLB_str_memcmp(name, func->Name, len)) {
+                memid[count] = func->funcdesc.memid;
+                goto ITypeLib2_fnFindName_exit;
             }
         }
 
         var = TLB_get_vardesc_by_name(pTInfo->vardescs, pTInfo->cVars, name);
-        if (var)
+        if (var) {
+            memid[count] = var->vardesc.memid;
             goto ITypeLib2_fnFindName_exit;
+        }
 
         continue;
 ITypeLib2_fnFindName_exit:
@@ -5317,7 +5386,7 @@ static HRESULT TLB_copy_all_custdata(struct list *custdata_list, CUSTDATA *pCust
 
     ct = list_count(custdata_list);
 
-    pCustData->prgCustData = heap_alloc_zero(ct * sizeof(CUSTDATAITEM));
+    pCustData->prgCustData = CoTaskMemAlloc(ct * sizeof(CUSTDATAITEM));
     if(!pCustData->prgCustData)
         return E_OUTOFMEMORY;
 
@@ -5401,9 +5470,10 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
     BINDPTR * pBindPtr)
 {
     ITypeLibImpl *This = impl_from_ITypeComp(iface);
-    int typemismatch=0, i;
+    BOOL typemismatch = FALSE;
+    int i;
 
-    TRACE("(%s, 0x%x, 0x%x, %p, %p, %p)\n", debugstr_w(szName), lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
+    TRACE("(%p)->(%s, 0x%x, 0x%x, %p, %p, %p)\n", This, debugstr_w(szName), lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
 
     *pDescKind = DESCKIND_NONE;
     pBindPtr->lptcomp = NULL;
@@ -5442,7 +5512,7 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
                 return S_OK;
             }
             else if (hr == TYPE_E_TYPEMISMATCH)
-                typemismatch = 1;
+                typemismatch = TRUE;
         }
 
         if ((pTypeInfo->typekind == TKIND_COCLASS) &&
@@ -5513,7 +5583,7 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
                 return S_OK;
             }
             else if (hr == TYPE_E_TYPEMISMATCH)
-                typemismatch = 1;
+                typemismatch = TRUE;
         }
     }
 
@@ -7687,7 +7757,7 @@ static HRESULT WINAPI ITypeInfo_fnGetRefTypeInfo(
                         ref_type->pImpTLInfo->wVersionMajor,
                         ref_type->pImpTLInfo->wVersionMinor,
                         This->pTypeLib->syskind,
-                        ref_type->pImpTLInfo->lcid, &libnam);
+                        ref_type->pImpTLInfo->lcid, &libnam, TRUE);
                 if(FAILED(result))
                     libnam = SysAllocString(ref_type->pImpTLInfo->name);
 
@@ -8514,7 +8584,7 @@ static HRESULT WINAPI ITypeComp_fnBind(
 
     for(fdc = 0; fdc < This->cFuncs; ++fdc){
         pFDesc = &This->funcdescs[fdc];
-        if (!strcmpiW(TLB_get_bstr(pFDesc->Name), szName)) {
+        if (!lstrcmpiW(TLB_get_bstr(pFDesc->Name), szName)) {
             if (!wFlags || (pFDesc->funcdesc.invkind & wFlags))
                 break;
             else
@@ -8547,7 +8617,7 @@ static HRESULT WINAPI ITypeComp_fnBind(
             return S_OK;
         }
     }
-    /* FIXME: search each inherited interface, not just the first */
+
     if (hr == DISP_E_MEMBERNOTFOUND && This->impltypes) {
         /* recursive search */
         ITypeInfo *pTInfo;
@@ -8563,6 +8633,13 @@ static HRESULT WINAPI ITypeComp_fnBind(
         {
             hr = ITypeComp_Bind(pTComp, szName, lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
             ITypeComp_Release(pTComp);
+            if (SUCCEEDED(hr) && *pDescKind == DESCKIND_FUNCDESC &&
+                    This->typekind == TKIND_DISPATCH)
+            {
+                FUNCDESC *tmp = pBindPtr->lpfuncdesc;
+                hr = TLB_AllocAndInitFuncDesc(tmp, &pBindPtr->lpfuncdesc, TRUE);
+                SysFreeString((BSTR)tmp);
+            }
             return hr;
         }
         WARN("Could not search inherited interface!\n");
@@ -9181,41 +9258,6 @@ static DWORD WMSFT_append_typedesc(TYPEDESC *desc, WMSFT_TLBFile *file, DWORD *o
         out_size = &junk2;
 
     vt = desc->vt & VT_TYPEMASK;
-    switch(vt){
-    case VT_INT:
-        subtype = VT_I4;
-        break;
-    case VT_UINT:
-        subtype = VT_UI4;
-        break;
-    case VT_VOID:
-        subtype = VT_EMPTY;
-        break;
-    default:
-        subtype = vt;
-        break;
-    }
-
-    switch(vt){
-    case VT_INT:
-    case VT_UINT:
-    case VT_I1:
-    case VT_UI1:
-    case VT_I2:
-    case VT_UI2:
-    case VT_I4:
-    case VT_UI4:
-    case VT_BOOL:
-    case VT_R4:
-    case VT_ERROR:
-    case VT_BSTR:
-    case VT_HRESULT:
-    case VT_CY:
-    case VT_VOID:
-    case VT_VARIANT:
-        *out_mix = subtype;
-        return 0x80000000 | (subtype << 16) | desc->vt;
-    }
 
     if(vt == VT_PTR || vt == VT_SAFEARRAY){
         DWORD mix;
@@ -9232,9 +9274,25 @@ static DWORD WMSFT_append_typedesc(TYPEDESC *desc, WMSFT_TLBFile *file, DWORD *o
         encoded[1] = desc->u.hreftype;
         *out_mix = 0x7FFF; /* FIXME: Should get TYPEKIND of the hreftype, e.g. TKIND_ENUM => VT_I4 */
     }else{
-        FIXME("Don't know what to do! VT: 0x%x\n", desc->vt);
-        *out_mix = desc->vt;
-        return 0x80000000 | (desc->vt << 16) | desc->vt;
+        TRACE("Mixing in-place, VT: 0x%x\n", desc->vt);
+
+        switch(vt){
+        case VT_INT:
+            subtype = VT_I4;
+            break;
+        case VT_UINT:
+            subtype = VT_UI4;
+            break;
+        case VT_VOID:
+            subtype = VT_EMPTY;
+            break;
+        default:
+            subtype = vt;
+            break;
+        }
+
+        *out_mix = subtype;
+        return 0x80000000 | (subtype << 16) | desc->vt;
     }
 
     data = file->typdesc_seg.data;
@@ -9626,7 +9684,7 @@ static DWORD WMSFT_compile_typeinfo(ITypeInfoImpl *info, INT16 index, WMSFT_TLBF
     size = sizeof(MSFT_TypeInfoBase);
 
     if(data){
-        MSFT_TypeInfoBase *base = (void*)data;
+        MSFT_TypeInfoBase *base = (MSFT_TypeInfoBase*)data;
         if(info->wTypeFlags & TYPEFLAG_FDUAL)
             base->typekind = TKIND_DISPATCH;
         else
@@ -10727,8 +10785,17 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetVarName(ICreateTypeInfo2 *iface,
         UINT index, LPOLESTR name)
 {
     ITypeInfoImpl *This = info_impl_from_ICreateTypeInfo2(iface);
-    FIXME("%p %u %s - stub\n", This, index, wine_dbgstr_w(name));
-    return E_NOTIMPL;
+
+    TRACE("%p %u %s\n", This, index, wine_dbgstr_w(name));
+
+    if(!name)
+        return E_INVALIDARG;
+
+    if(index >= This->cVars)
+        return TYPE_E_ELEMENTNOTFOUND;
+
+    This->vardescs[index].Name = TLB_append_str(&This->pTypeLib->name_list, name);
+    return S_OK;
 }
 
 static HRESULT WINAPI ICreateTypeInfo2_fnSetTypeDescAlias(ICreateTypeInfo2 *iface,
@@ -10768,8 +10835,19 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncDocString(ICreateTypeInfo2 *ifac
         UINT index, LPOLESTR docString)
 {
     ITypeInfoImpl *This = info_impl_from_ICreateTypeInfo2(iface);
-    FIXME("%p %u %s - stub\n", This, index, wine_dbgstr_w(docString));
-    return E_NOTIMPL;
+    TLBFuncDesc *func_desc = &This->funcdescs[index];
+
+    TRACE("%p %u %s\n", This, index, wine_dbgstr_w(docString));
+
+    if(!docString)
+        return E_INVALIDARG;
+
+    if(index >= This->cFuncs)
+        return TYPE_E_ELEMENTNOTFOUND;
+
+    func_desc->HelpString = TLB_append_str(&This->pTypeLib->string_list, docString);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ICreateTypeInfo2_fnSetVarDocString(ICreateTypeInfo2 *iface,
@@ -11195,8 +11273,7 @@ void WINAPI ClearCustData(CUSTDATA *lpCust)
             for (i = 0; i < lpCust->cCustData; i++)
                 VariantClear(&lpCust->prgCustData[i].varValue);
 
-            /* FIXME - Should be using a per-thread IMalloc */
-            heap_free(lpCust->prgCustData);
+            CoTaskMemFree(lpCust->prgCustData);
             lpCust->prgCustData = NULL;
         }
         lpCust->cCustData = 0;

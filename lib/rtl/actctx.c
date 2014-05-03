@@ -190,6 +190,9 @@ struct actctx_loader
     unsigned int              allocated_dependencies;
 };
 
+static const WCHAR asmv1W[] = {'a','s','m','v','1',':',0};
+static const WCHAR asmv2W[] = {'a','s','m','v','2',':',0};
+
 typedef struct _ACTIVATION_CONTEXT_WRAPPED
 {
     PVOID MagicMarker;
@@ -286,6 +289,7 @@ static const WCHAR manifestv3W[] = {'u','r','n',':','s','c','h','e','m','a','s',
 
 static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
 static const WCHAR version_formatW[] = {'%','u','.','%','u','.','%','u','.','%','u',0};
+static const WCHAR wildcardW[] = {'*',0};
 
 static ACTIVATION_CONTEXT_WRAPPED system_actctx = { ACTCTX_MAGIC_MARKER, { 1 } };
 static ACTIVATION_CONTEXT *process_actctx = &system_actctx.ActivationContext;
@@ -311,16 +315,6 @@ static WCHAR *xmlstrdupW(const xmlstr_t* str)
     return strW;
 }
 
-static UNICODE_STRING xmlstr2unicode(const xmlstr_t *xmlstr)
-{
-    UNICODE_STRING res;
-
-    res.Buffer = (PWSTR)xmlstr->ptr;
-    res.Length = res.MaximumLength = (USHORT)xmlstr->len * sizeof(WCHAR);
-
-    return res;
-}
-
 static inline BOOL xmlstr_cmp(const xmlstr_t* xmlstr, const WCHAR *str)
 {
     return !strncmpW(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
@@ -337,9 +331,40 @@ static inline BOOL xmlstr_cmp_end(const xmlstr_t* xmlstr, const WCHAR *str)
             !strncmpW(xmlstr->ptr + 1, str, xmlstr->len - 1) && !str[xmlstr->len - 1]);
 }
 
+static inline BOOL xml_elem_cmp(const xmlstr_t *elem, const WCHAR *str, const WCHAR *namespace)
+{
+    UINT len = strlenW( namespace );
+
+    if (!strncmpW(elem->ptr, str, elem->len) && !str[elem->len]) return TRUE;
+    return (elem->len > len && !strncmpW(elem->ptr, namespace, len) &&
+            !strncmpW(elem->ptr + len, str, elem->len - len) && !str[elem->len - len]);
+}
+
+static inline BOOL xml_elem_cmp_end(const xmlstr_t *elem, const WCHAR *str, const WCHAR *namespace)
+{
+    if (elem->len && elem->ptr[0] == '/')
+    {
+        xmlstr_t elem_end;
+        elem_end.ptr = elem->ptr + 1;
+        elem_end.len = elem->len - 1;
+        return xml_elem_cmp( &elem_end, str, namespace );
+    }
+    return FALSE;
+}
+
 static inline BOOL isxmlspace( WCHAR ch )
 {
     return (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t');
+}
+
+static UNICODE_STRING xmlstr2unicode(const xmlstr_t *xmlstr)
+{
+    UNICODE_STRING res;
+
+    res.Buffer = (PWSTR)xmlstr->ptr;
+    res.Length = res.MaximumLength = (USHORT)xmlstr->len * sizeof(WCHAR);
+
+    return res;
 }
 
 static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_type at)
@@ -485,7 +510,6 @@ static BOOL is_matching_identity( const struct assembly_identity *id1,
 
     if (id1->language && id2->language && strcmpiW( id1->language, id2->language ))
     {
-        static const WCHAR wildcardW[] = {'*',0};
         if (strcmpW( wildcardW, id1->language ) && strcmpW( wildcardW, id2->language ))
             return FALSE;
     }
@@ -605,17 +629,21 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
         {',','p','r','o','c','e','s','s','o','r','A','r','c','h','i','t','e','c','t','u','r','e','=',0};
     static const WCHAR public_keyW[] =
         {',','p','u','b','l','i','c','K','e','y','T','o','k','e','n','=',0};
+    static const WCHAR typeW2[] =
+        {',','t','y','p','e','=',0};
+    static const WCHAR versionW2[] =
+        {',','v','e','r','s','i','o','n','=',0};
 
     WCHAR version[64], *ret;
     SIZE_T size = 0;
 
     sprintfW( version, version_formatW,
               ai->version.major, ai->version.minor, ai->version.build, ai->version.revision );
-    if (ai->name) size += strlenW(ai->name);
+    if (ai->name) size += strlenW(ai->name) * sizeof(WCHAR);
     if (ai->arch) size += strlenW(archW) + strlenW(ai->arch) + 2;
     if (ai->public_key) size += strlenW(public_keyW) + strlenW(ai->public_key) + 2;
-    if (ai->type) size += 1 + strlenW(typeW) + 1 + strlenW(ai->type) + 2;
-    size += 1+ strlenW(versionW) + 1 + strlenW(version) + 2;
+    if (ai->type) size += strlenW(typeW2) + strlenW(ai->type) + 2;
+    size += strlenW(versionW2) + strlenW(version) + 2;
 
     if (!(ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, (size + 1) * sizeof(WCHAR) )))
         return NULL;
@@ -624,8 +652,8 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
     else *ret = 0;
     append_string( ret, archW, ai->arch );
     append_string( ret, public_keyW, ai->public_key );
-    append_string( ret, typeW, ai->type );
-    append_string( ret, versionW, version );
+    append_string( ret, typeW2, ai->type );
+    append_string( ret, versionW2, version );
     return ret;
 }
 static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
@@ -722,13 +750,23 @@ static BOOL next_xml_attr(xmlbuf_t* xmlbuf, xmlstr_t* name, xmlstr_t* value,
     ptr = xmlbuf->ptr;
     while (ptr < xmlbuf->end && *ptr != '=' && *ptr != '>' && !isxmlspace(*ptr)) ptr++;
 
-    if (ptr == xmlbuf->end || *ptr != '=') return FALSE;
+    if (ptr == xmlbuf->end) return FALSE;
 
     name->ptr = xmlbuf->ptr;
-    name->len = (ULONG)(ptr - xmlbuf->ptr);
+    name->len = ptr-xmlbuf->ptr;
     xmlbuf->ptr = ptr;
 
+    /* skip spaces before '=' */
+    while (ptr < xmlbuf->end && *ptr != '=' && isxmlspace(*ptr)) ptr++;
+    if (ptr == xmlbuf->end || *ptr != '=') return FALSE;
+
+    /* skip '=' itself */
     ptr++;
+    if (ptr == xmlbuf->end) return FALSE;
+
+    /* skip spaces after '=' */
+    while (ptr < xmlbuf->end && *ptr != '"' && *ptr != '\'' && isxmlspace(*ptr)) ptr++;
+
     if (ptr == xmlbuf->end || (*ptr != '"' && *ptr != '\'')) return FALSE;
 
     value->ptr = ++ptr;
@@ -741,7 +779,7 @@ static BOOL next_xml_attr(xmlbuf_t* xmlbuf, xmlstr_t* name, xmlstr_t* value,
         return FALSE;
     }
 
-    value->len = (ULONG)(ptr - value->ptr);
+    value->len = ptr - value->ptr;
     xmlbuf->ptr = ptr + 1;
 
     if (xmlbuf->ptr == xmlbuf->end) return FALSE;
@@ -783,7 +821,7 @@ static BOOL next_xml_elem(xmlbuf_t* xmlbuf, xmlstr_t* elem)
         ptr++;
 
     elem->ptr = xmlbuf->ptr;
-    elem->len = (ULONG)(ptr - xmlbuf->ptr);
+    elem->len = ptr - xmlbuf->ptr;
     xmlbuf->ptr = ptr;
     return xmlbuf->ptr != xmlbuf->end;
 }
@@ -811,7 +849,7 @@ static BOOL parse_text_content(xmlbuf_t* xmlbuf, xmlstr_t* content)
     if (!ptr) return FALSE;
 
     content->ptr = xmlbuf->ptr;
-    content->len = (ULONG)(ptr - xmlbuf->ptr);
+    content->len = ptr - xmlbuf->ptr;
     xmlbuf->ptr = ptr;
 
     return TRUE;
@@ -851,12 +889,12 @@ error:
     return FALSE;
 }
 
-static BOOL parse_expect_elem(xmlbuf_t* xmlbuf, const WCHAR* name)
+static BOOL parse_expect_elem(xmlbuf_t* xmlbuf, const WCHAR* name, const WCHAR *namespace)
 {
     xmlstr_t    elem;
     UNICODE_STRING elemU;
     if (!next_xml_elem(xmlbuf, &elem)) return FALSE;
-    if (xmlstr_cmp(&elem, name)) return TRUE;
+    if (xml_elem_cmp(&elem, name, namespace)) return TRUE;
     elemU = xmlstr2unicode(&elem);
     DPRINT1( "unexpected element %wZ\n", &elemU );
     return FALSE;
@@ -884,12 +922,12 @@ static BOOL parse_end_element(xmlbuf_t *xmlbuf)
     return parse_expect_no_attr(xmlbuf, &end) && !end;
 }
 
-static BOOL parse_expect_end_elem(xmlbuf_t *xmlbuf, const WCHAR *name)
+static BOOL parse_expect_end_elem(xmlbuf_t *xmlbuf, const WCHAR *name, const WCHAR *namespace)
 {
     xmlstr_t    elem;
     UNICODE_STRING elemU;
     if (!next_xml_elem(xmlbuf, &elem)) return FALSE;
-    if (!xmlstr_cmp_end(&elem, name))
+    if (!xml_elem_cmp_end(&elem, name, namespace))
     {
         elemU = xmlstr2unicode(&elem);
         DPRINT1( "unexpected element %wZ\n", &elemU );
@@ -949,9 +987,9 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
         }
         else if (xmlstr_cmp(&attr_name, languageW))
         {
-            if (!(ai->language = xmlstrdupW(&attr_value))) return FALSE;
             DPRINT1("Unsupported yet language attribute (%S)\n",
                  ai->language);
+            if (!(ai->language = xmlstrdupW(&attr_value))) return FALSE;
         }
         else
         {
@@ -962,13 +1000,13 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
     }
 
     if (error || end) return end;
-    return parse_expect_end_elem(xmlbuf, assemblyIdentityW);
+    return parse_expect_end_elem(xmlbuf, assemblyIdentityW, asmv1W);
 }
 
 static BOOL parse_com_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
 {
     xmlstr_t elem, attr_name, attr_value;
-    BOOL ret, end = FALSE, error;
+    BOOL ret = TRUE, end = FALSE, error;
     struct entity*      entity;
     UNICODE_STRING  attr_valueU, attr_nameU;
 
@@ -1037,7 +1075,7 @@ static BOOL parse_cominterface_proxy_stub_elem(xmlbuf_t* xmlbuf, struct dll_redi
     }
 
     if (error || end) return end;
-    return parse_expect_end_elem(xmlbuf, comInterfaceProxyStubW);
+    return parse_expect_end_elem(xmlbuf, comInterfaceProxyStubW, asmv1W);
 }
 
 static BOOL parse_typelib_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
@@ -1073,13 +1111,13 @@ static BOOL parse_typelib_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
     }
 
     if (error || end) return end;
-    return parse_expect_end_elem(xmlbuf, typelibW);
+    return parse_expect_end_elem(xmlbuf, typelibW, asmv1W);
 }
 
 static BOOL parse_window_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
 {
-    xmlstr_t    elem, content;
-    BOOL        end = FALSE, ret = TRUE;
+    xmlstr_t elem, content;
+    BOOL end = FALSE, ret = TRUE;
     struct entity*      entity;
     UNICODE_STRING elemU;
 
@@ -1137,7 +1175,7 @@ static BOOL parse_binding_redirect_elem(xmlbuf_t* xmlbuf)
     }
 
     if (error || end) return end;
-    return parse_expect_end_elem(xmlbuf, bindingRedirectW);
+    return parse_expect_end_elem(xmlbuf, bindingRedirectW, asmv1W);
 }
 
 static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
@@ -1201,7 +1239,7 @@ static BOOL parse_com_interface_external_proxy_stub_elem(xmlbuf_t* xmlbuf,
     }
 
     if (error || end) return end;
-    return parse_expect_end_elem(xmlbuf, comInterfaceExternalProxyStubW);
+    return parse_expect_end_elem(xmlbuf, comInterfaceExternalProxyStubW, asmv1W);
 }
 
 static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
@@ -1233,7 +1271,7 @@ static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
     }
 
     if (error || end) return end;
-    return parse_expect_end_elem(xmlbuf, clrClassW);
+    return parse_expect_end_elem(xmlbuf, clrClassW, asmv1W);
 }
 
 static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
@@ -1265,7 +1303,7 @@ static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly
     }
 
     if (error || end) return end;
-    return parse_expect_end_elem(xmlbuf, clrSurrogateW);
+    return parse_expect_end_elem(xmlbuf, clrSurrogateW, asmv1W);
 }
 
 static BOOL parse_dependent_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl, BOOL optional)
@@ -1279,7 +1317,7 @@ static BOOL parse_dependent_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader
     memset(&ai, 0, sizeof(ai));
     ai.optional = optional;
 
-    if (!parse_expect_elem(xmlbuf, assemblyIdentityW) ||
+    if (!parse_expect_elem(xmlbuf, assemblyIdentityW, asmv1W) ||
         !parse_assembly_identity_elem(xmlbuf, acl->actctx, &ai))
         return FALSE;
 
@@ -1357,7 +1395,7 @@ static BOOL parse_noinherit_elem(xmlbuf_t* xmlbuf)
     BOOL end = FALSE;
 
     if (!parse_expect_no_attr(xmlbuf, &end)) return FALSE;
-    return end || parse_expect_end_elem(xmlbuf, noInheritW);
+    return end || parse_expect_end_elem(xmlbuf, noInheritW, asmv1W);
 }
 
 static BOOL parse_noinheritable_elem(xmlbuf_t* xmlbuf)
@@ -1365,7 +1403,7 @@ static BOOL parse_noinheritable_elem(xmlbuf_t* xmlbuf)
     BOOL end = FALSE;
 
     if (!parse_expect_no_attr(xmlbuf, &end)) return FALSE;
-    return end || parse_expect_end_elem(xmlbuf, noInheritableW);
+    return end || parse_expect_end_elem(xmlbuf, noInheritableW, asmv1W);
 }
 
 static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
@@ -2089,6 +2127,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     NTSTATUS status;
     UNICODE_STRING nameW;
     HANDLE file;
+    DWORD len;
 
     DPRINT( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
            ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
@@ -2097,9 +2136,12 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
 
     /* FIXME: add support for language specific lookup */
 
+    len = max(RtlGetFullPathName_U(acl->actctx->assemblies->manifest.info, 0, NULL, NULL) / sizeof(WCHAR),
+        strlenW(acl->actctx->appdir.info));
+
     nameW.Buffer = NULL;
     if (!(buffer = RtlAllocateHeap( RtlGetProcessHeap(), 0,
-                                    (strlenW(acl->actctx->appdir.info) + 2 * strlenW(ai->name) + 2) * sizeof(WCHAR) + sizeof(dotManifestW) )))
+                                    (len + 2 * strlenW(ai->name) + 2) * sizeof(WCHAR) + sizeof(dotManifestW) )))
         return STATUS_NO_MEMORY;
 
     if (!(directory = build_assembly_dir( ai )))
@@ -2108,16 +2150,25 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
         return STATUS_NO_MEMORY;
     }
 
-    /* lookup in appdir\name.dll
-     *           appdir\name.manifest
-     *           appdir\name\name.dll
-     *           appdir\name\name.manifest
+    /* Lookup in <dir>\name.dll
+     *           <dir>\name.manifest
+     *           <dir>\name\name.dll
+     *           <dir>\name\name.manifest
+     *
+     * First 'appdir' is used as <dir>, if that failed
+     * it tries application manifest file path.
      */
     strcpyW( buffer, acl->actctx->appdir.info );
     p = buffer + strlenW(buffer);
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < 4; i++)
     {
-        *p++ = '\\';
+        if (i == 2)
+        {
+            struct assembly *assembly = acl->actctx->assemblies;
+            if (!RtlGetFullPathName_U(assembly->manifest.info, len * sizeof(WCHAR), buffer, &p)) break;
+        }
+        else *p++ = '\\';
+
         strcpyW( p, ai->name );
         p += strlenW(p);
 
@@ -2308,6 +2359,28 @@ static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS find_guid(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
+                          const GUID *guid, DWORD flags, PACTCTX_SECTION_KEYED_DATA data)
+{
+    NTSTATUS status;
+
+    switch (section_kind)
+    {
+    default:
+        DPRINT("Unknown section_kind %x\n", section_kind);
+        return STATUS_SXS_SECTION_NOT_FOUND;
+    }
+
+    if (status != STATUS_SUCCESS) return status;
+
+    if (flags & FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
+    {
+        actctx_addref(actctx);
+        data->hActCtx = actctx;
+    }
+    return STATUS_SUCCESS;
+}
+
 /* initialize the activation context for the current process */
 void actctx_init(void)
 {
@@ -2384,7 +2457,10 @@ RtlCreateActivationContext(IN ULONG Flags,
     }
 
     nameW.Buffer = NULL;
-    if (pActCtx->lpSource)
+
+    /* open file only if it's going to be used */
+    if (pActCtx->lpSource && !((pActCtx->dwFlags & ACTCTX_FLAG_RESOURCE_NAME_VALID) &&
+                               (pActCtx->dwFlags & ACTCTX_FLAG_HMODULE_VALID)))
     {
         if (!RtlDosPathNameToNtPathName_U(pActCtx->lpSource, &nameW, NULL, NULL))
         {
@@ -2789,7 +2865,6 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
             {
                 afdi->lpAssemblyDirectoryName = ptr;
                 memcpy(ptr, assembly->directory, ad_len * sizeof(WCHAR));
-                ptr += ad_len;
             }
             else afdi->lpAssemblyDirectoryName = NULL;
             RtlFreeHeap( RtlGetProcessHeap(), 0, assembly_id );
@@ -2923,12 +2998,37 @@ RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG sect
     return status;
 }
 
-NTSTATUS
-NTAPI
-RtlFindActivationContextSectionGuid(ULONG flags, const GUID *guid, ULONG section_kind, UNICODE_STRING *section_name, PVOID ptr)
+NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *extguid, ULONG section_kind,
+                                                     const GUID *guid, void *ptr )
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+   ACTCTX_SECTION_KEYED_DATA *data = ptr;
+   NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+
+   if (extguid)
+    {
+        DPRINT1("expected extguid == NULL\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
+    {
+        DPRINT1("unknown flags %08x\n", flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!data || data->cbSize < FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) || !guid)
+        return STATUS_INVALID_PARAMETER;
+    
+    if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
+    {
+        ACTIVATION_CONTEXT *actctx = check_actctx(NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext);
+        if (actctx) status = find_guid( actctx, section_kind, guid, flags, data );
+    }
+
+    if (status != STATUS_SUCCESS)
+        status = find_guid( process_actctx, section_kind, guid, flags, data );
+
+    return status;
 }
 
 /* Stubs */

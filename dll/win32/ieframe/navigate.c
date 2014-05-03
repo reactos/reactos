@@ -1437,6 +1437,45 @@ static const ITargetFramePriv2Vtbl TargetFramePriv2Vtbl = {
     TargetFramePriv2_AggregatedNavigation2
 };
 
+static inline HlinkFrame *impl_from_IWebBrowserPriv2IE9(IWebBrowserPriv2IE9 *iface)
+{
+    return CONTAINING_RECORD(iface, HlinkFrame, IWebBrowserPriv2IE9_iface);
+}
+
+static HRESULT WINAPI WebBrowserPriv2IE9_QueryInterface(IWebBrowserPriv2IE9 *iface, REFIID riid, void **ppv)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    return IUnknown_QueryInterface(This->outer, riid, ppv);
+}
+
+static ULONG WINAPI WebBrowserPriv2IE9_AddRef(IWebBrowserPriv2IE9 *iface)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    return IUnknown_AddRef(This->outer);
+}
+
+static ULONG WINAPI WebBrowserPriv2IE9_Release(IWebBrowserPriv2IE9 *iface)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    return IUnknown_Release(This->outer);
+}
+
+static HRESULT WINAPI WebBrowserPriv2IE9_NavigateWithBindCtx2(IWebBrowserPriv2IE9 *iface, IUri *uri, VARIANT *flags,
+        VARIANT *target_frame, VARIANT *post_data, VARIANT *headers, IBindCtx *bind_ctx, LPOLESTR url_fragment, DWORD unused)
+{
+    HlinkFrame *This = impl_from_IWebBrowserPriv2IE9(iface);
+    FIXME("(%p)->(%p %s %s %s %s %p %s)\n", This, uri, debugstr_variant(flags), debugstr_variant(target_frame),
+          debugstr_variant(post_data), debugstr_variant(headers), bind_ctx, debugstr_w(url_fragment));
+    return E_NOTIMPL;
+}
+
+static const IWebBrowserPriv2IE9Vtbl WebBrowserPriv2IE9Vtbl = {
+    WebBrowserPriv2IE9_QueryInterface,
+    WebBrowserPriv2IE9_AddRef,
+    WebBrowserPriv2IE9_Release,
+    WebBrowserPriv2IE9_NavigateWithBindCtx2
+};
+
 BOOL HlinkFrame_QI(HlinkFrame *This, REFIID riid, void **ppv)
 {
     if(IsEqualGUID(&IID_IHlinkFrame, riid)) {
@@ -1451,6 +1490,9 @@ BOOL HlinkFrame_QI(HlinkFrame *This, REFIID riid, void **ppv)
     }else if(IsEqualGUID(&IID_ITargetFramePriv2, riid)) {
         TRACE("(%p)->(IID_ITargetFramePriv2 %p)\n", This, ppv);
         *ppv = &This->ITargetFramePriv2_iface;
+    }else if(IsEqualGUID(&IID_IWebBrowserPriv2IE9, riid)) {
+        TRACE("(%p)->(IID_IWebBrowserPriv2IE9 %p)\n", This, ppv);
+        *ppv = &This->IWebBrowserPriv2IE9_iface;
     }else {
         return FALSE;
     }
@@ -1464,6 +1506,7 @@ void HlinkFrame_Init(HlinkFrame *This, IUnknown *outer, DocHost *doc_host)
     This->IHlinkFrame_iface.lpVtbl   = &HlinkFrameVtbl;
     This->ITargetFrame2_iface.lpVtbl = &TargetFrame2Vtbl;
     This->ITargetFramePriv2_iface.lpVtbl = &TargetFramePriv2Vtbl;
+    This->IWebBrowserPriv2IE9_iface.lpVtbl = &WebBrowserPriv2IE9Vtbl;
 
     This->outer = outer;
     This->doc_host = doc_host;

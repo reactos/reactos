@@ -292,10 +292,13 @@ typedef struct _I8042_HOOK_WORKITEM
 
 IO_WORKITEM_ROUTINE i8042SendHookWorkItem;
 
+_Dispatch_type_(IRP_MJ_CREATE)
 DRIVER_DISPATCH i8042Create;
 
+_Dispatch_type_(IRP_MJ_CLEANUP)
 DRIVER_DISPATCH i8042Cleanup;
 
+_Dispatch_type_(IRP_MJ_CLOSE)
 DRIVER_DISPATCH i8042Close;
 
 /* keyboard.c */
@@ -371,6 +374,7 @@ i8042ChangeMode(
 	IN UCHAR FlagsToDisable,
 	IN UCHAR FlagsToEnable);
 
+_Dispatch_type_(IRP_MJ_PNP)
 DRIVER_DISPATCH i8042Pnp;
 
 /* ps2pp.c */

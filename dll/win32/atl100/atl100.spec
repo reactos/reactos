@@ -5,7 +5,7 @@
 14 stdcall AtlUnmarshalPtr(ptr ptr ptr)
 15 stdcall AtlComModuleGetClassObject(ptr ptr ptr ptr)
 17 stdcall AtlComModuleRegisterClassObjects(ptr long long)
-20 stub AtlComModuleRevokeClassObjects
+20 stdcall AtlComModuleRevokeClassObjects(ptr)
 22 stdcall AtlComModuleUnregisterServer(ptr long ptr)
 23 stdcall AtlUpdateRegistryFromResourceD(long wstr long ptr ptr)
 24 stdcall AtlWaitWithMessageLoop(long)

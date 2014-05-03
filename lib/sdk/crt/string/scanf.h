@@ -359,7 +359,7 @@ _FUNCTION_ {
 			if (width>0) width--;
                     }
                     /* terminate */
-                    if (!suppress) *sptr = 0;
+                    if (st && !suppress) *sptr = 0;
                 }
                 break;
 	    widecharstring: { /* read a word into a wchar_t* */
@@ -375,7 +375,7 @@ _FUNCTION_ {
 			if (width>0) width--;
                     }
                     /* terminate */
-                    if (!suppress) *sptr = 0;
+                    if (st && !suppress) *sptr = 0;
                 }
                 break;
             /* 'c' and 'C work analogously to 's' and 'S' as described

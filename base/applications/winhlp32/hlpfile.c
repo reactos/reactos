@@ -1049,7 +1049,7 @@ static BOOL     HLPFILE_RtfAddMetaFile(struct RtfData* rd, HLPFILE* file, const 
     ptr = beg + 2; /* for type and pack */
 
     mm = fetch_ushort(&ptr); /* mapping mode */
-    sprintf(tmp, "{\\pict\\wmetafile%d\\picw%d\\pich%d",
+    sprintf(tmp, "{\\pict\\wmetafile%u\\picw%u\\pich%u",
             mm, GET_USHORT(ptr, 0), GET_USHORT(ptr, 2));
     if (!HLPFILE_RtfAddControl(rd, tmp)) return FALSE;
     ptr += 4;
@@ -1465,11 +1465,10 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
                     }
                     /* FIXME: missing at least colors, also bold attribute looses information */
 
-                    sprintf(tmp, "\\f%d\\cf%d\\fs%d%s%s%s%s",
+                    sprintf(tmp, "\\f%u\\cf%u\\fs%u%s%s%s%s",
                             font, font + 2, fs,
                             page->file->fonts[font].LogFont.lfWeight > 400 ? "\\b" : "\\b0",
-                            page->file->fonts[font].LogFont.lfItalic ? "\\i" : "\\i0",
-                            page->file->fonts[font].LogFont.lfUnderline ? "\\ul" : "\\ul0",
+                            page->file->fonts[font].LogFont.lfItalic ? "\\i" : "\\i0",                            page->file->fonts[font].LogFont.lfUnderline ? "\\ul" : "\\ul0",
                             page->file->fonts[font].LogFont.lfStrikeOut ? "\\strike" : "\\strike0");
                     if (!HLPFILE_RtfAddControl(rd, tmp)) goto done;
                 }

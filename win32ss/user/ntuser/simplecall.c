@@ -401,17 +401,17 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
             DWORD_PTR Ret;
-            PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
+            PMENU MenuObject = IntGetMenuObject((HMENU)Param1);
             if(!MenuObject)
                RETURN( 0);
 
             if(Param2 > 0)
             {
-               Ret = (MenuObject->MenuInfo.Height == (int)Param2);
-               MenuObject->MenuInfo.Height = (int)Param2;
+               Ret = (MenuObject->cyMenu == (int)Param2);
+               MenuObject->cyMenu = (int)Param2;
             }
             else
-               Ret = (DWORD_PTR)MenuObject->MenuInfo.Height;
+               Ret = (DWORD_PTR)MenuObject->cyMenu;
             IntReleaseMenuObject(MenuObject);
             RETURN( Ret);
          }
@@ -564,9 +564,9 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE:
-         TRACE("co_IntSetForegroundWindow 1 0x%p\n",hWnd);
+         TRACE("co_IntSetForegroundWindow M 1 0x%p\n",hWnd);
          Ret = co_IntSetForegroundWindowMouse(Window);
-         TRACE("co_IntSetForegroundWindow 2 0x%p\n",hWnd);
+         TRACE("co_IntSetForegroundWindow M 2 0x%p\n",hWnd);
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:

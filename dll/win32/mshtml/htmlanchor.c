@@ -53,47 +53,81 @@ static HRESULT navigate_anchor_window(HTMLAnchorElement *This, const WCHAR *targ
     return hres;
 }
 
-static HRESULT navigate_anchor(HTMLAnchorElement *This)
+HTMLOuterWindow *get_target_window(HTMLOuterWindow *window, nsAString *target_str, BOOL *use_new_window)
 {
-    nsAString href_str, target_str;
-    HTMLOuterWindow *window = NULL;
-    nsresult nsres;
-    HRESULT hres = E_FAIL;
+    HTMLOuterWindow *top_window, *ret_window;
+    const PRUnichar *target;
+    HRESULT hres;
 
-    static const WCHAR _parentW[] = {'p','a','r','e','n','t',0};
+    static const WCHAR _parentW[] = {'_','p','a','r','e','n','t',0};
     static const WCHAR _selfW[] = {'_','s','e','l','f',0};
     static const WCHAR _topW[] = {'_','t','o','p',0};
 
+    *use_new_window = FALSE;
+
+    nsAString_GetData(target_str, &target);
+    TRACE("%s\n", debugstr_w(target));
+
+    if(!*target || !strcmpiW(target, _selfW)) {
+        IHTMLWindow2_AddRef(&window->base.IHTMLWindow2_iface);
+        return window;
+    }
+
+    if(!strcmpiW(target, _topW)) {
+        get_top_window(window, &top_window);
+        IHTMLWindow2_AddRef(&top_window->base.IHTMLWindow2_iface);
+        return top_window;
+    }
+
+    if(!strcmpiW(target, _parentW)) {
+        if(!window->parent) {
+            WARN("Window has no parent\n");
+            return NULL;
+        }
+
+        IHTMLWindow2_AddRef(&window->parent->base.IHTMLWindow2_iface);
+        return window->parent;
+    }
+
+    get_top_window(window, &top_window);
+
+    hres = get_frame_by_name(top_window, target, TRUE, &ret_window);
+    if(FAILED(hres) || !ret_window) {
+        *use_new_window = TRUE;
+        return NULL;
+    }
+
+    IHTMLWindow2_AddRef(&ret_window->base.IHTMLWindow2_iface);
+    return ret_window;
+}
+
+static HRESULT navigate_anchor(HTMLAnchorElement *This)
+{
+    nsAString href_str, target_str;
+    HTMLOuterWindow *window;
+    BOOL use_new_window;
+    nsresult nsres;
+    HRESULT hres = E_FAIL;
+
+
     nsAString_Init(&target_str, NULL);
     nsres = nsIDOMHTMLAnchorElement_GetTarget(This->nsanchor, &target_str);
-    if(NS_SUCCEEDED(nsres)) {
+    if(NS_FAILED(nsres))
+        return E_FAIL;
+
+    window = get_target_window(This->element.node.doc->basedoc.window, &target_str, &use_new_window);
+    if(!window && use_new_window) {
         const PRUnichar *target;
 
         nsAString_GetData(&target_str, &target);
-        TRACE("target %s\n", debugstr_w(target));
-        if(*target && strcmpiW(target, _selfW)) {
-            if(!strcmpiW(target, _topW)) {
-                TRACE("target _top\n");
-                get_top_window(This->element.node.doc->basedoc.window, &window);
-            }else if(!strcmpiW(target, _parentW)) {
-                FIXME("Navigating to target _parent is not implemented\n");
-                nsAString_Finish(&target_str);
-                return S_OK;
-            }else {
-                HTMLOuterWindow *top_window;
-
-                get_top_window(This->element.node.doc->basedoc.window, &top_window);
-
-                hres = get_frame_by_name(top_window, target, TRUE, &window);
-                if(FAILED(hres) || !window) {
-                    hres = navigate_anchor_window(This, target);
-                    nsAString_Finish(&target_str);
-                    return hres;
-                }
-            }
-        }
+        hres = navigate_anchor_window(This, target);
+        nsAString_Finish(&target_str);
+        return hres;
     }
+
     nsAString_Finish(&target_str);
+    if(!window)
+        return S_OK;
 
     nsAString_Init(&href_str, NULL);
     nsres = nsIDOMHTMLAnchorElement_GetHref(This->nsanchor, &href_str);
@@ -102,15 +136,14 @@ static HRESULT navigate_anchor(HTMLAnchorElement *This)
 
         nsAString_GetData(&href_str, &href);
         if(*href) {
-            if(!window)
-                window = This->element.node.doc->basedoc.window;
-            hres = navigate_url(window, href, window->uri, BINDING_NAVIGATED);
+            hres = navigate_url(window, href, window->uri_nofrag, BINDING_NAVIGATED);
         }else {
             TRACE("empty href\n");
             hres = S_OK;
         }
     }
     nsAString_Finish(&href_str);
+    IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
     return hres;
 }
 

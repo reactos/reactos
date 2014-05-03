@@ -651,8 +651,8 @@ CSR_API(SrvConsoleNotifyLastClose)
     /* Only one process is allowed to be registered for last close notification */
     if (!Console->NotifyLastClose)
     {
-        Console->NotifiedLastCloseProcess = ProcessData;
         Console->NotifyLastClose = TRUE;
+        Console->NotifiedLastCloseProcess = ProcessData;
         Status = STATUS_SUCCESS;
     }
     else

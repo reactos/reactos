@@ -19,7 +19,7 @@ HKCR
             ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
             TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
         }
-        '{0AB5A3D0-E5B6-11D0-ABF5-00A0C90FFFC0}' = s 'IFileSystem'
+        '{C7C3F5A0-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IDrive'
         {
             ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
             ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
@@ -31,25 +31,7 @@ HKCR
             ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
             TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
         }
-        '{C7C3F5A0-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IDrive'
-        {
-            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
-            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
-            TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
-        }
-        '{C7C3F5A2-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFolder'
-        {
-            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
-            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
-            TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
-        }
-        '{C7C3F5A3-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFolderCollection'
-        {
-            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
-            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
-            TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
-        }
-        '{C7C3F5A5-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFileCollection'
+        '{53BAD8C1-E718-11CF-893D-00A0C9054228}' = s 'ITextStream'
         {
             ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
             ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
@@ -61,7 +43,25 @@ HKCR
             ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
             TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
         }
-        '{53BAD8C1-E718-11CF-893D-00A0C9054228}' = s 'ITextStream'
+        '{0AB5A3D0-E5B6-11D0-ABF5-00A0C90FFFC0}' = s 'IFileSystem'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A5-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFileCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A3-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFolderCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{420B2830-E718-11CF-893D-00A0C9054228}' { val Version = s '1.0' }
+        }
+        '{C7C3F5A2-88A3-11D0-ABCB-00A0C90FFFC0}' = s 'IFolder'
         {
             ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
             ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'

@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep register
+
 [
     threading(apartment),
     uuid(79eac9d0-baf9-11ce-8c82-00aa004ba90b)

@@ -35,11 +35,20 @@
 #define OPTIONAL
 #endif
 
+#ifndef _NTDEF_
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+#endif
+
 typedef struct _BCRYPT_ALGORITHM_IDENTIFIER
 {
     LPWSTR pszName;
     ULONG  dwClass;
     ULONG  dwFlags;
 } BCRYPT_ALGORITHM_IDENTIFIER;
+
+typedef PVOID BCRYPT_ALG_HANDLE;
+
+#define BCRYPT_RNG_USE_ENTROPY_IN_BUFFER 0x00000001
+#define BCRYPT_USE_SYSTEM_PREFERRED_RNG  0x00000002
 
 #endif  /* __WINE_BCRYPT_H */

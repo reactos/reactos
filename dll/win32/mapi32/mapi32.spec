@@ -62,12 +62,12 @@
  80 stdcall LPropCompareProp@8(ptr ptr) LPropCompareProp
  81 stub HrAddColumns@16
  82 stub HrAddColumnsEx@20
-121 stdcall -ret64 FtAddFt@16(double double) MAPI32_FtAddFt
+121 stdcall -ret64 FtAddFt@16(int64 int64) MAPI32_FtAddFt
 122 stub FtAdcFt@20
-123 stdcall -ret64 FtSubFt@16(double double) MAPI32_FtSubFt
-124 stdcall -ret64 FtMulDw@12(long double) MAPI32_FtMulDw
+123 stdcall -ret64 FtSubFt@16(int64 int64) MAPI32_FtSubFt
+124 stdcall -ret64 FtMulDw@12(long int64) MAPI32_FtMulDw
 125 stdcall -ret64 FtMulDwDw@8(long long) MAPI32_FtMulDwDw
-126 stdcall -ret64 FtNegFt@8(double) MAPI32_FtNegFt
+126 stdcall -ret64 FtNegFt@8(int64) MAPI32_FtNegFt
 127 stub FtDivFtBogus@20
 128 stdcall UlAddRef@4(ptr) UlAddRef
 129 stdcall UlRelease@4(ptr) UlRelease

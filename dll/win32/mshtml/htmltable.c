@@ -232,15 +232,48 @@ static HRESULT WINAPI HTMLTable_get_background(IHTMLTable *iface, BSTR *p)
 static HRESULT WINAPI HTMLTable_put_bgColor(IHTMLTable *iface, VARIANT v)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    nsAString_InitDepend(&val, V_BSTR(&v));
+    variant_to_nscolor(&v, &val);
+    nsres = nsIDOMHTMLTableElement_SetBgColor(This->nstable, &val);
+    nsAString_Finish(&val);
+
+    if (NS_FAILED(nsres)){
+        ERR("Set BgColor(%s) failed!\n", debugstr_variant(&v));
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTable_get_bgColor(IHTMLTable *iface, VARIANT *p)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString strColor;
+    nsresult nsres;
+    HRESULT hres;
+    const PRUnichar *color;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&strColor, NULL);
+    nsres = nsIDOMHTMLTableElement_GetBgColor(This->nstable, &strColor);
+
+    if(NS_SUCCEEDED(nsres)) {
+       nsAString_GetData(&strColor, &color);
+       V_VT(p) = VT_BSTR;
+       hres = nscolor_to_str(color, &V_BSTR(p));
+    }else {
+       ERR("SetBgColor failed: %08x\n", nsres);
+       hres = E_FAIL;
+    }
+
+    nsAString_Finish(&strColor);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLTable_put_borderColor(IHTMLTable *iface, VARIANT v)
@@ -288,15 +321,34 @@ static HRESULT WINAPI HTMLTable_get_borderColorDark(IHTMLTable *iface, VARIANT *
 static HRESULT WINAPI HTMLTable_put_align(IHTMLTable *iface, BSTR v)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_InitDepend(&val, v);
+
+    nsres = nsIDOMHTMLTableElement_SetAlign(This->nstable, &val);
+    nsAString_Finish(&val);
+    if (NS_FAILED(nsres)){
+        ERR("Set Align(%s) failed!\n", debugstr_w(v));
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTable_get_align(IHTMLTable *iface, BSTR *p)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&val, NULL);
+    nsres = nsIDOMHTMLTableElement_GetAlign(This->nstable, &val);
+
+    return return_nsstr(nsres, &val, p);
 }
 
 static HRESULT WINAPI HTMLTable_refresh(IHTMLTable *iface)

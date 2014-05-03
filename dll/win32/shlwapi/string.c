@@ -2800,7 +2800,7 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
     TRACE("returning %s\n", debugstr_w(dst));
 end:
     if(hmod) FreeLibrary(hmod);
-    HeapFree(GetProcessHeap(), 0, dllname);
+    LocalFree(dllname);
     return hr;
 }
 

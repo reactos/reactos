@@ -2054,8 +2054,8 @@ lookinhash:
 
                 if (ShowSnaps)
                 {
-                    DPRINT1("LDR: LdrpCheckForLoadedDll - Unable To Locate %ws: 0x%08x\n",
-                        DllName->Buffer, Length);
+                    DPRINT1("LDR: LdrpCheckForLoadedDll - Unable To Locate %wZ: 0x%08x\n",
+                        &DllName, Length);
                 }
 
                 /* Return failure */
@@ -2333,7 +2333,8 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
 
         if (!ExportDir)
         {
-            DPRINT1("Image %wZ has no exports, but were trying to get procedure %s. BaseAddress asked %p, got entry BA %p\n", &LdrEntry->BaseDllName, Name ? Name->Buffer : NULL, BaseAddress, LdrEntry->DllBase);
+            DPRINT1("Image %wZ has no exports, but were trying to get procedure %Z. BaseAddress asked 0x%p, got entry BA 0x%p\n",
+                    &LdrEntry->BaseDllName, &Name, BaseAddress, LdrEntry->DllBase);
             Status = STATUS_PROCEDURE_NOT_FOUND;
             _SEH2_YIELD(goto Quickie;)
         }

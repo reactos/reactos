@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Performance Counter Functions
@@ -17,10 +17,10 @@
 VOID APIENTRY
 EngQueryPerformanceFrequency(LONGLONG *Frequency)
 {
-  LARGE_INTEGER Freq;
+    LARGE_INTEGER Freq;
 
-  KeQueryPerformanceCounter(&Freq);
-  *Frequency = Freq.QuadPart;
+    KeQueryPerformanceCounter(&Freq);
+    *Frequency = Freq.QuadPart;
 }
 
 /*
@@ -29,8 +29,8 @@ EngQueryPerformanceFrequency(LONGLONG *Frequency)
 VOID APIENTRY
 EngQueryPerformanceCounter(LONGLONG *Count)
 {
-  LARGE_INTEGER PerfCount;
+    LARGE_INTEGER PerfCount;
 
-  PerfCount = KeQueryPerformanceCounter(NULL);
-  *Count = PerfCount.QuadPart;
+    PerfCount = KeQueryPerformanceCounter(NULL);
+    *Count = PerfCount.QuadPart;
 }

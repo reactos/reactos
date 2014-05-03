@@ -597,7 +597,7 @@ PVOID FASTCALL ValidateHandle(HANDLE handle, HANDLE_TYPE type)
 }
       
 /*
- * NtUserValidateHandleSecure
+ * NtUserValidateHandleSecure W2k3 has one argument.
  *
  * Status
  *    @implemented
@@ -609,62 +609,46 @@ NtUserValidateHandleSecure(
    HANDLE handle,
    BOOL Restricted)
 {
-   if(!Restricted)
+   UINT uType;
+   PPROCESSINFO ppi;
+   PUSER_HANDLE_ENTRY entry;
+
+   DECLARE_RETURN(BOOL);
+   UserEnterExclusive();
+
+   if (!(entry = handle_to_entry(gHandleTable, handle )))
    {
-     UINT uType;
-     {
-       PUSER_HANDLE_ENTRY entry;
-       if (!(entry = handle_to_entry(gHandleTable, handle )))
-       {
-          EngSetLastError(ERROR_INVALID_HANDLE);
-          return FALSE;
-       }
-       uType = entry->type;
-     }
-     switch (uType)
-     {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      RETURN( FALSE);
+   }
+   uType = entry->type;
+   switch (uType)
+   {
        case TYPE_WINDOW:
-       {
-         if (UserGetWindowObject((HWND) handle)) return TRUE;
-         return FALSE;
-       }
+       case TYPE_INPUTCONTEXT:
+          ppi = ((PTHREADINFO)entry->pi)->ppi;
+          break;
        case TYPE_MENU:
-       {
-         if (UserGetMenuObject((HMENU) handle)) return TRUE;
-         return FALSE;
-       }
        case TYPE_ACCELTABLE:
-       {
-         if (UserGetAccelObject((HACCEL) handle)) return TRUE;
-         return FALSE;
-       }
        case TYPE_CURSOR:
-       {
-         if (UserGetCurIconObject((HCURSOR) handle)) return TRUE;
-         return FALSE;
-       }
        case TYPE_HOOK:
-       {
-         if (IntGetHookObject((HHOOK) handle)) return TRUE;
-         return FALSE;
-       }
-       case TYPE_MONITOR:
-       {
-         if (UserGetMonitorObject((HMONITOR) handle)) return TRUE;
-         return FALSE;
-       }
        case TYPE_CALLPROC:
-       {
-         WNDPROC_INFO Proc;
-         return UserGetCallProcInfo( handle, &Proc );
-       }
+       case TYPE_SETWINDOWPOS:
+          ppi = entry->pi;
+          break;
        default:
-         EngSetLastError(ERROR_INVALID_HANDLE);
-     }
+          ppi = NULL;
+          break;
    }
-   else
-   { /* Is handle entry restricted? */
-     STUB
-   }
-   return FALSE;
+
+   if (!ppi) RETURN( FALSE);
+
+   // Same process job returns TRUE.
+   if (gptiCurrent->ppi->pW32Job == ppi->pW32Job) RETURN( TRUE);
+
+   RETURN( FALSE);
+
+CLEANUP:
+   UserLeave();
+   END_CLEANUP;
 }

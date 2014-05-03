@@ -934,16 +934,14 @@ static const IWICBitmapFrameDecodeVtbl TgaDecoder_Frame_Vtbl = {
     TgaDecoder_Frame_GetThumbnail
 };
 
-HRESULT TgaDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+HRESULT TgaDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     TgaDecoder *This;
     HRESULT ret;
 
-    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+    TRACE("(%s,%p)\n", debugstr_guid(iid), ppv);
 
     *ppv = NULL;
-
-    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(TgaDecoder));
     if (!This) return E_OUTOFMEMORY;

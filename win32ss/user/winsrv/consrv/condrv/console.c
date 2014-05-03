@@ -575,11 +575,6 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->LineInsertToggle = Console->InsertMode;
     // LineWakeupMask
 
-    // FIXME: This is terminal-specific !! VV
-    RtlZeroMemory(&Console->Selection, sizeof(CONSOLE_SELECTION_INFO));
-    Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
-    // dwSelectionCursor
-
     /* Set-up the code page */
     Console->CodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
 
@@ -1089,6 +1084,16 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
         Console->CodePage = CodePage;
 
     return STATUS_SUCCESS;
+}
+
+PCONSOLE_PROCESS_DATA NTAPI
+ConDrvGetConsoleLeaderProcess(IN PCONSOLE Console)
+{
+    if (Console == NULL) return NULL;
+
+    return CONTAINING_RECORD(Console->ProcessList.Blink,
+                             CONSOLE_PROCESS_DATA,
+                             ConsoleLink);
 }
 
 NTSTATUS NTAPI

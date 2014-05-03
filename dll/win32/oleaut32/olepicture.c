@@ -902,7 +902,7 @@ static HRESULT WINAPI OLEPictureImpl_FindConnectionPoint(
       return E_POINTER;
   *ppCP = NULL;
   if (IsEqualGUID(riid,&IID_IPropertyNotifySink))
-      return IConnectionPoint_QueryInterface(This->pCP,&IID_IConnectionPoint,(LPVOID)ppCP);
+      return IConnectionPoint_QueryInterface(This->pCP, &IID_IConnectionPoint, (void**)ppCP);
   FIXME("no connection point for %s\n",debugstr_guid(riid));
   return CONNECT_E_NOCONNECTION;
 }
@@ -1369,12 +1369,17 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
       }
       headerread += xread;
       xread = 0;
-      
+
       if (!memcmp(&(header[0]),"lt\0\0", 4) && (statfailed || (header[1] + headerread <= statstg.cbSize.QuadPart))) {
           if (toread != 0 && toread != header[1]) 
               FIXME("varying lengths of image data (prev=%u curr=%u), only last one will be used\n",
                   toread, header[1]);
           toread = header[1];
+          if (statfailed)
+          {
+              statstg.cbSize.QuadPart = header[1] + 8;
+              statfailed = FALSE;
+          }
           if (toread == 0) break;
       } else {
           if (!memcmp(&(header[0]), "GIF8",     4) ||   /* GIF header */
@@ -1506,9 +1511,9 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
   return hr;
 }
 
-static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLength)
+static BOOL serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLength)
 {
-    int iSuccess = 0;
+    BOOL success = FALSE;
     HDC hDC;
     BITMAPINFO * pInfoBitmap;
     int iNumPaletteEntries;
@@ -1564,17 +1569,17 @@ static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLengt
             sizeof(BITMAPINFOHEADER) +
             iNumPaletteEntries * sizeof(RGBQUAD),
         pPixelData, pInfoBitmap->bmiHeader.biSizeImage);
-    iSuccess = 1;
+    success = TRUE;
 
     HeapFree(GetProcessHeap(), 0, pPixelData);
     HeapFree(GetProcessHeap(), 0, pInfoBitmap);
-    return iSuccess;
+    return success;
 }
 
-static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
+static BOOL serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 {
 	ICONINFO infoIcon;
-	int iSuccess = 0;
+        BOOL success = FALSE;
 
 	*ppBuffer = NULL; *pLength = 0;
 	if (GetIconInfo(hIcon, &infoIcon)) {
@@ -1696,7 +1701,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 
 			/* Write out everything produced so far to the stream */
 			*ppBuffer = pIconData; *pLength = iDataSize;
-			iSuccess = 1;
+                        success = TRUE;
 		} else {
 /*
 			printf("ERROR: unable to get bitmap information via GetDIBits() (error %u)\n",
@@ -1719,7 +1724,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 		printf("ERROR: Unable to get icon information (error %u)\n",
 			GetLastError());
 	}
-	return iSuccess;
+        return success;
 }
 
 static HRESULT WINAPI OLEPictureImpl_Save(
@@ -1730,7 +1735,7 @@ static HRESULT WINAPI OLEPictureImpl_Save(
     unsigned int iDataSize;
     DWORD header[2];
     ULONG dummy;
-    int iSerializeResult = 0;
+    BOOL serializeResult = FALSE;
     OLEPictureImpl *This = impl_from_IPersistStream(iface);
 
     TRACE("%p %p %d\n", This, pStm, fClearDirty);
@@ -1764,7 +1769,7 @@ static HRESULT WINAPI OLEPictureImpl_Save(
         if (This->bIsDirty || !This->data) {
             switch (This->keepOrigFormat ? This->loadtime_format : BITMAP_FORMAT_BMP) {
             case BITMAP_FORMAT_BMP:
-                iSerializeResult = serializeBMP(This->desc.u.bmp.hbitmap, &pIconData, &iDataSize);
+                serializeResult = serializeBMP(This->desc.u.bmp.hbitmap, &pIconData, &iDataSize);
                 break;
             case BITMAP_FORMAT_JPEG:
                 FIXME("(%p,%p,%d), PICTYPE_BITMAP (format JPEG) not implemented!\n",This,pStm,fClearDirty);
@@ -1780,7 +1785,7 @@ static HRESULT WINAPI OLEPictureImpl_Save(
                 break;
             }
 
-            if (!iSerializeResult)
+            if (!serializeResult)
             {
                 hResult = E_FAIL;
                 break;
@@ -1974,6 +1979,7 @@ static HRESULT WINAPI OLEPictureImpl_Invoke(
   UINT*     puArgErr)
 {
   OLEPictureImpl *This = impl_from_IDispatch(iface);
+  HRESULT hr;
 
   /* validate parameters */
 
@@ -2031,7 +2037,7 @@ static HRESULT WINAPI OLEPictureImpl_Invoke(
     else if (wFlags & DISPATCH_PROPERTYPUT)
     {
       VARIANTARG vararg;
-      HRESULT hr;
+
       TRACE("DISPID_PICT_HPAL\n");
 
       VariantInit(&vararg);
@@ -2067,6 +2073,40 @@ static HRESULT WINAPI OLEPictureImpl_Invoke(
       TRACE("DISPID_PICT_HEIGHT\n");
       V_VT(pVarResult) = VT_I4;
       return IPicture_get_Height(&This->IPicture_iface, &V_I4(pVarResult));
+    }
+    break;
+  case DISPID_PICT_RENDER:
+    if (wFlags & DISPATCH_METHOD)
+    {
+      VARIANTARG *args = pDispParams->rgvarg;
+      int i;
+
+      TRACE("DISPID_PICT_RENDER\n");
+
+      if (pDispParams->cArgs != 10)
+        return DISP_E_BADPARAMCOUNT;
+
+      /* All parameters are supposed to be VT_I4 (on 64 bits too). */
+      for (i = 0; i < pDispParams->cArgs; i++)
+        if (V_VT(&args[i]) != VT_I4)
+        {
+          ERR("DISPID_PICT_RENDER: wrong argument type %d:%d\n", i, V_VT(&args[i]));
+          return DISP_E_TYPEMISMATCH;
+        }
+
+      /* FIXME: rectangle pointer argument handling seems broken on 64 bits,
+                currently Render() doesn't use it at all so for now NULL is passed. */
+      return IPicture_Render(&This->IPicture_iface,
+                LongToHandle(V_I4(&args[9])),
+                             V_I4(&args[8]),
+                             V_I4(&args[7]),
+                             V_I4(&args[6]),
+                             V_I4(&args[5]),
+                             V_I4(&args[4]),
+                             V_I4(&args[3]),
+                             V_I4(&args[2]),
+                             V_I4(&args[1]),
+                                      NULL);
     }
     break;
   }
@@ -2252,7 +2292,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
   HANDLE hFile;
   DWORD dwFileSize;
   HGLOBAL hGlobal = NULL;
-  DWORD dwBytesRead = 0;
+  DWORD dwBytesRead;
   IStream *stream;
   BOOL bRead;
   IPersistStream *pStream;
@@ -2296,7 +2336,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
 	  hGlobal = GlobalAlloc(GMEM_FIXED,dwFileSize);
 	  if ( hGlobal)
 	  {
-	      bRead = ReadFile(hFile, hGlobal, dwFileSize, &dwBytesRead, NULL);
+	      bRead = ReadFile(hFile, hGlobal, dwFileSize, &dwBytesRead, NULL) && dwBytesRead == dwFileSize;
 	      if (!bRead)
 	      {
 		  GlobalFree(hGlobal);

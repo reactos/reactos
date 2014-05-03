@@ -1480,6 +1480,7 @@ typedef enum {
 #define MAXBYTE	0xff
 #define MAXWORD	0xffff
 #define MAXDWORD	0xffffffff
+#define MAXLONGLONG (((LONGLONG)0x7fffffff << 32) | 0xffffffff)
 #define PROCESSOR_INTEL_386 386
 #define PROCESSOR_INTEL_486 486
 #define PROCESSOR_INTEL_PENTIUM 586
@@ -4671,10 +4672,10 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
     _ANONYMOUS_STRUCT struct {
       DWORD NameOffset:31;
       DWORD NameIsString:1;
-    } DUMMYSTRUCTNAME1;
+    } DUMMYSTRUCTNAME;
     DWORD Name;
     WORD Id;
-  } DUMMYUNIONNAME1;
+  } DUMMYUNIONNAME;
   _ANONYMOUS_UNION union {
     DWORD OffsetToData;
     _ANONYMOUS_STRUCT struct {

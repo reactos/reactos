@@ -421,9 +421,8 @@ static HRESULT BindCtxImpl_GetObjectIndex(BindCtxImpl* This,
                                           LPOLESTR pszkey,
                                           DWORD *index)
 {
-
     DWORD i;
-    BYTE found=0;
+    BOOL found = FALSE;
 
     TRACE("(%p,%p,%p,%p)\n",This,punk,pszkey,index);
 
@@ -440,14 +439,14 @@ static HRESULT BindCtxImpl_GetObjectIndex(BindCtxImpl* This,
                      )
                    )
 
-                    found=1;
+                    found = TRUE;
             }
         }
     else
         /* search object identified by a moniker*/
         for(i=0; ( (i<This->bindCtxTableLastIndex) && (!found));i++)
             if(This->bindCtxTable[i].pObj==punk)
-                found=1;
+                found = TRUE;
 
     if (index != NULL)
         *index=i-1;

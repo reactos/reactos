@@ -65,10 +65,12 @@ extern GpStatus graphics_from_image(GpImage *image, GpGraphics **graphics) DECLS
 extern GpStatus METAFILE_GetGraphicsContext(GpMetafile* metafile, GpGraphics **result) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GetDC(GpMetafile* metafile, HDC *hdc) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_ReleaseDC(GpMetafile* metafile, HDC hdc) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_FillRectangles(GpMetafile* metafile, GpBrush* brush,
+    GDIPCONST GpRectF* rects, INT count) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_SetPageTransform(GpMetafile* metafile, GpUnit unit, REAL scale) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GraphicsDeleted(GpMetafile* metafile) DECLSPEC_HIDDEN;
-extern MetafileType METAFILE_GetEmfType(HENHMETAFILE hemf) DECLSPEC_HIDDEN;
 
-extern void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
+extern void calc_curve_bezier(const GpPointF *pts, REAL tension, REAL *x1,
     REAL *y1, REAL *x2, REAL *y2) DECLSPEC_HIDDEN;
 extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
     REAL tension, REAL *x, REAL *y) DECLSPEC_HIDDEN;
@@ -122,9 +124,9 @@ static inline ARGB color_over(ARGB bg, ARGB fg)
     return (a<<24)|(r<<16)|(g<<8)|b;
 }
 
-extern const char *debugstr_rectf(CONST RectF* rc) DECLSPEC_HIDDEN;
+extern const char *debugstr_rectf(const RectF* rc) DECLSPEC_HIDDEN;
 
-extern const char *debugstr_pointf(CONST PointF* pt) DECLSPEC_HIDDEN;
+extern const char *debugstr_pointf(const PointF* pt) DECLSPEC_HIDDEN;
 
 extern void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
     BYTE *dst_bits, INT dst_stride, const BYTE *src_bits, INT src_stride) DECLSPEC_HIDDEN;
@@ -304,8 +306,12 @@ struct GpMetafile{
     GpGraphics *playback_graphics;
     HDC playback_dc;
     GpPointF playback_points[3];
+    GpRectF src_rect;
     HANDLETABLE *handle_table;
     int handle_count;
+    GpMatrix *world_transform;
+    GpUnit page_unit;
+    REAL page_scale;
 };
 
 struct GpBitmap{
@@ -412,17 +418,7 @@ struct region_element
     union
     {
         GpRectF rect;
-        struct
-        {
-            GpPath* path;
-            struct
-            {
-                DWORD size;
-                DWORD magic;
-                DWORD count;
-                DWORD flags;
-            } pathheader;
-        } pathdata;
+        GpPath *path;
         struct
         {
             struct region_element *left;  /* the original region */
@@ -432,13 +428,7 @@ struct region_element
 };
 
 struct GpRegion{
-    struct
-    {
-        DWORD size;
-        DWORD checksum;
-        DWORD magic;
-        DWORD num_children;
-    } header;
+    DWORD num_children;
     region_element node;
 };
 

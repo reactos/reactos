@@ -264,7 +264,7 @@ err:
 
     if (wma->uninit)
         CoUninitialize();
-    wma->uninit = 0;
+    wma->uninit = FALSE;
 
     return MCIERR_INTERNAL;
 }
@@ -736,13 +736,13 @@ static DWORD MCIQTZ_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lp
 
     if (dwFlags & MCI_DGV_WHERE_SOURCE) {
         if (dwFlags & MCI_DGV_WHERE_MAX)
-            FIXME("MCI_DGV_WHERE_SOURCE_MAX stub %s\n", wine_dbgstr_rect(&rc));
+            FIXME("MCI_DGV_WHERE_SOURCE_MAX stub\n");
         IBasicVideo_GetSourcePosition(wma->vidbasic, &rc.left, &rc.top, &rc.right, &rc.bottom);
         TRACE("MCI_DGV_WHERE_SOURCE %s\n", wine_dbgstr_rect(&rc));
     }
     if (dwFlags & MCI_DGV_WHERE_DESTINATION) {
         if (dwFlags & MCI_DGV_WHERE_MAX)
-            FIXME("MCI_DGV_WHERE_DESTINATION_MAX stub %s\n", wine_dbgstr_rect(&rc));
+            FIXME("MCI_DGV_WHERE_DESTINATION_MAX stub\n");
         IBasicVideo_GetDestinationPosition(wma->vidbasic, &rc.left, &rc.top, &rc.right, &rc.bottom);
         TRACE("MCI_DGV_WHERE_DESTINATION %s\n", wine_dbgstr_rect(&rc));
     }

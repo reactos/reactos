@@ -1,3 +1,9 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Version Program
+ * FILE:            winver.c
+ */
+
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
@@ -5,11 +11,10 @@
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-  static const WCHAR szROS[] = { 'R','e','a','c','t','O','S',0 };
-  UNREFERENCED_PARAMETER(lpCmdLine);
-  UNREFERENCED_PARAMETER(nCmdShow);
-  UNREFERENCED_PARAMETER(hPrevInstance);
-  UNREFERENCED_PARAMETER(hInstance);
-  ShellAboutW(0, szROS, 0, 0);
-  return 1;
+    UNREFERENCED_PARAMETER(hInstance);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
+    UNREFERENCED_PARAMETER(nCmdShow);
+
+    return ShellAboutW(NULL, L"ReactOS", NULL, NULL);
 }

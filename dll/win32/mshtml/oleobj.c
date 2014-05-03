@@ -190,6 +190,68 @@ void call_docview_84(HTMLDocumentObj *doc)
         FIXME("handle result\n");
 }
 
+void set_document_navigation(HTMLDocumentObj *doc, BOOL doc_can_navigate)
+{
+    VARIANT var;
+
+    if(!doc->client_cmdtrg)
+        return;
+
+    if(doc_can_navigate) {
+        V_VT(&var) = VT_UNKNOWN;
+        V_UNKNOWN(&var) = (IUnknown*)&doc->basedoc.window->base.IHTMLWindow2_iface;
+    }
+
+    IOleCommandTarget_Exec(doc->client_cmdtrg, &CGID_DocHostCmdPriv, DOCHOST_DOCCANNAVIGATE, 0,
+            doc_can_navigate ? &var : NULL, NULL);
+}
+
+static void load_settings(HTMLDocumentObj *doc)
+{
+    nsIMarkupDocumentViewer *markup_document_viewer;
+    nsIContentViewer *content_viewer;
+    nsIDocShell *doc_shell;
+    HKEY settings_key;
+    DWORD val, size;
+    LONG res;
+    nsresult nsres;
+
+    static const WCHAR ie_keyW[] = {
+        'S','O','F','T','W','A','R','E','\\',
+        'M','i','c','r','o','s','o','f','t','\\',
+        'I','n','t','e','r','n','e','t',' ','E','x','p','l','o','r','e','r',0};
+    static const WCHAR zoomW[] = {'Z','o','o','m',0};
+    static const WCHAR zoom_factorW[] = {'Z','o','o','m','F','a','c','t','o','r',0};
+
+    res = RegOpenKeyW(HKEY_CURRENT_USER, ie_keyW, &settings_key);
+    if(res != ERROR_SUCCESS)
+        return;
+
+    size = sizeof(val);
+    res = RegGetValueW(settings_key, zoomW, zoom_factorW, RRF_RT_REG_DWORD, NULL, &val, &size);
+    RegCloseKey(settings_key);
+    if(res != ERROR_SUCCESS)
+        return;
+
+    TRACE("Setting ZoomFactor to %u\n", val);
+
+    nsres = get_nsinterface((nsISupports*)doc->nscontainer->navigation, &IID_nsIDocShell, (void**)&doc_shell);
+    assert(nsres == NS_OK);
+
+    nsres = nsIDocShell_GetContentViewer(doc_shell, &content_viewer);
+    assert(nsres == NS_OK && content_viewer);
+
+    nsres = nsISupports_QueryInterface(content_viewer, &IID_nsIMarkupDocumentViewer, (void**)&markup_document_viewer);
+    nsISupports_Release(content_viewer);
+    assert(nsres == NS_OK);
+
+    nsres = nsIMarkupDocumentViewer_SetFullZoom(markup_document_viewer, (float)val/100000);
+    if(NS_FAILED(nsres))
+        ERR("SetFullZoom failed: %08x\n", nsres);
+
+    nsIDocShell_Release(doc_shell);
+}
+
 static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite *pClientSite)
 {
     HTMLDocument *This = impl_from_IOleObject(iface);
@@ -283,7 +345,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
             if(hres == S_OK && key_path) {
                 if(key_path[0]) {
                     /* FIXME: use key_path */
-                    TRACE("key_path = %s\n", debugstr_w(key_path));
+                    FIXME("key_path = %s\n", debugstr_w(key_path));
                 }
                 CoTaskMemFree(key_path);
             }
@@ -295,7 +357,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
                 if(hres == S_OK && override_key_path && override_key_path[0]) {
                     if(override_key_path[0]) {
                         /*FIXME: use override_key_path */
-                        TRACE("override_key_path = %s\n", debugstr_w(override_key_path));
+                        FIXME("override_key_path = %s\n", debugstr_w(override_key_path));
                     }
                     CoTaskMemFree(override_key_path);
                 }
@@ -305,6 +367,8 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
             This->doc_obj->hostui_setup = TRUE;
         }
     }
+
+    load_settings(This->doc_obj);
 
     /* Native calls here GetWindow. What is it for?
      * We don't have anything to do with it here (yet). */
@@ -339,9 +403,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
             IDocObjectService *doc_object_service;
             IWebBrowser2 *wb;
 
-            V_VT(&var) = VT_UNKNOWN;
-            V_UNKNOWN(&var) = (IUnknown*)&This->window->base.IHTMLWindow2_iface;
-            IOleCommandTarget_Exec(cmdtrg, &CGID_DocHostCmdPriv, DOCHOST_DOCCANNAVIGATE, 0, &var, NULL);
+            set_document_navigation(This->doc_obj, TRUE);
 
             if(browser_service) {
                 hres = IBrowserService_QueryInterface(browser_service,

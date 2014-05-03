@@ -150,7 +150,7 @@
 @ stdcall lineNegotiateExtVersion(long long long long long ptr)
 @ stdcall lineOpen(long long ptr long long long long long ptr) lineOpenA
 @ stdcall lineOpenA(long long ptr long long long long long ptr)
-@ stub lineOpenW
+@ stdcall lineOpenW(long long ptr long long long long long ptr)
 @ stdcall linePark(long long str ptr) lineParkA
 @ stdcall lineParkA(long long str ptr)
 @ stub lineParkW

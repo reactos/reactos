@@ -278,7 +278,7 @@ typedef INT
   _Inout_opt_ LPWSAOVERLAPPED lpOverlapped,
   _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
-#define WSAID_WSASENDMSG
+#define WSAID_WSASENDMSG \
   {0xa441e712,0x754f,0x43ca,{0x84,0xa7,0x0d,0xee,0x44,0xcf,0x60,0x6d}}
 
 typedef INT

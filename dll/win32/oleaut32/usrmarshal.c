@@ -181,7 +181,7 @@ typedef struct
     DWORD switch_is;
 } variant_wire_t;
 
-static unsigned int get_type_size(ULONG *pFlags, VARTYPE vt)
+unsigned int get_type_size(ULONG *pFlags, VARTYPE vt)
 {
     if (vt & VT_ARRAY) return 4;
 
@@ -197,6 +197,7 @@ static unsigned int get_type_size(ULONG *pFlags, VARTYPE vt)
         return sizeof(SHORT);
     case VT_I4:
     case VT_UI4:
+    case VT_HRESULT:
         return sizeof(LONG);
     case VT_INT:
     case VT_UINT:

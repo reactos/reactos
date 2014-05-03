@@ -80,8 +80,8 @@ typedef struct
     INT idCommand;
     BYTE  fsState;
     BYTE  fsStyle;
-    BYTE  bHot;
-    BYTE  bDropDownPressed;
+    BOOL  bHot;
+    BOOL  bDropDownPressed;
     DWORD_PTR dwData;
     INT_PTR iString;
     INT nRow;

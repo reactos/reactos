@@ -1,6 +1,6 @@
 #pragma once
 
-PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
+PMENU FASTCALL UserGetMenuObject(HMENU hMenu);
 
 #define ASSERT_REFS_CO(_obj_) \
 { \
@@ -109,7 +109,7 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type);
 /*************** MENU.C ***************/
 
 HMENU FASTCALL UserCreateMenu(BOOL PopupMenu);
-BOOL FASTCALL UserSetMenuDefaultItem(PMENU_OBJECT Menu, UINT uItem, UINT fByPos);
+BOOL FASTCALL UserSetMenuDefaultItem(PMENU Menu, UINT uItem, UINT fByPos);
 BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 
 /*************** SCROLLBAR.C ***************/

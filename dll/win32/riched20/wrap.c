@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+
 #include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
@@ -30,6 +31,66 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
  * - objects/images are not handled yet
  * - no tabs
  */
+
+
+static BOOL get_run_glyph_buffers( ME_Run *run )
+{
+    heap_free( run->glyphs );
+    run->glyphs = heap_alloc( run->max_glyphs * (sizeof(WORD) + sizeof(SCRIPT_VISATTR) + sizeof(int) + sizeof(GOFFSET)) );
+    if (!run->glyphs) return FALSE;
+
+    run->vis_attrs = (SCRIPT_VISATTR*)((char*)run->glyphs + run->max_glyphs * sizeof(WORD));
+    run->advances = (int*)((char*)run->glyphs + run->max_glyphs * (sizeof(WORD) + sizeof(SCRIPT_VISATTR)));
+    run->offsets = (GOFFSET*)((char*)run->glyphs + run->max_glyphs * (sizeof(WORD) + sizeof(SCRIPT_VISATTR) + sizeof(int)));
+
+    return TRUE;
+}
+
+static HRESULT shape_run( ME_Context *c, ME_Run *run )
+{
+    HRESULT hr;
+    HFONT old_font;
+    int i;
+
+    if (!run->glyphs)
+    {
+        run->max_glyphs = 1.5 * run->len + 16; /* This is suggested in the uniscribe documentation */
+        run->max_glyphs = (run->max_glyphs + 7) & ~7; /* Keep alignment simple */
+        get_run_glyph_buffers( run );
+    }
+
+    if (run->max_clusters < run->len)
+    {
+        heap_free( run->clusters );
+        run->max_clusters = run->len * 2;
+        run->clusters = heap_alloc( run->max_clusters * sizeof(WORD) );
+    }
+
+    old_font = ME_SelectStyleFont( c, run->style );
+    while (1)
+    {
+        hr = ScriptShape( c->hDC, &run->style->script_cache, get_text( run, 0 ), run->len, run->max_glyphs,
+                          &run->script_analysis, run->glyphs, run->clusters, run->vis_attrs, &run->num_glyphs );
+        if (hr != E_OUTOFMEMORY) break;
+        if (run->max_glyphs > 10 * run->len) break; /* something has clearly gone wrong */
+        run->max_glyphs *= 2;
+        get_run_glyph_buffers( run );
+    }
+
+    if (SUCCEEDED(hr))
+        hr = ScriptPlace( c->hDC, &run->style->script_cache, run->glyphs, run->num_glyphs, run->vis_attrs,
+                          &run->script_analysis, run->advances, run->offsets, NULL );
+
+    if (SUCCEEDED(hr))
+    {
+        for (i = 0, run->nWidth = 0; i < run->num_glyphs; i++)
+            run->nWidth += run->advances[i];
+    }
+
+    ME_UnselectStyleFont( c, run->style, old_font );
+
+    return hr;
+}
 
 /******************************************************************************
  * calc_run_extent
@@ -77,7 +138,10 @@ static ME_DisplayItem *split_run_extents(ME_WrapContext *wc, ME_DisplayItem *ite
   ME_SplitRunSimple(editor, &cursor);
 
   run2 = &cursor.pRun->member.run;
+  run2->script_analysis = run->script_analysis;
 
+  shape_run( wc->context, run );
+  shape_run( wc->context, run2 );
   calc_run_extent(wc->context, para, wc->nRow ? wc->nLeftMargin : wc->nFirstMargin, run);
 
   run2->pt.x = run->pt.x+run->nWidth;
@@ -165,15 +229,73 @@ static void ME_BeginRow(ME_WrapContext *wc)
     wc->pt.y++;
 }
 
+static void layout_row( ME_DisplayItem *start, const ME_DisplayItem *end )
+{
+    ME_DisplayItem *p;
+    int i, num_runs = 0;
+    int buf[16 * 5]; /* 5 arrays - 4 of int & 1 of BYTE, alloc space for 5 of ints */
+    int *vis_to_log = buf, *log_to_vis, *widths, *pos;
+    BYTE *levels;
+    BOOL found_black = FALSE;
+
+    for (p = end->prev; p != start->prev; p = p->prev)
+    {
+        if (p->type == diRun)
+        {
+            if (!found_black) found_black = !(p->member.run.nFlags & (MERF_WHITESPACE | MERF_ENDPARA));
+            if (found_black) num_runs++;
+        }
+    }
+
+    TRACE("%d runs\n", num_runs);
+    if (!num_runs) return;
+
+    if (num_runs > sizeof(buf) / (sizeof(buf[0]) * 5))
+        vis_to_log = heap_alloc( num_runs * sizeof(int) * 5 );
+
+    log_to_vis = vis_to_log + num_runs;
+    widths = vis_to_log + 2 * num_runs;
+    pos = vis_to_log + 3 * num_runs;
+    levels = (BYTE*)(vis_to_log + 4 * num_runs);
+
+    for (i = 0, p = start; i < num_runs; p = p->next)
+    {
+        if (p->type == diRun)
+        {
+            levels[i] = p->member.run.script_analysis.s.uBidiLevel;
+            widths[i] = p->member.run.nWidth;
+            TRACE( "%d: level %d width %d\n", i, levels[i], widths[i] );
+            i++;
+        }
+    }
+
+    ScriptLayout( num_runs, levels, vis_to_log, log_to_vis );
+
+    pos[0] = start->member.run.para->pt.x;
+    for (i = 1; i < num_runs; i++)
+        pos[i] = pos[i - 1] + widths[ vis_to_log[ i - 1 ] ];
+
+    for (i = 0, p = start; i < num_runs; p = p->next)
+    {
+        if (p->type == diRun)
+        {
+            p->member.run.pt.x = pos[ log_to_vis[ i ] ];
+            TRACE( "%d: x = %d\n", i, p->member.run.pt.x );
+            i++;
+        }
+    }
+
+    if (vis_to_log != buf) heap_free( vis_to_log );
+}
+
 static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
 {
-  ME_DisplayItem *p, *row, *para;
+  ME_DisplayItem *p, *row;
+  ME_Paragraph *para = &wc->pPara->member.para;
   BOOL bSkippingSpaces = TRUE;
   int ascent = 0, descent = 0, width=0, shift = 0, align = 0;
-  PARAFORMAT2 *pFmt;
+
   /* wrap text */
-  para = wc->pPara;
-  pFmt = para->member.para.pFmt;
 
   for (p = pEnd->prev; p!=wc->pRowStart->prev; p = p->prev)
   {
@@ -207,10 +329,10 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
       }
   }
 
-  para->member.para.nWidth = max(para->member.para.nWidth, width);
+  para->nWidth = max(para->nWidth, width);
   row = ME_MakeRow(ascent+descent, ascent, width);
   if (wc->context->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
-      pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE)
+      (para->pFmt->dwMask & PFM_TABLE) && (para->pFmt->wEffects & PFE_TABLE))
   {
     /* The text was shifted down in ME_BeginRow so move the wrap context
      * back to where it should be. */
@@ -221,12 +343,15 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
   row->member.row.pt = wc->pt;
   row->member.row.nLMargin = (!wc->nRow ? wc->nFirstMargin : wc->nLeftMargin);
   row->member.row.nRMargin = wc->nRightMargin;
-  assert(para->member.para.pFmt->dwMask & PFM_ALIGNMENT);
-  align = para->member.para.pFmt->wAlignment;
+  assert(para->pFmt->dwMask & PFM_ALIGNMENT);
+  align = para->pFmt->wAlignment;
   if (align == PFA_CENTER)
     shift = max((wc->nAvailWidth-width)/2, 0);
   if (align == PFA_RIGHT)
     shift = max(wc->nAvailWidth-width, 0);
+
+  if (para->nFlags & MEPF_COMPLEX) layout_row( wc->pRowStart, pEnd );
+
   row->member.row.pt.x = row->member.row.nLMargin + shift;
   for (p = wc->pRowStart; p!=pEnd; p = p->next)
   {
@@ -613,6 +738,111 @@ static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   }
 }
 
+static HRESULT itemize_para( ME_Context *c, ME_DisplayItem *p )
+{
+    ME_Paragraph *para = &p->member.para;
+    ME_Run *run;
+    ME_DisplayItem *di;
+    SCRIPT_ITEM buf[16], *items = buf;
+    int items_passed = sizeof( buf ) / sizeof( buf[0] ), num_items, cur_item;
+    SCRIPT_CONTROL control = { LANG_USER_DEFAULT, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+                               FALSE, FALSE, 0 };
+    SCRIPT_STATE state = { 0, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, 0, 0 };
+    HRESULT hr;
+
+    assert( p->type == diParagraph );
+
+    while (1)
+    {
+        hr = ScriptItemize( para->text->szData, para->text->nLen, items_passed, &control,
+                            &state, items, &num_items );
+        if (hr != E_OUTOFMEMORY) break; /* may not be enough items if hr == E_OUTOFMEMORY */
+        if (items_passed > para->text->nLen + 1) break; /* something else has gone wrong */
+        items_passed *= 2;
+        if (items == buf)
+            items = heap_alloc( items_passed * sizeof( *items ) );
+        else
+            items = heap_realloc( items, items_passed * sizeof( *items ) );
+        if (!items) break;
+    }
+    if (FAILED( hr )) goto end;
+
+    if (TRACE_ON( richedit ))
+    {
+        TRACE( "got items:\n" );
+        for (cur_item = 0; cur_item < num_items; cur_item++)
+        {
+            TRACE( "\t%d - %d RTL %d bidi level %d\n", items[cur_item].iCharPos, items[cur_item+1].iCharPos - 1,
+                   items[cur_item].a.fRTL, items[cur_item].a.s.uBidiLevel );
+        }
+
+        TRACE( "before splitting runs into ranges\n" );
+        for (di = p->next; di != p->member.para.next_para; di = di->next)
+        {
+            if (di->type != diRun) continue;
+            TRACE( "\t%d: %s\n", di->member.run.nCharOfs, debugstr_run( &di->member.run ) );
+        }
+    }
+
+    /* split runs into ranges at item boundaries */
+    for (di = p->next, cur_item = 0; di != p->member.para.next_para; di = di->next)
+    {
+        if (di->type != diRun) continue;
+        run = &di->member.run;
+
+        if (run->nCharOfs == items[cur_item+1].iCharPos) cur_item++;
+
+        items[cur_item].a.fLogicalOrder = TRUE;
+        run->script_analysis = items[cur_item].a;
+
+        if (run->nFlags & MERF_ENDPARA) break; /* don't split eop runs */
+
+        if (run->nCharOfs + run->len > items[cur_item+1].iCharPos)
+        {
+            ME_Cursor cursor = {p, di, items[cur_item+1].iCharPos - run->nCharOfs};
+            ME_SplitRunSimple( c->editor, &cursor );
+        }
+    }
+
+    if (TRACE_ON( richedit ))
+    {
+        TRACE( "after splitting into ranges\n" );
+        for (di = p->next; di != p->member.para.next_para; di = di->next)
+        {
+            if (di->type != diRun) continue;
+            TRACE( "\t%d: %s\n", di->member.run.nCharOfs, debugstr_run( &di->member.run ) );
+        }
+    }
+
+    para->nFlags |= MEPF_COMPLEX;
+
+end:
+    if (items != buf) heap_free( items );
+    return hr;
+}
+
+
+static HRESULT shape_para( ME_Context *c, ME_DisplayItem *p )
+{
+    ME_DisplayItem *di;
+    ME_Run *run;
+    HRESULT hr;
+
+    for (di = p->next; di != p->member.para.next_para; di = di->next)
+    {
+        if (di->type != diRun) continue;
+        run = &di->member.run;
+
+        hr = shape_run( c, run );
+        if (FAILED( hr ))
+        {
+            run->para->nFlags &= ~MEPF_COMPLEX;
+            return hr;
+        }
+    }
+    return hr;
+}
+
 static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p;
   ME_WrapContext wc;
@@ -625,6 +855,15 @@ static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
     return;
   }
   ME_PrepareParagraphForWrapping(c, tp);
+
+  /* For now treating all non-password text as complex for better testing */
+  if (!c->editor->cPasswordMask /* &&
+      ScriptIsComplex( tp->member.para.text->szData, tp->member.para.text->nLen, SIC_COMPLEX ) == S_OK */)
+  {
+      if (SUCCEEDED( itemize_para( c, tp ) ))
+          shape_para( c, tp );
+  }
+
   pFmt = tp->member.para.pFmt;
 
   wc.context = c;

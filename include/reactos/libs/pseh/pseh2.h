@@ -39,12 +39,15 @@
 
 #elif defined(_USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
 
+extern int _SEH2_Volatile0;
+extern int _SEH2_VolatileExceptionCode;
+
 #define _SEH2_TRY  {
 #define _SEH2_FINALLY }  {
-#define _SEH2_EXCEPT(...) } if (0) {
+#define _SEH2_EXCEPT(...) } if (_SEH2_Volatile0) {
 #define _SEH2_END }
 #define _SEH2_GetExceptionInformation()
-#define _SEH2_GetExceptionCode() 0
+#define _SEH2_GetExceptionCode() _SEH2_VolatileExceptionCode
 #define _SEH2_AbnormalTermination()
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE

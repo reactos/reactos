@@ -38,6 +38,12 @@ static const WCHAR wszZonesKey[] = {'S','o','f','t','w','a','r','e','\\',
                                     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
                                     'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
                                     'Z','o','n','e','s','\\',0};
+static const WCHAR zone_map_keyW[] = {'S','o','f','t','w','a','r','e','\\',
+                                      'M','i','c','r','o','s','o','f','t','\\',
+                                      'W','i','n','d','o','w','s','\\',
+                                      'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+                                      'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
+                                      'Z','o','n','e','M','a','p',0};
 static const WCHAR wszZoneMapDomainsKey[] = {'S','o','f','t','w','a','r','e','\\',
                                              'M','i','c','r','o','s','o','f','t','\\',
                                              'W','i','n','d','o','w','s','\\',
@@ -283,7 +289,7 @@ static BOOL get_zone_for_scheme(HKEY key, LPCWSTR schema, DWORD *zone)
  * search_domain_for_zone [internal]
  *
  * Searches the specified 'domain' registry key to see if 'host' maps into it, or any
- * of it's subdomain registry keys.
+ * of its subdomain registry keys.
  *
  * Returns S_OK if a match is found, S_FALSE if no matches were found, or an error code.
  */
@@ -375,7 +381,7 @@ static HRESULT search_domain_for_zone(HKEY domains, LPCWSTR domain, DWORD domain
             /* There's a chance that 'host' implicitly mapped into 'domain', in
              * which case we check to see if 'domain' contains zone information.
              *
-             * This can only happen if 'domain' is it's own domain name.
+             * This can only happen if 'domain' is its own domain name.
              *  Example:
              *      "google.com" (domain name = "google.com")
              *
@@ -384,7 +390,7 @@ static HRESULT search_domain_for_zone(HKEY domains, LPCWSTR domain, DWORD domain
              *
              *  Then host would map directly into the "google.com" domain key.
              *
-             * If 'domain' has more than just it's domain name, or it does not
+             * If 'domain' has more than just its domain name, or it does not
              * have a domain name, then we don't perform the check. The reason
              * for this is that these domains don't allow implicit mappings.
              *  Example:
@@ -2055,4 +2061,33 @@ HRESULT WINAPI CompareSecurityIds(BYTE *secid1, DWORD size1, BYTE *secid2, DWORD
 {
     FIXME("(%p %d %p %d %x)\n", secid1, size1, secid2, size2, reserved);
     return E_NOTIMPL;
+}
+
+/********************************************************************
+ *      IsInternetESCEnabledLocal (URLMON.108)
+ *
+ * Undocumented, returns if IE is running in Enhanced Security Configuration.
+ */
+BOOL WINAPI IsInternetESCEnabledLocal(void)
+{
+    static BOOL esc_initialized, esc_enabled;
+
+    TRACE("()\n");
+
+    if(!esc_initialized) {
+        DWORD type, size, val;
+        HKEY zone_map;
+
+        static const WCHAR iehardenW[] = {'I','E','H','a','r','d','e','n',0};
+
+        if(RegOpenKeyExW(HKEY_CURRENT_USER, zone_map_keyW, 0, KEY_QUERY_VALUE, &zone_map) == ERROR_SUCCESS) {
+            size = sizeof(DWORD);
+            if(RegQueryValueExW(zone_map, iehardenW, NULL, &type, (BYTE*)&val, &size) == ERROR_SUCCESS)
+                esc_enabled = type == REG_DWORD && val != 0;
+            RegCloseKey(zone_map);
+        }
+        esc_initialized = TRUE;
+    }
+
+    return esc_enabled;
 }

@@ -358,7 +358,7 @@ BOOL WINAPI MsiRecordIsNull( MSIHANDLE handle, UINT iField )
 
     rec = msihandle2msiinfo( handle, MSIHANDLETYPE_RECORD );
     if( !rec )
-        return 0;
+        return FALSE;
     msiobj_lock( &rec->hdr );
     ret = MSI_RecordIsNull( rec, iField );
     msiobj_unlock( &rec->hdr );
@@ -663,7 +663,7 @@ static UINT RECORD_StreamFromFile(LPCWSTR szFile, IStream **pstm)
         hGlob = GlobalAlloc(GMEM_FIXED, sz);
         if( hGlob )
         {
-            BOOL r = ReadFile(handle, hGlob, sz, &read, NULL);
+            BOOL r = ReadFile(handle, hGlob, sz, &read, NULL) && read == sz;
             if( !r )
             {
                 GlobalFree(hGlob);

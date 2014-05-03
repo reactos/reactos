@@ -241,9 +241,7 @@ static HRESULT WINAPI ConnectionPointImpl_GetConnectionPointContainer(
   ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   TRACE("(%p)->(%p)\n", This, ppCPC);
 
-  return IUnknown_QueryInterface(This->Obj,
-				 &IID_IConnectionPointContainer,
-				 (LPVOID)ppCPC);
+  return IUnknown_QueryInterface(This->Obj, &IID_IConnectionPointContainer, (void**)ppCPC);
 }
 
 /************************************************************************
@@ -260,7 +258,7 @@ static HRESULT WINAPI ConnectionPointImpl_Advise(IConnectionPoint *iface,
   TRACE("(%p)->(%p, %p)\n", This, lpUnk, pdwCookie);
 
   *pdwCookie = 0;
-  if(FAILED(IUnknown_QueryInterface(lpUnk, &This->iid, (LPVOID)&lpSink)))
+  if(FAILED(IUnknown_QueryInterface(lpUnk, &This->iid, (void**)&lpSink)))
     return CONNECT_E_CANNOTCONNECT;
 
   for(i = 0; i < This->maxSinks; i++) {
@@ -336,7 +334,7 @@ static HRESULT WINAPI ConnectionPointImpl_EnumConnections(
 
   EnumObj = EnumConnectionsImpl_Construct((IUnknown*)This, This->nSinks, pCD);
   hr = IEnumConnections_QueryInterface(&EnumObj->IEnumConnections_iface,
-				  &IID_IEnumConnections, (LPVOID)ppEnum);
+                                       &IID_IEnumConnections, (void**)ppEnum);
   IEnumConnections_Release(&EnumObj->IEnumConnections_iface);
 
   HeapFree(GetProcessHeap(), 0, pCD);
@@ -610,7 +608,7 @@ HRESULT CreateConnectionPoint(IUnknown *pUnk, REFIID riid,
   if(!Obj) return E_OUTOFMEMORY;
 
   hr = IConnectionPoint_QueryInterface(&Obj->IConnectionPoint_iface,
-				       &IID_IConnectionPoint, (LPVOID)pCP);
+                                       &IID_IConnectionPoint, (void**)pCP);
   IConnectionPoint_Release(&Obj->IConnectionPoint_iface);
   return hr;
 }

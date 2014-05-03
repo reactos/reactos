@@ -112,7 +112,7 @@ ShowMCIError(HWND hwnd, DWORD dwError)
         LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, sizeof(szErrorMessage) / sizeof(TCHAR));
     }
 
-    _stprintf(szTempMessage, _T("MMSYS%u: %s"), dwError, szErrorMessage);
+    _stprintf(szTempMessage, _T("MMSYS%lu: %s"), dwError, szErrorMessage);
     MessageBox(hwnd, szTempMessage, szAppTitle, MB_OK | MB_ICONEXCLAMATION);
 }
 

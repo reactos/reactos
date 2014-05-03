@@ -352,6 +352,7 @@ VfatOpenFile(
     PUNICODE_STRING PathNameU,
     PFILE_OBJECT FileObject,
     ULONG RequestedDisposition,
+    BOOLEAN OpenTargetDir,
     PVFATFCB *ParentFcb)
 {
     PVFATFCB Fcb;
@@ -402,6 +403,14 @@ VfatOpenFile(
         DPRINT ("Could not make a new FCB, status: %x\n", Status);
         return  Status;
     }
+
+    /* In case we're to open target, just check whether file exist, but don't open it */
+    if (OpenTargetDir)
+    {
+        vfatReleaseFCB(DeviceExt, Fcb);
+        return STATUS_OBJECT_NAME_COLLISION;
+    }
+
     if (Fcb->Flags & FCB_DELETE_PENDING)
     {
         vfatReleaseFCB(DeviceExt, Fcb);
@@ -443,6 +452,7 @@ VfatCreateFile(
     PWCHAR c, last;
     BOOLEAN PagingFileCreate = FALSE;
     BOOLEAN Dots;
+    BOOLEAN OpenTargetDir = FALSE;
     UNICODE_STRING FileNameU;
     UNICODE_STRING PathNameU;
     ULONG Attributes;
@@ -452,6 +462,11 @@ VfatCreateFile(
     RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
     RequestedOptions = Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
     PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;
+#if 0
+    OpenTargetDir = (Stack->Flags & SL_OPEN_TARGET_DIRECTORY) ? TRUE : FALSE;
+#else
+    OpenTargetDir = FALSE;
+#endif
     FileObject = Stack->FileObject;
     DeviceExt = DeviceObject->DeviceExtension;
 
@@ -484,6 +499,11 @@ VfatCreateFile(
             return STATUS_NOT_A_DIRECTORY;
         }
 #endif
+
+        if (OpenTargetDir)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
 
         pFcb = DeviceExt->VolumeFcb;
         vfatAttachFCBToFileObject(DeviceExt, pFcb, FileObject);
@@ -520,6 +540,13 @@ VfatCreateFile(
         }
     }
 
+    /* Check if we try to open target directory of root dir */
+    if (OpenTargetDir && FileObject->RelatedFileObject == NULL && PathNameU.Length == sizeof(WCHAR) &&
+        PathNameU.Buffer[0] == L'\\')
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     if (FileObject->RelatedFileObject && PathNameU.Length >= sizeof(WCHAR) && PathNameU.Buffer[0] == L'\\')
     {
         return STATUS_OBJECT_NAME_INVALID;
@@ -531,7 +558,86 @@ VfatCreateFile(
     }
 
     /* Try opening the file. */
-    Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, &ParentFcb);
+    Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, OpenTargetDir, &ParentFcb);
+
+    if (OpenTargetDir)
+    {
+        LONG idx, FileNameLen;
+
+        if (Status == STATUS_OBJECT_NAME_COLLISION)
+        {
+            Irp->IoStatus.Information = FILE_EXISTS;
+        }
+        else
+        {
+            Irp->IoStatus.Information = FILE_DOES_NOT_EXIST;
+        }
+
+        idx = FileObject->FileName.Length / sizeof(WCHAR) - 1;
+
+        /* Skip tailing \ - if any */
+        if (PathNameU.Buffer[idx] == L'\\')
+        {
+            --idx;
+            PathNameU.Length -= sizeof(WCHAR);
+        }
+
+        /* Get file name */
+        while (idx >= 0 && PathNameU.Buffer[idx] != L'\\')
+        {
+            --idx;
+        }
+
+        if (idx > 0 || PathNameU.Buffer[0] == L'\\')
+        {
+            /* We don't want to include / in the name */
+            FileNameLen = PathNameU.Length - ((idx + 1) * sizeof(WCHAR));
+
+            /* Try to open parent */
+            PathNameU.Length -= (PathNameU.Length - idx * sizeof(WCHAR));
+            Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, FALSE, &ParentFcb);
+
+            /* Update FO just to keep file name */
+            /* Skip first slash */
+            ++idx;
+            FileObject->FileName.Length = FileNameLen;
+            RtlMoveMemory(&PathNameU.Buffer[0], &PathNameU.Buffer[idx], FileObject->FileName.Length);
+        }
+        else
+        {
+            /* This is a relative open and we have only the filename, so open the parent directory
+             * It is in RelatedFileObject
+             */
+            BOOLEAN Chomp = FALSE;
+            PFILE_OBJECT RelatedFileObject = FileObject->RelatedFileObject;
+
+            DPRINT("%wZ\n", &PathNameU);
+
+            ASSERT(RelatedFileObject != NULL);
+
+            DPRINT("Relative opening\n");
+            DPRINT("FileObject->RelatedFileObject->FileName: %wZ\n", &RelatedFileObject->FileName);
+
+            /* VfatOpenFile() doesn't like our name ends with \, so chomp it if there's one */
+            if (RelatedFileObject->FileName.Buffer[RelatedFileObject->FileName.Length / sizeof(WCHAR) - 1] == L'\\')
+            {
+                Chomp = TRUE;
+                RelatedFileObject->FileName.Length -= sizeof(WCHAR);
+            }
+
+            /* Tricky part - fake our FO. It's NOT relative, we want to open the complete file path */
+            FileObject->RelatedFileObject = NULL;
+            Status = VfatOpenFile(DeviceExt, &RelatedFileObject->FileName, FileObject, RequestedDisposition, FALSE, &ParentFcb);
+
+            /* We're done opening, restore what we broke */
+            FileObject->RelatedFileObject = RelatedFileObject;
+            if (Chomp) RelatedFileObject->FileName.Length += sizeof(WCHAR);
+
+            /* No need to modify the FO, it already has the name */
+        }
+
+        return Status;
+    }
 
     /*
      * If the directory containing the file to open doesn't exist then
@@ -550,7 +656,7 @@ VfatCreateFile(
 
     if (!NT_SUCCESS(Status) && ParentFcb == NULL)
     {
-        DPRINT1("VfatOpenFile faild for '%wZ', status %x\n", &PathNameU, Status);
+        DPRINT1("VfatOpenFile failed for '%wZ', status %x\n", &PathNameU, Status);
         return Status;
     }
 

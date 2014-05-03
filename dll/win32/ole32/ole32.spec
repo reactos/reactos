@@ -29,8 +29,8 @@
 @ stdcall CoGetCurrentLogicalThreadId(ptr)
 @ stdcall CoGetCurrentProcess()
 @ stdcall CoGetDefaultContext(long ptr ptr)
-@ stub CoGetInstanceFromFile      #@ stdcall (ptr ptr ptr long wstr long ptr) return 0,ERR_NOTIMPLEMENTED
-@ stub CoGetInstanceFromIStorage  #@ stdcall (ptr ptr ptr long ptr long ptr) return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoGetInstanceFromFile(ptr ptr ptr long long wstr long ptr)
+@ stdcall CoGetInstanceFromIStorage(ptr ptr ptr long ptr long ptr)
 @ stdcall CoGetInterfaceAndReleaseStream(ptr ptr ptr)
 @ stdcall CoGetMalloc(long ptr)
 @ stdcall CoGetMarshalSizeMax(ptr ptr ptr long ptr long)
@@ -70,7 +70,7 @@
 @ stdcall CoResumeClassObjects()
 @ stdcall CoRevertToSelf()
 @ stdcall CoRevokeClassObject(long)
-@ stdcall CoRevokeInitializeSpy(double)
+@ stdcall CoRevokeInitializeSpy(int64)
 @ stdcall CoRevokeMallocSpy()
 @ stdcall CoSetProxyBlanket(ptr long long ptr long long ptr long)
 @ stdcall CoSetState(ptr)
@@ -164,7 +164,7 @@
 @ stdcall HWND_UserMarshal(ptr ptr ptr)
 @ stdcall HWND_UserSize(ptr long ptr)
 @ stdcall HWND_UserUnmarshal(ptr ptr ptr)
-@ stdcall IIDFromString(wstr ptr) CLSIDFromString
+@ stdcall IIDFromString(wstr ptr)
 @ stub I_RemoteMain
 @ stdcall IsAccelerator(long long ptr long)
 @ stdcall IsEqualGUID(ptr ptr)

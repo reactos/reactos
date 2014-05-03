@@ -20,8 +20,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-USHORT
 FORCEINLINE
+USHORT
 ChkSum(ULONG Sum, PUSHORT Src, ULONG Len)
 {
     ULONG i;

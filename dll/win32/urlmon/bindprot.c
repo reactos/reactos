@@ -204,7 +204,7 @@ static HRESULT handle_mime_filter(BindProtocol *This, IInternetProtocol *mime_fi
         return hres;
     }
 
-    /* NOTE: IE9 calls it on the new protocol_sink. It doesn't make sense to is seems to be a bug there. */
+    /* NOTE: IE9 calls it on the new protocol_sink. It doesn't make sense so it seems to be a bug there. */
     IInternetProtocolSink_ReportProgress(This->protocol_sink, BINDSTATUS_LOADINGMIMEHANDLER, NULL);
 
     return S_OK;

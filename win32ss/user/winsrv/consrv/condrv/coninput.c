@@ -246,7 +246,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
     NTSTATUS Status = STATUS_PENDING;
     PLIST_ENTRY CurrentEntry;
     ConsoleInput *Input;
-    ULONG i = ReadControl->nInitialChars;
+    ULONG i;
 
     if (Console == NULL || InputBuffer == NULL || /* Buffer == NULL  || */
         ReadControl == NULL || ReadControl->nLength != sizeof(CONSOLE_READCONSOLE_CONTROL))
@@ -260,6 +260,8 @@ ConDrvReadConsole(IN PCONSOLE Console,
             (Buffer == NULL && NumCharsToRead == 0) );
 
     /* We haven't read anything (yet) */
+
+    i = ReadControl->nInitialChars;
 
     if (InputBuffer->Mode & ENABLE_LINE_INPUT)
     {

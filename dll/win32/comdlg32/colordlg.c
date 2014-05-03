@@ -244,9 +244,9 @@ static void CC_DrawFocusRect(CCPRIV *lpp, HWND hwnd, int x, int y, int rows, int
 
 /***********************************************************************
  *                CC_MouseCheckPredefColorArray               [internal]
- *                returns 1 if one of the predefined colors is clicked
+ *                returns TRUE if one of the predefined colors is clicked
  */
-static int CC_MouseCheckPredefColorArray(CCPRIV *lpp, int rows, int cols, LPARAM lParam)
+static BOOL CC_MouseCheckPredefColorArray(CCPRIV *lpp, int rows, int cols, LPARAM lParam)
 {
  HWND hwnd;
  POINT point;
@@ -269,17 +269,17 @@ static int CC_MouseCheckPredefColorArray(CCPRIV *lpp, int rows, int cols, LPARAM
    y = point.y / dy;
    lpp->lpcc->rgbResult = predefcolors[y][x];
    CC_DrawFocusRect(lpp, hwnd, x, y, rows, cols);
-   return 1;
+   return TRUE;
   }
  }
- return 0;
+ return FALSE;
 }
 
 /***********************************************************************
  *                  CC_MouseCheckUserColorArray               [internal]
- *                  return 1 if the user clicked a color
+ *                  return TRUE if the user clicked a color
  */
-static int CC_MouseCheckUserColorArray(CCPRIV *lpp, int rows, int cols, LPARAM lParam)
+static BOOL CC_MouseCheckUserColorArray(CCPRIV *lpp, int rows, int cols, LPARAM lParam)
 {
  HWND hwnd;
  POINT point;
@@ -303,10 +303,10 @@ static int CC_MouseCheckUserColorArray(CCPRIV *lpp, int rows, int cols, LPARAM l
    y = point.y / dy;
    lpp->lpcc->rgbResult = crarr[x + (cols * y) ];
    CC_DrawFocusRect(lpp, hwnd, x, y, rows, cols);
-   return 1;
+   return TRUE;
   }
  }
- return 0;
+ return FALSE;
 }
 
 #define MAXVERT  240
@@ -322,7 +322,7 @@ static int CC_MouseCheckUserColorArray(CCPRIV *lpp, int rows, int cols, LPARAM l
 /***********************************************************************
  *                  CC_MouseCheckColorGraph                   [internal]
  */
-static int CC_MouseCheckColorGraph( HWND hDlg, int dlgitem, int *hori, int *vert, LPARAM lParam )
+static BOOL CC_MouseCheckColorGraph( HWND hDlg, int dlgitem, int *hori, int *vert, LPARAM lParam )
 {
  HWND hwnd;
  POINT point;
@@ -335,7 +335,7 @@ static int CC_MouseCheckColorGraph( HWND hDlg, int dlgitem, int *hori, int *vert
  GetWindowRect(hwnd, &rect);
 
  if (!PtInRect(&rect, point))
-  return 0;
+  return FALSE;
 
  GetClientRect(hwnd, &rect);
  ScreenToClient(hwnd, &point);
@@ -355,13 +355,13 @@ static int CC_MouseCheckColorGraph( HWND hDlg, int dlgitem, int *hori, int *vert
  if (vert)
   *vert = y;
 
- return 1;
+ return TRUE;
 }
 /***********************************************************************
  *                  CC_MouseCheckResultWindow                 [internal]
  *                  test if double click one of the result colors
  */
-static int CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
+static BOOL CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
 {
  HWND hwnd;
  POINT point;
@@ -374,9 +374,9 @@ static int CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
  if (PtInRect(&rect, point))
  {
   PostMessageA(hDlg, WM_COMMAND, IDC_COLOR_RES, 0);
-  return 1;
+  return TRUE;
  }
- return 0;
+ return FALSE;
 }
 
 /***********************************************************************

@@ -641,6 +641,19 @@ NtUserGetObjectInformation(
    PVOID pvData = NULL;
    DWORD nDataSize = 0;
 
+   _SEH2_TRY
+   {
+      if (nLengthNeeded)
+         ProbeForWrite(nLengthNeeded, sizeof(*nLengthNeeded), 1);
+      ProbeForWrite(pvInformation, nLength, 1);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      return FALSE;
+   }
+   _SEH2_END;
+
    /* try windowstation */
    TRACE("Trying to open window station %p\n", hObject);
    Status = ObReferenceObjectByHandle(
@@ -665,8 +678,7 @@ NtUserGetObjectInformation(
    if (!NT_SUCCESS(Status))
    {
       ERR("Failed: 0x%x\n", Status);
-      SetLastNtError(Status);
-      return FALSE;
+      goto Exit;
    }
 
    TRACE("WinSta or Desktop opened!!\n");
@@ -723,16 +735,27 @@ NtUserGetObjectInformation(
          break;
    }
 
-   /* try to copy data to caller */
-   if (Status == STATUS_SUCCESS)
+Exit:
+   if (Status == STATUS_SUCCESS && nLength < nDataSize)
+      Status = STATUS_BUFFER_TOO_SMALL;
+
+   _SEH2_TRY
    {
-      TRACE("Trying to copy data to caller (len = %lu, len needed = %lu)\n", nLength, nDataSize);
-      *nLengthNeeded = nDataSize;
-      if (nLength >= nDataSize)
-         Status = MmCopyToCaller(pvInformation, pvData, nDataSize);
-      else
-         Status = STATUS_BUFFER_TOO_SMALL;
+      if (nLengthNeeded)
+         *nLengthNeeded = nDataSize;
+
+      /* try to copy data to caller */
+      if (Status == STATUS_SUCCESS)
+      {
+         TRACE("Trying to copy data to caller (len = %lu, len needed = %lu)\n", nLength, nDataSize);
+         RtlCopyMemory(pvInformation, pvData, nDataSize);
+      }
    }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
 
    /* release objects */
    if (WinStaObject != NULL)

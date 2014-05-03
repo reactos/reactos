@@ -595,7 +595,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (!drawing)
                     {
                         TCHAR coordStr[100];
-                        _stprintf(coordStr, _T("%d, %d"), xNow, yNow);
+                        _stprintf(coordStr, _T("%ld, %ld"), xNow, yNow);
                         SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) coordStr);
                     }
                 }
@@ -634,7 +634,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         case TOOL_SHAPE:
                         {
                             TCHAR coordStr[100];
-                            _stprintf(coordStr, _T("%d, %d"), xNow, yNow);
+                            _stprintf(coordStr, _T("%ld, %ld"), xNow, yNow);
                             SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) coordStr);
                             break;
                         }
@@ -648,7 +648,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                             TCHAR sizeStr[100];
                             if ((activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                                 yRel = xRel;
-                            _stprintf(sizeStr, _T("%d x %d"), xRel, yRel);
+                            _stprintf(sizeStr, _T("%ld x %ld"), xRel, yRel);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
                         }
                     }
@@ -661,7 +661,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                             TCHAR sizeStr[100];
                             if ((activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                                 yRel = xRel;
-                            _stprintf(sizeStr, _T("%d x %d"), xRel, yRel);
+                            _stprintf(sizeStr, _T("%ld x %ld"), xRel, yRel);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
                         }
                     }

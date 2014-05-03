@@ -604,7 +604,7 @@ const char * __stdcall MSVCRT_type_info_name(type_info * _this)
      * Is this '.' really part of the mangled name, or has it some other meaning ?
      */
     char* name = __unDName(0, _this->mangled + 1, 0,
-                           MSVCRT_malloc, MSVCRT_free, 0x2800);
+                           MSVCRT_malloc, MSVCRT_free, UNDNAME_NO_ARGUMENTS | UNDNAME_32_BIT_DECODE);
     if (name)
     {
       size_t len = strlen(name);

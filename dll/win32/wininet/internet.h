@@ -146,6 +146,9 @@ typedef struct
     struct list pool_entry;
 } netconn_t;
 
+BOOL is_valid_netconn(netconn_t *) DECLSPEC_HIDDEN;
+void close_netconn(netconn_t *) DECLSPEC_HIDDEN;
+
 static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), 0, len);
@@ -285,6 +288,14 @@ typedef enum
 #define INET_OPENURL 0x0001
 #define INET_CALLBACKW 0x0002
 
+typedef struct
+{
+    LONG ref;
+    HANDLE file_handle;
+    WCHAR *file_name;
+    BOOL is_committed;
+} req_file_t;
+
 typedef struct _object_header_t object_header_t;
 
 typedef struct {
@@ -297,6 +308,7 @@ typedef struct {
     DWORD (*WriteFile)(object_header_t*,const void*,DWORD,DWORD*);
     DWORD (*QueryDataAvailable)(object_header_t*,DWORD*,DWORD,DWORD_PTR);
     DWORD (*FindNextFileW)(object_header_t*,void*);
+    DWORD (*LockRequestFile)(object_header_t*,req_file_t**);
 } object_vtbl_t;
 
 #define INTERNET_HANDLE_IN_USE 1
@@ -317,7 +329,6 @@ struct _object_header_t
     struct list entry;
     struct list children;
 };
-
 
 typedef struct
 {
@@ -395,7 +406,7 @@ typedef struct
     DWORD nCustHeaders;
     FILETIME last_modified;
     HANDLE hCacheFile;
-    LPWSTR cacheFile;
+    req_file_t *req_file;
     FILETIME expires;
     struct HttpAuthInfo *authInfo;
     struct HttpAuthInfo *proxyAuthInfo;
@@ -465,14 +476,19 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
 BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen) DECLSPEC_HIDDEN;
 
+typedef enum {
+    BLOCKING_ALLOW,
+    BLOCKING_DISALLOW,
+    BLOCKING_WAITALL
+} blocking_mode_t;
+
 DWORD create_netconn(BOOL,server_t*,DWORD,BOOL,DWORD,netconn_t**) DECLSPEC_HIDDEN;
 void free_netconn(netconn_t*) DECLSPEC_HIDDEN;
 void NETCON_unload(void) DECLSPEC_HIDDEN;
 DWORD NETCON_secure_connect(netconn_t*,server_t*) DECLSPEC_HIDDEN;
 DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
 		int *sent /* out */) DECLSPEC_HIDDEN;
-DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, int flags,
-		int *recvd /* out */) DECLSPEC_HIDDEN;
+DWORD NETCON_recv(netconn_t*,void*,size_t,blocking_mode_t,int*) DECLSPEC_HIDDEN;
 BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available) DECLSPEC_HIDDEN;
 BOOL NETCON_is_alive(netconn_t*) DECLSPEC_HIDDEN;
 LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
@@ -504,6 +520,15 @@ static inline int unix_getsockopt(int socket, int level, int option_name, void *
 #endif
 
 server_t *get_server(const WCHAR*,INTERNET_PORT,BOOL,BOOL);
+
+DWORD create_req_file(const WCHAR*,req_file_t**) DECLSPEC_HIDDEN;
+void req_file_release(req_file_t*) DECLSPEC_HIDDEN;
+
+static inline req_file_t *req_file_addref(req_file_t *req_file)
+{
+    InterlockedIncrement(&req_file->ref);
+    return req_file;
+}
 
 BOOL init_urlcache(void) DECLSPEC_HIDDEN;
 void free_urlcache(void) DECLSPEC_HIDDEN;

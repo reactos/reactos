@@ -33,6 +33,7 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, PVOID pvReserved)
         case DLL_PROCESS_ATTACH:
             hInstance = hInst;
             DisableThreadLibraryCalls(hInst);
+            init_empty_store();
             crypt_oid_init();
             break;
         case DLL_PROCESS_DETACH:

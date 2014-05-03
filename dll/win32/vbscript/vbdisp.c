@@ -103,7 +103,7 @@ static HRESULT invoke_variant_prop(VARIANT *v, WORD flags, DISPPARAMS *dp, VARIA
             return DISP_E_MEMBERNOTFOUND; /* That's what tests show */
         }
 
-        hres = VariantCopy(res, v);
+        hres = VariantCopyInd(res, v);
         break;
 
     case DISPATCH_PROPERTYPUT: {
@@ -115,10 +115,15 @@ static HRESULT invoke_variant_prop(VARIANT *v, WORD flags, DISPPARAMS *dp, VARIA
             return DISP_E_PARAMNOTOPTIONAL;
         }
 
+        if(arg_cnt(dp)) {
+            FIXME("Arguments not supported\n");
+            return E_NOTIMPL;
+        }
+
         if(res)
             V_VT(res) = VT_EMPTY;
 
-        hres = VariantCopy(v, put_val);
+        hres = VariantCopyInd(v, put_val);
         break;
     }
 
@@ -222,7 +227,7 @@ static BOOL run_terminator(vbdisp_t *This)
 
     This->ref++;
     exec_script(This->desc->ctx, This->desc->funcs[This->desc->class_terminate_id].entries[VBDISP_CALLGET],
-            (IDispatch*)&This->IDispatchEx_iface, &dp, NULL);
+            This, &dp, NULL);
     return !--This->ref;
 }
 
@@ -232,6 +237,13 @@ static void clean_props(vbdisp_t *This)
 
     if(!This->desc)
         return;
+
+    for(i=0; i < This->desc->array_cnt; i++) {
+        if(This->arrays[i]) {
+            SafeArrayDestroy(This->arrays[i]);
+            This->arrays[i] = NULL;
+        }
+    }
 
     for(i=0; i < This->desc->prop_cnt; i++)
         VariantClear(This->props+i);
@@ -285,6 +297,7 @@ static ULONG WINAPI DispatchEx_Release(IDispatchEx *iface)
     if(!ref && run_terminator(This)) {
         clean_props(This);
         list_remove(&This->entry);
+        heap_free(This->arrays);
         heap_free(This);
     }
 
@@ -378,7 +391,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
                 return DISP_E_MEMBERNOTFOUND;
             }
 
-            return exec_script(This->desc->ctx, func, (IDispatch*)&This->IDispatchEx_iface, pdp, pvarRes);
+            return exec_script(This->desc->ctx, func, This, pdp, pvarRes);
         case DISPATCH_PROPERTYPUT: {
             VARIANT *put_val;
             DISPPARAMS dp = {NULL, NULL, 1, 0};
@@ -401,7 +414,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
                 return DISP_E_MEMBERNOTFOUND;
             }
 
-            return exec_script(This->desc->ctx, func, (IDispatch*)&This->IDispatchEx_iface, &dp, NULL);
+            return exec_script(This->desc->ctx, func, This, &dp, NULL);
         }
         default:
             FIXME("flags %x\n", wFlags);
@@ -499,6 +512,7 @@ static inline vbdisp_t *unsafe_impl_from_IDispatch(IDispatch *iface)
 HRESULT create_vbdisp(const class_desc_t *desc, vbdisp_t **ret)
 {
     vbdisp_t *vbdisp;
+    HRESULT hres = S_OK;
 
     vbdisp = heap_alloc_zero( FIELD_OFFSET( vbdisp_t, props[desc->prop_cnt] ));
     if(!vbdisp)
@@ -510,16 +524,44 @@ HRESULT create_vbdisp(const class_desc_t *desc, vbdisp_t **ret)
 
     list_add_tail(&desc->ctx->objects, &vbdisp->entry);
 
-    if(desc->class_initialize_id) {
-        DISPPARAMS dp = {0};
-        HRESULT hres;
+    if(desc->array_cnt) {
+        vbdisp->arrays = heap_alloc_zero(desc->array_cnt * sizeof(*vbdisp->arrays));
+        if(vbdisp->arrays) {
+            unsigned i, j;
 
-        hres = exec_script(desc->ctx, desc->funcs[desc->class_initialize_id].entries[VBDISP_CALLGET],
-                           (IDispatch*)&vbdisp->IDispatchEx_iface, &dp, NULL);
-        if(FAILED(hres)) {
-            IDispatchEx_Release(&vbdisp->IDispatchEx_iface);
-            return hres;
+            for(i=0; i < desc->array_cnt; i++) {
+                if(!desc->array_descs[i].dim_cnt)
+                    continue;
+
+                vbdisp->arrays[i] = SafeArrayCreate(VT_VARIANT, desc->array_descs[i].dim_cnt, desc->array_descs[i].bounds);
+                if(!vbdisp->arrays[i]) {
+                    hres = E_OUTOFMEMORY;
+                    break;
+                }
+            }
+
+            if(SUCCEEDED(hres)) {
+                for(i=0, j=0; i < desc->prop_cnt; i++) {
+                    if(desc->props[i].is_array) {
+                        V_VT(vbdisp->props+i) = VT_ARRAY|VT_BYREF|VT_VARIANT;
+                        V_ARRAYREF(vbdisp->props+i) = vbdisp->arrays + j++;
+                    }
+                }
+            }
+        }else {
+            hres = E_OUTOFMEMORY;
         }
+    }
+
+    if(SUCCEEDED(hres) && desc->class_initialize_id) {
+        DISPPARAMS dp = {0};
+        hres = exec_script(desc->ctx, desc->funcs[desc->class_initialize_id].entries[VBDISP_CALLGET],
+                           vbdisp, &dp, NULL);
+    }
+
+    if(FAILED(hres)) {
+        IDispatchEx_Release(&vbdisp->IDispatchEx_iface);
+        return hres;
     }
 
     *ret = vbdisp;
@@ -917,6 +959,69 @@ HRESULT disp_get_id(IDispatch *disp, BSTR name, vbdisp_invoke_type_t invoke_type
 
     hres = IDispatchEx_GetDispID(dispex, name, fdexNameCaseInsensitive, id);
     IDispatchEx_Release(dispex);
+    return hres;
+}
+
+#define RPC_E_SERVER_UNAVAILABLE 0x800706ba
+
+HRESULT map_hres(HRESULT hres)
+{
+    if(SUCCEEDED(hres) || HRESULT_FACILITY(hres) == FACILITY_VBS)
+        return hres;
+
+    switch(hres) {
+    case E_NOTIMPL:                  return MAKE_VBSERROR(VBSE_ACTION_NOT_SUPPORTED);
+    case E_NOINTERFACE:              return MAKE_VBSERROR(VBSE_OLE_NOT_SUPPORTED);
+    case DISP_E_UNKNOWNINTERFACE:    return MAKE_VBSERROR(VBSE_OLE_NO_PROP_OR_METHOD);
+    case DISP_E_MEMBERNOTFOUND:      return MAKE_VBSERROR(VBSE_OLE_NO_PROP_OR_METHOD);
+    case DISP_E_PARAMNOTFOUND:       return MAKE_VBSERROR(VBSE_NAMED_PARAM_NOT_FOUND);
+    case DISP_E_TYPEMISMATCH:        return MAKE_VBSERROR(VBSE_TYPE_MISMATCH);
+    case DISP_E_UNKNOWNNAME:         return MAKE_VBSERROR(VBSE_OLE_NO_PROP_OR_METHOD);
+    case DISP_E_NONAMEDARGS:         return MAKE_VBSERROR(VBSE_NAMED_ARGS_NOT_SUPPORTED);
+    case DISP_E_BADVARTYPE:          return MAKE_VBSERROR(VBSE_INVALID_TYPELIB_VARIABLE);
+    case DISP_E_OVERFLOW:            return MAKE_VBSERROR(VBSE_OVERFLOW);
+    case DISP_E_BADINDEX:            return MAKE_VBSERROR(VBSE_OUT_OF_BOUNDS);
+    case DISP_E_UNKNOWNLCID:         return MAKE_VBSERROR(VBSE_LOCALE_SETTING_NOT_SUPPORTED);
+    case DISP_E_ARRAYISLOCKED:       return MAKE_VBSERROR(VBSE_ARRAY_LOCKED);
+    case DISP_E_BADPARAMCOUNT:       return MAKE_VBSERROR(VBSE_FUNC_ARITY_MISMATCH);
+    case DISP_E_PARAMNOTOPTIONAL:    return MAKE_VBSERROR(VBSE_PARAMETER_NOT_OPTIONAL);
+    case DISP_E_NOTACOLLECTION:      return MAKE_VBSERROR(VBSE_NOT_ENUM);
+    case TYPE_E_DLLFUNCTIONNOTFOUND: return MAKE_VBSERROR(VBSE_INVALID_DLL_FUNCTION_NAME);
+    case TYPE_E_TYPEMISMATCH:        return MAKE_VBSERROR(VBSE_TYPE_MISMATCH);
+    case TYPE_E_OUTOFBOUNDS:         return MAKE_VBSERROR(VBSE_OUT_OF_BOUNDS);
+    case TYPE_E_IOERROR:             return MAKE_VBSERROR(VBSE_IO_ERROR);
+    case TYPE_E_CANTCREATETMPFILE:   return MAKE_VBSERROR(VBSE_CANT_CREATE_TMP_FILE);
+    case STG_E_FILENOTFOUND:         return MAKE_VBSERROR(VBSE_OLE_FILE_NOT_FOUND);
+    case STG_E_PATHNOTFOUND:         return MAKE_VBSERROR(VBSE_PATH_NOT_FOUND);
+    case STG_E_TOOMANYOPENFILES:     return MAKE_VBSERROR(VBSE_TOO_MANY_FILES);
+    case STG_E_ACCESSDENIED:         return MAKE_VBSERROR(VBSE_PERMISSION_DENIED);
+    case STG_E_INSUFFICIENTMEMORY:   return MAKE_VBSERROR(VBSE_OUT_OF_MEMORY);
+    case STG_E_NOMOREFILES:          return MAKE_VBSERROR(VBSE_TOO_MANY_FILES);
+    case STG_E_DISKISWRITEPROTECTED: return MAKE_VBSERROR(VBSE_PERMISSION_DENIED);
+    case STG_E_WRITEFAULT:           return MAKE_VBSERROR(VBSE_IO_ERROR);
+    case STG_E_READFAULT:            return MAKE_VBSERROR(VBSE_IO_ERROR);
+    case STG_E_SHAREVIOLATION:       return MAKE_VBSERROR(VBSE_PATH_FILE_ACCESS);
+    case STG_E_LOCKVIOLATION:        return MAKE_VBSERROR(VBSE_PERMISSION_DENIED);
+    case STG_E_FILEALREADYEXISTS:    return MAKE_VBSERROR(VBSE_FILE_ALREADY_EXISTS);
+    case STG_E_MEDIUMFULL:           return MAKE_VBSERROR(VBSE_DISK_FULL);
+    case STG_E_INVALIDNAME:          return MAKE_VBSERROR(VBSE_FILE_NOT_FOUND);
+    case STG_E_INUSE:                return MAKE_VBSERROR(VBSE_PERMISSION_DENIED);
+    case STG_E_NOTCURRENT:           return MAKE_VBSERROR(VBSE_PERMISSION_DENIED);
+    case STG_E_CANTSAVE:             return MAKE_VBSERROR(VBSE_IO_ERROR);
+    case REGDB_E_CLASSNOTREG:        return MAKE_VBSERROR(VBSE_CANT_CREATE_OBJECT);
+    case MK_E_UNAVAILABLE:           return MAKE_VBSERROR(VBSE_CANT_CREATE_OBJECT);
+    case MK_E_INVALIDEXTENSION:      return MAKE_VBSERROR(VBSE_OLE_FILE_NOT_FOUND);
+    case MK_E_CANTOPENFILE:          return MAKE_VBSERROR(VBSE_OLE_FILE_NOT_FOUND);
+    case CO_E_CLASSSTRING:           return MAKE_VBSERROR(VBSE_CANT_CREATE_OBJECT);
+    case CO_E_APPNOTFOUND:           return MAKE_VBSERROR(VBSE_CANT_CREATE_OBJECT);
+    case CO_E_APPDIDNTREG:           return MAKE_VBSERROR(VBSE_CANT_CREATE_OBJECT);
+    case E_ACCESSDENIED:             return MAKE_VBSERROR(VBSE_PERMISSION_DENIED);
+    case E_OUTOFMEMORY:              return MAKE_VBSERROR(VBSE_OUT_OF_MEMORY);
+    case E_INVALIDARG:               return MAKE_VBSERROR(VBSE_ILLEGAL_FUNC_CALL);
+    case RPC_E_SERVER_UNAVAILABLE:   return MAKE_VBSERROR(VBSE_SERVER_NOT_FOUND);
+    case CO_E_SERVER_EXEC_FAILURE:   return MAKE_VBSERROR(VBSE_CANT_CREATE_OBJECT);
+    }
+
     return hres;
 }
 

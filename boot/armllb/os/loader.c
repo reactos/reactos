@@ -115,7 +115,7 @@ LlbHwLoadOsLoaderFromRam(VOID)
     /* Set parameters for the OS loader */
     snprintf(CommandLine,
              sizeof(CommandLine),
-             "rdbase=0x%x rdsize=0x%x rdoffset=%s",
+             "rdbase=0x%lx rdsize=0x%lx rdoffset=%s",
              RootFs, Size, Offset);
     LlbSetCommandLine(CommandLine);
     

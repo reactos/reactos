@@ -133,14 +133,14 @@ static HRESULT WINAPI IClassFactory_fnCreateInstance(LPCLASSFACTORY iface,
 
   if (IsEqualGUID(&CLSID_AVIFile, &This->clsid))
     return AVIFILE_CreateAVIFile(pOuter, riid, ppobj);
+  if (IsEqualGUID(&CLSID_WAVFile, &This->clsid))
+    return AVIFILE_CreateWAVFile(pOuter, riid, ppobj);
 
   if (pOuter)
     return CLASS_E_NOAGGREGATION;
 
   if (IsEqualGUID(&CLSID_ICMStream, &This->clsid))
     return AVIFILE_CreateICMStream(riid,ppobj);
-  if (IsEqualGUID(&CLSID_WAVFile, &This->clsid))
-    return AVIFILE_CreateWAVFile(riid,ppobj);
   if (IsEqualGUID(&CLSID_ACMStream, &This->clsid))
     return AVIFILE_CreateACMStream(riid,ppobj);
 

@@ -380,7 +380,7 @@ static inline HRESULT handle_xml_load(BindStatusCallback *This)
     if(FAILED(hres))
         return display_error_page(This);
 
-    hres = DOMDocument_create(MSXML_DEFAULT, NULL, (void**)&xml);
+    hres = DOMDocument_create(MSXML_DEFAULT, (void**)&xml);
     if(FAILED(hres))
         return display_error_page(This);
 
@@ -456,7 +456,7 @@ static inline HRESULT handle_xml_load(BindStatusCallback *This)
         return display_error_page(This);
     }
 
-    hres = DOMDocument_create(MSXML_DEFAULT, NULL, (void**)&xsl);
+    hres = DOMDocument_create(MSXML_DEFAULT, (void**)&xsl);
     if(FAILED(hres)) {
         VariantClear(&var);
         IXMLDOMDocument3_Release(xml);
@@ -1405,15 +1405,12 @@ static IOleObjectVtbl XMLView_OleObjectVtbl = {
     XMLView_OleObject_SetColorScheme
 };
 
-HRESULT XMLView_create(IUnknown *outer, void **ppObj)
+HRESULT XMLView_create(void **ppObj)
 {
     XMLView *This;
     HRESULT hres;
 
-    TRACE("(%p %p)\n", outer, ppObj);
-
-    if(outer)
-        return E_FAIL;
+    TRACE("(%p)\n", ppObj);
 
     This = heap_alloc_zero(sizeof(*This));
     if(!This)
@@ -1438,7 +1435,7 @@ HRESULT XMLView_create(IUnknown *outer, void **ppObj)
 
 #else
 
-HRESULT XMLView_create(IUnknown *outer, void **ppObj)
+HRESULT XMLView_create(void **ppObj)
 {
     MESSAGE("This program tried to use a XMLView object, but\n"
             "libxml2 support was not present at compile time.\n");

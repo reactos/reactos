@@ -36,6 +36,7 @@ list(APPEND SOURCE
 list(APPEND jscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/jscript.rgs
     ${CMAKE_CURRENT_SOURCE_DIR}/jscript_classes.rgs
+    ${CMAKE_CURRENT_SOURCE_DIR}/jsglobal.rgs
     ${CMAKE_CURRENT_BINARY_DIR}/jsglobal.tlb)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${jscript_rc_deps}")

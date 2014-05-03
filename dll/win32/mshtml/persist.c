@@ -411,9 +411,9 @@ HRESULT set_moniker(HTMLOuterWindow *window, IMoniker *mon, IUri *nav_uri, IBind
     return S_OK;
 }
 
-void set_ready_state(HTMLOuterWindow *window, READYSTATE readystate)
+static void notif_readystate(HTMLOuterWindow *window)
 {
-    window->readystate = readystate;
+    window->readystate_pending = FALSE;
 
     if(window->doc_obj && window->doc_obj->basedoc.window == window)
         call_property_onchanged(&window->doc_obj->basedoc.cp_container, DISPID_READYSTATE);
@@ -424,6 +424,52 @@ void set_ready_state(HTMLOuterWindow *window, READYSTATE readystate)
     if(window->frame_element)
         fire_event(window->frame_element->element.node.doc, EVENTID_READYSTATECHANGE,
                    TRUE, window->frame_element->element.node.nsnode, NULL, NULL);
+}
+
+typedef struct {
+    task_t header;
+    HTMLOuterWindow *window;
+} readystate_task_t;
+
+static void notif_readystate_proc(task_t *_task)
+{
+    readystate_task_t *task = (readystate_task_t*)_task;
+    notif_readystate(task->window);
+}
+
+static void notif_readystate_destr(task_t *_task)
+{
+    readystate_task_t *task = (readystate_task_t*)_task;
+    IHTMLWindow2_Release(&task->window->base.IHTMLWindow2_iface);
+}
+
+void set_ready_state(HTMLOuterWindow *window, READYSTATE readystate)
+{
+    READYSTATE prev_state = window->readystate;
+
+    window->readystate = readystate;
+
+    if(window->readystate_locked) {
+        readystate_task_t *task;
+        HRESULT hres;
+
+        if(window->readystate_pending || prev_state == readystate)
+            return;
+
+        task = heap_alloc(sizeof(*task));
+        if(!task)
+            return;
+
+        IHTMLWindow2_AddRef(&window->base.IHTMLWindow2_iface);
+        task->window = window;
+
+        hres = push_task(&task->header, notif_readystate_proc, notif_readystate_destr, window->task_magic);
+        if(SUCCEEDED(hres))
+            window->readystate_pending = TRUE;
+        return;
+    }
+
+    notif_readystate(window);
 }
 
 static HRESULT get_doc_string(HTMLDocumentNode *This, char **str)
@@ -817,11 +863,12 @@ static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM
 
     prepare_for_binding(This, mon, FALSE);
     hres = set_moniker(This->window, mon, NULL, NULL, NULL, TRUE);
-    IMoniker_Release(mon);
     if(FAILED(hres))
         return hres;
 
-    return channelbsc_load_stream(This->window->pending_window, pStm);
+    hres = channelbsc_load_stream(This->window->pending_window, mon, pStm);
+    IMoniker_Release(mon);
+    return hres;
 }
 
 static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM pStm,
@@ -874,11 +921,12 @@ static HRESULT WINAPI PersistStreamInit_InitNew(IPersistStreamInit *iface)
 
     prepare_for_binding(This, mon, FALSE);
     hres = set_moniker(This->window, mon, NULL, NULL, NULL, FALSE);
-    IMoniker_Release(mon);
     if(FAILED(hres))
         return hres;
 
-    return channelbsc_load_stream(This->window->pending_window, NULL);
+    hres = channelbsc_load_stream(This->window->pending_window, mon, NULL);
+    IMoniker_Release(mon);
+    return hres;
 }
 
 static const IPersistStreamInitVtbl PersistStreamInitVtbl = {

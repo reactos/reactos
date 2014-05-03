@@ -308,14 +308,13 @@ CSR_API(SrvGetConsoleSelectionInfo)
     PCONSOLE Console;
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (NT_SUCCESS(Status))
-    {
-        memset(&GetSelectionInfoRequest->Info, 0, sizeof(CONSOLE_SELECTION_INFO));
-        if (Console->Selection.dwFlags != 0)
-            GetSelectionInfoRequest->Info = Console->Selection;
-        ConSrvReleaseConsole(Console, TRUE);
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
+    Status = (TermGetSelectionInfo(Console, &GetSelectionInfoRequest->Info)
+                ? STATUS_SUCCESS
+                : STATUS_UNSUCCESSFUL);
+
+    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 

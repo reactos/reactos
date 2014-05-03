@@ -362,8 +362,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     EXLATEOBJ_vCleanup(&exlo);
 
     /* Unlock surfaces */
-    if (psurfPattern)
-        SURFACE_ShareUnlockSurface(psurfPattern);
+    SURFACE_ShareUnlockSurface(psurfPattern);
     if (psurfMask)
         SURFACE_ShareUnlockSurface(psurfMask);
 

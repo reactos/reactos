@@ -1006,7 +1006,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         if ((Disk->SectorCount - 1ULL) != EfiHeader->AlternateLBA)
         {
             /* We'll update it. First, count number of sectors needed to store partitions */
-            SectorsForPartitions = (EfiHeader->NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
+            SectorsForPartitions = ((ULONGLONG)EfiHeader->NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
             /* Then set first usable LBA: Legacy MBR + GPT header + Partitions entries */
             EfiHeader->FirstUsableLBA = SectorsForPartitions + 2;
             /* Then set last usable LBA: Last sector - GPT header - Partitions entries */
@@ -1313,7 +1313,7 @@ FstubVerifyPartitionTableEFI(IN PDISK_INFORMATION Disk,
     }
 
     /* Compute sectors taken by partitions */
-    SectorsForPartitions = ((EFIHeader->NumberOfEntries * PARTITION_ENTRY_SIZE) + Disk->SectorSize - 1) / Disk->SectorSize;
+    SectorsForPartitions = (((ULONGLONG)EFIHeader->NumberOfEntries * PARTITION_ENTRY_SIZE) + Disk->SectorSize - 1) / Disk->SectorSize;
     if (PrimaryValid)
     {
         WriteBackup = TRUE;

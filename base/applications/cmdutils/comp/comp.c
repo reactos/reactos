@@ -58,7 +58,6 @@ VOID Usage(VOID)
 int _tmain (int argc, TCHAR *argv[])
 {
     INT i;
-    INT LineLen1, LineLen2;
     FILE *fp1, *fp2;           // file pointers
     PTCHAR Line1 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
     PTCHAR Line2 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
@@ -156,8 +155,8 @@ int _tmain (int argc, TCHAR *argv[])
 
     _tprintf(_T("Comparing %s and %s...\n"), File1, File2);
 
-    while ((LineLen1 = GetLine(Line1, fp1) != 0) &&
-           (LineLen2 = GetLine(Line2, fp2) != 0))
+    while ((GetLine(Line1, fp1) != 0) &&
+           (GetLine(Line2, fp2) != 0))
     {
         // LineCount++;
         while ((*Line1 != '\0') && (*Line2 != '\0'))

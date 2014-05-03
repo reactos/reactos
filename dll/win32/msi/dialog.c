@@ -763,12 +763,13 @@ static msi_control *msi_dialog_add_control( msi_dialog *dialog,
                 MSIRECORD *rec, LPCWSTR szCls, DWORD style )
 {
     DWORD attributes;
-    LPCWSTR text, name;
+    const WCHAR *text = NULL, *name, *control_type;
     DWORD exstyle = 0;
 
     name = MSI_RecordGetString( rec, 2 );
+    control_type = MSI_RecordGetString( rec, 3 );
     attributes = MSI_RecordGetInteger( rec, 8 );
-    text = MSI_RecordGetString( rec, 10 );
+    if (strcmpW( control_type, szScrollableText )) text = MSI_RecordGetString( rec, 10 );
 
     TRACE("%s, %s, %08x, %s, %08x\n", debugstr_w(szCls), debugstr_w(name),
           attributes, debugstr_w(text), style);
@@ -1802,24 +1803,33 @@ static void msi_mask_control_change( struct msi_maskedit_info *info )
     val = msi_alloc( (info->num_chars+1)*sizeof(WCHAR) );
     for( i=0, n=0; i<info->num_groups; i++ )
     {
-        if( (info->group[i].len + n) > info->num_chars )
+        if (info->group[i].len == ~0u)
         {
-            ERR("can't fit control %d text into template\n",i);
-            break;
-        }
-        if (!msi_mask_editable(info->group[i].type))
-        {
-            for(r=0; r<info->group[i].len; r++)
-                val[n+r] = info->group[i].type;
-            val[n+r] = 0;
+            UINT len = SendMessageW( info->group[i].hwnd, WM_GETTEXTLENGTH, 0, 0 );
+            val = msi_realloc( val, (len + 1) * sizeof(WCHAR) );
+            GetWindowTextW( info->group[i].hwnd, val, len + 1 );
         }
         else
         {
-            r = GetWindowTextW( info->group[i].hwnd, &val[n], info->group[i].len+1 );
-            if( r != info->group[i].len )
+            if (info->group[i].len + n > info->num_chars)
+            {
+                ERR("can't fit control %d text into template\n",i);
                 break;
+            }
+            if (!msi_mask_editable(info->group[i].type))
+            {
+                for(r=0; r<info->group[i].len; r++)
+                    val[n+r] = info->group[i].type;
+                val[n+r] = 0;
+            }
+            else
+            {
+                r = GetWindowTextW( info->group[i].hwnd, &val[n], info->group[i].len+1 );
+                if( r != info->group[i].len )
+                    break;
+            }
+            n += r;
         }
-        n += r;
     }
 
     TRACE("%d/%d controls were good\n", i, info->num_groups);
@@ -1914,14 +1924,14 @@ msi_maskedit_set_text( struct msi_maskedit_info *info, LPCWSTR text )
 
 static struct msi_maskedit_info * msi_dialog_parse_groups( LPCWSTR mask )
 {
-    struct msi_maskedit_info * info = NULL;
+    struct msi_maskedit_info *info;
     int i = 0, n = 0, total = 0;
     LPCWSTR p;
 
     TRACE("masked control, template %s\n", debugstr_w(mask));
 
     if( !mask )
-        return info;
+        return NULL;
 
     info = msi_alloc_zero( sizeof *info );
     if( !info )
@@ -1937,7 +1947,16 @@ static struct msi_maskedit_info * msi_dialog_parse_groups( LPCWSTR mask )
     {
         /* stop at the end of the string */
         if( p[0] == 0 || p[0] == '>' )
+        {
+            if (!total)
+            {
+                /* create a group for the empty mask */
+                info->group[0].type = '&';
+                info->group[0].len = ~0u;
+                i = 1;
+            }
             break;
+        }
 
         /* count the number of the same identifier */
         for( n=0; p[n] == p[0]; n++ )
@@ -1983,9 +2002,16 @@ msi_maskedit_create_children( struct msi_maskedit_info *info, LPCWSTR font )
     {
         if (!msi_mask_editable( info->group[i].type ))
             continue;
-        wx = (info->group[i].ofs * width) / info->num_chars;
-        ww = (info->group[i].len * width) / info->num_chars;
-
+        if (info->num_chars)
+        {
+            wx = (info->group[i].ofs * width) / info->num_chars;
+            ww = (info->group[i].len * width) / info->num_chars;
+        }
+        else
+        {
+            wx = 0;
+            ww = width;
+        }
         hwnd = CreateWindowW( szEdit, NULL, style, wx, 0, ww, height,
                               info->hwnd, NULL, NULL, NULL );
         if( !hwnd )
@@ -2969,7 +2995,7 @@ static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *c
     FindClose( file );
 }
 
-UINT msi_dialog_directorylist_up( msi_dialog *dialog )
+static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
 {
     msi_control *control;
     LPWSTR prop, path, ptr;
@@ -3472,7 +3498,7 @@ static UINT msi_dialog_fill_controls( msi_dialog *dialog )
     return r;
 }
 
-UINT msi_dialog_reset( msi_dialog *dialog )
+static UINT msi_dialog_reset( msi_dialog *dialog )
 {
     /* FIXME: should restore the original values of any properties we changed */
     return msi_dialog_evaluate_control_conditions( dialog );
@@ -3906,7 +3932,7 @@ static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_di
     return dialog;
 }
 
-void msi_dialog_end_dialog( msi_dialog *dialog )
+static void msi_dialog_end_dialog( msi_dialog *dialog )
 {
     TRACE("%p\n", dialog);
     dialog->finished = 1;
@@ -3933,7 +3959,7 @@ void msi_dialog_check_messages( HANDLE handle )
         return;
     }
 
-    /* there's two choices for the UI thread */
+    /* there are two choices for the UI thread */
     while (1)
     {
         process_pending_messages( NULL );

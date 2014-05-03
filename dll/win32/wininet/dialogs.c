@@ -433,7 +433,7 @@ static INT_PTR WINAPI WININET_InvalidCertificateDialog(
                 /* FIXME: Use helper function */
                 flags |= SECURITY_FLAG_SECURE;
                 req->security_flags |= flags;
-                if(req->netconn)
+                if(is_valid_netconn(req->netconn))
                     req->netconn->security_flags |= flags;
             }
 

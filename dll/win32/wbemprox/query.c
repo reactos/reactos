@@ -102,15 +102,93 @@ static inline BOOL is_strcmp( const struct complex_expr *expr )
             (expr->left->type == EXPR_SVAL && expr->right->type == EXPR_PROPVAL));
 }
 
+static inline BOOL is_boolcmp( const struct complex_expr *expr, UINT ltype, UINT rtype )
+{
+    if (ltype == CIM_BOOLEAN && expr->left->type == EXPR_PROPVAL &&
+        (expr->right->type == EXPR_SVAL || expr->right->type == EXPR_BVAL)) return TRUE;
+    else if (rtype == CIM_BOOLEAN && expr->right->type == EXPR_PROPVAL &&
+             (expr->left->type == EXPR_SVAL || expr->left->type == EXPR_BVAL)) return TRUE;
+    return FALSE;
+}
+
+static HRESULT eval_boolcmp( UINT op, LONGLONG lval, LONGLONG rval, UINT ltype, UINT rtype, LONGLONG *val )
+{
+    static const WCHAR trueW[] = {'T','r','u','e',0};
+
+    if (ltype == CIM_STRING) lval = !strcmpiW( (const WCHAR *)(INT_PTR)lval, trueW ) ? -1 : 0;
+    else if (rtype == CIM_STRING) rval = !strcmpiW( (const WCHAR *)(INT_PTR)rval, trueW ) ? -1 : 0;
+
+    switch (op)
+    {
+    case OP_EQ:
+        *val = (lval == rval);
+        break;
+    case OP_NE:
+        *val = (lval != rval);
+        break;
+    default:
+        ERR("unhandled operator %u\n", op);
+        return WBEM_E_INVALID_QUERY;
+    }
+    return S_OK;
+}
+
+static UINT resolve_type( UINT left, UINT right )
+{
+    switch (left)
+    {
+    case CIM_SINT8:
+    case CIM_SINT16:
+    case CIM_SINT32:
+    case CIM_SINT64:
+    case CIM_UINT8:
+    case CIM_UINT16:
+    case CIM_UINT32:
+    case CIM_UINT64:
+        switch (right)
+        {
+            case CIM_SINT8:
+            case CIM_SINT16:
+            case CIM_SINT32:
+            case CIM_SINT64:
+            case CIM_UINT8:
+            case CIM_UINT16:
+            case CIM_UINT32:
+            case CIM_UINT64:
+                return CIM_UINT64;
+            default: break;
+        }
+        break;
+
+    case CIM_STRING:
+        if (right == CIM_STRING) return CIM_STRING;
+        break;
+
+    case CIM_BOOLEAN:
+        if (right == CIM_BOOLEAN) return CIM_BOOLEAN;
+        break;
+
+    default:
+        break;
+    }
+    return CIM_ILLEGAL;
+}
+
 static HRESULT eval_binary( const struct table *table, UINT row, const struct complex_expr *expr,
-                            LONGLONG *val )
+                            LONGLONG *val, UINT *type )
 {
     HRESULT lret, rret;
     LONGLONG lval, rval;
+    UINT ltype, rtype;
 
-    lret = eval_cond( table, row, expr->left, &lval );
-    rret = eval_cond( table, row, expr->right, &rval );
+    lret = eval_cond( table, row, expr->left, &lval, &ltype );
+    rret = eval_cond( table, row, expr->right, &rval, &rtype );
     if (lret != S_OK || rret != S_OK) return WBEM_E_INVALID_QUERY;
+
+    *type = resolve_type( ltype, rtype );
+
+    if (is_boolcmp( expr, ltype, rtype ))
+        return eval_boolcmp( expr->op, lval, rval, ltype, rtype, val );
 
     if (is_strcmp( expr ))
     {
@@ -153,12 +231,21 @@ static HRESULT eval_binary( const struct table *table, UINT row, const struct co
 }
 
 static HRESULT eval_unary( const struct table *table, UINT row, const struct complex_expr *expr,
-                           LONGLONG *val )
+                           LONGLONG *val, UINT *type )
 
 {
     HRESULT hr;
     UINT column;
     LONGLONG lval;
+
+    if (expr->op == OP_NOT)
+    {
+        hr = eval_cond( table, row, expr->left, &lval, type );
+        if (hr != S_OK)
+            return hr;
+        *val = !lval;
+        return S_OK;
+    }
 
     hr = get_column_index( table, expr->left->u.propval->name, &column );
     if (hr != S_OK)
@@ -180,11 +267,13 @@ static HRESULT eval_unary( const struct table *table, UINT row, const struct com
         ERR("unknown operator %u\n", expr->op);
         return WBEM_E_INVALID_QUERY;
     }
+
+    *type = table->columns[column].type & CIM_TYPE_MASK;
     return S_OK;
 }
 
 static HRESULT eval_propval( const struct table *table, UINT row, const struct property *propval,
-                             LONGLONG *val )
+                             LONGLONG *val, UINT *type )
 
 {
     HRESULT hr;
@@ -194,31 +283,44 @@ static HRESULT eval_propval( const struct table *table, UINT row, const struct p
     if (hr != S_OK)
         return hr;
 
+    *type = table->columns[column].type & CIM_TYPE_MASK;
     return get_value( table, row, column, val );
 }
 
-HRESULT eval_cond( const struct table *table, UINT row, const struct expr *cond, LONGLONG *val )
+HRESULT eval_cond( const struct table *table, UINT row, const struct expr *cond, LONGLONG *val, UINT *type )
 {
     if (!cond)
     {
         *val = 1;
+        *type = CIM_UINT64;
         return S_OK;
     }
     switch (cond->type)
     {
     case EXPR_COMPLEX:
-        return eval_binary( table, row, &cond->u.expr, val );
+        return eval_binary( table, row, &cond->u.expr, val, type );
+
     case EXPR_UNARY:
-        return eval_unary( table, row, &cond->u.expr, val );
+        return eval_unary( table, row, &cond->u.expr, val, type );
+
     case EXPR_PROPVAL:
-        return eval_propval( table, row, cond->u.propval, val );
+        return eval_propval( table, row, cond->u.propval, val, type );
+
     case EXPR_SVAL:
         *val = (INT_PTR)cond->u.sval;
+        *type = CIM_STRING;
         return S_OK;
+
     case EXPR_IVAL:
+        *val = cond->u.ival;
+        *type = CIM_UINT64;
+        return S_OK;
+
     case EXPR_BVAL:
         *val = cond->u.ival;
+        *type = CIM_BOOLEAN;
         return S_OK;
+
     default:
         ERR("invalid expression type\n");
         break;
@@ -245,6 +347,7 @@ HRESULT execute_view( struct view *view )
     {
         HRESULT hr;
         LONGLONG val = 0;
+        UINT type;
 
         if (j >= len)
         {
@@ -253,7 +356,7 @@ HRESULT execute_view( struct view *view )
             if (!(tmp = heap_realloc( view->result, len * sizeof(UINT) ))) return E_OUTOFMEMORY;
             view->result = tmp;
         }
-        if ((hr = eval_cond( view->table, i, view->cond, &val )) != S_OK) return hr;
+        if ((hr = eval_cond( view->table, i, view->cond, &val, &type )) != S_OK) return hr;
         if (val) view->result[j++] = i;
     }
     view->count = j;
@@ -302,7 +405,7 @@ HRESULT exec_query( const WCHAR *str, IEnumWbemClassObject **result )
     if (hr != S_OK) goto done;
     hr = execute_view( query->view );
     if (hr != S_OK) goto done;
-    hr = EnumWbemClassObject_create( NULL, query, (void **)result );
+    hr = EnumWbemClassObject_create( query, (void **)result );
 
 done:
     release_query( query );
@@ -844,7 +947,7 @@ HRESULT put_propval( const struct view *view, UINT index, const WCHAR *name, VAR
     return set_value( view->table, row, column, val, type );
 }
 
-HRESULT get_properties( const struct view *view, SAFEARRAY **props )
+HRESULT get_properties( const struct view *view, LONG flags, SAFEARRAY **props )
 {
     SAFEARRAY *sa;
     BSTR str;
@@ -855,7 +958,13 @@ HRESULT get_properties( const struct view *view, SAFEARRAY **props )
 
     for (i = 0; i < view->table->num_cols; i++)
     {
+        BOOL is_system;
+
         if (is_method( view->table, i )) continue;
+
+        is_system = is_system_prop( view->table->columns[i].name );
+        if ((flags & WBEM_FLAG_NONSYSTEM_ONLY) && is_system) continue;
+        else if ((flags & WBEM_FLAG_SYSTEM_ONLY) && !is_system) continue;
 
         str = SysAllocString( view->table->columns[i].name );
         if (!str || SafeArrayPutElement( sa, &i, str ) != S_OK)

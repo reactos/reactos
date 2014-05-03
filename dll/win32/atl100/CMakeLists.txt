@@ -11,9 +11,9 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(atl100.dll atl100.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    atl.c
-    atl_ax.c
-    registrar.c
+    ${REACTOS_SOURCE_DIR}/dll/win32/atl/atl.c
+    ${REACTOS_SOURCE_DIR}/dll/win32/atl/atl_ax.c
+    ${REACTOS_SOURCE_DIR}/dll/win32/atl/registrar.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/atl100_stubs.c)
 

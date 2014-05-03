@@ -5,6 +5,7 @@ typedef struct _PROCESSINFO *PPROCESSINFO;
 typedef struct _THREADINFO *PTHREADINFO;
 struct _DESKTOP;
 struct _WND;
+struct tagPOPUPMENU;
 
 #define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
@@ -313,7 +314,7 @@ typedef struct tagITEM
     struct tagMENU* spSubMenu; /* Pop-up menu. */
     HANDLE hbmpChecked;
     HANDLE hbmpUnchecked;
-    USHORT* lpstr; /* Item text pointer. */
+    USHORT* Xlpstr; /* Item text pointer. */
     ULONG cch;
     DWORD_PTR dwItemData;
     ULONG xItem;   /* Item position. left */
@@ -326,6 +327,9 @@ typedef struct tagITEM
     HBITMAP hbmp;  /* bitmap */
     INT cxBmp;     /* Width Maximum size of the bitmap items in MIIM_BITMAP state */
     INT cyBmp;     /* Height " */
+    //// ReactOS
+    UNICODE_STRING lpstr;
+    struct tagITEM *Next;
 } ITEM, *PITEM;
 
 typedef struct tagMENULIST
@@ -347,7 +351,7 @@ typedef struct tagMENU
 {
     PROCDESKHEAD head;
     ULONG fFlags;             /* [Style flags | Menu flags] */
-    INT iItem;                /* nPos of selected item, if -1 not selected. */
+    INT iItem;                /* nPos of selected item, if -1 not selected. AKA focused item */
     UINT cAlloced;            /* Number of allocated items. Inc's of 8 */
     UINT cItems;              /* Number of items in the menu */
     ULONG cxMenu;             /* Width of the whole menu */
@@ -363,7 +367,53 @@ typedef struct tagMENU
     INT iTop;                 /* Current scroll position Top */
     INT iMaxTop;              /* Current scroll position Max Top */
     DWORD dwArrowsOn:2;       /* Arrows: 0 off, 1 on, 2 to the top, 3 to the bottom. */
+    //// ReactOS
+    LIST_ENTRY ListEntry;
+    HWND hWnd;           /* Window containing the menu */
+    BOOL TimeToHide;
 } MENU, *PMENU;
+
+typedef struct tagPOPUPMENU
+{
+ ULONG  fIsMenuBar:1;
+ ULONG  fHasMenuBar:1;
+ ULONG  fIsSysMenu:1;
+ ULONG  fIsTrackPopup:1;
+ ULONG  fDroppedLeft:1;
+ ULONG  fHierarchyDropped:1;
+ ULONG  fRightButton:1;
+ ULONG  fToggle:1;
+ ULONG  fSynchronous:1;
+ ULONG  fFirstClick:1;
+ ULONG  fDropNextPopup:1;
+ ULONG  fNoNotify:1;
+ ULONG  fAboutToHide:1;
+ ULONG  fShowTimer:1;
+ ULONG  fHideTimer:1;
+ ULONG  fDestroyed:1;
+ ULONG  fDelayedFree:1;
+ ULONG  fFlushDelayedFree:1;
+ ULONG  fFreed:1;
+ ULONG  fInCancel:1;
+ ULONG  fTrackMouseEvent:1;
+ ULONG  fSendUninit:1;
+ ULONG  fRtoL:1;
+//  ULONG  fDesktopMenu:1;
+ ULONG  iDropDir:5;
+ ULONG  fUseMonitorRect:1;
+ struct _WND *spwndNotify;
+ struct _WND *spwndPopupMenu;
+ struct _WND *spwndNextPopup;
+ struct _WND *spwndPrevPopup;
+ PMENU  spmenu;
+ PMENU  spmenuAlternate;
+ struct _WND *spwndActivePopup; 
+ struct tagPOPUPMENU *ppopupmenuRoot;
+ struct tagPOPUPMENU *ppmDelayedFree;
+ UINT   posSelectedItem;
+ UINT   posDropped;
+} POPUPMENU, *PPOPUPMENU;
+
 
 typedef struct _REGISTER_SYSCLASS
 {
@@ -656,6 +706,12 @@ typedef struct _SBWND
   UINT   wDisableFlags;
   SBCALC SBCalc;
 } SBWND, *PSBWND;
+
+typedef struct _MENUWND
+{
+   WND wnd;
+   PPOPUPMENU ppopupmenu;
+} MENUWND, *PMENUWND;
 
 typedef struct _PFNCLIENT
 {
@@ -3334,21 +3390,6 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 #define HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT 0x1005
 
-DWORD
-NTAPI
-NtUserBuildMenuItemList(
- HMENU hMenu,
- PVOID Buffer,
- ULONG nBufSize,
- DWORD Reserved);
-
-UINT
-NTAPI
-NtUserGetMenuDefaultItem(
-  HMENU hMenu,
-  UINT fByPos,
-  UINT gmdiFlags);
-
 BOOL
 NTAPI
 NtUserGetMonitorInfo(
@@ -3371,25 +3412,21 @@ typedef struct tagROSMENUINFO
     DWORD dwContextHelpID;
     ULONG_PTR dwMenuData;
     /* ----------- Extra ----------- */
-    HMENU Self;         /* Handle of this menu */
-    WORD Flags;         /* Menu flags (MF_POPUP, MF_SYSMENU) */
-    UINT FocusedItem;   /* Currently focused item */
-    UINT MenuItemCount; /* Number of items in the menu */
-    HWND Wnd;           /* Window containing the menu */
-    WORD Width;         /* Width of the whole menu */
-    WORD Height;        /* Height of the whole menu */
-    HWND WndOwner;     /* window receiving the messages for ownerdraw */
-    BOOL TimeToHide;   /* Request hiding when receiving a second click in the top-level menu item */
-    SIZE maxBmpSize;   /* Maximum size of the bitmap items in MIIM_BITMAP state */
-} ROSMENUINFO, *PROSMENUINFO;
+    ULONG fFlags;       /* Menu flags (MF_POPUP, MF_SYSMENU) */
+    UINT iItem;         /* Currently focused item */
+    UINT cItems;        /* Number of items in the menu */
+    WORD cxMenu;        /* Width of the whole menu */
+    WORD cyMenu;        /* Height of the whole menu */
+    ULONG cxTextAlign;
+    PWND spwndNotify;     /* window receiving the messages for ownerdraw */
+    INT iTop;
+    INT iMaxTop;
+    DWORD dwArrowsOn:2;
 
-BOOL
-NTAPI
-NtUserMenuInfo(
- HMENU hmenu,
- PROSMENUINFO lpmi,
- BOOL fsog
-);
+    HMENU Self;         /* Handle of this menu */
+    HWND Wnd;           /* Window containing the menu */
+    BOOL TimeToHide;    /* Request hiding when receiving a second click in the top-level menu item */
+} ROSMENUINFO, *PROSMENUINFO;
 
 typedef struct tagROSMENUITEMINFO
 {
@@ -3410,17 +3447,8 @@ typedef struct tagROSMENUITEMINFO
     RECT Rect;      /* Item area (relative to menu window) */
     UINT dxTab;      /* X position of text after Tab */
     LPWSTR lpstr;    /* Copy of the text pointer in MenuItem->Text */
+    SIZE maxBmpSize;   /* Maximum size of the bitmap items in MIIM_BITMAP state */
 } ROSMENUITEMINFO, *PROSMENUITEMINFO;
-
-BOOL
-NTAPI
-NtUserMenuItemInfo(
- HMENU hMenu,
- UINT uItem,
- BOOL fByPosition,
- PROSMENUITEMINFO lpmii,
- BOOL fsog
-);
 
 HMONITOR
 NTAPI

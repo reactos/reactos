@@ -85,6 +85,16 @@ typedef struct
 #define TB_UNKWN45D              (WM_USER+93)
 #define TB_UNKWN464              (WM_USER+100)
 
+#define TreeView_GetItemA(hwnd, pitem) \
+ (BOOL)SNDMSGA((hwnd), TVM_GETITEMA, 0, (LPARAM) (TVITEMA *)(pitem))
+
+#define TreeView_InsertItemA(hwnd, phdi) \
+  (HTREEITEM)SNDMSGA((hwnd), TVM_INSERTITEMA, 0, \
+                            (LPARAM)(LPTVINSERTSTRUCTA)(phdi))
+
+#define TreeView_SetItemA(hwnd, pitem) \
+ (BOOL)SNDMSGA((hwnd), TVM_SETITEMA, 0, (LPARAM)(const TVITEMA *)(pitem))
+
 #ifdef __cplusplus
 }
 #endif

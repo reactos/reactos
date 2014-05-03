@@ -52,7 +52,7 @@ static HRESULT WINAPI Range_QueryInterface(ITfRange *iface, REFIID iid, LPVOID *
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfRange))
     {
-        *ppvOut = This;
+        *ppvOut = &This->ITfRange_iface;
     }
 
     if (*ppvOut)
@@ -325,7 +325,7 @@ HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD l
     This->anchorEnd = anchorEnd;
 
     *ppOut = &This->ITfRange_iface;
-    TRACE("returning %p\n", This);
+    TRACE("returning %p\n", *ppOut);
 
     return S_OK;
 }
@@ -339,7 +339,7 @@ HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_AC
     if (!tf || !tsAcp || !tf->range)
         return E_INVALIDARG;
 
-    This = (Range *)tf->range;
+    This = impl_from_ITfRange(tf->range);
 
     tsAcp->acpStart = This->anchorStart;
     tsAcp->acpEnd = This->anchorEnd;

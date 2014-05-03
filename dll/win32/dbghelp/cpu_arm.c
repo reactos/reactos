@@ -23,8 +23,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-static unsigned arm_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                             enum cpu_addr ca, ADDRESS64* addr)
+static BOOL arm_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                         enum cpu_addr ca, ADDRESS64* addr)
 {
     addr->Mode    = AddrModeFlat;
     addr->Segment = 0; /* don't need segment */

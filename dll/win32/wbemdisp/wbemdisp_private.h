@@ -37,7 +37,7 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(wbemdisp);
 
-HRESULT SWbemLocator_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT SWbemLocator_create(LPVOID *) DECLSPEC_HIDDEN;
 
 static void *heap_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
 static inline void *heap_alloc( size_t len )

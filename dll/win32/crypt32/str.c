@@ -448,7 +448,7 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
             for (j = 0; (!psz || ret < csz) && j < rdn->cRDNAttr; j++)
             {
                 DWORD chars;
-                char prefixBuf[10]; /* big enough for GivenName */
+                char prefixBuf[13]; /* big enough for SERIALNUMBER */
                 LPCSTR prefix = NULL;
 
                 if ((dwStrType & 0x000000ff) == CERT_OID_NAME_STR)

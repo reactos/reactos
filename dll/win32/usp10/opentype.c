@@ -933,7 +933,9 @@ static INT GSUB_apply_ChainContextSubst(const OT_LookupList* lookup, const OT_Lo
         }
         else if (GET_BE_WORD(ccsf1->SubstFormat) == 2)
         {
+#ifndef __REACTOS__
             FIXME("  TODO: subtype 2 (Class-based Chaining Context Glyph Substitution)\n");
+#endif
             continue;
         }
         else if (GET_BE_WORD(ccsf1->SubstFormat) == 3)

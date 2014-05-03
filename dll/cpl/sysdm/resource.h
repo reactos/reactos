@@ -10,6 +10,7 @@
 #define IDI_DOWN      2501
 
 #define IDB_ROSBMP 55
+#define IDB_ROSMASK 56
 
 #define IDS_CPLSYSTEMNAME        60
 #define IDS_CPLSYSTEMDESCRIPTION 61

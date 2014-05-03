@@ -747,6 +747,13 @@ TuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
 }
 
 static BOOL NTAPI
+TuiGetSelectionInfo(IN OUT PFRONTEND This,
+                    PCONSOLE_SELECTION_INFO pSelectionInfo)
+{
+    return TRUE;
+}
+
+static BOOL NTAPI
 TuiSetPalette(IN OUT PFRONTEND This,
               HPALETTE PaletteHandle,
               UINT PaletteUsage)
@@ -813,6 +820,7 @@ static FRONTEND_VTBL TuiVtbl =
     TuiChangeIcon,
     TuiGetConsoleWindowHandle,
     TuiGetLargestConsoleWindowSize,
+    TuiGetSelectionInfo,
     TuiSetPalette,
     TuiGetDisplayMode,
     TuiSetDisplayMode,

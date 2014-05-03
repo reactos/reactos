@@ -122,7 +122,6 @@ static ULONG WINAPI xmlnodemap_Release(
     {
         xmldoc_release( This->node->doc );
         if (This->enumvariant) IEnumVARIANT_Release(This->enumvariant);
-        release_dispex(&This->dispex);
         heap_free( This );
     }
 

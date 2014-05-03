@@ -20,7 +20,7 @@ extern ULONG gcEngFuncs;
 extern EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 
 
-DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
+DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl + 1];
 HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext = 0;
 

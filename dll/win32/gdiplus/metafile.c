@@ -35,6 +35,27 @@ typedef struct EmfPlusHeader
     DWORD LogicalDpiY;
 } EmfPlusHeader;
 
+typedef struct EmfPlusFillRects
+{
+    EmfPlusRecordHeader Header;
+    DWORD BrushID;
+    DWORD Count;
+} EmfPlusFillRects;
+
+typedef struct EmfPlusSetPageTransform
+{
+    EmfPlusRecordHeader Header;
+    REAL PageScale;
+} EmfPlusSetPageTransform;
+
+typedef struct EmfPlusRect
+{
+    SHORT X;
+    SHORT Y;
+    SHORT Width;
+    SHORT Height;
+} EmfPlusRect;
+
 static GpStatus METAFILE_AllocateRecord(GpMetafile *metafile, DWORD size, void **result)
 {
     DWORD size_needed;
@@ -211,6 +232,8 @@ GpStatus WINGDIPAPI GdipRecordMetafile(HDC hdc, EmfType type, GDIPCONST GpRectF 
     (*metafile)->image.picture = NULL;
     (*metafile)->image.flags   = ImageFlagsNone;
     (*metafile)->image.palette = NULL;
+    (*metafile)->image.xres = 72.0;
+    (*metafile)->image.yres = 72.0;
     (*metafile)->bounds = *frameRect;
     (*metafile)->unit = frameUnit;
     (*metafile)->metafile_type = type;
@@ -267,7 +290,11 @@ GpStatus METAFILE_GetGraphicsContext(GpMetafile* metafile, GpGraphics **result)
     stat = graphics_from_image((GpImage*)metafile, &metafile->record_graphics);
 
     if (stat == Ok)
+    {
         *result = metafile->record_graphics;
+        metafile->record_graphics->xres = 96.0;
+        metafile->record_graphics->yres = 96.0;
+    }
 
     return stat;
 }
@@ -290,6 +317,108 @@ GpStatus METAFILE_GetDC(GpMetafile* metafile, HDC *hdc)
     }
 
     *hdc = metafile->record_dc;
+
+    return Ok;
+}
+
+static BOOL is_integer_rect(const GpRectF *rect)
+{
+    SHORT x, y, width, height;
+    x = rect->X;
+    y = rect->Y;
+    width = rect->Width;
+    height = rect->Height;
+    if (rect->X != (REAL)x || rect->Y != (REAL)y ||
+        rect->Width != (REAL)width || rect->Height != (REAL)height)
+        return FALSE;
+    return TRUE;
+}
+
+GpStatus METAFILE_FillRectangles(GpMetafile* metafile, GpBrush* brush,
+    GDIPCONST GpRectF* rects, INT count)
+{
+    if (metafile->metafile_type == MetafileTypeEmfPlusOnly || metafile->metafile_type == MetafileTypeEmfPlusDual)
+    {
+        EmfPlusFillRects *record;
+        GpStatus stat;
+        BOOL integer_rects = TRUE;
+        int i;
+        DWORD brushid;
+        int flags = 0;
+
+        if (brush->bt == BrushTypeSolidColor)
+        {
+            flags |= 0x8000;
+            brushid = ((GpSolidFill*)brush)->color;
+        }
+        else
+        {
+            FIXME("brush serialization not implemented\n");
+            return NotImplemented;
+        }
+
+        for (i=0; i<count; i++)
+        {
+            if (!is_integer_rect(&rects[i]))
+            {
+                integer_rects = FALSE;
+                break;
+            }
+        }
+
+        if (integer_rects)
+            flags |= 0x4000;
+
+        stat = METAFILE_AllocateRecord(metafile,
+            sizeof(EmfPlusFillRects) + count * (integer_rects ? sizeof(EmfPlusRect) : sizeof(GpRectF)),
+            (void**)&record);
+        if (stat != Ok)
+            return stat;
+
+        record->Header.Type = EmfPlusRecordTypeFillRects;
+        record->Header.Flags = flags;
+        record->BrushID = brushid;
+        record->Count = count;
+
+        if (integer_rects)
+        {
+            EmfPlusRect *record_rects = (EmfPlusRect*)(record+1);
+            for (i=0; i<count; i++)
+            {
+                record_rects[i].X = (SHORT)rects[i].X;
+                record_rects[i].Y = (SHORT)rects[i].Y;
+                record_rects[i].Width = (SHORT)rects[i].Width;
+                record_rects[i].Height = (SHORT)rects[i].Height;
+            }
+        }
+        else
+            memcpy(record+1, rects, sizeof(GpRectF) * count);
+
+        METAFILE_WriteRecords(metafile);
+    }
+
+    return Ok;
+}
+
+GpStatus METAFILE_SetPageTransform(GpMetafile* metafile, GpUnit unit, REAL scale)
+{
+    if (metafile->metafile_type == MetafileTypeEmfPlusOnly || metafile->metafile_type == MetafileTypeEmfPlusDual)
+    {
+        EmfPlusSetPageTransform *record;
+        GpStatus stat;
+
+        stat = METAFILE_AllocateRecord(metafile,
+            sizeof(EmfPlusSetPageTransform),
+            (void**)&record);
+        if (stat != Ok)
+            return stat;
+
+        record->Header.Type = EmfPlusRecordTypeSetPageTransform;
+        record->Header.Flags = unit;
+        record->PageScale = scale;
+
+        METAFILE_WriteRecords(metafile);
+    }
 
     return Ok;
 }
@@ -368,9 +497,40 @@ static void METAFILE_PlaybackReleaseDC(GpMetafile *metafile)
     }
 }
 
+static GpStatus METAFILE_PlaybackUpdateWorldTransform(GpMetafile *metafile)
+{
+    GpMatrix *real_transform;
+    GpStatus stat;
+
+    stat = GdipCreateMatrix3(&metafile->src_rect, metafile->playback_points, &real_transform);
+
+    if (stat == Ok)
+    {
+        REAL scale = units_to_pixels(1.0, metafile->page_unit, 96.0);
+
+        if (metafile->page_unit != UnitDisplay)
+            scale *= metafile->page_scale;
+
+        stat = GdipScaleMatrix(real_transform, scale, scale, MatrixOrderPrepend);
+
+        if (stat == Ok)
+            stat = GdipMultiplyMatrix(real_transform, metafile->world_transform, MatrixOrderPrepend);
+
+        if (stat == Ok)
+            stat = GdipSetWorldTransform(metafile->playback_graphics, real_transform);
+
+        GdipDeleteMatrix(real_transform);
+    }
+
+    return stat;
+}
+
 GpStatus WINGDIPAPI GdipPlayMetafileRecord(GDIPCONST GpMetafile *metafile,
     EmfPlusRecordType recordType, UINT flags, UINT dataSize, GDIPCONST BYTE *data)
 {
+    GpStatus stat;
+    GpMetafile *real_metafile = (GpMetafile*)metafile;
+
     TRACE("(%p,%x,%x,%d,%p)\n", metafile, recordType, flags, dataSize, data);
 
     if (!metafile || (dataSize && !data) || !metafile->playback_graphics)
@@ -402,6 +562,8 @@ GpStatus WINGDIPAPI GdipPlayMetafileRecord(GDIPCONST GpMetafile *metafile,
     }
     else
     {
+        EmfPlusRecordHeader *header = (EmfPlusRecordHeader*)(data)-1;
+
         METAFILE_PlaybackReleaseDC((GpMetafile*)metafile);
 
         switch(recordType)
@@ -412,6 +574,85 @@ GpStatus WINGDIPAPI GdipPlayMetafileRecord(GDIPCONST GpMetafile *metafile,
         case EmfPlusRecordTypeGetDC:
             METAFILE_PlaybackGetDC((GpMetafile*)metafile);
             break;
+        case EmfPlusRecordTypeFillRects:
+        {
+            EmfPlusFillRects *record = (EmfPlusFillRects*)header;
+            GpBrush *brush, *temp_brush=NULL;
+            GpRectF *rects, *temp_rects=NULL;
+
+            if (dataSize + sizeof(EmfPlusRecordHeader) < sizeof(EmfPlusFillRects))
+                return InvalidParameter;
+
+            if (flags & 0x4000)
+            {
+                if (dataSize + sizeof(EmfPlusRecordHeader) < sizeof(EmfPlusFillRects) + sizeof(EmfPlusRect) * record->Count)
+                    return InvalidParameter;
+            }
+            else
+            {
+                if (dataSize + sizeof(EmfPlusRecordHeader) < sizeof(EmfPlusFillRects) + sizeof(GpRectF) * record->Count)
+                    return InvalidParameter;
+            }
+
+            if (flags & 0x8000)
+            {
+                stat = GdipCreateSolidFill((ARGB)record->BrushID, (GpSolidFill**)&temp_brush);
+                brush = temp_brush;
+            }
+            else
+            {
+                FIXME("brush deserialization not implemented\n");
+                return NotImplemented;
+            }
+
+            if (stat == Ok)
+            {
+                if (flags & 0x4000)
+                {
+                    EmfPlusRect *int_rects = (EmfPlusRect*)(record+1);
+                    int i;
+
+                    rects = temp_rects = GdipAlloc(sizeof(GpRectF) * record->Count);
+                    if (rects)
+                    {
+                        for (i=0; i<record->Count; i++)
+                        {
+                            rects[i].X = int_rects[i].X;
+                            rects[i].Y = int_rects[i].Y;
+                            rects[i].Width = int_rects[i].Width;
+                            rects[i].Height = int_rects[i].Height;
+                        }
+                    }
+                    else
+                        stat = OutOfMemory;
+                }
+                else
+                    rects = (GpRectF*)(record+1);
+            }
+
+            if (stat == Ok)
+            {
+                stat = GdipFillRectangles(metafile->playback_graphics, brush, rects, record->Count);
+            }
+
+            GdipDeleteBrush(temp_brush);
+            GdipFree(temp_rects);
+
+            return stat;
+        }
+        case EmfPlusRecordTypeSetPageTransform:
+        {
+            EmfPlusSetPageTransform *record = (EmfPlusSetPageTransform*)header;
+            GpUnit unit = (GpUnit)flags;
+
+            if (dataSize + sizeof(EmfPlusRecordHeader) < sizeof(EmfPlusSetPageTransform))
+                return InvalidParameter;
+
+            real_metafile->page_unit = unit;
+            real_metafile->page_scale = record->PageScale;
+
+            return METAFILE_PlaybackUpdateWorldTransform(real_metafile);
+        }
         default:
             FIXME("Not implemented for record type %x\n", recordType);
             return NotImplemented;
@@ -486,6 +727,7 @@ GpStatus WINGDIPAPI GdipEnumerateMetafileSrcRectDestPoints(GpGraphics *graphics,
     struct enum_metafile_data data;
     GpStatus stat;
     GpMetafile *real_metafile = (GpMetafile*)metafile; /* whoever made this const was joking */
+    GraphicsContainer state;
 
     TRACE("(%p,%p,%p,%i,%p,%i,%p,%p,%p)\n", graphics, metafile,
         destPoints, count, srcRect, srcUnit, callback, callbackData,
@@ -510,19 +752,46 @@ GpStatus WINGDIPAPI GdipEnumerateMetafileSrcRectDestPoints(GpGraphics *graphics,
 
     real_metafile->playback_graphics = graphics;
     real_metafile->playback_dc = NULL;
+    real_metafile->src_rect = *srcRect;
 
     memcpy(real_metafile->playback_points, destPoints, sizeof(PointF) * 3);
     stat = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, real_metafile->playback_points, 3);
 
-    if (stat == Ok && (metafile->metafile_type == MetafileTypeEmf ||
-        metafile->metafile_type == MetafileTypeWmfPlaceable ||
-        metafile->metafile_type == MetafileTypeWmf))
-        stat = METAFILE_PlaybackGetDC((GpMetafile*)metafile);
+    if (stat == Ok)
+        stat = GdipBeginContainer2(graphics, &state);
 
     if (stat == Ok)
-        EnumEnhMetaFile(0, metafile->hemf, enum_metafile_proc, &data, NULL);
+    {
+        stat = GdipSetPageScale(graphics, 1.0);
 
-    METAFILE_PlaybackReleaseDC((GpMetafile*)metafile);
+        if (stat == Ok)
+            stat = GdipSetPageUnit(graphics, UnitPixel);
+
+        if (stat == Ok)
+            stat = GdipCreateMatrix(&real_metafile->world_transform);
+
+        if (stat == Ok)
+        {
+            real_metafile->page_unit = UnitDisplay;
+            real_metafile->page_scale = 1.0;
+            stat = METAFILE_PlaybackUpdateWorldTransform(real_metafile);
+        }
+
+        if (stat == Ok && (metafile->metafile_type == MetafileTypeEmf ||
+            metafile->metafile_type == MetafileTypeWmfPlaceable ||
+            metafile->metafile_type == MetafileTypeWmf))
+            stat = METAFILE_PlaybackGetDC(real_metafile);
+
+        if (stat == Ok)
+            EnumEnhMetaFile(0, metafile->hemf, enum_metafile_proc, &data, NULL);
+
+        METAFILE_PlaybackReleaseDC(real_metafile);
+
+        GdipDeleteMatrix(real_metafile->world_transform);
+        real_metafile->world_transform = NULL;
+
+        GdipEndContainer(graphics, state);
+    }
 
     real_metafile->playback_graphics = NULL;
 
@@ -623,9 +892,268 @@ static int CALLBACK get_metafile_type_proc(HDC hDC, HANDLETABLE *lpHTable, const
     return FALSE;
 }
 
-MetafileType METAFILE_GetEmfType(HENHMETAFILE hemf)
+static MetafileType METAFILE_GetEmfType(HENHMETAFILE hemf)
 {
     MetafileType result = MetafileTypeInvalid;
     EnumEnhMetaFile(NULL, hemf, get_metafile_type_proc, &result, NULL);
     return result;
+}
+
+GpStatus WINGDIPAPI GdipGetMetafileHeaderFromMetafile(GpMetafile * metafile,
+    MetafileHeader * header)
+{
+    static int calls;
+
+    TRACE("(%p, %p)\n", metafile, header);
+
+    if(!metafile || !header)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    memset(header, 0, sizeof(MetafileHeader));
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetMetafileHeaderFromEmf(HENHMETAFILE hEmf,
+    MetafileHeader *header)
+{
+    static int calls;
+
+    if(!hEmf || !header)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    memset(header, 0, sizeof(MetafileHeader));
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetMetafileHeaderFromFile(GDIPCONST WCHAR *filename,
+    MetafileHeader *header)
+{
+    static int calls;
+
+    TRACE("(%s,%p)\n", debugstr_w(filename), header);
+
+    if(!filename || !header)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    memset(header, 0, sizeof(MetafileHeader));
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetMetafileHeaderFromStream(IStream *stream,
+    MetafileHeader *header)
+{
+    static int calls;
+
+    TRACE("(%p,%p)\n", stream, header);
+
+    if(!stream || !header)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    memset(header, 0, sizeof(MetafileHeader));
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipCreateMetafileFromEmf(HENHMETAFILE hemf, BOOL delete,
+    GpMetafile **metafile)
+{
+    ENHMETAHEADER header;
+    MetafileType metafile_type;
+
+    TRACE("(%p,%i,%p)\n", hemf, delete, metafile);
+
+    if(!hemf || !metafile)
+        return InvalidParameter;
+
+    if (GetEnhMetaFileHeader(hemf, sizeof(header), &header) == 0)
+        return GenericError;
+
+    metafile_type = METAFILE_GetEmfType(hemf);
+
+    if (metafile_type == MetafileTypeInvalid)
+        return GenericError;
+
+    *metafile = GdipAlloc(sizeof(GpMetafile));
+    if (!*metafile)
+        return OutOfMemory;
+
+    (*metafile)->image.type = ImageTypeMetafile;
+    (*metafile)->image.format = ImageFormatEMF;
+    (*metafile)->image.frame_count = 1;
+    (*metafile)->image.xres = (REAL)header.szlDevice.cx;
+    (*metafile)->image.yres = (REAL)header.szlDevice.cy;
+    (*metafile)->bounds.X = (REAL)header.rclBounds.left;
+    (*metafile)->bounds.Y = (REAL)header.rclBounds.top;
+    (*metafile)->bounds.Width = (REAL)(header.rclBounds.right - header.rclBounds.left);
+    (*metafile)->bounds.Height = (REAL)(header.rclBounds.bottom - header.rclBounds.top);
+    (*metafile)->unit = UnitPixel;
+    (*metafile)->metafile_type = metafile_type;
+    (*metafile)->hemf = hemf;
+    (*metafile)->preserve_hemf = !delete;
+
+    TRACE("<-- %p\n", *metafile);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipCreateMetafileFromWmf(HMETAFILE hwmf, BOOL delete,
+    GDIPCONST WmfPlaceableFileHeader * placeable, GpMetafile **metafile)
+{
+    UINT read;
+    BYTE *copy;
+    HENHMETAFILE hemf;
+    GpStatus retval = Ok;
+
+    TRACE("(%p, %d, %p, %p)\n", hwmf, delete, placeable, metafile);
+
+    if(!hwmf || !metafile || !placeable)
+        return InvalidParameter;
+
+    *metafile = NULL;
+    read = GetMetaFileBitsEx(hwmf, 0, NULL);
+    if(!read)
+        return GenericError;
+    copy = GdipAlloc(read);
+    GetMetaFileBitsEx(hwmf, read, copy);
+
+    hemf = SetWinMetaFileBits(read, copy, NULL, NULL);
+    GdipFree(copy);
+
+    /* FIXME: We should store and use hwmf instead of converting to hemf */
+    retval = GdipCreateMetafileFromEmf(hemf, TRUE, metafile);
+
+    if (retval == Ok)
+    {
+        (*metafile)->image.xres = (REAL)placeable->Inch;
+        (*metafile)->image.yres = (REAL)placeable->Inch;
+        (*metafile)->bounds.X = ((REAL)placeable->BoundingBox.Left) / ((REAL)placeable->Inch);
+        (*metafile)->bounds.Y = ((REAL)placeable->BoundingBox.Top) / ((REAL)placeable->Inch);
+        (*metafile)->bounds.Width = (REAL)(placeable->BoundingBox.Right -
+                                           placeable->BoundingBox.Left);
+        (*metafile)->bounds.Height = (REAL)(placeable->BoundingBox.Bottom -
+                                            placeable->BoundingBox.Top);
+        (*metafile)->metafile_type = MetafileTypeWmfPlaceable;
+        (*metafile)->image.format = ImageFormatWMF;
+
+        if (delete) DeleteMetaFile(hwmf);
+    }
+    else
+        DeleteEnhMetaFile(hemf);
+    return retval;
+}
+
+GpStatus WINGDIPAPI GdipCreateMetafileFromWmfFile(GDIPCONST WCHAR *file,
+    GDIPCONST WmfPlaceableFileHeader * placeable, GpMetafile **metafile)
+{
+    HMETAFILE hmf = GetMetaFileW(file);
+
+    TRACE("(%s, %p, %p)\n", debugstr_w(file), placeable, metafile);
+
+    if(!hmf) return InvalidParameter;
+
+    return GdipCreateMetafileFromWmf(hmf, TRUE, placeable, metafile);
+}
+
+GpStatus WINGDIPAPI GdipCreateMetafileFromFile(GDIPCONST WCHAR *file,
+    GpMetafile **metafile)
+{
+    FIXME("(%p, %p): stub\n", file, metafile);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipCreateMetafileFromStream(IStream *stream,
+    GpMetafile **metafile)
+{
+    FIXME("(%p, %p): stub\n", stream, metafile);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetMetafileDownLevelRasterizationLimit(GpMetafile *metafile,
+    UINT limitDpi)
+{
+    static int calls;
+
+    TRACE("(%p,%u)\n", metafile, limitDpi);
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipConvertToEmfPlus(const GpGraphics* ref,
+    GpMetafile* metafile, BOOL* succ, EmfType emfType,
+    const WCHAR* description, GpMetafile** out_metafile)
+{
+    static int calls;
+
+    TRACE("(%p,%p,%p,%u,%s,%p)\n", ref, metafile, succ, emfType,
+        debugstr_w(description), out_metafile);
+
+    if(!ref || !metafile || !out_metafile)
+        return InvalidParameter;
+
+    *succ = FALSE;
+    *out_metafile = NULL;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipEmfToWmfBits(HENHMETAFILE hemf, UINT cbData16,
+    LPBYTE pData16, INT iMapMode, INT eFlags)
+{
+    FIXME("(%p, %d, %p, %d, %d): stub\n", hemf, cbData16, pData16, iMapMode, eFlags);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipRecordMetafileFileName(GDIPCONST WCHAR* fileName,
+                            HDC hdc, EmfType type, GDIPCONST GpRectF *pFrameRect,
+                            MetafileFrameUnit frameUnit, GDIPCONST WCHAR *desc,
+                            GpMetafile **metafile)
+{
+    FIXME("%s %p %d %p %d %s %p stub!\n", debugstr_w(fileName), hdc, type, pFrameRect,
+                                 frameUnit, debugstr_w(desc), metafile);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipRecordMetafileFileNameI(GDIPCONST WCHAR* fileName, HDC hdc, EmfType type,
+                            GDIPCONST GpRect *pFrameRect, MetafileFrameUnit frameUnit,
+                            GDIPCONST WCHAR *desc, GpMetafile **metafile)
+{
+    FIXME("%s %p %d %p %d %s %p stub!\n", debugstr_w(fileName), hdc, type, pFrameRect,
+                                 frameUnit, debugstr_w(desc), metafile);
+
+    return NotImplemented;
+}
+
+/*****************************************************************************
+ * GdipConvertToEmfPlusToFile [GDIPLUS.@]
+ */
+
+GpStatus WINGDIPAPI GdipConvertToEmfPlusToFile(const GpGraphics* refGraphics,
+                                               GpMetafile* metafile, BOOL* conversionSuccess,
+                                               const WCHAR* filename, EmfType emfType,
+                                               const WCHAR* description, GpMetafile** out_metafile)
+{
+    FIXME("stub: %p, %p, %p, %p, %u, %p, %p\n", refGraphics, metafile, conversionSuccess, filename, emfType, description, out_metafile);
+    return NotImplemented;
 }
