@@ -685,21 +685,8 @@ i8042Pnp(
             {
                 case BusRelations:
                 {
-                    PDEVICE_RELATIONS DeviceRelations;
-
                     TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-                    DeviceRelations = ExAllocatePoolWithTag(PagedPool,
-                                                            sizeof(DEVICE_RELATIONS),
-                                                            I8042PRT_TAG);
-                    if (DeviceRelations)
-                    {
-                        DeviceRelations->Count = 0;
-                        Information = (ULONG_PTR)DeviceRelations;
-                        Status = STATUS_SUCCESS;
-                    }
-                    else
-                        Status = STATUS_INSUFFICIENT_RESOURCES;
-                    break;
+                    return ForwardIrpAndForget(DeviceObject, Irp);
                 }
                 case RemovalRelations:
                 {
@@ -709,7 +696,6 @@ i8042Pnp(
                 default:
                     ERR_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                         Stack->Parameters.QueryDeviceRelations.Type);
-                    ASSERT(FALSE);
                     return ForwardIrpAndForget(DeviceObject, Irp);
             }
             break;
@@ -717,17 +703,12 @@ i8042Pnp(
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0x0d */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
-            /* Nothing to do */
-            Status = Irp->IoStatus.Status;
-            break;
+            return ForwardIrpAndForget(DeviceObject, Irp);
         }
         case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
-            /* Nothing much to tell */
-            Information = 0;
-            Status = STATUS_SUCCESS;
-            break;
+            return ForwardIrpAndForget(DeviceObject, Irp);
         }
         default:
         {

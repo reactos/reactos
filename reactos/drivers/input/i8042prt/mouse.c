@@ -19,6 +19,7 @@
 /* FUNCTIONS *****************************************************************/
 
 static KDEFERRED_ROUTINE i8042MouDpcRoutine;
+static KDEFERRED_ROUTINE i8042DpcRoutineMouseTimeout;
 
 /*
  * These functions are callbacks for filter driver custom interrupt
@@ -346,7 +347,6 @@ i8042MouDpcRoutine(
  * I'll just send the 'disable mouse port' command to the controller
  * and say the mouse doesn't exist.
  */
-static KDEFERRED_ROUTINE i8042DpcRoutineMouseTimeout;
 static VOID NTAPI
 i8042DpcRoutineMouseTimeout(
 	IN PKDPC Dpc,
