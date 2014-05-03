@@ -196,8 +196,8 @@ int main(int argc, char** argv)
 	case 3:
 		clientMode = *++argv;
 		if (strcmp(clientMode,"-c") != 0) {
-			clientMode = NULL;
 			fprintf(stderr,"Invalid option: %s\n", clientMode);
+			clientMode = NULL;
 			res = -6;
 		}
 		//fall through
