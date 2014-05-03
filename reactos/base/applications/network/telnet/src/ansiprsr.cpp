@@ -709,7 +709,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 		case 'n':
 			if (iCurrentParam == 1 && iParam[0]==5) {
 				// report the cursor position
-				Network.WriteString("\x1B[0n", 6);
+				Network.WriteString("\x1B[0n", 4);
 				break;
 			}
 			if (iCurrentParam == 1 && iParam[0]==6){
