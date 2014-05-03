@@ -479,7 +479,10 @@ StartProcedure(
         
         /* Start the mouse */
         Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
-        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
+        /* HACK: the mouse has already been reset in i8042DetectMouse. This second
+           reset prevents some touchpads/mice from working (Dell D531, D600).
+           See CORE-6901
+        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE); */
         KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
     }
 
