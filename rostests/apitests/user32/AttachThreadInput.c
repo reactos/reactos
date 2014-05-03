@@ -217,9 +217,9 @@ static void cleanup_attachments()
     int i,j;
     BOOL ret;
 
-    for(i = 0; i< 4; i++);
+    for(i = 0; i< 4; i++)
     {
-        for(j = 0; j< 4; j++);
+        for(j = 0; j< 4; j++)
         {
             ret = AttachThreadInput(data[i].tid,data[j].tid, FALSE);
             ok(ret==0, "expected AttachThreadInput to fail\n");
