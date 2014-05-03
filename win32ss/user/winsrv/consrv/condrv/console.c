@@ -187,11 +187,10 @@ RemoveConsoleByPointer(IN PCONSOLE Console)
 }
 
 
-/* For resetting the frontend - defined in dummyfrontend.c */
-VOID ResetFrontEnd(IN PCONSOLE Console);
-
-
 /* PRIVATE FUNCTIONS **********************************************************/
+
+/* For resetting the terminal - defined in dummyterm.c */
+VOID ResetTerminal(IN PCONSOLE Console);
 
 VOID NTAPI
 ConDrvPause(PCONSOLE Console)
@@ -417,12 +416,12 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->ReferenceCount = 0;
     InitializeCriticalSection(&Console->Lock);
 
-    /* Initialize the frontend interface */
-    ResetFrontEnd(Console);
+    /* Initialize the terminal interface */
+    ResetTerminal(Console);
 
     memcpy(Console->Colors, ConsoleInfo->Colors, sizeof(ConsoleInfo->Colors));
     Console->ConsoleSize = ConsoleInfo->ConsoleSize;
-    Console->FixedSize   = FALSE; // Value by default; is reseted by the front-ends if needed.
+    Console->FixedSize   = FALSE; // Value by default; is reseted by the terminals if needed.
 
     /*
      * Initialize the input buffer
@@ -538,63 +537,63 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
 }
 
 NTSTATUS NTAPI
-ConDrvRegisterFrontEnd(IN PCONSOLE Console,
-                       IN PFRONTEND FrontEnd)
+ConDrvRegisterTerminal(IN PCONSOLE Console,
+                       IN PTERMINAL Terminal)
 {
     NTSTATUS Status;
 
-    if (Console == NULL || FrontEnd == NULL)
+    if (Console == NULL || Terminal == NULL)
         return STATUS_INVALID_PARAMETER;
 
     /* FIXME: Lock the console before ?? */
 
     /*
-     * Attach the frontend to the console. Use now the FrontEndIFace of the console,
-     * and not the user-defined temporary FrontEnd pointer.
+     * Attach the terminal to the console. Use now the TermIFace of the console,
+     * and not the user-defined temporary Terminal pointer.
      */
-    Console->FrontEndIFace = *FrontEnd;
-    Console->FrontEndIFace.Console = Console;
+    Console->TermIFace = *Terminal;
+    Console->TermIFace.Console = Console;
 
-    /* Initialize the frontend AFTER having attached it to the console */
-    DPRINT("Finish initialization of frontend\n");
-    Status = Console->FrontEndIFace.Vtbl->InitFrontEnd(&Console->FrontEndIFace, Console);
+    /* Initialize the terminal AFTER having attached it to the console */
+    DPRINT("Finish initialization of terminal\n");
+    Status = Console->TermIFace.Vtbl->InitTerminal(&Console->TermIFace, Console);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("FrontEnd initialization failed, Status = 0x%08lx\n", Status);
+        DPRINT1("Terminal initialization failed, Status = 0x%08lx\n", Status);
 
-        /* We failed, detach the frontend from the console */
-        FrontEnd->Console = NULL; // For the caller
-        ResetFrontEnd(Console);
+        /* We failed, detach the terminal from the console */
+        Terminal->Console = NULL; // For the caller
+        ResetTerminal(Console);
 
         return Status;
     }
 
     /* Copy buffer contents to screen */
-    // FrontEnd.Draw();
+    // Terminal.Draw();
     // ConioDrawConsole(Console);
     DPRINT("Console drawn\n");
 
-    DPRINT("Terminal FrontEnd initialization done\n");
+    DPRINT("Terminal initialization done\n");
     return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
-ConDrvDeregisterFrontEnd(IN PCONSOLE Console)
+ConDrvDeregisterTerminal(IN PCONSOLE Console)
 {
     if (Console == NULL) return STATUS_INVALID_PARAMETER;
 
     /* FIXME: Lock the console before ?? */
 
-    /* Deinitialize the frontend BEFORE detaching it from the console */
-    Console->FrontEndIFace.Vtbl->DeinitFrontEnd(&Console->FrontEndIFace/*, Console*/);
+    /* Deinitialize the terminal BEFORE detaching it from the console */
+    Console->TermIFace.Vtbl->DeinitTerminal(&Console->TermIFace/*, Console*/);
 
     /*
-     * Detach the frontend from the console:
-     * reinitialize the frontend interface.
+     * Detach the terminal from the console:
+     * reinitialize the terminal interface.
      */
-    ResetFrontEnd(Console);
+    ResetTerminal(Console);
 
-    DPRINT("Terminal FrontEnd unregistered\n");
+    DPRINT("Terminal unregistered\n");
     return STATUS_SUCCESS;
 }
 
@@ -643,7 +642,7 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
 
     /* Cleanup the UI-oriented part */
     DPRINT("Deregister console\n");
-    ConDrvDeregisterFrontEnd(Console);
+    ConDrvDeregisterTerminal(Console);
     DPRINT("Console deregistered\n");
 
     /***

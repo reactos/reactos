@@ -30,7 +30,7 @@ typedef struct _FRONTEND_VTBL
                              SMALL_RECT* Region);
     /* Interface used only for text-mode screen buffers */
     VOID (NTAPI *WriteStream)(IN OUT PFRONTEND This,
-                              SMALL_RECT* Block,
+                              SMALL_RECT* Region,
                               SHORT CursorStartX,
                               SHORT CursorStartY,
                               UINT ScrolledLines,

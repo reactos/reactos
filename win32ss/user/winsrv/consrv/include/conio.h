@@ -186,16 +186,16 @@ typedef struct _TERMINAL_VTBL
     /*
      * Internal interface (functions called by the console server only)
      */
-    NTSTATUS (NTAPI *InitFrontEnd)(IN OUT PTERMINAL This,
+    NTSTATUS (NTAPI *InitTerminal)(IN OUT PTERMINAL This,
                                    IN struct _CONSOLE* Console);
-    VOID (NTAPI *DeinitFrontEnd)(IN OUT PTERMINAL This);
+    VOID (NTAPI *DeinitTerminal)(IN OUT PTERMINAL This);
 
     /* Interface used for both text-mode and graphics screen buffers */
     VOID (NTAPI *DrawRegion)(IN OUT PTERMINAL This,
                              SMALL_RECT* Region);
     /* Interface used only for text-mode screen buffers */
     VOID (NTAPI *WriteStream)(IN OUT PTERMINAL This,
-                              SMALL_RECT* Block,
+                              SMALL_RECT* Region,
                               SHORT CursorStartX,
                               SHORT CursorStartY,
                               UINT ScrolledLines,
@@ -211,47 +211,27 @@ typedef struct _TERMINAL_VTBL
     VOID (NTAPI *SetActiveScreenBuffer)(IN OUT PTERMINAL This);
     VOID (NTAPI *ReleaseScreenBuffer)(IN OUT PTERMINAL This,
                                       IN PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (NTAPI *ProcessKeyCallback)(IN OUT PTERMINAL This,
-                                     MSG* msg,
-                                     BYTE KeyStateMenu,
-                                     DWORD ShiftState,
-                                     UINT VirtualKeyCode,
-                                     BOOL Down);
-    VOID (NTAPI *RefreshInternalInfo)(IN OUT PTERMINAL This);
 
     /*
      * External interface (functions corresponding to the Console API)
      */
     VOID (NTAPI *ChangeTitle)(IN OUT PTERMINAL This);
-    BOOL (NTAPI *ChangeIcon)(IN OUT PTERMINAL This,
-                             HICON IconHandle);
-    HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PTERMINAL This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PTERMINAL This,
                                               PCOORD pSize);
-    BOOL (NTAPI *GetSelectionInfo)(IN OUT PTERMINAL This,
-                                   PCONSOLE_SELECTION_INFO pSelectionInfo);
+    // BOOL (NTAPI *GetSelectionInfo)(IN OUT PTERMINAL This,
+                                   // PCONSOLE_SELECTION_INFO pSelectionInfo);
     BOOL (NTAPI *SetPalette)(IN OUT PTERMINAL This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);
-    ULONG (NTAPI *GetDisplayMode)(IN OUT PTERMINAL This);
-    BOOL  (NTAPI *SetDisplayMode)(IN OUT PTERMINAL This,
-                                  ULONG NewMode);
     INT   (NTAPI *ShowMouseCursor)(IN OUT PTERMINAL This,
                                    BOOL Show);
-    BOOL  (NTAPI *SetMouseCursor)(IN OUT PTERMINAL This,
-                                  HCURSOR CursorHandle);
-    HMENU (NTAPI *MenuControl)(IN OUT PTERMINAL This,
-                               UINT CmdIdLow,
-                               UINT CmdIdHigh);
-    BOOL  (NTAPI *SetMenuClose)(IN OUT PTERMINAL This,
-                                BOOL Enable);
 
 #if 0 // Possible future front-end interface
-    BOOL (NTAPI *GetFrontEndProperty)(IN OUT PTERMINAL This,
+    BOOL (NTAPI *GetTerminalProperty)(IN OUT PTERMINAL This,
                                       ULONG Flag,
                                       PVOID Info,
                                       ULONG Size);
-    BOOL (NTAPI *SetFrontEndProperty)(IN OUT PTERMINAL This,
+    BOOL (NTAPI *SetTerminalProperty)(IN OUT PTERMINAL This,
                                       ULONG Flag,
                                       PVOID Info /*,
                                       ULONG Size */);

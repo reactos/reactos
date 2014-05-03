@@ -10,6 +10,7 @@
 
 #include <consrv.h>
 
+// #include "frontends/gui/guiterm.h"
 #ifdef TUITERM_COMPILE
 #include "frontends/tui/tuiterm.h"
 #endif
@@ -81,8 +82,7 @@ struct
 //  {"Not found", 0, NULL}
 };
 
-
-/* static */ NTSTATUS
+static NTSTATUS
 ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
                    IN OUT PCONSOLE_INFO ConsoleInfo,
                    IN OUT PVOID ExtraConsoleInfo,
@@ -121,7 +121,7 @@ ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
     return Status;
 }
 
-/* static */ NTSTATUS
+static NTSTATUS
 ConSrvUnloadFrontEnd(IN PFRONTEND FrontEnd)
 {
     if (FrontEnd == NULL) return STATUS_INVALID_PARAMETER;
@@ -129,33 +129,105 @@ ConSrvUnloadFrontEnd(IN PFRONTEND FrontEnd)
     return FrontEnd->UnloadFrontEnd(FrontEnd);
 }
 
+// See after...
+static TERMINAL_VTBL ConSrvTermVtbl;
 
-/* DUMMY FRONTEND INTERFACE ***************************************************/
-
-#if 0
-
-static NTSTATUS NTAPI
-DummyInitFrontEnd(IN OUT PFRONTEND This,
-                  IN PCONSOLE Console)
+NTSTATUS NTAPI
+ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
+                   IN OUT PCONSOLE_INFO ConsoleInfo,
+                   IN OUT PVOID ExtraConsoleInfo,
+                   IN ULONG ProcessId)
 {
-    /* Load some settings ?? */
+    NTSTATUS Status;
+    PFRONTEND FrontEnd;
+
+    /* Load a suitable frontend for the ConSrv terminal */
+    FrontEnd = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(*FrontEnd));
+    if (!FrontEnd) return STATUS_NO_MEMORY;
+
+    Status = ConSrvLoadFrontEnd(FrontEnd,
+                                ConsoleInfo,
+                                ExtraConsoleInfo,
+                                ProcessId);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CONSRV: Failed to initialize a frontend, Status = 0x%08lx\n", Status);
+        ConsoleFreeHeap(FrontEnd);
+        return Status;
+    }
+    DPRINT("CONSRV: Frontend initialized\n");
+
+    /* Initialize the ConSrv terminal */
+    Terminal->Vtbl = &ConSrvTermVtbl;
+    // Terminal->Console will be initialized by ConDrvRegisterTerminal
+    Terminal->Data = FrontEnd; /* We store the frontend pointer in the terminal private data */
+
     return STATUS_SUCCESS;
 }
 
-static VOID NTAPI
-DummyDeinitFrontEnd(IN OUT PFRONTEND This)
+NTSTATUS NTAPI
+ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal)
 {
-    /* Free some settings ?? */
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFRONTEND FrontEnd = Terminal->Data;
+
+    /* Reset the ConSrv terminal */
+    Terminal->Data = NULL;
+    Terminal->Vtbl = NULL;
+
+    /* Unload the frontend */
+    if (FrontEnd != NULL)
+    {
+        Status = ConSrvUnloadFrontEnd(FrontEnd);
+        ConsoleFreeHeap(FrontEnd);
+    }
+
+    return Status;
+}
+
+
+/* CONSRV TERMINAL INTERFACE **************************************************/
+
+static NTSTATUS NTAPI
+ConSrvTermInitTerminal(IN OUT PTERMINAL This,
+                  IN PCONSOLE Console)
+{
+    NTSTATUS Status;
+    PFRONTEND FrontEnd = This->Data;
+
+    /* Initialize the console pointer for our frontend */
+    FrontEnd->Console = Console;
+
+    /** HACK HACK!! Copy FrontEnd into the console!! **/
+    DPRINT1("Using FrontEndIFace HACK(1), should be removed after proper implementation!\n");
+    Console->FrontEndIFace = *FrontEnd;
+
+    Status = FrontEnd->Vtbl->InitFrontEnd(FrontEnd, FrontEnd->Console);
+
+    /** HACK HACK!! Be sure FrontEndIFace is correctly updated in the console!! **/
+    DPRINT1("Using FrontEndIFace HACK(2), should be removed after proper implementation!\n");
+    Console->FrontEndIFace = *FrontEnd;
+
+    return Status;
 }
 
 static VOID NTAPI
-DummyDrawRegion(IN OUT PFRONTEND This,
+ConSrvTermDeinitTerminal(IN OUT PTERMINAL This)
+{
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->DeinitFrontEnd(FrontEnd);
+}
+
+static VOID NTAPI
+ConSrvTermDrawRegion(IN OUT PTERMINAL This,
                 SMALL_RECT* Region)
 {
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->DrawRegion(FrontEnd, Region);
 }
 
 static VOID NTAPI
-DummyWriteStream(IN OUT PFRONTEND This,
+ConSrvTermWriteStream(IN OUT PTERMINAL This,
                  SMALL_RECT* Region,
                  SHORT CursorStartX,
                  SHORT CursorStartY,
@@ -163,164 +235,120 @@ DummyWriteStream(IN OUT PFRONTEND This,
                  PWCHAR Buffer,
                  UINT Length)
 {
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->WriteStream(FrontEnd,
+                                Region,
+                                CursorStartX,
+                                CursorStartY,
+                                ScrolledLines,
+                                Buffer,
+                                Length);
 }
 
 static BOOL NTAPI
-DummySetCursorInfo(IN OUT PFRONTEND This,
-                   PCONSOLE_SCREEN_BUFFER Buff)
+ConSrvTermSetCursorInfo(IN OUT PTERMINAL This,
+                   PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
-    return TRUE;
+    PFRONTEND FrontEnd = This->Data;
+    return FrontEnd->Vtbl->SetCursorInfo(FrontEnd, ScreenBuffer);
 }
 
 static BOOL NTAPI
-DummySetScreenInfo(IN OUT PFRONTEND This,
-                   PCONSOLE_SCREEN_BUFFER Buff,
+ConSrvTermSetScreenInfo(IN OUT PTERMINAL This,
+                   PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                    SHORT OldCursorX,
                    SHORT OldCursorY)
 {
-    return TRUE;
+    PFRONTEND FrontEnd = This->Data;
+    return FrontEnd->Vtbl->SetScreenInfo(FrontEnd,
+                                         ScreenBuffer,
+                                         OldCursorX,
+                                         OldCursorY);
 }
 
 static VOID NTAPI
-DummyResizeTerminal(IN OUT PFRONTEND This)
+ConSrvTermResizeTerminal(IN OUT PTERMINAL This)
 {
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->ResizeTerminal(FrontEnd);
 }
 
 static VOID NTAPI
-DummySetActiveScreenBuffer(IN OUT PFRONTEND This)
+ConSrvTermSetActiveScreenBuffer(IN OUT PTERMINAL This)
 {
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->SetActiveScreenBuffer(FrontEnd);
 }
 
 static VOID NTAPI
-DummyReleaseScreenBuffer(IN OUT PFRONTEND This,
+ConSrvTermReleaseScreenBuffer(IN OUT PTERMINAL This,
                          IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
-}
-
-static BOOL NTAPI
-DummyProcessKeyCallback(IN OUT PFRONTEND This,
-                        MSG* msg,
-                        BYTE KeyStateMenu,
-                        DWORD ShiftState,
-                        UINT VirtualKeyCode,
-                        BOOL Down)
-{
-    return FALSE;
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->ReleaseScreenBuffer(FrontEnd, ScreenBuffer);
 }
 
 static VOID NTAPI
-DummyRefreshInternalInfo(IN OUT PFRONTEND This)
+ConSrvTermChangeTitle(IN OUT PTERMINAL This)
 {
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->ChangeTitle(FrontEnd);
 }
 
 static VOID NTAPI
-DummyChangeTitle(IN OUT PFRONTEND This)
-{
-}
-
-static BOOL NTAPI
-DummyChangeIcon(IN OUT PFRONTEND This,
-                HICON IconHandle)
-{
-    return TRUE;
-}
-
-static HWND NTAPI
-DummyGetConsoleWindowHandle(IN OUT PFRONTEND This)
-{
-    return NULL;
-}
-
-static VOID NTAPI
-DummyGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
+ConSrvTermGetLargestConsoleWindowSize(IN OUT PTERMINAL This,
                                  PCOORD pSize)
 {
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->GetLargestConsoleWindowSize(FrontEnd, pSize);
 }
 
+/*
 static BOOL NTAPI
-DummyGetSelectionInfo(IN OUT PFRONTEND This,
+ConSrvTermGetSelectionInfo(IN OUT PTERMINAL This,
                       PCONSOLE_SELECTION_INFO pSelectionInfo)
 {
-    return TRUE;
+    PFRONTEND FrontEnd = This->Data;
+    return FrontEnd->Vtbl->GetSelectionInfo(FrontEnd, pSelectionInfo);
 }
+*/
 
 static BOOL NTAPI
-DummySetPalette(IN OUT PFRONTEND This,
+ConSrvTermSetPalette(IN OUT PTERMINAL This,
                 HPALETTE PaletteHandle,
                 UINT PaletteUsage)
 {
-    return TRUE;
-}
-
-static ULONG NTAPI
-DummyGetDisplayMode(IN OUT PFRONTEND This)
-{
-    return 0;
-}
-
-static BOOL NTAPI
-DummySetDisplayMode(IN OUT PFRONTEND This,
-                    ULONG NewMode)
-{
-    return TRUE;
+    PFRONTEND FrontEnd = This->Data;
+    return FrontEnd->Vtbl->SetPalette(FrontEnd, PaletteHandle, PaletteUsage);
 }
 
 static INT NTAPI
-DummyShowMouseCursor(IN OUT PFRONTEND This,
+ConSrvTermShowMouseCursor(IN OUT PTERMINAL This,
                      BOOL Show)
 {
-    return 0;
+    PFRONTEND FrontEnd = This->Data;
+    return FrontEnd->Vtbl->ShowMouseCursor(FrontEnd, Show);
 }
 
-static BOOL NTAPI
-DummySetMouseCursor(IN OUT PFRONTEND This,
-                    HCURSOR CursorHandle)
+static TERMINAL_VTBL ConSrvTermVtbl =
 {
-    return TRUE;
-}
-
-static HMENU NTAPI
-DummyMenuControl(IN OUT PFRONTEND This,
-                 UINT CmdIdLow,
-                 UINT CmdIdHigh)
-{
-    return NULL;
-}
-
-static BOOL NTAPI
-DummySetMenuClose(IN OUT PFRONTEND This,
-                  BOOL Enable)
-{
-    return TRUE;
-}
-
-static FRONTEND_VTBL DummyVtbl =
-{
-    DummyInitFrontEnd,
-    DummyDeinitFrontEnd,
-    DummyDrawRegion,
-    DummyWriteStream,
-    DummySetCursorInfo,
-    DummySetScreenInfo,
-    DummyResizeTerminal,
-    DummySetActiveScreenBuffer,
-    DummyReleaseScreenBuffer,
-    DummyProcessKeyCallback,
-    DummyRefreshInternalInfo,
-    DummyChangeTitle,
-    DummyChangeIcon,
-    DummyGetConsoleWindowHandle,
-    DummyGetLargestConsoleWindowSize,
-    DummyGetSelectionInfo,
-    DummySetPalette,
-    DummyGetDisplayMode,
-    DummySetDisplayMode,
-    DummyShowMouseCursor,
-    DummySetMouseCursor,
-    DummyMenuControl,
-    DummySetMenuClose,
+    ConSrvTermInitTerminal,
+    ConSrvTermDeinitTerminal,
+    ConSrvTermDrawRegion,
+    ConSrvTermWriteStream,
+    ConSrvTermSetCursorInfo,
+    ConSrvTermSetScreenInfo,
+    ConSrvTermResizeTerminal,
+    ConSrvTermSetActiveScreenBuffer,
+    ConSrvTermReleaseScreenBuffer,
+    ConSrvTermChangeTitle,
+    ConSrvTermGetLargestConsoleWindowSize,
+    // ConSrvTermGetSelectionInfo,
+    ConSrvTermSetPalette,
+    ConSrvTermShowMouseCursor,
 };
 
+#if 0
 VOID
 ResetFrontEnd(IN PCONSOLE Console)
 {
@@ -328,9 +356,8 @@ ResetFrontEnd(IN PCONSOLE Console)
 
     /* Reinitialize the frontend interface */
     RtlZeroMemory(&Console->FrontEndIFace, sizeof(Console->FrontEndIFace));
-    Console->FrontEndIFace.Vtbl = &DummyVtbl;
+    Console->FrontEndIFace.Vtbl = &ConSrvTermVtbl;
 }
-
 #endif
 
 /* EOF */

@@ -82,13 +82,13 @@ ConSrvReleaseConsole(PCONSOLE Console,
 }
 
 
-/* static */ NTSTATUS
-ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
+NTSTATUS NTAPI
+ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
                    IN OUT PCONSOLE_INFO ConsoleInfo,
                    IN OUT PVOID ExtraConsoleInfo,
                    IN ULONG ProcessId);
-/* static */ NTSTATUS
-ConSrvUnloadFrontEnd(IN PFRONTEND FrontEnd);
+NTSTATUS NTAPI
+ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal);
 
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
@@ -102,7 +102,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     CONSOLE_INFO ConsoleInfo;
     SIZE_T Length = 0;
 
-    FRONTEND FrontEnd;
+    TERMINAL Terminal; /* The ConSrv terminal for this console */
 
     if (NewConsole == NULL || ConsoleStartInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -122,7 +122,6 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     wcsncpy(ConsoleInfo.ConsoleTitle, ConsoleStartInfo->ConsoleTitle, Length);
     ConsoleInfo.ConsoleTitle[Length] = L'\0';
 
-#if 0
     /* 3. Initialize the ConSrv terminal */
     Status = ConSrvInitTerminal(&Terminal,
                                 &ConsoleInfo,
@@ -134,18 +133,6 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
         return Status;
     }
     DPRINT("CONSRV: Terminal initialized\n");
-#else
-    Status = ConSrvLoadFrontEnd(&FrontEnd,
-                                &ConsoleInfo,
-                                ConsoleStartInfo,
-                                ConsoleLeaderProcessId);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CONSRV: Failed to initialize a frontend, Status = 0x%08lx\n", Status);
-        return Status;
-    }
-    DPRINT("CONSRV: Frontend initialized\n");
-#endif
 
     /*
      * 4. Load the remaining console settings via the registry.
@@ -190,7 +177,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Creating a new console failed, Status = 0x%08lx\n", Status);
-        ConSrvUnloadFrontEnd(&FrontEnd);
+        ConSrvDeinitTerminal(&Terminal);
         return Status;
     }
 
@@ -212,15 +199,15 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->QuickEdit = ConsoleInfo.QuickEdit;
 
     /* Attach the ConSrv terminal to the console */
-    Status = ConDrvRegisterFrontEnd(Console, &FrontEnd);
+    Status = ConDrvRegisterTerminal(Console, &Terminal);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to register frontend to the given console, Status = 0x%08lx\n", Status);
+        DPRINT1("Failed to register terminal to the given console, Status = 0x%08lx\n", Status);
         ConDrvDeleteConsole(Console);
-        ConSrvUnloadFrontEnd(&FrontEnd);
+        ConSrvDeinitTerminal(&Terminal);
         return Status;
     }
-    DPRINT("FrontEnd registered\n");
+    DPRINT("Terminal registered\n");
 
     /* Return the newly created console to the caller and a success code too */
     *NewConsoleHandle = ConsoleHandle;
@@ -233,7 +220,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
 {
     DPRINT("ConSrvDeleteConsole\n");
 
-    /* Just call the driver. ConSrvDeregisterFrontEnd is called on-demand. */
+    /* Just call the driver. ConDrvDeregisterTerminal is called on-demand. */
     ConDrvDeleteConsole(Console);
 }
 

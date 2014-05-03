@@ -17,10 +17,10 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   IN PCONSOLE_INFO ConsoleInfo,
                   IN ULONG ConsoleLeaderProcessId);
 NTSTATUS NTAPI
-ConDrvRegisterFrontEnd(IN PCONSOLE Console,
-                       IN PFRONTEND FrontEnd);
+ConDrvRegisterTerminal(IN PCONSOLE Console,
+                       IN PTERMINAL Terminal);
 NTSTATUS NTAPI
-ConDrvDeregisterFrontEnd(IN PCONSOLE Console);
+ConDrvDeregisterTerminal(IN PCONSOLE Console);
 VOID NTAPI
 ConDrvDeleteConsole(IN PCONSOLE Console);
 

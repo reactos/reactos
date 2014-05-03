@@ -14,27 +14,25 @@
 /* DUMMY TERMINAL INTERFACE ***************************************************/
 
 static NTSTATUS NTAPI
-DummyInitFrontEnd(IN OUT PFRONTEND This,
+DummyInitTerminal(IN OUT PTERMINAL This,
                   IN PCONSOLE Console)
 {
-    /* Load some settings ?? */
     return STATUS_SUCCESS;
 }
 
 static VOID NTAPI
-DummyDeinitFrontEnd(IN OUT PFRONTEND This)
+DummyDeinitTerminal(IN OUT PTERMINAL This)
 {
-    /* Free some settings ?? */
 }
 
 static VOID NTAPI
-DummyDrawRegion(IN OUT PFRONTEND This,
+DummyDrawRegion(IN OUT PTERMINAL This,
                 SMALL_RECT* Region)
 {
 }
 
 static VOID NTAPI
-DummyWriteStream(IN OUT PFRONTEND This,
+DummyWriteStream(IN OUT PTERMINAL This,
                  SMALL_RECT* Region,
                  SHORT CursorStartX,
                  SHORT CursorStartY,
@@ -45,15 +43,15 @@ DummyWriteStream(IN OUT PFRONTEND This,
 }
 
 static BOOL NTAPI
-DummySetCursorInfo(IN OUT PFRONTEND This,
-                   PCONSOLE_SCREEN_BUFFER Buff)
+DummySetCursorInfo(IN OUT PTERMINAL This,
+                   PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
     return TRUE;
 }
 
 static BOOL NTAPI
-DummySetScreenInfo(IN OUT PFRONTEND This,
-                   PCONSOLE_SCREEN_BUFFER Buff,
+DummySetScreenInfo(IN OUT PTERMINAL This,
+                   PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                    SHORT OldCursorX,
                    SHORT OldCursorY)
 {
@@ -61,122 +59,60 @@ DummySetScreenInfo(IN OUT PFRONTEND This,
 }
 
 static VOID NTAPI
-DummyResizeTerminal(IN OUT PFRONTEND This)
+DummyResizeTerminal(IN OUT PTERMINAL This)
 {
 }
 
 static VOID NTAPI
-DummySetActiveScreenBuffer(IN OUT PFRONTEND This)
+DummySetActiveScreenBuffer(IN OUT PTERMINAL This)
 {
 }
 
 static VOID NTAPI
-DummyReleaseScreenBuffer(IN OUT PFRONTEND This,
+DummyReleaseScreenBuffer(IN OUT PTERMINAL This,
                          IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
 }
 
-static BOOL NTAPI
-DummyProcessKeyCallback(IN OUT PFRONTEND This,
-                        MSG* msg,
-                        BYTE KeyStateMenu,
-                        DWORD ShiftState,
-                        UINT VirtualKeyCode,
-                        BOOL Down)
-{
-    return FALSE;
-}
-
 static VOID NTAPI
-DummyRefreshInternalInfo(IN OUT PFRONTEND This)
+DummyChangeTitle(IN OUT PTERMINAL This)
 {
 }
 
 static VOID NTAPI
-DummyChangeTitle(IN OUT PFRONTEND This)
-{
-}
-
-static BOOL NTAPI
-DummyChangeIcon(IN OUT PFRONTEND This,
-                HICON IconHandle)
-{
-    return TRUE;
-}
-
-static HWND NTAPI
-DummyGetConsoleWindowHandle(IN OUT PFRONTEND This)
-{
-    return NULL;
-}
-
-static VOID NTAPI
-DummyGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
+DummyGetLargestConsoleWindowSize(IN OUT PTERMINAL This,
                                  PCOORD pSize)
 {
 }
 
+/*
 static BOOL NTAPI
-DummyGetSelectionInfo(IN OUT PFRONTEND This,
+DummyGetSelectionInfo(IN OUT PTERMINAL This,
                       PCONSOLE_SELECTION_INFO pSelectionInfo)
 {
     return TRUE;
 }
+*/
 
 static BOOL NTAPI
-DummySetPalette(IN OUT PFRONTEND This,
+DummySetPalette(IN OUT PTERMINAL This,
                 HPALETTE PaletteHandle,
                 UINT PaletteUsage)
 {
     return TRUE;
 }
 
-static ULONG NTAPI
-DummyGetDisplayMode(IN OUT PFRONTEND This)
-{
-    return 0;
-}
-
-static BOOL NTAPI
-DummySetDisplayMode(IN OUT PFRONTEND This,
-                    ULONG NewMode)
-{
-    return TRUE;
-}
-
 static INT NTAPI
-DummyShowMouseCursor(IN OUT PFRONTEND This,
+DummyShowMouseCursor(IN OUT PTERMINAL This,
                      BOOL Show)
 {
     return 0;
 }
 
-static BOOL NTAPI
-DummySetMouseCursor(IN OUT PFRONTEND This,
-                    HCURSOR CursorHandle)
+static TERMINAL_VTBL DummyVtbl =
 {
-    return TRUE;
-}
-
-static HMENU NTAPI
-DummyMenuControl(IN OUT PFRONTEND This,
-                 UINT CmdIdLow,
-                 UINT CmdIdHigh)
-{
-    return NULL;
-}
-
-static BOOL NTAPI
-DummySetMenuClose(IN OUT PFRONTEND This,
-                  BOOL Enable)
-{
-    return TRUE;
-}
-
-static FRONTEND_VTBL DummyVtbl =
-{
-    DummyInitFrontEnd,
-    DummyDeinitFrontEnd,
+    DummyInitTerminal,
+    DummyDeinitTerminal,
     DummyDrawRegion,
     DummyWriteStream,
     DummySetCursorInfo,
@@ -184,30 +120,21 @@ static FRONTEND_VTBL DummyVtbl =
     DummyResizeTerminal,
     DummySetActiveScreenBuffer,
     DummyReleaseScreenBuffer,
-    DummyProcessKeyCallback,
-    DummyRefreshInternalInfo,
     DummyChangeTitle,
-    DummyChangeIcon,
-    DummyGetConsoleWindowHandle,
     DummyGetLargestConsoleWindowSize,
-    DummyGetSelectionInfo,
+    // DummyGetSelectionInfo,
     DummySetPalette,
-    DummyGetDisplayMode,
-    DummySetDisplayMode,
     DummyShowMouseCursor,
-    DummySetMouseCursor,
-    DummyMenuControl,
-    DummySetMenuClose,
 };
 
 VOID
-ResetFrontEnd(IN PCONSOLE Console)
+ResetTerminal(IN PCONSOLE Console)
 {
     if (!Console) return;
 
-    /* Reinitialize the frontend interface */
-    RtlZeroMemory(&Console->FrontEndIFace, sizeof(Console->FrontEndIFace));
-    Console->FrontEndIFace.Vtbl = &DummyVtbl;
+    /* Reinitialize the terminal interface */
+    RtlZeroMemory(&Console->TermIFace, sizeof(Console->TermIFace));
+    Console->TermIFace.Vtbl = &DummyVtbl;
 }
 
 /* EOF */
