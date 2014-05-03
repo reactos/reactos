@@ -333,8 +333,8 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
                                (PBYTE)lpKeyClass,
                                &dwDataSize) != ERROR_SUCCESS)
             {
-                lpKeyClass = NULL;
                 HeapFree(ProcessHeap, 0, lpKeyClass);
+                lpKeyClass = NULL;
                 continue;
             }
         }
