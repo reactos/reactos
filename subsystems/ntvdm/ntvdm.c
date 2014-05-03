@@ -377,7 +377,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 
     UNREFERENCED_PARAMETER(Parameter);
 
-    while (AcceptCommands)
+    do
     {
         /* Clear the structure */
         ZeroMemory(&CommandInfo, sizeof(CommandInfo));
@@ -431,6 +431,7 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 
         First = FALSE;
     }
+    while (AcceptCommands);
 
     return 0;
 }
@@ -468,6 +469,9 @@ INT wmain(INT argc, WCHAR *argv[])
         {
             /* This is the session ID */
             SessionId = wcstoul(argv[i] + 2, &endptr, 10);
+
+            /* The VDM hasn't been started from a console, so quit when the task is done */
+            AcceptCommands = FALSE;
         }
     }
 

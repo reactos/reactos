@@ -401,8 +401,17 @@ BaseCheckVDM(IN ULONG BinaryType,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCheckVDM),
                                  sizeof(BASE_CHECK_VDM));
 
-    /* Write back the task ID */
-    *iTask = CheckVdm->iTask;
+    /* Check if there is no console */
+    if (CheckVdm->ConsoleHandle == NULL)
+    {
+        /* Write back the task ID */
+        *iTask = CheckVdm->iTask;
+    }
+    else
+    {
+        /* Otherwise, iTask should be zero */
+        *iTask = 0;
+    }
 
 Cleanup:
 
