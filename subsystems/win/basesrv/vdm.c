@@ -665,7 +665,13 @@ CSR_API(BaseSrvCheckVDM)
             InsertTailList(&VDMConsoleListHead, &ConsoleRecord->Entry);
         }
 
-        CheckVdmRequest->iTask = ConsoleRecord->SessionId;
+        if (ConsoleRecord->ConsoleHandle == NULL)
+        {
+            /* The parent doesn't have a console, so return the session ID */
+            CheckVdmRequest->iTask = ConsoleRecord->SessionId;
+        }
+        else CheckVdmRequest->iTask = 0;
+
         CheckVdmRequest->VDMState = NewConsoleRecord ? VDM_NOT_LOADED : VDM_READY;
         Status = STATUS_SUCCESS;
     }
