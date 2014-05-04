@@ -180,6 +180,11 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
     StopChecking = FALSE;
 }
 
+#else
+#define KiExitTrapDebugChecks(x, y)
+#define KiFillTrapFrameDebug(x)
+#endif
+
 FORCEINLINE
 VOID
 KiExitSystemCallDebugChecks(IN ULONG SystemCall,
@@ -219,11 +224,6 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
         }
     }
 }
-#else
-#define KiExitTrapDebugChecks(x, y)
-#define KiFillTrapFrameDebug(x)
-#define KiExitSystemCallDebugChecks(x, y)
-#endif
 
 //
 // Generic Exit Routine
