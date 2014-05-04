@@ -3162,8 +3162,8 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     return Count;
 }
 
-LONG
 FORCEINLINE
+LONG
 ScaleLong(LONG lValue, PFLOATOBJ pef)
 {
     FLOATOBJ efTemp;

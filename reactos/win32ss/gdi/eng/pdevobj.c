@@ -360,8 +360,8 @@ EngpCreatePDEV(
     return ppdev;
 }
 
-VOID
 FORCEINLINE
+VOID
 SwitchPointer(
     _Inout_ PVOID pvPointer1,
     _Inout_ PVOID pvPointer2)

@@ -1,7 +1,7 @@
 #pragma once
 
-VOID
 FORCEINLINE
+VOID
 RECTL_vSetRect(RECTL *prcl, LONG left, LONG top, LONG right, LONG bottom)
 {
     prcl->left = left;
@@ -10,8 +10,8 @@ RECTL_vSetRect(RECTL *prcl, LONG left, LONG top, LONG right, LONG bottom)
     prcl->bottom = bottom;
 }
 
-VOID
 FORCEINLINE
+VOID
 RECTL_vSetEmptyRect(RECTL *prcl)
 {
     prcl->left = 0;
@@ -20,8 +20,8 @@ RECTL_vSetEmptyRect(RECTL *prcl)
     prcl->bottom = 0;
 }
 
-VOID
 FORCEINLINE
+VOID
 RECTL_vOffsetRect(RECTL *prcl, INT cx, INT cy)
 {
     prcl->left += cx;
@@ -30,23 +30,23 @@ RECTL_vOffsetRect(RECTL *prcl, INT cx, INT cy)
     prcl->bottom += cy;
 }
 
-BOOL
 FORCEINLINE
+BOOL
 RECTL_bIsEmptyRect(const RECTL *prcl)
 {
     return (prcl->left >= prcl->right || prcl->top >= prcl->bottom);
 }
 
-BOOL
 FORCEINLINE
+BOOL
 RECTL_bPointInRect(const RECTL *prcl, INT x, INT y)
 {
     return (x >= prcl->left && x < prcl->right &&
             y >= prcl->top  && y < prcl->bottom);
 }
 
-BOOL
 FORCEINLINE
+BOOL
 RECTL_bIsWellOrdered(const RECTL *prcl)
 {
     return ((prcl->left <= prcl->right) &&

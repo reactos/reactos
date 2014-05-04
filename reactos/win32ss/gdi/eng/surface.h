@@ -126,8 +126,8 @@ SURFACE_AllocSurface(
     _In_opt_ ULONG cjWidth,
     _In_opt_ PVOID pvBits);
 
-VOID
 FORCEINLINE
+VOID
 SURFACE_vSetPalette(
     _Inout_ PSURFACE psurf,
     _In_ PPALETTE ppal)
