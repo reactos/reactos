@@ -2458,7 +2458,7 @@ DEFINE_TEST(test_unvolatile_2)
 #ifndef __cplusplus
 DEFINE_TEST(test_unvolatile_3)
 {
-    int register val1 = 0, val2 = 0;
+    register int val1 = 0, val2 = 0;
 
     _SEH2_TRY
     {
