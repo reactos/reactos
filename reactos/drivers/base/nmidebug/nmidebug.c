@@ -15,8 +15,8 @@
 
 PCHAR NmiBegin = "NMI4NMI@";
 
-VOID
 FORCEINLINE
+VOID
 NmiClearFlag(VOID)
 {
     ((PCHAR)&KiBugCheckData[4])[0] -= (NmiBegin[3] | NmiBegin[7]);
