@@ -13,6 +13,8 @@
 #include "consrv.h"
 
 #include <ndk/psfuncs.h>
+
+#include <alias.h>
 #include "procinit.h"
 
 #define NDEBUG
@@ -22,6 +24,188 @@
 NTSTATUS NTAPI RtlGetLastNtStatus(VOID);
 
 /* GLOBALS ********************************************************************/
+
+static ULONG ConsoleListSize;
+static PCONSOLE* ConsoleList;   /* The list of the ConSrv consoles */
+static RTL_RESOURCE ListLock;
+
+#define ConSrvLockConsoleListExclusive()    \
+    RtlAcquireResourceExclusive(&ListLock, TRUE)
+
+#define ConSrvLockConsoleListShared()       \
+    RtlAcquireResourceShared(&ListLock, TRUE)
+
+#define ConSrvUnlockConsoleList()           \
+    RtlReleaseResource(&ListLock)
+
+
+static NTSTATUS
+InsertConsole(OUT PHANDLE Handle,
+              IN PCONSOLE Console)
+{
+#define CONSOLE_HANDLES_INCREMENT   2 * 3
+
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG i = 0;
+    PCONSOLE* Block;
+
+    ASSERT( (ConsoleList == NULL && ConsoleListSize == 0) ||
+            (ConsoleList != NULL && ConsoleListSize != 0) );
+
+    /* All went right, so add the console to the list */
+    ConSrvLockConsoleListExclusive();
+    DPRINT1("Insert in the list\n");
+
+    if (ConsoleList)
+    {
+        for (i = 0; i < ConsoleListSize; i++)
+        {
+            if (ConsoleList[i] == NULL) break;
+        }
+    }
+
+    if (i >= ConsoleListSize)
+    {
+        DPRINT1("Creation of a new handles table\n");
+        /* Allocate a new handles table */
+        Block = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
+                                 (ConsoleListSize +
+                                    CONSOLE_HANDLES_INCREMENT) * sizeof(PCONSOLE));
+        if (Block == NULL)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            goto Quit;
+        }
+
+        /* If we previously had a handles table, free it and use the new one */
+        if (ConsoleList)
+        {
+            /* Copy the handles from the old table to the new one */
+            RtlCopyMemory(Block,
+                          ConsoleList,
+                          ConsoleListSize * sizeof(PCONSOLE));
+            ConsoleFreeHeap(ConsoleList);
+        }
+        ConsoleList = Block;
+        ConsoleListSize += CONSOLE_HANDLES_INCREMENT;
+    }
+
+    ConsoleList[i] = Console;
+    *Handle = ULongToHandle((i << 2) | 0x3);
+
+Quit:
+    /* Unlock the console list and return status */
+    ConSrvUnlockConsoleList();
+    return Status;
+}
+
+/* Unused */
+#if 0
+static NTSTATUS
+RemoveConsoleByHandle(IN HANDLE Handle)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCONSOLE Console;
+
+    BOOLEAN ValidHandle = ((HandleToULong(Handle) & 0x3) == 0x3);
+    ULONG Index = HandleToULong(Handle) >> 2;
+
+    if (!ValidHandle) return STATUS_INVALID_HANDLE;
+
+    ASSERT( (ConsoleList == NULL && ConsoleListSize == 0) ||
+            (ConsoleList != NULL && ConsoleListSize != 0) );
+
+    /* Remove the console from the list */
+    ConSrvLockConsoleListExclusive();
+
+    if (Index >= ConsoleListSize ||
+        (Console = ConsoleList[Index]) == NULL)
+    {
+        Status = STATUS_INVALID_HANDLE;
+        goto Quit;
+    }
+
+    ConsoleList[Index] = NULL;
+
+Quit:
+    /* Unlock the console list and return status */
+    ConSrvUnlockConsoleList();
+    return Status;
+}
+#endif
+
+static NTSTATUS
+RemoveConsoleByPointer(IN PCONSOLE Console)
+{
+    ULONG i = 0;
+
+    if (!Console) return STATUS_INVALID_PARAMETER;
+
+    ASSERT( (ConsoleList == NULL && ConsoleListSize == 0) ||
+            (ConsoleList != NULL && ConsoleListSize != 0) );
+
+    /* Remove the console from the list */
+    ConSrvLockConsoleListExclusive();
+
+    if (ConsoleList)
+    {
+        for (i = 0; i < ConsoleListSize; i++)
+        {
+            if (ConsoleList[i] == Console) ConsoleList[i] = NULL;
+        }
+    }
+
+    /* Unlock the console list */
+    ConSrvUnlockConsoleList();
+
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN NTAPI
+ConSrvValidateConsole(OUT PCONSOLE* Console,
+                      IN HANDLE ConsoleHandle,
+                      IN CONSOLE_STATE ExpectedState,
+                      IN BOOLEAN LockConsole)
+{
+    BOOLEAN RetVal = FALSE;
+    PCONSOLE ValidatedConsole;
+
+    BOOLEAN ValidHandle = ((HandleToULong(ConsoleHandle) & 0x3) == 0x3);
+    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
+
+    if (!ValidHandle) return FALSE;
+
+    if (!Console) return FALSE;
+    *Console = NULL;
+
+    /*
+     * Forbid creation or deletion of consoles when
+     * checking for the existence of a console.
+     */
+    ConSrvLockConsoleListShared();
+
+    if (Index >= ConsoleListSize ||
+        (ValidatedConsole = ConsoleList[Index]) == NULL)
+    {
+        /* Unlock the console list */
+        ConSrvUnlockConsoleList();
+
+        return FALSE;
+    }
+
+    ValidatedConsole = ConsoleList[Index];
+
+    /* Unlock the console list and return */
+    ConSrvUnlockConsoleList();
+
+    RetVal = ConDrvValidateConsoleUnsafe(ValidatedConsole,
+                                         ExpectedState,
+                                         LockConsole);
+    if (RetVal) *Console = ValidatedConsole;
+
+    return RetVal;
+}
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -54,33 +238,76 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
 }
 
 NTSTATUS
-ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                 PCONSOLE* Console,
-                 BOOL LockConsole)
+ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
+                 OUT PCONSOLE* Console,
+                 IN BOOLEAN LockConsole)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE ProcessConsole;
+    NTSTATUS Status = STATUS_INVALID_HANDLE;
+    PCONSOLE GrabConsole;
 
+    // if (Console == NULL) return STATUS_INVALID_PARAMETER;
     ASSERT(Console);
     *Console = NULL;
 
     // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    Status = ConDrvGetConsole(&ProcessConsole, ProcessData->ConsoleHandle, LockConsole);
-    if (NT_SUCCESS(Status)) *Console = ProcessConsole;
+    if (ConSrvValidateConsole(&GrabConsole,
+                              ProcessData->ConsoleHandle,
+                              CONSOLE_RUNNING,
+                              LockConsole))
+    {
+        InterlockedIncrement(&GrabConsole->ReferenceCount);
+        *Console = GrabConsole;
+        Status = STATUS_SUCCESS;
+    }
 
     // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return Status;
 }
 
 VOID
-ConSrvReleaseConsole(PCONSOLE Console,
-                     BOOL WasConsoleLocked)
+ConSrvReleaseConsole(IN PCONSOLE Console,
+                     IN BOOLEAN WasConsoleLocked)
 {
-    /* Just call the driver */
-    ConDrvReleaseConsole(Console, WasConsoleLocked);
+    LONG RefCount = 0;
+
+    if (!Console) return;
+    // if (Console->ReferenceCount == 0) return; // This shouldn't happen
+    ASSERT(Console->ReferenceCount > 0);
+
+    /* The console must be locked */
+    // ASSERT(Console_locked);
+
+    /*
+     * Decrement the reference count. Save the new value too,
+     * because Console->ReferenceCount might be modified after
+     * the console gets unlocked but before we check whether we
+     * can destroy it.
+     */
+    RefCount = _InterlockedDecrement(&Console->ReferenceCount);
+
+    /* Unlock the console if needed */
+    if (WasConsoleLocked) LeaveCriticalSection(&Console->Lock);
+
+    /* Delete the console if needed */
+    if (RefCount <= 0) ConSrvDeleteConsole(Console);
 }
 
+
+/* CONSOLE INITIALIZATION FUNCTIONS *******************************************/
+
+VOID NTAPI
+ConSrvInitConsoleSupport(VOID)
+{
+    DPRINT("CONSRV: ConSrvInitConsoleSupport()\n");
+
+    /* Initialize the console list and its lock */
+    ConsoleListSize = 0;
+    ConsoleList = NULL;
+    RtlInitializeResource(&ListLock);
+
+    /* Should call LoadKeyboardLayout */
+}
 
 NTSTATUS NTAPI
 ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
@@ -170,10 +397,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     ConsoleInfo.CodePage = GetOEMCP();
 
     /* Initialize a new console via the driver */
-    Status = ConDrvInitConsole(&ConsoleHandle,
-                               &Console,
-                               &ConsoleInfo,
-                               ConsoleLeaderProcessId);
+    Status = ConDrvInitConsole(&Console, &ConsoleInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Creating a new console failed, Status = 0x%08lx\n", Status);
@@ -196,6 +420,13 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     InitializeListHead(&Console->ReadWaitQueue);
     InitializeListHead(&Console->WriteWaitQueue);
 
+    /* Initialize the alias and history buffers */
+    Console->Aliases = NULL;
+    InitializeListHead(&Console->HistoryBuffers);
+    Console->HistoryBufferSize      = ConsoleInfo.HistoryBufferSize;
+    Console->NumberOfHistoryBuffers = ConsoleInfo.NumberOfHistoryBuffers;
+    Console->HistoryNoDup           = ConsoleInfo.HistoryNoDup;
+
     Console->QuickEdit = ConsoleInfo.QuickEdit;
 
     /* Attach the ConSrv terminal to the console */
@@ -209,6 +440,9 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     }
     DPRINT("Terminal registered\n");
 
+    /* All went right, so add the console to the list */
+    Status = InsertConsole(&ConsoleHandle, Console);
+
     /* Return the newly created console to the caller and a success code too */
     *NewConsoleHandle = ConsoleHandle;
     *NewConsole       = Console;
@@ -220,7 +454,16 @@ ConSrvDeleteConsole(PCONSOLE Console)
 {
     DPRINT("ConSrvDeleteConsole\n");
 
-    /* Just call the driver. ConDrvDeregisterTerminal is called on-demand. */
+    // FIXME: Send a terminate message to all the processes owning this console
+
+    /* Remove the console from the list */
+    RemoveConsoleByPointer(Console);
+
+    /* Clean aliases and history */
+    IntDeleteAllAliases(Console);
+    HistoryDeleteBuffers(Console);
+
+    /* Now, call the driver. ConDrvDeregisterTerminal is called on-demand. */
     ConDrvDeleteConsole(Console);
 }
 
@@ -402,7 +645,7 @@ CSR_API(SrvAllocConsole)
 
     /* Return the console handle and the input wait handle to the caller */
     AllocConsoleRequest->ConsoleHandle   = ProcessData->ConsoleHandle;
-    AllocConsoleRequest->InputWaitHandle = ProcessData->ConsoleEvent;
+    AllocConsoleRequest->InputWaitHandle = ProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropDispatcher = AllocConsoleRequest->PropDispatcher;
@@ -479,7 +722,7 @@ CSR_API(SrvAttachConsole)
 
     /* Return the console handle and the input wait handle to the caller */
     AttachConsoleRequest->ConsoleHandle   = TargetProcessData->ConsoleHandle;
-    AttachConsoleRequest->InputWaitHandle = TargetProcessData->ConsoleEvent;
+    AttachConsoleRequest->InputWaitHandle = TargetProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     TargetProcessData->PropDispatcher = AttachConsoleRequest->PropDispatcher;

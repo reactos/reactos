@@ -51,7 +51,7 @@ typedef struct _CONSOLE_PROCESS_DATA
 {
     LIST_ENTRY ConsoleLink;
     PCSR_PROCESS Process;   // Process owning this structure.
-    HANDLE ConsoleEvent;
+    HANDLE InputWaitHandle;
 
     HANDLE ConsoleHandle;
     HANDLE ParentConsoleHandle;

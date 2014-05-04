@@ -353,7 +353,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     /* Initialize the new (target) process */
     RtlZeroMemory(TargetProcessData, sizeof(*TargetProcessData));
     TargetProcessData->Process = TargetProcess;
-    TargetProcessData->ConsoleEvent = NULL;
+    TargetProcessData->InputWaitHandle = NULL;
     TargetProcessData->ConsoleHandle = TargetProcessData->ParentConsoleHandle = NULL;
     TargetProcessData->ConsoleApp = ((TargetProcess->Flags & CsrProcessIsConsoleApp) ? TRUE : FALSE);
 
@@ -383,7 +383,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
         PCONSOLE SourceConsole;
 
         /* Validate and lock the parent's console */
-        if (ConDrvValidateConsole(&SourceConsole,
+        if (ConSrvValidateConsole(&SourceConsole,
                                   SourceProcessData->ConsoleHandle,
                                   CONSOLE_RUNNING, TRUE))
         {
@@ -484,7 +484,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
     /* Return the console handle and the input wait handle to the caller */
     ConnectInfo->ConsoleHandle   = ProcessData->ConsoleHandle;
-    ConnectInfo->InputWaitHandle = ProcessData->ConsoleEvent;
+    ConnectInfo->InputWaitHandle = ProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropDispatcher = ConnectInfo->ConsoleStartInfo.PropDispatcher;
@@ -529,6 +529,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
 */
 
     ConDrvInitConsoleSupport();
+    ConSrvInitConsoleSupport();
 
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = CONSRV_FIRST_API_NUMBER;

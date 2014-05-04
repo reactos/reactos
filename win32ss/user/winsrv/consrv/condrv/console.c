@@ -12,7 +12,6 @@
 
 #include <consrv.h>
 
-#include <alias.h>
 #include <coninput.h>
 
 #define NDEBUG
@@ -21,8 +20,10 @@
 
 /* GLOBALS ********************************************************************/
 
-static ULONG ConsoleListSize;
-static PCONSOLE* ConsoleList;   /* The list of all the allocated consoles */
+static ULONG CurrentConsoleID = 0;
+
+/* Linked list of consoles */
+static LIST_ENTRY ConsoleList;
 static RTL_RESOURCE ListLock;
 
 #define ConDrvLockConsoleListExclusive()    \
@@ -33,6 +34,47 @@ static RTL_RESOURCE ListLock;
 
 #define ConDrvUnlockConsoleList()           \
     RtlReleaseResource(&ListLock)
+
+
+static NTSTATUS
+InsertConsole(IN PCONSOLE Console)
+{
+    ASSERT(Console);
+
+    /* All went right, so add the console to the list */
+    ConDrvLockConsoleListExclusive();
+
+    DPRINT1("Insert in the list\n");
+    InsertTailList(&ConsoleList, &Console->ListEntry);
+
+    // FIXME: Move this code to the caller function!!
+    /* Get a new console ID */
+    _InterlockedExchange((PLONG)&Console->ConsoleID, CurrentConsoleID);
+    _InterlockedIncrement((PLONG)&CurrentConsoleID);
+
+    /* Unlock the console list and return success */
+    ConDrvUnlockConsoleList();
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+RemoveConsole(IN PCONSOLE Console)
+{
+    // ASSERT(Console);
+    if (!Console) return STATUS_INVALID_PARAMETER;
+
+    /* Remove the console from the list */
+    ConDrvLockConsoleListExclusive();
+
+    RemoveEntryList(&Console->ListEntry);
+
+    /* Unlock the console list and return success */
+    ConDrvUnlockConsoleList();
+    return STATUS_SUCCESS;
+}
+
+
+/* PRIVATE FUNCTIONS **********************************************************/
 
 // Adapted from reactos/lib/rtl/unicode.c, RtlCreateUnicodeString line 2180
 static BOOLEAN
@@ -62,135 +104,6 @@ ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
         RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
     }
 }
-
-
-static NTSTATUS
-InsertConsole(OUT PHANDLE Handle,
-              IN PCONSOLE Console)
-{
-#define CONSOLE_HANDLES_INCREMENT   2 * 3
-
-    NTSTATUS Status = STATUS_SUCCESS;
-    ULONG i = 0;
-    PCONSOLE* Block;
-
-    ASSERT( (ConsoleList == NULL && ConsoleListSize == 0) ||
-            (ConsoleList != NULL && ConsoleListSize != 0) );
-
-    /* All went right, so add the console to the list */
-    ConDrvLockConsoleListExclusive();
-    DPRINT1("Insert in the list\n");
-
-    if (ConsoleList)
-    {
-        for (i = 0; i < ConsoleListSize; i++)
-        {
-            if (ConsoleList[i] == NULL) break;
-        }
-    }
-
-    if (i >= ConsoleListSize)
-    {
-        DPRINT1("Creation of a new handles table\n");
-        /* Allocate a new handles table */
-        Block = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
-                                 (ConsoleListSize +
-                                    CONSOLE_HANDLES_INCREMENT) * sizeof(PCONSOLE));
-        if (Block == NULL)
-        {
-            Status = STATUS_UNSUCCESSFUL;
-            goto Quit;
-        }
-
-        /* If we previously had a handles table, free it and use the new one */
-        if (ConsoleList)
-        {
-            /* Copy the handles from the old table to the new one */
-            RtlCopyMemory(Block,
-                          ConsoleList,
-                          ConsoleListSize * sizeof(PCONSOLE));
-            ConsoleFreeHeap(ConsoleList);
-        }
-        ConsoleList = Block;
-        ConsoleListSize += CONSOLE_HANDLES_INCREMENT;
-    }
-
-    ConsoleList[i] = Console;
-    *Handle = ULongToHandle((i << 2) | 0x3);
-
-Quit:
-    /* Unlock the console list and return status */
-    ConDrvUnlockConsoleList();
-    return Status;
-}
-
-/* Unused */
-#if 0
-static NTSTATUS
-RemoveConsoleByHandle(IN HANDLE Handle)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console;
-
-    BOOLEAN ValidHandle = ((HandleToULong(Handle) & 0x3) == 0x3);
-    ULONG Index = HandleToULong(Handle) >> 2;
-
-    if (!ValidHandle) return STATUS_INVALID_HANDLE;
-
-    ASSERT( (ConsoleList == NULL && ConsoleListSize == 0) ||
-            (ConsoleList != NULL && ConsoleListSize != 0) );
-
-    /* Remove the console from the list */
-    ConDrvLockConsoleListExclusive();
-
-    if (Index >= ConsoleListSize ||
-        (Console = ConsoleList[Index]) == NULL)
-    {
-        Status = STATUS_INVALID_HANDLE;
-        goto Quit;
-    }
-
-    ConsoleList[Index] = NULL;
-
-Quit:
-    /* Unlock the console list and return status */
-    ConDrvUnlockConsoleList();
-    return Status;
-}
-#endif
-
-static NTSTATUS
-RemoveConsoleByPointer(IN PCONSOLE Console)
-{
-    ULONG i = 0;
-
-    if (!Console) return STATUS_INVALID_PARAMETER;
-
-    ASSERT( (ConsoleList == NULL && ConsoleListSize == 0) ||
-            (ConsoleList != NULL && ConsoleListSize != 0) );
-
-    /* Remove the console from the list */
-    ConDrvLockConsoleListExclusive();
-
-    if (ConsoleList)
-    {
-        for (i = 0; i < ConsoleListSize; i++)
-        {
-            if (ConsoleList[i] == Console) ConsoleList[i] = NULL;
-        }
-    }
-
-    /* Unlock the console list */
-    ConDrvUnlockConsoleList();
-
-    return STATUS_SUCCESS;
-}
-
-
-/* PRIVATE FUNCTIONS **********************************************************/
-
-/* For resetting the terminal - defined in dummyterm.c */
-VOID ResetTerminal(IN PCONSOLE Console);
 
 VOID NTAPI
 ConDrvPause(PCONSOLE Console)
@@ -254,103 +167,6 @@ ConDrvValidateConsoleUnsafe(IN PCONSOLE Console,
     return TRUE;
 }
 
-BOOLEAN NTAPI
-ConDrvValidateConsole(OUT PCONSOLE* Console,
-                      IN HANDLE ConsoleHandle,
-                      IN CONSOLE_STATE ExpectedState,
-                      IN BOOLEAN LockConsole)
-{
-    BOOLEAN RetVal = FALSE;
-    PCONSOLE ValidatedConsole;
-
-    BOOLEAN ValidHandle = ((HandleToULong(ConsoleHandle) & 0x3) == 0x3);
-    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
-
-    if (!ValidHandle) return FALSE;
-
-    if (!Console) return FALSE;
-    *Console = NULL;
-
-    /*
-     * Forbid creation or deletion of consoles when
-     * checking for the existence of a console.
-     */
-    ConDrvLockConsoleListShared();
-
-    if (Index >= ConsoleListSize ||
-        (ValidatedConsole = ConsoleList[Index]) == NULL)
-    {
-        /* Unlock the console list */
-        ConDrvUnlockConsoleList();
-
-        return FALSE;
-    }
-
-    ValidatedConsole = ConsoleList[Index];
-
-    /* Unlock the console list and return */
-    ConDrvUnlockConsoleList();
-
-    RetVal = ConDrvValidateConsoleUnsafe(ValidatedConsole,
-                                         ExpectedState,
-                                         LockConsole);
-    if (RetVal) *Console = ValidatedConsole;
-
-    return RetVal;
-}
-
-NTSTATUS NTAPI
-ConDrvGetConsole(OUT PCONSOLE* Console,
-                 IN HANDLE ConsoleHandle,
-                 IN BOOLEAN LockConsole)
-{
-    NTSTATUS Status = STATUS_INVALID_HANDLE;
-    PCONSOLE GrabConsole;
-
-    if (Console == NULL) return STATUS_INVALID_PARAMETER;
-    *Console = NULL;
-
-    if (ConDrvValidateConsole(&GrabConsole,
-                              ConsoleHandle,
-                              CONSOLE_RUNNING,
-                              LockConsole))
-    {
-        InterlockedIncrement(&GrabConsole->ReferenceCount);
-        *Console = GrabConsole;
-        Status = STATUS_SUCCESS;
-    }
-
-    return Status;
-}
-
-VOID NTAPI
-ConDrvReleaseConsole(IN PCONSOLE Console,
-                     IN BOOLEAN WasConsoleLocked)
-{
-    LONG RefCount = 0;
-
-    if (!Console) return;
-    // if (Console->ReferenceCount == 0) return; // This shouldn't happen
-    ASSERT(Console->ReferenceCount > 0);
-
-    /* The console must be locked */
-    // ASSERT(Console_locked);
-
-    /*
-     * Decrement the reference count. Save the new value too,
-     * because Console->ReferenceCount might be modified after
-     * the console gets unlocked but before we check whether we
-     * can destroy it.
-     */
-    RefCount = _InterlockedDecrement(&Console->ReferenceCount);
-
-    /* Unlock the console if needed */
-    if (WasConsoleLocked) LeaveCriticalSection(&Console->Lock);
-
-    /* Delete the console if needed */
-    if (RefCount <= 0) ConDrvDeleteConsole(Console);
-}
-
 
 /* CONSOLE INITIALIZATION FUNCTIONS *******************************************/
 
@@ -360,38 +176,36 @@ ConDrvInitConsoleSupport(VOID)
     DPRINT("CONSRV: ConDrvInitConsoleSupport()\n");
 
     /* Initialize the console list and its lock */
-    ConsoleListSize = 0;
-    ConsoleList = NULL;
+    InitializeListHead(&ConsoleList);
     RtlInitializeResource(&ListLock);
 
     /* Should call LoadKeyboardLayout */
 }
 
+/* For resetting the terminal - defined in dummyterm.c */
+VOID ResetTerminal(IN PCONSOLE Console);
+
 NTSTATUS NTAPI
-ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
-                  OUT PCONSOLE* NewConsole,
-                  IN PCONSOLE_INFO ConsoleInfo,
-                  IN ULONG ConsoleLeaderProcessId)
+ConDrvInitConsole(OUT PCONSOLE* NewConsole,
+                  IN PCONSOLE_INFO ConsoleInfo)
 {
     NTSTATUS Status;
     SECURITY_ATTRIBUTES SecurityAttributes;
     // CONSOLE_INFO CapturedConsoleInfo;
     TEXTMODE_BUFFER_INFO ScreenBufferInfo;
-    HANDLE ConsoleHandle;
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
 #if 0
     WCHAR DefaultTitle[128];
 #endif
 
-    if (NewConsoleHandle == NULL || NewConsole == NULL || ConsoleInfo == NULL)
+    if (NewConsole == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    *NewConsoleHandle = NULL;
     *NewConsole = NULL;
 
     /*
-     * Allocate a console structure
+     * Allocate a new console
      */
     Console = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(*Console));
     if (NULL == Console)
@@ -478,15 +292,6 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->ActiveBuffer = NewBuffer;
     Console->UnpauseEvent = NULL;
 
-    /*
-     * Initialize the alias and history buffers
-     */
-    Console->Aliases = NULL;
-    InitializeListHead(&Console->HistoryBuffers);
-    Console->HistoryBufferSize      = ConsoleInfo->HistoryBufferSize;
-    Console->NumberOfHistoryBuffers = ConsoleInfo->NumberOfHistoryBuffers;
-    Console->HistoryNoDup           = ConsoleInfo->HistoryNoDup;
-
     /* Initialize the console title */
     ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo->ConsoleTitle);
 #if 0
@@ -509,13 +314,10 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     }
 #endif
 
-    /* Lock the console until its initialization is finished */
-    // EnterCriticalSection(&Console->Lock);
-
     DPRINT("Console initialized\n");
 
     /* All went right, so add the console to the list */
-    Status = InsertConsole(&ConsoleHandle, Console);
+    Status = InsertConsole(Console);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -527,12 +329,8 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
     DPRINT("Change state\n");
     Console->State = CONSOLE_RUNNING;
 
-    /* Unlock the console */
-    // LeaveCriticalSection(&Console->Lock);
-
     /* Return the newly created console to the caller and a success code too */
-    *NewConsoleHandle = ConsoleHandle;
-    *NewConsole       = Console;
+    *NewConsole = Console;
     return STATUS_SUCCESS;
 }
 
@@ -630,7 +428,7 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     /*
      * Allow other threads to finish their job: basically, unlock
      * all other calls to EnterCriticalSection(&Console->Lock); by
-     * ConDrvValidateConsole(Unsafe) functions so that they just see
+     * ConDrvValidateConsoleUnsafe functions so that they just see
      * that we are not in CONSOLE_RUNNING state anymore, or unlock
      * other concurrent calls to ConDrvDeleteConsole so that they
      * can see that we are in fact already deleting the console.
@@ -666,16 +464,13 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     Console->ReferenceCount = 0;
 
     /* Remove the console from the list */
-    RemoveConsoleByPointer(Console);
+    RemoveConsole(Console);
 
     /* Discard all entries in the input event queue */
     PurgeInputBuffer(Console);
-
     if (Console->LineBuffer) ConsoleFreeHeap(Console->LineBuffer);
 
-    IntDeleteAllAliases(Console);
-    HistoryDeleteBuffers(Console);
-
+    /* Delete the last screen buffer */
     ConioDeleteScreenBuffer(Console->ActiveBuffer);
     Console->ActiveBuffer = NULL;
     if (!IsListEmpty(&Console->BufferList))

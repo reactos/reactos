@@ -8,6 +8,9 @@
 
 #pragma once
 
+VOID NTAPI
+ConSrvInitConsoleSupport(VOID);
+
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT struct _CONSOLE** /* PCONSOLE* */ NewConsole,
@@ -15,8 +18,17 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   IN ULONG ConsoleLeaderProcessId);
 VOID NTAPI ConSrvDeleteConsole(struct _CONSOLE* /* PCONSOLE */ Console);
 
-NTSTATUS ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                   struct _CONSOLE** /* PCONSOLE* */ Console,
-                                   BOOL LockConsole);
-VOID ConSrvReleaseConsole(struct _CONSOLE* /* PCONSOLE */ Console,
-                                   BOOL WasConsoleLocked);
+NTSTATUS
+ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
+                 OUT struct _CONSOLE** /* PCONSOLE* */ Console,
+                 IN BOOLEAN LockConsole);
+VOID
+ConSrvReleaseConsole(IN struct _CONSOLE* /* PCONSOLE */ Console,
+                     IN BOOLEAN WasConsoleLocked);
+
+
+BOOLEAN NTAPI
+ConSrvValidateConsole(OUT struct _CONSOLE** /* PCONSOLE* */ Console,
+                      IN HANDLE ConsoleHandle,
+                      IN CONSOLE_STATE ExpectedState,
+                      IN BOOLEAN LockConsole);

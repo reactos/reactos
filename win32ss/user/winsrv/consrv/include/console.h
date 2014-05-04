@@ -12,10 +12,8 @@ VOID NTAPI
 ConDrvInitConsoleSupport(VOID);
 
 NTSTATUS NTAPI
-ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
-                  OUT PCONSOLE* NewConsole,
-                  IN PCONSOLE_INFO ConsoleInfo,
-                  IN ULONG ConsoleLeaderProcessId);
+ConDrvInitConsole(OUT PCONSOLE* NewConsole,
+                  IN PCONSOLE_INFO ConsoleInfo);
 NTSTATUS NTAPI
 ConDrvRegisterTerminal(IN PCONSOLE Console,
                        IN PTERMINAL Terminal);
@@ -34,21 +32,5 @@ BOOLEAN NTAPI
 ConDrvValidateConsoleUnsafe(IN PCONSOLE Console,
                             IN CONSOLE_STATE ExpectedState,
                             IN BOOLEAN LockConsole);
-
-BOOLEAN NTAPI
-ConDrvValidateConsole(OUT PCONSOLE* Console,
-                      IN HANDLE ConsoleHandle,
-                      IN CONSOLE_STATE ExpectedState,
-                      IN BOOLEAN LockConsole);
-
-
-
-NTSTATUS NTAPI
-ConDrvGetConsole(OUT PCONSOLE* Console,
-                 IN HANDLE ConsoleHandle,
-                 IN BOOLEAN LockConsole);
-VOID NTAPI
-ConDrvReleaseConsole(IN PCONSOLE Console,
-                     IN BOOLEAN WasConsoleLocked);
 
 /* EOF */

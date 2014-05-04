@@ -440,7 +440,7 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    // Status = ConDrvGetConsole(&ObjectConsole, ProcessData->ConsoleHandle, LockConsole);
+    // Status = ConSrvGetConsole(ProcessData, &ObjectConsole, LockConsole);
     // if (NT_SUCCESS(Status))
     if (ConDrvValidateConsoleUnsafe(ObjectEntry->Console, CONSOLE_RUNNING, LockConsole))
     {
@@ -522,7 +522,7 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     Status = NtDuplicateObject(NtCurrentProcess(),
                                Console->InputBuffer.ActiveEvent,
                                ProcessData->Process->ProcessHandle,
-                               &ProcessData->ConsoleEvent,
+                               &ProcessData->InputWaitHandle,
                                EVENT_ALL_ACCESS, 0, 0);
     if (!NT_SUCCESS(Status))
     {
@@ -557,7 +557,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
     PCONSOLE Console;
 
     /* Validate and lock the console */
-    if (!ConDrvValidateConsole(&Console,
+    if (!ConSrvValidateConsole(&Console,
                                ConsoleHandle,
                                CONSOLE_RUNNING, TRUE))
     {
@@ -600,7 +600,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
     Status = NtDuplicateObject(NtCurrentProcess(),
                                Console->InputBuffer.ActiveEvent,
                                ProcessData->Process->ProcessHandle,
-                               &ProcessData->ConsoleEvent,
+                               &ProcessData->InputWaitHandle,
                                EVENT_ALL_ACCESS, 0, 0);
     if (!NT_SUCCESS(Status))
     {
@@ -637,7 +637,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
     // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     /* Validate and lock the console */
-    if (ConDrvValidateConsole(&Console,
+    if (ConSrvValidateConsole(&Console,
                               ProcessData->ConsoleHandle,
                               CONSOLE_RUNNING, TRUE))
     {
@@ -689,9 +689,9 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 
         /* Release the console */
         DPRINT("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);
-        ConDrvReleaseConsole(Console, TRUE);
-        //CloseHandle(ProcessData->ConsoleEvent);
-        //ProcessData->ConsoleEvent = NULL;
+        ConSrvReleaseConsole(Console, TRUE);
+        //CloseHandle(ProcessData->InputWaitHandle);
+        //ProcessData->InputWaitHandle = NULL;
     }
 
     // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);

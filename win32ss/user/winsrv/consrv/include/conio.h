@@ -274,6 +274,7 @@ typedef struct _CONSOLE
     TERMINAL TermIFace;                     /* Frontend-specific interface */
 
     ULONG ConsoleID;                        /* The ID of the console */
+    LIST_ENTRY ListEntry;                   /* Entry in the list of consoles */
 
 /**************************** Input buffer and data ***************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
@@ -296,13 +297,6 @@ typedef struct _CONSOLE
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
     UINT OutputCodePage;
-
-/**************************** Aliases and Histories ***************************/
-    struct _ALIAS_HEADER *Aliases;
-    LIST_ENTRY HistoryBuffers;
-    ULONG HistoryBufferSize;                /* Size for newly created history buffers */
-    ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
-    BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
 /****************************** Other properties ******************************/
     UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */

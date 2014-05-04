@@ -109,15 +109,24 @@ typedef struct _WINSRV_CONSOLE
 
     FRONTEND FrontEndIFace;                     /* Frontend-specific interface */
 
+/******************************* Process support ******************************/
     LIST_ENTRY ProcessList;         /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
     PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when the console leader process is killed */
     BOOLEAN NotifyLastClose;        /* TRUE if the console should send a control event when the console leader process is killed */
 
     BOOLEAN QuickEdit;
 
+/******************************* Pausing support ******************************/
     BYTE PauseFlags;
     LIST_ENTRY  ReadWaitQueue;      /* List head for the queue of unique input buffer read wait blocks */
     LIST_ENTRY WriteWaitQueue;      /* List head for the queue of current screen-buffer write wait blocks */
+
+/**************************** Aliases and Histories ***************************/
+    struct _ALIAS_HEADER *Aliases;
+    LIST_ENTRY HistoryBuffers;
+    ULONG HistoryBufferSize;                /* Size for newly created history buffers */
+    ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
+    BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
 } WINSRV_CONSOLE, *PWINSRV_CONSOLE;
 
