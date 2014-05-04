@@ -283,10 +283,13 @@ _SEH3$_AutoCleanup(
 #define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
     _SEH3$_NESTED_FUNC_OPEN(_Name) \
         /* Declare the intrinsics for exception filters */ \
+_Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wshadow\"") \
         inline __attribute__((always_inline, gnu_inline)) \
         unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; } \
         inline __attribute__((always_inline, gnu_inline)) \
         void * _exception_info() { return _SEH3$_TrylevelFrame.ExceptionPointers; } \
+_Pragma("GCC diagnostic pop") \
 \
         /* Now handle the actual filter expression */ \
         return (expression); \
