@@ -1090,17 +1090,6 @@ NtUserUpdateLayeredWindow(
 }
 
 /*
- *    @unimplemented
- */
-HWND APIENTRY
-NtUserWindowFromPhysicalPoint(POINT Point)
-{
-   STUB
-
-   return NULL;
-}
-
-/*
  * NtUserResolveDesktopForWOW
  *
  * Status
