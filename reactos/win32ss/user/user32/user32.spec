@@ -739,9 +739,6 @@
 @ stdcall wvsprintfA(ptr str ptr)
 @ stdcall wvsprintfW(ptr wstr ptr)
 
-; Functions exported by Win Vista
-@ stdcall SetProcessDPIAware()
-
 ; Unknown and undocumented functions
 ; @ stdcall CalcChildScroll(long long)
 ; @ stdcall CharNextExW(long wstr long)
