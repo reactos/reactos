@@ -81,6 +81,7 @@
 @ stdcall CreateSolidBrush(long)
 @ stdcall DPtoLP(long ptr long)
 @ stdcall DdEntry0(ptr ptr ptr ptr ptr ptr) NtGdiDxgGenericThunk
+@ stdcall DdEntry1(ptr ptr ptr ptr) NtGdiD3dContextCreate
 @ stdcall DdEntry10(ptr ptr) NtGdiDdBeginMoCompFrame
 @ stdcall DdEntry11(ptr ptr ptr) NtGdiDdBlt
 @ stdcall DdEntry12(ptr ptr) NtGdiDdCanCreateSurface
@@ -91,7 +92,7 @@
 @ stdcall DdEntry17(ptr ptr ptr ptr ptr ptr ptr ptr) NtGdiDdCreateD3DBuffer
 @ stdcall DdEntry18(ptr ptr) NtGdiDdCreateMoComp
 @ stdcall DdEntry19(ptr ptr ptr ptr ptr long) NtGdiDdCreateSurfaceObject
-@ stdcall DdEntry1(ptr ptr ptr ptr) NtGdiD3dContextCreate
+@ stdcall DdEntry2(ptr) NtGdiD3dContextDestroy
 @ stdcall DdEntry20(ptr) NtGdiDdDeleteDirectDrawObject
 @ stdcall DdEntry21(ptr) NtGdiDdDeleteSurfaceObject
 @ stdcall DdEntry22(ptr ptr) NtGdiDdDestroyMoComp
@@ -102,7 +103,7 @@
 @ stdcall DdEntry27(ptr long) NtGdiDdFlipToGDISurface
 @ stdcall DdEntry28(ptr ptr) NtGdiDdGetAvailDriverMemory
 @ stdcall DdEntry29(ptr ptr) NtGdiDdGetBltStatus
-@ stdcall DdEntry2(ptr) NtGdiD3dContextDestroy
+@ stdcall DdEntry3(ptr) NtGdiD3dContextDestroyAll
 @ stdcall DdEntry30(ptr ptr) NtGdiDdGetDC
 @ stdcall DdEntry31(ptr ptr) NtGdiDdGetDriverInfo
 @ stdcall DdEntry32(ptr ptr long) NtGdiDdGetDxHandle
@@ -113,7 +114,7 @@
 @ stdcall DdEntry37(ptr ptr) NtGdiDdGetMoCompFormats
 @ stdcall DdEntry38(ptr ptr) NtGdiDdGetScanLine
 @ stdcall DdEntry39(ptr ptr ptr) NtGdiDdLock
-@ stdcall DdEntry3(ptr) NtGdiD3dContextDestroyAll
+@ stdcall DdEntry4(ptr) NtGdiD3dValidateTextureStageState
 @ stdcall DdEntry40(ptr ptr) NtGdiDdLockD3D
 @ stdcall DdEntry41(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr) NtGdiDdQueryDirectDrawObject
 @ stdcall DdEntry42(ptr ptr) NtGdiDdQueryMoCompStatus
@@ -124,7 +125,7 @@
 @ stdcall DdEntry47(ptr ptr) NtGdiDdSetColorKey
 @ stdcall DdEntry48(ptr ptr) NtGdiDdSetExclusiveMode
 @ stdcall DdEntry49(ptr ptr ptr) NtGdiDdSetGammaRamp
-@ stdcall DdEntry4(ptr) NtGdiD3dValidateTextureStageState
+@ stdcall DdEntry5(ptr ptr ptr ptr ptr ptr ptr) NtGdiD3dDrawPrimitives2
 @ stdcall DdEntry50(ptr ptr long) NtGdiDdCreateSurfaceEx
 @ stdcall DdEntry51(ptr ptr ptr) NtGdiDdSetOverlayPosition
 @ stdcall DdEntry52(ptr ptr) NtGdiDdUnattachSurface
@@ -132,7 +133,6 @@
 @ stdcall DdEntry54(ptr ptr) NtGdiDdUnlockD3D
 @ stdcall DdEntry55(ptr ptr long) NtGdiDdUpdateOverlay
 @ stdcall DdEntry56(ptr ptr) NtGdiDdWaitForVerticalBlank
-@ stdcall DdEntry5(ptr ptr ptr ptr ptr ptr ptr) NtGdiD3dDrawPrimitives2
 @ stdcall DdEntry6(ptr) NtGdiDdGetDriverState
 @ stdcall DdEntry7(ptr ptr ptr) NtGdiDdAddAttachedSurface
 @ stdcall DdEntry8(ptr ptr ptr) NtGdiDdAlphaBlt
@@ -159,13 +159,10 @@
 @ stdcall EngCheckAbort(ptr) NtGdiEngCheckAbort
 @ stdcall EngComputeGlyphSet(ptr ptr ptr)
 @ stdcall EngCopyBits(ptr ptr ptr ptr ptr ptr) NtGdiEngCopyBits
-# @ stdcall EngCreateBitmap(longlong long long long ptr) NtGdiEngCreateBitmap
-@ stdcall EngCreateBitmap(long long long long long ptr) NtGdiEngCreateBitmap
+@ stdcall EngCreateBitmap(int64 long long long ptr) NtGdiEngCreateBitmap
 @ stdcall EngCreateClip() NtGdiEngCreateClip
-# @ stdcall EngCreateDeviceBitmap(ptr longlong long) NtGdiEngCreateDeviceBitmap
-@ stdcall EngCreateDeviceBitmap(ptr long long long) NtGdiEngCreateDeviceBitmap
-# @ stdcall EngCreateDeviceSurface(ptr longlong long) NtGdiEngCreateDeviceSurface
-@ stdcall EngCreateDeviceSurface(ptr long long long) NtGdiEngCreateDeviceSurface
+@ stdcall EngCreateDeviceBitmap(ptr int64 long) NtGdiEngCreateDeviceBitmap
+@ stdcall EngCreateDeviceSurface(ptr int64 long) NtGdiEngCreateDeviceSurface
 @ stdcall EngCreatePalette(long long ptr long long long) NtGdiEngCreatePalette
 @ stdcall EngCreateSemaphore()
 @ stdcall EngDeleteClip(ptr) NtGdiEngDeleteClip
@@ -267,6 +264,7 @@
 @ stdcall GdiDrawStream(ptr long ptr)
 @ stdcall GdiEndDocEMF(ptr)
 @ stdcall GdiEndPageEMF(ptr long)
+@ stdcall GdiEntry1(ptr ptr)
 @ stdcall GdiEntry10(ptr long)
 @ stdcall GdiEntry11(ptr ptr)
 @ stdcall GdiEntry12(ptr ptr)
@@ -274,7 +272,6 @@
 @ stdcall GdiEntry14(ptr ptr long)
 @ stdcall GdiEntry15(ptr ptr ptr)
 @ stdcall GdiEntry16(ptr ptr ptr)
-@ stdcall GdiEntry1(ptr ptr)
 @ stdcall GdiEntry2(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall GdiEntry3(ptr)
 @ stdcall GdiEntry4(ptr long)
@@ -287,7 +284,6 @@
 @ stdcall GdiFlush()
 @ stdcall GdiFullscreenControl(ptr ptr long ptr ptr) NtGdiFullscreenControl
 @ stdcall GdiGetBatchLimit()
-@ stdcall GdiGetBitmapBitsSize(ptr)
 @ stdcall GdiGetCharDimensions(long ptr ptr)
 @ stdcall GdiGetCodePage(long)
 @ stdcall GdiGetDC(ptr)
