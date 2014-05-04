@@ -22,7 +22,7 @@ static INT  SCROLL_TrackingBar = 0;
 static INT  SCROLL_TrackingPos = 0;
 static INT  SCROLL_TrackingVal = 0;
 
-void static ScreenToWindow( HWND hWnd, POINT* pt)
+static void ScreenToWindow( HWND hWnd, POINT* pt)
 {
     RECT rcWnd;
     GetWindowRect(hWnd, &rcWnd);
