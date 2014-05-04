@@ -346,8 +346,8 @@ _SEH3$_AutoCleanup(
         (void)&&_SEH3$_l_BeforeFilterOrFinally; \
         (void)&&_SEH3$_l_FilterOrFinally; \
 \
-_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 _Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 \
         /* Count the try level. Outside of any __try, _SEH3$_TryLevel is 0 */ \
         enum { \
@@ -379,16 +379,14 @@ _Pragma("GCC diagnostic pop") \
     _SEH3$_l_BeforeTry: (void)0; \
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
-_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 _Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 \
         /* Forward declaration of the filter function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FilterFunction); \
 \
         /* Create a static data table that contains the jump target and filter function */ \
         static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { &&_SEH3$_l_HandlerTarget, _SEH3$_FILTER(&_SEH3$_FilterFunction, (__VA_ARGS__)), _SEH3$_TryLevel, _SEH3$_HANDLER_TYPE }; \
-\
-_Pragma("GCC diagnostic pop") \
 \
         /* Register the registration record. */ \
         if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
@@ -397,13 +395,8 @@ _Pragma("GCC diagnostic pop") \
         /* Define an empty inline finally function */ \
         _SEH3$_DEFINE_DUMMY_FINALLY(_SEH3$_FinallyFunction) \
 \
-_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
-_Pragma("GCC diagnostic push") \
-\
         /* Allow intrinsics for __except to be used */ \
         _SEH3$_DECLARE_EXCEPT_INTRINSICS(); \
-\
-_Pragma("GCC diagnostic pop") \
 \
         goto _SEH3$_l_DoTry; \
 \
@@ -437,16 +430,14 @@ _Pragma("GCC diagnostic pop") \
     _SEH3$_l_BeforeTry: (void)0; \
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
-_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 _Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 \
         /* Forward declaration of the finally function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FinallyFunction); \
 \
         /* Create a static data table that contains the finally function */ \
         static const SEH3$_SCOPE_TABLE _SEH3$_ScopeTable = { 0, _SEH3$_FINALLY(&_SEH3$_FinallyFunction), _SEH3$_TryLevel, _SEH3$_HANDLER_TYPE }; \
-\
-_Pragma("GCC diagnostic pop") \
 \
         /* Register the registration record. */ \
         if (_SEH3$_TryLevel == 1) _SEH3$_RegisterFrame_(&_SEH3$_TrylevelFrame, &_SEH3$_ScopeTable); \
@@ -478,6 +469,8 @@ _Pragma("GCC diagnostic pop") \
 \
         /* Implementation of the auto cleanup function */ \
         _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
+\
+_Pragma("GCC diagnostic pop") \
 \
     /* Close the outer scope */ \
     } while (0);
