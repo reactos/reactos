@@ -25,6 +25,10 @@ toolbar, and address band for an explorer window
 
 #include "precomp.h"
 
+/* FIXME, I can't include windowsx because it conflicts with some #defines */
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+
 #define USE_CUSTOM_MENUBAND 1
 
 // navigation controls and menubar just send a message to parent window
@@ -514,33 +518,24 @@ void CInternetToolbar::AddDockItem(IUnknown *newItem, int bandID, int flags)
     newSite->Initialize(newItem, this, fMainReBar, bandID, flags);
 }
 
-HRESULT CInternetToolbar::ReserveBorderSpace()
+HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
 {
     CComPtr<IDockingWindowSite>             dockingWindowSite;
     RECT                                    availableBorderSpace;
-    RECT                                    neededBorderSpace;
-    HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
+    HRESULT hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
     if (FAILED(hResult))
         return hResult;
     hResult = dockingWindowSite->GetBorderDW(static_cast<IDockingWindow *>(this), &availableBorderSpace);
     if (FAILED(hResult))
         return hResult;
-    SendMessage(fMainReBar, RB_SIZETORECT, RBSTR_CHANGERECT, reinterpret_cast<LPARAM>(&availableBorderSpace));
-    // RBSTR_CHANGERECT does not seem to set the proper size in the rect.
-    // Let's make sure we fetch the actual size properly.
-    GetWindowRect(fMainReBar, &availableBorderSpace);
-    neededBorderSpace.left = 0;
-    neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
-    if (!fLocked)
-        neededBorderSpace.top += 3;
-    neededBorderSpace.right = 0;
-    neededBorderSpace.bottom = 0;
-    hResult = dockingWindowSite->SetBorderSpaceDW(static_cast<IDockingWindow *>(this), &neededBorderSpace);
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
+
+    if (availableBorderSpace.top > maxHeight)
+    {
+        availableBorderSpace.top = maxHeight;
+    }
+
+    return ResizeBorderDW(&availableBorderSpace, fSite, FALSE);
 }
 
 HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **menuBar)
@@ -784,7 +779,36 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::CloseDW(DWORD dwReserved)
 HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
     IUnknown *punkToolbarSite, BOOL fReserved)
 {
-    return E_NOTIMPL;
+    RECT neededBorderSpace;
+    RECT availableBorderSpace = *prcBorder;
+
+    SendMessage(fMainReBar, RB_SIZETORECT, RBSTR_CHANGERECT, reinterpret_cast<LPARAM>(&availableBorderSpace));
+
+    // RBSTR_CHANGERECT does not seem to set the proper size in the rect.
+    // Let's make sure we fetch the actual size properly.
+    GetWindowRect(fMainReBar, &availableBorderSpace);
+    neededBorderSpace.left = 0;
+    neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
+    if (!fLocked)
+        neededBorderSpace.top += 3;
+    neededBorderSpace.right = 0;
+    neededBorderSpace.bottom = 0;
+
+    CComPtr<IDockingWindowSite> dockingWindowSite;
+    
+    HRESULT hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
+    if (FAILED(hResult))
+        return hResult;
+
+    hResult = dockingWindowSite->RequestBorderSpaceDW(static_cast<IDockingWindow *>(this), &neededBorderSpace);
+    if (FAILED(hResult))
+        return hResult;
+
+    hResult = dockingWindowSite->SetBorderSpaceDW(static_cast<IDockingWindow *>(this), &neededBorderSpace);
+    if (FAILED(hResult))
+        return hResult;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetClassID(CLSID *pClassID)
@@ -830,8 +854,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = CreateMenuBar(&menuBar);
     if (FAILED(hResult))
         return hResult;
-    AddDockItem(menuBar, ITBBID_MENUBAND,
-        CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
+    AddDockItem(menuBar, ITBBID_MENUBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
 
     hResult = menuBar->QueryInterface(IID_PPV_ARG(IOleWindow, &menuOleWindow));
     hResult = menuOleWindow->GetWindow(&fMenuBandWindow);
@@ -841,8 +864,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = CreateBrandBand(&logoBar);
     if (FAILED(hResult))
         return hResult;
-    AddDockItem(logoBar, ITBBID_BRANDBAND,
-        CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
+    AddDockItem(logoBar, ITBBID_BRANDBAND, CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
     fLogoBar.Attach(logoBar.Detach());                  // transfer the ref count
 
     /* Create and attach the standard toolbar to the rebar */
@@ -1184,7 +1206,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::OnWinEvent(
     if (fMenuBar)
     {
         hResult = fMenuBar->QueryInterface(IID_PPV_ARG(IWinEventHandler, &menuWinEventHandler));
-        if (menuWinEventHandler->IsWindowOwner(hWnd))
+        if (menuWinEventHandler->IsWindowOwner(hWnd) == S_OK)
         {
             return menuWinEventHandler->OnWinEvent(fMenuBandWindow, uMsg, wParam, lParam, theResult);
         }
@@ -1657,6 +1679,66 @@ LRESULT CInternetToolbar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
             }
         }
     }
+
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (fLocked)
+        return 0;
+
+    if (wParam & MK_CONTROL)
+        return 0;
+
+    fSizing = TRUE;
+
+    DWORD msgp = GetMessagePos();
+    
+    fStartPosition.x = GET_X_LPARAM(msgp);
+    fStartPosition.y = GET_Y_LPARAM(msgp);
+    
+    RECT rc;
+    GetWindowRect(m_hWnd, &rc);
+
+    fStartHeight = rc.bottom - rc.top;
+
+    SetCapture();
+
+    bHandled = TRUE;
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (!fSizing)
+        return 0;
+
+    DWORD msgp = GetMessagePos();
+
+    POINT pt;
+    pt.x = GET_X_LPARAM(msgp);
+    pt.y = GET_Y_LPARAM(msgp);
+
+    ReserveBorderSpace(fStartHeight - fStartPosition.y + pt.y);
+
+    bHandled = TRUE;
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (!fSizing)
+        return 0;
+
+    OnMouseMove(uMsg, wParam, lParam, bHandled);
+
+    fSizing = FALSE;
+
+    ReleaseCapture();
 
     return 0;
 }

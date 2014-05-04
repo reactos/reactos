@@ -25,8 +25,8 @@
 
 extern "C"
 BOOL WINAPI Shell_GetImageLists(
-    _In_  HIMAGELIST *phiml,
-    _In_  HIMAGELIST *phimlSmall
+    _Out_  HIMAGELIST *phiml,
+    _Out_  HIMAGELIST *phimlSmall
     );
 
 #include "newatlinterfaces.h"
@@ -200,8 +200,8 @@ HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder)
 {
     CComPtr<IShellFolder>                   desktop;
 
-    ::SHGetDesktopFolder(&desktop);
-    if (desktop == NULL)
+    HRESULT hr = ::SHGetDesktopFolder(&desktop);
+    if (FAILED(hr))
         return E_FAIL;
     if (path == NULL || path->mkid.cb == 0)
     {
@@ -1361,26 +1361,43 @@ void CShellBrowser::RepositionBars()
             if (borderSpace.top != 0)
             {
                 toolbarRect.bottom = toolbarRect.top + borderSpace.top;
-                clientRect.top += borderSpace.top;
             }
             else if (borderSpace.bottom != 0)
             {
                 toolbarRect.top = toolbarRect.bottom - borderSpace.bottom;
-                clientRect.bottom -= borderSpace.bottom;
             }
-            if (borderSpace.left != 0)
+            else if (borderSpace.left != 0)
             {
                 toolbarRect.right = toolbarRect.left + borderSpace.left;
-                clientRect.left += borderSpace.left;
             }
             else if (borderSpace.right != 0)
             {
                 toolbarRect.left = toolbarRect.right - borderSpace.right;
-                clientRect.right -= borderSpace.right;
             }
-            ::SetWindowPos(hwnd, NULL, toolbarRect.left, toolbarRect.top,
-                                toolbarRect.right - toolbarRect.left,
-                                toolbarRect.bottom - toolbarRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
+
+            ::SetWindowPos(hwnd, NULL,
+                toolbarRect.left,
+                toolbarRect.top,
+                toolbarRect.right - toolbarRect.left,
+                toolbarRect.bottom - toolbarRect.top,
+                SWP_NOOWNERZORDER | SWP_NOZORDER);
+
+            if (borderSpace.top != 0)
+            {
+                clientRect.top = toolbarRect.bottom;
+            }
+            else if (borderSpace.bottom != 0)
+            {
+                clientRect.bottom = toolbarRect.top;
+            }
+            else if (borderSpace.left != 0)
+            {
+                clientRect.left = toolbarRect.right;
+            }
+            else if (borderSpace.right != 0)
+            {
+                clientRect.right = toolbarRect.left;
+            }
         }
     }
     ::SetWindowPos(fCurrentShellViewWindow, NULL, clientRect.left, clientRect.top,
@@ -1589,8 +1606,9 @@ bool IUnknownIsEqual(IUnknown *int1, IUnknown *int2)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetBorderDW(IUnknown *punkObj, LPRECT prcBorder)
 {
-    RECT                                    availableBounds;
-    static const INT                        excludeItems[] = {1, 1, 1, 0xa001, 0, 0};
+    static const INT excludeItems[] = { 1, 1, 1, 0xa001, 0, 0 };
+
+    RECT availableBounds;
 
     GetEffectiveClientRect(m_hWnd, &availableBounds, excludeItems);
     for (INT x = 0; x < 3; x++)
@@ -1853,6 +1871,15 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::RemoveMenusSB(HMENU hmenuShared)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetStatusTextSB(LPCOLESTR pszStatusText)
 {
+    //
+    if (pszStatusText)
+    {
+        ::SetWindowText(fStatusBar, pszStatusText);
+    }
+    else
+    {
+
+    }
     return E_NOTIMPL;
 }
 
@@ -2041,8 +2068,10 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetTravelLog(ITravelLog **pptl)
     HRESULT                                 hResult;
 
     // called by toolbar when displaying tooltips
-    if (pptl != NULL)
-        *pptl = NULL;
+    if (pptl == NULL)
+        return E_FAIL;
+
+    *pptl = NULL;
     if (fTravelLog.p == NULL)
     {
         hResult = CreateTravelLog(IID_PPV_ARG(ITravelLog, &fTravelLog));

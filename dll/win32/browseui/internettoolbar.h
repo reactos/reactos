@@ -96,11 +96,14 @@ public:
     HWND                                    fToolbarWindow;
     DWORD                                   fAdviseCookie;
     CComPtr<IBandProxy>                     fBandProxy;
+    BOOL                                    fSizing;
+    POINT                                   fStartPosition;
+    LONG                                    fStartHeight;
 public:
     CInternetToolbar();
     ~CInternetToolbar();
     void AddDockItem(IUnknown *newItem, int bandID, int flags);
-    HRESULT ReserveBorderSpace();
+    HRESULT ReserveBorderSpace(LONG maxHeight = -1);
     HRESULT CreateMenuBar(IShellMenu **menuBar);
     HRESULT CreateBrandBand(IUnknown **logoBar);
     HRESULT CreateToolsBar(IUnknown **toolsBar);
@@ -198,6 +201,9 @@ public:
     LRESULT OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BEGIN_MSG_MAP(CInternetToolbar)
         COMMAND_ID_HANDLER(gBackCommandID, OnTravelBack)
@@ -215,6 +221,9 @@ public:
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
         NOTIFY_CODE_HANDLER(TTN_NEEDTEXTW, OnTipText)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLDown)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnLUp)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
     END_MSG_MAP()
 
     DECLARE_REGISTRY_RESOURCEID(IDR_INTERNETTOOLBAR)

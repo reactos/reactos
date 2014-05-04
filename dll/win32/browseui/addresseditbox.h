@@ -34,7 +34,6 @@ class CAddressEditBox :
 {
 private:
     CContainedWindow                        fEditWindow;
-    CContainedWindow                        fComboBoxExWindow;
 public:
     CAddressEditBox();
     ~CAddressEditBox();
@@ -80,6 +79,7 @@ public:
     // message handlers
 //    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 //    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_ADDRESSEDITBOX)
     DECLARE_NOT_AGGREGATABLE(CAddressEditBox)
@@ -94,6 +94,7 @@ public:
     //        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocusSaveButton)
     //    ALT_MSG_MAP(2)
     //        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocusSelectButton)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CAddressEditBox)

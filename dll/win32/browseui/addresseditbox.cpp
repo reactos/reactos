@@ -40,8 +40,7 @@ TODO:
 */
 
 CAddressEditBox::CAddressEditBox() :
-        fEditWindow(NULL, this, 1),
-        fComboBoxExWindow(NULL, this, 2)
+        fEditWindow(NULL, this, 1)
 {
 }
 
@@ -57,6 +56,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::FileSysChange(long param8, long paramC)
 {
+    LPWSTR str8 = reinterpret_cast<LPWSTR>(param8);
+    LPWSTR strC = reinterpret_cast<LPWSTR>(paramC);
     return E_NOTIMPL;
 }
 
@@ -67,13 +68,15 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Refresh(long param8)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editControl, long param14, IUnknown *param18)
 {
-    fComboBoxExWindow.SubclassWindow(comboboxEx);
+    SubclassWindow(comboboxEx);
     fEditWindow.SubclassWindow(editControl);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
 {
+    LPWSTR strC = reinterpret_cast<LPWSTR>(paramC);    
+    fEditWindow.SetWindowText(strC);
     return E_NOTIMPL;
 }
 
@@ -165,6 +168,25 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(IStream *pStm, BOOL fClearDirty)
 HRESULT STDMETHODCALLTYPE CAddressEditBox::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
     return E_NOTIMPL;
+}
+
+LRESULT CAddressEditBox::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+/*
+    RECT rc;
+    GetClientRect(&rc);
+    rc.left += 24;
+    rc.top += 4;
+    rc.right -= 4;
+    rc.bottom -= 4;
+    fEditWindow.SetWindowPos(NULL,
+        rc.left, rc.top,
+        rc.right - rc.left,
+        rc.bottom - rc.top,
+        SWP_NOOWNERZORDER | SWP_NOZORDER);
+*/
+    return 0;
 }
 
 HRESULT CreateAddressEditBox(REFIID riid, void **ppv)
