@@ -1,6 +1,9 @@
 #pragma once
 
-PMENU FASTCALL UserGetMenuObject(HMENU hMenu);
+FORCEINLINE PMENU UserGetMenuObject(HMENU hMenu)
+{
+   return ValidateHandle(hMenu, TYPE_MENU);
+}
 
 #define ASSERT_REFS_CO(_obj_) \
 { \
