@@ -1910,12 +1910,12 @@ NtUserGetMenuBarInfo(
       Ret = IntGetMenuItemRect(pWnd, Menu, 0, &kmbi.rcBar);
       kmbi.rcBar.right = kmbi.rcBar.left + Menu->cxMenu;
       kmbi.rcBar.bottom = kmbi.rcBar.top + Menu->cyMenu;
-      ERR("idItem 0 %d\n",Ret);
+      TRACE("idItem 0 %d\n",Ret);
    }
    else
    {
       Ret = IntGetMenuItemRect(pWnd, Menu, idItem-1, &kmbi.rcBar);
-      ERR("idItem X %d\n", Ret);
+      TRACE("idItem X %d\n", Ret);
    }
 
    kmbi.hMenu = hMenu;
