@@ -22,6 +22,7 @@
 #include <ndk/psfuncs.h>
 #include <ndk/exfuncs.h>
 #include <ndk/umfuncs.h>
+#include <ndk/cmfuncs.h>
 
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
