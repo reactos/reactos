@@ -21,8 +21,6 @@ list(APPEND SOURCE
     htmlcomment.c
     htmlcurstyle.c
     htmldoc.c
-    htmldoc3.c
-    htmldoc5.c
     htmlelem.c
     htmlelem2.c
     htmlelem3.c

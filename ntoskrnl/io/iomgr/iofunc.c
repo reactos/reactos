@@ -635,6 +635,236 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+IopGetFileInformation(IN PFILE_OBJECT FileObject,
+                      IN ULONG Length,
+                      IN FILE_INFORMATION_CLASS FileInfoClass,
+                      OUT PVOID Buffer,
+                      OUT PULONG ReturnedLength)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    PAGED_CODE();
+
+    /* Allocate an IRP */
+    ObReferenceObject(FileObject);
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (Irp == NULL)
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Init event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* Setup the IRP */
+    Irp->UserIosb = &IoStatusBlock;
+    Irp->UserEvent = &Event;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+    Irp->RequestorMode = KernelMode;
+    Irp->AssociatedIrp.SystemBuffer = Buffer;
+    Irp->Flags = IRP_SYNCHRONOUS_API | IRP_BUFFERED_IO | IRP_OB_QUERY_NAME;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack->MajorFunction = IRP_MJ_QUERY_INFORMATION;
+    Stack->FileObject = FileObject;
+    Stack->Parameters.QueryFile.FileInformationClass = FileInfoClass;
+    Stack->Parameters.QueryFile.Length = Length;
+
+
+    /* Queue the IRP */
+    IopQueueIrpToThread(Irp);
+
+    /* Call the driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    *ReturnedLength = IoStatusBlock.Information;
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+IopGetBasicInformationFile(IN PFILE_OBJECT FileObject,
+                           OUT PFILE_BASIC_INFORMATION BasicInfo)
+{
+    ULONG ReturnedLength;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    PAGED_CODE();
+
+    /* Try to do it the fast way if possible */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (DeviceObject->DriverObject->FastIoDispatch != NULL &&
+        DeviceObject->DriverObject->FastIoDispatch->FastIoQueryBasicInfo != NULL &&
+        DeviceObject->DriverObject->FastIoDispatch->FastIoQueryBasicInfo(FileObject,
+                                                                         ((FileObject->Flags & FO_SYNCHRONOUS_IO) != 0),
+                                                                         BasicInfo,
+                                                                         &IoStatusBlock,
+                                                                         DeviceObject))
+    {
+        return IoStatusBlock.Status;
+    }
+
+    /* In case it failed, fall back to IRP-based method */
+    return IopGetFileInformation(FileObject, sizeof(FILE_BASIC_INFORMATION), FileBasicInformation, BasicInfo, &ReturnedLength);
+}
+
+NTSTATUS
+NTAPI
+IopOpenLinkOrRenameTarget(OUT PHANDLE Handle,
+                          IN PIRP Irp,
+                          IN PFILE_RENAME_INFORMATION RenameInfo,
+                          IN PFILE_OBJECT FileObject)
+{
+    NTSTATUS Status;
+    HANDLE TargetHandle;
+    UNICODE_STRING FileName;
+    PIO_STACK_LOCATION Stack;
+    PFILE_OBJECT TargetFileObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION BasicInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
+    ACCESS_MASK DesiredAccess = FILE_WRITE_DATA;
+
+    PAGED_CODE();
+
+    /* First, establish whether our target is a directory */
+    if (!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN))
+    {
+        Status = IopGetBasicInformationFile(FileObject, &BasicInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        if (BasicInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            DesiredAccess = FILE_ADD_SUBDIRECTORY;
+        }
+    }
+
+    /* Setup the string to the target */
+    FileName.Buffer = RenameInfo->FileName;
+    FileName.Length = RenameInfo->FileNameLength;
+    FileName.MaximumLength = RenameInfo->FileNameLength;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               (FileObject->Flags & FO_OPENED_CASE_SENSITIVE ? 0 : OBJ_CASE_INSENSITIVE) | OBJ_KERNEL_HANDLE,
+                               RenameInfo->RootDirectory,
+                               NULL);
+
+    /* And open its parent directory */
+    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
+    {
+        ASSERT(!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN));
+#if 0
+        /* Commented out - we don't support FO extension yet
+         * FIXME: Corrected last arg when it's supported
+         */
+        Status = IoCreateFileSpecifyDeviceObjectHint(&TargetHandle,
+                                                     DesiredAccess | SYNCHRONIZE,
+                                                     &ObjectAttributes,
+                                                     &IoStatusBlock,
+                                                     NULL,
+                                                     0,
+                                                     FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                                     FILE_OPEN,
+                                                     FILE_OPEN_FOR_BACKUP_INTENT,
+                                                     NULL,
+                                                     0,
+                                                     CreateFileTypeNone,
+                                                     NULL,
+                                                     IO_FORCE_ACCESS_CHECK | IO_OPEN_TARGET_DIRECTORY | IO_NO_PARAMETER_CHECKING,
+                                                     FileObject->DeviceObject);
+#else
+        ASSERT(FALSE);
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+#endif
+    }
+    else
+    {
+        Status = IoCreateFile(&TargetHandle,
+                              DesiredAccess | SYNCHRONIZE,
+                              &ObjectAttributes,
+                              &IoStatusBlock,
+                              NULL,
+                              0,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE,
+                              FILE_OPEN,
+                              FILE_OPEN_FOR_BACKUP_INTENT,
+                              NULL,
+                              0,
+                              CreateFileTypeNone,
+                              NULL,
+                              IO_FORCE_ACCESS_CHECK | IO_OPEN_TARGET_DIRECTORY | IO_NO_PARAMETER_CHECKING);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Once open, continue only if:
+     * Target exists and we're allowed to overwrite it
+     */
+    Stack = IoGetNextIrpStackLocation(Irp);
+    if (Stack->Parameters.SetFile.FileInformationClass == FileLinkInformation &&
+        !RenameInfo->ReplaceIfExists &&
+        IoStatusBlock.Information == FILE_EXISTS)
+    {
+        ObCloseHandle(TargetHandle, KernelMode);
+        return STATUS_OBJECT_NAME_COLLISION;
+    }
+
+    /* Now, we'll get the associated device of the target, to check for same device location
+     * So, get the FO first
+     */
+    Status = ObReferenceObjectByHandle(TargetHandle,
+                                       FILE_WRITE_DATA,
+                                       IoFileObjectType,
+                                       KernelMode,
+                                       (PVOID *)&TargetFileObject,
+                                       &HandleInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        ObCloseHandle(TargetHandle, KernelMode);
+        return Status;
+    }
+
+    /* We can dereference, we have the handle */
+    ObDereferenceObject(TargetFileObject);
+    /* If we're not on the same device, error out **/
+    if (IoGetRelatedDeviceObject(TargetFileObject) != IoGetRelatedDeviceObject(FileObject))
+    {
+        ObCloseHandle(TargetHandle, KernelMode);
+        return STATUS_NOT_SAME_DEVICE;
+    }
+
+    /* Return parent directory file object and handle */
+    Stack->Parameters.SetFile.FileObject = TargetFileObject;
+    *Handle = TargetHandle;
+
+    return STATUS_SUCCESS;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -2218,6 +2448,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
     PVOID Queue;
     PFILE_COMPLETION_INFORMATION CompletionInfo = FileInformation;
     PIO_COMPLETION_CONTEXT Context;
+    PFILE_RENAME_INFORMATION RenameInfo;
+    HANDLE TargetHandle = NULL;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
@@ -2469,6 +2701,58 @@ NtSetInformationFile(IN HANDLE FileHandle,
         Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information = 0;
     }
+    else if (FileInformationClass == FileRenameInformation ||
+             FileInformationClass == FileLinkInformation ||
+             FileInformationClass == FileMoveClusterInformation)
+    {
+        /* Get associated information */
+        RenameInfo = Irp->AssociatedIrp.SystemBuffer;
+
+        /* Only rename if:
+         * -> We have a name
+         * -> In unicode
+         * -> sizes are valid
+         */
+        if (RenameInfo->FileNameLength != 0 &&
+            !(RenameInfo->FileNameLength & 1) &&
+            (Length - FIELD_OFFSET(FILE_RENAME_INFORMATION, FileName) >= RenameInfo->FileNameLength))
+        {
+            /* Properly set information received */
+            if (FileInformationClass == FileMoveClusterInformation)
+            {
+                StackPtr->Parameters.SetFile.ClusterCount = ((PFILE_MOVE_CLUSTER_INFORMATION)RenameInfo)->ClusterCount;
+            }
+            else
+            {
+                StackPtr->Parameters.SetFile.ReplaceIfExists = RenameInfo->ReplaceIfExists;
+            }
+
+            /* If we got fully path OR relative target, attempt a parent directory open */
+            if (RenameInfo->FileName[0] == OBJ_NAME_PATH_SEPARATOR || RenameInfo->RootDirectory)
+            {
+                Status = IopOpenLinkOrRenameTarget(&TargetHandle, Irp, RenameInfo, FileObject);
+                if (!NT_SUCCESS(Status))
+                {
+                    Irp->IoStatus.Status = Status;
+                }
+                else
+                {
+                    /* Call the Driver */
+                    Status = IoCallDriver(DeviceObject, Irp);
+                }
+            }
+            else
+            {
+                /* Call the Driver */
+                Status = IoCallDriver(DeviceObject, Irp);
+            }
+        }
+        else
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            Irp->IoStatus.Status = Status;
+        }
+    }
     else
     {
         /* Call the Driver */
@@ -2558,6 +2842,11 @@ NtSetInformationFile(IN HANDLE FileHandle,
 
         /* Release the file object if we had locked it*/
         if (!LocalEvent) IopUnlockFileObject(FileObject);
+    }
+
+    if (TargetHandle != NULL)
+    {
+        ObCloseHandle(TargetHandle, KernelMode);
     }
 
     /* Return the Status */

@@ -22,8 +22,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-static unsigned ppc_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                             enum cpu_addr ca, ADDRESS64* addr)
+static BOOL ppc_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                         enum cpu_addr ca, ADDRESS64* addr)
 {
    switch (ca)
     {

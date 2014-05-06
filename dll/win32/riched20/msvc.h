@@ -101,7 +101,7 @@ typedef HRESULT (WINAPI typeof(fnTextSrv_OnTxUIActivate))(ITextServices *iface);
 typedef HRESULT (WINAPI typeof(fnTextSrv_OnTxUIDeactivate))(ITextServices *iface);
 typedef HRESULT (WINAPI typeof(fnTextSrv_TxGetText))(ITextServices *iface,BSTR* pbstrText);
 typedef HRESULT (WINAPI typeof(fnTextSrv_TxSetText))(ITextServices *iface,LPCWSTR pszText);
-typedef HRESULT (WINAPI typeof(fnTextSrv_TxGetCurrentTargetX))(ITextServices *iface,LONG* x);
+typedef HRESULT (WINAPI typeof(fnTextSrv_TxGetCurTargetX))(ITextServices *iface,LONG* x);
 typedef HRESULT (WINAPI typeof(fnTextSrv_TxGetBaseLinePos))(ITextServices *iface,LONG* x);
 typedef HRESULT (WINAPI typeof(fnTextSrv_TxGetNaturalSize))(ITextServices *iface,DWORD dwAspect,HDC hdcDraw,HDC hicTargetDev,DVTARGETDEVICE* ptd,DWORD dwMode,const SIZEL* psizelExtent,LONG* pwidth,LONG* pheight);
 typedef HRESULT (WINAPI typeof(fnTextSrv_TxGetDropTarget))(ITextServices *iface,struct IDropTarget** ppDropTarget);

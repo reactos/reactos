@@ -93,7 +93,7 @@ static BOOL pendingRename()
         }
         else
         {
-            printf("Couldn't open key, error %ld\n", res);
+            printf("Couldn't open key, error %lu\n", res);
             res=FALSE;
         }
 
@@ -113,7 +113,7 @@ static BOOL pendingRename()
 
     if (res!=ERROR_SUCCESS)
     {
-        printf("Couldn't query value's length (%ld)\n", res);
+        printf("Couldn't query value's length (%lu)\n", res);
         res=FALSE;
         goto end;
     }
@@ -369,7 +369,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         if ((res=RegEnumValueW(hkRun, i, szValue, &nValLength, 0, &type,
                         (LPBYTE)szCmdLine, &nDataLength))!=ERROR_SUCCESS)
         {
-            printf("Couldn't read in value %ld - %ld\n", i, res);
+            printf("Couldn't read in value %lu - %ld\n", i, res);
 
             continue;
         }
@@ -379,22 +379,22 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
 
         if (bDelete && (res=RegDeleteValueW(hkRun, szValue))!=ERROR_SUCCESS)
         {
-            printf("Couldn't delete value - %ld, %ld. Running command anyways.\n", i, res);
+            printf("Couldn't delete value - %lu, %ld. Running command anyways.\n", i, res);
         }
 
         if (type!=REG_SZ)
         {
-            printf("Incorrect type of value #%ld (%ld)\n", i, type);
+            printf("Incorrect type of value #%lu (%lu)\n", i, type);
 
             continue;
         }
 
         if ((res=runCmd(szCmdLine, NULL, bSynchronous, FALSE))==INVALID_RUNCMD_RETURN)
         {
-            printf("Error running cmd #%ld (%ld)\n", i, GetLastError());
+            printf("Error running cmd #%lu (%ld)\n", i, GetLastError());
         }
 
-        printf("Done processing cmd #%ld\n", i);
+        printf("Done processing cmd #%lu\n", i);
     }
 
     free(szValue);

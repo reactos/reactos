@@ -1381,7 +1381,7 @@ EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
         if (Colon != 0 && Colon != PageFileInfo->PageFileName.Buffer)
         {
             /* We can call the user callback routine with the colon */
-            Colon -= sizeof(WCHAR);
+            --Colon;
             pCallbackRoutine(lpContext, &Information, Colon);
         }
 

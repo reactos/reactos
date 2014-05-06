@@ -4672,10 +4672,10 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
     _ANONYMOUS_STRUCT struct {
       DWORD NameOffset:31;
       DWORD NameIsString:1;
-    } DUMMYSTRUCTNAME1;
+    } DUMMYSTRUCTNAME;
     DWORD Name;
     WORD Id;
-  } DUMMYUNIONNAME1;
+  } DUMMYUNIONNAME;
   _ANONYMOUS_UNION union {
     DWORD OffsetToData;
     _ANONYMOUS_STRUCT struct {

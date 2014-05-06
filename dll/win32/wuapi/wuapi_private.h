@@ -36,11 +36,11 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
 
-extern HRESULT AutomaticUpdates_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateSession_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateSearcher_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateDownloader_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateInstaller_create( IUnknown *pUnkOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT SystemInformation_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+extern HRESULT AutomaticUpdates_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT UpdateSession_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT UpdateSearcher_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT UpdateDownloader_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT UpdateInstaller_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT SystemInformation_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
 
 #endif /* _WUAPI_PRIVATE_H_ */

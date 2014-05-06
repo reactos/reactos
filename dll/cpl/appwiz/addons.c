@@ -26,11 +26,11 @@
 
 #include <msi.h>
 
-#define GECKO_VERSION "2.21"
+#define GECKO_VERSION "2.24"
 
 #ifdef __i386__
 #define ARCH_STRING "x86"
-#define GECKO_SHA "a514fc4d53783a586c7880a676c415695fe934a3"
+#define GECKO_SHA "b4923c0565e6cbd20075a0d4119ce3b48424f962"
 #else
 #define ARCH_STRING ""
 #define GECKO_SHA "???"
@@ -60,7 +60,7 @@ static const addon_info_t *addon;
 
 static HWND install_dialog = NULL;
 
-static WCHAR GeckoUrl[] = L"http://dl.dropboxusercontent.com/u/743491/ReactOS/wine_gecko-2.21-x86.msi";
+static WCHAR GeckoUrl[] = L"http://dl.dropboxusercontent.com/u/743491/ReactOS/wine_gecko-2.24-x86.msi";
 
 /* SHA definitions are copied from advapi32. They aren't available in headers. */
 

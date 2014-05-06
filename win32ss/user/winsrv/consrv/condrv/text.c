@@ -595,8 +595,8 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
     PCHAR_INFO Ptr;
 
     COORD  TopLeft = {0};
-    ULONG  NumCodesToWrite = Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y;
-    USHORT OldScreenAttrib = Buffer->ScreenDefaultAttrib;
+    ULONG  NumCodesToWrite;
+    USHORT OldScreenAttrib;
 
     if (Console == NULL || Buffer == NULL)
     {
@@ -606,9 +606,13 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
 
+    NumCodesToWrite = Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y;
+    OldScreenAttrib = Buffer->ScreenDefaultAttrib;
+
     X = TopLeft.X;
     Y = (TopLeft.Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
     Length = NumCodesToWrite;
+
     // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work
     // Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X]; // May work
 

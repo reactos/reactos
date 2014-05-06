@@ -591,16 +591,18 @@ IoAllocateIrp(IN CCHAR StackSize,
         /* Check if we should charge quota */
         if (ChargeQuota)
         {
-            Irp = ExAllocatePoolWithQuotaTag(NonPagedPool, Size, TAG_IRP);
+            Irp = ExAllocatePoolWithQuotaTag(NonPagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                             Size,
+                                             TAG_IRP);
         }
         else
         {
-            /* Allocate the IRP With no Quota charge */
+            /* Allocate the IRP with no quota charge */
             Irp = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_IRP);
         }
 
         /* Make sure it was sucessful */
-        if (!Irp) return(NULL);
+        if (!Irp) return NULL;
     }
     else
     {

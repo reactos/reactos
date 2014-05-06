@@ -156,7 +156,7 @@ ConSrvOpenUserSettings(DWORD ProcessId,
     TranslateConsoleName(szBuffer2, ConsoleTitle, MAX_PATH);
 
     /* Create the registry path */
-    wcsncat(szBuffer, szBuffer2, MAX_PATH);
+    wcsncat(szBuffer, szBuffer2, MAX_PATH - wcslen(szBuffer) - 1);
 
     /* Create or open the registry key */
     if (bCreate)
@@ -351,7 +351,7 @@ do {                                                                            
          * or we are saving settings for a particular console, which differs
          * from the default ones.
          */
-        swprintf(szValueName, L"ColorTable%02d", i);
+        swprintf(szValueName, L"ColorTable%02u", i);
         SetConsoleSetting(szValueName, REG_DWORD, sizeof(DWORD), &ConsoleInfo->Colors[i], s_Colors[i]);
     }
 

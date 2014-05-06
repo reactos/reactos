@@ -346,17 +346,75 @@ static HRESULT WINAPI HTMLFormElement_get_onreset(IHTMLFormElement *iface, VARIA
 static HRESULT WINAPI HTMLFormElement_submit(IHTMLFormElement *iface)
 {
     HTMLFormElement *This = impl_from_IHTMLFormElement(iface);
+    HTMLOuterWindow *window = NULL, *this_window = NULL;
+    nsIInputStream *post_stream;
+    nsAString action_uri_str, target_str;
+    IUri *uri;
     nsresult nsres;
+    HRESULT hres;
 
     TRACE("(%p)->()\n", This);
 
-    nsres = nsIDOMHTMLFormElement_Submit(This->nsform);
-    if(NS_FAILED(nsres)) {
-        ERR("Submit failed: %08x\n", nsres);
-        return E_FAIL;
+    if(This->element.node.doc) {
+        HTMLDocumentNode *doc = This->element.node.doc;
+        if(doc->window && doc->window->base.outer_window)
+            this_window = doc->window->base.outer_window;
+    }
+    if(!this_window) {
+        TRACE("No outer window\n");
+        return S_OK;
     }
 
-    return S_OK;
+    nsAString_Init(&target_str, NULL);
+    nsres = nsIDOMHTMLFormElement_GetTarget(This->nsform, &target_str);
+    if(NS_SUCCEEDED(nsres)) {
+        BOOL use_new_window;
+        window = get_target_window(this_window, &target_str, &use_new_window);
+        if(use_new_window)
+            FIXME("submit to new window is not supported\n");
+    }
+    nsAString_Finish(&target_str);
+    if(!window)
+        return S_OK;
+
+    /*
+     * FIXME: We currently don't use our submit implementation for sub-windows because
+     * load_nsuri can't support post data. We should fix it.
+     */
+    if(!window->doc_obj || window->doc_obj->basedoc.window != window) {
+        nsres = nsIDOMHTMLFormElement_Submit(This->nsform);
+        IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
+        if(NS_FAILED(nsres)) {
+            ERR("Submit failed: %08x\n", nsres);
+            return E_FAIL;
+        }
+
+        return S_OK;
+    }
+
+    nsAString_Init(&action_uri_str, NULL);
+    nsres = nsIDOMHTMLFormElement_GetFormData(This->nsform, NULL, &action_uri_str, &post_stream);
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *action_uri;
+
+        nsAString_GetData(&action_uri_str, &action_uri);
+        hres = create_uri(action_uri, 0, &uri);
+    }else {
+        ERR("GetFormData failed: %08x\n", nsres);
+        hres = E_FAIL;
+    }
+    nsAString_Finish(&action_uri_str);
+    if(SUCCEEDED(hres)) {
+        window->readystate_locked++;
+        hres = submit_form(window, uri, post_stream);
+        window->readystate_locked--;
+        IUri_Release(uri);
+    }
+
+    IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
+    if(post_stream)
+        nsIInputStream_Release(post_stream);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLFormElement_reset(IHTMLFormElement *iface)

@@ -58,7 +58,7 @@ PrintAlias (VOID)
     DWORD len;
 
     len = GetConsoleAliasesLength(_T("cmd.exe"));
-    if (len <= 0)
+    if (len == 0)
         return;
 
     /* allocate memory for an extra \0 char to make parsing easier */

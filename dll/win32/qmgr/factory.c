@@ -57,7 +57,7 @@ BITS_IClassFactory_CreateInstance(IClassFactory *iface, IUnknown *pUnkOuter, REF
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    res = BackgroundCopyManagerConstructor(pUnkOuter, (LPVOID*) &punk);
+    res = BackgroundCopyManagerConstructor((LPVOID*) &punk);
     if (FAILED(res))
         return res;
 

@@ -221,7 +221,7 @@ GetDeviceCapabilities(
     caps->vDriverVersion = 0x0100;
 
     memset(caps->szPname, 0, sizeof(caps->szPname));
-    memcpy(caps->szPname, L"PC speaker\0", strlen("PC speaker\0") * 2);
+    wcscpy(caps->szPname, L"PC speaker");
 
     caps->wTechnology = MOD_SQSYNTH;
 

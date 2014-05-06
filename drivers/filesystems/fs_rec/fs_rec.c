@@ -380,7 +380,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\FileSystem\\Ext2Recognizer",
                              FS_TYPE_EXT2,
                              FILE_DEVICE_DISK_FILE_SYSTEM);
-    if (NT_SUCCESS(Status)){ DeviceCount++; DPRINT1("2 Ext2FS!!!!!\n");}
+    if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Return appropriate Status */
     return (DeviceCount > 0) ? STATUS_SUCCESS : STATUS_IMAGE_ALREADY_LOADED;

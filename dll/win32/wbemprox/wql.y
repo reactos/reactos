@@ -318,6 +318,12 @@ expr:
             if (!$$)
                 YYABORT;
         }
+  | TK_NOT expr
+        {
+            $$ = expr_unary( ctx, $2, OP_NOT );
+            if (!$$)
+                YYABORT;
+        }
   | prop_val TK_EQ const_val
         {
             $$ = expr_complex( ctx, $1, OP_EQ, $3 );

@@ -3162,8 +3162,8 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     return Count;
 }
 
-LONG
 FORCEINLINE
+LONG
 ScaleLong(LONG lValue, PFLOATOBJ pef)
 {
     FLOATOBJ efTemp;
@@ -3533,6 +3533,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
+                DC_vFinishBlit(dc, NULL);
                 goto fail2;
             }
             glyph = face->glyph;
@@ -3546,6 +3547,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
+                DC_vFinishBlit(dc, NULL);
                 goto fail2;
             }
         }
@@ -3609,6 +3611,7 @@ GreExtTextOutW(
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             // FT_Done_Glyph(realglyph);
             IntUnLockFreeType;
+            DC_vFinishBlit(dc, NULL);
             goto fail2;
         }
         SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
@@ -3617,6 +3620,7 @@ GreExtTextOutW(
             EngDeleteSurface((HSURF)HSourceGlyph);
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             IntUnLockFreeType;
+            DC_vFinishBlit(dc, NULL);
             goto fail2;
         }
 

@@ -19,40 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include <precomp.h>
 
 #include <stdio.h>
+#include <rpcproxy.h>
 
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <ole2.h>
-#include <oleauto.h>
-
-//#include "objidl.h"
-#include <atlbase.h>
-#include <atlwin.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(atl);
-
-static HINSTANCE hInst;
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
-
-    if (fdwReason == DLL_PROCESS_ATTACH) {
-        DisableThreadLibraryCalls(hinstDLL);
-        hInst = hinstDLL;
-    }
-    return TRUE;
-}
+extern HINSTANCE atl_instance;
 
 #define ATLVer1Size FIELD_OFFSET(_ATL_MODULEW, dwAtlBuildVer)
 
@@ -145,25 +117,6 @@ HRESULT WINAPI AtlModuleTerm(_ATL_MODULE *pM)
             iter = iter->pNext;
             HeapFree(GetProcessHeap(), 0, tmp);
         }
-    }
-
-    return S_OK;
-}
-
-HRESULT WINAPI AtlModuleAddTermFunc(_ATL_MODULEW *pM, _ATL_TERMFUNC *pFunc, DWORD_PTR dw)
-{
-    _ATL_TERMFUNC_ELEM *termfunc_elem;
-
-    TRACE("(%p %p %ld)\n", pM, pFunc, dw);
-
-    if (pM->cbSize > ATLVer1Size)
-    {
-        termfunc_elem = HeapAlloc(GetProcessHeap(), 0, sizeof(_ATL_TERMFUNC_ELEM));
-        termfunc_elem->pFunc = pFunc;
-        termfunc_elem->dw = dw;
-        termfunc_elem->pNext = pM->m_pTermFuncs;
-
-        pM->m_pTermFuncs = termfunc_elem;
     }
 
     return S_OK;
@@ -602,6 +555,7 @@ static HRESULT do_register_server(BOOL do_register)
     return do_register_dll_server(NULL, atl_dllW, MAKEINTRESOURCEW(101), do_register, reg_map);
 }
 
+
 /**************************************************************
  * DllGetClassObject (ATL.2)
  */
@@ -639,60 +593,4 @@ HRESULT WINAPI DllUnregisterServer(void)
 HRESULT WINAPI DllCanUnloadNow(void)
 {
     return S_FALSE;
-}
-
-/***********************************************************************
- *           AtlGetVersion              [ATL.@]
- */
-DWORD WINAPI AtlGetVersion(void *pReserved)
-{
-   return _ATL_VER;
-}
-
-/**********************************************************************
- * AtlAxWin class window procedure
- */
-static LRESULT CALLBACK AtlAxWin_wndproc( HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam )
-{
-    if ( wMsg == WM_CREATE )
-    {
-            DWORD len = GetWindowTextLengthW( hWnd ) + 1;
-            WCHAR *ptr = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-            if (!ptr)
-                return 1;
-            GetWindowTextW( hWnd, ptr, len );
-            AtlAxCreateControlEx( ptr, hWnd, NULL, NULL, NULL, NULL, NULL );
-            HeapFree( GetProcessHeap(), 0, ptr );
-            return 0;
-    }
-    return DefWindowProcW( hWnd, wMsg, wParam, lParam );
-}
-
-BOOL WINAPI AtlAxWinInit(void)
-{
-    WNDCLASSEXW wcex;
-    const WCHAR AtlAxWin[] = {'A','t','l','A','x','W','i','n',0};
-
-    FIXME("semi-stub\n");
-
-    if ( FAILED( OleInitialize(NULL) ) )
-        return FALSE;
-
-    wcex.cbSize        = sizeof(wcex);
-    wcex.style         = CS_GLOBALCLASS;
-    wcex.cbClsExtra    = 0;
-    wcex.cbWndExtra    = 0;
-    wcex.hInstance     = GetModuleHandleW( NULL );
-    wcex.hIcon         = NULL;
-    wcex.hCursor       = NULL;
-    wcex.hbrBackground = NULL;
-    wcex.lpszMenuName  = NULL;
-    wcex.hIconSm       = 0;
-
-    wcex.lpfnWndProc   = AtlAxWin_wndproc;
-    wcex.lpszClassName = AtlAxWin;
-    if ( !RegisterClassExW( &wcex ) )
-        return FALSE;
-
-    return TRUE;
 }

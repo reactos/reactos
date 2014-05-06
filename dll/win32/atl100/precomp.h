@@ -19,4 +19,6 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(atl);
+
 #endif /* _ATL100_PCH_ */

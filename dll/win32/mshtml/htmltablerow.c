@@ -88,43 +88,116 @@ static HRESULT WINAPI HTMLTableRow_Invoke(IHTMLTableRow *iface, DISPID dispIdMem
 static HRESULT WINAPI HTMLTableRow_put_align(IHTMLTableRow *iface, BSTR v)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_InitDepend(&val, v);
+
+    nsres = nsIDOMHTMLTableRowElement_SetAlign(This->nsrow, &val);
+    nsAString_Finish(&val);
+    if (NS_FAILED(nsres)){
+        ERR("Set Align(%s) failed!\n", debugstr_w(v));
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTableRow_get_align(IHTMLTableRow *iface, BSTR *p)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&val, NULL);
+    nsres = nsIDOMHTMLTableRowElement_GetAlign(This->nsrow, &val);
+
+    return return_nsstr(nsres, &val, p);
 }
 
 static HRESULT WINAPI HTMLTableRow_put_vAlign(IHTMLTableRow *iface, BSTR v)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_InitDepend(&val, v);
+
+    nsres = nsIDOMHTMLTableRowElement_SetVAlign(This->nsrow, &val);
+    nsAString_Finish(&val);
+
+    if (NS_FAILED(nsres)){
+        ERR("Set VAlign(%s) failed!\n", debugstr_w(v));
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTableRow_get_vAlign(IHTMLTableRow *iface, BSTR *p)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&val, NULL);
+    nsres = nsIDOMHTMLTableRowElement_GetVAlign(This->nsrow, &val);
+
+    return return_nsstr(nsres, &val, p);
 }
 
 static HRESULT WINAPI HTMLTableRow_put_bgColor(IHTMLTableRow *iface, VARIANT v)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    nsAString_InitDepend(&val, V_BSTR(&v));
+    variant_to_nscolor(&v, &val);
+    nsres = nsIDOMHTMLTableRowElement_SetBgColor(This->nsrow, &val);
+    nsAString_Finish(&val);
+
+    if (NS_FAILED(nsres)){
+        ERR("Set BgColor(%s) failed!\n", debugstr_variant(&v));
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTableRow_get_bgColor(IHTMLTableRow *iface, VARIANT *p)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString strColor;
+    nsresult nsres;
+    HRESULT hres;
+    const PRUnichar *color;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&strColor, NULL);
+    nsres = nsIDOMHTMLTableRowElement_GetBgColor(This->nsrow, &strColor);
+
+    if(NS_SUCCEEDED(nsres)) {
+       nsAString_GetData(&strColor, &color);
+       V_VT(p) = VT_BSTR;
+       hres = nscolor_to_str(color, &V_BSTR(p));
+    }else {
+       ERR("SetBgColor failed: %08x\n", nsres);
+       hres = E_FAIL;
+    }
+
+    nsAString_Finish(&strColor);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLTableRow_put_borderColor(IHTMLTableRow *iface, VARIANT v)
@@ -172,15 +245,29 @@ static HRESULT WINAPI HTMLTableRow_get_borderColorDark(IHTMLTableRow *iface, VAR
 static HRESULT WINAPI HTMLTableRow_get_rowIndex(IHTMLTableRow *iface, LONG *p)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+    nsres = nsIDOMHTMLTableRowElement_GetRowIndex(This->nsrow, p);
+    if(NS_FAILED(nsres)) {
+        ERR("Get rowIndex failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
-static HRESULT WINAPI HTMLTableRow_get_selectionRowIndex(IHTMLTableRow *iface, LONG *p)
+static HRESULT WINAPI HTMLTableRow_get_sectionRowIndex(IHTMLTableRow *iface, LONG *p)
 {
     HTMLTableRow *This = impl_from_IHTMLTableRow(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+    nsres = nsIDOMHTMLTableRowElement_GetSectionRowIndex(This->nsrow, p);
+    if(NS_FAILED(nsres)) {
+        ERR("Get selectionRowIndex failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTableRow_get_cells(IHTMLTableRow *iface, IHTMLElementCollection **p)
@@ -238,7 +325,7 @@ static const IHTMLTableRowVtbl HTMLTableRowVtbl = {
     HTMLTableRow_put_borderColorDark,
     HTMLTableRow_get_borderColorDark,
     HTMLTableRow_get_rowIndex,
-    HTMLTableRow_get_selectionRowIndex,
+    HTMLTableRow_get_sectionRowIndex,
     HTMLTableRow_get_cells,
     HTMLTableRow_insertCell,
     HTMLTableRow_deleteCell

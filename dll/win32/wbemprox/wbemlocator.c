@@ -180,7 +180,7 @@ static HRESULT WINAPI wbem_locator_ConnectServer(
     if (SecurityFlags)
         FIXME("unsupported flags\n");
 
-    hr = WbemServices_create( NULL, namespace, (void **)ppNamespace );
+    hr = WbemServices_create( namespace, (void **)ppNamespace );
     heap_free( namespace );
     heap_free( server );
     if (SUCCEEDED( hr ))
@@ -197,11 +197,11 @@ static const IWbemLocatorVtbl wbem_locator_vtbl =
     wbem_locator_ConnectServer
 };
 
-HRESULT WbemLocator_create( IUnknown *pUnkOuter, LPVOID *ppObj )
+HRESULT WbemLocator_create( LPVOID *ppObj )
 {
     wbem_locator *wl;
 
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
+    TRACE("(%p)\n", ppObj);
 
     wl = heap_alloc( sizeof(*wl) );
     if (!wl) return E_OUTOFMEMORY;

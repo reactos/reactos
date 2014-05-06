@@ -21,10 +21,6 @@
 #include <mshtmcid.h>
 #include <olectl.h>
 
-#if defined(_MSC_VER) && (__midl >= 501)
-midl_pragma warning(disable: 2362)
-#endif
-
 import "ocidl.idl";
 import "dimm.idl";
 import "shtypes.idl";
@@ -3882,6 +3878,94 @@ interface IHTMLDOMNode2 : IDispatch
     WINE_IHTMLDOMNODE2_DISPINTERFACE_DECL
 
 /*****************************************************************************
+ *    IHTMLDOMNode3 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(305106e0-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLDOMNode3 : IDispatch
+{
+    [propput, id(DISPID_IHTMLDOMNODE3_PREFIX)]
+    HRESULT prefix([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOMNODE3_PREFIX)]
+    HRESULT prefix([out, retval] VARIANT *p);
+
+    [propget, id(DISPID_IHTMLDOMNODE3_LOCALNAME)]
+    HRESULT localName([out, retval] VARIANT *p);
+
+    [propget, id(DISPID_IHTMLDOMNODE3_NAMESPACEURI)]
+    HRESULT namespaceURI([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOMNODE3_TEXTCONTENT)]
+    HRESULT textContent([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOMNODE3_TEXTCONTENT)]
+    HRESULT textContent([out, retval] VARIANT *p);
+
+    [id(DISPID_IHTMLDOMNODE3_ISEQUALNODE)]
+    HRESULT isEqualNode(
+        [in] IHTMLDOMNode3 *otherNode,
+        [out, retval] VARIANT_BOOL *isEqual);
+
+    [id(DISPID_IHTMLDOMNODE3_LOOKUPNAMESPACEURI)]
+    HRESULT lookupNamespaceURI(
+        [in] VARIANT *pvarPrefix,
+        [out, retval] VARIANT *pvarNamespaceURI);
+
+    [id(DISPID_IHTMLDOMNODE3_LOOKUPPREFIX)]
+    HRESULT lookupPrefix(
+       [in] VARIANT *pvarNamespaceURI,
+       [out, retval] VARIANT *pvarPrefix);
+
+    [id(DISPID_IHTMLDOMNODE3_ISDEFAULTNAMESPACE)]
+    HRESULT isDefaultNamespace(
+        [in] VARIANT *pvarNamespace,
+        [out, retval] VARIANT_BOOL *pfDefaultNamespace);
+
+    [id(DISPID_IHTMLDOMNODE3_IE9_APPENDCHILD)]
+    HRESULT appendChild(
+        [in] IHTMLDOMNode *newChild,
+        [out, retval] IHTMLDOMNode **node);
+
+    [id(DISPID_IHTMLDOMNODE3_IE9_INSERTBEFORE)]
+    HRESULT insertBefore(
+        [in] IHTMLDOMNode *newChild,
+        [in, optional] VARIANT refChild,
+        [out, retval] IHTMLDOMNode **node);
+
+    [id(DISPID_IHTMLDOMNODE3_IE9_REMOVECHILD)]
+    HRESULT removeChild(
+        [in] IHTMLDOMNode *oldChild,
+        [out, retval] IHTMLDOMNode **node);
+
+    [id(DISPID_IHTMLDOMNODE3_IE9_REPLACECHILD)]
+    HRESULT replaceChild(
+        [in] IHTMLDOMNode *newChild,
+        [in] IHTMLDOMNode *oldChild,
+        [out, retval] IHTMLDOMNode **node);
+
+    [id(DISPID_IHTMLDOMNODE3_ISSAMENODE)]
+    HRESULT isSameNode(
+        [in] IHTMLDOMNode3 *otherNode,
+        [out, retval] VARIANT_BOOL *isSame);
+
+    [id(DISPID_IHTMLDOMNODE3_COMPAREDOCUMENTPOSITION)]
+    HRESULT compareDocumentPosition(
+        [in] IHTMLDOMNode *otherNode,
+        [out, retval] USHORT *flags);
+
+    [id(DISPID_IHTMLDOMNODE3_ISSUPPORTED)]
+    HRESULT isSupported(
+        [in] BSTR feature,
+        [in] VARIANT version,
+        [out, retval] VARIANT_BOOL *pfisSupported);
+}
+
+/*****************************************************************************
  *    IHTMLDOMAttribute interface
  */
 [
@@ -7154,6 +7238,103 @@ interface IHTMLTxtRange : IDispatch
         [retval, out] VARIANT_BOOL *pfRet);
 }
 
+/*****************************************************************************
+ *    IHTMLDOMRange interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(305104ae-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLDOMRange : IDispatch
+{
+    [propget, id(DISPID_IHTMLDOMRANGE_STARTCONTAINER)]
+    HRESULT startContainer([out, retval] IHTMLDOMNode **p);
+
+    [propget, id(DISPID_IHTMLDOMRANGE_STARTOFFSET)]
+    HRESULT startOffset([out, retval] long *p);
+
+    [propget, id(DISPID_IHTMLDOMRANGE_ENDCONTAINER)]
+    HRESULT endContainer([out, retval] IHTMLDOMNode **p);
+
+    [propget, id(DISPID_IHTMLDOMRANGE_ENDOFFSET)]
+    HRESULT endOffset([out, retval] long *p);
+
+    [propget, id(DISPID_IHTMLDOMRANGE_COLLAPSED)]
+    HRESULT collapsed([out, retval] VARIANT_BOOL *p);
+
+    [propget, id(DISPID_IHTMLDOMRANGE_COMMONANCESTORCONTAINER)]
+    HRESULT commonAncestorContainer([out, retval] IHTMLDOMNode **p);
+
+    [id(DISPID_IHTMLDOMRANGE_SETSTART)]
+    HRESULT setStart(
+        [in] IDispatch *refNode,
+        [in] long offset);
+
+    [id(DISPID_IHTMLDOMRANGE_SETEND)] HRESULT
+    setEnd(
+        [in] IDispatch *refNode,
+        [in] long offset);
+
+    [id(DISPID_IHTMLDOMRANGE_SETSTARTBEFORE)]
+    HRESULT setStartBefore([in] IDispatch* refNode);
+
+    [id(DISPID_IHTMLDOMRANGE_SETSTARTAFTER)]
+    HRESULT setStartAfter([in] IDispatch *refNode);
+
+    [id(DISPID_IHTMLDOMRANGE_SETENDBEFORE)]
+    HRESULT setEndBefore([in] IDispatch *refNode);
+
+    [id(DISPID_IHTMLDOMRANGE_SETENDAFTER)]
+    HRESULT setEndAfter([in] IDispatch *refNode);
+
+    [id(DISPID_IHTMLDOMRANGE_COLLAPSE)]
+    HRESULT collapse([in] VARIANT_BOOL toStart);
+
+    [id(DISPID_IHTMLDOMRANGE_SELECTNODE)]
+    HRESULT selectNode([in] IDispatch *refNode);
+
+    [id(DISPID_IHTMLDOMRANGE_SELECTNODECONTENTS)]
+    HRESULT selectNodeContents([in] IDispatch *refNode);
+
+    [id(DISPID_IHTMLDOMRANGE_COMPAREBOUNDARYPOINTS)]
+    HRESULT compareBoundaryPoints(
+        [in] short how,
+        [in] IDispatch *sourceRange,
+        [out, retval] long *compareResult);
+
+    [id(DISPID_IHTMLDOMRANGE_DELETECONTENTS)]
+    HRESULT deleteContents();
+
+    [id(DISPID_IHTMLDOMRANGE_EXTRACTCONTENTS)]
+    HRESULT extractContents([out, retval] IDispatch **ppDocumentFragment);
+
+    [id(DISPID_IHTMLDOMRANGE_CLONECONTENTS)]
+    HRESULT cloneContents([out, retval] IDispatch **ppDocumentFragment);
+
+    [id(DISPID_IHTMLDOMRANGE_INSERTNODE)]
+    HRESULT insertNode([in] IDispatch *newNode);
+
+    [id(DISPID_IHTMLDOMRANGE_SURROUNDCONTENTS)]
+    HRESULT surroundContents([in] IDispatch *newParent);
+
+    [id(DISPID_IHTMLDOMRANGE_CLONERANGE)]
+    HRESULT cloneRange([out, retval] IHTMLDOMRange **ppClonedRange);
+
+    [id(DISPID_IHTMLDOMRANGE_TOSTRING)]
+    HRESULT toString([out, retval] BSTR *pRangeString);
+
+    [id(DISPID_IHTMLDOMRANGE_DETACH)]
+    HRESULT detach();
+
+    [id(DISPID_IHTMLDOMRANGE_GETCLIENTRECTS)]
+    HRESULT getClientRects([out, retval] IHTMLRectCollection **ppRectCol);
+
+    [id(DISPID_IHTMLDOMRANGE_GETBOUNDINGCLIENTRECT)]
+    HRESULT getBoundingClientRect([out, retval] IHTMLRect **ppRect);
+}
+
 [
     noncreatable,
     uuid(3050f37f-98b5-11cf-bb82-00aa00bdce0b)
@@ -9310,6 +9491,70 @@ interface IHTMLSelectionObject : IDispatch
 
     [propget, id(DISPID_IHTMLSELECTIONOBJECT_TYPE)]
     HRESULT type([retval, out] BSTR *p);
+}
+
+/*****************************************************************************
+ *    IHTMLSelection interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(305104b6-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLSelection : IDispatch
+{
+    [propget, id(DISPID_IHTMLSELECTION_ANCHORNODE)]
+    HRESULT anchorNode([out, retval] IHTMLDOMNode **p);
+
+    [propget, id(DISPID_IHTMLSELECTION_ANCHOROFFSET)]
+    HRESULT anchorOffset([out, retval] long *p);
+
+    [propget, id(DISPID_IHTMLSELECTION_FOCUSNODE)]
+    HRESULT focusNode([out, retval] IHTMLDOMNode **p);
+
+    [propget, id(DISPID_IHTMLSELECTION_FOCUSOFFSET)]
+    HRESULT focusOffset([out, retval] long *p);
+
+    [propget, id(DISPID_IHTMLSELECTION_ISCOLLAPSED)]
+    HRESULT isCollapsed([out, retval] VARIANT_BOOL *p);
+
+    [id(DISPID_IHTMLSELECTION_COLLAPSE)]
+    HRESULT collapse(
+        [in] IDispatch *parentNode,
+        [in] long offfset);
+
+    [id(DISPID_IHTMLSELECTION_COLLAPSETOSTART)]
+    HRESULT collapseToStart();
+
+    [id(DISPID_IHTMLSELECTION_COLLAPSETOEND)]
+    HRESULT collapseToEnd();
+
+    [id(DISPID_IHTMLSELECTION_SELECTALLCHILDREN)]
+    HRESULT selectAllChildren([in] IDispatch *parentNode);
+
+    [id(DISPID_IHTMLSELECTION_DELETEFROMDOCUMENT)]
+    HRESULT deleteFromDocument();
+
+    [propget, id(DISPID_IHTMLSELECTION_RANGECOUNT)]
+    HRESULT rangeCount([out, retval] long *p);
+
+    [id(DISPID_IHTMLSELECTION_GETRANGEAT)]
+    HRESULT getRangeAt(
+        [in] long index,
+        [out, retval] IHTMLDOMRange **ppRange);
+
+    [id(DISPID_IHTMLSELECTION_ADDRANGE)]
+    HRESULT addRange([in] IDispatch *range);
+
+    [id(DISPID_IHTMLSELECTION_REMOVERANGE)]
+    HRESULT removeRange([in] IDispatch *range);
+
+    [id(DISPID_IHTMLSELECTION_REMOVEALLRANGES)]
+    HRESULT removeAllRanges();
+
+    [id(DISPID_IHTMLSELECTION_TOSTRING)]
+    HRESULT toString([out, retval] BSTR *pSelectionString);
 }
 
 /*****************************************************************************
@@ -13342,6 +13587,27 @@ methods:
 }
 
 /*****************************************************************************
+ *    IDOMProcessingInstruction interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510742-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IDOMProcessingInstruction : IDispatch
+{
+    [propget, id(DISPID_IDOMPROCESSINGINSTRUCTION_TARGET)]
+    HRESULT target([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IDOMPROCESSINGINSTRUCTION_DATA)]
+    HRESULT data([in] BSTR v);
+
+    [propget, id(DISPID_IDOMPROCESSINGINSTRUCTION_DATA)]
+    HRESULT data([out, retval] BSTR *p);
+}
+
+/*****************************************************************************
  *    IHTMLDocument interface
  */
 [
@@ -14044,6 +14310,355 @@ interface IHTMLDocument6 : IDispatch
 
     [id(DISPID_IHTMLDOCUMENT6_UPDATESETTINGS)]
     HRESULT updateSettings();
+}
+
+/*****************************************************************************
+ *    IHTMLDocument7 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(305104b8-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLDocument7 : IDispatch
+{
+    [propget, id(DISPID_IHTMLDOCUMENT7_DEFAULTVIEW)]
+    HRESULT defaultView([out, retval] IHTMLWindow2 **p);
+
+    [id(DISPID_IHTMLDOCUMENT7_CREATECDATASECTION)]
+    HRESULT createCDATASection(
+        [in] BSTR text,
+        [out, retval] IHTMLDOMNode **newCDATASectionNode);
+
+    [id(DISPID_IHTMLDOCUMENT7_GETSELECTION)]
+    HRESULT getSelection([out, retval] IHTMLSelection **ppIHTMLSelection);
+
+    [id(DISPID_IHTMLDOCUMENT7_GETELEMENTSBYTAGNAMENS)]
+    HRESULT getElementsByTagNameNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR bstrLocalName,
+        [out, retval] IHTMLElementCollection **pelColl);
+
+    [id(DISPID_IHTMLDOCUMENT7_CREATEELEMENTNS)]
+    HRESULT createElementNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR bstrTag,
+        [out, retval] IHTMLElement **newElem);
+
+    [id(DISPID_IHTMLDOCUMENT7_CREATEATTRIBUTENS)]
+    HRESULT createAttributeNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR bstrAttrName,
+        [out, retval] IHTMLDOMAttribute **ppAttribute);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONMSTHUMBNAILCLICK), displaybind, bindable]
+    HRESULT onmsthumbnailclick([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONMSTHUMBNAILCLICK), displaybind, bindable]
+    HRESULT onmsthumbnailclick([out, retval] VARIANT *p);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_CHARACTERSET)]
+    HRESULT characterSet([out, retval] BSTR *p);
+
+    [id(DISPID_IHTMLDOCUMENT7_IE9_CREATEELEMENT)]
+    HRESULT createElement(
+        [in] BSTR bstrTag,
+        [out, retval] IHTMLElement **newElem);
+
+    [id(DISPID_IHTMLDOCUMENT7_IE9_CREATEATTRIBUTE)]
+    HRESULT createAttribute(
+        [in] BSTR bstrAttrName,
+        [out, retval] IHTMLDOMAttribute **ppAttribute);
+
+    [id(DISPID_IHTMLDOCUMENT7_GETELEMENTSBYCLASSNAME)]
+    HRESULT getElementsByClassName(
+        [in] BSTR v,
+        [out, retval] IHTMLElementCollection **pel);
+
+    [id(DISPID_IHTMLDOCUMENT7_CREATEPROCESSINGINSTRUCTION)]
+    HRESULT createProcessingInstruction(
+        [in] BSTR bstrTarget,
+        [in] BSTR bstrData,
+        [out, retval] IDOMProcessingInstruction **newProcessingInstruction);
+
+    [id(DISPID_IHTMLDOCUMENT7_ADOPTNODE)]
+    HRESULT adoptNode(
+        [in] IHTMLDOMNode *pNodeSource,
+        [out, retval] IHTMLDOMNode3 **ppNodeDest);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONMSSITEMODEJUMPLISTITEMREMOVED), displaybind, bindable]
+    HRESULT onmssitemodejumplistitemremoved([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONMSSITEMODEJUMPLISTITEMREMOVED), displaybind, bindable]
+    HRESULT onmssitemodejumplistitemremoved([out, retval] VARIANT *p);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_IE9_ALL)]
+    HRESULT all([out, retval] IHTMLElementCollection **p);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_INPUTENCODING)]
+    HRESULT inputEncoding([out, retval] BSTR *p);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_XMLENCODING)]
+    HRESULT xmlEncoding([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_XMLSTANDALONE)]
+    HRESULT xmlStandalone([in] VARIANT_BOOL v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_XMLSTANDALONE)]
+    HRESULT xmlStandalone([out, retval] VARIANT_BOOL *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_XMLVERSION)]
+    HRESULT xmlVersion([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_XMLVERSION)]
+    HRESULT xmlVersion([out, retval] BSTR *p);
+
+    [id(DISPID_IHTMLDOCUMENT7_HASATTRIBUTES)]
+    HRESULT hasAttributes([out, retval] VARIANT_BOOL *pfHasAttributes);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONABORT), displaybind, bindable]
+    HRESULT onabort([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONABORT), displaybind, bindable]
+    HRESULT onabort([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONBLUR), displaybind, bindable]
+    HRESULT onblur([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONBLUR), displaybind, bindable]
+    HRESULT onblur([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONCANPLAY), displaybind, bindable]
+    HRESULT oncanplay([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONCANPLAY), displaybind, bindable]
+    HRESULT oncanplay([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONCANPLAYTHROUGH), displaybind, bindable]
+    HRESULT oncanplaythrough([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONCANPLAYTHROUGH), displaybind, bindable]
+    HRESULT oncanplaythrough([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONCHANGE), displaybind, bindable]
+    HRESULT onchange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONCHANGE), displaybind, bindable]
+    HRESULT onchange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONDRAG), displaybind, bindable]
+    HRESULT ondrag([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONDRAG), displaybind, bindable]
+    HRESULT ondrag([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONDRAGEND), displaybind, bindable]
+    HRESULT ondragend([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONDRAGEND), displaybind, bindable]
+    HRESULT ondragend([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONDRAGENTER), displaybind, bindable]
+    HRESULT ondragenter([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONDRAGENTER), displaybind, bindable]
+    HRESULT ondragenter([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONDRAGLEAVE), displaybind, bindable]
+    HRESULT ondragleave([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONDRAGLEAVE), displaybind, bindable]
+    HRESULT ondragleave([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONDRAGOVER), displaybind, bindable]
+    HRESULT ondragover([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONDRAGOVER), displaybind, bindable]
+    HRESULT ondragover([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONDROP), displaybind, bindable]
+    HRESULT ondrop([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONDROP), displaybind, bindable]
+    HRESULT ondrop([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONDURATIONCHANGE), displaybind, bindable]
+    HRESULT ondurationchange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONDURATIONCHANGE), displaybind, bindable]
+    HRESULT ondurationchange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONEMPTIED), displaybind, bindable]
+    HRESULT onemptied([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONEMPTIED), displaybind, bindable]
+    HRESULT onemptied([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONENDED), displaybind, bindable]
+    HRESULT onended([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONENDED), displaybind, bindable]
+    HRESULT onended([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONERROR), displaybind, bindable]
+    HRESULT onerror([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONERROR), displaybind, bindable]
+    HRESULT onerror([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONFOCUS), displaybind, bindable]
+    HRESULT onfocus([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONFOCUS), displaybind, bindable]
+    HRESULT onfocus([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONINPUT), displaybind, bindable]
+    HRESULT oninput([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONINPUT), displaybind, bindable]
+    HRESULT oninput([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONLOAD), displaybind, bindable]
+    HRESULT onload([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONLOAD), displaybind, bindable]
+    HRESULT onload([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONLOADEDDATA), displaybind, bindable]
+    HRESULT onloadeddata([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONLOADEDDATA), displaybind, bindable]
+    HRESULT onloadeddata([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONLOADEDMETADATA), displaybind, bindable]
+    HRESULT onloadedmetadata([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONLOADEDMETADATA), displaybind, bindable]
+    HRESULT onloadedmetadata([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONLOADSTART), displaybind, bindable]
+    HRESULT onloadstart([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONLOADSTART), displaybind, bindable]
+    HRESULT onloadstart([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONPAUSE), displaybind, bindable]
+    HRESULT onpause([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONPAUSE), displaybind, bindable]
+    HRESULT onpause([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONPLAY), displaybind, bindable]
+    HRESULT onplay([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONPLAY), displaybind, bindable]
+    HRESULT onplay([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONPLAYING), displaybind, bindable]
+    HRESULT onplaying([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONPLAYING), displaybind, bindable]
+    HRESULT onplaying([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONPROGRESS), displaybind, bindable]
+    HRESULT onprogress([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONPROGRESS), displaybind, bindable]
+    HRESULT onprogress([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONRATECHANGE), displaybind, bindable]
+    HRESULT onratechange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONRATECHANGE), displaybind, bindable]
+    HRESULT onratechange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONRESET), displaybind, bindable]
+    HRESULT onreset([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONRESET), displaybind, bindable]
+    HRESULT onreset([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONSCROLL), displaybind, bindable]
+    HRESULT onscroll([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONSCROLL), displaybind, bindable]
+    HRESULT onscroll([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONSEEKED), displaybind, bindable]
+    HRESULT onseeked([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONSEEKED), displaybind, bindable]
+    HRESULT onseeked([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONSEEKING), displaybind, bindable]
+    HRESULT onseeking([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONSEEKING), displaybind, bindable]
+    HRESULT onseeking([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONSELECT), displaybind, bindable]
+    HRESULT onselect([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONSELECT), displaybind, bindable]
+    HRESULT onselect([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONSTALLED), displaybind, bindable]
+    HRESULT onstalled([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONSTALLED), displaybind, bindable]
+    HRESULT onstalled([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONSUBMIT), displaybind, bindable]
+    HRESULT onsubmit([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONSUBMIT), displaybind, bindable]
+    HRESULT onsubmit([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONSUSPEND), displaybind, bindable]
+    HRESULT onsuspend([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONSUSPEND), displaybind, bindable]
+    HRESULT onsuspend([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONTIMEUPDATE), displaybind, bindable]
+    HRESULT ontimeupdate([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONTIMEUPDATE), displaybind, bindable]
+    HRESULT ontimeupdate([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONVOLUMECHANGE), displaybind, bindable]
+    HRESULT onvolumechange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONVOLUMECHANGE), displaybind, bindable]
+    HRESULT onvolumechange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLDOCUMENT7_ONWAITING), displaybind, bindable]
+    HRESULT onwaiting([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_ONWAITING), displaybind, bindable]
+    HRESULT onwaiting([out, retval] VARIANT *p);
+
+    [id(DISPID_IHTMLDOCUMENT7_NORMALIZE)]
+    HRESULT normalize();
+
+    [id(DISPID_IHTMLDOCUMENT7_IMPORTNODE)]
+    HRESULT importNode(
+        [in] IHTMLDOMNode *pNodeSource,
+        [in] VARIANT_BOOL fDeep,
+        [out, retval] IHTMLDOMNode3 **ppNodeDest);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_IE9_PARENTWINDOW)]
+    HRESULT parentWindow([out, retval] IHTMLWindow2 **p);
+
+    [propputref, id(DISPID_IHTMLDOCUMENT7_IE9_BODY)]
+    HRESULT body([in] IHTMLElement *v);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_IE9_BODY)]
+    HRESULT body([out, retval] IHTMLElement **p);
+
+    [propget, id(DISPID_IHTMLDOCUMENT7_HEAD)]
+    HRESULT head([out, retval] IHTMLElement **p);
 }
 
 /*****************************************************************************
@@ -18519,4 +19134,56 @@ interface IHTMLPrivateWindow : IUnknown
     HRESULT PICSComplete(int arg);
     HRESULT FindWindowByName(LPCWSTR name, IHTMLWindow2 **ret);
     HRESULT GetAddressBarUrl(BSTR *url);
+}
+
+/*****************************************************************************
+ *    IWebBrowserPriv interface
+ */
+[
+    object,
+    uuid(3050f804-98b5-11cf-bb82-00aa00bdce0b),
+    local
+]
+interface IWebBrowserPriv : IUnknown
+{
+    HRESULT NavigateWithBindCtx(VARIANT *uri, VARIANT *flags, VARIANT *target_frame, VARIANT *post_data,
+            VARIANT *headers, IBindCtx *bind_ctx, LPOLESTR url_fragment);
+    HRESULT OnClose();
+}
+
+/*****************************************************************************
+ *    IWebBrowserPriv2IE8 interface
+ */
+[
+    object,
+    uuid(3ed72303-6ffc-4214-ba90-faf1862dec8a),
+    local
+]
+interface IWebBrowserPriv2IE8 : IUnknown
+{
+  HRESULT NavigateWithBindCtx2(IUri *uri, VARIANT *flags, VARIANT *target_frame, VARIANT *post_data,
+          VARIANT *headers, IBindCtx *bind_ctx, LPOLESTR url_fragment);
+  HRESULT SetBrowserFrameOptions(DWORD opt1, DWORD opt2);
+  HRESULT DetachConnectionPoints();
+  HRESULT GetProcessId(DWORD *pid);
+  HRESULT CompatAttachEditEvents();
+  HRESULT HandleOpenOptions(IUnknown *obj, BSTR bstr, int options);
+  HRESULT SetSearchTerm(BSTR term);
+  HRESULT GetSearchTerm(BSTR *term);
+  HRESULT GetCurrentDocument(IDispatch** doc);
+}
+
+/*****************************************************************************
+ *    IWebBrowserPriv2IE9 interface
+ */
+[
+    object,
+    uuid(3ed72303-6ffc-4214-ba90-faf1862dec8a),
+    local
+]
+interface IWebBrowserPriv2IE9 : IUnknown
+{
+    HRESULT NavigateWithBindCtx2(IUri *uri, VARIANT *flags, VARIANT *target_frame, VARIANT *post_data,
+            VARIANT *headers, IBindCtx *bind_ctx, LPOLESTR url_fragment, DWORD unused);
+    /* Probably more */
 }

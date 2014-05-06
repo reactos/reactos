@@ -331,7 +331,12 @@ static void draw_text( ME_Context *c, ME_Run *run, int x, int y, BOOL selected, 
     old_text = SetTextColor( c->hDC, text_color );
     if (selected) old_back = SetBkColor( c->hDC, back_color );
 
-    ExtTextOutW( c->hDC, x, y, selected ? ETO_OPAQUE : 0, sel_rect, text, run->len, NULL );
+    if (run->para->nFlags & MEPF_COMPLEX)
+        ScriptTextOut( c->hDC, &run->style->script_cache, x, y, selected ? ETO_OPAQUE : 0, sel_rect,
+                       &run->script_analysis, NULL, 0, run->glyphs, run->num_glyphs, run->advances,
+                       NULL, run->offsets );
+    else
+        ExtTextOutW( c->hDC, x, y, selected ? ETO_OPAQUE : 0, sel_rect, text, run->len, NULL );
 
     if (selected) SetBkColor( c->hDC, old_back );
     SetTextColor( c->hDC, old_text );

@@ -73,12 +73,14 @@ StartupWindowThread(LPVOID lpParam)
                             FALSE, 
                             DUPLICATE_SAME_ACCESS))
     {
+        ERR("Duplicating handle failed!\n");
         HeapFree(GetProcessHeap(), 0, lpParam);
         return FALSE;
     }
 
     if(!SetThreadDesktop(hDesk))
     {
+        ERR("Setting thread desktop failed!\n");
         HeapFree(GetProcessHeap(), 0, lpParam);
         return FALSE;
     }

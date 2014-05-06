@@ -49,7 +49,7 @@ typedef struct _NetBIOSSession
  * is not NULL, the adapter is considered valid.  (transport is a pointer to
  * an entry in a NetBIOSTransportTableEntry.)  data has data for the callers of
  * NetBIOSEnumAdapters to be able to see.  The lana is repeated there, even
- * though I don't use it internally--it's for transports to use reenabling
+ * though I don't use it internally--it's for transports to use re-enabling
  * adapters using NetBIOSEnableAdapter.
  */
 typedef struct _NetBIOSAdapter
@@ -856,5 +856,50 @@ UCHAR WINAPI Netbios(PNCB ncb)
         }
     }
     TRACE("returning 0x%02x\n", ret);
+    return ret;
+}
+
+DWORD WINAPI NetpNetBiosStatusToApiStatus(DWORD nrc)
+{
+    DWORD ret;
+
+    switch (nrc)
+    {
+        case NRC_GOODRET:
+            ret = NO_ERROR;
+            break;
+        case NRC_NORES:
+            ret = NERR_NoNetworkResource;
+            break;
+        case NRC_DUPNAME:
+            ret = NERR_AlreadyExists;
+            break;
+        case NRC_NAMTFUL:
+            ret = NERR_TooManyNames;
+            break;
+        case NRC_ACTSES:
+            ret = NERR_DeleteLater;
+            break;
+        case NRC_REMTFUL:
+            ret = ERROR_REM_NOT_LIST;
+            break;
+        case NRC_NOCALL:
+            ret = NERR_NameNotFound;
+            break;
+        case NRC_NOWILD:
+            ret = ERROR_INVALID_PARAMETER;
+            break;
+        case NRC_INUSE:
+            ret = NERR_DuplicateName;
+            break;
+        case NRC_NAMERR:
+            ret = ERROR_INVALID_PARAMETER;
+            break;
+        case NRC_NAMCONF:
+            ret = NERR_DuplicateName;
+            break;
+        default:
+            ret = NERR_NetworkError;
+    }
     return ret;
 }

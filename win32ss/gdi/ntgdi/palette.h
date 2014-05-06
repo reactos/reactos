@@ -121,8 +121,8 @@ BOOL
 NTAPI
 PALETTE_Cleanup(PVOID ObjectBody);
 
-ULONG
 FORCEINLINE
+ULONG
 CalculateShift(ULONG ulMask1, ULONG ulMask2)
 {
     ULONG ulShift1, ulShift2;

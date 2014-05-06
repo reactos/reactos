@@ -108,7 +108,15 @@ extern "C"
 #define ADNS_CLEAR_ERRNO {WSASetLastError(errno = 0);}
 
 #define ENOBUFS WSAENOBUFS
+
+/* FIXME: there are two types of defines for this,
+ * one points to WSAEWOULDBLOCK and the other is from errno.h */
+#ifdef EWOULDBLOCK
+#undef EWOULDBLOCK
+#endif
+
 #define EWOULDBLOCK WSAEWOULDBLOCK
+
 #define EINPROGRESS WSAEINPROGRESS
 #define EMSGSIZE WSAEMSGSIZE
 #define ENOPROTOOPT WSAENOPROTOOPT

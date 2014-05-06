@@ -82,8 +82,8 @@ LdrAlternateResourcesEnabled(VOID)
     return FALSE;
 }
 
-ULONG_PTR
 FORCEINLINE
+ULONG_PTR
 LdrpMakeCookie(VOID)
 {
     /* Generate a cookie */

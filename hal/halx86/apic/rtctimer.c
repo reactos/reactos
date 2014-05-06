@@ -25,8 +25,8 @@ static UCHAR RtcMinimumClockRate = 6;  /* Minimum rate  6:  16 Hz / 62.5 ms */
 static UCHAR RtcMaximumClockRate = 10; /* Maximum rate 10: 256 Hz / 3.9 ms */
 
 
-ULONG
 FORCEINLINE
+ULONG
 RtcClockRateToIncrement(UCHAR Rate)
 {
     ULONG Freqency = ((32768 << 1) >> Rate);

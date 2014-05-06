@@ -112,7 +112,7 @@ i8042BasicDetect(
         }
         else if (Value == KBD_RESEND)
         {
-            TRACE_(I8042PRT, "Resending...\n", Value);
+            TRACE_(I8042PRT, "Resending...\n");
             KeStallExecutionProcessor(50);
         }
         else
@@ -390,7 +390,7 @@ static NTSTATUS
 StartProcedure(
     IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     UCHAR FlagsToDisable = 0;
     UCHAR FlagsToEnable = 0;
     KIRQL Irql;
@@ -479,7 +479,10 @@ StartProcedure(
         
         /* Start the mouse */
         Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
-        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
+        /* HACK: the mouse has already been reset in i8042DetectMouse. This second
+           reset prevents some touchpads/mice from working (Dell D531, D600).
+           See CORE-6901
+        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE); */
         KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
     }
 
@@ -495,7 +498,7 @@ i8042PnpStartDevice(
     PFDO_DEVICE_EXTENSION DeviceExtension;
     PPORT_DEVICE_EXTENSION PortDeviceExtension;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor, ResourceDescriptorTranslated;
-    INTERRUPT_DATA InterruptData;
+    INTERRUPT_DATA InterruptData = { NULL };
     BOOLEAN FoundDataPort = FALSE;
     BOOLEAN FoundControlPort = FALSE;
     BOOLEAN FoundIrq = FALSE;
@@ -682,19 +685,8 @@ i8042Pnp(
             {
                 case BusRelations:
                 {
-                    PDEVICE_RELATIONS DeviceRelations;
-
                     TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-                    DeviceRelations = ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
-                    if (DeviceRelations)
-                    {
-                        DeviceRelations->Count = 0;
-                        Information = (ULONG_PTR)DeviceRelations;
-                        Status = STATUS_SUCCESS;
-                    }
-                    else
-                        Status = STATUS_INSUFFICIENT_RESOURCES;
-                    break;
+                    return ForwardIrpAndForget(DeviceObject, Irp);
                 }
                 case RemovalRelations:
                 {
@@ -704,7 +696,6 @@ i8042Pnp(
                 default:
                     ERR_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                         Stack->Parameters.QueryDeviceRelations.Type);
-                    ASSERT(FALSE);
                     return ForwardIrpAndForget(DeviceObject, Irp);
             }
             break;
@@ -712,17 +703,12 @@ i8042Pnp(
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0x0d */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
-            /* Nothing to do */
-            Status = Irp->IoStatus.Status;
-            break;
+            return ForwardIrpAndForget(DeviceObject, Irp);
         }
         case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
-            /* Nothing much to tell */
-            Information = 0;
-            Status = STATUS_SUCCESS;
-            break;
+            return ForwardIrpAndForget(DeviceObject, Irp);
         }
         default:
         {

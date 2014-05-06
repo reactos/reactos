@@ -18,13 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #include <ole2.h>
 #include <exdisp.h>
-#include <atlwin.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(atl);
+#include <wine/atlwin.h>
 
 typedef struct IOCS {
     IOleClientSite            IOleClientSite_iface;
@@ -72,16 +70,30 @@ static LRESULT CALLBACK AtlAxWin_wndproc( HWND hWnd, UINT wMsg, WPARAM wParam, L
 BOOL WINAPI AtlAxWinInit(void)
 {
     WNDCLASSEXW wcex;
-    const WCHAR AtlAxWin100[] = {'A','t','l','A','x','W','i','n','1','0','0',0};
-    const WCHAR AtlAxWinLic100[] = {'A','t','l','A','x','W','i','n','L','i','c','1','0','0',0};
 
-    FIXME("semi-stub\n");
+#if _ATL_VER <= _ATL_VER_30
+#define ATL_NAME_SUFFIX 0
+#elif _ATL_VER == _ATL_VER_80
+#define ATL_NAME_SUFFIX '8','0',0
+#elif _ATL_VER == _ATL_VER_90
+#define ATL_NAME_SUFFIX '9','0',0
+#elif _ATL_VER == _ATL_VER_100
+#define ATL_NAME_SUFFIX '1','0','0',0
+#elif _ATL_VER == _ATL_VER_110
+#define ATL_NAME_SUFFIX '1','1','0',0
+#else
+#error Unsupported version
+#endif
+
+    const WCHAR AtlAxWinW[] = {'A','t','l','A','x','W','i','n',ATL_NAME_SUFFIX};
+
+    FIXME("version %04x semi-stub\n", _ATL_VER);
 
     if ( FAILED( OleInitialize(NULL) ) )
         return FALSE;
 
     wcex.cbSize        = sizeof(wcex);
-    wcex.style         = CS_GLOBALCLASS | CS_DBLCLKS;
+    wcex.style         = CS_GLOBALCLASS | (_ATL_VER > _ATL_VER_30 ? CS_DBLCLKS : 0);
     wcex.cbClsExtra    = 0;
     wcex.cbWndExtra    = 0;
     wcex.hInstance     = GetModuleHandleW( NULL );
@@ -92,13 +104,17 @@ BOOL WINAPI AtlAxWinInit(void)
     wcex.hIconSm       = 0;
 
     wcex.lpfnWndProc   = AtlAxWin_wndproc;
-    wcex.lpszClassName = AtlAxWin100;
+    wcex.lpszClassName = AtlAxWinW;
     if ( !RegisterClassExW( &wcex ) )
         return FALSE;
 
-    wcex.lpszClassName = AtlAxWinLic100;
-    if ( !RegisterClassExW( &wcex ) )
-        return FALSE;
+    if(_ATL_VER > _ATL_VER_30) {
+        const WCHAR AtlAxWinLicW[] = {'A','t','l','A','x','W','i','n','L','i','c',ATL_NAME_SUFFIX};
+
+        wcex.lpszClassName = AtlAxWinLicW;
+        if ( !RegisterClassExW( &wcex ) )
+            return FALSE;
+    }
 
     return TRUE;
 }

@@ -74,7 +74,7 @@ typedef struct
     INT         item_height;    /* Default item height */
     INT         page_size;      /* Items per listbox page */
     INT         column_width;   /* Column width for multi-column listboxes */
-    INT         horz_extent;    /* Horizontal extent (0 if no hscroll) */
+    INT         horz_extent;    /* Horizontal extent */
     INT         horz_pos;       /* Horizontal position */
     INT         nb_tabs;        /* Number of tabs in array */
     INT        *tabs;           /* Array of tabs */
@@ -259,17 +259,14 @@ static void LISTBOX_UpdateScroll( LB_DESCR *descr )
         if (descr->style & WS_VSCROLL)
             SetScrollInfo( descr->self, SB_VERT, &info, TRUE );
 
-        if (descr->horz_extent)
+        if (descr->style & WS_HSCROLL)
         {
-            info.nMin  = 0;
-            info.nMax  = descr->horz_extent - 1;
             info.nPos  = descr->horz_pos;
             info.nPage = descr->width;
-            info.fMask = SIF_RANGE | SIF_POS | SIF_PAGE;
+            info.fMask = SIF_POS | SIF_PAGE;
             if (descr->style & LBS_DISABLENOSCROLL)
                 info.fMask |= SIF_DISABLENOSCROLL;
-            if (descr->style & WS_HSCROLL)
-                SetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
+            SetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
         }
     }
 }
@@ -1236,16 +1233,21 @@ static void LISTBOX_SetHorizontalPos( LB_DESCR *descr, INT pos )
  */
 static LRESULT LISTBOX_SetHorizontalExtent( LB_DESCR *descr, INT extent )
 {
-    if (!descr->horz_extent || (descr->style & LBS_MULTICOLUMN))
+    if (descr->style & LBS_MULTICOLUMN)
         return LB_OKAY;
-    if (extent <= 0) extent = 1;
     if (extent == descr->horz_extent) return LB_OKAY;
     TRACE("[%p]: new horz extent = %d\n", descr->self, extent );
     descr->horz_extent = extent;
+    if (descr->style & WS_HSCROLL) {
+        SCROLLINFO info;
+        info.cbSize = sizeof(info);
+        info.nMin  = 0;
+        info.nMax = descr->horz_extent ? descr->horz_extent - 1 : 0;
+        info.fMask = SIF_RANGE;
+        SetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
+    }
     if (descr->horz_pos > extent - descr->width)
         LISTBOX_SetHorizontalPos( descr, extent - descr->width );
-    else
-        LISTBOX_UpdateScroll( descr );
     return LB_OKAY;
 }
 
@@ -2492,7 +2494,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     descr->item_height   = 1;
     descr->page_size     = 1;
     descr->column_width  = 150;
-    descr->horz_extent   = (descr->style & WS_HSCROLL) ? 1 : 0;
+    descr->horz_extent   = 0;
     descr->horz_pos      = 0;
     descr->nb_tabs       = 0;
     descr->tabs          = NULL;

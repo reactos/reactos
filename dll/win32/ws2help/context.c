@@ -45,8 +45,8 @@ typedef VLONG *PVLONG;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
 static __inline
+VOID
 AcquireReadLock(IN PWAH_SEARCH_TABLE Table,
                 IN PVLONG *Count)
 {
@@ -70,8 +70,8 @@ AcquireReadLock(IN PWAH_SEARCH_TABLE Table,
     } while (TRUE);
 }
 
-VOID
 static __inline
+VOID
 ReleaseReadLock(IN PWAH_SEARCH_TABLE Table,
                 IN PVLONG Count)
 {
@@ -139,8 +139,8 @@ DoWaitForReaders(IN PWAH_SEARCH_TABLE Table,
     }
 }
 
-VOID
 static __inline
+VOID
 TryWaitForReaders(IN PWAH_SEARCH_TABLE Table)
 {
     PVLONG OldCount = Table->CurrentCount;
