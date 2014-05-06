@@ -130,7 +130,7 @@ static SIZE MenuCharSize;
  *
  * Validate the given menu handle and returns the menu structure pointer.
  */
-PMENU FORCEINLINE MENU_GetMenu(HMENU hMenu)
+FORCEINLINE PMENU MENU_GetMenu(HMENU hMenu)
 {
     return ValidateHandle(hMenu, TYPE_MENU); 
 }

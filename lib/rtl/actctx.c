@@ -273,6 +273,7 @@ static const WCHAR iidW[] = {'i','i','d',0};
 static const WCHAR languageW[] = {'l','a','n','g','u','a','g','e',0};
 static const WCHAR manifestVersionW[] = {'m','a','n','i','f','e','s','t','V','e','r','s','i','o','n',0};
 static const WCHAR g_nameW[] = {'n','a','m','e',0};
+static const WCHAR neutralW[] = {'n','e','u','t','r','a','l',0};
 static const WCHAR newVersionW[] = {'n','e','w','V','e','r','s','i','o','n',0};
 static const WCHAR oldVersionW[] = {'o','l','d','V','e','r','s','i','o','n',0};
 static const WCHAR optionalW[] = {'o','p','t','i','o','n','a','l',0};
@@ -1907,7 +1908,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     base = NULL;
     status = NtMapViewOfSection( mapping, NtCurrentProcess(), &base, 0, 0, &offset,
                                  &count, ViewShare, 0, PAGE_READONLY );
-
+    NtClose( mapping );
     if (status != STATUS_SUCCESS) return status;
 
     /* Fixme: WINE uses FileEndOfFileInformation with NtQueryInformationFile. */
@@ -1917,7 +1918,6 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
         status = parse_manifest(acl, ai, filename, directory, shared, base, (SIZE_T)info.EndOfFile.QuadPart);
 
     NtUnmapViewOfSection( NtCurrentProcess(), base );
-    NtClose( mapping );
     return status;
 }
 
@@ -1966,7 +1966,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
         status = get_manifest_in_manifest_file( acl, ai, nameW.Buffer, directory, FALSE, file );
         NtClose( file );
     }
-    else status = STATUS_RESOURCE_DATA_NOT_FOUND;
+    else status = STATUS_RESOURCE_TYPE_NOT_FOUND;
     RtlFreeUnicodeString( &nameW );
     return status;
 }
@@ -1981,6 +1981,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
     WCHAR *lookup, *ret = NULL;
     UNICODE_STRING lookup_us;
     IO_STATUS_BLOCK io;
+    const WCHAR *lang = ai->language;
     unsigned int data_pos = 0, data_len;
     char buffer[8192];
 
@@ -1990,7 +1991,9 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
                                     + sizeof(lookup_fmtW) )))
         return NULL;
 
-    sprintfW( lookup, lookup_fmtW, ai->arch, ai->name, ai->public_key, ai->version.major, ai->version.minor);
+    if (!lang || !strcmpiW( lang, neutralW )) lang = wildcardW;
+    sprintfW( lookup, lookup_fmtW, ai->arch, ai->name, ai->public_key,
+              ai->version.major, ai->version.minor, lang );
     RtlInitUnicodeString( &lookup_us, lookup );
 
     NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),

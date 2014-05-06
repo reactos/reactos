@@ -36,6 +36,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags("-Wno-microsoft")
 endif()
 
+if(DBG)
+    add_compile_flags_language("-Wold-style-declaration -Wdeclaration-after-statement" "C")
+endif()
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
 
 #bug

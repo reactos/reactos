@@ -7,8 +7,8 @@
 
 #include "bmfd.h"
 
-ULONG
 FORCEINLINE
+ULONG
 _ReadPixel(
     CHAR* pjBits,
     ULONG x,
@@ -21,8 +21,8 @@ _ReadPixel(
 }
 
 
-VOID
 FORCEINLINE
+VOID
 _WritePixel(
     CHAR* pjBits,
     ULONG x,

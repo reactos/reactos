@@ -159,13 +159,10 @@
 @ stdcall EngCheckAbort(ptr) NtGdiEngCheckAbort
 @ stdcall EngComputeGlyphSet(ptr ptr ptr)
 @ stdcall EngCopyBits(ptr ptr ptr ptr ptr ptr) NtGdiEngCopyBits
-# @ stdcall EngCreateBitmap(longlong long long long ptr) NtGdiEngCreateBitmap
-@ stdcall EngCreateBitmap(long long long long long ptr) NtGdiEngCreateBitmap
+@ stdcall EngCreateBitmap(int64 long long long ptr) NtGdiEngCreateBitmap
 @ stdcall EngCreateClip() NtGdiEngCreateClip
-# @ stdcall EngCreateDeviceBitmap(ptr longlong long) NtGdiEngCreateDeviceBitmap
-@ stdcall EngCreateDeviceBitmap(ptr long long long) NtGdiEngCreateDeviceBitmap
-# @ stdcall EngCreateDeviceSurface(ptr longlong long) NtGdiEngCreateDeviceSurface
-@ stdcall EngCreateDeviceSurface(ptr long long long) NtGdiEngCreateDeviceSurface
+@ stdcall EngCreateDeviceBitmap(ptr int64 long) NtGdiEngCreateDeviceBitmap
+@ stdcall EngCreateDeviceSurface(ptr int64 long) NtGdiEngCreateDeviceSurface
 @ stdcall EngCreatePalette(long long ptr long long long) NtGdiEngCreatePalette
 @ stdcall EngCreateSemaphore()
 @ stdcall EngDeleteClip(ptr) NtGdiEngDeleteClip
@@ -287,7 +284,6 @@
 @ stdcall GdiFlush()
 @ stdcall GdiFullscreenControl(ptr ptr long ptr ptr) NtGdiFullscreenControl
 @ stdcall GdiGetBatchLimit()
-@ stdcall GdiGetBitmapBitsSize(ptr)
 @ stdcall GdiGetCharDimensions(long ptr ptr)
 @ stdcall GdiGetCodePage(long)
 @ stdcall GdiGetDC(ptr)

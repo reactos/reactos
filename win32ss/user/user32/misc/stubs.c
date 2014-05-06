@@ -478,15 +478,6 @@ BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_
 /*
  * @unimplemented
  */
-BOOL WINAPI SetProcessDPIAware(VOID)
-{
-    UNIMPLEMENTED;
-    return TRUE;
-}
-
-/*
- * @unimplemented
- */
 BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl)
 {
   UNIMPLEMENTED;

@@ -1303,13 +1303,13 @@ void shell(int argc, const char *argv[])
 
     if (argc > 1)
     {
-        strncat(CmdLine, " /C", MAX_PATH);
+        strncat(CmdLine, " /C", MAX_PATH - strlen(CmdLine) - 1);
     }
 
     for (i=1; i<argc; i++)
     {
-        strncat(CmdLine, " ", MAX_PATH);
-        strncat(CmdLine, argv[i], MAX_PATH);
+        strncat(CmdLine, " ", MAX_PATH - strlen(CmdLine) - 1);
+        strncat(CmdLine, argv[i], MAX_PATH - strlen(CmdLine) - 1); 
     }
 
     StartupInfo.cb          = sizeof( StartupInfo );

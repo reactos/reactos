@@ -142,8 +142,8 @@ EBRUSHOBJ_psoPattern(EBRUSHOBJ *pebo);
 #define BRUSHOBJ_psoPattern(pbo) \
     EBRUSHOBJ_psoPattern(CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject))
 
-ULONG
 FORCEINLINE
+ULONG
 EBRUSHOBJ_iSetSolidColor(EBRUSHOBJ *pebo, ULONG iSolidColor)
 {
     ULONG iOldColor = pebo->BrushObject.iSolidColor;

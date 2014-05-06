@@ -351,8 +351,8 @@ NpReleaseVcb(VOID)
 // Function to process deferred IRPs outside the VCB lock but still within the
 // critical region
 //
-VOID
 FORCEINLINE
+VOID
 NpCompleteDeferredIrps(IN PLIST_ENTRY DeferredList)
 {
     PLIST_ENTRY ThisEntry, NextEntry;
