@@ -34,7 +34,7 @@ FAST486_STATE EmulatorContext;
 BOOLEAN CpuSimulate = FALSE;
 
 /* No more than 'MaxCpuCallLevel' recursive CPU calls are allowed */
-const static INT MaxCpuCallLevel = 32;
+static const INT MaxCpuCallLevel = 32;
 static INT CpuCallLevel = 0;
 
 LPVOID  BaseAddress = NULL;
