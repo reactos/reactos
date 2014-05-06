@@ -269,6 +269,9 @@ VOID NTAPI BaseSrvCleanupVdmRecords(ULONG ProcessId)
                 ConsoleRecord->CurDirsLength = 0;
             }
 
+            /* Close the process handle */
+            if (ConsoleRecord->ProcessHandle) NtClose(ConsoleRecord->ProcessHandle);
+
             /* Close the event handle */
             if (ConsoleRecord->ServerEvent) NtClose(ConsoleRecord->ServerEvent);
 
@@ -613,7 +616,7 @@ CSR_API(BaseSrvCheckVDM)
 
             /* Initialize the console record */
             ConsoleRecord->ConsoleHandle = CheckVdmRequest->ConsoleHandle;
-            ConsoleRecord->ProcessHandle = CsrGetClientThread()->Process->ProcessHandle;
+            ConsoleRecord->ProcessHandle = NULL;
             ConsoleRecord->ServerEvent = ConsoleRecord->ClientEvent = NULL;
             ConsoleRecord->ReenterCount = 0;
             ConsoleRecord->CurrentDirs = NULL;
@@ -779,6 +782,7 @@ CSR_API(BaseSrvUpdateVDMEntry)
                      */
                     if (ConsoleRecord->DosListHead.Flink == &ConsoleRecord->DosListHead)
                     {
+                        if (ConsoleRecord->ProcessHandle) NtClose(ConsoleRecord->ProcessHandle);
                         if (ConsoleRecord->ServerEvent) NtClose(ConsoleRecord->ServerEvent);
                         RemoveEntryList(&ConsoleRecord->Entry);
                         RtlFreeHeap(BaseSrvHeap, 0, ConsoleRecord);
