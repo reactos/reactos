@@ -2944,13 +2944,18 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo,
       {
           MenuHideSubPopups(WndOwner, &SubMenuInfo, FALSE, wFlags);
           MenuSelectItem(WndOwner, &SubMenuInfo, NO_SELECTED_ITEM, SendMenuSelect, NULL);
-          DestroyWindow(SubMenuInfo.Wnd);
-          SubMenuInfo.Wnd = NULL;
-          MenuSetRosMenuInfo(&SubMenuInfo);
 
           if (!(wFlags & TPM_NONOTIFY))
              SendMessageW( WndOwner, WM_UNINITMENUPOPUP, (WPARAM)ItemInfo.hSubMenu,
                                  MAKELPARAM(0, IS_SYSTEM_MENU(&SubMenuInfo)) );
+          ////
+          // Call WM_UNINITMENUPOPUP FIRST before destroy!!
+          // Fixes todo_wine User32 test menu.c line 2233 GetMenuBarInfo callback....
+          //
+          DestroyWindow(SubMenuInfo.Wnd);
+          SubMenuInfo.Wnd = NULL;
+          MenuSetRosMenuInfo(&SubMenuInfo);
+          ////
       }
   }
 }
