@@ -134,7 +134,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 
     // create combo box ex
     combobox = CreateWindowEx(WS_EX_TOOLWINDOW, WC_COMBOBOXEXW, NULL, WS_CHILD | WS_VISIBLE |
-                    WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY,
+        WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED,
                     0, 0, 500, 250, parentWindow, (HMENU)0xa205, _AtlBaseModule.GetModuleInstance(), 0);
     if (combobox == NULL)
         return E_FAIL;

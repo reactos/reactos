@@ -33,6 +33,7 @@ class CAddressEditBox :
     public IShellService
 {
 private:
+    CContainedWindow                        fCombobox;
     CContainedWindow                        fEditWindow;
 public:
     CAddressEditBox();

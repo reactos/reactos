@@ -40,7 +40,8 @@ TODO:
 */
 
 CAddressEditBox::CAddressEditBox() :
-        fEditWindow(NULL, this, 1)
+    fCombobox(NULL, this, 1),
+    fEditWindow(NULL, this, 1)
 {
 }
 
@@ -56,8 +57,6 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::FileSysChange(long param8, long paramC)
 {
-    LPWSTR str8 = reinterpret_cast<LPWSTR>(param8);
-    LPWSTR strC = reinterpret_cast<LPWSTR>(paramC);
     return E_NOTIMPL;
 }
 
@@ -68,7 +67,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Refresh(long param8)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editControl, long param14, IUnknown *param18)
 {
-    SubclassWindow(comboboxEx);
+    fCombobox.SubclassWindow(comboboxEx);
     fEditWindow.SubclassWindow(editControl);
     return S_OK;
 }
