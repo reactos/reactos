@@ -1867,11 +1867,13 @@ GetConsoleTitleA(LPSTR lpConsoleTitle,
 
 
 static BOOL
-IntSetConsoleTitle(CONST VOID *lpConsoleTitle, DWORD dwNumChars, BOOLEAN bUnicode)
+IntSetConsoleTitle(CONST VOID *lpConsoleTitle, BOOLEAN bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETCONSOLETITLE TitleRequest = &ApiMessage.Data.TitleRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DWORD dwNumChars = (lpConsoleTitle ? (bUnicode ? wcslen(lpConsoleTitle) : strlen(lpConsoleTitle)) : 0);
 
     TitleRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     TitleRequest->Length        = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
@@ -1915,7 +1917,7 @@ BOOL
 WINAPI
 SetConsoleTitleW(LPCWSTR lpConsoleTitle)
 {
-    return IntSetConsoleTitle(lpConsoleTitle, wcslen(lpConsoleTitle), TRUE);
+    return IntSetConsoleTitle(lpConsoleTitle, TRUE);
 }
 
 
@@ -1928,7 +1930,7 @@ BOOL
 WINAPI
 SetConsoleTitleA(LPCSTR lpConsoleTitle)
 {
-    return IntSetConsoleTitle(lpConsoleTitle, strlen(lpConsoleTitle), FALSE);
+    return IntSetConsoleTitle(lpConsoleTitle, FALSE);
 }
 
 

@@ -388,11 +388,13 @@ GetConsoleAliasesA(LPSTR AliasBuffer,
 
 
 static DWORD
-IntGetConsoleAliasesLength(LPVOID lpExeName, DWORD dwNumChars, BOOLEAN bUnicode)
+IntGetConsoleAliasesLength(LPVOID lpExeName, BOOLEAN bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &ApiMessage.Data.GetAllAliasesLengthRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
     if (lpExeName == NULL || dwNumChars == 0)
     {
@@ -442,13 +444,7 @@ DWORD
 WINAPI
 GetConsoleAliasesLengthW(LPWSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    return IntGetConsoleAliasesLength(lpExeName, wcslen(lpExeName), TRUE);
+    return IntGetConsoleAliasesLength(lpExeName, TRUE);
 }
 
 
@@ -459,13 +455,7 @@ DWORD
 WINAPI
 GetConsoleAliasesLengthA(LPSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    return IntGetConsoleAliasesLength(lpExeName, strlen(lpExeName), FALSE);
+    return IntGetConsoleAliasesLength(lpExeName, FALSE);
 }
 
 

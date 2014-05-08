@@ -52,11 +52,13 @@ IntCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
 #endif
 
 static VOID
-IntExpungeConsoleCommandHistory(LPCVOID lpExeName, DWORD dwNumChars, BOOLEAN bUnicode)
+IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOLEAN bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &ApiMessage.Data.ExpungeCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
     if (lpExeName == NULL || dwNumChars == 0)
     {
@@ -98,11 +100,13 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, DWORD dwNumChars, BOOLEAN bUn
 
 
 static DWORD
-IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName, DWORD dwNumChars, BOOLEAN bUnicode)
+IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName, BOOLEAN bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &ApiMessage.Data.GetCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
     if (lpExeName == NULL || dwNumChars == 0)
     {
@@ -160,11 +164,13 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
 
 
 static DWORD
-IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, DWORD dwNumChars, BOOL bUnicode)
+IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &ApiMessage.Data.GetCommandHistoryLengthRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
     if (lpExeName == NULL || dwNumChars == 0)
     {
@@ -213,12 +219,13 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, DWORD dwNumChars, BOOL bUni
 static BOOL
 IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
                               LPCVOID lpExeName,
-                              DWORD dwNumChars,
                               BOOLEAN bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &ApiMessage.Data.SetHistoryNumberCommandsRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
     if (lpExeName == NULL || dwNumChars == 0)
     {
@@ -274,13 +281,7 @@ VOID
 WINAPI
 ExpungeConsoleCommandHistoryW(LPCWSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return;
-    }
-
-    IntExpungeConsoleCommandHistory(lpExeName, wcslen(lpExeName), TRUE);
+    IntExpungeConsoleCommandHistory(lpExeName, TRUE);
 }
 
 
@@ -291,13 +292,7 @@ VOID
 WINAPI
 ExpungeConsoleCommandHistoryA(LPCSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return;
-    }
-
-    IntExpungeConsoleCommandHistory(lpExeName, strlen(lpExeName), FALSE);
+    IntExpungeConsoleCommandHistory(lpExeName, FALSE);
 }
 
 
@@ -310,13 +305,7 @@ GetConsoleCommandHistoryW(LPWSTR lpHistory,
                           DWORD cbHistory,
                           LPCWSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, wcslen(lpExeName), TRUE);
+    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, TRUE);
 }
 
 
@@ -329,13 +318,7 @@ GetConsoleCommandHistoryA(LPSTR lpHistory,
                           DWORD cbHistory,
                           LPCSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, strlen(lpExeName), FALSE);
+    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, FALSE);
 }
 
 
@@ -346,13 +329,7 @@ DWORD
 WINAPI
 GetConsoleCommandHistoryLengthW(LPCWSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    return IntGetConsoleCommandHistoryLength(lpExeName, wcslen(lpExeName), TRUE);
+    return IntGetConsoleCommandHistoryLength(lpExeName, TRUE);
 }
 
 
@@ -363,13 +340,7 @@ DWORD
 WINAPI
 GetConsoleCommandHistoryLengthA(LPCSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    return IntGetConsoleCommandHistoryLength(lpExeName, strlen(lpExeName), FALSE);
+    return IntGetConsoleCommandHistoryLength(lpExeName, FALSE);
 }
 
 
@@ -381,13 +352,7 @@ WINAPI
 SetConsoleNumberOfCommandsW(DWORD dwNumCommands,
                             LPCWSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, wcslen(lpExeName), TRUE);
+    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, TRUE);
 }
 
 
@@ -399,13 +364,7 @@ WINAPI
 SetConsoleNumberOfCommandsA(DWORD dwNumCommands,
                             LPCSTR lpExeName)
 {
-    if (lpExeName == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, strlen(lpExeName), FALSE);
+    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, FALSE);
 }
 
 
