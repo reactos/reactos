@@ -175,7 +175,7 @@
 @ stdcall NtGetCurrentProcessorNumber() ; 5.2 and higher
 @ stdcall NtGetDevicePowerState(ptr ptr)
 @ stdcall NtGetPlugPlayEvent(long long ptr long)
-;@ stdcall NtGetTickCount()
+@ stdcall -stub NtGetTickCount()
 @ stdcall NtGetWriteWatch(long long ptr long ptr ptr ptr)
 @ stdcall NtImpersonateAnonymousToken(ptr)
 @ stdcall NtImpersonateClientOfPort(ptr ptr)
