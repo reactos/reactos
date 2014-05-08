@@ -3654,7 +3654,7 @@ RtlFindActivationContextSectionString(
     _In_ ULONG dwFlags,
     _In_ const GUID *ExtensionGuid,
     _In_ ULONG SectionType,
-    _In_ PUNICODE_STRING SectionName,
+    _In_ const UNICODE_STRING *SectionName,
     _Inout_ PVOID ReturnedData
 );
 
