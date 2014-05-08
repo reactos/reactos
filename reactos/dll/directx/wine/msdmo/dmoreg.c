@@ -607,9 +607,9 @@ static HRESULT WINAPI IEnumDMO_fnNext(
         hres = RegQueryValueExW(hkey, NULL, NULL, NULL, (LPBYTE) szValue, &len); 
         if (ERROR_SUCCESS == hres)
 	{
-            Names[count] = HeapAlloc(GetProcessHeap(), 0, strlenW(szValue) + 1);
+            Names[count] = HeapAlloc(GetProcessHeap(), 0, (strlenW(szValue) + 1) * sizeof(WCHAR));
 	    if (Names[count])
-                strcmpW(Names[count], szValue);
+                strcpyW(Names[count], szValue);
 	}
         wsprintfW(szGuidKey,szToGuidFmt,szNextKey);
         CLSIDFromString(szGuidKey, &pCLSID[count]);
