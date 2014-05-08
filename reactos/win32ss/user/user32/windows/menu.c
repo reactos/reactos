@@ -2945,6 +2945,8 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo,
           MenuHideSubPopups(WndOwner, &SubMenuInfo, FALSE, wFlags);
           MenuSelectItem(WndOwner, &SubMenuInfo, NO_SELECTED_ITEM, SendMenuSelect, NULL);
 
+          DestroyWindow(SubMenuInfo.Wnd);
+          /* Native returns handle to destroyed window */
           if (!(wFlags & TPM_NONOTIFY))
              SendMessageW( WndOwner, WM_UNINITMENUPOPUP, (WPARAM)ItemInfo.hSubMenu,
                                  MAKELPARAM(0, IS_SYSTEM_MENU(&SubMenuInfo)) );
@@ -2952,7 +2954,6 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo,
           // Call WM_UNINITMENUPOPUP FIRST before destroy!!
           // Fixes todo_wine User32 test menu.c line 2233 GetMenuBarInfo callback....
           //
-          DestroyWindow(SubMenuInfo.Wnd);
           SubMenuInfo.Wnd = NULL;
           MenuSetRosMenuInfo(&SubMenuInfo);
           ////
@@ -3966,6 +3967,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
                     IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, MenuInfo.Wnd, OBJID_CLIENT, CHILDID_SELF, 0);
                     DestroyWindow(MenuInfo.Wnd);
                     MenuInfo.Wnd = NULL;
+                    MenuSetRosMenuInfo(&MenuInfo);
 
                     if (!(wFlags & TPM_NONOTIFY))
                       SendMessageW( mt.OwnerWnd, WM_UNINITMENUPOPUP, (WPARAM)mt.TopMenu,
