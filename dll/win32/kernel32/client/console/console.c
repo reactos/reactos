@@ -1496,18 +1496,17 @@ SetConsoleScreenBufferSize(HANDLE hConsoleOutput,
 static
 BOOL
 IntScrollConsoleScreenBuffer(HANDLE hConsoleOutput,
-                             const SMALL_RECT *lpScrollRectangle,
-                             const SMALL_RECT *lpClipRectangle,
+                             CONST SMALL_RECT* lpScrollRectangle,
+                             CONST SMALL_RECT* lpClipRectangle,
                              COORD dwDestinationOrigin,
-                             const CHAR_INFO *lpFill,
+                             CONST CHAR_INFO* lpFill,
                              BOOL bUnicode)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SCROLLSCREENBUFFER ScrollScreenBufferRequest = &ApiMessage.Data.ScrollScreenBufferRequest;
 
-    ScrollScreenBufferRequest->OutputHandle = hConsoleOutput;
-    ScrollScreenBufferRequest->Unicode = bUnicode;
+    ScrollScreenBufferRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ScrollScreenBufferRequest->OutputHandle  = hConsoleOutput;
     ScrollScreenBufferRequest->ScrollRectangle = *lpScrollRectangle;
 
     if (lpClipRectangle != NULL)
@@ -1521,16 +1520,16 @@ IntScrollConsoleScreenBuffer(HANDLE hConsoleOutput,
     }
 
     ScrollScreenBufferRequest->DestinationOrigin = dwDestinationOrigin;
-    ScrollScreenBufferRequest->Fill = *lpFill;
+    ScrollScreenBufferRequest->Fill    = *lpFill;
+    ScrollScreenBufferRequest->Unicode = bUnicode;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepScrollScreenBuffer),
-                                 sizeof(CONSOLE_SCROLLSCREENBUFFER));
-
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepScrollScreenBuffer),
+                        sizeof(*ScrollScreenBufferRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -1546,16 +1545,16 @@ IntScrollConsoleScreenBuffer(HANDLE hConsoleOutput,
 BOOL
 WINAPI
 ScrollConsoleScreenBufferA(HANDLE hConsoleOutput,
-                           CONST SMALL_RECT *lpScrollRectangle,
-                           CONST SMALL_RECT *lpClipRectangle,
+                           CONST SMALL_RECT* lpScrollRectangle,
+                           CONST SMALL_RECT* lpClipRectangle,
                            COORD dwDestinationOrigin,
-                           CONST CHAR_INFO *lpFill)
+                           CONST CHAR_INFO* lpFill)
 {
     return IntScrollConsoleScreenBuffer(hConsoleOutput,
-                                        (PSMALL_RECT)lpScrollRectangle,
-                                        (PSMALL_RECT)lpClipRectangle,
+                                        lpScrollRectangle,
+                                        lpClipRectangle,
                                         dwDestinationOrigin,
-                                        (PCHAR_INFO)lpFill,
+                                        lpFill,
                                         FALSE);
 }
 

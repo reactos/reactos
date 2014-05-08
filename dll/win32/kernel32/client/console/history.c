@@ -16,13 +16,14 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#if 0
 /* Get the size needed to copy a string to a capture buffer, including alignment */
 static ULONG
 IntStringSize(LPCVOID String,
               BOOL Unicode)
 {
     ULONG Size = (Unicode ? wcslen(String) : strlen(String)) * sizeof(WCHAR);
-    return (Size + 3) & -4;
+    return (Size + 3) & ~3;
 }
 
 
@@ -48,67 +49,77 @@ IntCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
     }
     RequestString->Length = RequestString->MaximumLength = (USHORT)Size;
 }
+#endif
 
-
-static BOOL
-IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOL bUnicode)
+static VOID
+IntExpungeConsoleCommandHistory(LPCVOID lpExeName, DWORD dwNumChars, BOOLEAN bUnicode)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &ApiMessage.Data.ExpungeCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    if (lpExeName == NULL || dwNumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        return;
     }
 
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    ExpungeCommandHistoryRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ExpungeCommandHistoryRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    ExpungeCommandHistoryRequest->Unicode  =
+    ExpungeCommandHistoryRequest->Unicode2 = bUnicode;
+
+    // CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, ExpungeCommandHistoryRequest->ExeLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        return;
     }
 
-    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &ExpungeCommandHistoryRequest->ExeName);
+    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+    //                         &ExpungeCommandHistoryRequest->ExeName);
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpExeName,
+                            ExpungeCommandHistoryRequest->ExeLength,
+                            (PVOID)&ExpungeCommandHistoryRequest->ExeName);
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepExpungeCommandHistory),
-                                 sizeof(CONSOLE_EXPUNGECOMMANDHISTORY));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepExpungeCommandHistory),
+                        sizeof(*ExpungeCommandHistoryRequest));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
+    if (!NT_SUCCESS(ApiMessage.Status))
+        BaseSetLastNTError(ApiMessage.Status);
 }
 
 
 static DWORD
-IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName, BOOL bUnicode)
+IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName, DWORD dwNumChars, BOOLEAN bUnicode)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &ApiMessage.Data.GetCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    DWORD HistoryLength = cbHistory * (bUnicode ? 1 : sizeof(WCHAR));
 
-    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    if (lpExeName == NULL || dwNumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    CaptureBuffer = CsrAllocateCaptureBuffer(2, IntStringSize(lpExeName, bUnicode) +
-                                                HistoryLength);
+    GetCommandHistoryRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetCommandHistoryRequest->HistoryLength = cbHistory;
+    GetCommandHistoryRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    GetCommandHistoryRequest->Unicode  =
+    GetCommandHistoryRequest->Unicode2 = bUnicode;
+
+    // CaptureBuffer = CsrAllocateCaptureBuffer(2, IntStringSize(lpExeName, bUnicode) +
+    //                                             HistoryLength);
+    CaptureBuffer = CsrAllocateCaptureBuffer(2, GetCommandHistoryRequest->ExeLength +
+                                                GetCommandHistoryRequest->HistoryLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
@@ -116,60 +127,58 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
         return 0;
     }
 
-    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &GetCommandHistoryRequest->ExeName);
-    GetCommandHistoryRequest->Length = HistoryLength;
-    CsrAllocateMessagePointer(CaptureBuffer, HistoryLength,
+    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+    //                         &GetCommandHistoryRequest->ExeName);
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpExeName,
+                            GetCommandHistoryRequest->ExeLength,
+                            (PVOID)&GetCommandHistoryRequest->ExeName);
+
+    // CsrAllocateMessagePointer(CaptureBuffer, HistoryLength,
+    CsrAllocateMessagePointer(CaptureBuffer, GetCommandHistoryRequest->HistoryLength,
                               (PVOID*)&GetCommandHistoryRequest->History);
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCommandHistory),
-                                 sizeof(CONSOLE_GETCOMMANDHISTORY));
-    if (!NT_SUCCESS(Status))
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCommandHistory),
+                        sizeof(*GetCommandHistoryRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return 0;
     }
 
-    if (bUnicode)
-    {
-        memcpy(lpHistory,
-               GetCommandHistoryRequest->History,
-               GetCommandHistoryRequest->Length);
-    }
-    else
-    {
-        WideCharToMultiByte(CP_ACP, 0,
-                            GetCommandHistoryRequest->History,
-                            GetCommandHistoryRequest->Length / sizeof(WCHAR),
-                            lpHistory,
-                            cbHistory,
-                            NULL, NULL);
-    }
+    memcpy(lpHistory,
+           GetCommandHistoryRequest->History,
+           GetCommandHistoryRequest->HistoryLength);
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return GetCommandHistoryRequest->Length;
+    return GetCommandHistoryRequest->HistoryLength;
 }
 
 
 static DWORD
-IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
+IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, DWORD dwNumChars, BOOL bUnicode)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &ApiMessage.Data.GetCommandHistoryLengthRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    if (lpExeName == NULL || dwNumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    GetCommandHistoryLengthRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetCommandHistoryLengthRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    GetCommandHistoryLengthRequest->Unicode  =
+    GetCommandHistoryLengthRequest->Unicode2 = bUnicode;
+
+    // CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, GetCommandHistoryLengthRequest->ExeLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
@@ -177,43 +186,54 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
         return 0;
     }
 
-    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &GetCommandHistoryLengthRequest->ExeName);
+    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+    //                         &GetCommandHistoryLengthRequest->ExeName);
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpExeName,
+                            GetCommandHistoryLengthRequest->ExeLength,
+                            (PVOID)&GetCommandHistoryLengthRequest->ExeName);
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCommandHistoryLength),
-                                 sizeof(CONSOLE_GETCOMMANDHISTORYLENGTH));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCommandHistoryLength),
+                        sizeof(*GetCommandHistoryLengthRequest));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return 0;
     }
 
-    return GetCommandHistoryLengthRequest->Length;
+    return GetCommandHistoryLengthRequest->HistoryLength;
 }
 
 
 static BOOL
 IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
                               LPCVOID lpExeName,
-                              BOOL bUnicode)
+                              DWORD dwNumChars,
+                              BOOLEAN bUnicode)
 {
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &ApiMessage.Data.SetHistoryNumberCommandsRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    if (lpExeName == NULL || dwNumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    SetHistoryNumberCommandsRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetHistoryNumberCommandsRequest->NumCommands   = dwNumCommands;
+    SetHistoryNumberCommandsRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    SetHistoryNumberCommandsRequest->Unicode  =
+    SetHistoryNumberCommandsRequest->Unicode2 = bUnicode;
+
+    // CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, SetHistoryNumberCommandsRequest->ExeLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
@@ -221,20 +241,23 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
         return FALSE;
     }
 
-    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &SetHistoryNumberCommandsRequest->ExeName);
-    SetHistoryNumberCommandsRequest->NumCommands = dwNumCommands;
+    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+    //                         &SetHistoryNumberCommandsRequest->ExeName);
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpExeName,
+                            SetHistoryNumberCommandsRequest->ExeLength,
+                            (PVOID)&SetHistoryNumberCommandsRequest->ExeName);
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetNumberOfCommands),
-                                 sizeof(CONSOLE_SETHISTORYNUMBERCOMMANDS));
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetNumberOfCommands),
+                        sizeof(*SetHistoryNumberCommandsRequest));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -247,22 +270,34 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
 /*
  * @implemented (Undocumented)
  */
-BOOL
+VOID
 WINAPI
 ExpungeConsoleCommandHistoryW(LPCWSTR lpExeName)
 {
-    return IntExpungeConsoleCommandHistory(lpExeName, TRUE);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return;
+    }
+
+    IntExpungeConsoleCommandHistory(lpExeName, wcslen(lpExeName), TRUE);
 }
 
 
 /*
  * @implemented (Undocumented)
  */
-BOOL
+VOID
 WINAPI
 ExpungeConsoleCommandHistoryA(LPCSTR lpExeName)
 {
-    return IntExpungeConsoleCommandHistory(lpExeName, FALSE);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return;
+    }
+
+    IntExpungeConsoleCommandHistory(lpExeName, strlen(lpExeName), FALSE);
 }
 
 
@@ -275,7 +310,13 @@ GetConsoleCommandHistoryW(LPWSTR lpHistory,
                           DWORD cbHistory,
                           LPCWSTR lpExeName)
 {
-    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, TRUE);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, wcslen(lpExeName), TRUE);
 }
 
 
@@ -288,7 +329,13 @@ GetConsoleCommandHistoryA(LPSTR lpHistory,
                           DWORD cbHistory,
                           LPCSTR lpExeName)
 {
-    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, FALSE);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, strlen(lpExeName), FALSE);
 }
 
 
@@ -299,7 +346,13 @@ DWORD
 WINAPI
 GetConsoleCommandHistoryLengthW(LPCWSTR lpExeName)
 {
-    return IntGetConsoleCommandHistoryLength(lpExeName, TRUE);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return IntGetConsoleCommandHistoryLength(lpExeName, wcslen(lpExeName), TRUE);
 }
 
 
@@ -310,7 +363,13 @@ DWORD
 WINAPI
 GetConsoleCommandHistoryLengthA(LPCSTR lpExeName)
 {
-    return IntGetConsoleCommandHistoryLength(lpExeName, FALSE) / sizeof(WCHAR);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return IntGetConsoleCommandHistoryLength(lpExeName, strlen(lpExeName), FALSE);
 }
 
 
@@ -320,9 +379,15 @@ GetConsoleCommandHistoryLengthA(LPCSTR lpExeName)
 BOOL
 WINAPI
 SetConsoleNumberOfCommandsW(DWORD dwNumCommands,
-                            LPCSTR lpExeName)
+                            LPCWSTR lpExeName)
 {
-    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, TRUE);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, wcslen(lpExeName), TRUE);
 }
 
 
@@ -332,21 +397,42 @@ SetConsoleNumberOfCommandsW(DWORD dwNumCommands,
 BOOL
 WINAPI
 SetConsoleNumberOfCommandsA(DWORD dwNumCommands,
-                            LPCWSTR lpExeName)
+                            LPCSTR lpExeName)
 {
-    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, FALSE);
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, strlen(lpExeName), FALSE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 SetConsoleCommandHistoryMode(IN DWORD dwMode)
 {
-    STUB;
-    return FALSE;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETHISTORYMODE SetHistoryModeRequest = &ApiMessage.Data.SetHistoryModeRequest;
+
+    SetHistoryModeRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    SetHistoryModeRequest->Mode          = dwMode;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCommandHistoryMode),
+                        sizeof(*SetHistoryModeRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */

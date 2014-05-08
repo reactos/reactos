@@ -483,6 +483,7 @@ CSR_API(SrvGetConsoleAliases)
 
 CSR_API(SrvGetConsoleAliasesLength)
 {
+    NTSTATUS Status;
     PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesLengthRequest;
     PCONSOLE Console;
     PALIAS_HEADER Header;
@@ -496,28 +497,34 @@ CSR_API(SrvGetConsoleAliasesLength)
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (GetAllAliasesLengthRequest->ExeName == NULL)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(ApiMessage->Status))
-    {
-        return ApiMessage->Status;
-    }
+    // FIXME!! Convert GetAllAliasesLengthRequest->ExeName into UNICODE if Unicode2 is FALSE
+    // and make use of GetAllAliasesLengthRequest->ExeLength
 
     Header = IntFindAliasHeader(Console->Aliases, GetAllAliasesLengthRequest->ExeName);
-    if (!Header)
+    if (Header)
     {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_INVALID_PARAMETER;
+        Length = IntGetAllConsoleAliasesLength(Header);
+        GetAllAliasesLengthRequest->Length = Length;
+
+        /*
+         * Quick and dirty way of getting the number of bytes of the
+         * corresponding ANSI string from the one in UNICODE.
+         */
+        if (!GetAllAliasesLengthRequest->Unicode)
+            GetAllAliasesLengthRequest->Length /= sizeof(WCHAR);
+
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_INVALID_PARAMETER;
     }
 
-    Length = IntGetAllConsoleAliasesLength(Header);
-    GetAllAliasesLengthRequest->Length = Length;
     ConSrvReleaseConsole(Console, TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 CSR_API(SrvGetConsoleAliasExes)
@@ -530,7 +537,7 @@ CSR_API(SrvGetConsoleAliasExes)
     DPRINT("SrvGetConsoleAliasExes entered\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID)&GetAliasesExesRequest->ExeNames,
+                                  (PVOID*)&GetAliasesExesRequest->ExeNames,
                                   GetAliasesExesRequest->Length,
                                   sizeof(BYTE)))
     {
@@ -568,17 +575,24 @@ CSR_API(SrvGetConsoleAliasExes)
 
 CSR_API(SrvGetConsoleAliasExesLength)
 {
+    NTSTATUS Status;
     PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;
     PCONSOLE Console;
-    DPRINT("SrvGetConsoleAliasExesLength entered\n");
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (NT_SUCCESS(ApiMessage->Status))
-    {
-        GetAliasesExesLengthRequest->Length = IntGetConsoleAliasesExesLength(Console->Aliases);
-        ConSrvReleaseConsole(Console, TRUE);
-    }
-    return ApiMessage->Status;
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    GetAliasesExesLengthRequest->Length = IntGetConsoleAliasesExesLength(Console->Aliases);
+
+    /*
+     * Quick and dirty way of getting the number of bytes of the
+     * corresponding ANSI string from the one in UNICODE.
+     */
+    if (!GetAliasesExesLengthRequest->Unicode)
+        GetAliasesExesLengthRequest->Length /= sizeof(WCHAR);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 /* EOF */

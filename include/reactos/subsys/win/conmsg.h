@@ -701,20 +701,35 @@ typedef struct
 
 typedef struct
 {
-    UNICODE_STRING ExeName;
-    PWCHAR History;
-    DWORD Length;
+    HANDLE  ConsoleHandle;
+    ULONG   HistoryLength;
+    PVOID   History;
+    // UNICODE_STRING ExeName;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_GETCOMMANDHISTORY, *PCONSOLE_GETCOMMANDHISTORY;
 
 typedef struct
 {
-    UNICODE_STRING ExeName;
-    DWORD Length;
+    HANDLE  ConsoleHandle;
+    ULONG   HistoryLength;
+    // UNICODE_STRING ExeName;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_GETCOMMANDHISTORYLENGTH, *PCONSOLE_GETCOMMANDHISTORYLENGTH;
 
 typedef struct
 {
-    UNICODE_STRING ExeName;
+    HANDLE  ConsoleHandle;
+    // UNICODE_STRING ExeName;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_EXPUNGECOMMANDHISTORY, *PCONSOLE_EXPUNGECOMMANDHISTORY;
 
 typedef struct
@@ -726,8 +741,13 @@ typedef struct
 
 typedef struct
 {
-    UNICODE_STRING ExeName;
-    DWORD NumCommands;
+    HANDLE  ConsoleHandle;
+    ULONG   NumCommands;
+    // UNICODE_STRING ExeName;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_SETHISTORYNUMBERCOMMANDS, *PCONSOLE_SETHISTORYNUMBERCOMMANDS;
 
 typedef struct
