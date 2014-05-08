@@ -4419,6 +4419,17 @@ RtlCloneMemoryStream(
 
 #endif // NTOS_MODE_USER
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFindActivationContextSectionGuid(
+    ULONG flags,
+    const GUID *extguid,
+    ULONG section_kind,
+    const GUID *guid,
+    void *ptr
+);
+
 #ifdef __cplusplus
 }
 #endif
