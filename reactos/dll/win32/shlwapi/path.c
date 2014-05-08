@@ -19,7 +19,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "wine/unicode.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winternl.h"
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /* Get a function pointer from a DLL handle */
 #define GET_FUNC(func, module, name, fail) \
@@ -2189,7 +2207,7 @@ BOOL WINAPI PathIsUNCA(LPCSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_a(lpszPath));
 
-  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+  if (lpszPath && lpszPath[0] == '\\' && lpszPath[1] == '\\' && lpszPath[2] != '?')
     return TRUE;
   return FALSE;
 }
@@ -2203,7 +2221,7 @@ BOOL WINAPI PathIsUNCW(LPCWSTR lpszPath)
 {
   TRACE("(%s)\n",debugstr_w(lpszPath));
 
-  if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
+  if (lpszPath && lpszPath[0] == '\\' && lpszPath[1] == '\\' && lpszPath[2] != '?')
     return TRUE;
   return FALSE;
 }
@@ -2229,7 +2247,7 @@ BOOL WINAPI PathIsUNCServerA(LPCSTR lpszPath)
 {
   TRACE("(%s)\n", debugstr_a(lpszPath));
 
-  if (lpszPath && *lpszPath++ == '\\' && *lpszPath++ == '\\')
+  if (lpszPath && *lpszPath++ == '\\' && *lpszPath++ == '\\' && *lpszPath != '?')
   {
     while (*lpszPath)
     {
@@ -2251,7 +2269,7 @@ BOOL WINAPI PathIsUNCServerW(LPCWSTR lpszPath)
 {
   TRACE("(%s)\n", debugstr_w(lpszPath));
 
-  if (lpszPath && lpszPath[0] == '\\' && lpszPath[1] == '\\')
+  if (lpszPath && lpszPath[0] == '\\' && lpszPath[1] == '\\' && lpszPath[2] != '?')
   {
       return !strchrW( lpszPath + 2, '\\' );
   }
@@ -2279,7 +2297,7 @@ BOOL WINAPI PathIsUNCServerShareA(LPCSTR lpszPath)
 {
   TRACE("(%s)\n", debugstr_a(lpszPath));
 
-  if (lpszPath && *lpszPath++ == '\\' && *lpszPath++ == '\\')
+  if (lpszPath && *lpszPath++ == '\\' && *lpszPath++ == '\\' && *lpszPath != '?')
   {
     BOOL bSeenSlash = FALSE;
     while (*lpszPath)
@@ -2306,7 +2324,7 @@ BOOL WINAPI PathIsUNCServerShareW(LPCWSTR lpszPath)
 {
   TRACE("(%s)\n", debugstr_w(lpszPath));
 
-  if (lpszPath && *lpszPath++ == '\\' && *lpszPath++ == '\\')
+  if (lpszPath && *lpszPath++ == '\\' && *lpszPath++ == '\\' && *lpszPath != '?')
   {
     BOOL bSeenSlash = FALSE;
     while (*lpszPath)
@@ -3515,7 +3533,7 @@ BOOL WINAPI PathRelativePathToW(LPWSTR lpszPath, LPCWSTR lpszFrom, DWORD dwAttrF
 
   if(!(dwAttrFrom & FILE_ATTRIBUTE_DIRECTORY))
     PathRemoveFileSpecW(szFrom);
-  if(!(dwAttrFrom & FILE_ATTRIBUTE_DIRECTORY))
+  if(!(dwAttrTo & FILE_ATTRIBUTE_DIRECTORY))
     PathRemoveFileSpecW(szTo);
 
   /* Paths can only be relative if they have a common root */
