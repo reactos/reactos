@@ -19,6 +19,7 @@
 #include <iphlpapi.h>
 
 #include <wine/debug.h>
+#include <wine/unicode.h>
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>

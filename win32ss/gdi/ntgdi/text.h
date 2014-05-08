@@ -80,8 +80,8 @@ typedef struct _LFONT
 #define LFONT_ShareUnlockFont(plfnt) GDIOBJ_vDereferenceObject((POBJ)plfnt)
 #define LFONT_UnlockFont(plfnt) GDIOBJ_vUnlockObject((POBJ)plfnt)
 
-PTEXTOBJ
 FORCEINLINE
+PTEXTOBJ
 TEXTOBJ_LockText(HFONT hfont)
 {
     PLFONT plfnt = LFONT_ShareLockFont(hfont);
@@ -93,8 +93,8 @@ TEXTOBJ_LockText(HFONT hfont)
     return plfnt;
 }
 
-VOID
 FORCEINLINE
+VOID
 TEXTOBJ_UnlockText(PLFONT plfnt)
 {
     ExReleasePushLockExclusive(&plfnt->lock);

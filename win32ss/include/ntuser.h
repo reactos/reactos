@@ -329,7 +329,6 @@ typedef struct tagITEM
     INT cyBmp;     /* Height " */
     //// ReactOS
     UNICODE_STRING lpstr;
-    struct tagITEM *Next;
 } ITEM, *PITEM;
 
 typedef struct tagMENULIST
@@ -369,7 +368,7 @@ typedef struct tagMENU
     DWORD dwArrowsOn:2;       /* Arrows: 0 off, 1 on, 2 to the top, 3 to the bottom. */
     //// ReactOS
     LIST_ENTRY ListEntry;
-    HWND hWnd;           /* Window containing the menu */
+    HWND hWnd;           /* Window containing the menu, use POPUPMENU */
     BOOL TimeToHide;
 } MENU, *PMENU;
 
@@ -3332,11 +3331,6 @@ NtUserWin32PoolAllocationStats(
   DWORD Unknown3,
   DWORD Unknown4,
   DWORD Unknown5);
-
-HWND
-NTAPI
-NtUserWindowFromPhysicalPoint(
-  POINT Point);
 
 HWND
 NTAPI

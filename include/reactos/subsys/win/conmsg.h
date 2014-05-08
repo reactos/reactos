@@ -429,14 +429,14 @@ typedef struct
 
 typedef struct
 {
-    HANDLE OutputHandle;
-
-    BOOL Unicode;
+    HANDLE     ConsoleHandle;
+    HANDLE     OutputHandle;
     SMALL_RECT ScrollRectangle;
-    BOOL UseClipRectangle;
     SMALL_RECT ClipRectangle;
-    COORD DestinationOrigin;
-    CHAR_INFO Fill;
+    BOOL       UseClipRectangle;
+    COORD      DestinationOrigin;
+    CHAR_INFO  Fill;
+    BOOLEAN    Unicode;
 } CONSOLE_SCROLLSCREENBUFFER, *PCONSOLE_SCROLLSCREENBUFFER;
 
 
@@ -674,20 +674,27 @@ typedef struct
 
 typedef struct
 {
-    DWORD Length;
-    DWORD ExeLength;
-    LPWSTR ExeName;
+    HANDLE  ConsoleHandle;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    ULONG   Length;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_GETALLALIASESLENGTH, *PCONSOLE_GETALLALIASESLENGTH;
 
 typedef struct
 {
-    DWORD Length;
-    LPWSTR ExeNames;
+    HANDLE  ConsoleHandle;
+    ULONG   Length ; // ExeLength; // ExesLength
+    PVOID   ExeNames;
+    BOOLEAN Unicode;
 } CONSOLE_GETALIASESEXES, *PCONSOLE_GETALIASESEXES;
 
 typedef struct
 {
-    DWORD Length;
+    HANDLE  ConsoleHandle;
+    ULONG   Length;
+    BOOLEAN Unicode;
 } CONSOLE_GETALIASESEXESLENGTH, *PCONSOLE_GETALIASESEXESLENGTH;
 
 
@@ -712,16 +719,22 @@ typedef struct
 
 typedef struct
 {
+    UINT HistoryBufferSize;
+    UINT NumberOfHistoryBuffers;
+    DWORD dwFlags;
+} CONSOLE_GETSETHISTORYINFO, *PCONSOLE_GETSETHISTORYINFO;
+
+typedef struct
+{
     UNICODE_STRING ExeName;
     DWORD NumCommands;
 } CONSOLE_SETHISTORYNUMBERCOMMANDS, *PCONSOLE_SETHISTORYNUMBERCOMMANDS;
 
 typedef struct
 {
-    UINT HistoryBufferSize;
-    UINT NumberOfHistoryBuffers;
-    DWORD dwFlags;
-} CONSOLE_GETSETHISTORYINFO, *PCONSOLE_GETSETHISTORYINFO;
+    HANDLE ConsoleHandle;
+    ULONG  Mode;
+} CONSOLE_SETHISTORYMODE, *PCONSOLE_SETHISTORYMODE;
 
 
 
@@ -841,8 +854,9 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest;
         CONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest;
         CONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest;
-        CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
         CONSOLE_GETSETHISTORYINFO HistoryInfoRequest;
+        CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
+        CONSOLE_SETHISTORYMODE SetHistoryModeRequest;
 
         /* Input and Output Code Pages */
         CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;

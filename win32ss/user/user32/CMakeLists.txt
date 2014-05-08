@@ -58,6 +58,7 @@ list(APPEND SOURCE
     windows/text.c
     windows/window.c
     windows/winpos.c
+    ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     include/user32.h)
 
 if(USE_NEW_CURSORICON)

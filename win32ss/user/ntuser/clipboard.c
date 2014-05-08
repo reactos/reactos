@@ -17,7 +17,7 @@ DBG_DEFAULT_CHANNEL(UserClipbrd);
 #define IS_DATA_DELAYED(ce)     ((ce)->hData == DATA_DELAYED)
 #define IS_DATA_SYNTHESIZED(ce) ((ce)->hData == DATA_SYNTH_USER || (ce)->hData == DATA_SYNTH_KRNL)
 
-PWINSTATION_OBJECT static FASTCALL
+static PWINSTATION_OBJECT FASTCALL
 IntGetWinStaForCbAccess(VOID)
 {
     HWINSTA hWinSta;
@@ -37,7 +37,7 @@ IntGetWinStaForCbAccess(VOID)
 }
 
 /* If format exists, returns a non zero value (pointing to formated object) */
-PCLIP static FASTCALL
+static PCLIP FASTCALL
 IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
 {
     unsigned i = 0;
@@ -51,7 +51,7 @@ IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
     return NULL;
 }
 
-VOID static FASTCALL
+static VOID FASTCALL
 IntFreeElementData(PCLIP pElement)
 {
     if (!IS_DATA_DELAYED(pElement) &&
@@ -69,7 +69,7 @@ IntFreeElementData(PCLIP pElement)
 }
 
 /* Adds a new format and data to the clipboard */
-PCLIP static NTAPI
+static PCLIP NTAPI
 IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEAN fGlobalHandle, BOOL bEnd)
 {
     PCLIP pElement = NULL;
@@ -121,7 +121,7 @@ IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEA
     return pElement;
 }
 
-BOOL static FASTCALL
+static BOOL FASTCALL
 IntIsClipboardOpenByMe(PWINSTATION_OBJECT pWinSta)
 {
     /* Check if current thread has opened the clipboard */
@@ -134,7 +134,7 @@ IntIsClipboardOpenByMe(PWINSTATION_OBJECT pWinSta)
     return FALSE;
 }
 
-VOID static NTAPI
+static VOID NTAPI
 IntSynthesizeDib(
     PWINSTATION_OBJECT pWinStaObj,
     HBITMAP hbm)
@@ -218,7 +218,7 @@ cleanup:
     UserReleaseDC(NULL, hdc, FALSE);
 }
 
-VOID static WINAPI
+static VOID WINAPI
 IntSynthesizeBitmap(PWINSTATION_OBJECT pWinStaObj, PCLIP pBmEl)
 {
     HDC hdc = NULL;
@@ -279,7 +279,7 @@ cleanup:
         DIB_FreeConvertedBitmapInfo(pConvertedBmi, pBmi, -1);
 }
 
-VOID static NTAPI
+static VOID NTAPI
 IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
 {
     PCLIP pTextEl, pUniTextEl, pOemTextEl, pLocaleEl, pBmEl, pDibEl;

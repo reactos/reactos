@@ -3515,7 +3515,7 @@ BOOL WINAPI PathRelativePathToW(LPWSTR lpszPath, LPCWSTR lpszFrom, DWORD dwAttrF
 
   if(!(dwAttrFrom & FILE_ATTRIBUTE_DIRECTORY))
     PathRemoveFileSpecW(szFrom);
-  if(!(dwAttrFrom & FILE_ATTRIBUTE_DIRECTORY))
+  if(!(dwAttrTo & FILE_ATTRIBUTE_DIRECTORY))
     PathRemoveFileSpecW(szTo);
 
   /* Paths can only be relative if they have a common root */

@@ -39,7 +39,8 @@ struct __thread_data {
     struct tm                             *time_buffer;        /* buffer for localtime/gmtime */
     char                                  *efcvt_buffer;       /* buffer for ecvt/fcvt */
     int                                   unk3[2];
-    void                                  *unk4[4];
+    void                                  *unk4[3];
+    EXCEPTION_POINTERS                    *xcptinfo;
     int                                   fpecode;
     struct MSVCRT_threadmbcinfostruct     *mbcinfo;
     struct MSVCRT_threadlocaleinfostruct  *locinfo;

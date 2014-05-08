@@ -1,9 +1,0 @@
-/* Hungarian translation by Robert Horvath 2005 - talley at cubeclub.hu */
-
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    STRING_WelcomeMsg "ReactOS Virtuális DOS Gép támogatás.\n"
-    STRING_PromptMsg "Futtatáshoz nyomd meg a r<cr>, leállításhoz a s<cr> vagy kilépéshez a q<cr> gombot."
-END

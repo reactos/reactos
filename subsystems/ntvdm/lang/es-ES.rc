@@ -1,9 +1,13 @@
-/* Spanish translation by Samuel Serapion */
-
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "Maquina virtual de DOS en ReactOS.\n"
-    STRING_PromptMsg "Escriba r<cr> para correr, s<cr> para desactivar or q<cr> para salir ahora."
+    IDS_HIDE_MOUSE, "&Ocultar puntero del ratón"
+    IDS_SHOW_MOUSE, "&Mostrar puntero del ratón"
+    IDS_VDM_MENU  , "ReactOS &VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_QUIT,   "&Salir de ReactOS VDM"
 END

@@ -782,8 +782,8 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
 
 /* EDGE INTERRUPT DISMISSAL FUNCTIONS *****************************************/
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 _HalpDismissIrqGeneric(IN KIRQL Irql,
                        IN ULONG Irq,
                        OUT PKIRQL OldIrql)
@@ -925,8 +925,8 @@ HalpDismissIrq07(IN KIRQL Irql,
 
 /* LEVEL INTERRUPT DISMISSAL FUNCTIONS ****************************************/
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 _HalpDismissIrqLevel(IN KIRQL Irql,
                      IN ULONG Irq,
                      OUT PKIRQL OldIrql)
@@ -1248,8 +1248,8 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
 
 /* SOFTWARE INTERRUPT TRAPS ***************************************************/
 
-VOID
 FORCEINLINE
+VOID
 DECLSPEC_NORETURN
 _HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
@@ -1304,8 +1304,8 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     _HalpApcInterruptHandler(TrapFrame);
 }
 
-KIRQL
 FORCEINLINE
+KIRQL
 _HalpDispatchInterruptHandler(VOID)
 {
     KIRQL CurrentIrql;

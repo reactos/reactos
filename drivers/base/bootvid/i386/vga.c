@@ -95,8 +95,8 @@ ReadWriteMode(UCHAR Mode)
 }
 
 
-VOID
 FORCEINLINE
+VOID
 SetPixel(IN ULONG Left,
          IN ULONG Top,
          IN UCHAR Color)

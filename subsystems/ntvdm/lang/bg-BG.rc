@@ -1,7 +1,0 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    STRING_WelcomeMsg "Поддръжка на РеактОС за привидна ДОС машина.\n"
-    STRING_PromptMsg "Напишете r<cr> за пускане, s<cr> за спиране или q<cr> за изход."
-END

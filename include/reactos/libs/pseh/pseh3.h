@@ -283,10 +283,13 @@ _SEH3$_AutoCleanup(
 #define _SEH3$_DEFINE_FILTER_FUNC(_Name, expression) \
     _SEH3$_NESTED_FUNC_OPEN(_Name) \
         /* Declare the intrinsics for exception filters */ \
+_Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wshadow\"") \
         inline __attribute__((always_inline, gnu_inline)) \
         unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; } \
         inline __attribute__((always_inline, gnu_inline)) \
         void * _exception_info() { return _SEH3$_TrylevelFrame.ExceptionPointers; } \
+_Pragma("GCC diagnostic pop") \
 \
         /* Now handle the actual filter expression */ \
         return (expression); \
@@ -346,6 +349,9 @@ _SEH3$_AutoCleanup(
         (void)&&_SEH3$_l_BeforeFilterOrFinally; \
         (void)&&_SEH3$_l_FilterOrFinally; \
 \
+_Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
+\
         /* Count the try level. Outside of any __try, _SEH3$_TryLevel is 0 */ \
         enum { \
             _SEH3$_PreviousTryLevel = _SEH3$_TryLevel, \
@@ -357,6 +363,8 @@ _SEH3$_AutoCleanup(
 \
         /* Allocate a registration frame */ \
         volatile SEH3$_REGISTRATION_FRAME _SEH3$_AUTO_CLEANUP _SEH3$_TrylevelFrame; \
+\
+_Pragma("GCC diagnostic pop") \
 \
         goto _SEH3$_l_BeforeTry; \
         /* Silence warning */ goto _SEH3$_l_AfterTry; \
@@ -373,6 +381,9 @@ _SEH3$_AutoCleanup(
 \
     _SEH3$_l_BeforeTry: (void)0; \
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
+\
+_Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
 \
         /* Forward declaration of the filter function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FilterFunction); \
@@ -422,6 +433,9 @@ _SEH3$_AutoCleanup(
     _SEH3$_l_BeforeTry: (void)0; \
         _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
 \
+_Pragma("GCC diagnostic push") \
+_Pragma("GCC diagnostic ignored \"-Wdeclaration-after-statement\"") \
+\
         /* Forward declaration of the finally function */ \
         _SEH3$_DECLARE_FILTER_FUNC(_SEH3$_FinallyFunction); \
 \
@@ -458,6 +472,8 @@ _SEH3$_AutoCleanup(
 \
         /* Implementation of the auto cleanup function */ \
         _SEH3$_DEFINE_CLEANUP_FUNC(_SEH3$_AutoCleanup); \
+\
+_Pragma("GCC diagnostic pop") \
 \
     /* Close the outer scope */ \
     } while (0);

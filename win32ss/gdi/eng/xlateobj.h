@@ -46,8 +46,8 @@ typedef struct _EXLATEOBJ
 extern EXLATEOBJ gexloTrivial;
 
 _Notnull_
-PFN_XLATE
 FORCEINLINE
+PFN_XLATE
 XLATEOBJ_pfnXlate(
     _In_ XLATEOBJ *pxlo)
 {

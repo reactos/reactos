@@ -99,7 +99,7 @@ co_IntTranslateAccelerator(
     /* Check if accelerator is associated with menu command */
     hMenu = (Window->style & WS_CHILD) ? 0 : (HMENU)Window->IDMenu;
     hSubMenu = NULL;
-    MenuObject = IntGetMenuObject(hMenu);
+    MenuObject = UserGetMenuObject(hMenu);
     nPos = pAccel->cmd;
     if (MenuObject)
     {
@@ -113,7 +113,7 @@ co_IntTranslateAccelerator(
         /* Check system menu now */
         hMenu = Window->SystemMenu;
         hSubMenu = hMenu; /* system menu is a popup menu */
-        MenuObject = IntGetMenuObject(hMenu);
+        MenuObject = UserGetMenuObject(hMenu);
         nPos = pAccel->cmd;
         if (MenuObject)
         {

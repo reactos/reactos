@@ -247,8 +247,8 @@ DC_UnlockDc(PDC pdc)
     GDIOBJ_vUnlockObject(&pdc->BaseObject);
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
 {
     PSURFACE psurfOld = pdc->dclevel.pSurface;
@@ -262,8 +262,8 @@ DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
     pdc->dclevel.pSurface = psurfNew;
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectFillBrush(PDC pdc, PBRUSH pbrFill)
 {
     PBRUSH pbrFillOld = pdc->dclevel.pbrFill;
@@ -274,8 +274,8 @@ DC_vSelectFillBrush(PDC pdc, PBRUSH pbrFill)
     pdc->dclevel.pbrFill = pbrFill;
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectLineBrush(PDC pdc, PBRUSH pbrLine)
 {
     PBRUSH pbrLineOld = pdc->dclevel.pbrLine;
@@ -286,8 +286,8 @@ DC_vSelectLineBrush(PDC pdc, PBRUSH pbrLine)
     pdc->dclevel.pbrLine = pbrLine;
 }
 
-VOID
 FORCEINLINE
+VOID
 DC_vSelectPalette(PDC pdc, PPALETTE ppal)
 {
     PPALETTE ppalOld = pdc->dclevel.ppal;

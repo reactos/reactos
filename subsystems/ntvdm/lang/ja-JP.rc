@@ -1,7 +1,0 @@
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    STRING_WelcomeMsg "ReactOS Virtual DOS Machine support.\n"
-    STRING_PromptMsg "起動するには r<cr> を、シャットダウンするには s<cr> を、今すぐ終了させるには q<cr> を入力してください。"
-END

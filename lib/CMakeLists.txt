@@ -11,6 +11,7 @@ add_subdirectory(cryptlib)
 #add_subdirectory(dnslib) Nothing links to this lib.
 add_subdirectory(drivers)
 add_subdirectory(epsapi)
+add_subdirectory(fast486)
 add_subdirectory(fslib)
 add_subdirectory(lsalib)
 add_subdirectory(ppcmmu)

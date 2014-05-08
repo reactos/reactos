@@ -59,6 +59,6 @@ echo Preparing reactos...
 cd ../reactos
 rm -f CMakeCache.txt
 
-cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=1 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH -DREACTOS_BUILD_TOOLS_DIR:PATH="$REACTOS_BUILD_TOOLS_DIR" $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
+cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH -DREACTOS_BUILD_TOOLS_DIR:PATH="$REACTOS_BUILD_TOOLS_DIR" $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 
 echo Configure script complete! Enter directories and execute appropriate build commands \(ex: ninja, make, makex, etc...\).

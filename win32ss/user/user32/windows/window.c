@@ -120,8 +120,8 @@ CloseWindow(HWND hWnd)
     return HandleToUlong(hWnd);
 }
 
-VOID
 FORCEINLINE
+VOID
 RtlInitLargeString(
     OUT PLARGE_STRING plstr,
     LPCVOID psz,
