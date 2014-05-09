@@ -1136,6 +1136,7 @@ static VOID VgaUpdateFramebuffer(VOID)
     {
         /* Graphics mode */
         PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
+        DWORD InterlaceHighBit = VGA_INTERLACE_HIGH_BIT;
 
         /*
          * Synchronize access to the graphics framebuffer
@@ -1143,17 +1144,15 @@ static VOID VgaUpdateFramebuffer(VOID)
          */
         WaitForSingleObject(ConsoleMutex, INFINITE);
 
+        /* Shift the high bit right by 1 in odd/even mode */
+        if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
+        {
+            InterlaceHighBit >>= 1;
+        }
+
         /* Loop through the scanlines */
         for (i = 0; i < Resolution.Y; i++)
         {
-            DWORD InterlaceHighBit = VGA_INTERLACE_HIGH_BIT;
-
-            if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
-            {
-                /* Shift the high bit right by 1 in odd/even mode */
-                InterlaceHighBit >>= 1;
-            }
-
             if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) && (i & 1))
             {
                 /* Odd-numbered line in interlaced mode - set the high bit */
@@ -1309,7 +1308,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                 }
             }
 
-            if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE && (i & 1))
+            if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) && (i & 1))
             {
                 /* Clear the high bit */
                 Address &= ~InterlaceHighBit;
