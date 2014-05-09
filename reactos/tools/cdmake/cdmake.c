@@ -1327,7 +1327,7 @@ static void pass(void)
 
   // Boot Volume Descriptor
 
-  if (eltorito == TRUE)
+  if (eltorito)
     {
       write_byte(0);
       write_string("CD001\1");
@@ -1390,7 +1390,7 @@ static void pass(void)
   fill_sector();
 
   // Boot Catalog
-  if (eltorito == TRUE)
+  if (eltorito)
     {
       boot_catalog_sector = cd.sector;
 
@@ -1416,7 +1416,7 @@ static void pass(void)
     }
 
   // Boot Image
-  if (eltorito == TRUE)
+  if (eltorito)
     {
       boot_image_sector = cd.sector;
 
