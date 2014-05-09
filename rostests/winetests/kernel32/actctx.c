@@ -1670,9 +1670,6 @@ static void test_typelib_section(void)
     HANDLE handle;
     BOOL ret;
 
-    skip("test_typelib_section\n");
-    return;
-
     /* use two dependent manifests, 4 'files' total */
     create_manifest_file("testdep1.manifest", manifest_wndcls1, -1, NULL, NULL);
     create_manifest_file("testdep2.manifest", manifest_wndcls2, -1, NULL, NULL);
