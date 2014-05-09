@@ -1146,7 +1146,19 @@ static VOID VgaUpdateFramebuffer(VOID)
         /* Loop through the scanlines */
         for (i = 0; i < Resolution.Y; i++)
         {
-            BOOL RepeatScanline = FALSE;
+            DWORD InterlaceHighBit = VGA_INTERLACE_HIGH_BIT;
+
+            if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
+            {
+                /* Shift the high bit right by 1 in odd/even mode */
+                InterlaceHighBit >>= 1;
+            }
+
+            if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) && (i & 1))
+            {
+                /* Odd-numbered line in interlaced mode - set the high bit */
+                Address |= InterlaceHighBit;
+            }
 
             /* Loop through the pixels */
             for (j = 0; j < Resolution.X; j++)
@@ -1203,21 +1215,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                          */
                         DWORD BankNumber = (j / 4) % 2;
                         DWORD Offset = Address + (j / 8);
-                        BYTE LowPlaneData, HighPlaneData;
-
-                        if (i % 2 != 0)
-                        {
-                            /* Odd-numbered line - add the CGA emulation offset */
-                            Offset += VGA_CGA_ODD_LINE_OFFSET;
-                        }
-                        else
-                        {
-                            /* Even-numbered line - use the same scanline */
-                            RepeatScanline = TRUE;
-                        }
-
-                        LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + Offset * AddressSize];
-                        HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + Offset * AddressSize];
+                        BYTE LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + Offset * AddressSize];
+                        BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + Offset * AddressSize];
 
                         /* Extract the two bits from each plane */
                         LowPlaneData = (LowPlaneData >> (6 - ((j % 4) * 2))) & 3;
@@ -1310,8 +1309,17 @@ static VOID VgaUpdateFramebuffer(VOID)
                 }
             }
 
-            /* Move to the next scanline */
-            if (!RepeatScanline) Address += ScanlineSize;
+            if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE && (i & 1))
+            {
+                /* Clear the high bit */
+                Address &= ~InterlaceHighBit;
+            }
+
+            if (!(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) || (i & 1))
+            {
+                /* Move to the next scanline */
+                Address += ScanlineSize;
+            }
         }
 
         /*
