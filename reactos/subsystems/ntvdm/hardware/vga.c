@@ -1205,6 +1205,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                         DWORD Offset = Address + (j / 8);
                         BYTE LowPlaneData, HighPlaneData;
 
+                        /* Check if the 0-based index is divisible by 2. If so, the 1-based index is an odd number. */
                         if (i % 2 == 0)
                         {
                             /* Odd-numbered line - add the CGA emulation offset */
