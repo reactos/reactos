@@ -1146,6 +1146,8 @@ static VOID VgaUpdateFramebuffer(VOID)
         /* Loop through the scanlines */
         for (i = 0; i < Resolution.Y; i++)
         {
+            BOOL RepeatScanline = FALSE;
+
             /* Loop through the pixels */
             for (j = 0; j < Resolution.X; j++)
             {
@@ -1199,10 +1201,23 @@ static VOID VgaUpdateFramebuffer(VOID)
                          * 2 bits shifted from plane 0 and 2 for the first 4 pixels,
                          * then 2 bits shifted from plane 1 and 3 for the next 4
                          */
-                        BYTE LowPlaneData = VgaMemory[((j / 4) % 2) * VGA_BANK_SIZE
-                                                      + (Address + (j / 8)) * AddressSize];
-                        BYTE HighPlaneData = VgaMemory[(((j / 4) % 2) + 2) * VGA_BANK_SIZE
-                                                       + (Address + (j / 8)) * AddressSize];
+                        DWORD BankNumber = (j / 4) % 2;
+                        DWORD Offset = Address + (j / 8);
+                        BYTE LowPlaneData, HighPlaneData;
+
+                        if (i % 2 == 0)
+                        {
+                            /* Odd-numbered line - add the CGA emulation offset */
+                            Offset += VGA_CGA_ODD_LINE_OFFSET;
+                        }
+                        else
+                        {
+                            /* Even-numbered line - use the same scanline */
+                            RepeatScanline = TRUE;
+                        }
+
+                        LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + Offset * AddressSize];
+                        HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + Offset * AddressSize];
 
                         /* Extract the two bits from each plane */
                         LowPlaneData = (LowPlaneData >> (6 - ((j % 4) * 2))) & 3;
@@ -1296,7 +1311,7 @@ static VOID VgaUpdateFramebuffer(VOID)
             }
 
             /* Move to the next scanline */
-            Address += ScanlineSize;
+            if (!RepeatScanline) Address += ScanlineSize;
         }
 
         /*
