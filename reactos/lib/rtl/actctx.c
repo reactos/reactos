@@ -5130,7 +5130,7 @@ RtlpFindActivationContextSection_CheckParameters( ULONG flags, const GUID *guid,
                                                   const UNICODE_STRING *section_name, PACTCTX_SECTION_KEYED_DATA data )
 {
     /* Check general parameter combinations */
-    if (!section_name ||
+    if (!section_name ||  !section_name->Buffer || 
         (flags & ~FIND_ACTCTX_VALID_MASK) ||
         ((flags & FIND_ACTCTX_VALID_MASK) && !data) ||
         (data && data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex)))
