@@ -52,6 +52,7 @@ enum
     FL_STUB = 2,
     FL_NONAME = 4,
     FL_ORDINAL = 8,
+    FL_DATA_ALIAS = 16
 };
 
 enum
@@ -369,6 +370,15 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
     }
     else
     {
+        /* Does the string already have stdcall decoration? */
+        pcAt = ScanToken(pcName, '@');
+        if (pcAt && (pcAt < (pcName + nNameLength)) && pcName[0] == '_')
+        {
+            /* Skip leading underscore and remove trailing decoration */
+            pcName++;
+            nNameLength = pcAt - pcName;
+        }
+
         /* Print the undecorated function name */
         fprintf(fileDest, "%.*s", nNameLength, pcName);
     }
@@ -492,7 +502,9 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
         fprintf(fileDest, " PRIVATE");
     }
 
-    if (pexp->nCallingConvention == CC_EXTERN)
+    /* Make this a data export, unless this is MSVC and -withalias was given */
+    if ((pexp->nCallingConvention == CC_EXTERN) &&
+        !(gbMSComp && (pexp->uFlags & FL_DATA_ALIAS)))
     {
         fprintf(fileDest, " DATA");
     }
@@ -644,6 +656,15 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             else if (CompareToken(pc, "-stub"))
             {
                 exp.uFlags |= FL_STUB;
+            }
+            else if (CompareToken(pc, "-withalias"))
+            {
+                /* This flag is to create a nin _imp_ prefixed alias for a
+                   data export, so that the hacked DDK declarations work */
+                if (exp.nCallingConvention != CC_EXTERN)
+                    fprintf(stderr, "error: line %d -withalias on non-data export\n", nLine);
+                else
+                    exp.uFlags |= FL_DATA_ALIAS;
             }
             else if (CompareToken(pc, "-norelay") ||
                      CompareToken(pc, "-register") ||
