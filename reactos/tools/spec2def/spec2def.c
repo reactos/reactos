@@ -325,7 +325,22 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
     int nNameLength = pstr->len;
     const char* pcDot, *pcAt;
 
-    if ((giArch == ARCH_X86) && fDeco &&
+    /* Check for non-x86 first */
+    if (giArch != ARCH_X86)
+    {
+        /* Does the string already have stdcall decoration? */
+        pcAt = ScanToken(pcName, '@');
+        if ((pcAt < (pcName + nNameLength)) && (pcName[0] == '_'))
+        {
+            /* Skip leading underscore and remove trailing decoration */
+            pcName++;
+            nNameLength = pcAt - pcName;
+        }
+
+        /* Print the undecorated function name */
+        fprintf(fileDest, "%.*s", nNameLength, pcName);
+    }
+    else if (fDeco &&
         ((pexp->nCallingConvention == CC_STDCALL) ||
          (pexp->nCallingConvention == CC_FASTCALL)))
     {
@@ -370,15 +385,6 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
     }
     else
     {
-        /* Does the string already have stdcall decoration? */
-        pcAt = ScanToken(pcName, '@');
-        if (pcAt && (pcAt < (pcName + nNameLength)) && pcName[0] == '_')
-        {
-            /* Skip leading underscore and remove trailing decoration */
-            pcName++;
-            nNameLength = pcAt - pcName;
-        }
-
         /* Print the undecorated function name */
         fprintf(fileDest, "%.*s", nNameLength, pcName);
     }
