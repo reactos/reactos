@@ -114,7 +114,7 @@ HackSecureVirtualMemory(
     else if (ProbeMode == PAGE_READWRITE) Operation = IoModifyAccess;
     else return NULL;
 
-    pmdl = IoAllocateMdl(Address, Size, FALSE, TRUE, NULL);
+    pmdl = IoAllocateMdl(Address, (ULONG)Size, FALSE, TRUE, NULL);
     if (pmdl == NULL)
     {
         return NULL;

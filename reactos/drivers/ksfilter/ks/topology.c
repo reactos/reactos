@@ -28,7 +28,7 @@ KspCreateObjectType(
 
     /* calculate request length */
     Name.Length = 0;
-    Name.MaximumLength = wcslen(ObjectType) * sizeof(WCHAR) + CreateParametersSize +  1 * sizeof(WCHAR);
+    Name.MaximumLength = (USHORT)(wcslen(ObjectType) * sizeof(WCHAR) + CreateParametersSize +  1 * sizeof(WCHAR));
     Name.MaximumLength += sizeof(WCHAR);
     /* acquire request buffer */
     Name.Buffer = AllocateItem(NonPagedPool, Name.MaximumLength);
@@ -39,7 +39,7 @@ KspCreateObjectType(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* build a request which looks like {ObjectClass}\CreateParameters 
+    /* build a request which looks like {ObjectClass}\CreateParameters
      * For pins the parent is the reference string used in registration
      * For clocks it is full path for pin\{ClockGuid}\ClockCreateParams
      */
