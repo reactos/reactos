@@ -446,6 +446,9 @@ GetTickCount(VOID)
 {
     ULARGE_INTEGER TickCount;
 
+#ifdef _WIN64
+    TickCount.QuadPart = *((volatile ULONG64*)&SharedUserData->TickCount);
+#else
     while (TRUE)
     {
         TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
@@ -456,6 +459,7 @@ GetTickCount(VOID)
 
         YieldProcessor();
     }
+#endif
 
     return (ULONG)((UInt32x32To64(TickCount.LowPart,
                                   SharedUserData->TickCountMultiplier) >> 24) +
