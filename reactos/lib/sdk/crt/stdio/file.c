@@ -1553,8 +1553,7 @@ int CDECL _sopen_s( int *fd, const char *path, int oflags, int shflags, int pmod
 
   if (!fd)
   {
-    MSVCRT_INVALID_PMT("null out fd pointer");
-    *_errno() = EINVAL;
+    MSVCRT_INVALID_PMT("null out fd pointer", EINVAL);
     return EINVAL;
   }
 
@@ -1672,8 +1671,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
 
   if (!fd)
   {
-    MSVCRT_INVALID_PMT("null out fd pointer");
-    *_errno() = EINVAL;
+    MSVCRT_INVALID_PMT("null out fd pointer", EINVAL);
     return EINVAL;
   }
 

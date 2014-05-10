@@ -126,15 +126,13 @@ _gmtime64_s(
     __time64_t time = *ptime;
     if (!ptm)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptm == NULL");
+        MSVCRT_INVALID_PMT("ptm == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
 
     if (!ptime)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptime == NULL");
+        MSVCRT_INVALID_PMT("ptime == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
 
@@ -167,15 +165,13 @@ _gmtime32_s(
     __time64_t time = *ptime;
     if (!ptm)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptm == NULL");
+        MSVCRT_INVALID_PMT("ptm == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
 
     if (!ptime)
     {
-        _set_errno(ERROR_BAD_COMMAND);
-        MSVCRT_INVALID_PMT("ptime == NULL");
+        MSVCRT_INVALID_PMT("ptime == NULL", ERROR_BAD_COMMAND);
         return ERROR_BAD_COMMAND;
     }
 
