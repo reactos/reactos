@@ -464,7 +464,13 @@ BasicBehaviorChecks(HANDLE FileHandle)
 /* FIXME: Null pointer dereference. See ROSTESTS-108 */
 #ifdef ROSTESTS_108_FIXED
     //mimic lack of section support for a particular file as well.
-    Status = ObReferenceObjectByHandle(FileHandle, STANDARD_RIGHTS_ALL, IoFileObjectType, KernelMode, (PVOID *)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(FileHandle, STANDARD_RIGHTS_ALL,
+#ifdef _PROPER_NT_EXPORTS
+                                       *IoFileObjectType,
+#else
+                                       IoFileObjectType,
+#endif
+                                        KernelMode, (PVOID *)&FileObject, NULL);
     if (!skip(NT_SUCCESS(Status), "Cannot reference object by handle\n"))
     {
         PSECTION_OBJECT_POINTERS Pointers = FileObject->SectionObjectPointer;

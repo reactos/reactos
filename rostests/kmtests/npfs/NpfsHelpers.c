@@ -742,7 +742,11 @@ KmtStartThread(
     {
         Status = ObReferenceObjectByHandle(ThreadHandle,
                                            SYNCHRONIZE,
+#ifdef _PROPER_NT_EXPORTS
+                                           *PsThreadType,
+#else
                                            PsThreadType,
+#endif
                                            KernelMode,
                                            &ThreadObject,
                                            NULL);

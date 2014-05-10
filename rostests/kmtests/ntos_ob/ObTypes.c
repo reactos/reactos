@@ -164,6 +164,40 @@ TestObjectTypes(VOID)
     SeDefaultObjectMethod = ObpTypeObjectType->TypeInfo.SecurityProcedure;
     ok(SeDefaultObjectMethod != NULL, "No SeDefaultObjectMethod\n");
 
+#ifdef _PROPER_NT_EXPORTS
+#define ExSemaphoreObjectType *ExSemaphoreObjectType
+#define SeTokenObjectType *SeTokenObjectType
+#define PsProcessType *PsProcessType
+#define PsThreadType *PsThreadType
+#define ExEventObjectType *ExEventObjectType
+#define IoFileObjectType *IoFileObjectType
+#endif
+#ifdef _PROPER_NT_NDK_EXPORTS
+#define ObpTypeObjectType *ObpTypeObjectType
+#define ObpDirectoryObjectType *ObpDirectoryObjectType
+#define ObpSymbolicLinkObjectType *ObpSymbolicLinkObjectType
+#define PsJobType *PsJobType
+#define DbgkDebugObjectType *DbgkDebugObjectType
+#define ExEventPairObjectType *ExEventPairObjectType
+#define ExMutantObjectType *ExMutantObjectType
+#define ExCallbackObjectType *ExCallbackObjectType
+#define ExTimerObjectType *ExTimerObjectType
+#define ExProfileObjectType *ExProfileObjectType
+#define ExpKeyedEventObjectType *ExpKeyedEventObjectType
+#define ExWindowStationObjectType *ExWindowStationObjectType
+#define ExDesktopObjectType *ExDesktopObjectType
+#define MmSectionObjectType *MmSectionObjectType
+#define CmpKeyObjectType *CmpKeyObjectType
+#define LpcPortObjectType *LpcPortObjectType
+#define LpcWaitablePortObjectType *LpcWaitablePortObjectType
+#define IoAdapterObjectType *IoAdapterObjectType
+#define IoControllerObjectType *IoControllerObjectType
+#define IoDeviceObjectType *IoDeviceObjectType
+#define IoDriverObjectType *IoDriverObjectType
+#define IoCompletionObjectType *IoCompletionObjectType
+#define WmipGuidObjectType *WmipGuidObjectType
+#endif
+
     Index = 1;
     CheckObjectType(Type, ObpTypeObjectType,                    OBT_MAINTAIN_TYPE_LIST | OBT_CUSTOM_KEY,    0x100,  0x020000, 0x020000, 0x020000, 0x0f0001, 0x1f0001);
         ok_eq_hex(ObpTypeObjectType->Key, TAG('ObjT'));
