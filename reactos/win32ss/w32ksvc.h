@@ -235,7 +235,7 @@ SVC_(GdiMonoBitmap, 1)
 SVC_(GdiMoveTo, 4)
 SVC_(GdiOffsetClipRgn, 3)
 SVC_(GdiOffsetRgn, 3)
-SVC_(GdiOpenDCW, 8) /* FIXME: 7 params on XP */
+SVC_(GdiOpenDCW, 8) /* FIXME: 7 params on XP/2k3 */
 SVC_(GdiPatBlt, 6)
 SVC_(GdiPolyPatBlt, 5)
 SVC_(GdiPathToRegion, 1)
@@ -374,7 +374,7 @@ SVC_(UserEndDeferWindowPosEx, 2)
 SVC_(UserEndMenu, 0)
 SVC_(UserEndPaint, 2)
 SVC_(UserEnumDisplayDevices, 4)
-SVC_(UserEnumDisplayMonitors, 5) /* FIXME: 4 on XP */
+SVC_(UserEnumDisplayMonitors, 5) /* FIXME: 4 on XP/2k3 */
 SVC_(UserEnumDisplaySettings, 4)
 SVC_(UserEvent, 1)
 SVC_(UserExcludeUpdateRgn, 2)
@@ -495,7 +495,7 @@ SVC_(UserRealInternalGetMessage, 6)
 SVC_(UserRealWaitMessageEx, 2)
 SVC_(UserRedrawWindow, 4)
 SVC_(UserRegisterClassExWOW, 7)
-SVC_(UserRegisterUserApiHook, 4) /* FIXME: 2 params on XP */
+SVC_(UserRegisterUserApiHook, 4) /* Note: 2 params on XP, 4 on 2k3 */
 SVC_(UserRegisterHotKey, 4)
 SVC_(UserRegisterRawInputDevices, 3)
 SVC_(UserRegisterTasklist, 1)
@@ -589,7 +589,7 @@ SVC_(UserUnregisterUserApiHook, 0)
 SVC_(UserUnregisterHotKey, 2)
 SVC_(UserUpdateInputContext, 3)
 SVC_(UserUpdateInstance, 3)
-SVC_(UserUpdateLayeredWindow, 10) /* FIXME: 9 params on XP */
+SVC_(UserUpdateLayeredWindow, 10) /* Note: 9 params on XP, 10 on 2k3 */
 SVC_(UserGetLayeredWindowAttributes, 4)
 SVC_(UserSetLayeredWindowAttributes, 4)
 SVC_(UserUpdatePerUserSystemParameters, 2)
