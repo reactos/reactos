@@ -329,7 +329,7 @@ KspCreateDeviceReference(
     IN LPWSTR ReferenceString)
 {
     LPWSTR DeviceName;
-    ULONG Length;
+    SIZE_T Length;
     PLIST_ENTRY Entry;
     PBUS_DEVICE_ENTRY DeviceEntry = NULL; /* GCC warning */
     BOOLEAN ItemExists = FALSE;
@@ -523,7 +523,7 @@ KspBusQueryReferenceString(
     IN OUT PWCHAR *String)
 {
     LPWSTR Name;
-    ULONG Length;
+    SIZE_T Length;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension = (PBUS_ENUM_DEVICE_EXTENSION)Context;
 
     /* sanity checks */
@@ -665,7 +665,7 @@ KspDoReparseForIrp(
     PIRP Irp,
     PBUS_DEVICE_ENTRY DeviceEntry)
 {
-    ULONG Length;
+    SIZE_T Length;
     LPWSTR Buffer;
     PIO_STACK_LOCATION IoStack;
 
@@ -885,7 +885,7 @@ KspQueryId(
     PBUS_DEVICE_ENTRY DeviceEntry;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
     LPWSTR Name;
-    ULONG Length;
+    SIZE_T Length;
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -972,7 +972,7 @@ KspInstallInterface(
     IN PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension,
     IN PSWENUM_INSTALL_INTERFACE InstallInterface)
 {
-    ULONG Length, Index;
+    SIZE_T Length, Index;
     UNICODE_STRING DeviceString, InterfaceString, ReferenceString;
     HANDLE hKey, hDeviceKey, hInterfaceKey, hReferenceKey;
     NTSTATUS Status;
@@ -1369,7 +1369,7 @@ KsGetBusEnumIdentifier(
     PDEV_EXTENSION DeviceExtension;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
     PIO_STACK_LOCATION IoStack;
-    ULONG Length;
+    SIZE_T Length;
     NTSTATUS Status;
     LPWSTR Buffer;
 
@@ -1489,7 +1489,7 @@ KsCreateBusEnumObject(
     IN REFGUID InterfaceGuid OPTIONAL,
     IN PWCHAR ServiceRelativePath OPTIONAL)
 {
-    ULONG Length;
+    SIZE_T Length;
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING ServiceKeyPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\");
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;

@@ -1140,7 +1140,7 @@ KsSynchronousIoControlDevice(
         if (Status)
         {
             /* store bytes returned */
-            *BytesReturned = IoStatusBlock.Information;
+            *BytesReturned = (ULONG)IoStatusBlock.Information;
             /* return status */
             return IoStatusBlock.Status;
         }
@@ -1181,7 +1181,7 @@ KsSynchronousIoControlDevice(
         Status = IoStatusBlock.Status;
     }
 
-    *BytesReturned = IoStatusBlock.Information;
+    *BytesReturned = (ULONG)IoStatusBlock.Information;
     return Status;
 }
 
@@ -1716,8 +1716,8 @@ KsCompletePendingRequest(
         return;
     }
 
-    /* FIXME 
-     * delete object / device header 
+    /* FIXME
+     * delete object / device header
      * remove dead pin / filter instance
      */
     UNIMPLEMENTED
@@ -1782,7 +1782,7 @@ KspDeviceSetGetBusData(
     Status = IoCallDriver(DeviceObject, Irp);
 
     /* is the request still pending */
-    if (Status == STATUS_PENDING) 
+    if (Status == STATUS_PENDING)
     {
         /* have a nap */
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -1887,7 +1887,7 @@ KsGetNextSibling(
     /* get the basic header */
     BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
-    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory ||
            BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
     return (PVOID)BasicHeader->Next.Pin;
@@ -2128,7 +2128,7 @@ KspMergePropertySet(
     PKSPROPERTY_ITEM PropertyItem, CurrentPropertyItem;
     NTSTATUS Status;
 
-    // max properties 
+    // max properties
     PropertyCount = PropertySetA->PropertiesCount + PropertySetB->PropertiesCount;
 
     // allocate items
@@ -2518,7 +2518,7 @@ KsRegisterAggregatedClientUnknown(
     PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
     /* sanity check */
-    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory ||
            BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
     if (BasicHeader->ClientAggregate)
