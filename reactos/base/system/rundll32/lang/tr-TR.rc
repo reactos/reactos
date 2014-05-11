@@ -3,6 +3,6 @@
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded """%s"" kitaplığı yüklenemedi."
-    IDS_MissingEntry "%s giriş noktası %s içinde bulunamadı."
+    IDS_DllNotLoaded "LoadLibrary, ""%s"" kitaplığını yüklemede başarısız oldu."
+    IDS_MissingEntry "%s içinde %s giriş noktası eksik."
 END

@@ -114,7 +114,7 @@ BEGIN
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-    LTEXT "Birtakım hizmetler, diğer hizmetlere, dizge sürücülerine ve yükleme sıra öbeklerine bağımlıdır. Eğer bir dizge bileşeni, durdurulmuşsa ya da düzgün bir şekilde çalışmıyorsa bağımlı hizmetler etkilenebilir.", IDC_STATIC, 8, 7, 238, 26
+    LTEXT "Birtakım hizmetler, başka hizmetlere, dizge sürücülerine ve yükleme sıra öbeklerine bağımlıdır. Eğer bir dizge bileşeni, durdurulmuşsa ya da düzgün bir şekilde çalışmıyorsa bağımlı hizmetler etkilenebilir.", IDC_STATIC, 8, 7, 238, 26
     LTEXT "Bu hizmet aşağıdaki bileşenlere bağımlıdır:", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
@@ -155,7 +155,7 @@ BEGIN
 END
 
 IDD_DLG_DEPEND_STOP DIALOGEX 6, 6, 240, 148
-CAPTION "Diğer Hizmetleri Kapatma"
+CAPTION "Başka Hizmetleri Kapatma"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
