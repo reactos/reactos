@@ -36,7 +36,7 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
  * Activate this line if you want to run NTVDM in standalone mode with:
  * ntvdm.exe <program>
  */
-#define STANDALONE
+// #define STANDALONE
 
 /* FUNCTIONS ******************************************************************/
 
