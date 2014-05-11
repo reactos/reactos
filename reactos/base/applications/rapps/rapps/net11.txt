@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Microsoft .NET Framework Version 1.1 Redistributable Package

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Microsoft .NET Framework Version 2.0 Redistributable Package
