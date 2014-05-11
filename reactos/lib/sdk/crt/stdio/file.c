@@ -2263,6 +2263,11 @@ int CDECL _filbuf(FILE* file)
     unsigned char c;
     _lock_file(file);
 
+    if(file->_flag & _IOSTRG) {
+        _unlock_file(file);
+        return EOF;
+    }
+
     /* Allocate buffer if needed */
     if(file->_bufsiz == 0 && !(file->_flag & _IONBF))
         alloc_buffer(file);
