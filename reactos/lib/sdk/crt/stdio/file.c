@@ -83,6 +83,7 @@ int *__p___mb_cur_max(void);
 /* values for wxflag in file descriptor */
 #define WX_OPEN           0x01
 #define WX_ATEOF          0x02
+#define WX_READNL         0x04  /* read started with \n */
 #define WX_READEOF        0x04  /* like ATEOF, but for underlying file rather than buffer */
 #define WX_READCR         0x08  /* underlying file is at \r */
 #define WX_DONTINHERIT    0x10
@@ -2894,8 +2895,6 @@ int CDECL fsetpos(FILE* file, const fpos_t *pos)
  */
 __int64 CDECL _ftelli64(FILE* file)
 {
-    /* TODO: just call fgetpos and return lower half of result */
-    int off=0;
     __int64 pos;
 
     _lock_file(file);
@@ -2905,26 +2904,50 @@ __int64 CDECL _ftelli64(FILE* file)
         return -1;
     }
     if(file->_bufsiz)  {
-        if( file->_flag & _IOWRT ) {
-            off = file->_ptr - file->_base;
+        if(file->_flag & _IOWRT) {
+            pos += file->_ptr - file->_base;
+
+            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
+                char *p;
+
+                for(p=file->_base; p<file->_ptr; p++)
+                    if(*p == '\n')
+                        pos++;
+            }
+        } else if(!file->_cnt) { /* nothing to do */
+        } else if(_lseeki64(file->_file, 0, SEEK_END)==pos) {
+            int i;
+
+            pos -= file->_cnt;
+            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
+                for(i=0; i<file->_cnt; i++)
+                    if(file->_ptr[i] == '\n')
+                        pos--;
+            }
         } else {
-            off = -file->_cnt;
-            if (get_ioinfo(file->_file)->wxflag & WX_TEXT) {
-                /* Black magic correction for CR removal */
-                int i;
-                for (i=0; i<file->_cnt; i++) {
-                    if (file->_ptr[i] == '\n')
-                        off--;
-                }
-                /* Black magic when reading CR at buffer boundary*/
-                if(get_ioinfo(file->_file)->wxflag & WX_READCR)
-                    off--;
+            char *p;
+
+            if(_lseeki64(file->_file, pos, SEEK_SET) != pos) {
+                _unlock_file(file);
+                return -1;
+            }
+
+            pos -= file->_bufsiz;
+            pos += file->_ptr - file->_base;
+
+            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
+                if(get_ioinfo(file->_file)->wxflag & WX_READNL)
+                    pos--;
+
+                for(p=file->_base; p<file->_ptr; p++)
+                    if(*p == '\n')
+                        pos++;
             }
         }
     }
 
     _unlock_file(file);
-    return off + pos;
+    return pos;
 }
 
 /*********************************************************************
