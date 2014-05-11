@@ -99,7 +99,7 @@ KspEnableEvent(
     KSEVENT Event;
     PKSEVENT_ITEM EventItem, FoundEventItem;
     PKSEVENTDATA EventData;
-    const KSEVENT_SET* FoundEventSet;
+    const KSEVENT_SET *FoundEventSet;
     PKSEVENT_ENTRY EventEntry;
     ULONG Index, SubIndex, Size;
     PVOID Object;
@@ -234,7 +234,7 @@ KspEnableEvent(
         if (EventData->NotificationType == KSEVENTF_SEMAPHORE_HANDLE)
         {
             /* get semaphore object handle */
-            Status = ObReferenceObjectByHandle(EventData->SemaphoreHandle.Semaphore, SEMAPHORE_MODIFY_STATE, ExSemaphoreObjectType, Irp->RequestorMode, &Object, NULL);
+            Status = ObReferenceObjectByHandle(EventData->SemaphoreHandle.Semaphore, SEMAPHORE_MODIFY_STATE, *ExSemaphoreObjectType, Irp->RequestorMode, &Object, NULL);
 
             if (!NT_SUCCESS(Status))
             {
@@ -245,7 +245,7 @@ KspEnableEvent(
         else if (EventData->NotificationType == KSEVENTF_EVENT_HANDLE)
         {
             /* get event object handle */
-            Status = ObReferenceObjectByHandle(EventData->EventHandle.Event, EVENT_MODIFY_STATE, ExEventObjectType, Irp->RequestorMode, &Object, NULL);
+            Status = ObReferenceObjectByHandle(EventData->EventHandle.Event, EVENT_MODIFY_STATE, *ExEventObjectType, Irp->RequestorMode, &Object, NULL);
 
             if (!NT_SUCCESS(Status))
             {

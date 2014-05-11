@@ -223,7 +223,7 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_INSENDMESSAGE:
          {
-           PUSER_SENT_MESSAGE Message = 
+           PUSER_SENT_MESSAGE Message =
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
            ERR("THREADSTATE_INSENDMESSAGE\n");
 
@@ -243,7 +243,7 @@ NtUserGetThreadState(
              if (Message->QS_Flags & QS_SMRESULT) ret |= ISMEX_REPLIED;
            }
 
-           break;         
+           break;
          }
       case THREADSTATE_GETMESSAGETIME:
          ret = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast;
@@ -289,7 +289,7 @@ NtUserSetThreadState(
    DWORD Ret = 0;
    // Test the only flags user can change.
    if (Set & ~(QF_FF10STATUS|QF_DIALOGACTIVE|QF_TABSWITCHING|QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) return 0;
-   if (Flags & ~(QF_FF10STATUS|QF_DIALOGACTIVE|QF_TABSWITCHING|QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) return 0;   
+   if (Flags & ~(QF_FF10STATUS|QF_DIALOGACTIVE|QF_TABSWITCHING|QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) return 0;
    UserEnterExclusive();
    pti = PsGetCurrentThreadWin32Thread();
    if (pti->MessageQueue)
@@ -448,7 +448,7 @@ NtUserGetGuiResources(
 
    Status = ObReferenceObjectByHandle(hProcess,
                                       PROCESS_QUERY_INFORMATION,
-                                      PsProcessType,
+                                      *PsProcessType,
                                       ExGetPreviousMode(),
                                       (PVOID*)&Process,
                                       NULL);
@@ -656,7 +656,7 @@ void UserDbgAssertThreadInfo(BOOL showCaller)
     ASSERT(pci->ulClientDelta == DesktopHeapGetUserDelta());
     if (pti->pcti && pci->pDeskInfo)
         ASSERT(pci->pClientThreadInfo == (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta));
-    if (pti->KeyboardLayout) 
+    if (pti->KeyboardLayout)
         ASSERT(pci->hKL == pti->KeyboardLayout->hkl);
     if(pti->rpdesk != NULL)
         ASSERT(pti->pDeskInfo == pti->rpdesk->pDeskInfo);

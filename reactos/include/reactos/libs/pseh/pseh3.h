@@ -120,7 +120,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 #define _SEH3$_EnforceFramePointer() asm volatile ("#\n" : : "m"(*(char*)__builtin_alloca(4)) : "%esp", "memory")
 
 /* CLANG doesn't have asm goto! */
-#define _SEH3$_ASM_GOTO(_Label, ...)
+#define _SEH3$_ASM_GOTO(...)
 
 int
 __attribute__((regparm(3)))
@@ -167,7 +167,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
 /* This will make GCC use ebp, even if it was disabled by -fomit-frame-pointer */
 #define _SEH3$_EnforceFramePointer() asm volatile ("#\n" : : "m"(*(char*)__builtin_alloca(0)) : "%esp", "memory")
 
-#define _SEH3$_ASM_GOTO(_Label, ...) asm goto ("#\n" : : : "memory", ## __VA_ARGS__ : _Label)
+#define _SEH3$_ASM_GOTO(...) asm goto ("#\n" : : : "memory" : __VA_ARGS__)
 
 #ifdef __cplusplus
 #define _SEH3$_CALL_WRAPPER(_Function, _TrylevelFrame, _DataTable) \
@@ -177,7 +177,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
               : \
               : "m" (*(_TrylevelFrame)), "m" (*(_DataTable)), "c"(__builtin_alloca(0)) \
               : "eax", "edx", "memory" \
-              : _SEH3$_l_HandlerTarget, _SEH3$_l_FilterOrFinally)
+              : _SEH3$_l_BeforeTry, _SEH3$_l_HandlerTarget, _SEH3$_l_OnException, _SEH3$_l_BeforeFilterOrFinally, _SEH3$_l_FilterOrFinally)
 
 #else
 #define _SEH3$_CALL_WRAPPER(_Function, _TrylevelFrame, _DataTable) \
@@ -187,7 +187,7 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
               : \
               : "m" (*(_TrylevelFrame)), "m" (*(_DataTable)) \
               : "eax", "edx", "ecx", "memory" \
-              : _SEH3$_l_HandlerTarget)
+              : _SEH3$_l_BeforeTry, _SEH3$_l_HandlerTarget, _SEH3$_l_OnException, _SEH3$_l_BeforeFilterOrFinally, _SEH3$_l_FilterOrFinally)
 #endif
 
 /* This is an asm wrapper around _SEH3$_RegisterFrame */
@@ -202,10 +202,8 @@ _SEH3$_RegisterTryLevelWithNonVolatiles(
    around into places that are never executed. */
 #define _SEH3$_SCARE_GCC() \
         void *plabel; \
-        _SEH3$_ASM_GOTO(_SEH3$_l_BeforeTry); \
-        _SEH3$_ASM_GOTO(_SEH3$_l_HandlerTarget); \
-        _SEH3$_ASM_GOTO(_SEH3$_l_OnException); \
-        asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException) \
+        _SEH3$_ASM_GOTO(_SEH3$_l_BeforeTry, _SEH3$_l_HandlerTarget, _SEH3$_l_OnException, _SEH3$_l_BeforeFilterOrFinally, _SEH3$_l_FilterOrFinally); \
+        asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException), "p"(&&_SEH3$_l_FilterOrFinally) \
                       : "ebx", "ecx", "edx", "esi", "edi", "flags", "memory" ); \
         goto _SEH3$_l_OnException;
 

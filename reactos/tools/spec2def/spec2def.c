@@ -52,7 +52,6 @@ enum
     FL_STUB = 2,
     FL_NONAME = 4,
     FL_ORDINAL = 8,
-    FL_DATA_ALIAS = 16
 };
 
 enum
@@ -508,9 +507,7 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
         fprintf(fileDest, " PRIVATE");
     }
 
-    /* Make this a data export, unless this is MSVC and -withalias was given */
-    if ((pexp->nCallingConvention == CC_EXTERN) &&
-        !(gbMSComp && (pexp->uFlags & FL_DATA_ALIAS)))
+    if (pexp->nCallingConvention == CC_EXTERN)
     {
         fprintf(fileDest, " DATA");
     }
@@ -662,15 +659,6 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             else if (CompareToken(pc, "-stub"))
             {
                 exp.uFlags |= FL_STUB;
-            }
-            else if (CompareToken(pc, "-withalias"))
-            {
-                /* This flag is to create a nin _imp_ prefixed alias for a
-                   data export, so that the hacked DDK declarations work */
-                if (exp.nCallingConvention != CC_EXTERN)
-                    fprintf(stderr, "error: line %d -withalias on non-data export\n", nLine);
-                else
-                    exp.uFlags |= FL_DATA_ALIAS;
             }
             else if (CompareToken(pc, "-norelay") ||
                      CompareToken(pc, "-register") ||

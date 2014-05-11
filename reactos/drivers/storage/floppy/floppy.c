@@ -761,9 +761,9 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     HeadLoadTime = SPECIFY_HLT_500K;
     HeadUnloadTime = SPECIFY_HUT_500K;
     StepRateTime = SPECIFY_SRT_500K;
-    
+
     INFO_(FLOPPY, "InitController: setting data rate\n");
-    
+
     /* Set data rate */
     if(HwSetDataRate(ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
     {
@@ -1176,7 +1176,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, PsThreadType, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
+    if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, *PsThreadType, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
     {
         WARN_(FLOPPY, "Unable to reference returned thread handle; failing init\n");
         return STATUS_UNSUCCESSFUL;

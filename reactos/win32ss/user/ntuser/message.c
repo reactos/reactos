@@ -1548,7 +1548,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     {
         RETURN(FALSE);
     }
-    
+
     ptiSendTo = IntSendTo(Window, Win32Thread, Msg);
 
     if (Msg & 0x80000000 &&
@@ -2755,7 +2755,7 @@ NtUserMessageCall( HWND hWnd,
                                               ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
                                               (LPARAM)&CWP,
                                               Hook->Proc,
-                                              Hook->ihmod, 
+                                              Hook->ihmod,
                                               Hook->offPfn,
                                               Hook->Ansi,
                                               &Hook->ModuleName);
@@ -2774,7 +2774,7 @@ NtUserMessageCall( HWND hWnd,
                                               ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
                                               (LPARAM)&CWPR,
                                               Hook->Proc,
-                                              Hook->ihmod, 
+                                              Hook->ihmod,
                                               Hook->offPfn,
                                               Hook->Ansi,
                                               &Hook->ModuleName);
@@ -2833,7 +2833,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
 
     Status = ObReferenceObjectByHandle(hProcess,
                                        PROCESS_QUERY_INFORMATION,
-                                       PsProcessType,
+                                       *PsProcessType,
                                        UserMode,
                                        (PVOID*)&Process,
                                        NULL);

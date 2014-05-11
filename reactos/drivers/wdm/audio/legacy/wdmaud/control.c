@@ -97,7 +97,7 @@ WdmAudControlDeviceState(
 
     DPRINT("WdmAudControlDeviceState\n");
 
-    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: invalid device handle provided %p Type %x\n", DeviceInfo->hDevice, DeviceInfo->DeviceType);
@@ -197,7 +197,7 @@ WdmAudFrameSize(
     NTSTATUS Status;
 
     /* Get sysaudio pin file object */
-    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Invalid buffer handle %p\n", DeviceInfo->hDevice);
@@ -290,7 +290,7 @@ WdmAudResetStream(
 
     DPRINT("WdmAudResetStream\n");
 
-    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: invalid device handle provided %p Type %x\n", DeviceInfo->hDevice, DeviceInfo->DeviceType);
@@ -528,7 +528,7 @@ WdmAudReadWrite(
     ASSERT(DeviceInfo);
 
     /* now get sysaudio file object */
-    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Invalid pin handle %p\n", DeviceInfo->hDevice);

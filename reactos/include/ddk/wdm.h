@@ -25,6 +25,9 @@
 #ifndef _WDMDDK_
 #define _WDMDDK_
 
+// TEMP HACK!
+#define _PROPER_NT_EXPORTS 1
+
 #define WDM_MAJORVERSION        0x06
 #define WDM_MINORVERSION        0x00
 
@@ -82,10 +85,13 @@ extern "C" {
 #endif
 
 /* For ReactOS */
-#if !defined(_NTOSKRNL_) && !defined(_BLDR_)
+#if !defined(_NTOSKRNL_) && !defined(_BLDR_) && !defined(_NTSYSTEM_)
 #define NTKERNELAPI DECLSPEC_IMPORT
 #else
 #define NTKERNELAPI
+#ifndef _NTSYSTEM_
+#define _NTSYSTEM_
+#endif
 #endif
 
 #if defined(_X86_) && !defined(_NTHAL_)
@@ -129,6 +135,29 @@ extern "C" {
 #define ALLOC_DATA_PRAGMA 1
 #endif
 
+#endif /* _MSC_VER */
+
+/* These macros are used to create aliases for imported data. We need to do
+   this to have declarations that are compatible with MS DDK */
+#ifdef _M_IX86
+#define __SYMBOL(_Name) "_"#_Name
+#define __IMPORTSYMBOL(_Name) "__imp__"#_Name
+#define __IMPORTNAME(_Name) _imp__##_Name
+#else
+#define __SYMBOL(_Name) #_Name
+#define __IMPORTSYMBOL(_Name) "__imp_"#_Name
+#define __IMPORTNAME(_Name) __imp_##_Name
+#endif
+#ifdef _MSC_VER
+#define __CREATE_NTOS_DATA_IMPORT_ALIAS(_Name) \
+    __pragma(comment(linker, "/alternatename:"__SYMBOL(_Name) "=" __IMPORTSYMBOL(_Name)))
+#else /* !_MSC_VER */
+#ifndef __STRINGIFY
+#define __STRINGIFY(_exp) #_exp
+#endif
+#define _Pragma_redifine_extname(_Name, _Target) _Pragma(__STRINGIFY(redefine_extname _Name _Target))
+#define __CREATE_NTOS_DATA_IMPORT_ALIAS(_Name) \
+    _Pragma_redifine_extname(_Name,__IMPORTNAME(_Name))
 #endif
 
 #if defined(_WIN64)
@@ -599,11 +628,19 @@ typedef struct _EXCEPTION_POINTERS {
   PCONTEXT ContextRecord;
 } EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 
-/* MS definition is broken! */
-extern BOOLEAN NTSYSAPI NlsMbCodePageTag;
-extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
+#ifdef _NTSYSTEM_
+extern BOOLEAN NlsMbCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+extern BOOLEAN NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#else
+extern BOOLEAN *NlsMbCodePageTag;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbCodePageTag)
+#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
+extern BOOLEAN *NlsMbOemCodePageTag;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbOemCodePageTag)
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#endif
 
 #define SHORT_LEAST_SIGNIFICANT_BIT       0
 #define SHORT_MOST_SIGNIFICANT_BIT        1
@@ -1673,6 +1710,7 @@ extern NTSYSAPI volatile CCHAR KeNumberProcessors;
 extern NTSYSAPI CCHAR KeNumberProcessors;
 #else
 extern PCCHAR KeNumberProcessors;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(KeNumberProcessors)
 #endif
 
 
@@ -1824,8 +1862,11 @@ typedef enum _MM_SYSTEM_SIZE {
   MmLargeSystem
 } MM_SYSTEMSIZE;
 
-extern NTKERNELAPI BOOLEAN Mm64BitPhysicalAddress;
-extern PVOID MmBadPointer;
+#ifndef _NTSYSTEM_
+extern PBOOLEAN Mm64BitPhysicalAddress;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(Mm64BitPhysicalAddress)
+#endif
+extern NTKERNELAPI PVOID MmBadPointer;
 
 
 /******************************************************************************
@@ -2098,7 +2139,7 @@ typedef struct _RESOURCE_PERFORMANCE_DATA {
 
 /* Global debug flag */
 #if DEVL
-extern ULONG NtGlobalFlag;
+extern NTKERNELAPI ULONG NtGlobalFlag;
 #define IF_NTOS_DEBUG(FlagName) if (NtGlobalFlag & (FLG_##FlagName))
 #else
 #define IF_NTOS_DEBUG(FlagName) if(FALSE)
@@ -7857,6 +7898,7 @@ typedef struct _OBJECT_NAME_INFORMATION {
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
 /* Exported object types */
+#ifdef _NTSYSTEM_
 extern POBJECT_TYPE NTSYSAPI CmKeyObjectType;
 extern POBJECT_TYPE NTSYSAPI ExEventObjectType;
 extern POBJECT_TYPE NTSYSAPI ExSemaphoreObjectType;
@@ -7864,6 +7906,30 @@ extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
+#else
+extern POBJECT_TYPE *CmKeyObjectType;
+extern POBJECT_TYPE *IoFileObjectType;
+extern POBJECT_TYPE *ExEventObjectType;
+extern POBJECT_TYPE *ExSemaphoreObjectType;
+extern POBJECT_TYPE *TmTransactionManagerObjectType;
+extern POBJECT_TYPE *TmResourceManagerObjectType;
+extern POBJECT_TYPE *TmEnlistmentObjectType;
+extern POBJECT_TYPE *TmTransactionObjectType;
+extern POBJECT_TYPE *PsProcessType;
+extern POBJECT_TYPE *PsThreadType;
+extern POBJECT_TYPE *SeTokenObjectType;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(CmKeyObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(IoFileObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(ExEventObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(ExSemaphoreObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(TmTransactionManagerObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(TmResourceManagerObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(TmEnlistmentObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(TmTransactionObjectType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(PsProcessType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(PsThreadType)
+__CREATE_NTOS_DATA_IMPORT_ALIAS(SeTokenObjectType)
+#endif
 
 
 /******************************************************************************
@@ -8339,7 +8405,7 @@ KeRestoreFloatingPointState(PVOID FloatingState)
 #define HIGH_LEVEL              15
 
 #define KI_USER_SHARED_DATA ((ULONG_PTR)(KADDRESS_BASE + 0xFFFE0000))
-extern volatile LARGE_INTEGER KeTickCount;
+extern NTKERNELAPI volatile LARGE_INTEGER KeTickCount;
 
 #define PAUSE_PROCESSOR __yield();
 
@@ -15770,27 +15836,18 @@ DbgSetDebugPrintCallback(
 
 #endif /* !DBG */
 
-#if defined(__GNUC__)
-
-extern NTKERNELAPI BOOLEAN KdDebuggerNotPresent;
-extern NTKERNELAPI BOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED KdDebuggerEnabled
-#define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
-
-#elif defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
-
-extern NTKERNELAPI PBOOLEAN KdDebuggerNotPresent;
-extern NTKERNELAPI PBOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED *KdDebuggerEnabled
-#define KD_DEBUGGER_NOT_PRESENT *KdDebuggerNotPresent
-
-#else
-
-extern BOOLEAN KdDebuggerNotPresent;
+#ifdef _NTSYSTEM_
 extern BOOLEAN KdDebuggerEnabled;
 #define KD_DEBUGGER_ENABLED KdDebuggerEnabled
+extern BOOLEAN KdDebuggerNotPresent;
 #define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
-
+#else
+extern BOOLEAN *KdDebuggerEnabled;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(KdDebuggerEnabled)
+#define KD_DEBUGGER_ENABLED (*KdDebuggerEnabled)
+extern BOOLEAN *KdDebuggerNotPresent;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(KdDebuggerNotPresent)
+#define KD_DEBUGGER_NOT_PRESENT (*KdDebuggerNotPresent)
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
