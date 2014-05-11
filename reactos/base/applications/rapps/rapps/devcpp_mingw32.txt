@@ -14,6 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Eine gepflegte Version von Dev-C++. Der MinGW32 Compiler liegt bei.
 
+[Section.0410]
+Description = Una versione mantenuta di Dev-C++. Contiene il compilatore MinGW32.
+
 [Section.041f]
 Description = Dev-C++'nın sürdürülen bir sürümü. MinGW32 derleyicisini içerir.
 Size = 60,2 MB

@@ -22,7 +22,7 @@ Description = Clone de Pansez General utilisant la bibliothèque SDL.
 Size = 1,92 Mo
 
 [Section.0410]
-Description = Clone di Pansez General utilizza librerie SDL.
+Description = Clone di Pansez General che utilizza librerie SDL.
 
 [Section.0413]
 Description = Panzer General kloon, gebruikt SDL.

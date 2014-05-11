@@ -14,6 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthält den TDM-GCC (version 4.7.1, 32 bit) Compiler.
 
+[Section.0410]
+Description = Un IDE potente, open source, multipiattaforma. Contiene il compilatore TDM-GCC (versione 4.7.1, 32 bit).
+
 [Section.041f]
 Name = Code::Blocks TDM-GCC (sürüm 4.7.1, 32 bitlik)
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. TDM-GCC (sürüm 4.7.1, 32 bitlik) derleyicisini içerir.

@@ -14,6 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Ein sehr guter CD-Ripper/Audio-Datei-Konverter.
 
+[Section.0410]
+Description = Un buon CD Ripper/Convertitore di file Audio.
+
 [Section.040a]
 Description = Un buen CD Ripper/ conversor de archivos de audio.
 

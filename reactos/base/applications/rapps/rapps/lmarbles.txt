@@ -22,7 +22,7 @@ Description = Clone de Atomix utilisant la bibliothèque SDL.
 Size = 1,39 Mo
 
 [Section.0410]
-Description = Clone di Atomix utilizza le librerie SDL.
+Description = Clone di Atomix che utilizza le librerie SDL.
 
 [Section.0413]
 Description = Atomix kloon, gebruikt SDL.

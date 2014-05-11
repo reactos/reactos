@@ -14,6 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Ein Spiel, ähnlich zu Frozen Fruits.
 
+[Section.0410]
+Description = Un gioco simile a Frozen Fuits.
+
 [Section.041f]
 Licence = Ücretsiz
 Description = Frozen Fruits'e benzeyen bir oyun.
