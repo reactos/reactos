@@ -40,7 +40,7 @@ add_library(setupapi SHARED
 
 set_module_type(setupapi win32dll UNICODE)
 target_link_libraries(setupapi uuid wine ${PSEH_LIB})
-add_delay_importlibs(setupapi shell32)
+add_delay_importlibs(setupapi shell32 wintrust)
 
 add_importlibs(setupapi
     msvcrt

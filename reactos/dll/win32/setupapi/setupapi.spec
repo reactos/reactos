@@ -562,7 +562,7 @@
 @ stub pSetupHandleFailedVerification
 @ stub pSetupInfCacheBuild
 @ stub pSetupInfIsFromOemLocation
-@ stub pSetupInstallCatalog
+@ stdcall pSetupInstallCatalog(wstr wstr ptr)
 @ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
 @ stub pSetupIsLocalSystem
