@@ -85,9 +85,11 @@ int *__p___mb_cur_max(void);
 #define WX_ATEOF          0x02
 #define WX_READNL         0x04  /* read started with \n */
 #define WX_READEOF        0x04  /* like ATEOF, but for underlying file rather than buffer */
+#define WX_PIPE           0x08
 #define WX_READCR         0x08  /* underlying file is at \r */
 #define WX_DONTINHERIT    0x10
 #define WX_APPEND         0x20
+#define WX_NOSEEK         0x40
 #define WX_TEXT           0x80
 
 /* FIXME: this should be allocated dynamically */
@@ -1836,6 +1838,7 @@ int CDECL _wcreat(const wchar_t *path, int flags)
  */
 int CDECL _open_osfhandle(intptr_t handle, int oflags)
 {
+  DWORD flags;
   int fd;
 
   /* _O_RDONLY (0) always matches, so set the read flag
@@ -1847,8 +1850,23 @@ int CDECL _open_osfhandle(intptr_t handle, int oflags)
   if (!(oflags & (_O_BINARY | _O_TEXT)))
       oflags |= _O_BINARY;
 
-  fd = alloc_fd((HANDLE)handle, split_oflags(oflags));
-  TRACE(":handle (%ld) fd (%d) flags 0x%08x\n", handle, fd, oflags);
+  flags = GetFileType((HANDLE)handle);
+  if (flags==FILE_TYPE_UNKNOWN && GetLastError()!=NO_ERROR)
+  {
+    _dosmaperr(GetLastError());
+    return -1;
+  }
+
+  if (flags == FILE_TYPE_CHAR)
+    flags = WX_NOSEEK;
+  else if (flags == FILE_TYPE_PIPE)
+    flags = WX_PIPE;
+  else
+    flags = 0;
+  flags |= split_oflags(oflags);
+
+  fd = alloc_fd((HANDLE)handle, flags);
+  TRACE(":handle (%ld) fd (%d) flags 0x%08x\n", handle, fd, flags);
   return fd;
 }
 
