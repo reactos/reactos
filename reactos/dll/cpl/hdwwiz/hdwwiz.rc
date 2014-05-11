@@ -25,9 +25,6 @@ IDB_HEADER BITMAP "resources/header.bmp"
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
-#ifdef LANGUAGE_CS_CZ
-    #include "lang/cs-CZ.rc"
-#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
@@ -80,6 +77,9 @@ IDB_HEADER BITMAP "resources/header.bmp"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif

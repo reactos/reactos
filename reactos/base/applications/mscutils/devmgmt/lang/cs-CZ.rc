@@ -1,4 +1,4 @@
-﻿LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
@@ -21,7 +21,7 @@ BEGIN
         MENUITEM "Prostředky podle typu", IDC_RESBYTYPE, GRAYED
         MENUITEM "Prostředky podle připojení", IDC_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Show hidden devices", IDC_SHOWHIDDEN
+        MENUITEM "Zobrazit skrytá zařízení", IDC_SHOWHIDDEN
     END
     POPUP "Nápověda"
     BEGIN
