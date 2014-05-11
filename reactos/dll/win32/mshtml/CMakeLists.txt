@@ -7,7 +7,7 @@ add_definitions(
     -DCOM_NO_WINDOWS_H)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-add_idl_Headers(mshtml_nsiface_header nsiface.idl)
+add_idl_headers(mshtml_nsiface_header nsiface.idl)
 spec2def(mshtml.dll mshtml.spec)
 
 list(APPEND SOURCE
