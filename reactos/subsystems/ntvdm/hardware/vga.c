@@ -421,7 +421,7 @@ static VOID VgaUpdateCursorPosition(VOID)
     VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG]  = LOBYTE(Offset);
     VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG] = HIBYTE(Offset);
 
-    VidBiosSyncCursorPosition();
+    // VidBiosSyncCursorPosition();
     VgaUpdateTextCursor();
 }
 
@@ -536,61 +536,6 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     VgaUpdateCursorPosition();
 
     return TRUE;
-}
-
-BOOL VgaAttachToConsole(VOID)
-{
-    if (TextResolution.X == 0 || TextResolution.Y == 0)
-        DPRINT1("VgaAttachToConsole -- TextResolution uninitialized\n");
-
-    if (TextResolution.X == 0) TextResolution.X = 80;
-    if (TextResolution.Y == 0) TextResolution.Y = 25;
-
-    return VgaAttachToConsoleInternal(&TextResolution);
-}
-
-VOID VgaDetachFromConsole(BOOL ChangingMode)
-{
-    ULONG dummyLength;
-    PVOID dummyPtr;
-    COORD dummySize = {0};
-
-    __RegisterConsoleVDM(0,
-                         NULL,
-                         NULL,
-                         NULL,
-                         0,
-                         &dummyLength,
-                         &dummyPtr,
-                         NULL,
-                         0,
-                         dummySize,
-                         (PCHAR*)&dummyPtr);
-
-    TextFramebuffer = NULL;
-
-    if (!ChangingMode)
-    {
-        SMALL_RECT ConRect;
-
-        /* Restore the old screen buffer */
-        SetConsoleActiveScreenBuffer(TextConsoleBuffer);
-
-        /* Restore the original console size */
-        ConRect.Left   = 0;
-        ConRect.Top    = 0;
-        ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
-        ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
-        /*
-         * See the following trick explanation in VgaAttachToConsoleInternal.
-         */
-        SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
-        SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
-        SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
-
-        /* Restore the original cursor shape */
-        SetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo);
-    }
 }
 
 static BOOL IsConsoleHandle(HANDLE hHandle)
@@ -1038,7 +983,10 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
             return FALSE;
         }
     }
-    else VgaUpdateCursorPosition();
+    else
+    {
+        VgaUpdateCursorPosition();
+    }
 
     /* The active framebuffer is now the text framebuffer */
     ConsoleFramebuffer = TextFramebuffer;
@@ -1884,6 +1832,71 @@ VOID VgaResetPalette(VOID)
     VgaRestoreDefaultPalette(Entries, VGA_MAX_COLORS);
     SetPaletteEntries(PaletteHandle, 0, VGA_MAX_COLORS, Entries);
     PaletteChanged = TRUE;
+}
+
+
+
+
+BOOL VgaAttachToConsole(VOID)
+{
+    //
+    // FIXME: We should go back to the saved screen state
+    //
+    if (TextResolution.X == 0 || TextResolution.Y == 0)
+        DPRINT1("VgaAttachToConsole -- TextResolution uninitialized\n");
+
+    if (TextResolution.X == 0) TextResolution.X = 80;
+    if (TextResolution.Y == 0) TextResolution.Y = 25;
+
+    return VgaAttachToConsoleInternal(&TextResolution);
+}
+
+VOID VgaDetachFromConsole(BOOL ChangingMode)
+{
+    ULONG dummyLength;
+    PVOID dummyPtr;
+    COORD dummySize = {0};
+
+    //
+    // FIXME: We should save the screen state
+    //
+
+    __RegisterConsoleVDM(0,
+                         NULL,
+                         NULL,
+                         NULL,
+                         0,
+                         &dummyLength,
+                         &dummyPtr,
+                         NULL,
+                         0,
+                         dummySize,
+                         (PCHAR*)&dummyPtr);
+
+    TextFramebuffer = NULL;
+
+    if (!ChangingMode)
+    {
+        SMALL_RECT ConRect;
+
+        /* Restore the old screen buffer */
+        SetConsoleActiveScreenBuffer(TextConsoleBuffer);
+
+        /* Restore the original console size */
+        ConRect.Left   = 0;
+        ConRect.Top    = 0;
+        ConRect.Right  = ConRect.Left + OrgConsoleBufferInfo.srWindow.Right  - OrgConsoleBufferInfo.srWindow.Left;
+        ConRect.Bottom = ConRect.Top  + OrgConsoleBufferInfo.srWindow.Bottom - OrgConsoleBufferInfo.srWindow.Top ;
+        /*
+         * See the following trick explanation in VgaAttachToConsoleInternal.
+         */
+        SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
+        SetConsoleWindowInfo(TextConsoleBuffer, TRUE, &ConRect);
+        SetConsoleScreenBufferSize(TextConsoleBuffer, OrgConsoleBufferInfo.dwSize);
+
+        /* Restore the original cursor shape */
+        SetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo);
+    }
 }
 
 BOOLEAN VgaInitialize(HANDLE TextHandle)

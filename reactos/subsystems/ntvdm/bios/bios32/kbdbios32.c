@@ -91,22 +91,13 @@ static WORD BiosPeekCharacter(VOID)
     else return 0xFFFF;
 }
 
-WORD BiosGetCharacter(VOID)
+static WORD BiosGetCharacter(VOID)
 {
     WORD CharacterData = 0;
 
-    /* Check if there is a key available */
-    if (BiosKbdBufferTop(&CharacterData))
-    {
-        /* A key was available, remove it from the queue */
-        BiosKbdBufferPop();
-    }
-    else
-    {
-        /* No key available. Set the handler CF to repeat the BOP */
-        setCF(1);
-        // CharacterData = 0xFFFF;
-    }
+    /* Check if there is a key available, and if so, remove it from the queue */
+    if (BiosKbdBufferTop(&CharacterData)) BiosKbdBufferPop();
+    else CharacterData = 0xFFFF;
 
     return CharacterData;
 }
@@ -121,7 +112,17 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
         case 0x10:  // FIXME: Temporarily do the same as INT 16h, 00h
         {
             /* Read the character (and wait if necessary) */
-            setAX(BiosGetCharacter());
+            WORD Character = BiosGetCharacter();
+
+            if (Character == 0xFFFF)
+            {
+                /* No key available. Set the handler CF to repeat the BOP */
+                setCF(1);
+                break;
+            }
+
+            setAX(Character);
+
             break;
         }
 
@@ -130,13 +131,13 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
         /* Get extended keystroke status */
         case 0x11:  // FIXME: Temporarily do the same as INT 16h, 01h
         {
-            WORD Data = BiosPeekCharacter();
+            WORD Character = BiosPeekCharacter();
 
-            if (Data != 0xFFFF)
+            if (Character != 0xFFFF)
             {
                 /* There is a character, clear ZF and return it */
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
-                setAX(Data);
+                setAX(Character);
             }
             else
             {

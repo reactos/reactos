@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos.c
+ * FILE:            dos/dos32krnl/dos.c
  * PURPOSE:         VDM DOS Kernel
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
@@ -29,8 +29,13 @@ static DWORD DiskTransferArea;
 /*static*/ BYTE CurrentDrive;
 static CHAR LastDrive = 'E';
 static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
-static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
-static WORD DosSftRefCount[DOS_SFT_SIZE];
+
+static struct
+{
+    HANDLE Handle;
+    WORD   RefCount;
+} DosSystemFileTable[DOS_SFT_SIZE];
+
 static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
 static WORD DosErrorLevel = 0x0000;
@@ -431,6 +436,11 @@ static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
     return DestSegment;
 }
 
+
+
+
+
+
 /* Taken from base/shell/cmd/console.c */
 BOOL IsConsoleHandle(HANDLE hHandle)
 {
@@ -455,7 +465,7 @@ BOOL IsConsoleHandle(HANDLE hHandle)
     return GetConsoleMode(hHandle, &dwMode);
 }
 
-static WORD DosOpenHandle(HANDLE Handle)
+WORD DosOpenHandle(HANDLE Handle)
 {
     BYTE i;
     WORD DosHandle;
@@ -482,10 +492,10 @@ static WORD DosOpenHandle(HANDLE Handle)
     for (i = 0; i < DOS_SFT_SIZE; i++)
     {
         /* Check if this is the same handle */
-        if (DosSystemFileTable[i] != Handle) continue;
+        if (DosSystemFileTable[i].Handle != Handle) continue;
 
         /* Already in the table, reference it */
-        DosSftRefCount[i]++;
+        DosSystemFileTable[i].RefCount++;
 
         /* Set the JFT entry to that SFT index */
         HandleTable[DosHandle] = i;
@@ -498,11 +508,11 @@ static WORD DosOpenHandle(HANDLE Handle)
     for (i = 0; i < DOS_SFT_SIZE; i++)
     {
         /* Make sure this is an empty table entry */
-        if (DosSystemFileTable[i] != INVALID_HANDLE_VALUE) continue;
+        if (DosSystemFileTable[i].Handle != INVALID_HANDLE_VALUE) continue;
 
         /* Initialize the empty table entry */
-        DosSystemFileTable[i] = Handle;
-        DosSftRefCount[i] = 1;
+        DosSystemFileTable[i].Handle   = Handle;
+        DosSystemFileTable[i].RefCount = 1;
 
         /* Set the JFT entry to that SFT index */
         HandleTable[DosHandle] = i;
@@ -531,7 +541,7 @@ HANDLE DosGetRealHandle(WORD DosHandle)
     if (HandleTable[DosHandle] == 0xFF) return INVALID_HANDLE_VALUE;
 
     /* Return the Win32 handle */
-    return DosSystemFileTable[HandleTable[DosHandle]];
+    return DosSystemFileTable[HandleTable[DosHandle]].Handle;
 }
 
 static VOID DosCopyHandleTable(LPBYTE DestinationTable)
@@ -553,7 +563,7 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
             DestinationTable[i] = (BYTE)i;
 
             /* Increase the reference count */
-            DosSftRefCount[i]++;
+            DosSystemFileTable[i].RefCount++;
         }
 
         /* Done */
@@ -570,7 +580,7 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
         DestinationTable[i] = SourceTable[i];
 
         /* Increase the reference count */
-        DosSftRefCount[SourceTable[i]]++;
+        DosSystemFileTable[SourceTable[i]].RefCount++;
     }
 }
 
@@ -594,16 +604,16 @@ static BOOLEAN DosCloseHandle(WORD DosHandle)
 
     /* Decrement the reference count of the SFT entry */
     SftIndex = HandleTable[DosHandle];
-    DosSftRefCount[SftIndex]--;
+    DosSystemFileTable[SftIndex].RefCount--;
 
     /* Check if the reference count fell to zero */
-    if (!DosSftRefCount[SftIndex])
+    if (!DosSystemFileTable[SftIndex].RefCount)
     {
         /* Close the file, it's no longer needed */
-        CloseHandle(DosSystemFileTable[SftIndex]);
+        CloseHandle(DosSystemFileTable[SftIndex].Handle);
 
         /* Clear the handle */
-        DosSystemFileTable[SftIndex] = INVALID_HANDLE_VALUE;
+        DosSystemFileTable[SftIndex].Handle = INVALID_HANDLE_VALUE;
     }
 
     /* Clear the entry in the JFT */
@@ -641,7 +651,7 @@ static BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
 
     /* Increment the reference count of the SFT entry */
     SftIndex = HandleTable[OldHandle];
-    DosSftRefCount[SftIndex]++;
+    DosSystemFileTable[SftIndex].RefCount++;
 
     /* Make the new handle point to that SFT entry */
     HandleTable[NewHandle] = SftIndex;
@@ -650,260 +660,11 @@ static BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
     return TRUE;
 }
 
-static WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
-{
-    HANDLE FileHandle;
-    WORD DosHandle;
 
-    DPRINT("DosCreateFile: FilePath \"%s\", Attributes 0x%04X\n",
-            FilePath,
-            Attributes);
 
-    /* Create the file */
-    FileHandle = CreateFileA(FilePath,
-                             GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                             NULL,
-                             CREATE_ALWAYS,
-                             Attributes,
-                             NULL);
 
-    if (FileHandle == INVALID_HANDLE_VALUE)
-    {
-        /* Return the error code */
-        return (WORD)GetLastError();
-    }
 
-    /* Open the DOS handle */
-    DosHandle = DosOpenHandle(FileHandle);
 
-    if (DosHandle == INVALID_DOS_HANDLE)
-    {
-        /* Close the handle */
-        CloseHandle(FileHandle);
-
-        /* Return the error code */
-        return ERROR_TOO_MANY_OPEN_FILES;
-    }
-
-    /* It was successful */
-    *Handle = DosHandle;
-    return ERROR_SUCCESS;
-}
-
-static WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
-{
-    HANDLE FileHandle;
-    ACCESS_MASK Access = 0;
-    WORD DosHandle;
-
-    DPRINT("DosOpenFile: FilePath \"%s\", AccessMode 0x%04X\n",
-            FilePath,
-            AccessMode);
-
-    /* Parse the access mode */
-    switch (AccessMode & 3)
-    {
-        case 0:
-        {
-            /* Read-only */
-            Access = GENERIC_READ;
-            break;
-        }
-
-        case 1:
-        {
-            /* Write only */
-            Access = GENERIC_WRITE;
-            break;
-        }
-
-        case 2:
-        {
-            /* Read and write */
-            Access = GENERIC_READ | GENERIC_WRITE;
-            break;
-        }
-
-        default:
-        {
-            /* Invalid */
-            return ERROR_INVALID_PARAMETER;
-        }
-    }
-
-    /* Open the file */
-    FileHandle = CreateFileA(FilePath,
-                             Access,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                             NULL,
-                             OPEN_EXISTING,
-                             FILE_ATTRIBUTE_NORMAL,
-                             NULL);
-
-    if (FileHandle == INVALID_HANDLE_VALUE)
-    {
-        /* Return the error code */
-        return (WORD)GetLastError();
-    }
-
-    /* Open the DOS handle */
-    DosHandle = DosOpenHandle(FileHandle);
-
-    if (DosHandle == INVALID_DOS_HANDLE)
-    {
-        /* Close the handle */
-        CloseHandle(FileHandle);
-
-        /* Return the error code */
-        return ERROR_TOO_MANY_OPEN_FILES;
-    }
-
-    /* It was successful */
-    *Handle = DosHandle;
-    return ERROR_SUCCESS;
-}
-
-WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
-{
-    WORD Result = ERROR_SUCCESS;
-    DWORD BytesRead32 = 0;
-    HANDLE Handle = DosGetRealHandle(FileHandle);
-
-    DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
-
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
-
-    /* Read the file */
-    if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
-    {
-        /* Store the error code */
-        Result = (WORD)GetLastError();
-    }
-
-    /* The number of bytes read is always 16-bit */
-    *BytesRead = LOWORD(BytesRead32);
-
-    /* Return the error code */
-    return Result;
-}
-
-WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
-{
-    WORD Result = ERROR_SUCCESS;
-    DWORD BytesWritten32 = 0;
-    HANDLE Handle = DosGetRealHandle(FileHandle);
-    WORD i;
-
-    DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n",
-           FileHandle,
-           Count);
-
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
-
-    if (IsConsoleHandle(Handle))
-    {
-        for (i = 0; i < Count; i++)
-        {
-            /* Save AX and BX */
-            USHORT AX = getAX();
-            USHORT BX = getBX();
-
-            /* Set the parameters */
-            setAL(((PCHAR)Buffer)[i]);
-            setBL(DOS_CHAR_ATTRIBUTE);
-            setBH(Bda->VideoPage);
-
-            /* Call the BIOS INT 10h, AH=0Eh "Teletype Output" */
-            setAH(0x0E);
-            Int32Call(&DosContext, BIOS_VIDEO_INTERRUPT);
-
-            /* Restore AX and BX */
-            setBX(BX);
-            setAX(AX);
-
-            BytesWritten32++;
-        }
-    }
-    else
-    {
-        /* Write the file */
-        if (!WriteFile(Handle, Buffer, Count, &BytesWritten32, NULL))
-        {
-            /* Store the error code */
-            Result = (WORD)GetLastError();
-        }
-    }
-
-    /* The number of bytes written is always 16-bit */
-    *BytesWritten = LOWORD(BytesWritten32);
-
-    /* Return the error code */
-    return Result;
-}
-
-static WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
-{
-    WORD Result = ERROR_SUCCESS;
-    DWORD FilePointer;
-    HANDLE Handle = DosGetRealHandle(FileHandle);
-
-    DPRINT("DosSeekFile: FileHandle 0x%04X, Offset 0x%08X, Origin 0x%02X\n",
-           FileHandle,
-           Offset,
-           Origin);
-
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
-
-    /* Check if the origin is valid */
-    if (Origin != FILE_BEGIN && Origin != FILE_CURRENT && Origin != FILE_END)
-    {
-        return ERROR_INVALID_FUNCTION;
-    }
-
-    /* Move the file pointer */
-    FilePointer = SetFilePointer(Handle, Offset, NULL, Origin);
-
-    /* Check if there's a possibility the operation failed */
-    if (FilePointer == INVALID_SET_FILE_POINTER)
-    {
-        /* Get the real error code */
-        Result = (WORD)GetLastError();
-    }
-
-    if (Result != ERROR_SUCCESS)
-    {
-        /* The operation did fail */
-        return Result;
-    }
-
-    /* Return the file pointer, if requested */
-    if (NewOffset) *NewOffset = FilePointer;
-
-    /* Return success */
-    return ERROR_SUCCESS;
-}
-
-static BOOLEAN DosFlushFileBuffers(WORD FileHandle)
-{
-    HANDLE Handle = DosGetRealHandle(FileHandle);
-
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return FALSE;
-
-    /*
-     * No need to check whether the handle is a console handle since
-     * FlushFileBuffers() automatically does this check and calls
-     * FlushConsoleInputBuffer() for us.
-     */
-    // if (IsConsoleHandle(Handle))
-    //    return (BOOLEAN)FlushConsoleInputBuffer(Handle);
-    // else
-    return (BOOLEAN)FlushFileBuffers(Handle);
-}
 
 static BOOLEAN DosChangeDrive(BYTE Drive)
 {
@@ -1279,6 +1040,36 @@ Cleanup:
     return Result;
 }
 
+DWORD DosStartProcess(IN LPCSTR ExecutablePath,
+                      IN LPCSTR CommandLine,
+                      IN PVOID Environment)
+{
+    DWORD Result;
+
+    Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
+                               ExecutablePath,
+                               CommandLine,
+                               Environment,
+                               NULL,
+                               NULL);
+
+    if (Result != ERROR_SUCCESS) goto Quit;
+
+    /* Attach to the console */
+    VidBiosAttachToConsole(); // FIXME: And in fact, attach the full NTVDM UI to the console
+
+    /* Start simulation */
+    SetEvent(VdmTaskEvent);
+    EmulatorSimulate();
+
+    /* Detach from the console */
+    VidBiosDetachFromConsole(); // FIXME: And in fact, detach the full NTVDM UI from the console
+
+Quit:
+    return Result;
+}
+
+#ifndef STANDALONE
 WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
                       LPCSTR ProgramName,
                       PDOS_EXEC_PARAM_BLOCK Parameters)
@@ -1363,16 +1154,17 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
             GetNextVDMCommand(&CommandInfo);
 
             /* Load the executable */
-            Result= DosLoadExecutable(LoadType,
-                                      AppName,
-                                      CmdLine,
-                                      Env,
-                                      &Parameters->StackLocation,
-                                      &Parameters->EntryPoint);
+            Result = DosLoadExecutable(LoadType,
+                                       AppName,
+                                       CmdLine,
+                                       Env,
+                                       &Parameters->StackLocation,
+                                       &Parameters->EntryPoint);
             if (Result != ERROR_SUCCESS)
             {
                 DisplayMessage(L"Could not load '%S'. Error: %u", AppName, Result);
-                break;
+                // FIXME: Decrement the reenter count. Or, instead, just increment
+                // the VDM reenter count *only* if this call succeeds...
             }
 
             break;
@@ -1392,6 +1184,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
 
     return ERROR_SUCCESS;
 }
+#endif
 
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
 {
@@ -1400,7 +1193,6 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
     PDOS_MCB CurrentMcb;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
-    VDM_COMMAND_INFO CommandInfo;
 
     DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X\n",
            Psp,
@@ -1451,10 +1243,13 @@ Done:
         }
     }
 
+#ifndef STANDALONE
     // FIXME: This is probably not the best way to do it
     /* Check if this was a nested DOS task */
     if (CurrentPsp != SYSTEM_PSP)
     {
+        VDM_COMMAND_INFO CommandInfo;
+
         /* Decrement the re-entry count */
         CommandInfo.TaskId = SessionId;
         CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
@@ -1468,6 +1263,7 @@ Done:
         CommandInfo.VDMState = VDM_FLAG_DONT_WAIT;
         GetNextVDMCommand(&CommandInfo);
     }
+#endif
 
     /* Save the return code - Normal termination */
     DosErrorLevel = MAKEWORD(ReturnCode, 0x00);
@@ -1500,12 +1296,12 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
              * for a list of possible flags.
              */
 
-            if (Handle == DosSystemFileTable[0])
+            if (Handle == DosSystemFileTable[DOS_INPUT_HANDLE].Handle)
             {
                 /* Console input */
                 InfoWord |= 1 << 0;
             }
-            else if (Handle == DosSystemFileTable[1])
+            else if (Handle == DosSystemFileTable[DOS_OUTPUT_HANDLE].Handle)
             {
                 /* Console output */
                 InfoWord |= 1 << 1;
@@ -1556,11 +1352,12 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Read Character from STDIN with Echo */
         case 0x01:
         {
-            Character = DosReadCharacter();
-            DosPrintCharacter(Character);
+            // FIXME: Under DOS 2+, input / output handle may be redirected!!!!
+            Character = DosReadCharacter(DOS_INPUT_HANDLE);
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
 
-            /* Let the BOP repeat if needed */
-            if (getCF()) break;
+            // /* Let the BOP repeat if needed */
+            // if (getCF()) break;
 
             setAL(Character);
             break;
@@ -1569,8 +1366,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Write Character to STDOUT */
         case 0x02:
         {
+            // FIXME: Under DOS 2+, output handle may be redirected!!!!
             Character = getDL();
-            DosPrintCharacter(Character);
+            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
 
             /*
              * We return the output character (DOS 2.1+).
@@ -1588,7 +1386,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             // FIXME: Really read it from STDAUX!
             DPRINT1("INT 16h, 03h: Read character from STDAUX is HALFPLEMENTED\n");
-            setAL(DosReadCharacter());
+            // setAL(DosReadCharacter());
             break;
         }
 
@@ -1597,7 +1395,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             // FIXME: Really write it to STDAUX!
             DPRINT1("INT 16h, 04h: Write character to STDAUX is HALFPLEMENTED\n");
-            DosPrintCharacter(getDL());
+            // DosPrintCharacter(getDL());
             break;
         }
 
@@ -1616,10 +1414,12 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             Character = getDL();
 
+            // FIXME: Under DOS 2+, output handle may be redirected!!!!
+
             if (Character != 0xFF)
             {
                 /* Output */
-                DosPrintCharacter(Character);
+                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
 
                 /*
                  * We return the output character (DOS 2.1+).
@@ -1634,7 +1434,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 if (DosCheckInput())
                 {
                     Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
-                    setAL(DosReadCharacter());
+                    setAL(DosReadCharacter(DOS_INPUT_HANDLE));
                 }
                 else
                 {
@@ -1651,10 +1451,15 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x07:
         case 0x08:
         {
-            Character = DosReadCharacter();
+            // FIXME: Under DOS 2+, input handle may be redirected!!!!
+            Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
-            /* Let the BOP repeat if needed */
-            if (getCF()) break;
+            // FIXME: For 0x07, do not check Ctrl-C/Break.
+            //        For 0x08, do check those control sequences and if needed,
+            //        call INT 0x23.
+
+            // /* Let the BOP repeat if needed */
+            // if (getCF()) break;
 
             setAL(Character);
             break;
@@ -1667,7 +1472,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             while (*String != '$')
             {
-                DosPrintCharacter(*String);
+                DosPrintCharacter(DOS_OUTPUT_HANDLE, *String);
                 String++;
             }
 
@@ -1683,26 +1488,27 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Read Buffered Input */
         case 0x0A:
         {
+            WORD Count = 0;
             InputBuffer = (PDOS_INPUT_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
 
-            while (Stack[STACK_COUNTER] < InputBuffer->MaxLength)
-            {
-                /* Try to read a character */
-                Character = DosReadCharacter();
+            DPRINT1("Read Buffered Input\n");
 
-                /* If it's not ready yet, let the BOP repeat */
-                if (getCF()) break;
+            while (Count < InputBuffer->MaxLength)
+            {
+                /* Try to read a character (wait) */
+                Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
                 /* Echo the character and append it to the buffer */
-                DosPrintCharacter(Character);
-                InputBuffer->Buffer[Stack[STACK_COUNTER]] = Character;
+                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+                InputBuffer->Buffer[Count] = Character;
 
                 if (Character == '\r') break;
-                Stack[STACK_COUNTER]++;
+                Count++;
             }
 
             /* Update the length */
-            InputBuffer->Length = Stack[STACK_COUNTER];
+            InputBuffer->Length = Count;
+
             break;
         }
 
@@ -1719,7 +1525,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             BYTE InputFunction = getAL();
 
             /* Flush STDIN buffer */
-            DosFlushFileBuffers(DOS_INPUT_HANDLE); // Maybe just create a DosFlushInputBuffer...
+            DosFlushFileBuffers(DOS_INPUT_HANDLE);
 
             /*
              * If the input function number contained in AL is valid, i.e.
@@ -2163,47 +1969,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Read from File or Device */
         case 0x3F:
         {
-            WORD Handle    = getBX();
-            LPBYTE Buffer  = (LPBYTE)SEG_OFF_TO_PTR(getDS(), getDX());
-            WORD Count     = getCX();
             WORD BytesRead = 0;
-            WORD ErrorCode = ERROR_SUCCESS;
-            CHAR Character;
-
-            if (IsConsoleHandle(DosGetRealHandle(Handle)))
-            {
-                while (Stack[STACK_COUNTER] < Count)
-                {
-                    /* Read a character from the BIOS */
-                    Character = LOBYTE(BiosGetCharacter());
-
-                    /* Stop if the BOP needs to be repeated */
-                    if (getCF()) break;
-
-                    // FIXME: Security checks!
-                    DosPrintCharacter(Character);
-                    Buffer[Stack[STACK_COUNTER]++] = Character;
-
-                    if (Character == '\r')
-                    {
-                        /* Stop on first carriage return */
-                        DosPrintCharacter('\n');
-                        break;
-                    }
-                }
-
-                if (Character != '\r')
-                {
-                    if (Stack[STACK_COUNTER] < Count) ErrorCode = ERROR_NOT_READY;
-                    else BytesRead = Count;
-                }
-                else BytesRead = Stack[STACK_COUNTER];
-            }
-            else
-            {
-                /* Use the file reading function */
-                ErrorCode = DosReadFile(Handle, Buffer, Count, &BytesRead);
-            }
+            WORD ErrorCode = DosReadFile(getBX(),
+                                         SEG_OFF_TO_PTR(getDS(), getDX()),
+                                         getCX(),
+                                         &BytesRead);
 
             if (ErrorCode == ERROR_SUCCESS)
             {
@@ -2215,6 +1985,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 setAX(ErrorCode);
             }
+
             break;
         }
 
@@ -2358,7 +2129,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             WORD NewHandle;
             HANDLE Handle = DosGetRealHandle(getBX());
 
-            if (Handle != INVALID_HANDLE_VALUE)
+            if (Handle == INVALID_HANDLE_VALUE)
             {
                 /* The handle is invalid */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
@@ -2491,6 +2262,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+#ifndef STANDALONE
         /* Execute */
         case 0x4B:
         {
@@ -2511,6 +2283,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             break;
         }
+#endif
 
         /* Terminate With Return Code */
         case 0x4C:
@@ -2540,8 +2313,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                                                  getCX());
 
             setAX(Result);
-            if (Result == ERROR_SUCCESS) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-            else Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+            if (Result == ERROR_SUCCESS)
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            else
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
             break;
         }
@@ -2552,8 +2328,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             WORD Result = (WORD)demFileFindNext(FAR_POINTER(DiskTransferArea));
 
             setAX(Result);
-            if (Result == ERROR_SUCCESS) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
-            else Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+            if (Result == ERROR_SUCCESS)
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            else
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
             break;
         }
@@ -2578,6 +2357,23 @@ VOID WINAPI DosInt21h(LPWORD Stack)
              * for more information.
              */
             setBX(CurrentPsp);
+            break;
+        }
+
+        /* Internal - Get "List of lists" (SYSVARS) */
+        case 0x52:
+        {
+            /*
+             * On return, ES points at the DOS data segment (see also INT 2F/AX=1203h).
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2983.htm
+             * for more information.
+             */
+
+            /* Return the DOS "list of lists" in ES:BX */
+            setES(0x0000);
+            setBX(0x0000);
+
+            DisplayMessage(L"Required for AARD code, do you remember? :P");
             break;
         }
 
@@ -2666,32 +2462,6 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
      * for more information.
      */
 
-#if 0
-    if (Stack[STACK_COUNTER] == 0)
-    {
-        Stack[STACK_COUNTER]++;
-
-        /* Save AX and BX */
-        Stack[STACK_VAR_A] = getAX();
-        Stack[STACK_VAR_B] = getBX();
-
-        /* Rewind the BOP manually, we can't use CF because the interrupt could modify it */
-        EmulatorExecute(getCS(), getIP() - 4);
-
-        /* Call INT 0x10, AH = 0x0E */
-        setAH(0x0E);
-        setBL(DOS_CHAR_ATTRIBUTE);
-        setBH(Bda->VideoPage);
-
-        EmulatorInterrupt(0x10);
-    }
-    else
-    {
-        /* Restore AX and BX */
-        setAX(Stack[STACK_VAR_A]);
-        setBX(Stack[STACK_VAR_B]);
-    }
-#else
     /* Save AX and BX */
     USHORT AX = getAX();
     USHORT BX = getBX();
@@ -2707,12 +2477,11 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
     /* Restore AX and BX */
     setBX(BX);
     setAX(AX);
-#endif
 }
 
 VOID WINAPI DosInt2Fh(LPWORD Stack)
 {
-    DPRINT1("DOS System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
+    DPRINT1("DOS Internal System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
             getAH(), getAL());
     Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 }
@@ -2778,17 +2547,19 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Initialize the SFT */
     for (i = 0; i < DOS_SFT_SIZE; i++)
     {
-        DosSystemFileTable[i] = INVALID_HANDLE_VALUE;
-        DosSftRefCount[i] = 0;
+        DosSystemFileTable[i].Handle   = INVALID_HANDLE_VALUE;
+        DosSystemFileTable[i].RefCount = 0;
     }
 
     /* Get handles to standard I/O devices */
-    DosSystemFileTable[0] = GetStdHandle(STD_INPUT_HANDLE);
-    DosSystemFileTable[1] = GetStdHandle(STD_OUTPUT_HANDLE);
-    DosSystemFileTable[2] = GetStdHandle(STD_ERROR_HANDLE);
+    DosSystemFileTable[0].Handle = GetStdHandle(STD_INPUT_HANDLE);
+    DosSystemFileTable[1].Handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    DosSystemFileTable[2].Handle = GetStdHandle(STD_ERROR_HANDLE);
 
     /* Initialize the reference counts */
-    DosSftRefCount[0] = DosSftRefCount[1] = DosSftRefCount[2] = 1;
+    DosSystemFileTable[0].RefCount =
+    DosSystemFileTable[1].RefCount =
+    DosSystemFileTable[2].RefCount = 1;
 
 #endif
 

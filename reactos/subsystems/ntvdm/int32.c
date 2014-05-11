@@ -58,6 +58,13 @@ VOID WINAPI ControlBop(LPWORD Stack)
 
 VOID InitializeInt32(WORD BiosSegment)
 {
+    //
+    // WARNING WARNING!!
+    //
+    // If you modify the code stubs here, think also
+    // about updating them in callback.c too!!
+    //
+
     LPDWORD IntVecTable = (LPDWORD)BaseAddress;
     LPBYTE  BiosCode    = (LPBYTE)SEG_OFF_TO_PTR(BiosSegment, 0);
     USHORT i;
@@ -73,15 +80,6 @@ VOID InitializeInt32(WORD BiosSegment)
 
         BiosCode[Offset++] = 0x6A; // push i
         BiosCode[Offset++] = (UCHAR)i;
-
-        /* The counter variable (initialized to 0) */
-        BiosCode[Offset++] = 0x6A; // push 0
-        BiosCode[Offset++] = 0x00;
-
-        /* Stack variables */
-        BiosCode[Offset++] = 0x83; // sub sp, 4
-        BiosCode[Offset++] = 0xEC;
-        BiosCode[Offset++] = 0x04;
 
         BopSeqOffset = COMMON_STUB_OFFSET - (Offset + 3);
 
@@ -113,9 +111,11 @@ VOID InitializeInt32(WORD BiosSegment)
     BiosCode[Offset++] = 0xF5;
 
 // EXIT:
-    BiosCode[Offset++] = 0x83; // add sp, 8
+    // BiosCode[Offset++] = 0x44; // inc sp
+    // BiosCode[Offset++] = 0x44; // inc sp
+    BiosCode[Offset++] = 0x83; // add sp, 2
     BiosCode[Offset++] = 0xC4;
-    BiosCode[Offset++] = 0x08;
+    BiosCode[Offset++] = 0x02;
 
     BiosCode[Offset++] = 0xCF; // iret
 
