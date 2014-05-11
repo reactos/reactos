@@ -106,7 +106,7 @@ _tsplitpath_x(
     dir_start = path;
     while (*path != '\0')
     {
-#ifndef _UNICODE
+#if !defined(_UNICODE) && !defined(_LIBCNT_)
         /* Check for multibyte lead bytes */
         if (_ismbblead((unsigned char)*path))
         {
