@@ -92,6 +92,10 @@ int *__p___mb_cur_max(void);
 #define WX_NOSEEK         0x40
 #define WX_TEXT           0x80
 
+/* values for exflag - it's used differently in msvcr90.dll*/
+#define EF_UTF8           0x01
+#define EF_UTF16          0x02
+
 /* FIXME: this should be allocated dynamically */
 #define MAX_FILES 2048
 #define FD_BLOCK_SIZE 64
@@ -2009,14 +2013,32 @@ int CDECL _read(int fd, void *buf, unsigned int count)
  */
 int CDECL _setmode(int fd,int mode)
 {
-  int ret = get_ioinfo(fd)->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
-  if (mode & (~(_O_TEXT|_O_BINARY)))
-    FIXME("fd (%d) mode (0x%08x) unknown\n",fd,mode);
-  if ((mode & _O_TEXT) == _O_TEXT)
+    int ret = get_ioinfo(fd)->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
+    if(ret==_O_TEXT && (get_ioinfo(fd)->exflag & (EF_UTF8|EF_UTF16)))
+        ret = _O_WTEXT;
+
+    if(mode!=_O_TEXT && mode!=_O_BINARY && mode!=_O_WTEXT
+                && mode!=_O_U16TEXT && mode!=_O_U8TEXT) {
+        *_errno() = EINVAL;
+        return -1;
+    }
+
+    if(mode == _O_BINARY) {
+        get_ioinfo(fd)->wxflag &= ~WX_TEXT;
+        get_ioinfo(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+        return ret;
+    }
+
     get_ioinfo(fd)->wxflag |= WX_TEXT;
-  else
-    get_ioinfo(fd)->wxflag &= ~WX_TEXT;
-  return ret;
+    if(mode == _O_TEXT)
+        get_ioinfo(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+    else if(mode == _O_U8TEXT)
+        get_ioinfo(fd)->exflag = (get_ioinfo(fd)->exflag & ~EF_UTF16) | EF_UTF8;
+    else
+        get_ioinfo(fd)->exflag = (get_ioinfo(fd)->exflag & ~EF_UTF8) | EF_UTF16;
+
+    return ret;
+
 }
 
 /*********************************************************************
