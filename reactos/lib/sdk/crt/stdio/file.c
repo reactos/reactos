@@ -52,6 +52,12 @@
 int *__p__fmode(void);
 int *__p___mb_cur_max(void);
 
+extern int _commode;
+
+#ifndef _IOCOMMIT
+#define _IOCOMMIT 0x4000
+#endif
+
 #ifdef feof
 #undef feof
 #endif
@@ -1250,6 +1256,10 @@ static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
 {
   int plus = strchrW(mode, '+') != NULL;
 
+  TRACE("%s\n", debugstr_w(mode));
+
+  while(*mode == ' ') mode++;
+
   switch(*mode++)
   {
   case 'R': case 'r':
@@ -1265,12 +1275,13 @@ static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
     *stream_flags = plus ? _IORW : _IOWRT;
     break;
   default:
-    _invalid_parameter(NULL, NULL, NULL, 0, 0);
-    *_errno() = EINVAL;
+    MSVCRT_INVALID_PMT(0, EINVAL);
     return -1;
   }
 
-  while (*mode)
+  *stream_flags |= _commode;
+
+  while (*mode && *mode!=',')
     switch (*mode++)
     {
     case 'B': case 'b':
@@ -1281,12 +1292,79 @@ static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
       *open_flags |=  _O_TEXT;
       *open_flags &= ~_O_BINARY;
       break;
+    case 'D':
+      *open_flags |= _O_TEMPORARY;
+      break;
+    case 'T':
+      *open_flags |= _O_SHORT_LIVED;
+      break;
+    case 'c':
+      *stream_flags |= _IOCOMMIT;
+      break;
+    case 'n':
+      *stream_flags &= ~_IOCOMMIT;
+      break;
+    case 'N':
+      *open_flags |= _O_NOINHERIT;
+      break;
     case '+':
     case ' ':
+    case 'a':
+    case 'w':
+      break;
+    case 'S':
+    case 'R':
+      FIXME("ignoring cache optimization flag: %c\n", mode[-1]);
       break;
     default:
-      FIXME(":unknown flag %c not supported\n",mode[-1]);
+      ERR("incorrect mode flag: %c\n", mode[-1]);
+      break;
     }
+
+  if(*mode == ',')
+  {
+    static const WCHAR ccs[] = {'c','c','s'};
+    static const WCHAR utf8[] = {'u','t','f','-','8'};
+    static const WCHAR utf16le[] = {'u','t','f','-','1','6','l','e'};
+    static const WCHAR unicode[] = {'u','n','i','c','o','d','e'};
+
+    mode++;
+    while(*mode == ' ') mode++;
+    if(!MSVCRT_CHECK_PMT(!strncmpW(ccs, mode, sizeof(ccs)/sizeof(ccs[0]))))
+      return -1;
+    mode += sizeof(ccs)/sizeof(ccs[0]);
+    while(*mode == ' ') mode++;
+    if(!MSVCRT_CHECK_PMT(*mode == '='))
+        return -1;
+    mode++;
+    while(*mode == ' ') mode++;
+
+    if(!strncmpiW(utf8, mode, sizeof(utf8)/sizeof(utf8[0])))
+    {
+      *open_flags |= _O_U8TEXT;
+      mode += sizeof(utf8)/sizeof(utf8[0]);
+    }
+    else if(!strncmpiW(utf16le, mode, sizeof(utf16le)/sizeof(utf16le[0])))
+    {
+      *open_flags |= _O_U16TEXT;
+      mode += sizeof(utf16le)/sizeof(utf16le[0]);
+    }
+    else if(!strncmpiW(unicode, mode, sizeof(unicode)/sizeof(unicode[0])))
+    {
+      *open_flags |= _O_WTEXT;
+      mode += sizeof(unicode)/sizeof(unicode[0]);
+    }
+    else
+    {
+      MSVCRT_INVALID_PMT(0, EINVAL);
+      return -1;
+    }
+
+    while(*mode == ' ') mode++;
+  }
+
+  if(!MSVCRT_CHECK_PMT(*mode == 0))
+    return -1;
   return 0;
 }
 
