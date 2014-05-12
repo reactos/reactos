@@ -253,7 +253,7 @@ static void free_fd(int fd)
 
 /* INTERNAL: Allocate an fd slot from a Win32 HANDLE, starting from fd */
 /* caller must hold the files lock */
-static int alloc_fd_from(HANDLE hand, int flag, int fd)
+static int set_fd(HANDLE hand, int flag, int fd)
 {
   ioinfo *fdinfo;
 
@@ -282,7 +282,11 @@ static int alloc_fd_from(HANDLE hand, int flag, int fd)
   }
 
   fdinfo->handle = hand;
-  fdinfo->wxflag = WX_OPEN | (flag & (WX_DONTINHERIT | WX_APPEND | WX_TEXT));
+  fdinfo->wxflag = WX_OPEN | (flag & (WX_DONTINHERIT | WX_APPEND | WX_TEXT | WX_PIPE | WX_NOSEEK));
+  fdinfo->lookahead[0] = '\n';
+  fdinfo->lookahead[1] = '\n';
+  fdinfo->lookahead[2] = '\n';
+  fdinfo->exflag = 0;
 
   /* locate next free slot */
   if (fd == fdstart && fd == fdend)
@@ -313,7 +317,7 @@ static int alloc_fd_from(HANDLE hand, int flag, int fd)
 
   LOCK_FILES();
   TRACE(":handle (%p) allocating fd (%d)\n",hand,fdstart);
-  ret = alloc_fd_from(hand, flag, fdstart);
+  ret = set_fd(hand, flag, fdstart);
   UNLOCK_FILES();
   return ret;
 }
@@ -433,7 +437,7 @@ void msvcrt_init_io(void)
     for (i = 0; i < count; i++)
     {
       if ((*wxflag_ptr & WX_OPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
-        alloc_fd_from(*handle_ptr, *wxflag_ptr, i);
+        set_fd(*handle_ptr, *wxflag_ptr, i);
 
       wxflag_ptr++; handle_ptr++;
     }
@@ -443,7 +447,7 @@ void msvcrt_init_io(void)
   }
 
   if(!__pioinfo[0])
-      alloc_fd_from(INVALID_HANDLE_VALUE, 0, 3);
+      set_fd(INVALID_HANDLE_VALUE, 0, 3);
 
   fdinfo = get_ioinfo(0);
   if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE)
@@ -885,7 +889,7 @@ int CDECL _dup2(int od, int nd)
 
       if (is_valid_fd(nd))
         _close(nd);
-      ret = alloc_fd_from(handle, wxflag, nd);
+      ret = set_fd(handle, wxflag, nd);
       if (ret == -1)
       {
         CloseHandle(handle);
