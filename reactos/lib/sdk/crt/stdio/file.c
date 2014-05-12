@@ -2506,33 +2506,36 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
         return 0;
 
     _lock_file(file);
-    if(file->_cnt) {
-        int pcnt=((unsigned)file->_cnt>wrcnt)? wrcnt: file->_cnt;
-        memcpy(file->_ptr, ptr, pcnt);
-        file->_cnt -= pcnt;
-        file->_ptr += pcnt;
-        written = pcnt;
-        wrcnt -= pcnt;
-        ptr = (const char*)ptr + pcnt;
-    } else if(!(file->_flag & _IOWRT)) {
-        if(file->_flag & _IORW) {
-            file->_flag |= _IOWRT;
-        } else {
-            _unlock_file(file);
-            return 0;
-        }
-    }
-    if(wrcnt) {
-        /* Flush buffer */
-        int res=flush_buffer(file);
-        if(!res) {
-            int pwritten = _write(file->_file, ptr, wrcnt);
-            if (pwritten <= 0)
-            {
-                file->_flag |= _IOERR;
-                pwritten=0;
+
+    while(wrcnt) {
+        if(file->_cnt) {
+            int pcnt=((unsigned)file->_cnt>wrcnt)? wrcnt: file->_cnt;
+            memcpy(file->_ptr, ptr, pcnt);
+            file->_cnt -= pcnt;
+            file->_ptr += pcnt;
+            written += pcnt;
+            wrcnt -= pcnt;
+            ptr = (const char*)ptr + pcnt;
+        } else if(!file->_bufsiz && (file->_flag & _IONBF)) {
+            if(!(file->_flag & _IOWRT)) {
+                if(file->_flag & _IORW)
+                    file->_flag |= _IOWRT;
+                else
+                    break;
             }
-            written += pwritten;
+
+            if(_write(file->_file, ptr, wrcnt) <= 0) {
+                file->_flag |= _IOERR;
+                break;
+            }
+            written += wrcnt;
+            wrcnt = 0;
+        } else {
+            if(_flsbuf(*(const char*)ptr, file) == EOF)
+                break;
+            written++;
+            wrcnt--;
+            ptr = (const char*)ptr + 1;
         }
     }
 
