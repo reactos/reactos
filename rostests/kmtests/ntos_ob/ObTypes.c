@@ -164,14 +164,6 @@ TestObjectTypes(VOID)
     SeDefaultObjectMethod = ObpTypeObjectType->TypeInfo.SecurityProcedure;
     ok(SeDefaultObjectMethod != NULL, "No SeDefaultObjectMethod\n");
 
-#ifdef _PROPER_NT_EXPORTS
-#define ExSemaphoreObjectType *ExSemaphoreObjectType
-#define SeTokenObjectType *SeTokenObjectType
-#define PsProcessType *PsProcessType
-#define PsThreadType *PsThreadType
-#define ExEventObjectType *ExEventObjectType
-#define IoFileObjectType *IoFileObjectType
-#endif
 #ifdef _PROPER_NT_NDK_EXPORTS
 #define ObpTypeObjectType *ObpTypeObjectType
 #define ObpDirectoryObjectType *ObpDirectoryObjectType
@@ -203,16 +195,16 @@ TestObjectTypes(VOID)
         ok_eq_hex(ObpTypeObjectType->Key, TAG('ObjT'));
     CheckObjectType(Directory, ObpDirectoryObjectType,          OBT_CASE_INSENSITIVE | OBT_PAGED_POOL,      0x100,  0x020003, 0x02000c, 0x020003, 0x0f000f, 0x0f000f);
     CheckObjectType(SymbolicLink, ObpSymbolicLinkObjectType,    OBT_CASE_INSENSITIVE | OBT_PAGED_POOL,      0x100,  0x020001, 0x020000, 0x020001, 0x0f0001, 0x0f0001);
-    CheckObjectType(Token, SeTokenObjectType,                   OBT_SECURITY_REQUIRED | OBT_PAGED_POOL,     0x100,  0x020008, 0x0200e0, 0x020000, 0x0f01ff, 0x1f01ff);
-    CheckObjectType(Process, PsProcessType,                     OBT_NO_DEFAULT | OBT_SECURITY_REQUIRED,     0x0b0,  0x020410, 0x020beb, 0x120000, 0x1f0fff, 0x1f0fff);
-    CheckObjectType(Thread, PsThreadType,                       OBT_NO_DEFAULT | OBT_SECURITY_REQUIRED,     0x0b0,  0x020048, 0x020037, 0x120000, 0x1f03ff, 0x1f03ff);
+    CheckObjectType(Token, *SeTokenObjectType,                   OBT_SECURITY_REQUIRED | OBT_PAGED_POOL,     0x100,  0x020008, 0x0200e0, 0x020000, 0x0f01ff, 0x1f01ff);
+    CheckObjectType(Process, *PsProcessType,                     OBT_NO_DEFAULT | OBT_SECURITY_REQUIRED,     0x0b0,  0x020410, 0x020beb, 0x120000, 0x1f0fff, 0x1f0fff);
+    CheckObjectType(Thread, *PsThreadType,                       OBT_NO_DEFAULT | OBT_SECURITY_REQUIRED,     0x0b0,  0x020048, 0x020037, 0x120000, 0x1f03ff, 0x1f03ff);
     CheckObjectType(Job, PsJobType,                             OBT_NO_DEFAULT | OBT_SECURITY_REQUIRED,     0x000,  0x020004, 0x02000b, 0x120000, 0x1f03ff, 0x1f001f);
     CheckObjectType(DebugObject, DbgkDebugObjectType,           OBT_NO_DEFAULT | OBT_SECURITY_REQUIRED,     0x000,  0x020001, 0x020002, 0x120000, 0x1f000f, 0x1f000f);
-    CheckObjectType(Event, ExEventObjectType,                   OBT_NO_DEFAULT,                             0x100,  0x020001, 0x020002, 0x120000, 0x1f0003, 0x1f0003);
+    CheckObjectType(Event, *ExEventObjectType,                   OBT_NO_DEFAULT,                             0x100,  0x020001, 0x020002, 0x120000, 0x1f0003, 0x1f0003);
     CheckObjectType(EventPair, ExEventPairObjectType,           0,                                          0x100,  0x120000, 0x120000, 0x120000, 0x1f0000, 0x1f0000);
     CheckObjectType(Mutant, ExMutantObjectType,                 OBT_NO_DEFAULT,                             0x100,  0x020001, 0x020000, 0x120000, 0x1f0001, 0x1f0001);
     CheckObjectType(Callback, ExCallbackObjectType,             OBT_NO_DEFAULT,                             0x100,  0x020000, 0x020001, 0x120000, 0x1f0001, 0x1f0001);
-    CheckObjectType(Semaphore, ExSemaphoreObjectType,           OBT_NO_DEFAULT,                             0x100,  0x020001, 0x020002, 0x120000, 0x1f0003, 0x1f0003);
+    CheckObjectType(Semaphore, *ExSemaphoreObjectType,           OBT_NO_DEFAULT,                             0x100,  0x020001, 0x020002, 0x120000, 0x1f0003, 0x1f0003);
     CheckObjectType(Timer, ExTimerObjectType,                   OBT_NO_DEFAULT,                             0x100,  0x020001, 0x020002, 0x120000, 0x1f0003, 0x1f0003);
     CheckObjectType(Profile, ExProfileObjectType,               OBT_NO_DEFAULT,                             0x100,  0x020001, 0x020001, 0x020001, 0x0f0001, 0x0f0001);
     CheckObjectType(KeyedEvent, ExpKeyedEventObjectType,        OBT_PAGED_POOL,                             0x000,  0x020001, 0x020002, 0x020000, 0x0f0003, 0x1f0003);
@@ -231,7 +223,7 @@ TestObjectTypes(VOID)
                                                                                                             0x100,  0x120089, 0x120116, 0x1200a0, 0x1f01ff, 0x1f01ff);
     CheckObjectType(Driver, IoDriverObjectType,                 OBT_CASE_INSENSITIVE,                       0x100,  0x120089, 0x120116, 0x1200a0, 0x1f01ff, 0x1f01ff);
     CheckObjectType(IoCompletion, IoCompletionObjectType,       OBT_CASE_INSENSITIVE,                       0x110,  0x020001, 0x020002, 0x120000, 0x1f0003, 0x1f0003);
-    CheckObjectType(File, IoFileObjectType,                     OBT_NO_DEFAULT | OBT_CUSTOM_SECURITY_PROC | OBT_CASE_INSENSITIVE | OBT_MAINTAIN_HANDLE_COUNT,
+    CheckObjectType(File, *IoFileObjectType,                     OBT_NO_DEFAULT | OBT_CUSTOM_SECURITY_PROC | OBT_CASE_INSENSITIVE | OBT_MAINTAIN_HANDLE_COUNT,
                                                                                                             0x130,  0x120089, 0x120116, 0x1200a0, 0x1f01ff, 0x1f01ff);
     CheckObjectType(WmiGuid, WmipGuidObjectType,                OBT_NO_DEFAULT | OBT_CUSTOM_SECURITY_PROC | OBT_SECURITY_REQUIRED,
                                                                                                             0x100,  0x000001, 0x000002, 0x000010, 0x120fff, 0x1f0fff);

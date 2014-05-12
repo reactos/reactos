@@ -57,11 +57,7 @@ KernelModeTest(IN PVOID Context)
     {
         Status = ObReferenceObjectByHandle(TargetHandle,
                                            FILE_READ_DATA,
-#ifdef _PROPER_NT_EXPORTS
                                            *IoFileObjectType,
-#else
-                                           IoFileObjectType,
-#endif
                                            KernelMode,
                                            (PVOID *)&TargetFileObject,
                                            NULL);
@@ -107,11 +103,7 @@ KernelModeTest(IN PVOID Context)
     {
         Status = ObReferenceObjectByHandle(ParentHandle,
                                            FILE_READ_DATA,
-#ifdef _PROPER_NT_EXPORTS
                                            *IoFileObjectType,
-#else
-                                           IoFileObjectType,
-#endif
                                            KernelMode,
                                            (PVOID *)&ParentFileObject,
                                            NULL);
@@ -181,11 +173,7 @@ KernelModeTest(IN PVOID Context)
         {
             Status = ObReferenceObjectByHandle(ParentHandle,
                                                FILE_READ_DATA,
-#ifdef _PROPER_NT_EXPORTS
                                                *IoFileObjectType,
-#else
-                                               IoFileObjectType,
-#endif
                                                KernelMode,
                                                (PVOID *)&ParentFileObject,
                                                NULL);
@@ -199,11 +187,7 @@ KernelModeTest(IN PVOID Context)
                 ok_eq_long(RtlCompareUnicodeString(&ParentFileObject->FileName, &TargetFileObject->FileName, FALSE), 0);
                 Status = ObReferenceObjectByHandle(SystemRootHandle,
                                                    FILE_READ_DATA,
-#ifdef _PROPER_NT_EXPORTS
                                                    *IoFileObjectType,
-#else
-                                                   IoFileObjectType,
-#endif
                                                    KernelMode,
                                                    (PVOID *)&SystemRootFileObject,
                                                    NULL);
@@ -256,12 +240,7 @@ KernelModeTest(IN PVOID Context)
     {
         Status = ObReferenceObjectByHandle(ParentHandle,
                                            FILE_READ_DATA,
-#ifdef _PROPER_NT_EXPORTS
                                            *IoFileObjectType,
-#else
-                                           IoFileObjectType,
-#endif
-
                                            KernelMode,
                                            (PVOID *)&ParentFileObject,
                                            NULL);
@@ -323,12 +302,7 @@ KernelModeTest(IN PVOID Context)
         {
             Status = ObReferenceObjectByHandle(ParentHandle,
                                                FILE_READ_DATA,
-#ifdef _PROPER_NT_EXPORTS
                                                *IoFileObjectType,
-#else
-                                               IoFileObjectType,
-#endif
-
                                                KernelMode,
                                                (PVOID *)&ParentFileObject,
                                                NULL);
@@ -342,12 +316,7 @@ KernelModeTest(IN PVOID Context)
                 ok_eq_long(RtlCompareUnicodeString(&ParentFileObject->FileName, &TargetFileObject->FileName, FALSE), 0);
                 Status = ObReferenceObjectByHandle(SystemRootHandle,
                                                    FILE_READ_DATA,
-#ifdef _PROPER_NT_EXPORTS
                                                    *IoFileObjectType,
-#else
-                                                   IoFileObjectType,
-#endif
-
                                                    KernelMode,
                                                    (PVOID *)&SystemRootFileObject,
                                                    NULL);
@@ -565,11 +534,7 @@ START_TEST(IoCreateFile)
         /* Then, just wait on our thread to finish */
         Status = ObReferenceObjectByHandle(ThreadHandle,
                                            SYNCHRONIZE,
-#ifdef _PROPER_NT_EXPORTS
                                            *PsThreadType,
-#else
-                                           PsThreadType,
-#endif
                                            KernelMode,
                                            &ThreadObject,
                                            NULL);

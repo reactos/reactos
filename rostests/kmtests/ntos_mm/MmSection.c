@@ -428,13 +428,7 @@ START_TEST(MmSection)
 
     if (!skip(Status == STATUS_SUCCESS && FileHandle1 != NULL, "Failed to open file 1\n"))
     {
-        Status = ObReferenceObjectByHandle(FileHandle1, FILE_READ_DATA | FILE_WRITE_DATA,
-#ifdef _PROPER_NT_EXPORTS
-                                           *IoFileObjectType,
-#else
-                                           IoFileObjectType,
-#endif
-                                           KernelMode, (PVOID *)&FileObject1, NULL);
+        Status = ObReferenceObjectByHandle(FileHandle1, FILE_READ_DATA | FILE_WRITE_DATA, *IoFileObjectType, KernelMode, (PVOID *)&FileObject1, NULL);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok(FileObject1 != NULL, "FileObject1 is NULL\n");
         CheckObject(FileHandle1, 3L, 1L);
@@ -442,13 +436,7 @@ START_TEST(MmSection)
 
     if (!skip(Status == STATUS_SUCCESS && FileHandle2 != NULL, "Failed to open file 2\n"))
     {
-        Status = ObReferenceObjectByHandle(FileHandle2, FILE_READ_DATA | FILE_WRITE_DATA,
-#ifdef _PROPER_NT_EXPORTS
-                                           *IoFileObjectType,
-#else
-                                           IoFileObjectType,
-#endif
-                                           KernelMode, (PVOID *)&FileObject2, NULL);
+        Status = ObReferenceObjectByHandle(FileHandle2, FILE_READ_DATA | FILE_WRITE_DATA, *IoFileObjectType, KernelMode, (PVOID *)&FileObject2, NULL);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok(FileObject2 != NULL, "FileObject2 is NULL\n");
     }

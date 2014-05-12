@@ -268,14 +268,7 @@ StartThread(
     InitializeObjectAttributes(&Attributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
     Status = PsCreateSystemThread(&ThreadData->Handle, GENERIC_ALL, &Attributes, NULL, NULL, AcquireResourceThread, ThreadData);
     ok_eq_hex(Status, STATUS_SUCCESS);
-    Status = ObReferenceObjectByHandle(ThreadData->Handle, SYNCHRONIZE,
-#ifdef _PROPER_NT_EXPORTS
-                                       *PsThreadType,
-#else
-                                       PsThreadType,
-#endif
-
-                                       KernelMode, (PVOID *)&ThreadData->Thread, NULL);
+    Status = ObReferenceObjectByHandle(ThreadData->Handle, SYNCHRONIZE, *PsThreadType, KernelMode, (PVOID *)&ThreadData->Thread, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     return KeWaitForSingleObject(&ThreadData->OutEvent, Executive, KernelMode, FALSE, Timeout);

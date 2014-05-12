@@ -169,13 +169,7 @@ TestEventConcurrent(
         Threads[i].Signal = FALSE;
         Status = PsCreateSystemThread(&Threads[i].Handle, GENERIC_ALL, NULL, NULL, NULL, WaitForEventThread, &Threads[i]);
         ok_eq_hex(Status, STATUS_SUCCESS);
-        Status = ObReferenceObjectByHandle(Threads[i].Handle, SYNCHRONIZE,
-#ifdef _PROPER_NT_EXPORTS
-                                           *PsThreadType,
-#else
-                                           PsThreadType,
-#endif
-                                           KernelMode, (PVOID *)&Threads[i].Thread, NULL);
+        Status = ObReferenceObjectByHandle(Threads[i].Handle, SYNCHRONIZE, *PsThreadType, KernelMode, (PVOID *)&Threads[i].Thread, NULL);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ThreadObjects[i] = Threads[i].Thread;
         Priority = KeQueryPriorityThread(Threads[i].Thread);
