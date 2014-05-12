@@ -101,6 +101,10 @@ extern int _commode;
 /* values for exflag - it's used differently in msvcr90.dll*/
 #define EF_UTF8           0x01
 #define EF_UTF16          0x02
+#define EF_UNK_UNICODE    0x08
+
+static char utf8_bom[3] = { 0xef, 0xbb, 0xbf };
+static char utf16_bom[2] = { 0xff, 0xfe };
 
 /* FIXME: this should be allocated dynamically */
 #define MAX_FILES 2048
@@ -1629,6 +1633,29 @@ int CDECL _pipe(int *pfds, unsigned int psize, int textmode)
   return ret;
 }
 
+static int check_bom(HANDLE h, int oflags, BOOL seek)
+{
+    char bom[sizeof(utf8_bom)];
+    DWORD r;
+
+    oflags &= ~(_O_WTEXT|_O_U16TEXT|_O_U8TEXT);
+
+    if (!ReadFile(h, bom, sizeof(utf8_bom), &r, NULL))
+        return oflags;
+
+    if (r==sizeof(utf8_bom) && !memcmp(bom, utf8_bom, sizeof(utf8_bom))) {
+        oflags |= _O_U8TEXT;
+    }else if (r>=sizeof(utf16_bom) && !memcmp(bom, utf16_bom, sizeof(utf16_bom))) {
+        if (seek && r>2)
+            SetFilePointer(h, 2, NULL, FILE_BEGIN);
+        oflags |= _O_U16TEXT;
+    }else if (seek) {
+        SetFilePointer(h, 0, NULL, FILE_BEGIN);
+    }
+
+    return oflags;
+}
+
 /*********************************************************************
  *              _sopen_s (MSVCRT.@)
  */
@@ -1761,11 +1788,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
   TRACE("fd*: %p :file (%s) oflags: 0x%04x shflags: 0x%04x pmode: 0x%04x\n",
         fd, debugstr_w(path), oflags, shflags, pmode);
 
-  if (!fd)
-  {
-    MSVCRT_INVALID_PMT("null out fd pointer", EINVAL);
-    return EINVAL;
-  }
+  if (!MSVCRT_CHECK_PMT( fd != NULL )) return EINVAL;
 
   *fd = -1;
   wxflag = split_oflags(oflags);
@@ -1827,17 +1850,80 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
 
   sa.nLength              = sizeof( SECURITY_ATTRIBUTES );
   sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle       = (oflags & _O_NOINHERIT) ? FALSE : TRUE;
+  sa.bInheritHandle       = !(oflags & _O_NOINHERIT);
+
+  if ((oflags&(_O_WTEXT|_O_U16TEXT|_O_U8TEXT))
+          && (creation==OPEN_ALWAYS || creation==OPEN_EXISTING)
+          && !(access&GENERIC_READ))
+  {
+      hand = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE,
+              &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+      if (hand != INVALID_HANDLE_VALUE)
+      {
+          oflags = check_bom(hand, oflags, FALSE);
+          CloseHandle(hand);
+      }
+      else
+          oflags &= ~(_O_WTEXT|_O_U16TEXT|_O_U8TEXT);
+  }
 
   hand = CreateFileW(path, access, sharing, &sa, creation, attrib, 0);
-
   if (hand == INVALID_HANDLE_VALUE)  {
     WARN(":failed-last error (%d)\n",GetLastError());
     _dosmaperr(GetLastError());
     return *_errno();
   }
 
+  if (oflags & (_O_WTEXT|_O_U16TEXT|_O_U8TEXT))
+  {
+      if ((access & GENERIC_WRITE) && (creation==CREATE_NEW
+                  || creation==CREATE_ALWAYS || creation==TRUNCATE_EXISTING
+                  || (creation==OPEN_ALWAYS && GetLastError()==ERROR_ALREADY_EXISTS)))
+      {
+          if (oflags & _O_U8TEXT)
+          {
+              DWORD written = 0, tmp;
+
+              while(written!=sizeof(utf8_bom) && WriteFile(hand, (char*)utf8_bom+written,
+                          sizeof(utf8_bom)-written, &tmp, NULL))
+                  written += tmp;
+              if (written != sizeof(utf8_bom)) {
+                  WARN("error writing BOM\n");
+                  CloseHandle(hand);
+                  _dosmaperr(GetLastError());
+                  return *_errno();
+              }
+          }
+          else
+          {
+              DWORD written = 0, tmp;
+
+              while(written!=sizeof(utf16_bom) && WriteFile(hand, (char*)utf16_bom+written,
+                          sizeof(utf16_bom)-written, &tmp, NULL))
+                  written += tmp;
+              if (written != sizeof(utf16_bom))
+              {
+                  WARN("error writing BOM\n");
+                  CloseHandle(hand);
+                  _dosmaperr(GetLastError());
+                  return *_errno();
+              }
+          }
+      }
+      else if (access & GENERIC_READ)
+          oflags = check_bom(hand, oflags, TRUE);
+  }
+
   *fd = alloc_fd(hand, wxflag);
+  if (*fd == -1)
+      return *_errno();
+
+  if (oflags & _O_WTEXT)
+      get_ioinfo(*fd)->exflag |= EF_UTF16|EF_UNK_UNICODE;
+  else if (oflags & _O_U16TEXT)
+      get_ioinfo(*fd)->exflag |= EF_UTF16;
+  else if (oflags & _O_U8TEXT)
+      get_ioinfo(*fd)->exflag |= EF_UTF8;
 
   TRACE(":fd (%d) handle (%p)\n", *fd, hand);
   return 0;
