@@ -1657,124 +1657,6 @@ static int check_bom(HANDLE h, int oflags, BOOL seek)
 }
 
 /*********************************************************************
- *              _sopen_s (MSVCRT.@)
- */
-int CDECL _sopen_s( int *fd, const char *path, int oflags, int shflags, int pmode )
-{
-  DWORD access = 0, creation = 0, attrib;
-  DWORD sharing;
-  int wxflag;
-  HANDLE hand;
-  SECURITY_ATTRIBUTES sa;
-
-  TRACE("fd*: %p file: (%s) oflags: 0x%04x shflags: 0x%04x pmode: 0x%04x\n",
-        fd, path, oflags, shflags, pmode);
-
-  if (!fd)
-  {
-    MSVCRT_INVALID_PMT("null out fd pointer", EINVAL);
-    return EINVAL;
-  }
-
-  *fd = -1;
-  wxflag = split_oflags(oflags);
-  switch (oflags & (_O_RDONLY | _O_WRONLY | _O_RDWR))
-  {
-  case _O_RDONLY: access |= GENERIC_READ; break;
-  case _O_WRONLY: access |= GENERIC_WRITE; break;
-  case _O_RDWR:   access |= GENERIC_WRITE | GENERIC_READ; break;
-  }
-
-  if (oflags & _O_CREAT)
-  {
-    if(pmode & ~(_S_IREAD | _S_IWRITE))
-      FIXME(": pmode 0x%04x ignored\n", pmode);
-    else
-      WARN(": pmode 0x%04x ignored\n", pmode);
-
-    if (oflags & _O_EXCL)
-      creation = CREATE_NEW;
-    else if (oflags & _O_TRUNC)
-      creation = CREATE_ALWAYS;
-    else
-      creation = OPEN_ALWAYS;
-  }
-  else  /* no _O_CREAT */
-  {
-    if (oflags & _O_TRUNC)
-      creation = TRUNCATE_EXISTING;
-    else
-      creation = OPEN_EXISTING;
-  }
-
-  switch( shflags )
-  {
-    case _SH_DENYRW:
-      sharing = 0L;
-      break;
-    case _SH_DENYWR:
-      sharing = FILE_SHARE_READ;
-      break;
-    case _SH_DENYRD:
-      sharing = FILE_SHARE_WRITE;
-      break;
-    case _SH_DENYNO:
-      sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
-      break;
-    default:
-      ERR( "Unhandled shflags 0x%x\n", shflags );
-      return EINVAL;
-  }
-  attrib = FILE_ATTRIBUTE_NORMAL;
-
-  if (oflags & _O_TEMPORARY)
-  {
-      attrib |= FILE_FLAG_DELETE_ON_CLOSE;
-      access |= DELETE;
-      sharing |= FILE_SHARE_DELETE;
-  }
-
-  sa.nLength              = sizeof( SECURITY_ATTRIBUTES );
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle       = (oflags & _O_NOINHERIT) ? FALSE : TRUE;
-
-  hand = CreateFileA(path, access, sharing, &sa, creation, attrib, 0);
-  if (hand == INVALID_HANDLE_VALUE)  {
-    WARN(":failed-last error (%d)\n", GetLastError());
-    _dosmaperr(GetLastError());
-    return *_errno();
-  }
-
-  *fd = alloc_fd(hand, wxflag);
-
-  TRACE(":fd (%d) handle (%p)\n", *fd, hand);
-  return 0;
-}
-
-/*********************************************************************
- *              _sopen (MSVCRT.@)
- */
-int CDECL _sopen( const char *path, int oflags, int shflags, ... )
-{
-  int pmode;
-  int fd;
-
-  if (oflags & _O_CREAT)
-  {
-    va_list ap;
-
-    va_start(ap, shflags);
-    pmode = va_arg(ap, int);
-    va_end(ap);
-  }
-  else
-    pmode = 0;
-
-  _sopen_s(&fd, path, oflags, shflags, pmode);
-  return fd;
-}
-
-/*********************************************************************
  *              _wsopen_s (MSVCRT.@)
  */
 int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int pmode )
@@ -1949,6 +1831,124 @@ int CDECL _wsopen( const wchar_t *path, int oflags, int shflags, ... )
     pmode = 0;
 
   _wsopen_s(&fd, path, oflags, shflags, pmode);
+  return fd;
+}
+
+/*********************************************************************
+ *              _sopen_s (MSVCRT.@)
+ */
+int CDECL _sopen_s( int *fd, const char *path, int oflags, int shflags, int pmode )
+{
+  DWORD access = 0, creation = 0, attrib;
+  DWORD sharing;
+  int wxflag;
+  HANDLE hand;
+  SECURITY_ATTRIBUTES sa;
+
+  TRACE("fd*: %p file: (%s) oflags: 0x%04x shflags: 0x%04x pmode: 0x%04x\n",
+        fd, path, oflags, shflags, pmode);
+
+  if (!fd)
+  {
+    MSVCRT_INVALID_PMT("null out fd pointer", EINVAL);
+    return EINVAL;
+  }
+
+  *fd = -1;
+  wxflag = split_oflags(oflags);
+  switch (oflags & (_O_RDONLY | _O_WRONLY | _O_RDWR))
+  {
+  case _O_RDONLY: access |= GENERIC_READ; break;
+  case _O_WRONLY: access |= GENERIC_WRITE; break;
+  case _O_RDWR:   access |= GENERIC_WRITE | GENERIC_READ; break;
+  }
+
+  if (oflags & _O_CREAT)
+  {
+    if(pmode & ~(_S_IREAD | _S_IWRITE))
+      FIXME(": pmode 0x%04x ignored\n", pmode);
+    else
+      WARN(": pmode 0x%04x ignored\n", pmode);
+
+    if (oflags & _O_EXCL)
+      creation = CREATE_NEW;
+    else if (oflags & _O_TRUNC)
+      creation = CREATE_ALWAYS;
+    else
+      creation = OPEN_ALWAYS;
+  }
+  else  /* no _O_CREAT */
+  {
+    if (oflags & _O_TRUNC)
+      creation = TRUNCATE_EXISTING;
+    else
+      creation = OPEN_EXISTING;
+  }
+
+  switch( shflags )
+  {
+    case _SH_DENYRW:
+      sharing = 0L;
+      break;
+    case _SH_DENYWR:
+      sharing = FILE_SHARE_READ;
+      break;
+    case _SH_DENYRD:
+      sharing = FILE_SHARE_WRITE;
+      break;
+    case _SH_DENYNO:
+      sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
+      break;
+    default:
+      ERR( "Unhandled shflags 0x%x\n", shflags );
+      return EINVAL;
+  }
+  attrib = FILE_ATTRIBUTE_NORMAL;
+
+  if (oflags & _O_TEMPORARY)
+  {
+      attrib |= FILE_FLAG_DELETE_ON_CLOSE;
+      access |= DELETE;
+      sharing |= FILE_SHARE_DELETE;
+  }
+
+  sa.nLength              = sizeof( SECURITY_ATTRIBUTES );
+  sa.lpSecurityDescriptor = NULL;
+  sa.bInheritHandle       = (oflags & _O_NOINHERIT) ? FALSE : TRUE;
+
+  hand = CreateFileA(path, access, sharing, &sa, creation, attrib, 0);
+  if (hand == INVALID_HANDLE_VALUE)  {
+    WARN(":failed-last error (%d)\n", GetLastError());
+    _dosmaperr(GetLastError());
+    return *_errno();
+  }
+
+  *fd = alloc_fd(hand, wxflag);
+
+  TRACE(":fd (%d) handle (%p)\n", *fd, hand);
+  return 0;
+}
+
+/*********************************************************************
+ *              _sopen (MSVCRT.@)
+ */
+int CDECL _sopen( const char *path, int oflags, int shflags, ... )
+{
+  int pmode;
+  int fd;
+
+  if (oflags & _O_CREAT)
+  {
+    va_list ap;
+
+    va_start(ap, shflags);
+    pmode = va_arg(ap, int);
+    va_end(ap);
+  }
+  else
+    pmode = 0;
+
+  _sopen_s(&fd, path, oflags, shflags, pmode);
   return fd;
 }
 
