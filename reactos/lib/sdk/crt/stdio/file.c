@@ -96,11 +96,12 @@ int *__p___mb_cur_max(void);
 #define MAX_FILES 2048
 #define FD_BLOCK_SIZE 64
 
+/* ioinfo structure size is different in msvcrXX.dll's */
 typedef struct {
     HANDLE              handle;
     unsigned char       wxflag;
-    char                unk1;
-    BOOL                crit_init;
+    char                lookahead[3];
+    int                 exflag;
     CRITICAL_SECTION    crit;
 } ioinfo;
 
