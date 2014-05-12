@@ -200,7 +200,7 @@ copy(TCHAR source[MAX_PATH],
     }
 
     /* A page-aligned buffer usually give more speed */
-    buffer = (LPBYTE)VirtualAlloc(NULL, BUFF_SIZE, MEM_COMMIT, PAGE_READWRITE);
+    buffer = VirtualAlloc(NULL, BUFF_SIZE, MEM_COMMIT, PAGE_READWRITE);
     if (buffer == NULL)
     {
         CloseHandle (hFileDest);
