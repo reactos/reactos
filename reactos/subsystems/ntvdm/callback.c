@@ -75,8 +75,7 @@ BYTE Int16To32[] =
     0xEB, 0xF5,         // jmp BOP_SEQ (offset -11)
 
 // EXIT:
-    // 0x44, 0x44,         // inc sp, inc sp
-    0x83, 0xC4, 0x02,   // add sp, 2
+    0x44, 0x44,         // inc sp, inc sp
     0xCF,               // iret
 };
 
@@ -202,11 +201,13 @@ RegisterInt32(IN  ULONG   FarPtr,
     BYTE IntCallback[sizeof(Int16To32)/sizeof(BYTE)];
 
     /* Check whether the 32-bit interrupt was already registered */
-    // if (Int32Proc[IntNumber] != NULL)
-    // {
-        // DPRINT1("RegisterInt32: Interrupt 0x%X already registered!\n", IntNumber);
-        // return 0;
-    // }
+#if 0
+    if (Int32Proc[IntNumber] != NULL)
+    {
+        DPRINT1("RegisterInt32: Interrupt 0x%X already registered!\n", IntNumber);
+        return 0;
+    }
+#endif
 
     /* Register the 32-bit interrupt handler */
     Int32Proc[IntNumber] = IntHandler;

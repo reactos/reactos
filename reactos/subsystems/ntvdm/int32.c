@@ -111,11 +111,8 @@ VOID InitializeInt32(WORD BiosSegment)
     BiosCode[Offset++] = 0xF5;
 
 // EXIT:
-    // BiosCode[Offset++] = 0x44; // inc sp
-    // BiosCode[Offset++] = 0x44; // inc sp
-    BiosCode[Offset++] = 0x83; // add sp, 2
-    BiosCode[Offset++] = 0xC4;
-    BiosCode[Offset++] = 0x02;
+    BiosCode[Offset++] = 0x44; // inc sp
+    BiosCode[Offset++] = 0x44; // inc sp
 
     BiosCode[Offset++] = 0xCF; // iret
 
