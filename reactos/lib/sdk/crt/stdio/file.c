@@ -2194,89 +2194,170 @@ int CDECL _umask(int umask)
  */
 int CDECL _write(int fd, const void* buf, unsigned int count)
 {
-  DWORD num_written;
-  HANDLE hand = fdtoh(fd);
+    DWORD num_written;
+    ioinfo *info = get_ioinfo(fd);
+    HANDLE hand = info->handle;
 
-  /* Don't trace small writes, it gets *very* annoying */
+    /* Don't trace small writes, it gets *very* annoying */
 #if 0
-  if (count > 32)
-    TRACE(":fd (%d) handle (%d) buf (%p) len (%d)\n",fd,hand,buf,count);
+    if (count > 32)
+        TRACE(":fd (%d) handle (%d) buf (%p) len (%d)\n",fd,hand,buf,count);
 #endif
-  if (hand == INVALID_HANDLE_VALUE)
+    if (hand == INVALID_HANDLE_VALUE)
     {
-      *_errno() = EBADF;
-      return -1;
+        *_errno() = EBADF;
+        return -1;
     }
 
-  /* If appending, go to EOF */
-  if (get_ioinfo(fd)->wxflag & WX_APPEND)
-    _lseek(fd, 0, FILE_END);
-
-  if (!(get_ioinfo(fd)->wxflag & WX_TEXT))
+    if (((info->exflag&EF_UTF8) || (info->exflag&EF_UTF16)) && count&1)
     {
-      if (WriteFile(hand, buf, count, &num_written, NULL)
-	  &&  (num_written == count))
-	return num_written;
-      TRACE("WriteFile (fd %d, hand %p) failed-last error (%d)\n", fd,
-       hand, GetLastError());
-      *_errno() = ENOSPC;
+        *_errno() = EINVAL;
+        return -1;
     }
-  else
-  {
-      unsigned int i, j, nr_lf;
-      char *p = NULL;
-      const char *q;
-      const char *s = buf, *buf_start = buf;
-      /* find number of \n ( without preceding \r ) */
-      for ( nr_lf=0,i = 0; i <count; i++)
-      {
-          if (s[i]== '\n')
-          {
-              nr_lf++;
-              /*if ((i >1) && (s[i-1] == '\r'))	nr_lf--; */
-          }
-      }
-      if (nr_lf)
-      {
-          if ((q = p = malloc(count + nr_lf)))
-          {
-              for (s = buf, i = 0, j = 0; i < count; i++)
-              {
-                  if (s[i]== '\n')
-                  {
-                      p[j++] = '\r';
-                      /*if ((i >1) && (s[i-1] == '\r'))j--;*/
-                  }
-                  p[j++] = s[i];
-              }
-          }
-          else
-          {
-              FIXME("Malloc failed\n");
-              nr_lf =0;
-              q = buf;
-          }
-      }
-      else
-          q = buf;
 
-      if ((WriteFile(hand, q, count+nr_lf, &num_written, NULL) == 0 ) || (num_written != count+nr_lf))
-      {
-          TRACE("WriteFile (fd %d, hand %p) failed-last error (%d), num_written %d\n",
-           fd, hand, GetLastError(), num_written);
-          *_errno() = ENOSPC;
-          if(nr_lf)
-              free(p);
-          return s - buf_start;
-      }
-      else
-      {
-          if(nr_lf)
-              free(p);
-          return count;
-      }
-  }
-  return -1;
+    /* If appending, go to EOF */
+    if (info->wxflag & WX_APPEND)
+        _lseek(fd, 0, FILE_END);
+
+    if (!(info->wxflag & WX_TEXT))
+    {
+        if (WriteFile(hand, buf, count, &num_written, NULL)
+                &&  (num_written == count))
+            return num_written;
+        TRACE("WriteFile (fd %d, hand %p) failed-last error (%d)\n", fd,
+                hand, GetLastError());
+        *_errno() = ENOSPC;
+    }
+    else
+    {
+        unsigned int i, j, nr_lf, size;
+        char *p = NULL;
+        const char *q;
+        const char *s = buf, *buf_start = buf;
+
+        if (!(info->exflag & (EF_UTF8|EF_UTF16)))
+        {
+            /* find number of \n */
+            for (nr_lf=0, i=0; i<count; i++)
+                if (s[i] == '\n')
+                    nr_lf++;
+            if (nr_lf)
+            {
+                size = count+nr_lf;
+                if ((q = p = malloc(size)))
+                {
+                    for (s = buf, i = 0, j = 0; i < count; i++)
+                    {
+                        if (s[i] == '\n')
+                            p[j++] = '\r';
+                        p[j++] = s[i];
+                    }
+                }
+                else
+                {
+                    FIXME("Malloc failed\n");
+                    nr_lf = 0;
+                    size = count;
+                    q = buf;
+                }
+            }
+            else
+            {
+                size = count;
+                q = buf;
+            }
+        }
+        else if (info->exflag & EF_UTF16)
+        {
+            for (nr_lf=0, i=0; i<count; i+=2)
+                if (s[i]=='\n' && s[i+1]==0)
+                    nr_lf += 2;
+            if (nr_lf)
+            {
+                size = count+nr_lf;
+                if ((q = p = malloc(size)))
+                {
+                    for (s=buf, i=0, j=0; i<count; i++)
+                    {
+                        if (s[i]=='\n' && s[i+1]==0)
+                        {
+                            p[j++] = '\r';
+                            p[j++] = 0;
+                        }
+                        p[j++] = s[i++];
+                        p[j++] = s[i];
+                    }
+                }
+                else
+                {
+                    FIXME("Malloc failed\n");
+                    nr_lf = 0;
+                    size = count;
+                    q = buf;
+                }
+            }
+            else
+            {
+                size = count;
+                q = buf;
+            }
+        }
+        else
+        {
+            DWORD conv_len;
+
+            for(nr_lf=0, i=0; i<count; i+=2)
+                if (s[i]=='\n' && s[i+1]==0)
+                    nr_lf++;
+
+            conv_len = WideCharToMultiByte(CP_UTF8, 0, (WCHAR*)buf, count/2, NULL, 0, NULL, NULL);
+            if(!conv_len) {
+                _dosmaperr(GetLastError());
+                free(p);
+                return -1;
+            }
+
+            size = conv_len+nr_lf;
+            if((p = malloc(count+nr_lf*2+size)))
+            {
+                for (s=buf, i=0, j=0; i<count; i++)
+                {
+                    if (s[i]=='\n' && s[i+1]==0)
+                    {
+                        p[j++] = '\r';
+                        p[j++] = 0;
+                    }
+                    p[j++] = s[i++];
+                    p[j++] = s[i];
+                }
+                q = p+count+nr_lf*2;
+                WideCharToMultiByte(CP_UTF8, 0, (WCHAR*)p, count/2+nr_lf,
+                        p+count+nr_lf*2, conv_len+nr_lf, NULL, NULL);
+            }
+            else
+            {
+                FIXME("Malloc failed\n");
+                nr_lf = 0;
+                size = count;
+                q = buf;
+            }
+        }
+
+        if (!WriteFile(hand, q, size, &num_written, NULL))
+            num_written = -1;
+        if(p)
+            free(p);
+        if (num_written != size)
+        {
+            TRACE("WriteFile (fd %d, hand %p) failed-last error (%d), num_written %d\n",
+                    fd, hand, GetLastError(), num_written);
+            *_errno() = ENOSPC;
+            return s - buf_start;
+        }
+        return count;
+    }
+
+    return -1;
 }
 
 /*********************************************************************
