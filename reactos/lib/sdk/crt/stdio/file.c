@@ -3346,16 +3346,20 @@ FILE* CDECL tmpfile(void)
   FILE* file = NULL;
 
   LOCK_FILES();
-  fd = _open(filename, _O_CREAT | _O_BINARY | _O_RDWR | _O_TEMPORARY);
+  fd = _open(filename, _O_CREAT | _O_BINARY | _O_RDWR | _O_TEMPORARY,
+          _S_IREAD | _S_IWRITE);
   if (fd != -1 && (file = alloc_fp()))
   {
-    if (init_fp(file, fd, _O_RDWR) == -1)
+    if (init_fp(file, fd, _IORW) == -1)
     {
         file->_flag = 0;
         file = NULL;
     }
     else file->_tmpfname = _strdup(filename);
   }
+
+  if(fd != -1 && !file)
+      _close(fd);
   UNLOCK_FILES();
   return file;
 }
