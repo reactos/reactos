@@ -2240,13 +2240,7 @@ int CDECL feof(FILE* file)
  */
 int CDECL ferror(FILE* file)
 {
-    int ret;
-
-    _lock_file(file);
-    ret = file->_flag & _IOERR;
-    _unlock_file(file);
-
-    return ret;
+    return file->_flag & _IOERR;
 }
 
 /*********************************************************************
