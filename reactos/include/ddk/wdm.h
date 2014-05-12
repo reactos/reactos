@@ -25,9 +25,6 @@
 #ifndef _WDMDDK_
 #define _WDMDDK_
 
-// TEMP HACK!
-#define _PROPER_NT_EXPORTS 1
-
 #define WDM_MAJORVERSION        0x06
 #define WDM_MINORVERSION        0x00
 
@@ -155,9 +152,9 @@ extern "C" {
 #ifndef __STRINGIFY
 #define __STRINGIFY(_exp) #_exp
 #endif
-#define _Pragma_redifine_extname(_Name, _Target) _Pragma(__STRINGIFY(redefine_extname _Name _Target))
+#define _Pragma_redefine_extname(_Name, _Target) _Pragma(__STRINGIFY(redefine_extname _Name _Target))
 #define __CREATE_NTOS_DATA_IMPORT_ALIAS(_Name) \
-    _Pragma_redifine_extname(_Name,__IMPORTNAME(_Name))
+    _Pragma_redefine_extname(_Name,__IMPORTNAME(_Name))
 #endif
 
 #if defined(_WIN64)
