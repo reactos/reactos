@@ -13,45 +13,24 @@
 
 static _invalid_parameter_handler invalid_parameter_handler = NULL;
 
-/*
- * @implemented
- */
-unsigned long* CDECL __doserrno(void)
-{
-    return &(msvcrt_get_thread_data()->thread_doserrno);
-}
-
-/*
- * @implemented
+/*********************************************************************
+ *		_errno (MSVCRT.@)
  */
 int CDECL *_errno(void)
 {
     return &(msvcrt_get_thread_data()->thread_errno);
 }
 
-/*
- * @implemented
+/*********************************************************************
+ *		__doserrno (MSVCRT.@)
  */
-errno_t CDECL _get_doserrno(unsigned long *pValue)
+unsigned long* CDECL __doserrno(void)
 {
-    if (!pValue)
-        return EINVAL;
-
-    *pValue = *__doserrno();
-    return 0;
+    return &(msvcrt_get_thread_data()->thread_doserrno);
 }
 
-/*
- * @implemented
- */
-errno_t CDECL _set_doserrno(unsigned long error)
-{
-    *__doserrno() = error;
-    return 0;
-}
-
-/*
- * @implemented
+/*********************************************************************
+ *		_get_errno (MSVCRT.@)
  */
 errno_t CDECL _get_errno(int *pValue)
 {
@@ -62,12 +41,33 @@ errno_t CDECL _get_errno(int *pValue)
     return 0;
 }
 
-/*
- * @implemented
+/*********************************************************************
+ *		_get_doserrno (MSVCRT.@)
+ */
+errno_t CDECL _get_doserrno(unsigned long *pValue)
+{
+    if (!pValue)
+        return EINVAL;
+
+    *pValue = *__doserrno();
+    return 0;
+}
+
+/*********************************************************************
+ *		_set_errno (MSVCRT.@)
  */
 int CDECL _set_errno(int error)
 {
     *_errno() = error;
+    return 0;
+}
+
+/*********************************************************************
+ *		_set_doserrno (MSVCRT.@)
+ */
+errno_t CDECL _set_doserrno(unsigned long error)
+{
+    *__doserrno() = error;
     return 0;
 }
 
@@ -124,8 +124,8 @@ int CDECL _set_error_mode(int mode)
 }
 
 /******************************************************************************
-*              _seterrormode (MSVCRT.@)
-*/
+ *		_seterrormode (MSVCRT.@)
+ */
 void CDECL _seterrormode(int mode)
 {
     SetErrorMode( mode );
@@ -134,8 +134,8 @@ void CDECL _seterrormode(int mode)
 /******************************************************************************
  *		_invalid_parameter (MSVCRT.@)
  */
-void CDECL _invalid_parameter(const wchar_t *expr, const wchar_t *func,
-                                       const wchar_t *file, unsigned int line, uintptr_t arg)
+void __cdecl _invalid_parameter(const wchar_t *expr, const wchar_t *func,
+                                const wchar_t *file, unsigned int line, uintptr_t arg)
 {
     if (invalid_parameter_handler) invalid_parameter_handler( expr, func, file, line, arg );
     else
@@ -163,4 +163,3 @@ _invalid_parameter_handler CDECL _set_invalid_parameter_handler(
     invalid_parameter_handler = handler;
     return old;
 }
-/* EOF */
