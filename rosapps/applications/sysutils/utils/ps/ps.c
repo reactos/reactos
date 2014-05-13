@@ -1,5 +1,4 @@
 /*
- *
  *  ReactOS ps - process list console viewer
  *
  *  ps.c
@@ -19,7 +18,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
-	Thanks to Filip Navara patch for fixing the Xp crash problem.
+    Thanks to Filip Navara patch for fixing the Xp crash problem.
 */
 
 #define NTOS_MODE_USER
