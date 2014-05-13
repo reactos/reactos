@@ -4,7 +4,10 @@
 #include "lang/es-ES.rc"
 #include "lang/fr-FR.rc"
 #include "lang/lt-LT.rc"
-#include "lang/pl-PL.rc"
 #include "lang/no-NO.rc"
+#include "lang/pl-PL.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
+
+/* UTF-8 */
+#include "lang/ro-RO.rc"

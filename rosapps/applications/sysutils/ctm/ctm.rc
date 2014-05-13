@@ -15,3 +15,6 @@
 #include "lang/uk-UA.rc"
 #include "lang/ru-RU.rc"
 #include "lang/no-NO.rc"
+
+/* UTF-8 */
+#include "lang/ro-RO.rc"

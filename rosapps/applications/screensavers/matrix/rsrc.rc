@@ -19,3 +19,6 @@ IDI_ICON1        ICON    DISCARDABLE  "icon1.ico"
 #include "lang/sk-SK.rc"
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
+
+/* UTF-8 */
+#include "lang/ro-RO.rc"
