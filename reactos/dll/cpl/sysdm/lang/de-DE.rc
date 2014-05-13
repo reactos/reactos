@@ -139,7 +139,7 @@ CAPTION "Benutzerprofile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Benutzerprofile enthalten Desktopeinstellungen und andere Informationen bezüglich ihrer Anmeldung. Sie können unterschiedliche Profile, für jeden Computer, den Sie benutzen, einrichten, oder aber auch ein einziges Profil wählen, welches auf jedem Computer gleich ist.", IDC_STATIC, 40, 7, 204, 40
+    LTEXT "Benutzerprofile enthalten Desktopeinstellungen und andere Informationen bezüglich ihrer Anmeldung. Sie können unterschiedliche Profile für jeden Computer, den Sie benutzen einrichten oder ein einziges Profil wählen, welches auf jedem Computer gleich ist.", IDC_STATIC, 40, 7, 204, 40
     LTEXT "Auf diesem Computer gespeicherte Profile:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -165,7 +165,7 @@ BEGIN
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "Sek.", IDC_STATIC, 221, 56, 14, 8
-    AUTOCHECKBOX "Anze&igedauer der Wiederherstellungs-Optionen:", IDC_STRRECREC, 14, 70, 165, 8
+    AUTOCHECKBOX "Anze&igedauer der Wiederherstellungsoptionen:", IDC_STRRECREC, 14, 70, 165, 8
     EDITTEXT IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
@@ -176,7 +176,7 @@ BEGIN
     AUTOCHECKBOX "Ereignis in das Systemprotokoll &eintragen", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
     AUTOCHECKBOX "Administrator-Warnmeldung &senden", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "Automatisch &neu starten", IDC_STRRECRESTART, 14, 152, 145, 10
-    GROUPBOX "Debug-Informationen schreiben", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX "Debuginformationen schreiben", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "Dump-&Datei:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12
@@ -269,7 +269,7 @@ BEGIN
     IDS_TERABYTE "TB RAM"
     IDS_PETABYTE "PB RAM"
     IDS_VARIABLE "Variable"
-    IDS_VALUE "Value"
+    IDS_VALUE "Wert"
     IDS_NO_DUMP "(Keine)"
     IDS_MINI_DUMP "Kleines Speicherabbild (64KB)"
     IDS_KERNEL_DUMP "Kernelspeicherabbild"

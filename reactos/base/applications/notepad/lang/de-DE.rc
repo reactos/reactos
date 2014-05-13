@@ -70,7 +70,7 @@ BEGIN
     END
 END
 
-/* Dialog 'Page setup' */
+/* Dialog 'Seite einrichten' */
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
@@ -94,11 +94,11 @@ BEGIN
     PUSHBUTTON "&Hilfe", IDHELP, 180, 39, 40, 15, WS_TABSTOP
 END
 
-/* Dialog 'Enkodierung' */
+/* Dialog 'Zeichenkodierung' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Enkodierung"
+CAPTION "Zeichenkodierung"
 BEGIN
     COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Kodierung:", 0x155, 5, 2, 41, 12
@@ -113,7 +113,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Gehe zu Zeile"
 BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "Zeile Nummer:", 0x155, 5, 12, 45, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    LTEXT "Zeilennummer:", 0x155, 5, 12, 45, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
     PUSHBUTTON "Abbrechen", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -132,7 +132,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "Dieses Programm ist Freie Software: Sie können es unter den Bedingungen der GNU General Public License, wie von der Free Software Foundation, Version 2.1 der Lizenz oder (nach Ihrer Wahl) jeder neueren veröffentlichten Version, weiterverbreiten und/oder modifizieren.\r\n\r\nDieses Programm wird in der Hoffnung, dass es nützlich sein wird, aber OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.\r\n\r\nSie sollten eine Kopie der GNU General Public License zusammen mit diesem Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>."
 END
 
 STRINGTABLE
@@ -166,7 +166,7 @@ um diese Funktion \nabzuschließen. Beenden Sie eine oder mehrere \
     STRING_CANNOTFIND "'%s' wurde nicht gefunden."
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
-    STRING_UNICODE_BE "Unicode (big endian)"
+    STRING_UNICODE_BE "Unicode (Big-Endian)"
     STRING_UTF8 "UTF-8"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"

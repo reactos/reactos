@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kompatibilität"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Falls dieses Programm Probleme verursacht, wählen Sie den zutreffenden Kompatibilitätsmodus, der mit der Betriebssystem-Version übereinstimmt, unter der das Programm korrekt funktionierte.", -1, 7, 7, 210, 31
+    LTEXT "Falls dieses Programm Probleme verursacht, wählen Sie einen Kompatibilitätsmodus, unter dem das Programm möglicherweise korrekt funktioniert.", -1, 7, 7, 210, 31
     GROUPBOX "Kompatibilitätsmodus", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Programm im Kompatibilitätsmodus ausführen für:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -33,5 +33,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_SLAYER "Slayer"
-    IDS_DESCRIPTION "Anwendungs-Kompatibilitätsschicht Shell Erweiterung"
+    IDS_DESCRIPTION "Shell-Erweiterung der Anwendungs-Kompatibilitätsschicht"
 END

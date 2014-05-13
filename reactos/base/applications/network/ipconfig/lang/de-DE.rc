@@ -3,7 +3,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_BCAST "Broadcast"
-    IDS_P2P "Peer To Peer"
+    IDS_P2P "Peer-to-Peer"
     IDS_MIXED "Gemischt"
     IDS_HYBRID "Hybrid"
     IDS_UNKNOWN "Unbekannt"
@@ -24,10 +24,10 @@ STRINGTABLE
 BEGIN
     IDS_USAGE
     "\nSyntax:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
+        ipconfig [/? | /all | /renew [Adapter] | /release [Adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [Klassen-ID] ]\n \
+                  /showclassid Adapter |\n \
+                  /setclassid Adapter [Klassen-ID] ]\n \
     \n \
     wobei\n \
         Adapter         Verbindungsname\n \

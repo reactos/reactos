@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wählen Sie die Dienste aus, die Sie für die Eingabesprachen in der Liste verwenden wollen.\nVerwenden Sie Hinzufügen und Entfernen, um die Liste zu bearbeiten.", -1, 9, 6, 238, 25
+    LTEXT "Wählen Sie die Dienste aus, die Sie für die Eingabesprachen in der Liste verwenden wollen.\nVerwenden Sie ""Hinzufügen"" und ""Entfernen"", um die Liste zu bearbeiten.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
     PUSHBUTTON "&Als Standard", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Hinzufügen...", IDC_ADD_BUTTON, 27, 142, 70, 14
@@ -20,7 +20,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Erweiterte Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Konfiguration", -1, 7, 7, 240, 70
+    GROUPBOX "Systemkonfiguration", -1, 7, 7, 240, 70
     AUTOCHECKBOX "&Erweiterte &Textdienste deaktivieren", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
     LTEXT "Auswählen, um die erweiterte Sprachunterstützung in allen Programmen zu deaktivieren.\nNicht empfohlen für ostasiatische Benutzer, da die Sprachleiste hierdurch geschlossen wird.", -1, 14, 40, 230, 35
 END
@@ -62,7 +62,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
     AUTOCHECKBOX "&Eingabesprache umschalten", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
-    LTEXT "Shift", -1, 73, 37, 27, 12
+    LTEXT "Umschalt", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&Strg", IDC_CTRL_LANG, 29, 31, 30, 11
     AUTORADIOBUTTON "&Alt links", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
@@ -95,7 +95,7 @@ BEGIN
     IDS_KEYBOARD "Tastatur"
     IDS_NONE "(Keine)"
     IDS_UNKNOWN "(Unbekannt)"
-    IDS_RESTART "Wollen Sie Ihren Computer nun neustarten?"
+    IDS_RESTART "Wollen Sie Ihren Computer nun neu starten?"
     IDS_WHATS_THIS "Was ist das?"
     IDS_LANGUAGE "Sprache"
     IDS_LAYOUT "Tastaturlayout"
@@ -118,8 +118,8 @@ BEGIN
     IDS_ARMENIAN_WESTERN_LAYOUT "Westarmenisch"
     IDS_ASSAMESE_LAYOUT "Assamisch"
     IDS_AZERI_CYRILLIC_LAYOUT "Aserbaidschanisch (Kyrillisch)"
-    IDS_AZERI_LATIN_LAYOUT "Aserbaidschanisch (Lateinisch)"
-    IDS_BELARUSIAN_LAYOUT "Belarussisch"
+    IDS_AZERI_LATIN_LAYOUT "Aserbaidschanisch (Latein)"
+    IDS_BELARUSIAN_LAYOUT "Weißrussisch"
     IDS_BELGIAN_COMMA_LAYOUT "Belgisch (Komma)"
     IDS_BELGIAN_FRENCH_LAYOUT "Belgisch (Wallonisch)"
     IDS_BELGIAN_LAYOUT "Belgisch (Punkt)"
@@ -132,7 +132,7 @@ BEGIN
     IDS_BURMESE_LAYOUT "Burmesisch"
     IDS_CANADIAN_FRENCH_LAYOUT "Französisch (Kanada)"
     IDS_CANADIAN_FRENCH_LEGACY_LAYOUT "Französisch (Kanada, herkömmlich)"
-    IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT "Kanada (Standard -- Multilingual)"
+    IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT "Kanada (Standard -- multilingual)"
     IDS_CANTONESE_PHONETIC_LAYOUT "Phonetisches Kantonesisch"
     IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT "Chinesisch (vereinfacht) - Microsoft Pinyin IME 3.0"
     IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT "Chinesisch (vereinfacht) - NeiMa"
@@ -140,7 +140,7 @@ BEGIN
     IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT "Chinesisch (vereinfacht) - ShuangPin"
     IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT "Chinesisch (vereinfacht) - US-Tastatur"
     IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT "Chinesisch (vereinfacht) - ZhengMa"
-    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT "Chinesisch (traditionell) - Alphanummerisch"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT "Chinesisch (traditionell) - alphanumerisch"
     IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT "Chinesisch (traditionell) - Array"
     IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT "Chinesisch (traditionell) - Big5-Code"
     IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT "Chinesisch (traditionell) - ChangJie"
@@ -231,13 +231,13 @@ BEGIN
     IDS_TATAR_LAYOUT "Tatarisch"
     IDS_TELUGU_LAYOUT "Telugu"
     IDS_THAI_KEDMANEE_LAYOUT "Thai Kedmanee"
-    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT "Thai Kedmanee (nicht ShiftLock)"
+    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT "Thai Kedmanee (ohne ShiftLock)"
     IDS_THAI_PATTACHOTE_LAYOUT "Thai Pattachote"
-    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT "Thai Pattachote (nicht ShiftLock)"
+    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT "Thai Pattachote (ohne ShiftLock)"
     IDS_TURKISH_F_LAYOUT "Türkisch F"
     IDS_TURKISH_Q_LAYOUT "Türkisch Q"
     IDS_UKRAINIAN_LAYOUT "Ukrainisch"
-    IDS_UKRAINIAN_STUDENT_LAYOUT "Ukrainian (Student)"
+    IDS_UKRAINIAN_STUDENT_LAYOUT "Ukrainisch (Student)"
     IDS_UNITED_KINGDOM_LAYOUT "Englisch (Großbritannien u. Nordirland)"
     IDS_UNITED_STATES_DVIRAK_LAYOUT "Englisch (USA, Dvorak)"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Englisch (USA, Dvorak für Linkshänder)"

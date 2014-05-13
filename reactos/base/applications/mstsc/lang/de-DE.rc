@@ -58,6 +58,6 @@ BEGIN
     IDS_PIXEL "%lux%lu Pixel"
     IDS_FULLSCREEN "Vollbild"
     IDS_BROWSESERVER "<Nach mehr suchen...>"
-    IDS_HEADERTEXT1 "Remote Desktop"
+    IDS_HEADERTEXT1 "Remotedesktop"
     IDS_HEADERTEXT2 "Verbindung"
 END

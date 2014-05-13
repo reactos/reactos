@@ -151,9 +151,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "Zeichenkette ändern"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "&Daten:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 196, 64, 50, 14
@@ -161,12 +161,12 @@ END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Multi-Stringwert editieren"
+CAPTION "Mehrteilige Zeichenfolge bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "&Daten:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
@@ -175,12 +175,12 @@ END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Binärwert editieren"
+CAPTION "Binärwert bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "&Daten:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
     DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 196, 154, 50, 14
@@ -188,12 +188,12 @@ END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "DWORD-Wert editieren"
+CAPTION "DWORD-Wert bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "&Daten:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
     GROUPBOX "Basis", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "&Hexadezimal", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
@@ -270,7 +270,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Enthält Befehle für das Arbeiten mit der ganzen Registry"
     ID_EDIT_MENU "Enthält Befehle für das Ändern von Schlüsseln oder Werten"
-    ID_VIEW_MENU "Enthält Befehle für das Anpassen des Registry Editor Fensters"
+    ID_VIEW_MENU "Enthält Befehle für das Anpassen des Editor-Fensters"
     ID_FAVOURITES_MENU "Enthält Befehle um auf oft genutzte Schlüssel zuzugreifen"
     ID_HELP_MENU "Enthält Befehle um Hilfe und Informationen über den Registry-Editor anzuzeigen"
     ID_EDIT_NEW_MENU "Enthält Befehle für das Erstellen von neuen Schlüsseln oder Werten"
@@ -289,9 +289,9 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE "Entlädt einen Hive von der Registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Verbindet zu einer Registry eines Fremdcomputers"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Trennt die Verbindung zu der Registry eines Fremdcomputers"
-    ID_REGISTRY_PRINT "Druckt Teile oder die gesamte Registry aus"
+    ID_REGISTRY_PRINT "Druckt die gesamte Registry oder Teile davon aus"
 /*    ID_HELP_HELPTOPICS "Öffnet die Hilfe" */
-    ID_HELP_ABOUT "Zeigt Programmname, Version und Copyright an"
+    ID_HELP_ABOUT "Zeigt Versions- und Copyright-Informationen an"
 END
 
 STRINGTABLE
@@ -329,7 +329,7 @@ BEGIN
     IDS_ERR_RENVAL_CAPTION "Fehler beim Umbenennen des Wertes"
     IDS_ERR_RENVAL_TOEMPTY "Kann %s nicht umbenennen. Der angegebene Name ist leer."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Wiederherstellen des Schlüssels bestätigen"
-    IDS_QUERY_IMPORT_HIVE_MSG "Ein Schlüssel wird über den aktuell ausgewählten Schlüssel wiederhergestellt.\nAlle Werte und Unterschlüssel dieses Schlüssels werden dabei gelöscht.\nMöchten Sie den Vorgang fortsetzen?"
+    IDS_QUERY_IMPORT_HIVE_MSG "Ein Schlüssel wird an der Stelle des aktuell ausgewählten Schlüssels eingefügt.\nAlle Werte und Unterschlüssel dieses Schlüssels werden dabei gelöscht.\nMöchten Sie den Vorgang fortsetzen?"
     IDS_NEW_KEY "Neuer Schlüssel #%d"
     IDS_NEW_VALUE "Neuer Wert #%d"
 END

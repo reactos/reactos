@@ -32,7 +32,7 @@ BEGIN
     LTEXT "Minuten", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL "&Passwort nach Reaktivierung", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "&Enerigesparfunktionen des Monitors", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    GROUPBOX "&Energiesparfunktionen des Monitors", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT "Um die Energieeinstellungen des Monitors zu editieren, wählen Sie Energieeinstellungen.", IDC_STATIC, 14, 166, 146, 27
     PUSHBUTTON "Energieoptionen", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
@@ -118,7 +118,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Verschieben Sie die Monitor-Symbole, so dass sie der physikalischen Anordnung Ihrer Monitore entsprechen.", -1, 3, 3, 240, 20
+    LTEXT "Verschieben Sie die Monitor-Symbole, sodass sie der physischen Anordnung Ihrer Monitore entsprechen.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "&Anzeige", 1820, 3, 107, 70, 9
@@ -144,8 +144,8 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilität", -1, 7, 67, 237, 97
-    LTEXT "Einige Programme könnten fehlerhaft arbeiten, wenn nach Änderung der Farbeinstellungen nicht neugestartet wird.\r\n\nNach Änderung der Farbeinstellungen", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Computer vor dem Anwenden der Farbeinstellungen neustarten.", IDC_RESTART_RB, 14, 116, 228, 10
+    LTEXT "Einige Programme könnten fehlerhaft arbeiten, wenn nach Änderung der Farbeinstellungen nicht neu gestartet wird.\r\n\nNach Änderung der Farbeinstellungen", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Computer vor dem Anwenden der Farbeinstellungen neu starten.", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "Farbeinstellungen ohne Neustart übernehmen.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "Vor dem Anwenden der neuen Farbeinstellungen nachfragen.", IDC_ASKME_RB, 14, 146, 228, 10
 END

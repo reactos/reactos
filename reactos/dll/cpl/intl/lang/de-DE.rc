@@ -22,7 +22,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Geografische Lage", -1, 5, 172, 234, 55
-    LTEXT "Wählen Sie Ihren Standort, so dass Dienste Sie mit lokalen Informationen, wie Nachrichten und Wettervorhersagen, versorgen können.", -1, 14, 184, 210, 24
+    LTEXT "Wählen Sie Ihren Standort, sodass Dienste Sie mit lokalen Informationen, wie Nachrichten und Wettervorhersagen, versorgen können.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 210, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -35,7 +35,7 @@ BEGIN
     LTEXT "Um Ihre Sprache einsehen oder ändern zu können wählen Sie ""Details...""", -1, 12, 15, 220, 18
     PUSHBUTTON "&Details...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Zusätzliche Sprachunterstützung", -1, 5, 62, 234, 82
-    LTEXT "Die meisten Sprachen sind standardmäßig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren Kontollkästchen.", -1, 12, 72, 220, 18
+    LTEXT "Die meisten Sprachen sind standardmäßig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren Kontrollkästchen.", -1, 12, 72, 220, 18
     CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links-Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "Dateien für &ostasiatische Sprachen installieren.", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
@@ -195,14 +195,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Fehler"
-    IDS_ERROR_SYMBOL_SEPARATE "Das eingegebene kurze Datumstrennzeichen enthält falsche Symbole"
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "Das eingegebene kurze Datumsformat enthält falsche Symbole"
-    IDS_ERROR_SYMBOL_FORMAT_LONG "Das eingegebene lange Datumsformat enthält falsche Symbole"
-    IDS_ERROR_OEM_CODE_PAGE "Die OEM-Codepage konnte nicht gelesen werden"
-    IDS_ERROR_ANSI_CODE_PAGE "Die ANSI-Codepage konnte nicht gelesen werden"
-    IDS_ERROR_INT_KEY_REG "Der Schlüssel HKCU\\Control Panel\\International konnte nicht geöffnet werden"
-    IDS_ERROR_DEF_INT_KEY_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden"
-    IDS_ERROR_NLS_KEY_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language konnte nicht geöffnet werden"
-    IDS_ERROR_NLS_CODE_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage konnte nicht geöffnet werden"
-    IDS_ERROR_INPUT_DLL "input.dll konnte nicht geladen werden"
+    IDS_ERROR_SYMBOL_SEPARATE "Das eingegebene kurze Datumstrennzeichen enthält falsche Symbole."
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Das eingegebene kurze Datumsformat enthält falsche Symbole."
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Das eingegebene lange Datumsformat enthält falsche Symbole."
+    IDS_ERROR_OEM_CODE_PAGE "Die OEM-Codepage konnte nicht gelesen werden."
+    IDS_ERROR_ANSI_CODE_PAGE "Die ANSI-Codepage konnte nicht gelesen werden."
+    IDS_ERROR_INT_KEY_REG "Der Schlüssel HKCU\\Control Panel\\International konnte nicht geöffnet werden."
+    IDS_ERROR_DEF_INT_KEY_REG "Der Schlüssel HKU\\.DEFAULT\\Control Panel\\International konnte nicht geöffnet werden."
+    IDS_ERROR_NLS_KEY_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language konnte nicht geöffnet werden."
+    IDS_ERROR_NLS_CODE_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage konnte nicht geöffnet werden."
+    IDS_ERROR_INPUT_DLL "Die Datei input.dll konnte nicht geladen werden."
 END
