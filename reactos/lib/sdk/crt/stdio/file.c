@@ -2634,60 +2634,50 @@ char * CDECL fgets(char *s, int size, FILE* file)
 
 /*********************************************************************
  *		fgetwc (MSVCRT.@)
- *
- * In _O_TEXT mode, multibyte characters are read from the file, dropping
- * the CR from CR/LF combinations
  */
 wint_t CDECL fgetwc(FILE* file)
 {
-  int c;
+    wint_t ret;
+    int ch;
 
   _lock_file(file);
-  if (!(get_ioinfo(file->_file)->wxflag & WX_TEXT))
-    {
-      wchar_t wc;
-      unsigned int i;
-      int j;
-      char *chp, *wcp;
-      wcp = (char *)&wc;
-      for(i=0; i<sizeof(wc); i++)
-      {
-        if (file->_cnt>0)
-        {
-          file->_cnt--;
-          chp = file->_ptr++;
-          wcp[i] = *chp;
-        }
-        else
-        {
-          j = _filbuf(file);
-          if(file->_cnt<=0)
-          {
-            file->_flag |= (file->_cnt == 0) ? _IOEOF : _IOERR;
-            file->_cnt = 0;
 
-            _unlock_file(file);
-            return WEOF;
-          }
-          wcp[i] = j;
-        }
-      }
+    if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
+            || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+        char *p;
 
-      _unlock_file(file);
-      return wc;
+        for(p=(char*)&ret; (wint_t*)p<&ret+1; p++) {
+            ch = fgetc(file);
+            if(ch == EOF) {
+                ret = WEOF;
+                break;
+            }
+            *p = (char)ch;
+        }
+    }else {
+        char mbs[MB_LEN_MAX];
+        int len = 0;
+
+        ch = fgetc(file);
+        if(ch != EOF) {
+            mbs[0] = (char)ch;
+            if(isleadbyte((unsigned char)mbs[0])) {
+                ch = fgetc(file);
+                if(ch != EOF) {
+                    mbs[1] = (char)ch;
+                    len = 2;
+                }
+            }else {
+                len = 1;
+            }
+        }
+
+        if(!len || mbtowc(&ret, mbs, len)==-1)
+            ret = WEOF;
     }
 
-  c = fgetc(file);
-  if ((__mb_cur_max > 1) && isleadbyte(c))
-    {
-      FIXME("Treat Multibyte characters\n");
-    }
-
-  _unlock_file(file);
-  if (c == EOF)
-    return WEOF;
-  else
-    return (wint_t)c;
+    _unlock_file(file);
+    return ret;
 }
 
 /*********************************************************************
