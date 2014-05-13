@@ -23,8 +23,18 @@ Implements the navigation band of the cabinet window
 */
 
 #include "precomp.h"
+#include <commoncontrols.h>
+#include <shlwapi_undoc.h>
+#include <shellapi.h>
 
 HRESULT CreateAddressEditBox(REFIID riid, void **ppv);
+
+extern "C"
+HRESULT WINAPI SHGetImageList(
+    _In_   int iImageList,
+    _In_   REFIID riid,
+    _Out_  void **ppv
+    );
 
 /*
 TODO:
@@ -191,6 +201,17 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     SendMessage(fGoButton, TB_ADDSTRINGW,
         reinterpret_cast<WPARAM>(_AtlBaseModule.GetResourceInstance()), IDS_GOBUTTONLABEL);
     SendMessage(fGoButton, TB_ADDBUTTONSW, 1, (LPARAM)&buttonInfo);
+
+    IImageList * piml;
+    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        SendMessageW(combobox, CBEM_SETIMAGELIST, 0, 0);
+    }
+    else
+    {
+        SendMessageW(combobox, CBEM_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
+    }
 
     // take advice to watch events
     hResult = IUnknown_QueryService(pUnkSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
@@ -424,7 +445,16 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Invoke(DISPID dispIdMember, REFIID riid,
     DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     CComPtr<IBrowserService> isb;
+    CComPtr<IShellFolder> sf;
     HRESULT hr;
+    INT indexClosed, indexOpen, itemExists, oldIndex;
+    DWORD result;
+    COMBOBOXEXITEMW item;
+    PIDLIST_ABSOLUTE absolutePIDL;
+    LPCITEMIDLIST pidlChild;
+    LPITEMIDLIST pidlPrevious;
+    STRRET ret;
+    WCHAR buf[4096];
 
     if (pDispParams == NULL)
         return E_INVALIDARG;
@@ -433,23 +463,57 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Invoke(DISPID dispIdMember, REFIID riid,
     {
     case DISPID_NAVIGATECOMPLETE2:
     case DISPID_DOCUMENTCOMPLETE:
+
+        oldIndex = SendMessage(m_hWnd, CB_GETCURSEL, 0, 0);
+
+        item.mask = CBEIF_LPARAM;
+        item.iItem = 0;
+        itemExists = SendMessage(m_hWnd, CBEM_GETITEM, 0, reinterpret_cast<LPARAM>(&item));
+        if (itemExists)
+        {
+            pidlPrevious = reinterpret_cast<LPITEMIDLIST>(item.lParam);
+        }
+
         hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
         if (FAILED(hr))
             return hr;
-        PIDLIST_ABSOLUTE absolutePIDL;
-        LPCITEMIDLIST pidlChild;
         isb->GetPidl(&absolutePIDL);
 
-        CComPtr<IShellFolder> sf;
         SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
 
-        STRRET ret;
         sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
 
-        WCHAR buf[4096];
         StrRetToBufW(&ret, pidlChild, buf, 4095);
 
-        fAddressEditBox->SetCurrentDir(reinterpret_cast<long>(buf));
+        indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+
+        item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
+        item.iItem = 0;
+        item.iImage = indexClosed;
+        item.iSelectedImage = indexOpen;
+        item.pszText = buf;
+        item.lParam = reinterpret_cast<LPARAM>(absolutePIDL);
+
+        if (itemExists)
+        {
+            result = SendMessage(m_hWnd, CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+
+            if (result)
+            {
+                ILFree(pidlPrevious);
+            }
+        }
+        else
+        {
+            oldIndex = SendMessage(m_hWnd, CBEM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&item));
+
+            if (oldIndex < 0)
+                DbgPrint("ERROR %d\n", GetLastError());
+        }
+
+        SendMessage(m_hWnd, CB_SETCURSEL, oldIndex, 0);
+
+        //fAddressEditBox->SetCurrentDir(index);
 
         break;
     }
@@ -461,8 +525,6 @@ LRESULT CAddressBand::OnNotifyClick(WPARAM wParam, NMHDR *notifyHeader, BOOL &bH
     if (notifyHeader->hwndFrom == fGoButton)
     {
         fAddressEditBox->ParseNow(0);
-        //SendMessage(fEditControl, WM_KEYDOWN, 13, 0);
-        //SendMessage(fEditControl, WM_KEYUP, 13, 0);
     }
     return 0;
 }

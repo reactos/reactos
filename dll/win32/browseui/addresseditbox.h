@@ -78,9 +78,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
 
     // message handlers
-//    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-//    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_ADDRESSEDITBOX)
     DECLARE_NOT_AGGREGATABLE(CAddressEditBox)
@@ -88,14 +85,6 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_MSG_MAP(CAddressEditBox)
-    //    MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-    //    MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-    //    MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-    //    ALT_MSG_MAP(1)
-    //        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocusSaveButton)
-    //    ALT_MSG_MAP(2)
-    //        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocusSelectButton)
-        MESSAGE_HANDLER(WM_SIZE, OnSize)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CAddressEditBox)

@@ -76,6 +76,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
 {
     LPWSTR strC = reinterpret_cast<LPWSTR>(paramC);    
     fEditWindow.SetWindowText(strC);
+
     return E_NOTIMPL;
 }
 
@@ -167,25 +168,6 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(IStream *pStm, BOOL fClearDirty)
 HRESULT STDMETHODCALLTYPE CAddressEditBox::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
     return E_NOTIMPL;
-}
-
-LRESULT CAddressEditBox::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    bHandled = FALSE;
-/*
-    RECT rc;
-    GetClientRect(&rc);
-    rc.left += 24;
-    rc.top += 4;
-    rc.right -= 4;
-    rc.bottom -= 4;
-    fEditWindow.SetWindowPos(NULL,
-        rc.left, rc.top,
-        rc.right - rc.left,
-        rc.bottom - rc.top,
-        SWP_NOOWNERZORDER | SWP_NOZORDER);
-*/
-    return 0;
 }
 
 HRESULT CreateAddressEditBox(REFIID riid, void **ppv)
