@@ -34,13 +34,15 @@
 #define EMULATOR_FLAG_VIP (1 << 20)
 #define EMULATOR_FLAG_ID (1 << 21)
 
-#define STACK_VAR_B     0
-#define STACK_VAR_A     1
-#define STACK_COUNTER   2
-#define STACK_INT_NUM   3
-#define STACK_IP        4
-#define STACK_CS        5
-#define STACK_FLAGS     6
+//
+// WARNING WARNING!!
+// If you're changing the indices here, you then need to
+// also fix the BOP code in callback.c !!!!!!!!!!!!!!!!!
+//
+#define STACK_INT_NUM   0
+#define STACK_IP        1
+#define STACK_CS        2
+#define STACK_FLAGS     3
 
 
 /* Basic Memory Management */

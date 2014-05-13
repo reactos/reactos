@@ -1,6 +1,6 @@
 /* FILE:       applications/rapps/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-12-12
+ * UPDATED:    2014-04-20
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -21,9 +21,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Odstranit z &registru", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Obnovit", ID_REFRESH
+        MENUITEM "Ob&novit", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "&Aktualizovat databázi", ID_RESETDB
     END
     POPUP "Nápověda"
     BEGIN
@@ -51,9 +51,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Odstranit z &registru", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Obnovit", ID_REFRESH
+        MENUITEM "Ob&novit", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "&Aktualizovat databázi", ID_RESETDB
     END
 END
 
@@ -103,7 +103,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "O programu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Manažer aplikací\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    LTEXT "ReactOS Správce aplikací\nCopyright (C) 2009\nDmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
     PUSHBUTTON "Zavřít", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -168,7 +168,7 @@ BEGIN
     IDS_CAT_INTERNET "Internet a sítě"
     IDS_CAT_LIBS "Knihovny"
     IDS_CAT_OFFICE "Kancelář"
-    IDS_CAT_OTHER "Jiné"
+    IDS_CAT_OTHER "Ostatní"
     IDS_CAT_SCIENCE "Věda"
     IDS_CAT_TOOLS "Nástroje"
     IDS_CAT_VIDEO "Video"
@@ -176,20 +176,20 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Manažer aplikací"
+    IDS_APPTITLE "ReactOS Správce aplikací"
     IDS_SEARCH_TEXT "Hledat..."
     IDS_INSTALL "Instalovat"
     IDS_UNINSTALL "Odinstalovat"
     IDS_MODIFY "Změnit"
     IDS_APPS_COUNT "Počet aplikací: %d"
-    IDS_WELCOME_TITLE "Vítejte v ReactOS Manažeru aplikací!\n\n"
+    IDS_WELCOME_TITLE "Vítejte v ReactOS Správci aplikací!\n\n"
     IDS_WELCOME_TEXT "Na levé straně zvolte kategorii, pak vpravo zvolte aplikaci, která bude nainstalována nebo odinstalována.\nWebová stránka ReactOS: "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Nainstalováno"
-    IDS_AVAILABLEFORINST "Dostupné k instalaci"
+    IDS_AVAILABLEFORINST "Lze instalovat"
     IDS_UPDATES "Aktualizace"
     IDS_APPLICATIONS "Aplikace"
-    IDS_CHOOSE_FOLDER_TEXT "Zvolte složku, do které se budou ukládat stažené soubory:"
+    IDS_CHOOSE_FOLDER_TEXT "Zvolte složku, do které se budou ukládat stažené soubory: "
     IDS_CHOOSE_FOLDER_ERROR "Zvolená složka neexistuje. Vytvořit?"
     IDS_APP_REG_REMOVE "Určitě odstranit data instalovaného programu z registru?"
     IDS_INFORMATION "Informace"

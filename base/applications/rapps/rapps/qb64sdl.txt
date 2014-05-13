@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 [Section]
 Name = QB64 (SDL version)
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = QB64 ist ein Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
+
+[Section.0410]
+Description = QB64 è un compilatore auto ospitante per Microsoft Windows, Linux e Mac OS X, progettato per essere compatibile con Microsoft QuickBasic. Necessita di 7-Zip o uno strumento simile per essere estratto.
 
 [Section.0415]
 Description = QB64 to kompilator BASIC zdolny do kompilacji własnego kodu źródłowego. Działa w systemach Windows, Linux i Mac OS X. Jest kompatybilny z Microsoft QBasic i QuickBASIC. Wymaga programu archiwizującego do wypakowania.

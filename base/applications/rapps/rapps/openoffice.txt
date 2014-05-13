@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = OpenOffice 4.0
@@ -30,6 +30,7 @@ Size = 127,22 Mo
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/fr/Apache_OpenOffice_4.0.1_Win_x86_install_fr.exe
 
 [Section.0410]
+Description = La suite di office Open Source.
 URLSite = http://www.openoffice.org/it/
 Size = 132.39 MB
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/it/Apache_OpenOffice_4.0.1_Win_x86_install_it.exe

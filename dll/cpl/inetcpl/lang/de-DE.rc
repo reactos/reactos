@@ -31,7 +31,7 @@ CAPTION "Allgemein"
 BEGIN
 
     GROUPBOX    " Startseite ", IDC_STATIC, 4, 4, 312, 52
-    LTEXT       "Sie können eine Addresse wählen, die als Startseite verwendet wird.",
+    LTEXT       "Sie können eine Adresse wählen, die als Startseite verwendet wird.",
                 IDC_STATIC, 58, 10, 252, 10
     EDITTEXT    IDC_HOME_EDIT, 58, 22, 252, 12, WS_VISIBLE | ES_AUTOHSCROLL
     PUSHBUTTON  "A&ktuelle Seite", IDC_HOME_CURRENT, 58, 36, 80, 14
@@ -49,10 +49,10 @@ END
 IDD_DELETE_HISTORY DIALOG  0, 0, 250, 250
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Gespeicherte Browserdaten löchen"
+CAPTION "Gespeicherte Browserdaten löschen"
 BEGIN
 
-    AUTOCHECKBOX   "&Temporäre Inernetdateien\nZwischengespeicherte Kopien von Webseiten, Bildern und Zertifikaten.",
+    AUTOCHECKBOX   "&Temporäre Internetdateien\nZwischengespeicherte Kopien von Webseiten, Bildern und Zertifikaten.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 30, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Cookies\nVon Webseiten auf ihrem Computer gespeicherte Dateien, die Benutzereinstellungen oder Anmeldeinformationen enthalten.",
                     IDC_DELETE_COOKIES, 10, 38, 230, 30, BS_TOP | BS_MULTILINE

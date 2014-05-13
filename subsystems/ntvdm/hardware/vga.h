@@ -24,7 +24,7 @@
 #define VGA_MINIMUM_HEIGHT 300
 #define VGA_DAC_TO_COLOR(x) (((x) << 2) | ((x) >> 4))
 #define VGA_COLOR_TO_DAC(x) ((x) >> 2)
-
+#define VGA_INTERLACE_HIGH_BIT (1 << 13)
 
 
 /* Register I/O ports */

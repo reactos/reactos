@@ -73,7 +73,7 @@
 # @ cdecl ??_U@YAPAXIHPBDH@Z(long long str long) MSVCRT_operator_new_dbg
 @ cdecl -arch=win32 ??_V@YAXPAX@Z(ptr) MSVCRT_operator_delete
 @ cdecl -arch=win64 ??_V@YAXPEAX@Z(ptr) MSVCRT_operator_delete
-@ cdecl -arch=win64 -norelay __uncaught_exception(ptr)
+@ cdecl -norelay __uncaught_exception(ptr)
 @ cdecl -arch=win32 -norelay ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
 @ cdecl -arch=win64 -norelay ?_query_new_handler@@YAP6AH_K@ZXZ() MSVCRT__query_new_handler
 @ cdecl ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
@@ -256,7 +256,6 @@
 @ cdecl __threadhandle() kernel32.GetCurrentThread
 @ cdecl __threadid() kernel32.GetCurrentThreadId
 @ cdecl __toascii(long)
-@ cdecl __uncaught_exception()
 @ cdecl __unDName(ptr str long ptr ptr long)
 @ cdecl __unDNameEx(ptr str long ptr ptr ptr long)
 @ extern __unguarded_readlc_active

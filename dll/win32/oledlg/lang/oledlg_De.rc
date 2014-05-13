@@ -49,10 +49,10 @@ END
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"Fügt ein neues %s - Objekt in Ihr Dokument ein."
+  IDS_RESULTOBJDESC	"Fügt ein neues %s-Objekt in Ihr Dokument ein."
   IDS_RESULTFILEOBJDESC	"Fügt den Inhalt der Datei als Objekt so in Ihr Dokument ein, dass Sie es mit dem Programm aktivieren können, mit dem es erstellt wurde."
   IDS_BROWSE            "Durchsuchen"
-  IDS_NOTOLEMOD         "Die Datei ist offenbar kein gültiges OLE - Steuermodul. Die OLE - Steuerung konnte nicht registiert werden."
+  IDS_NOTOLEMOD         "Die Datei ist offenbar kein gültiges OLE-Steuermodul. Die OLE-Steuerung konnte nicht registriert werden."
   IDS_NOTOLEMODCAPTION  "Steuerung hinzufügen"
 }
 
@@ -85,12 +85,12 @@ END
 STRINGTABLE
 {
     IDS_PS_PASTE_DATA                     "Fügt den Inhalt der Zwischenablage in Ihr Dokument als %s ein."
-    IDS_PS_PASTE_OBJECT                   "Fügt den Inhalt der Zwischenablage so in Ihr Dokument ein dass Sie es mit %s aktivieren können."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "Fügt den Inhalt der Zwischenablage so in Ihr Dokument ein dass Sie es mit %s aktivieren können.  Wird als Symbol dargestellt."
-    IDS_PS_PASTE_LINK_DATA                "Fügt den Inhalt der Zwischenablage in Ihr Dokument als %s ein.  Die Daten sind mit der Ursprungsdatei verknüpft so dass Änderungen an dieser in Ihrem Dokument erscheinen."
-    IDS_PS_PASTE_LINK_OBJECT              "Fügt ein Bild des Zwischenablagen-Inhalts in Ihr Dokument ein.  Das Bild ist mit der Ursprungsdatei verknüpft so dass Änderungen an dieser in Ihrem Dokument erscheinen."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Fügt eine Verknüpfung ein die auf den Ort des Zwischenablagen-Inhalts zeigt.  Die Verknüpfung ist mit der Ursprungsdatei verknüpft so dass Änderungen an dieser in Ihrem Dokument erscheinen."
-    IDS_PS_NON_OLE                        "Fügt den Inhalt der Zwischenablage in Ihr Dokument als ein."
+    IDS_PS_PASTE_OBJECT                   "Fügt den Inhalt der Zwischenablage so in Ihr Dokument ein, dass Sie ihn mit %s aktivieren können."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Fügt den Inhalt der Zwischenablage so in Ihr Dokument ein, dass Sie ihn mit %s aktivieren können.  Er wird dann als Symbol dargestellt."
+    IDS_PS_PASTE_LINK_DATA                "Fügt den Inhalt der Zwischenablage in Ihr Dokument als %s ein. Die Daten sind mit der Ursprungsdatei verknüpft, sodass Änderungen an dieser in Ihrem Dokument erscheinen."
+    IDS_PS_PASTE_LINK_OBJECT              "Fügt ein Bild aus der Zwischenablage in Ihr Dokument ein. Das Bild ist mit der Ursprungsdatei verknüpft, sodass Änderungen an dieser in Ihrem Dokument erscheinen."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Fügt eine Verknüpfung ein, die auf den Ort in der Zwischenablage zeigt. Die Verknüpfung ist mit der Ursprungsdatei verknüpft, sodass Änderungen an dieser in Ihrem Dokument erscheinen."
+    IDS_PS_NON_OLE                        "Fügt den Inhalt der Zwischenablage in Ihr Dokument ein."
     IDS_PS_UNKNOWN_TYPE                   "Unbekannter Typ"
     IDS_PS_UNKNOWN_SRC                    "Unbekannte Quelle"
     IDS_PS_UNKNOWN_APP                    "dem Erzeugerprogramm"

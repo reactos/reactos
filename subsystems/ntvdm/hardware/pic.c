@@ -313,7 +313,7 @@ call_ica_hw_interrupt(INT  ms,
     BYTE InterruptNumber = line;
 
     /* Check for PIC validity */
-    if (ms != ICA_MASTER || ms != ICA_SLAVE) return;
+    if (ms != ICA_MASTER && ms != ICA_SLAVE) return;
 
     /*
      * Adjust the interrupt request number according to the parameters,

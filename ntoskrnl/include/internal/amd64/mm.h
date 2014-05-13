@@ -296,7 +296,7 @@ MI_IS_MAPPED_PTE(PMMPTE PointerPte)
 {
     /// FIXME
     __debugbreak();
-    return (PointerPte->u.Long & 0xFFFFFC01 != 0);
+    return ((PointerPte->u.Long & 0xFFFFFC01) != 0);
 }
 
 VOID

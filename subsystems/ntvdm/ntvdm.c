@@ -21,12 +21,6 @@
 
 #include "resource.h"
 
-/*
- * Activate this line if you want to run NTVDM in standalone mode with:
- * ntvdm.exe <program>
- */
-// #define STANDALONE
-
 /* VARIABLES ******************************************************************/
 
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
@@ -39,7 +33,10 @@ static HMENU hConsoleMenu  = NULL;
 static INT   VdmMenuPos    = -1;
 static BOOLEAN ShowPointer = FALSE;
 
+#ifndef STANDALONE
 ULONG SessionId = 0;
+#endif
+
 HANDLE VdmTaskEvent = NULL;
 
 /*
@@ -124,7 +121,7 @@ AppendMenuItems(HMENU hMenu,
 static VOID
 CreateVdmMenu(HANDLE ConOutHandle)
 {
-    hConsoleMenu = ConsoleMenuControl(ConsoleOutput,
+    hConsoleMenu = ConsoleMenuControl(ConOutHandle,
                                       ID_SHOWHIDE_MOUSE,
                                       ID_VDM_QUIT);
     if (hConsoleMenu == NULL) return;
@@ -176,7 +173,8 @@ static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID DisplayMessage(LPCWSTR Format, ...)
+VOID
+DisplayMessage(LPCWSTR Format, ...)
 {
     WCHAR Buffer[256];
     va_list Parameters;
@@ -188,7 +186,9 @@ VOID DisplayMessage(LPCWSTR Format, ...)
     va_end(Parameters);
 }
 
-BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
+static BOOL
+WINAPI
+ConsoleCtrlHandler(DWORD ControlType)
 {
     switch (ControlType)
     {
@@ -224,12 +224,14 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
     return TRUE;
 }
 
-VOID ConsoleInitUI(VOID)
+static VOID
+ConsoleInitUI(VOID)
 {
     CreateVdmMenu(ConsoleOutput);
 }
 
-VOID ConsoleCleanupUI(VOID)
+static VOID
+ConsoleCleanupUI(VOID)
 {
     /* Display again properly the mouse pointer */
     if (ShowPointer) ShowHideMousePointer(ConsoleOutput, ShowPointer);
@@ -237,7 +239,97 @@ VOID ConsoleCleanupUI(VOID)
     DestroyVdmMenu();
 }
 
-DWORD WINAPI PumpConsoleInput(LPVOID Parameter)
+static BOOL
+ConsoleAttach(VOID)
+{
+    /* Save the original input and output console modes */
+    if (!GetConsoleMode(ConsoleInput , &OrgConsoleInputMode ) ||
+        !GetConsoleMode(ConsoleOutput, &OrgConsoleOutputMode))
+    {
+        CloseHandle(ConsoleOutput);
+        CloseHandle(ConsoleInput);
+        wprintf(L"FATAL: Cannot save console in/out modes\n");
+        // return FALSE;
+    }
+
+    /* Initialize the UI */
+    ConsoleInitUI();
+
+    return TRUE;
+}
+
+static VOID
+ConsoleDetach(VOID)
+{
+    /* Restore the original input and output console modes */
+    SetConsoleMode(ConsoleOutput, OrgConsoleOutputMode);
+    SetConsoleMode(ConsoleInput , OrgConsoleInputMode );
+
+    /* Cleanup the UI */
+    ConsoleCleanupUI();
+}
+
+static BOOL
+ConsoleInit(VOID)
+{
+    /* Set the handler routine */
+    SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+
+    /* Enable the CTRL_LAST_CLOSE_EVENT */
+    SetLastConsoleEventActive();
+
+    /*
+     * NOTE: The CONIN$ and CONOUT$ "virtual" files
+     * always point to non-redirected console handles.
+     */
+
+    /* Get the input handle to the real console, and check for success */
+    ConsoleInput = CreateFileW(L"CONIN$",
+                               GENERIC_READ | GENERIC_WRITE,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE,
+                               NULL,
+                               OPEN_EXISTING,
+                               0,
+                               NULL);
+    if (ConsoleInput == INVALID_HANDLE_VALUE)
+    {
+        wprintf(L"FATAL: Cannot retrieve a handle to the console input\n");
+        return FALSE;
+    }
+
+    /* Get the output handle to the real console, and check for success */
+    ConsoleOutput = CreateFileW(L"CONOUT$",
+                                GENERIC_READ | GENERIC_WRITE,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                NULL,
+                                OPEN_EXISTING,
+                                0,
+                                NULL);
+    if (ConsoleOutput == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(ConsoleInput);
+        wprintf(L"FATAL: Cannot retrieve a handle to the console output\n");
+        return FALSE;
+    }
+
+    /* Effectively attach to the console */
+    return ConsoleAttach();
+}
+
+static VOID
+ConsoleCleanup(VOID)
+{
+    /* Detach from the console */
+    ConsoleDetach();
+
+    /* Close the console handles */
+    if (ConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(ConsoleOutput);
+    if (ConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
+}
+
+DWORD
+WINAPI
+PumpConsoleInput(LPVOID Parameter)
 {
     HANDLE ConsoleInput = (HANDLE)Parameter;
     INPUT_RECORD InputRecord;
@@ -296,74 +388,10 @@ DWORD WINAPI PumpConsoleInput(LPVOID Parameter)
     return 0;
 }
 
-BOOL ConsoleInit(VOID)
-{
-    /* Set the handler routine */
-    SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
-
-    /* Enable the CTRL_LAST_CLOSE_EVENT */
-    SetLastConsoleEventActive();
-
-    /* Get the input handle to the real console, and check for success */
-    ConsoleInput = CreateFileW(L"CONIN$",
-                               GENERIC_READ | GENERIC_WRITE,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,
-                               NULL,
-                               OPEN_EXISTING,
-                               0,
-                               NULL);
-    if (ConsoleInput == INVALID_HANDLE_VALUE)
-    {
-        wprintf(L"FATAL: Cannot retrieve a handle to the console input\n");
-        return FALSE;
-    }
-
-    /* Get the output handle to the real console, and check for success */
-    ConsoleOutput = CreateFileW(L"CONOUT$",
-                                GENERIC_READ | GENERIC_WRITE,
-                                FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                NULL,
-                                OPEN_EXISTING,
-                                0,
-                                NULL);
-    if (ConsoleOutput == INVALID_HANDLE_VALUE)
-    {
-        CloseHandle(ConsoleInput);
-        wprintf(L"FATAL: Cannot retrieve a handle to the console output\n");
-        return FALSE;
-    }
-
-    /* Save the original input and output console modes */
-    if (!GetConsoleMode(ConsoleInput , &OrgConsoleInputMode ) ||
-        !GetConsoleMode(ConsoleOutput, &OrgConsoleOutputMode))
-    {
-        CloseHandle(ConsoleOutput);
-        CloseHandle(ConsoleInput);
-        wprintf(L"FATAL: Cannot save console in/out modes\n");
-        return FALSE;
-    }
-
-    /* Initialize the UI */
-    ConsoleInitUI();
-
-    return TRUE;
-}
-
-VOID ConsoleCleanup(VOID)
-{
-    /* Restore the original input and output console modes */
-    SetConsoleMode(ConsoleOutput, OrgConsoleOutputMode);
-    SetConsoleMode(ConsoleInput , OrgConsoleInputMode );
-
-    /* Cleanup the UI */
-    ConsoleCleanupUI();
-
-    /* Close the console handles */
-    if (ConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(ConsoleOutput);
-    if (ConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
-}
-
-DWORD WINAPI CommandThreadProc(LPVOID Parameter)
+#ifndef STANDALONE
+static DWORD
+WINAPI
+CommandThreadProc(LPVOID Parameter)
 {
     BOOLEAN First = TRUE;
     DWORD Result;
@@ -404,30 +432,14 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
         if (!GetNextVDMCommand(&CommandInfo)) break;
 
         /* Start the process from the command line */
-        DPRINT1("Starting '%s'...\n", AppName);
-
-        Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE, AppName, CmdLine, Env, NULL, NULL);
+        DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
+        Result = DosStartProcess(AppName, CmdLine, Env);
         if (Result != ERROR_SUCCESS)
         {
             DisplayMessage(L"Could not start '%S'. Error: %u", AppName, Result);
-            break;
+            // break;
+            continue;
         }
-
-        /* Attach to the console */
-        if (!First) VgaAttachToConsole();
-
-        /* Perform a screen refresh */
-        VgaRefreshDisplay();
-
-        /* Start simulation */
-        SetEvent(VdmTaskEvent);
-        EmulatorSimulate();
-
-        /* Perform another screen refresh */
-        VgaRefreshDisplay();
-
-        /* Detach from the console */
-        VgaDetachFromConsole(FALSE);
 
         First = FALSE;
     }
@@ -435,8 +447,10 @@ DWORD WINAPI CommandThreadProc(LPVOID Parameter)
 
     return 0;
 }
+#endif
 
-INT wmain(INT argc, WCHAR *argv[])
+INT
+wmain(INT argc, WCHAR *argv[])
 {
 #ifdef STANDALONE
 
@@ -459,6 +473,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
 #else
+
     INT i;
     WCHAR *endptr;
 
@@ -530,26 +545,15 @@ INT wmain(INT argc, WCHAR *argv[])
 #else
 
     /* Start the process from the command line */
-    DPRINT1("Starting '%s'...\n", ApplicationName);
-
-    Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
-                               ApplicationName,
-                               CommandLine,
-                               GetEnvironmentStrings(),
-                               NULL,
-                               NULL);
+    DPRINT1("Starting '%s' ('%s')...\n", ApplicationName, CommandLine);
+    Result = DosStartProcess(ApplicationName,
+                             CommandLine,
+                             GetEnvironmentStrings());
     if (Result != ERROR_SUCCESS)
     {
         DisplayMessage(L"Could not start '%S'. Error: %u", ApplicationName, Result);
         goto Cleanup;
     }
-
-    /* Start simulation */
-    SetEvent(VdmTaskEvent);
-    EmulatorSimulate();
-
-    /* Perform another screen refresh */
-    VgaRefreshDisplay();
 
 #endif
 

@@ -1,6 +1,6 @@
 /* FILE:       dll/win32/shell32/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2013-06-01
+ * UPDATED:    2014-04-25
  * THANKS TO:  navaraf, who translated major part of this file
  */
 
@@ -764,7 +764,7 @@ BEGIN
     IDS_SYS_FILE "Systémový soubor"
 
     IDS_OPEN_VERB "Otevřít"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_EXPLORE_VERB "Prozkoumat"
     IDS_RUNAS_VERB "Spustit jako "
     IDS_EDIT_VERB "Upravit"
     IDS_FIND_VERB "Najít"

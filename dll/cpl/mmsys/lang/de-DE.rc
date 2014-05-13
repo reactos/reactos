@@ -17,7 +17,7 @@ BEGIN
     PUSHBUTTON "Er&weitert", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Lautsprechereinstellungen", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Verwenden Sie die unteren Einstellungen um die Lautstäre einzelner Geräte und andere Einstellungen zu verändern.", -1, 70, 155, 150, 36
+    LTEXT "Verwenden Sie die unteren Einstellungen um die Lautstärke einzelner Geräte und andere Einstellungen zu verändern.", -1, 70, 155, 150, 36
     PUSHBUTTON "&Lautstärke...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "E&rweitert...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Klänge"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ein Klangschema ist eine Sammlung von Klängen, die bestimmten Programmereignissen in ReactOS zugordnet sind. Sie können ein existierendes Schema auswählen oder ein modifiziertes speichern.", -1, 8, 7, 230, 40
+    LTEXT "Ein Klangschema ist eine Sammlung von Klängen, die bestimmten Programmereignissen in ReactOS zugeordnet sind. Sie können ein existierendes Schema auswählen oder ein modifiziertes speichern.", -1, 8, 7, 230, 40
     LTEXT "Klang&schema:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Sp&eichern unter...", IDC_SAVEAS_BTN, 120, 70, 65, 15
@@ -179,7 +179,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Multichannel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bezeichung kommt hier rein.", 9506, 8, 4, 212, 24
+    LTEXT "Bezeichnung erscheint hier.", 9506, 8, 4, 212, 24
     LTEXT "Niedrig", 9473, 65, 31, 22, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 29, 108, 17

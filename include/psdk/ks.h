@@ -3525,7 +3525,7 @@ NTAPI
 KsMethodHandler(
   _In_ PIRP Irp,
   _In_ ULONG MethodSetsCount,
-  _In_reads_(MethodSetsCount) const PKSMETHOD_SET MethodSet);
+  _In_reads_(MethodSetsCount) const KSMETHOD_SET* MethodSet);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
@@ -3534,7 +3534,7 @@ NTAPI
 KsMethodHandlerWithAllocator(
   _In_ PIRP Irp,
   _In_ ULONG MethodSetsCount,
-  _In_reads_(MethodSetsCount) const PKSMETHOD_SET MethodSet,
+  _In_reads_(MethodSetsCount) const KSMETHOD_SET* MethodSet,
   _In_opt_ PFNKSALLOCATOR Allocator,
   _In_opt_ ULONG MethodItemSize);
 
@@ -3576,7 +3576,7 @@ NTAPI
 KsPropertyHandlerWithAllocator(
   _In_ PIRP Irp,
   _In_ ULONG PropertySetsCount,
-  _In_reads_(PropertySetsCount) const PKSPROPERTY_SET PropertySet,
+  _In_reads_(PropertySetsCount) const KSPROPERTY_SET* PropertySet,
   _In_opt_ PFNKSALLOCATOR Allocator,
   _In_opt_ ULONG PropertyItemSize);
 
@@ -3659,7 +3659,7 @@ NTAPI
 KsEnableEventWithAllocator(
   _In_ PIRP Irp,
   _In_ ULONG EventSetsCount,
-  _In_reads_(EventSetsCount) const PKSEVENT_SET EventSet,
+  _In_reads_(EventSetsCount) const KSEVENT_SET* EventSet,
   _Inout_opt_ PLIST_ENTRY EventsList,
   _In_opt_ KSEVENTS_LOCKTYPE EventsFlags,
   _In_opt_ PVOID EventsLock,
@@ -4819,7 +4819,7 @@ DEFINE_GUID(IID_IKsControl, 0x28F54685L, 0x06FD, 0x11D2, 0xB2, 0x7A, 0x00, 0xA0,
 
 DECLARE_INTERFACE_(IKsControl,IUnknown)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)( THIS_ 
+    STDMETHOD_(NTSTATUS, QueryInterface)( THIS_
         REFIID InterfaceId,
         PVOID* Interface)PURE;
 

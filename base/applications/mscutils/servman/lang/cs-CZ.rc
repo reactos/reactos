@@ -1,0 +1,281 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "Exportovat...", ID_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "&Konec", ID_EXIT
+    END
+    POPUP "Akce"
+    BEGIN
+        MENUITEM "Připojit k...", ID_CONNECT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Spustit", ID_START, GRAYED
+        MENUITEM "Zastavit", ID_STOP, GRAYED
+        MENUITEM "Pozastavit", ID_PAUSE, GRAYED
+        MENUITEM "Pokračovat", ID_RESUME, GRAYED
+        MENUITEM "Restartovat", ID_RESTART, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Obnovit", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Upravit...", ID_EDIT, GRAYED
+        MENUITEM "Vytvořit...", ID_CREATE, GRAYED
+        MENUITEM "Odstranit...", ID_DELETE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Vlastnosti...", ID_PROP, GRAYED
+    END
+    POPUP "Zobrazit"
+    BEGIN
+        MENUITEM "Velké ikony", ID_VIEW_LARGE
+        MENUITEM "Malé ikony", ID_VIEW_SMALL
+        MENUITEM "Seznam", ID_VIEW_LIST
+        MENUITEM "Detaily", ID_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        MENUITEM "Upravit...", ID_VIEW_CUST, GRAYED
+    END
+    POPUP "Nápověda"
+    BEGIN
+        MENUITEM "Nápověda", ID_HELP
+        MENUITEM "O programu", ID_ABOUT
+    END
+END
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "Spustit", ID_START, GRAYED
+        MENUITEM "Zastavit", ID_STOP, GRAYED
+        MENUITEM "Pozastavit", ID_PAUSE, GRAYED
+        MENUITEM "pokračovat", ID_RESUME, GRAYED
+        MENUITEM "Restartovat", ID_RESTART, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Obnovit", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Upravit...", ID_EDIT, GRAYED
+        MENUITEM "Odstranit...", ID_DELETE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Vlastnosti...", ID_PROP, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Nápověda...", ID_HELP
+    END
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
+CAPTION "O správci služeb"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+    LTEXT "Správce služeb v0.8\nCopyright (C) 2005-2007\nGed Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 30
+    PUSHBUTTON "Zavřít", IDOK, 75, 162, 44, 15
+    ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
+    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
+BEGIN
+    LTEXT "", IDC_SERV_NAME, 70, 11, 176, 11, WS_CHILD | WS_VISIBLE
+    EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+    EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
+    EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+    COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
+    PUSHBUTTON "Spustit", IDC_START, 6, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Zastavit", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Pozastavit", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Pokračovat", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+    LTEXT "Název služby:", IDC_STATIC, 4, 11, 53, 11
+    LTEXT "Jméno:", IDC_STATIC, 4, 29, 53, 11
+    LTEXT "Popis:", IDC_STATIC, 4, 51, 53, 11
+    LTEXT "Cesta:", IDC_STATIC, 6, 73, 82, 9
+    LTEXT "Typ spuštění:", IDC_STATIC, 6, 108, 53, 11
+    LTEXT "Stav služby:", IDC_STATIC, 4, 138, 53, 11
+    LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
+    LTEXT "Zde můžete upřesnit parametry, které budou použity při spuštění.", IDC_STATIC, 6, 177, 240, 15
+    LTEXT "Parametry:", IDC_STATIC, 6, 200, 58, 11
+    EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Upravit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+END
+
+IDD_DLG_DEPEND DIALOGEX 6, 6, 253, 225
+CAPTION "Závislosti"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
+BEGIN
+    CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW |
+            WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
+            TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+    CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
+            WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
+            TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
+    LTEXT "Některé služby závisí na jiných službách, systémových ovladačích nebo načítají jiné skupiny služeb. Zastavené nebo nesprávně fungující součásti systému mohou ovlivnit závislé služby.", IDC_STATIC, 8, 7, 238, 26
+    LTEXT "Tato služba závisí na následujících součástech:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
+END
+
+IDD_DLG_CREATE DIALOGEX 6, 6, 225, 209
+CAPTION "Vytvořit službu"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
+BEGIN
+    EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+    EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+    EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
+    EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+    EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+    LTEXT "*Název služby :", IDC_STATIC, 12, 12, 54, 9
+    LTEXT "*Jméno :", IDC_STATIC, 12, 33, 54, 9
+    LTEXT "*Cesta :", IDC_STATIC, 10, 51, 68, 9
+    LTEXT "Popis :", IDC_STATIC, 12, 86, 44, 9
+    PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
+    PUSHBUTTON "Storno", IDCANCEL, 176, 192, 46, 13
+    LTEXT "Další možnosti (viz Nápovědu)", IDC_STATIC, 10, 151, 134, 9
+    PUSHBUTTON "Nápověda", ID_CREATE_HELP, 10, 192, 44, 13
+END
+
+IDD_DLG_DELETE DIALOGEX 6, 6, 185, 148
+CAPTION "Odstranit službu"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+    ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+    LTEXT "Opravdu chcete tuto službu odstranit? Tuto akci nelze vrátit!", IDC_STATIC, 50, 6, 125, 25
+    LTEXT "Název služby:", IDC_STATIC, 6, 40, 80, 9
+    LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
+    EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
+             WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
+    PUSHBUTTON "Ano", IDOK, 26, 129, 54, 13
+    DEFPUSHBUTTON "Ne", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_DEPEND_STOP DIALOGEX 6, 6, 240, 148
+CAPTION "Zastavit jiné služby"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+    ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+    LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+    LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+    LTEXT "Chcete zastavit tyto služby?", IDC_STATIC, 15, 110, 150, 10
+    DEFPUSHBUTTON "Ano", IDOK, 60, 129, 54, 14
+    PUSHBUTTON "Ne", IDCANCEL, 120, 129, 54, 14
+END
+
+IDD_DLG_HELP_OPTIONS DIALOGEX 6, 6, 200, 150
+CAPTION "Možnosti"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE 0x10CF0000
+BEGIN
+    LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
+    PUSHBUTTON "Ok", IDOK, 75, 130, 44, 13
+END
+
+IDD_DLG_PROGRESS DIALOGEX 6, 6, 255, 89
+CAPTION "Ovldání služeb"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+BEGIN
+    CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
+    LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
+    LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
+    PUSHBUTTON "&Zavřít", IDOK, 100, 70, 54, 13
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FIRSTCOLUMN "Název"
+    IDS_SECONDCOLUMN "Popis"
+    IDS_THIRDCOLUMN "Stav"
+    IDS_FOURTHCOLUMN "Typ spuštění"
+    IDS_FITHCOLUMN "Přihlásit jako"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICES_STARTED "Spuštěno"
+    IDS_SERVICES_STOPPED "Zastaveno"
+    IDS_SERVICES_AUTO "Automaticky"
+    IDS_SERVICES_MAN "Ručně"
+    IDS_SERVICES_DIS "Zakázáno"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NUM_SERVICES "Počet služeb: %d"
+    IDS_STOP_DEPENDS "Zastavením %s dojde také k zastavení"
+    IDS_NO_DEPENDS "<Žádné závislosti>"
+    IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_PROP "Vlastnosti"
+    IDS_TOOLTIP_REFRESH "Obnovit"
+    IDS_TOOLTIP_EXPORT "Export seznamu"
+    IDS_TOOLTIP_CREATE "Vytvořit novou službu"
+    IDS_TOOLTIP_DELETE "Odstraní danou službu"
+    IDS_TOOLTIP_START "Spustit službu"
+    IDS_TOOLTIP_STOP "Zastavit službu"
+    IDS_TOOLTIP_PAUSE "Pozastavit službu"
+    IDS_TOOLTIP_RESTART "Restartovat službu"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROGRESS_INFO_START "ReactOS se pokouší spustit následující službu"
+    IDS_PROGRESS_INFO_STOP "ReactOS se pokouší zastavit následující službu"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS se pokouší pozastavit následující službu"
+    IDS_PROGRESS_INFO_RESUME "ReactOS se pokouší pokračovat s následující službou"
+    IDS_CREATE_SUCCESS "Služba úspěšně vytvořena"
+    IDS_DELETE_SUCCESS "Služba úspěšně odstraněna"
+    IDS_CREATE_REQ "Položky označené hvězdičkou\njsou povinné"
+    IDS_DELETE_STOP "Před odstraněním musí být služba ručně zastavena!"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_OPTIONS "MOŽNOSTI VYTVOŘENÍ:\r\nPOZNÁMKA: Jméno parametru zahrnuje i znak rovnítko.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (výchozí = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (výchozí = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (výchozí = normal)\r\n group= <SkupinaPořadíNačtení>\r\n tag= <yes|no>\r\n depend= <Závislosti(oddělené / (lomítko))>\r\n obj= <JménoÚčtu|JménoObjektu>\r\n       (výchozí = LocalSystem)\r\n password= <heslo>\r\n"
+END
+
+/* Hints */
+STRINGTABLE
+BEGIN
+    IDS_HINT_BLANK " "
+    IDS_HINT_EXPORT " Vyexportuje daný seznam do souboru."
+    IDS_HINT_EXIT " Ukončí program."
+    IDS_HINT_CONNECT " Spravovat jiný počítač."
+    IDS_HINT_START " Spustit vybranou službu."
+    IDS_HINT_STOP " Zastavit vybranou službu."
+    IDS_HINT_PAUSE " Pozastavit vybranou službu."
+    IDS_HINT_RESUME " Pokračovat s vybranou službou."
+    IDS_HINT_RESTART " Zastavit a spustit vybranou službu."
+    IDS_HINT_REFRESH " Obnovit seznam služeb."
+    IDS_HINT_EDIT " Upravit vlastnosti vybrané služby."
+    IDS_HINT_CREATE " Vytvořit novou službu."
+    IDS_HINT_DELETE " Odstranit vybranou službu."
+    IDS_HINT_PROP " Zobrazit panel vlastností pro vybranou službu."
+    IDS_HINT_LARGE " Zobrazit služby jako velké ikony."
+    IDS_HINT_SMALL " Zobrazit služby jako malé ikony."
+    IDS_HINT_LIST " Zobrazit služby jako seznam."
+    IDS_HINT_DETAILS " Zobrazit služby jako podrobný seznam."
+    IDS_HINT_CUST " Upravit zobrazení."
+    IDS_HINT_HELP " Zobrazit nápovědu."
+    IDS_HINT_ABOUT " O ReactOS Správci služeb."
+    IDS_HINT_SYS_RESTORE " Obnovit normální velikost tohoto okna."
+    IDS_HINT_SYS_MOVE " Přesunout okno."
+    IDS_HINT_SYS_SIZE " Změnit velikost okna."
+    IDS_HINT_SYS_MINIMIZE " Minimalizovat na panel start."
+    IDS_HINT_SYS_MAXIMIZE " Maximalizovat na celou obrazovku."
+    IDS_HINT_SYS_CLOSE " Zavřít toto okno."
+END
+
+/* Application title */
+STRINGTABLE
+BEGIN
+    IDS_APPNAME "ReactOS Správce služeb"
+END

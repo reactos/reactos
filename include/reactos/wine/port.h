@@ -278,7 +278,7 @@ ssize_t pwrite( int fd, const void *buf, size_t count, off_t offset );
 #endif /* HAVE_PWRITE */
 #endif /* __REACTOS__ */
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef HAVE_SIGSETJMP
 # include <setjmp.h>
 typedef jmp_buf sigjmp_buf;

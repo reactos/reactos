@@ -82,7 +82,7 @@
 @ stdcall ExEnterCriticalRegionAndAcquireResourceShared(ptr)
 @ stdcall ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(ptr)
 @ stdcall ExEnumHandleTable(ptr ptr ptr ptr)
-@ extern ExEventObjectType _ExEventObjectType
+@ extern ExEventObjectType
 @ stdcall ExExtendZone(ptr ptr long)
 @ stdcall ExFreeCacheAwareRundownProtection(ptr)
 @ stdcall ExFreePool(ptr)
@@ -144,7 +144,7 @@
 @ fastcall ExReleaseRundownProtectionEx(ptr long) ExfReleaseRundownProtectionEx
 @ fastcall ExRundownCompleted(ptr) ExfRundownCompleted
 @ fastcall ExRundownCompletedCacheAware(ptr) ExfRundownCompletedCacheAware
-@ extern ExSemaphoreObjectType _ExSemaphoreObjectType
+@ extern ExSemaphoreObjectType
 @ stdcall ExSetResourceOwnerPointer(ptr ptr)
 @ stdcall ExSetTimerResolution(long long)
 @ stdcall ExSizeOfRundownProtectionCacheAware()
@@ -241,7 +241,7 @@
 @ stdcall FsRtlIsNtstatusExpected(long)
 @ stdcall FsRtlIsPagingFile(ptr)
 @ stdcall FsRtlIsTotalDeviceFailure(ptr)
-@ extern FsRtlLegalAnsiCharacterArray _FsRtlLegalAnsiCharacterArray
+@ extern FsRtlLegalAnsiCharacterArray
 @ stdcall FsRtlLookupBaseMcbEntry(ptr long long ptr ptr ptr ptr ptr)
 @ stdcall FsRtlLookupLargeMcbEntry(ptr long long ptr ptr ptr ptr ptr)
 @ stdcall FsRtlLookupLastBaseMcbEntry(ptr ptr ptr)
@@ -302,7 +302,7 @@
 @ stdcall FsRtlUninitializeLargeMcb(ptr)
 @ stdcall FsRtlUninitializeMcb(ptr)
 @ stdcall FsRtlUninitializeOplock(ptr)
-@ extern HalDispatchTable _HalDispatchTable
+@ extern HalDispatchTable
 @ fastcall HalExamineMBR(ptr long long ptr)
 @ extern HalPrivateDispatchTable
 @ stdcall HeadlessDispatch(long ptr long ptr ptr)
@@ -393,7 +393,7 @@
 @ stdcall IoEnumerateDeviceObjectList(ptr ptr long ptr)
 @ stdcall IoEnumerateRegisteredFiltersList(ptr long ptr)
 @ stdcall IoFastQueryNetworkAttributes(ptr long long ptr ptr)
-@ extern IoFileObjectType _IoFileObjectType
+@ extern IoFileObjectType
 @ stdcall IoForwardAndCatchIrp(ptr ptr) IoForwardIrpSynchronously
 @ stdcall IoForwardIrpSynchronously(ptr ptr)
 @ stdcall IoFreeController(ptr)
@@ -533,8 +533,8 @@
 @ fastcall IofCallDriver(ptr ptr)
 @ fastcall IofCompleteRequest(ptr long)
 @ stdcall KdChangeOption(long long ptr long ptr ptr)
-@ extern KdDebuggerEnabled _KdDebuggerEnabled
-@ extern KdDebuggerNotPresent _KdDebuggerNotPresent
+@ extern KdDebuggerEnabled
+@ extern KdDebuggerNotPresent
 @ stdcall KdDisableDebugger()
 @ stdcall KdEnableDebugger()
 @ extern KdEnteredDebugger
@@ -830,7 +830,7 @@
 @ extern NlsMbCodePageTag
 @ extern NlsMbOemCodePageTag
 @ extern NlsOemCodePage
-@ extern NlsOemLeadByteInfo _NlsOemLeadByteInfo
+@ extern NlsOemLeadByteInfo
 @ stdcall NtAddAtom(wstr long ptr)
 @ stdcall NtAdjustPrivilegesToken(ptr long ptr long ptr ptr)
 @ stdcall -arch=i386,arm NtAlertThread(ptr)
@@ -1011,7 +1011,7 @@
 @ stdcall PsLookupProcessByProcessId(ptr ptr)
 @ stdcall PsLookupProcessThreadByCid(ptr ptr ptr)
 @ stdcall PsLookupThreadByThreadId(ptr ptr)
-@ extern PsProcessType _PsProcessType
+@ extern PsProcessType
 @ stdcall PsReferenceImpersonationToken(ptr ptr ptr ptr)
 @ stdcall PsReferencePrimaryToken(ptr)
 @ stdcall PsRemoveCreateThreadNotifyRoutine(ptr)
@@ -1036,7 +1036,7 @@
 @ stdcall PsSetThreadHardErrorsAreDisabled(ptr long)
 @ stdcall PsSetThreadWin32Thread(ptr ptr ptr)
 @ stdcall PsTerminateSystemThread(long)
-@ extern PsThreadType _PsThreadType
+@ extern PsThreadType
 ;PsWrapApcWow64Thread
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_UCHAR(ptr ptr long)
 @ stdcall -arch=i386,arm READ_REGISTER_BUFFER_ULONG(ptr ptr long)

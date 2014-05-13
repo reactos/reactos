@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 
 [Section]
@@ -14,6 +14,9 @@ CDPath = none
 
 [Section.0407]
 Description = Qmmp ist ein Audio-Player, der mit Hilfe der Qt Bibliothek geschrieben wurde. Die Benutzeroberfläche ist ähnlich zu WinAMP oder XMMS. Alternative Benutzeroberflächen sind ebenfalls verfügbar.
+
+[Section.0410]
+Description = Qmmp è un lettore multimediale, scritto con l'aiuto della libreria Qt. L'interfaccia grafica è simile a WinAMP o XMMS. Interfaccie utenti alternative sono disponibili.
 
 [Section.0415]
 Description = Gmmp to odtwarzacz audio, napisany z pomocą biblioteki Qt. Interfejs podobny jest do Winampa lub XMMS. Dostępnme są także dodatkowe skórki.

@@ -128,7 +128,7 @@ BEGIN
         MENUITEM "Pink",          ID_COLOR_FUCHSIA
         MENUITEM "Aquamarin",     ID_COLOR_AQUA
         MENUITEM "Weiß",          ID_COLOR_WHITE
-        MENUITEM "Automatic",     ID_COLOR_AUTOMATIC
+        MENUITEM "Automatisch",   ID_COLOR_AUTOMATIC
     END
 END
 

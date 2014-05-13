@@ -65,6 +65,7 @@ FS_AddProvider(
     InsertTailList(&List->ListHead, &Item->ListEntry);
 }
 
+
 PFILE_SYSTEM_LIST
 CreateFileSystemList(
     IN SHORT Left,
@@ -111,6 +112,7 @@ CreateFileSystemList(
     return List;
 }
 
+
 VOID
 DestroyFileSystemList(
     IN PFILE_SYSTEM_LIST List)
@@ -130,6 +132,7 @@ DestroyFileSystemList(
     }
     RtlFreeHeap(ProcessHeap, 0, List);
 }
+
 
 VOID
 DrawFileSystemList(
@@ -183,6 +186,7 @@ DrawFileSystemList(
     }
 }
 
+
 VOID
 ScrollDownFileSystemList(
     IN PFILE_SYSTEM_LIST List)
@@ -193,6 +197,7 @@ ScrollDownFileSystemList(
         DrawFileSystemList(List);
     }
 }
+
 
 VOID
 ScrollUpFileSystemList(

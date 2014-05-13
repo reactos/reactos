@@ -1217,6 +1217,34 @@ DWORD WINAPI InstallCatalog( LPCSTR catalog, LPCSTR basename, LPSTR fullname )
     return 0;
 }
 
+/***********************************************************************
+ *      pSetupInstallCatalog  (SETUPAPI.@)
+ */
+DWORD WINAPI pSetupInstallCatalog( LPCWSTR catalog, LPCWSTR basename, LPWSTR fullname )
+{
+    HCATADMIN admin;
+    HCATINFO cat;
+
+    TRACE ("%s, %s, %p\n", debugstr_w(catalog), debugstr_w(basename), fullname);
+
+    if (!CryptCATAdminAcquireContext(&admin,NULL,0))
+        return GetLastError();
+
+    if (!(cat = CryptCATAdminAddCatalog( admin, (PWSTR)catalog, (PWSTR)basename, 0 )))
+    {
+        DWORD rc = GetLastError();
+        CryptCATAdminReleaseContext(admin, 0);
+        return rc;
+    }
+    CryptCATAdminReleaseCatalogContext(admin, cat, 0);
+    CryptCATAdminReleaseContext(admin,0);
+
+    if (fullname)
+        FIXME("not returning full installed catalog path\n");
+
+    return NO_ERROR;
+}
+
 static UINT detect_compression_type( LPCWSTR file )
 {
     DWORD size;
@@ -1536,26 +1564,29 @@ static DWORD decompress_file_lz( LPCWSTR source, LPCWSTR target )
     return ret;
 }
 
+struct callback_context
+{
+    BOOL has_extracted;
+    LPCWSTR target;
+};
+
 static UINT CALLBACK decompress_or_copy_callback( PVOID context, UINT notification, UINT_PTR param1, UINT_PTR param2 )
 {
+    struct callback_context *context_info = context;
     FILE_IN_CABINET_INFO_W *info = (FILE_IN_CABINET_INFO_W *)param1;
 
     switch (notification)
     {
     case SPFILENOTIFY_FILEINCABINET:
     {
-        LPCWSTR filename, targetname = context;
-        WCHAR *p;
+        if (context_info->has_extracted)
+            return FILEOP_ABORT;
 
-        if ((p = strrchrW( targetname, '\\' ))) filename = p + 1;
-        else filename = targetname;
-
-        if (!lstrcmpiW( filename, info->NameInCabinet ))
-        {
-            strcpyW( info->FullTargetName, targetname );
-            return FILEOP_DOIT;
-        }
-        return FILEOP_SKIP;
+        TRACE("Requesting extraction of cabinet file %s\n",
+              wine_dbgstr_w(info->NameInCabinet));
+        strcpyW( info->FullTargetName, context_info->target );
+        context_info->has_extracted = TRUE;
+        return FILEOP_DOIT;
     }
     default: return NO_ERROR;
     }
@@ -1563,9 +1594,10 @@ static UINT CALLBACK decompress_or_copy_callback( PVOID context, UINT notificati
 
 static DWORD decompress_file_cab( LPCWSTR source, LPCWSTR target )
 {
+    struct callback_context context = {0, target};
     BOOL ret;
 
-    ret = SetupIterateCabinetW( source, 0, decompress_or_copy_callback, (PVOID)target );
+    ret = SetupIterateCabinetW( source, 0, decompress_or_copy_callback, &context );
 
     if (ret) return ERROR_SUCCESS;
     else return GetLastError();
@@ -1578,7 +1610,7 @@ static DWORD decompress_file_cab( LPCWSTR source, LPCWSTR target )
  */
 DWORD WINAPI SetupDecompressOrCopyFileA( PCSTR source, PCSTR target, PUINT type )
 {
-    DWORD ret = FALSE;
+    DWORD ret = 0;
     WCHAR *sourceW = NULL, *targetW = NULL;
 
     if (source && !(sourceW = pSetupMultiByteToUnicode( source, CP_ACP ))) return FALSE;

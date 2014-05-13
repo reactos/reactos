@@ -90,31 +90,8 @@
 //
 // Define the internal versions of external and public global data
 //
-#define IoFileObjectType                _IoFileObjectType
-#define PsThreadType                    _PsThreadType
-#define PsProcessType                   _PsProcessType
-#define ExEventObjectType               _ExEventObjectType
-#define ExSemaphoreObjectType           _ExSemaphoreObjectType
-#define KdDebuggerEnabled               _KdDebuggerEnabled
-#define KdDebuggerNotPresent            _KdDebuggerNotPresent
-#define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
-extern PUSHORT _NlsOemLeadByteInfo;
 #define KeNumberProcessors              _KeNumberProcessors
 extern UCHAR _KeNumberProcessors;
-#define FsRtlLegalAnsiCharacterArray    _FsRtlLegalAnsiCharacterArray
-#undef LEGAL_ANSI_CHARACTER_ARRAY
-#undef NLS_MB_CODE_PAGE_TAG
-#undef NLS_OEM_LEAD_BYTE_INFO
-#define LEGAL_ANSI_CHARACTER_ARRAY      FsRtlLegalAnsiCharacterArray
-#define NLS_MB_CODE_PAGE_TAG            NlsMbOemCodePageTag
-#define NLS_OEM_LEAD_BYTE_INFO          _NlsOemLeadByteInfo
-#undef KD_DEBUGGER_ENABLED
-#undef KD_DEBUGGER_NOT_PRESENT
-#define KD_DEBUGGER_ENABLED             KdDebuggerEnabled
-#define KD_DEBUGGER_NOT_PRESENT         KdDebuggerNotPresent
-#define HalDispatchTable                _HalDispatchTable
-#undef HALDISPATCH
-#define HALDISPATCH                     (&HalDispatchTable)
 #define ExRaiseStatus RtlRaiseStatus
 
 /* Internal Headers */

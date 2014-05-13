@@ -34,7 +34,9 @@ static PPROGRESSBAR FormatProgressBar = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-static BOOLEAN NTAPI
+static
+BOOLEAN
+NTAPI
 FormatCallback(
     IN CALLBACKCOMMAND Command,
     IN ULONG Modifier,
@@ -81,6 +83,7 @@ FormatCallback(
 
     return TRUE;
 }
+
 
 NTSTATUS
 FormatPartition(

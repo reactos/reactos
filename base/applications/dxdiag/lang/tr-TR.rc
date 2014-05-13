@@ -118,7 +118,7 @@ BEGIN
     RTEXT "Sürüm:", -1, 275, 35, 55, 10
     RTEXT "Zaman:", -1, 275, 45, 55, 10
     RTEXT "WHQL İmleği:", -1, 275, 55, 55, 10
-    RTEXT "Diğer Kütükler:", -1, 275, 65, 55, 10
+    RTEXT "Başka Kütükler:", -1, 275, 65, 55, 10
     RTEXT "Sağlayıcı:", -1, 275, 75, 55, 10
     LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
     LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10

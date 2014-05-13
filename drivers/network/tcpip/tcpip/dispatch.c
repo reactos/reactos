@@ -173,7 +173,7 @@ VOID NTAPI DispCancelRequest(
     case TDI_CONNECT:
         DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
         break;
-            
+
     case TDI_DISCONNECT:
         Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
 
@@ -303,7 +303,7 @@ NTSTATUS DispTdiAssociateAddress(
   Status = ObReferenceObjectByHandle(
     Parameters->AddressHandle,
     0,
-    IoFileObjectType,
+    *IoFileObjectType,
     KernelMode,
     (PVOID*)&FileObject,
     NULL);
@@ -511,7 +511,7 @@ NTSTATUS DispTdiDisconnect(
     Status = STATUS_INVALID_PARAMETER;
     goto done;
   }
-    
+
   Status = DispPrepareIrpForCancel
     (TranContext->Handle.ConnectionContext,
      Irp,
@@ -716,7 +716,7 @@ NTSTATUS DispTdiQueryInformation(
           case TDI_CONNECTION_FILE:
             Endpoint =
 				(PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-                
+
             Address->TAAddressCount = 1;
             Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
             Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
@@ -761,12 +761,12 @@ NTSTATUS DispTdiQueryInformation(
       case TDI_QUERY_MAX_DATAGRAM_INFO:
       {
           PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo;
-          
+
           if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*MaxDatagramInfo)) {
               TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
               return STATUS_BUFFER_TOO_SMALL;
           }
-          
+
           MaxDatagramInfo = (PTDI_MAX_DATAGRAM_INFO)
             MmGetSystemAddressForMdl(Irp->MdlAddress);
 
@@ -1560,7 +1560,7 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
-            
+
             IF->Broadcast.Type = IP_ADDRESS_V4;
 	    IF->Broadcast.Address.IPv4Address =
 		IF->Unicast.Address.IPv4Address |

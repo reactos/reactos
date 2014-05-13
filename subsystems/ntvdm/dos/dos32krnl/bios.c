@@ -24,65 +24,15 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#if 0
-static WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
-{
-    WORD Result = ERROR_SUCCESS;
-    DWORD BytesWritten32 = 0;
-    HANDLE Handle = DosGetRealHandle(FileHandle);
-    WORD i;
-
-    DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n",
-           FileHandle,
-           Count);
-
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
-
-    if (IsConsoleHandle(Handle))
-    {
-        for (i = 0; i < Count; i++)
-        {
-            /* Call the BIOS to print the character */
-            VidBiosPrintCharacter(((LPBYTE)Buffer)[i], DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
-            BytesWritten32++;
-        }
-    }
-    else
-    {
-        /* Write the file */
-        if (!WriteFile(Handle, Buffer, Count, &BytesWritten32, NULL))
-        {
-            /* Store the error code */
-            Result = (WORD)GetLastError();
-        }
-    }
-
-    /* The number of bytes written is always 16-bit */
-    *BytesWritten = LOWORD(BytesWritten32);
-
-    /* Return the error code */
-    return Result;
-}
-#endif
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-CHAR DosReadCharacter(VOID)
+CHAR DosReadCharacter(WORD FileHandle)
 {
     CHAR Character = '\0';
     WORD BytesRead;
 
-    if (IsConsoleHandle(DosGetRealHandle(DOS_INPUT_HANDLE)))
-    {
-        /* Call the BIOS */
-        Character = LOBYTE(BiosGetCharacter());
-    }
-    else
-    {
-        /* Use the file reading function */
-        DosReadFile(DOS_INPUT_HANDLE, &Character, sizeof(CHAR), &BytesRead);
-    }
+    /* Use the file reading function */
+    DosReadFile(FileHandle, &Character, 1, &BytesRead);
 
     return Character;
 }
@@ -117,12 +67,12 @@ BOOLEAN DosCheckInput(VOID)
     }
 }
 
-VOID DosPrintCharacter(CHAR Character)
+VOID DosPrintCharacter(WORD FileHandle, CHAR Character)
 {
     WORD BytesWritten;
 
     /* Use the file writing function */
-    DosWriteFile(DOS_OUTPUT_HANDLE, &Character, sizeof(CHAR), &BytesWritten);
+    DosWriteFile(FileHandle, &Character, 1, &BytesWritten);
 }
 
 BOOLEAN DosBIOSInitialize(VOID)

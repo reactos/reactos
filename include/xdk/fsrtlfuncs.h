@@ -1580,26 +1580,31 @@ FsRtlRemovePerFileObjectContext(
     (InterlockedDecrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
 }
 
-/* GCC compatible definition, MS one is retarded */
-extern NTKERNELAPI const UCHAR * const FsRtlLegalAnsiCharacterArray;
-#define LEGAL_ANSI_CHARACTER_ARRAY        FsRtlLegalAnsiCharacterArray
+#ifdef _NTSYSTEM_
+extern const UCHAR * const FsRtlLegalAnsiCharacterArray;
+#define LEGAL_ANSI_CHARACTER_ARRAY FsRtlLegalAnsiCharacterArray
+#else
+extern const UCHAR * const *FsRtlLegalAnsiCharacterArray;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(FsRtlLegalAnsiCharacterArray)
+#define LEGAL_ANSI_CHARACTER_ARRAY (*FsRtlLegalAnsiCharacterArray)
+#endif
 
 #define FsRtlIsAnsiCharacterWild(C) (                                       \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
 )
 
 #define FsRtlIsAnsiCharacterLegalFat(C, WILD) (                                \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |       \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |       \
                                         ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
 )
 
 #define FsRtlIsAnsiCharacterLegalHpfs(C, WILD) (                               \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |      \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |      \
                                         ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
 )
 
 #define FsRtlIsAnsiCharacterLegalNtfs(C, WILD) (                               \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |      \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |      \
                                         ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
 )
 
@@ -1627,7 +1632,7 @@ extern NTKERNELAPI const UCHAR * const FsRtlLegalAnsiCharacterArray;
 #define FsRtlIsUnicodeCharacterWild(C) (                                    \
     (((C) >= 0x40) ?                                                        \
     FALSE :                                                                 \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
+    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(C)], FSRTL_WILD_CHARACTER ))       \
 )
 
 #define FsRtlInitPerFileContext( _fc, _owner, _inst, _cb)   \

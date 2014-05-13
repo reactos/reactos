@@ -50,7 +50,7 @@ call_ica_hw_interrupt
  */
 PVOID  WINAPI getIntelRegistersPointer(VOID);
 
-#ifdef __i386__
+#ifndef _M_MIPS
 
 ULONG  WINAPI getEAX(VOID);
 VOID   WINAPI setEAX(ULONG);

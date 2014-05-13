@@ -113,7 +113,7 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
     LTEXT "Einige Dienste sind von anderen Diensten, Systemtreibern und Ladegruppen abhängig. Falls eine Systemkomponente anhält oder nicht einwandfrei ausgeführt wird, kann dies Auswirkungen auf abhängige Dienste haben.", IDC_STATIC, 8, 7, 238, 38
-    LTEXT "Dieser Dienst ist von diesen Systemkomponenten abhängig", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "Dieser Dienst ist von folgenden Systemkomponenten abhängig", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
@@ -208,8 +208,8 @@ STRINGTABLE
 BEGIN
     IDS_NUM_SERVICES "Anzahl der Dienste: %d"
     IDS_STOP_DEPENDS "Wenn %s beendet wird, werden diese Dienste ebenfalls beendet"
-    IDS_NO_DEPENDS "<No Dependencies>"
-    IDS_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_NO_DEPENDS "<Keine Abhängigkeiten>"
+    IDS_LICENSE "Dieses Programm ist Freie Software: Sie können es unter den Bedingungen der GNU General Public License, wie von der Free Software Foundation, Version 2.1 der Lizenz oder (nach Ihrer Wahl) jeder neueren veröffentlichten Version, weiterverbreiten und/oder modifizieren.\r\n\r\nDieses Programm wird in der Hoffnung, dass es nützlich sein wird, aber OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.\r\n\r\nSie sollten eine Kopie der GNU General Public License zusammen mit diesem Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>."
 END
 
 STRINGTABLE
@@ -233,7 +233,7 @@ BEGIN
     IDS_PROGRESS_INFO_RESUME "ReactOS versucht den folgenden Dienst fortzusetzen"
     IDS_CREATE_SUCCESS "Der Dienst wurde erfolgreich erstellt"
     IDS_DELETE_SUCCESS "Der Dienst wurde erfolgreich gelöscht"
-    IDS_CREATE_REQ "Mit einem Sternchen gekennzeichnete Felder sind erforderlich"
+    IDS_CREATE_REQ "Mit einem Stern (*) gekennzeichnete Felder sind erforderlich"
     IDS_DELETE_STOP "Sie müssen den Dienst manuell beenden, bevor er gelöscht werden kann!"
 END
 

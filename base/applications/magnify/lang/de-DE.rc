@@ -23,7 +23,7 @@ CAPTION "Über"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20
-    LTEXT "Bildschirm-Lupe Version 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Bildschirmlupe Version 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
     LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 48, 24, 125, 22
     PUSHBUTTON "OK", IDOK, 162, 48, 50, 14
 END
@@ -67,5 +67,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Bildschirm-Lupe"
+    IDS_APP_TITLE "Bildschirmlupe"
 END

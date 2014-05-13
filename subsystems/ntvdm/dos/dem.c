@@ -21,7 +21,6 @@
 #include "bop.h"
 
 #include "bios/bios.h"
-#include "hardware/vga.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/obtypes.h>
@@ -138,8 +137,7 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
 
             StartupInfo.cb = sizeof(StartupInfo);
 
-            VgaRefreshDisplay();
-            VgaDetachFromConsole(FALSE);
+            VidBiosDetachFromConsole();
 
             Result = CreateProcessA(NULL,
                                     CommandLine,
@@ -171,9 +169,7 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
                 dwExitCode = GetLastError();
             }
 
-            VgaAttachToConsole();
-            VgaRefreshDisplay();
-            VidBiosSyncCursorPosition();
+            VidBiosAttachToConsole();
 
             setAL((UCHAR)dwExitCode);
 

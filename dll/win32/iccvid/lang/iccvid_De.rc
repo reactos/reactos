@@ -25,6 +25,6 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    IDS_NAME "Cinepak Video Codec"
-    IDS_DESCRIPTION "Cinepak Video Codec"
+    IDS_NAME "Cinepak Video-Codec"
+    IDS_DESCRIPTION "Cinepak Video-Codec"
 }

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = PeaZip
@@ -13,6 +13,12 @@ CDPath = none
 
 [Section.0407]
 Description = PeaZip ist ein freier, plattformübergreifender, quelloffener Datei- und Archivmanager. Er unterstützt über 150 Archiv-Formate.
+
+[Section.0410]
+Description = PeaZip è un manager di file e archivi gratis, multipiattaforma e open source. Supporta oltre 150 formati d'archivio.
+
+[Section.0415]
+PeaZip to darmowy, wieloplatformowy menedżer plików i archiwów, o otwartym źródle. Obsługuje ponad 150 formatów archiwów.
 
 [Section.041f]
 Description = PeaZip; ücretsiz, çapraz platform, açık kaynak bir kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.

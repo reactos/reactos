@@ -53,7 +53,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Dieses Programm ist Freie Software: Sie können es unter den Bedingungen der GNU General Public License, wie von der Free Software Foundation, Version 2.1 der Lizenz oder (nach Ihrer Wahl) jeder neueren veröffentlichten Version, weiterverbreiten und/oder modifizieren.\r\n\r\nDieses Programm wird in der Hoffnung, dass es nützlich sein wird, aber OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.\r\n\r\nSie sollten eine Kopie der GNU General Public License zusammen mit diesem Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>."
 END
 
 STRINGTABLE
@@ -71,7 +71,7 @@ BEGIN
     IDS_HINT_BLANK " "
     IDS_HINT_EXIT " Das Programm beenden."
     IDS_HINT_REFRESH " Die Service-Liste aktualisieren."
-    IDS_HINT_PROP " Eigenschaften-Seite für die aktuelle Auswahl anzeigen."
+    IDS_HINT_PROP " Eigenschaften für die aktuelle Auswahl anzeigen."
     IDS_HINT_HELP " Hilfe-Fenster anzeigen."
     IDS_HINT_ABOUT " Über ReactOS Geräte-Manager."
     IDS_HINT_SYS_RESTORE " Dieses Fenster auf normale Größe wiederherstellen."

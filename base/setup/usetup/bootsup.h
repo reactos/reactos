@@ -27,65 +27,79 @@
 #pragma once
 
 NTSTATUS
-CreateFreeLoaderIniForDos(PWCHAR IniPath,
-			  PWCHAR ArcPath);
+CreateFreeLoaderIniForDos(
+    PWCHAR IniPath,
+    PWCHAR ArcPath);
 
 NTSTATUS
-CreateFreeLoaderIniForReactos(PWCHAR IniPath,
-			      PWCHAR ArcPath);
+CreateFreeLoaderIniForReactos(
+    PWCHAR IniPath,
+    PWCHAR ArcPath);
 
 NTSTATUS
-UpdateFreeLoaderIni(PWCHAR IniPath,
-		    PWCHAR ArcPath);
+UpdateFreeLoaderIni(
+    PWCHAR IniPath,
+    PWCHAR ArcPath);
 
 NTSTATUS
-SaveCurrentBootSector(PWSTR RootPath,
-		      PWSTR DstPath);
+SaveCurrentBootSector(
+    PWSTR RootPath,
+    PWSTR DstPath);
 
 NTSTATUS
-InstallFat16BootCodeToFile(PWSTR SrcPath,
-			   PWSTR DstPath,
-			   PWSTR RootPath);
+InstallFat16BootCodeToFile(
+    PWSTR SrcPath,
+    PWSTR DstPath,
+    PWSTR RootPath);
 
 NTSTATUS
-InstallFat32BootCodeToFile(PWSTR SrcPath,
-			   PWSTR DstPath,
-			   PWSTR RootPath);
+InstallFat32BootCodeToFile(
+    PWSTR SrcPath,
+    PWSTR DstPath,
+    PWSTR RootPath);
 
 NTSTATUS
-InstallMbrBootCodeToDisk (PWSTR SrcPath,
-			  PWSTR RootPath);
+InstallMbrBootCodeToDisk(
+    PWSTR SrcPath,
+    PWSTR RootPath);
 
 NTSTATUS
-InstallFat16BootCodeToDisk(PWSTR SrcPath,
-			   PWSTR RootPath);
+InstallFat16BootCodeToDisk(
+    PWSTR SrcPath,
+    PWSTR RootPath);
 
 NTSTATUS
-InstallFat32BootCodeToDisk(PWSTR SrcPath,
-			   PWSTR RootPath);
+InstallFat32BootCodeToDisk(
+    PWSTR SrcPath,
+    PWSTR RootPath);
 
 NTSTATUS
-UpdateBootIni(PWSTR BootIniPath,
-	      PWSTR EntryName,
-	      PWSTR EntryValue);
+UpdateBootIni(
+    PWSTR BootIniPath,
+    PWSTR EntryName,
+    PWSTR EntryValue);
 
 BOOLEAN
-CheckInstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath);
+CheckInstallFatBootcodeToPartition(
+    PUNICODE_STRING SystemRootPath);
 
 NTSTATUS
-InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
-			      PUNICODE_STRING SourceRootPath,
-			      PUNICODE_STRING DestinationArcPath,
-			      UCHAR PartitionType);
+InstallFatBootcodeToPartition(
+    PUNICODE_STRING SystemRootPath,
+    PUNICODE_STRING SourceRootPath,
+    PUNICODE_STRING DestinationArcPath,
+    UCHAR PartitionType);
 
 NTSTATUS
-InstallVBRToPartition(PUNICODE_STRING SystemRootPath,
-                      PUNICODE_STRING SourceRootPath,
-                      PUNICODE_STRING DestinationArcPath,
-                      UCHAR PartitionType);
+InstallVBRToPartition(
+    PUNICODE_STRING SystemRootPath,
+    PUNICODE_STRING SourceRootPath,
+    PUNICODE_STRING DestinationArcPath,
+    UCHAR PartitionType);
 
 NTSTATUS
-InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
-			   PUNICODE_STRING DestinationArcPath);
+InstallFatBootcodeToFloppy(
+    PUNICODE_STRING SourceRootPath,
+    PUNICODE_STRING DestinationArcPath);
 
 /* EOF */

@@ -2173,6 +2173,7 @@ BOOL WINAPI SetupCopyOEMInfA(
     PWSTR DestinationInfFileNameW = NULL;
     PWSTR DestinationInfFileNameComponentW = NULL;
     BOOL ret = FALSE;
+    DWORD size;
 
     TRACE("%s %s 0x%lx 0x%lx %p 0%lu %p %p\n",
         SourceInfFileName, OEMSourceMediaLocation, OEMSourceMediaType,
@@ -2204,11 +2205,14 @@ BOOL WINAPI SetupCopyOEMInfA(
             CopyStyle,
             DestinationInfFileNameW,
             DestinationInfFileNameSize,
-            RequiredSize,
+            &size,
             DestinationInfFileNameComponent ? &DestinationInfFileNameComponentW : NULL);
         if (!ret)
+        {
+            if (RequiredSize) *RequiredSize = size;
             goto cleanup;
-
+        }
+            
         if (DestinationInfFileNameSize != 0)
         {
             if (WideCharToMultiByte(CP_ACP, 0, DestinationInfFileNameW, -1,

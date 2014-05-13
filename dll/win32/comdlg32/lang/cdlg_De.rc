@@ -66,7 +66,7 @@ Bitte geben Sie eine Zahl zwischen 1 und %d ein."
     PD32_DRIVER_UNKNOWN                   "Unbekannter Druckertreiber."
     PD32_NO_DEVICES                       "Bevor Sie Drucker-relevante Aufgaben ausführen können, wie die Seiteneinrichtung oder ein Dokument zu drucken, müssen Sie einen Drucker installieren. Bitte führen Sie dies zuerst aus und versuchen Sie es erneut."
 
-    PD32_DEFAULT_PRINTER                  "Standard Drucker; "
+    PD32_DEFAULT_PRINTER                  "Standarddrucker; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Es sind %d Dokumente in der Warteschlange"
     PD32_MARGINS_IN_INCHES                "Ränder [Zoll]"
     PD32_MARGINS_IN_MILLIMETERS           "Ränder [mm]"
@@ -80,16 +80,16 @@ Bitte geben Sie eine Zahl zwischen 1 und %d ein."
     PD32_PRINTER_STATUS_PAPER_OUT         "Papierfach leer; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Papier manuell zuführen; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papierproblem; "
-    PD32_PRINTER_STATUS_OFFLINE           "Drucker ist offline; "
+    PD32_PRINTER_STATUS_OFFLINE           "Drucker ist unerreichbar; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "Datenübertragung; "
     PD32_PRINTER_STATUS_BUSY              "Beschäftigt; "
-    PD32_PRINTER_STATUS_PRINTING          "Druckend; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Ausgabe Fach ist voll; "
+    PD32_PRINTER_STATUS_PRINTING          "Druckt; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Ausgabefach ist voll; "
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "Nicht vorhanden; "
-    PD32_PRINTER_STATUS_WAITING           "Wartend; "
+    PD32_PRINTER_STATUS_WAITING           "Warten; "
     PD32_PRINTER_STATUS_PROCESSING        "In Bearbeitung; "
-    PD32_PRINTER_STATUS_INITIALIZING      "Initialisierend; "
-    PD32_PRINTER_STATUS_WARMING_UP        "Aufwärmend; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Initialisierung; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Aufwärmen; "
     PD32_PRINTER_STATUS_TONER_LOW         "Tonerstand niedrig; "
     PD32_PRINTER_STATUS_NO_TONER          "Kein Toner mehr; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Seitenausgabe; "
@@ -123,7 +123,7 @@ STRINGTABLE /* Color names */
     IDS_COLOR_LIME      "Hellgrün"
     IDS_COLOR_YELLOW    "Gelb"
     IDS_COLOR_BLUE      "Blau"
-    IDS_COLOR_FUCHSIA   "Fuchsin"
+    IDS_COLOR_FUCHSIA   "Fuchsie"
     IDS_COLOR_AQUA      "Aquamarin"
     IDS_COLOR_WHITE     "Weiß"
 }
@@ -193,7 +193,7 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Drucker:", stc1, 6, 6, 40, 9
  LTEXT "", stc2, 60, 6, 150, 9
- GROUPBOX "Druck Bereich", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ GROUPBOX "Druckbereich", grp1, 6, 30, 160, 65, BS_GROUPBOX
  RADIOBUTTON "&Alles", rad1, 16, 45, 60, 12
  RADIOBUTTON "A&uswahl", rad2, 16, 60, 60, 12
  RADIOBUTTON "&Seiten", rad3, 16, 75, 60, 12

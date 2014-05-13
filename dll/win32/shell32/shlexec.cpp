@@ -450,15 +450,13 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     startup.cb = sizeof(STARTUPINFOW);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = psei->nShow;
+    dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
+   if (psei->fMask & SEE_MASK_NO_CONSOLE)
+        dwCreationFlags |= CREATE_NEW_CONSOLE;    
     startup.lpTitle = (LPWSTR)(psei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE) ? psei->lpClass : NULL);
 
     if (psei->fMask & SEE_MASK_HASLINKNAME)
         startup.dwFlags |= STARTF_TITLEISLINKNAME;
-
-    dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
-
-    if (psei->fMask & SEE_MASK_NO_CONSOLE)
-        dwCreationFlags |= CREATE_NEW_CONSOLE;
 
     if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
                        lpDirectory, &startup, &info))
@@ -703,7 +701,13 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOpera
         lpFile = xlpFile;
         /* Hey, isn't this value ignored?  Why make this call?  Shouldn't we return here?  --dank*/
     }
-
+    else if (lpPath && SearchPathW(NULL, lpFile, wszExe, sizeof(xlpFile)/sizeof(WCHAR), xlpFile, NULL))
+    {
+        TRACE("SearchPathW returned non-zero\n");
+        lpFile = xlpFile;
+        /* The file was found in one of the directories in the system-wide search path */
+    }
+    
     attribs = GetFileAttributesW(lpFile);
     if (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY))
     {

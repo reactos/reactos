@@ -1,6 +1,6 @@
 /* FILE:       dll/win32/syssetup/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2009-08-02
+ * UPDATED:    2014-04-21
  * THANKS TO:  Filip Navara and Kamil Hornicek, who translated major part of this file
  */
 
@@ -12,7 +12,7 @@ CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Vítejte v průvodci instalace systému ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Tento průvodce nainstaluje systém ReactOS na Váš počítač. Průvodce potřebuje získat některé informace o Vás a Vašem počítači aby mohl systém správně nastavit.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Tento průvodce nainstaluje systém ReactOS na Váš počítač. Průvodce potřebuje získat některé informace o Vás a Vašem počítači, aby mohl systém správně nastavit.", IDC_STATIC, 115, 50, 189, 100
     LTEXT "Kliknutím na Další pokračujte v instalaci.", IDC_STATIC, 115, 160, 189, 31
 END
 
@@ -155,7 +155,7 @@ BEGIN
     IDS_TIMEOUT "Vypršel časový limit registrace"
     IDS_REASON_UNKNOWN ""
     /*
-     * ATTENTION: 
+     * ATTENTION:
      *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.

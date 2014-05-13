@@ -494,8 +494,6 @@ extern PKDEBUG_ROUTINE KiDebugRoutine;
 extern PKDEBUG_SWITCH_ROUTINE KiDebugSwitchRoutine;
 extern BOOLEAN KdBreakAfterSymbolLoad;
 extern BOOLEAN KdPitchDebugger;
-extern BOOLEAN _KdDebuggerNotPresent;
-extern BOOLEAN _KdDebuggerEnabled;
 extern BOOLEAN KdAutoEnableOnEvent;
 extern BOOLEAN KdBlockEnable;
 extern BOOLEAN KdIgnoreUmExceptions;

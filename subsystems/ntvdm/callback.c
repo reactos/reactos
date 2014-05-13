@@ -44,6 +44,13 @@ do {                                 \
 #define CALL16_TRAMPOLINE_SIZE  (1 * sizeof(ULONGLONG))
 #define  INT16_TRAMPOLINE_SIZE  (1 * sizeof(ULONGLONG))
 
+//
+// WARNING WARNING!!
+//
+// If you modify the code stubs here, think also
+// about updating them in int32.c too!!
+//
+
 /* 16-bit generic interrupt code for calling a 32-bit interrupt handler */
 BYTE Int16To32[] =
 {
@@ -51,12 +58,6 @@ BYTE Int16To32[] =
 
     /* Push the value of the interrupt to be called */
     0x6A, 0xFF,         // push i (patchable to 0x6A, 0xIntNum)
-
-    /* The counter variable (initialized to 0) */
-    0x6A, 0x00,         // push 0
-
-    /* Stack variables */
-    0x83, 0xEC, 0x04,   // sub sp, 4
 
     /* The BOP Sequence */
 // BOP_SEQ:
@@ -74,7 +75,7 @@ BYTE Int16To32[] =
     0xEB, 0xF5,         // jmp BOP_SEQ (offset -11)
 
 // EXIT:
-    0x83, 0xC4, 0x08,   // add sp, 8
+    0x44, 0x44,         // inc sp, inc sp
     0xCF,               // iret
 };
 
@@ -200,11 +201,13 @@ RegisterInt32(IN  ULONG   FarPtr,
     BYTE IntCallback[sizeof(Int16To32)/sizeof(BYTE)];
 
     /* Check whether the 32-bit interrupt was already registered */
-    // if (Int32Proc[IntNumber] != NULL)
-    // {
-        // DPRINT1("RegisterInt32: Interrupt 0x%X already registered!\n", IntNumber);
-        // return 0;
-    // }
+#if 0
+    if (Int32Proc[IntNumber] != NULL)
+    {
+        DPRINT1("RegisterInt32: Interrupt 0x%X already registered!\n", IntNumber);
+        return 0;
+    }
+#endif
 
     /* Register the 32-bit interrupt handler */
     Int32Proc[IntNumber] = IntHandler;

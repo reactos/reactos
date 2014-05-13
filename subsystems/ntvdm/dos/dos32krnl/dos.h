@@ -30,10 +30,12 @@
 #define USER_MEMORY_SIZE 0x8FFE
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
-#define INVALID_DOS_HANDLE 0xFFFF
-#define DOS_INPUT_HANDLE 0
-#define DOS_OUTPUT_HANDLE 1
-#define DOS_ERROR_HANDLE 2
+
+#define INVALID_DOS_HANDLE  0xFFFF
+#define DOS_INPUT_HANDLE    0
+#define DOS_OUTPUT_HANDLE   1
+#define DOS_ERROR_HANDLE    2
+
 #define DOS_SFT_SIZE 255
 #define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 #define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
@@ -172,9 +174,9 @@ do { \
  * DOS BIOS Functions
  * See bios.c
  */
-CHAR DosReadCharacter(VOID);
+CHAR DosReadCharacter(WORD FileHandle);
 BOOLEAN DosCheckInput(VOID);
-VOID DosPrintCharacter(CHAR Character);
+VOID DosPrintCharacter(WORD FileHandle, CHAR Character);
 
 BOOLEAN DosBIOSInitialize(VOID);
 
@@ -184,9 +186,15 @@ BOOLEAN DosBIOSInitialize(VOID);
  * See dos.c
  */
 BOOL IsConsoleHandle(HANDLE hHandle);
+WORD DosOpenHandle(HANDLE Handle);
 HANDLE DosGetRealHandle(WORD DosHandle);
+
+WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes);
+WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode);
 WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
 WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
+WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset);
+BOOL DosFlushFileBuffers(WORD FileHandle);
 
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
 DWORD DosLoadExecutable(
@@ -202,6 +210,9 @@ WORD DosCreateProcess(
     LPCSTR ProgramName,
     PDOS_EXEC_PARAM_BLOCK Parameters
 );
+DWORD DosStartProcess(IN LPCSTR ExecutablePath,
+                      IN LPCSTR CommandLine,
+                      IN PVOID Environment);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
 

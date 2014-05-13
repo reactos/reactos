@@ -5242,6 +5242,10 @@ TREEVIEW_KeyDown(TREEVIEW_INFO *infoPtr, WPARAM wParam)
 	newSelection = TREEVIEW_GetNextListItem(infoPtr, prevItem);
 	break;
 
+    case VK_RETURN:
+        TREEVIEW_SendSimpleNotify(infoPtr, NM_RETURN);
+    break;
+    
     case VK_HOME:
 	newSelection = infoPtr->root->firstChild;
 	break;

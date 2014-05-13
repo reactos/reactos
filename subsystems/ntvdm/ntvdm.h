@@ -28,13 +28,22 @@
 
 #include <vddsvc.h>
 
+DWORD WINAPI SetLastConsoleEventActive(VOID);
+
 #include <debug.h>
 
-DWORD WINAPI SetLastConsoleEventActive(VOID);
+/*
+ * Activate this line if you want to run NTVDM in standalone mode with:
+ * ntvdm.exe <program>
+ */
+// #define STANDALONE
 
 /* FUNCTIONS ******************************************************************/
 
+#ifndef STANDALONE
 extern ULONG SessionId;
+#endif
+
 extern HANDLE VdmTaskEvent;
 
 VOID DisplayMessage(LPCWSTR Format, ...);

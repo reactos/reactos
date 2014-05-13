@@ -21,6 +21,7 @@ list(APPEND SOURCE
     hardware/vga.c
     dos/dos32krnl/bios.c
     dos/dos32krnl/dos.c
+    dos/dos32krnl/dosfiles.c
     dos/dem.c
     bop.c
     callback.c

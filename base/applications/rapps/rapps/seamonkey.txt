@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Mozilla SeaMonkey
@@ -27,7 +27,7 @@ Size = 24,06 Mo
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.25/win32/fr/SeaMonkey%20Setup%202.25.exe
 
 [Section.0410]
-Description = Mozilla Suite è vivo. Questo è l'unico e solo Browser, Mail, Chat, e Composer di cui avrete mai bisogno...
+Description = Mozilla Suite è vivo. Questo è l'unico pachetto che include Browser, Mail, Chat, e Composer di cui avrete mai bisogno...
 Size = 23.71 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.25/win32/it/SeaMonkey%20Setup%202.25.exe
 

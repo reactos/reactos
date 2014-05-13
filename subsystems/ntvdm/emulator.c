@@ -395,13 +395,22 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     /* Initialize the PS2 port */
     PS2Initialize(ConsoleInput);
 
+    /**************** ATTACH INPUT WITH CONSOLE *****************/
     /* Start the input thread */
     InputThread = CreateThread(NULL, 0, &PumpConsoleInput, ConsoleInput, 0, NULL);
-    // if (InputThread == NULL) return FALSE;
+    if (InputThread == NULL)
+    {
+        DisplayMessage(L"Failed to create the console input thread.");
+        return FALSE;
+    }
+    /************************************************************/
 
     /* Initialize the VGA */
-    // if (!VgaInitialize(ConsoleOutput)) return FALSE;
-    VgaInitialize(ConsoleOutput);
+    if (!VgaInitialize(ConsoleOutput))
+    {
+        DisplayMessage(L"Failed to initialize VGA support.");
+        return FALSE;
+    }
 
     /* Initialize the software callback system and register the emulator BOPs */
     InitializeCallbacks();

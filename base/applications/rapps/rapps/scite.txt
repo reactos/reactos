@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = SciTE
@@ -22,7 +22,7 @@ Description = SciTE est un éditeur de texte basé sur SCIntilla. Originelement 
 Size = 730 ko
 
 [Section.0410]
-Description = SciTE è un editor di testo basato scintilla. Originariamente costruito per dimostrare Scintilla, è cresciuto fino a essere un editor generalmente utile con strutture per la creazione e l'esecuzione di programmi.
+Description = SciTE è un editor di testo basato su scintilla. Originariamente costruito per dimostrare Scintilla, è cresciuto fino a essere un editor generalmente utile con strutture per la creazione e l'esecuzione di programmi.
 
 [Section.0413]
 Description = SciTE is een tekstbewerker gebaseerd op SCIntilla. Origineel bedoeld om Scontilla te demonstreren, is uitgegroeid tot een handige editor met mogelijkheden voor ontwerken en uitvoeren van programma's.

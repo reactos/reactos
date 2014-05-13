@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = OpenOffice 2.4
@@ -31,6 +31,7 @@ URLSite = http://www.openoffice.org/fr/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/fr/2.4.2/OOo_2.4.2_Win32Intel_install_fr.exe
 
 [Section.0410]
+Description = La suite di office Open Source.
 Size = 113.79 MB
 URLSite = http://www.openoffice.org/it/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/it/2.4.3/OOo_2.4.3_Win32Intel_install_it.exe

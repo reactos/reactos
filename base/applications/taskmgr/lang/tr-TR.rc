@@ -277,11 +277,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 84, 178, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 138, 178, 50, 14
-    LTEXT "Bu seçenekler, ""İşlemci"" sekmesindeki dikeçlerin hangisinin görüntülenip görüntülenmeyeceğini belirler.", IDC_STATIC, 7, 7, 181, 17
+    LTEXT "Görev Yöneticisi'nin İşlemler sayfasında gözükecek dikeçleri seçiniz.", IDC_STATIC, 7, 7, 181, 17
     CONTROL "Yansıma Adı", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
     CONTROL "PID (İşlem Tanımlayıcı)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 88, 10
     CONTROL "CPU Kullanımı", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
-    CONTROL "CPU Çalışma Süresi", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
+    CONTROL "CPU Süresi", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
     CONTROL "Bellek Kullanımı", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
     CONTROL "Bellek Kullanım Aralığı", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 82, 10
     CONTROL "En Yüksek Bellek Kullanımı", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
@@ -295,14 +295,14 @@ BEGIN
     CONTROL "Farazî Bellek Boyutu", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 77, 10
     CONTROL "Sayfalanmış Havuz", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 53, 10
     CONTROL "Sayfalanmamış Havuz", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 67, 10
-    CONTROL "Öncelik", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
+    CONTROL "Birinci Öncelik", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
     CONTROL "İşleçler", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 83, 59, 10
     CONTROL "İş Parçacıkları", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 59, 10
     CONTROL "GDI Nesneleri", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 55, 10
     CONTROL "G/Ç Yazma", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 116, 49, 10
     CONTROL "G/Ç Yazma Çokluları", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
-    CONTROL "G/Ç Diğer", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
-    CONTROL "G/Ç Diğer Çoklular", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "G/Ç Başka", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
+    CONTROL "G/Ç Başka Çoklular", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
 END
 
 /* String Tables */
@@ -311,64 +311,64 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Görev Yöneticisi"
     IDC_TASKMGR "Görev Yöneticisi"
-    IDS_IDLE_PROCESS "Çalışmayan İşlemci Yüzdesi İşlemi"
+    IDS_IDLE_PROCESS "Dizge Boşta İşlemi"
 END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW "Yeni görev çalıştırır."
-    ID_OPTIONS_ALWAYSONTOP "Görev Yöneticisi'ni diğer pencerelerin üstünde tutar."
-    ID_OPTIONS_MINIMIZEONUSE "Geçiş yapılırken Görev Yöneticisi'ni simge durumuna küçültür."
+    ID_FILE_NEW "Yeni bir izlence çalıştırır."
+    ID_OPTIONS_ALWAYSONTOP "Simge durumuna küçültülmeden Görev Yöneticisi başka tüm pencerelerin önünde durur."
+    ID_OPTIONS_MINIMIZEONUSE "Geçme işlemi uygulanırken Görev Yöneticisi simge durumuna küçültülür."
     ID_OPTIONS_HIDEWHENMINIMIZED "Görev Yöneticisi simge durumuna küçültüldüğünde Görev Yöneticisi'ni gizler."
-    ID_VIEW_REFRESH "Görev Yöneticisi'ndeki bilgileri yeniler."
-    ID_VIEW_LARGE "Görevleri büyük simgelerle gösterir."
-    ID_VIEW_SMALL "Görevleri küçük simgelerle gösterir."
-    ID_VIEW_DETAILS "Görevleri küçük simgelerle, ayrıntılı olarak gösterir."
-    ID_VIEW_UPDATESPEED_HIGH "Her yarım sâniyede bir Görev Yöneticisi'ndeki bilgileri yeniler."
-    ID_VIEW_UPDATESPEED_NORMAL "Her iki sâniyede bir Görev Yöneticisi'ndeki bilgileri yeniler."
-    ID_VIEW_UPDATESPEED_LOW "Her dört sâniyede bir Görev Yöneticisi'ndeki bilgileri yeniler."
+    ID_VIEW_REFRESH "Yenileme Hızı ayârını önemsemeden Görev Yöneticisi'ni şimdi yenilemeye zorlar."
+    ID_VIEW_LARGE "Görevleri büyük simgeler kullanarak gösterir."
+    ID_VIEW_SMALL "Görevleri küçük simgeler kullanarak gösterir."
+    ID_VIEW_DETAILS "Her bir görev için bilgi görüntüler."
+    ID_VIEW_UPDATESPEED_HIGH "Her sâniyede iki kez görünümü yeniler."
+    ID_VIEW_UPDATESPEED_NORMAL "Her iki sâniyede bir görünümü yeniler."
+    ID_VIEW_UPDATESPEED_LOW "Her dört sâniyede bir görünümü yeniler."
 END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Görev Yöneticisi'ndeki bilgilerin kendiliğinden yenilenmesini durdurur."
-    ID_WINDOWS_TILEHORIZONTALLY "Masaüstündeki pencereleri yatay olarak sıralar."
-    ID_WINDOWS_TILEVERTICALLY "Masaüstündeki pencereleri dikey olarak sıralar."
+    ID_VIEW_UPDATESPEED_PAUSED "Kendiliğinden yenilemez."
+    ID_WINDOWS_TILEHORIZONTALLY "Masaüstünde pencereleri yatay olarak döşer."
+    ID_WINDOWS_TILEVERTICALLY "Masaüstünde pencereleri dikey olarak döşer."
     ID_WINDOWS_MINIMIZE "Pencereleri simge durumuna küçültür."
-    ID_WINDOWS_MAXIMIZE "Pencereleri her bir pencerenin görüntülüğü kaplayacağı şekilde büyütür."
-    ID_WINDOWS_CASCADE "Pencereleri masaüstünde çapraz olarak sıralar."
-    ID_WINDOWS_BRINGTOFRONT "Pencereyi öne getirir ancak o pencereye geçiş yapmaz."
-    ID_HELP_TOPICS "Görev Yöneticisi ile ilgili yardım konularını görüntüler."
-    ID_HELP_ABOUT "Görev Yöneticisi ile ilgili bilgi görüntüler."
-    ID_FILE_EXIT "Görev Yöneticisi'nden çıkar."
-    ID_OPTIONS_SHOW16BITTASKS "Farazî DOS Makinesi (ntvdm.exe) altında çalışan 16 bitlik uygulamaları da görüntüler."
-    ID_VIEW_SELECTCOLUMNS """İşlemler"" sekmesinde hangi dikeçlerin görüntülenip görüntülenmeyeceğini belirler."
-    ID_VIEW_SHOWKERNELTIMES "İşlemci çizgelerinde çekirdek zamanlarını gösterir."
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Toplam CPU kullanımını tek çizgede gösterir."
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Her CPU'nun kullanımını ayrı çizgelerde gösterir."
-    ID_APPLICATION_PAGE_SWITCHTO "Seçilen görevi öne getirip o göreve odaklatır."
+    ID_WINDOWS_MAXIMIZE "Pencereleri büyütür."
+    ID_WINDOWS_CASCADE "Masaüstünde pencereleri çapraz olarak basamaklar."
+    ID_WINDOWS_BRINGTOFRONT "Pencereyi öne getirir ancak ona geçmez."
+    ID_HELP_TOPICS "Görev Yöneticisi yardım konularını görüntüler."
+    ID_HELP_ABOUT "İzlenceyle ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
+    ID_FILE_EXIT "Görev Yöneticisi uygulamasından çıkar."
+    ID_OPTIONS_SHOW16BITTASKS "İlişkili ntvdm.exe altındaki 16 bitlik görevleri gösterir."
+    ID_VIEW_SELECTCOLUMNS "İşlemler sayfasında hangi dikeçlerin görünür olacağını seçer."
+    ID_VIEW_SHOWKERNELTIMES "Başarım çizgelerinde çekirdek sürelerini görüntüler."
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Bir bayağı geçmiş çizgesi toplam CPU kullanımını gösterir."
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Her bir CPU'nun kendi geçmiş çizgesi vardır."
+    ID_APPLICATION_PAGE_SWITCHTO "Bir görevi ön plana getirir, o göreve odaklatır."
 END
 
 STRINGTABLE
 BEGIN
-    ID_ENDTASK "Seçili görevi sonlandırmaya çalışır."
-    ID_GOTOPROCESS "Seçili görevin işlemine gider."
-    ID_RESTORE "Görev Yöneticisi'ni gizli olmaktan çıkarır."
-    ID_PROCESS_PAGE_ENDPROCESS "Seçili işlemi sonlandırır."
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Seçili işlemi ve bu işlemin bağlı olduğu tüm işlemleri sonlandırır."
-    ID_PROCESS_PAGE_DEBUG "Seçili işleme bir yanlışlık ayıklayıcı bağlar."
-    ID_PROCESS_PAGE_SETAFFINITY "Seçili işlemin hangi CPU'larla yürütüleceğini belirler."
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Seçili işlemin öncelik sırasını EŞ ZAMANLI yapar."
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Seçili işlemin öncelik sırasını YÜKSEK yapar."
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Seçili işlemin öncelik sırasını ORTA-YÜKSEK yapar."
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Seçili işlemin öncelik sırasını ORTA yapar."
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Seçili işlemin öncelik sırasını ORTA-DÜŞÜK yapar."
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Seçili işlemin öncelik sırasını DÜŞÜK yapar."
+    ID_ENDTASK "Seçilen görevleri sonlandırmayı bildirir."
+    ID_GOTOPROCESS "Seçilen görevin işlemine odaklatır."
+    ID_RESTORE "Görev Yöneticisi'ni gizli durumdan döndürür."
+    ID_PROCESS_PAGE_ENDPROCESS "İşlemi dizgeden siler."
+    ID_PROCESS_PAGE_ENDPROCESSTREE "Bu işlemi ve tüm astlarını bu dizgeden sonlandırır."
+    ID_PROCESS_PAGE_DEBUG "Bu işleme yanlışlık ayıklayıcı bağlar."
+    ID_PROCESS_PAGE_SETAFFINITY "İşleme hangi CPU'ların üzerinde çalışmasına izin verileceğini denetler."
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "İşlemi EŞ ZAMANLI öncelik sınıfına getirir."
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "İşlemi YÜKSEK öncelik sınıfına getirir."
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "İşlemi DÜZGÜLÜ ÜSTÜ öncelik sınıfına getirir."
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "İşlemi DÜZGÜLÜ öncelik sınıfına getirir."
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "İşlemi DÜZGÜLÜ ALTI öncelik sınıfına getirir."
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "İşlemi DÜŞÜK öncelik sınıfına getirir."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_APPS "Görevler"
+    IDS_TAB_APPS "Uygulamalar"
     IDS_TAB_PROCESSES "İşlemler"
     IDS_TAB_PERFORMANCE "Başarım"
     IDS_TAB_TASK "Görev"
@@ -378,7 +378,7 @@ BEGIN
     IDS_TAB_USERNAME "Kullanıcı Adı"
     IDS_TAB_SESSIONID "Oturum Kimliği"
     IDS_TAB_CPU "CPU Kullanımı"
-    IDS_TAB_CPUTIME "CPU Çalışma Süresi"
+    IDS_TAB_CPUTIME "CPU Süresi"
     IDS_TAB_MEMUSAGE "Bellek Kullanımı"
     IDS_TAB_PEAKMEMUSAGE "En Yüksek Bellek Kullanımı"
     IDS_TAB_MEMDELTA "Bellek Kullanım Aralığı"
@@ -387,43 +387,43 @@ BEGIN
     IDS_TAB_VMSIZE "Farazî Bellek Boyutu"
     IDS_TAB_PAGEDPOOL "Sayfalanmış Havuz"
     IDS_TAB_NPPOOL "Sayfalanmamış Havuz"
-    IDS_TAB_BASEPRI "Öncelik"
+    IDS_TAB_BASEPRI "Birinci Öncelik"
     IDS_TAB_HANDLES "İşleçler"
     IDS_TAB_THREADS "İş Parçacıkları"
     IDS_TAB_USERPBJECTS "Kullanıcı Nesneleri"
     IDS_TAB_GDIOBJECTS "GDI Nesneleri"
     IDS_TAB_IOREADS "G/Ç Okuma"
     IDS_TAB_IOWRITES "G/Ç Yazma"
-    IDS_TAB_IOOTHER "G/Ç Diğer"
+    IDS_TAB_IOOTHER "G/Ç Başka"
     IDS_TAB_IOREADBYTES "G/Ç Okuma Çokluları"
     IDS_TAB_IOWRITESBYTES "G/Ç Yazma Çokluları"
-    IDS_TAB_IOOTHERBYTES "G/Ç Diğer Çoklular"
+    IDS_TAB_IOOTHERBYTES "G/Ç Başka Çoklular"
     IDS_MENU_SELECTCOLUMNS "&Dikeçleri Seç..."
     IDS_MENU_16BITTASK "&16 Bitlik Görevleri Göster"
     IDS_MENU_WINDOWS "&Pencereler"
     IDS_MENU_LARGEICONS "&Büyük Simgeler"
     IDS_MENU_SMALLICONS "&Küçük Simgeler"
     IDS_MENU_DETAILS "&Ayrıntılar"
-    IDS_MENU_ONEGRAPHALLCPUS "&Tüm CPU'lar İçin Aynı Çizge"
-    IDS_MENU_ONEGRAPHPERCPU "&Her CPU'ya Birer Çizge"
+    IDS_MENU_ONEGRAPHALLCPUS "&Tek Çizge, Tüm CPU'lar"
+    IDS_MENU_ONEGRAPHPERCPU "&CPU Başına Bir Çizge"
     IDS_MENU_CPUHISTORY "&CPU Geçmişi"
-    IDS_MENU_SHOWKERNELTIMES "&Çekirdek Zamanlarını Göster"
+    IDS_MENU_SHOWKERNELTIMES "&Çekirdek Sürelerini Göster"
     IDS_CREATENEWTASK "Yeni Görev Oluşturma"
-    IDS_CREATENEWTASK_DESC "Çalıştırılacak görevin konumunu yazınız:"
-    IDS_MSG_ACCESSPROCESSAFF "CPU'larla ilişkisi erişilemez veyâ değiştirilemez."
-    IDS_MSG_PROCESSONEPRO "Herhangi bir işlem, en az bir CPU ile ilişkili olmalıdır."
-    IDS_MSG_INVALIDOPTION "Geçersiz seçenek."
-    IDS_MSG_UNABLEDEBUGPROCESS "Yanlışlık ayıklama işlemi yapılamaz."
-    IDS_MSG_WARNINGDEBUG "UYARI: Bu işlemde yanlışlık ayıklama, veri yitimine neden olabilir.\nBu işleme bir yanlışlık ayıklayıcı bağlamayı doğruluyor musunuz?"
-    IDS_MSG_TASKMGRWARNING "Uyarı"
-    IDS_MSG_WARNINGTERMINATING "UYARI: Bir işlemin sonlandırılması, dizge\nkararsızlığı veyâ veri yitimi gibi istenmeyen durumlara neden olabilir. Bu\nişlemi sonlandırmayı doğruluyor musunuz?"
-    IDS_MSG_UNABLETERMINATEPRO "İşlem sonlandırma yapılamaz."
-    IDS_MSG_UNABLECHANGEPRIORITY "İşlemci önceliği değiştirilemez."
-    IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: İşlemci önceliğinin değiştirilmesi, dizge\nkararsızlığı gibi istenmeyen durumlara neden olabilir. Bu işlemin\nişlemci önceliğini değiştirmeyi doğruluyor musunuz?"
+    IDS_CREATENEWTASK_DESC "Bir izlencenin, bir dizinin, bir belgenin veyâ bir Umûmî Ağ kaynağının adını yazınız, Görev Yöneticisi onu sizin için açacaktır."
+    IDS_MSG_ACCESSPROCESSAFF "İşlemci İlişkisinin Erişilememesi veyâ Ayarlanamaması"
+    IDS_MSG_PROCESSONEPRO "İşlem en azından bir işlemciyle ilişkisi olmalıdır."
+    IDS_MSG_INVALIDOPTION "Geçersiz Seçenek"
+    IDS_MSG_UNABLEDEBUGPROCESS "Yanlışlık Ayıklama İşleminin Yapılamaması"
+    IDS_MSG_WARNINGDEBUG "UYARI: Bu işlemde yanlışlık ayıklama veri yitimiyle sonuçlanabilir.\nYanlışlık ayıklayıcı bağlamak istediğinizi doğruluyor musunuz?"
+    IDS_MSG_TASKMGRWARNING "Görev Yöneticisi Uyarısı"
+    IDS_MSG_WARNINGTERMINATING "UYARI: Bir işlemin sonlandırılması, veri\nyitimi ve dizge kararsızlığını içeren istenmeyen sonuçlara neden\nolabilir. İşlem sonlandırılmadan önce durumunu veyâ verisini\nkaydetme fırsatı verilmeyecektir. İşlemi\nsonlandırmak istediğinizi doğruluyor musunuz?"
+    IDS_MSG_UNABLETERMINATEPRO "İşlem Sonlandırmanın Yapılamaması"
+    IDS_MSG_UNABLECHANGEPRIORITY "Önceliğin Değiştirilememesi"
+    IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: Bu işlemin öncelik sınıfının değiştirilmesi, dizge\nkararsızlığını içeren istenmeyen sonuçlara neden olabilir. Öncelik \nsınıfını değiştirmek istediğinizi doğruluyor musunuz?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Kullanımı: %%%d"
     IDS_STATUS_MEMUSAGE "Bellek Kullanımı: %d KB / %d KB"
     IDS_STATUS_CPUUSAGE "CPU Kullanımı: %%%3d"
-    IDS_STATUS_PROCESSES "İşlem Sayısı: %d"
+    IDS_STATUS_PROCESSES "İşlem: %d"
     IDS_Not_Responding "Yanıt Vermiyor"
     IDS_Running "Çalışıyor"
 END

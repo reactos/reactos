@@ -307,7 +307,10 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
 {
   RpcConnection_np *npc = (RpcConnection_np *) Connection;
   static const char prefix[] = "\\\\";
-  static const char local[] =".";
+  static const char local[] = ".";
+  BOOL bUseLocalName = TRUE;
+  CHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+  DWORD bufLen = sizeof(ComputerName)/sizeof(ComputerName[0]);
   RPC_STATUS r;
   LPSTR pname;
   INT size;
@@ -318,15 +321,39 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
 
   /* protseq=ncacn_np: named pipes */
   size = strlen(prefix);
+
   if (Connection->NetworkAddr == NULL || strlen(Connection->NetworkAddr) == 0)
+  {
+    bUseLocalName = TRUE;
     size += strlen(local);
+  }
   else
-    size += strlen(Connection->NetworkAddr);
+  {
+    if (GetComputerNameA(ComputerName, &bufLen))
+    {
+      if (stricmp(ComputerName, Connection->NetworkAddr) == 0)
+      {
+        bUseLocalName = TRUE;
+        size += strlen(local);
+      }
+      else
+      {
+        bUseLocalName = FALSE;
+        size += strlen(Connection->NetworkAddr);
+      }
+    }
+    else
+    {
+      bUseLocalName = FALSE;
+      size += strlen(Connection->NetworkAddr);
+    }
+  }
+
   size += strlen(Connection->Endpoint) + 1;
 
   pname = I_RpcAllocate(size);
   strcpy(pname, prefix);
-  if (Connection->NetworkAddr == NULL || strlen(Connection->NetworkAddr) == 0)
+  if (bUseLocalName)
     strcat(pname, local);
   else
     strcat(pname, Connection->NetworkAddr);

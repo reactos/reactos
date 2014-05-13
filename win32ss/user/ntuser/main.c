@@ -320,7 +320,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
        goto error;
     }
     Status = ObReferenceObjectByHandle(ptiCurrent->hEventQueueClient, 0,
-                                       ExEventObjectType, KernelMode,
+                                       *ExEventObjectType, KernelMode,
                                        (PVOID*)&ptiCurrent->pEventQueueServer, NULL);
     if (!NT_SUCCESS(Status))
     {

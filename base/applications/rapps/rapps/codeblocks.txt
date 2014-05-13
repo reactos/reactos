@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Code::Blocks (no compiler)
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthält keinen Compiler.
+
+[Section.0410]
+Description = Un IDE potente, open source, multipiattaforma. Non contiene un compilatore.
 
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)

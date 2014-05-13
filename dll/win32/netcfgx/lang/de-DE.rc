@@ -198,7 +198,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NET_CONNECT "LAN-Verbindung"
-    IDS_NO_IPADDR_SET "Der Adapter erfordert mindestens eine IP-Addresse. Geben Sie eine IP-Adresse ein."
+    IDS_NO_IPADDR_SET "Der Adapter erfordert mindestens eine IP-Adresse. Geben Sie eine IP-Adresse ein."
     IDS_NO_SUBMASK_SET "Sie haben eine Adresse eingegeben, für die keine Subnetzmaske vorhanden ist. Fügen Sie eine Subnetzmaske hinzu."
     IDS_TCPFILTERDESC "Mit der TCP/IP-Filterung können Sie die Art der TCP/IP-Netzwerkdaten, die den Windows-Computer erreichen sollen, steuern."
     IDS_TCPFILTER "TCP/IP-Filterung"

@@ -4,5 +4,5 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Zeigt den Computernamen an.\n\nhostname"
     IDS_NOSET "Der Befehl hostname -s wird nicht unterstützt."
-    IDS_ERROR "Win32 Fehler"
+    IDS_ERROR "Win32-Fehler"
 END

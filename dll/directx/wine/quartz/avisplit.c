@@ -803,7 +803,7 @@ static HRESULT AVISplitter_ProcessStreamList(AVISplitterImpl * This, const BYTE 
             TRACE("dwChunkId: %.4s\n", (const char *)&pIndex->dwChunkId);
             if (pIndex->dwReserved[0])
                 TRACE("dwReserved[0]: %u\n", pIndex->dwReserved[0]);
-            if (pIndex->dwReserved[2])
+            if (pIndex->dwReserved[1])
                 TRACE("dwReserved[1]: %u\n", pIndex->dwReserved[1]);
             if (pIndex->dwReserved[2])
                 TRACE("dwReserved[2]: %u\n", pIndex->dwReserved[2]);

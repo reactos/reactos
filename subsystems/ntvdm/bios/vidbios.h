@@ -37,9 +37,12 @@ enum
 
 /* FUNCTIONS ******************************************************************/
 
+VOID VidBiosSyncCursorPosition(VOID);
+
 VOID WINAPI VidBiosVideoService(LPWORD Stack);
 
-VOID VidBiosSyncCursorPosition(VOID);
+VOID VidBiosDetachFromConsole(VOID);
+VOID VidBiosAttachToConsole(VOID);
 
 BOOLEAN VidBiosInitialize(VOID);
 VOID VidBiosCleanup(VOID);

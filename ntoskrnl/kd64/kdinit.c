@@ -310,9 +310,7 @@ KdInitSystem(IN ULONG BootPhase,
         KdDebuggerEnabled = TRUE;
 
         /* Let user-mode know that it's enabled as well */
-#undef KdDebuggerEnabled
         SharedUserData->KdDebuggerEnabled = TRUE;
-#define KdDebuggerEnabled _KdDebuggerEnabled
 
         /* Check if the debugger should be disabled initially */
         if (DisableKdAfterInit)

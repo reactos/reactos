@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = AC97 Driver for VirtualBox
@@ -19,6 +19,11 @@ Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
 Name = AC97 Treiber für VirtualBox
 Licence = Unbekannt
 Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+
+[Section.0410]
+Name = Driver AC97 per VirtualBox
+License = Sconosciuta
+Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOs due volte.
 
 [Section.040a]
 Name = Driver AC97 para VirtualBox

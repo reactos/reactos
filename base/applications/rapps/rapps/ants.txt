@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 [Section]
 Name = Ants
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Ein strategisches Kartenspiel. Sie bauen Ihr eigenes Schloss und versuchen, die gegnerische Burg zu zerstören. Sie benötigen ein ZIP-Programm, um es zu installieren.
+
+[Section.0410]
+Description = Un gioco di carte strategico. Costruisci il tuo castello e prova a distruggere il castello nemico. Necessita di un programma di estrazione ZIP per essere installato.
 
 [Section.0415]
 Description = Karciana gra strategiczna. Budujesz zamek, przy okazji próbujesz zniszczyć zamek wroga. Wymaga programu archiwizującego do wypakowania.

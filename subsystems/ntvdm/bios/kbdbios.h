@@ -21,8 +21,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-WORD BiosGetCharacter(VOID);
-
 BOOLEAN KbdBiosInitialize(VOID);
 VOID KbdBiosCleanup(VOID);
 

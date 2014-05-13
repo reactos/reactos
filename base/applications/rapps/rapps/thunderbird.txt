@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Mozilla Thunderbird 24
@@ -30,7 +30,7 @@ URLSite = https://www.mozilla.org/fr/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.4.0/win32/fr/Thunderbird%20Setup%2024.4.0.exe
 
 [Section.0410]
-Description = Il più popolare e il migliore Clients mail gratuito.
+Description = Il più popolare e il migliore Client mail gratuito.
 Size = 20.91 MB
 URLSite = https://www.mozilla.org/it/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.4.0/win32/it/Thunderbird%20Setup%2024.4.0.exe

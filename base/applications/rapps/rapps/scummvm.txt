@@ -1,10 +1,10 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = ScummVM
 Version = 1.6.0
 Licence = GPL
-Description = Sam and Max, Day of the Tentacle, etc on ReactOS.
+Description = Software that reproduce the working of graphical engine for videogames (Sam and Max, Day of the Tentacle, etc) on ReactOS.
 Size = 6.28 MB
 Category = 4
 URLSite = http://scummvm.org/
@@ -22,7 +22,7 @@ Description = Sam and Max, Day of the Tentacle, etc sur ReactOS.
 Size = 6,28 Mo
 
 [Section.0410]
-Description = Software che riproduce il funzionamento di motori grafici per videogiochi(Sam and Max, Day of the Tentacle, etc) su ReactOS.
+Description = Software che riproduce il funzionamento di motori grafici per videogiochi (Sam and Max, Day of the Tentacle, etc) su ReactOS.
 
 [Section.0413]
 Description = Sam and Max, Day of the Tentacle, enz. op ReactOS.

@@ -20,6 +20,7 @@
  */
 
 #include "videoprt.h"
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -33,30 +34,24 @@ IntVideoPortGetMonitorId(
     IN OUT PWCHAR Buffer)
 {
     USHORT Manufacturer, Model;
-    UNICODE_STRING UnicodeModelStr;
 
     /* This must be valid to call this function */
     ASSERT(ChildExtension->EdidValid);
 
     /* 3 letters 5-bit ANSI manufacturer code (big endian) */
-    Manufacturer = *(PUSHORT)(&ChildExtension->ChildDescriptor[8]);
-
     /* Letters encoded as A=1 to Z=26 */
-    Buffer[0] = (WCHAR)((Manufacturer & 0x7C00) + 'A' - 1);
-    Buffer[1] = (WCHAR)((Manufacturer & 0x03E0) + 'A' - 1);
-    Buffer[2] = (WCHAR)((Manufacturer & 0x001F) + 'A' - 1);
+    Manufacturer = *(PUSHORT)(&ChildExtension->ChildDescriptor[8]);
 
     /* Model number (16-bit little endian) */
     Model = *(PUSHORT)(&ChildExtension->ChildDescriptor[10]);
 
-    /* Use Rtl helper for conversion */
-    UnicodeModelStr.Buffer = &Buffer[3];
-    UnicodeModelStr.Length = 0;
-    UnicodeModelStr.MaximumLength = 4 * sizeof(WCHAR);
-    RtlIntegerToUnicodeString(Model, 16, &UnicodeModelStr);
-
-    /* Terminate it */
-    Buffer[7] = UNICODE_NULL;
+    /* Convert the Monitor ID to a readable form */
+    swprintf(Buffer,
+             L"%C%C%C%04hx",
+             (WCHAR)((Manufacturer >> 10 & 0x001F) + 'A' - 1),
+             (WCHAR)((Manufacturer >> 5 & 0x001F) + 'A' - 1),
+             (WCHAR)((Manufacturer & 0x001F) + 'A' - 1),
+             Model);
 
     /* And we're done */
     return TRUE;

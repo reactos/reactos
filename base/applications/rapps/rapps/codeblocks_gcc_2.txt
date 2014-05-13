@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Code::Blocks TDM-GCC (version 4.8.1, 32 bit)
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthät den TDM-GCC (version 4.8.1, 32 bit) Compiler.
+
+[Section.0410]
+Description = Un IDE potente, open source, multipiattaforma. Contiene il compilatore TDM-GCC (versione 4.8.1, 32 bit).
 
 [Section.041f]
 Name = Code::Blocks TDM-GCC (sürüm 4.8.1, 32 bitlik)

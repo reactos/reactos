@@ -1124,13 +1124,14 @@ HalGetDmaAlignmentRequirement(
 #define HalGetDmaAlignmentRequirement() 1L
 #endif
 
-extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
-#define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo
-
-#ifdef NLS_MB_CODE_PAGE_TAG
-#undef NLS_MB_CODE_PAGE_TAG
+#ifdef _NTSYSTEM_
+extern PUSHORT NlsOemLeadByteInfo;
+#define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
+#else
+extern PUSHORT *NlsOemLeadByteInfo;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsOemLeadByteInfo)
+#define NLS_OEM_LEAD_BYTE_INFO (*NlsOemLeadByteInfo)
 #endif
-#define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 

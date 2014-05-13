@@ -27,19 +27,19 @@ IDB_SDI BITMAP "res/sdi.bmp"
 
 /* Accelerators */
 
-IDA_EXPLORER ACCELERATORS    
+IDA_EXPLORER ACCELERATORS
 BEGIN
     "S", ID_VIEW_FULLSCREEN, VIRTKEY, SHIFT, CONTROL, NOINVERT
     VK_F5, ID_REFRESH, VIRTKEY, NOINVERT
     "X", ID_FILE_EXIT, VIRTKEY, ALT, NOINVERT
 END
 
-IDA_SEARCH_PROGRAM ACCELERATORS    
+IDA_SEARCH_PROGRAM ACCELERATORS
 BEGIN
     VK_F5, ID_REFRESH, VIRTKEY, NOINVERT
 END
 
-IDA_TRAYNOTIFY ACCELERATORS    
+IDA_TRAYNOTIFY ACCELERATORS
 BEGIN
     VK_F5, ID_REFRESH, VIRTKEY, NOINVERT
 END
@@ -112,9 +112,6 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 #ifdef LANGUAGE_BG_BG
     #include "explorer-bg.rc"
 #endif
-#ifdef LANGUAGE_CS_CZ
-    #include "explorer-cz.rc"
-#endif
 #ifdef LANGUAGE_DE_DE
     #include "explorer-de.rc"
 #endif
@@ -164,6 +161,9 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_CS_CZ
+    #include "explorer-cz.rc"
+#endif
 #ifdef LANGUAGE_HE_IL
     #include "explorer-he.rc"
 #endif

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = ReMooD
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = ReMooD ist ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten.
+
+[Section.0410]
+Description = ReMooD è un porting sorgente di Doom Legacy. Punta a provedere la classica esperienza ereditaria con nuove funzionalità e maggiore stabilità.
 
 [Section.040a]
 Description = ReMood es un port de Doom Legacy. Su fin es proporcionar la clásica experiencia anterior con nuevas características y mayor estabilidad.

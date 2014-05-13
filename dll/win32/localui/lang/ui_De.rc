@@ -29,7 +29,7 @@ STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPW
 CAPTION "Lokalen Anschluss hinzufügen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Lokaler Anschuss, der hinzugefügt werden soll:", -1, 7, 13, 194, 13, WS_VISIBLE
+    LTEXT "&Lokaler Anschluss, der hinzugefügt werden soll:", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 188, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Abbrechen", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
@@ -54,5 +54,5 @@ STRINGTABLE
     IDS_LOCALPORT "Lokaler Anschluss"
     IDS_INVALIDNAME "'%s' ist kein gültiger Anschlussname"
     IDS_PORTEXISTS "Der Anschluss %s existiert bereits"
-    IDS_NOTHINGTOCONFIG "Dieser Anschluss hat keine Optionen zum Konfigurieren"
+    IDS_NOTHINGTOCONFIG "Dieser Anschluss besitzt keine zu konfigurierenden Optionen"
 }

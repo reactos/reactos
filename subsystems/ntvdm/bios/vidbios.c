@@ -1532,6 +1532,37 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
     }
 }
 
+
+/*
+ * Those attach / detach functions are work-in-progress
+ */
+
+static BOOL Attached = TRUE;
+
+VOID VidBiosAttachToConsole(VOID)
+{
+    // VgaRefreshDisplay();
+    if (!Attached)
+    {
+        VgaAttachToConsole();
+        Attached = TRUE;
+    }
+
+    VgaRefreshDisplay();
+    VidBiosSyncCursorPosition();
+}
+
+VOID VidBiosDetachFromConsole(VOID)
+{
+    /* Perform another screen refresh */
+    VgaRefreshDisplay();
+
+    /* Detach from the console */
+    VgaDetachFromConsole(FALSE);
+    Attached = FALSE;
+}
+
+
 BOOLEAN VidBiosInitialize(VOID)
 {
     /* Some interrupts are in fact addresses to tables */
@@ -1540,6 +1571,15 @@ BOOLEAN VidBiosInitialize(VOID)
     // ((PULONG)BaseAddress)[0x42] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x43] = (ULONG)NULL;
     ((PULONG)BaseAddress)[0x44] = (ULONG)NULL;
+
+    //
+    // FIXME: At the moment we always set a VGA mode. In the future,
+    // we should set this mode **only** when:
+    // - an app starts to use directly the video memory
+    //   (that should be done in emulator.c)
+    // - or starts to use non-stream I/O interrupts
+    //   (that should be done here, or maybe in VGA ??)
+    //
 
     /* Set the default video mode */
     VidBiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
