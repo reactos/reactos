@@ -23,6 +23,6 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-   IDS_NO_MAPI_CLIENT, "Das senden der E-Mails scheiterte, da Sie keinen MAPI E-Mail Programm installiert haben."
+   IDS_NO_MAPI_CLIENT, "Das Senden der E-Mails scheiterte, da Sie kein MAPI-fähiges E-Mail-Programm installiert haben."
    IDS_SEND_MAIL, "E-Mail senden"
 }
