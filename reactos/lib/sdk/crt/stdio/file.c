@@ -530,6 +530,20 @@ static int flush_buffer(FILE* file)
   return 0;
 }
 
+/*********************************************************************
+ *		_isatty (MSVCRT.@)
+ */
+int CDECL _isatty(int fd)
+{
+    HANDLE hand = fdtoh(fd);
+
+    TRACE(":fd (%d) handle (%p)\n",fd,hand);
+    if (hand == INVALID_HANDLE_VALUE)
+        return 0;
+
+    return GetFileType(hand) == FILE_TYPE_CHAR? 1 : 0;
+}
+
 /* INTERNAL: Allocate stdio file buffer */
 /*static*/ void alloc_buffer(FILE* file)
 {
@@ -1468,20 +1482,6 @@ intptr_t CDECL _get_osfhandle(int fd)
   TRACE(":fd (%d) handle (%p)\n",fd,hand);
 
   return (intptr_t)hand;
-}
-
-/*********************************************************************
- *		_isatty (MSVCRT.@)
- */
-int CDECL _isatty(int fd)
-{
-  HANDLE hand = fdtoh(fd);
-
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
-    return 0;
-
-  return GetFileType(hand) == FILE_TYPE_CHAR? 1 : 0;
 }
 
 /*********************************************************************
