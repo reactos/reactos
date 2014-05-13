@@ -1964,7 +1964,7 @@ QSI_DEF(SystemLookasideInformation)
     }
 
     /* Acquire spinlock for ExpNonPagedLookasideListHead */
-    OldIrql = KfAcquireSpinLock(&ExpNonPagedLookasideListLock);
+    KeAcquireSpinLock(&ExpNonPagedLookasideListLock, &OldIrql);
 
     /* Copy info from non-paged lookaside lists */
     ExpCopyLookasideInformation(&Info,
@@ -1973,7 +1973,7 @@ QSI_DEF(SystemLookasideInformation)
                                 TRUE);
 
     /* Release spinlock for ExpNonPagedLookasideListHead */
-    KfReleaseSpinLock(&ExpNonPagedLookasideListLock, OldIrql);
+    KeReleaseSpinLock(&ExpNonPagedLookasideListLock, OldIrql);
 
     if (Remaining == 0)
     {
@@ -1981,7 +1981,7 @@ QSI_DEF(SystemLookasideInformation)
     }
 
     /* Acquire spinlock for ExpPagedLookasideListHead */
-    OldIrql = KfAcquireSpinLock(&ExpPagedLookasideListLock);
+    KeAcquireSpinLock(&ExpPagedLookasideListLock, &OldIrql);
 
     /* Copy info from paged lookaside lists */
     ExpCopyLookasideInformation(&Info,
@@ -1990,7 +1990,7 @@ QSI_DEF(SystemLookasideInformation)
                                 TRUE);
 
     /* Release spinlock for ExpPagedLookasideListHead */
-    KfReleaseSpinLock(&ExpPagedLookasideListLock, OldIrql);
+    KeReleaseSpinLock(&ExpPagedLookasideListLock, OldIrql);
 
 Leave:
 

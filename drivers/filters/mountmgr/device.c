@@ -1552,7 +1552,7 @@ MountMgrVolumeMountPointChanged(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Reference it */
-    Status = ObReferenceObjectByHandle(Handle, 0, IoFileObjectType, KernelMode, (PVOID *)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(Handle, 0, *IoFileObjectType, KernelMode, (PVOID *)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         goto Cleanup;

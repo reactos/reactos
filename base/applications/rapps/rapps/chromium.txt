@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 [Section]
 Name = Chromium B.S.U.

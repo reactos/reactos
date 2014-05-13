@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = OpenTTD
@@ -22,7 +22,7 @@ Description = Clone open source du moteur de jeu "Transport Tycoon Deluxe". Vous
 Size = 7,0 Mo
 
 [Section.0410]
-Description = Clone open source del  motore di gioco di "Transport Tycoon Deluxe". Hai bisogno di una copia di Transport Tycoon.
+Description = Clone open source del motore di gioco di "Transport Tycoon Deluxe". Hai bisogno di una copia di Transport Tycoon.
 
 [Section.0413]
 Description = Open-bron kloon van de "Transport Tycoon Deluxe" spelletjesmotor. Je hebt een kopij van Transport Tycoon nodig.

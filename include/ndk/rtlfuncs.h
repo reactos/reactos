@@ -3654,7 +3654,7 @@ RtlFindActivationContextSectionString(
     _In_ ULONG dwFlags,
     _In_ const GUID *ExtensionGuid,
     _In_ ULONG SectionType,
-    _In_ PUNICODE_STRING SectionName,
+    _In_ const UNICODE_STRING *SectionName,
     _Inout_ PVOID ReturnedData
 );
 
@@ -4418,6 +4418,17 @@ RtlCloneMemoryStream(
 );
 
 #endif // NTOS_MODE_USER
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFindActivationContextSectionGuid(
+    ULONG flags,
+    const GUID *extguid,
+    ULONG section_kind,
+    const GUID *guid,
+    void *ptr
+);
 
 #ifdef __cplusplus
 }

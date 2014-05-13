@@ -953,6 +953,11 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
          SysMenu->fFlags |= MNF_SYSDESKMN;
          SysMenu->hWnd = Window->head.h;
          hNewMenu = co_IntLoadSysMenuTemplate();
+         //if ( Window->ExStyle & WS_EX_MDICHILD )
+         //hNewMenu = co_IntCallLoadMenu( NULL, L"SYSMENUMDI");
+         // else
+         //hNewMenu = co_IntCallLoadMenu( NULL, L"SYSMENU");
+         // Do the rest in here.
          if(!hNewMenu)
          {
             IntReleaseMenuObject(SysMenu);
@@ -985,7 +990,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
             ItemInfo.dwTypeData = NULL;
             ItemInfo.cch = 0;
             ItemInfo.hSubMenu = NewMenu->head.h;
-            IntInsertMenuItem(SysMenu, (UINT) -1, TRUE, &ItemInfo);
+            IntInsertMenuItem(SysMenu, (UINT) -1, TRUE, &ItemInfo, NULL);
 
             Window->SystemMenu = SysMenu->head.h;
 

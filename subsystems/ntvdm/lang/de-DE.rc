@@ -1,13 +1,13 @@
-/*
- * German translate
- * By Rouven Wessling 2005 pentiumforever@gmail.com
- *                    2008 dark_shadow@gmx.at
- */
-
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "ReactOS virtuelle DOS-Unterstützung.\n"
-    STRING_PromptMsg "Drücken Sie r<cr> zum Starten, s<cr> zum Herunterfahren oder q<cr> zum Beenden."
+    IDS_HIDE_MOUSE, "Mauszeiger &verstecken"
+    IDS_SHOW_MOUSE, "Mauszeiger &anzeigen"
+    IDS_VDM_MENU  , "&ReactOS VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_QUIT,   "ReactOS VDM b&eenden"
 END

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 [Section]
 Name = Mpxplay
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Mpxplay ist ein konsolenbasierter 32-bit Audio Player für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+
+[Section.0410]
+Description = Mpxplay è una console audio 32-bit per Windows. Necessita 7-Zip o un programma simile per essere estratto.
 
 [Section.0415]
 Description = Mpxplay to 32 bitowy odtwarzacz audio (działający w konsoli) dla Windows. Wymaga programu archiwizującego (np. 7-Zip) do wypakowania.

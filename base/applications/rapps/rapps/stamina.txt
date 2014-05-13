@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 
 [Section]
@@ -12,6 +12,9 @@ CDPath = none
 
 [Section.0407]
 Description = Ein freies Schreiblernprogramm.
+
+[Section.0410]
+Description = Tutore di scrittura gratuita.
 
 [Section.0415]
 Description = Darmowy program do nauki pisania na klawiaturze.

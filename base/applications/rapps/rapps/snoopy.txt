@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Snoopy
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Das Original C64 Snoopy Remake.
+
+[Section.0410]
+Description = Il remake del gioco Snoopy per Commodore 64.
 
 [Section.041f]
 Licence = Ücretsiz

@@ -613,4 +613,32 @@ RtlpSafeCopyMemory(
     return STATUS_SUCCESS;
 }
 
+/* FIXME: code duplication with kernel32/client/time.c */
+ULONG
+NTAPI
+RtlGetTickCount(VOID)
+{
+    ULARGE_INTEGER TickCount;
+
+#ifdef _WIN64
+    TickCount.QuadPart = *((volatile ULONG64*)&SharedUserData->TickCount);
+#else
+    while (TRUE)
+    {
+        TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
+        TickCount.LowPart = SharedUserData->TickCount.LowPart;
+
+        if (TickCount.HighPart == (ULONG)SharedUserData->TickCount.High2Time)
+            break;
+
+        YieldProcessor();
+    }
+#endif
+
+    return (ULONG)((UInt32x32To64(TickCount.LowPart,
+                                  SharedUserData->TickCountMultiplier) >> 24) +
+                    UInt32x32To64((TickCount.HighPart << 8) & 0xFFFFFFFF,
+                                  SharedUserData->TickCountMultiplier));
+}
+
 /* EOF */

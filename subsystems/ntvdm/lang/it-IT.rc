@@ -1,15 +1,13 @@
-/*
-* PROJECT:    ReactOS Virtual DOS Machine
-* LICENSE:    GPL - See COPYING in the top level directory
-* FILE:       subsystems/ntvdm/it-IT.rc
-* PURPOSE:    Italian Translation of subsystems/ntvdm/en-US.rc
-* TRANSLATOR: Daniele Forsi (dforsi at gmail.com)
-*/
-
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_WelcomeMsg "Supporto di ReactOS per la macchina virtuale DOS.\n"
-    STRING_PromptMsg "Digitare r<invio> per avviare, s<invio> per arrestare o q<invio> per abbandonare ora."
+    IDS_HIDE_MOUSE, "&Nascondi il mouse"
+    IDS_SHOW_MOUSE, "&Mostra il mouse"
+    IDS_VDM_MENU  , "ReactOS &VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_QUIT,   "&Esci da ReactOS VDM"
 END

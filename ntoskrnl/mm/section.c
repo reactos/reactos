@@ -280,7 +280,14 @@ l_ReadHeaderFromFile:
         nStatus = ReadFileCb(File, &lnOffset, sizeof(IMAGE_NT_HEADERS64), &pData, &pBuffer, &cbReadSize);
 
         if(!NT_SUCCESS(nStatus))
-            DIE(("ReadFile failed, status %08X\n", nStatus));
+        {
+            NTSTATUS ReturnedStatus = nStatus;
+
+            /* If it attempted to read past the end of the file, it means e_lfanew is invalid */
+            if (ReturnedStatus == STATUS_END_OF_FILE) nStatus = STATUS_ROS_EXEFMT_UNKNOWN_FORMAT;
+
+            DIE(("ReadFile failed, status %08X\n", ReturnedStatus));
+        }
 
         ASSERT(pData);
         ASSERT(pBuffer);

@@ -34,7 +34,9 @@ static PPROGRESSBAR ChkdskProgressBar = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-static BOOLEAN NTAPI
+static
+BOOLEAN
+NTAPI
 ChkdskCallback(
     IN CALLBACKCOMMAND Command,
     IN ULONG Modifier,
@@ -49,6 +51,7 @@ ChkdskCallback(
 
     return TRUE;
 }
+
 
 NTSTATUS
 ChkdskPartition(

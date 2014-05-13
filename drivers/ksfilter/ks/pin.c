@@ -193,7 +193,7 @@ IKsPin_PinMasterClock(
             {
                 Mode = ExGetPreviousMode();
 
-                Status = ObReferenceObjectByHandle(*Handle, SYNCHRONIZE | DIRECTORY_QUERY, IoFileObjectType, Mode, (PVOID*)&FileObject, NULL);
+                Status = ObReferenceObjectByHandle(*Handle, SYNCHRONIZE | DIRECTORY_QUERY, *IoFileObjectType, Mode, (PVOID*)&FileObject, NULL);
 
                 DPRINT("IKsPin_PinMasterClock ObReferenceObjectByHandle %lx\n", Status);
                 if (NT_SUCCESS(Status))
@@ -2221,7 +2221,7 @@ IKsPin_DispatchCreateClock(
                    pResolution = &Resolution;
                 }
 
-                Status = KsAllocateDefaultClockEx(&This->DefaultClock, 
+                Status = KsAllocateDefaultClockEx(&This->DefaultClock,
                                                   (PVOID)&This->Pin,
                                                   (PFNKSSETTIMER)This->Pin.Descriptor->Dispatch->Clock->SetTimer,
                                                   (PFNKSCANCELTIMER)This->Pin.Descriptor->Dispatch->Clock->CancelTimer,
@@ -2265,7 +2265,7 @@ IKsPin_DispatchCreateNode(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-static KSDISPATCH_TABLE PinDispatchTable = 
+static KSDISPATCH_TABLE PinDispatchTable =
 {
     IKsPin_DispatchDeviceIoControl,
     KsDispatchInvalidDeviceRequest,
@@ -2329,10 +2329,10 @@ KspCreatePin(
             DPRINT("KspCreatePin Index %lu FileAlignment %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].FileAlignment);
             DPRINT("KspCreatePin Index %lu MemoryTypeWeight %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].MemoryTypeWeight);
             DPRINT("KspCreatePin Index %lu PhysicalRange MinFrameSize %lu MaxFrameSize %lu Stepping %lu\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MinFrameSize,
-                   Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MaxFrameSize, 
+                   Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MaxFrameSize,
                    Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.Stepping);
 
-            DPRINT("KspCreatePin Index %lu FramingRange  MinFrameSize %lu MaxFrameSize %lu Stepping %lu InPlaceWeight %lu NotInPlaceWeight %lu\n", 
+            DPRINT("KspCreatePin Index %lu FramingRange  MinFrameSize %lu MaxFrameSize %lu Stepping %lu InPlaceWeight %lu NotInPlaceWeight %lu\n",
                    Index,
                    Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.MinFrameSize,
                    Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.MaxFrameSize,

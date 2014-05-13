@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Samba TNG
@@ -22,7 +22,7 @@ Description = Cet outil vous permet d'accéder à vos répertoire/imprimantes pa
 Size = 2,13 Mo
 
 [Section.0410]
-Description = Questo strumento consente di accedere alle cartelle condivise di Windows / stampanti con ReactOS.
+Description = Questo strumento consente di accedere alle cartelle/stampanti condivise di Windows con ReactOS.
 
 [Section.0413]
 Description = Maakt het mogelijk om Windows gedeelde printers te gebruiken met ReactOS.

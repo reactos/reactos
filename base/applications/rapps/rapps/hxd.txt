@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 
 [Section]
@@ -20,6 +20,9 @@ URLDownload = http://mh-nexus.de/downloads/HxDSetupDE.zip
 
 [Section.0415]
 Description = Dobry edytor Hex. Do wypakowania pliku potrzebny jest program archiwizujący np. 7-Zip.
+
+[Section.0410]
+Description = Un buon editor hexadecimale. Necessita 7-Zip o un programma simile per estrarlo.
 
 [Section.0418]
 Licence = Gratuită

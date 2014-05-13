@@ -27,18 +27,24 @@
 #pragma once
 
 BOOLEAN
-ImportRegistryFile(PWSTR Filename,
-		   PWSTR Section,
-		   LCID LocaleId,
-		   BOOLEAN Delete);
+ImportRegistryFile(
+    PWSTR Filename,
+    PWSTR Section,
+    LCID LocaleId,
+    BOOLEAN Delete);
 
 BOOLEAN
-SetInstallPathValue(PUNICODE_STRING InstallPath);
+SetInstallPathValue(
+    PUNICODE_STRING InstallPath);
 
 BOOLEAN
-SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset);
+SetMountedDeviceValue(
+    CHAR Letter,
+    ULONG Signature,
+    LARGE_INTEGER StartingOffset);
 
 VOID
-SetDefaultPagefile(WCHAR Drive);
+SetDefaultPagefile(
+    WCHAR Drive);
 
 /* EOF */

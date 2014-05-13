@@ -7037,35 +7037,13 @@ FsRtlNotifyStreamFileObject(
   _In_ BOOLEAN SafeToRecurse);
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
-#define DO_VERIFY_VOLUME                    0x00000002
-#define DO_BUFFERED_IO                      0x00000004
-#define DO_EXCLUSIVE                        0x00000008
-#define DO_DIRECT_IO                        0x00000010
-#define DO_MAP_IO_BUFFER                    0x00000020
-#define DO_DEVICE_HAS_NAME                  0x00000040
-#define DO_DEVICE_INITIALIZING              0x00000080
-#define DO_SYSTEM_BOOT_PARTITION            0x00000100
-#define DO_LONG_TERM_REQUESTS               0x00000200
-#define DO_NEVER_LAST_DEVICE                0x00000400
-#define DO_SHUTDOWN_REGISTERED              0x00000800
-#define DO_BUS_ENUMERATED_DEVICE            0x00001000
-#define DO_POWER_PAGABLE                    0x00002000
-#define DO_POWER_INRUSH                     0x00004000
-#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
-#define DO_SUPPORTS_TRANSACTIONS            0x00040000
-#define DO_FORCE_NEITHER_IO                 0x00080000
-#define DO_VOLUME_DEVICE_OBJECT             0x00100000
-#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
-#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
-#define DO_DISALLOW_EXECUTE                 0x00800000
-
-extern KSPIN_LOCK                   IoStatisticsLock;
-extern ULONG                        IoReadOperationCount;
-extern ULONG                        IoWriteOperationCount;
-extern ULONG                        IoOtherOperationCount;
-extern LARGE_INTEGER                IoReadTransferCount;
-extern LARGE_INTEGER                IoWriteTransferCount;
-extern LARGE_INTEGER                IoOtherTransferCount;
+extern NTKERNELAPI KSPIN_LOCK    IoStatisticsLock;
+extern NTKERNELAPI ULONG         IoReadOperationCount;
+extern NTKERNELAPI ULONG         IoWriteOperationCount;
+extern NTKERNELAPI ULONG         IoOtherOperationCount;
+extern NTKERNELAPI LARGE_INTEGER IoReadTransferCount;
+extern NTKERNELAPI LARGE_INTEGER IoWriteTransferCount;
+extern NTKERNELAPI LARGE_INTEGER IoOtherTransferCount;
 
 #define IO_FILE_OBJECT_NON_PAGED_POOL_CHARGE    64
 #define IO_FILE_OBJECT_PAGED_POOL_CHARGE        1024

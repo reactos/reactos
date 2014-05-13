@@ -105,7 +105,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        0,
                                        NULL,
                                        MAXIMUM_ALLOWED,
-                                       IoFileObjectType,
+                                       *IoFileObjectType,
                                        Irp->RequestorMode,
                                        &UserHandle);
         if (NT_SUCCESS(Status))

@@ -104,7 +104,7 @@ _sxprintf(
         if (count != _TRUNCATE)
         {
             /* We can't, invoke invalid parameter handler */
-            MSVCRT_INVALID_PMT("Buffer is too small");
+            MSVCRT_INVALID_PMT("Buffer is too small", ERANGE);
 
             /* If we came back, set the buffer to an empty string */
             *buffer = 0;

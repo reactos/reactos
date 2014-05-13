@@ -165,7 +165,7 @@ WdmAudOpenSysAudioDevices(
             }
 
             /* get the file object */
-            Status = ObReferenceObjectByHandle(hSysAudio, FILE_READ_DATA | FILE_WRITE_DATA, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+            Status = ObReferenceObjectByHandle(hSysAudio, FILE_READ_DATA | FILE_WRITE_DATA, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to reference FileObject %x\n", Status);
@@ -200,7 +200,7 @@ WdmAudRegisterDeviceInterface(
     }
 
     /* failed to register device interface
-     * create a symbolic link instead 
+     * create a symbolic link instead
      */
     DeviceExtension->DeviceInterfaceSupport = FALSE;
 

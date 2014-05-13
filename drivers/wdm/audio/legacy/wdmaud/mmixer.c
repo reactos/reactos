@@ -202,7 +202,7 @@ Control(
     PFILE_OBJECT FileObject;
 
     /* get file object */
-    Status = ObReferenceObjectByHandle(hMixer, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    Status = ObReferenceObjectByHandle(hMixer, GENERIC_READ | GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("failed to reference %p with %lx\n", hMixer, Status);
@@ -420,7 +420,7 @@ WdmAudControlOpenMixer(
 
     if (DeviceInfo->u.hNotifyEvent)
     {
-        Status = ObReferenceObjectByHandle(DeviceInfo->u.hNotifyEvent, EVENT_MODIFY_STATE, ExEventObjectType, UserMode, (LPVOID*)&EventObject, NULL);
+        Status = ObReferenceObjectByHandle(DeviceInfo->u.hNotifyEvent, EVENT_MODIFY_STATE, *ExEventObjectType, UserMode, (LPVOID*)&EventObject, NULL);
 
         if (!NT_SUCCESS(Status))
         {

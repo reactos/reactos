@@ -420,7 +420,7 @@ OpenDevice(
 
     if (FileObject)
     {
-        Status = ObReferenceObjectByHandle(hDevice, FILE_READ_DATA | FILE_WRITE_DATA, IoFileObjectType, KernelMode, (PVOID*)FileObject, NULL);
+        Status = ObReferenceObjectByHandle(hDevice, FILE_READ_DATA | FILE_WRITE_DATA, *IoFileObjectType, KernelMode, (PVOID*)FileObject, NULL);
 
         if (!NT_SUCCESS(Status))
         {

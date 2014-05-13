@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 
 [Section]
@@ -17,6 +17,9 @@ Description = Version mit Layers, aber eingeschänkter als die Studio-X Version.
 
 [Section.0415]
 Description = Ta wersja obsługuje warstwy, ale ma większe ograniczenia od Studio X. PhotoFiltre Studio to program do retuszu zdjęć.
+
+[Section.0410]
+Description = Questa versione con pannelli ma più limitata della versione Studio X. PhotoFiltre Studio è un programma di fotoritocco completo.
 
 [Section.0418]
 Licence = Gratuită

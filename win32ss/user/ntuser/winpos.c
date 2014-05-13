@@ -1710,6 +1710,7 @@ co_WinPosSetWindowPos(
    RECTL valid_rects[2];
    PROSRGNDATA VisRgn;
    HRGN VisBefore = NULL;
+   HRGN VisBeforeJustClient = NULL;
    HRGN VisAfter = NULL;
    HRGN DirtyRgn = NULL;
    HRGN ExposedRgn = NULL;
@@ -1805,6 +1806,28 @@ co_WinPosSetWindowPos(
          {
             RGNOBJAPI_Unlock(VisRgn);
             NtGdiOffsetRgn(VisBefore, -Window->rcWindow.left, -Window->rcWindow.top);
+         }
+
+         /* Calculate the non client area for resizes, as this is used in the copy region */ 
+         if (!(WinPos.flags & SWP_NOSIZE))
+         {
+             VisBeforeJustClient = VIS_ComputeVisibleRegion(Window, TRUE, FALSE,
+                 (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
+             VisRgn = NULL;
+
+             if ( VisBeforeJustClient != NULL &&
+                 (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisBeforeJustClient, NULL)) &&
+                 REGION_Complexity(VisRgn) == NULLREGION )
+             {
+                 RGNOBJAPI_Unlock(VisRgn);
+                 GreDeleteObject(VisBeforeJustClient);
+                 VisBeforeJustClient = NULL;
+             }
+             else if(VisRgn)
+             {
+                 RGNOBJAPI_Unlock(VisRgn);
+                 NtGdiOffsetRgn(VisBeforeJustClient, -Window->rcWindow.left, -Window->rcWindow.top);
+             }
          }
       }
    }
@@ -1909,8 +1932,6 @@ co_WinPosSetWindowPos(
           ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
           !(Window->ExStyle & WS_EX_TRANSPARENT) )
       {
-         CopyRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
 
          /*
           * If this is (also) a window resize, the whole nonclient area
@@ -1920,19 +1941,14 @@ co_WinPosSetWindowPos(
           * we don't have to crop (can't take anything away from an empty
           * region...)
           */
-         if (!(WinPos.flags & SWP_NOSIZE) &&
-               RgnType != ERROR &&
-               RgnType != NULLREGION )
+
+         CopyRgn = IntSysCreateRectRgn(0, 0, 0, 0);
+         if (WinPos.flags & SWP_NOSIZE)
+            RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
+         else if (VisBeforeJustClient != NULL)
          {
-            PROSRGNDATA pCopyRgn;
-            RECTL ORect = OldClientRect;
-            RECTL NRect = NewClientRect;
-            RECTL_vOffsetRect(&ORect, - OldWindowRect.left, - OldWindowRect.top);
-            RECTL_vOffsetRect(&NRect, - NewWindowRect.left, - NewWindowRect.top);
-            RECTL_bIntersectRect(&CopyRect, &ORect, &NRect);
-            pCopyRgn = RGNOBJAPI_Lock(CopyRgn, NULL);
-            REGION_CropAndOffsetRegion(pCopyRgn, pCopyRgn, &CopyRect, NULL);
-            RGNOBJAPI_Unlock(pCopyRgn);
+            RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBeforeJustClient, RGN_AND);
+            GreDeleteObject(VisBeforeJustClient);
          }
 
          /* No use in copying bits which are in the update region. */

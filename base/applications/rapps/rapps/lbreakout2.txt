@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = LBreakout2
@@ -22,7 +22,7 @@ Description = Clone de casse-brique utilisant la bibliothèque SDL.
 Size = 3,03 Mo
 
 [Section.0410]
-Description = Clone di Breakout utilizza librerie SDL.
+Description = Clone di Breakout che utilizza librerie SDL.
 
 [Section.0413]
 Description = Breakout kloon, gebruikt SDL.

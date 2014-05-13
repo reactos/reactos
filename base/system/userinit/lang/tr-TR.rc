@@ -4,5 +4,5 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_USERINIT_FAIL "Userinit, kabuğu başlatamadı!\n"
+    STRING_USERINIT_FAIL "Userinit, kabuğu başlatmada başarısız oldu!\n"
 END

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = UltraVNC
@@ -22,7 +22,7 @@ Description = Client/serveur VNC open source.
 Size = 3,27 Mo
 
 [Section.0410]
-Description = Client/serveur VNC open source.
+Description = Client/server VNC open source.
 
 [Section.0413]
 Description = Open-bron VNC afnemer/aanbieder.

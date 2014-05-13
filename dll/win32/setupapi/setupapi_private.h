@@ -37,6 +37,8 @@
 #include <regstr.h>
 #include <sddl.h>
 #include <setupapi.h>
+#include <softpub.h>
+#include <mscat.h>
 #include <shlobj.h>
 #include <wine/unicode.h>
 #define NTOS_MODE_USER

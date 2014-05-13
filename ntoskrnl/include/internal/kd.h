@@ -2,18 +2,11 @@
 
 #include <cportlib/cportlib.h>
 
-#ifdef _M_PPC
-#define KdDebuggerEnabled _KdDebuggerEnabled
-#define KdDebuggerNotPresent _KdDebuggerNotPresent
-#endif
-
 //
 // Kernel Debugger Port Definition
 //
 struct _KD_DISPATCH_TABLE;
 extern CPPORT GdbPortInfo;
-extern BOOLEAN _KdDebuggerEnabled;
-extern BOOLEAN _KdDebuggerNotPresent;
 extern BOOLEAN KdBreakAfterSymbolLoad;
 extern BOOLEAN KdPitchDebugger;
 extern BOOLEAN KdIgnoreUmExceptions;

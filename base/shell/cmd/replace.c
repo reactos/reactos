@@ -160,7 +160,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     }
 
     /* Get buffer for the copy process */
-    buffer = (LPBYTE)VirtualAlloc(NULL, BUFF_SIZE, MEM_COMMIT, PAGE_READWRITE);
+    buffer = VirtualAlloc(NULL, BUFF_SIZE, MEM_COMMIT, PAGE_READWRITE);
     if (buffer == NULL)
     {
         CloseHandle (hFileDest);
@@ -188,7 +188,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
         if (dwWritten != dwRead || CheckCtrlBreak(BREAK_INPUT))
         {
             ConOutResPuts(STRING_COPY_ERROR3);
-            cmd_free (buffer);
+            VirtualFree (buffer, 0, MEM_RELEASE);
             CloseHandle (hFileDest);
             CloseHandle (hFileSrc);
             nErrorLevel = 1;

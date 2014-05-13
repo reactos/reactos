@@ -987,6 +987,7 @@ extern NTSYSAPI volatile CCHAR KeNumberProcessors;
 extern NTSYSAPI CCHAR KeNumberProcessors;
 #else
 extern PCCHAR KeNumberProcessors;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(KeNumberProcessors)
 #endif
 
 $endif (_WDMDDK_)

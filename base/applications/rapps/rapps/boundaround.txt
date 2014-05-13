@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Bound Around (Demo)
@@ -12,6 +12,10 @@ CDPath = none
 
 [Section.0407]
 Description = Ein Spiel, ähnlich zu Frozen Fruits.
+
+[Section.0410]
+Name = Bound Around (Versione di prova)
+Description = Un gioco simile a Frozen Fruits.
 
 [Section.041f]
 Name = Bound Around (Göstermelik)

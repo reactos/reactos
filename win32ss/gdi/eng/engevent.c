@@ -134,7 +134,7 @@ EngMapEvent(
     /* Create a handle, and have Ob fill out the pKEvent field */
     Status = ObReferenceObjectByHandle(EngEvent,
                                        EVENT_ALL_ACCESS,
-                                       ExEventObjectType,
+                                       *ExEventObjectType,
                                        UserMode,
                                        &EngEvent->pKEvent,
                                        NULL);

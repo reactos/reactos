@@ -175,7 +175,7 @@
 @ stdcall NtGetCurrentProcessorNumber() ; 5.2 and higher
 @ stdcall NtGetDevicePowerState(ptr ptr)
 @ stdcall NtGetPlugPlayEvent(long long ptr long)
-;@ stdcall NtGetTickCount()
+@ stdcall NtGetTickCount() RtlGetTickCount
 @ stdcall NtGetWriteWatch(long long ptr long ptr ptr ptr)
 @ stdcall NtImpersonateAnonymousToken(ptr)
 @ stdcall NtImpersonateClientOfPort(ptr ptr)
@@ -1051,7 +1051,7 @@
 @ stdcall ZwGetCurrentProcessorNumber()
 @ stdcall ZwGetDevicePowerState(ptr ptr)
 @ stdcall ZwGetPlugPlayEvent(long long ptr long)
-;@ stdcall ZwGetTickCount() NtGetTickCount
+@ stdcall ZwGetTickCount() RtlGetTickCount
 @ stdcall ZwGetWriteWatch(long long ptr long ptr ptr ptr) NtGetWriteWatch
 @ stdcall ZwImpersonateAnonymousToken(ptr)
 @ stdcall ZwImpersonateClientOfPort(ptr ptr) NtImpersonateClientOfPort

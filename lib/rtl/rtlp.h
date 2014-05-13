@@ -125,6 +125,11 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
 #define RtlpAllocateStringMemory RtlpAllocateMemory
 #define RtlpFreeStringMemory     RtlpFreeMemory
 
+ULONG
+NTAPI
+RtlGetTickCount(VOID);
+#define NtGetTickCount RtlGetTickCount
+
 BOOLEAN
 NTAPI
 RtlpSetInDbgPrint(

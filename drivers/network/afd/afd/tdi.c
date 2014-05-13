@@ -144,7 +144,7 @@ static NTSTATUS TdiOpenDevice(
     if (NT_SUCCESS(Status)) {
         Status = ObReferenceObjectByHandle(*Handle,                       /* Handle to open file */
                                            GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,  /* Access mode */
-                                           IoFileObjectType,              /* Object type */
+                                           *IoFileObjectType,              /* Object type */
                                            KernelMode,                    /* Access mode */
                                            (PVOID*)Object,                /* Pointer to object */
                                            NULL);                         /* Handle information */

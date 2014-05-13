@@ -197,11 +197,19 @@ typedef struct _EXCEPTION_POINTERS {
   PCONTEXT ContextRecord;
 } EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 
-/* MS definition is broken! */
-extern BOOLEAN NTSYSAPI NlsMbCodePageTag;
-extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
+#ifdef _NTSYSTEM_
+extern BOOLEAN NlsMbCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+extern BOOLEAN NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#else
+extern BOOLEAN *NlsMbCodePageTag;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbCodePageTag)
+#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
+extern BOOLEAN *NlsMbOemCodePageTag;
+__CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbOemCodePageTag)
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#endif
 
 #define SHORT_LEAST_SIGNIFICANT_BIT       0
 #define SHORT_MOST_SIGNIFICANT_BIT        1

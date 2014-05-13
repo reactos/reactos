@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; PL translation by wojo664
 
 [Section]
@@ -14,6 +14,9 @@ CDPath = none
 
 [Section.0407]
 Description = Arcade-Style Spiel für UNIX, Mac OS X, Windows und DOS in der Tradition von: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga / PC), "Sokoban" (PC). Sie benötigen ein ZIP-Programm, um es zu installieren.
+
+[Section.0410]
+Description = Gioco in stile arcade per UNIX, Mac OS X, Windows e DOS nella tradizione di: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC). Necessita di un programma di decompressione di archivi ZIP per essere installato.
 
 Section.0415]
 Description = Gra typu Arcade dla UNIX, Mac OS X, Windows i DOS. Bazująca na "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC). Aby zainstalować te grę, potrzebny jest program archiwizujący np. 7-Zip.

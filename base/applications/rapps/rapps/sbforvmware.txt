@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = SoundBlaster Driver for VMWare
@@ -34,7 +34,7 @@ Size = 2,22 Mo
 [Section.0410]
 Name = Driver SoundBlaster per VMWare
 Licence = Sconosciuta
-Description = Unzip nella cartella "ReactOS" e riavviare ReactOS.
+Description = Estrarre nella cartella "ReactOS" e riavviare ReactOS due volte.
 
 [Section.0413]
 Name = SoundBlaster Driver voor VMWare

@@ -133,5 +133,4 @@ FsRtlInitSystem(
 // Global data inside the File System Runtime Library
 //
 extern PERESOURCE FsRtlPagingIoResources;
-extern PUCHAR _FsRtlLegalAnsiCharacterArray;
 extern PAGED_LOOKASIDE_LIST FsRtlFileLockLookasideList;
