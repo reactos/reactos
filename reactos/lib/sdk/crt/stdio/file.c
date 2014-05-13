@@ -1562,6 +1562,9 @@ wchar_t * CDECL _wmktemp(wchar_t *pattern)
     if (oflags & _O_APPEND)              wxflags |= WX_APPEND;
     if (oflags & _O_BINARY)              {/* Nothing to do */}
     else if (oflags & _O_TEXT)           wxflags |= WX_TEXT;
+    else if (oflags & _O_WTEXT)          wxflags |= WX_TEXT;
+    else if (oflags & _O_U16TEXT)        wxflags |= WX_TEXT;
+    else if (oflags & _O_U8TEXT)         wxflags |= WX_TEXT;
     else if (*__p__fmode() & _O_BINARY)  {/* Nothing to do */}
     else                                        wxflags |= WX_TEXT; /* default to TEXT*/
     if (oflags & _O_NOINHERIT)           wxflags |= WX_DONTINHERIT;
@@ -1571,7 +1574,8 @@ wchar_t * CDECL _wmktemp(wchar_t *pattern)
                     _O_TRUNC|_O_EXCL|_O_CREAT|
                     _O_RDWR|_O_WRONLY|_O_TEMPORARY|
                     _O_NOINHERIT|
-                    _O_SEQUENTIAL|_O_RANDOM|_O_SHORT_LIVED
+                    _O_SEQUENTIAL|_O_RANDOM|_O_SHORT_LIVED|
+                    _O_WTEXT|_O_U16TEXT|_O_U8TEXT
                     )))
         ERR(":unsupported oflags 0x%04x\n",unsupp);
 
