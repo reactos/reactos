@@ -1822,11 +1822,11 @@ int CDECL _wsopen( const wchar_t *path, int oflags, int shflags, ... )
 
   if (oflags & _O_CREAT)
   {
-    va_list ap;
+    __ms_va_list ap;
 
-    va_start(ap, shflags);
+    __ms_va_start(ap, shflags);
     pmode = va_arg(ap, int);
-    va_end(ap);
+    __ms_va_end(ap);
   }
   else
     pmode = 0;
