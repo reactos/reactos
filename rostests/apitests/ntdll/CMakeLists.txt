@@ -7,6 +7,7 @@ list(APPEND SOURCE
     NtCreateThread.c
     NtFreeVirtualMemory.c
     NtMapViewOfSection.c
+    NtMutant.c
     NtProtectVirtualMemory.c
     NtQuerySystemEnvironmentValue.c
     NtQueryVolumeInformationFile.c

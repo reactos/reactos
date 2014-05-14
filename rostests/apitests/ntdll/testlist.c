@@ -10,6 +10,7 @@ extern void func_NtCreateFile(void);
 extern void func_NtCreateThread(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtMapViewOfSection(void);
+extern void func_NtMutant(void);
 extern void func_NtProtectVirtualMemory(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtQueryVolumeInformationFile(void);
@@ -38,6 +39,7 @@ const struct test winetest_testlist[] =
     { "NtCreateThread",                 func_NtCreateThread },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
+    { "NtMutant",                       func_NtMutant },
     { "NtProtectVirtualMemory",         func_NtProtectVirtualMemory },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtQueryVolumeInformationFile",   func_NtQueryVolumeInformationFile },
