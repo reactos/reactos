@@ -3180,11 +3180,9 @@ FILE * CDECL fopen(const char *path, const char *mode)
 int CDECL fopen_s(FILE** pFile,
         const char *filename, const char *mode)
 {
-    if (!MSVCRT_CHECK_PMT(pFile != NULL) || !MSVCRT_CHECK_PMT(filename != NULL) ||
-        !MSVCRT_CHECK_PMT(mode != NULL)) {
-        *_errno() = EINVAL;
-        return EINVAL;
-    }
+    if (!MSVCRT_CHECK_PMT(pFile != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT(filename != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT(mode != NULL)) return EINVAL;
 
     *pFile = fopen(filename, mode);
 
