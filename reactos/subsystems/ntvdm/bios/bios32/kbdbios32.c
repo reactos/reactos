@@ -273,6 +273,9 @@ BOOLEAN KbdBios32Initialize(VOID)
     Bda->KeybdBufferEnd   = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
     Bda->KeybdBufferHead  = Bda->KeybdBufferTail = 0;
 
+    // FIXME: Fill the keyboard buffer with invalid values, for diagnostic purposes...
+    RtlFillMemory(((LPVOID)((ULONG_PTR)Bda + Bda->KeybdBufferStart)), BIOS_KBD_BUFFER_SIZE * sizeof(WORD), 'A');
+
     /* Register the BIOS 32-bit Interrupts */
 
     /* Initialize software vector handlers */
