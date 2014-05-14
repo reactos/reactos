@@ -156,6 +156,13 @@ static int tmpnam_unique;
  * protection, rather than locking the whole table for every change.
  */
 static CRITICAL_SECTION file_cs;
+static CRITICAL_SECTION_DEBUG file_cs_debug =
+{
+    0, 0, &file_cs,
+    { &file_cs_debug.ProcessLocksList, &file_cs_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": file_cs") }
+};
+static CRITICAL_SECTION file_cs = { &file_cs_debug, -1, 0, 0, 0, 0 };
 #define LOCK_FILES()    do { EnterCriticalSection(&file_cs); } while (0)
 #define UNLOCK_FILES()  do { LeaveCriticalSection(&file_cs); } while (0)
 
@@ -429,8 +436,6 @@ void msvcrt_init_io(void)
   unsigned int  i;
   ioinfo        *fdinfo;
 
-  InitializeCriticalSection(&file_cs);
-  file_cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": file_cs");
   GetStartupInfoA(&si);
   if (si.cbReserved2 >= sizeof(unsigned int) && si.lpReserved2 != NULL)
   {
@@ -456,53 +461,36 @@ void msvcrt_init_io(void)
         if (get_ioinfo(fdstart)->handle == INVALID_HANDLE_VALUE) break;
   }
 
-  if(!__pioinfo[0])
-      set_fd(INVALID_HANDLE_VALUE, 0, 3);
+  fdinfo = get_ioinfo(STDIN_FILENO);
+  if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
+    HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD type = GetFileType(h);
 
-  fdinfo = get_ioinfo(0);
-  if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE)
-  {
-      HANDLE std = GetStdHandle(STD_INPUT_HANDLE);
-#ifndef __REACTOS__
-      if (std != INVALID_HANDLE_VALUE && DuplicateHandle(GetCurrentProcess(), std,
-                                                         GetCurrentProcess(), &fdinfo->handle,
-                                                         0, TRUE, DUPLICATE_SAME_ACCESS))
-#else
-          fdinfo->handle = std;
-#endif
-          fdinfo->wxflag = WX_OPEN | WX_TEXT;
+    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_NOSEEK : 0)
+            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDIN_FILENO);
   }
 
-  fdinfo = get_ioinfo(1);
-  if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE)
-  {
-      HANDLE std = GetStdHandle(STD_OUTPUT_HANDLE);
-#ifndef __REACTOS__
-      if (std != INVALID_HANDLE_VALUE && DuplicateHandle(GetCurrentProcess(), std,
-                                                         GetCurrentProcess(), &fdinfo->handle,
-                                                         0, TRUE, DUPLICATE_SAME_ACCESS))
-#else
-          fdinfo->handle = std;
-#endif
-          fdinfo->wxflag = WX_OPEN | WX_TEXT;
+  fdinfo = get_ioinfo(STDOUT_FILENO);
+  if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD type = GetFileType(h);
+
+    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_NOSEEK : 0)
+            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDOUT_FILENO);
   }
 
-  fdinfo = get_ioinfo(2);
-  if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE)
-  {
-      HANDLE std = GetStdHandle(STD_ERROR_HANDLE);
-#ifndef __REACTOS__
-      if (std != INVALID_HANDLE_VALUE && DuplicateHandle(GetCurrentProcess(), std,
-                                                         GetCurrentProcess(), &fdinfo->handle,
-                                                         0, TRUE, DUPLICATE_SAME_ACCESS))
-#else
-          fdinfo->handle = std;
-#endif
-          fdinfo->wxflag = WX_OPEN | WX_TEXT;
+  fdinfo = get_ioinfo(STDERR_FILENO);
+  if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
+    HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+    DWORD type = GetFileType(h);
+
+    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_NOSEEK : 0)
+            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDERR_FILENO);
   }
 
-  TRACE(":handles (%p)(%p)(%p)\n", get_ioinfo(0)->handle,
-	get_ioinfo(1)->handle, get_ioinfo(2)->handle);
+  TRACE(":handles (%p)(%p)(%p)\n", get_ioinfo(STDIN_FILENO)->handle,
+        get_ioinfo(STDOUT_FILENO)->handle,
+        get_ioinfo(STDERR_FILENO)->handle);
 
   memset(_iob,0,3*sizeof(FILE));
   for (i = 0; i < 3; i++)
@@ -1012,24 +1000,28 @@ int CDECL _fcloseall(void)
 /* free everything on process exit */
 void msvcrt_free_io(void)
 {
-    int i;
+    unsigned int i;
+    int j;
 
+    _flushall();
     _fcloseall();
-    /* The Win32 _fcloseall() function explicitly doesn't close stdin,
-     * stdout, and stderr (unlike GNU), so we need to fclose() them here
-     * or they won't get flushed.
-     */
-    fclose(&_iob[0]);
-    fclose(&_iob[1]);
-    fclose(&_iob[2]);
 
     for(i=0; i<sizeof(__pioinfo)/sizeof(__pioinfo[0]); i++)
         free(__pioinfo[i]);
 
+    for(j=0; j<stream_idx; j++)
+    {
+        FILE *file = get_file(j);
+        if(file<_iob || file>=_iob+_IOB_ENTRIES)
+        {
+            ((file_crit*)file)->crit.DebugInfo->Spare[0] = 0;
+            DeleteCriticalSection(&((file_crit*)file)->crit);
+        }
+    }
+
     for(i=0; i<sizeof(fstream)/sizeof(fstream[0]); i++)
         free(fstream[i]);
 
-    file_cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&file_cs);
 }
 
