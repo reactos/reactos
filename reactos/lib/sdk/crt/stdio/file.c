@@ -3293,13 +3293,8 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
   while(rcnt>0)
   {
     int i;
-    /* Fill the buffer on small reads.
-     * TODO: Use a better buffering strategy.
-     */
-    if (!file->_cnt && size*nmemb <= BUFSIZ/2 && !(file->_flag & _IONBF)) {
-      if (file->_bufsiz == 0) {
-        alloc_buffer(file);
-      }
+    if (!file->_cnt && rcnt<BUFSIZ && !(file->_flag & _IONBF)
+            && (file->_bufsiz != 0 || alloc_buffer(file))) {
       file->_cnt = _read(file->_file, file->_base, file->_bufsiz);
       file->_ptr = file->_base;
       i = ((unsigned int)file->_cnt<rcnt) ? file->_cnt : rcnt;
@@ -3313,8 +3308,12 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
         file->_cnt -= i;
         file->_ptr += i;
       }
+    } else if (rcnt > UINT_MAX) {
+      i = _read(file->_file, ptr, UINT_MAX);
+    } else if (rcnt < BUFSIZ) {
+      i = _read(file->_file, ptr, rcnt);
     } else {
-      i = _read(file->_file,ptr, rcnt);
+      i = _read(file->_file, ptr, rcnt - BUFSIZ/2);
     }
     pread += i;
     rcnt -= i;
