@@ -533,19 +533,24 @@ int CDECL _isatty(int fd)
 }
 
 /* INTERNAL: Allocate stdio file buffer */
-/*static*/ void alloc_buffer(FILE* file)
+/*static*/ BOOL alloc_buffer(FILE* file)
 {
-	file->_base = calloc(BUFSIZ,1);
-	if(file->_base) {
-		file->_bufsiz = BUFSIZ;
-		file->_flag |= _IOMYBUF;
-	} else {
-		file->_base = (char*)(&file->_charbuf);
-		/* put here 2 ??? */
-		file->_bufsiz = sizeof(file->_charbuf);
-	}
-	file->_ptr = file->_base;
-	file->_cnt = 0;
+    if((file->_file==STDOUT_FILENO || file->_file==STDERR_FILENO)
+            && _isatty(file->_file))
+        return FALSE;
+
+    file->_base = calloc(BUFSIZ,1);
+    if(file->_base) {
+        file->_bufsiz = BUFSIZ;
+        file->_flag |= _IOMYBUF;
+    } else {
+        file->_base = (char*)(&file->_charbuf);
+        /* put here 2 ??? */
+        file->_bufsiz = sizeof(file->_charbuf);
+    }
+    file->_ptr = file->_base;
+    file->_cnt = 0;
+    return TRUE;
 }
 
 /* INTERNAL: Convert integer to base32 string (0-9a-v), 0 becomes "" */
@@ -2886,7 +2891,7 @@ wint_t CDECL fgetwc(FILE* file)
     wint_t ret;
     int ch;
 
-  _lock_file(file);
+    _lock_file(file);
 
     if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
             || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
