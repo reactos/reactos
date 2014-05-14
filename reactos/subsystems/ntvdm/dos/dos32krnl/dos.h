@@ -27,7 +27,7 @@
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"
 #define FIRST_MCB_SEGMENT 0x1000
-#define USER_MEMORY_SIZE 0x8FFE
+#define USER_MEMORY_SIZE (0x9FFE - FIRST_MCB_SEGMENT)
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
 
