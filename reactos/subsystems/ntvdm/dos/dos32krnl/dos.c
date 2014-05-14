@@ -584,6 +584,87 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
     }
 }
 
+static BOOLEAN DosResizeHandleTable(WORD NewSize)
+{
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+    WORD Segment;
+
+    /* Get the PSP block */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+
+    if (NewSize == PspBlock->HandleTableSize)
+    {
+        /* No change */
+        return TRUE;
+    }
+
+    if (PspBlock->HandleTableSize > 20)
+    {
+        /* Get the segment of the current table */
+        Segment = (LOWORD(PspBlock->HandleTablePtr) >> 4) + HIWORD(PspBlock->HandleTablePtr);
+
+        if (NewSize <= 20)
+        {
+            /* Get the current handle table */
+            HandleTable = FAR_POINTER(PspBlock->HandleTablePtr);
+
+            /* Copy it to the PSP */
+            RtlCopyMemory(PspBlock->HandleTable, HandleTable, NewSize);
+
+            /* Free the memory */
+            DosFreeMemory(Segment);
+
+            /* Update the handle table pointer and size */
+            PspBlock->HandleTableSize = NewSize;
+            PspBlock->HandleTablePtr = MAKELONG(0x18, CurrentPsp);
+        }
+        else
+        {
+            /* Resize the memory */
+            if (!DosResizeMemory(Segment, NewSize, NULL))
+            {
+                /* Unable to resize, try allocating it somewhere else */
+                Segment = DosAllocateMemory(NewSize, NULL);
+                if (Segment == 0) return FALSE;
+
+                /* Get the new handle table */
+                HandleTable = SEG_OFF_TO_PTR(Segment, 0);
+
+                /* Copy the handles to the new table */
+                RtlCopyMemory(HandleTable,
+                              FAR_POINTER(PspBlock->HandleTablePtr),
+                              PspBlock->HandleTableSize);
+
+                /* Update the handle table pointer */
+                PspBlock->HandleTablePtr = MAKELONG(0, Segment);
+            }
+
+            /* Update the handle table size */
+            PspBlock->HandleTableSize = NewSize;
+        }
+    }
+    else if (NewSize > 20)
+    {
+        Segment = DosAllocateMemory(NewSize, NULL);
+        if (Segment == 0) return FALSE;
+
+        /* Get the new handle table */
+        HandleTable = SEG_OFF_TO_PTR(Segment, 0);
+
+        /* Copy the handles from the PSP to the new table */
+        RtlCopyMemory(HandleTable,
+                      FAR_POINTER(PspBlock->HandleTablePtr),
+                      PspBlock->HandleTableSize);
+
+        /* Update the handle table pointer and size */
+        PspBlock->HandleTableSize = NewSize;
+        PspBlock->HandleTablePtr = MAKELONG(0, Segment);
+    }
+
+    return TRUE;
+}
+
 static BOOLEAN DosCloseHandle(WORD DosHandle)
 {
     BYTE SftIndex;
@@ -2429,6 +2510,19 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 setAX(ERROR_INVALID_FUNCTION);
             }
+
+            break;
+        }
+
+        /* Set Handle Count */
+        case 0x67:
+        {
+            if (!DosResizeHandleTable(getBX()))
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(DosLastError);
+            }
+            else Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
             break;
         }
