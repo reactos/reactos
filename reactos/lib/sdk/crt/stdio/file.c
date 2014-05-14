@@ -3880,13 +3880,19 @@ int CDECL ungetc(int c, FILE * file)
         return EOF;
 
     _lock_file(file);
-    if(file->_bufsiz == 0) {
-        alloc_buffer(file);
+    if(file->_bufsiz == 0 && alloc_buffer(file))
         file->_ptr++;
-    }
     if(file->_ptr>file->_base) {
         file->_ptr--;
-        *file->_ptr=c;
+        if(file->_flag & _IOSTRG) {
+            if(*file->_ptr != c) {
+                file->_ptr++;
+                _unlock_file(file);
+                return EOF;
+            }
+        }else {
+            *file->_ptr = c;
+        }
         file->_cnt++;
         clearerr(file);
         _unlock_file(file);
