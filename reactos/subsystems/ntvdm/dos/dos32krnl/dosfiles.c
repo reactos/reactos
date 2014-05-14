@@ -167,15 +167,14 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
             /* Retrieve the character in AL (scan code is in AH) */
             Character = getAL();
 
-            // FIXME: Sometimes we need echo, some other times not.
-            // DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+            if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
 
             ((PCHAR)Buffer)[BytesRead32] = Character;
 
             /* Stop on first carriage return */
             if (Character == '\r')
             {
-                // DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
+                if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
                 break;
             }
 

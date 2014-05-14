@@ -160,6 +160,8 @@ typedef struct _DOS_EXEC_PARAM_BLOCK
 
 #pragma pack(pop)
 
+extern BOOLEAN DoEcho;
+
 /* FUNCTIONS ******************************************************************/
 
 extern CALLBACK16 DosContext;

@@ -40,6 +40,9 @@ static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
 static WORD DosErrorLevel = 0x0000;
 
+/* Echo state for INT 21h, AH = 01h and AH = 3Fh */
+BOOLEAN DoEcho = FALSE;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /*
@@ -1434,8 +1437,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x01:
         {
             // FIXME: Under DOS 2+, input / output handle may be redirected!!!!
+            DoEcho = TRUE;
             Character = DosReadCharacter(DOS_INPUT_HANDLE);
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+            DoEcho = FALSE;
 
             // /* Let the BOP repeat if needed */
             // if (getCF()) break;
@@ -1576,6 +1580,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             while (Count < InputBuffer->MaxLength)
             {
+                // FIXME!! This function should interpret backspaces etc...
+
                 /* Try to read a character (wait) */
                 Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
@@ -2051,10 +2057,14 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x3F:
         {
             WORD BytesRead = 0;
-            WORD ErrorCode = DosReadFile(getBX(),
-                                         SEG_OFF_TO_PTR(getDS(), getDX()),
-                                         getCX(),
-                                         &BytesRead);
+            WORD ErrorCode;
+
+            DoEcho = TRUE;
+            ErrorCode = DosReadFile(getBX(),
+                                    SEG_OFF_TO_PTR(getDS(), getDX()),
+                                    getCX(),
+                                    &BytesRead);
+            DoEcho = FALSE;
 
             if (ErrorCode == ERROR_SUCCESS)
             {
