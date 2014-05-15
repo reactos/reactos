@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos.h
- * PURPOSE:         VDM DOS Kernel
+ * FILE:            dos/dos32krnl/dos.h
+ * PURPOSE:         DOS32 Kernel
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -191,8 +191,8 @@ BOOL IsConsoleHandle(HANDLE hHandle);
 WORD DosOpenHandle(HANDLE Handle);
 HANDLE DosGetRealHandle(WORD DosHandle);
 
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes);
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode);
+WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attributes);
+WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes);
 WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
 WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
 WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset);
