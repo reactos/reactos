@@ -239,10 +239,17 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                                MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE, Window->style & WS_MINIMIZE),
                               (LPARAM)(WindowPrev ? UserHMGetHandle(WindowPrev) : 0));
 
-      if (!Window->spwndOwner && !IntGetParent(Window))
+      if (Window->spwndParent == UserGetDesktopWindow() &&
+          Window->spwndOwner == NULL &&
+          !(Window->ExStyle & WS_EX_TOOLWINDOW) ||
+          (Window->ExStyle & WS_EX_APPWINDOW))
       {
          // FIXME lParam; The value is TRUE if the window is in full-screen mode, or FALSE otherwise.
          co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (WPARAM) UserHMGetHandle(Window), FALSE);
+      }
+      else
+      {
+          co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, 0, FALSE);
       }
 
       Window->state &= ~WNDS_NONCPAINT;
