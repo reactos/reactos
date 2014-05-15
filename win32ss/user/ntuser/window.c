@@ -2428,10 +2428,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    IntSendParentNotify(Window, WM_CREATE);
 
    /* Notify the shell that a new window was created */
-   if ((!hWndParent) && (!hWndOwner) &&
-       Window->spwndOwner == NULL &&
-       !(Window->ExStyle & WS_EX_TOOLWINDOW) ||
-       (Window->ExStyle & WS_EX_APPWINDOW))
+   if (Window->spwndParent == UserGetDesktopWindow() &&
+       ((Window->spwndOwner == NULL &&
+       !(Window->ExStyle & WS_EX_TOOLWINDOW)) ||
+       (Window->ExStyle & WS_EX_APPWINDOW)))
    {
       co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)hWnd, 0);
    }
