@@ -194,6 +194,205 @@ public:
 
 };
 
+template <class Base>
+class CComContainedObject : public Base
+{
+public:
+	IUnknown* m_pUnkOuter;
+	CComContainedObject(void * pv = NULL) : m_pUnkOuter(static_cast<IUnknown*>(pv))
+	{
+	}
+
+	STDMETHOD_(ULONG, AddRef)()
+	{
+		return m_pUnkOuter->AddRef();
+	}
+
+	STDMETHOD_(ULONG, Release)()
+	{
+		return m_pUnkOuter->Release();
+	}
+
+	STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
+	{
+		return m_pUnkOuter->QueryInterface(iid, ppvObject);
+	}
+
+	IUnknown* GetControllingUnknown()
+	{
+		return m_pUnkOuter;
+	}
+};
+
+template <class contained>
+class CComAggObject : public contained
+{
+public:
+	CComContainedObject<contained> m_contained;
+
+	CComAggObject(void * pv = NULL) : m_contained(static_cast<contained*>(pv))
+	{
+		_pAtlModule->Lock();
+	}
+
+	virtual ~CComAggObject()
+	{
+		this->FinalRelease();
+		_pAtlModule->Unlock();
+	}
+
+	HRESULT FinalConstruct()
+	{
+		return m_contained.FinalConstruct();
+	}
+	void FinalRelease()
+	{
+		m_contained.FinalRelease();
+	}
+
+	STDMETHOD_(ULONG, AddRef)()
+	{
+		return this->InternalAddRef();
+	}
+
+	STDMETHOD_(ULONG, Release)()
+	{
+		ULONG newRefCount;
+		newRefCount = this->InternalRelease();
+		if (newRefCount == 0)
+			delete this;
+		return newRefCount;
+	}
+
+	STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
+	{
+		if (ppvObject == NULL)
+			return E_POINTER;
+		if (iid == IID_IUnknown)
+			*ppvObject = reinterpret_cast<void*>(this);
+		else
+			return m_contained._InternalQueryInterface(iid, ppvObject);
+		return S_OK;
+	}
+
+	static HRESULT WINAPI CreateInstance(IUnknown * punkOuter, CComAggObject<contained> **pp)
+	{
+		CComAggObject<contained>	*newInstance;
+		HRESULT						hResult;
+
+		ATLASSERT(pp != NULL);
+		if (pp == NULL)
+			return E_POINTER;
+
+		hResult = E_OUTOFMEMORY;
+		newInstance = NULL;
+		ATLTRY(newInstance = new CComAggObject<contained>(punkOuter))
+		if (newInstance != NULL)
+		{
+			newInstance->SetVoid(NULL);
+			newInstance->InternalFinalConstructAddRef();
+			hResult = newInstance->_AtlInitialConstruct();
+			if (SUCCEEDED(hResult))
+				hResult = newInstance->FinalConstruct();
+			if (SUCCEEDED(hResult))
+				hResult = newInstance->_AtlFinalConstruct();
+			newInstance->InternalFinalConstructRelease();
+			if (hResult != S_OK)
+			{
+				delete newInstance;
+				newInstance = NULL;
+			}
+		}
+		*pp = newInstance;
+		return hResult;
+	}
+};
+
+template <class contained>
+class CComPolyObject : public contained
+{
+public:
+	CComContainedObject<contained> m_contained;
+
+	CComPolyObject(void * pv = NULL)
+		: m_contained(pv ? static_cast<contained*>(pv) : this)
+	{
+		_pAtlModule->Lock();
+	}
+
+	virtual ~CComPolyObject()
+	{
+		this->FinalRelease();
+		_pAtlModule->Unlock();
+	}
+
+	HRESULT FinalConstruct()
+	{
+		return m_contained.FinalConstruct();
+	}
+	void FinalRelease()
+	{
+		m_contained.FinalRelease();
+	}
+
+	STDMETHOD_(ULONG, AddRef)()
+	{
+		return this->InternalAddRef();
+	}
+
+	STDMETHOD_(ULONG, Release)()
+	{
+		ULONG newRefCount;
+		newRefCount = this->InternalRelease();
+		if (newRefCount == 0)
+			delete this;
+		return newRefCount;
+	}
+
+	STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
+	{
+		if (ppvObject == NULL)
+			return E_POINTER;
+		if (iid == IID_IUnknown)
+			*ppvObject = reinterpret_cast<void*>(this);
+		else
+			return m_contained._InternalQueryInterface(iid, ppvObject);
+		return S_OK;
+	}
+
+	static HRESULT WINAPI CreateInstance(IUnknown * punkOuter, CComPolyObject<contained> **pp)
+	{
+		CComPolyObject<contained>	*newInstance;
+		HRESULT						hResult;
+
+		ATLASSERT(pp != NULL);
+		if (pp == NULL)
+			return E_POINTER;
+
+		hResult = E_OUTOFMEMORY;
+		newInstance = NULL;
+		ATLTRY(newInstance = new CComPolyObject<contained>(punkOuter))
+		if (newInstance != NULL)
+		{
+			newInstance->SetVoid(NULL);
+			newInstance->InternalFinalConstructAddRef();
+			hResult = newInstance->_AtlInitialConstruct();
+			if (SUCCEEDED(hResult))
+				hResult = newInstance->FinalConstruct();
+			if (SUCCEEDED(hResult))
+				hResult = newInstance->_AtlFinalConstruct();
+			newInstance->InternalFinalConstructRelease();
+			if (hResult != S_OK)
+			{
+				delete newInstance;
+				newInstance = NULL;
+			}
+		}
+		*pp = newInstance;
+		return hResult;
+	}
+};
+
 template <HRESULT hResult>
 class CComFailCreator
 {
@@ -225,7 +424,7 @@ public:
 
 		hResult = E_OUTOFMEMORY;
 		newInstance = NULL;
-		ATLTRY(newInstance = new T1())
+		ATLTRY(newInstance = new T1(pv))
 		if (newInstance != NULL)
 		{
 			newInstance->SetVoid(pv);
@@ -254,7 +453,7 @@ class CComCreator2
 public:
 	static HRESULT WINAPI CreateInstance(void *pv, REFIID riid, LPVOID *ppv)
 	{
-		ATLASSERT(ppv != NULL && ppv != NULL);
+		ATLASSERT(ppv != NULL && riid != NULL);
 
 		if (pv == NULL)
 			return T1::CreateInstance(NULL, riid, ppv);
@@ -370,15 +569,15 @@ public:																			\
 
 #define DECLARE_AGGREGATABLE(x)													\
 public:																			\
-	typedef CComCreator2<CComCreator<CComObject<x> >, CComCreator<CComAggObject<x> > > _CreatorClass;
+	typedef ATL::CComCreator2<ATL::CComCreator<ATL::CComObject<x> >, ATL::CComCreator<ATL::CComAggObject<x> > > _CreatorClass;
 
 #define DECLARE_ONLY_AGGREGATABLE(x)											\
 public:																			\
-	typedef CComCreator2<CComFailCreator<E_FAIL>, CComCreator<CComAggObject<x> > > _CreatorClass;
+	typedef ATL::CComCreator2<ATL::CComFailCreator<E_FAIL>, ATL::CComCreator<ATL::CComAggObject<x> > > _CreatorClass;
 
 #define DECLARE_POLY_AGGREGATABLE(x)											\
 public:																			\
-	typedef CComCreator<CComPolyObject<x> > _CreatorClass;
+	typedef ATL::CComCreator<ATL::CComPolyObject<x> > _CreatorClass;
 
 #define DECLARE_GET_CONTROLLING_UNKNOWN()										\
 public:																			\

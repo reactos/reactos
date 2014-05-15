@@ -934,10 +934,10 @@ static VOID
 TaskSwitchWnd_CheckActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
                                     IN OUT PTASK_ITEM TaskItem)
 {
-    PTASK_ITEM ActiveTaskItem;
+    PTASK_ITEM CurrentTaskItem;
     PTASK_GROUP TaskGroup = NULL;
 
-    ActiveTaskItem = This->ActiveTaskItem;
+    CurrentTaskItem = This->ActiveTaskItem;
 
     if (TaskItem != NULL)
         TaskGroup = TaskItem->Group;
@@ -950,20 +950,20 @@ TaskSwitchWnd_CheckActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
         return;
     }
 
-    if (ActiveTaskItem != NULL)
+    if (CurrentTaskItem != NULL)
     {
-        PTASK_GROUP ActiveTaskGroup;
+        PTASK_GROUP CurrentTaskGroup;
 
-        if (ActiveTaskItem == TaskItem)
+        if (CurrentTaskItem == TaskItem)
             return;
 
-        ActiveTaskGroup = ActiveTaskItem->Group;
+        CurrentTaskGroup = CurrentTaskItem->Group;
 
         if (This->IsGroupingEnabled &&
-            ActiveTaskGroup != NULL &&
-            ActiveTaskGroup->IsCollapsed)
+            CurrentTaskGroup != NULL &&
+            CurrentTaskGroup->IsCollapsed)
         {
-            if (ActiveTaskGroup == TaskGroup)
+            if (CurrentTaskGroup == TaskGroup)
                 return;
 
             /* FIXME */
@@ -971,10 +971,9 @@ TaskSwitchWnd_CheckActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
         else
         {
             This->ActiveTaskItem = NULL;
-            if (ActiveTaskItem->Index >= 0)
+            if (CurrentTaskItem->Index >= 0)
             {
-                TaskSwitchWnd_UpdateTaskItemButton(This,
-                                                   ActiveTaskItem);
+                TaskSwitchWnd_UpdateTaskItemButton(This, CurrentTaskItem);
             }
         }
     }
@@ -983,8 +982,11 @@ TaskSwitchWnd_CheckActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
 
     if (TaskItem != NULL && TaskItem->Index >= 0)
     {
-        TaskSwitchWnd_UpdateTaskItemButton(This,
-                                           TaskItem);
+        TaskSwitchWnd_UpdateTaskItemButton(This, TaskItem);
+    }
+    else if (TaskItem == NULL)
+    {
+        DbgPrint("Active TaskItem now NULL\n");
     }
 }
 
@@ -1031,6 +1033,9 @@ TaskSwitchWnd_AddTask(IN OUT PTASK_SWITCH_WND This,
 {
     PTASK_ITEM TaskItem;
 
+    if (!IsWindow(hWnd) || ITrayWindow_IsSpecialHWND(This->Tray, hWnd))
+        return FALSE;
+
     TaskItem = TaskSwitchWnd_FindTaskItem(This,
                                           hWnd);
     if (TaskItem == NULL)
@@ -1066,8 +1071,7 @@ TaskSwitchWnd_ActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
         DbgPrint("Activate window 0x%p on button %d\n", TaskItem->hWnd, TaskItem->Index);
     }
 
-    TaskSwitchWnd_CheckActivateTaskItem(This,
-                                        TaskItem);
+    TaskSwitchWnd_CheckActivateTaskItem(This, TaskItem);
 
     return FALSE;
 }
@@ -1077,6 +1081,11 @@ TaskSwitchWnd_ActivateTask(IN OUT PTASK_SWITCH_WND This,
                            IN HWND hWnd)
 {
     PTASK_ITEM TaskItem;
+
+    if (!hWnd)
+    {
+        return TaskSwitchWnd_ActivateTaskItem(This, NULL);
+    }
 
     TaskItem = TaskSwitchWnd_FindTaskItem(This,
                                           hWnd);
@@ -1091,8 +1100,7 @@ TaskSwitchWnd_ActivateTask(IN OUT PTASK_SWITCH_WND This,
         DbgPrint("Activate window 0x%p, could not find task\n", hWnd);
     }
 
-    return TaskSwitchWnd_ActivateTaskItem(This,
-                                          TaskItem);
+    return TaskSwitchWnd_ActivateTaskItem(This, TaskItem);
 }
 
 static BOOL
@@ -1361,14 +1369,12 @@ TaskSwitchWnd_EnumWindowsProc(IN HWND hWnd,
     /* Only show windows that still exist and are visible and none of explorer's
        special windows (such as the desktop or the tray window) */
     if (IsWindow(hWnd) && IsWindowVisible(hWnd) &&
-        !ITrayWindow_IsSpecialHWND(This->Tray,
-                                   hWnd))
+        !ITrayWindow_IsSpecialHWND(This->Tray, hWnd))
     {
+        DWORD exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
         /* Don't list popup windows and also no tool windows */
-        if (GetWindow(hWnd,
-                      GW_OWNER) == NULL &&
-            !(GetWindowLong(hWnd,
-                            GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+        if ((GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
+            !(exStyle & WS_EX_TOOLWINDOW))
         {
             TaskSwitchWnd_AddTask(This,
                                   hWnd);
@@ -1592,28 +1598,23 @@ TaskSwitchWnd_HandleShellHookMsg(IN OUT PTASK_SWITCH_WND This,
             break;
 
         case HSHELL_WINDOWCREATED:
-            TaskSwitchWnd_AddTask(This,
+            Ret = TaskSwitchWnd_AddTask(This,
                                   (HWND)lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
-            TaskSwitchWnd_DeleteTask(This,
-                                     (HWND)lParam);
+            TaskSwitchWnd_DeleteTask(This, (HWND)lParam);
             Ret = TRUE;
             break;
 
-        case HSHELL_ACTIVATESHELLWINDOW:
-            goto UnhandledShellMessage;
-
         case HSHELL_RUDEAPPACTIVATED:
-            goto UnhandledShellMessage;
-
         case HSHELL_WINDOWACTIVATED:
-            TaskSwitchWnd_ActivateTask(This,
-                                       (HWND)lParam);
-            Ret = TRUE;
+            if (lParam)
+            {
+                TaskSwitchWnd_ActivateTask(This, (HWND) lParam);
+                Ret = TRUE;
+            }
             break;
 
         case HSHELL_GETMINRECT:
@@ -1635,6 +1636,7 @@ TaskSwitchWnd_HandleShellHookMsg(IN OUT PTASK_SWITCH_WND This,
             PostMessage(ITrayWindow_GetHWND(This->Tray), TWM_OPENSTARTMENU,0, 0);
             break;
 
+        case HSHELL_ACTIVATESHELLWINDOW:
         case HSHELL_LANGUAGE:
         case HSHELL_SYSMENU:
         case HSHELL_ENDTASK:
@@ -1708,12 +1710,20 @@ TaskSwitchWnd_HandleTaskItemClick(IN OUT PTASK_SWITCH_WND This,
         bIsMinimized = IsIconic(TaskItem->hWnd);
         bIsActive = (TaskItem == This->ActiveTaskItem);
 
+        DbgPrint("Active TaskItem %p, selected TaskItem %p\n", This->ActiveTaskItem, TaskItem);
+        if (This->ActiveTaskItem)
+            DbgPrint("Active TaskItem hWnd=%p, TaskItem hWnd %p\n", This->ActiveTaskItem->hWnd, TaskItem->hWnd);
+
+        DbgPrint("Valid button clicked. HWND=%p, IsMinimized=%s, IsActive=%s...\n",
+            TaskItem->hWnd, bIsMinimized ? "Yes" : "No", bIsActive ? "Yes" : "No");
+
         if (!bIsMinimized && bIsActive)
         {
             PostMessage(TaskItem->hWnd,
                         WM_SYSCOMMAND,
                         SC_MINIMIZE,
                         0);
+            DbgPrint("Valid button clicked. App window Minimized.\n");
         }
         else
         {
@@ -1723,9 +1733,11 @@ TaskSwitchWnd_HandleTaskItemClick(IN OUT PTASK_SWITCH_WND This,
                              WM_SYSCOMMAND,
                              SC_RESTORE,
                              0);
+                 DbgPrint("Valid button clicked. App window Restored.\n");
             }
 
             SetForegroundWindow(TaskItem->hWnd);
+            DbgPrint("Valid button clicked. App window Activated.\n");
         }
     }
 }

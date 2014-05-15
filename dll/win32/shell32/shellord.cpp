@@ -294,8 +294,13 @@ BOOL WINAPI RegisterShellHook(
     HWND hWnd,
     DWORD dwType)
 {
-    FIXME("(%p,0x%08x):stub.\n",hWnd, dwType);
-    return TRUE;
+    if (dwType == 3)
+        return RegisterShellHookWindow(hWnd);
+    else if (dwType == 0)
+        return DeregisterShellHookWindow(hWnd);
+
+    ERR("Unsupported argument");
+    return FALSE;
 }
 
 /*************************************************************************
