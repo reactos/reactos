@@ -2430,6 +2430,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    /* Notify the shell that a new window was created */
    if (Window->spwndParent == UserGetDesktopWindow() &&
        Window->spwndOwner == NULL &&
+       (Window->style & WS_VISIBLE) &&
        (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
         (Window->ExStyle & WS_EX_APPWINDOW)))
    {
