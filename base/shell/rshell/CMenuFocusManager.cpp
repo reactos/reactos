@@ -212,13 +212,13 @@ void CMenuFocusManager::SetCapture(HWND child)
         {
             ::SetCapture(child);
             m_captureHwnd = child;
-            TRACE("MouseTrack is now capturing %p\n", child);
+            DbgPrint("MouseTrack is now capturing %p\n", child);
         }
         else
         {
             ::ReleaseCapture();
             m_captureHwnd = NULL;
-            TRACE("MouseTrack is now off\n");
+            DbgPrint("MouseTrack is now off\n");
         }
 
     }
@@ -243,6 +243,40 @@ HRESULT CMenuFocusManager::IsTrackedWindow(HWND hWnd, StackEntry ** pentry)
                 if (pentry)
                     *pentry = &entry;
                 return S_OK;
+            }
+        }
+    }
+
+    return S_FALSE;
+}
+
+HRESULT CMenuFocusManager::IsTrackedWindowOrParent(HWND hWnd)
+{
+    for (int i = m_bandCount; --i >= 0;)
+    {
+        StackEntry& entry = m_bandStack[i];
+
+        if (entry.type != TrackedMenuEntry)
+        {
+            HRESULT hr = entry.mb->IsWindowOwner(hWnd);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+            if (hr == S_OK)
+                return S_OK;
+            if (entry.mb->_IsPopup() == S_OK)
+            {
+                CComPtr<IUnknown> site;
+                CComPtr<IOleWindow> pw;
+                hr = entry.mb->GetSite(IID_PPV_ARG(IUnknown, &site));
+                if (FAILED_UNEXPECTEDLY(hr))
+                    continue;
+                hr = IUnknown_QueryService(site, SID_SMenuBandParent, IID_PPV_ARG(IOleWindow, &pw));
+                if (FAILED_UNEXPECTEDLY(hr))
+                    continue;
+
+                HWND hParent;
+                if (pw->GetWindow(&hParent) == S_OK && hParent == hWnd)
+                    return S_OK;
             }
         }
     }
@@ -284,7 +318,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
 
         if (SendMessage(child, WM_USER_ISTRACKEDITEM, iHitTestResult, 0) == S_FALSE)
         {
-            TRACE("Hot item tracking detected a change (capture=%p)...\n", m_captureHwnd);
+            DbgPrint("Hot item tracking detected a change (capture=%p / cCapture=%p)...\n", m_captureHwnd, cCapture);
             DisableMouseTrack(NULL, FALSE);
             if (isTracking && iHitTestResult>=0 && m_current->type == TrackedMenuEntry)
                 SendMessage(entry->hwnd, WM_CANCELMODE, 0, 0);
@@ -359,13 +393,13 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM hookWParam, LPARAM ho
             callNext = ProcessMouseMove(msg);
             break;
         case WM_INITMENUPOPUP:
-            TRACE("WM_INITMENUPOPUP %p %p\n", msg->wParam, msg->lParam);
+            DbgPrint("WM_INITMENUPOPUP %p %p\n", msg->wParam, msg->lParam);
             m_selectedMenu = reinterpret_cast<HMENU>(msg->lParam);
             m_selectedItem = -1;
             m_selectedItemFlags = 0;
             break;
         case WM_MENUSELECT:
-            TRACE("WM_MENUSELECT %p %p\n", msg->wParam, msg->lParam);
+            DbgPrint("WM_MENUSELECT %p %p\n", msg->wParam, msg->lParam);
             m_selectedMenu = reinterpret_cast<HMENU>(msg->lParam);
             m_selectedItem = GET_X_LPARAM(msg->wParam);
             m_selectedItemFlags = HIWORD(msg->wParam);
@@ -415,7 +449,7 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
             {
                 HWND child = WindowFromPoint(pt);
 
-                if (IsTrackedWindow(child) != S_OK)
+                if (IsTrackedWindowOrParent(child) != S_OK)
                 {
                     SetCapture(NULL);
                     m_current->mb->_MenuItemHotTrack(MPOS_FULLCANCEL);
@@ -476,12 +510,12 @@ HRESULT CMenuFocusManager::PlaceHooks()
 {
     if (m_current->type == TrackedMenuEntry)
     {
-        TRACE("Entering MSGFILTER hook...\n");
+        DbgPrint("Entering MSGFILTER hook...\n");
         m_hMsgFilterHook = SetWindowsHookEx(WH_MSGFILTER, s_MsgFilterHook, NULL, m_threadId);
     }
     else
     {
-        TRACE("Entering GETMESSAGE hook...\n");
+        DbgPrint("Entering GETMESSAGE hook...\n");
         m_hGetMsgHook = SetWindowsHookEx(WH_GETMESSAGE, s_GetMsgHook, NULL, m_threadId);
     }
     return S_OK;
@@ -489,7 +523,7 @@ HRESULT CMenuFocusManager::PlaceHooks()
 
 HRESULT CMenuFocusManager::RemoveHooks()
 {
-    TRACE("Removing all hooks...\n");
+    DbgPrint("Removing all hooks...\n");
     if (m_hMsgFilterHook)
         UnhookWindowsHookEx(m_hMsgFilterHook);
     if (m_hGetMsgHook)
@@ -627,7 +661,7 @@ HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    TRACE("PushTrackedPopup %p\n", popup);
+    DbgPrint("PushTrackedPopup %p\n", popup);
     m_selectedMenu = popup;
     m_selectedItem = -1;
     m_selectedItemFlags = 0;

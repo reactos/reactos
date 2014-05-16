@@ -103,6 +103,7 @@ private:
     HRESULT RemoveHooks();
     HRESULT UpdateFocus();
     HRESULT IsTrackedWindow(HWND hWnd, StackEntry ** pentry = NULL);
+    HRESULT IsTrackedWindowOrParent(HWND hWnd);
 
     void DisableMouseTrack(HWND parent, BOOL disableThis);
     void SetCapture(HWND child);
