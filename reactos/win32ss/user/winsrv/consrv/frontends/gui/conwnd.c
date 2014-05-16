@@ -254,13 +254,27 @@ static VOID
 CreateSysMenu(HWND hWnd)
 {
     MENUITEMINFOW mii;
+    WCHAR szMenuStringBack[255];
+    const WCHAR *ptrTab;
     HMENU hMenu = GetSystemMenu(hWnd, FALSE);
     if (hMenu != NULL)
     {
         mii.cbSize = sizeof(mii);
         mii.fMask = MIIM_STRING;   
-        mii.dwTypeData = L"&Close";
-        SetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
+        mii.dwTypeData = szMenuStringBack;
+        mii.cch = sizeof(szMenuStringBack);
+
+        GetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
+
+        ptrTab = wcschr(szMenuStringBack, '\t');
+        if (ptrTab)
+        {
+           mii.cch = (int)( ptrTab - szMenuStringBack);
+           RtlZeroMemory((PVOID)ptrTab, mii.cch);
+           mii.cch = wcslen(szMenuStringBack);
+
+           SetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
+        }
 
         AppendMenuItems(hMenu, GuiConsoleMainMenuItems);
         DrawMenuBar(hWnd);
