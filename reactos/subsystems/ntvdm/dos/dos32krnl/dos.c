@@ -2622,6 +2622,59 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Lock/Unlock Region of File */
+        case 0x5C:
+        {
+            HANDLE Handle = DosGetRealHandle(getBX());
+
+            if (Handle == INVALID_HANDLE_VALUE)
+            {
+                /* The handle is invalid */
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ERROR_INVALID_HANDLE);
+                break;
+            }
+
+            if (getAL() == 0x00)
+            {
+                /* Lock region of file */
+                if (LockFile(Handle,
+                             MAKELONG(getCX(), getDX()), 0,
+                             MAKELONG(getSI(), getDI()), 0))
+                {
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                }
+                else
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(GetLastError());
+                }
+            }
+            else if (getAL() == 0x01)
+            {
+                /* Unlock region of file */
+                if (UnlockFile(Handle,
+                               MAKELONG(getCX(), getDX()), 0,
+                               MAKELONG(getSI(), getDI()), 0))
+                {
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                }
+                else
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(GetLastError());
+                }
+            }
+            else
+            {
+                /* Invalid subfunction */
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ERROR_INVALID_FUNCTION);
+            }
+
+            break;
+        }
+
         /* Canonicalize File Name or Path */
         case 0x60:
         {
