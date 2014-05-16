@@ -2625,7 +2625,36 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Canonicalize File Name or Path */
         case 0x60:
         {
-            // TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-3137.htm
+             * for more information.
+             */
+
+            /*
+             * We suppose that the DOS app gave to us a valid
+             * 128-byte long buffer for the canonicalized name.
+             */
+            DWORD dwRetVal = GetFullPathNameA(SEG_OFF_TO_PTR(getDS(), getSI()),
+                                              128,
+                                              SEG_OFF_TO_PTR(getES(), getDI()),
+                                              NULL);
+            if (dwRetVal == 0)
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(GetLastError());
+            }
+            else
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(0x0000);
+            }
+
+            // FIXME: Convert the full path name into short version.
+            // We cannot reliably use GetShortPathName, because it fails
+            // if the path name given doesn't exist. However this DOS
+            // function AH=60h should be able to work even for non-existing
+            // path and file names.
+
             break;
         }
 
