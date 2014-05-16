@@ -253,9 +253,15 @@ AppendMenuItems(HMENU hMenu,
 static VOID
 CreateSysMenu(HWND hWnd)
 {
+    MENUITEMINFOW mii;
     HMENU hMenu = GetSystemMenu(hWnd, FALSE);
     if (hMenu != NULL)
     {
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_STRING;   
+        mii.dwTypeData = L"&Close";
+        SetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
+
         AppendMenuItems(hMenu, GuiConsoleMainMenuItems);
         DrawMenuBar(hWnd);
     }
