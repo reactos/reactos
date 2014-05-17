@@ -50,7 +50,7 @@ CreateGreenFdo(
 	InitializeObjectAttributes(&ObjectAttributes, &DriverExtension->AttachedDeviceName, OBJ_KERNEL_HANDLE, NULL, NULL);
 	Status = ObOpenObjectByName(
 		&ObjectAttributes,
-		IoFileObjectType,
+		*IoFileObjectType,
 		KernelMode,
 		NULL,
 		DesiredAccess,
