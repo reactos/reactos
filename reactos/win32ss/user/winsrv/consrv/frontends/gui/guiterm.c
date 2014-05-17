@@ -806,8 +806,9 @@ GuiProcessKeyCallback(IN OUT PFRONTEND This,
     if ((ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED) || KeyStateMenu & 0x80) &&
         (VirtualKeyCode == VK_ESCAPE || VirtualKeyCode == VK_TAB || VirtualKeyCode == VK_SPACE))
     {
-        DefWindowProcW(msg->hwnd, msg->message, msg->wParam, msg->lParam);
-        return TRUE;
+        DPRINT1("GuiProcessKeyCallback\n");
+        //DefWindowProcW(msg->hwnd, msg->message, msg->wParam, msg->lParam);
+        //return TRUE;
     }
 
     return FALSE;

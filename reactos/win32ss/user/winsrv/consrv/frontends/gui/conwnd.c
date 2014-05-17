@@ -255,7 +255,7 @@ CreateSysMenu(HWND hWnd)
 {
     MENUITEMINFOW mii;
     WCHAR szMenuStringBack[255];
-    const WCHAR *ptrTab;
+    WCHAR *ptrTab;
     HMENU hMenu = GetSystemMenu(hWnd, FALSE);
     if (hMenu != NULL)
     {
@@ -269,9 +269,7 @@ CreateSysMenu(HWND hWnd)
         ptrTab = wcschr(szMenuStringBack, '\t');
         if (ptrTab)
         {
-           mii.cch = (int)( ptrTab - szMenuStringBack);
-           RtlZeroMemory((PVOID)ptrTab, mii.cch);
-
+           *ptrTab = '\0';
            mii.cch = wcslen(szMenuStringBack);
 
            SetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
@@ -1926,6 +1924,11 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     GuiConsoleSwitchFullScreen(GuiData);
 
                 break;
+            }
+            /* Detect Alt-Esc/Space/Tab presses defer to DefWindowProc */
+            if ( (HIWORD(lParam) & KF_ALTDOWN) && (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_TAB))
+            {
+               return DefWindowProcW(hWnd, msg, wParam, lParam);
             }
 
             OnKey(GuiData, msg, wParam, lParam);
