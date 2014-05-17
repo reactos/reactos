@@ -4409,13 +4409,18 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                                                        &StartingAddress);
             }
 
-            if (Result == TableFoundNode) goto FailPath;
+            if (Result == TableFoundNode)
+            {
+                Status = STATUS_NO_MEMORY;
+                goto FailPath;
+            }
 
             //
             // Now we know where the allocation ends. Make sure it doesn't end up
             // somewhere in kernel mode.
             //
-            EndingAddress = ((ULONG_PTR)StartingAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
+            NT_ASSERT(StartingAddress != 0);
+            EndingAddress = (StartingAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
             if ((PVOID)EndingAddress > MM_HIGHEST_VAD_ADDRESS)
             {
                 Status = STATUS_NO_MEMORY;
