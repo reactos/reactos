@@ -9,5 +9,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_QUIT,   "&Esci da ReactOS VDM"
+    IDS_VDM_DUMPMEM,    "Dump &Memory"
+    IDS_VDM_QUIT   ,    "&Esci da ReactOS VDM"
 END

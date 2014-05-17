@@ -51,7 +51,8 @@ typedef struct _VDM_MENUITEM
 
 static const VDM_MENUITEM VdmMenuItems[] =
 {
-    { IDS_VDM_QUIT, NULL, ID_VDM_QUIT },
+    { IDS_VDM_DUMPMEM, NULL, ID_VDM_DUMPMEM },
+    { IDS_VDM_QUIT   , NULL, ID_VDM_QUIT    },
 
     { 0, NULL, 0 }      /* End of list */
 };
@@ -366,6 +367,10 @@ PumpConsoleInput(LPVOID Parameter)
                     case ID_SHOWHIDE_MOUSE:
                         ShowHideMousePointer(ConsoleOutput, ShowPointer);
                         ShowPointer = !ShowPointer;
+                        break;
+
+                    case ID_VDM_DUMPMEM:
+                        DumpMemory();
                         break;
 
                     case ID_VDM_QUIT:
