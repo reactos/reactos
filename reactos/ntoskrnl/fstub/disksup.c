@@ -1655,8 +1655,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                     UInt32x32To64(GET_PARTITION_LENGTH(PartitionDescriptor),
                                   SectorSize);
 
-                /* FIXME: REACTOS HACK */
-                PartitionInfo->PartitionNumber = i + 1;
+                PartitionInfo->PartitionNumber = (!IsContainerPartition(PartitionType)) ? i : 0;
             }
             else
             {
@@ -1667,7 +1666,6 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->PartitionLength.QuadPart = 0;
                 PartitionInfo->HiddenSectors = 0;
 
-                /* FIXME: REACTOS HACK */
                 PartitionInfo->PartitionNumber = 0;
             }
         }
