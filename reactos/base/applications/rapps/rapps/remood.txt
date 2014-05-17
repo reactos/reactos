@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = ReMooD
 Version = 0.8a
 Licence = GPL
-Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy Experience with new features and more stability.
+Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy experience with new features and more stability.
 Size = 1.15 MB
 Category = 4
 URLSite = http://remood.sourceforge.net/
@@ -38,7 +39,7 @@ Description = ReMooD este o portare a codului Doom Legacy. Scopul e de a oferi c
 Size = 1,15 Mo
 
 [Section.041f]
-Description = ReMooD, Doom Legacy'in kaynak kodlarının bir uyarlamasıdır. Bilindik Legacy deneyimiyle yeni husûsiyetler ve daha fazla kararlılık sağlamayı amaçlar.
+Description = ReMooD, Doom Legacy'in bir kaynak kodu uyarlamasıdır. Yeni husûsiyetlerle ve daha çok kararlılıkla kökleşik Legacy deneyimini sağlamayı amaçlar.
 Size = 1,15 MB
 
 [Section.0422]

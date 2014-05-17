@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Microsoft Powerpoint Viewer
@@ -50,7 +51,7 @@ URLDownload = http://download.microsoft.com/download/5/6/E/56E4DBA3-D725-43EA-B1
 Name = Microsoft Powerpoint Görüntüleyici
 Licence = Bilinmiyor
 Description = Microsoft Powerpoint Görüntüleyici
-Size = 60.4 MB
+Size = 60,4 MB
 URLDownload = http://download.microsoft.com/download/4/6/4/4641DACB-5DE8-4E3A-B8F4-39A1C73889D3/PowerPointViewer.exe
 
 [Section.0422]

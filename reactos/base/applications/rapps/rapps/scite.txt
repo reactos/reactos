@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = SciTE
 Version = 3.4.1
 Licence = Freeware
-Description = SciTE is a SCIntilla based Text Editor. Originally built to demonstrate Scintilla, it has grown to be a generally useful editor with facilities for building and running programs.
+Description = SciTE is a SCIntilla based text editor. Originally built to demonstrate Scintilla, it has grown to be a generally useful editor with facilities for building and running programs.
 Size = 730 kB
 Category = 7
 URLSite = http://www.scintilla.org/
@@ -37,7 +38,7 @@ Size = 730 ko
 
 [Section.041f]
 Licence = Ücretsiz
-Description = SciTE, Scintilla tabanlı bir metin düzenleyicisidir. Başlangıçta, Scintilla'yı göstermek için yapılmıştır ancak umûmiyetle izlenceleri yapmak ve çalıştırmak yetenekleriyle birlikte kullanışlı bir düzenleyici olarak geliştirilmiştir.
+Description = SciTE, bir Scintilla tabanlı metin düzenleyicisidir. İlk başta Scintilla'yı göstermek için yapıldı, izlenceleri yapmak ve çalıştırmak yetenekleriyle bir umûmiyetle kullanışlı düzenleyici olmak için gelişti.
 Size = 730 KB
 
 [Section.0422]

@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = LGeneral
@@ -35,7 +36,7 @@ Description = Clonă Panzer General utilizând bibliotecile SDL.
 Size = 1,92 Mo
 
 [Section.041f]
-Description = SDL kitaplıklarını kullanan bir Panzer General taklidi.
+Description = SDL kitaplıklarını kullanan Panzer General taklidi.
 Size = 1,92 MB
 
 [Section.0422]

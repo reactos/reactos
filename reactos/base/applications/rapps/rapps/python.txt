@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Python 3
@@ -35,7 +36,7 @@ Description = Un limbaj de programare dinamic și puternic.
 Size = 23,4 Mo
 
 [Section.041f]
-Description = İlgi çekici, güçlü ve devingen bir izlenceleme dili.
+Description = Dikkat çekici, güçlü ve devingen bir izlenceleme dili.
 Size = 23,4 MB
 
 [Section.0422]

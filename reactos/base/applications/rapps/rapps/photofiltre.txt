@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = PhotoFiltre 7
@@ -28,5 +29,5 @@ Size = 4,99 Mo
 
 [Section.041f]
 Licence = Ücretsiz
-Description = Bu sürüm, katmanlarla gelmektedir ancak Stüdyo X sürümünden daha kısıtlıdır. PhotoFiltre Stüdyo, eksiksiz bir resim düzeltme yazılımıdır.
+Description = Bu sürüm, katmanlarla gelmektedir ancak Studio X sürümünden daha kısıtlıdır. PhotoFiltre Studio eksiksiz bir resim düzeltme yazılımıdır.
 Size = 4,99 MB

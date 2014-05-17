@@ -1,5 +1,6 @@
 ; UTF-8
-;PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Zaz

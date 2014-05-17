@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = LBreakout2
@@ -35,7 +36,7 @@ Description = Ramificație-clonă a bibliotecilor SDL.
 Size = 3,03 Mo
 
 [Section.041f]
-Description = SDL kitaplıklarını kullanan bir Breakout taklidi.
+Description = SDL kitaplıklarını kullanan Breakout taklidi.
 Size = 3,03 MB
 
 [Section.0422]

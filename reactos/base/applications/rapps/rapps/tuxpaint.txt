@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = TuxPaint
 Version = 0.9.21c
 Licence = GPL
-Description = An Open Source bitmap graphics editor geared towards young children.
+Description = An open source bitmap graphics editor geared towards young children.
 Size = 10.42 MB
 Category = 3
 URLSite = http://tuxpaint.org/
@@ -38,7 +39,7 @@ Description = Un editor grafic bitmap, adresat copiilor.
 Size = 10,42 Mo
 
 [Section.041f]
-Description = Çocuklar için açık kaynak bit eşlem çizge düzenleyicisi.
+Description = Küçük çocuklar için yapılmış bir açık kaynak bit eşlem çizge düzenleyicisi.
 Size = 10,42 MB
 
 [Section.0422]

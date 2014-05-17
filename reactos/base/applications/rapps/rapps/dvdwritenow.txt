@@ -1,10 +1,12 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = DVD Write Now
 Version = 1.5.12 sp2
 Licence = Freeware
-Description =  A free direct CD/DVD recording software. Once installed, you can use your CD/DVD RW as USB Flash or removable hard drives. Along with this you can write to CD/DVD RW recorded with UDF filesystem. You can also read UDF disks created with other software. (Microsoft DVD−ROMs, RW disks recorded with Ahead InCD). You need a ZIP decompression program to install it.
+Description = A free direct CD/DVD recording software. Once installed, you can use your CD/DVD RW as USB Flash or removable hard drives. Along with this you can write to CD/DVD RW recorded with UDF filesystem. You can also read UDF disks created with other software (Microsoft DVD−ROMs, RW disks recorded with Ahead InCD). You need a ZIP decompression program to install it.
 Size = 1.2 MB
 Category = 12
 URLSite = http://dwn.alter.org.ua/
@@ -30,7 +32,6 @@ Description = DVD Write Now - бесплатная программа для п�
 URLSite = http://dwn.alter.org.ua/ru/
 
 [Section.041f]
-Name = DVD Şimdi Yaz
 Licence = Ücretsiz
-Description =  Ücretsiz bir doğrudan CD/DVD kaydedicisi. Kurulur kurulmaz CD/DVD RW'leri çıkartılabilir disk olarak kullanabilirsiniz. Bununla birlikte CD/DVD RW'leri UDF kütük dizgesiyle kaydedebilirsiniz. Ayrıca, Mikroyazılım DVD−ROM'ları, Ahead InCD ile kaydedilen RW diskleri gibi diğer yazılımlarla oluşturulan UDF diskleri okutabilirsiniz. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
+Description = Ücretsiz bir doğrudan CD/DVD kaydedici yazılımı. Kurulduktan sonra CD/DVD RW'lerinizi USB Flash veyâ çıkarılabilir sâbit disk sürücüleri olarak kullanabilirsiniz. Bununla birlikte UDF kütük dizgesiyle kaydedilmiş CD/DVD RW'lere yazabilirsiniz. Ayrıca Microsoft DVD−ROM'ları, Ahead InCD ile kaydedilmiş RW diskleri gibi başka yazılımlarla oluşturulmuş UDF diskleri okuyabilirsiniz. Kurmak için bir ZIP çıkarma izlencesi gerekir.
 Size = 1,2 MB

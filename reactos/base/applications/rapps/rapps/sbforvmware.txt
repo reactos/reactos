@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = SoundBlaster Driver for VMWare
 Version = 5.12.1.5017
 Licence = Unknown
-Description = Unzip in the "ReactOS" folder then restart ReactOS twice.
+Description = Unzip in the ReactOS's folder then restart ReactOS twice.
 Size = 2.22 MB
 Category = 13
 URLDownload = http://svn.reactos.org/packages/sb_vmware.exe
@@ -13,62 +14,62 @@ CDPath = none
 [Section.0405]
 Name = Ovladač SoundBlaster pro VMWare
 Licence = Neznámá
-Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
+Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte. (FIXME)
 
 [Section.0407]
 Name = SoundBlaster Treiber für VMWare
 Licence = Unbekannt
-Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten. (FIXME)
 
 [Section.040a]
 Name = Driver SoundBlaster para VMWare
 Licence = Desconocida
-Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
+Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces. (FIXME)
 
 [Section.040c]
 Name = Pilote SoundBlaster pour VMWare
 Licence = Inconnue
-Description = Dézippez dans le répertoire "ReactOS" puis redémarrez deux fois.
+Description = Dézippez dans le répertoire "ReactOS" puis redémarrez deux fois. (FIXME)
 Size = 2,22 Mo
 
 [Section.0410]
 Name = Driver SoundBlaster per VMWare
 Licence = Sconosciuta
-Description = Estrarre nella cartella "ReactOS" e riavviare ReactOS due volte.
+Description = Estrarre nella cartella "ReactOS" e riavviare ReactOS due volte. (FIXME)
 
 [Section.0413]
 Name = SoundBlaster Driver voor VMWare
 Licence = Ongekend
-Description = Pak uit in de "ReactOS" folder en start ReactOS tweemaal opnieuw op.
+Description = Pak uit in de "ReactOS" folder en start ReactOS tweemaal opnieuw op. (FIXME)
 
 [Section.0415]
 Name = Sterownik SoundBlaster dla VMWare
 Licence = Nieznana
-Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
+Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system. (FIXME)
 
 [Section.0418]
 Name = Modul pilot SoundBlaster pentru VMWare
 Licence = Nespecificată
-Description = Dezarhivați în dosarul „ReactOS” apoi reporniți ReactOS de două ori.
+Description = Dezarhivați în dosarul „ReactOS” apoi reporniți ReactOS de două ori. (FIXME)
 Size = 2,22 Mo
 
 [Section.0419]
 Name = Драйвер SoundBlaster для VMWare
 Licence = Не указано
-Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
+Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему. (FIXME)
 
 [Section.041f]
 Name = VMWare için SoundBlaster Sürücüsü
 Licence = Bilinmiyor
-Description = Bunu, ReactOS'un dizinine çıkartıp bilgisayarı iki kez yeniden başlatınız.
+Description = ReactOS'un dizinine çıkartınız, sonra bilgisayarı iki kez yeniden başlatınız.
 Size = 2,22 MB
 
 [Section.0422]
 Name = Драйвер SoundBlaster для VMWare
 Licence = Невідома
-Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему. (FIXME)
 
 [Section.0813]
 Name = SoundBlaster Driver voor VMWare
 Licence = Ongekend
-Description = Pak uit in de "ReactOS" folder en start ReactOS tweemaal opnieuw op.
+Description = Pak uit in de "ReactOS" folder en start ReactOS tweemaal opnieuw op. (FIXME)

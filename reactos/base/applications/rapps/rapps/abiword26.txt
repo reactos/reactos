@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = AbiWord
@@ -35,7 +36,7 @@ Description = Procesor de text.
 Size = 5,64 Mo
 
 [Section.041f]
-Description = Bir zengin metin düzenleyicisi.
+Description = Sözcük işlemcisi.
 Size = 5,64 MB
 
 [Section.0422]

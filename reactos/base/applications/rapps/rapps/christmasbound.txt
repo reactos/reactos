@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Christmas Bound
@@ -19,5 +20,5 @@ Description = Un gioco simile a Frozen Fuits.
 
 [Section.041f]
 Licence = Ücretsiz
-Description = Frozen Fruits'e benzeyen bir oyun.
+Description = Frozen Fruits benzeri bir oyun.
 Size = 892 KB

@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Pocket Tanks
@@ -27,7 +28,6 @@ Description = Cel mai rapid joc de artilerie pe care-l veți juca vreodată.
 Size = 2,86 Mo
 
 [Section.041f]
-Name = Küçük Tanklar
-Licence = Kısıtlı
-Description = Bu güne kadar oynadığınız en hızlı topçu oyunu.
+Licence = Paylaşımlı
+Description = Şimdiye kadar oynayacağınız en hızlı topçuluk oyunu.
 Size = 2,86 MB

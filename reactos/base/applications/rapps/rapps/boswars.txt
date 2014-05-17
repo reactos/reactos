@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Bos Wars
@@ -26,6 +27,5 @@ Description = Bos Wars e o strategie în timp real, futuristă. Pentru a porni j
 Size = 62,3 Mo
 
 [Section.041f]
-Name = Bos Savaşları
-Description = Bos Savaşları, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Mikroyazılım Basarî C++ 2008 Yürütücüsü'nü kurunuz.
+Description = Bos Wars, gelecekçi ve gerçek zamanlı bir izlem oyunudur. Oyunu başlatmak için Microsoft Visual C++ 2008 Yürütücüsü'nü kurunuz.
 Size = 62,3 MB

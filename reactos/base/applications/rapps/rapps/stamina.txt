@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Stamina 2.5
@@ -24,5 +25,5 @@ Description = Tutor gratuit pentru dactilografiere.
 Size = 4,7 Mo
 
 [Section.041f]
-Description = Ücretsiz bir düğme takımında yazma öğreticisi.
+Description = Ücretsiz düğme takımında yazma öğreticisi.
 Size = 4,7 MB

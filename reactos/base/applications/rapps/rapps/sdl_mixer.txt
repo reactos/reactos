@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Mixer
 Version = 1.2.12
 Licence = LGPL
-Description = Needed for some Open Source Games to run. You need 7-Zip or a similar Utility to extract it.
+Description = Needed for some open source games to run. You need 7-Zip or a similar utility to extract it.
 Size = 548.02 kB
 Category = 14
 URLSite = http://www.libsdl.org/projects/SDL_mixer/
@@ -39,7 +40,7 @@ Size = 548,02 ko
 
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Karıştırıcısı
-Description = Birtakım açık kaynak uygulamalar için gereklidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = Birtakım açık kaynak oyunları çalıştırmak için gereklidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 548,02 KB
 
 [Section.0422]

@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Code::Blocks TDM-GCC (version 4.7.1, 32 bit)
@@ -19,5 +20,6 @@ Description = Un IDE potente, open source, multipiattaforma. Contiene il compila
 
 [Section.041f]
 Name = Code::Blocks TDM-GCC (sürüm 4.7.1, 32 bitlik)
+Licence = GPL 3. sürüm
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. TDM-GCC (sürüm 4.7.1, 32 bitlik) derleyicisini içerir.
 Size = 97,8 MB
