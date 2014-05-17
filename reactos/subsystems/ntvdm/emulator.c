@@ -400,8 +400,7 @@ VOID DumpMemory(VOID)
         i = 0;
         while (i++ <= 0x0F && (MAX_ADDRESS - (ULONG_PTR)PHYS_TO_REAL(Ptr2) > 0))
         {
-            Line += snprintf(Line, LINE_SIZE + LineBuffer - Line, "%c",
-                            (*Ptr2 >= 0x20 && *Ptr2 <= 0x7E) || (*Ptr2 >= 0x80 && *Ptr2 < 0xFF) ? *Ptr2 : '.');
+            *Line++ = ((*Ptr2 >= 0x20 && *Ptr2 <= 0x7E) || (*Ptr2 >= 0x80 && *Ptr2 < 0xFF) ? *Ptr2 : '.');
             ++Ptr2;
         }
 
