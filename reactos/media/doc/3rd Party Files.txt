@@ -65,3 +65,7 @@ Website: http://stlport.sourceforge.net/
 Title: win-iconv
 Used Version: r44
 Website: https://code.google.com/p/win-iconv/
+
+Title: libjpeg
+Used Version: 9a
+Website: http://www.ijg.org/

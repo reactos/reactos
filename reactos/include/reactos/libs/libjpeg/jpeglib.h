@@ -2,7 +2,7 @@
  * jpeglib.h
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2002-2012 by Guido Vollbeding.
+ * Modified 2002-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -39,12 +39,12 @@ extern "C" {
 
 #define JPEG_LIB_VERSION        90	/* Compatibility version 9.0 */
 #define JPEG_LIB_VERSION_MAJOR  9
-#define JPEG_LIB_VERSION_MINOR  0
+#define JPEG_LIB_VERSION_MINOR  1
 
 
 /* Various constants determining the sizes of things.
- * All of these are specified by the JPEG standard, so don't change them
- * if you want to be compatible.
+ * All of these are specified by the JPEG standard,
+ * so don't change them if you want to be compatible.
  */
 
 #define DCTSIZE		    8	/* The basic DCT block is 8x8 coefficients */
@@ -157,16 +157,21 @@ typedef struct {
   /* The downsampled dimensions are the component's actual, unpadded number
    * of samples at the main buffer (preprocessing/compression interface);
    * DCT scaling is included, so
-   * downsampled_width = ceil(image_width * Hi/Hmax * DCT_h_scaled_size/DCTSIZE)
+   * downsampled_width =
+   *   ceil(image_width * Hi/Hmax * DCT_h_scaled_size/block_size)
    * and similarly for height.
    */
   JDIMENSION downsampled_width;	 /* actual width in samples */
   JDIMENSION downsampled_height; /* actual height in samples */
-  /* This flag is used only for decompression.  In cases where some of the
-   * components will be ignored (eg grayscale output from YCbCr image),
-   * we can skip most computations for the unused components.
+  /* For decompression, in cases where some of the components will be
+   * ignored (eg grayscale output from YCbCr image), we can skip most
+   * computations for the unused components.
+   * For compression, some of the components will need further quantization
+   * scale by factor of 2 after DCT (eg BG_YCC output from normal RGB input).
+   * The field is first set TRUE for decompression, FALSE for compression
+   * in initial_setup, and then adapted in color conversion setup.
    */
-  boolean component_needed;	/* do we need the value of this component? */
+  boolean component_needed;
 
   /* These values are computed before starting a scan of the component. */
   /* The decompressor output side may not use these variables. */
@@ -215,10 +220,12 @@ struct jpeg_marker_struct {
 typedef enum {
 	JCS_UNKNOWN,		/* error/unspecified */
 	JCS_GRAYSCALE,		/* monochrome */
-	JCS_RGB,		/* red/green/blue */
-	JCS_YCbCr,		/* Y/Cb/Cr (also known as YUV) */
+	JCS_RGB,		/* red/green/blue, standard RGB (sRGB) */
+	JCS_YCbCr,		/* Y/Cb/Cr (also known as YUV), standard YCC */
 	JCS_CMYK,		/* C/M/Y/K */
-	JCS_YCCK		/* Y/Cb/Cr/K */
+	JCS_YCCK,		/* Y/Cb/Cr/K */
+	JCS_BG_RGB,		/* big gamut red/green/blue, bg-sRGB */
+	JCS_BG_YCC		/* big gamut Y/Cb/Cr, bg-sYCC */
 } J_COLOR_SPACE;
 
 /* Supported color transforms. */
