@@ -1198,15 +1198,17 @@ int CDECL fseek(FILE* file, long offset, int whence)
 }
 
 /*********************************************************************
- *		_chsize (MSVCRT.@)
+ *		_chsize_s (MSVCRT.@)
  */
-int CDECL _chsize(int fd, long size)
+int CDECL _chsize_s(int fd, __int64 size)
 {
-    LONG cur, pos;
+    __int64 cur, pos;
     HANDLE handle;
     BOOL ret = FALSE;
 
-    TRACE("(fd=%d, size=%d)\n", fd, size);
+    TRACE("(fd=%d, size=%s)\n", fd, wine_dbgstr_longlong(size));
+
+    if (!MSVCRT_CHECK_PMT(size >= 0)) return EINVAL;
 
     LOCK_FILES();
 
@@ -1214,10 +1216,10 @@ int CDECL _chsize(int fd, long size)
     if (handle != INVALID_HANDLE_VALUE)
     {
         /* save the current file pointer */
-        cur = _lseek(fd, 0, SEEK_CUR);
+        cur = _lseeki64(fd, 0, SEEK_CUR);
         if (cur >= 0)
         {
-            pos = _lseek(fd, size, SEEK_SET);
+            pos = _lseeki64(fd, size, SEEK_SET);
             if (pos >= 0)
             {
                 ret = SetEndOfFile(handle);
@@ -1225,12 +1227,21 @@ int CDECL _chsize(int fd, long size)
             }
 
             /* restore the file pointer */
-            _lseek(fd, cur, SEEK_SET);
+            _lseeki64(fd, cur, SEEK_SET);
         }
     }
 
     UNLOCK_FILES();
-    return ret ? 0 : -1;
+    return ret ? 0 : *_errno();
+}
+
+/*********************************************************************
+ *		_chsize (MSVCRT.@)
+ */
+int CDECL _chsize(int fd, long size)
+{
+    /* _chsize_s returns errno on failure but _chsize should return -1 */
+    return _chsize_s( fd, size ) == 0 ? 0 : -1;
 }
 
 /*********************************************************************
