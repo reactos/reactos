@@ -249,6 +249,14 @@ static BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         /* Set the maximum possible size of the block */
         ReturnSize += NextMcb->Size + 1;
 
+        if (ReturnSize < NewSize)
+        {
+            DPRINT("Cannot expand memory block: insufficient free segments available!\n");
+            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
+            Success = FALSE;
+            goto Done;
+        }
+
         /* Maximize the current block */
         Mcb->Size = ReturnSize;
         Mcb->BlockType = NextMcb->BlockType;
