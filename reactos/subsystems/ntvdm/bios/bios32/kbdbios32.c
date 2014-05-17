@@ -35,7 +35,11 @@ static BOOLEAN BiosKbdBufferPush(WORD Data)
     if (NextElement >= Bda->KeybdBufferEnd) NextElement = Bda->KeybdBufferStart;
 
     /* If it's full, fail */
-    if (NextElement == Bda->KeybdBufferHead) return FALSE;
+    if (NextElement == Bda->KeybdBufferHead)
+    {
+        DPRINT1("BIOS keyboard buffer full.\n");
+        return FALSE;
+    }
 
     /* Put the value in the queue */
     *((LPWORD)((ULONG_PTR)Bda + Bda->KeybdBufferTail)) = Data;

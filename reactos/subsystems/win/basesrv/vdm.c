@@ -436,6 +436,8 @@ Cleanup:
 NTSTATUS NTAPI BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
                                       PBASE_GET_NEXT_VDM_COMMAND Message)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+
     /* Copy the data */
     Message->iTask = CommandInfo->TaskId;
     Message->StdIn = CommandInfo->StdIn;
@@ -450,46 +452,61 @@ NTSTATUS NTAPI BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
 
     if (CommandInfo->CmdLen && Message->CmdLen)
     {
-        if (Message->CmdLen < CommandInfo->CmdLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->CmdLen >= CommandInfo->CmdLen)
+        {
+            /* Copy the command line */
+            RtlMoveMemory(Message->CmdLine, CommandInfo->CmdLine, CommandInfo->CmdLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the command line */
-        RtlMoveMemory(Message->CmdLine, CommandInfo->CmdLine, CommandInfo->CmdLen);
         Message->CmdLen = CommandInfo->CmdLen;
     }
 
     if (CommandInfo->AppLen && Message->AppLen)
     {
-        if (Message->AppLen < CommandInfo->CmdLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->AppLen >= CommandInfo->AppLen)
+        {
+            /* Copy the application name */
+            RtlMoveMemory(Message->AppName, CommandInfo->AppName, CommandInfo->AppLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the application name */
-        RtlMoveMemory(Message->AppName, CommandInfo->AppName, CommandInfo->AppLen);
         Message->AppLen = CommandInfo->AppLen;
     }
 
     if (CommandInfo->PifLen && Message->PifLen)
     {
-        if (Message->PifLen < CommandInfo->PifLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->PifLen >= CommandInfo->PifLen)
+        {
+            /* Copy the PIF file name */
+            RtlMoveMemory(Message->PifFile, CommandInfo->PifFile, CommandInfo->PifLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the PIF file name */
-        RtlMoveMemory(Message->PifFile, CommandInfo->PifFile, CommandInfo->PifLen);
         Message->PifLen = CommandInfo->PifLen;
     }
 
     if (CommandInfo->CurDirectoryLen && Message->CurDirectoryLen)
     {
-        if (Message->CurDirectoryLen < CommandInfo->CurDirectoryLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->CurDirectoryLen >= CommandInfo->CurDirectoryLen)
+        {
+            /* Copy the current directory */
+            RtlMoveMemory(Message->CurDirectory, CommandInfo->CurDirectory, CommandInfo->CurDirectoryLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the current directory */
-        RtlMoveMemory(Message->CurDirectory, CommandInfo->CurDirectory, CommandInfo->CurDirectoryLen);
         Message->CurDirectoryLen = CommandInfo->CurDirectoryLen;
     }
 
     if (CommandInfo->EnvLen && Message->EnvLen)
     {
-        if (Message->EnvLen < CommandInfo->EnvLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->EnvLen >= CommandInfo->EnvLen)
+        {
+            /* Copy the environment */
+            RtlMoveMemory(Message->Env, CommandInfo->Env, CommandInfo->EnvLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the environment */
-        RtlMoveMemory(Message->Env, CommandInfo->Env, CommandInfo->EnvLen);
         Message->EnvLen = CommandInfo->EnvLen;
     }
 
@@ -500,32 +517,41 @@ NTSTATUS NTAPI BaseSrvFillCommandInfo(PVDM_COMMAND_INFO CommandInfo,
 
     if (CommandInfo->DesktopLen && Message->DesktopLen)
     {
-        if (Message->DesktopLen < CommandInfo->DesktopLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->DesktopLen >= CommandInfo->DesktopLen)
+        {
+            /* Copy the desktop name */
+            RtlMoveMemory(Message->Desktop, CommandInfo->Desktop, CommandInfo->DesktopLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the desktop name */
-        RtlMoveMemory(Message->Desktop, CommandInfo->Desktop, CommandInfo->DesktopLen);
         Message->DesktopLen = CommandInfo->DesktopLen;
     }
 
     if (CommandInfo->TitleLen && Message->TitleLen)
     {
-        if (Message->TitleLen < CommandInfo->TitleLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->TitleLen >= CommandInfo->TitleLen)
+        {
+            /* Copy the title */
+            RtlMoveMemory(Message->Title, CommandInfo->Title, CommandInfo->TitleLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the title */
-        RtlMoveMemory(Message->Title, CommandInfo->Title, CommandInfo->TitleLen);
         Message->TitleLen = CommandInfo->TitleLen;
     }
 
     if (CommandInfo->ReservedLen && Message->ReservedLen)
     {
-        if (Message->ReservedLen < CommandInfo->ReservedLen) return STATUS_BUFFER_TOO_SMALL;
+        if (Message->ReservedLen >= CommandInfo->ReservedLen)
+        {
+            /* Copy the reserved parameter */
+            RtlMoveMemory(Message->Reserved, CommandInfo->Reserved, CommandInfo->ReservedLen);
+        }
+        else Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Copy the reserved parameter */
-        RtlMoveMemory(Message->Reserved, CommandInfo->Reserved, CommandInfo->ReservedLen);
         Message->ReservedLen = CommandInfo->ReservedLen;
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID NTAPI BaseInitializeVDM(VOID)
@@ -1017,6 +1043,7 @@ CSR_API(BaseSrvGetNextVDMCommand)
             {
                 /* Fill the command information */
                 Status = BaseSrvFillCommandInfo(DosRecord->CommandInfo, GetNextVdmCommandRequest);
+                if (!NT_SUCCESS(Status)) goto Cleanup;
 
                 /* Free the command information, it's no longer needed */
                 BaseSrvFreeVDMInfo(DosRecord->CommandInfo);

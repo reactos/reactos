@@ -662,7 +662,8 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 {
     BOOL Result;
     ULONG RegionSize, EnvironmentSize = 0;
-    PWCHAR p, Environment, NewEnvironment = NULL;
+    PWCHAR SourcePtr, DestPtr, Environment, NewEnvironment = NULL;
+    WCHAR PathBuffer[MAX_PATH];
     NTSTATUS Status;
 
     /* Make sure we have both strings */
@@ -695,8 +696,8 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     }
 
     /* Count how much space the whole environment takes */
-    p = Environment;
-    while ((*p++ != UNICODE_NULL) && (*p != UNICODE_NULL)) EnvironmentSize++;
+    SourcePtr = Environment;
+    while ((*SourcePtr++ != UNICODE_NULL) && (*SourcePtr != UNICODE_NULL)) EnvironmentSize++;
     EnvironmentSize += sizeof(UNICODE_NULL);
 
     /* Allocate a new copy */
@@ -715,16 +716,73 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
     }
 
     /* Begin parsing the new environment */
-    p = NewEnvironment;
+    SourcePtr = Environment;
+    DestPtr   = NewEnvironment;
 
-    /* FIXME: Code here */
-    DPRINT1("BaseCreateVDMEnvironment is half-plemented!\n");
+    while (*SourcePtr != UNICODE_NULL)
+    {
+        while (*SourcePtr != UNICODE_NULL)
+        {
+            if (*SourcePtr == L'=')
+            {
+                /* Store the '=' sign */
+                *DestPtr++ = *SourcePtr++;
+
+                /* Check if this is likely a full path */
+                if (isalphaW(SourcePtr[0])
+                    && (SourcePtr[1] == L':')
+                    && ((SourcePtr[2] == '\\') || (SourcePtr[2] == '/')))
+                {
+                    PWCHAR Delimiter = wcschr(SourcePtr, L';');
+                    ULONG NumChars;
+
+                    if (Delimiter != NULL)
+                    {
+                        wcsncpy(PathBuffer,
+                                SourcePtr,
+                                min(Delimiter - SourcePtr, MAX_PATH));
+
+                        /* Seek to the part after the delimiter */
+                        SourcePtr = Delimiter + 1;
+                    }
+                    else
+                    {
+                        wcsncpy(PathBuffer, SourcePtr, MAX_PATH);
+
+                        /* Seek to the end of the string */
+                        SourcePtr = wcschr(SourcePtr, UNICODE_NULL);
+                    }
+
+                    /* Convert the path into a short path */
+                    NumChars = GetShortPathNameW(PathBuffer,
+                                                 DestPtr,
+                                                 EnvironmentSize - (DestPtr - NewEnvironment));
+                    if (NumChars)
+                    {
+                        /*
+                         * If it failed, this block won't be executed, so it
+                         * will continue from the character after the '=' sign.
+                         */
+                        DestPtr += NumChars;
+
+                        /* Append the delimiter */
+                        if (Delimiter != NULL) *DestPtr++ = L';';
+                    }
+                }
+            }
+            else if (islowerW(*SourcePtr)) *DestPtr++ = toupperW(*SourcePtr++);
+            else *DestPtr++ = *SourcePtr++;
+        }
+
+        /* Copy the terminating NULL character */
+        *DestPtr++ = *SourcePtr++;
+    }
 
     /* Terminate it */
-    *p++ = UNICODE_NULL;
+    *DestPtr++ = UNICODE_NULL;
 
     /* Initialize the unicode string to hold it */
-    EnvironmentSize = (p - NewEnvironment) * sizeof(WCHAR);
+    EnvironmentSize = (DestPtr - NewEnvironment) * sizeof(WCHAR);
     RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, (USHORT)EnvironmentSize);
     UnicodeEnv->Length = (USHORT)EnvironmentSize;
 
@@ -1267,6 +1325,16 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
 
                 if (!NT_SUCCESS(Status))
                 {
+                    /* Store the correct lengths */
+                    CommandData->CmdLen = GetNextVdmCommand->CmdLen;
+                    CommandData->AppLen = GetNextVdmCommand->AppLen;
+                    CommandData->PifLen = GetNextVdmCommand->PifLen;
+                    CommandData->CurDirectoryLen = GetNextVdmCommand->CurDirectoryLen;
+                    CommandData->EnvLen = GetNextVdmCommand->EnvLen;
+                    CommandData->DesktopLen = GetNextVdmCommand->DesktopLen;
+                    CommandData->TitleLen = GetNextVdmCommand->TitleLen;
+                    CommandData->ReservedLen = GetNextVdmCommand->ReservedLen;
+
                     BaseSetLastNTError(Status);
                     goto Cleanup;
                 }
