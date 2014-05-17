@@ -2093,12 +2093,13 @@ MiLocateAddress(
     IN PVOID VirtualAddress
 );
 
-PMMADDRESS_NODE
+TABLE_SEARCH_RESULT
 NTAPI
 MiCheckForConflictingNode(
     IN ULONG_PTR StartVpn,
     IN ULONG_PTR EndVpn,
-    IN PMM_AVL_TABLE Table
+    IN PMM_AVL_TABLE Table,
+    OUT PMMADDRESS_NODE *NodeOrParent
 );
 
 TABLE_SEARCH_RESULT
@@ -2122,7 +2123,7 @@ MiFindEmptyAddressRangeDownBasedTree(
     OUT PULONG_PTR Base
 );
 
-NTSTATUS
+TABLE_SEARCH_RESULT
 NTAPI
 MiFindEmptyAddressRangeInTree(
     IN SIZE_T Length,

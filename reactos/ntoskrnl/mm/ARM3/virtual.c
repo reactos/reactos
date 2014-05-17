@@ -1903,6 +1903,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     BOOLEAN Committed;
     NTSTATUS Status = STATUS_SUCCESS;
     PETHREAD Thread = PsGetCurrentThread();
+    TABLE_SEARCH_RESULT Result;
 
     /* Calculate base address for the VAD */
     StartingAddress = (ULONG_PTR)PAGE_ALIGN((*BaseAddress));
@@ -1939,10 +1940,11 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     }
 
     /* Get the VAD for this address range, and make sure it exists */
-    Vad = (PMMVAD)MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
-                                            EndingAddress >> PAGE_SHIFT,
-                                            &Process->VadRoot);
-    if (!Vad)
+    Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
+                                       EndingAddress >> PAGE_SHIFT,
+                                       &Process->VadRoot,
+                                       (PMMADDRESS_NODE*)&Vad);
+    if (Result != TableFoundNode)
     {
         DPRINT("Could not find a VAD for this allocation\n");
         Status = STATUS_CONFLICTING_ADDRESSES;
@@ -4099,6 +4101,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     BOOLEAN Attached = FALSE, ChangeProtection = FALSE;
     MMPTE TempPte;
     PMMPTE PointerPte, PointerPde, LastPte;
+    TABLE_SEARCH_RESULT Result;
+    PMMADDRESS_NODE Parent;
     PAGED_CODE();
 
     /* Check for valid Zero bits */
@@ -4384,12 +4388,28 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         //
         if (!PBaseAddress)
         {
-            Status = MiFindEmptyAddressRangeInTree(PRegionSize,
-                                                   _64K,
-                                                   &Process->VadRoot,
-                                                   (PMMADDRESS_NODE*)&Process->VadFreeHint,
-                                                   &StartingAddress);
-            if (!NT_SUCCESS(Status)) goto FailPath;
+            /* Which way should we search? */
+            if (AllocationType & MEM_TOP_DOWN)
+            {
+                /* Find an address top-down */
+                Result = MiFindEmptyAddressRangeDownTree(PRegionSize,
+                                                         (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
+                                                         _64K,
+                                                         &Process->VadRoot,
+                                                         &StartingAddress,
+                                                         &Parent);
+            }
+            else
+            {
+                /* Find an address bottom-up */
+                Result = MiFindEmptyAddressRangeInTree(PRegionSize,
+                                                       _64K,
+                                                       &Process->VadRoot,
+                                                       &Parent,
+                                                       &StartingAddress);
+            }
+
+            if (Result == TableFoundNode) goto FailPath;
 
             //
             // Now we know where the allocation ends. Make sure it doesn't end up
@@ -4402,15 +4422,21 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                 goto FailPath;
             }
         }
-        else if (MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
-                                           EndingAddress >> PAGE_SHIFT,
-                                           &Process->VadRoot))
+        else
         {
-            //
-            // The address specified is in conflict!
-            //
-            Status = STATUS_CONFLICTING_ADDRESSES;
-            goto FailPath;
+            /* Make sure it doesn't conflict with an existing allocation */
+            Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
+                                               EndingAddress >> PAGE_SHIFT,
+                                               &Process->VadRoot,
+                                               &Parent);
+            if (Result == TableFoundNode)
+            {
+                //
+                // The address specified is in conflict!
+                //
+                Status = STATUS_CONFLICTING_ADDRESSES;
+                goto FailPath;
+            }
         }
 
         //
@@ -4429,7 +4455,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         //
         MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
         Vad->ControlArea = NULL; // For Memory-Area hack
-        MiInsertVad(Vad, Process);
+        Process->VadRoot.NodeHint = Vad;
+        MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
         MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
 
         //
@@ -4495,10 +4522,11 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     //
     // Get the VAD for this address range, and make sure it exists
     //
-    FoundVad = (PMMVAD)MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
-                                                 EndingAddress >> PAGE_SHIFT,
-                                                 &Process->VadRoot);
-    if (!FoundVad)
+    Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
+                                       EndingAddress >> PAGE_SHIFT,
+                                       &Process->VadRoot,
+                                       (PMMADDRESS_NODE*)&FoundVad);
+    if (Result != TableFoundNode)
     {
         DPRINT1("Could not find a VAD for this allocation\n");
         Status = STATUS_CONFLICTING_ADDRESSES;
