@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auxiliary functions for PostScript fonts (body).                     */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -847,6 +847,8 @@
   /* first character must be a delimiter or a part of a number */
   /* NB: `values' can be NULL if we just want to skip the      */
   /*     array; in this case we ignore `max_values'            */
+  /*                                                           */
+  /* return number of successfully parsed values               */
 
   static FT_Int
   ps_tofixedarray( FT_Byte*  *acur,
@@ -1200,7 +1202,7 @@
 
           result = ps_tofixedarray( &cur, limit, 4, temp, 0 );
 
-          if ( result < 0 )
+          if ( result < 4 )
           {
             FT_ERROR(( "ps_parser_load_field:"
                        " expected four integers in bounding box\n" ));
@@ -1230,7 +1232,7 @@
           {
             result = ps_tofixedarray( &cur, limit, max_objects,
                                       temp + i * max_objects, 0 );
-            if ( result < 0 )
+            if ( result < 0 || (FT_UInt)result < max_objects )
             {
               FT_ERROR(( "ps_parser_load_field:"
                          " expected %d integers in the %s subarray\n"

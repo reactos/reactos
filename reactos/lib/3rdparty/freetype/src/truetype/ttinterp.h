@@ -263,12 +263,10 @@ FT_BEGIN_HEADER
 #ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
     TT_Round_Func      func_round_sphn;   /* subpixel rounding function */
 
-    FT_Bool            grayscale_hinting; /* Using grayscale hinting?      */
-    FT_Bool            subpixel_hinting;  /* Using subpixel hinting?       */
-    FT_Bool            native_hinting;    /* Using native hinting?         */
+    FT_Bool            subpixel;          /* Using subpixel hinting?       */
     FT_Bool            ignore_x_mode;     /* Standard rendering mode for   */
                                           /* subpixel hinting.  On if gray */
-                                          /* or subpixel hinting is on )   */
+                                          /* or subpixel hinting is on.    */
 
     /* The following 4 aren't fully implemented but here for MS rasterizer */
     /* compatibility.                                                      */

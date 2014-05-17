@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType character mapping table (cmap) support (body).              */
 /*                                                                         */
-/*  Copyright 2002-2010, 2012, 2013 by                                     */
+/*  Copyright 2002-2010, 2012-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -88,9 +88,15 @@
   tt_cmap0_validate( FT_Byte*      table,
                      FT_Validator  valid )
   {
-    FT_Byte*  p      = table + 2;
-    FT_UInt   length = TT_NEXT_USHORT( p );
+    FT_Byte*  p;
+    FT_UInt   length;
 
+
+    if ( table + 2 + 2 > valid->limit )
+      FT_INVALID_TOO_SHORT;
+
+    p      = table + 2;           /* skip format */
+    length = TT_NEXT_USHORT( p );
 
     if ( table + length > valid->limit || length < 262 )
       FT_INVALID_TOO_SHORT;
@@ -279,13 +285,20 @@
   tt_cmap2_validate( FT_Byte*      table,
                      FT_Validator  valid )
   {
-    FT_Byte*  p      = table + 2;           /* skip format */
-    FT_UInt   length = TT_PEEK_USHORT( p );
-    FT_UInt   n, max_subs;
-    FT_Byte*  keys;                         /* keys table */
-    FT_Byte*  subs;                         /* sub-headers */
-    FT_Byte*  glyph_ids;                    /* glyph ID array */
+    FT_Byte*  p;
+    FT_UInt   length;
 
+    FT_UInt   n, max_subs;
+    FT_Byte*  keys;        /* keys table     */
+    FT_Byte*  subs;        /* sub-headers    */
+    FT_Byte*  glyph_ids;   /* glyph ID array */
+
+
+    if ( table + 2 + 2 > valid->limit )
+      FT_INVALID_TOO_SHORT;
+
+    p      = table + 2;           /* skip format */
+    length = TT_NEXT_USHORT( p );
 
     if ( table + length > valid->limit || length < 6 + 512 )
       FT_INVALID_TOO_SHORT;
@@ -818,12 +831,19 @@
   tt_cmap4_validate( FT_Byte*      table,
                      FT_Validator  valid )
   {
-    FT_Byte*  p      = table + 2;               /* skip format */
-    FT_UInt   length = TT_NEXT_USHORT( p );
+    FT_Byte*  p;
+    FT_UInt   length;
+
     FT_Byte   *ends, *starts, *offsets, *deltas, *glyph_ids;
     FT_UInt   num_segs;
     FT_Error  error = FT_Err_Ok;
 
+
+    if ( table + 2 + 2 > valid->limit )
+      FT_INVALID_TOO_SHORT;
+
+    p      = table + 2;           /* skip format */
+    length = TT_NEXT_USHORT( p );
 
     if ( length < 16 )
       FT_INVALID_TOO_SHORT;
@@ -2044,9 +2064,9 @@
   tt_cmap12_validate( FT_Byte*      table,
                       FT_Validator  valid )
   {
-    FT_Byte*   p;
-    FT_ULong   length;
-    FT_ULong   num_groups;
+    FT_Byte*  p;
+    FT_ULong  length;
+    FT_ULong  num_groups;
 
 
     if ( table + 16 > valid->limit )
@@ -2109,8 +2129,6 @@
       goto Fail;
 
     char_code = cmap->cur_charcode + 1;
-
-    n = cmap->cur_group;
 
     for ( n = cmap->cur_group; n < cmap->num_groups; n++ )
     {
@@ -2434,8 +2452,6 @@
 
     char_code = cmap->cur_charcode + 1;
 
-    n = cmap->cur_group;
-
     for ( n = cmap->cur_group; n < cmap->num_groups; n++ )
     {
       p        = cmap->cmap.data + 16 + 12 * n;
@@ -2758,10 +2774,17 @@
   tt_cmap14_validate( FT_Byte*      table,
                       FT_Validator  valid )
   {
-    FT_Byte*  p             = table + 2;
-    FT_ULong  length        = TT_NEXT_ULONG( p );
-    FT_ULong  num_selectors = TT_NEXT_ULONG( p );
+    FT_Byte*  p;
+    FT_ULong  length;
+    FT_ULong  num_selectors;
 
+
+    if ( table + 2 + 4 + 4 > valid->limit )
+      FT_INVALID_TOO_SHORT;
+
+    p             = table + 2;
+    length        = TT_NEXT_ULONG( p );
+    num_selectors = TT_NEXT_ULONG( p );
 
     if ( length > (FT_ULong)( valid->limit - table ) ||
          length < 10 + 11 * num_selectors            )

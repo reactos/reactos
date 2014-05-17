@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for autofit module.  */
 /*                                                                         */
-/*  Copyright 2009-2013 by                                                 */
+/*  Copyright 2009-2014 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,6 +20,7 @@
 #include FT_FREETYPE_H
 #include FT_INTERNAL_OBJECTS_H
 #include "afpic.h"
+#include "afglobal.h"
 #include "aferrors.h"
 
 
@@ -42,7 +43,7 @@
     FT_AutoHinter_InterfaceRec*  clazz );
 
 
-  /* forward declaration of PIC init functions from script classes */
+  /* forward declaration of PIC init functions from writing system classes */
 #undef  WRITING_SYSTEM
 #define WRITING_SYSTEM( ws, WS )  /* empty */
 
@@ -97,15 +98,20 @@
 
     FT_Init_Class_af_service_properties( &container->af_service_properties );
 
-    for ( ss = 0; ss < AF_WRITING_SYSTEM_MAX - 1; ss++ )
+    for ( ss = 0; ss < AF_WRITING_SYSTEM_MAX; ss++ )
       container->af_writing_system_classes[ss] =
         &container->af_writing_system_classes_rec[ss];
-    container->af_writing_system_classes[AF_WRITING_SYSTEM_MAX - 1] = NULL;
+    container->af_writing_system_classes[AF_WRITING_SYSTEM_MAX] = NULL;
 
-    for ( ss = 0; ss < AF_SCRIPT_MAX - 1; ss++ )
+    for ( ss = 0; ss < AF_SCRIPT_MAX; ss++ )
       container->af_script_classes[ss] =
         &container->af_script_classes_rec[ss];
-    container->af_script_classes[AF_SCRIPT_MAX - 1] = NULL;
+    container->af_script_classes[AF_SCRIPT_MAX] = NULL;
+
+    for ( ss = 0; ss < AF_STYLE_MAX; ss++ )
+      container->af_style_classes[ss] =
+        &container->af_style_classes_rec[ss];
+    container->af_style_classes[AF_STYLE_MAX] = NULL;
 
 #undef  WRITING_SYSTEM
 #define WRITING_SYSTEM( ws, WS )                             \
@@ -116,12 +122,20 @@
 #include "afwrtsys.h"
 
 #undef  SCRIPT
-#define SCRIPT( s, S, d )                            \
+#define SCRIPT( s, S, d, h, sc1, sc2, sc3 )          \
         FT_Init_Class_af_ ## s ## _script_class(     \
           &container->af_script_classes_rec[ss++] );
 
     ss = 0;
 #include "afscript.h"
+
+#undef  STYLE
+#define STYLE( s, S, d, ws, sc, bss, c )            \
+        FT_Init_Class_af_ ## s ## _style_class(     \
+          &container->af_style_classes_rec[ss++] );
+
+    ss = 0;
+#include "afstyles.h"
 
     FT_Init_Class_af_autofitter_interface(
       library, &container->af_autofitter_interface );

@@ -90,7 +90,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*************************************************************************/
 
-  /* The next level is to group blue strings into script-specific sets. */
+  /* The next level is to group blue strings into style-specific sets. */
 
 
   /* Properties are specific to a writing system.  We assume that a given  */

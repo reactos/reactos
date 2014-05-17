@@ -2,7 +2,7 @@
 /*                                                                         */
 /*  afcjk.h                                                                */
 /*                                                                         */
-/*    Auto-fitter hinting routines for CJK script (specification).         */
+/*    Auto-fitter hinting routines for CJK writing system (specification). */
 /*                                                                         */
 /*  Copyright 2006, 2007, 2011-2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
@@ -29,11 +29,6 @@ FT_BEGIN_HEADER
   /* the CJK-specific writing system */
 
   AF_DECLARE_WRITING_SYSTEM_CLASS( af_cjk_writing_system_class )
-
-
-  /* the CJK-specific script classes */
-
-  AF_DECLARE_SCRIPT_CLASS( af_hani_script_class )
 
 
   /*************************************************************************/
@@ -105,9 +100,9 @@ FT_BEGIN_HEADER
 
   typedef struct  AF_CJKMetricsRec_
   {
-    AF_ScriptMetricsRec  root;
-    FT_UInt              units_per_em;
-    AF_CJKAxisRec        axis[AF_DIMENSION_MAX];
+    AF_StyleMetricsRec  root;
+    FT_UInt             units_per_em;
+    AF_CJKAxisRec       axis[AF_DIMENSION_MAX];
 
   } AF_CJKMetricsRec, *AF_CJKMetrics;
 

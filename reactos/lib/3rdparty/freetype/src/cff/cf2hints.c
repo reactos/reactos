@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Adobe's code for handling CFF hints (body).                          */
 /*                                                                         */
-/*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
+/*  Copyright 2007-2014 Adobe Systems Incorporated.                        */
 /*                                                                         */
 /*  This software, and all works of authorship, whether in source or       */
 /*  object code form as indicated by the copyright notice(s) included      */
@@ -781,6 +781,8 @@
       cf2_hintmask_setAll( hintMask,
                            cf2_arrstack_size( hStemHintArray ) +
                              cf2_arrstack_size( vStemHintArray ) );
+      if ( !cf2_hintmask_isValid( hintMask ) )
+          return;                   /* too many stem hints */
     }
 
     /* begin by clearing the map */

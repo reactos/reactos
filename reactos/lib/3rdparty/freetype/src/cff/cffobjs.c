@@ -866,7 +866,7 @@
           flags |= FT_FACE_FLAG_KERNING;
 #endif
 
-        cffface->face_flags = flags;
+        cffface->face_flags |= flags;
 
         /*******************************************************************/
         /*                                                                 */

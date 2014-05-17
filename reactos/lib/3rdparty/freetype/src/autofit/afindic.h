@@ -2,7 +2,8 @@
 /*                                                                         */
 /*  afindic.h                                                              */
 /*                                                                         */
-/*    Auto-fitter hinting routines for Indic scripts (specification).      */
+/*    Auto-fitter hinting routines for Indic writing system                */
+/*    (specification).                                                     */
 /*                                                                         */
 /*  Copyright 2007, 2012, 2013 by                                          */
 /*  Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.    */
@@ -28,11 +29,6 @@ FT_BEGIN_HEADER
   /* the `indic' writing system */
 
   AF_DECLARE_WRITING_SYSTEM_CLASS( af_indic_writing_system_class )
-
-
-  /* the indic-specific script classes */
-
-  AF_DECLARE_SCRIPT_CLASS( af_deva_script_class )
 
 
 /* */

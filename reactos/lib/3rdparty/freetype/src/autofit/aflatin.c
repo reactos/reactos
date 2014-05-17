@@ -2,9 +2,9 @@
 /*                                                                         */
 /*  aflatin.c                                                              */
 /*                                                                         */
-/*    Auto-fitter hinting routines for latin script (body).                */
+/*    Auto-fitter hinting routines for latin writing system (body).        */
 /*                                                                         */
-/*  Copyright 2003-2013 by                                                 */
+/*  Copyright 2003-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,6 +21,7 @@
 #include FT_INTERNAL_DEBUG_H
 
 #include "afglobal.h"
+#include "afpic.h"
 #include "aflatin.h"
 #include "aferrors.h"
 
@@ -61,10 +62,10 @@
 
 
     FT_TRACE5(( "\n"
-                "latin standard widths computation (script `%s')\n"
-                "=================================================\n"
+                "latin standard widths computation (style `%s')\n"
+                "=====================================================\n"
                 "\n",
-                af_script_names[metrics->root.script_class->script] ));
+                af_style_names[metrics->root.style_class->style] ));
 
     af_glyph_hints_init( hints, face->memory );
 
@@ -73,20 +74,66 @@
 
     {
       FT_Error            error;
-      FT_UInt             glyph_index;
+      FT_ULong            glyph_index;
+      FT_Long             y_offset;
       int                 dim;
       AF_LatinMetricsRec  dummy[1];
       AF_Scaler           scaler = &dummy->root.scaler;
 
+#ifdef FT_CONFIG_OPTION_PIC
+      AF_FaceGlobals  globals = metrics->root.globals;
+#endif
 
-      glyph_index = FT_Get_Char_Index(
-                      face,
-                      metrics->root.script_class->standard_char );
-      if ( glyph_index == 0 )
-        goto Exit;
+      AF_StyleClass   style_class  = metrics->root.style_class;
+      AF_ScriptClass  script_class = AF_SCRIPT_CLASSES_GET
+                                       [style_class->script];
+
+      FT_UInt32  standard_char;
+
+
+      /*
+       * We check more than a single standard character to catch features
+       * like `c2sc' (small caps from caps) that don't contain lowercase
+       * letters by definition, or other features that mainly operate on
+       * numerals.
+       */
+
+      standard_char = script_class->standard_char1;
+      af_get_char_index( &metrics->root,
+                         standard_char,
+                         &glyph_index,
+                         &y_offset );
+      if ( !glyph_index )
+      {
+        if ( script_class->standard_char2 )
+        {
+          standard_char = script_class->standard_char2;
+          af_get_char_index( &metrics->root,
+                             standard_char,
+                             &glyph_index,
+                             &y_offset );
+          if ( !glyph_index )
+          {
+            if ( script_class->standard_char3 )
+            {
+              standard_char = script_class->standard_char3;
+              af_get_char_index( &metrics->root,
+                                 standard_char,
+                                 &glyph_index,
+                                 &y_offset );
+              if ( !glyph_index )
+                goto Exit;
+            }
+            else
+              goto Exit;
+          }
+        }
+        else
+          goto Exit;
+      }
 
       FT_TRACE5(( "standard character: U+%04lX (glyph index %d)\n",
-                  metrics->root.script_class->standard_char, glyph_index ));
+                  standard_char, glyph_index ));
 
       error = FT_Load_Glyph( face, glyph_index, FT_LOAD_NO_SCALE );
       if ( error || face->glyph->outline.n_points <= 0 )
@@ -105,7 +152,7 @@
       scaler->render_mode = FT_RENDER_MODE_NORMAL;
       scaler->flags       = 0;
 
-      af_glyph_hints_rescale( hints, (AF_ScriptMetrics)dummy );
+      af_glyph_hints_rescale( hints, (AF_StyleMetrics)dummy );
 
       error = af_glyph_hints_reload( hints, &face->glyph->outline );
       if ( error )
@@ -214,12 +261,14 @@
     AF_LatinAxis  axis = &metrics->axis[AF_DIMENSION_VERT];
     FT_Outline    outline;
 
-    AF_Blue_Stringset         bss = metrics->root.script_class->blue_stringset;
+    AF_StyleClass  sc = metrics->root.style_class;
+
+    AF_Blue_Stringset         bss = sc->blue_stringset;
     const AF_Blue_StringRec*  bs  = &af_blue_stringsets[bss];
 
 
-    /* we walk over the blue character strings as specified in the  */
-    /* script's entry in the `af_blue_stringset' array              */
+    /* we walk over the blue character strings as specified in the */
+    /* style's entry in the `af_blue_stringset' array              */
 
     FT_TRACE5(( "latin blue zones computation\n"
                 "============================\n"
@@ -277,7 +326,8 @@
       while ( *p )
       {
         FT_ULong    ch;
-        FT_UInt     glyph_index;
+        FT_ULong    glyph_index;
+        FT_Long     y_offset;
         FT_Pos      best_y;                            /* same as points.y */
         FT_Int      best_point, best_contour_first, best_contour_last;
         FT_Vector*  points;
@@ -287,7 +337,7 @@
         GET_UTF8_CHAR( ch, p );
 
         /* load the character in the face -- skip unknown or empty ones */
-        glyph_index = FT_Get_Char_Index( face, ch );
+        af_get_char_index( &metrics->root, ch, &glyph_index, &y_offset );
         if ( glyph_index == 0 )
         {
           FT_TRACE5(( "  U+%04lX unavailable\n", ch ));
@@ -575,7 +625,10 @@
                       if ( FT_ABS( points[next].x - points[first].x ) <=
                              20 * dist )
                       {
-                        last--;
+                        if ( last > best_contour_first )
+                          last--;
+                        else
+                          last = best_contour_last;
                         break;
                       }
 
@@ -605,6 +658,12 @@
               } while ( last != best_segment_first );
             }
           }
+
+          /* for computing blue zones, we add the y offset as returned */
+          /* by the currently used OpenType feature -- for example,    */
+          /* superscript glyphs might be identical to subscript glyphs */
+          /* with a vertical shift                                     */
+          best_y += y_offset;
 
           FT_TRACE5(( "  U+%04lX: best_y = %5ld", ch, best_y ));
 
@@ -733,10 +792,11 @@
     /* digit `0' is 0x30 in all supported charmaps */
     for ( i = 0x30; i <= 0x39; i++ )
     {
-      FT_UInt  glyph_index;
+      FT_ULong  glyph_index;
+      FT_Long   y_offset;
 
 
-      glyph_index = FT_Get_Char_Index( face, i );
+      af_get_char_index( &metrics->root, i, &glyph_index, &y_offset );
       if ( glyph_index == 0 )
         continue;
 
@@ -879,11 +939,11 @@
 
             FT_TRACE5((
               "af_latin_metrics_scale_dim:"
-              " x height alignment (script `%s'):\n"
+              " x height alignment (style `%s'):\n"
               "                           "
               " vertical scaling changed from %.4f to %.4f (by %d%%)\n"
               "\n",
-              af_script_names[metrics->root.script_class->script],
+              af_style_names[metrics->root.style_class->style],
               axis->org_scale / 65536.0,
               scale / 65536.0,
               ( fitted - scaled ) * 100 / scaled ));
@@ -906,9 +966,9 @@
       metrics->root.scaler.y_delta = delta;
     }
 
-    FT_TRACE5(( "%s widths (script `%s')\n",
+    FT_TRACE5(( "%s widths (style `%s')\n",
                 dim == AF_DIMENSION_HORZ ? "horizontal" : "vertical",
-                af_script_names[metrics->root.script_class->script] ));
+                af_style_names[metrics->root.style_class->style] ));
 
     /* scale the widths */
     for ( nn = 0; nn < axis->width_count; nn++ )
@@ -933,15 +993,15 @@
 
 #ifdef FT_DEBUG_LEVEL_TRACE
     if ( axis->extra_light )
-      FT_TRACE5(( "`%s' script is extra light (at current resolution)\n"
+      FT_TRACE5(( "`%s' style is extra light (at current resolution)\n"
                   "\n",
-                  af_script_names[metrics->root.script_class->script] ));
+                  af_style_names[metrics->root.style_class->style] ));
 #endif
 
     if ( dim == AF_DIMENSION_VERT )
     {
-      FT_TRACE5(( "blue zones (script `%s')\n",
-                  af_script_names[metrics->root.script_class->script] ));
+      FT_TRACE5(( "blue zones (style `%s')\n",
+                  af_style_names[metrics->root.style_class->style] ));
 
       /* scale the blue zones */
       for ( nn = 0; nn < axis->blue_count; nn++ )
@@ -1797,7 +1857,7 @@
     FT_Face         face = metrics->root.scaler.face;
 
 
-    af_glyph_hints_rescale( hints, (AF_ScriptMetrics)metrics );
+    af_glyph_hints_rescale( hints, (AF_StyleMetrics)metrics );
 
     /*
      *  correct x_scale and y_scale if needed, since they may have
@@ -2148,9 +2208,9 @@
 #endif
 
 
-    FT_TRACE5(( "latin %s edge hinting (script `%s')\n",
+    FT_TRACE5(( "latin %s edge hinting (style `%s')\n",
                 dim == AF_DIMENSION_VERT ? "horizontal" : "vertical",
-                af_script_names[hints->metrics->script_class->script] ));
+                af_style_names[hints->metrics->style_class->style] ));
 
     /* we begin by aligning all stems relative to the blue zone */
     /* if needed -- that's only for horizontal edges            */
@@ -2709,111 +2769,12 @@
 
     sizeof ( AF_LatinMetricsRec ),
 
-    (AF_Script_InitMetricsFunc) af_latin_metrics_init,
-    (AF_Script_ScaleMetricsFunc)af_latin_metrics_scale,
-    (AF_Script_DoneMetricsFunc) NULL,
+    (AF_WritingSystem_InitMetricsFunc) af_latin_metrics_init,
+    (AF_WritingSystem_ScaleMetricsFunc)af_latin_metrics_scale,
+    (AF_WritingSystem_DoneMetricsFunc) NULL,
 
-    (AF_Script_InitHintsFunc)   af_latin_hints_init,
-    (AF_Script_ApplyHintsFunc)  af_latin_hints_apply
-  )
-
-
-  /* XXX: this should probably fine tuned to differentiate better between */
-  /*      scripts...                                                      */
-
-  static const AF_Script_UniRangeRec  af_latn_uniranges[] =
-  {
-    AF_UNIRANGE_REC(  0x0020UL,  0x007FUL ),  /* Basic Latin (no control chars) */
-    AF_UNIRANGE_REC(  0x00A0UL,  0x00FFUL ),  /* Latin-1 Supplement (no control chars) */
-    AF_UNIRANGE_REC(  0x0100UL,  0x017FUL ),  /* Latin Extended-A */
-    AF_UNIRANGE_REC(  0x0180UL,  0x024FUL ),  /* Latin Extended-B */
-    AF_UNIRANGE_REC(  0x0250UL,  0x02AFUL ),  /* IPA Extensions */
-    AF_UNIRANGE_REC(  0x02B0UL,  0x02FFUL ),  /* Spacing Modifier Letters */
-    AF_UNIRANGE_REC(  0x0300UL,  0x036FUL ),  /* Combining Diacritical Marks */
-    AF_UNIRANGE_REC(  0x1D00UL,  0x1D7FUL ),  /* Phonetic Extensions */
-    AF_UNIRANGE_REC(  0x1D80UL,  0x1DBFUL ),  /* Phonetic Extensions Supplement */
-    AF_UNIRANGE_REC(  0x1DC0UL,  0x1DFFUL ),  /* Combining Diacritical Marks Supplement */
-    AF_UNIRANGE_REC(  0x1E00UL,  0x1EFFUL ),  /* Latin Extended Additional */
-    AF_UNIRANGE_REC(  0x2000UL,  0x206FUL ),  /* General Punctuation */
-    AF_UNIRANGE_REC(  0x2070UL,  0x209FUL ),  /* Superscripts and Subscripts */
-    AF_UNIRANGE_REC(  0x20A0UL,  0x20CFUL ),  /* Currency Symbols */
-    AF_UNIRANGE_REC(  0x2150UL,  0x218FUL ),  /* Number Forms */
-    AF_UNIRANGE_REC(  0x2460UL,  0x24FFUL ),  /* Enclosed Alphanumerics */
-    AF_UNIRANGE_REC(  0x2C60UL,  0x2C7FUL ),  /* Latin Extended-C */
-    AF_UNIRANGE_REC(  0x2E00UL,  0x2E7FUL ),  /* Supplemental Punctuation */
-    AF_UNIRANGE_REC(  0xA720UL,  0xA7FFUL ),  /* Latin Extended-D */
-    AF_UNIRANGE_REC(  0xFB00UL,  0xFB06UL ),  /* Alphab. Present. Forms (Latin Ligs) */
-    AF_UNIRANGE_REC( 0x1D400UL, 0x1D7FFUL ),  /* Mathematical Alphanumeric Symbols */
-    AF_UNIRANGE_REC( 0x1F100UL, 0x1F1FFUL ),  /* Enclosed Alphanumeric Supplement */
-    AF_UNIRANGE_REC(       0UL,       0UL )
-  };
-
-  static const AF_Script_UniRangeRec  af_grek_uniranges[] =
-  {
-    AF_UNIRANGE_REC(  0x0370UL,  0x03FFUL ),  /* Greek and Coptic */
-    AF_UNIRANGE_REC(  0x1F00UL,  0x1FFFUL ),  /* Greek Extended */
-    AF_UNIRANGE_REC(       0UL,       0UL )
-  };
-
-  static const AF_Script_UniRangeRec  af_cyrl_uniranges[] =
-  {
-    AF_UNIRANGE_REC(  0x0400UL,  0x04FFUL ),  /* Cyrillic */
-    AF_UNIRANGE_REC(  0x0500UL,  0x052FUL ),  /* Cyrillic Supplement */
-    AF_UNIRANGE_REC(  0x2DE0UL,  0x2DFFUL ),  /* Cyrillic Extended-A */
-    AF_UNIRANGE_REC(  0xA640UL,  0xA69FUL ),  /* Cyrillic Extended-B */
-    AF_UNIRANGE_REC(       0UL,       0UL )
-  };
-
-  static const AF_Script_UniRangeRec  af_hebr_uniranges[] =
-  {
-    AF_UNIRANGE_REC(  0x0590UL,  0x05FFUL ),  /* Hebrew */
-    AF_UNIRANGE_REC(  0xFB1DUL,  0xFB4FUL ),  /* Alphab. Present. Forms (Hebrew) */
-    AF_UNIRANGE_REC(       0UL,       0UL )
-  };
-
-
-  AF_DEFINE_SCRIPT_CLASS(
-    af_latn_script_class,
-
-    AF_SCRIPT_LATN,
-    AF_BLUE_STRINGSET_LATN,
-    AF_WRITING_SYSTEM_LATIN,
-
-    af_latn_uniranges,
-    'o'
-  )
-
-  AF_DEFINE_SCRIPT_CLASS(
-    af_grek_script_class,
-
-    AF_SCRIPT_GREK,
-    AF_BLUE_STRINGSET_GREK,
-    AF_WRITING_SYSTEM_LATIN,
-
-    af_grek_uniranges,
-    0x3BF /* ο */
-  )
-
-  AF_DEFINE_SCRIPT_CLASS(
-    af_cyrl_script_class,
-
-    AF_SCRIPT_CYRL,
-    AF_BLUE_STRINGSET_CYRL,
-    AF_WRITING_SYSTEM_LATIN,
-
-    af_cyrl_uniranges,
-    0x43E /* о */
-  )
-
-  AF_DEFINE_SCRIPT_CLASS(
-    af_hebr_script_class,
-
-    AF_SCRIPT_HEBR,
-    AF_BLUE_STRINGSET_HEBR,
-    AF_WRITING_SYSTEM_LATIN,
-
-    af_hebr_uniranges,
-    0x5DD /* ם */
+    (AF_WritingSystem_InitHintsFunc)   af_latin_hints_init,
+    (AF_WritingSystem_ApplyHintsFunc)  af_latin_hints_apply
   )
 
 

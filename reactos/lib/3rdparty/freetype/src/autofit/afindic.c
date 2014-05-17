@@ -2,7 +2,7 @@
 /*                                                                         */
 /*  afindic.c                                                              */
 /*                                                                         */
-/*    Auto-fitter hinting routines for Indic scripts (body).               */
+/*    Auto-fitter hinting routines for Indic writing system (body).        */
 /*                                                                         */
 /*  Copyright 2007, 2011-2013 by                                           */
 /*  Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.    */
@@ -104,31 +104,17 @@
 
     sizeof ( AF_CJKMetricsRec ),
 
-    (AF_Script_InitMetricsFunc) af_indic_metrics_init,
-    (AF_Script_ScaleMetricsFunc)af_indic_metrics_scale,
-    (AF_Script_DoneMetricsFunc) NULL,
+    (AF_WritingSystem_InitMetricsFunc) af_indic_metrics_init,
+    (AF_WritingSystem_ScaleMetricsFunc)af_indic_metrics_scale,
+    (AF_WritingSystem_DoneMetricsFunc) NULL,
 
-    (AF_Script_InitHintsFunc)   af_indic_hints_init,
-    (AF_Script_ApplyHintsFunc)  af_indic_hints_apply
+    (AF_WritingSystem_InitHintsFunc)   af_indic_hints_init,
+    (AF_WritingSystem_ApplyHintsFunc)  af_indic_hints_apply
   )
-
-  /* XXX: this should probably fine tuned to differentiate better between */
-  /*      scripts...                                                      */
-
-  static const AF_Script_UniRangeRec  af_deva_uniranges[] =
-  {
-    AF_UNIRANGE_REC(  0x0900UL,  0x0DFFUL ),  /* Indic Range  */
-    AF_UNIRANGE_REC(  0x0F00UL,  0x0FFFUL ),  /* Tibetan      */
-    AF_UNIRANGE_REC(  0x1900UL,  0x194FUL ),  /* Limbu        */
-    AF_UNIRANGE_REC(  0x1B80UL,  0x1BBFUL ),  /* Sundanese    */
-    AF_UNIRANGE_REC(  0x1C80UL,  0x1CDFUL ),  /* Meetei Mayak */
-    AF_UNIRANGE_REC(  0xA800UL,  0xA82FUL ),  /* Syloti Nagri */
-    AF_UNIRANGE_REC( 0x11800UL, 0x118DFUL ),  /* Sharada      */
-    AF_UNIRANGE_REC(       0UL,       0UL )
-  };
 
 
 #else /* !AF_CONFIG_OPTION_INDIC */
+
 
   AF_DEFINE_WRITING_SYSTEM_CLASS(
     af_indic_writing_system_class,
@@ -137,33 +123,16 @@
 
     sizeof ( AF_CJKMetricsRec ),
 
-    (AF_Script_InitMetricsFunc) NULL,
-    (AF_Script_ScaleMetricsFunc)NULL,
-    (AF_Script_DoneMetricsFunc) NULL,
+    (AF_WritingSystem_InitMetricsFunc) NULL,
+    (AF_WritingSystem_ScaleMetricsFunc)NULL,
+    (AF_WritingSystem_DoneMetricsFunc) NULL,
 
-    (AF_Script_InitHintsFunc)   NULL,
-    (AF_Script_ApplyHintsFunc)  NULL
+    (AF_WritingSystem_InitHintsFunc)   NULL,
+    (AF_WritingSystem_ApplyHintsFunc)  NULL
   )
 
-
-  static const AF_Script_UniRangeRec  af_deva_uniranges[] =
-  {
-    AF_UNIRANGE_REC( 0UL, 0UL )
-  };
 
 #endif /* !AF_CONFIG_OPTION_INDIC */
-
-
-  AF_DEFINE_SCRIPT_CLASS(
-    af_deva_script_class,
-
-    AF_SCRIPT_DEVA,
-    (AF_Blue_Stringset)0, /* XXX */
-    AF_WRITING_SYSTEM_INDIC,
-
-    af_deva_uniranges,
-    'o' /* XXX */
-  )
 
 
 /* END */

@@ -2,7 +2,8 @@
 /*                                                                         */
 /*  aflatin.h                                                              */
 /*                                                                         */
-/*    Auto-fitter hinting routines for latin script (specification).       */
+/*    Auto-fitter hinting routines for latin writing system                */
+/*    (specification).                                                     */
 /*                                                                         */
 /*  Copyright 2003-2007, 2009, 2011-2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
@@ -29,17 +30,6 @@ FT_BEGIN_HEADER
   AF_DECLARE_WRITING_SYSTEM_CLASS( af_latin_writing_system_class )
 
 
-  /* the latin-specific script classes */
-
-  AF_DECLARE_SCRIPT_CLASS( af_cyrl_script_class )
-  AF_DECLARE_SCRIPT_CLASS( af_grek_script_class )
-  AF_DECLARE_SCRIPT_CLASS( af_latn_script_class )
-  AF_DECLARE_SCRIPT_CLASS( af_hebr_script_class )
-#if 0
-  AF_DECLARE_SCRIPT_CLASS( af_armn_script_class )
-#endif
-
-
   /* constants are given with units_per_em == 2048 in mind */
 #define AF_LATIN_CONSTANT( metrics, c )                                      \
   ( ( (c) * (FT_Long)( (AF_LatinMetrics)(metrics) )->units_per_em ) / 2048 )
@@ -56,8 +46,8 @@ FT_BEGIN_HEADER
 
   /*
    *  The following declarations could be embedded in the file `aflatin.c';
-   *  they have been made semi-public to allow alternate script hinters to
-   *  re-use some of them.
+   *  they have been made semi-public to allow alternate writing system
+   *  hinters to re-use some of them.
    */
 
 
@@ -113,9 +103,9 @@ FT_BEGIN_HEADER
 
   typedef struct  AF_LatinMetricsRec_
   {
-    AF_ScriptMetricsRec  root;
-    FT_UInt              units_per_em;
-    AF_LatinAxisRec      axis[AF_DIMENSION_MAX];
+    AF_StyleMetricsRec  root;
+    FT_UInt             units_per_em;
+    AF_LatinAxisRec     axis[AF_DIMENSION_MAX];
 
   } AF_LatinMetricsRec, *AF_LatinMetrics;
 
@@ -171,7 +161,7 @@ FT_BEGIN_HEADER
 
   /*
    *  The next functions shouldn't normally be exported.  However, other
-   *  scripts might like to use these functions as-is.
+   *  writing systems might like to use these functions as-is.
    */
   FT_LOCAL( FT_Error )
   af_latin_hints_compute_segments( AF_GlyphHints  hints,

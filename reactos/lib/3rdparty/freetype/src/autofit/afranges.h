@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  afmodule.h                                                             */
+/*  afranges.h                                                             */
 /*                                                                         */
-/*    Auto-fitter module implementation (specification).                   */
+/*    Auto-fitter Unicode script ranges (specification).                   */
 /*                                                                         */
-/*  Copyright 2003-2005, 2009, 2012, 2013 by                               */
+/*  Copyright 2013, 2014 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,44 +16,26 @@
 /***************************************************************************/
 
 
-#ifndef __AFMODULE_H__
-#define __AFMODULE_H__
+#ifndef __AFRANGES_H__
+#define __AFRANGES_H__
 
-#include <ft2build.h>
-#include FT_INTERNAL_OBJECTS_H
-#include FT_MODULE_H
 
-#include "afloader.h"
+#include "aftypes.h"
 
 
 FT_BEGIN_HEADER
 
+#undef  SCRIPT
+#define SCRIPT( s, S, d, h, sc1, sc2, sc3 )                             \
+          extern const AF_Script_UniRangeRec  af_ ## s ## _uniranges[];
 
-  /*
-   *  This is the `extended' FT_Module structure which holds the
-   *  autofitter's global data.  Right before hinting a glyph, the data
-   *  specific to the glyph's face (blue zones, stem widths, etc.) are
-   *  loaded into `loader' (see function `af_loader_reset').
-   */
+#include "afscript.h"
 
-  typedef struct  AF_ModuleRec_
-  {
-    FT_ModuleRec  root;
-
-    FT_UInt       fallback_style;
-    FT_UInt       default_script;
-
-    AF_LoaderRec  loader[1];
-
-  } AF_ModuleRec;
-
-
-FT_DECLARE_MODULE(autofit_module_class)
-
+ /* */
 
 FT_END_HEADER
 
-#endif /* __AFMODULE_H__ */
+#endif /* __AFRANGES_H__ */
 
 
 /* END */

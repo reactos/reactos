@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility functions for bitmaps (body).                       */
 /*                                                                         */
-/*  Copyright 2004-2009, 2011, 2013 by                                     */
+/*  Copyright 2004-2009, 2011, 2013, 2014 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -375,7 +375,7 @@
   }
 
 
-  FT_Byte
+  static FT_Byte
   ft_gray_for_premultiplied_srgb_bgra( const FT_Byte*  bgra )
   {
     FT_Long  a = bgra[3];
