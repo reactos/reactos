@@ -165,6 +165,42 @@ Bus_PDO_PnP (
         }
         status = STATUS_SUCCESS;// We must not fail this IRP.
         break;
+
+    case IRP_MN_REMOVE_DEVICE:
+        //
+        // We handle REMOVE_DEVICE just like STOP_DEVICE. This is because
+        // the device is still physically present (or at least we don't know any better)
+        // so we have to retain the PDO after stopping and removing power from it.
+        //
+        if (DeviceData->InterfaceName.Length != 0)
+            IoSetDeviceInterfaceState(&DeviceData->InterfaceName, FALSE);
+
+        if (DeviceData->AcpiHandle && acpi_bus_power_manageable(DeviceData->AcpiHandle) &&
+            !ACPI_SUCCESS(acpi_bus_set_power(DeviceData->AcpiHandle, ACPI_STATE_D3)))
+        {
+            DPRINT1("Device %x failed to enter D3!\n", DeviceData->AcpiHandle);
+            state.DeviceState = PowerDeviceD3;
+            PoSetPowerState(DeviceData->Common.Self, DevicePowerState, state);
+            DeviceData->Common.DevicePowerState = PowerDeviceD3;
+        }
+        
+        SET_NEW_PNP_STATE(DeviceData->Common, Stopped);
+        status = STATUS_SUCCESS;
+        break;
+
+    case IRP_MN_QUERY_REMOVE_DEVICE:
+        SET_NEW_PNP_STATE(DeviceData->Common, RemovalPending);
+        status = STATUS_SUCCESS;
+        break;
+
+    case IRP_MN_CANCEL_REMOVE_DEVICE:
+        if (RemovalPending == DeviceData->Common.DevicePnPState)
+        {
+            RESTORE_PREVIOUS_PNP_STATE(DeviceData->Common);
+        }
+        status = STATUS_SUCCESS;
+        break;
+
     case IRP_MN_QUERY_CAPABILITIES:
 
         //
