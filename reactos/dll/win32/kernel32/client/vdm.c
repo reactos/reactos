@@ -99,8 +99,6 @@ BaseCheckVDM(IN ULONG BinaryType,
         return STATUS_INVALID_PARAMETER;
     }
 
-    DPRINT1("Before: ApplicationName = '%S' ; CommandLine = '%S'\n", ApplicationName, CommandLine);
-
     /* Trim leading whitespace from ApplicationName */
     while (*ApplicationName == L' ' || *ApplicationName == L'\t')
         ++ApplicationName;
@@ -164,7 +162,6 @@ BaseCheckVDM(IN ULONG BinaryType,
      *   suppose that the first token corresponds to an application name and
      *   we skip it. Care should be taken when quotes are present in this token.
      */
-
      if (*CommandLine)
      {
         /* The first part of CommandLine should be the ApplicationName... */
@@ -205,8 +202,6 @@ BaseCheckVDM(IN ULONG BinaryType,
      */
     while (*CommandLine == L' ' || *CommandLine == L'\t')
         ++CommandLine;
-
-    DPRINT1("After: ApplicationName = '%S' ; CommandLine = '%S'\n", ApplicationName, CommandLine);
 
     /* Get the current directory */
     if (CurrentDirectory == NULL)
@@ -290,7 +285,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     }
 
     /* Allocate memory for the ANSI strings */
-    // We need to add the two newline characters '\r\n' to the command line
+    // We need to add the newline characters '\r\n' to the command line
     AnsiCmdLine = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CmdLen + 2);
     AnsiAppName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->AppLen);
     AnsiCurDirectory = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CurDirectoryLen);
@@ -324,7 +319,7 @@ BaseCheckVDM(IN ULONG BinaryType,
                         CheckVdm->CmdLen,
                         NULL,
                         NULL);
-    /* Add a needed newline '\r\n' and NULL-terminate */
+    /* Add the needed newline and NULL-terminate */
     CheckVdm->CmdLen--; // Rewind back to the NULL character
     AnsiCmdLine[CheckVdm->CmdLen++] = '\r';
     AnsiCmdLine[CheckVdm->CmdLen++] = '\n';
