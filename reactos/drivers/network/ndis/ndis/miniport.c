@@ -1317,10 +1317,11 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
             if (NdisStatus == NDIS_STATUS_PENDING)
               break;
 
+            Adapter->NdisMiniportBlock.PendingRequest = (PNDIS_REQUEST)WorkItemContext;
             switch (((PNDIS_REQUEST)WorkItemContext)->RequestType)
               {
                 case NdisRequestQueryInformation:
-		  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
+                  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
                   break;
 
                 case NdisRequestSetInformation:
@@ -1331,6 +1332,7 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
                   NDIS_DbgPrint(MIN_TRACE, ("Unknown NDIS request type.\n"));
                   break;
               }
+            Adapter->NdisMiniportBlock.PendingRequest = NULL;
             break;
 
           default:
