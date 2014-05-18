@@ -551,6 +551,7 @@ Bus_PDO_QueryDeviceId(
         RtlCopyMemory (buffer, src, length * sizeof(WCHAR));
         Irp->IoStatus.Information = (ULONG_PTR) buffer;
         DPRINT("BusQueryHardwareIDs: %ls\n",buffer);
+        status = STATUS_SUCCESS;
         break;
 
     case BusQueryCompatibleIDs:
