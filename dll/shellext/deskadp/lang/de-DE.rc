@@ -40,8 +40,8 @@ BEGIN
     IDES_REFRESHRATEFMT "%d Hertz"
     IDS_4BPP "16 Farben"
     IDS_8BPP "256 Farben"
-    IDS_15BPP "High Color (15 bit)"
-    IDS_16BPP "High Color (16 bit)"
-    IDS_24BPP "True Color (24 bit)"
-    IDS_32BPP "True Color (32 bit)"
+    IDS_15BPP "High Color (15 Bit)"
+    IDS_16BPP "High Color (16 Bit)"
+    IDS_24BPP "True Color (24 Bit)"
+    IDS_32BPP "True Color (32 Bit)"
 END

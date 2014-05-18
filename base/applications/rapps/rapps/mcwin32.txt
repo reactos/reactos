@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Midnight Commander for Windows
@@ -17,16 +18,14 @@ Version = Revisione 183 (4.8.11)
 Licence = GPL versione 3
 Description = Un porting Windows 32bit di Midnight Commander.
 
+[Section.0415]
+Name = Midnight Commander dla Windows
+Licence = GPL wersja 3
+Description = 32-bitowy port GNU Midnight Commander dla Windows.
+
 [Section.041f]
 Name = Midnight Commander (Windows için)
 Version = Yapı 183 (4.8.11)
 Licence = GPL 3. sürüm
 Description = GNU Midnight Commander'ın 32 bitlik Windows uyarlamasıdır.
-Size = 2,35 MB
-
-[Section.0415]
-Name = Midnight Commander dla Windows
-Version = Build 183 (4.8.11)
-Licence = GPL wersja 3
-Description = 32-bitowy port GNU Midnight Commander dla Windows.
 Size = 2,35 MB

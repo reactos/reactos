@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Samba TNG
@@ -35,7 +36,7 @@ Description = Acest instrument permite accesarea în ReactOS a dosarelor/imprima
 Size = 2,13 Mo
 
 [Section.041f]
-Description = Bu araç, ReactOS'ta Windows'un paylaşılan yazıcılarıyla paylaşılan dizinlerine erişimi sağlar.
+Description = Bu araç, size, ReactOS'la Windows paylaşılan dizinlerinize ve paylaşılan yazıcılarınıza erişime olanak sağlar.
 Size = 2,13 MB
 
 [Section.0422]

@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = IrfanView
@@ -42,8 +43,8 @@ Description = Lector pentru multiple formaturi de fișiere grafice/audio/video.
 Size = 1,8 Mo
 
 [Section.041f]
-Licence = Şahsî kullanımlar için ücretsiz.
-Description = Çizge, ses ve vidyo kütükleri görüntüleyicisi.
+Licence = Şahsî kullanım için ücretsiz.
+Description = Çizgelerin, ses kütüklerinin, vidyo kütüklerinin tüm türleri için görüntüleyici.
 Size = 1,8 MB
 
 [Section.0422]

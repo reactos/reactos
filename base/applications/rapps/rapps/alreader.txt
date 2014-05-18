@@ -1,8 +1,9 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = AlReader
-Description = A FB2 eBook Reader. Read formats: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Supported ZIP and GZ archives.
+Description = A FB2 eBook Reader. Supported read formats: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Supported ZIP and GZ archives.
 URLSite = http://www.alreader.com
 Size = 4.6 MB
 Category = 6
@@ -10,18 +11,18 @@ URLDownload = http://svn.reactos.org/packages/AlReader2Setup.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein FB2 eBook Reader. Unterstützung für folgende Formate: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. ZIP und GZ Archive werden ebenfalls unterstützt.
+Description = Ein FB2 eBook Reader. Unterstützung für folgende Formate: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. ZIP und GZ Archive werden ebenfalls unterstützt. (FIXME?)
 
 [Section.0410]
-Description = Un eBook Reader. Legge i formati fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Supporta gli archivi ZIP e GZ.
+Description = Un eBook Reader. Legge i formati fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Supporta gli archivi ZIP e GZ. (FIXME)
 
 [Section.0415]
-Description = Czytnik eBooków. Obsługuje formaty: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Obsługiwane są także pliki w archivach ZIP i GZ.
+Description = Czytnik eBooków. Obsługuje formaty: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Obsługiwane są także pliki w archivach ZIP i GZ. (FIXME)
 
 [Section.0418]
-Description = Cititor de cărți electronice în format FB2.
+Description = Cititor de cărți electronice în format FB2. Supported read formats: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Supported ZIP and GZ archives. (FIXME)
 Size = 4,6 Mo
 
 [Section.041f]
-Description = Bir FB2 e-Kitap ouyucusu.
+Description = Bir FB2 elektronik kitap okuyucusu. Desteklenen okuma biçimleri: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. ZIP ve GZ belgeliklerini destekler.
 Size = 4,6 MB

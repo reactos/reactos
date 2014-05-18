@@ -37,7 +37,8 @@
   /* Define `WRITING_SYSTEM' as needed.                 */
 
 
-  /* Add new writing systems here. */
+  /* Add new writing systems here.  The arguments are the writing system */
+  /* name in lowercase and uppercase, respectively.                      */
 
   WRITING_SYSTEM( dummy,  DUMMY  )
   WRITING_SYSTEM( latin,  LATIN  )

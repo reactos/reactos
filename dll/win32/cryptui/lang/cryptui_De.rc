@@ -318,7 +318,7 @@ IDD_IMPORT_STORE DIALOG 0,0,317,143
 CAPTION "Importassistent für die Zertifikatsverwaltung"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Wine kann automatisch einen Zertifikatsspeicher wählen, oder Sie wählen einen aus.",
+  LTEXT "ReactOS kann automatisch einen Zertifikatsspeicher wählen, oder Sie wählen einen aus.",
     -1, 21,1,220,25
   AUTORADIOBUTTON "A&utomatisch einen Zertifikatsspeicher wählen",
     IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP
@@ -381,11 +381,11 @@ CAPTION "Exportassistent für die Zertifikatsverwaltung"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Willkommen", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Dieser Assistent hilft ihnen Zertifikate, Zertifikatssperrlisten und Zertifikatsvertrauenslisten in eine Datei zu exportieren.\n\
+  LTEXT "Dieser Assistent hilft ihnen, Zertifikate, Zertifikatssperrlisten und Zertifikatsvertrauenslisten in eine Datei zu exportieren.\n\
 \n\
 Ein Zertifikat dient zur Identifikation von Ihnen oder ihrem Computer. Es kann auch für die Authentifizierung und zum Unterzeichnen genutzt werden. Zertifikatsspeicher sind Sammlungen von Zertifikaten, Zertifikatssperrlisten und Zertifikatsvertrauenslisten.\n\
 \n\
-Klicken Sie Weiter um fortzufahren.",
+Klicken Sie auf Weiter, um fortzufahren.",
     -1, 115,40,195,120
 END
 
@@ -393,7 +393,7 @@ IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
 CAPTION "Exportassistent für die Zertifikatsverwaltung"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Wenn Sie sich entscheiden den privaten Schlüssel zu exportieren, werden Sie später nach einem Passwort gefragt.", -1, 21,1,195,25
+  LTEXT "Wenn Sie sich entscheiden, den privaten Schlüssel zu exportieren, werden Sie später nach einem Passwort gefragt.", -1, 21,1,195,25
   LTEXT "Privaten Schlüssel exportieren?", -1, 21,27,195,10
   AUTORADIOBUTTON "&Ja, privaten Schlüssel exportieren",
     IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
@@ -423,15 +423,15 @@ BEGIN
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "&Syntaxstandard kryptografischer Meldungen/PKCS #7 Zertifikate (.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
-  CHECKBOX "&Wenn möglich alle Zertifikate im Zertifizierungspfad einbeziehen",
+  CHECKBOX "&Wenn möglich, alle Zertifikate im Zertifizierungspfad einbeziehen",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "&Privater Informationsaustausch/PKCS #12 (.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
-  CHECKBOX "W&enn möglich alle Zertifikate im Zertifizierungspfad einbeziehen",
+  CHECKBOX "W&enn möglich, alle Zertifikate im Zertifizierungspfad einbeziehen",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Verstärkte Sicherheit aktivieren",
     IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  CHECKBOX "Priva&ten Schlüssel löschen wenn der Export erfolgreich war",
+  CHECKBOX "Priva&ten Schlüssel löschen, wenn der Export erfolgreich war",
     IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 

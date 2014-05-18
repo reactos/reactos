@@ -9,9 +9,9 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
 \n\
   /INSERT             Aktiviert den Einfügemodus.\n\
   /OVERSTRIKE         Deaktiviert den Einfügemodus.\n\
-  /EXENAME=exename    Legt den Namen der Anwendung, auf die die Einstel-\n\
-                      lungen angewendet werden sollen, fest. Der Standard-\n\
-                      wert ist cmd.exe.\n\
+  /EXENAME=exename    Gibt den Namen der Anwendung an, deren Einstellungen\n\
+                      angezeigt oder geändert werden sollen.\n\
+                      Der Standardwert ist cmd.exe.\n\
   /HISTORY            Zeigt den Befehlsverlauf an.\n\
   /LISTSIZE=size      Legt die Anzahl der Befehle per Verlaufspuffer fest.\n\
   /REINSTALL          Leert den Befehlsverlauf.\n\

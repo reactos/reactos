@@ -98,6 +98,8 @@ extern BOOLEAN VdmRunning;
 
 /* FUNCTIONS ******************************************************************/
 
+VOID DumpMemory(VOID);
+
 VOID WINAPI EmulatorReadMemory
 (
     PFAST486_STATE State,

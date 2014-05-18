@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Mozilla Thunderbird 24
@@ -60,7 +61,7 @@ URLSite = https://www.mozilla.org/ru/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.4.0/win32/ru/Thunderbird%20Setup%2024.4.0.exe
 
 [Section.041f]
-Description = Özgür mail istemcileri arasında en tutulanı ve en iyisi.
+Description = Özgür posta istemcileri arasında en tutulanı ve en iyilerinden biri.
 Size = 20,99 MB
 URLSite = https://www.mozilla.org/tr/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.4.0/win32/tr/Thunderbird%20Setup%2024.4.0.exe
@@ -70,3 +71,9 @@ Description = Найпопулярніший та один з кращих по�
 Size = 21.41 MB
 URLSite = https://www.mozilla.org/uk/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.4.0/win32/uk/Thunderbird%20Setup%2024.4.0.exe
+
+[Section.0813]
+Description = De meest populaire en een van de beste gratis e-mail-programma's.
+Size = 9.71 MB
+URLSite = https://www.mozilla.org/nl/thunderbird/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/24.4.0/win32/nl/Thunderbird%20Setup%2024.4.0.exe

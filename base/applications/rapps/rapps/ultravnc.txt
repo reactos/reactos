@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = UltraVNC
 Version = 1.1.9.0
 Licence = GPL
-Description = Open-source VNC client/server.
+Description = Open source VNC client/server.
 Size = 3.27 MB
 Category = 5
 URLSite = http://www.uvnc.com/
@@ -35,7 +36,7 @@ Description = Client/server VNC (open-source).
 Size = 3,27 Mo
 
 [Section.041f]
-Description = Açık kaynak bir VNC istemcisi ve bir VNC sunucusu.
+Description = Açık kaynak VNC istemcisi ve sunucusu.
 Size = 3,27 MB
 
 [Section.0422]

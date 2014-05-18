@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = PeaZip
@@ -21,5 +22,6 @@ Description = PeaZip è un manager di file e archivi gratis, multipiattaforma e 
 PeaZip to darmowy, wieloplatformowy menedżer plików i archiwów, o otwartym źródle. Obsługuje ponad 150 formatów archiwów.
 
 [Section.041f]
-Description = PeaZip; ücretsiz, çapraz platform, açık kaynak bir kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
+Licence = LGPL 3. sürüm, OpenCandy EULA
+Description = PeaZip; ücretsiz, çapraz platform, açık kaynak kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
 Size = 5,8 MB

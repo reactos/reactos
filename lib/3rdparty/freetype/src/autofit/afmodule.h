@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter module implementation (specification).                   */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005 by                                          */
+/*  Copyright 2003-2005, 2009, 2012, 2013 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,7 +40,8 @@ FT_BEGIN_HEADER
   {
     FT_ModuleRec  root;
 
-    FT_UInt       fallback_script;
+    FT_UInt       fallback_style;
+    FT_UInt       default_script;
 
     AF_LoaderRec  loader[1];
 

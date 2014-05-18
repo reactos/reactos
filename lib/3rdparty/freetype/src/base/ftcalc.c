@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2006, 2008, 2012-2013 by                                */
+/*  Copyright 1996-2006, 2008, 2012-2014 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -128,7 +128,7 @@
     }
     if ( z >= ( 1L << 1 ) )
     {
-      z     >>= 1;
+   /* z     >>= 1; */
       shift  += 1;
     }
 

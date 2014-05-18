@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Orwell Dev-C++ TDM GCC x64
@@ -18,5 +19,6 @@ Description = Eine gepflegte Version von Dev-C++. Der 64 bit TDM-GCC Compiler li
 Description = Una versione sostenuta di Dev-C++. Contiene il compilatore a 64bit TDM-GCC.
 
 [Section.041f]
-Description = Dev-C++'nın sürdürülen bir sürümü. 64 bitlik TDM-GCC derleyicisini içerir.
+Licence = GPL 2. sürüm
+Description = Dev-C++'nın sürdürülen bir sürümü. 64 bitlik TDM-GCC derleyicisi içerir.
 Size = 44,8 MB

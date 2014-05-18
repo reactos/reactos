@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = LibreOffice
 Version = 4.2.3
 Licence = LGPL
-Description = Former called OpenOffice. Open Source Office Suite.
+Description = A powerful and open source office suite. It has been forked from OpenOffice.
 Size = 211.0 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
@@ -12,34 +13,34 @@ URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.2.3/wi
 CDPath = none
 
 [Section.0407]
-Description = Vorher bekannt als OpenOffice. Open Source Office Suite.
+Description = Vorher bekannt als OpenOffice. Open Source Office Suite. (FIXME)
 
 [Section.040a]
-Description = La suite de ofimática de código abierto.
+Description = La suite de ofimática de código abierto. (FIXME)
 
 [Section.040c]
-Description = Précédemment appelé OpenOffice. Suite bureautique open source.
+Description = Précédemment appelé OpenOffice. Suite bureautique open source. (FIXME)
 Size = 211,0 Mo
 
 [Section.0410]
-Description = Precedentemente chiamato OpenOffice. Open Source Office Suite.
+Description = Precedentemente chiamato OpenOffice. Open Source Office Suite. (FIXME)
 
 [Section.0413]
-Description = Voorheen OpenOffice. Open-bron Office pakket.
+Description = Voorheen OpenOffice. Open-bron Office pakket. (FIXME)
 
 [Section.0415]
-Description = Otwarty pakiet biurowy.
+Description = Otwarty pakiet biurowy. (FIXME)
 
 [Section.0418]
-Description = Fostul OpenOffice. Suita de aplicații de birotică open-source.
+Description = Fostul OpenOffice. Suita de aplicații de birotică open-source. (FIXME)
 Size = 211,0 Mo
 
 [Section.041f]
-Description = OpenOffice gibi bir açık kaynak büro takımı.
+Description = Güçlü ve açık kaynak bir büro takımı. OpenOffice'ten çatallanılmıştır.
 Size = 211,0 MB
 
 [Section.0422]
-Description = Відкритий офісний пакет.
+Description = Відкритий офісний пакет. (FIXME)
 
 [Section.0813]
-Description = Voorheen OpenOffice. Open-bron Office pakket.
+Description = Voorheen OpenOffice. Open-bron Office pakket. (FIXME)

@@ -5,7 +5,7 @@
 #
 # Process a blue zone character data file.
 #
-# Copyright 2013 by
+# Copyright 2013, 2014 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used,
@@ -17,7 +17,7 @@
 use strict;
 use warnings;
 use English '-no_match_vars';
-use open ':std', ':locale';
+use open ':std', ':encoding(UTF-8)';
 
 
 my $prog = $PROGRAM_NAME;
@@ -71,7 +71,7 @@ my $whitespace_only_re = qr/ ^ \s* $ /x;
 
 # [<ws>] '"' <string> '"' [<ws>] '\n'  (<string> doesn't contain newlines)
 my $string_re = qr/ ^ \s*
-                       " ( (?: [^"\\]++ | \\. )*+ ) "
+                       " ( (?> (?: (?> [^"\\]+ ) | \\. )* ) ) "
                        \s* $ /x;
 
 # [<ws>] '{' <block> '}' [<ws>] '\n'  (<block> can contain newlines)
@@ -194,7 +194,7 @@ sub convert_literal
 
 sub aux_name
 {
-  return "af_blue_" . $num_sections. "_" . join('_', reverse @name_stack);
+  return "af_blue_" . $num_sections. "_" . join('_', @name_stack);
 }
 
 
@@ -210,7 +210,7 @@ sub aux_name_next
 
 sub enum_val_string
 {
-  # Build string which holds code to save the current offset in an
+  # Build string that holds code to save the current offset in an
   # enumeration element.
   my $aux = shift;
 
@@ -288,7 +288,7 @@ while (<DATA>)
     {
       # Having preprocessor conditionals complicates the computation of
       # correct offset values.  We have to introduce auxiliary enumeration
-      # elements with the name `af_blue_<s>_<n1>_<n2>_...' which store
+      # elements with the name `af_blue_<s>_<n1>_<n2>_...' that store
       # offsets to be used in conditional clauses.  `<s>' is the number of
       # sections seen so far, `<n1>' is the number of `#if' and `#endif'
       # conditionals seen so far in the topmost level, `<n2>' the number of
@@ -344,23 +344,26 @@ while (<DATA>)
 
         $curr_offset = 0;
       }
-      elsif (/ ^ \# \s* endif /x)
+      elsif (/ ^ (\# \s*) endif /x)
       {
         my $prev_else = pop @else_stack;
         Die("unbalanced #endif") unless defined($prev_else);
 
         pop @name_stack;
-        $name_stack[$#name_stack]++;
 
         # If there is no else-clause for an if-clause, we add one.  This is
         # necessary to have correct offsets.
         if (!$prev_else)
         {
-          push @{$diversions{$curr_enum}}, enum_val_string(aux_name())
-                                           . "#else\n";
+          # Use amount of whitespace from `endif'.
+          push @{$diversions{$curr_enum}}, enum_val_string(aux_name_next())
+                                           . $1 . "else\n";
+          $last_aux = aux_name();
 
           $curr_offset = 0;
         }
+
+        $name_stack[$#name_stack]++;
 
         push @{$diversions{$curr_enum}}, enum_val_string(aux_name());
         $last_aux = aux_name();

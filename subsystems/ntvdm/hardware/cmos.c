@@ -53,6 +53,7 @@ VOID CmosWriteAddress(BYTE Value)
 
 BYTE CmosReadData(VOID)
 {
+    BYTE Value;
     SYSTEMTIME CurrentTime;
 
     /* Get the current time */
@@ -61,21 +62,33 @@ BYTE CmosReadData(VOID)
     switch (SelectedRegister)
     {
         case CMOS_REG_SECONDS:
-            return READ_CMOS_DATA(CmosMemory, CurrentTime.wSecond);
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CurrentTime.wSecond);
+            break;
+        }
 
         case CMOS_REG_ALARM_SEC:
-            return READ_CMOS_DATA(CmosMemory, CmosMemory.AlarmSecond);
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CmosMemory.AlarmSecond);
+            break;
+        }
 
         case CMOS_REG_MINUTES:
-            return READ_CMOS_DATA(CmosMemory, CurrentTime.wMinute);
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CurrentTime.wMinute);
+            break;
+        }
 
         case CMOS_REG_ALARM_MIN:
-            return READ_CMOS_DATA(CmosMemory, CmosMemory.AlarmMinute);
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CmosMemory.AlarmMinute);
+            break;
+        }
 
         case CMOS_REG_HOURS:
         {
             BOOLEAN Afternoon = FALSE;
-            BYTE Value = CurrentTime.wHour;
+            Value = CurrentTime.wHour;
 
             if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value >= 12))
             {
@@ -88,13 +101,13 @@ BYTE CmosReadData(VOID)
             /* Convert to 12-hour */
             if (Afternoon) Value |= 0x80;
 
-            return Value;
+            break;
         }
 
         case CMOS_REG_ALARM_HRS:
         {
             BOOLEAN Afternoon = FALSE;
-            BYTE Value = CmosMemory.AlarmHour;
+            Value = CmosMemory.AlarmHour;
 
             if (!(CmosMemory.StatusRegB & CMOS_STB_24HOUR) && (Value >= 12))
             {
@@ -107,35 +120,47 @@ BYTE CmosReadData(VOID)
             /* Convert to 12-hour */
             if (Afternoon) Value |= 0x80;
 
-            return Value;
+            break;
         }
 
         case CMOS_REG_DAY_OF_WEEK:
+        {
             /*
              * The CMOS value is 1-based but the
              * GetLocalTime API value is 0-based.
              * Correct it.
              */
-            return READ_CMOS_DATA(CmosMemory, CurrentTime.wDayOfWeek + 1);
+            Value = READ_CMOS_DATA(CmosMemory, CurrentTime.wDayOfWeek + 1);
+            break;
+        }
 
         case CMOS_REG_DAY:
-            return READ_CMOS_DATA(CmosMemory, CurrentTime.wDay);
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CurrentTime.wDay);
+            break;
+        }
 
         case CMOS_REG_MONTH:
-            return READ_CMOS_DATA(CmosMemory, CurrentTime.wMonth);
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CurrentTime.wMonth);
+            break;
+        }
 
         case CMOS_REG_YEAR:
-            return READ_CMOS_DATA(CmosMemory, CurrentTime.wYear % 100);
+        {
+            Value = READ_CMOS_DATA(CmosMemory, CurrentTime.wYear % 100);
+            break;
+        }
 
         case CMOS_REG_STATUS_C:
         {
-            BYTE Value = CmosMemory.StatusRegC;
+            /* Return the old value */
+            Value = CmosMemory.StatusRegC;
 
             /* Clear status register C */
             CmosMemory.StatusRegC = 0x00;
 
-            /* Return the old value */
-            return Value;
+            break;
         }
 
         case CMOS_REG_STATUS_A:
@@ -146,12 +171,14 @@ BYTE CmosReadData(VOID)
         default:
         {
             // ASSERT(SelectedRegister < CMOS_REG_MAX);
-            return CmosMemory.Regs[SelectedRegister];
+            Value = CmosMemory.Regs[SelectedRegister];
         }
     }
 
     /* Return to Status Register D */
     SelectedRegister = CMOS_REG_STATUS_D;
+
+    return Value;
 }
 
 VOID CmosWriteData(BYTE Value)

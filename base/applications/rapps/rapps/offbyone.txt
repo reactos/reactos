@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Off By One Browser
@@ -39,9 +40,9 @@ Description = Un navigator web foarte mic și rapid compatibil cu HTML 3.2.
 Size = 1010,89 ko
 
 [Section.041f]
-Name = Off By One Tarayıcısı
+Name = Off By One Tarayıcı
 Licence = Ücretsiz
-Description = Off By One Tarayıcısı, HTML 3.2 desteğiyle çok küçük ve hızlı bir tarayıcıdır.
+Description = Off By One Tarayıcı, eksiksiz HTML 3.2 desteğiyle çok küçük ve hızlı bir Umûmî Ağ tarayıcısıdır.
 Size = 1010,89 KB
 
 [Section.0422]

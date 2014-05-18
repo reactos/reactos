@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = OpenTTD
@@ -35,7 +36,8 @@ Description = Clona (open-source a) motorului de joc "Transport Tycoon Deluxe". 
 Size = 7,0 Mo
 
 [Section.041f]
-Description = Transport Tycoon Deluxe oyun motorunun bir açık kaynak taklidi. Transport Tycoon'un bir kopyası gerekir.
+Licence = GPL 2. sürüm
+Description = "Transport Tycoon Deluxe" oyun motorunun açık kaynak taklidi. Transport Tycoon'un bir kopyası gerekir.
 Size = 7,0 MB
 
 [Section.0422]

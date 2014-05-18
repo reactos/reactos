@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Pingus
@@ -26,5 +27,5 @@ Description = Pingus este un joc-enigmă asemănător cu Lemmings.
 Size = 16,0 Mo
 
 [Section.041f]
-Description = Pingus, ücretsiz, Yaban Sıçanları gibi bir bulmaca oyunudur.
+Description = Pingus, ücretsiz, Lemmings gibi bir bulmaca oyunudur.
 Size = 16,0 MB

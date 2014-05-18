@@ -1,7 +1,8 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
-Name = Code::Blocks (no compiler)
+Name = Code::Blocks (without compiler)
 Version = 13.12
 Licence = GPLv3
 Description = A open source, cross-platform, powerful IDE. It doesn't contain a compiler.
@@ -19,5 +20,6 @@ Description = Un IDE potente, open source, multipiattaforma. Non contiene un com
 
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)
+Licence = GPL 3. sürüm
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. Bir derleyici içermez.
 Size = 29,2 MB

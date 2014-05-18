@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (body).                           */
 /*                                                                         */
-/*  Copyright 2003-2009, 2011-2013 by                                      */
+/*  Copyright 2003-2009, 2011-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -109,7 +109,7 @@
     FT_Error          error;
     FT_Face           face     = loader->face;
     FT_GlyphLoader    gloader  = loader->gloader;
-    AF_ScriptMetrics  metrics  = loader->metrics;
+    AF_StyleMetrics   metrics  = loader->metrics;
     AF_GlyphHints     hints    = &loader->hints;
     FT_GlyphSlot      slot     = face->glyph;
     FT_Slot_Internal  internal = slot->internal;
@@ -183,17 +183,17 @@
       /* automatic hinting process                                 */
       {
 #ifdef FT_CONFIG_OPTION_PIC
-        AF_FaceGlobals         globals              = loader->globals;
+        AF_FaceGlobals         globals = loader->globals;
 #endif
+        AF_StyleClass          style_class = metrics->style_class;
         AF_WritingSystemClass  writing_system_class =
-                                 AF_WRITING_SYSTEM_CLASSES_GET
-                                   [metrics->script_class->writing_system];
+          AF_WRITING_SYSTEM_CLASSES_GET[style_class->writing_system];
 
 
-        if ( writing_system_class->script_hints_apply )
-          writing_system_class->script_hints_apply( hints,
-                                                    &gloader->current.outline,
-                                                    metrics );
+        if ( writing_system_class->style_hints_apply )
+          writing_system_class->style_hints_apply( hints,
+                                                   &gloader->current.outline,
+                                                   metrics );
       }
 
       /* we now need to adjust the metrics according to the change in */
@@ -318,12 +318,7 @@
           /* recompute subglyph pointer */
           subglyph = gloader->base.subglyphs + num_base_subgs + nn;
 
-          if ( subglyph->flags & FT_SUBGLYPH_FLAG_USE_MY_METRICS )
-          {
-            pp1 = loader->pp1;
-            pp2 = loader->pp2;
-          }
-          else
+          if ( !( subglyph->flags & FT_SUBGLYPH_FLAG_USE_MY_METRICS ) )
           {
             loader->pp1 = pp1;
             loader->pp2 = pp2;
@@ -529,14 +524,14 @@
     error = af_loader_reset( module, face );
     if ( !error )
     {
-      AF_ScriptMetrics  metrics;
-      FT_UInt           options = AF_SCRIPT_DFLT;
+      AF_StyleMetrics  metrics;
+      FT_UInt          options = AF_STYLE_NONE_DFLT;
 
 
 #ifdef FT_OPTION_AUTOFIT2
       /* XXX: undocumented hook to activate the latin2 writing system */
       if ( load_flags & ( 1UL << 20 ) )
-        options = AF_SCRIPT_LTN2;
+        options = AF_STYLE_LTN2_DFLT;
 #endif
 
       error = af_face_globals_get_metrics( loader->globals, gindex,
@@ -544,27 +539,27 @@
       if ( !error )
       {
 #ifdef FT_CONFIG_OPTION_PIC
-        AF_FaceGlobals         globals              = loader->globals;
+        AF_FaceGlobals         globals = loader->globals;
 #endif
+        AF_StyleClass          style_class = metrics->style_class;
         AF_WritingSystemClass  writing_system_class =
-                                 AF_WRITING_SYSTEM_CLASSES_GET
-                                   [metrics->script_class->writing_system];
+          AF_WRITING_SYSTEM_CLASSES_GET[style_class->writing_system];
 
 
         loader->metrics = metrics;
 
-        if ( writing_system_class->script_metrics_scale )
-          writing_system_class->script_metrics_scale( metrics, &scaler );
+        if ( writing_system_class->style_metrics_scale )
+          writing_system_class->style_metrics_scale( metrics, &scaler );
         else
           metrics->scaler = scaler;
 
         load_flags |=  FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
         load_flags &= ~FT_LOAD_RENDER;
 
-        if ( writing_system_class->script_hints_init )
+        if ( writing_system_class->style_hints_init )
         {
-          error = writing_system_class->script_hints_init( &loader->hints,
-                                                           metrics );
+          error = writing_system_class->style_hints_init( &loader->hints,
+                                                          metrics );
           if ( error )
             goto Exit;
         }

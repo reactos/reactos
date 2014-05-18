@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (body).                                 */
 /*                                                                         */
-/*  Copyright 2003-2007, 2009-2013 by                                      */
+/*  Copyright 2003-2007, 2009-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -345,7 +345,9 @@
   af_glyph_hints_get_segment_offset( AF_GlyphHints  hints,
                                      FT_Int         dimension,
                                      FT_Int         idx,
-                                     FT_Pos*        offset )
+                                     FT_Pos        *offset,
+                                     FT_Bool       *is_blue,
+                                     FT_Pos        *blue_offset )
   {
     AF_Dimension  dim;
     AF_AxisHints  axis;
@@ -362,9 +364,18 @@
     if ( idx < 0 || idx >= axis->num_segments )
       return FT_THROW( Invalid_Argument );
 
-    seg     = &axis->segments[idx];
-    *offset = ( dim == AF_DIMENSION_HORZ ) ? seg->first->ox
-                                           : seg->first->oy;
+    seg      = &axis->segments[idx];
+    *offset  = ( dim == AF_DIMENSION_HORZ ) ? seg->first->ox
+                                            : seg->first->oy;
+    if ( seg->edge )
+      *is_blue = (FT_Bool)( seg->edge->blue_edge != 0 );
+    else
+      *is_blue = FALSE;
+
+    if ( *is_blue )
+      *blue_offset = seg->edge->blue_edge->cur;
+    else
+      *blue_offset = 0;
 
     return FT_Err_Ok;
   }
@@ -533,8 +544,8 @@
   /* Reset metrics. */
 
   FT_LOCAL_DEF( void )
-  af_glyph_hints_rescale( AF_GlyphHints     hints,
-                          AF_ScriptMetrics  metrics )
+  af_glyph_hints_rescale( AF_GlyphHints    hints,
+                          AF_StyleMetrics  metrics )
   {
     hints->metrics      = metrics;
     hints->scaler_flags = metrics->scaler.flags;
@@ -810,7 +821,6 @@
 
           in_x = out_x;
           in_y = out_y;
-          prev = point;
         }
       }
     }
@@ -1224,8 +1234,6 @@
       }
     }
 
-    point = points;
-
     for ( ; contour < contour_limit; contour++ )
     {
       AF_Point  first_touched, last_touched;
@@ -1248,7 +1256,6 @@
       }
 
       first_touched = point;
-      last_touched  = point;
 
       for (;;)
       {

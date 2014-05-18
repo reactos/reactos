@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 parser (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2007, 2009, 2013 by                                     */
+/*  Copyright 1996-2007, 2009, 2013, 2014 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -178,8 +178,6 @@
         if ( ft_strncmp( (char*)arg1, "(Hex)", 5 ) == 0 )
           parser->binary_length = ft_atol( (const char *)arg2 );
 
-        limit = parser->root.limit;
-        cur   = parser->root.cursor;
         goto Exit;
       }
       else if ( cur[1] == 's' && ft_strncmp( (char*)cur, "/sfnts", 6 ) == 0 )

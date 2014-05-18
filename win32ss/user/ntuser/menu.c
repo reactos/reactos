@@ -150,7 +150,6 @@ PMENU FASTCALL VerifyMenu(PMENU pMenu)
    UINT i;
    if (!pMenu) return NULL;
 
-   ERR("VerifyMenu 1!\n");
    _SEH2_TRY
    {
       hMenu = UserHMGetHandle(pMenu);
@@ -167,10 +166,13 @@ PMENU FASTCALL VerifyMenu(PMENU pMenu)
       _SEH2_YIELD(return NULL);
    }
    _SEH2_END
-   ERR("VerifyMenu 2!\n");
+
    if ( UserObjectInDestroy(hMenu))
+   {
+      ERR("Menu is marked for destruction!\n");
       return NULL;
-   ERR("VerifyMenu 3!\n");
+   }
+
    return pMenu;
 }
 
@@ -533,28 +535,24 @@ IntCloneMenuItems(PMENU Destination, PMENU Source)
       NewMenuItem->hbmpChecked = MenuItem->hbmpChecked;
       NewMenuItem->hbmpUnchecked = MenuItem->hbmpUnchecked;
       NewMenuItem->dwItemData = MenuItem->dwItemData;
-      if((MENU_ITEM_TYPE(NewMenuItem->fType) == MF_STRING))
+      if (MenuItem->lpstr.Length)
       {
-         if(MenuItem->lpstr.Length)
+         NewMenuItem->lpstr.Length = 0;
+         NewMenuItem->lpstr.MaximumLength = MenuItem->lpstr.MaximumLength;
+         NewMenuItem->lpstr.Buffer = DesktopHeapAlloc(Destination->head.rpdesk, MenuItem->lpstr.MaximumLength);
+         if (!NewMenuItem->lpstr.Buffer)
          {
-            NewMenuItem->lpstr.Length = 0;
-            NewMenuItem->lpstr.MaximumLength = MenuItem->lpstr.MaximumLength;
-            NewMenuItem->lpstr.Buffer = DesktopHeapAlloc(Destination->head.rpdesk, MenuItem->lpstr.MaximumLength);
-            if(!NewMenuItem->lpstr.Buffer)
-            {
-               DesktopHeapFree(Destination->head.rpdesk, NewMenuItem);
-               break;
-            }
-            RtlCopyUnicodeString(&NewMenuItem->lpstr, &MenuItem->lpstr);
+             DesktopHeapFree(Destination->head.rpdesk, NewMenuItem);
+             break;
          }
-         else
-         {
-            NewMenuItem->lpstr.Buffer = MenuItem->lpstr.Buffer;
-         }
+         RtlCopyUnicodeString(&NewMenuItem->lpstr, &MenuItem->lpstr);
+         NewMenuItem->lpstr.Buffer[MenuItem->lpstr.Length / sizeof(WCHAR)] = 0;
+         NewMenuItem->Xlpstr = NewMenuItem->lpstr.Buffer;
       }
       else
       {
          NewMenuItem->lpstr.Buffer = MenuItem->lpstr.Buffer;
+         NewMenuItem->Xlpstr = NewMenuItem->lpstr.Buffer;
       }
       NewMenuItem->hbmp = MenuItem->hbmp;
    }
@@ -773,6 +771,7 @@ BOOL FASTCALL
 IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUNICODE_STRING lpstr)
 {
    PMENU SubMenuObject;
+   BOOL circref = FALSE;
 
    if(!MenuItem || !MenuObject || !lpmii)
    {
@@ -846,17 +845,28 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
 
    if(lpmii->fMask & MIIM_SUBMENU)
    {
-      /* Make sure the submenu is marked as a popup menu */
       if (lpmii->hSubMenu)
       {
          SubMenuObject = UserGetMenuObject(lpmii->hSubMenu);
-         if (SubMenuObject != NULL)
+         if ( SubMenuObject && !(UserObjectInDestroy(lpmii->hSubMenu)) )
          {
-            if ( MENU_depth( SubMenuObject, 0) > MAXMENUDEPTH)
+            //// wine Bug 12171 : Adding Popup Menu to itself! Could create endless loops.
+            //// CORE-7967.
+            if (MenuObject == SubMenuObject)
+            {
+               HANDLE hMenu;
+               ERR("Pop Up Menu Double Trouble!\n");
+               SubMenuObject = IntCreateMenu(&hMenu, FALSE); // It will be marked.
+               if (!SubMenuObject) return FALSE;
+               circref = TRUE;
+            }
+            if ( MENU_depth( SubMenuObject, 0) > MAXMENUDEPTH )
             {
                ERR( "Loop detected in menu hierarchy or maximum menu depth exceeded!\n");
+               if (circref) IntDestroyMenuObject(SubMenuObject, FALSE, TRUE);
                return FALSE;
             }
+            /* Make sure the submenu is marked as a popup menu */
             SubMenuObject->fFlags |= MNF_POPUP;
             // Now fix the test_subpopup_locked_by_menu tests....
             if (MenuItem->spSubMenu) IntReleaseMenuObject(MenuItem->spSubMenu);
@@ -1436,6 +1446,34 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
 }
 
 BOOL FASTCALL
+IntMenuItemInfo(
+   PMENU Menu,
+   UINT Item,
+   BOOL ByPosition,
+   PROSMENUITEMINFO ItemInfo,
+   BOOL SetOrGet,
+   PUNICODE_STRING lpstr)
+{
+   PITEM MenuItem;
+   BOOL Ret;
+
+   if (!(MenuItem = MENU_FindItem( &Menu, &Item, (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND) )))
+   {
+      EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
+      return( FALSE);
+   }
+   if (SetOrGet)
+   {
+      Ret = IntSetMenuItemInfo(Menu, MenuItem, ItemInfo, lpstr);
+   }
+   else
+   {
+      Ret = IntGetMenuItemInfo(Menu, MenuItem, ItemInfo);
+   }
+   return( Ret);
+}
+
+BOOL FASTCALL
 UserMenuItemInfo(
    PMENU Menu,
    UINT Item,
@@ -1925,15 +1963,10 @@ NtUserGetMenuBarInfo(
    //kmbi.fBarFocused = top_popup_hmenu == hMenu;
    if (idItem)
    {
-       //PITEM MenuItem;
-       //UINT nPos = idItem-1;
        kmbi.fFocused = Menu->iItem == idItem-1;
        if (kmbi.fFocused && (Menu->rgItems[idItem - 1].spSubMenu))
-       //MenuItem = MENU_FindItem (&Menu, &nPos, MF_BYPOSITION);
-       //if ( MenuItem && kmbi.fFocused && MenuItem->spSubMenu )
        {
           kmbi.hwndMenu = Menu->rgItems[idItem - 1].spSubMenu->hWnd;
-          //kmbi.hwndMenu = MenuItem->spSubMenu->hWnd;
        }
    }
 /*   else

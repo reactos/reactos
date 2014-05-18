@@ -142,7 +142,7 @@ NtGdiCreateBitmap(
     IN OPTIONAL LPBYTE pUnsafeBits)
 {
     HBITMAP hbmp;
-    ULONG cRealBpp, cjWidthBytes, iFormat, fjBitmap;
+    ULONG cRealBpp, cjWidthBytes, iFormat;
     ULONGLONG cjSize;
     PSURFACE psurf;
 
@@ -164,15 +164,12 @@ NtGdiCreateBitmap(
         return NULL;
     }
 
-    /* Allocations larger than PAGE_SIZE go into user mem */
-    fjBitmap = (cjSize > PAGE_SIZE) ? BMF_USERMEM : 0;
-
     /* Allocate the surface (but don't set the bits) */
     psurf = SURFACE_AllocSurface(STYPE_BITMAP,
                                  nWidth,
                                  nHeight,
                                  iFormat,
-                                 fjBitmap,
+                                 0,
                                  0,
                                  NULL);
     if (!psurf)

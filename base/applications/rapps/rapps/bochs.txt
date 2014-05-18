@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Bochs
@@ -26,5 +27,6 @@ Description = Bochs este un emulator PC (x86) cu surse publice și portabilitate
 Size = 4,7 Mo
 
 [Section.041f]
-Description = Bochs; son derece taşınabilir, C++ ile yazılmış, en bilinen platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.
+Licence = LGPL 2. sürüm
+Description = Bochs; çok taşınabilir, C++ ile yazılmış, en yaygın platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.
 Size = 4,7 MB

@@ -325,7 +325,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
 
     /* Open the Object */
     Status = ObReferenceObjectByHandle(MutantHandle,
-                                       MUTANT_QUERY_STATE,
+                                       0, /* No access rights required */
                                        ExMutantObjectType,
                                        PreviousMode,
                                        (PVOID*)&Mutant,

@@ -1,5 +1,7 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = Chromium B.S.U.
 Version = 0.9.13.2
@@ -25,5 +27,5 @@ Description = Chromium B.S.U. este un joc de vânătoare în spațiul cosmic (ar
 Size = 2,3 Mo
 
 [Section.041f]
-Description = Chromium B.S.U., atari salonu oyunu türünde, üst kaydırmalı bir uzay nişancısıdır.
+Description = Chromium B.S.U., atari salonu oyunu türünde, üstten kaydırmalı bir uzay gezleyicisidir.
 Size = 2,3 MB

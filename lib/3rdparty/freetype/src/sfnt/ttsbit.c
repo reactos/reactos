@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 2005-2009, 2013 by                                           */
+/*  Copyright 2005-2009, 2013, 2014 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  Copyright 2013 by Google, Inc.                                         */
@@ -967,7 +967,6 @@
         break;
 
       case 2:
-      case 5:
       case 7:
         {
           /* Don't trust `glyph_format'.  For example, Apple's main Korean */
@@ -997,6 +996,10 @@
         }
         break;
 
+      case 5:
+        loader = tt_sbit_decoder_load_bit_aligned;
+        break;
+
       case 8:
         if ( p + 1 > p_limit )
           goto Fail;
@@ -1013,10 +1016,11 @@
       case 19: /* metrics in EBLC, PNG image data */
 #ifdef FT_CONFIG_OPTION_USE_PNG
         loader = tt_sbit_decoder_load_png;
+        break;
 #else
         error = FT_THROW( Unimplemented_Feature );
+        goto Fail;
 #endif /* FT_CONFIG_OPTION_USE_PNG */
-        break;
 
       default:
         error = FT_THROW( Invalid_Table );
@@ -1243,11 +1247,11 @@
                            FT_Bitmap           *map,
                            TT_SBit_MetricsRec  *metrics )
   {
-    FT_UInt     sbix_pos, strike_offset, glyph_start, glyph_end;
-    FT_ULong    table_size, data_size;
-    FT_Int      originOffsetX, originOffsetY;
-    FT_Tag      graphicType;
-    FT_Int      recurse_depth = 0;
+    FT_UInt   sbix_pos, strike_offset, glyph_start, glyph_end;
+    FT_ULong  table_size;
+    FT_Int    originOffsetX, originOffsetY;
+    FT_Tag    graphicType;
+    FT_Int    recurse_depth = 0;
 
     FT_Error  error;
     FT_Byte*  p;
@@ -1298,7 +1302,6 @@
     originOffsetY = FT_GET_SHORT();
 
     graphicType = FT_GET_TAG4();
-    data_size   = glyph_end - glyph_start - 8;
 
     switch ( graphicType )
     {
@@ -1322,7 +1325,7 @@
                              metrics,
                              stream->memory,
                              stream->cursor,
-                             data_size,
+                             glyph_end - glyph_start - 8,
                              TRUE );
 #else
       error = FT_THROW( Unimplemented_Feature );

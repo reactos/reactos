@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Double Commander
@@ -32,7 +33,7 @@ Description = Double Commander - это открытый двухпанельн�
 
 [Section.041f]
 Version = 0.5.8 Gelişme
-Description = Double Commander, yan yana duran iki bölmenin bulunduğu bir açık kaynak kütük yöneticisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = Double Commander, yan yana iki bölmeli bir açık kaynak kütük yöneticisidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 7,6 MB
 
 [Section.0422]

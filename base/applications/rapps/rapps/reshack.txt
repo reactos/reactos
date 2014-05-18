@@ -1,11 +1,12 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Resource Hacker
 Version = 3.6.0
 Licence = Freeware
-Description = Resource Hacker, is a freeware utility to view, modify, rename, add, delete and extract resources in 32bit & 64bit Windows executables and resource files (*.res).
+Description = Resource Hacker is a freeware utility to view, modify, rename, add, delete and extract resources in 32bit & 64bit Windows executables and resource files (*.res).
 Size = 730 kB
 Category = 7
 URLSite = http://www.angusj.com/resourcehacker/
@@ -27,7 +28,6 @@ Description = Resource Hacker este un utilitar gratuit pentru inspectarea, modif
 Size = 730 ko
 
 [Section.041f]
-Name = Kaynak Korsancısı
 Licence = Ücretsiz
-Description = Kaynak Korsancısı, 32 ya da 64 ikillik Pencereler çaılştırabilirlerini ve .res uzantılı kaynak kütüklerindeki kaynakları görüntüleyen, değiştiren, yeniden adlandıran, ekleyen, silen ve çıkartan ücretsiz bir araçtır.
+Description = Resoure Hacker, 32 ve 64 bitlik Windows çaılştırılabilirlerindeki ve kaynak kütüklerindeki (*.res) kaynakları görüntülemek, değiştirmek, yeniden adlandırmak, eklemek, silmek ve çıkarmak için ücretsiz bir araçtır.
 Size = 730 KB

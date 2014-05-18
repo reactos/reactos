@@ -213,8 +213,9 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
                                                               &Length);
     if (Status != NO_ERROR) return;
     VbeInfo = VideoPortAllocatePool(VgaExtension, 1, sizeof(VBE_INFO), ' agV');
-    VbeModeInfo = &VbeInfo->Modes;
     if (!VbeInfo) return;
+
+    VbeModeInfo = &VbeInfo->Modes;
 
     /* Init VBE data and write to card buffer */
     VideoDebugPrint((0, "have int10 data\n"));

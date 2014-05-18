@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = ReactOS Build Environment ARM Addon
@@ -36,7 +37,7 @@ Size = 11,15 Mo
 
 [Section.041f]
 Name = ReactOS Derleme Ortamı ARM Eklentisi
-Description = ReactOS ARM Kaynak Kodları'nı derlettirir. Daha çok açıklama için ReactOS Wiki'ye bakınız.
+Description = ReactOS ARM Kaynak Kodları'nı derlemenize olanak sağlar. Daha çok açıklama için ReactOS Wiki'ye bakınız.
 Size = 11,15 MB
 
 [Section.0422]

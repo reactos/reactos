@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Audio Grabber
@@ -40,7 +41,7 @@ Size = 4,35 Mo
 
 [Section.041f]
 Licence = Ücretsiz
-Description = Çok iyi bir CD ripleyicisi ve ses biçimi dönüştürücüsü.
+Description = Çok iyi bir CD ripleyicisi ve ses kütüğü dönüştürücüsü.
 Size = 4,35 MB
 
 [Section.0422]

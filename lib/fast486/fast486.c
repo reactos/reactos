@@ -121,6 +121,11 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
             /* Set the interrupt status to execute on the next instruction */
             State->IntStatus = FAST486_INT_EXECUTE;
         }
+        else if (State->IntStatus == FAST486_INT_DELAYED)
+        {
+            /* Restore the old state */
+            State->IntStatus = FAST486_INT_EXECUTE;
+        }
     }
     while ((Command == FAST486_CONTINUE)
            || (Command == FAST486_STEP_OVER && ProcedureCallCount > 0)

@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = DosBlaster
 Version = 2.5
 Licence = GPL
-Description = DosBlaster is a Shell extension which makes it possible to open any DOS executabe in DOSBox via right click. This version contains DOSBox 0.70, but can be simply updated by installing a newer DOSBox into the DosBlaster folders.
+Description = DosBlaster is a shell extension which makes it possible to open any DOS executable in DOSBox via right click. This version contains DOSBox 0.70, but can be simply updated by installing a newer DOSBox into the DosBlaster folders.
 Size = 2.05 MB
 Category = 15
 URLSite = http://dosblaster.sourceforge.net/
@@ -35,7 +36,7 @@ Description = DosBlaster este o extensie de interfațare ce oferă posibilitatea
 Size = 2,05 Mo
 
 [Section.041f]
-Description = DosBlaster, bir DOS uygulamasını sağ tıklamayla DOSBox'ta çalıştırabilmesini sağlayan bir kabuk uzantısıdır. Bu sürüm, DOSBox 0.70 içerir ancak daha yeni bir DOSBox'u DosBlaster dizinlerinin içine kurarak bunu kolayca yükseltebilirsiniz.
+Description = DosBlaster, bir DOS uygulamasını DOSBox'ta sağ tıklamayla açtırılabilmesini olanaklı duruma getiren bir kabuk uzantısıdır. Bu sürüm DOSBox 0.70 içerir ancak daha yeni bir DOSBox'u DosBlaster dizinlerinin içine kurarak kolayca şimdikileştirilebilir.
 Size = 2,05 MB
 
 [Section.0422]

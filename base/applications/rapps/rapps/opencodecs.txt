@@ -1,5 +1,6 @@
 ; UTF-8
-; PL trans by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = xiph.org OpenCodecs
@@ -26,5 +27,5 @@ Description = Filtrele DirectShow pentru formatele de fișiere Ogg Vorbis, Speex
 Size = 2,53 Mo
 
 [Section.041f]
-Description = Ogg Vorbis, Speex, Theora, FLAC ve WebM kütük türleri için DirectShow süzgeçleri.
+Description = Ogg Vorbis, Speex, Theora, FLAC ve WebM kütük biçimleri için DirectShow süzgeçleri.
 Size = 2,53 MB

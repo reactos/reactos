@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Lazarus
@@ -28,4 +29,4 @@ Size = 112 Mo
 
 [Section.041f]
 Licence = Değiştirilmiş LGPL, GPL
-Description = Basarî ve basarî olmayan Nesne Paskal çizeylemleri oluşturmayı sağlayan, Özgür Paskal derleyicisini kullanarak çalıştırabilir kütük oluşturan bir çapraz platform tümleşik geliştirme ortamı.
+Description = Görmelik (GUI) ve görmelik olmayan Object Pascal izlenceleri oluşturmanızı sağlayan, çalıştırılabilir kütüğünüzü oluşturmak için Free Pascal derleyicisini kullanan bir çapraz platform bir tümleşik geliştirme ortamı (IDE).

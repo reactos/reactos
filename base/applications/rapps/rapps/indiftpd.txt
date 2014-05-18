@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = IndiFTPD
@@ -27,5 +28,5 @@ Size = 556 ko
 
 [Section.041f]
 Version = 1.0.9 Gelişme
-Description = IndiFTPD, bağımsız (bir tek çalıştırılabilir kütükten oluşan) bir FTP sunucusudur. Bu yazılım, çabucak çalışan bir sunucuya iye olmak isteyen, ancak dizgesinde bir sunucu kurmak/ayarlamak istemeyen veyâ dizgesine bir sunucu kuramayan/ayarlayamayan kullanıcılar için tasarlanmıştır.
+Description = IndiFTPD, bir tek çalıştırılabilir kütükten çalışan tek başına bir FTP sunucusudur. Bir kullanıcının, çabucak, çalışan bir sunucuya iye olmak istediği ve dizgesinde bir sunucu kurmak/yapılandırmak istemediği (veyâ bunu yapmaya izni olmadığı) durumlar için tasarlanmıştır.
 Size = 556 KB

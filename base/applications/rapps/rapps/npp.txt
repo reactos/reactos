@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Notepad++
@@ -20,6 +21,7 @@ Description = Un editor de text.
 [Section.040c]
 Description = Un éditeur de texte.
 Size = 7,3 Mo
+URLSite = http://notepad-plus-plus.org/fr/
 
 [Section.0410]
 Description = Un editor di testo.

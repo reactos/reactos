@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2004, 2006-2013 by                                      */
+/*  Copyright 1996-2004, 2006-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*  Copyright 2003 Huw D M Davies for Codeweavers                          */
 /*  Copyright 2007 Dmitry Timoshkov for Codeweavers                        */
@@ -743,8 +743,8 @@
 
       root->face_index = face_index;
 
-      root->face_flags = FT_FACE_FLAG_FIXED_SIZES |
-                         FT_FACE_FLAG_HORIZONTAL;
+      root->face_flags |= FT_FACE_FLAG_FIXED_SIZES |
+                          FT_FACE_FLAG_HORIZONTAL;
 
       if ( font->header.avg_width == font->header.max_width )
         root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
@@ -977,7 +977,7 @@
 
     font = face->font;
 
-    if ( !font ||
+    if ( !font                                                   ||
          glyph_index >= (FT_UInt)( FT_FACE( face )->num_glyphs ) )
     {
       error = FT_THROW( Invalid_Argument );
@@ -989,16 +989,26 @@
     if ( glyph_index > 0 )
       glyph_index--;                           /* revert to real index */
     else
-      glyph_index = font->header.default_char; /* the .notdef glyph */
+      glyph_index = font->header.default_char; /* the `.notdef' glyph  */
 
     new_format = FT_BOOL( font->header.version == 0x300 );
     len        = new_format ? 6 : 4;
 
-    /* jump to glyph entry */
-    p = font->fnt_frame + ( new_format ? 148 : 118 ) + len * glyph_index;
+    /* get glyph width and offset */
+    offset = ( new_format ? 148 : 118 ) + len * glyph_index;
+
+    if ( offset >= font->header.file_size - 2 - ( new_format ? 4 : 2 ) )
+    {
+      FT_TRACE2(( "invalid FNT offset\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Exit;
+    }
+
+    p = font->fnt_frame + offset;
 
     bitmap->width = FT_NEXT_SHORT_LE( p );
 
+    /* jump to glyph entry */
     if ( new_format )
       offset = FT_NEXT_ULONG_LE( p );
     else

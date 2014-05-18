@@ -347,7 +347,7 @@ static BOOL wglUseFontOutlines_common(HDC hdc,
         BYTE *buf;
         TTPOLYGONHEADER *pph;
         TTPOLYCURVE *ppc;
-        GLdouble *vertices = NULL;
+        GLdouble *vertices = NULL, *vertices_temp = NULL;
         int vertex_total = -1;
 
         if(unicode)
@@ -359,6 +359,9 @@ static BOOL wglUseFontOutlines_common(HDC hdc,
             goto error;
 
         buf = HeapAlloc(GetProcessHeap(), 0, needed);
+
+        if(!buf)
+            goto error;
 
         if(unicode)
             GetGlyphOutlineW(hdc, glyph, GGO_NATIVE, &gm, needed, buf, &identity);
@@ -393,7 +396,7 @@ static BOOL wglUseFontOutlines_common(HDC hdc,
         while(!vertices)
         {
             if(vertex_total != -1)
-                vertices = HeapAlloc(GetProcessHeap(), 0, vertex_total * 3 * sizeof(GLdouble));
+                vertices_temp = vertices = HeapAlloc(GetProcessHeap(), 0, vertex_total * 3 * sizeof(GLdouble));
             vertex_total = 0;
 
             pph = (TTPOLYGONHEADER*)buf;
@@ -521,8 +524,11 @@ error_in_list:
             pgluTessEndPolygon(tess);
         funcs->Translated((GLdouble)gm.gmCellIncX / em_size, (GLdouble)gm.gmCellIncY / em_size, 0.0);
         funcs->EndList();
+
         HeapFree(GetProcessHeap(), 0, buf);
-        HeapFree(GetProcessHeap(), 0, vertices);
+
+        if(vertices_temp)
+            HeapFree(GetProcessHeap(), 0, vertices_temp);
     }
 
  error:

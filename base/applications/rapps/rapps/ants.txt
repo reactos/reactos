@@ -1,10 +1,12 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = Ants
 Version = N/A
 Licence = Freeware
-Description = A card strategic game. You're building your own castle and trying to destroy enemy castle. You need a ZIP decompression program to install it.
+Description = A card strategic game. Build your own castle and try to destroy enemy castle. You need a ZIP decompression program to install it.
 Size = 632 kB
 Category = 4
 URLSite = http://peter.hostuju.cz/index.htm
@@ -12,21 +14,21 @@ URLDownload = http://petr.hostuju.cz/program/download/ANTS.zip
 CDPath = none
 
 [Section.0407]
-Description = Ein strategisches Kartenspiel. Sie bauen Ihr eigenes Schloss und versuchen, die gegnerische Burg zu zerstören. Sie benötigen ein ZIP-Programm, um es zu installieren.
+Description = Ein strategisches Kartenspiel. Sie bauen Ihr eigenes Schloss und versuchen, die gegnerische Burg zu zerstören. Sie benötigen ein ZIP-Programm, um es zu installieren. (FIXME)
 
 [Section.0410]
 Description = Un gioco di carte strategico. Costruisci il tuo castello e prova a distruggere il castello nemico. Necessita di un programma di estrazione ZIP per essere installato.
 
 [Section.0415]
-Description = Karciana gra strategiczna. Budujesz zamek, przy okazji próbujesz zniszczyć zamek wroga. Wymaga programu archiwizującego do wypakowania.
+Description = Karciana gra strategiczna. Budujesz zamek, przy okazji próbujesz zniszczyć zamek wroga. Wymaga programu archiwizującego do wypakowania. (FIXME)
 
 [Section.0418]
 Licence = Gratuită
-Description = Un joc strategic de cărți. Jucătorul își va construi un castel și încerca să distrugă castelele oponenților. Este necesar un utilitar de dezarhivare ZIP pentru a instala acest joc.
+Description = Un joc strategic de cărți. Jucătorul își va construi un castel și încerca să distrugă castelele oponenților. Este necesar un utilitar de dezarhivare ZIP pentru a instala acest joc. (FIXME)
 Size = 632 ko
 
 [Section.041f]
-Name = Karıncalar
+Version = Yok
 Licence = Ücretsiz
-Description = Bir kartlarla izlem oyunu. Kalenizi bitirmeye veyâ rakip kaleyi yıkmaya çalışın. Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
+Description = Bir kartlarla izlem oyunu. Kendi kurganınızı yapınız ve rakip kaleyi yıkmaya çalışınız. Kurmak için bir ZIP çıkarma izlencesi gerekir.
 Size = 632 KB

@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Abyss Web server X1
@@ -40,7 +41,7 @@ Size = 2,1 Mo
 [Section.041f]
 Name = Abyss Umûmî Ağ Sunucusu X1
 Licence = Ücretsiz
-Description = Abyss Umûmî Ağ Sunucusu, bilgisayarda Umûmî Ağ sitelerinin yayınlanmasını sağlar. Abyss Umûmî Ağ Sunucusu, güvenli SSL/TLS bağlantılarını (HTTPS), Umûmî Ağ uygulayım biliminin geniş yelpâzesiyle destekler. Abyss Umûmî Ağ Sunucusu; MySQL, SQLite, MS SQL Server, MS Access, ve Oracle gibi veri tabanlarını destekleyen gelişmiş PHP, Perl, Python, ASP, ASP.NET ve Rails üzerinde Ruby Umûmî Ağ uygulamalarını çalıştırabilir.
+Description = Abyss Umûmî Ağ Sunucusu, bilgisayarınızda Umûmî Ağ sitelerinizin barındırılmasına olanak sağlar. Umûmî Ağ uygulayım biliminin bir geniş yelpâzesinin yanı sıra güvenli SSL/TLS bağlantılarını (HTTPS) destekler. Ayrıca MySQL, SQLite, MS SQL Server, MS Access, ve Oracle gibi veri tabanlarıyla desteklenebilen gelişmiş PHP, Perl, Python, ASP, ASP.NET ve Rails üzerinde Ruby Umûmî Ağ uygulamalarını çalıştırabilir.
 Size = 2,1 MB
 
 [Section.0422]

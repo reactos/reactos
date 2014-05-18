@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos.c
- * PURPOSE:         VDM DOS Kernel
+ * FILE:            dos/dos32krnl/bios.c
+ * PURPOSE:         DOS32 Bios
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -30,6 +30,8 @@ CHAR DosReadCharacter(WORD FileHandle)
 {
     CHAR Character = '\0';
     WORD BytesRead;
+
+    DPRINT("DosReadCharacter\n");
 
     /* Use the file reading function */
     DosReadFile(FileHandle, &Character, 1, &BytesRead);

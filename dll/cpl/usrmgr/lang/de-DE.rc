@@ -1,10 +1,5 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-/*
- * Attention Translators:
- *   DO NOT TRANSLATE THESE RESOURCES YET!
- */
-
 /* Dialogs */
 
 IDD_USERS DIALOGEX 0, 0, 252, 223
@@ -54,7 +49,7 @@ BEGIN
     AUTOCHECKBOX "Benutzer muss das Passwort bei der ersten Anmeldung ändern", IDC_USER_GENERAL_FORCE_CHANGE, 7, 82, 230, 10
     AUTOCHECKBOX "Benutzer kann das Passwort nicht ändern", IDC_USER_GENERAL_CANNOT_CHANGE, 7, 95, 210, 10
     AUTOCHECKBOX "Passwort läuft nie ab", IDC_USER_GENERAL_NEVER_EXPIRES, 7, 108, 210, 10
-    AUTOCHECKBOX "Konto ist deativiert", IDC_USER_GENERAL_DISABLED, 7, 121, 210, 10
+    AUTOCHECKBOX "Konto ist deaktiviert", IDC_USER_GENERAL_DISABLED, 7, 121, 210, 10
     AUTOCHECKBOX "Konto ist gesperrt", IDC_USER_GENERAL_LOCKED, 7, 134, 210, 10
 END
 
