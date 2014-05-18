@@ -275,10 +275,10 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                                   EnumRootKey,
                                   &DeviceNode->InstancePath,
                                   KEY_READ);
+    ZwClose(EnumRootKey);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
-        ZwClose(EnumRootKey);
         return Status;
     }
     
@@ -330,11 +330,16 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                                           ClassKey,
                                           &Properties,
                                           KEY_READ);
+            ZwClose(ClassKey);
             if (!NT_SUCCESS(Status))
             {
                 /* No properties */
                 DPRINT("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
                 PropertiesKey = NULL;
+            }
+            else
+            {
+                ZwClose(PropertiesKey);
             }
         }
         
@@ -343,11 +348,22 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     }
     
     /* Do ReactOS-style setup */
-    IopAttachFilterDrivers(DeviceNode, TRUE);
+    Status = IopAttachFilterDrivers(DeviceNode, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        IopRemoveDevice(DeviceNode);
+        return Status;
+    }
     Status = IopInitializeDevice(DeviceNode, DriverObject);
     if (NT_SUCCESS(Status))
     {
-        IopAttachFilterDrivers(DeviceNode, FALSE);
+        Status = IopAttachFilterDrivers(DeviceNode, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            IopRemoveDevice(DeviceNode);
+            return Status;
+        }
+            
         Status = IopStartDevice(DeviceNode);
     }
     
