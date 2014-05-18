@@ -926,6 +926,10 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         return ERROR_NOT_SUPPORTED;
     }
 
+    /* NULL-terminate the command line by removing the return carriage character */
+    while (*CommandLine && *CommandLine != '\r') CommandLine++;
+    *(LPSTR)CommandLine = '\0';
+
     /* Open a handle to the executable */
     FileHandle = CreateFileA(ExecutablePath,
                              GENERIC_READ,

@@ -119,8 +119,8 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
             STARTUPINFOA StartupInfo;
             PROCESS_INFORMATION ProcessInformation;
 
-            /* NULL-terminate the command by removing the return carriage character */
-            while (*CmdPtr != '\r') CmdPtr++;
+            /* NULL-terminate the command line by removing the return carriage character */
+            while (*CmdPtr && *CmdPtr != '\r') CmdPtr++;
             *CmdPtr = '\0';
 
             DPRINT1("CMD Run Command '%s'\n", Command);
