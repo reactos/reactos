@@ -284,14 +284,13 @@ BaseCheckVDM(IN ULONG BinaryType,
     if (StartupInfo->dwFlags & STARTF_USESTDHANDLES)
     {
         /* Set the standard handles */
-        CheckVdm->StdIn = StartupInfo->hStdInput;
+        CheckVdm->StdIn  = StartupInfo->hStdInput;
         CheckVdm->StdOut = StartupInfo->hStdOutput;
         CheckVdm->StdErr = StartupInfo->hStdError;
     }
 
     /* Allocate memory for the ANSI strings */
-
-    /* For the command line we need to add two characters needed for newline '\r\n' */
+    // We need to add the two newline characters '\r\n' to the command line
     AnsiCmdLine = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CmdLen + 2);
     AnsiAppName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->AppLen);
     AnsiCurDirectory = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CurDirectoryLen);
@@ -325,11 +324,11 @@ BaseCheckVDM(IN ULONG BinaryType,
                         CheckVdm->CmdLen,
                         NULL,
                         NULL);
-    /* Add a needed newline '\r\n' */
-    CheckVdm->CmdLen--; // FIXME....
-    AnsiCmdLine[CheckVdm->CmdLen    ] = '\r';
-    AnsiCmdLine[CheckVdm->CmdLen + 1] = '\n';
-    CheckVdm->CmdLen += 2;
+    /* Add a needed newline '\r\n' and NULL-terminate */
+    CheckVdm->CmdLen--; // Rewind back to the NULL character
+    AnsiCmdLine[CheckVdm->CmdLen++] = '\r';
+    AnsiCmdLine[CheckVdm->CmdLen++] = '\n';
+    AnsiCmdLine[CheckVdm->CmdLen++] = 0;
 
     /* Convert the short application name into an ANSI string */
     WideCharToMultiByte(CP_ACP,
