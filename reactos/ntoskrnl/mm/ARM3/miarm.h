@@ -52,6 +52,7 @@
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 #define MI_DEFAULT_SYSTEM_PTE_COUNT             50000
+#define MI_MAX_ZERO_BITS                        21
 
 #endif /* !_M_AMD64 */
 
