@@ -20,14 +20,16 @@
 
 #include "precomp.h"
 
+static HINSTANCE hRShell = NULL;
+
 typedef HRESULT(*PSTARTMENU_CONSTRUCTOR)(REFIID riid, void **ppv);
 
-HRESULT
-CStartMenu_Constructor(
-    REFIID riid,
-    void **ppv)
+HRESULT CStartMenu_Constructor(REFIID riid, void **ppv)
 {
-    HINSTANCE hRShell = LoadLibraryW(L"rshell.dll");
+    if (!hRShell)
+    {
+        hRShell = LoadLibraryW(L"rshell.dll");
+    }
 
     if (hRShell)
     {
@@ -49,7 +51,12 @@ typedef HANDLE(WINAPI *PSHCREATEDESKTOP)(IShellDesktopTray *ShellDesk);
 
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {
-    HINSTANCE hRShell = LoadLibraryW(L"rshell.dll");
+    HINSTANCE hFallback;
+
+    if (!hRShell)
+    {
+        hRShell = LoadLibraryW(L"rshell.dll");
+    }
 
     if (hRShell)
     {
@@ -60,11 +67,11 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
         }
     }
 
-    hRShell = LoadLibraryW(L"shell32.dll");
+    hFallback = GetModuleHandleW(L"shell32.dll");
 
-    if (hRShell)
+    if (hFallback)
     {
-        PSHCREATEDESKTOP func = (PSHCREATEDESKTOP)GetProcAddress(hRShell, "SHCreateDesktop");
+        PSHCREATEDESKTOP func = (PSHCREATEDESKTOP) GetProcAddress(hFallback, (LPCSTR) 200);
         if (func)
         {
             return func(ShellDesk);
@@ -78,7 +85,12 @@ typedef BOOL(WINAPI *PSHDESKTOPMESSAGELOOP)(HANDLE hDesktop);
 
 BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
 {
-    HINSTANCE hRShell = LoadLibraryW(L"rshell.dll");
+    HINSTANCE hFallback;
+
+    if (!hRShell)
+    {
+        hRShell = LoadLibraryW(L"rshell.dll");
+    }
 
     if (hRShell)
     {
@@ -89,11 +101,11 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
         }
     }
 
-    hRShell = LoadLibraryW(L"shell32.dll");
+    hFallback = GetModuleHandleW(L"shell32.dll");
 
-    if (hRShell)
+    if (hFallback)
     {
-        PSHDESKTOPMESSAGELOOP func = (PSHDESKTOPMESSAGELOOP)GetProcAddress(hRShell, "SHDesktopMessageLoop");
+        PSHDESKTOPMESSAGELOOP func = (PSHDESKTOPMESSAGELOOP) GetProcAddress(hFallback, (LPCSTR) 201);
         if (func)
         {
             return func(hDesktop);
@@ -107,7 +119,12 @@ typedef DWORD(WINAPI* PWINLIST_INIT)(void);
 
 DWORD WINAPI WinList_Init(void)
 {
-    HINSTANCE hRShell = LoadLibraryW(L"rshell.dll");
+    HINSTANCE hFallback;
+
+    if (!hRShell)
+    {
+        hRShell = LoadLibraryW(L"rshell.dll");
+    }
 
     if (hRShell)
     {
@@ -118,11 +135,11 @@ DWORD WINAPI WinList_Init(void)
         }
     }
 
-    hRShell = LoadLibraryW(L"shdocvw.dll");
+    hFallback = GetModuleHandleW(L"shdocvw.dll");
 
-    if (hRShell)
+    if (hFallback)
     {
-        PWINLIST_INIT func = (PWINLIST_INIT)GetProcAddress(hRShell, "WinList_Init");
+        PWINLIST_INIT func = (PWINLIST_INIT) GetProcAddress(hFallback, (LPCSTR) 110);
         if (func)
         {
             return func();
@@ -136,7 +153,12 @@ typedef void (WINAPI *PSHELLDDEINIT)(BOOL bInit);
 
 void WINAPI ShellDDEInit(BOOL bInit)
 {
-    HINSTANCE hRShell = LoadLibraryW(L"rshell.dll");
+    HINSTANCE hFallback;
+
+    if (!hRShell)
+    {
+        hRShell = LoadLibraryW(L"rshell.dll");
+    }
 
     if (hRShell)
     {
@@ -148,11 +170,11 @@ void WINAPI ShellDDEInit(BOOL bInit)
         }
     }
 
-    hRShell = LoadLibraryW(L"shell32.dll");
+    hFallback = GetModuleHandleW(L"shell32.dll");
 
-    if (hRShell)
+    if (hFallback)
     {
-        PSHELLDDEINIT func = (PSHELLDDEINIT)GetProcAddress(hRShell, "ShellDDEInit");
+        PSHELLDDEINIT func = (PSHELLDDEINIT) GetProcAddress(hFallback, (LPCSTR) 188);
         if (func)
         {
             func(bInit);
