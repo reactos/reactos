@@ -400,7 +400,7 @@ Bus_PDO_QueryDeviceId(
     PIO_STACK_LOCATION      stack;
     PWCHAR                  buffer, src;
     WCHAR                   temp[256];
-    ULONG                   length;
+    ULONG                   length, i;
     NTSTATUS                status = STATUS_SUCCESS;
     struct acpi_device *Device;
 
@@ -490,11 +490,18 @@ Bus_PDO_QueryDeviceId(
 
         /* This is a REG_MULTI_SZ value */
         length = 0;
+        status = STATUS_NOT_SUPPORTED;
 
         /* See comment in BusQueryDeviceID case */
         if (DeviceData->AcpiHandle)
         {
             acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
+            
+            if (!Device->flags.hardware_id)
+            {
+                /* We don't have the ID to satisfy this request */
+                break;
+            }
 
             DPRINT("Device name: %s\n", Device->pnp.device_name);
             DPRINT("Hardware ID: %s\n", Device->pnp.hardware_id);
@@ -557,11 +564,17 @@ Bus_PDO_QueryDeviceId(
         {
             acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
+            if (!Device->flags.hardware_id)
+            {
+                /* We don't have the ID to satisfy this request */
+                break;
+            }
+            
+            DPRINT("Device name: %s\n", Device->pnp.device_name);
+            DPRINT("Hardware ID: %s\n", Device->pnp.hardware_id);
+            
             if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
             {
-                DPRINT("Device name: %s\n", Device->pnp.device_name);
-                DPRINT("Hardware ID: %s\n", Device->pnp.hardware_id);
-
                 length += swprintf(&temp[length],
                                    L"ACPI\\%hs",
                                    Device->pnp.hardware_id);
@@ -572,21 +585,43 @@ Bus_PDO_QueryDeviceId(
                                    Device->pnp.hardware_id);
                 temp[length++] = UNICODE_NULL;
                 temp[length++] = UNICODE_NULL;
-
-                NT_ASSERT(length * sizeof(WCHAR) <= sizeof(temp));
-
-                buffer = ExAllocatePoolWithTag (PagedPool, length * sizeof(WCHAR), 'IPCA');
-                if (!buffer)
-                {
-                    status = STATUS_INSUFFICIENT_RESOURCES;
-                    break;
-                }
-
-                RtlCopyMemory (buffer, temp, length * sizeof(WCHAR));
-                Irp->IoStatus.Information = (ULONG_PTR) buffer;
-                DPRINT("BusQueryHardwareIDs: %ls\n",buffer);
-                status = STATUS_SUCCESS;
             }
+            else if (Device->flags.compatible_ids)
+            {
+                for (i = 0; i < Device->pnp.cid_list->Count; i++)
+                {
+                    length += swprintf(&temp[length],
+                                   L"ACPI\\%hs",
+                                   Device->pnp.cid_list->Ids[i].String);
+                    temp[length++] = UNICODE_NULL;
+                    
+                    length += swprintf(&temp[length],
+                                   L"*%hs",
+                                   Device->pnp.cid_list->Ids[i].String);
+                    temp[length++] = UNICODE_NULL;
+                }
+                
+                temp[length++] = UNICODE_NULL;
+            }
+            else
+            {
+                /* No compatible IDs */
+                break;
+            }
+            
+            NT_ASSERT(length * sizeof(WCHAR) <= sizeof(temp));
+
+            buffer = ExAllocatePoolWithTag (PagedPool, length * sizeof(WCHAR), 'IPCA');
+            if (!buffer)
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            RtlCopyMemory (buffer, temp, length * sizeof(WCHAR));
+            Irp->IoStatus.Information = (ULONG_PTR) buffer;
+            DPRINT("BusQueryCompatibleIDs: %ls\n",buffer);
+            status = STATUS_SUCCESS;
         }
         break;
 
