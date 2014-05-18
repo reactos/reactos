@@ -887,9 +887,10 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     ASSERT(MappingPte <= MiHighestUserPte);
 
     /* Start fresh */
-    *NewPte = ValidKernelPte;
+    NewPte->u.Long = 0;
 
     /* Set the protection and page */
+    NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
