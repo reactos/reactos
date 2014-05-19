@@ -860,12 +860,14 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = menuOleWindow->GetWindow(&fMenuBandWindow);
     fMenuBar.Attach(menuBar.Detach());                  // transfer the ref count
 
+#if 0
     /* Create and attach the brand/logo to the rebar */
     hResult = CreateBrandBand(&logoBar);
     if (FAILED(hResult))
         return hResult;
     AddDockItem(logoBar, ITBBID_BRANDBAND, CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
     fLogoBar.Attach(logoBar.Detach());                  // transfer the ref count
+#endif
 
     /* Create and attach the standard toolbar to the rebar */
     hResult = CreateToolsBar(&toolsBar);

@@ -287,7 +287,7 @@ Switch to a new bar when it receives an Exec(CGID_IDeskBand, 1, 1, vaIn, NULL);
 */
 
 class CShellBrowser :
-    public CWindowImpl<CShellBrowser, CWindow, CControlWinTraits>,
+    public CWindowImpl<CShellBrowser, CWindow, CFrameWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellBrowser,
     public IDropTarget,
@@ -732,7 +732,6 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
     CComPtr<IPersistStreamInit>             persistStreamInit;
     CComPtr<IOleCommandTarget>              commandTarget;
     CComPtr<IObjectWithSite>                objectSite;
-    RECT                                    bounds = {0, 0, 800, 591};
     HRESULT                                 hResult;
 
     _AtlInitialConstruct();
@@ -743,7 +742,7 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
     }
 
     // create window
-    Create(HWND_DESKTOP, bounds, NULL, WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0U);
+    Create(HWND_DESKTOP);
     if (m_hWnd == NULL)
         return E_FAIL;
 
@@ -808,11 +807,7 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
                     _AtlBaseModule.GetModuleInstance(), 0);
     fStatusBarVisible = true;
 
-    FOLDERSETTINGS                          newFolderSettings;
-
     // browse 
-    newFolderSettings.ViewMode = FVM_LIST;
-    newFolderSettings.fFlags = 0;
     hResult = BrowseToPIDL(pidl, BTP_UPDATE_NEXT_HISTORY);
     if (FAILED(hResult))
         return hResult;
@@ -831,7 +826,7 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     // called by shell view to browse to new folder
     // also called by explorer band to navigate to new folder
     hResult = SHBindToFolder(pidl, &newFolder);
-    newFolderSettings.ViewMode = FVM_LIST;
+    newFolderSettings.ViewMode = FVM_ICON;
     newFolderSettings.fFlags = 0;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
     if (FAILED(hResult))
