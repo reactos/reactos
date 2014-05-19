@@ -1419,6 +1419,8 @@ void CDefView::DoActivate(UINT uState)
                 {
                     MergeFileMenu(mii.hSubMenu);
                 }
+
+                ::SetFocus(m_hWndList);
             }
 
             TRACE("-- before fnSetMenuSB\n");

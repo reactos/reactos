@@ -41,7 +41,8 @@ TODO:
 
 CAddressEditBox::CAddressEditBox() :
     fCombobox(NULL, this, 1),
-    fEditWindow(NULL, this, 1)
+    fEditWindow(NULL, this, 1),
+    fSite(NULL)
 {
 }
 
@@ -69,6 +70,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editContro
 {
     fCombobox.SubclassWindow(comboboxEx);
     fEditWindow.SubclassWindow(editControl);
+    fSite = param18;
     return S_OK;
 }
 
@@ -82,7 +84,28 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 {
-    return E_NOTIMPL;
+    WCHAR address[4096];
+    ULONG eaten;
+    LPITEMIDLIST pidl;
+    ULONG attributes;
+    HRESULT hr;
+    HWND topLevelWindow;
+
+    CComPtr<IShellBrowser> pisb;
+    hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+
+    IUnknown_GetWindow(pisb, &topLevelWindow);
+
+    GetWindowText(fCombobox.m_hWnd, address, 4095);
+
+    CComPtr<IShellFolder> psfDesktop;
+    hr = SHGetDesktopFolder(&psfDesktop);
+    hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidl, &attributes);
+    if (SUCCEEDED(hr))
+    {
+        hr = pisb->BrowseObject(pidl, 0);
+    }
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)

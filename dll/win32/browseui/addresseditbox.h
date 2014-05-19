@@ -35,6 +35,7 @@ class CAddressEditBox :
 private:
     CContainedWindow                        fCombobox;
     CContainedWindow                        fEditWindow;
+    CComPtr<IUnknown> fSite;
 public:
     CAddressEditBox();
     ~CAddressEditBox();
