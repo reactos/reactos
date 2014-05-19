@@ -116,8 +116,9 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
         case 0xC0:
         {
             /* Return the BIOS ROM Configuration Table address in ES:BX */
-            setES(HIWORD(Bct));
-            setBX(LOWORD(Bct));
+            // The BCT is found at F000:E6F5 for 100% compatible BIOSes.
+            setES(BIOS_SEGMENT);
+            setBX(0xE6F5);
 
             /* Call successful; clear CF */
             setAH(0x00);
