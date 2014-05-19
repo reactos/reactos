@@ -22,6 +22,8 @@
 
 #define BIOS_EQUIPMENT_LIST     0x2C // HACK: Disable FPU for now
 
+#pragma pack(push, 1)
+
 /*
  * BIOS Data Area at 0040:XXXX
  *
@@ -29,7 +31,6 @@
  * and: http://www.bioscentral.com/misc/bda.htm
  * for more information.
  */
-#pragma pack(push, 1)
 typedef struct
 {
     WORD SerialPorts[4];                        // 0x00
@@ -96,13 +97,30 @@ typedef struct
     BYTE Reserved17[15];                        // 0x121
     BYTE Reserved18[3];                         // 0x130
 } BIOS_DATA_AREA, *PBIOS_DATA_AREA;
-#pragma pack(pop)
-
 C_ASSERT(sizeof(BIOS_DATA_AREA) == 0x133);
+
+/*
+ * BIOS Configuration Table at F000:E6F5 for 100% compatible BIOSes.
+ *
+ * See: http://www.ctyme.com/intr/rb-1594.htm
+ * for more information.
+ */
+typedef struct _BIOS_CONFIG_TABLE
+{
+    WORD    Length;                             // 0x00
+    BYTE    Model;                              // 0x02
+    BYTE    SubModel;                           // 0x03
+    BYTE    BiosRevision;                       // 0x04
+    BYTE    BiosFeature[5];                     // 0x05 -- 0x09
+    // Other BIOSes may extend this table. We don't.
+} BIOS_CONFIG_TABLE, *PBIOS_CONFIG_TABLE;
+
+#pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 
 extern PBIOS_DATA_AREA Bda;
+extern PBIOS_CONFIG_TABLE Bct;
 
 VOID WINAPI BiosEquipmentService(LPWORD Stack);
 VOID WINAPI BiosGetMemorySize(LPWORD Stack);
