@@ -15,17 +15,15 @@
 /* 32-bit Interrupt Identifiers */
 #define EMULATOR_MAX_INT32_NUM  0xFF + 1
 
-#define INT_HANDLER_OFFSET 0x1000
-#define COMMON_STUB_OFFSET 0x2000
-
-
 typedef struct _CALLBACK16
 {
     ULONG  TrampolineFarPtr; // Where the trampoline zone is placed
+    ULONG  TrampolineSize;   // Size of the trampoline zone
     USHORT Segment;
     USHORT NextOffset;
 } CALLBACK16, *PCALLBACK16;
 
+extern const ULONG Int16To32StubSize;
 
 /* FUNCTIONS ******************************************************************/
 

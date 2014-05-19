@@ -301,18 +301,14 @@ static VOID BiosHwSetup(VOID)
 static VOID InitializeBiosInt32(VOID)
 {
     USHORT i;
-    // USHORT Offset = 0;
 
     /* Initialize the callback context */
     InitializeContext(&BiosContext, BIOS_SEGMENT, 0x0000);
 
-    /* Register the BIOS 32-bit Interrupts */
+    /* Register the default BIOS 32-bit Interrupts */
     for (i = 0x00; i <= 0xFF; i++)
     {
-        // Offset += RegisterInt32(MAKELONG(Offset, BIOS_SEGMENT), i, NULL, NULL);
-        BiosContext.NextOffset += RegisterInt32(MAKELONG(BiosContext.NextOffset,
-                                                         BiosContext.Segment),
-                                                i, NULL, NULL);
+        RegisterBiosInt32(i, NULL);
     }
 
     /* Initialize the exception vector interrupts to a default Exception handler */
