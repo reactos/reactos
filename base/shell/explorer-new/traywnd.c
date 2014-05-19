@@ -768,15 +768,6 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
 
         /* FIXME: Are there more flags? */
 
-        if (This->hWnd != NULL)
-            SetWindowPos (This->hWnd,
-                          This->AlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
-                          0,
-                          0,
-                          0,
-                          0,
-                          SWP_NOMOVE | SWP_NOSIZE);
-
         if (sr.Position > ABE_BOTTOM)
             This->Position = ABE_BOTTOM;
         else
@@ -794,6 +785,7 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
     else
     {
         This->Position = ABE_BOTTOM;
+        This->AlwaysOnTop = TRUE;
 
         /* Use the minimum size of the taskbar, we'll use the start
            button as a minimum for now. Make sure we calculate the
@@ -812,6 +804,15 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
                                               &rcScreen,
                                               MONITOR_DEFAULTTOPRIMARY);
     }
+
+    if (This->hWnd != NULL)
+        SetWindowPos(This->hWnd,
+        This->AlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
+        0,
+        0,
+        0,
+        0,
+        SWP_NOMOVE | SWP_NOSIZE);
 
     /* Determine a minimum tray window rectangle. The "client" height is
        zero here since we cannot determine an optimal minimum width when
@@ -2151,6 +2152,19 @@ TrayWndProc(IN HWND hwnd,
 
         switch (uMsg)
         {
+            case WM_DISPLAYCHANGE:
+
+                /* Load the saved tray window settings */
+                ITrayWindowImpl_RegLoadSettings(This);
+
+                /* Move the tray window to the right position and resize it if neccessary */
+                ITrayWindowImpl_CheckTrayWndPosition(This);
+
+                /* Align all controls on the tray window */
+                ITrayWindowImpl_AlignControls(This, NULL);
+
+                break;
+
             case WM_COPYDATA:
             {
                 if (This->hwndTrayNotify)
