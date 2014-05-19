@@ -525,6 +525,7 @@ LRESULT CAddressBand::OnNotifyClick(WPARAM wParam, NMHDR *notifyHeader, BOOL &bH
     if (notifyHeader->hwndFrom == fGoButton)
     {
         fAddressEditBox->ParseNow(0);
+        fAddressEditBox->Execute(0);
     }
     return 0;
 }

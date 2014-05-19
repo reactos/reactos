@@ -826,6 +826,9 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     // called by shell view to browse to new folder
     // also called by explorer band to navigate to new folder
     hResult = SHBindToFolder(pidl, &newFolder);
+    if (FAILED(hResult))
+        return hResult;
+
     newFolderSettings.ViewMode = FVM_ICON;
     newFolderSettings.fFlags = 0;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);

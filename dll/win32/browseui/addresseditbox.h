@@ -35,7 +35,9 @@ class CAddressEditBox :
 private:
     CContainedWindow                        fCombobox;
     CContainedWindow                        fEditWindow;
-    CComPtr<IUnknown> fSite;
+    DWORD                                   fAdviseCookie;
+    CComPtr<IUnknown>                       fSite;
+    LPITEMIDLIST                            pidlLastParsed;
 public:
     CAddressEditBox();
     ~CAddressEditBox();
