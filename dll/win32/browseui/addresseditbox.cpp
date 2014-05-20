@@ -78,8 +78,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editContro
     HRESULT hResult = IUnknown_QueryService(param18, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
     if (SUCCEEDED(hResult))
     {
-        if (SUCCEEDED(hResult))
-            hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
+        hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
     }
 
     return hResult;

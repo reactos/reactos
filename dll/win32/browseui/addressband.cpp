@@ -217,8 +217,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     hResult = IUnknown_QueryService(pUnkSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
     if (SUCCEEDED(hResult))
     {
-        if (SUCCEEDED(hResult))
-            hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
+        hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
     }
 
     return hResult;
