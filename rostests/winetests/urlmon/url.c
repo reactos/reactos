@@ -2818,6 +2818,7 @@ static BOOL test_RegisterBindStatusCallback(void)
 #define BINDTEST_ABORT_START        0x0400
 #define BINDTEST_ABORT_PROGRESS     0x0800
 #define BINDTEST_ASYNC_SWITCH       0x1000
+#define BINDTEST_ALLOW_FINDINGRESOURCE  0x2000
 
 static void init_bind_test(int protocol, DWORD flags, DWORD t)
 {
@@ -2893,9 +2894,11 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
     MSG msg;
     IBindStatusCallback *previousclb;
     IUnknown *unk = (IUnknown*)0x00ff00ff;
+    BOOL allow_finding_resource;
     IBinding *bind;
 
     init_bind_test(protocol, flags, t);
+    allow_finding_resource = (flags & BINDTEST_ALLOW_FINDINGRESOURCE) != 0;
 
     if(no_callback) {
         hres = CreateBindCtx(0, &bctx);
@@ -2975,7 +2978,7 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
                 SET_EXPECT(BeginningTransaction);
                 SET_EXPECT(QueryInterface_IHttpNegotiate2);
                 SET_EXPECT(GetRootSecurityId);
-                if(http_is_first)
+                if(http_is_first || allow_finding_resource)
                     SET_EXPECT(OnProgress_FINDINGRESOURCE);
                 SET_EXPECT(OnProgress_CONNECTING);
             }
@@ -3133,6 +3136,8 @@ static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
                     CLEAR_CALLED(OnProgress_CONNECTING);
                 }
             }else if(!abort_start) {
+                if(allow_finding_resource)
+                    CLEAR_CALLED(OnProgress_FINDINGRESOURCE);
                 /* IE7 does call this */
                 CLEAR_CALLED(OnProgress_CONNECTING);
             }
@@ -3959,7 +3964,7 @@ START_TEST(url)
         test_BindToObject(HTTP_TEST, 0, S_OK);
 
         trace("http test (short response)...\n");
-        test_BindToStorage(HTTP_TEST, BINDTEST_HTTPRESPONSE, TYMED_ISTREAM);
+        test_BindToStorage(HTTP_TEST, BINDTEST_HTTPRESPONSE|BINDTEST_ALLOW_FINDINGRESOURCE, TYMED_ISTREAM);
 
         trace("http test (short response, to object)...\n");
         test_BindToObject(HTTP_TEST, 0, S_OK);
@@ -3973,7 +3978,7 @@ START_TEST(url)
         test_BindToStorage(HTTP_TEST, BINDTEST_ABORT_START, TYMED_FILE);
 
         trace("http test (abort progress)...\n");
-        test_BindToStorage(HTTP_TEST, BINDTEST_ABORT_PROGRESS, TYMED_FILE);
+        test_BindToStorage(HTTP_TEST, BINDTEST_ABORT_PROGRESS|BINDTEST_ALLOW_FINDINGRESOURCE, TYMED_FILE);
 
         trace("emulated http test...\n");
         test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
@@ -4086,3 +4091,4 @@ START_TEST(url)
     CloseHandle(complete_event2);
     CoUninitialize();
 }
+
