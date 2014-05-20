@@ -172,6 +172,32 @@ static CONST COLORREF VgaDefaultPalette[VGA_MAX_COLORS] =
 #endif
 
 /*
+ * Default 16-color palette for foreground and background
+ * (corresponding flags in comments).
+ * Taken from subsystems/win32/winsrv/consrv/frontends/gui/conwnd.c
+ */
+static const COLORREF ConsoleColors[16] =
+{
+    RGB(0, 0, 0),       // (Black)
+    RGB(0, 0, 128),     // BLUE
+    RGB(0, 128, 0),     // GREEN
+    RGB(0, 128, 128),   // BLUE  | GREEN
+    RGB(128, 0, 0),     // RED
+    RGB(128, 0, 128),   // BLUE  | RED
+    RGB(128, 128, 0),   // GREEN | RED
+    RGB(192, 192, 192), // BLUE  | GREEN | RED
+
+    RGB(128, 128, 128), // (Grey)  INTENSITY
+    RGB(0, 0, 255),     // BLUE  | INTENSITY
+    RGB(0, 255, 0),     // GREEN | INTENSITY
+    RGB(0, 255, 255),   // BLUE  | GREEN | INTENSITY
+    RGB(255, 0, 0),     // RED   | INTENSITY
+    RGB(255, 0, 255),   // BLUE  | RED   | INTENSITY
+    RGB(255, 255, 0),   // GREEN | RED   | INTENSITY
+    RGB(255, 255, 255)  // BLUE  | GREEN | RED | INTENSITY
+};
+
+/*
  * Console interface -- VGA-mode-agnostic
  */
 typedef struct _CHAR_CELL
@@ -184,6 +210,7 @@ C_ASSERT(sizeof(CHAR_CELL) == 2);
 static LPVOID ConsoleFramebuffer = NULL; // Active framebuffer, points to
                                          // either TextFramebuffer or a valid
                                          // graphics framebuffer.
+static HPALETTE TextPaletteHandle = NULL;
 static HPALETTE PaletteHandle = NULL;
 
 static HANDLE StartEvent = NULL;
@@ -774,7 +801,7 @@ static VOID VgaWriteCrtc(BYTE Data)
 
 static VOID VgaWriteDac(BYTE Data)
 {
-    INT PaletteIndex;
+    INT i, PaletteIndex;
     PALETTEENTRY Entry;
 
     /* Set the value */
@@ -789,8 +816,20 @@ static VOID VgaWriteDac(BYTE Data)
     Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 2]);
     Entry.peFlags = 0;
 
-    /* Update the palette entry and set the palette change flag */
+    /* Update the palette entry */
     SetPaletteEntries(PaletteHandle, PaletteIndex, 1, &Entry);
+
+    /* Check which text palette entries are affected */
+    for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
+    {
+        if (VgaAcRegisters[i] == PaletteIndex)
+        {
+            /* Update the text palette entry */
+            SetPaletteEntries(TextPaletteHandle, i, 1, &Entry);
+        }
+    }
+
+    /* Set the palette changed flag */
     PaletteChanged = TRUE;
 
     /* Update the index */
@@ -800,6 +839,8 @@ static VOID VgaWriteDac(BYTE Data)
 
 static VOID VgaWriteAc(BYTE Data)
 {
+    PALETTEENTRY Entry;
+
     ASSERT(VgaAcIndex < VGA_AC_MAX_REG);
 
     /* Save the value */
@@ -810,8 +851,17 @@ static VOID VgaWriteAc(BYTE Data)
         // DbgPrint("    AC Palette Writing %d to index %d\n", Data, VgaAcIndex);
         if (VgaAcRegisters[VgaAcIndex] != Data)
         {
-            /* Update the AC register and set the palette change flag */
+            /* Update the AC register */
             VgaAcRegisters[VgaAcIndex] = Data;
+
+            /* Fill the entry structure */
+            Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3]);
+            Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 1]);
+            Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 2]);
+            Entry.peFlags = 0;
+
+            /* Update the palette entry and set the palette change flag */
+            SetPaletteEntries(TextPaletteHandle, VgaAcIndex, 1, &Entry);
             PaletteChanged = TRUE;
         }
     }
@@ -843,33 +893,62 @@ static VOID VgaRestoreDefaultPalette(PPALETTEENTRY Entries, USHORT NumOfEntries)
 
 static BOOLEAN VgaInitializePalette(VOID)
 {
-    LPLOGPALETTE Palette;
+    INT i;
+    BOOLEAN Result = FALSE;
+    LPLOGPALETTE Palette, TextPalette;
 
-    /* Allocate storage space for the palette */
+    /* Allocate storage space for the palettes */
     Palette = (LPLOGPALETTE)HeapAlloc(GetProcessHeap(),
                                       HEAP_ZERO_MEMORY,
                                       sizeof(LOGPALETTE) +
-                                        VGA_MAX_COLORS * sizeof(PALETTEENTRY));
-    if (Palette == NULL) return FALSE;
+                                      VGA_MAX_COLORS * sizeof(PALETTEENTRY));
+    TextPalette = (LPLOGPALETTE)HeapAlloc(GetProcessHeap(),
+                                          HEAP_ZERO_MEMORY,
+                                          sizeof(LOGPALETTE) + 
+                                          (VGA_AC_PAL_F_REG + 1) * sizeof(PALETTEENTRY));
+    if ((Palette == NULL) || (TextPalette == NULL)) goto Cleanup;
 
-    /* Initialize the palette */
-    Palette->palVersion = 0x0300;
+    /* Initialize the palettes */
+    Palette->palVersion = TextPalette->palVersion = 0x0300;
     Palette->palNumEntries = VGA_MAX_COLORS;
+    TextPalette->palNumEntries = VGA_AC_PAL_F_REG + 1;
 
-    /* Restore the default palette */
+    /* Restore the default graphics palette */
     VgaRestoreDefaultPalette(Palette->palPalEntry, Palette->palNumEntries);
 
-    /* Create the palette */
+    /* Set the default text palette */
+    for (i = 0; i < TextPalette->palNumEntries; i++)
+    {
+        /* Set the palette entries */
+        TextPalette->palPalEntry[i].peRed   = GetRValue(ConsoleColors[i]);
+        TextPalette->palPalEntry[i].peGreen = GetGValue(ConsoleColors[i]);
+        TextPalette->palPalEntry[i].peBlue  = GetBValue(ConsoleColors[i]);
+        TextPalette->palPalEntry[i].peFlags = 0;
+    }
+
+    /* Create the palettes */
     PaletteHandle = CreatePalette(Palette);
+    TextPaletteHandle = CreatePalette(TextPalette);
 
-    /* Free the palette */
-    HeapFree(GetProcessHeap(), 0, Palette);
+    if (PaletteHandle != NULL && TextPaletteHandle != NULL)
+    {
+        /* The palettes have been created successfully */
+        Result = TRUE;
+    }
 
-    /* Fail if the palette wasn't successfully created... */
-    if (PaletteHandle == NULL) return FALSE;
+Cleanup:
+    /* Free the palettes */
+    if (Palette) HeapFree(GetProcessHeap(), 0, Palette);
+    if (TextPalette) HeapFree(GetProcessHeap(), 0, TextPalette);
 
-    /* ... otherwise return success */
-    return TRUE;
+    if (!Result)
+    {
+        /* Something failed, delete the palettes */
+        if (PaletteHandle) DeleteObject(PaletteHandle);
+        if (TextPaletteHandle) DeleteObject(TextPaletteHandle);
+    }
+
+    return Result;
 }
 
 static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
@@ -1001,7 +1080,7 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
      * screen-buffers, which is a new feature on ReactOS).
      */
     SetConsolePalette(TextConsoleBuffer,
-                      PaletteHandle,
+                      TextPaletteHandle,
                       SYSPAL_NOSTATIC256);
 
     /* Set the screen mode flag */
