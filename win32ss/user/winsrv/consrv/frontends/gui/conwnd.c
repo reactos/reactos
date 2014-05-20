@@ -1927,7 +1927,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Detect Alt-Esc/Space/Tab presses defer to DefWindowProc */
             if ( (HIWORD(lParam) & KF_ALTDOWN) && (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_TAB))
             {
-               return DefWindowProcW(hWnd, msg, wParam, lParam);
+                return DefWindowProcW(hWnd, msg, wParam, lParam);
             }
 
             OnKey(GuiData, msg, wParam, lParam);

@@ -276,6 +276,21 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
+#if 0
+            if ((HIWORD(lParam) & KF_ALTDOWN) && wParam == VK_TAB)
+            {
+                // if ((HIWORD(lParam) & (KF_UP | KF_REPEAT)) != KF_REPEAT)
+                    TuiSwapConsole(ShiftState & SHIFT_PRESSED ? -1 : 1);
+
+                break;
+            }
+            else if (wParam == VK_MENU /* && !Down */)
+            {
+                TuiSwapConsole(0);
+                break;
+            }
+#endif
+
             if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 MSG Message;
@@ -688,32 +703,6 @@ TuiResizeTerminal(IN OUT PFRONTEND This)
 {
 }
 
-static BOOL NTAPI
-TuiProcessKeyCallback(IN OUT PFRONTEND This,
-                      MSG* msg,
-                      BYTE KeyStateMenu,
-                      DWORD ShiftState,
-                      UINT VirtualKeyCode,
-                      BOOL Down)
-{
-    if (0 != (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) &&
-        VK_TAB == VirtualKeyCode)
-    {
-        if (Down)
-        {
-            TuiSwapConsole(ShiftState & SHIFT_PRESSED ? -1 : 1);
-        }
-
-        return TRUE;
-    }
-    else if (VK_MENU == VirtualKeyCode && !Down)
-    {
-        return TuiSwapConsole(0);
-    }
-
-    return FALSE;
-}
-
 static VOID NTAPI
 TuiRefreshInternalInfo(IN OUT PFRONTEND This)
 {
@@ -814,7 +803,6 @@ static FRONTEND_VTBL TuiVtbl =
     TuiSetCursorInfo,
     TuiSetScreenInfo,
     TuiResizeTerminal,
-    TuiProcessKeyCallback,
     TuiRefreshInternalInfo,
     TuiChangeTitle,
     TuiChangeIcon,

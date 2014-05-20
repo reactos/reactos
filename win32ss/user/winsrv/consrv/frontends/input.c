@@ -175,16 +175,6 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
         UnicodeChar = (1 == RetChars ? Chars[0] : 0);
     }
 
-    if (TermProcessKeyCallback(Console,
-                               msg,
-                               KeyState[VK_MENU],
-                               ShiftState,
-                               VirtualKeyCode,
-                               Down))
-    {
-        return;
-    }
-
     Fake = UnicodeChar &&
             (msg->message != WM_CHAR && msg->message != WM_SYSCHAR &&
              msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);

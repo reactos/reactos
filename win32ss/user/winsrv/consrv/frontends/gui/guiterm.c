@@ -796,25 +796,6 @@ GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
 }
 
 static BOOL NTAPI
-GuiProcessKeyCallback(IN OUT PFRONTEND This,
-                      MSG* msg,
-                      BYTE KeyStateMenu,
-                      DWORD ShiftState,
-                      UINT VirtualKeyCode,
-                      BOOL Down)
-{
-    if ((ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED) || KeyStateMenu & 0x80) &&
-        (VirtualKeyCode == VK_ESCAPE || VirtualKeyCode == VK_TAB || VirtualKeyCode == VK_SPACE))
-    {
-        DPRINT1("GuiProcessKeyCallback\n");
-        //DefWindowProcW(msg->hwnd, msg->message, msg->wParam, msg->lParam);
-        //return TRUE;
-    }
-
-    return FALSE;
-}
-
-static BOOL NTAPI
 GuiSetMouseCursor(IN OUT PFRONTEND This,
                   HCURSOR CursorHandle);
 
@@ -1098,7 +1079,6 @@ static FRONTEND_VTBL GuiVtbl =
     GuiResizeTerminal,
     GuiSetActiveScreenBuffer,
     GuiReleaseScreenBuffer,
-    GuiProcessKeyCallback,
     GuiRefreshInternalInfo,
     GuiChangeTitle,
     GuiChangeIcon,

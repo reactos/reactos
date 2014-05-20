@@ -25,8 +25,6 @@
     (Console)->TermIFace.Vtbl->SetActiveScreenBuffer(&(Console)->TermIFace)
 #define TermReleaseScreenBuffer(Console, ScreenBuffer) \
     (Console)->TermIFace.Vtbl->ReleaseScreenBuffer(&(Console)->TermIFace, (ScreenBuffer))
-#define TermProcessKeyCallback(Console, Msg, KeyStateMenu, ShiftState, VirtualKeyCode, Down) \
-    (Console)->FrontEndIFace.Vtbl->ProcessKeyCallback(&(Console)->FrontEndIFace, (Msg), (KeyStateMenu), (ShiftState), (VirtualKeyCode), (Down))
 #define TermRefreshInternalInfo(Console) \
     (Console)->FrontEndIFace.Vtbl->RefreshInternalInfo(&(Console)->FrontEndIFace)
 

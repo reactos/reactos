@@ -46,12 +46,6 @@ typedef struct _FRONTEND_VTBL
     VOID (NTAPI *SetActiveScreenBuffer)(IN OUT PFRONTEND This);
     VOID (NTAPI *ReleaseScreenBuffer)(IN OUT PFRONTEND This,
                                       IN PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (NTAPI *ProcessKeyCallback)(IN OUT PFRONTEND This,
-                                     MSG* msg,
-                                     BYTE KeyStateMenu,
-                                     DWORD ShiftState,
-                                     UINT VirtualKeyCode,
-                                     BOOL Down);
     VOID (NTAPI *RefreshInternalInfo)(IN OUT PFRONTEND This);
 
     /*
