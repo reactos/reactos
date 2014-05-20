@@ -4593,8 +4593,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     // on the user input, and then compute the actual region size once all the
     // alignments have been done.
     //
-    StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
     EndingAddress = (((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1));
+    StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
     PRegionSize = EndingAddress - StartingAddress + 1;
 
     //
@@ -4700,6 +4700,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         {
             //
             // Make sure it's okay to touch it
+            // Note: The Windows 2003 kernel has a bug here, passing the
+            // unaligned base address together with the aligned size,
+            // potentially covering a region larger than the actual allocation.
+            // Might be exposed through NtGdiCreateDIBSection w/ section handle
+            // For now we keep this behavior.
+            // TODO: analyze possible implications, create test case
             //
             Status = MiCheckSecuredVad(FoundVad,
                                        PBaseAddress,
