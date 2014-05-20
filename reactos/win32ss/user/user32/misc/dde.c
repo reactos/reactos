@@ -36,7 +36,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
 static WDML_INSTANCE*	WDML_InstanceList = NULL;
 static LONG		WDML_MaxInstanceID = 0;  /* OK for present, have to worry about wrap-around later */
-const WCHAR		WDML_szEventClass[] = {'D','d','e','E','v','e','n','t','C','l','a','s','s',0};
+const WCHAR		WDML_szEventClass[] = {'D','D','E','M','L','E','v','e','n','t',0};
 
 /* protection for instance list */
 CRITICAL_SECTION WDML_CritSect;
@@ -91,7 +91,7 @@ LPARAM WINAPI PackDDElParam(UINT msg, UINT_PTR uiLo, UINT_PTR uiHi)
         return uiHi;
 
     default:
-        return MAKELPARAM(uiLo, uiHi);
+        return MAKELONG(uiLo, uiHi);
     }
 }
 
@@ -229,7 +229,7 @@ BOOL WINAPI ImpersonateDdeClientWindow(HWND hWndClient, HWND hWndServer)
  *            DdeSetQualityOfService (USER32.@)
  */
 
-BOOL WINAPI DdeSetQualityOfService(HWND hwndClient, CONST SECURITY_QUALITY_OF_SERVICE *pqosNew,
+BOOL WINAPI DdeSetQualityOfService(HWND hwndClient, const SECURITY_QUALITY_OF_SERVICE *pqosNew,
 				   PSECURITY_QUALITY_OF_SERVICE pqosPrev)
 {
      FIXME("(%p %p %p): stub\n", hwndClient, pqosNew, pqosPrev);
@@ -238,534 +238,9 @@ BOOL WINAPI DdeSetQualityOfService(HWND hwndClient, CONST SECURITY_QUALITY_OF_SE
 
 /* ================================================================
  *
- * 			Instance management
+ * 			WDML Error management
  *
  * ================================================================ */
-
-/******************************************************************************
- *		IncrementInstanceId
- *
- *	generic routine to increment the max instance Id and allocate a new application instance
- */
-static void WDML_IncrementInstanceId(WDML_INSTANCE* pInstance)
-{
-    DWORD	id = InterlockedIncrement(&WDML_MaxInstanceID);
-
-    pInstance->instanceID = id;
-    TRACE("New instance id %d allocated\n", id);
-}
-
-/******************************************************************
- *		WDML_EventProc
- *
- *
- */
-static LRESULT CALLBACK WDML_EventProc(HWND hwndEvent, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    WDML_INSTANCE*	pInstance;
-    HSZ			hsz1, hsz2;
-
-    switch (uMsg)
-    {
-    case WM_WDML_REGISTER:
-	pInstance = WDML_GetInstanceFromWnd(hwndEvent);
-        /* try calling the Callback */
-	if (pInstance && !(pInstance->CBFflags & CBF_SKIP_REGISTRATIONS))
-	{
-	    hsz1 = WDML_MakeHszFromAtom(pInstance, wParam);
-	    hsz2 = WDML_MakeHszFromAtom(pInstance, lParam);
-	    WDML_InvokeCallback(pInstance, XTYP_REGISTER, 0, 0, hsz1, hsz2, 0, 0, 0);
-	    WDML_DecHSZ(pInstance, hsz1);
-	    WDML_DecHSZ(pInstance, hsz2);
-	}
-	break;
-
-    case WM_WDML_UNREGISTER:
-	pInstance = WDML_GetInstanceFromWnd(hwndEvent);
-	if (pInstance && !(pInstance->CBFflags & CBF_SKIP_UNREGISTRATIONS))
-	{
-	    hsz1 = WDML_MakeHszFromAtom(pInstance, wParam);
-	    hsz2 = WDML_MakeHszFromAtom(pInstance, lParam);
-	    WDML_InvokeCallback(pInstance, XTYP_UNREGISTER, 0, 0, hsz1, hsz2, 0, 0, 0);
-	    WDML_DecHSZ(pInstance, hsz1);
-	    WDML_DecHSZ(pInstance, hsz2);
-	}
-	break;
-
-    case WM_WDML_CONNECT_CONFIRM:
-	pInstance = WDML_GetInstanceFromWnd(hwndEvent);
-	if (pInstance && !(pInstance->CBFflags & CBF_SKIP_CONNECT_CONFIRMS))
-	{
-	    WDML_CONV*	pConv;
-	    /* confirm connection...
-	     * lookup for this conv handle
-	     */
-            HWND client = (HWND)wParam;
-            HWND server = (HWND)lParam;
-	    for (pConv = pInstance->convs[WDML_SERVER_SIDE]; pConv != NULL; pConv = pConv->next)
-	    {
-		if (pConv->hwndClient == client && pConv->hwndServer == server)
-		    break;
-	    }
-	    if (pConv)
-	    {
-		pConv->wStatus |= ST_ISLOCAL;
-
-		WDML_InvokeCallback(pInstance, XTYP_CONNECT_CONFIRM, 0, (HCONV)pConv,
-				    pConv->hszTopic, pConv->hszService, 0, 0,
-				    (pConv->wStatus & ST_ISSELF) ? 1 : 0);
-	    }
-	}
-	break;
-    default:
-	return DefWindowProcW(hwndEvent, uMsg, wParam, lParam);
-    }
-    return 0;
-}
-
-/******************************************************************
- *		WDML_Initialize
- *
- *
- */
-UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
-		     DWORD afCmd, DWORD ulRes, BOOL bUnicode)
-{
-    WDML_INSTANCE*		pInstance;
-    WDML_INSTANCE*		reference_inst;
-    UINT			ret;
-    WNDCLASSEXW			wndclass;
-
-    TRACE("(%p,%p,0x%x,%d,0x%x)\n",
-	  pidInst, pfnCallback, afCmd, ulRes, bUnicode);
-
-    if (ulRes)
-    {
-	ERR("Reserved value not zero?  What does this mean?\n");
-	/* trap this and no more until we know more */
-	return DMLERR_NO_ERROR;
-    }
-
-    /* grab enough heap for one control struct - not really necessary for re-initialise
-     *	but allows us to use same validation routines */
-    pInstance = HeapAlloc(GetProcessHeap(), 0, sizeof(WDML_INSTANCE));
-    if (pInstance == NULL)
-    {
-	/* catastrophe !! warn user & abort */
-	ERR("Instance create failed - out of memory\n");
-	return DMLERR_SYS_ERROR;
-    }
-    pInstance->next = NULL;
-    pInstance->monitor = (afCmd | APPCLASS_MONITOR);
-
-    /* messy bit, spec implies that 'Client Only' can be set in 2 different ways, catch 1 here */
-
-    pInstance->clientOnly = afCmd & APPCMD_CLIENTONLY;
-    pInstance->instanceID = *pidInst; /* May need to add calling proc Id */
-    pInstance->threadID = GetCurrentThreadId();
-    pInstance->callback = *pfnCallback;
-    pInstance->unicode = bUnicode;
-    pInstance->nodeList = NULL; /* node will be added later */
-    pInstance->monitorFlags = afCmd & MF_MASK;
-    pInstance->wStatus = 0;
-    pInstance->lastError = DMLERR_NO_ERROR;
-    pInstance->servers = NULL;
-    pInstance->convs[0] = NULL;
-    pInstance->convs[1] = NULL;
-    pInstance->links[0] = NULL;
-    pInstance->links[1] = NULL;
-
-    /* isolate CBF flags in one go, expect this will go the way of all attempts to be clever !! */
-
-    pInstance->CBFflags = afCmd^((afCmd&MF_MASK)|((afCmd&APPCMD_MASK)|(afCmd&APPCLASS_MASK)));
-
-    if (!pInstance->clientOnly)
-    {
-	/* Check for other way of setting Client-only !! */
-	pInstance->clientOnly =
-	    (pInstance->CBFflags & CBF_FAIL_ALLSVRXACTIONS) == CBF_FAIL_ALLSVRXACTIONS;
-    }
-
-    TRACE("instance created - checking validity\n");
-
-    if (*pidInst == 0)
-    {
-	/*  Initialisation of new Instance Identifier */
-	TRACE("new instance, callback %p flags %X\n",pfnCallback,afCmd);
-
-	EnterCriticalSection(&WDML_CritSect);
-
-	if (WDML_InstanceList == NULL)
-	{
-	    /* can't be another instance in this case, assign to the base pointer */
-	    WDML_InstanceList = pInstance;
-
-	    /* since first must force filter of XTYP_CONNECT and XTYP_WILDCONNECT for
-	     *		present
-	     *	-------------------------------      NOTE NOTE NOTE    --------------------------
-	     *
-	     *	the manual is not clear if this condition
-	     *	applies to the first call to DdeInitialize from an application, or the
-	     *	first call for a given callback !!!
-	     */
-
-	    pInstance->CBFflags = pInstance->CBFflags|APPCMD_FILTERINITS;
-	    TRACE("First application instance detected OK\n");
-	    /*	allocate new instance ID */
-	    WDML_IncrementInstanceId(pInstance);
-	}
-	else
-	{
-	    /* really need to chain the new one in to the latest here, but after checking conditions
-	     *	such as trying to start a conversation from an application trying to monitor */
-	    reference_inst = WDML_InstanceList;
-	    TRACE("Subsequent application instance - starting checks\n");
-	    while (reference_inst->next != NULL)
-	    {
-		/*
-		 *	This set of tests will work if application uses same instance Id
-		 *	at application level once allocated - which is what manual implies
-		 *	should happen. If someone tries to be
-		 *	clever (lazy ?) it will fail to pick up that later calls are for
-		 *	the same application - should we trust them ?
-		 */
-		if (pInstance->instanceID == reference_inst->instanceID)
-		{
-		    /* Check 1 - must be same Client-only state */
-
-		    if (pInstance->clientOnly != reference_inst->clientOnly)
-		    {
-			ret = DMLERR_DLL_USAGE;
-			goto theError;
-		    }
-
-		    /* Check 2 - cannot use 'Monitor' with any non-monitor modes */
-
-		    if (pInstance->monitor != reference_inst->monitor)
-		    {
-			ret = DMLERR_INVALIDPARAMETER;
-			goto theError;
-		    }
-
-		    /* Check 3 - must supply different callback address */
-
-		    if (pInstance->callback == reference_inst->callback)
-		    {
-			ret = DMLERR_DLL_USAGE;
-			goto theError;
-		    }
-		}
-		reference_inst = reference_inst->next;
-	    }
-	    /*  All cleared, add to chain */
-
-	    TRACE("Application Instance checks finished\n");
-	    WDML_IncrementInstanceId(pInstance);
-	    reference_inst->next = pInstance;
-	}
-	LeaveCriticalSection(&WDML_CritSect);
-
-	*pidInst = pInstance->instanceID;
-
-	/* for deadlock issues, windows must always be created when outside the critical section */
-	wndclass.cbSize        = sizeof(wndclass);
-	wndclass.style         = 0;
-	wndclass.lpfnWndProc   = WDML_EventProc;
-	wndclass.cbClsExtra    = 0;
-	wndclass.cbWndExtra    = sizeof(ULONG_PTR);
-	wndclass.hInstance     = 0;
-	wndclass.hIcon         = 0;
-	wndclass.hCursor       = 0;
-	wndclass.hbrBackground = 0;
-	wndclass.lpszMenuName  = NULL;
-	wndclass.lpszClassName = WDML_szEventClass;
-	wndclass.hIconSm       = 0;
-
-	RegisterClassExW(&wndclass);
-
-	pInstance->hwndEvent = CreateWindowW(WDML_szEventClass, NULL,
-						WS_POPUP, 0, 0, 0, 0,
-						0, 0, 0, 0);
-
-	SetWindowLongPtrW(pInstance->hwndEvent, GWL_WDML_INSTANCE, (ULONG_PTR)pInstance);
-
-	TRACE("New application instance processing finished OK\n");
-    }
-    else
-    {
-	/* Reinitialisation situation   --- FIX  */
-	TRACE("reinitialisation of (%p,%p,0x%x,%d): stub\n", pidInst, pfnCallback, afCmd, ulRes);
-
-	EnterCriticalSection(&WDML_CritSect);
-
-	if (WDML_InstanceList == NULL)
-	{
-	    ret = DMLERR_INVALIDPARAMETER;
-	    goto theError;
-	}
-	/* can't reinitialise if we have initialised nothing !! */
-	reference_inst = WDML_InstanceList;
-	/* must first check if we have been given a valid instance to re-initialise !!  how do we do that ? */
-	/*
-	 *	MS allows initialisation without specifying a callback, should we allow addition of the
-	 *	callback by a later call to initialise ? - if so this lot will have to change
-	 */
-	while (reference_inst->next != NULL)
-	{
-	    if (*pidInst == reference_inst->instanceID && pfnCallback == reference_inst->callback)
-	    {
-		/* Check 1 - cannot change client-only mode if set via APPCMD_CLIENTONLY */
-
-		if (reference_inst->clientOnly)
-		{
-		    if  ((reference_inst->CBFflags & CBF_FAIL_ALLSVRXACTIONS) != CBF_FAIL_ALLSVRXACTIONS)
-		    {
-				/* i.e. Was set to Client-only and through APPCMD_CLIENTONLY */
-
-			if (!(afCmd & APPCMD_CLIENTONLY))
-			{
-			    ret = DMLERR_INVALIDPARAMETER;
-			    goto theError;
-			}
-		    }
-		}
-		/* Check 2 - cannot change monitor modes */
-
-		if (pInstance->monitor != reference_inst->monitor)
-		{
-		    ret = DMLERR_INVALIDPARAMETER;
-		    goto theError;
-		}
-
-		/* Check 3 - trying to set Client-only via APPCMD when not set so previously */
-
-		if ((afCmd&APPCMD_CLIENTONLY) && !reference_inst->clientOnly)
-		{
-		    ret = DMLERR_INVALIDPARAMETER;
-		    goto theError;
-		}
-		break;
-	    }
-	    reference_inst = reference_inst->next;
-	}
-	if (reference_inst->next == NULL)
-	{
-	    ret = DMLERR_INVALIDPARAMETER;
-	    goto theError;
-	}
-	/* All checked - change relevant flags */
-
-	reference_inst->CBFflags = pInstance->CBFflags;
-	reference_inst->clientOnly = pInstance->clientOnly;
-	reference_inst->monitorFlags = pInstance->monitorFlags;
-
-	HeapFree(GetProcessHeap(), 0, pInstance); /* finished - release heap space used as work store */
-
-	LeaveCriticalSection(&WDML_CritSect);
-    }
-
-    return DMLERR_NO_ERROR;
- theError:
-    HeapFree(GetProcessHeap(), 0, pInstance);
-    LeaveCriticalSection(&WDML_CritSect);
-    return ret;
-}
-
-/******************************************************************************
- *            DdeInitializeA   (USER32.@)
- *
- * See DdeInitializeW.
- */
-UINT WINAPI DdeInitializeA(LPDWORD pidInst, PFNCALLBACK pfnCallback,
-			   DWORD afCmd, DWORD ulRes)
-{
-    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, FALSE);
-}
-
-/******************************************************************************
- * DdeInitializeW [USER32.@]
- * Registers an application with the DDEML
- *
- * PARAMS
- *    pidInst     [I] Pointer to instance identifier
- *    pfnCallback [I] Pointer to callback function
- *    afCmd       [I] Set of command and filter flags
- *    ulRes       [I] Reserved
- *
- * RETURNS
- *    Success: DMLERR_NO_ERROR
- *    Failure: DMLERR_DLL_USAGE, DMLERR_INVALIDPARAMETER, DMLERR_SYS_ERROR
- */
-UINT WINAPI DdeInitializeW(LPDWORD pidInst, PFNCALLBACK pfnCallback,
-			   DWORD afCmd, DWORD ulRes)
-{
-    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, TRUE);
-}
-
-/*****************************************************************
- * DdeUninitialize [USER32.@]  Frees DDEML resources
- *
- * PARAMS
- *    idInst [I] Instance identifier
- *
- * RETURNS
- *    Success: TRUE
- *    Failure: FALSE
- */
-
-BOOL WINAPI DdeUninitialize(DWORD idInst)
-{
-    /*  Stage one - check if we have a handle for this instance
-     */
-    WDML_INSTANCE*		pInstance;
-    WDML_CONV*			pConv;
-    WDML_CONV*			pConvNext;
-
-    TRACE("(%d)\n", idInst);
-
-    /*  First check instance
-     */
-    pInstance = WDML_GetInstance(idInst);
-    if (pInstance == NULL)
-    {
-	/*
-	 *	Needs something here to record NOT_INITIALIZED ready for DdeGetLastError
-	 */
-	return FALSE;
-    }
-
-    /* first terminate all conversations client side
-     * this shall close existing links...
-     */
-    for (pConv = pInstance->convs[WDML_CLIENT_SIDE]; pConv != NULL; pConv = pConvNext)
-    {
-	pConvNext = pConv->next;
-	DdeDisconnect((HCONV)pConv);
-    }
-    if (pInstance->convs[WDML_CLIENT_SIDE])
-	FIXME("still pending conversations\n");
-
-    /* then unregister all known service names */
-    DdeNameService(idInst, 0, 0, DNS_UNREGISTER);
-
-    /* Free the nodes that were not freed by this instance
-     * and remove the nodes from the list of HSZ nodes.
-     */
-    WDML_FreeAllHSZ(pInstance);
-
-    DestroyWindow(pInstance->hwndEvent);
-
-    /* OK now delete the instance handle itself */
-
-    if (WDML_InstanceList == pInstance)
-    {
-	/* special case - the first/only entry */
-	WDML_InstanceList = pInstance->next;
-    }
-    else
-    {
-	/* general case, remove entry */
-	WDML_INSTANCE*	inst;
-
-	for (inst = WDML_InstanceList; inst->next != pInstance; inst = inst->next);
-	inst->next = pInstance->next;
-    }
-    /* release the heap entry
-     */
-    HeapFree(GetProcessHeap(), 0, pInstance);
-
-    return TRUE;
-}
-
-/******************************************************************
- *		WDML_NotifyThreadExit
- *
- *
- */
-void WDML_NotifyThreadDetach(void)
-{
-    WDML_INSTANCE*	pInstance;
-    WDML_INSTANCE*	next;
-    DWORD		tid = GetCurrentThreadId();
-
-    EnterCriticalSection(&WDML_CritSect);
-    for (pInstance = WDML_InstanceList; pInstance != NULL; pInstance = next)
-    {
-	next = pInstance->next;
-	if (pInstance->threadID == tid)
-	{
-            LeaveCriticalSection(&WDML_CritSect);
-	    DdeUninitialize(pInstance->instanceID);
-            EnterCriticalSection(&WDML_CritSect);
-	}
-    }
-    LeaveCriticalSection(&WDML_CritSect);
-}
-
-/******************************************************************
- *		WDML_InvokeCallback
- *
- *
- */
-HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInstance, UINT uType, UINT uFmt, HCONV hConv,
-				    HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
-				    ULONG_PTR dwData1, ULONG_PTR dwData2)
-{
-    HDDEDATA	ret;
-
-    if (pInstance == NULL)
-	return NULL;
-
-    TRACE("invoking CB[%p] (%x %x %p %p %p %p %lx %lx)\n",
-	  pInstance->callback, uType, uFmt,
-	  hConv, hsz1, hsz2, hdata, dwData1, dwData2);
-    ret = pInstance->callback(uType, uFmt, hConv, hsz1, hsz2, hdata, dwData1, dwData2);
-    TRACE("done => %p\n", ret);
-    return ret;
-}
-
-/*****************************************************************************
- *	WDML_GetInstance
- *
- *	generic routine to return a pointer to the relevant DDE_HANDLE_ENTRY
- *	for an instance Id, or NULL if the entry does not exist
- *
- */
-WDML_INSTANCE*	WDML_GetInstance(DWORD instId)
-{
-    WDML_INSTANCE*	pInstance;
-
-    EnterCriticalSection(&WDML_CritSect);
-
-    for (pInstance = WDML_InstanceList; pInstance != NULL; pInstance = pInstance->next)
-    {
-	if (pInstance->instanceID == instId)
-	{
-	    if (GetCurrentThreadId() != pInstance->threadID)
-	    {
-		FIXME("Tried to get instance from wrong thread\n");
-		continue;
-	    }
-	    break;
-	}
-    }
-
-    LeaveCriticalSection(&WDML_CritSect);
-
-    if (!pInstance)
-        WARN("Instance entry missing for id %04x\n", instId);
-    return pInstance;
-}
-
-/******************************************************************
- *		WDML_GetInstanceFromWnd
- *
- *
- */
-WDML_INSTANCE*	WDML_GetInstanceFromWnd(HWND hWnd)
-{
-    return (WDML_INSTANCE*)GetWindowLongPtrW(hWnd, GWL_WDML_INSTANCE);
-}
 
 /******************************************************************************
  * DdeGetLastError [USER32.@]  Gets most recent error code
@@ -1260,6 +735,545 @@ INT WINAPI DdeCmpStringHandles(HSZ hsz1, HSZ hsz2)
 
 /* ================================================================
  *
+ * 			Instance management
+ *
+ * ================================================================ */
+
+/******************************************************************************
+ *		IncrementInstanceId
+ *
+ *	generic routine to increment the max instance Id and allocate a new application instance
+ */
+static void WDML_IncrementInstanceId(WDML_INSTANCE* pInstance)
+{
+    DWORD	id = InterlockedIncrement(&WDML_MaxInstanceID);
+
+    pInstance->instanceID = id;
+    TRACE("New instance id %d allocated\n", id);
+}
+
+/******************************************************************
+ *		WDML_EventProc
+ *
+ *
+ */
+static LRESULT CALLBACK WDML_EventProc(HWND hwndEvent, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    WDML_INSTANCE*	pInstance;
+    HSZ			hsz1, hsz2;
+
+    switch (uMsg)
+    {
+    case WM_WDML_REGISTER:
+	pInstance = WDML_GetInstanceFromWnd(hwndEvent);
+        /* try calling the Callback */
+	if (pInstance && !(pInstance->CBFflags & CBF_SKIP_REGISTRATIONS))
+	{
+	    hsz1 = WDML_MakeHszFromAtom(pInstance, wParam);
+	    hsz2 = WDML_MakeHszFromAtom(pInstance, lParam);
+	    WDML_InvokeCallback(pInstance, XTYP_REGISTER, 0, 0, hsz1, hsz2, 0, 0, 0);
+	    WDML_DecHSZ(pInstance, hsz1);
+	    WDML_DecHSZ(pInstance, hsz2);
+	}
+	break;
+
+    case WM_WDML_UNREGISTER:
+	pInstance = WDML_GetInstanceFromWnd(hwndEvent);
+	if (pInstance && !(pInstance->CBFflags & CBF_SKIP_UNREGISTRATIONS))
+	{
+	    hsz1 = WDML_MakeHszFromAtom(pInstance, wParam);
+	    hsz2 = WDML_MakeHszFromAtom(pInstance, lParam);
+	    WDML_InvokeCallback(pInstance, XTYP_UNREGISTER, 0, 0, hsz1, hsz2, 0, 0, 0);
+	    WDML_DecHSZ(pInstance, hsz1);
+	    WDML_DecHSZ(pInstance, hsz2);
+	}
+	break;
+
+    case WM_WDML_CONNECT_CONFIRM:
+	pInstance = WDML_GetInstanceFromWnd(hwndEvent);
+	if (pInstance && !(pInstance->CBFflags & CBF_SKIP_CONNECT_CONFIRMS))
+	{
+	    WDML_CONV*	pConv;
+	    /* confirm connection...
+	     * lookup for this conv handle
+	     */
+            HWND client = (HWND)wParam;
+            HWND server = (HWND)lParam;
+	    for (pConv = pInstance->convs[WDML_SERVER_SIDE]; pConv != NULL; pConv = pConv->next)
+	    {
+		if (pConv->hwndClient == client && pConv->hwndServer == server)
+		    break;
+	    }
+	    if (pConv)
+	    {
+		pConv->wStatus |= ST_ISLOCAL;
+
+		WDML_InvokeCallback(pInstance, XTYP_CONNECT_CONFIRM, 0, (HCONV)pConv,
+				    pConv->hszTopic, pConv->hszService, 0, 0,
+				    (pConv->wStatus & ST_ISSELF) ? 1 : 0);
+	    }
+	}
+	break;
+    default:
+	return DefWindowProcW(hwndEvent, uMsg, wParam, lParam);
+    }
+    return 0;
+}
+
+/******************************************************************
+ *		WDML_Initialize
+ *
+ *
+ */
+UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
+                            DWORD afCmd, DWORD ulRes, BOOL bUnicode)
+{
+    WDML_INSTANCE*		pInstance;
+    WDML_INSTANCE*		reference_inst;
+    UINT			ret;
+    WNDCLASSEXW			wndclass;
+
+    TRACE("(%p,%p,0x%x,%d,0x%x)\n",
+	  pidInst, pfnCallback, afCmd, ulRes, bUnicode);
+
+    if (ulRes)
+    {
+	ERR("Reserved value not zero?  What does this mean?\n");
+	/* trap this and no more until we know more */
+	return DMLERR_INVALIDPARAMETER;
+    }
+
+    /* grab enough heap for one control struct - not really necessary for re-initialise
+     *	but allows us to use same validation routines */
+    pInstance = HeapAlloc(GetProcessHeap(), 0, sizeof(WDML_INSTANCE));
+    if (pInstance == NULL)
+    {
+	/* catastrophe !! warn user & abort */
+	ERR("Instance create failed - out of memory\n");
+	return DMLERR_SYS_ERROR;
+    }
+    pInstance->next = NULL;
+    pInstance->monitor = (afCmd | APPCLASS_MONITOR);
+
+    /* messy bit, spec implies that 'Client Only' can be set in 2 different ways, catch 1 here */
+
+    pInstance->clientOnly = afCmd & APPCMD_CLIENTONLY;
+    pInstance->instanceID = *pidInst; /* May need to add calling proc Id */
+    pInstance->threadID = GetCurrentThreadId();
+    pInstance->callback = *pfnCallback;
+    pInstance->unicode = bUnicode;
+    pInstance->nodeList = NULL; /* node will be added later */
+    pInstance->monitorFlags = afCmd & MF_MASK;
+    pInstance->wStatus = 0;
+    pInstance->lastError = DMLERR_NO_ERROR;
+    pInstance->servers = NULL;
+    pInstance->convs[0] = NULL;
+    pInstance->convs[1] = NULL;
+    pInstance->links[0] = NULL;
+    pInstance->links[1] = NULL;
+
+    /* isolate CBF flags in one go, expect this will go the way of all attempts to be clever !! */
+
+    pInstance->CBFflags = afCmd^((afCmd&MF_MASK)|((afCmd&APPCMD_MASK)|(afCmd&APPCLASS_MASK)));
+
+    if (!pInstance->clientOnly)
+    {
+	/* Check for other way of setting Client-only !! */
+	pInstance->clientOnly =
+	    (pInstance->CBFflags & CBF_FAIL_ALLSVRXACTIONS) == CBF_FAIL_ALLSVRXACTIONS;
+    }
+
+    ERR("instance created - checking validity\n");
+
+    if (*pidInst == 0)
+    {
+	/*  Initialisation of new Instance Identifier */
+	ERR("new instance, callback %p flags %X\n",pfnCallback,afCmd);
+
+	EnterCriticalSection(&WDML_CritSect);
+
+	if (WDML_InstanceList == NULL)
+	{
+	    /* can't be another instance in this case, assign to the base pointer */
+	    WDML_InstanceList = pInstance;
+
+	    /* since first must force filter of XTYP_CONNECT and XTYP_WILDCONNECT for
+	     *		present
+	     *	-------------------------------      NOTE NOTE NOTE    --------------------------
+	     *
+	     *	the manual is not clear if this condition
+	     *	applies to the first call to DdeInitialize from an application, or the
+	     *	first call for a given callback !!!
+	     */
+
+	    pInstance->CBFflags = pInstance->CBFflags|APPCMD_FILTERINITS;
+	    ERR("First application instance detected OK\n");
+	    /*	allocate new instance ID */
+	    WDML_IncrementInstanceId(pInstance);
+	}
+	else
+	{
+	    /* really need to chain the new one in to the latest here, but after checking conditions
+	     *	such as trying to start a conversation from an application trying to monitor */
+	    reference_inst = WDML_InstanceList;
+	    ERR("Subsequent application instance - starting checks\n");
+	    while (reference_inst->next != NULL)
+	    {
+		/*
+		 *	This set of tests will work if application uses same instance Id
+		 *	at application level once allocated - which is what manual implies
+		 *	should happen. If someone tries to be
+		 *	clever (lazy ?) it will fail to pick up that later calls are for
+		 *	the same application - should we trust them ?
+		 */
+		if (pInstance->instanceID == reference_inst->instanceID)
+		{
+		    /* Check 1 - must be same Client-only state */
+
+		    if (pInstance->clientOnly != reference_inst->clientOnly)
+		    {
+		        ERR("WDML_Initialize Mustbe Client-only\n");
+			ret = DMLERR_DLL_USAGE;
+			goto theError;
+		    }
+
+		    /* Check 2 - cannot use 'Monitor' with any non-monitor modes */
+
+		    if (pInstance->monitor != reference_inst->monitor)
+		    {
+		        ERR("WDML_Initialize cannot use monitor w/any modes\n");
+			ret = DMLERR_INVALIDPARAMETER;
+			goto theError;
+		    }
+
+		    /* Check 3 - must supply different callback address */
+
+		    if (pInstance->callback == reference_inst->callback)
+		    {
+			ret = DMLERR_DLL_USAGE;
+			goto theError;
+		    }
+		}
+		reference_inst = reference_inst->next;
+	    }
+	    /*  All cleared, add to chain */
+
+	    ERR("Application Instance checks finished\n");
+	    WDML_IncrementInstanceId(pInstance);
+	    reference_inst->next = pInstance;
+	}
+	LeaveCriticalSection(&WDML_CritSect);
+
+	*pidInst = pInstance->instanceID;
+
+	/* for deadlock issues, windows must always be created when outside the critical section */
+	wndclass.cbSize        = sizeof(wndclass);
+	wndclass.style         = 0;
+	wndclass.lpfnWndProc   = WDML_EventProc;
+	wndclass.cbClsExtra    = 0;
+	wndclass.cbWndExtra    = sizeof(ULONG_PTR);
+	wndclass.hInstance     = 0;
+	wndclass.hIcon         = 0;
+	wndclass.hCursor       = 0;
+	wndclass.hbrBackground = 0;
+	wndclass.lpszMenuName  = NULL;
+	wndclass.lpszClassName = WDML_szEventClass;
+	wndclass.hIconSm       = 0;
+
+	RegisterClassExW(&wndclass);
+
+	pInstance->hwndEvent = CreateWindowW(WDML_szEventClass, NULL,
+						WS_POPUP, 0, 0, 0, 0,
+						0, 0, 0, 0);
+
+	SetWindowLongPtrW(pInstance->hwndEvent, GWL_WDML_INSTANCE, (ULONG_PTR)pInstance);
+
+	ERR("New application instance processing finished OK\n");
+    }
+    else
+    {
+	/* Reinitialisation situation   --- FIX  */
+	ERR("reinitialisation of (%p,%p,0x%x,%d): stub\n", pidInst, pfnCallback, afCmd, ulRes);
+
+	EnterCriticalSection(&WDML_CritSect);
+
+	if (WDML_InstanceList == NULL)
+	{
+	    ERR("WDML_Initialize No instance list\n");
+	    ret = DMLERR_INVALIDPARAMETER;
+	    goto theError;
+	}
+	/* can't reinitialise if we have initialised nothing !! */
+	reference_inst = WDML_InstanceList;
+	/* must first check if we have been given a valid instance to re-initialise !!  how do we do that ? */
+	/*
+	 *	MS allows initialisation without specifying a callback, should we allow addition of the
+	 *	callback by a later call to initialise ? - if so this lot will have to change
+	 */
+	while (reference_inst->next != NULL)
+	{
+	    if (*pidInst == reference_inst->instanceID && pfnCallback == reference_inst->callback)
+	    {
+		/* Check 1 - cannot change client-only mode if set via APPCMD_CLIENTONLY */
+
+		if (reference_inst->clientOnly)
+		{
+		    if  ((reference_inst->CBFflags & CBF_FAIL_ALLSVRXACTIONS) != CBF_FAIL_ALLSVRXACTIONS)
+		    {
+				/* i.e. Was set to Client-only and through APPCMD_CLIENTONLY */
+
+			if (!(afCmd & APPCMD_CLIENTONLY))
+			{
+			    ERR("WDML_Initialize AppCmd Client-only 2\n");
+			    ret = DMLERR_INVALIDPARAMETER;
+			    goto theError;
+			}
+		    }
+		}
+		/* Check 2 - cannot change monitor modes */
+
+		if (pInstance->monitor != reference_inst->monitor)
+		{
+		    ERR("WDML_Initialize cannot change monitor modes 2\n");
+		    ret = DMLERR_INVALIDPARAMETER;
+		    goto theError;
+		}
+
+		/* Check 3 - trying to set Client-only via APPCMD when not set so previously */
+
+		if ((afCmd&APPCMD_CLIENTONLY) && !reference_inst->clientOnly)
+		{
+		    ERR("WDML_Initialize trying to set Client-only via APPCMD\n");
+		    ret = DMLERR_INVALIDPARAMETER;
+		    goto theError;
+		}
+		break;
+	    }
+	    reference_inst = reference_inst->next;
+	}
+	if (reference_inst->next == NULL)
+	{
+	    ERR("WDML_Initialize Nothing Next\n");
+	    ret = DMLERR_INVALIDPARAMETER;
+	    goto theError;
+	}
+	/* All checked - change relevant flags */
+
+	reference_inst->CBFflags = pInstance->CBFflags;
+	reference_inst->clientOnly = pInstance->clientOnly;
+	reference_inst->monitorFlags = pInstance->monitorFlags;
+
+	HeapFree(GetProcessHeap(), 0, pInstance); /* finished - release heap space used as work store */
+
+	LeaveCriticalSection(&WDML_CritSect);
+    }
+
+    return DMLERR_NO_ERROR;
+ theError:
+    ERR("WDML_Initialize error %x\n",ret);
+    HeapFree(GetProcessHeap(), 0, pInstance);
+    LeaveCriticalSection(&WDML_CritSect);
+    return ret;
+}
+
+/******************************************************************************
+ *            DdeInitializeA   (USER32.@)
+ *
+ * See DdeInitializeW.
+ */
+UINT WINAPI DdeInitializeA(LPDWORD pidInst, PFNCALLBACK pfnCallback,
+			   DWORD afCmd, DWORD ulRes)
+{
+    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, FALSE);
+}
+
+/******************************************************************************
+ * DdeInitializeW [USER32.@]
+ * Registers an application with the DDEML
+ *
+ * PARAMS
+ *    pidInst     [I] Pointer to instance identifier
+ *    pfnCallback [I] Pointer to callback function
+ *    afCmd       [I] Set of command and filter flags
+ *    ulRes       [I] Reserved
+ *
+ * RETURNS
+ *    Success: DMLERR_NO_ERROR
+ *    Failure: DMLERR_DLL_USAGE, DMLERR_INVALIDPARAMETER, DMLERR_SYS_ERROR
+ */
+UINT WINAPI DdeInitializeW(LPDWORD pidInst, PFNCALLBACK pfnCallback,
+			   DWORD afCmd, DWORD ulRes)
+{
+    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, TRUE);
+}
+
+/*****************************************************************
+ * DdeUninitialize [USER32.@]  Frees DDEML resources
+ *
+ * PARAMS
+ *    idInst [I] Instance identifier
+ *
+ * RETURNS
+ *    Success: TRUE
+ *    Failure: FALSE
+ */
+
+BOOL WINAPI DdeUninitialize(DWORD idInst)
+{
+    /*  Stage one - check if we have a handle for this instance
+     */
+    WDML_INSTANCE*		pInstance;
+    WDML_CONV*			pConv;
+    WDML_CONV*			pConvNext;
+
+    TRACE("(%d)\n", idInst);
+
+    /*  First check instance
+     */
+    pInstance = WDML_GetInstance(idInst);
+    if (pInstance == NULL)
+    {
+	/*
+	 *	Needs something here to record NOT_INITIALIZED ready for DdeGetLastError
+	 */
+	return FALSE;
+    }
+
+    /* first terminate all conversations client side
+     * this shall close existing links...
+     */
+    for (pConv = pInstance->convs[WDML_CLIENT_SIDE]; pConv != NULL; pConv = pConvNext)
+    {
+	pConvNext = pConv->next;
+	DdeDisconnect((HCONV)pConv);
+    }
+    if (pInstance->convs[WDML_CLIENT_SIDE])
+	FIXME("still pending conversations\n");
+
+    /* then unregister all known service names */
+    DdeNameService(idInst, 0, 0, DNS_UNREGISTER);
+
+    /* Free the nodes that were not freed by this instance
+     * and remove the nodes from the list of HSZ nodes.
+     */
+    WDML_FreeAllHSZ(pInstance);
+
+    DestroyWindow(pInstance->hwndEvent);
+
+    /* OK now delete the instance handle itself */
+
+    if (WDML_InstanceList == pInstance)
+    {
+	/* special case - the first/only entry */
+	WDML_InstanceList = pInstance->next;
+    }
+    else
+    {
+	/* general case, remove entry */
+	WDML_INSTANCE*	inst;
+
+	for (inst = WDML_InstanceList; inst->next != pInstance; inst = inst->next);
+	inst->next = pInstance->next;
+    }
+    /* release the heap entry
+     */
+    HeapFree(GetProcessHeap(), 0, pInstance);
+
+    return TRUE;
+}
+
+/******************************************************************
+ *		WDML_NotifyThreadExit
+ *
+ *
+ */
+void WDML_NotifyThreadDetach(void)
+{
+    WDML_INSTANCE*	pInstance;
+    WDML_INSTANCE*	next;
+    DWORD		tid = GetCurrentThreadId();
+
+    EnterCriticalSection(&WDML_CritSect);
+    for (pInstance = WDML_InstanceList; pInstance != NULL; pInstance = next)
+    {
+	next = pInstance->next;
+	if (pInstance->threadID == tid)
+	{
+            LeaveCriticalSection(&WDML_CritSect);
+	    DdeUninitialize(pInstance->instanceID);
+            EnterCriticalSection(&WDML_CritSect);
+	}
+    }
+    LeaveCriticalSection(&WDML_CritSect);
+}
+
+/******************************************************************
+ *		WDML_InvokeCallback
+ *
+ *
+ */
+HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInstance, UINT uType, UINT uFmt, HCONV hConv,
+				    HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
+				    ULONG_PTR dwData1, ULONG_PTR dwData2)
+{
+    HDDEDATA	ret;
+
+    if (pInstance == NULL)
+	return NULL;
+
+    TRACE("invoking CB[%p] (%x %x %p %p %p %p %lx %lx)\n",
+	  pInstance->callback, uType, uFmt,
+	  hConv, hsz1, hsz2, hdata, dwData1, dwData2);
+    ret = pInstance->callback(uType, uFmt, hConv, hsz1, hsz2, hdata, dwData1, dwData2);
+    TRACE("done => %p\n", ret);
+    return ret;
+}
+
+/*****************************************************************************
+ *	WDML_GetInstance
+ *
+ *	generic routine to return a pointer to the relevant DDE_HANDLE_ENTRY
+ *	for an instance Id, or NULL if the entry does not exist
+ *
+ */
+WDML_INSTANCE*	WDML_GetInstance(DWORD instId)
+{
+    WDML_INSTANCE*	pInstance;
+
+    EnterCriticalSection(&WDML_CritSect);
+
+    for (pInstance = WDML_InstanceList; pInstance != NULL; pInstance = pInstance->next)
+    {
+	if (pInstance->instanceID == instId)
+	{
+	    if (GetCurrentThreadId() != pInstance->threadID)
+	    {
+		FIXME("Tried to get instance from wrong thread\n");
+		continue;
+	    }
+	    break;
+	}
+    }
+
+    LeaveCriticalSection(&WDML_CritSect);
+
+    if (!pInstance)
+        WARN("Instance entry missing for id %04x\n", instId);
+    return pInstance;
+}
+
+/******************************************************************
+ *		WDML_GetInstanceFromWnd
+ *
+ *
+ */
+WDML_INSTANCE*	WDML_GetInstanceFromWnd(HWND hWnd)
+{
+    return (WDML_INSTANCE*)GetWindowLongPtrW(hWnd, GWL_WDML_INSTANCE);
+}
+
+/* ================================================================
+ *
  * 			Data handle management
  *
  * ================================================================ */
@@ -1459,7 +1473,7 @@ BOOL WINAPI DdeFreeDataHandle(HDDEDATA hData)
 
     /* 1 is the handle value returned by an asynchronous operation. */
     if (hData == (HDDEDATA)1)
-       return TRUE;
+        return TRUE;
 
     return GlobalFree(hData) == 0;
 }
@@ -1514,7 +1528,7 @@ HDDEDATA        WDML_Global2DataHandle(WDML_CONV* pConv, HGLOBAL hMem, WINE_DDEH
             default:
                 FIXME("Unsupported format (%04x) for data %p, passing raw information\n",
                       pDd->cfFormat, hMem);
-                /* fall thru */
+                /* fall through */
             case 0:
             case CF_TEXT:
                 ret = DdeCreateDataHandle(pConv->instance->instanceID, pDd->Value, size, 0, 0, pDd->cfFormat, 0);
@@ -1573,7 +1587,7 @@ HGLOBAL WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
         default:
             FIXME("Unsupported format (%04x) for data %p, passing raw information\n",
                    pDdh->cfFormat, hDdeData);
-            /* fall thru */
+            /* fall through */
         case 0:
         case CF_TEXT:
             hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, sizeof(WINE_DDEHEAD) + dwSize);
@@ -1738,6 +1752,259 @@ WDML_SERVER*	WDML_FindServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTo
 
 /* ================================================================
  *
+ * 			Link (hot & warm) management
+ *
+ * ================================================================ */
+
+/******************************************************************
+ *		WDML_AddLink
+ *
+ *
+ */
+void WDML_AddLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
+		  UINT wType, HSZ hszItem, UINT wFmt)
+{
+    WDML_LINK*	pLink;
+
+    pLink = HeapAlloc(GetProcessHeap(), 0, sizeof(WDML_LINK));
+    if (pLink == NULL)
+    {
+	ERR("OOM\n");
+	return;
+    }
+
+    pLink->hConv = hConv;
+    pLink->transactionType = wType;
+    WDML_IncHSZ(pInstance, pLink->hszItem = hszItem);
+    pLink->uFmt = wFmt;
+    pLink->next = pInstance->links[side];
+    pInstance->links[side] = pLink;
+}
+
+/******************************************************************
+ *		WDML_RemoveLink
+ *
+ *
+ */
+void WDML_RemoveLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
+		     HSZ hszItem, UINT uFmt)
+{
+    WDML_LINK* pPrev = NULL;
+    WDML_LINK* pCurrent = NULL;
+
+    pCurrent = pInstance->links[side];
+
+    while (pCurrent != NULL)
+    {
+	if (pCurrent->hConv == hConv &&
+	    DdeCmpStringHandles(pCurrent->hszItem, hszItem) == 0 &&
+	    pCurrent->uFmt == uFmt)
+	{
+	    if (pCurrent == pInstance->links[side])
+	    {
+		pInstance->links[side] = pCurrent->next;
+	    }
+	    else
+	    {
+		pPrev->next = pCurrent->next;
+	    }
+
+	    WDML_DecHSZ(pInstance, pCurrent->hszItem);
+	    HeapFree(GetProcessHeap(), 0, pCurrent);
+	    break;
+	}
+
+	pPrev = pCurrent;
+	pCurrent = pCurrent->next;
+    }
+}
+
+/* this function is called to remove all links related to the conv.
+   It should be called from both client and server when terminating
+   the conversation.
+*/
+/******************************************************************
+ *		WDML_RemoveAllLinks
+ *
+ *
+ */
+void WDML_RemoveAllLinks(WDML_INSTANCE* pInstance, WDML_CONV* pConv, WDML_SIDE side)
+{
+    WDML_LINK* pPrev = NULL;
+    WDML_LINK* pCurrent = NULL;
+    WDML_LINK* pNext = NULL;
+
+    pCurrent = pInstance->links[side];
+
+    while (pCurrent != NULL)
+    {
+	if (pCurrent->hConv == (HCONV)pConv)
+	{
+	    if (pCurrent == pInstance->links[side])
+	    {
+		pInstance->links[side] = pCurrent->next;
+		pNext = pCurrent->next;
+	    }
+	    else
+	    {
+		pPrev->next = pCurrent->next;
+		pNext = pCurrent->next;
+	    }
+
+	    WDML_DecHSZ(pInstance, pCurrent->hszItem);
+
+	    HeapFree(GetProcessHeap(), 0, pCurrent);
+	    pCurrent = NULL;
+	}
+
+	if (pCurrent)
+	{
+	    pPrev = pCurrent;
+	    pCurrent = pCurrent->next;
+	}
+	else
+	{
+	    pCurrent = pNext;
+	}
+    }
+}
+
+/******************************************************************
+ *		WDML_FindLink
+ *
+ *
+ */
+WDML_LINK* 	WDML_FindLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
+			      HSZ hszItem, BOOL use_fmt, UINT uFmt)
+{
+    WDML_LINK*	pCurrent = NULL;
+
+    for (pCurrent = pInstance->links[side]; pCurrent != NULL; pCurrent = pCurrent->next)
+    {
+	/* we don't need to check for transaction type as it can be altered */
+
+	if (pCurrent->hConv == hConv &&
+	    DdeCmpStringHandles(pCurrent->hszItem, hszItem) == 0 &&
+	    (!use_fmt || pCurrent->uFmt == uFmt))
+	{
+	    break;
+	}
+
+    }
+
+    return pCurrent;
+}
+
+/* ================================================================
+ *
+ * 			Transaction management
+ *
+ * ================================================================ */
+
+/******************************************************************
+ *		WDML_AllocTransaction
+ *
+ * Alloc a transaction structure for handling the message ddeMsg
+ */
+WDML_XACT*	WDML_AllocTransaction(WDML_INSTANCE* pInstance, UINT ddeMsg,
+				      UINT wFmt, HSZ hszItem)
+{
+    WDML_XACT*		pXAct;
+    static WORD		tid = 1;	/* FIXME: wrap around */
+
+    pXAct = HeapAlloc(GetProcessHeap(), 0, sizeof(WDML_XACT));
+    if (!pXAct)
+    {
+	pInstance->lastError = DMLERR_MEMORY_ERROR;
+	return NULL;
+    }
+
+    pXAct->xActID = tid++;
+    pXAct->ddeMsg = ddeMsg;
+    pXAct->hDdeData = 0;
+    pXAct->hUser = 0;
+    pXAct->next = NULL;
+    pXAct->wType = 0;
+    pXAct->wFmt = wFmt;
+    if ((pXAct->hszItem = hszItem)) WDML_IncHSZ(pInstance, pXAct->hszItem);
+    pXAct->atom = 0;
+    pXAct->hMem = 0;
+    pXAct->lParam = 0;
+
+    return pXAct;
+}
+
+/******************************************************************
+ *		WDML_QueueTransaction
+ *
+ * Adds a transaction to the list of transaction
+ */
+void	WDML_QueueTransaction(WDML_CONV* pConv, WDML_XACT* pXAct)
+{
+    WDML_XACT**	pt;
+
+    /* advance to last in queue */
+    for (pt = &pConv->transactions; *pt != NULL; pt = &(*pt)->next);
+    *pt = pXAct;
+}
+
+/******************************************************************
+ *		WDML_UnQueueTransaction
+ *
+ *
+ */
+BOOL	WDML_UnQueueTransaction(WDML_CONV* pConv, WDML_XACT*  pXAct)
+{
+    WDML_XACT**	pt;
+
+    for (pt = &pConv->transactions; *pt; pt = &(*pt)->next)
+    {
+	if (*pt == pXAct)
+	{
+	    *pt = pXAct->next;
+	    return TRUE;
+	}
+    }
+    return FALSE;
+}
+
+/******************************************************************
+ *		WDML_FreeTransaction
+ *
+ *
+ */
+void	WDML_FreeTransaction(WDML_INSTANCE* pInstance, WDML_XACT* pXAct, BOOL doFreePmt)
+{
+    /* free pmt(s) in pXAct too. check against one for not deleting TRUE return values */
+    if (doFreePmt && (ULONG_PTR)pXAct->hMem > 1)
+    {
+	GlobalFree(pXAct->hMem);
+    }
+    if (pXAct->hszItem) WDML_DecHSZ(pInstance, pXAct->hszItem);
+
+    HeapFree(GetProcessHeap(), 0, pXAct);
+}
+
+/******************************************************************
+ *		WDML_FindTransaction
+ *
+ *
+ */
+WDML_XACT* WDML_FindTransaction(WDML_CONV* pConv, DWORD tid)
+{
+    WDML_XACT* pXAct;
+
+    tid = HIWORD(tid);
+    for (pXAct = pConv->transactions; pXAct; pXAct = pXAct->next)
+    {
+	if (pXAct->xActID == tid)
+	    break;
+    }
+    return pXAct;
+}
+
+/* ================================================================
+ *
  * 		Conversation management
  *
  * ================================================================ */
@@ -1876,7 +2143,7 @@ static BOOL WDML_EnableCallback(WDML_CONV *pConv, UINT wCmd)
     }
 
     if (wCmd == EC_QUERYWAITING)
-        return pConv->transactions ? TRUE : FALSE;
+        return pConv->transactions != NULL;
 
     if (wCmd != EC_ENABLEALL && wCmd != EC_ENABLEONE)
     {
@@ -2199,259 +2466,6 @@ UINT WINAPI DdeQueryConvInfo(HCONV hConv, DWORD id, PCONVINFO lpConvInfo)
     if (ret != 0)
 	memcpy(lpConvInfo, &ci, min((size_t)lpConvInfo->cb, sizeof(ci)));
     return ret;
-}
-
-/* ================================================================
- *
- * 			Link (hot & warm) management
- *
- * ================================================================ */
-
-/******************************************************************
- *		WDML_AddLink
- *
- *
- */
-void WDML_AddLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
-		  UINT wType, HSZ hszItem, UINT wFmt)
-{
-    WDML_LINK*	pLink;
-
-    pLink = HeapAlloc(GetProcessHeap(), 0, sizeof(WDML_LINK));
-    if (pLink == NULL)
-    {
-	ERR("OOM\n");
-	return;
-    }
-
-    pLink->hConv = hConv;
-    pLink->transactionType = wType;
-    WDML_IncHSZ(pInstance, pLink->hszItem = hszItem);
-    pLink->uFmt = wFmt;
-    pLink->next = pInstance->links[side];
-    pInstance->links[side] = pLink;
-}
-
-/******************************************************************
- *		WDML_RemoveLink
- *
- *
- */
-void WDML_RemoveLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
-		     HSZ hszItem, UINT uFmt)
-{
-    WDML_LINK* pPrev = NULL;
-    WDML_LINK* pCurrent = NULL;
-
-    pCurrent = pInstance->links[side];
-
-    while (pCurrent != NULL)
-    {
-	if (pCurrent->hConv == hConv &&
-	    DdeCmpStringHandles(pCurrent->hszItem, hszItem) == 0 &&
-	    pCurrent->uFmt == uFmt)
-	{
-	    if (pCurrent == pInstance->links[side])
-	    {
-		pInstance->links[side] = pCurrent->next;
-	    }
-	    else
-	    {
-		pPrev->next = pCurrent->next;
-	    }
-
-	    WDML_DecHSZ(pInstance, pCurrent->hszItem);
-	    HeapFree(GetProcessHeap(), 0, pCurrent);
-	    break;
-	}
-
-	pPrev = pCurrent;
-	pCurrent = pCurrent->next;
-    }
-}
-
-/* this function is called to remove all links related to the conv.
-   It should be called from both client and server when terminating
-   the conversation.
-*/
-/******************************************************************
- *		WDML_RemoveAllLinks
- *
- *
- */
-void WDML_RemoveAllLinks(WDML_INSTANCE* pInstance, WDML_CONV* pConv, WDML_SIDE side)
-{
-    WDML_LINK* pPrev = NULL;
-    WDML_LINK* pCurrent = NULL;
-    WDML_LINK* pNext = NULL;
-
-    pCurrent = pInstance->links[side];
-
-    while (pCurrent != NULL)
-    {
-	if (pCurrent->hConv == (HCONV)pConv)
-	{
-	    if (pCurrent == pInstance->links[side])
-	    {
-		pInstance->links[side] = pCurrent->next;
-		pNext = pCurrent->next;
-	    }
-	    else
-	    {
-		pPrev->next = pCurrent->next;
-		pNext = pCurrent->next;
-	    }
-
-	    WDML_DecHSZ(pInstance, pCurrent->hszItem);
-
-	    HeapFree(GetProcessHeap(), 0, pCurrent);
-	    pCurrent = NULL;
-	}
-
-	if (pCurrent)
-	{
-	    pPrev = pCurrent;
-	    pCurrent = pCurrent->next;
-	}
-	else
-	{
-	    pCurrent = pNext;
-	}
-    }
-}
-
-/******************************************************************
- *		WDML_FindLink
- *
- *
- */
-WDML_LINK* 	WDML_FindLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
-			      HSZ hszItem, BOOL use_fmt, UINT uFmt)
-{
-    WDML_LINK*	pCurrent = NULL;
-
-    for (pCurrent = pInstance->links[side]; pCurrent != NULL; pCurrent = pCurrent->next)
-    {
-	/* we don't need to check for transaction type as it can be altered */
-
-	if (pCurrent->hConv == hConv &&
-	    DdeCmpStringHandles(pCurrent->hszItem, hszItem) == 0 &&
-	    (!use_fmt || pCurrent->uFmt == uFmt))
-	{
-	    break;
-	}
-
-    }
-
-    return pCurrent;
-}
-
-/* ================================================================
- *
- * 			Transaction management
- *
- * ================================================================ */
-
-/******************************************************************
- *		WDML_AllocTransaction
- *
- * Alloc a transaction structure for handling the message ddeMsg
- */
-WDML_XACT*	WDML_AllocTransaction(WDML_INSTANCE* pInstance, UINT ddeMsg,
-				      UINT wFmt, HSZ hszItem)
-{
-    WDML_XACT*		pXAct;
-    static WORD		tid = 1;	/* FIXME: wrap around */
-
-    pXAct = HeapAlloc(GetProcessHeap(), 0, sizeof(WDML_XACT));
-    if (!pXAct)
-    {
-	pInstance->lastError = DMLERR_MEMORY_ERROR;
-	return NULL;
-    }
-
-    pXAct->xActID = tid++;
-    pXAct->ddeMsg = ddeMsg;
-    pXAct->hDdeData = 0;
-    pXAct->hUser = 0;
-    pXAct->next = NULL;
-    pXAct->wType = 0;
-    pXAct->wFmt = wFmt;
-    if ((pXAct->hszItem = hszItem)) WDML_IncHSZ(pInstance, pXAct->hszItem);
-    pXAct->atom = 0;
-    pXAct->hMem = 0;
-    pXAct->lParam = 0;
-
-    return pXAct;
-}
-
-/******************************************************************
- *		WDML_QueueTransaction
- *
- * Adds a transaction to the list of transaction
- */
-void	WDML_QueueTransaction(WDML_CONV* pConv, WDML_XACT* pXAct)
-{
-    WDML_XACT**	pt;
-
-    /* advance to last in queue */
-    for (pt = &pConv->transactions; *pt != NULL; pt = &(*pt)->next);
-    *pt = pXAct;
-}
-
-/******************************************************************
- *		WDML_UnQueueTransaction
- *
- *
- */
-BOOL	WDML_UnQueueTransaction(WDML_CONV* pConv, WDML_XACT*  pXAct)
-{
-    WDML_XACT**	pt;
-
-    for (pt = &pConv->transactions; *pt; pt = &(*pt)->next)
-    {
-	if (*pt == pXAct)
-	{
-	    *pt = pXAct->next;
-	    return TRUE;
-	}
-    }
-    return FALSE;
-}
-
-/******************************************************************
- *		WDML_FreeTransaction
- *
- *
- */
-void	WDML_FreeTransaction(WDML_INSTANCE* pInstance, WDML_XACT* pXAct, BOOL doFreePmt)
-{
-    /* free pmt(s) in pXAct too. check against one for not deleting TRUE return values */
-    if (doFreePmt && (ULONG_PTR)pXAct->hMem > 1)
-    {
-	GlobalFree(pXAct->hMem);
-    }
-    if (pXAct->hszItem) WDML_DecHSZ(pInstance, pXAct->hszItem);
-
-    HeapFree(GetProcessHeap(), 0, pXAct);
-}
-
-/******************************************************************
- *		WDML_FindTransaction
- *
- *
- */
-WDML_XACT*	WDML_FindTransaction(WDML_CONV* pConv, DWORD tid)
-{
-    WDML_XACT* pXAct;
-
-    tid = HIWORD(tid);
-    for (pXAct = pConv->transactions; pXAct; pXAct = pXAct->next)
-    {
-	if (pXAct->xActID == tid)
-	    break;
-    }
-    return pXAct;
 }
 
 /* ================================================================
