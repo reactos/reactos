@@ -1058,7 +1058,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
 
         index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
-        Shell_GetImageLists(&himlSmall, &himlLarge);
+        Shell_GetImageLists(&himlLarge, &himlSmall);
 
         HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
         HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
