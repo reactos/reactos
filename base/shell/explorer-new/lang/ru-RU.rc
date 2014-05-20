@@ -7,19 +7,19 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "&Настройка даты и времени", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Настройка уведомлений...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "Расположить окна &каскадом", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Расположить окна по &горизонтали", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Расположить окна по &вертикали", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "Показать &рабочий стол", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Отменить", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "Диспетчер задач", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Д&испетчер задач", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Закрепить панель задач", ID_LOCKTASKBAR
-        MENUITEM "&Свойства", ID_SHELL_CMD_PROPERTIES
+        MENUITEM "Сво&йства", ID_SHELL_CMD_PROPERTIES
     END
 END
 
@@ -123,11 +123,11 @@ END
 
 IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced"
+CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Advanced options", IDC_STATIC, 6, 6, 240, 121
-    AUTOCHECKBOX "Show s&econds", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    GROUPBOX "Дополнительные настройки", IDC_STATIC, 6, 6, 240, 121
+    AUTOCHECKBOX "Показывать с&екунды", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
     AUTOCHECKBOX "Отобра&жать образцы окон (эскизы)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 
@@ -137,7 +137,7 @@ BEGIN
     IDS_PROPERTIES "&Свойства"
     IDS_OPEN_ALL_USERS "&Все пользователи"
     IDS_EXPLORE_ALL_USERS "&Обзор Всех пользователей"
-    IDS_STARTUP_ERROR "The system cannot start explorer because the registry is corrupted or unavailable."
+    IDS_STARTUP_ERROR "Система не может запустить Проводник, потому что данные реестра повреждены или недоступны."
 END
 
 STRINGTABLE

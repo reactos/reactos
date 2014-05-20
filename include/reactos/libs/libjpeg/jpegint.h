@@ -2,7 +2,7 @@
  * jpegint.h
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 1997-2011 by Guido Vollbeding.
+ * Modified 1997-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -211,8 +211,8 @@ struct jpeg_marker_reader {
 /* Entropy decoding */
 struct jpeg_entropy_decoder {
   JMETHOD(void, start_pass, (j_decompress_ptr cinfo));
-  JMETHOD(boolean, decode_mcu, (j_decompress_ptr cinfo,
-				JBLOCKROW *MCU_data));
+  JMETHOD(boolean, decode_mcu, (j_decompress_ptr cinfo, JBLOCKROW *MCU_data));
+  JMETHOD(void, finish_pass, (j_decompress_ptr cinfo));
 };
 
 /* Inverse DCT (also performs dequantization) */

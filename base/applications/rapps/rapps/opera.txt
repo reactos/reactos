@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Opera
@@ -43,7 +44,7 @@ Description = Популярный браузер со многими допол
 
 [Section.041f]
 Licence = Ücretsiz
-Description = Tutulan Opera Tarayıcı, birçok gelişmiş husûsiyetle ve kendi mail ve BitTorrent istemcileriyle birlikte gelir.
+Description = Bir posta ve BitTorrent istemcisini kapsayan birçok gelişmiş husûsiyetle, tutulan Opera Tarayıcı.
 Size = 12,56 MB
 
 [Section.0422]

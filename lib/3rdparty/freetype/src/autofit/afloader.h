@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (specification).                  */
 /*                                                                         */
-/*  Copyright 2003-2005, 2011-2012 by                                      */
+/*  Copyright 2003-2005, 2011-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,7 +44,7 @@ FT_BEGIN_HEADER
     /* current glyph data */
     FT_GlyphLoader    gloader;
     AF_GlyphHintsRec  hints;
-    AF_ScriptMetrics  metrics;
+    AF_StyleMetrics   metrics;
     FT_Bool           transformed;
     FT_Matrix         trans_matrix;
     FT_Vector         trans_delta;

@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Bound Around (Demo)
@@ -19,6 +20,6 @@ Description = Un gioco simile a Frozen Fruits.
 
 [Section.041f]
 Name = Bound Around (Göstermelik)
-Licence = Kısıtlı
-Description = Frozen Fruits'e benzeyen bir oyun.
+Licence = Paylaşımlı
+Description = Frozen Fruits benzeri bir oyun.
 Size = 1,95 MB

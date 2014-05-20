@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = OpenOffice 2.4
 Version = 2.4.3
 Licence = LGPL
-Description = THE Open Source Office Suite.
+Description = The open source office suite.
 Size = 113 MB
 Category = 6
 URLSite = http://www.openoffice.org/
@@ -12,7 +13,7 @@ URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/stab
 CDPath = none
 
 [Section.0407]
-Description = DIE Open Source Office Suite.
+Description = DIE Open Source Office Suite. (FIXME)
 Size = 114.25 MB
 URLSite = http://www.openoffice.org/de/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/de/2.4.3/OOo_2.4.3_Win32Intel_install_de.exe
@@ -38,7 +39,7 @@ URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/loca
 
 [Section.0413]
 Version = 2.4.2
-Description = Open-bron Office Pakket.
+Description = Open-bron Office Pakket. (FIXME)
 Size = 113.8 MB
 URLSite = http://www.openoffice.org/nl/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe
@@ -60,14 +61,14 @@ Description = Bir açık kaynak büro takımı.
 URLSite = http://www.openoffice.org/tr/
 
 [Section.0422]
-URLSite = http://www.openoffice.org/ua/
 Description = Відкритий офісний пакет.
-URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/ru/2.4.3/OOo_2.4.3_Win32Intel_install_ru.exe
 Size = 114.76 MB
+URLSite = http://www.openoffice.org/ua/
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/ru/2.4.3/OOo_2.4.3_Win32Intel_install_ru.exe
 
 [Section.0813]
 Version = 2.4.2
-Description = Open-bron Office Pakket.
+Description = Open-bron Office Pakket. (FIXME)
 Size = 113.8 MB
 URLSite = http://www.openoffice.org/nl/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe

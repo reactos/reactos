@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = OLE Viewer and Microsoft Foundation Classes version 4
@@ -48,7 +49,7 @@ Size = 865,04 ko
 [Section.041f]
 Name = OLE Görüntüleyicisi ve Microsoft Ana Sınıfları (MFC) Sürüm 4
 Licence = Bilinmiyor
-Description = Birtakım uygulamalar için gereklidir. Şunları içerir: mfc40.dll, msvcrt40.dll.
+Description = MFC 4, birtakım uygulamalar için gereklidir. Şunları içerir: mfc40.dll, msvcrt40.dll.
 Size = 865,04 KB
 
 [Section.0422]

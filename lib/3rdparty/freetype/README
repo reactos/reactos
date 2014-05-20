@@ -1,4 +1,4 @@
-  FreeType 2.5.2
+  FreeType 2.5.3
   ==============
 
   Homepage: http://www.freetype.org
@@ -16,7 +16,7 @@
   the file `docs/LICENSE.TXT' for the available licenses.
 
   The FreeType 2 API reference is located in `docs/reference'; use the
-  file   `ft2-doc.html'   as   the   top  entry   point.    Additional
+  file   `ft2-toc.html'   as   the   top  entry   point.    Additional
   documentation is available as a separate package from our sites.  Go
   to
 
@@ -24,9 +24,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.5.2.tar.bz2
-    freetype-doc-2.5.2.tar.gz
-    ftdoc252.zip
+    freetype-doc-2.5.3.tar.bz2
+    freetype-doc-2.5.3.tar.gz
+    ftdoc253.zip
 
   To view the documentation online, go to
 
@@ -70,7 +70,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006-2013 by
+Copyright 2006-2014 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

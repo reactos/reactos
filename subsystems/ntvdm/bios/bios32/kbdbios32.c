@@ -35,18 +35,15 @@ static BOOLEAN BiosKbdBufferPush(WORD Data)
     if (NextElement >= Bda->KeybdBufferEnd) NextElement = Bda->KeybdBufferStart;
 
     /* If it's full, fail */
-    if (NextElement == Bda->KeybdBufferHead) return FALSE;
+    if (NextElement == Bda->KeybdBufferHead)
+    {
+        DPRINT1("BIOS keyboard buffer full.\n");
+        return FALSE;
+    }
 
     /* Put the value in the queue */
     *((LPWORD)((ULONG_PTR)Bda + Bda->KeybdBufferTail)) = Data;
-    Bda->KeybdBufferTail += sizeof(WORD);
-
-    /* Check if we are at, or have passed, the end of the buffer */
-    if (Bda->KeybdBufferTail >= Bda->KeybdBufferEnd)
-    {
-        /* Return it to the beginning */
-        Bda->KeybdBufferTail = Bda->KeybdBufferStart;
-    }
+    Bda->KeybdBufferTail = NextElement;
 
     /* Return success */
     return TRUE;
@@ -271,7 +268,10 @@ BOOLEAN KbdBios32Initialize(VOID)
     /* Initialize the BDA */
     Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
     Bda->KeybdBufferEnd   = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
-    Bda->KeybdBufferHead  = Bda->KeybdBufferTail = 0;
+    Bda->KeybdBufferHead  = Bda->KeybdBufferTail = Bda->KeybdBufferStart;
+
+    // FIXME: Fill the keyboard buffer with invalid values, for diagnostic purposes...
+    RtlFillMemory(((LPVOID)((ULONG_PTR)Bda + Bda->KeybdBufferStart)), BIOS_KBD_BUFFER_SIZE * sizeof(WORD), 'A');
 
     /* Register the BIOS 32-bit Interrupts */
 

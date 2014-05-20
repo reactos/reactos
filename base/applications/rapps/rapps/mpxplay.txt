@@ -1,5 +1,7 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = Mpxplay
 Version = 1.60b
@@ -28,5 +30,5 @@ Size = 520 ko
 Description = Mpxplay - 32-разрядный консольный аудиоплеер для Windows. Вам нужен 7-Zip или подобная утилита для его распаковки.
 
 [Section.041f]
-Description = Mpxplay, Pencereler için 32 ikillik, konsolluk bir ses oynatıcısıdır. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = Mpxplay; Windows için, 32 bitlik, konsolluk bir ses oynatıcısıdır. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 520 KB

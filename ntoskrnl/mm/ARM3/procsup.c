@@ -110,7 +110,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     {
         /* For TEBs, or if a PEB location couldn't be found, scan the VAD root */
         Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1,
+                                                 (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
                                                  PAGE_SIZE,
                                                  &Process->VadRoot,
                                                  Base,

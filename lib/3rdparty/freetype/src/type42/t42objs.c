@@ -218,9 +218,9 @@
     root->num_charmaps = 0;
     root->face_index   = 0;
 
-    root->face_flags = FT_FACE_FLAG_SCALABLE    |
-                       FT_FACE_FLAG_HORIZONTAL  |
-                       FT_FACE_FLAG_GLYPH_NAMES;
+    root->face_flags |= FT_FACE_FLAG_SCALABLE    |
+                        FT_FACE_FLAG_HORIZONTAL  |
+                        FT_FACE_FLAG_GLYPH_NAMES;
 
     if ( info->is_fixed_pitch )
       root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;

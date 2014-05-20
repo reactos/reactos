@@ -614,6 +614,15 @@ int __cdecl _isctype (int c, int ctypeFlags)
 { 
   return _isctype_l(c, ctypeFlags, NULL);
 }
+
+/*********************************************************************
+ *		_isleadbyte_l (MSVCRT.@)
+ */
+int __cdecl _isleadbyte_l(int c, _locale_t locale)
+{
+  return _isctype_l( c, _LEADBYTE, locale );
+}
+
 #endif /* _LIBCNT_ */
 
 /*

@@ -5,7 +5,7 @@
 /*    Support for the FT_Outline type used to store glyph shapes of        */
 /*    most scalable font formats (specification).                          */
 /*                                                                         */
-/*  Copyright 1996-2003, 2005-2013 by                                      */
+/*  Copyright 1996-2003, 2005-2014 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -354,6 +354,9 @@ FT_BEGIN_HEADER
   /*      if ( face->slot->format == FT_GLYPH_FORMAT_OUTLINE )             */
   /*        FT_Outline_Embolden( &face->slot->outline, strength );         */
   /*    }                                                                  */
+  /*                                                                       */
+  /*    To get meaningful results, font scaling values must be set with    */
+  /*    functions like @FT_Set_Char_Size before calling FT_Render_Glyph.   */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Outline_Embolden( FT_Outline*  outline,

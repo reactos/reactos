@@ -2468,7 +2468,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     PolicyPathPair.Nt = &SxsNtPolicyPath.String;
 #endif
 
-    DPRINT("CreateProcessInternalW: %S %S %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
+    DPRINT("CreateProcessInternalW: '%S' '%S' %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
 
     /* Finally, set our TEB and PEB */
     Teb = NtCurrentTeb();

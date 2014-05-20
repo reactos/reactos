@@ -1,7 +1,7 @@
 /*
  * jpegtran.c
  *
- * Copyright (C) 1995-2012, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1995-2013, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -66,8 +66,8 @@ usage (void)
   fprintf(stderr, "Switches for modifying the image:\n");
 #if TRANSFORMS_SUPPORTED
   fprintf(stderr, "  -crop WxH+X+Y  Crop to a rectangular subarea\n");
-  fprintf(stderr, "  -grayscale     Reduce to grayscale (omit color data)\n");
   fprintf(stderr, "  -flip [horizontal|vertical]  Mirror image (left-right or top-bottom)\n");
+  fprintf(stderr, "  -grayscale     Reduce to grayscale (omit color data)\n");
   fprintf(stderr, "  -perfect       Fail if there is non-transformable edge blocks\n");
   fprintf(stderr, "  -rotate [90|180|270]         Rotate image (degrees clockwise)\n");
 #endif
@@ -76,6 +76,7 @@ usage (void)
   fprintf(stderr, "  -transpose     Transpose image\n");
   fprintf(stderr, "  -transverse    Transverse transpose image\n");
   fprintf(stderr, "  -trim          Drop non-transformable edge blocks\n");
+  fprintf(stderr, "  -wipe WxH+X+Y  Wipe (gray out) a rectangular subarea\n");
 #endif
   fprintf(stderr, "Switches for advanced users:\n");
 #ifdef C_ARITH_CODING_SUPPORTED
@@ -187,7 +188,8 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
 #if TRANSFORMS_SUPPORTED
       if (++argn >= argc)	/* advance to next argument */
 	usage();
-      if (! jtransform_parse_crop_spec(&transformoption, argv[argn])) {
+      if (transformoption.crop /* reject multiple crop/wipe requests */ ||
+	  ! jtransform_parse_crop_spec(&transformoption, argv[argn])) {
 	fprintf(stderr, "%s: bogus -crop argument '%s'\n",
 		progname, argv[argn]);
 	exit(EXIT_FAILURE);
@@ -335,6 +337,21 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
     } else if (keymatch(arg, "trim", 3)) {
       /* Trim off any partial edge MCUs that the transform can't handle. */
       transformoption.trim = TRUE;
+
+    } else if (keymatch(arg, "wipe", 1)) {
+#if TRANSFORMS_SUPPORTED
+      if (++argn >= argc)	/* advance to next argument */
+	usage();
+      if (transformoption.crop /* reject multiple crop/wipe requests */ ||
+	  ! jtransform_parse_crop_spec(&transformoption, argv[argn])) {
+	fprintf(stderr, "%s: bogus -wipe argument '%s'\n",
+		progname, argv[argn]);
+	exit(EXIT_FAILURE);
+      }
+      select_transform(JXFORM_WIPE);
+#else
+      select_transform(JXFORM_NONE);	/* force an error */
+#endif
 
     } else {
       usage();			/* bogus switch */

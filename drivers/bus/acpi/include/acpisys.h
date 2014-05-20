@@ -13,6 +13,7 @@ typedef enum _DEVICE_PNP_STATE {
     Started,                // Device has received the START_DEVICE IRP
     StopPending,            // Device has received the QUERY_STOP IRP
     Stopped,                // Device has received the STOP_DEVICE IRP
+    RemovalPending,         // Device has received the QUERY_REMOVE IRP
     UnKnown                 // Unknown state
 
 } DEVICE_PNP_STATE;

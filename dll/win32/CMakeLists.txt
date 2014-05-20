@@ -227,7 +227,7 @@ add_subdirectory(wing32)
 add_subdirectory(winhttp)
 add_subdirectory(wininet)
 add_subdirectory(winmm)
-#add_subdirectory(winscard) # not built in trunk
+add_subdirectory(winscard)
 add_subdirectory(winspool)
 add_subdirectory(winsta)
 add_subdirectory(wintrust)

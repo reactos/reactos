@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = ReactOS Build Environment
@@ -39,7 +40,7 @@ Size = 28,3 Mo
 
 [Section.041f]
 Name = ReactOS Derleme Ortamı
-Description = ReactOS Kaynak Kodları'nı derlettirir. Daha çok açıklama için ReactOS Wiki'ye bakınız.
+Description = ReactOS Kaynak Kodları'nı derlemenize olanak sağlar. Daha çok açıklama için ReactOS Wiki'ye bakınız.
 Size = 28,3 MB
 
 [Section.0422]

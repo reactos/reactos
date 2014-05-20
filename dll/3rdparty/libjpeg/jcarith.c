@@ -1,7 +1,7 @@
 /*
  * jcarith.c
  *
- * Developed 1997-2012 by Guido Vollbeding.
+ * Developed 1997-2013 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -362,7 +362,6 @@ METHODDEF(boolean)
 encode_mcu_DC_first (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
-  JBLOCKROW block;
   unsigned char *st;
   int blkn, ci, tbl;
   int v, v2, m;
@@ -381,14 +380,13 @@ encode_mcu_DC_first (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
 
   /* Encode the MCU data blocks */
   for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
-    block = MCU_data[blkn];
     ci = cinfo->MCU_membership[blkn];
     tbl = cinfo->cur_comp_info[ci]->dc_tbl_no;
 
     /* Compute the DC value after the required point transform by Al.
      * This is simply an arithmetic right shift.
      */
-    m = IRIGHT_SHIFT((int) ((*block)[0]), cinfo->Al);
+    m = IRIGHT_SHIFT((int) (MCU_data[blkn][0][0]), cinfo->Al);
 
     /* Sections F.1.4.1 & F.1.4.4.1: Encoding of DC coefficients */
 
@@ -453,11 +451,11 @@ METHODDEF(boolean)
 encode_mcu_AC_first (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
+  const int * natural_order;
   JBLOCKROW block;
   unsigned char *st;
   int tbl, k, ke;
   int v, v2, m;
-  const int * natural_order;
 
   /* Emit restart marker if needed */
   if (cinfo->restart_interval) {
@@ -552,6 +550,8 @@ encode_mcu_AC_first (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
 
 /*
  * MCU encoding for DC successive approximation refinement scan.
+ * Note: we assume such scans can be multi-component,
+ * although the spec is not very clear on the point.
  */
 
 METHODDEF(boolean)
@@ -593,11 +593,11 @@ METHODDEF(boolean)
 encode_mcu_AC_refine (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
+  const int * natural_order;
   JBLOCKROW block;
   unsigned char *st;
   int tbl, k, ke, kex;
   int v;
-  const int * natural_order;
 
   /* Emit restart marker if needed */
   if (cinfo->restart_interval) {
@@ -692,12 +692,13 @@ METHODDEF(boolean)
 encode_mcu (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
 {
   arith_entropy_ptr entropy = (arith_entropy_ptr) cinfo->entropy;
-  jpeg_component_info * compptr;
+  const int * natural_order;
   JBLOCKROW block;
   unsigned char *st;
-  int blkn, ci, tbl, k, ke;
+  int tbl, k, ke;
   int v, v2, m;
-  const int * natural_order;
+  int blkn, ci;
+  jpeg_component_info * compptr;
 
   /* Emit restart marker if needed */
   if (cinfo->restart_interval) {

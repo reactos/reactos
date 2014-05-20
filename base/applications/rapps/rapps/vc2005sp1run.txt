@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Microsoft Visual C++ 2005 SP1 Redistributable Package
@@ -44,7 +45,7 @@ Size = 2,6 Mo
 [Section.041f]
 Name = Microsoft Visual C++ 2005 SP1 Yeniden Dağıtılabilir Paket
 Licence = Bilinmiyor
-Description = Microsoft Visual Studio 2005 SP1 Yürütücüsü. Şunları içerir: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Description = Microsoft Visual Studio 2005 Yürütücüsü SP1. Şunları içerir: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2,6 MB
 
 [Section.0422]

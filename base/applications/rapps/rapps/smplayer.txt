@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = SMPlayer
@@ -38,7 +39,7 @@ Description = Lector multimedia (interfață pentru MPlayer).
 Size = 20,7 Mo
 
 [Section.041f]
-Description = MPlayer için çizgelik önyüz.
+Description = MPlayer için çizgelik ön yüz.
 Size = 20,7 MB
 URLSite = http://smplayer.sourceforge.net/tr/info
 

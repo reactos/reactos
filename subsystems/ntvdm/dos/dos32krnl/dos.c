@@ -2,8 +2,9 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            dos/dos32krnl/dos.c
- * PURPOSE:         VDM DOS Kernel
+ * PURPOSE:         DOS32 Kernel
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
@@ -39,6 +40,9 @@ static struct
 static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
 static WORD DosErrorLevel = 0x0000;
+
+/* Echo state for INT 21h, AH = 01h and AH = 3Fh */
+BOOLEAN DoEcho = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -244,6 +248,14 @@ static BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
 
         /* Set the maximum possible size of the block */
         ReturnSize += NextMcb->Size + 1;
+
+        if (ReturnSize < NewSize)
+        {
+            DPRINT("Cannot expand memory block: insufficient free segments available!\n");
+            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
+            Success = FALSE;
+            goto Done;
+        }
 
         /* Maximize the current block */
         Mcb->Size = ReturnSize;
@@ -584,6 +596,87 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
     }
 }
 
+static BOOLEAN DosResizeHandleTable(WORD NewSize)
+{
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+    WORD Segment;
+
+    /* Get the PSP block */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+
+    if (NewSize == PspBlock->HandleTableSize)
+    {
+        /* No change */
+        return TRUE;
+    }
+
+    if (PspBlock->HandleTableSize > 20)
+    {
+        /* Get the segment of the current table */
+        Segment = (LOWORD(PspBlock->HandleTablePtr) >> 4) + HIWORD(PspBlock->HandleTablePtr);
+
+        if (NewSize <= 20)
+        {
+            /* Get the current handle table */
+            HandleTable = FAR_POINTER(PspBlock->HandleTablePtr);
+
+            /* Copy it to the PSP */
+            RtlCopyMemory(PspBlock->HandleTable, HandleTable, NewSize);
+
+            /* Free the memory */
+            DosFreeMemory(Segment);
+
+            /* Update the handle table pointer and size */
+            PspBlock->HandleTableSize = NewSize;
+            PspBlock->HandleTablePtr = MAKELONG(0x18, CurrentPsp);
+        }
+        else
+        {
+            /* Resize the memory */
+            if (!DosResizeMemory(Segment, NewSize, NULL))
+            {
+                /* Unable to resize, try allocating it somewhere else */
+                Segment = DosAllocateMemory(NewSize, NULL);
+                if (Segment == 0) return FALSE;
+
+                /* Get the new handle table */
+                HandleTable = SEG_OFF_TO_PTR(Segment, 0);
+
+                /* Copy the handles to the new table */
+                RtlCopyMemory(HandleTable,
+                              FAR_POINTER(PspBlock->HandleTablePtr),
+                              PspBlock->HandleTableSize);
+
+                /* Update the handle table pointer */
+                PspBlock->HandleTablePtr = MAKELONG(0, Segment);
+            }
+
+            /* Update the handle table size */
+            PspBlock->HandleTableSize = NewSize;
+        }
+    }
+    else if (NewSize > 20)
+    {
+        Segment = DosAllocateMemory(NewSize, NULL);
+        if (Segment == 0) return FALSE;
+
+        /* Get the new handle table */
+        HandleTable = SEG_OFF_TO_PTR(Segment, 0);
+
+        /* Copy the handles from the PSP to the new table */
+        RtlCopyMemory(HandleTable,
+                      FAR_POINTER(PspBlock->HandleTablePtr),
+                      PspBlock->HandleTableSize);
+
+        /* Update the handle table pointer and size */
+        PspBlock->HandleTableSize = NewSize;
+        PspBlock->HandleTablePtr = MAKELONG(0, Segment);
+    }
+
+    return TRUE;
+}
+
 static BOOLEAN DosCloseHandle(WORD DosHandle)
 {
     BYTE SftIndex;
@@ -832,6 +925,10 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         DPRINT1("Overlay loading is not supported yet.\n");
         return ERROR_NOT_SUPPORTED;
     }
+
+    /* NULL-terminate the command line by removing the return carriage character */
+    while (*CommandLine && *CommandLine != '\r') CommandLine++;
+    *(LPSTR)CommandLine = '\0';
 
     /* Open a handle to the executable */
     FileHandle = CreateFileA(ExecutablePath,
@@ -1352,12 +1449,16 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Read Character from STDIN with Echo */
         case 0x01:
         {
-            // FIXME: Under DOS 2+, input / output handle may be redirected!!!!
-            Character = DosReadCharacter(DOS_INPUT_HANDLE);
-            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+            DPRINT("INT 21h, AH = 01h\n");
 
-            // /* Let the BOP repeat if needed */
-            // if (getCF()) break;
+            // FIXME: Under DOS 2+, input / output handle may be redirected!!!!
+            DoEcho = TRUE;
+            Character = DosReadCharacter(DOS_INPUT_HANDLE);
+            DoEcho = FALSE;
+
+            // FIXME: Check whether Ctrl-C / Ctrl-Break is pressed, and call INT 23h if so.
+            // Check also Ctrl-P and set echo-to-printer flag.
+            // Ctrl-Z is not interpreted.
 
             setAL(Character);
             break;
@@ -1451,6 +1552,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x07:
         case 0x08:
         {
+            DPRINT("Char input without echo\n");
+
             // FIXME: Under DOS 2+, input handle may be redirected!!!!
             Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
@@ -1481,7 +1584,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
              * See Ralf Brown: http://www.ctyme.com/intr/rb-2562.htm
              * for more information.
              */
-            setAL('$');
+            setAL('$'); // *String
             break;
         }
 
@@ -1491,19 +1594,24 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             WORD Count = 0;
             InputBuffer = (PDOS_INPUT_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
 
-            DPRINT1("Read Buffered Input\n");
+            DPRINT("Read Buffered Input\n");
 
             while (Count < InputBuffer->MaxLength)
             {
+                // FIXME!! This function should interpret backspaces etc...
+
                 /* Try to read a character (wait) */
                 Character = DosReadCharacter(DOS_INPUT_HANDLE);
+
+                // FIXME: Check whether Ctrl-C / Ctrl-Break is pressed, and call INT 23h if so.
 
                 /* Echo the character and append it to the buffer */
                 DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
                 InputBuffer->Buffer[Count] = Character;
 
+                Count++; /* Carriage returns are also counted */
+
                 if (Character == '\r') break;
-                Count++;
             }
 
             /* Update the length */
@@ -1536,13 +1644,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 InputFunction == 0x07 || InputFunction == 0x08 ||
                 InputFunction == 0x0A)
             {
+                /* Call ourselves recursively */
                 setAH(InputFunction);
-                /*
-                 * Instead of calling ourselves really recursively as in:
-                 * DosInt21h(Stack);
-                 * prefer resetting the CF flag to let the BOP repeat.
-                 */
-                setCF(1);
+                DosInt21h(Stack);
             }
             break;
         }
@@ -1650,7 +1754,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Create New PSP */
         case 0x26:
         {
-            DPRINT1("INT 21h, 26h - Create New PSP is UNIMPLEMENTED\n");
+            DPRINT1("INT 21h, AH = 26h - Create New PSP is UNIMPLEMENTED\n");
             break;
         }
 
@@ -1906,15 +2010,16 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Create File */
+        /* Create or Truncate File */
         case 0x3C:
         {
             WORD FileHandle;
             WORD ErrorCode = DosCreateFile(&FileHandle,
                                            (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX()),
+                                           CREATE_ALWAYS,
                                            getCX());
 
-            if (ErrorCode == 0)
+            if (ErrorCode == ERROR_SUCCESS)
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 setAX(FileHandle);
@@ -1936,7 +2041,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                                          (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX()),
                                          getAL());
 
-            if (ErrorCode == 0)
+            if (ErrorCode == ERROR_SUCCESS)
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 setAX(FileHandle);
@@ -1970,10 +2075,16 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x3F:
         {
             WORD BytesRead = 0;
-            WORD ErrorCode = DosReadFile(getBX(),
-                                         SEG_OFF_TO_PTR(getDS(), getDX()),
-                                         getCX(),
-                                         &BytesRead);
+            WORD ErrorCode;
+
+            DPRINT("INT 21h, AH = 3Fh\n");
+
+            DoEcho = TRUE;
+            ErrorCode = DosReadFile(getBX(),
+                                    SEG_OFF_TO_PTR(getDS(), getDX()),
+                                    getCX(),
+                                    &BytesRead);
+            DoEcho = FALSE;
 
             if (ErrorCode == ERROR_SUCCESS)
             {
@@ -2377,6 +2488,30 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Rename File */
+        case 0x56:
+        {
+            LPSTR ExistingFileName = (LPSTR)SEG_OFF_TO_PTR(getDS(), getDX());
+            LPSTR NewFileName      = (LPSTR)SEG_OFF_TO_PTR(getES(), getDI());
+
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2990.htm
+             * for more information.
+             */
+
+            if (MoveFileA(ExistingFileName, NewFileName))
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(GetLastError());
+            }
+
+            break;
+        }
+
         /* Get/Set Memory Management Options */
         case 0x58:
         {
@@ -2433,6 +2568,218 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Create Temporary File */
+        case 0x5A:
+        {
+            LPSTR PathName = (LPSTR)SEG_OFF_TO_PTR(getDS(), getDX());
+            LPSTR FileName = PathName; // The buffer for the path and the full file name is the same.
+            UINT  uRetVal;
+            WORD  FileHandle;
+            WORD  ErrorCode;
+
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-3014.htm
+             * for more information.
+             */
+
+            // FIXME: Check for buffer validity?
+            // It should be a ASCIZ path ending with a '\' + 13 zero bytes
+            // to receive the generated filename.
+
+            /* First create the temporary file */
+            uRetVal = GetTempFileNameA(PathName, NULL, 0, FileName);
+            if (uRetVal == 0)
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(GetLastError());
+                break;
+            }
+
+            /* Now try to open it in read/write access */
+            ErrorCode = DosOpenFile(&FileHandle, FileName, 2);
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(FileHandle);
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ErrorCode);
+            }
+
+            break;
+        }
+
+        /* Create New File */
+        case 0x5B:
+        {
+            WORD FileHandle;
+            WORD ErrorCode = DosCreateFile(&FileHandle,
+                                           (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX()),
+                                           CREATE_NEW,
+                                           getCX());
+
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(FileHandle);
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ErrorCode);
+            }
+
+            break;
+        }
+
+        /* Lock/Unlock Region of File */
+        case 0x5C:
+        {
+            HANDLE Handle = DosGetRealHandle(getBX());
+
+            if (Handle == INVALID_HANDLE_VALUE)
+            {
+                /* The handle is invalid */
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ERROR_INVALID_HANDLE);
+                break;
+            }
+
+            if (getAL() == 0x00)
+            {
+                /* Lock region of file */
+                if (LockFile(Handle,
+                             MAKELONG(getCX(), getDX()), 0,
+                             MAKELONG(getSI(), getDI()), 0))
+                {
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                }
+                else
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(GetLastError());
+                }
+            }
+            else if (getAL() == 0x01)
+            {
+                /* Unlock region of file */
+                if (UnlockFile(Handle,
+                               MAKELONG(getCX(), getDX()), 0,
+                               MAKELONG(getSI(), getDI()), 0))
+                {
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                }
+                else
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(GetLastError());
+                }
+            }
+            else
+            {
+                /* Invalid subfunction */
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ERROR_INVALID_FUNCTION);
+            }
+
+            break;
+        }
+
+        /* Canonicalize File Name or Path */
+        case 0x60:
+        {
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-3137.htm
+             * for more information.
+             */
+
+            /*
+             * We suppose that the DOS app gave to us a valid
+             * 128-byte long buffer for the canonicalized name.
+             */
+            DWORD dwRetVal = GetFullPathNameA(SEG_OFF_TO_PTR(getDS(), getSI()),
+                                              128,
+                                              SEG_OFF_TO_PTR(getES(), getDI()),
+                                              NULL);
+            if (dwRetVal == 0)
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(GetLastError());
+            }
+            else
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setAX(0x0000);
+            }
+
+            // FIXME: Convert the full path name into short version.
+            // We cannot reliably use GetShortPathName, because it fails
+            // if the path name given doesn't exist. However this DOS
+            // function AH=60h should be able to work even for non-existing
+            // path and file names.
+
+            break;
+        }
+
+        /* Set Handle Count */
+        case 0x67:
+        {
+            if (!DosResizeHandleTable(getBX()))
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(DosLastError);
+            }
+            else Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+
+            break;
+        }
+
+        /* Commit File */
+        case 0x68:
+        case 0x6A:
+        {
+            /*
+             * Function 6Ah is identical to function 68h,
+             * and sets AH to 68h if success.
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-3176.htm
+             * for more information.
+             */
+            setAH(0x68);
+
+            if (DosFlushFileBuffers(getBX()))
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(GetLastError());
+            }
+
+            break;
+        }
+
+        /* Extended Open/Create */
+        case 0x6C:
+        {
+            /* Check for AL == 00 */
+            if (getAL() != 0x00)
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ERROR_INVALID_FUNCTION);
+                break;
+            }
+
+            // TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // FIXME: Extend and merge DosOpenFile and DosCreateFile into
+            // a single wrapper around CreateFileA, which acts as:
+            // http://www.ctyme.com/intr/rb-3179.htm
+
+            break;
+        }
+
         /* Unsupported */
         default:
         {
@@ -2458,6 +2805,8 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
 {
     /*
      * This is the DOS 2+ Fast Console Output Interrupt.
+     * The default handler under DOS 2.x and 3.x simply calls INT 10h/AH=0Eh.
+     *
      * See Ralf Brown: http://www.ctyme.com/intr/rb-4124.htm
      * for more information.
      */
@@ -2466,7 +2815,12 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
     USHORT AX = getAX();
     USHORT BX = getBX();
 
-    /* Set the parameters (AL = character, already set) */
+    /*
+     * Set the parameters:
+     * AL contains the character to print (already set),
+     * BL contains the character attribute,
+     * BH contains the video page to use.
+     */
     setBL(DOS_CHAR_ATTRIBUTE);
     setBH(Bda->VideoPage);
 

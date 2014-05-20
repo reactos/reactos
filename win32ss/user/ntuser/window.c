@@ -901,7 +901,9 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
    PMENU Menu, NewMenu = NULL, SysMenu = NULL, ret = NULL;
    PTHREADINFO W32Thread;
    HMENU hNewMenu, hSysMenu;
+   ROSMENUITEMINFO ItemInfoSet = {0};
    ROSMENUITEMINFO ItemInfo = {0};
+   UNICODE_STRING MenuName;
 
    if(bRevert)
    {
@@ -952,14 +954,21 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
          }
          SysMenu->fFlags |= MNF_SYSDESKMN;
          SysMenu->hWnd = Window->head.h;
-         hNewMenu = co_IntLoadSysMenuTemplate();
+         //hNewMenu = co_IntLoadSysMenuTemplate();
          //if ( Window->ExStyle & WS_EX_MDICHILD )
-         //hNewMenu = co_IntCallLoadMenu( NULL, L"SYSMENUMDI");
-         // else
-         //hNewMenu = co_IntCallLoadMenu( NULL, L"SYSMENU");
-         // Do the rest in here.
+         //{
+         //   RtlInitUnicodeString( &MenuName, L"SYSMENUMDI");
+         //   hNewMenu = co_IntCallLoadMenu( hModClient, &MenuName);
+         //}
+         //else
+         {
+            RtlInitUnicodeString( &MenuName, L"SYSMENU");
+            hNewMenu = co_IntCallLoadMenu( hModClient, &MenuName);
+            //ERR("%wZ\n",&MenuName);
+         }
          if(!hNewMenu)
          {
+            ERR("No Menu!!\n");
             IntReleaseMenuObject(SysMenu);
             UserDestroyMenu(hSysMenu);
             return NULL;
@@ -971,6 +980,21 @@ IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
             UserDestroyMenu(hSysMenu);
             return NULL;
          }
+
+         // Do the rest in here.
+
+         Menu->fFlags |= MNS_CHECKORBMP | MNF_SYSDESKMN | MNF_POPUP;
+
+         ItemInfoSet.cbSize = sizeof( MENUITEMINFOW);
+         ItemInfoSet.fMask = MIIM_BITMAP;
+         ItemInfoSet.hbmpItem = HBMMENU_POPUP_CLOSE;
+         IntMenuItemInfo(Menu, SC_CLOSE, FALSE, &ItemInfoSet, TRUE, NULL);
+         ItemInfoSet.hbmpItem = HBMMENU_POPUP_RESTORE;
+         IntMenuItemInfo(Menu, SC_RESTORE, FALSE, &ItemInfoSet, TRUE, NULL);
+         ItemInfoSet.hbmpItem = HBMMENU_POPUP_MAXIMIZE;
+         IntMenuItemInfo(Menu, SC_MAXIMIZE, FALSE, &ItemInfoSet, TRUE, NULL);
+         ItemInfoSet.hbmpItem = HBMMENU_POPUP_MINIMIZE;
+         IntMenuItemInfo(Menu, SC_MINIMIZE, FALSE, &ItemInfoSet, TRUE, NULL);
 
          NewMenu = IntCloneMenu(Menu);
          if(NewMenu)

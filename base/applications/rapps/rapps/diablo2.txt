@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Diablo II
@@ -36,8 +37,8 @@ Description = Diablo 2 Shareware. Pentru execuție este necesar (pachetul) zecke
 Size = 131,9 Mo
 
 [Section.041f]
-Licence = Kısıtlı
-Description = Diablo 2'nin kısıtlısı. Çalıştırmak için zeckensack'ın glide çeviricisi gereklidir.
+Licence = Paylaşımlı
+Description = Diablo 2 Paylaşımlı. Çalıştırmak için zeckensack'ın glide wrapper'ı gereklidir.
 Size = 131,9 MB
 
 [Section.0422]

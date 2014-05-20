@@ -51,7 +51,8 @@ typedef struct _VDM_MENUITEM
 
 static const VDM_MENUITEM VdmMenuItems[] =
 {
-    { IDS_VDM_QUIT, NULL, ID_VDM_QUIT },
+    { IDS_VDM_DUMPMEM, NULL, ID_VDM_DUMPMEM },
+    { IDS_VDM_QUIT   , NULL, ID_VDM_QUIT    },
 
     { 0, NULL, 0 }      /* End of list */
 };
@@ -368,6 +369,10 @@ PumpConsoleInput(LPVOID Parameter)
                         ShowPointer = !ShowPointer;
                         break;
 
+                    case ID_VDM_DUMPMEM:
+                        DumpMemory();
+                        break;
+
                     case ID_VDM_QUIT:
                         /* Stop the VDM */
                         EmulatorTerminate();
@@ -401,9 +406,11 @@ CommandThreadProc(LPVOID Parameter)
     CHAR PifFile[MAX_PATH];
     CHAR Desktop[MAX_PATH];
     CHAR Title[MAX_PATH];
-    CHAR Env[MAX_PATH];
+    ULONG EnvSize = 256;
+    PVOID Env = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
 
     UNREFERENCED_PARAMETER(Parameter);
+    ASSERT(Env != NULL);
 
     do
     {
@@ -424,12 +431,25 @@ CommandThreadProc(LPVOID Parameter)
         CommandInfo.Title = Title;
         CommandInfo.TitleLen = sizeof(Title);
         CommandInfo.Env = Env;
-        CommandInfo.EnvLen = sizeof(Env);
+        CommandInfo.EnvLen = EnvSize;
 
         if (First) CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
 
-        /* Wait for the next available VDM */
-        if (!GetNextVDMCommand(&CommandInfo)) break;
+Command:
+        if (!GetNextVDMCommand(&CommandInfo))
+        {
+            if (CommandInfo.EnvLen > EnvSize)
+            {
+                /* Expand the environment size */
+                EnvSize = CommandInfo.EnvLen;
+                Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
+
+                /* Repeat the request */
+                goto Command;
+            }
+
+            break;
+        }
 
         /* Start the process from the command line */
         DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
@@ -445,6 +465,7 @@ CommandThreadProc(LPVOID Parameter)
     }
     while (AcceptCommands);
 
+    HeapFree(GetProcessHeap(), 0, Env);
     return 0;
 }
 #endif

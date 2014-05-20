@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Вас приветствует программа установки ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "Установку ReactOS можно производить только загрузившись с этого диска! После перезапуска компьютера выберите загрузку с CD и начните установку ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Нажмите кнопку ""ЗавершитьW"" для выхода.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Нажмите кнопку ""Завершить"" для выхода.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_LANGSELPAGE DIALOGEX 0, 0, 317, 193
@@ -40,7 +40,7 @@ CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Основные устройства", IDC_STATIC, "Button", BS_GROUPBOX, 10, 0, 297, 172
-    LTEXT "Компьтер:", IDC_STATIC, 20, 15, 80, 10
+    LTEXT "Компьютер:", IDC_STATIC, 20, 15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 150, 80
     LTEXT "Экран:", IDC_STATIC, 20, 35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 150, 80
@@ -65,7 +65,7 @@ END
 
 IDD_PARTITION DIALOGEX 0, 0, 145, 90
 STYLE WS_VISIBLE | WS_CAPTION
-CAPTION "Create Partition"
+CAPTION "Создать раздел на диске"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13

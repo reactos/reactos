@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Runtime
 Version = 1.2.15
 Licence = LGPL
-Description = Needed for many Open Source Games to run. You need 7-Zip or a similar Utility to extract it.
+Description = Needed for many open source games to run. You need 7-Zip or a similar utility to extract it.
 Size = 136.67 kB
 Category = 14
 URLSite = http://www.libsdl.org/
@@ -40,7 +41,7 @@ Size = 136,67 ko
 
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Yürütücüsü
-Description = Birtakım açık kaynak uygulamalar için gereklidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = Birçok açık kaynak oyunu çalıştırmak için gereklidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 136,67 KB
 
 [Section.0422]

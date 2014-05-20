@@ -230,6 +230,19 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /*  HarfBuzz support.                                                    */
+  /*                                                                       */
+  /*   FreeType uses the HarfBuzz library to improve auto-hinting of       */
+  /*   OpenType fonts.  If available, many glyphs not directly addressable */
+  /*   by a font's character map will be hinted also.                      */
+  /*                                                                       */
+  /*   Define this macro if you want to enable this `feature'.             */
+  /*                                                                       */
+/* #define FT_CONFIG_OPTION_USE_HARFBUZZ */
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* DLL export compilation                                                */
   /*                                                                       */
   /*   When compiling FreeType as a DLL, some systems/compilers need a     */

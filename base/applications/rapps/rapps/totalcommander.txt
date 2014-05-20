@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Total Commander
@@ -13,6 +14,7 @@ CDPath = none
 
 [Section.0407]
 Description = Total Commander ist ein Dateimanager mit zwei nebeneinander liegenden Panels.
+URLSite = http://www.ghisler.com/deutsch.htm
 
 [Section.0410]
 Description = Total Commander è un file manager con due pannelli affiancati.
@@ -29,8 +31,8 @@ Description = Total Commander este un gestionar de fișiere după modelul «dou�
 Size = 3,5 Mo
 
 [Section.041f]
-Licence = Kısıtlı
-Description = Total Commander, yan yana iki bölmenin bulunduğu bir kütük yöneticisidir.
+Licence = Paylaşımlı
+Description = Total Commander, yan yana iki bölmeli bir kütük yöneticisidir.
 Size = 3,5 MB
 
 [Section.0813]

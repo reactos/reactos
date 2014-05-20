@@ -73,22 +73,25 @@ MiLocateAddress(IN PVOID VirtualAddress)
     return FoundVad;
 }
 
-PMMADDRESS_NODE
+TABLE_SEARCH_RESULT
 NTAPI
 MiCheckForConflictingNode(IN ULONG_PTR StartVpn,
                           IN ULONG_PTR EndVpn,
-                          IN PMM_AVL_TABLE Table)
+                          IN PMM_AVL_TABLE Table,
+                          OUT PMMADDRESS_NODE *NodeOrParent)
 {
-    PMMADDRESS_NODE CurrentNode;
+    PMMADDRESS_NODE ParentNode, CurrentNode;
 
     /* If the tree is empty, there is no conflict */
-    if (!Table->NumberGenericTableElements) return NULL;
+    if (Table->NumberGenericTableElements == 0) return TableEmptyTree;
 
-    /* Start looping from the right */
+    /* Start looping from the root node */
     CurrentNode = RtlRightChildAvl(&Table->BalancedRoot);
     ASSERT(CurrentNode != NULL);
     while (CurrentNode)
     {
+        ParentNode = CurrentNode;
+
         /* This address comes after */
         if (StartVpn > CurrentNode->EndingVpn)
         {
@@ -103,12 +106,21 @@ MiCheckForConflictingNode(IN ULONG_PTR StartVpn,
         else
         {
             /* This address is part of this node, return it */
-            break;
+            *NodeOrParent = ParentNode;
+            return TableFoundNode;
         }
     }
 
-    /* Return either the conflicting node, or no node at all */
-    return CurrentNode;
+    /* There is no more child, save the current node as parent */
+    *NodeOrParent = ParentNode;
+    if (StartVpn > ParentNode->EndingVpn)
+    {
+        return TableInsertAsRight;
+    }
+    else
+    {
+        return TableInsertAsLeft;
+    }
 }
 
 VOID
@@ -338,7 +350,7 @@ MiGetNextNode(IN PMMADDRESS_NODE Node)
     return NULL;
 }
 
-NTSTATUS
+TABLE_SEARCH_RESULT
 NTAPI
 MiFindEmptyAddressRangeInTree(IN SIZE_T Length,
                               IN ULONG_PTR Alignment,
@@ -346,67 +358,78 @@ MiFindEmptyAddressRangeInTree(IN SIZE_T Length,
                               OUT PMMADDRESS_NODE *PreviousVad,
                               OUT PULONG_PTR Base)
 {
-    PMMADDRESS_NODE Node;
-    PMMADDRESS_NODE NextNode;
-    ULONG_PTR StartingVpn, HighestVpn, AlignmentVpn, LengthVpn, LowVpn;
+    PMMADDRESS_NODE Node, PreviousNode;
+    ULONG_PTR PageCount, AlignmentVpn, LowVpn, HighVpn;
     ASSERT(Length != 0);
 
-    /* Precompute page numbers for the length, alignment, and starting address */
-    LengthVpn = (Length + (PAGE_SIZE - 1)) >> PAGE_SHIFT;
+    /* Calculate page numbers for the length, alignment, and starting address */
+    PageCount = BYTES_TO_PAGES(Length);
     AlignmentVpn = Alignment >> PAGE_SHIFT;
-    StartingVpn = ROUND_UP((ULONG_PTR)MM_LOWEST_USER_ADDRESS >> PAGE_SHIFT,
-                           AlignmentVpn);
+    LowVpn = ALIGN_UP_BY((ULONG_PTR)MM_LOWEST_USER_ADDRESS >> PAGE_SHIFT, AlignmentVpn);
 
-    /* Check if the table is free, so the lowest possible address is available */
-    if (!Table->NumberGenericTableElements) goto FoundAtBottom;
+    /* Check if the table is empty */
+    if (Table->NumberGenericTableElements == 0)
+    {
+        /* Tree is empty, the candidate address is already the best one */
+        *Base = LowVpn << PAGE_SHIFT;
+        return TableEmptyTree;
+    }
 
     /* Otherwise, follow the leftmost child of the right root node's child */
     Node = RtlRightChildAvl(&Table->BalancedRoot);
     while (RtlLeftChildAvl(Node)) Node = RtlLeftChildAvl(Node);
 
-    /* This is the node for the remaining gap at the bottom, can it be used? */
-    if ((Node->StartingVpn > StartingVpn) &&
-        (LengthVpn < Node->StartingVpn - StartingVpn))
+    /* Start a search to find a gap */
+    PreviousNode = NULL;
+    while (Node != NULL)
     {
-FoundAtBottom:
-        /* Use this VAD to store the allocation */
-        *PreviousVad = NULL;
-        *Base = StartingVpn << PAGE_SHIFT;
-        return STATUS_SUCCESS;
-    }
-
-    /* Otherwise, we start a search to find a gap */
-    while (TRUE)
-    {
-        /* The last aligned page number in this entry */
-        LowVpn = ROUND_UP(Node->EndingVpn + 1, AlignmentVpn);
-
-        /* Keep going as long as there's still a next node */
-        NextNode = MiGetNextNode(Node);
-        if (!NextNode) break;
-
-        /* Can this allocation fit in this node? */
-        if ((LengthVpn <= (NextNode->StartingVpn - LowVpn)) &&
-            (NextNode->StartingVpn > LowVpn))
+        /* Check if the gap below the current node is suitable */
+        if (Node->StartingVpn >= LowVpn + PageCount)
         {
-Found:
-            /* Yes! Use this VAD to store the allocation */
-            *PreviousVad = Node;
-            *Base = ROUND_UP((Node->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1),
-                             Alignment);
-            return STATUS_SUCCESS;
+            /* There is enough space to add our node */
+            *Base = LowVpn << PAGE_SHIFT;
+
+            /* Can we use the current node as parent? */
+            if (RtlLeftChildAvl(Node) == NULL)
+            {
+                /* Node has no left child, so use it as parent */
+                *PreviousVad = Node;
+                return TableInsertAsLeft;
+            }
+            else
+            {
+                /* Node has a left child, this means that the previous node is
+                   the right-most child of it's left child and can be used as
+                   the parent. In case we use the space before the left-most
+                   node, it's left child must be NULL. */
+                ASSERT(PreviousNode != NULL);
+                ASSERT(RtlRightChildAvl(PreviousNode) == NULL);
+                *PreviousVad = PreviousNode;
+                return TableInsertAsRight;
+            }
         }
 
-        /* Try the next node */
-        Node = NextNode;
+        /* The next candidate is above the current node */
+        if (Node->EndingVpn >= LowVpn)
+            LowVpn = ALIGN_UP_BY(Node->EndingVpn + 1, AlignmentVpn);
+
+        /* Remember the current node and go to the next node */
+        PreviousNode = Node;
+        Node = MiGetNextNode(Node);
     }
 
-    /* We're down to the last (top) VAD, will this allocation fit inside it? */
-    HighestVpn = ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1) >> PAGE_SHIFT;
-    if ((HighestVpn > LowVpn) && (LengthVpn <= HighestVpn - LowVpn)) goto Found;
+    /* We're up to the highest VAD, will this allocation fit above it? */
+    HighVpn = ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1) / PAGE_SIZE;
+    if (HighVpn >= LowVpn + PageCount)
+    {
+        /* Yes! Use this VAD to store the allocation */
+        *PreviousVad = PreviousNode;
+        *Base = LowVpn << PAGE_SHIFT;
+        return TableInsertAsRight;
+    }
 
     /* Nyet, there's no free address space for this allocation, so we'll fail */
-    return STATUS_NO_MEMORY;
+    return TableFoundNode;
 }
 
 TABLE_SEARCH_RESULT
@@ -418,55 +441,59 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
                                 OUT PULONG_PTR Base,
                                 OUT PMMADDRESS_NODE *Parent)
 {
-    PMMADDRESS_NODE Node, LowestNode, Child;
-    ULONG_PTR LowVpn, HighVpn;
+    PMMADDRESS_NODE Node, OldNode, Child;
+    ULONG_PTR LowVpn, HighVpn, AlignmentVpn;
     PFN_NUMBER PageCount;
 
     /* Sanity checks */
     ASSERT(BoundaryAddress);
-    ASSERT(BoundaryAddress <= ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
+    ASSERT(BoundaryAddress <= ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS));
+    ASSERT((Alignment & (PAGE_SIZE - 1)) == 0);
 
-    /* Compute page length, make sure the boundary address is valid */
+    /* Calculate page numbers for the length and alignment */
     Length = ROUND_TO_PAGES(Length);
     PageCount = Length >> PAGE_SHIFT;
-    if ((BoundaryAddress + 1) < Length) return TableFoundNode;
+    AlignmentVpn = Alignment / PAGE_SIZE;
+
+    /* Check if there is enough space below the boundary */
+    if ((ALIGN_UP_BY((ULONG_PTR)MM_LOWEST_USER_ADDRESS, Alignment) + Length) >
+        (BoundaryAddress + 1))
+    {
+        return TableFoundNode;
+    }
 
     /* Check if the table is empty */
     if (Table->NumberGenericTableElements == 0)
     {
         /* Tree is empty, the candidate address is already the best one */
-        *Base = ROUND_UP(BoundaryAddress + 1 - Length, Alignment);
+        *Base = ALIGN_DOWN_BY(BoundaryAddress + 1 - Length, Alignment);
         return TableEmptyTree;
     }
 
     /* Calculate the initial upper margin */
-    HighVpn = BoundaryAddress >> PAGE_SHIFT;
+    HighVpn = (BoundaryAddress + 1) >> PAGE_SHIFT;
 
-    /* Starting from the root, go down until the right-most child
-     * which is just behind the boundary*/
-    LowestNode = Node = RtlRightChildAvl(&Table->BalancedRoot);
-    while (((Child = RtlRightChildAvl(Node)) != 0 )
-            && (Node->EndingVpn < HighVpn )) Node = Child;
+    /* Starting from the root, follow the right children until we found a node
+       that ends above the boundary */
+    Node = RtlRightChildAvl(&Table->BalancedRoot);
+    while ((Node->EndingVpn < HighVpn) &&
+           ((Child = RtlRightChildAvl(Node)) != NULL)) Node = Child;
 
     /* Now loop the Vad nodes */
     while (Node)
     {
-        /* Keep track of the lowest node */
-        LowestNode = Node;
-
         /* Calculate the lower margin */
-        LowVpn = ROUND_UP(Node->EndingVpn + 1, Alignment >> PAGE_SHIFT);
+        LowVpn = ALIGN_UP_BY(Node->EndingVpn + 1, AlignmentVpn);
 
         /* Check if the current bounds are suitable */
         if ((HighVpn > LowVpn) && ((HighVpn - LowVpn) >= PageCount))
         {
             /* There is enough space to add our node */
-            LowVpn = HighVpn - PageCount;
+            LowVpn = ALIGN_DOWN_BY(HighVpn - PageCount, AlignmentVpn);
             *Base = LowVpn << PAGE_SHIFT;
 
             /* Can we use the current node as parent? */
-            Child = RtlRightChildAvl(Node);
-            if (!Child)
+            if (!RtlRightChildAvl(Node))
             {
                 /* Node has no right child, so use it as parent */
                 *Parent = Node;
@@ -474,29 +501,29 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
             }
             else
             {
-                /* Node has a right child, find most left grand child */
-                Node = Child;
-                while ((Child = RtlLeftChildAvl(Node))) Node = Child;
-                *Parent = Node;
+                /* Node has a right child, the node we had before is the most
+                   left grandchild of that right child, use it as parent. */
+                *Parent = OldNode;
                 return TableInsertAsLeft;
             }
         }
 
-        /* Update the upper margin if neccessary */
+        /* Update the upper margin if necessary */
         if (Node->StartingVpn < HighVpn) HighVpn = Node->StartingVpn;
 
-        /* Go to the next lower node */
+        /* Remember the current node and go to the previous node */
+        OldNode = Node;
         Node = MiGetPreviousNode(Node);
     }
 
     /* Check if there's enough space before the lowest Vad */
-    LowVpn = ROUND_UP((ULONG_PTR)MI_LOWEST_VAD_ADDRESS, Alignment) >> PAGE_SHIFT;
+    LowVpn = ALIGN_UP_BY((ULONG_PTR)MI_LOWEST_VAD_ADDRESS, Alignment) / PAGE_SIZE;
     if ((HighVpn > LowVpn) && ((HighVpn - LowVpn) >= PageCount))
     {
         /* There is enough space to add our address */
-        LowVpn = HighVpn - PageCount;
+        LowVpn = ALIGN_DOWN_BY(HighVpn - PageCount, Alignment >> PAGE_SHIFT);
         *Base = LowVpn << PAGE_SHIFT;
-        *Parent = LowestNode;
+        *Parent = OldNode;
         return TableInsertAsLeft;
     }
 
@@ -527,7 +554,7 @@ MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
     if ((BoundaryAddress + 1) < Length) return STATUS_NO_MEMORY;
 
     /* Check if the table is empty */
-    BestVpn = ROUND_UP(BoundaryAddress + 1 - Length, Alignment);
+    BestVpn = ROUND_DOWN(BoundaryAddress + 1 - Length, Alignment);
     if (Table->NumberGenericTableElements == 0)
     {
         /* Tree is empty, the candidate address is already the best one */
@@ -540,11 +567,18 @@ MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
     while (RtlRightChildAvl(Node)) Node = RtlRightChildAvl(Node);
 
     /* Check if we can fit in here */
-    LowVpn = ROUND_UP(Node->EndingVpn, Alignment);
-    if ((LowVpn < BoundaryAddress) && (Length < (BoundaryAddress - LowVpn)))
+    LowVpn = ROUND_UP(Node->EndingVpn + 1, Alignment);
+    if ((LowVpn < BoundaryAddress) && (Length <= (BoundaryAddress - LowVpn)))
     {
-        /* Return the address */
-        *Base = ROUND_UP(BoundaryAddress - Length, Alignment);
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        /* Return the address. */
+        *Base = BestVpn;
+#else
+        /* Note: this is a compatibility hack that mimics a bug in the 2k3
+           kernel. It will can waste up to Alignment bytes of memory above
+           the allocation. This bug was fixed in Windows Vista */
+        *Base = ROUND_DOWN(BoundaryAddress - Length, Alignment);
+#endif
         return STATUS_SUCCESS;
     }
 
@@ -558,22 +592,20 @@ MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
         /* Check if this node could contain the requested address */
         LowVpn = ROUND_UP(LowestNode->EndingVpn + 1, Alignment);
         if ((LowestNode->EndingVpn < BestVpn) &&
+            (LowVpn < Node->StartingVpn) &&
             (Length <= (Node->StartingVpn - LowVpn)))
         {
-            /* Check if it fits in perfectly */
-            if ((BestVpn > LowestNode->EndingVpn) &&
-                (BoundaryAddress < Node->StartingVpn))
+            /* Check if we need to take BoundaryAddress into account */
+            if (BoundaryAddress < Node->StartingVpn)
             {
                 /* Return the optimal VPN address */
                 *Base = BestVpn;
                 return STATUS_SUCCESS;
             }
-
-            /* It doesn't, check if it can partly fit */
-            if (Node->StartingVpn > LowVpn)
+            else
             {
-                /* Return an aligned base address within this node */
-                *Base = ROUND_UP(Node->StartingVpn - Length, Alignment);
+                /* The upper margin is given by the Node's starting address */
+                *Base = ROUND_DOWN(Node->StartingVpn - Length, Alignment);
                 return STATUS_SUCCESS;
             }
         }
@@ -584,7 +616,7 @@ MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
 
     /* Check if there's enough space before the lowest Vad */
     if ((Node->StartingVpn > (ULONG_PTR)MI_LOWEST_VAD_ADDRESS) &&
-        ((Node->StartingVpn - (ULONG_PTR)MI_LOWEST_VAD_ADDRESS) > Length))
+        ((Node->StartingVpn - (ULONG_PTR)MI_LOWEST_VAD_ADDRESS) >= Length))
     {
         /* Check if it fits in perfectly */
         if (BoundaryAddress < Node->StartingVpn)
@@ -595,7 +627,7 @@ MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
         }
 
         /* Return an aligned base address within this node */
-        *Base = ROUND_UP(Node->StartingVpn - Length, Alignment);
+        *Base = ROUND_DOWN(Node->StartingVpn - Length, Alignment);
         return STATUS_SUCCESS;
     }
 
@@ -669,3 +701,4 @@ MiCheckSecuredVad(IN PMMVAD Vad,
 }
 
 /* EOF */
+

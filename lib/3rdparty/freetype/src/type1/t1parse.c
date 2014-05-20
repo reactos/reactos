@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (body).                                                */
 /*                                                                         */
-/*  Copyright 1996-2005, 2008, 2009, 2012, 2013 by                         */
+/*  Copyright 1996-2005, 2008, 2009, 2012-2014 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -332,9 +332,11 @@
       /* dictionary block in the heap.                                 */
 
       /* first of all, look at the `eexec' keyword */
-      FT_Byte*  cur   = parser->base_dict;
-      FT_Byte*  limit = cur + parser->base_len;
-      FT_Byte   c;
+      FT_Byte*    cur   = parser->base_dict;
+      FT_Byte*    limit = cur + parser->base_len;
+      FT_Byte     c;
+      FT_Pointer  pos_lf;
+      FT_Bool     test_cr;
 
 
     Again:
@@ -400,15 +402,24 @@
       cur   = parser->root.cursor;
       limit = parser->root.limit;
 
-      /* according to the Type1 spec, the first cipher byte must not be  */
+      /* According to the Type 1 spec, the first cipher byte must not be */
       /* an ASCII whitespace character code (blank, tab, carriage return */
       /* or line feed).  We have seen Type 1 fonts with two line feed    */
       /* characters...  So skip now all whitespace character codes.      */
-      while ( cur < limit       &&
-              ( *cur == ' '  ||
-                *cur == '\t' ||
-                *cur == '\r' ||
-                *cur == '\n' ) )
+      /*                                                                 */
+      /* On the other hand, Adobe's Type 1 parser handles fonts just     */
+      /* fine that are violating this limitation, so we add a heuristic  */
+      /* test to stop at \r only if it is not used for EOL.              */
+
+      pos_lf  = ft_memchr( cur, '\n', limit - cur );
+      test_cr = FT_BOOL( !pos_lf                                      ||
+                         pos_lf > ft_memchr( cur, '\r', limit - cur ) );
+
+      while ( cur < limit                    &&
+              ( *cur == ' '                ||
+                *cur == '\t'               ||
+                (test_cr && *cur == '\r' ) ||
+                *cur == '\n'               ) )
         ++cur;
       if ( cur >= limit )
       {

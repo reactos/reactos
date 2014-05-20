@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = HxD
@@ -32,6 +33,6 @@ URLDownload = http://mh-nexus.de/downloads/HxDSetupROM.zip
 
 [Section.041f]
 Licence = Ücretsiz
-Description = İyi bir onaltılık düzenleyici. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = İyi bir onaltılık düzenleyici. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 853 KB
 URLDownload = http://mh-nexus.de/downloads/HxDSetupTR.zip

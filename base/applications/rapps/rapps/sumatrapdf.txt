@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = SumatraPDF
@@ -12,32 +13,36 @@ URLDownload = https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-2.4-inst
 CDPath = none
 
 [Section.0407]
-Description = Sumatra PDF ist ein freies, schlankes, Open-Source PDF-Anzeigeprogramm.
+Description = Sumatra PDF ist ein freies, schlankes, Open-Source PDF-Anzeigeprogramm. (FIXME)
+URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-de.html
 
 [Section.040a]
-Description = Sumatra PDF es un lector PDF ligero, libre y open-source.
+Description = Sumatra PDF es un lector PDF ligero, libre y open-source. (FIXME)
+URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-es.html
 
 [Section.040c]
-Description = Sumatra PDF est un lecteur PDF lÃ©ger, libre et open-source.
+Description = Sumatra PDF est un lecteur PDF lÃ©ger, libre et open-source. (FIXME)
 Size = 4,0 Mo
+URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-fr.html
 
 [Section.0410]
-Description = Sumatra PDF è un visualizzatore di file PDF, leggero e open source.
+Description = Sumatra PDF è un visualizzatore di file PDF, leggero e open source. (FIXME)
 
 [Section.0413]
-Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.
+Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer. (FIXME)
 
 [Section.0415]
-Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.
+Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF. (FIXME)
 
 [Section.0418]
-Description = Lector PDF - ușor, gratuit (open-source), și portabil.
+Description = Lector PDF - ușor, gratuit (open-source), și portabil. (FIXME)
 Size = 4,0 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 
 [Section.041f]
-Description = SumatraPDF; yeğni, ücretsiz ve açık kaynak bir PDF okuyucusudur. Taşınabilirdir.
+Licence = GPL 3. sürüm
+Description = SumatraPDF; yeğni, ücretsiz ve açık kaynak bir PDF okuyucusudur. Kutunun dışında taşınabilirdir.
 Size = 4,0 MB
 
 [Section.0813]
-Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.
+Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer. (FIXME)

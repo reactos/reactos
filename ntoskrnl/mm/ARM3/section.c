@@ -1214,6 +1214,8 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     ULONG QuotaCharge = 0, QuotaExcess = 0;
     PMMPTE PointerPte, LastPte;
     MMPTE TempPte;
+    PMMADDRESS_NODE Parent;
+    TABLE_SEARCH_RESULT Result;
 
     /* Get the segment for this section */
     Segment = ControlArea->Segment;
@@ -1302,23 +1304,29 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
         if (AllocationType & MEM_TOP_DOWN)
         {
             /* No, find an address top-down */
-            Status = MiFindEmptyAddressRangeDownTree(*ViewSize,
+            Result = MiFindEmptyAddressRangeDownTree(*ViewSize,
                                                      (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
                                                      _64K,
                                                      &Process->VadRoot,
                                                      &StartAddress,
-                                                     (PMMADDRESS_NODE*)&Process->VadFreeHint);
-            ASSERT(NT_SUCCESS(Status));
+                                                     &Parent);
         }
         else
         {
             /* No, find an address bottom-up */
-            Status = MiFindEmptyAddressRangeInTree(*ViewSize,
+            Result = MiFindEmptyAddressRangeInTree(*ViewSize,
                                                    _64K,
                                                    &Process->VadRoot,
-                                                   (PMMADDRESS_NODE*)&Process->VadFreeHint,
+                                                   &Parent,
                                                    &StartAddress);
-            ASSERT(NT_SUCCESS(Status));
+        }
+
+        /* Check if we found a suitable location */
+        if (Result == TableFoundNode)
+        {
+            DPRINT1("Not enough free space to insert this section!\n");
+            MiDereferenceControlArea(ControlArea);
+            return STATUS_CONFLICTING_ADDRESSES;
         }
 
         /* Get the ending address, which is the last piece we need for the VAD */
@@ -1343,9 +1351,11 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
         EndingAddress = (StartAddress + *ViewSize - 1) | (PAGE_SIZE - 1);
 
         /* Make sure it doesn't conflict with an existing allocation */
-        if (MiCheckForConflictingNode(StartAddress >> PAGE_SHIFT,
-                                      EndingAddress >> PAGE_SHIFT,
-                                      &Process->VadRoot))
+        Result = MiCheckForConflictingNode(StartAddress >> PAGE_SHIFT,
+                                           EndingAddress >> PAGE_SHIFT,
+                                           &Process->VadRoot,
+                                           &Parent);
+        if (Result == TableFoundNode)
         {
             DPRINT1("Conflict with SEC_BASED or manually based section!\n");
             MiDereferenceControlArea(ControlArea);
@@ -1395,7 +1405,8 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     MiLockProcessWorkingSetUnsafe(Process, Thread);
 
     /* Insert the VAD */
-    MiInsertVad((PMMVAD)Vad, Process);
+    Process->VadRoot.NodeHint = Vad;
+    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
 
     /* Release the working set */
     MiUnlockProcessWorkingSetUnsafe(Process, Thread);

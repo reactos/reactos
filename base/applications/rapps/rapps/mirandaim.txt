@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Miranda IM
@@ -35,7 +36,7 @@ Description = Aplicație de mesagerie instant multiprotocol (open-source) - posi
 Size = 2,8 Mo
 
 [Section.041f]
-Description = Bir açık kaynak, çoklu iletişim kurallı ve evgin iletileşme yazılımı. Eksiksiz olarak çalışmayabilir.
+Description = Açık kaynak, çoklu iletişim kâideli, evgin iletileşme uygulaması. Eksiksiz olarak çalışmayabilir.
 Size = 2,8 MB
 
 [Section.0422]

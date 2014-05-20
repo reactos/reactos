@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType high-level API and common types (specification only).       */
 /*                                                                         */
-/*  Copyright 1996-2013 by                                                 */
+/*  Copyright 1996-2014 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -37,6 +37,38 @@
 
 FT_BEGIN_HEADER
 
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Section>                                                             */
+  /*    header_inclusion                                                   */
+  /*                                                                       */
+  /* <Title>                                                               */
+  /*    FreeType's header inclusion scheme                                 */
+  /*                                                                       */
+  /* <Abstract>                                                            */
+  /*    How client applications should include FreeType header files.      */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    To be as flexible as possible (and for historical reasons),        */
+  /*    FreeType uses a very special inclusion scheme to load header       */
+  /*    files, for example                                                 */
+  /*                                                                       */
+  /*    {                                                                  */
+  /*      #include <ft2build.h>                                            */
+  /*                                                                       */
+  /*      #include FT_FREETYPE_H                                           */
+  /*      #include FT_OUTLINE_H                                            */
+  /*    }                                                                  */
+  /*                                                                       */
+  /*    A compiler and its preprocessor only needs an include path to find */
+  /*    the file `ft2build.h'; the exact locations and names of the other  */
+  /*    FreeType header files are hidden by preprocessor macro names,      */
+  /*    loaded by `ft2build.h'.  The API documentation always gives the    */
+  /*    header macro name needed for a particular function.                */
+  /*                                                                       */
+  /*************************************************************************/
 
 
   /*************************************************************************/
@@ -2273,6 +2305,8 @@ FT_BEGIN_HEADER
   /*    glyph relative to this size.  For more information refer to        */
   /*    `http://www.freetype.org/freetype2/docs/glyphs/glyphs-2.html'      */
   /*                                                                       */
+  /*    Don't use this function if you are using the FreeType cache API.   */
+  /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Request_Size( FT_Face          face,
                    FT_Size_Request  req );
@@ -2346,6 +2380,8 @@ FT_BEGIN_HEADER
   /*    You should not rely on the resulting glyphs matching, or being     */
   /*    constrained, to this pixel size.  Refer to @FT_Request_Size to     */
   /*    understand how requested sizes relate to actual sizes.             */
+  /*                                                                       */
+  /*    Don't use this function if you are using the FreeType cache API.   */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_Pixel_Sizes( FT_Face  face,
@@ -2838,6 +2874,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    To get meaningful results, font scaling values must be set with    */
+  /*    functions like @FT_Set_Char_Size before calling FT_Render_Glyph.   */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Render_Glyph( FT_GlyphSlot    slot,
@@ -3925,7 +3965,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  5
-#define FREETYPE_PATCH  2
+#define FREETYPE_PATCH  3
 
 
   /*************************************************************************/

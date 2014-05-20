@@ -1444,7 +1444,6 @@ InstallFat16BootCodeToDisk(
     NTSTATUS Status;
     PFAT_BOOTSECTOR OrigBootSector;
     PFAT_BOOTSECTOR NewBootSector;
-    PARTITION_INFORMATION *PartInfo;
 
     /* Allocate buffer for original bootsector */
     OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
@@ -1543,8 +1542,7 @@ InstallFat16BootCodeToDisk(
            FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
 
-    PartInfo = &PartitionList->CurrentPartition->PartInfo[PartitionList->CurrentPartitionNumber];
-    NewBootSector->HiddenSectors = PartInfo->HiddenSectors;
+    NewBootSector->HiddenSectors = PartitionList->CurrentDisk->SectorsPerTrack;
 
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1606,7 +1604,6 @@ InstallFat32BootCodeToDisk(
     PFAT32_BOOTSECTOR NewBootSector;
     LARGE_INTEGER FileOffset;
     USHORT BackupBootSector;
-    PARTITION_INFORMATION *PartInfo;
 
     /* Allocate buffer for original bootsector */
     OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
@@ -1704,8 +1701,7 @@ InstallFat32BootCodeToDisk(
            FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
-    PartInfo = &PartitionList->CurrentPartition->PartInfo[PartitionList->CurrentPartitionNumber];
-    NewBootSector->HiddenSectors = PartInfo->HiddenSectors;
+    NewBootSector->HiddenSectors = PartitionList->CurrentDisk->SectorsPerTrack;
 
     /* Get the location of the backup boot sector */
     BackupBootSector = OrigBootSector->BackupBootSector;

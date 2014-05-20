@@ -2,8 +2,9 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            dos/dos32krnl/dosfiles.c
- * PURPOSE:         DOS Files
+ * PURPOSE:         DOS32 Files Support
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
@@ -22,13 +23,14 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
+WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attributes)
 {
     HANDLE FileHandle;
     WORD DosHandle;
 
-    DPRINT("DosCreateFile: FilePath \"%s\", Attributes 0x%04X\n",
+    DPRINT("DosCreateFile: FilePath \"%s\", CreationFlags 0x%04X, Attributes 0x%04X\n",
             FilePath,
+            CreationFlags,
             Attributes);
 
     /* Create the file */
@@ -36,7 +38,7 @@ WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
                              GENERIC_READ | GENERIC_WRITE,
                              FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                              NULL,
-                             CREATE_ALWAYS,
+                             CreationFlags,
                              Attributes,
                              NULL);
 
@@ -63,37 +65,40 @@ WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
     return ERROR_SUCCESS;
 }
 
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
+WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes)
 {
     HANDLE FileHandle;
-    ACCESS_MASK Access = 0;
+    ACCESS_MASK AccessMode = 0;
+    DWORD ShareMode = 0;
+    BOOL InheritableFile = FALSE;
+    SECURITY_ATTRIBUTES SecurityAttributes;
     WORD DosHandle;
 
-    DPRINT("DosOpenFile: FilePath \"%s\", AccessMode 0x%04X\n",
+    DPRINT("DosOpenFile: FilePath \"%s\", AccessShareModes 0x%04X\n",
             FilePath,
-            AccessMode);
+            AccessShareModes);
 
     /* Parse the access mode */
-    switch (AccessMode & 3)
+    switch (AccessShareModes & 0x03)
     {
         case 0:
         {
             /* Read-only */
-            Access = GENERIC_READ;
+            AccessMode = GENERIC_READ;
             break;
         }
 
         case 1:
         {
             /* Write only */
-            Access = GENERIC_WRITE;
+            AccessMode = GENERIC_WRITE;
             break;
         }
 
         case 2:
         {
             /* Read and write */
-            Access = GENERIC_READ | GENERIC_WRITE;
+            AccessMode = GENERIC_READ | GENERIC_WRITE;
             break;
         }
 
@@ -104,11 +109,64 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
         }
     }
 
+    /* Parse the share mode */
+    switch ((AccessShareModes >> 4) & 0x07)
+    {
+        case 0:
+        {
+            /* Compatibility mode */
+            ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+            break;
+        }
+
+        case 1:
+        {
+            /* No sharing "DenyAll" */
+            ShareMode = 0;
+            break;
+        }
+
+        case 2:
+        {
+            /* No write share "DenyWrite" */
+            ShareMode = FILE_SHARE_READ;
+            break;
+        }
+
+        case 3:
+        {
+            /* No read share "DenyRead" */
+            ShareMode = FILE_SHARE_WRITE;
+            break;
+        }
+
+        case 4:
+        {
+            /* Full share "DenyNone" */
+            ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+            break;
+        }
+
+        default:
+        {
+            /* Invalid */
+            return ERROR_INVALID_PARAMETER;
+        }
+    }
+
+    /* Check for inheritance */
+    InheritableFile = ((AccessShareModes & 0x80) == 0);
+
+    /* Assign default security attributes to the file, and set the inheritance flag */
+    SecurityAttributes.nLength = sizeof(SecurityAttributes);
+    SecurityAttributes.lpSecurityDescriptor = NULL;
+    SecurityAttributes.bInheritHandle = InheritableFile;
+
     /* Open the file */
     FileHandle = CreateFileA(FilePath,
-                             Access,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                             NULL,
+                             AccessMode,
+                             ShareMode,
+                             &SecurityAttributes,
                              OPEN_EXISTING,
                              FILE_ATTRIBUTE_NORMAL,
                              NULL);
@@ -142,7 +200,7 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
     DWORD BytesRead32 = 0;
     HANDLE Handle = DosGetRealHandle(FileHandle);
 
-    DPRINT1("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
+    DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
     /* Make sure the handle is valid */
     if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
@@ -167,15 +225,14 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
             /* Retrieve the character in AL (scan code is in AH) */
             Character = getAL();
 
-            // FIXME: Sometimes we need echo, some other times not.
-            // DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+            if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
 
             ((PCHAR)Buffer)[BytesRead32] = Character;
 
             /* Stop on first carriage return */
             if (Character == '\r')
             {
-                // DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
+                if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
                 break;
             }
 
@@ -208,9 +265,7 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     DWORD BytesWritten32 = 0;
     HANDLE Handle = DosGetRealHandle(FileHandle);
 
-    DPRINT1("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n",
-           FileHandle,
-           Count);
+    DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
     /* Make sure the handle is valid */
     if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
@@ -314,7 +369,6 @@ WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
     return ERROR_SUCCESS;
 }
 
-// This function is almost exclusively used as a DosFlushInputBuffer
 BOOL DosFlushFileBuffers(WORD FileHandle)
 {
     HANDLE Handle = DosGetRealHandle(FileHandle);
@@ -323,9 +377,11 @@ BOOL DosFlushFileBuffers(WORD FileHandle)
     if (Handle == INVALID_HANDLE_VALUE) return FALSE;
 
     /*
-     * No need to check whether the handle is a console handle since
-     * FlushFileBuffers() automatically does this check and calls
-     * FlushConsoleInputBuffer() for us.
+     * This function can either flush files back to disks, or flush
+     * console input buffers, in which case there is no need to check
+     * whether the handle is a console handle. FlushFileBuffers()
+     * automatically does this check and calls FlushConsoleInputBuffer()
+     * if needed.
      */
     return FlushFileBuffers(Handle);
 }

@@ -47,3 +47,4 @@ UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
 UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);
 BOOL FASTCALL IntRemoveMenuItem(PMENU Menu, UINT uPosition, UINT uFlags, BOOL bRecurse);
 PITEM FASTCALL MENU_FindItem( PMENU *pmenu, UINT *nPos, UINT wFlags );
+BOOL FASTCALL IntMenuItemInfo(PMENU Menu, UINT Item, BOOL ByPosition, PROSMENUITEMINFO UnsafeItemInfo, BOOL SetOrGet, PUNICODE_STRING lpstr);

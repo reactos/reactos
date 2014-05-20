@@ -1,5 +1,6 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Rocks'n'Diamonds
@@ -26,5 +27,6 @@ Description = Un joc de tip arcadă pentru UNIX, Mac OS X, Windows și DOS; resp
 Size = 2,42 Mo
 
 [Section.041f]
-Description = UNIX, Mac OS X, Pencereler ve DOS için yapılmış, atari oyun salonu türünde bir oyun. Şu gelenekleri içerir: "Boulder Dash" (C64), "Zümrüt Mâdeni" (Amiga), "Supaplex" (Amiga ve PC), "Sokoban" (PC). Yazılımı kurmak için ZIP biçiminde çıkartma yeteneği olan bir yazılım gerekir.
+Licence = GPL 2. sürüm
+Description = "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC) gelenekleri içinde; UNIX, Mac OS X, Windows ve DOS için atari oyun salonu türünde oyun. Kurmak için bir ZIP çıkarma izlencesi gerekir.
 Size = 2,42 MB

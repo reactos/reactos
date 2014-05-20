@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            dos.h
- * PURPOSE:         VDM DOS Kernel
+ * FILE:            dos/dos32krnl/dos.h
+ * PURPOSE:         DOS32 Kernel
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
@@ -27,7 +27,7 @@
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"
 #define FIRST_MCB_SEGMENT 0x1000
-#define USER_MEMORY_SIZE 0x8FFE
+#define USER_MEMORY_SIZE (0x9FFE - FIRST_MCB_SEGMENT)
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
 
@@ -160,6 +160,8 @@ typedef struct _DOS_EXEC_PARAM_BLOCK
 
 #pragma pack(pop)
 
+extern BOOLEAN DoEcho;
+
 /* FUNCTIONS ******************************************************************/
 
 extern CALLBACK16 DosContext;
@@ -189,8 +191,8 @@ BOOL IsConsoleHandle(HANDLE hHandle);
 WORD DosOpenHandle(HANDLE Handle);
 HANDLE DosGetRealHandle(WORD DosHandle);
 
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes);
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode);
+WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attributes);
+WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes);
 WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
 WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
 WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset);

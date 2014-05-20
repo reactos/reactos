@@ -1,5 +1,7 @@
 ; UTF-8
-; PL translation by wojo664
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = QB64 (SDL version)
 Version = 0.980
@@ -26,7 +28,7 @@ Description = QB64 este un compilator BASIC auto-compilabil pentru Windows, Linu
 Size = 39,0 Mo
 
 [Section.041f]
-Name = QB64 (SDL Sürümü)
+Name = QB64 (SDL sürümü)
 Licence = Ücretsiz
-Description = QB64; Mikroyazılım Pencereler, Linux ve Mac OS X için yapılmış, Mikroyazılım QBasic ve Mikroyazılım QuickBASIC ile uyumlu olarak tasarlanan, kendi kendini derleyen bir BASIC derleyicisidir. Bunu çıkartmak için 7-Zip ya da 7-Zip benzeri bir yazılım kullanmanız gerekir.
+Description = QB64; Microsoft Windows, Linux ve Mac OS X için, Microsoft QBasic ve Microsoft QuickBASIC ile uyumlu olacak biçimde tasarlanmış, kendi kendini derleyen bir BASIC derleyicisidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 39,0 MB

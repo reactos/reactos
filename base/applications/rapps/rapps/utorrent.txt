@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = µTorrent
@@ -50,8 +51,8 @@ Licence = Бесплатная для некоммерческого испол�
 Description = Маленький и быстрый клиент BitTorrent.
 
 [Section.041f]
-Licence = Ticârî olmayan kullanımlarda ücretsiz.
-Description = Küçük ve hızlı bir BitTorrent istemcisi.
+Licence = Tecimlik olmayan kullanımlar için ücretsiz.
+Description = Küçük ve hızlı BitTorrent istemcisi.
 Size = 1,6 MB
 
 [Section.0422]

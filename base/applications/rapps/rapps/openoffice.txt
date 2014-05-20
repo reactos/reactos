@@ -1,10 +1,11 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = OpenOffice 4.0
 Version = 4.0.1
 Licence = LGPL
-Description = THE Open Source Office Suite.
+Description = The open source office suite.
 Size = 136.79 MB
 Category = 6
 URLSite = http://www.openoffice.org/
@@ -12,39 +13,39 @@ URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1
 CDPath = none
 
 [Section.0407]
-Description = DIE Open Source Office Suite.
-URLSite = http://www.openoffice.org/de/
+Description = DIE Open Source Office Suite. (FIXME)
 Size = 154.88 MB
+URLSite = http://www.openoffice.org/de/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/de/Apache_OpenOffice_4.0.1_Win_x86_install_de.exe
 
 [Section.040a]
 Description = La suite de ofimática de código abierto.
-URLSite = http://www.openoffice.org/es/
 Size = 126.29 MB
+URLSite = http://www.openoffice.org/es/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/es/Apache_OpenOffice_4.0.1_Win_x86_install_es.exe
 
 [Section.040c]
 Description = LA suite bureautique open source.
-URLSite = http://www.openoffice.org/fr/
 Size = 127,22 Mo
+URLSite = http://www.openoffice.org/fr/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/fr/Apache_OpenOffice_4.0.1_Win_x86_install_fr.exe
 
 [Section.0410]
 Description = La suite di office Open Source.
-URLSite = http://www.openoffice.org/it/
 Size = 132.39 MB
+URLSite = http://www.openoffice.org/it/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/it/Apache_OpenOffice_4.0.1_Win_x86_install_it.exe
 
 [Section.0413]
-Description = Open-bron Office Pakket.
-URLSite = http://www.openoffice.org/nl/
+Description = Open-bron Office Pakket. (FIXME)
 Size = 132.11 MB
+URLSite = http://www.openoffice.org/nl/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/nl/Apache_OpenOffice_4.0.1_Win_x86_install_nl.exe
 
 [Section.0415]
 Description = Otwarty pakiet biurowy.
-URLSite = http://www.openoffice.org/pl/
 Size = 127.47 MB
+URLSite = http://www.openoffice.org/pl/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/pl/Apache_OpenOffice_4.0.1_Win_x86_install_pl.exe
 
 [Section.0418]
@@ -60,11 +61,11 @@ URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1
 
 [Section.0422]
 Description = Відкритий офісний пакет.
-URLSite = http://www.openoffice.org/ua/
 Size = 136.79 MB
+URLSite = http://www.openoffice.org/ua/
 
 [Section.0813]
-Description = Open-bron Office Pakket.
-URLSite = http://www.openoffice.org/nl/
+Description = Open-bron Office Pakket. (FIXME)
 Size = 132.11 MB
+URLSite = http://www.openoffice.org/nl/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.0.1/binaries/nl/Apache_OpenOffice_4.0.1_Win_x86_install_nl.exe

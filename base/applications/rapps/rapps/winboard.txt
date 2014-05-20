@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = WinBoard
@@ -35,7 +36,7 @@ Description = WinBoard este o tablă de șah grafică pentru Windows/ReactOS ce 
 Size = 5,93 Mo
 
 [Section.041f]
-Description = WinBoard; GNU Chess, Crafty ve diğer satranç motorlarını Umûmî Ağ satranç sunucuları ve maille yazışmalı satranç için bir arayüz olarak sunan, Windows/ReactOS için bir çizgelik satranç tahtasıdır.
+Description = WinBoard; GNU Chess, Crafty ve diğer satranç motorlarını Umûmî Ağ satranç sunucuları ve postayla yazışmalı satranç için bir arayüz olarak sunan, Windows/ReactOS için bir çizgelik satranç tahtasıdır.
 Size = 5,93 MB
 
 [Section.0422]

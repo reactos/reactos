@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Fox Audio Player
@@ -36,7 +37,7 @@ Size = 1,89 Mo
 
 [Section.041f]
 Name = Fox Ses Oynatıcısı
-Description = Bayağı ve yeğni bir ses oynatıcısı.
+Description = Bayağı ve yeğni ses oynatıcısı.
 Size = 1,89 MB
 
 [Section.0422]

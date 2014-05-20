@@ -30,11 +30,12 @@
 /* FUNCTIONS ******************************************************************/
 
 extern CALLBACK16 BiosContext;
-#define RegisterBiosInt32(IntNumber, IntHandler) \
+#define RegisterBiosInt32(IntNumber, IntHandler)    \
 do { \
-    BiosContext.NextOffset += RegisterInt32(MAKELONG(BiosContext.NextOffset,  \
-                                                     BiosContext.Segment),    \
-                                            (IntNumber), (IntHandler), NULL); \
+    RegisterInt32(BiosContext.TrampolineFarPtr +    \
+                  BiosContext.TrampolineSize   +    \
+                  (IntNumber) * Int16To32StubSize,  \
+                  (IntNumber), (IntHandler), NULL); \
 } while(0);
 
 VOID EnableHwIRQ(UCHAR hwirq, EMULATOR_INT32_PROC func);

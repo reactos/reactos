@@ -108,7 +108,7 @@
   };
 
 
-  /* stringsets are specific to scripts */
+  /* stringsets are specific to styles */
   FT_LOCAL_ARRAY_DEF( AF_Blue_StringRec )
   af_blue_stringsets[] =
   {

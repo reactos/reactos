@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Mozilla SeaMonkey
@@ -51,7 +52,7 @@ Size = 24.27 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.25/win32/ru/SeaMonkey%20Setup%202.25.exe
 
 [Section.041f]
-Description = Bu; yalnızca Tarayıcı, Mail, Söyleşi ve Yazar'dan oluşan, hiç gereksinim duymayacağınız bir bohçadır.
+Description = Mozilla Bohçası sağ. Bu, hiç gereksinim duymayacağınız, yalnızca Tarayıcı, Posta, Söyleşi ve Yazar bohçasıdır.
 Size = 23,83 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.25/win32/tr/SeaMonkey%20Setup%202.25.exe
 

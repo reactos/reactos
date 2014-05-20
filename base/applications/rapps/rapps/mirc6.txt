@@ -1,4 +1,5 @@
 ; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = mIRC 6
@@ -36,8 +37,8 @@ Description = Cel mai popular client de IRC (Internet Relay Chat).
 Size = 1,67 Mo
 
 [Section.041f]
-Licence = Kısıtlı
-Description = Umûmî Ağ Eşzamanlı Söyleşi (IRC) istemcileri arasında en tutulanı.
+Licence = Paylaşımlı
+Description = Umûmî Ağ Eş Zamanlı Söyleşi (IRC) için en çok tutulan istemci.
 Size = 1,67 MB
 
 [Section.0422]

@@ -287,7 +287,52 @@ FT_BEGIN_HEADER
    *   face-specific property like @glyph-to-script-map, or by auto-hinting
    *   any glyph from that face.  In particular, if you have already created
    *   an @FT_Face structure but not loaded any glyph (using the
-   *   auto-hinter), a change of the fallback glyph will affect this face.
+   *   auto-hinter), a change of the fallback script will affect this face.
+   *
+   */
+
+
+  /**************************************************************************
+   *
+   * @property:
+   *   default-script
+   *
+   * @description:
+   *   *Experimental* *only*
+   *
+   *   If Freetype gets compiled with FT_CONFIG_OPTION_USE_HARFBUZZ to make
+   *   the HarfBuzz library access OpenType features for getting better
+   *   glyph coverages, this property sets the (auto-fitter) script to be
+   *   used for the default (OpenType) script data of a font's GSUB table.
+   *   Features for the default script are intended for all scripts not
+   *   explicitly handled in GSUB; an example is a `dlig' feature,
+   *   containing the combination of the characters `T', `E', and `L' to
+   *   form a `TEL' ligature.
+   *
+   *   By default, this is @FT_AUTOHINTER_SCRIPT_LATIN.  Using the
+   *   `default-script' property, this default value can be changed.
+   *
+   *   {
+   *     FT_Library  library;
+   *     FT_UInt     default_script = FT_AUTOHINTER_SCRIPT_NONE;
+   *
+   *
+   *     FT_Init_FreeType( &library );
+   *
+   *     FT_Property_Set( library, "autofitter",
+   *                               "default-script", &default_script );
+   *   }
+   *
+   * @note:
+   *   This property can be used with @FT_Property_Get also.
+   *
+   *   It's important to use the right timing for changing this value: The
+   *   creation of the glyph-to-script map that eventually uses the
+   *   default script value gets triggered either by setting or reading a
+   *   face-specific property like @glyph-to-script-map, or by auto-hinting
+   *   any glyph from that face.  In particular, if you have already created
+   *   an @FT_Face structure but not loaded any glyph (using the
+   *   auto-hinter), a change of the default script will affect this face.
    *
    */
 

@@ -52,6 +52,7 @@
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 #define MI_DEFAULT_SYSTEM_PTE_COUNT             50000
+#define MI_MAX_ZERO_BITS                        21
 
 #endif /* !_M_AMD64 */
 
@@ -887,9 +888,10 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     ASSERT(MappingPte <= MiHighestUserPte);
 
     /* Start fresh */
-    *NewPte = ValidKernelPte;
+    NewPte->u.Long = 0;
 
     /* Set the protection and page */
+    NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
@@ -2093,12 +2095,13 @@ MiLocateAddress(
     IN PVOID VirtualAddress
 );
 
-PMMADDRESS_NODE
+TABLE_SEARCH_RESULT
 NTAPI
 MiCheckForConflictingNode(
     IN ULONG_PTR StartVpn,
     IN ULONG_PTR EndVpn,
-    IN PMM_AVL_TABLE Table
+    IN PMM_AVL_TABLE Table,
+    OUT PMMADDRESS_NODE *NodeOrParent
 );
 
 TABLE_SEARCH_RESULT
@@ -2122,7 +2125,7 @@ MiFindEmptyAddressRangeDownBasedTree(
     OUT PULONG_PTR Base
 );
 
-NTSTATUS
+TABLE_SEARCH_RESULT
 NTAPI
 MiFindEmptyAddressRangeInTree(
     IN SIZE_T Length,

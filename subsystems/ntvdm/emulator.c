@@ -337,6 +337,86 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+VOID DumpMemory(VOID)
+{
+    static ULONG DumpNumber = 0;
+
+    HANDLE hFile;
+    WCHAR  FileName[MAX_PATH];
+
+#define LINE_SIZE   75 + 2
+    ULONG  i;
+    PBYTE  Ptr1, Ptr2;
+    CHAR   LineBuffer[LINE_SIZE];
+    PCHAR  Line;
+    SIZE_T LineSize;
+
+    /* Build a suitable file name */
+    _snwprintf(FileName, MAX_PATH, L"memdump%lu.txt", DumpNumber);
+    ++DumpNumber;
+
+    /* Always create the dump file */
+    hFile = CreateFileW(FileName,
+                        GENERIC_WRITE,
+                        0,
+                        NULL,
+                        CREATE_ALWAYS,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("Error when creating '%S' for memory dumping, GetLastError() = %u\n",
+                FileName, GetLastError());
+        return;
+    }
+
+    /* Dump the VM memory */
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+    Ptr1 = Ptr2 = REAL_TO_PHYS(NULL);
+    while (MAX_ADDRESS - (ULONG_PTR)PHYS_TO_REAL(Ptr1) > 0)
+    {
+        Ptr1 = Ptr2;
+        Line = LineBuffer;
+
+        /* Print the address */
+        Line += snprintf(Line, LINE_SIZE + LineBuffer - Line, "%08x ", PHYS_TO_REAL(Ptr1));
+
+        /* Print up to 16 bytes... */
+
+        /* ... in hexadecimal form first... */
+        i = 0;
+        while (i++ <= 0x0F && (MAX_ADDRESS - (ULONG_PTR)PHYS_TO_REAL(Ptr1) > 0))
+        {
+            Line += snprintf(Line, LINE_SIZE + LineBuffer - Line, " %02x", *Ptr1);
+            ++Ptr1;
+        }
+
+        /* ... align with spaces if needed... */
+        RtlFillMemory(Line, 0x0F + 4 - i, ' ');
+        Line += 0x0F + 4 - i;
+
+        /* ... then in character form. */
+        i = 0;
+        while (i++ <= 0x0F && (MAX_ADDRESS - (ULONG_PTR)PHYS_TO_REAL(Ptr2) > 0))
+        {
+            *Line++ = ((*Ptr2 >= 0x20 && *Ptr2 <= 0x7E) || (*Ptr2 >= 0x80 && *Ptr2 < 0xFF) ? *Ptr2 : '.');
+            ++Ptr2;
+        }
+
+        /* Newline */
+        *Line++ = '\r';
+        *Line++ = '\n';
+
+        /* Finally write the line to the file */
+        LineSize = Line - LineBuffer;
+        WriteFile(hFile, LineBuffer, LineSize, &LineSize, NULL);
+    }
+
+    /* Close the file */
+    CloseHandle(hFile);
+}
+
 DWORD WINAPI PumpConsoleInput(LPVOID Parameter);
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
