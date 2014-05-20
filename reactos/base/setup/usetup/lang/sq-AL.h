@@ -823,12 +823,19 @@ static MUI_ENTRY sqALSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Kiko C p‰r t‰ krijuar nj‰ particion t‰ ri.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Kiko C p‰r t‰ krijuar nj‰ particion t‰ ri.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Kliko D p‰r t‰ fshir‰ nj‰ particion ekzistues.",
         TEXT_STYLE_NORMAL
     },
@@ -1283,6 +1290,10 @@ static MUI_ENTRY sqALRegistryEntries[] =
 MUI_ERROR sqALErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS nuk ‰shte instaluar plotesisht ne kompjuterin\n"
         "tuaj. N‰se dilni nga instalimi tani, ju do t‰ duhet t‰\n"
@@ -1493,6 +1504,32 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1603,13 +1640,19 @@ MUI_STRING sqALStrings[] =
     {STRING_PLEASEWAIT,
      "   Ju lutem prisni..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalo   C = Krijo Particion   F3 = Dil"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Instalo   C = Krijo Particion   F3 = Dil"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalo   D = Fshi Particion   F3 = Dil"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Madh‰sia e particionit t‰ ri:"},
     {STRING_CHOOSENEWPARTITION,
+//     "You have chosen to create a primary partition on"},
      "Ju keni zgjedhur p‰r t‰ krijuar nj‰ ndarje t‰ re n‰"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Ju lutem, jepini madh‰sin‰ e particionit t‰ ri n‰ megabajt."},
     {STRING_CREATEPARTITION,
@@ -1692,6 +1735,8 @@ MUI_STRING sqALStrings[] =
     "    Hap‰sire e papjesesezuar              %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "I ri (papjesesezuar)"},
     {STRING_FORMATUNUSED,

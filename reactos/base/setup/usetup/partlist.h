@@ -216,10 +216,15 @@ ScrollUpPartitionList(
     PPARTLIST List);
 
 VOID
-CreateNewPartition(
+CreatePrimaryPartition(
     PPARTLIST List,
     ULONGLONG PartitionSize,
     BOOLEAN AutoCreate);
+
+VOID
+CreateExtendedPartition(
+    PPARTLIST List,
+    ULONGLONG PartitionSize);
 
 VOID
 DeleteCurrentPartition(
@@ -236,5 +241,13 @@ CheckForLinuxFdiskPartitions(
 BOOLEAN
 WritePartitionsToDisk(
     PPARTLIST List);
+
+ULONG
+PrimaryPartitionCreationChecks(
+    IN PPARTLIST List);
+
+ULONG
+ExtendedPartitionCreationChecks(
+    IN PPARTLIST List);
 
 /* EOF */

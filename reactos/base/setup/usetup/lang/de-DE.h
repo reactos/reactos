@@ -814,12 +814,18 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  C erstellt eine neue Partition.",
+        "\x07  P erstellt eine primÑre Partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  E erstellt eine erweiterte Partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  D lîscht eine vorhandene Partition.",
         TEXT_STYLE_NORMAL
     },
@@ -1280,6 +1286,10 @@ static MUI_ENTRY deDERegistryEntries[] =
 MUI_ERROR deDEErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Erfolg\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS wurde nicht vollstÑndig auf Ihrem System installiert.\n"
         "Wenn Sie die Installation jetzt beenden, mÅssen Sie diese\n"
@@ -1494,6 +1504,32 @@ MUI_ERROR deDEErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "Sie kînnen keine weitere primÑre oder erweiterte Partition in\n"
+        "der Partitionstabelle erstellen, weil die Tabelle voll ist.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "Sie kînnen nur eine erweiterte Partition auf jeder Festplatte anlegen.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "Sie kînnen hinter einer erweiterten Partition keine weitere Partition anlegen.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "Eine erweiterte Partition muss immer die letzte Partition in \n"
+        "einer Partitionstabelle sein.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
         NULL,
         NULL
     }
@@ -1605,13 +1641,17 @@ MUI_STRING deDEStrings[] =
     {STRING_PLEASEWAIT,
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  EINGABETASTE = Installieren  C = Partition erstellen  F3 = Installation abbr."},
+     "  EINGABETASTE = Installieren  P = PrimÑre  E = Erweiterte  F3 = Installation abbr."},
     {STRING_INSTALLDELETEPARTITION,
      "  EINGABETASTE = Installieren  D = Partition lîschen  F3 = Installation abbr."},
+    {STRING_DELETEPARTITION,
+     "   D = Partition lîschen  F3 = Installation abbrechen"},
     {STRING_PARTITIONSIZE,
      "Grî·e der neuen Partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "Eine neue Partition soll hier erstellt werden:"},
+     "Eine primÑre Partition soll hier erstellt werden:"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "Eine erweiterte Partition soll hier erstellt werden:"},
     {STRING_HDDSIZE,
     "Bitte geben Sie die Grî·e der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,
@@ -1694,6 +1734,8 @@ MUI_STRING deDEStrings[] =
     "    Unpartitionierter Speicher       %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Erweiterte Partition"},
     {STRING_UNFORMATTED,
     "Neu (Unformatiert)"},
     {STRING_FORMATUNUSED,
