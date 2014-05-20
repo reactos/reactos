@@ -1385,7 +1385,7 @@ TaskSwitchWnd_EnumWindowsProc(IN HWND hWnd,
 }
 
 static LRESULT CALLBACK
-TaskSwichWnd_ToolbarSubclassedProc(IN HWND hWnd,
+TaskSwitchWnd_ToolbarSubclassedProc(IN HWND hWnd,
                                    IN UINT msg,
                                    IN WPARAM wParam,
                                    IN LPARAM lParam,
@@ -1523,7 +1523,7 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
         /* Subclass the toolbar control because it doesn't provide a
            NM_NCHITTEST notification */
         This->IsToolbarSubclassed = SetWindowSubclass(This->hWndToolbar,
-                                                      TaskSwichWnd_ToolbarSubclassedProc,
+                                                      TaskSwitchWnd_ToolbarSubclassedProc,
                                                       TSW_TOOLBAR_SUBCLASS_ID,
                                                       (DWORD_PTR)This);
     }
@@ -1840,7 +1840,7 @@ TaskSwitchWnd_HandleButtonRightClick(IN OUT PTASK_SWITCH_WND This,
 
 
 static LRESULT
-TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
+TaskSwitchWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                              IN OUT NMTBCUSTOMDRAW *nmtbcd)
 {
     LRESULT Ret = CDRF_DODEFAULT;
@@ -1902,7 +1902,7 @@ TaskSwitchWnd_HandleToolbarNotification(IN OUT PTASK_SWITCH_WND This,
             {
 
                 case CDDS_ITEMPREPAINT:
-                    Ret = TaskSwichWnd_HandleItemPaint(This,
+                    Ret = TaskSwitchWnd_HandleItemPaint(This,
                                                        nmtbcd);
                     break;
 
@@ -2109,7 +2109,7 @@ ForwardContextMenuMsg:
                 if (This->IsToolbarSubclassed)
                 {
                     if (RemoveWindowSubclass(This->hWndToolbar,
-                                             TaskSwichWnd_ToolbarSubclassedProc,
+                                             TaskSwitchWnd_ToolbarSubclassedProc,
                                              TSW_TOOLBAR_SUBCLASS_ID))
                     {
                         This->IsToolbarSubclassed = FALSE;
