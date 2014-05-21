@@ -2655,8 +2655,14 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     ASSERT(Section->u.Flags.Image == 0);
     ASSERT(Section->u.Flags.NoCache == 0);
     ASSERT(Section->u.Flags.WriteCombined == 0);
-    ASSERT((AllocationType & MEM_RESERVE) == 0);
     ASSERT(ControlArea->u.Flags.PhysicalMemory == 0);
+
+    /* FIXME */
+    if ((AllocationType & MEM_RESERVE) != 0)
+    {
+        DPRINT1("MmMapViewOfArm3Section called with MEM_RESERVE, this is not implemented yet!!!\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
 
     /* Check if the mapping protection is compatible with the create */
     if (!MiIsProtectionCompatible(Section->InitialPageProtection, Protect))
