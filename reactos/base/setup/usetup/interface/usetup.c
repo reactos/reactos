@@ -2137,6 +2137,10 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         {
             PartType = "NTFS"; /* FIXME: Not quite correct! */
         }
+        else if (IsContainerPartition(PartEntry->PartitionType))
+        {
+            PartType = MUIGetString(STRING_EXTENDED_PARTITION);
+        }
     }
 
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
