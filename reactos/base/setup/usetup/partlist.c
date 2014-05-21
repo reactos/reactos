@@ -520,15 +520,18 @@ EnumerateBiosDiskEntries(
 
 static
 VOID
-AddPrimaryPartitionToDisk(
+AddPartitionToDisk(
     ULONG DiskNumber,
     PDISKENTRY DiskEntry,
-    ULONG PartitionIndex)
+    ULONG PartitionIndex,
+    BOOLEAN ExtendedPartition)
 {
     PPARTITION_INFORMATION PartitionInfo;
     PPARTENTRY PartEntry;
 
     PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartitionIndex];
+    if (PartitionInfo->PartitionType == 0)
+        return;
 
     PartEntry = RtlAllocateHeap(ProcessHeap,
                                 HEAP_ZERO_MEMORY,
@@ -545,6 +548,7 @@ AddPrimaryPartitionToDisk(
     PartEntry->PartitionType = PartitionInfo->PartitionType;
     PartEntry->HiddenSectors = PartitionInfo->HiddenSectors;
 
+    PartEntry->ExtendedPartition = ExtendedPartition;
     PartEntry->IsPartitioned = TRUE;
     PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
     PartEntry->PartitionIndex = PartitionIndex;
@@ -609,8 +613,12 @@ AddPrimaryPartitionToDisk(
         PartEntry->FormatState = UnknownFormat;
     }
 
-    InsertTailList(&DiskEntry->PrimaryPartListHead,
-                   &PartEntry->ListEntry);
+    if (ExtendedPartition)
+        InsertTailList(&DiskEntry->ExtendedPartListHead,
+                       &PartEntry->ListEntry);
+    else
+        InsertTailList(&DiskEntry->PrimaryPartListHead,
+                       &PartEntry->ListEntry);
 }
 
 
@@ -1055,24 +1063,18 @@ AddDiskToList(
         {
             for (i = 0; i < 4; i++)
             {
-                if (DiskEntry->LayoutBuffer->PartitionEntry[i].PartitionType != 0)
-                {
-                    AddPrimaryPartitionToDisk(DiskNumber,
-                                              DiskEntry,
-                                              i);
-                }
+                AddPartitionToDisk(DiskNumber,
+                                   DiskEntry,
+                                   i,
+                                   FALSE);
             }
 
-            for (i = 4; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
+            for (i = 4; i < DiskEntry->LayoutBuffer->PartitionCount; i += 4)
             {
-                if (DiskEntry->LayoutBuffer->PartitionEntry[i].PartitionType != 0)
-                {
-#if 0
-                    AddExtendedPartitionToDisk(DiskNumber,
-                                               DiskEntry,
-                                               i);
-#endif
-                }
+                AddPartitionToDisk(DiskNumber,
+                                   DiskEntry,
+                                   i,
+                                   TRUE);
             }
         }
     }
@@ -1340,6 +1342,8 @@ PrintPartitionData(
 
         sprintf(LineBuffer,
                 MUIGetString(STRING_UNPSPACE),
+                PartEntry->ExtendedPartition ? "  " : "",
+                PartEntry->ExtendedPartition ? "" : "  ",
                 PartSize.u.LowPart,
                 Unit);
     }
@@ -1406,17 +1410,21 @@ PrintPartitionData(
                     MUIGetString(STRING_HDDINFOUNK5),
                     (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                     (PartEntry->DriveLetter == 0) ? '-' : ':',
+                    PartEntry->ExtendedPartition ? "  " : "",
                     PartEntry->PartitionType,
+                    PartEntry->ExtendedPartition ? "" : "  ",
                     PartSize.u.LowPart,
                     Unit);
         }
         else
         {
             sprintf(LineBuffer,
-                    "%c%c  %-24s         %6lu %s",
+                    "%c%c  %s%-24s%s      %6lu %s",
                     (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                     (PartEntry->DriveLetter == 0) ? '-' : ':',
+                    PartEntry->ExtendedPartition ? "  " : "",
                     PartType,
+                    PartEntry->ExtendedPartition ? "" : "  ",
                     PartSize.u.LowPart,
                     Unit);
         }
@@ -1466,8 +1474,8 @@ PrintDiskData(
     PPARTLIST List,
     PDISKENTRY DiskEntry)
 {
-    PPARTENTRY PartEntry;
-    PLIST_ENTRY Entry;
+    PPARTENTRY PrimaryPartEntry, ExtendedPartEntry;
+    PLIST_ENTRY PrimaryEntry, ExtendedEntry;
     CHAR LineBuffer[128];
     COORD coPos;
     DWORD Written;
@@ -1551,16 +1559,31 @@ PrintDiskData(
     PrintEmptyLine(List);
 
     /* Print partition lines*/
-    Entry = DiskEntry->PrimaryPartListHead.Flink;
-    while (Entry != &DiskEntry->PrimaryPartListHead)
+    PrimaryEntry = DiskEntry->PrimaryPartListHead.Flink;
+    while (PrimaryEntry != &DiskEntry->PrimaryPartListHead)
     {
-        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+        PrimaryPartEntry = CONTAINING_RECORD(PrimaryEntry, PARTENTRY, ListEntry);
 
         PrintPartitionData(List,
                            DiskEntry,
-                           PartEntry);
+                           PrimaryPartEntry);
 
-        Entry = Entry->Flink;
+        if (IsContainerPartition(PrimaryPartEntry->PartitionType))
+        {
+            ExtendedEntry = DiskEntry->ExtendedPartListHead.Flink;
+            while (ExtendedEntry != &DiskEntry->ExtendedPartListHead)
+            {
+                ExtendedPartEntry = CONTAINING_RECORD(ExtendedEntry, PARTENTRY, ListEntry);
+
+                PrintPartitionData(List,
+                                   DiskEntry,
+                                   ExtendedPartEntry);
+
+                ExtendedEntry = ExtendedEntry->Flink;
+            }
+        }
+
+        PrimaryEntry = PrimaryEntry->Flink;
     }
 
     /* Print separator line */

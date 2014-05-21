@@ -57,6 +57,8 @@ typedef struct _PARTENTRY
     CHAR VolumeLabel[17];
     CHAR FileSystemName[9];
 
+    BOOLEAN ExtendedPartition;
+
     /* Partition is partitioned disk space */
     BOOLEAN IsPartitioned;
 
