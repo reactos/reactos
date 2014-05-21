@@ -1653,7 +1653,7 @@ MUI_STRING frFRStrings[] =
     {STRING_INSTALLDELETEPARTITION,
      "   ENTRêE = Installer   D = Supprimer Partition   F3 = Quitter"},
     {STRING_DELETEPARTITION,
-     "   D = Supprimer Partition   F3 = Quit"},
+     "   D = Supprimer Partition   F3 = Quitter"},
     {STRING_PARTITIONSIZE,
      "Taille de la nouvelle partition :"},
     {STRING_CHOOSENEWPARTITION,
