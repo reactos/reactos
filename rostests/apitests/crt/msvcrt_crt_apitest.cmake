@@ -1251,7 +1251,7 @@ list(APPEND SOURCE_MSVCRT
 #    wcstok_s.c
 #    wcstol.c
 #    wcstombs.c
-    wcstombs_s.c
+#    wcstombs_s.c Not exported in 2k3 Sp1
 #    wcstoul.c
 #    wcsxfrm.c
 #    wctob
