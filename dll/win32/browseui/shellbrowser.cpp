@@ -2528,7 +2528,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::_SetFocus(LPTOOLBARITEM ptbi, HWND hwnd
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::v_MayTranslateAccelerator(MSG *pmsg)
 {
-    return E_NOTIMPL;
+    return fCurrentShellView->TranslateAcceleratorW(pmsg);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::_GetBorderDWHelper(IUnknown *punkSrc, LPRECT lprectBorder, BOOL bUseHmonitor)
@@ -3272,56 +3272,59 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
-//static LRESULT CALLBACK ExplorerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-//{
-//    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-//}
-
-static void ExplorerMessageLoop()
-{
-    MSG Msg;
-    BOOL Ret;
-
-    while (1)
-    {
-        Ret = (GetMessage(&Msg, NULL, 0, 0) != 0);
-
-        if (Ret != -1)
-        {
-            if (!Ret)
-                break;
-
-            TranslateMessage(&Msg);
-            DispatchMessage(&Msg);
-
-            if (Msg.message == WM_QUIT)
-                break;
-        }
-    }
-}
-
-DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
+static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 {
     CComPtr<IShellBrowser>                  shellBrowser;
     CComObject<CShellBrowser>               *theCabinet;
-    IEThreadParamBlock                      *parameters;
     HRESULT                                 hResult;
+    MSG Msg;
+    BOOL Ret;
 
-    parameters = (IEThreadParamBlock *)lpThreadParameter;
     OleInitialize(NULL);
-    ATLTRY (theCabinet = new CComObject<CShellBrowser>);
+
+    ATLTRY(theCabinet = new CComObject<CShellBrowser>);
     if (theCabinet == NULL)
-        return E_OUTOFMEMORY;
+    {
+        hResult = E_OUTOFMEMORY;
+        goto uninitialize;
+    }
+
     hResult = theCabinet->QueryInterface(IID_PPV_ARG(IShellBrowser, &shellBrowser));
     if (FAILED(hResult))
     {
         delete theCabinet;
-        return hResult;
+        goto uninitialize;
     }
+
     hResult = theCabinet->Initialize(parameters->directoryPIDL, 0, 0, 0);
     if (FAILED(hResult))
-        return hResult;
-    ExplorerMessageLoop();
+        goto uninitialize;
+
+    while (Ret = GetMessage(&Msg, NULL, 0, 0))
+    {
+        if (Ret == -1)
+        {
+            // Error: continue or exit?
+            break;
+        }
+
+        if (theCabinet->v_MayTranslateAccelerator(&Msg) != S_OK)
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
+        }
+
+        if (Msg.message == WM_QUIT)
+            break;
+    }
+
+uninitialize:
     OleUninitialize();
-    return 0;
+    return hResult;
+}
+
+DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
+{
+    IEThreadParamBlock * parameters = (IEThreadParamBlock *) lpThreadParameter;
+    return ExplorerMessageLoop(parameters);
 }
