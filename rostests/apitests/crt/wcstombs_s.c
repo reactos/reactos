@@ -36,7 +36,7 @@ START_TEST(wcstombs_s)
     size_t cchConverted;
     char mbsbuffer[10];
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     mbsbuffer[5] = 0xFF;
     ret = wcstombs_s(&cchConverted, mbsbuffer, 6, L"hallo", 5);
@@ -46,7 +46,7 @@ START_TEST(wcstombs_s)
     ok_str(mbsbuffer, "hallo");
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     mbsbuffer[0] = 0xFF;
     ret = wcstombs_s(&cchConverted, mbsbuffer, 1, L"", 0);
@@ -55,7 +55,7 @@ START_TEST(wcstombs_s)
     ok_wchar(mbsbuffer[0], 0);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     mbsbuffer[0] = 0xFF;
     mbsbuffer[1] = 0xFF;
@@ -74,7 +74,7 @@ START_TEST(wcstombs_s)
     ok_char(mbsbuffer[0], 0);
     ok_errno(ERANGE);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     mbsbuffer[0] = 0xFF;
     mbsbuffer[1] = 0xFF;
@@ -93,64 +93,64 @@ START_TEST(wcstombs_s)
     ok_char(mbsbuffer[0], 0);
     ok_errno(ERANGE);
 
-    _set_errno(0);
+    *_errno() = 0;
     ret = wcstombs_s(0, 0, 0, 0, 0);
     ok_long(ret, EINVAL);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, 0, 0, 0, 0);
     ok_long(ret, EINVAL);
     ok_size_t(cchConverted, 0);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     mbsbuffer[0] = L'x';
     ret = wcstombs_s(0, mbsbuffer, 0, 0, 0);
     ok_long(ret, EINVAL);
     ok_char(mbsbuffer[0], L'x');
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     ret = wcstombs_s(0, mbsbuffer, 10, L"hallo", 5);
     ok_long(ret, 0);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     ret = wcstombs_s(0, mbsbuffer, 0, L"hallo", 5);
     ok_long(ret, EINVAL);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, 0, 10, L"hallo", 5);
     ok_long(ret, EINVAL);
     ok_size_t(cchConverted, 0xf00bac);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, 0, 0, L"hallo", 5);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 6);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, mbsbuffer, 10, 0, 5);
     ok_long(ret, EINVAL);
     ok_size_t(cchConverted, 0);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, mbsbuffer, 10, L"hallo", 0);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 1);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     mbsbuffer[0] = 0xAB;
     mbsbuffer[1] = 0xCD;
@@ -169,28 +169,28 @@ START_TEST(wcstombs_s)
     ok_char(mbsbuffer[0], L'h');
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, mbsbuffer, 10, 0, 0);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 1);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, mbsbuffer, 10, L"hallo", 7);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 6);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, 0, 0, L"hallo", 7);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 6);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     mbsbuffer[0] = 0xAB;
     mbsbuffer[1] = 0xCD;
@@ -209,7 +209,7 @@ START_TEST(wcstombs_s)
     ok_char(mbsbuffer[0], L'h');
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = wcstombs_s(&cchConverted, mbsbuffer, 10, L"hallo", -1);
     ok_long(ret, 0);

@@ -54,7 +54,7 @@ START_TEST(mbstowcs_s)
     size_t cchConverted;
     wchar_t widechar[10];
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     widechar[5] = 0xFF;
     ret = mbstowcs_s(&cchConverted, widechar, 6, "hallo", 5);
@@ -64,7 +64,7 @@ START_TEST(mbstowcs_s)
     ok_wstr(widechar, L"hallo");
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     widechar[0] = 0xFF;
     ret = mbstowcs_s(&cchConverted, widechar, 1, "", 0);
@@ -73,7 +73,7 @@ START_TEST(mbstowcs_s)
     ok_wchar(widechar[0], 0);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     widechar[0] = 0xFF;
     widechar[1] = 0xFF;
@@ -92,7 +92,7 @@ START_TEST(mbstowcs_s)
     ok_wchar(widechar[0], 0);
     ok_errno(ERANGE);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     widechar[0] = 0xFF;
     widechar[1] = 0xFF;
@@ -111,64 +111,64 @@ START_TEST(mbstowcs_s)
     ok_wchar(widechar[0], 0);
     ok_errno(ERANGE);
 
-    _set_errno(0);
+    *_errno() = 0;
     ret = mbstowcs_s(0, 0, 0, 0, 0);
     ok_long(ret, EINVAL);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, 0, 0, 0, 0);
     ok_long(ret, EINVAL);
     ok_size_t(cchConverted, 0);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     widechar[0] = L'x';
     ret = mbstowcs_s(0, widechar, 0, 0, 0);
     ok_long(ret, EINVAL);
     ok_wchar(widechar[0], L'x');
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     ret = mbstowcs_s(0, widechar, 10, "hallo", 5);
     ok_long(ret, 0);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     ret = mbstowcs_s(0, widechar, 0, "hallo", 5);
     ok_long(ret, EINVAL);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, 0, 10, "hallo", 5);
     ok_long(ret, EINVAL);
     ok_size_t(cchConverted, 0xf00bac);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, 0, 0, "hallo", 5);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 6);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, widechar, 10, 0, 5);
     ok_long(ret, EINVAL);
     ok_size_t(cchConverted, 0);
     ok_errno(EINVAL);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, widechar, 10, "hallo", 0);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 1);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     widechar[0] = 0xABCD;
     widechar[1] = 0xABCD;
@@ -187,28 +187,28 @@ START_TEST(mbstowcs_s)
     ok_wchar(widechar[0], L'h');
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, widechar, 10, 0, 0);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 1);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, widechar, 10, "hallo", 7);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 6);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, 0, 0, "hallo", 7);
     ok_long(ret, 0);
     ok_size_t(cchConverted, 6);
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     widechar[0] = 0xABCD;
     widechar[1] = 0xABCD;
@@ -227,7 +227,7 @@ START_TEST(mbstowcs_s)
     ok_wchar(widechar[0], L'h');
     ok_errno(0);
 
-    _set_errno(0);
+    *_errno() = 0;
     cchConverted = 0xf00bac;
     ret = mbstowcs_s(&cchConverted, widechar, 10, "hallo", -1);
     ok_long(ret, 0);
