@@ -356,7 +356,7 @@ KdInitSystem(IN ULONG BootPhase,
                 RtlInitString(&ImageName, NameBuffer);
                 DbgLoadImageSymbols(&ImageName,
                                     LdrEntry->DllBase,
-                                    (ULONG_PTR)ZwCurrentProcess());
+                                    (ULONG_PTR)PsGetCurrentProcessId());
 
                 /* Go to the next entry */
                 NextEntry = NextEntry->Flink;

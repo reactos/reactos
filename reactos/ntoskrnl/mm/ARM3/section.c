@@ -1185,7 +1185,7 @@ MiLoadUserSymbols(IN PCONTROL_AREA ControlArea,
     Status = RtlUnicodeStringToAnsiString(&FileNameA, FileName, TRUE);
     if (NT_SUCCESS(Status))
     {
-        DbgLoadImageSymbols(&FileNameA, BaseAddress, (ULONG_PTR)Process);
+        DbgLoadImageSymbols(&FileNameA, BaseAddress, (ULONG_PTR)Process->UniqueProcessId);
         RtlFreeAnsiString(&FileNameA);
     }
 }
