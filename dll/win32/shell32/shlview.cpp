@@ -1923,10 +1923,6 @@ HRESULT WINAPI CDefView::TranslateAccelerator(LPMSG lpmsg)
         if (::TranslateAcceleratorW(m_hWnd, m_hAccel, lpmsg) != 0)
             return S_OK;
 
-        /* FIXME: should call TranslateAcceleratorSB */
-
-        return m_pShellBrowser->TranslateAcceleratorSB(lpmsg, 0);
-
         TRACE("-- key=0x04%lx\n", lpmsg->wParam) ;
     }
 

@@ -22,6 +22,7 @@
 
 #define IDM_FILE_CLOSE                   0xA021
 #define IDM_FILE_EXPLORE_MENU            0xA027
+#define IDM_BACKSPACE                    0xA032
 #define IDM_EXPLORE_ITEM_FIRST           0xA470
 #define IDM_EXPLORE_ITEM_LAST            0xA570
 #define IDM_FILE_EXPLORE_SEP             0xA028

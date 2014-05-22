@@ -332,6 +332,7 @@ private:
     IOleObject                              *fHistoryObject;
     IStream                                 *fHistoryStream;
     IBindCtx                                *fHistoryBindContext;
+    HACCEL m_hAccel;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -615,6 +616,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetPositionCookie(DWORD *pdwPositioncookie);
 
     // message handlers
+    LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -627,6 +629,7 @@ public:
     LRESULT OnGoBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -652,6 +655,7 @@ public:
     }
 
     BEGIN_MSG_MAP(CShellBrowser)
+        MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
@@ -675,6 +679,7 @@ public:
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LINKSBAR, OnToggleLinksBandVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_TEXTLABELS, OnToggleTextLabels)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_CUSTOMIZE, OnToolbarCustomize)
+        COMMAND_ID_HANDLER(IDM_BACKSPACE, OnBackspace)
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
     END_MSG_MAP()
@@ -1888,7 +1893,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::EnableModelessSB(BOOL fEnable)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD wID)
 {
-    return E_NOTIMPL;
+    if (!::TranslateAcceleratorW(m_hWnd, m_hAccel, pmsg))
+        return S_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
@@ -2249,7 +2256,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::OnSize(WPARAM wParam)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::OnCreate(struct tagCREATESTRUCTW *pcs)
 {
-    return E_NOTIMPL;
+    m_hAccel = LoadAcceleratorsW(GetModuleHandle(L"browseui.dll"), MAKEINTRESOURCEW(256));
+    return S_OK;
 }
 
 LRESULT STDMETHODCALLTYPE CShellBrowser::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -2528,7 +2536,13 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::_SetFocus(LPTOOLBARITEM ptbi, HWND hwnd
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::v_MayTranslateAccelerator(MSG *pmsg)
 {
-    return fCurrentShellView->TranslateAcceleratorW(pmsg);
+    if (fCurrentShellView->TranslateAcceleratorW(pmsg) != S_OK)
+    {
+        if (TranslateAcceleratorSB(pmsg, 0) != S_OK)
+            return S_FALSE;
+        return S_OK;
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::_GetBorderDWHelper(IUnknown *punkSrc, LPRECT lprectBorder, BOOL bUseHmonitor)
@@ -3029,6 +3043,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetPositionCookie(DWORD *pdwPositioncoo
     return E_NOTIMPL;
 }
 
+LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    OnCreate(reinterpret_cast<LPCREATESTRUCT> (lParam));
+    return 0;
+}
+
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     // TODO: rip down everything
@@ -3149,19 +3169,24 @@ LRESULT CShellBrowser::OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &
     return 0;
 }
 
+LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    HRESULT                                 hResult;
+
+    // FIXME: This does not appear to be what windows does.
+    hResult = NavigateToParent();
+    return 0;
+}
+
 LRESULT CShellBrowser::OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT                                 hResult;
 
     typedef HRESULT (WINAPI *PSHOpenNewFrame)(LPITEMIDLIST pidl, IUnknown *b, long c, long d);
-    PSHOpenNewFrame Func;
-    HMODULE hShlwapi;
-
-    hShlwapi = LoadLibrary(TEXT("browseui.dll"));
-    if (hShlwapi != NULL)
-        Func = reinterpret_cast<PSHOpenNewFrame>(GetProcAddress(hShlwapi, (LPCSTR)103));
-    else
-        Func = NULL;
+    PSHOpenNewFrame Func = NULL;
+    HMODULE Module = GetModuleHandle(TEXT("browseui.dll"));
+    if (Module != NULL)
+        Func = reinterpret_cast<PSHOpenNewFrame>(GetProcAddress(Module, (LPCSTR) 103));
     if (Func != NULL)
     {
         LPITEMIDLIST                        desktopPIDL;
@@ -3300,7 +3325,7 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     if (FAILED(hResult))
         goto uninitialize;
 
-    while (Ret = GetMessage(&Msg, NULL, 0, 0))
+    while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
     {
         if (Ret == -1)
         {
