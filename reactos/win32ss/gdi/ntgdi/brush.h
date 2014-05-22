@@ -94,7 +94,7 @@ typedef struct _EBRUSHOBJ
 #define  BRUSH_ShareUnlockBrush(pBrush) GDIOBJ_vDereferenceObject((POBJ)pBrush)
 
 INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
-BOOL NTAPI BRUSH_Cleanup(PVOID ObjectBody);
+VOID NTAPI BRUSH_vCleanup(PVOID ObjectBody);
 
 extern HSURF gahsurfHatch[HS_DDI_MAX];
 

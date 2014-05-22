@@ -230,17 +230,15 @@ PALETTE_AllocPalWithHandle(
     return ppal;
 }
 
-BOOL
+VOID
 NTAPI
-PALETTE_Cleanup(PVOID ObjectBody)
+PALETTE_vCleanup(PVOID ObjectBody)
 {
     PPALETTE pPal = (PPALETTE)ObjectBody;
     if (pPal->IndexedColors && pPal->IndexedColors != pPal->apalColors)
     {
         ExFreePoolWithTag(pPal->IndexedColors, TAG_PALETTE);
     }
-
-    return TRUE;
 }
 
 INT
@@ -702,15 +700,15 @@ NtGdiGetNearestColor(
         EngSetLastError(ERROR_INVALID_HANDLE);
         return CLR_INVALID;
     }
-    
+
     if(dc->dclevel.pSurface == NULL)
         ppal = gppalMono;
     else
         ppal = dc->dclevel.pSurface->ppal;
-    
+
     /* Translate the color to the DC format */
     Color = TranslateCOLORREF(dc, Color);
-    
+
     /* XLATE it back to RGB color space */
     EXLATEOBJ_vInitialize(&exlo,
         ppal,
@@ -718,11 +716,11 @@ NtGdiGetNearestColor(
         0,
         RGB(0xff, 0xff, 0xff),
         RGB(0, 0, 0));
-    
+
     nearest = XLATEOBJ_iXlate(&exlo.xlo, Color);
-    
+
     EXLATEOBJ_vCleanup(&exlo);
-    
+
     /* We're done */
     DC_UnlockDc(dc);
 
@@ -771,7 +769,7 @@ IntGdiRealizePalette(HDC hDC)
     {
         goto cleanup;
     }
-	
+
 	if(pdc->dctype == DCTYPE_DIRECT)
 	{
 		UNIMPLEMENTED;

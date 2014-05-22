@@ -860,8 +860,8 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
             for (r = 1; r <= rows && *pWnd; r++, i++)
             {
                 LONG posOptions = SWP_DRAWFRAME | SWP_NOACTIVATE | SWP_NOZORDER;
-                LONG style = GetWindowLongW(win_array[i], GWL_STYLE);  
-                if (!(style & WS_SIZEBOX)) posOptions |= SWP_NOSIZE; 
+                LONG style = GetWindowLongW(win_array[i], GWL_STYLE);
+                if (!(style & WS_SIZEBOX)) posOptions |= SWP_NOSIZE;
 
                 SetWindowPos(*pWnd, 0, x, y, xsize, ysize, posOptions);
                 y += ysize;
@@ -1091,9 +1091,9 @@ static void MDI_UpdateFrameText( HWND frame, HWND hClient, BOOL repaint, LPCWSTR
 
     DefWindowProcW( frame, WM_SETTEXT, 0, (LPARAM)lpBuffer );
 
-    if (repaint)  
-        SetWindowPos( frame, 0,0,0,0,0, SWP_FRAMECHANGED |  
-                      SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER ); 
+    if (repaint)
+        SetWindowPos( frame, 0,0,0,0,0, SWP_FRAMECHANGED |
+                      SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER );
 }
 
 
@@ -1830,7 +1830,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         return;
     }
 
-    ERR("CalcChildScroll 1\n");
+    TRACE("CalcChildScroll 1\n");
     if ((list = WIN_ListChildren( hwnd )))
     {
         int i;
@@ -1851,14 +1851,14 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                 OffsetRect(&rect, -WindowInfo.rcClient.left,
                                   -WindowInfo.rcClient.top);
                 //WIN_GetRectangles( list[i], COORDS_PARENT, &rect, NULL );
-                ERR("CalcChildScroll L\n");
+                TRACE("CalcChildScroll L\n");
                 UnionRect( &childRect, &rect, &childRect );
             }
         }
         HeapFree( GetProcessHeap(), 0, list );
     }
     UnionRect( &childRect, &clientRect, &childRect );
-    ERR("CalcChildScroll 3\n");
+    TRACE("CalcChildScroll 3\n");
     /* set common info values */
     info.cbSize = sizeof(info);
     info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
@@ -1883,12 +1883,12 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 			    SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
 			if (scroll == SB_HORZ)
 			{
-                           ERR("CalcChildScroll H\n");
+                           TRACE("CalcChildScroll H\n");
 			   break;
 			}
 			else
 			{
-                           ERR("CalcChildScroll B\n");
+                           TRACE("CalcChildScroll B\n");
                         }
 			/* fall through */
 	case SB_VERT:
@@ -1898,7 +1898,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 			info.nPage = 1 + clientRect.bottom - clientRect.top;
 			//info.nMax = childRect.bottom - clientRect.bottom;
 			//info.nPos = clientRect.top - childRect.top;
-			ERR("CalcChildScroll V\n");
+			TRACE("CalcChildScroll V\n");
 			if (ci->initialStyle & WS_VSCROLL)
 			    SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
 			break;
@@ -2029,7 +2029,7 @@ TileWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
  *              TileChildWindows (USER32.@)
  */
 WORD WINAPI TileChildWindows( HWND parent, UINT flags )
-{  
+{
     return TileWindows( parent, flags, NULL, 0, NULL );
 }
 
