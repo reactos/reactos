@@ -530,7 +530,8 @@ AddPartitionToDisk(
     PPARTENTRY PartEntry;
 
     PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartitionIndex];
-    if (PartitionInfo->PartitionType == 0)
+    if (PartitionInfo->PartitionType == 0 ||
+        (LogicalPartition == TRUE && IsContainerPartition(PartitionInfo->PartitionType)))
         return;
 
     PartEntry = RtlAllocateHeap(ProcessHeap,
@@ -749,6 +750,125 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
             /* Append the table to the list */
             InsertTailList(&DiskEntry->PrimaryPartListHead,
                            &NewPartEntry->ListEntry);
+        }
+    }
+
+    if (DiskEntry->ExtendedPartition != NULL)
+    {
+        if (IsListEmpty(&DiskEntry->LogicalPartListHead))
+        {
+            DPRINT1("No logical partition!\n");
+
+            /* Create a partition table entry that represents the empty extended partition */
+            NewPartEntry = RtlAllocateHeap(ProcessHeap,
+                                           HEAP_ZERO_MEMORY,
+                                           sizeof(PARTENTRY));
+            if (NewPartEntry == NULL)
+                return;
+
+            NewPartEntry->DiskEntry = DiskEntry;
+            NewPartEntry->LogicalPartition = TRUE;
+
+            NewPartEntry->IsPartitioned = FALSE;
+            NewPartEntry->StartSector.QuadPart = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorsPerTrack;
+            NewPartEntry->SectorCount.QuadPart = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorsPerTrack;
+
+            DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
+            DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+            DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+
+            NewPartEntry->FormatState = Unformatted;
+
+            InsertTailList(&DiskEntry->LogicalPartListHead,
+                           &NewPartEntry->ListEntry);
+
+            return;
+        }
+
+        /* Start partition at head 1, cylinder 0 */
+        LastStartSector = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorsPerTrack;
+        LastSectorCount = 0ULL;
+        LastUnusedSectorCount = 0ULL;
+
+        Entry = DiskEntry->LogicalPartListHead.Flink;
+        while (Entry != &DiskEntry->LogicalPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (PartEntry->PartitionType != PARTITION_ENTRY_UNUSED ||
+                PartEntry->SectorCount.QuadPart != 0ULL)
+            {
+                LastUnusedSectorCount =
+                    PartEntry->StartSector.QuadPart - (ULONGLONG)DiskEntry->SectorsPerTrack - (LastStartSector + LastSectorCount);
+
+                if ((PartEntry->StartSector.QuadPart - (ULONGLONG)DiskEntry->SectorsPerTrack) > (LastStartSector + LastSectorCount) &&
+                    LastUnusedSectorCount >= (ULONGLONG)DiskEntry->SectorAlignment)
+                {
+                    DPRINT("Unpartitioned disk space %I64u sectors\n", LastUnusedSectorCount);
+
+                    NewPartEntry = RtlAllocateHeap(ProcessHeap,
+                                                   HEAP_ZERO_MEMORY,
+                                                   sizeof(PARTENTRY));
+                    if (NewPartEntry == NULL)
+                        return;
+
+                    NewPartEntry->DiskEntry = DiskEntry;
+                    NewPartEntry->LogicalPartition = TRUE;
+
+                    NewPartEntry->IsPartitioned = FALSE;
+                    NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
+                    NewPartEntry->SectorCount.QuadPart = Align(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
+                                                         NewPartEntry->StartSector.QuadPart;
+DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
+DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+
+                    NewPartEntry->FormatState = Unformatted;
+
+                    /* Insert the table into the list */
+                    InsertTailList(&PartEntry->ListEntry,
+                                   &NewPartEntry->ListEntry);
+                }
+
+                LastStartSector = PartEntry->StartSector.QuadPart;
+                LastSectorCount = PartEntry->SectorCount.QuadPart;
+            }
+
+            Entry = Entry->Flink;
+        }
+
+        /* Check for trailing unpartitioned disk space */
+        if ((LastStartSector + LastSectorCount) < DiskEntry->ExtendedPartition->StartSector.QuadPart + DiskEntry->ExtendedPartition->SectorCount.QuadPart)
+        {
+            LastUnusedSectorCount = Align(DiskEntry->ExtendedPartition->StartSector.QuadPart + DiskEntry->ExtendedPartition->SectorCount.QuadPart - (LastStartSector + LastSectorCount), DiskEntry->SectorAlignment);
+
+            if (LastUnusedSectorCount >= (ULONGLONG)DiskEntry->SectorAlignment)
+            {
+                DPRINT("Unpartitioned disk space: %I64u sectors\n", LastUnusedSectorCount);
+
+                NewPartEntry = RtlAllocateHeap(ProcessHeap,
+                                               HEAP_ZERO_MEMORY,
+                                               sizeof(PARTENTRY));
+                if (NewPartEntry == NULL)
+                    return;
+
+                NewPartEntry->DiskEntry = DiskEntry;
+                NewPartEntry->LogicalPartition = TRUE;
+
+                NewPartEntry->IsPartitioned = FALSE;
+                NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
+                NewPartEntry->SectorCount.QuadPart = Align(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
+                                                     NewPartEntry->StartSector.QuadPart;
+DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
+DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+
+                NewPartEntry->FormatState = Unformatted;
+
+                /* Append the table to the list */
+                InsertTailList(&DiskEntry->LogicalPartListHead,
+                               &NewPartEntry->ListEntry);
+            }
         }
     }
 

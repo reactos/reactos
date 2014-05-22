@@ -1725,7 +1725,7 @@ MUI_STRING enUSStrings[] =
     {STRING_NEWPARTITION,
     "Setup created a new partition on"},
     {STRING_UNPSPACE,
-    "    %sUnpartitioned space%s            %6lu %s"},
+    "    %sUnpartitioned space%s           %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
