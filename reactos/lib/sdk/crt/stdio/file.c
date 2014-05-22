@@ -3824,14 +3824,38 @@ int CDECL ungetc(int c, FILE * file)
 wint_t CDECL ungetwc(wint_t wc, FILE * file)
 {
     wchar_t mwc = wc;
-    char * pp = (char *)&mwc;
-    int i;
+
+    if (wc == WEOF)
+        return WEOF;
 
     _lock_file(file);
-    for(i=sizeof(wchar_t)-1;i>=0;i--) {
-        if(pp[i] != ungetc(pp[i],file)) {
+
+    if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
+            || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+        unsigned char * pp = (unsigned char *)&mwc;
+        int i;
+
+        for(i=sizeof(wchar_t)-1;i>=0;i--) {
+            if(pp[i] != ungetc(pp[i],file)) {
+                _unlock_file(file);
+                return WEOF;
+            }
+        }
+    }else {
+        char mbs[MB_LEN_MAX];
+        int len;
+
+        len = wctomb(mbs, mwc);
+        if(len == -1) {
             _unlock_file(file);
             return WEOF;
+        }
+
+        for(len--; len>=0; len--) {
+            if(mbs[len] != ungetc(mbs[len], file)) {
+                _unlock_file(file);
+                return WEOF;
+            }
         }
     }
 
