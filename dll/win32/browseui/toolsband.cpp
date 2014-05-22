@@ -274,20 +274,31 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
         TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
     HINSTANCE shell32Instance = GetModuleHandle(_T("shell32.dll"));
-    HBITMAP imageBitmap = reinterpret_cast<HBITMAP>(
+    HBITMAP imgNormal = reinterpret_cast<HBITMAP>(
         LoadImage(shell32Instance, MAKEINTRESOURCE(214),
             IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
 
-    if (imageBitmap)
+    HBITMAP imgHot = reinterpret_cast<HBITMAP>(
+        LoadImage(shell32Instance, MAKEINTRESOURCE(215),
+        IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
+
+    if (imgNormal && imgHot)
     {
-        DIBSECTION bitmapInfo;
-        GetObjectW(imageBitmap, sizeof(bitmapInfo), &bitmapInfo);
-        HIMAGELIST imageList = ImageList_Create(bitmapInfo.dsBm.bmHeight, bitmapInfo.dsBm.bmHeight, ILC_COLOR32, 4, 4);
+        BITMAP bitmapInfo;
+        GetObjectW(imgNormal, sizeof(bitmapInfo), &bitmapInfo);
+        HIMAGELIST himlNormal = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
 
-        ImageList_Add(imageList, imageBitmap, NULL);
-        DeleteObject(imageBitmap);
+        ImageList_Add(himlNormal, imgNormal, NULL);
+        DeleteObject(imgNormal);
 
-        SendMessage(TB_SETIMAGELIST, 0, (LPARAM) imageList);
+        GetObjectW(imgHot, sizeof(bitmapInfo), &bitmapInfo);
+        HIMAGELIST himlHot = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
+
+        ImageList_Add(himlHot, imgHot, NULL);
+        DeleteObject(imgHot);
+
+        SendMessage(TB_SETIMAGELIST, 0, (LPARAM) himlNormal);
+        SendMessage(TB_SETHOTIMAGELIST, 0, (LPARAM) himlHot);
     }
 
     SendMessage(TB_ADDBUTTONSW, numShownButtons, (LPARAM)&tbButtonsAdd);
