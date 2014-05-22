@@ -83,7 +83,7 @@ MACRO(KiEnterTrap, Flags)
     if (Flags AND KI_FAST_SYSTEM_CALL)
 
         /* SYSENTER requires us to build a complete ring transition trap frame */
-        FrameSize = KTRAP_FRAME_V86_ES
+        FrameSize = KTRAP_FRAME_EIP
 
         /* Fixup fs. cx is free to clobber */
         mov cx, KGDT_R0_PCR
@@ -94,6 +94,13 @@ MACRO(KiEnterTrap, Flags)
 
         /* Get a stack pointer */
         mov esp, [ecx + KTSS_ESP0]
+
+        /* Set up a fake hardware trap frame */
+        push KGDT_R3_DATA or RPL_MASK
+        push edx
+        pushfd
+        push KGDT_R3_CODE or RPL_MASK
+        push dword ptr ds:[KUSER_SHARED_SYSCALL_RET]
 
     elseif (Flags AND KI_SOFTWARE_TRAP)
 
@@ -183,7 +190,19 @@ set_sane_segs:
     mov es, ax
 
     /* Fast system calls have fs already fixed */
-    if (NOT (Flags AND KI_FAST_SYSTEM_CALL))
+    if (Flags AND KI_FAST_SYSTEM_CALL)
+
+        /* Enable interrupts and set a sane FS value */
+        or dword ptr [esp + KTRAP_FRAME_EFLAGS], EFLAGS_INTERRUPT_MASK
+        mov dword ptr [esp + KTRAP_FRAME_FS], KGDT_R3_TEB or RPL_MASK
+
+        /* Set sane active EFLAGS */
+        push 2
+        popfd
+
+        /* Point edx to the usermode parameters */
+        add edx, 8
+    else
         /* Otherwise fix fs now */
         mov ax, KGDT_R0_PCR
         mov fs, ax

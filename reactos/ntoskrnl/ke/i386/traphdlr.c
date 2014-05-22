@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID KiFastCallEntry(VOID);
+VOID KiFastCallEntryWithSingleStep(VOID);
+
 /* GLOBALS ********************************************************************/
 
 UCHAR KiTrapPrefixTable[] =
@@ -417,13 +420,26 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
-    
+
     /* Check for VDM trap */
     ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
 
+    /* Check if this was a single step after sysenter */
+    if (TrapFrame->Eip == (ULONG)KiFastCallEntry)
+    {
+        /* Disable single stepping */
+        TrapFrame->EFlags &= ~EFLAGS_TF;
+
+        /* Re-enter at the alternative sysenter entry point */
+        TrapFrame->Eip = (ULONG)KiFastCallEntryWithSingleStep;
+
+        /* End this trap */
+        KiEoiHelper(TrapFrame);
+    }
+
     /* Enable interrupts if the trap came from user-mode */
     if (KiUserTrap(TrapFrame)) _enable();
-    
+
     /*  Mask out trap flag and dispatch the exception */
     TrapFrame->EFlags &= ~EFLAGS_TF;
     KiDispatchException0Args(STATUS_SINGLE_STEP,
@@ -1521,11 +1537,11 @@ KiDbgPostServiceHook(ULONG SystemCallNumber, ULONG_PTR Result)
     return Result;
 }
 
-FORCEINLINE
 DECLSPEC_NORETURN
 VOID
-KiSystemCall(IN PKTRAP_FRAME TrapFrame,
-             IN PVOID Arguments)
+FASTCALL
+KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
+                       IN PVOID Arguments)
 {
     PKTHREAD Thread;
     PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
@@ -1656,38 +1672,6 @@ ExitCall:
 
     /* Exit from system call */
     KiServiceExit(TrapFrame, Result);
-}
-
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
-                       IN PVOID Arguments)
-{
-    /* Call the shared handler (inline) */
-    KiSystemCall(TrapFrame, Arguments);
-}
-
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiFastCallEntryHandler(IN PKTRAP_FRAME TrapFrame,
-                       IN PVOID Arguments)
-{
-    /* Set up a fake INT Stack and enable interrupts */
-    TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
-    TrapFrame->HardwareEsp = (ULONG_PTR)Arguments;
-    TrapFrame->EFlags = __readeflags() | EFLAGS_INTERRUPT_MASK;
-    TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
-    TrapFrame->Eip = SharedUserData->SystemCallReturn;
-    TrapFrame->SegFs = KGDT_R3_TEB | RPL_MASK;
-    __writeeflags(0x2);
-    
-    /* Arguments are actually 2 frames down (because of the double indirection) */
-    Arguments = (PVOID)(TrapFrame->HardwareEsp + 8);
-
-    /* Call the shared handler (inline) */
-    KiSystemCall(TrapFrame, Arguments);
 }
 
 /*
