@@ -1210,7 +1210,7 @@ BuildDesktopNameList(
    DWORD EntryCount;
    ULONG ReturnLength;
    WCHAR NullWchar;
-   PUNICODE_STRING DesktopName;
+   UNICODE_STRING DesktopName;
 
    Status = IntValidateWindowStationHandle(hWindowStation,
                                            KernelMode,
@@ -1233,8 +1233,8 @@ BuildDesktopNameList(
          DesktopEntry = DesktopEntry->Flink)
    {
       DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
-      DesktopName = GET_DESKTOP_NAME(DesktopObject);
-      if (DesktopName) ReturnLength += DesktopName->Length + sizeof(WCHAR);
+      RtlInitUnicodeString(&DesktopName, DesktopObject->pDeskInfo->szDesktopName);
+      ReturnLength += DesktopName.Length + sizeof(WCHAR);
       EntryCount++;
    }
    TRACE("Required size: %lu Entry count: %lu\n", ReturnLength, EntryCount);
@@ -1277,18 +1277,15 @@ BuildDesktopNameList(
          DesktopEntry = DesktopEntry->Flink)
    {
       DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
-      _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
-      DesktopName = GET_DESKTOP_NAME(DesktopObject);/// @todo Don't mess around with the object headers!
-      if (!DesktopName) continue;
-
-      Status = MmCopyToCaller(lpBuffer, DesktopName->Buffer, DesktopName->Length);
+      RtlInitUnicodeString(&DesktopName, DesktopObject->pDeskInfo->szDesktopName);
+      Status = MmCopyToCaller(lpBuffer, DesktopName.Buffer, DesktopName.Length);
       if (! NT_SUCCESS(Status))
       {
          KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return Status;
       }
-      lpBuffer = (PVOID) ((PCHAR)lpBuffer + DesktopName->Length);
+      lpBuffer = (PVOID) ((PCHAR)lpBuffer + DesktopName.Length);
       Status = MmCopyToCaller(lpBuffer, &NullWchar, sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {
