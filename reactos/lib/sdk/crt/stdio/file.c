@@ -3718,6 +3718,7 @@ char * CDECL tmpnam(char *s)
   {
     size = int_to_base32(tmpnam_unique++, tmpstr);
     memcpy(p, tmpstr, size);
+    p[size] = '\0';
     if (GetFileAttributesA(s) == INVALID_FILE_ATTRIBUTES &&
         GetLastError() == ERROR_FILE_NOT_FOUND)
       break;
@@ -3749,6 +3750,7 @@ wchar_t * CDECL _wtmpnam(wchar_t *s)
     {
         size = int_to_base32_w(tmpnam_unique++, tmpstr);
         memcpy(p, tmpstr, size*sizeof(wchar_t));
+        p[size] = '\0';
         if (GetFileAttributesW(s) == INVALID_FILE_ATTRIBUTES &&
                 GetLastError() == ERROR_FILE_NOT_FOUND)
             break;
