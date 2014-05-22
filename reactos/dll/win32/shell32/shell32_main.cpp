@@ -1075,7 +1075,7 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 /*************************************************************************
  * AboutDlgProc            (internal)
  */
-INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     static DWORD   cxLogoBmp;
     static DWORD   cyLogoBmp;
