@@ -3416,34 +3416,9 @@ LONG CDECL ftell(FILE* file)
  */
 int CDECL fgetpos(FILE* file, fpos_t *pos)
 {
-    int off=0;
-
-    _lock_file(file);
-    *pos = _lseeki64(file->_file,0,SEEK_CUR);
-    if(*pos == -1) {
-        _unlock_file(file);
+    *pos = _ftelli64(file);
+    if(*pos == -1)
         return -1;
-    }
-    if(file->_bufsiz)  {
-        if( file->_flag & _IOWRT ) {
-            off = file->_ptr - file->_base;
-        } else {
-            off = -file->_cnt;
-            if (get_ioinfo(file->_file)->wxflag & WX_TEXT) {
-                /* Black magic correction for CR removal */
-                int i;
-                for (i=0; i<file->_cnt; i++) {
-                    if (file->_ptr[i] == '\n')
-                        off--;
-                }
-                /* Black magic when reading CR at buffer boundary*/
-                if(get_ioinfo(file->_file)->wxflag & WX_READCR)
-                    off--;
-            }
-        }
-    }
-    *pos += off;
-    _unlock_file(file);
     return 0;
 }
 
