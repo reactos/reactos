@@ -57,7 +57,7 @@ typedef struct _PARTENTRY
     CHAR VolumeLabel[17];
     CHAR FileSystemName[9];
 
-    BOOLEAN ExtendedPartition;
+    BOOLEAN LogicalPartition;
 
     /* Partition is partitioned disk space */
     BOOLEAN IsPartitioned;
@@ -117,8 +117,10 @@ typedef struct _DISKENTRY
 
     PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
 
+    PPARTENTRY ExtendedPartition;
+
     LIST_ENTRY PrimaryPartListHead;
-    LIST_ENTRY ExtendedPartListHead;
+    LIST_ENTRY LogicalPartListHead;
 
 } DISKENTRY, *PDISKENTRY;
 
