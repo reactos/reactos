@@ -1291,10 +1291,10 @@ MiGetPageProtection(IN PMMPTE PointerPte)
     }
 
     /* This is software PTE */
-    DPRINT1("Prototype PTE: %lx %p\n", TempPte.u.Hard.PageFrameNumber, Pfn);
-    DPRINT1("VA: %p\n", MiPteToAddress(&TempPte));
-    DPRINT1("Mask: %lx\n", TempPte.u.Soft.Protection);
-    DPRINT1("Mask2: %lx\n", Pfn->OriginalPte.u.Soft.Protection);
+    DPRINT("Prototype PTE: %lx %p\n", TempPte.u.Hard.PageFrameNumber, Pfn);
+    DPRINT("VA: %p\n", MiPteToAddress(&TempPte));
+    DPRINT("Mask: %lx\n", TempPte.u.Soft.Protection);
+    DPRINT("Mask2: %lx\n", Pfn->OriginalPte.u.Soft.Protection);
     return MmProtectToValue[TempPte.u.Soft.Protection];
 }
 

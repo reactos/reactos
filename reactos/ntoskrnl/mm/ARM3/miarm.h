@@ -1100,11 +1100,11 @@ MI_WS_OWNER(IN PEPROCESS Process)
     /* Check if this process is the owner, and that the thread owns the WS */
     if (PsGetCurrentThread()->OwnsProcessWorkingSetExclusive == 0)
     {
-        DPRINT1("Thread: %p is not an owner\n", PsGetCurrentThread());
+        DPRINT("Thread: %p is not an owner\n", PsGetCurrentThread());
     }
     if (KeGetCurrentThread()->ApcState.Process != &Process->Pcb)
     {
-        DPRINT1("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
+        DPRINT("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
     }
     return ((KeGetCurrentThread()->ApcState.Process == &Process->Pcb) &&
             ((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) ||
