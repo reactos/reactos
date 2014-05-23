@@ -202,37 +202,63 @@ static const int moveToImageIndex = 44;
 static const int copyToImageIndex = 45;
 static const int folderOptionsImageIndex = 46;
 
+enum StandardToolbarButtons {
+    BtnIdx_Back = 0,
+    BtnIdx_Forward,
+    BtnIdx_Up,
+    BtnIdx_Search,
+    BtnIdx_Folders,
+    BtnIdx_MoveTo,
+    BtnIdx_CopyTo,
+    BtnIdx_Delete,
+    BtnIdx_Undo,
+    BtnIdx_Views,
+    BtnIdx_Stop,
+    BtnIdx_Refresh,
+    BtnIdx_Home,
+    BtnIdx_MapDrive,
+    BtnIdx_Disconnect,
+    BtnIdx_Favorites,
+    BtnIdx_History,
+    BtnIdx_FullScreen,
+    BtnIdx_Properties,
+    BtnIdx_Cut,
+    BtnIdx_Copy,
+    BtnIdx_Paste,
+    BtnIdx_FolderOptions,
+};
+
 const int numShownButtons = 13;
 const int numHiddenButtons = 13;
 TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
 {
-    {backImageIndex, gBackCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Back")},
-    {forwardImageIndex, gForwardCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN, {0}, 0, (INT_PTR)_T("Forward")},
-    {upImageIndex, gUpLevelCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Up")},
-    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
-    {searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Search")},
-    {foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Folders")},
-    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
-    {moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Move To")},
-    {copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy To")},
-    {deleteImageIndex, gDeleteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Delete")},
-    {undoImageIndex, gUndoCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Undo")},
-    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
-    {viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, {0}, 0, (INT_PTR)_T("Views")},
+    { backImageIndex, gBackCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Back },
+    { forwardImageIndex, gForwardCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN, { 0 }, 0,          BtnIdx_Forward },
+    { upImageIndex, gUpLevelCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0,                 BtnIdx_Up },
+    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
+    { searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Search },
+    { foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Folders },
+    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
+    { moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MoveTo },
+    { copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_CopyTo },
+    { deleteImageIndex, gDeleteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Delete },
+    { undoImageIndex, gUndoCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Undo },
+    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
+    { viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, { 0 }, 0, BtnIdx_Views },
 
-    {0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Stop")},
-    {0, gRefreshCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Refresh")},
-    {0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Home")},
-    {mapDriveImageIndex, gMapDriveCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Map Drive")},
-    {disconnectImageIndex, gDisconnectCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Disconnect")},
-    {favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Favorites")},
-    {0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("History")},
-    {0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Full Screen")},
-    {propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Properties")},
-    {cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Cut")},
-    {copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy")},
-    {pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Paste")},
-    {folderOptionsImageIndex, gFolderOptionsCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Folder Options")},
+    { 0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Stop },
+    { 0, gRefreshCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Refresh },
+    { 0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Home },
+    { mapDriveImageIndex, gMapDriveCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MapDrive },
+    { disconnectImageIndex, gDisconnectCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Disconnect },
+    { favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Favorites },
+    { 0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_History },
+    { 0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FullScreen },
+    { propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Properties },
+    { cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Cut },
+    { copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Copy },
+    { pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Paste },
+    { folderOptionsImageIndex, gFolderOptionsCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FolderOptions },
 };
 
 HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
@@ -259,19 +285,22 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
     if (!::IsWindow(parentWindow))
         return E_FAIL;
 
-    toolbar = CreateWindowEx(TBSTYLE_EX_DOUBLEBUFFER, TOOLBARCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-                    WS_CLIPCHILDREN | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
-                    CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP, 0, 0, 500, 20, parentWindow, NULL,
-                    _AtlBaseModule.GetModuleInstance(), 0);
+    toolbar = CreateWindowEx(
+                    TBSTYLE_EX_DOUBLEBUFFER,
+                    TOOLBARCLASSNAMEW, NULL,
+                    WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+                    TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
+                    CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP,
+                    0, 0, 500, 20, parentWindow, NULL, _AtlBaseModule.GetModuleInstance(), 0);
     if (toolbar == NULL)
         return E_FAIL;
     SubclassWindow(toolbar);
+    SendMessage(TB_ADDSTRINGW, (WPARAM) GetModuleHandle(L"browseui.dll"), IDS_STANDARD_TOOLBAR);
 
     SendMessage(WM_USER + 100, GetSystemMetrics(SM_CXEDGE) / 2, 0);
     SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     SendMessage(TB_SETMAXTEXTROWS, 1, 0);
-    SendMessage(TB_SETEXTENDEDSTYLE, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS,
-        TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
+    SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
     HINSTANCE shell32Instance = GetModuleHandle(_T("shell32.dll"));
     HBITMAP imgNormal = reinterpret_cast<HBITMAP>(
