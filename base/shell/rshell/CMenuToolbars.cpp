@@ -1156,7 +1156,6 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
         }
         else if (!(info.fType & MFT_BITMAP))
         {
-
             info.cch++;
             info.dwTypeData = (PWSTR) HeapAlloc(GetProcessHeap(), 0, (info.cch + 1) * sizeof(WCHAR));
 

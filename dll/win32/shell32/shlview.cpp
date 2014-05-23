@@ -1347,13 +1347,7 @@ void CDefView::OnDeactivate()
 
     if (m_uState != SVUIA_DEACTIVATE)
     {
-        if (m_hMenu)
-        {
-            m_pShellBrowser->SetMenuSB(0, 0, 0);
-            m_pShellBrowser->RemoveMenusSB(m_hMenu);
-            DestroyMenu(m_hMenu);
-            m_hMenu = 0;
-        }
+        // TODO: cleanup menu after deactivation
 
         m_uState = SVUIA_DEACTIVATE;
     }
@@ -1361,7 +1355,6 @@ void CDefView::OnDeactivate()
 
 void CDefView::DoActivate(UINT uState)
 {
-    OLEMENUGROUPWIDTHS                    omw = { {0, 0, 0, 0, 0, 0} };
     MENUITEMINFOA                        mii;
     CHAR                                szText[MAX_PATH];
 
@@ -1378,14 +1371,28 @@ void CDefView::DoActivate(UINT uState)
     /*only do This if we are active */
     if(uState != SVUIA_DEACTIVATE)
     {
+        // FIXME: windows does not do this.
+
+        // temporary solution (HACK): wipe the contents and refill
+        {
+            OLEMENUGROUPWIDTHS omw = { { 0 } };
+
+            INT mic = GetMenuItemCount(m_hMenu);
+            for (int i = 0; i < mic; i++)
+            {
+                HMENU submenu = GetSubMenu(m_hMenu, 0);
+                RemoveMenu(m_hMenu, 0, MF_BYPOSITION);
+                if (submenu)
+                    DestroyMenu(submenu);
+            }
+
+            m_pShellBrowser->InsertMenusSB(m_hMenu, &omw);
+        }
+
         /*merge the menus */
-        m_hMenu = CreateMenu();
 
         if(m_hMenu)
         {
-            m_pShellBrowser->InsertMenusSB(m_hMenu, &omw);
-            TRACE("-- after fnInsertMenusSB\n");
-
             /*build the top level menu get the menu item's text*/
             strcpy(szText, "dummy 31");
 
@@ -1987,6 +1994,8 @@ HRESULT WINAPI CDefView::Refresh()
 
 HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTINGS lpfs, IShellBrowser *psb, RECT *prcView, HWND *phWnd)
 {
+    OLEMENUGROUPWIDTHS                    omw = { { 0, 0, 0, 0, 0, 0 } };
+
     *phWnd = 0;
 
     TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n", this, lpPrevView, lpfs, psb, prcView, phWnd);
@@ -2027,6 +2036,13 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
 
     SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     UpdateWindow();
+
+    if (!m_hMenu)
+    {
+        m_hMenu = CreateMenu();
+        m_pShellBrowser->InsertMenusSB(m_hMenu, &omw);
+        TRACE("-- after fnInsertMenusSB\n");
+    }
 
     return S_OK;
 }
