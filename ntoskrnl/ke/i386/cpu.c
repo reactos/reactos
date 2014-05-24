@@ -1432,7 +1432,8 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 #else
     __asm
     {
-        fnsave [FpState]
+        mov eax, [FpState]
+        fnsave [eax]
     };
 #endif
 
@@ -1458,7 +1459,8 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
     __asm
     {
         fnclex
-        frstor [FpState]
+        mov eax, [FpState]
+        frstor [eax]
     };
 #endif
 
