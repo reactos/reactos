@@ -353,22 +353,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 //Update to new position
                 pMouse = pNewMouse;
                 cp = pNewMouse;
-                Refresh();
             }
             else if (((pCaret.x != pNewCaret.x) || (pCaret.y != pNewCaret.y)) && bFollowCaret)
             {
                 //Update to new position
                 pCaret = pNewCaret;
                 cp = pNewCaret;
-                Refresh();
             }
             else if (((pFocus.x != pNewFocus.x) || (pFocus.y != pNewFocus.y)) && bFollowFocus)
             {
                 //Update to new position
                 pFocus = pNewFocus;
                 cp = pNewFocus;
-                Refresh();
             }
+            Refresh();
         }
         break;
     case WM_COMMAND:
