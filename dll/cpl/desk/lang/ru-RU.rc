@@ -43,17 +43,17 @@ CAPTION "Оформление"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "&Окна и кнопки:", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Цветовая схема", IDC_STATIC, 7, 160, 104, 9
+    LTEXT "&Цветовая схема:", IDC_STATIC, 7, 160, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 190, 104, 9
+    LTEXT "&Размер шрифта:", IDC_STATIC, 7, 190, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Эффекты...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "Дополнительно", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON "&Дополнительно", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
@@ -222,7 +222,7 @@ BEGIN
     IDS_MESSBOX "Окно сообщения"
     IDS_MESSTEXT "Сообщение"
     IDS_BUTTEXT "OK"
-    IDS_CLASSIC_THEME "Classic Theme"
+    IDS_CLASSIC_THEME "Классическая тема"
 END
 
 STRINGTABLE
@@ -233,7 +233,7 @@ BEGIN
     IDS_ELEMENT_4 "Заголовок активных окон"
     IDS_ELEMENT_5 "Граница активных окон"
     IDS_ELEMENT_6 "Меню"
-    IDS_ELEMENT_7 "Выледенные элементы"
+    IDS_ELEMENT_7 "Выделенные элементы"
     IDS_ELEMENT_8 "Окна"
     IDS_ELEMENT_9 "Полоса прокрутки"
     IDS_ELEMENT_10 "Рельефные объекты"
@@ -244,7 +244,7 @@ BEGIN
     IDS_ELEMENT_15 "Диалог"
     IDS_ELEMENT_16 "Полосы прокрутки"
     IDS_ELEMENT_17 "Рабочая область приложения"
-    IDS_ELEMENT_18 "Small captionbar"
+    IDS_ELEMENT_18 "Название панели"
     IDS_ELEMENT_19 "Интервал между значками (гор.)"
     IDS_ELEMENT_20 "Интервал между значками (верт.)"
     IDS_ELEMENT_21 "Всплывающая подсказка"

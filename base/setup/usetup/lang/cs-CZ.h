@@ -827,12 +827,19 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Stisknut¡m C umo§n¡te vytvoýen¡ nov‚ho odd¡lu.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Stisknut¡m C umo§n¡te vytvoýen¡ nov‚ho odd¡lu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Stisknut¡m D umo§n¡te smaz n¡ existuj¡c¡ho odd¡lu.",
         TEXT_STYLE_NORMAL
     },
@@ -1287,6 +1294,10 @@ static MUI_ENTRY csCZRegistryEntries[] =
 MUI_ERROR csCZErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS nen¡ ve vaçem poŸ¡taŸi kompletnØ nainstalov n.\n"
         "Pokud nyn¡ instalaci ukonŸ¡te, budete ji muset pro\n"
@@ -1497,6 +1508,32 @@ MUI_ERROR csCZErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1608,13 +1645,19 @@ MUI_STRING csCZStrings[] =
     {STRING_PLEASEWAIT,
      "   ¬ekejte, pros¡m..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalovat   C = Vytvoýit odd¡l    F3 = UkonŸit"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Instalovat   C = Vytvoýit odd¡l    F3 = UkonŸit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalovat   D = Odstranit odd¡l   F3 = UkonŸit"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Velikost nov‚ho odd¡lu:"},
     {STRING_CHOOSENEWPARTITION,
-     "Zvolili jste vytvoýen¡ nov‚ho odd¡lu na"},
+     "You have chosen to create a primary partition on"},
+//     "Zvolili jste vytvoýen¡ nov‚ho odd¡lu na"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Zadejte velikost nov‚ho odd¡lu v megabajtech."},
     {STRING_CREATEPARTITION,
@@ -1686,7 +1729,7 @@ MUI_STRING csCZStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Typ %-3u                        %6lu %s"},
+    "%c%c  %sTyp %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,
@@ -1694,9 +1737,11 @@ MUI_STRING csCZStrings[] =
     {STRING_NEWPARTITION,
     "Instalace vytvoýila novì odd¡l na"},
     {STRING_UNPSPACE,
-    "    M¡sto bez odd¡l…                 %6lu %s"},
+    "    %sM¡sto bez odd¡l…%s               %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Novì (Nenaform tovanì)"},
     {STRING_FORMATUNUSED,

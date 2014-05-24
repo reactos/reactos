@@ -825,12 +825,19 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Натиснiть C щоб створити новий роздiл.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Натиснiть C щоб створити новий роздiл.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Натиснiть D щоб видалити iснуючий роздiл.",
         TEXT_STYLE_NORMAL
     },
@@ -1285,6 +1292,10 @@ static MUI_ENTRY ukUARegistryEntries[] =
 MUI_ERROR ukUAErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS не був повнiстю встановлений на Ваш\n"
         "комп'ютер. Якщо ви вийдете з встановлювача зараз,\n"
@@ -1496,6 +1507,32 @@ MUI_ERROR ukUAErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1606,13 +1643,19 @@ MUI_STRING ukUAStrings[] =
     {STRING_PLEASEWAIT,
      "   Будь-ласка, зачекайте..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Встановити   C = Створити Роздiл   F3 = Вийти"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Встановити   C = Створити Роздiл   F3 = Вийти"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Встановити   D = Видалити Роздiл   F3 = Вийти"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Розмiр нового роздiлу:"},
     {STRING_CHOOSENEWPARTITION,
-     "Ви хочете створити новий роздiл на"},
+     "You have chosen to create a primary partition on"},
+//     "Ви хочете створити новий роздiл на"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Будь-ласка, введiть розмiр нового роздiлу в мегабайтах."},
     {STRING_CREATEPARTITION,
@@ -1684,7 +1727,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на Жорсткому диску %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c  %sType %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
@@ -1692,9 +1735,11 @@ MUI_STRING ukUAStrings[] =
     {STRING_NEWPARTITION,
     "Встановлювач створив новий роздiл на"},
     {STRING_UNPSPACE,
-    "    Нерозмiчена область              %6lu %s"},
+    "    %sНерозмiчена область%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (макс. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Новий (Неформатований)"},
     {STRING_FORMATUNUSED,

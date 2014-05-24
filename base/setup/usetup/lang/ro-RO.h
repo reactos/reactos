@@ -881,12 +881,19 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tastaîi C pentru a crea o nouÇ partiîie.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Tastaîi C pentru a crea o nouÇ partiîie.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Tastaîi D pentru a ­terge o partiîie existentÇ.",
         TEXT_STYLE_NORMAL
     },
@@ -1341,6 +1348,10 @@ static MUI_ENTRY roRORegistryEntries[] =
 MUI_ERROR roROErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS nu a fost instalat complet Œn calculatorul\n"
         "dumneavoastrÇ. DacÇ abandonaîi instalarea ReactOS\n"
@@ -1567,6 +1578,32 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1677,13 +1714,19 @@ MUI_STRING roROStrings[] =
     {STRING_PLEASEWAIT,
      "   A­teptaîi..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalare   C = Creare partiîie   F3 = Ie­ire"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Instalare   C = Creare partiîie   F3 = Ie­ire"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalare   D = ¸tergere partiîie   F3 = Ie­ire"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "MÇrimea noii partiîii:"},
     {STRING_CHOOSENEWPARTITION,
-     "Aîi ales crearea unei noi partiîii pe"},
+     "You have chosen to create a primary partition on"},
+//     "Aîi ales crearea unei noi partiîii pe"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Introduceîi mÇrimea noii partiîii Œn megaocteîi."},
     {STRING_CREATEPARTITION,
@@ -1755,7 +1798,7 @@ MUI_STRING roROStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "de pe Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Tip %-3u                         %6lu %s"},
+    "%c%c  %sTip %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %S"},
     {STRING_HDDINFOUNK6,
@@ -1763,9 +1806,11 @@ MUI_STRING roROStrings[] =
     {STRING_NEWPARTITION,
     "O nouÇ partiîie a fost creatÇ Œn"},
     {STRING_UNPSPACE,
-    "    Spaîiu nepartiîionat             %6lu %s"},
+    "    %sSpaîiu nepartiîionat%s           %6lu %s"},
     {STRING_MAXSIZE,
     "Mo (max. %lu Mo)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Part. nouÇ (neformatatÇ)"},
     {STRING_FORMATUNUSED,

@@ -37,6 +37,7 @@ static BOOLEAN Bios32Loaded = FALSE;
 
 static CALLBACK16 __BiosContext;
 PBIOS_DATA_AREA Bda;
+PBIOS_CONFIG_TABLE Bct;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -134,8 +135,10 @@ BiosInitialize(IN LPCSTR BiosFileName)
     /* Disable interrupts */
     setIF(0);
 
-    /* Initialize the BDA pointer */
-    Bda = (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0);
+    /* Initialize the BDA and the BCT pointers */
+    Bda =    (PBIOS_DATA_AREA)SEG_OFF_TO_PTR(BDA_SEGMENT, 0x0000);
+    // The BCT is found at F000:E6F5 for 100% compatible BIOSes.
+    Bct = (PBIOS_CONFIG_TABLE)SEG_OFF_TO_PTR(BIOS_SEGMENT, 0xE6F5);
 
     /* Register the BIOS support BOPs */
     RegisterBop(BOP_BIOSINIT  , BiosInitBop);

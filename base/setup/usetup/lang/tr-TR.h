@@ -807,12 +807,19 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Seáili boüluktan yeni bir bîlÅm oluüturmak iáin C dÅßmesine basçnçz.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Seáili boüluktan yeni bir bîlÅm oluüturmak iáin C dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Seáili bîlÅmÅ silmek iáin D dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
@@ -1255,6 +1262,10 @@ static MUI_ENTRY trTRRegistryEntries[] =
 MUI_ERROR trTRErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS, bilgisayara bÅtÅnÅyle kurulmadç.\n"
         "Eßer Kur'dan áçkarsançz ReactOS'u kurmak\n"
@@ -1464,6 +1475,32 @@ MUI_ERROR trTRErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1574,13 +1611,19 @@ MUI_STRING trTRStrings[] =
     {STRING_PLEASEWAIT,
     "   LÅtfen bekleyiniz..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   Giriü = Kur   C = BîlÅm Oluütur   F3 = Äçkçü"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//    "   Giriü = Kur   C = BîlÅm Oluütur   F3 = Äçkçü"},
     {STRING_INSTALLDELETEPARTITION,
     "   Giriü = Kur   D = BîlÅmÅ Sil   F3 = Äçkçü"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
     "BÅyÅklÅßÅ giriniz:"},
     {STRING_CHOOSENEWPARTITION,
-    "Yeni bir bîlÅm oluüturmayç seátiniz."},
+     "You have chosen to create a primary partition on"},
+//    "Yeni bir bîlÅm oluüturmayç seátiniz."},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Oluüturulacak bîlÅmÅn bÅyÅklÅßÅnÅ megaáoklu olarak giriniz."},
     {STRING_CREATEPARTITION,
@@ -1652,7 +1695,7 @@ MUI_STRING trTRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "özerinde: Disk %lu (%I64u %s), Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu, %wZ Åzerinde."},
     {STRING_HDDINFOUNK5,
-    "%c%c  TÅr  %-3u                         %6lu %s"},
+    "%c%c  %sTÅr  %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu), %S Åzerinde"},
     {STRING_HDDINFOUNK6,
@@ -1660,9 +1703,11 @@ MUI_STRING trTRStrings[] =
     {STRING_NEWPARTITION,
     "Kur, üu bîlÅmÅ oluüturdu:"},
     {STRING_UNPSPACE,
-    "    Kullançlmayan Boüluk             %6lu %s"},
+    "    %sKullançlmayan Boüluk%s           %6lu %s"},
     {STRING_MAXSIZE,
     "MB (En áok %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Yeni (Biáimlendirilmemiü)"},
     {STRING_FORMATUNUSED,

@@ -51,7 +51,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     OBJECT_ATTRIBUTES ObjectAttributes;
     PLIST_ENTRY NextEntry, ListHead;
     PWINSTATION_OBJECT WinStaObject = (PWINSTATION_OBJECT)ParseObject;
-    PUNICODE_STRING DesktopName;
+    UNICODE_STRING DesktopName;
     PBOOLEAN pContext = (PBOOLEAN) Context;
 
     if(pContext)
@@ -65,43 +65,40 @@ IntDesktopObjectParse(IN PVOID ParseObject,
         /* Get the current desktop */
         Desktop = CONTAINING_RECORD(NextEntry, DESKTOP, ListEntry);
 
-        /// @todo Don't mess around with the object headers!
-        /* Get its name */
-        _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
-        DesktopName = GET_DESKTOP_NAME(Desktop);
-        if (DesktopName)
+        /* Get the desktop name */
+        ASSERT(Desktop->pDeskInfo != NULL);
+        RtlInitUnicodeString(&DesktopName, Desktop->pDeskInfo->szDesktopName);
+
+        /* Compare the name */
+        if (RtlEqualUnicodeString(RemainingName,
+                                  &DesktopName,
+                                  (Attributes & OBJ_CASE_INSENSITIVE)))
         {
-            /* Compare the name */
-            if (RtlEqualUnicodeString(RemainingName,
-                                      DesktopName,
-                                      (Attributes & OBJ_CASE_INSENSITIVE)))
+            /* We found a match. Did this come from a create? */
+            if (Context)
             {
-                /* We found a match. Did this come from a create? */
-                if (Context)
+                /* Unless OPEN_IF was given, fail with an error */
+                if (!(Attributes & OBJ_OPENIF))
                 {
-                    /* Unless OPEN_IF was given, fail with an error */
-                    if (!(Attributes & OBJ_OPENIF))
-                    {
-                        /* Name collision */
-                        return STATUS_OBJECT_NAME_COLLISION;
-                    }
-                    else
-                    {
-                        /* Otherwise, return with a warning only */
-                        Status = STATUS_OBJECT_NAME_EXISTS;
-                    }
+                    /* Name collision */
+                    return STATUS_OBJECT_NAME_COLLISION;
                 }
                 else
                 {
-                    /* This was a real open, so this is OK */
-                    Status = STATUS_SUCCESS;
+                    /* Otherwise, return with a warning only */
+                    Status = STATUS_OBJECT_NAME_EXISTS;
                 }
-
-                /* Reference the desktop and return it */
-                ObReferenceObject(Desktop);
-                *Object = Desktop;
-                return Status;
             }
+            else
+            {
+                /* This was a real open, so this is OK */
+                Status = STATUS_SUCCESS;
+            }
+
+            /* Reference the desktop and return it */
+            ObReferenceObject(Desktop);
+            *Object = Desktop;
+            return Status;
         }
 
         /* Go to the next desktop */
@@ -522,7 +519,7 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    {
       gpqForeground = pdo->ActiveMessageQueue;
    }
-   else 
+   else
    {
       gpqForeground = NULL;
       ERR("ptiLastInput is CLEARED!!\n");

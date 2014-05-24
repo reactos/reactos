@@ -580,7 +580,11 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     IO_STACK_LOCATION Stack;
     PVOID Dummy;
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
 
+    /* Drop all our state for this device in case it isn't really going away */
+    DeviceNode->Flags &= DNF_ENUMERATED | DNF_PROCESSED;
+    
     RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
     Stack.MajorFunction = IRP_MJ_PNP;
     Stack.MinorFunction = IRP_MN_REMOVE_DEVICE;
@@ -4537,8 +4541,6 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject, BOOLEAN Force)
         return Status;
     }
 
-    DeviceNode->Flags |= DNF_WILL_BE_REMOVED;
-    DeviceNode->Problem = CM_PROB_WILL_BE_REMOVED;
     if (DeviceRelations)
         IopSendRemoveDeviceRelations(DeviceRelations);
     IopSendRemoveChildDevices(DeviceNode);

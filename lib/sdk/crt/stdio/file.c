@@ -553,6 +553,29 @@ int CDECL _isatty(int fd)
     return TRUE;
 }
 
+/* INTERNAL: Allocate temporary buffer for stdout and stderr */
+static BOOL add_std_buffer(FILE *file)
+{
+    static char buffers[2][BUFSIZ];
+
+    if((file->_file!=STDOUT_FILENO && file->_file!=STDERR_FILENO)
+            || !_isatty(file->_file) || file->_bufsiz)
+        return FALSE;
+
+    file->_ptr = file->_base = buffers[file->_file == STDOUT_FILENO ? 0 : 1];
+    file->_bufsiz = file->_cnt = BUFSIZ;
+    return TRUE;
+}
+
+/* INTERNAL: Removes temporary buffer from stdout or stderr */
+/* Only call this function when add_std_buffer returned TRUE */
+static void remove_std_buffer(FILE *file)
+{
+    flush_buffer(file);
+    file->_ptr = file->_base = NULL;
+    file->_bufsiz = file->_cnt = 0;
+}
+
 /* INTERNAL: Convert integer to base32 string (0-9a-v), 0 becomes "" */
 static int int_to_base32(int num, char *str)
 {
@@ -3416,34 +3439,9 @@ LONG CDECL ftell(FILE* file)
  */
 int CDECL fgetpos(FILE* file, fpos_t *pos)
 {
-    int off=0;
-
-    _lock_file(file);
-    *pos = _lseeki64(file->_file,0,SEEK_CUR);
-    if(*pos == -1) {
-        _unlock_file(file);
+    *pos = _ftelli64(file);
+    if(*pos == -1)
         return -1;
-    }
-    if(file->_bufsiz)  {
-        if( file->_flag & _IOWRT ) {
-            off = file->_ptr - file->_base;
-        } else {
-            off = -file->_cnt;
-            if (get_ioinfo(file->_file)->wxflag & WX_TEXT) {
-                /* Black magic correction for CR removal */
-                int i;
-                for (i=0; i<file->_cnt; i++) {
-                    if (file->_ptr[i] == '\n')
-                        off--;
-                }
-                /* Black magic when reading CR at buffer boundary*/
-                if(get_ioinfo(file->_file)->wxflag & WX_READCR)
-                    off--;
-            }
-        }
-    }
-    *pos += off;
-    _unlock_file(file);
     return 0;
 }
 
@@ -3452,23 +3450,13 @@ int CDECL fgetpos(FILE* file, fpos_t *pos)
  */
 int CDECL fputs(const char *s, FILE* file)
 {
-    size_t i, len = strlen(s);
+    size_t len = strlen(s);
     int ret;
 
     _lock_file(file);
-    if (!(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
-      ret = fwrite(s,sizeof(*s),len,file) == len ? 0 : EOF;
-      _unlock_file(file);
-      return ret;
-    }
-    for (i=0; i<len; i++)
-      if (fputc(s[i], file) == EOF)  {
-        _unlock_file(file);
-        return EOF;
-      }
-
+    ret = fwrite(s, sizeof(*s), len, file) == len ? 0 : EOF;
     _unlock_file(file);
-    return 0;
+    return ret;
 }
 
 /*********************************************************************
@@ -3477,6 +3465,7 @@ int CDECL fputs(const char *s, FILE* file)
 int CDECL fputws(const wchar_t *s, FILE* file)
 {
     size_t i, len = strlenW(s);
+    BOOL tmp_buf;
     int ret;
 
     _lock_file(file);
@@ -3485,14 +3474,17 @@ int CDECL fputws(const wchar_t *s, FILE* file)
         _unlock_file(file);
         return ret;
     }
+
+    tmp_buf = add_std_buffer(file);
     for (i=0; i<len; i++) {
-        if (((s[i] == '\n') && (fputc('\r', file) == EOF))
-                || fputwc(s[i], file) == WEOF) {
+        if(fputwc(s[i], file) == WEOF) {
+            if(tmp_buf) remove_std_buffer(file);
             _unlock_file(file);
             return WEOF;
         }
     }
 
+    if(tmp_buf) remove_std_buffer(file);
     _unlock_file(file);
     return 0;
 }
@@ -3726,6 +3718,7 @@ char * CDECL tmpnam(char *s)
   {
     size = int_to_base32(tmpnam_unique++, tmpstr);
     memcpy(p, tmpstr, size);
+    p[size] = '\0';
     if (GetFileAttributesA(s) == INVALID_FILE_ATTRIBUTES &&
         GetLastError() == ERROR_FILE_NOT_FOUND)
       break;
@@ -3757,6 +3750,7 @@ wchar_t * CDECL _wtmpnam(wchar_t *s)
     {
         size = int_to_base32_w(tmpnam_unique++, tmpstr);
         memcpy(p, tmpstr, size*sizeof(wchar_t));
+        p[size] = '\0';
         if (GetFileAttributesW(s) == INVALID_FILE_ATTRIBUTES &&
                 GetLastError() == ERROR_FILE_NOT_FOUND)
             break;
@@ -3830,14 +3824,38 @@ int CDECL ungetc(int c, FILE * file)
 wint_t CDECL ungetwc(wint_t wc, FILE * file)
 {
     wchar_t mwc = wc;
-    char * pp = (char *)&mwc;
-    int i;
+
+    if (wc == WEOF)
+        return WEOF;
 
     _lock_file(file);
-    for(i=sizeof(wchar_t)-1;i>=0;i--) {
-        if(pp[i] != ungetc(pp[i],file)) {
+
+    if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
+            || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+        unsigned char * pp = (unsigned char *)&mwc;
+        int i;
+
+        for(i=sizeof(wchar_t)-1;i>=0;i--) {
+            if(pp[i] != ungetc(pp[i],file)) {
+                _unlock_file(file);
+                return WEOF;
+            }
+        }
+    }else {
+        char mbs[MB_LEN_MAX];
+        int len;
+
+        len = wctomb(mbs, mwc);
+        if(len == -1) {
             _unlock_file(file);
             return WEOF;
+        }
+
+        for(len--; len>=0; len--) {
+            if(mbs[len] != ungetc(mbs[len], file)) {
+                _unlock_file(file);
+                return WEOF;
+            }
         }
     }
 

@@ -838,12 +838,19 @@ static MUI_ENTRY ptBRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Para criar uma partiá∆o no espaáo n∆o particionado, pressione C.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Para criar uma partiá∆o no espaáo n∆o particionado, pressione C.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Para excluir a partiá∆o selecionada, pressione D.",
         TEXT_STYLE_NORMAL
     },
@@ -1316,6 +1323,10 @@ static MUI_ENTRY ptBRRegistryEntries[] =
 MUI_ERROR ptBRErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "O ReactOS n∆o est† completamente instalado no computador.\n"
         "Se vocà sair da instalaá∆o agora, precisar† executa-la\n"
@@ -1526,6 +1537,32 @@ MUI_ERROR ptBRErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1636,13 +1673,19 @@ MUI_STRING ptBRStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER=Instalar  C=Criar partiá∆o  F3=Sair"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//    "   ENTER=Instalar  C=Criar partiá∆o  F3=Sair"},
     {STRING_INSTALLDELETEPARTITION,
     "   ENTER=Instalar  D=Apagar partiá∆o  F3=Sair"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
     "Tamanho da nova partiá∆o:"},
     {STRING_CHOOSENEWPARTITION,
-    "Vocà solicitou a criaá∆o de uma nova partiá∆o em"},
+     "You have chosen to create a primary partition on"},
+//    "Vocà solicitou a criaá∆o de uma nova partiá∆o em"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Por favor, insira o tamanho da nova partiá∆o em megabytes (MB)."},
     {STRING_CREATEPARTITION,
@@ -1714,7 +1757,7 @@ MUI_STRING ptBRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "em Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Tipo %-3u                         %6lu %s"},
+    "%c%c  %sTipo %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %S"},
     {STRING_HDDINFOUNK6,
@@ -1722,9 +1765,11 @@ MUI_STRING ptBRStrings[] =
     {STRING_NEWPARTITION,
     "O instalador criou uma nova partiá∆o em"},
     {STRING_UNPSPACE,
-    "    Espaáo n∆o particionado              %6lu %s"},
+    "    %sEspaáo n∆o particionado%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Novo (sem formato)"},
     {STRING_FORMATUNUSED,

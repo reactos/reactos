@@ -117,9 +117,9 @@ PALETTE_vGetBitMasks(
     PPALETTE ppal,
     PULONG pulColors);
 
-BOOL
+VOID
 NTAPI
-PALETTE_Cleanup(PVOID ObjectBody);
+PALETTE_vCleanup(PVOID ObjectBody);
 
 FORCEINLINE
 ULONG

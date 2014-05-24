@@ -846,7 +846,7 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 /* Load the symbols */
                 DbgLoadImageSymbols(&SymbolString,
                                     LdrEntry->DllBase,
-                                    (ULONG_PTR)ZwCurrentProcess());
+                                    (ULONG_PTR)PsGetCurrentProcessId());
             }
         }
 

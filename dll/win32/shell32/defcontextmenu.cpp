@@ -600,8 +600,13 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         fState = MFS_ENABLED;
         mii.dwTypeData = NULL;
 
+        /* set first entry as default */
+        if (pEntry == m_pStaticEntries)
+            fState |= MFS_DEFAULT;
+        
         if (!wcsicmp(pEntry->szVerb, L"open"))
         {
+            /* override default when open verb is found */
             fState |= MFS_DEFAULT;
             idResource = IDS_OPEN_VERB;
         }

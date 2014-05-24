@@ -112,6 +112,21 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        /* Get Configuration */
+        case 0xC0:
+        {
+            /* Return the BIOS ROM Configuration Table address in ES:BX */
+            // The BCT is found at F000:E6F5 for 100% compatible BIOSes.
+            setES(BIOS_SEGMENT);
+            setBX(0xE6F5);
+
+            /* Call successful; clear CF */
+            setAH(0x00);
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+
+            break;
+        }
+
         default:
         {
             DPRINT1("BIOS Function INT 15h, AH = 0x%02X NOT IMPLEMENTED\n",
@@ -301,18 +316,14 @@ static VOID BiosHwSetup(VOID)
 static VOID InitializeBiosInt32(VOID)
 {
     USHORT i;
-    // USHORT Offset = 0;
 
     /* Initialize the callback context */
     InitializeContext(&BiosContext, BIOS_SEGMENT, 0x0000);
 
-    /* Register the BIOS 32-bit Interrupts */
+    /* Register the default BIOS 32-bit Interrupts */
     for (i = 0x00; i <= 0xFF; i++)
     {
-        // Offset += RegisterInt32(MAKELONG(Offset, BIOS_SEGMENT), i, NULL, NULL);
-        BiosContext.NextOffset += RegisterInt32(MAKELONG(BiosContext.NextOffset,
-                                                         BiosContext.Segment),
-                                                i, NULL, NULL);
+        RegisterBiosInt32(i, NULL);
     }
 
     /* Initialize the exception vector interrupts to a default Exception handler */
@@ -340,25 +351,22 @@ static VOID InitializeBiosInt32(VOID)
     ((PULONG)BaseAddress)[0x49] = (ULONG)NULL;
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * The BIOS POST (Power On-Self Test)
- */
-BOOLEAN Bios32Initialize(VOID)
+static VOID InitializeBiosInfo(VOID)
 {
-    BOOLEAN Success;
+    Bct->Length         = sizeof(*Bct);
+    Bct->Model          = 0xFC; // PC-AT; see http://www.ctyme.com/intr/rb-1594.htm#Table515
+    Bct->SubModel       = 0x00;
+    Bct->BiosRevision   = 0x01;
+    Bct->BiosFeature[0] = 0x64; // At the moment we don't support "INT 15/AH=4Fh called upon INT 09h" nor "wait for external event (INT 15/AH=41h) supported"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
+    Bct->BiosFeature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
+    Bct->BiosFeature[2] = 0x00;
+    Bct->BiosFeature[3] = 0x00;
+    Bct->BiosFeature[4] = 0x00;
+}
+
+static VOID InitializeBiosData(VOID)
+{
     UCHAR Low, High;
-
-    /* Initialize the stack */
-    // That's what says IBM... (stack at 30:00FF going downwards)
-    // setSS(0x0000);
-    // setSP(0x0400);
-    setSS(0x0050);  // Stack at 50:0400, going downwards
-    setSP(0x0400);
-
-    /* Set data segment */
-    setDS(BDA_SEGMENT);
 
     /* Initialize the BDA contents */
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
@@ -372,6 +380,30 @@ BOOLEAN Bios32Initialize(VOID)
     IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_BASE_MEMORY_HIGH);
     High = IOReadB(CMOS_DATA_PORT);
     Bda->MemorySize = MAKEWORD(Low, High);
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * The BIOS POST (Power On-Self Test)
+ */
+BOOLEAN Bios32Initialize(VOID)
+{
+    BOOLEAN Success;
+
+    /* Initialize the stack */
+    // That's what says IBM... (stack at 30:00FF going downwards)
+    // setSS(0x0000);
+    // setSP(0x0400);
+    setSS(0x0050);  // Stack at 50:0400, going downwards
+    setSP(0x0400);
+
+    /* Set data segment */
+    setDS(BDA_SEGMENT);
+
+    /* Initialize the BDA and the BIOS ROM Information */
+    InitializeBiosData();
+    InitializeBiosInfo();
 
     /* Register the BIOS 32-bit Interrupts */
     InitializeBiosInt32();

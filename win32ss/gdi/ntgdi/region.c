@@ -2275,8 +2275,8 @@ IntSysCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     return hrgn;
 }
 
-BOOL NTAPI
-REGION_Cleanup(PVOID ObjectBody)
+VOID NTAPI
+REGION_vCleanup(PVOID ObjectBody)
 {
     PROSRGNDATA pRgn = (PROSRGNDATA)ObjectBody;
     PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
@@ -2288,7 +2288,6 @@ REGION_Cleanup(PVOID ObjectBody)
 
     if (pRgn->Buffer && pRgn->Buffer != &pRgn->rdh.rcBound)
         ExFreePoolWithTag(pRgn->Buffer, TAG_REGION);
-    return TRUE;
 }
 
 VOID FASTCALL

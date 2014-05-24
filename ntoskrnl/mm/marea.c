@@ -988,6 +988,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 {
    ULONG_PTR tmpLength;
    PMEMORY_AREA MemoryArea;
+   ULONG_PTR EndingAddress;
 
    DPRINT("MmCreateMemoryArea(Type 0x%lx, BaseAddress %p, "
           "*BaseAddress %p, Length %p, AllocationFlags %x, "
@@ -997,7 +998,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
    if ((*BaseAddress) == 0 && !FixedAddress)
    {
-      tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, Granularity);
+      tmpLength = (ULONG_PTR)MM_ROUND_UP(Length, PAGE_SIZE);
       *BaseAddress = MmFindGap(AddressSpace,
                                tmpLength,
                                Granularity,
@@ -1010,10 +1011,9 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    }
    else
    {
-      tmpLength = Length + ((ULONG_PTR) *BaseAddress
-                         - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
-      tmpLength = (ULONG_PTR)MM_ROUND_UP(tmpLength, Granularity);
-      *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
+      EndingAddress = ((ULONG_PTR)*BaseAddress + Length - 1) | (PAGE_SIZE - 1);
+      *BaseAddress = ALIGN_DOWN_POINTER_BY(*BaseAddress, Granularity);
+      tmpLength = EndingAddress + 1 - (ULONG_PTR)*BaseAddress;
 
       if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
       {

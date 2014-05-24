@@ -820,12 +820,19 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Нажмите C для создания нового раздела.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Нажмите C для создания нового раздела.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Нажмите D для удаления существующего раздела.",
         TEXT_STYLE_NORMAL
     },
@@ -1280,6 +1287,10 @@ static MUI_ENTRY ruRURegistryEntries[] =
 MUI_ERROR ruRUErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS не был полностью установлен на ваш\n"
         "компьютер. Если вы выйдите из установки сейчас,\n"
@@ -1490,6 +1501,32 @@ MUI_ERROR ruRUErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1601,13 +1638,19 @@ MUI_STRING ruRUStrings[] =
     {STRING_PLEASEWAIT,
      "   Пожалуйста, подождите..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Установить   C = Создать раздел   F3 = Выход"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Установить   C = Создать раздел   F3 = Выход"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Установить   D = Удалить раздел   F3 = Выход"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Размер нового раздела:"},
     {STRING_CHOOSENEWPARTITION,
-     "Вы хотите создать новый раздел на"},
+     "You have chosen to create a primary partition on"},
+//     "Вы хотите создать новый раздел на"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Пожалуйста, введите размер нового раздела в мегабайтах."},
     {STRING_CREATEPARTITION,
@@ -1679,7 +1722,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на жестком диске %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Запись %-3u                         %6lu %s"},
+    "%c%c  %sЗапись %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %S"},
     {STRING_HDDINFOUNK6,
@@ -1687,9 +1730,11 @@ MUI_STRING ruRUStrings[] =
     {STRING_NEWPARTITION,
     "Программа установки создала новый раздел на:"},
     {STRING_UNPSPACE,
-    "    Неразмеченное пространство              %6lu %s"},
+    "    %sНеразмеченное пространство%s            %6lu %s"},
     {STRING_MAXSIZE,
     "МБ (макс. %lu МБ)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Новый (неотформатированный)"},
     {STRING_FORMATUNUSED,

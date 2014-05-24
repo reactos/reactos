@@ -42,12 +42,25 @@ typedef struct _PARTENTRY
 {
     LIST_ENTRY ListEntry;
 
-    CHAR DriveLetter[4];
+    struct _DISKENTRY *DiskEntry;
+
+    ULARGE_INTEGER StartSector;
+    ULARGE_INTEGER SectorCount;
+
+    BOOLEAN BootIndicator;
+    UCHAR PartitionType;
+    ULONG HiddenSectors;
+    ULONG PartitionNumber;
+    ULONG PartitionIndex;
+
+    CHAR DriveLetter;
     CHAR VolumeLabel[17];
     CHAR FileSystemName[9];
 
-    /* Partition is unused disk space */
-    BOOLEAN Unpartitioned;
+    BOOLEAN LogicalPartition;
+
+    /* Partition is partitioned disk space */
+    BOOLEAN IsPartitioned;
 
     /* Partition is new. Table does not exist on disk yet */
     BOOLEAN New;
@@ -56,15 +69,6 @@ typedef struct _PARTENTRY
     BOOLEAN AutoCreate;
 
     FORMATSTATE FormatState;
-
-    /*
-     * Raw offset and length of the unpartitioned disk space.
-     * Includes the leading, not yet existing, partition table.
-     */
-    ULONGLONG UnpartitionedOffset;
-    ULONGLONG UnpartitionedLength;
-
-    PARTITION_INFORMATION PartInfo[4];
 
 } PARTENTRY, *PPARTENTRY;
 
@@ -86,18 +90,17 @@ typedef struct _DISKENTRY
     LIST_ENTRY ListEntry;
 
     ULONGLONG Cylinders;
-    ULONGLONG TracksPerCylinder;
-    ULONGLONG SectorsPerTrack;
-    ULONGLONG BytesPerSector;
+    ULONG TracksPerCylinder;
+    ULONG SectorsPerTrack;
+    ULONG BytesPerSector;
 
-    ULONGLONG DiskSize;
-    ULONGLONG CylinderSize;
-    ULONGLONG TrackSize;
+    ULARGE_INTEGER SectorCount;
+    ULONG SectorAlignment;
 
     BOOLEAN BiosFound;
     ULONG BiosDiskNumber;
-    ULONG Signature;
-    ULONG Checksum;
+//    ULONG Signature;
+//    ULONG Checksum;
 
     ULONG DiskNumber;
     USHORT Port;
@@ -105,14 +108,19 @@ typedef struct _DISKENTRY
     USHORT Id;
 
     /* Has the partition list been modified? */
-    BOOLEAN Modified;
+    BOOLEAN Dirty;
 
     BOOLEAN NewDisk;
     BOOLEAN NoMbr; /* MBR is absent */
 
     UNICODE_STRING DriverName;
 
-    LIST_ENTRY PartListHead;
+    PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
+
+    PPARTENTRY ExtendedPartition;
+
+    LIST_ENTRY PrimaryPartListHead;
+    LIST_ENTRY LogicalPartListHead;
 
 } DISKENTRY, *PDISKENTRY;
 
@@ -132,11 +140,9 @@ typedef struct _PARTLIST
 
     PDISKENTRY CurrentDisk;
     PPARTENTRY CurrentPartition;
-    UCHAR      CurrentPartitionNumber;
 
     PDISKENTRY ActiveBootDisk;
     PPARTENTRY ActiveBootPartition;
-    UCHAR      ActiveBootPartitionNumber;
 
     LIST_ENTRY DiskListHead;
     LIST_ENTRY BiosDiskListHead;
@@ -214,10 +220,15 @@ ScrollUpPartitionList(
     PPARTLIST List);
 
 VOID
-CreateNewPartition(
+CreatePrimaryPartition(
     PPARTLIST List,
     ULONGLONG PartitionSize,
     BOOLEAN AutoCreate);
+
+VOID
+CreateExtendedPartition(
+    PPARTLIST List,
+    ULONGLONG PartitionSize);
 
 VOID
 DeleteCurrentPartition(
@@ -234,5 +245,13 @@ CheckForLinuxFdiskPartitions(
 BOOLEAN
 WritePartitionsToDisk(
     PPARTLIST List);
+
+ULONG
+PrimaryPartitionCreationChecks(
+    IN PPARTLIST List);
+
+ULONG
+ExtendedPartitionCreationChecks(
+    IN PPARTLIST List);
 
 /* EOF */

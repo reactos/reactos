@@ -820,12 +820,19 @@ static MUI_ENTRY jaJPSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  ±À×¼² Êß°Ã¨¼®Ý ¦ »¸¾² ½ÙÆÊ C ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  ±À×¼² Êß°Ã¨¼®Ý ¦ »¸¾² ½ÙÆÊ C ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  ·¿ÝÉ Êß°Ã¨¼®Ý¦ »¸¼Þ® ½ÙÆÊ D ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
@@ -1280,6 +1287,10 @@ static MUI_ENTRY jaJPRegistryEntries[] =
 MUI_ERROR jaJPErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS Ê ºÝËß­°ÀÆ ¶Ý¾ÞÝÆ ²Ý½Ä°Ù\n"
         "»ÚÏ¾Ý¡ ¾¯Ä±¯Ìß¦ Á­³¼ ½Ù ÊÞ±²¤ ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ¾¯Ä±¯Ìß¦\n"
@@ -1490,6 +1501,32 @@ MUI_ERROR jaJPErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1600,13 +1637,19 @@ MUI_STRING jaJPStrings[] =
     {STRING_PLEASEWAIT,
      "   µÏÁ ¸ÀÞ»²..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = ²Ý½Ä°Ù   C = Êß°Ã¨¼®Ý »¸¾²   F3 = Á­³¼"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = ²Ý½Ä°Ù   C = Êß°Ã¨¼®Ý »¸¾²   F3 = Á­³¼"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = ²Ý½Ä°Ù   D = Êß°Ã¨¼®Ý »¸¼Þ®   F3 = Á­³¼"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "±À×¼² Êß°Ã¨¼®ÝÉ »²½Þ:"},
     {STRING_CHOOSENEWPARTITION,
-     "±À×¼² Êß°Ã¨¼®Ý¦ Â·ÞÆ »¸¾²½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À:"},
+     "You have chosen to create a primary partition on"},
+//     "±À×¼² Êß°Ã¨¼®Ý¦ Â·ÞÆ »¸¾²½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À:"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "±À×¼² Êß°Ã¨¼®ÝÉ »²½Þ¦ Ò¶ÞÊÞ²Ä ÀÝ²ÃÞ Æ­³Ø®¸ ¼Ã¸ÀÞ»²¡"},
     {STRING_CREATEPARTITION,
@@ -1678,7 +1721,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "on Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  ¼­Ù² %-3u                         %6lu %s"},
+    "%c%c  %s¼­Ù² %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
@@ -1686,9 +1729,11 @@ MUI_STRING jaJPStrings[] =
     {STRING_NEWPARTITION,
     "¾¯Ä±¯ÌßÊ ±À×¼² Êß°Ã¨¼®Ý¦ Â·ÞÆ »¸¾²¼Ï¼À:"},
     {STRING_UNPSPACE,
-    "    ÐÌÞÝ¶ÂÉ ½Íß°½              %6lu %s"},
+    "    %sÐÌÞÝ¶ÂÉ ½Íß°½%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (»²ÀÞ². %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "¼Ý· (ÐÌ«°Ï¯Ä)"},
     {STRING_FORMATUNUSED,

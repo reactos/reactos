@@ -884,7 +884,7 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    if (pMenuName->Length)
       RtlCopyMemory(&Common->MenuName, pMenuName->Buffer, pMenuName->Length);
    else
-      RtlCopyMemory(&Common->MenuName, &pMenuName->Buffer, sizeof(WCHAR));
+      Common->InterSource = pMenuName->Buffer;
 
    ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);

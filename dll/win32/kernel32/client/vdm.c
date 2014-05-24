@@ -93,26 +93,23 @@ BaseCheckVDM(IN ULONG BinaryType,
     STARTUPINFOA AnsiStartupInfo;
     ULONG NumStrings = 5;
 
-    if (CurrentDirectory == NULL)
+    /* Parameters validation */
+    if (ApplicationName == NULL || CommandLine == NULL)
     {
-        /* Allocate memory for the current directory path */
-        Length = GetCurrentDirectoryW(0, NULL);
-        CurrentDir = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                             HEAP_ZERO_MEMORY,
-                                             Length * sizeof(WCHAR));
-        if (CurrentDir == NULL)
-        {
-            Status = STATUS_NO_MEMORY;
-            goto Cleanup;
-        }
-
-        /* Get the current directory */
-        GetCurrentDirectoryW(Length, CurrentDir);
-        CurrentDirectory = CurrentDir;
+        return STATUS_INVALID_PARAMETER;
     }
+
+    /* Trim leading whitespace from ApplicationName */
+    while (*ApplicationName == L' ' || *ApplicationName == L'\t')
+        ++ApplicationName;
 
     /* Calculate the size of the short application name */
     Length = GetShortPathNameW(ApplicationName, NULL, 0);
+    if (Length == 0)
+    {
+        Status = STATUS_OBJECT_PATH_INVALID;
+        goto Cleanup;
+    }
 
     /* Allocate memory for the short application name */
     ShortAppName = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
@@ -125,7 +122,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     }
 
     /* Get the short application name */
-    if (!GetShortPathNameW(ApplicationName, ShortAppName, Length))
+    if (GetShortPathNameW(ApplicationName, ShortAppName, Length) == 0)
     {
         /* Try to determine which error occurred */
         switch (GetLastError())
@@ -149,6 +146,80 @@ BaseCheckVDM(IN ULONG BinaryType,
         }
 
         goto Cleanup;
+    }
+
+    /* Trim leading whitespace from CommandLine */
+    while (*CommandLine == L' ' || *CommandLine == L'\t')
+        ++CommandLine;
+
+    /*
+     * CommandLine is usually formatted as: 'ApplicationName param0 ...'.
+     * So we want to strip the first token (ApplicationName) from it.
+     * Two cases are in fact possible:
+     * - either the first token is indeed ApplicationName, so we just skip it;
+     * - or the first token is not exactly ApplicationName, because it happened
+     *   that somebody else already preprocessed CommandLine. Therefore we
+     *   suppose that the first token corresponds to an application name and
+     *   we skip it. Care should be taken when quotes are present in this token.
+     */
+     if (*CommandLine)
+     {
+        /* The first part of CommandLine should be the ApplicationName... */
+        Length = wcslen(ApplicationName);
+        if (Length <= wcslen(CommandLine) &&
+            _wcsnicmp(ApplicationName, CommandLine, Length) == 0)
+        {
+            /* Skip it */
+            CommandLine += Length;
+        }
+        /*
+         * ... but it is not, however we still have a token. We suppose that
+         * it corresponds to some sort of application name, so we skip it too.
+         */
+        else
+        {
+            /* Get rid of the first token. We stop when we see whitespace. */
+            while (*CommandLine && !(*CommandLine == L' ' || *CommandLine == L'\t'))
+            {
+                if (*CommandLine == L'\"')
+                {
+                    /* We enter a quoted part, skip it */
+                    ++CommandLine;
+                    while (*CommandLine && *CommandLine++ != L'\"') ;
+                }
+                else
+                {
+                    /* Go to the next character */
+                    ++CommandLine;
+                }
+            }
+        }
+    }
+
+    /*
+     * Trim remaining whitespace from CommandLine that may be
+     * present between the application name and the parameters.
+     */
+    while (*CommandLine == L' ' || *CommandLine == L'\t')
+        ++CommandLine;
+
+    /* Get the current directory */
+    if (CurrentDirectory == NULL)
+    {
+        /* Allocate memory for the current directory path */
+        Length = GetCurrentDirectoryW(0, NULL);
+        CurrentDir = (PWCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                             HEAP_ZERO_MEMORY,
+                                             Length * sizeof(WCHAR));
+        if (CurrentDir == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Cleanup;
+        }
+
+        /* Get the current directory */
+        GetCurrentDirectoryW(Length, CurrentDir);
+        CurrentDirectory = CurrentDir;
     }
 
     /* Calculate the size of the short current directory path */
@@ -208,13 +279,14 @@ BaseCheckVDM(IN ULONG BinaryType,
     if (StartupInfo->dwFlags & STARTF_USESTDHANDLES)
     {
         /* Set the standard handles */
-        CheckVdm->StdIn = StartupInfo->hStdInput;
+        CheckVdm->StdIn  = StartupInfo->hStdInput;
         CheckVdm->StdOut = StartupInfo->hStdOutput;
         CheckVdm->StdErr = StartupInfo->hStdError;
     }
 
     /* Allocate memory for the ANSI strings */
-    AnsiCmdLine = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CmdLen);
+    // We need to add the newline characters '\r\n' to the command line
+    AnsiCmdLine = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CmdLen + 2);
     AnsiAppName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->AppLen);
     AnsiCurDirectory = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CheckVdm->CurDirectoryLen);
     if (StartupInfo->lpDesktop) AnsiDesktop = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
@@ -247,6 +319,11 @@ BaseCheckVDM(IN ULONG BinaryType,
                         CheckVdm->CmdLen,
                         NULL,
                         NULL);
+    /* Add the needed newline and NULL-terminate */
+    CheckVdm->CmdLen--; // Rewind back to the NULL character
+    AnsiCmdLine[CheckVdm->CmdLen++] = '\r';
+    AnsiCmdLine[CheckVdm->CmdLen++] = '\n';
+    AnsiCmdLine[CheckVdm->CmdLen++] = 0;
 
     /* Convert the short application name into an ANSI string */
     WideCharToMultiByte(CP_ACP,
@@ -417,12 +494,12 @@ Cleanup:
     /* Free the capture buffer */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Free the short paths */
-    if (ShortAppName) RtlFreeHeap(RtlGetProcessHeap(), 0, ShortAppName);
+    /* Free the current directory, if it was allocated here, and its short path */
     if (ShortCurrentDir) RtlFreeHeap(RtlGetProcessHeap(), 0, ShortCurrentDir);
-
-    /* Free the current directory, if it was allocated here */
     if (CurrentDir) RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDir);
+
+    /* Free the short app name */
+    if (ShortAppName) RtlFreeHeap(RtlGetProcessHeap(), 0, ShortAppName);
 
     return Status;
 }

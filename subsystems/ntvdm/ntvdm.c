@@ -435,6 +435,7 @@ CommandThreadProc(LPVOID Parameter)
 
         if (First) CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
 
+Command:
         if (!GetNextVDMCommand(&CommandInfo))
         {
             if (CommandInfo.EnvLen > EnvSize)
@@ -443,7 +444,8 @@ CommandThreadProc(LPVOID Parameter)
                 EnvSize = CommandInfo.EnvLen;
                 Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
 
-                continue;
+                /* Repeat the request */
+                goto Command;
             }
 
             break;

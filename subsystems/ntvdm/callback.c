@@ -22,7 +22,7 @@
 /*
  * This is the list of registered 32-bit Interrupt handlers.
  */
-EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
+static EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
 
 /* BOP Identifiers */
 #define BOP_CONTROL             0xFF    // Control BOP Handler
@@ -50,7 +50,7 @@ do {                                 \
 //
 
 /* 16-bit generic interrupt code for calling a 32-bit interrupt handler */
-BYTE Int16To32[] =
+static BYTE Int16To32[] =
 {
     0xFA,               // cli
 
@@ -76,6 +76,7 @@ BYTE Int16To32[] =
     0x44, 0x44,         // inc sp, inc sp
     0xCF,               // iret
 };
+const ULONG Int16To32StubSize = sizeof(Int16To32);
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -85,9 +86,10 @@ InitializeContext(IN PCALLBACK16 Context,
                   IN USHORT      Offset)
 {
     Context->TrampolineFarPtr = MAKELONG(Offset, Segment);
+    Context->TrampolineSize   = max(CALL16_TRAMPOLINE_SIZE,
+                                     INT16_TRAMPOLINE_SIZE);
     Context->Segment          = Segment;
-    Context->NextOffset       = Offset + max(CALL16_TRAMPOLINE_SIZE,
-                                              INT16_TRAMPOLINE_SIZE);
+    Context->NextOffset       = Offset + Context->TrampolineSize;
 }
 
 VOID

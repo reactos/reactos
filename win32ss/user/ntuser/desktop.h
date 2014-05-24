@@ -174,11 +174,6 @@ HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))
 
-#define GET_DESKTOP_NAME(d)                                             \
-    OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d)) ?            \
-    &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d))->Name) :   \
-    NULL
-
 HWND FASTCALL IntGetMessageWindow(VOID);
 PWND FASTCALL UserGetMessageWindow(VOID);
 

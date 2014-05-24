@@ -644,6 +644,26 @@ i8042PnpStartDevice(
     return Status;
 }
 
+static VOID
+i8042RemoveDevice(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PI8042_DRIVER_EXTENSION DriverExtension;
+    KIRQL OldIrql;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+
+    DriverExtension = (PI8042_DRIVER_EXTENSION)IoGetDriverObjectExtension(DeviceObject->DriverObject, DeviceObject->DriverObject);
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    
+    KeAcquireSpinLock(&DriverExtension->DeviceListLock, &OldIrql);
+    RemoveEntryList(&DeviceExtension->ListEntry);
+    KeReleaseSpinLock(&DriverExtension->DeviceListLock, OldIrql);
+    
+    IoDetachDevice(DeviceExtension->LowerDevice);
+    
+    IoDeleteDevice(DeviceObject);
+}
+
 NTSTATUS NTAPI
 i8042Pnp(
     IN PDEVICE_OBJECT DeviceObject,
@@ -709,6 +729,23 @@ i8042Pnp(
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
             return ForwardIrpAndForget(DeviceObject, Irp);
+        }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_REMOVE_DEVICE\n");
+            return ForwardIrpAndForget(DeviceObject, Irp);
+        }
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_CANCEL_REMOVE_DEVICE\n");
+            return ForwardIrpAndForget(DeviceObject, Irp);
+        }
+        case IRP_MN_REMOVE_DEVICE:
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            Status = ForwardIrpAndForget(DeviceObject, Irp);
+            i8042RemoveDevice(DeviceObject);
+            return Status;
         }
         default:
         {

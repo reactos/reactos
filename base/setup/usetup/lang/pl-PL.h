@@ -828,12 +828,19 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Naci˜nij C, by stworzy† now¥ partycj©.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Naci˜nij C, by stworzy† now¥ partycj©.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Naci˜nij D, by skasowa† istniej¥c¥ partycj©.",
         TEXT_STYLE_NORMAL
     },
@@ -1288,6 +1295,10 @@ static MUI_ENTRY plPLRegistryEntries[] =
 MUI_ERROR plPLErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS nie zostaˆ w peˆni zainstalowany na twoim\n"
         "komputerze. Je˜li wyjdziesz teraz, trzeba b©dzie\n"
@@ -1498,6 +1509,32 @@ MUI_ERROR plPLErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1609,13 +1646,19 @@ MUI_STRING plPLStrings[] =
     {STRING_PLEASEWAIT,
      "   Prosz© czeka†..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalacja   C = Utworzenie Partycji   F3 = Wyj˜cie"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Instalacja   C = Utworzenie Partycji   F3 = Wyj˜cie"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalacja   D = Skasowanie Partycji   F3 = Wyj˜cie"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Rozmiar nowej partycji:"},
     {STRING_CHOOSENEWPARTITION,
-     "Wybrane: utworzenie nowej partycji na"},
+     "You have chosen to create a primary partition on"},
+//     "Wybrane: utworzenie nowej partycji na"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Prosz© wprowadzi† rozmiar nowej partycji w megabajtach."},
     {STRING_CREATEPARTITION,
@@ -1687,7 +1730,7 @@ MUI_STRING plPLStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "na Dysku Twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  09Typ %-3u                         %6lu %s"},
+    "%c%c  %s09Typ %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Dysk Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,
@@ -1695,7 +1738,7 @@ MUI_STRING plPLStrings[] =
     {STRING_NEWPARTITION,
     "Instalator utworzyˆ now¥ partycj©"},
     {STRING_UNPSPACE,
-    "    Miejsce poza partycjami              %6lu %s"},
+    "    %sMiejsce poza partycjami%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (maks. %lu MB)"},
     {STRING_UNFORMATTED,

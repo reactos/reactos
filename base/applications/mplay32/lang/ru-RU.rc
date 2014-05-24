@@ -9,11 +9,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Выход", IDM_EXIT
     END
-    POPUP "&Device"
+    POPUP "&Устройство"
     BEGIN
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&Свойства", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "&Громкость", IDM_VOLUMECTL
     END
     POPUP "&Помощь"
     BEGIN
@@ -33,6 +33,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Вперед"
     IDS_APPTITLE "Проигрыватель ReactOS"
     IDS_PLAY "Воспроизвести"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error"
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
+    IDS_DEFAULTMCIERRMSG "Неизвестная ошибка."
+    IDS_UNKNOWNFILEEXT "Невозможно определить тип устройства мультимедиа для заданного расширения файла."
 END

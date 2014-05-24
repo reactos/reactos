@@ -558,6 +558,10 @@ IopAttachFilterDriversCallback(
    PLDR_DATA_TABLE_ENTRY ModuleObject;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
+   
+   /* No filter value present */
+   if (ValueType == REG_NONE)
+       return STATUS_SUCCESS;
 
    for (Filters = ValueData;
         ((ULONG_PTR)Filters - (ULONG_PTR)ValueData) < ValueLength &&
@@ -578,18 +582,21 @@ IopAttachFilterDriversCallback(
            /* Load and initialize the filter driver */
            Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
            if (!NT_SUCCESS(Status))
-               continue;
+               return Status;
 
            Status = IopInitializeDriverModule(DeviceNode, ModuleObject, &ServiceName,
                                               FALSE, &DriverObject);
            if (!NT_SUCCESS(Status))
-               continue;
+               return Status;
        }
 
        Status = IopInitializeDevice(DeviceNode, DriverObject);
 
        /* Remove extra reference */
        ObDereferenceObject(DriverObject);
+       
+       if (!NT_SUCCESS(Status))
+           return Status;
    }
 
    return STATUS_SUCCESS;
@@ -645,14 +652,23 @@ IopAttachFilterDrivers(
      QueryTable[0].Name = L"LowerFilters";
    else
      QueryTable[0].Name = L"UpperFilters";
-   QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
+   QueryTable[0].Flags = 0;
+   QueryTable[0].DefaultType = REG_NONE;
 
-   RtlQueryRegistryValues(
+   Status = RtlQueryRegistryValues(
       RTL_REGISTRY_HANDLE,
       (PWSTR)SubKey,
       QueryTable,
       DeviceNode,
       NULL);
+   if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("Failed to load device %s filters: %08X\n", 
+         Lower ? "lower" : "upper", Status);
+       ZwClose(SubKey);
+       ZwClose(EnumRootKey);
+       return Status;
+   }
 
    /*
     * Now get the class GUID
@@ -696,9 +712,10 @@ IopAttachFilterDrivers(
            &Class, KEY_READ);
        if (!NT_SUCCESS(Status))
        {
+           /* It's okay if there's no class key */
            DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
            ZwClose(EnumRootKey);
-           return Status;
+           return STATUS_SUCCESS;
        }
 
       QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
@@ -707,9 +724,10 @@ IopAttachFilterDrivers(
       else
          QueryTable[0].Name = L"UpperFilters";
       QueryTable[0].EntryContext = NULL;
-      QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
+      QueryTable[0].Flags = 0;
+      QueryTable[0].DefaultType = REG_NONE;
 
-      RtlQueryRegistryValues(
+      Status = RtlQueryRegistryValues(
          RTL_REGISTRY_HANDLE,
          (PWSTR)SubKey,
          QueryTable,
@@ -719,6 +737,15 @@ IopAttachFilterDrivers(
       /* Clean up */
       ZwClose(SubKey);
       ZwClose(EnumRootKey);
+      
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("Failed to load class %s filters: %08X\n", 
+            Lower ? "lower" : "upper", Status);
+         ZwClose(SubKey);
+         ZwClose(EnumRootKey);
+         return Status;
+      }
    }
 
    return STATUS_SUCCESS;

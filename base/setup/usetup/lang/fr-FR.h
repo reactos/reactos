@@ -42,8 +42,8 @@ static MUI_ENTRY frFRLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer  F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer  F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -64,7 +64,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         6,
         8,
-        "Bienvenue Ö l'installation de ReactOS",
+        "Bienvenue dans l'installation de ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -118,8 +118,8 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer  R = RÇparer F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer  R = RÇparer  L = Licence  F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -140,7 +140,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de dÇveloppement.",
+        "L'installation de ReactOS est en phase de dÇveloppement.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -218,8 +218,8 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -342,8 +342,8 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Retour",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Retour",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -435,8 +435,8 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -457,7 +457,7 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de dÇveloppement.",
+        "L'installation de ReactOS est en phase de dÇveloppement.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -505,8 +505,8 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         0,
         0,
-        "   êCHAP = Page principale  ENTRêE = RedÇmarrer",
-        TEXT_TYPE_STATUS
+        "êCHAP = Page principale  ENTRêE = RedÇmarrer",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -556,8 +556,8 @@ static MUI_ENTRY frFRComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -596,8 +596,8 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         0,
         0,
-        "   Vidage du cache",
-        TEXT_TYPE_STATUS
+        "Vidage du cache",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -642,8 +642,8 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         0,
         0,
-        "   Veuillez attendre ...",
-        TEXT_TYPE_STATUS,
+        "Veuillez attendre ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -693,8 +693,8 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -739,8 +739,8 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = RedÇmarrer l'ordinateur",
-        TEXT_TYPE_STATUS
+        "ENTRêE = RedÇmarrer l'ordinateur",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -785,8 +785,8 @@ static MUI_ENTRY frFRBootPageEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -814,13 +814,13 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         6,
         9,
-        "l'espace disque non utilise pour de nouvelles partitions.",
+        "l'espace disque non utilisÇ pour de nouvelles partitions.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Appuyer sur HAUT ou BAS pour sÇlectionner une entree de la liste.",
+        "\x07  Appuyer sur HAUT ou BAS pour sÇlectionner une entrÇe de la liste.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -832,20 +832,26 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Appuyer sur C pour creer une nouvelle partition.",
+        "\x07  Appuyer sur P pour crÇer une partition primaire.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Appuyer sur E pour crÇer une partition Çtendue.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Appuyer sur D pour effacer une partition.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Patienter...",
-        TEXT_TYPE_STATUS
+        "Patienter...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -878,8 +884,8 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -930,8 +936,8 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1022,8 +1028,8 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1062,7 +1068,7 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur êCHAP pour revenir a la page prÇcÇdente sans changer",
+        "\x07  Appuyez sur êCHAP pour revenir Ö la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1074,8 +1080,8 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1114,7 +1120,7 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur êCHAP pour revenir a la page prÇcÇdente sans changer",
+        "\x07  Appuyez sur êCHAP pour revenir Ö la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1126,8 +1132,8 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1155,8 +1161,8 @@ static MUI_ENTRY frFRPrepareCopyEntries[] =
     {
         0,
         0,
-        "   PrÇpare la liste de fichiers Ö copier...",
-        TEXT_TYPE_STATUS
+        "PrÇpare la liste de fichiers Ö copier...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1202,8 +1208,8 @@ static MUI_ENTRY frFRSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1249,8 +1255,8 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Supprimer la Partition   êCHAP = Annuler   F3 = Quitter",
-        TEXT_TYPE_STATUS
+        "D = Supprimer la Partition   êCHAP = Annuler   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1277,8 +1283,8 @@ static MUI_ENTRY frFRRegistryEntries[] =
     {
         0,
         0,
-        "   En train de crÇer la base de registres...",
-        TEXT_TYPE_STATUS
+        "En train de crÇer la base de registres...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1291,6 +1297,10 @@ static MUI_ENTRY frFRRegistryEntries[] =
 
 MUI_ERROR frFRErrorEntries[] =
 {
+    {
+        // NOT_AN_ERROR
+        "Succäs\n"
+    },
     {
         //ERROR_NOT_INSTALLED
         "ReactOS n'est pas complätement installÇ sur votre\n"
@@ -1498,8 +1508,34 @@ MUI_ERROR frFRErrorEntries[] =
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Pas assez d'espace libre dans la partition sÇlectionnÇe.\n"
-        "  * Appuyez sur n'importe quelle touche pour continuer.",
+        "  * Appuyer sur une touche pour continuer.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "Impossible de crÇer une nouvelle partition primaire ou Çtendue\n"
+        "sur ce disque parce que sa table de partition est pleine.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "Impossible de crÇer plus d'une partition Çtendue par disque.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "Impossible de crÇer une partition prÇcÇdant une partition Çtendue.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "Une partition Çtendue doit toujours àtre placÇe en dernier\n"
+        "dans la table de partition.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
     },
     {
         NULL,
@@ -1613,13 +1649,17 @@ MUI_STRING frFRStrings[] =
     {STRING_PLEASEWAIT,
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTRêE = Installer   C = CrÇer Partition   F3 = Quitter"},
+     "   ENTRêE = Installer   P/E = CrÇer Partition Primaire/êtendue   F3 = Quitter"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTRêE = Installer   D = Supprimer Partition   F3 = Quitter"},
+    {STRING_DELETEPARTITION,
+     "   D = Supprimer Partition   F3 = Quitter"},
     {STRING_PARTITIONSIZE,
      "Taille de la nouvelle partition :"},
     {STRING_CHOOSENEWPARTITION,
-     "Vous avez choisi de crÇer une nouvelle partition sur"},
+     "Vous avez choisi de crÇer une partition primaire sur"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "Vous avez choisi de crÇer une partition Çtendue sur"},
     {STRING_HDDSIZE,
     "Veuillez entrer la taille de la nouvelle partition en mÇgaoctets."},
     {STRING_CREATEPARTITION,
@@ -1691,7 +1731,7 @@ MUI_STRING frFRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "sur Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c  %sType %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %S"},
     {STRING_HDDINFOUNK6,
@@ -1699,9 +1739,11 @@ MUI_STRING frFRStrings[] =
     {STRING_NEWPARTITION,
     "Setup a crÇÇ une nouvelle partition sur"},
     {STRING_UNPSPACE,
-    "    Espace non partitionnÇ              %6lu %s"},
+    "    %sEspace non partitionnÇ%s            %6lu %s"},
     {STRING_MAXSIZE,
     "Mo (max. %lu Mo)"},
+    {STRING_EXTENDED_PARTITION,
+    "Partition êtendue"},
     {STRING_UNFORMATTED,
     "Nouveau (non formatÇ)"},
     {STRING_FORMATUNUSED,

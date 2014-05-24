@@ -114,9 +114,9 @@ BRUSH_vFreeBrushAttr(PBRUSH pbr)
     pbr->pBrushAttr = &pbr->BrushAttr;
 }
 
-BOOL
+VOID
 NTAPI
-BRUSH_Cleanup(PVOID ObjectBody)
+BRUSH_vCleanup(PVOID ObjectBody)
 {
     PBRUSH pbrush = (PBRUSH)ObjectBody;
     if (pbrush->hbmPattern)
@@ -136,8 +136,6 @@ BRUSH_Cleanup(PVOID ObjectBody)
     {
         ExFreePool(pbrush->pStyle);
     }
-
-    return TRUE;
 }
 
 INT

@@ -52,6 +52,7 @@
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 #define MI_DEFAULT_SYSTEM_PTE_COUNT             50000
+#define MI_MAX_ZERO_BITS                        21
 
 #endif /* !_M_AMD64 */
 
@@ -887,9 +888,10 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     ASSERT(MappingPte <= MiHighestUserPte);
 
     /* Start fresh */
-    *NewPte = ValidKernelPte;
+    NewPte->u.Long = 0;
 
     /* Set the protection and page */
+    NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
@@ -1098,11 +1100,11 @@ MI_WS_OWNER(IN PEPROCESS Process)
     /* Check if this process is the owner, and that the thread owns the WS */
     if (PsGetCurrentThread()->OwnsProcessWorkingSetExclusive == 0)
     {
-        DPRINT1("Thread: %p is not an owner\n", PsGetCurrentThread());
+        DPRINT("Thread: %p is not an owner\n", PsGetCurrentThread());
     }
     if (KeGetCurrentThread()->ApcState.Process != &Process->Pcb)
     {
-        DPRINT1("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
+        DPRINT("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
     }
     return ((KeGetCurrentThread()->ApcState.Process == &Process->Pcb) &&
             ((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) ||

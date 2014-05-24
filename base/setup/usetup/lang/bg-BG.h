@@ -828,12 +828,19 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Натиснете C за създаване на нов дял.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Натиснете C за създаване на нов дял.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Натиснете D за изтриване на съществуващ дял.",
         TEXT_STYLE_NORMAL
     },
@@ -1289,6 +1296,10 @@ static MUI_ENTRY bgBGRegistryEntries[] =
 MUI_ERROR bgBGErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "РеактОС не е напълно сложен на компютъра\n"
         "ви. Ако сега излезете от слаганете, ще трябва\n"
@@ -1501,6 +1512,32 @@ MUI_ERROR bgBGErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1612,13 +1649,19 @@ MUI_STRING bgBGStrings[] =
     {STRING_PLEASEWAIT,
      "   Почакайте..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Слагане   C = Създаване на дял   F3 = Изход"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Слагане   C = Създаване на дял   F3 = Изход"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Слагане   D = Изтриване на дял   F3 = Изход"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Размер на новия дял:"},
     {STRING_CHOOSENEWPARTITION,
-     "Избрали сте да създадете нов дял на"},
+     "You have chosen to create a primary partition on"},
+//     "Избрали сте да създадете нов дял на"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Въведете размера на новия дял (в мегабайти)."},
     {STRING_CREATEPARTITION,
@@ -1690,7 +1733,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  вид %-3u                         %6lu %s"},
+    "%c%c  %sвид %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %S"},
     {STRING_HDDINFOUNK6,
@@ -1698,9 +1741,11 @@ MUI_STRING bgBGStrings[] =
     {STRING_NEWPARTITION,
     "Бе създаден нов дял на"},
     {STRING_UNPSPACE,
-    "    Неразпределено място              %6lu %s"},
+    "    %sНеразпределено място%s            %6lu %s"},
     {STRING_MAXSIZE,
     "МБ (до %lu МБ)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Нов (Неформатиран)"},
     {STRING_FORMATUNUSED,

@@ -837,12 +837,19 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  ПШлуйлЬ C ЪаШ дШ ЫЮгажмиЪуйЬлЬ тдШ дтж ЫаШгтиайгШ.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  ПШлуйлЬ C ЪаШ дШ ЫЮгажмиЪуйЬлЬ тдШ дтж ЫаШгтиайгШ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  ПШлуйлЬ D ЪаШ дШ ЫаШЪиспЬлЬ тдШ мзсиожд ЫаШгтиайгШ.",
         TEXT_STYLE_NORMAL
     },
@@ -1309,6 +1316,10 @@ static MUI_ENTRY elGRRegistryEntries[] =
 MUI_ERROR elGRErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "Тж ReactOS ЫЬд ЬЪбШлШйлсЯЮбЬ звуирк йлжд\n"
         "мзжвжЪайлу йШк. Ад ШзжориуйЬлЬ Шзц лЮд ДЪбШлсйлШйЮ лщиШ, ЯШ зитзЬа дШ\n"
@@ -1513,6 +1524,32 @@ MUI_ERROR elGRErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1624,13 +1661,19 @@ MUI_STRING elGRStrings[] =
     {STRING_PLEASEWAIT,
      "   ПШиШбШвщ зЬиагтдЬлЬ..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = ДЪбШлсйлШйЮ   C = ГЮгажмиЪхШ Partition   F3 = АзжощиЮйЮ"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = ДЪбШлсйлШйЮ   C = ГЮгажмиЪхШ Partition   F3 = АзжощиЮйЮ"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = ДЪбШлсйлШйЮ   D = ГаШЪиШну Partition   F3 = АзжощиЮйЮ"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "ЛтЪЬЯжк лжм дтжм partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "ДзавтеШлЬ дШ ЫЮгажмиЪуйЬлЬ тдШ дтж partition on"},
+     "You have chosen to create a primary partition on"},
+//     "ДзавтеШлЬ дШ ЫЮгажмиЪуйЬлЬ тдШ дтж partition on"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "ПШиШбШвщ ЫщйлЬ лж гтЪЬЯжк лжм partition йЬ megabytes."},
     {STRING_CREATEPARTITION,
@@ -1702,7 +1745,7 @@ MUI_STRING elGRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "йлж йбвЮиц Ыхйбж %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Type %-3u                         %6lu %s"},
+    "%c%c  %sType %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
@@ -1710,9 +1753,11 @@ MUI_STRING elGRStrings[] =
     {STRING_NEWPARTITION,
     "Ж ЬЪбШлсйлШйЮ ЫЮгажчиЪЮйЬ тдШ дтж partition йлж"},
     {STRING_UNPSPACE,
-    "    Unpartitioned space              %6lu %s"},
+    "    %sUnpartitioned space%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (гЬЪ. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Мтж (ЛЮ ЫаШгжинргтдж)"},
     {STRING_FORMATUNUSED,

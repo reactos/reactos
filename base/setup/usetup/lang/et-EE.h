@@ -819,12 +819,19 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Vajuta C, et teha uus partitsioon.",
+        "\x07  Press P to create a primary partition.",
+//        "\x07  Vajuta C, et teha uus partitsioon.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  Press E to create an extended partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  Vajuta D, et kustutada olemasolev partitsioon.",
         TEXT_STYLE_NORMAL
     },
@@ -1279,6 +1286,10 @@ static MUI_ENTRY etEERegistryEntries[] =
 MUI_ERROR etEEErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Success\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS ei ole tÑielikult paigaldatud.\n"
         "Kui paigaldamine praegu katkestada, siis tuleb\n"
@@ -1486,6 +1497,32 @@ MUI_ERROR etEEErrorEntries[] =
         NULL
     },
     {
+        //ERROR_PARTITION_TABLE_FULL,
+        "You can not create a new primary or extended partition in the\n"
+        "partition table of this disk because the partition table is full.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "You can not create more than one extended partition per disk.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "You can not create a partition behind an extended partition.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "An extended partition must always be the last\n"
+        "partition in a partition table.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         NULL,
         NULL
     }
@@ -1597,13 +1634,19 @@ MUI_STRING etEEStrings[] =
     {STRING_PLEASEWAIT,
      "   Palun oota..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Paigalda  C = Loo partitsioon    F3 = VÑlju"},
+     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+//     "   ENTER = Paigalda  C = Loo partitsioon    F3 = VÑlju"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Paigalda  D = Kustuta partitsioon  F3 = VÑlju"},
+    {STRING_DELETEPARTITION,
+     "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Uue partitsiooni suurus:"},
     {STRING_CHOOSENEWPARTITION,
-     "Oled valinud kettale uue partitsiooni loomise"},
+     "You have chosen to create a primary partition on"},
+//     "Oled valinud kettale uue partitsiooni loomise"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "You have chosen to create an extended partition on"},
     {STRING_HDDSIZE,
     "Sisesta uue partitsiooni suurus megabaitides."},
     {STRING_CREATEPARTITION,
@@ -1675,7 +1718,7 @@ MUI_STRING etEEStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "K‰vaketas %lu (%I64u %s), Port=%hu, Siin=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  TÅÅp %-3u                         %6lu %s"},
+    "%c%c  %sTÅÅp %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  K‰vaketas %lu  (Port=%hu, Siin=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
@@ -1683,9 +1726,11 @@ MUI_STRING etEEStrings[] =
     {STRING_NEWPARTITION,
     "Loodi uus partitsioon"},
     {STRING_UNPSPACE,
-    "    Kasutamata kettaruum                %6lu %s"},
+    "    %sKasutamata kettaruum%s              %6lu %s"},
     {STRING_MAXSIZE,
     "MB (maks. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Extended Partition"},
     {STRING_UNFORMATTED,
     "Uus (Vormindamata)"},
     {STRING_FORMATUNUSED,

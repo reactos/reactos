@@ -19,7 +19,7 @@
 /*
  * This is the list of registered BOP handlers.
  */
-EMULATOR_BOP_PROC BopProc[EMULATOR_MAX_BOP_NUM] = { NULL };
+static EMULATOR_BOP_PROC BopProc[EMULATOR_MAX_BOP_NUM] = { NULL };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
