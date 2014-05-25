@@ -198,7 +198,7 @@ PWND FASTCALL IntGetLastTopMostWindow(VOID)
 }
 
 //
-// This helps with bug 6751 forcing modal dialog active when another app is minimized or closed.
+// This helps with CORE-6129 forcing modal dialog active when another app is minimized or closed.
 //
 BOOL FASTCALL ActivateOtherWindowMin(PWND Wnd)
 {
@@ -1212,12 +1212,9 @@ co_WinPosDoNCCALCSize(PWND Window, PWINDOWPOS WinPos, RECTL* WindowRect, RECTL* 
       Parent = Window->spwndParent;
       if (0 != (Window->style & WS_CHILD) && Parent)
       {
-         RECTL_vOffsetRect(&(params.rgrc[0]), - Parent->rcClient.left,
-                          - Parent->rcClient.top);
-         RECTL_vOffsetRect(&(params.rgrc[1]), - Parent->rcClient.left,
-                          - Parent->rcClient.top);
-         RECTL_vOffsetRect(&(params.rgrc[2]), - Parent->rcClient.left,
-                          - Parent->rcClient.top);
+         RECTL_vOffsetRect(&(params.rgrc[0]), - Parent->rcClient.left, - Parent->rcClient.top);
+         RECTL_vOffsetRect(&(params.rgrc[1]), - Parent->rcClient.left, - Parent->rcClient.top);
+         RECTL_vOffsetRect(&(params.rgrc[2]), - Parent->rcClient.left, - Parent->rcClient.top);
       }
 
       params.lppos = &winposCopy;
@@ -1232,8 +1229,7 @@ co_WinPosDoNCCALCSize(PWND Window, PWINDOWPOS WinPos, RECTL* WindowRect, RECTL* 
          *ClientRect = params.rgrc[0]; // First rectangle contains the coordinates of the new client rectangle resulting from the move or resize
          if ((Window->style & WS_CHILD) && Parent)
          {
-            RECTL_vOffsetRect(ClientRect, Parent->rcClient.left,
-                             Parent->rcClient.top);
+            RECTL_vOffsetRect(ClientRect, Parent->rcClient.left, Parent->rcClient.top);
          }
          FixClientRect(ClientRect, WindowRect);
       }
@@ -1244,16 +1240,14 @@ co_WinPosDoNCCALCSize(PWND Window, PWINDOWPOS WinPos, RECTL* WindowRect, RECTL* 
          WinPos->flags &= ~SWP_NOCLIENTMOVE;
       }
 
-      if (ClientRect->right - ClientRect->left !=
-          Window->rcClient.right - Window->rcClient.left)
+      if (ClientRect->right - ClientRect->left != Window->rcClient.right - Window->rcClient.left)
       {
          WinPos->flags &= ~SWP_NOCLIENTSIZE;
       }
       else
          wvrFlags &= ~WVR_HREDRAW;
 
-      if (ClientRect->bottom - ClientRect->top !=
-          Window->rcClient.bottom - Window->rcClient.top)
+      if (ClientRect->bottom - ClientRect->top != Window->rcClient.bottom - Window->rcClient.top)
       {
          WinPos->flags &= ~SWP_NOCLIENTSIZE;
       }
@@ -1317,44 +1311,24 @@ co_WinPosDoWinPosChanging(PWND Window,
          WindowRect->bottom = WindowRect->top + WinPos->cy;
       }
    }
-#if 0
-   if (!(WinPos->flags & SWP_NOMOVE))
-   {
-      WindowRect->left    = WinPos->x;
-      WindowRect->top     = WinPos->y;
-      WindowRect->right  += WinPos->x - Window->rcWindow.left;
-      WindowRect->bottom += WinPos->y - Window->rcWindow.top;
-      RECTL_vOffsetRect(ClientRect,
-                        WinPos->x - Window->rcWindow.left,
-                        WinPos->y - Window->rcWindow.top);
 
-   }
-
-   *WindowRect = Window->rcWindow;
-   *ClientRect = Window->rcClient;
-
-   if (!(WinPos->flags & SWP_NOSIZE))
-   {
-      WindowRect->right = WindowRect->left + WinPos->cx;
-      WindowRect->bottom = WindowRect->top + WinPos->cy;
-   }
-#endif
    if (!(WinPos->flags & SWP_NOMOVE))
    {
       INT X, Y;
       PWND Parent;
       X = WinPos->x;
       Y = WinPos->y;
-      //ERR("Not SWP_NOMOVE\n");
+
       Parent = Window->spwndParent;
+
       if (((Window->style & WS_CHILD) != 0) &&
            Parent &&
            Parent != Window->head.rpdesk->pDeskInfo->spwnd)
       {
-         //ERR("Not SWP_NOMOVE 1 Parent client offset X %d Y %d\n",X,Y);
+         TRACE("Not SWP_NOMOVE 1 Parent client offset X %d Y %d\n",X,Y);
          X += Parent->rcClient.left;
          Y += Parent->rcClient.top;
-         //ERR("Not SWP_NOMOVE 2 Parent client offset X %d Y %d\n",X,Y);
+         TRACE("Not SWP_NOMOVE 2 Parent client offset X %d Y %d\n",X,Y);
       }
 
       WindowRect->left    = X;
@@ -1365,12 +1339,13 @@ co_WinPosDoWinPosChanging(PWND Window,
       RECTL_vOffsetRect(ClientRect, X - Window->rcWindow.left,
                                     Y - Window->rcWindow.top);
    }
-
    WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
 
    TRACE( "hwnd %p, after %p, swp %d,%d %dx%d flags %08x\n",
            WinPos->hwnd, WinPos->hwndInsertAfter, WinPos->x, WinPos->y,
            WinPos->cx, WinPos->cy, WinPos->flags );
+   TRACE("WindowRect: %d %d %d %d\n", WindowRect->left,WindowRect->top,WindowRect->right,WindowRect->bottom);
+   TRACE("ClientRect: %d %d %d %d\n", ClientRect->left,ClientRect->top,ClientRect->right,ClientRect->bottom);
 
    return TRUE;
 }
@@ -1533,6 +1508,7 @@ WinPosInternalMoveWindow(PWND Window, INT MoveX, INT MoveY)
    PWND Child;
 
    ASSERT(Window != Window->spwndChild);
+   TRACE("InternalMoveWin  X %d Y %d\n", MoveX, MoveY);
 
    Window->rcWindow.left += MoveX;
    Window->rcWindow.right += MoveX;
@@ -1591,7 +1567,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWND Wnd)
    pt.x = WinPos->x;
    pt.y = WinPos->y;
    IntClientToScreen( Parent, &pt );
-   //ERR("WPFU C2S wpx %d wpy %d ptx %d pty %d\n",WinPos->x,WinPos->y,pt.x,pt.y);
+   TRACE("WPFU C2S wpx %d wpy %d ptx %d pty %d\n",WinPos->x,WinPos->y,pt.x,pt.y);
    /* Check for right position */
    if (Wnd->rcWindow.left == pt.x && Wnd->rcWindow.top == pt.y)
    {
@@ -1846,12 +1822,11 @@ co_WinPosSetWindowPos(
 
    OldWindowRect = Window->rcWindow;
    OldClientRect = Window->rcClient;
-   //ERR("SetWindowPos OldWindowRect: %d %d %d %d\n", OldWindowRect.left,OldWindowRect.top,OldWindowRect.right,OldWindowRect.bottom);
-   //ERR("SetWindowPos OldClientRect: %d %d %d %d\n", OldClientRect.left,OldClientRect.top,OldClientRect.right,OldClientRect.bottom);
 
    if (NewClientRect.left != OldClientRect.left ||
        NewClientRect.top  != OldClientRect.top)
    {
+      // Move child window if their parent is moved. Keep Child window relative to Parent...
       WinPosInternalMoveWindow(Window,
                                NewClientRect.left - OldClientRect.left,
                                NewClientRect.top - OldClientRect.top);
@@ -1859,9 +1834,6 @@ co_WinPosSetWindowPos(
 
    Window->rcWindow = NewWindowRect;
    Window->rcClient = NewClientRect;
-
-   //ERR("SetWindowPos NewWindowRect: %d %d %d %d\n", NewWindowRect.left,NewWindowRect.top,NewWindowRect.right,NewWindowRect.bottom);
-   //ERR("SetWindowPos NewClientRect: %d %d %d %d\n", NewClientRect.left,NewClientRect.top,NewClientRect.right,NewClientRect.bottom);
 
    /* erase parent when hiding or resizing child */
    if (WinPos.flags & SWP_HIDEWINDOW)
@@ -2374,7 +2346,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
    }
 
-#if 0 // Explorer issues with common controls. Someone does not know how CS_SAVEBITS works.
+#if 0 // Explorer issues with common controls? Someone does not know how CS_SAVEBITS works.
+      // Breaks startup and shutdown active window...
    if ((Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD &&
         Wnd->pcls->style & CS_SAVEBITS &&
         ((Cmd == SW_SHOW) || (Cmd == SW_NORMAL)))
