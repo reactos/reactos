@@ -15,7 +15,7 @@
  @ fastcall FastcallFunc1(ptr)
 
 # Decorated export of a fastcall function
- @ fastcall @DecoratedFastcallFunc1@4(ptr)
+ @ fastcall -arch=i386 @DecoratedFastcallFunc1@4(ptr)
 
 # Normal export of data
  @ extern DataItem1
