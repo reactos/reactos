@@ -4572,44 +4572,44 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             {
                 Status = STATUS_NO_MEMORY;
                 goto FailPath;
+            }
         }
-    }
-    else
-    {
-        /* Make sure it doesn't conflict with an existing allocation */
-        Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
-                                           EndingAddress >> PAGE_SHIFT,
-                                           &Process->VadRoot,
-                                           &Parent);
-        if (Result == TableFoundNode)
+        else
         {
-            //
-            // The address specified is in conflict!
-            //
-            Status = STATUS_CONFLICTING_ADDRESSES;
-            goto FailPath;
+            /* Make sure it doesn't conflict with an existing allocation */
+            Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
+                                               EndingAddress >> PAGE_SHIFT,
+                                               &Process->VadRoot,
+                                               &Parent);
+            if (Result == TableFoundNode)
+            {
+                //
+                // The address specified is in conflict!
+                //
+                Status = STATUS_CONFLICTING_ADDRESSES;
+                goto FailPath;
+            }
         }
-    }
 
-    //
-    // Write out the VAD fields for this allocation
-    //
-    Vad->StartingVpn = StartingAddress >> PAGE_SHIFT;
-    Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
+        //
+        // Write out the VAD fields for this allocation
+        //
+        Vad->StartingVpn = StartingAddress >> PAGE_SHIFT;
+        Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
 
-    //
-    // FIXME: Should setup VAD bitmap
-    //
-    Status = STATUS_SUCCESS;
+        //
+        // FIXME: Should setup VAD bitmap
+        //
+        Status = STATUS_SUCCESS;
 
-    //
-    // Lock the working set and insert the VAD into the process VAD tree
-    //
-    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
-    Vad->ControlArea = NULL; // For Memory-Area hack
-    Process->VadRoot.NodeHint = Vad;
-    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
-    MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
+        //
+        // Lock the working set and insert the VAD into the process VAD tree
+        //
+        MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
+        Vad->ControlArea = NULL; // For Memory-Area hack
+        Process->VadRoot.NodeHint = Vad;
+        MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
+        MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
 
         //
         // Make sure the actual region size is at least as big as the
