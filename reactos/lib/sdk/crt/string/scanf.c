@@ -101,12 +101,12 @@ static int wchar2digit(wchar_t c, int base) {
  */
 int CDECL fscanf(FILE *file, const char *format, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     int res;
 
-    va_start(valist, format);
+    __ms_va_start(valist, format);
     res = vfscanf_l(file, format, NULL, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     return res;
 }
 
@@ -115,12 +115,12 @@ int CDECL fscanf(FILE *file, const char *format, ...)
  */
 int CDECL scanf(const char *format, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     int res;
 
-    va_start(valist, format);
+    __ms_va_start(valist, format);
     res = vfscanf_l(stdin, format, NULL, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     return res;
 }
 
@@ -129,12 +129,12 @@ int CDECL scanf(const char *format, ...)
  */
 int CDECL fwscanf(FILE *file, const wchar_t *format, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     int res;
 
-    va_start(valist, format);
+    __ms_va_start(valist, format);
     res = vfwscanf_l(file, format, NULL, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     return res;
 }
 
@@ -144,12 +144,12 @@ int CDECL fwscanf(FILE *file, const wchar_t *format, ...)
  */
 int CDECL wscanf(const wchar_t *format, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     int res;
 
-    va_start(valist, format);
+    __ms_va_start(valist, format);
     res = vfwscanf_l(stdin, format, NULL, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     return res;
 }
 #endif /* !_LIBCNT_ */
@@ -160,12 +160,12 @@ int CDECL wscanf(const wchar_t *format, ...)
  */
 int CDECL sscanf(const char *str, const char *format, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     int res;
 
-    va_start(valist, format);
+    __ms_va_start(valist, format);
     res = vsscanf_l(str, format, NULL, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     return res;
 }
 
@@ -175,12 +175,12 @@ int CDECL sscanf(const char *str, const char *format, ...)
  */
 int CDECL swscanf(const wchar_t *str, const wchar_t *format, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     int res;
 
-    va_start(valist, format);
+    __ms_va_start(valist, format);
     res = vswscanf_l(str, format, NULL, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     return res;
 }
 
@@ -190,12 +190,12 @@ int CDECL swscanf(const wchar_t *str, const wchar_t *format, ...)
  */
 int CDECL _cscanf(const char *format, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     int res;
 
-    va_start(valist, format);
+    __ms_va_start(valist, format);
     res = vcscanf_l(format, NULL, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     return res;
 }
 #endif
