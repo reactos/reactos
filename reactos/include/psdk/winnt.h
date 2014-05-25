@@ -3310,7 +3310,7 @@ typedef struct _CONTEXT {
 	DWORD Fill[2];
 
 } CONTEXT;
-#elif defined(ARM)
+#elif defined(_ARM_)
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE                         0x1000 // FIXME: This should probably go elsewhere
