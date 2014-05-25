@@ -48,7 +48,11 @@
 #ifdef CONSOLE
 #define _GETC_(file) (consumed++, _getch())
 #define _UNGETC_(nch, file) do { _ungetch(nch); consumed--; } while(0)
-#define _FUNCTION_ int vcscanf(const char *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vcscanf_s_l(const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vcscanf_l(const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #else
 #ifdef STRING
 #undef _EOF_
@@ -56,24 +60,41 @@
 #define _GETC_(file) (consumed++, *file++)
 #define _UNGETC_(nch, file) do { file--; consumed--; } while(0)
 #ifdef WIDE_SCANF
-#define _FUNCTION_ int vswscanf(const wchar_t *file, const wchar_t *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vswscanf_s_l(const wchar_t *file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vswscanf_l(const wchar_t *file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #else /* WIDE_SCANF */
-#define _FUNCTION_ int vsscanf(const char *file, const char *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vsscanf_s_l(const char *file, const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vsscanf_l(const char *file, const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #endif /* WIDE_SCANF */
 #else /* STRING */
 #ifdef WIDE_SCANF
 #define _GETC_(file) (consumed++, fgetwc(file))
 #define _UNGETC_(nch, file) do { ungetwc(nch, file); consumed--; } while(0)
-#define _FUNCTION_ int vfwscanf(FILE* file, const wchar_t *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vfwscanf_s_l(FILE* file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vfwscanf_l(FILE* file, const wchar_t *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #else /* WIDE_SCANF */
 #define _GETC_(file) (consumed++, fgetc(file))
 #define _UNGETC_(nch, file) do { ungetc(nch, file); consumed--; } while(0)
-#define _FUNCTION_ int vfscanf(FILE* file, const char *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vfscanf_s_l(FILE* file, const char *format, _locale_t locale, __ms_va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vfscanf_l(FILE* file, const char *format, _locale_t locale, __ms_va_list ap)
+#endif /* SECURE */
 #endif /* WIDE_SCANF */
 #endif /* STRING */
 #endif /* CONSOLE */
 
 _FUNCTION_ {
+    pthreadlocinfo locinfo;
     int rd = 0, consumed = 0;
     int nch;
     if (!*format) return 0;
@@ -93,6 +114,11 @@ _FUNCTION_ {
     if (nch == _EOF_) {
         return _EOF_RET;
     }
+
+    if(!locale)
+        locinfo = get_locinfo();
+    else
+        locinfo = locale->locinfo;
 
     while (*format) {
 	/* a whitespace character in the format string causes scanf to read,
@@ -246,8 +272,12 @@ _FUNCTION_ {
             case 'f':
             case 'g':
             case 'G': { /* read a float */
-                    long double cur = 0;
-		    int negative = 0;
+                    //long double cur = 1, expcnt = 10;
+                    ULONGLONG d, hlp;
+                    int exp = 0, negative = 0;
+                    //unsigned fpcontrol;
+                    //BOOL negexp;
+
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
@@ -259,69 +289,112 @@ _FUNCTION_ {
                         if (width==0) break;
                         nch = _GETC_(file);
                     }
-		    /* get first digit. */
-		    if ('.' != nch) {
-		      if (!_ISDIGIT_(nch)) break;
-		      cur = (nch - '0');
-		      nch = _GETC_(file);
-		      if (width>0) width--;
-		      /* read until no more digits */
-		      while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
-                        cur = cur*10 + (nch - '0');
-                        nch = _GETC_(file);
-			if (width>0) width--;
-		      }
-		    } else {
-		      cur = 0; /* MaxPayneDemo Fix: .8 -> 0.8 */
-		    }
-		    /* handle decimals */
-                    if (width!=0 && nch == '.') {
-                        long double dec = 1;
+
+                    /* get first digit. */
+                    if (*locinfo->lconv->decimal_point != nch) {
+                        if (!_ISDIGIT_(nch)) break;
+                        d = nch - '0';
                         nch = _GETC_(file);
                         if (width>0) width--;
+                        /* read until no more digits */
                         while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
-                            dec /= 10;
-                            cur += dec * (nch - '0');
+                            hlp = d*10 + nch - '0';
+                            nch = _GETC_(file);
+                            if (width>0) width--;
+                            if(d > (ULONGLONG)-1/10 || hlp<d) {
+                                exp++;
+                                break;
+                            }
+                            else
+                                d = hlp;
+                        }
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+                            exp++;
+                            nch = _GETC_(file);
+                            if (width>0) width--;
+                        }
+                    } else {
+                        d = 0; /* Fix: .8 -> 0.8 */
+                    }
+
+                    /* handle decimals */
+                    if (width!=0 && nch == *locinfo->lconv->decimal_point) {
+                        nch = _GETC_(file);
+                        if (width>0) width--;
+
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+                            hlp = d*10 + nch - '0';
+                            nch = _GETC_(file);
+                            if (width>0) width--;
+                            if(d > (ULONGLONG)-1/10 || hlp<d)
+                                break;
+
+                            d = hlp;
+                            exp--;
+                        }
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
                             nch = _GETC_(file);
                             if (width>0) width--;
                         }
                     }
-		    /* handle exponent */
-		    if (width!=0 && (nch == 'e' || nch == 'E')) {
-			int exponent = 0, negexp = 0;
-			double expcnt, shift;
+
+                    /* handle exponent */
+                    if (width!=0 && (nch == 'e' || nch == 'E')) {
+                        int sign = 1, e = 0;
+
                         nch = _GETC_(file);
                         if (width>0) width--;
-			/* possible sign on the exponent */
-			if (width!=0 && (nch=='+' || nch=='-')) {
-			    negexp = (nch=='-');
-                            nch = _GETC_(file);
-                            if (width>0) width--;
-			}
-			/* exponent digits */
-			while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
-			    exponent *= 10;
-			    exponent += (nch - '0');
+                        if (width!=0 && (nch=='+' || nch=='-')) {
+                            if(nch == '-')
+                                sign = -1;
                             nch = _GETC_(file);
                             if (width>0) width--;
                         }
-			/* update 'cur' with this exponent. */
-			expcnt = 10;
-			shift = 1.0;
-			while (exponent!=0) {
-			    if (exponent&1)
-				shift *= expcnt;
-			    exponent/=2;
-			    expcnt=expcnt*expcnt;
-			}
-			cur = (negexp ? cur / shift : cur * shift);
-		    }
+
+                        /* exponent digits */
+                        while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+                            if(e > INT_MAX/10 || (e = e*10 + nch - '0')<0)
+                                e = INT_MAX;
+                            nch = _GETC_(file);
+                            if (width>0) width--;
+                        }
+                        e *= sign;
+
+                        if(exp<0 && e<0 && e+exp>0) exp = INT_MIN;
+                        else if(exp>0 && e>0 && e+exp<0) exp = INT_MAX;
+                        else exp += e;
+                    }
+
+#ifdef __REACTOS__
+                    /* ReactOS: don't inline float processing (kernel/freeldr don't like that! */
+                    _internal_handle_float(negative, exp, suppress, d, l_prefix || L_prefix, &ap);
+                    st = 1;
+#else
+                    fpcontrol = _control87(0, 0);
+                    _control87(MSVCRT__EM_DENORMAL|MSVCRT__EM_INVALID|MSVCRT__EM_ZERODIVIDE
+                            |MSVCRT__EM_OVERFLOW|MSVCRT__EM_UNDERFLOW|MSVCRT__EM_INEXACT, 0xffffffff);
+
+                    negexp = (exp < 0);
+                    if(negexp)
+                        exp = -exp;
+                    /* update 'cur' with this exponent. */
+                    while(exp) {
+                        if(exp & 1)
+                            cur *= expcnt;
+                        exp /= 2;
+                        expcnt = expcnt*expcnt;
+                    }
+                    cur = (negexp ? d/cur : d*cur);
+
+                    _control87(fpcontrol, 0xffffffff);
+
                     st = 1;
                     if (!suppress) {
-			if (L_prefix) _SET_NUMBER_(long double);
+                        if (L_prefix) _SET_NUMBER_(double);
                         else if (l_prefix) _SET_NUMBER_(double);
                         else _SET_NUMBER_(float);
                     }
+#endif /* __REACTOS__ */
                 }
                 break;
 		/* According to msdn,
@@ -448,11 +521,7 @@ _FUNCTION_ {
 		    int invert = 0; /* Set if we are NOT to find the chars */
 
             /* Init our bitmap */
-#ifdef _LIBCNT_
-            Mask = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
-#else
             Mask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
-#endif
             RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
 
 		    /* Read the format */
@@ -497,11 +566,7 @@ _FUNCTION_ {
                     }
                     /* terminate */
                     if (!suppress) *sptr = 0;
-#ifdef _LIBCNT_
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, Mask);
-#else
                     HeapFree(GetProcessHeap(), 0, Mask);
-#endif
                 }
                 break;
             default:

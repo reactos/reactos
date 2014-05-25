@@ -59,6 +59,7 @@ list(APPEND LIBCNTPR_SOURCE
     string/wtoi64.c
     string/wtoi.c
     string/wtol.c
+    string/winesup.c
     wstring/wcsicmp.c
     wstring/wcslwr.c
     wstring/wcsnicmp.c
