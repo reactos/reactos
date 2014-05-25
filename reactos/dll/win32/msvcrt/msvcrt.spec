@@ -111,31 +111,6 @@
 @ cdecl -arch=i386 _CIsqrt()
 @ cdecl -arch=i386 _CItan()
 @ cdecl -arch=i386 _CItanh()
-# stub _CrtCheckMemory
-# stub _CrtDbgBreak
-# stub _CrtDbgReport
-# stub _CrtDbgReportV
-# stub _CrtDbgReportW
-# stub _CrtDbgReportWV
-# stub _CrtDoForAllClientObjects
-# stub _CrtDumpMemoryLeaks
-# stub _CrtIsMemoryBlock
-# stub _CrtIsValidHeapPointer
-# stub _CrtIsValidPointer
-# stub _CrtMemCheckpoint
-# stub _CrtMemDifference
-# stub _CrtMemDumpAllObjectsSince
-# stub _CrtMemDumpStatistics
-# stub _CrtReportBlockType
-# stub _CrtSetAllocHook
-# stub _CrtSetBreakAlloc
-# stub _CrtSetDbgBlockType
-# stub _CrtSetDbgFlag
-# stub _CrtSetDumpClient
-# stub _CrtSetReportFile
-# stub _CrtSetReportHook
-# stub _CrtSetReportHook2
-# stub _CrtSetReportMode
 @ stdcall _CxxThrowException(long long)
 @ cdecl -i386 -norelay _EH_prolog()
 @ cdecl _Getdays()
@@ -146,7 +121,6 @@
 @ cdecl _XcptFilter(long ptr)
 @ stdcall -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
 @ cdecl __CppXcptFilter(long ptr)
-# stub __CxxCallUnwindDelDtor
 # stub __CxxCallUnwindDtor
 # stub __CxxCallUnwindVecDtor
 @ cdecl __CxxDetectRethrow(ptr)
@@ -190,31 +164,9 @@
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
 @ extern __lc_codepage
-# @ stub __lc_collate # not in XP / 7
 @ extern __lc_collate_cp MSVCRT___lc_collate_cp
 @ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
-# stub __libm_sse2_acos
-# stub __libm_sse2_acosf
-# stub __libm_sse2_asin
-# stub __libm_sse2_asinf
-# stub __libm_sse2_atan
-# stub __libm_sse2_atan2
-# stub __libm_sse2_atanf
-# stub __libm_sse2_cos
-# stub __libm_sse2_cosf
-# stub __libm_sse2_exp
-# stub __libm_sse2_expf
-# stub __libm_sse2_log
-# stub __libm_sse2_log10
-# stub __libm_sse2_log10f
-# stub __libm_sse2_logf
-# stub __libm_sse2_pow
-# stub __libm_sse2_powf
-# stub __libm_sse2_sin
-# stub __libm_sse2_sinf
-# stub __libm_sse2_tan
-# stub __libm_sse2_tanf
 @ extern __mb_cur_max
 @ cdecl -arch=i386 __p___argc()
 @ cdecl -arch=i386 __p___argv()
@@ -252,7 +204,6 @@
 @ cdecl __set_app_type(long)
 @ extern __setlc_active
 @ cdecl __setusermatherr(ptr)
-# stub __strncnt
 @ cdecl __threadhandle() kernel32.GetCurrentThread
 @ cdecl __threadid() kernel32.GetCurrentThreadId
 @ cdecl __toascii(long)
@@ -262,7 +213,6 @@
 @ extern __wargv __wargv
 @ cdecl __wcserror(wstr)
 @ cdecl __wcserror_s(ptr long wstr)
-# stub __wcsncnt
 @ cdecl __wgetmainargs(ptr ptr ptr long ptr)
 @ extern __winitenv
 @ cdecl _abnormal_termination()
@@ -286,48 +236,30 @@
 @ extern -arch=i386 _adjust_fdiv
 @ extern _aexit_rtn
 @ cdecl _aligned_free(ptr)
-# stub _aligned_free_dbg
 @ cdecl _aligned_malloc(long long)
-# stub _aligned_malloc_dbg
 @ cdecl _aligned_offset_malloc(long long long)
-# stub _aligned_offset_malloc_dbg
 @ cdecl _aligned_offset_realloc(ptr long long long)
-# stub _aligned_offset_realloc_dbg
 @ cdecl _aligned_realloc(ptr long long)
-# stub _aligned_realloc_dbg
 @ cdecl _amsg_exit(long)
 @ cdecl _assert(str str long)
 @ cdecl _atodbl(ptr str)
-# stub _atodbl_l
-# @ cdecl _atof_l(str ptr)
-# stub _atoflt_l
 @ cdecl -ret64 _atoi64(str)
-# stub _atoi64_l
-# stub _atoi_l
-# stub _atol_l
 @ cdecl _atoldbl(ptr str)
-# stub _atoldbl_l
 @ cdecl _beep(long long)
 @ cdecl _beginthread(ptr long ptr)
 @ cdecl _beginthreadex(ptr long ptr ptr long ptr)
 @ cdecl _c_exit()
 @ cdecl _cabs(long)
 @ cdecl _callnewh(long)
-# stub _calloc_dbg
 @ cdecl _cexit()
 @ cdecl _cgets(str)
-# stub _cgets_s
 # stub _cgetws
-# stub _cgetws_s
 @ cdecl _chdir(str)
 @ cdecl _chdrive(long)
 @ cdecl _chgsign(double)
 @ cdecl -i386 -norelay _chkesp()
 @ cdecl _chmod(str long)
 @ cdecl _chsize(long long)
-# stub _chsize_s
-# stub _chvalidator
-# stub _chvalidator_l
 @ cdecl _clearfp()
 @ cdecl _close(long)
 @ cdecl _commit(long)
@@ -337,21 +269,10 @@
 @ cdecl _controlfp_s(ptr long long)
 @ cdecl _copysign( double double )
 @ varargs _cprintf(str)
-# stub _cprintf_l
-# stub _cprintf_p
-# stub _cprintf_p_l
-# stub _cprintf_s
-# stub _cprintf_s_l
 @ cdecl _cputs(str)
 # stub _cputws
 @ cdecl _creat(str long)
-# stub _crtAssertBusy
-# stub _crtBreakAlloc
-# stub _crtDbgFlag
 @ varargs _cscanf(str)
-# @ varargs _cscanf_l(str ptr)
-# @ varargs _cscanf_s(str)
-# @ varargs _cscanf_s_l(str ptr)
 @ cdecl _ctime32(ptr)
 @ cdecl _ctime32_s(str long ptr)
 @ cdecl _ctime64(ptr)
@@ -359,15 +280,7 @@
 @ extern _ctype
 @ cdecl _cwait(ptr long long)
 @ varargs _cwprintf(wstr)
-# stub _cwprintf_l
-# stub _cwprintf_p
-# stub _cwprintf_p_l
-# stub _cwprintf_s
-# stub _cwprintf_s_l
 # @ varargs _cwscanf(wstr)
-# @ varargs _cwscanf_l(wstr ptr)
-# @ varargs _cwscanf_s(wstr)
-# @ varargs _cwscanf_s_l(wstr ptr)
 @ extern _daylight
 @ cdecl _difftime32(long long)
 @ cdecl _difftime64(long long)
@@ -375,7 +288,6 @@
 @ cdecl _dup(long)
 @ cdecl _dup2(long long)
 @ cdecl _ecvt(double long ptr ptr)
-# stub _ecvt_s
 @ cdecl _endthread()
 @ cdecl _endthreadex(long)
 @ extern _environ
@@ -394,10 +306,8 @@
 @ cdecl _execvpe(str ptr ptr)
 @ cdecl _exit(long)
 @ cdecl _expand(ptr long)
-# stub _expand_dbg
 @ cdecl _fcloseall()
 @ cdecl _fcvt(double long ptr ptr)
-# stub _fcvt_s
 @ cdecl _fdopen(long str)
 @ cdecl _fgetchar()
 @ cdecl _fgetwchar()
@@ -420,18 +330,8 @@
 @ cdecl _fpclass(double)
 @ cdecl _fpieee_flt(long ptr ptr)
 @ cdecl _fpreset()
-# stub _fprintf_l
-# stub _fprintf_p
-# stub _fprintf_p_l
-# stub _fprintf_s_l
 @ cdecl _fputchar(long)
 @ cdecl _fputwchar(long)
-# stub _free_dbg
-# stub _freea
-# stub _freea_s
-# stub _fscanf_l
-# @ varargs _fscanf_l(ptr str ptr)
-# @ varargs _fscanf_s_l(ptr str ptr)
 @ cdecl _fseeki64(ptr long long long)
 @ cdecl _fsopen(str str long)
 @ cdecl _fstat(long ptr)
@@ -440,42 +340,23 @@
 @ cdecl -ret64 _ftelli64(ptr)
 @ cdecl _ftime(ptr)
 @ cdecl _ftime32(ptr)
-# stub _ftime32_s
 @ cdecl _ftime64(ptr)
-# stub _ftime64_s
 @ cdecl -arch=i386 -ret64 _ftol()
 @ cdecl -arch=i386 -ret64 _ftol2() _ftol
 @ cdecl -arch=i386 -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
-# stub _ftol2_sse_excpt
 @ cdecl _fullpath(ptr str long)
-# stub _fullpath_dbg
 @ cdecl _futime(long ptr)
 @ cdecl _futime32(long ptr)
 @ cdecl _futime64(long ptr)
-# stub _fwprintf_l
-# stub _fwprintf_p
-# stub _fwprintf_p_l
-# stub _fwprintf_s_l
-# @ varargs _fwscanf_l(ptr wstr ptr)
-# @ varargs _fwscanf_s_l(ptr wstr ptr)
 @ cdecl _gcvt(double long str)
-# stub _gcvt_s
 @ cdecl _get_doserrno(ptr)
-# stub _get_environ
 @ cdecl _get_errno(ptr)
-# stub _get_fileinfo
-# stub _get_fmode
 # @ cdecl _get_heap_handle()
 @ cdecl _get_osfhandle(long)
 @ cdecl _get_osplatform(ptr)
-# stub _get_osver
 @ cdecl _get_output_format()
 @ cdecl _get_pgmptr(ptr)
 @ cdecl _get_sbh_threshold()
-# stub _get_wenviron
-# stub _get_winmajor
-# stub _get_winminor
-# stub _get_winver
 @ cdecl _get_wpgmptr(ptr)
 @ cdecl _get_terminate()
 @ cdecl _get_tzname(ptr str long long)
@@ -519,91 +400,39 @@
 @ cdecl -arch=i386 _inpw(long) MSVCRT__inpw
 @ cdecl _invalid_parameter(wstr wstr wstr long long)
 @ extern _iob
-# stub _isalnum_l
-# stub _isalpha_l
 @ cdecl _isatty(long)
-# stub _iscntrl_l
 @ cdecl _isctype(long long)
 @ cdecl _isctype_l(long long ptr)
-# stub _isdigit_l
-# stub _isgraph_l
-# stub _isleadbyte_l
-# stub _islower_l
 @ cdecl _ismbbalnum(long)
-# stub _ismbbalnum_l
 @ cdecl _ismbbalpha(long)
-# stub _ismbbalpha_l
 @ cdecl _ismbbgraph(long)
-# stub _ismbbgraph_l
 @ cdecl _ismbbkalnum(long)
-# stub _ismbbkalnum_l
 @ cdecl _ismbbkana(long)
-# stub _ismbbkana_l
 @ cdecl _ismbbkprint(long)
-# stub _ismbbkprint_l
 @ cdecl _ismbbkpunct(long)
-# stub _ismbbkpunct_l
 @ cdecl _ismbblead(long)
-# stub _ismbblead_l
 @ cdecl _ismbbprint(long)
-# stub _ismbbprint_l
 @ cdecl _ismbbpunct(long)
-# stub _ismbbpunct_l
 @ cdecl _ismbbtrail(long)
-# stub _ismbbtrail_l
 @ cdecl _ismbcalnum(long)
-# stub _ismbcalnum_l
 @ cdecl _ismbcalpha(long)
-# stub _ismbcalpha_l
 @ cdecl _ismbcdigit(long)
-# stub _ismbcdigit_l
 @ cdecl _ismbcgraph(long)
-# stub _ismbcgraph_l
 @ cdecl _ismbchira(long)
-# stub _ismbchira_l
 @ cdecl _ismbckata(long)
-# stub _ismbckata_l
 @ cdecl _ismbcl0(long)
-# stub _ismbcl0_l
 @ cdecl _ismbcl1(long)
-# stub _ismbcl1_l
 @ cdecl _ismbcl2(long)
-# stub _ismbcl2_l
 @ cdecl _ismbclegal(long)
-# stub _ismbclegal_l
 @ cdecl _ismbclower(long)
-# stub _ismbclower_l
 @ cdecl _ismbcprint(long)
-# stub _ismbcprint_l
 @ cdecl _ismbcpunct(long)
-# stub _ismbcpunct_l
 @ cdecl _ismbcspace(long)
-# stub _ismbcspace_l
 @ cdecl _ismbcsymbol(long)
-# stub _ismbcsymbol_l
 @ cdecl _ismbcupper(long)
-# stub _ismbcupper_l
 @ cdecl _ismbslead(ptr ptr)
-# stub _ismbslead_l
 @ cdecl _ismbstrail(ptr ptr)
-# stub _ismbstrail_l
 @ cdecl _isnan(double)
-# stub _isprint_l
-# stub _isspace_l
-# stub _isupper_l
-# stub _iswalnum_l
-# stub _iswalpha_l
-# stub _iswcntrl_l
-# stub _iswctype_l
-# stub _iswdigit_l
-# stub _iswgraph_l
-# stub _iswlower_l
-# stub _iswprint_l
-# stub _iswpunct_l
-# stub _iswspace_l
-# stub _iswupper_l
-# stub _iswxdigit_l
-# stub _isxdigit_l
 @ cdecl _itoa(long ptr long)
 @ cdecl _itoa_s(long ptr long long)
 @ cdecl _itow(long ptr long)
@@ -613,7 +442,6 @@
 @ cdecl _jn(long double)
 @ cdecl _kbhit()
 @ cdecl _lfind(ptr ptr ptr long ptr)
-# stub _lfind_s
 @ cdecl _loaddll(str)
 @ cdecl -i386 _local_unwind2(ptr long)
 @ cdecl -i386 _local_unwind4(ptr ptr long)
@@ -628,7 +456,6 @@
 @ cdecl _lrotl(long long)
 @ cdecl _lrotr(long long)
 @ cdecl _lsearch(ptr ptr long long ptr)
-# stub _lsearch_s
 @ cdecl _lseek(long long long)
 @ cdecl -ret64 _lseeki64(long double long)
 @ cdecl _ltoa(long ptr long)
@@ -637,33 +464,19 @@
 @ cdecl _ltow_s(long ptr long long)
 @ cdecl _makepath(ptr str str str str)
 @ cdecl _makepath_s(ptr long str str str str)
-# stub _malloc_dbg
 @ cdecl _mbbtombc(long)
-# stub _mbbtombc_l
 @ cdecl _mbbtype(long long)
 @ extern _mbcasemap
 @ cdecl _mbccpy (str str)
-# stub _mbccpy_l
-# stub _mbccpy_s
-# stub _mbccpy_s_l
 @ cdecl _mbcjistojms(long)
-# stub _mbcjistojms_l
 @ cdecl _mbcjmstojis(long)
-# stub _mbcjmstojis_l
 @ cdecl _mbclen(ptr)
-# stub _mbclen_l
 @ cdecl _mbctohira(long)
-# stub _mbctohira_l
 @ cdecl _mbctokata(long)
-# stub _mbctokata_l
 @ cdecl _mbctolower(long)
-# stub _mbctolower_l
 @ cdecl _mbctombb(long)
-# stub _mbctombb_l
 @ cdecl _mbctoupper(long)
-# stub _mbctoupper_l
 @ extern _mbctype
-# stub _mblen_l
 @ cdecl _mbsbtype(str long)
 # stub _mbsbtype_l
 @ cdecl _mbscat(str str)
@@ -1349,7 +1162,6 @@
 @ cdecl -arch=x86_64 sqrtf(long)
 @ cdecl srand(long)
 @ varargs sscanf(str str)
-# @ varargs sscanf_s(str str)
 @ cdecl strcat(str str)
 @ cdecl strcat_s(str long str)
 @ cdecl strchr(str long)
@@ -1363,7 +1175,6 @@
 @ cdecl strftime(str long str ptr)
 @ cdecl strlen(str)
 @ cdecl strncat(str str long)
-# stub strncat_s
 @ cdecl strncmp(str str long)
 @ cdecl strncpy(ptr str long)
 @ cdecl strncpy_s(ptr long str long)
@@ -1381,37 +1192,30 @@
 @ varargs swprintf(ptr wstr)
 @ varargs swprintf_s(ptr long wstr)
 @ varargs swscanf(wstr wstr)
-# @ varargs swscanf_s(wstr wstr)
 @ cdecl system(str)
 @ cdecl tan(double)
 @ cdecl tanh(double)
 @ cdecl time(ptr)
 @ cdecl tmpfile()
-# stub tmpfile_s
 @ cdecl tmpnam(ptr)
-# stub tmpnam_s
 @ cdecl tolower(long)
 @ cdecl toupper(long)
 @ cdecl towlower(long)
 @ cdecl towupper(long)
 @ cdecl ungetc(long ptr)
 @ cdecl ungetwc(long ptr)
-# stub utime
 @ cdecl vfprintf(ptr str ptr)
 @ cdecl vfprintf_s(ptr str ptr)
 @ cdecl vfwprintf(ptr wstr ptr)
 @ cdecl vfwprintf_s(ptr wstr ptr)
 @ cdecl vprintf(str ptr)
 @ cdecl vprintf_s(str ptr)
-# stub vsnprintf
 @ cdecl vsprintf(ptr str ptr)
 @ cdecl vsprintf_s(ptr long str ptr)
 @ cdecl vswprintf(ptr wstr ptr)
 @ cdecl vswprintf_s(ptr long wstr ptr)
 @ cdecl vwprintf(wstr ptr)
 @ cdecl vwprintf_s(wstr ptr)
-# stub wcrtomb
-# stub wcrtomb_s
 @ cdecl wcscat(wstr wstr)
 @ cdecl wcscat_s(wstr long wstr)
 @ cdecl wcschr(wstr long)
@@ -1430,8 +1234,6 @@
 @ cdecl wcsnlen(wstr long)
 @ cdecl wcspbrk(wstr wstr)
 @ cdecl wcsrchr(wstr long)
-# stub wcsrtombs
-# stub wcsrtombs_s
 @ cdecl wcsspn(wstr wstr)
 @ cdecl wcsstr(wstr wstr)
 @ cdecl wcstod(wstr ptr)
@@ -1441,13 +1243,10 @@
 @ cdecl wcstombs(ptr ptr long)
 @ cdecl wcstoul(wstr ptr long)
 @ cdecl wcsxfrm(ptr wstr long)
-# stub wctob
 @ cdecl wctomb(ptr long)
-# stub wctomb_s
 @ varargs wprintf(wstr)
 @ varargs wprintf_s(wstr)
 @ varargs wscanf(wstr)
-# @ varargs wscanf_s(wstr)
 
 # Functions not exported in native dll:
 @ cdecl _get_invalid_parameter_handler()
