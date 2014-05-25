@@ -30,6 +30,9 @@ typedef ULONG64 BITMAP_BUFFER, *PBITMAP_BUFFER;
 #undef BitScanForward
 #define BitScanForward(Index, Mask) \
     do { unsigned long tmp; BitScanForward64(&tmp, Mask); *Index = tmp; } while (0)
+#undef BitScanReverse
+#define BitScanReverse(Index, Mask) \
+    do { unsigned long tmp; BitScanReverse64(&tmp, Mask); *Index = tmp; } while (0)
 #define RtlFillMemoryUlong RtlFillMemoryUlonglong
 
 #define RtlInitializeBitMap RtlInitializeBitMap64
@@ -734,7 +737,7 @@ RtlFindFirstRunClear(
     return RtlFindNextForwardRunClear(BitMapHeader, 0, StartingIndex);
 }
 
-ULONG
+BITMAP_INDEX
 NTAPI
 RtlFindLastBackwardRunClear(
     _In_ PRTL_BITMAP BitMapHeader,
@@ -771,7 +774,7 @@ RtlFindLastBackwardRunClear(
     BitScanReverse(&BitPos, InvValue);
 
     /* Calculate last bit position */
-    FromIndex = (Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos;
+    FromIndex = (BITMAP_INDEX)((Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos);
 
     Value = ~InvValue << ((_BITCOUNT - 1) - BitPos) >> ((_BITCOUNT - 1) - BitPos);
 
@@ -787,7 +790,7 @@ RtlFindLastBackwardRunClear(
         BitScanReverse(&BitPos, Value);
 
         /* Calculate Starting Index */
-        *StartingRunIndex = (Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos + 1;
+        *StartingRunIndex = (BITMAP_INDEX)((Buffer + 1 - BitMapHeader->Buffer) * _BITCOUNT + BitPos + 1);
     }
     else
     {
@@ -796,7 +799,7 @@ RtlFindLastBackwardRunClear(
     }
 
     /* Return length of the run */
-    return FromIndex - *StartingRunIndex;
+    return (FromIndex - *StartingRunIndex);
 }
 
 
