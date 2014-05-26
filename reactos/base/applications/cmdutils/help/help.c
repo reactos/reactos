@@ -56,7 +56,7 @@ VOID PrintResourceString(INT resID, ...)
     // FIXME: Optimize by using Win32 console functions.
     if (IsConsoleHandle(OutputHandle))
     {
-        _vcwprintf(tmpBuffer, arg_ptr);
+        vfwprintf(stdout, tmpBuffer, arg_ptr);
     }
     else
     {
