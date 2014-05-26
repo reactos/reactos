@@ -459,7 +459,7 @@ function(set_module_type MODULE TYPE)
 
     # Handle hotpatchable images.
     # GCC has this as a function attribute so we're handling it using DECLSPEC_HOTPATCH
-    if(__module_HOTPATCHABLE AND MSVC)
+    if(__module_HOTPATCHABLE AND MSVC AND (NOT ARCH STREQUAL "arm"))
         set_property(TARGET ${MODULE} APPEND_STRING PROPERTY COMPILE_FLAGS " /hotpatch")
         if(ARCH STREQUAL "i386")
             set_property(TARGET ${MODULE} APPEND_STRING PROPERTY LINK_FLAGS " /FUNCTIONPADMIN:5")
