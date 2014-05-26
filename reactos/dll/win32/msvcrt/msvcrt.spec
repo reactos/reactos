@@ -270,14 +270,12 @@
 # stub _cputws
 @ cdecl _creat(str long)
 @ varargs _cscanf(str)
-@ cdecl _ctime32(ptr)
 @ cdecl _ctime64(ptr)
 @ extern _ctype
 @ cdecl _cwait(ptr long long)
 @ varargs _cwprintf(wstr)
 # @ varargs _cwscanf(wstr)
 @ extern _daylight
-@ cdecl _difftime32(long long)
 @ cdecl _difftime64(long long)
 @ extern _dstbias
 @ cdecl _dup(long)
@@ -334,28 +332,17 @@
 @ cdecl _fstati64(long ptr)
 @ cdecl -ret64 _ftelli64(ptr)
 @ cdecl _ftime(ptr)
-@ cdecl _ftime32(ptr)
 @ cdecl _ftime64(ptr)
 @ cdecl -arch=i386 -ret64 _ftol()
 @ cdecl -arch=i386 -ret64 _ftol2() _ftol
 @ cdecl -arch=i386 -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
 @ cdecl _fullpath(ptr str long)
 @ cdecl _futime(long ptr)
-@ cdecl _futime32(long ptr)
 @ cdecl _futime64(long ptr)
 @ cdecl _gcvt(double long str)
-@ cdecl _get_doserrno(ptr)
-@ cdecl _get_errno(ptr)
 # @ cdecl _get_heap_handle()
 @ cdecl _get_osfhandle(long)
-@ cdecl _get_osplatform(ptr)
-@ cdecl _get_output_format()
-@ cdecl _get_pgmptr(ptr)
 @ cdecl _get_sbh_threshold()
-@ cdecl _get_wpgmptr(ptr)
-@ cdecl _get_terminate()
-@ cdecl _get_tzname(ptr str long long)
-@ cdecl _get_unexpected()
 @ cdecl _getch()
 @ cdecl _getche()
 @ cdecl _getcwd(str long)
@@ -373,7 +360,6 @@
 # stub _getwche
 @ cdecl _getws(ptr)
 @ cdecl -i386 _global_unwind2(ptr)
-@ cdecl _gmtime32(ptr)
 @ cdecl _gmtime64(ptr)
 @ cdecl _heapadd(ptr long)
 @ cdecl _heapchk()
@@ -389,11 +375,9 @@
 @ cdecl -arch=i386 _inp(long) MSVCRT__inp
 @ cdecl -arch=i386 _inpd(long) MSVCRT__inpd
 @ cdecl -arch=i386 _inpw(long) MSVCRT__inpw
-@ cdecl _invalid_parameter(wstr wstr wstr long long)
 @ extern _iob
 @ cdecl _isatty(long)
 @ cdecl _isctype(long long)
-@ cdecl _isctype_l(long long ptr)
 @ cdecl _ismbbalnum(long)
 @ cdecl _ismbbalpha(long)
 @ cdecl _ismbbgraph(long)
@@ -434,7 +418,6 @@
 @ cdecl _loaddll(str)
 @ cdecl -i386 _local_unwind2(ptr long)
 @ cdecl -i386 _local_unwind4(ptr ptr long)
-@ cdecl _localtime32(ptr)
 @ cdecl _localtime64(ptr)
 @ cdecl _lock(long)
 @ cdecl _locking(long long long)
@@ -507,10 +490,8 @@
 @ cdecl _memicmp(str str long)
 @ cdecl _mkdir(str)
 @ cdecl _mkgmtime(ptr)
-@ cdecl _mkgmtime32(ptr)
 @ cdecl _mkgmtime64(ptr)
 @ cdecl _mktemp(str)
-@ cdecl _mktime32(ptr)
 @ cdecl _mktime64(ptr)
 @ cdecl _msize(ptr)
 @ cdecl _nextafter(double double)
@@ -553,8 +534,6 @@
 @ stdcall -i386 _seh_longjmp_unwind4(ptr)
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
 # stub _set_SSE2_enable
-@ cdecl _set_doserrno(long)
-@ cdecl _set_errno(long)
 @ cdecl _set_error_mode(long)
 @ cdecl _set_sbh_threshold(long)
 @ cdecl _seterrormode(long)
@@ -602,13 +581,11 @@
 @ cdecl _strtoui64(str ptr long) strtoull
 @ cdecl _strupr(str)
 @ cdecl _swab(str str long)
-@ varargs _swprintf(ptr str) swprintf
 @ extern _sys_errlist
 @ extern _sys_nerr
 @ cdecl _tell(long)
 @ cdecl -ret64 _telli64(long)
 @ cdecl _tempnam(str str)
-@ cdecl _time32(ptr)
 @ cdecl _time64(ptr)
 @ extern _timezone
 @ cdecl _tolower(long)
@@ -625,17 +602,12 @@
 @ cdecl _unlink(str)
 @ cdecl _unloaddll(long)
 @ cdecl _unlock(long)
-@ cdecl _utime32(str ptr)
-@ cdecl _utime64(str ptr)
-@ cdecl _vcwprintf(wstr ptr)
 @ cdecl _utime(str ptr)
+@ cdecl _utime64(str ptr)
 @ cdecl _vscprintf(str ptr)
 @ cdecl _vscwprintf(wstr ptr)
 @ cdecl _vsnprintf(ptr long str ptr)
-@ cdecl _vsnprintf_c(ptr long str ptr) _vsnprintf
 @ cdecl _vsnwprintf(ptr long wstr ptr)
-@ cdecl _vsprintf_p(ptr long str ptr)
-@ cdecl _vswprintf_c(ptr long wstr ptr) _vsnwprintf
 @ cdecl _waccess(wstr long)
 @ cdecl _wasctime(ptr)
 @ cdecl _wchdir(wstr)
@@ -654,11 +626,9 @@
 @ cdecl _wcsrev(wstr)
 @ cdecl _wcsset(wstr long)
 @ cdecl _wcstoi64(wstr ptr long)
-@ cdecl _wcstombs_l(ptr ptr long ptr)
 @ cdecl _wcstoui64(wstr ptr long)
 @ cdecl _wcsupr(wstr)
 @ cdecl _wctime(ptr)
-@ cdecl _wctime32(ptr)
 @ cdecl _wctime64(ptr)
 # stub _wctype
 @ extern _wenviron
@@ -712,8 +682,8 @@
 @ cdecl _wspawnvpe(long wstr ptr ptr)
 @ cdecl _wsplitpath(wstr ptr ptr ptr ptr)
 @ cdecl _wstat(wstr ptr)
-@ cdecl _wstati64(wstr ptr)
 @ cdecl _wstat64(wstr ptr)
+@ cdecl _wstati64(wstr ptr)
 @ cdecl _wstrdate(ptr)
 @ cdecl _wstrtime(ptr)
 @ cdecl _wsystem(wstr)
@@ -725,7 +695,6 @@
 @ cdecl _wtol(wstr)
 @ cdecl _wunlink(wstr)
 @ cdecl _wutime(wstr ptr)
-@ cdecl _wutime32(wstr ptr)
 @ cdecl _wutime64(wstr ptr)
 @ cdecl _y0(double)
 @ cdecl _y1(double)
