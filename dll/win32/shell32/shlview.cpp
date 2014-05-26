@@ -922,6 +922,8 @@ LRESULT CDefView::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    if (m_hMenu)
+        DestroyMenu(m_hMenu);
     RevokeDragDrop(m_hWnd);
     SHChangeNotifyDeregister(m_hNotify);
     bHandled = FALSE;

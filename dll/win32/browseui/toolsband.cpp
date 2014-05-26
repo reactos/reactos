@@ -232,9 +232,9 @@ const int numShownButtons = 13;
 const int numHiddenButtons = 13;
 TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
 {
-    { backImageIndex, gBackCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Back },
-    { forwardImageIndex, gForwardCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN, { 0 }, 0,          BtnIdx_Forward },
-    { upImageIndex, gUpLevelCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0,                 BtnIdx_Up },
+    { backImageIndex, IDM_GOTO_BACK, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Back },
+    { forwardImageIndex, IDM_GOTO_FORWARD, TBSTATE_ENABLED, BTNS_DROPDOWN, { 0 }, 0,          BtnIdx_Forward },
+    { upImageIndex, IDM_GOTO_UPONELEVEL, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0,                 BtnIdx_Up },
     { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
     { searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Search },
     { foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Folders },
@@ -247,10 +247,10 @@ TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
     { viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, { 0 }, 0, BtnIdx_Views },
 
     { 0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Stop },
-    { 0, gRefreshCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Refresh },
+    { 0, IDM_VIEW_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Refresh },
     { 0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Home },
-    { mapDriveImageIndex, gMapDriveCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MapDrive },
-    { disconnectImageIndex, gDisconnectCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Disconnect },
+    { mapDriveImageIndex, IDM_TOOLS_MAPNETWORKDRIVE, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MapDrive },
+    { disconnectImageIndex, IDM_TOOLS_DISCONNECTNETWORKDRIVE, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Disconnect },
     { favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Favorites },
     { 0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_History },
     { 0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FullScreen },
@@ -258,11 +258,10 @@ TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
     { cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Cut },
     { copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Copy },
     { pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Paste },
-    { folderOptionsImageIndex, gFolderOptionsCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FolderOptions },
+    { folderOptionsImageIndex, IDM_TOOLS_FOLDEROPTIONS, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FolderOptions },
 };
 
-HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
-{
+HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     HWND                    parentWindow;
     IOleWindow              *oleWindow;
     HWND                    toolbar;

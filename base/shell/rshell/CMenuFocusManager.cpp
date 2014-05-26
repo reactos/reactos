@@ -378,6 +378,8 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM hookWParam, LPARAM ho
         {
         case WM_NCLBUTTONDOWN:
         case WM_LBUTTONDOWN:
+        case WM_NCRBUTTONDOWN:
+        case WM_RBUTTONDOWN:
             if (m_menuBar)
             {
                 POINT pt = msg->pt;
@@ -445,6 +447,8 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
         {
         case WM_NCLBUTTONDOWN:
         case WM_LBUTTONDOWN:
+        case WM_NCRBUTTONDOWN:
+        case WM_RBUTTONDOWN:
             if (m_current->type == MenuPopupEntry)
             {
                 HWND child = WindowFromPoint(pt);

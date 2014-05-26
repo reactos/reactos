@@ -158,14 +158,14 @@ CDockSite::~CDockSite()
 
 HRESULT CDockSite::Initialize(IUnknown *containedBand, CInternetToolbar *browser, HWND hwnd, int bandID, int flags)
 {
-    CComPtr<IObjectWithSite>                site;
+    CComPtr<IObjectWithSite>                child;
     CComPtr<IOleWindow>                     oleWindow;
     CComPtr<IDeskBand>                      deskBand;
     TCHAR                                   textBuffer[40];
     REBARBANDINFOW                          bandInfo;
     HRESULT                                 hResult;
 
-    hResult = containedBand->QueryInterface(IID_PPV_ARG(IObjectWithSite, &site));
+    hResult = containedBand->QueryInterface(IID_PPV_ARG(IObjectWithSite, &child));
     if (FAILED(hResult))
         return hResult;
     hResult = containedBand->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
@@ -179,7 +179,7 @@ HRESULT CDockSite::Initialize(IUnknown *containedBand, CInternetToolbar *browser
     fRebarWindow = hwnd;
     fBandID = bandID;
     fFlags = flags;
-    hResult = site->SetSite(static_cast<IOleWindow *>(this));
+    hResult = child->SetSite(static_cast<IOleWindow *>(this));
     if (FAILED(hResult))
         return hResult;
     hResult = oleWindow->GetWindow(&fChildWindow);
@@ -680,6 +680,8 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
             }
         }
         hResult = ReserveBorderSpace();
+
+        // TODO: refresh view menu?
     }
     return S_OK;
 }
@@ -700,11 +702,11 @@ HRESULT CInternetToolbar::CommandStateChanged(bool newValue, int commandID)
             break;
         case 1:
             // forward
-            hResult = SetState(&CLSID_CommonButtons, gForwardCommandID, newValue ? TBSTATE_ENABLED : 0);
+            hResult = SetState(&CLSID_CommonButtons, IDM_GOTO_FORWARD, newValue ? TBSTATE_ENABLED : 0);
             break;
         case 2:
             // back
-            hResult = SetState(&CLSID_CommonButtons, gBackCommandID, newValue ? TBSTATE_ENABLED : 0);
+            hResult = SetState(&CLSID_CommonButtons, IDM_GOTO_BACK, newValue ? TBSTATE_ENABLED : 0);
             break;
     }
     return hResult;
@@ -1398,7 +1400,7 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
     ::MapWindowPoints(fToolbarWindow, NULL, reinterpret_cast<POINT *>(&bounds), 2);
     switch (notifyInfo->iItem)
     {
-        case gBackCommandID:
+        case IDM_GOTO_BACK:
             newMenu = CreatePopupMenu();
             hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
             hResult = serviceProvider->QueryService(
@@ -1428,7 +1430,7 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
                 hResult = travelLog->Travel(browserService, -selectedItem);
             DestroyMenu(newMenu);
             break;
-        case gForwardCommandID:
+        case IDM_GOTO_FORWARD:
             newMenu = CreatePopupMenu();
             hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
             hResult = serviceProvider->QueryService(SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
@@ -1529,6 +1531,13 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         default:
             break;
     }
+
+    MENUITEMINFO mii;
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_STATE;
+    mii.fState = fLocked ? MFS_CHECKED : MFS_UNCHECKED;
+    command = SetMenuItemInfo(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, FALSE, &mii);
+
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
                 clickLocation.x, clickLocation.y, 0, m_hWnd, NULL);
@@ -1588,13 +1597,13 @@ LRESULT CInternetToolbar::OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
 
     if (nID != 0)
     {
-        if (nID == (UINT)gBackCommandID || nID == (UINT)gForwardCommandID)
+        if (nID == (UINT)IDM_GOTO_BACK || nID == (UINT)IDM_GOTO_FORWARD)
         {
             // TODO: Should this call QueryService?
             hResult = fSite->QueryInterface(IID_PPV_ARG(IBrowserService, &browserService));
             hResult = browserService->GetTravelLog(&travelLog);
             hResult = travelLog->GetToolTipText(browserService,
-                (nID == (UINT)gBackCommandID) ? TLOG_BACK : TLOG_FORE,
+                (nID == (UINT)IDM_GOTO_BACK) ? TLOG_BACK : TLOG_FORE,
                 0, tempString, 299);
             if (FAILED(hResult))
             {
