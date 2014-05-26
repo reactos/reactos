@@ -183,9 +183,9 @@ GetServiceDescription(LPTSTR lpServiceName)
                                                   dwSize * sizeof(TCHAR));
                         if (lpDescription)
                         {
-                            _tcscpy_s(lpDescription,
-                                      dwSize,
-                                      pServiceDescription->lpDescription);
+                            StringCchCopy(lpDescription,
+                                          dwSize,
+                                          pServiceDescription->lpDescription);
                         }
                     }
                 }
