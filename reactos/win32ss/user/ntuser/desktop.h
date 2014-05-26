@@ -10,6 +10,11 @@ typedef struct _DESKTOP
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *rpwinstaParent;
     DWORD dwDTFlags;
+    DWORD_PTR dwDesktopId;
+    PMENU spmenuSys;
+    PMENU spmenuDialogSys;
+    PMENU spmenuHScroll;
+    PMENU spmenuVScroll;
     PWND spwndForeground;
     PWND spwndTray;
     PWND spwndMessage;

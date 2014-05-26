@@ -454,7 +454,6 @@ NtUserCreateWindowStation(
    KeInitializeSpinLock(&WindowStationObject->Lock);
    InitializeListHead(&WindowStationObject->DesktopListHead);
    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
-   WindowStationObject->SystemMenuTemplate = (HANDLE)0;
    WindowStationObject->Name = WindowStationName;
    WindowStationObject->dwSessionId = NtCurrentPeb()->SessionId;
 
