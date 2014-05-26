@@ -345,6 +345,8 @@ typedef struct tagMENULIST
 #define MNF_DESKTOPMN   0x0040
 #define MNF_SYSDESKMN   0x0080
 #define MNF_SYSSUBMENU  0x0100
+// Hack
+#define MNF_SYSMENU     0x0200
 
 typedef struct tagMENU
 {
