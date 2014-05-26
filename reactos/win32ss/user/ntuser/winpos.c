@@ -362,7 +362,6 @@ done:
    if (WndTo) UserDerefObjectCo(WndTo);
 }
 
-
 VOID FASTCALL
 WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
 {
@@ -623,12 +622,13 @@ co_WinPosArrangeIconicWindows(PWND parent)
    ASSERT_REFS_CO(parent);
 
    IntGetClientRect( parent, &rectParent );
-   // FIXME: Support gspv.mm.iArrange.
+   // FIXME: Support Minimize Metrics gspv.mm.iArrange.
+   // Default: ARW_BOTTOMLEFT
    x = rectParent.left;
    y = rectParent.bottom;
 
-   xspacing = (UserGetSystemMetrics(SM_CXMINSPACING)/2)+UserGetSystemMetrics(SM_CXBORDER);
-   yspacing = (UserGetSystemMetrics(SM_CYMINSPACING)/2)+UserGetSystemMetrics(SM_CYBORDER);
+   xspacing = UserGetSystemMetrics(SM_CXMINIMIZED);
+   yspacing = UserGetSystemMetrics(SM_CYMINIMIZED);
 
    Child = parent->spwndChild;
    while(Child)
@@ -645,7 +645,7 @@ co_WinPosArrangeIconicWindows(PWND parent)
          Child->InternalPos.IconPos.y = sy;
          Child->InternalPos.flags |= WPF_MININIT;
 
-         co_WinPosSetWindowPos( Child, 0, sx, sy, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_ASYNCWINDOWPOS);
+         co_WinPosSetWindowPos( Child, 0, sx, sy, xspacing, yspacing, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_ASYNCWINDOWPOS);
 
          UserDerefObjectCo(Child);
 
@@ -682,12 +682,13 @@ WinPosFindIconPos(PWND Window, POINT *Pos)
    }
 
    IntGetClientRect( pwndParent, &rectParent );
-   // FIXME: Support gspv.mm.iArrange.
+   // FIXME: Support Minimize Metrics gspv.mm.iArrange.
+   // Default: ARW_BOTTOMLEFT
    x = rectParent.left;
    y = rectParent.bottom;
 
-   xspacing = (UserGetSystemMetrics(SM_CXMINSPACING)/2)+UserGetSystemMetrics(SM_CXBORDER);
-   yspacing = (UserGetSystemMetrics(SM_CYMINSPACING)/2)+UserGetSystemMetrics(SM_CYBORDER);
+   xspacing = UserGetSystemMetrics(SM_CXMINIMIZED);
+   yspacing = UserGetSystemMetrics(SM_CYMINIMIZED);
 
    // Set to default position when minimized.
    Pos->x = x + UserGetSystemMetrics(SM_CXBORDER);
@@ -786,10 +787,6 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
 
                if (!(old_style & WS_MINIMIZE)) SwpFlags |= SWP_STATECHANGED;
 
-               /*ERR("Minimize: %d,%d %dx%d\n",
-                      wpl.ptMinPosition.x, wpl.ptMinPosition.y, UserGetSystemMetrics(SM_CXMINIMIZED),
-                                                   UserGetSystemMetrics(SM_CYMINIMIZED));
-                */
                RECTL_vSetRect(NewPos, wpl.ptMinPosition.x, wpl.ptMinPosition.y,
                              wpl.ptMinPosition.x + UserGetSystemMetrics(SM_CXMINIMIZED),
                              wpl.ptMinPosition.y + UserGetSystemMetrics(SM_CYMINIMIZED));
@@ -814,7 +811,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
 
                if (!(old_style & WS_MAXIMIZE)) SwpFlags |= SWP_STATECHANGED;
                RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
-//                              wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
+                              //wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
                               Size.x, Size.y);
                break;
             }
@@ -830,26 +827,18 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                old_style = IntSetStyle( Wnd, 0, WS_MINIMIZE | WS_MAXIMIZE );
                if (old_style & WS_MINIMIZE)
                {
-
                   if (Wnd->InternalPos.flags & WPF_RESTORETOMAXIMIZED)
                   {
                      co_WinPosGetMinMaxInfo(Wnd, &Size, &wpl.ptMaxPosition, NULL, NULL);
                      IntSetStyle( Wnd, WS_MAXIMIZE, 0 );
                      SwpFlags |= SWP_STATECHANGED;
-                     /*ERR("Restore to Max: %d,%d %dx%d\n",
-                      wpl.ptMaxPosition.x, wpl.ptMaxPosition.y, Size.x, Size.y);
-                     */
                      RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
-//                                    wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
-                                    Size.x, Size.y);
+                                    wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
                      break;
                   }
                   else
                   {
                      *NewPos = wpl.rcNormalPosition;
-                     /*ERR("Restore Max: %d,%d %dx%d\n",
-                      NewPos->left, NewPos->top, NewPos->right - NewPos->left, NewPos->bottom - NewPos->top);
-                      */
                      NewPos->right -= NewPos->left;
                      NewPos->bottom -= NewPos->top;
                      break;
@@ -864,9 +853,6 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                   SwpFlags |= SWP_STATECHANGED;
                   Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
                   *NewPos = wpl.rcNormalPosition;
-                     /*ERR("Restore Min: %d,%d %dx%d\n",
-                      NewPos->left, NewPos->top, NewPos->right - NewPos->left, NewPos->bottom - NewPos->top);
-                      */
                   NewPos->right -= NewPos->left;
                   NewPos->bottom -= NewPos->top;
                   break;
@@ -1284,8 +1270,8 @@ co_WinPosDoWinPosChanging(PWND Window,
    {
       if (Window->style & WS_MINIMIZE)
       {
-         WindowRect->right  = WindowRect->left + (UserGetSystemMetrics(SM_CXMINSPACING)/2)+UserGetSystemMetrics(SM_CXBORDER);
-         WindowRect->bottom = WindowRect->top  + (UserGetSystemMetrics(SM_CYMINSPACING)/2)+UserGetSystemMetrics(SM_CYBORDER);
+         WindowRect->right  = WindowRect->left + UserGetSystemMetrics(SM_CXMINIMIZED);
+         WindowRect->bottom = WindowRect->top  + UserGetSystemMetrics(SM_CYMINIMIZED);
       }
       else
       {
