@@ -1,6 +1,5 @@
 # msvcrt.dll - MS VC++ Run Time Library
 
-@ cdecl $I10_OUTPUT() MSVCRT_I10_OUTPUT
 @ cdecl -i386 -norelay ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) __thiscall_MSVCRT___non_rtti_object_copy_ctor
 @ cdecl -arch=win64 -norelay ??0__non_rtti_object@@QEAA@AEBV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor
 @ cdecl -i386 -norelay ??0__non_rtti_object@@QAE@PBD@Z(ptr) __thiscall_MSVCRT___non_rtti_object_ctor
@@ -95,6 +94,7 @@
 @ cdecl ?unexpected@@YAXXZ() MSVCRT_unexpected
 @ cdecl -i386 -norelay ?what@exception@@UBEPBDXZ() __thiscall_MSVCRT_what_exception
 @ cdecl -arch=x86_64 -stub -norelay ?what@exception@@UEBAPEBDXZ() __thiscall_MSVCRT_what_exception
+@ cdecl $I10_OUTPUT() MSVCRT_I10_OUTPUT
 @ cdecl -arch=i386 _CIacos()
 @ cdecl -arch=i386 _CIasin()
 @ cdecl -arch=i386 _CIatan()
@@ -127,7 +127,6 @@
 # stub __CxxExceptionFilter
 @ cdecl -arch=i386,x86_64 -norelay __CxxFrameHandler(ptr ptr ptr ptr)
 @ cdecl -arch=i386 -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
-@ cdecl -arch=i386 -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
 @ stdcall -i386 __CxxLongjmpUnwind(ptr)
 @ cdecl -i386 __CxxQueryExceptionSize()
 # stub -i386 __CxxRegisterExceptionObject
@@ -152,11 +151,9 @@
 @ cdecl __crtGetStringTypeW(long long wstr long ptr)
 @ cdecl __crtLCMapStringA(long long str long str long long long)
 @ cdecl __crtLCMapStringW(long long wstr long wstr long long long)
-@ cdecl __daylight() __p__daylight
 @ cdecl __dllonexit(ptr ptr ptr)
 @ cdecl __doserrno()
 @ cdecl __fpecode()
-@ cdecl __get_app_type()
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
 @ extern __initenv
 @ cdecl __iob_func()
@@ -276,7 +273,6 @@
 @ varargs _cwprintf(wstr)
 # @ varargs _cwscanf(wstr)
 @ extern _daylight
-@ cdecl _difftime64(long long)
 @ extern _dstbias
 @ cdecl _dup(long)
 @ cdecl _dup2(long long)
@@ -288,7 +284,6 @@
 @ cdecl _errno()
 @ cdecl -i386 _except_handler2(ptr ptr ptr ptr)
 @ cdecl -i386 _except_handler3(ptr ptr ptr ptr)
-@ cdecl -i386 _except_handler4_common(ptr ptr ptr ptr ptr ptr)
 @ varargs _execl(str str)
 @ varargs _execle(str str)
 @ varargs _execlp(str str)
@@ -325,17 +320,13 @@
 @ cdecl _fpreset()
 @ cdecl _fputchar(long)
 @ cdecl _fputwchar(long)
-@ cdecl _fseeki64(ptr long long long)
 @ cdecl _fsopen(str str long)
 @ cdecl _fstat(long ptr)
 @ cdecl _fstat64(long ptr)
 @ cdecl _fstati64(long ptr)
-@ cdecl -ret64 _ftelli64(ptr)
 @ cdecl _ftime(ptr)
 @ cdecl _ftime64(ptr)
 @ cdecl -arch=i386 -ret64 _ftol()
-@ cdecl -arch=i386 -ret64 _ftol2() _ftol
-@ cdecl -arch=i386 -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
 @ cdecl _fullpath(ptr str long)
 @ cdecl _futime(long ptr)
 @ cdecl _futime64(long ptr)
@@ -371,7 +362,6 @@
 @ cdecl _i64toa(long long ptr long)
 @ cdecl _i64tow(long long ptr long)
 @ cdecl _initterm(ptr ptr)
-@ cdecl _initterm_e(ptr ptr)
 @ cdecl -arch=i386 _inp(long) MSVCRT__inp
 @ cdecl -arch=i386 _inpd(long) MSVCRT__inpd
 @ cdecl -arch=i386 _inpw(long) MSVCRT__inpw
@@ -417,7 +407,6 @@
 @ cdecl _lfind(ptr ptr ptr long ptr)
 @ cdecl _loaddll(str)
 @ cdecl -i386 _local_unwind2(ptr long)
-@ cdecl -i386 _local_unwind4(ptr ptr long)
 @ cdecl _localtime64(ptr)
 @ cdecl _lock(long)
 @ cdecl _locking(long long long)
@@ -531,7 +520,6 @@
 # stub _scprintf
 # stub _scwprintf
 @ cdecl _searchenv(str str ptr)
-@ stdcall -i386 _seh_longjmp_unwind4(ptr)
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
 # stub _set_SSE2_enable
 @ cdecl _set_error_mode(long)
@@ -799,7 +787,6 @@
 @ cdecl -i386 longjmp(ptr long)
 @ cdecl malloc(long)
 @ cdecl mblen(ptr long)
-@ cdecl mbrlen(ptr long ptr)
 @ cdecl mbstowcs(ptr str long)
 @ cdecl mbtowc(wstr str long)
 @ cdecl memchr(ptr long long)
@@ -851,7 +838,6 @@
 @ cdecl strncat(str str long)
 @ cdecl strncmp(str str long)
 @ cdecl strncpy(ptr str long)
-@ cdecl strnlen(str long)
 @ cdecl strpbrk(str str)
 @ cdecl strrchr(str long)
 @ cdecl strspn(str str)
@@ -892,7 +878,6 @@
 @ cdecl wcsncat(wstr wstr long)
 @ cdecl wcsncmp(wstr wstr long)
 @ cdecl wcsncpy(ptr wstr long)
-@ cdecl wcsnlen(wstr long)
 @ cdecl wcspbrk(wstr wstr)
 @ cdecl wcsrchr(wstr long)
 @ cdecl wcsspn(wstr wstr)
@@ -908,8 +893,7 @@
 @ varargs wscanf(wstr)
 
 # Functions not exported in native dll:
-@ cdecl _get_invalid_parameter_handler()
-@ cdecl _set_invalid_parameter_handler(ptr)
+@ cdecl -arch=i386 -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
 # Gecko
 @ cdecl _controlfp_s(ptr long long)
 @ varargs _snwprintf_s(ptr long long ptr)
