@@ -1029,7 +1029,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         pData->dwFlags = pDrvInfoData.dwFlags;
 
         pUserColorControl->dwSize = DDCOLORCONTROLCALLBACKSSIZE;
-        pUserColorControl->dwFlags = pUserColorControl->dwFlags;
+        pUserColorControl->dwFlags = pColorControl.dwFlags;
 
         if (pColorControl.ColorControl != NULL)
         {
