@@ -443,8 +443,8 @@ static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
     *(DestBuffer++) = 0;
 
     /* Store the special program name tag */
-    *(DestBuffer++) = LOWORD(DOS_PROGRAM_NAME_TAG);
-    *(DestBuffer++) = HIWORD(DOS_PROGRAM_NAME_TAG);
+    *(DestBuffer++) = LOBYTE(DOS_PROGRAM_NAME_TAG);
+    *(DestBuffer++) = HIBYTE(DOS_PROGRAM_NAME_TAG);
 
     /* Copy the program name after the environment block */
     strcpy(DestBuffer, ProgramName);
