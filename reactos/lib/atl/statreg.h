@@ -272,7 +272,7 @@ private:
 			{
 				len = MultiByteToWideChar(CP_ACP, 0, regstra, filelen, NULL, 0) + 1;
 				regstrw = reinterpret_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR)));
-				if (regstra == NULL)
+				if (regstrw == NULL)
 				{
 					HeapFree(GetProcessHeap(), 0, regstra);
 					return E_OUTOFMEMORY;
