@@ -358,8 +358,6 @@ unsigned short __readfsword(unsigned long Offset);
 #pragma intrinsic(__readfsword)
 unsigned long __readfsdword(unsigned long Offset);
 #pragma intrinsic(__readfsdword)
-unsigned __int64 __readfsqword(unsigned long);
-#pragma intrinsic(__readfsqword)
 void __incfsbyte(unsigned long Offset);
 #pragma intrinsic(__incfsbyte)
 void __incfsword(unsigned long Offset);
