@@ -2018,10 +2018,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
 {
     UCHAR TableReg[6];
     FAST486_MOD_REG_RM ModRegRm;
-    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    BOOLEAN OperandSize, AddressSize;
     FAST486_SEG_REGS Segment = FAST486_REG_DS;
 
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+
     NO_LOCK_PREFIX();
+    TOGGLE_OPSIZE(OperandSize);
     TOGGLE_ADSIZE(AddressSize);
 
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -2117,6 +2120,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
             State->Gdtr.Size = *((PUSHORT)TableReg);
             State->Gdtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
 
+            /* In 16-bit mode the highest byte is masked out */
+            if (!OperandSize) State->Gdtr.Address &= 0x00FFFFFF;
+
             return TRUE;
         }
 
@@ -2152,6 +2158,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
             /* Load the new IDT */
             State->Idtr.Size = *((PUSHORT)TableReg);
             State->Idtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
+
+            /* In 16-bit mode the highest byte is masked out */
+            if (!OperandSize) State->Idtr.Address &= 0x00FFFFFF;
 
             return TRUE;
         }

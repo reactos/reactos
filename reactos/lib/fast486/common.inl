@@ -542,24 +542,32 @@ Fast486LoadSegment(PFAST486_STATE State,
         {
             /* Loading a data segment */
 
-            if (!GdtEntry.SystemType)
+            if (GET_SEGMENT_INDEX(Selector) != 0)
             {
-                /* This is a special descriptor */
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
-                return FALSE;
-            }
+                if (!GdtEntry.SystemType)
+                {
+                    /* This is a special descriptor */
+                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                    return FALSE;
+                }
 
-            if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
-                || (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
-            {
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
-                return FALSE;
-            }
+                if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
+                    || (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
+                {
+                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                    return FALSE;
+                }
 
-            if (!GdtEntry.Present)
+                if (!GdtEntry.Present)
+                {
+                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
+                    return FALSE;
+                }
+            }
+            else
             {
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
-                return FALSE;
+                /* This is a NULL selector */
+                RtlZeroMemory(&GdtEntry, sizeof(GdtEntry));
             }
         }
 
@@ -572,6 +580,7 @@ Fast486LoadSegment(PFAST486_STATE State,
         CachedDescriptor->DirConf = GdtEntry.DirConf;
         CachedDescriptor->Executable = GdtEntry.Executable;
         CachedDescriptor->SystemType = GdtEntry.SystemType;
+        CachedDescriptor->Rpl = GET_SEGMENT_RPL(Selector);
         CachedDescriptor->Dpl = GdtEntry.Dpl;
         CachedDescriptor->Present = GdtEntry.Present;
         CachedDescriptor->Size = GdtEntry.Size;

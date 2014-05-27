@@ -159,7 +159,7 @@ Fast486InterruptInternal
     PFAST486_STATE State,
     USHORT SegmentSelector,
     ULONG Offset,
-    BOOLEAN InterruptGate
+    ULONG GateType
 );
 
 VOID
