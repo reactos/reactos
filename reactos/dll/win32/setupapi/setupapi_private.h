@@ -31,6 +31,8 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <wingdi.h>
+#include <winspool.h>
 #include <wincon.h>
 #include <objbase.h>
 #include <cfgmgr32.h>
