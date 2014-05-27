@@ -239,7 +239,7 @@ function(add_cd_file)
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
-                add_dependencies(bootcd ${_CD_TARGET})
+                add_dependencies(bootcd ${_CD_TARGET} converted_hives)
             endif()
         else()
             #add it in reactos.cab
@@ -259,7 +259,7 @@ function(add_cd_file)
     if(NOT __cd EQUAL -1)
         #manage dependency
         if(_CD_TARGET)
-            add_dependencies(livecd ${_CD_TARGET})
+            add_dependencies(livecd ${_CD_TARGET} converted_hives)
         endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
@@ -289,7 +289,7 @@ function(add_cd_file)
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
-                add_dependencies(bootcdregtest ${_CD_TARGET})
+                add_dependencies(bootcdregtest ${_CD_TARGET} converted_hives)
             endif()
         else()
             #add it in reactos.cab
