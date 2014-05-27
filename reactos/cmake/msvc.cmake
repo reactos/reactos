@@ -291,7 +291,9 @@ function(generate_import_lib _libname _dllname _spec_file)
 endfunction()
 
 if(ARCH STREQUAL "amd64")
-    add_definitions(/D__x86_64__)
+    # This is NOT a typo.
+    # See https://software.intel.com/en-us/forums/topic/404643
+    add_definitions(/D__x86_64)
     set(SPEC2DEF_ARCH x86_64)
 elseif(ARCH STREQUAL "arm")
     add_definitions(/D__arm__)
