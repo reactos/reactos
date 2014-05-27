@@ -584,8 +584,10 @@ void __halt(void);
 #pragma intrinsic(__halt)
 void __ud2(void);
 #pragma intrinsic(__ud2)
+#if (_MSC_VER >= 1700)
 __declspec(noreturn) void __fastfail(unsigned int Code);
 #pragma intrinsic(__fastfail)
+#endif
 #endif
 #if defined(_M_ARM)
 int __trap(int Arg1, ...);
@@ -749,8 +751,10 @@ unsigned char __vmx_vmwrite(size_t Field, size_t FieldValue);
 /** Misc **/
 void __nop(void);
 #pragma intrinsic(__nop)
+#if (_MSC_VER >= 1700)
 void __code_seg(const char *);
 #pragma intrinsic(__code_seg)
+#endif
 #ifdef _M_ARM
 int _AddSatInt(int, int);
 #pragma intrinsic(_AddSatInt)
