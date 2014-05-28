@@ -18,7 +18,7 @@ typedef struct _COMMAND
 
 COMMAND cmds[] =
 {
-    {L"accounts",   unimplemented},
+    {L"accounts",   cmdAccounts},
     {L"computer",   unimplemented},
     {L"config",     unimplemented},
     {L"continue",   cmdContinue},
