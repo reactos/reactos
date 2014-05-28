@@ -37,7 +37,20 @@ BEGIN
     MENUITEM "Ε&λαχιστοποίηση", SC_MINIMIZE
     MENUITEM "Με&γιστοποίηση", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Κλείσημο\tAlt-F4", SC_CLOSE
+    MENUITEM "&Κλείσημο\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Επαναφορά", SC_RESTORE
+    MENUITEM "&Μετακίνηση", SC_MOVE
+    MENUITEM "Μέ&γεθος", SC_SIZE
+    MENUITEM "Ε&λαχιστοποίηση", SC_MINIMIZE
+    MENUITEM "Με&γιστοποίηση", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Κλείσημο\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "&Επόμενο\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

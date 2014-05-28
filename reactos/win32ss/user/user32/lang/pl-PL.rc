@@ -42,7 +42,20 @@ BEGIN
     MENUITEM "&Minimalizuj", SC_MINIMIZE
     MENUITEM "Mak&symalizuj", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "Zam&knij\tAlt-F4", SC_CLOSE
+    MENUITEM "Zam&knij\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Przywróć", SC_RESTORE
+    MENUITEM "Prz&enieś", SC_MOVE
+    MENUITEM "&Rozmiar", SC_SIZE
+    MENUITEM "&Minimalizuj", SC_MINIMIZE
+    MENUITEM "Mak&symalizuj", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "Zam&knij\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "Nas&tępny\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

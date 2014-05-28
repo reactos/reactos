@@ -37,7 +37,20 @@ BEGIN
     MENUITEM "Ke&cilkan", SC_MINIMIZE
     MENUITEM "Maksi&malkan", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Tutup\tAlt-F4", SC_CLOSE
+    MENUITEM "&Tutup\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Kembalikan", SC_RESTORE
+    MENUITEM "&Pindahkan", SC_MOVE
+    MENUITEM "&Ukuran", SC_SIZE
+    MENUITEM "Ke&cilkan", SC_MINIMIZE
+    MENUITEM "Maksi&malkan", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Tutup\tCrtl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "&Berikutnya\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
