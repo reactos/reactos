@@ -1684,12 +1684,12 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
    if (!Popup)
    {
       //hNewMenu = co_IntLoadSysMenuTemplate();
-      //if ( Window->ExStyle & WS_EX_MDICHILD )
-      //{
-      //   RtlInitUnicodeString( &MenuName, L"SYSMENUMDI");
-      //   hNewMenu = co_IntCallLoadMenu( hModClient, &MenuName);
-      //}
-      //else
+      if ( Window->ExStyle & WS_EX_MDICHILD )
+      {
+         RtlInitUnicodeString( &MenuName, L"SYSMENUMDI");
+         hNewMenu = co_IntCallLoadMenu( hModClient, &MenuName);
+      }
+      else
       {
          RtlInitUnicodeString( &MenuName, L"SYSMENU");
          hNewMenu = co_IntCallLoadMenu( hModClient, &MenuName);
