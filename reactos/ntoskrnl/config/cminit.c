@@ -240,6 +240,28 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
 
 NTSTATUS
 NTAPI
+CmpDestroyHive(IN PCMHIVE CmHive)
+{
+    /* Remove the hive from the list */
+    ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
+    RemoveEntryList(&CmHive->HiveList);
+    ExReleasePushLock(&CmpHiveListHeadLock);
+
+    /* Delete the flusher lock */
+    ExDeleteResourceLite(CmHive->FlusherLock);
+    ExFreePoolWithTag(CmHive->FlusherLock, TAG_CM);
+
+    /* Delete the view lock */
+    ExFreePoolWithTag(CmHive->ViewLock, TAG_CM);
+
+    /* Free the hive */
+    HvFree(&CmHive->Hive);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
                  IN PCWSTR Extension OPTIONAL,
                  OUT PHANDLE Primary,

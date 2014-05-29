@@ -361,3 +361,62 @@ CmpRemoveValueFromList(IN PHHIVE Hive,
     ChildList->Count = Count;
     return STATUS_SUCCESS;
 }
+
+NTSTATUS
+NTAPI
+CmpCopyKeyValueList(IN PHHIVE SourceHive,
+                    IN PCHILD_LIST SrcValueList,
+                    IN PHHIVE DestinationHive,
+                    IN OUT PCHILD_LIST DestValueList,
+                    IN HSTORAGE_TYPE StorageType)
+
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    HCELL_INDEX CellIndex = HCELL_NIL;
+    ULONG Index;
+    PCELL_DATA SrcListData = NULL;
+    PCELL_DATA DestListData = NULL;
+
+    PAGED_CODE();
+
+    /* Set the count */
+    DestValueList->Count = SrcValueList->Count;
+
+    /* Check if the list is empty */
+    if (!DestValueList->Count)
+    {
+        DestValueList->List = HCELL_NIL;
+        return STATUS_SUCCESS;
+    }
+
+    /* Create a simple copy of the list */
+    CellIndex = CmpCopyCell(SourceHive,
+                            SrcValueList->List,
+                            DestinationHive,
+                            StorageType);
+    if (CellIndex == HCELL_NIL) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the source and the destination value list */
+    SrcListData = HvGetCell(SourceHive, SrcValueList->List);
+    DestListData = HvGetCell(DestinationHive, CellIndex);
+
+    /* Copy the actual values */
+    for (Index = 0; Index < SrcValueList->Count; Index++)
+    {
+        DestListData->u.KeyList[Index] = CmpCopyCell(SourceHive,
+                                                     SrcListData->u.KeyList[Index],
+                                                     DestinationHive,
+                                                     StorageType);
+        if (DestListData->u.KeyList[Index] == HCELL_NIL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+        }
+    }
+
+    /* Release the cells */
+    if (SrcListData) HvReleaseCell(SourceHive, SrcValueList->List);
+    if (DestListData) HvReleaseCell(DestinationHive, CellIndex);
+
+    return Status;
+}
