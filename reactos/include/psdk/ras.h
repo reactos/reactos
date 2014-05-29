@@ -13,7 +13,7 @@ extern "C"
 /* TODO
 include <basetsd.h> from winnt.h so that this typedef is not necessary
 */
-#ifndef _BASETSD_H
+#ifndef _BASETSD_H_
 typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #endif
 
@@ -787,7 +787,7 @@ typedef struct tagRASCOMMSETTINGS
 typedef DWORD (WINAPI *PFNRASSETCOMMSETTINGS) (HANDLE hPort,RASCOMMSETTINGS *pRasCommSettings,PVOID  pvReserved);
 typedef struct tagRASCUSTOMSCRIPTEXTENSIONS
 {
-    DWORD                 dwSize;                  
+    DWORD                 dwSize;
     PFNRASSETCOMMSETTINGS pfnRasSetCommSettings;
 } RASCUSTOMSCRIPTEXTENSIONS;
 #endif /*(WINVER >= 0x501)*/

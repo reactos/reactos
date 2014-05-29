@@ -473,7 +473,7 @@ static const WCHAR LOCALE_NAME_SYSTEM_DEFAULT[] = {'!','s','y','s','-','d','e','
 #define VS_ALLOW_LATIN 0x1
 #define GSS_ALLOW_INHERITED_COMMON 0x1
 #endif
-#ifndef  _BASETSD_H
+#ifndef  _BASETSD_H_
 typedef long LONG_PTR;
 #endif
 
