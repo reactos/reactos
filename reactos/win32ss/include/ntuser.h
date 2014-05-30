@@ -306,6 +306,9 @@ C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 /* Menu Item fType. */
 #define MFT_RTOL 0x6000
 
+/* Menu Item fState. */
+#define MFS_HBMMENUBMP 0x20000000
+
 typedef struct tagITEM
 {
     UINT fType;

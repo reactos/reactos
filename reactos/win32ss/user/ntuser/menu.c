@@ -178,15 +178,7 @@ PMENU FASTCALL VerifyMenu(PMENU pMenu)
 
 BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse, BOOL RemoveFromProcess)
 {
-    /* DestroyMenu should not destroy system menu popup owner */
-    if ((pMenu->fFlags & (MNF_POPUP | MNF_SYSSUBMENU)) == MNF_POPUP && pMenu->hWnd)
-    {
-       //PWND pWnd = ValidateHwndNoErr(pMenu->hWnd);
-       ERR("FIXME Pop up menu window thing'ie\n");
-       
-       //co_UserDestroyWindow( pWnd );
-       //pMenu->hWnd = 0;
-    }
+    PMENU SubMenu;
 
     if (pMenu->rgItems) /* recursively destroy submenus */
     {
@@ -194,33 +186,46 @@ BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse, BOOL RemoveFromProcess)
        ITEM *item = pMenu->rgItems;
        for (i = pMenu->cItems; i > 0; i--, item++)
        {
-           pMenu->cItems--; //// I hate recursion logic! (jt) 4/2014. See r63028 comment for IntDeleteMenuItems.
+           SubMenu = item->spSubMenu;
+           item->spSubMenu = NULL;
+
+           /* Remove Item Text */
            FreeMenuText(pMenu,item);
-           if (bRecurse && item->spSubMenu)//VerifyMenu(item->spSubMenu))
+
+           /* Remove Item Bitmap and set it for this process */
+           if (item->hbmp && !(item->fState & MFS_HBMMENUBMP))
            {
-              IntDestroyMenu(item->spSubMenu, bRecurse, RemoveFromProcess);
-              item->spSubMenu = NULL;
+              GreSetObjectOwner(item->hbmp, GDI_OBJ_HMGR_POWNED);
+              item->hbmp = NULL;
+           }
+
+           /* Remove Item submenu */
+           if (bRecurse && SubMenu)//VerifyMenu(SubMenu))
+           {
+              /* Release submenu since it was referenced when inserted */
+              IntReleaseMenuObject(SubMenu);
+              IntDestroyMenuObject(SubMenu, bRecurse, RemoveFromProcess);
            }
        }
+       /* Free the Item */
        DesktopHeapFree(pMenu->head.rpdesk, pMenu->rgItems );
        pMenu->rgItems = NULL; 
-       pMenu->cItems = 0; //// What ever~!
+       pMenu->cItems = 0;
     }
     return TRUE;
 }
 
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU Menu,
-                     BOOL bRecurse, BOOL RemoveFromProcess)
+IntDestroyMenuObject(PMENU Menu, BOOL bRecurse, BOOL RemoveFromProcess)
 {
    if(Menu)
    {
       PWND Window;
-      
+
       /* Remove all menu items */
       IntDestroyMenu( Menu, bRecurse, RemoveFromProcess);
 
-      if(RemoveFromProcess)
+      if (RemoveFromProcess)
       {
          RemoveEntryList(&Menu->ListEntry);
       }
@@ -234,9 +239,17 @@ IntDestroyMenuObject(PMENU Menu,
             if (Window)
             {
                Window->IDMenu = 0;
+
+               /* DestroyMenu should not destroy system menu popup owner */
+               if ((Menu->fFlags & (MNF_POPUP | MNF_SYSSUBMENU)) == MNF_POPUP)
+               {
+                  // Should we check it to see if it has Class?
+                  ERR("FIXME Pop up menu window thing'ie\n");
+                  //co_UserDestroyWindow( Window );
+                  //Menu->hWnd = 0;
+               }
             }
          }
-         //UserDereferenceObject(Menu);
          ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
          if (!ret)
          {  // Make sure it is really dead or just marked for deletion.
@@ -338,7 +351,7 @@ PITEM FASTCALL MENU_FindItem( PMENU *pmenu, UINT *nPos, UINT wFlags )
 BOOL FASTCALL
 IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
 {
-    PITEM item, NewItems;
+    PITEM item;
 
     TRACE("(menu=%p pos=%04x flags=%04x)\n",pMenu, nPos, wFlags);
     if (!(item = MENU_FindItem( &pMenu, &nPos, wFlags ))) return FALSE;
@@ -364,10 +377,7 @@ IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
 	    item++;
 	    nPos++;
 	}
-        NewItems = DesktopHeapAlloc(pMenu->head.rpdesk, pMenu->cItems * sizeof(ITEM));
-        RtlCopyMemory(NewItems, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
-        DesktopHeapFree(pMenu->head.rpdesk, pMenu->rgItems);
-        pMenu->rgItems = NewItems;
+	pMenu->rgItems = DesktopHeapReAlloc(pMenu->head.rpdesk, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
     }
     return TRUE;
 }
@@ -819,6 +829,10 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
    if(lpmii->fMask & MIIM_BITMAP)
    {
       MenuItem->hbmp = lpmii->hbmpItem;
+      if (MenuItem->hbmp <= HBMMENU_POPUP_MINIMIZE && MenuItem->hbmp >= HBMMENU_CALLBACK)
+         MenuItem->fState |= MFS_HBMMENUBMP;
+      else
+         MenuItem->fState &= ~MFS_HBMMENUBMP; 
    }
    if(lpmii->fMask & MIIM_CHECKMARKS)
    {
@@ -858,6 +872,7 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
                ERR("Pop Up Menu Double Trouble!\n");
                SubMenuObject = IntCreateMenu(&hMenu, FALSE); // It will be marked.
                if (!SubMenuObject) return FALSE;
+               IntReleaseMenuObject(SubMenuObject); // This will be referenced again after insertion.
                circref = TRUE;
             }
             if ( MENU_depth( SubMenuObject, 0) > MAXMENUDEPTH )
