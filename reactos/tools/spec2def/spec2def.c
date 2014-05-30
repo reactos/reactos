@@ -258,7 +258,13 @@ OutputHeader_asmstub(FILE *file, char *libname)
     fprintf(file, "; File generated automatically, do not edit! \n\n");
 
     if (giArch == ARCH_X86)
+    {
         fprintf(file, ".586\n.model flat\n");
+    }
+    else if (giArch == ARCH_ARM)
+    {
+        fprintf(file, "#include <kxarm.h>\n        TEXTAREA\n");
+    }
 
     fprintf(file, ".code\n");
 }

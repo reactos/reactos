@@ -188,7 +188,14 @@ int main(int argc, char* argv[])
             case TYPE_CONSTANT:
                 if (ms_format)
                 {
-                    fprintf(output, "%s equ 0%"PRIx64"h\n", data.Name, data.Value);
+                    if (Machine == IMAGE_FILE_MACHINE_ARMNT)
+                    {
+                        fprintf(output, "%s equ 0x%"PRIx64"\n", data.Name, data.Value);
+                    }
+                    else
+                    {
+                        fprintf(output, "%s equ 0%"PRIx64"h\n", data.Name, data.Value);
+                    }
                 }
                 else
                 {
