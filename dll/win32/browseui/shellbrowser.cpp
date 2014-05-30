@@ -2539,8 +2539,16 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::_SetFocus(LPTOOLBARITEM ptbi, HWND hwnd
     return E_NOTIMPL;
 }
 
+extern HRESULT IUnknown_HasFocusIO(IUnknown * punk);
+extern HRESULT IUnknown_TranslateAcceleratorIO(IUnknown * punk, MSG * pmsg);
 HRESULT STDMETHODCALLTYPE CShellBrowser::v_MayTranslateAccelerator(MSG *pmsg)
 {
+    for (int i = 0; i < 3; i++)
+    {
+        if (IUnknown_TranslateAcceleratorIO(fClientBars[i].clientBar, pmsg) == S_OK)
+            return S_OK;
+    }
+
     if (fCurrentShellView->TranslateAcceleratorW(pmsg) != S_OK)
     {
         if (TranslateAcceleratorSB(pmsg, 0) != S_OK)

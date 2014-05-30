@@ -1793,25 +1793,6 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             return FALSE;
         }
 
-        case LVN_KEYDOWN:
-        {
-            LPNMLVKEYDOWN plvKeyDown = (LPNMLVKEYDOWN) lpnmh;
-
-            /* initiate a rename of the selected file or directory */
-            if (plvKeyDown->wVKey == VK_BACK)
-            {
-                LPSHELLBROWSER lpSb;
-                if ((lpSb = (LPSHELLBROWSER)SendMessageW(m_hWndParent, CWM_GETISHELLBROWSER, 0, 0)))
-                {
-                    lpSb->BrowseObject(NULL, SBSP_PARENT);
-                }
-            }
-           
-            else
-                FIXME("LVN_KEYDOWN key=0x%08x\n", plvKeyDown->wVKey);
-        }
-        break;
-
         default:
             TRACE("-- %p WM_COMMAND %x unhandled\n", this, lpnmh->code);
             break;

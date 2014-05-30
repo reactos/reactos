@@ -73,6 +73,28 @@ extern HRESULT CreateBrandBand(REFIID riid, void **ppv);
 extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
 extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
 
+HRESULT IUnknown_HasFocusIO(IUnknown * punk)
+{
+    CComPtr<IInputObject> pio;
+    HRESULT hr;
+    hr = punk->QueryInterface(IID_PPV_ARG(IInputObject, &pio));
+    if (FAILED(hr))
+        return hr;
+    return pio->HasFocusIO();
+}
+
+HRESULT IUnknown_TranslateAcceleratorIO(IUnknown * punk, MSG * pmsg)
+{
+    CComPtr<IInputObject> pio;
+    HRESULT hr;
+    if (!punk)
+        return E_FAIL;
+    hr = punk->QueryInterface(IID_PPV_ARG(IInputObject, &pio));
+    if (FAILED(hr))
+        return hr;
+    return pio->TranslateAcceleratorIO(pmsg);
+}
+
 typedef HRESULT(*PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
 
 class CInternetToolbar;
@@ -740,12 +762,46 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::UIActivateIO(BOOL fActivate, LPMSG l
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::HasFocusIO()
 {
-    return E_NOTIMPL;
+    HRESULT hr = S_FALSE;
+
+    if (fMenuBar)
+        hr = IUnknown_HasFocusIO(fMenuBar);
+    if (hr != S_FALSE)
+        return hr;
+
+    if (fControlsBar)
+        hr = IUnknown_HasFocusIO(fControlsBar);
+    if (hr != S_FALSE)
+        return hr;
+
+    if (fNavigationBar)
+        hr = IUnknown_HasFocusIO(fNavigationBar);
+    if (hr != S_FALSE)
+        return hr;
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    return E_NOTIMPL;
+    HRESULT hr = S_FALSE;
+
+    if (fMenuBar)
+        hr = IUnknown_TranslateAcceleratorIO(fMenuBar, lpMsg);
+    if (hr == S_OK)
+        return hr;
+
+    if (fControlsBar)
+        hr = IUnknown_TranslateAcceleratorIO(fControlsBar, lpMsg);
+    if (hr == S_OK)
+        return hr;
+
+    if (fNavigationBar)
+        hr = IUnknown_TranslateAcceleratorIO(fNavigationBar, lpMsg);
+    if (hr == S_OK)
+        return hr;
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetWindow(HWND *lphwnd)

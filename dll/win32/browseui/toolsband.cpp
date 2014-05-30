@@ -386,12 +386,12 @@ HRESULT STDMETHODCALLTYPE CToolsBand::ShowDW(BOOL fShow)
 
 HRESULT STDMETHODCALLTYPE CToolsBand::HasFocusIO()
 {
-    return E_NOTIMPL;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    return E_NOTIMPL;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)

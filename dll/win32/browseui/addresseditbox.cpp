@@ -91,7 +91,6 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 {
-    WCHAR address[4096];
     ULONG eaten;
     ULONG attributes;
     HRESULT hr;
@@ -102,11 +101,34 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 
     IUnknown_GetWindow(pisb, &topLevelWindow);
 
-    GetWindowText(fCombobox.m_hWnd, address, 4095);
+    LPWSTR input;
+    int inputLength = GetWindowTextLength(fCombobox.m_hWnd) + 2;
+
+    input = new WCHAR[inputLength];
+    GetWindowText(fCombobox.m_hWnd, input, inputLength);
+
+    LPWSTR address;
+    int addressLength = ExpandEnvironmentStrings(input, NULL, 0);
+
+    if (addressLength <= 0)
+    {
+        address = input;
+    }
+    else
+    {
+        addressLength += 2;
+        address = new WCHAR[addressLength];
+        ExpandEnvironmentStrings(input, address, 0);
+    }
 
     CComPtr<IShellFolder> psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
     hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+
+    if (address != input)
+        delete [] address;
+    delete [] input;
+
     return hr;
 }
 

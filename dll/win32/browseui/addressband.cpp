@@ -301,7 +301,22 @@ HRESULT STDMETHODCALLTYPE CAddressBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    // incomplete
+    if (lpMsg->hwnd == fEditControl)
+    {
+        switch (lpMsg->message)
+        {
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        case WM_SYSCOMMAND:
+        case WM_SYSDEADCHAR:
+        case WM_SYSCHAR:
+            return S_FALSE;
+        }
+
+        TranslateMessage(lpMsg);
+        DispatchMessage(lpMsg);
+        return S_OK;
+    }
     return S_FALSE;
 }
 
@@ -510,6 +525,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Invoke(DISPID dispIdMember, REFIID riid,
                 DbgPrint("ERROR %d\n", GetLastError());
         }
 
+        SendMessage(m_hWnd, CB_SETCURSEL, -1, 0);
         SendMessage(m_hWnd, CB_SETCURSEL, oldIndex, 0);
 
         //fAddressEditBox->SetCurrentDir(index);

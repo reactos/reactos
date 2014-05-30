@@ -1095,14 +1095,15 @@ HRESULT STDMETHODCALLTYPE CMenuBand::IsEmpty(THIS)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::HasFocusIO()
 {
-    UNIMPLEMENTED;
-    return S_OK;
+    if (m_popupBar)
+        return S_OK;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    UNIMPLEMENTED;
-    return S_OK;
+    // TODO: Alt down -> toggle menu focus
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::IsDirty()
