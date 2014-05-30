@@ -61,6 +61,11 @@
 #define CM_KCB_READ_ONLY_KEY                            0x80
 
 //
+// CM_KEY_BODY Types
+//
+#define CM_KEY_BODY_TYPE                                0x6B793032
+
+//
 // CM_KEY_VALUE Types
 //
 #define CM_KEY_VALUE_SMALL                              0x4
