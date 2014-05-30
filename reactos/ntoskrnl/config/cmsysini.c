@@ -358,7 +358,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
                                LogHandle,
                                NULL,
                                HiveName,
-                               0);
+                               CheckFlags);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -370,7 +370,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     /* Success, return hive */
     *Hive = NewHive;
 
-    /* ROS: Init root key cell and prepare the hive */
+    /* HACK: ROS: Init root key cell and prepare the hive */
     if (Operation == HINIT_CREATE) CmCreateRootNode(&NewHive->Hive, L"");
 
     /* Duplicate the hive name */
