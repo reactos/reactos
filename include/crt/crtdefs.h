@@ -237,9 +237,11 @@
 #define _TRUNCATE ((size_t)-1)
 #endif
 
+#ifndef __REACTOS__
 #define __STDC_SECURE_LIB__ 200411L
 #define __GOT_SECURE_LIB__ __STDC_SECURE_LIB__
 #define _SECURECRT_FILL_BUFFER_PATTERN 0xFD
+#endif
 
 
 /** Type definitions *********************************************************/

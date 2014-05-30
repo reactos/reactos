@@ -42,7 +42,20 @@ BEGIN
     MENUITEM "Mi&nimalizovat", SC_MINIMIZE
     MENUITEM "Ma&ximalizovat", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Zavřít\tAlt-F4", SC_CLOSE
+    MENUITEM "&Zavřít\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Obnovit", SC_RESTORE
+    MENUITEM "&Přesunout", SC_MOVE
+    MENUITEM "&Velikost", SC_SIZE
+    MENUITEM "Mi&nimalizovat", SC_MINIMIZE
+    MENUITEM "Ma&ximalizovat", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Zavřít\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "Následující\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

@@ -1,4 +1,4 @@
-[Version]
+﻿[Version]
 Signature="$ReactOS$"
 
 [AddReg]
@@ -70,10 +70,10 @@ HKCR,"comfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; Control Panel extensions
 HKCR,".cpl","",0x00000000,"cplfile"
-HKCR,"cplfile","",0x00000000,"Control Panel Extension"
+HKCR,"cplfile","",0x00000000,%CPLFILE%
 HKCR,"cplfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-161"
 HKCR,"cplfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
-HKCR,"cplfile\shell\cplopen","",0x00000000,"Open with Control Panel"
+HKCR,"cplfile\shell\cplopen","",0x00000000,%CPLFILE_OPENWITH%
 HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %1,%*"
 HKCR,"cplfile\shell\runas\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLLAsUser %1,%*"
 
@@ -465,5 +465,26 @@ HKCR,"MIME\Database\Rfc1766","0490",0x00000000,"wa;Walloon"
 HKCR,"MIME\Database\Rfc1766","0434",0x00000000,"xh;Xhosa"
 HKCR,"MIME\Database\Rfc1766","043D",0x00000000,"ji;Yiddish"
 HKCR,"MIME\Database\Rfc1766","0435",0x00000000,"zu;Zulu"
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+CPLFILE="Control Panel Extension"
+CPLFILE_OPENWITH="Open with Control Panel"
+
+; LANG_GERMAN SUBLANG_NEUTRAL
+[Strings.0007]
+CPLFILE="Systemsteuerungselement"
+CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
+
+; LANG_POLISH SUBLANG_NEUTRAL
+[Strings.0015]
+CPLFILE="Aplet Panelu Sterowania"
+CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
+
+; LANG_FRENCH SUBLANG_NEUTRAL
+[Strings.000C]
+CPLFILE="Extension du Panneau de Contrôle"
+CPLFILE_OPENWITH="Ouvrir avec le Panneau de Contrôle"
 
 ; EOF

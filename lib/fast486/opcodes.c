@@ -3702,9 +3702,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushImm)
     }
     else
     {
-        USHORT Data;
+        SHORT Data;
 
-        if (!Fast486FetchWord(State, &Data))
+        if (!Fast486FetchWord(State, (PUSHORT)&Data))
         {
             /* Exception occurred */
             return FALSE;
@@ -3837,12 +3837,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushByteImm)
 {
-    UCHAR Data;
+    CHAR Data;
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x6A);
 
-    if (!Fast486FetchByte(State, &Data))
+    if (!Fast486FetchByte(State, (PUCHAR)&Data))
     {
         /* Exception occurred */
         return FALSE;

@@ -957,6 +957,11 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         // what to do with error? Do we want to halt browse because state save failed?
     }
 
+    if (fCurrentShellView)
+    {
+        fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
+    }
+
     // create view object
     hResult = newShellFolder->CreateViewObject(m_hWnd, IID_PPV_ARG(IShellView, &newShellView));
     if (FAILED(hResult))

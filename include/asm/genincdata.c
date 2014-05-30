@@ -74,15 +74,18 @@ __attribute__ ((section(".asmdef")))
 
 ASMGENDATA Table[] =
 {
-
+#if defined (_M_IX86) || defined (M_AMD64)
 /* PORTABLE CONSTANTS ********************************************************/
 #include "ksx.template.h"
+#endif
 
 /* ARCHITECTURE SPECIFIC CONTSTANTS ******************************************/
 #ifdef _M_IX86
 #include "ks386.template.h"
 #elif defined(_M_AMD64)
 #include "ksamd64.template.h"
+#elif defined(_M_ARM)
+#include "ksarm.template.h"
 #endif
 
     /* End of list */

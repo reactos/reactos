@@ -1261,6 +1261,11 @@ MiGetPageProtection(IN PMMPTE PointerPte)
 {
     MMPTE TempPte;
     PMMPFN Pfn;
+    PEPROCESS CurrentProcess;
+    PETHREAD CurrentThread;
+    BOOLEAN WsSafe, WsShared;
+    ULONG Protect;
+    KIRQL OldIrql;
     PAGED_CODE();
 
     /* Copy this PTE's contents */
@@ -1270,12 +1275,79 @@ MiGetPageProtection(IN PMMPTE PointerPte)
     ASSERT(TempPte.u.Long);
 
     /* Check for a special prototype format */
-    if (TempPte.u.Soft.Valid == 0 &&
-        TempPte.u.Soft.Prototype == 1)
+    if ((TempPte.u.Soft.Valid == 0) &&
+        (TempPte.u.Soft.Prototype == 1))
     {
-        /* Unsupported now */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        /* Check if the prototype PTE is not yet pointing to a PTE */
+        if (TempPte.u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
+        {
+            /* The prototype PTE contains the protection */
+            return MmProtectToValue[TempPte.u.Soft.Protection];
+        }
+
+        /* Get a pointer to the underlying shared PTE */
+        PointerPte = MiProtoPteToPte(&TempPte);
+
+        /* Since the PTE we want to read can be paged out at any time, we need
+           to release the working set lock first, so that it can be paged in */
+        CurrentThread = PsGetCurrentThread();
+        CurrentProcess = PsGetCurrentProcess();
+        MiUnlockProcessWorkingSetForFault(CurrentProcess,
+                                          CurrentThread,
+                                          &WsSafe,
+                                          &WsShared);
+
+        /* Now read the PTE value */
+        TempPte = *PointerPte;
+
+        /* Check if that one is invalid */
+        if (!TempPte.u.Hard.Valid)
+        {
+            /* We get the protection directly from this PTE */
+            Protect = MmProtectToValue[TempPte.u.Soft.Protection];
+        }
+        else
+        {
+            /* The PTE is valid, so we might need to get the protection from
+               the PFN. Lock the PFN database */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+            /* Check if the PDE is still valid */
+            if (MiAddressToPte(PointerPte)->u.Hard.Valid == 0)
+            {
+                /* It's not, make it valid */
+                MiMakeSystemAddressValidPfn(PointerPte, OldIrql);
+            }
+
+            /* Now it's safe to read the PTE value again */
+            TempPte = *PointerPte;
+            ASSERT(TempPte.u.Long != 0);
+
+            /* Check again if the PTE is invalid */
+            if (!TempPte.u.Hard.Valid)
+            {
+                /* The PTE is not valid, so we can use it's protection field */
+                Protect = MmProtectToValue[TempPte.u.Soft.Protection];
+            }
+            else
+            {
+                /* The PTE is valid, so we can find the protection in the
+                   OriginalPte field of the PFN */
+                Pfn = MI_PFN_ELEMENT(TempPte.u.Hard.PageFrameNumber);
+                Protect = MmProtectToValue[Pfn->OriginalPte.u.Soft.Protection];
+            }
+
+            /* Release the PFN database */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        }
+
+        /* Lock the working set again */
+        MiLockProcessWorkingSetForFault(CurrentProcess,
+                                        CurrentThread,
+                                        WsSafe,
+                                        WsShared);
+
+        return Protect;
     }
 
     /* In the easy case of transition or demand zero PTE just return its protection */

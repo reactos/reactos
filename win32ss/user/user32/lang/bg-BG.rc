@@ -37,7 +37,20 @@ BEGIN
     MENUITEM "С&маляване", SC_MINIMIZE
     MENUITEM "У&големяване", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Затваряне\tAlt-F4", SC_CLOSE
+    MENUITEM "&Затваряне\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Възстановяване", SC_RESTORE
+    MENUITEM "&Преместване", SC_MOVE
+    MENUITEM "&Размер", SC_SIZE
+    MENUITEM "С&маляване", SC_MINIMIZE
+    MENUITEM "У&големяване", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Затваряне\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "На&пред\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

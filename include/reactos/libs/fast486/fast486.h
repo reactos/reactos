@@ -251,6 +251,7 @@ typedef struct _FAST486_SEG_REG
     ULONG DirConf       : 1;
     ULONG Executable    : 1;
     ULONG SystemType    : 1;
+    ULONG Rpl           : 2;
     ULONG Dpl           : 2;
     ULONG Present       : 1;
     ULONG Size          : 1;

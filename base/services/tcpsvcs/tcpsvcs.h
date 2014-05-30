@@ -10,10 +10,6 @@
 #include <winsock2.h>
 #include <tchar.h>
 
-#ifndef _MSC_VER
-#define _swprintf swprintf
-#endif
-
 #define LOG_FILE 1
 #define LOG_EVENTLOG 2
 #define LOG_ERROR 4

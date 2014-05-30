@@ -47,6 +47,12 @@ NtGdiAlphaBlend(
         return FALSE;
     }
 
+    if ((hDCDest == NULL) || (hDCSrc == NULL))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     TRACE("Locking DCs\n");
     ahDC[0] = hDCDest;
     ahDC[1] = hDCSrc ;
@@ -161,14 +167,14 @@ NtGdiBitBlt(
        return NtGdiStretchBlt(hDCDest,
                               XDest,
                               YDest,
-                              Width,  
+                              Width,
                               Height,
                               hDCSrc,
                               XSrc,
                               YSrc,
                               Width,
                               Height,
-                              ROP, 
+                              ROP,
                               crBackColor);
 
     dwTRop = ROP & ~(NOMIRRORBITMAP|CAPTUREBLT);
@@ -212,6 +218,12 @@ NtGdiTransparentBlt(
     ULONG TransparentColor = 0;
     BOOL Ret = FALSE;
     EXLATEOBJ exlo;
+
+    if ((hdcDst == NULL) || (hdcSrc == NULL))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     TRACE("Locking DCs\n");
     ahDC[0] = hdcDst;

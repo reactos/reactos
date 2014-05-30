@@ -29,7 +29,7 @@ toolbar, and address band for an explorer window
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
-#define USE_CUSTOM_MENUBAND 1
+#define USE_CUSTOM_MENUBAND 0
 
 // navigation controls and menubar just send a message to parent window
 /*

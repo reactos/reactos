@@ -351,18 +351,33 @@ CopyFileExA(IN LPCSTR lpExistingFileName,
  */
 BOOL
 WINAPI
-CopyFileA (
-    LPCSTR	lpExistingFileName,
-    LPCSTR	lpNewFileName,
-    BOOL	bFailIfExists
-)
+CopyFileA(IN LPCSTR lpExistingFileName,
+          IN LPCSTR lpNewFileName,
+          IN BOOL bFailIfExists)
 {
-    return CopyFileExA (lpExistingFileName,
-                        lpNewFileName,
-                        NULL,
-                        NULL,
-                        NULL,
-                        bFailIfExists);
+    BOOL Result = FALSE;
+    UNICODE_STRING lpNewFileNameW;
+    PUNICODE_STRING lpExistingFileNameW;
+
+    lpExistingFileNameW = Basep8BitStringToStaticUnicodeString(lpExistingFileName);
+    if (!lpExistingFileNameW)
+    {
+        return FALSE;
+    }
+
+    if (Basep8BitStringToDynamicUnicodeString(&lpNewFileNameW, lpNewFileName))
+    {
+        Result = CopyFileExW(lpExistingFileNameW->Buffer,
+                             lpNewFileNameW.Buffer,
+                             NULL,
+                             NULL,
+                             NULL,
+                             (bFailIfExists ? COPY_FILE_FAIL_IF_EXISTS : 0));
+
+        RtlFreeUnicodeString(&lpNewFileNameW);
+    }
+
+    return Result;
 }
 
 
@@ -371,18 +386,16 @@ CopyFileA (
  */
 BOOL
 WINAPI
-CopyFileW (
-    LPCWSTR	lpExistingFileName,
-    LPCWSTR	lpNewFileName,
-    BOOL	bFailIfExists
-)
+CopyFileW(IN LPCWSTR lpExistingFileName,
+          IN LPCWSTR lpNewFileName,
+          IN BOOL bFailIfExists)
 {
-    return CopyFileExW (lpExistingFileName,
-                        lpNewFileName,
-                        NULL,
-                        NULL,
-                        NULL,
-                        bFailIfExists);
+    return CopyFileExW(lpExistingFileName,
+                       lpNewFileName,
+                       NULL,
+                       NULL,
+                       NULL,
+                       (bFailIfExists ? COPY_FILE_FAIL_IF_EXISTS : 0));
 }
 
 

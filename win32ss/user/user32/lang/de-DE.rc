@@ -42,6 +42,19 @@ BEGIN
     MENUITEM "S&chließen\tAlt+F4", SC_CLOSE
 END
 
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Wiederherstellen", SC_RESTORE
+    MENUITEM "&Verschieben", SC_MOVE
+    MENUITEM "&Größe", SC_SIZE
+    MENUITEM "Mi&nimieren", SC_MINIMIZE
+    MENUITEM "Ma&ximieren", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "S&chließen\tStrg+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "Nächs&ter\tStrg+F6", SC_NEXTWINDOW
+END
+
 /* Strings */
 
 STRINGTABLE

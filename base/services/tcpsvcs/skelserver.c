@@ -84,14 +84,14 @@ AcceptConnections(SOCKET listeningSocket,
                 sock = accept(listeningSocket, (SOCKADDR*)&client, &addrSize);
                 if (sock != INVALID_SOCKET)
                 {
-                    _swprintf(logBuf,
-                              L"Accepted connection to %s server from %S:%d",
-                              lpName,
-                              inet_ntoa(client.sin_addr),
-                              ntohs(client.sin_port));
+                    swprintf(logBuf,
+                             L"Accepted connection to %s server from %S:%d",
+                             lpName,
+                             inet_ntoa(client.sin_addr),
+                             ntohs(client.sin_port));
                     LogEvent(logBuf, 0, 0, LOG_FILE);
 
-                    _swprintf(logBuf, L"Creating worker thread for %s", lpName);
+                    swprintf(logBuf, L"Creating worker thread for %s", lpName);
                     LogEvent(logBuf, 0, 0, LOG_FILE);
 
                     if (!bShutdown)
@@ -103,8 +103,8 @@ AcceptConnections(SOCKET listeningSocket,
                         }
                         else
                         {
-                            _swprintf(logBuf, L"Failed to start worker thread for the %s server",
-                                      lpName);
+                            swprintf(logBuf, L"Failed to start worker thread for the %s server",
+                                     lpName);
                             LogEvent(logBuf, 0, 0, LOG_FILE);
                         }
                     }
@@ -149,7 +149,7 @@ ShutdownConnection(SOCKET sock,
             ret = recv(sock, readBuffer, BUF, 0);
             if (ret >= 0)
             {
-                _swprintf(logBuf, L"FYI, received %d unexpected bytes during shutdown", ret);
+                swprintf(logBuf, L"FYI, received %d unexpected bytes during shutdown", ret);
                 LogEvent(logBuf, 0, 0, LOG_FILE);
             }
         } while (ret > 0);
@@ -170,7 +170,7 @@ StartServer(LPVOID lpParam)
 
     pServices = (PSERVICES)lpParam;
 
-    _swprintf(logBuf, L"Starting %s server", pServices->lpName);
+    swprintf(logBuf, L"Starting %s server", pServices->lpName);
     LogEvent(logBuf, 0, 0, LOG_FILE);
 
     if (!bShutdown)
@@ -178,10 +178,10 @@ StartServer(LPVOID lpParam)
         listeningSocket = SetUpListener(htons(pServices->Port));
         if (!bShutdown && listeningSocket != INVALID_SOCKET)
         {
-            _swprintf(logBuf,
-                      L"%s is waiting for connections on port %d",
-                      pServices->lpName,
-                      pServices->Port);
+            swprintf(logBuf,
+                     L"%s is waiting for connections on port %d",
+                     pServices->lpName,
+                     pServices->Port);
             LogEvent(logBuf, 0, 0, LOG_FILE);
 
             AcceptConnections(listeningSocket, pServices->lpService, pServices->lpName);
@@ -192,9 +192,7 @@ StartServer(LPVOID lpParam)
         }
     }
 
-    _swprintf(logBuf,
-              L"Exiting %s thread",
-              pServices->lpName);
+    swprintf(logBuf, L"Exiting %s thread", pServices->lpName);
     LogEvent(logBuf, 0, 0, LOG_FILE);
     ExitThread(0);
 }
