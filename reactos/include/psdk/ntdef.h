@@ -20,25 +20,23 @@
 
 #ifndef _NTDEF_
 #define _NTDEF_
+#pragma once
 
 /* Dependencies */
 #include <ctype.h>
 #include <basetsd.h>
+#include <guiddef.h>
 #include <excpt.h>
 #include <sdkddkver.h>
 #include <specstrings.h>
+#include <kernelspecs.h>
 
 // FIXME: Shouldn't be included!
 #include <stdarg.h>
 #include <string.h>
 
-/* Helper macro to enable gcc's extension.  */
-#ifndef __GNU_EXTENSION
-#ifdef __GNUC__
-#define __GNU_EXTENSION __extension__
-#else
-#define __GNU_EXTENSION
-#endif
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Pseudo Modifiers for Input Parameters */
@@ -63,14 +61,9 @@
 #define CRITICAL
 #endif
 
+// FIXME: deprecated
 #ifndef FAR
 #define FAR
-#endif
-
-
-/* Defines the "size" of an any-size array */
-#ifndef ANYSIZE_ARRAY
-#define ANYSIZE_ARRAY 1
 #endif
 
 /* Constant modifier */
@@ -93,26 +86,22 @@
 #endif
 #endif /* NULL */
 
+/* Defines the "size" of an any-size array */
+#ifndef ANYSIZE_ARRAY
+#define ANYSIZE_ARRAY 1
+#endif
 
-//
-// FIXME
-// We should use the -fms-extensions compiler flag for gcc,
-// and clean up the mess.
-//
-#ifndef __ANONYMOUS_DEFINED
-#define __ANONYMOUS_DEFINED
-
-#ifndef NONAMELESSUNION
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
 #ifdef __GNUC__
-#define _ANONYMOUS_UNION __GNU_EXTENSION
-#define _ANONYMOUS_STRUCT __GNU_EXTENSION
-#elif defined(__WATCOMC__) || defined(_MSC_VER)
-#define _ANONYMOUS_UNION
-#define _ANONYMOUS_STRUCT
-#endif /* __GNUC__/__WATCOMC__ */
-#endif /* NONAMELESSUNION */
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
 
-#ifndef _ANONYMOUS_UNION
+#ifndef DUMMYUNIONNAME
+#if defined(NONAMELESSUNION)// || !defined(_MSC_EXTENSIONS)
 #define _ANONYMOUS_UNION
 #define _UNION_NAME(x) x
 #define DUMMYUNIONNAME  u
@@ -124,7 +113,9 @@
 #define DUMMYUNIONNAME6 u6
 #define DUMMYUNIONNAME7 u7
 #define DUMMYUNIONNAME8 u8
+#define DUMMYUNIONNAME9  u9
 #else
+#define _ANONYMOUS_UNION __GNU_EXTENSION
 #define _UNION_NAME(x)
 #define DUMMYUNIONNAME
 #define DUMMYUNIONNAME1
@@ -135,9 +126,12 @@
 #define DUMMYUNIONNAME6
 #define DUMMYUNIONNAME7
 #define DUMMYUNIONNAME8
-#endif
+#define DUMMYUNIONNAME9
+#endif /* NONAMELESSUNION */
+#endif /* !DUMMYUNIONNAME */
 
-#ifndef _ANONYMOUS_STRUCT
+#ifndef DUMMYSTRUCTNAME
+#if defined(NONAMELESSUNION)// || !defined(_MSC_EXTENSIONS)
 #define _ANONYMOUS_STRUCT
 #define _STRUCT_NAME(x) x
 #define DUMMYSTRUCTNAME s
@@ -147,6 +141,7 @@
 #define DUMMYSTRUCTNAME4 s4
 #define DUMMYSTRUCTNAME5 s5
 #else
+#define _ANONYMOUS_STRUCT __GNU_EXTENSION
 #define _STRUCT_NAME(x)
 #define DUMMYSTRUCTNAME
 #define DUMMYSTRUCTNAME1
@@ -154,11 +149,14 @@
 #define DUMMYSTRUCTNAME3
 #define DUMMYSTRUCTNAME4
 #define DUMMYSTRUCTNAME5
+#endif /* NONAMELESSUNION */
+#endif /* DUMMYSTRUCTNAME */
+
+#if defined(STRICT_GS_ENABLED)
+#pragma strict_gs_check(push, on)
 #endif
 
-#endif /* __ANONYMOUS_DEFINED */
-
-#if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64)
+#if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM)
 #define ALIGNMENT_MACHINE
 #define UNALIGNED __unaligned
 #if defined(_WIN64)
@@ -203,7 +201,7 @@
 #endif
 
 /* Returns the type's alignment */
-#if defined(_MSC_VER) && (_MSC_VER >= 1300)
+#if defined(_MSC_VER)
 #define TYPE_ALIGNMENT(t) __alignof(t)
 #else
 #define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
@@ -217,8 +215,14 @@
 #error "unknown architecture"
 #endif
 
+#if defined(_WIN64)
+#define PROBE_ALIGNMENT32(_s) TYPE_ALIGNMENT(ULONG)
+#endif
+
 /* Calling Conventions */
-#if defined(_M_IX86)
+#if defined(_MANAGED)
+#define FASTCALL __stdcall
+#elif defined(_M_IX86)
 #define FASTCALL __fastcall
 #else
 #define FASTCALL
@@ -234,15 +238,23 @@
 #define DECLSPEC_NORETURN __declspec(noreturn)
 
 #ifndef DECLSPEC_ADDRSAFE
-#if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))
+#if defined(_MSC_VER) && (defined(_M_ALPHA) || defined(_M_AXP64))
 #define DECLSPEC_ADDRSAFE  __declspec(address_safe)
 #else
 #define DECLSPEC_ADDRSAFE
 #endif
 #endif /* DECLSPEC_ADDRSAFE */
 
+#ifndef DECLSPEC_NOTHROW
+#if !defined(MIDL_PASS)
+#define DECLSPEC_NOTHROW __declspec(nothrow)
+#else
+#define DECLSPEC_NOTHROW
+#endif
+#endif
+
 #ifndef NOP_FUNCTION
-#if (_MSC_VER >= 1210)
+#if defined(_MSC_VER)
 #define NOP_FUNCTION __noop
 #else
 #define NOP_FUNCTION (void)0
@@ -263,16 +275,12 @@
 
 /* Inlines */
 #ifndef FORCEINLINE
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+#if defined(_MSC_VER)
 #define FORCEINLINE __forceinline
-#elif defined(_MSC_VER)
-#define FORCEINLINE __inline
-#else /* __GNUC__ */
-# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-#  define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
-# else
-#  define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
-# endif
+#elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+# define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
+#else
+# define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
 #endif
 #endif /* FORCEINLINE */
 
@@ -294,10 +302,10 @@
 
 /* Use to specify structure alignment */
 #ifndef DECLSPEC_ALIGN
-#if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
+#if defined(_MSC_VER) && !defined(MIDL_PASS)
 #define DECLSPEC_ALIGN(x) __declspec(align(x))
 #elif defined(__GNUC__)
-#define DECLSPEC_ALIGN(x) __attribute__ ((__aligned__ (x)))
+#define DECLSPEC_ALIGN(x) __attribute__ ((__aligned__(x)))
 #else
 #define DECLSPEC_ALIGN(x)
 #endif
@@ -315,12 +323,53 @@
 #define DECLSPEC_CACHEALIGN DECLSPEC_ALIGN(SYSTEM_CACHE_ALIGNMENT_SIZE)
 #endif
 
+#ifndef DECLSPEC_UUID
+#if defined(_MSC_VER) && defined(__cplusplus)
+#define DECLSPEC_UUID(x) __declspec(uuid(x))
+#else
+#define DECLSPEC_UUID(x)
+#endif
+#endif
+
+#ifndef DECLSPEC_NOVTABLE
+#if defined(_MSC_VER) && defined(__cplusplus)
+#define DECLSPEC_NOVTABLE __declspec(novtable)
+#else
+#define DECLSPEC_NOVTABLE
+#endif
+#endif
+
 #ifndef DECLSPEC_SELECTANY
-#if (_MSC_VER >= 1100) || defined(__GNUC__)
-#define DECLSPEC_SELECTANY  __declspec(selectany)
+#if defined(_MSC_VER) || defined(__GNUC__)
+#define DECLSPEC_SELECTANY __declspec(selectany)
 #else
 #define DECLSPEC_SELECTANY
 #endif
+#endif
+
+#ifndef DECLSPEC_DEPRECATED
+#if (defined(_MSC_VER) || defined(__GNUC__)) && !defined(MIDL_PASS)
+#define DECLSPEC_DEPRECATED __declspec(deprecated)
+#define DEPRECATE_SUPPORTED
+#else
+#define DECLSPEC_DEPRECATED
+#undef  DEPRECATE_SUPPORTED
+#endif
+#endif
+
+#ifdef DEPRECATE_DDK_FUNCTIONS
+#ifdef _NTDDK_
+#define DECLSPEC_DEPRECATED_DDK DECLSPEC_DEPRECATED
+#ifdef DEPRECATE_SUPPORTED
+#define PRAGMA_DEPRECATED_DDK 1
+#endif
+#else
+#define DECLSPEC_DEPRECATED_DDK
+#define PRAGMA_DEPRECATED_DDK 1
+#endif
+#else
+#define DECLSPEC_DEPRECATED_DDK
+#define PRAGMA_DEPRECATED_DDK 0
 #endif
 
 /* Use to silence unused variable warnings when it is intentional */
@@ -347,18 +396,15 @@
 
 /* Void Pointers */
 typedef void *PVOID;
-//typedef void * POINTER_64 PVOID64;
-typedef PVOID PVOID64; // FIXME!
+typedef void * POINTER_64 PVOID64;
 
 /* Handle Type */
+typedef void *HANDLE, **PHANDLE;;
 #ifdef STRICT
-typedef void *HANDLE;
-#define DECLARE_HANDLE(n) typedef struct n##__{int i;}*n
+#define DECLARE_HANDLE(n) typedef struct n##__{int unused;} *n
 #else
-typedef PVOID HANDLE;
 #define DECLARE_HANDLE(n) typedef HANDLE n
 #endif
-typedef HANDLE *PHANDLE;
 
 /* Upper-Case Versions of Some Standard C Types */
 #ifndef VOID
@@ -890,5 +936,9 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_YI                                   0x78
 #define LANG_YORUBA                               0x6a
 #define LANG_ZULU                                 0x35
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* _NTDEF_ */
