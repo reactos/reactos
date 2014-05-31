@@ -17,5 +17,5 @@ add_importlibs(winmm_winetest winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET winmm_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(winmm_winetest "-Wno-error=format -Wno-error=unused-but-set-variable")
+    add_target_compile_flags(winmm_winetest "-Wno-format -Wno-unused-but-set-variable")
 endif()
