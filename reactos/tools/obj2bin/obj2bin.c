@@ -52,7 +52,7 @@ RelocateSection(
                 break;
 
             default:
-                printf("Unknown relocatation type %u, address 0x%x\n",
+                printf("Unknown relocation type %u, address 0x%x\n",
                        pReloc->Type, (unsigned)pReloc->VirtualAddress);
         }
 
