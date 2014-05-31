@@ -68,7 +68,7 @@ extern LONG winetest_get_failures(void);
 extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
 
-extern const char *wine_dbgstr_wn( const WCHAR *str, int n );
+extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
 extern const char *wine_dbgstr_guid( const GUID *guid );
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
@@ -486,7 +486,7 @@ void winetest_wait_child_process( HANDLE process )
     }
 }
 
-const char *wine_dbgstr_wn( const WCHAR *str, int n )
+const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
 {
     char *dst, *res;
     size_t size;
