@@ -894,13 +894,3 @@
 
 # Functions not exported in native dll:
 @ cdecl -arch=i386 -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
-# Gecko
-@ cdecl _controlfp_s(ptr long long)
-@ varargs _snwprintf_s(ptr long long ptr)
-@ cdecl _vsnprintf_s(ptr long long str ptr)
-@ cdecl _vsnwprintf_s(ptr long long wstr ptr)
-@ cdecl _wcslwr_s(wstr long)
-@ cdecl _wfopen_s(ptr wstr wstr)
-@ cdecl fopen_s(ptr str str)
-@ cdecl strtok_s(ptr str ptr)
-@ varargs swprintf_s(ptr long wstr)
