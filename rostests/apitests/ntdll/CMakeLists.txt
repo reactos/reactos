@@ -11,6 +11,7 @@ list(APPEND SOURCE
     NtProtectVirtualMemory.c
     NtQuerySystemEnvironmentValue.c
     NtQueryVolumeInformationFile.c
+    NtSaveKey.c
     RtlBitmap.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
