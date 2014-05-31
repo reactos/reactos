@@ -1,7 +1,7 @@
 ;
 ; ReactOS Operating System
 ;
-; This file contains all win32k native api functions from win 2003 sp2
+; This file contains all win32k native api functions from ReactOS
 ; Unsupported functions are commented out
 ;
 
@@ -377,7 +377,7 @@
 @ stdcall NtUserEndMenu()
 @ stdcall NtUserEndPaint(ptr ptr)
 @ stdcall NtUserEnumDisplayDevices(ptr long ptr long)
-@ stdcall NtUserEnumDisplayMonitors(ptr ptr ptr ptr) # FIXME: 4 on XP
+; @ stdcall NtUserEnumDisplayMonitors(ptr ptr ptr ptr) # FIXME: 4 on XP
 @ stdcall NtUserEnumDisplaySettings(ptr long ptr long)
 @ stdcall NtUserEvent(long)
 @ stdcall NtUserExcludeUpdateRgn(ptr ptr)
@@ -597,7 +597,6 @@
 @ stdcall NtUserWaitForMsgAndEvent(long)
 @ stdcall NtUserWaitMessage()
 @ stdcall NtUserWin32PoolAllocationStats(long long long long long long)
-@ stdcall NtUserWindowFromPhysicalPoint(ptr ptr) # Vista
 @ stdcall NtUserWindowFromPoint(long long)
 @ stdcall NtUserYieldTask()
 @ stdcall NtUserRemoteConnect(long long long)
