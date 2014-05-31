@@ -5,19 +5,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define IMAGE_FILE_MACHINE_I386  0x014c
 #define IMAGE_FILE_MACHINE_AMD64 0x8664
 #define IMAGE_FILE_MACHINE_ARMNT 0x01c4
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define PRIx64 "I64x"
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
 #else
-#include <stdint.h>
-#define PRIx64 "llx"
+#include <inttypes.h>
 #define _stricmp strcasecmp
 #endif
 

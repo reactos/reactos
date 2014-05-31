@@ -20,7 +20,7 @@
  * is inserted, so the string looks right on the console but still
  * contains the original string, plus other garbage:
  */
-static char 
+static char
 *backSpaceEdit(char *s)
 {
     char c;
@@ -58,7 +58,7 @@ handle_switch(FILE *outFile, int *sw, char *arg, char *desc)
             *sw = x;
             changed = 1;
         }
-    } 
+    }
     if (desc)
     {
         esclog(outFile, "%s is %d (%s)\n", desc, *sw, changed ? "changed":"unchanged");
@@ -90,14 +90,14 @@ handle_switch_str(FILE *outFile, char *sw, char *arg, char *desc)
                 changed = 1;
             }
         }
-    } 
+    }
     if (desc)
     {
         esclog(outFile, "%s is \"%s\" (%s)\n", desc, sw, changed ? "changed":"unchanged");
         if (!arg)
             esclog(outFile, "(readonly)\n");
     }
-        
+
     return changed;
 }
 
@@ -132,14 +132,14 @@ handle_switch_pstr(FILE *outFile, char **psw, char *arg, char *desc)
                 }
             }
         }
-    } 
+    }
     if (desc)
     {
         esclog(outFile, "%s is \"%s\" (%s)\n", desc, *psw, changed ? "changed":"unchanged");
         if (!arg)
             esclog(outFile, "(readonly)\n");
     }
-        
+
     return changed;
 }
 
@@ -155,7 +155,7 @@ handle_address_cmd(FILE *outFile, char *arg)
     if(( s = strchr(arg, ':') ))
     {
         *s = ' ';
-        if ( (cnt = sscanf(arg,"%20s %lx", Image, &Offset)) == 2)
+        if ( (cnt = sscanf(arg,"%20s %x", Image, &Offset)) == 2)
         {
             if (( plm = entry_lookup(&cache, Image) ))
             {
@@ -292,7 +292,7 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         {
             memset(&summ, 0, sizeof(SUMM));
             esclog(outFile, "Statistics cleared\n");
-        } 
+        }
         else
             stat_print(outFile, &summ);
         break;

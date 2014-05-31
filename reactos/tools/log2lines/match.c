@@ -32,8 +32,8 @@ static int match_mod(FILE *outFile, char *Line, int processed)
 {
     static int state = 0;
     char Image[NAMESIZE];
-    DWORD Base;
-    DWORD Size;
+    UINT Base;
+    UINT Size;
     PLIST_MEMBER plm;
 
     int cnt;
@@ -48,13 +48,13 @@ static int match_mod(FILE *outFile, char *Line, int processed)
     switch (state)
     {
     case 1:
-        if ( (cnt = sscanf(Line,"%lx %lx %20s", &Base, &Size, Image)) == 3 )
+        if ( (cnt = sscanf(Line,"%x %x %20s", &Base, &Size, Image)) == 3 )
         {
             if (( plm = entry_lookup(&cache, Image) ))
             {
                 plm->RelBase = Base;
                 plm->Size = Size;
-                l2l_dbg(1, "Relocated: %s %08x -> %08x\n", Image, plm->ImageBase, plm->RelBase);
+                l2l_dbg(1, "Relocated: %s %p -> %p\n", Image, (void*)plm->ImageBase, (void*)plm->RelBase);
             }
             return 0;
         }

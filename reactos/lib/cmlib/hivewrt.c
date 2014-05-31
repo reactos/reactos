@@ -14,8 +14,8 @@ HvpWriteLog(
    PHHIVE RegistryHive)
 {
    ULONG FileOffset;
-   ULONG BufferSize;
-   ULONG BitmapSize;
+   UINT BufferSize;
+   UINT BitmapSize;
    PUCHAR Buffer;
    PUCHAR Ptr;
    ULONG BlockIndex;
