@@ -460,7 +460,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     startup.wShowWindow = psei->nShow;
     dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     if (!(psei->fMask & SEE_MASK_NO_CONSOLE))
-        dwCreationFlags |= CREATE_NEW_CONSOLE;    
+        dwCreationFlags |= CREATE_NEW_CONSOLE;
     startup.lpTitle = (LPWSTR)(psei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE) ? psei->lpClass : NULL);
 
     if (psei->fMask & SEE_MASK_HASLINKNAME)
@@ -733,7 +733,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         lpFile = xlpFile;
         /* The file was found in one of the directories in the system-wide search path */
     }
-    
+
     attribs = GetFileAttributesW(lpFile);
     if (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY))
     {
@@ -994,7 +994,7 @@ static unsigned dde_connect(const WCHAR* key, const WCHAR* start, WCHAR* ddeexec
         assert(ptr);
         *ptr = 0;
     }
-    
+
     static const WCHAR wTopic[] = L"\\topic";
     if (strlenW(wTopic) + 1 > endkeyLen)
     {
@@ -1491,7 +1491,7 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
     DWORD resultLen;
     BOOL done;
     UINT_PTR rslt;
-    
+
     /* FIXME: remove following block when SHELL_quote_and_execute supports hkeyClass parameter */
     if (cmask != SEE_MASK_CLASSNAME)
     {
@@ -1522,7 +1522,7 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
             ERR("Argify buffer not large enough... truncating\n");
         return execfunc(wcmd, NULL, FALSE, psei, psei_out);
     }
-    
+
     strcpyW(classname, psei->lpClass);
     rslt = SHELL_FindExecutableByVerb(psei->lpVerb, NULL, classname, execCmd, sizeof(execCmd));
 
@@ -1835,6 +1835,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_EXEC;
 
             //if (SHOpenWithDialog(sei_tmp.hwnd, &Info) != S_OK)
+            DBG_UNREFERENCED_LOCAL_VARIABLE(Info);
             do_error_dialog(retval, sei_tmp.hwnd, wszApplicationName);
         }
         HeapFree(GetProcessHeap(), 0, wszApplicationName);
@@ -2070,6 +2071,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_EXEC;
 
         //if (SHOpenWithDialog(sei_tmp.hwnd, &Info) != S_OK)
+        DBG_UNREFERENCED_LOCAL_VARIABLE(Info);
         do_error_dialog(retval, sei_tmp.hwnd, wszApplicationName);
     }
 
