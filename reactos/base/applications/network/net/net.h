@@ -13,12 +13,20 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winuser.h>
 #include <winsvc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <lm.h>
 #include <ndk/rtlfuncs.h>
+
+#include "resource.h"
+
+VOID
+PrintResourceString(
+    INT resID,
+    ...);
 
 VOID help(VOID);
 INT unimplemented(INT argc, WCHAR **argv);

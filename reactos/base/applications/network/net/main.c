@@ -9,6 +9,8 @@
 
 #include "net.h"
 
+#define MAX_BUFFER_SIZE 4096
+
 typedef struct _COMMAND
 {
     WCHAR *name;
@@ -42,6 +44,22 @@ COMMAND cmds[] =
     {L"view",       unimplemented},
     {NULL,          NULL}
 };
+
+
+VOID
+PrintResourceString(
+    INT resID,
+    ...)
+{
+    WCHAR szMsgBuf[MAX_BUFFER_SIZE];
+    va_list arg_ptr;
+
+    va_start(arg_ptr, resID);
+    LoadStringW(GetModuleHandle(NULL), resID, szMsgBuf, MAX_BUFFER_SIZE);
+    vwprintf(szMsgBuf, arg_ptr);
+    va_end(arg_ptr);
+}
+
 
 int wmain(int argc, WCHAR **argv)
 {

@@ -15,11 +15,21 @@ INT cmdContinue(INT argc, WCHAR **argv)
     SC_HANDLE hService = NULL;
     SERVICE_STATUS status;
     INT nError = 0;
+    INT i;
 
     if (argc != 3)
     {
-        puts("Usage: NET CONTINUE <Service Name>");
+        PrintResourceString(IDS_CONTINUE_SYNTAX);
         return 1;
+    }
+
+    for (i = 2; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"/help") == 0)
+        {
+            PrintResourceString(IDS_CONTINUE_HELP);
+            return 1;
+        }
     }
 
     hManager = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ENUMERATE_SERVICE);

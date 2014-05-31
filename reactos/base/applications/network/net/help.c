@@ -18,8 +18,7 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2],L"ACCOUNTS")==0)
     {
-        puts("ACCOUNTS");
-        puts("help text");
+        PrintResourceString(IDS_ACCOUNTS_HELP);
         return 0;
     }
 
@@ -39,8 +38,7 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2],L"CONTINUE")==0)
     {
-        puts("CONTINUE");
-        puts("help text");
+        PrintResourceString(IDS_CONTINUE_HELP);
         return 0;
     }
 
