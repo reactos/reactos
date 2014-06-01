@@ -6,7 +6,7 @@
 Name = Zaz
 Version = 1.0.0
 Licence = GPL
-Description = Zaz is a free software arcade action puzzle computer game, a little bit like Frozen Bubble.
+Description = Zaz is a free arcade action puzzle computer game, a little bit like Frozen Bubble.
 Size = 21.0 MB
 Category = 4
 URLSite = http://zaz.sourceforge.net
@@ -27,5 +27,5 @@ Description = Zaz este un joc de acțiune de tip enigmă/arcadă, asemănător c
 Size = 21,0 Mo
 
 [Section.041f]
-Description = Zaz, atari salonu oyunu türünde, gelişimli bir bulmaca oyunudur. Bir nebze Donmuş Kabarcıklar'a benzemektedir.
+Description = Zaz; ücretsiz, atari salonu oyunu türünde, devingen bir bulmaca oyunudur, birazcık Frozen Bubble'a benzer.
 Size = 21,0 MB

@@ -1,9 +1,9 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = µTorrent
-Version = 3.4.1
+Version = 3.4.2
 Licence = Freeware for non-commercial uses
 Description = Small and fast BitTorrent Client.
 Size = 1.6 MB

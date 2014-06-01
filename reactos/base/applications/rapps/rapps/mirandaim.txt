@@ -1,15 +1,15 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Miranda IM
-Version = 0.10.22
+Version = 0.10.23
 Licence = GPL
 Description = Open source multiprotocol instant messaging application - May not work completely.
-Size = 2.8 MB
+Size = 3.8 MB
 Category = 5
 URLSite = http://www.miranda-im.org/
-URLDownload = http://files.miranda-im.org/stable/0.10.22.0/miranda-im-v0.10.22-unicode.exe
+URLDownload = http://files.miranda-im.org/stable/0.10.23.0/miranda-im-v0.10.23-unicode.exe
 CDPath = none
 
 [Section.0407]
@@ -20,7 +20,7 @@ Description = Aplicación de mensajería instantánea multiprotocolo de código 
 
 [Section.040c]
 Description = Application de messagerie instantannée multi-protocoles open source - pourrait ne pas fonctionner complètement.
-Size = 2,8 Mo
+Size = 3,8 Mo
 
 [Section.0410]
 Description = Multi-protocollo open source per applicazioni di messaggistica istantanea - potrebbe non funzionare del tutto.
@@ -33,11 +33,11 @@ Description = Otwarty komunikator internetowy, obsługujący wiele różnych pro
 
 [Section.0418]
 Description = Aplicație de mesagerie instant multiprotocol (open-source) - posibil cu limitări în funcționalitate.
-Size = 2,8 Mo
+Size = 3,8 Mo
 
 [Section.041f]
 Description = Açık kaynak, çoklu iletişim kâideli, evgin iletileşme uygulaması. Eksiksiz olarak çalışmayabilir.
-Size = 2,8 MB
+Size = 3,8 MB
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.

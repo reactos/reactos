@@ -1,15 +1,15 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = SumatraPDF
-Version = 2.4
+Version = 2.5.2
 Licence = GPLv3
 Description = Sumatra PDF is a slim, free, open-source PDF reader. Portable out of the box.
 Size = 4.0 MB
 Category = 6
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader.html
-URLDownload = https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-2.4-install.exe
+URLDownload = https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-2.5.2-install.exe
 CDPath = none
 
 [Section.0407]

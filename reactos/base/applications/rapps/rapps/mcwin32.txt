@@ -9,7 +9,7 @@ Description = 32-bit Windows port of GNU Midnight Commander.
 Size = 2.35 MB
 Category = 12
 URLSite = http://sourceforge.net/projects/mcwin32/
-URLDownload = http://optimate.dl.sourceforge.net/project/mcwin32/mcwin32-build183-setup.exe
+URLDownload = http://download.sourceforge.net/project/mcwin32/mcwin32-build183-setup.exe
 CDPath = none
 
 [Section.0410]
