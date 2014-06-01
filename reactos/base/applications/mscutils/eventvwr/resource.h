@@ -46,6 +46,8 @@
 #define ID_VIEW_REFRESH    32780
 #define ID_REFRESH         32781
 #define IDM_REFRESH        32782
+#define ID_CLEAR_EVENTS    32783
+#define ID_SAVE_PROTOCOL   32784
 
 /* String IDs */
 #define IDS_APP_TITLE                 103
@@ -59,6 +61,8 @@
 #define IDS_EVENTLOG_AUDIT_FAILURE    255
 #define IDS_EVENTLOG_SUCCESS          256
 #define IDS_EVENTLOG_UNKNOWN_TYPE     257
+#define IDS_CLEAREVENTS_MSG           258
+#define IDS_SAVE_FILTER               259
 
 #define IDS_COLUMNTYPE      300
 #define IDS_COLUMNDATE      301
