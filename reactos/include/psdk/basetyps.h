@@ -33,6 +33,7 @@
 # endif
 #endif
 
+#ifndef STDMETHODCALLTYPE
 #define STDMETHODCALLTYPE  __stdcall
 #define STDMETHODVCALLTYPE __cdecl
 #define STDAPICALLTYPE     __stdcall
@@ -45,6 +46,7 @@
 #define STDAPIV_(t)        EXTERN_C t STDAPIVCALLTYPE
 #define STDMETHODIMPV      HRESULT STDMETHODVCALLTYPE
 #define STDMETHODIMPV_(t)  t STDMETHODVCALLTYPE
+#endif /* !STDMETHODCALLTYPE */
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 # define interface struct

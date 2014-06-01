@@ -31,10 +31,6 @@
 #include <specstrings.h>
 #include <kernelspecs.h>
 
-// FIXME: Shouldn't be included!
-#include <stdarg.h>
-#include <string.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,7 +38,7 @@ extern "C" {
 /* Default to strict */
 #ifndef NO_STRICT
 #ifndef STRICT
-//#define STRICT 1 // FIXME: disabled for now
+#define STRICT 1
 #endif
 #endif
 
@@ -68,11 +64,6 @@ extern "C" {
 #define CRITICAL
 #endif
 
-// FIXME: deprecated
-#ifndef FAR
-#define FAR
-#endif
-
 /* Constant modifier */
 #ifndef CONST
 #define CONST const
@@ -96,12 +87,6 @@ extern "C" {
 /* Defines the "size" of an any-size array */
 #ifndef ANYSIZE_ARRAY
 #define ANYSIZE_ARRAY 1
-#endif
-
-#ifdef __cplusplus
-#define EXTERN_C extern "C"
-#else
-#define EXTERN_C extern
 #endif
 
 /* Helper macro to enable gcc's extension.  */
@@ -232,6 +217,12 @@ extern "C" {
 #define PROBE_ALIGNMENT32(_s) TYPE_ALIGNMENT(ULONG)
 #endif
 
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#else
+#define EXTERN_C extern
+#endif
+
 /* Calling Conventions */
 #if defined(_MANAGED)
 #define FASTCALL __stdcall
@@ -242,6 +233,30 @@ extern "C" {
 #endif
 
 #define NTAPI __stdcall
+
+#ifndef STDMETHODCALLTYPE
+#define STDMETHODCALLTYPE  __stdcall
+#define STDMETHODVCALLTYPE __cdecl
+#define STDAPICALLTYPE     __stdcall
+#define STDAPIVCALLTYPE    __cdecl
+#define STDAPI             EXTERN_C HRESULT STDAPICALLTYPE
+#define STDAPI_(t)         EXTERN_C t STDAPICALLTYPE
+#define STDMETHODIMP       HRESULT STDMETHODCALLTYPE
+#define STDMETHODIMP_(t)   t STDMETHODCALLTYPE
+#define STDAPIV            EXTERN_C HRESULT STDAPIVCALLTYPE
+#define STDAPIV_(t)        EXTERN_C t STDAPIVCALLTYPE
+#define STDMETHODIMPV      HRESULT STDMETHODVCALLTYPE
+#define STDMETHODIMPV_(t)  t STDMETHODVCALLTYPE
+#endif /* !STDMETHODCALLTYPE */
+
+#define STDOVERRIDEMETHODIMP      __override STDMETHODIMP
+#define STDOVERRIDEMETHODIMP_(t)  __override STDMETHODIMP_(t)
+#define IFACEMETHODIMP            __override STDMETHODIMP
+#define IFACEMETHODIMP_(t)        __override STDMETHODIMP_(t)
+#define STDOVERRIDEMETHODIMPV     __override STDMETHODIMPV
+#define STDOVERRIDEMETHODIMPV_(t) __override STDMETHODIMPV_(t)
+#define IFACEMETHODIMPV           __override STDMETHODIMPV
+#define IFACEMETHODIMPV_(t)       __override STDMETHODIMPV_(t)
 
 
 /* Import and Export Specifiers */

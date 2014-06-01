@@ -70,6 +70,7 @@ extern "C" {
 #endif
 
 /*** memcopy must be memmove ***/
+void* memmove(void*, const void*, size_t);
 __INTRIN_INLINE void* memcpy(void* dest, const void* source, size_t num)
 {
     return memmove(dest, source, num);
