@@ -1,5 +1,9 @@
+
 #ifndef _BASETYPS_H
 #define _BASETYPS_H
+#pragma once
+
+#include <guiddef.h>
 
 #ifndef __OBJC__
 # ifdef __cplusplus
@@ -71,8 +75,6 @@
 # endif
 # define DECLARE_INTERFACE_(i,b) DECLARE_INTERFACE(i)
 #endif
-
-#include <guiddef.h>
 
 #ifndef _ERROR_STATUS_T_DEFINED
 #define _ERROR_STATUS_T_DEFINED

@@ -39,6 +39,13 @@
 extern "C" {
 #endif
 
+/* Default to strict */
+#ifndef NO_STRICT
+#ifndef STRICT
+//#define STRICT 1 // FIXME: disabled for now
+#endif
+#endif
+
 /* Pseudo Modifiers for Input Parameters */
 
 #ifndef IN
@@ -89,6 +96,12 @@ extern "C" {
 /* Defines the "size" of an any-size array */
 #ifndef ANYSIZE_ARRAY
 #define ANYSIZE_ARRAY 1
+#endif
+
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#else
+#define EXTERN_C extern
 #endif
 
 /* Helper macro to enable gcc's extension.  */
@@ -579,6 +592,7 @@ typedef enum
 #pragma warning(push)
 #pragma warning(disable:4201)
 #endif
+
 /* Used to store a non-float 8 byte aligned structure */
 typedef struct _QUAD
 {
@@ -701,24 +715,6 @@ typedef struct _STRING64 {
   UNICODE_STRING64, *PUNICODE_STRING64,
   ANSI_STRING64, *PANSI_STRING64;
 
-/* LangID and NLS */
-#define MAKELANGID(p, s)       ((((USHORT)(s)) << 10) | (USHORT)(p))
-#define PRIMARYLANGID(lgid)    ((USHORT)(lgid) & 0x3ff)
-#define SUBLANGID(lgid)        ((USHORT)(lgid) >> 10)
-
-#define NLS_VALID_LOCALE_MASK  0x000fffff
-
-#define MAKELCID(lgid, srtid)  ((ULONG)((((ULONG)((USHORT)(srtid))) << 16) |  \
-                                         ((ULONG)((USHORT)(lgid)))))
-#define MAKESORTLCID(lgid, srtid, ver)                                        \
-                               ((ULONG)((MAKELCID(lgid, srtid)) |             \
-                                    (((ULONG)((USHORT)(ver))) << 20)))
-#define LANGIDFROMLCID(lcid)   ((USHORT)(lcid))
-#define SORTIDFROMLCID(lcid)   ((USHORT)((((ULONG)(lcid)) >> 16) & 0xf))
-#define SORTVERSIONFROMLCID(lcid)  ((USHORT)((((ULONG)(lcid)) >> 20) & 0xf))
-
-#define LOCALE_NAME_MAX_LENGTH   85
-
 /* Object Attributes */
 typedef struct _OBJECT_ATTRIBUTES {
   ULONG Length;
@@ -836,6 +832,8 @@ typedef struct _PROCESSOR_NUMBER {
   UCHAR Reserved;
 } PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
 
+#define ALL_PROCESSOR_GROUPS 0xffff
+
 _IRQL_requires_same_
 _Function_class_(EXCEPTION_ROUTINE)
 typedef
@@ -905,6 +903,20 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
 #define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
 #define _ARRAYSIZE(A)   RTL_NUMBER_OF_V1(A)
 
+#define RTL_NUMBER_OF_FIELD(type, field) \
+    (RTL_NUMBER_OF(RTL_FIELD_TYPE(type, field)))
+
+#define RTL_PADDING_BETWEEN_FIELDS(type, field1, field2) \
+    ((FIELD_OFFSET(type, field2) > FIELD_OFFSET(type, field1)) \
+        ? (FIELD_OFFSET(type, field2) - FIELD_OFFSET(type, field1) - RTL_FIELD_SIZE(type, field1)) \
+        : (FIELD_OFFSET(type, field1) - FIELD_OFFSET(type, field2) - RTL_FIELD_SIZE(type, field2)))
+
+#if defined(__cplusplus)
+#define RTL_CONST_CAST(type) const_cast<type>
+#else
+#define RTL_CONST_CAST(type) (type)
+#endif
+
 /* Type Limits */
 #define MINCHAR   0x80
 #define MAXCHAR   0x7f
@@ -933,6 +945,18 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
 #define Int64ShraMod32(a,b) __ll_rshift(a,b)
 #define Int64ShrlMod32(a,b) __ull_rshift(a,b)
 #endif
+
+#define RotateLeft32 _rotl
+#define RotateLeft64 _rotl64
+#define RotateRight32 _rotr
+#define RotateRight64 _rotr64
+
+#if defined(_M_AMD64)
+#define RotateLeft8 _rotl8
+#define RotateLeft16 _rotl16
+#define RotateRight8 _rotr8
+#define RotateRight16 _rotr16
+#endif /* _M_AMD64 */
 
 /* C_ASSERT Definition */
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
@@ -965,10 +989,120 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
 #define VER_SUITE_COMPUTE_SERVER            0x00004000
 #define VER_SUITE_WH_SERVER                 0x00008000
 
+#define PRODUCT_UNDEFINED                           0x00000000
+#define PRODUCT_ULTIMATE                            0x00000001
+#define PRODUCT_HOME_BASIC                          0x00000002
+#define PRODUCT_HOME_PREMIUM                        0x00000003
+#define PRODUCT_ENTERPRISE                          0x00000004
+#define PRODUCT_HOME_BASIC_N                        0x00000005
+#define PRODUCT_BUSINESS                            0x00000006
+#define PRODUCT_STANDARD_SERVER                     0x00000007
+#define PRODUCT_DATACENTER_SERVER                   0x00000008
+#define PRODUCT_SMALLBUSINESS_SERVER                0x00000009
+#define PRODUCT_ENTERPRISE_SERVER                   0x0000000A
+#define PRODUCT_STARTER                             0x0000000B
+#define PRODUCT_DATACENTER_SERVER_CORE              0x0000000C
+#define PRODUCT_STANDARD_SERVER_CORE                0x0000000D
+#define PRODUCT_ENTERPRISE_SERVER_CORE              0x0000000E
+#define PRODUCT_ENTERPRISE_SERVER_IA64              0x0000000F
+#define PRODUCT_BUSINESS_N                          0x00000010
+#define PRODUCT_WEB_SERVER                          0x00000011
+#define PRODUCT_CLUSTER_SERVER                      0x00000012
+#define PRODUCT_HOME_SERVER                         0x00000013
+#define PRODUCT_STORAGE_EXPRESS_SERVER              0x00000014
+#define PRODUCT_STORAGE_STANDARD_SERVER             0x00000015
+#define PRODUCT_STORAGE_WORKGROUP_SERVER            0x00000016
+#define PRODUCT_STORAGE_ENTERPRISE_SERVER           0x00000017
+#define PRODUCT_SERVER_FOR_SMALLBUSINESS            0x00000018
+#define PRODUCT_SMALLBUSINESS_SERVER_PREMIUM        0x00000019
+#define PRODUCT_HOME_PREMIUM_N                      0x0000001A
+#define PRODUCT_ENTERPRISE_N                        0x0000001B
+#define PRODUCT_ULTIMATE_N                          0x0000001C
+#define PRODUCT_WEB_SERVER_CORE                     0x0000001D
+#define PRODUCT_MEDIUMBUSINESS_SERVER_MANAGEMENT    0x0000001E
+#define PRODUCT_MEDIUMBUSINESS_SERVER_SECURITY      0x0000001F
+#define PRODUCT_MEDIUMBUSINESS_SERVER_MESSAGING     0x00000020
+#define PRODUCT_SERVER_FOUNDATION                   0x00000021
+#define PRODUCT_HOME_PREMIUM_SERVER                 0x00000022
+#define PRODUCT_SERVER_FOR_SMALLBUSINESS_V          0x00000023
+#define PRODUCT_STANDARD_SERVER_V                   0x00000024
+#define PRODUCT_DATACENTER_SERVER_V                 0x00000025
+#define PRODUCT_ENTERPRISE_SERVER_V                 0x00000026
+#define PRODUCT_DATACENTER_SERVER_CORE_V            0x00000027
+#define PRODUCT_STANDARD_SERVER_CORE_V              0x00000028
+#define PRODUCT_ENTERPRISE_SERVER_CORE_V            0x00000029
+#define PRODUCT_HYPERV                              0x0000002A
+#define PRODUCT_STORAGE_EXPRESS_SERVER_CORE         0x0000002B
+#define PRODUCT_STORAGE_STANDARD_SERVER_CORE        0x0000002C
+#define PRODUCT_STORAGE_WORKGROUP_SERVER_CORE       0x0000002D
+#define PRODUCT_STORAGE_ENTERPRISE_SERVER_CORE      0x0000002E
+#define PRODUCT_STARTER_N                           0x0000002F
+#define PRODUCT_PROFESSIONAL                        0x00000030
+#define PRODUCT_PROFESSIONAL_N                      0x00000031
+#define PRODUCT_SB_SOLUTION_SERVER                  0x00000032
+#define PRODUCT_SERVER_FOR_SB_SOLUTIONS             0x00000033
+#define PRODUCT_STANDARD_SERVER_SOLUTIONS           0x00000034
+#define PRODUCT_STANDARD_SERVER_SOLUTIONS_CORE      0x00000035
+#define PRODUCT_SB_SOLUTION_SERVER_EM               0x00000036
+#define PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM          0x00000037
+#define PRODUCT_SOLUTION_EMBEDDEDSERVER             0x00000038
+#define PRODUCT_SOLUTION_EMBEDDEDSERVER_CORE        0x00000039
+#define PRODUCT_ESSENTIALBUSINESS_SERVER_MGMT       0x0000003B
+#define PRODUCT_ESSENTIALBUSINESS_SERVER_ADDL       0x0000003C
+#define PRODUCT_ESSENTIALBUSINESS_SERVER_MGMTSVC    0x0000003D
+#define PRODUCT_ESSENTIALBUSINESS_SERVER_ADDLSVC    0x0000003E
+#define PRODUCT_SMALLBUSINESS_SERVER_PREMIUM_CORE   0x0000003F
+#define PRODUCT_CLUSTER_SERVER_V                    0x00000040
+#define PRODUCT_EMBEDDED                            0x00000041
+#define PRODUCT_STARTER_E                           0x00000042
+#define PRODUCT_HOME_BASIC_E                        0x00000043
+#define PRODUCT_HOME_PREMIUM_E                      0x00000044
+#define PRODUCT_PROFESSIONAL_E                      0x00000045
+#define PRODUCT_ENTERPRISE_E                        0x00000046
+#define PRODUCT_ULTIMATE_E                          0x00000047
+#define PRODUCT_ENTERPRISE_EVALUATION               0x00000048
+#define PRODUCT_MULTIPOINT_STANDARD_SERVER          0x0000004C
+#define PRODUCT_MULTIPOINT_PREMIUM_SERVER           0x0000004D
+#define PRODUCT_STANDARD_EVALUATION_SERVER          0x0000004F
+#define PRODUCT_DATACENTER_EVALUATION_SERVER        0x00000050
+#define PRODUCT_ENTERPRISE_N_EVALUATION             0x00000054
+#define PRODUCT_EMBEDDED_AUTOMOTIVE                 0x00000055
+#define PRODUCT_EMBEDDED_INDUSTRY_A                 0x00000056
+#define PRODUCT_THINPC                              0x00000057
+#define PRODUCT_EMBEDDED_A                          0x00000058
+#define PRODUCT_EMBEDDED_INDUSTRY                   0x00000059
+#define PRODUCT_EMBEDDED_E                          0x0000005A
+#define PRODUCT_EMBEDDED_INDUSTRY_E                 0x0000005B
+#define PRODUCT_EMBEDDED_INDUSTRY_A_E               0x0000005C
+#define PRODUCT_STORAGE_WORKGROUP_EVALUATION_SERVER 0x0000005F
+#define PRODUCT_STORAGE_STANDARD_EVALUATION_SERVER  0x00000060
+#define PRODUCT_CORE_ARM                            0x00000061
+#define PRODUCT_CORE_N                              0x00000062
+#define PRODUCT_CORE_COUNTRYSPECIFIC                0x00000063
+#define PRODUCT_CORE_SINGLELANGUAGE                 0x00000064
+#define PRODUCT_CORE                                0x00000065
+#define PRODUCT_PROFESSIONAL_WMC                    0x00000067
+#define PRODUCT_UNLICENSED                          0xABCDABCD
+
+/* LangID and NLS */
+#define MAKELANGID(p, s)       ((((USHORT)(s)) << 10) | (USHORT)(p))
+#define PRIMARYLANGID(lgid)    ((USHORT)(lgid) & 0x3ff)
+#define SUBLANGID(lgid)        ((USHORT)(lgid) >> 10)
+#define MAKELCID(lgid, srtid)  ((ULONG)((((ULONG)((USHORT)(srtid))) << 16) |  \
+                                         ((ULONG)((USHORT)(lgid)))))
+#define MAKESORTLCID(lgid, srtid, ver)                                        \
+                               ((ULONG)((MAKELCID(lgid, srtid)) |             \
+                                    (((ULONG)((USHORT)(ver))) << 20)))
+#define LANGIDFROMLCID(lcid)   ((USHORT)(lcid))
+#define SORTIDFROMLCID(lcid)   ((USHORT)((((ULONG)(lcid)) >> 16) & 0xf))
+#define SORTVERSIONFROMLCID(lcid)  ((USHORT)((((ULONG)(lcid)) >> 20) & 0xf))
+
+#define NLS_VALID_LOCALE_MASK  0x000fffff
+#define LOCALE_NAME_MAX_LENGTH   85
+
 /*  Primary language IDs. */
 #define LANG_NEUTRAL                              0x00
 #define LANG_INVARIANT                            0x7f
-
 #define LANG_AFRIKAANS                            0x36
 #define LANG_ALBANIAN                             0x1c
 #define LANG_ALSATIAN                             0x84
@@ -1107,6 +1241,281 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
 #define LANG_YI                                   0x78
 #define LANG_YORUBA                               0x6a
 #define LANG_ZULU                                 0x35
+
+#define SUBLANG_NEUTRAL                             0x00
+#define SUBLANG_DEFAULT                             0x01
+#define SUBLANG_SYS_DEFAULT                         0x02
+#define SUBLANG_CUSTOM_DEFAULT                      0x03
+#define SUBLANG_CUSTOM_UNSPECIFIED                  0x04
+#define SUBLANG_UI_CUSTOM_DEFAULT                   0x05
+#define SUBLANG_AFRIKAANS_SOUTH_AFRICA              0x01
+#define SUBLANG_ALBANIAN_ALBANIA                    0x01
+#define SUBLANG_ALSATIAN_FRANCE                     0x01
+#define SUBLANG_AMHARIC_ETHIOPIA                    0x01
+#define SUBLANG_ARABIC_SAUDI_ARABIA                 0x01
+#define SUBLANG_ARABIC_IRAQ                         0x02
+#define SUBLANG_ARABIC_EGYPT                        0x03
+#define SUBLANG_ARABIC_LIBYA                        0x04
+#define SUBLANG_ARABIC_ALGERIA                      0x05
+#define SUBLANG_ARABIC_MOROCCO                      0x06
+#define SUBLANG_ARABIC_TUNISIA                      0x07
+#define SUBLANG_ARABIC_OMAN                         0x08
+#define SUBLANG_ARABIC_YEMEN                        0x09
+#define SUBLANG_ARABIC_SYRIA                        0x0a
+#define SUBLANG_ARABIC_JORDAN                       0x0b
+#define SUBLANG_ARABIC_LEBANON                      0x0c
+#define SUBLANG_ARABIC_KUWAIT                       0x0d
+#define SUBLANG_ARABIC_UAE                          0x0e
+#define SUBLANG_ARABIC_BAHRAIN                      0x0f
+#define SUBLANG_ARABIC_QATAR                        0x10
+#define SUBLANG_ARMENIAN_ARMENIA                    0x01
+#define SUBLANG_ASSAMESE_INDIA                      0x01
+#define SUBLANG_AZERI_LATIN                         0x01
+#define SUBLANG_AZERI_CYRILLIC                      0x02
+#define SUBLANG_AZERBAIJANI_AZERBAIJAN_LATIN        0x01
+#define SUBLANG_AZERBAIJANI_AZERBAIJAN_CYRILLIC     0x02
+#define SUBLANG_BANGLA_INDIA                        0x01
+#define SUBLANG_BANGLA_BANGLADESH                   0x02
+#define SUBLANG_BASHKIR_RUSSIA                      0x01
+#define SUBLANG_BASQUE_BASQUE                       0x01
+#define SUBLANG_BELARUSIAN_BELARUS                  0x01
+#define SUBLANG_BENGALI_INDIA                       0x01
+#define SUBLANG_BENGALI_BANGLADESH                  0x02
+#define SUBLANG_BOSNIAN_BOSNIA_HERZEGOVINA_LATIN    0x05
+#define SUBLANG_BOSNIAN_BOSNIA_HERZEGOVINA_CYRILLIC 0x08
+#define SUBLANG_BRETON_FRANCE                       0x01
+#define SUBLANG_BULGARIAN_BULGARIA                  0x01
+#define SUBLANG_CATALAN_CATALAN                     0x01
+#define SUBLANG_CENTRAL_KURDISH_IRAQ                0x01
+#define SUBLANG_CHEROKEE_CHEROKEE                   0x01
+#define SUBLANG_CHINESE_TRADITIONAL                 0x01
+#define SUBLANG_CHINESE_SIMPLIFIED                  0x02
+#define SUBLANG_CHINESE_HONGKONG                    0x03
+#define SUBLANG_CHINESE_SINGAPORE                   0x04
+#define SUBLANG_CHINESE_MACAU                       0x05
+#define SUBLANG_CORSICAN_FRANCE                     0x01
+#define SUBLANG_CZECH_CZECH_REPUBLIC                0x01
+#define SUBLANG_CROATIAN_CROATIA                    0x01
+#define SUBLANG_CROATIAN_BOSNIA_HERZEGOVINA_LATIN   0x04
+#define SUBLANG_DANISH_DENMARK                      0x01
+#define SUBLANG_DARI_AFGHANISTAN                    0x01
+#define SUBLANG_DIVEHI_MALDIVES                     0x01
+#define SUBLANG_DUTCH                               0x01
+#define SUBLANG_DUTCH_BELGIAN                       0x02
+#define SUBLANG_ENGLISH_US                          0x01
+#define SUBLANG_ENGLISH_UK                          0x02
+#define SUBLANG_ENGLISH_AUS                         0x03
+#define SUBLANG_ENGLISH_CAN                         0x04
+#define SUBLANG_ENGLISH_NZ                          0x05
+#define SUBLANG_ENGLISH_EIRE                        0x06
+#define SUBLANG_ENGLISH_SOUTH_AFRICA                0x07
+#define SUBLANG_ENGLISH_JAMAICA                     0x08
+#define SUBLANG_ENGLISH_CARIBBEAN                   0x09
+#define SUBLANG_ENGLISH_BELIZE                      0x0a
+#define SUBLANG_ENGLISH_TRINIDAD                    0x0b
+#define SUBLANG_ENGLISH_ZIMBABWE                    0x0c
+#define SUBLANG_ENGLISH_PHILIPPINES                 0x0d
+#define SUBLANG_ENGLISH_INDIA                       0x10
+#define SUBLANG_ENGLISH_MALAYSIA                    0x11
+#define SUBLANG_ENGLISH_SINGAPORE                   0x12
+#define SUBLANG_ESTONIAN_ESTONIA                    0x01
+#define SUBLANG_FAEROESE_FAROE_ISLANDS              0x01
+#define SUBLANG_FILIPINO_PHILIPPINES                0x01
+#define SUBLANG_FINNISH_FINLAND                     0x01
+#define SUBLANG_FRENCH                              0x01
+#define SUBLANG_FRENCH_BELGIAN                      0x02
+#define SUBLANG_FRENCH_CANADIAN                     0x03
+#define SUBLANG_FRENCH_SWISS                        0x04
+#define SUBLANG_FRENCH_LUXEMBOURG                   0x05
+#define SUBLANG_FRENCH_MONACO                       0x06
+#define SUBLANG_FRISIAN_NETHERLANDS                 0x01
+#define SUBLANG_FULAH_SENEGAL                       0x02
+#define SUBLANG_GALICIAN_GALICIAN                   0x01
+#define SUBLANG_GEORGIAN_GEORGIA                    0x01
+#define SUBLANG_GERMAN                              0x01
+#define SUBLANG_GERMAN_SWISS                        0x02
+#define SUBLANG_GERMAN_AUSTRIAN                     0x03
+#define SUBLANG_GERMAN_LUXEMBOURG                   0x04
+#define SUBLANG_GERMAN_LIECHTENSTEIN                0x05
+#define SUBLANG_GREEK_GREECE                        0x01
+#define SUBLANG_GREENLANDIC_GREENLAND               0x01
+#define SUBLANG_GUJARATI_INDIA                      0x01
+#define SUBLANG_HAUSA_NIGERIA_LATIN                 0x01
+#define SUBLANG_HAWAIIAN_US                         0x01
+#define SUBLANG_HEBREW_ISRAEL                       0x01
+#define SUBLANG_HINDI_INDIA                         0x01
+#define SUBLANG_HUNGARIAN_HUNGARY                   0x01
+#define SUBLANG_ICELANDIC_ICELAND                   0x01
+#define SUBLANG_IGBO_NIGERIA                        0x01
+#define SUBLANG_INDONESIAN_INDONESIA                0x01
+#define SUBLANG_INUKTITUT_CANADA                    0x01
+#define SUBLANG_INUKTITUT_CANADA_LATIN              0x02
+#define SUBLANG_IRISH_IRELAND                       0x02
+#define SUBLANG_ITALIAN                             0x01
+#define SUBLANG_ITALIAN_SWISS                       0x02
+#define SUBLANG_JAPANESE_JAPAN                      0x01
+#define SUBLANG_KANNADA_INDIA                       0x01
+#define SUBLANG_KASHMIRI_SASIA                      0x02
+#define SUBLANG_KASHMIRI_INDIA                      0x02
+#define SUBLANG_KAZAK_KAZAKHSTAN                    0x01
+#define SUBLANG_KHMER_CAMBODIA                      0x01
+#define SUBLANG_KICHE_GUATEMALA                     0x01
+#define SUBLANG_KINYARWANDA_RWANDA                  0x01
+#define SUBLANG_KONKANI_INDIA                       0x01
+#define SUBLANG_KOREAN                              0x01
+#define SUBLANG_KYRGYZ_KYRGYZSTAN                   0x01
+#define SUBLANG_LAO_LAO                             0x01
+#define SUBLANG_LATVIAN_LATVIA                      0x01
+#define SUBLANG_LITHUANIAN                          0x01
+#define SUBLANG_LOWER_SORBIAN_GERMANY               0x02
+#define SUBLANG_LUXEMBOURGISH_LUXEMBOURG            0x01
+#define SUBLANG_MACEDONIAN_MACEDONIA                0x01
+#define SUBLANG_MALAY_MALAYSIA                      0x01
+#define SUBLANG_MALAY_BRUNEI_DARUSSALAM             0x02
+#define SUBLANG_MALAYALAM_INDIA                     0x01
+#define SUBLANG_MALTESE_MALTA                       0x01
+#define SUBLANG_MAORI_NEW_ZEALAND                   0x01
+#define SUBLANG_MAPUDUNGUN_CHILE                    0x01
+#define SUBLANG_MARATHI_INDIA                       0x01
+#define SUBLANG_MOHAWK_MOHAWK                       0x01
+#define SUBLANG_MONGOLIAN_CYRILLIC_MONGOLIA         0x01
+#define SUBLANG_MONGOLIAN_PRC                       0x02
+#define SUBLANG_NEPALI_INDIA                        0x02
+#define SUBLANG_NEPALI_NEPAL                        0x01
+#define SUBLANG_NORWEGIAN_BOKMAL                    0x01
+#define SUBLANG_NORWEGIAN_NYNORSK                   0x02
+#define SUBLANG_OCCITAN_FRANCE                      0x01
+#define SUBLANG_ODIA_INDIA                          0x01
+#define SUBLANG_ORIYA_INDIA                         0x01
+#define SUBLANG_PASHTO_AFGHANISTAN                  0x01
+#define SUBLANG_PERSIAN_IRAN                        0x01
+#define SUBLANG_POLISH_POLAND                       0x01
+#define SUBLANG_PORTUGUESE                          0x02
+#define SUBLANG_PORTUGUESE_BRAZILIAN                0x01
+#define SUBLANG_PULAR_SENEGAL                       0x02
+#define SUBLANG_PUNJABI_INDIA                       0x01
+#define SUBLANG_PUNJABI_PAKISTAN                    0x02
+#define SUBLANG_QUECHUA_BOLIVIA                     0x01
+#define SUBLANG_QUECHUA_ECUADOR                     0x02
+#define SUBLANG_QUECHUA_PERU                        0x03
+#define SUBLANG_ROMANIAN_ROMANIA                    0x01
+#define SUBLANG_ROMANSH_SWITZERLAND                 0x01
+#define SUBLANG_RUSSIAN_RUSSIA                      0x01
+#define SUBLANG_SAKHA_RUSSIA                        0x01
+#define SUBLANG_SAMI_NORTHERN_NORWAY                0x01
+#define SUBLANG_SAMI_NORTHERN_SWEDEN                0x02
+#define SUBLANG_SAMI_NORTHERN_FINLAND               0x03
+#define SUBLANG_SAMI_LULE_NORWAY                    0x04
+#define SUBLANG_SAMI_LULE_SWEDEN                    0x05
+#define SUBLANG_SAMI_SOUTHERN_NORWAY                0x06
+#define SUBLANG_SAMI_SOUTHERN_SWEDEN                0x07
+#define SUBLANG_SAMI_SKOLT_FINLAND                  0x08
+#define SUBLANG_SAMI_INARI_FINLAND                  0x09
+#define SUBLANG_SANSKRIT_INDIA                      0x01
+#define SUBLANG_SCOTTISH_GAELIC                     0x01
+#define SUBLANG_SERBIAN_BOSNIA_HERZEGOVINA_LATIN    0x06
+#define SUBLANG_SERBIAN_BOSNIA_HERZEGOVINA_CYRILLIC 0x07
+#define SUBLANG_SERBIAN_MONTENEGRO_LATIN            0x0b
+#define SUBLANG_SERBIAN_MONTENEGRO_CYRILLIC         0x0c
+#define SUBLANG_SERBIAN_SERBIA_LATIN                0x09
+#define SUBLANG_SERBIAN_SERBIA_CYRILLIC             0x0a
+#define SUBLANG_SERBIAN_CROATIA                     0x01
+#define SUBLANG_SERBIAN_LATIN                       0x02
+#define SUBLANG_SERBIAN_CYRILLIC                    0x03
+#define SUBLANG_SINDHI_INDIA                        0x01
+#define SUBLANG_SINDHI_PAKISTAN                     0x02
+#define SUBLANG_SINDHI_AFGHANISTAN                  0x02
+#define SUBLANG_SINHALESE_SRI_LANKA                 0x01
+#define SUBLANG_SOTHO_NORTHERN_SOUTH_AFRICA         0x01
+#define SUBLANG_SLOVAK_SLOVAKIA                     0x01
+#define SUBLANG_SLOVENIAN_SLOVENIA                  0x01
+#define SUBLANG_SPANISH                             0x01
+#define SUBLANG_SPANISH_MEXICAN                     0x02
+#define SUBLANG_SPANISH_MODERN                      0x03
+#define SUBLANG_SPANISH_GUATEMALA                   0x04
+#define SUBLANG_SPANISH_COSTA_RICA                  0x05
+#define SUBLANG_SPANISH_PANAMA                      0x06
+#define SUBLANG_SPANISH_DOMINICAN_REPUBLIC          0x07
+#define SUBLANG_SPANISH_VENEZUELA                   0x08
+#define SUBLANG_SPANISH_COLOMBIA                    0x09
+#define SUBLANG_SPANISH_PERU                        0x0a
+#define SUBLANG_SPANISH_ARGENTINA                   0x0b
+#define SUBLANG_SPANISH_ECUADOR                     0x0c
+#define SUBLANG_SPANISH_CHILE                       0x0d
+#define SUBLANG_SPANISH_URUGUAY                     0x0e
+#define SUBLANG_SPANISH_PARAGUAY                    0x0f
+#define SUBLANG_SPANISH_BOLIVIA                     0x10
+#define SUBLANG_SPANISH_EL_SALVADOR                 0x11
+#define SUBLANG_SPANISH_HONDURAS                    0x12
+#define SUBLANG_SPANISH_NICARAGUA                   0x13
+#define SUBLANG_SPANISH_PUERTO_RICO                 0x14
+#define SUBLANG_SPANISH_US                          0x15
+#define SUBLANG_SWAHILI_KENYA                       0x01
+#define SUBLANG_SWEDISH                             0x01
+#define SUBLANG_SWEDISH_FINLAND                     0x02
+#define SUBLANG_SYRIAC_SYRIA                        0x01
+#define SUBLANG_TAJIK_TAJIKISTAN                    0x01
+#define SUBLANG_TAMAZIGHT_ALGERIA_LATIN             0x02
+#define SUBLANG_TAMAZIGHT_MOROCCO_TIFINAGH          0x04
+#define SUBLANG_TAMIL_INDIA                         0x01
+#define SUBLANG_TAMIL_SRI_LANKA                     0x02
+#define SUBLANG_TATAR_RUSSIA                        0x01
+#define SUBLANG_TELUGU_INDIA                        0x01
+#define SUBLANG_THAI_THAILAND                       0x01
+#define SUBLANG_TIBETAN_PRC                         0x01
+#define SUBLANG_TIGRIGNA_ERITREA                    0x02
+#define SUBLANG_TIGRINYA_ERITREA                    0x02
+#define SUBLANG_TIGRINYA_ETHIOPIA                   0x01
+#define SUBLANG_TSWANA_BOTSWANA                     0x02
+#define SUBLANG_TSWANA_SOUTH_AFRICA                 0x01
+#define SUBLANG_TURKISH_TURKEY                      0x01
+#define SUBLANG_TURKMEN_TURKMENISTAN                0x01
+#define SUBLANG_UIGHUR_PRC                          0x01
+#define SUBLANG_UKRAINIAN_UKRAINE                   0x01
+#define SUBLANG_UPPER_SORBIAN_GERMANY               0x01
+#define SUBLANG_URDU_PAKISTAN                       0x01
+#define SUBLANG_URDU_INDIA                          0x02
+#define SUBLANG_UZBEK_LATIN                         0x01
+#define SUBLANG_UZBEK_CYRILLIC                      0x02
+#define SUBLANG_VALENCIAN_VALENCIA                  0x02
+#define SUBLANG_VIETNAMESE_VIETNAM                  0x01
+#define SUBLANG_WELSH_UNITED_KINGDOM                0x01
+#define SUBLANG_WOLOF_SENEGAL                       0x01
+#define SUBLANG_XHOSA_SOUTH_AFRICA                  0x01
+#define SUBLANG_YAKUT_RUSSIA                        0x01
+#define SUBLANG_YI_PRC                              0x01
+#define SUBLANG_YORUBA_NIGERIA                      0x01
+#define SUBLANG_ZULU_SOUTH_AFRICA                   0x01
+
+#define SORT_DEFAULT                     0x0
+#define SORT_INVARIANT_MATH              0x1
+#define SORT_JAPANESE_XJIS               0x0
+#define SORT_JAPANESE_UNICODE            0x1
+#define SORT_JAPANESE_RADICALSTROKE      0x4
+#define SORT_CHINESE_BIG5                0x0
+#define SORT_CHINESE_PRCP                0x0
+#define SORT_CHINESE_UNICODE             0x1
+#define SORT_CHINESE_PRC                 0x2
+#define SORT_CHINESE_BOPOMOFO            0x3
+#define SORT_CHINESE_RADICALSTROKE       0x4
+#define SORT_KOREAN_KSC                  0x0
+#define SORT_KOREAN_UNICODE              0x1
+#define SORT_GERMAN_PHONE_BOOK           0x1
+#define SORT_HUNGARIAN_DEFAULT           0x0
+#define SORT_HUNGARIAN_TECHNICAL         0x1
+#define SORT_GEORGIAN_TRADITIONAL        0x0
+#define SORT_GEORGIAN_MODERN             0x1
+
+#define LANG_SYSTEM_DEFAULT       MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT))
+#define LANG_USER_DEFAULT         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT))
+
+#define LOCALE_SYSTEM_DEFAULT     MAKELCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT)
+#define LOCALE_USER_DEFAULT       MAKELCID(LANG_USER_DEFAULT, SORT_DEFAULT)
+#define LOCALE_CUSTOM_DEFAULT     MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_DEFAULT), SORT_DEFAULT)
+#define LOCALE_CUSTOM_UNSPECIFIED MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_UNSPECIFIED), SORT_DEFAULT)
+#define LOCALE_CUSTOM_UI_DEFAULT  MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_UI_CUSTOM_DEFAULT), SORT_DEFAULT)
+#define LOCALE_NEUTRAL            MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT)
+#define LOCALE_INVARIANT          MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
 
 #ifdef __cplusplus
 } // extern "C"

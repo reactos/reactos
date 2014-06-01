@@ -1003,6 +1003,7 @@ __INTRIN_INLINE unsigned char _bittestandset(long * const a, const long b);
 __INTRIN_INLINE unsigned char _rotl8(unsigned char value, unsigned char shift);
 __INTRIN_INLINE unsigned short _rotl16(unsigned short value, unsigned char shift);
 __INTRIN_INLINE unsigned int _rotl(unsigned int value, int shift);
+__INTRIN_INLINE unsigned __int64 _rotl64(unsigned __int64 value, int shift);
 __INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift);
 __INTRIN_INLINE unsigned char _rotr8(unsigned char value, unsigned char shift);
 __INTRIN_INLINE unsigned short _rotr16(unsigned short value, unsigned char shift);
@@ -1113,6 +1114,21 @@ __INTRIN_INLINE unsigned int _rotl(unsigned int value, int shift)
 	__asm__("roll %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
+
+#ifdef _M_AMD64
+__INTRIN_INLINE unsigned __int64 _rotl64(unsigned __int64 value, int shift)
+{
+	unsigned __int64 retval;
+	__asm__("rolq %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	return retval;
+}
+#else
+__INTRIN_INLINE unsigned __int64 _rotl64(unsigned __int64 value, int shift)
+{
+    /* FIXME: this is probably not optimal */
+    return (value << shift) | (value >> (64 - shift));
+}
+#endif
 
 __INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
 {
