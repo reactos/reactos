@@ -65,6 +65,8 @@ private:
     CMenuToolbarBase * m_popupBar;
     INT                m_popupItem;
 
+    BOOL m_Show;
+
 public:
     CMenuBand();
     ~CMenuBand();

@@ -819,19 +819,87 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ContextSensitiveHelp(BOOL fEnterMode
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
 {
-    CComPtr<IDockingWindow>     dockingWindow;
     HRESULT                     hResult;
 
     // show the bar here
-    hResult = ReserveBorderSpace();
-    hResult = fMenuBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
-    hResult = dockingWindow->ShowDW(fShow);
+    if (fShow)
+    {
+        hResult = ReserveBorderSpace();
+    }
+    if (fMenuBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fMenuBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->ShowDW(fShow);
+    }
+    if (fControlsBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fControlsBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->ShowDW(fShow);
+    }
+    if (fNavigationBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fNavigationBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->ShowDW(fShow);
+    }
+    if (fLogoBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fLogoBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->ShowDW(fShow);
+    }
     return S_OK;
+}
+
+template<class T>
+void ReleaseCComPtrExpectZero(CComPtr<T>& cptr)
+{
+    if (cptr.p != NULL)
+    {
+        int nrc = cptr->Release();
+        if (nrc > 0)
+        {
+            DbgPrint("WARNING: Unexpected RefCount > 0!\n");
+        }
+        cptr.Detach();
+    }
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::CloseDW(DWORD dwReserved)
 {
-    return E_NOTIMPL;
+    HRESULT                     hResult;
+
+    if (fMenuBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fMenuBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->CloseDW(dwReserved);
+    }
+    ReleaseCComPtrExpectZero(fMenuBar);
+    if (fControlsBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fControlsBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->CloseDW(dwReserved);
+    }
+    ReleaseCComPtrExpectZero(fControlsBar);
+    if (fNavigationBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fNavigationBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->CloseDW(dwReserved);
+    }
+    ReleaseCComPtrExpectZero(fNavigationBar);
+    if (fLogoBar)
+    {
+        CComPtr<IDockingWindow> dockingWindow;
+        hResult = fLogoBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+        hResult = dockingWindow->CloseDW(dwReserved);
+    }
+    ReleaseCComPtrExpectZero(fLogoBar);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,

@@ -74,7 +74,8 @@ CMenuBand::CMenuBand() :
     m_hotBar(NULL),
     m_hotItem(-1),
     m_popupBar(NULL),
-    m_popupItem(-1)
+    m_popupItem(-1),
+    m_Show(FALSE)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -363,6 +364,9 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
 {
     HRESULT hr = S_OK;
 
+    if (m_Show == fShow)
+        return S_OK;
+
     if (m_staticToolbar != NULL)
     {
         hr = m_staticToolbar->ShowWindow(fShow);
@@ -402,6 +406,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
         else
             hr = m_focusManager->PopMenuBar(this);
     }
+
+    m_Show = fShow;
 
     return S_OK;
 }

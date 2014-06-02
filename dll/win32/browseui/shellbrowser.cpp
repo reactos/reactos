@@ -3062,9 +3062,49 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     return 0;
 }
 
+template<class T>
+void ReleaseCComPtrExpectZero(CComPtr<T>& cptr)
+{
+    if (cptr.p != NULL)
+    {
+        int nrc = cptr->Release();
+        if (nrc > 0)
+        {
+            DbgPrint("WARNING: Unexpected RefCount > 0!\n");
+        }
+        cptr.Detach();
+    }
+}
+
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    HRESULT hr;
     // TODO: rip down everything
+    {
+        fCurrentShellView->DestroyViewWindow();
+        fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
+        ReleaseCComPtrExpectZero(fCurrentShellView);
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (fClientBars[i].clientBar == NULL)
+                continue;
+            IDockingWindow * pdw;
+            hr = fClientBars[i].clientBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &pdw));
+            if (FAILED_UNEXPECTEDLY(hr))
+                continue;
+            pdw->ShowDW(FALSE);
+            pdw->CloseDW(0);
+            pdw->Release();
+            ReleaseCComPtrExpectZero(fClientBars[i].clientBar);
+        }
+        ReleaseCComPtrExpectZero(fTravelLog);
+
+        fCurrentShellFolder.Release();
+        ILFree(fCurrentDirectoryPIDL);
+        ::DestroyWindow(fStatusBar);
+        DestroyMenu(fCurrentMenuBar);
+    }
     PostQuitMessage(0);
     return 0;
 }
@@ -3312,31 +3352,20 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 {
-    CComPtr<IShellBrowser>                  shellBrowser;
-    CComObject<CShellBrowser>               *theCabinet;
+    CComPtr<CComObject<CShellBrowser>>      theCabinet;
     HRESULT                                 hResult;
     MSG Msg;
     BOOL Ret;
-
-    OleInitialize(NULL);
-
+    
     ATLTRY(theCabinet = new CComObject<CShellBrowser>);
     if (theCabinet == NULL)
     {
-        hResult = E_OUTOFMEMORY;
-        goto uninitialize;
+        return E_OUTOFMEMORY;
     }
-
-    hResult = theCabinet->QueryInterface(IID_PPV_ARG(IShellBrowser, &shellBrowser));
-    if (FAILED(hResult))
-    {
-        delete theCabinet;
-        goto uninitialize;
-    }
-
+    
     hResult = theCabinet->Initialize(parameters->directoryPIDL, 0, 0, 0);
     if (FAILED(hResult))
-        goto uninitialize;
+        return E_OUTOFMEMORY;
 
     while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
     {
@@ -3355,14 +3384,30 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
         if (Msg.message == WM_QUIT)
             break;
     }
+    
+    //TerminateProcess(GetCurrentProcess(), hResult);
 
-uninitialize:
-    OleUninitialize();
+    int nrc = theCabinet->Release();
+    if (nrc > 0)
+    {
+        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked, process will never terminate.\n");
+    }
+
+    theCabinet.Detach();
+
     return hResult;
 }
 
 DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
 {
+    HRESULT hr;
     IEThreadParamBlock * parameters = (IEThreadParamBlock *) lpThreadParameter;
-    return ExplorerMessageLoop(parameters);
+
+    OleInitialize(NULL);
+
+    ATLTRY(hr = ExplorerMessageLoop(parameters));
+
+    OleUninitialize();
+
+    return hr;
 }
