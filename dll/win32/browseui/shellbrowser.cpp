@@ -3352,7 +3352,7 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 {
-    CComPtr<CComObject<CShellBrowser>>      theCabinet;
+    CComPtr< CComObject<CShellBrowser> >    theCabinet;
     HRESULT                                 hResult;
     MSG Msg;
     BOOL Ret;
