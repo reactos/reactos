@@ -1383,9 +1383,7 @@ void CDefView::DoActivate(UINT uState)
             for (int i = 0; i < mic; i++)
             {
                 HMENU submenu = GetSubMenu(m_hMenu, 0);
-                RemoveMenu(m_hMenu, 0, MF_BYPOSITION);
-                if (submenu)
-                    DestroyMenu(submenu);
+                DeleteMenu(m_hMenu, 0, MF_BYPOSITION);
             }
 
             m_pShellBrowser->InsertMenusSB(m_hMenu, &omw);

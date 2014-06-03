@@ -132,7 +132,7 @@ private:
 
 public:
     CMenuStaticToolbar(CMenuBand *menuBand);
-    virtual ~CMenuStaticToolbar() {}
+    virtual ~CMenuStaticToolbar();
 
     HRESULT SetMenu(HMENU hmenu, HWND hwnd, DWORD dwFlags);
     HRESULT GetMenu(HMENU *phmenu, HWND *phwnd, DWORD *pdwFlags);

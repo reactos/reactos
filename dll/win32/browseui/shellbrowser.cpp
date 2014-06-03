@@ -1571,8 +1571,15 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         DeleteMenu(theMenu, IDM_VIEW_TOOLBARS, MF_BYCOMMAND);
     else
     {
+        menuItemInfo.cbSize = sizeof(menuItemInfo);
+        menuItemInfo.fMask = MIIM_SUBMENU;
+        GetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
+        DestroyMenu(menuItemInfo.hSubMenu);
+
         toolbarMenuBar = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_CABINET_CONTEXTMENU));
         toolbarMenu = GetSubMenu(toolbarMenuBar, 0);
+        RemoveMenu(toolbarMenuBar, 0, MF_BYPOSITION);
+        DestroyMenu(toolbarMenuBar);
 
         SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_STANDARDBUTTONS, commandList[0].cmdf);
         SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_ADDRESSBAR, commandList[1].cmdf & OLECMDF_ENABLED);
@@ -1846,6 +1853,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::InsertMenusSB(HMENU hmenuShared, LPOLEM
 
     int GCCU(itemCount3) = GetMenuItemCount(hmenuShared);
     Unused(itemCount3);
+
+    DestroyMenu(mainMenu);
 
     lpMenuWidths->width[0] = 2;
     lpMenuWidths->width[2] = 3;

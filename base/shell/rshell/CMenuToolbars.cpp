@@ -1095,6 +1095,10 @@ CMenuStaticToolbar::CMenuStaticToolbar(CMenuBand *menuBand) :
 {
 }
 
+CMenuStaticToolbar::~CMenuStaticToolbar()
+{
+}
+
 HRESULT  CMenuStaticToolbar::GetMenu(
     _Out_opt_ HMENU *phmenu,
     _Out_opt_ HWND *phwnd,

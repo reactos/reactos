@@ -1680,6 +1680,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
             SendMessage(fToolbarWindow, TB_CUSTOMIZE, 0, 0);
             break;
     }
+
+    DestroyMenu(contextMenuBar);
     return 1;
 }
 
