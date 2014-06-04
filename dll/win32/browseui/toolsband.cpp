@@ -37,12 +37,12 @@ class CToolsBand :
     public IPersistStream
 {
 private:
-    IDockingWindowSite          *fDockSite;
+    CComPtr<IDockingWindowSite> fDockSite;
     GUID                        fExecCommandCategory;
     CComPtr<IOleCommandTarget>  fExecCommandTarget;
 public:
     CToolsBand();
-    ~CToolsBand();
+    virtual ~CToolsBand();
 public:
     // *** IDeskBand methods ***
     virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi);
@@ -95,14 +95,12 @@ END_COM_MAP()
 };
 
 CToolsBand::CToolsBand()
+    : fDockSite(NULL)
 {
-    fDockSite = NULL;
 }
 
 CToolsBand::~CToolsBand()
 {
-    if (fDockSite)
-        fDockSite->Release();
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi)
@@ -267,8 +265,8 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     HWND                    toolbar;
     HRESULT                 hResult;
 
-    if (fDockSite != NULL)
-        fDockSite->Release();
+    if(fDockSite) fDockSite.Release();
+
     if (pUnkSite == NULL)
         return S_OK;
     hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fDockSite));
@@ -364,6 +362,8 @@ HRESULT STDMETHODCALLTYPE CToolsBand::CloseDW(DWORD dwReserved)
 
     m_hWnd = NULL;
 
+    if (fDockSite) fDockSite.Release();
+
     return S_OK;
 }
 
@@ -440,19 +440,19 @@ LRESULT CToolsBand::OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
 
 HRESULT CreateToolsBar(REFIID riid, void **ppv)
 {
-    CComObject<CToolsBand>                  *theMenuBar;
-    HRESULT                                 hResult;
+    CToolsBand                  *theToolbar;
+    HRESULT                     hResult;
 
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY (theMenuBar = new CComObject<CToolsBand>);
-    if (theMenuBar == NULL)
+    ATLTRY(theToolbar = new CComObject<CToolsBand>);
+    if (theToolbar == NULL)
         return E_OUTOFMEMORY;
-    hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+    hResult = theToolbar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
     if (FAILED(hResult))
     {
-        delete theMenuBar;
+        delete theToolbar;
         return hResult;
     }
     return S_OK;

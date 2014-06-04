@@ -69,7 +69,7 @@ private:
 
 public:
     CMenuBand();
-    ~CMenuBand();
+    virtual ~CMenuBand();
 
     DECLARE_NOT_AGGREGATABLE(CMenuBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()

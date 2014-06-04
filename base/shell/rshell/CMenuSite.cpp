@@ -45,7 +45,7 @@ HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
     hr = site->QueryInterface(riid, ppv);
 
     if (FAILED_UNEXPECTEDLY(hr))
-        site->Release();
+        delete site;
 #endif
 
     return hr;

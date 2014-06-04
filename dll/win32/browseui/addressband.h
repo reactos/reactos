@@ -45,7 +45,7 @@ private:
     DWORD                                   fAdviseCookie;
 public:
     CAddressBand();
-    ~CAddressBand();
+    virtual ~CAddressBand();
 private:
     void FocusChange(BOOL bFocus);
 public:

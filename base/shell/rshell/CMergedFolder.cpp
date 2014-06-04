@@ -36,7 +36,7 @@ private:
 
 public:
     CEnumMergedFolder() : m_UserLocal(NULL), m_AllUSers(NULL), m_FirstDone(FALSE) {}
-    ~CEnumMergedFolder() {}
+    virtual ~CEnumMergedFolder() {}
 
     DECLARE_NOT_AGGREGATABLE(CEnumMergedFolder)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -139,7 +139,7 @@ HRESULT WINAPI CMergedFolder_Constructor(IShellFolder* userLocal, IShellFolder* 
 
     hr = fld->QueryInterface(riid, ppv);
     if (FAILED_UNEXPECTEDLY(hr))
-        fld->Release();
+        delete fld;
 
     return hr;
 }

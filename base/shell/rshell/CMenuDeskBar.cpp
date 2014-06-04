@@ -47,7 +47,7 @@ HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
     hr = deskbar->QueryInterface(riid, ppv);
 
     if (FAILED_UNEXPECTEDLY(hr))
-        deskbar->Release();
+        delete deskbar;
 
 #endif
     return hr;

@@ -29,7 +29,7 @@ private:
 
 public:
     CMergedFolder() {}
-    ~CMergedFolder() {}
+    virtual ~CMergedFolder() {}
 
     HRESULT _SetSources(IShellFolder* userLocal, IShellFolder* allUSers);
 

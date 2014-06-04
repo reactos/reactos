@@ -1382,7 +1382,6 @@ void CDefView::DoActivate(UINT uState)
             INT mic = GetMenuItemCount(m_hMenu);
             for (int i = 0; i < mic; i++)
             {
-                HMENU submenu = GetSubMenu(m_hMenu, 0);
                 DeleteMenu(m_hMenu, 0, MF_BYPOSITION);
             }
 

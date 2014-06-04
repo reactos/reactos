@@ -111,15 +111,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
 HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 {
     CComPtr<IBrowserService>                browserService;
-    CComPtr<IOleWindow>                     oleWindow;
     CComPtr<IShellService>                  shellService;
-    CComPtr<IUnknown>                       offset34;
     HWND                                    parentWindow;
     HWND                                    combobox;
-    static const TBBUTTON                   buttonInfo[] = { {0, 1, TBSTATE_ENABLED, 0} };
-    HIMAGELIST                              normalImagelist;
-    HIMAGELIST                              hotImageList;
-    HINSTANCE                               shellInstance;
     HRESULT                                 hResult;
 
     if (pUnkSite == NULL)
@@ -137,7 +131,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 
     // get window handle of parent
     parentWindow = NULL;
-    hResult = IUnknown_GetWindow(pUnkSite, &parentWindow);
+    hResult = IUnknown_GetWindow(fSite, &parentWindow);
 
     if (!::IsWindow(parentWindow))
         return E_FAIL;
@@ -182,35 +176,43 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     // TODO: properly initialize this from registry
     fGoButtonShown = true;
 
-    shellInstance = GetModuleHandle(_T("shell32.dll"));
-    normalImagelist = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_NORMAL),
-        20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
-    hotImageList = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_HOT),
-        20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
-
-    fGoButton = CreateWindowEx(WS_EX_TOOLWINDOW, TOOLBARCLASSNAMEW, 0, WS_CHILD | WS_CLIPSIBLINGS |
-        WS_CLIPCHILDREN | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | CCS_NODIVIDER |
-        CCS_NOPARENTALIGN | CCS_NORESIZE,
-        0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
-    SendMessage(fGoButton, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-    SendMessage(fGoButton, TB_SETMAXTEXTROWS, 1, 0);
-    if (normalImagelist)
-        SendMessage(fGoButton, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(normalImagelist));
-    if (hotImageList)
-        SendMessage(fGoButton, TB_SETHOTIMAGELIST, 0, reinterpret_cast<LPARAM>(hotImageList));
-    SendMessage(fGoButton, TB_ADDSTRINGW,
-        reinterpret_cast<WPARAM>(_AtlBaseModule.GetResourceInstance()), IDS_GOBUTTONLABEL);
-    SendMessage(fGoButton, TB_ADDBUTTONSW, 1, (LPARAM)&buttonInfo);
-
-    IImageList * piml;
-    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (fGoButtonShown)
     {
-        SendMessageW(combobox, CBEM_SETIMAGELIST, 0, 0);
-    }
-    else
-    {
-        SendMessageW(combobox, CBEM_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
+        const TBBUTTON buttonInfo [] = { { 0, 1, TBSTATE_ENABLED, 0 } };
+        HIMAGELIST            normalImagelist;
+        HIMAGELIST            hotImageList;
+        HINSTANCE             shellInstance;
+
+        shellInstance = GetModuleHandle(_T("shell32.dll"));
+        normalImagelist = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_NORMAL),
+            20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
+        hotImageList = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_HOT),
+            20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
+
+        fGoButton = CreateWindowEx(WS_EX_TOOLWINDOW, TOOLBARCLASSNAMEW, 0, WS_CHILD | WS_CLIPSIBLINGS |
+            WS_CLIPCHILDREN | TBSTYLE_LIST | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | CCS_NODIVIDER |
+            CCS_NOPARENTALIGN | CCS_NORESIZE,
+            0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
+        SendMessage(fGoButton, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+        SendMessage(fGoButton, TB_SETMAXTEXTROWS, 1, 0);
+        if (normalImagelist)
+            SendMessage(fGoButton, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(normalImagelist));
+        if (hotImageList)
+            SendMessage(fGoButton, TB_SETHOTIMAGELIST, 0, reinterpret_cast<LPARAM>(hotImageList));
+        SendMessage(fGoButton, TB_ADDSTRINGW,
+            reinterpret_cast<WPARAM>(_AtlBaseModule.GetResourceInstance()), IDS_GOBUTTONLABEL);
+        SendMessage(fGoButton, TB_ADDBUTTONSW, 1, (LPARAM) &buttonInfo);
+
+        IImageList * piml;
+        HRESULT hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            SendMessageW(combobox, CBEM_SETIMAGELIST, 0, 0);
+        }
+        else
+        {
+            SendMessageW(combobox, CBEM_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(piml));
+        }
     }
 
     // take advice to watch events
@@ -251,6 +253,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::CloseDW(DWORD dwReserved)
         DestroyWindow();
 
     m_hWnd = NULL;
+
+    if (fAddressEditBox) fAddressEditBox.Release();
+    if (fSite) fSite.Release();
 
     return S_OK;
 }
@@ -662,8 +667,8 @@ LRESULT CAddressBand::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPara
 
 HRESULT CreateAddressBand(REFIID riid, void **ppv)
 {
-    CComObject<CAddressBand>                *theMenuBar;
-    HRESULT                                 hResult;
+    CAddressBand                *theMenuBar;
+    HRESULT                     hResult;
 
     if (ppv == NULL)
         return E_POINTER;

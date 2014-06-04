@@ -52,7 +52,7 @@ HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
     hr = site->QueryInterface(riid, ppv);
 
     if (FAILED_UNEXPECTEDLY(hr))
-        site->Release();
+        delete site;
 #endif
 
     return hr;
@@ -255,14 +255,15 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetSite(REFIID riid, PVOID *ppvSite)
     return m_site->QueryInterface(riid, ppvSite);
 }
 
-HRESULT STDMETHODCALLTYPE CMenuBand::GetWindow(
-    HWND *phwnd)
+HRESULT STDMETHODCALLTYPE CMenuBand::GetWindow(HWND *phwnd)
 {
     if (m_SFToolbar != NULL)
         return m_SFToolbar->GetWindow(phwnd);
 
     if (m_staticToolbar != NULL)
         return m_staticToolbar->GetWindow(phwnd);
+
+    if (phwnd) *phwnd = NULL;
 
     return E_FAIL;
 }
@@ -417,10 +418,25 @@ HRESULT STDMETHODCALLTYPE CMenuBand::CloseDW(DWORD dwReserved)
     ShowDW(FALSE);
 
     if (m_staticToolbar != NULL)
-        return m_staticToolbar->Close();
+    {
+        m_staticToolbar->Close();
+        delete m_staticToolbar;
+        m_staticToolbar = NULL;
+    }
 
     if (m_SFToolbar != NULL)
-        return m_SFToolbar->Close();
+    {
+        m_SFToolbar->Close();
+        delete m_staticToolbar;
+        m_staticToolbar = NULL;
+    }
+
+    if (m_site) m_site.Release();
+    if (m_psmc) m_psmc.Release();
+    if (m_subMenuChild) m_subMenuChild.Release();
+    if (m_subMenuParent) m_subMenuParent.Release();
+    if (m_childBand) m_childBand.Release();
+    if (m_parentBand) m_parentBand.Release();
 
     return S_OK;
 }

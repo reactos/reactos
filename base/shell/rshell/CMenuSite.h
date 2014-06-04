@@ -39,7 +39,7 @@ private:
 
 public:
     CMenuSite();
-    ~CMenuSite() {}
+    virtual ~CMenuSite() {}
 
     DECLARE_WND_CLASS_EX(_T("MenuSite"), 0, COLOR_MENU)
 

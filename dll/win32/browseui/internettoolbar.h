@@ -45,7 +45,7 @@ private:
     CComPtr<IShellMenu>             fFavoritesMenu;
 public:
     CMenuCallback();
-    ~CMenuCallback();
+    virtual ~CMenuCallback();
 
     HRESULT STDMETHODCALLTYPE GetObject(LPSMDATA psmd, REFIID riid, void **ppvObject);
 public:
@@ -94,7 +94,7 @@ public:
     LONG                                    fStartHeight;
 public:
     CInternetToolbar();
-    ~CInternetToolbar();
+    virtual ~CInternetToolbar();
     void AddDockItem(IUnknown *newItem, int bandID, int flags);
     HRESULT ReserveBorderSpace(LONG maxHeight = -1);
     HRESULT CreateMenuBar(IShellMenu **menuBar);

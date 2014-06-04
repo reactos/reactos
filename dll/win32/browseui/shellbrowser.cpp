@@ -29,6 +29,8 @@ BOOL WINAPI Shell_GetImageLists(
     _Out_  HIMAGELIST *phimlSmall
     );
 
+extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
+
 #include "newatlinterfaces.h"
 
 /*
@@ -732,12 +734,9 @@ CShellBrowser::~CShellBrowser()
 
 HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
 {
-    CComPtr<IDockingWindow>                 dockingWindow;
-    CComPtr<IStream>                        settingsStream;
     CComPtr<IPersistStreamInit>             persistStreamInit;
-    CComPtr<IOleCommandTarget>              commandTarget;
-    CComPtr<IObjectWithSite>                objectSite;
     HRESULT                                 hResult;
+    CComPtr<IUnknown> clientBar;
 
     _AtlInitialConstruct();
 
@@ -756,61 +755,53 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
     if (FAILED(hResult))
         return hResult;
 #else
-    hResult = CreateInternetToolbar(IID_PPV_ARG(IUnknown, &fClientBars[BIInternetToolbar].clientBar));
+    hResult = CreateInternetToolbar(IID_PPV_ARG(IUnknown, &clientBar));
     if (FAILED(hResult))
         return hResult;
 #endif
 
+    fClientBars[BIInternetToolbar].clientBar = clientBar;
+
     // create interfaces
-    hResult = fClientBars[BIInternetToolbar].clientBar->QueryInterface(
-        IID_PPV_ARG(IDockingWindow, &dockingWindow));
-    if (FAILED(hResult))
+    hResult = clientBar->QueryInterface(IID_PPV_ARG(IPersistStreamInit, &persistStreamInit));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = fClientBars[BIInternetToolbar].clientBar->QueryInterface(
-        IID_PPV_ARG(IPersistStreamInit, &persistStreamInit));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = fClientBars[BIInternetToolbar].clientBar->QueryInterface(
-        IID_PPV_ARG(IOleCommandTarget, &commandTarget));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = fClientBars[BIInternetToolbar].clientBar->QueryInterface(
-        IID_PPV_ARG(IObjectWithSite, &objectSite));
+
+    hResult = IUnknown_SetSite(clientBar, static_cast<IShellBrowser *>(this));
     if (FAILED(hResult))
         return hResult;
 
-    hResult = objectSite->SetSite(static_cast<IShellBrowser *>(this));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = commandTarget->Exec(&CGID_PrivCITCommands, 1, 1 /* or 0 */, NULL, NULL);
+    hResult = IUnknown_Exec(clientBar, CGID_PrivCITCommands, 1, 1 /* or 0 */, NULL, NULL);
     if (FAILED(hResult))
         return hResult;
 
     // TODO: create settingsStream from registry entry
-    if (settingsStream.p == NULL)
+    //if (settingsStream.p)
+    //{
+    //    hResult = persistStreamInit->Load(settingsStream);
+    //    if (FAILED_UNEXPECTEDLY(hResult))
+    //        return hResult;
+    //}
+    //else
     {
         hResult = persistStreamInit->InitNew();
         if (FAILED(hResult))
             return hResult;
     }
-    else
-    {
-        hResult = persistStreamInit->Load(settingsStream);
-        if (FAILED(hResult))
-            return hResult;
-    }
-    hResult = dockingWindow->ShowDW(TRUE);
-    if (FAILED(hResult))
+
+    hResult = IUnknown_ShowDW(clientBar, TRUE);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    fToolbarProxy.Initialize(m_hWnd, fClientBars[BIInternetToolbar].clientBar);
+    fToolbarProxy.Initialize(m_hWnd, clientBar);
+
 
     // create status bar
     fStatusBar = CreateWindow(STATUSCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
                     SBT_NOBORDERS | SBT_TOOLTIPS, 0, 0, 500, 20, m_hWnd, (HMENU)0xa001,
                     _AtlBaseModule.GetModuleInstance(), 0);
     fStatusBarVisible = true;
+
 
     // browse 
     hResult = BrowseToPIDL(pidl, BTP_UPDATE_NEXT_HISTORY);
@@ -1091,14 +1082,8 @@ HRESULT CShellBrowser::GetMenuBand(REFIID riid, void **shellMenu)
     CComPtr<IDeskBand>                      deskBand;
     HRESULT                                 hResult;
 
-    if (fClientBars[BIInternetToolbar].clientBar.p == NULL)
-        return E_FAIL;
-    hResult = fClientBars[BIInternetToolbar].clientBar->QueryInterface(
-        IID_PPV_ARG(IServiceProvider, &serviceProvider));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = serviceProvider->QueryService(SID_IBandSite, IID_PPV_ARG(IBandSite, &bandSite));
-    if (FAILED(hResult))
+    hResult = IUnknown_QueryService(fClientBars[BIInternetToolbar].clientBar, SID_IBandSite, IID_PPV_ARG(IBandSite, &bandSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = bandSite->QueryBand(1, &deskBand, NULL, NULL, 0);
     if (FAILED(hResult))
@@ -1291,7 +1276,6 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     CShellBrowser                           *pThis = reinterpret_cast<CShellBrowser *>(hWnd);
     _ATL_MSG                                msg(pThis->m_hWnd, uMsg, wParam, lParam);
     LRESULT                                 lResult;
-    CComPtr<IMenuBand>                      menuBand;
     const _ATL_MSG                          *previousMessage;
     BOOL                                    handled;
     WNDPROC                                 saveWindowProc;
@@ -1301,6 +1285,7 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     previousMessage = pThis->m_pCurrentMsg;
     pThis->m_pCurrentMsg = &msg;
 
+    CComPtr<IMenuBand> menuBand;
     hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
     if (SUCCEEDED(hResult) && menuBand.p != NULL)
     {
@@ -1311,6 +1296,7 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
         wParam = msg.wParam;
         lParam = msg.lParam;
     }
+    menuBand.Release();
 
     handled = pThis->ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult, 0);
     ATLASSERT(pThis->m_pCurrentMsg == &msg);
@@ -1867,7 +1853,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetMenuSB(HMENU hmenuShared, HOLEMENU h
     CComPtr<IShellMenu>                     shellMenu;
     HRESULT                                 hResult;
 
-    if (IsMenu(hmenuShared) == FALSE)
+    if (hmenuShared && IsMenu(hmenuShared) == FALSE)
         return E_FAIL;
     hResult = GetMenuBand(IID_PPV_ARG(IShellMenu, &shellMenu));
     if (FAILED(hResult))
@@ -1882,7 +1868,10 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetMenuSB(HMENU hmenuShared, HOLEMENU h
 HRESULT STDMETHODCALLTYPE CShellBrowser::RemoveMenusSB(HMENU hmenuShared)
 {
     if (hmenuShared == fCurrentMenuBar)
-        fCurrentMenuBar = NULL;
+    {
+        //DestroyMenu(fCurrentMenuBar);
+        SetMenuSB(NULL, NULL, NULL);
+    }
     return S_OK;
 }
 
@@ -3072,7 +3061,7 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 }
 
 template<class T>
-void ReleaseCComPtrExpectZero(CComPtr<T>& cptr)
+void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
 {
     if (cptr.p != NULL)
     {
@@ -3080,6 +3069,13 @@ void ReleaseCComPtrExpectZero(CComPtr<T>& cptr)
         if (nrc > 0)
         {
             DbgPrint("WARNING: Unexpected RefCount > 0!\n");
+            if (forceRelease)
+            {
+                while (nrc > 0)
+                {
+                    nrc = cptr->Release();
+                }
+            }
         }
         cptr.Detach();
     }
@@ -3361,8 +3357,8 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 {
-    CComPtr< CComObject<CShellBrowser> >    theCabinet;
-    HRESULT                                 hResult;
+    CComPtr<CShellBrowser>    theCabinet;
+    HRESULT                   hResult;
     MSG Msg;
     BOOL Ret;
     
@@ -3384,14 +3380,14 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
             break;
         }
 
+        if (Msg.message == WM_QUIT)
+            break;
+
         if (theCabinet->v_MayTranslateAccelerator(&Msg) != S_OK)
         {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
         }
-
-        if (Msg.message == WM_QUIT)
-            break;
     }
     
     //TerminateProcess(GetCurrentProcess(), hResult);
@@ -3399,7 +3395,9 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     int nrc = theCabinet->Release();
     if (nrc > 0)
     {
-        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked, process will never terminate.\n");
+        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked, process will never terminate. Terminating forcefully.\n", nrc);
+
+        //TerminateProcess(GetCurrentProcess(), 1);
     }
 
     theCabinet.Detach();

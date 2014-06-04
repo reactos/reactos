@@ -52,7 +52,7 @@ private:
 
 public:
     CMenuDeskBar();
-    ~CMenuDeskBar();
+    virtual ~CMenuDeskBar();
 
     DECLARE_NOT_AGGREGATABLE(CMenuDeskBar)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
