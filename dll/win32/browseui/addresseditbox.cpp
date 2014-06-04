@@ -144,7 +144,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     if (SUCCEEDED(hr))
     {
         hr = pisb->BrowseObject(pidlLastParsed, 0);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
         {
             HWND topLevelWindow;
             LPCITEMIDLIST pidlChild;
@@ -267,7 +267,7 @@ HRESULT CreateAddressEditBox(REFIID riid, void **ppv)
     if (theMenuBar == NULL)
         return E_OUTOFMEMORY;
     hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
         delete theMenuBar;
         return hResult;

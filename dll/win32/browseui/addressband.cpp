@@ -126,7 +126,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     fSite.Release();
 
     hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fSite));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
     // get window handle of parent
@@ -155,22 +155,22 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 #else
     hResult = E_FAIL;
 #endif
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
         // instantiate new version
         hResult = CreateAddressEditBox(IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
     }
 
     hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &shellService));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = fAddressEditBox->Init(combobox, fEditControl, 8, pUnkSite /*(IAddressBand *)this*/);
-    if (FAILED(hResult))
+    hResult = fAddressEditBox->Init(combobox, fEditControl, 8, fSite /*(IAddressBand *)this*/);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = shellService->SetOwner(pUnkSite);
-    if (FAILED(hResult))
+    hResult = shellService->SetOwner(fSite);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
     // TODO: properly initialize this from registry
@@ -285,7 +285,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::QueryStatus(
     HRESULT                                 hResult;
 
     hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return oleCommandTarget->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
 }
@@ -333,7 +333,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg
     if (fActivate)
     {
         hResult = fSite->QueryInterface(IID_PPV_ARG(IInputObjectSite, &inputObjectSite));
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = inputObjectSite->OnFocusChangeIS(static_cast<IDeskBand *>(this), fActivate);
         SetFocus();
@@ -361,7 +361,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
             break;
     }
     hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return winEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
 }
@@ -374,7 +374,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::IsWindowOwner(HWND hWnd)
     if (fAddressEditBox)
     {
         hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IWinEventHandler, &winEventHandler));
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         return winEventHandler->IsWindowOwner(hWnd);
     }
@@ -387,7 +387,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::FileSysChange(long param8, long paramC)
     HRESULT                                 hResult;
 
     hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IAddressBand, &addressBand));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return addressBand->FileSysChange(param8, paramC);
 }
@@ -398,7 +398,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Refresh(long param8)
     HRESULT                                 hResult;
 
     hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IAddressBand, &addressBand));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return addressBand->Refresh(param8);
 }
@@ -494,7 +494,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Invoke(DISPID dispIdMember, REFIID riid,
         }
 
         hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
         isb->GetPidl(&absolutePIDL);
 
@@ -677,7 +677,7 @@ HRESULT CreateAddressBand(REFIID riid, void **ppv)
     if (theMenuBar == NULL)
         return E_OUTOFMEMORY;
     hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
         delete theMenuBar;
         return hResult;

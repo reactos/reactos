@@ -171,7 +171,7 @@ HRESULT STDMETHODCALLTYPE CBrandBand::SetSite(IUnknown* pUnkSite)
 
     // get window handle of parent
     hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fSite));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     parentWindow = NULL;
     hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
@@ -356,7 +356,7 @@ HRESULT STDMETHODCALLTYPE CBrandBand::QueryService(REFGUID guidService, REFIID r
     if (IsEqualIID(guidService, SID_SBrandBand))
         return this->QueryInterface(riid, ppvObject);
     hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return serviceProvider->QueryService(guidService, riid, ppvObject);
 }
@@ -480,7 +480,7 @@ HRESULT CreateBrandBand(REFIID riid, void **ppv)
     if (theMenuBar == NULL)
         return E_OUTOFMEMORY;
     hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
         delete theMenuBar;
         return hResult;

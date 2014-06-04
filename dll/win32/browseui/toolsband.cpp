@@ -270,7 +270,7 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     if (pUnkSite == NULL)
         return S_OK;
     hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fDockSite));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     parentWindow = NULL;
     hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
@@ -450,7 +450,7 @@ HRESULT CreateToolsBar(REFIID riid, void **ppv)
     if (theToolbar == NULL)
         return E_OUTOFMEMORY;
     hResult = theToolbar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
         delete theToolbar;
         return hResult;

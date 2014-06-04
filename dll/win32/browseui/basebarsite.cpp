@@ -171,22 +171,22 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
     HRESULT                                 hResult;
 
     hResult = newBar->QueryInterface(IID_PPV_ARG(IPersist, &persist));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = newBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &site));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = newBar->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = newBar->QueryInterface(IID_PPV_ARG(IDeskBand, &deskBand));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = newBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = site->SetSite(static_cast<IOleWindow *>(this));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     ATLTRY(newInfo = new CBarInfo);
     if (newInfo == NULL)
@@ -224,7 +224,7 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
 
     // this call is what makes the tree fill with contents
     hResult = dockingWindow->ShowDW(TRUE);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     // for now
     fCurrentActiveBar = newInfo;
@@ -267,7 +267,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryService(REFGUID guidService, REFIID
     if (fDeskBarSite == NULL)
         return E_FAIL;
     hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     // called for SID_STopLevelBrowser, IID_IBrowserService to find top level browser
     // called for SID_IWebBrowserApp, IID_IConnectionPointContainer
@@ -326,13 +326,13 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
     else
     {
         hResult = punkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = punkSite->QueryInterface(IID_PPV_ARG(IUnknown, &fDeskBarSite));
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = oleWindow->GetWindow(&ownerWindow);
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         m_hWnd = CreateWindow(REBARCLASSNAMEW, NULL, WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS |
                     WS_CLIPCHILDREN |
@@ -487,7 +487,7 @@ HRESULT CreateBaseBarSite(REFIID riid, void **ppv)
     if (theBaseBarSite == NULL)
         return E_OUTOFMEMORY;
     hResult = theBaseBarSite->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
         delete theBaseBarSite;
         return hResult;

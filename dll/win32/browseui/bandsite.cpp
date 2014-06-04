@@ -202,7 +202,7 @@ HRESULT CBandSiteBase::UpdateAllBands()
         if (fBands[i].DeskBand != NULL)
         {
             hRet = UpdateSingleBand(&fBands[i]);
-            if (FAILED(hRet))
+            if (FAILED_UNEXPECTEDLY(hRet))
                 return hRet;
         }
     }
@@ -628,11 +628,11 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetDeskBarSite(IUnknown *pUnk)
     fOleWindow.Release();
 
     hRet = pUnk->QueryInterface(IID_PPV_ARG(IOleWindow, &fOleWindow));
-    if (FAILED(hRet))
+    if (FAILED_UNEXPECTEDLY(hRet))
         return E_FAIL;
 
     hRet = fOleWindow->GetWindow(&hWndParent);
-    if (FAILED(hRet))
+    if (FAILED_UNEXPECTEDLY(hRet))
         return E_FAIL;
 
     style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | RBS_VARHEIGHT |

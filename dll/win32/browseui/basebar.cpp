@@ -180,10 +180,10 @@ HRESULT CBaseBar::ReserveBorderSpace()
     HRESULT                                 hResult;
 
     hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = dockingWindowSite->GetBorderDW(static_cast<IDeskBar *>(this), &availableBorderSpace);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     memset(&neededBorderSpace, 0, sizeof(neededBorderSpace));
     if (fVisible)
@@ -194,7 +194,7 @@ HRESULT CBaseBar::ReserveBorderSpace()
             neededBorderSpace.bottom = fNeededSize + GetSystemMetrics(SM_CXFRAME);
     }
     hResult = dockingWindowSite->SetBorderSpaceDW(static_cast<IDeskBar *>(this), &neededBorderSpace);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return S_OK;
 }
@@ -273,7 +273,7 @@ HRESULT STDMETHODCALLTYPE CBaseBar::QueryService(REFGUID guidService, REFIID rii
     if (fSite == NULL)
         return E_FAIL;
     hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     // called for SID_STopLevelBrowser, IID_IBrowserService to find top level browser
     // called for SID_IWebBrowserApp, IID_IConnectionPointContainer
@@ -310,13 +310,13 @@ HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)
     else
     {
         hResult = punkClient->QueryInterface(IID_PPV_ARG(IUnknown, &fClient));
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = fSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = oleWindow->GetWindow(&ownerWindow);
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         Create(ownerWindow, 0, NULL,
             WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW);
@@ -524,7 +524,7 @@ HRESULT CreateBaseBar(REFIID riid, void **ppv)
     if (theBaseBar == NULL)
         return E_OUTOFMEMORY;
     hResult = theBaseBar->QueryInterface (riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
         delete theBaseBar;
         return hResult;
