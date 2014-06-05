@@ -117,7 +117,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Continue  R = Repair  L = Licence  F3 = Quit",
+        "ENTER = Continue  R = Repair  L = License  F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
