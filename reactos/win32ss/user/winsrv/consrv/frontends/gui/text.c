@@ -59,9 +59,6 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
            GuiData->Selection.srSelection.Right,
            GuiData->Selection.srSelection.Bottom);
 
-#ifdef IS_WHITESPACE
-#undef IS_WHITESPACE
-#endif
 #define IS_WHITESPACE(c)    ((c) == L'\0' || (c) == L' ' || (c) == L'\t')
 
     /* Basic size for one line... */

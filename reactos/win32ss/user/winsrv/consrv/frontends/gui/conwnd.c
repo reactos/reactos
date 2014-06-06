@@ -731,8 +731,8 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
 
         if ((GuiData->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) == 0)
         {
-            LPWSTR SelectionType, WindowTitle = NULL;
-            SIZE_T Length = 0;
+            LPWSTR SelTypeStr = NULL   , WindowTitle = NULL;
+            SIZE_T SelTypeStrLength = 0, Length = 0;
 
             /* Clear the old selection */
             if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
@@ -740,21 +740,34 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
                 InvalidateRect(GuiData->hWindow, &oldRect, FALSE);
             }
 
-            if (GuiData->Selection.dwFlags & CONSOLE_MOUSE_SELECTION)
-            {
-                SelectionType = L"Selection - ";
-            }
-            else
-            {
-                SelectionType = L"Mark - ";
-            }
+            /*
+             * When passing a zero-length buffer size, LoadString(...) returns
+             * a read-only pointer buffer to the program's resource string.
+             */
+            SelTypeStrLength =
+                LoadStringW(ConSrvDllInstance,
+                            (GuiData->Selection.dwFlags & CONSOLE_MOUSE_SELECTION)
+                                ? IDS_SELECT_TITLE : IDS_MARK_TITLE,
+                            (LPWSTR)&SelTypeStr, 0);
 
-            Length = Console->Title.Length + wcslen(SelectionType) + 1;
-            WindowTitle = ConsoleAllocHeap(0, Length * sizeof(WCHAR));
-            wcscpy(WindowTitle, SelectionType);
-            wcscat(WindowTitle, Console->Title.Buffer);
-            SetWindowText(GuiData->hWindow, WindowTitle);
-            ConsoleFreeHeap(WindowTitle);
+            /*
+             * Prepend the selection type string to the current console title
+             * if we succeeded in retrieving a valid localized string.
+             */
+            if (SelTypeStr)
+            {
+                // 3 for " - " and 1 for NULL
+                Length = Console->Title.Length + (SelTypeStrLength + 3 + 1) * sizeof(WCHAR);
+                WindowTitle = ConsoleAllocHeap(0, Length);
+
+                wcsncpy(WindowTitle, SelTypeStr, SelTypeStrLength);
+                WindowTitle[SelTypeStrLength] = L'\0';
+                wcscat(WindowTitle, L" - ");
+                wcscat(WindowTitle, Console->Title.Buffer);
+
+                SetWindowText(GuiData->hWindow, WindowTitle);
+                ConsoleFreeHeap(WindowTitle);
+            }
 
             GuiData->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS;
             ConioPause(Console, PAUSED_FROM_SELECTION);
@@ -771,6 +784,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
         GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
         ConioUnpause(Console, PAUSED_FROM_SELECTION);
 
+        /* Restore the console title */
         SetWindowText(GuiData->hWindow, Console->Title.Buffer);
     }
 }
@@ -1305,10 +1319,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 if (GetType(Buffer) == TEXTMODE_BUFFER)
                 {
-#ifdef IS_WHITESPACE
-#undef IS_WHITESPACE
-#endif
-#define IS_WHITESPACE(c)    \
+#define IS_WORD_SEP(c)  \
     ((c) == L'\0' || (c) == L' ' || (c) == L'\t' || (c) == L'\r' || (c) == L'\n')
 
                     PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
@@ -1320,15 +1331,15 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                     ptrL = ptrR = ConioCoordToPointer(TextBuffer, cL.X, cL.Y);
 
                     /* Enlarge the selection by checking for whitespace */
-                    while ((0 < cL.X) && !IS_WHITESPACE(ptrL->Char.UnicodeChar)
-                                      && !IS_WHITESPACE((ptrL-1)->Char.UnicodeChar))
+                    while ((0 < cL.X) && !IS_WORD_SEP(ptrL->Char.UnicodeChar)
+                                      && !IS_WORD_SEP((ptrL-1)->Char.UnicodeChar))
                     {
                         --cL.X;
                         --ptrL;
                     }
                     while ((cR.X < TextBuffer->ScreenBufferSize.X - 1) &&
-                           !IS_WHITESPACE(ptrR->Char.UnicodeChar)      &&
-                           !IS_WHITESPACE((ptrR+1)->Char.UnicodeChar))
+                           !IS_WORD_SEP(ptrR->Char.UnicodeChar)        &&
+                           !IS_WORD_SEP((ptrR+1)->Char.UnicodeChar))
                     {
                         ++cR.X;
                         ++ptrR;
