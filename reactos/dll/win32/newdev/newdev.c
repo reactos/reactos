@@ -810,8 +810,9 @@ cleanup:
 BOOL WINAPI
 ClientSideInstallW(
     IN HWND hWndOwner,
-    IN DWORD dwUnknownFlags,
-    IN LPWSTR lpNamedPipeName)
+    IN HINSTANCE hInstance,
+    IN LPWSTR lpNamedPipeName,
+    IN INT Show)
 {
     BOOL ReturnValue = FALSE;
     BOOL ShowWizard;
