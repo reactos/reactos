@@ -22,7 +22,7 @@
 
 static HINSTANCE hRShell = NULL;
 
-typedef HRESULT(*PSTARTMENU_CONSTRUCTOR)(REFIID riid, void **ppv);
+typedef HRESULT(WINAPI * PSTARTMENU_CONSTRUCTOR)(REFIID riid, void **ppv);
 
 HRESULT CStartMenu_Constructor(REFIID riid, void **ppv)
 {
@@ -47,7 +47,7 @@ HRESULT CStartMenu_Constructor(REFIID riid, void **ppv)
                             ppv);   
 }
 
-typedef HANDLE(WINAPI *PSHCREATEDESKTOP)(IShellDesktopTray *ShellDesk);
+typedef HANDLE(WINAPI * PSHCREATEDESKTOP)(IShellDesktopTray *ShellDesk);
 
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {

@@ -73,6 +73,8 @@ extern HRESULT CreateBrandBand(REFIID riid, void **ppv);
 extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
 extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
 
+typedef HRESULT(WINAPI * PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
+
 HRESULT IUnknown_HasFocusIO(IUnknown * punk)
 {
     CComPtr<IInputObject> pio;
@@ -132,8 +134,6 @@ HRESULT IUnknown_CloseDW(IUnknown * punk, DWORD dwReserved)
         return hResult;
     return S_OK;
 }
-
-typedef HRESULT(*PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
 
 class CInternetToolbar;
 
@@ -594,9 +594,9 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
     VARIANT                                 menuOut;
     HWND                                    ownerWindow;
     HRESULT                                 hResult;
+
     if (!pMenuBar)
         return E_POINTER;
-
 
     *pMenuBar = NULL;
 
