@@ -1581,12 +1581,14 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-            ScrollDownPartitionList(PartitionList);
+            if (ScrollDownPartitionList(PartitionList))
+                DrawPartitionList(PartitionList);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-            ScrollUpPartitionList(PartitionList);
+            if (ScrollUpPartitionList(PartitionList))
+                DrawPartitionList(PartitionList);
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {

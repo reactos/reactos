@@ -211,11 +211,11 @@ BOOL
 SetMountedDeviceValues(
     PPARTLIST List);
 
-VOID
+BOOL
 ScrollDownPartitionList(
     PPARTLIST List);
 
-VOID
+BOOL
 ScrollUpPartitionList(
     PPARTLIST List);
 
