@@ -903,10 +903,21 @@ HRESULT IEGetNameAndFlagsEx(LPITEMIDLIST pidl, SHGDNF uFlags, long param10,
     HRESULT                                 hResult;
 
     hResult = SHBindToFolderIDListParent(NULL, pidl, &IID_PPV_ARG(IShellFolder, &parentFolder), &childPIDL);
+    if (FAILED(hResult))
+        return hResult;
+
     hResult = parentFolder->GetDisplayNameOf(childPIDL, uFlags, &L108);
+    if (FAILED(hResult))
+        return hResult;
+
     StrRetToBufW(&L108, childPIDL, pszBuf, cchBuf);
     if (rgfInOut)
+    {
         hResult = parentFolder->GetAttributesOf(1, const_cast<LPCITEMIDLIST *>(&childPIDL), rgfInOut);
+        if (FAILED(hResult))
+            return hResult;
+    }
+
     ILFree(childPIDL);
     return S_OK;
 }

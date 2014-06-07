@@ -753,11 +753,13 @@ EXTERN_C LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
  */
 UINT WINAPI ILGetSize(LPCITEMIDLIST pidl)
 {
-    LPCSHITEMID si = &(pidl->mkid);
+    LPCSHITEMID si;
     UINT len = 0;
 
     if (pidl)
     {
+        si = &(pidl->mkid);
+
         while (si->cb)
         {
             len += si->cb;

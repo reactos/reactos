@@ -126,35 +126,41 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
                   LPITEMIDLIST * pidlInOut, LPOLESTR szNext, DWORD * pEaten, DWORD * pdwAttributes)
 {
     HRESULT hr = E_INVALIDARG;
-    LPITEMIDLIST pidlOut = NULL,
-      pidlTemp = NULL;
-    IShellFolder *psfChild;
+    LPITEMIDLIST pidlIn = pidlInOut ? *pidlInOut : NULL;
+    LPITEMIDLIST pidlOut = NULL;
+    LPITEMIDLIST pidlTemp = NULL;
+    CComPtr<IShellFolder> psfChild;
 
-    TRACE ("(%p, %p, %p, %s)\n", psf, pbc, pidlInOut ? *pidlInOut : NULL, debugstr_w (szNext));
+    TRACE ("(%p, %p, %p, %s)\n", psf, pbc, pidlIn, debugstr_w (szNext));
 
     /* get the shellfolder for the child pidl and let it analyse further */
-    hr = psf->BindToObject(*pidlInOut, pbc, IID_PPV_ARG(IShellFolder, &psfChild));
+    hr = psf->BindToObject(pidlIn, pbc, IID_PPV_ARG(IShellFolder, &psfChild));
+    if (FAILED(hr))
+        return hr;
 
-    if (SUCCEEDED(hr)) {
     hr = psfChild->ParseDisplayName(hwndOwner, pbc, szNext, pEaten, &pidlOut, pdwAttributes);
-    psfChild->Release();
+    if (FAILED(hr))
+        return hr;
 
-    if (SUCCEEDED(hr)) {
-        pidlTemp = ILCombine (*pidlInOut, pidlOut);
-
-        if (!pidlTemp)
+    pidlTemp = ILCombine (pidlIn, pidlOut);
+    if (!pidlTemp)
+    {
         hr = E_OUTOFMEMORY;
+        if (pidlOut)
+            ILFree(pidlOut);
+        return hr;
     }
 
     if (pidlOut)
         ILFree (pidlOut);
-    }
 
-    ILFree (*pidlInOut);
+    if (pidlIn)
+        ILFree (pidlIn);
+
     *pidlInOut = pidlTemp;
 
     TRACE ("-- pidl=%p ret=0x%08x\n", pidlInOut ? *pidlInOut : NULL, hr);
-    return hr;
+    return S_OK;
 }
 
 /***********************************************************************

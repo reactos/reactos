@@ -113,3 +113,75 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #else
 #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
 #endif
+
+
+template <class Base>
+class CComDebugObject : public Base
+{
+public:
+    CComDebugObject(void * = NULL)
+    {
+        _pAtlModule->Lock();
+    }
+
+    virtual ~CComDebugObject()
+    {
+        this->FinalRelease();
+        _pAtlModule->Unlock();
+    }
+
+    STDMETHOD_(ULONG, AddRef)()
+    {
+        int rc = this->InternalAddRef();
+        DbgPrint("RefCount is now %d(++)!\n", rc);
+        return rc;
+    }
+
+    STDMETHOD_(ULONG, Release)()
+    {
+        ULONG								newRefCount;
+
+        newRefCount = this->InternalRelease();
+        DbgPrint("RefCount is now %d(--)!\n", newRefCount);
+        if (newRefCount == 0)
+            delete this;
+        return newRefCount;
+    }
+
+    STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
+    {
+        return this->_InternalQueryInterface(iid, ppvObject);
+    }
+
+    static HRESULT WINAPI CreateInstance(CComDebugObject<Base> **pp)
+    {
+        CComDebugObject<Base>				*newInstance;
+        HRESULT								hResult;
+
+        ATLASSERT(pp != NULL);
+        if (pp == NULL)
+            return E_POINTER;
+
+        hResult = E_OUTOFMEMORY;
+        newInstance = NULL;
+        ATLTRY(newInstance = new CComDebugObject<Base>())
+            if (newInstance != NULL)
+            {
+            newInstance->SetVoid(NULL);
+            newInstance->InternalFinalConstructAddRef();
+            hResult = newInstance->_AtlInitialConstruct();
+            if (SUCCEEDED(hResult))
+                hResult = newInstance->FinalConstruct();
+            if (SUCCEEDED(hResult))
+                hResult = newInstance->_AtlFinalConstruct();
+            newInstance->InternalFinalConstructRelease();
+            if (hResult != S_OK)
+            {
+                delete newInstance;
+                newInstance = NULL;
+            }
+            }
+        *pp = newInstance;
+        return hResult;
+    }
+};

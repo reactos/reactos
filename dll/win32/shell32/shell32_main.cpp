@@ -752,7 +752,7 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
         temppsfi.dwAttributes=psfi->dwAttributes;
 
     if (psfi == NULL)
-        ret = SHGetFileInfoW(pathW, dwFileAttributes, NULL, sizeof(temppsfi), flags);
+        ret = SHGetFileInfoW(pathW, dwFileAttributes, NULL, 0, flags);
     else
         ret = SHGetFileInfoW(pathW, dwFileAttributes, &temppsfi, sizeof(temppsfi), flags);
 

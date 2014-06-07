@@ -354,7 +354,6 @@ BOOL CMenuSite::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             {
                 RECT Rect = { 0 };
                 GetClientRect(&Rect);
-                Rect.right = Rect.right;
                 pMenuPopup->OnPosRectChangeDB(&Rect);
             }
         }

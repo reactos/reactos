@@ -547,9 +547,11 @@ CInternetToolbar::CInternetToolbar()
     fLocked = false;
     fMenuBandWindow = NULL;
     fNavigationWindow = NULL;
-    fMenuCallback.AddRef();
+    fMenuCallback = new CComDebugObject<CMenuCallback>();
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
+
+    fMenuCallback->AddRef();
 }
 
 CInternetToolbar::~CInternetToolbar()
@@ -585,73 +587,77 @@ HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
     return ResizeBorderDW(&availableBorderSpace, fSite, FALSE);
 }
 
-HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **menuBar)
+HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 {
-    CComPtr<IOleCommandTarget>              siteCommandTarget;
-    CComPtr<IOleWindow>                     oleWindow;
-    CComPtr<IOleCommandTarget>              commandTarget;
+    CComPtr<IShellMenu>                     menubar;
     CComPtr<IShellMenuCallback>             callback;
     VARIANT                                 menuOut;
     HWND                                    ownerWindow;
     HRESULT                                 hResult;
+    if (!pMenuBar)
+        return E_POINTER;
 
+
+    *pMenuBar = NULL;
+
+    hResult = E_FAIL;
 #if USE_CUSTOM_MENUBAND
-    HMODULE hrs = LoadLibraryW(L"rshell.dll");
-
-    if (!hrs)
-    {
-        DbgPrint("Failed: %d\n", GetLastError());
-        return E_FAIL;
-    }
-
-    PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hrs, "CMenuBand_Constructor");
-    if (func)
-    {
-        hResult = func(IID_PPV_ARG(IShellMenu, menuBar));
-    }
-    else
-    {
-        DbgPrint("Failed: %d\n", GetLastError());
-        hResult = E_FAIL;
-    }
+    HMODULE hrs = GetModuleHandleW(L"rshell.dll");
     
+    if (!hrs) hrs = LoadLibraryW(L"rshell.dll");
+
+    if (hrs)
+    {
+        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hrs, "CMenuBand_Constructor");
+        if (func)
+        {
+            hResult = func(IID_PPV_ARG(IShellMenu, &menubar));
+        }
+    }
+#endif
+
+    menubar->AddRef();
+
     if (FAILED_UNEXPECTEDLY(hResult))
     {
         hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
-            IID_PPV_ARG(IShellMenu, menuBar));
+            IID_PPV_ARG(IShellMenu, &menubar));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
     }
-#else
-    hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IShellMenu, menuBar));
-#endif
+    
+    hResult = fMenuCallback->QueryInterface(IID_PPV_ARG(IShellMenuCallback, &callback));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = fMenuCallback.QueryInterface(IID_PPV_ARG(IShellMenuCallback, &callback));
+
+    hResult = menubar->Initialize(callback, -1, ANCESTORDEFAULT, SMINIT_HORIZONTAL | SMINIT_TOPLEVEL);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = (*menuBar)->Initialize(callback, -1, ANCESTORDEFAULT, SMINIT_HORIZONTAL | SMINIT_TOPLEVEL);
+
+    // Set Menu
+    {
+        hResult = IUnknown_Exec(fSite, CGID_Explorer, 0x35, 0, NULL, &menuOut);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+
+        if (V_VT(&menuOut) != VT_INT_PTR || V_INTREF(&menuOut) == NULL)
+            return E_FAIL;
+
+        hResult = IUnknown_GetWindow(fSite, &ownerWindow);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+
+        hResult = menubar->SetMenu((HMENU) V_INTREF(&menuOut), ownerWindow, SMSET_DONTOWN);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+
+    hResult = IUnknown_Exec(menubar, CGID_MenuBand, 3, 1, NULL, NULL);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = oleWindow->GetWindow(&ownerWindow);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &siteCommandTarget));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = siteCommandTarget->Exec(&CGID_Explorer, 0x35, 0, NULL, &menuOut);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    if (V_VT(&menuOut) != VT_INT_PTR || V_INTREF(&menuOut) == NULL)
-        return E_FAIL;
-    hResult = (*menuBar)->SetMenu((HMENU)V_INTREF(&menuOut), ownerWindow, SMSET_DONTOWN);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = IUnknown_Exec(*menuBar, CGID_MenuBand, 3, 1, NULL, NULL);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+
+    *pMenuBar = menubar.Detach();
+
     return S_OK;
 }
 
@@ -1686,7 +1692,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STATE;
     mii.fState = fLocked ? MFS_CHECKED : MFS_UNCHECKED;
-    command = SetMenuItemInfo(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, FALSE, &mii);
+    SetMenuItemInfo(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, FALSE, &mii);
 
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,

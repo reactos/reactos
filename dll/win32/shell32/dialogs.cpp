@@ -62,7 +62,7 @@ BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)lParam;
 
     if (IS_INTRESOURCE(lpszName))
-        swprintf(szName, L"%u", lpszName);
+        swprintf(szName, L"%u", (DWORD)lpszName);
     else
         wcscpy(szName, (WCHAR*)lpszName);
 
