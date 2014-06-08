@@ -25,12 +25,49 @@
  * UPDATE HISTORY:
  *      07/26/2005  Created
  */
+
 #include "ntmarta.h"
 
 #define NDEBUG
 #include <debug.h>
 
 HINSTANCE hDllInstance;
+
+/* FIXME: Vista+ API */
+VOID
+WINAPI
+SetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                      OUT LPDWORD DesiredAccess)
+{
+    *DesiredAccess = 0;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+        *DesiredAccess |= WRITE_OWNER;
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+        *DesiredAccess |= WRITE_DAC;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+}
+
+/* FIXME: Vista+ API */
+VOID
+WINAPI
+QuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                        OUT LPDWORD DesiredAccess)
+{
+    *DesiredAccess = 0;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION |
+                               GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
+    {
+        *DesiredAccess |= READ_CONTROL;
+    }
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+}
 
 static ACCESS_MODE
 AccpGetAceAccessMode(IN PACE_HEADER AceHeader)
