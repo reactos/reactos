@@ -754,14 +754,15 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
     }
 
     /* Copy static verbs from Classes\Applications key */
-    LONG Result = RegCopyTreeW(hSrcKey, NULL, hDestKey);
+    /* FIXME: SHCopyKey does not copy the security attributes of the keys */
+    LSTATUS Result = SHCopyKeyW(hSrcKey, NULL, hDestKey, 0);
     RegCloseKey(hDestKey);
     RegCloseKey(hSrcKey);
     RegCloseKey(hKey);
 
     if (Result != ERROR_SUCCESS)
     {
-        ERR("RegCopyTreeW failed\n");
+        ERR("SHCopyKeyW failed\n");
         return FALSE;
     }
 
