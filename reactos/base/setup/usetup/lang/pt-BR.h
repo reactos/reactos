@@ -1675,6 +1675,8 @@ MUI_STRING ptBRStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //    "   ENTER=Instalar  C=Criar parti‡Æo  F3=Sair"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
     "   ENTER=Instalar  D=Apagar parti‡Æo  F3=Sair"},
     {STRING_DELETEPARTITION,

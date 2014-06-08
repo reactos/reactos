@@ -1640,6 +1640,8 @@ MUI_STRING ruRUStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Установить   C = Создать раздел   F3 = Выход"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Установить   D = Удалить раздел   F3 = Выход"},
     {STRING_DELETEPARTITION,

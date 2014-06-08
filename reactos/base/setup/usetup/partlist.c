@@ -3088,4 +3088,22 @@ ExtendedPartitionCreationChecks(
     return ERROR_SUCCESS;
 }
 
+
+ULONG
+LogicalPartitionCreationChecks(
+    IN PPARTLIST List)
+{
+//    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+
+//    DiskEntry = List->CurrentDisk;
+    PartEntry = List->CurrentPartition;
+
+    /* Fail if partition is already in use */
+    if (PartEntry->IsPartitioned == TRUE)
+        return ERROR_NEW_PARTITION;
+
+    return ERROR_SUCCESS;
+}
+
 /* EOF */

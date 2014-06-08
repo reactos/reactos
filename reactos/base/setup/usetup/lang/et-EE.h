@@ -1636,6 +1636,8 @@ MUI_STRING etEEStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Paigalda  C = Loo partitsioon    F3 = V„lju"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Paigalda  D = Kustuta partitsioon  F3 = V„lju"},
     {STRING_DELETEPARTITION,

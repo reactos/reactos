@@ -1642,6 +1642,8 @@ MUI_STRING sqALStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Instalo   C = Krijo Particion   F3 = Dil"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalo   D = Fshi Particion   F3 = Dil"},
     {STRING_DELETEPARTITION,

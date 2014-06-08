@@ -1642,6 +1642,8 @@ MUI_STRING deDEStrings[] =
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
      "  EINGABETASTE = Installieren  P = Prim„re  E = Erweiterte  F3 = Installation abbr."},
+    {STRING_INSTALLCREATELOGICAL,
+     "  EINGABETASTE = Installieren  L = Logisches Laufwerk  F3 = Installation abbr."},
     {STRING_INSTALLDELETEPARTITION,
      "  EINGABETASTE = Installieren  D = Partition l”schen  F3 = Installation abbr."},
     {STRING_DELETEPARTITION,

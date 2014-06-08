@@ -1716,6 +1716,8 @@ MUI_STRING roROStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Instalare   C = Creare partiîie   F3 = Ie­ire"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalare   D = ¸tergere partiîie   F3 = Ie­ire"},
     {STRING_DELETEPARTITION,

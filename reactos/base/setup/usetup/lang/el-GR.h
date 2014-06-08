@@ -1663,6 +1663,8 @@ MUI_STRING elGRStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = „š¡˜«á©«˜©ž   C = ƒž£ ¦¬¨šå˜ Partition   F3 = €§¦®é¨ž©ž"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = „š¡˜«á©«˜©ž   D = ƒ ˜š¨˜­ã Partition   F3 = €§¦®é¨ž©ž"},
     {STRING_DELETEPARTITION,

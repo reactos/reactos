@@ -1613,6 +1613,8 @@ MUI_STRING trTRStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //    "   Giriü = Kur   C = BîlÅm Oluütur   F3 = Äçkçü"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
     "   Giriü = Kur   D = BîlÅmÅ Sil   F3 = Äçkçü"},
     {STRING_DELETEPARTITION,

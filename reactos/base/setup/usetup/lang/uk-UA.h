@@ -1645,6 +1645,8 @@ MUI_STRING ukUAStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Встановити   C = Створити Роздiл   F3 = Вийти"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Встановити   D = Видалити Роздiл   F3 = Вийти"},
     {STRING_DELETEPARTITION,

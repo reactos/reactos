@@ -254,4 +254,8 @@ ULONG
 ExtendedPartitionCreationChecks(
     IN PPARTLIST List);
 
+ULONG
+LogicalPartitionCreationChecks(
+    IN PPARTLIST List);
+
 /* EOF */

@@ -1684,6 +1684,8 @@ MUI_STRING nlNLStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Installeren   C = Partitie aanmaken   F3 = Afsluiten"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installeren   D = Partitie verwijderen   F3 = Afsluiten"},
     {STRING_DELETEPARTITION,

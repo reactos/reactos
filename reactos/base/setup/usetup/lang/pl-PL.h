@@ -1648,6 +1648,8 @@ MUI_STRING plPLStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Instalacja   C = Utworzenie Partycji   F3 = Wyj˜cie"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalacja   D = Skasowanie Partycji   F3 = Wyj˜cie"},
     {STRING_DELETEPARTITION,

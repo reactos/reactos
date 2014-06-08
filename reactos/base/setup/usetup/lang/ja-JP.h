@@ -1639,6 +1639,8 @@ MUI_STRING jaJPStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = ²Ý½Ä°Ù   C = Êß°Ã¨¼®Ý »¸¾²   F3 = Á­³¼"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = ²Ý½Ä°Ù   D = Êß°Ã¨¼®Ý »¸¼Þ®   F3 = Á­³¼"},
     {STRING_DELETEPARTITION,

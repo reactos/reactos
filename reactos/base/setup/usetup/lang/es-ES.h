@@ -1645,6 +1645,8 @@ MUI_STRING esESStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Instalar   C = Crear Partici¢n   F3 = Salir"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_DELETEPARTITION,
      "   D = Borrar Partici¢n   F3 = Salir"},
     {STRING_INSTALLDELETEPARTITION,

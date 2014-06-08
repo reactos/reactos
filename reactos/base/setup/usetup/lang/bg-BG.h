@@ -1651,6 +1651,8 @@ MUI_STRING bgBGStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Слагане   C = Създаване на дял   F3 = Изход"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Слагане   D = Изтриване на дял   F3 = Изход"},
     {STRING_DELETEPARTITION,

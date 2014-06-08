@@ -1638,6 +1638,8 @@ MUI_STRING heILStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = „š—   C = –…˜ Ž‡‰–„   F3 = ˆŒ „š—„"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = „š—   D = Ž‡— Ž‡‰–„   F3 = ˆŒ „š—„"},
     {STRING_DELETEPARTITION,

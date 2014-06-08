@@ -1550,18 +1550,38 @@ SelectPartitionPage(PINPUT_RECORD Ir)
     while (TRUE)
     {
         /* Update status text */
-        if (PartitionList->CurrentPartition == NULL ||
-            PartitionList->CurrentPartition->IsPartitioned == FALSE)
+        if (PartitionList->CurrentPartition == NULL)
         {
             CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATEPARTITION));
         }
-        else if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
+        else if (PartitionList->CurrentPartition->LogicalPartition)
         {
-            CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
+             if (PartitionList->CurrentPartition->IsPartitioned)
+             {
+                 CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
+             }
+             else
+             {
+                 CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATELOGICAL));
+             }
         }
         else
         {
-            CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLDELETEPARTITION));
+             if (PartitionList->CurrentPartition->IsPartitioned)
+             {
+                 if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
+                 {
+                     CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
+                 }
+                 else
+                 {
+                     CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLDELETEPARTITION));
+                 }
+             }
+             else
+             {
+                 CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATEPARTITION));
+             }
         }
 
         CONSOLE_ConInKey(Ir);
@@ -1616,25 +1636,45 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'P')  /* P */
         {
-            Error = PrimaryPartitionCreationChecks(PartitionList);
-            if (Error != NOT_AN_ERROR)
+            if (PartitionList->CurrentPartition->LogicalPartition == FALSE)
             {
-                MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                return SELECT_PARTITION_PAGE;
-            }
+                Error = PrimaryPartitionCreationChecks(PartitionList);
+                if (Error != NOT_AN_ERROR)
+                {
+                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                    return SELECT_PARTITION_PAGE;
+                }
 
-            return CREATE_PRIMARY_PARTITION_PAGE;
+                return CREATE_PRIMARY_PARTITION_PAGE;
+            }
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'E')  /* E */
         {
-            Error = ExtendedPartitionCreationChecks(PartitionList);
-            if (Error != NOT_AN_ERROR)
+            if (PartitionList->CurrentPartition->LogicalPartition == FALSE)
             {
-                MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                return SELECT_PARTITION_PAGE;
-            }
+                Error = ExtendedPartitionCreationChecks(PartitionList);
+                if (Error != NOT_AN_ERROR)
+                {
+                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                    return SELECT_PARTITION_PAGE;
+                }
 
-            return CREATE_EXTENDED_PARTITION_PAGE;
+                return CREATE_EXTENDED_PARTITION_PAGE;
+            }
+        }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'L')  /* L */
+        {
+            if (PartitionList->CurrentPartition->LogicalPartition == TRUE)
+            {
+                Error = LogicalPartitionCreationChecks(PartitionList);
+                if (Error != NOT_AN_ERROR)
+                {
+                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                    return SELECT_PARTITION_PAGE;
+                }
+
+                return CREATE_LOGICAL_PARTITION_PAGE;
+            }
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D')  /* D */
         {
@@ -2085,6 +2125,14 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     }
 
     return CREATE_EXTENDED_PARTITION_PAGE;
+}
+
+
+static PAGE_NUMBER
+CreateLogicalPartitionPage(PINPUT_RECORD Ir)
+{
+
+    return SELECT_PARTITION_PAGE;
 }
 
 
@@ -4027,6 +4075,10 @@ RunUSetup(VOID)
 
             case CREATE_EXTENDED_PARTITION_PAGE:
                 Page = CreateExtendedPartitionPage(&Ir);
+                break;
+
+            case CREATE_LOGICAL_PARTITION_PAGE:
+                Page = CreateLogicalPartitionPage(&Ir);
                 break;
 
             case DELETE_PARTITION_PAGE:

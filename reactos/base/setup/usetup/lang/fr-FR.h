@@ -1650,6 +1650,8 @@ MUI_STRING frFRStrings[] =
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTRêE = Installer   P/E = CrÇer Partition Primaire/êtendue   F3 = Quitter"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTRêE = Installer   D = Supprimer Partition   F3 = Quitter"},
     {STRING_DELETEPARTITION,
