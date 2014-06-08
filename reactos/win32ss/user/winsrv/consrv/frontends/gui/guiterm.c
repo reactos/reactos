@@ -533,8 +533,11 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     GuiData->CmdIdLow = GuiData->CmdIdHigh = 0;
 
     /* Initialize the selection */
-    RtlZeroMemory(&GuiData->Selection, sizeof(CONSOLE_SELECTION_INFO));
+    RtlZeroMemory(&GuiData->Selection, sizeof(GuiData->Selection));
     GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
+    RtlZeroMemory(&GuiData->dwSelectionCursor, sizeof(GuiData->dwSelectionCursor));
+    GuiData->LineSelection = FALSE; // Default to block selection
+    // TODO: Retrieve the selection mode via the registry.
 
     /*
      * We need to wait until the GUI has been fully initialized
