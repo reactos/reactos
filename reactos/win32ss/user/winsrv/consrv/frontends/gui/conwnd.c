@@ -12,7 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <consrv.h>
-
+#include <intrin.h>
 #include <windowsx.h>
 
 #define NDEBUG
@@ -694,17 +694,8 @@ GetSelectionBeginEnd(PCOORD Begin, PCOORD End,
     /* Exchange Begin / End if Begin > End lexicographically */
     if (Begin->Y > End->Y || (Begin->Y == End->Y && Begin->X > End->X))
     {
-        SHORT tmp;
-
-        // End->X = InterlockedExchange16(&Begin->X, End->X);
-        tmp = Begin->X;
-        Begin->X = End->X;
-        End->X = tmp;
-
-        // End->Y = InterlockedExchange16(&Begin->Y, End->Y);
-        tmp = Begin->Y;
-        Begin->Y = End->Y;
-        End->Y = tmp;
+        End->X = _InterlockedExchange16(&Begin->X, End->X);
+        End->Y = _InterlockedExchange16(&Begin->Y, End->Y);
     }
 }
 
