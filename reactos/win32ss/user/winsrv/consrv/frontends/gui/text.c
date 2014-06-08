@@ -167,12 +167,11 @@ CopyLines(PTEXTMODE_SCREEN_BUFFER Buffer,
     }
     else // if (End->Y > Begin->Y)
     {
-        NumChars = (Buffer->ScreenBufferSize.X - 1) - (Begin->X) + 1;
+        NumChars = Buffer->ScreenBufferSize.X - Begin->X;
 
-        if (Begin->Y + 1 <= End->Y - 1)
+        if (End->Y >= Begin->Y + 2)
         {
-            NumChars += ( (Buffer->ScreenBufferSize.X - 1) + 1 ) *
-                        ( (End->Y - 1) - (Begin->Y + 1) + 1);
+            NumChars += (End->Y - Begin->Y - 1) * Buffer->ScreenBufferSize.X;
         }
 
         NumChars += End->X + 1;
