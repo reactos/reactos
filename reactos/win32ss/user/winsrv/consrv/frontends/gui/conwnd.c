@@ -301,7 +301,9 @@ Copy(PGUI_CONSOLE_DATA GuiData);
 static VOID
 Paste(PGUI_CONSOLE_DATA GuiData);
 static VOID
-UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord);
+UpdateSelection(PGUI_CONSOLE_DATA GuiData,
+                PCOORD SelectionAnchor OPTIONAL,
+                PCOORD coord);
 
 static VOID
 Mark(PGUI_CONSOLE_DATA GuiData)
@@ -309,30 +311,28 @@ Mark(PGUI_CONSOLE_DATA GuiData)
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
 
     /* Clear the old selection */
-    // UpdateSelection(GuiData, NULL);
     GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
 
     /* Restart a new selection */
-    GuiData->dwSelectionCursor.X = ActiveBuffer->ViewOrigin.X;
-    GuiData->dwSelectionCursor.Y = ActiveBuffer->ViewOrigin.Y;
-    GuiData->Selection.dwSelectionAnchor = GuiData->dwSelectionCursor;
-    UpdateSelection(GuiData, &GuiData->Selection.dwSelectionAnchor);
+    GuiData->dwSelectionCursor = ActiveBuffer->ViewOrigin;
+    UpdateSelection(GuiData,
+                    &GuiData->dwSelectionCursor,
+                    &GuiData->dwSelectionCursor);
 }
 
 static VOID
 SelectAll(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
+    COORD SelectionAnchor;
 
     /* Clear the old selection */
-    // UpdateSelection(GuiData, NULL);
     GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
 
     /*
      * The selection area extends to the whole screen buffer's width.
      */
-    GuiData->Selection.dwSelectionAnchor.X = 0;
-    GuiData->Selection.dwSelectionAnchor.Y = 0;
+    SelectionAnchor.X = SelectionAnchor.Y = 0;
     GuiData->dwSelectionCursor.X = ActiveBuffer->ScreenBufferSize.X - 1;
 
     /*
@@ -358,7 +358,7 @@ SelectAll(PGUI_CONSOLE_DATA GuiData)
 
     /* Restart a new selection */
     GuiData->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION;
-    UpdateSelection(GuiData, &GuiData->dwSelectionCursor);
+    UpdateSelection(GuiData, &SelectionAnchor, &GuiData->dwSelectionCursor);
 }
 
 static LRESULT
@@ -678,18 +678,171 @@ SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
     Rect->bottom = (SmallRect->Bottom + 1 - Buffer->ViewOrigin.Y) * HeightUnit;
 }
 
+VOID
+GetSelectionBeginEnd(PCOORD Begin, PCOORD End,
+                     PCOORD SelectionAnchor,
+                     PSMALL_RECT SmallRect)
+{
+    if (Begin == NULL || End == NULL) return;
+
+    *Begin = *SelectionAnchor;
+    End->X = (SelectionAnchor->X == SmallRect->Left) ? SmallRect->Right
+              /* Case X != Left, must be == Right */ : SmallRect->Left;
+    End->Y = (SelectionAnchor->Y == SmallRect->Top ) ? SmallRect->Bottom
+              /* Case Y != Top, must be == Bottom */ : SmallRect->Top;
+
+    /* Exchange Begin / End if Begin > End lexicographically */
+    if (Begin->Y > End->Y || (Begin->Y == End->Y && Begin->X > End->X))
+    {
+        SHORT tmp;
+
+        // End->X = InterlockedExchange16(&Begin->X, End->X);
+        tmp = Begin->X;
+        Begin->X = End->X;
+        End->X = tmp;
+
+        // End->Y = InterlockedExchange16(&Begin->Y, End->Y);
+        tmp = Begin->Y;
+        Begin->Y = End->Y;
+        End->Y = tmp;
+    }
+}
+
+static HRGN
+CreateSelectionRgn(PGUI_CONSOLE_DATA GuiData,
+                   BOOL LineSelection,
+                   PCOORD SelectionAnchor,
+                   PSMALL_RECT SmallRect)
+{
+    if (!LineSelection)
+    {
+        RECT rect;
+        SmallRectToRect(GuiData, &rect, SmallRect);
+        return CreateRectRgnIndirect(&rect);
+    }
+    else
+    {
+        HRGN SelRgn;
+        COORD Begin, End;
+
+        GetSelectionBeginEnd(&Begin, &End, SelectionAnchor, SmallRect);
+
+        if (Begin.Y == End.Y)
+        {
+            SMALL_RECT sr;
+            RECT       r ;
+
+            sr.Left   = Begin.X;
+            sr.Top    = Begin.Y;
+            sr.Right  = End.X;
+            sr.Bottom = End.Y;
+
+            // Debug thingie to see whether I can put this corner case
+            // together with the previous one.
+            if (SmallRect->Left   != sr.Left  ||
+                SmallRect->Top    != sr.Top   ||
+                SmallRect->Right  != sr.Right ||
+                SmallRect->Bottom != sr.Bottom)
+            {
+                DPRINT1("\n"
+                        "SmallRect = (%d, %d, %d, %d)\n"
+                        "sr = (%d, %d, %d, %d)\n"
+                        "\n",
+                        SmallRect->Left, SmallRect->Top, SmallRect->Right, SmallRect->Bottom,
+                        sr.Left, sr.Top, sr.Right, sr.Bottom);
+            }
+
+            SmallRectToRect(GuiData, &r, &sr);
+            SelRgn = CreateRectRgnIndirect(&r);
+        }
+        else
+        {
+            PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
+
+            HRGN       rg1, rg2, rg3;
+            SMALL_RECT sr1, sr2, sr3;
+            RECT       r1 , r2 , r3 ;
+
+            sr1.Left   = Begin.X;
+            sr1.Top    = Begin.Y;
+            sr1.Right  = ActiveBuffer->ScreenBufferSize.X - 1;
+            sr1.Bottom = Begin.Y;
+
+            sr2.Left   = 0;
+            sr2.Top    = Begin.Y + 1;
+            sr2.Right  = ActiveBuffer->ScreenBufferSize.X - 1;
+            sr2.Bottom = End.Y - 1;
+
+            sr3.Left   = 0;
+            sr3.Top    = End.Y;
+            sr3.Right  = End.X;
+            sr3.Bottom = End.Y;
+
+            SmallRectToRect(GuiData, &r1, &sr1);
+            SmallRectToRect(GuiData, &r2, &sr2);
+            SmallRectToRect(GuiData, &r3, &sr3);
+
+            rg1 = CreateRectRgnIndirect(&r1);
+            rg2 = CreateRectRgnIndirect(&r2);
+            rg3 = CreateRectRgnIndirect(&r3);
+
+            CombineRgn(rg1, rg1, rg2, RGN_XOR);
+            CombineRgn(rg1, rg1, rg3, RGN_XOR);
+            DeleteObject(rg3);
+            DeleteObject(rg2);
+
+            SelRgn = rg1;
+        }
+
+        return SelRgn;
+    }
+}
+
 static VOID
-UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
+PaintSelectionRect(PGUI_CONSOLE_DATA GuiData, PPAINTSTRUCT pps)
+{
+    HRGN rgnPaint = CreateRectRgnIndirect(&pps->rcPaint);
+    HRGN rgnSel   = CreateSelectionRgn(GuiData, GuiData->LineSelection,
+                                       &GuiData->Selection.dwSelectionAnchor,
+                                       &GuiData->Selection.srSelection);
+
+    /* Invert the selection */
+
+    int ErrorCode = CombineRgn(rgnPaint, rgnPaint, rgnSel, RGN_AND);
+    if (ErrorCode != ERROR && ErrorCode != NULLREGION)
+    {
+        InvertRgn(pps->hdc, rgnPaint);
+    }
+
+    DeleteObject(rgnSel);
+    DeleteObject(rgnPaint);
+}
+
+static VOID
+UpdateSelection(PGUI_CONSOLE_DATA GuiData,
+                PCOORD SelectionAnchor OPTIONAL,
+                PCOORD coord)
 {
     PCONSOLE Console = GuiData->Console;
-    RECT oldRect;
+    HRGN oldRgn = CreateSelectionRgn(GuiData, GuiData->LineSelection,
+                                     &GuiData->Selection.dwSelectionAnchor,
+                                     &GuiData->Selection.srSelection);
 
-    SmallRectToRect(GuiData, &oldRect, &GuiData->Selection.srSelection);
+    /* Update the anchor if needed (use the old one if NULL) */
+    if (SelectionAnchor)
+        GuiData->Selection.dwSelectionAnchor = *SelectionAnchor;
 
     if (coord != NULL)
     {
-        RECT newRect;
         SMALL_RECT rc;
+        HRGN newRgn;
+
+        /*
+         * Pressing the Control key while selecting text, allows us to enter
+         * into line-selection mode, the selection mode of *nix terminals.
+         */
+        BOOL OldLineSel = GuiData->LineSelection;
+        GuiData->LineSelection = !!(GetKeyState(VK_CONTROL) & 0x8000);
 
         /* Exchange left/top with right/bottom if required */
         rc.Left   = min(GuiData->Selection.dwSelectionAnchor.X, coord->X);
@@ -697,33 +850,28 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
         rc.Right  = max(GuiData->Selection.dwSelectionAnchor.X, coord->X);
         rc.Bottom = max(GuiData->Selection.dwSelectionAnchor.Y, coord->Y);
 
-        SmallRectToRect(GuiData, &newRect, &rc);
+        newRgn = CreateSelectionRgn(GuiData, GuiData->LineSelection,
+                                    &GuiData->Selection.dwSelectionAnchor,
+                                    &rc);
 
         if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
         {
-            if (memcmp(&rc, &GuiData->Selection.srSelection, sizeof(SMALL_RECT)) != 0)
+            if (OldLineSel != GuiData->LineSelection ||
+                memcmp(&rc, &GuiData->Selection.srSelection, sizeof(SMALL_RECT)) != 0)
             {
-                HRGN rgn1, rgn2;
-
                 /* Calculate the region that needs to be updated */
-                if ((rgn1 = CreateRectRgnIndirect(&oldRect)))
+                if (oldRgn && newRgn && CombineRgn(newRgn, newRgn, oldRgn, RGN_XOR) != ERROR)
                 {
-                    if ((rgn2 = CreateRectRgnIndirect(&newRect)))
-                    {
-                        if (CombineRgn(rgn1, rgn2, rgn1, RGN_XOR) != ERROR)
-                        {
-                            InvalidateRgn(GuiData->hWindow, rgn1, FALSE);
-                        }
-                        DeleteObject(rgn2);
-                    }
-                    DeleteObject(rgn1);
+                    InvalidateRgn(GuiData->hWindow, newRgn, FALSE);
                 }
             }
         }
         else
         {
-            InvalidateRect(GuiData->hWindow, &newRect, FALSE);
+            InvalidateRgn(GuiData->hWindow, newRgn, FALSE);
         }
+
+        DeleteObject(newRgn);
 
         GuiData->Selection.dwFlags |= CONSOLE_SELECTION_NOT_EMPTY;
         GuiData->Selection.srSelection = rc;
@@ -737,7 +885,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
             /* Clear the old selection */
             if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
             {
-                InvalidateRect(GuiData->hWindow, &oldRect, FALSE);
+                InvalidateRgn(GuiData->hWindow, oldRgn, FALSE);
             }
 
             /*
@@ -778,7 +926,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
         /* Clear the selection */
         if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
         {
-            InvalidateRect(GuiData->hWindow, &oldRect, FALSE);
+            InvalidateRgn(GuiData->hWindow, oldRgn, FALSE);
         }
 
         GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
@@ -787,6 +935,8 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData, PCOORD coord)
         /* Restore the console title */
         SetWindowText(GuiData->hWindow, Console->Title.Buffer);
     }
+
+    DeleteObject(oldRgn);
 }
 
 
@@ -840,15 +990,10 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
                rcPaint.top,
                SRCCOPY);
 
+        /* Draw the selection region if needed */
         if (GuiData->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
         {
-            SmallRectToRect(GuiData, &rcPaint, &GuiData->Selection.srSelection);
-
-            /* Invert the selection */
-            if (IntersectRect(&rcPaint, &ps.rcPaint, &rcPaint))
-            {
-                InvertRect(ps.hdc, &rcPaint);
-            }
+            PaintSelectionRect(GuiData, &ps);
         }
 
         LeaveCriticalSection(&GuiData->Lock);
@@ -925,10 +1070,10 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             goto Quit;
         }
         else if ( VirtualKeyCode == VK_ESCAPE ||
-                 (VirtualKeyCode == 'C' && GetKeyState(VK_CONTROL) & 0x8000) )
+                 (VirtualKeyCode == 'C' && (GetKeyState(VK_CONTROL) & 0x8000)) )
         {
             /* Cancel selection if ESC or Ctrl-C are pressed */
-            UpdateSelection(GuiData, NULL);
+            UpdateSelection(GuiData, NULL, NULL);
             goto Quit;
         }
 
@@ -936,7 +1081,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             /* Keyboard selection mode */
             BOOL Interpreted = FALSE;
-            BOOL MajPressed  = (GetKeyState(VK_SHIFT) & 0x8000);
+            BOOL MajPressed  = !!(GetKeyState(VK_SHIFT) & 0x8000);
 
             switch (VirtualKeyCode)
             {
@@ -1017,10 +1162,9 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 
             if (Interpreted)
             {
-                if (!MajPressed)
-                    GuiData->Selection.dwSelectionAnchor = GuiData->dwSelectionCursor;
-
-                UpdateSelection(GuiData, &GuiData->dwSelectionCursor);
+                UpdateSelection(GuiData,
+                                !MajPressed ? &GuiData->dwSelectionCursor : NULL,
+                                &GuiData->dwSelectionCursor);
             }
             else if (!IsSystemKey(VirtualKeyCode))
             {
@@ -1037,7 +1181,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             if (!IsSystemKey(VirtualKeyCode))
             {
                 /* Clear the selection and send the key into the input buffer */
-                UpdateSelection(GuiData, NULL);
+                UpdateSelection(GuiData, NULL, NULL);
             }
             else
             {
@@ -1287,27 +1431,26 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             case WM_LBUTTONDOWN:
             {
                 /* Clear the old selection */
-                // UpdateSelection(GuiData, NULL);
                 GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
 
                 /* Restart a new selection */
-                GuiData->Selection.dwSelectionAnchor = PointToCoord(GuiData, lParam);
+                GuiData->dwSelectionCursor = PointToCoord(GuiData, lParam);
                 SetCapture(GuiData->hWindow);
                 GuiData->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
-                UpdateSelection(GuiData, &GuiData->Selection.dwSelectionAnchor);
+                UpdateSelection(GuiData,
+                                &GuiData->dwSelectionCursor,
+                                &GuiData->dwSelectionCursor);
 
                 break;
             }
 
             case WM_LBUTTONUP:
             {
-                // COORD c;
-
                 if (!(GuiData->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
 
-                // c = PointToCoord(GuiData, lParam);
+                // GuiData->dwSelectionCursor = PointToCoord(GuiData, lParam);
                 GuiData->Selection.dwFlags &= ~CONSOLE_MOUSE_DOWN;
-                // UpdateSelection(GuiData, &c);
+                // UpdateSelection(GuiData, NULL, &GuiData->dwSelectionCursor);
                 ReleaseCapture();
 
                 break;
@@ -1349,11 +1492,8 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                      * Update the selection started with the single
                      * left-click that preceded this double-click.
                      */
-                    GuiData->Selection.dwSelectionAnchor = cL;
-                    GuiData->dwSelectionCursor           = cR;
-
                     GuiData->Selection.dwFlags |= CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
-                    UpdateSelection(GuiData, &GuiData->dwSelectionCursor);
+                    UpdateSelection(GuiData, &cL, &cR);
 
                     /* Ignore the next mouse move signal */
                     GuiData->IgnoreNextMouseSignal = TRUE;
@@ -1381,13 +1521,12 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 
             case WM_MOUSEMOVE:
             {
-                COORD c;
-
                 if (!(wParam & MK_LBUTTON)) break;
                 if (!(GuiData->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
 
-                c = PointToCoord(GuiData, lParam); /* TODO: Scroll buffer to bring c into view */
-                UpdateSelection(GuiData, &c);
+                // TODO: Scroll buffer to bring SelectionCursor into view
+                GuiData->dwSelectionCursor = PointToCoord(GuiData, lParam);
+                UpdateSelection(GuiData, NULL, &GuiData->dwSelectionCursor);
 
                 break;
             }
@@ -1557,7 +1696,7 @@ Copy(PGUI_CONSOLE_DATA GuiData)
     }
 
     /* Clear the selection */
-    UpdateSelection(GuiData, NULL);
+    UpdateSelection(GuiData, NULL, NULL);
 }
 
 VOID
