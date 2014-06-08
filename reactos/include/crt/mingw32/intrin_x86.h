@@ -150,6 +150,8 @@ __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * const Destinat
 __INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand);
 __INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand);
+__INTRIN_INLINE char _InterlockedExchange8(volatile char * const Target, const char Value);
+__INTRIN_INLINE short _InterlockedExchange16(volatile short * const Target, const short Value);
 __INTRIN_INLINE long _InterlockedExchange(volatile long * const Target, const long Value);
 __INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value);
 __INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value);
@@ -199,6 +201,20 @@ __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * cons
 	return (void *)__sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
+__INTRIN_INLINE char _InterlockedExchange8(volatile char * const Target, const char Value)
+{
+	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
+	__sync_synchronize();
+	return __sync_lock_test_and_set(Target, Value);
+}
+
+__INTRIN_INLINE short _InterlockedExchange16(volatile short * const Target, const short Value)
+{
+	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
+	__sync_synchronize();
+	return __sync_lock_test_and_set(Target, Value);
+}
+
 __INTRIN_INLINE long _InterlockedExchange(volatile long * const Target, const long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
@@ -217,7 +233,7 @@ __INTRIN_INLINE long long _InterlockedExchange64(volatile long long * const Targ
 
 __INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
 {
-	/* NOTE: ditto */
+	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
 	return (void *)__sync_lock_test_and_set(Target, Value);
 }
@@ -347,6 +363,8 @@ __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * const Destinat
 __INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand);
 __INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand);
+__INTRIN_INLINE char _InterlockedExchange8(volatile char * const Target, const char Value);
+__INTRIN_INLINE short _InterlockedExchange16(volatile short * const Target, const short Value);
 __INTRIN_INLINE long _InterlockedExchange(volatile long * const Target, const long Value);
 __INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value);
 __INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value);
@@ -394,6 +412,20 @@ __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * cons
 {
 	void * retval = (void *)Comperand;
 	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "=a" (retval) : "[retval]" (retval), [Destination] "m" (*Destination), [Exchange] "q" (Exchange) : "memory");
+	return retval;
+}
+
+__INTRIN_INLINE char _InterlockedExchange8(volatile char * const Target, const char Value)
+{
+	char retval = Value;
+	__asm__("xchgb %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
+	return retval;
+}
+
+__INTRIN_INLINE short _InterlockedExchange16(volatile short * const Target, const short Value)
+{
+	short retval = Value;
+	__asm__("xchgw %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
 	return retval;
 }
 
