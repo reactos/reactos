@@ -18,6 +18,8 @@
 
 #include "wincodecs_private.h"
 
+#include <shlwapi.h>
+
 /***********************************************************************
  *		interface for self-registering
  */
@@ -374,11 +376,11 @@ static HRESULT unregister_decoders(struct regsvr_decoder const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = RegDeleteTreeW(coclass_key, buf);
+	res = SHDeleteKeyW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = RegDeleteTreeW(instance_key, buf);
+	res = SHDeleteKeyW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -552,11 +554,11 @@ static HRESULT unregister_encoders(struct regsvr_encoder const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = RegDeleteTreeW(coclass_key, buf);
+	res = SHDeleteKeyW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = RegDeleteTreeW(instance_key, buf);
+	res = SHDeleteKeyW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -709,11 +711,11 @@ static HRESULT unregister_converters(struct regsvr_converter const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = RegDeleteTreeW(coclass_key, buf);
+	res = SHDeleteKeyW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = RegDeleteTreeW(instance_key, buf);
+	res = SHDeleteKeyW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -919,11 +921,11 @@ static HRESULT unregister_metadatareaders(struct regsvr_metadatareader const *li
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	StringFromGUID2(list->clsid, buf, 39);
 
-	res = RegDeleteTreeW(coclass_key, buf);
+	res = SHDeleteKeyW(coclass_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-	res = RegDeleteTreeW(instance_key, buf);
+	res = SHDeleteKeyW(instance_key, buf);
 	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -1094,11 +1096,11 @@ static HRESULT unregister_pixelformats(struct regsvr_pixelformat const *list)
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
         StringFromGUID2(list->clsid, buf, 39);
 
-        res = RegDeleteTreeW(coclass_key, buf);
+        res = SHDeleteKeyW(coclass_key, buf);
         if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
         if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
-        res = RegDeleteTreeW(instance_key, buf);
+        res = SHDeleteKeyW(instance_key, buf);
         if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
         if (res != ERROR_SUCCESS) goto error_close_coclass_key;
     }
@@ -2009,14 +2011,14 @@ static HRESULT unregister_categories(const struct regsvr_category *list)
     for (; res == ERROR_SUCCESS && list->clsid; list++)
     {
         StringFromGUID2(list->clsid, buf, 39);
-        res = RegDeleteTreeW(instance_key, buf);
+        res = SHDeleteKeyW(instance_key, buf);
     }
 
     RegCloseKey(instance_key);
     RegCloseKey(categories_key);
 
     StringFromGUID2(&CLSID_WICImagingCategories, buf, 39);
-    res = RegDeleteTreeW(coclass_key, buf);
+    res = SHDeleteKeyW(coclass_key, buf);
 
     RegCloseKey(coclass_key);
 
