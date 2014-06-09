@@ -1655,6 +1655,8 @@ MUI_STRING sqALStrings[] =
      "Ju keni zgjedhur p‰r t‰ krijuar nj‰ ndarje t‰ re n‰"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Ju lutem, jepini madh‰sin‰ e particionit t‰ ri n‰ megabajt."},
     {STRING_CREATEPARTITION,

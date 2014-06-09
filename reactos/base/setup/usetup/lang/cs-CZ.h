@@ -1660,6 +1660,8 @@ MUI_STRING csCZStrings[] =
 //     "Zvolili jste vytvoýen¡ nov‚ho odd¡lu na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Zadejte velikost nov‚ho odd¡lu v megabajtech."},
     {STRING_CREATEPARTITION,

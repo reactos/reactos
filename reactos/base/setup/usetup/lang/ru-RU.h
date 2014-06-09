@@ -1653,6 +1653,8 @@ MUI_STRING ruRUStrings[] =
 //     "Вы хотите создать новый раздел на"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Пожалуйста, введите размер нового раздела в мегабайтах."},
     {STRING_CREATEPARTITION,

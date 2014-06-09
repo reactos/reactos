@@ -1729,6 +1729,8 @@ MUI_STRING roROStrings[] =
 //     "Aîi ales crearea unei noi partiîii pe"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Introduceîi mÇrimea noii partiîii Œn megaocteîi."},
     {STRING_CREATEPARTITION,

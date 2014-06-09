@@ -1664,6 +1664,8 @@ MUI_STRING bgBGStrings[] =
 //     "Избрали сте да създадете нов дял на"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Въведете размера на новия дял (в мегабайти)."},
     {STRING_CREATEPARTITION,

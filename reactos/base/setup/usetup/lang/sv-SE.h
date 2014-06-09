@@ -1658,6 +1658,8 @@ MUI_STRING svSEStrings[] =
 //     "Du har valt att skapa en ny partiton p†"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "V„nligen skriv in storleken av den nya partitionen i megabytes."},
     {STRING_CREATEPARTITION,

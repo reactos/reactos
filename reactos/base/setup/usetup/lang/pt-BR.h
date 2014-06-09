@@ -1688,6 +1688,8 @@ MUI_STRING ptBRStrings[] =
 //    "Vocˆ solicitou a cria‡Æo de uma nova parti‡Æo em"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Por favor, insira o tamanho da nova parti‡Æo em megabytes (MB)."},
     {STRING_CREATEPARTITION,

@@ -1661,6 +1661,8 @@ MUI_STRING plPLStrings[] =
 //     "Wybrane: utworzenie nowej partycji na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Prosz© wprowadzi† rozmiar nowej partycji w megabajtach."},
     {STRING_CREATEPARTITION,

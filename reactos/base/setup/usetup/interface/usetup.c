@@ -2131,8 +2131,146 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 {
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+    BOOLEAN Quit;
+    BOOLEAN Cancel;
+    CHAR InputBuffer[50];
+    ULONG MaxSize;
+    ULONGLONG PartSize;
+    ULONGLONG DiskSize;
+    ULONGLONG SectorCount;
+    PCHAR Unit;
 
-    return SELECT_PARTITION_PAGE;
+    if (PartitionList == NULL ||
+        PartitionList->CurrentDisk == NULL ||
+        PartitionList->CurrentPartition == NULL)
+    {
+        /* FIXME: show an error dialog */
+        return QUIT_PAGE;
+    }
+
+    DiskEntry = PartitionList->CurrentDisk;
+    PartEntry = PartitionList->CurrentPartition;
+
+    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_LOGICAL_PARTITION));
+
+    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+#if 0
+    if (DiskSize >= 10737418240) /* 10 GB */
+    {
+        DiskSize = DiskSize / 1073741824;
+        Unit = MUIGetString(STRING_GB);
+    }
+    else
+#endif
+    {
+        DiskSize = DiskSize / 1048576;
+        if (DiskSize == 0)
+            DiskSize = 1;
+
+        Unit = MUIGetString(STRING_MB);
+    }
+
+    if (DiskEntry->DriverName.Length > 0)
+    {
+        CONSOLE_PrintTextXY(6, 10,
+                            MUIGetString(STRING_HDINFOPARTCREATE),
+                            DiskSize,
+                            Unit,
+                            DiskEntry->DiskNumber,
+                            DiskEntry->Port,
+                            DiskEntry->Bus,
+                            DiskEntry->Id,
+                            &DiskEntry->DriverName);
+    }
+    else
+    {
+        CONSOLE_PrintTextXY(6, 10,
+                            MUIGetString(STRING_HDDINFOUNK1),
+                            DiskSize,
+                            Unit,
+                            DiskEntry->DiskNumber,
+                            DiskEntry->Port,
+                            DiskEntry->Bus,
+                            DiskEntry->Id);
+    }
+
+    CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
+
+#if 0
+    CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
+                        PartitionList->CurrentPartition->SectorCount * DiskEntry->BytesPerSector / 1048576);
+#endif
+
+    CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
+
+    PartEntry = PartitionList->CurrentPartition;
+    while (TRUE)
+    {
+        MaxSize = (PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector) / 1048576;  /* in MBytes (rounded) */
+
+        if (MaxSize > PARTITION_MAXSIZE)
+            MaxSize = PARTITION_MAXSIZE;
+
+        ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
+                                  MaxSize, InputBuffer, &Quit, &Cancel);
+
+        if (Quit == TRUE)
+        {
+            if (ConfirmQuit (Ir) == TRUE)
+            {
+                return QUIT_PAGE;
+            }
+        }
+        else if (Cancel == TRUE)
+        {
+            return SELECT_PARTITION_PAGE;
+        }
+        else
+        {
+            PartSize = atoi(InputBuffer);
+
+            if (PartSize < 1)
+            {
+                /* Too small */
+                continue;
+            }
+
+            if (PartSize > MaxSize)
+            {
+                /* Too large */
+                continue;
+            }
+
+            /* Convert to bytes */
+            if (PartSize == MaxSize)
+            {
+                /* Use all of the unpartitioned disk space */
+                SectorCount = PartEntry->SectorCount.QuadPart;
+            }
+            else
+            {
+                /* Calculate the sector count from the size in MB */
+                SectorCount = PartSize * 1048576 / DiskEntry->BytesPerSector;
+
+                /* But never get larger than the unpartitioned disk space */
+                if (SectorCount > PartEntry->SectorCount.QuadPart)
+                    SectorCount = PartEntry->SectorCount.QuadPart;
+            }
+
+            DPRINT("Partition size: %I64u bytes\n", PartSize);
+
+            CreateLogicalPartition(PartitionList,
+                                   SectorCount);
+
+            return SELECT_PARTITION_PAGE;
+        }
+    }
+
+    return CREATE_LOGICAL_PARTITION_PAGE;
 }
 
 

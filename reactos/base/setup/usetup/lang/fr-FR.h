@@ -1662,6 +1662,8 @@ MUI_STRING frFRStrings[] =
      "Vous avez choisi de cr‚er une partition primaire sur"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Vous avez choisi de cr‚er une partition ‚tendue sur"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Veuillez entrer la taille de la nouvelle partition en m‚gaoctets."},
     {STRING_CREATEPARTITION,

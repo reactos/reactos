@@ -1658,6 +1658,8 @@ MUI_STRING esESStrings[] =
 //     "Ha elegido crear una nueva partici¢n en"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Por favor, introduzca el tama¤o de la nueva partici¢n en megabytes."},
     {STRING_CREATEPARTITION,

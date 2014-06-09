@@ -1676,6 +1676,8 @@ MUI_STRING elGRStrings[] =
 //     "ДзавтеШлЬ дШ ЫЮгажмиЪуйЬлЬ тдШ дтж partition on"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "ПШиШбШвщ ЫщйлЬ лж гтЪЬЯжк лжм partition йЬ megabytes."},
     {STRING_CREATEPARTITION,

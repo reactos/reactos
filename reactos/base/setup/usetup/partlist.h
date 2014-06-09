@@ -231,6 +231,11 @@ CreateExtendedPartition(
     ULONGLONG PartitionSize);
 
 VOID
+CreateLogicalPartition(
+    PPARTLIST List,
+    ULONGLONG PartitionSize);
+
+VOID
 DeleteCurrentPartition(
     PPARTLIST List);
 

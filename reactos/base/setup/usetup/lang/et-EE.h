@@ -1649,6 +1649,8 @@ MUI_STRING etEEStrings[] =
 //     "Oled valinud kettale uue partitsiooni loomise"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Sisesta uue partitsiooni suurus megabaitides."},
     {STRING_CREATEPARTITION,

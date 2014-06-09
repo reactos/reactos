@@ -2578,6 +2578,32 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
 
 VOID
+CreateLogicalPartition(
+    PPARTLIST List,
+    ULONGLONG SectorCount)
+{
+//    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+//    PPARTENTRY NewPartEntry;
+
+    DPRINT1("CreateLogicalPartition(%I64u)\n", SectorCount);
+
+    if (List == NULL ||
+        List->CurrentDisk == NULL ||
+        List->CurrentPartition == NULL ||
+        List->CurrentPartition->IsPartitioned == TRUE)
+    {
+        return;
+    }
+
+//    DiskEntry = List->CurrentDisk;
+    PartEntry = List->CurrentPartition;
+
+    DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
+}
+
+
+VOID
 DeleteCurrentPartition(
     PPARTLIST List)
 {
