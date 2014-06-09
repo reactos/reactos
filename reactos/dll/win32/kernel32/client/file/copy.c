@@ -191,20 +191,16 @@ SetLastWriteTime(
     return errCode;
 }
 
-
-/*
- * @implemented
- */
 BOOL
-WINAPI
-CopyFileExW (
-    LPCWSTR			lpExistingFileName,
-    LPCWSTR			lpNewFileName,
-    LPPROGRESS_ROUTINE	lpProgressRoutine,
-    LPVOID			lpData,
-    BOOL			*pbCancel,
-    DWORD			dwCopyFlags
-)
+BasepCopyFileExW(IN LPCWSTR lpExistingFileName,
+                 IN LPCWSTR lpNewFileName,
+                 IN LPPROGRESS_ROUTINE lpProgressRoutine OPTIONAL,
+                 IN LPVOID lpData OPTIONAL,
+                 IN LPBOOL pbCancel OPTIONAL,
+                 IN DWORD dwCopyFlags,
+                 IN DWORD dwBasepFlags,
+                 OUT LPHANDLE lpExistingHandle,
+                 OUT LPHANDLE lpNewHandle)
 {
     NTSTATUS errCode;
     HANDLE FileHandleSource, FileHandleDest;
@@ -307,6 +303,53 @@ CopyFileExW (
     return RC;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+CopyFileExW(IN LPCWSTR lpExistingFileName,
+            IN LPCWSTR lpNewFileName,
+            IN LPPROGRESS_ROUTINE lpProgressRoutine OPTIONAL,
+            IN LPVOID lpData OPTIONAL,
+            IN LPBOOL pbCancel OPTIONAL,
+            IN DWORD dwCopyFlags)
+{
+    BOOL Ret;
+    HANDLE ExistingHandle, NewHandle;
+
+    ExistingHandle = INVALID_HANDLE_VALUE;
+    NewHandle = INVALID_HANDLE_VALUE;
+
+    _SEH2_TRY
+    {
+        Ret = BasepCopyFileExW(lpExistingFileName,
+                               lpNewFileName,
+                               lpProgressRoutine,
+                               lpData,
+                               pbCancel,
+                               dwCopyFlags,
+                               0,
+                               &ExistingHandle,
+                               &NewHandle);
+    }
+    _SEH2_FINALLY
+    {
+        if (ExistingHandle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(ExistingHandle);
+        }
+
+        if (NewHandle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(NewHandle);
+        }
+    }
+    _SEH2_END;
+
+    return Ret;
+}
+
 
 /*
  * @implemented
@@ -404,17 +447,53 @@ CopyFileW(IN LPCWSTR lpExistingFileName,
  */
 BOOL
 WINAPI
-PrivCopyFileExW (
-    LPCWSTR			lpExistingFileName,
-    LPCWSTR			lpNewFileName,
-    LPPROGRESS_ROUTINE	lpProgressRoutine,
-    LPVOID			lpData,
-    BOOL			*pbCancel,
-    DWORD			dwCopyFlags
-)
+PrivCopyFileExW(IN LPCWSTR lpExistingFileName,
+                IN LPCWSTR lpNewFileName,
+                IN LPPROGRESS_ROUTINE lpProgressRoutine,
+                IN LPVOID lpData,
+                IN LPBOOL pbCancel,
+                IN DWORD dwCopyFlags)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    BOOL Ret;
+    HANDLE ExistingHandle, NewHandle;
+
+    ExistingHandle = INVALID_HANDLE_VALUE;
+    NewHandle = INVALID_HANDLE_VALUE;
+
+    /* Check for incompatible flags */
+    if (dwCopyFlags & COPY_FILE_FAIL_IF_EXISTS && dwCopyFlags & BASEP_COPY_REPLACE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    _SEH2_TRY
+    {
+        Ret = BasepCopyFileExW(lpExistingFileName,
+                               lpNewFileName,
+                               lpProgressRoutine,
+                               lpData,
+                               pbCancel,
+                               dwCopyFlags & BASEP_COPY_PUBLIC_MASK,
+                               dwCopyFlags & BASEP_COPY_BASEP_MASK,
+                               &ExistingHandle,
+                               &NewHandle);
+    }
+    _SEH2_FINALLY
+    {
+        if (ExistingHandle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(ExistingHandle);
+        }
+
+        if (NewHandle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(NewHandle);
+        }
+    }
+    _SEH2_END;
+
+    return Ret;
 }
 
 /* EOF */
