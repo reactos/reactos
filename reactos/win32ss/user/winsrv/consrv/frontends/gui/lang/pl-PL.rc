@@ -4,6 +4,7 @@
  *    https://sourceforge.net/projects/reactospl
  *    Translation update by Olaf Siejka (Caemyr), Apr 2011
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Update by wojo664 (June 2014)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -33,6 +34,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Mark"
-    IDS_SELECT_TITLE "Select"
+    IDS_MARK_TITLE "Zaznacz"
+    IDS_SELECT_TITLE "Wybierz"
 END

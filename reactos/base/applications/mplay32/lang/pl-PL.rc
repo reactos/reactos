@@ -3,6 +3,7 @@
  *   http://www.reactos.org
  *   IRC: irc.freenode.net #reactos-pl
  *   UTF-8 conversion by Caemyr (May, 2011)
+ *   Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (May, 2014)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -16,11 +17,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Wyjdź", IDM_EXIT
     END
-    POPUP "&Device"
+    POPUP "&Urządzenie"
     BEGIN
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&Właściwości", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "&Regulacja głośności", IDM_VOLUMECTL
     END
     POPUP "&Pomoc"
     BEGIN
@@ -38,8 +39,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Przewiń do tyłu"
     IDS_TOOLTIP_SEEKFORW "Przewiń do przodu"
     IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
-    IDS_APPTITLE "ReactOS Multimedia Player"
+    IDS_APPTITLE "Odtwarzacz multimedialny ReactOS"
     IDS_PLAY "Odtwórz"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error"
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
+    IDS_DEFAULTMCIERRMSG "Brak dostępnego opisu dla tego błędu"
+    IDS_UNKNOWNFILEEXT "Nie można określić typu urządzenia z podanego rozszerzenia pliku."
 END

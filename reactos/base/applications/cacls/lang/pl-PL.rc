@@ -2,7 +2,7 @@
  *    Translated by TestamenT
  *    testament@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (May, 2014)
  *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
@@ -51,8 +51,8 @@ Skróty:\n\
     IDS_ABBR_CHANGE "C"
     IDS_ABBR_NONE "N"
     IDS_ALLOW ""
-    IDS_DENY "(DENY)"
-    IDS_SPECIAL_ACCESS "(special access:)"
+    IDS_DENY "(ODMÓW)"
+    IDS_SPECIAL_ACCESS "(dostęp specjalny:)"
     IDS_GENERIC_READ "GENERIC_READ"
     IDS_GENERIC_WRITE "GENERIC_WRITE"
     IDS_GENERIC_EXECUTE "GENERIC_EXECUTE"
