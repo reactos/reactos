@@ -30,8 +30,8 @@ COMMAND cmds[] =
     {L"helpmsg",    cmdHelpMsg},
     {L"localgroup", unimplemented},
     {L"name",       unimplemented},
-    {L"print",      unimplemented},
     {L"pause",      cmdPause},
+    {L"print",      unimplemented},
     {L"send",       unimplemented},
     {L"session",    unimplemented},
     {L"share",      unimplemented},
@@ -67,7 +67,7 @@ int wmain(int argc, WCHAR **argv)
 
     if (argc < 2)
     {
-        help();
+        PrintResourceString(IDS_NET_SYNTAX);
         return 1;
     }
 
@@ -80,7 +80,7 @@ int wmain(int argc, WCHAR **argv)
         }
     }
 
-    help();
+    PrintResourceString(IDS_NET_SYNTAX);
 
     return 1;
 }

@@ -19,8 +19,7 @@ INT cmdStop(INT argc, WCHAR **argv)
 
     if (argc != 3)
     {
-        /* FIXME: Print usage message! */
-        printf("Usage: NET STOP <Service name>\n");
+        PrintResourceString(IDS_STOP_SYNTAX);
         return 1;
     }
 

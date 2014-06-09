@@ -18,7 +18,7 @@ INT cmdPause(INT argc, WCHAR **argv)
 
     if (argc != 3)
     {
-        puts("Usage: NET PAUSE <Service Name>");
+        PrintResourceString(IDS_PAUSE_SYNTAX);
         return 1;
     }
 
