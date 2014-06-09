@@ -131,6 +131,17 @@ DWORD
 
 extern WaitForInputIdleType UserWaitForInputIdleRoutine;
 
+/* Flags for PrivCopyFileExW && BasepCopyFileExW */
+#define BASEP_COPY_METADATA         0x10
+#define BASEP_COPY_SACL             0x20
+#define BASEP_COPY_OWNER_AND_GROUP  0x40
+#define BASEP_COPY_DIRECTORY        0x80
+#define BASEP_COPY_BACKUP_SEMANTICS 0x100
+#define BASEP_COPY_REPLACE          0x200
+#define BASEP_COPY_SKIP_DACL        0x400
+#define BASEP_COPY_PUBLIC_MASK      0xF
+#define BASEP_COPY_BASEP_MASK       0xFFFFFFF0
+
 /* GLOBAL VARIABLES **********************************************************/
 
 extern BOOL bIsFileApiAnsi;
@@ -422,6 +433,18 @@ BaseMarkFileForDelete(
     IN ULONG FileAttributes
 );
 
+BOOL
+BasepCopyFileExW(
+    IN LPCWSTR lpExistingFileName,
+    IN LPCWSTR lpNewFileName,
+    IN LPPROGRESS_ROUTINE lpProgressRoutine OPTIONAL,
+    IN LPVOID lpData OPTIONAL,
+    IN LPBOOL pbCancel OPTIONAL,
+    IN DWORD dwCopyFlags,
+    IN DWORD dwBasepFlags,
+    OUT LPHANDLE lpExistingHandle,
+    OUT LPHANDLE lpNewHandle
+);
 
 /* FIXME: This is EXPORTED! It should go in an external kernel32.h header */
 VOID
