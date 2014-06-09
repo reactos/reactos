@@ -19,6 +19,8 @@
 #include <ftoutln.h>
 #include <ftwinfnt.h>
 
+#include <gdi/eng/floatobj.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -3228,6 +3230,7 @@ GreExtTextOutW(
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
     LONG fixAscender, fixDescender;
+    FLOATOBJ Scale;
 
     // TODO: Write test-cases to exactly match real Windows in different
     // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -3671,8 +3674,13 @@ GreExtTextOutW(
         }
         else
         {
-            TextLeft += Dx[i<<DxShift] << 6;
-             DPRINT("New TextLeft2: %I64d\n", TextLeft);
+            Scale = pdcattr->mxWorldToDevice.efM11;
+            if (_FLOATOBJ_Equal0(&Scale))
+                FLOATOBJ_Set1(&Scale);
+ 
+            FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); // do the shift before multiplying to preserve precision
+            TextLeft += FLOATOBJ_GetLong(&Scale);
+            DPRINT("New TextLeft2: %I64d\n", TextLeft);
         }
 
         if (DxShift)
