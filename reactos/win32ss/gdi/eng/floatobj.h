@@ -63,8 +63,8 @@ extern const FLOATOBJ gef16;
 #define FLOATOBJ_16 {0x40000000, 0x00000006}
 #define FLOATOBJ_1_16 {0x40000000, 0xfffffffe}
 
-#define FLOATOBJ_Set0(fo) (fo)->ul1 = 0; (fo)->ul2 = 0;
-#define FLOATOBJ_Set1(fo) (fo)->ul1 = 0x40000000; (fo)->ul2 = 2;
+#define FLOATOBJ_Set0(fo) do { (fo)->ul1 = 0; (fo)->ul2 = 0; } while (0)
+#define FLOATOBJ_Set1(fo) do { (fo)->ul1 = 0x40000000; (fo)->ul2 = 2; } while (0)
 
 #else
 
