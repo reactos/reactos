@@ -16,11 +16,21 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
     LPWSTR endptr;
     LPWSTR lpBuffer;
     LONG errNum;
+    INT i;
 
     if (argc < 3)
     {
         PrintResourceString(IDS_HELPMSG_SYNTAX);
         return 1;
+    }
+
+    for (i = 2; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"/help") == 0)
+        {
+            PrintResourceString(IDS_HELPMSG_HELP);
+            return 1;
+        }
     }
 
     errNum = wcstol(argv[2], &endptr, 10);
