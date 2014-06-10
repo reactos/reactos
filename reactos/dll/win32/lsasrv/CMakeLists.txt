@@ -4,9 +4,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/idl
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys/lsass)
 
-# FIXME: See CORE-8200
-set(IDL_FLAGS ${IDL_FLAGS} -Oif)
-
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl)
 spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
