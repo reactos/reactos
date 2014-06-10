@@ -203,7 +203,7 @@ CopyLines(PTEXTMODE_SCREEN_BUFFER Buffer,
         xBeg = (yPos == Begin->Y ? Begin->X : 0);
         xEnd = (yPos ==   End->Y ?   End->X : Buffer->ScreenBufferSize.X - 1);
 
-        ptr = ConioCoordToPointer(Buffer, xBeg, yPos);
+        ptr = ConioCoordToPointer(Buffer, 0, yPos);
 
         /* Copy only the characters, leave attributes alone */
         for (xPos = xBeg; (xPos <= xEnd) && (NumChars-- > 0); xPos++)
