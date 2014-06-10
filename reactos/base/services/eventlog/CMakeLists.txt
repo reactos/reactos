@@ -3,6 +3,9 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/idl
     ${CMAKE_CURRENT_BINARY_DIR})
 
+# FIXME: See CORE-8200
+set(IDL_FLAGS ${IDL_FLAGS} -Oif)
+
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/eventlogrpc.idl)
 
 list(APPEND SOURCE
