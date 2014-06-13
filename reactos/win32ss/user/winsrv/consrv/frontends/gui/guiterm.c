@@ -140,7 +140,8 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
 
 VOID
 SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
-
+VOID
+CreateSysMenu(HWND hWnd);
 static LRESULT CALLBACK
 GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -198,6 +199,8 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 /* CAN WE DEADLOCK ?? */
                 GuiConsoleMoveWindow(GuiData); // FIXME: This MUST be done via the CreateWindowExW call.
                 SendMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
+
+                CreateSysMenu(GuiData->hWindow);
 
                 /* Switch to full-screen mode if necessary */
                 // FIXME: Move elsewhere, it cause misdrawings of the window.

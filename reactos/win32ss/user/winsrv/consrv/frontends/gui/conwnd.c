@@ -250,7 +250,8 @@ AppendMenuItems(HMENU hMenu,
     } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
-static VOID
+//static
+VOID
 CreateSysMenu(HWND hWnd)
 {
     MENUITEMINFOW mii;
@@ -587,7 +588,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     SetWindowLongPtrW(GuiData->hWindow, GWLP_USERDATA, (DWORD_PTR)GuiData);
 
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
-    CreateSysMenu(GuiData->hWindow);
+    //CreateSysMenu(GuiData->hWindow);
 
     DPRINT("OnNcCreate - setting start event\n");
     SetEvent(GuiData->hGuiInitEvent);
