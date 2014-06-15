@@ -564,6 +564,10 @@ static void test_DrawTextCalcRect(void)
     textheight = DrawTextA(hdc, wordbreak_text, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
     ok(textheight == heightcheck * 2, "Got unexpected textheight %d, expected %d.\n",
        textheight, heightcheck * 2);
+    SetRect(&rect, 0, 0, 1, 1);
+    textheight = DrawTextA(hdc, wordbreak_text, -1, &rect, DT_CALCRECT | DT_WORDBREAK | DT_EDITCONTROL);
+    ok(textheight >= heightcheck * 6, "Got unexpected textheight %d, expected at least %d.\n",
+       textheight, heightcheck * 6);
 
     SetRect(&rect, 0, 0, 1, 1);
     heightcheck = DrawTextW(hdc, wordbreak_textW, -1, &rect, DT_CALCRECT);
@@ -571,6 +575,10 @@ static void test_DrawTextCalcRect(void)
     textheight = DrawTextW(hdc, wordbreak_textW, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
     ok(textheight == heightcheck * 2, "Got unexpected textheight %d, expected %d.\n",
        textheight, heightcheck * 2);
+    SetRect(&rect, 0, 0, 1, 1);
+    textheight = DrawTextW(hdc, wordbreak_textW, -1, &rect, DT_CALCRECT | DT_WORDBREAK | DT_EDITCONTROL);
+    ok(textheight >= heightcheck * 6, "Got unexpected textheight %d, expected at least %d.\n",
+       textheight, heightcheck * 6);
 
     SelectObject(hdc, hOldFont);
     ret = DeleteObject(hFont);
