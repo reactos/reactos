@@ -407,6 +407,12 @@ _tWinMain(IN HINSTANCE hInstance,
     InitCommonControls();
     OleInitialize(NULL);
 
+    /*
+     * Set our shutdown parameters: we want to shutdown the very last,
+     * but before any TaskMgr instance (which has a shutdown level of 1).
+     */
+    SetProcessShutdownParameters(2, 0);
+
     ProcessStartupItems();
 
     if (GetShellWindow() == NULL)
