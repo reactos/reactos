@@ -200,6 +200,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 GuiConsoleMoveWindow(GuiData); // FIXME: This MUST be done via the CreateWindowExW call.
                 SendMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
 
+                // FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
                 CreateSysMenu(GuiData->hWindow);
 
                 /* Switch to full-screen mode if necessary */

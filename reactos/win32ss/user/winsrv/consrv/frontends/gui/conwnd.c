@@ -588,6 +588,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     SetWindowLongPtrW(GuiData->hWindow, GWLP_USERDATA, (DWORD_PTR)GuiData);
 
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
+    // FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
     //CreateSysMenu(GuiData->hWindow);
 
     DPRINT("OnNcCreate - setting start event\n");
