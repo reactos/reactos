@@ -2013,14 +2013,14 @@ BOOL
 ScrollDownPartitionList(
     PPARTLIST List)
 {
-//    PDISKENTRY DiskEntry;
+    PLIST_ENTRY DiskListEntry;
+    PLIST_ENTRY PartListEntry;
+    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PLIST_ENTRY Entry;
 
-    /* Check for empty disks */
+    /* Fail, if no disks are available */
     if (IsListEmpty(&List->DiskListHead))
         return FALSE;
-
 
     /* Check for next usable entry on current disk */
     if (List->CurrentPartition != NULL)
@@ -2029,21 +2029,21 @@ ScrollDownPartitionList(
         {
             /* Logical partition */
 
-            Entry = List->CurrentPartition->ListEntry.Flink;
-            if (Entry != &List->CurrentDisk->LogicalPartListHead)
+            PartListEntry = List->CurrentPartition->ListEntry.Flink;
+            if (PartListEntry != &List->CurrentDisk->LogicalPartListHead)
             {
                 /* Next logical partition */
-                PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                 List->CurrentPartition = PartEntry;
                 return TRUE;
             }
             else
             {
-                Entry = List->CurrentDisk->ExtendedPartition->ListEntry.Flink;
-                if (Entry != &List->CurrentDisk->PrimaryPartListHead)
+                PartListEntry = List->CurrentDisk->ExtendedPartition->ListEntry.Flink;
+                if (PartListEntry != &List->CurrentDisk->PrimaryPartListHead)
                 {
-                    PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                     List->CurrentPartition = PartEntry;
                     return TRUE;
@@ -2057,10 +2057,10 @@ ScrollDownPartitionList(
             if (IsContainerPartition(List->CurrentPartition->PartitionType))
             {
                 /* First logical partition */
-                Entry = List->CurrentDisk->LogicalPartListHead.Flink;
-                if (Entry != &List->CurrentDisk->LogicalPartListHead)
+                PartListEntry = List->CurrentDisk->LogicalPartListHead.Flink;
+                if (PartListEntry != &List->CurrentDisk->LogicalPartListHead)
                 {
-                    PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                     List->CurrentPartition = PartEntry;
                     return TRUE;
@@ -2069,10 +2069,10 @@ ScrollDownPartitionList(
             else
             {
                 /* Next primary partition */
-                Entry = List->CurrentPartition->ListEntry.Flink;
-                if (Entry != &List->CurrentDisk->PrimaryPartListHead)
+                PartListEntry = List->CurrentPartition->ListEntry.Flink;
+                if (PartListEntry != &List->CurrentDisk->PrimaryPartListHead)
                 {
-                    PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                     List->CurrentPartition = PartEntry;
                     return TRUE;
@@ -2081,32 +2081,24 @@ ScrollDownPartitionList(
         }
     }
 
-    DPRINT1("TODO: Check the next drive!\n");
-
-#if 0
-    /* Check for first usable entry on next disk */
-    if (List->CurrentDisk != NULL)
+    /* Search for the first partition entry on the next disk */
+    DiskListEntry = List->CurrentDisk->ListEntry.Flink;
+    while (DiskListEntry != &List->DiskListHead)
     {
-        Entry1 = List->CurrentDisk->ListEntry.Flink;
-        while (Entry1 != &List->DiskListHead)
+        DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
+
+        PartListEntry = DiskEntry->PrimaryPartListHead.Flink;
+        if (PartListEntry != &DiskEntry->PrimaryPartListHead)
         {
-            DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
+            PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-            Entry2 = DiskEntry->PartListHead.Flink;
-            if (Entry2 != &DiskEntry->PartListHead)
-            {
-                PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-
-                List->CurrentDisk = DiskEntry;
-                List->CurrentPartition = PartEntry;
-                DrawPartitionList(List);
-                return;
-            }
-
-            Entry1 = Entry1->Flink;
+            List->CurrentDisk = DiskEntry;
+            List->CurrentPartition = PartEntry;
+            return TRUE;
         }
+
+        DiskListEntry = DiskListEntry->Flink;
     }
-#endif
 
     return FALSE;
 }
@@ -2116,11 +2108,12 @@ BOOL
 ScrollUpPartitionList(
     PPARTLIST List)
 {
-//    PDISKENTRY DiskEntry;
+    PLIST_ENTRY DiskListEntry;
+    PLIST_ENTRY PartListEntry;
+    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PLIST_ENTRY Entry;
 
-    /* Check for empty disks */
+    /* Fail, if no disks are available */
     if (IsListEmpty(&List->DiskListHead))
         return FALSE;
 
@@ -2130,11 +2123,11 @@ ScrollUpPartitionList(
         if (List->CurrentPartition->LogicalPartition)
         {
             /* Logical partition */
-            Entry = List->CurrentPartition->ListEntry.Blink;
-            if (Entry != &List->CurrentDisk->LogicalPartListHead)
+            PartListEntry = List->CurrentPartition->ListEntry.Blink;
+            if (PartListEntry != &List->CurrentDisk->LogicalPartListHead)
             {
                 /* Previous logical partition */
-                PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
             }
             else
             {
@@ -2149,15 +2142,15 @@ ScrollUpPartitionList(
         {
             /* Primary or extended partition */
 
-            Entry = List->CurrentPartition->ListEntry.Blink;
-            if (Entry != &List->CurrentDisk->PrimaryPartListHead)
+            PartListEntry = List->CurrentPartition->ListEntry.Blink;
+            if (PartListEntry != &List->CurrentDisk->PrimaryPartListHead)
             {
-                PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                 if (IsContainerPartition(PartEntry->PartitionType))
                 {
-                    Entry = List->CurrentDisk->LogicalPartListHead.Blink;
-                    PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                    PartListEntry = List->CurrentDisk->LogicalPartListHead.Blink;
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
                 }
 
                 List->CurrentPartition = PartEntry;
@@ -2167,34 +2160,39 @@ ScrollUpPartitionList(
         }
     }
 
-    DPRINT1("TODO: Check the previous drive!\n");
-
-#if 0
-    /* check for last usable entry on previous disk */
-    if (List->CurrentDisk != NULL)
+    /* Search for the last partition entry on the previous disk */
+    DiskListEntry = List->CurrentDisk->ListEntry.Blink;
+    while (DiskListEntry != &List->DiskListHead)
     {
-        Entry1 = List->CurrentDisk->ListEntry.Blink;
-        while (Entry1 != &List->DiskListHead)
+        DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
+
+        PartListEntry = DiskEntry->PrimaryPartListHead.Blink;
+        if (PartListEntry != &DiskEntry->PrimaryPartListHead)
         {
-            DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
+            PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-            Entry2 = DiskEntry->PrimaryPartListHead.Blink;
-            if (Entry2 != &DiskEntry->PrimaryPartListHead)
+            if (IsContainerPartition(PartEntry->PartitionType))
             {
-                PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+                PartListEntry = DiskEntry->LogicalPartListHead.Blink;
+                if (PartListEntry != &DiskEntry->LogicalPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
+                    List->CurrentDisk = DiskEntry;
+                    List->CurrentPartition = PartEntry;
+                    return TRUE;
+                }
+            }
+            else
+            {
                 List->CurrentDisk = DiskEntry;
                 List->CurrentPartition = PartEntry;
-
-                /* Draw partition list and return */
-                DrawPartitionList(List);
-                return;
+                return TRUE;
             }
-
-            Entry1 = Entry1->Blink;
         }
+
+        DiskListEntry = DiskListEntry->Blink;
     }
-#endif
 
     return FALSE;
 }
