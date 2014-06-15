@@ -1203,6 +1203,12 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
             "ROS Explorer - command line options", MB_OK);
     }
 
+    /*
+     * Set our shutdown parameters: we want to shutdown the very last,
+     * but before any TaskMgr instance (which has a shutdown level of 1).
+     */
+    SetProcessShutdownParameters(2, 0);
+
     Thread* pSSOThread = NULL;
 
     if (startup_desktop) {
