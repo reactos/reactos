@@ -12,7 +12,6 @@
 @ stdcall CsrDereferenceWait(ptr)
 @ stdcall CsrDestroyProcess(ptr long)
 @ stdcall CsrDestroyThread(ptr)
-;@ stdcall CsrEnumProcesses(ptr ptr) ;;;;;;; Temporary hack used in win32csr, to be removed
 @ stdcall CsrExecServerThread(ptr long)
 @ stdcall CsrGetProcessLuid(ptr ptr)
 @ stdcall CsrImpersonateClient(ptr)
