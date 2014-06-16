@@ -357,10 +357,6 @@ static const struct value_desc values[] = {
    { GL_BLEND_EQUATION, CONTEXT_ENUM(Color.EquationRGB), NO_EXTRA },
    { GL_BLEND_EQUATION_ALPHA_EXT, CONTEXT_ENUM(Color.EquationA), NO_EXTRA },
 
-   /* GL_ARB_texture_compression */
-   { GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_COMPRESSED_TEXTURE_FORMATS_ARB, LOC_CUSTOM, TYPE_INT_N, 0, NO_EXTRA },
-
    /* GL_ARB_multisample */
    { GL_SAMPLE_ALPHA_TO_COVERAGE_ARB,
      CONTEXT_BOOL(Multisample.SampleAlphaToCoverage), NO_EXTRA },
@@ -512,11 +508,6 @@ static const struct value_desc values[] = {
 
    { GL_BLEND_COLOR_EXT, LOC_CUSTOM, TYPE_FLOATN_4, 0, NO_EXTRA },
 
-   /* OES_texture_3D */
-   { GL_TEXTURE_BINDING_3D, LOC_CUSTOM, TYPE_INT, TEXTURE_3D_INDEX, NO_EXTRA },
-   { GL_MAX_3D_TEXTURE_SIZE, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_context, Const.Max3DTextureLevels), NO_EXTRA },
-
    { GL_ACCUM_RED_BITS, BUFFER_INT(Visual.accumRedBits), NO_EXTRA },
    { GL_ACCUM_GREEN_BITS, BUFFER_INT(Visual.accumGreenBits), NO_EXTRA },
    { GL_ACCUM_BLUE_BITS, BUFFER_INT(Visual.accumBlueBits), NO_EXTRA },
@@ -638,7 +629,6 @@ static const struct value_desc values[] = {
    { GL_STEREO, BUFFER_INT(Visual.stereoMode), NO_EXTRA },
 
    { GL_TEXTURE_1D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-   { GL_TEXTURE_3D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
 
    { GL_TEXTURE_BINDING_1D, LOC_CUSTOM, TYPE_INT, TEXTURE_1D_INDEX, NO_EXTRA },
 
@@ -882,7 +872,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    switch (d->pname) {
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
-   case GL_TEXTURE_3D:
    case GL_TEXTURE_CUBE_MAP_ARB:
       v->value_bool = _mesa_IsEnabled(d->pname);
       break;

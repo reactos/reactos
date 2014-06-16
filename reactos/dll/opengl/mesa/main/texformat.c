@@ -96,7 +96,6 @@ _mesa_choose_tex_format( struct gl_context *ctx, GLint internalFormat,
       case GL_RGBA12:
       case GL_RGBA16:
 	 RETURN_IF_SUPPORTED(MESA_FORMAT_RGBA_16);
-	 RETURN_IF_SUPPORTED(MESA_FORMAT_RGBA_16);
 	 RETURN_IF_SUPPORTED(MESA_FORMAT_RGBA8888);
 	 RETURN_IF_SUPPORTED(MESA_FORMAT_ARGB8888);
 	 break;

@@ -392,7 +392,6 @@ _mesa_init_constants(struct gl_context *ctx)
    /* Constants, may be overriden (usually only reduced) by device drivers */
    ctx->Const.MaxTextureMbytes = MAX_TEXTURE_MBYTES;
    ctx->Const.MaxTextureLevels = MAX_TEXTURE_LEVELS;
-   ctx->Const.Max3DTextureLevels = MAX_3D_TEXTURE_LEVELS;
    ctx->Const.MaxCubeTextureLevels = MAX_CUBE_TEXTURE_LEVELS;
    ctx->Const.MaxTextureMaxAnisotropy = MAX_TEXTURE_MAX_ANISOTROPY;
    ctx->Const.MaxArrayLockSize = MAX_ARRAY_LOCK_SIZE;

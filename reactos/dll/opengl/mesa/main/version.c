@@ -75,7 +75,6 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_shadow_funcs);
    const GLboolean ver_2_0 = (ver_1_5 &&
                               ctx->Extensions.ARB_point_sprite &&
-                              ctx->Extensions.ARB_texture_non_power_of_two &&
                               ctx->Extensions.EXT_blend_equation_separate);
    const GLboolean ver_2_1 = (ver_2_0);
    const GLboolean ver_3_0 = (ver_2_1 &&

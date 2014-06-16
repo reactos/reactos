@@ -179,7 +179,6 @@ typedef enum
    OPCODE_COPY_TEX_IMAGE2D,
    OPCODE_COPY_TEX_SUB_IMAGE1D,
    OPCODE_COPY_TEX_SUB_IMAGE2D,
-   OPCODE_COPY_TEX_SUB_IMAGE3D,
    OPCODE_CULL_FACE,
    OPCODE_DEPTH_FUNC,
    OPCODE_DEPTH_MASK,
@@ -248,10 +247,8 @@ typedef enum
    OPCODE_TEXPARAMETER,
    OPCODE_TEX_IMAGE1D,
    OPCODE_TEX_IMAGE2D,
-   OPCODE_TEX_IMAGE3D,
    OPCODE_TEX_SUB_IMAGE1D,
    OPCODE_TEX_SUB_IMAGE2D,
-   OPCODE_TEX_SUB_IMAGE3D,
    OPCODE_TRANSLATE,
    OPCODE_VIEWPORT,
    OPCODE_WINDOW_POS,
@@ -502,20 +499,12 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
             free(n[9].data);
             n += InstSize[n[0].opcode];
             break;
-         case OPCODE_TEX_IMAGE3D:
-            free(n[10].data);
-            n += InstSize[n[0].opcode];
-            break;
          case OPCODE_TEX_SUB_IMAGE1D:
             free(n[7].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_TEX_SUB_IMAGE2D:
             free(n[9].data);
-            n += InstSize[n[0].opcode];
-            break;
-         case OPCODE_TEX_SUB_IMAGE3D:
-            free(n[11].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_CONTINUE:
@@ -1602,34 +1591,6 @@ save_CopyTexSubImage2D(GLenum target, GLint level,
    }
    if (ctx->ExecuteFlag) {
       CALL_CopyTexSubImage2D(ctx->Exec, (target, level, xoffset, yoffset,
-                                         x, y, width, height));
-   }
-}
-
-
-static void GLAPIENTRY
-save_CopyTexSubImage3D(GLenum target, GLint level,
-                       GLint xoffset, GLint yoffset, GLint zoffset,
-                       GLint x, GLint y, GLsizei width, GLint height)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_COPY_TEX_SUB_IMAGE3D, 9);
-   if (n) {
-      n[1].e = target;
-      n[2].i = level;
-      n[3].i = xoffset;
-      n[4].i = yoffset;
-      n[5].i = zoffset;
-      n[6].i = x;
-      n[7].i = y;
-      n[8].i = width;
-      n[9].i = height;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_CopyTexSubImage3D(ctx->Exec, (target, level,
-                                         xoffset, yoffset, zoffset,
                                          x, y, width, height));
    }
 }
@@ -3520,46 +3481,6 @@ save_TexImage2D(GLenum target,
 
 
 static void GLAPIENTRY
-save_TexImage3D(GLenum target,
-                GLint level, GLint internalFormat,
-                GLsizei width, GLsizei height, GLsizei depth,
-                GLint border,
-                GLenum format, GLenum type, const GLvoid * pixels)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (target == GL_PROXY_TEXTURE_3D) {
-      /* don't compile, execute immediately */
-      CALL_TexImage3D(ctx->Exec, (target, level, internalFormat, width,
-                                  height, depth, border, format, type,
-                                  pixels));
-   }
-   else {
-      Node *n;
-      ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-      n = alloc_instruction(ctx, OPCODE_TEX_IMAGE3D, 10);
-      if (n) {
-         n[1].e = target;
-         n[2].i = level;
-         n[3].i = (GLint) internalFormat;
-         n[4].i = (GLint) width;
-         n[5].i = (GLint) height;
-         n[6].i = (GLint) depth;
-         n[7].i = border;
-         n[8].e = format;
-         n[9].e = type;
-         n[10].data = unpack_image(ctx, 3, width, height, depth, format, type,
-                                   pixels, &ctx->Unpack);
-      }
-      if (ctx->ExecuteFlag) {
-         CALL_TexImage3D(ctx->Exec, (target, level, internalFormat, width,
-                                     height, depth, border, format, type,
-                                     pixels));
-      }
-   }
-}
-
-
-static void GLAPIENTRY
 save_TexSubImage1D(GLenum target, GLint level, GLint xoffset,
                    GLsizei width, GLenum format, GLenum type,
                    const GLvoid * pixels)
@@ -3614,41 +3535,6 @@ save_TexSubImage2D(GLenum target, GLint level,
    if (ctx->ExecuteFlag) {
       CALL_TexSubImage2D(ctx->Exec, (target, level, xoffset, yoffset,
                                      width, height, format, type, pixels));
-   }
-}
-
-
-static void GLAPIENTRY
-save_TexSubImage3D(GLenum target, GLint level,
-                   GLint xoffset, GLint yoffset, GLint zoffset,
-                   GLsizei width, GLsizei height, GLsizei depth,
-                   GLenum format, GLenum type, const GLvoid * pixels)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-
-   n = alloc_instruction(ctx, OPCODE_TEX_SUB_IMAGE3D, 11);
-   if (n) {
-      n[1].e = target;
-      n[2].i = level;
-      n[3].i = xoffset;
-      n[4].i = yoffset;
-      n[5].i = zoffset;
-      n[6].i = (GLint) width;
-      n[7].i = (GLint) height;
-      n[8].i = (GLint) depth;
-      n[9].e = format;
-      n[10].e = type;
-      n[11].data = unpack_image(ctx, 3, width, height, depth, format, type,
-                                pixels, &ctx->Unpack);
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_TexSubImage3D(ctx->Exec, (target, level,
-                                     xoffset, yoffset, zoffset,
-                                     width, height, depth, format, type,
-                                     pixels));
    }
 }
 
@@ -4980,11 +4866,6 @@ execute_list(struct gl_context *ctx, GLuint list)
                                                n[4].i, n[5].i, n[6].i, n[7].i,
                                                n[8].i));
             break;
-         case OPCODE_COPY_TEX_SUB_IMAGE3D:
-            CALL_CopyTexSubImage3D(ctx->Exec, (n[1].e, n[2].i, n[3].i,
-                                               n[4].i, n[5].i, n[6].i, n[7].i,
-                                               n[8].i, n[9].i));
-            break;
          case OPCODE_CULL_FACE:
             CALL_CullFace(ctx->Exec, (n[1].e));
             break;
@@ -5314,23 +5195,6 @@ execute_list(struct gl_context *ctx, GLuint list)
                ctx->Unpack = save;      /* restore */
             }
             break;
-         case OPCODE_TEX_IMAGE3D:
-            {
-               const struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = ctx->DefaultPacking;
-               CALL_TexImage3D(ctx->Exec, (n[1].e,      /* target */
-                                           n[2].i,      /* level */
-                                           n[3].i,      /* components */
-                                           n[4].i,      /* width */
-                                           n[5].i,      /* height */
-                                           n[6].i,      /* depth  */
-                                           n[7].e,      /* border */
-                                           n[8].e,      /* format */
-                                           n[9].e,      /* type */
-                                           n[10].data));
-               ctx->Unpack = save;      /* restore */
-            }
-            break;
          case OPCODE_TEX_SUB_IMAGE1D:
             {
                const struct gl_pixelstore_attrib save = ctx->Unpack;
@@ -5349,17 +5213,6 @@ execute_list(struct gl_context *ctx, GLuint list)
                                               n[4].i, n[5].e,
                                               n[6].i, n[7].e, n[8].e,
                                               n[9].data));
-               ctx->Unpack = save;      /* restore */
-            }
-            break;
-         case OPCODE_TEX_SUB_IMAGE3D:
-            {
-               const struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = ctx->DefaultPacking;
-               CALL_TexSubImage3D(ctx->Exec, (n[1].e, n[2].i, n[3].i,
-                                              n[4].i, n[5].i, n[6].i, n[7].i,
-                                              n[8].i, n[9].e, n[10].e,
-                                              n[11].data));
                ctx->Unpack = save;      /* restore */
             }
             break;
@@ -6729,11 +6582,6 @@ _mesa_create_save_table(void)
    SET_TexSubImage2D(table, save_TexSubImage2D);
    SET_VertexPointer(table, exec_VertexPointer);
 
-   /* GL 1.2 */
-   SET_CopyTexSubImage3D(table, save_CopyTexSubImage3D);
-   SET_TexImage3D(table, save_TexImage3D);
-   SET_TexSubImage3D(table, save_TexSubImage3D);
-
    /* GL_ARB_imaging */
    /* Not all are supported */
    SET_BlendColor(table, save_BlendColor);
@@ -6778,13 +6626,6 @@ _mesa_create_save_table(void)
 
    /* 3. GL_EXT_polygon_offset */
    SET_PolygonOffsetEXT(table, save_PolygonOffsetEXT);
-
-   /* 6. GL_EXT_texture3d */
-#if 0
-   SET_CopyTexSubImage3DEXT(table, save_CopyTexSubImage3D);
-   SET_TexImage3DEXT(table, save_TexImage3DEXT);
-   SET_TexSubImage3DEXT(table, save_TexSubImage3D);
-#endif
 
    /* 14. GL_SGI_color_table */
 #if 0

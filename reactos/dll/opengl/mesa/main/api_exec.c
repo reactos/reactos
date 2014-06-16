@@ -208,13 +208,6 @@ _mesa_create_exec_table(void)
    SET_VertexPointer(exec, _mesa_VertexPointer);
 #endif
 
-   /* 1.2 */
-#if _HAVE_FULL_GL
-   SET_CopyTexSubImage3D(exec, _mesa_CopyTexSubImage3D);
-   SET_TexImage3D(exec, _mesa_TexImage3D);
-   SET_TexSubImage3D(exec, _mesa_TexSubImage3D);
-#endif
-
    /* OpenGL 1.2  GL_ARB_imaging */
    SET_BlendColor(exec, _mesa_BlendColor);
    SET_BlendEquation(exec, _mesa_BlendEquation);
@@ -232,13 +225,6 @@ _mesa_create_exec_table(void)
    /* 3. GL_EXT_polygon_offset */
 #if _HAVE_FULL_GL
    SET_PolygonOffsetEXT(exec, _mesa_PolygonOffsetEXT);
-#endif
-
-   /* 6. GL_EXT_texture3d */
-#if 0
-/*    SET_CopyTexSubImage3DEXT(exec, _mesa_CopyTexSubImage3D); */
-/*    SET_TexImage3DEXT(exec, _mesa_TexImage3DEXT); */
-/*    SET_TexSubImage3DEXT(exec, _mesa_TexSubImage3D); */
 #endif
 
    /* 11. GL_EXT_histogram */

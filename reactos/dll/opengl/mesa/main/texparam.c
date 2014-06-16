@@ -71,8 +71,6 @@ get_texobj(struct gl_context *ctx, GLenum target, GLboolean get)
       return texUnit->CurrentTex[TEXTURE_1D_INDEX];
    case GL_TEXTURE_2D:
       return texUnit->CurrentTex[TEXTURE_2D_INDEX];
-   case GL_TEXTURE_3D:
-      return texUnit->CurrentTex[TEXTURE_3D_INDEX];
    case GL_TEXTURE_CUBE_MAP:
       if (ctx->Extensions.ARB_texture_cube_map) {
          return texUnit->CurrentTex[TEXTURE_CUBE_INDEX];

@@ -88,12 +88,4 @@ _mesa_meta_CopyTexSubImage2D(struct gl_context *ctx,
                              GLint x, GLint y,
                              GLsizei width, GLsizei height);
 
-extern void
-_mesa_meta_CopyTexSubImage3D(struct gl_context *ctx,
-                             struct gl_texture_image *texImage,
-                             GLint xoffset, GLint yoffset, GLint zoffset,
-                             struct gl_renderbuffer *rb,
-                             GLint x, GLint y,
-                             GLsizei width, GLsizei height);
-
 #endif /* META_H */

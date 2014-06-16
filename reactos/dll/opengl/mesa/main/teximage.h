@@ -165,18 +165,6 @@ _mesa_TexImage2D( GLenum target, GLint level, GLint internalformat,
 
 
 extern void GLAPIENTRY
-_mesa_TexImage3D( GLenum target, GLint level, GLint internalformat,
-                  GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                  GLenum format, GLenum type, const GLvoid *pixels );
-
-
-extern void GLAPIENTRY
-_mesa_TexImage3DEXT( GLenum target, GLint level, GLenum internalformat,
-                     GLsizei width, GLsizei height, GLsizei depth,
-                     GLint border, GLenum format, GLenum type,
-                     const GLvoid *pixels );
-
-extern void GLAPIENTRY
 _mesa_TexSubImage1D( GLenum target, GLint level, GLint xoffset,
                      GLsizei width,
                      GLenum format, GLenum type,
@@ -187,14 +175,6 @@ extern void GLAPIENTRY
 _mesa_TexSubImage2D( GLenum target, GLint level,
                      GLint xoffset, GLint yoffset,
                      GLsizei width, GLsizei height,
-                     GLenum format, GLenum type,
-                     const GLvoid *pixels );
-
-
-extern void GLAPIENTRY
-_mesa_TexSubImage3D( GLenum target, GLint level,
-                     GLint xoffset, GLint yoffset, GLint zoffset,
-                     GLsizei width, GLsizei height, GLsizei depth,
                      GLenum format, GLenum type,
                      const GLvoid *pixels );
 
@@ -218,12 +198,6 @@ _mesa_CopyTexSubImage1D( GLenum target, GLint level, GLint xoffset,
 extern void GLAPIENTRY
 _mesa_CopyTexSubImage2D( GLenum target, GLint level,
                          GLint xoffset, GLint yoffset,
-                         GLint x, GLint y, GLsizei width, GLsizei height );
-
-
-extern void GLAPIENTRY
-_mesa_CopyTexSubImage3D( GLenum target, GLint level,
-                         GLint xoffset, GLint yoffset, GLint zoffset,
                          GLint x, GLint y, GLsizei width, GLsizei height );
 
 /*@}*/

@@ -220,18 +220,6 @@ struct dd_function_table {
                       GLint width, GLint height, GLint border,
                       GLenum format, GLenum type, const GLvoid *pixels,
                       const struct gl_pixelstore_attrib *packing);
-   
-   /**
-    * Called by glTexImage3D().
-    * 
-    * \sa dd_function_table::TexImage1D.
-    */
-   void (*TexImage3D)(struct gl_context *ctx,
-                      struct gl_texture_image *texImage,
-                      GLint internalFormat,
-                      GLint width, GLint height, GLint depth, GLint border,
-                      GLenum format, GLenum type, const GLvoid *pixels,
-                      const struct gl_pixelstore_attrib *packing);
 
    /**
     * Called by glTexSubImage1D().  Replace a subset of the target texture
@@ -254,19 +242,6 @@ struct dd_function_table {
                          struct gl_texture_image *texImage,
                          GLint xoffset, GLint yoffset,
                          GLsizei width, GLsizei height,
-                         GLenum format, GLenum type,
-                         const GLvoid *pixels,
-                         const struct gl_pixelstore_attrib *packing);
-   
-   /**
-    * Called by glTexSubImage3D().
-    *
-    * \sa dd_function_table::TexSubImage1D.
-    */
-   void (*TexSubImage3D)(struct gl_context *ctx,
-                         struct gl_texture_image *texImage,
-                         GLint xoffset, GLint yoffset, GLint zoffset,
-                         GLsizei width, GLsizei height, GLint depth,
                          GLenum format, GLenum type,
                          const GLvoid *pixels,
                          const struct gl_pixelstore_attrib *packing);
@@ -294,16 +269,6 @@ struct dd_function_table {
    void (*CopyTexSubImage2D)(struct gl_context *ctx,
                              struct gl_texture_image *texImage,
                              GLint xoffset, GLint yoffset,
-                             struct gl_renderbuffer *rb,
-                             GLint x, GLint y,
-                             GLsizei width, GLsizei height);
-
-   /**
-    * Called by glCopyTexSubImage3D() and glCopyTexImage3D().
-    */
-   void (*CopyTexSubImage3D)(struct gl_context *ctx,
-                             struct gl_texture_image *texImage,
-                             GLint xoffset, GLint yoffset, GLint zoffset,
                              struct gl_renderbuffer *rb,
                              GLint x, GLint y,
                              GLsizei width, GLsizei height);
@@ -349,18 +314,6 @@ struct dd_function_table {
                                 GLsizei imageSize, const GLvoid *data);
 
    /**
-    * Called by glCompressedTexImage3D().
-    *
-    * \sa dd_function_table::CompressedTexImage3D.
-    */
-   void (*CompressedTexImage3D)(struct gl_context *ctx,
-                                struct gl_texture_image *texImage,
-                                GLint internalFormat,
-                                GLsizei width, GLsizei height, GLsizei depth,
-                                GLint border,
-                                GLsizei imageSize, const GLvoid *data);
-
-   /**
     * Called by glCompressedTexSubImage1D().
     */
    void (*CompressedTexSubImage1D)(struct gl_context *ctx,
@@ -376,16 +329,6 @@ struct dd_function_table {
                                    struct gl_texture_image *texImage,
                                    GLint xoffset, GLint yoffset,
                                    GLsizei width, GLint height,
-                                   GLenum format,
-                                   GLsizei imageSize, const GLvoid *data);
-
-   /**
-    * Called by glCompressedTexSubImage3D().
-    */
-   void (*CompressedTexSubImage3D)(struct gl_context *ctx,
-                                   struct gl_texture_image *texImage,
-                                   GLint xoffset, GLint yoffset, GLint zoffset,
-                                   GLsizei width, GLint height, GLint depth,
                                    GLenum format,
                                    GLsizei imageSize, const GLvoid *data);
    /*@}*/

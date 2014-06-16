@@ -568,11 +568,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
             return;
          }
          break;
-      case GL_TEXTURE_3D:
-         if (!enable_texture(ctx, state, TEXTURE_3D_BIT)) {
-            return;
-         }
-         break;
       case GL_TEXTURE_GEN_S:
       case GL_TEXTURE_GEN_T:
       case GL_TEXTURE_GEN_R:
@@ -886,8 +881,6 @@ _mesa_IsEnabled( GLenum cap )
          return is_texture_enabled(ctx, TEXTURE_1D_BIT);
       case GL_TEXTURE_2D:
          return is_texture_enabled(ctx, TEXTURE_2D_BIT);
-      case GL_TEXTURE_3D:
-         return is_texture_enabled(ctx, TEXTURE_3D_BIT);
       case GL_TEXTURE_GEN_S:
       case GL_TEXTURE_GEN_T:
       case GL_TEXTURE_GEN_R:

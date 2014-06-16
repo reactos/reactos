@@ -833,7 +833,6 @@ struct gl_stencil_attrib
 typedef enum
 {
    TEXTURE_CUBE_INDEX,
-   TEXTURE_3D_INDEX,
    TEXTURE_2D_INDEX,
    TEXTURE_1D_INDEX,
    NUM_TEXTURE_TARGETS
@@ -846,7 +845,6 @@ typedef enum
  */
 /*@{*/
 #define TEXTURE_CUBE_BIT     (1 << TEXTURE_CUBE_INDEX)
-#define TEXTURE_3D_BIT       (1 << TEXTURE_3D_INDEX)
 #define TEXTURE_2D_BIT       (1 << TEXTURE_2D_INDEX)
 #define TEXTURE_1D_BIT       (1 << TEXTURE_1D_INDEX)
 /*@}*/
@@ -1512,8 +1510,7 @@ struct gl_precision
 struct gl_constants
 {
    GLint MaxTextureMbytes;      /**< Max memory per image, in MB */
-   GLint MaxTextureLevels;      /**< Max mipmap levels. */ 
-   GLint Max3DTextureLevels;    /**< Max mipmap levels for 3D textures */
+   GLint MaxTextureLevels;      /**< Max mipmap levels. */
    GLint MaxCubeTextureLevels;  /**< Max mipmap levels for cube textures */
    GLfloat MaxTextureMaxAnisotropy;  /**< GL_EXT_texture_filter_anisotropic */
 
@@ -1583,7 +1580,6 @@ struct gl_extensions
    GLboolean ARB_texture_env_combine;
    GLboolean ARB_texture_env_crossbar;
    GLboolean ARB_texture_env_dot3;
-   GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_texture_storage;
    GLboolean ARB_transpose_matrix;
    GLboolean ARB_vertex_array_object;

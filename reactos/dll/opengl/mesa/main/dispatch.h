@@ -438,9 +438,6 @@ typedef PROC _glapi_proc;
 #define _gloffset_Minmax 368
 #define _gloffset_ResetHistogram 369
 #define _gloffset_ResetMinmax 370
-#define _gloffset_TexImage3D 371
-#define _gloffset_TexSubImage3D 372
-#define _gloffset_CopyTexSubImage3D 373
 
 #if !FEATURE_remap_table
 
@@ -5171,39 +5168,6 @@ static inline _glptr_ResetMinmax GET_ResetMinmax(struct _glapi_table *disp) {
 
 static inline void SET_ResetMinmax(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum)) {
    SET_by_offset(disp, _gloffset_ResetMinmax, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_TexImage3D)(GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const GLvoid *);
-#define CALL_TexImage3D(disp, parameters) \
-    (* GET_TexImage3D(disp)) parameters
-static inline _glptr_TexImage3D GET_TexImage3D(struct _glapi_table *disp) {
-   return (_glptr_TexImage3D) (GET_by_offset(disp, _gloffset_TexImage3D));
-}
-
-static inline void SET_TexImage3D(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_TexImage3D, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_TexSubImage3D)(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const GLvoid *);
-#define CALL_TexSubImage3D(disp, parameters) \
-    (* GET_TexSubImage3D(disp)) parameters
-static inline _glptr_TexSubImage3D GET_TexSubImage3D(struct _glapi_table *disp) {
-   return (_glptr_TexSubImage3D) (GET_by_offset(disp, _gloffset_TexSubImage3D));
-}
-
-static inline void SET_TexSubImage3D(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_TexSubImage3D, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CopyTexSubImage3D)(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei);
-#define CALL_CopyTexSubImage3D(disp, parameters) \
-    (* GET_CopyTexSubImage3D(disp)) parameters
-static inline _glptr_CopyTexSubImage3D GET_CopyTexSubImage3D(struct _glapi_table *disp) {
-   return (_glptr_CopyTexSubImage3D) (GET_by_offset(disp, _gloffset_CopyTexSubImage3D));
-}
-
-static inline void SET_CopyTexSubImage3D(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei)) {
-   SET_by_offset(disp, _gloffset_CopyTexSubImage3D, fn);
 }
 
 typedef const GLubyte * (GLAPIENTRYP _glptr_GetStringi)(GLenum, GLuint);

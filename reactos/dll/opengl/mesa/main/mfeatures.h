@@ -103,13 +103,9 @@
 #define FEATURE_pixel_transfer            FEATURE_GL
 #define FEATURE_queryobj                  FEATURE_GL
 #define FEATURE_rastpos                   FEATURE_GL
-#define FEATURE_texture_fxt1              FEATURE_GL
-#define FEATURE_texture_s3tc              FEATURE_GL
 
 #define FEATURE_extra_context_init        FEATURE_ES
 #define FEATURE_point_size_array          FEATURE_ES
-
-#define FEATURE_es2_glsl                  FEATURE_ES2
 
 #define FEATURE_ARB_fragment_program      1
 #define FEATURE_ARB_vertex_program        1

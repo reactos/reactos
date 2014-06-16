@@ -71,7 +71,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_texture_env_crossbar",                o(ARB_texture_env_crossbar),                2001 },
    { "GL_ARB_texture_env_dot3",                    o(ARB_texture_env_dot3),                    2001 },
    { "GL_ARB_texture_mirrored_repeat",             o(dummy_true),                              2001 },
-   { "GL_ARB_texture_non_power_of_two",            o(ARB_texture_non_power_of_two),            2003 },
    { "GL_ARB_texture_storage",                     o(ARB_texture_storage),                     2011 },
    { "GL_ARB_transpose_matrix",                    o(ARB_transpose_matrix),                    1999 },
    { "GL_ARB_vertex_array_object",                 o(ARB_vertex_array_object),                 2006 },
@@ -206,7 +205,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.ARB_texture_env_crossbar = GL_TRUE;
    ctx->Extensions.ARB_texture_env_dot3 = GL_TRUE;
    /*ctx->Extensions.ARB_texture_float = GL_TRUE;*/
-   ctx->Extensions.ARB_texture_non_power_of_two = GL_TRUE;
    ctx->Extensions.ARB_texture_storage = GL_TRUE;
    ctx->Extensions.ARB_vertex_array_object = GL_TRUE;
    ctx->Extensions.APPLE_vertex_array_object = GL_TRUE;
@@ -234,9 +232,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.NV_point_sprite = GL_TRUE;
    ctx->Extensions.NV_texture_env_combine4 = GL_TRUE;
    /*ctx->Extensions.NV_texgen_reflection = GL_TRUE;*/
-#if FEATURE_texture_fxt1
-   _mesa_enable_extension(ctx, "GL_3DFX_texture_compression_FXT1");
-#endif
 }
 
 
@@ -293,7 +288,6 @@ _mesa_enable_2_0_extensions(struct gl_context *ctx)
 {
    ctx->Extensions.ARB_point_sprite = GL_TRUE;
    ctx->Extensions.EXT_blend_equation_separate = GL_TRUE;
-   ctx->Extensions.ARB_texture_non_power_of_two = GL_TRUE;
 }
 
 

@@ -39,7 +39,6 @@
  * code:
  *   ctx->Driver.TexImage1D = _mesa_store_teximage1d;
  *   ctx->Driver.TexImage2D = _mesa_store_teximage2d;
- *   ctx->Driver.TexImage3D = _mesa_store_teximage3d;
  *   etc...
  *
  * Texture image processing is actually kind of complicated.  We have to do:
@@ -3159,9 +3158,6 @@ store_texsubimage(struct gl_context *ctx,
    case GL_TEXTURE_1D:
       dims = 1;
       break;
-   case GL_TEXTURE_3D:
-      dims = 3;
-      break;
    default:
       dims = 2;
    }
@@ -3182,13 +3178,6 @@ store_texsubimage(struct gl_context *ctx,
       assert(depth == 1);
       assert(yoffset == 0);
       assert(zoffset == 0);
-      break;
-   case GL_TEXTURE_3D:
-      /* we'll store 3D images as a series of slices */
-      numSlices = depth;
-      sliceOffset = zoffset;
-      srcImageStride = _mesa_image_image_stride(packing, width, height,
-                                                format, type);
       break;
    default:
       _mesa_warning(ctx, "Unexpected target 0x%x in store_texsubimage()", target);
@@ -3287,34 +3276,6 @@ _mesa_store_teximage2d(struct gl_context *ctx,
 
 
 
-/**
- * This is the fallback for Driver.TexImage3D().
- */
-void
-_mesa_store_teximage3d(struct gl_context *ctx,
-                       struct gl_texture_image *texImage,
-                       GLint internalFormat,
-                       GLint width, GLint height, GLint depth, GLint border,
-                       GLenum format, GLenum type, const void *pixels,
-                       const struct gl_pixelstore_attrib *packing)
-{
-   if (width == 0 || height == 0 || depth == 0)
-      return;
-
-   /* allocate storage for texture data */
-   if (!ctx->Driver.AllocTextureImageBuffer(ctx, texImage, texImage->TexFormat,
-                                            width, height, depth)) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glTexImage3D");
-      return;
-   }
-
-   store_texsubimage(ctx, texImage,
-                     0, 0, 0, width, height, depth,
-                     format, type, pixels, packing, "glTexImage3D");
-}
-
-
-
 
 /*
  * This is the fallback for Driver.TexSubImage1D().
@@ -3347,21 +3308,4 @@ _mesa_store_texsubimage2d(struct gl_context *ctx,
    store_texsubimage(ctx, texImage,
                      xoffset, yoffset, 0, width, height, 1,
                      format, type, pixels, packing, "glTexSubImage2D");
-}
-
-
-/*
- * This is the fallback for Driver.TexSubImage3D().
- */
-void
-_mesa_store_texsubimage3d(struct gl_context *ctx,
-                          struct gl_texture_image *texImage,
-                          GLint xoffset, GLint yoffset, GLint zoffset,
-                          GLint width, GLint height, GLint depth,
-                          GLenum format, GLenum type, const void *pixels,
-                          const struct gl_pixelstore_attrib *packing)
-{
-   store_texsubimage(ctx, texImage,
-                     xoffset, yoffset, zoffset, width, height, depth,
-                     format, type, pixels, packing, "glTexSubImage3D");
 }

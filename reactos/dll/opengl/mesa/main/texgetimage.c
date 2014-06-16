@@ -397,9 +397,6 @@ _mesa_get_teximage(struct gl_context *ctx,
    case GL_TEXTURE_1D:
       dimensions = 1;
       break;
-   case GL_TEXTURE_3D:
-      dimensions = 3;
-      break;
    default:
       dimensions = 2;
    }
