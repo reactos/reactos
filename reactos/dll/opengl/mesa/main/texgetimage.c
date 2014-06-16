@@ -40,7 +40,6 @@ type_needs_clamping(GLenum type)
    case GL_SHORT:
    case GL_INT:
    case GL_FLOAT:
-   case GL_HALF_FLOAT_ARB:
    case GL_UNSIGNED_INT_10F_11F_11F_REV:
    case GL_UNSIGNED_INT_5_9_9_9_REV:
       return GL_FALSE;

@@ -106,24 +106,6 @@ typedef enum
    /*@}*/
 
    /**
-    * \name Floating point texture formats.
-    */
-   /*@{*/
-   MESA_FORMAT_RGBA_FLOAT32,
-   MESA_FORMAT_RGBA_FLOAT16,
-   MESA_FORMAT_RGB_FLOAT32,
-   MESA_FORMAT_RGB_FLOAT16,
-   MESA_FORMAT_ALPHA_FLOAT32,
-   MESA_FORMAT_ALPHA_FLOAT16,
-   MESA_FORMAT_LUMINANCE_FLOAT32,
-   MESA_FORMAT_LUMINANCE_FLOAT16,
-   MESA_FORMAT_LUMINANCE_ALPHA_FLOAT32,
-   MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16,
-   MESA_FORMAT_INTENSITY_FLOAT32,
-   MESA_FORMAT_INTENSITY_FLOAT16,
-   /*@}*/
-
-   /**
     * \name Non-normalized signed integer formats.
     * XXX Note: these are just stand-ins for some better hardware
     * formats TBD such as BGRA or ARGB.

@@ -1577,15 +1577,12 @@ struct gl_extensions
    GLboolean dummy;  /* don't remove this! */
    GLboolean dummy_true;  /* Set true by _mesa_init_extensions(). */
    GLboolean dummy_false; /* Set false by _mesa_init_extensions(). */
-   GLboolean ARB_half_float_pixel;
-   GLboolean ARB_half_float_vertex;
    GLboolean ARB_map_buffer_range;
    GLboolean ARB_point_sprite;
    GLboolean ARB_texture_cube_map;
    GLboolean ARB_texture_env_combine;
    GLboolean ARB_texture_env_crossbar;
    GLboolean ARB_texture_env_dot3;
-   GLboolean ARB_texture_float;
    GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_texture_storage;
    GLboolean ARB_transpose_matrix;

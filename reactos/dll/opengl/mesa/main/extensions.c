@@ -61,8 +61,6 @@ struct extension {
  */
 static const struct extension extension_table[] = {
    /* ARB Extensions */
-   { "GL_ARB_half_float_pixel",                    o(ARB_half_float_pixel),                    2003 },
-   { "GL_ARB_half_float_vertex",                   o(ARB_half_float_vertex),                   2008 },
    { "GL_ARB_map_buffer_range",                    o(ARB_map_buffer_range),                    2008 },
    { "GL_ARB_multisample",                         o(dummy_true),                              1994 },
    { "GL_ARB_point_parameters",                    o(EXT_point_parameters),                    1997 },
@@ -72,7 +70,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_texture_env_combine",                 o(ARB_texture_env_combine),                 2001 },
    { "GL_ARB_texture_env_crossbar",                o(ARB_texture_env_crossbar),                2001 },
    { "GL_ARB_texture_env_dot3",                    o(ARB_texture_env_dot3),                    2001 },
-   { "GL_ARB_texture_float",                       o(ARB_texture_float),                       2004 },
    { "GL_ARB_texture_mirrored_repeat",             o(dummy_true),                              2001 },
    { "GL_ARB_texture_non_power_of_two",            o(ARB_texture_non_power_of_two),            2003 },
    { "GL_ARB_texture_storage",                     o(ARB_texture_storage),                     2011 },
@@ -121,7 +118,6 @@ static const struct extension extension_table[] = {
    { "GL_APPLE_vertex_array_object",               o(APPLE_vertex_array_object),               2002 },
    { "GL_ATI_blend_equation_separate",             o(EXT_blend_equation_separate),             2003 },
    { "GL_ATI_texture_env_combine3",                o(ATI_texture_env_combine3),                2002 },
-   { "GL_ATI_texture_float",                       o(ARB_texture_float),                       2002 },
    { "GL_IBM_multimode_draw_arrays",               o(IBM_multimode_draw_arrays),               1998 },
    { "GL_IBM_rasterpos_clip",                      o(IBM_rasterpos_clip),                      1996 },
    { "GL_IBM_texture_mirrored_repeat",             o(dummy_true),                              1998 },
@@ -203,8 +199,6 @@ static const size_t default_extensions[] = {
 void
 _mesa_enable_sw_extensions(struct gl_context *ctx)
 {
-   ctx->Extensions.ARB_half_float_pixel = GL_TRUE;
-   ctx->Extensions.ARB_half_float_vertex = GL_TRUE;
    ctx->Extensions.ARB_map_buffer_range = GL_TRUE;
    ctx->Extensions.ARB_point_sprite = GL_TRUE;
    ctx->Extensions.ARB_texture_cube_map = GL_TRUE;

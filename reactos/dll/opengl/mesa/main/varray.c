@@ -59,11 +59,6 @@ type_to_bit(const struct gl_context *ctx, GLenum type)
       return INT_BIT;
    case GL_UNSIGNED_INT:
       return UNSIGNED_INT_BIT;
-   case GL_HALF_FLOAT:
-      if (ctx->Extensions.ARB_half_float_vertex)
-         return HALF_BIT;
-      else
-         return 0x0;
    case GL_FLOAT:
       return FLOAT_BIT;
    case GL_DOUBLE:

@@ -115,31 +115,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
          return GL_YCBCR_MESA;
    }
 
-   if (ctx->Extensions.ARB_texture_float) {
-      switch (internalFormat) {
-         case GL_ALPHA16F_ARB:
-         case GL_ALPHA32F_ARB:
-            return GL_ALPHA;
-         case GL_RGBA16F_ARB:
-         case GL_RGBA32F_ARB:
-            return GL_RGBA;
-         case GL_RGB16F_ARB:
-         case GL_RGB32F_ARB:
-            return GL_RGB;
-         case GL_INTENSITY16F_ARB:
-         case GL_INTENSITY32F_ARB:
-            return GL_INTENSITY;
-         case GL_LUMINANCE16F_ARB:
-         case GL_LUMINANCE32F_ARB:
-            return GL_LUMINANCE;
-         case GL_LUMINANCE_ALPHA16F_ARB:
-         case GL_LUMINANCE_ALPHA32F_ARB:
-            return GL_LUMINANCE_ALPHA;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    if (ctx->VersionMajor >= 3 ||
        ctx->Extensions.EXT_texture_integer) {
       switch (internalFormat) {

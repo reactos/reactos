@@ -79,10 +79,7 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_blend_equation_separate);
    const GLboolean ver_2_1 = (ver_2_0);
    const GLboolean ver_3_0 = (ver_2_1 &&
-                              ctx->Extensions.ARB_half_float_pixel &&
-                              ctx->Extensions.ARB_half_float_vertex &&
                               ctx->Extensions.ARB_map_buffer_range &&
-                              ctx->Extensions.ARB_texture_float &&
                               ctx->Extensions.APPLE_vertex_array_object);
 
 

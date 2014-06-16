@@ -125,8 +125,6 @@ _mesa_sizeof_type( GLenum type )
 	 return sizeof(GLfloat);
       case GL_DOUBLE:
 	 return sizeof(GLdouble);
-      case GL_HALF_FLOAT_ARB:
-	 return sizeof(GLhalfARB);
       case GL_FIXED:
 	 return sizeof(GLfixed);
       default:
@@ -157,8 +155,6 @@ _mesa_sizeof_packed_type( GLenum type )
 	 return sizeof(GLuint);
       case GL_INT:
 	 return sizeof(GLint);
-      case GL_HALF_FLOAT_ARB:
-	 return sizeof(GLhalfARB);
       case GL_FLOAT:
 	 return sizeof(GLfloat);
       case GL_UNSIGNED_BYTE_3_3_2:
@@ -267,8 +263,6 @@ _mesa_bytes_per_pixel( GLenum format, GLenum type )
          return comps * sizeof(GLint);
       case GL_FLOAT:
          return comps * sizeof(GLfloat);
-      case GL_HALF_FLOAT_ARB:
-         return comps * sizeof(GLhalfARB);
       case GL_UNSIGNED_BYTE_3_3_2:
       case GL_UNSIGNED_BYTE_2_3_3_REV:
          if (format == GL_RGB || format == GL_BGR ||
@@ -384,9 +378,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             case GL_UNSIGNED_INT:
             case GL_FLOAT:
                return GL_NO_ERROR;
-            case GL_HALF_FLOAT:
-               return ctx->Extensions.ARB_half_float_pixel
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;
          }
@@ -410,9 +401,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             case GL_UNSIGNED_INT:
             case GL_FLOAT:
                return GL_NO_ERROR;
-            case GL_HALF_FLOAT:
-               return ctx->Extensions.ARB_half_float_pixel
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;
          }
@@ -431,9 +419,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             case GL_UNSIGNED_SHORT_5_6_5:
             case GL_UNSIGNED_SHORT_5_6_5_REV:
                return GL_NO_ERROR;
-            case GL_HALF_FLOAT:
-               return ctx->Extensions.ARB_half_float_pixel
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;
          }
@@ -451,9 +436,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             case GL_UNSIGNED_INT:
             case GL_FLOAT:
                return GL_NO_ERROR;
-            case GL_HALF_FLOAT:
-               return ctx->Extensions.ARB_half_float_pixel
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;
          }
@@ -476,9 +458,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             case GL_UNSIGNED_INT_8_8_8_8:
             case GL_UNSIGNED_INT_8_8_8_8_REV:
                return GL_NO_ERROR;
-            case GL_HALF_FLOAT:
-               return ctx->Extensions.ARB_half_float_pixel
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;
          }
