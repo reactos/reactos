@@ -70,7 +70,6 @@ typedef enum _USERTHREADINFOCLASS
     UserThreadWOWInformation,
     UserThreadHungStatus,
     UserThreadInitiateShutdown,
-
     UserThreadEndShutdown,
     UserThreadUseActiveDesktop,
     UserThreadUseDesktop,
@@ -3385,7 +3384,6 @@ typedef struct tagKMDDELPARAM
   #define MSQ_STATE_MENUOWNER	0x4
   #define MSQ_STATE_MOVESIZE	0x5
   #define MSQ_STATE_CARET	0x6
-#define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 #define HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT 0x1005
 
