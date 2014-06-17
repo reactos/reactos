@@ -6,7 +6,6 @@
 #include "api_exec.h"
 #include "api_loopback.h"
 #include "api_validate.h"
-#include "arrayobj.h"
 #include "attrib.h"
 #include "blend.h"
 #include "bufferobj.h"

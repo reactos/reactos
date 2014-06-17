@@ -6,7 +6,6 @@ list(APPEND SOURCE
     api_validate.c
     accum.c
     attrib.c
-    arrayobj.c
     blend.c
     bufferobj.c
     buffers.c

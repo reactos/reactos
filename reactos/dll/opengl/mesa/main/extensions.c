@@ -73,7 +73,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_texture_mirrored_repeat",             o(dummy_true),                              2001 },
    { "GL_ARB_texture_storage",                     o(ARB_texture_storage),                     2011 },
    { "GL_ARB_transpose_matrix",                    o(ARB_transpose_matrix),                    1999 },
-   { "GL_ARB_vertex_array_object",                 o(ARB_vertex_array_object),                 2006 },
    { "GL_ARB_vertex_buffer_object",                o(dummy_true),                              2003 },
    { "GL_ARB_window_pos",                          o(ARB_window_pos),                          2001 },
    /* EXT extensions */
@@ -112,9 +111,7 @@ static const struct extension extension_table[] = {
    { "GL_EXT_vertex_array",                        o(dummy_true),                              1995 },
 
    /* Vendor extensions */
-   { "GL_APPLE_object_purgeable",                  o(APPLE_object_purgeable),                  2006 },
    { "GL_APPLE_packed_pixels",                     o(APPLE_packed_pixels),                     2002 },
-   { "GL_APPLE_vertex_array_object",               o(APPLE_vertex_array_object),               2002 },
    { "GL_ATI_blend_equation_separate",             o(EXT_blend_equation_separate),             2003 },
    { "GL_ATI_texture_env_combine3",                o(ATI_texture_env_combine3),                2002 },
    { "GL_IBM_multimode_draw_arrays",               o(IBM_multimode_draw_arrays),               1998 },
@@ -206,11 +203,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.ARB_texture_env_dot3 = GL_TRUE;
    /*ctx->Extensions.ARB_texture_float = GL_TRUE;*/
    ctx->Extensions.ARB_texture_storage = GL_TRUE;
-   ctx->Extensions.ARB_vertex_array_object = GL_TRUE;
-   ctx->Extensions.APPLE_vertex_array_object = GL_TRUE;
-#if FEATURE_APPLE_object_purgeable
-   ctx->Extensions.APPLE_object_purgeable = GL_TRUE;
-#endif
    ctx->Extensions.ATI_texture_env_combine3 = GL_TRUE;
    ctx->Extensions.EXT_blend_color = GL_TRUE;
    ctx->Extensions.EXT_blend_equation_separate = GL_TRUE;

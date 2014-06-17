@@ -308,12 +308,6 @@ _mesa_create_exec_table(void)
    /* glVertexAttrib*NV functions handled in api_loopback.c */
 #endif
 
-   /* 273. GL_APPLE_vertex_array_object */
-   SET_BindVertexArrayAPPLE(exec, _mesa_BindVertexArrayAPPLE);
-   SET_DeleteVertexArraysAPPLE(exec, _mesa_DeleteVertexArraysAPPLE);
-   SET_GenVertexArraysAPPLE(exec, _mesa_GenVertexArraysAPPLE);
-   SET_IsVertexArrayAPPLE(exec, _mesa_IsVertexArrayAPPLE);
-
    /* 282. GL_NV_fragment_program */
 #if FEATURE_NV_fragment_program
    SET_ProgramNamedParameter4fNV(exec, _mesa_ProgramNamedParameter4fNV);
@@ -365,16 +359,6 @@ _mesa_create_exec_table(void)
 #if FEATURE_ARB_map_buffer_range
    SET_MapBufferRange(exec, _mesa_MapBufferRange);
    SET_FlushMappedBufferRange(exec, _mesa_FlushMappedBufferRange);
-#endif
-
-   /* GL_ARB_vertex_array_object */
-   SET_BindVertexArray(exec, _mesa_BindVertexArray);
-   SET_GenVertexArrays(exec, _mesa_GenVertexArrays);
-
-#if FEATURE_APPLE_object_purgeable
-   SET_ObjectPurgeableAPPLE(exec, _mesa_ObjectPurgeableAPPLE);
-   SET_ObjectUnpurgeableAPPLE(exec, _mesa_ObjectUnpurgeableAPPLE);
-   SET_GetObjectParameterivAPPLE(exec, _mesa_GetObjectParameterivAPPLE);
 #endif
 
    /* GL_EXT_texture_integer */

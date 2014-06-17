@@ -61,7 +61,6 @@ update_min(GLuint min, struct gl_client_array *array)
 static void
 update_arrays( struct gl_context *ctx )
 {
-   struct gl_array_object *arrayObj = ctx->Array.ArrayObj;
    GLuint min = ~0;
 
    /* find min of _MaxElement values for all enabled arrays.
@@ -70,46 +69,46 @@ update_arrays( struct gl_context *ctx )
     */
 
    /* 0 */
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_POS]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_POS].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_POS]);
    }
 
    /* 2 */
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_NORMAL].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_NORMAL]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_NORMAL].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_NORMAL]);
    }
 
    /* 3 */
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_COLOR0].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_COLOR0]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0]);
    }
 
    /* 4 */
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_COLOR1].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_COLOR1]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1]);
    }
 
    /* 5 */
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_FOG].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_FOG]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_FOG].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_FOG]);
    }
 
    /* 6 */
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR_INDEX]);
    }
 
    /* 8 */
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_TEX].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_TEX]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_TEX].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_TEX]);
    }
 
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_EDGEFLAG].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_EDGEFLAG]);
    }
 
    /* _MaxElement is one past the last legal array element */
-   arrayObj->_MaxElement = min;
+   ctx->Array._MaxElement = min;
 }
 
 static void

@@ -1057,31 +1057,6 @@ copy_pixelstore(struct gl_context *ctx,
 #define GL_CLIENT_UNPACK_BIT (1<<21)
 
 /**
- * Copy gl_array_object from src to dest.
- * 'dest' must be in an initialized state.
- */
-static void
-copy_array_object(struct gl_context *ctx,
-                  struct gl_array_object *dest,
-                  struct gl_array_object *src)
-{
-   GLuint i;
-
-   /* skip Name */
-   /* skip RefCount */
-
-   /* In theory must be the same anyway, but on recreate make sure it matches */
-   dest->ARBsemantics = src->ARBsemantics;
-
-   for (i = 0; i < Elements(src->VertexAttrib); i++)
-      _mesa_copy_client_array(ctx, &dest->VertexAttrib[i], &src->VertexAttrib[i]);
-
-   /* _Enabled must be the same than on push */
-   dest->_Enabled = src->_Enabled;
-   dest->_MaxElement = src->_MaxElement;
-}
-
-/**
  * Copy gl_array_attrib from src to dest.
  * 'dest' must be in an initialized state.
  */
@@ -1098,8 +1073,20 @@ copy_array_attrib(struct gl_context *ctx,
    /* skip NewState */
    /* skip RebindArrays */
 
-   if (!vbo_deleted)
-      copy_array_object(ctx, dest->ArrayObj, src->ArrayObj);
+    if (!vbo_deleted)
+    {
+        GLuint i;
+
+        /* skip Name */
+        /* skip RefCount */
+
+        for (i = 0; i < Elements(src->VertexAttrib); i++)
+            _mesa_copy_client_array(ctx, &dest->VertexAttrib[i], &src->VertexAttrib[i]);
+
+        /* _Enabled must be the same than on push */
+        dest->_Enabled = src->_Enabled;
+        dest->_MaxElement = src->_MaxElement;
+    }
 
    /* skip ArrayBufferObj */
    /* skip ElementArrayBufferObj */
@@ -1113,17 +1100,14 @@ save_array_attrib(struct gl_context *ctx,
                   struct gl_array_attrib *dest,
                   struct gl_array_attrib *src)
 {
-   /* Set the Name, needed for restore, but do never overwrite.
-    * Needs to match value in the object hash. */
-   dest->ArrayObj->Name = src->ArrayObj->Name;
    /* And copy all of the rest. */
    copy_array_attrib(ctx, dest, src, GL_FALSE);
 
    /* Just reference them here */
    _mesa_reference_buffer_object(ctx, &dest->ArrayBufferObj,
                                  src->ArrayBufferObj);
-   _mesa_reference_buffer_object(ctx, &dest->ArrayObj->ElementArrayBufferObj,
-                                 src->ArrayObj->ElementArrayBufferObj);
+   _mesa_reference_buffer_object(ctx, &dest->ElementArrayBufferObj,
+                                 src->ElementArrayBufferObj);
 }
 
 /**
@@ -1134,29 +1118,8 @@ restore_array_attrib(struct gl_context *ctx,
                      struct gl_array_attrib *dest,
                      struct gl_array_attrib *src)
 {
-   /* The ARB_vertex_array_object spec says:
-    *
-    *     "BindVertexArray fails and an INVALID_OPERATION error is generated
-    *     if array is not a name returned from a previous call to
-    *     GenVertexArrays, or if such a name has since been deleted with
-    *     DeleteVertexArrays."
-    *
-    * Therefore popping a deleted VAO cannot magically recreate it.
-    *
-    * The semantics of objects created using APPLE_vertex_array_objects behave
-    * differently.  These objects expect to be recreated by pop.  Alas.
-    */
-   const GLboolean arb_vao = (src->ArrayObj->Name != 0
-			 && src->ArrayObj->ARBsemantics);
-
-   if (arb_vao && !_mesa_IsVertexArrayAPPLE(src->ArrayObj->Name))
-      return;
-
-   _mesa_BindVertexArrayAPPLE(src->ArrayObj->Name);
-
    /* Restore or recreate the buffer objects by the names ... */
-   if (!arb_vao
-       || src->ArrayBufferObj->Name == 0
+   if (!src->ArrayBufferObj->Name == 0
        || _mesa_IsBufferARB(src->ArrayBufferObj->Name)) {
       /* ... and restore its content */
       copy_array_attrib(ctx, dest, src, GL_FALSE);
@@ -1167,11 +1130,10 @@ restore_array_attrib(struct gl_context *ctx,
       copy_array_attrib(ctx, dest, src, GL_TRUE);
    }
 
-   if (!arb_vao
-       || src->ArrayObj->ElementArrayBufferObj->Name == 0
-       || _mesa_IsBufferARB(src->ArrayObj->ElementArrayBufferObj->Name))
+   if (src->ElementArrayBufferObj->Name == 0
+       || _mesa_IsBufferARB(src->ElementArrayBufferObj->Name))
       _mesa_BindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB,
-			  src->ArrayObj->ElementArrayBufferObj->Name);
+			  src->ElementArrayBufferObj->Name);
 
    /* Better safe than sorry?! */
    dest->RebindArrays = GL_TRUE;
@@ -1181,20 +1143,7 @@ restore_array_attrib(struct gl_context *ctx,
     * FIXME: of the old ArrayObj->_Enabled and the new _Enabled.
     * ... just do it.
     */
-   dest->NewState |= src->ArrayObj->_Enabled | dest->ArrayObj->_Enabled;
-}
-
-/**
- * init/alloc the fields of 'attrib'.
- * Needs to the init part matching free_array_attrib_data below.
- */
-static void
-init_array_attrib_data(struct gl_context *ctx,
-                       struct gl_array_attrib *attrib)
-{
-   /* Get a non driver gl_array_object. */
-   attrib->ArrayObj = CALLOC_STRUCT( gl_array_object );
-   _mesa_initialize_array_object(ctx, attrib->ArrayObj, 0);
+   dest->NewState |= src->_Enabled | dest->_Enabled;
 }
 
 /**
@@ -1206,11 +1155,8 @@ static void
 free_array_attrib_data(struct gl_context *ctx,
                        struct gl_array_attrib *attrib)
 {
-   /* We use a non driver array object, so don't just unref since we would
-    * end up using the drivers DeleteArrayObject function for deletion. */
-   _mesa_delete_array_object(ctx, attrib->ArrayObj);
-   attrib->ArrayObj = 0;
    _mesa_reference_buffer_object(ctx, &attrib->ArrayBufferObj, NULL);
+   _mesa_free_varray_data(ctx, attrib);
 }
 
 
@@ -1247,7 +1193,7 @@ _mesa_PushClientAttrib(GLbitfield mask)
    if (mask & GL_CLIENT_VERTEX_ARRAY_BIT) {
       struct gl_array_attrib *attr;
       attr = CALLOC_STRUCT( gl_array_attrib );
-      init_array_attrib_data(ctx, attr);
+      _mesa_init_varray(ctx, attr);
       save_array_attrib(ctx, attr, &ctx->Array);
       save_attrib_data(&head, GL_CLIENT_VERTEX_ARRAY_BIT, attr);
    }

@@ -478,8 +478,6 @@ typedef PROC _glapi_proc;
 #define _gloffset_GetActiveAttribARB 569
 #define _gloffset_FlushMappedBufferRange 580
 #define _gloffset_MapBufferRange 581
-#define _gloffset_BindVertexArray 583
-#define _gloffset_GenVertexArrays 584
 #define _gloffset_TexStorage1D 685
 #define _gloffset_TexStorage2D 686
 #define _gloffset_TexStorage3D 687
@@ -623,10 +621,6 @@ typedef PROC _glapi_proc;
 #define _gloffset_PointParameteriNV 863
 #define _gloffset_PointParameterivNV 864
 #define _gloffset_ActiveStencilFaceEXT 865
-#define _gloffset_BindVertexArrayAPPLE 866
-#define _gloffset_DeleteVertexArraysAPPLE 867
-#define _gloffset_GenVertexArraysAPPLE 868
-#define _gloffset_IsVertexArrayAPPLE 869
 #define _gloffset_GetProgramNamedParameterdvNV 870
 #define _gloffset_GetProgramNamedParameterfvNV 871
 #define _gloffset_ProgramNamedParameter4dNV 872
@@ -698,8 +692,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define VertexAttribDivisorARB_remap_index 171
 #define FlushMappedBufferRange_remap_index 172
 #define MapBufferRange_remap_index 173
-#define BindVertexArray_remap_index 175
-#define GenVertexArrays_remap_index 176
 #define TexStorage1D_remap_index 277
 #define TexStorage2D_remap_index 278
 #define TexStorage3D_remap_index 279
@@ -844,10 +836,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define PointParameteriNV_remap_index 455
 #define PointParameterivNV_remap_index 456
 #define ActiveStencilFaceEXT_remap_index 457
-#define BindVertexArrayAPPLE_remap_index 458
-#define DeleteVertexArraysAPPLE_remap_index 459
-#define GenVertexArraysAPPLE_remap_index 460
-#define IsVertexArrayAPPLE_remap_index 461
 #define GetProgramNamedParameterdvNV_remap_index 462
 #define GetProgramNamedParameterfvNV_remap_index 463
 #define ProgramNamedParameter4dNV_remap_index 464
@@ -912,8 +900,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_GetAttribLocationARB driDispatchRemapTable[GetAttribLocationARB_remap_index]
 #define _gloffset_FlushMappedBufferRange driDispatchRemapTable[FlushMappedBufferRange_remap_index]
 #define _gloffset_MapBufferRange driDispatchRemapTable[MapBufferRange_remap_index]
-#define _gloffset_BindVertexArray driDispatchRemapTable[BindVertexArray_remap_index]
-#define _gloffset_GenVertexArrays driDispatchRemapTable[GenVertexArrays_remap_index]
 #define _gloffset_TexStorage1D driDispatchRemapTable[TexStorage1D_remap_index]
 #define _gloffset_TexStorage2D driDispatchRemapTable[TexStorage2D_remap_index]
 #define _gloffset_TexStorage3D driDispatchRemapTable[TexStorage3D_remap_index]
@@ -1057,10 +1043,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_PointParameteriNV driDispatchRemapTable[PointParameteriNV_remap_index]
 #define _gloffset_PointParameterivNV driDispatchRemapTable[PointParameterivNV_remap_index]
 #define _gloffset_ActiveStencilFaceEXT driDispatchRemapTable[ActiveStencilFaceEXT_remap_index]
-#define _gloffset_BindVertexArrayAPPLE driDispatchRemapTable[BindVertexArrayAPPLE_remap_index]
-#define _gloffset_DeleteVertexArraysAPPLE driDispatchRemapTable[DeleteVertexArraysAPPLE_remap_index]
-#define _gloffset_GenVertexArraysAPPLE driDispatchRemapTable[GenVertexArraysAPPLE_remap_index]
-#define _gloffset_IsVertexArrayAPPLE driDispatchRemapTable[IsVertexArrayAPPLE_remap_index]
 #define _gloffset_GetProgramNamedParameterdvNV driDispatchRemapTable[GetProgramNamedParameterdvNV_remap_index]
 #define _gloffset_GetProgramNamedParameterfvNV driDispatchRemapTable[GetProgramNamedParameterfvNV_remap_index]
 #define _gloffset_ProgramNamedParameter4dNV driDispatchRemapTable[ProgramNamedParameter4dNV_remap_index]
@@ -5577,28 +5559,6 @@ static inline void SET_MapBufferRange(struct _glapi_table *disp, GLvoid * (GLAPI
    SET_by_offset(disp, _gloffset_MapBufferRange, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_BindVertexArray)(GLuint);
-#define CALL_BindVertexArray(disp, parameters) \
-    (* GET_BindVertexArray(disp)) parameters
-static inline _glptr_BindVertexArray GET_BindVertexArray(struct _glapi_table *disp) {
-   return (_glptr_BindVertexArray) (GET_by_offset(disp, _gloffset_BindVertexArray));
-}
-
-static inline void SET_BindVertexArray(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
-   SET_by_offset(disp, _gloffset_BindVertexArray, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GenVertexArrays)(GLsizei, GLuint *);
-#define CALL_GenVertexArrays(disp, parameters) \
-    (* GET_GenVertexArrays(disp)) parameters
-static inline _glptr_GenVertexArrays GET_GenVertexArrays(struct _glapi_table *disp) {
-   return (_glptr_GenVertexArrays) (GET_by_offset(disp, _gloffset_GenVertexArrays));
-}
-
-static inline void SET_GenVertexArrays(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
-   SET_by_offset(disp, _gloffset_GenVertexArrays, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_TexStorage1D)(GLenum, GLsizei, GLenum, GLsizei);
 #define CALL_TexStorage1D(disp, parameters) \
     (* GET_TexStorage1D(disp)) parameters
@@ -7172,50 +7132,6 @@ static inline void SET_ActiveStencilFaceEXT(struct _glapi_table *disp, void (GLA
    SET_by_offset(disp, _gloffset_ActiveStencilFaceEXT, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_BindVertexArrayAPPLE)(GLuint);
-#define CALL_BindVertexArrayAPPLE(disp, parameters) \
-    (* GET_BindVertexArrayAPPLE(disp)) parameters
-static inline _glptr_BindVertexArrayAPPLE GET_BindVertexArrayAPPLE(struct _glapi_table *disp) {
-   return (_glptr_BindVertexArrayAPPLE) (GET_by_offset(disp, _gloffset_BindVertexArrayAPPLE));
-}
-
-static inline void SET_BindVertexArrayAPPLE(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
-   SET_by_offset(disp, _gloffset_BindVertexArrayAPPLE, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DeleteVertexArraysAPPLE)(GLsizei, const GLuint *);
-#define CALL_DeleteVertexArraysAPPLE(disp, parameters) \
-    (* GET_DeleteVertexArraysAPPLE(disp)) parameters
-static inline _glptr_DeleteVertexArraysAPPLE GET_DeleteVertexArraysAPPLE(struct _glapi_table *disp) {
-   return (_glptr_DeleteVertexArraysAPPLE) (GET_by_offset(disp, _gloffset_DeleteVertexArraysAPPLE));
-}
-
-static inline void SET_DeleteVertexArraysAPPLE(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLuint *)) {
-   SET_by_offset(disp, _gloffset_DeleteVertexArraysAPPLE, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GenVertexArraysAPPLE)(GLsizei, GLuint *);
-#define CALL_GenVertexArraysAPPLE(disp, parameters) \
-    (* GET_GenVertexArraysAPPLE(disp)) parameters
-static inline _glptr_GenVertexArraysAPPLE GET_GenVertexArraysAPPLE(struct _glapi_table *disp) {
-   return (_glptr_GenVertexArraysAPPLE) (GET_by_offset(disp, _gloffset_GenVertexArraysAPPLE));
-}
-
-static inline void SET_GenVertexArraysAPPLE(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
-   SET_by_offset(disp, _gloffset_GenVertexArraysAPPLE, fn);
-}
-
-typedef GLboolean (GLAPIENTRYP _glptr_IsVertexArrayAPPLE)(GLuint);
-#define CALL_IsVertexArrayAPPLE(disp, parameters) \
-    (* GET_IsVertexArrayAPPLE(disp)) parameters
-static inline _glptr_IsVertexArrayAPPLE GET_IsVertexArrayAPPLE(struct _glapi_table *disp) {
-   return (_glptr_IsVertexArrayAPPLE) (GET_by_offset(disp, _gloffset_IsVertexArrayAPPLE));
-}
-
-static inline void SET_IsVertexArrayAPPLE(struct _glapi_table *disp, GLboolean (GLAPIENTRYP fn)(GLuint)) {
-   SET_by_offset(disp, _gloffset_IsVertexArrayAPPLE, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_GetProgramNamedParameterdvNV)(GLuint, GLsizei, const GLubyte *, GLdouble *);
 #define CALL_GetProgramNamedParameterdvNV(disp, parameters) \
     (* GET_GetProgramNamedParameterdvNV(disp)) parameters
@@ -7434,39 +7350,6 @@ static inline _glptr_TextureRangeAPPLE GET_TextureRangeAPPLE(struct _glapi_table
 
 static inline void SET_TextureRangeAPPLE(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLvoid *)) {
    SET_by_offset(disp, _gloffset_TextureRangeAPPLE, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetObjectParameterivAPPLE)(GLenum, GLuint, GLenum, GLint *);
-#define CALL_GetObjectParameterivAPPLE(disp, parameters) \
-    (* GET_GetObjectParameterivAPPLE(disp)) parameters
-static inline _glptr_GetObjectParameterivAPPLE GET_GetObjectParameterivAPPLE(struct _glapi_table *disp) {
-   return (_glptr_GetObjectParameterivAPPLE) (GET_by_offset(disp, _gloffset_GetObjectParameterivAPPLE));
-}
-
-static inline void SET_GetObjectParameterivAPPLE(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLenum, GLint *)) {
-   SET_by_offset(disp, _gloffset_GetObjectParameterivAPPLE, fn);
-}
-
-typedef GLenum (GLAPIENTRYP _glptr_ObjectPurgeableAPPLE)(GLenum, GLuint, GLenum);
-#define CALL_ObjectPurgeableAPPLE(disp, parameters) \
-    (* GET_ObjectPurgeableAPPLE(disp)) parameters
-static inline _glptr_ObjectPurgeableAPPLE GET_ObjectPurgeableAPPLE(struct _glapi_table *disp) {
-   return (_glptr_ObjectPurgeableAPPLE) (GET_by_offset(disp, _gloffset_ObjectPurgeableAPPLE));
-}
-
-static inline void SET_ObjectPurgeableAPPLE(struct _glapi_table *disp, GLenum (GLAPIENTRYP fn)(GLenum, GLuint, GLenum)) {
-   SET_by_offset(disp, _gloffset_ObjectPurgeableAPPLE, fn);
-}
-
-typedef GLenum (GLAPIENTRYP _glptr_ObjectUnpurgeableAPPLE)(GLenum, GLuint, GLenum);
-#define CALL_ObjectUnpurgeableAPPLE(disp, parameters) \
-    (* GET_ObjectUnpurgeableAPPLE(disp)) parameters
-static inline _glptr_ObjectUnpurgeableAPPLE GET_ObjectUnpurgeableAPPLE(struct _glapi_table *disp) {
-   return (_glptr_ObjectUnpurgeableAPPLE) (GET_by_offset(disp, _gloffset_ObjectUnpurgeableAPPLE));
-}
-
-static inline void SET_ObjectUnpurgeableAPPLE(struct _glapi_table *disp, GLenum (GLAPIENTRYP fn)(GLenum, GLuint, GLenum)) {
-   SET_by_offset(disp, _gloffset_ObjectUnpurgeableAPPLE, fn);
 }
 
 typedef GLuint (GLAPIENTRYP _glptr_CreateShaderProgramEXT)(GLenum, const GLchar *);

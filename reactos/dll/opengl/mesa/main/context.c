@@ -494,7 +494,7 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_scissor( ctx );
    _mesa_init_stencil( ctx );
    _mesa_init_transform( ctx );
-   _mesa_init_varray( ctx );
+   _mesa_init_varray(ctx, &ctx->Array);
    _mesa_init_viewport( ctx );
 
    if (!_mesa_init_texture( ctx ))
@@ -748,9 +748,7 @@ _mesa_free_context_data( struct gl_context *ctx )
    _mesa_free_texture_data( ctx );
    _mesa_free_matrix_data( ctx );
    _mesa_free_viewport_data( ctx );
-   _mesa_free_varray_data(ctx);
-
-   _mesa_delete_array_object(ctx, ctx->Array.DefaultArrayObj);
+   _mesa_free_varray_data(ctx, &ctx->Array);
 
    _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj, NULL);
 

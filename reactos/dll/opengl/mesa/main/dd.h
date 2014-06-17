@@ -563,31 +563,6 @@ struct dd_function_table {
 			     struct gl_buffer_object *obj );
    /*@}*/
 
-   /**
-    * \name Functions for GL_APPLE_object_purgeable
-    */
-   /*@{*/
-   /* variations on ObjectPurgeable */
-   GLenum (*BufferObjectPurgeable)( struct gl_context *ctx, struct gl_buffer_object *obj, GLenum option );
-   GLenum (*RenderObjectPurgeable)( struct gl_context *ctx, struct gl_renderbuffer *obj, GLenum option );
-   GLenum (*TextureObjectPurgeable)( struct gl_context *ctx, struct gl_texture_object *obj, GLenum option );
-
-   /* variations on ObjectUnpurgeable */
-   GLenum (*BufferObjectUnpurgeable)( struct gl_context *ctx, struct gl_buffer_object *obj, GLenum option );
-   GLenum (*RenderObjectUnpurgeable)( struct gl_context *ctx, struct gl_renderbuffer *obj, GLenum option );
-   GLenum (*TextureObjectUnpurgeable)( struct gl_context *ctx, struct gl_texture_object *obj, GLenum option );
-   /*@}*/
-
-
-   /**
-    * \name Vertex Array objects
-    */
-   /*@{*/
-   struct gl_array_object * (*NewArrayObject)(struct gl_context *ctx, GLuint id);
-   void (*DeleteArrayObject)(struct gl_context *ctx, struct gl_array_object *obj);
-   void (*BindArrayObject)(struct gl_context *ctx, struct gl_array_object *obj);
-   /*@}*/
-
 
    /**
     * \name Support for multiple T&L engines

@@ -34,7 +34,6 @@
 #include "main/glheader.h"
 #include "main/mtypes.h"
 #include "main/imports.h"
-#include "main/arrayobj.h"
 #include "main/blend.h"
 #include "main/bufferobj.h"
 #include "main/buffers.h"
@@ -133,10 +132,6 @@ struct save_state
    GLbitfield TexEnabled;
    GLbitfield TexGenEnabled;
    GLuint EnvMode;  /* unit[0] only */
-
-   /** MESA_META_VERTEX */
-   struct gl_array_object *ArrayObj;
-   struct gl_buffer_object *ArrayBufferObj;
 
    /** MESA_META_VIEWPORT */
    GLint ViewportX, ViewportY, ViewportW, ViewportH;
@@ -406,15 +401,6 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
       }
    }
 
-   if (state & MESA_META_VERTEX) {
-      /* save vertex array object state */
-      _mesa_reference_array_object(ctx, &save->ArrayObj,
-                                   ctx->Array.ArrayObj);
-      _mesa_reference_buffer_object(ctx, &save->ArrayBufferObj,
-                                    ctx->Array.ArrayBufferObj);
-      /* set some default state? */
-   }
-
    if (state & MESA_META_VIEWPORT) {
       /* save viewport state */
       save->ViewportX = ctx->Viewport.X;
@@ -596,16 +582,6 @@ _mesa_meta_end(struct gl_context *ctx)
             }
          }
       }
-   }
-
-   if (state & MESA_META_VERTEX) {
-      /* restore vertex buffer object */
-      _mesa_BindBufferARB(GL_ARRAY_BUFFER_ARB, save->ArrayBufferObj->Name);
-      _mesa_reference_buffer_object(ctx, &save->ArrayBufferObj, NULL);
-
-      /* restore vertex array object */
-      _mesa_BindVertexArray(save->ArrayObj->Name);
-      _mesa_reference_array_object(ctx, &save->ArrayObj, NULL);
    }
 
    if (state & MESA_META_VIEWPORT) {

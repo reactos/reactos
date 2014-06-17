@@ -78,8 +78,7 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_blend_equation_separate);
    const GLboolean ver_2_1 = (ver_2_0);
    const GLboolean ver_3_0 = (ver_2_1 &&
-                              ctx->Extensions.ARB_map_buffer_range &&
-                              ctx->Extensions.APPLE_vertex_array_object);
+                              ctx->Extensions.ARB_map_buffer_range);
 
 
    if (ver_3_0) {

@@ -262,12 +262,10 @@ EXTRA_EXT(IBM_rasterpos_clip);
 EXTRA_EXT(NV_point_sprite);
 EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
-EXTRA_EXT(APPLE_vertex_array_object);
 EXTRA_EXT(EXT_compiled_vertex_array);
 EXTRA_EXT2(NV_point_sprite, ARB_point_sprite);
 
 static const int extra_version_30[] = { EXTRA_VERSION_30, EXTRA_END };
-static const int extra_version_31[] = { EXTRA_VERSION_31, EXTRA_END };
 static const int extra_version_32[] = { EXTRA_VERSION_32, EXTRA_END };
 
 #define API_OPENGL_BIT (1 << API_OPENGL)
@@ -739,10 +737,6 @@ static const struct value_desc values[] = {
    { GL_DEPTH_BOUNDS_EXT, CONTEXT_FLOAT2(Depth.BoundsMin),
      extra_EXT_depth_bounds_test },
 
-   /* GL_APPLE_vertex_array_object */
-   { GL_VERTEX_ARRAY_BINDING_APPLE, ARRAY_INT(Name),
-     extra_APPLE_vertex_array_object },
-
    /* GL_EXT_texture_integer */
    { GL_RGBA_INTEGER_MODE_EXT, BUFFER_BOOL(_IntegerColor),
      extra_EXT_texture_integer },
@@ -929,7 +923,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_COORD_ARRAY_SIZE:
    case GL_TEXTURE_COORD_ARRAY_TYPE:
    case GL_TEXTURE_COORD_ARRAY_STRIDE:
-      array = &ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX];
+      array = &ctx->Array.VertexAttrib[VERT_ATTRIB_TEX];
       v->value_int = *(GLuint *) ((char *) array + d->offset);
       break;
 
@@ -1032,7 +1026,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING_ARB:
    case GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING_ARB:
       buffer_obj = (struct gl_buffer_object **)
-	 ((char *) ctx->Array.ArrayObj + d->offset);
+	 ((char *) &ctx->Array + d->offset);
       v->value_int = (*buffer_obj)->Name;
       break;
    case GL_ARRAY_BUFFER_BINDING_ARB:
@@ -1040,10 +1034,10 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       break;
    case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB:
       v->value_int =
-	 ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX].BufferObj->Name;
+	 ctx->Array.VertexAttrib[VERT_ATTRIB_TEX].BufferObj->Name;
       break;
    case GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB:
-      v->value_int = ctx->Array.ArrayObj->ElementArrayBufferObj->Name;
+      v->value_int = ctx->Array.ElementArrayBufferObj->Name;
       break;
 
    case GL_FOG_COLOR:
@@ -1195,7 +1189,7 @@ find_value(const char *func, GLenum pname, void **p, union value *v)
       *p = ((char *) ctx + d->offset);
       return d;
    case LOC_ARRAY:
-      *p = ((char *) ctx->Array.ArrayObj + d->offset);
+      *p = ((char *)&ctx->Array + d->offset);
       return d;
    case LOC_TEXUNIT:
       unit = &ctx->Texture.Unit;

@@ -6730,16 +6730,6 @@ _mesa_create_save_table(void)
    SET_PointParameteriNV(table, save_PointParameteriNV);
    SET_PointParameterivNV(table, save_PointParameterivNV);
 
-   /* 273. GL_APPLE_vertex_array_object */
-   SET_BindVertexArrayAPPLE(table, _mesa_BindVertexArrayAPPLE);
-   SET_DeleteVertexArraysAPPLE(table, _mesa_DeleteVertexArraysAPPLE);
-   SET_GenVertexArraysAPPLE(table, _mesa_GenVertexArraysAPPLE);
-   SET_IsVertexArrayAPPLE(table, _mesa_IsVertexArrayAPPLE);
-
-   /* GL_ARB_vertex_array_object */
-   SET_BindVertexArray(table, _mesa_BindVertexArray);
-   SET_GenVertexArrays(table, _mesa_GenVertexArrays);
-
    /* ???. GL_EXT_depth_bounds_test */
    SET_DepthBoundsEXT(table, save_DepthBoundsEXT);
 
@@ -6773,13 +6763,6 @@ _mesa_create_save_table(void)
 #if FEATURE_ARB_map_buffer_range
    SET_MapBufferRange(table, _mesa_MapBufferRange); /* no dlist save */
    SET_FlushMappedBufferRange(table, _mesa_FlushMappedBufferRange); /* no dl */
-#endif
-
-   /* 371. GL_APPLE_object_purgeable */
-#if FEATURE_APPLE_object_purgeable
-   SET_ObjectPurgeableAPPLE(table, _mesa_ObjectPurgeableAPPLE);
-   SET_ObjectUnpurgeableAPPLE(table, _mesa_ObjectUnpurgeableAPPLE);
-   SET_GetObjectParameterivAPPLE(table, _mesa_GetObjectParameterivAPPLE);
 #endif
 
    /* GL_EXT_texture_integer */

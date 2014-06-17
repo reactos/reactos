@@ -47,7 +47,6 @@
 #define MESA_META_STENCIL_TEST            0x400
 #define MESA_META_TRANSFORM               0x800 /**< modelview/projection matrix state */
 #define MESA_META_TEXTURE                0x1000
-#define MESA_META_VERTEX                 0x2000
 #define MESA_META_VIEWPORT               0x4000
 #define MESA_META_CLIP                   0x8000
 #define MESA_META_SELECT_FEEDBACK       0x10000

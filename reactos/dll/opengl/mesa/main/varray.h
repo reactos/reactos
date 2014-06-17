@@ -175,15 +175,11 @@ _mesa_copy_client_array(struct gl_context *ctx,
                         struct gl_client_array *dst,
                         struct gl_client_array *src);
 
-
 extern void
-_mesa_print_arrays(struct gl_context *ctx);
-
-extern void
-_mesa_init_varray( struct gl_context * ctx );
+_mesa_init_varray( struct gl_context * ctx, struct gl_array_attrib *array);
 
 extern void 
-_mesa_free_varray_data(struct gl_context *ctx);
+_mesa_free_varray_data(struct gl_context *ctx, struct gl_array_attrib *array);
 
 #else
 

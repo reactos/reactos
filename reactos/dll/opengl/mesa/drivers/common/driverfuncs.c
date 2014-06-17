@@ -26,7 +26,6 @@
 #include "main/glheader.h"
 #include "main/imports.h"
 #include "main/accum.h"
-#include "main/arrayobj.h"
 #include "main/context.h"
 #include "main/framebuffer.h"
 #include "main/readpix.h"
@@ -146,11 +145,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->UnmapRenderbuffer = _swrast_unmap_soft_renderbuffer;
 
    _mesa_init_texture_barrier_functions(driver);
-
-   /* APPLE_vertex_array_object */
-   driver->NewArrayObject = _mesa_new_array_object;
-   driver->DeleteArrayObject = _mesa_delete_array_object;
-   driver->BindArrayObject = NULL;
 
    /* T&L stuff */
    driver->CurrentExecPrimitive = 0;

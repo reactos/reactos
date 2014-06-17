@@ -1203,22 +1203,6 @@ struct gl_array_object
    _glthread_Mutex Mutex;
 
    /**
-    * Does the VAO use ARB semantics or Apple semantics?
-    *
-    * There are several ways in which ARB_vertex_array_object and
-    * APPLE_vertex_array_object VAOs have differing semantics.  At the very
-    * least,
-    *
-    *     - ARB VAOs require that all array data be sourced from vertex buffer
-    *       objects, but Apple VAOs do not.
-    *
-    *     - ARB VAOs require that names come from GenVertexArrays.
-    *
-    * This flag notes which behavior governs this VAO.
-    */
-   GLboolean ARBsemantics;
-
-   /**
     * Has this array object been bound?
     */
    GLboolean _Used;
@@ -1244,23 +1228,28 @@ struct gl_array_object
  */
 struct gl_array_attrib
 {
-   /** Currently bound array object. See _mesa_BindVertexArrayAPPLE() */
-   struct gl_array_object *ArrayObj;
+    /** Vertex attribute arrays */
+    struct gl_client_array VertexAttrib[VERT_ATTRIB_MAX];
 
-   /** The default vertex array object */
-   struct gl_array_object *DefaultArrayObj;
+    /** Mask of VERT_BIT_* values indicating which arrays are enabled */
+    GLbitfield64 _Enabled;
 
-   /** Array objects (GL_ARB/APPLE_vertex_array_object) */
-   struct _mesa_HashTable *Objects;
+    /**
+     * Min of all enabled arrays' _MaxElement.  When arrays reside inside VBOs
+     * we can determine the max legal (in bounds) glDrawElements array index.
+     */
+    GLuint _MaxElement;
 
-   GLuint LockFirst;            /**< GL_EXT_compiled_vertex_array */
-   GLuint LockCount;            /**< GL_EXT_compiled_vertex_array */
+    struct gl_buffer_object *ElementArrayBufferObj;
 
-   GLbitfield64 NewState;		/**< mask of VERT_BIT_* values */
-   GLboolean RebindArrays; /**< whether the VBO module should rebind arrays */
+    GLuint LockFirst;            /**< GL_EXT_compiled_vertex_array */
+    GLuint LockCount;            /**< GL_EXT_compiled_vertex_array */
 
-   /* GL_ARB_vertex_buffer_object */
-   struct gl_buffer_object *ArrayBufferObj;
+    GLbitfield64 NewState;		/**< mask of VERT_BIT_* values */
+    GLboolean RebindArrays; /**< whether the VBO module should rebind arrays */
+
+    /* GL_ARB_vertex_buffer_object */
+    struct gl_buffer_object *ArrayBufferObj;
 };
 
 
@@ -1582,7 +1571,6 @@ struct gl_extensions
    GLboolean ARB_texture_env_dot3;
    GLboolean ARB_texture_storage;
    GLboolean ARB_transpose_matrix;
-   GLboolean ARB_vertex_array_object;
    GLboolean ARB_window_pos;
    GLboolean EXT_blend_color;
    GLboolean EXT_blend_equation_separate;
@@ -1606,8 +1594,6 @@ struct gl_extensions
    GLboolean EXT_texture_integer;
    /* vendor extensions */
    GLboolean APPLE_packed_pixels;
-   GLboolean APPLE_vertex_array_object;
-   GLboolean APPLE_object_purgeable;
    GLboolean ATI_texture_env_combine3;
    GLboolean IBM_rasterpos_clip;
    GLboolean IBM_multimode_draw_arrays;
