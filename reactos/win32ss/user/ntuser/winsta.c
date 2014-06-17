@@ -451,7 +451,9 @@ NtUserCreateWindowStation(
    /* Initialize the window station */
    RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
 
+#ifdef USE_WINSTA_LOCK
    KeInitializeSpinLock(&WindowStationObject->Lock);
+#endif
    InitializeListHead(&WindowStationObject->DesktopListHead);
    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
    WindowStationObject->Name = WindowStationName;
@@ -1203,7 +1205,9 @@ BuildDesktopNameList(
 {
    NTSTATUS Status;
    PWINSTATION_OBJECT WindowStation;
+#ifdef USE_WINSTA_LOCK
    KIRQL OldLevel;
+#endif
    PLIST_ENTRY DesktopEntry;
    PDESKTOP DesktopObject;
    DWORD EntryCount;
@@ -1220,7 +1224,9 @@ BuildDesktopNameList(
       return Status;
    }
 
+#ifdef USE_WINSTA_LOCK
    KeAcquireSpinLock(&WindowStation->Lock, &OldLevel);
+#endif
 
    /*
     * Count the required size of buffer.
@@ -1242,7 +1248,9 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(pRequiredSize, &ReturnLength, sizeof(ULONG));
       if (! NT_SUCCESS(Status))
       {
+#ifdef USE_WINSTA_LOCK
          KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
+#endif
          ObDereferenceObject(WindowStation);
          return STATUS_BUFFER_TOO_SMALL;
       }
@@ -1253,7 +1261,9 @@ BuildDesktopNameList(
     */
    if (dwSize < ReturnLength)
    {
+#ifdef USE_WINSTA_LOCK
       KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
+#endif
       ObDereferenceObject(WindowStation);
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -1264,7 +1274,9 @@ BuildDesktopNameList(
    Status = MmCopyToCaller(lpBuffer, &EntryCount, sizeof(DWORD));
    if (! NT_SUCCESS(Status))
    {
+#ifdef USE_WINSTA_LOCK
       KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
+#endif
       ObDereferenceObject(WindowStation);
       return Status;
    }
@@ -1280,7 +1292,9 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(lpBuffer, DesktopName.Buffer, DesktopName.Length);
       if (! NT_SUCCESS(Status))
       {
+#ifdef USE_WINSTA_LOCK
          KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
+#endif
          ObDereferenceObject(WindowStation);
          return Status;
       }
@@ -1288,7 +1302,9 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(lpBuffer, &NullWchar, sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {
+#ifdef USE_WINSTA_LOCK
          KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
+#endif
          ObDereferenceObject(WindowStation);
          return Status;
       }
@@ -1298,7 +1314,9 @@ BuildDesktopNameList(
    /*
     * Clean up
     */
+#ifdef USE_WINSTA_LOCK
    KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
+#endif
    ObDereferenceObject(WindowStation);
 
    return STATUS_SUCCESS;

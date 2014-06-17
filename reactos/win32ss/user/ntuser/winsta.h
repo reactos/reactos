@@ -7,11 +7,16 @@
 #define WSS_LOCKED	(1)
 #define WSS_NOINTERACTIVE	(2)
 
+// Uncomment for using WinSta spinlock
+// #define USE_WINSTA_LOCK
+
 typedef struct _WINSTATION_OBJECT
 {
     DWORD dwSessionId;
 
+#ifdef USE_WINSTA_LOCK
     KSPIN_LOCK Lock;
+#endif
     UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
