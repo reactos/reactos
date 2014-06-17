@@ -166,10 +166,8 @@ struct clear_state
 {
    GLuint ArrayObj;
    GLuint VBO;
-   GLuint ShaderProg;
    GLint ColorLocation;
 
-   GLuint IntegerShaderProg;
    GLint IntegerColorLocation;
 };
 

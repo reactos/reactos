@@ -30,8 +30,6 @@
 
 #include <precomp.h>
 
-#include "histogram.h"
-
 #if FEATURE_GL
 
 
@@ -215,7 +213,6 @@ _mesa_create_exec_table(void)
 
    _mesa_init_colortable_dispatch(exec);
    _mesa_init_convolve_dispatch(exec);
-   _mesa_init_histogram_dispatch(exec);
 
    /* 2. GL_EXT_blend_color */
 #if 0
@@ -225,16 +222,6 @@ _mesa_create_exec_table(void)
    /* 3. GL_EXT_polygon_offset */
 #if _HAVE_FULL_GL
    SET_PolygonOffsetEXT(exec, _mesa_PolygonOffsetEXT);
-#endif
-
-   /* 11. GL_EXT_histogram */
-#if 0
-   SET_GetHistogramEXT(exec, _mesa_GetHistogram);
-   SET_GetHistogramParameterfvEXT(exec, _mesa_GetHistogramParameterfv);
-   SET_GetHistogramParameterivEXT(exec, _mesa_GetHistogramParameteriv);
-   SET_GetMinmaxEXT(exec, _mesa_GetMinmax);
-   SET_GetMinmaxParameterfvEXT(exec, _mesa_GetMinmaxParameterfv);
-   SET_GetMinmaxParameterivEXT(exec, _mesa_GetMinmaxParameteriv);
 #endif
 
    /* 14. SGI_color_table */
@@ -285,37 +272,6 @@ _mesa_create_exec_table(void)
 #if _HAVE_FULL_GL
    SET_MultiModeDrawArraysIBM(exec, _mesa_MultiModeDrawArraysIBM);
    SET_MultiModeDrawElementsIBM(exec, _mesa_MultiModeDrawElementsIBM);
-#endif
-
-   /* 233. GL_NV_vertex_program */
-#if FEATURE_NV_vertex_program
-   SET_ExecuteProgramNV(exec, _mesa_ExecuteProgramNV);
-   SET_GenProgramsNV(exec, _mesa_GenPrograms);
-   SET_AreProgramsResidentNV(exec, _mesa_AreProgramsResidentNV);
-   SET_RequestResidentProgramsNV(exec, _mesa_RequestResidentProgramsNV);
-   SET_GetProgramParameterfvNV(exec, _mesa_GetProgramParameterfvNV);
-   SET_GetProgramParameterdvNV(exec, _mesa_GetProgramParameterdvNV);
-   SET_GetProgramivNV(exec, _mesa_GetProgramivNV);
-   SET_GetTrackMatrixivNV(exec, _mesa_GetTrackMatrixivNV);
-   SET_LoadProgramNV(exec, _mesa_LoadProgramNV);
-   SET_ProgramEnvParameter4dARB(exec, _mesa_ProgramEnvParameter4dARB); /* alias to ProgramParameter4dNV */
-   SET_ProgramEnvParameter4dvARB(exec, _mesa_ProgramEnvParameter4dvARB);  /* alias to ProgramParameter4dvNV */
-   SET_ProgramEnvParameter4fARB(exec, _mesa_ProgramEnvParameter4fARB);  /* alias to ProgramParameter4fNV */
-   SET_ProgramEnvParameter4fvARB(exec, _mesa_ProgramEnvParameter4fvARB);  /* alias to ProgramParameter4fvNV */
-   SET_ProgramParameters4dvNV(exec, _mesa_ProgramParameters4dvNV);
-   SET_ProgramParameters4fvNV(exec, _mesa_ProgramParameters4fvNV);
-   SET_TrackMatrixNV(exec, _mesa_TrackMatrixNV);
-   /* glVertexAttrib*NV functions handled in api_loopback.c */
-#endif
-
-   /* 282. GL_NV_fragment_program */
-#if FEATURE_NV_fragment_program
-   SET_ProgramNamedParameter4fNV(exec, _mesa_ProgramNamedParameter4fNV);
-   SET_ProgramNamedParameter4dNV(exec, _mesa_ProgramNamedParameter4dNV);
-   SET_ProgramNamedParameter4fvNV(exec, _mesa_ProgramNamedParameter4fvNV);
-   SET_ProgramNamedParameter4dvNV(exec, _mesa_ProgramNamedParameter4dvNV);
-   SET_GetProgramNamedParameterfvNV(exec, _mesa_GetProgramNamedParameterfvNV);
-   SET_GetProgramNamedParameterdvNV(exec, _mesa_GetProgramNamedParameterdvNV);
 #endif
 
    /* 262. GL_NV_point_sprite */
@@ -371,9 +327,6 @@ _mesa_create_exec_table(void)
 
    /* GL 3.0 (functions not covered by other extensions) */
    SET_GetStringi(exec, _mesa_GetStringi);
-
-   /* GL_NV_texture_barrier */
-   SET_TextureBarrierNV(exec, _mesa_TextureBarrierNV);
 
    /* GL_ARB_texture_storage */
    SET_TexStorage1D(exec, _mesa_TexStorage1D);

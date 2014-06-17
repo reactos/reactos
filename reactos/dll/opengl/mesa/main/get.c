@@ -157,7 +157,7 @@ union value {
 #define CONTEXT_FIELD(field, type) \
    LOC_CONTEXT, type, offsetof(struct gl_context, field)
 #define ARRAY_FIELD(field, type) \
-   LOC_ARRAY, type, offsetof(struct gl_array_object, field)
+   LOC_ARRAY, type, offsetof(struct gl_array_attrib, field)
 #define CONST(value) \
    LOC_CONTEXT, TYPE_CONST, value
 
@@ -487,11 +487,11 @@ static const struct value_desc values[] = {
 
    /* GL_ARB_vertex_buffer_object */
    { GL_VERTEX_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_POS].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_POS].BufferObj), NO_EXTRA },
    { GL_NORMAL_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_NORMAL].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_NORMAL].BufferObj), NO_EXTRA },
    { GL_COLOR_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_COLOR0].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_COLOR0].BufferObj), NO_EXTRA },
    { GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA },
 
    /* GL_OES_point_sprite */
@@ -723,13 +723,13 @@ static const struct value_desc values[] = {
  
    /* GL_ARB_vertex_buffer_object */
    { GL_INDEX_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_COLOR_INDEX].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_COLOR_INDEX].BufferObj), NO_EXTRA },
    { GL_EDGE_FLAG_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_EDGEFLAG].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_EDGEFLAG].BufferObj), NO_EXTRA },
    { GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_COLOR1].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_COLOR1].BufferObj), NO_EXTRA },
    { GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_FOG].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_FOG].BufferObj), NO_EXTRA },
 
    /* GL_EXT_depth_bounds_test */
    { GL_DEPTH_BOUNDS_TEST_EXT, CONTEXT_BOOL(Depth.BoundsTest),

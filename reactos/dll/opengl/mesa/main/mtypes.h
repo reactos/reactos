@@ -1191,39 +1191,6 @@ struct gl_client_array
 
 
 /**
- * Collection of vertex arrays.  Defined by the GL_APPLE_vertex_array_object
- * extension, but a nice encapsulation in any case.
- */
-struct gl_array_object
-{
-   /** Name of the array object as received from glGenVertexArrayAPPLE. */
-   GLuint Name;
-
-   GLint RefCount;
-   _glthread_Mutex Mutex;
-
-   /**
-    * Has this array object been bound?
-    */
-   GLboolean _Used;
-
-   /** Vertex attribute arrays */
-   struct gl_client_array VertexAttrib[VERT_ATTRIB_MAX];
-
-   /** Mask of VERT_BIT_* values indicating which arrays are enabled */
-   GLbitfield64 _Enabled;
-
-   /**
-    * Min of all enabled arrays' _MaxElement.  When arrays reside inside VBOs
-    * we can determine the max legal (in bounds) glDrawElements array index.
-    */
-   GLuint _MaxElement;
-
-   struct gl_buffer_object *ElementArrayBufferObj;
-};
-
-
-/**
  * Vertex array state
  */
 struct gl_array_attrib
@@ -1481,17 +1448,6 @@ struct gl_framebuffer
    void (*Delete)(struct gl_framebuffer *fb);
 };
 
-
-/**
- * Precision info for shader datatypes.  See glGetShaderPrecisionFormat().
- */
-struct gl_precision
-{
-   GLushort RangeMin;   /**< min value exponent */
-   GLushort RangeMax;   /**< max value exponent */
-   GLushort Precision;  /**< number of mantissa bits */
-};
-
 /**
  * Constants which may be overridden by device driver during context creation
  * but are never changed after that.
@@ -1588,7 +1544,6 @@ struct gl_extensions
    GLboolean EXT_secondary_color;
    GLboolean EXT_separate_shader_objects;
    GLboolean EXT_separate_specular_color;
-   GLboolean EXT_texture3D;
    GLboolean EXT_texture_env_dot3;
    GLboolean EXT_texture_filter_anisotropic;
    GLboolean EXT_texture_integer;
@@ -1604,7 +1559,6 @@ struct gl_extensions
    GLboolean NV_fog_distance;
    GLboolean NV_light_max_exponent;
    GLboolean NV_point_sprite;
-   GLboolean NV_texture_barrier;
    GLboolean NV_texgen_reflection;
    GLboolean NV_texture_env_combine4;
    GLboolean extension_sentinel;
@@ -1673,8 +1627,7 @@ struct gl_matrix_stack
 #define _NEW_BUFFERS           (1 << 22)  /**< gl_context::Visual, DrawBuffer, */
 #define _NEW_CURRENT_ATTRIB    (1 << 23)  /**< gl_context::Current */
 #define _NEW_MULTISAMPLE       (1 << 24)  /**< gl_context::Multisample */
-#define _NEW_TRACK_MATRIX      (1 << 25)  /**< gl_context::VertexProgram */
-#define _NEW_BUFFER_OBJECT     (1 << 26)
+#define _NEW_BUFFER_OBJECT     (1 << 25)
 #define _NEW_ALL ~0
 
 /**

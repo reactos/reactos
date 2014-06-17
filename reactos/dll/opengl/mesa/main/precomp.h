@@ -70,7 +70,6 @@
 #include "texstate.h"
 #include "texstorage.h"
 #include "texstore.h"
-#include "texturebarrier.h"
 #include "varray.h"
 #include "version.h"
 #include "viewport.h"

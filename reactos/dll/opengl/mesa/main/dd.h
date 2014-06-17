@@ -666,11 +666,6 @@ struct dd_function_table {
    void (*EndCallList)( struct gl_context *ctx );
 
    /**@}*/
-
-   /**
-    * \name GL_NV_texture_barrier interface
-    */
-   void (*TextureBarrier)(struct gl_context *ctx);
 };
 
 

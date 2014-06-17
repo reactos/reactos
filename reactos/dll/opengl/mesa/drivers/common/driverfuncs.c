@@ -36,7 +36,6 @@
 #include "main/texobj.h"
 #include "main/texstore.h"
 #include "main/bufferobj.h"
-#include "main/texturebarrier.h"
 
 #include "tnl/tnl.h"
 #include "swrast/swrast.h"
@@ -143,8 +142,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
 
    driver->MapRenderbuffer = _swrast_map_soft_renderbuffer;
    driver->UnmapRenderbuffer = _swrast_unmap_soft_renderbuffer;
-
-   _mesa_init_texture_barrier_functions(driver);
 
    /* T&L stuff */
    driver->CurrentExecPrimitive = 0;

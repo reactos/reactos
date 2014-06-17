@@ -78,12 +78,6 @@
 #define FEATURE_GL !FEATURE_ES
 #endif
 
-#if defined(IN_DRI_DRIVER) || (FEATURE_GL + FEATURE_ES1 + FEATURE_ES2 > 1)
-#define FEATURE_remap_table               1
-#else
-#define FEATURE_remap_table               0
-#endif
-
 #define FEATURE_dispatch                  1
 #define FEATURE_texgen                    1
 #define FEATURE_userclip                  1

@@ -34,7 +34,6 @@ list(APPEND SOURCE
     getstring.c
     hash.c
     hint.c
-    #histogram.c
     image.c
     imports.c
     light.c
@@ -66,7 +65,6 @@ list(APPEND SOURCE
     texstate.c
     texstorage.c
     texstore.c
-    texturebarrier.c
     varray.c
     version.c
     viewport.c

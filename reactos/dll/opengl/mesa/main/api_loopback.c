@@ -991,113 +991,6 @@ loopback_VertexAttrib4ubvNV(GLuint index, const GLubyte *v)
 }
 
 
-static void GLAPIENTRY
-loopback_VertexAttribs1svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib1svNV(index + i, v + i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs1fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB1NV(index + i, v[i]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs1dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib1dvNV(index + i, v + i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs2svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib2svNV(index + i, v + 2 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs2fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB2NV(index + i, v[2 * i], v[2 * i + 1]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs2dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib2dvNV(index + i, v + 2 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs3svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib3svNV(index + i, v + 3 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs3fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB3NV(index + i, v[3 * i], v[3 * i + 1], v[3 * i + 2]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs3dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib3dvNV(index + i, v + 3 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib4svNV(index + i, v + 4 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB4NV(index + i, v[4 * i], v[4 * i + 1], v[4 * i + 2], v[4 * i + 3]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib4dvNV(index + i, v + 4 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4ubvNV(GLuint index, GLsizei n, const GLubyte *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib4ubvNV(index + i, v + 4 * i);
-}
-
-
-
-
 /*
  * This code never registers handlers for any of the entry points
  * listed in vtxfmt.h.
@@ -1246,19 +1139,6 @@ _mesa_loopback_init_api_table( struct _glapi_table *dest )
    SET_VertexAttrib4svNV(dest, loopback_VertexAttrib4svNV);
    SET_VertexAttrib4dvNV(dest, loopback_VertexAttrib4dvNV);
    SET_VertexAttrib4ubvNV(dest, loopback_VertexAttrib4ubvNV);
-   SET_VertexAttribs1svNV(dest, loopback_VertexAttribs1svNV);
-   SET_VertexAttribs1fvNV(dest, loopback_VertexAttribs1fvNV);
-   SET_VertexAttribs1dvNV(dest, loopback_VertexAttribs1dvNV);
-   SET_VertexAttribs2svNV(dest, loopback_VertexAttribs2svNV);
-   SET_VertexAttribs2fvNV(dest, loopback_VertexAttribs2fvNV);
-   SET_VertexAttribs2dvNV(dest, loopback_VertexAttribs2dvNV);
-   SET_VertexAttribs3svNV(dest, loopback_VertexAttribs3svNV);
-   SET_VertexAttribs3fvNV(dest, loopback_VertexAttribs3fvNV);
-   SET_VertexAttribs3dvNV(dest, loopback_VertexAttribs3dvNV);
-   SET_VertexAttribs4svNV(dest, loopback_VertexAttribs4svNV);
-   SET_VertexAttribs4fvNV(dest, loopback_VertexAttribs4fvNV);
-   SET_VertexAttribs4dvNV(dest, loopback_VertexAttribs4dvNV);
-   SET_VertexAttribs4ubvNV(dest, loopback_VertexAttribs4ubvNV);
 }
 
 

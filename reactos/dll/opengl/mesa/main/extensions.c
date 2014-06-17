@@ -99,7 +99,6 @@ static const struct extension extension_table[] = {
    { "GL_EXT_shadow_funcs",                        o(EXT_shadow_funcs),                        2002 },
    { "GL_EXT_stencil_wrap",                        o(dummy_true),                              2002 },
    { "GL_EXT_subtexture",                          o(dummy_true),                              1995 },
-   { "GL_EXT_texture3D",                           o(EXT_texture3D),                           1996 },
    { "GL_EXT_texture_cube_map",                    o(ARB_texture_cube_map),                    2001 },
    { "GL_EXT_texture_env_add",                     o(dummy_true),                              1999 },
    { "GL_EXT_texture_env_combine",                 o(dummy_true),                              2000 },
@@ -127,7 +126,6 @@ static const struct extension extension_table[] = {
    { "GL_NV_light_max_exponent",                   o(NV_light_max_exponent),                   1999 },
    { "GL_NV_point_sprite",                         o(NV_point_sprite),                         2001 },
    { "GL_NV_texgen_reflection",                    o(NV_texgen_reflection),                    1999 },
-   { "GL_NV_texture_barrier",                      o(NV_texture_barrier),                      2009 },
    { "GL_NV_texture_env_combine4",                 o(NV_texture_env_combine4),                 1999 },
 
    { 0, 0, 0},
@@ -175,7 +173,6 @@ static const size_t default_extensions[] = {
    o(EXT_packed_pixels),
    o(EXT_rescale_normal),
    o(EXT_separate_specular_color),
-   o(EXT_texture3D),
 
    /* Vendor Extensions */
    o(APPLE_packed_pixels),

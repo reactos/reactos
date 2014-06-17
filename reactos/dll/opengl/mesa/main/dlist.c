@@ -193,7 +193,6 @@ typedef enum
    OPCODE_FRONT_FACE,
    OPCODE_FRUSTUM,
    OPCODE_HINT,
-   OPCODE_HISTOGRAM,
    OPCODE_INDEX_MASK,
    OPCODE_INIT_NAMES,
    OPCODE_LIGHT,
@@ -210,7 +209,6 @@ typedef enum
    OPCODE_MAPGRID1,
    OPCODE_MAPGRID2,
    OPCODE_MATRIX_MODE,
-   OPCODE_MIN_MAX,
    OPCODE_MULT_MATRIX,
    OPCODE_ORTHO,
    OPCODE_PASSTHROUGH,
@@ -231,8 +229,6 @@ typedef enum
    OPCODE_PUSH_NAME,
    OPCODE_RASTER_POS,
    OPCODE_READ_BUFFER,
-   OPCODE_RESET_HISTOGRAM,
-   OPCODE_RESET_MIN_MAX,
    OPCODE_ROTATE,
    OPCODE_SCALE,
    OPCODE_SCISSOR,
@@ -280,9 +276,6 @@ typedef enum
    OPCODE_CLEARCOLOR_UI,
    OPCODE_TEXPARAMETER_I,
    OPCODE_TEXPARAMETER_UI,
-
-   /* GL_NV_texture_barrier */
-   OPCODE_TEXTURE_BARRIER_NV,
 
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
@@ -1900,27 +1893,6 @@ save_Hint(GLenum target, GLenum mode)
 
 
 static void GLAPIENTRY
-save_Histogram(GLenum target, GLsizei width, GLenum internalFormat,
-               GLboolean sink)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_HISTOGRAM, 4);
-   if (n) {
-      n[1].e = target;
-      n[2].i = width;
-      n[3].e = internalFormat;
-      n[4].b = sink;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_Histogram(ctx->Exec, (target, width, internalFormat, sink));
-   }
-}
-
-
-static void GLAPIENTRY
 save_IndexMask(GLuint mask)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -2432,25 +2404,6 @@ save_MatrixMode(GLenum mode)
    }
    if (ctx->ExecuteFlag) {
       CALL_MatrixMode(ctx->Exec, (mode));
-   }
-}
-
-
-static void GLAPIENTRY
-save_Minmax(GLenum target, GLenum internalFormat, GLboolean sink)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_MIN_MAX, 3);
-   if (n) {
-      n[1].e = target;
-      n[2].e = internalFormat;
-      n[3].b = sink;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_Minmax(ctx->Exec, (target, internalFormat, sink));
    }
 }
 
@@ -3032,38 +2985,6 @@ save_ReadBuffer(GLenum mode)
    }
    if (ctx->ExecuteFlag) {
       CALL_ReadBuffer(ctx->Exec, (mode));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ResetHistogram(GLenum target)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_RESET_HISTOGRAM, 1);
-   if (n) {
-      n[1].e = target;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ResetHistogram(ctx->Exec, (target));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ResetMinmax(GLenum target)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_RESET_MIN_MAX, 1);
-   if (n) {
-      n[1].e = target;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ResetMinmax(ctx->Exec, (target));
    }
 }
 
@@ -3799,69 +3720,6 @@ save_SampleCoverageARB(GLclampf value, GLboolean invert)
 }
 
 
-/*
- * GL_NV_vertex_program
- */
-
-#if FEATURE_NV_fragment_program
-static void GLAPIENTRY
-save_ProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte * name,
-                               GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-
-   n = alloc_instruction(ctx, OPCODE_PROGRAM_NAMED_PARAMETER_NV, 6);
-   if (n) {
-      GLubyte *nameCopy = (GLubyte *) malloc(len);
-      if (!nameCopy) {
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glProgramNamedParameter4fNV");
-         return;
-      }
-      memcpy(nameCopy, name, len);
-      n[1].ui = id;
-      n[2].i = len;
-      n[3].data = nameCopy;
-      n[4].f = x;
-      n[5].f = y;
-      n[6].f = z;
-      n[7].f = w;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ProgramNamedParameter4fNV(ctx->Exec, (id, len, name, x, y, z, w));
-   }
-}
-
-static void GLAPIENTRY
-save_ProgramNamedParameter4fvNV(GLuint id, GLsizei len, const GLubyte * name,
-                                const float v[])
-{
-   save_ProgramNamedParameter4fNV(id, len, name, v[0], v[1], v[2], v[3]);
-}
-
-
-static void GLAPIENTRY
-save_ProgramNamedParameter4dNV(GLuint id, GLsizei len, const GLubyte * name,
-                               GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-   save_ProgramNamedParameter4fNV(id, len, name, (GLfloat) x, (GLfloat) y,
-                                  (GLfloat) z, (GLfloat) w);
-}
-
-
-static void GLAPIENTRY
-save_ProgramNamedParameter4dvNV(GLuint id, GLsizei len, const GLubyte * name,
-                                const double v[])
-{
-   save_ProgramNamedParameter4fNV(id, len, name, (GLfloat) v[0],
-                                  (GLfloat) v[1], (GLfloat) v[2],
-                                  (GLfloat) v[3]);
-}
-#endif
-
-
 /* GL_EXT_depth_bounds_test */
 static void GLAPIENTRY
 save_DepthBoundsEXT(GLclampd zmin, GLclampd zmax)
@@ -4555,19 +4413,6 @@ exec_GetTexParameterIuiv(GLenum target, GLenum pname, GLuint *params)
    CALL_GetTexParameterIuivEXT(ctx->Exec, (target, pname, params));
 }
 
-
-/* GL_NV_texture_barrier */
-static void GLAPIENTRY
-save_TextureBarrierNV(void)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   alloc_instruction(ctx, OPCODE_TEXTURE_BARRIER_NV, 0);
-   if (ctx->ExecuteFlag) {
-      CALL_TextureBarrierNV(ctx->Exec, ());
-   }
-}
-
 /**
  * Save an error-generating command into display list.
  *
@@ -4924,9 +4769,6 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_HINT:
             CALL_Hint(ctx->Exec, (n[1].e, n[2].e));
             break;
-         case OPCODE_HISTOGRAM:
-            CALL_Histogram(ctx->Exec, (n[1].e, n[2].i, n[3].e, n[4].b));
-            break;
          case OPCODE_INDEX_MASK:
             CALL_IndexMask(ctx->Exec, (n[1].ui));
             break;
@@ -5021,9 +4863,6 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_MATRIX_MODE:
             CALL_MatrixMode(ctx->Exec, (n[1].e));
             break;
-         case OPCODE_MIN_MAX:
-            CALL_Minmax(ctx->Exec, (n[1].e, n[2].e, n[3].b));
-            break;
          case OPCODE_MULT_MATRIX:
             if (sizeof(Node) == sizeof(GLfloat)) {
                CALL_MultMatrixf(ctx->Exec, (&n[1].f));
@@ -5106,12 +4945,6 @@ execute_list(struct gl_context *ctx, GLuint list)
             break;
          case OPCODE_READ_BUFFER:
             CALL_ReadBuffer(ctx->Exec, (n[1].e));
-            break;
-         case OPCODE_RESET_HISTOGRAM:
-            CALL_ResetHistogram(ctx->Exec, (n[1].e));
-            break;
-         case OPCODE_RESET_MIN_MAX:
-            CALL_ResetMinmax(ctx->Exec, (n[1].e));
             break;
          case OPCODE_ROTATE:
             CALL_Rotatef(ctx->Exec, (n[1].f, n[2].f, n[3].f, n[4].f));
@@ -5232,38 +5065,6 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_WINDOW_POS_ARB:   /* GL_ARB_window_pos */
             CALL_WindowPos3fMESA(ctx->Exec, (n[1].f, n[2].f, n[3].f));
             break;
-#if FEATURE_NV_vertex_program
-         case OPCODE_EXECUTE_PROGRAM_NV:
-            {
-               GLfloat v[4];
-               v[0] = n[3].f;
-               v[1] = n[4].f;
-               v[2] = n[5].f;
-               v[3] = n[6].f;
-               CALL_ExecuteProgramNV(ctx->Exec, (n[1].e, n[2].ui, v));
-            }
-            break;
-         case OPCODE_REQUEST_RESIDENT_PROGRAMS_NV:
-            CALL_RequestResidentProgramsNV(ctx->Exec, (n[1].ui,
-                                                       (GLuint *) n[2].data));
-            break;
-         case OPCODE_LOAD_PROGRAM_NV:
-            CALL_LoadProgramNV(ctx->Exec, (n[1].e, n[2].ui, n[3].i,
-                                           (const GLubyte *) n[4].data));
-            break;
-         case OPCODE_TRACK_MATRIX_NV:
-            CALL_TrackMatrixNV(ctx->Exec, (n[1].e, n[2].ui, n[3].e, n[4].e));
-            break;
-#endif
-
-#if FEATURE_NV_fragment_program
-         case OPCODE_PROGRAM_NAMED_PARAMETER_NV:
-            CALL_ProgramNamedParameter4fNV(ctx->Exec, (n[1].ui, n[2].i,
-                                                       (const GLubyte *) n[3].
-                                                       data, n[4].f, n[5].f,
-                                                       n[6].f, n[7].f));
-            break;
-#endif
 
          case OPCODE_DEPTH_BOUNDS_EXT:
             CALL_DepthBoundsEXT(ctx->Exec, (n[1].f, n[2].f));
@@ -5357,10 +5158,6 @@ execute_list(struct gl_context *ctx, GLuint list)
                params[3] = n[6].ui;
                CALL_TexParameterIuivEXT(ctx->Exec, (n[1].e, n[2].e, params));
             }
-            break;
-
-         case OPCODE_TEXTURE_BARRIER_NV:
-            CALL_TextureBarrierNV(ctx->Exec, ());
             break;
 
          case OPCODE_CONTINUE:
@@ -6176,56 +5973,6 @@ exec_GetConvolutionParameteriv(GLenum target, GLenum pname, GLint *params)
 }
 
 static void GLAPIENTRY
-exec_GetHistogram(GLenum target, GLboolean reset, GLenum format,
-                  GLenum type, GLvoid *values)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetHistogram(ctx->Exec, (target, reset, format, type, values));
-}
-
-static void GLAPIENTRY
-exec_GetHistogramParameterfv(GLenum target, GLenum pname, GLfloat *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetHistogramParameterfv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
-exec_GetHistogramParameteriv(GLenum target, GLenum pname, GLint *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetHistogramParameteriv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
-exec_GetMinmax(GLenum target, GLboolean reset, GLenum format,
-               GLenum type, GLvoid *values)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetMinmax(ctx->Exec, (target, reset, format, type, values));
-}
-
-static void GLAPIENTRY
-exec_GetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetMinmaxParameterfv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
-exec_GetMinmaxParameteriv(GLenum target, GLenum pname, GLint *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetMinmaxParameteriv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
 exec_GetSeparableFilter(GLenum target, GLenum format, GLenum type,
                         GLvoid *row, GLvoid *column, GLvoid *span)
 {
@@ -6606,17 +6353,7 @@ _mesa_create_save_table(void)
    SET_GetConvolutionFilter(table, exec_GetConvolutionFilter);
    SET_GetConvolutionParameterfv(table, exec_GetConvolutionParameterfv);
    SET_GetConvolutionParameteriv(table, exec_GetConvolutionParameteriv);
-   SET_GetHistogram(table, exec_GetHistogram);
-   SET_GetHistogramParameterfv(table, exec_GetHistogramParameterfv);
-   SET_GetHistogramParameteriv(table, exec_GetHistogramParameteriv);
-   SET_GetMinmax(table, exec_GetMinmax);
-   SET_GetMinmaxParameterfv(table, exec_GetMinmaxParameterfv);
-   SET_GetMinmaxParameteriv(table, exec_GetMinmaxParameteriv);
    SET_GetSeparableFilter(table, exec_GetSeparableFilter);
-   SET_Histogram(table, save_Histogram);
-   SET_Minmax(table, save_Minmax);
-   SET_ResetHistogram(table, save_ResetHistogram);
-   SET_ResetMinmax(table, save_ResetMinmax);
    SET_SeparableFilter2D(table, exec_SeparableFilter2D);
 
    /* 2. GL_EXT_blend_color */
@@ -6696,36 +6433,6 @@ _mesa_create_save_table(void)
    SET_MultiModeDrawArraysIBM(table, exec_MultiModeDrawArraysIBM);
    SET_MultiModeDrawElementsIBM(table, exec_MultiModeDrawElementsIBM);
 
-#if FEATURE_NV_vertex_program
-   /* 233. GL_NV_vertex_program */
-   /* The following commands DO NOT go into display lists:
-    * AreProgramsResidentNV, IsProgramNV, GenProgramsNV, DeleteProgramsNV,
-    * VertexAttribPointerNV, GetProgram*, GetVertexAttrib*
-    */
-   SET_ExecuteProgramNV(table, save_ExecuteProgramNV);
-   SET_AreProgramsResidentNV(table, _mesa_AreProgramsResidentNV);
-   SET_RequestResidentProgramsNV(table, save_RequestResidentProgramsNV);
-   SET_GetProgramParameterfvNV(table, _mesa_GetProgramParameterfvNV);
-   SET_GetProgramParameterdvNV(table, _mesa_GetProgramParameterdvNV);
-   SET_GetTrackMatrixivNV(table, _mesa_GetTrackMatrixivNV);
-   SET_LoadProgramNV(table, save_LoadProgramNV);
-   SET_ProgramParameters4dvNV(table, save_ProgramParameters4dvNV);
-   SET_ProgramParameters4fvNV(table, save_ProgramParameters4fvNV);
-   SET_TrackMatrixNV(table, save_TrackMatrixNV);
-#endif
-
-   /* 282. GL_NV_fragment_program */
-#if FEATURE_NV_fragment_program
-   SET_ProgramNamedParameter4fNV(table, save_ProgramNamedParameter4fNV);
-   SET_ProgramNamedParameter4dNV(table, save_ProgramNamedParameter4dNV);
-   SET_ProgramNamedParameter4fvNV(table, save_ProgramNamedParameter4fvNV);
-   SET_ProgramNamedParameter4dvNV(table, save_ProgramNamedParameter4dvNV);
-   SET_GetProgramNamedParameterfvNV(table,
-                                    _mesa_GetProgramNamedParameterfvNV);
-   SET_GetProgramNamedParameterdvNV(table,
-                                    _mesa_GetProgramNamedParameterdvNV);
-#endif
-
    /* 262. GL_NV_point_sprite */
    SET_PointParameteriNV(table, save_PointParameteriNV);
    SET_PointParameterivNV(table, save_PointParameterivNV);
@@ -6772,9 +6479,6 @@ _mesa_create_save_table(void)
    SET_TexParameterIuivEXT(table, save_TexParameterIuiv);
    SET_GetTexParameterIivEXT(table, exec_GetTexParameterIiv);
    SET_GetTexParameterIuivEXT(table, exec_GetTexParameterIuiv);
-
-   /* GL_NV_texture_barrier */
-   SET_TextureBarrierNV(table, save_TextureBarrierNV);
 
    /* GL_ARB_texture_storage (no dlist support) */
    SET_TexStorage1D(table, _mesa_TexStorage1D);
