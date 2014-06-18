@@ -5336,7 +5336,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     ASSERT(Vad->StartingVpn << PAGE_SHIFT == (ULONG_PTR)MemoryArea->StartingAddress);
                     ASSERT((Vad->EndingVpn + 1) << PAGE_SHIFT == (ULONG_PTR)MemoryArea->EndingAddress);
                     Vad->EndingVpn = ((ULONG_PTR)StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->EndingAddress = (PVOID)(((Vad->EndingVpn + 1) << PAGE_SHIFT) - 1);
+                    MemoryArea->EndingAddress = (PVOID)(StartingAddress);
                 }
                 else
                 {
