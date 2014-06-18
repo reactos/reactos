@@ -439,7 +439,7 @@ BOOL sw_SetPixelFormat(HDC hdc, struct wgl_dc_data* dc_data, INT format)
     TRACE("OpenGL software implementation START!\n");
     
     /* allocate our structure */
-    fb = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(struct sw_framebuffer, bmi.bmiColors[2]));
+    fb = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(struct sw_framebuffer, bmi.bmiColors[3]));
     if(!fb)
     {
         ERR("HeapAlloc FAILED!\n");
