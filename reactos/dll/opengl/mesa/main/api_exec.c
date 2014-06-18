@@ -168,7 +168,6 @@ _mesa_create_exec_table(void)
    SET_ReadPixels(exec, _mesa_ReadPixels);
    SET_Rotated(exec, _mesa_Rotated);
    SET_Scaled(exec, _mesa_Scaled);
-   SET_SecondaryColorPointerEXT(exec, _mesa_SecondaryColorPointerEXT);
    SET_TexEnvf(exec, _mesa_TexEnvf);
    SET_TexEnviv(exec, _mesa_TexEnviv);
 
@@ -206,31 +205,9 @@ _mesa_create_exec_table(void)
    SET_VertexPointer(exec, _mesa_VertexPointer);
 #endif
 
-   /* OpenGL 1.2  GL_ARB_imaging */
-   SET_BlendColor(exec, _mesa_BlendColor);
-   SET_BlendEquation(exec, _mesa_BlendEquation);
-   SET_BlendEquationSeparateEXT(exec, _mesa_BlendEquationSeparateEXT);
-
-   _mesa_init_colortable_dispatch(exec);
-   _mesa_init_convolve_dispatch(exec);
-
-   /* 2. GL_EXT_blend_color */
-#if 0
-/*    SET_BlendColorEXT(exec, _mesa_BlendColorEXT); */
-#endif
-
    /* 3. GL_EXT_polygon_offset */
 #if _HAVE_FULL_GL
    SET_PolygonOffsetEXT(exec, _mesa_PolygonOffsetEXT);
-#endif
-
-   /* 14. SGI_color_table */
-#if 0
-   SET_ColorTableSGI(exec, _mesa_ColorTable);
-   SET_ColorSubTableSGI(exec, _mesa_ColorSubTable);
-   SET_GetColorTableSGI(exec, _mesa_GetColorTable);
-   SET_GetColorTableParameterfvSGI(exec, _mesa_GetColorTableParameterfv);
-   SET_GetColorTableParameterivSGI(exec, _mesa_GetColorTableParameteriv);
 #endif
 
    /* 30. GL_EXT_vertex_array */
@@ -243,11 +220,6 @@ _mesa_create_exec_table(void)
    SET_VertexPointerEXT(exec, _mesa_VertexPointerEXT);
 #endif
 
-   /* 37. GL_EXT_blend_minmax */
-#if 0
-   SET_BlendEquationEXT(exec, _mesa_BlendEquationEXT);
-#endif
-
    /* 54. GL_EXT_point_parameters */
 #if _HAVE_FULL_GL
    SET_PointParameterfEXT(exec, _mesa_PointParameterf);
@@ -258,11 +230,6 @@ _mesa_create_exec_table(void)
 #if _HAVE_FULL_GL
    SET_LockArraysEXT(exec, _mesa_LockArraysEXT);
    SET_UnlockArraysEXT(exec, _mesa_UnlockArraysEXT);
-#endif
-
-   /* 173. GL_INGR_blend_func_separate */
-#if _HAVE_FULL_GL
-   SET_BlendFuncSeparateEXT(exec, _mesa_BlendFuncSeparateEXT);
 #endif
 
    /* 197. GL_MESA_window_pos */
@@ -324,9 +291,6 @@ _mesa_create_exec_table(void)
    SET_GetTexParameterIuivEXT(exec, _mesa_GetTexParameterIuiv);
    SET_TexParameterIivEXT(exec, _mesa_TexParameterIiv);
    SET_TexParameterIuivEXT(exec, _mesa_TexParameterIuiv);
-
-   /* GL 3.0 (functions not covered by other extensions) */
-   SET_GetStringi(exec, _mesa_GetStringi);
 
    /* GL_ARB_texture_storage */
    SET_TexStorage1D(exec, _mesa_TexStorage1D);

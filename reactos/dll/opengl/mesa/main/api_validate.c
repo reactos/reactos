@@ -219,67 +219,6 @@ _mesa_validate_DrawElements(struct gl_context *ctx,
 
 
 /**
- * Error checking for glDrawRangeElements().  Includes parameter checking
- * and VBO bounds checking.
- * \return GL_TRUE if OK to render, GL_FALSE if error found
- */
-GLboolean
-_mesa_validate_DrawRangeElements(struct gl_context *ctx, GLenum mode,
-				 GLuint start, GLuint end,
-				 GLsizei count, GLenum type,
-				 const GLvoid *indices)
-{
-   ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, GL_FALSE);
-
-   if (count <= 0) {
-      if (count < 0)
-	 _mesa_error(ctx, GL_INVALID_VALUE, "glDrawRangeElements(count)" );
-      return GL_FALSE;
-   }
-
-   if (!_mesa_valid_prim_mode(ctx, mode)) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glDrawRangeElements(mode)" );
-      return GL_FALSE;
-   }
-
-   if (end < start) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glDrawRangeElements(end<start)");
-      return GL_FALSE;
-   }
-
-   if (type != GL_UNSIGNED_INT &&
-       type != GL_UNSIGNED_BYTE &&
-       type != GL_UNSIGNED_SHORT) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glDrawRangeElements(type)" );
-      return GL_FALSE;
-   }
-
-   if (!check_valid_to_render(ctx, "glDrawRangeElements"))
-      return GL_FALSE;
-
-   /* Vertex buffer object tests */
-   if (_mesa_is_bufferobj(ctx->Array.ElementArrayBufferObj)) {
-      /* use indices in the buffer object */
-      /* make sure count doesn't go outside buffer bounds */
-      if (index_bytes(type, count) > ctx->Array.ElementArrayBufferObj->Size) {
-         _mesa_warning(ctx, "glDrawRangeElements index out of buffer bounds");
-         return GL_FALSE;
-      }
-   }
-   else {
-      /* not using a VBO */
-      if (!indices)
-         return GL_FALSE;
-   }
-
-   if (!check_index_bounds(ctx, count, type, indices))
-      return GL_FALSE;
-
-   return GL_TRUE;
-}
-
-
-/**
  * Called from the tnl module to error check the function parameters and
  * verify that we really can draw something.
  * \return GL_TRUE if OK to render, GL_FALSE if error found

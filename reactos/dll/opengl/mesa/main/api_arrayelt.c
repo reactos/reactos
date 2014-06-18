@@ -157,7 +157,6 @@ static const int NormalFuncs[NUM_TYPES] = {
 };
 
 /* Note: _gloffset_* for these may not be a compile-time constant. */
-static int SecondaryColorFuncs[NUM_TYPES];
 static int FogCoordFuncs[NUM_TYPES];
 
 
@@ -673,16 +672,6 @@ GLboolean _ae_create_context( struct gl_context *ctx )
    if (ctx->aelt_context)
       return GL_TRUE;
 
-   /* These _gloffset_* values may not be compile-time constants */
-   SecondaryColorFuncs[0] = _gloffset_SecondaryColor3bvEXT;
-   SecondaryColorFuncs[1] = _gloffset_SecondaryColor3ubvEXT;
-   SecondaryColorFuncs[2] = _gloffset_SecondaryColor3svEXT;
-   SecondaryColorFuncs[3] = _gloffset_SecondaryColor3usvEXT;
-   SecondaryColorFuncs[4] = _gloffset_SecondaryColor3ivEXT;
-   SecondaryColorFuncs[5] = _gloffset_SecondaryColor3uivEXT;
-   SecondaryColorFuncs[6] = _gloffset_SecondaryColor3fvEXT;
-   SecondaryColorFuncs[7] = _gloffset_SecondaryColor3dvEXT;
-
    FogCoordFuncs[0] = -1;
    FogCoordFuncs[1] = -1;
    FogCoordFuncs[2] = -1;
@@ -756,15 +745,9 @@ static void _ae_update_state( struct gl_context *ctx )
       check_vbo(actx, aa->array->BufferObj);
       aa++;
    }
-   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0].Enabled) {
-      aa->array = &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0];
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR].Enabled) {
+      aa->array = &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR];
       aa->offset = ColorFuncs[aa->array->Size-3][TYPE_IDX(aa->array->Type)];
-      check_vbo(actx, aa->array->BufferObj);
-      aa++;
-   }
-   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1].Enabled) {
-      aa->array = &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1];
-      aa->offset = SecondaryColorFuncs[TYPE_IDX(aa->array->Type)];
       check_vbo(actx, aa->array->BufferObj);
       aa++;
    }

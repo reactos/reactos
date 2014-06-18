@@ -487,33 +487,6 @@ pixel_point(struct gl_context *ctx, const SWvertex *vert)
 
 
 /**
- * Add specular color to primary color, draw point, restore original
- * primary color.
- */
-void
-_swrast_add_spec_terms_point(struct gl_context *ctx, const SWvertex *v0)
-{
-   SWvertex *ncv0 = (SWvertex *) v0; /* cast away const */
-   GLfloat rSum, gSum, bSum;
-   GLchan cSave[4];
-
-   /* save */
-   COPY_CHAN4(cSave, ncv0->color);
-   /* sum */
-   rSum = CHAN_TO_FLOAT(ncv0->color[0]) + ncv0->attrib[FRAG_ATTRIB_COL1][0];
-   gSum = CHAN_TO_FLOAT(ncv0->color[1]) + ncv0->attrib[FRAG_ATTRIB_COL1][1];
-   bSum = CHAN_TO_FLOAT(ncv0->color[2]) + ncv0->attrib[FRAG_ATTRIB_COL1][2];
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[0], rSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[1], gSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[2], bSum);
-   /* draw */
-   SWRAST_CONTEXT(ctx)->SpecPoint(ctx, ncv0);
-   /* restore */
-   COPY_CHAN4(ncv0->color, cSave);
-}
-
-
-/**
  * Examine current state to determine which point drawing function to use.
  */
 void

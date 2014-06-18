@@ -250,7 +250,6 @@ static void bind_inputs( struct gl_context *ctx,
    /* These should perhaps be part of _TNL_ATTRIB_* */
    VB->BackfaceColorPtr = NULL;
    VB->BackfaceIndexPtr = NULL;
-   VB->BackfaceSecondaryColorPtr = NULL;
 
    /* Clipping and drawing code still requires this to be a packed
     * array of ubytes which can be written into.  TODO: Fix and

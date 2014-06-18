@@ -43,24 +43,6 @@ _mesa_BlendFunc( GLenum sfactor, GLenum dfactor );
 
 
 extern void GLAPIENTRY
-_mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
-                            GLenum sfactorA, GLenum dfactorA );
-
-
-extern void GLAPIENTRY
-_mesa_BlendEquation( GLenum mode );
-
-
-
-extern void GLAPIENTRY
-_mesa_BlendEquationSeparateEXT( GLenum modeRGB, GLenum modeA );
-
-
-extern void GLAPIENTRY
-_mesa_BlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-
-
-extern void GLAPIENTRY
 _mesa_AlphaFunc( GLenum func, GLclampf ref );
 
 

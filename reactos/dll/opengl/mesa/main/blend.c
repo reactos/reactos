@@ -97,34 +97,19 @@ legal_dst_factor(const struct gl_context *ctx, GLenum factor)
  */
 static GLboolean
 validate_blend_factors(struct gl_context *ctx, const char *func,
-                       GLenum sfactorRGB, GLenum dfactorRGB,
-                       GLenum sfactorA, GLenum dfactorA)
+                       GLenum srcfactor, GLenum dstfactor)
 {
-   if (!legal_src_factor(ctx, sfactorRGB)) {
+   if (!legal_src_factor(ctx, srcfactor)) {
       _mesa_error(ctx, GL_INVALID_ENUM,
                   "%s(sfactorRGB = %s)", func,
-                  _mesa_lookup_enum_by_nr(sfactorRGB));
+                  _mesa_lookup_enum_by_nr(srcfactor));
       return GL_FALSE;
    }
 
-   if (!legal_dst_factor(ctx, dfactorRGB)) {
+   if (!legal_dst_factor(ctx, dstfactor)) {
       _mesa_error(ctx, GL_INVALID_ENUM,
                   "%s(dfactorRGB = %s)", func,
-                  _mesa_lookup_enum_by_nr(dfactorRGB));
-      return GL_FALSE;
-   }
-
-   if (sfactorA != sfactorRGB && !legal_src_factor(ctx, sfactorA)) {
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "%s(sfactorA = %s)", func,
-                  _mesa_lookup_enum_by_nr(sfactorA));
-      return GL_FALSE;
-   }
-
-   if (dfactorA != dfactorRGB && !legal_dst_factor(ctx, dfactorA)) {
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "%s(dfactorA = %s)", func,
-                  _mesa_lookup_enum_by_nr(dfactorA));
+                  _mesa_lookup_enum_by_nr(dstfactor));
       return GL_FALSE;
    }
 
@@ -138,190 +123,32 @@ validate_blend_factors(struct gl_context *ctx, const char *func,
  * \param sfactor source factor operator.
  * \param dfactor destination factor operator.
  *
- * \sa glBlendFunc, glBlendFuncSeparateEXT
+ * \sa glBlendFunc
  */
 void GLAPIENTRY
 _mesa_BlendFunc( GLenum sfactor, GLenum dfactor )
 {
-   _mesa_BlendFuncSeparateEXT(sfactor, dfactor, sfactor, dfactor);
-}
-
-
-/**
- * Set the separate blend source/dest factors for all draw buffers.
- *
- * \param sfactorRGB RGB source factor operator.
- * \param dfactorRGB RGB destination factor operator.
- * \param sfactorA alpha source factor operator.
- * \param dfactorA alpha destination factor operator.
- */
-void GLAPIENTRY
-_mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
-                            GLenum sfactorA, GLenum dfactorA )
-{
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(ctx, "glBlendFuncSeparate %s %s %s %s\n",
-                  _mesa_lookup_enum_by_nr(sfactorRGB),
-                  _mesa_lookup_enum_by_nr(dfactorRGB),
-                  _mesa_lookup_enum_by_nr(sfactorA),
-                  _mesa_lookup_enum_by_nr(dfactorA));
+      _mesa_debug(ctx, "glBlendFunc %s %s\n",
+                  _mesa_lookup_enum_by_nr(sfactor),
+                  _mesa_lookup_enum_by_nr(dfactor));
 
-   if (!validate_blend_factors(ctx, "glBlendFuncSeparate",
-                               sfactorRGB, dfactorRGB,
-                               sfactorA, dfactorA)) {
+   if (!validate_blend_factors(ctx, "glBlendFunc", sfactor, dfactor)) {
       return;
    }
 
-   if (ctx->Color.SrcRGB == sfactorRGB &&
-       ctx->Color.DstRGB == dfactorRGB &&
-       ctx->Color.SrcA == sfactorA &&
-       ctx->Color.DstA == dfactorA) {
+   if (ctx->Color.SrcFactor == sfactor &&
+       ctx->Color.DstFactor == dfactor) {
       return;
    }
 
    FLUSH_VERTICES(ctx, _NEW_COLOR);
 
-   ctx->Color.SrcRGB = sfactorRGB;
-   ctx->Color.DstRGB = dfactorRGB;
-   ctx->Color.SrcA = sfactorA;
-   ctx->Color.DstA = dfactorA;
-   if (ctx->Driver.BlendFuncSeparate) {
-      ctx->Driver.BlendFuncSeparate(ctx, sfactorRGB, dfactorRGB,
-                                    sfactorA, dfactorA);
-   }
-}
-
-
-#if _HAVE_FULL_GL
-/**
- * Check if given blend equation is legal.
- * \return GL_TRUE if legal, GL_FALSE otherwise.
- */
-static GLboolean
-legal_blend_equation(const struct gl_context *ctx, GLenum mode)
-{
-   switch (mode) {
-   case GL_FUNC_ADD:
-   case GL_FUNC_SUBTRACT:
-   case GL_FUNC_REVERSE_SUBTRACT:
-      return GL_TRUE;
-   case GL_MIN:
-   case GL_MAX:
-      return ctx->Extensions.EXT_blend_minmax;
-   default:
-      return GL_FALSE;
-   }
-}
-
-
-/* This is really an extension function! */
-void GLAPIENTRY
-_mesa_BlendEquation( GLenum mode )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(ctx, "glBlendEquation(%s)\n",
-                  _mesa_lookup_enum_by_nr(mode));
-
-   if (!legal_blend_equation(ctx, mode)) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquation");
-      return;
-   }
-
-   if (ctx->Color.EquationRGB == mode && ctx->Color.EquationA == mode) {
-      return;
-   }
-
-   FLUSH_VERTICES(ctx, _NEW_COLOR);
-   ctx->Color.EquationRGB = mode;
-   ctx->Color.EquationA = mode;
-
-   if (ctx->Driver.BlendEquationSeparate)
-      (*ctx->Driver.BlendEquationSeparate)( ctx, mode, mode );
-}
-
-void GLAPIENTRY
-_mesa_BlendEquationSeparateEXT( GLenum modeRGB, GLenum modeA )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(ctx, "glBlendEquationSeparateEXT(%s %s)\n",
-                  _mesa_lookup_enum_by_nr(modeRGB),
-                  _mesa_lookup_enum_by_nr(modeA));
-
-   if ( (modeRGB != modeA) && !ctx->Extensions.EXT_blend_equation_separate ) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-		  "glBlendEquationSeparateEXT not supported by driver");
-      return;
-   }
-
-   if (!legal_blend_equation(ctx, modeRGB)) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparateEXT(modeRGB)");
-      return;
-   }
-
-   if (!legal_blend_equation(ctx, modeA)) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparateEXT(modeA)");
-      return;
-   }
-
-   if (ctx->Color.EquationRGB == modeRGB && ctx->Color.EquationA == modeA) {
-      return;
-   }
-   
-   FLUSH_VERTICES(ctx, _NEW_COLOR);
-   ctx->Color.EquationRGB = modeRGB;
-   ctx->Color.EquationA = modeA;
-
-   if (ctx->Driver.BlendEquationSeparate)
-      ctx->Driver.BlendEquationSeparate(ctx, modeRGB, modeA);
-}
-
-
-#endif /* _HAVE_FULL_GL */
-
-
-/**
- * Set the blending color.
- *
- * \param red red color component.
- * \param green green color component.
- * \param blue blue color component.
- * \param alpha alpha color component.
- *
- * \sa glBlendColor().
- *
- * Clamps the parameters and updates gl_colorbuffer_attrib::BlendColor.  On a
- * change, flushes the vertices and notifies the driver via
- * dd_function_table::BlendColor callback.
- */
-void GLAPIENTRY
-_mesa_BlendColor( GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha )
-{
-   GLfloat tmp[4];
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   tmp[0] = red;
-   tmp[1] = green;
-   tmp[2] = blue;
-   tmp[3] = alpha;
-
-   if (TEST_EQ_4V(tmp, ctx->Color.BlendColor))
-      return;
-
-   FLUSH_VERTICES(ctx, _NEW_COLOR);
-   COPY_4FV( ctx->Color.BlendColor, tmp );
-
-   if (ctx->Driver.BlendColor)
-      (*ctx->Driver.BlendColor)(ctx, ctx->Color.BlendColor);
+   ctx->Color.SrcFactor = sfactor;
+   ctx->Color.DstFactor = dfactor;
 }
 
 
@@ -507,13 +334,8 @@ void _mesa_init_color( struct gl_context * ctx )
    ctx->Color.AlphaFunc = GL_ALWAYS;
    ctx->Color.AlphaRef = 0;
    ctx->Color.BlendEnabled = 0x0;
-   ctx->Color.SrcRGB = GL_ONE;
-   ctx->Color.DstRGB = GL_ZERO;
-   ctx->Color.SrcA = GL_ONE;
-   ctx->Color.DstA = GL_ZERO;
-   ctx->Color.EquationRGB = GL_FUNC_ADD;
-   ctx->Color.EquationA = GL_FUNC_ADD;
-   ASSIGN_4V( ctx->Color.BlendColor, 0.0, 0.0, 0.0, 0.0 );
+   ctx->Color.SrcFactor = GL_ONE;
+   ctx->Color.DstFactor = GL_ZERO;
    ctx->Color.IndexLogicOpEnabled = GL_FALSE;
    ctx->Color.ColorLogicOpEnabled = GL_FALSE;
    ctx->Color.LogicOp = GL_COPY;

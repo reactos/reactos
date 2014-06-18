@@ -153,18 +153,6 @@ NAME( struct gl_context *ctx, const SWvertex *vert0, const SWvertex *vert1 )
    if (dx == 0 && dy == 0)
       return;
 
-   /*
-   printf("%s %d,%d  %g %g %g %g  %g %g %g %g\n", __FUNCTION__, dx, dy,
-          vert0->attrib[FRAG_ATTRIB_COL1][0],
-          vert0->attrib[FRAG_ATTRIB_COL1][1],
-          vert0->attrib[FRAG_ATTRIB_COL1][2],
-          vert0->attrib[FRAG_ATTRIB_COL1][3],
-          vert1->attrib[FRAG_ATTRIB_COL1][0],
-          vert1->attrib[FRAG_ATTRIB_COL1][1],
-          vert1->attrib[FRAG_ATTRIB_COL1][2],
-          vert1->attrib[FRAG_ATTRIB_COL1][3]);
-   */
-
 #ifdef DEPTH_TYPE
    zPtr = (DEPTH_TYPE *) _swrast_pixel_address(zrb, x0, y0);
 #endif

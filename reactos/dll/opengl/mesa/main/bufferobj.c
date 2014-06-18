@@ -55,8 +55,6 @@ static inline struct gl_buffer_object **
 get_buffer_target(struct gl_context *ctx, GLenum target)
 {
    switch (target) {
-   case GL_ARRAY_BUFFER_ARB:
-      return &ctx->Array.ArrayBufferObj;
    case GL_ELEMENT_ARRAY_BUFFER_ARB:
       return &ctx->Array.ElementArrayBufferObj;
    default:
@@ -474,16 +472,6 @@ _mesa_init_buffer_objects( struct gl_context *ctx )
    memset(&DummyBufferObject, 0, sizeof(DummyBufferObject));
    _glthread_INIT_MUTEX(DummyBufferObject.Mutex);
    DummyBufferObject.RefCount = 1000*1000*1000; /* never delete */
-
-   _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj,
-                                 ctx->Shared->NullBufferObj);
-}
-
-
-void
-_mesa_free_buffer_objects( struct gl_context *ctx )
-{
-   _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj, NULL);
 }
 
 
@@ -674,9 +662,6 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
             unbind(ctx, &ctx->Array.VertexAttrib[j].BufferObj, bufObj);
          }
 
-         if (ctx->Array.ArrayBufferObj == bufObj) {
-            _mesa_BindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
-         }
          if (ctx->Array.ElementArrayBufferObj == bufObj) {
             _mesa_BindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
          }

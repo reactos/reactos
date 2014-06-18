@@ -1065,8 +1065,7 @@ void _tnl_generic_copy_pv( struct gl_context *ctx, GLuint edst, GLuint esrc )
    GLuint j;
 
    for (j = 0; j < attr_count; j++) {
-      if (a[j].attrib == VERT_ATTRIB_COLOR0 ||
-	  a[j].attrib == VERT_ATTRIB_COLOR1) {
+      if (a[j].attrib == VERT_ATTRIB_COLOR) {
 
 	 memcpy( vdst + a[j].vertoffset,
                  vsrc + a[j].vertoffset,
@@ -1099,15 +1098,6 @@ void _tnl_generic_interp_extras( struct gl_context *ctx,
 		 VB->BackfaceColorPtr->data[out],
 		 VB->BackfaceColorPtr->data[in] );
    }
-
-   if (VB->BackfaceSecondaryColorPtr) {
-      assert(VB->BackfaceSecondaryColorPtr->stride == 4 * sizeof(GLfloat));
-      
-      INTERP_3F( t,
-		 VB->BackfaceSecondaryColorPtr->data[dst],
-		 VB->BackfaceSecondaryColorPtr->data[out],
-		 VB->BackfaceSecondaryColorPtr->data[in] );
-   }
    
    if (VB->BackfaceIndexPtr) {
       VB->BackfaceIndexPtr->data[dst][0] = LINTERP( t,
@@ -1132,11 +1122,6 @@ void _tnl_generic_copy_pv_extras( struct gl_context *ctx,
    if (VB->BackfaceColorPtr && VB->BackfaceColorPtr->stride) {
       COPY_4FV( VB->BackfaceColorPtr->data[dst],
 		VB->BackfaceColorPtr->data[src] );
-   }
-
-   if (VB->BackfaceSecondaryColorPtr) {
-      COPY_4FV( VB->BackfaceSecondaryColorPtr->data[dst],
-		VB->BackfaceSecondaryColorPtr->data[src] );
    }
 
    if (VB->BackfaceIndexPtr) {

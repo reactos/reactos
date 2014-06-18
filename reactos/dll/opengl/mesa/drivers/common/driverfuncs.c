@@ -100,9 +100,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
 
    /* simple state commands */
    driver->AlphaFunc = NULL;
-   driver->BlendColor = NULL;
-   driver->BlendEquationSeparate = NULL;
-   driver->BlendFuncSeparate = NULL;
    driver->ClearColor = NULL;
    driver->ClearDepth = NULL;
    driver->ClearStencil = NULL;

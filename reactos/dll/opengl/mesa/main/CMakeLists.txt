@@ -11,9 +11,7 @@ list(APPEND SOURCE
     buffers.c
     clear.c
     clip.c
-    colortab.c
     context.c
-    convolve.c
     cpuinfo.c
     depth.c
     dlist.c

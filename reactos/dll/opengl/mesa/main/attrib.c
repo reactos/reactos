@@ -723,25 +723,7 @@ _mesa_PopAttrib(void)
                   _mesa_set_enable(ctx, GL_BLEND, (color->BlendEnabled & 1));
                }
                /* set same blend modes for all buffers */
-               _mesa_BlendFuncSeparateEXT(color->SrcRGB,
-                                          color->DstRGB,
-                                          color->SrcA,
-                                          color->DstA);
-               /* This special case is because glBlendEquationSeparateEXT
-                * cannot take GL_LOGIC_OP as a parameter.
-                */
-               if (color->EquationRGB == color->EquationA) {
-                  _mesa_BlendEquation(color->EquationRGB);
-               }
-               else {
-                  _mesa_BlendEquationSeparateEXT(
-                                              color->EquationRGB,
-                                              color->EquationA);
-               }
-               _mesa_BlendColor(color->BlendColor[0],
-                                color->BlendColor[1],
-                                color->BlendColor[2],
-                                color->BlendColor[3]);
+               _mesa_BlendFunc(color->SrcFactor, color->DstFactor);
                _mesa_LogicOp(color->LogicOp);
                _mesa_set_enable(ctx, GL_COLOR_LOGIC_OP,
                                 color->ColorLogicOpEnabled);
@@ -856,8 +838,6 @@ _mesa_PopAttrib(void)
                                  (GLfloat) light->Model.LocalViewer);
                _mesa_LightModelf(GL_LIGHT_MODEL_TWO_SIDE,
                                  (GLfloat) light->Model.TwoSide);
-               _mesa_LightModelf(GL_LIGHT_MODEL_COLOR_CONTROL,
-                                 (GLfloat) light->Model.ColorControl);
                /* shade model */
                _mesa_ShadeModel(light->ShadeModel);
                /* color material */
@@ -1063,33 +1043,30 @@ copy_pixelstore(struct gl_context *ctx,
 static void
 copy_array_attrib(struct gl_context *ctx,
                   struct gl_array_attrib *dest,
-                  struct gl_array_attrib *src,
-                  GLboolean vbo_deleted)
+                  struct gl_array_attrib *src)
 {
-   /* skip ArrayObj */
-   /* skip DefaultArrayObj, Objects */
-   dest->LockFirst = src->LockFirst;
-   dest->LockCount = src->LockCount;
-   /* skip NewState */
-   /* skip RebindArrays */
+    GLuint i;
 
-    if (!vbo_deleted)
-    {
-        GLuint i;
+    /* skip ArrayObj */
+    /* skip DefaultArrayObj, Objects */
+    dest->LockFirst = src->LockFirst;
+    dest->LockCount = src->LockCount;
+    /* skip NewState */
+    /* skip RebindArrays */
 
-        /* skip Name */
-        /* skip RefCount */
 
-        for (i = 0; i < Elements(src->VertexAttrib); i++)
-            _mesa_copy_client_array(ctx, &dest->VertexAttrib[i], &src->VertexAttrib[i]);
+    /* skip Name */
+    /* skip RefCount */
 
-        /* _Enabled must be the same than on push */
-        dest->_Enabled = src->_Enabled;
-        dest->_MaxElement = src->_MaxElement;
-    }
+    for (i = 0; i < Elements(src->VertexAttrib); i++)
+        _mesa_copy_client_array(ctx, &dest->VertexAttrib[i], &src->VertexAttrib[i]);
 
-   /* skip ArrayBufferObj */
-   /* skip ElementArrayBufferObj */
+    /* _Enabled must be the same than on push */
+    dest->_Enabled = src->_Enabled;
+    dest->_MaxElement = src->_MaxElement;
+
+    /* skip ArrayBufferObj */
+    /* skip ElementArrayBufferObj */
 }
 
 /**
@@ -1101,11 +1078,9 @@ save_array_attrib(struct gl_context *ctx,
                   struct gl_array_attrib *src)
 {
    /* And copy all of the rest. */
-   copy_array_attrib(ctx, dest, src, GL_FALSE);
+   copy_array_attrib(ctx, dest, src);
 
    /* Just reference them here */
-   _mesa_reference_buffer_object(ctx, &dest->ArrayBufferObj,
-                                 src->ArrayBufferObj);
    _mesa_reference_buffer_object(ctx, &dest->ElementArrayBufferObj,
                                  src->ElementArrayBufferObj);
 }
@@ -1118,17 +1093,7 @@ restore_array_attrib(struct gl_context *ctx,
                      struct gl_array_attrib *dest,
                      struct gl_array_attrib *src)
 {
-   /* Restore or recreate the buffer objects by the names ... */
-   if (!src->ArrayBufferObj->Name == 0
-       || _mesa_IsBufferARB(src->ArrayBufferObj->Name)) {
-      /* ... and restore its content */
-      copy_array_attrib(ctx, dest, src, GL_FALSE);
-
-      _mesa_BindBufferARB(GL_ARRAY_BUFFER_ARB,
-			  src->ArrayBufferObj->Name);
-   } else {
-      copy_array_attrib(ctx, dest, src, GL_TRUE);
-   }
+    copy_array_attrib(ctx, dest, src);
 
    if (src->ElementArrayBufferObj->Name == 0
        || _mesa_IsBufferARB(src->ElementArrayBufferObj->Name))
@@ -1144,19 +1109,6 @@ restore_array_attrib(struct gl_context *ctx,
     * ... just do it.
     */
    dest->NewState |= src->_Enabled | dest->_Enabled;
-}
-
-/**
- * Free/unreference the fields of 'attrib' but don't delete it (that's
- * done later in the calling code).
- * Needs to the cleanup part matching init_array_attrib_data above.
- */
-static void
-free_array_attrib_data(struct gl_context *ctx,
-                       struct gl_array_attrib *attrib)
-{
-   _mesa_reference_buffer_object(ctx, &attrib->ArrayBufferObj, NULL);
-   _mesa_free_varray_data(ctx, attrib);
 }
 
 
@@ -1243,7 +1195,7 @@ _mesa_PopClientAttrib(void)
 	    struct gl_array_attrib * attr =
 	      (struct gl_array_attrib *) node->data;
             restore_array_attrib(ctx, &ctx->Array, attr);
-            free_array_attrib_data(ctx, attr);
+            _mesa_free_varray_data(ctx, attr);
 	    ctx->NewState |= _NEW_ARRAY;
             break;
 	 }

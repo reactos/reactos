@@ -146,10 +146,7 @@ typedef enum
    OPCODE_ALPHA_FUNC,
    OPCODE_BIND_TEXTURE,
    OPCODE_BITMAP,
-   OPCODE_BLEND_COLOR,
-   OPCODE_BLEND_EQUATION,
-   OPCODE_BLEND_EQUATION_SEPARATE,
-   OPCODE_BLEND_FUNC_SEPARATE,
+   OPCODE_BLEND_FUNC,
 
    OPCODE_CALL_LIST,
    OPCODE_CALL_LIST_OFFSET,
@@ -162,18 +159,6 @@ typedef enum
    OPCODE_CLIP_PLANE,
    OPCODE_COLOR_MASK,
    OPCODE_COLOR_MATERIAL,
-   OPCODE_COLOR_TABLE,
-   OPCODE_COLOR_TABLE_PARAMETER_FV,
-   OPCODE_COLOR_TABLE_PARAMETER_IV,
-   OPCODE_COLOR_SUB_TABLE,
-   OPCODE_CONVOLUTION_FILTER_1D,
-   OPCODE_CONVOLUTION_FILTER_2D,
-   OPCODE_CONVOLUTION_PARAMETER_I,
-   OPCODE_CONVOLUTION_PARAMETER_IV,
-   OPCODE_CONVOLUTION_PARAMETER_F,
-   OPCODE_CONVOLUTION_PARAMETER_FV,
-   OPCODE_COPY_COLOR_SUB_TABLE,
-   OPCODE_COPY_COLOR_TABLE,
    OPCODE_COPY_PIXELS,
    OPCODE_COPY_TEX_IMAGE1D,
    OPCODE_COPY_TEX_IMAGE2D,
@@ -461,22 +446,6 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_BITMAP:
-            free(n[7].data);
-            n += InstSize[n[0].opcode];
-            break;
-         case OPCODE_COLOR_TABLE:
-            free(n[6].data);
-            n += InstSize[n[0].opcode];
-            break;
-         case OPCODE_COLOR_SUB_TABLE:
-            free(n[6].data);
-            n += InstSize[n[0].opcode];
-            break;
-         case OPCODE_CONVOLUTION_FILTER_1D:
-            free(n[6].data);
-            n += InstSize[n[0].opcode];
-            break;
-         case OPCODE_CONVOLUTION_FILTER_2D:
             free(n[7].data);
             n += InstSize[n[0].opcode];
             break;
@@ -837,83 +806,21 @@ save_Bitmap(GLsizei width, GLsizei height,
 
 
 static void GLAPIENTRY
-save_BlendEquation(GLenum mode)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_BLEND_EQUATION, 1);
-   if (n) {
-      n[1].e = mode;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_BlendEquation(ctx->Exec, (mode));
-   }
-}
-
-
-static void GLAPIENTRY
-save_BlendEquationSeparateEXT(GLenum modeRGB, GLenum modeA)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_BLEND_EQUATION_SEPARATE, 2);
-   if (n) {
-      n[1].e = modeRGB;
-      n[2].e = modeA;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_BlendEquationSeparateEXT(ctx->Exec, (modeRGB, modeA));
-   }
-}
-
-
-static void GLAPIENTRY
-save_BlendFuncSeparateEXT(GLenum sfactorRGB, GLenum dfactorRGB,
-                          GLenum sfactorA, GLenum dfactorA)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_BLEND_FUNC_SEPARATE, 4);
-   if (n) {
-      n[1].e = sfactorRGB;
-      n[2].e = dfactorRGB;
-      n[3].e = sfactorA;
-      n[4].e = dfactorA;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_BlendFuncSeparateEXT(ctx->Exec,
-                                (sfactorRGB, dfactorRGB, sfactorA, dfactorA));
-   }
-}
-
-
-static void GLAPIENTRY
 save_BlendFunc(GLenum srcfactor, GLenum dstfactor)
 {
-   save_BlendFuncSeparateEXT(srcfactor, dstfactor, srcfactor, dstfactor);
-}
-
-
-static void GLAPIENTRY
-save_BlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
-{
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_BLEND_COLOR, 4);
+   n = alloc_instruction(ctx, OPCODE_BLEND_FUNC, 2);
    if (n) {
-      n[1].f = red;
-      n[2].f = green;
-      n[3].f = blue;
-      n[4].f = alpha;
+      n[1].e = srcfactor;
+      n[2].e = dstfactor;
    }
    if (ctx->ExecuteFlag) {
-      CALL_BlendColor(ctx->Exec, (red, green, blue, alpha));
+      CALL_BlendFunc(ctx->Exec, (srcfactor, dstfactor));
    }
 }
+
 
 static void invalidate_saved_current_state( struct gl_context *ctx )
 {
@@ -1156,313 +1063,6 @@ save_ColorMaterial(GLenum face, GLenum mode)
    }
    if (ctx->ExecuteFlag) {
       CALL_ColorMaterial(ctx->Exec, (face, mode));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ColorTable(GLenum target, GLenum internalFormat,
-                GLsizei width, GLenum format, GLenum type,
-                const GLvoid * table)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   if (_mesa_is_proxy_texture(target)) {
-      /* execute immediately */
-      CALL_ColorTable(ctx->Exec, (target, internalFormat, width,
-                                  format, type, table));
-   }
-   else {
-      Node *n;
-      ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-      n = alloc_instruction(ctx, OPCODE_COLOR_TABLE, 6);
-      if (n) {
-         n[1].e = target;
-         n[2].e = internalFormat;
-         n[3].i = width;
-         n[4].e = format;
-         n[5].e = type;
-         n[6].data = unpack_image(ctx, 1, width, 1, 1, format, type, table,
-                                  &ctx->Unpack);
-      }
-      if (ctx->ExecuteFlag) {
-         CALL_ColorTable(ctx->Exec, (target, internalFormat, width,
-                                     format, type, table));
-      }
-   }
-}
-
-
-
-static void GLAPIENTRY
-save_ColorTableParameterfv(GLenum target, GLenum pname,
-                           const GLfloat *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-
-   n = alloc_instruction(ctx, OPCODE_COLOR_TABLE_PARAMETER_FV, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].e = pname;
-      n[3].f = params[0];
-      if (pname == GL_COLOR_TABLE_SGI ||
-          pname == GL_POST_CONVOLUTION_COLOR_TABLE_SGI ||
-          pname == GL_TEXTURE_COLOR_TABLE_SGI) {
-         n[4].f = params[1];
-         n[5].f = params[2];
-         n[6].f = params[3];
-      }
-   }
-
-   if (ctx->ExecuteFlag) {
-      CALL_ColorTableParameterfv(ctx->Exec, (target, pname, params));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ColorTableParameteriv(GLenum target, GLenum pname, const GLint *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-
-   n = alloc_instruction(ctx, OPCODE_COLOR_TABLE_PARAMETER_IV, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].e = pname;
-      n[3].i = params[0];
-      if (pname == GL_COLOR_TABLE_SGI ||
-          pname == GL_POST_CONVOLUTION_COLOR_TABLE_SGI ||
-          pname == GL_TEXTURE_COLOR_TABLE_SGI) {
-         n[4].i = params[1];
-         n[5].i = params[2];
-         n[6].i = params[3];
-      }
-   }
-
-   if (ctx->ExecuteFlag) {
-      CALL_ColorTableParameteriv(ctx->Exec, (target, pname, params));
-   }
-}
-
-
-
-static void GLAPIENTRY
-save_ColorSubTable(GLenum target, GLsizei start, GLsizei count,
-                   GLenum format, GLenum type, const GLvoid * table)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_COLOR_SUB_TABLE, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].i = start;
-      n[3].i = count;
-      n[4].e = format;
-      n[5].e = type;
-      n[6].data = unpack_image(ctx, 1, count, 1, 1, format, type, table,
-                               &ctx->Unpack);
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ColorSubTable(ctx->Exec,
-                         (target, start, count, format, type, table));
-   }
-}
-
-
-static void GLAPIENTRY
-save_CopyColorSubTable(GLenum target, GLsizei start,
-                       GLint x, GLint y, GLsizei width)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_COPY_COLOR_SUB_TABLE, 5);
-   if (n) {
-      n[1].e = target;
-      n[2].i = start;
-      n[3].i = x;
-      n[4].i = y;
-      n[5].i = width;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_CopyColorSubTable(ctx->Exec, (target, start, x, y, width));
-   }
-}
-
-
-static void GLAPIENTRY
-save_CopyColorTable(GLenum target, GLenum internalformat,
-                    GLint x, GLint y, GLsizei width)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_COPY_COLOR_TABLE, 5);
-   if (n) {
-      n[1].e = target;
-      n[2].e = internalformat;
-      n[3].i = x;
-      n[4].i = y;
-      n[5].i = width;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_CopyColorTable(ctx->Exec, (target, internalformat, x, y, width));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ConvolutionFilter1D(GLenum target, GLenum internalFormat, GLsizei width,
-                         GLenum format, GLenum type, const GLvoid * filter)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-
-   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_FILTER_1D, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].e = internalFormat;
-      n[3].i = width;
-      n[4].e = format;
-      n[5].e = type;
-      n[6].data = unpack_image(ctx, 1, width, 1, 1, format, type, filter,
-                               &ctx->Unpack);
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ConvolutionFilter1D(ctx->Exec, (target, internalFormat, width,
-                                           format, type, filter));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ConvolutionFilter2D(GLenum target, GLenum internalFormat,
-                         GLsizei width, GLsizei height, GLenum format,
-                         GLenum type, const GLvoid * filter)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-
-   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_FILTER_2D, 7);
-   if (n) {
-      n[1].e = target;
-      n[2].e = internalFormat;
-      n[3].i = width;
-      n[4].i = height;
-      n[5].e = format;
-      n[6].e = type;
-      n[7].data = unpack_image(ctx, 2, width, height, 1, format, type, filter,
-                               &ctx->Unpack);
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ConvolutionFilter2D(ctx->Exec,
-                               (target, internalFormat, width, height, format,
-                                type, filter));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ConvolutionParameteri(GLenum target, GLenum pname, GLint param)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_I, 3);
-   if (n) {
-      n[1].e = target;
-      n[2].e = pname;
-      n[3].i = param;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ConvolutionParameteri(ctx->Exec, (target, pname, param));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ConvolutionParameteriv(GLenum target, GLenum pname, const GLint *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_IV, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].e = pname;
-      n[3].i = params[0];
-      if (pname == GL_CONVOLUTION_BORDER_COLOR ||
-          pname == GL_CONVOLUTION_FILTER_SCALE ||
-          pname == GL_CONVOLUTION_FILTER_BIAS) {
-         n[4].i = params[1];
-         n[5].i = params[2];
-         n[6].i = params[3];
-      }
-      else {
-         n[4].i = n[5].i = n[6].i = 0;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ConvolutionParameteriv(ctx->Exec, (target, pname, params));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ConvolutionParameterf(GLenum target, GLenum pname, GLfloat param)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_F, 3);
-   if (n) {
-      n[1].e = target;
-      n[2].e = pname;
-      n[3].f = param;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ConvolutionParameterf(ctx->Exec, (target, pname, param));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ConvolutionParameterfv(GLenum target, GLenum pname,
-                            const GLfloat *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_FV, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].e = pname;
-      n[3].f = params[0];
-      if (pname == GL_CONVOLUTION_BORDER_COLOR ||
-          pname == GL_CONVOLUTION_FILTER_SCALE ||
-          pname == GL_CONVOLUTION_FILTER_BIAS) {
-         n[4].f = params[1];
-         n[5].f = params[2];
-         n[6].f = params[3];
-      }
-      else {
-         n[4].f = n[5].f = n[6].f = 0.0F;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ConvolutionParameterfv(ctx->Exec, (target, pname, params));
    }
 }
 
@@ -4191,37 +3791,25 @@ save_FogCoordfvEXT(const GLfloat * v)
 static void GLAPIENTRY
 save_Color3f(GLfloat x, GLfloat y, GLfloat z)
 {
-   save_Attr3fNV(VERT_ATTRIB_COLOR0, x, y, z);
+   save_Attr3fNV(VERT_ATTRIB_COLOR, x, y, z);
 }
 
 static void GLAPIENTRY
 save_Color3fv(const GLfloat * v)
 {
-   save_Attr3fNV(VERT_ATTRIB_COLOR0, v[0], v[1], v[2]);
+   save_Attr3fNV(VERT_ATTRIB_COLOR, v[0], v[1], v[2]);
 }
 
 static void GLAPIENTRY
 save_Color4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-   save_Attr4fNV(VERT_ATTRIB_COLOR0, x, y, z, w);
+   save_Attr4fNV(VERT_ATTRIB_COLOR, x, y, z, w);
 }
 
 static void GLAPIENTRY
 save_Color4fv(const GLfloat * v)
 {
-   save_Attr4fNV(VERT_ATTRIB_COLOR0, v[0], v[1], v[2], v[3]);
-}
-
-static void GLAPIENTRY
-save_SecondaryColor3fEXT(GLfloat x, GLfloat y, GLfloat z)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR1, x, y, z);
-}
-
-static void GLAPIENTRY
-save_SecondaryColor3fvEXT(const GLfloat * v)
-{
-   save_Attr3fNV(VERT_ATTRIB_COLOR1, v[0], v[1], v[2]);
+   save_Attr4fNV(VERT_ATTRIB_COLOR, v[0], v[1], v[2], v[3]);
 }
 
 
@@ -4528,20 +4116,9 @@ execute_list(struct gl_context *ctx, GLuint list)
                ctx->Unpack = save;      /* restore */
             }
             break;
-         case OPCODE_BLEND_COLOR:
-            CALL_BlendColor(ctx->Exec, (n[1].f, n[2].f, n[3].f, n[4].f));
+         case OPCODE_BLEND_FUNC:
+            CALL_BlendFunc(ctx->Exec, (n[1].e, n[2].e));
             break;
-         case OPCODE_BLEND_EQUATION:
-            CALL_BlendEquation(ctx->Exec, (n[1].e));
-            break;
-         case OPCODE_BLEND_EQUATION_SEPARATE:
-            CALL_BlendEquationSeparateEXT(ctx->Exec, (n[1].e, n[2].e));
-            break;
-         case OPCODE_BLEND_FUNC_SEPARATE:
-            CALL_BlendFuncSeparateEXT(ctx->Exec,
-                                      (n[1].e, n[2].e, n[3].e, n[4].e));
-            break;
-
          case OPCODE_CALL_LIST:
             /* Generated by glCallList(), don't add ListBase */
             if (ctx->ListState.CallDepth < MAX_LIST_NESTING) {
@@ -4592,102 +4169,6 @@ execute_list(struct gl_context *ctx, GLuint list)
             break;
          case OPCODE_COLOR_MATERIAL:
             CALL_ColorMaterial(ctx->Exec, (n[1].e, n[2].e));
-            break;
-         case OPCODE_COLOR_TABLE:
-            {
-               const struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = ctx->DefaultPacking;
-               CALL_ColorTable(ctx->Exec, (n[1].e, n[2].e, n[3].i, n[4].e,
-                                           n[5].e, n[6].data));
-               ctx->Unpack = save;      /* restore */
-            }
-            break;
-         case OPCODE_COLOR_TABLE_PARAMETER_FV:
-            {
-               GLfloat params[4];
-               params[0] = n[3].f;
-               params[1] = n[4].f;
-               params[2] = n[5].f;
-               params[3] = n[6].f;
-               CALL_ColorTableParameterfv(ctx->Exec,
-                                          (n[1].e, n[2].e, params));
-            }
-            break;
-         case OPCODE_COLOR_TABLE_PARAMETER_IV:
-            {
-               GLint params[4];
-               params[0] = n[3].i;
-               params[1] = n[4].i;
-               params[2] = n[5].i;
-               params[3] = n[6].i;
-               CALL_ColorTableParameteriv(ctx->Exec,
-                                          (n[1].e, n[2].e, params));
-            }
-            break;
-         case OPCODE_COLOR_SUB_TABLE:
-            {
-               const struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = ctx->DefaultPacking;
-               CALL_ColorSubTable(ctx->Exec, (n[1].e, n[2].i, n[3].i,
-                                              n[4].e, n[5].e, n[6].data));
-               ctx->Unpack = save;      /* restore */
-            }
-            break;
-         case OPCODE_CONVOLUTION_FILTER_1D:
-            {
-               const struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = ctx->DefaultPacking;
-               CALL_ConvolutionFilter1D(ctx->Exec, (n[1].e, n[2].i, n[3].i,
-                                                    n[4].e, n[5].e,
-                                                    n[6].data));
-               ctx->Unpack = save;      /* restore */
-            }
-            break;
-         case OPCODE_CONVOLUTION_FILTER_2D:
-            {
-               const struct gl_pixelstore_attrib save = ctx->Unpack;
-               ctx->Unpack = ctx->DefaultPacking;
-               CALL_ConvolutionFilter2D(ctx->Exec, (n[1].e, n[2].i, n[3].i,
-                                                    n[4].i, n[5].e, n[6].e,
-                                                    n[7].data));
-               ctx->Unpack = save;      /* restore */
-            }
-            break;
-         case OPCODE_CONVOLUTION_PARAMETER_I:
-            CALL_ConvolutionParameteri(ctx->Exec, (n[1].e, n[2].e, n[3].i));
-            break;
-         case OPCODE_CONVOLUTION_PARAMETER_IV:
-            {
-               GLint params[4];
-               params[0] = n[3].i;
-               params[1] = n[4].i;
-               params[2] = n[5].i;
-               params[3] = n[6].i;
-               CALL_ConvolutionParameteriv(ctx->Exec,
-                                           (n[1].e, n[2].e, params));
-            }
-            break;
-         case OPCODE_CONVOLUTION_PARAMETER_F:
-            CALL_ConvolutionParameterf(ctx->Exec, (n[1].e, n[2].e, n[3].f));
-            break;
-         case OPCODE_CONVOLUTION_PARAMETER_FV:
-            {
-               GLfloat params[4];
-               params[0] = n[3].f;
-               params[1] = n[4].f;
-               params[2] = n[5].f;
-               params[3] = n[6].f;
-               CALL_ConvolutionParameterfv(ctx->Exec,
-                                           (n[1].e, n[2].e, params));
-            }
-            break;
-         case OPCODE_COPY_COLOR_SUB_TABLE:
-            CALL_CopyColorSubTable(ctx->Exec, (n[1].e, n[2].i,
-                                               n[3].i, n[4].i, n[5].i));
-            break;
-         case OPCODE_COPY_COLOR_TABLE:
-            CALL_CopyColorSubTable(ctx->Exec, (n[1].e, n[2].i,
-                                               n[3].i, n[4].i, n[5].i));
             break;
          case OPCODE_COPY_PIXELS:
             CALL_CopyPixels(ctx->Exec, (n[1].i, n[2].i,
@@ -5903,98 +5384,6 @@ exec_VertexPointer(GLint size, GLenum type, GLsizei stride,
 }
 
 static void GLAPIENTRY
-exec_CopyConvolutionFilter1D(GLenum target, GLenum internalFormat,
-                             GLint x, GLint y, GLsizei width)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_CopyConvolutionFilter1D(ctx->Exec,
-                                (target, internalFormat, x, y, width));
-}
-
-static void GLAPIENTRY
-exec_CopyConvolutionFilter2D(GLenum target, GLenum internalFormat,
-                             GLint x, GLint y, GLsizei width, GLsizei height)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_CopyConvolutionFilter2D(ctx->Exec,
-                                (target, internalFormat, x, y, width,
-                                 height));
-}
-
-static void GLAPIENTRY
-exec_GetColorTable(GLenum target, GLenum format, GLenum type, GLvoid * data)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetColorTable(ctx->Exec, (target, format, type, data));
-}
-
-static void GLAPIENTRY
-exec_GetColorTableParameterfv(GLenum target, GLenum pname, GLfloat *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetColorTableParameterfv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
-exec_GetColorTableParameteriv(GLenum target, GLenum pname, GLint *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetColorTableParameteriv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
-exec_GetConvolutionFilter(GLenum target, GLenum format, GLenum type,
-                          GLvoid * image)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetConvolutionFilter(ctx->Exec, (target, format, type, image));
-}
-
-static void GLAPIENTRY
-exec_GetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetConvolutionParameterfv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
-exec_GetConvolutionParameteriv(GLenum target, GLenum pname, GLint *params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetConvolutionParameteriv(ctx->Exec, (target, pname, params));
-}
-
-static void GLAPIENTRY
-exec_GetSeparableFilter(GLenum target, GLenum format, GLenum type,
-                        GLvoid *row, GLvoid *column, GLvoid *span)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_GetSeparableFilter(ctx->Exec,
-                           (target, format, type, row, column, span));
-}
-
-static void GLAPIENTRY
-exec_SeparableFilter2D(GLenum target, GLenum internalFormat,
-                       GLsizei width, GLsizei height, GLenum format,
-                       GLenum type, const GLvoid *row, const GLvoid *column)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_SeparableFilter2D(ctx->Exec,
-                          (target, internalFormat, width, height, format,
-                           type, row, column));
-}
-
-static void GLAPIENTRY
 exec_ColorPointerEXT(GLint size, GLenum type, GLsizei stride,
                      GLsizei count, const GLvoid *ptr)
 {
@@ -6061,15 +5450,6 @@ exec_UnlockArraysEXT(void)
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_VERTICES(ctx, 0);
    CALL_UnlockArraysEXT(ctx->Exec, ());
-}
-
-static void GLAPIENTRY
-exec_SecondaryColorPointerEXT(GLint size, GLenum type,
-                              GLsizei stride, const GLvoid *ptr)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_SecondaryColorPointerEXT(ctx->Exec, (size, type, stride, ptr));
 }
 
 static void GLAPIENTRY
@@ -6329,49 +5709,8 @@ _mesa_create_save_table(void)
    SET_TexSubImage2D(table, save_TexSubImage2D);
    SET_VertexPointer(table, exec_VertexPointer);
 
-   /* GL_ARB_imaging */
-   /* Not all are supported */
-   SET_BlendColor(table, save_BlendColor);
-   SET_BlendEquation(table, save_BlendEquation);
-   SET_ColorSubTable(table, save_ColorSubTable);
-   SET_ColorTable(table, save_ColorTable);
-   SET_ColorTableParameterfv(table, save_ColorTableParameterfv);
-   SET_ColorTableParameteriv(table, save_ColorTableParameteriv);
-   SET_ConvolutionFilter1D(table, save_ConvolutionFilter1D);
-   SET_ConvolutionFilter2D(table, save_ConvolutionFilter2D);
-   SET_ConvolutionParameterf(table, save_ConvolutionParameterf);
-   SET_ConvolutionParameterfv(table, save_ConvolutionParameterfv);
-   SET_ConvolutionParameteri(table, save_ConvolutionParameteri);
-   SET_ConvolutionParameteriv(table, save_ConvolutionParameteriv);
-   SET_CopyColorSubTable(table, save_CopyColorSubTable);
-   SET_CopyColorTable(table, save_CopyColorTable);
-   SET_CopyConvolutionFilter1D(table, exec_CopyConvolutionFilter1D);
-   SET_CopyConvolutionFilter2D(table, exec_CopyConvolutionFilter2D);
-   SET_GetColorTable(table, exec_GetColorTable);
-   SET_GetColorTableParameterfv(table, exec_GetColorTableParameterfv);
-   SET_GetColorTableParameteriv(table, exec_GetColorTableParameteriv);
-   SET_GetConvolutionFilter(table, exec_GetConvolutionFilter);
-   SET_GetConvolutionParameterfv(table, exec_GetConvolutionParameterfv);
-   SET_GetConvolutionParameteriv(table, exec_GetConvolutionParameteriv);
-   SET_GetSeparableFilter(table, exec_GetSeparableFilter);
-   SET_SeparableFilter2D(table, exec_SeparableFilter2D);
-
-   /* 2. GL_EXT_blend_color */
-#if 0
-   SET_BlendColorEXT(table, save_BlendColorEXT);
-#endif
-
    /* 3. GL_EXT_polygon_offset */
    SET_PolygonOffsetEXT(table, save_PolygonOffsetEXT);
-
-   /* 14. GL_SGI_color_table */
-#if 0
-   SET_ColorTableSGI(table, save_ColorTable);
-   SET_ColorSubTableSGI(table, save_ColorSubTable);
-   SET_GetColorTableSGI(table, exec_GetColorTable);
-   SET_GetColorTableParameterfvSGI(table, exec_GetColorTableParameterfv);
-   SET_GetColorTableParameterivSGI(table, exec_GetColorTableParameteriv);
-#endif
 
    /* 30. GL_EXT_vertex_array */
    SET_ColorPointerEXT(table, exec_ColorPointerEXT);
@@ -6381,11 +5720,6 @@ _mesa_create_save_table(void)
    SET_TexCoordPointerEXT(table, exec_TexCoordPointerEXT);
    SET_VertexPointerEXT(table, exec_VertexPointerEXT);
 
-   /* 37. GL_EXT_blend_minmax */
-#if 0
-   SET_BlendEquationEXT(table, save_BlendEquationEXT);
-#endif
-
    /* 54. GL_EXT_point_parameters */
    SET_PointParameterfEXT(table, save_PointParameterfEXT);
    SET_PointParameterfvEXT(table, save_PointParameterfvEXT);
@@ -6394,14 +5728,8 @@ _mesa_create_save_table(void)
    SET_LockArraysEXT(table, exec_LockArraysEXT);
    SET_UnlockArraysEXT(table, exec_UnlockArraysEXT);
 
-   /* 145. GL_EXT_secondary_color */
-   SET_SecondaryColorPointerEXT(table, exec_SecondaryColorPointerEXT);
-
    /* 149. GL_EXT_fog_coord */
    SET_FogCoordPointerEXT(table, exec_FogCoordPointerEXT);
-
-   /* 173. GL_EXT_blend_func_separate */
-   SET_BlendFuncSeparateEXT(table, save_BlendFuncSeparateEXT);
 
    /* 197. GL_MESA_window_pos */
    SET_WindowPos2dMESA(table, save_WindowPos2dMESA);
@@ -6462,9 +5790,6 @@ _mesa_create_save_table(void)
    SET_IsBufferARB(table, _mesa_IsBufferARB);
    SET_MapBufferARB(table, _mesa_MapBufferARB);
    SET_UnmapBufferARB(table, _mesa_UnmapBufferARB);
-
-   /* 299. GL_EXT_blend_equation_separate */
-   SET_BlendEquationSeparateEXT(table, save_BlendEquationSeparateEXT);
 
    /* ARB 50. GL_ARB_map_buffer_range */
 #if FEATURE_ARB_map_buffer_range
@@ -6546,16 +5871,6 @@ print_list(struct gl_context *ctx, GLuint list)
          case OPCODE_CALL_LIST_OFFSET:
             printf("CallList %d + offset %u = %u\n", (int) n[1].ui,
                          ctx->List.ListBase, ctx->List.ListBase + n[1].ui);
-            break;
-         case OPCODE_COLOR_TABLE_PARAMETER_FV:
-            printf("ColorTableParameterfv %s %s %f %f %f %f\n",
-                         enum_string(n[1].e), enum_string(n[2].e),
-                         n[3].f, n[4].f, n[5].f, n[6].f);
-            break;
-         case OPCODE_COLOR_TABLE_PARAMETER_IV:
-            printf("ColorTableParameteriv %s %s %d %d %d %d\n",
-                         enum_string(n[1].e), enum_string(n[2].e),
-                         n[3].i, n[4].i, n[5].i, n[6].i);
             break;
          case OPCODE_DISABLE:
             printf("Disable %s\n", enum_string(n[1].e));
@@ -6786,8 +6101,6 @@ _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->Materialfv = save_Materialfv;
    vfmt->Normal3f = save_Normal3f;
    vfmt->Normal3fv = save_Normal3fv;
-   vfmt->SecondaryColor3fEXT = save_SecondaryColor3fEXT;
-   vfmt->SecondaryColor3fvEXT = save_SecondaryColor3fvEXT;
    vfmt->TexCoord1f = save_TexCoord1f;
    vfmt->TexCoord1fv = save_TexCoord1fv;
    vfmt->TexCoord2f = save_TexCoord2f;
@@ -6822,7 +6135,6 @@ _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
 #if 0
    vfmt->DrawArrays = 0;
    vfmt->DrawElements = 0;
-   vfmt->DrawRangeElements = 0;
 #endif
 }
 

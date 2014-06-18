@@ -418,7 +418,6 @@ _mesa_GetLightiv( GLenum light, GLenum pname, GLint *params )
 void GLAPIENTRY
 _mesa_LightModelfv( GLenum pname, const GLfloat *params )
 {
-   GLenum newenum;
    GLboolean newbool;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
@@ -447,21 +446,6 @@ _mesa_LightModelfv( GLenum pname, const GLfloat *params )
             ctx->_TriangleCaps |= DD_TRI_LIGHT_TWOSIDE;
          else
             ctx->_TriangleCaps &= ~DD_TRI_LIGHT_TWOSIDE;
-         break;
-      case GL_LIGHT_MODEL_COLOR_CONTROL:
-         if (params[0] == (GLfloat) GL_SINGLE_COLOR)
-	    newenum = GL_SINGLE_COLOR;
-         else if (params[0] == (GLfloat) GL_SEPARATE_SPECULAR_COLOR)
-	    newenum = GL_SEPARATE_SPECULAR_COLOR;
-	 else {
-            _mesa_error( ctx, GL_INVALID_ENUM, "glLightModel(param=0x0%x)",
-                         (GLint) params[0] );
-	    return;
-         }
-	 if (ctx->Light.Model.ColorControl == newenum)
-	    return;
-	 FLUSH_VERTICES(ctx, _NEW_LIGHT);
-	 ctx->Light.Model.ColorControl = newenum;
          break;
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glLightModel(pname=0x%x)", pname );
@@ -716,7 +700,7 @@ _mesa_ColorMaterial( GLenum face, GLenum mode )
 
    if (ctx->Light.ColorMaterialEnabled) {
       FLUSH_CURRENT( ctx, 0 );
-      _mesa_update_color_material(ctx,ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
+      _mesa_update_color_material(ctx,ctx->Current.Attrib[VERT_ATTRIB_COLOR]);
    }
 
    if (ctx->Driver.ColorMaterial)
@@ -1019,7 +1003,6 @@ _mesa_update_lighting( struct gl_context *ctx )
 
    ctx->Light._NeedVertices =
       ((ctx->Light._Flags & (LIGHT_POSITIONAL|LIGHT_SPOT)) ||
-       ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR ||
        ctx->Light.Model.LocalViewer);
 
    ctx->Light._NeedEyeCoords = ((ctx->Light._Flags & LIGHT_POSITIONAL) ||
@@ -1285,7 +1268,6 @@ init_lightmodel( struct gl_lightmodel *lm )
    ASSIGN_4V( lm->Ambient, 0.2F, 0.2F, 0.2F, 1.0F );
    lm->LocalViewer = GL_FALSE;
    lm->TwoSide = GL_FALSE;
-   lm->ColorControl = GL_SINGLE_COLOR;
 }
 
 

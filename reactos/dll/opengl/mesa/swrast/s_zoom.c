@@ -156,7 +156,7 @@ zoom_span( struct gl_context *ctx, GLint imgX, GLint imgY, const SWspan *span,
    else if (zoomed.array->ChanType == GL_UNSIGNED_SHORT)
       zoomed.array->rgba = (GLchan (*)[4]) zoomed.array->rgba16;
    else
-      zoomed.array->rgba = (GLchan (*)[4]) zoomed.array->attribs[FRAG_ATTRIB_COL0];
+      zoomed.array->rgba = (GLchan (*)[4]) zoomed.array->attribs[FRAG_ATTRIB_COL];
 
    COPY_4V(zoomed.attrStart[FRAG_ATTRIB_WPOS], span->attrStart[FRAG_ATTRIB_WPOS]);
    COPY_4V(zoomed.attrStepX[FRAG_ATTRIB_WPOS], span->attrStepX[FRAG_ATTRIB_WPOS]);
@@ -173,7 +173,7 @@ zoom_span( struct gl_context *ctx, GLint imgX, GLint imgY, const SWspan *span,
       /* we'll generate an array of colorss */
       zoomed.interpMask = span->interpMask & ~SPAN_RGBA;
       zoomed.arrayMask |= SPAN_RGBA;
-      zoomed.arrayAttribs |= FRAG_BIT_COL0;  /* we'll produce these values */
+      zoomed.arrayAttribs |= FRAG_BIT_COL;  /* we'll produce these values */
       ASSERT(span->arrayMask & SPAN_RGBA);
    }
    else if (format == GL_DEPTH_COMPONENT) {
@@ -225,7 +225,7 @@ zoom_span( struct gl_context *ctx, GLint imgX, GLint imgY, const SWspan *span,
             GLint j = unzoom_x(ctx->Pixel.ZoomX, imgX, x0 + i) - span->x;
             ASSERT(j >= 0);
             ASSERT(j < span->end);
-            COPY_4V(zoomed.array->attribs[FRAG_ATTRIB_COL0][i], rgba[j]);
+            COPY_4V(zoomed.array->attribs[FRAG_ATTRIB_COL][i], rgba[j]);
          }
       }
    }
@@ -263,10 +263,10 @@ zoom_span( struct gl_context *ctx, GLint imgX, GLint imgY, const SWspan *span,
             GLint j = unzoom_x(ctx->Pixel.ZoomX, imgX, x0 + i) - span->x;
             ASSERT(j >= 0);
             ASSERT(j < span->end);
-            zoomed.array->attribs[FRAG_ATTRIB_COL0][i][0] = rgb[j][0];
-            zoomed.array->attribs[FRAG_ATTRIB_COL0][i][1] = rgb[j][1];
-            zoomed.array->attribs[FRAG_ATTRIB_COL0][i][2] = rgb[j][2];
-            zoomed.array->attribs[FRAG_ATTRIB_COL0][i][3] = 1.0F;
+            zoomed.array->attribs[FRAG_ATTRIB_COL][i][0] = rgb[j][0];
+            zoomed.array->attribs[FRAG_ATTRIB_COL][i][1] = rgb[j][1];
+            zoomed.array->attribs[FRAG_ATTRIB_COL][i][2] = rgb[j][2];
+            zoomed.array->attribs[FRAG_ATTRIB_COL][i][3] = 1.0F;
          }
       }
    }

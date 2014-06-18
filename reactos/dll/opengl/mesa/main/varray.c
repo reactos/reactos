@@ -118,14 +118,6 @@ update_array(struct gl_context *ctx,
       return;
    }
 
-   if (!_mesa_is_bufferobj(ctx->Array.ArrayBufferObj)) {
-      /* GL_ARB_vertex_array_object requires that all arrays reside in VBOs.
-       * Generate GL_INVALID_OPERATION if that's not true.
-       */
-      _mesa_error(ctx, GL_INVALID_OPERATION, "%s(non-VBO array)", func);
-      return;
-   }
-
    elementSize = _mesa_sizeof_type(type) * size;
 
    array = &ctx->Array.VertexAttrib[attrib];
@@ -137,9 +129,6 @@ update_array(struct gl_context *ctx,
    array->Integer = integer;
    array->Ptr = (const GLubyte *) ptr;
    array->_ElementSize = elementSize;
-
-   _mesa_reference_buffer_object(ctx, &array->BufferObj,
-                                 ctx->Array.ArrayBufferObj);
 
    ctx->NewState |= _NEW_ARRAY;
    ctx->Array.NewState |= VERT_BIT(attrib);
@@ -184,7 +173,7 @@ _mesa_ColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   update_array(ctx, "glColorPointer", VERT_ATTRIB_COLOR0,
+   update_array(ctx, "glColorPointer", VERT_ATTRIB_COLOR,
                 legalTypes, 3, 4,
                 size, type, stride, GL_TRUE, GL_FALSE, ptr);
 }
@@ -214,23 +203,6 @@ _mesa_IndexPointer(GLenum type, GLsizei stride, const GLvoid *ptr)
    update_array(ctx, "glIndexPointer", VERT_ATTRIB_COLOR_INDEX,
                 legalTypes, 1, 1,
                 1, type, stride, GL_FALSE, GL_FALSE, ptr);
-}
-
-
-void GLAPIENTRY
-_mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
-			       GLsizei stride, const GLvoid *ptr)
-{
-   const GLbitfield legalTypes = (BYTE_BIT | UNSIGNED_BYTE_BIT |
-                                  SHORT_BIT | UNSIGNED_SHORT_BIT |
-                                  INT_BIT | UNSIGNED_INT_BIT |
-                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT);
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   update_array(ctx, "glSecondaryColorPointer", VERT_ATTRIB_COLOR1,
-                legalTypes, 3, 4,
-                size, type, stride, GL_TRUE, GL_FALSE, ptr);
 }
 
 
@@ -644,9 +616,6 @@ _mesa_init_varray(struct gl_context *ctx, struct gl_array_attrib *array)
        case VERT_ATTRIB_NORMAL:
           init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_NORMAL], 3, GL_FLOAT);
           break;
-       case VERT_ATTRIB_COLOR1:
-          init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_COLOR1], 3, GL_FLOAT);
-          break;
        case VERT_ATTRIB_FOG:
           init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_FOG], 1, GL_FLOAT);
           break;
@@ -656,11 +625,6 @@ _mesa_init_varray(struct gl_context *ctx, struct gl_array_attrib *array)
        case VERT_ATTRIB_EDGEFLAG:
           init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_EDGEFLAG], 1, GL_BOOL);
           break;
-    #if FEATURE_point_size_array
-       case VERT_ATTRIB_POINT_SIZE:
-          init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_POINT_SIZE], 1, GL_FLOAT);
-          break;
-    #endif
        default:
           init_array(ctx, &array->VertexAttrib[i], 4, GL_FLOAT);
           break;

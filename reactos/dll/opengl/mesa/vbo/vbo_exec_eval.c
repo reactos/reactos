@@ -72,10 +72,10 @@ void vbo_exec_eval_update( struct vbo_exec_context *exec )
    }
 
    if (ctx->Eval.Map1Color4) 
-      set_active_eval1( exec, VBO_ATTRIB_COLOR0, 4, &ctx->EvalMap.Map1Color4 );
+      set_active_eval1( exec, VBO_ATTRIB_COLOR, 4, &ctx->EvalMap.Map1Color4 );
       
    if (ctx->Eval.Map2Color4) 
-      set_active_eval2( exec, VBO_ATTRIB_COLOR0, 4, &ctx->EvalMap.Map2Color4 );
+      set_active_eval2( exec, VBO_ATTRIB_COLOR, 4, &ctx->EvalMap.Map2Color4 );
 
    if (ctx->Eval.Map1TextureCoord4) 
       set_active_eval1( exec, VBO_ATTRIB_TEX, 4, &ctx->EvalMap.Map1Texture4 );

@@ -32,15 +32,6 @@
 
 #include <precomp.h>
 
-static void
-update_separate_specular(struct gl_context *ctx)
-{
-   if (_mesa_need_secondary_color(ctx))
-      ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
-   else
-      ctx->_TriangleCaps &= ~DD_SEPARATE_SPECULAR;
-}
-
 
 /**
  * Helper for update_arrays().
@@ -79,13 +70,8 @@ update_arrays( struct gl_context *ctx )
    }
 
    /* 3 */
-   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0].Enabled) {
-      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR0]);
-   }
-
-   /* 4 */
-   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1].Enabled) {
-      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR1]);
+   if (ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR].Enabled) {
+      min = update_min(min, &ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR]);
    }
 
    /* 5 */
@@ -261,9 +247,6 @@ _mesa_update_state_locked( struct gl_context *ctx )
 
    if (new_state & _NEW_PIXEL)
       _mesa_update_pixel( ctx, new_state );
-
-   if (new_state & _DD_NEW_SEPARATE_SPECULAR)
-      update_separate_specular( ctx );
 
    if (new_state & (_NEW_BUFFERS | _NEW_VIEWPORT))
       update_viewport_matrix(ctx);

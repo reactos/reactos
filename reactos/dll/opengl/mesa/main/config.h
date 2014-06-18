@@ -97,9 +97,6 @@
 /** Line width granularity */
 #define LINE_WIDTH_GRANULARITY 0.1
 
-/** Max texture palette / color table size */
-#define MAX_COLOR_TABLE_SIZE 256
-
 /** Max memory to allow for a single texture image (in megabytes) */
 #define MAX_TEXTURE_MBYTES 1024
 

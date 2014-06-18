@@ -888,14 +888,14 @@ _mesa_error( struct gl_context *ctx, GLenum error, const char *fmtString, ... )
 void
 _mesa_debug( const struct gl_context *ctx, const char *fmtString, ... )
 {
-#ifdef DEBUG
+//#ifdef DEBUG
    char s[MAXSTRING];
    va_list args;
    va_start(args, fmtString);
    vsnprintf(s, MAXSTRING, fmtString, args);
    va_end(args);
    output_if_debug("Mesa", s, GL_FALSE);
-#endif /* DEBUG */
+//#endif /* DEBUG */
    (void) ctx;
    (void) fmtString;
 }

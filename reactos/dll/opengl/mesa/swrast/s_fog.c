@@ -166,7 +166,7 @@ _swrast_fog_rgba_span( const struct gl_context *ctx, SWspan *span )
                FOG_LOOP(GLushort, LINEAR_FOG);
             }
             else {
-               GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL0];
+               GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL];
                ASSERT(span->array->ChanType == GL_FLOAT);
                FOG_LOOP(GLfloat, LINEAR_FOG);
             }
@@ -185,7 +185,7 @@ _swrast_fog_rgba_span( const struct gl_context *ctx, SWspan *span )
                FOG_LOOP(GLushort, EXP_FOG);
             }
             else {
-               GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL0];
+               GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL];
                ASSERT(span->array->ChanType == GL_FLOAT);
                FOG_LOOP(GLfloat, EXP_FOG);
             }
@@ -204,7 +204,7 @@ _swrast_fog_rgba_span( const struct gl_context *ctx, SWspan *span )
                FOG_LOOP(GLushort, EXP2_FOG);
             }
             else {
-               GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL0];
+               GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL];
                ASSERT(span->array->ChanType == GL_FLOAT);
                FOG_LOOP(GLfloat, EXP2_FOG);
             }
@@ -229,7 +229,7 @@ _swrast_fog_rgba_span( const struct gl_context *ctx, SWspan *span )
          FOG_LOOP(GLushort, BLEND_FOG);
       }
       else {
-         GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL0];
+         GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL];
          ASSERT(span->array->ChanType == GL_FLOAT);
          FOG_LOOP(GLfloat, BLEND_FOG);
       }

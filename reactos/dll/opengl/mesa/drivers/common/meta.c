@@ -37,7 +37,6 @@
 #include "main/blend.h"
 #include "main/bufferobj.h"
 #include "main/buffers.h"
-#include "main/colortab.h"
 #include "main/context.h"
 #include "main/depth.h"
 #include "main/enable.h"

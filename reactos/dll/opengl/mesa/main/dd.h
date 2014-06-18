@@ -433,19 +433,6 @@ struct dd_function_table {
    /*@{*/
    /** Specify the alpha test function */
    void (*AlphaFunc)(struct gl_context *ctx, GLenum func, GLfloat ref);
-   /** Set the blend color */
-   void (*BlendColor)(struct gl_context *ctx, const GLfloat color[4]);
-   /** Set the blend equation */
-   void (*BlendEquationSeparate)(struct gl_context *ctx, GLenum modeRGB, GLenum modeA);
-   void (*BlendEquationSeparatei)(struct gl_context *ctx, GLuint buffer,
-                                  GLenum modeRGB, GLenum modeA);
-   /** Specify pixel arithmetic */
-   void (*BlendFuncSeparate)(struct gl_context *ctx,
-                             GLenum sfactorRGB, GLenum dfactorRGB,
-                             GLenum sfactorA, GLenum dfactorA);
-   void (*BlendFuncSeparatei)(struct gl_context *ctx, GLuint buffer,
-                              GLenum sfactorRGB, GLenum dfactorRGB,
-                              GLenum sfactorA, GLenum dfactorA);
    /** Specify clear values for the color buffers */
    void (*ClearColor)(struct gl_context *ctx,
                       const union gl_color_union color);
@@ -719,8 +706,6 @@ typedef struct {
    void (GLAPIENTRYP MultiTexCoord4fvARB)( GLenum, const GLfloat * );
    void (GLAPIENTRYP Normal3f)( GLfloat, GLfloat, GLfloat );
    void (GLAPIENTRYP Normal3fv)( const GLfloat * );
-   void (GLAPIENTRYP SecondaryColor3fEXT)( GLfloat, GLfloat, GLfloat );
-   void (GLAPIENTRYP SecondaryColor3fvEXT)( const GLfloat * );
    void (GLAPIENTRYP TexCoord1f)( GLfloat );
    void (GLAPIENTRYP TexCoord1fv)( const GLfloat * );
    void (GLAPIENTRYP TexCoord2f)( GLfloat, GLfloat );
@@ -760,9 +745,6 @@ typedef struct {
    void (GLAPIENTRYP DrawArrays)( GLenum mode, GLint start, GLsizei count );
    void (GLAPIENTRYP DrawElements)( GLenum mode, GLsizei count, GLenum type,
 			 const GLvoid *indices );
-   void (GLAPIENTRYP DrawRangeElements)( GLenum mode, GLuint start,
-			      GLuint end, GLsizei count,
-			      GLenum type, const GLvoid *indices );
    /*@}*/
 
    /**

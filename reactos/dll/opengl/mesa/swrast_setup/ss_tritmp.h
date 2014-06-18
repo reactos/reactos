@@ -37,7 +37,6 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
    SScontext *swsetup = SWSETUP_CONTEXT(ctx);
    GLchan saved_color[3][4] = { { 0 } };
    GLfloat saved_col0[3][4] = { { 0 } };
-   GLfloat saved_spec[3][4] = { { 0 } };
 #endif
    SWvertex *verts = SWSETUP_CONTEXT(ctx)->verts;
    SWvertex *v[3];
@@ -79,9 +78,9 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
                      COPY_CHAN4(saved_color[2], v[2]->color);
                   }
                   else {
-                     COPY_4V(saved_col0[0], v[0]->attrib[FRAG_ATTRIB_COL0]);
-                     COPY_4V(saved_col0[1], v[1]->attrib[FRAG_ATTRIB_COL0]);
-                     COPY_4V(saved_col0[2], v[2]->attrib[FRAG_ATTRIB_COL0]);
+                     COPY_4V(saved_col0[0], v[0]->attrib[FRAG_ATTRIB_COL]);
+                     COPY_4V(saved_col0[1], v[1]->attrib[FRAG_ATTRIB_COL]);
+                     COPY_4V(saved_col0[2], v[2]->attrib[FRAG_ATTRIB_COL]);
                   }
 
                   if (VB->BackfaceColorPtr->stride) {
@@ -91,9 +90,9 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
                         SS_COLOR(v[2]->color, vbcolor[e2]);
                      }
                      else {
-                        COPY_4V(v[0]->attrib[FRAG_ATTRIB_COL0], vbcolor[e0]);
-                        COPY_4V(v[1]->attrib[FRAG_ATTRIB_COL0], vbcolor[e1]);
-                        COPY_4V(v[2]->attrib[FRAG_ATTRIB_COL0], vbcolor[e2]);
+                        COPY_4V(v[0]->attrib[FRAG_ATTRIB_COL], vbcolor[e0]);
+                        COPY_4V(v[1]->attrib[FRAG_ATTRIB_COL], vbcolor[e1]);
+                        COPY_4V(v[2]->attrib[FRAG_ATTRIB_COL], vbcolor[e2]);
                      }
                   }
                   else {
@@ -104,31 +103,12 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
                         SS_COLOR(v[2]->color, vbcolor[0]);
                      }
                      else {
-                        COPY_4V(v[0]->attrib[FRAG_ATTRIB_COL0], vbcolor[0]);
-                        COPY_4V(v[1]->attrib[FRAG_ATTRIB_COL0], vbcolor[0]);
-                        COPY_4V(v[2]->attrib[FRAG_ATTRIB_COL0], vbcolor[0]);
+                        COPY_4V(v[0]->attrib[FRAG_ATTRIB_COL], vbcolor[0]);
+                        COPY_4V(v[1]->attrib[FRAG_ATTRIB_COL], vbcolor[0]);
+                        COPY_4V(v[2]->attrib[FRAG_ATTRIB_COL], vbcolor[0]);
                      }
                   }
                }
-
-               if (VB->BackfaceSecondaryColorPtr) {
-		  GLfloat (*vbspec)[4] = VB->BackfaceSecondaryColorPtr->data;
-
-		  COPY_4V(saved_spec[0], v[0]->attrib[FRAG_ATTRIB_COL1]);
-		  COPY_4V(saved_spec[1], v[1]->attrib[FRAG_ATTRIB_COL1]);
-		  COPY_4V(saved_spec[2], v[2]->attrib[FRAG_ATTRIB_COL1]);
-
-		  if (VB->BackfaceSecondaryColorPtr->stride) {
-		    SS_SPEC(v[0]->attrib[FRAG_ATTRIB_COL1], vbspec[e0]);
-		    SS_SPEC(v[1]->attrib[FRAG_ATTRIB_COL1], vbspec[e1]);
-		    SS_SPEC(v[2]->attrib[FRAG_ATTRIB_COL1], vbspec[e2]);
-		  }
-		  else {
-		    SS_SPEC(v[0]->attrib[FRAG_ATTRIB_COL1], vbspec[0]);
-		    SS_SPEC(v[1]->attrib[FRAG_ATTRIB_COL1], vbspec[0]);
-		    SS_SPEC(v[2]->attrib[FRAG_ATTRIB_COL1], vbspec[0]);
-		  }
-	       }
 	    }
 #endif
       }
@@ -210,16 +190,10 @@ static void TAG(triangle)(struct gl_context *ctx, GLuint e0, GLuint e1, GLuint e
 	    COPY_CHAN4(v[2]->color, saved_color[2]);
 	  }
 	  else {
-	    COPY_4V(v[0]->attrib[FRAG_ATTRIB_COL0], saved_col0[0]);
-	    COPY_4V(v[1]->attrib[FRAG_ATTRIB_COL0], saved_col0[1]);
-	    COPY_4V(v[2]->attrib[FRAG_ATTRIB_COL0], saved_col0[2]);
+	    COPY_4V(v[0]->attrib[FRAG_ATTRIB_COL], saved_col0[0]);
+	    COPY_4V(v[1]->attrib[FRAG_ATTRIB_COL], saved_col0[1]);
+	    COPY_4V(v[2]->attrib[FRAG_ATTRIB_COL], saved_col0[2]);
 	  }
-	}
-
-	if (VB->BackfaceSecondaryColorPtr) {
-	  COPY_4V(v[0]->attrib[FRAG_ATTRIB_COL1], saved_spec[0]);
-	  COPY_4V(v[1]->attrib[FRAG_ATTRIB_COL1], saved_spec[1]);
-	  COPY_4V(v[2]->attrib[FRAG_ATTRIB_COL1], saved_spec[2]);
 	}
       }
    }

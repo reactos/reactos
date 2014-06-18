@@ -96,14 +96,13 @@ typedef enum
    VERT_ATTRIB_POS = 0,
    VERT_ATTRIB_WEIGHT = 1,
    VERT_ATTRIB_NORMAL = 2,
-   VERT_ATTRIB_COLOR0 = 3,
-   VERT_ATTRIB_COLOR1 = 4,
-   VERT_ATTRIB_FOG = 5,
-   VERT_ATTRIB_COLOR_INDEX = 6,
-   VERT_ATTRIB_EDGEFLAG = 7,
-   VERT_ATTRIB_TEX = 8,
-   VERT_ATTRIB_POINT_SIZE = 9,
-   VERT_ATTRIB_MAX = 10
+   VERT_ATTRIB_COLOR = 3,
+   VERT_ATTRIB_FOG = 4,
+   VERT_ATTRIB_COLOR_INDEX = 5,
+   VERT_ATTRIB_EDGEFLAG = 6,
+   VERT_ATTRIB_TEX = 7,
+   VERT_ATTRIB_POINT_SIZE = 8,
+   VERT_ATTRIB_MAX = 9
 } gl_vert_attrib;
 
 /**
@@ -121,8 +120,7 @@ typedef enum
 #define VERT_BIT_POS             BITFIELD64_BIT(VERT_ATTRIB_POS)
 #define VERT_BIT_WEIGHT          BITFIELD64_BIT(VERT_ATTRIB_WEIGHT)
 #define VERT_BIT_NORMAL          BITFIELD64_BIT(VERT_ATTRIB_NORMAL)
-#define VERT_BIT_COLOR0          BITFIELD64_BIT(VERT_ATTRIB_COLOR0)
-#define VERT_BIT_COLOR1          BITFIELD64_BIT(VERT_ATTRIB_COLOR1)
+#define VERT_BIT_COLOR           BITFIELD64_BIT(VERT_ATTRIB_COLOR)
 #define VERT_BIT_FOG             BITFIELD64_BIT(VERT_ATTRIB_FOG)
 #define VERT_BIT_COLOR_INDEX     BITFIELD64_BIT(VERT_ATTRIB_COLOR_INDEX)
 #define VERT_BIT_EDGEFLAG        BITFIELD64_BIT(VERT_ATTRIB_EDGEFLAG)
@@ -143,20 +141,18 @@ typedef enum
 typedef enum
 {
    FRAG_ATTRIB_WPOS = 0,
-   FRAG_ATTRIB_COL0 = 1,
-   FRAG_ATTRIB_COL1 = 2,
-   FRAG_ATTRIB_FOGC = 3,
-   FRAG_ATTRIB_TEX = 4,
-   FRAG_ATTRIB_FACE = 5,  /**< front/back face */
-   FRAG_ATTRIB_PNTC = 6,  /**< sprite/point coord */
-   FRAG_ATTRIB_CLIP_DIST0 = 7,
-   FRAG_ATTRIB_CLIP_DIST1 = 8,
-   FRAG_ATTRIB_MAX = 9
+   FRAG_ATTRIB_COL = 1,
+   FRAG_ATTRIB_FOGC = 2,
+   FRAG_ATTRIB_TEX = 3,
+   FRAG_ATTRIB_FACE = 4,  /**< front/back face */
+   FRAG_ATTRIB_PNTC = 5,  /**< sprite/point coord */
+   FRAG_ATTRIB_CLIP_DIST0 = 6,
+   FRAG_ATTRIB_CLIP_DIST1 = 7,
+   FRAG_ATTRIB_MAX = 8
 } gl_frag_attrib;
 
 
-#define FRAG_BIT_COL0  (1 << FRAG_ATTRIB_COL0)
-#define FRAG_BIT_COL1  (1 << FRAG_ATTRIB_COL1)
+#define FRAG_BIT_COL  (1 << FRAG_ATTRIB_COL)
 #define FRAG_BIT_FOGC  (1 << FRAG_ATTRIB_FOGC)
 #define FRAG_BIT_TEX  (1 << FRAG_ATTRIB_TEX)
 
@@ -386,8 +382,6 @@ struct gl_lightmodel
    GLfloat Ambient[4];		/**< ambient color */
    GLboolean LocalViewer;	/**< Local (or infinite) view point? */
    GLboolean TwoSide;		/**< Two (or one) sided lighting? */
-   GLenum ColorControl;		/**< either GL_SINGLE_COLOR
-				 *    or GL_SEPARATE_SPECULAR_COLOR */
 };
 
 
@@ -452,14 +446,9 @@ struct gl_colorbuffer_attrib
     * control, only on the fixed-pointness of the render target.
     * The query does however depend on fragment color clamping.
     */
-   GLfloat BlendColor[4];               /**< Blending color */
 
-   GLenum SrcRGB;             /**< RGB blend source term */
-   GLenum DstRGB;             /**< RGB blend dest term */
-   GLenum SrcA;               /**< Alpha blend source term */
-   GLenum DstA;               /**< Alpha blend dest term */
-   GLenum EquationRGB;        /**< GL_ADD, GL_SUBTRACT, etc. */
-   GLenum EquationA;          /**< GL_ADD, GL_SUBTRACT, etc. */
+   GLenum SrcFactor;             /**< RGB blend source term */
+   GLenum DstFactor;             /**< RGB blend dest term */
    /*@}*/
 
    /** 
@@ -496,7 +485,6 @@ struct gl_current_attrib
    GLfloat RasterPos[4];
    GLfloat RasterDistance;
    GLfloat RasterColor[4];
-   GLfloat RasterSecondaryColor[4];
    GLfloat RasterTexCoords[4];
    GLboolean RasterPosValid;
    /*@}*/
@@ -572,7 +560,6 @@ struct gl_fog_attrib
    GLfloat End;			/**< End distance in eye coords */
    GLfloat Index;		/**< Fog index */
    GLenum Mode;			/**< Fog mode */
-   GLboolean ColorSumEnabled;
    GLenum FogCoordinateSource;  /**< GL_EXT_fog_coord */
    GLfloat _Scale;		/**< (End == Start) ? 1.0 : 1.0 / (End - Start) */
    GLenum FogDistanceMode;     /**< GL_NV_fog_distance */
@@ -1214,9 +1201,6 @@ struct gl_array_attrib
 
     GLbitfield64 NewState;		/**< mask of VERT_BIT_* values */
     GLboolean RebindArrays; /**< whether the VBO module should rebind arrays */
-
-    /* GL_ARB_vertex_buffer_object */
-    struct gl_buffer_object *ArrayBufferObj;
 };
 
 
@@ -1470,8 +1454,6 @@ struct gl_constants
    GLfloat MinLineWidthAA, MaxLineWidthAA;   /**< antialiased */
    GLfloat LineWidthGranularity;
 
-   GLuint MaxColorTableSize;
-
    GLuint MaxClipPlanes;
    GLuint MaxLights;
    GLfloat MaxShininess;                     /**< GL_NV_light_max_exponent */
@@ -1645,17 +1627,16 @@ struct gl_matrix_stack
  */
 /*@{*/
 #define DD_FLATSHADE                0x1
-#define DD_SEPARATE_SPECULAR        0x2
-#define DD_TRI_CULL_FRONT_BACK      0x4 /* special case on some hw */
-#define DD_TRI_LIGHT_TWOSIDE        0x8
-#define DD_TRI_UNFILLED             0x10
-#define DD_TRI_SMOOTH               0x20
-#define DD_TRI_STIPPLE              0x40
-#define DD_TRI_OFFSET               0x80
-#define DD_LINE_SMOOTH              0x100
-#define DD_LINE_STIPPLE             0x200
-#define DD_POINT_SMOOTH             0x400
-#define DD_POINT_ATTEN              0x800
+#define DD_TRI_CULL_FRONT_BACK      0x2 /* special case on some hw */
+#define DD_TRI_LIGHT_TWOSIDE        0x4
+#define DD_TRI_UNFILLED             0x8
+#define DD_TRI_SMOOTH               0x10
+#define DD_TRI_STIPPLE              0x20
+#define DD_TRI_OFFSET               0x40
+#define DD_LINE_SMOOTH              0x80
+#define DD_LINE_STIPPLE             0x100
+#define DD_POINT_SMOOTH             0x200
+#define DD_POINT_ATTEN              0x400
 /*@}*/
 
 

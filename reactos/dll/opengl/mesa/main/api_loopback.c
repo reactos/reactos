@@ -55,7 +55,6 @@
 #define RECTF(a,b,c,d)              CALL_Rectf(GET_DISPATCH(), (a,b,c,d))
 
 #define FOGCOORDF(x)                CALL_FogCoordfEXT(GET_DISPATCH(), (x))
-#define SECONDARYCOLORF(a,b,c)      CALL_SecondaryColor3fEXT(GET_DISPATCH(), (a,b,c))
 
 #define ATTRIB1NV(index,x)          CALL_VertexAttrib1fNV(GET_DISPATCH(), (index,x))
 #define ATTRIB2NV(index,x,y)        CALL_VertexAttrib2fNV(GET_DISPATCH(), (index,x,y))
@@ -765,113 +764,6 @@ loopback_Rectsv(const GLshort *v1, const GLshort *v2)
    RECTF((GLfloat) v1[0], (GLfloat) v1[1], (GLfloat) v2[0], (GLfloat) v2[1]);
 }
 
-static void GLAPIENTRY
-loopback_SecondaryColor3bEXT_f( GLbyte red, GLbyte green, GLbyte blue )
-{
-   SECONDARYCOLORF( BYTE_TO_FLOAT(red),
-		    BYTE_TO_FLOAT(green),
-		    BYTE_TO_FLOAT(blue) );
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3dEXT_f( GLdouble red, GLdouble green, GLdouble blue )
-{
-   SECONDARYCOLORF( (GLfloat) red, (GLfloat) green, (GLfloat) blue );
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3iEXT_f( GLint red, GLint green, GLint blue )
-{
-   SECONDARYCOLORF( INT_TO_FLOAT(red),
-		    INT_TO_FLOAT(green),
-		    INT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3sEXT_f( GLshort red, GLshort green, GLshort blue )
-{
-   SECONDARYCOLORF(SHORT_TO_FLOAT(red),
-                   SHORT_TO_FLOAT(green),
-                   SHORT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3uiEXT_f( GLuint red, GLuint green, GLuint blue )
-{
-   SECONDARYCOLORF(UINT_TO_FLOAT(red),
-                   UINT_TO_FLOAT(green),
-                   UINT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3usEXT_f( GLushort red, GLushort green, GLushort blue )
-{
-   SECONDARYCOLORF(USHORT_TO_FLOAT(red),
-                   USHORT_TO_FLOAT(green),
-                   USHORT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3ubEXT_f( GLubyte red, GLubyte green, GLubyte blue )
-{
-   SECONDARYCOLORF(UBYTE_TO_FLOAT(red),
-                   UBYTE_TO_FLOAT(green),
-                   UBYTE_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3bvEXT_f( const GLbyte *v )
-{
-   SECONDARYCOLORF(BYTE_TO_FLOAT(v[0]),
-                   BYTE_TO_FLOAT(v[1]),
-                   BYTE_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3dvEXT_f( const GLdouble *v )
-{
-   SECONDARYCOLORF( (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2] );
-}
-static void GLAPIENTRY
-loopback_SecondaryColor3ivEXT_f( const GLint *v )
-{
-   SECONDARYCOLORF(INT_TO_FLOAT(v[0]),
-                   INT_TO_FLOAT(v[1]),
-                   INT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3svEXT_f( const GLshort *v )
-{
-   SECONDARYCOLORF(SHORT_TO_FLOAT(v[0]),
-                   SHORT_TO_FLOAT(v[1]),
-                   SHORT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3uivEXT_f( const GLuint *v )
-{
-   SECONDARYCOLORF(UINT_TO_FLOAT(v[0]),
-                   UINT_TO_FLOAT(v[1]),
-                   UINT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3usvEXT_f( const GLushort *v )
-{
-   SECONDARYCOLORF(USHORT_TO_FLOAT(v[0]),
-                   USHORT_TO_FLOAT(v[1]),
-                   USHORT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3ubvEXT_f( const GLubyte *v )
-{
-   SECONDARYCOLORF(UBYTE_TO_FLOAT(v[0]),
-                   UBYTE_TO_FLOAT(v[1]),
-                   UBYTE_TO_FLOAT(v[2]));
-}
-
 
 /*
  * GL_NV_vertex_program:
@@ -1026,21 +918,6 @@ _mesa_loopback_init_api_table( struct _glapi_table *dest )
    SET_Color4uiv(dest, loopback_Color4uiv_f);
    SET_Color4usv(dest, loopback_Color4usv_f);
    SET_Color4ubv(dest, loopback_Color4ubv_f);
-
-   SET_SecondaryColor3bEXT(dest, loopback_SecondaryColor3bEXT_f);
-   SET_SecondaryColor3dEXT(dest, loopback_SecondaryColor3dEXT_f);
-   SET_SecondaryColor3iEXT(dest, loopback_SecondaryColor3iEXT_f);
-   SET_SecondaryColor3sEXT(dest, loopback_SecondaryColor3sEXT_f);
-   SET_SecondaryColor3uiEXT(dest, loopback_SecondaryColor3uiEXT_f);
-   SET_SecondaryColor3usEXT(dest, loopback_SecondaryColor3usEXT_f);
-   SET_SecondaryColor3ubEXT(dest, loopback_SecondaryColor3ubEXT_f);
-   SET_SecondaryColor3bvEXT(dest, loopback_SecondaryColor3bvEXT_f);
-   SET_SecondaryColor3dvEXT(dest, loopback_SecondaryColor3dvEXT_f);
-   SET_SecondaryColor3ivEXT(dest, loopback_SecondaryColor3ivEXT_f);
-   SET_SecondaryColor3svEXT(dest, loopback_SecondaryColor3svEXT_f);
-   SET_SecondaryColor3uivEXT(dest, loopback_SecondaryColor3uivEXT_f);
-   SET_SecondaryColor3usvEXT(dest, loopback_SecondaryColor3usvEXT_f);
-   SET_SecondaryColor3ubvEXT(dest, loopback_SecondaryColor3ubvEXT_f);
       
    SET_EdgeFlagv(dest, loopback_EdgeFlagv);
 
