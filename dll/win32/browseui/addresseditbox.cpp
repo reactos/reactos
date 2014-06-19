@@ -74,6 +74,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editContro
     fEditWindow.SubclassWindow(editControl);
     fSite = param18;
 
+    SHAutoComplete(fEditWindow.m_hWnd, SHACF_FILESYSTEM | SHACF_URLALL | SHACF_USETAB);
+
     // take advice to watch events
     HRESULT hResult = IUnknown_QueryService(param18, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
     if (SUCCEEDED(hResult))
@@ -98,8 +100,12 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 
     CComPtr<IShellBrowser> pisb;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    IUnknown_GetWindow(pisb, &topLevelWindow);
+    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     LPWSTR input;
     int inputLength = GetWindowTextLength(fCombobox.m_hWnd) + 2;
@@ -118,12 +124,19 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     {
         addressLength += 2;
         address = new WCHAR[addressLength];
-        ExpandEnvironmentStrings(input, address, 0);
+        if (!ExpandEnvironmentStrings(input, address, addressLength))
+        {
+            delete[] address;
+            address = input;
+        }
     }
 
     CComPtr<IShellFolder> psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
-    hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+    if (SUCCEEDED(hr))
+    {
+        hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+    }
 
     if (address != input)
         delete [] address;
@@ -171,8 +184,21 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(long paramC)
 HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
     HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    // handle fill of listbox here
-    return E_NOTIMPL;
+    LPNMHDR hdr;
+
+    *theResult = 0;
+
+    switch (uMsg)
+    {
+    case WM_NOTIFY:
+        hdr = (LPNMHDR) lParam;
+        if (hdr->code == CBEN_ENDEDIT)
+        {
+            ParseNow(0);
+        }
+        break;
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::IsWindowOwner(HWND hWnd)

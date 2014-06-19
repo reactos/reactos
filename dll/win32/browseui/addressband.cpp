@@ -347,6 +347,8 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
     CComPtr<IWinEventHandler>               winEventHandler;
     HRESULT                                 hResult;
 
+    *theResult = 0;
+
     switch (uMsg)
     {
         case WM_WININICHANGE:
@@ -544,7 +546,6 @@ LRESULT CAddressBand::OnNotifyClick(WPARAM wParam, NMHDR *notifyHeader, BOOL &bH
 {
     if (notifyHeader->hwndFrom == fGoButton)
     {
-        fAddressEditBox->ParseNow(0);
         fAddressEditBox->Execute(0);
     }
     return 0;
