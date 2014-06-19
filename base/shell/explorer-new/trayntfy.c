@@ -44,6 +44,13 @@ typedef struct _SYS_PAGER_DATA
     INT VisibleButtonCount;
 } SYS_PAGER_WND_DATA, *PSYS_PAGER_WND_DATA;
 
+// Data comes from shell32/systray.cpp -> TrayNotifyCDS_Dummy
+typedef struct _SYS_PAGER_COPY_DATA
+{
+    DWORD           cookie;
+    DWORD           notify_code;
+    NOTIFYICONDATA  nicon_data;
+} SYS_PAGER_COPY_DATA, *PSYS_PAGER_COPY_DATA;
 
 static PNOTIFY_ITEM
 SysPagerWnd_CreateNotifyItemData(IN OUT PSYS_PAGER_WND_DATA This)
@@ -418,7 +425,7 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
     PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT)lParam;
     if (cpData->dwData == 1)
     {
-        DWORD trayCommand;
+        SYS_PAGER_COPY_DATA data;
         NOTIFYICONDATA *iconData;
         HWND parentHWND;
         RECT windowRect;
@@ -426,15 +433,21 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
         parentHWND = GetParent(parentHWND);
         GetClientRect(parentHWND, &windowRect);
 
-        /* FIXME: ever heard of "struct"? */
-        trayCommand = *(DWORD *) (((BYTE *)cpData->lpData) + 4);
-        iconData = (NOTIFYICONDATA *) (((BYTE *)cpData->lpData) + 8);
+        ZeroMemory(&data, sizeof(data));
+        CopyMemory(
+            &data,
+            (PSYS_PAGER_COPY_DATA) cpData->lpData,
+            cpData->dwData);
+        iconData = &data.nicon_data;
 
-        switch (trayCommand)
+        switch (data.notify_code)
         {
             case NIM_ADD:
             {
                 PPNOTIFY_ITEM NotifyPointer;
+
+                DbgPrint("NotifyMessage received with NIM_ADD\n");
+
                 NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,
                                                                        iconData);
                 if (!NotifyPointer)
@@ -446,6 +459,9 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
             case NIM_MODIFY:
             {
                 PPNOTIFY_ITEM NotifyPointer;
+
+                DbgPrint("NotifyMessage received with NIM_MODIFY\n");
+
                 NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,
                                                                        iconData);
                 if (!NotifyPointer)
@@ -460,9 +476,14 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
             }
             case NIM_DELETE:
             {
+                DbgPrint("NotifyMessage received with NIM_DELETE\n");
+
                 SysPagerWnd_RemoveButton(This, iconData);
                 break;
             }
+            default:
+                DbgPrint("NotifyMessage received with unknown code %d.\n", data.notify_code);
+                break;
         }
         SendMessage(parentHWND,
                     WM_SIZE,
