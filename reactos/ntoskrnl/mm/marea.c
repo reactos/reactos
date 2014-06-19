@@ -399,7 +399,6 @@ MmInsertMemoryArea(
             Vad->EndingVpn = Vad->StartingVpn;
         }
        Vad->u.VadFlags.Spare = 1;
-       Vad->u.VadFlags.PrivateMemory = 1;
        Vad->u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
 
        /* Insert the VAD */
