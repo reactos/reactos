@@ -547,7 +547,7 @@ CInternetToolbar::CInternetToolbar()
     fLocked = false;
     fMenuBandWindow = NULL;
     fNavigationWindow = NULL;
-    fMenuCallback = new CComDebugObject<CMenuCallback>();
+    fMenuCallback = new CComObject<CMenuCallback>();
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
 

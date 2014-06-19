@@ -1093,12 +1093,17 @@ HRESULT CShellBrowser::GetMenuBand(REFIID riid, void **shellMenu)
     CComPtr<IDeskBand>                      deskBand;
     HRESULT                                 hResult;
 
+    if (!fClientBars[BIInternetToolbar].clientBar)
+        return E_FAIL;
+
     hResult = IUnknown_QueryService(fClientBars[BIInternetToolbar].clientBar, SID_IBandSite, IID_PPV_ARG(IBandSite, &bandSite));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
     hResult = bandSite->QueryBand(1, &deskBand, NULL, NULL, 0);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
     return deskBand->QueryInterface(riid, shellMenu);
 }
 

@@ -28,6 +28,7 @@ target_link_libraries(rshell
     wine)
 
 add_importlibs(rshell
+    uxtheme
     shlwapi
     shell32
     gdi32

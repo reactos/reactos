@@ -44,7 +44,7 @@ HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
 #else
     *ppv = NULL;
 
-    CMenuBand * site = new CComDebugObject<CMenuBand>();
+    CMenuBand * site = new CComObject<CMenuBand>();
 
     if (!site)
         return E_OUTOFMEMORY;

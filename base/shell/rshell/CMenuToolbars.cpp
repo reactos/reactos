@@ -21,6 +21,7 @@
 #include <windowsx.h>
 #include <commoncontrols.h>
 #include <shlwapi_undoc.h>
+#include <uxtheme.h>
 
 #include "CMenuBand.h"
 #include "CMenuToolbars.h"
@@ -195,7 +196,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         isHot = m_hotBar == this && (int) cdraw->nmcd.dwItemSpec == m_hotItem;
         isPopup = m_popupBar == this && (int) cdraw->nmcd.dwItemSpec == m_popupItem;
 
-        if (m_initFlags & SMINIT_VERTICAL)
+        if (m_initFlags & SMINIT_VERTICAL || IsAppThemed())
         {
             // Remove HOT and CHECKED flags (will restore HOT if necessary)
             cdraw->nmcd.uItemState &= ~(CDIS_HOT | CDIS_CHECKED);
@@ -829,7 +830,7 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
 
 HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)
 {
-    m_menuBand->_KillPopupTimers();
+    this->m_menuBand->_KillPopupTimers();
 
     INT index;
     DWORD_PTR data;
