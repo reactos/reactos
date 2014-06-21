@@ -72,7 +72,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
         /* Compare the name */
         if (RtlEqualUnicodeString(RemainingName,
                                   &DesktopName,
-                                  (Attributes & OBJ_CASE_INSENSITIVE)))
+                                  (Attributes & OBJ_CASE_INSENSITIVE) != 0))
         {
             /* We found a match. Did this come from a create? */
             if (Context)
