@@ -1820,7 +1820,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
     /* FIXME: Handle relative case semicolon-lookup here */
 
     /* Calculate length */
-    Length += (ULONG)wcslen(DllName) + sizeof(UNICODE_NULL);
+    Length += (ULONG)wcslen(DllName) + 1;
     if (Length > UNICODE_STRING_MAX_CHARS)
     {
         /* Too long, fail */
