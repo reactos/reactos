@@ -15,9 +15,9 @@ HMODULE hLibrary = NULL;
 LONG
 CALLBACK
 CPlApplet(HWND hwndCpl,
-		  UINT uMsg,
-		  LPARAM lParam1,
-		  LPARAM lParam2)
+          UINT uMsg,
+          LPARAM lParam1,
+          LPARAM lParam2)
 {
     switch (uMsg)
     {
@@ -66,24 +66,25 @@ CPlApplet(HWND hwndCpl,
 BOOL
 WINAPI
 DllMain(HINSTANCE hinstDLL,
-		DWORD dwReason,
-		LPVOID lpReserved)
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
-	INITCOMMONCONTROLSEX InitControls;
-	UNREFERENCED_PARAMETER(lpReserved);
+    INITCOMMONCONTROLSEX InitControls;
+    UNREFERENCED_PARAMETER(lpReserved);
 
-	switch(dwReason)
-	{
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
+    switch(dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+        case DLL_THREAD_ATTACH:
+        {
+            InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+            InitControls.dwICC = ICC_LISTVIEW_CLASSES | ICC_UPDOWN_CLASS | ICC_BAR_CLASSES;
+            InitCommonControlsEx(&InitControls);
 
-			InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-			InitControls.dwICC = ICC_LISTVIEW_CLASSES | ICC_UPDOWN_CLASS | ICC_BAR_CLASSES;
-			InitCommonControlsEx(&InitControls);
+            hApplet = hinstDLL;
+            break;
+        }
+    }
 
-			hApplet = hinstDLL;
-			break;
-  }
-
-  return TRUE;
+    return TRUE;
 }
