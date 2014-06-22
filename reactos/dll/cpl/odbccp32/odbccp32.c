@@ -19,36 +19,47 @@ CPlApplet(HWND hwndCpl,
 		  LPARAM lParam1,
 		  LPARAM lParam2)
 {
-	if (ODBCProc == NULL)
-	{
-		TCHAR szBuffer[MAX_PATH];
+    switch (uMsg)
+    {
+        case CPL_INIT:
+            return TRUE;
 
-		if (ExpandEnvironmentStrings(_T("%systemroot%\\system32\\odbccp32.dll"),
-									 szBuffer,
-									 sizeof(szBuffer) / sizeof(TCHAR)) > 0)
-		{
-			hLibrary = LoadLibrary(szBuffer);
-			if (hLibrary)
-			{
-				ODBCProc = (APPLET_PROC)GetProcAddress(hLibrary, "ODBCCPlApplet");
-			}
-		}
-	}
+        case CPL_DBLCLK:
+        {
+            if (ODBCProc == NULL)
+            {
+                TCHAR szBuffer[MAX_PATH];
 
-	if (ODBCProc)
-	{
-		return ODBCProc(hwndCpl, uMsg, lParam1, lParam2);
-	}
-	else
-	{
-		if(hLibrary)
-		{
-			FreeLibrary(hLibrary);
-		}
+                if (ExpandEnvironmentStrings(_T("%systemroot%\\system32\\odbccp32.dll"),
+                                             szBuffer,
+                                             sizeof(szBuffer) / sizeof(TCHAR)) > 0)
+                {
+                    hLibrary = LoadLibrary(szBuffer);
+                    if (hLibrary)
+                    {
+                        ODBCProc = (APPLET_PROC)GetProcAddress(hLibrary, "ODBCCPlApplet");
+                    }
+                }
+            }
 
-		TerminateProcess(GetCurrentProcess(), -1);
-		return (LONG)-1;
-	}
+            if (ODBCProc)
+            {
+                return ODBCProc(hwndCpl, uMsg, lParam1, lParam2);
+            }
+            else
+            {
+                if (hLibrary)
+                {
+                    FreeLibrary(hLibrary);
+                }
+
+                TerminateProcess(GetCurrentProcess(), -1);
+                return (LONG)-1;
+            }
+        }
+    }
+
+    return FALSE;
 }
 
 
