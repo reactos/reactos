@@ -2640,8 +2640,33 @@ HandleTrayContextMenu:
                             break;
 
                         case IDM_SEARCH:
-                        case IDM_HELPANDSUPPORT:
                             break;
+
+                        case IDM_HELPANDSUPPORT:
+                        {
+                            /* TODO: Implement properly */
+
+                            LPCWSTR strSite = L"http://www.reactos.org/";
+
+                            /* TODO: Make localizable */
+                            LPCWSTR strCaption = L"Sorry";
+                            LPCWSTR strMessage = L"ReactOS could not browse to '%s' (error %d). Please make sure there is a web browser installed.";
+                            WCHAR tmpMessage[512];
+
+                            /* TODO: Read from the registry */
+                            LPCWSTR strVerb = NULL; /* default */
+                            LPCWSTR strPath = strSite;
+                            LPCWSTR strParams = NULL;
+
+                            /* The return value is defined as HINSTANCE for backwards compatibility only, the cast is needed */
+                            int result = (int) ShellExecuteW(hwnd, strVerb, strPath, strParams, NULL, SW_SHOWNORMAL);
+                            if (result <= 32)
+                            {
+                                StringCchPrintfW(tmpMessage, 512, strMessage, strSite, result);
+                                MessageBoxExW(hwnd, tmpMessage, strCaption, MB_OK, 0);
+                            }
+                            break;
+                        }
 
                         case IDM_RUN:
                         {
