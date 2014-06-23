@@ -607,9 +607,9 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
         do
         {
             /* Get each byte from the pseudo random number and store it in the buffer */
-            *pBuffer = (BYTE)(uPseudoRandom >> 8 * (dwLen % 4) & 0xFF);
+            *pBuffer = (BYTE)(uPseudoRandom >> 8 * (dwLen % 3) & 0xFF);
             ++pBuffer;
-        } while(--dwLen % 4);
+        } while(--dwLen % 3);
     } while(dwLen);
 
     return TRUE;
