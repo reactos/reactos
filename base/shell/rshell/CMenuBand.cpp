@@ -762,8 +762,12 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
 
     HWND hwnd = m_menuOwner ? m_menuOwner : m_topLevelWindow;
 
+    m_focusManager->PushTrackedPopup(popup);
+
     TRACE("Before Tracking\n");
     uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, hwnd, NULL);
+
+    m_focusManager->PopTrackedPopup(popup);
 
     if (uCommand != 0)
     {
