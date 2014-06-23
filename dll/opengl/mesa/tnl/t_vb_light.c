@@ -50,7 +50,6 @@ struct material_cursor {
 struct light_stage_data {
    GLvector4f Input;
    GLvector4f LitColor[2];
-   GLvector4f LitSecondary[2];
    light_func *light_func_tab;
 
    struct material_cursor mat[MAT_ATTRIB_MAX];
@@ -113,7 +112,7 @@ prepare_materials(struct gl_context *ctx,
       const GLuint bitmask = ctx->Light.ColorMaterialBitmask;
       for (i = 0 ; i < MAT_ATTRIB_MAX ; i++)
 	 if (bitmask & (1<<i))
-	    VB->AttribPtr[_TNL_ATTRIB_MAT_FRONT_AMBIENT + i] = VB->AttribPtr[_TNL_ATTRIB_COLOR0];
+	    VB->AttribPtr[_TNL_ATTRIB_MAT_FRONT_AMBIENT + i] = VB->AttribPtr[_TNL_ATTRIB_COLOR];
    }
 
    /* Now, for each material attribute that's tracking vertex color, save
@@ -246,9 +245,6 @@ static void validate_lighting( struct gl_context *ctx,
       return;
 
    if (ctx->Light._NeedVertices) {
-      if (ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
-	 tab = _tnl_light_spec_tab;
-      else
 	 tab = _tnl_light_tab;
    }
    else {
@@ -290,13 +286,9 @@ static GLboolean init_lighting( struct gl_context *ctx,
    _mesa_vector4f_alloc( &store->Input, 0, size, 32 );
    _mesa_vector4f_alloc( &store->LitColor[0], 0, size, 32 );
    _mesa_vector4f_alloc( &store->LitColor[1], 0, size, 32 );
-   _mesa_vector4f_alloc( &store->LitSecondary[0], 0, size, 32 );
-   _mesa_vector4f_alloc( &store->LitSecondary[1], 0, size, 32 );
 
    store->LitColor[0].size = 4;
    store->LitColor[1].size = 4;
-   store->LitSecondary[0].size = 3;
-   store->LitSecondary[1].size = 3;
 
    return GL_TRUE;
 }
@@ -312,8 +304,6 @@ static void dtr( struct tnl_pipeline_stage *stage )
       _mesa_vector4f_free( &store->Input );
       _mesa_vector4f_free( &store->LitColor[0] );
       _mesa_vector4f_free( &store->LitColor[1] );
-      _mesa_vector4f_free( &store->LitSecondary[0] );
-      _mesa_vector4f_free( &store->LitSecondary[1] );
       FREE( store );
       stage->privatePtr = NULL;
    }

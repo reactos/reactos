@@ -60,6 +60,7 @@ pcmcia.sys=,,,,,,,,,,,,4
 swenum.sys=,,,,,,,,,,,,4
 ntdll.dll=,,,,,,,,,,,,2
 wmilib.sys=,,,,,,,,,,,,4
+ksecdd.sys=,,,,,,,,,,,,4
 
 [HardwareIdsDatabase]
 ;*PNP0A00 = isapnp

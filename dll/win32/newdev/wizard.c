@@ -1255,49 +1255,49 @@ DisplayWizard(
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.hInstance = hDllInstance;
     psp.lParam = (LPARAM)DevInstData;
-    psp.pfnDlgProc = (DLGPROC) WelcomeDlgProc;
+    psp.pfnDlgProc = WelcomeDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_WELCOMEPAGE);
     ahpsp[IDD_WELCOMEPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the Select Source page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pfnDlgProc = (DLGPROC) CHSourceDlgProc;
+    psp.pfnDlgProc = CHSourceDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_CHSOURCE);
     ahpsp[IDD_CHSOURCE] = CreatePropertySheetPage(&psp);
 
     /* Create the Search driver page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pfnDlgProc = (DLGPROC) SearchDrvDlgProc;
+    psp.pfnDlgProc = SearchDrvDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_SEARCHDRV);
     ahpsp[IDD_SEARCHDRV] = CreatePropertySheetPage(&psp);
 
     /* Create the Install driver page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pfnDlgProc = (DLGPROC) InstallDrvDlgProc;
+    psp.pfnDlgProc = InstallDrvDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLDRV);
     ahpsp[IDD_INSTALLDRV] = CreatePropertySheetPage(&psp);
 
     /* Create the No driver page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
-    psp.pfnDlgProc = (DLGPROC) NoDriverDlgProc;
+    psp.pfnDlgProc = NoDriverDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NODRIVER);
     ahpsp[IDD_NODRIVER] = CreatePropertySheetPage(&psp);
 
     /* Create the Install failed page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
-    psp.pfnDlgProc = (DLGPROC) InstallFailedDlgProc;
+    psp.pfnDlgProc = InstallFailedDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLFAILED);
     ahpsp[IDD_INSTALLFAILED] = CreatePropertySheetPage(&psp);
 
     /* Create the Need reboot page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
-    psp.pfnDlgProc = (DLGPROC) NeedRebootDlgProc;
+    psp.pfnDlgProc = NeedRebootDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NEEDREBOOT);
     ahpsp[IDD_NEEDREBOOT] = CreatePropertySheetPage(&psp);
 
     /* Create the Finish page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
-    psp.pfnDlgProc = (DLGPROC) FinishDlgProc;
+    psp.pfnDlgProc = FinishDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
     ahpsp[IDD_FINISHPAGE] = CreatePropertySheetPage(&psp);
 

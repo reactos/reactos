@@ -1072,8 +1072,8 @@ LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
         if (!NT_SUCCESS(Status) && (Status != STATUS_DLL_NOT_FOUND))
         {
             /* Failure */
-            DbgPrintEx(81, //DPFLTR_LDR_ID,
-                       0,
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "LDR: %s - call to LdrpCheckForKnownDll(\"%ws\", ...) failed with status %x\n",
                         __FUNCTION__,
                         DllName,
@@ -1660,8 +1660,8 @@ LdrpResolveFullName(IN PUNICODE_STRING OriginalName,
     /* Display debug output if snaps are on */
     if (ShowSnaps)
     {
-        DbgPrintEx(81, //DPFLTR_LDR_ID,
-                   0,
+        DbgPrintEx(DPFLTR_LDR_ID,
+                   DPFLTR_ERROR_LEVEL,
                    "LDR: %s - Expanding full name of %wZ\n",
                    __FUNCTION__,
                    OriginalName);
@@ -1737,16 +1737,16 @@ Quickie:
         /* Check which output to use -- failure or success */
         if (NT_SUCCESS(Status))
         {
-            DbgPrintEx(81, //DPFLTR_LDR_ID,
-                       0,
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "LDR: %s - Expanded to %wZ\n",
                        __FUNCTION__,
                        *ExpandedName);
         }
         else
         {
-            DbgPrintEx(81, //DPFLTR_LDR_ID,
-                       0,
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "LDR: %s - Failed to expand %wZ; 0x%08x\n",
                        __FUNCTION__,
                        OriginalName,
@@ -1784,8 +1784,8 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
     /* Display debug output if snaps are on */
     if (ShowSnaps)
     {
-        DbgPrintEx(81, //DPFLTR_LDR_ID,
-                   0,
+        DbgPrintEx(DPFLTR_LDR_ID,
+                   DPFLTR_ERROR_LEVEL,
                    "LDR: %s - Looking for %ws in %ws\n",
                    __FUNCTION__,
                    DllName,
@@ -1820,7 +1820,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
     /* FIXME: Handle relative case semicolon-lookup here */
 
     /* Calculate length */
-    Length += (ULONG)wcslen(DllName) + sizeof(UNICODE_NULL);
+    Length += (ULONG)wcslen(DllName) + 1;
     if (Length > UNICODE_STRING_MAX_CHARS)
     {
         /* Too long, fail */
@@ -1852,8 +1852,8 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
             /* Display debug output if snaps are on */
             if (ShowSnaps)
             {
-                DbgPrintEx(81, //DPFLTR_LDR_ID,
-                           0,
+                DbgPrintEx(DPFLTR_LDR_ID,
+                           DPFLTR_ERROR_LEVEL,
                            "LDR: %s - Looking for %ws\n",
                            __FUNCTION__,
                            Buffer);
@@ -1932,16 +1932,16 @@ Quickie:
         /* Check which output to use -- failure or success */
         if (NT_SUCCESS(Status))
         {
-            DbgPrintEx(81, //DPFLTR_LDR_ID,
-                       0,
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "LDR: %s - Returning %wZ\n",
                        __FUNCTION__,
                        *ExpandedName);
         }
         else
         {
-            DbgPrintEx(81, //DPFLTR_LDR_ID,
-                       0,
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "LDR: %s -  Unable to locate %ws in %ws: 0x%08x\n",
                        __FUNCTION__,
                        DllName,
@@ -2455,8 +2455,8 @@ LdrpLoadDll(IN BOOLEAN Redirected,
             sizeof(NameBuffer))
         {
             /* No space to add the extension */
-            DbgPrintEx(81, //DPFLTR_LDR_ID,
-                       0,
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "LDR: %s - Dll name missing extension; with extension "
                        "added the name is too long\n"
                        "   DllName: (@ %p) \"%wZ\"\n"

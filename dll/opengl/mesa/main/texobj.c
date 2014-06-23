@@ -216,7 +216,6 @@ valid_texture_object(const struct gl_texture_object *tex)
    case 0:
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
-   case GL_TEXTURE_3D:
    case GL_TEXTURE_CUBE_MAP_ARB:
       return GL_TRUE;
    case 0x99:
@@ -365,12 +364,6 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
                      t->Image[0][baseLevel]->HeightLog2);
       maxLevels = ctx->Const.MaxTextureLevels;
    }
-   else if (t->Target == GL_TEXTURE_3D) {
-      GLint max = MAX2(t->Image[0][baseLevel]->WidthLog2,
-                       t->Image[0][baseLevel]->HeightLog2);
-      maxLog2 = MAX2(max, (GLint)(t->Image[0][baseLevel]->DepthLog2));
-      maxLevels = ctx->Const.Max3DTextureLevels;
-   }
    else if (t->Target == GL_TEXTURE_CUBE_MAP_ARB) {
       maxLog2 = MAX2(t->Image[0][baseLevel]->WidthLog2,
                      t->Image[0][baseLevel]->HeightLog2);
@@ -500,49 +493,6 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
                if (width==1 && height==1) {
                   return;  /* found smallest needed mipmap, all done! */
                }
-            }
-         }
-      }
-      else if (t->Target == GL_TEXTURE_3D) {
-         /* Test 3-D mipmaps */
-         GLuint width = t->Image[0][baseLevel]->Width2;
-         GLuint height = t->Image[0][baseLevel]->Height2;
-         GLuint depth = t->Image[0][baseLevel]->Depth2;
-         for (i = baseLevel + 1; i < maxLevels; i++) {
-            if (width > 1) {
-               width /= 2;
-            }
-            if (height > 1) {
-               height /= 2;
-            }
-            if (depth > 1) {
-               depth /= 2;
-            }
-            if (i >= minLevel && i <= maxLevel) {
-               const struct gl_texture_image *img = t->Image[0][i];
-               if (!img) {
-                  incomplete(t, "3D Image[%d] is missing", i);
-                  return;
-               }
-               if (img->_BaseFormat == GL_DEPTH_COMPONENT) {
-                  incomplete(t, "GL_DEPTH_COMPONENT only works with 1/2D tex");
-                  return;
-               }
-               if (img->Width2 != width) {
-                  incomplete(t, "3D Image[%d] bad width %u", i, img->Width2);
-                  return;
-               }
-               if (img->Height2 != height) {
-                  incomplete(t, "3D Image[%d] bad height %u", i, img->Height2);
-                  return;
-               }
-               if (img->Depth2 != depth) {
-                  incomplete(t, "3D Image[%d] bad depth %u", i, img->Depth2);
-                  return;
-               }
-            }
-            if (width == 1 && height == 1 && depth == 1) {
-               return;  /* found smallest needed mipmap, all done! */
             }
          }
       }
@@ -863,8 +813,6 @@ target_enum_to_index(GLenum target)
       return TEXTURE_1D_INDEX;
    case GL_TEXTURE_2D:
       return TEXTURE_2D_INDEX;
-   case GL_TEXTURE_3D:
-      return TEXTURE_3D_INDEX;
    case GL_TEXTURE_CUBE_MAP_ARB:
       return TEXTURE_CUBE_INDEX;
    default:

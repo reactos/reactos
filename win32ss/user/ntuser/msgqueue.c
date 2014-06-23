@@ -1369,7 +1369,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
     else
     {
-        pwndMsg = co_WinPosWindowFromPoint(NULL, &msg->pt, &hittest, TRUE);
+        pwndMsg = co_WinPosWindowFromPoint(NULL, &msg->pt, &hittest, FALSE);//TRUE);
     }
 
     TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);

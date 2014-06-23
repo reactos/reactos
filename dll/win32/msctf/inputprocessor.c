@@ -227,8 +227,8 @@ static HRESULT WINAPI InputProcessorProfiles_Unregister(
     StringFromGUID2(rclsid, buf, 39);
     sprintfW(fullkey,szwTipfmt,szwSystemTIPKey,buf);
 
-    RegDeleteTreeW(HKEY_LOCAL_MACHINE, fullkey);
-    RegDeleteTreeW(HKEY_CURRENT_USER, fullkey);
+    SHDeleteKeyW(HKEY_LOCAL_MACHINE, fullkey);
+    SHDeleteKeyW(HKEY_CURRENT_USER, fullkey);
 
     return S_OK;
 }

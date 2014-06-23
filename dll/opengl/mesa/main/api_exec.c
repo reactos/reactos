@@ -30,8 +30,6 @@
 
 #include <precomp.h>
 
-#include "histogram.h"
-
 #if FEATURE_GL
 
 
@@ -170,7 +168,6 @@ _mesa_create_exec_table(void)
    SET_ReadPixels(exec, _mesa_ReadPixels);
    SET_Rotated(exec, _mesa_Rotated);
    SET_Scaled(exec, _mesa_Scaled);
-   SET_SecondaryColorPointerEXT(exec, _mesa_SecondaryColorPointerEXT);
    SET_TexEnvf(exec, _mesa_TexEnvf);
    SET_TexEnviv(exec, _mesa_TexEnviv);
 
@@ -208,56 +205,9 @@ _mesa_create_exec_table(void)
    SET_VertexPointer(exec, _mesa_VertexPointer);
 #endif
 
-   /* 1.2 */
-#if _HAVE_FULL_GL
-   SET_CopyTexSubImage3D(exec, _mesa_CopyTexSubImage3D);
-   SET_TexImage3D(exec, _mesa_TexImage3D);
-   SET_TexSubImage3D(exec, _mesa_TexSubImage3D);
-#endif
-
-   /* OpenGL 1.2  GL_ARB_imaging */
-   SET_BlendColor(exec, _mesa_BlendColor);
-   SET_BlendEquation(exec, _mesa_BlendEquation);
-   SET_BlendEquationSeparateEXT(exec, _mesa_BlendEquationSeparateEXT);
-
-   _mesa_init_colortable_dispatch(exec);
-   _mesa_init_convolve_dispatch(exec);
-   _mesa_init_histogram_dispatch(exec);
-
-   /* 2. GL_EXT_blend_color */
-#if 0
-/*    SET_BlendColorEXT(exec, _mesa_BlendColorEXT); */
-#endif
-
    /* 3. GL_EXT_polygon_offset */
 #if _HAVE_FULL_GL
    SET_PolygonOffsetEXT(exec, _mesa_PolygonOffsetEXT);
-#endif
-
-   /* 6. GL_EXT_texture3d */
-#if 0
-/*    SET_CopyTexSubImage3DEXT(exec, _mesa_CopyTexSubImage3D); */
-/*    SET_TexImage3DEXT(exec, _mesa_TexImage3DEXT); */
-/*    SET_TexSubImage3DEXT(exec, _mesa_TexSubImage3D); */
-#endif
-
-   /* 11. GL_EXT_histogram */
-#if 0
-   SET_GetHistogramEXT(exec, _mesa_GetHistogram);
-   SET_GetHistogramParameterfvEXT(exec, _mesa_GetHistogramParameterfv);
-   SET_GetHistogramParameterivEXT(exec, _mesa_GetHistogramParameteriv);
-   SET_GetMinmaxEXT(exec, _mesa_GetMinmax);
-   SET_GetMinmaxParameterfvEXT(exec, _mesa_GetMinmaxParameterfv);
-   SET_GetMinmaxParameterivEXT(exec, _mesa_GetMinmaxParameteriv);
-#endif
-
-   /* 14. SGI_color_table */
-#if 0
-   SET_ColorTableSGI(exec, _mesa_ColorTable);
-   SET_ColorSubTableSGI(exec, _mesa_ColorSubTable);
-   SET_GetColorTableSGI(exec, _mesa_GetColorTable);
-   SET_GetColorTableParameterfvSGI(exec, _mesa_GetColorTableParameterfv);
-   SET_GetColorTableParameterivSGI(exec, _mesa_GetColorTableParameteriv);
 #endif
 
    /* 30. GL_EXT_vertex_array */
@@ -268,11 +218,6 @@ _mesa_create_exec_table(void)
    SET_NormalPointerEXT(exec, _mesa_NormalPointerEXT);
    SET_TexCoordPointerEXT(exec, _mesa_TexCoordPointerEXT);
    SET_VertexPointerEXT(exec, _mesa_VertexPointerEXT);
-#endif
-
-   /* 37. GL_EXT_blend_minmax */
-#if 0
-   SET_BlendEquationEXT(exec, _mesa_BlendEquationEXT);
 #endif
 
    /* 54. GL_EXT_point_parameters */
@@ -287,11 +232,6 @@ _mesa_create_exec_table(void)
    SET_UnlockArraysEXT(exec, _mesa_UnlockArraysEXT);
 #endif
 
-   /* 173. GL_INGR_blend_func_separate */
-#if _HAVE_FULL_GL
-   SET_BlendFuncSeparateEXT(exec, _mesa_BlendFuncSeparateEXT);
-#endif
-
    /* 197. GL_MESA_window_pos */
    /* part of _mesa_init_rastpos_dispatch(exec); */
 
@@ -299,43 +239,6 @@ _mesa_create_exec_table(void)
 #if _HAVE_FULL_GL
    SET_MultiModeDrawArraysIBM(exec, _mesa_MultiModeDrawArraysIBM);
    SET_MultiModeDrawElementsIBM(exec, _mesa_MultiModeDrawElementsIBM);
-#endif
-
-   /* 233. GL_NV_vertex_program */
-#if FEATURE_NV_vertex_program
-   SET_ExecuteProgramNV(exec, _mesa_ExecuteProgramNV);
-   SET_GenProgramsNV(exec, _mesa_GenPrograms);
-   SET_AreProgramsResidentNV(exec, _mesa_AreProgramsResidentNV);
-   SET_RequestResidentProgramsNV(exec, _mesa_RequestResidentProgramsNV);
-   SET_GetProgramParameterfvNV(exec, _mesa_GetProgramParameterfvNV);
-   SET_GetProgramParameterdvNV(exec, _mesa_GetProgramParameterdvNV);
-   SET_GetProgramivNV(exec, _mesa_GetProgramivNV);
-   SET_GetTrackMatrixivNV(exec, _mesa_GetTrackMatrixivNV);
-   SET_LoadProgramNV(exec, _mesa_LoadProgramNV);
-   SET_ProgramEnvParameter4dARB(exec, _mesa_ProgramEnvParameter4dARB); /* alias to ProgramParameter4dNV */
-   SET_ProgramEnvParameter4dvARB(exec, _mesa_ProgramEnvParameter4dvARB);  /* alias to ProgramParameter4dvNV */
-   SET_ProgramEnvParameter4fARB(exec, _mesa_ProgramEnvParameter4fARB);  /* alias to ProgramParameter4fNV */
-   SET_ProgramEnvParameter4fvARB(exec, _mesa_ProgramEnvParameter4fvARB);  /* alias to ProgramParameter4fvNV */
-   SET_ProgramParameters4dvNV(exec, _mesa_ProgramParameters4dvNV);
-   SET_ProgramParameters4fvNV(exec, _mesa_ProgramParameters4fvNV);
-   SET_TrackMatrixNV(exec, _mesa_TrackMatrixNV);
-   /* glVertexAttrib*NV functions handled in api_loopback.c */
-#endif
-
-   /* 273. GL_APPLE_vertex_array_object */
-   SET_BindVertexArrayAPPLE(exec, _mesa_BindVertexArrayAPPLE);
-   SET_DeleteVertexArraysAPPLE(exec, _mesa_DeleteVertexArraysAPPLE);
-   SET_GenVertexArraysAPPLE(exec, _mesa_GenVertexArraysAPPLE);
-   SET_IsVertexArrayAPPLE(exec, _mesa_IsVertexArrayAPPLE);
-
-   /* 282. GL_NV_fragment_program */
-#if FEATURE_NV_fragment_program
-   SET_ProgramNamedParameter4fNV(exec, _mesa_ProgramNamedParameter4fNV);
-   SET_ProgramNamedParameter4dNV(exec, _mesa_ProgramNamedParameter4dNV);
-   SET_ProgramNamedParameter4fvNV(exec, _mesa_ProgramNamedParameter4fvNV);
-   SET_ProgramNamedParameter4dvNV(exec, _mesa_ProgramNamedParameter4dvNV);
-   SET_GetProgramNamedParameterfvNV(exec, _mesa_GetProgramNamedParameterfvNV);
-   SET_GetProgramNamedParameterdvNV(exec, _mesa_GetProgramNamedParameterdvNV);
 #endif
 
    /* 262. GL_NV_point_sprite */
@@ -381,16 +284,6 @@ _mesa_create_exec_table(void)
    SET_FlushMappedBufferRange(exec, _mesa_FlushMappedBufferRange);
 #endif
 
-   /* GL_ARB_vertex_array_object */
-   SET_BindVertexArray(exec, _mesa_BindVertexArray);
-   SET_GenVertexArrays(exec, _mesa_GenVertexArrays);
-
-#if FEATURE_APPLE_object_purgeable
-   SET_ObjectPurgeableAPPLE(exec, _mesa_ObjectPurgeableAPPLE);
-   SET_ObjectUnpurgeableAPPLE(exec, _mesa_ObjectUnpurgeableAPPLE);
-   SET_GetObjectParameterivAPPLE(exec, _mesa_GetObjectParameterivAPPLE);
-#endif
-
    /* GL_EXT_texture_integer */
    SET_ClearColorIiEXT(exec, _mesa_ClearColorIiEXT);
    SET_ClearColorIuiEXT(exec, _mesa_ClearColorIuiEXT);
@@ -398,12 +291,6 @@ _mesa_create_exec_table(void)
    SET_GetTexParameterIuivEXT(exec, _mesa_GetTexParameterIuiv);
    SET_TexParameterIivEXT(exec, _mesa_TexParameterIiv);
    SET_TexParameterIuivEXT(exec, _mesa_TexParameterIuiv);
-
-   /* GL 3.0 (functions not covered by other extensions) */
-   SET_GetStringi(exec, _mesa_GetStringi);
-
-   /* GL_NV_texture_barrier */
-   SET_TextureBarrierNV(exec, _mesa_TextureBarrierNV);
 
    /* GL_ARB_texture_storage */
    SET_TexStorage1D(exec, _mesa_TexStorage1D);

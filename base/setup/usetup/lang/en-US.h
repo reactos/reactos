@@ -117,7 +117,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Continue  R = Repair  L = Licence  F3 = Quit",
+        "ENTER = Continue  R = Repair  L = License  F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1636,6 +1636,8 @@ MUI_STRING enUSStrings[] =
      "   Please wait..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+    {STRING_INSTALLCREATELOGICAL,
+     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Install   D = Delete Partition   F3 = Quit"},
     {STRING_DELETEPARTITION,
@@ -1646,6 +1648,8 @@ MUI_STRING enUSStrings[] =
      "You have chosen to create a primary partition on"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
     "Please enter the size of the new partition in megabytes."},
     {STRING_CREATEPARTITION,

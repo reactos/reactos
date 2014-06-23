@@ -41,6 +41,7 @@
 #include <dvdmedia.h>
 #include <vfw.h>
 #include <aviriff.h>
+#include <shlwapi.h>
 
 #include <wine/strmbase.h>
 #include <wine/unicode.h>

@@ -115,31 +115,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
          return GL_YCBCR_MESA;
    }
 
-   if (ctx->Extensions.ARB_texture_float) {
-      switch (internalFormat) {
-         case GL_ALPHA16F_ARB:
-         case GL_ALPHA32F_ARB:
-            return GL_ALPHA;
-         case GL_RGBA16F_ARB:
-         case GL_RGBA32F_ARB:
-            return GL_RGBA;
-         case GL_RGB16F_ARB:
-         case GL_RGB32F_ARB:
-            return GL_RGB;
-         case GL_INTENSITY16F_ARB:
-         case GL_INTENSITY32F_ARB:
-            return GL_INTENSITY;
-         case GL_LUMINANCE16F_ARB:
-         case GL_LUMINANCE32F_ARB:
-            return GL_LUMINANCE;
-         case GL_LUMINANCE_ALPHA16F_ARB:
-         case GL_LUMINANCE_ALPHA32F_ARB:
-            return GL_LUMINANCE_ALPHA;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    if (ctx->VersionMajor >= 3 ||
        ctx->Extensions.EXT_texture_integer) {
       switch (internalFormat) {
@@ -304,7 +279,6 @@ _mesa_is_proxy_texture(GLenum target)
 
    return (target == GL_PROXY_TEXTURE_1D ||
            target == GL_PROXY_TEXTURE_2D ||
-           target == GL_PROXY_TEXTURE_3D ||
            target == GL_PROXY_TEXTURE_CUBE_MAP_ARB);
 }
 
@@ -322,9 +296,6 @@ get_proxy_target(GLenum target)
    case GL_TEXTURE_2D:
    case GL_PROXY_TEXTURE_2D:
       return GL_PROXY_TEXTURE_2D;
-   case GL_TEXTURE_3D:
-   case GL_PROXY_TEXTURE_3D:
-      return GL_PROXY_TEXTURE_3D;
    case GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB:
    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB:
    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB:
@@ -364,10 +335,6 @@ _mesa_select_tex_object(struct gl_context *ctx,
          return ctx->Texture.Unit.CurrentTex[TEXTURE_2D_INDEX];
       case GL_PROXY_TEXTURE_2D:
          return ctx->Texture.ProxyTex[TEXTURE_2D_INDEX];
-      case GL_TEXTURE_3D:
-         return ctx->Texture.Unit.CurrentTex[TEXTURE_3D_INDEX];
-      case GL_PROXY_TEXTURE_3D:
-         return ctx->Texture.ProxyTex[TEXTURE_3D_INDEX];
       default:
          _mesa_problem(NULL, "bad target in _mesa_select_tex_object()");
          return NULL;
@@ -457,11 +424,6 @@ _mesa_get_proxy_tex_image(struct gl_context *ctx, GLenum target, GLint level)
          return NULL;
       texIndex = TEXTURE_2D_INDEX;
       break;
-   case GL_PROXY_TEXTURE_3D:
-      if (level >= ctx->Const.Max3DTextureLevels)
-         return NULL;
-      texIndex = TEXTURE_3D_INDEX;
-      break;
    case GL_PROXY_TEXTURE_CUBE_MAP:
       if (level >= ctx->Const.MaxCubeTextureLevels)
          return NULL;
@@ -506,9 +468,6 @@ _mesa_max_texture_levels(struct gl_context *ctx, GLenum target)
    case GL_TEXTURE_2D:
    case GL_PROXY_TEXTURE_2D:
       return ctx->Const.MaxTextureLevels;
-   case GL_TEXTURE_3D:
-   case GL_PROXY_TEXTURE_3D:
-      return ctx->Const.Max3DTextureLevels;
    case GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB:
    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB:
    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB:
@@ -545,9 +504,6 @@ _mesa_get_texture_dimensions(GLenum target)
    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
       return 2;
-   case GL_TEXTURE_3D:
-   case GL_PROXY_TEXTURE_3D:
-      return 3;
    default:
       _mesa_problem(NULL, "invalid target 0x%x in get_texture_dimensions()",
                     target);
@@ -708,13 +664,6 @@ _mesa_init_teximage_fields(struct gl_context *ctx,
          img->Depth2 = 1;
       img->DepthLog2 = 0;
       break;
-   case GL_TEXTURE_3D:
-   case GL_PROXY_TEXTURE_3D:
-      img->Height2 = height - 2 * border; /* == 1 << img->HeightLog2; */
-      img->HeightLog2 = _mesa_logbase2(img->Height2);
-      img->Depth2 = depth - 2 * border;   /* == 1 << img->DepthLog2; */
-      img->DepthLog2 = _mesa_logbase2(img->Depth2);
-      break;
    default:
       _mesa_problem(NULL, "invalid target 0x%x in _mesa_init_teximage_fields()",
                     target);
@@ -785,10 +734,8 @@ _mesa_test_proxy_teximage(struct gl_context *ctx, GLenum target, GLint level,
          return GL_FALSE;
       if (level >= ctx->Const.MaxTextureLevels)
          return GL_FALSE;
-      if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
-            return GL_FALSE;
-      }
+      if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         return GL_FALSE;
       return GL_TRUE;
 
    case GL_PROXY_TEXTURE_2D:
@@ -799,32 +746,10 @@ _mesa_test_proxy_teximage(struct gl_context *ctx, GLenum target, GLint level,
          return GL_FALSE;
       if (level >= ctx->Const.MaxTextureLevels)
          return GL_FALSE;
-      if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
-            return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
-            return GL_FALSE;
-      }
-      return GL_TRUE;
-
-   case GL_PROXY_TEXTURE_3D:
-      maxSize = 1 << (ctx->Const.Max3DTextureLevels - 1);
-      if (width < 2 * border || width > 2 * border + maxSize)
+      if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
          return GL_FALSE;
-      if (height < 2 * border || height > 2 * border + maxSize)
+      if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
          return GL_FALSE;
-      if (depth < 2 * border || depth > 2 * border + maxSize)
-         return GL_FALSE;
-      if (level >= ctx->Const.Max3DTextureLevels)
-         return GL_FALSE;
-      if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
-            return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
-            return GL_FALSE;
-         if (depth > 0 && !_mesa_is_pow_two(depth - 2 * border))
-            return GL_FALSE;
-      }
       return GL_TRUE;
 
    case GL_PROXY_TEXTURE_CUBE_MAP_ARB:
@@ -835,12 +760,10 @@ _mesa_test_proxy_teximage(struct gl_context *ctx, GLenum target, GLint level,
          return GL_FALSE;
       if (level >= ctx->Const.MaxCubeTextureLevels)
          return GL_FALSE;
-      if (!ctx->Extensions.ARB_texture_non_power_of_two) {
-         if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
-            return GL_FALSE;
-         if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
-            return GL_FALSE;
-      }
+      if (width > 0 && !_mesa_is_pow_two(width - 2 * border))
+         return GL_FALSE;
+      if (height > 0 && !_mesa_is_pow_two(height - 2 * border))
+         return GL_FALSE;
       return GL_TRUE;
 
    default:
@@ -898,14 +821,6 @@ legal_teximage_target(struct gl_context *ctx, GLuint dims, GLenum target)
       default:
          return GL_FALSE;
       }
-   case 3:
-      switch (target) {
-      case GL_TEXTURE_3D:
-      case GL_PROXY_TEXTURE_3D:
-         return GL_TRUE;
-      default:
-         return GL_FALSE;
-      }
    default:
       _mesa_problem(ctx, "invalid dims=%u in legal_teximage_target()", dims);
       return GL_FALSE;
@@ -936,13 +851,6 @@ legal_texsubimage_target(struct gl_context *ctx, GLuint dims, GLenum target)
       case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
       case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
          return ctx->Extensions.ARB_texture_cube_map;
-      default:
-         return GL_FALSE;
-      }
-   case 3:
-      switch (target) {
-      case GL_TEXTURE_3D:
-         return GL_TRUE;
       default:
          return GL_FALSE;
       }
@@ -1265,16 +1173,6 @@ subtexture_error_check2( struct gl_context *ctx, GLuint dimensions,
       if (yoffset + height > (GLint) (destTex->Height + destTex->Border)) {
          _mesa_error(ctx, GL_INVALID_VALUE, "glTexSubImage%dD(yoffset+height)",
                      dimensions);
-         return GL_TRUE;
-      }
-   }
-   if (dimensions > 2) {
-      if (zoffset < -((GLint)destTex->Border)) {
-         _mesa_error(ctx, GL_INVALID_VALUE, "glTexSubImage3D(zoffset)");
-         return GL_TRUE;
-      }
-      if (zoffset + depth  > (GLint) (destTex->Depth + destTex->Border)) {
-         _mesa_error(ctx, GL_INVALID_VALUE, "glTexSubImage3D(zoffset+depth)");
          return GL_TRUE;
       }
    }
@@ -1786,7 +1684,6 @@ teximage(struct gl_context *ctx, GLuint dims,
                                           border, internalFormat, texFormat);
 
                /* Give the texture to the driver.  <pixels> may be null. */
-               ASSERT(ctx->Driver.TexImage3D);
                switch (dims) {
                case 1:
                   ctx->Driver.TexImage1D(ctx, texImage, internalFormat,
@@ -1796,11 +1693,6 @@ teximage(struct gl_context *ctx, GLuint dims,
                case 2:
                   ctx->Driver.TexImage2D(ctx, texImage, internalFormat,
                                          width, height, border, format,
-                                         type, pixels, unpack);
-                  break;
-               case 3:
-                  ctx->Driver.TexImage3D(ctx, texImage, internalFormat,
-                                         width, height, depth, border, format,
                                          type, pixels, unpack);
                   break;
                default:
@@ -1844,33 +1736,6 @@ _mesa_TexImage2D( GLenum target, GLint level, GLint internalFormat,
    GET_CURRENT_CONTEXT(ctx);
    teximage(ctx, 2, target, level, internalFormat, width, height, 1,
             border, format, type, pixels);
-}
-
-
-/*
- * Called by the API or display list executor.
- * Note that width and height include the border.
- */
-void GLAPIENTRY
-_mesa_TexImage3D( GLenum target, GLint level, GLint internalFormat,
-                  GLsizei width, GLsizei height, GLsizei depth,
-                  GLint border, GLenum format, GLenum type,
-                  const GLvoid *pixels )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   teximage(ctx, 3, target, level, internalFormat, width, height, depth,
-            border, format, type, pixels);
-}
-
-
-void GLAPIENTRY
-_mesa_TexImage3DEXT( GLenum target, GLint level, GLenum internalFormat,
-                     GLsizei width, GLsizei height, GLsizei depth,
-                     GLint border, GLenum format, GLenum type,
-                     const GLvoid *pixels )
-{
-   _mesa_TexImage3D(target, level, (GLint) internalFormat, width, height,
-                    depth, border, format, type, pixels);
 }
 
 
@@ -1947,12 +1812,6 @@ texsubimage(struct gl_context *ctx, GLuint dims, GLenum target, GLint level,
                                       xoffset, yoffset, width, height,
                                       format, type, pixels, &ctx->Unpack);
             break;
-         case 3:
-            ctx->Driver.TexSubImage3D(ctx, texImage,
-                                      xoffset, yoffset, zoffset,
-                                      width, height, depth,
-                                      format, type, pixels, &ctx->Unpack);
-            break;
          default:
             _mesa_problem(ctx, "unexpected dims in subteximage()");
          }
@@ -1989,22 +1848,6 @@ _mesa_TexSubImage2D( GLenum target, GLint level,
    texsubimage(ctx, 2, target, level,
                xoffset, yoffset, 0,
                width, height, 1,
-               format, type, pixels);
-}
-
-
-
-void GLAPIENTRY
-_mesa_TexSubImage3D( GLenum target, GLint level,
-                     GLint xoffset, GLint yoffset, GLint zoffset,
-                     GLsizei width, GLsizei height, GLsizei depth,
-                     GLenum format, GLenum type,
-                     const GLvoid *pixels )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   texsubimage(ctx, 3, target, level,
-               xoffset, yoffset, zoffset,
-               width, height, depth,
                format, type, pixels);
 }
 
@@ -2218,11 +2061,6 @@ copytexsubimage(struct gl_context *ctx, GLuint dims, GLenum target, GLint level,
                ctx->Driver.CopyTexSubImage2D(ctx, texImage, xoffset, yoffset,
                                              srcRb, x, y, width, height);
                break;
-            case 3:
-               ctx->Driver.CopyTexSubImage3D(ctx, texImage,
-                                             xoffset, yoffset, zoffset,
-                                             srcRb, x, y, width, height);
-               break;
             default:
                _mesa_problem(ctx, "bad dims in copytexsubimage()");
             }
@@ -2253,16 +2091,4 @@ _mesa_CopyTexSubImage2D( GLenum target, GLint level,
    GET_CURRENT_CONTEXT(ctx);
    copytexsubimage(ctx, 2, target, level, xoffset, yoffset, 0, x, y,
                    width, height);
-}
-
-
-
-void GLAPIENTRY
-_mesa_CopyTexSubImage3D( GLenum target, GLint level,
-                         GLint xoffset, GLint yoffset, GLint zoffset,
-                         GLint x, GLint y, GLsizei width, GLsizei height )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   copytexsubimage(ctx, 3, target, level, xoffset, yoffset, zoffset,
-                   x, y, width, height);
 }

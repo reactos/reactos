@@ -13,186 +13,150 @@ INT cmdHelp(INT argc, WCHAR **argv)
 {
     if (argc != 3)
     {
-      return 0;
-    }
-
-    if (_wcsicmp(argv[2],L"ACCOUNTS")==0)
-    {
-        puts("ACCOUNTS");
-        puts("help text");
+        PrintResourceString(IDS_HELP_SYNTAX);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"COMPUTER")==0)
+    if (_wcsicmp(argv[2],L"ACCOUNTS") == 0)
     {
-        puts("COMPUTER");
-        puts("help text");
+        PrintResourceString(IDS_ACCOUNTS_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"CONFIG")==0)
+    if (_wcsicmp(argv[2],L"COMPUTER") == 0)
     {
-        puts("CONFIG");
-        puts("help text");
+        PrintResourceString(IDS_COMPUTER_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"CONTINUE")==0)
+    if (_wcsicmp(argv[2],L"CONFIG") == 0)
     {
-        puts("CONTINUE");
-        puts("help text");
+        PrintResourceString(IDS_CONFIG_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"FILE")==0)
+    if (_wcsicmp(argv[2],L"CONTINUE") == 0)
     {
-        puts("FILE");
-        puts("help text");
+        PrintResourceString(IDS_CONTINUE_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"GROUP")==0)
+    if (_wcsicmp(argv[2],L"FILE") == 0)
     {
-        puts("GROUP");
-        puts("help text");
+        PrintResourceString(IDS_FILE_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"HELP")==0)
+    if (_wcsicmp(argv[2],L"GROUP") == 0)
     {
-        puts("HELP");
-        puts("help text");
+        PrintResourceString(IDS_GROUP_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"HELPMSG")==0)
+    if (_wcsicmp(argv[2],L"HELPMSG") == 0)
     {
-        puts("HELPMSG");
-        puts("help text");
+        PrintResourceString(IDS_HELPMSG_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"LOCALGROUP")==0)
+    if (_wcsicmp(argv[2],L"LOCALGROUP") == 0)
     {
-        puts("LOCALGROUP");
-        puts("help text");
+        PrintResourceString(IDS_LOCALGROUP_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"NAME")==0)
+    if (_wcsicmp(argv[2],L"NAME") == 0)
     {
-        puts("NAME");
-        puts("help text");
+        PrintResourceString(IDS_NAME_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"PRINT")==0)
+    if (_wcsicmp(argv[2],L"PAUSE") == 0)
     {
-        puts("PRINT");
-        puts("help text");
+        PrintResourceString(IDS_PAUSE_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"SEND")==0)
+    if (_wcsicmp(argv[2],L"PRINT") == 0)
     {
-        puts("SEND");
-        puts("help text");
+        PrintResourceString(IDS_PRINT_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"SESSION")==0)
+    if (_wcsicmp(argv[2],L"SEND") == 0)
     {
-        puts("SESSION");
-        puts("help text");
+        PrintResourceString(IDS_SEND_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"SHARE")==0)
+    if (_wcsicmp(argv[2],L"SESSION") == 0)
     {
-        puts("SHARE");
-        puts("help text");
+        PrintResourceString(IDS_SESSION_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"START")==0)
+    if (_wcsicmp(argv[2],L"SHARE") == 0)
     {
-        puts("START");
-        puts("help text");
+        PrintResourceString(IDS_SHARE_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"STATISTICS")==0)
+    if (_wcsicmp(argv[2],L"START") == 0)
     {
-        puts("STATISTICS");
-        puts("help text");
+        PrintResourceString(IDS_START_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"STOP")==0)
+    if (_wcsicmp(argv[2],L"STATISTICS") == 0)
     {
-        puts("STOP");
-        puts("help text");
+        PrintResourceString(IDS_STATISTICS_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"TIME")==0)
+    if (_wcsicmp(argv[2],L"STOP") == 0)
     {
-        puts("TIME");
-        puts("help text");
+        PrintResourceString(IDS_STOP_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"USE")==0)
+    if (_wcsicmp(argv[2],L"TIME") == 0)
     {
-        puts("USE");
-        puts("help text");
+        PrintResourceString(IDS_TIME_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"USER")==0)
+    if (_wcsicmp(argv[2],L"USE") == 0)
     {
-        puts("USER");
-        puts("help text");
+        PrintResourceString(IDS_USE_HELP);
         return 0;
     }
 
-    if (_wcsicmp(argv[2],L"VIEW")==0)
+    if (_wcsicmp(argv[2],L"USER") == 0)
     {
-        puts("VIEW");
-        puts("help text");
+        PrintResourceString(IDS_USER_HELP);
         return 0;
     }
 
-    help();
+    if (_wcsicmp(argv[2],L"VIEW") == 0)
+    {
+        PrintResourceString(IDS_VIEW_HELP);
+        return 0;
+    }
+
+#if 0
+    if (_wcsicmp(argv[2],L"SERVICES") == 0)
+    {
+        return 0;
+    }
+
+    if (_wcsicmp(argv[2],L"SYNTAX") == 0)
+    {
+        return 0;
+    }
+#endif
+
+    PrintResourceString(IDS_HELP_SYNTAX);
+
     return 0;
 }
 
-VOID help(VOID)
-{
-    puts("NET ACCOUNTS");
-    puts("NET COMPUTER");
-    puts("NET CONFIG");
-    puts("NET CONFIG SERVER");
-    puts("NET CONFIG WORKSTATION");
-    puts("NET CONTINUE");
-    puts("NET FILE");
-    puts("NET GROUP");
-
-    puts("NET HELP");
-    puts("NET HELPMSG");
-    puts("NET LOCALGROUP");
-    puts("NET NAME");
-    puts("NET PAUSE");
-    puts("NET PRINT");
-    puts("NET SEND");
-    puts("NET SESSION");
-
-    puts("NET SHARE");
-    puts("NET START");
-    puts("NET STATISTICS");
-    puts("NET STOP");
-    puts("NET TIME");
-    puts("NET USE");
-    puts("NET USER");
-    puts("NET VIEW");
-}

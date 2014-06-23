@@ -286,7 +286,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     
     /* Setup the key body */
     KeyBody = (PCM_KEY_BODY)(*Object);
-    KeyBody->Type = '20yk';
+    KeyBody->Type = CM_KEY_BODY_TYPE;
     KeyBody->KeyControlBlock = NULL;
 
     /* Check if we had a class */
@@ -691,7 +691,7 @@ CmpDoOpen(IN PHHIVE Hive,
         /* Get the key body and fill it out */
         KeyBody = (PCM_KEY_BODY)(*Object);       
         KeyBody->KeyControlBlock = Kcb;
-        KeyBody->Type = '20yk';
+        KeyBody->Type = CM_KEY_BODY_TYPE;
         KeyBody->ProcessID = PsGetCurrentProcessId();
         KeyBody->NotifyBlock = NULL;
         

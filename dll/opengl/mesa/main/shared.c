@@ -63,7 +63,6 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
       /* NOTE: the order of these enums matches the TEXTURE_x_INDEX values */
       static const GLenum targets[NUM_TEXTURE_TARGETS] = {
          GL_TEXTURE_CUBE_MAP,
-         GL_TEXTURE_3D,
          GL_TEXTURE_2D,
          GL_TEXTURE_1D
       };

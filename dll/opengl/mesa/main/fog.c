@@ -198,7 +198,6 @@ void _mesa_init_fog( struct gl_context * ctx )
    ctx->Fog.Density = 1.0;
    ctx->Fog.Start = 0.0;
    ctx->Fog.End = 1.0;
-   ctx->Fog.ColorSumEnabled = GL_FALSE;
    ctx->Fog.FogCoordinateSource = GL_FRAGMENT_DEPTH_EXT;
    ctx->Fog._Scale = 1.0f;
    ctx->Fog.FogDistanceMode = GL_EYE_PLANE_ABSOLUTE_NV;

@@ -8,6 +8,10 @@ BEGIN
         MENUITEM "&Zabezpečení", ID_LOG_SECURITY
         MENUITEM "&Systém", ID_LOG_SYSTEM
         MENUITEM SEPARATOR
+        MENUITEM "Uložit &Protokol...", ID_SAVE_PROTOCOL, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Odstranit události", ID_CLEAR_EVENTS, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Konec", IDM_EXIT
     END
     POPUP "&Zobrazit"
@@ -95,6 +99,8 @@ BEGIN
     IDS_EVENTLOG_AUDIT_FAILURE "Audit selhal"
     IDS_EVENTLOG_SUCCESS "Úspěch"
     IDS_EVENTLOG_UNKNOWN_TYPE "Neznámá událost"
+    IDS_CLEAREVENTS_MSG "Chcete tento protokol před odstraněním uložit?"
+    IDS_SAVE_FILTER "Protokol událostí (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE

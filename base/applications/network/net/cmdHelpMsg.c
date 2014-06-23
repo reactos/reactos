@@ -16,17 +16,27 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
     LPWSTR endptr;
     LPWSTR lpBuffer;
     LONG errNum;
+    INT i;
 
     if (argc < 3)
     {
-        puts("Usage: NET HELPMSG <Error Code>");
+        PrintResourceString(IDS_HELPMSG_SYNTAX);
         return 1;
+    }
+
+    for (i = 2; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"/help") == 0)
+        {
+            PrintResourceString(IDS_HELPMSG_HELP);
+            return 1;
+        }
     }
 
     errNum = wcstol(argv[2], &endptr, 10);
     if (*endptr != 0)
     {
-        puts("Usage: NET HELPMSG <Error Code>");
+        PrintResourceString(IDS_HELPMSG_SYNTAX);
         return 1;
     }
 

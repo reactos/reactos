@@ -27,6 +27,7 @@
 
 #include <vfw.h>
 #include <aviriff.h>
+#include <shlwapi.h>
 
 #include "resource.h"
 
@@ -675,15 +676,15 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
      * or switched from pulseaudio to alsa, delete all old devices first
      */
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_AudioRendererCategory, &basekey, path, MAX_PATH)))
-        RegDeleteTreeW(basekey, path);
+        SHDeleteKeyW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_AudioInputDeviceCategory, &basekey, path, MAX_PATH)))
-        RegDeleteTreeW(basekey, path);
+        SHDeleteKeyW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_VideoInputDeviceCategory, &basekey, path, MAX_PATH)))
-        RegDeleteTreeW(basekey, path);
+        SHDeleteKeyW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_MidiRendererCategory, &basekey, path, MAX_PATH)))
-        RegDeleteTreeW(basekey, path);
+        SHDeleteKeyW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_VideoCompressorCategory, &basekey, path, MAX_PATH)))
-        RegDeleteTreeW(basekey, path);
+        SHDeleteKeyW(basekey, path);
 
     rf2.dwVersion = 2;
     rf2.dwMerit = MERIT_PREFERRED;

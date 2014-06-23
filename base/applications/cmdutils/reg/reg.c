@@ -22,6 +22,7 @@
 #include <winuser.h>
 #include <winreg.h>
 #include <wincon.h>
+#include <shlwapi.h>
 #include <wine/unicode.h>
 
 #include "reg.h"
@@ -293,7 +294,7 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
     /* Delete subtree only if no /v* option is given */
     if (!value_name && !value_empty && !value_all)
     {
-        if (RegDeleteTreeW(root,p)!=ERROR_SUCCESS)
+        if (SHDeleteKeyW(root, p) != ERROR_SUCCESS)
         {
             reg_message(STRING_CANNOT_FIND);
             return 1;

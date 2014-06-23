@@ -71,8 +71,6 @@ get_texobj(struct gl_context *ctx, GLenum target, GLboolean get)
       return texUnit->CurrentTex[TEXTURE_1D_INDEX];
    case GL_TEXTURE_2D:
       return texUnit->CurrentTex[TEXTURE_2D_INDEX];
-   case GL_TEXTURE_3D:
-      return texUnit->CurrentTex[TEXTURE_3D_INDEX];
    case GL_TEXTURE_CUBE_MAP:
       if (ctx->Extensions.ARB_texture_cube_map) {
          return texUnit->CurrentTex[TEXTURE_CUBE_INDEX];
@@ -247,18 +245,10 @@ set_tex_parameterf(struct gl_context *ctx,
 
    case GL_TEXTURE_BORDER_COLOR:
       flush(ctx);
-      /* ARB_texture_float disables clamping */
-      if (ctx->Extensions.ARB_texture_float) {
-         texObj->Sampler.BorderColor.f[RCOMP] = params[0];
-         texObj->Sampler.BorderColor.f[GCOMP] = params[1];
-         texObj->Sampler.BorderColor.f[BCOMP] = params[2];
-         texObj->Sampler.BorderColor.f[ACOMP] = params[3];
-      } else {
-         texObj->Sampler.BorderColor.f[RCOMP] = CLAMP(params[0], 0.0F, 1.0F);
-         texObj->Sampler.BorderColor.f[GCOMP] = CLAMP(params[1], 0.0F, 1.0F);
-         texObj->Sampler.BorderColor.f[BCOMP] = CLAMP(params[2], 0.0F, 1.0F);
-         texObj->Sampler.BorderColor.f[ACOMP] = CLAMP(params[3], 0.0F, 1.0F);
-      }
+      texObj->Sampler.BorderColor.f[RCOMP] = CLAMP(params[0], 0.0F, 1.0F);
+      texObj->Sampler.BorderColor.f[GCOMP] = CLAMP(params[1], 0.0F, 1.0F);
+      texObj->Sampler.BorderColor.f[BCOMP] = CLAMP(params[2], 0.0F, 1.0F);
+      texObj->Sampler.BorderColor.f[ACOMP] = CLAMP(params[3], 0.0F, 1.0F);
       return GL_TRUE;
 
    default:
@@ -632,22 +622,6 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
          else {
             *params = 0;
          }
-         break;
-
-      /* GL_ARB_texture_float */
-      case GL_TEXTURE_RED_TYPE_ARB:
-      case GL_TEXTURE_GREEN_TYPE_ARB:
-      case GL_TEXTURE_BLUE_TYPE_ARB:
-      case GL_TEXTURE_ALPHA_TYPE_ARB:
-      case GL_TEXTURE_LUMINANCE_TYPE_ARB:
-      case GL_TEXTURE_INTENSITY_TYPE_ARB:
-      case GL_TEXTURE_DEPTH_TYPE_ARB:
-         if (!ctx->Extensions.ARB_texture_float)
-            goto invalid_pname;
-	 if (_mesa_base_format_has_channel(img->_BaseFormat, pname))
-	    *params = _mesa_get_format_datatype(texFormat);
-	 else
-	    *params = GL_NONE;
          break;
 
       default:

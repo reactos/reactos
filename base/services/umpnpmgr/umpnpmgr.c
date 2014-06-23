@@ -44,6 +44,7 @@
 #include <cfgmgr32.h>
 #include <regstr.h>
 #include <userenv.h>
+#include <shlwapi.h>
 #include <pnp_s.h>
 
 #define NDEBUG
@@ -1142,7 +1143,7 @@ DWORD PNP_DeleteClassKey(
 
     if (ulFlags & CM_DELETE_CLASS_SUBKEYS)
     {
-        if (RegDeleteTreeW(hClassKey, pszClassGuid) != ERROR_SUCCESS)
+        if (SHDeleteKeyW(hClassKey, pszClassGuid) != ERROR_SUCCESS)
             ret = CR_REGISTRY_ERROR;
     }
     else

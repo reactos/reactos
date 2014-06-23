@@ -2307,6 +2307,13 @@ CmSaveKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         goto Cleanup;
     }
 
+    if (Kcb->KeyHive == &CmiVolatileHive->Hive)
+    {
+        /* Keys that are directly in the master hive can't be saved */
+        Status = STATUS_ACCESS_DENIED;
+        goto Cleanup;
+    }
+
     /* Create a new hive that will hold the key */
     Status = CmpInitializeHive(&KeyHive,
                                HINIT_CREATE,

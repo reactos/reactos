@@ -382,7 +382,7 @@ EngLoadImageEx(
         if (pldev->pGdiDriverInfo)
         {
             /* Check for match (case insensative) */
-            if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, 1))
+            if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, TRUE))
             {
                 /* Image found in LDEV list */
                 break;

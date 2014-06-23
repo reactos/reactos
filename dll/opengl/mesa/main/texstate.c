@@ -502,7 +502,6 @@ alloc_proxy_textures( struct gl_context *ctx )
     */
    static const GLenum targets[] = {
       GL_TEXTURE_CUBE_MAP_ARB,
-      GL_TEXTURE_3D,
       GL_TEXTURE_2D,
       GL_TEXTURE_1D,
    };

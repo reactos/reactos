@@ -172,6 +172,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         return -1;
     }
 
+    /*
+     * Set our shutdown parameters: we want to shutdown the very last,
+     * without displaying any end task dialog if needed.
+     */
+    SetProcessShutdownParameters(1, SHUTDOWN_NORETRY);
+
     DialogBoxW(hInst, (LPCWSTR)IDD_TASKMGR_DIALOG, NULL, TaskManagerWndProc);
 
     /* Save our settings to the registry */

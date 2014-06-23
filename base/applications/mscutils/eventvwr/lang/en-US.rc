@@ -16,6 +16,10 @@ BEGIN
         MENUITEM "&Security", ID_LOG_SECURITY
         MENUITEM "&System", ID_LOG_SYSTEM
         MENUITEM SEPARATOR
+        MENUITEM "Save &Protocol...", ID_SAVE_PROTOCOL, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "C&lear all Events", ID_CLEAR_EVENTS, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "E&xit", IDM_EXIT
     END
     POPUP "&View"
@@ -103,6 +107,8 @@ BEGIN
     IDS_EVENTLOG_AUDIT_FAILURE "Audit Failure"
     IDS_EVENTLOG_SUCCESS "Success"
     IDS_EVENTLOG_UNKNOWN_TYPE "Unknown Event"
+    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
+    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE

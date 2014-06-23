@@ -4090,14 +4090,21 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
       return(STATUS_UNSUCCESSFUL);
    }
 
-   MemoryArea->DeleteInProgress = TRUE;
    Section = MemoryArea->Data.SectionData.Section;
    Segment = MemoryArea->Data.SectionData.Segment;
 
 #ifdef NEWCC
-   if (Segment->Flags & MM_DATAFILE_SEGMENT)
-      return MmUnmapViewOfCacheSegment(AddressSpace, BaseAddress);
+    if (Segment->Flags & MM_DATAFILE_SEGMENT)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+        Status = MmUnmapViewOfCacheSegment(AddressSpace, BaseAddress);
+        MmLockAddressSpace(AddressSpace);
+
+        return Status;
+    }
 #endif
+
+   MemoryArea->DeleteInProgress = TRUE;
 
    MmLockSectionSegment(Segment);
 
@@ -4151,7 +4158,8 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
                                             BaseAddress);
    if (MemoryArea == NULL ||
-       MemoryArea->Type != MEMORY_AREA_SECTION_VIEW ||
+       ((MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) &&
+       (MemoryArea->Type != MEMORY_AREA_CACHE)) ||
        MemoryArea->DeleteInProgress)
    {
       if (MemoryArea) NT_ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
@@ -4159,11 +4167,9 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
       return STATUS_NOT_MAPPED_VIEW;
    }
 
-   MemoryArea->DeleteInProgress = TRUE;
-
    Section = MemoryArea->Data.SectionData.Section;
 
-   if (Section->AllocationAttributes & SEC_IMAGE)
+   if ((Section != NULL) && (Section->AllocationAttributes & SEC_IMAGE))
    {
       ULONG i;
       ULONG NrSegments;
@@ -4175,6 +4181,8 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
       ImageSectionObject = Section->ImageSection;
       SectionSegments = ImageSectionObject->Segments;
       NrSegments = ImageSectionObject->NrSegments;
+
+      MemoryArea->DeleteInProgress = TRUE;
 
       /* Search for the current segment within the section segments
        * and calculate the image base address */

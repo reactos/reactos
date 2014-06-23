@@ -72,33 +72,6 @@ _mesa_GetString( GLenum name )
 }
 
 
-/**
- * GL3
- */
-const GLubyte * GLAPIENTRY
-_mesa_GetStringi(GLenum name, GLuint index)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (!ctx)
-      return NULL;
-
-   ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, NULL);
-
-   switch (name) {
-   case GL_EXTENSIONS:
-      if (index >= _mesa_get_extension_count(ctx)) {
-         _mesa_error(ctx, GL_INVALID_VALUE, "glGetStringi(index=%u)", index);
-         return (const GLubyte *) 0;
-      }
-      return _mesa_get_enabled_extension(ctx, index);
-   default:
-      _mesa_error( ctx, GL_INVALID_ENUM, "glGetString" );
-      return (const GLubyte *) 0;
-   }
-}
-
-
 
 /**
  * Return pointer-valued state, such as a vertex array pointer.
@@ -125,28 +98,25 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params )
 
    switch (pname) {
       case GL_VERTEX_ARRAY_POINTER:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POS].Ptr;
+         *params = (GLvoid *) ctx->Array.VertexAttrib[VERT_ATTRIB_POS].Ptr;
          break;
       case GL_NORMAL_ARRAY_POINTER:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_NORMAL].Ptr;
+         *params = (GLvoid *) ctx->Array.VertexAttrib[VERT_ATTRIB_NORMAL].Ptr;
          break;
       case GL_COLOR_ARRAY_POINTER:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR0].Ptr;
-         break;
-      case GL_SECONDARY_COLOR_ARRAY_POINTER_EXT:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR1].Ptr;
+         *params = (GLvoid *) ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR].Ptr;
          break;
       case GL_FOG_COORDINATE_ARRAY_POINTER_EXT:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_FOG].Ptr;
+         *params = (GLvoid *) ctx->Array.VertexAttrib[VERT_ATTRIB_FOG].Ptr;
          break;
       case GL_INDEX_ARRAY_POINTER:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Ptr;
+         *params = (GLvoid *) ctx->Array.VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Ptr;
          break;
       case GL_TEXTURE_COORD_ARRAY_POINTER:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX].Ptr;
+         *params = (GLvoid *) ctx->Array.VertexAttrib[VERT_ATTRIB_TEX].Ptr;
          break;
       case GL_EDGE_FLAG_ARRAY_POINTER:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Ptr;
+         *params = (GLvoid *) ctx->Array.VertexAttrib[VERT_ATTRIB_EDGEFLAG].Ptr;
          break;
       case GL_FEEDBACK_BUFFER_POINTER:
          *params = ctx->Feedback.Buffer;
@@ -154,11 +124,6 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params )
       case GL_SELECTION_BUFFER_POINTER:
          *params = ctx->Select.Buffer;
          break;
-#if FEATURE_point_size_array
-      case GL_POINT_SIZE_ARRAY_POINTER_OES:
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POINT_SIZE].Ptr;
-         break;
-#endif
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glGetPointerv" );
          return;

@@ -14,7 +14,7 @@
 
 /* FUNCTIONS ********************************************************/
 
-LRESULT CALLBACK
+INT_PTR CALLBACK
 MRDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -66,10 +66,10 @@ MRDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 int
 mirrorRotateDlg()
 {
-    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_MIRRORROTATE), hMainWnd, (DLGPROC) MRDlgWinProc);
+    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_MIRRORROTATE), hMainWnd, MRDlgWinProc);
 }
 
-LRESULT CALLBACK
+INT_PTR CALLBACK
 ATTDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -203,10 +203,10 @@ ATTDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 int
 attributesDlg()
 {
-    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_ATTRIBUTES), hMainWnd, (DLGPROC) ATTDlgWinProc);
+    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_ATTRIBUTES), hMainWnd, ATTDlgWinProc);
 }
 
-LRESULT CALLBACK
+INT_PTR CALLBACK
 CHSIZEDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -266,5 +266,5 @@ CHSIZEDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 int
 changeSizeDlg()
 {
-    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_STRETCHSKEW), hMainWnd, (DLGPROC) CHSIZEDlgWinProc);
+    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_STRETCHSKEW), hMainWnd, CHSIZEDlgWinProc);
 }

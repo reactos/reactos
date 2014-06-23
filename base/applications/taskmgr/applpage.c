@@ -869,6 +869,9 @@ void ApplicationPage_OnEndTask(void)
     LV_ITEM                       item;
     int                           i;
 
+    /* Trick: on Windows, pressing the CTRL key forces the task to be ended */
+    BOOL ForceEndTask = !!(GetKeyState(VK_CONTROL) & 0x8000);
+
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
         memset(&item, 0, sizeof(LV_ITEM));
         item.mask = LVIF_STATE|LVIF_PARAM;
@@ -878,7 +881,7 @@ void ApplicationPage_OnEndTask(void)
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
             if (pAPLI) {
-                PostMessageW(pAPLI->hWnd, WM_CLOSE, 0, 0);
+                EndTask(pAPLI->hWnd, 0, ForceEndTask);
             }
         }
     }

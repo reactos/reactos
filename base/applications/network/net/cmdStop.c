@@ -16,12 +16,21 @@ INT cmdStop(INT argc, WCHAR **argv)
     SERVICE_STATUS ServiceStatus;
     DWORD dwError = ERROR_SUCCESS;
     INT nError = 0;
+    INT i;
 
     if (argc != 3)
     {
-        /* FIXME: Print usage message! */
-        printf("Usage: NET STOP <Service name>\n");
+        PrintResourceString(IDS_STOP_SYNTAX);
         return 1;
+    }
+
+    for (i = 2; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"/help") == 0)
+        {
+            PrintResourceString(IDS_STOP_HELP);
+            return 1;
+        }
     }
 
     hManager = OpenSCManagerW(NULL,

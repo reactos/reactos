@@ -214,7 +214,8 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
         (OperationType == HINIT_MAPFILE))
     {
         /* Verify integrity */
-        if (CmCheckRegistry((PCMHIVE)Hive, TRUE))
+        ULONG CheckStatus = CmCheckRegistry(Hive, CheckFlags);
+        if (CheckStatus != 0)
         {
             /* Cleanup allocations and fail */
             ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);

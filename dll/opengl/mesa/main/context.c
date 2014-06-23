@@ -373,8 +373,7 @@ _mesa_init_current(struct gl_context *ctx)
    /* redo special cases: */
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_WEIGHT], 1.0, 0.0, 0.0, 0.0 );
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_NORMAL], 0.0, 0.0, 1.0, 1.0 );
-   ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_COLOR0], 1.0, 1.0, 1.0, 1.0 );
-   ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_COLOR1], 0.0, 0.0, 0.0, 1.0 );
+   ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_COLOR], 1.0, 1.0, 1.0, 1.0 );
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_COLOR_INDEX], 1.0, 0.0, 0.0, 1.0 );
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_EDGEFLAG], 1.0, 0.0, 0.0, 1.0 );
 }
@@ -392,7 +391,6 @@ _mesa_init_constants(struct gl_context *ctx)
    /* Constants, may be overriden (usually only reduced) by device drivers */
    ctx->Const.MaxTextureMbytes = MAX_TEXTURE_MBYTES;
    ctx->Const.MaxTextureLevels = MAX_TEXTURE_LEVELS;
-   ctx->Const.Max3DTextureLevels = MAX_3D_TEXTURE_LEVELS;
    ctx->Const.MaxCubeTextureLevels = MAX_CUBE_TEXTURE_LEVELS;
    ctx->Const.MaxTextureMaxAnisotropy = MAX_TEXTURE_MAX_ANISOTROPY;
    ctx->Const.MaxArrayLockSize = MAX_ARRAY_LOCK_SIZE;
@@ -407,7 +405,6 @@ _mesa_init_constants(struct gl_context *ctx)
    ctx->Const.MinLineWidthAA = MIN_LINE_WIDTH;
    ctx->Const.MaxLineWidthAA = MAX_LINE_WIDTH;
    ctx->Const.LineWidthGranularity = (GLfloat) LINE_WIDTH_GRANULARITY;
-   ctx->Const.MaxColorTableSize = MAX_COLOR_TABLE_SIZE;
    ctx->Const.MaxClipPlanes = 6;
    ctx->Const.MaxLights = MAX_LIGHTS;
    ctx->Const.MaxShininess = 128.0;
@@ -495,7 +492,7 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_scissor( ctx );
    _mesa_init_stencil( ctx );
    _mesa_init_transform( ctx );
-   _mesa_init_varray( ctx );
+   _mesa_init_varray(ctx, &ctx->Array);
    _mesa_init_viewport( ctx );
 
    if (!_mesa_init_texture( ctx ))
@@ -743,17 +740,12 @@ _mesa_free_context_data( struct gl_context *ctx )
    _mesa_reference_framebuffer(&ctx->ReadBuffer, NULL);
 
    _mesa_free_attrib_data(ctx);
-   _mesa_free_buffer_objects(ctx);
    _mesa_free_lighting_data( ctx );
    _mesa_free_eval_data( ctx );
    _mesa_free_texture_data( ctx );
    _mesa_free_matrix_data( ctx );
    _mesa_free_viewport_data( ctx );
-   _mesa_free_varray_data(ctx);
-
-   _mesa_delete_array_object(ctx, ctx->Array.DefaultArrayObj);
-
-   _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj, NULL);
+   _mesa_free_varray_data(ctx, &ctx->Array);
 
    /* free dispatch tables */
    free(ctx->Exec);

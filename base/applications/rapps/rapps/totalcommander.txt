@@ -1,15 +1,15 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Total Commander
-Version = 8.50
+Version = 8.51a
 Licence = Shareware
 Description = Total Commander is a file manager with two panels side by side.
-Size = 3.5 MB
+Size = 3.55 MB
 Category = 12
 URLSite = http://www.ghisler.com/
-URLDownload = http://www.slo.ru/download/total_commander/tcm850x32.exe
+URLDownload = http://www.slo.ru/download/total_commander/tcm851ax32.exe
 CDPath = none
 
 [Section.0407]
@@ -28,12 +28,12 @@ Description = Total Commander to popularny menedżer plików z dwoma panelami, u
 [Section.0418]
 Licence = Versiune de evaluare
 Description = Total Commander este un gestionar de fișiere după modelul «două paneluri alăturate».
-Size = 3,5 Mo
+Size = 3,55 Mo
 
 [Section.041f]
 Licence = Paylaşımlı
 Description = Total Commander, yan yana iki bölmeli bir kütük yöneticisidir.
-Size = 3,5 MB
+Size = 3,55 MB
 
 [Section.0813]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.

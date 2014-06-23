@@ -1,15 +1,15 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Notepad++
-Version = 6.5.5
+Version = 6.6.3
 Licence = GPL
 Description = A text editor.
 Size = 7.3 MB
 Category = 6
 URLSite = http://notepad-plus-plus.org/
-URLDownload = http://download.tuxfamily.org/notepadplus/6.5.5/npp.6.5.5.Installer.exe
+URLDownload = http://download.tuxfamily.org/notepadplus/6.6.3/npp.6.6.3.Installer.exe
 CDPath = none
 
 [Section.0407]

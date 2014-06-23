@@ -32,6 +32,7 @@ KeyboardHookProc(int nCode,
                  WPARAM wParam,
                  LPARAM lParam)
 {
+    DPRINT1("KeyboardHookProc Processing!\n");
     return CallNextHookEx(hhk, nCode, wParam, lParam);
 }
 /*** END - HACK from win32csr... ***/

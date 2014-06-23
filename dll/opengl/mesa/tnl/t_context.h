@@ -79,12 +79,15 @@ enum {
 	_TNL_ATTRIB_POS = 0,
 	_TNL_ATTRIB_WEIGHT = 1,
 	_TNL_ATTRIB_NORMAL = 2,
-	_TNL_ATTRIB_COLOR0 = 3,
-	_TNL_ATTRIB_COLOR1 = 4,
-	_TNL_ATTRIB_FOG = 5,
-	_TNL_ATTRIB_COLOR_INDEX = 6,
-	_TNL_ATTRIB_EDGEFLAG = 7,
-	_TNL_ATTRIB_TEX = 8,
+	_TNL_ATTRIB_COLOR = 3,
+	_TNL_ATTRIB_FOG = 4,
+	_TNL_ATTRIB_COLOR_INDEX = 5,
+	_TNL_ATTRIB_EDGEFLAG = 6,
+	_TNL_ATTRIB_TEX = 7,
+    /* This is really a VERT_RESULT, not an attrib.  Need to fix
+     * tnl to understand the difference.
+     */
+    _TNL_ATTRIB_POINTSIZE = 8,
 
 	/* These alias with the generics, but they are not active
 	 * concurrently, so it's not a problem.  The TNL module
@@ -96,49 +99,28 @@ enum {
 	 * generic attribute in order to pick up per-vertex material
 	 * data.
 	 */
-	_TNL_ATTRIB_MAT_FRONT_AMBIENT = 10,
-	_TNL_ATTRIB_MAT_BACK_AMBIENT = 11,
-	_TNL_ATTRIB_MAT_FRONT_DIFFUSE = 12,
-	_TNL_ATTRIB_MAT_BACK_DIFFUSE = 13,
-	_TNL_ATTRIB_MAT_FRONT_SPECULAR = 14,
-	_TNL_ATTRIB_MAT_BACK_SPECULAR = 15,
-	_TNL_ATTRIB_MAT_FRONT_EMISSION = 16,
-	_TNL_ATTRIB_MAT_BACK_EMISSION = 17,
-	_TNL_ATTRIB_MAT_FRONT_SHININESS = 18,
-	_TNL_ATTRIB_MAT_BACK_SHININESS = 19,
-	_TNL_ATTRIB_MAT_FRONT_INDEXES = 20,
-	_TNL_ATTRIB_MAT_BACK_INDEXES = 21,
+	_TNL_ATTRIB_MAT_FRONT_AMBIENT = 9,
+	_TNL_ATTRIB_MAT_BACK_AMBIENT = 10,
+	_TNL_ATTRIB_MAT_FRONT_DIFFUSE = 11,
+	_TNL_ATTRIB_MAT_BACK_DIFFUSE = 12,
+	_TNL_ATTRIB_MAT_FRONT_SPECULAR = 13,
+	_TNL_ATTRIB_MAT_BACK_SPECULAR = 14,
+	_TNL_ATTRIB_MAT_FRONT_EMISSION = 15,
+	_TNL_ATTRIB_MAT_BACK_EMISSION = 16,
+	_TNL_ATTRIB_MAT_FRONT_SHININESS = 17,
+	_TNL_ATTRIB_MAT_BACK_SHININESS = 18,
+	_TNL_ATTRIB_MAT_FRONT_INDEXES = 29,
+	_TNL_ATTRIB_MAT_BACK_INDEXES = 20,
 
-	/* This is really a VERT_RESULT, not an attrib.  Need to fix
-	 * tnl to understand the difference.
-	 */
-	_TNL_ATTRIB_POINTSIZE = 9,
-
-	_TNL_ATTRIB_MAX = 22
+	_TNL_ATTRIB_MAX = 21
 } ;
-
-#define _TNL_ATTRIB_GENERIC(n) (_TNL_ATTRIB_GENERIC0 + (n))
-
-/* special index used for handing invalid glVertexAttribute() indices */
-#define _TNL_ATTRIB_ERROR    (_TNL_ATTRIB_GENERIC15 + 1)
 
 /**
  * Handy attribute ranges:
  */
-#define _TNL_FIRST_PROG      _TNL_ATTRIB_WEIGHT
-#define _TNL_LAST_PROG       _TNL_ATTRIB_TEX
 
 #define _TNL_FIRST_MAT       _TNL_ATTRIB_MAT_FRONT_AMBIENT
 #define _TNL_LAST_MAT        _TNL_ATTRIB_MAT_BACK_INDEXES
-
-/* Number of available texture attributes */
-#define _TNL_NUM_TEX 8
-
-/* Number of available generic attributes */
-#define _TNL_NUM_GENERIC 16
-
-/* Number of attributes used for evaluators */
-#define _TNL_NUM_EVAL 16
 
 
 #define PRIM_BEGIN     0x10
@@ -184,7 +166,6 @@ struct vertex_buffer
    GLboolean   *EdgeFlag;	                /* _TNL_BIT_EDGEFLAG */
    GLvector4f  *BackfaceIndexPtr;
    GLvector4f  *BackfaceColorPtr;
-   GLvector4f  *BackfaceSecondaryColorPtr;
 
    const struct _mesa_prim  *Primitive;	              
    GLuint      PrimitiveCount;	      

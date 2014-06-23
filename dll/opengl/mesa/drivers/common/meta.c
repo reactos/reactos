@@ -34,11 +34,9 @@
 #include "main/glheader.h"
 #include "main/mtypes.h"
 #include "main/imports.h"
-#include "main/arrayobj.h"
 #include "main/blend.h"
 #include "main/bufferobj.h"
 #include "main/buffers.h"
-#include "main/colortab.h"
 #include "main/context.h"
 #include "main/depth.h"
 #include "main/enable.h"
@@ -134,10 +132,6 @@ struct save_state
    GLbitfield TexGenEnabled;
    GLuint EnvMode;  /* unit[0] only */
 
-   /** MESA_META_VERTEX */
-   struct gl_array_object *ArrayObj;
-   struct gl_buffer_object *ArrayBufferObj;
-
    /** MESA_META_VIEWPORT */
    GLint ViewportX, ViewportY, ViewportW, ViewportH;
    GLclampd DepthNear, DepthFar;
@@ -150,23 +144,6 @@ struct save_state
    /** Miscellaneous (always disabled) */
    GLboolean Lighting;
    GLboolean RasterDiscard;
-};
-
-/**
- * Temporary texture used for glBlitFramebuffer, glDrawPixels, etc.
- * This is currently shared by all the meta ops.  But we could create a
- * separate one for each of glDrawPixel, glBlitFramebuffer, glCopyPixels, etc.
- */
-struct temp_texture
-{
-   GLuint TexObj;
-   GLenum Target;         /**< GL_TEXTURE_2D */
-   GLsizei MinSize;       /**< Min texture size to allocate */
-   GLsizei MaxSize;       /**< Max possible texture size */
-   GLboolean NPOT;        /**< Non-power of two size OK? */
-   GLsizei Width, Height; /**< Current texture size */
-   GLenum IntFormat;
-   GLfloat Sright, Ttop;  /**< right, top texcoords */
 };
 
 
@@ -188,10 +165,8 @@ struct clear_state
 {
    GLuint ArrayObj;
    GLuint VBO;
-   GLuint ShaderProg;
    GLint ColorLocation;
 
-   GLuint IntegerShaderProg;
    GLint IntegerColorLocation;
 };
 
@@ -216,12 +191,8 @@ struct gl_meta_state
    /** Save stack depth */
    GLuint SaveStackDepth;
 
-   struct temp_texture TempTex;
-
    struct copypix_state CopyPix;  /**< For _mesa_meta_CopyPixels() */
 };
-
-static void cleanup_temp_texture(struct gl_context *ctx, struct temp_texture *tex);
 
 /**
  * Initialize meta-ops for a context.
@@ -245,7 +216,6 @@ _mesa_meta_free(struct gl_context *ctx)
 {
    GET_CURRENT_CONTEXT(old_context);
    _mesa_make_current(ctx, NULL, NULL);
-   cleanup_temp_texture(ctx, &ctx->Meta->TempTex);
    if (old_context)
       _mesa_make_current(old_context, old_context->WinSysDrawBuffer, old_context->WinSysReadBuffer);
    else
@@ -382,7 +352,6 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
           ctx->Texture.Unit.TexGenEnabled) {
          _mesa_set_enable(ctx, GL_TEXTURE_1D, GL_FALSE);
          _mesa_set_enable(ctx, GL_TEXTURE_2D, GL_FALSE);
-         _mesa_set_enable(ctx, GL_TEXTURE_3D, GL_FALSE);
          if (ctx->Extensions.ARB_texture_cube_map)
             _mesa_set_enable(ctx, GL_TEXTURE_CUBE_MAP, GL_FALSE);
          _mesa_set_enable(ctx, GL_TEXTURE_GEN_S, GL_FALSE);
@@ -427,15 +396,6 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
             _mesa_set_enable(ctx, GL_CLIP_PLANE0 + i, GL_FALSE);
          }
       }
-   }
-
-   if (state & MESA_META_VERTEX) {
-      /* save vertex array object state */
-      _mesa_reference_array_object(ctx, &save->ArrayObj,
-                                   ctx->Array.ArrayObj);
-      _mesa_reference_buffer_object(ctx, &save->ArrayBufferObj,
-                                    ctx->Array.ArrayBufferObj);
-      /* set some default state? */
    }
 
    if (state & MESA_META_VIEWPORT) {
@@ -621,16 +581,6 @@ _mesa_meta_end(struct gl_context *ctx)
       }
    }
 
-   if (state & MESA_META_VERTEX) {
-      /* restore vertex buffer object */
-      _mesa_BindBufferARB(GL_ARRAY_BUFFER_ARB, save->ArrayBufferObj->Name);
-      _mesa_reference_buffer_object(ctx, &save->ArrayBufferObj, NULL);
-
-      /* restore vertex array object */
-      _mesa_BindVertexArray(save->ArrayObj->Name);
-      _mesa_reference_array_object(ctx, &save->ArrayObj, NULL);
-   }
-
    if (state & MESA_META_VIEWPORT) {
       if (save->ViewportX != ctx->Viewport.X ||
           save->ViewportY != ctx->Viewport.Y ||
@@ -659,270 +609,6 @@ GLboolean
 _mesa_meta_in_progress(struct gl_context *ctx)
 {
    return ctx->Meta->SaveStackDepth != 0;
-}
-
-
-/**
- * Convert Z from a normalized value in the range [0, 1] to an object-space
- * Z coordinate in [-1, +1] so that drawing at the new Z position with the
- * default/identity ortho projection results in the original Z value.
- * Used by the meta-Clear, Draw/CopyPixels and Bitmap functions where the Z
- * value comes from the clear value or raster position.
- */
-static INLINE GLfloat
-invert_z(GLfloat normZ)
-{
-   GLfloat objZ = 1.0f - 2.0f * normZ;
-   return objZ;
-}
-
-
-/**
- * One-time init for a temp_texture object.
- * Choose tex target, compute max tex size, etc.
- */
-static void
-init_temp_texture(struct gl_context *ctx, struct temp_texture *tex)
-{
-   /* use 2D texture, NPOT if possible */
-   tex->Target = GL_TEXTURE_2D;
-   tex->MaxSize = 1 << (ctx->Const.MaxTextureLevels - 1);
-   tex->NPOT = ctx->Extensions.ARB_texture_non_power_of_two;
-   tex->MinSize = 16;  /* 16 x 16 at least */
-   assert(tex->MaxSize > 0);
-
-   _mesa_GenTextures(1, &tex->TexObj);
-}
-
-static void
-cleanup_temp_texture(struct gl_context *ctx, struct temp_texture *tex)
-{
-   if (!tex->TexObj)
-     return;
-   _mesa_DeleteTextures(1, &tex->TexObj);
-   tex->TexObj = 0;
-}
-
-
-/**
- * Return pointer to temp_texture info for non-bitmap ops.
- * This does some one-time init if needed.
- */
-static struct temp_texture *
-get_temp_texture(struct gl_context *ctx)
-{
-   struct temp_texture *tex = &ctx->Meta->TempTex;
-
-   if (!tex->TexObj) {
-      init_temp_texture(ctx, tex);
-   }
-
-   return tex;
-}
-
-
-/**
- * Compute the width/height of texture needed to draw an image of the
- * given size.  Return a flag indicating whether the current texture
- * can be re-used (glTexSubImage2D) or if a new texture needs to be
- * allocated (glTexImage2D).
- * Also, compute s/t texcoords for drawing.
- *
- * \return GL_TRUE if new texture is needed, GL_FALSE otherwise
- */
-static GLboolean
-alloc_texture(struct temp_texture *tex,
-              GLsizei width, GLsizei height, GLenum intFormat)
-{
-   GLboolean newTex = GL_FALSE;
-
-   ASSERT(width <= tex->MaxSize);
-   ASSERT(height <= tex->MaxSize);
-
-   if (width > tex->Width ||
-       height > tex->Height ||
-       intFormat != tex->IntFormat) {
-      /* alloc new texture (larger or different format) */
-
-      if (tex->NPOT) {
-         /* use non-power of two size */
-         tex->Width = MAX2(tex->MinSize, width);
-         tex->Height = MAX2(tex->MinSize, height);
-      }
-      else {
-         /* find power of two size */
-         GLsizei w, h;
-         w = h = tex->MinSize;
-         while (w < width)
-            w *= 2;
-         while (h < height)
-            h *= 2;
-         tex->Width = w;
-         tex->Height = h;
-      }
-
-      tex->IntFormat = intFormat;
-
-      newTex = GL_TRUE;
-   }
-
-   /* compute texcoords */
-   tex->Sright = (GLfloat) width / tex->Width;
-   tex->Ttop = (GLfloat) height / tex->Height;
-
-   return newTex;
-}
-
-
-/**
- * Setup/load texture for glCopyPixels or glBlitFramebuffer.
- */
-static void
-setup_copypix_texture(struct temp_texture *tex,
-                      GLboolean newTex,
-                      GLint srcX, GLint srcY,
-                      GLsizei width, GLsizei height, GLenum intFormat,
-                      GLenum filter)
-{
-   _mesa_BindTexture(tex->Target, tex->TexObj);
-   _mesa_TexParameteri(tex->Target, GL_TEXTURE_MIN_FILTER, filter);
-   _mesa_TexParameteri(tex->Target, GL_TEXTURE_MAG_FILTER, filter);
-   _mesa_TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-   /* copy framebuffer image to texture */
-   if (newTex) {
-      /* create new tex image */
-      if (tex->Width == width && tex->Height == height) {
-         /* create new tex with framebuffer data */
-         _mesa_CopyTexImage2D(tex->Target, 0, tex->IntFormat,
-                              srcX, srcY, width, height, 0);
-      }
-      else {
-         /* create empty texture */
-         _mesa_TexImage2D(tex->Target, 0, tex->IntFormat,
-                          tex->Width, tex->Height, 0,
-                          intFormat, GL_UNSIGNED_BYTE, NULL);
-         /* load image */
-         _mesa_CopyTexSubImage2D(tex->Target, 0,
-                                 0, 0, srcX, srcY, width, height);
-      }
-   }
-   else {
-      /* replace existing tex image */
-      _mesa_CopyTexSubImage2D(tex->Target, 0,
-                              0, 0, srcX, srcY, width, height);
-   }
-}
-
-/**
- * Meta implementation of ctx->Driver.CopyPixels() in terms
- * of texture mapping and polygon rendering and GLSL shaders.
- */
-void
-_mesa_meta_CopyPixels(struct gl_context *ctx, GLint srcX, GLint srcY,
-                      GLsizei width, GLsizei height,
-                      GLint dstX, GLint dstY, GLenum type)
-{
-   struct copypix_state *copypix = &ctx->Meta->CopyPix;
-   struct temp_texture *tex = get_temp_texture(ctx);
-   struct vertex {
-      GLfloat x, y, z, s, t;
-   };
-   struct vertex verts[4];
-   GLboolean newTex;
-   GLenum intFormat = GL_RGBA;
-
-   if (type != GL_COLOR ||
-       ctx->_ImageTransferState ||
-       ctx->Fog.Enabled ||
-       width > tex->MaxSize ||
-       height > tex->MaxSize) {
-      /* XXX avoid this fallback */
-      _swrast_CopyPixels(ctx, srcX, srcY, width, height, dstX, dstY, type);
-      return;
-   }
-
-   /* Most GL state applies to glCopyPixels, but a there's a few things
-    * we need to override:
-    */
-   _mesa_meta_begin(ctx, (MESA_META_RASTERIZATION |
-                          MESA_META_TEXTURE |
-                          MESA_META_TRANSFORM |
-                          MESA_META_CLIP |
-                          MESA_META_VERTEX |
-                          MESA_META_VIEWPORT));
-
-   if (copypix->ArrayObj == 0) {
-      /* one-time setup */
-
-      /* create vertex array object */
-      _mesa_GenVertexArrays(1, &copypix->ArrayObj);
-      _mesa_BindVertexArray(copypix->ArrayObj);
-
-      /* create vertex array buffer */
-      _mesa_GenBuffersARB(1, &copypix->VBO);
-      _mesa_BindBufferARB(GL_ARRAY_BUFFER_ARB, copypix->VBO);
-      _mesa_BufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(verts),
-                          NULL, GL_DYNAMIC_DRAW_ARB);
-
-      /* setup vertex arrays */
-      _mesa_VertexPointer(3, GL_FLOAT, sizeof(struct vertex), OFFSET(x));
-      _mesa_TexCoordPointer(2, GL_FLOAT, sizeof(struct vertex), OFFSET(s));
-      _mesa_EnableClientState(GL_VERTEX_ARRAY);
-      _mesa_EnableClientState(GL_TEXTURE_COORD_ARRAY);
-   }
-   else {
-      _mesa_BindVertexArray(copypix->ArrayObj);
-      _mesa_BindBufferARB(GL_ARRAY_BUFFER_ARB, copypix->VBO);
-   }
-
-   newTex = alloc_texture(tex, width, height, intFormat);
-
-   /* vertex positions, texcoords (after texture allocation!) */
-   {
-      const GLfloat dstX0 = (GLfloat) dstX;
-      const GLfloat dstY0 = (GLfloat) dstY;
-      const GLfloat dstX1 = dstX + width * ctx->Pixel.ZoomX;
-      const GLfloat dstY1 = dstY + height * ctx->Pixel.ZoomY;
-      const GLfloat z = invert_z(ctx->Current.RasterPos[2]);
-
-      verts[0].x = dstX0;
-      verts[0].y = dstY0;
-      verts[0].z = z;
-      verts[0].s = 0.0F;
-      verts[0].t = 0.0F;
-      verts[1].x = dstX1;
-      verts[1].y = dstY0;
-      verts[1].z = z;
-      verts[1].s = tex->Sright;
-      verts[1].t = 0.0F;
-      verts[2].x = dstX1;
-      verts[2].y = dstY1;
-      verts[2].z = z;
-      verts[2].s = tex->Sright;
-      verts[2].t = tex->Ttop;
-      verts[3].x = dstX0;
-      verts[3].y = dstY1;
-      verts[3].z = z;
-      verts[3].s = 0.0F;
-      verts[3].t = tex->Ttop;
-
-      /* upload new vertex data */
-      _mesa_BufferSubDataARB(GL_ARRAY_BUFFER_ARB, 0, sizeof(verts), verts);
-   }
-
-   /* Alloc/setup texture */
-   setup_copypix_texture(tex, newTex, srcX, srcY, width, height,
-                         GL_RGBA, GL_NEAREST);
-
-   _mesa_set_enable(ctx, tex->Target, GL_TRUE);
-
-   /* draw textured quad */
-   _mesa_DrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-   _mesa_set_enable(ctx, tex->Target, GL_FALSE);
-
-   _mesa_meta_end(ctx);
 }
 
 
@@ -1031,11 +717,6 @@ copy_tex_sub_image(struct gl_context *ctx,
                                 xoffset, width,
                                 format, type, buf, &ctx->Unpack);
    }
-   else if (target == GL_TEXTURE_3D) {
-      ctx->Driver.TexSubImage3D(ctx, texImage,
-                                xoffset, yoffset, zoffset, width, height, 1,
-                                format, type, buf, &ctx->Unpack);
-   }
    else {
       ctx->Driver.TexSubImage2D(ctx, texImage,
                                 xoffset, yoffset, width, height,
@@ -1073,15 +754,3 @@ _mesa_meta_CopyTexSubImage2D(struct gl_context *ctx,
                       rb, x, y, width, height);
 }
 
-
-void
-_mesa_meta_CopyTexSubImage3D(struct gl_context *ctx,
-                             struct gl_texture_image *texImage,
-                             GLint xoffset, GLint yoffset, GLint zoffset,
-                             struct gl_renderbuffer *rb,
-                             GLint x, GLint y,
-                             GLsizei width, GLsizei height)
-{
-   copy_tex_sub_image(ctx, 3, texImage, xoffset, yoffset, zoffset,
-                      rb, x, y, width, height);
-}

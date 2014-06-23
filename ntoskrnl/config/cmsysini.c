@@ -129,7 +129,7 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     CmpLockRegistry();
 
     /* Make sure this is a valid key body */
-    if (KeyBody->Type == '20yk')
+    if (KeyBody->Type == CM_KEY_BODY_TYPE)
     {
         /* Get the KCB */
         Kcb = KeyBody->KeyControlBlock;
@@ -166,7 +166,7 @@ CmpCloseKeyObject(IN PEPROCESS Process OPTIONAL,
     if (SystemHandleCount > 1) return;
 
     /* Make sure we're a valid key body */
-    if (KeyBody->Type == '20yk')
+    if (KeyBody->Type == CM_KEY_BODY_TYPE)
     {
         /* Don't do anything if we don't have a notify block */
         if (!KeyBody->NotifyBlock) return;
@@ -358,7 +358,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
                                LogHandle,
                                NULL,
                                HiveName,
-                               0);
+                               CheckFlags);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -370,7 +370,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     /* Success, return hive */
     *Hive = NewHive;
 
-    /* ROS: Init root key cell and prepare the hive */
+    /* HACK: ROS: Init root key cell and prepare the hive */
     if (Operation == HINIT_CREATE) CmCreateRootNode(&NewHive->Hive, L"");
 
     /* Duplicate the hive name */
@@ -1056,7 +1056,7 @@ CmpCreateRegistryRoot(VOID)
 
     /* Initialize the object */
     RootKey->KeyControlBlock = Kcb;
-    RootKey->Type = '20yk';
+    RootKey->Type = CM_KEY_BODY_TYPE;
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
 

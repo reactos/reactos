@@ -1174,6 +1174,29 @@ AddDiskToList(
         DumpPartitionTable(DiskEntry);
 #endif
 
+        if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart != 0 &&
+            DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionLength.QuadPart != 0 &&
+            DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionType != 0)
+        {
+            if ((DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector) % DiskEntry->SectorsPerTrack == 0)
+            {
+                DPRINT1("Use %lu Sector alignment!\n", DiskEntry->SectorsPerTrack);
+            }
+            else if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart % 1048756 == 0)
+            {
+                DPRINT1("Use megabyte (%lu Sectors) alignment!\n", 1048756 / DiskEntry->BytesPerSector);
+            }
+            else
+            {
+                DPRINT1("No matching aligment found! Partiton 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
+            }
+        }
+        else
+        {
+            DPRINT1("No valid partiton table found! Use megabyte (%lu Sectors) alignment!\n", 1048756 / DiskEntry->BytesPerSector);
+        }
+
+
         if (DiskEntry->LayoutBuffer->PartitionCount == 0)
         {
             DiskEntry->NewDisk = TRUE;
@@ -1986,115 +2009,192 @@ SelectPartition(
 }
 
 
-VOID
+BOOL
 ScrollDownPartitionList(
     PPARTLIST List)
 {
-//    PDISKENTRY DiskEntry;
+    PLIST_ENTRY DiskListEntry;
+    PLIST_ENTRY PartListEntry;
+    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-//    PLIST_ENTRY Entry1;
-    PLIST_ENTRY Entry2;
 
-    /* Check for empty disks */
+    /* Fail, if no disks are available */
     if (IsListEmpty(&List->DiskListHead))
-        return;
+        return FALSE;
 
     /* Check for next usable entry on current disk */
     if (List->CurrentPartition != NULL)
     {
-        Entry2 = List->CurrentPartition->ListEntry.Flink;
-        if (Entry2 != &List->CurrentDisk->PrimaryPartListHead)
+        if (List->CurrentPartition->LogicalPartition)
         {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            /* Logical partition */
 
-            List->CurrentPartition = PartEntry;
-            DrawPartitionList(List);
-            return;
-        }
-    }
-
-#if 0
-    /* Check for first usable entry on next disk */
-    if (List->CurrentDisk != NULL)
-    {
-        Entry1 = List->CurrentDisk->ListEntry.Flink;
-        while (Entry1 != &List->DiskListHead)
-        {
-            DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
-
-            Entry2 = DiskEntry->PartListHead.Flink;
-            if (Entry2 != &DiskEntry->PartListHead)
+            PartListEntry = List->CurrentPartition->ListEntry.Flink;
+            if (PartListEntry != &List->CurrentDisk->LogicalPartListHead)
             {
-                PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+                /* Next logical partition */
+                PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-                List->CurrentDisk = DiskEntry;
                 List->CurrentPartition = PartEntry;
-                DrawPartitionList(List);
-                return;
+                return TRUE;
             }
+            else
+            {
+                PartListEntry = List->CurrentDisk->ExtendedPartition->ListEntry.Flink;
+                if (PartListEntry != &List->CurrentDisk->PrimaryPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-            Entry1 = Entry1->Flink;
+                    List->CurrentPartition = PartEntry;
+                    return TRUE;
+                }
+            }
+        }
+        else
+        {
+            /* Primary or extended partition */
+
+            if (IsContainerPartition(List->CurrentPartition->PartitionType))
+            {
+                /* First logical partition */
+                PartListEntry = List->CurrentDisk->LogicalPartListHead.Flink;
+                if (PartListEntry != &List->CurrentDisk->LogicalPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+
+                    List->CurrentPartition = PartEntry;
+                    return TRUE;
+                }
+            }
+            else
+            {
+                /* Next primary partition */
+                PartListEntry = List->CurrentPartition->ListEntry.Flink;
+                if (PartListEntry != &List->CurrentDisk->PrimaryPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+
+                    List->CurrentPartition = PartEntry;
+                    return TRUE;
+                }
+            }
         }
     }
-#endif
+
+    /* Search for the first partition entry on the next disk */
+    DiskListEntry = List->CurrentDisk->ListEntry.Flink;
+    while (DiskListEntry != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
+
+        PartListEntry = DiskEntry->PrimaryPartListHead.Flink;
+        if (PartListEntry != &DiskEntry->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+
+            List->CurrentDisk = DiskEntry;
+            List->CurrentPartition = PartEntry;
+            return TRUE;
+        }
+
+        DiskListEntry = DiskListEntry->Flink;
+    }
+
+    return FALSE;
 }
 
 
-VOID
+BOOL
 ScrollUpPartitionList(
     PPARTLIST List)
 {
-//    PDISKENTRY DiskEntry;
+    PLIST_ENTRY DiskListEntry;
+    PLIST_ENTRY PartListEntry;
+    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-//    PLIST_ENTRY Entry1;
-    PLIST_ENTRY Entry2;
 
-    /* Check for empty disks */
+    /* Fail, if no disks are available */
     if (IsListEmpty(&List->DiskListHead))
-        return;
+        return FALSE;
 
-    /* check for previous usable entry on current disk */
+    /* Check for previous usable entry on current disk */
     if (List->CurrentPartition != NULL)
     {
-        Entry2 = List->CurrentPartition->ListEntry.Blink;
-        if (Entry2 != &List->CurrentDisk->PrimaryPartListHead)
+        if (List->CurrentPartition->LogicalPartition)
         {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-
-            List->CurrentPartition = PartEntry;
-
-            /* Draw partition list and return */
-            DrawPartitionList(List);
-            return;
-        }
-    }
-
-#if 0
-    /* check for last usable entry on previous disk */
-    if (List->CurrentDisk != NULL)
-    {
-        Entry1 = List->CurrentDisk->ListEntry.Blink;
-        while (Entry1 != &List->DiskListHead)
-        {
-            DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
-
-            Entry2 = DiskEntry->PrimaryPartListHead.Blink;
-            if (Entry2 != &DiskEntry->PrimaryPartListHead)
+            /* Logical partition */
+            PartListEntry = List->CurrentPartition->ListEntry.Blink;
+            if (PartListEntry != &List->CurrentDisk->LogicalPartListHead)
             {
-                PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-
-                List->CurrentDisk = DiskEntry;
-                List->CurrentPartition = PartEntry;
-
-                /* Draw partition list and return */
-                DrawPartitionList(List);
-                return;
+                /* Previous logical partition */
+                PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+            }
+            else
+            {
+                /* Extended partition*/
+                PartEntry = List->CurrentDisk->ExtendedPartition;
             }
 
-            Entry1 = Entry1->Blink;
+            List->CurrentPartition = PartEntry;
+            return TRUE;
+        }
+        else
+        {
+            /* Primary or extended partition */
+
+            PartListEntry = List->CurrentPartition->ListEntry.Blink;
+            if (PartListEntry != &List->CurrentDisk->PrimaryPartListHead)
+            {
+                PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+
+                if (IsContainerPartition(PartEntry->PartitionType))
+                {
+                    PartListEntry = List->CurrentDisk->LogicalPartListHead.Blink;
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+                }
+
+                List->CurrentPartition = PartEntry;
+                return TRUE;
+            }
+
         }
     }
-#endif
+
+    /* Search for the last partition entry on the previous disk */
+    DiskListEntry = List->CurrentDisk->ListEntry.Blink;
+    while (DiskListEntry != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
+
+        PartListEntry = DiskEntry->PrimaryPartListHead.Blink;
+        if (PartListEntry != &DiskEntry->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+
+            if (IsContainerPartition(PartEntry->PartitionType))
+            {
+                PartListEntry = DiskEntry->LogicalPartListHead.Blink;
+                if (PartListEntry != &DiskEntry->LogicalPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
+
+                    List->CurrentDisk = DiskEntry;
+                    List->CurrentPartition = PartEntry;
+                    return TRUE;
+                }
+            }
+            else
+            {
+                List->CurrentDisk = DiskEntry;
+                List->CurrentPartition = PartEntry;
+                return TRUE;
+            }
+        }
+
+        DiskListEntry = DiskListEntry->Blink;
+    }
+
+    return FALSE;
 }
 
 
@@ -2472,6 +2572,32 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
     UpdatePartitionNumbers(DiskEntry);
 
     AssignDriveLetters(List);
+}
+
+
+VOID
+CreateLogicalPartition(
+    PPARTLIST List,
+    ULONGLONG SectorCount)
+{
+//    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+//    PPARTENTRY NewPartEntry;
+
+    DPRINT1("CreateLogicalPartition(%I64u)\n", SectorCount);
+
+    if (List == NULL ||
+        List->CurrentDisk == NULL ||
+        List->CurrentPartition == NULL ||
+        List->CurrentPartition->IsPartitioned == TRUE)
+    {
+        return;
+    }
+
+//    DiskEntry = List->CurrentDisk;
+    PartEntry = List->CurrentPartition;
+
+    DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
 }
 
 
@@ -2982,6 +3108,24 @@ ExtendedPartitionCreationChecks(
     /* Fail if the partition is not the last list entry */
     if (!IsLastPrimaryPartiton(PartEntry))
         return ERROR_EXTENDED_NOT_LAST;
+
+    return ERROR_SUCCESS;
+}
+
+
+ULONG
+LogicalPartitionCreationChecks(
+    IN PPARTLIST List)
+{
+//    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+
+//    DiskEntry = List->CurrentDisk;
+    PartEntry = List->CurrentPartition;
+
+    /* Fail if partition is already in use */
+    if (PartEntry->IsPartitioned == TRUE)
+        return ERROR_NEW_PARTITION;
 
     return ERROR_SUCCESS;
 }

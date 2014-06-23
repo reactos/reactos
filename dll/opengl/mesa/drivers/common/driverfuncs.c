@@ -26,7 +26,6 @@
 #include "main/glheader.h"
 #include "main/imports.h"
 #include "main/accum.h"
-#include "main/arrayobj.h"
 #include "main/context.h"
 #include "main/framebuffer.h"
 #include "main/readpix.h"
@@ -37,7 +36,6 @@
 #include "main/texobj.h"
 #include "main/texstore.h"
 #include "main/bufferobj.h"
-#include "main/texturebarrier.h"
 
 #include "tnl/tnl.h"
 #include "swrast/swrast.h"
@@ -84,14 +82,11 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->ChooseTextureFormat = _mesa_choose_tex_format;
    driver->TexImage1D = _mesa_store_teximage1d;
    driver->TexImage2D = _mesa_store_teximage2d;
-   driver->TexImage3D = _mesa_store_teximage3d;
    driver->TexSubImage1D = _mesa_store_texsubimage1d;
    driver->TexSubImage2D = _mesa_store_texsubimage2d;
-   driver->TexSubImage3D = _mesa_store_texsubimage3d;
    driver->GetTexImage = _mesa_get_teximage;
    driver->CopyTexSubImage1D = _mesa_meta_CopyTexSubImage1D;
    driver->CopyTexSubImage2D = _mesa_meta_CopyTexSubImage2D;
-   driver->CopyTexSubImage3D = _mesa_meta_CopyTexSubImage3D;
    driver->TestProxyTexImage = _mesa_test_proxy_teximage;
    driver->BindTexture = NULL;
    driver->NewTextureObject = _mesa_new_texture_object;
@@ -105,9 +100,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
 
    /* simple state commands */
    driver->AlphaFunc = NULL;
-   driver->BlendColor = NULL;
-   driver->BlendEquationSeparate = NULL;
-   driver->BlendFuncSeparate = NULL;
    driver->ClearColor = NULL;
    driver->ClearDepth = NULL;
    driver->ClearStencil = NULL;
@@ -147,13 +139,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
 
    driver->MapRenderbuffer = _swrast_map_soft_renderbuffer;
    driver->UnmapRenderbuffer = _swrast_unmap_soft_renderbuffer;
-
-   _mesa_init_texture_barrier_functions(driver);
-
-   /* APPLE_vertex_array_object */
-   driver->NewArrayObject = _mesa_new_array_object;
-   driver->DeleteArrayObject = _mesa_delete_array_object;
-   driver->BindArrayObject = NULL;
 
    /* T&L stuff */
    driver->CurrentExecPrimitive = 0;

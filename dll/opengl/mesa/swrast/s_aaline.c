@@ -470,9 +470,6 @@ _swrast_choose_aa_line_function(struct gl_context *ctx)
    ASSERT(ctx->Line.SmoothFlag);
 
    if (ctx->Texture._EnabledCoord
-       || (ctx->Light.Enabled &&
-           ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
-       || ctx->Fog.ColorSumEnabled
        || swrast->_FogEnabled) {
       swrast->Line = aa_general_rgba_line;
    }

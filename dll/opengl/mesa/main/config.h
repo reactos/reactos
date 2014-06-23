@@ -97,9 +97,6 @@
 /** Line width granularity */
 #define LINE_WIDTH_GRANULARITY 0.1
 
-/** Max texture palette / color table size */
-#define MAX_COLOR_TABLE_SIZE 256
-
 /** Max memory to allow for a single texture image (in megabytes) */
 #define MAX_TEXTURE_MBYTES 1024
 
@@ -135,7 +132,6 @@
 #undef MAX_WIDTH
 #undef MAX_HEIGHT
 #define MAX_TEXTURE_LEVELS 13
-#define MAX_3D_TEXTURE_LEVELS 9
 #define MAX_CUBE_TEXTURE_LEVELS 13
 #define MAX_WIDTH 4096
 #define MAX_HEIGHT 4096
@@ -154,9 +150,6 @@
 #define MAX_CONVOLUTION_WIDTH 9
 /** Max convolution filter height */
 #define MAX_CONVOLUTION_HEIGHT 9
-
-/** For GL_ARB_texture_compression */
-#define MAX_COMPRESSED_TEXTURE_FORMATS 25
 
 /** For GL_EXT_texture_filter_anisotropic */
 #define MAX_TEXTURE_MAX_ANISOTROPY 16.0

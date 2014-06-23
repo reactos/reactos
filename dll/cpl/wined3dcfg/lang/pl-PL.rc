@@ -2,6 +2,7 @@
  *    Translated by Caemyr - Olaf Siejka (Mar 2012)
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
+ *	  Updated by Saibamen and wojo664 (May 2014)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -12,27 +13,27 @@ CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
-    GROUPBOX "Shaders", -1, 5, 25, 230, 80
-    LTEXT "Enable GLSL:", -1, 15, 42, 80, 10
+    GROUPBOX "Cieniowanie", -1, 5, 25, 230, 80
+    LTEXT "Włącz GLSL:", -1, 15, 42, 80, 10
     COMBOBOX IDC_GLSL, 95, 40, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Maximum GS Level:", -1, 15, 57, 80, 10
+    LTEXT "Maksymalny poziom GS:", -1, 15, 57, 80, 10
     COMBOBOX IDC_GSLEVEL, 95, 55, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Maximum PS Level:", -1, 15, 72, 80, 10
+    LTEXT "Maksymalny poziom PS:", -1, 15, 72, 80, 10
     COMBOBOX IDC_PSLEVEL, 95, 70, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Maximum VS Level:", -1, 15, 87, 80, 10
+    LTEXT "Maksymalny poziom VS:", -1, 15, 87, 80, 10
     COMBOBOX IDC_VSLEVEL, 95, 85, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    GROUPBOX "Rendering", -1, 5, 110, 230, 110
-    LTEXT "Multisampling:", -1, 15, 127, 80, 10
+    GROUPBOX "Renderowanie", -1, 5, 110, 230, 110
+    LTEXT "Multipróbkowanie:", -1, 15, 127, 80, 10
     COMBOBOX IDC_MULTISAMPLING, 95, 125, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Strict draw ordering:", -1, 15, 142, 80, 10
+    LTEXT "Ścisła kolejność rysowania:", -1, 15, 142, 80, 10
     COMBOBOX IDC_STRICTDRAWORDERING, 95, 140, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Offscreen rendering:", -1, 15, 157, 80, 10
+    LTEXT "Renderowanie pozaekranowe:", -1, 15, 157, 80, 10
     COMBOBOX IDC_OFFSCREEN, 95, 155, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Always offscreen:", -1, 15, 172, 72, 10, SS_LEFT
+    LTEXT "Zawsze pozaekranowo:", -1, 15, 172, 72, 10, SS_LEFT
     COMBOBOX IDC_ALWAYSOFFSCREEN, 95, 170, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Video memory size:", -1, 15, 187, 72, 10, SS_LEFT
+    LTEXT "Rozmiar pamięci video:", -1, 15, 187, 72, 10, SS_LEFT
     COMBOBOX IDC_VIDMEMSIZE, 95, 185, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "DirectDraw Renderer:", -1, 15, 202, 72, 10, SS_LEFT
+    LTEXT "Urządzenie renderujące DirectDraw:", -1, 15, 202, 72, 10, SS_LEFT
     COMBOBOX IDC_DDRENDERER, 95, 200, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
 END
 

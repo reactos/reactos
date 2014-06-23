@@ -14,8 +14,8 @@ HvpWriteLog(
    PHHIVE RegistryHive)
 {
    ULONG FileOffset;
-   ULONG BufferSize;
-   ULONG BitmapSize;
+   UINT32 BufferSize;
+   UINT32 BitmapSize;
    PUCHAR Buffer;
    PUCHAR Ptr;
    ULONG BlockIndex;
@@ -42,7 +42,7 @@ HvpWriteLog(
    BufferSize = HV_LOG_HEADER_SIZE + sizeof(ULONG) + BitmapSize;
    BufferSize = ROUND_UP(BufferSize, HV_BLOCK_SIZE);
 
-   DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
+   DPRINT("Bitmap size %u  buffer size: %u\n", BitmapSize, BufferSize);
 
    Buffer = RegistryHive->Allocate(BufferSize, TRUE, TAG_CM);
    if (Buffer == NULL)

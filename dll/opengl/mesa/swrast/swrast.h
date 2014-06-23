@@ -70,13 +70,13 @@
  *     primitives unaccelerated), hook in swrast_setup instead.
  */
 typedef struct {
-   GLfloat attrib[32][4];
+   GLfloat attrib[FRAG_ATTRIB_MAX][4];
    GLchan color[4];   /** integer color */
    GLfloat pointSize;
 } SWvertex;
 
 
-#define FRAG_ATTRIB_CI FRAG_ATTRIB_COL0
+#define FRAG_ATTRIB_CI FRAG_ATTRIB_COL
 
 
 struct swrast_device_driver;

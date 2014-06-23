@@ -30,7 +30,7 @@
 
 #ifdef __i386__
 #define ARCH_STRING "x86"
-#define GECKO_SHA "b4923c0565e6cbd20075a0d4119ce3b48424f962"
+#define GECKO_SHA "f6984567b24fef7b0be79837e04d3a913af1a88c"
 #else
 #define ARCH_STRING ""
 #define GECKO_SHA "???"

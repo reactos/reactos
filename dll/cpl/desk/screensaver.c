@@ -504,6 +504,8 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
     HKEY regKey;
     BOOL DeleteMode = FALSE;
 
+    DBG_UNREFERENCED_LOCAL_VARIABLE(DeleteMode);
+
     if (RegOpenKeyEx(HKEY_CURRENT_USER,
                      _T("Control Panel\\Desktop"),
                      0,

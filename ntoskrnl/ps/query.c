@@ -151,7 +151,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 ProcessBasicInfo->UniqueProcessId = (ULONG_PTR)Process->
                                                     UniqueProcessId;
                 ProcessBasicInfo->InheritedFromUniqueProcessId =
-                    (ULONG)Process->InheritedFromUniqueProcessId;
+                    (ULONG_PTR)Process->InheritedFromUniqueProcessId;
                 ProcessBasicInfo->BasePriority = Process->Pcb.BasePriority;
 
             }

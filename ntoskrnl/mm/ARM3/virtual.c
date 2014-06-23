@@ -4398,6 +4398,9 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
+    DPRINT("NtAllocateVirtualMemory: Process 0x%p, Address 0x%p, Zerobits %lu , RegionSize 0x%x, Allocation type 0x%x, Protect 0x%x.\n",
+        Process, PBaseAddress, ZeroBits, PRegionSize, AllocationType, Protect);
+
     //
     // Check for large page allocations and make sure that the required privilege
     // is being held, before attempting to handle them.
@@ -4656,6 +4659,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             //
         }
         _SEH2_END;
+        DPRINT("Reserved %x bytes at %p.\n", PRegionSize, StartingAddress);
         return STATUS_SUCCESS;
     }
 
@@ -5153,6 +5157,9 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
+    DPRINT("NtFreeVirtualMemory: Process 0x%p, Adress 0x%p, size 0x%x, FreeType %x.\n",
+        Process, PBaseAddress, PRegionSize, FreeType);
+
     //
     // Lock the address space
     //
@@ -5336,7 +5343,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     ASSERT(Vad->StartingVpn << PAGE_SHIFT == (ULONG_PTR)MemoryArea->StartingAddress);
                     ASSERT((Vad->EndingVpn + 1) << PAGE_SHIFT == (ULONG_PTR)MemoryArea->EndingAddress);
                     Vad->EndingVpn = ((ULONG_PTR)StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->EndingAddress = (PVOID)(((Vad->EndingVpn + 1) << PAGE_SHIFT) - 1);
+                    MemoryArea->EndingAddress = (PVOID)(StartingAddress);
                 }
                 else
                 {

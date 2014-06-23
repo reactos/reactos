@@ -56,7 +56,7 @@
 #elif defined(_MSC_VER)
 # define __CRT_INLINE __inline
 #elif defined(__GNUC__)
-# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+# if defined(__clang__) || ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
 #  define __CRT_INLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
 # else
 #  define __CRT_INLINE extern __inline__ __attribute__((__always_inline__))

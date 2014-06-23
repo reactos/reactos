@@ -211,11 +211,11 @@ BOOL
 SetMountedDeviceValues(
     PPARTLIST List);
 
-VOID
+BOOL
 ScrollDownPartitionList(
     PPARTLIST List);
 
-VOID
+BOOL
 ScrollUpPartitionList(
     PPARTLIST List);
 
@@ -227,6 +227,11 @@ CreatePrimaryPartition(
 
 VOID
 CreateExtendedPartition(
+    PPARTLIST List,
+    ULONGLONG PartitionSize);
+
+VOID
+CreateLogicalPartition(
     PPARTLIST List,
     ULONGLONG PartitionSize);
 
@@ -252,6 +257,10 @@ PrimaryPartitionCreationChecks(
 
 ULONG
 ExtendedPartitionCreationChecks(
+    IN PPARTLIST List);
+
+ULONG
+LogicalPartitionCreationChecks(
     IN PPARTLIST List);
 
 /* EOF */

@@ -96,14 +96,13 @@ typedef enum
    VERT_ATTRIB_POS = 0,
    VERT_ATTRIB_WEIGHT = 1,
    VERT_ATTRIB_NORMAL = 2,
-   VERT_ATTRIB_COLOR0 = 3,
-   VERT_ATTRIB_COLOR1 = 4,
-   VERT_ATTRIB_FOG = 5,
-   VERT_ATTRIB_COLOR_INDEX = 6,
-   VERT_ATTRIB_EDGEFLAG = 7,
-   VERT_ATTRIB_TEX = 8,
-   VERT_ATTRIB_POINT_SIZE = 9,
-   VERT_ATTRIB_MAX = 10
+   VERT_ATTRIB_COLOR = 3,
+   VERT_ATTRIB_FOG = 4,
+   VERT_ATTRIB_COLOR_INDEX = 5,
+   VERT_ATTRIB_EDGEFLAG = 6,
+   VERT_ATTRIB_TEX = 7,
+   VERT_ATTRIB_POINT_SIZE = 8,
+   VERT_ATTRIB_MAX = 9
 } gl_vert_attrib;
 
 /**
@@ -121,8 +120,7 @@ typedef enum
 #define VERT_BIT_POS             BITFIELD64_BIT(VERT_ATTRIB_POS)
 #define VERT_BIT_WEIGHT          BITFIELD64_BIT(VERT_ATTRIB_WEIGHT)
 #define VERT_BIT_NORMAL          BITFIELD64_BIT(VERT_ATTRIB_NORMAL)
-#define VERT_BIT_COLOR0          BITFIELD64_BIT(VERT_ATTRIB_COLOR0)
-#define VERT_BIT_COLOR1          BITFIELD64_BIT(VERT_ATTRIB_COLOR1)
+#define VERT_BIT_COLOR           BITFIELD64_BIT(VERT_ATTRIB_COLOR)
 #define VERT_BIT_FOG             BITFIELD64_BIT(VERT_ATTRIB_FOG)
 #define VERT_BIT_COLOR_INDEX     BITFIELD64_BIT(VERT_ATTRIB_COLOR_INDEX)
 #define VERT_BIT_EDGEFLAG        BITFIELD64_BIT(VERT_ATTRIB_EDGEFLAG)
@@ -143,20 +141,18 @@ typedef enum
 typedef enum
 {
    FRAG_ATTRIB_WPOS = 0,
-   FRAG_ATTRIB_COL0 = 1,
-   FRAG_ATTRIB_COL1 = 2,
-   FRAG_ATTRIB_FOGC = 3,
-   FRAG_ATTRIB_TEX = 4,
-   FRAG_ATTRIB_FACE = 5,  /**< front/back face */
-   FRAG_ATTRIB_PNTC = 6,  /**< sprite/point coord */
-   FRAG_ATTRIB_CLIP_DIST0 = 7,
-   FRAG_ATTRIB_CLIP_DIST1 = 8,
-   FRAG_ATTRIB_MAX = 9
+   FRAG_ATTRIB_COL = 1,
+   FRAG_ATTRIB_FOGC = 2,
+   FRAG_ATTRIB_TEX = 3,
+   FRAG_ATTRIB_FACE = 4,  /**< front/back face */
+   FRAG_ATTRIB_PNTC = 5,  /**< sprite/point coord */
+   FRAG_ATTRIB_CLIP_DIST0 = 6,
+   FRAG_ATTRIB_CLIP_DIST1 = 7,
+   FRAG_ATTRIB_MAX = 8
 } gl_frag_attrib;
 
 
-#define FRAG_BIT_COL0  (1 << FRAG_ATTRIB_COL0)
-#define FRAG_BIT_COL1  (1 << FRAG_ATTRIB_COL1)
+#define FRAG_BIT_COL  (1 << FRAG_ATTRIB_COL)
 #define FRAG_BIT_FOGC  (1 << FRAG_ATTRIB_FOGC)
 #define FRAG_BIT_TEX  (1 << FRAG_ATTRIB_TEX)
 
@@ -386,8 +382,6 @@ struct gl_lightmodel
    GLfloat Ambient[4];		/**< ambient color */
    GLboolean LocalViewer;	/**< Local (or infinite) view point? */
    GLboolean TwoSide;		/**< Two (or one) sided lighting? */
-   GLenum ColorControl;		/**< either GL_SINGLE_COLOR
-				 *    or GL_SEPARATE_SPECULAR_COLOR */
 };
 
 
@@ -452,14 +446,9 @@ struct gl_colorbuffer_attrib
     * control, only on the fixed-pointness of the render target.
     * The query does however depend on fragment color clamping.
     */
-   GLfloat BlendColor[4];               /**< Blending color */
 
-   GLenum SrcRGB;             /**< RGB blend source term */
-   GLenum DstRGB;             /**< RGB blend dest term */
-   GLenum SrcA;               /**< Alpha blend source term */
-   GLenum DstA;               /**< Alpha blend dest term */
-   GLenum EquationRGB;        /**< GL_ADD, GL_SUBTRACT, etc. */
-   GLenum EquationA;          /**< GL_ADD, GL_SUBTRACT, etc. */
+   GLenum SrcFactor;             /**< RGB blend source term */
+   GLenum DstFactor;             /**< RGB blend dest term */
    /*@}*/
 
    /** 
@@ -496,7 +485,6 @@ struct gl_current_attrib
    GLfloat RasterPos[4];
    GLfloat RasterDistance;
    GLfloat RasterColor[4];
-   GLfloat RasterSecondaryColor[4];
    GLfloat RasterTexCoords[4];
    GLboolean RasterPosValid;
    /*@}*/
@@ -572,7 +560,6 @@ struct gl_fog_attrib
    GLfloat End;			/**< End distance in eye coords */
    GLfloat Index;		/**< Fog index */
    GLenum Mode;			/**< Fog mode */
-   GLboolean ColorSumEnabled;
    GLenum FogCoordinateSource;  /**< GL_EXT_fog_coord */
    GLfloat _Scale;		/**< (End == Start) ? 1.0 : 1.0 / (End - Start) */
    GLenum FogDistanceMode;     /**< GL_NV_fog_distance */
@@ -833,7 +820,6 @@ struct gl_stencil_attrib
 typedef enum
 {
    TEXTURE_CUBE_INDEX,
-   TEXTURE_3D_INDEX,
    TEXTURE_2D_INDEX,
    TEXTURE_1D_INDEX,
    NUM_TEXTURE_TARGETS
@@ -846,7 +832,6 @@ typedef enum
  */
 /*@{*/
 #define TEXTURE_CUBE_BIT     (1 << TEXTURE_CUBE_INDEX)
-#define TEXTURE_3D_BIT       (1 << TEXTURE_3D_INDEX)
 #define TEXTURE_2D_BIT       (1 << TEXTURE_2D_INDEX)
 #define TEXTURE_1D_BIT       (1 << TEXTURE_1D_INDEX)
 /*@}*/
@@ -1193,76 +1178,29 @@ struct gl_client_array
 
 
 /**
- * Collection of vertex arrays.  Defined by the GL_APPLE_vertex_array_object
- * extension, but a nice encapsulation in any case.
- */
-struct gl_array_object
-{
-   /** Name of the array object as received from glGenVertexArrayAPPLE. */
-   GLuint Name;
-
-   GLint RefCount;
-   _glthread_Mutex Mutex;
-
-   /**
-    * Does the VAO use ARB semantics or Apple semantics?
-    *
-    * There are several ways in which ARB_vertex_array_object and
-    * APPLE_vertex_array_object VAOs have differing semantics.  At the very
-    * least,
-    *
-    *     - ARB VAOs require that all array data be sourced from vertex buffer
-    *       objects, but Apple VAOs do not.
-    *
-    *     - ARB VAOs require that names come from GenVertexArrays.
-    *
-    * This flag notes which behavior governs this VAO.
-    */
-   GLboolean ARBsemantics;
-
-   /**
-    * Has this array object been bound?
-    */
-   GLboolean _Used;
-
-   /** Vertex attribute arrays */
-   struct gl_client_array VertexAttrib[VERT_ATTRIB_MAX];
-
-   /** Mask of VERT_BIT_* values indicating which arrays are enabled */
-   GLbitfield64 _Enabled;
-
-   /**
-    * Min of all enabled arrays' _MaxElement.  When arrays reside inside VBOs
-    * we can determine the max legal (in bounds) glDrawElements array index.
-    */
-   GLuint _MaxElement;
-
-   struct gl_buffer_object *ElementArrayBufferObj;
-};
-
-
-/**
  * Vertex array state
  */
 struct gl_array_attrib
 {
-   /** Currently bound array object. See _mesa_BindVertexArrayAPPLE() */
-   struct gl_array_object *ArrayObj;
+    /** Vertex attribute arrays */
+    struct gl_client_array VertexAttrib[VERT_ATTRIB_MAX];
 
-   /** The default vertex array object */
-   struct gl_array_object *DefaultArrayObj;
+    /** Mask of VERT_BIT_* values indicating which arrays are enabled */
+    GLbitfield64 _Enabled;
 
-   /** Array objects (GL_ARB/APPLE_vertex_array_object) */
-   struct _mesa_HashTable *Objects;
+    /**
+     * Min of all enabled arrays' _MaxElement.  When arrays reside inside VBOs
+     * we can determine the max legal (in bounds) glDrawElements array index.
+     */
+    GLuint _MaxElement;
 
-   GLuint LockFirst;            /**< GL_EXT_compiled_vertex_array */
-   GLuint LockCount;            /**< GL_EXT_compiled_vertex_array */
+    struct gl_buffer_object *ElementArrayBufferObj;
 
-   GLbitfield64 NewState;		/**< mask of VERT_BIT_* values */
-   GLboolean RebindArrays; /**< whether the VBO module should rebind arrays */
+    GLuint LockFirst;            /**< GL_EXT_compiled_vertex_array */
+    GLuint LockCount;            /**< GL_EXT_compiled_vertex_array */
 
-   /* GL_ARB_vertex_buffer_object */
-   struct gl_buffer_object *ArrayBufferObj;
+    GLbitfield64 NewState;		/**< mask of VERT_BIT_* values */
+    GLboolean RebindArrays; /**< whether the VBO module should rebind arrays */
 };
 
 
@@ -1494,17 +1432,6 @@ struct gl_framebuffer
    void (*Delete)(struct gl_framebuffer *fb);
 };
 
-
-/**
- * Precision info for shader datatypes.  See glGetShaderPrecisionFormat().
- */
-struct gl_precision
-{
-   GLushort RangeMin;   /**< min value exponent */
-   GLushort RangeMax;   /**< max value exponent */
-   GLushort Precision;  /**< number of mantissa bits */
-};
-
 /**
  * Constants which may be overridden by device driver during context creation
  * but are never changed after that.
@@ -1512,8 +1439,7 @@ struct gl_precision
 struct gl_constants
 {
    GLint MaxTextureMbytes;      /**< Max memory per image, in MB */
-   GLint MaxTextureLevels;      /**< Max mipmap levels. */ 
-   GLint Max3DTextureLevels;    /**< Max mipmap levels for 3D textures */
+   GLint MaxTextureLevels;      /**< Max mipmap levels. */
    GLint MaxCubeTextureLevels;  /**< Max mipmap levels for cube textures */
    GLfloat MaxTextureMaxAnisotropy;  /**< GL_EXT_texture_filter_anisotropic */
 
@@ -1527,8 +1453,6 @@ struct gl_constants
    GLfloat MinLineWidth, MaxLineWidth;       /**< aliased */
    GLfloat MinLineWidthAA, MaxLineWidthAA;   /**< antialiased */
    GLfloat LineWidthGranularity;
-
-   GLuint MaxColorTableSize;
 
    GLuint MaxClipPlanes;
    GLuint MaxLights;
@@ -1577,19 +1501,14 @@ struct gl_extensions
    GLboolean dummy;  /* don't remove this! */
    GLboolean dummy_true;  /* Set true by _mesa_init_extensions(). */
    GLboolean dummy_false; /* Set false by _mesa_init_extensions(). */
-   GLboolean ARB_half_float_pixel;
-   GLboolean ARB_half_float_vertex;
    GLboolean ARB_map_buffer_range;
    GLboolean ARB_point_sprite;
    GLboolean ARB_texture_cube_map;
    GLboolean ARB_texture_env_combine;
    GLboolean ARB_texture_env_crossbar;
    GLboolean ARB_texture_env_dot3;
-   GLboolean ARB_texture_float;
-   GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_texture_storage;
    GLboolean ARB_transpose_matrix;
-   GLboolean ARB_vertex_array_object;
    GLboolean ARB_window_pos;
    GLboolean EXT_blend_color;
    GLboolean EXT_blend_equation_separate;
@@ -1607,14 +1526,11 @@ struct gl_extensions
    GLboolean EXT_secondary_color;
    GLboolean EXT_separate_shader_objects;
    GLboolean EXT_separate_specular_color;
-   GLboolean EXT_texture3D;
    GLboolean EXT_texture_env_dot3;
    GLboolean EXT_texture_filter_anisotropic;
    GLboolean EXT_texture_integer;
    /* vendor extensions */
    GLboolean APPLE_packed_pixels;
-   GLboolean APPLE_vertex_array_object;
-   GLboolean APPLE_object_purgeable;
    GLboolean ATI_texture_env_combine3;
    GLboolean IBM_rasterpos_clip;
    GLboolean IBM_multimode_draw_arrays;
@@ -1625,7 +1541,6 @@ struct gl_extensions
    GLboolean NV_fog_distance;
    GLboolean NV_light_max_exponent;
    GLboolean NV_point_sprite;
-   GLboolean NV_texture_barrier;
    GLboolean NV_texgen_reflection;
    GLboolean NV_texture_env_combine4;
    GLboolean extension_sentinel;
@@ -1694,8 +1609,7 @@ struct gl_matrix_stack
 #define _NEW_BUFFERS           (1 << 22)  /**< gl_context::Visual, DrawBuffer, */
 #define _NEW_CURRENT_ATTRIB    (1 << 23)  /**< gl_context::Current */
 #define _NEW_MULTISAMPLE       (1 << 24)  /**< gl_context::Multisample */
-#define _NEW_TRACK_MATRIX      (1 << 25)  /**< gl_context::VertexProgram */
-#define _NEW_BUFFER_OBJECT     (1 << 26)
+#define _NEW_BUFFER_OBJECT     (1 << 25)
 #define _NEW_ALL ~0
 
 /**
@@ -1713,17 +1627,16 @@ struct gl_matrix_stack
  */
 /*@{*/
 #define DD_FLATSHADE                0x1
-#define DD_SEPARATE_SPECULAR        0x2
-#define DD_TRI_CULL_FRONT_BACK      0x4 /* special case on some hw */
-#define DD_TRI_LIGHT_TWOSIDE        0x8
-#define DD_TRI_UNFILLED             0x10
-#define DD_TRI_SMOOTH               0x20
-#define DD_TRI_STIPPLE              0x40
-#define DD_TRI_OFFSET               0x80
-#define DD_LINE_SMOOTH              0x100
-#define DD_LINE_STIPPLE             0x200
-#define DD_POINT_SMOOTH             0x400
-#define DD_POINT_ATTEN              0x800
+#define DD_TRI_CULL_FRONT_BACK      0x2 /* special case on some hw */
+#define DD_TRI_LIGHT_TWOSIDE        0x4
+#define DD_TRI_UNFILLED             0x8
+#define DD_TRI_SMOOTH               0x10
+#define DD_TRI_STIPPLE              0x20
+#define DD_TRI_OFFSET               0x40
+#define DD_LINE_SMOOTH              0x80
+#define DD_LINE_STIPPLE             0x100
+#define DD_POINT_SMOOTH             0x200
+#define DD_POINT_ATTEN              0x400
 /*@}*/
 
 

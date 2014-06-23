@@ -40,7 +40,6 @@ type_needs_clamping(GLenum type)
    case GL_SHORT:
    case GL_INT:
    case GL_FLOAT:
-   case GL_HALF_FLOAT_ARB:
    case GL_UNSIGNED_INT_10F_11F_11F_REV:
    case GL_UNSIGNED_INT_5_9_9_9_REV:
       return GL_FALSE;
@@ -397,9 +396,6 @@ _mesa_get_teximage(struct gl_context *ctx,
    switch (texImage->TexObject->Target) {
    case GL_TEXTURE_1D:
       dimensions = 1;
-      break;
-   case GL_TEXTURE_3D:
-      dimensions = 3;
       break;
    default:
       dimensions = 2;

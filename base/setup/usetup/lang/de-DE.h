@@ -466,7 +466,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
         "nutzbaren Setups.",
         TEXT_STYLE_NORMAL
     },
-	    {
+    {
         6,
         14,
         "Die Reparaturfunktionen sind noch nicht implementiert.",
@@ -915,7 +915,7 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
         "Benutzen Sie die Entf-TASTE, um Zeichen zu l”schen.",
         TEXT_STYLE_NORMAL
     },
-	{
+    {
         6,
         17,
         "Best„tigen Sie die Eingabe mit der EINGABETASTE.",
@@ -1398,7 +1398,7 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "Die Registrierungseintr„ge der Anzeigeeinstellungen\n"
-		"konnten nicht aktualisiert werden.",
+        "konnten nicht aktualisiert werden.",
         "EINGABETASTER = Computer neu starten"
     },
     {
@@ -1439,7 +1439,7 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_COPY_QUEUE,
         "Die Liste mit den zu kopierenden Dateien\n"
-		"konnte nicht gefunden werden.\n",
+        "konnte nicht gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
@@ -1642,6 +1642,8 @@ MUI_STRING deDEStrings[] =
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
      "  EINGABETASTE = Installieren  P = Prim„re  E = Erweiterte  F3 = Installation abbr."},
+    {STRING_INSTALLCREATELOGICAL,
+     "  EINGABETASTE = Installieren  L = Logisches Laufwerk  F3 = Installation abbr."},
     {STRING_INSTALLDELETEPARTITION,
      "  EINGABETASTE = Installieren  D = Partition l”schen  F3 = Installation abbr."},
     {STRING_DELETEPARTITION,
@@ -1652,6 +1654,8 @@ MUI_STRING deDEStrings[] =
      "Eine prim„re Partition soll hier erstellt werden:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Eine erweiterte Partition soll hier erstellt werden:"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "Ein logisches Laufwerk soll hier erstellt werden:"},
     {STRING_HDDSIZE,
     "Bitte geben Sie die Gr”áe der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,

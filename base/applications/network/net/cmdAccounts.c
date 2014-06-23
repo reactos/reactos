@@ -18,33 +18,34 @@ cmdAccounts(
     PUSER_MODALS_INFO_1 Info1 = NULL;
     PUSER_MODALS_INFO_3 Info3 = NULL;
     NT_PRODUCT_TYPE ProductType;
-    LPWSTR p, perr;
+    LPWSTR p;
+    LPWSTR endptr;
     DWORD ParamErr;
     ULONG value;
     INT i;
     BOOL Modified = FALSE;
 //    BOOL Domain = FALSE;
     NET_API_STATUS Status;
+    INT result = 0;
 
-    for (i = 3; i < argc; i++)
+    for (i = 2; i < argc; i++)
     {
-        if (wcsicmp(argv[i], L"help") == 0)
+        if (_wcsicmp(argv[i], L"help") == 0)
         {
             /* Print short syntax help */
-            puts("NET ACCOUNTS [/FORCELOGOFF:{Minutes|NO}] [/MINPWLEN:Length]");
-            puts("             [/MAXPWAGE:{Days|UNLIMITED}] [/MINPWAGE:Days]");
-            puts("             [/UNIQUEPW:Count] [/DOMAIN]");
+            PrintResourceString(IDS_ACCOUNTS_SYNTAX);
             return 0;
         }
 
-        if (wcsicmp(argv[i], L"/help") == 0)
+        if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            /* FIXME: Print long help text*/
+            /* Print full help text*/
+            PrintResourceString(IDS_ACCOUNTS_HELP);
             return 0;
         }
 
 /*
-        if (wcsicmp(argv[i], L"/domain") == 0)
+        if (_wcsicmp(argv[i], L"/domain") == 0)
         {
             Domain = TRUE;
         }
@@ -55,7 +56,7 @@ cmdAccounts(
     if (Status != NERR_Success)
         goto done;
 
-    for (i = 3; i < argc; i++)
+    for (i = 2; i < argc; i++)
     {
         if (_wcsnicmp(argv[i], L"/forcelogoff:", 13) == 0)
         {
@@ -67,7 +68,13 @@ cmdAccounts(
             }
             else
             {
-                value = wcstoul(p, &perr, 10);
+                value = wcstoul(p, &endptr, 10);
+                if (*endptr != 0)
+                {
+                    printf("You entered an invalid value for the /FORCELOGOFF option.\n");
+                    result = 1;
+                    goto done;
+                }
 
                 Info0->usrmod0_force_logoff = value * 60;
                 Modified = TRUE;
@@ -76,7 +83,14 @@ cmdAccounts(
         else if (_wcsnicmp(argv[i], L"/minpwlen:", 10) == 0)
         {
             p = &argv[i][10];
-            value = wcstoul(p, &perr, 10);
+            value = wcstoul(p, &endptr, 10);
+            if (*endptr != 0)
+            {
+                    printf("You entered an invalid value for the /MINPWLEN option.\n");
+                    result = 1;
+                    goto done;
+            }
+
             Info0->usrmod0_min_passwd_len = value;
             Modified = TRUE;
         }
@@ -91,7 +105,13 @@ cmdAccounts(
             }
             else
             {
-                value = wcstoul(p, &perr, 10);
+                value = wcstoul(p, &endptr, 10);
+                if (*endptr != 0)
+                {
+                    printf("You entered an invalid value for the /MAXPWAGE option.\n");
+                    result = 1;
+                    goto done;
+                }
 
                 Info0->usrmod0_max_passwd_age = value * 86400;
                 Modified = TRUE;
@@ -100,7 +120,13 @@ cmdAccounts(
         else if (_wcsnicmp(argv[i], L"/minpwage:", 10) == 0)
         {
             p = &argv[i][10];
-            value = wcstoul(p, &perr, 10);
+            value = wcstoul(p, &endptr, 10);
+            if (*endptr != 0)
+            {
+                printf("You entered an invalid value for the /MINPWAGE option.\n");
+                result = 1;
+                goto done;
+            }
 
             Info0->usrmod0_min_passwd_age = value * 86400;
             Modified = TRUE;
@@ -108,7 +134,13 @@ cmdAccounts(
         else if (_wcsnicmp(argv[i], L"/uniquepw:", 10) == 0)
         {
             p = &argv[i][10];
-            value = wcstoul(p, &perr, 10);
+            value = wcstoul(p, &endptr, 10);
+            if (*endptr != 0)
+            {
+                printf("You entered an invalid value for the /UNIQUEPW option.\n");
+                result = 1;
+                goto done;
+            }
 
             Info0->usrmod0_password_hist_len = value;
             Modified = TRUE;
@@ -149,7 +181,12 @@ cmdAccounts(
         else
             printf("%lu\n", Info0->usrmod0_password_hist_len);
 
-        printf("Lockout threshold: %lu\n", Info3->usrmod3_lockout_threshold);
+        printf("Lockout threshold: ");
+        if (Info3->usrmod3_lockout_threshold == 0)
+            printf("Never\n");
+        else
+            printf("%lu\n", Info3->usrmod3_lockout_threshold);
+
         printf("Lockout duration (in minutes): %lu\n", Info3->usrmod3_lockout_duration / 60);
         printf("Lockout observation window (in minutes): %lu\n", Info3->usrmod3_lockout_observation_window / 60);
 
@@ -186,7 +223,7 @@ done:
     if (Info0 != NULL)
         NetApiBufferFree(Info0);
 
-    return 0;
+    return result;
 }
 
 /* EOF */

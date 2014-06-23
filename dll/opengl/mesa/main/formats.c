@@ -406,116 +406,7 @@ static struct gl_format_info format_info[MESA_FORMAT_COUNT] =
       0, 0, 0, 0, 8,               /* Lum/Int/Index/Depth/StencilBits */
       1, 1, 1                      /* BlockWidth/Height,Bytes */
    },
-   {
-      MESA_FORMAT_RGBA_FLOAT32,
-      "MESA_FORMAT_RGBA_FLOAT32",
-      GL_RGBA,
-      GL_FLOAT,
-      32, 32, 32, 32,
-      0, 0, 0, 0, 0,
-      1, 1, 16
-   },
-   {
-      MESA_FORMAT_RGBA_FLOAT16,
-      "MESA_FORMAT_RGBA_FLOAT16",
-      GL_RGBA,
-      GL_FLOAT,
-      16, 16, 16, 16,
-      0, 0, 0, 0, 0,
-      1, 1, 8
-   },
-   {
-      MESA_FORMAT_RGB_FLOAT32,
-      "MESA_FORMAT_RGB_FLOAT32",
-      GL_RGB,
-      GL_FLOAT,
-      32, 32, 32, 0,
-      0, 0, 0, 0, 0,
-      1, 1, 12
-   },
-   {
-      MESA_FORMAT_RGB_FLOAT16,
-      "MESA_FORMAT_RGB_FLOAT16",
-      GL_RGB,
-      GL_FLOAT,
-      16, 16, 16, 0,
-      0, 0, 0, 0, 0,
-      1, 1, 6
-   },
-   {
-      MESA_FORMAT_ALPHA_FLOAT32,
-      "MESA_FORMAT_ALPHA_FLOAT32",
-      GL_ALPHA,
-      GL_FLOAT,
-      0, 0, 0, 32,
-      0, 0, 0, 0, 0,
-      1, 1, 4
-   },
-   {
-      MESA_FORMAT_ALPHA_FLOAT16,
-      "MESA_FORMAT_ALPHA_FLOAT16",
-      GL_ALPHA,
-      GL_FLOAT,
-      0, 0, 0, 16,
-      0, 0, 0, 0, 0,
-      1, 1, 2
-   },
-   {
-      MESA_FORMAT_LUMINANCE_FLOAT32,
-      "MESA_FORMAT_LUMINANCE_FLOAT32",
-      GL_LUMINANCE,
-      GL_FLOAT,
-      0, 0, 0, 0,
-      32, 0, 0, 0, 0,
-      1, 1, 4
-   },
-   {
-      MESA_FORMAT_LUMINANCE_FLOAT16,
-      "MESA_FORMAT_LUMINANCE_FLOAT16",
-      GL_LUMINANCE,
-      GL_FLOAT,
-      0, 0, 0, 0,
-      16, 0, 0, 0, 0,
-      1, 1, 2
-   },
-   {
-      MESA_FORMAT_LUMINANCE_ALPHA_FLOAT32,
-      "MESA_FORMAT_LUMINANCE_ALPHA_FLOAT32",
-      GL_LUMINANCE_ALPHA,
-      GL_FLOAT,
-      0, 0, 0, 32,
-      32, 0, 0, 0, 0,
-      1, 1, 8
-   },
-   {
-      MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16,
-      "MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16",
-      GL_LUMINANCE_ALPHA,
-      GL_FLOAT,
-      0, 0, 0, 16,
-      16, 0, 0, 0, 0,
-      1, 1, 4
-   },
-   {
-      MESA_FORMAT_INTENSITY_FLOAT32,
-      "MESA_FORMAT_INTENSITY_FLOAT32",
-      GL_INTENSITY,
-      GL_FLOAT,
-      0, 0, 0, 0,
-      0, 32, 0, 0, 0,
-      1, 1, 4
-   },
-   {
-      MESA_FORMAT_INTENSITY_FLOAT16,
-      "MESA_FORMAT_INTENSITY_FLOAT16",
-      GL_INTENSITY,
-      GL_FLOAT,
-      0, 0, 0, 0,
-      0, 16, 0, 0, 0,
-      1, 1, 2
-   },
 
-   /* unnormalized signed int formats */
    /* unnormalized unsigned int formats */
    {
       MESA_FORMAT_ALPHA_UINT8,
@@ -1355,43 +1246,6 @@ _mesa_format_to_type_and_comps(gl_format format,
       *comps = 4;
       return;
 
-   case MESA_FORMAT_RGBA_FLOAT32:
-      *datatype = GL_FLOAT;
-      *comps = 4;
-      return;
-   case MESA_FORMAT_RGBA_FLOAT16:
-      *datatype = GL_HALF_FLOAT_ARB;
-      *comps = 4;
-      return;
-   case MESA_FORMAT_RGB_FLOAT32:
-      *datatype = GL_FLOAT;
-      *comps = 3;
-      return;
-   case MESA_FORMAT_RGB_FLOAT16:
-      *datatype = GL_HALF_FLOAT_ARB;
-      *comps = 3;
-      return;
-   case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT32:
-      *datatype = GL_FLOAT;
-      *comps = 2;
-      return;
-   case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16:
-      *datatype = GL_HALF_FLOAT_ARB;
-      *comps = 2;
-      return;
-   case MESA_FORMAT_ALPHA_FLOAT32:
-   case MESA_FORMAT_LUMINANCE_FLOAT32:
-   case MESA_FORMAT_INTENSITY_FLOAT32:
-      *datatype = GL_FLOAT;
-      *comps = 1;
-      return;
-   case MESA_FORMAT_ALPHA_FLOAT16:
-   case MESA_FORMAT_LUMINANCE_FLOAT16:
-   case MESA_FORMAT_INTENSITY_FLOAT16:
-      *datatype = GL_HALF_FLOAT_ARB;
-      *comps = 1;
-      return;
-
    case MESA_FORMAT_ALPHA_UINT8:
    case MESA_FORMAT_LUMINANCE_UINT8:
    case MESA_FORMAT_INTENSITY_UINT8:
@@ -1653,36 +1507,6 @@ _mesa_format_matches_format_and_type(gl_format gl_format,
 
    case MESA_FORMAT_S8:
       return GL_FALSE;
-
-   case MESA_FORMAT_RGBA_FLOAT32:
-      return format == GL_RGBA && type == GL_FLOAT;
-   case MESA_FORMAT_RGBA_FLOAT16:
-      return format == GL_RGBA && type == GL_HALF_FLOAT;
-
-   case MESA_FORMAT_RGB_FLOAT32:
-      return format == GL_RGB && type == GL_FLOAT;
-   case MESA_FORMAT_RGB_FLOAT16:
-      return format == GL_RGB && type == GL_HALF_FLOAT;
-
-   case MESA_FORMAT_ALPHA_FLOAT32:
-      return format == GL_ALPHA && type == GL_FLOAT;
-   case MESA_FORMAT_ALPHA_FLOAT16:
-      return format == GL_ALPHA && type == GL_HALF_FLOAT;
-
-   case MESA_FORMAT_LUMINANCE_FLOAT32:
-      return format == GL_LUMINANCE && type == GL_FLOAT;
-   case MESA_FORMAT_LUMINANCE_FLOAT16:
-      return format == GL_LUMINANCE && type == GL_HALF_FLOAT;
-
-   case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT32:
-      return format == GL_LUMINANCE_ALPHA && type == GL_FLOAT;
-   case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16:
-      return format == GL_LUMINANCE_ALPHA && type == GL_HALF_FLOAT;
-
-   case MESA_FORMAT_INTENSITY_FLOAT32:
-      return format == GL_INTENSITY && type == GL_FLOAT;
-   case MESA_FORMAT_INTENSITY_FLOAT16:
-      return format == GL_INTENSITY && type == GL_HALF_FLOAT;
 
       /* FINISHME: What do we want to do for GL_EXT_texture_integer? */
    case MESA_FORMAT_ALPHA_UINT8:

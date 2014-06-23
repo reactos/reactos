@@ -11,6 +11,7 @@
 #include "ws2_32.h"
 
 #include <ws2tcpip.h>
+#include <strsafe.h>
 
 /*
  * @implemented
@@ -895,6 +896,16 @@ getnameinfo(const struct sockaddr FAR * sa,
             DWORD           servlen,
             INT             flags)
 {
+    if (!host && serv && flags & NI_NUMERICSERV)
+    {
+        const struct sockaddr_in *sa_in = (const struct sockaddr_in *)sa;
+        if (salen >= sizeof(*sa_in) && sa->sa_family == AF_INET)
+        {
+            StringCbPrintfA(serv, servlen, "%u", sa_in->sin_port);
+            return 0;
+        }
+    }
+
     UNIMPLEMENTED
 
     WSASetLastError(WSASYSCALLFAILURE);

@@ -1513,7 +1513,7 @@ static HRESULT WINAPI FilterMapper_UnregisterFilter(IFilterMapper * iface, CLSID
         if (lRet != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(lRet);
 
-        lRet = RegDeleteTreeW(hKey, wszPins);
+        lRet = SHDeleteKeyW(hKey, wszPins);
         if (lRet != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(lRet);
 
@@ -1572,7 +1572,7 @@ static HRESULT WINAPI FilterMapper_UnregisterPin(IFilterMapper * iface, CLSID Fi
         strcatW(wszPinNameKey, wszSlash);
         strcatW(wszPinNameKey, Name);
 
-        lRet = RegDeleteTreeW(hKey, wszPinNameKey);
+        lRet = SHDeleteKeyW(hKey, wszPinNameKey);
         hr = HRESULT_FROM_WIN32(lRet);
         CoTaskMemFree(wszPinNameKey);
     }

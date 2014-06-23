@@ -149,41 +149,6 @@ draw_wide_line( struct gl_context *ctx, SWspan *span, GLboolean xMajor )
 
 
 
-void
-_swrast_add_spec_terms_line(struct gl_context *ctx,
-                            const SWvertex *v0, const SWvertex *v1)
-{
-   SWvertex *ncv0 = (SWvertex *)v0;
-   SWvertex *ncv1 = (SWvertex *)v1;
-   GLfloat rSum, gSum, bSum;
-   GLchan cSave[2][4];
-
-   /* save original colors */
-   COPY_CHAN4(cSave[0], ncv0->color);
-   COPY_CHAN4(cSave[1], ncv1->color);
-   /* sum v0 */
-   rSum = CHAN_TO_FLOAT(ncv0->color[0]) + ncv0->attrib[FRAG_ATTRIB_COL1][0];
-   gSum = CHAN_TO_FLOAT(ncv0->color[1]) + ncv0->attrib[FRAG_ATTRIB_COL1][1];
-   bSum = CHAN_TO_FLOAT(ncv0->color[2]) + ncv0->attrib[FRAG_ATTRIB_COL1][2];
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[0], rSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[1], gSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[2], bSum);
-   /* sum v1 */
-   rSum = CHAN_TO_FLOAT(ncv1->color[0]) + ncv1->attrib[FRAG_ATTRIB_COL1][0];
-   gSum = CHAN_TO_FLOAT(ncv1->color[1]) + ncv1->attrib[FRAG_ATTRIB_COL1][1];
-   bSum = CHAN_TO_FLOAT(ncv1->color[2]) + ncv1->attrib[FRAG_ATTRIB_COL1][2];
-   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[0], rSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[1], gSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[2], bSum);
-   /* draw */
-   SWRAST_CONTEXT(ctx)->SpecLine( ctx, ncv0, ncv1 );
-   /* restore original colors */
-   COPY_CHAN4( ncv0->attrib[FRAG_ATTRIB_COL0], cSave[0] );
-   COPY_CHAN4( ncv1->attrib[FRAG_ATTRIB_COL0], cSave[1] );
-}
-
-
-
 #ifdef DEBUG
 
 /* record the current line function name */
@@ -215,9 +180,6 @@ void
 _swrast_choose_line( struct gl_context *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   GLboolean specular = (ctx->Fog.ColorSumEnabled ||
-                         (ctx->Light.Enabled &&
-                          ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR));
 
    if (ctx->RenderMode == GL_RENDER) {
       if (ctx->Line.SmoothFlag) {
@@ -226,8 +188,7 @@ _swrast_choose_line( struct gl_context *ctx )
          ASSERT(swrast->Line);
       }
       else if (ctx->Texture._EnabledCoord
-               || swrast->_FogEnabled
-               || specular) {
+               || swrast->_FogEnabled) {
          USE(general_line);
       }
       else if (ctx->Depth.Test

@@ -11,7 +11,6 @@ typedef struct _WINSTATION_OBJECT
 {
     DWORD dwSessionId;
 
-    KSPIN_LOCK Lock;
     UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;

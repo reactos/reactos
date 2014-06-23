@@ -10,6 +10,10 @@ BEGIN
         MENUITEM "보안(&S)", ID_LOG_SECURITY
         MENUITEM "시스템(&S)", ID_LOG_SYSTEM
         MENUITEM SEPARATOR
+        MENUITEM "Save &Protocol...", ID_SAVE_PROTOCOL, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "C&lear all Events", ID_CLEAR_EVENTS, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "종료(&X)", IDM_EXIT
     END
     POPUP "보기(&V)"
@@ -97,6 +101,8 @@ BEGIN
     IDS_EVENTLOG_AUDIT_FAILURE "감사 실패"
     IDS_EVENTLOG_SUCCESS "성공"
     IDS_EVENTLOG_UNKNOWN_TYPE "알려지지 않은 이벤트"
+    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
+    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE

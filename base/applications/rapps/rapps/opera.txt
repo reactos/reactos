@@ -1,15 +1,15 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Opera
-Version = 12.16
+Version = 12.17
 Licence = Freeware
 Description = The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.
-Size = 12.56 MB
+Size = 12.57 MB
 Category = 5
 URLSite = http://www.opera.com/
-URLDownload = http://ftp.opera.com/pub/opera/win/1216/int/Opera_1216_int_Setup.exe
+URLDownload = http://ftp.opera.com/pub/opera/win/1217/int/Opera_1217_int_Setup.exe
 CDPath = none
 
 [Section.0405]
@@ -23,7 +23,7 @@ Description = Popular navegador web con muchas características avanzadas e incl
 
 [Section.040c]
 Description = Le populaire navigateur Opera avec beaucoup de fonctionnalités avancées, incluant un client mail et BitTorrent.
-Size = 12,56 Mo
+Size = 12,57 Mo
 
 [Section.0410]
 Description = Il famoso browser Opera con funzionalità avanzate come un client BitTorrent integrato e la gestione delle Mail.
@@ -37,7 +37,7 @@ Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkc
 [Section.0418]
 Licence = Gratuită
 Description = Navigatorul popular Opera cu multe funcționalități avansate incluzând poștă electronică și un client de BitTorrent.
-Size = 12,56 Mo
+Size = 12,57 Mo
 
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
@@ -45,7 +45,7 @@ Description = Популярный браузер со многими допол
 [Section.041f]
 Licence = Ücretsiz
 Description = Bir posta ve BitTorrent istemcisini kapsayan birçok gelişmiş husûsiyetle, tutulan Opera Tarayıcı.
-Size = 12,56 MB
+Size = 12,57 MB
 
 [Section.0422]
 Description = Популярний браузер з багатьма додатковими можливостями, який включає в себе поштовий та BitTorrent клієнти.

@@ -76,7 +76,8 @@ typedef struct
     WORD KeybdBufferEnd;                        // 0x82
     BYTE ScreenRows;                            // 0x84
     WORD CharacterHeight;                       // 0x85
-    BYTE EGAFlags[2];                           // 0x87
+    BYTE VGAOptions;                            // 0x87
+    BYTE VGASwitches;                           // 0x88
     BYTE VGAFlags[2];                           // 0x89
     DWORD Reserved3;                            // 0x8b
     BYTE Reserved4;                             // 0x8f

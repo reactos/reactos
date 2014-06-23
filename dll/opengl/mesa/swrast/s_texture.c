@@ -203,15 +203,6 @@ _swrast_map_teximage(struct gl_context *ctx,
       
    map = swImage->Buffer;
 
-   if (texImage->TexObject->Target == GL_TEXTURE_3D) {
-      GLuint sliceSize = _mesa_format_image_size(texImage->TexFormat,
-                                                 texImage->Width,
-                                                 texImage->Height,
-                                                 1);
-      assert(slice < texImage->Depth);
-      map += slice * sliceSize;
-   }
-
    /* apply x/y offset to map address */
    map += stride * (y / bh) + texelSize * (x / bw);
 

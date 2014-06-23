@@ -155,122 +155,6 @@ vbo_get_minmax_index(struct gl_context *ctx,
 
 
 /**
- * Check that element 'j' of the array has reasonable data.
- * Map VBO if needed.
- * For debugging purposes; not normally used.
- */
-static void
-check_array_data(struct gl_context *ctx, struct gl_client_array *array,
-                 GLuint attrib, GLuint j)
-{
-   if (array->Enabled) {
-      const void *data = array->Ptr;
-      if (_mesa_is_bufferobj(array->BufferObj)) {
-         if (!array->BufferObj->Pointer) {
-            /* need to map now */
-            array->BufferObj->Pointer =
-               ctx->Driver.MapBufferRange(ctx, 0, array->BufferObj->Size,
-					  GL_MAP_READ_BIT, array->BufferObj);
-         }
-         data = ADD_POINTERS(data, array->BufferObj->Pointer);
-      }
-      switch (array->Type) {
-      case GL_FLOAT:
-         {
-            GLfloat *f = (GLfloat *) ((GLubyte *) data + array->StrideB * j);
-            GLint k;
-            for (k = 0; k < array->Size; k++) {
-               if (IS_INF_OR_NAN(f[k]) ||
-                   f[k] >= 1.0e20 || f[k] <= -1.0e10) {
-                  printf("Bad array data:\n");
-                  printf("  Element[%u].%u = %f\n", j, k, f[k]);
-                  printf("  Array %u at %p\n", attrib, (void* ) array);
-                  printf("  Type 0x%x, Size %d, Stride %d\n",
-			 array->Type, array->Size, array->Stride);
-                  printf("  Address/offset %p in Buffer Object %u\n",
-			 array->Ptr, array->BufferObj->Name);
-                  f[k] = 1.0; /* XXX replace the bad value! */
-               }
-               /*assert(!IS_INF_OR_NAN(f[k]));*/
-            }
-         }
-         break;
-      default:
-         ;
-      }
-   }
-}
-
-
-/**
- * Unmap the buffer object referenced by given array, if mapped.
- */
-static void
-unmap_array_buffer(struct gl_context *ctx, struct gl_client_array *array)
-{
-   if (array->Enabled &&
-       _mesa_is_bufferobj(array->BufferObj) &&
-       _mesa_bufferobj_mapped(array->BufferObj)) {
-      ctx->Driver.UnmapBuffer(ctx, array->BufferObj);
-   }
-}
-
-
-/**
- * Examine the array's data for NaNs, etc.
- * For debug purposes; not normally used.
- */
-static void
-check_draw_elements_data(struct gl_context *ctx, GLsizei count, GLenum elemType,
-                         const void *elements, GLint basevertex)
-{
-   struct gl_array_object *arrayObj = ctx->Array.ArrayObj;
-   const void *elemMap;
-   GLint i, k;
-
-   if (_mesa_is_bufferobj(ctx->Array.ArrayObj->ElementArrayBufferObj)) {
-      elemMap = ctx->Driver.MapBufferRange(ctx, 0,
-					   ctx->Array.ArrayObj->ElementArrayBufferObj->Size,
-					   GL_MAP_READ_BIT,
-					   ctx->Array.ArrayObj->ElementArrayBufferObj);
-      elements = ADD_POINTERS(elements, elemMap);
-   }
-
-   for (i = 0; i < count; i++) {
-      GLuint j;
-
-      /* j = element[i] */
-      switch (elemType) {
-      case GL_UNSIGNED_BYTE:
-         j = ((const GLubyte *) elements)[i];
-         break;
-      case GL_UNSIGNED_SHORT:
-         j = ((const GLushort *) elements)[i];
-         break;
-      case GL_UNSIGNED_INT:
-         j = ((const GLuint *) elements)[i];
-         break;
-      default:
-         assert(0);
-      }
-
-      /* check element j of each enabled array */
-      for (k = 0; k < Elements(arrayObj->VertexAttrib); k++) {
-         check_array_data(ctx, &arrayObj->VertexAttrib[k], k, j);
-      }
-   }
-
-   if (_mesa_is_bufferobj(arrayObj->ElementArrayBufferObj)) {
-      ctx->Driver.UnmapBuffer(ctx, ctx->Array.ArrayObj->ElementArrayBufferObj);
-   }
-
-   for (k = 0; k < Elements(arrayObj->VertexAttrib); k++) {
-      unmap_array_buffer(ctx, &arrayObj->VertexAttrib[k]);
-   }
-}
-
-
-/**
  * Check array data, looking for NaNs, etc.
  */
 static void
@@ -289,7 +173,6 @@ print_draw_arrays(struct gl_context *ctx,
 {
    struct vbo_context *vbo = vbo_context(ctx);
    struct vbo_exec_context *exec = &vbo->exec;
-   struct gl_array_object *arrayObj = ctx->Array.ArrayObj;
    int i;
 
    printf("vbo_exec_DrawArrays(mode 0x%x, start %d, count %d):\n",
@@ -305,7 +188,7 @@ print_draw_arrays(struct gl_context *ctx,
 	     exec->array.inputs[i]->Size,
 	     stride,
 	     /*exec->array.inputs[i]->Enabled,*/
-	     arrayObj->VertexAttrib[VERT_ATTRIB(i)].Enabled,
+	     ctx->Array.VertexAttrib[VERT_ATTRIB(i)].Enabled,
 	     exec->array.inputs[i]->Ptr,
 	     bufName);
 
@@ -342,7 +225,7 @@ recalculate_input_bindings(struct gl_context *ctx)
 {
    struct vbo_context *vbo = vbo_context(ctx);
    struct vbo_exec_context *exec = &vbo->exec;
-   struct gl_client_array *vertexAttrib = ctx->Array.ArrayObj->VertexAttrib;
+   struct gl_client_array *vertexAttrib = ctx->Array.VertexAttrib;
    const struct gl_client_array **inputs = &exec->array.inputs[0];
    GLbitfield64 const_inputs = 0x0;
    GLuint i;
@@ -546,7 +429,7 @@ vbo_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
 
    ib.count = count;
    ib.type = type;
-   ib.obj = ctx->Array.ArrayObj->ElementArrayBufferObj;
+   ib.obj = ctx->Array.ElementArrayBufferObj;
    ib.ptr = indices;
 
    prim[0].begin = 1;
@@ -595,82 +478,6 @@ vbo_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
 		    index_bounds_valid, start, end );
 }
 
-/**
- * Called by glDrawRangeElements() in immediate mode.
- */
-static void GLAPIENTRY
-vbo_exec_DrawRangeElements(GLenum mode,
-				     GLuint start, GLuint end,
-				     GLsizei count, GLenum type,
-				     const GLvoid *indices)
-{
-   static GLuint warnCount = 0;
-   GLboolean index_bounds_valid = GL_TRUE;
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (MESA_VERBOSE & VERBOSE_DRAW)
-      _mesa_debug(ctx,
-                "glDrawRangeElements(%s, %u, %u, %d, %s, %p)\n",
-                _mesa_lookup_enum_by_nr(mode), start, end, count,
-                _mesa_lookup_enum_by_nr(type), indices);
-
-   if (!_mesa_validate_DrawRangeElements( ctx, mode, start, end, count,
-                                          type, indices ))
-      return;
-
-   if (end < start ||
-       end >= ctx->Array.ArrayObj->_MaxElement) {
-      /* The application requested we draw using a range of indices that's
-       * outside the bounds of the current VBO.  This is invalid and appears
-       * to give undefined results.  The safest thing to do is to simply
-       * ignore the range, in case the application botched their range tracking
-       * but did provide valid indices.  Also issue a warning indicating that
-       * the application is broken.
-       */
-      if (warnCount++ < 10) {
-         _mesa_warning(ctx, "glDrawRangeElements(start %u, end %u, "
-                       "count %d, type 0x%x, indices=%p):\n"
-                       "\trange is outside VBO bounds (max=%u); ignoring.\n"
-                       "\tThis should be fixed in the application.",
-                       start, end, count, type, indices,
-                       ctx->Array.ArrayObj->_MaxElement - 1);
-      }
-      index_bounds_valid = GL_FALSE;
-   }
-
-   /* NOTE: It's important that 'end' is a reasonable value.
-    * in _tnl_draw_prims(), we use end to determine how many vertices
-    * to transform.  If it's too large, we can unnecessarily split prims
-    * or we can read/write out of memory in several different places!
-    */
-
-   /* Catch/fix some potential user errors */
-   if (type == GL_UNSIGNED_BYTE) {
-      start = MIN2(start, 0xff);
-      end = MIN2(end, 0xff);
-   }
-   else if (type == GL_UNSIGNED_SHORT) {
-      start = MIN2(start, 0xffff);
-      end = MIN2(end, 0xffff);
-   }
-
-   if (0) {
-      printf("glDraw[Range]Elements"
-	     "(start %u, end %u, type 0x%x, count %d) ElemBuf %u\n",
-	     start, end, type, count,
-	     ctx->Array.ArrayObj->ElementArrayBufferObj->Name);
-   }
-
-#if 0
-   check_draw_elements_data(ctx, count, type, indices);
-#else
-   (void) check_draw_elements_data;
-#endif
-
-   vbo_validated_drawrangeelements(ctx, mode, index_bounds_valid, start, end,
-				   count, type, indices, 1);
-}
-
 
 /**
  * Called by glDrawElements() in immediate mode.
@@ -703,7 +510,6 @@ vbo_exec_array_init( struct vbo_exec_context *exec )
 {
    exec->vtxfmt.DrawArrays = vbo_exec_DrawArrays;
    exec->vtxfmt.DrawElements = vbo_exec_DrawElements;
-   exec->vtxfmt.DrawRangeElements = vbo_exec_DrawRangeElements;
 }
 
 
@@ -733,13 +539,5 @@ _mesa_DrawElements(GLenum mode, GLsizei count, GLenum type,
                    const GLvoid *indices)
 {
    vbo_exec_DrawElements(mode, count, type, indices);
-}
-
-
-void GLAPIENTRY
-_mesa_DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
-                        GLenum type, const GLvoid *indices)
-{
-   vbo_exec_DrawRangeElements(mode, start, end, count, type, indices);
 }
 

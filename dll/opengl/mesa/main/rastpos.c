@@ -240,21 +240,13 @@ window_pos3f(GLfloat x, GLfloat y, GLfloat z)
 
    /* raster color = current color or index */
    ctx->Current.RasterColor[0]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR0][0], 0.0F, 1.0F);
+      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR][0], 0.0F, 1.0F);
    ctx->Current.RasterColor[1]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR0][1], 0.0F, 1.0F);
+      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR][1], 0.0F, 1.0F);
    ctx->Current.RasterColor[2]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR0][2], 0.0F, 1.0F);
+      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR][2], 0.0F, 1.0F);
    ctx->Current.RasterColor[3]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR0][3], 0.0F, 1.0F);
-   ctx->Current.RasterSecondaryColor[0]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR1][0], 0.0F, 1.0F);
-   ctx->Current.RasterSecondaryColor[1]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR1][1], 0.0F, 1.0F);
-   ctx->Current.RasterSecondaryColor[2]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR1][2], 0.0F, 1.0F);
-   ctx->Current.RasterSecondaryColor[3]
-      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR1][3], 0.0F, 1.0F);
+      = CLAMP(ctx->Current.Attrib[VERT_ATTRIB_COLOR][3], 0.0F, 1.0F);
 
    /* raster texcoord = current texcoord */
    COPY_4FV( ctx->Current.RasterTexCoords, ctx->Current.Attrib[VERT_ATTRIB_TEX] );
@@ -539,7 +531,6 @@ void _mesa_init_rastpos( struct gl_context * ctx )
    ASSIGN_4V( ctx->Current.RasterPos, 0.0, 0.0, 0.0, 1.0 );
    ctx->Current.RasterDistance = 0.0;
    ASSIGN_4V( ctx->Current.RasterColor, 1.0, 1.0, 1.0, 1.0 );
-   ASSIGN_4V( ctx->Current.RasterSecondaryColor, 0.0, 0.0, 0.0, 1.0 );
    ASSIGN_4V( ctx->Current.RasterTexCoords, 0.0, 0.0, 0.0, 1.0 );
    ctx->Current.RasterPosValid = GL_TRUE;
 }

@@ -62,9 +62,6 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params );
 extern const GLubyte * GLAPIENTRY
 _mesa_GetString( GLenum name );
 
-extern const GLubyte * GLAPIENTRY
-_mesa_GetStringi(GLenum name, GLuint index);
-
 extern GLenum GLAPIENTRY
 _mesa_GetError( void );
 

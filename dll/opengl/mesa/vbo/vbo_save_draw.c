@@ -96,7 +96,7 @@ _playback_copy_to_current(struct gl_context *ctx,
    /* Colormaterial -- this kindof sucks.
     */
    if (ctx->Light.ColorMaterialEnabled) {
-      _mesa_update_color_material(ctx, ctx->Current.Attrib[VBO_ATTRIB_COLOR0]);
+      _mesa_update_color_material(ctx, ctx->Current.Attrib[VBO_ATTRIB_COLOR]);
    }
 
    /* CurrentExecPrimitive

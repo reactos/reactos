@@ -451,7 +451,6 @@ NtUserCreateWindowStation(
    /* Initialize the window station */
    RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
 
-   KeInitializeSpinLock(&WindowStationObject->Lock);
    InitializeListHead(&WindowStationObject->DesktopListHead);
    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
    WindowStationObject->Name = WindowStationName;
@@ -1203,7 +1202,6 @@ BuildDesktopNameList(
 {
    NTSTATUS Status;
    PWINSTATION_OBJECT WindowStation;
-   KIRQL OldLevel;
    PLIST_ENTRY DesktopEntry;
    PDESKTOP DesktopObject;
    DWORD EntryCount;
@@ -1219,8 +1217,6 @@ BuildDesktopNameList(
    {
       return Status;
    }
-
-   KeAcquireSpinLock(&WindowStation->Lock, &OldLevel);
 
    /*
     * Count the required size of buffer.
@@ -1242,7 +1238,6 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(pRequiredSize, &ReturnLength, sizeof(ULONG));
       if (! NT_SUCCESS(Status))
       {
-         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return STATUS_BUFFER_TOO_SMALL;
       }
@@ -1253,7 +1248,6 @@ BuildDesktopNameList(
     */
    if (dwSize < ReturnLength)
    {
-      KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
       ObDereferenceObject(WindowStation);
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -1264,7 +1258,6 @@ BuildDesktopNameList(
    Status = MmCopyToCaller(lpBuffer, &EntryCount, sizeof(DWORD));
    if (! NT_SUCCESS(Status))
    {
-      KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
       ObDereferenceObject(WindowStation);
       return Status;
    }
@@ -1280,7 +1273,6 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(lpBuffer, DesktopName.Buffer, DesktopName.Length);
       if (! NT_SUCCESS(Status))
       {
-         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return Status;
       }
@@ -1288,7 +1280,6 @@ BuildDesktopNameList(
       Status = MmCopyToCaller(lpBuffer, &NullWchar, sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {
-         KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return Status;
       }
@@ -1296,11 +1287,9 @@ BuildDesktopNameList(
    }
 
    /*
-    * Clean up
+    * Clean up and return
     */
-   KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
    ObDereferenceObject(WindowStation);
-
    return STATUS_SUCCESS;
 }
 

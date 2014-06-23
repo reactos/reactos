@@ -313,6 +313,7 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
   DWORD bufLen = sizeof(ComputerName)/sizeof(ComputerName[0]);
   RPC_STATUS r;
   LPSTR pname;
+  LPSTR NetworkAddr;
   INT size;
 
   /* already connected? */
@@ -329,9 +330,13 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
   }
   else
   {
+    NetworkAddr = Connection->NetworkAddr;
+    if (NetworkAddr[0] == '\\' && NetworkAddr[1] == '\\')
+        NetworkAddr += 2;
+
     if (GetComputerNameA(ComputerName, &bufLen))
     {
-      if (stricmp(ComputerName, Connection->NetworkAddr) == 0)
+      if (stricmp(ComputerName, NetworkAddr) == 0)
       {
         bUseLocalName = TRUE;
         size += strlen(local);
@@ -339,13 +344,13 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
       else
       {
         bUseLocalName = FALSE;
-        size += strlen(Connection->NetworkAddr);
+        size += strlen(NetworkAddr);
       }
     }
     else
     {
       bUseLocalName = FALSE;
-      size += strlen(Connection->NetworkAddr);
+      size += strlen(NetworkAddr);
     }
   }
 
@@ -356,7 +361,7 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
   if (bUseLocalName)
     strcat(pname, local);
   else
-    strcat(pname, Connection->NetworkAddr);
+    strcat(pname, NetworkAddr);
   strcat(pname, Connection->Endpoint);
   r = rpcrt4_conn_open_pipe(Connection, pname, TRUE);
   I_RpcFree(pname);
