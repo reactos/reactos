@@ -1,7 +1,7 @@
 /*
  * SetupAPI device class-related functions tests
  *
- * Copyright 2006 Hervé Poussineau
+ * Copyright 2006 Hervï¿½ Poussineau
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public Licence as
@@ -269,6 +269,25 @@ static void test_SetupDiGetClassDevsA(void)
         "Error reported %lx\n", GetLastError() );
 }
 
+static void test_SetupDiGetClassDevsExW(void)
+{
+    const GUID not_existing_guid = { 0xdeadbeef, 0xdead, 0xbeef, { 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff } };
+    HDEVINFO dev_info;
+    BOOL ret;
+    SP_DEVINFO_DATA info;
+
+    dev_info = SetupDiGetClassDevsExW(&not_existing_guid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE, NULL, NULL, NULL);
+    ok(dev_info != INVALID_HANDLE_VALUE, "Expected success\n");
+
+    ZeroMemory(&info, sizeof(info));
+    info.cbSize = sizeof(info);
+    ret = SetupDiEnumDeviceInfo(dev_info, 0, &info);
+    ok (!ret, "Expected failure.\n");
+    ok_lasterr(ERROR_NO_MORE_ITEMS);
+
+    SetupDiDestroyDeviceInfoList(dev_info);
+}
+
 static void test_SetupDiOpenClassRegKeyExA(void)
 {
     HKEY hkey;
@@ -328,4 +347,5 @@ START_TEST(devclass)
     test_SetupDiGetClassDescriptionA();
     test_SetupDiGetClassDevsA();
     test_SetupDiOpenClassRegKeyExA();
+    test_SetupDiGetClassDevsExW();
 }
