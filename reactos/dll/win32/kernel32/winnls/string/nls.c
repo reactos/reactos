@@ -89,21 +89,22 @@ NlsInit(VOID)
     }
 
     /* Setup ANSI code page. */
-    AnsiCodePage.CodePage = CP_ACP;
     AnsiCodePage.SectionHandle = NULL;
     AnsiCodePage.SectionMapping = NtCurrentTeb()->ProcessEnvironmentBlock->AnsiCodePageData;
 
     RtlInitCodePageTable((PUSHORT)AnsiCodePage.SectionMapping,
                          &AnsiCodePage.CodePageTable);
+    AnsiCodePage.CodePage = AnsiCodePage.CodePageTable.CodePage;
+    
     InsertTailList(&CodePageListHead, &AnsiCodePage.Entry);
 
     /* Setup OEM code page. */
-    OemCodePage.CodePage = CP_OEMCP;
     OemCodePage.SectionHandle = NULL;
     OemCodePage.SectionMapping = NtCurrentTeb()->ProcessEnvironmentBlock->OemCodePageData;
 
     RtlInitCodePageTable((PUSHORT)OemCodePage.SectionMapping,
                          &OemCodePage.CodePageTable);
+    OemCodePage.CodePage = OemCodePage.CodePageTable.CodePage;
     InsertTailList(&CodePageListHead, &OemCodePage.Entry);
 
     return TRUE;
@@ -199,8 +200,15 @@ IntGetCodePageEntry(UINT CodePage)
     WCHAR FileName[MAX_PATH + 1];
     UINT FileNamePos;
     PCODEPAGE_ENTRY CodePageEntry;
-
-    if (CodePage == CP_THREAD_ACP)
+    if (CodePage == CP_ACP)
+    {
+        return &AnsiCodePage;
+    }
+    else if (CodePage == CP_OEMCP)
+    {
+        return &OemCodePage;
+    }
+    else if (CodePage == CP_THREAD_ACP)
     {
         if (!GetLocaleInfoW(GetThreadLocale(),
                             LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
@@ -1816,7 +1824,7 @@ GetCPInfoExW(UINT CodePage,
 
             lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
             lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
-            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+            return GetLocalisedText(CodePageEntry->CodePageTable.CodePage, lpCPInfoEx->CodePageName);
         }
         break;
     }
