@@ -22,20 +22,20 @@
 
 static const int gSearchCommandID = 1003;
 static const int gFoldersCommandID = 1004;
-static const int gMoveToCommandID = 0x701f;
-static const int gCopyToCommandID = 0x701e;
-static const int gDeleteCommandID = 0x7011;
-static const int gUndoCommandID = 0x701b;
-static const int gViewsCommandID = 0x7031;
+static const int gMoveToCommandID = FCIDM_SHVIEW_MOVETO;
+static const int gCopyToCommandID = FCIDM_SHVIEW_COPYTO;
+static const int gDeleteCommandID = FCIDM_SHVIEW_DELETE;
+static const int gUndoCommandID = FCIDM_SHVIEW_UNDO;
+static const int gViewsCommandID = FCIDM_SHVIEW_AUTOARRANGE;
 static const int gStopCommandID = 1010;
 static const int gHomeCommandID = 1012;
 static const int gFavoritesCommandID = 1015;
 static const int gHistoryCommandID = 1016;
 static const int gFullScreenCommandID = 1017;
-static const int gPropertiesCommandID = 0x7013;
-static const int gCutCommandID = 0x7018;
-static const int gCopyCommandID = 0x7019;
-static const int gPasteCommandID = 0x701a;
+static const int gPropertiesCommandID = FCIDM_SHVIEW_PROPERTIES;
+static const int gCutCommandID = FCIDM_SHVIEW_CUT;
+static const int gCopyCommandID = FCIDM_SHVIEW_COPY;
+static const int gPasteCommandID = FCIDM_SHVIEW_INSERT;
 
 class CMenuCallback :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,

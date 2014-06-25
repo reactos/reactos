@@ -1624,7 +1624,7 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
             V_INTREF(&inValue) = reinterpret_cast<INT *>(&bounds);
 
             if (fCommandTarget.p != NULL)
-                hResult = fCommandTarget->Exec(&fCommandCategory, 0x7031, 1, &inValue, &outValue);
+                hResult = fCommandTarget->Exec(&fCommandCategory, FCIDM_SHVIEW_AUTOARRANGE, 1, &inValue, &outValue);
             // pvaOut is VT_I4 with value 0x403
             break;
     }
