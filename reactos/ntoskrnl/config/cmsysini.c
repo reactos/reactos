@@ -1052,7 +1052,11 @@ CmpCreateRegistryRoot(VOID)
                                    NULL,
                                    0,
                                    &KeyName);
-    if (!Kcb) return FALSE;
+    if (!Kcb)
+    {
+        ObDereferenceObject(RootKey);
+        return FALSE;
+    }
 
     /* Initialize the object */
     RootKey->KeyControlBlock = Kcb;
@@ -1070,7 +1074,11 @@ CmpCreateRegistryRoot(VOID)
                             0,
                             NULL,
                             &CmpRegistryRootHandle);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(RootKey);
+        return FALSE;
+    }
 
     /* Reference the key again so that we never lose it */
     Status = ObReferenceObjectByHandle(CmpRegistryRootHandle,
@@ -1079,7 +1087,11 @@ CmpCreateRegistryRoot(VOID)
                                        KernelMode,
                                        (PVOID*)&RootKey,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(RootKey);
+        return FALSE;
+    }
 
     /* Completely sucessful */
     return TRUE;
