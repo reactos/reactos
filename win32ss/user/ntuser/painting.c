@@ -2141,7 +2141,13 @@ NtUserInvalidateRect(
     CONST RECT *lpUnsafeRect,
     BOOL bErase)
 {
-    return NtUserRedrawWindow(hWnd, lpUnsafeRect, NULL, RDW_INVALIDATE | (bErase? RDW_ERASE : 0));
+    UINT flags = RDW_INVALIDATE | (bErase ? RDW_ERASE : 0);
+    if (!hWnd)
+    {
+       flags = RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_FRAME | RDW_ERASE | RDW_ERASENOW;
+       lpUnsafeRect = NULL;
+    }
+    return NtUserRedrawWindow(hWnd, lpUnsafeRect, NULL, flags);
 }
 
 BOOL
@@ -2151,6 +2157,11 @@ NtUserInvalidateRgn(
     HRGN hRgn,
     BOOL bErase)
 {
+    if (!hWnd)
+    {
+       EngSetLastError( ERROR_INVALID_WINDOW_HANDLE );
+       return FALSE;
+    }
     return NtUserRedrawWindow(hWnd, NULL, hRgn, RDW_INVALIDATE | (bErase? RDW_ERASE : 0));
 }
 
@@ -2197,11 +2208,13 @@ NtUserValidateRect(
     HWND hWnd,
     const RECT *lpRect)
 {
-    if (hWnd)
+    UINT flags = RDW_VALIDATE;
+    if (!hWnd)
     {
-       return NtUserRedrawWindow(hWnd, lpRect, NULL, RDW_VALIDATE );
+       flags = RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_FRAME | RDW_ERASE | RDW_ERASENOW;
+       lpRect = NULL;
     }
-    return NtUserRedrawWindow(hWnd, lpRect, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ERASENOW|RDW_ALLCHILDREN);
+    return NtUserRedrawWindow(hWnd, lpRect, NULL, flags);
 }
 
 /* EOF */

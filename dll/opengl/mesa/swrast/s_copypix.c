@@ -121,7 +121,7 @@ copy_rgba_pixels(struct gl_context *ctx, GLint srcx, GLint srcy,
    INIT_SPAN(span, GL_BITMAP);
    _swrast_span_default_attribs(ctx, &span);
    span.arrayMask = SPAN_RGBA;
-   span.arrayAttribs = FRAG_BIT_COL0; /* we'll fill in COL0 attrib values */
+   span.arrayAttribs = FRAG_BIT_COL; /* we'll fill in COL0 attrib values */
 
    if (overlapping) {
       tmpImage = (GLfloat *) malloc(width * height * sizeof(GLfloat) * 4);
@@ -146,7 +146,7 @@ copy_rgba_pixels(struct gl_context *ctx, GLint srcx, GLint srcy,
    ASSERT(width < MAX_WIDTH);
 
    for (row = 0; row < height; row++, sy += stepy, dy += stepy) {
-      GLvoid *rgba = span.array->attribs[FRAG_ATTRIB_COL0];
+      GLvoid *rgba = span.array->attribs[FRAG_ATTRIB_COL];
 
       /* Get row/span of source pixels */
       if (overlapping) {

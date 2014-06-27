@@ -18,17 +18,18 @@
 #define ID_SYSTEM_DEFAULTS       0xFFF6
 #define ID_SYSTEM_PROPERTIES     0xFFF7
 
-#define NCPOPUP_MENU 103
+#define IDS_EDIT            204
+#define IDS_MARK            205
+#define IDS_COPY            206
+#define IDS_PASTE           207
+#define IDS_SELECTALL       208
+#define IDS_SCROLL          209
+#define IDS_FIND            210
+#define IDS_DEFAULTS        211
+#define IDS_PROPERTIES      212
 
-#define IDS_EDIT       204
-#define IDS_MARK       205
-#define IDS_COPY       206
-#define IDS_PASTE      207
-#define IDS_SELECTALL  208
-#define IDS_SCROLL     209
-#define IDS_FIND       210
-#define IDS_DEFAULTS   211
-#define IDS_PROPERTIES 212
+#define IDS_MARK_TITLE      220
+#define IDS_SELECT_TITLE    221
 
 // Scrollbar resource ids. Unused.
 /*

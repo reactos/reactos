@@ -47,6 +47,7 @@
 #define DOS_DIR_LENGTH 64
 #define NUM_DRIVES ('Z' - 'A' + 1)
 #define DOS_CHAR_ATTRIBUTE 0x07
+#define DOS_PROGRAM_NAME_TAG 0x0001
 
 enum DOS_ALLOC_STRATEGY
 {

@@ -62,9 +62,9 @@ BitmapFormat(ULONG cBits, ULONG iCompression)
     }
 }
 
-BOOL
+VOID
 NTAPI
-SURFACE_Cleanup(PVOID ObjectBody)
+SURFACE_vCleanup(PVOID ObjectBody)
 {
     PSURFACE psurf = (PSURFACE)ObjectBody;
     PVOID pvBits = psurf->SurfObj.pvBits;
@@ -108,8 +108,6 @@ SURFACE_Cleanup(PVOID ObjectBody)
     {
         PALETTE_ShareUnlockPalette(psurf->ppal);
     }
-
-    return TRUE;
 }
 
 

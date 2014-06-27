@@ -162,16 +162,21 @@ done:
 INT
 cmdStart(INT argc, WCHAR **argv)
 {
-    INT nError = 0;
+    INT i;
 
     if (argc == 2)
     {
-        nError = EnumerateRunningServices();
-    }
-    else
-    {
-        nError = StartOneService(argc, argv);
+        return EnumerateRunningServices();
     }
 
-    return nError;
+    for (i = 2; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"/help") == 0)
+        {
+            PrintResourceString(IDS_START_HELP);
+            return 1;
+        }
+    }
+
+    return StartOneService(argc, argv);
 }

@@ -37,7 +37,20 @@ BEGIN
     MENUITEM "З&горнути", SC_MINIMIZE
     MENUITEM "&Розгорнути", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Закрити\tAlt-F4", SC_CLOSE
+    MENUITEM "&Закрити\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Відновити", SC_RESTORE
+    MENUITEM "П&еремістити", SC_MOVE
+    MENUITEM "Роз&мір", SC_SIZE
+    MENUITEM "З&горнути", SC_MINIMIZE
+    MENUITEM "&Розгорнути", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Закрити\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "Нас&тупний\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

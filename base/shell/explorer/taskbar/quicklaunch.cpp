@@ -184,7 +184,7 @@ void QuickLaunchBar::AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry,
 
 	_entries[id] = qle;
 
-	TBBUTTON btn = {0, 0, flags, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
+	TBBUTTON btn = {0, 0, (BYTE)flags, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
 
 	btn.idCommand = id;
 	btn.iBitmap = bmp_idx;
@@ -195,7 +195,7 @@ void QuickLaunchBar::AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry,
 void QuickLaunchBar::UpdateDesktopButtons(int desktop_idx)
 {
 	for(int i=0; i<DESKTOP_COUNT; ++i) {
-		TBBUTTONINFO tbi = {sizeof(TBBUTTONINFO), TBIF_STATE, 0, 0, desktop_idx==i? TBSTATE_ENABLED|TBSTATE_PRESSED: TBSTATE_ENABLED};
+		TBBUTTONINFO tbi = {sizeof(TBBUTTONINFO), TBIF_STATE, 0, 0, (BYTE)(desktop_idx==i? TBSTATE_ENABLED|TBSTATE_PRESSED: TBSTATE_ENABLED)};
 
 		SendMessage(_hwnd, TB_SETBUTTONINFO, ID_SWITCH_DESKTOP_1+i, (LPARAM)&tbi);
 	}

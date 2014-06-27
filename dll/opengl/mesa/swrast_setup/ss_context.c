@@ -125,15 +125,11 @@ setup_vertex_format(struct gl_context *ctx)
 
       EMIT_ATTR( _TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, attrib[FRAG_ATTRIB_WPOS] );
 
-      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_COLOR0)) {
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_COLOR)) {
          if (swsetup->intColors)
-            EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4CHAN_4F_RGBA, color );
+            EMIT_ATTR( _TNL_ATTRIB_COLOR, EMIT_4CHAN_4F_RGBA, color );
          else
-            EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4F, attrib[FRAG_ATTRIB_COL0]);
-      }
-
-      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_COLOR1)) {
-         EMIT_ATTR( _TNL_ATTRIB_COLOR1, EMIT_4F, attrib[FRAG_ATTRIB_COL1]);
+            EMIT_ATTR( _TNL_ATTRIB_COLOR, EMIT_4F, attrib[FRAG_ATTRIB_COL]);
       }
 
       if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_FOG)) {

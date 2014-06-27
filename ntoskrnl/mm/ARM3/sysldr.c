@@ -928,7 +928,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
             /* Unload the symbols */
             DbgUnLoadImageSymbols(&TempName,
                                   BaseAddress,
-                                  (ULONG_PTR)ZwCurrentProcess());
+                                  (ULONG_PTR)PsGetCurrentProcessId());
             RtlFreeAnsiString(&TempName);
         }
     }
@@ -3309,7 +3309,7 @@ LoaderScan:
         /* Notify the debugger */
         DbgLoadImageSymbols(&AnsiTemp,
                             LdrEntry->DllBase,
-                            (ULONG_PTR)ZwCurrentProcess());
+                            (ULONG_PTR)PsGetCurrentProcessId());
         LdrEntry->Flags |= LDRP_DEBUG_SYMBOLS_LOADED;
     }
 

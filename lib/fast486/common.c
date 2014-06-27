@@ -65,7 +65,7 @@ Fast486ReadMemory(PFAST486_STATE State,
             return FALSE;
         }
 
-        if ((!InstFetch && (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl))
+        if ((!InstFetch && (CachedDescriptor->Rpl > CachedDescriptor->Dpl))
             || (Fast486GetCurrentPrivLevel(State) > CachedDescriptor->Dpl))
         {
             Fast486Exception(State, FAST486_EXCEPTION_GP);
@@ -132,7 +132,7 @@ Fast486WriteMemory(PFAST486_STATE State,
             return FALSE;
         }
 
-        if ((GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
+        if ((CachedDescriptor->Rpl > CachedDescriptor->Dpl)
             || (Fast486GetCurrentPrivLevel(State) > CachedDescriptor->Dpl))
         {
             Fast486Exception(State, FAST486_EXCEPTION_GP);
@@ -164,14 +164,26 @@ BOOLEAN
 Fast486InterruptInternal(PFAST486_STATE State,
                          USHORT SegmentSelector,
                          ULONG Offset,
-                         BOOLEAN InterruptGate)
+                         ULONG GateType)
 {
+    BOOLEAN GateSize = (GateType == FAST486_IDT_INT_GATE_32)
+                       || (GateType == FAST486_IDT_TRAP_GATE_32);
+
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         FAST486_TSS Tss;
         USHORT OldSs = State->SegmentRegs[FAST486_REG_SS].Selector;
         ULONG OldEsp = State->GeneralRegs[FAST486_REG_ESP].Long;
+        
+        if (GateSize != (State->SegmentRegs[FAST486_REG_CS].Size))
+        {
+            /*
+             * The gate size doesn't match the current operand size, so toggle
+             * the OPSIZE flag.
+             */
+            State->PrefixFlags ^= FAST486_PREFIX_OPSIZE;
+        }
 
         /* Check if the interrupt handler is more privileged */
         if (Fast486GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
@@ -257,7 +269,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
     /* Push the instruction pointer */
     if (!Fast486StackPush(State, State->InstPtr.Long)) return FALSE;
 
-    if (InterruptGate)
+    if ((GateType == FAST486_IDT_INT_GATE) || (GateType == FAST486_IDT_INT_GATE_32))
     {
         /* Disable interrupts after a jump to an interrupt gate handler */
         State->Flags.If = FALSE;
@@ -270,7 +282,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
         return FALSE;
     }
 
-    if (State->SegmentRegs[FAST486_REG_CS].Size)
+    if (GateSize)
     {
         /* 32-bit code segment, use EIP */
         State->InstPtr.Long = Offset;

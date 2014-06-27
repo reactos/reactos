@@ -344,9 +344,9 @@ DC_vInitDc(
     }
 }
 
-BOOL
+VOID
 NTAPI
-DC_Cleanup(PVOID ObjectBody)
+DC_vCleanup(PVOID ObjectBody)
 {
     PDC pdc = (PDC)ObjectBody;
 
@@ -391,8 +391,6 @@ DC_Cleanup(PVOID ObjectBody)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
 
     PDEVOBJ_vRelease(pdc->ppdev) ;
-
-    return TRUE;
 }
 
 VOID

@@ -28,6 +28,29 @@ extern "C" {
 //
 
 //
+// CPSR Values
+//
+#define CPSR_THUMB_ENABLE    0x20
+#define CPSR_FIQ_DISABLE     0x40
+#define CPSR_IRQ_DISABLE     0x80
+#define CPSR_USER_MODE       0x10
+#define CPSR_FIQ_MODE        0x11
+#define CPSR_IRQ_MODE        0x12
+#define CPSR_SVC_MODE        0x13
+#define CPSR_ABORT_MODE      0x17
+#define CPSR_UND_MODE        0x1B
+#define CPSR_MODES           0x1F
+
+//
+// C1 Register Values
+//
+#define C1_MMU_CONTROL       0x01
+#define C1_ALIGNMENT_CONTROL 0x02
+#define C1_DCACHE_CONTROL    0x04
+#define C1_ICACHE_CONTROL    0x1000
+#define C1_VECTOR_CONTROL    0x2000
+
+//
 // IPI Types
 //
 #define IPI_APC                 1

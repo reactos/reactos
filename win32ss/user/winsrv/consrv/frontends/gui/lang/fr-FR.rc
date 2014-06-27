@@ -24,3 +24,9 @@ BEGIN
 */
     IDS_TERMINAL_TITLE "ReactOS Console"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Marquage"
+    IDS_SELECT_TITLE "Sélection"
+END

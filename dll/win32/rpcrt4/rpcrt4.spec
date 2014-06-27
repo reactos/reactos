@@ -1,5 +1,6 @@
 @ stdcall CreateProxyFromTypeInfo(ptr ptr ptr ptr ptr)
 @ stdcall CreateStubFromTypeInfo(ptr ptr ptr ptr)
+# I_RpcServerTurnOnOffKeepalives
 @ stdcall CStdStubBuffer_AddRef(ptr)
 @ stdcall CStdStubBuffer_Connect(ptr ptr)
 @ stdcall CStdStubBuffer_CountRefs(ptr)
@@ -9,9 +10,10 @@
 @ stdcall CStdStubBuffer_Invoke(ptr ptr ptr)
 @ stdcall CStdStubBuffer_IsIIDSupported(ptr ptr)
 @ stdcall CStdStubBuffer_QueryInterface(ptr ptr ptr)
-@ stub CreateServerInterfaceFromStub # wxp
 @ stdcall DceErrorInqTextA (long ptr)
 @ stdcall DceErrorInqTextW (long ptr)
+# DllGetClassObject
+# DllInstall
 @ stdcall -private DllRegisterServer()
 @ stub GlobalMutexClearExternal
 @ stub GlobalMutexRequestExternal
@@ -25,17 +27,17 @@
 @ stub I_RpcBCacheAllocate
 @ stub I_RpcBCacheFree
 @ stub I_RpcBindingCopy
+# I_RpcBindingHandleToAsyncHandle
 @ stub I_RpcBindingInqConnId
 @ stub I_RpcBindingInqDynamicEndPoint
 @ stub I_RpcBindingInqDynamicEndPointA
 @ stub I_RpcBindingInqDynamicEndPointW
 @ stub I_RpcBindingInqLocalClientPID # wxp
+# I_RpcBindingInqMarshalledTargetInfo
 @ stub I_RpcBindingInqSecurityContext
 @ stdcall I_RpcBindingInqTransportType(ptr ptr)
 @ stub I_RpcBindingInqWireIdForSnego
 @ stub I_RpcBindingIsClientLocal
-# 9x version of I_RpcBindingSetAsync has 3 arguments, not 2
-@ stdcall I_RpcBindingSetAsync(ptr ptr)
 @ stub I_RpcBindingToStaticStringBindingW
 @ stub I_RpcClearMutex
 @ stub I_RpcConnectionInqSockBuffSize
@@ -53,6 +55,8 @@
 @ stub I_RpcIfInqTransferSyntaxes
 @ stub I_RpcLogEvent
 @ stdcall I_RpcMapWin32Status(long)
+# I_RpcNDRCGetWireRepresentation
+# I_RpcNDRSContextEmergencyCleanup
 @ stdcall I_RpcNegotiateTransferSyntax(ptr)
 @ stub I_RpcNsBindingSetEntryName
 @ stub I_RpcNsBindingSetEntryNameA
@@ -64,21 +68,25 @@
 @ stub I_RpcProxyNewConnection # wxp
 @ stub I_RpcReallocPipeBuffer
 @ stdcall I_RpcReceive(ptr)
+# I_RpcRecordCalloutFailure
+# I_RpcReplyToClientWithStatus
 @ stub I_RpcRequestMutex
+# I_RpcSNCHOption
 @ stdcall I_RpcSend(ptr)
 @ stdcall I_RpcSendReceive(ptr)
 @ stub I_RpcServerAllocateIpPort
+# I_RpcServerCheckClientRestriction
 @ stub I_RpcServerInqAddressChangeFn
 @ stub I_RpcServerInqLocalConnAddress # wxp
 @ stub I_RpcServerInqTransportType
+# I_RpcServerIsClientDisconnected
 @ stub I_RpcServerRegisterForwardFunction
 @ stub I_RpcServerSetAddressChangeFn
-@ stdcall I_RpcServerStartListening(ptr) # win9x
-@ stdcall I_RpcServerStopListening() # win9x
 @ stub I_RpcServerUseProtseq2A
 @ stub I_RpcServerUseProtseq2W
 @ stub I_RpcServerUseProtseqEp2A
 @ stub I_RpcServerUseProtseqEp2W
+# I_RpcSessionStrictContextHandle
 @ stub I_RpcSetAsyncHandle
 @ stub I_RpcSsDontSerializeContext
 @ stub I_RpcSystemFunction001 # wxp (oh, brother!)
@@ -92,7 +100,6 @@
 @ stub I_RpcTransIoCancelled
 @ stub I_RpcTransServerNewConnection
 @ stub I_RpcTurnOnEEInfoPropagation # wxp
-@ stdcall I_RpcWindowProc(ptr long long long) # win9x
 @ stub I_UuidCreate
 @ stub MIDL_wchar_strcpy
 @ stub MIDL_wchar_strlen
@@ -118,7 +125,6 @@
 @ stdcall NdrAllocate(ptr long)
 @ varargs NdrAsyncClientCall(ptr ptr)
 @ stub NdrAsyncServerCall
-@ stdcall NdrAsyncStubCall(ptr ptr ptr ptr)
 @ stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
 @ stdcall NdrByteCountPointerFree(ptr ptr ptr)
 @ stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
@@ -126,8 +132,8 @@
 @ stdcall NdrCStdStubBuffer2_Release(ptr ptr)
 @ stdcall NdrCStdStubBuffer_Release(ptr ptr)
 @ stdcall NdrClearOutParameters(ptr ptr ptr)
-@ varargs NdrClientCall2(ptr ptr)
 @ varargs -arch=i386 NdrClientCall(ptr ptr) NdrClientCall2
+@ varargs NdrClientCall2(ptr ptr)
 @ stdcall NdrClientContextMarshall(ptr ptr long)
 @ stdcall NdrClientContextUnmarshall(ptr ptr ptr)
 @ stub NdrClientInitialize
@@ -173,6 +179,7 @@
 @ stdcall NdrCorrelationFree(ptr)
 @ stdcall NdrCorrelationInitialize(ptr ptr long long)
 @ stdcall NdrCorrelationPass(ptr)
+# NdrCreateServerInterfaceFromStub
 @ stub NdrDcomAsyncClientCall
 @ stub NdrDcomAsyncStubCall
 @ stdcall NdrDllCanUnloadNow(ptr)
@@ -198,28 +205,19 @@
 @ stdcall NdrFullPointerXlatInit(long long) 
 @ stdcall NdrGetBuffer(ptr long ptr)
 @ stub NdrGetDcomProtocolVersion
-@ stub NdrGetPartialBuffer
-@ stub NdrGetPipeBuffer
 @ stub NdrGetSimpleTypeBufferAlignment # wxp
 @ stub NdrGetSimpleTypeBufferSize # wxp
 @ stub NdrGetSimpleTypeMemorySize # wxp
 @ stub NdrGetTypeFlags # wxp
 @ stdcall NdrGetUserMarshalInfo(ptr long ptr)
-@ stub NdrHardStructBufferSize #(ptr ptr ptr)
-@ stub NdrHardStructFree #(ptr ptr ptr)
-@ stub NdrHardStructMarshall #(ptr ptr ptr)
-@ stub NdrHardStructMemorySize #(ptr ptr)
-@ stub NdrHardStructUnmarshall #(ptr ptr ptr long)
 @ stdcall NdrInterfacePointerBufferSize(ptr ptr ptr)
 @ stdcall NdrInterfacePointerFree(ptr ptr ptr)
 @ stdcall NdrInterfacePointerMarshall(ptr ptr ptr)
 @ stdcall NdrInterfacePointerMemorySize(ptr ptr)
 @ stdcall NdrInterfacePointerUnmarshall(ptr ptr ptr long)
-@ stub NdrIsAppDoneWithPipes
 @ stdcall NdrMapCommAndFaultStatus(ptr ptr ptr long)
-@ stub NdrMarkNextActivePipe
-@ stub NdrMesProcEncodeDecode2
 @ varargs NdrMesProcEncodeDecode(ptr ptr ptr)
+@ stub NdrMesProcEncodeDecode2
 @ stub NdrMesSimpleTypeAlignSize
 @ stub NdrMesSimpleTypeDecode
 @ stub NdrMesSimpleTypeEncode
@@ -248,11 +246,6 @@
 @ stub NdrPartialIgnoreClientMarshall # wxp
 @ stub NdrPartialIgnoreServerInitialize # wxp
 @ stub NdrPartialIgnoreServerUnmarshall # wxp
-@ stub NdrPipePull
-@ stub NdrPipePush
-@ stub NdrPipeSendReceive
-@ stub NdrPipesDone
-@ stub NdrPipesInitialize
 @ stdcall NdrPointerBufferSize(ptr ptr ptr)
 @ stdcall NdrPointerFree(ptr ptr ptr)
 @ stdcall NdrPointerMarshall(ptr ptr ptr)
@@ -378,13 +371,14 @@
 @ stub RpcErrorClearInformation # wxp
 @ stdcall RpcErrorEndEnumeration(ptr)
 @ stdcall RpcErrorGetNextRecord(ptr long ptr)
+# RpcErrorGetNumberOfRecords
 @ stdcall RpcErrorLoadErrorInfo(ptr long ptr)
-@ stub RpcErrorNumberOfRecords # wxp
 @ stub RpcErrorResetEnumeration # wxp
 @ stdcall RpcErrorSaveErrorInfo(ptr ptr ptr)
 @ stdcall RpcErrorStartEnumeration(ptr)
 @ stub RpcFreeAuthorizationContext # wxp
 @ stdcall RpcGetAsyncCallStatus(ptr) RpcAsyncGetCallStatus
+# RpcGetAuthorizationContextForClient
 @ stub RpcIfIdVectorFree
 @ stub RpcIfInqId
 @ stdcall RpcImpersonateClient(ptr)

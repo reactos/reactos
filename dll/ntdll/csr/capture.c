@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            dll/ntdll/csr/capture.c
  * PURPOSE:         Routines for probing and capturing CSR API Messages
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/

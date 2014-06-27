@@ -37,21 +37,4 @@ _mesa_update_state(struct gl_context *ctx);
 extern void
 _mesa_update_state_locked(struct gl_context *ctx);
 
-
-/**
- * Is the secondary color needed?
- */
-static inline GLboolean
-_mesa_need_secondary_color(const struct gl_context *ctx)
-{
-   if (ctx->Light.Enabled &&
-       ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
-       return GL_TRUE;
-
-   if (ctx->Fog.ColorSumEnabled)
-      return GL_TRUE;
-
-   return GL_FALSE;
-}
-
 #endif

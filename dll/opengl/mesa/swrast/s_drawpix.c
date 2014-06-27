@@ -409,7 +409,7 @@ draw_rgba_pixels( struct gl_context *ctx, GLint x, GLint y,
    INIT_SPAN(span, GL_BITMAP);
    _swrast_span_default_attribs(ctx, &span);
    span.arrayMask = SPAN_RGBA;
-   span.arrayAttribs = FRAG_BIT_COL0; /* we're fill in COL0 attrib values */
+   span.arrayAttribs = FRAG_BIT_COL; /* we're fill in COL0 attrib values */
 
    if (_mesa_get_format_datatype(ctx->DrawBuffer->_ColorDrawBuffer->Format) != GL_FLOAT) {
       /* need to clamp colors before applying fragment ops */
@@ -426,7 +426,7 @@ draw_rgba_pixels( struct gl_context *ctx, GLint x, GLint y,
          = _mesa_image_row_stride(unpack, width, format, type);
       GLint skipPixels = 0;
       /* use span array for temp color storage */
-      GLfloat *rgba = (GLfloat *) span.array->attribs[FRAG_ATTRIB_COL0];
+      GLfloat *rgba = (GLfloat *) span.array->attribs[FRAG_ATTRIB_COL];
 
       /* if the span is wider than MAX_WIDTH we have to do it in chunks */
       while (skipPixels < width) {

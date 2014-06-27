@@ -157,7 +157,7 @@ union value {
 #define CONTEXT_FIELD(field, type) \
    LOC_CONTEXT, type, offsetof(struct gl_context, field)
 #define ARRAY_FIELD(field, type) \
-   LOC_ARRAY, type, offsetof(struct gl_array_object, field)
+   LOC_ARRAY, type, offsetof(struct gl_array_attrib, field)
 #define CONST(value) \
    LOC_CONTEXT, TYPE_CONST, value
 
@@ -262,12 +262,10 @@ EXTRA_EXT(IBM_rasterpos_clip);
 EXTRA_EXT(NV_point_sprite);
 EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
-EXTRA_EXT(APPLE_vertex_array_object);
 EXTRA_EXT(EXT_compiled_vertex_array);
 EXTRA_EXT2(NV_point_sprite, ARB_point_sprite);
 
 static const int extra_version_30[] = { EXTRA_VERSION_30, EXTRA_END };
-static const int extra_version_31[] = { EXTRA_VERSION_31, EXTRA_END };
 static const int extra_version_32[] = { EXTRA_VERSION_32, EXTRA_END };
 
 #define API_OPENGL_BIT (1 << API_OPENGL)
@@ -285,7 +283,7 @@ static const int extra_version_32[] = { EXTRA_VERSION_32, EXTRA_END };
 static const struct value_desc values[] = {
    { GL_ALPHA_BITS, BUFFER_INT(Visual.alphaBits), extra_new_buffers },
    { GL_BLEND, CONTEXT_BIT0(Color.BlendEnabled), NO_EXTRA },
-   { GL_BLEND_SRC, CONTEXT_ENUM(Color.SrcRGB), NO_EXTRA },
+   { GL_BLEND_SRC, CONTEXT_ENUM(Color.SrcFactor), NO_EXTRA },
    { GL_BLUE_BITS, BUFFER_INT(Visual.blueBits), extra_new_buffers },
    { GL_COLOR_CLEAR_VALUE, LOC_CUSTOM, TYPE_FLOATN_4, 0, NO_EXTRA },
    { GL_COLOR_WRITEMASK, LOC_CUSTOM, TYPE_INT_4, 0, NO_EXTRA },
@@ -347,19 +345,8 @@ static const struct value_desc values[] = {
      extra_ARB_texture_cube_map }, /* XXX: OES_texture_cube_map */
 
    /* XXX: OES_blend_subtract */
-   { GL_BLEND_SRC_RGB_EXT, CONTEXT_ENUM(Color.SrcRGB), NO_EXTRA },
-   { GL_BLEND_DST_RGB_EXT, CONTEXT_ENUM(Color.DstRGB), NO_EXTRA },
-   { GL_BLEND_SRC_ALPHA_EXT, CONTEXT_ENUM(Color.SrcA), NO_EXTRA },
-   { GL_BLEND_DST_ALPHA_EXT, CONTEXT_ENUM(Color.DstA), NO_EXTRA },
-
-   /* GL_BLEND_EQUATION_RGB, which is what we're really after, is
-    * defined identically to GL_BLEND_EQUATION. */
-   { GL_BLEND_EQUATION, CONTEXT_ENUM(Color.EquationRGB), NO_EXTRA },
-   { GL_BLEND_EQUATION_ALPHA_EXT, CONTEXT_ENUM(Color.EquationA), NO_EXTRA },
-
-   /* GL_ARB_texture_compression */
-   { GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_COMPRESSED_TEXTURE_FORMATS_ARB, LOC_CUSTOM, TYPE_INT_N, 0, NO_EXTRA },
+   { GL_BLEND_SRC_RGB_EXT, CONTEXT_ENUM(Color.SrcFactor), NO_EXTRA },
+   { GL_BLEND_DST_RGB_EXT, CONTEXT_ENUM(Color.DstFactor), NO_EXTRA },
 
    /* GL_ARB_multisample */
    { GL_SAMPLE_ALPHA_TO_COVERAGE_ARB,
@@ -403,7 +390,7 @@ static const struct value_desc values[] = {
    { GL_ALPHA_TEST, CONTEXT_BOOL(Color.AlphaEnabled), NO_EXTRA },
    { GL_ALPHA_TEST_FUNC, CONTEXT_ENUM(Color.AlphaFunc), NO_EXTRA },
    { GL_ALPHA_TEST_REF, LOC_CUSTOM, TYPE_FLOATN, 0, NO_EXTRA },
-   { GL_BLEND_DST, CONTEXT_ENUM(Color.DstRGB), NO_EXTRA },
+   { GL_BLEND_DST, CONTEXT_ENUM(Color.DstFactor), NO_EXTRA },
    { GL_CLIP_DISTANCE0, CONTEXT_BIT0(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
    { GL_CLIP_DISTANCE1, CONTEXT_BIT1(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
    { GL_CLIP_DISTANCE2, CONTEXT_BIT2(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
@@ -414,7 +401,7 @@ static const struct value_desc values[] = {
    { GL_CLIP_DISTANCE7, CONTEXT_BIT7(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
    { GL_COLOR_MATERIAL, CONTEXT_BOOL(Light.ColorMaterialEnabled), NO_EXTRA },
    { GL_CURRENT_COLOR,
-     CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_COLOR0][0], TYPE_FLOATN_4),
+     CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_COLOR][0], TYPE_FLOATN_4),
      extra_flush_current },
    { GL_CURRENT_NORMAL,
      CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_NORMAL][0], TYPE_FLOATN_3),
@@ -468,10 +455,10 @@ static const struct value_desc values[] = {
    { GL_NORMAL_ARRAY, ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_NORMAL].Enabled), NO_EXTRA },
    { GL_NORMAL_ARRAY_TYPE, ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_NORMAL].Type), NO_EXTRA },
    { GL_NORMAL_ARRAY_STRIDE, ARRAY_INT(VertexAttrib[VERT_ATTRIB_NORMAL].Stride), NO_EXTRA },
-   { GL_COLOR_ARRAY, ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_COLOR0].Enabled), NO_EXTRA },
-   { GL_COLOR_ARRAY_SIZE, ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR0].Size), NO_EXTRA },
-   { GL_COLOR_ARRAY_TYPE, ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_COLOR0].Type), NO_EXTRA },
-   { GL_COLOR_ARRAY_STRIDE, ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR0].Stride), NO_EXTRA },
+   { GL_COLOR_ARRAY, ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_COLOR].Enabled), NO_EXTRA },
+   { GL_COLOR_ARRAY_SIZE, ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR].Size), NO_EXTRA },
+   { GL_COLOR_ARRAY_TYPE, ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_COLOR].Type), NO_EXTRA },
+   { GL_COLOR_ARRAY_STRIDE, ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR].Stride), NO_EXTRA },
    { GL_TEXTURE_COORD_ARRAY,
      LOC_CUSTOM, TYPE_BOOLEAN, offsetof(struct gl_client_array, Enabled), NO_EXTRA },
    { GL_TEXTURE_COORD_ARRAY_SIZE,
@@ -493,11 +480,11 @@ static const struct value_desc values[] = {
 
    /* GL_ARB_vertex_buffer_object */
    { GL_VERTEX_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_POS].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_POS].BufferObj), NO_EXTRA },
    { GL_NORMAL_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_NORMAL].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_NORMAL].BufferObj), NO_EXTRA },
    { GL_COLOR_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_COLOR0].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_COLOR].BufferObj), NO_EXTRA },
    { GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA },
 
    /* GL_OES_point_sprite */
@@ -511,11 +498,6 @@ static const struct value_desc values[] = {
      extra_EXT_texture_filter_anisotropic },
 
    { GL_BLEND_COLOR_EXT, LOC_CUSTOM, TYPE_FLOATN_4, 0, NO_EXTRA },
-
-   /* OES_texture_3D */
-   { GL_TEXTURE_BINDING_3D, LOC_CUSTOM, TYPE_INT, TEXTURE_3D_INDEX, NO_EXTRA },
-   { GL_MAX_3D_TEXTURE_SIZE, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_context, Const.Max3DTextureLevels), NO_EXTRA },
 
    { GL_ACCUM_RED_BITS, BUFFER_INT(Visual.accumRedBits), NO_EXTRA },
    { GL_ACCUM_GREEN_BITS, BUFFER_INT(Visual.accumGreenBits), NO_EXTRA },
@@ -540,8 +522,6 @@ static const struct value_desc values[] = {
    { GL_CURRENT_RASTER_DISTANCE, CONTEXT_FLOAT(Current.RasterDistance), NO_EXTRA },
    { GL_CURRENT_RASTER_INDEX, CONST(1), NO_EXTRA },
    { GL_CURRENT_RASTER_POSITION, CONTEXT_FLOAT4(Current.RasterPos[0]), NO_EXTRA },
-   { GL_CURRENT_RASTER_SECONDARY_COLOR,
-     CONTEXT_FIELD(Current.RasterSecondaryColor[0], TYPE_FLOATN_4), NO_EXTRA },
    { GL_CURRENT_RASTER_TEXTURE_COORDS, LOC_CUSTOM, TYPE_FLOAT_4, 0,
      extra_valid_texture_unit },
    { GL_CURRENT_RASTER_POSITION_VALID, CONTEXT_BOOL(Current.RasterPosValid), NO_EXTRA },
@@ -561,7 +541,6 @@ static const struct value_desc values[] = {
    { GL_INDEX_OFFSET, CONTEXT_INT(Pixel.IndexOffset), NO_EXTRA },
    { GL_INDEX_SHIFT, CONTEXT_INT(Pixel.IndexShift), NO_EXTRA },
    { GL_INDEX_WRITEMASK, CONTEXT_INT(Color.IndexMask), NO_EXTRA },
-   { GL_LIGHT_MODEL_COLOR_CONTROL, CONTEXT_ENUM(Light.Model.ColorControl), NO_EXTRA },
    { GL_LIGHT_MODEL_LOCAL_VIEWER, CONTEXT_BOOL(Light.Model.LocalViewer), NO_EXTRA },
    { GL_LINE_STIPPLE, CONTEXT_BOOL(Line.StippleFlag), NO_EXTRA },
    { GL_LINE_STIPPLE_PATTERN, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
@@ -638,7 +617,6 @@ static const struct value_desc values[] = {
    { GL_STEREO, BUFFER_INT(Visual.stereoMode), NO_EXTRA },
 
    { GL_TEXTURE_1D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-   { GL_TEXTURE_3D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
 
    { GL_TEXTURE_BINDING_1D, LOC_CUSTOM, TYPE_INT, TEXTURE_1D_INDEX, NO_EXTRA },
 
@@ -686,19 +664,6 @@ static const struct value_desc values[] = {
      CONTEXT_MATRIX_T(ProjectionMatrixStack.Top), NO_EXTRA },
    { GL_TRANSPOSE_TEXTURE_MATRIX_ARB, CONTEXT_MATRIX_T(TextureMatrixStack), NO_EXTRA },
 
-   /* GL_EXT_secondary_color */
-   { GL_CURRENT_SECONDARY_COLOR_EXT,
-     CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_COLOR1][0], TYPE_FLOATN_4),
-     extra_EXT_secondary_color_flush_current },
-   { GL_SECONDARY_COLOR_ARRAY_EXT, ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_COLOR1].Enabled),
-     extra_EXT_secondary_color },
-   { GL_SECONDARY_COLOR_ARRAY_TYPE_EXT, ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_COLOR1].Type),
-     extra_EXT_secondary_color },
-   { GL_SECONDARY_COLOR_ARRAY_STRIDE_EXT, ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR1].Stride),
-     extra_EXT_secondary_color },
-   { GL_SECONDARY_COLOR_ARRAY_SIZE_EXT, ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR1].Size),
-     extra_EXT_secondary_color },
-
    /* GL_EXT_fog_coord */
    { GL_CURRENT_FOG_COORDINATE_EXT,
      CONTEXT_FLOAT(Current.Attrib[VERT_ATTRIB_FOG][0]),
@@ -735,23 +700,17 @@ static const struct value_desc values[] = {
  
    /* GL_ARB_vertex_buffer_object */
    { GL_INDEX_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_COLOR_INDEX].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_COLOR_INDEX].BufferObj), NO_EXTRA },
    { GL_EDGE_FLAG_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_EDGEFLAG].BufferObj), NO_EXTRA },
-   { GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_COLOR1].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_EDGEFLAG].BufferObj), NO_EXTRA },
    { GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_FOG].BufferObj), NO_EXTRA },
+     offsetof(struct gl_array_attrib, VertexAttrib[VERT_ATTRIB_FOG].BufferObj), NO_EXTRA },
 
    /* GL_EXT_depth_bounds_test */
    { GL_DEPTH_BOUNDS_TEST_EXT, CONTEXT_BOOL(Depth.BoundsTest),
      extra_EXT_depth_bounds_test },
    { GL_DEPTH_BOUNDS_EXT, CONTEXT_FLOAT2(Depth.BoundsMin),
      extra_EXT_depth_bounds_test },
-
-   /* GL_APPLE_vertex_array_object */
-   { GL_VERTEX_ARRAY_BINDING_APPLE, ARRAY_INT(Name),
-     extra_APPLE_vertex_array_object },
 
    /* GL_EXT_texture_integer */
    { GL_RGBA_INTEGER_MODE_EXT, BUFFER_BOOL(_IntegerColor),
@@ -882,7 +841,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    switch (d->pname) {
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
-   case GL_TEXTURE_3D:
    case GL_TEXTURE_CUBE_MAP_ARB:
       v->value_bool = _mesa_IsEnabled(d->pname);
       break;
@@ -940,7 +898,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_COORD_ARRAY_SIZE:
    case GL_TEXTURE_COORD_ARRAY_TYPE:
    case GL_TEXTURE_COORD_ARRAY_STRIDE:
-      array = &ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX];
+      array = &ctx->Array.VertexAttrib[VERT_ATTRIB_TEX];
       v->value_int = *(GLuint *) ((char *) array + d->offset);
       break;
 
@@ -1043,18 +1001,15 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING_ARB:
    case GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING_ARB:
       buffer_obj = (struct gl_buffer_object **)
-	 ((char *) ctx->Array.ArrayObj + d->offset);
+	 ((char *) &ctx->Array + d->offset);
       v->value_int = (*buffer_obj)->Name;
-      break;
-   case GL_ARRAY_BUFFER_BINDING_ARB:
-      v->value_int = ctx->Array.ArrayBufferObj->Name;
       break;
    case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB:
       v->value_int =
-	 ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX].BufferObj->Name;
+	 ctx->Array.VertexAttrib[VERT_ATTRIB_TEX].BufferObj->Name;
       break;
    case GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB:
-      v->value_int = ctx->Array.ArrayObj->ElementArrayBufferObj->Name;
+      v->value_int = ctx->Array.ElementArrayBufferObj->Name;
       break;
 
    case GL_FOG_COLOR:
@@ -1065,9 +1020,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       v->value_float_4[1] = ctx->Color.ClearColor.f[1], 0.0F, 1.0F;
       v->value_float_4[2] = ctx->Color.ClearColor.f[2], 0.0F, 1.0F;
       v->value_float_4[3] = ctx->Color.ClearColor.f[3], 0.0F, 1.0F;
-      break;
-   case GL_BLEND_COLOR_EXT:
-      COPY_4FV(v->value_float_4, ctx->Color.BlendColor);
       break;
    case GL_ALPHA_TEST_REF:
          v->value_float = ctx->Color.AlphaRef;
@@ -1206,7 +1158,7 @@ find_value(const char *func, GLenum pname, void **p, union value *v)
       *p = ((char *) ctx + d->offset);
       return d;
    case LOC_ARRAY:
-      *p = ((char *) ctx->Array.ArrayObj + d->offset);
+      *p = ((char *)&ctx->Array + d->offset);
       return d;
    case LOC_TEXUNIT:
       unit = &ctx->Texture.Unit;

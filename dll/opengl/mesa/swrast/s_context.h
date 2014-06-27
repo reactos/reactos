@@ -227,7 +227,6 @@ typedef struct
    GLbitfield NewState;
    GLuint StateChanges;
    GLenum Primitive;    /* current primitive being drawn (ala glBegin) */
-   GLboolean SpecularVertexAdd; /**< Add specular/secondary color per vertex */
 
    void (*InvalidateState)( struct gl_context *ctx, GLbitfield new_state );
 

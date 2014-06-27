@@ -111,9 +111,9 @@ ULONG
 FASTCALL
 BitmapFormat(ULONG cBits, ULONG iCompression);
 
-BOOL
+VOID
 NTAPI
-SURFACE_Cleanup(PVOID ObjectBody);
+SURFACE_vCleanup(PVOID ObjectBody);
 
 PSURFACE
 NTAPI

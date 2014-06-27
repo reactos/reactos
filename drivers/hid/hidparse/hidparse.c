@@ -70,7 +70,7 @@ CopyFunction(
 }
 
 VOID
-NTAPI
+__cdecl
 DebugFunction(
     IN LPCSTR FormatStr, ...)
 {

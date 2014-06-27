@@ -1148,8 +1148,8 @@ NTAPI
 NtSaveKey(IN HANDLE KeyHandle,
           IN HANDLE FileHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Call the extended API */
+    return NtSaveKeyEx(KeyHandle, FileHandle, REG_STANDARD_FORMAT);
 }
 
 NTSTATUS
@@ -1158,8 +1158,43 @@ NtSaveKeyEx(IN HANDLE KeyHandle,
             IN HANDLE FileHandle,
             IN ULONG Flags)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCM_KEY_BODY KeyObject;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    PAGED_CODE();
+
+    DPRINT("NtSaveKeyEx(0x%08X, 0x%08X, %lu)\n", KeyHandle, FileHandle, Flags);
+
+    /* Verify the flags */
+    if ((Flags != REG_STANDARD_FORMAT)
+        && (Flags != REG_LATEST_FORMAT)
+        && (Flags != REG_NO_COMPRESSION))
+    {
+        /* Only one of these values can be specified */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check for the SeBackupPrivilege */
+    if (!SeSinglePrivilegeCheck(SeBackupPrivilege, PreviousMode))
+    {
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       KEY_READ,
+                                       CmpKeyObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Call the internal API */
+    Status = CmSaveKey(KeyObject->KeyControlBlock, FileHandle, Flags);
+
+    ObDereferenceObject(KeyObject);
+    return Status;
 }
 
 NTSTATUS

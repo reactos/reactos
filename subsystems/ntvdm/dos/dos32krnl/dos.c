@@ -442,6 +442,10 @@ static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
     /* Set the final zero */
     *(DestBuffer++) = 0;
 
+    /* Store the special program name tag */
+    *(DestBuffer++) = LOBYTE(DOS_PROGRAM_NAME_TAG);
+    *(DestBuffer++) = HIBYTE(DOS_PROGRAM_NAME_TAG);
+
     /* Copy the program name after the environment block */
     strcpy(DestBuffer, ProgramName);
 
@@ -911,6 +915,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     PIMAGE_DOS_HEADER Header;
     PDWORD RelocationTable;
     PWORD RelocWord;
+    LPSTR CmdLinePtr = (LPSTR)CommandLine;
 
     DPRINT1("DosLoadExecutable(%d, %s, %s, %s, 0x%08X, 0x%08X)\n",
             LoadType,
@@ -927,8 +932,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     }
 
     /* NULL-terminate the command line by removing the return carriage character */
-    while (*CommandLine && *CommandLine != '\r') CommandLine++;
-    *(LPSTR)CommandLine = '\0';
+    while (*CmdLinePtr && *CmdLinePtr != '\r') CmdLinePtr++;
+    *CmdLinePtr = '\0';
 
     /* Open a handle to the executable */
     FileHandle = CreateFileA(ExecutablePath,

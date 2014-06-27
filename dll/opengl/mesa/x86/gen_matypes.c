@@ -229,7 +229,6 @@ int main( int argc, char **argv )
    OFFSET( "LIGHT_MODEL_AMBIENT       ", struct gl_lightmodel, Ambient );
    OFFSET( "LIGHT_MODEL_LOCAL_VIEWER  ", struct gl_lightmodel, LocalViewer );
    OFFSET( "LIGHT_MODEL_TWO_SIDE      ", struct gl_lightmodel, TwoSide );
-   OFFSET( "LIGHT_MODEL_COLOR_CONTROL ", struct gl_lightmodel, ColorControl );
 
 
    printf( "\n" );

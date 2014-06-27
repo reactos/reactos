@@ -10,6 +10,14 @@ Title: DejaVu Fonts
 Used Version: 2.34
 Website: http://dejavu.sourceforge.net
 
+Title: Ubuntu Fonts
+Used Version: 0.80
+Website: http://font.ubuntu.com
+
+Title: Open Sans Fonts
+Used Version: 1.10
+Website: http://www.google.com/fonts/specimen/Open+Sans
+
 Title: DXTN OpenGL Compression Libs
 Used Version: 1.1
 Website: http://www.geocities.com/dborca/opengl/tc.html

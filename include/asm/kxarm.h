@@ -1,22 +1,103 @@
 
+
+#ifdef _MSC_VER
+
+    /* Globals */
+    GBLS    AreaName
+    GBLS    FuncName
+    GBLS    PrologName
+    GBLS    FuncEndName
+AreaName    SETS    "|.text|"
+
+    MACRO
+    TEXTAREA
+    AREA |.text|,ALIGN=2,CODE,READONLY
+AreaName    SETS    "|.text|"
+    MEND
+
+    MACRO
+    NESTED_ENTRY    $Name
+FuncName    SETS    "$Name"
+PrologName  SETS    "$Name":CC:"_Prolog"
+FuncEndName SETS    "$Name":CC:"_end"
+    AREA |.pdata|,ALIGN=2,PDATA
+    ALIGN 2
+    EXPORT $FuncName [FUNC]
+$FuncName
+    ROUT
+    MEND
+
+    MACRO
+    PROLOG_END
+$PrologName
+    MEND
+
+    MACRO
+    ENTRY_END $Name
+$FuncEndName
+    MEND
+
+	MACRO
+	LEAF_ENTRY $Name
+FuncName    SETS    "$Name"
+PrologName  SETS	"Invalid Prolog"
+FuncEndName SETS    "$Name":CC:"_end"
+	ALIGN 2
+	EXPORT $FuncName [FUNC]
+$FuncName
+	ROUT
+	MEND
+
+    MACRO
+    LEAF_END $Name
+$FuncEndName
+    MEND
+
+    MACRO
+    TRAP_PROLOG $Abort
+        fixme
+    MEND
+
+    MACRO
+    SYSCALL_PROLOG $Abort
+        fixme
+    MEND
+
+    MACRO
+    TRAP_EPILOG $SystemCall
+        fixme
+    MEND
+
+#else
+
+/* Compatibility define */
+#define EQU .equ
+
+.macro IMPORT Name
+    /* Ignore */
+.endm
+
 .macro TEXTAREA
     .section .text, "rx"
     .align 2
 .endm
 
 .macro NESTED_ENTRY Name
-    .global &Name
+FuncName    .equ    &Name
+PrologName  .equ    &Name&_Prolog
+FuncEndName .equ    &Name&_end
+    .global &FuncName
     .align 2
-    .func &Name
-    &Name:
+    .func &FuncName
+    &FuncName:
 .endm
 
-.macro PROLOG_END Name
-    prolog_&Name:
+.macro PROLOG_END
+    \PrologName:
 .endm
 
 .macro ENTRY_END Name
-    end_&Name:
+    &FuncEndName:
    .endfunc
 .endm
 
@@ -30,57 +111,39 @@
     sub lr, lr, #4
 .endif
 
-    //
     // Save the bottom 4 registers
-    //
     stmdb sp, {r0-r3}
-    
-    //
+
     // Save the abort lr, sp, spsr, cpsr
-    //
     mov r0, lr
     mov r1, sp
     mrs r2, cpsr
     mrs r3, spsr
-    
-    //
+
     // Switch to SVC mode
-    //
     bic r2, r2, #CPSR_MODES
     orr r2, r2, #CPSR_SVC_MODE
     msr cpsr_c, r2
-    
-    //
+
     // Save the SVC sp before we modify it
-    //
     mov r2, sp
-    
-    //
+
     // Make space for the trap frame
-    //
     sub sp, sp, #TrapFrameLength
-    
-    //
+
     // Save abt32 state
-    //
     str r0, [sp, #TrPc]
     str lr, [sp, #TrSvcLr]
-    str r2, [sp, #TrSvcSp]       
-    
-    //
+    str r2, [sp, #TrSvcSp]
+
     // Restore the saved SPSR
-    //
     msr spsr_all, r3
-    
-    //
+
     // Restore our 4 registers
-    //
     ldmdb r1, {r0-r3}
-       
-    //
+
     // Build trap frame
     // FIXME: Change to stmdb later
-    //
     str r0, [sp, #TrR0]
     str r1, [sp, #TrR1]
     str r2, [sp, #TrR2]
@@ -102,17 +165,13 @@
     ldr r0, =0xBADB0D00
     str r0, [sp, #TrDbgArgMark]
 .endm
-    
+
 .macro SYSCALL_PROLOG
-    //
     // Make space for the trap frame
-    //
     sub sp, sp, #TrapFrameLength
-          
-    //
+
     // Build trap frame
     // FIXME: Change to stmdb later
-    //
     str r0, [sp, #TrR0]
     str r1, [sp, #TrR1]
     str r2, [sp, #TrR2]
@@ -136,26 +195,20 @@
     ldr r0, =0xBADB0D00
     str r0, [sp, #TrDbgArgMark]
 .endm
-    
+
 .macro TRAP_EPILOG SystemCall
-    //
     // ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00)
-    //
     ldr r0, [sp, #TrDbgArgMark]
     ldr r1, =0xBADB0D00
     cmp r0, r1
     bne 1f
-    
-    //
+
     // Get the SPSR and restore it
-    //
     ldr r0, [sp, #TrSpsr]
     msr spsr_all, r0
-    
-    //
+
     // Restore the registers
     // FIXME: Use LDMIA later
-    //
     mov r0, sp
     add r0, r0, #TrUserSp
     ldm r0, {sp, lr}^
@@ -172,10 +225,8 @@
     ldr r10, [sp, #TrR10]
     ldr r11, [sp, #TrR11]
     ldr r12, [sp, #TrR12]
-    
-    //
+
     // Restore program execution state
-    //
 .if \SystemCall
     ldr lr, [sp, #TrPc]
     add sp, sp, #TrapFrameLength
@@ -187,3 +238,7 @@
 1:
     b .
 .endm
+
+#endif
+
+

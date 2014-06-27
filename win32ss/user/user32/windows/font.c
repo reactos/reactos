@@ -636,8 +636,9 @@ static void TEXT_WordBreak (HDC hdc, WCHAR *str, unsigned int max_str,
             DT_EDITCONTROL)
         {
             /* break the word after the last character that fits (there must be
-             * at least one; none is caught earlier).
-             */
+             * at least one). */
+            if (!chars_fit)
+                ++chars_fit;
             *len_str = chars_fit;
             *chars_used = chars_fit;
 

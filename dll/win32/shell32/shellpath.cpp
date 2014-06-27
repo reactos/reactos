@@ -1171,6 +1171,11 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
 
     if (dwFlags & SHGFP_TYPE_DEFAULT)
     {
+        if (hToken != NULL && hToken != (HANDLE)-1)
+        {
+             FIXME("unsupported for user other than current or default\n");
+             return E_FAIL;
+        }
         hr = _SHGetDefaultValue(folder, pszPath);
     }
     else

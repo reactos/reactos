@@ -51,7 +51,7 @@ static const struct
     { MESA_FORMAT_RGB888,       24,  8, 0,  0x00000000, 8, 8,  0x00000000, 8, 16, 0x00000000, 0, 0,  0x00000000, 16, 16, 8, BI_RGB },
     // { MESA_FORMAT_BGR888,       24,  8, 16, 8, 8,  8, 0,  0, 0,   16, 32, 8 },
     // { MESA_FORMAT_BGR888,       24,  8, 16, 8, 8,  8, 0,  0, 0,   16, 16, 8 },
-    { MESA_FORMAT_RGB565,       16,  5, 0,  0x00000000, 6, 5,  0x00000000, 5, 11, 0x00000000, 0, 0,  0x00000000, 16, 32, 8, BI_BITFIELDS },
+    { MESA_FORMAT_RGB565,       16,  5, 0,  0x0000F800, 6, 5,  0x000007E0, 5, 11, 0x0000001F, 0, 0,  0x00000000, 16, 32, 8, BI_BITFIELDS },
     { MESA_FORMAT_RGB565,       16,  5, 0,  0x0000F800, 6, 5,  0x000007E0, 5, 11, 0x0000001F, 0, 0,  0x00000000, 16, 16, 8, BI_BITFIELDS },
 };
 
@@ -361,15 +361,15 @@ INT sw_DescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDESCRIPTOR
     INT nb_win_compat = 0, start_win_compat = 0;
     INT ret = sizeof(pixel_formats)/sizeof(pixel_formats[0]);
     
-    if(GetObjectType(hdc) == OBJ_DC)
+    if (GetObjectType(hdc) == OBJ_DC)
     {
         /* Find the window compatible formats */
         INT bpp = GetDeviceCaps(hdc, BITSPIXEL);
-        for(index = 0; index<sizeof(pixel_formats)/sizeof(pixel_formats[0]); index++)
+        for (index = 0; index < sizeof(pixel_formats)/sizeof(pixel_formats[0]); index++)
         {
-            if(pixel_formats[index].color_bits == bpp)
+            if (pixel_formats[index].color_bits == bpp)
             {
-                if(!start_win_compat)
+                if (!start_win_compat)
                     start_win_compat = index+1;
                 nb_win_compat++;
             }
@@ -439,11 +439,15 @@ BOOL sw_SetPixelFormat(HDC hdc, struct wgl_dc_data* dc_data, INT format)
     TRACE("OpenGL software implementation START!\n");
     
     /* allocate our structure */
-    fb = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(struct sw_framebuffer, bmi.bmiColors[2]));
+    fb = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(struct sw_framebuffer, bmi.bmiColors[3]));
     if(!fb)
+    {
+        ERR("HeapAlloc FAILED!\n");
         return FALSE;
+    }
     /* Get the format index */
     fb->format_index = index_from_format(dc_data, format, &doubleBuffered);
+    TRACE("Using format %u - double buffered: %x.\n", fb->format_index, doubleBuffered);
     fb->flags = doubleBuffered ? SW_FB_DOUBLEBUFFERED : 0;
     /* Set the bitmap info describing the framebuffer */
     fb->bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -663,6 +667,9 @@ sw_call_window_proc(
              * of the client area via GetClientRect.  */
             RECT client_rect;
             UINT width, height;
+
+            TRACE("Got WM_WINDOWPOSCHANGED\n");
+
             GetClientRect(pParams->hwnd, &client_rect);
             width = client_rect.right - client_rect.left;
             height = client_rect.bottom - client_rect.top;

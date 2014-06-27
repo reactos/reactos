@@ -39,7 +39,20 @@ BEGIN
     MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
     MENUITEM "&Ekranı Kapla", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Kapat\tAlt-F4", SC_CLOSE
+    MENUITEM "&Kapat\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "Ö&nceki Boyut", SC_RESTORE
+    MENUITEM "&Taşı", SC_MOVE
+    MENUITEM "&Boyut", SC_SIZE
+    MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
+    MENUITEM "&Ekranı Kapla", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Kapat\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "İle&ri\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

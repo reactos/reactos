@@ -289,8 +289,7 @@ _swrast_set_aa_triangle_function(struct gl_context *ctx)
    ASSERT(ctx->Polygon.SmoothFlag);
 
    if (ctx->Texture._EnabledCoord
-       || swrast->_FogEnabled
-       || _mesa_need_secondary_color(ctx)) {
+       || swrast->_FogEnabled) {
       SWRAST_CONTEXT(ctx)->Triangle = general_aa_tri;
    }
    else {

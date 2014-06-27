@@ -28,9 +28,11 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
+#include <wingdi.h>
 #include <winnls.h>
 #include <winreg.h>
 #include <commctrl.h>
+#include <commdlg.h>
 
 #include "resource.h"
 
@@ -42,7 +44,7 @@
 static const LPWSTR EVENT_SOURCE_APPLICATION = L"Application";
 static const LPWSTR EVENT_SOURCE_SECURITY    = L"Security";
 static const LPWSTR EVENT_SOURCE_SYSTEM      = L"System";
-static const WCHAR szWindowClass[]          = L"EVENTVWR"; /* the main window class name*/
+static const WCHAR szWindowClass[]           = L"EVENTVWR"; /* the main window class name*/
 
 //MessageFile message buffer size
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10
@@ -58,12 +60,15 @@ static const WCHAR szWindowClass[]          = L"EVENTVWR"; /* the main window cl
 HINSTANCE hInst;                            /* current instance */
 WCHAR szTitle[MAX_LOADSTRING];              /* The title bar text */
 WCHAR szTitleTemplate[MAX_LOADSTRING];      /* The logged-on title bar text */
+WCHAR szSaveFilter[MAX_LOADSTRING];         /* Filter Mask for the save Dialog */
 HWND hwndMainWindow;                        /* Main window */
 HWND hwndListView;                          /* ListView control */
 HWND hwndStatus;                            /* Status bar */
+HMENU hMainMenu;                            /* The application's main menu */
 WCHAR szStatusBarTemplate[MAX_LOADSTRING];  /* The status bar text */
 PEVENTLOGRECORD *g_RecordPtrs = NULL;
 DWORD g_TotalRecords = 0;
+OPENFILENAMEW sfn;
 
 LPWSTR lpSourceLogName = NULL;
 LPWSTR lpComputerName  = NULL;
@@ -135,6 +140,25 @@ static void FreeRecords(void)
         HeapFree(GetProcessHeap(), 0, g_RecordPtrs[iIndex]);
     HeapFree(GetProcessHeap(), 0, g_RecordPtrs);
     g_RecordPtrs = NULL;
+}
+
+VOID
+ShowLastWin32Error(VOID)
+{
+    DWORD dwError;
+    LPWSTR lpMessageBuffer;
+
+    dwError = GetLastError();
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                   NULL,
+                   dwError,
+                   0,
+                   (LPWSTR)&lpMessageBuffer,
+                   0,
+                   NULL);
+
+    MessageBoxW(hwndMainWindow, lpMessageBuffer, szTitle, MB_OK | MB_ICONERROR);
+    LocalFree(lpMessageBuffer);
 }
 
 VOID
@@ -219,10 +243,7 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
     }
     else
     {
-        MessageBoxW(NULL,
-                   L"Registry access failed!",
-                   L"Event Log",
-                   MB_OK | MB_ICONINFORMATION);
+        ShowLastWin32Error();
     }
 
     if (hSourceKey != NULL)
@@ -524,20 +545,17 @@ QueryEventMessages(LPWSTR lpMachineName,
 
     dwFlags = EVENTLOG_FORWARDS_READ | EVENTLOG_SEQUENTIAL_READ;
 
-    lpSourceLogName = lpLogName;
-    lpComputerName = lpMachineName;
-
     /* Open the event log. */
     hEventLog = OpenEventLogW(lpMachineName,
                              lpLogName);
     if (hEventLog == NULL)
     {
-        MessageBoxW(NULL,
-                   L"Could not open the event log.",
-                   L"Event Log",
-                   MB_OK | MB_ICONINFORMATION);
+        ShowLastWin32Error();
         return FALSE;
     }
+
+    lpSourceLogName = lpLogName;
+    lpComputerName = lpMachineName;
 
     /* Disable listview redraw */
     SendMessage(hwndListView, WM_SETREDRAW, FALSE, 0);
@@ -551,6 +569,17 @@ QueryEventMessages(LPWSTR lpMachineName,
     /* Get the total number of event log records. */
     GetNumberOfEventLogRecords (hEventLog , &dwTotalRecords);
     g_TotalRecords = dwTotalRecords;
+
+    if (dwTotalRecords > 0)
+    {
+        EnableMenuItem(hMainMenu, ID_CLEAR_EVENTS, MF_BYCOMMAND | MF_ENABLED);
+        EnableMenuItem(hMainMenu, ID_SAVE_PROTOCOL, MF_BYCOMMAND | MF_ENABLED);
+    }
+    else
+    {
+        EnableMenuItem(hMainMenu, ID_CLEAR_EVENTS, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMainMenu, ID_SAVE_PROTOCOL, MF_BYCOMMAND | MF_GRAYED);
+    }
 
     g_RecordPtrs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(PVOID));
 
@@ -704,6 +733,97 @@ QueryEventMessages(LPWSTR lpMachineName,
     SendMessageW(hwndListView, WM_SETREDRAW, TRUE, 0);
 
     // Close the event log.
+    CloseEventLog(hEventLog);
+
+    return TRUE;
+}
+
+
+VOID
+SaveProtocol(VOID)
+{
+    HANDLE hEventLog;
+    WCHAR szFileName[MAX_PATH];
+
+    ZeroMemory(szFileName, sizeof(szFileName));
+
+    sfn.lpstrFile = szFileName;
+    sfn.nMaxFile  = MAX_PATH;
+
+    if (!GetSaveFileNameW(&sfn))
+    {
+        return;
+    }
+
+    hEventLog = OpenEventLogW(lpComputerName, lpSourceLogName);
+    if (!hEventLog)
+    {
+        ShowLastWin32Error();
+        return;
+    }
+
+    if (!BackupEventLogW(hEventLog, szFileName))
+    {
+        ShowLastWin32Error();
+    }
+
+    CloseEventLog(hEventLog);
+}
+
+
+BOOL
+ClearEvents(VOID)
+{
+    HANDLE hEventLog;
+    WCHAR szFileName[MAX_PATH];
+    WCHAR szMessage[MAX_LOADSTRING];
+
+    ZeroMemory(szFileName, sizeof(szFileName));
+    ZeroMemory(szMessage, sizeof(szMessage));
+
+    LoadStringW(hInst, IDS_CLEAREVENTS_MSG, szMessage, MAX_LOADSTRING);
+
+    sfn.lpstrFile = szFileName;
+    sfn.nMaxFile  = MAX_PATH;
+
+    switch (MessageBoxW(hwndMainWindow, szMessage, szTitle, MB_YESNOCANCEL | MB_ICONINFORMATION))
+    {
+        case IDCANCEL:
+        {
+            return FALSE;
+            break;
+        }
+
+        case IDNO:
+        {
+            sfn.lpstrFile = NULL;
+            break;
+        }
+
+        case IDYES:
+        {
+            if (!GetSaveFileNameW(&sfn))
+            {
+                return FALSE;
+            }
+            break;
+        }
+    }
+
+    hEventLog = OpenEventLogW(lpComputerName, lpSourceLogName);
+    if (!hEventLog)
+    {
+        ShowLastWin32Error();
+        return FALSE;
+    }
+
+    if (!ClearEventLogW(hEventLog, sfn.lpstrFile))
+    {
+        ShowLastWin32Error();
+        CloseEventLog(hEventLog);
+        return FALSE;
+    }
+
     CloseEventLog(hEventLog);
 
     return TRUE;
@@ -905,6 +1025,20 @@ InitInstance(HINSTANCE hInstance,
     lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 8, &lvc);
 
+    // Initialize the save Dialog
+    ZeroMemory(&sfn, sizeof(sfn));
+    ZeroMemory(szSaveFilter, sizeof(szSaveFilter));
+
+    LoadStringW(hInst, IDS_SAVE_FILTER, szSaveFilter, MAX_LOADSTRING);
+
+    sfn.lStructSize     = sizeof(sfn);
+    sfn.hwndOwner       = hwndMainWindow;
+    sfn.hInstance       = hInstance;
+    sfn.lpstrFilter     = szSaveFilter;
+    sfn.lpstrInitialDir = NULL;
+    sfn.Flags           = OFN_HIDEREADONLY | OFN_SHAREAWARE;
+    sfn.lpstrDefExt     = NULL;
+
     ShowWindow(hwndMainWindow, nCmdShow);
     UpdateWindow(hwndMainWindow);
 
@@ -934,6 +1068,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
         case WM_CREATE:
+            hMainMenu = GetMenu(hWnd);
             CheckMenuRadioItem(GetMenu(hWnd),
                                ID_LOG_APPLICATION,
                                ID_LOG_SYSTEM,
@@ -1002,6 +1137,17 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     break;
 
+                case ID_SAVE_PROTOCOL:
+                    SaveProtocol();
+                    break;
+
+                case ID_CLEAR_EVENTS:
+                    if (ClearEvents())
+                    {
+                        Refresh();
+                    }
+                    break;
+
                 case IDM_REFRESH:
                     Refresh();
                     break;
@@ -1011,7 +1157,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDM_HELP:
-                    MessageBoxW(NULL,
+                    MessageBoxW(hwndMainWindow,
                                L"Help not implemented yet!",
                                L"Event Log",
                                MB_OK | MB_ICONINFORMATION);
@@ -1221,7 +1367,7 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     return (INT_PTR)TRUE;
 
                 case IDHELP:
-                    MessageBoxW(NULL,
+                    MessageBoxW(hDlg,
                                L"Help not implemented yet!",
                                L"Event Log",
                                MB_OK | MB_ICONINFORMATION);

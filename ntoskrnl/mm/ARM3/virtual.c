@@ -1261,6 +1261,11 @@ MiGetPageProtection(IN PMMPTE PointerPte)
 {
     MMPTE TempPte;
     PMMPFN Pfn;
+    PEPROCESS CurrentProcess;
+    PETHREAD CurrentThread;
+    BOOLEAN WsSafe, WsShared;
+    ULONG Protect;
+    KIRQL OldIrql;
     PAGED_CODE();
 
     /* Copy this PTE's contents */
@@ -1270,12 +1275,79 @@ MiGetPageProtection(IN PMMPTE PointerPte)
     ASSERT(TempPte.u.Long);
 
     /* Check for a special prototype format */
-    if (TempPte.u.Soft.Valid == 0 &&
-        TempPte.u.Soft.Prototype == 1)
+    if ((TempPte.u.Soft.Valid == 0) &&
+        (TempPte.u.Soft.Prototype == 1))
     {
-        /* Unsupported now */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        /* Check if the prototype PTE is not yet pointing to a PTE */
+        if (TempPte.u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
+        {
+            /* The prototype PTE contains the protection */
+            return MmProtectToValue[TempPte.u.Soft.Protection];
+        }
+
+        /* Get a pointer to the underlying shared PTE */
+        PointerPte = MiProtoPteToPte(&TempPte);
+
+        /* Since the PTE we want to read can be paged out at any time, we need
+           to release the working set lock first, so that it can be paged in */
+        CurrentThread = PsGetCurrentThread();
+        CurrentProcess = PsGetCurrentProcess();
+        MiUnlockProcessWorkingSetForFault(CurrentProcess,
+                                          CurrentThread,
+                                          &WsSafe,
+                                          &WsShared);
+
+        /* Now read the PTE value */
+        TempPte = *PointerPte;
+
+        /* Check if that one is invalid */
+        if (!TempPte.u.Hard.Valid)
+        {
+            /* We get the protection directly from this PTE */
+            Protect = MmProtectToValue[TempPte.u.Soft.Protection];
+        }
+        else
+        {
+            /* The PTE is valid, so we might need to get the protection from
+               the PFN. Lock the PFN database */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+            /* Check if the PDE is still valid */
+            if (MiAddressToPte(PointerPte)->u.Hard.Valid == 0)
+            {
+                /* It's not, make it valid */
+                MiMakeSystemAddressValidPfn(PointerPte, OldIrql);
+            }
+
+            /* Now it's safe to read the PTE value again */
+            TempPte = *PointerPte;
+            ASSERT(TempPte.u.Long != 0);
+
+            /* Check again if the PTE is invalid */
+            if (!TempPte.u.Hard.Valid)
+            {
+                /* The PTE is not valid, so we can use it's protection field */
+                Protect = MmProtectToValue[TempPte.u.Soft.Protection];
+            }
+            else
+            {
+                /* The PTE is valid, so we can find the protection in the
+                   OriginalPte field of the PFN */
+                Pfn = MI_PFN_ELEMENT(TempPte.u.Hard.PageFrameNumber);
+                Protect = MmProtectToValue[Pfn->OriginalPte.u.Soft.Protection];
+            }
+
+            /* Release the PFN database */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        }
+
+        /* Lock the working set again */
+        MiLockProcessWorkingSetForFault(CurrentProcess,
+                                        CurrentThread,
+                                        WsSafe,
+                                        WsShared);
+
+        return Protect;
     }
 
     /* In the easy case of transition or demand zero PTE just return its protection */
@@ -1291,10 +1363,10 @@ MiGetPageProtection(IN PMMPTE PointerPte)
     }
 
     /* This is software PTE */
-    DPRINT1("Prototype PTE: %lx %p\n", TempPte.u.Hard.PageFrameNumber, Pfn);
-    DPRINT1("VA: %p\n", MiPteToAddress(&TempPte));
-    DPRINT1("Mask: %lx\n", TempPte.u.Soft.Protection);
-    DPRINT1("Mask2: %lx\n", Pfn->OriginalPte.u.Soft.Protection);
+    DPRINT("Prototype PTE: %lx %p\n", TempPte.u.Hard.PageFrameNumber, Pfn);
+    DPRINT("VA: %p\n", MiPteToAddress(&TempPte));
+    DPRINT("Mask: %lx\n", TempPte.u.Soft.Protection);
+    DPRINT("Mask2: %lx\n", Pfn->OriginalPte.u.Soft.Protection);
     return MmProtectToValue[TempPte.u.Soft.Protection];
 }
 
@@ -4326,6 +4398,9 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
+    DPRINT("NtAllocateVirtualMemory: Process 0x%p, Address 0x%p, Zerobits %lu , RegionSize 0x%x, Allocation type 0x%x, Protect 0x%x.\n",
+        Process, PBaseAddress, ZeroBits, PRegionSize, AllocationType, Protect);
+
     //
     // Check for large page allocations and make sure that the required privilege
     // is being held, before attempting to handle them.
@@ -4584,6 +4659,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             //
         }
         _SEH2_END;
+        DPRINT("Reserved %x bytes at %p.\n", PRegionSize, StartingAddress);
         return STATUS_SUCCESS;
     }
 
@@ -4593,8 +4669,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     // on the user input, and then compute the actual region size once all the
     // alignments have been done.
     //
-    StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
     EndingAddress = (((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1));
+    StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
     PRegionSize = EndingAddress - StartingAddress + 1;
 
     //
@@ -4700,6 +4776,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         {
             //
             // Make sure it's okay to touch it
+            // Note: The Windows 2003 kernel has a bug here, passing the
+            // unaligned base address together with the aligned size,
+            // potentially covering a region larger than the actual allocation.
+            // Might be exposed through NtGdiCreateDIBSection w/ section handle
+            // For now we keep this behavior.
+            // TODO: analyze possible implications, create test case
             //
             Status = MiCheckSecuredVad(FoundVad,
                                        PBaseAddress,
@@ -5075,6 +5157,9 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
+    DPRINT("NtFreeVirtualMemory: Process 0x%p, Adress 0x%p, size 0x%x, FreeType %x.\n",
+        Process, PBaseAddress, PRegionSize, FreeType);
+
     //
     // Lock the address space
     //
@@ -5258,7 +5343,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     ASSERT(Vad->StartingVpn << PAGE_SHIFT == (ULONG_PTR)MemoryArea->StartingAddress);
                     ASSERT((Vad->EndingVpn + 1) << PAGE_SHIFT == (ULONG_PTR)MemoryArea->EndingAddress);
                     Vad->EndingVpn = ((ULONG_PTR)StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->EndingAddress = (PVOID)(((Vad->EndingVpn + 1) << PAGE_SHIFT) - 1);
+                    MemoryArea->EndingAddress = (PVOID)(StartingAddress);
                 }
                 else
                 {

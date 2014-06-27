@@ -597,12 +597,6 @@ extern unsigned int
 _mesa_bitcount(unsigned int n);
 #endif
 
-extern GLhalfARB
-_mesa_float_to_half(float f);
-
-extern float
-_mesa_half_to_float(GLhalfARB h);
-
 
 extern void *
 _mesa_bsearch( const void *key, const void *base, size_t nmemb, size_t size, 

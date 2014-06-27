@@ -133,11 +133,6 @@ _mesa_FogCoordPointerEXT(GLenum type, GLsizei stride, const GLvoid *ptr);
 
 
 extern void GLAPIENTRY
-_mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
-			       GLsizei stride, const GLvoid *ptr);
-
-
-extern void GLAPIENTRY
 _mesa_InterleavedArrays(GLenum format, GLsizei stride, const GLvoid *pointer);
 
 extern void GLAPIENTRY
@@ -165,25 +160,17 @@ extern void GLAPIENTRY
 _mesa_DrawElements(GLenum mode, GLsizei count, GLenum type,
                    const GLvoid *indices);
 
-extern void GLAPIENTRY
-_mesa_DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
-                        GLenum type, const GLvoid *indices);
-
 
 extern void
 _mesa_copy_client_array(struct gl_context *ctx,
                         struct gl_client_array *dst,
                         struct gl_client_array *src);
 
-
 extern void
-_mesa_print_arrays(struct gl_context *ctx);
-
-extern void
-_mesa_init_varray( struct gl_context * ctx );
+_mesa_init_varray( struct gl_context * ctx, struct gl_array_attrib *array);
 
 extern void 
-_mesa_free_varray_data(struct gl_context *ctx);
+_mesa_free_varray_data(struct gl_context *ctx, struct gl_array_attrib *array);
 
 #else
 

@@ -1,6 +1,4 @@
 
-if(NOT ARCH STREQUAL "amd64")
-
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/rostests/)
 add_subdirectory(rostests)
 endif()
@@ -11,6 +9,4 @@ endif()
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/wallpaper/)
 add_subdirectory(wallpaper)
-endif()
-
 endif()

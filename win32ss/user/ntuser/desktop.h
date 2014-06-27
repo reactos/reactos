@@ -10,6 +10,11 @@ typedef struct _DESKTOP
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *rpwinstaParent;
     DWORD dwDTFlags;
+    DWORD_PTR dwDesktopId;
+    PMENU spmenuSys;
+    PMENU spmenuDialogSys;
+    PMENU spmenuHScroll;
+    PMENU spmenuVScroll;
     PWND spwndForeground;
     PWND spwndTray;
     PWND spwndMessage;
@@ -173,11 +178,6 @@ HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))
-
-#define GET_DESKTOP_NAME(d)                                             \
-    OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d)) ?            \
-    &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d))->Name) :   \
-    NULL
 
 HWND FASTCALL IntGetMessageWindow(VOID);
 PWND FASTCALL UserGetMessageWindow(VOID);

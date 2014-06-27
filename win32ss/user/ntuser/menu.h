@@ -41,7 +41,7 @@ BOOL FASTCALL
 IntInsertMenuItem(_In_ PMENU MenuObject, UINT uItem, BOOL fByPosition, PROSMENUITEMINFO ItemInfo, PUNICODE_STRING lpstr);
 
 PMENU FASTCALL
-IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu);
+IntGetSystemMenu(PWND Window, BOOL bRevert);
 
 UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget );
 UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags);

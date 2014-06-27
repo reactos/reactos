@@ -20,8 +20,6 @@
 
 #include "quartz_private.h"
 
-#include <shlwapi.h>
-
 static const WCHAR wszOutputPinName[] = { 'O','u','t','p','u','t',0 };
 
 typedef struct AsyncReader

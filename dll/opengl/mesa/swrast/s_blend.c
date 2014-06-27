@@ -293,113 +293,6 @@ blend_add(struct gl_context *ctx, GLuint n, const GLubyte mask[],
 
 
 /**
- * Blend min function.
- * Any chanType ok.
- */
-static void _BLENDAPI
-blend_min(struct gl_context *ctx, GLuint n, const GLubyte mask[],
-          GLvoid *src, const GLvoid *dst, GLenum chanType)
-{
-   GLuint i;
-   ASSERT(ctx->Color.EquationRGB == GL_MIN);
-   ASSERT(ctx->Color.EquationA == GL_MIN);
-   (void) ctx;
-
-   if (chanType == GL_UNSIGNED_BYTE) {
-      GLubyte (*rgba)[4] = (GLubyte (*)[4]) src;
-      const GLubyte (*dest)[4] = (const GLubyte (*)[4]) dst;
-      for (i=0;i<n;i++) {
-         if (mask[i]) {
-            rgba[i][RCOMP] = MIN2( rgba[i][RCOMP], dest[i][RCOMP] );
-            rgba[i][GCOMP] = MIN2( rgba[i][GCOMP], dest[i][GCOMP] );
-            rgba[i][BCOMP] = MIN2( rgba[i][BCOMP], dest[i][BCOMP] );
-            rgba[i][ACOMP] = MIN2( rgba[i][ACOMP], dest[i][ACOMP] );
-         }
-      }
-   }
-   else if (chanType == GL_UNSIGNED_SHORT) {
-      GLushort (*rgba)[4] = (GLushort (*)[4]) src;
-      const GLushort (*dest)[4] = (const GLushort (*)[4]) dst;
-      for (i=0;i<n;i++) {
-         if (mask[i]) {
-            rgba[i][RCOMP] = MIN2( rgba[i][RCOMP], dest[i][RCOMP] );
-            rgba[i][GCOMP] = MIN2( rgba[i][GCOMP], dest[i][GCOMP] );
-            rgba[i][BCOMP] = MIN2( rgba[i][BCOMP], dest[i][BCOMP] );
-            rgba[i][ACOMP] = MIN2( rgba[i][ACOMP], dest[i][ACOMP] );
-         }
-      }
-   }
-   else {
-      GLfloat (*rgba)[4] = (GLfloat (*)[4]) src;
-      const GLfloat (*dest)[4] = (const GLfloat (*)[4]) dst;
-      ASSERT(chanType == GL_FLOAT);
-      for (i=0;i<n;i++) {
-         if (mask[i]) {
-            rgba[i][RCOMP] = MIN2( rgba[i][RCOMP], dest[i][RCOMP] );
-            rgba[i][GCOMP] = MIN2( rgba[i][GCOMP], dest[i][GCOMP] );
-            rgba[i][BCOMP] = MIN2( rgba[i][BCOMP], dest[i][BCOMP] );
-            rgba[i][ACOMP] = MIN2( rgba[i][ACOMP], dest[i][ACOMP] );
-         }
-      }
-   }
-}
-
-
-/**
- * Blend max function.
- * Any chanType ok.
- */
-static void _BLENDAPI
-blend_max(struct gl_context *ctx, GLuint n, const GLubyte mask[],
-          GLvoid *src, const GLvoid *dst, GLenum chanType)
-{
-   GLuint i;
-   ASSERT(ctx->Color.EquationRGB == GL_MAX);
-   ASSERT(ctx->Color.EquationA == GL_MAX);
-   (void) ctx;
-
-   if (chanType == GL_UNSIGNED_BYTE) {
-      GLubyte (*rgba)[4] = (GLubyte (*)[4]) src;
-      const GLubyte (*dest)[4] = (const GLubyte (*)[4]) dst;
-      for (i=0;i<n;i++) {
-         if (mask[i]) {
-            rgba[i][RCOMP] = MAX2( rgba[i][RCOMP], dest[i][RCOMP] );
-            rgba[i][GCOMP] = MAX2( rgba[i][GCOMP], dest[i][GCOMP] );
-            rgba[i][BCOMP] = MAX2( rgba[i][BCOMP], dest[i][BCOMP] );
-            rgba[i][ACOMP] = MAX2( rgba[i][ACOMP], dest[i][ACOMP] );
-         }
-      }
-   }
-   else if (chanType == GL_UNSIGNED_SHORT) {
-      GLushort (*rgba)[4] = (GLushort (*)[4]) src;
-      const GLushort (*dest)[4] = (const GLushort (*)[4]) dst;
-      for (i=0;i<n;i++) {
-         if (mask[i]) {
-            rgba[i][RCOMP] = MAX2( rgba[i][RCOMP], dest[i][RCOMP] );
-            rgba[i][GCOMP] = MAX2( rgba[i][GCOMP], dest[i][GCOMP] );
-            rgba[i][BCOMP] = MAX2( rgba[i][BCOMP], dest[i][BCOMP] );
-            rgba[i][ACOMP] = MAX2( rgba[i][ACOMP], dest[i][ACOMP] );
-         }
-      }
-   }
-   else {
-      GLfloat (*rgba)[4] = (GLfloat (*)[4]) src;
-      const GLfloat (*dest)[4] = (const GLfloat (*)[4]) dst;
-      ASSERT(chanType == GL_FLOAT);
-      for (i=0;i<n;i++) {
-         if (mask[i]) {
-            rgba[i][RCOMP] = MAX2( rgba[i][RCOMP], dest[i][RCOMP] );
-            rgba[i][GCOMP] = MAX2( rgba[i][GCOMP], dest[i][GCOMP] );
-            rgba[i][BCOMP] = MAX2( rgba[i][BCOMP], dest[i][BCOMP] );
-            rgba[i][ACOMP] = MAX2( rgba[i][ACOMP], dest[i][ACOMP] );
-         }
-      }
-   }
-}
-
-
-
-/**
  * Modulate:  result = src * dest
  * Any chanType ok.
  */
@@ -488,68 +381,56 @@ blend_general_float(struct gl_context *ctx, GLuint n, const GLubyte mask[],
           */
 
          /* Source RGB factor */
-         switch (ctx->Color.SrcRGB) {
+         switch (ctx->Color.SrcFactor) {
             case GL_ZERO:
-               sR = sG = sB = 0.0F;
+               sR = sG = sB = sA = 0.0F;
                break;
             case GL_ONE:
-               sR = sG = sB = 1.0F;
+               sR = sG = sB = sA = 1.0F;
                break;
             case GL_DST_COLOR:
                sR = Rd;
                sG = Gd;
                sB = Bd;
+               sA = Ad;
                break;
             case GL_ONE_MINUS_DST_COLOR:
                sR = 1.0F - Rd;
                sG = 1.0F - Gd;
                sB = 1.0F - Bd;
+               sA = 1.0f - Ad;
                break;
             case GL_SRC_ALPHA:
-               sR = sG = sB = As;
+               sR = sG = sB = sA = As;
                break;
             case GL_ONE_MINUS_SRC_ALPHA:
-               sR = sG = sB = 1.0F - As;
+               sR = sG = sB = sA = 1.0F - As;
                break;
             case GL_DST_ALPHA:
-               sR = sG = sB = Ad;
+               sR = sG = sB = sA = Ad;
                break;
             case GL_ONE_MINUS_DST_ALPHA:
-               sR = sG = sB = 1.0F - Ad;
+               sR = sG = sB = sA = 1.0F - Ad;
                break;
             case GL_SRC_ALPHA_SATURATE:
                if (As < 1.0F - Ad) {
-                  sR = sG = sB = As;
+                  sR = sG = sB = sA = As;
                }
                else {
-                  sR = sG = sB = 1.0F - Ad;
+                  sR = sG = sB = sA = 1.0F - Ad;
                }
-               break;
-            case GL_CONSTANT_COLOR:
-               sR = ctx->Color.BlendColor[0];
-               sG = ctx->Color.BlendColor[1];
-               sB = ctx->Color.BlendColor[2];
-               break;
-            case GL_ONE_MINUS_CONSTANT_COLOR:
-               sR = 1.0F - ctx->Color.BlendColor[0];
-               sG = 1.0F - ctx->Color.BlendColor[1];
-               sB = 1.0F - ctx->Color.BlendColor[2];
-               break;
-            case GL_CONSTANT_ALPHA:
-               sR = sG = sB = ctx->Color.BlendColor[3];
-               break;
-            case GL_ONE_MINUS_CONSTANT_ALPHA:
-               sR = sG = sB = 1.0F - ctx->Color.BlendColor[3];
                break;
             case GL_SRC_COLOR:
                sR = Rs;
                sG = Gs;
                sB = Bs;
+               sA = As;
                break;
             case GL_ONE_MINUS_SRC_COLOR:
                sR = 1.0F - Rs;
                sG = 1.0F - Gs;
                sB = 1.0F - Bs;
+               sA = 1.0F - As;
                break;
             default:
                /* this should never happen */
@@ -557,234 +438,62 @@ blend_general_float(struct gl_context *ctx, GLuint n, const GLubyte mask[],
                return;
          }
 
-         /* Source Alpha factor */
-         switch (ctx->Color.SrcA) {
+         /* Dest factor */
+         switch (ctx->Color.DstFactor) {
             case GL_ZERO:
-               sA = 0.0F;
+               dR = dG = dB = dA = 0.0F;
                break;
             case GL_ONE:
-               sA = 1.0F;
-               break;
-            case GL_DST_COLOR:
-               sA = Ad;
-               break;
-            case GL_ONE_MINUS_DST_COLOR:
-               sA = 1.0F - Ad;
-               break;
-            case GL_SRC_ALPHA:
-               sA = As;
-               break;
-            case GL_ONE_MINUS_SRC_ALPHA:
-               sA = 1.0F - As;
-               break;
-            case GL_DST_ALPHA:
-               sA = Ad;
-               break;
-            case GL_ONE_MINUS_DST_ALPHA:
-               sA = 1.0F - Ad;
-               break;
-            case GL_SRC_ALPHA_SATURATE:
-               sA = 1.0;
-               break;
-            case GL_CONSTANT_COLOR:
-               sA = ctx->Color.BlendColor[3];
-               break;
-            case GL_ONE_MINUS_CONSTANT_COLOR:
-               sA = 1.0F - ctx->Color.BlendColor[3];
-               break;
-            case GL_CONSTANT_ALPHA:
-               sA = ctx->Color.BlendColor[3];
-               break;
-            case GL_ONE_MINUS_CONSTANT_ALPHA:
-               sA = 1.0F - ctx->Color.BlendColor[3];
-               break;
-            case GL_SRC_COLOR:
-               sA = As;
-               break;
-            case GL_ONE_MINUS_SRC_COLOR:
-               sA = 1.0F - As;
-               break;
-            default:
-               /* this should never happen */
-               sA = 0.0F;
-               _mesa_problem(ctx, "Bad blend source A factor in blend_general_float");
-               return;
-         }
-
-         /* Dest RGB factor */
-         switch (ctx->Color.DstRGB) {
-            case GL_ZERO:
-               dR = dG = dB = 0.0F;
-               break;
-            case GL_ONE:
-               dR = dG = dB = 1.0F;
+               dR = dG = dB = dA = 1.0F;
                break;
             case GL_SRC_COLOR:
                dR = Rs;
                dG = Gs;
                dB = Bs;
+               dA = As;
                break;
             case GL_ONE_MINUS_SRC_COLOR:
                dR = 1.0F - Rs;
                dG = 1.0F - Gs;
                dB = 1.0F - Bs;
+               dA = 1.0F - As;
                break;
             case GL_SRC_ALPHA:
-               dR = dG = dB = As;
+               dR = dG = dB = dA = As;
                break;
             case GL_ONE_MINUS_SRC_ALPHA:
-               dR = dG = dB = 1.0F - As;
+               dR = dG = dB = dA = 1.0F - As;
                break;
             case GL_DST_ALPHA:
-               dR = dG = dB = Ad;
+               dR = dG = dB = dA = Ad;
                break;
             case GL_ONE_MINUS_DST_ALPHA:
-               dR = dG = dB = 1.0F - Ad;
-               break;
-            case GL_CONSTANT_COLOR:
-               dR = ctx->Color.BlendColor[0];
-               dG = ctx->Color.BlendColor[1];
-               dB = ctx->Color.BlendColor[2];
-               break;
-            case GL_ONE_MINUS_CONSTANT_COLOR:
-               dR = 1.0F - ctx->Color.BlendColor[0];
-               dG = 1.0F - ctx->Color.BlendColor[1];
-               dB = 1.0F - ctx->Color.BlendColor[2];
-               break;
-            case GL_CONSTANT_ALPHA:
-               dR = dG = dB = ctx->Color.BlendColor[3];
-               break;
-            case GL_ONE_MINUS_CONSTANT_ALPHA:
-               dR = dG = dB = 1.0F - ctx->Color.BlendColor[3];
+               dR = dG = dB = dA = 1.0F - Ad;
                break;
             case GL_DST_COLOR:
                dR = Rd;
                dG = Gd;
                dB = Bd;
+               dA = Ad;
                break;
             case GL_ONE_MINUS_DST_COLOR:
                dR = 1.0F - Rd;
                dG = 1.0F - Gd;
                dB = 1.0F - Bd;
-               break;
-            default:
-               /* this should never happen */
-               dR = dG = dB = 0.0F;
-               _mesa_problem(ctx, "Bad blend dest RGB factor in blend_general_float");
-               return;
-         }
-
-         /* Dest Alpha factor */
-         switch (ctx->Color.DstA) {
-            case GL_ZERO:
-               dA = 0.0F;
-               break;
-            case GL_ONE:
-               dA = 1.0F;
-               break;
-            case GL_SRC_COLOR:
-               dA = As;
-               break;
-            case GL_ONE_MINUS_SRC_COLOR:
-               dA = 1.0F - As;
-               break;
-            case GL_SRC_ALPHA:
-               dA = As;
-               break;
-            case GL_ONE_MINUS_SRC_ALPHA:
-               dA = 1.0F - As;
-               break;
-            case GL_DST_ALPHA:
-               dA = Ad;
-               break;
-            case GL_ONE_MINUS_DST_ALPHA:
-               dA = 1.0F - Ad;
-               break;
-            case GL_CONSTANT_COLOR:
-               dA = ctx->Color.BlendColor[3];
-               break;
-            case GL_ONE_MINUS_CONSTANT_COLOR:
-               dA = 1.0F - ctx->Color.BlendColor[3];
-               break;
-            case GL_CONSTANT_ALPHA:
-               dA = ctx->Color.BlendColor[3];
-               break;
-            case GL_ONE_MINUS_CONSTANT_ALPHA:
-               dA = 1.0F - ctx->Color.BlendColor[3];
-               break;
-            case GL_DST_COLOR:
-               dA = Ad;
-               break;
-            case GL_ONE_MINUS_DST_COLOR:
                dA = 1.0F - Ad;
                break;
             default:
                /* this should never happen */
-               dA = 0.0F;
-               _mesa_problem(ctx, "Bad blend dest A factor in blend_general_float");
+               dR = dG = dB = dA = 0.0F;
+               _mesa_problem(ctx, "Bad blend dest factor in blend_general_float");
                return;
          }
 
-         /* compute the blended RGB */
-         switch (ctx->Color.EquationRGB) {
-         case GL_FUNC_ADD:
-            r = Rs * sR + Rd * dR;
-            g = Gs * sG + Gd * dG;
-            b = Bs * sB + Bd * dB;
-            a = As * sA + Ad * dA;
-            break;
-         case GL_FUNC_SUBTRACT:
-            r = Rs * sR - Rd * dR;
-            g = Gs * sG - Gd * dG;
-            b = Bs * sB - Bd * dB;
-            a = As * sA - Ad * dA;
-            break;
-         case GL_FUNC_REVERSE_SUBTRACT:
-            r = Rd * dR - Rs * sR;
-            g = Gd * dG - Gs * sG;
-            b = Bd * dB - Bs * sB;
-            a = Ad * dA - As * sA;
-            break;
-         case GL_MIN:
-	    r = MIN2( Rd, Rs );
-	    g = MIN2( Gd, Gs );
-	    b = MIN2( Bd, Bs );
-            break;
-         case GL_MAX:
-	    r = MAX2( Rd, Rs );
-	    g = MAX2( Gd, Gs );
-	    b = MAX2( Bd, Bs );
-            break;
-	 default:
-            /* should never get here */
-            r = g = b = 0.0F;  /* silence uninitialized var warning */
-            _mesa_problem(ctx, "unexpected BlendEquation in blend_general()");
-            return;
-         }
-
-         /* compute the blended alpha */
-         switch (ctx->Color.EquationA) {
-         case GL_FUNC_ADD:
-            a = As * sA + Ad * dA;
-            break;
-         case GL_FUNC_SUBTRACT:
-            a = As * sA - Ad * dA;
-            break;
-         case GL_FUNC_REVERSE_SUBTRACT:
-            a = Ad * dA - As * sA;
-            break;
-         case GL_MIN:
-	    a = MIN2( Ad, As );
-            break;
-         case GL_MAX:
-	    a = MAX2( Ad, As );
-            break;
-         default:
-            /* should never get here */
-            a = 0.0F;  /* silence uninitialized var warning */
-            _mesa_problem(ctx, "unexpected BlendEquation in blend_general()");
-            return;
-         }
+         /* compute the blended RGBA */
+         r = Rs * sR + Rd * dR;
+         g = Gs * sG + Gd * dG;
+         b = Bs * sB + Bd * dB;
+         a = As * sA + Ad * dA;
 
          /* final clamping */
 #if 0
@@ -891,40 +600,10 @@ void
 _swrast_choose_blend_func(struct gl_context *ctx, GLenum chanType)
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLenum eq = ctx->Color.EquationRGB;
-   const GLenum srcRGB = ctx->Color.SrcRGB;
-   const GLenum dstRGB = ctx->Color.DstRGB;
-   const GLenum srcA = ctx->Color.SrcA;
-   const GLenum dstA = ctx->Color.DstA;
+   const GLenum srcFactor = ctx->Color.SrcFactor;
+   const GLenum dstFactor = ctx->Color.DstFactor;
 
-   if (ctx->Color.EquationRGB != ctx->Color.EquationA) {
-      swrast->BlendFunc = blend_general;
-   }
-   else if (eq == GL_MIN) {
-      /* Note: GL_MIN ignores the blending weight factors */
-#if defined(USE_MMX_ASM)
-      if (cpu_has_mmx && chanType == GL_UNSIGNED_BYTE) {
-         swrast->BlendFunc = _mesa_mmx_blend_min;
-      }
-      else
-#endif
-         swrast->BlendFunc = blend_min;
-   }
-   else if (eq == GL_MAX) {
-      /* Note: GL_MAX ignores the blending weight factors */
-#if defined(USE_MMX_ASM)
-      if (cpu_has_mmx && chanType == GL_UNSIGNED_BYTE) {
-         swrast->BlendFunc = _mesa_mmx_blend_max;
-      }
-      else
-#endif
-         swrast->BlendFunc = blend_max;
-   }
-   else if (srcRGB != srcA || dstRGB != dstA) {
-      swrast->BlendFunc = blend_general;
-   }
-   else if (eq == GL_FUNC_ADD && srcRGB == GL_SRC_ALPHA
-            && dstRGB == GL_ONE_MINUS_SRC_ALPHA) {
+   if (srcFactor == GL_SRC_ALPHA && dstFactor == GL_ONE_MINUS_SRC_ALPHA) {
 #if defined(USE_MMX_ASM)
       if (cpu_has_mmx && chanType == GL_UNSIGNED_BYTE) {
          swrast->BlendFunc = _mesa_mmx_blend_transparency;
@@ -940,7 +619,7 @@ _swrast_choose_blend_func(struct gl_context *ctx, GLenum chanType)
             swrast->BlendFunc = blend_transparency_float;
       }
    }
-   else if (eq == GL_FUNC_ADD && srcRGB == GL_ONE && dstRGB == GL_ONE) {
+   else if (srcFactor == GL_ONE && dstFactor == GL_ONE) {
 #if defined(USE_MMX_ASM)
       if (cpu_has_mmx && chanType == GL_UNSIGNED_BYTE) {
          swrast->BlendFunc = _mesa_mmx_blend_add;
@@ -949,11 +628,8 @@ _swrast_choose_blend_func(struct gl_context *ctx, GLenum chanType)
 #endif
          swrast->BlendFunc = blend_add;
    }
-   else if (((eq == GL_FUNC_ADD || eq == GL_FUNC_REVERSE_SUBTRACT)
-	     && (srcRGB == GL_ZERO && dstRGB == GL_SRC_COLOR))
-	    ||
-	    ((eq == GL_FUNC_ADD || eq == GL_FUNC_SUBTRACT)
-	     && (srcRGB == GL_DST_COLOR && dstRGB == GL_ZERO))) {
+   else if ((srcFactor == GL_ZERO && dstFactor == GL_SRC_COLOR)
+	    || (srcFactor == GL_DST_COLOR && dstFactor == GL_ZERO)) {
 #if defined(USE_MMX_ASM)
       if (cpu_has_mmx && chanType == GL_UNSIGNED_BYTE) {
          swrast->BlendFunc = _mesa_mmx_blend_modulate;
@@ -962,10 +638,10 @@ _swrast_choose_blend_func(struct gl_context *ctx, GLenum chanType)
 #endif
          swrast->BlendFunc = blend_modulate;
    }
-   else if (eq == GL_FUNC_ADD && srcRGB == GL_ZERO && dstRGB == GL_ONE) {
+   else if (srcFactor == GL_ZERO && dstFactor == GL_ONE) {
       swrast->BlendFunc = blend_noop;
    }
-   else if (eq == GL_FUNC_ADD && srcRGB == GL_ONE && dstRGB == GL_ZERO) {
+   else if (srcFactor == GL_ONE && dstFactor == GL_ZERO) {
       swrast->BlendFunc = blend_replace;
    }
    else {

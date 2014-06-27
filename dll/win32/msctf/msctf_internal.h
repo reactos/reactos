@@ -37,6 +37,7 @@
 #include <objbase.h>
 #include <olectl.h>
 #include <msctf.h>
+#include <shlwapi.h>
 
 #include <wine/list.h>
 #include <wine/unicode.h>

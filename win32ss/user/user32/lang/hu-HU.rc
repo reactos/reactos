@@ -39,7 +39,20 @@ BEGIN
     MENUITEM "&Kis méret", SC_MINIMIZE
     MENUITEM "&Nagy méret", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Bezár\tAlt-F4", SC_CLOSE
+    MENUITEM "&Bezár\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Vissza állít", SC_RESTORE
+    MENUITEM "Át &helyez", SC_MOVE
+    MENUITEM "&Méret", SC_SIZE
+    MENUITEM "&Kis méret", SC_MINIMIZE
+    MENUITEM "&Nagy méret", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Bezár\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "&Előre\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

@@ -47,7 +47,6 @@
 #define MESA_META_STENCIL_TEST            0x400
 #define MESA_META_TRANSFORM               0x800 /**< modelview/projection matrix state */
 #define MESA_META_TEXTURE                0x1000
-#define MESA_META_VERTEX                 0x2000
 #define MESA_META_VIEWPORT               0x4000
 #define MESA_META_CLIP                   0x8000
 #define MESA_META_SELECT_FEEDBACK       0x10000
@@ -84,14 +83,6 @@ extern void
 _mesa_meta_CopyTexSubImage2D(struct gl_context *ctx,
                              struct gl_texture_image *texImage,
                              GLint xoffset, GLint yoffset,
-                             struct gl_renderbuffer *rb,
-                             GLint x, GLint y,
-                             GLsizei width, GLsizei height);
-
-extern void
-_mesa_meta_CopyTexSubImage3D(struct gl_context *ctx,
-                             struct gl_texture_image *texImage,
-                             GLint xoffset, GLint yoffset, GLint zoffset,
                              struct gl_renderbuffer *rb,
                              GLint x, GLint y,
                              GLsizei width, GLsizei height);

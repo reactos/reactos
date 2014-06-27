@@ -73,24 +73,6 @@ static void free_space(struct gl_context *ctx)
    }						\
 } while (0)
 
-
-static void
-convert_half_to_float(const struct gl_client_array *input,
-		      const GLubyte *ptr, GLfloat *fptr,
-		      GLuint count, GLuint sz)
-{
-   GLuint i, j;
-
-   for (i = 0; i < count; i++) {
-      GLhalfARB *in = (GLhalfARB *)ptr;
-
-      for (j = 0; j < sz; j++) {
-	 *fptr++ = _mesa_half_to_float(in[j]);
-      }
-      ptr += input->StrideB;
-   }
-}
-
 /**
  * \brief Convert fixed-point to floating-point.
  *
@@ -167,9 +149,6 @@ static void _tnl_import_array( struct gl_context *ctx,
 	 break;
       case GL_DOUBLE: 
 	 CONVERT(GLdouble, (GLfloat)); 
-	 break;
-      case GL_HALF_FLOAT:
-	 convert_half_to_float(input, ptr, fptr, count, sz);
 	 break;
       case GL_FIXED:
          convert_fixed_to_float(input, ptr, fptr, count);
@@ -271,7 +250,6 @@ static void bind_inputs( struct gl_context *ctx,
    /* These should perhaps be part of _TNL_ATTRIB_* */
    VB->BackfaceColorPtr = NULL;
    VB->BackfaceIndexPtr = NULL;
-   VB->BackfaceSecondaryColorPtr = NULL;
 
    /* Clipping and drawing code still requires this to be a packed
     * array of ubytes which can be written into.  TODO: Fix and

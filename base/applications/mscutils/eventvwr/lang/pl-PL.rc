@@ -1,4 +1,6 @@
-/* Polish translation by Caemyr - Olaf Siejka */
+/* Polish translation by Caemyr - Olaf Siejka
+ * PL update by wojo664 (June 2014)
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -9,6 +11,10 @@ BEGIN
         MENUITEM "&Aplikacja", ID_LOG_APPLICATION
         MENUITEM "&Zabezpieczenia", ID_LOG_SECURITY
         MENUITEM "&System", ID_LOG_SYSTEM
+        MENUITEM SEPARATOR
+        MENUITEM "Zapisz &protokół...", ID_SAVE_PROTOCOL, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "W&yczyść wszystkie zdarzenia", ID_CLEAR_EVENTS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Wyjście", IDM_EXIT
     END
@@ -87,8 +93,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Podgląd zdarzeń"
-    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s)"
+    IDS_APP_TITLE_EX "%s - %s Log na \\\\"
+    IDS_STATUS_MSG "%s posiada %lu zdarzeń"
     IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID: ( %lu ) nie został odnaleziony w źródle: ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego."
     IDS_EVENTLOG_ERROR_TYPE "Błąd"
     IDS_EVENTLOG_WARNING_TYPE "Ostrzeżenie"
@@ -97,6 +103,8 @@ BEGIN
     IDS_EVENTLOG_AUDIT_FAILURE "Nieudany Audyt"
     IDS_EVENTLOG_SUCCESS "Sukces"
     IDS_EVENTLOG_UNKNOWN_TYPE "Zdarzenie nieznane"
+    IDS_CLEAREVENTS_MSG "Czy chcesz zapisać dziennik zdarzeń przed czyszczeniem?"
+    IDS_SAVE_FILTER "Dziennik zdarzeń (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE

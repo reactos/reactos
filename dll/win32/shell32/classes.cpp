@@ -34,7 +34,7 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL 
 
     /* added because we do not want to have double dots */
     if (szExtension[0] == '.')
-        bPrependDot = 0;
+        bPrependDot = FALSE;
 
     if (bPrependDot)
         szTemp[0] = '.';
@@ -66,7 +66,7 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 
     /* added because we do not want to have double dots */
     if (szExtension[0] == '.')
-        bPrependDot = 0;
+        bPrependDot = FALSE;
 
     if (bPrependDot)
         szTemp[0] = '.';
@@ -109,7 +109,7 @@ BOOL HCR_GetDefaultVerbW(HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD le
 
     TRACE("%p %s %p\n", hkeyClass, debugstr_w(szVerb), szDest);
 
-    if (szVerb)
+    if (szVerb && *szVerb)
     {
         lstrcpynW(szDest, szVerb, len);
         return TRUE;
@@ -173,7 +173,7 @@ BOOL HCR_GetExecuteCommandW(HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPW
         return FALSE;
     ret = FALSE;
 
-    if (HCR_GetDefaultVerbW(hkeyClass, szVerb, sTempVerb, sizeof(sTempVerb)))
+    if (HCR_GetDefaultVerbW(hkeyClass, szVerb, sTempVerb, sizeof(sTempVerb)/sizeof(sTempVerb[0])))
     {
         WCHAR sTemp[MAX_PATH];
         wcscpy(sTemp, swShell);
@@ -420,7 +420,7 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
         }
     }
 
-    TRACE("-- %s\n", szDest);
+    TRACE("-- (%s)\n", szDest);
 
     return ret;
 }

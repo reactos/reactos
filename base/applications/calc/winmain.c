@@ -1626,7 +1626,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             if (IsWindow(calc.hStatWnd))
                 break;
             calc.hStatWnd = CreateDialog(calc.hInstance,
-                                    MAKEINTRESOURCE(IDD_DIALOG_STAT), hWnd, (DLGPROC)DlgStatProc);
+                                    MAKEINTRESOURCE(IDD_DIALOG_STAT), hWnd, DlgStatProc);
             if (calc.hStatWnd != NULL) {
                 enable_allowed_controls(hWnd, calc.base);
                 SendMessage(calc.hStatWnd, WM_SETFOCUS, 0, 0);
@@ -1722,7 +1722,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
             dwLayout = IDD_DIALOG_STANDARD;
 
         /* This call will always fail if UNICODE for Win9x */
-        if (NULL == CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, (DLGPROC)DlgMainProc))
+        if (NULL == CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, DlgMainProc))
             break;
 
         while (GetMessage(&msg, NULL, 0, 0)) {

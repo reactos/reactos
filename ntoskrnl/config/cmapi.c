@@ -5,6 +5,7 @@
  * PURPOSE:         Configuration Manager - Internal Registry APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl
+ *                  Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -2119,4 +2120,235 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
     DPRINT("open sub keys: %u\n", SubKeys);
 
     return SubKeys;
+}
+
+HCELL_INDEX
+NTAPI
+CmpCopyCell(IN PHHIVE SourceHive,
+            IN HCELL_INDEX SourceCell,
+            IN PHHIVE DestinationHive,
+            IN HSTORAGE_TYPE StorageType)
+{
+    PCELL_DATA SourceData;
+    PCELL_DATA DestinationData = NULL;
+    HCELL_INDEX DestinationCell = HCELL_NIL;
+    LONG DataSize;
+    PAGED_CODE();
+
+    /* Get the data and the size of the source cell */
+    SourceData = HvGetCell(SourceHive, SourceCell);
+    DataSize = HvGetCellSize(SourceHive, SourceData);
+
+    /* Allocate a new cell in the destination hive */
+    DestinationCell = HvAllocateCell(DestinationHive,
+                                     DataSize,
+                                     StorageType,
+                                     HCELL_NIL);
+    if (DestinationCell == HCELL_NIL) goto Cleanup;
+
+    /* Get the data of the destination cell */
+    DestinationData = HvGetCell(DestinationHive, DestinationCell);
+
+    /* Copy the data from the source cell to the destination cell */
+    RtlMoveMemory(DestinationData, SourceData, DataSize);
+
+Cleanup:
+
+    /* Release the cells */
+    if (SourceData) HvReleaseCell(SourceHive, SourceCell);
+    if (DestinationData) HvReleaseCell(DestinationHive, DestinationCell);
+
+    /* Return the destination cell index */
+    return DestinationCell;
+}
+
+static
+NTSTATUS
+NTAPI
+CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
+                       IN HCELL_INDEX SrcKeyCell,
+                       IN PHHIVE DestinationHive,
+                       IN HCELL_INDEX Parent,
+                       IN HSTORAGE_TYPE StorageType,
+                       OUT PHCELL_INDEX DestKeyCell OPTIONAL)
+{
+    NTSTATUS Status;
+    PCM_KEY_NODE SrcNode, DestNode;
+    HCELL_INDEX NewKeyCell, SubKey, NewSubKey;
+    ULONG Index, SubKeyCount;
+    PAGED_CODE();
+
+    DPRINT("CmpDeepCopyKeyInternal(0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X)\n",
+           SourceHive,
+           SrcKeyCell,
+           DestinationHive,
+           Parent,
+           StorageType,
+           DestKeyCell);
+
+    /* Get the source cell node */
+    SrcNode = HvGetCell(SourceHive, SrcKeyCell);
+
+    /* Sanity check */
+    ASSERT(SrcNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Create a simple copy of the source key */
+    NewKeyCell = CmpCopyCell(SourceHive,
+                             SrcKeyCell,
+                             DestinationHive,
+                             StorageType);
+    if (NewKeyCell == HCELL_NIL)
+    {
+        /* Not enough storage space */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
+    }
+
+    /* Get the destination cell node */
+    DestNode = HvGetCell(DestinationHive, NewKeyCell);
+
+    /* Set the parent */
+    DestNode->Parent = Parent;
+
+    // TODO: These should also be copied!
+    DestNode->Security = DestNode->Class = HCELL_NIL;
+
+    /* Copy the value list */
+    Status = CmpCopyKeyValueList(SourceHive,
+                                 &SrcNode->ValueList,
+                                 DestinationHive,
+                                 &DestNode->ValueList,
+                                 StorageType);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
+
+    /* Clear the invalid subkey index */
+    DestNode->SubKeyCounts[Stable] = DestNode->SubKeyCounts[Volatile] = 0;
+    DestNode->SubKeyLists[Stable] = DestNode->SubKeyLists[Volatile] = HCELL_NIL;
+
+    /* Calculate the total number of subkeys */
+    SubKeyCount = SrcNode->SubKeyCounts[Stable] + SrcNode->SubKeyCounts[Volatile];
+
+    /* Loop through all the subkeys */
+    for (Index = 0; Index < SubKeyCount; Index++)
+    {
+        /* Get the subkey */
+        SubKey = CmpFindSubKeyByNumber(SourceHive, SrcNode, Index);
+        ASSERT(SubKey != HCELL_NIL);
+
+        /* Call the function recursively for the subkey */
+        Status = CmpDeepCopyKeyInternal(SourceHive,
+                                        SubKey,
+                                        DestinationHive,
+                                        NewKeyCell,
+                                        StorageType,
+                                        &NewSubKey);
+        if (!NT_SUCCESS(Status)) goto Cleanup;
+
+        /* Add the copy of the subkey to the new key */
+        if (!CmpAddSubKey(DestinationHive,
+                          NewKeyCell,
+                          NewSubKey))
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
+        }
+    }
+
+    /* Set the cell index if requested and return success */
+    if (DestKeyCell) *DestKeyCell = NewKeyCell;
+    Status = STATUS_SUCCESS;
+
+Cleanup:
+
+    /* Release the cells */
+    if (SrcNode) HvReleaseCell(SourceHive, SrcKeyCell);
+    if (DestNode) HvReleaseCell(DestinationHive, NewKeyCell);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmpDeepCopyKey(IN PHHIVE SourceHive,
+               IN HCELL_INDEX SrcKeyCell,
+               IN PHHIVE DestinationHive,
+               IN HSTORAGE_TYPE StorageType,
+               OUT PHCELL_INDEX DestKeyCell OPTIONAL)
+{
+    /* Call the internal function */
+    return CmpDeepCopyKeyInternal(SourceHive,
+                                  SrcKeyCell,
+                                  DestinationHive,
+                                  HCELL_NIL,
+                                  StorageType,
+                                  DestKeyCell);
+}
+
+NTSTATUS
+NTAPI
+CmSaveKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
+          IN HANDLE FileHandle,
+          IN ULONG Flags)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCMHIVE KeyHive = NULL;
+    PAGED_CODE();
+
+    DPRINT("CmSaveKey(0x%08X, 0x%08X, %lu)\n", Kcb, FileHandle, Flags);
+
+    /* Lock the registry and KCB */
+    CmpLockRegistry();
+    CmpAcquireKcbLockShared(Kcb);
+
+    if (Kcb->Delete)
+    {
+        /* The source key has been deleted, do nothing */
+        Status = STATUS_KEY_DELETED;
+        goto Cleanup;
+    }
+
+    if (Kcb->KeyHive == &CmiVolatileHive->Hive)
+    {
+        /* Keys that are directly in the master hive can't be saved */
+        Status = STATUS_ACCESS_DENIED;
+        goto Cleanup;
+    }
+
+    /* Create a new hive that will hold the key */
+    Status = CmpInitializeHive(&KeyHive,
+                               HINIT_CREATE,
+                               HIVE_VOLATILE,
+                               HFILE_TYPE_PRIMARY,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               0);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
+
+    /* Copy the key recursively into the new hive */
+    Status = CmpDeepCopyKey(Kcb->KeyHive,
+                            Kcb->KeyCell,
+                            &KeyHive->Hive,
+                            Stable,
+                            &KeyHive->Hive.BaseBlock->RootCell);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
+
+    /* Set the primary handle of the hive */
+    KeyHive->FileHandles[HFILE_TYPE_PRIMARY] = FileHandle;
+
+    /* Dump the hive into the file */
+    HvWriteHive(&KeyHive->Hive);
+
+Cleanup:
+
+    /* Free the hive */
+    if (KeyHive) CmpDestroyHive(KeyHive);
+
+    /* Release the locks */
+    CmpReleaseKcbLock(Kcb);
+    CmpUnlockRegistry();
+
+    return Status;
 }

@@ -2989,7 +2989,7 @@ static void delete_tree( HKEY root, const WCHAR *path )
     HKEY hkey;
 
     if (!(hkey = open_key( root, path, FALSE ))) return;
-    res = RegDeleteTreeW( hkey, NULL );
+    res = SHDeleteKeyW( hkey, NULL );
     if (res) TRACE("failed to delete subtree of %s (%d)\n", debugstr_w(path), res);
     delete_key( root, path );
     RegCloseKey( hkey );

@@ -1,0 +1,63 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_ACCOUNTS_SYNTAX "Usage:\nNET ACCOUNTS [/FORCELOGOFF:{Minutes|NO}] [/MINPWLEN:Length]\n\
+             [/MAXPWAGE:{Days|UNLIMITED}] [/MINPWAGE:Days]\n\
+             [/UNIQUEPW:Count] [/DOMAIN]\n"
+    IDS_ACCOUNTS_HELP "ACCOUNTS\n..."
+    IDS_COMPUTER_SYNTAX "Usage:\nNET COMPUTER ..."
+    IDS_COMPUTER_HELP "COMPUTER\n..."
+    IDS_CONFIG_SYNTAX "Usage:\nNET CONFIG ..."
+    IDS_CONFIG_HELP "CONFIG\n..."
+    IDS_CONTINUE_SYNTAX "Usage:\nNET CONTINUE <Service Name>"
+    IDS_CONTINUE_HELP "CONTINUE\n..."
+    IDS_FILE_SYNTAX "Usage:\nNET FILE ..."
+    IDS_FILE_HELP "FILE\n..."
+    IDS_GROUP_SYNTAX "Usage:\nNET GROUP ..."
+    IDS_GROUP_HELP "GROUP\n..."
+    IDS_HELPMSG_SYNTAX "Usage:\nNET HELPMSG <Error Code>"
+    IDS_HELPMSG_HELP "HELPMSG\n..."
+    IDS_LOCALGROUP_SYNTAX "Usage:\nNET LOCALGROUP ..."
+    IDS_LOCALGROUP_HELP "LOCALGROUP\n..."
+    IDS_NAME_SYNTAX "Usage:\nNET NAME ..."
+    IDS_NAME_HELP "NAME\n..."
+    IDS_PRINT_SYNTAX  "Usage:\nNET PRINT ..."
+    IDS_PRINT_HELP "PRINT\n..."
+    IDS_PAUSE_SYNTAX "Usage:\nNET PAUSE <Service Name>"
+    IDS_PAUSE_HELP "PAUSE\n..."
+    IDS_SEND_SYNTAX "Usage:\nNET SEND ..."
+    IDS_SEND_HELP "SEND\n..."
+    IDS_SESSION_SYNTAX "Usage:\nNET SESSION ..."
+    IDS_SESSION_HELP "SESSION\n..."
+    IDS_SHARE_SYNTAX "Usage:\nNET SHARE ..."
+    IDS_SHARE_HELP "SHARE\n..."
+    IDS_START_SYNTAX "Usage:\nNET START ..."
+    IDS_START_HELP "START\n..."
+    IDS_STATISTICS_SYNTAX "Usage:\nNET STATISTICS ..."
+    IDS_STATISTICS_HELP "STATISTICS\n..."
+    IDS_STOP_SYNTAX "Usage:\nNET STOP <Service name>"
+    IDS_STOP_HELP "STOP\n..."
+    IDS_TIME_SYNTAX "Usage:\nNET TIME ..."
+    IDS_TIME_HELP "TIME\n..."
+    IDS_USE_SYNTAX "Usage:\nNET USE ..."
+    IDS_USE_HELP "USE\n..."
+    IDS_USER_SYNTAX "Usage:\nNET USER ..."
+    IDS_USER_HELP "USER\n..."
+    IDS_VIEW_SYNTAX "Usage:\nNET VIEW ..."
+    IDS_VIEW_HELP "VIEW\n..."
+    IDS_HELP_SYNTAX "Usage:\nNET HELP <Command>\n   - or -\nNET <Command> /HELP\n\n\
+   The following commands are available:\n\n\
+   NET ACCOUNTS             NET HELP                 NET SHARE\n\
+   NET COMPUTER             NET HELPMSG              NET START\n\
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS\n\
+   NET CONFIG SERVER        NET NAME                 NET STOP\n\
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME\n\
+   NET CONTINUE             NET PRINT                NET USE\n\
+   NET FILE                 NET SEND                 NET USER\n\
+   NET GROUP                NET SESSION              NET VIEW\n\n\
+   ..."
+    IDS_NET_SYNTAX "Usage:\nNET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
+      SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
+END

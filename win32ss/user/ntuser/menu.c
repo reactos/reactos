@@ -178,15 +178,7 @@ PMENU FASTCALL VerifyMenu(PMENU pMenu)
 
 BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse, BOOL RemoveFromProcess)
 {
-    /* DestroyMenu should not destroy system menu popup owner */
-    if ((pMenu->fFlags & (MNF_POPUP | MNF_SYSSUBMENU)) == MNF_POPUP && pMenu->hWnd)
-    {
-       //PWND pWnd = ValidateHwndNoErr(pMenu->hWnd);
-       ERR("FIXME Pop up menu window thing'ie\n");
-       
-       //co_UserDestroyWindow( pWnd );
-       //pMenu->hWnd = 0;
-    }
+    PMENU SubMenu;
 
     if (pMenu->rgItems) /* recursively destroy submenus */
     {
@@ -194,33 +186,46 @@ BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse, BOOL RemoveFromProcess)
        ITEM *item = pMenu->rgItems;
        for (i = pMenu->cItems; i > 0; i--, item++)
        {
-           pMenu->cItems--; //// I hate recursion logic! (jt) 4/2014. See r63028 comment for IntDeleteMenuItems.
+           SubMenu = item->spSubMenu;
+           item->spSubMenu = NULL;
+
+           /* Remove Item Text */
            FreeMenuText(pMenu,item);
-           if (bRecurse && item->spSubMenu)//VerifyMenu(item->spSubMenu))
+
+           /* Remove Item Bitmap and set it for this process */
+           if (item->hbmp && !(item->fState & MFS_HBMMENUBMP))
            {
-              IntDestroyMenu(item->spSubMenu, bRecurse, RemoveFromProcess);
-              item->spSubMenu = NULL;
+              GreSetObjectOwner(item->hbmp, GDI_OBJ_HMGR_POWNED);
+              item->hbmp = NULL;
+           }
+
+           /* Remove Item submenu */
+           if (bRecurse && SubMenu)//VerifyMenu(SubMenu))
+           {
+              /* Release submenu since it was referenced when inserted */
+              IntReleaseMenuObject(SubMenu);
+              IntDestroyMenuObject(SubMenu, bRecurse, RemoveFromProcess);
            }
        }
+       /* Free the Item */
        DesktopHeapFree(pMenu->head.rpdesk, pMenu->rgItems );
        pMenu->rgItems = NULL; 
-       pMenu->cItems = 0; //// What ever~!
+       pMenu->cItems = 0;
     }
     return TRUE;
 }
 
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU Menu,
-                     BOOL bRecurse, BOOL RemoveFromProcess)
+IntDestroyMenuObject(PMENU Menu, BOOL bRecurse, BOOL RemoveFromProcess)
 {
    if(Menu)
    {
       PWND Window;
-      
+
       /* Remove all menu items */
       IntDestroyMenu( Menu, bRecurse, RemoveFromProcess);
 
-      if(RemoveFromProcess)
+      if (RemoveFromProcess)
       {
          RemoveEntryList(&Menu->ListEntry);
       }
@@ -234,9 +239,17 @@ IntDestroyMenuObject(PMENU Menu,
             if (Window)
             {
                Window->IDMenu = 0;
+
+               /* DestroyMenu should not destroy system menu popup owner */
+               if ((Menu->fFlags & (MNF_POPUP | MNF_SYSSUBMENU)) == MNF_POPUP)
+               {
+                  // Should we check it to see if it has Class?
+                  ERR("FIXME Pop up menu window thing'ie\n");
+                  //co_UserDestroyWindow( Window );
+                  //Menu->hWnd = 0;
+               }
             }
          }
-         //UserDereferenceObject(Menu);
          ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
          if (!ret)
          {  // Make sure it is really dead or just marked for deletion.
@@ -338,7 +351,7 @@ PITEM FASTCALL MENU_FindItem( PMENU *pmenu, UINT *nPos, UINT wFlags )
 BOOL FASTCALL
 IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
 {
-    PITEM item, NewItems;
+    PITEM item;
 
     TRACE("(menu=%p pos=%04x flags=%04x)\n",pMenu, nPos, wFlags);
     if (!(item = MENU_FindItem( &pMenu, &nPos, wFlags ))) return FALSE;
@@ -364,10 +377,7 @@ IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
 	    item++;
 	    nPos++;
 	}
-        NewItems = DesktopHeapAlloc(pMenu->head.rpdesk, pMenu->cItems * sizeof(ITEM));
-        RtlCopyMemory(NewItems, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
-        DesktopHeapFree(pMenu->head.rpdesk, pMenu->rgItems);
-        pMenu->rgItems = NewItems;
+	pMenu->rgItems = DesktopHeapReAlloc(pMenu->head.rpdesk, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
     }
     return TRUE;
 }
@@ -819,6 +829,10 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
    if(lpmii->fMask & MIIM_BITMAP)
    {
       MenuItem->hbmp = lpmii->hbmpItem;
+      if (MenuItem->hbmp <= HBMMENU_POPUP_MINIMIZE && MenuItem->hbmp >= HBMMENU_CALLBACK)
+         MenuItem->fState |= MFS_HBMMENUBMP;
+      else
+         MenuItem->fState &= ~MFS_HBMMENUBMP; 
    }
    if(lpmii->fMask & MIIM_CHECKMARKS)
    {
@@ -858,6 +872,7 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
                ERR("Pop Up Menu Double Trouble!\n");
                SubMenuObject = IntCreateMenu(&hMenu, FALSE); // It will be marked.
                if (!SubMenuObject) return FALSE;
+               IntReleaseMenuObject(SubMenuObject); // This will be referenced again after insertion.
                circref = TRUE;
             }
             if ( MENU_depth( SubMenuObject, 0) > MAXMENUDEPTH )
@@ -915,7 +930,7 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
       }
    }
 
-   if( !(MenuObject->fFlags & MNF_SYSDESKMN) &&
+   if( !(MenuObject->fFlags & MNF_SYSMENU) &&
        !MenuItem->Xlpstr &&
        !lpmii->dwTypeData &&
        !(MenuItem->fType & MFT_OWNERDRAW) &&
@@ -1430,7 +1445,7 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
           return (HMENU)0;
        }
        Menu = IntCreateMenu(&Handle, !PopupMenu);
-       if (Menu->head.rpdesk->rpwinstaParent != WinStaObject)
+       if (Menu && Menu->head.rpdesk->rpwinstaParent != WinStaObject)
        {
           ERR("Desktop Window Station does not match Process one!\n");
        }
@@ -1658,6 +1673,183 @@ IntGetMenuItemRect(
    return TRUE;
 }
 
+PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
+{
+   PMENU Menu, NewMenu = NULL, SysMenu = NULL;
+   HMENU hSysMenu, hNewMenu = NULL;
+   ROSMENUITEMINFO ItemInfoSet = {0};
+   ROSMENUITEMINFO ItemInfo = {0};
+   UNICODE_STRING MenuName;
+
+   hSysMenu = UserCreateMenu(FALSE);
+   if (NULL == hSysMenu)
+   {
+      return NULL;
+   }
+   SysMenu = IntGetMenuObject(hSysMenu);
+   if (NULL == SysMenu)
+   {
+       UserDestroyMenu(hSysMenu);
+       return NULL;
+   }
+   
+   SysMenu->fFlags |= MNF_SYSMENU;
+   SysMenu->hWnd = Window->head.h;
+
+   if (!Popup)
+   {
+      //hNewMenu = co_IntLoadSysMenuTemplate();
+      if ( Window->ExStyle & WS_EX_MDICHILD )
+      {
+         RtlInitUnicodeString( &MenuName, L"SYSMENUMDI");
+         hNewMenu = co_IntCallLoadMenu( hModClient, &MenuName);
+      }
+      else
+      {
+         RtlInitUnicodeString( &MenuName, L"SYSMENU");
+         hNewMenu = co_IntCallLoadMenu( hModClient, &MenuName);
+         //ERR("%wZ\n",&MenuName);
+      }
+      if (!hNewMenu)
+      {
+         ERR("No Menu!!\n");
+         IntReleaseMenuObject(SysMenu);
+         UserDestroyMenu(hSysMenu);
+         return NULL;
+      }
+      Menu = IntGetMenuObject(hNewMenu);
+      if (!Menu)
+      {
+         IntReleaseMenuObject(SysMenu);
+         UserDestroyMenu(hSysMenu);
+         return NULL;
+      }
+
+      // Do the rest in here.
+
+      Menu->fFlags |= MNS_CHECKORBMP | MNF_SYSMENU  | MNF_POPUP;
+
+      ItemInfoSet.cbSize = sizeof( MENUITEMINFOW);
+      ItemInfoSet.fMask = MIIM_BITMAP;
+      ItemInfoSet.hbmpItem = HBMMENU_POPUP_CLOSE;
+      IntMenuItemInfo(Menu, SC_CLOSE, FALSE, &ItemInfoSet, TRUE, NULL);
+      ItemInfoSet.hbmpItem = HBMMENU_POPUP_RESTORE;
+      IntMenuItemInfo(Menu, SC_RESTORE, FALSE, &ItemInfoSet, TRUE, NULL);
+      ItemInfoSet.hbmpItem = HBMMENU_POPUP_MAXIMIZE;
+      IntMenuItemInfo(Menu, SC_MAXIMIZE, FALSE, &ItemInfoSet, TRUE, NULL);
+      ItemInfoSet.hbmpItem = HBMMENU_POPUP_MINIMIZE;
+      IntMenuItemInfo(Menu, SC_MINIMIZE, FALSE, &ItemInfoSet, TRUE, NULL);
+
+      NewMenu = IntCloneMenu(Menu);
+
+      IntReleaseMenuObject(NewMenu);
+      UserSetMenuDefaultItem(NewMenu, SC_CLOSE, FALSE);
+
+      IntDestroyMenuObject(Menu, FALSE, TRUE);
+   }
+   else
+   {
+      NewMenu = Popup;
+   }
+   if (NewMenu)
+   {
+      NewMenu->fFlags |= MNF_SYSMENU | MNF_POPUP;
+
+      if (Window->pcls->style & CS_NOCLOSE)
+         IntRemoveMenuItem(NewMenu, SC_CLOSE, MF_BYCOMMAND, TRUE);
+
+      ItemInfo.cbSize = sizeof(MENUITEMINFOW);
+      ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
+      ItemInfo.fType = 0;
+      ItemInfo.fState = MFS_ENABLED;
+      ItemInfo.dwTypeData = NULL;
+      ItemInfo.cch = 0;
+      ItemInfo.hSubMenu = UserHMGetHandle(NewMenu);
+      IntInsertMenuItem(SysMenu, (UINT) -1, TRUE, &ItemInfo, NULL);
+
+      return SysMenu;
+   }
+   ERR("failed to load system menu!\n");
+   return NULL;
+}
+
+PMENU FASTCALL
+IntGetSystemMenu(PWND Window, BOOL bRevert)
+{
+   PMENU Menu;
+
+   if (bRevert)
+   {
+      if (Window->SystemMenu)
+      {
+         Menu = UserGetMenuObject(Window->SystemMenu);
+         if (Menu && !(Menu->fFlags & MNF_SYSDESKMN))
+         {
+            IntDestroyMenuObject(Menu, TRUE, TRUE);
+            Window->SystemMenu = NULL;
+         }
+      }
+   }
+   else
+   {
+      Menu = Window->SystemMenu ? UserGetMenuObject(Window->SystemMenu) : NULL;
+      if ((!Window->SystemMenu || Menu->fFlags & MNF_SYSDESKMN) && Window->style & WS_SYSMENU)
+      {
+         Menu = MENU_GetSystemMenu(Window, NULL);
+         Window->SystemMenu = Menu ? UserHMGetHandle(Menu) : NULL;
+      }
+   }
+
+   if (Window->SystemMenu)
+   {
+      HMENU hMenu = IntGetSubMenu( Window->SystemMenu, 0);
+      /* Store the dummy sysmenu handle to facilitate the refresh */
+      /* of the close button if the SC_CLOSE item change */
+      Menu = UserGetMenuObject(hMenu);
+      if (Menu)
+      {
+         Menu->spwndNotify = Window;
+         Menu->fFlags |= MNF_SYSSUBMENU;
+      }
+      return Menu;
+   }
+   return NULL;
+}
+
+BOOL FASTCALL
+IntSetSystemMenu(PWND Window, PMENU Menu)
+{
+   PMENU OldMenu;
+
+   if (!(Window->style & WS_SYSMENU)) return FALSE;
+
+   if (Window->SystemMenu)
+   {
+      OldMenu = UserGetMenuObject(Window->SystemMenu);
+      if (OldMenu)
+      {
+          OldMenu->fFlags &= ~MNF_SYSMENU;
+         IntDestroyMenuObject(OldMenu, TRUE, TRUE);
+      }
+   }
+
+   OldMenu = MENU_GetSystemMenu(Window, Menu);
+   if (OldMenu)
+   {  // Use spmenuSys too!
+      Window->SystemMenu = UserHMGetHandle(OldMenu);
+   }
+   else
+      Window->SystemMenu = NULL;
+
+   if (Menu && Window != Menu->spwndNotify)
+   {
+      Menu->spwndNotify = Window;
+   } 
+
+   return TRUE;
+}
+
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -1712,6 +1904,107 @@ NtUserDeleteMenu(
 
 CLEANUP:
    TRACE("Leave NtUserDeleteMenu, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+
+/*
+ * NtUserGetSystemMenu
+ *
+ * The NtUserGetSystemMenu function allows the application to access the
+ * window menu (also known as the system menu or the control menu) for
+ * copying and modifying.
+ *
+ * Parameters
+ *    hWnd
+ *       Handle to the window that will own a copy of the window menu.
+ *    bRevert
+ *       Specifies the action to be taken. If this parameter is FALSE,
+ *       NtUserGetSystemMenu returns a handle to the copy of the window menu
+ *       currently in use. The copy is initially identical to the window menu
+ *       but it can be modified.
+ *       If this parameter is TRUE, GetSystemMenu resets the window menu back
+ *       to the default state. The previous window menu, if any, is destroyed.
+ *
+ * Return Value
+ *    If the bRevert parameter is FALSE, the return value is a handle to a
+ *    copy of the window menu. If the bRevert parameter is TRUE, the return
+ *    value is NULL.
+ *
+ * Status
+ *    @implemented
+ */
+
+HMENU APIENTRY
+NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
+{
+   PWND Window;
+   PMENU Menu;
+   DECLARE_RETURN(HMENU);
+
+   TRACE("Enter NtUserGetSystemMenu\n");
+   UserEnterShared();
+
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN(NULL);
+   }
+
+   if (!(Menu = IntGetSystemMenu(Window, bRevert)))
+   {
+      RETURN(NULL);
+   }
+
+   RETURN(Menu->head.h);
+
+CLEANUP:
+   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", _ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+
+/*
+ * NtUserSetSystemMenu
+ *
+ * Status
+ *    @implemented
+ */
+
+BOOL APIENTRY
+NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
+{
+   BOOL Result = FALSE;
+   PWND Window;
+   PMENU Menu;
+   DECLARE_RETURN(BOOL);
+
+   TRACE("Enter NtUserSetSystemMenu\n");
+   UserEnterExclusive();
+
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN( FALSE);
+   }
+
+   if (hMenu)
+   {
+      /*
+       * Assign new menu handle and Up the Lock Count.
+       */
+      if (!(Menu = IntGetMenuObject(hMenu)))
+      {
+         RETURN( FALSE);
+      }
+
+      Result = IntSetSystemMenu(Window, Menu);
+   }
+   else
+      EngSetLastError(ERROR_INVALID_MENU_HANDLE);
+
+   RETURN( Result);
+
+CLEANUP:
+   TRACE("Leave NtUserSetSystemMenu, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1908,7 +2201,7 @@ NtUserGetMenuBarInfo(
         break;
     case OBJID_SYSMENU:
         if (!(pWnd->style & WS_SYSMENU)) RETURN(FALSE);
-        Menu = IntGetSystemMenu(pWnd, FALSE, FALSE);
+        Menu = IntGetSystemMenu(pWnd, FALSE);
         hMenu = Menu->head.h;
         break;
     default:

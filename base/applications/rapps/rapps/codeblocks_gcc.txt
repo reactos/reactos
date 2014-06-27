@@ -9,7 +9,7 @@ Description = A open source, cross-platform, powerful IDE. It contains TDM-GCC (
 Size = 97.8 MB
 Category = 7
 URLSite = http://www.codeblocks.org/
-URLDownload = http://sourceforge.net/projects/codeblocks/files/Binaries/13.12/Windows/codeblocks-13.12mingw-setup.exe
+URLDownload = http://download.sourceforge.net/project/codeblocks/Binaries/13.12/Windows/codeblocks-13.12mingw-setup.exe
 CDPath = none
 
 [Section.0407]

@@ -39,7 +39,20 @@ BEGIN
     MENUITEM "Su&skleisti", SC_MINIMIZE
     MENUITEM "Pa&didint", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Uþverti\tAlt-F4", SC_CLOSE
+    MENUITEM "&Uþverti\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "A&tkurti", SC_RESTORE
+    MENUITEM "Pe&rkelti", SC_MOVE
+    MENUITEM "D&ydis", SC_SIZE
+    MENUITEM "Su&skleisti", SC_MINIMIZE
+    MENUITEM "Pa&didint", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Uþverti\tVald-F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "Ki&tas\tVald+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

@@ -99,9 +99,13 @@ MUIGetString(
 
 #define STRING_PLEASEWAIT                1
 #define STRING_INSTALLCREATEPARTITION    2
+#define STRING_INSTALLCREATELOGICAL           60
 #define STRING_INSTALLDELETEPARTITION    3
+#define STRING_DELETEPARTITION                59
 #define STRING_PARTITIONSIZE             4
 #define STRING_CHOOSENEWPARTITION        5
+#define STRING_CHOOSE_NEW_EXTENDED_PARTITION  57
+#define STRING_CHOOSE_NEW_LOGICAL_PARTITION   61
 #define STRING_HDDSIZE                   6
 #define STRING_CREATEPARTITION           7
 #define STRING_PARTFORMAT                8
@@ -144,6 +148,7 @@ MUIGetString(
 #define STRING_UNPSPACE                  48
 #define STRING_MAXSIZE                   49
 #define STRING_UNFORMATTED               50
+#define STRING_EXTENDED_PARTITION             58
 #define STRING_FORMATUNUSED              51
 #define STRING_FORMATUNKNOWN             52
 #define STRING_KB                        53

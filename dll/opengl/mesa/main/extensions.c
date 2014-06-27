@@ -61,8 +61,6 @@ struct extension {
  */
 static const struct extension extension_table[] = {
    /* ARB Extensions */
-   { "GL_ARB_half_float_pixel",                    o(ARB_half_float_pixel),                    2003 },
-   { "GL_ARB_half_float_vertex",                   o(ARB_half_float_vertex),                   2008 },
    { "GL_ARB_map_buffer_range",                    o(ARB_map_buffer_range),                    2008 },
    { "GL_ARB_multisample",                         o(dummy_true),                              1994 },
    { "GL_ARB_point_parameters",                    o(EXT_point_parameters),                    1997 },
@@ -72,12 +70,9 @@ static const struct extension extension_table[] = {
    { "GL_ARB_texture_env_combine",                 o(ARB_texture_env_combine),                 2001 },
    { "GL_ARB_texture_env_crossbar",                o(ARB_texture_env_crossbar),                2001 },
    { "GL_ARB_texture_env_dot3",                    o(ARB_texture_env_dot3),                    2001 },
-   { "GL_ARB_texture_float",                       o(ARB_texture_float),                       2004 },
    { "GL_ARB_texture_mirrored_repeat",             o(dummy_true),                              2001 },
-   { "GL_ARB_texture_non_power_of_two",            o(ARB_texture_non_power_of_two),            2003 },
    { "GL_ARB_texture_storage",                     o(ARB_texture_storage),                     2011 },
    { "GL_ARB_transpose_matrix",                    o(ARB_transpose_matrix),                    1999 },
-   { "GL_ARB_vertex_array_object",                 o(ARB_vertex_array_object),                 2006 },
    { "GL_ARB_vertex_buffer_object",                o(dummy_true),                              2003 },
    { "GL_ARB_window_pos",                          o(ARB_window_pos),                          2001 },
    /* EXT extensions */
@@ -104,7 +99,6 @@ static const struct extension extension_table[] = {
    { "GL_EXT_shadow_funcs",                        o(EXT_shadow_funcs),                        2002 },
    { "GL_EXT_stencil_wrap",                        o(dummy_true),                              2002 },
    { "GL_EXT_subtexture",                          o(dummy_true),                              1995 },
-   { "GL_EXT_texture3D",                           o(EXT_texture3D),                           1996 },
    { "GL_EXT_texture_cube_map",                    o(ARB_texture_cube_map),                    2001 },
    { "GL_EXT_texture_env_add",                     o(dummy_true),                              1999 },
    { "GL_EXT_texture_env_combine",                 o(dummy_true),                              2000 },
@@ -116,12 +110,9 @@ static const struct extension extension_table[] = {
    { "GL_EXT_vertex_array",                        o(dummy_true),                              1995 },
 
    /* Vendor extensions */
-   { "GL_APPLE_object_purgeable",                  o(APPLE_object_purgeable),                  2006 },
    { "GL_APPLE_packed_pixels",                     o(APPLE_packed_pixels),                     2002 },
-   { "GL_APPLE_vertex_array_object",               o(APPLE_vertex_array_object),               2002 },
    { "GL_ATI_blend_equation_separate",             o(EXT_blend_equation_separate),             2003 },
    { "GL_ATI_texture_env_combine3",                o(ATI_texture_env_combine3),                2002 },
-   { "GL_ATI_texture_float",                       o(ARB_texture_float),                       2002 },
    { "GL_IBM_multimode_draw_arrays",               o(IBM_multimode_draw_arrays),               1998 },
    { "GL_IBM_rasterpos_clip",                      o(IBM_rasterpos_clip),                      1996 },
    { "GL_IBM_texture_mirrored_repeat",             o(dummy_true),                              1998 },
@@ -135,7 +126,6 @@ static const struct extension extension_table[] = {
    { "GL_NV_light_max_exponent",                   o(NV_light_max_exponent),                   1999 },
    { "GL_NV_point_sprite",                         o(NV_point_sprite),                         2001 },
    { "GL_NV_texgen_reflection",                    o(NV_texgen_reflection),                    1999 },
-   { "GL_NV_texture_barrier",                      o(NV_texture_barrier),                      2009 },
    { "GL_NV_texture_env_combine4",                 o(NV_texture_env_combine4),                 1999 },
 
    { 0, 0, 0},
@@ -183,7 +173,6 @@ static const size_t default_extensions[] = {
    o(EXT_packed_pixels),
    o(EXT_rescale_normal),
    o(EXT_separate_specular_color),
-   o(EXT_texture3D),
 
    /* Vendor Extensions */
    o(APPLE_packed_pixels),
@@ -203,8 +192,6 @@ static const size_t default_extensions[] = {
 void
 _mesa_enable_sw_extensions(struct gl_context *ctx)
 {
-   ctx->Extensions.ARB_half_float_pixel = GL_TRUE;
-   ctx->Extensions.ARB_half_float_vertex = GL_TRUE;
    ctx->Extensions.ARB_map_buffer_range = GL_TRUE;
    ctx->Extensions.ARB_point_sprite = GL_TRUE;
    ctx->Extensions.ARB_texture_cube_map = GL_TRUE;
@@ -212,13 +199,7 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.ARB_texture_env_crossbar = GL_TRUE;
    ctx->Extensions.ARB_texture_env_dot3 = GL_TRUE;
    /*ctx->Extensions.ARB_texture_float = GL_TRUE;*/
-   ctx->Extensions.ARB_texture_non_power_of_two = GL_TRUE;
    ctx->Extensions.ARB_texture_storage = GL_TRUE;
-   ctx->Extensions.ARB_vertex_array_object = GL_TRUE;
-   ctx->Extensions.APPLE_vertex_array_object = GL_TRUE;
-#if FEATURE_APPLE_object_purgeable
-   ctx->Extensions.APPLE_object_purgeable = GL_TRUE;
-#endif
    ctx->Extensions.ATI_texture_env_combine3 = GL_TRUE;
    ctx->Extensions.EXT_blend_color = GL_TRUE;
    ctx->Extensions.EXT_blend_equation_separate = GL_TRUE;
@@ -240,9 +221,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.NV_point_sprite = GL_TRUE;
    ctx->Extensions.NV_texture_env_combine4 = GL_TRUE;
    /*ctx->Extensions.NV_texgen_reflection = GL_TRUE;*/
-#if FEATURE_texture_fxt1
-   _mesa_enable_extension(ctx, "GL_3DFX_texture_compression_FXT1");
-#endif
 }
 
 
@@ -299,7 +277,6 @@ _mesa_enable_2_0_extensions(struct gl_context *ctx)
 {
    ctx->Extensions.ARB_point_sprite = GL_TRUE;
    ctx->Extensions.EXT_blend_equation_separate = GL_TRUE;
-   ctx->Extensions.ARB_texture_non_power_of_two = GL_TRUE;
 }
 
 

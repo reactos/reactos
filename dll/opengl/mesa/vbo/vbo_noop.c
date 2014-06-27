@@ -88,16 +88,6 @@ _mesa_noop_Color3fv(const GLfloat * v)
 }
 
 static void GLAPIENTRY
-_mesa_noop_SecondaryColor3fEXT(GLfloat a, GLfloat b, GLfloat c)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_SecondaryColor3fvEXT(const GLfloat * v)
-{
-}
-
-static void GLAPIENTRY
 _mesa_noop_TexCoord1f(GLfloat a)
 {
 }
@@ -275,15 +265,6 @@ _mesa_noop_DrawElements(GLenum mode, GLsizei count, GLenum type,
 {
 }
 
-
-static void GLAPIENTRY
-_mesa_noop_DrawRangeElements(GLenum mode,
-                             GLuint start, GLuint end,
-                             GLsizei count, GLenum type,
-                             const GLvoid * indices)
-{
-}
-
 static void GLAPIENTRY
 _mesa_noop_EvalMesh1(GLenum mode, GLint i1, GLint i2)
 {
@@ -325,8 +306,6 @@ _mesa_noop_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->Materialfv = _mesa_noop_Materialfv;
    vfmt->Normal3f = _mesa_noop_Normal3f;
    vfmt->Normal3fv = _mesa_noop_Normal3fv;
-   vfmt->SecondaryColor3fEXT = _mesa_noop_SecondaryColor3fEXT;
-   vfmt->SecondaryColor3fvEXT = _mesa_noop_SecondaryColor3fvEXT;
    vfmt->TexCoord1f = _mesa_noop_TexCoord1f;
    vfmt->TexCoord1fv = _mesa_noop_TexCoord1fv;
    vfmt->TexCoord2f = _mesa_noop_TexCoord2f;
@@ -354,7 +333,6 @@ _mesa_noop_vtxfmt_init(GLvertexformat * vfmt)
 
    vfmt->DrawArrays = _mesa_noop_DrawArrays;
    vfmt->DrawElements = _mesa_noop_DrawElements;
-   vfmt->DrawRangeElements = _mesa_noop_DrawRangeElements;
 }
 
 

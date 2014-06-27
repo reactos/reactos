@@ -32,9 +32,9 @@ AddServiceToList(LPWSTR *lpServiceList,
         if (lpNewList)
         {
             /* Copy the service name */
-            wcscpy_s(lpNewList,
-                     dwToAddSize,
-                     lpServiceToAdd);
+            StringCchCopy(lpNewList,
+                          dwToAddSize,
+                          lpServiceToAdd);
 
             /* Add the double null char */
             lpNewList[dwToAddSize - 1] = L'\0';
@@ -68,9 +68,9 @@ AddServiceToList(LPWSTR *lpServiceList,
         if (lpNewList)
         {
             /* Copy the service name */
-            wcscpy_s(&lpNewList[dwCurSize - 1],
-                     dwToAddSize,
-                     lpServiceToAdd);
+            StringCchCopy(&lpNewList[dwCurSize - 1],
+                          dwToAddSize,
+                          lpServiceToAdd);
 
             /* Add the double null char */
             lpNewList[dwCurSize + dwToAddSize - 1] = L'\0';

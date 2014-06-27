@@ -11,7 +11,7 @@ typedef struct _EDRIVEROBJ
 typedef DRIVEROBJ *PDRIVEROBJ;
 
 /* Cleanup function */
-BOOL NTAPI DRIVEROBJ_Cleanup(PVOID pObject);
+VOID NTAPI DRIVEROBJ_vCleanup(PVOID pObject);
 
 
 #define DRIVEROBJ_AllocObjectWithHandle()  ((PEDRIVEROBJ)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_DRIVEROBJ, sizeof(EDRIVEROBJ)))

@@ -166,7 +166,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    if (bShowWarning)
    {
-      DialogBox (hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, (DLGPROC)WarningProc);
+      DialogBox (hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, WarningProc);
    }
 
    return TRUE;
@@ -353,22 +353,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 //Update to new position
                 pMouse = pNewMouse;
                 cp = pNewMouse;
-                Refresh();
             }
             else if (((pCaret.x != pNewCaret.x) || (pCaret.y != pNewCaret.y)) && bFollowCaret)
             {
                 //Update to new position
                 pCaret = pNewCaret;
                 cp = pNewCaret;
-                Refresh();
             }
             else if (((pFocus.x != pNewFocus.x) || (pFocus.y != pNewFocus.y)) && bFollowFocus)
             {
                 //Update to new position
                 pFocus = pNewFocus;
                 cp = pNewFocus;
-                Refresh();
             }
+            Refresh();
         }
         break;
     case WM_COMMAND:
@@ -377,10 +375,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         switch (wmId)
         {
             case IDM_OPTIONS:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hWnd, (DLGPROC)OptionsProc);
+                DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hWnd, OptionsProc);
                 break;
             case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, (DLGPROC)AboutProc);
+                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutProc);
                 break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);

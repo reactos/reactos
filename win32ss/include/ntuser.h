@@ -70,7 +70,6 @@ typedef enum _USERTHREADINFOCLASS
     UserThreadWOWInformation,
     UserThreadHungStatus,
     UserThreadInitiateShutdown,
-
     UserThreadEndShutdown,
     UserThreadUseActiveDesktop,
     UserThreadUseDesktop,
@@ -306,6 +305,9 @@ C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 /* Menu Item fType. */
 #define MFT_RTOL 0x6000
 
+/* Menu Item fState. */
+#define MFS_HBMMENUBMP 0x20000000
+
 typedef struct tagITEM
 {
     UINT fType;
@@ -345,6 +347,8 @@ typedef struct tagMENULIST
 #define MNF_DESKTOPMN   0x0040
 #define MNF_SYSDESKMN   0x0080
 #define MNF_SYSSUBMENU  0x0100
+// Hack
+#define MNF_SYSMENU     0x0200
 
 typedef struct tagMENU
 {
@@ -3380,7 +3384,6 @@ typedef struct tagKMDDELPARAM
   #define MSQ_STATE_MENUOWNER	0x4
   #define MSQ_STATE_MOVESIZE	0x5
   #define MSQ_STATE_CARET	0x6
-#define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 #define HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT 0x1005
 

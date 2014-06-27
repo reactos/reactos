@@ -198,7 +198,7 @@ PWND FASTCALL IntGetLastTopMostWindow(VOID)
 }
 
 //
-// This helps with bug 6751 forcing modal dialog active when another app is minimized or closed.
+// This helps with CORE-6129 forcing modal dialog active when another app is minimized or closed.
 //
 BOOL FASTCALL ActivateOtherWindowMin(PWND Wnd)
 {
@@ -360,135 +360,6 @@ done:
       co_IntSetActiveWindow(NULL,FALSE,TRUE,FALSE);
    }
    if (WndTo) UserDerefObjectCo(WndTo);
-}
-
-UINT
-FASTCALL
-co_WinPosArrangeIconicWindows(PWND parent)
-{
-   RECTL rectParent;
-   INT i, x, y, xspacing, yspacing, sx, sy;
-   HWND *List = IntWinListChildren(parent);
-
-   ASSERT_REFS_CO(parent);
-
-   /* Check if we found any children */
-   if(List == NULL)
-   {
-       return 0;
-   }
-
-   IntGetClientRect( parent, &rectParent );
-   // FIXME: Support gspv.mm.iArrange.
-   x = rectParent.left;
-   y = rectParent.bottom;
-
-   xspacing = (UserGetSystemMetrics(SM_CXMINSPACING)/2)+UserGetSystemMetrics(SM_CXBORDER);
-   yspacing = (UserGetSystemMetrics(SM_CYMINSPACING)/2)+UserGetSystemMetrics(SM_CYBORDER);
-
-   //ERR("X:%d Y:%d XS:%d YS:%d\n",x,y,xspacing,yspacing);
-
-   for(i = 0; List[i]; i++)
-   {
-      PWND Child;
-
-      if (!(Child = ValidateHwndNoErr(List[i])))
-         continue;
-
-      if((Child->style & WS_MINIMIZE) != 0 )
-      {
-         USER_REFERENCE_ENTRY Ref;
-         UserRefObjectCo(Child, &Ref);
-
-         sx = x + UserGetSystemMetrics(SM_CXBORDER);
-         sy = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
-
-         co_WinPosSetWindowPos( Child, 0, sx, sy, 0, 0,
-                                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
-
-         Child->InternalPos.IconPos.x = sx;
-         Child->InternalPos.IconPos.y = sy;
-         Child->InternalPos.flags |= WPF_MININIT;
-         Child->InternalPos.flags &= ~WPF_SETMINPOSITION;
-
-         UserDerefObjectCo(Child);
-
-         if (x <= (rectParent.right - UserGetSystemMetrics(SM_CXMINSPACING)))
-            x += xspacing;
-         else
-         {
-            x = rectParent.left;
-            y -= yspacing;
-         }
-         //ERR("X:%d Y:%d\n",x,y);
-      }
-   }
-   ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
-   return yspacing;
-}
-
-static VOID FASTCALL
-WinPosFindIconPos(PWND Window, POINT *Pos)
-{
-   RECT rectParent;
-   PWND pwndChild, pwndParent;
-   int x, y, xspacing, yspacing;
-
-   pwndParent = Window->spwndParent;
-   if (pwndParent == UserGetDesktopWindow())
-   {
-      //ERR("Parent is Desktop, Min off screen!\n");
-      /* ReactOS doesn't support iconic minimize to desktop */
-      Pos->x = Pos->y = -32000;
-      Window->InternalPos.flags |= WPF_MININIT;
-      Window->InternalPos.IconPos.x = Pos->x;
-      Window->InternalPos.IconPos.y = Pos->y;
-      return;
-   }
-
-   IntGetClientRect( pwndParent, &rectParent );
-   // FIXME: Support gspv.mm.iArrange.
-   x = rectParent.left;
-   y = rectParent.bottom;
-
-   xspacing = (UserGetSystemMetrics(SM_CXMINSPACING)/2)+UserGetSystemMetrics(SM_CXBORDER);
-   yspacing = (UserGetSystemMetrics(SM_CYMINSPACING)/2)+UserGetSystemMetrics(SM_CYBORDER);
-
-   //ERR("X:%d Y:%d XS:%d YS:%d\n",Pos->x,Pos->y,xspacing,yspacing);
-
-   // Set to default position when minimized.
-   Pos->x = x + UserGetSystemMetrics(SM_CXBORDER);
-   Pos->y = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
-
-   for (pwndChild = pwndParent->spwndChild; pwndChild; pwndChild = pwndChild->spwndNext)
-   {
-        if (pwndChild == Window) continue;
-
-        if (pwndChild->style & WS_VISIBLE)
-        {
-            //ERR("Loop!\n");
-            continue;
-        }
-        //ERR("Pos Child X %d Y %d!\n", pwndChild->InternalPos.IconPos.x, pwndChild->InternalPos.IconPos.y);
-        if ( pwndChild->InternalPos.IconPos.x == Pos->x &&
-             pwndChild->InternalPos.IconPos.y == Pos->y )
-        {
-           if (x <= rectParent.right - UserGetSystemMetrics(SM_CXMINSPACING))
-              x += xspacing;
-           else
-           {
-              x = rectParent.left;
-              y -= yspacing;
-           }
-           Pos->x = x + UserGetSystemMetrics(SM_CXBORDER);
-           Pos->y = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
-        }
-   }
-   Window->InternalPos.IconPos.x = Pos->x;
-   Window->InternalPos.IconPos.y = Pos->y;
-   Window->InternalPos.flags |= WPF_MININIT;
-   //ERR("Position is set! X:%d Y:%d\n",Pos->x,Pos->y);
-   return;
 }
 
 VOID FASTCALL
@@ -740,6 +611,120 @@ IntSetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *wpl, UINT Flags)
    return TRUE;
 }
 
+UINT
+FASTCALL
+co_WinPosArrangeIconicWindows(PWND parent)
+{
+   RECTL rectParent;
+   PWND Child;
+   INT x, y, xspacing, yspacing, sx, sy;
+
+   ASSERT_REFS_CO(parent);
+
+   IntGetClientRect( parent, &rectParent );
+   // FIXME: Support Minimize Metrics gspv.mm.iArrange.
+   // Default: ARW_BOTTOMLEFT
+   x = rectParent.left;
+   y = rectParent.bottom;
+
+   xspacing = UserGetSystemMetrics(SM_CXMINIMIZED);
+   yspacing = UserGetSystemMetrics(SM_CYMINIMIZED);
+
+   Child = parent->spwndChild;
+   while(Child)
+   {
+      if((Child->style & WS_MINIMIZE) != 0 )
+      {
+         USER_REFERENCE_ENTRY Ref;
+         UserRefObjectCo(Child, &Ref);
+
+         sx = x + UserGetSystemMetrics(SM_CXBORDER);
+         sy = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
+
+         Child->InternalPos.IconPos.x = sx;
+         Child->InternalPos.IconPos.y = sy;
+         Child->InternalPos.flags |= WPF_MININIT;
+
+         co_WinPosSetWindowPos( Child, 0, sx, sy, xspacing, yspacing, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_ASYNCWINDOWPOS);
+
+         UserDerefObjectCo(Child);
+
+         if (x <= rectParent.right - xspacing)
+            x += xspacing;
+         else
+         {
+            x = rectParent.left;
+            y -= yspacing;
+         }
+      }
+      Child = Child->spwndNext;
+   }
+   return yspacing;
+}
+
+static VOID FASTCALL
+WinPosFindIconPos(PWND Window, POINT *Pos)
+{
+   RECT rectParent;
+   PWND pwndChild, pwndParent;
+   int x, y, xspacing, yspacing;
+
+   pwndParent = Window->spwndParent;
+   if (pwndParent == UserGetDesktopWindow())
+   {
+      //ERR("Parent is Desktop, Min off screen!\n");
+      /* ReactOS doesn't support iconic minimize to desktop */
+      Pos->x = Pos->y = -32000;
+      Window->InternalPos.flags |= WPF_MININIT;
+      Window->InternalPos.IconPos.x = Pos->x;
+      Window->InternalPos.IconPos.y = Pos->y;
+      return;
+   }
+
+   IntGetClientRect( pwndParent, &rectParent );
+   // FIXME: Support Minimize Metrics gspv.mm.iArrange.
+   // Default: ARW_BOTTOMLEFT
+   x = rectParent.left;
+   y = rectParent.bottom;
+
+   xspacing = UserGetSystemMetrics(SM_CXMINIMIZED);
+   yspacing = UserGetSystemMetrics(SM_CYMINIMIZED);
+
+   // Set to default position when minimized.
+   Pos->x = x + UserGetSystemMetrics(SM_CXBORDER);
+   Pos->y = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
+
+   for (pwndChild = pwndParent->spwndChild; pwndChild; pwndChild = pwndChild->spwndNext)
+   {
+        if (pwndChild == Window) continue;
+
+        if ((pwndChild->style & (WS_VISIBLE|WS_MINIMIZE)) != (WS_VISIBLE|WS_MINIMIZE) )
+        {
+            continue;
+        }
+
+        if ( pwndChild->InternalPos.IconPos.x != Pos->x && pwndChild->InternalPos.IconPos.y != Pos->y )
+        {
+           break;
+        }
+        if (x <= rectParent.right - xspacing)
+            x += xspacing;
+        else
+        {
+            x = rectParent.left;
+            y -= yspacing;
+        }
+        Pos->x = x + UserGetSystemMetrics(SM_CXBORDER);
+        Pos->y = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
+   }
+
+   Window->InternalPos.IconPos.x = Pos->x;
+   Window->InternalPos.IconPos.y = Pos->y;
+   Window->InternalPos.flags |= WPF_MININIT;
+   TRACE("Position is set! X:%d Y:%d\n",Pos->x,Pos->y);
+   return;
+}
+
 UINT FASTCALL
 co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
 {
@@ -793,8 +778,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
 
                old_style = IntSetStyle( Wnd, WS_MINIMIZE, WS_MAXIMIZE );
 
-               co_UserRedrawWindow(Wnd, NULL, 0, RDW_VALIDATE | RDW_NOERASE |
-                                   RDW_NOINTERNALPAINT);
+               co_UserRedrawWindow(Wnd, NULL, 0, RDW_VALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT);
 
                if (!(Wnd->InternalPos.flags & WPF_SETMINPOSITION))
                   Wnd->InternalPos.flags &= ~WPF_MININIT;
@@ -803,15 +787,9 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
 
                if (!(old_style & WS_MINIMIZE)) SwpFlags |= SWP_STATECHANGED;
 
-               /*ERR("Minimize: %d,%d %dx%d\n",
-                      wpl.ptMinPosition.x, wpl.ptMinPosition.y, UserGetSystemMetrics(SM_CXMINIMIZED),
-                                                   UserGetSystemMetrics(SM_CYMINIMIZED));
-                */
                RECTL_vSetRect(NewPos, wpl.ptMinPosition.x, wpl.ptMinPosition.y,
-//                             wpl.ptMinPosition.x + UserGetSystemMetrics(SM_CXMINIMIZED),
-//                             wpl.ptMinPosition.y + UserGetSystemMetrics(SM_CYMINIMIZED));
-                             UserGetSystemMetrics(SM_CXMINIMIZED),
-                             UserGetSystemMetrics(SM_CYMINIMIZED));
+                             wpl.ptMinPosition.x + UserGetSystemMetrics(SM_CXMINIMIZED),
+                             wpl.ptMinPosition.y + UserGetSystemMetrics(SM_CYMINIMIZED));
                SwpFlags |= SWP_NOCOPYBITS;
                break;
             }
@@ -833,7 +811,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
 
                if (!(old_style & WS_MAXIMIZE)) SwpFlags |= SWP_STATECHANGED;
                RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
-//                              wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
+                              //wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
                               Size.x, Size.y);
                break;
             }
@@ -854,20 +832,13 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                      co_WinPosGetMinMaxInfo(Wnd, &Size, &wpl.ptMaxPosition, NULL, NULL);
                      IntSetStyle( Wnd, WS_MAXIMIZE, 0 );
                      SwpFlags |= SWP_STATECHANGED;
-                     /*ERR("Restore to Max: %d,%d %dx%d\n",
-                      wpl.ptMaxPosition.x, wpl.ptMaxPosition.y, Size.x, Size.y);
-                     */
                      RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
-//                                    wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
-                                    Size.x, Size.y);
+                                    wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
                      break;
                   }
                   else
                   {
                      *NewPos = wpl.rcNormalPosition;
-                     /*ERR("Restore Max: %d,%d %dx%d\n",
-                      NewPos->left, NewPos->top, NewPos->right - NewPos->left, NewPos->bottom - NewPos->top);
-                      */
                      NewPos->right -= NewPos->left;
                      NewPos->bottom -= NewPos->top;
                      break;
@@ -882,9 +853,6 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                   SwpFlags |= SWP_STATECHANGED;
                   Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
                   *NewPos = wpl.rcNormalPosition;
-                     /*ERR("Restore Min: %d,%d %dx%d\n",
-                      NewPos->left, NewPos->top, NewPos->right - NewPos->left, NewPos->bottom - NewPos->top);
-                      */
                   NewPos->right -= NewPos->left;
                   NewPos->bottom -= NewPos->top;
                   break;
@@ -1212,12 +1180,9 @@ co_WinPosDoNCCALCSize(PWND Window, PWINDOWPOS WinPos, RECTL* WindowRect, RECTL* 
       Parent = Window->spwndParent;
       if (0 != (Window->style & WS_CHILD) && Parent)
       {
-         RECTL_vOffsetRect(&(params.rgrc[0]), - Parent->rcClient.left,
-                          - Parent->rcClient.top);
-         RECTL_vOffsetRect(&(params.rgrc[1]), - Parent->rcClient.left,
-                          - Parent->rcClient.top);
-         RECTL_vOffsetRect(&(params.rgrc[2]), - Parent->rcClient.left,
-                          - Parent->rcClient.top);
+         RECTL_vOffsetRect(&(params.rgrc[0]), - Parent->rcClient.left, - Parent->rcClient.top);
+         RECTL_vOffsetRect(&(params.rgrc[1]), - Parent->rcClient.left, - Parent->rcClient.top);
+         RECTL_vOffsetRect(&(params.rgrc[2]), - Parent->rcClient.left, - Parent->rcClient.top);
       }
 
       params.lppos = &winposCopy;
@@ -1232,8 +1197,7 @@ co_WinPosDoNCCALCSize(PWND Window, PWINDOWPOS WinPos, RECTL* WindowRect, RECTL* 
          *ClientRect = params.rgrc[0]; // First rectangle contains the coordinates of the new client rectangle resulting from the move or resize
          if ((Window->style & WS_CHILD) && Parent)
          {
-            RECTL_vOffsetRect(ClientRect, Parent->rcClient.left,
-                             Parent->rcClient.top);
+            RECTL_vOffsetRect(ClientRect, Parent->rcClient.left, Parent->rcClient.top);
          }
          FixClientRect(ClientRect, WindowRect);
       }
@@ -1244,16 +1208,14 @@ co_WinPosDoNCCALCSize(PWND Window, PWINDOWPOS WinPos, RECTL* WindowRect, RECTL* 
          WinPos->flags &= ~SWP_NOCLIENTMOVE;
       }
 
-      if (ClientRect->right - ClientRect->left !=
-          Window->rcClient.right - Window->rcClient.left)
+      if (ClientRect->right - ClientRect->left != Window->rcClient.right - Window->rcClient.left)
       {
          WinPos->flags &= ~SWP_NOCLIENTSIZE;
       }
       else
          wvrFlags &= ~WVR_HREDRAW;
 
-      if (ClientRect->bottom - ClientRect->top !=
-          Window->rcClient.bottom - Window->rcClient.top)
+      if (ClientRect->bottom - ClientRect->top != Window->rcClient.bottom - Window->rcClient.top)
       {
          WinPos->flags &= ~SWP_NOCLIENTSIZE;
       }
@@ -1308,8 +1270,8 @@ co_WinPosDoWinPosChanging(PWND Window,
    {
       if (Window->style & WS_MINIMIZE)
       {
-         WindowRect->right  = WindowRect->left + UserGetSystemMetrics(SM_CXICON);
-         WindowRect->bottom = WindowRect->top + UserGetSystemMetrics(SM_CYICON);
+         WindowRect->right  = WindowRect->left + UserGetSystemMetrics(SM_CXMINIMIZED);
+         WindowRect->bottom = WindowRect->top  + UserGetSystemMetrics(SM_CYMINIMIZED);
       }
       else
       {
@@ -1317,44 +1279,24 @@ co_WinPosDoWinPosChanging(PWND Window,
          WindowRect->bottom = WindowRect->top + WinPos->cy;
       }
    }
-#if 0
-   if (!(WinPos->flags & SWP_NOMOVE))
-   {
-      WindowRect->left    = WinPos->x;
-      WindowRect->top     = WinPos->y;
-      WindowRect->right  += WinPos->x - Window->rcWindow.left;
-      WindowRect->bottom += WinPos->y - Window->rcWindow.top;
-      RECTL_vOffsetRect(ClientRect,
-                        WinPos->x - Window->rcWindow.left,
-                        WinPos->y - Window->rcWindow.top);
 
-   }
-
-   *WindowRect = Window->rcWindow;
-   *ClientRect = Window->rcClient;
-
-   if (!(WinPos->flags & SWP_NOSIZE))
-   {
-      WindowRect->right = WindowRect->left + WinPos->cx;
-      WindowRect->bottom = WindowRect->top + WinPos->cy;
-   }
-#endif
    if (!(WinPos->flags & SWP_NOMOVE))
    {
       INT X, Y;
       PWND Parent;
       X = WinPos->x;
       Y = WinPos->y;
-      //ERR("Not SWP_NOMOVE\n");
+
       Parent = Window->spwndParent;
+
       if (((Window->style & WS_CHILD) != 0) &&
            Parent &&
            Parent != Window->head.rpdesk->pDeskInfo->spwnd)
       {
-         //ERR("Not SWP_NOMOVE 1 Parent client offset X %d Y %d\n",X,Y);
+         TRACE("Not SWP_NOMOVE 1 Parent client offset X %d Y %d\n",X,Y);
          X += Parent->rcClient.left;
          Y += Parent->rcClient.top;
-         //ERR("Not SWP_NOMOVE 2 Parent client offset X %d Y %d\n",X,Y);
+         TRACE("Not SWP_NOMOVE 2 Parent client offset X %d Y %d\n",X,Y);
       }
 
       WindowRect->left    = X;
@@ -1365,12 +1307,13 @@ co_WinPosDoWinPosChanging(PWND Window,
       RECTL_vOffsetRect(ClientRect, X - Window->rcWindow.left,
                                     Y - Window->rcWindow.top);
    }
-
    WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
 
    TRACE( "hwnd %p, after %p, swp %d,%d %dx%d flags %08x\n",
            WinPos->hwnd, WinPos->hwndInsertAfter, WinPos->x, WinPos->y,
            WinPos->cx, WinPos->cy, WinPos->flags );
+   TRACE("WindowRect: %d %d %d %d\n", WindowRect->left,WindowRect->top,WindowRect->right,WindowRect->bottom);
+   TRACE("ClientRect: %d %d %d %d\n", ClientRect->left,ClientRect->top,ClientRect->right,ClientRect->bottom);
 
    return TRUE;
 }
@@ -1533,6 +1476,7 @@ WinPosInternalMoveWindow(PWND Window, INT MoveX, INT MoveY)
    PWND Child;
 
    ASSERT(Window != Window->spwndChild);
+   TRACE("InternalMoveWin  X %d Y %d\n", MoveX, MoveY);
 
    Window->rcWindow.left += MoveX;
    Window->rcWindow.right += MoveX;
@@ -1591,7 +1535,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWND Wnd)
    pt.x = WinPos->x;
    pt.y = WinPos->y;
    IntClientToScreen( Parent, &pt );
-   //ERR("WPFU C2S wpx %d wpy %d ptx %d pty %d\n",WinPos->x,WinPos->y,pt.x,pt.y);
+   TRACE("WPFU C2S wpx %d wpy %d ptx %d pty %d\n",WinPos->x,WinPos->y,pt.x,pt.y);
    /* Check for right position */
    if (Wnd->rcWindow.left == pt.x && Wnd->rcWindow.top == pt.y)
    {
@@ -1846,12 +1790,11 @@ co_WinPosSetWindowPos(
 
    OldWindowRect = Window->rcWindow;
    OldClientRect = Window->rcClient;
-   //ERR("SetWindowPos OldWindowRect: %d %d %d %d\n", OldWindowRect.left,OldWindowRect.top,OldWindowRect.right,OldWindowRect.bottom);
-   //ERR("SetWindowPos OldClientRect: %d %d %d %d\n", OldClientRect.left,OldClientRect.top,OldClientRect.right,OldClientRect.bottom);
 
    if (NewClientRect.left != OldClientRect.left ||
        NewClientRect.top  != OldClientRect.top)
    {
+      // Move child window if their parent is moved. Keep Child window relative to Parent...
       WinPosInternalMoveWindow(Window,
                                NewClientRect.left - OldClientRect.left,
                                NewClientRect.top - OldClientRect.top);
@@ -1859,9 +1802,6 @@ co_WinPosSetWindowPos(
 
    Window->rcWindow = NewWindowRect;
    Window->rcClient = NewClientRect;
-
-   //ERR("SetWindowPos NewWindowRect: %d %d %d %d\n", NewWindowRect.left,NewWindowRect.top,NewWindowRect.right,NewWindowRect.bottom);
-   //ERR("SetWindowPos NewClientRect: %d %d %d %d\n", NewClientRect.left,NewClientRect.top,NewClientRect.right,NewClientRect.bottom);
 
    /* erase parent when hiding or resizing child */
    if (WinPos.flags & SWP_HIDEWINDOW)
@@ -2209,10 +2149,10 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    LONG style;
    PWND Parent;
    PTHREADINFO pti;
-   //  HRGN VisibleRgn;
-   //ERR("co_WinPosShowWindow START\n");
+   //HRGN VisibleRgn;
    BOOL ShowOwned = FALSE;
    ASSERT_REFS_CO(Wnd);
+   //ERR("co_WinPosShowWindow START\n");
 
    pti = PsGetCurrentThreadWin32Thread();
    WasVisible = (Wnd->style & WS_VISIBLE) != 0;
@@ -2374,7 +2314,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
    }
 
-#if 0 // Explorer issues with common controls. Someone does not know how CS_SAVEBITS works.
+#if 0 // Explorer issues with common controls? Someone does not know how CS_SAVEBITS works.
+      // Breaks startup and shutdown active window...
    if ((Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD &&
         Wnd->pcls->style & CS_SAVEBITS &&
         ((Cmd == SW_SHOW) || (Cmd == SW_NORMAL)))

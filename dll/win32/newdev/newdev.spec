@@ -1,4 +1,4 @@
-@ stdcall ClientSideInstallW(ptr long wstr)
+@ stdcall ClientSideInstallW(ptr ptr wstr long)
 @ stdcall DevInstallW(ptr ptr wstr long)
 @ stub InstallDevInst
 @ stub InstallDevInstEx

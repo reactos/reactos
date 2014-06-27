@@ -162,7 +162,8 @@ BEGIN
     IDS_PASSWORDEXPIRED "Twoje hasło wygasło i musi zostać zmienione."
 END
 
-/* Shutdown Dialog Strings */STRINGTABLE
+/* Shutdown Dialog Strings */
+STRINGTABLE
 BEGIN
     IDS_SHUTDOWN_LOGOFF "Wyloguj ""%s"""
     IDS_SHUTDOWN_SHUTDOWN "Wyłącz"

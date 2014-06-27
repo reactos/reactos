@@ -141,7 +141,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    npc->pipe = pipe;
  
    return RPC_S_OK;
-@@ -308,18 +306,59 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc
+@@ -308,18 +306,64 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc
  static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
  {
    RpcConnection_np *npc = (RpcConnection_np *) Connection;
@@ -153,6 +153,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
 +  DWORD bufLen = sizeof(ComputerName)/sizeof(ComputerName[0]);
    RPC_STATUS r;
    LPSTR pname;
++  LPSTR NetworkAddr;
 +  INT size;
  
    /* already connected? */
@@ -172,9 +173,13 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
 +  }
 +  else
 +  {
++    NetworkAddr = Connection->NetworkAddr;
++    if (NetworkAddr[0] == '\\' && NetworkAddr[1] == '\\')
++        NetworkAddr += 2;
++
 +    if (GetComputerNameA(ComputerName, &bufLen))
 +    {
-+      if (stricmp(ComputerName, Connection->NetworkAddr) == 0)
++      if (stricmp(ComputerName, NetworkAddr) == 0)
 +      {
 +        bUseLocalName = TRUE;
 +        size += strlen(local);
@@ -182,13 +187,13 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
 +      else
 +      {
 +        bUseLocalName = FALSE;
-+        size += strlen(Connection->NetworkAddr);
++        size += strlen(NetworkAddr);
 +      }
 +    }
 +    else
 +    {
 +      bUseLocalName = FALSE;
-+      size += strlen(Connection->NetworkAddr);
++      size += strlen(NetworkAddr);
 +    }
 +  }
 +
@@ -199,13 +204,13 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
 +  if (bUseLocalName)
 +    strcat(pname, local);
 +  else
-+    strcat(pname, Connection->NetworkAddr);
++    strcat(pname, NetworkAddr);
 +  strcat(pname, Connection->Endpoint);
 +  r = rpcrt4_conn_open_pipe(Connection, pname, TRUE);
    I_RpcFree(pname);
  
    return r;
-@@ -368,9 +407,9 @@ static void rpcrt4_conn_np_handoff(RpcCo
+@@ -368,9 +412,9 @@ static void rpcrt4_conn_np_handoff(RpcCo
     * to the child, then reopen the server binding to continue listening */
  
    new_npc->pipe = old_npc->pipe;
@@ -217,7 +222,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    old_npc->listening = FALSE;
  }
  
-@@ -415,11 +454,17 @@ static int rpcrt4_conn_np_read(RpcConnec
+@@ -415,11 +459,17 @@ static int rpcrt4_conn_np_read(RpcConnec
    char *buf = buffer;
    BOOL ret = TRUE;
    unsigned int bytes_left = count;
@@ -244,7 +249,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    return ret ? count : -1;
  }
  
-@@ -437,16 +483,23 @@ static int rpcrt4_conn_np_write(RpcConne
+@@ -437,16 +488,23 @@ static int rpcrt4_conn_np_write(RpcConne
    const char *buf = buffer;
    BOOL ret = TRUE;
    unsigned int bytes_left = count;
@@ -269,7 +274,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    return ret ? count : -1;
  }
  
-@@ -458,9 +511,9 @@ static int rpcrt4_conn_np_close(RpcConne
+@@ -458,9 +516,9 @@ static int rpcrt4_conn_np_close(RpcConne
      CloseHandle(npc->pipe);
      npc->pipe = 0;
    }
@@ -282,7 +287,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
    }
    return 0;
  }
-@@ -664,7 +717,7 @@ static void *rpcrt4_protseq_np_get_wait_
+@@ -664,7 +722,7 @@ static void *rpcrt4_protseq_np_get_wait_
      conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
      while (conn) {
          rpcrt4_conn_listen_pipe(conn);
@@ -291,7 +296,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
              (*count)++;
          conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
      }
-@@ -685,7 +738,7 @@ static void *rpcrt4_protseq_np_get_wait_
+@@ -685,7 +743,7 @@ static void *rpcrt4_protseq_np_get_wait_
      *count = 1;
      conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
      while (conn) {
@@ -300,7 +305,7 @@ diff -prudN .\wine\dlls\rpcrt4/rpc_transport.c .\reactos\dll\win32\rpcrt4/rpc_tr
              (*count)++;
          conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
      }
-@@ -732,18 +785,12 @@ static int rpcrt4_protseq_np_wait_for_ne
+@@ -732,18 +790,12 @@ static int rpcrt4_protseq_np_wait_for_ne
          EnterCriticalSection(&protseq->cs);
          conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
          while (conn) {

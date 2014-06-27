@@ -130,26 +130,18 @@ static void _swsetup_render_tri(struct gl_context *ctx,
 
    if (ctx->Light.ShadeModel == GL_FLAT) {
       GLchan c[2][4];
-      GLfloat s[2][4];
 
       /* save colors/indexes for v0, v1 vertices */
       COPY_CHAN4(c[0], v0->color);
       COPY_CHAN4(c[1], v1->color);
-      COPY_4V(s[0], v0->attrib[FRAG_ATTRIB_COL1]);
-      COPY_4V(s[1], v1->attrib[FRAG_ATTRIB_COL1]);
 
       /* copy v2 color/indexes to v0, v1 indexes */
       COPY_CHAN4(v0->color, v2->color);
       COPY_CHAN4(v1->color, v2->color);
-      COPY_4V(v0->attrib[FRAG_ATTRIB_COL1], v2->attrib[FRAG_ATTRIB_COL1]);
-      COPY_4V(v1->attrib[FRAG_ATTRIB_COL1], v2->attrib[FRAG_ATTRIB_COL1]);
-
       render(ctx, ef, e0, e1, e2, v0, v1, v2);
 
       COPY_CHAN4(v0->color, c[0]);
       COPY_CHAN4(v1->color, c[1]);
-      COPY_4V(v0->attrib[FRAG_ATTRIB_COL1], s[0]);
-      COPY_4V(v1->attrib[FRAG_ATTRIB_COL1], s[1]);
    }
    else {
       render(ctx, ef, e0, e1, e2, v0, v1, v2);

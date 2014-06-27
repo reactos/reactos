@@ -1,7 +1,6 @@
 
 spec2def(ksecdd.sys ksecdd.spec)
 
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/drivers/ksecdd
     ${REACTOS_SOURCE_DIR}/lib/cryptlib)
@@ -11,7 +10,8 @@ list(APPEND SOURCE
      dispatch.c
      random.c
      stubs.c
-     ksecdd.rc)
+     ksecdd.rc
+     ${CMAKE_CURRENT_BINARY_DIR}/ksecdd.def)
 
 add_library(ksecdd SHARED ${SOURCE})
 target_link_libraries(ksecdd cryptlib pseh)

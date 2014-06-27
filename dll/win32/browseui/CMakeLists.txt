@@ -58,3 +58,7 @@ add_importlibs(browseui
 
 add_pch(browseui precomp.h SOURCE)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    add_target_compile_flags(browseui "-Wno-unused-but-set-variable")
+endif()

@@ -116,45 +116,57 @@ extern "C" {
 #define LOCALE_SABBREVMONTHNAME13	0x100F
 #define LOCALE_SPOSITIVESIGN	80
 #define LOCALE_SNEGATIVESIGN	81
-#define LOCALE_SSCRIPTS         108
+#define LOCALE_SSCRIPTS         108 // FIXME
 #define LOCALE_IPOSSIGNPOSN	82
 #define LOCALE_INEGSIGNPOSN	83
 #define LOCALE_IPOSSYMPRECEDES	84
 #define LOCALE_IPOSSEPBYSPACE	85
 #define LOCALE_INEGSYMPRECEDES	86
 #define LOCALE_INEGSEPBYSPACE	87
-#if (WINVER >= 0x0400)
 #define LOCALE_FONTSIGNATURE    88
 #define LOCALE_SISO639LANGNAME  89
 #define LOCALE_SISO3166CTRYNAME 90
-#define LOCALE_SNAME            92
-#endif
-#if (WINVER >= 0x0600)
-#define LOCALE_SSCRIPTS 108
-#endif
-#define LOCALE_SYSTEM_DEFAULT	0x800
-#define LOCALE_USER_DEFAULT	0x400
+#define LOCALE_SNAME            92 // FIXME
 
+#if (WINVER >= 0x0600)
+#define LOCALE_SNAME            92
+#define LOCALE_SDURATION        93
+#define LOCALE_SKEYBOARDSTOINSTALL 94
+#define LOCALE_SSHORTESTDAYNAME1 96
+#define LOCALE_SSHORTESTDAYNAME2 97
+#define LOCALE_SSHORTESTDAYNAME3 98
+#define LOCALE_SSHORTESTDAYNAME4 99
+#define LOCALE_SSHORTESTDAYNAME5 100
+#define LOCALE_SSHORTESTDAYNAME6 101
+#define LOCALE_SSHORTESTDAYNAME7 102
+#define LOCALE_SISO639LANGNAME2  103
+#define LOCALE_SISO3166CTRYNAME2 104
+#define LOCALE_SNAN              105
+#define LOCALE_SPOSINFINITY      106
+#define LOCALE_SNEGINFINITY      107
+#define LOCALE_SSCRIPTS 108
+#define LOCALE_SPARENT  109
+#define LOCALE_SCONSOLEFALLBACKNAME 110
+#endif /* (WINVER >= 0x0600) */
+
+//#if (WINVER >= _WIN32_WINNT_WIN7)
 #define LOCALE_IREADINGLAYOUT       0x0070
 #define LOCALE_INEUTRAL             0x0071
+#define LOCALE_INEGATIVEPERCENT     0x0074
+#define LOCALE_IPOSITIVEPERCENT     0x0075
+#define LOCALE_SPERCENT             0x0076
+#define LOCALE_SPERMILLE            0x0077
+#define LOCALE_SMONTHDAY            0x0078
+#define LOCALE_SSHORTTIME           0x0079
+#define LOCALE_SOPENTYPELANGUAGETAG 0x007a
+#define LOCALE_SSORTLOCALE          0x007b
+//#endif /* (WINVER >= _WIN32_WINNT_WIN7) */
 
-#if defined(__GNUC__)
-# define LOCALE_NAME_INVARIANT      (const WCHAR []){ 0 }
-#elif defined(_MSC_VER)
-# define LOCALE_NAME_INVARIANT      L""
-#else
-static const WCHAR LOCALE_NAME_INVARIANT[] = { 0 };
-#endif
-
-#if defined(__GNUC__)
-# define LOCALE_NAME_SYSTEM_DEFAULT      (const WCHAR []){'!','s','y','s','-','d','e','f','a','u','l','t','-','l','o','c','a','l','e',0}
-#elif defined(_MSC_VER)
-# define LOCALE_NAME_SYSTEM_DEFAULT      L"!sys-default-locale"
-#else
-static const WCHAR LOCALE_NAME_SYSTEM_DEFAULT[] = {'!','s','y','s','-','d','e','f','a','u','l','t','-','l','o','c','a','l','e',0};
-#endif
-
+#if (WINVER >= 0x0600)
 #define LOCALE_NAME_USER_DEFAULT    NULL
+#define LOCALE_NAME_INVARIANT      L""
+#define LOCALE_NAME_SYSTEM_DEFAULT      L"!sys-default-locale"
+#endif
 
 #define LOCALE_IDEFAULTUNIXCODEPAGE   0x1030 /* Wine extension */
 
@@ -473,7 +485,7 @@ static const WCHAR LOCALE_NAME_SYSTEM_DEFAULT[] = {'!','s','y','s','-','d','e','
 #define VS_ALLOW_LATIN 0x1
 #define GSS_ALLOW_INHERITED_COMMON 0x1
 #endif
-#ifndef  _BASETSD_H
+#ifndef  _BASETSD_H_
 typedef long LONG_PTR;
 #endif
 

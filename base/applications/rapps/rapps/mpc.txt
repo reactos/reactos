@@ -1,15 +1,15 @@
-; UTF-8
+﻿; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Media Player Classic Home Cinema
-Version = 1.7.4
+Version = 1.7.5
 Licence = GPL
 Description = A media player.
 Size = 10.1 MB
 Category = 2
 URLSite = http://mpc-hc.org/
-URLDownload = http://download.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.7.4_x86/MPC-HC.1.7.4.x86.exe
+URLDownload = http://download.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.7.5_x86/MPC-HC.1.7.5.x86.exe
 CDPath = none
 
 [Section.0407]

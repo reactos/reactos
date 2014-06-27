@@ -361,32 +361,32 @@ static void NAME(struct gl_context *ctx, const SWvertex *v0,
          GLfloat eMaj_da = (GLfloat) (vMax->color[ACOMP] - vMin->color[ACOMP]);
          GLfloat eBot_da = (GLfloat) (vMid->color[ACOMP] - vMin->color[ACOMP]);
 #  endif
-         span.attrStepX[FRAG_ATTRIB_COL0][0] = oneOverArea * (eMaj_dr * eBot.dy - eMaj.dy * eBot_dr);
-         span.attrStepY[FRAG_ATTRIB_COL0][0] = oneOverArea * (eMaj.dx * eBot_dr - eMaj_dr * eBot.dx);
-         span.attrStepX[FRAG_ATTRIB_COL0][1] = oneOverArea * (eMaj_dg * eBot.dy - eMaj.dy * eBot_dg);
-         span.attrStepY[FRAG_ATTRIB_COL0][1] = oneOverArea * (eMaj.dx * eBot_dg - eMaj_dg * eBot.dx);
-         span.attrStepX[FRAG_ATTRIB_COL0][2] = oneOverArea * (eMaj_db * eBot.dy - eMaj.dy * eBot_db);
-         span.attrStepY[FRAG_ATTRIB_COL0][2] = oneOverArea * (eMaj.dx * eBot_db - eMaj_db * eBot.dx);
-         span.redStep   = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL0][0]);
-         span.greenStep = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL0][1]);
-         span.blueStep  = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL0][2]);
+         span.attrStepX[FRAG_ATTRIB_COL][0] = oneOverArea * (eMaj_dr * eBot.dy - eMaj.dy * eBot_dr);
+         span.attrStepY[FRAG_ATTRIB_COL][0] = oneOverArea * (eMaj.dx * eBot_dr - eMaj_dr * eBot.dx);
+         span.attrStepX[FRAG_ATTRIB_COL][1] = oneOverArea * (eMaj_dg * eBot.dy - eMaj.dy * eBot_dg);
+         span.attrStepY[FRAG_ATTRIB_COL][1] = oneOverArea * (eMaj.dx * eBot_dg - eMaj_dg * eBot.dx);
+         span.attrStepX[FRAG_ATTRIB_COL][2] = oneOverArea * (eMaj_db * eBot.dy - eMaj.dy * eBot_db);
+         span.attrStepY[FRAG_ATTRIB_COL][2] = oneOverArea * (eMaj.dx * eBot_db - eMaj_db * eBot.dx);
+         span.redStep   = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL][0]);
+         span.greenStep = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL][1]);
+         span.blueStep  = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL][2]);
 #  ifdef INTERP_ALPHA
-         span.attrStepX[FRAG_ATTRIB_COL0][3] = oneOverArea * (eMaj_da * eBot.dy - eMaj.dy * eBot_da);
-         span.attrStepY[FRAG_ATTRIB_COL0][3] = oneOverArea * (eMaj.dx * eBot_da - eMaj_da * eBot.dx);
-         span.alphaStep = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL0][3]);
+         span.attrStepX[FRAG_ATTRIB_COL][3] = oneOverArea * (eMaj_da * eBot.dy - eMaj.dy * eBot_da);
+         span.attrStepY[FRAG_ATTRIB_COL][3] = oneOverArea * (eMaj.dx * eBot_da - eMaj_da * eBot.dx);
+         span.alphaStep = SignedFloatToFixed(span.attrStepX[FRAG_ATTRIB_COL][3]);
 #  endif /* INTERP_ALPHA */
       }
       else {
          ASSERT(ctx->Light.ShadeModel == GL_FLAT);
          span.interpMask |= SPAN_FLAT;
-         span.attrStepX[FRAG_ATTRIB_COL0][0] = span.attrStepY[FRAG_ATTRIB_COL0][0] = 0.0F;
-         span.attrStepX[FRAG_ATTRIB_COL0][1] = span.attrStepY[FRAG_ATTRIB_COL0][1] = 0.0F;
-         span.attrStepX[FRAG_ATTRIB_COL0][2] = span.attrStepY[FRAG_ATTRIB_COL0][2] = 0.0F;
+         span.attrStepX[FRAG_ATTRIB_COL][0] = span.attrStepY[FRAG_ATTRIB_COL][0] = 0.0F;
+         span.attrStepX[FRAG_ATTRIB_COL][1] = span.attrStepY[FRAG_ATTRIB_COL][1] = 0.0F;
+         span.attrStepX[FRAG_ATTRIB_COL][2] = span.attrStepY[FRAG_ATTRIB_COL][2] = 0.0F;
 	 span.redStep   = 0;
 	 span.greenStep = 0;
 	 span.blueStep  = 0;
 #  ifdef INTERP_ALPHA
-         span.attrStepX[FRAG_ATTRIB_COL0][3] = span.attrStepY[FRAG_ATTRIB_COL0][3] = 0.0F;
+         span.attrStepX[FRAG_ATTRIB_COL][3] = span.attrStepY[FRAG_ATTRIB_COL][3] = 0.0F;
 	 span.alphaStep = 0;
 #  endif
       }
@@ -636,26 +636,26 @@ static void NAME(struct gl_context *ctx, const SWvertex *v0,
 #ifdef INTERP_RGB
                if (ctx->Light.ShadeModel == GL_SMOOTH) {
                   rLeft = (GLint)(ChanToFixed(vLower->color[RCOMP])
-                                  + span.attrStepX[FRAG_ATTRIB_COL0][0] * adjx
-                                  + span.attrStepY[FRAG_ATTRIB_COL0][0] * adjy) + FIXED_HALF;
+                                  + span.attrStepX[FRAG_ATTRIB_COL][0] * adjx
+                                  + span.attrStepY[FRAG_ATTRIB_COL][0] * adjy) + FIXED_HALF;
                   gLeft = (GLint)(ChanToFixed(vLower->color[GCOMP])
-                                  + span.attrStepX[FRAG_ATTRIB_COL0][1] * adjx
-                                  + span.attrStepY[FRAG_ATTRIB_COL0][1] * adjy) + FIXED_HALF;
+                                  + span.attrStepX[FRAG_ATTRIB_COL][1] * adjx
+                                  + span.attrStepY[FRAG_ATTRIB_COL][1] * adjy) + FIXED_HALF;
                   bLeft = (GLint)(ChanToFixed(vLower->color[BCOMP])
-                                  + span.attrStepX[FRAG_ATTRIB_COL0][2] * adjx
-                                  + span.attrStepY[FRAG_ATTRIB_COL0][2] * adjy) + FIXED_HALF;
-                  fdrOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL0][0]
-                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL0][0]);
-                  fdgOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL0][1]
-                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL0][1]);
-                  fdbOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL0][2]
-                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL0][2]);
+                                  + span.attrStepX[FRAG_ATTRIB_COL][2] * adjx
+                                  + span.attrStepY[FRAG_ATTRIB_COL][2] * adjy) + FIXED_HALF;
+                  fdrOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL][0]
+                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL][0]);
+                  fdgOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL][1]
+                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL][1]);
+                  fdbOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL][2]
+                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL][2]);
 #  ifdef INTERP_ALPHA
                   aLeft = (GLint)(ChanToFixed(vLower->color[ACOMP])
-                                  + span.attrStepX[FRAG_ATTRIB_COL0][3] * adjx
-                                  + span.attrStepY[FRAG_ATTRIB_COL0][3] * adjy) + FIXED_HALF;
-                  fdaOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL0][3]
-                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL0][3]);
+                                  + span.attrStepX[FRAG_ATTRIB_COL][3] * adjx
+                                  + span.attrStepY[FRAG_ATTRIB_COL][3] * adjy) + FIXED_HALF;
+                  fdaOuter = SignedFloatToFixed(span.attrStepY[FRAG_ATTRIB_COL][3]
+                                                + dxOuter * span.attrStepX[FRAG_ATTRIB_COL][3]);
 #  endif
                }
                else {

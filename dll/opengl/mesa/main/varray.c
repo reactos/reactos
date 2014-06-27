@@ -59,11 +59,6 @@ type_to_bit(const struct gl_context *ctx, GLenum type)
       return INT_BIT;
    case GL_UNSIGNED_INT:
       return UNSIGNED_INT_BIT;
-   case GL_HALF_FLOAT:
-      if (ctx->Extensions.ARB_half_float_vertex)
-         return HALF_BIT;
-      else
-         return 0x0;
    case GL_FLOAT:
       return FLOAT_BIT;
    case GL_DOUBLE:
@@ -123,18 +118,9 @@ update_array(struct gl_context *ctx,
       return;
    }
 
-   if (ctx->Array.ArrayObj->ARBsemantics &&
-       !_mesa_is_bufferobj(ctx->Array.ArrayBufferObj)) {
-      /* GL_ARB_vertex_array_object requires that all arrays reside in VBOs.
-       * Generate GL_INVALID_OPERATION if that's not true.
-       */
-      _mesa_error(ctx, GL_INVALID_OPERATION, "%s(non-VBO array)", func);
-      return;
-   }
-
    elementSize = _mesa_sizeof_type(type) * size;
 
-   array = &ctx->Array.ArrayObj->VertexAttrib[attrib];
+   array = &ctx->Array.VertexAttrib[attrib];
    array->Size = size;
    array->Type = type;
    array->Stride = stride;
@@ -143,9 +129,6 @@ update_array(struct gl_context *ctx,
    array->Integer = integer;
    array->Ptr = (const GLubyte *) ptr;
    array->_ElementSize = elementSize;
-
-   _mesa_reference_buffer_object(ctx, &array->BufferObj,
-                                 ctx->Array.ArrayBufferObj);
 
    ctx->NewState |= _NEW_ARRAY;
    ctx->Array.NewState |= VERT_BIT(attrib);
@@ -190,7 +173,7 @@ _mesa_ColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   update_array(ctx, "glColorPointer", VERT_ATTRIB_COLOR0,
+   update_array(ctx, "glColorPointer", VERT_ATTRIB_COLOR,
                 legalTypes, 3, 4,
                 size, type, stride, GL_TRUE, GL_FALSE, ptr);
 }
@@ -220,23 +203,6 @@ _mesa_IndexPointer(GLenum type, GLsizei stride, const GLvoid *ptr)
    update_array(ctx, "glIndexPointer", VERT_ATTRIB_COLOR_INDEX,
                 legalTypes, 1, 1,
                 1, type, stride, GL_FALSE, GL_FALSE, ptr);
-}
-
-
-void GLAPIENTRY
-_mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
-			       GLsizei stride, const GLvoid *ptr)
-{
-   const GLbitfield legalTypes = (BYTE_BIT | UNSIGNED_BYTE_BIT |
-                                  SHORT_BIT | UNSIGNED_SHORT_BIT |
-                                  INT_BIT | UNSIGNED_INT_BIT |
-                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT);
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   update_array(ctx, "glSecondaryColorPointer", VERT_ATTRIB_COLOR1,
-                legalTypes, 3, 4,
-                size, type, stride, GL_TRUE, GL_FALSE, ptr);
 }
 
 
@@ -614,46 +580,22 @@ _mesa_copy_client_array(struct gl_context *ctx,
    dst->_MaxElement = src->_MaxElement;
 }
 
-
-
-/**
- * Print vertex array's fields.
- */
 static void
-print_array(const char *name, GLint index, const struct gl_client_array *array)
+init_array(struct gl_context *ctx,
+           struct gl_client_array *array, GLint size, GLint type)
 {
-   if (index >= 0)
-      printf("  %s[%d]: ", name, index);
-   else
-      printf("  %s: ", name);
-   printf("Ptr=%p, Type=0x%x, Size=%d, ElemSize=%u, Stride=%d, Buffer=%u(Size %lu), MaxElem=%u\n",
-	  array->Ptr, array->Type, array->Size,
-	  array->_ElementSize, array->StrideB,
-	  array->BufferObj->Name, (unsigned long) array->BufferObj->Size,
-	  array->_MaxElement);
-}
-
-
-/**
- * Print current vertex object/array info.  For debug.
- */
-void
-_mesa_print_arrays(struct gl_context *ctx)
-{
-   struct gl_array_object *arrayObj = ctx->Array.ArrayObj;
-
-   _mesa_update_array_object_max_element(ctx, arrayObj);
-
-   printf("Array Object %u\n", arrayObj->Name);
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled)
-      print_array("Vertex", -1, &arrayObj->VertexAttrib[VERT_ATTRIB_POS]);
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_NORMAL].Enabled)
-      print_array("Normal", -1, &arrayObj->VertexAttrib[VERT_ATTRIB_NORMAL]);
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_COLOR0].Enabled)
-      print_array("Color", -1, &arrayObj->VertexAttrib[VERT_ATTRIB_COLOR0]);
-   if (arrayObj->VertexAttrib[VERT_ATTRIB_TEX].Enabled)
-      print_array("TexCoord", -1, &arrayObj->VertexAttrib[VERT_ATTRIB_TEX]);
-   printf("  _MaxElement = %u\n", arrayObj->_MaxElement);
+   array->Size = size;
+   array->Type = type;
+   array->Stride = 0;
+   array->StrideB = 0;
+   array->Ptr = NULL;
+   array->Enabled = GL_FALSE;
+   array->Normalized = GL_FALSE;
+   array->Integer = GL_FALSE;
+   array->_ElementSize = size * _mesa_sizeof_type(type);
+   /* Vertex array buffers */
+   _mesa_reference_buffer_object(ctx, &array->BufferObj,
+                                 ctx->Shared->NullBufferObj);
 }
 
 
@@ -661,25 +603,33 @@ _mesa_print_arrays(struct gl_context *ctx)
  * Initialize vertex array state for given context.
  */
 void 
-_mesa_init_varray(struct gl_context *ctx)
+_mesa_init_varray(struct gl_context *ctx, struct gl_array_attrib *array)
 {
-   ctx->Array.DefaultArrayObj = _mesa_new_array_object(ctx, 0);
-   _mesa_reference_array_object(ctx, &ctx->Array.ArrayObj,
-                                ctx->Array.DefaultArrayObj);
+    GLuint i;
 
-   ctx->Array.Objects = _mesa_NewHashTable();
-}
-
-
-/**
- * Callback for deleting an array object.  Called by _mesa_HashDeleteAll().
- */
-static void
-delete_arrayobj_cb(GLuint id, void *data, void *userData)
-{
-   struct gl_array_object *arrayObj = (struct gl_array_object *) data;
-   struct gl_context *ctx = (struct gl_context *) userData;
-   _mesa_delete_array_object(ctx, arrayObj);
+    /* Init the individual arrays */
+    for (i = 0; i < Elements(array->VertexAttrib); i++) {
+       switch (i) {
+       case VERT_ATTRIB_WEIGHT:
+          init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_WEIGHT], 1, GL_FLOAT);
+          break;
+       case VERT_ATTRIB_NORMAL:
+          init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_NORMAL], 3, GL_FLOAT);
+          break;
+       case VERT_ATTRIB_FOG:
+          init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_FOG], 1, GL_FLOAT);
+          break;
+       case VERT_ATTRIB_COLOR_INDEX:
+          init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_COLOR_INDEX], 1, GL_FLOAT);
+          break;
+       case VERT_ATTRIB_EDGEFLAG:
+          init_array(ctx, &array->VertexAttrib[VERT_ATTRIB_EDGEFLAG], 1, GL_BOOL);
+          break;
+       default:
+          init_array(ctx, &array->VertexAttrib[i], 4, GL_FLOAT);
+          break;
+       }
+    }
 }
 
 
@@ -687,8 +637,14 @@ delete_arrayobj_cb(GLuint id, void *data, void *userData)
  * Free vertex array state for given context.
  */
 void 
-_mesa_free_varray_data(struct gl_context *ctx)
+_mesa_free_varray_data(struct gl_context *ctx, struct gl_array_attrib* array)
 {
-   _mesa_HashDeleteAll(ctx->Array.Objects, delete_arrayobj_cb, ctx);
-   _mesa_DeleteHashTable(ctx->Array.Objects);
+    GLuint i;
+
+    /* Uninit the individual arrays */
+    for (i = 0; i < Elements(array->VertexAttrib); i++)
+    {
+        _mesa_reference_buffer_object(ctx, &array->VertexAttrib[i].BufferObj, NULL);
+        memset(&array->VertexAttrib[i], 0, sizeof(struct gl_client_array));
+    }
 }

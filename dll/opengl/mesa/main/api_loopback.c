@@ -55,7 +55,6 @@
 #define RECTF(a,b,c,d)              CALL_Rectf(GET_DISPATCH(), (a,b,c,d))
 
 #define FOGCOORDF(x)                CALL_FogCoordfEXT(GET_DISPATCH(), (x))
-#define SECONDARYCOLORF(a,b,c)      CALL_SecondaryColor3fEXT(GET_DISPATCH(), (a,b,c))
 
 #define ATTRIB1NV(index,x)          CALL_VertexAttrib1fNV(GET_DISPATCH(), (index,x))
 #define ATTRIB2NV(index,x,y)        CALL_VertexAttrib2fNV(GET_DISPATCH(), (index,x,y))
@@ -765,113 +764,6 @@ loopback_Rectsv(const GLshort *v1, const GLshort *v2)
    RECTF((GLfloat) v1[0], (GLfloat) v1[1], (GLfloat) v2[0], (GLfloat) v2[1]);
 }
 
-static void GLAPIENTRY
-loopback_SecondaryColor3bEXT_f( GLbyte red, GLbyte green, GLbyte blue )
-{
-   SECONDARYCOLORF( BYTE_TO_FLOAT(red),
-		    BYTE_TO_FLOAT(green),
-		    BYTE_TO_FLOAT(blue) );
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3dEXT_f( GLdouble red, GLdouble green, GLdouble blue )
-{
-   SECONDARYCOLORF( (GLfloat) red, (GLfloat) green, (GLfloat) blue );
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3iEXT_f( GLint red, GLint green, GLint blue )
-{
-   SECONDARYCOLORF( INT_TO_FLOAT(red),
-		    INT_TO_FLOAT(green),
-		    INT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3sEXT_f( GLshort red, GLshort green, GLshort blue )
-{
-   SECONDARYCOLORF(SHORT_TO_FLOAT(red),
-                   SHORT_TO_FLOAT(green),
-                   SHORT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3uiEXT_f( GLuint red, GLuint green, GLuint blue )
-{
-   SECONDARYCOLORF(UINT_TO_FLOAT(red),
-                   UINT_TO_FLOAT(green),
-                   UINT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3usEXT_f( GLushort red, GLushort green, GLushort blue )
-{
-   SECONDARYCOLORF(USHORT_TO_FLOAT(red),
-                   USHORT_TO_FLOAT(green),
-                   USHORT_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3ubEXT_f( GLubyte red, GLubyte green, GLubyte blue )
-{
-   SECONDARYCOLORF(UBYTE_TO_FLOAT(red),
-                   UBYTE_TO_FLOAT(green),
-                   UBYTE_TO_FLOAT(blue));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3bvEXT_f( const GLbyte *v )
-{
-   SECONDARYCOLORF(BYTE_TO_FLOAT(v[0]),
-                   BYTE_TO_FLOAT(v[1]),
-                   BYTE_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3dvEXT_f( const GLdouble *v )
-{
-   SECONDARYCOLORF( (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2] );
-}
-static void GLAPIENTRY
-loopback_SecondaryColor3ivEXT_f( const GLint *v )
-{
-   SECONDARYCOLORF(INT_TO_FLOAT(v[0]),
-                   INT_TO_FLOAT(v[1]),
-                   INT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3svEXT_f( const GLshort *v )
-{
-   SECONDARYCOLORF(SHORT_TO_FLOAT(v[0]),
-                   SHORT_TO_FLOAT(v[1]),
-                   SHORT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3uivEXT_f( const GLuint *v )
-{
-   SECONDARYCOLORF(UINT_TO_FLOAT(v[0]),
-                   UINT_TO_FLOAT(v[1]),
-                   UINT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3usvEXT_f( const GLushort *v )
-{
-   SECONDARYCOLORF(USHORT_TO_FLOAT(v[0]),
-                   USHORT_TO_FLOAT(v[1]),
-                   USHORT_TO_FLOAT(v[2]));
-}
-
-static void GLAPIENTRY
-loopback_SecondaryColor3ubvEXT_f( const GLubyte *v )
-{
-   SECONDARYCOLORF(UBYTE_TO_FLOAT(v[0]),
-                   UBYTE_TO_FLOAT(v[1]),
-                   UBYTE_TO_FLOAT(v[2]));
-}
-
 
 /*
  * GL_NV_vertex_program:
@@ -991,113 +883,6 @@ loopback_VertexAttrib4ubvNV(GLuint index, const GLubyte *v)
 }
 
 
-static void GLAPIENTRY
-loopback_VertexAttribs1svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib1svNV(index + i, v + i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs1fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB1NV(index + i, v[i]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs1dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib1dvNV(index + i, v + i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs2svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib2svNV(index + i, v + 2 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs2fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB2NV(index + i, v[2 * i], v[2 * i + 1]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs2dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib2dvNV(index + i, v + 2 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs3svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib3svNV(index + i, v + 3 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs3fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB3NV(index + i, v[3 * i], v[3 * i + 1], v[3 * i + 2]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs3dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib3dvNV(index + i, v + 3 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4svNV(GLuint index, GLsizei n, const GLshort *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib4svNV(index + i, v + 4 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4fvNV(GLuint index, GLsizei n, const GLfloat *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      ATTRIB4NV(index + i, v[4 * i], v[4 * i + 1], v[4 * i + 2], v[4 * i + 3]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4dvNV(GLuint index, GLsizei n, const GLdouble *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib4dvNV(index + i, v + 4 * i);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttribs4ubvNV(GLuint index, GLsizei n, const GLubyte *v)
-{
-   GLint i;
-   for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib4ubvNV(index + i, v + 4 * i);
-}
-
-
-
-
 /*
  * This code never registers handlers for any of the entry points
  * listed in vtxfmt.h.
@@ -1133,21 +918,6 @@ _mesa_loopback_init_api_table( struct _glapi_table *dest )
    SET_Color4uiv(dest, loopback_Color4uiv_f);
    SET_Color4usv(dest, loopback_Color4usv_f);
    SET_Color4ubv(dest, loopback_Color4ubv_f);
-
-   SET_SecondaryColor3bEXT(dest, loopback_SecondaryColor3bEXT_f);
-   SET_SecondaryColor3dEXT(dest, loopback_SecondaryColor3dEXT_f);
-   SET_SecondaryColor3iEXT(dest, loopback_SecondaryColor3iEXT_f);
-   SET_SecondaryColor3sEXT(dest, loopback_SecondaryColor3sEXT_f);
-   SET_SecondaryColor3uiEXT(dest, loopback_SecondaryColor3uiEXT_f);
-   SET_SecondaryColor3usEXT(dest, loopback_SecondaryColor3usEXT_f);
-   SET_SecondaryColor3ubEXT(dest, loopback_SecondaryColor3ubEXT_f);
-   SET_SecondaryColor3bvEXT(dest, loopback_SecondaryColor3bvEXT_f);
-   SET_SecondaryColor3dvEXT(dest, loopback_SecondaryColor3dvEXT_f);
-   SET_SecondaryColor3ivEXT(dest, loopback_SecondaryColor3ivEXT_f);
-   SET_SecondaryColor3svEXT(dest, loopback_SecondaryColor3svEXT_f);
-   SET_SecondaryColor3uivEXT(dest, loopback_SecondaryColor3uivEXT_f);
-   SET_SecondaryColor3usvEXT(dest, loopback_SecondaryColor3usvEXT_f);
-   SET_SecondaryColor3ubvEXT(dest, loopback_SecondaryColor3ubvEXT_f);
       
    SET_EdgeFlagv(dest, loopback_EdgeFlagv);
 
@@ -1246,19 +1016,6 @@ _mesa_loopback_init_api_table( struct _glapi_table *dest )
    SET_VertexAttrib4svNV(dest, loopback_VertexAttrib4svNV);
    SET_VertexAttrib4dvNV(dest, loopback_VertexAttrib4dvNV);
    SET_VertexAttrib4ubvNV(dest, loopback_VertexAttrib4ubvNV);
-   SET_VertexAttribs1svNV(dest, loopback_VertexAttribs1svNV);
-   SET_VertexAttribs1fvNV(dest, loopback_VertexAttribs1fvNV);
-   SET_VertexAttribs1dvNV(dest, loopback_VertexAttribs1dvNV);
-   SET_VertexAttribs2svNV(dest, loopback_VertexAttribs2svNV);
-   SET_VertexAttribs2fvNV(dest, loopback_VertexAttribs2fvNV);
-   SET_VertexAttribs2dvNV(dest, loopback_VertexAttribs2dvNV);
-   SET_VertexAttribs3svNV(dest, loopback_VertexAttribs3svNV);
-   SET_VertexAttribs3fvNV(dest, loopback_VertexAttribs3fvNV);
-   SET_VertexAttribs3dvNV(dest, loopback_VertexAttribs3dvNV);
-   SET_VertexAttribs4svNV(dest, loopback_VertexAttribs4svNV);
-   SET_VertexAttribs4fvNV(dest, loopback_VertexAttribs4fvNV);
-   SET_VertexAttribs4dvNV(dest, loopback_VertexAttribs4dvNV);
-   SET_VertexAttribs4ubvNV(dest, loopback_VertexAttribs4ubvNV);
 }
 
 

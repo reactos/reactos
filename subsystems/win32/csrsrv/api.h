@@ -153,8 +153,6 @@ NTSTATUS
 NTAPI
 CsrInitializeProcessStructure(VOID);
 
-// NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
-//                                  PVOID Context);
 PCSR_THREAD
 NTAPI
 CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,

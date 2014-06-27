@@ -118,8 +118,8 @@ BmfdQueryGlyphAndBitmap(
     }
     else
     {
-        cxDst = cxSrc * yScale;
-        cyDst = cySrc * xScale;
+        cxDst = cxSrc * xScale;
+        cyDst = cySrc * yScale;
     }
     cjDstRow = (cxDst + 7) / 8;
 
@@ -154,7 +154,7 @@ BmfdQueryGlyphAndBitmap(
         }
 
         /* Fill GLYPHBITS structure */
-        pgb->ptlOrigin.x = yScale * pface->wA;
+        pgb->ptlOrigin.x = xScale * pface->wA;
         pgb->ptlOrigin.y = - yScale * pface->wAscent;
         pgb->sizlBitmap.cx = cxDst;
         pgb->sizlBitmap.cy = cyDst;

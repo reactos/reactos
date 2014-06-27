@@ -140,7 +140,8 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
 
 VOID
 SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
-
+VOID
+CreateSysMenu(HWND hWnd);
 static LRESULT CALLBACK
 GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -198,6 +199,9 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 /* CAN WE DEADLOCK ?? */
                 GuiConsoleMoveWindow(GuiData); // FIXME: This MUST be done via the CreateWindowExW call.
                 SendMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
+
+                // FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
+                CreateSysMenu(GuiData->hWindow);
 
                 /* Switch to full-screen mode if necessary */
                 // FIXME: Move elsewhere, it cause misdrawings of the window.
@@ -533,8 +537,11 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     GuiData->CmdIdLow = GuiData->CmdIdHigh = 0;
 
     /* Initialize the selection */
-    RtlZeroMemory(&GuiData->Selection, sizeof(CONSOLE_SELECTION_INFO));
+    RtlZeroMemory(&GuiData->Selection, sizeof(GuiData->Selection));
     GuiData->Selection.dwFlags = CONSOLE_NO_SELECTION;
+    RtlZeroMemory(&GuiData->dwSelectionCursor, sizeof(GuiData->dwSelectionCursor));
+    GuiData->LineSelection = FALSE; // Default to block selection
+    // TODO: Retrieve the selection mode via the registry.
 
     /*
      * We need to wait until the GUI has been fully initialized

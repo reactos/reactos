@@ -58,14 +58,6 @@ legal_texobj_target(struct gl_context *ctx, GLuint dims, GLenum target)
       default:
          return GL_FALSE;
       }
-   case 3:
-      switch (target) {
-      case GL_TEXTURE_3D:
-      case GL_PROXY_TEXTURE_3D:
-         return GL_TRUE;
-      default:
-         return GL_FALSE;
-      }
    default:
       _mesa_problem(ctx, "invalid dims=%u in legal_texobj_target()", dims);
       return GL_FALSE;

@@ -20,6 +20,7 @@
 
 #include "localspl_private.h"
 
+#include <shlwapi.h>
 #include <ddk/winddiui.h>
 
 /* ############################### */
@@ -1846,7 +1847,7 @@ static BOOL WINAPI fpDeleteMonitor(LPWSTR pName, LPWSTR pEnvironment, LPWSTR pMo
         return FALSE;
     }
 
-    if(RegDeleteTreeW(hroot, pMonitorName) == ERROR_SUCCESS) {
+    if(SHDeleteKeyW(hroot, pMonitorName) == ERROR_SUCCESS) {
         TRACE("%s deleted\n", debugstr_w(pMonitorName));
         RegCloseKey(hroot);
         return TRUE;

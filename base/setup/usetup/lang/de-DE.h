@@ -466,7 +466,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
         "nutzbaren Setups.",
         TEXT_STYLE_NORMAL
     },
-	    {
+    {
         6,
         14,
         "Die Reparaturfunktionen sind noch nicht implementiert.",
@@ -814,12 +814,18 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  C erstellt eine neue Partition.",
+        "\x07  P erstellt eine primÑre Partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
+        "\x07  E erstellt eine erweiterte Partition.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
         "\x07  D lîscht eine vorhandene Partition.",
         TEXT_STYLE_NORMAL
     },
@@ -909,7 +915,7 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
         "Benutzen Sie die Entf-TASTE, um Zeichen zu lîschen.",
         TEXT_STYLE_NORMAL
     },
-	{
+    {
         6,
         17,
         "BestÑtigen Sie die Eingabe mit der EINGABETASTE.",
@@ -1280,6 +1286,10 @@ static MUI_ENTRY deDERegistryEntries[] =
 MUI_ERROR deDEErrorEntries[] =
 {
     {
+        // NOT_AN_ERROR
+        "Erfolg\n"
+    },
+    {
         //ERROR_NOT_INSTALLED
         "ReactOS wurde nicht vollstÑndig auf Ihrem System installiert.\n"
         "Wenn Sie die Installation jetzt beenden, mÅssen Sie diese\n"
@@ -1388,7 +1398,7 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "Die RegistrierungseintrÑge der Anzeigeeinstellungen\n"
-		"konnten nicht aktualisiert werden.",
+        "konnten nicht aktualisiert werden.",
         "EINGABETASTER = Computer neu starten"
     },
     {
@@ -1429,7 +1439,7 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_COPY_QUEUE,
         "Die Liste mit den zu kopierenden Dateien\n"
-		"konnte nicht gefunden werden.\n",
+        "konnte nicht gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
@@ -1492,6 +1502,32 @@ MUI_ERROR deDEErrorEntries[] =
         "gewÑhlten Partition vorhanden.\n"
         "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
         NULL
+    },
+    {
+        //ERROR_PARTITION_TABLE_FULL,
+        "Sie kînnen keine weitere primÑre oder erweiterte Partition in\n"
+        "der Partitionstabelle erstellen, weil die Tabelle voll ist.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
+        //ERROR_ONLY_ONE_EXTENDED,
+        "Sie kînnen nur eine erweiterte Partition auf jeder Festplatte anlegen.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
+        //ERROR_NOT_BEHIND_EXTENDED,
+        "Sie kînnen hinter einer erweiterten Partition keine weitere Partition anlegen.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+    },
+    {
+        //ERROR_EXTENDED_NOT_LAST,
+        "Eine erweiterte Partition muss immer die letzte Partition in \n"
+        "einer Partitionstabelle sein.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
     },
     {
         NULL,
@@ -1605,13 +1641,21 @@ MUI_STRING deDEStrings[] =
     {STRING_PLEASEWAIT,
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  EINGABETASTE = Installieren  C = Partition erstellen  F3 = Installation abbr."},
+     "  EINGABETASTE = Installieren  P = PrimÑre  E = Erweiterte  F3 = Installation abbr."},
+    {STRING_INSTALLCREATELOGICAL,
+     "  EINGABETASTE = Installieren  L = Logisches Laufwerk  F3 = Installation abbr."},
     {STRING_INSTALLDELETEPARTITION,
      "  EINGABETASTE = Installieren  D = Partition lîschen  F3 = Installation abbr."},
+    {STRING_DELETEPARTITION,
+     "   D = Partition lîschen  F3 = Installation abbrechen"},
     {STRING_PARTITIONSIZE,
      "Grî·e der neuen Partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "Eine neue Partition soll hier erstellt werden:"},
+     "Eine primÑre Partition soll hier erstellt werden:"},
+    {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
+     "Eine erweiterte Partition soll hier erstellt werden:"},
+    {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
+     "Ein logisches Laufwerk soll hier erstellt werden:"},
     {STRING_HDDSIZE,
     "Bitte geben Sie die Grî·e der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,
@@ -1683,7 +1727,7 @@ MUI_STRING deDEStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "auf Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  Typ %-3u                         %6lu %s"},
+    "%c%c  %sTyp %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %S"},
     {STRING_HDDINFOUNK6,
@@ -1691,9 +1735,11 @@ MUI_STRING deDEStrings[] =
     {STRING_NEWPARTITION,
     "Setup erstellte eine neue Partition auf"},
     {STRING_UNPSPACE,
-    "    Unpartitionierter Speicher       %6lu %s"},
+    "    %sUnpartitionierter Speicher%s     %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
+    {STRING_EXTENDED_PARTITION,
+    "Erweiterte Partition"},
     {STRING_UNFORMATTED,
     "Neu (Unformatiert)"},
     {STRING_FORMATUNUSED,

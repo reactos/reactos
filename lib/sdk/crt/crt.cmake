@@ -306,6 +306,7 @@ list(APPEND CRT_SOURCE
     string/wtoi.c
     string/wtoi64.c
     string/wtol.c
+    string/winesup.c
     sys_stat/systime.c
     time/asctime.c
     time/clock.c

@@ -867,56 +867,6 @@ nodraw_triangle( struct gl_context *ctx,
 }
 
 
-/*
- * This is used when separate specular color is enabled, but not
- * texturing.  We add the specular color to the primary color,
- * draw the triangle, then restore the original primary color.
- * Inefficient, but seldom needed.
- */
-void
-_swrast_add_spec_terms_triangle(struct gl_context *ctx, const SWvertex *v0,
-                                const SWvertex *v1, const SWvertex *v2)
-{
-   SWvertex *ncv0 = (SWvertex *)v0; /* drop const qualifier */
-   SWvertex *ncv1 = (SWvertex *)v1;
-   SWvertex *ncv2 = (SWvertex *)v2;
-   GLfloat rSum, gSum, bSum;
-   GLchan cSave[3][4];
-
-   /* save original colors */
-   COPY_CHAN4( cSave[0], ncv0->color );
-   COPY_CHAN4( cSave[1], ncv1->color );
-   COPY_CHAN4( cSave[2], ncv2->color );
-   /* sum v0 */
-   rSum = CHAN_TO_FLOAT(ncv0->color[0]) + ncv0->attrib[FRAG_ATTRIB_COL1][0];
-   gSum = CHAN_TO_FLOAT(ncv0->color[1]) + ncv0->attrib[FRAG_ATTRIB_COL1][1];
-   bSum = CHAN_TO_FLOAT(ncv0->color[2]) + ncv0->attrib[FRAG_ATTRIB_COL1][2];
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[0], rSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[1], gSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[2], bSum);
-   /* sum v1 */
-   rSum = CHAN_TO_FLOAT(ncv1->color[0]) + ncv1->attrib[FRAG_ATTRIB_COL1][0];
-   gSum = CHAN_TO_FLOAT(ncv1->color[1]) + ncv1->attrib[FRAG_ATTRIB_COL1][1];
-   bSum = CHAN_TO_FLOAT(ncv1->color[2]) + ncv1->attrib[FRAG_ATTRIB_COL1][2];
-   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[0], rSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[1], gSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[2], bSum);
-   /* sum v2 */
-   rSum = CHAN_TO_FLOAT(ncv2->color[0]) + ncv2->attrib[FRAG_ATTRIB_COL1][0];
-   gSum = CHAN_TO_FLOAT(ncv2->color[1]) + ncv2->attrib[FRAG_ATTRIB_COL1][1];
-   bSum = CHAN_TO_FLOAT(ncv2->color[2]) + ncv2->attrib[FRAG_ATTRIB_COL1][2];
-   UNCLAMPED_FLOAT_TO_CHAN(ncv2->color[0], rSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv2->color[1], gSum);
-   UNCLAMPED_FLOAT_TO_CHAN(ncv2->color[2], bSum);
-   /* draw */
-   SWRAST_CONTEXT(ctx)->SpecTriangle( ctx, ncv0, ncv1, ncv2 );
-   /* restore original colors */
-   COPY_CHAN4( ncv0->color, cSave[0] );
-   COPY_CHAN4( ncv1->color, cSave[1] );
-   COPY_CHAN4( ncv2->color, cSave[2] );
-}
-
-
 
 #ifdef DEBUG
 
@@ -970,7 +920,6 @@ _swrast_choose_triangle( struct gl_context *ctx )
        * needs to be interpolated.
        */
       if (ctx->Texture._EnabledCoord ||
-          _mesa_need_secondary_color(ctx) ||
           swrast->_FogEnabled) {
          /* Ugh, we do a _lot_ of tests to pick the best textured tri func */
          const struct gl_texture_object *texObj2D;
@@ -999,7 +948,6 @@ _swrast_choose_triangle( struct gl_context *ctx )
              && texImg->Width == swImg->RowStride
              && (format == MESA_FORMAT_RGB888 || format == MESA_FORMAT_RGBA8888)
              && minFilter == magFilter
-             && ctx->Light.Model.ColorControl == GL_SINGLE_COLOR
              && !swrast->_FogEnabled
              && ctx->Texture.Unit.EnvMode != GL_COMBINE_EXT
              && ctx->Texture.Unit.EnvMode != GL_COMBINE4_NV) {

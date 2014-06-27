@@ -18,6 +18,8 @@
 
 #include "crypt32_private.h"
 
+#include <shlwapi.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 typedef struct _WINE_HASH_TO_DELETE
@@ -507,12 +509,12 @@ WINECRYPT_CERTSTORE *CRYPT_RegOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags,
 
     if (dwFlags & CERT_STORE_DELETE_FLAG)
     {
-        DWORD rc = RegDeleteTreeW((HKEY)pvPara, CertsW);
+        DWORD rc = SHDeleteKeyW((HKEY)pvPara, CertsW);
 
         if (rc == ERROR_SUCCESS || rc == ERROR_NO_MORE_ITEMS)
-            rc = RegDeleteTreeW((HKEY)pvPara, CRLsW);
+            rc = SHDeleteKeyW((HKEY)pvPara, CRLsW);
         if (rc == ERROR_SUCCESS || rc == ERROR_NO_MORE_ITEMS)
-            rc = RegDeleteTreeW((HKEY)pvPara, CTLsW);
+            rc = SHDeleteKeyW((HKEY)pvPara, CTLsW);
         if (rc == ERROR_NO_MORE_ITEMS)
             rc = ERROR_SUCCESS;
         SetLastError(rc);

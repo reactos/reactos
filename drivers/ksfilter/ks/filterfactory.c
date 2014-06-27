@@ -542,7 +542,7 @@ KsFilterFactoryUpdateCacheData(
     PLIST_ENTRY Entry;
     PSYMBOLIC_LINK_ENTRY SymEntry;
     BOOLEAN Found;
-    HKEY hKey;
+    HANDLE hKey;
     NTSTATUS Status = STATUS_SUCCESS;
 
     IKsFilterFactoryImpl * Factory = (IKsFilterFactoryImpl*)CONTAINING_RECORD(FilterFactory, IKsFilterFactoryImpl, FilterFactory);
@@ -742,5 +742,5 @@ KsFilterFactoryUpdateCacheData(
 
     /* done */
     return Status;
-}	
+}
 

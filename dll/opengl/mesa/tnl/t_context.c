@@ -101,10 +101,7 @@ _tnl_InvalidateState( struct gl_context *ctx, GLuint new_state )
     */
    tnl->render_inputs_bitset = BITFIELD64_BIT(_TNL_ATTRIB_POS);
 
-   tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_COLOR0);
-
-   if (_mesa_need_secondary_color(ctx))
-     tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_COLOR1);
+   tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_COLOR);
 
    if (ctx->Texture._EnabledCoord) {
       tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_TEX);

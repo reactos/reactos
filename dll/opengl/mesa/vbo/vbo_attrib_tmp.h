@@ -197,44 +197,28 @@ static void GLAPIENTRY
 TAG(Color3f)(GLfloat x, GLfloat y, GLfloat z)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR3F(VBO_ATTRIB_COLOR0, x, y, z);
+   ATTR3F(VBO_ATTRIB_COLOR, x, y, z);
 }
 
 static void GLAPIENTRY
 TAG(Color3fv)(const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR3FV(VBO_ATTRIB_COLOR0, v);
+   ATTR3FV(VBO_ATTRIB_COLOR, v);
 }
 
 static void GLAPIENTRY
 TAG(Color4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR4F(VBO_ATTRIB_COLOR0, x, y, z, w);
+   ATTR4F(VBO_ATTRIB_COLOR, x, y, z, w);
 }
 
 static void GLAPIENTRY
 TAG(Color4fv)(const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ATTR4FV(VBO_ATTRIB_COLOR0, v);
-}
-
-
-
-static void GLAPIENTRY
-TAG(SecondaryColor3fEXT)(GLfloat x, GLfloat y, GLfloat z)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ATTR3F(VBO_ATTRIB_COLOR1, x, y, z);
-}
-
-static void GLAPIENTRY
-TAG(SecondaryColor3fvEXT)(const GLfloat * v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ATTR3FV(VBO_ATTRIB_COLOR1, v);
+   ATTR4FV(VBO_ATTRIB_COLOR, v);
 }
 
 

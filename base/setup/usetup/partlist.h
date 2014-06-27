@@ -57,6 +57,8 @@ typedef struct _PARTENTRY
     CHAR VolumeLabel[17];
     CHAR FileSystemName[9];
 
+    BOOLEAN LogicalPartition;
+
     /* Partition is partitioned disk space */
     BOOLEAN IsPartitioned;
 
@@ -115,8 +117,10 @@ typedef struct _DISKENTRY
 
     PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
 
+    PPARTENTRY ExtendedPartition;
+
     LIST_ENTRY PrimaryPartListHead;
-    LIST_ENTRY ExtendedPartListHead;
+    LIST_ENTRY LogicalPartListHead;
 
 } DISKENTRY, *PDISKENTRY;
 
@@ -207,19 +211,29 @@ BOOL
 SetMountedDeviceValues(
     PPARTLIST List);
 
-VOID
+BOOL
 ScrollDownPartitionList(
     PPARTLIST List);
 
-VOID
+BOOL
 ScrollUpPartitionList(
     PPARTLIST List);
 
 VOID
-CreateNewPartition(
+CreatePrimaryPartition(
     PPARTLIST List,
     ULONGLONG PartitionSize,
     BOOLEAN AutoCreate);
+
+VOID
+CreateExtendedPartition(
+    PPARTLIST List,
+    ULONGLONG PartitionSize);
+
+VOID
+CreateLogicalPartition(
+    PPARTLIST List,
+    ULONGLONG PartitionSize);
 
 VOID
 DeleteCurrentPartition(
@@ -236,5 +250,17 @@ CheckForLinuxFdiskPartitions(
 BOOLEAN
 WritePartitionsToDisk(
     PPARTLIST List);
+
+ULONG
+PrimaryPartitionCreationChecks(
+    IN PPARTLIST List);
+
+ULONG
+ExtendedPartitionCreationChecks(
+    IN PPARTLIST List);
+
+ULONG
+LogicalPartitionCreationChecks(
+    IN PPARTLIST List);
 
 /* EOF */

@@ -220,18 +220,6 @@ struct dd_function_table {
                       GLint width, GLint height, GLint border,
                       GLenum format, GLenum type, const GLvoid *pixels,
                       const struct gl_pixelstore_attrib *packing);
-   
-   /**
-    * Called by glTexImage3D().
-    * 
-    * \sa dd_function_table::TexImage1D.
-    */
-   void (*TexImage3D)(struct gl_context *ctx,
-                      struct gl_texture_image *texImage,
-                      GLint internalFormat,
-                      GLint width, GLint height, GLint depth, GLint border,
-                      GLenum format, GLenum type, const GLvoid *pixels,
-                      const struct gl_pixelstore_attrib *packing);
 
    /**
     * Called by glTexSubImage1D().  Replace a subset of the target texture
@@ -254,19 +242,6 @@ struct dd_function_table {
                          struct gl_texture_image *texImage,
                          GLint xoffset, GLint yoffset,
                          GLsizei width, GLsizei height,
-                         GLenum format, GLenum type,
-                         const GLvoid *pixels,
-                         const struct gl_pixelstore_attrib *packing);
-   
-   /**
-    * Called by glTexSubImage3D().
-    *
-    * \sa dd_function_table::TexSubImage1D.
-    */
-   void (*TexSubImage3D)(struct gl_context *ctx,
-                         struct gl_texture_image *texImage,
-                         GLint xoffset, GLint yoffset, GLint zoffset,
-                         GLsizei width, GLsizei height, GLint depth,
                          GLenum format, GLenum type,
                          const GLvoid *pixels,
                          const struct gl_pixelstore_attrib *packing);
@@ -294,16 +269,6 @@ struct dd_function_table {
    void (*CopyTexSubImage2D)(struct gl_context *ctx,
                              struct gl_texture_image *texImage,
                              GLint xoffset, GLint yoffset,
-                             struct gl_renderbuffer *rb,
-                             GLint x, GLint y,
-                             GLsizei width, GLsizei height);
-
-   /**
-    * Called by glCopyTexSubImage3D() and glCopyTexImage3D().
-    */
-   void (*CopyTexSubImage3D)(struct gl_context *ctx,
-                             struct gl_texture_image *texImage,
-                             GLint xoffset, GLint yoffset, GLint zoffset,
                              struct gl_renderbuffer *rb,
                              GLint x, GLint y,
                              GLsizei width, GLsizei height);
@@ -349,18 +314,6 @@ struct dd_function_table {
                                 GLsizei imageSize, const GLvoid *data);
 
    /**
-    * Called by glCompressedTexImage3D().
-    *
-    * \sa dd_function_table::CompressedTexImage3D.
-    */
-   void (*CompressedTexImage3D)(struct gl_context *ctx,
-                                struct gl_texture_image *texImage,
-                                GLint internalFormat,
-                                GLsizei width, GLsizei height, GLsizei depth,
-                                GLint border,
-                                GLsizei imageSize, const GLvoid *data);
-
-   /**
     * Called by glCompressedTexSubImage1D().
     */
    void (*CompressedTexSubImage1D)(struct gl_context *ctx,
@@ -376,16 +329,6 @@ struct dd_function_table {
                                    struct gl_texture_image *texImage,
                                    GLint xoffset, GLint yoffset,
                                    GLsizei width, GLint height,
-                                   GLenum format,
-                                   GLsizei imageSize, const GLvoid *data);
-
-   /**
-    * Called by glCompressedTexSubImage3D().
-    */
-   void (*CompressedTexSubImage3D)(struct gl_context *ctx,
-                                   struct gl_texture_image *texImage,
-                                   GLint xoffset, GLint yoffset, GLint zoffset,
-                                   GLsizei width, GLint height, GLint depth,
                                    GLenum format,
                                    GLsizei imageSize, const GLvoid *data);
    /*@}*/
@@ -490,19 +433,6 @@ struct dd_function_table {
    /*@{*/
    /** Specify the alpha test function */
    void (*AlphaFunc)(struct gl_context *ctx, GLenum func, GLfloat ref);
-   /** Set the blend color */
-   void (*BlendColor)(struct gl_context *ctx, const GLfloat color[4]);
-   /** Set the blend equation */
-   void (*BlendEquationSeparate)(struct gl_context *ctx, GLenum modeRGB, GLenum modeA);
-   void (*BlendEquationSeparatei)(struct gl_context *ctx, GLuint buffer,
-                                  GLenum modeRGB, GLenum modeA);
-   /** Specify pixel arithmetic */
-   void (*BlendFuncSeparate)(struct gl_context *ctx,
-                             GLenum sfactorRGB, GLenum dfactorRGB,
-                             GLenum sfactorA, GLenum dfactorA);
-   void (*BlendFuncSeparatei)(struct gl_context *ctx, GLuint buffer,
-                              GLenum sfactorRGB, GLenum dfactorRGB,
-                              GLenum sfactorA, GLenum dfactorA);
    /** Specify clear values for the color buffers */
    void (*ClearColor)(struct gl_context *ctx,
                       const union gl_color_union color);
@@ -620,31 +550,6 @@ struct dd_function_table {
 			     struct gl_buffer_object *obj );
    /*@}*/
 
-   /**
-    * \name Functions for GL_APPLE_object_purgeable
-    */
-   /*@{*/
-   /* variations on ObjectPurgeable */
-   GLenum (*BufferObjectPurgeable)( struct gl_context *ctx, struct gl_buffer_object *obj, GLenum option );
-   GLenum (*RenderObjectPurgeable)( struct gl_context *ctx, struct gl_renderbuffer *obj, GLenum option );
-   GLenum (*TextureObjectPurgeable)( struct gl_context *ctx, struct gl_texture_object *obj, GLenum option );
-
-   /* variations on ObjectUnpurgeable */
-   GLenum (*BufferObjectUnpurgeable)( struct gl_context *ctx, struct gl_buffer_object *obj, GLenum option );
-   GLenum (*RenderObjectUnpurgeable)( struct gl_context *ctx, struct gl_renderbuffer *obj, GLenum option );
-   GLenum (*TextureObjectUnpurgeable)( struct gl_context *ctx, struct gl_texture_object *obj, GLenum option );
-   /*@}*/
-
-
-   /**
-    * \name Vertex Array objects
-    */
-   /*@{*/
-   struct gl_array_object * (*NewArrayObject)(struct gl_context *ctx, GLuint id);
-   void (*DeleteArrayObject)(struct gl_context *ctx, struct gl_array_object *obj);
-   void (*BindArrayObject)(struct gl_context *ctx, struct gl_array_object *obj);
-   /*@}*/
-
 
    /**
     * \name Support for multiple T&L engines
@@ -748,11 +653,6 @@ struct dd_function_table {
    void (*EndCallList)( struct gl_context *ctx );
 
    /**@}*/
-
-   /**
-    * \name GL_NV_texture_barrier interface
-    */
-   void (*TextureBarrier)(struct gl_context *ctx);
 };
 
 
@@ -806,8 +706,6 @@ typedef struct {
    void (GLAPIENTRYP MultiTexCoord4fvARB)( GLenum, const GLfloat * );
    void (GLAPIENTRYP Normal3f)( GLfloat, GLfloat, GLfloat );
    void (GLAPIENTRYP Normal3fv)( const GLfloat * );
-   void (GLAPIENTRYP SecondaryColor3fEXT)( GLfloat, GLfloat, GLfloat );
-   void (GLAPIENTRYP SecondaryColor3fvEXT)( const GLfloat * );
    void (GLAPIENTRYP TexCoord1f)( GLfloat );
    void (GLAPIENTRYP TexCoord1fv)( const GLfloat * );
    void (GLAPIENTRYP TexCoord2f)( GLfloat, GLfloat );
@@ -847,9 +745,6 @@ typedef struct {
    void (GLAPIENTRYP DrawArrays)( GLenum mode, GLint start, GLsizei count );
    void (GLAPIENTRYP DrawElements)( GLenum mode, GLsizei count, GLenum type,
 			 const GLvoid *indices );
-   void (GLAPIENTRYP DrawRangeElements)( GLenum mode, GLuint start,
-			      GLuint end, GLsizei count,
-			      GLenum type, const GLvoid *indices );
    /*@}*/
 
    /**

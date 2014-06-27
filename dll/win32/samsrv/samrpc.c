@@ -8062,6 +8062,10 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
     LARGE_INTEGER SystemTime;
     NTSTATUS Status;
 
+    DBG_UNREFERENCED_LOCAL_VARIABLE(StoredLmPresent);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(StoredNtPresent);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(StoredLmEmpty);
+
     TRACE("(%p %u %p %p %u %p %p %u %p %u %p)\n",
           UserHandle, LmPresent, OldLmEncryptedWithNewLm, NewLmEncryptedWithOldLm,
           NtPresent, OldNtEncryptedWithNewNt, NewNtEncryptedWithOldNt, NtCrossEncryptionPresent,

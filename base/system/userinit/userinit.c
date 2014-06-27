@@ -227,7 +227,7 @@ StartAutoApplications(
     {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (findData.nFileSizeHigh || findData.nFileSizeLow))
         {
-            memset(&ExecInfo, 0x0, sizeof(SHELLEXECUTEINFOW));
+            ZeroMemory(&ExecInfo, sizeof(SHELLEXECUTEINFOW));
             ExecInfo.cbSize = sizeof(ExecInfo);
             wcscpy(&szPath[len+1], findData.cFileName);
             ExecInfo.lpVerb = L"open";
@@ -430,11 +430,9 @@ COLORREF StrToColorref(
 
     TRACE("(%s)\n", debugstr_w(lpszCol));
 
-    rgb[0] = StrToIntW(lpszCol);
-    lpszCol = StrChrW(lpszCol, L' ') + 1;
-    rgb[1] = StrToIntW(lpszCol);
-    lpszCol = StrChrW(lpszCol, L' ') + 1;
-    rgb[2] = StrToIntW(lpszCol);
+    rgb[0] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
+    rgb[1] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
+    rgb[2] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
     return RGB(rgb[0], rgb[1], rgb[2]);
 }
 
@@ -443,7 +441,7 @@ VOID SetUserSysColors(VOID)
 {
     HKEY hKey;
     INT i;
-    WCHAR szColor[20];
+    WCHAR szColor[25];
     DWORD Type, Size;
     COLORREF crColor;
     LONG rc;
