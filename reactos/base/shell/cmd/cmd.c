@@ -1838,6 +1838,7 @@ int _tmain(int argc, const TCHAR *argv[])
         if (!GetConsoleScreenBufferInfo(hConsole, &Info))
         {
             ConErrFormatMessage(GetLastError());
+            CloseHandle(hConsole);
             return(1);
         }
         wDefColor = Info.wAttributes;
