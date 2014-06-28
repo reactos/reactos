@@ -1297,7 +1297,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
         CsrProcess->ShutdownFlags = 0;
     }
 
-    /* Set shudown Priority */
+    /* Set shutdown Priority */
     CsrSetToShutdownPriority();
 
     /* Start looping */
