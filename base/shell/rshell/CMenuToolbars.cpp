@@ -1260,10 +1260,9 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
     IEnumIDList * eidl;
     m_shellFolder->EnumObjects(GetToolbar(), SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &eidl);
 
-    LPITEMIDLIST item = static_cast<LPITEMIDLIST>(CoTaskMemAlloc(sizeof(ITEMIDLIST)));
-    ULONG fetched;
-    hr = eidl->Next(1, &item, &fetched);
-    while (SUCCEEDED(hr) && fetched > 0)
+    LPITEMIDLIST item = { 0 };
+    hr = eidl->Next(1, &item, NULL);
+    while (hr == S_OK)
     {
         INT index = 0;
         INT indexOpen = 0;
@@ -1286,13 +1285,13 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
         DWORD_PTR dwData = reinterpret_cast<DWORD_PTR>(ILClone(item));
 
         // Fetch next item already, so we know if the current one is the last
-        hr = eidl->Next(1, &item, &fetched);
+        hr = eidl->Next(1, &item, NULL);
 
-        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData, FAILED(hr) || fetched == 0);
+        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData, hr != S_OK);
 
         CoTaskMemFree(MenuString);
     }
-    CoTaskMemFree(item);
+    ILFree(item);
 
     // If no items were added, show the "empty" placeholder
     if (i == 0)

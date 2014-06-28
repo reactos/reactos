@@ -31,6 +31,7 @@ add_importlibs(rshell
     uxtheme
     shlwapi
     shell32
+    comctl32
     gdi32
     ole32
     user32

@@ -19,6 +19,8 @@
  */
 #pragma once
 
+class CEnumMergedFolder;
+
 class CMergedFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2
@@ -26,6 +28,7 @@ class CMergedFolder :
 private:
     CComPtr<IShellFolder> m_UserLocal;
     CComPtr<IShellFolder> m_AllUSers;
+    CComPtr<CEnumMergedFolder> m_EnumSource;
 
 public:
     CMergedFolder() {}
