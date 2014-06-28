@@ -1260,7 +1260,7 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
     IEnumIDList * eidl;
     m_shellFolder->EnumObjects(GetToolbar(), SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &eidl);
 
-    LPITEMIDLIST item = { 0 };
+    LPITEMIDLIST item = NULL;
     hr = eidl->Next(1, &item, NULL);
     while (hr == S_OK)
     {

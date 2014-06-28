@@ -256,85 +256,24 @@ HRESULT CEnumMergedFolder::FindPidlInList(LPCITEMIDLIST pcidl, LocalPidlInfo * p
 
         TRACE("Comparing with item at %d with side %d and pidl { cb=%d }\n", i, info.side, info.pidl->mkid.cb);
 
+        CComPtr<IShellFolder> fld;
         if (info.side <= 0)
-        {
-#if 0
-            LPWSTR name1;
-            LPWSTR name2;
-            STRRET str1 = { STRRET_WSTR, 0 };
-            STRRET str2 = { STRRET_WSTR, 0 };
-            hr = m_UserLocalFolder->GetDisplayNameOf(info->pidl, SHGDN_FORPARSING | SHGDN_INFOLDER, &str1);
-            if (FAILED(hr))
-                return hr;
-            hr = m_UserLocalFolder->GetDisplayNameOf(pcidl, SHGDN_FORPARSING | SHGDN_INFOLDER, &str2);
-            if (FAILED(hr))
-                return hr;
-            StrRetToStrW(&str1, info->pidl, &name1);
-            StrRetToStrW(&str2, pcidl, &name2);
-            int order = StrCmpW(name1, name2);
-            CoTaskMemFree(name1);
-            CoTaskMemFree(name2);
+            fld = m_UserLocalFolder;
+        else
+            fld = m_AllUSersFolder;
 
-            if (order == 0)
-            {
-                *pinfo = *info;
-                return S_OK;
-            }
-#else
-            // FIXME: This works in windows.
-            hr = m_UserLocalFolder->CompareIDs(0, info.pidl, pcidl);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-            if (hr == S_OK)
-            {
-                *pinfo = info;
-                return S_OK;
-            }
-            else
-            {
-                TRACE("Comparison returned %d\n", (int) (short) (hr & 0xFFFF));
-            }
-#endif
+        hr = m_AllUSersFolder->CompareIDs(0, info.pidl, pcidl);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (hr == S_OK)
+        {
+            *pinfo = info;
+            return S_OK;
         }
         else
         {
-#if 0
-            LPWSTR name1;
-            LPWSTR name2;
-            STRRET str1 = { STRRET_WSTR, 0 };
-            STRRET str2 = { STRRET_WSTR, 0 };
-            hr = m_AllUSersFolder->GetDisplayNameOf(info->pidl, SHGDN_FORPARSING | SHGDN_INFOLDER, &str1);
-            if (FAILED(hr))
-                return hr;
-            hr = m_AllUSersFolder->GetDisplayNameOf(pcidl, SHGDN_FORPARSING | SHGDN_INFOLDER, &str2);
-            if (FAILED(hr))
-                return hr;
-            StrRetToStrW(&str1, info->pidl, &name1);
-            StrRetToStrW(&str2, pcidl, &name2);
-            int order = StrCmpW(name1, name2);
-            CoTaskMemFree(name1);
-            CoTaskMemFree(name2);
-
-            if (order == 0)
-            {
-                *pinfo = *info;
-                return S_OK;
-            }
-#else
-            // FIXME: This works in windows.
-            hr = m_AllUSersFolder->CompareIDs(0, info.pidl, pcidl);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-            if (hr == S_OK)
-            {
-                *pinfo = info;
-                return S_OK;
-            }
-            else
-            {
-                TRACE("Comparison returned %d\n", (int) (short) (hr & 0xFFFF));
-            }
-#endif
+            TRACE("Comparison returned %d\n", (int) (short) (hr & 0xFFFF));
         }
     }
 
