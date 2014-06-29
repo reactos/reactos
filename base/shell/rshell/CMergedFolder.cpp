@@ -27,7 +27,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMergedFolder);
 
 struct LocalPidlInfo
 {
-    int side; // -1 local, 0 shared, 1 common
+    BOOL shared;
+    IShellFolder * parent;
     LPITEMIDLIST pidl;
 };
 
@@ -205,28 +206,29 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
             break;
         }
 
-        LocalPidlInfo info;
+        LocalPidlInfo info = { FALSE };
         if (order < 0)
         {
-            info.side = -1;
+            info.parent = m_UserLocalFolder;
             info.pidl = ILClone(pidl1);
             ILFree(pidl1);
         }
         else if (order > 0)
         {
-            info.side = 1;
+            info.parent = m_AllUSersFolder;
             info.pidl = ILClone(pidl2);
             ILFree(pidl2);
         }
         else // if (order == 0)
         {
-            info.side = 0;
+            info.shared = TRUE;
+            info.parent = m_UserLocalFolder;
             info.pidl = ILClone(pidl1);
             ILFree(pidl1);
             ILFree(pidl2);
         }
 
-        TRACE("Inserting item %d with side %d and pidl { cb=%d }\n", m_hDsaCount, info.side, info.pidl->mkid.cb);
+        TRACE("Inserting item %d with parent %p and pidl { cb=%d }\n", m_hDsaCount, info.parent, info.pidl->mkid.cb);
         int idx = DSA_InsertItem(m_hDsa, DSA_APPEND, &info);
         TRACE("New index: %d\n", idx);
 
@@ -254,15 +256,9 @@ HRESULT CEnumMergedFolder::FindPidlInList(LPCITEMIDLIST pcidl, LocalPidlInfo * p
 
         LocalPidlInfo info = *tinfo;
 
-        TRACE("Comparing with item at %d with side %d and pidl { cb=%d }\n", i, info.side, info.pidl->mkid.cb);
+        TRACE("Comparing with item at %d with parent %p and pidl { cb=%d }\n", i, info.parent, info.pidl->mkid.cb);
 
-        CComPtr<IShellFolder> fld;
-        if (info.side <= 0)
-            fld = m_UserLocalFolder;
-        else
-            fld = m_AllUSersFolder;
-
-        hr = m_AllUSersFolder->CompareIDs(0, info.pidl, pcidl);
+        hr = info.parent->CompareIDs(0, info.pidl, pcidl);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -299,7 +295,7 @@ HRESULT STDMETHODCALLTYPE CEnumMergedFolder::Next(
 
         LocalPidlInfo info = *tinfo;
 
-        TRACE("Returning next item at %d with side %d and pidl { cb=%d }\n", m_hDsaIndex, info.side, info.pidl->mkid.cb);
+        TRACE("Returning next item at %d with parent %p and pidl { cb=%d }\n", m_hDsaIndex, info.parent, info.pidl->mkid.cb);
 
         // FIXME: ILClone shouldn't be needed here! This should be causing leaks
         if (rgelt) rgelt[i] = ILClone(info.pidl);
@@ -404,11 +400,9 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
     hr = m_EnumSource->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    
-    if (info.side < 0)
-        return m_UserLocal->BindToObject(pidl, pbcReserved, riid, ppvOut);
-    if (info.side > 0)
-        return m_AllUSers->BindToObject(pidl, pbcReserved, riid, ppvOut);
+
+    if (!info.shared)
+        return info.parent->BindToObject(pidl, pbcReserved, riid, ppvOut);
 
     if (riid != IID_IShellFolder)
         return E_FAIL;
@@ -472,10 +466,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
 
         SFGAOF * pinOut1 = rgfInOut ? rgfInOut + i : NULL;
 
-        if (info.side <= 0)
-            hr = m_UserLocal->GetAttributesOf(1, &pidl, pinOut1);
-        else
-            hr = m_AllUSers->GetAttributesOf(1, &pidl, pinOut1);
+        hr = info.parent->GetAttributesOf(1, &pidl, pinOut1);
 
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
@@ -499,17 +490,18 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetUIObjectOf(
     {
         LPCITEMIDLIST pidl = apidl[i];
 
+        TRACE("Processing GetUIObjectOf item %d of %u...\n", i, cidl);
+
         hr = m_EnumSource->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        TRACE("FindPidlInList succeeded with parent %p and pidl { db=%d }\n", info.parent, info.pidl->mkid.cb);
+
         UINT * pinOut1 = prgfInOut ? prgfInOut+i : NULL;
         void** ppvOut1 = ppvOut ? ppvOut + i : NULL;
 
-        if (info.side <= 0)
-            hr = m_UserLocal->GetUIObjectOf(hwndOwner, 1, &pidl, riid, pinOut1, ppvOut1);
-        else
-            hr = m_AllUSers->GetUIObjectOf(hwndOwner, 1, &pidl, riid, pinOut1, ppvOut1);
+        hr = info.parent->GetUIObjectOf(hwndOwner, 1, &pidl, riid, pinOut1, ppvOut1);
 
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
@@ -530,10 +522,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDisplayNameOf(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (info.side <= 0)
-        hr = m_UserLocal->GetDisplayNameOf(pidl, uFlags, lpName);
-    else
-        hr = m_AllUSers->GetDisplayNameOf(pidl, uFlags, lpName);
+    hr = info.parent->GetDisplayNameOf(pidl, uFlags, lpName);
 
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -549,6 +538,28 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::SetNameOf(
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
+}
+
+// IPersist
+HRESULT STDMETHODCALLTYPE CMergedFolder::GetClassID(CLSID *lpClassId)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+// IPersistFolder
+HRESULT STDMETHODCALLTYPE CMergedFolder::Initialize(LPCITEMIDLIST pidl)
+{
+    m_shellPidl = ILClone(pidl);
+    return S_OK;
+}
+
+// IPersistFolder2
+HRESULT STDMETHODCALLTYPE CMergedFolder::GetCurFolder(LPITEMIDLIST * pidl)
+{
+    if (pidl)
+        *pidl = m_shellPidl;
+    return S_OK;
 }
 
 // IShellFolder2

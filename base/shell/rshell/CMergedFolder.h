@@ -23,12 +23,24 @@ class CEnumMergedFolder;
 
 class CMergedFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellFolder2
+    public IShellFolder2,
+    //public IStorage,    
+    //public IAugmentedShellFolder3,     // -- undocumented
+    //public IShellService,              // -- undocumented
+    //public ITranslateShellChangeNotify,// -- undocumented
+    public IPersistFolder2
+    //public IPersistPropertyBag,
+    //public IShellIconOverlay,          // -- undocumented
+    //public ICompositeFolder,           // -- undocumented
+    //public IItemNameLimits,            // -- undocumented
+
 {
 private:
     CComPtr<IShellFolder> m_UserLocal;
     CComPtr<IShellFolder> m_AllUSers;
     CComPtr<CEnumMergedFolder> m_EnumSource;
+
+    LPITEMIDLIST m_shellPidl;
 
 public:
     CMergedFolder() {}
@@ -40,8 +52,19 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_COM_MAP(CMergedFolder)
-        COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
-        COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolder,    IShellFolder)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolder2,   IShellFolder2)
+        COM_INTERFACE_ENTRY_IID(IID_IPersist,        IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IPersistFolder,  IPersistFolder)
+        COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
+        //COM_INTERFACE_ENTRY_IID(IID_IStorage,                   IStorage)
+        //COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder3,     IAugmentedShellFolder3)
+        //COM_INTERFACE_ENTRY_IID(IID_IShellService,              IShellService)
+        //COM_INTERFACE_ENTRY_IID(IID_ITranslateShellChangeNotify,ITranslateShellChangeNotify)
+        //COM_INTERFACE_ENTRY_IID(IID_IPersistPropertyBag,IPersistPropertyBag)
+        //COM_INTERFACE_ENTRY_IID(IID_IShellIconOverlay,  IShellIconOverlay)
+        //COM_INTERFACE_ENTRY_IID(IID_ICompositeFolder,   ICompositeFolder)
+        //COM_INTERFACE_ENTRY_IID(IID_IItemNameLimits,    IItemNameLimits)
     END_COM_MAP()
 
     // IShellFolder
@@ -135,4 +158,12 @@ public:
         UINT iColumn,
         SHCOLUMNID *pscid);
 
+    // IPersist
+    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *lpClassId);
+
+    // IPersistFolder
+    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl);
+
+    // IPersistFolder2
+    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(LPITEMIDLIST * pidl);
 };
