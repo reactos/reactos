@@ -77,6 +77,10 @@ private:
     INT   m_selectedItem;
     DWORD m_selectedItemFlags;
 
+    BOOL m_isLButtonDown;
+    BOOL m_movedSinceDown;
+    HWND m_windowAtDown;
+
     // TODO: make dynamic
 #define MAX_RECURSE 20
     StackEntry m_bandStack[MAX_RECURSE];
@@ -109,6 +113,8 @@ private:
     void SetCapture(HWND child);
 
     LRESULT ProcessMouseMove(MSG* msg);
+    LRESULT ProcessMouseDown(MSG* msg);
+    LRESULT ProcessMouseUp(MSG* msg);
 public:
     HRESULT PushMenuBar(CMenuBand * mb);
     HRESULT PushMenuPopup(CMenuBand * mb);

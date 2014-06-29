@@ -97,6 +97,9 @@ public:
 
     HRESULT KillPopupTimer();
 
+    HRESULT MenuBarMouseDown(INT item);
+    HRESULT MenuBarMouseUp(INT item);
+
 protected:
     virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) = 0;
 

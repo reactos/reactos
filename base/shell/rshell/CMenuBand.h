@@ -191,6 +191,8 @@ public:
     HRESULT _IsPopup();
     HRESULT _IsTracking();
     HRESULT _KillPopupTimers();
+    HRESULT _MenuBarMouseDown(HWND hwnd, INT item);
+    HRESULT _MenuBarMouseUp(HWND hwnd, INT item);
 
     BOOL UseBigIcons()
     {

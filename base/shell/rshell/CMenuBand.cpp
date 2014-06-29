@@ -1017,6 +1017,24 @@ HRESULT CMenuBand::_KillPopupTimers()
     return hr;
 }
 
+HRESULT CMenuBand::_MenuBarMouseDown(HWND hwnd, INT item)
+{
+    if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hwnd) == S_OK)
+        m_staticToolbar->MenuBarMouseDown(item);
+    if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hwnd) == S_OK)
+        m_SFToolbar->MenuBarMouseDown(item);
+    return S_OK;
+}
+
+HRESULT CMenuBand::_MenuBarMouseUp(HWND hwnd, INT item)
+{
+    if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hwnd) == S_OK)
+        m_staticToolbar->MenuBarMouseUp(item);
+    if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hwnd) == S_OK)
+        m_SFToolbar->MenuBarMouseUp(item);
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)
 {
     UNIMPLEMENTED;

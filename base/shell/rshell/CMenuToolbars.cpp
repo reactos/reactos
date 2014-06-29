@@ -49,7 +49,8 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     switch (uMsg)
     {
     case WM_COMMAND:
-        return OnCommand(wParam, lParam, theResult);
+        //return OnCommand(wParam, lParam, theResult);
+        return S_OK;
 
     case WM_NOTIFY:
         hdr = reinterpret_cast<LPNMHDR>(lParam);
@@ -826,6 +827,30 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     TRACE("Executing...\n");
 
     return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
+}
+
+HRESULT CMenuToolbarBase::MenuBarMouseDown(INT item)
+{
+    LRESULT theResult;
+    TBBUTTON btn;
+
+    if (m_initFlags & SMINIT_VERTICAL)
+        return S_OK;
+
+    SendMessage(m_hwndToolbar, TB_GETBUTTON, item, reinterpret_cast<LPARAM>(&btn));
+    return OnCommand(btn.idCommand, 0, &theResult);
+}
+
+HRESULT CMenuToolbarBase::MenuBarMouseUp(INT item)
+{
+    LRESULT theResult;
+    TBBUTTON btn;
+
+    if (!(m_initFlags & SMINIT_VERTICAL))
+        return S_OK;
+
+    SendMessage(m_hwndToolbar, TB_GETBUTTON, item, reinterpret_cast<LPARAM>(&btn));
+    return OnCommand(btn.idCommand, 0, &theResult);
 }
 
 HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)

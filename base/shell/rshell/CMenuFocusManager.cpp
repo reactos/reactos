@@ -160,6 +160,9 @@ CMenuFocusManager::CMenuFocusManager() :
     m_selectedMenu(NULL),
     m_selectedItem(0),
     m_selectedItemFlags(0),
+    m_isLButtonDown(FALSE),
+    m_movedSinceDown(FALSE),
+    m_windowAtDown(NULL),
     m_bandCount(0)
 {
     m_ptPrev.x = 0;
@@ -302,12 +305,18 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     if (cCapture && cCapture != m_captureHwnd && m_current->type != TrackedMenuEntry)
         return TRUE;
 
+
+    m_movedSinceDown = TRUE;
+
     m_ptPrev = pt;
 
     child = WindowFromPoint(pt);
 
     StackEntry * entry = NULL;
-    IsTrackedWindow(child, &entry);
+    if (IsTrackedWindow(child, &entry) == S_OK)
+    {
+        DbgPrint("MouseMove %d\n", m_isLButtonDown);
+    }
 
     BOOL isTracking = FALSE;
     if (entry)
@@ -320,7 +329,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
         {
             TRACE("Hot item tracking detected a change (capture=%p / cCapture=%p)...\n", m_captureHwnd, cCapture);
             DisableMouseTrack(NULL, FALSE);
-            if (isTracking && iHitTestResult>=0 && m_current->type == TrackedMenuEntry)
+            if (isTracking && iHitTestResult >= 0 && m_current->type == TrackedMenuEntry)
                 SendMessage(entry->hwnd, WM_CANCELMODE, 0, 0);
             PostMessage(child, WM_USER_CHANGETRACKEDITEM, iHitTestResult, MAKELPARAM(isTracking, TRUE));
             if (m_current->type == TrackedMenuEntry)
@@ -359,6 +368,94 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     {
         HWND parent = GetAncestor(child, GA_ROOT);
         DisableMouseTrack(parent, FALSE);
+    }
+
+    return TRUE;
+}
+
+LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
+{
+    HWND child;
+    int iHitTestResult = -1;
+
+    // Don't do anything if another window is capturing the mouse.
+    HWND cCapture = ::GetCapture();
+    if (cCapture && cCapture != m_captureHwnd && m_current->type != TrackedMenuEntry)
+        return TRUE;
+
+
+    POINT pt = msg->pt;
+
+    child = WindowFromPoint(pt);
+
+    StackEntry * entry = NULL;
+    if (IsTrackedWindow(child, &entry) != S_OK)
+        return TRUE;
+
+    DbgPrint("MouseDown %d\n", m_isLButtonDown);
+
+    BOOL isTracking = FALSE;
+    if (entry)
+    {
+        ScreenToClient(child, &pt);
+        iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
+        isTracking = entry->mb->_IsTracking();
+
+        if (iHitTestResult >= 0)
+        {
+            DbgPrint("MouseDown send %d\n", iHitTestResult);
+            entry->mb->_MenuBarMouseDown(child, iHitTestResult);
+        }
+    }
+
+    msg->message = WM_NULL;
+
+    m_isLButtonDown = TRUE;
+    m_movedSinceDown = FALSE;
+    m_windowAtDown = child;
+
+    DbgPrint("MouseDown end %d\n", m_isLButtonDown);
+
+    return TRUE;
+}
+
+LRESULT CMenuFocusManager::ProcessMouseUp(MSG* msg)
+{
+    HWND child;
+    int iHitTestResult = -1;
+
+    // Don't do anything if another window is capturing the mouse.
+    HWND cCapture = ::GetCapture();
+    if (cCapture && cCapture != m_captureHwnd && m_current->type != TrackedMenuEntry)
+        return TRUE;
+
+    if (!m_isLButtonDown)
+        return TRUE;
+
+    m_isLButtonDown = FALSE;
+
+    POINT pt = msg->pt;
+
+    child = WindowFromPoint(pt);
+
+    StackEntry * entry = NULL;
+    if (IsTrackedWindow(child, &entry) != S_OK)
+        return TRUE;
+
+    DbgPrint("MouseUp %d\n", m_isLButtonDown);
+
+    BOOL isTracking = FALSE;
+    if (entry)
+    {
+        ScreenToClient(child, &pt);
+        iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
+        isTracking = entry->mb->_IsTracking();
+
+        if (iHitTestResult >= 0)
+        {
+            DbgPrint("MouseUp send %d\n", iHitTestResult);
+            entry->mb->_MenuBarMouseUp(child, iHitTestResult);
+        }
     }
 
     return TRUE;
@@ -434,6 +531,7 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM hookWParam, LPARAM ho
 
 LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookLParam)
 {
+    BOOL isLButton = FALSE;
     if (nCode < 0)
         return CallNextHookEx(m_hGetMsgHook, nCode, hookWParam, hookLParam);
     
@@ -447,6 +545,9 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
         {
         case WM_NCLBUTTONDOWN:
         case WM_LBUTTONDOWN:
+            isLButton = TRUE;
+
+            // fallthrough;
         case WM_NCRBUTTONDOWN:
         case WM_RBUTTONDOWN:
             if (m_current->type == MenuPopupEntry)
@@ -457,8 +558,18 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
                 {
                     SetCapture(NULL);
                     m_current->mb->_MenuItemHotTrack(MPOS_FULLCANCEL);
+                    break;
                 }
             }
+            
+            if (isLButton)
+            {
+                ProcessMouseDown(msg);
+            }
+            break;
+        case WM_NCLBUTTONUP:
+        case WM_LBUTTONUP:
+            ProcessMouseUp(msg);
             break;
         case WM_MOUSEMOVE:
             callNext = ProcessMouseMove(msg);
