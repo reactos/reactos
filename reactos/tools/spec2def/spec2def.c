@@ -569,7 +569,9 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         else
         {
             exp.nOrdinal = atol(pc);
-            exp.uFlags |= FL_ORDINAL;
+            /* The import lib should contain the ordinal only if -ordinal was specified */
+            if (!gbImportLib)
+                exp.uFlags |= FL_ORDINAL;
         }
 
         /* Go to next token (type) */
