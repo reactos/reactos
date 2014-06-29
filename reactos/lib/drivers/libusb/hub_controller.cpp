@@ -111,7 +111,7 @@ protected:
 
 
     //Internal Functions
-    BOOLEAN QueryStatusChageEndpoint(PIRP Irp);
+    BOOLEAN QueryStatusChangeEndpoint(PIRP Irp);
 };
 
 typedef struct
@@ -286,7 +286,7 @@ CHubController::Initialize(
 // Queries the ports to see if there has been a device connected or removed.
 //
 BOOLEAN
-CHubController::QueryStatusChageEndpoint(
+CHubController::QueryStatusChangeEndpoint(
     PIRP Irp)
 {
     ULONG PortCount, PortId;
@@ -846,7 +846,7 @@ CHubController::HandleBulkOrInterruptTransfer(
     if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this)  || Urb->UrbHeader.UsbdDeviceHandle == NULL)
     {
         ASSERT(m_PendingSCEIrp == NULL);
-        if (QueryStatusChageEndpoint(Irp))
+        if (QueryStatusChangeEndpoint(Irp))
         {
             StatusChangeEndpointCallBack(this);
             return STATUS_SUCCESS;
@@ -1111,7 +1111,7 @@ CHubController::HandleSelectConfiguration(
         // select configuration
         //
         Status = UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
-        if (NT_SUCCESS(Status)) 
+        if (NT_SUCCESS(Status))
         {
             // successfully configured device
             Urb->UrbSelectConfiguration.Hdr.Status = USBD_STATUS_SUCCESS;
@@ -1590,7 +1590,7 @@ CHubController::HandleGetDescriptor(
                 Length = BufferLength > sizeof(USB_CONFIGURATION_DESCRIPTOR) ?
                     sizeof(USB_CONFIGURATION_DESCRIPTOR) : BufferLength;
                 RtlCopyMemory(Buffer, &ROOTHUB2_CONFIGURATION_DESCRIPTOR, Length);
-                
+
                 //
                 // Check if we still have some space left
                 //
@@ -1614,7 +1614,7 @@ CHubController::HandleGetDescriptor(
                 Length = BufferLength > sizeof(USB_INTERFACE_DESCRIPTOR) ?
                     sizeof(USB_INTERFACE_DESCRIPTOR) : BufferLength;
                 RtlCopyMemory(Buffer, &ROOTHUB2_INTERFACE_DESCRIPTOR, Length);
-                
+
                 //
                 // Check if we still have some space left
                 //
@@ -1631,8 +1631,8 @@ CHubController::HandleGetDescriptor(
                 //
                 Buffer += Length;
                 BufferLength -= Length;
-                
-                
+
+
                 //
                 // copy end point descriptor template
                 //
@@ -1665,7 +1665,7 @@ CHubController::HandleGetDescriptor(
                 // get device
                 //
                 UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
-                
+
                 //
                 // Allocate temporary buffer
                 //
@@ -1681,14 +1681,14 @@ CHubController::HandleGetDescriptor(
                 // perform work in IUSBDevice
                 //
                 UsbDevice->GetConfigurationDescriptors((PUSB_CONFIGURATION_DESCRIPTOR)Buffer, BufferLength, &Length);
-                
+
                 //
                 // Copy what we can
                 //
-                Length = Urb->UrbControlDescriptorRequest.TransferBufferLength > Length ? 
+                Length = Urb->UrbControlDescriptorRequest.TransferBufferLength > Length ?
                     Length : Urb->UrbControlDescriptorRequest.TransferBufferLength;
                 RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, Buffer, Length);
-                
+
                 //
                 // Free temporary buffer
                 //
@@ -3997,7 +3997,7 @@ VOID NTAPI StatusChangeEndpointCallBack(PVOID Context)
     }
 
     This->m_PendingSCEIrp = NULL;
-    This->QueryStatusChageEndpoint(Irp);
+    This->QueryStatusChangeEndpoint(Irp);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
