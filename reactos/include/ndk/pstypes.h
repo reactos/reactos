@@ -576,14 +576,6 @@ NTSTATUS
     _In_ PVOID Parameter
 );
 
-typedef
-NTSTATUS
-(NTAPI *PKWIN32_WIN32DATACOLLECTION_CALLOUT)(
-    _In_ struct _EPROCESS *Process,
-    _In_ PVOID Callback,
-    _In_ PVOID Context
-);
-
 //
 // Lego Callback
 //
@@ -1421,7 +1413,6 @@ typedef struct _WIN32_CALLOUTS_FPNS
     PKWIN32_SESSION_CALLOUT WindowStationDeleteProcedure;
     PKWIN32_SESSION_CALLOUT WindowStationParseProcedure;
     PKWIN32_SESSION_CALLOUT WindowStationOpenProcedure;
-    PKWIN32_WIN32DATACOLLECTION_CALLOUT Win32DataCollectionProcedure;
 } WIN32_CALLOUTS_FPNS, *PWIN32_CALLOUTS_FPNS;
 
 #endif // !NTOS_MODE_USER

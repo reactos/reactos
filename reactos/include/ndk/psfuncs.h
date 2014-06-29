@@ -110,6 +110,13 @@ PsGetThreadId(
 );
 
 NTKERNELAPI
+PEPROCESS
+NTAPI
+PsGetThreadProcess(
+    _In_ PETHREAD Thread
+);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetThreadHardErrorsAreDisabled(
