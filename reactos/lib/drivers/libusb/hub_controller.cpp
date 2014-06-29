@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID StatusChangeEndpointCallBack(
+VOID NTAPI StatusChangeEndpointCallBack(
     PVOID Context);
 
 class CHubController : public IHubController,
@@ -78,7 +78,7 @@ public:
     NTSTATUS HandleSyncResetAndClearStall(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleAbortPipe(IN OUT PIRP Irp, PURB Urb);
 
-    friend VOID StatusChangeEndpointCallBack(PVOID Context);
+    friend VOID NTAPI StatusChangeEndpointCallBack(PVOID Context);
 
     // constructor / destructor
     CHubController(IUnknown *OuterUnknown){}
@@ -3981,7 +3981,7 @@ CreateHubController(
     return STATUS_SUCCESS;
 }
 
-VOID StatusChangeEndpointCallBack(PVOID Context)
+VOID NTAPI StatusChangeEndpointCallBack(PVOID Context)
 {
     CHubController* This;
     PIRP Irp;
