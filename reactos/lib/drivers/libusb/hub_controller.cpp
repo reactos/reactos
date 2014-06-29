@@ -48,6 +48,7 @@ public:
     virtual NTSTATUS HandlePnp(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
     virtual NTSTATUS HandlePower(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
     virtual NTSTATUS HandleDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
+    virtual NTSTATUS HandleSystemControl(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
 
     // local functions
     NTSTATUS HandleQueryInterface(PIO_STACK_LOCATION IoStack);
@@ -759,10 +760,23 @@ CHubController::HandlePower(
     IN PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp)
 {
-    UNIMPLEMENTED
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    Status = Irp->IoStatus.Status;
+    PoStartNextPowerIrp(Irp);
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
+    return Status;
+}
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::HandleSystemControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp)
+{
+    NTSTATUS Status;
+    Status = Irp->IoStatus.Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
 
 //-----------------------------------------------------------------------------------------
