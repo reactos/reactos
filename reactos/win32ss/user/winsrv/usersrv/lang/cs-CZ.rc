@@ -4,25 +4,25 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOGEX 0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ukonèit program - "
+CAPTION "UkonÄit program - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Probíhá ukonèení programu... Èekejte, prosím", IDC_STATIC, 7, 7, 186, 11
+    LTEXT "ProbÃ­hÃ¡ ukonÄenÃ­ programu... ÄŒekejte, prosÃ­m", IDC_STATIC, 7, 7, 186, 11
     CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "IPokud zvolíte okamité ukonèení programu, všechna neuloená data budou ztracena. Kliknutím na Ukonèit okamitì ukonèíte program.", IDC_STATIC, 7, 40, 186, 26
-    DEFPUSHBUTTON "&Ukonèit okamitì", IDC_END_NOW, 150, 71, 43, 17
+    LTEXT "IPokud zvolÃ­te okamÅ¾itÃ© ukonÄenÃ­ programu, vÅ¡echna neuloÅ¾enÃ¡ data budou ztracena. KliknutÃ­m na UkonÄit okamÅ¾itÄ› ukonÄÃ­te program.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&UkonÄit okamÅ¾itÄ›", IDC_END_NOW, 150, 71, 43, 17
 END
 
 IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ukonèit program - "
+CAPTION "UkonÄit program - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Storno", IDCANCEL, 142, 98, 43, 17
-    PUSHBUTTON "&Ukonèit okamitì", IDC_END_NOW, 78, 98, 43, 17
-    LTEXT "Tento program neodpovídá.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "Kliknutím na Storno se lze vrátit do systému ReactOS a ovìøit stav programu.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Pokud zvolíte okamité ukonèení programu, všechna neuloená data budou ztracena. Kliknutím na Ukonèit okamitì ukonèíte program.", IDC_STATIC, 7, 53, 178, 26
+    PUSHBUTTON "&UkonÄit okamÅ¾itÄ›", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "Tento program neodpovÃ­dÃ¡.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "KliknutÃ­m na Storno se lze vrÃ¡tit do systÃ©mu ReactOS a ovÄ›Å™it stav programu.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Pokud zvolÃ­te okamÅ¾itÃ© ukonÄenÃ­ programu, vÅ¡echna neuloÅ¾enÃ¡ data budou ztracena. KliknutÃ­m na UkonÄit okamÅ¾itÄ› ukonÄÃ­te program.", IDC_STATIC, 7, 53, 178, 26
 END
 
 IDD_SWITCH_APP DIALOGEX 90, 90, 265, 170

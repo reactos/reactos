@@ -7,8 +7,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Avslutt Program... Vennligst vent", IDC_STATIC, 7, 7, 186, 11
     CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "Hvis du velger å avslutte programmet øyeblikkelig, vil du miste alt data som ikke er lagret. For å avslutte programmet nå, Trykk på Avslutt nå.", IDC_STATIC, 7, 40, 186, 26
-    DEFPUSHBUTTON "&Avslutt nå", IDC_END_NOW, 150, 71, 43, 17
+    LTEXT "Hvis du velger Ã¥ avslutte programmet Ã¸yeblikkelig, vil du miste alt data som ikke er lagret. For Ã¥ avslutte programmet nÃ¥, Trykk pÃ¥ Avslutt nÃ¥.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&Avslutt nÃ¥", IDC_END_NOW, 150, 71, 43, 17
 END
 
 IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
@@ -17,10 +17,10 @@ CAPTION "Avslutt program - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Avbryt", IDCANCEL, 142, 98, 43, 17
-    PUSHBUTTON "&Avslutt nå", IDC_END_NOW, 78, 98, 43, 17
+    PUSHBUTTON "&Avslutt nÃ¥", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "Programmet svarer ikke.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "For å returnere til ReactOS for å sjekke statusen på programmet, trykk på avbryt.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Hvis du velger å avslutte programmet øyeblikkelig, vil du miste alt data som ikke er lagret. For å avslutte programmet nå, Trykk på Avslutt nå.", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "For Ã¥ returnere til ReactOS for Ã¥ sjekke statusen pÃ¥ programmet, trykk pÃ¥ avbryt.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Hvis du velger Ã¥ avslutte programmet Ã¸yeblikkelig, vil du miste alt data som ikke er lagret. For Ã¥ avslutte programmet nÃ¥, Trykk pÃ¥ Avslutt nÃ¥.", IDC_STATIC, 7, 53, 178, 26
 END
 
 IDD_SWITCH_APP DIALOGEX 90, 90, 265, 170

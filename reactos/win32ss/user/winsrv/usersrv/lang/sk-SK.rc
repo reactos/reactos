@@ -1,4 +1,4 @@
-/* TRANSLATOR: Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR: MÃ¡rio KaÄmÃ¡r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR: 29-05-2008
  * LastChange: 12-04-2011
  */
@@ -7,25 +7,25 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOGEX 0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ukonèenie programu - "
+CAPTION "UkonÄenie programu - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ukonèujem program... Poèkajte, prosím.", IDC_STATIC, 7, 7, 186, 11
+    LTEXT "UkonÄujem program... PoÄkajte, prosÃ­m.", IDC_STATIC, 7, 7, 186, 11
     CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "Ak zvolíte okamité ukonèenie programu, stratíte všetky neuloené údaje. Ak chcete program ukonèi okamite, kliknite na tlaèidlo Ukonèi ihneï.", IDC_STATIC, 7, 40, 186, 26
-    DEFPUSHBUTTON "&Ukonèi ihneï", IDC_END_NOW, 150, 71, 43, 17
+    LTEXT "Ak zvolÃ­te okamÅ¾itÃ© ukonÄenie programu, stratÃ­te vÅ¡etky neuloÅ¾enÃ© Ãºdaje. Ak chcete program ukonÄiÅ¥ okamÅ¾ite, kliknite na tlaÄidlo UkonÄiÅ¥ ihneÄ.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&UkonÄiÅ¥ ihneÄ", IDC_END_NOW, 150, 71, 43, 17
 END
 
 IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ukonèenie programu - "
+CAPTION "UkonÄenie programu - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Zruši", IDCANCEL, 142, 98, 43, 17
-    PUSHBUTTON "&Ukonèi ihneï", IDC_END_NOW, 78, 98, 43, 17
-    LTEXT "Tento program neodpovedá.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "Pre návrat do systému ReactOS a overenie stavu programu kliknite na tlaèidlo Zruši.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Ak zvolíte okamité ukonèenie programu, stratíte všetky neuloené údaje. Ak chcete program ukonèi okamite, kliknite na tlaèidlo Ukonèi ihneï.", IDC_STATIC, 7, 53, 178, 26
+    DEFPUSHBUTTON "ZruÅ¡iÅ¥", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "&UkonÄiÅ¥ ihneÄ", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "Tento program neodpovedÃ¡.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "Pre nÃ¡vrat do systÃ©mu ReactOS a overenie stavu programu kliknite na tlaÄidlo ZruÅ¡iÅ¥.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Ak zvolÃ­te okamÅ¾itÃ© ukonÄenie programu, stratÃ­te vÅ¡etky neuloÅ¾enÃ© Ãºdaje. Ak chcete program ukonÄiÅ¥ okamÅ¾ite, kliknite na tlaÄidlo UkonÄiÅ¥ ihneÄ.", IDC_STATIC, 7, 53, 178, 26
 END
 
 IDD_SWITCH_APP DIALOGEX 90, 90, 265, 170
