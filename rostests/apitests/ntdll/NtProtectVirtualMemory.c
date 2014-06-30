@@ -89,6 +89,27 @@ START_TEST(NtProtectVirtualMemory)
     {
         ok(*allocationStart == 0, "Test should not go as far as this.\n");
     } EndSeh(STATUS_ACCESS_VIOLATION);
+
+    /* Set it as readable again */
+    status = NtProtectVirtualMemory(NtCurrentProcess(),
+        (void**)&allocationStart,
+        &allocationSize,
+        PAGE_READONLY,
+        &oldProtection);
+    ok(NT_SUCCESS(status), "NtProtectVirtualMemory failed.\n");
+    ok(oldProtection == PAGE_NOACCESS, "Expected PAGE_READONLY, got %08lx.\n", oldProtection);
+
+    /* Try writing it */
+    StartSeh()
+    {
+        *allocationStart = 0xAA;
+    } EndSeh(STATUS_ACCESS_VIOLATION);
+
+    /* Try reading it */
+    StartSeh()
+    {
+        ok(*allocationStart == 0xFF, "Memory content was not preserved.\n");
+    } EndSeh(STATUS_SUCCESS);
     
     /* Free memory */
     status = NtFreeVirtualMemory(NtCurrentProcess(),
