@@ -10,7 +10,7 @@ BEGIN
         MENUITEM "&Bağlan", IDM_FILE_CONNECT
         MENUITEM "B&ağlantıyı Kes", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Görüntüyü Temizle", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&Görüntüyü Sil", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
         MENUITEM "&Yakalamayı Başlat", IDM_FILE_STARTCAPTURE
         MENUITEM "Ya&kalamayı Durdur", IDM_FILE_STOPCAPTURE, GRAYED
@@ -39,7 +39,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "FreeLoader Yanlışlık Ayıklayıcı Üzerine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "FreeLoader Yanlışlık Ayıklayıcı - Sürüm 1.0\nTelif Hakkı: 2003 - Brian Palmer\n(brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "FreeLoader Yanlışlık Ayıklayıcı - Sürüm 1.0\nTelif Hakkı: 2003\nBrian Palmer(brianp@reactos.org) ile.", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "Tamam", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -50,9 +50,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Bağlantı Seçenekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "COM girişini giriniz: (Örnek: COM1)", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "COM girişini giriniz (Örnek: COM1): ", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Baud hızını giriniz: (Örnek: 115200)", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "Baud hızını giriniz (Örnek: 115200): ", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Tamam", IDOK, 45, 79, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 100, 79, 50, 14
@@ -60,10 +60,10 @@ END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kütük Yakalama"
+CAPTION "Yakalama Kütüğü"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Yakalanacak Kütük Adı:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "Yakalama Kütüğü Adı:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Göz At", IDC_BROWSE, 194, 26, 50, 14
     DEFPUSHBUTTON "Tamam", IDOK, 139, 74, 50, 14
@@ -81,5 +81,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu izlence özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Umûmî Kamu Ruhsatı'nın, 2. sürümünün ya da daha sonraki herhangi bir sürümünün (Orası size bağlı.) koşulları altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu izlence, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bu izlencenin HİÇBİR GÜVENCESİ YOKTUR, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN demek istenilen güvencesi bile. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu izlenceyle birlikte GNU Umûmî Kamu Ruhsatı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu izlence özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Umûmî Kamu Ruhsatı'nın, 2. sürümünün ya da daha sonraki bir sürümünün (Orası size bağlı.) koşulları altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu izlence, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bu izlencenin HİÇBİR GÜVENCESİ YOKTUR, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN demek istenilen güvencesi bile. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu izlenceyle birlikte GNU Umûmî Kamu Ruhsatı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END

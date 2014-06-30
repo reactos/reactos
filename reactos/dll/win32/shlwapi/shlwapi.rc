@@ -60,9 +60,6 @@
 #ifdef LANGUAGE_SV_SE
     #include "lang/shlwapi_Sv.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/shlwapi_Tr.rc"
-#endif
 
 /* UTF-8 */
 
@@ -95,6 +92,9 @@
 #endif
 #ifdef LANGUAGE_SL_SI
     #include "lang/shlwapi_Si.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/shlwapi_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/shlwapi_Uk.rc"
