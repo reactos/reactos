@@ -65,7 +65,7 @@ NTAPI
 PALETTE_AllocPalette(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue);
@@ -75,7 +75,7 @@ NTAPI
 PALETTE_AllocPalWithHandle(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue);
