@@ -315,7 +315,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     StackEntry * entry = NULL;
     if (IsTrackedWindow(child, &entry) == S_OK)
     {
-        DbgPrint("MouseMove %d\n", m_isLButtonDown);
+        TRACE("MouseMove %d\n", m_isLButtonDown);
     }
 
     BOOL isTracking = FALSE;
@@ -392,7 +392,7 @@ LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
     if (IsTrackedWindow(child, &entry) != S_OK)
         return TRUE;
 
-    DbgPrint("MouseDown %d\n", m_isLButtonDown);
+    TRACE("MouseDown %d\n", m_isLButtonDown);
 
     BOOL isTracking = FALSE;
     if (entry)
@@ -403,7 +403,7 @@ LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
 
         if (iHitTestResult >= 0)
         {
-            DbgPrint("MouseDown send %d\n", iHitTestResult);
+            TRACE("MouseDown send %d\n", iHitTestResult);
             entry->mb->_MenuBarMouseDown(child, iHitTestResult);
         }
     }
@@ -414,7 +414,7 @@ LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
     m_movedSinceDown = FALSE;
     m_windowAtDown = child;
 
-    DbgPrint("MouseDown end %d\n", m_isLButtonDown);
+    TRACE("MouseDown end %d\n", m_isLButtonDown);
 
     return TRUE;
 }
@@ -442,7 +442,7 @@ LRESULT CMenuFocusManager::ProcessMouseUp(MSG* msg)
     if (IsTrackedWindow(child, &entry) != S_OK)
         return TRUE;
 
-    DbgPrint("MouseUp %d\n", m_isLButtonDown);
+    TRACE("MouseUp %d\n", m_isLButtonDown);
 
     BOOL isTracking = FALSE;
     if (entry)
@@ -453,7 +453,7 @@ LRESULT CMenuFocusManager::ProcessMouseUp(MSG* msg)
 
         if (iHitTestResult >= 0)
         {
-            DbgPrint("MouseUp send %d\n", iHitTestResult);
+            TRACE("MouseUp send %d\n", iHitTestResult);
             entry->mb->_MenuBarMouseUp(child, iHitTestResult);
         }
     }

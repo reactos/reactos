@@ -66,6 +66,7 @@ private:
     INT                m_popupItem;
 
     BOOL m_Show;
+    BOOL m_shellBottom;
 
 public:
     CMenuBand();

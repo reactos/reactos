@@ -75,7 +75,8 @@ CMenuBand::CMenuBand() :
     m_hotItem(-1),
     m_popupBar(NULL),
     m_popupItem(-1),
-    m_Show(FALSE)
+    m_Show(FALSE),
+    m_shellBottom(FALSE)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -292,21 +293,43 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
     int syStatic = maxStatic.cy;
     int syShlFld = sy - syStatic;
 
-    if (m_SFToolbar)
+    if (m_shellBottom)
     {
-        m_SFToolbar->SetPosSize(
-            prc->left,
-            prc->top,
-            prc->right - prc->left,
-            syShlFld);
+        if (m_SFToolbar)
+        {
+            m_SFToolbar->SetPosSize(
+                prc->left,
+                prc->top + syStatic,
+                prc->right - prc->left,
+                syShlFld);
+        }
+        if (m_staticToolbar)
+        {
+            m_staticToolbar->SetPosSize(
+                prc->left,
+                prc->top,
+                prc->right - prc->left,
+                syStatic);
+        }
     }
-    if (m_staticToolbar)
+    else // shell menu on top
     {
-        m_staticToolbar->SetPosSize(
-            prc->left,
-            prc->top + syShlFld,
-            prc->right - prc->left,
-            syStatic);
+        if (m_SFToolbar)
+        {
+            m_SFToolbar->SetPosSize(
+                prc->left,
+                prc->top,
+                prc->right - prc->left,
+                syShlFld);
+        }
+        if (m_staticToolbar)
+        {
+            m_staticToolbar->SetPosSize(
+                prc->left,
+                prc->top + syShlFld,
+                prc->right - prc->left,
+                syStatic);
+        }
     }
 
     return S_OK;
@@ -636,6 +659,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetShellFolder(IShellFolder *psf, LPCITEMID
     HRESULT hr = m_SFToolbar->SetShellFolder(psf, pidlFolder, hKey, dwFlags);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    m_shellBottom = (dwFlags & SMSET_BOTTOM) != 0;
 
     if (m_site)
     {

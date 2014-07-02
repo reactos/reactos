@@ -43,8 +43,8 @@ private:
     LPITEMIDLIST m_shellPidl;
 
 public:
-    CMergedFolder() {}
-    virtual ~CMergedFolder() {}
+    CMergedFolder();
+    virtual ~CMergedFolder();
 
     HRESULT _SetSources(IShellFolder* userLocal, IShellFolder* allUSers);
 

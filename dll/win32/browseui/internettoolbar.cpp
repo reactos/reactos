@@ -74,6 +74,7 @@ extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
 extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
 
 typedef HRESULT(WINAPI * PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
+typedef HRESULT(WINAPI * PMERGEDFOLDER_CONSTRUCTOR)(IShellFolder* userLocal, IShellFolder* allUsers, REFIID riid, LPVOID *ppv);
 
 HRESULT IUnknown_HasFocusIO(IUnknown * punk)
 {
@@ -397,6 +398,9 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
     CComPtr<IShellMenu>                     newMenu;
     CComPtr<IShellFolder>                   favoritesFolder;
     LPITEMIDLIST                            favoritesPIDL;
+    CComPtr<IShellFolder>                   commonFavsFolder;
+    LPITEMIDLIST                            commonFavsPIDL;
+    CComPtr<IShellFolder>                   mergedFolder;
     HWND                                    ownerWindow;
     HMENU                                   parentHMenu;
     HMENU                                   favoritesHMenu;
@@ -456,7 +460,28 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
             return hResult;
         RegCreateKeyEx(HKEY_CURRENT_USER, szFavoritesKey,
                 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &orderRegKey, &disposition);
-        hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | 0x18);
+#if 1 /*USE_MERGED_FAVORITES*/
+        hResult = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &commonFavsPIDL);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        hResult = SHBindToFolder(commonFavsPIDL, &commonFavsFolder);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        ILFree(commonFavsPIDL);
+        
+        PMERGEDFOLDER_CONSTRUCTOR mfconstruct = (PMERGEDFOLDER_CONSTRUCTOR) GetProcAddress(hrs, "CMergedFolder_Constructor");
+        if (mfconstruct)
+        {
+            hResult = mfconstruct(favoritesFolder, commonFavsFolder, IID_PPV_ARG(IShellFolder, &mergedFolder));
+        }
+        else
+        {
+            mergedFolder = favoritesFolder;
+        }
+#else
+        mergedFolder = favoritesFolder;
+#endif
+        hResult = newMenu->SetShellFolder(mergedFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
         ILFree(favoritesPIDL);
         if (SUCCEEDED(hResult))
             fFavoritesMenu.Attach(newMenu.Detach());

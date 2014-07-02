@@ -356,6 +356,18 @@ HRESULT WINAPI CMergedFolder_Constructor(IShellFolder* userLocal, IShellFolder* 
     return hr;
 }
 
+CMergedFolder::CMergedFolder() :
+    m_UserLocal(NULL),
+    m_AllUSers(NULL),
+    m_EnumSource(NULL),
+    m_shellPidl(NULL)
+{
+}
+
+CMergedFolder::~CMergedFolder() 
+{
+}
+
 HRESULT CMergedFolder::_SetSources(IShellFolder* userLocal, IShellFolder* allUsers)
 {
     m_UserLocal = userLocal;
@@ -382,6 +394,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::EnumObjects(
     SHCONTF grfFlags,
     IEnumIDList **ppenumIDList)
 {
+    DbgPrint("EnumObjects\n");
     HRESULT hr = m_EnumSource->QueryInterface(IID_PPV_ARG(IEnumIDList, ppenumIDList));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -397,12 +410,14 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
     LocalPidlInfo info;
     HRESULT hr;
 
+    DbgPrint("BindToObject\n");
+
     hr = m_EnumSource->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (!info.shared)
-        return info.parent->BindToObject(pidl, pbcReserved, riid, ppvOut);
+        return info.parent->BindToObject(info.pidl, pbcReserved, riid, ppvOut);
 
     if (riid != IID_IShellFolder)
         return E_FAIL;
@@ -410,11 +425,11 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
     CComPtr<IShellFolder> fld1;
     CComPtr<IShellFolder> fld2;
 
-    hr = m_UserLocal->BindToObject(pidl, pbcReserved, IID_PPV_ARG(IShellFolder, &fld1));
+    hr = m_UserLocal->BindToObject(info.pidl, pbcReserved, IID_PPV_ARG(IShellFolder, &fld1));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = m_AllUSers->BindToObject(pidl, pbcReserved, IID_PPV_ARG(IShellFolder, &fld2));
+    hr = m_AllUSers->BindToObject(info.pidl, pbcReserved, IID_PPV_ARG(IShellFolder, &fld2));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -436,6 +451,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::CompareIDs(
     LPCITEMIDLIST pidl1,
     LPCITEMIDLIST pidl2)
 {
+    DbgPrint("CompareIDs\n");
     return m_UserLocal->CompareIDs(lParam, pidl1, pidl2);
 }
 
@@ -456,6 +472,8 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
     LocalPidlInfo info;
     HRESULT hr;
 
+    DbgPrint("GetAttributesOf\n");
+
     for (int i = 0; i < (int)cidl; i++)
     {
         LPCITEMIDLIST pidl = apidl[i];
@@ -463,6 +481,8 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
         hr = m_EnumSource->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+
+        pidl = info.pidl;
 
         SFGAOF * pinOut1 = rgfInOut ? rgfInOut + i : NULL;
 
@@ -486,6 +506,8 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetUIObjectOf(
     LocalPidlInfo info;
     HRESULT hr;
 
+    DbgPrint("GetUIObjectOf\n");
+
     for (int i = 0; i < (int)cidl; i++)
     {
         LPCITEMIDLIST pidl = apidl[i];
@@ -495,6 +517,8 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetUIObjectOf(
         hr = m_EnumSource->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+
+        pidl = info.pidl;
 
         TRACE("FindPidlInList succeeded with parent %p and pidl { db=%d }\n", info.parent, info.pidl->mkid.cb);
 
@@ -518,11 +542,13 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDisplayNameOf(
     LocalPidlInfo info;
     HRESULT hr;
 
+    DbgPrint("GetDisplayNameOf\n");
+
     hr = m_EnumSource->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = info.parent->GetDisplayNameOf(pidl, uFlags, lpName);
+    hr = info.parent->GetDisplayNameOf(info.pidl, uFlags, lpName);
 
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
