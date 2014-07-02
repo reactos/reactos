@@ -46,7 +46,7 @@
 #145 stub GetComponentIDFromCLSSPEC
 #146 stub GetMarkOfTheWeb
 147 stdcall GetSoftwareUpdateInfo(ptr ptr)
-#148 stub HlinkGoBack
+148 stdcall -stub HlinkGoBack(ptr)
 #149 stub HlinkGoForward
 #150 stub HlinkNavigateMoniker
 151 stdcall HlinkNavigateString(ptr wstr)
