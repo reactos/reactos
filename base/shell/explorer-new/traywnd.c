@@ -665,8 +665,6 @@ ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
 {
     RECT rcTray,rcWorkArea;
 
-    return;
-
     /* If monitor has changed then fix the previous monitors work area */
     if (This->PreviousMonitor != This->Monitor)
     {
@@ -775,11 +773,10 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
 
         /* FIXME: Are there more flags? */
 
-        //if (sr.Position > ABE_BOTTOM)
-        //    This->Position = ABE_BOTTOM;
-        //else
-        //    This->Position = sr.Position;
-        This->Position = ABE_LEFT;
+        if (sr.Position > ABE_BOTTOM)
+            This->Position = ABE_BOTTOM;
+        else
+            This->Position = sr.Position;
 
         /* Try to find out which monitor the tray window was located on last.
            Here we're only interested in the monitor screen that we think

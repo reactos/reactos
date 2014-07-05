@@ -139,7 +139,10 @@ SysPagerWnd_UpdateButton(IN OUT PSYS_PAGER_WND_DATA This,
         notifyItem->IconIndex = tbbi.iImage = ImageList_AddIcon(This->SysIcons, iconData->hIcon);
     }
 
-    /* TODO: support NIF_TIP */
+    if (iconData->uFlags & NIF_TIP)
+    {
+        StringCchCopy(notifyItem->iconData.szTip, _countof(notifyItem->iconData.szTip), iconData->szTip);
+    }
 
     if (iconData->uFlags & NIF_STATE)
     {
@@ -353,7 +356,7 @@ SysPagerWnd_ToolbarSubclassedProc(IN HWND hWnd,
         if (!parent)
             return 0;
 
-        return SendMessage(parent, msg, wParam, lParam);
+        SendMessage(parent, msg, wParam, lParam);
     }
 
     return DefSubclassProc(hWnd, msg, wParam, lParam);
@@ -362,13 +365,16 @@ SysPagerWnd_ToolbarSubclassedProc(IN HWND hWnd,
 static VOID
 SysPagerWnd_Create(IN OUT PSYS_PAGER_WND_DATA This)
 {
-    This->hWndToolbar = CreateWindowEx(0,
+    DWORD styles = 
+        WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
+        TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
+        CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
+    DWORD exStyles = WS_EX_TOOLWINDOW;
+
+    This->hWndToolbar = CreateWindowEx(exStyles,
                                        TOOLBARCLASSNAME,
                                        NULL,
-                                       WS_CHILD | WS_VISIBLE  | WS_CLIPCHILDREN |
-                                           TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE |
-                                           TBSTYLE_TRANSPARENT |
-                                           CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER,
+                                       styles,
                                        0,
                                        0,
                                        0,
@@ -425,7 +431,7 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
     PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT)lParam;
     if (cpData->dwData == 1)
     {
-        SYS_PAGER_COPY_DATA data;
+        SYS_PAGER_COPY_DATA * data;
         NOTIFYICONDATA *iconData;
         HWND parentHWND;
         RECT windowRect;
@@ -433,20 +439,14 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
         parentHWND = GetParent(parentHWND);
         GetClientRect(parentHWND, &windowRect);
 
-        ZeroMemory(&data, sizeof(data));
-        CopyMemory(
-            &data,
-            (PSYS_PAGER_COPY_DATA) cpData->lpData,
-            cpData->cbData);
-        iconData = &data.nicon_data;
+        data = (PSYS_PAGER_COPY_DATA) cpData->lpData;
+        iconData = &data->nicon_data;
 
-        switch (data.notify_code)
+        switch (data->notify_code)
         {
             case NIM_ADD:
             {
                 PPNOTIFY_ITEM NotifyPointer;
-
-                DbgPrint("NotifyMessage received with NIM_ADD\n");
 
                 NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,
                                                                        iconData);
@@ -459,8 +459,6 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
             case NIM_MODIFY:
             {
                 PPNOTIFY_ITEM NotifyPointer;
-
-                DbgPrint("NotifyMessage received with NIM_MODIFY\n");
 
                 NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,
                                                                        iconData);
@@ -476,13 +474,11 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
             }
             case NIM_DELETE:
             {
-                DbgPrint("NotifyMessage received with NIM_DELETE\n");
-
                 SysPagerWnd_RemoveButton(This, iconData);
                 break;
             }
             default:
-                DbgPrint("NotifyMessage received with unknown code %d.\n", data.notify_code);
+                DbgPrint("NotifyMessage received with unknown code %d.\n", data->notify_code);
                 break;
         }
         SendMessage(parentHWND,
@@ -572,6 +568,35 @@ SysPagerWndProc(IN HWND hwnd,
             case WM_NCDESTROY:
                 SysPagerWnd_NCDestroy(This);
                 break;
+
+            case WM_NOTIFY:
+            {
+                const NMHDR * nmh = (const NMHDR *) lParam;
+                if (nmh->code == TBN_GETINFOTIPW)
+                {
+                    NMTBGETINFOTIP * nmtip = (NMTBGETINFOTIP *) lParam;
+                    PPNOTIFY_ITEM ptr = SysPagerWnd_FindPPNotifyItemByIndex(This, nmtip->iItem);
+                    if (ptr)
+                    {
+                        PNOTIFY_ITEM item = *ptr;
+                        StringCchCopy(nmtip->pszText, nmtip->cchTextMax, item->iconData.szTip);
+                    }
+                }
+                else if (nmh->code == NM_CUSTOMDRAW)
+                {
+                    NMCUSTOMDRAW * cdraw = (NMCUSTOMDRAW *) lParam;
+                    switch (cdraw->dwDrawStage)
+                    {
+                    case CDDS_PREPAINT:
+                        return CDRF_NOTIFYITEMDRAW;
+
+                    case CDDS_ITEMPREPAINT:
+                        return TBCDRF_NOBACKGROUND | TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOMARK | TBCDRF_NOETCHEDEFFECT;
+                    }
+                }
+
+                break;
+            }
 
             case WM_SIZE:
             {
