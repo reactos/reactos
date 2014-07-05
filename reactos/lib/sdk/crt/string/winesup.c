@@ -99,4 +99,3 @@ _internal_handle_float(
         else _SET_NUMBER_(float);
     }
 }
-#undef _SET_NUMBER_

@@ -33,6 +33,10 @@ else()
         list(APPEND ASM_SOURCE
             amd64/seh.s
             amd64/seh_prolog.s)
+    elseif(ARCH STREQUAL "arm")
+        list(APPEND ASM_SOURCE
+            arm/seh_prolog.s)
+        list(APPEND SOURCE dummy.c)
     endif()
 
     list(APPEND SOURCE dummy.c)
