@@ -9,6 +9,7 @@ list(APPEND SOURCE
     explorer.c
     rshell.c
     settings.c
+	shellservice.c
     startmnu.c
     startup.c
     taskband.c

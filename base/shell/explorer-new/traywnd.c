@@ -20,6 +20,9 @@
 
 #include "precomp.h"
 
+extern HRESULT InitShellServices(HDPA * phdpa);
+extern HRESULT ShutdownShellServices(HDPA hdpa);
+
 static const TRAYWINDOW_CTXMENU TrayWindowCtxMenu;
 
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)
@@ -94,6 +97,8 @@ typedef struct
 
     HWND hwndTrayPropertiesOwner;
     HWND hwndRunFileDlgOwner;
+
+    HDPA hdpaShellServices;
 } ITrayWindowImpl;
 
 BOOL LaunchCPanel(HWND hwnd, LPCTSTR applet)
@@ -660,6 +665,8 @@ ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
 {
     RECT rcTray,rcWorkArea;
 
+    return;
+
     /* If monitor has changed then fix the previous monitors work area */
     if (This->PreviousMonitor != This->Monitor)
     {
@@ -768,10 +775,11 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
 
         /* FIXME: Are there more flags? */
 
-        if (sr.Position > ABE_BOTTOM)
-            This->Position = ABE_BOTTOM;
-        else
-            This->Position = sr.Position;
+        //if (sr.Position > ABE_BOTTOM)
+        //    This->Position = ABE_BOTTOM;
+        //else
+        //    This->Position = sr.Position;
+        This->Position = ABE_LEFT;
 
         /* Try to find out which monitor the tray window was located on last.
            Here we're only interested in the monitor screen that we think
@@ -985,6 +993,13 @@ ITrayWindowImpl_Destroy(ITrayWindowImpl *This)
 {
     (void)InterlockedExchangePointer((PVOID*)&This->hWnd,
                                      NULL);
+
+
+    if (This->hdpaShellServices != NULL)
+    {
+        ShutdownShellServices(This->hdpaShellServices);
+        This->hdpaShellServices = NULL;
+    }
 
     if (This->himlStartBtn != NULL)
     {
@@ -1586,6 +1601,8 @@ SetStartBtnImage:
     /* Align all controls on the tray window */
     ITrayWindowImpl_AlignControls(This,
                                   NULL);
+
+    InitShellServices(&(This->hdpaShellServices));
 }
 
 static HRESULT STDMETHODCALLTYPE

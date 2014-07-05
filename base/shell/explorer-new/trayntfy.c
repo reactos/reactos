@@ -437,7 +437,7 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
         CopyMemory(
             &data,
             (PSYS_PAGER_COPY_DATA) cpData->lpData,
-            cpData->dwData);
+            cpData->cbData);
         iconData = &data.nicon_data;
 
         switch (data.notify_code)
