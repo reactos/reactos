@@ -53,7 +53,6 @@ list(APPEND FREELDR_COMMON_SOURCE
     fs/fs.c
     fs/iso.c
     fs/ntfs.c
-    fs/pxe.c
     inifile/ini_init.c
     inifile/inifile.c
     inifile/parse.c
@@ -87,6 +86,7 @@ if(ARCH STREQUAL "i386")
         arch/i386/linux.S
         arch/i386/mb.S)
     list(APPEND FREELDR_COMMON_SOURCE
+        fs/pxe.c
         arch/i386/archmach.c
         arch/i386/custom.c
         arch/i386/drivemap.c
@@ -130,6 +130,7 @@ elseif(ARCH STREQUAL "amd64")
         arch/amd64/int386.S
         arch/amd64/pnpbios.S)
     list(APPEND FREELDR_COMMON_SOURCE
+        fs/pxe.c
         arch/i386/custom.c
         arch/i386/drivemap.c
         arch/i386/hardware.c
@@ -149,6 +150,12 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/pcrtc.c
         arch/i386/pcvideo.c
         arch/amd64/winldr.c)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND FREELDR_COMMON_ASM_SOURCE
+        arch/arm/boot.S)
+    list(APPEND FREELDR_COMMON_SOURCE
+        arch/arm/macharm.c
+        arch/arm/winldr.c)
 else()
 #TBD
 endif()
