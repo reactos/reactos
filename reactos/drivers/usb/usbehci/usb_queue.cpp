@@ -376,6 +376,7 @@ CUSBQueue::GetIntervalIndex(
 {
     UCHAR IntervalIndex;
 
+    ASSERT(Interval != 0);
     if (Interval == 1)
         IntervalIndex = 1;
     else if (Interval == 2)
@@ -392,11 +393,10 @@ CUSBQueue::GetIntervalIndex(
         IntervalIndex = 7;
     else if (Interval <= 128)
         IntervalIndex = 8;
-    else if (Interval <= 256)
-        IntervalIndex = 9;
     else
-        IntervalIndex = 10;
+        IntervalIndex = 9;
 
+    ASSERT(IntervalIndex < EHCI_INTERRUPT_ENTRIES_COUNT);
     return IntervalIndex;
 }
 
@@ -746,8 +746,7 @@ CUSBQueue::ProcessPeriodicSchedule(
         //
         // get queue head structure
         //
-        QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
-        ASSERT(QueueHead);
+        QueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
 
         //
         // sanity check
@@ -822,8 +821,7 @@ CUSBQueue::ProcessAsyncList(
         //
         // get queue head structure
         //
-        QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
-        ASSERT(QueueHead);
+        QueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
 
         //
         // sanity check

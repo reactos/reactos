@@ -894,7 +894,7 @@ CUSBRequest::BuildControlTransferQueueHead(
     //
     QueueHead->EndPointCharacteristics.DeviceAddress = GetDeviceAddress();
 
-    ASSERT(m_EndpointDescriptor == FALSE);
+    ASSERT(m_EndpointDescriptor == NULL);
 
     //
     // init setup descriptor
