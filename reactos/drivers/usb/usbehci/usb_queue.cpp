@@ -479,20 +479,22 @@ CUSBQueue::LinkQueueHead(
     InsertTailList(&HeadQueueHead->LinkedQueueHeads, &NewQueueHead->LinkedQueueHeads);
 
     //
-    // Update HLP for Previous QueueHead, which should be the last in list.
-    //
-    Entry = NewQueueHead->LinkedQueueHeads.Blink;
-    LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
-    //ASSERT(LastQueueHead == HeadQueueHead);
-    LastQueueHead->HorizontalLinkPointer = (NewQueueHead->PhysicalAddr | QH_TYPE_QH);
-
-    //
     // Update HLP for NewQueueHead to point to next, which should be the HeadQueueHead
     //
     Entry = NewQueueHead->LinkedQueueHeads.Flink;
     NextQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
     //ASSERT(NextQueueHead == HeadQueueHead);
     NewQueueHead->HorizontalLinkPointer = (NextQueueHead->PhysicalAddr | QH_TYPE_QH);
+
+    _ReadWriteBarrier();
+
+    //
+    // Update HLP for Previous QueueHead, which should be the last in list.
+    //
+    Entry = NewQueueHead->LinkedQueueHeads.Blink;
+    LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    //ASSERT(LastQueueHead == HeadQueueHead);
+    LastQueueHead->HorizontalLinkPointer = (NewQueueHead->PhysicalAddr | QH_TYPE_QH);
 
     //
     // head queue head must be halted
