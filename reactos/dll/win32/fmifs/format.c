@@ -14,9 +14,14 @@
 #include <debug.h>
 
 /* FMIFS.6 */
-VOID
-NTAPI
-Format(VOID)
+VOID NTAPI
+Format(
+    IN PWCHAR DriveRoot,
+    IN FMIFS_MEDIA_FLAG MediaFlag,
+    IN PWCHAR Format,
+    IN PWCHAR Label,
+    IN BOOLEAN QuickFormat,
+    IN PFMIFSCALLBACK Callback)
 {
 }
 
