@@ -925,7 +925,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         }
         
         /* You should not have made it this far */
-        ASSERT(FALSE && "System is still up and running?!");
+        ASSERTMSG("System is still up and running?!", FALSE);
         break;
     }
 
