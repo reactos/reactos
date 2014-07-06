@@ -346,6 +346,87 @@ Fat32WriteRootDirectory(IN HANDLE FileHandle,
 }
 
 
+static
+NTSTATUS
+Fat32WipeSectors(
+    IN HANDLE FileHandle,
+    IN PFAT32_BOOT_SECTOR BootSector,
+    IN OUT PFORMAT_CONTEXT Context)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    PUCHAR Buffer;
+    LARGE_INTEGER FileOffset;
+    ULONGLONG Sector;
+    ULONG Length;
+    NTSTATUS Status;
+
+    /* Allocate buffer for the cluster */
+    Buffer = (PUCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     BootSector->SectorsPerCluster * BootSector->BytesPerSector);
+    if (Buffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Sector = 0;
+    Length = BootSector->SectorsPerCluster * BootSector->BytesPerSector;
+
+    while (Sector + BootSector->SectorsPerCluster < BootSector->SectorsHuge)
+    {
+        FileOffset.QuadPart = Sector * BootSector->BytesPerSector;
+
+        Status = NtWriteFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             Buffer,
+                             Length,
+                             &FileOffset,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+            goto done;
+        }
+
+        UpdateProgress(Context, (ULONG)BootSector->SectorsPerCluster);
+
+        Sector += BootSector->SectorsPerCluster;
+    }
+
+    if (Sector + BootSector->SectorsPerCluster > BootSector->SectorsHuge)
+    {
+        DPRINT("Remaining sectors %lu\n", BootSector->SectorsHuge - Sector);
+
+        FileOffset.QuadPart = Sector * BootSector->BytesPerSector;
+        Length = (BootSector->SectorsHuge - Sector) * BootSector->BytesPerSector;
+
+        Status = NtWriteFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             Buffer,
+                             Length,
+                             &FileOffset,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+            goto done;
+        }
+
+        UpdateProgress(Context, BootSector->SectorsHuge - Sector);
+    }
+
+done:
+    /* Free the buffer */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    return Status;
+}
+
+
 NTSTATUS
 Fat32Format(IN HANDLE FileHandle,
             IN PPARTITION_INFORMATION PartitionInfo,
@@ -407,7 +488,7 @@ Fat32Format(IN HANDLE FileHandle,
     BootSector.RootCluster = 2;
     BootSector.FSInfoSector = 1;
     BootSector.BootBackup = 6;
-    BootSector.Drive = DiskGeometry->MediaType == FixedMedia ? 0x80 : 0x00;
+    BootSector.Drive = (DiskGeometry->MediaType == FixedMedia) ? 0x80 : 0x00;
     BootSector.ExtBootSignature = 0x29;
     BootSector.VolumeID = CalcVolumeSerialNumber ();
     if ((Label == NULL) || (Label->Buffer == NULL))
@@ -435,6 +516,20 @@ Fat32Format(IN HANDLE FileHandle,
     /* Init context data */
     Context->TotalSectorCount =
         2 + (BootSector.FATSectors32 * BootSector.FATCount) + BootSector.SectorsPerCluster;
+
+    if (!QuickFormat)
+    {
+        Context->TotalSectorCount += BootSector.SectorsHuge;
+
+        Status = Fat32WipeSectors(FileHandle,
+                                  &BootSector,
+                                  Context);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Fat32WipeSectors() failed with status 0x%.08x\n", Status);
+            return Status;
+        }
+    }
 
     Status = Fat32WriteBootSector(FileHandle,
                                   &BootSector,
@@ -482,11 +577,6 @@ Fat32Format(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Fat32WriteRootDirectory() failed with status 0x%.08x\n", Status);
-    }
-
-    if (!QuickFormat)
-    {
-        /* FIXME: Fill remaining sectors */
     }
 
     return Status;
