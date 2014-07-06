@@ -43,7 +43,9 @@ int _tmain(int argc, TCHAR ** argv)
         FILE   *pPipe2;
 
         /* get available tests */
-        pPipe = _tpopen(argv[2], "r");
+        strcpy(cmd, argv[2]);
+        strcat(cmd, " --list");        
+        pPipe = _tpopen(cmd, "r");
         if (pPipe != NULL)
         {
             while(fgets(psBuffer, 128, pPipe))
