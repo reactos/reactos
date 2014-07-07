@@ -5,6 +5,7 @@ list(APPEND SOURCE
     NtContinue.c
     NtCreateFile.c
     NtCreateThread.c
+    NtDeleteKey.c
     NtFreeVirtualMemory.c
     NtMapViewOfSection.c
     NtMutant.c

@@ -8,6 +8,7 @@ extern void func_NtAllocateVirtualMemory(void);
 extern void func_NtContinue(void);
 extern void func_NtCreateFile(void);
 extern void func_NtCreateThread(void);
+extern void func_NtDeleteKey(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtMapViewOfSection(void);
 extern void func_NtMutant(void);
@@ -38,6 +39,7 @@ const struct test winetest_testlist[] =
     { "NtContinue",                     func_NtContinue },
     { "NtCreateFile",                   func_NtCreateFile },
     { "NtCreateThread",                 func_NtCreateThread },
+    { "NtDeleteKey",                    func_NtDeleteKey },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
     { "NtMutant",                       func_NtMutant },
