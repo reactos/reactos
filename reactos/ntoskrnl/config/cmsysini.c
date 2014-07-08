@@ -416,7 +416,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Key opened, now write to the key */
     RtlInitUnicodeString(&KeyName, L"SystemStartOptions");
-    Status = NtSetValueKey(KeyHandle,
+    Status = ZwSetValueKey(KeyHandle,
                            &KeyName,
                            0,
                            REG_SZ,
@@ -427,7 +427,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Setup value name for system boot device in ARC format */
     RtlInitUnicodeString(&KeyName, L"SystemBootDevice");
     RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->ArcBootDeviceName);
-    Status = NtSetValueKey(KeyHandle,
+    Status = ZwSetValueKey(KeyHandle,
                            &KeyName,
                            0,
                            REG_SZ,
@@ -474,7 +474,7 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = NtOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
+    Status = ZwOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
@@ -488,16 +488,17 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                        OBJ_CASE_INSENSITIVE,
                                        NULL,
                                        NULL);
-            Status = NtCreateKey(&KeyHandle,
+            Status = ZwCreateKey(&KeyHandle,
                                  KEY_ALL_ACCESS,
                                  &ObjectAttributes,
                                  0,
                                  NULL,
                                  0,
                                  &Disposition);
-            if (!NT_SUCCESS(Status)) return Status;
+            if (!NT_SUCCESS(Status))
+                return Status;
 
-            /* Don't need the handle */
+            /* We don't need the handle */
             ZwClose(KeyHandle);
 
             /* Use hard-coded setting */
@@ -533,7 +534,7 @@ UseSet:
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = NtCreateKey(&KeyHandle,
+    Status = ZwCreateKey(&KeyHandle,
                          KEY_CREATE_LINK,
                          &ObjectAttributes,
                          0,
@@ -557,7 +558,7 @@ UseSet:
     Status = RtlAnsiStringToUnicodeString(&KeyName, &TempString, FALSE);
 
     /* Set the value */
-    Status = NtSetValueKey(KeyHandle,
+    Status = ZwSetValueKey(KeyHandle,
                            &CmSymbolicLinkValueName,
                            0,
                            REG_LINK,
@@ -572,7 +573,7 @@ UseSet:
                                KeyHandle,
                                NULL);
     Status = NtOpenKey(&ConfigHandle, KEY_READ, &ObjectAttributes);
-    NtClose(KeyHandle);
+    ZwClose(KeyHandle);
 
     /* Check if we don't have one */
     if (!NT_SUCCESS(Status))
@@ -689,7 +690,7 @@ UseSet:
         ASSERT(STATUS_SUCCESS == Status);
 
         /* Set it */
-        Status = NtSetValueKey(KeyHandle,
+        Status = ZwSetValueKey(KeyHandle,
                                &CmSymbolicLinkValueName,
                                0,
                                REG_LINK,
@@ -2180,7 +2181,7 @@ CmpSetVersionData(VOID)
     RtlInitUnicodeString(&ValueData,
                          Buffer);
 
-    NtSetValueKey(CurrentVersionKeyHandle,
+    ZwSetValueKey(CurrentVersionKeyHandle,
                   &ValueName,
                   0,
                   REG_SZ,
