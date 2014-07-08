@@ -1,7 +1,7 @@
 /*
  * SetupAPI device class-related functions tests
  *
- * Copyright 2006 Herv� Poussineau
+ * Copyright 2006 Hervé Poussineau
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public Licence as
