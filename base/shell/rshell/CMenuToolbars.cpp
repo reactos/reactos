@@ -1285,29 +1285,37 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
         INT index = 0;
         INT indexOpen = 0;
 
-        STRRET sr = { STRRET_CSTR, { 0 } };
+        if (m_menuBand->_CallCBWithItemPidl(item, 0x10000000, 0, 0) == S_OK)
+        {
+            STRRET sr = { STRRET_CSTR, { 0 } };
 
-        hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            hr = m_shellFolder->GetDisplayNameOf(item, SIGDN_NORMALDISPLAY, &sr);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
 
-        StrRetToStr(&sr, NULL, &MenuString);
+            StrRetToStr(&sr, NULL, &MenuString);
 
-        index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
+            index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
 
-        LPCITEMIDLIST itemc = item;
+            LPCITEMIDLIST itemc = item;
 
-        SFGAOF attrs = SFGAO_FOLDER;
-        hr = m_shellFolder->GetAttributesOf(1, &itemc, &attrs);
+            SFGAOF attrs = SFGAO_FOLDER;
+            hr = m_shellFolder->GetAttributesOf(1, &itemc, &attrs);
 
-        DWORD_PTR dwData = reinterpret_cast<DWORD_PTR>(ILClone(item));
+            DWORD_PTR dwData = reinterpret_cast<DWORD_PTR>(ILClone(item));
 
-        // Fetch next item already, so we know if the current one is the last
-        hr = eidl->Next(1, &item, NULL);
+            // Fetch next item already, so we know if the current one is the last
+            hr = eidl->Next(1, &item, NULL);
 
-        AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData, hr != S_OK);
+            AddButton(++i, MenuString, attrs & SFGAO_FOLDER, index, dwData, hr != S_OK);
 
-        CoTaskMemFree(MenuString);
+            CoTaskMemFree(MenuString);
+        }
+        else
+        {
+            // Fetch next item here also
+            hr = eidl->Next(1, &item, NULL);
+        }
     }
     ILFree(item);
 

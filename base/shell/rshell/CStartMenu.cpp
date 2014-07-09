@@ -65,7 +65,9 @@ private:
     CComPtr<IBandSite> m_pBandSite;
     CComPtr<IDeskBar> m_pDeskBar;
     CComPtr<ITrayPriv> m_pTrayPriv;
-    CComPtr<IShellFolder> m_programsFolder;
+    CComPtr<IShellFolder> m_psfPrograms;
+    
+    LPITEMIDLIST m_pidlPrograms;
 
     HRESULT OnInitMenu()
     {
@@ -161,9 +163,9 @@ private:
         {
             IShellFolder *psfStartMenu;
 
-            if (csidl == CSIDL_PROGRAMS && m_programsFolder)
+            if (csidl == CSIDL_PROGRAMS && m_psfPrograms)
             {
-                psfStartMenu = m_programsFolder;
+                psfStartMenu = m_psfPrograms;
             }
             else
             {
@@ -251,9 +253,10 @@ public:
         m_pDeskBar.Release();
     }
 
-    HRESULT _SetProgramsFolder(IShellFolder * programs)
+    HRESULT _SetProgramsFolder(IShellFolder * psf, LPITEMIDLIST pidl)
     {
-        m_programsFolder = programs;
+        m_psfPrograms = psf;
+        m_pidlPrograms = pidl;
         return S_OK;
     }
 
@@ -276,6 +279,10 @@ public:
         case SMC_SFEXEC:
             m_pTrayPriv->Execute(psmd->psf, psmd->pidlItem);
             break;
+        case 0x10000000: // _FilterPIDL from CMenuSFToolbar
+            if (psmd->psf->CompareIDs(0, psmd->pidlItem, m_pidlPrograms) == 0)
+                return S_FALSE;
+            return S_OK;
         }
 
         return S_FALSE;
@@ -312,9 +319,9 @@ HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
 
     if (FAILED(SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_STARTMENU, &pidlCommonStartMenu)))
     {
-        BindToDesktop(pidlUserStartMenu, ppsfStartMenu);
+        hr = BindToDesktop(pidlUserStartMenu, ppsfStartMenu);
         ILFree(pidlUserStartMenu);
-        return S_OK;
+        return hr;
     }
 
     CComPtr<IShellFolder> psfUserStartMenu;
@@ -337,10 +344,10 @@ HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
     hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
     if (FAILED_UNEXPECTEDLY(hr))
     {
-        BindToDesktop(pidlUserStartMenu, ppsfStartMenu);
+        hr = BindToDesktop(pidlUserStartMenu, ppsfStartMenu);
         ILFree(pidlCommonStartMenu);
         ILFree(pidlUserStartMenu);
-        return S_OK;
+        return hr;
     }
 
     hr = pasf->AddNameSpace(NULL, psfUserStartMenu, pidlUserStartMenu, 0xFF00);
@@ -410,7 +417,7 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = pCallback->_SetProgramsFolder(psfPrograms);
+    hr = pCallback->_SetProgramsFolder(psfPrograms, pidlPrograms);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
