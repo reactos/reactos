@@ -30,6 +30,7 @@ struct LocalPidlInfo
     BOOL shared;
     IShellFolder * parent;
     LPITEMIDLIST pidl;
+    LPITEMIDLIST pidlCommon;
 };
 
 class CEnumMergedFolder :
@@ -67,7 +68,7 @@ public:
 
     HRESULT SetSources(IShellFolder * userLocal, IShellFolder * allUSers);
     HRESULT Begin(HWND hwndOwner, SHCONTF flags);
-    HRESULT FindPidlInList(LPCITEMIDLIST pcidl, LocalPidlInfo * pinfo);
+    HRESULT FindPidlInList(HWND hwndOwner, LPCITEMIDLIST pcidl, LocalPidlInfo * pinfo);
 
     virtual HRESULT STDMETHODCALLTYPE Next(
         ULONG celt,
@@ -86,9 +87,10 @@ CEnumMergedFolder::CEnumMergedFolder() :
     m_AllUSers(NULL),
     m_HwndOwner(NULL),
     m_Flags(0),
-    m_hDsaIndex(0)
+    m_hDsa(NULL),
+    m_hDsaIndex(0),
+    m_hDsaCount(0)
 {
-    m_hDsa = DSA_Create(sizeof(LocalPidlInfo), 10);
 }
     
 CEnumMergedFolder::~CEnumMergedFolder()
@@ -119,8 +121,8 @@ HRESULT CEnumMergedFolder::SetSources(IShellFolder * userLocal, IShellFolder * a
 HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
 {
     HRESULT hr;
-
-    if (m_HwndOwner == hwndOwner && m_Flags == flags)
+    
+    if (m_hDsa && m_HwndOwner == hwndOwner && m_Flags == flags)
     {
         return Reset();
     }
@@ -135,6 +137,11 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
     {
         m_UserLocal = NULL;
         return hr;
+    }
+
+    if (!m_hDsa)
+    {
+        m_hDsa = DSA_Create(sizeof(LocalPidlInfo), 10);
     }
 
     DSA_EnumCallback(m_hDsa, s_DsaDeleteCallback, this);
@@ -242,9 +249,14 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
     return Reset();
 }
 
-HRESULT CEnumMergedFolder::FindPidlInList(LPCITEMIDLIST pcidl, LocalPidlInfo * pinfo)
+HRESULT CEnumMergedFolder::FindPidlInList(HWND hwndOwner, LPCITEMIDLIST pcidl, LocalPidlInfo * pinfo)
 {
     HRESULT hr;
+
+    if (!m_hDsa)
+    {
+        Begin(hwndOwner, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS);
+    }
 
     TRACE("Searching for pidl { cb=%d } in a list of %d items\n", pcidl->mkid.cb, m_hDsaCount);
 
@@ -299,10 +311,9 @@ HRESULT STDMETHODCALLTYPE CEnumMergedFolder::Next(
 
         // FIXME: ILClone shouldn't be needed here! This should be causing leaks
         if (rgelt) rgelt[i] = ILClone(info.pidl);
-
-        m_hDsaIndex++;
         i++;
 
+        m_hDsaIndex++;
         if (m_hDsaIndex == m_hDsaCount)
         {
             if (pceltFetched) *pceltFetched = i;
@@ -376,6 +387,37 @@ HRESULT CMergedFolder::_SetSources(IShellFolder* userLocal, IShellFolder* allUse
     return m_EnumSource->SetSources(m_UserLocal, m_AllUSers);
 }
 
+// IAugmentedShellFolder2
+HRESULT STDMETHODCALLTYPE CMergedFolder::AddNameSpace(LPGUID lpGuid, IShellFolder * psf, LPCITEMIDLIST pcidl, ULONG dwUnknown)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMergedFolder::GetNameSpaceID(LPCITEMIDLIST pcidl, LPGUID lpGuid)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMergedFolder::QueryNameSpace(ULONG dwUnknown, LPGUID lpGuid, IShellFolder ** ppsf)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMergedFolder::EnumNameSpace(ULONG dwUnknown, PULONG lpUnknown)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMergedFolder::UnWrapIDList(LPCITEMIDLIST pcidl, LONG lUnknown, IShellFolder ** ppsf, LPITEMIDLIST * ppidl1, LPITEMIDLIST *ppidl2, LONG * lpUnknown)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
 // IShellFolder
 HRESULT STDMETHODCALLTYPE CMergedFolder::ParseDisplayName(
     HWND hwndOwner,
@@ -385,8 +427,34 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::ParseDisplayName(
     LPITEMIDLIST *ppidl,
     ULONG *pdwAttributes)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    HRESULT hr;
+    LocalPidlInfo info;
+
+    if (!ppidl) return E_FAIL;
+
+    if (pchEaten) *pchEaten = 0;
+    if (pdwAttributes) *pdwAttributes = 0;
+
+    hr = m_UserLocal->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+    if (SUCCEEDED(hr))
+    {
+        hr = m_EnumSource->FindPidlInList(hwndOwner, *ppidl, &info);
+        if (SUCCEEDED(hr))
+            return hr;
+    }
+
+    hr = m_AllUSers->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+    if (SUCCEEDED(hr))
+    {
+        hr = m_EnumSource->FindPidlInList(hwndOwner, *ppidl, &info);
+        if (SUCCEEDED(hr))
+            return hr;
+    }
+
+    if (ppidl) *ppidl = NULL;
+    if (pchEaten) *pchEaten = 0;
+    if (pdwAttributes) *pdwAttributes = 0;
+    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 }
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::EnumObjects(
@@ -412,7 +480,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
 
     TRACE("BindToObject\n");
 
-    hr = m_EnumSource->FindPidlInList(pidl, &info);
+    hr = m_EnumSource->FindPidlInList(NULL, pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -478,7 +546,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
     {
         LPCITEMIDLIST pidl = apidl[i];
 
-        hr = m_EnumSource->FindPidlInList(pidl, &info);
+        hr = m_EnumSource->FindPidlInList(NULL, pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -514,7 +582,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetUIObjectOf(
 
         TRACE("Processing GetUIObjectOf item %d of %u...\n", i, cidl);
 
-        hr = m_EnumSource->FindPidlInList(pidl, &info);
+        hr = m_EnumSource->FindPidlInList(hwndOwner, pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -544,7 +612,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDisplayNameOf(
 
     TRACE("GetDisplayNameOf\n");
 
-    hr = m_EnumSource->FindPidlInList(pidl, &info);
+    hr = m_EnumSource->FindPidlInList(NULL, pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -630,7 +698,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDetailsEx(
 
     TRACE("GetDetailsEx\n");
 
-    hr = m_EnumSource->FindPidlInList(pidl, &info);
+    hr = m_EnumSource->FindPidlInList(NULL, pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -655,7 +723,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDetailsOf(
 
     TRACE("GetDetailsOf\n");
 
-    hr = m_EnumSource->FindPidlInList(pidl, &info);
+    hr = m_EnumSource->FindPidlInList(NULL, pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
