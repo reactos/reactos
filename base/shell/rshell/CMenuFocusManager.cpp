@@ -319,7 +319,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     }
 
     BOOL isTracking = FALSE;
-    if (entry)
+    if (entry && (entry->type == MenuBarEntry || m_current->type != TrackedMenuEntry))
     {
         ScreenToClient(child, &pt);
         iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
@@ -485,7 +485,21 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM hookWParam, LPARAM ho
                 if (hoveringMenuBar)
                 {
                     m_menuBar->mb->_DisableMouseTrack(TRUE);
+                    if (m_current->type == TrackedMenuEntry)
+                    {
+                        SendMessage(m_parent->hwnd, WM_CANCELMODE, 0, 0);
+                        msg->message = WM_NULL;
+                    }
                 }
+            }
+            break;
+        case WM_NCLBUTTONUP:
+        case WM_LBUTTONUP:
+        case WM_NCRBUTTONUP:
+        case WM_RBUTTONUP:
+            if (m_current && m_current->type != TrackedMenuEntry)
+            {
+                msg->message = WM_NULL;
             }
             break;
         case WM_MOUSEMOVE:

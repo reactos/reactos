@@ -97,8 +97,9 @@ public:
 
     HRESULT KillPopupTimer();
 
-    HRESULT MenuBarMouseDown(INT item);
-    HRESULT MenuBarMouseUp(INT item);
+    HRESULT MenuBarMouseDown(INT iIndex);
+    HRESULT MenuBarMouseUp(INT iIndex);
+    HRESULT ProcessClick(INT iItem);
 
 protected:
     virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) = 0;
@@ -119,7 +120,6 @@ protected:
 private:
     HRESULT UpdateImageLists();
 
-    HRESULT OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult);
     HRESULT OnPagerCalcSize(LPNMPGCALCSIZE csize);
     HRESULT OnPopupTimer(DWORD timerId);
     HRESULT OnContextMenu(NMMOUSE * rclick);

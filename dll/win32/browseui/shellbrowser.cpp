@@ -3425,8 +3425,14 @@ DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
 {
     HRESULT hr;
     IEThreadParamBlock * parameters = (IEThreadParamBlock *) lpThreadParameter;
+    INITCOMMONCONTROLSEX iccex =
+    {
+        sizeof(iccex),
+        0xFFFF /* everything! */
+    };
 
     OleInitialize(NULL);
+    InitCommonControlsEx(&iccex);
 
     ATLTRY(hr = ExplorerMessageLoop(parameters));
 

@@ -63,7 +63,7 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return OnPagerCalcSize(reinterpret_cast<LPNMPGCALCSIZE>(hdr));
 
         case TBN_DROPDOWN:
-            return OnCommand(reinterpret_cast<LPNMTOOLBAR>(hdr)->iItem, 0, theResult);
+            return ProcessClick(reinterpret_cast<LPNMTOOLBAR>(hdr)->iItem);
 
         case TBN_HOTITEMCHANGE:
             //return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr), theResult);
@@ -798,11 +798,10 @@ HRESULT CMenuToolbarBase::TrackContextMenu(IContextMenu* contextMenu, POINT pt)
     return m_menuBand->_TrackContextMenu(contextMenu, pt.x, pt.y);
 }
 
-HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT CMenuToolbarBase::ProcessClick(INT iItem)
 {
     if (m_disableMouseTrack)
     {
-        *theResult = 1;
         TRACE("Item click prevented by DisableMouseTrack\n");
         return S_OK;
     }
@@ -813,10 +812,6 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
         TRACE("OnCommand cancelled because it was tracking submenu.\n");
         return S_FALSE;
     }
-
-    *theResult = 0;
-
-    INT iItem = (INT)wParam;
 
     if (PopupItem(iItem, FALSE) == S_OK)
     {
@@ -829,28 +824,26 @@ HRESULT CMenuToolbarBase::OnCommand(WPARAM wParam, LPARAM lParam, LRESULT *theRe
     return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
 }
 
-HRESULT CMenuToolbarBase::MenuBarMouseDown(INT item)
+HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex)
 {
-    LRESULT theResult;
     TBBUTTON btn;
 
     if (m_initFlags & SMINIT_VERTICAL)
         return S_OK;
 
-    SendMessage(m_hwndToolbar, TB_GETBUTTON, item, reinterpret_cast<LPARAM>(&btn));
-    return OnCommand(btn.idCommand, 0, &theResult);
+    ::SendMessageW(m_hwndToolbar, TB_GETBUTTON, iIndex, reinterpret_cast<LPARAM>(&btn));
+    return ProcessClick(btn.idCommand);
 }
 
-HRESULT CMenuToolbarBase::MenuBarMouseUp(INT item)
+HRESULT CMenuToolbarBase::MenuBarMouseUp(INT iIndex)
 {
-    LRESULT theResult;
     TBBUTTON btn;
 
     if (!(m_initFlags & SMINIT_VERTICAL))
         return S_OK;
 
-    SendMessage(m_hwndToolbar, TB_GETBUTTON, item, reinterpret_cast<LPARAM>(&btn));
-    return OnCommand(btn.idCommand, 0, &theResult);
+    ::SendMessageW(m_hwndToolbar, TB_GETBUTTON, iIndex, reinterpret_cast<LPARAM>(&btn));
+    return ProcessClick(btn.idCommand);
 }
 
 HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)

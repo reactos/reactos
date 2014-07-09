@@ -394,7 +394,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::EnumObjects(
     SHCONTF grfFlags,
     IEnumIDList **ppenumIDList)
 {
-    DbgPrint("EnumObjects\n");
+    TRACE("EnumObjects\n");
     HRESULT hr = m_EnumSource->QueryInterface(IID_PPV_ARG(IEnumIDList, ppenumIDList));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -410,7 +410,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
     LocalPidlInfo info;
     HRESULT hr;
 
-    DbgPrint("BindToObject\n");
+    TRACE("BindToObject\n");
 
     hr = m_EnumSource->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -451,7 +451,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::CompareIDs(
     LPCITEMIDLIST pidl1,
     LPCITEMIDLIST pidl2)
 {
-    DbgPrint("CompareIDs\n");
+    TRACE("CompareIDs\n");
     return m_UserLocal->CompareIDs(lParam, pidl1, pidl2);
 }
 
@@ -472,7 +472,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
     LocalPidlInfo info;
     HRESULT hr;
 
-    DbgPrint("GetAttributesOf\n");
+    TRACE("GetAttributesOf\n");
 
     for (int i = 0; i < (int)cidl; i++)
     {
@@ -506,7 +506,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetUIObjectOf(
     LocalPidlInfo info;
     HRESULT hr;
 
-    DbgPrint("GetUIObjectOf\n");
+    TRACE("GetUIObjectOf\n");
 
     for (int i = 0; i < (int)cidl; i++)
     {
@@ -542,7 +542,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDisplayNameOf(
     LocalPidlInfo info;
     HRESULT hr;
 
-    DbgPrint("GetDisplayNameOf\n");
+    TRACE("GetDisplayNameOf\n");
 
     hr = m_EnumSource->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -625,8 +625,24 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDetailsEx(
     const SHCOLUMNID *pscid,
     VARIANT *pv)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    LocalPidlInfo info;
+    HRESULT hr;
+
+    TRACE("GetDetailsEx\n");
+
+    hr = m_EnumSource->FindPidlInList(pidl, &info);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IShellFolder2> parent2;
+    hr = info.parent->QueryInterface(IID_PPV_ARG(IShellFolder2, &parent2));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = parent2->GetDetailsEx(info.pidl, pscid, pv);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::GetDetailsOf(
@@ -634,8 +650,25 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDetailsOf(
     UINT iColumn,
     SHELLDETAILS *psd)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    LocalPidlInfo info;
+    HRESULT hr;
+
+    TRACE("GetDetailsOf\n");
+
+    hr = m_EnumSource->FindPidlInList(pidl, &info);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IShellFolder2> parent2;
+    hr = info.parent->QueryInterface(IID_PPV_ARG(IShellFolder2, &parent2));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = parent2->GetDetailsOf(info.pidl, iColumn, psd);
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::MapColumnToSCID(

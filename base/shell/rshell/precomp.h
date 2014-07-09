@@ -26,7 +26,7 @@
 #define WRAP_MENUBAND 0
 #define WRAP_TRAYPRIV 0
 
-#define MERGE_FOLDERS 0
+#define MERGE_FOLDERS 1
 
 #include <stdio.h>
 #include <tchar.h>

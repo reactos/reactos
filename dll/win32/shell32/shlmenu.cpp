@@ -20,6 +20,8 @@
 
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(shellmenu);
+
 #ifdef FM_SEPARATOR
 #undef FM_SEPARATOR
 #endif
@@ -55,8 +57,6 @@ typedef struct
 static BOOL bAbortInit;
 
 #define    CCH_MAXITEMTEXT 256
-
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static LPFMINFO FM_GetMenuInfo(HMENU hmenu)
 {
@@ -857,6 +857,8 @@ UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAd
       return uIDMax;
 
     nItem = GetMenuItemCount(hmDst);
+    if (nItem == -1)
+        return uIDMax;
 
     if (uInsert >= (UINT)nItem)    /* insert position inside menu? */
     {
@@ -900,16 +902,18 @@ UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAd
         /* This is a separator; don't put two of them in a row */
         if (bAlreadySeparated)
           continue;
+
         bAlreadySeparated = TRUE;
       }
       else if (miiSrc.hSubMenu)
       {
-        if ((uFlags & MM_SUBMENUSHAVEIDS) != 0 && miiSrc.wID != (UINT)miiSrc.hSubMenu)
+        if (uFlags & MM_SUBMENUSHAVEIDS)
         {
           miiSrc.wID += uIDAdjust;            /* add uIDAdjust to the ID */
 
-          if (miiSrc.wID > uIDAdjustMax)        /* skip ID's higher uIDAdjustMax */
+                if (miiSrc.wID > uIDAdjustMax) /* skip IDs higher than uIDAdjustMax */
             continue;
+
           if (uIDMax <= miiSrc.wID)            /* remember the highest ID */
             uIDMax = miiSrc.wID + 1;
         }
@@ -934,9 +938,9 @@ UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAd
       {
         miiSrc.wID += uIDAdjust;            /* add uIDAdjust to the ID */
 
-        if (miiSrc.wID > uIDAdjustMax)        /* skip ID's higher uIDAdjustMax */{
+        if (miiSrc.wID > uIDAdjustMax) /* skip IDs higher than uIDAdjustMax */
           continue;
-        }
+
         if (uIDMax <= miiSrc.wID)            /* remember the highest ID */
           uIDMax = miiSrc.wID + 1;
 
