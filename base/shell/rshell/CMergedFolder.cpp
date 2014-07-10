@@ -111,7 +111,7 @@ HRESULT CEnumMergedFolder::SetSources(IShellFolder * userLocal, IShellFolder * a
     m_UserLocalFolder = userLocal;
     m_AllUSersFolder = allUSers;
 
-    TRACE("SetSources %p %p\n", m_UserLocalFolder, m_AllUSersFolder);
+    TRACE("SetSources %p %p\n", userLocal, allUSers);
     return S_OK;
 }
 
@@ -397,7 +397,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::AddNameSpace(LPGUID lpGuid, IShellFolde
         return E_NOTIMPL;
     }
 
-    TRACE("AddNameSpace %p %p\n", m_UserLocal, m_AllUSers);
+    TRACE("AddNameSpace %p %p\n", m_UserLocal.p, m_AllUSers.p);
     
     // FIXME: Use a DSA to store the list of merged namespaces, together with their related info (psf, pidl, ...)
     // For now, assume only 2 will ever be used, and ignore all the other data.
