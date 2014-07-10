@@ -625,8 +625,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
     PreviousMode = ExGetPreviousMode();
 
-    if (Data && !DataSize)
-        return STATUS_INVALID_PARAMETER;
+    if (!DataSize)
+        Data = NULL;
 
     /* Probe and copy the data */
     if ((PreviousMode != KernelMode) && Data)
