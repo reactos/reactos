@@ -135,7 +135,7 @@ IopBootLog(PUNICODE_STRING DriverName,
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
     }
     else
     {

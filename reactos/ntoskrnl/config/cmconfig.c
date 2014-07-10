@@ -97,7 +97,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
     /* Setup the component information key */
     RtlInitUnicodeString(&ValueName, L"Component Information");
-    Status = ZwSetValueKey(KeyHandle,
+    Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_BINARY,
@@ -124,7 +124,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         if (NT_SUCCESS(Status))
         {
             /* Save the identifier in the registry */
-            Status = ZwSetValueKey(KeyHandle,
+            Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
@@ -178,7 +178,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     CmpConfigurationData->BusNumber = BusNumber;
 
     /* Save the actual data */
-    Status = ZwSetValueKey(KeyHandle,
+    Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_FULL_RESOURCE_DESCRIPTOR,

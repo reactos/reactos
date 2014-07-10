@@ -268,7 +268,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
         /* Set the value */
         RtlInitUnicodeString(&ValueName, L"PhysicalAddressExtension");
-        ZwSetValueKey(KeyHandle,
+        NtSetValueKey(KeyHandle,
                       &ValueName,
                       0,
                       REG_DWORD,
@@ -463,7 +463,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                     /* Add it to the registry */
                     RtlInitUnicodeString(&ValueName, L"ProcessorNameString");
-                    Status = ZwSetValueKey(KeyHandle,
+                    Status = NtSetValueKey(KeyHandle,
                                            &ValueName,
                                            0,
                                            REG_SZ,
@@ -486,7 +486,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                     /* Add it to the registry */
                     RtlInitUnicodeString(&ValueName, L"VendorIdentifier");
-                    Status = ZwSetValueKey(KeyHandle,
+                    Status = NtSetValueKey(KeyHandle,
                                            &ValueName,
                                            0,
                                            REG_SZ,
@@ -502,7 +502,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 {
                     /* Add them to the registry */
                     RtlInitUnicodeString(&ValueName, L"FeatureSet");
-                    Status = ZwSetValueKey(KeyHandle,
+                    Status = NtSetValueKey(KeyHandle,
                                            &ValueName,
                                            0,
                                            REG_DWORD,
@@ -515,7 +515,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 {
                     /* Add it to the registry */
                     RtlInitUnicodeString(&ValueName, L"~MHz");
-                    Status = ZwSetValueKey(KeyHandle,
+                    Status = NtSetValueKey(KeyHandle,
                                            &ValueName,
                                            0,
                                            REG_DWORD,
@@ -528,7 +528,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 {
                     /* Add it to the registry */
                     RtlInitUnicodeString(&ValueName, L"Update Signature");
-                    Status = ZwSetValueKey(KeyHandle,
+                    Status = NtSetValueKey(KeyHandle,
                                            &ValueName,
                                            0,
                                            REG_BINARY,
@@ -621,7 +621,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
             /* Write the date into the registry */
             RtlInitUnicodeString(&ValueName, L"SystemBiosDate");
-            Status = ZwSetValueKey(SystemHandle,
+            Status = NtSetValueKey(SystemHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
@@ -643,7 +643,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 if (NT_SUCCESS(Status))
                 {
                     /* Save it to the registry */
-                    Status = ZwSetValueKey(BiosHandle,
+                    Status = NtSetValueKey(BiosHandle,
                                            &ValueName,
                                            0,
                                            REG_SZ,
@@ -703,7 +703,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                 /* Write the BIOS Version to the registry */
                 RtlInitUnicodeString(&ValueName, L"SystemBiosVersion");
-                Status = ZwSetValueKey(SystemHandle,
+                Status = NtSetValueKey(SystemHandle,
                                        &ValueName,
                                        0,
                                        REG_MULTI_SZ,
@@ -746,7 +746,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
             /* Write the date into the registry */
             RtlInitUnicodeString(&ValueName, L"VideoBiosDate");
-            Status = ZwSetValueKey(SystemHandle,
+            Status = NtSetValueKey(SystemHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
@@ -801,7 +801,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                 /* Write the BIOS Version to the registry */
                 RtlInitUnicodeString(&ValueName, L"VideoBiosVersion");
-                Status = ZwSetValueKey(SystemHandle,
+                Status = NtSetValueKey(SystemHandle,
                                        &ValueName,
                                        0,
                                        REG_MULTI_SZ,

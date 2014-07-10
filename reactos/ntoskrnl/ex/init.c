@@ -1853,7 +1853,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             {
                 /* Write the safe boot type */
                 RtlInitUnicodeString(&KeyName, L"OptionValue");
-                ZwSetValueKey(OptionHandle,
+                NtSetValueKey(OptionHandle,
                               &KeyName,
                               0,
                               REG_DWORD,
@@ -1866,7 +1866,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                     /* Remember this for later */
                     Disposition = TRUE;
                     RtlInitUnicodeString(&KeyName, L"UseAlternateShell");
-                    ZwSetValueKey(OptionHandle,
+                    NtSetValueKey(OptionHandle,
                                   &KeyName,
                                   0,
                                   REG_DWORD,
