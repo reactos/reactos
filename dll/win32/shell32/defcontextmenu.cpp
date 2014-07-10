@@ -1675,7 +1675,7 @@ CDefFolderMenu_Create2(
     // FIXME: This needs to be freed somewhere (like in the destructor of the context  menu)
     LPCITEMIDLIST *apidl2 = (LPCITEMIDLIST *) SHAlloc(sizeof(LPCITEMIDLIST) * cidl);
 
-    for (int i = 0; i < cidl; i++)
+    for (int i = 0; i < (int)cidl; i++)
     {
         apidl2[i] = apidl[i];
     }

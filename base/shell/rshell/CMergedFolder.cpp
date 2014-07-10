@@ -30,7 +30,6 @@ struct LocalPidlInfo
     BOOL shared;
     IShellFolder * parent;
     LPITEMIDLIST pidl;
-    LPITEMIDLIST pidlCommon;
 };
 
 class CEnumMergedFolder :
@@ -41,8 +40,6 @@ class CEnumMergedFolder :
 private:
     CComPtr<IShellFolder> m_UserLocalFolder;
     CComPtr<IShellFolder> m_AllUSersFolder;
-    CComPtr<IEnumIDList> m_UserLocal;
-    CComPtr<IEnumIDList> m_AllUSers;
 
     HWND m_HwndOwner;
     SHCONTF m_Flags;
@@ -83,8 +80,6 @@ public:
 CEnumMergedFolder::CEnumMergedFolder() :
     m_UserLocalFolder(NULL),
     m_AllUSersFolder(NULL),
-    m_UserLocal(NULL),
-    m_AllUSers(NULL),
     m_HwndOwner(NULL),
     m_Flags(0),
     m_hDsa(NULL),
@@ -115,6 +110,8 @@ HRESULT CEnumMergedFolder::SetSources(IShellFolder * userLocal, IShellFolder * a
 {
     m_UserLocalFolder = userLocal;
     m_AllUSersFolder = allUSers;
+
+    TRACE("SetSources %p %p\n", m_UserLocalFolder, m_AllUSersFolder);
     return S_OK;
 }
 
@@ -129,13 +126,15 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
 
     TRACE("Search conditions changed, recreating list...\n");
 
-    hr = m_UserLocalFolder->EnumObjects(hwndOwner, flags, &m_UserLocal);
+    CComPtr<IEnumIDList> userLocal;
+    CComPtr<IEnumIDList> allUSers;
+    hr = m_UserLocalFolder->EnumObjects(hwndOwner, flags, &userLocal);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    hr = m_AllUSersFolder->EnumObjects(hwndOwner, flags, &m_AllUSers);
+    hr = m_AllUSersFolder->EnumObjects(hwndOwner, flags, &allUSers);
     if (FAILED_UNEXPECTEDLY(hr))
     {
-        m_UserLocal = NULL;
+        userLocal = NULL;
         return hr;
     }
 
@@ -159,7 +158,7 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
         {
             if (hr1 == S_OK)
             {
-                hr1 = m_UserLocal->Next(1, &pidl1, NULL);
+                hr1 = userLocal->Next(1, &pidl1, NULL);
                 if (FAILED_UNEXPECTEDLY(hr1))
                     return hr1;
             }
@@ -172,7 +171,7 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
         {
             if (hr2 == S_OK)
             {
-                hr2 = m_AllUSers->Next(1, &pidl2, NULL);
+                hr2 = allUSers->Next(1, &pidl2, NULL);
                 if (FAILED_UNEXPECTEDLY(hr2))
                     return hr2;
             }
@@ -197,19 +196,27 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
             StrRetToStrW(&str1, pidl1, &name1);
             StrRetToStrW(&str2, pidl2, &name2);
             order = StrCmpW(name1, name2);
+
+            TRACE("Both sources are S_OK, comparison between %S and %S returns %d\n", name1, name2, order);
+
             CoTaskMemFree(name1);
             CoTaskMemFree(name2);
         }
         else if (hr1 == S_OK)
         {
             order = -1;
+
+            TRACE("Both sources are S_OK, forcing %d\n", order);
         }
         else if (hr2 == S_OK)
         {
             order = 1;
+
+            TRACE("Both sources are S_OK, forcing %d\n", order);
         }
         else
         {
+            TRACE("None of the sources\n");
             break;
         }
 
@@ -347,7 +354,7 @@ HRESULT STDMETHODCALLTYPE CEnumMergedFolder::Clone(
 // CMergedFolder
 
 extern "C"
-HRESULT WINAPI CMergedFolder_Constructor(IShellFolder* userLocal, IShellFolder* allUsers, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
 
@@ -357,8 +364,6 @@ HRESULT WINAPI CMergedFolder_Constructor(IShellFolder* userLocal, IShellFolder* 
         return E_OUTOFMEMORY;
 
     HRESULT hr;
-
-    hr = fld->_SetSources(userLocal, allUsers);
 
     hr = fld->QueryInterface(riid, ppv);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -371,27 +376,46 @@ CMergedFolder::CMergedFolder() :
     m_UserLocal(NULL),
     m_AllUSers(NULL),
     m_EnumSource(NULL),
+    m_UserLocalPidl(NULL),
+    m_AllUsersPidl(NULL),
     m_shellPidl(NULL)
 {
 }
 
 CMergedFolder::~CMergedFolder() 
 {
-}
-
-HRESULT CMergedFolder::_SetSources(IShellFolder* userLocal, IShellFolder* allUsers)
-{
-    m_UserLocal = userLocal;
-    m_AllUSers = allUsers;
-    m_EnumSource = new CComObject<CEnumMergedFolder>();
-    return m_EnumSource->SetSources(m_UserLocal, m_AllUSers);
+    if (m_UserLocalPidl) ILFree(m_UserLocalPidl);
+    if (m_AllUsersPidl)  ILFree(m_AllUsersPidl);
 }
 
 // IAugmentedShellFolder2
 HRESULT STDMETHODCALLTYPE CMergedFolder::AddNameSpace(LPGUID lpGuid, IShellFolder * psf, LPCITEMIDLIST pcidl, ULONG dwUnknown)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (lpGuid)
+    {
+        TRACE("FIXME: No idea how to handle the GUID\n");
+        return E_NOTIMPL;
+    }
+
+    TRACE("AddNameSpace %p %p\n", m_UserLocal, m_AllUSers);
+    
+    // FIXME: Use a DSA to store the list of merged namespaces, together with their related info (psf, pidl, ...)
+    // For now, assume only 2 will ever be used, and ignore all the other data.
+    if (!m_UserLocal)
+    {
+        m_UserLocal = psf;
+        m_UserLocalPidl = ILClone(pcidl);
+        return S_OK;
+    }
+
+    if (m_AllUSers)
+        return E_FAIL;
+
+    m_AllUSers = psf;
+    m_AllUsersPidl = ILClone(pcidl);
+
+    m_EnumSource = new CComObject<CEnumMergedFolder>();
+    return m_EnumSource->SetSources(m_UserLocal, m_AllUSers);
 }
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::GetNameSpaceID(LPCITEMIDLIST pcidl, LPGUID lpGuid)
@@ -429,26 +453,39 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::ParseDisplayName(
 {
     HRESULT hr;
     LocalPidlInfo info;
+    LPITEMIDLIST pidl;
 
     if (!ppidl) return E_FAIL;
 
     if (pchEaten) *pchEaten = 0;
     if (pdwAttributes) *pdwAttributes = 0;
 
-    hr = m_UserLocal->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+    TRACE("ParseDisplayName name=%S\n", lpszDisplayName);
+
+    hr = m_UserLocal->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, &pidl, pdwAttributes);
     if (SUCCEEDED(hr))
     {
-        hr = m_EnumSource->FindPidlInList(hwndOwner, *ppidl, &info);
+        TRACE("ParseDisplayName result local\n");
+        hr = m_EnumSource->FindPidlInList(hwndOwner, pidl, &info);
         if (SUCCEEDED(hr))
+        {
+            ILFree(pidl);
+            *ppidl = ILClone(info.pidl);
             return hr;
+        }
     }
 
-    hr = m_AllUSers->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+    hr = m_AllUSers->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, &pidl, pdwAttributes);
     if (SUCCEEDED(hr))
     {
-        hr = m_EnumSource->FindPidlInList(hwndOwner, *ppidl, &info);
+        TRACE("ParseDisplayName result common\n");
+        hr = m_EnumSource->FindPidlInList(hwndOwner, pidl, &info);
         if (SUCCEEDED(hr))
+        {
+            ILFree(pidl);
+            *ppidl = ILClone(info.pidl);
             return hr;
+        }
     }
 
     if (ppidl) *ppidl = NULL;
@@ -477,12 +514,12 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
 {
     LocalPidlInfo info;
     HRESULT hr;
-
-    TRACE("BindToObject\n");
-
+    
     hr = m_EnumSource->FindPidlInList(NULL, pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    TRACE("BindToObject shared = %d\n", info.shared);
 
     if (!info.shared)
         return info.parent->BindToObject(info.pidl, pbcReserved, riid, ppvOut);
@@ -501,7 +538,24 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return CMergedFolder_Constructor(fld1, fld2, riid, ppvOut);
+    CComPtr<IAugmentedShellFolder> pasf;
+    hr = CMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pasf->QueryInterface(riid, ppvOut);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pasf->AddNameSpace(NULL, fld1, info.pidl, 0xFF00);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pasf->AddNameSpace(NULL, fld2, info.pidl, 0x0000);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::BindToStorage(

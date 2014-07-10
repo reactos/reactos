@@ -310,6 +310,9 @@ HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
     HRESULT hr;
     LPITEMIDLIST pidlUserStartMenu;
     LPITEMIDLIST pidlCommonStartMenu;
+    CComPtr<IShellFolder> psfUserStartMenu;
+    CComPtr<IShellFolder> psfCommonStartMenu;
+    CComPtr<IAugmentedShellFolder> pasf;
 
     *ppsfStartMenu = NULL;
 
@@ -324,27 +327,22 @@ HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
         return hr;
     }
 
-    CComPtr<IShellFolder> psfUserStartMenu;
     hr = BindToDesktop(pidlUserStartMenu, &psfUserStartMenu);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    CComPtr<IShellFolder> psfCommonStartMenu;
     hr = BindToDesktop(pidlCommonStartMenu, &psfCommonStartMenu);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if CUSTOM_MERGE_FOLDERS
-    IShellFolder * psfMerged;
-    hr = CMergedFolder_Constructor(psfUserStartMenu, psfCommonStartMenu, IID_PPV_ARG(IShellFolder, &psfMerged));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+#if 1
+    hr = CMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
 #else
-    CComPtr<IAugmentedShellFolder> pasf;
     hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+#endif
     if (FAILED_UNEXPECTEDLY(hr))
     {
-        hr = BindToDesktop(pidlUserStartMenu, ppsfStartMenu);
+        *ppsfStartMenu = psfUserStartMenu.Detach();
         ILFree(pidlCommonStartMenu);
         ILFree(pidlUserStartMenu);
         return hr;
@@ -360,7 +358,6 @@ HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
 
     hr = pasf->QueryInterface(IID_PPV_ARG(IShellFolder, ppsfStartMenu));
     pasf.Release();
-#endif
 
     ILFree(pidlCommonStartMenu);
     ILFree(pidlUserStartMenu);

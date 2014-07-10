@@ -65,6 +65,8 @@ private:
     CComPtr<IShellFolder> m_AllUSers;
     CComPtr<CEnumMergedFolder> m_EnumSource;
 
+    LPITEMIDLIST m_UserLocalPidl;
+    LPITEMIDLIST m_AllUsersPidl;
     LPITEMIDLIST m_shellPidl;
 
 public:
