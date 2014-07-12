@@ -380,6 +380,7 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     HRESULT hr;
     IShellFolder * psf;
 
+    LPITEMIDLIST pidlProgramsAbsolute;
     LPITEMIDLIST pidlPrograms;
     CComPtr<IShellFolder> psfPrograms;
 
@@ -410,10 +411,10 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    WCHAR name[] = L"Programs";
-    hr = psf->ParseDisplayName(NULL, NULL, name, NULL, &pidlPrograms, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
+
+    pidlPrograms = ILClone(ILFindLastID(pidlProgramsAbsolute));
+    ILFree(pidlProgramsAbsolute);
 
     hr = psf->BindToObject(pidlPrograms, NULL, IID_PPV_ARG(IShellFolder, &psfPrograms));
     if (FAILED_UNEXPECTEDLY(hr))
