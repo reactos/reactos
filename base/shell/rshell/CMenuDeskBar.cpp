@@ -495,6 +495,11 @@ HRESULT CMenuDeskBar::_CloseBar()
 
     m_Shown = false;
 
+    if (m_SubMenuParent)
+    {
+        m_SubMenuParent->SetSubMenu(this, FALSE);
+    }
+
     if (m_SubMenuChild)
     {
         hr = m_SubMenuChild->OnSelect(MPOS_CANCELLEVEL);

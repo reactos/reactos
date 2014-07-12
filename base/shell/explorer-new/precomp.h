@@ -455,4 +455,7 @@ HWND
 CreateTaskSwitchWnd(IN HWND hWndParent,
                     IN OUT ITrayWindow *Tray);
 
+HRESULT
+Tray_OnStartMenuDismissed();
+
 #endif /* _EXPLORER_PRECOMP__H_ */

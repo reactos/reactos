@@ -101,6 +101,8 @@ typedef struct
     HDPA hdpaShellServices;
 } ITrayWindowImpl;
 
+static ITrayWindowImpl * g_TrayWindow;
+
 BOOL LaunchCPanel(HWND hwnd, LPCTSTR applet)
 {
     TCHAR szParams[MAX_PATH];
@@ -2122,6 +2124,8 @@ static void PopupStartMenu(IN ITrayWindowImpl *This)
                 &pt,
                 &rcExclude,
                 dwFlags);
+
+            SendMessageW(This->hwndStart, BM_SETSTATE, TRUE, 0);
         }
     }
 }
@@ -2870,6 +2874,8 @@ CreateTrayWindow(VOID)
 
         ITrayWindowImpl_Open(TrayWindow);
 
+        g_TrayWindow = This;
+
         return TrayWindow;
     }
 
@@ -3040,3 +3046,16 @@ static const IShellDesktopTrayVtbl IShellDesktopTrayImpl_Vtbl =
     ITrayWindowImpl_IShellDesktopTray_RegisterDesktopWindow,
     ITrayWindowImpl_IShellDesktopTray_Unknown
 };
+
+HRESULT
+ITrayWindowImpl_RaiseStartButton(ITrayWindowImpl * This)
+{
+    SendMessageW(This->hwndStart, BM_SETSTATE, FALSE, 0);
+    return S_OK;
+}
+
+HRESULT
+Tray_OnStartMenuDismissed()
+{
+    return ITrayWindowImpl_RaiseStartButton(g_TrayWindow);
+}

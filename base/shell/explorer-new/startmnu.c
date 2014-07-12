@@ -291,6 +291,7 @@ static const IStartMenuSiteVtbl IStartMenuSiteImpl_Vtbl;
 static const IServiceProviderVtbl IServiceProviderImpl_Vtbl;
 static const ITrayPrivVtbl ITrayPrivImpl_Vtbl;
 static const IOleCommandTargetVtbl IOleCommandTargetImpl_Vtbl;
+static const IMenuPopupVtbl IMenuPopupImpl_Vtbl;
 
 typedef struct
 {
@@ -298,9 +299,12 @@ typedef struct
     const IServiceProviderVtbl *lpServiceProviderVtbl;
     const ITrayPrivVtbl *lpStartMenuCallbackVtbl;
     const IOleCommandTargetVtbl *lpOleCommandTargetVtbl;
+    const IMenuPopupVtbl *lpMenuPopupVtbl;
     LONG Ref;
 
     ITrayWindow *Tray;
+
+    IMenuPopup * StartMenuPopup;
 } IStartMenuSiteImpl;
 
 static IUnknown *
@@ -313,6 +317,8 @@ IMPL_CASTS(IStartMenuSite, IStartMenuSite, lpVtbl)
 IMPL_CASTS(IServiceProvider, IStartMenuSite, lpServiceProviderVtbl)
 IMPL_CASTS(ITrayPriv, IStartMenuSite, lpStartMenuCallbackVtbl)
 IMPL_CASTS(IOleCommandTarget, IStartMenuSite, lpOleCommandTargetVtbl)
+IMPL_CASTS(IDeskBar, IStartMenuSite, lpMenuPopupVtbl)
+IMPL_CASTS(IMenuPopup, IStartMenuSite, lpMenuPopupVtbl)
 
 /*******************************************************************/
 
@@ -379,6 +385,16 @@ IStartMenuSiteImpl_QueryInterface(IN OUT IStartMenuSite *iface,
                         &IID_IOleCommandTarget))
     {
         *ppvObj = IOleCommandTarget_from_IStartMenuSiteImpl(This);
+    }
+    else if (IsEqualIID(riid,
+                        &IID_IDeskBar))
+    {
+        *ppvObj = IDeskBar_from_IStartMenuSiteImpl(This);
+    }
+    else if (IsEqualIID(riid,
+                        &IID_IMenuPopup))
+    {
+        *ppvObj = IMenuPopup_from_IStartMenuSiteImpl(This);
     }
     else
     {
@@ -776,6 +792,89 @@ static const IOleCommandTargetVtbl IOleCommandTargetImpl_Vtbl =
 
 /*******************************************************************/
 
+METHOD_IUNKNOWN_INHERITED_ADDREF(IMenuPopup, IStartMenuSite)
+METHOD_IUNKNOWN_INHERITED_RELEASE(IMenuPopup, IStartMenuSite)
+METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE(IMenuPopup, IStartMenuSite)
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_IMenuPopup_GetWindow(IN OUT IMenuPopup *iface, OUT HWND *phwnd)
+{
+    IStartMenuSiteImpl * This = IStartMenuSiteImpl_from_IMenuPopup(iface);
+    ITrayPriv * tp = ITrayPriv_from_IStartMenuSiteImpl(This);
+    return IStartMenuSiteImpl_GetWindow(tp, phwnd);
+}
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_IMenuPopup_ContextSensitiveHelp(IN OUT IMenuPopup *iface, IN BOOL fEnterMode)
+{
+    IStartMenuSiteImpl * This = IStartMenuSiteImpl_from_IMenuPopup(iface);
+    ITrayPriv * tp = ITrayPriv_from_IStartMenuSiteImpl(This);
+    return IStartMenuSiteImpl_ContextSensitiveHelp(tp, fEnterMode);
+}
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_SetClient(IN OUT IMenuPopup *iface, IUnknown *punkClient)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_GetClient(IN OUT IMenuPopup *iface, IUnknown ** ppunkClient)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_OnPosRectChangeDB(IN OUT IMenuPopup *iface, RECT *prc)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_Popup(IN OUT IMenuPopup *iface, POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_OnSelect(IN OUT IMenuPopup *iface, DWORD dwSelectType)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE
+IStartMenuSiteImpl_SetSubMenu(IN OUT IMenuPopup *iface, IMenuPopup *pmp, BOOL fSet)
+{
+    if (!fSet)
+    {
+        return Tray_OnStartMenuDismissed();
+    }
+
+    return S_OK;
+}
+
+static const IMenuPopupVtbl IMenuPopupImpl_Vtbl =
+{
+    /*** IUnknown methods ***/
+    METHOD_IUNKNOWN_INHERITED_QUERYINTERFACE_NAME(IMenuPopup, IStartMenuSite),
+    METHOD_IUNKNOWN_INHERITED_ADDREF_NAME(IMenuPopup, IStartMenuSite),
+    METHOD_IUNKNOWN_INHERITED_RELEASE_NAME(IMenuPopup, IStartMenuSite),
+    /*** IOleWindow methods ***/
+    IStartMenuSiteImpl_IMenuPopup_GetWindow,
+    IStartMenuSiteImpl_IMenuPopup_ContextSensitiveHelp,
+    /*** IDeskBar methods ***/
+    IStartMenuSiteImpl_SetClient,
+    IStartMenuSiteImpl_GetClient,
+    IStartMenuSiteImpl_OnPosRectChangeDB,
+    /*** IMenuPopup ***/
+    IStartMenuSiteImpl_Popup,
+    IStartMenuSiteImpl_OnSelect,
+    IStartMenuSiteImpl_SetSubMenu
+};
+
+
+/*******************************************************************/
+
 static IStartMenuSiteImpl*
 IStartMenuSiteImpl_Construct(IN ITrayWindow *Tray)
 {
@@ -791,6 +890,7 @@ IStartMenuSiteImpl_Construct(IN ITrayWindow *Tray)
     This->lpServiceProviderVtbl = &IServiceProviderImpl_Vtbl;
     This->lpStartMenuCallbackVtbl = &ITrayPrivImpl_Vtbl;
     This->lpOleCommandTargetVtbl = &IOleCommandTargetImpl_Vtbl;
+    This->lpMenuPopupVtbl = &IMenuPopupImpl_Vtbl;
     This->Ref = 1;
 
     This->Tray = Tray;
