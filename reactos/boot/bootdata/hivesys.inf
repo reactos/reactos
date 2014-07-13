@@ -1322,11 +1322,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Wow","",0x00000000,""
 ; PNP Root device
 HKLM,"SYSTEM\CurrentControlSet\Enum\HTREE\ROOT\0","",0x00000000,""
 
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles",,0x00000012
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\0000",,0x00000012
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\0000\Software",,0x00000012
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\0000\System",,0x00000012
-
 ; Afd driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Group",0x00000000,"TDI"
@@ -2003,7 +1998,7 @@ HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 
 ; Debug channels
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+sam,+netapi32,+msports,+devmgr"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+ole,+rpc"
 
 ; Winsrv configuration
 HKLM,"SYSTEM\CurrentControlSet\Control\PriorityControl",,0x00000012
