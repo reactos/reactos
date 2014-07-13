@@ -329,7 +329,45 @@ HRESULT
 WINAPI
 CNetConnection::Rename(LPCWSTR pszwDuplicateName)
 {
-    return E_NOTIMPL;
+    WCHAR szName[140];
+    LPOLESTR pStr;
+    DWORD dwSize;
+    HKEY hKey;
+    HRESULT hr;
+
+    if (pszwDuplicateName == NULL || wcslen(pszwDuplicateName) == 0)
+        return S_OK;
+
+    if (Props.pszwName)
+    {
+        CoTaskMemFree(Props.pszwName);
+        Props.pszwName = NULL;
+    }
+
+    dwSize = (wcslen(pszwDuplicateName) + 1) * sizeof(WCHAR);
+    Props.pszwName = (LPWSTR)CoTaskMemAlloc(dwSize);
+    if (Props.pszwName == NULL)
+        return E_OUTOFMEMORY;
+
+    wcscpy(Props.pszwName, pszwDuplicateName);
+
+    hr = StringFromCLSID((CLSID)Props.guidId, &pStr);
+    if (SUCCEEDED(hr))
+    {
+        wcscpy(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\");
+        wcscat(szName, pStr);
+        wcscat(szName, L"\\Connection");
+
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+        {
+            RegSetValueExW(hKey, L"Name", NULL, REG_SZ, (LPBYTE)Props.pszwName, dwSize);
+            RegCloseKey(hKey);
+        }
+
+        CoTaskMemFree(pStr);
+    }
+
+    return hr;
 }
 
 HRESULT WINAPI IConnection_Constructor(INetConnection **ppv, PINetConnectionItem pItem)
