@@ -37,8 +37,9 @@ static BOOLEAN HasCurrentCabinet = FALSE;
 static WCHAR CurrentCabinetName[MAX_PATH];
 static CAB_SEARCH Search;
 
+static
 NTSTATUS
-SetupCreateDirectory(
+SetupCreateSingleDirectory(
     PWCHAR DirectoryName)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -87,6 +88,111 @@ SetupCreateDirectory(
     }
 
     RtlFreeUnicodeString(&PathName);
+
+    return Status;
+}
+
+
+static
+BOOLEAN
+DoesPathExist(
+    PWSTR PathName)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING Name;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&Name,
+                         PathName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    NtClose(FileHandle);
+
+    return TRUE;
+}
+
+
+NTSTATUS
+SetupCreateDirectory(
+    PWCHAR PathName)
+{
+    PWCHAR PathBuffer = NULL;
+    PWCHAR Ptr, EndPtr;
+    ULONG BackslashCount;
+    ULONG Size;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Size = (wcslen(PathName) + 1) * sizeof(WCHAR);
+    PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+    if (PathBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    wcscpy(PathBuffer, PathName);
+    EndPtr = PathBuffer + wcslen(PathName);
+
+    Ptr = PathBuffer;
+
+    /* Skip the '\Device\HarddiskX\PartitionY\ part */
+    BackslashCount = 0;
+    while (Ptr < EndPtr && BackslashCount < 4)
+    {
+        if (*Ptr == L'\\')
+            BackslashCount++;
+
+        Ptr++;
+    }
+
+    while (Ptr < EndPtr)
+    {
+        if (*Ptr == L'\\')
+        {
+            *Ptr = 0;
+
+            DPRINT("PathBuffer: %S\n", PathBuffer);
+            if (!DoesPathExist(PathBuffer))
+            {
+                DPRINT("Create: %S\n", PathBuffer);
+                Status = SetupCreateSingleDirectory(PathBuffer);
+                if (!NT_SUCCESS(Status))
+                    goto done;
+            }
+
+            *Ptr = L'\\';
+        }
+
+        Ptr++;
+    }
+
+    if (!DoesPathExist(PathBuffer))
+    {
+        DPRINT("Create: %S\n", PathBuffer);
+        Status = SetupCreateSingleDirectory(PathBuffer);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+done:
+    DPRINT("Done.\n");
+    if (PathBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
 
     return Status;
 }
