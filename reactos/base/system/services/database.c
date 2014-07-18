@@ -29,7 +29,7 @@
  * Uncomment the line below to use asynchronous IO operations
  * on the service control pipes.
  */
-// #define USE_ASYNCHRONOUS_IO
+#define USE_ASYNCHRONOUS_IO
 
 
 /* GLOBALS *******************************************************************/
