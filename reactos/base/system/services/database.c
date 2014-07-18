@@ -936,16 +936,16 @@ ScmControlService(PSERVICE Service,
                         &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT1("WriteFile() returned FALSE\n");
+        DPRINT("WriteFile() returned FALSE\n");
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT1("dwError: ERROR_IO_PENDING\n");
+            DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
                                           PipeTimeout);
-            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+            DPRINT("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
             {
@@ -990,16 +990,16 @@ ScmControlService(PSERVICE Service,
                        &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT1("ReadFile() returned FALSE\n");
+        DPRINT("ReadFile() returned FALSE\n");
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT1("dwError: ERROR_IO_PENDING\n");
+            DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
                                           PipeTimeout);
-            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+            DPRINT("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
             {
@@ -1187,16 +1187,16 @@ ScmSendStartCommand(PSERVICE Service,
                         &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT1("WriteFile() returned FALSE\n");
+        DPRINT("WriteFile() returned FALSE\n");
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT1("dwError: ERROR_IO_PENDING\n");
+            DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
                                           PipeTimeout);
-            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+            DPRINT("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
             {
@@ -1241,16 +1241,16 @@ ScmSendStartCommand(PSERVICE Service,
                        &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT1("ReadFile() returned FALSE\n");
+        DPRINT("ReadFile() returned FALSE\n");
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT1("dwError: ERROR_IO_PENDING\n");
+            DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
                                           PipeTimeout);
-            DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
+            DPRINT("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
             {
@@ -1457,7 +1457,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
         }
     }
 
-    DPRINT1("ScmWaitForServiceConnect() done\n");
+    DPRINT("ScmWaitForServiceConnect() done\n");
 
     return ERROR_SUCCESS;
 #else
