@@ -1787,7 +1787,11 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
 
     /* Free the buffer and check for success */
     if (Buffer) ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
-    if (!NT_SUCCESS(Status)) ExFreePoolWithTag(*PartitionBuffer, TAG_FILE_SYSTEM);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(*PartitionBuffer, TAG_FILE_SYSTEM);
+        *PartitionBuffer = NULL;
+    }
 
     /* Return status */
     return Status;
