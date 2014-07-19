@@ -1183,7 +1183,7 @@ CreatePartitionDeviceObjects(
         // Allocate and zero a partition list.
         //
 
-        partitionList = ExAllocatePool(NonPagedPool, sizeof(*partitionList ));
+        partitionList = ExAllocatePool(NonPagedPool, sizeof(*partitionList));
 
 
         if (partitionList != NULL) {
@@ -1446,6 +1446,10 @@ CreatePartitionDeviceObjects(
 
         ExFreePool(partitionList);
 
+        if (dmSkew) {
+            ExFreePool(dmSkew);
+        }
+
     } else {
 
 CreatePartitionDeviceObjectsExit:
@@ -1455,6 +1459,10 @@ CreatePartitionDeviceObjectsExit:
         }
         if (initData) {
             ExFreePool(initData);
+        }
+
+        if (dmSkew) {
+            ExFreePool(dmSkew);
         }
 
         return status;
@@ -1909,7 +1917,7 @@ Return Value:
                 case EXECUTE_OFFLINE_DIAGS:
                     controlCode = IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS;
                     break;
-      
+
           default:
                     status = STATUS_INVALID_PARAMETER;
                     break;
@@ -2090,13 +2098,13 @@ Return Value:
             RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
                           deviceExtension->DiskGeometry,
                           (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY) ?
-                          sizeof(DISK_GEOMETRY) : 
+                          sizeof(DISK_GEOMETRY) :
                           sizeof(DISK_GEOMETRY_EX));
 
             status = STATUS_SUCCESS;
             Irp->IoStatus.Information =
                (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY) ?
-               sizeof(DISK_GEOMETRY) : 
+               sizeof(DISK_GEOMETRY) :
                sizeof(DISK_GEOMETRY_EX);
         }
 
