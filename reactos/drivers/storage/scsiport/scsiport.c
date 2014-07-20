@@ -1840,6 +1840,8 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
   //PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT1("ScsiPortLogError() called\n");
+  DPRINT1("PathId: 0x%02x  TargetId: 0x%02x  Lun: 0x%02x  ErrorCode: 0x%08lx  UniqueId: 0x%08lx\n",
+          PathId, TargetId, Lun, ErrorCode, UniqueId);
 
   //DeviceExtension = CONTAINING_RECORD(HwDeviceExtension, SCSI_PORT_DEVICE_EXTENSION, MiniPortDeviceExtension);
 
