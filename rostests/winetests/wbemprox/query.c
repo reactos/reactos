@@ -675,14 +675,7 @@ START_TEST(query)
                             RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE );
     ok( hr == S_OK, "failed to set proxy blanket %08x\n", hr );
 
-    if (!winetest_interactive)
-    {
-        skip("test_select( services ), ROSTESTS-120\n");
-    }
-    else
-    {
-        test_select( services );
-    }
+    test_select( services );
     test_Win32_Process( services );
     test_Win32_Service( services );
     test_StdRegProv( services );
