@@ -107,7 +107,7 @@ NtGdiAlphaBlend(
 
     /* Prepare DCs for blit */
     TRACE("Preparing DCs for blit\n");
-    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+    DC_vPrepareDCsForBlit(DCDest, &DestRect, DCSrc, &SourceRect);
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
@@ -268,7 +268,7 @@ NtGdiTransparentBlt(
     rcSrc.bottom += DCSrc->ptlDCOrig.y;
 
     /* Prepare for blit */
-    DC_vPrepareDCsForBlit(DCDest, rcDest, DCSrc, rcSrc);
+    DC_vPrepareDCsForBlit(DCDest, &rcDest, DCSrc, &rcSrc);
 
     BitmapDest = DCDest->dclevel.pSurface;
     if (!BitmapDest)
@@ -456,7 +456,7 @@ NtGdiMaskBlt(
     }
 
     /* Prepare blit */
-    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+    DC_vPrepareDCsForBlit(DCDest, &DestRect, DCSrc, &SourceRect);
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(DCDest);
@@ -647,7 +647,7 @@ GreStretchBltMask(
     BrushOrigin.y = 0;
 
     /* Only prepare Source and Dest, hdcMask represents a DIB */
-    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+    DC_vPrepareDCsForBlit(DCDest, &DestRect, DCSrc, &SourceRect);
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(DCDest);
@@ -826,7 +826,7 @@ IntPatBlt(
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y;
 #endif
 
-    DC_vPrepareDCsForBlit(pdc, DestRect, NULL, DestRect);
+    DC_vPrepareDCsForBlit(pdc, &DestRect, NULL, NULL);
 
     psurf = pdc->dclevel.pSurface;
 

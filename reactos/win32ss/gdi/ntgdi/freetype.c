@@ -3212,7 +3212,7 @@ GreExtTextOutW(
     LONGLONG TextLeft, RealXStart;
     ULONG TextTop, previous, BackgroundLeft;
     FT_Bool use_kerning;
-    RECTL DestRect, MaskRect, DummyRect = {0, 0, 0, 0};
+    RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
     HBITMAP HSourceGlyph;
     SURFOBJ *SourceGlyphSurf;
@@ -3308,7 +3308,7 @@ GreExtTextOutW(
         DestRect.right  += dc->ptlDCOrig.x;
         DestRect.bottom += dc->ptlDCOrig.y;
 
-        DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+        DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
@@ -3502,7 +3502,7 @@ GreExtTextOutW(
     BackgroundLeft = (RealXStart + 32) >> 6;
 
     /* Lock blit with a dummy rect */
-    DC_vPrepareDCsForBlit(dc, DummyRect, NULL, DummyRect);
+    DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
     psurf = dc->dclevel.pSurface ;
     if(!psurf) psurf = psurfDefaultBitmap;

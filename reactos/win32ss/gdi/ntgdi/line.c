@@ -257,8 +257,7 @@ IntGdiPolyline(DC      *dc,
     if (PATH_IsPathOpen(dc->dclevel))
         return PATH_Polyline(dc, pt, Count);
 
-    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                            NULL, dc->rosdc.CombinedClip->rclBounds);
+    DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
@@ -411,7 +410,7 @@ NtGdiLineTo(HDC  hDC,
     rcLockRect.right += dc->ptlDCOrig.x;
     rcLockRect.bottom += dc->ptlDCOrig.y;
 
-    DC_vPrepareDCsForBlit(dc, rcLockRect, NULL, rcLockRect);
+    DC_vPrepareDCsForBlit(dc, &rcLockRect, NULL, NULL);
 
     if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
         DC_vUpdateLineBrush(dc);
