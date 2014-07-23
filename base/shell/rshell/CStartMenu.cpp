@@ -412,6 +412,8 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
         return hr;
 
     hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     pidlPrograms = ILClone(ILFindLastID(pidlProgramsAbsolute));
     ILFree(pidlProgramsAbsolute);

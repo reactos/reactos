@@ -1,0 +1,26 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_ICON1 ICON "resources/1.ico"
+IDI_ICON2 ICON "resources/2.ico"
+IDI_ICON3 ICON "resources/3.ico"
+IDI_ICON4 ICON "resources/4.ico"
+
+IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#if 0
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#endif
