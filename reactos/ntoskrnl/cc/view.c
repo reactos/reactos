@@ -42,7 +42,6 @@
 /* GLOBALS *******************************************************************/
 
 static LIST_ENTRY DirtyVacbListHead;
-static LIST_ENTRY VacbListHead;
 static LIST_ENTRY VacbLruListHead;
 ULONG DirtyPageCount = 0;
 
@@ -331,7 +330,6 @@ retry:
             ASSERT(!current->MappedCount);
 
             RemoveEntryList(&current->CacheMapVacbListEntry);
-            RemoveEntryList(&current->VacbListEntry);
             RemoveEntryList(&current->VacbLruListEntry);
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
 
@@ -688,7 +686,6 @@ CcRosCreateVacb (
         InsertHeadList(&SharedCacheMap->CacheMapVacbListHead, &current->CacheMapVacbListEntry);
     }
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
-    InsertTailList(&VacbListHead, &current->VacbListEntry);
     InsertTailList(&VacbLruListHead, &current->VacbLruListEntry);
     KeReleaseGuardedMutex(&ViewLock);
 
@@ -1040,7 +1037,6 @@ CcRosDeleteFileCache (
         {
             current_entry = RemoveTailList(&SharedCacheMap->CacheMapVacbListHead);
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
-            RemoveEntryList(&current->VacbListEntry);
             RemoveEntryList(&current->VacbLruListEntry);
             if (current->Dirty)
             {
@@ -1267,7 +1263,6 @@ CcInitView (
 {
     DPRINT("CcInitView()\n");
 
-    InitializeListHead(&VacbListHead);
     InitializeListHead(&DirtyVacbListHead);
     InitializeListHead(&VacbLruListHead);
     KeInitializeGuardedMutex(&ViewLock);

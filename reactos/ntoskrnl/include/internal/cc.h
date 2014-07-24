@@ -135,7 +135,6 @@ typedef struct _ROS_VACB
     /* Entry in the list of VACBs which are dirty. */
     LIST_ENTRY DirtyVacbListEntry;
     /* Entry in the list of VACBs. */
-    LIST_ENTRY VacbListEntry;
     LIST_ENTRY VacbLruListEntry;
     /* Offset in the file which this view maps. */
     LARGE_INTEGER FileOffset;
