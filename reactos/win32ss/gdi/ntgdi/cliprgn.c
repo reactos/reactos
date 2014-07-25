@@ -44,9 +44,9 @@ IntGdiExtSelectClipRgn(
     PREGION prgn,
     int fnMode)
 {
-    if (!prgn)
+    if (fnMode == RGN_COPY)
     {
-        if (fnMode == RGN_COPY)
+        if (!prgn)
         {
             if (dc->dclevel.prgnClip != NULL)
             {
@@ -56,12 +56,14 @@ IntGdiExtSelectClipRgn(
             }
             return SIMPLEREGION;
         }
-        else
-        {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            return ERROR;
-        }
+
+        if (!dc->dclevel.prgnClip)
+            dc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+
+        return IntGdiCombineRgn(dc->dclevel.prgnClip, prgn, NULL, RGN_COPY);
     }
+
+    ASSERT(prgn != NULL);
 
     if (!dc->dclevel.prgnClip)
     {
@@ -72,9 +74,6 @@ IntGdiExtSelectClipRgn(
     }
 
     dc->fs |= DC_FLAG_DIRTY_RAO;
-
-    if(fnMode == RGN_COPY)
-        return IntGdiCombineRgn(dc->dclevel.prgnClip, prgn, 0, fnMode);
 
     return IntGdiCombineRgn(dc->dclevel.prgnClip, dc->dclevel.prgnClip, prgn, fnMode);
 }
@@ -99,8 +98,15 @@ NtGdiExtSelectClipRgn(
 
     prgn = REGION_LockRgn(hrgn);
 
-    /* IntGdiExtSelectClipRgn takes care of checking for NULL region */
-    retval = IntGdiExtSelectClipRgn(dc, prgn, fnMode);
+    if ((prgn == NULL) && (fnMode != RGN_COPY))
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        retval = ERROR;
+    }
+    else
+    {
+        retval = IntGdiExtSelectClipRgn(dc, prgn, fnMode);
+    }
 
     if (prgn)
         REGION_UnlockRgn(prgn);
@@ -120,6 +126,9 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
    {
       return ERROR;
    }
+
+   if (dc->fs & DC_FLAG_DIRTY_RAO)
+       CLIPPING_UpdateGCRegion(dc);
 
    /* FIXME: Rao and Vis only! */
    if (dc->prgnAPI) // APIRGN
