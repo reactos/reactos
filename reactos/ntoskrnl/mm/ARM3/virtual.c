@@ -404,13 +404,36 @@ MiDeletePte(IN PMMPTE PointerPte,
     /* Capture the PTE */
     TempPte = *PointerPte;
 
-    /* We only support valid PTEs for now */
-    ASSERT(TempPte.u.Hard.Valid == 1);
+    /* See if the PTE is valid */
     if (TempPte.u.Hard.Valid == 0)
     {
-        /* Invalid PTEs not supported yet */
+        /* Prototype PTEs not supported yet */
         ASSERT(TempPte.u.Soft.Prototype == 0);
-        ASSERT(TempPte.u.Soft.Transition == 0);
+        if (TempPte.u.Soft.Transition)
+        {
+            /* Get the PFN entry */
+            PageFrameIndex = PFN_FROM_PTE(&TempPte);
+            Pfn1 = MiGetPfnEntry(PageFrameIndex);
+
+            DPRINT1("Pte %p is transitional!\n", PointerPte);
+
+            /* Destroy the PTE */
+            MI_ERASE_PTE(PointerPte);
+
+            /* Drop the reference on the page table. */
+            MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
+
+            if (Pfn1->u2.ShareCount == 0)
+            {
+                NT_ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+                /* Mark the page temporarily as valid, we're going to make it free soon */
+                Pfn1->u3.e1.PageLocation = ActiveAndValid;
+
+                /* Bring it back into the free list */
+                MiInsertPageInFreeList(PageFrameIndex);
+            }
+            return;
+        }
     }
 
     /* Get the PFN entry */
@@ -457,6 +480,9 @@ MiDeletePte(IN PMMPTE PointerPte,
                              (ULONG_PTR)Pfn1->PteAddress);
             }
         }
+
+        /* Erase it */
+        MI_ERASE_PTE(PointerPte);
     }
     else
     {
@@ -470,6 +496,9 @@ MiDeletePte(IN PMMPTE PointerPte,
                          PointerPte->u.Long,
                          (ULONG_PTR)Pfn1->PteAddress);
         }
+
+        /* Erase the PTE */
+        MI_ERASE_PTE(PointerPte);
 
         /* There should only be 1 shared reference count */
         ASSERT(Pfn1->u2.ShareCount == 1);
@@ -485,8 +514,7 @@ MiDeletePte(IN PMMPTE PointerPte,
         //CurrentProcess->NumberOfPrivatePages--;
     }
 
-    /* Destroy the PTE and flush the TLB */
-    MI_ERASE_PTE(PointerPte);
+    /* Flush the TLB */
     KeFlushCurrentTb();
 }
 
@@ -2053,7 +2081,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
 
     /* Check for ROS specific memory area */
     MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
+    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
     {
         /* Evil hack */
         return MiRosProtectVirtualMemory(Process,
@@ -2231,27 +2259,41 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                 if ((NewAccessProtection & PAGE_NOACCESS) ||
                     (NewAccessProtection & PAGE_GUARD))
                 {
-                    /* The page should be in the WS and we should make it transition now */
-                    DPRINT1("Making valid page invalid is not yet supported!\n");
-                    Status = STATUS_NOT_IMPLEMENTED;
-                    /* Unlock the working set */
-                    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
-                    goto FailPath;
-                }
+                    KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
-                /* Write the protection mask and write it with a TLB flush */
-                Pfn1->OriginalPte.u.Soft.Protection = ProtectionMask;
-                MiFlushTbAndCapture(Vad,
-                                    PointerPte,
-                                    ProtectionMask,
-                                    Pfn1,
-                                    TRUE);
+                    /* Mark the PTE as transition and change its protection */
+                    PteContents.u.Hard.Valid = 0;
+                    PteContents.u.Soft.Transition = 1;
+                    PteContents.u.Trans.Protection = ProtectionMask;
+                    /* Decrease PFN share count and write the PTE */
+                    MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&PteContents));
+                    // FIXME: remove the page from the WS
+                    MI_WRITE_INVALID_PTE(PointerPte, PteContents);
+#ifdef CONFIG_SMP
+                    // FIXME: Should invalidate entry in every CPU TLB
+                    ASSERT(FALSE);
+#endif
+                    KeInvalidateTlbEntry(MiPteToAddress(PointerPte));
+
+                    /* We are done for this PTE */
+                    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                }
+                else
+                {
+                    /* Write the protection mask and write it with a TLB flush */
+                    Pfn1->OriginalPte.u.Soft.Protection = ProtectionMask;
+                    MiFlushTbAndCapture(Vad,
+                                        PointerPte,
+                                        ProtectionMask,
+                                        Pfn1,
+                                        TRUE);
+                }
             }
             else
             {
                 /* We don't support these cases yet */
                 ASSERT(PteContents.u.Soft.Prototype == 0);
-                ASSERT(PteContents.u.Soft.Transition == 0);
+                //ASSERT(PteContents.u.Soft.Transition == 0);
 
                 /* The PTE is already demand-zero, just update the protection mask */
                 PteContents.u.Soft.Protection = ProtectionMask;

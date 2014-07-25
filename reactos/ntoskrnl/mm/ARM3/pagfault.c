@@ -1310,20 +1310,41 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         }
     }
 
+    /* Is this a transition PTE */
+    if (TempPte.u.Soft.Transition)
+    {
+        PVOID InPageBlock = NULL;
+        /* Lock the PFN database */
+        LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* Resolve */
+        Status = MiResolveTransitionFault(Address, PointerPte, Process, LockIrql, &InPageBlock);
+
+        NT_ASSERT(NT_SUCCESS(Status));
+
+        /* And now release the lock and leave*/
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
+
+        ASSERT(OldIrql == KeGetCurrentIrql());
+        ASSERT(OldIrql <= APC_LEVEL);
+        ASSERT(KeAreAllApcsDisabled() == TRUE);
+        return Status;
+    }
+
     //
     // The PTE must be invalid but not completely empty. It must also not be a
-    // prototype PTE as that scenario should've been handled above. These are
-    // all Windows checks
+    // prototype or transition PTE as those scenarii should've been handled above.
+    // These are all Windows checks
     //
     ASSERT(TempPte.u.Hard.Valid == 0);
     ASSERT(TempPte.u.Soft.Prototype == 0);
+    ASSERT(TempPte.u.Soft.Transition == 0);
     ASSERT(TempPte.u.Long != 0);
 
     //
-    // No transition or page file software PTEs in ARM3 yet, so this must be a
-    // demand zero page. These are all ReactOS checks
+    // No page file software PTEs in ARM3 yet, so this must be a
+    // demand zero page. This is a ReactOS check.
     //
-    ASSERT(TempPte.u.Soft.Transition == 0);
     ASSERT(TempPte.u.Soft.PageFileHigh == 0);
 
     //
