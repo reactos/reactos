@@ -65,7 +65,6 @@ IntEngWndUpdateClipObj(
     hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
     if (hVisRgn != NULL)
     {
-        NtGdiOffsetRgn(hVisRgn, Window->rcClient.left, Window->rcClient.top);
         visRgn = RGNOBJAPI_Lock(hVisRgn, NULL);
         if (visRgn != NULL)
         {
