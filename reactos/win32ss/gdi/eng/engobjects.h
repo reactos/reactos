@@ -85,6 +85,7 @@ typedef struct _CLIPGDI {
     ULONG RectCount;
     RECTL* Rects;
 } CLIPGDI, *PCLIPGDI;
+C_ASSERT(FIELD_OFFSET(CLIPGDI, ClipObj) == FIELD_OFFSET(CLIPGDI, WndObj.coClient));
 
 // HACK, until we use the original structure
 #define XCLIPOBJ CLIPGDI

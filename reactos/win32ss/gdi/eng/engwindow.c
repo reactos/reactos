@@ -18,11 +18,9 @@ INT gcountPWO = 0;
 VOID
 FASTCALL
 IntEngWndCallChangeProc(
-    IN WNDOBJ *pwo,
-    IN FLONG   flChanged)
+    _In_ XCLIPOBJ *Clip,
+    _In_ FLONG   flChanged)
 {
-    XCLIPOBJ* Clip = CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
-
     if (Clip->ChangeProc == NULL)
     {
         return;
@@ -35,15 +33,14 @@ IntEngWndCallChangeProc(
         return;
     }
 
-    /* Call the WNDOBJCHANGEPROC */
-    if (flChanged == WOC_CHANGED)
-    {
-        pwo = NULL;
-    }
-
     TRACE("Calling WNDOBJCHANGEPROC (0x%p), Changed = 0x%x\n",
            Clip->ChangeProc, flChanged);
-    Clip->ChangeProc(pwo, flChanged);
+
+    /* Call the WNDOBJCHANGEPROC */
+    if (flChanged == WOC_CHANGED)
+        Clip->ChangeProc(NULL, flChanged);
+    else
+        Clip->ChangeProc(&Clip->WndObj, flChanged);
 }
 
 /*
@@ -112,30 +109,25 @@ IntEngWindowChanged(
     _In_    PWND  Window,
     _In_    FLONG flChanged)
 {
-    PPROPERTY pprop;
-    XCLIPOBJ *Current;
-    HWND hWnd;
+    XCLIPOBJ *Clip;
 
     ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
-    hWnd = Window->head.h;
-    pprop = IntGetProp(Window, AtomWndObj);
-    if (!pprop)
+    Clip = UserGetProp(Window, AtomWndObj);
+    if (!Clip)
     {
         return;
     }
-    Current = (XCLIPOBJ *)pprop->Data;
-    if ( gcountPWO &&
-            Current &&
-            Current->Hwnd == hWnd &&
-            Current->WndObj.pvConsumer != NULL )
+
+    ASSERT(Clip->Hwnd == Window->head.h);
+    if (Clip->WndObj.pvConsumer != NULL)
     {
         /* Update the WNDOBJ */
         switch (flChanged)
         {
         case WOC_RGN_CLIENT:
             /* Update the clipobj and client rect of the WNDOBJ */
-            IntEngWndUpdateClipObj(Current, Window);
+            IntEngWndUpdateClipObj(Clip, Window);
             break;
 
         case WOC_DELETE:
@@ -144,12 +136,12 @@ IntEngWindowChanged(
         }
 
         /* Call the change proc */
-        IntEngWndCallChangeProc(&Current->WndObj, flChanged);
+        IntEngWndCallChangeProc(Clip, flChanged);
 
         /* HACK: Send WOC_CHANGED after WOC_RGN_CLIENT */
         if (flChanged == WOC_RGN_CLIENT)
         {
-            IntEngWndCallChangeProc(&Current->WndObj, WOC_CHANGED);
+            IntEngWndCallChangeProc(Clip, WOC_CHANGED);
         }
     }
 }
@@ -218,7 +210,7 @@ EngCreateWnd(
     IntSetProp(Window, AtomWndObj, Clip);
     ++gcountPWO;
 
-    TRACE("EngCreateWnd: SUCCESS!\n");
+    TRACE("EngCreateWnd: SUCCESS: %p!\n", WndObjUser);
 
     RETURN( WndObjUser);
 
@@ -315,6 +307,7 @@ WNDOBJ_vSetConsumer(
     IN WNDOBJ  *pwo,
     IN PVOID  pvConsumer)
 {
+    XCLIPOBJ* Clip = CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
     BOOL Hack;
 
     TRACE("WNDOBJ_vSetConsumer: pwo = 0x%p, pvConsumer = 0x%p\n", pwo, pvConsumer);
@@ -333,9 +326,9 @@ WNDOBJ_vSetConsumer(
     if (Hack)
     {
         FIXME("Is this hack really needed?\n");
-        IntEngWndCallChangeProc(pwo, WOC_RGN_CLIENT);
-        IntEngWndCallChangeProc(pwo, WOC_CHANGED);
-        IntEngWndCallChangeProc(pwo, WOC_DRAWN);
+        IntEngWndCallChangeProc(Clip, WOC_RGN_CLIENT);
+        IntEngWndCallChangeProc(Clip, WOC_CHANGED);
+        IntEngWndCallChangeProc(Clip, WOC_DRAWN);
     }
 }
 
