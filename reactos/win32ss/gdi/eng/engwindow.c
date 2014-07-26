@@ -7,9 +7,8 @@
  */
 
 #include <win32k.h>
-
-#define NDEBUG
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(EngWnd);
 
 INT gcountPWO = 0;
 
@@ -42,7 +41,7 @@ IntEngWndCallChangeProc(
         pwo = NULL;
     }
 
-    DPRINT("Calling WNDOBJCHANGEPROC (0x%p), Changed = 0x%x\n",
+    TRACE("Calling WNDOBJCHANGEPROC (0x%p), Changed = 0x%x\n",
            WndObjInt->ChangeProc, flChanged);
     WndObjInt->ChangeProc(pwo, flChanged);
 }
@@ -61,7 +60,7 @@ IntEngWndUpdateClipObj(
     CLIPOBJ *ClipObj = NULL;
     CLIPOBJ *OldClipObj;
 
-    DPRINT("IntEngWndUpdateClipObj\n");
+    TRACE("IntEngWndUpdateClipObj\n");
 
     hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
     if (hVisRgn != NULL)
@@ -74,15 +73,15 @@ IntEngWndUpdateClipObj(
             {
                 ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, visRgn->Buffer,
                                                  &visRgn->rdh.rcBound);
-                DPRINT("Created visible region with %lu rects\n", visRgn->rdh.nCount);
-                DPRINT("  BoundingRect: %d, %d  %d, %d\n",
+                TRACE("Created visible region with %lu rects\n", visRgn->rdh.nCount);
+                TRACE("  BoundingRect: %d, %d  %d, %d\n",
                        visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
                        visRgn->rdh.rcBound.right, visRgn->rdh.rcBound.bottom);
                 {
                     ULONG i;
                     for (i = 0; i < visRgn->rdh.nCount; i++)
                     {
-                        DPRINT("  Rect #%lu: %ld,%ld  %ld,%ld\n", i+1,
+                        TRACE("  Rect #%lu: %ld,%ld  %ld,%ld\n", i+1,
                                visRgn->Buffer[i].left, visRgn->Buffer[i].top,
                                visRgn->Buffer[i].right, visRgn->Buffer[i].bottom);
                     }
@@ -92,13 +91,13 @@ IntEngWndUpdateClipObj(
         }
         else
         {
-            DPRINT1("Warning: Couldn't lock visible region of window DC\n");
+            WARN("Couldn't lock visible region of window DC\n");
         }
         GreDeleteObject(hVisRgn);
     }
     else
     {
-        DPRINT1("Warning: VIS_ComputeVisibleRegion failed!\n");
+        WARN("VIS_ComputeVisibleRegion failed!\n");
     }
 
     if (ClipObj == NULL)
@@ -110,7 +109,7 @@ IntEngWndUpdateClipObj(
 
     if (ClipObj == NULL)
     {
-        DPRINT1("Warning: IntEngCreateClipRegion() failed!\n");
+        ERR("IntEngCreateClipRegion() failed!\n");
         return FALSE;
     }
 
@@ -192,7 +191,7 @@ EngCreateWnd(
     BOOL calledFromUser;
     DECLARE_RETURN(WNDOBJ*);
 
-    DPRINT1("EngCreateWnd: pso = 0x%p, hwnd = 0x%p, pfn = 0x%p, fl = 0x%lx, pixfmt = %d\n",
+    TRACE("EngCreateWnd: pso = 0x%p, hwnd = 0x%p, pfn = 0x%p, fl = 0x%lx, pixfmt = %d\n",
             pso, hWnd, pfn, fl, iPixelFormat);
 
     calledFromUser = UserIsEntered();
@@ -211,7 +210,7 @@ EngCreateWnd(
     WndObjInt = EngAllocMem(0, sizeof (WNDGDI), GDITAG_WNDOBJ);
     if (WndObjInt == NULL)
     {
-        DPRINT1("Failed to allocate memory for a WND structure!\n");
+        ERR("Failed to allocate memory for a WND structure!\n");
         RETURN( NULL);
     }
 
@@ -238,7 +237,7 @@ EngCreateWnd(
     IntSetProp(Window, AtomWndObj, WndObjInt);
     ++gcountPWO;
 
-    DPRINT("EngCreateWnd: SUCCESS!\n");
+    TRACE("EngCreateWnd: SUCCESS!\n");
 
     RETURN( WndObjUser);
 
@@ -264,7 +263,7 @@ EngDeleteWnd(
     PWND Window;
     BOOL calledFromUser;
 
-    DPRINT("EngDeleteWnd: pwo = 0x%p\n", pwo);
+    TRACE("EngDeleteWnd: pwo = 0x%p\n", pwo);
 
     calledFromUser = UserIsEntered();
     if (!calledFromUser) {
@@ -275,7 +274,7 @@ EngDeleteWnd(
     Window = UserGetWindowObject(WndObjInt->Hwnd);
     if (Window == NULL)
     {
-        DPRINT1("Warning: Couldnt get window object for WndObjInt->Hwnd!!!\n");
+        ERR("Couldnt get window object for WndObjInt->Hwnd!!!\n");
     }
     else
     {
@@ -307,10 +306,10 @@ WNDOBJ_bEnum(
     WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
     BOOL Ret;
 
-    DPRINT("WNDOBJ_bEnum: pwo = 0x%p, cj = %lu, pul = 0x%p\n", pwo, cj, pul);
+    TRACE("WNDOBJ_bEnum: pwo = 0x%p, cj = %lu, pul = 0x%p\n", pwo, cj, pul);
     Ret = CLIPOBJ_bEnum(WndObjInt->ClientClipObj, cj, pul);
 
-    DPRINT("WNDOBJ_bEnum: Returning %s\n", Ret ? "True" : "False");
+    TRACE("WNDOBJ_bEnum: Returning %s\n", Ret ? "True" : "False");
     return Ret;
 }
 
@@ -329,13 +328,13 @@ WNDOBJ_cEnumStart(
     WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
     ULONG Ret;
 
-    DPRINT("WNDOBJ_cEnumStart: pwo = 0x%p, iType = %lu, iDirection = %lu, cLimit = %lu\n",
+    TRACE("WNDOBJ_cEnumStart: pwo = 0x%p, iType = %lu, iDirection = %lu, cLimit = %lu\n",
            pwo, iType, iDirection, cLimit);
 
     /* FIXME: Should we enumerate all rectangles or not? */
     Ret = CLIPOBJ_cEnumStart(WndObjInt->ClientClipObj, FALSE, iType, iDirection, cLimit);
 
-    DPRINT("WNDOBJ_cEnumStart: Returning 0x%lx\n", Ret);
+    TRACE("WNDOBJ_cEnumStart: Returning 0x%lx\n", Ret);
     return Ret;
 }
 
@@ -351,7 +350,7 @@ WNDOBJ_vSetConsumer(
 {
     BOOL Hack;
 
-    DPRINT("WNDOBJ_vSetConsumer: pwo = 0x%p, pvConsumer = 0x%p\n", pwo, pvConsumer);
+    TRACE("WNDOBJ_vSetConsumer: pwo = 0x%p, pvConsumer = 0x%p\n", pwo, pvConsumer);
 
     Hack = (pwo->pvConsumer == NULL);
     pwo->pvConsumer = pvConsumer;
@@ -366,6 +365,7 @@ WNDOBJ_vSetConsumer(
      */
     if (Hack)
     {
+        FIXME("Is this hack really needed?\n");
         IntEngWndCallChangeProc(pwo, WOC_RGN_CLIENT);
         IntEngWndCallChangeProc(pwo, WOC_CHANGED);
         IntEngWndCallChangeProc(pwo, WOC_DRAWN);
