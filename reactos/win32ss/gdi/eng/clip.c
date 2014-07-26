@@ -7,9 +7,8 @@
  */
 
 #include <win32k.h>
+DBG_DEFAULT_CHANNEL(EngClip);
 
-#define NDEBUG
-#include <debug.h>
 
 static __inline int
 CompareRightDown(
@@ -256,13 +255,15 @@ CLIPOBJ *
 APIENTRY
 EngCreateClip(VOID)
 {
-    CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), GDITAG_CLIPOBJ);
+    XCLIPOBJ *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(XCLIPOBJ), GDITAG_CLIPOBJ);
     if(Clip != NULL)
     {
-        Clip->Rects = &Clip->ClipObj.rclBounds;
+        IntEngInitClipObj(Clip);
+        TRACE("Created Clip Obj %p.\n", Clip);
         return &Clip->ClipObj;
     }
 
+    ERR("Clip object allocation failed!\n");
     return NULL;
 }
 
@@ -275,8 +276,8 @@ EngDeleteClip(
     _In_ _Post_ptr_invalid_ CLIPOBJ *pco)
 {
     XCLIPOBJ* Clip = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
-    if (Clip->Rects != &Clip->ClipObj.rclBounds)
-        EngFreeMem(Clip->Rects);
+    TRACE("Deleting %p.\n");
+    IntEngFreeClipResources(Clip);
     EngFreeMem(Clip);
 }
 
@@ -319,7 +320,7 @@ CLIPOBJ_cEnumStart(
                 break;
 
             default:
-                DPRINT1("Invalid iDirection %lu\n", iDirection);
+                ERR("Invalid iDirection %lu\n", iDirection);
                 iDirection = Clip->EnumOrder;
                 CompareFunc = NULL;
                 break;
