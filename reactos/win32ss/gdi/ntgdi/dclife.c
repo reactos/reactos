@@ -232,6 +232,9 @@ DC_vInitDc(
     pdc->prgnVis = IntSysCreateRectpRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
 	ASSERT(pdc->prgnVis);
 
+	/* Initialize Clip object */
+	IntEngInitClipObj(&pdc->co);
+
     /* Setup palette */
     pdc->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
     pdc->dclevel.ppal = PALETTE_ShareLockPalette(pdc->dclevel.hpal);
@@ -373,8 +376,9 @@ DC_vCleanup(PVOID ObjectBody)
         REGION_Delete(pdc->prgnRao);
     if (pdc->prgnAPI)
         REGION_Delete(pdc->prgnAPI);
-    if (pdc->rosdc.CombinedClip)
-        IntEngDeleteClipRegion(pdc->rosdc.CombinedClip);
+
+    /* Free CLIPOBJ resources */
+    IntEngFreeClipResources(&pdc->co);
 
     PATH_Delete(pdc->dclevel.hPath);
 

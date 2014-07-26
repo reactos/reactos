@@ -114,13 +114,17 @@ IntEngPolyline(SURFOBJ *DestSurf,
                LONG dCount,
                MIX mix);
 
-CLIPOBJ* FASTCALL
-IntEngCreateClipRegion(ULONG count,
-                       PRECTL pRect,
-                       PRECTL rcBounds);
+VOID FASTCALL
+IntEngUpdateClipRegion(XCLIPOBJ* Clip,
+                       ULONG count,
+                       const RECTL* pRect,
+                       const RECTL* rcBounds);
 
 VOID FASTCALL
-IntEngDeleteClipRegion(CLIPOBJ *ClipObj);
+IntEngInitClipObj(XCLIPOBJ *Clip);
+
+VOID FASTCALL
+IntEngFreeClipResources(XCLIPOBJ *Clip);
 
 
 BOOL FASTCALL

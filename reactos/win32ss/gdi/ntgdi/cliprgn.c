@@ -467,8 +467,6 @@ VOID
 FASTCALL
 CLIPPING_UpdateGCRegion(PDC pDC)
 {
-    CLIPOBJ * co;
-
     /* Must have VisRgn set to a valid state! */
     ASSERT (pDC->prgnVis);
 
@@ -540,16 +538,10 @@ CLIPPING_UpdateGCRegion(PDC pDC)
     // With pDC->co.pClipRgn->Buffer,
     // pDC->co.pClipRgn = pDC->prgnRao ? pDC->prgnRao : pDC->prgnVis;
 
-    co = IntEngCreateClipRegion(pDC->prgnRao->rdh.nCount,
-                                pDC->prgnRao->Buffer,
-                                &pDC->erclClip);
-    if (co)
-    {
-        if (pDC->rosdc.CombinedClip != NULL)
-            IntEngDeleteClipRegion(pDC->rosdc.CombinedClip);
-
-        pDC->rosdc.CombinedClip = co;
-    }
+    IntEngUpdateClipRegion(&pDC->co,
+                           pDC->prgnRao->rdh.nCount,
+                           pDC->prgnRao->Buffer,
+                           &pDC->erclClip);
 
     IntGdiOffsetRgn(pDC->prgnRao, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
 }

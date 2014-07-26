@@ -68,11 +68,22 @@ typedef struct _XCLIPOBJ
   }
  */
 typedef struct _CLIPGDI {
-  CLIPOBJ ClipObj;
-  ULONG EnumPos;
-  ULONG EnumOrder;
-  ULONG EnumMax;
-  ENUMRECTS EnumRects;
+    union
+    {
+        CLIPOBJ ClipObj;
+        WNDOBJ WndObj;
+    };
+    /* WNDOBJ part */
+    HWND              Hwnd;
+    WNDOBJCHANGEPROC  ChangeProc;
+    FLONG             Flags;
+    int               PixelFormat;
+    /* CLIPOBJ part */
+    ULONG EnumPos;
+    ULONG EnumOrder;
+    ULONG EnumMax;
+    ULONG RectCount;
+    RECTL* Rects;
 } CLIPGDI, *PCLIPGDI;
 
 // HACK, until we use the original structure
@@ -111,15 +122,6 @@ typedef struct _FONTGDI {
 typedef struct _PATHGDI {
   PATHOBJ PathObj;
 } PATHGDI;
-
-typedef struct _WNDGDI {
-  WNDOBJ            WndObj;
-  HWND              Hwnd;
-  CLIPOBJ           *ClientClipObj;
-  WNDOBJCHANGEPROC  ChangeProc;
-  FLONG             Flags;
-  int               PixelFormat;
-} WNDGDI, *PWNDGDI;
 
 typedef struct _XFORMGDI {
   ULONG Dummy;

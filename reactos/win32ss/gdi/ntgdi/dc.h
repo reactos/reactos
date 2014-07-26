@@ -46,11 +46,6 @@ typedef enum _DCTYPE
 
 /* Type definitions ***********************************************************/
 
-typedef struct _ROS_DC_INFO
-{
-  CLIPOBJ     *CombinedClip;
-} ROS_DC_INFO;
-
 typedef struct _DCLEVEL
 {
   HPALETTE          hpal;
@@ -136,9 +131,6 @@ typedef struct _DC
   ULONG       ulCopyCount;
   PVOID       pSurfInfo;
   POINTL      ptlDoBanding;
-
-  /* Reactos specific members */
-  ROS_DC_INFO rosdc;
 } DC;
 
 extern PDC defaultDCstate;

@@ -131,7 +131,7 @@ NtGdiAlphaBlend(
     TRACE("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
-                               DCDest->rosdc.CombinedClip,
+                               &DCDest->co.ClipObj,
                                &exlo.xlo,
                                &DestRect,
                                &SourceRect,
@@ -290,7 +290,7 @@ NtGdiTransparentBlt(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        DCDest->rosdc.CombinedClip, &exlo.xlo, &rcDest, &rcSrc,
+        &DCDest->co.ClipObj, &exlo.xlo, &rcDest, &rcSrc,
         TransparentColor, 0);
 
     EXLATEOBJ_vCleanup(&exlo);
@@ -487,7 +487,7 @@ NtGdiMaskBlt(
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                           psurfMask ? &psurfMask->SurfObj : NULL,
-                          DCDest->rosdc.CombinedClip,
+                          &DCDest->co.ClipObj,
                           XlateObj,
                           &DestRect,
                           &SourcePoint,
@@ -697,7 +697,7 @@ GreStretchBltMask(
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
                               BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                               BitmapMask ? &BitmapMask->SurfObj : NULL,
-                              DCDest->rosdc.CombinedClip,
+                              &DCDest->co.ClipObj,
                               XlateObj,
                               &DCDest->dclevel.ca,
                               &DestRect,
@@ -834,7 +834,7 @@ IntPatBlt(
         &psurf->SurfObj,
         NULL,
         NULL,
-        pdc->rosdc.CombinedClip,
+        &pdc->co.ClipObj,
         NULL,
         &DestRect,
         NULL,

@@ -408,7 +408,7 @@ POLYGONFILL_FillScanLineAlternate(
 
       //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
       IntEngLineTo(&psurf->SurfObj,
-                   dc->rosdc.CombinedClip,
+                   &dc->co.ClipObj,
                    BrushObj,
                    x1,
                    ScanLine,
@@ -481,7 +481,7 @@ POLYGONFILL_FillScanLineWinding(
 
 	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
 	IntEngLineTo(&psurf->SurfObj,
-                     dc->rosdc.CombinedClip,
+                     &dc->co.ClipObj,
                      BrushObj,
                      x1,
                      ScanLine,
@@ -504,7 +504,7 @@ POLYGONFILL_FillScanLineWinding(
 
   //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
   IntEngLineTo(&psurf->SurfObj,
-               dc->rosdc.CombinedClip,
+               &dc->co.ClipObj,
                BrushObj,
                x1,
                ScanLine,
@@ -627,7 +627,7 @@ IntFillPolygon(
                 IntEngBitBlt(&psurf->SurfObj,
                                  NULL,
                                  NULL,
-                                 dc->rosdc.CombinedClip,
+                                 &dc->co.ClipObj,
                                  NULL,
                                  &LineRect,
                                  NULL,

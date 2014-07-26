@@ -121,6 +121,8 @@ NtGdiSetPixelFormat(
     SURFOBJ *pso = NULL;
     BOOL Ret = FALSE;
 
+    DPRINT1("Setting pixel format from win32k!\n");
+
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {

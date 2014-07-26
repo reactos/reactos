@@ -21,15 +21,15 @@ IntEngWndCallChangeProc(
     IN WNDOBJ *pwo,
     IN FLONG   flChanged)
 {
-    WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
+    XCLIPOBJ* Clip = CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
 
-    if (WndObjInt->ChangeProc == NULL)
+    if (Clip->ChangeProc == NULL)
     {
         return;
     }
 
     /* check flags of the WNDOBJ */
-    flChanged &= WndObjInt->Flags;
+    flChanged &= Clip->Flags;
     if (flChanged == 0)
     {
         return;
@@ -42,8 +42,8 @@ IntEngWndCallChangeProc(
     }
 
     TRACE("Calling WNDOBJCHANGEPROC (0x%p), Changed = 0x%x\n",
-           WndObjInt->ChangeProc, flChanged);
-    WndObjInt->ChangeProc(pwo, flChanged);
+           Clip->ChangeProc, flChanged);
+    Clip->ChangeProc(pwo, flChanged);
 }
 
 /*
@@ -52,13 +52,11 @@ IntEngWndCallChangeProc(
 BOOLEAN
 FASTCALL
 IntEngWndUpdateClipObj(
-    WNDGDI *WndObjInt,
+    XCLIPOBJ* Clip,
     PWND Window)
 {
     HRGN hVisRgn;
     PROSRGNDATA visRgn;
-    CLIPOBJ *ClipObj = NULL;
-    CLIPOBJ *OldClipObj;
 
     TRACE("IntEngWndUpdateClipObj\n");
 
@@ -70,8 +68,7 @@ IntEngWndUpdateClipObj(
         {
             if (visRgn->rdh.nCount > 0)
             {
-                ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, visRgn->Buffer,
-                                                 &visRgn->rdh.rcBound);
+                IntEngUpdateClipRegion(Clip, visRgn->rdh.nCount, visRgn->Buffer, &visRgn->rdh.rcBound);
                 TRACE("Created visible region with %lu rects\n", visRgn->rdh.nCount);
                 TRACE("  BoundingRect: %d, %d  %d, %d\n",
                        visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
@@ -96,27 +93,12 @@ IntEngWndUpdateClipObj(
     }
     else
     {
-        WARN("VIS_ComputeVisibleRegion failed!\n");
-    }
-
-    if (ClipObj == NULL)
-    {
         /* Fall back to client rect */
-        ClipObj = IntEngCreateClipRegion(1, &Window->rcClient,
-                                         &Window->rcClient);
+        IntEngUpdateClipRegion(Clip, 1, &Window->rcClient, &Window->rcClient);
     }
 
-    if (ClipObj == NULL)
-    {
-        ERR("IntEngCreateClipRegion() failed!\n");
-        return FALSE;
-    }
-
-    RtlCopyMemory(&WndObjInt->WndObj.coClient, ClipObj, sizeof (CLIPOBJ));
-    RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->rcClient, sizeof (RECT));
-    OldClipObj = InterlockedExchangePointer((PVOID*)&WndObjInt->ClientClipObj, ClipObj);
-    if (OldClipObj != NULL)
-        IntEngDeleteClipRegion(OldClipObj);
+    /* Update the WNDOBJ */
+    Clip->WndObj.rclClient = Window->rcClient;
 
     return TRUE;
 }
@@ -131,7 +113,7 @@ IntEngWindowChanged(
     _In_    FLONG flChanged)
 {
     PPROPERTY pprop;
-    WNDGDI *Current;
+    XCLIPOBJ *Current;
     HWND hWnd;
 
     ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
@@ -142,7 +124,7 @@ IntEngWindowChanged(
     {
         return;
     }
-    Current = (WNDGDI *)pprop->Data;
+    Current = (XCLIPOBJ *)pprop->Data;
     if ( gcountPWO &&
             Current &&
             Current->Hwnd == hWnd &&
@@ -184,7 +166,7 @@ EngCreateWnd(
     FLONG             fl,
     int               iPixelFormat)
 {
-    WNDGDI *WndObjInt = NULL;
+    XCLIPOBJ *Clip = NULL;
     WNDOBJ *WndObjUser = NULL;
     PWND Window;
     BOOL calledFromUser;
@@ -206,34 +188,34 @@ EngCreateWnd(
     }
 
     /* Create WNDOBJ */
-    WndObjInt = EngAllocMem(0, sizeof (WNDGDI), GDITAG_WNDOBJ);
-    if (WndObjInt == NULL)
+    Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof (XCLIPOBJ), GDITAG_WNDOBJ);
+    if (Clip == NULL)
     {
         ERR("Failed to allocate memory for a WND structure!\n");
         RETURN( NULL);
     }
+    IntEngInitClipObj(Clip);
 
     /* Fill the clipobj */
-    WndObjInt->ClientClipObj = NULL;
-    if (!IntEngWndUpdateClipObj(WndObjInt, Window))
+    if (!IntEngWndUpdateClipObj(Clip, Window))
     {
-        EngFreeMem(WndObjInt);
+        EngFreeMem(Clip);
         RETURN( NULL);
     }
 
     /* Fill user object */
-    WndObjUser = GDIToObj(WndObjInt, WND);
+    WndObjUser = &Clip->WndObj;
     WndObjUser->psoOwner = pso;
     WndObjUser->pvConsumer = NULL;
 
     /* Fill internal object */
-    WndObjInt->Hwnd = hWnd;
-    WndObjInt->ChangeProc = pfn;
-    WndObjInt->Flags = fl;
-    WndObjInt->PixelFormat = iPixelFormat;
+    Clip->Hwnd = hWnd;
+    Clip->ChangeProc = pfn;
+    Clip->Flags = fl;
+    Clip->PixelFormat = iPixelFormat;
 
     /* associate object with window */
-    IntSetProp(Window, AtomWndObj, WndObjInt);
+    IntSetProp(Window, AtomWndObj, Clip);
     ++gcountPWO;
 
     TRACE("EngCreateWnd: SUCCESS!\n");
@@ -258,7 +240,7 @@ APIENTRY
 EngDeleteWnd(
     IN WNDOBJ *pwo)
 {
-    WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
+    XCLIPOBJ* Clip = CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
     PWND Window;
     BOOL calledFromUser;
 
@@ -270,7 +252,7 @@ EngDeleteWnd(
     }
 
     /* Get window object */
-    Window = UserGetWindowObject(WndObjInt->Hwnd);
+    Window = UserGetWindowObject(Clip->Hwnd);
     if (Window == NULL)
     {
         ERR("Couldnt get window object for WndObjInt->Hwnd!!!\n");
@@ -287,8 +269,8 @@ EngDeleteWnd(
     }
 
     /* Free resources */
-    IntEngDeleteClipRegion(WndObjInt->ClientClipObj);
-    EngFreeMem(WndObjInt);
+    IntEngFreeClipResources(Clip);
+    EngFreeMem(Clip);
 }
 
 
@@ -302,14 +284,8 @@ WNDOBJ_bEnum(
     IN ULONG  cj,
     OUT ULONG  *pul)
 {
-    WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
-    BOOL Ret;
-
-    TRACE("WNDOBJ_bEnum: pwo = 0x%p, cj = %lu, pul = 0x%p\n", pwo, cj, pul);
-    Ret = CLIPOBJ_bEnum(WndObjInt->ClientClipObj, cj, pul);
-
-    TRACE("WNDOBJ_bEnum: Returning %s\n", Ret ? "True" : "False");
-    return Ret;
+    /* Relay */
+    return CLIPOBJ_bEnum(&pwo->coClient, cj, pul);
 }
 
 
@@ -324,17 +300,9 @@ WNDOBJ_cEnumStart(
     IN ULONG  iDirection,
     IN ULONG  cLimit)
 {
-    WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
-    ULONG Ret;
-
-    TRACE("WNDOBJ_cEnumStart: pwo = 0x%p, iType = %lu, iDirection = %lu, cLimit = %lu\n",
-           pwo, iType, iDirection, cLimit);
-
-    /* FIXME: Should we enumerate all rectangles or not? */
-    Ret = CLIPOBJ_cEnumStart(WndObjInt->ClientClipObj, FALSE, iType, iDirection, cLimit);
-
-    TRACE("WNDOBJ_cEnumStart: Returning 0x%lx\n", Ret);
-    return Ret;
+    /* Relay */
+    // FIXME: Should we enumerate all rectangles or not?
+    return CLIPOBJ_cEnumStart(&pwo->coClient, FALSE, iType, iDirection, cLimit);
 }
 
 

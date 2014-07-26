@@ -2484,7 +2484,7 @@ IntGdiPaintRgn(
 {
     HRGN tmpVisRgn;
     PROSRGNDATA visrgn;
-    CLIPOBJ* ClipRegion;
+    XCLIPOBJ ClipRegion;
     BOOL bRet = FALSE;
     POINTL BrushOrigin;
     SURFACE *psurf;
@@ -2515,10 +2515,8 @@ IntGdiPaintRgn(
     if (dc->prgnRao)
         IntGdiCombineRgn(visrgn, visrgn, dc->prgnRao, RGN_AND);
 
-    ClipRegion = IntEngCreateClipRegion(visrgn->rdh.nCount,
-                                        visrgn->Buffer,
-                                        &visrgn->rdh.rcBound );
-    ASSERT(ClipRegion);
+    IntEngInitClipObj(&ClipRegion);
+    IntEngUpdateClipRegion(&ClipRegion, visrgn->rdh.nCount, visrgn->Buffer, &visrgn->rdh.rcBound );
 
     BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
     BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
@@ -2526,13 +2524,14 @@ IntGdiPaintRgn(
     /* FIXME: Handle psurf == NULL !!!! */
 
     bRet = IntEngPaint(&psurf->SurfObj,
-                       ClipRegion,
+                       &ClipRegion.ClipObj,
                        &dc->eboFill.BrushObject,
                        &BrushOrigin,
                        0xFFFF); // FIXME: Don't know what to put here
 
     RGNOBJAPI_Unlock(visrgn);
     GreDeleteObject(tmpVisRgn);
+    IntEngFreeClipResources(&ClipRegion);
 
     // Fill the region
     return bRet;

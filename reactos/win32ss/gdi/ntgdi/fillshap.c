@@ -112,7 +112,7 @@ IntGdiPolygon(PDC    dc,
 //                                 Points[1].x, Points[1].y );
 
                 ret = IntEngLineTo(&psurf->SurfObj,
-                                   dc->rosdc.CombinedClip,
+                                   &dc->co.ClipObj,
                                    &dc->eboLine.BrushObject,
                                    Points[i].x,          /* From */
                                    Points[i].y,
@@ -126,7 +126,7 @@ IntGdiPolygon(PDC    dc,
             if (ret)
             {
                 ret = IntEngLineTo(&psurf->SurfObj,
-                                   dc->rosdc.CombinedClip,
+                                   &dc->co.ClipObj,
                                    &dc->eboLine.BrushObject,
                                    Points[Count-1].x, /* From */
                                    Points[Count-1].y,
@@ -599,7 +599,7 @@ IntRectangle(PDC dc,
             ret = IntEngBitBlt(&psurf->SurfObj,
                                NULL,
                                NULL,
-                               dc->rosdc.CombinedClip,
+                               &dc->co.ClipObj,
                                NULL,
                                &DestRect,
                                NULL,
@@ -618,28 +618,28 @@ IntRectangle(PDC dc,
     {
         Mix = ROP2_TO_MIX(pdcattr->jROP2);
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
                                   &DestRect, // Bounding rectangle
@@ -963,10 +963,8 @@ GreGradientFill(
 
     DC_vPrepareDCsForBlit(pdc, &rclExtent, NULL, NULL);
 
-    ASSERT(pdc->rosdc.CombinedClip);
-
     bRet = IntEngGradientFill(&psurf->SurfObj,
-                             pdc->rosdc.CombinedClip,
+                             &pdc->co.ClipObj,
                              &exlo.xlo,
                              pVertex,
                              nVertex,

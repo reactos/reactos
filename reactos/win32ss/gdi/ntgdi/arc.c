@@ -8,7 +8,7 @@
  */
 #define PUTPIXEL(x,y,BrushInst)        \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->rosdc.CombinedClip,                         \
+       &dc->co.ClipObj,                         \
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
@@ -16,7 +16,7 @@
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->rosdc.CombinedClip,                         \
+       &dc->co.ClipObj,                         \
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
