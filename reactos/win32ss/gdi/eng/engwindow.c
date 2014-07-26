@@ -111,6 +111,12 @@ IntEngWindowChanged(
 {
     XCLIPOBJ *Clip;
 
+    /*
+     * This function is broken because AtomWndObj conflicts with
+     * properties set from user mode using SetPropW
+     */
+    return;
+
     ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
     Clip = UserGetProp(Window, AtomWndObj);
