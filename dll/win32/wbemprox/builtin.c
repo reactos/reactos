@@ -1477,6 +1477,7 @@ static UINT64 get_freespace( const WCHAR *dir, UINT64 *disksize )
     ULARGE_INTEGER free;
     DISK_GEOMETRY_EX info;
     HANDLE handle;
+    DWORD bytes_returned;
 
     free.QuadPart = 512 * 1024 * 1024;
     GetDiskFreeSpaceExW( dir, NULL, NULL, &free );
@@ -1485,7 +1486,7 @@ static UINT64 get_freespace( const WCHAR *dir, UINT64 *disksize )
     handle = CreateFileW( root, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0 );
     if (handle != INVALID_HANDLE_VALUE)
     {
-        if (DeviceIoControl( handle, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, &info, sizeof(info), NULL, NULL ))
+        if (DeviceIoControl( handle, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, NULL, 0, &info, sizeof(info), &bytes_returned, NULL ))
             *disksize = info.DiskSize.QuadPart;
         CloseHandle( handle );
     }

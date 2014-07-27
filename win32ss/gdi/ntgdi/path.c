@@ -2511,8 +2511,7 @@ NtGdiFillPath(HDC  hDC)
         return FALSE;
     }
 
-    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                          NULL, dc->rosdc.CombinedClip->rclBounds);
+    DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
     pdcattr = dc->pdcattr;
 
@@ -2777,8 +2776,7 @@ NtGdiStrokeAndFillPath(HDC hDC)
         return FALSE;
     }
 
-    DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
-                          NULL, pDc->rosdc.CombinedClip->rclBounds);
+    DC_vPrepareDCsForBlit(pDc, NULL, NULL, NULL);
 
     pdcattr = pDc->pdcattr;
 
@@ -2822,8 +2820,7 @@ NtGdiStrokePath(HDC hDC)
         return FALSE;
     }
 
-    DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
-                          NULL, pDc->rosdc.CombinedClip->rclBounds);
+    DC_vPrepareDCsForBlit(pDc, NULL, NULL, NULL);
 
     pdcattr = pDc->pdcattr;
 

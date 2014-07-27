@@ -1045,7 +1045,7 @@ CsrReferenceThread(IN PCSR_THREAD CsrThread)
     CsrAcquireProcessLock();
 
     /* Sanity checks */
-    ASSERT(CsrThread->Flags & CsrThreadTerminated); // CSR_THREAD_DESTROYED in ASSERT
+    ASSERT((CsrThread->Flags & CsrThreadTerminated) == 0);
     ASSERT(CsrThread->ReferenceCount != 0);
 
     /* Increment reference count */

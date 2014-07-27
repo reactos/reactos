@@ -522,7 +522,16 @@ HRESULT WINAPI CNetworkConnections::SetNameOf (
                HWND hwndOwner, LPCITEMIDLIST pidl,	/*simple pidl */
                LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
-    return E_NOTIMPL;
+    VALUEStruct * val;
+
+    val = _ILGetValueStruct(pidl);
+    if (!val)
+        return E_FAIL;
+
+   if (!val->pItem)
+       return E_FAIL;
+
+    return val->pItem->Rename(lpName);
 }
 
 HRESULT WINAPI CNetworkConnections::GetDefaultSearchGUID(GUID * pguid)

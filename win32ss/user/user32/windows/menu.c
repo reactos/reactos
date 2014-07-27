@@ -4046,7 +4046,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
  */
 static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT wFlags)
 {
-    ROSMENUINFO MenuInfo;
+    ROSMENUINFO MenuInfo = {0};
     
     TRACE("hwnd=%p hmenu=%p\n", hWnd, hMenu);
 

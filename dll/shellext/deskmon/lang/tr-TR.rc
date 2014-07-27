@@ -14,7 +14,7 @@ BEGIN
     GROUPBOX "Göstergeç Ayarları", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
     LTEXT "&Görüntülük Yenileme Sıklığı:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "G&örüntülüğün Görüntüleyemeyeceği Kipleri Gösterme", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&Bu Görüntülüğün Görüntüleyemeyeceği Kipleri Gizle", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE

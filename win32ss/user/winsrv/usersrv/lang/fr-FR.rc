@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Termine le programme... Veuillez patienter", IDC_STATIC, 7, 7, 186, 11
     CONTROL "Avancement", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "Si vous choisissez de terminer le programme immédiatement, vous perdrez toutes les données non sauvegardées. Pour terminer le programme maintenant, cliquez sur Terminer maintenant.", IDC_STATIC, 7, 40, 186, 26
+    LTEXT "Si vous choisissez de terminer le programme immÃ©diatement, vous perdrez toutes les donnÃ©es non sauvegardÃ©es. Pour terminer le programme maintenant, cliquez sur Terminer maintenant.", IDC_STATIC, 7, 40, 186, 26
     DEFPUSHBUTTON "T&erminer maintenant", IDC_END_NOW, 150, 71, 43, 17
 END
 
@@ -18,9 +18,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Annuler", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "T&erminer maintenant", IDC_END_NOW, 78, 98, 43, 17
-    LTEXT "Ce programme ne répond pas.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "Pour retourner à ReactOS et vérifier l'état du programme, cliquez sur Annuler.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Si vous choisissez de terminer le programme immédiatement, vous perdrez toutes les données non sauvegardées. Pour terminer le programme maintenant, cliquez sur Terminer maintenant.", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "Ce programme ne rÃ©pond pas.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "Pour retourner Ã  ReactOS et vÃ©rifier l'Ã©tat du programme, cliquez sur Annuler.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Si vous choisissez de terminer le programme immÃ©diatement, vous perdrez toutes les donnÃ©es non sauvegardÃ©es. Pour terminer le programme maintenant, cliquez sur Terminer maintenant.", IDC_STATIC, 7, 53, 178, 26
 END
 
 IDD_SWITCH_APP DIALOGEX 90, 90, 265, 170

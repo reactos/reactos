@@ -5,5 +5,5 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE 
 BEGIN
     IDS_CPLSYSTEMNAME "Telefon ve Çevirge Seçenekleri"
-    IDS_CPLSYSTEMDESCRIPTION "Telefon Arama Kurallarını ve Çevirge Ayarlarını Yapılandırır."
+    IDS_CPLSYSTEMDESCRIPTION "Telefon Arama Kâidelerinizi ve Çevirge Ayarlarınızı Yapılandırır."
 END

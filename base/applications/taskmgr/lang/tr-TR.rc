@@ -159,7 +159,7 @@ BEGIN
     CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&İşlemi Sonlandır", IDC_ENDPROCESS, 171, 189, 69, 14
-    CONTROL "&Her Kullanıcının İşlemlerini Göster", IDC_SHOWALLPROCESSES, "Button",
+    CONTROL "&Tüm Kullanıcıların İşlemlerini Göster", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
 END
 
@@ -323,10 +323,10 @@ BEGIN
     ID_VIEW_REFRESH "Yenileme Hızı ayârını önemsemeden Görev Yöneticisi'ni şimdi yenilemeye zorlar."
     ID_VIEW_LARGE "Görevleri büyük simgeler kullanarak gösterir."
     ID_VIEW_SMALL "Görevleri küçük simgeler kullanarak gösterir."
-    ID_VIEW_DETAILS "Her bir görev için bilgi görüntüler."
-    ID_VIEW_UPDATESPEED_HIGH "Her sâniyede iki kez görünümü yeniler."
-    ID_VIEW_UPDATESPEED_NORMAL "Her iki sâniyede bir görünümü yeniler."
-    ID_VIEW_UPDATESPEED_LOW "Her dört sâniyede bir görünümü yeniler."
+    ID_VIEW_DETAILS "Her bir görev üzerine bilgi görüntüler."
+    ID_VIEW_UPDATESPEED_HIGH "Sâniyede iki kez görünümü yeniler."
+    ID_VIEW_UPDATESPEED_NORMAL "İki sâniyede bir görünümü yeniler."
+    ID_VIEW_UPDATESPEED_LOW "Dört sâniyede bir görünümü yeniler."
 END
 
 STRINGTABLE
@@ -345,7 +345,7 @@ BEGIN
     ID_VIEW_SELECTCOLUMNS "İşlemler sayfasında hangi dikeçlerin görünür olacağını seçer."
     ID_VIEW_SHOWKERNELTIMES "Başarım çizgelerinde çekirdek sürelerini görüntüler."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL "Bir bayağı geçmiş çizgesi toplam CPU kullanımını gösterir."
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Her bir CPU'nun kendi geçmiş çizgesi vardır."
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Her CPU'nun kendi geçmiş çizgesi vardır."
     ID_APPLICATION_PAGE_SWITCHTO "Bir görevi ön plana getirir, o göreve odaklatır."
 END
 

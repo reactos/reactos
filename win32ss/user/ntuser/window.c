@@ -1802,6 +1802,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    }
 
    InitializeListHead(&pWnd->PropListHead);
+   pWnd->PropListItems = 0;
 
    if ( WindowName->Buffer != NULL && WindowName->Length > 0 )
    {

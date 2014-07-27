@@ -366,11 +366,12 @@ EngLineTo(
 
     if (!Clip)
     {
-        Clip = pcoPriv = IntEngCreateClipRegion(0, 0, RectBounds);
+        Clip = pcoPriv = EngCreateClip();
         if (!Clip)
         {
             return FALSE;
         }
+        IntEngUpdateClipRegion((XCLIPOBJ*)Clip, 0, 0, RectBounds);
     }
 
     x1 += Translate.x;
@@ -487,7 +488,7 @@ EngLineTo(
 
     if (pcoPriv)
     {
-        IntEngDeleteClipRegion(pcoPriv);
+        EngDeleteClip(pcoPriv);
     }
 
     return IntEngLeave(&EnterLeave);

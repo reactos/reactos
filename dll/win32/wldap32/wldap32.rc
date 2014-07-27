@@ -44,9 +44,6 @@
 #ifdef LANGUAGE_SV_SE
     #include "lang/wldap32_Sv.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/wldap32_Tr.rc"
-#endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_DE_DE
@@ -78,6 +75,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/wldap32_Sq.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/wldap32_Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/wldap32_Uk.rc"

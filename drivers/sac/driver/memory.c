@@ -104,7 +104,8 @@ MyAllocatePool(IN SIZE_T PoolSize,
     PSAC_MEMORY_ENTRY LocalDescriptor, NextDescriptor;
     ULONG GlobalSize, ActualSize;
     PVOID Buffer;
-    ASSERT("Tag != FREE_POOL_TAG");
+
+    ASSERT(Tag != FREE_POOL_TAG);
     SAC_DBG(SAC_DBG_MM, "Entering.\n");
 
     /* Acquire the memory allocation lock and align the size request */

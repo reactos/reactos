@@ -330,7 +330,7 @@ NtGdiSelectBitmap(
     PDC pdc;
     HBITMAP hbmpOld;
     PSURFACE psurfNew, psurfOld;
-    HRGN hVisRgn;
+    PREGION VisRgn;
     HDC hdcOld;
     ULONG cBitsPixel;
     ASSERT_NOGDILOCKS();
@@ -452,15 +452,15 @@ NtGdiSelectBitmap(
     pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
 
     /* FIXME: Improve by using a region without a handle and selecting it */
-    hVisRgn = IntSysCreateRectRgn( 0,
+    VisRgn = IntSysCreateRectpRgn( 0,
                                    0,
                                    pdc->dclevel.sizl.cx,
                                    pdc->dclevel.sizl.cy);
 
-    if (hVisRgn)
+    if (VisRgn)
     {
-        GdiSelectVisRgn(hdc, hVisRgn);
-        GreDeleteObject(hVisRgn);
+        GdiSelectVisRgn(hdc, VisRgn);
+        REGION_Delete(VisRgn);
     }
 
     /* Unlock the DC */
@@ -509,7 +509,10 @@ NtGdiSelectClipPath(
     /* Construct a region from the path */
     else if (PATH_PathToRegion(pPath, pdcattr->jFillMode, &hrgnPath))
     {
-        success = GdiExtSelectClipRgn(pdc, hrgnPath, Mode) != ERROR;
+        PREGION prgnPath = REGION_LockRgn(hrgnPath);
+        ASSERT(prgnPath);
+        success = IntGdiExtSelectClipRgn(pdc, prgnPath, Mode) != ERROR;
+        REGION_UnlockRgn(prgnPath);
         GreDeleteObject( hrgnPath );
 
         /* Empty the path */
@@ -693,9 +696,7 @@ NtGdiGetRandomRgn(
 {
     INT ret = 0;
     PDC pdc;
-    HRGN hrgnSrc = NULL;
     PREGION prgnSrc = NULL;
-    POINTL ptlOrg;
 
     pdc = DC_LockDc(hdc);
     if (!pdc)
@@ -707,8 +708,7 @@ NtGdiGetRandomRgn(
     switch (iCode)
     {
         case CLIPRGN:
-            hrgnSrc = pdc->rosdc.hClipRgn;
-//            if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
+            prgnSrc = pdc->dclevel.prgnClip;
             break;
 
         case METARGN:
@@ -716,14 +716,15 @@ NtGdiGetRandomRgn(
             break;
 
         case APIRGN:
+            if (pdc->fs & DC_FLAG_DIRTY_RAO)
+                CLIPPING_UpdateGCRegion(pdc);
             if (pdc->prgnAPI)
             {
                 prgnSrc = pdc->prgnAPI;
             }
-//            else if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
-            else if (pdc->rosdc.hClipRgn)
+            else if (pdc->dclevel.prgnClip)
             {
-                hrgnSrc = pdc->rosdc.hClipRgn;
+                prgnSrc = pdc->dclevel.prgnClip;
             }
             else if (pdc->dclevel.prgnMeta)
             {
@@ -739,26 +740,18 @@ NtGdiGetRandomRgn(
             break;
     }
 
-    if (hrgnSrc)
-    {
-        ret = NtGdiCombineRgn(hrgnDest, hrgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
-    }
-    else if (prgnSrc)
+    if (prgnSrc)
     {
         PREGION prgnDest = REGION_LockRgn(hrgnDest);
         if (prgnDest)
         {
             ret = IntGdiCombineRgn(prgnDest, prgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+            if ((ret == 1) && (iCode == SYSRGN))
+                IntGdiOffsetRgn(prgnDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
             REGION_UnlockRgn(prgnDest);
         }
         else
             ret = -1;
-    }
-
-    if (iCode == SYSRGN)
-    {
-        ptlOrg = pdc->ptlDCOrig;
-        NtGdiOffsetRgn(hrgnDest, ptlOrg.x, ptlOrg.y );
     }
 
     DC_UnlockDc(pdc);

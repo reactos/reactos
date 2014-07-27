@@ -1,7 +1,7 @@
 /*
  * MPR dll resources for Turkish
  *
- * Copyright (C) 2006 Fatih Aþýcý
+ * Copyright (C) 2006 Fatih AÅŸÄ±cÄ±
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,25 +22,25 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_ENTIRENETWORK "Tüm Að"
+    IDS_ENTIRENETWORK "TÃ¼m AÄŸ"
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Að Parolanýzý Girin"
+CAPTION "AÄŸ ParolanÄ±zÄ± Girin"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Lütfen kullanýcý adýnýzý ve parolanýzý girin:", IDC_EXPLAIN, 40, 6, 150, 15
+ LTEXT "LÃ¼tfen kullanÄ±cÄ± adÄ±nÄ±zÄ± ve parolanÄ±zÄ± girin:", IDC_EXPLAIN, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
 /* LTEXT "Realm", -1, 40, 46, 50, 10 */
- LTEXT "Kullanýcý", -1, 40, 66, 50, 10
+ LTEXT "KullanÄ±cÄ±", -1, 40, 66, 50, 10
  LTEXT "Parola", -1, 40, 86, 50, 10
  LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "Bu parolayý &sakla (Güvensiz)", IDC_SAVEPASSWORD,
+ CHECKBOX "Bu parolayÄ± &sakla (GÃ¼vensiz)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Tamam", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Ýptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Ä°ptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

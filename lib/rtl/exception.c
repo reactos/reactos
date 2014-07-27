@@ -221,8 +221,14 @@ static VOID
     DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
     DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
     DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
+#elif defined(_M_ARM)
+    DbgPrint("Pc: %lx   Lr: %lx   Sp: %lx    Cpsr: %lx\n", pc->Pc, pc->Lr, pc->Sp, pc->Cpsr);
+    DbgPrint("R0: %lx   R1: %lx   R2: %lx    R3: %lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
+    DbgPrint("R4: %lx   R5: %lx   R6: %lx    R7: %lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
+    DbgPrint("R8: %lx   R9: %lx  R10: %lx   R11: %lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
+    DbgPrint("R12: %lx   \n", pc->R12);
 #else
-#warning Unknown architecture
+#pragma message ("Unknown architecture")
 #endif
 }
 

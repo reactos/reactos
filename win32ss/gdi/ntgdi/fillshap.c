@@ -112,7 +112,7 @@ IntGdiPolygon(PDC    dc,
 //                                 Points[1].x, Points[1].y );
 
                 ret = IntEngLineTo(&psurf->SurfObj,
-                                   dc->rosdc.CombinedClip,
+                                   &dc->co.ClipObj,
                                    &dc->eboLine.BrushObject,
                                    Points[i].x,          /* From */
                                    Points[i].y,
@@ -126,7 +126,7 @@ IntGdiPolygon(PDC    dc,
             if (ret)
             {
                 ret = IntEngLineTo(&psurf->SurfObj,
-                                   dc->rosdc.CombinedClip,
+                                   &dc->co.ClipObj,
                                    &dc->eboLine.BrushObject,
                                    Points[Count-1].x, /* From */
                                    Points[Count-1].y,
@@ -307,7 +307,7 @@ NtGdiEllipse(
         tmpFillBrushObj.ptOrigin.x += dc->ptlDCOrig.x;
         tmpFillBrushObj.ptOrigin.y += dc->ptlDCOrig.y;
 
-        DC_vPrepareDCsForBlit(dc, RectBounds, NULL, RectBounds);
+        DC_vPrepareDCsForBlit(dc, &RectBounds, NULL, NULL);
 
         ret = IntFillEllipse( dc,
                               CenterX - RadiusX,
@@ -480,8 +480,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         return TRUE;
     }
 
-    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                            NULL, dc->rosdc.CombinedClip->rclBounds);
+    DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
     if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
@@ -567,7 +566,7 @@ IntRectangle(PDC dc,
         DestRect.bottom--;
     }
 
-    DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+    DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
@@ -600,7 +599,7 @@ IntRectangle(PDC dc,
             ret = IntEngBitBlt(&psurf->SurfObj,
                                NULL,
                                NULL,
-                               dc->rosdc.CombinedClip,
+                               &dc->co.ClipObj,
                                NULL,
                                &DestRect,
                                NULL,
@@ -619,28 +618,28 @@ IntRectangle(PDC dc,
     {
         Mix = ROP2_TO_MIX(pdcattr->jROP2);
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
         ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  dc->rosdc.CombinedClip,
+                                  &dc->co.ClipObj,
                                   &dc->eboLine.BrushObject,
                                   DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
                                   &DestRect, // Bounding rectangle
@@ -796,7 +795,7 @@ IntRoundRect(
     else
     {
 
-        DC_vPrepareDCsForBlit(dc, RectBounds, NULL, RectBounds);
+        DC_vPrepareDCsForBlit(dc, &RectBounds, NULL, NULL);
 
         RtlCopyMemory(&brushTemp, pbrFill, sizeof(brushTemp));
         brushTemp.ptOrigin.x += RectBounds.left - Left;
@@ -962,12 +961,10 @@ GreGradientFill(
 
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0, 0);
 
-    ASSERT(pdc->rosdc.CombinedClip);
-
-    DC_vPrepareDCsForBlit(pdc, rclExtent, NULL, rclExtent);
+    DC_vPrepareDCsForBlit(pdc, &rclExtent, NULL, NULL);
 
     bRet = IntEngGradientFill(&psurf->SurfObj,
-                             pdc->rosdc.CombinedClip,
+                             &pdc->co.ClipObj,
                              &exlo.xlo,
                              pVertex,
                              nVertex,
@@ -1091,6 +1088,13 @@ NtGdiExtFloodFill(
         return TRUE;
     }
 
+    psurf = dc->dclevel.pSurface;
+    if (!psurf)
+    {
+        Ret = FALSE;
+        goto cleanup;
+    }
+
     pdcattr = dc->pdcattr;
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
@@ -1103,20 +1107,18 @@ NtGdiExtFloodFill(
     Pt.y = YStart;
     IntLPtoDP(dc, (LPPOINT)&Pt, 1);
 
-    Ret = NtGdiPtInRegion(dc->rosdc.hGCClipRgn, Pt.x, Pt.y);
-    if (Ret)
-        IntGdiGetRgnBox(dc->rosdc.hGCClipRgn,(LPRECT)&DestRect);
-    else
-        goto cleanup;
-
-    DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
-
-    psurf = dc->dclevel.pSurface;
-    if (!psurf)
+    if (dc->prgnRao)
     {
-        Ret = FALSE;
-        goto cleanup;
+        Ret = REGION_PtInRegion(dc->prgnRao, Pt.x, Pt.y);
+        if (Ret)
+            REGION_GetRgnBox(dc->prgnRao ,(LPRECT)&DestRect);
+        else
+            goto cleanup;
     }
+    else
+        RECTL_vSetRect(&DestRect, 0, psurf->SurfObj.sizlBitmap.cx, 0, psurf->SurfObj.sizlBitmap.cy);
+
+    DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0xffffff, 0);
 
@@ -1127,10 +1129,11 @@ NtGdiExtFloodFill(
     ConvColor = XLATEOBJ_iXlate(&exlo.xlo, Color);
     Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, ConvColor, FillType);
 
+    DC_vFinishBlit(dc, NULL);
+
     EXLATEOBJ_vCleanup(&exlo);
 
 cleanup:
-    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc(dc);
     return Ret;
 }

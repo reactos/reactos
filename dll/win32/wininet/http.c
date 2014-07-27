@@ -3568,12 +3568,12 @@ static DWORD HTTP_HttpQueryInfoW(http_request_t *request, DWORD dwInfoLevel,
 
                 TRACE("returning data: %s\n", debugstr_wn(headers, len / sizeof(WCHAR)));
 
-                for (i=0; i<len; i++)
+                for (i = 0; i < len / sizeof(WCHAR); i++)
                 {
                     if (headers[i] == '\n')
                         headers[i] = 0;
                 }
-                memcpy(lpBuffer, headers, len + sizeof(WCHAR));
+                memcpy(lpBuffer, headers, len);
             }
             *lpdwBufferLength = len - sizeof(WCHAR);
 

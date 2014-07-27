@@ -321,8 +321,8 @@ WinMain(
     if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
     {
         ERR("WL: Could not register logon process\n");
-        NtShutdownSystem(ShutdownNoReboot);
-        ExitProcess(0);
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+        ExitProcess(1);
     }
 
     WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), 0, sizeof(WLSESSION));
@@ -366,7 +366,7 @@ WinMain(
     if (!StartLsass())
     {
         ERR("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
-        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, OptionOk, &HardErrorResponse);
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
         ExitProcess(1);
     }
 
@@ -377,7 +377,9 @@ WinMain(
     if (!GinaInit(WLSession))
     {
         ERR("WL: Failed to initialize Gina\n");
-        DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), GetDesktopWindow(), GinaLoadFailedWindowProc, (LPARAM)L"");
+        // FIXME: Retrieve the real name of the GINA DLL we were trying to load.
+        // It is known only inside the GinaInit function...
+        DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), GetDesktopWindow(), GinaLoadFailedWindowProc, (LPARAM)L"msgina.dll");
         HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
         ExitProcess(1);
     }

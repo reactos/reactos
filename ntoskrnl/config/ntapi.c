@@ -33,7 +33,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     CM_PARSE_CONTEXT ParseContext = {0};
     HANDLE Handle;
     PAGED_CODE();
-    DPRINT("NtCreateKey(OB name %wZ)\n", ObjectAttributes->ObjectName);
+
+    DPRINT("NtCreateKey(Path: %wZ, Root %x, Access: %x, CreateOptions %x)\n",
+            ObjectAttributes->ObjectName, ObjectAttributes->RootDirectory,
+            DesiredAccess, CreateOptions);
 
     /* Check for user-mode caller */
     if (PreviousMode != KernelMode)
@@ -60,7 +63,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                          sizeof(OBJECT_ATTRIBUTES),
                          sizeof(ULONG));
 
-            if (Disposition) ProbeForWriteUlong(Disposition);
+            if (Disposition)
+                ProbeForWriteUlong(Disposition);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -101,6 +105,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     }
     _SEH2_END;
 
+    DPRINT("Returning handle %x, Status %x.\n", Handle, Status);
+
     /* Return status */
     return Status;
 }
@@ -116,7 +122,8 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
-    DPRINT("NtOpenKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
+    DPRINT("NtOpenKey(Path: %wZ, Root %x, Access: %x)\n",
+            ObjectAttributes->ObjectName, ObjectAttributes->RootDirectory, DesiredAccess);
 
     /* Check for user-mode caller */
     if (PreviousMode != KernelMode)
@@ -165,6 +172,8 @@ NtOpenKey(OUT PHANDLE KeyHandle,
         }
         _SEH2_END;
     }
+
+    DPRINT("Returning handle %x, Status %x.\n", Handle, Status);
 
     /* Return status */
     return Status;
@@ -301,6 +310,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
     /* Dereference and return status */
     ObDereferenceObject(KeyObject);
+    DPRINT("Returning status %x.\n", Status);
     return Status;
 }
 
@@ -604,14 +614,52 @@ NtSetValueKey(IN HANDLE KeyHandle,
               IN PVOID Data,
               IN ULONG DataSize)
 {
-    NTSTATUS Status;
-    PCM_KEY_BODY KeyObject;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCM_KEY_BODY KeyObject = NULL;
     REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
-    UNICODE_STRING ValueNameCopy = *ValueName;
+    UNICODE_STRING ValueNameCopy;
+    KPROCESSOR_MODE PreviousMode;
+
     PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    if (!DataSize)
+        Data = NULL;
+
+    /* Probe and copy the data */
+    if ((PreviousMode != KernelMode) && Data)
+    {
+        PVOID DataCopy = ExAllocatePoolWithTag(PagedPool, DataSize, TAG_CM);
+        if (!DataCopy)
+            return STATUS_NO_MEMORY;
+        _SEH2_TRY
+        {
+            ProbeForRead(Data, DataSize, 1);
+            RtlCopyMemory(DataCopy, Data, DataSize);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(DataCopy, TAG_CM);
+            return Status;
+        }
+        Data = DataCopy;
+    }
+
+    /* Capture the string */
+    Status = ProbeAndCaptureUnicodeString(&ValueNameCopy, PreviousMode, ValueName);
+    if (!NT_SUCCESS(Status))
+        goto end;
+
     DPRINT("NtSetValueKey() KH 0x%p, VN '%wZ', TI %x, T %lu, DS %lu\n",
-        KeyHandle, ValueName, TitleIndex, Type, DataSize);
+        KeyHandle, &ValueNameCopy, TitleIndex, Type, DataSize);
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
@@ -620,7 +668,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
                                        ExGetPreviousMode(),
                                        (PVOID*)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        goto end;
 
     /* Make sure the name is aligned, not too long, and the data under 4GB */
     if ( (ValueNameCopy.Length > 32767) ||
@@ -628,8 +677,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
          (DataSize > 0x80000000))
     {
         /* Fail */
-        ObDereferenceObject(KeyObject);
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_INVALID_PARAMETER;
+        goto end;
     }
 
     /* Ignore any null characters at the end */
@@ -644,14 +693,14 @@ NtSetValueKey(IN HANDLE KeyHandle,
     if (KeyObject->KeyControlBlock->ExtFlags & CM_KCB_READ_ONLY_KEY)
     {
         /* Fail */
-        ObDereferenceObject(KeyObject);
-        return STATUS_ACCESS_DENIED;
+        Status = STATUS_ACCESS_DENIED;
+        goto end;
     }
 
     /* Setup callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
     SetValueKeyInfo.Object = (PVOID)KeyObject;
-    SetValueKeyInfo.ValueName = ValueName;
+    SetValueKeyInfo.ValueName = &ValueNameCopy;
     SetValueKeyInfo.TitleIndex = TitleIndex;
     SetValueKeyInfo.Type = Type;
     SetValueKeyInfo.Data = Data;
@@ -673,8 +722,13 @@ NtSetValueKey(IN HANDLE KeyHandle,
     PostOperationInfo.Status = Status;
     CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
 
+end:
     /* Dereference and return status */
-    ObDereferenceObject(KeyObject);
+    if (KeyObject)
+        ObDereferenceObject(KeyObject);
+    ReleaseCapturedUnicodeString(&ValueNameCopy, PreviousMode);
+    if ((PreviousMode != KernelMode) && Data)
+        ExFreePoolWithTag(Data, TAG_CM);
     return Status;
 }
 

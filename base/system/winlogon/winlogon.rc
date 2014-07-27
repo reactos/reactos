@@ -3,16 +3,14 @@
 
 #include "resource.h"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Logon Application"
 #define REACTOS_STR_INTERNAL_NAME     "winlogon"
 #define REACTOS_STR_ORIGINAL_FILENAME "winlogon.exe"
 #include <reactos/version.rc>
 
-/*
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-IDI_WINLOGON ICON "resources/winlogon.ico"
-*/
+IDI_WINLOGON ICON "res/winlogon.ico"
 
 /* UTF-8 */
 #pragma code_page(65001)

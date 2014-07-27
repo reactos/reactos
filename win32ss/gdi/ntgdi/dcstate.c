@@ -51,23 +51,26 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
-    if (To) // Copy "To" SaveDC state.
+    if (!To)
     {
-        if (pdcSrc->rosdc.hClipRgn)
+        IntGdiExtSelectClipRgn(pdcDst, pdcSrc->dclevel.prgnClip, RGN_COPY);
+        if (pdcDst->dclevel.prgnMeta)
         {
-           pdcDst->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-           NtGdiCombineRgn(pdcDst->rosdc.hClipRgn, pdcSrc->rosdc.hClipRgn, 0, RGN_COPY);
+            REGION_Delete(pdcDst->dclevel.prgnMeta);
+            pdcDst->dclevel.prgnMeta = NULL;
         }
-        // FIXME: Handle prgnMeta!
-    }
-    else // Copy "!To" RestoreDC state.
-    {  /* The VisRectRegion field needs to be set to a valid state */
-       GdiExtSelectClipRgn(pdcDst, pdcSrc->rosdc.hClipRgn, RGN_COPY);
+        if (pdcSrc->dclevel.prgnMeta)
+        {
+            pdcDst->dclevel.prgnMeta = IntSysCreateRectpRgn(0, 0, 0, 0);
+            IntGdiCombineRgn(pdcDst->dclevel.prgnMeta, pdcSrc->dclevel.prgnMeta, NULL, RGN_COPY);
+        }
+        pdcDst->fs |= DC_FLAG_DIRTY_RAO;
     }
 }
 
 
-BOOL FASTCALL
+BOOL
+FASTCALL
 IntGdiCleanDC(HDC hDC)
 {
     PDC dc;
@@ -86,6 +89,16 @@ IntGdiCleanDC(HDC hDC)
         DC_vUpdateLineBrush(dc);
         DC_vUpdateTextBrush(dc);
     }
+
+    /* DC_vCopyState frees the Clip rgn and the Meta rgn. Take care of the other ones
+     * There is no need to clear prgnVis, as UserGetDC updates it immediately. */
+    if (dc->prgnRao)
+        REGION_Delete(dc->prgnRao);
+    if (dc->prgnAPI)
+        REGION_Delete(dc->prgnAPI);
+    dc->prgnRao = dc->prgnAPI = NULL;
+
+    dc->fs |= DC_FLAG_DIRTY_RAO;
 
     DC_UnlockDc(dc);
 
@@ -272,7 +285,7 @@ NtGdiSaveDC(
     GDIOBJ_vSetObjectOwner(&pdcSave->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Copy the current state */
-    DC_vCopyState(pdc, pdcSave, TRUE);
+    DC_vCopyState(pdc, pdcSave, FALSE);
 
     /* Only memory DC's change their surface */
     if (pdc->dctype == DCTYPE_MEMORY)

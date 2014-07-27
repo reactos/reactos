@@ -491,6 +491,15 @@ DECLARE_INTERFACE_(IDispatchIrp, IUnknown)
 
     virtual NTSTATUS HandleDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                                          IN OUT PIRP Irp) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// HandleSystemControl
+//
+// Description: handles WMI system control requests
+
+    virtual NTSTATUS HandleSystemControl(IN PDEVICE_OBJECT DeviceObject,
+                                         IN OUT PIRP Irp) = 0;
 };
 
 typedef IDispatchIrp *PDISPATCHIRP;

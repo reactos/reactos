@@ -1,7 +1,7 @@
-﻿/*
+/*
  * Turkish Resources
  *
- * Copyright 2006 Fatih Aþýcý
+ * Copyright 2006 Fatih Aşıcı
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,20 +22,20 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Að Parolasýný Girin"
+CAPTION "Ağ Parolasını Girin"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Lütfen kullanýcý adýnýzý ve parolanýzý girin:", -1, 40, 6, 150, 15
+ LTEXT "Lütfen kullanıcı adınızı ve parolanızı girin:", -1, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
  LTEXT "Realm", -1, 40, 46, 50, 10
- LTEXT "Kullanýcý", -1, 40, 66, 50, 10
+ LTEXT "Kullanıcı", -1, 40, 66, 50, 10
  LTEXT "Parola", -1, 40, 86, 50, 10
  LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "Bu parolayý &sakla (güvensiz)", IDC_SAVEPASSWORD,
+ CHECKBOX "Bu parolayı &sakla (güvensiz)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Tamam", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Ýptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "İptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

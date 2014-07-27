@@ -576,6 +576,7 @@ NTSTATUS
     _In_ PVOID Parameter
 );
 
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_WIN32DATACOLLECTION_CALLOUT)(
@@ -583,6 +584,7 @@ NTSTATUS
     _In_ PVOID Callback,
     _In_ PVOID Context
 );
+#endif
 
 //
 // Lego Callback
@@ -1421,7 +1423,9 @@ typedef struct _WIN32_CALLOUTS_FPNS
     PKWIN32_SESSION_CALLOUT WindowStationDeleteProcedure;
     PKWIN32_SESSION_CALLOUT WindowStationParseProcedure;
     PKWIN32_SESSION_CALLOUT WindowStationOpenProcedure;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PKWIN32_WIN32DATACOLLECTION_CALLOUT Win32DataCollectionProcedure;
+#endif
 } WIN32_CALLOUTS_FPNS, *PWIN32_CALLOUTS_FPNS;
 
 #endif // !NTOS_MODE_USER

@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Saati, Yaz Saati Uygulamalarında Kendiliğinden Ayarla",
+    AUTOCHECKBOX "Gün ışığı tutum değişiklikleri için saati kendiliğinden ayarla.",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -36,24 +36,24 @@ CAPTION "Umûmî Ağ Zamânı"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Zamânı, Umûmî Ağ Zaman Sunucusuyla Kendiliğinden Eşleştir",
+    AUTOCHECKBOX "Bir Umûmî Ağ Zamânı Sunucusuyla Kendiliğinden Eşleştir",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Sunucu:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "&Eşleştir", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON "&Şimdi Şimdkileştir", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "Eşleme, yalnızca bilgisayar Umûmî Ağ'a bağlandığında olur.", -1, 12, 114, 225, 25
+    LTEXT "Eşleştirme, yalnızca, bilgisayarınız Umûmî Ağ'a bağlı olduğunda olabilir.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Zaman"
-    IDS_CPLDESCRIPTION "Zamânı ve saat dilimini değiştirir."
+    IDS_CPLDESCRIPTION "Târihi, saati ve saat dilimi bilgisini değiştirir."
     IDS_TIMEZONETEXT "Şimdiki Saat Dilimi: %s"
     IDS_TIMEZONEINVALID "Geçersiz"
     IDS_TIMEZONEUNKNOWN "Bilinmeyen"
-    IDS_INETTIMESUCSYNC "Zaman, %s.%s:%s ile başarıyla eşlendi."
-    IDS_INETTIMENEXTSYNC "Bir Dahaki Eşleme: %s.%s"
-    IDS_INETTIMESYNCING "ReactOS, zamânı %s ile eşlerken bekleyiniz."
-    IDS_INETTIMEERROR "ReactOS, zamânı %s ile eşlerken bir yanlışlık oldu."
+    IDS_INETTIMESUCSYNC "Saat, %s ile başarıyla eşleştirildi: %s.%s"
+    IDS_INETTIMENEXTSYNC "Bir Sonraki Eşleştirme: %s.%s"
+    IDS_INETTIMESYNCING "ReactOS, saati %s ile eşleştirirken lütfen bekleyiniz."
+    IDS_INETTIMEERROR "ReactOS, %s ile eşleştirirken bir yanlışlık oldu."
 END

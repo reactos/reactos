@@ -214,6 +214,18 @@ static enum install_res install_from_registered_dir(void)
         return INSTALL_FAILED;
     }
 
+    if (type == REG_EXPAND_SZ)
+    {
+        size = ExpandEnvironmentStringsA(package_dir, NULL, 0);
+        if (size)
+        {
+            char* buf = heap_alloc(size + sizeof(addon->file_name));
+            ExpandEnvironmentStringsA(package_dir, buf, size);
+            heap_free(package_dir);
+            package_dir = buf;
+        }
+    }
+
     TRACE("Trying %s/%s\n", debugstr_a(package_dir), debugstr_a(addon->file_name));
 
     ret = install_from_unix_file(package_dir, "", addon->file_name);

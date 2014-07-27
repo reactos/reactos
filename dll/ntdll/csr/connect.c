@@ -255,7 +255,7 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
         CsrPortHeap = RtlGetProcessHeap();
 
         /* Tell the caller we're inside the server */
-        *ServerToServerCall = InsideCsrProcess;
+        if (ServerToServerCall) *ServerToServerCall = InsideCsrProcess;
         return STATUS_SUCCESS;
     }
 

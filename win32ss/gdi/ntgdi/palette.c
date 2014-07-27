@@ -65,7 +65,7 @@ InitPaletteImpl()
     // Create default palette (20 system colors)
     gppalDefault = PALETTE_AllocPalWithHandle(PAL_INDEXED,
                                               20,
-                                              (PULONG)g_sysPalTemplate,
+                                              g_sysPalTemplate,
                                               0, 0, 0);
     GDIOBJ_vReferenceObjectByPointer(&gppalDefault->BaseObject);
     PALETTE_UnlockPalette(gppalDefault);
@@ -132,7 +132,7 @@ NTAPI
 PALETTE_AllocPalette(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue)
@@ -174,12 +174,10 @@ PALETTE_AllocPalette(
     if (iMode & PAL_INDEXED)
     {
         /* Check if we got a color array */
-        if (pulColors)
+        if (pEntries)
         {
             /* Copy the entries */
-            RtlCopyMemory(ppal->IndexedColors,
-                          pulColors,
-                          cColors * sizeof(ULONG));
+            RtlCopyMemory(ppal->IndexedColors, pEntries, cColors * sizeof(pEntries[0]));
         }
     }
     else if (iMode & PAL_BITFIELDS)
@@ -208,7 +206,7 @@ NTAPI
 PALETTE_AllocPalWithHandle(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_opt_ PULONG pulColors,
+    _In_opt_ const PALETTEENTRY* pEntries,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue)
@@ -216,7 +214,7 @@ PALETTE_AllocPalWithHandle(
     PPALETTE ppal;
 
     /* Allocate the palette without a handle */
-    ppal = PALETTE_AllocPalette(iMode, cColors, pulColors, flRed, flGreen, flBlue);
+    ppal = PALETTE_AllocPalette(iMode, cColors, pEntries, flRed, flGreen, flBlue);
     if (!ppal) return NULL;
 
     /* Insert the palette into the handle table */
@@ -382,7 +380,7 @@ EngCreatePalette(
     PPALETTE ppal;
     HPALETTE hpal;
 
-    ppal = PALETTE_AllocPalette(iMode, cColors, pulColors, flRed, flGreen, flBlue);
+    ppal = PALETTE_AllocPalette(iMode, cColors, (PPALETTEENTRY)pulColors, flRed, flGreen, flBlue);
     if (!ppal) return NULL;
 
     hpal = GDIOBJ_hInsertObject(&ppal->BaseObject, GDI_OBJ_HMGR_PUBLIC);
@@ -454,7 +452,7 @@ GreCreatePaletteInternal(
     pLogPal->palNumEntries = cEntries;
     ppal = PALETTE_AllocPalWithHandle(PAL_INDEXED,
                                       cEntries,
-                                      (PULONG)pLogPal->palPalEntry,
+                                      pLogPal->palPalEntry,
                                       0, 0, 0);
 
     if (ppal != NULL)
@@ -512,107 +510,81 @@ NtGdiCreatePaletteInternal(
     return hpal;
 }
 
-HPALETTE APIENTRY NtGdiCreateHalftonePalette(HDC  hDC)
+HPALETTE
+APIENTRY
+NtGdiCreateHalftonePalette(HDC  hDC)
 {
     int i, r, g, b;
-    struct {
-        WORD Version;
-        WORD NumberOfEntries;
-        PALETTEENTRY aEntries[256];
-        } Palette;
+    PALETTEENTRY PalEntries[256];
+    PPALETTE ppal;
+    PDC pdc;
+    HPALETTE hpal = NULL;
 
-    Palette.Version = 0x300;
-    Palette.NumberOfEntries = 256;
-    if (IntGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries) == 0)
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
     {
-        /* From WINE, more that 256 color math */
-        Palette.NumberOfEntries = 20;
-        for (i = 0; i < Palette.NumberOfEntries; i++)
-        {
-            Palette.aEntries[i].peRed=0xff;
-            Palette.aEntries[i].peGreen=0xff;
-            Palette.aEntries[i].peBlue=0xff;
-            Palette.aEntries[i].peFlags=0x00;
-        }
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
 
-        Palette.aEntries[0].peRed=0x00;
-        Palette.aEntries[0].peBlue=0x00;
-        Palette.aEntries[0].peGreen=0x00;
+    RtlZeroMemory(PalEntries, sizeof(PalEntries));
 
-        /* The first 6 */
-        for (i=1; i <= 6; i++)
-        {
-            Palette.aEntries[i].peRed=(i%2)?0x80:0;
-            Palette.aEntries[i].peGreen=(i==2)?0x80:(i==3)?0x80:(i==6)?0x80:0;
-            Palette.aEntries[i].peBlue=(i>3)?0x80:0;
-        }
+    /* First and last ten entries are default ones */
+    for (i = 0; i < 10; i++)
+    {
+        PalEntries[i].peRed = g_sysPalTemplate[i].peRed;
+        PalEntries[i].peGreen = g_sysPalTemplate[i].peGreen;
+        PalEntries[i].peBlue = g_sysPalTemplate[i].peBlue;
 
-        for (i=7;  i <= 12; i++)
-        {
-            switch(i)
-            {
-                case 7:
-                    Palette.aEntries[i].peRed=0xc0;
-                    Palette.aEntries[i].peBlue=0xc0;
-                    Palette.aEntries[i].peGreen=0xc0;
-                    break;
-                case 8:
-                    Palette.aEntries[i].peRed=0xc0;
-                    Palette.aEntries[i].peGreen=0xdc;
-                    Palette.aEntries[i].peBlue=0xc0;
-                    break;
-                case 9:
-                    Palette.aEntries[i].peRed=0xa6;
-                    Palette.aEntries[i].peGreen=0xca;
-                    Palette.aEntries[i].peBlue=0xf0;
-                    break;
-                case 10:
-                    Palette.aEntries[i].peRed=0xff;
-                    Palette.aEntries[i].peGreen=0xfb;
-                    Palette.aEntries[i].peBlue=0xf0;
-                    break;
-                case 11:
-                    Palette.aEntries[i].peRed=0xa0;
-                    Palette.aEntries[i].peGreen=0xa0;
-                    Palette.aEntries[i].peBlue=0xa4;
-                    break;
-            case 12:
-                Palette.aEntries[i].peRed=0x80;
-                Palette.aEntries[i].peGreen=0x80;
-                Palette.aEntries[i].peBlue=0x80;
-            }
-        }
+        PalEntries[246 + i].peRed = g_sysPalTemplate[10 + i].peRed;
+        PalEntries[246 + i].peGreen = g_sysPalTemplate[10 + i].peGreen;
+        PalEntries[246 + i].peBlue = g_sysPalTemplate[10 + i].peBlue;
+    }
 
-        for (i=13; i <= 18; i++)
-        {
-            Palette.aEntries[i].peRed=(i%2)?0xff:0;
-            Palette.aEntries[i].peGreen=(i==14)?0xff:(i==15)?0xff:(i==18)?0xff:0;
-            Palette.aEntries[i].peBlue=(i>15)?0xff:0x00;
-        }
+    ppal = PALETTE_ShareLockPalette(pdc->dclevel.hpal);
+    if (ppal && (ppal->flFlags & PAL_INDEXED))
+    {
+        /* FIXME: optimize the palette for the current palette */
+        UNIMPLEMENTED
     }
     else
     {
-        /* 256 color table */
         for (r = 0; r < 6; r++)
+        {
             for (g = 0; g < 6; g++)
+            {
                 for (b = 0; b < 6; b++)
                 {
                     i = r + g*6 + b*36 + 10;
-                    Palette.aEntries[i].peRed = r * 51;
-                    Palette.aEntries[i].peGreen = g * 51;
-                    Palette.aEntries[i].peBlue = b * 51;
+                    PalEntries[i].peRed = r * 51;
+                    PalEntries[i].peGreen = g * 51;
+                    PalEntries[i].peBlue = b * 51;
                 }
+            }
+        }
 
         for (i = 216; i < 246; i++)
         {
             int v = (i - 216) << 3;
-            Palette.aEntries[i].peRed = v;
-            Palette.aEntries[i].peGreen = v;
-            Palette.aEntries[i].peBlue = v;
+            PalEntries[i].peRed = v;
+            PalEntries[i].peGreen = v;
+            PalEntries[i].peBlue = v;
         }
     }
 
-   return GreCreatePaletteInternal((LOGPALETTE *)&Palette, Palette.NumberOfEntries);
+    if (ppal)
+        PALETTE_ShareUnlockPalette(ppal);
+
+    DC_UnlockDc(pdc);
+
+    ppal = PALETTE_AllocPalWithHandle(PAL_INDEXED, 256, PalEntries, 0, 0, 0);
+    if (ppal)
+    {
+        hpal = ppal->BaseObject.hHmgr;
+        PALETTE_UnlockPalette(ppal);
+    }
+
+    return hpal;
 }
 
 BOOL

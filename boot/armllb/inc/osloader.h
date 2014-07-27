@@ -8,13 +8,12 @@
 
 //
 // OS Loader Main Routine
-// 
+//
 typedef
 VOID (*POSLOADER_INIT)(
     IN PVOID BoardInit
 );
 
-#ifndef __REGISTRY_H
 //
 // Type of memory detected by LLB
 //
@@ -36,7 +35,6 @@ typedef struct
     ULONG Type;
     ULONG Reserved;
 } BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
-#endif
 
 //
 // Information sent from LLB to OS Loader

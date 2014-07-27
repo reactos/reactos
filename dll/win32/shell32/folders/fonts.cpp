@@ -609,7 +609,10 @@ HRESULT WINAPI CFontsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHEL
                         {
                             psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(wcslen(buffer) + 1);
                             if (!psd->str.pOleStr)
+                            {
+                                CloseHandle(hFile);
                                 return E_OUTOFMEMORY;
+                            }
                             wcscpy(psd->str.pOleStr, buffer);
                             psd->str.uType = STRRET_WSTR;
                             CloseHandle(hFile);

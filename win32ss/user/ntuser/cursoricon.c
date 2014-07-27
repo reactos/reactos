@@ -1287,10 +1287,10 @@ UserDrawIconEx(
         RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
 
         /* Prepare the underlying surface */
-        DC_vPrepareDCsForBlit(pdc, rcDest, NULL, rcDest);
+        DC_vPrepareDCsForBlit(pdc, &rcDest, NULL, NULL);
 
         /* Get the clip object */
-        pdcClipObj = pdc->rosdc.CombinedClip;
+        pdcClipObj = &pdc->co.ClipObj;
 
         /* We now have our destination surface and rectangle */
         psurfDest = pdc->dclevel.pSurface;
@@ -1472,10 +1472,10 @@ done:
         RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
 
         /* Prepare the underlying surface */
-        DC_vPrepareDCsForBlit(pdc, rcDest, NULL, rcDest);
+        DC_vPrepareDCsForBlit(pdc, &rcDest, NULL, NULL);
 
         /* Get the clip object */
-        pdcClipObj = pdc->rosdc.CombinedClip;
+        pdcClipObj = &pdc->co.ClipObj;
 
         /* We now have our destination surface and rectangle */
         psurfDest = pdc->dclevel.pSurface;
