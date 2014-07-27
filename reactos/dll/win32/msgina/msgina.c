@@ -57,10 +57,10 @@ WlxNegotiate(
     return TRUE;
 }
 
-static LONG
-ReadRegSzKey(
+LONG
+ReadRegSzValue(
     IN HKEY hKey,
-    IN LPCWSTR pszKey,
+    IN LPCWSTR pszValue,
     OUT LPWSTR* pValue)
 {
     LONG rc;
@@ -72,7 +72,7 @@ ReadRegSzKey(
         return ERROR_INVALID_PARAMETER;
 
     *pValue = NULL;
-    rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
+    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, NULL, &cbData);
     if (rc != ERROR_SUCCESS)
         return rc;
     if (dwType != REG_SZ)
@@ -80,7 +80,7 @@ ReadRegSzKey(
     Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
     if (!Value)
         return ERROR_NOT_ENOUGH_MEMORY;
-    rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);
+    rc = RegQueryValueExW(hKey, pszValue, NULL, NULL, (LPBYTE)Value, &cbData);
     if (rc != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, Value);
@@ -94,9 +94,9 @@ ReadRegSzKey(
 }
 
 static LONG
-ReadRegDwordKey(
+ReadRegDwordValue(
     IN HKEY hKey,
-    IN LPCWSTR pszKey,
+    IN LPCWSTR pszValue,
     OUT LPDWORD pValue)
 {
     LONG rc;
@@ -108,7 +108,7 @@ ReadRegDwordKey(
         return ERROR_INVALID_PARAMETER;
 
     cbData = sizeof(DWORD);
-    rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, (LPBYTE)&dwValue, &cbData);
+    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, (LPBYTE)&dwValue, &cbData);
     if (rc == ERROR_SUCCESS && dwType == REG_DWORD)
         *pValue = dwValue;
 
@@ -131,7 +131,7 @@ ChooseGinaUI(VOID)
         KEY_QUERY_VALUE,
         &ControlKey);
 
-    rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
+    rc = ReadRegSzValue(ControlKey, L"SystemStartOptions", &SystemStartOptions);
     if (rc != ERROR_SUCCESS)
         goto cleanup;
 
@@ -186,9 +186,9 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
         return FALSE;
     }
 
-    rc = ReadRegSzKey(hKey,
-                      L"AutoAdminLogon",
-                      &lpAutoAdminLogon);
+    rc = ReadRegSzValue(hKey,
+                        L"AutoAdminLogon",
+                        &lpAutoAdminLogon);
     if (rc == ERROR_SUCCESS)
     {
         if (wcscmp(lpAutoAdminLogon, L"1") == 0)
@@ -197,9 +197,9 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
 
     TRACE("bAutoAdminLogon: %s\n", pgContext->bAutoAdminLogon ? "TRUE" : "FALSE");
 
-    rc = ReadRegDwordKey(hKey,
-                         L"DisableCAD",
-                         &dwDisableCAD);
+    rc = ReadRegDwordValue(hKey,
+                           L"DisableCAD",
+                           &dwDisableCAD);
     if (rc == ERROR_SUCCESS)
     {
         if (dwDisableCAD != 0)
@@ -209,18 +209,18 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
     TRACE("bDisableCAD: %s\n", pgContext->bDisableCAD ? "TRUE" : "FALSE");
 
     pgContext->bShutdownWithoutLogon = TRUE;
-    rc = ReadRegSzKey(hKey,
-                      L"ShutdownWithoutLogon",
-                      &lpShutdownWithoutLogon);
+    rc = ReadRegSzValue(hKey,
+                        L"ShutdownWithoutLogon",
+                        &lpShutdownWithoutLogon);
     if (rc == ERROR_SUCCESS)
     {
         if (wcscmp(lpShutdownWithoutLogon, L"0") == 0)
             pgContext->bShutdownWithoutLogon = FALSE;
     }
 
-    rc = ReadRegSzKey(hKey,
-                      L"DontDisplayLastUserName",
-                      &lpDontDisplayLastUserName);
+    rc = ReadRegSzValue(hKey,
+                        L"DontDisplayLastUserName",
+                        &lpDontDisplayLastUserName);
     if (rc == ERROR_SUCCESS)
     {
         if (wcscmp(lpDontDisplayLastUserName, L"1") == 0)
@@ -856,19 +856,19 @@ DoAutoLogon(
         /* Set it by default to disabled, we might reenable it again later */
         pgContext->AutoLogonState = AUTOLOGON_DISABLED;
 
-        rc = ReadRegSzKey(WinLogonKey, L"AutoAdminLogon", &AutoLogon);
+        rc = ReadRegSzValue(WinLogonKey, L"AutoAdminLogon", &AutoLogon);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
         if (wcscmp(AutoLogon, L"1") != 0)
             goto cleanup;
 
-        rc = ReadRegSzKey(WinLogonKey, L"AutoLogonCount", &AutoCount);
+        rc = ReadRegSzValue(WinLogonKey, L"AutoLogonCount", &AutoCount);
         if (rc == ERROR_SUCCESS && wcscmp(AutoCount, L"0") == 0)
             goto cleanup;
         else if (rc != ERROR_FILE_NOT_FOUND)
             goto cleanup;
 
-        rc = ReadRegSzKey(WinLogonKey, L"IgnoreShiftOverride", &UserName);
+        rc = ReadRegSzValue(WinLogonKey, L"IgnoreShiftOverride", &UserName);
         if (rc == ERROR_SUCCESS)
         {
             if (wcscmp(AutoLogon, L"1") != 0 && GetKeyState(VK_SHIFT) < 0)
@@ -887,13 +887,13 @@ DoAutoLogon(
     {
         pgContext->AutoLogonState = AUTOLOGON_DISABLED;
 
-        rc = ReadRegSzKey(WinLogonKey, L"DefaultUserName", &UserName);
+        rc = ReadRegSzValue(WinLogonKey, L"DefaultUserName", &UserName);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
-        rc = ReadRegSzKey(WinLogonKey, L"DefaultDomain", &Domain);
+        rc = ReadRegSzValue(WinLogonKey, L"DefaultDomain", &Domain);
         if (rc != ERROR_SUCCESS && rc != ERROR_FILE_NOT_FOUND)
             goto cleanup;
-        rc = ReadRegSzKey(WinLogonKey, L"DefaultPassword", &Password);
+        rc = ReadRegSzValue(WinLogonKey, L"DefaultPassword", &Password);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
 
