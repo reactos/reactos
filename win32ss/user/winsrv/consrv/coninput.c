@@ -260,17 +260,39 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
     NTSTATUS Status;
     PCONSOLE_GETINPUT GetInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetInputRequest;
     PCONSOLE_INPUT_BUFFER InputBuffer = InputInfo->InputBuffer;
+    ULONG NumEventsRead;
 
-    // GetInputRequest->InputsRead = 0;
+    PINPUT_RECORD InputRecord;
 
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than five
+     * input records are read. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     */
+    if (GetInputRequest->NumRecords <= sizeof(GetInputRequest->RecordStaticBuffer)/sizeof(INPUT_RECORD))
+    {
+        /*
+         * Adjust the internal pointer, because its old value points to
+         * the static buffer in the original ApiMessage structure.
+         */
+        // GetInputRequest->RecordBufPtr = GetInputRequest->RecordStaticBuffer;
+        InputRecord = GetInputRequest->RecordStaticBuffer;
+    }
+    else
+    {
+        InputRecord = GetInputRequest->RecordBufPtr;
+    }
+
+    NumEventsRead = 0;
     Status = ConDrvGetConsoleInput(InputBuffer->Header.Console,
                                    InputBuffer,
-                                   (GetInputRequest->wFlags & CONSOLE_READ_KEEPEVENT) != 0,
-                                   (GetInputRequest->wFlags & CONSOLE_READ_CONTINUE ) == 0,
+                                   (GetInputRequest->Flags & CONSOLE_READ_KEEPEVENT) != 0,
+                                   (GetInputRequest->Flags & CONSOLE_READ_CONTINUE ) == 0,
                                    GetInputRequest->Unicode,
-                                   GetInputRequest->InputRecord,
-                                   GetInputRequest->Length,
-                                   &GetInputRequest->InputsRead);
+                                   InputRecord,
+                                   GetInputRequest->NumRecords,
+                                   &NumEventsRead);
 
     if (Status == STATUS_PENDING)
     {
@@ -283,6 +305,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
     else
     {
         /* We read all what we wanted, we return the error code we were given */
+        GetInputRequest->NumRecords = NumEventsRead;
         return Status;
         // return STATUS_SUCCESS;
     }
@@ -345,21 +368,36 @@ CSR_API(SrvGetConsoleInput)
 
     DPRINT("SrvGetConsoleInput\n");
 
-    if (GetInputRequest->wFlags & ~(CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE))
+    if (GetInputRequest->Flags & ~(CONSOLE_READ_KEEPEVENT | CONSOLE_READ_CONTINUE))
         return STATUS_INVALID_PARAMETER;
 
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&GetInputRequest->InputRecord,
-                                  GetInputRequest->Length,
-                                  sizeof(INPUT_RECORD)))
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than five
+     * input records are read. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     */
+    if (GetInputRequest->NumRecords <= sizeof(GetInputRequest->RecordStaticBuffer)/sizeof(INPUT_RECORD))
     {
-        return STATUS_INVALID_PARAMETER;
+        /*
+         * Adjust the internal pointer, because its old value points to
+         * the static buffer in the original ApiMessage structure.
+         */
+        // GetInputRequest->RecordBufPtr = &GetInputRequest->RecordStaticBuffer;
+    }
+    else
+    {
+        if (!CsrValidateMessageBuffer(ApiMessage,
+                                      (PVOID*)&GetInputRequest->RecordBufPtr,
+                                      GetInputRequest->NumRecords,
+                                      sizeof(INPUT_RECORD)))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
     }
 
     Status = ConSrvGetInputBufferAndHandleEntry(ProcessData, GetInputRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
-
-    GetInputRequest->InputsRead = 0;
 
     InputInfo.CallingThread = CsrGetClientThread();
     InputInfo.HandleEntry   = HandleEntry;
@@ -389,14 +427,36 @@ CSR_API(SrvWriteConsoleInput)
     PCONSOLE_INPUT_BUFFER InputBuffer;
     ULONG NumEventsWritten;
 
+    PINPUT_RECORD InputRecord;
+
     DPRINT("SrvWriteConsoleInput\n");
 
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&WriteInputRequest->InputRecord,
-                                  WriteInputRequest->Length,
-                                  sizeof(INPUT_RECORD)))
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than five
+     * input records are written. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     */
+    if (WriteInputRequest->NumRecords <= sizeof(WriteInputRequest->RecordStaticBuffer)/sizeof(INPUT_RECORD))
     {
-        return STATUS_INVALID_PARAMETER;
+        /*
+         * Adjust the internal pointer, because its old value points to
+         * the static buffer in the original ApiMessage structure.
+         */
+        // WriteInputRequest->RecordBufPtr = WriteInputRequest->RecordStaticBuffer;
+        InputRecord = WriteInputRequest->RecordStaticBuffer;
+    }
+    else
+    {
+        if (!CsrValidateMessageBuffer(ApiMessage,
+                                      (PVOID*)&WriteInputRequest->RecordBufPtr,
+                                      WriteInputRequest->NumRecords,
+                                      sizeof(INPUT_RECORD)))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        InputRecord = WriteInputRequest->RecordBufPtr;
     }
 
     Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -409,10 +469,10 @@ CSR_API(SrvWriteConsoleInput)
                                      InputBuffer,
                                      WriteInputRequest->Unicode,
                                      WriteInputRequest->AppendToEnd,
-                                     WriteInputRequest->InputRecord,
-                                     WriteInputRequest->Length,
+                                     InputRecord,
+                                     WriteInputRequest->NumRecords,
                                      &NumEventsWritten);
-    WriteInputRequest->Length = NumEventsWritten;
+    WriteInputRequest->NumRecords = NumEventsWritten;
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);
     return Status;

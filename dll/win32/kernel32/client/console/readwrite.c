@@ -127,39 +127,62 @@ IntGetConsoleInput(HANDLE hConsoleInput,
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETINPUT GetInputRequest = &ApiMessage.Data.GetInputRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
-    ULONG Size;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
 
     if (lpBuffer == NULL)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_ACCESS);
         return FALSE;
     }
 
-    Size = nLength * sizeof(INPUT_RECORD);
-
-    DPRINT("IntGetConsoleInput: %lx %p\n", Size, lpNumberOfEventsRead);
-
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
-    if (CaptureBuffer == NULL)
+    if (!IsConsoleHandle(hConsoleInput))
     {
-        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        SetLastError(ERROR_INVALID_HANDLE);
+
+        if (lpNumberOfEventsRead != NULL)
+            *lpNumberOfEventsRead = 0;
+
         return FALSE;
     }
 
-    /* Allocate space in the Buffer */
-    CsrAllocateMessagePointer(CaptureBuffer,
-                              Size,
-                              (PVOID*)&GetInputRequest->InputRecord);
+    DPRINT("IntGetConsoleInput: %lx %p\n", nLength, lpNumberOfEventsRead);
 
     /* Set up the data to send to the Console Server */
-    GetInputRequest->InputHandle = hConsoleInput;
-    GetInputRequest->InputsRead = 0;
-    GetInputRequest->Length = nLength;
-    GetInputRequest->wFlags = wFlags;
-    GetInputRequest->Unicode = bUnicode;
+    GetInputRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetInputRequest->InputHandle   = hConsoleInput;
+    GetInputRequest->NumRecords    = nLength;
+    GetInputRequest->Flags         = wFlags;
+    GetInputRequest->Unicode       = bUnicode;
+
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than five
+     * input records are read. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (nLength <= sizeof(GetInputRequest->RecordStaticBuffer)/sizeof(INPUT_RECORD))
+    {
+        GetInputRequest->RecordBufPtr = GetInputRequest->RecordStaticBuffer;
+        // CaptureBuffer = NULL;
+    }
+    else
+    {
+        ULONG Size = nLength * sizeof(INPUT_RECORD);
+
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Allocate space in the Buffer */
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  Size,
+                                  (PVOID*)&GetInputRequest->RecordBufPtr);
+    }
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -171,16 +194,15 @@ IntGetConsoleInput(HANDLE hConsoleInput,
     if (NT_SUCCESS(ApiMessage.Status))
     {
         /* Return the number of events read */
-        DPRINT("Events read: %lx\n", GetInputRequest->InputsRead);
+        DPRINT("Events read: %lx\n", GetInputRequest->NumRecords);
 
         if (lpNumberOfEventsRead != NULL)
-            *lpNumberOfEventsRead = GetInputRequest->InputsRead;
+            *lpNumberOfEventsRead = GetInputRequest->NumRecords;
 
         /* Copy into the buffer */
-        DPRINT("Copying to buffer\n");
         RtlCopyMemory(lpBuffer,
-                      GetInputRequest->InputRecord,
-                      sizeof(INPUT_RECORD) * GetInputRequest->InputsRead);
+                      GetInputRequest->RecordBufPtr,
+                      GetInputRequest->NumRecords * sizeof(INPUT_RECORD));
     }
     else
     {
@@ -191,12 +213,11 @@ IntGetConsoleInput(HANDLE hConsoleInput,
         BaseSetLastNTError(ApiMessage.Status);
     }
 
-    /* Release the capture buffer */
-    CsrFreeCaptureBuffer(CaptureBuffer);
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
     /* Return TRUE or FALSE */
-    return (GetInputRequest->InputsRead > 0);
-    // return NT_SUCCESS(ApiMessage.Status);
+    return NT_SUCCESS(ApiMessage.Status);
 }
 
 
@@ -216,7 +237,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
 
     if (lpBuffer == NULL)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_ACCESS);
         return FALSE;
     }
 
@@ -454,38 +475,62 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
                      PINPUT_RECORD lpBuffer,
                      DWORD nLength,
                      LPDWORD lpNumberOfEventsWritten,
-                     BOOL bUnicode,
-                     BOOL bAppendToEnd)
+                     BOOLEAN bUnicode,
+                     BOOLEAN bAppendToEnd)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEINPUT WriteInputRequest = &ApiMessage.Data.WriteInputRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
-    DWORD Size;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
 
-    Size = nLength * sizeof(INPUT_RECORD);
-
-    DPRINT("IntWriteConsoleInput: %lx %p\n", Size, lpNumberOfEventsWritten);
-
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
-    if (CaptureBuffer == NULL)
+    if (lpBuffer == NULL)
     {
-        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        SetLastError(ERROR_INVALID_ACCESS);
         return FALSE;
     }
 
-    /* Capture the user buffer */
-    CsrCaptureMessageBuffer(CaptureBuffer,
-                            lpBuffer,
-                            Size,
-                            (PVOID*)&WriteInputRequest->InputRecord);
+    DPRINT("IntWriteConsoleInput: %lx %p\n", nLength, lpNumberOfEventsWritten);
 
     /* Set up the data to send to the Console Server */
-    WriteInputRequest->InputHandle = hConsoleInput;
-    WriteInputRequest->Length = nLength;
-    WriteInputRequest->Unicode = bUnicode;
-    WriteInputRequest->AppendToEnd = bAppendToEnd;
+    WriteInputRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    WriteInputRequest->InputHandle   = hConsoleInput;
+    WriteInputRequest->NumRecords    = nLength;
+    WriteInputRequest->Unicode       = bUnicode;
+    WriteInputRequest->AppendToEnd   = bAppendToEnd;
+
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than five
+     * input records are written. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (nLength <= sizeof(WriteInputRequest->RecordStaticBuffer)/sizeof(INPUT_RECORD))
+    {
+        WriteInputRequest->RecordBufPtr = WriteInputRequest->RecordStaticBuffer;
+        // CaptureBuffer = NULL;
+
+        RtlCopyMemory(WriteInputRequest->RecordBufPtr,
+                      lpBuffer,
+                      nLength * sizeof(INPUT_RECORD));
+    }
+    else
+    {
+        ULONG Size = nLength * sizeof(INPUT_RECORD);
+
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Capture the user buffer */
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                lpBuffer,
+                                Size,
+                                (PVOID*)&WriteInputRequest->RecordBufPtr);
+    }
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -493,14 +538,17 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsoleInput),
                         sizeof(*WriteInputRequest));
 
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
+
     /* Check for success */
     if (NT_SUCCESS(ApiMessage.Status))
     {
-        /* Return the number of events read */
-        DPRINT("Events read: %lx\n", WriteInputRequest->Length);
+        /* Return the number of events written */
+        DPRINT("Events written: %lx\n", WriteInputRequest->NumRecords);
 
         if (lpNumberOfEventsWritten != NULL)
-            *lpNumberOfEventsWritten = WriteInputRequest->Length;
+            *lpNumberOfEventsWritten = WriteInputRequest->NumRecords;
     }
     else
     {
@@ -510,9 +558,6 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
         /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
     }
-
-    /* Release the capture buffer */
-    CsrFreeCaptureBuffer(CaptureBuffer);
 
     /* Return TRUE or FALSE */
     return NT_SUCCESS(ApiMessage.Status);
@@ -535,7 +580,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
 
     if ((lpBuffer == NULL) || (lpWriteRegion == NULL))
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_ACCESS);
         return FALSE;
     }
     /*

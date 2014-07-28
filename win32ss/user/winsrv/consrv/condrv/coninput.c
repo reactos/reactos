@@ -170,8 +170,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (Buffer != NULL && NumCharsToRead >  0) ||
-            (Buffer == NULL && NumCharsToRead == 0) );
+    ASSERT((Buffer != NULL) || (Buffer == NULL && NumCharsToRead == 0));
 
     /* We haven't read anything (yet) */
 
@@ -316,11 +315,9 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (InputRecord != NULL && NumEventsToRead >  0) ||
-            (InputRecord == NULL && NumEventsToRead == 0) );
+    ASSERT((InputRecord != NULL) || (InputRecord == NULL && NumEventsToRead == 0));
 
-    // Do NOT do that !! Use the existing number of events already read, if any...
-    // if (NumEventsRead) *NumEventsRead = 0;
+    if (NumEventsRead) *NumEventsRead = 0;
 
     if (IsListEmpty(&InputBuffer->InputEvents))
     {
@@ -333,8 +330,7 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 
     /* Only get input if there is any */
     CurrentInput = InputBuffer->InputEvents.Flink;
-    if (NumEventsRead) i = *NumEventsRead; // We will read the remaining events...
-
+    i = 0;
     while ((CurrentInput != &InputBuffer->InputEvents) && (i < NumEventsToRead))
     {
         Input = CONTAINING_RECORD(CurrentInput, ConsoleInput, ListEntry);
@@ -386,12 +382,10 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (InputRecord != NULL && NumEventsToWrite >  0) ||
-            (InputRecord == NULL && NumEventsToWrite == 0) );
+    ASSERT((InputRecord != NULL) || (InputRecord == NULL && NumEventsToWrite == 0));
 
     // if (NumEventsWritten) *NumEventsWritten = 0;
-
-    /// Status = ConioAddInputEvents(Console, InputRecord, NumEventsToWrite, NumEventsWritten, AppendToEnd);
+    // Status = ConioAddInputEvents(Console, InputRecord, NumEventsToWrite, NumEventsWritten, AppendToEnd);
 
     for (i = 0; i < NumEventsToWrite && NT_SUCCESS(Status); ++i)
     {

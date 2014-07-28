@@ -520,13 +520,25 @@ typedef struct
 
 typedef struct
 {
-    HANDLE InputHandle;
-    ULONG InputsRead;
-    PINPUT_RECORD InputRecord;
-    ULONG Length;
-    WORD wFlags;
-    BOOLEAN Unicode;
+    HANDLE        ConsoleHandle;
+    HANDLE        InputHandle;
+    INPUT_RECORD  RecordStaticBuffer[5];
+    PINPUT_RECORD RecordBufPtr;
+    ULONG         NumRecords;
+    WORD          Flags;
+    BOOLEAN       Unicode;
 } CONSOLE_GETINPUT, *PCONSOLE_GETINPUT;
+
+typedef struct
+{
+    HANDLE        ConsoleHandle;
+    HANDLE        InputHandle;
+    INPUT_RECORD  RecordStaticBuffer[5];
+    PINPUT_RECORD RecordBufPtr;
+    ULONG         NumRecords;
+    BOOLEAN       Unicode;
+    BOOLEAN       AppendToEnd;
+} CONSOLE_WRITEINPUT, *PCONSOLE_WRITEINPUT;
 
 typedef struct
 {
@@ -541,18 +553,9 @@ typedef struct
 
 typedef struct
 {
-    HANDLE InputHandle;
-    DWORD Length;
-    INPUT_RECORD* InputRecord;
-    BOOL Unicode;
-    BOOL AppendToEnd;
-} CONSOLE_WRITEINPUT, *PCONSOLE_WRITEINPUT;
-
-typedef struct
-{
     HANDLE ConsoleHandle;
     HANDLE InputHandle;
-    DWORD  NumberOfEvents;
+    ULONG  NumberOfEvents;
 } CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
 
 
