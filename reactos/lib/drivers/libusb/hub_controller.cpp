@@ -848,7 +848,9 @@ CHubController::HandleBulkOrInterruptTransfer(
         ASSERT(m_PendingSCEIrp == NULL);
         if (QueryStatusChangeEndpoint(Irp))
         {
-            StatusChangeEndpointCallBack(this);
+            //
+            // We've seen a change already, so return immediately
+            //
             return STATUS_SUCCESS;
         }
 
