@@ -17,6 +17,7 @@ spec2def(stobject.dll stobject.spec)
 add_library(stobject SHARED
     stobject.cpp
     stobject.rc
+    volume.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)
 
 set_module_type(stobject win32dll UNICODE)
@@ -24,12 +25,14 @@ target_link_libraries(stobject uuid wine atlnew)
 
 add_importlibs(stobject
     advapi32
-	ole32
+    winmm
+    ole32
+    shlwapi
+    shell32
+    comctl32
+    msvcrt
     gdi32
     user32
-    comctl32
-    shlwapi
-    msvcrt
     kernel32
     ntdll)
 
