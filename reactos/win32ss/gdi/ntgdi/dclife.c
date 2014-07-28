@@ -318,7 +318,7 @@ DC_vInitDc(
     /* Other stuff */
     pdc->hdcNext = NULL;
     pdc->hdcPrev = NULL;
-    pdc->ipfdDevMax = 0x0000ffff;
+    pdc->ipfdDevMax = 0;
     pdc->ulCopyCount = -1;
     pdc->ptlDoBanding.x = 0;
     pdc->ptlDoBanding.y = 0;

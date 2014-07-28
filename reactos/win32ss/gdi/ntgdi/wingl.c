@@ -62,7 +62,19 @@ NtGdiDescribePixelFormat(
     }
 
     if (!pdc->ipfdDevMax)
-        IntGetipfdDevMax(pdc);
+    {
+        if (!IntGetipfdDevMax(pdc))
+        {
+            /* EngSetLastError ? */
+            goto Exit;
+        }
+    }
+
+    if (!ppfd)
+    {
+        Ret = pdc->ipfdDevMax;
+        goto Exit;
+    }
 
     if ((ipfd < 1) || (ipfd > pdc->ipfdDevMax))
     {

@@ -276,11 +276,9 @@ noparent:
 
    Dce->DCXFlags &= ~DCX_DCEDIRTY;
    GdiSelectVisRgn(Dce->hDC, RgnVisible);
-
-   if (VerifyWnd(Window)) // Window maybe dead by this time before finishing the DCE release.
-   {
-      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-   }
+   /* Tell GDI driver */
+   if (Window)
+       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
 
    if (RgnVisible != NULL)
    {
@@ -935,12 +933,6 @@ DceResetActiveDCEs(PWND Window)
 
          DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
          IntGdiSetHookFlags(pDCE->hDC, DCHF_VALIDATEVISRGN);
-
-         if (Window->head.h != pDCE->hwndCurrent)
-         {
-//            IntEngWindowChanged(CurrentWindow, WOC_RGN_CLIENT);
-//            UserDerefObject(CurrentWindow);
-         }
       }
       pLE = pDCE->List.Flink;
       pDCE = CONTAINING_RECORD(pLE, DCE, List);
