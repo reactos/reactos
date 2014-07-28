@@ -322,6 +322,12 @@ typedef struct
 typedef struct
 {
     HANDLE ConsoleHandle;
+    ULONG  NumButtons;
+} CONSOLE_GETMOUSEINFO, *PCONSOLE_GETMOUSEINFO;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
     WORD   Attributes;
 } CONSOLE_SETTEXTATTRIB, *PCONSOLE_SETTEXTATTRIB;
@@ -370,7 +376,8 @@ typedef struct
     DWORD  DesiredAccess;
     BOOL   InheritHandle;
     DWORD  ShareMode;
-    DWORD  ScreenBufferType; /* Type of the screen buffer: CONSOLE_TEXTMODE_BUFFER or CONSOLE_GRAPHICS_BUFFER */
+    /* Type of the screen buffer: CONSOLE_TEXTMODE_BUFFER or CONSOLE_GRAPHICS_BUFFER */
+    DWORD  ScreenBufferType;
     /*
      * This structure holds the initialization information
      * for graphics screen buffers.
@@ -656,20 +663,26 @@ typedef struct
 
 typedef struct
 {
-    ULONG  SourceLength;
-    ULONG  TargetLength; // Also used for storing the number of bytes written.
-    ULONG  ExeLength;
-    LPWSTR Source;
-    LPWSTR Target;
-    LPWSTR Exe;
+    HANDLE  ConsoleHandle;
+    USHORT  SourceLength;
+    USHORT  TargetLength; // Also used for storing the number of bytes written.
+    USHORT  ExeLength;
+    PVOID   Source;
+    PVOID   Target;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_ADDGETALIAS, *PCONSOLE_ADDGETALIAS;
 
 typedef struct
 {
-    DWORD ExeLength;
-    DWORD AliasesBufferLength;
-    LPWSTR ExeName;
-    LPWSTR AliasesBuffer;
+    HANDLE  ConsoleHandle;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
+    ULONG   AliasesBufferLength;
+    PVOID   AliasesBuffer;
 } CONSOLE_GETALLALIASES, *PCONSOLE_GETALLALIASES;
 
 typedef struct
@@ -704,7 +717,6 @@ typedef struct
     HANDLE  ConsoleHandle;
     ULONG   HistoryLength;
     PVOID   History;
-    // UNICODE_STRING ExeName;
     USHORT  ExeLength;
     PVOID   ExeName;
     BOOLEAN Unicode;
@@ -715,7 +727,6 @@ typedef struct
 {
     HANDLE  ConsoleHandle;
     ULONG   HistoryLength;
-    // UNICODE_STRING ExeName;
     USHORT  ExeLength;
     PVOID   ExeName;
     BOOLEAN Unicode;
@@ -725,7 +736,6 @@ typedef struct
 typedef struct
 {
     HANDLE  ConsoleHandle;
-    // UNICODE_STRING ExeName;
     USHORT  ExeLength;
     PVOID   ExeName;
     BOOLEAN Unicode;
@@ -743,7 +753,6 @@ typedef struct
 {
     HANDLE  ConsoleHandle;
     ULONG   NumCommands;
-    // UNICODE_STRING ExeName;
     USHORT  ExeLength;
     PVOID   ExeName;
     BOOLEAN Unicode;
@@ -814,11 +823,12 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETHANDLEINFO GetHandleInfoRequest;
         CONSOLE_SETHANDLEINFO SetHandleInfoRequest;
 
-        /* Cursor */
+        /* Cursor & Mouse */
         CONSOLE_SHOWCURSOR ShowCursorRequest;
         CONSOLE_SETCURSOR SetCursorRequest;
         CONSOLE_GETSETCURSORINFO CursorInfoRequest;
         CONSOLE_SETCURSORPOSITION SetCursorPositionRequest;
+        CONSOLE_GETMOUSEINFO GetMouseInfoRequest;
 
         /* Screen-buffer */
         CONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest;

@@ -389,10 +389,11 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
     ASSERT( (InputRecord != NULL && NumEventsToWrite >  0) ||
             (InputRecord == NULL && NumEventsToWrite == 0) );
 
-    // Do NOT do that !! Use the existing number of events already written, if any...
     // if (NumEventsWritten) *NumEventsWritten = 0;
 
-    for (i = (NumEventsWritten ? *NumEventsWritten : 0); i < NumEventsToWrite && NT_SUCCESS(Status); ++i)
+    /// Status = ConioAddInputEvents(Console, InputRecord, NumEventsToWrite, NumEventsWritten, AppendToEnd);
+
+    for (i = 0; i < NumEventsToWrite && NT_SUCCESS(Status); ++i)
     {
         if (!Unicode)
         {

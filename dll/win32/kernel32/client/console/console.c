@@ -1392,15 +1392,29 @@ SetConsoleCursorInfo(HANDLE hConsoleOutput,
 /*--------------------------------------------------------------
  *     GetNumberOfConsoleMouseButtons
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetNumberOfConsoleMouseButtons(LPDWORD lpNumberOfMouseButtons)
 {
-    DPRINT1("GetNumberOfConsoleMouseButtons(0x%p) UNIMPLEMENTED!\n", lpNumberOfMouseButtons);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETMOUSEINFO GetMouseInfoRequest = &ApiMessage.Data.GetMouseInfoRequest;
+
+    GetMouseInfoRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetMouseInfo),
+                        sizeof(*GetMouseInfoRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    *lpNumberOfMouseButtons = GetMouseInfoRequest->NumButtons;
+    return TRUE;
 }
 
 
@@ -2525,14 +2539,6 @@ GetConsoleCursorMode(HANDLE hConsole, PBOOL pUnknown1, PBOOL pUnknown2)
 
 BOOL
 WINAPI
-GetConsoleNlsMode(HANDLE hConsole, LPDWORD lpMode)
-{
-    STUB;
-    return FALSE;
-}
-
-BOOL
-WINAPI
 SetConsoleCursorMode(HANDLE hConsole, BOOL Unknown1, BOOL Unknown2)
 {
     STUB;
@@ -2541,7 +2547,7 @@ SetConsoleCursorMode(HANDLE hConsole, BOOL Unknown1, BOOL Unknown2)
 
 BOOL
 WINAPI
-SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
+GetConsoleNlsMode(HANDLE hConsole, LPDWORD lpMode)
 {
     STUB;
     return FALSE;
@@ -2550,6 +2556,14 @@ SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknow
 BOOL
 WINAPI
 SetConsoleNlsMode(HANDLE hConsole, DWORD dwMode)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
 {
     STUB;
     return FALSE;

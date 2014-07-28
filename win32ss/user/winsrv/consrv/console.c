@@ -977,8 +977,18 @@ CSR_API(SrvConsoleNotifyLastClose)
 
 CSR_API(SrvGetConsoleMouseInfo)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCONSOLE_GETMOUSEINFO GetMouseInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetMouseInfoRequest;
+    PCONSOLE Console;
+
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Just retrieve the number of buttons of the mouse attached to this console */
+    GetMouseInfoRequest->NumButtons = GetSystemMetrics(SM_CMOUSEBUTTONS);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvSetConsoleKeyShortcuts)
