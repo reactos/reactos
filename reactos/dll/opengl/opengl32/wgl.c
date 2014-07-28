@@ -14,6 +14,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(wgl);
 static CRITICAL_SECTION dc_data_cs = {NULL, -1, 0, 0, 0, 0};
 static struct wgl_dc_data* dc_data_list = NULL;
 
+LIST_ENTRY ContextListHead;
+
 /* FIXME: suboptimal */
 static
 struct wgl_dc_data*
@@ -139,7 +141,11 @@ INT WINAPI wglDescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDES
     /* Query ICD if needed */
     if(format <= dc_data->nb_icd_formats)
     {
-        if(!dc_data->icd_data->DrvDescribePixelFormat(hdc, format, size, descr))
+        struct ICD_Data* icd_data = dc_data->icd_data;
+        /* SetPixelFormat may have NULLified this */
+        if (!icd_data)
+            icd_data = IntGetIcdData(hdc);
+        if(!icd_data->DrvDescribePixelFormat(hdc, format, size, descr))
         {
             ret = 0;
         }
@@ -174,7 +180,7 @@ INT WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR* ppfd)
     if (!count) return 0;
 
     best_format = 0;
-    best.dwFlags = 0;
+    best.dwFlags = PFD_GENERIC_FORMAT;
     best.cAlphaBits = -1;
     best.cColorBits = -1;
     best.cDepthBits = -1;
@@ -329,6 +335,9 @@ INT WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR* ppfd)
         continue;
 
     found:
+        /* Prefer HW accelerated formats */
+        if ((format.dwFlags & PFD_GENERIC_FORMAT) && !(best.dwFlags & PFD_GENERIC_FORMAT))
+            continue;
         best_format = i;
         best = format;
         bestDBuffer = format.dwFlags & PFD_DOUBLEBUFFER;
@@ -422,6 +431,9 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     context->pixelformat = dc_data->pixelformat;
     context->thread_id = 0;
     
+    /* Insert into the list */
+    InsertTailList(&ContextListHead, &context->ListEntry);
+
     context->magic = 'GLRC';
     TRACE("Success!\n");
     return (HGLRC)context;
@@ -525,6 +537,7 @@ BOOL WINAPI wglDeleteContext(HGLRC hglrc)
         sw_DeleteContext(context->dhglrc);
     
     context->magic = 0;
+    RemoveEntryList(&context->ListEntry);
     HeapFree(GetProcessHeap(), 0, context);
     
     return TRUE;
@@ -901,4 +914,19 @@ BOOL WINAPI wglSwapLayerBuffers(HDC hdc, UINT fuPlanes)
 DWORD WINAPI wglSwapMultipleBuffers(UINT count, CONST WGLSWAP * toSwap)
 {
     return 0;
+}
+
+/* Clean up on DLL unload */
+void
+IntDeleteAllContexts(void)
+{
+    struct wgl_context* context;
+    LIST_ENTRY* Entry = ContextListHead.Flink;
+
+    while (Entry != &ContextListHead)
+    {
+        context = CONTAINING_RECORD(Entry, struct wgl_context, ListEntry);
+        wglDeleteContext((HGLRC)context);
+        Entry = ContextListHead.Flink;
+    }
 }
