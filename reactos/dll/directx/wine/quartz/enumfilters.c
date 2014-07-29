@@ -113,6 +113,7 @@ static ULONG WINAPI IEnumFiltersImpl_Release(IEnumFilters * iface)
     if (!refCount)
     {
         IGraphVersion_Release(This->pVersionSource);
+        CoTaskMemFree(This);
         return 0;
     }
     else

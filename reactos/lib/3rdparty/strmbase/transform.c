@@ -295,7 +295,7 @@ HRESULT WINAPI TransformFilterImpl_QueryInterface(IBaseFilter * iface, REFIID ri
 ULONG WINAPI TransformFilterImpl_Release(IBaseFilter * iface)
 {
     TransformFilter *This = impl_from_IBaseFilter(iface);
-    ULONG refCount = BaseFilterImpl_Release(iface);
+    ULONG refCount = InterlockedDecrement(&This->filter.refCount);
 
     TRACE("(%p/%p)->() Release from %d\n", This, iface, refCount + 1);
 
@@ -325,6 +325,7 @@ ULONG WINAPI TransformFilterImpl_Release(IBaseFilter * iface)
         FreeMediaType(&This->pmt);
         QualityControlImpl_Destroy(This->qcimpl);
         IUnknown_Release(This->seekthru_unk);
+        BaseFilter_Destroy(&This->filter);
         CoTaskMemFree(This);
 
         return 0;
