@@ -464,7 +464,7 @@ typedef union _CODE_ELEMENT
     CHAR  AsciiChar;
     WCHAR UnicodeChar;
     WORD  Attribute;
-} CODE_ELEMENT, *PCODE_ELEMENT;
+} CODE_ELEMENT;
 
 typedef struct
 {
@@ -473,14 +473,15 @@ typedef struct
     COORD  Coord;
 
     CODE_TYPE CodeType;
-    CHAR      CodeStaticBuffer[80];
-    union
-    {
-        PVOID  pCode;
-        PCHAR  AsciiChar;
-        PWCHAR UnicodeChar;
-        PWORD  Attribute;
-    } pCode;    // Either a pointer to a character or to an attribute.
+    CHAR      CodeStaticBuffer[80]; // == 40 * sizeof(CODE_ELEMENT)
+    PVOID     pCode; // Either a pointer to a character or to an attribute.
+    // union
+    // {
+        // PVOID  pCode;
+        // PCHAR  AsciiChar;
+        // PWCHAR UnicodeChar;
+        // PWORD  Attribute;
+    // } pCode;    // Either a pointer to a character or to an attribute.
 
     ULONG NumCodes;
 } CONSOLE_READOUTPUTCODE , *PCONSOLE_READOUTPUTCODE,

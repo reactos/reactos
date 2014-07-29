@@ -913,15 +913,15 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     switch (CodeType)
     {
         case CODE_ASCII:
-            CodeSize = sizeof(CHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
             break;
 
         case CODE_UNICODE:
-            CodeSize = sizeof(WCHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
             break;
 
         case CODE_ATTRIBUTE:
-            CodeSize = sizeof(WORD);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
             break;
 
         default:
@@ -982,21 +982,6 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
         }
     }
 
-    // switch (CodeType)
-    // {
-        // case CODE_UNICODE:
-            // *(PWCHAR)ReadBuffer = 0;
-            // break;
-
-        // case CODE_ASCII:
-            // *(PCHAR)ReadBuffer = 0;
-            // break;
-
-        // case CODE_ATTRIBUTE:
-            // *(PWORD)ReadBuffer = 0;
-            // break;
-    // }
-
     // EndCoord->X = Xpos;
     // EndCoord->Y = (Ypos - Buffer->VirtualY + Buffer->ScreenBufferSize.Y) % Buffer->ScreenBufferSize.Y;
 
@@ -1036,15 +1021,15 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     switch (CodeType)
     {
         case CODE_ASCII:
-            CodeSize = sizeof(CHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
             break;
 
         case CODE_UNICODE:
-            CodeSize = sizeof(WCHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
             break;
 
         case CODE_ATTRIBUTE:
-            CodeSize = sizeof(WORD);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
             break;
 
         default:

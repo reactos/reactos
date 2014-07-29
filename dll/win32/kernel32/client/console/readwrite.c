@@ -319,6 +319,14 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
 
     DPRINT("IntReadConsoleOutputCode\n");
 
+    if ( (CodeType != CODE_ASCII    ) &&
+         (CodeType != CODE_UNICODE  ) &&
+         (CodeType != CODE_ATTRIBUTE) )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /* Set up the data to send to the Console Server */
     ReadOutputCodeRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     ReadOutputCodeRequest->OutputHandle  = hConsoleOutput;
@@ -330,20 +338,16 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
     switch (CodeType)
     {
         case CODE_ASCII:
-            CodeSize = sizeof(CHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
             break;
 
         case CODE_UNICODE:
-            CodeSize = sizeof(WCHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
             break;
 
         case CODE_ATTRIBUTE:
-            CodeSize = sizeof(WORD);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
             break;
-
-        default:
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
     }
     SizeBytes = nLength * CodeSize;
 
@@ -355,7 +359,7 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
      */
     if (SizeBytes <= sizeof(ReadOutputCodeRequest->CodeStaticBuffer))
     {
-        ReadOutputCodeRequest->pCode.pCode = ReadOutputCodeRequest->CodeStaticBuffer;
+        ReadOutputCodeRequest->pCode = ReadOutputCodeRequest->CodeStaticBuffer;
         // CaptureBuffer = NULL;
     }
     else
@@ -372,7 +376,7 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
         /* Allocate space in the Buffer */
         CsrAllocateMessagePointer(CaptureBuffer,
                                   SizeBytes,
-                                  (PVOID*)&ReadOutputCodeRequest->pCode.pCode);
+                                  (PVOID*)&ReadOutputCodeRequest->pCode);
     }
 
     /* Call the server */
@@ -386,7 +390,7 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
     {
         DWORD NumCodes = ReadOutputCodeRequest->NumCodes;
         RtlCopyMemory(pCode,
-                      ReadOutputCodeRequest->pCode.pCode,
+                      ReadOutputCodeRequest->pCode,
                       NumCodes * CodeSize);
 
         if (lpNumberOfCodesRead != NULL)
@@ -675,6 +679,14 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
         return FALSE;
     }
 
+    if ( (CodeType != CODE_ASCII    ) &&
+         (CodeType != CODE_UNICODE  ) &&
+         (CodeType != CODE_ATTRIBUTE) )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     DPRINT("IntWriteConsoleOutputCode\n");
 
     /* Set up the data to send to the Console Server */
@@ -688,20 +700,16 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
     switch (CodeType)
     {
         case CODE_ASCII:
-            CodeSize = sizeof(CHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
             break;
 
         case CODE_UNICODE:
-            CodeSize = sizeof(WCHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
             break;
 
         case CODE_ATTRIBUTE:
-            CodeSize = sizeof(WORD);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
             break;
-
-        default:
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
     }
     SizeBytes = nLength * CodeSize;
 
@@ -713,10 +721,10 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
      */
     if (SizeBytes <= sizeof(WriteOutputCodeRequest->CodeStaticBuffer))
     {
-        WriteOutputCodeRequest->pCode.pCode = WriteOutputCodeRequest->CodeStaticBuffer;
+        WriteOutputCodeRequest->pCode = WriteOutputCodeRequest->CodeStaticBuffer;
         // CaptureBuffer = NULL;
 
-        RtlCopyMemory(WriteOutputCodeRequest->pCode.pCode,
+        RtlCopyMemory(WriteOutputCodeRequest->pCode,
                       pCode,
                       SizeBytes);
     }
@@ -735,7 +743,7 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
         CsrCaptureMessageBuffer(CaptureBuffer,
                                 (PVOID)pCode,
                                 SizeBytes,
-                                (PVOID*)&WriteOutputCodeRequest->pCode.pCode);
+                                (PVOID*)&WriteOutputCodeRequest->pCode);
     }
 
     /* Call the server */
@@ -778,6 +786,8 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &ApiMessage.Data.FillOutputRequest;
+
+    DPRINT("IntFillConsoleOutputCode\n");
 
     if ( (CodeType != CODE_ASCII    ) &&
          (CodeType != CODE_UNICODE  ) &&

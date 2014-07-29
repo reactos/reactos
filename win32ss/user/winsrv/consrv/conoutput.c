@@ -540,15 +540,15 @@ CSR_API(SrvReadConsoleOutputString)
     switch (ReadOutputCodeRequest->CodeType)
     {
         case CODE_ASCII:
-            CodeSize = sizeof(CHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
             break;
 
         case CODE_UNICODE:
-            CodeSize = sizeof(WCHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
             break;
 
         case CODE_ATTRIBUTE:
-            CodeSize = sizeof(WORD);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
             break;
 
         default:
@@ -567,20 +567,20 @@ CSR_API(SrvReadConsoleOutputString)
          * Adjust the internal pointer, because its old value points to
          * the static buffer in the original ApiMessage structure.
          */
-        // ReadOutputCodeRequest->pCode.pCode = ReadOutputCodeRequest->CodeStaticBuffer;
+        // ReadOutputCodeRequest->pCode = ReadOutputCodeRequest->CodeStaticBuffer;
         pCode = ReadOutputCodeRequest->CodeStaticBuffer;
     }
     else
     {
         if (!CsrValidateMessageBuffer(ApiMessage,
-                                      (PVOID*)&ReadOutputCodeRequest->pCode.pCode,
+                                      (PVOID*)&ReadOutputCodeRequest->pCode,
                                       ReadOutputCodeRequest->NumCodes,
                                       CodeSize))
         {
             return STATUS_INVALID_PARAMETER;
         }
 
-        pCode = ReadOutputCodeRequest->pCode.pCode;
+        pCode = ReadOutputCodeRequest->pCode;
     }
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -624,15 +624,15 @@ CSR_API(SrvWriteConsoleOutputString)
     switch (WriteOutputCodeRequest->CodeType)
     {
         case CODE_ASCII:
-            CodeSize = sizeof(CHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
             break;
 
         case CODE_UNICODE:
-            CodeSize = sizeof(WCHAR);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
             break;
 
         case CODE_ATTRIBUTE:
-            CodeSize = sizeof(WORD);
+            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
             break;
 
         default:
@@ -651,20 +651,20 @@ CSR_API(SrvWriteConsoleOutputString)
          * Adjust the internal pointer, because its old value points to
          * the static buffer in the original ApiMessage structure.
          */
-        // WriteOutputCodeRequest->pCode.pCode = WriteOutputCodeRequest->CodeStaticBuffer;
+        // WriteOutputCodeRequest->pCode = WriteOutputCodeRequest->CodeStaticBuffer;
         pCode = WriteOutputCodeRequest->CodeStaticBuffer;
     }
     else
     {
         if (!CsrValidateMessageBuffer(ApiMessage,
-                                      (PVOID*)&WriteOutputCodeRequest->pCode.pCode,
+                                      (PVOID*)&WriteOutputCodeRequest->pCode,
                                       WriteOutputCodeRequest->NumCodes,
                                       CodeSize))
         {
             return STATUS_INVALID_PARAMETER;
         }
 
-        pCode = WriteOutputCodeRequest->pCode.pCode;
+        pCode = WriteOutputCodeRequest->pCode;
     }
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
