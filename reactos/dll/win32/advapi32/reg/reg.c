@@ -3903,7 +3903,7 @@ RegQueryInfoKeyW(HKEY hKey,
                                        NULL,
                                        0,
                                        lpcbSecurityDescriptor);
-        if (!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
         {
             if (lpClass != NULL)
             {
