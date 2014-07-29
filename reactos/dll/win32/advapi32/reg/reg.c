@@ -3168,13 +3168,11 @@ RegGetKeySecurity(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-#if 0
     Status = NtQuerySecurityObject(KeyHandle,
                                    SecurityInformation,
                                    pSecurityDescriptor,
                                    *lpcbSecurityDescriptor,
                                    lpcbSecurityDescriptor);
-#endif
 
     ClosePredefKey(KeyHandle);
 
@@ -3896,7 +3894,6 @@ RegQueryInfoKeyW(HKEY hKey,
         *lpcbMaxValueLen = FullInfo->MaxValueDataLen;
     }
 
-#if 0
     if (lpcbSecurityDescriptor != NULL)
     {
         Status = NtQuerySecurityObject(KeyHandle,
@@ -3919,7 +3916,6 @@ RegQueryInfoKeyW(HKEY hKey,
             goto Cleanup;
         }
     }
-#endif
 
     if (lpftLastWriteTime != NULL)
     {
