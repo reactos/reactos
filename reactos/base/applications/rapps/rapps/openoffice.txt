@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.0
 CDPath = none
 
 [Section.0407]
-Description = DIE Open Source Office Suite. (FIXME)
+Description = DIE Open Source Office Suite.
 Size = 154.88 MB
 URLSite = http://www.openoffice.org/de/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.0/binaries/de/Apache_OpenOffice_4.1.0_Win_x86_install_de.exe
@@ -37,7 +37,7 @@ URLSite = http://www.openoffice.org/it/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.0/binaries/it/Apache_OpenOffice_4.1.0_Win_x86_install_it.exe
 
 [Section.0413]
-Description = Open-bron Office Pakket. (FIXME)
+Description = Open-bron Office Pakket.
 Size = 132.11 MB
 URLSite = http://www.openoffice.org/nl/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.0/binaries/nl/Apache_OpenOffice_4.1.0_Win_x86_install_nl.exe
@@ -65,7 +65,7 @@ Size = 136.79 MB
 URLSite = http://www.openoffice.org/ua/
 
 [Section.0813]
-Description = Open-bron Office Pakket. (FIXME)
+Description = Open-bron Office Pakket.
 Size = 132.11 MB
 URLSite = http://www.openoffice.org/nl/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.0/binaries/nl/Apache_OpenOffice_4.1.0_Win_x86_install_nl.exe
