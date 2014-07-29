@@ -16,10 +16,18 @@
 
 /* GLOBALS ********************************************************************/
 
+/*
+ * From MSDN:
+ * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
+ *  If they are the same, the function fails, and GetLastError returns
+ *  ERROR_INVALID_PARAMETER."
+ */
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
+    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
     WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
 #define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
     MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
 
 typedef struct ConsoleInput_t

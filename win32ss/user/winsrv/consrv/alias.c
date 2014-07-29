@@ -70,6 +70,14 @@ ConvertInputUnicodeToAnsi(PCONSOLE Console,
 {
     ASSERT(Source && Target && TargetLength);
 
+    /*
+     * From MSDN:
+     * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
+     *  If they are the same, the function fails, and GetLastError returns
+     *  ERROR_INVALID_PARAMETER."
+     */
+    ASSERT((ULONG_PTR)Source != (ULONG_PTR)Target);
+
     /* Use the console input CP for the conversion */
     // *TargetLength = WideCharToMultiByte(Console->InputCodePage, 0,
                                         // Source, SourceLength,
