@@ -892,7 +892,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               IN ULONG NumCodesToRead,
                               IN PCOORD ReadCoord,
                               // OUT PCOORD EndCoord,
-                              OUT PULONG CodesRead)
+                              OUT PULONG NumCodesRead OPTIONAL)
 {
     SHORT Xpos, Ypos;
     PVOID ReadBuffer;
@@ -900,8 +900,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     ULONG CodeSize;
     PCHAR_INFO Ptr;
 
-    if (Console == NULL || Buffer == NULL ||
-        ReadCoord == NULL || /* EndCoord == NULL || */ CodesRead == NULL)
+    if (Console == NULL || Buffer == NULL || ReadCoord == NULL /* || EndCoord == NULL */)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -909,6 +908,8 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     /* Validity checks */
     ASSERT(Console == Buffer->Header.Console);
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCodesToRead == 0));
+
+    if (NumCodesRead) *NumCodesRead = 0;
 
     switch (CodeType)
     {
@@ -985,7 +986,8 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     // EndCoord->X = Xpos;
     // EndCoord->Y = (Ypos - Buffer->VirtualY + Buffer->ScreenBufferSize.Y) % Buffer->ScreenBufferSize.Y;
 
-    *CodesRead = (ULONG)((ULONG_PTR)ReadBuffer - (ULONG_PTR)StringBuffer) / CodeSize;
+    if (NumCodesRead)
+        *NumCodesRead = (ULONG)((ULONG_PTR)ReadBuffer - (ULONG_PTR)StringBuffer) / CodeSize;
     // <= NumCodesToRead
 
     return STATUS_SUCCESS;
@@ -997,9 +999,9 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
                                IN CODE_TYPE CodeType,
                                IN PVOID StringBuffer,
                                IN ULONG NumCodesToWrite,
-                               IN PCOORD WriteCoord /*,
-                               OUT PCOORD EndCoord,
-                               OUT PULONG CodesWritten */)
+                               IN PCOORD WriteCoord,
+                               // OUT PCOORD EndCoord,
+                               OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID WriteBuffer = NULL;
@@ -1008,8 +1010,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     ULONG CodeSize;
     PCHAR_INFO Ptr;
 
-    if (Console == NULL || Buffer == NULL ||
-        WriteCoord == NULL /* || EndCoord == NULL || CodesWritten == NULL */)
+    if (Console == NULL || Buffer == NULL || WriteCoord == NULL /* || EndCoord == NULL */)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1017,6 +1018,8 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     /* Validity checks */
     ASSERT(Console == Buffer->Header.Console);
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCodesToWrite == 0));
+
+    if (NumCodesWritten) *NumCodesWritten = 0;
 
     switch (CodeType)
     {
@@ -1114,7 +1117,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
 Cleanup:
     if (tmpString) RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
 
-    // CodesWritten = Written;
+    // if (NumCodesWritten) *NumCodesWritten = Written;
     return Status;
 }
 
@@ -1124,19 +1127,21 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN CODE_TYPE CodeType,
                         IN CODE_ELEMENT Code,
                         IN ULONG NumCodesToWrite,
-                        IN PCOORD WriteCoord /*,
-                        OUT PULONG CodesWritten */)
+                        IN PCOORD WriteCoord,
+                        OUT PULONG NumCodesWritten OPTIONAL)
 {
     DWORD X, Y, Length; // , Written = 0;
     PCHAR_INFO Ptr;
 
-    if (Console == NULL || Buffer == NULL || WriteCoord == NULL /* || CodesWritten == NULL */)
+    if (Console == NULL || Buffer == NULL || WriteCoord == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
+
+    if (NumCodesWritten) *NumCodesWritten = 0;
 
     if (CodeType == CODE_ASCII)
     {
@@ -1189,7 +1194,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
         TermDrawRegion(Console, &UpdateRect);
     }
 
-    // CodesWritten = Written; // NumCodesToWrite;
+    // if (NumCodesWritten) *NumCodesWritten = Written; // NumCodesToWrite;
     return STATUS_SUCCESS;
 }
 

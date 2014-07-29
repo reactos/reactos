@@ -525,7 +525,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               IN ULONG NumCodesToRead,
                               IN PCOORD ReadCoord,
                               // OUT PCOORD EndCoord,
-                              OUT PULONG CodesRead);
+                              OUT PULONG NumCodesRead OPTIONAL);
 CSR_API(SrvReadConsoleOutputString)
 {
     NTSTATUS Status;
@@ -607,9 +607,9 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
                                IN CODE_TYPE CodeType,
                                IN PVOID StringBuffer,
                                IN ULONG NumCodesToWrite,
-                               IN PCOORD WriteCoord /*,
-                               OUT PCOORD EndCoord,
-                               OUT PULONG CodesWritten */);
+                               IN PCOORD WriteCoord,
+                               // OUT PCOORD EndCoord,
+                               OUT PULONG NumCodesWritten OPTIONAL);
 CSR_API(SrvWriteConsoleOutputString)
 {
     NTSTATUS Status;
@@ -677,11 +677,9 @@ CSR_API(SrvWriteConsoleOutputString)
                                             WriteOutputCodeRequest->CodeType,
                                             pCode,
                                             WriteOutputCodeRequest->NumCodes,
-                                            &WriteOutputCodeRequest->Coord /*,
-                                            &WriteOutputCodeRequest->EndCoord,
-                                            &WriteOutputCodeRequest->NrCharactersWritten */);
-
-    // WriteOutputCodeRequest->NrCharactersWritten = Written;
+                                            &WriteOutputCodeRequest->Coord,
+                                            // &WriteOutputCodeRequest->EndCoord,
+                                            &WriteOutputCodeRequest->NumCodes);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;
@@ -693,8 +691,8 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN CODE_TYPE CodeType,
                         IN CODE_ELEMENT Code,
                         IN ULONG NumCodesToWrite,
-                        IN PCOORD WriteCoord /*,
-                        OUT PULONG CodesWritten */);
+                        IN PCOORD WriteCoord,
+                        OUT PULONG NumCodesWritten OPTIONAL);
 CSR_API(SrvFillConsoleOutput)
 {
     NTSTATUS Status;
@@ -721,10 +719,8 @@ CSR_API(SrvFillConsoleOutput)
                                      CodeType,
                                      FillOutputRequest->Code,
                                      FillOutputRequest->NumCodes,
-                                     &FillOutputRequest->WriteCoord /*,
-                                     &FillOutputRequest->NrCharactersWritten */);
-
-    // FillOutputRequest->NrCharactersWritten = Written;
+                                     &FillOutputRequest->WriteCoord,
+                                     &FillOutputRequest->NumCodes);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;
