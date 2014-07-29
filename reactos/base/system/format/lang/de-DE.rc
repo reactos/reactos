@@ -11,7 +11,7 @@ BEGIN
                    empfohlen, grundsätzlich Standardeinstellungen zu verwenden!\n\
                    NTFS unterstützt 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT unterstützt 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                   NTFS-Kompression wird für Blockgrössen über 4096 nicht\n\
+                   NTFS-Kompression wird für Blockgrößen über 4096 nicht\n\
                    unterstützt.\n\
   -C               Auf dem neuen Datenträger erstellte Dateien werden\n\
                    standardmäßig komprimiert.\n\n"
@@ -35,8 +35,8 @@ BEGIN
     STRING_CREATE_FSYS "Erzeuge Dateisystem-Strukturen.\n"
     STRING_FMT_COMPLETE "Formatierung abgeschlossen.\n"
     STRING_VOL_COMPRESS "Medium unterstützt keine Kompression.\n"
-    STRING_ENTER_LABEL "Datenträgerbezeichnung (11 Zeichen, Enter für keine)? "
+    STRING_ENTER_LABEL "Datenträgerbezeichnung (11 Zeichen, Eingabetaste für keine)? "
     STRING_NO_LABEL "Konnte Datenträger nicht benennen"
-    STRING_FREE_SPACE "\n%I64d Byte Speicherkapazität.\n%I64d bytes freier Speicher.\n"
+    STRING_FREE_SPACE "\n%I64d Bytes Speicherkapazität.\n%I64d Bytes freier Speicher.\n"
     STRING_SERIAL_NUMBER "\nDatenträger-Seriennummer ist %04X-%04X\n"
 END
