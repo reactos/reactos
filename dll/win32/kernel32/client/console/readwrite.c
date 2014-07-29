@@ -118,29 +118,30 @@ IntReadConsole(HANDLE hConsoleInput,
 
 static
 BOOL
-IntGetConsoleInput(HANDLE hConsoleInput,
-                   PINPUT_RECORD lpBuffer,
-                   DWORD nLength,
-                   LPDWORD lpNumberOfEventsRead,
-                   WORD wFlags,
-                   BOOLEAN bUnicode)
+IntGetConsoleInput(IN HANDLE hConsoleInput,
+                   OUT PINPUT_RECORD lpBuffer,
+                   IN DWORD nLength,
+                   OUT LPDWORD lpNumberOfEventsRead,
+                   IN WORD wFlags,
+                   IN BOOLEAN bUnicode)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETINPUT GetInputRequest = &ApiMessage.Data.GetInputRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
 
-    if (lpBuffer == NULL)
-    {
-        SetLastError(ERROR_INVALID_ACCESS);
-        return FALSE;
-    }
-
     if (!IsConsoleHandle(hConsoleInput))
     {
-        SetLastError(ERROR_INVALID_HANDLE);
-
-        if (lpNumberOfEventsRead != NULL)
+        _SEH2_TRY
+        {
             *lpNumberOfEventsRead = 0;
+            SetLastError(ERROR_INVALID_HANDLE);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastError(ERROR_INVALID_ACCESS);
+        }
+        _SEH2_END;
 
         return FALSE;
     }
@@ -191,33 +192,37 @@ IntGetConsoleInput(HANDLE hConsoleInput,
                         sizeof(*GetInputRequest));
 
     /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
+    Success = NT_SUCCESS(ApiMessage.Status);
+
+    /* Retrieve the results */
+    _SEH2_TRY
     {
-        /* Return the number of events read */
         DPRINT("Events read: %lx\n", GetInputRequest->NumRecords);
+        *lpNumberOfEventsRead = GetInputRequest->NumRecords;
 
-        if (lpNumberOfEventsRead != NULL)
-            *lpNumberOfEventsRead = GetInputRequest->NumRecords;
-
-        /* Copy into the buffer */
-        RtlCopyMemory(lpBuffer,
-                      GetInputRequest->RecordBufPtr,
-                      GetInputRequest->NumRecords * sizeof(INPUT_RECORD));
+        if (Success)
+        {
+            RtlCopyMemory(lpBuffer,
+                          GetInputRequest->RecordBufPtr,
+                          GetInputRequest->NumRecords * sizeof(INPUT_RECORD));
+        }
+        else
+        {
+            BaseSetLastNTError(ApiMessage.Status);
+        }
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (lpNumberOfEventsRead != NULL)
-            *lpNumberOfEventsRead = 0;
-
-        /* Error out */
-        BaseSetLastNTError(ApiMessage.Status);
+        SetLastError(ERROR_INVALID_ACCESS);
+        Success = FALSE;
     }
+    _SEH2_END;
 
     /* Release the capture buffer if needed */
     if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(ApiMessage.Status);
+    /* Return success status */
+    return Success;
 }
 
 
@@ -305,13 +310,14 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
 
 static
 BOOL
-IntReadConsoleOutputCode(HANDLE hConsoleOutput,
-                         CODE_TYPE CodeType,
-                         PVOID pCode,
-                         DWORD nLength,
-                         COORD dwReadCoord,
-                         LPDWORD lpNumberOfCodesRead)
+IntReadConsoleOutputCode(IN HANDLE hConsoleOutput,
+                         IN CODE_TYPE CodeType,
+                         OUT PVOID pCode,
+                         IN DWORD nLength,
+                         IN COORD dwReadCoord,
+                         OUT LPDWORD lpNumberOfCodesRead)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &ApiMessage.Data.ReadOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
@@ -386,30 +392,36 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
                         sizeof(*ReadOutputCodeRequest));
 
     /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
-    {
-        DWORD NumCodes = ReadOutputCodeRequest->NumCodes;
-        RtlCopyMemory(pCode,
-                      ReadOutputCodeRequest->pCode,
-                      NumCodes * CodeSize);
+    Success = NT_SUCCESS(ApiMessage.Status);
 
-        if (lpNumberOfCodesRead != NULL)
-            *lpNumberOfCodesRead = NumCodes;
-    }
-    else
+    /* Retrieve the results */
+    _SEH2_TRY
     {
-        if (lpNumberOfCodesRead != NULL)
-            *lpNumberOfCodesRead = 0;
+        *lpNumberOfCodesRead = ReadOutputCodeRequest->NumCodes;
 
-        /* Error out */
-        BaseSetLastNTError(ApiMessage.Status);
+        if (Success)
+        {
+            RtlCopyMemory(pCode,
+                          ReadOutputCodeRequest->pCode,
+                          ReadOutputCodeRequest->NumCodes * CodeSize);
+        }
+        else
+        {
+            BaseSetLastNTError(ApiMessage.Status);
+        }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        Success = FALSE;
+    }
+    _SEH2_END;
 
     /* Release the capture buffer if needed */
     if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(ApiMessage.Status);
+    /* Return success status */
+    return Success;
 }
 
 
@@ -488,22 +500,17 @@ IntWriteConsole(HANDLE hConsoleOutput,
 
 static
 BOOL
-IntWriteConsoleInput(HANDLE hConsoleInput,
-                     PINPUT_RECORD lpBuffer,
-                     DWORD nLength,
-                     LPDWORD lpNumberOfEventsWritten,
-                     BOOLEAN bUnicode,
-                     BOOLEAN bAppendToEnd)
+IntWriteConsoleInput(IN HANDLE hConsoleInput,
+                     IN PINPUT_RECORD lpBuffer,
+                     IN DWORD nLength,
+                     OUT LPDWORD lpNumberOfEventsWritten,
+                     IN BOOLEAN bUnicode,
+                     IN BOOLEAN bAppendToEnd)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEINPUT WriteInputRequest = &ApiMessage.Data.WriteInputRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
-
-    if (lpBuffer == NULL)
-    {
-        SetLastError(ERROR_INVALID_ACCESS);
-        return FALSE;
-    }
 
     DPRINT("IntWriteConsoleInput: %lx %p\n", nLength, lpNumberOfEventsWritten);
 
@@ -525,9 +532,18 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
         WriteInputRequest->RecordBufPtr = WriteInputRequest->RecordStaticBuffer;
         // CaptureBuffer = NULL;
 
-        RtlCopyMemory(WriteInputRequest->RecordBufPtr,
-                      lpBuffer,
-                      nLength * sizeof(INPUT_RECORD));
+        _SEH2_TRY
+        {
+            RtlCopyMemory(WriteInputRequest->RecordBufPtr,
+                          lpBuffer,
+                          nLength * sizeof(INPUT_RECORD));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastError(ERROR_INVALID_ACCESS);
+            return FALSE;
+        }
+        _SEH2_END;
     }
     else
     {
@@ -555,29 +571,30 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsoleInput),
                         sizeof(*WriteInputRequest));
 
+    /* Check for success */
+    Success = NT_SUCCESS(ApiMessage.Status);
+
     /* Release the capture buffer if needed */
     if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
+    /* Retrieve the results */
+    _SEH2_TRY
     {
-        /* Return the number of events written */
         DPRINT("Events written: %lx\n", WriteInputRequest->NumRecords);
+        *lpNumberOfEventsWritten = WriteInputRequest->NumRecords;
 
-        if (lpNumberOfEventsWritten != NULL)
-            *lpNumberOfEventsWritten = WriteInputRequest->NumRecords;
+        if (!Success)
+            BaseSetLastNTError(ApiMessage.Status);
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (lpNumberOfEventsWritten != NULL)
-            *lpNumberOfEventsWritten = 0;
-
-        /* Error out */
-        BaseSetLastNTError(ApiMessage.Status);
+        SetLastError(ERROR_INVALID_ACCESS);
+        Success = FALSE;
     }
+    _SEH2_END;
 
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(ApiMessage.Status);
+    /* Return success status */
+    return Success;
 }
 
 
@@ -661,23 +678,18 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
 
 static
 BOOL
-IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
-                          CODE_TYPE CodeType,
-                          CONST VOID *pCode,
-                          DWORD nLength,
-                          COORD dwWriteCoord,
-                          LPDWORD lpNumberOfCodesWritten)
+IntWriteConsoleOutputCode(IN HANDLE hConsoleOutput,
+                          IN CODE_TYPE CodeType,
+                          IN CONST VOID *pCode,
+                          IN DWORD nLength,
+                          IN COORD dwWriteCoord,
+                          OUT LPDWORD lpNumberOfCodesWritten)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &ApiMessage.Data.WriteOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
     ULONG SizeBytes, CodeSize;
-
-    if (pCode == NULL)
-    {
-        SetLastError(ERROR_INVALID_ACCESS);
-        return FALSE;
-    }
 
     if ( (CodeType != CODE_ASCII    ) &&
          (CodeType != CODE_UNICODE  ) &&
@@ -724,9 +736,18 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
         WriteOutputCodeRequest->pCode = WriteOutputCodeRequest->CodeStaticBuffer;
         // CaptureBuffer = NULL;
 
-        RtlCopyMemory(WriteOutputCodeRequest->pCode,
-                      pCode,
-                      SizeBytes);
+        _SEH2_TRY
+        {
+            RtlCopyMemory(WriteOutputCodeRequest->pCode,
+                          pCode,
+                          SizeBytes);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastError(ERROR_INVALID_ACCESS);
+            return FALSE;
+        }
+        _SEH2_END;
     }
     else
     {
@@ -752,38 +773,42 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsoleOutputString),
                         sizeof(*WriteOutputCodeRequest));
 
+    /* Check for success */
+    Success = NT_SUCCESS(ApiMessage.Status);
+
     /* Release the capture buffer if needed */
     if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
+    /* Retrieve the results */
+    _SEH2_TRY
     {
-        if (lpNumberOfCodesWritten != NULL)
-            *lpNumberOfCodesWritten = WriteOutputCodeRequest->NumCodes;
+        *lpNumberOfCodesWritten = WriteOutputCodeRequest->NumCodes;
+
+        if (!Success)
+            BaseSetLastNTError(ApiMessage.Status);
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (lpNumberOfCodesWritten != NULL)
-            *lpNumberOfCodesWritten = 0;
-
-        /* Error out */
-        BaseSetLastNTError(ApiMessage.Status);
+        SetLastError(ERROR_INVALID_ACCESS);
+        Success = FALSE;
     }
+    _SEH2_END;
 
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(ApiMessage.Status);
+    /* Return success status */
+    return Success;
 }
 
 
 static
 BOOL
-IntFillConsoleOutputCode(HANDLE hConsoleOutput,
-                         CODE_TYPE CodeType,
-                         CODE_ELEMENT Code,
-                         DWORD nLength,
-                         COORD dwWriteCoord,
-                         LPDWORD lpNumberOfCodesWritten)
+IntFillConsoleOutputCode(IN HANDLE hConsoleOutput,
+                         IN CODE_TYPE CodeType,
+                         IN CODE_ELEMENT Code,
+                         IN DWORD nLength,
+                         IN COORD dwWriteCoord,
+                         OUT LPDWORD lpNumberOfCodesWritten)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &ApiMessage.Data.FillOutputRequest;
 
@@ -812,21 +837,25 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
                         sizeof(*FillOutputRequest));
 
     /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
-    {
-        if (lpNumberOfCodesWritten != NULL)
-            *lpNumberOfCodesWritten = FillOutputRequest->NumCodes;
-    }
-    else
-    {
-        if (lpNumberOfCodesWritten != NULL)
-            *lpNumberOfCodesWritten = 0;
+    Success = NT_SUCCESS(ApiMessage.Status);
 
-        BaseSetLastNTError(ApiMessage.Status);
-    }
+    /* Retrieve the results */
+    _SEH2_TRY
+    {
+        *lpNumberOfCodesWritten = FillOutputRequest->NumCodes;
 
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(ApiMessage.Status);
+        if (!Success)
+            BaseSetLastNTError(ApiMessage.Status);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        Success = FALSE;
+    }
+    _SEH2_END;
+
+    /* Return success status */
+    return Success;
 }
 
 
@@ -887,10 +916,10 @@ ReadConsoleA(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-PeekConsoleInputW(HANDLE hConsoleInput,
-                  PINPUT_RECORD lpBuffer,
-                  DWORD nLength,
-                  LPDWORD lpNumberOfEventsRead)
+PeekConsoleInputW(IN HANDLE hConsoleInput,
+                  OUT PINPUT_RECORD lpBuffer,
+                  IN DWORD nLength,
+                  OUT LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
                               lpBuffer,
@@ -908,10 +937,10 @@ PeekConsoleInputW(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-PeekConsoleInputA(HANDLE hConsoleInput,
-                  PINPUT_RECORD lpBuffer,
-                  DWORD nLength,
-                  LPDWORD lpNumberOfEventsRead)
+PeekConsoleInputA(IN HANDLE hConsoleInput,
+                  OUT PINPUT_RECORD lpBuffer,
+                  IN DWORD nLength,
+                  OUT LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
                               lpBuffer,
@@ -929,10 +958,10 @@ PeekConsoleInputA(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-ReadConsoleInputW(HANDLE hConsoleInput,
-                  PINPUT_RECORD lpBuffer,
-                  DWORD nLength,
-                  LPDWORD lpNumberOfEventsRead)
+ReadConsoleInputW(IN HANDLE hConsoleInput,
+                  OUT PINPUT_RECORD lpBuffer,
+                  IN DWORD nLength,
+                  OUT LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
                               lpBuffer,
@@ -950,10 +979,10 @@ ReadConsoleInputW(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-ReadConsoleInputA(HANDLE hConsoleInput,
-                  PINPUT_RECORD lpBuffer,
-                  DWORD nLength,
-                  LPDWORD lpNumberOfEventsRead)
+ReadConsoleInputA(IN HANDLE hConsoleInput,
+                  OUT PINPUT_RECORD lpBuffer,
+                  IN DWORD nLength,
+                  OUT LPDWORD lpNumberOfEventsRead)
 {
     return IntGetConsoleInput(hConsoleInput,
                               lpBuffer,
@@ -971,11 +1000,11 @@ ReadConsoleInputA(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-ReadConsoleInputExW(HANDLE hConsoleInput,
-                    PINPUT_RECORD lpBuffer,
-                    DWORD nLength,
-                    LPDWORD lpNumberOfEventsRead,
-                    WORD wFlags)
+ReadConsoleInputExW(IN HANDLE hConsoleInput,
+                    OUT PINPUT_RECORD lpBuffer,
+                    IN DWORD nLength,
+                    OUT LPDWORD lpNumberOfEventsRead,
+                    IN WORD wFlags)
 {
     return IntGetConsoleInput(hConsoleInput,
                               lpBuffer,
@@ -993,11 +1022,11 @@ ReadConsoleInputExW(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-ReadConsoleInputExA(HANDLE hConsoleInput,
-                    PINPUT_RECORD lpBuffer,
-                    DWORD nLength,
-                    LPDWORD lpNumberOfEventsRead,
-                    WORD wFlags)
+ReadConsoleInputExA(IN HANDLE hConsoleInput,
+                    OUT PINPUT_RECORD lpBuffer,
+                    IN DWORD nLength,
+                    OUT LPDWORD lpNumberOfEventsRead,
+                    IN WORD wFlags)
 {
     return IntGetConsoleInput(hConsoleInput,
                               lpBuffer,
@@ -1059,11 +1088,11 @@ ReadConsoleOutputA(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-ReadConsoleOutputCharacterW(HANDLE hConsoleOutput,
-                            LPWSTR lpCharacter,
-                            DWORD nLength,
-                            COORD dwReadCoord,
-                            LPDWORD lpNumberOfCharsRead)
+ReadConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
+                            OUT LPWSTR lpCharacter,
+                            IN DWORD nLength,
+                            IN COORD dwReadCoord,
+                            OUT LPDWORD lpNumberOfCharsRead)
 {
     return IntReadConsoleOutputCode(hConsoleOutput,
                                     CODE_UNICODE,
@@ -1081,11 +1110,11 @@ ReadConsoleOutputCharacterW(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-ReadConsoleOutputCharacterA(HANDLE hConsoleOutput,
-                            LPSTR lpCharacter,
-                            DWORD nLength,
-                            COORD dwReadCoord,
-                            LPDWORD lpNumberOfCharsRead)
+ReadConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
+                            OUT LPSTR lpCharacter,
+                            IN DWORD nLength,
+                            IN COORD dwReadCoord,
+                            OUT LPDWORD lpNumberOfCharsRead)
 {
     return IntReadConsoleOutputCode(hConsoleOutput,
                                     CODE_ASCII,
@@ -1103,11 +1132,11 @@ ReadConsoleOutputCharacterA(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-ReadConsoleOutputAttribute(HANDLE hConsoleOutput,
-                           LPWORD lpAttribute,
-                           DWORD nLength,
-                           COORD dwReadCoord,
-                           LPDWORD lpNumberOfAttrsRead)
+ReadConsoleOutputAttribute(IN HANDLE hConsoleOutput,
+                           OUT LPWORD lpAttribute,
+                           IN DWORD nLength,
+                           IN COORD dwReadCoord,
+                           OUT LPDWORD lpNumberOfAttrsRead)
 {
     return IntReadConsoleOutputCode(hConsoleOutput,
                                     CODE_ATTRIBUTE,
@@ -1173,10 +1202,10 @@ WriteConsoleA(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-WriteConsoleInputW(HANDLE hConsoleInput,
-                   CONST INPUT_RECORD *lpBuffer,
-                   DWORD nLength,
-                   LPDWORD lpNumberOfEventsWritten)
+WriteConsoleInputW(IN HANDLE hConsoleInput,
+                   IN CONST INPUT_RECORD *lpBuffer,
+                   IN DWORD nLength,
+                   OUT LPDWORD lpNumberOfEventsWritten)
 {
     return IntWriteConsoleInput(hConsoleInput,
                                 (PINPUT_RECORD)lpBuffer,
@@ -1194,10 +1223,10 @@ WriteConsoleInputW(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-WriteConsoleInputA(HANDLE hConsoleInput,
-                   CONST INPUT_RECORD *lpBuffer,
-                   DWORD nLength,
-                   LPDWORD lpNumberOfEventsWritten)
+WriteConsoleInputA(IN HANDLE hConsoleInput,
+                   IN CONST INPUT_RECORD *lpBuffer,
+                   IN DWORD nLength,
+                   OUT LPDWORD lpNumberOfEventsWritten)
 {
     return IntWriteConsoleInput(hConsoleInput,
                                 (PINPUT_RECORD)lpBuffer,
@@ -1215,10 +1244,10 @@ WriteConsoleInputA(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-WriteConsoleInputVDMW(HANDLE hConsoleInput,
-                      CONST INPUT_RECORD *lpBuffer,
-                      DWORD nLength,
-                      LPDWORD lpNumberOfEventsWritten)
+WriteConsoleInputVDMW(IN HANDLE hConsoleInput,
+                      IN CONST INPUT_RECORD *lpBuffer,
+                      IN DWORD nLength,
+                      OUT LPDWORD lpNumberOfEventsWritten)
 {
     return IntWriteConsoleInput(hConsoleInput,
                                 (PINPUT_RECORD)lpBuffer,
@@ -1236,10 +1265,10 @@ WriteConsoleInputVDMW(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-WriteConsoleInputVDMA(HANDLE hConsoleInput,
-                      CONST INPUT_RECORD *lpBuffer,
-                      DWORD nLength,
-                      LPDWORD lpNumberOfEventsWritten)
+WriteConsoleInputVDMA(IN HANDLE hConsoleInput,
+                      IN CONST INPUT_RECORD *lpBuffer,
+                      IN DWORD nLength,
+                      OUT LPDWORD lpNumberOfEventsWritten)
 {
     return IntWriteConsoleInput(hConsoleInput,
                                 (PINPUT_RECORD)lpBuffer,
@@ -1301,11 +1330,11 @@ WriteConsoleOutputA(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-WriteConsoleOutputCharacterW(HANDLE hConsoleOutput,
-                             LPCWSTR lpCharacter,
-                             DWORD nLength,
-                             COORD dwWriteCoord,
-                             LPDWORD lpNumberOfCharsWritten)
+WriteConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
+                             IN LPCWSTR lpCharacter,
+                             IN DWORD nLength,
+                             IN COORD dwWriteCoord,
+                             OUT LPDWORD lpNumberOfCharsWritten)
 {
     return IntWriteConsoleOutputCode(hConsoleOutput,
                                      CODE_UNICODE,
@@ -1323,11 +1352,11 @@ WriteConsoleOutputCharacterW(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-WriteConsoleOutputCharacterA(HANDLE hConsoleOutput,
-                             LPCSTR lpCharacter,
-                             DWORD nLength,
-                             COORD dwWriteCoord,
-                             LPDWORD lpNumberOfCharsWritten)
+WriteConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
+                             IN LPCSTR lpCharacter,
+                             IN DWORD nLength,
+                             IN COORD dwWriteCoord,
+                             OUT LPDWORD lpNumberOfCharsWritten)
 {
     return IntWriteConsoleOutputCode(hConsoleOutput,
                                      CODE_ASCII,
@@ -1345,11 +1374,11 @@ WriteConsoleOutputCharacterA(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-WriteConsoleOutputAttribute(HANDLE hConsoleOutput,
-                            CONST WORD *lpAttribute,
-                            DWORD nLength,
-                            COORD dwWriteCoord,
-                            LPDWORD lpNumberOfAttrsWritten)
+WriteConsoleOutputAttribute(IN HANDLE hConsoleOutput,
+                            IN CONST WORD *lpAttribute,
+                            IN DWORD nLength,
+                            IN COORD dwWriteCoord,
+                            OUT LPDWORD lpNumberOfAttrsWritten)
 {
     return IntWriteConsoleOutputCode(hConsoleOutput,
                                      CODE_ATTRIBUTE,
@@ -1367,11 +1396,11 @@ WriteConsoleOutputAttribute(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-FillConsoleOutputCharacterW(HANDLE hConsoleOutput,
-                            WCHAR cCharacter,
-                            DWORD nLength,
-                            COORD dwWriteCoord,
-                            LPDWORD lpNumberOfCharsWritten)
+FillConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
+                            IN WCHAR cCharacter,
+                            IN DWORD nLength,
+                            IN COORD dwWriteCoord,
+                            OUT LPDWORD lpNumberOfCharsWritten)
 {
     CODE_ELEMENT Code;
     Code.UnicodeChar = cCharacter;
@@ -1391,10 +1420,10 @@ FillConsoleOutputCharacterW(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-FillConsoleOutputCharacterA(HANDLE hConsoleOutput,
-                            CHAR cCharacter,
-                            DWORD nLength,
-                            COORD dwWriteCoord,
+FillConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
+                            IN CHAR cCharacter,
+                            IN DWORD nLength,
+                            IN COORD dwWriteCoord,
                             LPDWORD lpNumberOfCharsWritten)
 {
     CODE_ELEMENT Code;
@@ -1415,11 +1444,11 @@ FillConsoleOutputCharacterA(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-FillConsoleOutputAttribute(HANDLE hConsoleOutput,
-                           WORD wAttribute,
-                           DWORD nLength,
-                           COORD dwWriteCoord,
-                           LPDWORD lpNumberOfAttrsWritten)
+FillConsoleOutputAttribute(IN HANDLE hConsoleOutput,
+                           IN WORD wAttribute,
+                           IN DWORD nLength,
+                           IN COORD dwWriteCoord,
+                           OUT LPDWORD lpNumberOfAttrsWritten)
 {
     CODE_ELEMENT Code;
     Code.Attribute = wAttribute;
