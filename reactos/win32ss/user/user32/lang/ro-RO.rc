@@ -1,4 +1,4 @@
-/* 2011.12.17 - Fulea Ștefan: minor changes */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -52,7 +52,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Închid&e\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "Înain&te\tCtrl+F6", SC_NEXTWINDOW
+    MENUITEM "&Următoare\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */

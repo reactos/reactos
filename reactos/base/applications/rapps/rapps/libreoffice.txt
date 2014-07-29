@@ -32,7 +32,7 @@ Description = Voorheen OpenOffice. Open-bron Office pakket.
 Description = Otwarty pakiet biurowy.
 
 [Section.0418]
-Description = Fostul OpenOffice. Suita de aplicații de birotică open-source.
+Description = O suită office completă, cu surse deschise. Reprezintă o bifurcare a dezvoltării OpenOffice.
 Size = 209,36 Mo
 
 [Section.041f]

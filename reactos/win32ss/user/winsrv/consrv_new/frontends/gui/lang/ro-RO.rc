@@ -1,4 +1,4 @@
-/* Romanian translation by Fulea Ștefan */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -22,5 +22,5 @@ BEGIN
     IDS_SCROLLUP "Derulează în sus"
     IDS_SCROLLDOWN "Derulează în jos"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "Consola ReactOS"
 END

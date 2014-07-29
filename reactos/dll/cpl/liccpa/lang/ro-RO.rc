@@ -1,9 +1,7 @@
 /* 
  * FILE:       dll/cpl/liccpa/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-09-02  initial translation
- *             2011-11-20  minor change
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -21,7 +19,7 @@ BEGIN
     CONTROL "Con&firmă", 107, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 7, 46, 14
     CONTROL "A&nulează", 108, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 27, 46, 14
     CONTROL "Informații", 109, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 48, 46, 14
-    CONTROL "Replicarea…", 110, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 68, 46, 14
+    CONTROL "Replicare…", 110, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 68, 46, 14
     CONTROL "Adaugă licențe", 111, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 30, 56, 65, 15
     CONTROL "Elimină licențe", 112, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 112, 56, 61, 16
     CONTROL "", 114, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 187, 39, 32, 12

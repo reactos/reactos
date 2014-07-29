@@ -1,7 +1,7 @@
 /*
  * PROJECT:     Command-line interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/shell/cmd/lang/uk-UA.rc
+ * FILE:        base/applications/cmdutils/help/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Command-line interface
  * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */

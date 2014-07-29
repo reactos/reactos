@@ -32,7 +32,7 @@ Description = Sam and Max, Day of the Tentacle, enz. op ReactOS.
 Description = Program pozwalający uruchomić stare gry przygodowe (Sam and Max, Day of the Tentacle, Monkey Island) w ReactOS.
 
 [Section.0418]
-Description = Motor de execuție pentru jocuri SCUMM.
+Description = Program care reproduce rezultatul motorului grafic pentru jocuri (Sam and Max, Day of the Tentacle, etc) în ReactOS.
 Size = 6,9 Mo
 
 [Section.041f]

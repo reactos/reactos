@@ -1081,7 +1081,7 @@ END
 
 547 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Asistentul pentru interfeța de apelare la cerere"
+CAPTION "Asistent pentru interfeța de apelare la cerere"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la asistentul pentru interfața de apelare la cerere.", 1530, 122, 8, 192, 32

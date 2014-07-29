@@ -23,6 +23,12 @@ Name = Midnight Commander dla Windows
 Licence = GPL wersja 3
 Description = 32-bitowy port GNU Midnight Commander dla Windows.
 
+[Section.0418]
+Name = Midnight Commander pentru Windows
+Version = Versiunea 183 (4.8.11)
+Description = GNU Midnight Commander pentru Windows pe 32-biți.
+Size = 2,35 Mo
+
 [Section.041f]
 Name = Midnight Commander (Windows için)
 Version = Yapı 183 (4.8.11)

@@ -11,3 +11,8 @@ CDPath = none
 
 [Section.0407]
 Description = MiKTeX ist eine aktuelle Implementierung von TeX/LaTeX und zugehöriger Programme für Windows.
+
+[Section.0418]
+Licence = Gratuită
+Description = MikTEX este o implementare actualizată de TeX/LaTeX și aprogramelor aferente.
+Size = 163,18 Mo

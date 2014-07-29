@@ -44,7 +44,7 @@ URLDownload = http://download.microsoft.com/download/c/9/f/c9f672f3-c14b-4cff-96
 
 [Section.0418]
 Licence = Nespecificată
-Description = Platforma Microsoft .NET versiunea 1.1 - Pachet redistributabl.
+Description = Platforma Microsoft .NET versiunea 1.1 - Pachet redistributabil.
 Size = 23,14 Mo
 
 [Section.041f]

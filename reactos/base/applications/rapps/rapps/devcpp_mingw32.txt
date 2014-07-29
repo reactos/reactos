@@ -18,6 +18,10 @@ Description = Eine gepflegte Version von Dev-C++. Der MinGW32 Compiler liegt bei
 [Section.0410]
 Description = Una versione mantenuta di Dev-C++. Contiene il compilatore MinGW32.
 
+[Section.0418]
+Description = O versiune menținută a Dev-C++. Conține compilatorul MinGW32.
+Size = 60,2 Mo
+
 [Section.041f]
 Licence = GPL 2. sürüm
 Description = Dev-C++'nın sürdürülen bir sürümü. MinGW32 derleyicisi içerir.
