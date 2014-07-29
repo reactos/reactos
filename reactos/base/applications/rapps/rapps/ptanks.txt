@@ -29,5 +29,5 @@ Size = 2,86 Mo
 
 [Section.041f]
 Licence = Paylaşımlı
-Description = Şimdiye kadar oynayacağınız en hızlı topçuluk oyunu.
+Description = Şimdiye dek oynayacağınız en hızlı topçuluk oyunu.
 Size = 2,86 MB

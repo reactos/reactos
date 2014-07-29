@@ -12,6 +12,12 @@ URLSite = http://www.mozilla.org/en-US/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/31.0/win32/en-US/Firefox%20Setup%2031.0.exe
 CDPath = none
 
+[Section.0405]
+Description = Nejpopulárnější a jeden z nejlepších svobodných webových prohlížečů.
+Size = 30.6 MB
+URLSite = http://www.mozilla.org/cs/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/31.0/win32/cs/Firefox%20Setup%2031.0.exe
+
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
 Size = 30.56 MB
@@ -82,3 +88,9 @@ Description = Найпопулярніший та один з кращих бе�
 Size = 30.97 MB
 URLSite = http://www.mozilla.org/uk/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/31.0/win32/uk/Firefox%20Setup%2031.0.exe
+
+[Section.0813]
+Description = De meest populaire en een van de beste gratis Web browsers.
+Size = 31.2 MB
+URLSite = http://www.mozilla.org/nl/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/31.0/win32/nl/Firefox%20Setup%2031.0.exe

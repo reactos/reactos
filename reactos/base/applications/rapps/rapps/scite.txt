@@ -38,7 +38,7 @@ Size = 736 ko
 
 [Section.041f]
 Licence = Ücretsiz
-Description = SciTE, bir Scintilla tabanlı metin düzenleyicisidir. İlk başta Scintilla'yı göstermek için yapıldı, izlenceleri yapmak ve çalıştırmak yetenekleriyle bir umûmiyetle kullanışlı düzenleyici olmak için gelişti.
+Description = SciTE, bir Scintilla tabanlı metin düzenleyicisidir. İlk başta Scintilla'yı göstermek için yapıldı; izlenceleri yapmak ve çalıştırmak yetenekleriyle, umûmiyetle kullanışlı bir düzenleyici olmak için gelişti.
 Size = 736 KB
 
 [Section.0422]

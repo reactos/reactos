@@ -9,7 +9,7 @@ Licence = Freeware
 Description = A card strategic game. Build your own castle and try to destroy enemy castle. You need a ZIP decompression program to install it.
 Size = 632 kB
 Category = 4
-URLSite = http://peter.hostuju.cz/index.htm
+URLSite = http://peter.hostuju.cz/
 URLDownload = http://petr.hostuju.cz/program/download/ANTS.zip
 CDPath = none
 
