@@ -459,6 +459,13 @@ typedef enum _CODE_TYPE
     CODE_ATTRIBUTE  = 0x03
 } CODE_TYPE;
 
+typedef union _CODE_ELEMENT
+{
+    CHAR  AsciiChar;
+    WCHAR UnicodeChar;
+    WORD  Attribute;
+} CODE_ELEMENT, *PCODE_ELEMENT;
+
 typedef struct
 {
     HANDLE ConsoleHandle;
@@ -485,13 +492,8 @@ typedef struct
     HANDLE OutputHandle;
     COORD  WriteCoord;
 
-    CODE_TYPE CodeType;
-    union
-    {
-        CHAR  AsciiChar;
-        WCHAR UnicodeChar;
-        WORD  Attribute;
-    } Code; // Either a character or an attribute.
+    CODE_TYPE    CodeType;
+    CODE_ELEMENT Code; // Either a character or an attribute.
 
     ULONG NumCodes;
 } CONSOLE_FILLOUTPUTCODE, *PCONSOLE_FILLOUTPUTCODE;

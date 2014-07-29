@@ -691,7 +691,7 @@ NTSTATUS NTAPI
 ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PTEXTMODE_SCREEN_BUFFER Buffer,
                         IN CODE_TYPE CodeType,
-                        IN PVOID Code,
+                        IN CODE_ELEMENT Code,
                         IN ULONG NumCodesToWrite,
                         IN PCOORD WriteCoord /*,
                         OUT PULONG CodesWritten */);
@@ -700,7 +700,7 @@ CSR_API(SrvFillConsoleOutput)
     NTSTATUS Status;
     PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FillOutputRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
-    USHORT CodeType = FillOutputRequest->CodeType;
+    CODE_TYPE CodeType = FillOutputRequest->CodeType;
 
     DPRINT("SrvFillConsoleOutput\n");
 
@@ -719,7 +719,7 @@ CSR_API(SrvFillConsoleOutput)
     Status = ConDrvFillConsoleOutput(Buffer->Header.Console,
                                      Buffer,
                                      CodeType,
-                                     &FillOutputRequest->Code,
+                                     FillOutputRequest->Code,
                                      FillOutputRequest->NumCodes,
                                      &FillOutputRequest->WriteCoord /*,
                                      &FillOutputRequest->NrCharactersWritten */);

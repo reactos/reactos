@@ -1137,7 +1137,7 @@ NTSTATUS NTAPI
 ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PTEXTMODE_SCREEN_BUFFER Buffer,
                         IN CODE_TYPE CodeType,
-                        IN PVOID Code,
+                        IN CODE_ELEMENT Code,
                         IN ULONG NumCodesToWrite,
                         IN PCOORD WriteCoord /*,
                         OUT PULONG CodesWritten */)
@@ -1145,8 +1145,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
     DWORD X, Y, Length; // , Written = 0;
     PCHAR_INFO Ptr;
 
-    if (Console == NULL || Buffer == NULL || Code == NULL ||
-        WriteCoord == NULL /* || CodesWritten == NULL */)
+    if (Console == NULL || Buffer == NULL || WriteCoord == NULL /* || CodesWritten == NULL */)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1154,29 +1153,13 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
 
-#if 0
-    switch (CodeType)
-    {
-        case CODE_ASCII:
-            /* On-place conversion from the ASCII char to the UNICODE char */
-            ConsoleAnsiCharToUnicodeChar(Console, &Code->UnicodeChar, &Code->AsciiChar);
-        /* Fall through */
-        case CODE_UNICODE:
-            Code = &Code->UnicodeChar;
-            break;
-
-        case CODE_ATTRIBUTE:
-            Code = &Code->Attribute;
-            break;
-    }
-#else
     if (CodeType == CODE_ASCII)
     {
-        /* On-place conversion from the ASCII char to the UNICODE char */
-        // FIXME: What if Code points to an invalid memory zone ??
-        ConsoleAnsiCharToUnicodeChar(Console, (PWCHAR)Code, (PCHAR)Code);
+        /* Conversion from the ASCII char to the UNICODE char */
+        CODE_ELEMENT tmp;
+        ConsoleAnsiCharToUnicodeChar(Console, &tmp.UnicodeChar, &Code.AsciiChar);
+        Code = tmp;
     }
-#endif
 
     X = WriteCoord->X;
     Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
@@ -1193,11 +1176,11 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
         {
             case CODE_ASCII:
             case CODE_UNICODE:
-                Ptr->Char.UnicodeChar = *(PWCHAR)Code;
+                Ptr->Char.UnicodeChar = Code.UnicodeChar;
                 break;
 
             case CODE_ATTRIBUTE:
-                Ptr->Attributes = *(PWORD)Code;
+                Ptr->Attributes = Code.Attribute;
                 break;
         }
         // ++Ptr;

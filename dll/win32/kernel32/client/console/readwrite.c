@@ -771,7 +771,7 @@ static
 BOOL
 IntFillConsoleOutputCode(HANDLE hConsoleOutput,
                          CODE_TYPE CodeType,
-                         PVOID pCode,
+                         CODE_ELEMENT Code,
                          DWORD nLength,
                          COORD dwWriteCoord,
                          LPDWORD lpNumberOfCodesWritten)
@@ -779,31 +779,21 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &ApiMessage.Data.FillOutputRequest;
 
+    if ( (CodeType != CODE_ASCII    ) &&
+         (CodeType != CODE_UNICODE  ) &&
+         (CodeType != CODE_ATTRIBUTE) )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /* Set up the data to send to the Console Server */
     FillOutputRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     FillOutputRequest->OutputHandle  = hConsoleOutput;
     FillOutputRequest->WriteCoord    = dwWriteCoord;
-    FillOutputRequest->NumCodes      = nLength;
-
     FillOutputRequest->CodeType = CodeType;
-    switch (CodeType)
-    {
-        case CODE_ASCII:
-            FillOutputRequest->Code.AsciiChar = *(PCHAR)pCode;
-            break;
-
-        case CODE_UNICODE:
-            FillOutputRequest->Code.UnicodeChar = *(PWCHAR)pCode;
-            break;
-
-        case CODE_ATTRIBUTE:
-            FillOutputRequest->Code.Attribute = *(PWORD)pCode;
-            break;
-
-        default:
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
-    }
+    FillOutputRequest->Code     = Code;
+    FillOutputRequest->NumCodes = nLength;
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -1373,9 +1363,11 @@ FillConsoleOutputCharacterW(HANDLE hConsoleOutput,
                             COORD dwWriteCoord,
                             LPDWORD lpNumberOfCharsWritten)
 {
+    CODE_ELEMENT Code;
+    Code.UnicodeChar = cCharacter;
     return IntFillConsoleOutputCode(hConsoleOutput,
                                     CODE_UNICODE,
-                                    &cCharacter,
+                                    Code,
                                     nLength,
                                     dwWriteCoord,
                                     lpNumberOfCharsWritten);
@@ -1395,9 +1387,11 @@ FillConsoleOutputCharacterA(HANDLE hConsoleOutput,
                             COORD dwWriteCoord,
                             LPDWORD lpNumberOfCharsWritten)
 {
+    CODE_ELEMENT Code;
+    Code.AsciiChar = cCharacter;
     return IntFillConsoleOutputCode(hConsoleOutput,
                                     CODE_ASCII,
-                                    &cCharacter,
+                                    Code,
                                     nLength,
                                     dwWriteCoord,
                                     lpNumberOfCharsWritten);
@@ -1417,9 +1411,11 @@ FillConsoleOutputAttribute(HANDLE hConsoleOutput,
                            COORD dwWriteCoord,
                            LPDWORD lpNumberOfAttrsWritten)
 {
+    CODE_ELEMENT Code;
+    Code.Attribute = wAttribute;
     return IntFillConsoleOutputCode(hConsoleOutput,
                                     CODE_ATTRIBUTE,
-                                    &wAttribute,
+                                    Code,
                                     nLength,
                                     dwWriteCoord,
                                     lpNumberOfAttrsWritten);
