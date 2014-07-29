@@ -1117,7 +1117,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
 Cleanup:
     if (tmpString) RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
 
-    // if (NumCodesWritten) *NumCodesWritten = Written;
+    if (NumCodesWritten) *NumCodesWritten = NumCodesToWrite; // Written;
     return Status;
 }
 
@@ -1194,7 +1194,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
         TermDrawRegion(Console, &UpdateRect);
     }
 
-    // if (NumCodesWritten) *NumCodesWritten = Written; // NumCodesToWrite;
+    if (NumCodesWritten) *NumCodesWritten = NumCodesToWrite; // Written;
     return STATUS_SUCCESS;
 }
 
@@ -1329,7 +1329,11 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
                   CapturedDestinationOrigin.X + ConioRectWidth(&SrcRegion ) - 1);
 
     if (!Unicode)
-        ConsoleAnsiCharToUnicodeChar(Console, &FillChar.Char.UnicodeChar, &FillChar.Char.AsciiChar);
+    {
+        WCHAR tmp;
+        ConsoleAnsiCharToUnicodeChar(Console, &tmp, &FillChar.Char.AsciiChar);
+        FillChar.Char.UnicodeChar = tmp;
+    }
 
     ConioMoveRegion(Buffer, &SrcRegion, &DstRegion, &CapturedClipRectangle, FillChar);
 

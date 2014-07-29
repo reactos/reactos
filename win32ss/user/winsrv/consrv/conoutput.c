@@ -586,7 +586,11 @@ CSR_API(SrvReadConsoleOutputString)
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      ReadOutputCodeRequest->OutputHandle,
                                      &Buffer, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        ReadOutputCodeRequest->NumCodes = 0;
+        return Status;
+    }
 
     Status = ConDrvReadConsoleOutputString(Buffer->Header.Console,
                                            Buffer,
@@ -670,7 +674,11 @@ CSR_API(SrvWriteConsoleOutputString)
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      WriteOutputCodeRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        WriteOutputCodeRequest->NumCodes = 0;
+        return Status;
+    }
 
     Status = ConDrvWriteConsoleOutputString(Buffer->Header.Console,
                                             Buffer,
@@ -712,7 +720,11 @@ CSR_API(SrvFillConsoleOutput)
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      FillOutputRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        FillOutputRequest->NumCodes = 0;
+        return Status;
+    }
 
     Status = ConDrvFillConsoleOutput(Buffer->Header.Console,
                                      Buffer,
