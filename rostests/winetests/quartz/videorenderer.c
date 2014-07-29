@@ -156,16 +156,9 @@ START_TEST(videorenderer)
     if (!create_video_renderer())
         return;
 
-    if (!winetest_interactive)
-    {
-        skip("Skipping filtergraph test, see ROSTESTS-116\n");
-        return;
-    }
-    else
-    {
-        test_query_interface();
-        test_basefilter();
-    }
+    test_query_interface();
+    test_basefilter();
+
     release_video_renderer();
 
     CoUninitialize();

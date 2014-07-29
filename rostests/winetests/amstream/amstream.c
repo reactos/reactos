@@ -440,14 +440,7 @@ START_TEST(amstream)
 
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
-    if (!winetest_interactive)
-    {
-        win_skip("test_media_streams(), ROSTESTS-123\n");
-    }
-    else
-    {
-        test_media_streams();
-    }
+    test_media_streams();
  
     file = CreateFileW(filenameW, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (file != INVALID_HANDLE_VALUE)

@@ -1878,12 +1878,6 @@ START_TEST(filtergraph)
 {
     HRESULT hr;
 
-    if (!winetest_interactive)
-    {
-        skip("Skipping filtergraph test, see ROSTESTS-116\n");
-        return;
-    }
-
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
     hr = CoCreateInstance(&CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IGraphBuilder, (LPVOID*)&pgraph);

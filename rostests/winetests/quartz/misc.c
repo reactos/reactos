@@ -224,17 +224,10 @@ START_TEST(misc)
 {
     CoInitialize(NULL);
 
-    if (!winetest_interactive)
-    {
-        skip("Skipping misc test, see ROSTESTS-116\n");
-        return;
-    }
-    else
-    {
-        test_null_renderer_aggregations();
-        test_video_renderer_aggregations();
-        test_filter_graph_aggregations();
-        test_filter_mapper_aggregations();
-    }
+    test_null_renderer_aggregations();
+    test_video_renderer_aggregations();
+    test_filter_graph_aggregations();
+    test_filter_mapper_aggregations();
+
     CoUninitialize();
 }
