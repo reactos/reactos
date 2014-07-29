@@ -71,9 +71,9 @@ IntReadConsole(HANDLE hConsoleInput,
          * For ANSI mode, set this parameter to NULL."
          */
         ReadConsoleRequest->NrCharactersRead = pInputControl->nInitialChars;
-        memcpy(ReadConsoleRequest->Buffer,
-               lpBuffer,
-               pInputControl->nInitialChars * sizeof(WCHAR));
+        RtlCopyMemory(ReadConsoleRequest->Buffer,
+                      lpBuffer,
+                      pInputControl->nInitialChars * sizeof(WCHAR));
         ReadConsoleRequest->CtrlWakeupMask = pInputControl->dwCtrlWakeupMask;
     }
 
@@ -86,9 +86,9 @@ IntReadConsole(HANDLE hConsoleInput,
     /* Check for success */
     if (NT_SUCCESS(ApiMessage.Status))
     {
-        memcpy(lpBuffer,
-               ReadConsoleRequest->Buffer,
-               ReadConsoleRequest->NrCharactersRead * CharSize);
+        RtlCopyMemory(lpBuffer,
+                      ReadConsoleRequest->Buffer,
+                      ReadConsoleRequest->NrCharactersRead * CharSize);
 
         if (lpNumberOfCharsRead != NULL)
             *lpNumberOfCharsRead = ReadConsoleRequest->NrCharactersRead;
@@ -312,14 +312,21 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
                          COORD dwReadCoord,
                          LPDWORD lpNumberOfCodesRead)
 {
-    BOOL bRet = TRUE;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &ApiMessage.Data.ReadOutputCodeRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
     ULONG SizeBytes, CodeSize;
-    DWORD CodesRead;
+
+    DPRINT("IntReadConsoleOutputCode\n");
+
+    /* Set up the data to send to the Console Server */
+    ReadOutputCodeRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ReadOutputCodeRequest->OutputHandle  = hConsoleOutput;
+    ReadOutputCodeRequest->Coord         = dwReadCoord;
+    ReadOutputCodeRequest->NumCodes      = nLength;
 
     /* Determine the needed size */
+    ReadOutputCodeRequest->CodeType = CodeType;
     switch (CodeType)
     {
         case CODE_ASCII:
@@ -340,26 +347,33 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
     }
     SizeBytes = nLength * CodeSize;
 
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, SizeBytes);
-    if (CaptureBuffer == NULL)
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are read. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (SizeBytes <= sizeof(ReadOutputCodeRequest->CodeStaticBuffer))
     {
-        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        ReadOutputCodeRequest->pCode.pCode = ReadOutputCodeRequest->CodeStaticBuffer;
+        // CaptureBuffer = NULL;
     }
+    else
+    {
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, SizeBytes);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
 
-    /* Allocate space in the Buffer */
-    CsrAllocateMessagePointer(CaptureBuffer,
-                              SizeBytes,
-                              (PVOID*)&ReadOutputCodeRequest->pCode.pCode);
-
-    /* Start reading */
-    ReadOutputCodeRequest->OutputHandle = hConsoleOutput;
-    ReadOutputCodeRequest->CodeType = CodeType;
-    ReadOutputCodeRequest->ReadCoord = dwReadCoord;
-
-    ReadOutputCodeRequest->NumCodesToRead = nLength;
+        /* Allocate space in the Buffer */
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  SizeBytes,
+                                  (PVOID*)&ReadOutputCodeRequest->pCode.pCode);
+    }
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -370,15 +384,13 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
     /* Check for success */
     if (NT_SUCCESS(ApiMessage.Status))
     {
-        CodesRead = ReadOutputCodeRequest->CodesRead;
-        memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, CodesRead * CodeSize);
-
-        // ReadOutputCodeRequest->ReadCoord = ReadOutputCodeRequest->EndCoord;
+        DWORD NumCodes = ReadOutputCodeRequest->NumCodes;
+        RtlCopyMemory(pCode,
+                      ReadOutputCodeRequest->pCode.pCode,
+                      NumCodes * CodeSize);
 
         if (lpNumberOfCodesRead != NULL)
-            *lpNumberOfCodesRead = CodesRead;
-
-        bRet = TRUE;
+            *lpNumberOfCodesRead = NumCodes;
     }
     else
     {
@@ -387,12 +399,13 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
 
         /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
-        bRet = FALSE;
     }
 
-    CsrFreeCaptureBuffer(CaptureBuffer);
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return bRet;
+    /* Return TRUE or FALSE */
+    return NT_SUCCESS(ApiMessage.Status);
 }
 
 
@@ -651,13 +664,27 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
                           COORD dwWriteCoord,
                           LPDWORD lpNumberOfCodesWritten)
 {
-    BOOL bRet = TRUE;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &ApiMessage.Data.WriteOutputCodeRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
-    ULONG CodeSize;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
+    ULONG SizeBytes, CodeSize;
+
+    if (pCode == NULL)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        return FALSE;
+    }
+
+    DPRINT("IntWriteConsoleOutputCode\n");
+
+    /* Set up the data to send to the Console Server */
+    WriteOutputCodeRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    WriteOutputCodeRequest->OutputHandle  = hConsoleOutput;
+    WriteOutputCodeRequest->Coord         = dwWriteCoord;
+    WriteOutputCodeRequest->NumCodes      = nLength;
 
     /* Determine the needed size */
+    WriteOutputCodeRequest->CodeType = CodeType;
     switch (CodeType)
     {
         case CODE_ASCII:
@@ -676,29 +703,40 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
-    WriteOutputCodeRequest->BufferSize = nLength * CodeSize;
+    SizeBytes = nLength * CodeSize;
 
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, WriteOutputCodeRequest->BufferSize);
-    if (CaptureBuffer == NULL)
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are written. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (SizeBytes <= sizeof(WriteOutputCodeRequest->CodeStaticBuffer))
     {
-        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        WriteOutputCodeRequest->pCode.pCode = WriteOutputCodeRequest->CodeStaticBuffer;
+        // CaptureBuffer = NULL;
+
+        RtlCopyMemory(WriteOutputCodeRequest->pCode.pCode,
+                      pCode,
+                      SizeBytes);
     }
+    else
+    {
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, SizeBytes);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
 
-    /* Capture the buffer to write */
-    CsrCaptureMessageBuffer(CaptureBuffer,
-                            (PVOID)pCode,
-                            WriteOutputCodeRequest->BufferSize,
-                            (PVOID*)&WriteOutputCodeRequest->pCode.pCode);
-
-    /* Start writing */
-    WriteOutputCodeRequest->OutputHandle = hConsoleOutput;
-    WriteOutputCodeRequest->CodeType = CodeType;
-    WriteOutputCodeRequest->Coord = dwWriteCoord;
-
-    WriteOutputCodeRequest->Length = (USHORT)nLength;
+        /* Capture the buffer to write */
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                (PVOID)pCode,
+                                SizeBytes,
+                                (PVOID*)&WriteOutputCodeRequest->pCode.pCode);
+    }
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -706,16 +744,14 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
                         CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsoleOutputString),
                         sizeof(*WriteOutputCodeRequest));
 
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
+
     /* Check for success */
     if (NT_SUCCESS(ApiMessage.Status))
     {
-        // WriteOutputCodeRequest->Coord = WriteOutputCodeRequest->EndCoord;
-
         if (lpNumberOfCodesWritten != NULL)
-            // *lpNumberOfCodesWritten = WriteOutputCodeRequest->NrCharactersWritten;
-            *lpNumberOfCodesWritten = WriteOutputCodeRequest->Length;
-
-        bRet = TRUE;
+            *lpNumberOfCodesWritten = WriteOutputCodeRequest->NumCodes;
     }
     else
     {
@@ -724,12 +760,10 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
 
         /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
-        bRet = FALSE;
     }
 
-    CsrFreeCaptureBuffer(CaptureBuffer);
-
-    return bRet;
+    /* Return TRUE or FALSE */
+    return NT_SUCCESS(ApiMessage.Status);
 }
 
 
@@ -745,9 +779,13 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &ApiMessage.Data.FillOutputRequest;
 
-    FillOutputRequest->OutputHandle = hConsoleOutput;
-    FillOutputRequest->CodeType = CodeType;
+    /* Set up the data to send to the Console Server */
+    FillOutputRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    FillOutputRequest->OutputHandle  = hConsoleOutput;
+    FillOutputRequest->WriteCoord    = dwWriteCoord;
+    FillOutputRequest->NumCodes      = nLength;
 
+    FillOutputRequest->CodeType = CodeType;
     switch (CodeType)
     {
         case CODE_ASCII:
@@ -767,10 +805,6 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
             return FALSE;
     }
 
-    /* Set up the data to send to the Console Server */
-    FillOutputRequest->Coord = dwWriteCoord;
-    FillOutputRequest->Length = nLength;
-
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         NULL,
@@ -781,10 +815,7 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
     if (NT_SUCCESS(ApiMessage.Status))
     {
         if (lpNumberOfCodesWritten != NULL)
-            *lpNumberOfCodesWritten = FillOutputRequest->Length;
-            // *lpNumberOfCodesWritten = Request.Data.FillOutputRequest.NrCharactersWritten;
-
-        return TRUE;
+            *lpNumberOfCodesWritten = FillOutputRequest->NumCodes;
     }
     else
     {
@@ -792,8 +823,10 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
             *lpNumberOfCodesWritten = 0;
 
         BaseSetLastNTError(ApiMessage.Status);
-        return FALSE;
     }
+
+    /* Return TRUE or FALSE */
+    return NT_SUCCESS(ApiMessage.Status);
 }
 
 

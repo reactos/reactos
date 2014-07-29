@@ -383,7 +383,7 @@ CSR_API(SrvGetConsoleInput)
          * Adjust the internal pointer, because its old value points to
          * the static buffer in the original ApiMessage structure.
          */
-        // GetInputRequest->RecordBufPtr = &GetInputRequest->RecordStaticBuffer;
+        // GetInputRequest->RecordBufPtr = GetInputRequest->RecordStaticBuffer;
     }
     else
     {

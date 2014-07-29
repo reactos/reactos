@@ -891,7 +891,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               OUT PVOID StringBuffer,
                               IN ULONG NumCodesToRead,
                               IN PCOORD ReadCoord,
-                              OUT PCOORD EndCoord,
+                              // OUT PCOORD EndCoord,
                               OUT PULONG CodesRead)
 {
     SHORT Xpos, Ypos;
@@ -901,7 +901,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     PCHAR_INFO Ptr;
 
     if (Console == NULL || Buffer == NULL ||
-        ReadCoord == NULL || EndCoord == NULL || CodesRead == NULL)
+        ReadCoord == NULL || /* EndCoord == NULL || */ CodesRead == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -997,8 +997,8 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
             // break;
     // }
 
-    EndCoord->X = Xpos;
-    EndCoord->Y = (Ypos - Buffer->VirtualY + Buffer->ScreenBufferSize.Y) % Buffer->ScreenBufferSize.Y;
+    // EndCoord->X = Xpos;
+    // EndCoord->Y = (Ypos - Buffer->VirtualY + Buffer->ScreenBufferSize.Y) % Buffer->ScreenBufferSize.Y;
 
     *CodesRead = (ULONG)((ULONG_PTR)ReadBuffer - (ULONG_PTR)StringBuffer) / CodeSize;
     // <= NumCodesToRead

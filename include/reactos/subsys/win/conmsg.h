@@ -423,7 +423,7 @@ typedef struct
 
     BOOL Unicode;
     COORD BufferSize;
-    COORD BufferCoord;
+    COORD BufferCoord; // WriteCoord
     SMALL_RECT WriteRegion;
     PCHAR_INFO CharInfo;
 } CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
@@ -461,15 +461,12 @@ typedef enum _CODE_TYPE
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-
-    DWORD NumCodesToRead;
-    COORD ReadCoord;
-    COORD EndCoord;
-
-    DWORD CodesRead;
+    COORD  Coord;
 
     CODE_TYPE CodeType;
+    CHAR      CodeStaticBuffer[80];
     union
     {
         PVOID  pCode;
@@ -477,32 +474,16 @@ typedef struct
         PWCHAR UnicodeChar;
         PWORD  Attribute;
     } pCode;    // Either a pointer to a character or to an attribute.
-} CONSOLE_READOUTPUTCODE, *PCONSOLE_READOUTPUTCODE;
+
+    ULONG NumCodes;
+} CONSOLE_READOUTPUTCODE , *PCONSOLE_READOUTPUTCODE,
+  CONSOLE_WRITEOUTPUTCODE, *PCONSOLE_WRITEOUTPUTCODE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-
-    ULONG BufferSize; // Seems unusued
-    WORD Length;
-    COORD Coord;
-    COORD EndCoord;
-
-    ULONG NrCharactersWritten; // Seems unusued
-
-    CODE_TYPE CodeType;
-    union
-    {
-        PVOID  pCode;
-        PCHAR  AsciiChar;
-        PWCHAR UnicodeChar;
-        PWORD  Attribute;
-    } pCode;    // Either a pointer to a character or to an attribute.
-} CONSOLE_WRITEOUTPUTCODE, *PCONSOLE_WRITEOUTPUTCODE;
-
-typedef struct
-{
-    HANDLE OutputHandle;
+    COORD  WriteCoord;
 
     CODE_TYPE CodeType;
     union
@@ -512,10 +493,7 @@ typedef struct
         WORD  Attribute;
     } Code; // Either a character or an attribute.
 
-    COORD Coord;
-    ULONG Length;
-
-    ULONG NrCharactersWritten; // FIXME: Only for chars, is it removable ?
+    ULONG NumCodes;
 } CONSOLE_FILLOUTPUTCODE, *PCONSOLE_FILLOUTPUTCODE;
 
 typedef struct

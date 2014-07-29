@@ -524,7 +524,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               OUT PVOID StringBuffer,
                               IN ULONG NumCodesToRead,
                               IN PCOORD ReadCoord,
-                              OUT PCOORD EndCoord,
+                              // OUT PCOORD EndCoord,
                               OUT PULONG CodesRead);
 CSR_API(SrvReadConsoleOutputString)
 {
@@ -532,6 +532,8 @@ CSR_API(SrvReadConsoleOutputString)
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadOutputCodeRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
     ULONG CodeSize;
+
+    PVOID pCode;
 
     DPRINT("SrvReadConsoleOutputString\n");
 
@@ -553,12 +555,32 @@ CSR_API(SrvReadConsoleOutputString)
             return STATUS_INVALID_PARAMETER;
     }
 
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&ReadOutputCodeRequest->pCode.pCode,
-                                  ReadOutputCodeRequest->NumCodesToRead,
-                                  CodeSize))
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are read. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     */
+    if (ReadOutputCodeRequest->NumCodes * CodeSize <= sizeof(ReadOutputCodeRequest->CodeStaticBuffer))
     {
-        return STATUS_INVALID_PARAMETER;
+        /*
+         * Adjust the internal pointer, because its old value points to
+         * the static buffer in the original ApiMessage structure.
+         */
+        // ReadOutputCodeRequest->pCode.pCode = ReadOutputCodeRequest->CodeStaticBuffer;
+        pCode = ReadOutputCodeRequest->CodeStaticBuffer;
+    }
+    else
+    {
+        if (!CsrValidateMessageBuffer(ApiMessage,
+                                      (PVOID*)&ReadOutputCodeRequest->pCode.pCode,
+                                      ReadOutputCodeRequest->NumCodes,
+                                      CodeSize))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        pCode = ReadOutputCodeRequest->pCode.pCode;
     }
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -569,11 +591,11 @@ CSR_API(SrvReadConsoleOutputString)
     Status = ConDrvReadConsoleOutputString(Buffer->Header.Console,
                                            Buffer,
                                            ReadOutputCodeRequest->CodeType,
-                                           ReadOutputCodeRequest->pCode.pCode,
-                                           ReadOutputCodeRequest->NumCodesToRead,
-                                           &ReadOutputCodeRequest->ReadCoord,
-                                           &ReadOutputCodeRequest->EndCoord,
-                                           &ReadOutputCodeRequest->CodesRead);
+                                           pCode,
+                                           ReadOutputCodeRequest->NumCodes,
+                                           &ReadOutputCodeRequest->Coord,
+                                           // &ReadOutputCodeRequest->EndCoord,
+                                           &ReadOutputCodeRequest->NumCodes);
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;
@@ -595,6 +617,8 @@ CSR_API(SrvWriteConsoleOutputString)
     PTEXTMODE_SCREEN_BUFFER Buffer;
     ULONG CodeSize;
 
+    PVOID pCode;
+
     DPRINT("SrvWriteConsoleOutputString\n");
 
     switch (WriteOutputCodeRequest->CodeType)
@@ -615,12 +639,32 @@ CSR_API(SrvWriteConsoleOutputString)
             return STATUS_INVALID_PARAMETER;
     }
 
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&WriteOutputCodeRequest->pCode.pCode,
-                                  WriteOutputCodeRequest->Length,
-                                  CodeSize))
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are written. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     */
+    if (WriteOutputCodeRequest->NumCodes * CodeSize <= sizeof(WriteOutputCodeRequest->CodeStaticBuffer))
     {
-        return STATUS_INVALID_PARAMETER;
+        /*
+         * Adjust the internal pointer, because its old value points to
+         * the static buffer in the original ApiMessage structure.
+         */
+        // WriteOutputCodeRequest->pCode.pCode = WriteOutputCodeRequest->CodeStaticBuffer;
+        pCode = WriteOutputCodeRequest->CodeStaticBuffer;
+    }
+    else
+    {
+        if (!CsrValidateMessageBuffer(ApiMessage,
+                                      (PVOID*)&WriteOutputCodeRequest->pCode.pCode,
+                                      WriteOutputCodeRequest->NumCodes,
+                                      CodeSize))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        pCode = WriteOutputCodeRequest->pCode.pCode;
     }
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
@@ -631,9 +675,9 @@ CSR_API(SrvWriteConsoleOutputString)
     Status = ConDrvWriteConsoleOutputString(Buffer->Header.Console,
                                             Buffer,
                                             WriteOutputCodeRequest->CodeType,
-                                            WriteOutputCodeRequest->pCode.pCode,
-                                            WriteOutputCodeRequest->Length, // NumCodesToWrite,
-                                            &WriteOutputCodeRequest->Coord /*, // WriteCoord,
+                                            pCode,
+                                            WriteOutputCodeRequest->NumCodes,
+                                            &WriteOutputCodeRequest->Coord /*,
                                             &WriteOutputCodeRequest->EndCoord,
                                             &WriteOutputCodeRequest->NrCharactersWritten */);
 
@@ -676,8 +720,8 @@ CSR_API(SrvFillConsoleOutput)
                                      Buffer,
                                      CodeType,
                                      &FillOutputRequest->Code,
-                                     FillOutputRequest->Length, // NumCodesToWrite,
-                                     &FillOutputRequest->Coord /*, // WriteCoord,
+                                     FillOutputRequest->NumCodes,
+                                     &FillOutputRequest->WriteCoord /*,
                                      &FillOutputRequest->NrCharactersWritten */);
 
     // FillOutputRequest->NrCharactersWritten = Written;
