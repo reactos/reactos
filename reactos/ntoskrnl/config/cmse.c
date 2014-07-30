@@ -144,10 +144,14 @@ CmpQuerySecurityDescriptor(IN PCM_KEY_BODY KeyBody,
                            IN OUT PULONG BufferLength)
 {
     PISECURITY_DESCRIPTOR_RELATIVE RelSd;
-    PUCHAR Current;
     ULONG SidSize;
+    ULONG AclSize;
     ULONG SdSize;
     NTSTATUS Status;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
+    ULONG Owner = 0;
+    ULONG Group = 0;
+    ULONG Dacl = 0;
 
     DBG_UNREFERENCED_PARAMETER(KeyBody);
 
@@ -157,8 +161,33 @@ CmpQuerySecurityDescriptor(IN PCM_KEY_BODY KeyBody,
     }
 
     SidSize = RtlLengthSid(SeWorldSid);
-    SdSize = sizeof(*RelSd) + 2 * SidSize;
     RelSd = SecurityDescriptor;
+    SdSize = sizeof(*RelSd);
+
+    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    {
+        Owner = SdSize;
+        SdSize += SidSize;
+    }
+
+    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+    {
+        Group = SdSize;
+        SdSize += SidSize;
+    }
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+        Control |= SE_DACL_PRESENT;
+        Dacl = SdSize;
+        AclSize = sizeof(ACL) + sizeof(ACE) + SidSize;
+        SdSize += AclSize;
+    }
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        Control |= SE_SACL_PRESENT;
+    }
 
     if (*BufferLength < SdSize)
     {
@@ -173,36 +202,37 @@ CmpQuerySecurityDescriptor(IN PCM_KEY_BODY KeyBody,
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Current = (PUCHAR)(RelSd + 1);
-    ASSERT((ULONG_PTR)Current - (ULONG_PTR)RelSd <= SdSize);
+    RelSd->Control |= Control;
+    RelSd->Owner = Owner;
+    RelSd->Group = Group;
+    RelSd->Dacl = Dacl;
 
-    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    if (Owner)
+        RtlCopyMemory((PUCHAR)RelSd + Owner,
+                      SeWorldSid,
+                      SidSize);
+
+    if (Group)
+        RtlCopyMemory((PUCHAR)RelSd + Group,
+                      SeWorldSid,
+                      SidSize);
+
+    if (Dacl)
     {
-        RtlCopyMemory(Current, SeWorldSid, SidSize);
-        RelSd->Owner = Current - (PUCHAR)RelSd;
-        Current += SidSize;
-        ASSERT((ULONG_PTR)Current - (ULONG_PTR)RelSd <= SdSize);
+        Status = RtlCreateAcl((PACL)((PUCHAR)RelSd + Dacl),
+                              AclSize,
+                              ACL_REVISION);
+        if (NT_SUCCESS(Status))
+        {
+            Status = RtlAddAccessAllowedAce((PACL)((PUCHAR)RelSd + Dacl),
+                                            ACL_REVISION,
+                                            GENERIC_ALL,
+                                            SeWorldSid);
+        }
     }
 
-    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
-    {
-        RtlCopyMemory(Current, SeWorldSid, SidSize);
-        RelSd->Group = Current - (PUCHAR)RelSd;
-        Current += SidSize;
-        ASSERT((ULONG_PTR)Current - (ULONG_PTR)RelSd <= SdSize);
-    }
-
-    if (SecurityInformation & DACL_SECURITY_INFORMATION)
-    {
-        RelSd->Control |= SE_DACL_PRESENT;
-    }
-
-    if (SecurityInformation & SACL_SECURITY_INFORMATION)
-    {
-        RelSd->Control |= SE_SACL_PRESENT;
-    }
-
-    return STATUS_SUCCESS;
+    ASSERT(Status == STATUS_SUCCESS);
+    return Status;
 }
 
 NTSTATUS
