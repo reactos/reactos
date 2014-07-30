@@ -13,11 +13,11 @@
 #define NUM_CARDBACKS            (CARDBACK_END - CARDBACK_START + 1)
 #define CARDBACK_RES_START       53
 /* Display option cards with half the size */
-#define CARDBACK_OPTIONS_WIDTH   36
-#define CARDBACK_OPTIONS_HEIGHT  48
+#define CARDBACK_OPTIONS_WIDTH   63
+#define CARDBACK_OPTIONS_HEIGHT  88
 
 #define X_BORDER                  6
-#define Y_BORDER                 12
+#define Y_BORDER                  6
 
 #define NUM_STACKS         10
 
