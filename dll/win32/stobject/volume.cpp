@@ -2,15 +2,16 @@
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll\win32\stobject\volume.cpp
- * PURPOSE:     Systray shell service object
- * PROGRAMMERS: Robert Naumann
-                David Quintana <gigaherz@gmail.com>
+ * PURPOSE:     Volume notification icon handler
+ * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
  */
 
 #include "precomp.h"
 
 #include <mmsystem.h>
 #include <mmddk.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
 HICON g_hIconVolume;
 HICON g_hIconMute;
@@ -33,7 +34,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 
     DbgPrint("Volume_FindDefaultMixerID\n");
 
-    result = waveOutMessage((HWAVEOUT) WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET, (DWORD) &waveOutId, (DWORD) &param2);
+    result = waveOutMessage((HWAVEOUT) WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET, (DWORD_PTR) &waveOutId, (DWORD_PTR) &param2);
     if (result)
         return E_FAIL;
 

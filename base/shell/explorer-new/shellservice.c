@@ -27,6 +27,7 @@ static int CALLBACK InitializeAllCallback(void* pItem, void* pData)
 {
     IOleCommandTarget * pOct = pItem;
     HRESULT * phr = pData;
+    DbgPrint("Initializing SSO %p\n", pOct);
     *phr = IOleCommandTarget_Exec(pOct, &CGID_ShellServiceObject, OLECMDID_NEW, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     return SUCCEEDED(*phr);
 }
@@ -34,6 +35,7 @@ static int CALLBACK InitializeAllCallback(void* pItem, void* pData)
 static int CALLBACK ShutdownAllCallback(void* pItem, void* pData)
 {
     IOleCommandTarget * pOct = pItem;
+    DbgPrint("Shutting down SSO %p\n", pOct);
     IOleCommandTarget_Exec(pOct, &CGID_ShellServiceObject, OLECMDID_SAVE, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     return TRUE;
 }
@@ -41,6 +43,7 @@ static int CALLBACK ShutdownAllCallback(void* pItem, void* pData)
 static int CALLBACK DeleteAllEnumCallback(void* pItem, void* pData)
 {
     IOleCommandTarget * pOct = pItem;
+    DbgPrint("Releasing SSO %p\n", pOct);
     IUnknown_Release(pOct);
     return TRUE;
 }
@@ -60,10 +63,13 @@ HRESULT InitShellServices(HDPA * phdpa)
 
     hdpa = DPA_Create(5);
 
+    DbgPrint("Enumerating Shell Service Ojbect GUIDs...\n");
+
     if (RegOpenKey(HKEY_LOCAL_MACHINE,
         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ShellServiceObjectDelayLoad",
         &hkey))
     {
+        DbgPrint("ERROR: RegOpenKey failed.\n");
         return HRESULT_FROM_WIN32(GetLastError());
     }
 
@@ -78,15 +84,24 @@ HRESULT InitShellServices(HDPA * phdpa)
             break;
 
         if (type != REG_SZ)
+        {
+            DbgPrint("WARNING: Value type was not REG_SZ.\n");
             continue;
+        }
 
         hr = CLSIDFromString(value, &clsid);
         if (FAILED(hr))
+        {
+            DbgPrint("ERROR: CLSIDFromString failed %08x.\n", hr);
             goto cleanup;
+        }
 
         hr = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IOleCommandTarget, (VOID**) &pOct);
         if (FAILED(hr))
+        {
+            DbgPrint("ERROR: CoCreateInstance failed %08x.\n", hr);
             goto cleanup;
+        }
 
         DPA_AppendPtr(hdpa, pOct);
 
@@ -96,6 +111,7 @@ HRESULT InitShellServices(HDPA * phdpa)
 
     if (ret != ERROR_NO_MORE_ITEMS)
     {
+        DbgPrint("ERROR: RegEnumValueW failed %08x.\n", ret);
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }

@@ -15,6 +15,7 @@ include_directories(
 spec2def(stobject.dll stobject.spec)
 
 add_library(stobject SHARED
+    csystray.cpp
     stobject.cpp
     stobject.rc
     volume.cpp
