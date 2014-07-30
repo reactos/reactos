@@ -17,9 +17,8 @@ extern bool fGameStarted;
 #define CARDBACK_END             IDC_CARDBACK12
 #define NUM_CARDBACKS            (CARDBACK_END - CARDBACK_START + 1)
 #define CARDBACK_RES_START       53
-/* Display option cards with 3/4 the size */
-#define CARDBACK_OPTIONS_WIDTH   63
-#define CARDBACK_OPTIONS_HEIGHT  88
+#define CARDBACK_OPTIONS_WIDTH   72
+#define CARDBACK_OPTIONS_HEIGHT  112
 
 extern DWORD dwOptions;
 
