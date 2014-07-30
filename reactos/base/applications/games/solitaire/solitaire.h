@@ -51,7 +51,8 @@ void NewGame(void);
 #define X_PILE_BORDER            18
 #define X_ROWSTACK_BORDER        10
 #define X_SUITSTACK_BORDER       10
-#define Y_BORDER                 38
+#define Y_BORDER                 30
+#define Y_BORDERWITHFRAME        20
 #define Y_ROWSTACK_BORDER        32
 extern int yRowStackCardOffset;
 
