@@ -842,14 +842,14 @@ typedef struct _SECTION
 //
 typedef struct _MMWSLENTRY
 {
-    ULONG Valid:1;
-    ULONG LockedInWs:1;
-    ULONG LockedInMemory:1;
-    ULONG Protection:5;
-    ULONG Hashed:1;
-    ULONG Direct:1;
-    ULONG Age:2;
-    ULONG VirtualPageNumber:20;
+    ULONG_PTR Valid:1;
+    ULONG_PTR LockedInWs:1;
+    ULONG_PTR LockedInMemory:1;
+    ULONG_PTR Protection:5;
+    ULONG_PTR Hashed:1;
+    ULONG_PTR Direct:1;
+    ULONG_PTR Age:2;
+    ULONG_PTR VirtualPageNumber: MM_PAGE_FRAME_NUMBER_SIZE;
 } MMWSLENTRY, *PMMWSLENTRY;
 
 typedef struct _MMWSLE
@@ -857,7 +857,7 @@ typedef struct _MMWSLE
     union
     {
         PVOID VirtualAddress;
-        ULONG Long;
+        ULONG_PTR Long;
         MMWSLENTRY e1;
     } u1;
 } MMWSLE, *PMMWSLE;
