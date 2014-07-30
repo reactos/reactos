@@ -128,8 +128,11 @@ SampCheckPassword(IN SAMPR_HANDLE UserHandle,
                   IN PUNICODE_STRING Password)
 {
     USER_DOMAIN_PASSWORD_INFORMATION DomainPasswordInformation;
+    LPWORD CharTypeBuffer = NULL;
     ULONG PasswordLength;
-    NTSTATUS Status;
+    ULONG i;
+    ULONG Upper = 0, Lower = 0, Digit = 0, Punct = 0, Alpha = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("(%p %p)\n", UserHandle, Password);
 
@@ -152,10 +155,57 @@ SampCheckPassword(IN SAMPR_HANDLE UserHandle,
     /* Check the password complexity */
     if (DomainPasswordInformation.PasswordProperties & DOMAIN_PASSWORD_COMPLEX)
     {
-        /* FIXME */
+        CharTypeBuffer = midl_user_allocate(PasswordLength * sizeof(WORD));
+        if (CharTypeBuffer == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        GetStringTypeW(CT_CTYPE1,
+                       Password->Buffer,
+                       PasswordLength,
+                       CharTypeBuffer);
+
+        for (i = 0; i < PasswordLength; i++)
+        {
+            TRACE("%lu: %C %s %s %s %s\n", i, Password->Buffer[i],
+                  (CharTypeBuffer[i] & C1_UPPER) ? "C1_UPPER" : "        ",
+                  (CharTypeBuffer[i] & C1_LOWER) ? "C1_LOWER" : "        ",
+                  (CharTypeBuffer[i] & C1_DIGIT) ? "C1_DIGIT" : "        ",
+                  (CharTypeBuffer[i] & C1_PUNCT) ? "C1_PUNCT" : "        ",
+                  (CharTypeBuffer[i] & C1_ALPHA) ? "C1_ALPHA" : "        ");
+
+            if (CharTypeBuffer[i] & C1_UPPER)
+                Upper = 1;
+
+            if (CharTypeBuffer[i] & C1_LOWER)
+                Lower = 1;
+
+            if (CharTypeBuffer[i] & C1_DIGIT)
+                Digit = 1;
+
+            if (CharTypeBuffer[i] & C1_PUNCT)
+                Punct = 1;
+
+            if ((CharTypeBuffer[i] & C1_ALPHA) &&
+                !(CharTypeBuffer[i] & C1_UPPER) &&
+                !(CharTypeBuffer[i] & C1_LOWER))
+                Alpha = 1;
+        }
+
+        TRACE("Upper: %lu\n", Upper);
+        TRACE("Lower: %lu\n", Lower);
+        TRACE("Digit: %lu\n", Digit);
+        TRACE("Punct: %lu\n", Punct);
+        TRACE("Alpha: %lu\n", Alpha);
+
+        TRACE("Total: %lu\n", Upper + Lower + Digit + Punct + Alpha);
+        if (Upper + Lower + Digit + Punct + Alpha < 3)
+            Status = STATUS_PASSWORD_RESTRICTION;
     }
 
-    return STATUS_SUCCESS;
+    if (CharTypeBuffer != NULL)
+        midl_user_free(CharTypeBuffer);
+
+    return Status;
 }
 
 
