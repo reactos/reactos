@@ -10,6 +10,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
+SysTrayIconHandlers_t g_IconHandlers [] = {
+        { Volume_Init, Volume_Shutdown, Volume_Update, Volume_Message }
+};
+const int             g_NumIcons = _countof(g_IconHandlers);
+
 const GUID CLSID_SysTray = { 0x35CEC8A3, 0x2BE6, 0x11D2, { 0x87, 0x73, 0x92, 0xE2, 0x20, 0x52, 0x41, 0x53 } };
 
 CSysTray::CSysTray() {}

@@ -18,27 +18,15 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_SysTray, CSysTray)
 END_OBJECT_MAP()
 
-const int ObjectMapCount = _countof(ObjectMap);
-
-class CShellTrayModule : public CComModule
-{
-public:
-};
-
-HINSTANCE             g_hInstance;
-CShellTrayModule      g_Module;
-SysTrayIconHandlers_t g_IconHandlers [] = {
-        { Volume_Init, Volume_Shutdown, Volume_Update, Volume_Message }
-};
-const int             g_NumIcons = _countof(g_IconHandlers);
+HINSTANCE  g_hInstance;
+CComModule g_Module;
 
 void *operator new (size_t, void *buf)
 {
     return buf;
 }
 
-BOOL
-WINAPI
+STDAPI_(BOOL)
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
     if (fdwReason == DLL_PROCESS_ATTACH)
@@ -47,7 +35,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         DisableThreadLibraryCalls(g_hInstance);
 
         /* HACK - the global constructors don't run, so I placement new them here */
-        new (&g_Module) CShellTrayModule;
+        new (&g_Module) CComModule;
         new (&_AtlWinModule) CAtlWinModule;
         new (&_AtlBaseModule) CAtlBaseModule;
         new (&_AtlComModule) CAtlComModule;
@@ -65,47 +53,22 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 STDAPI
 DllRegisterServer(void)
 {
-    HRESULT hr;
-
-    DbgPrint("DllRegisterServer should process %d classes...\n", ObjectMapCount);
-
-    hr = g_Module.DllRegisterServer(FALSE);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return S_OK;
+    return g_Module.DllRegisterServer(FALSE);
 }
 
 STDAPI
 DllUnregisterServer(void)
 {
-    HRESULT hr;
-
-    DbgPrint("DllUnregisterServer should process %d classes...\n", ObjectMapCount);
-
-    hr = g_Module.DllUnregisterServer(FALSE);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return S_OK;
+    return g_Module.DllUnregisterServer(FALSE);
 }
 
 STDAPI
 DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    HRESULT hr;
-
-    DbgPrint("DllGetClassObject should process %d classes...\n", ObjectMapCount);
-
-    hr = g_Module.DllGetClassObject(rclsid, riid, ppv);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return S_OK;
+    return g_Module.DllGetClassObject(rclsid, riid, ppv);
 }
 
-HRESULT
-WINAPI
+STDAPI
 DllCanUnloadNow(void)
 {
     return g_Module.DllCanUnloadNow();
