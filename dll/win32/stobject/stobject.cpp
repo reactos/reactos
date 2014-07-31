@@ -18,6 +18,8 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_SysTray, CSysTray)
 END_OBJECT_MAP()
 
+const int ObjectMapCount = _countof(ObjectMap);
+
 class CShellTrayModule : public CComModule
 {
 public:
@@ -60,67 +62,14 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
     return TRUE;
 }
 
-static
-HRESULT
-RegisterShellServiceObject(REFGUID guidClass, LPCWSTR lpName, BOOL bRegister)
-{
-    const LPCWSTR strRegistryLocation = L"Software\\Microsoft\\Windows\\CurrentVersion\\ShellServiceObjectDelayLoad";
-
-    HRESULT hr = E_FAIL;
-
-    OLECHAR strGuid[128];
-
-    HKEY hKey = 0;
-
-    if (!StringFromGUID2(guidClass, strGuid, _countof(strGuid)))
-    {
-        DbgPrint("StringFromGUID2 failed\n");
-        goto cleanup;
-    }
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, strRegistryLocation, 0, KEY_WRITE, &hKey))
-    {
-        DbgPrint("RegOpenKeyExW failed\n");
-        goto cleanup;
-    }
-
-    if (bRegister)
-    {
-        LONG cbGuid = (lstrlenW(strGuid) + 1) * 2;
-        if (RegSetValueExW(hKey, lpName, 0, REG_SZ, (const BYTE *) strGuid, cbGuid))
-        {
-            DbgPrint("RegSetValueExW failed\n");
-            goto cleanup;
-        }
-    }
-    else
-    {
-        if (RegDeleteValueW(hKey, lpName))
-        {
-            DbgPrint("RegDeleteValueW failed\n");
-            goto cleanup;
-        }
-    }
-
-    hr = S_OK;
-
-cleanup:
-    if (hKey)
-        RegCloseKey(hKey);
-
-    return hr;
-}
-
 STDAPI
 DllRegisterServer(void)
 {
     HRESULT hr;
 
-    hr = g_Module.DllRegisterServer(FALSE);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    DbgPrint("DllRegisterServer should process %d classes...\n", ObjectMapCount);
 
-    hr = RegisterShellServiceObject(CLSID_SysTray, L"SysTray", TRUE);
+    hr = g_Module.DllRegisterServer(FALSE);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -132,9 +81,7 @@ DllUnregisterServer(void)
 {
     HRESULT hr;
 
-    hr = RegisterShellServiceObject(CLSID_SysTray, L"SysTray", FALSE);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    DbgPrint("DllUnregisterServer should process %d classes...\n", ObjectMapCount);
 
     hr = g_Module.DllUnregisterServer(FALSE);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -147,7 +94,9 @@ STDAPI
 DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     HRESULT hr;
-    
+
+    DbgPrint("DllGetClassObject should process %d classes...\n", ObjectMapCount);
+
     hr = g_Module.DllGetClassObject(rclsid, riid, ppv);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
