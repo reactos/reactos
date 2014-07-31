@@ -49,7 +49,12 @@ InitUserAtoms(VOID)
 
   gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
 
-  AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
+  /*
+   * FIXME: AddPropW uses the global kernel atom table, thus leading to conflicts if we use
+   * the win32k atom table for this ones. What is the right thing to do ?
+   */
+  // AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
+  NtAddAtom(L"SysWNDO", 14, &AtomWndObj);
   AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
   AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
 

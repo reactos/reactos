@@ -168,7 +168,6 @@ CcSetFileSizes (
                 if ((current->ReferenceCount == 0) || ((current->ReferenceCount == 1) && current->Dirty))
                 {
                     RemoveEntryList(&current->CacheMapVacbListEntry);
-                    RemoveEntryList(&current->VacbListEntry);
                     RemoveEntryList(&current->VacbLruListEntry);
                     if (current->Dirty)
                     {

@@ -48,7 +48,7 @@ FS_AddProvider(
     Item->FileSystem = FileSystem;
     Item->FormatFunc = FormatFunc;
     Item->ChkdskFunc = ChkdskFunc;
-    Item->QuickFormat = FALSE;
+    Item->QuickFormat = TRUE;
     InsertTailList(&List->ListHead, &Item->ListEntry);
 
     if (!FormatFunc)
@@ -61,7 +61,7 @@ FS_AddProvider(
     Item->FileSystem = FileSystem;
     Item->FormatFunc = FormatFunc;
     Item->ChkdskFunc = ChkdskFunc;
-    Item->QuickFormat = TRUE;
+    Item->QuickFormat = FALSE;
     InsertTailList(&List->ListHead, &Item->ListEntry);
 }
 

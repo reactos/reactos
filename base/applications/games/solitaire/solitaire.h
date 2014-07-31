@@ -17,9 +17,8 @@ extern bool fGameStarted;
 #define CARDBACK_END             IDC_CARDBACK12
 #define NUM_CARDBACKS            (CARDBACK_END - CARDBACK_START + 1)
 #define CARDBACK_RES_START       53
-/* Display option cards with half the size */
-#define CARDBACK_OPTIONS_WIDTH   36
-#define CARDBACK_OPTIONS_HEIGHT  48
+#define CARDBACK_OPTIONS_WIDTH   72
+#define CARDBACK_OPTIONS_HEIGHT  112
 
 extern DWORD dwOptions;
 
@@ -51,7 +50,8 @@ void NewGame(void);
 #define X_PILE_BORDER            18
 #define X_ROWSTACK_BORDER        10
 #define X_SUITSTACK_BORDER       10
-#define Y_BORDER                 20
+#define Y_BORDER                 30
+#define Y_BORDERWITHFRAME        20
 #define Y_ROWSTACK_BORDER        32
 extern int yRowStackCardOffset;
 

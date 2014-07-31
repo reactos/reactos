@@ -54,7 +54,7 @@ STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELL
 CAPTION "Tebrikler!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Adınızı giriniz.", -1, 10, 10, 150, 10
+    LTEXT "Lütfen adınızı giriniz.", -1, 10, 10, 150, 10
     EDITTEXT IDC_EDITNAME, 25, 20, 110, 12
     DEFPUSHBUTTON "Tamam", IDOK, 60, 40, 40, 15
 END

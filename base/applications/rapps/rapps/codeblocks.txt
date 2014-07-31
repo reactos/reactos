@@ -18,6 +18,11 @@ Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese en
 [Section.0410]
 Description = Un IDE potente, open source, multipiattaforma. Non contiene un compilatore.
 
+[Section.0418]
+Name = Code::Blocks (fără compilator)
+Description = Un IDE (mediu de dezvoltare integrat) puternic, multi-platformă, cu sursă deschisă. Nu conține nici un compilator.
+Size = 29,2 Mo
+
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)
 Licence = GPL 3. sürüm

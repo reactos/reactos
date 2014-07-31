@@ -133,6 +133,16 @@ EnableVolumeCompression(
 
 /* Format command in FMIFS */
 VOID NTAPI
+Format(
+	IN PWCHAR DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PWCHAR Format,
+	IN PWCHAR Label,
+	IN BOOLEAN QuickFormat,
+	IN PFMIFSCALLBACK Callback);
+
+/* FormatEx command in FMIFS */
+VOID NTAPI
 FormatEx(
 	IN PWCHAR DriveRoot,
 	IN FMIFS_MEDIA_FLAG MediaFlag,

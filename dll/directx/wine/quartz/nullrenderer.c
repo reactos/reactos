@@ -108,7 +108,7 @@ static ULONG WINAPI NullRendererInner_AddRef(IUnknown *iface)
 static ULONG WINAPI NullRendererInner_Release(IUnknown *iface)
 {
     NullRendererImpl *This = impl_from_IUnknown(iface);
-    ULONG refCount = BaseFilterImpl_Release(&This->renderer.filter.IBaseFilter_iface);
+    ULONG refCount = BaseRendererImpl_Release(&This->renderer.filter.IBaseFilter_iface);
 
     if (!refCount)
     {

@@ -292,7 +292,6 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
         ListHead = &MmModifiedPageListByColor[0];
 
         /* Decrease transition page counter */
-        ASSERT(Pfn->u3.e1.PrototypePte == 1); /* Only supported ARM3 case */
         MmTransitionSharedPages--;
     }
     else if (ListHead == &MmModifiedNoWritePageListHead)
@@ -984,7 +983,6 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
         ASSERT(Pfn1->OriginalPte.u.Soft.PageFileHigh == 0);
 
         /* One more transition page */
-        ASSERT(Pfn1->u3.e1.PrototypePte == 1);
         MmTransitionSharedPages++;
 
         /* Increment the number of per-process modified pages */

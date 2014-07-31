@@ -10,7 +10,8 @@
 #include "precomp.h"
 
 /* FMIFS.3 */
-VOID NTAPI
+VOID
+NTAPI
 DiskCopy(void)
 {
 }

@@ -32,18 +32,18 @@ extern LIST_ENTRY ProviderListHead;
 
 typedef struct _IFS_PROVIDER
 {
-	LIST_ENTRY ListEntry;
+    LIST_ENTRY ListEntry;
 
-	CHKDSKEX ChkdskEx;
-	PVOID Extend;
-	FORMATEX FormatEx;
+    CHKDSKEX ChkdskEx;
+    PVOID Extend;
+    FORMATEX FormatEx;
 
-	WCHAR Name[1];
+    WCHAR Name[1];
 } IFS_PROVIDER, *PIFS_PROVIDER;
 
 /* init.c */
 PIFS_PROVIDER
 GetProvider(
-	IN PWCHAR FileSytem);
+    IN PWCHAR FileSytem);
 
 #endif /* _FMIFS_PCH_ */

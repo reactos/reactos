@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
@@ -32,7 +32,7 @@ Description = Open-bron multi-protocol instant message toepassing - werkt mogeli
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
 
 [Section.0418]
-Description = Aplicație de mesagerie instant multiprotocol (open-source) - posibil cu limitări în funcționalitate.
+Description = Aplicație de mesagerie instant multiprotocol (cu surse deschise) - posibil cu limitări în funcționalitate.
 Size = 3,8 Mo
 
 [Section.041f]

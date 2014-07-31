@@ -18,6 +18,11 @@ Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese en
 [Section.0410]
 Description = Un IDE potente, open source, multipiattaforma. Contiene il compilatore TDM-GCC (versione 4.8.1, 32 bit).
 
+[Section.0418]
+Name = Code::Blocks TDM-GCC (versiunea 4.8.1 pe 32 biți)
+Description = Un IDE (mediu de dezvoltare integrat) puternic, multi-platformă, cu sursă deschisă. Conține compilatorul TDM-GCC (versiunea 4.8.1 pe 32 biți).
+Size = 100 Mo
+
 [Section.041f]
 Name = Code::Blocks TDM-GCC (sürüm 4.8.1, 32 bitlik)
 Licence = GPL 3. sürüm

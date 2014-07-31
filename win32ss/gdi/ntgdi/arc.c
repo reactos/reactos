@@ -8,7 +8,7 @@
  */
 #define PUTPIXEL(x,y,BrushInst)        \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->rosdc.CombinedClip,                         \
+       &dc->co.ClipObj,                         \
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
@@ -16,7 +16,7 @@
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       dc->rosdc.CombinedClip,                         \
+       &dc->co.ClipObj,                         \
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
@@ -335,8 +335,7 @@ NtGdiAngleArc(
 
   worker.l  = dwStartAngle;
   worker1.l = dwSweepAngle;
-  DC_vPrepareDCsForBlit(pDC, pDC->rosdc.CombinedClip->rclBounds,
-                           NULL, pDC->rosdc.CombinedClip->rclBounds);
+  DC_vPrepareDCsForBlit(pDC, NULL, NULL, NULL);
   if (pDC->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
     DC_vUpdateFillBrush(pDC);
   if (pDC->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
@@ -381,8 +380,7 @@ NtGdiArcInternal(
     return TRUE;
   }
 
-  DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                            NULL, dc->rosdc.CombinedClip->rclBounds);
+  DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
   if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
     DC_vUpdateFillBrush(dc);

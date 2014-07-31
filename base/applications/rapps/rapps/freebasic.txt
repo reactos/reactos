@@ -29,7 +29,7 @@ Description = Compilatore BASIC open source. La sintassi del BASIC è compatibil
 Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.
 
 [Section.0418]
-Description = Compilator (open-source) BASIC. Sintaxa BASIC este compatibilă cu QBASIC.
+Description = Compilator (cu surse deschise) BASIC. Sintaxa BASIC este compatibilă cu QBASIC.
 Size = 7,4 Mo
 
 [Section.041f]

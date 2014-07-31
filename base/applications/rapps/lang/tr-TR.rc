@@ -100,7 +100,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Üzerine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Uygulama Yöneticisi\nTelif Hakkı: 2009 - \nDmitry Chapyshev (dmitry@reactos.org) eliyle yazılmıştır.", IDC_STATIC, 48, 7, 130, 39
+    LTEXT "ReactOS Uygulama Yöneticisi\nTelif Hakkı: 2009\nDmitry Chapyshev (dmitry@reactos.org) ile.", IDC_STATIC, 48, 7, 130, 39
     PUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -179,7 +179,7 @@ BEGIN
     IDS_UNINSTALL "Kaldır"
     IDS_MODIFY "Değiştir"
     IDS_APPS_COUNT "Uygulama Sayısı: %d"
-    IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoşgeldiniz.\n\n"
+    IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
     IDS_WELCOME_TEXT "Solda bir ulam seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un Umûmî Ağ sitesi: "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Kurulanlar"

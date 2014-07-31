@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Programm wird beendet...", IDC_STATIC, 7, 7, 186, 11
     CONTROL "Fortschritt", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "Wenn Sie das Programm sofort beenden, werden Sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wählen Sie Jetzt beenden.", IDC_STATIC, 7, 40, 186, 26
+    LTEXT "Wenn Sie das Programm sofort beenden, werden Sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wÃ¤hlen Sie Jetzt beenden.", IDC_STATIC, 7, 40, 186, 26
     DEFPUSHBUTTON "J&etzt beenden", IDC_END_NOW, 150, 71, 43, 17
 END
 
@@ -19,8 +19,8 @@ BEGIN
     DEFPUSHBUTTON "Abbechen", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "J&etzt beenden", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "Das Programm reagiert nicht.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "Um zu ReactOS zurückzukehren und den Status der Anwendung zu überprüfen, wählen Sie Abbrechen.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Wenn Sie das Programm sofort beenden, werden Sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wählen Sie Jetzt beenden.", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "Um zu ReactOS zurÃ¼ckzukehren und den Status der Anwendung zu Ã¼berprÃ¼fen, wÃ¤hlen Sie Abbrechen.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Wenn Sie das Programm sofort beenden, werden Sie eventuell ungespeicherte Daten verlieren. Um das Programm zu beenden, wÃ¤hlen Sie Jetzt beenden.", IDC_STATIC, 7, 53, 178, 26
 END
 
 IDD_SWITCH_APP DIALOGEX 90, 90, 265, 170

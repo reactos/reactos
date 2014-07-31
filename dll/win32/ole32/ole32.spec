@@ -57,7 +57,7 @@
 # CoGetProcessIdentifier
 @ stdcall CoGetStandardMarshal(ptr ptr long ptr long ptr)
 @ stdcall CoGetState(ptr)
-# CoGetStdMarshalEx
+@ stdcall -stub CoGetStdMarshalEx(ptr long ptr)
 # CoGetSystemSecurityPermissions
 @ stdcall CoGetTreatAsClass(ptr ptr)
 @ stdcall CoImpersonateClient()

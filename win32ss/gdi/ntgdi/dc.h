@@ -46,14 +46,6 @@ typedef enum _DCTYPE
 
 /* Type definitions ***********************************************************/
 
-typedef struct _ROS_DC_INFO
-{
-  HRGN     hClipRgn;     /* Clip region (may be 0) */
-  HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
-
-  CLIPOBJ     *CombinedClip;
-} ROS_DC_INFO;
-
 typedef struct _DCLEVEL
 {
   HPALETTE          hpal;
@@ -139,9 +131,6 @@ typedef struct _DC
   ULONG       ulCopyCount;
   PVOID       pSurfInfo;
   POINTL      ptlDoBanding;
-
-  /* Reactos specific members */
-  ROS_DC_INFO rosdc;
 } DC;
 
 extern PDC defaultDCstate;
@@ -199,9 +188,9 @@ BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
 
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 VOID FASTCALL DC_vUpdateViewportExt(PDC pdc);
-VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL to);
+VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To);
 VOID FASTCALL DC_vFinishBlit(PDC pdc1, PDC pdc2);
-VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdc1, RECT rc1, PDC pdc2, RECT rc2);
+VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdcDest, const RECT* rcDest, PDC pdcSrc, const RECT* rcSrc);
 
 VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 

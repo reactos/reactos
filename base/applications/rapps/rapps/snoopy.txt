@@ -19,6 +19,11 @@ URLSite = http://www.blueskied.com/spiele-spielen/snoopy.htm
 [Section.0410]
 Description = Il remake del gioco Snoopy per Commodore 64.
 
+[Section.0418]
+Licence = Gratuită
+Description = Recrearea jocului Snoppy (original pe C64).
+Size = 704 ko
+
 [Section.041f]
 Licence = Ücretsiz
 Description = Özgün C64 Snoopy'in yeniden yapılmışı.

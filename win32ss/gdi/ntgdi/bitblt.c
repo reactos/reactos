@@ -107,7 +107,7 @@ NtGdiAlphaBlend(
 
     /* Prepare DCs for blit */
     TRACE("Preparing DCs for blit\n");
-    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+    DC_vPrepareDCsForBlit(DCDest, &DestRect, DCSrc, &SourceRect);
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
@@ -131,7 +131,7 @@ NtGdiAlphaBlend(
     TRACE("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
-                               DCDest->rosdc.CombinedClip,
+                               &DCDest->co.ClipObj,
                                &exlo.xlo,
                                &DestRect,
                                &SourceRect,
@@ -268,7 +268,7 @@ NtGdiTransparentBlt(
     rcSrc.bottom += DCSrc->ptlDCOrig.y;
 
     /* Prepare for blit */
-    DC_vPrepareDCsForBlit(DCDest, rcDest, DCSrc, rcSrc);
+    DC_vPrepareDCsForBlit(DCDest, &rcDest, DCSrc, &rcSrc);
 
     BitmapDest = DCDest->dclevel.pSurface;
     if (!BitmapDest)
@@ -290,7 +290,7 @@ NtGdiTransparentBlt(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        DCDest->rosdc.CombinedClip, &exlo.xlo, &rcDest, &rcSrc,
+        &DCDest->co.ClipObj, &exlo.xlo, &rcDest, &rcSrc,
         TransparentColor, 0);
 
     EXLATEOBJ_vCleanup(&exlo);
@@ -456,7 +456,7 @@ NtGdiMaskBlt(
     }
 
     /* Prepare blit */
-    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+    DC_vPrepareDCsForBlit(DCDest, &DestRect, DCSrc, &SourceRect);
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(DCDest);
@@ -487,7 +487,7 @@ NtGdiMaskBlt(
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                           psurfMask ? &psurfMask->SurfObj : NULL,
-                          DCDest->rosdc.CombinedClip,
+                          &DCDest->co.ClipObj,
                           XlateObj,
                           &DestRect,
                           &SourcePoint,
@@ -647,7 +647,7 @@ GreStretchBltMask(
     BrushOrigin.y = 0;
 
     /* Only prepare Source and Dest, hdcMask represents a DIB */
-    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+    DC_vPrepareDCsForBlit(DCDest, &DestRect, DCSrc, &SourceRect);
 
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(DCDest);
@@ -697,7 +697,7 @@ GreStretchBltMask(
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
                               BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                               BitmapMask ? &BitmapMask->SurfObj : NULL,
-                              DCDest->rosdc.CombinedClip,
+                              &DCDest->co.ClipObj,
                               XlateObj,
                               &DCDest->dclevel.ca,
                               &DestRect,
@@ -826,7 +826,7 @@ IntPatBlt(
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y;
 #endif
 
-    DC_vPrepareDCsForBlit(pdc, DestRect, NULL, DestRect);
+    DC_vPrepareDCsForBlit(pdc, &DestRect, NULL, NULL);
 
     psurf = pdc->dclevel.pSurface;
 
@@ -834,7 +834,7 @@ IntPatBlt(
         &psurf->SurfObj,
         NULL,
         NULL,
-        pdc->rosdc.CombinedClip,
+        &pdc->co.ClipObj,
         NULL,
         &DestRect,
         NULL,

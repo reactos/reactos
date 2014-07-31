@@ -1195,7 +1195,7 @@ UserDrawIconEx(
     RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
     
     /* Prepare the underlying surface */
-    DC_vPrepareDCsForBlit(pdc, rcDest, NULL, rcDest);
+    DC_vPrepareDCsForBlit(pdc, &rcDest, NULL, NULL);
 
     /* We now have our destination surface and rectangle */
     psurfDest = pdc->dclevel.pSurface;

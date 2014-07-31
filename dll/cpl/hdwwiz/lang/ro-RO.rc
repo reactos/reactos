@@ -1,10 +1,17 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+ * PROJECT: ReactOS Add hardware control panel
+ * FILE:    dll/cpl/hdwwiz/lang/ro-RO.rc
+ * PURPOSE: Romanian Language File for add hardware control panel
+ * TRANSLATORS:
+ *          Petre Dumitriu
+ *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la adăugarea de componente fizice", IDC_FINISHTITLE, 114, 8, 203, 24
@@ -18,7 +25,7 @@ END
 
 IDD_SEARCHPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
@@ -27,7 +34,7 @@ END
 
 IDD_ISCONNECTEDPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Componenta fizică este conectată la calculator?", -1, 20, 11, 275, 8
@@ -37,7 +44,7 @@ END
 
 IDD_PROBELISTPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Alegeți din lista de mai jos un dispozitiv instalat, apoi apăsați „Înainte” pentru a-i inspecta proprietățile sau pentru a depana o posibilă problemă.", -1, 21, 8, 275, 22
@@ -48,7 +55,7 @@ END
 
 IDD_SELECTWAYPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Asistentul poate încerca detectarea și instalarea automată a componentelor fizice. Altfel, dacă știți exact modelul dispozitivului, îl veți putea manual alege dintr-o listă.", -1, 21, 8, 280, 24
@@ -59,7 +66,7 @@ END
 
 IDD_DETECTEDHWPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
@@ -69,7 +76,7 @@ END
 
 IDD_HWTYPESPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dacă nu regăsiți categoria pe care o căutați, specificați „afișează toate”.", IDC_STATUSTEXT, 21, 9, 275, 18
@@ -79,7 +86,7 @@ END
 
 IDD_PROGRESSPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Căutarea componentei fizice poate dura câteva minute.", -1, 21, 8, 275, 15
@@ -91,7 +98,7 @@ END
 
 IDD_FINISHPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Încheiere proces de instalare", IDC_FINISHTITLE, 114, 8, 203, 24
@@ -102,7 +109,7 @@ END
 
 IDD_ISFOUNDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Încheiere proces de instalare", IDC_FINISHTITLE, 114, 8, 203, 24
@@ -113,7 +120,7 @@ END
 
 IDD_HWSTATUSPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Încheire proces de instalare", IDC_FINISHTITLE, 114, 8, 195, 28
@@ -125,7 +132,7 @@ END
 
 IDD_NOTCONNECTEDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de adăugare a componentelor fizice"
+CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Nu se mai poate continua Adăugarea componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 28

@@ -47,7 +47,7 @@ static VOID WINAPI DosSystemBop(LPWORD Stack)
     {
         case 0x11:  // Load the DOS kernel
         {
-            BOOLEAN Success;
+            BOOLEAN Success = FALSE;
             HANDLE  hDosKernel;
             ULONG   ulDosKernelSize = 0;
 

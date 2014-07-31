@@ -37,6 +37,11 @@ static DHGLRC wglGetDHGLRC(struct wgl_context* context)
     return context->dhglrc;
 }
 
+/* GDI entry points (win32k) */
+extern INT APIENTRY GdiDescribePixelFormat(HDC hdc, INT ipfd, UINT cjpfd, PPIXELFORMATDESCRIPTOR ppfd);
+extern BOOL APIENTRY GdiSetPixelFormat(HDC hdc, INT ipfd);
+extern BOOL APIENTRY GdiSwapBuffers(HDC hdc);
+
 /* Retrieves the ICD data (driver version + relevant DLL entry points) for a device context */
 struct ICD_Data* IntGetIcdData(HDC hdc)
 {
@@ -245,6 +250,17 @@ struct ICD_Data* IntGetIcdData(HDC hdc)
     DRV_LOAD(DrvSwapLayerBuffers);
 #undef DRV_LOAD
     
+    /* Let's see if GDI should handle this instead of the ICD DLL */
+    // FIXME: maybe there is a better way
+    if (GdiDescribePixelFormat(hdc, 0, 0, NULL) != 0)
+    {
+        /* GDI knows what to do with that. Override */
+        TRACE("Forwarding WGL calls to win32k!\n");
+        data->DrvDescribePixelFormat = GdiDescribePixelFormat;
+        data->DrvSetPixelFormat = GdiSetPixelFormat;
+        data->DrvSwapBuffers = GdiSwapBuffers;
+    }
+
     /* Copy the DriverName */
     wcscpy(data->DriverName, DrvInfo.DriverName);
     
@@ -264,4 +280,20 @@ fail:
     FreeLibrary(data->hModule);
     HeapFree(GetProcessHeap(), 0, data);
     return NULL;
+}
+
+void IntDeleteAllICDs(void)
+{
+    struct ICD_Data* data;
+
+    EnterCriticalSection(&icdload_cs);
+
+    while (ICD_Data_List != NULL)
+    {
+        data = ICD_Data_List;
+        ICD_Data_List = data->next;
+
+        FreeLibrary(data->hModule);
+        HeapFree(GetProcessHeap(), 0, data);
+    }
 }

@@ -10,25 +10,25 @@
 #include "precomp.h"
 
 /* FMIFS.1 */
-VOID NTAPI
+VOID
+NTAPI
 Chkdsk(
-	IN PWCHAR DriveRoot,
-	IN PWCHAR Format,
-	IN BOOLEAN CorrectErrors,
-	IN BOOLEAN Verbose,
-	IN BOOLEAN CheckOnlyIfDirty,
-	IN BOOLEAN ScanDrive,
-	IN PVOID Unused2,
-	IN PVOID Unused3,
-	IN PFMIFSCALLBACK Callback)
+    IN PWCHAR DriveRoot,
+    IN PWCHAR Format,
+    IN BOOLEAN CorrectErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID Unused2,
+    IN PVOID Unused3,
+    IN PFMIFSCALLBACK Callback)
 {
-	BOOLEAN Argument = FALSE;
+    BOOLEAN Argument = FALSE;
 
-	/* FAIL immediately */
-	Callback(
-		DONE, /* Command */
-		0, /* DWORD Modifier */
-		&Argument);/* Argument */
+    /* FAIL immediately */
+    Callback(DONE, /* Command */
+             0, /* DWORD Modifier */
+             &Argument);/* Argument */
 }
 
 /* EOF */

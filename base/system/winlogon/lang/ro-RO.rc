@@ -1,4 +1,11 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+ * PROJECT: ReactOS Winlogon
+ * FILE:    base/system/winlogon/lang/ro-RO.rc
+ * PURPOSE: Romanian Language File for Winlogon
+ * TRANSLATORS:
+ *          Petre Dumitriu
+ *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -33,11 +40,11 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Se execută operațiile de autentificare…"
     IDS_LOADINGYOURPERSONALSETTINGS "Se reconstituie configurațiile personale…"
     IDS_CLOSINGNETWORKCONNECTIONS "Se închid conexiunile în rețea…"
-    IDS_REACTOSISSHUTTINGDOWN "Se oprește sistemului de operare…"
+    IDS_REACTOSISSHUTTINGDOWN "Se oprește sistemul de operare…"
     IDS_PREPARETOSTANDBY "Se pregătește stărea de veghe…"
     IDS_PREPARETOHIBERNATE "Se pregătește starea de hibernare…"
     IDS_SAVEYOURSETTINGS "Se rețin configurațiile personale…"
-    IDS_REACTOSISSTARTINGUP "Se pornește sistemului de operare…"
+    IDS_REACTOSISSTARTINGUP "Se pornește sistemul de operare…"
 END
 
 STRINGTABLE

@@ -14,7 +14,17 @@
 
 XCLIPOBJ gxcoTrivial =
 {
-    {0, {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, DC_TRIVIAL, FC_RECT, TC_RECTANGLES, 0},
+    /* CLIPOBJ */
+    {
+        {
+            0, /* iUniq */
+            {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, /* rclBounds */
+            DC_TRIVIAL,    /* idCOmplexity */
+            FC_RECT,       /* iFComplexity */
+            TC_RECTANGLES, /* iMode */
+            0              /* fjOptions */
+        },
+    },
     0, 0, 0
 };
 

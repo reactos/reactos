@@ -367,7 +367,7 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
     }
     else if (Flags & DCHF_VALIDATEVISRGN || 0 == Flags)
     {
-        dc->fs &= ~DC_FLAG_DIRTY_RAO;
+        //dc->fs &= ~DC_FLAG_DIRTY_RAO;
     }
 
     DC_UnlockDc(dc);

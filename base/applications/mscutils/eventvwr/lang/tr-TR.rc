@@ -16,9 +16,9 @@ BEGIN
         MENUITEM "&Güvenlik", ID_LOG_SECURITY
         MENUITEM "&Dizge", ID_LOG_SYSTEM
         MENUITEM SEPARATOR
-        MENUITEM "Save &Protocol...", ID_SAVE_PROTOCOL, GRAYED
+        MENUITEM "&Protokolü Kaydet...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "C&lear all Events", ID_CLEAR_EVENTS, GRAYED
+        MENUITEM "&Tüm Olayları Sil", ID_CLEAR_EVENTS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
     END
@@ -98,7 +98,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Olay Görüntüleyicisi"
     IDS_APP_TITLE_EX "%s - %s Oturum Aç \\\\"
-    IDS_STATUS_MSG "%s'nin %lu olayı var."
+    IDS_STATUS_MSG "%s -> %lu olay var."
     IDS_EVENTSTRINGIDNOTFOUND "%s kaynağındaki %lu olay kimliği için açıklama bulunamıyor. Yerli bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veyâ ileti DLL kütükleri olmayabilir."
     IDS_EVENTLOG_ERROR_TYPE "Yanlışlık"
     IDS_EVENTLOG_WARNING_TYPE "Uyarı"
@@ -107,8 +107,8 @@ BEGIN
     IDS_EVENTLOG_AUDIT_FAILURE "Başarısızlık Denetimi"
     IDS_EVENTLOG_SUCCESS "Başarı"
     IDS_EVENTLOG_UNKNOWN_TYPE "Bilinmeyen Olay"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
-    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını kaydetmek ister misiniz?"
+    IDS_SAVE_FILTER "Olay Kaydı (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE

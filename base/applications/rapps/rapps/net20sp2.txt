@@ -8,30 +8,31 @@ Licence = Unknown
 Description = Microsoft .NET Framework Version 2.0 Service Pack 2.
 Size = 23.84 MB
 Category = 14
-URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=1639
+URLSite = http://www.microsoft.com/en-US/download/details.aspx?id=1639
 URLDownload = http://download.microsoft.com/download/c/6/e/c6e88215-0178-4c6c-b5f3-158ff77b1f38/NetFx20SP2_x86.exe
 CDPath = none
 
 [Section.0407]
 Description = Microsoft .NET Framework Version 2.0 Service Pack 2.
 URLSite = http://www.microsoft.com/de-DE/download/details.aspx?id=1639
-URLDownload = http://www.microsoft.com/de-de/download/confirmation.aspx?id=1639&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1
 
 [Section.040a]
 Description = Microsoft .NET Framework versión 2.0 Service Pack 2.
 URLSite = http://www.microsoft.com/es-ES/download/details.aspx?id=1639
-URLDownload = http://www.microsoft.com/es-es/download/confirmation.aspx?id=1639&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1
 
 [Section.040c]
 Description = Microsoft .NET Framework version 2.0 Service Pack 2.
 Size = 23,84 Mo
 URLSite = http://www.microsoft.com/fr-FR/download/details.aspx?id=1639
-URLDownload = http://www.microsoft.com/fr-fr/download/confirmation.aspx?id=1639&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1
+
+[Section.0410]
+Description = Microsoft .NET Framework Version 2.0 - Redistributable Package.
+Size = 23.8 MB
+URLSite = http://www.microsoft.com/it-IT/download/details.aspx?id=1639
 
 [Section.0415]
 Description = Microsoft .NET Framework Wersja 2.0 Service Pack 2.
 URLSite = http://www.microsoft.com/pl-PL/download/details.aspx?id=1639
-URLDownload = http://www.microsoft.com/pl-pl/download/confirmation.aspx?id=1639&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1
 
 [Section.0418]
 Licence = Nespecificată
@@ -44,4 +45,3 @@ Licence = Bilinmiyor
 Description = Microsoft .NET Çatısı Sürüm 2.0 - Hizmet Paketi 2
 Size = 23,84 MB
 URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=1639
-URLDownload = http://www.microsoft.com/tr-tr/download/confirmation.aspx?id=1639&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1

@@ -667,7 +667,10 @@ CDevSettings_GetData(IDataObject* iface,
         {
             hr = StringCbCopy(pszBuf, (wcslen(pszRet) + 1) * sizeof(WCHAR), pszRet);
             if (FAILED(hr))
+            {
+                GlobalFree(pszBuf);
                 return hr;
+            }
 
             pmedium->tymed = TYMED_HGLOBAL;
             pmedium->hGlobal = pszBuf;

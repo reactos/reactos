@@ -62,7 +62,19 @@ NtGdiDescribePixelFormat(
     }
 
     if (!pdc->ipfdDevMax)
-        IntGetipfdDevMax(pdc);
+    {
+        if (!IntGetipfdDevMax(pdc))
+        {
+            /* EngSetLastError ? */
+            goto Exit;
+        }
+    }
+
+    if (!ppfd)
+    {
+        Ret = pdc->ipfdDevMax;
+        goto Exit;
+    }
 
     if ((ipfd < 1) || (ipfd > pdc->ipfdDevMax))
     {
@@ -120,6 +132,8 @@ NtGdiSetPixelFormat(
     PWNDOBJ pWndObj;
     SURFOBJ *pso = NULL;
     BOOL Ret = FALSE;
+
+    DPRINT1("Setting pixel format from win32k!\n");
 
     pdc = DC_LockDc(hdc);
     if (!pdc)

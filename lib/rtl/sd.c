@@ -1070,7 +1070,7 @@ RtlValidSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 
         /* Group SID must be valid if present */
         Group = SepGetGroupFromDescriptor(Sd);
-        if ((Owner) && (!RtlValidSid(Group))) _SEH2_YIELD(return FALSE);
+        if ((Group) && (!RtlValidSid(Group))) _SEH2_YIELD(return FALSE);
 
         /* DACL must be valid if present */
         Dacl = SepGetDaclFromDescriptor(Sd);

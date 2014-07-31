@@ -33,7 +33,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vidyo Sürücüsü Kurulumu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "VMware(r) SVGA sürücüsü, başarılı bir şekilde kuruldu. Lütfen gözde görüntülük çözünürlüğünüzü seçiniz:", -1, 25, 5, 225, 20
+    LTEXT "VMware(r) SVGA sürücüsü, başarıyla kuruldu. Lütfen gözde görüntülük çözünürlüğünüzü seçiniz:", -1, 25, 5, 225, 20
     PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -66,7 +66,7 @@ BEGIN
     PUSHBUTTON "Görüntülük Ayarlarını Yapılandırma", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "Başka Bir Çizge Sürücüsü Kurma", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "VMware(r) SVGA Sürücüsünü Kaldırma", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-    LTEXT "Sürdürmek için ""İleri""ye ya da büyücüden çıkmak için ""İptal""e tıklayınız.", -1, 25, 93, 225, 19
+    LTEXT "Sürdürmek için ""İleri""ye ya da yardımcıdan çıkmak için ""İptal""e tıklayınız.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -102,9 +102,9 @@ END
 
 STRINGTABLE
 BEGIN
-    10001 "En Düşük (Her Noktada 8 Bit)"
-    10002 "Orta (Her Noktada 16 Bit)"
-    10003 "En Yüksek (Her Noktada 32 Bit)"
+    10001 "En Düşük (Tüm Noktalarda 8 Bit)"
+    10002 "Orta (Tüm Noktalarda 16 Bit)"
+    10003 "En Yüksek (Tüm Noktalarda 32 Bit)"
 END
 
 STRINGTABLE
@@ -116,18 +116,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDD_INSERT_VMWARE_TOOLSTITLE "VMware(r) SVGA Sürücüsünün Kurulum Büyücüsü"
+    IDD_INSERT_VMWARE_TOOLSTITLE "VMware(r) SVGA Sürücüsünün Kurulum Yardımcısı"
     IDD_INSERT_VMWARE_TOOLSSUBTITLE "Lütfen VMWare(r) Araç CD-ROM'unu takınız."
-    IDD_INSTALLING_VMWARE_TOOLSTITLE "VMware(r) SVGA Sürücüsünün Kurulum Büyücüsü"
+    IDD_INSTALLING_VMWARE_TOOLSTITLE "VMware(r) SVGA Sürücüsünün Kurulum Yardımcısı"
     IDD_INSTALLING_VMWARE_TOOLSSUBTITLE "VMware(r) SVGA sürücüsünü arayınız ve çoğaltınız."
-    IDD_CONFIGTITLE "VMware(r) SVGA Sürücüsünün Kurulum Büyücüsü"
+    IDD_CONFIGTITLE "VMware(r) SVGA Sürücüsünün Kurulum Yardımcısı"
     IDD_CONFIGSUBTITLE "Gözde görüntülük çözünürlüğünüzü seçiniz."
-    IDD_INSTALLATION_FAILEDTITLE "VMware(r) SVGA Sürücüsünün Kurulum Büyücüsü"
+    IDD_INSTALLATION_FAILEDTITLE "VMware(r) SVGA Sürücüsünün Kurulum Yardımcısı"
     IDD_INSTALLATION_FAILEDSUBTITLE "VMware(r) SVGA sürücüsünün kurulumu başarısız oldu."
-    IDD_CHOOSEACTIONTITLE "VMware(r) SVGA Sürücüsünün Kurulum Büyücüsü"
+    IDD_CHOOSEACTIONTITLE "VMware(r) SVGA Sürücüsünün Kurulum Yardımcısı"
     IDD_CHOOSEACTIONSUBTITLE "Ne yapmak istediğinizi seçiniz."
-    IDD_SELECTDRIVERTITLE "VMware(r) SVGA Sürücüsünün Kurulum Büyücüsü"
+    IDD_SELECTDRIVERTITLE "VMware(r) SVGA Sürücüsünün Kurulum Yardımcısı"
     IDD_SELECTDRIVERSUBTITLE "Bir sürücü seçiniz."
-    IDD_DOUNINSTALLTITLE "VMware(r) SVGA Sürücüsünün Kurulum Büyücüsü"
+    IDD_DOUNINSTALLTITLE "VMware(r) SVGA Sürücüsünün Kurulum Yardımcısı"
     IDD_DOUNINSTALLSUBTITLE "Sürücüyü kaldırınız."
 END

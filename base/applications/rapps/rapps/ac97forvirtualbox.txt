@@ -14,12 +14,12 @@ CDPath = none
 [Section.0405]
 Name = Ovladač AC97 pro VirtualBox
 Licence = Neznámá
-Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte. (FIXME)
+Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
 
 [Section.0407]
 Name = AC97 Treiber für VirtualBox
 Licence = Unbekannt
-Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten. (FIXME)
+Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
 
 [Section.0410]
 Name = Driver AC97 per VirtualBox
@@ -29,39 +29,39 @@ Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOs due volt
 [Section.040a]
 Name = Driver AC97 para VirtualBox
 Licence = Desconocida
-Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces. (FIXME)
+Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
 
 [Section.040c]
 Name = Pilote AC97 pour VirtualBox
 Licence = Inconnue
-Description = Décompresser dans le dossier "ReactOS" puis redémarrer ReactOS deux fois. (FIXME)
+Description = Décompresser dans le dossier "ReactOS" puis redémarrer ReactOS deux fois.
 Size = 185,5 ko
 
 [Section.0410]
 Name = Driver AC97 per VirtualBox
 Licence = Sconosciuta
-Description = Decomprimere nella cartella "ReactOS" e riavviare ReactOS. (FIXME)
+Description = Decomprimere nella cartella "ReactOS" e riavviare ReactOS.
 
 [Section.0413]
 Name = AC97 Driver voor VirtualBox
 Licence = Ongekend
-Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op. (FIXME)
+Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op.
 
 [Section.0415]
 Name = Sterownik AC97 dla VirtualBox
 Licence = Nieznana
-Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system. (FIXME)
+Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
 
 [Section.0418]
 Name = Modul pilot AC97 pentru VirtualBox
 Licence = Nespecificată
-Description = Dezarhivați în dosarul „ReactOS” apoi reporniți ReactOS de două ori. (FIXME)
+Description = Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
 Size = 185,5 ko
 
 [Section.0419]
 Name = Драйвер AC97 для VirtualBox
 Licence = Не указано
-Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему. (FIXME)
+Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
 
 [Section.041f]
 Name = VirtualBox için AC97 Sürücüsü
@@ -72,9 +72,9 @@ Size = 185,5 KB
 [Section.0422]
 Name = Драйвер AC97 для VirtualBox
 Licence = Невідома
-Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему. (FIXME)
+Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
 
 [Section.0813]
 Name = AC97 Driver voor VirtualBox
 Licence = Ongekend
-Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op. (FIXME)
+Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op.

@@ -1,4 +1,11 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+ * PROJECT: ReactOS msgina.dll
+ * FILE:    dll/win32/msgina/lang/ro-RO.rc
+ * PURPOSE: Romanian Language File for ReactOS Logon GINA DLL
+ * TRANSLATORS:
+ *          Petre Dumitriu
+ *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -130,6 +137,15 @@ BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 204, 122, 55, 14
 END
 
+IDD_LEGALNOTICE_DLG DIALOGEX 0, 0, 280, 200
+STYLE DS_MODALFRAME | DS_SHELLFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_LEGALNOTICE_TEXT, 7, 7, 266, 165, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "Î&nchide", IDOK, 115, 179, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Bun venit!"
@@ -150,8 +166,8 @@ BEGIN
     IDS_LOGONTITLE "Mesaj de autentificare"
     IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă se face distincție între majuscule și minuscule."
     IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
-    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
-    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
+    IDS_PASSWORDMUSTCHANGE "Este imperativ să vă schimbați parola la prima autentificare."
+    IDS_PASSWORDEXPIRED "Parola v-a expirat și trebuie schimbată."
 END
 
 /* Shutdown Dialog Strings */

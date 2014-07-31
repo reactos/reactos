@@ -46,21 +46,47 @@ DceCreateDisplayDC(VOID)
   return IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
 }
 
+/* Returns the DCE pointer from the HDC handle */
+DCE*
+FASTCALL
+DceGetDceFromDC(HDC hdc)
+{
+    LIST_ENTRY* Entry = LEDce.Flink;
+    DCE* dce;
+
+    while (Entry != &LEDce)
+    {
+        dce = CONTAINING_RECORD(Entry, DCE, List);
+        if (dce->hDC == hdc)
+            return dce;
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
 static
-HRGN FASTCALL
+PREGION FASTCALL
 DceGetVisRgn(PWND Window, ULONG Flags, HWND hWndChild, ULONG CFlags)
 {
-  HRGN VisRgn;
+  PREGION RetRgn;
+  HRGN hVisRgn;
+  hVisRgn = VIS_ComputeVisibleRegion( Window,
+                                      0 == (Flags & DCX_WINDOW),
+                                      0 != (Flags & DCX_CLIPCHILDREN),
+                                      0 != (Flags & DCX_CLIPSIBLINGS));
 
-  VisRgn = VIS_ComputeVisibleRegion( Window,
-                                     0 == (Flags & DCX_WINDOW),
-                                     0 != (Flags & DCX_CLIPCHILDREN),
-                                     0 != (Flags & DCX_CLIPSIBLINGS));
+  RetRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
 
-  if (VisRgn == NULL)
-      VisRgn = IntSysCreateRectRgn(0, 0, 0, 0);
+  if (hVisRgn != NULL)
+  {
+      PREGION VisRgn = REGION_LockRgn(hVisRgn);
+      IntGdiCombineRgn(RetRgn, VisRgn, NULL, RGN_COPY);
+      REGION_UnlockRgn(VisRgn);
+      GreDeleteObject(hVisRgn);
+  }
 
-  return VisRgn;
+  return RetRgn;
 }
 
 PDCE FASTCALL
@@ -150,6 +176,7 @@ DceSetDrawable( PWND Window OPTIONAL,
          dc->ptlDCOrig.y = Window->rcClient.top;
       }
   }
+  dc->fs |= DC_FLAG_DIRTY_RAO;
   DC_UnlockDc(dc);
 }
 
@@ -175,10 +202,11 @@ DceDeleteClipRgn(DCE* Dce)
    IntGdiSetHookFlags(Dce->hDC, DCHF_INVALIDATEVISRGN);
 }
 
-static VOID FASTCALL
+VOID
+FASTCALL
 DceUpdateVisRgn(DCE *Dce, PWND Window, ULONG Flags)
 {
-   HANDLE hRgnVisible = NULL;
+   PREGION RgnVisible = NULL;
    ULONG DcxFlags;
    PWND DesktopWindow;
 
@@ -189,7 +217,7 @@ DceUpdateVisRgn(DCE *Dce, PWND Window, ULONG Flags)
       Parent = Window->spwndParent;
       if(!Parent)
       {
-         hRgnVisible = NULL;
+         RgnVisible = NULL;
          goto noparent;
       }
 
@@ -202,23 +230,23 @@ DceUpdateVisRgn(DCE *Dce, PWND Window, ULONG Flags)
       {
          DcxFlags = Flags & ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
       }
-      hRgnVisible = DceGetVisRgn(Parent, DcxFlags, Window->head.h, Flags);
+      RgnVisible = DceGetVisRgn(Parent, DcxFlags, Window->head.h, Flags);
    }
    else if (Window == NULL)
    {
       DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       if (NULL != DesktopWindow)
       {
-         hRgnVisible = IntSysCreateRectRgnIndirect(&DesktopWindow->rcWindow);
+         RgnVisible = IntSysCreateRectpRgnIndirect(&DesktopWindow->rcWindow);
       }
       else
       {
-         hRgnVisible = NULL;
+         RgnVisible = NULL;
       }
    }
    else
    {
-      hRgnVisible = DceGetVisRgn(Window, Flags, 0, 0);
+      RgnVisible = DceGetVisRgn(Window, Flags, 0, 0);
    }
 
 noparent:
@@ -226,33 +254,35 @@ noparent:
    {
       if(Dce->hrgnClip != NULL)
       {
-         NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hrgnClip, RGN_AND);
+         PREGION RgnClip = REGION_LockRgn(Dce->hrgnClip);
+         IntGdiCombineRgn(RgnVisible, RgnVisible, RgnClip, RGN_AND);
+         REGION_UnlockRgn(RgnClip);
       }
       else
       {
-         if(hRgnVisible != NULL)
+         if(RgnVisible != NULL)
          {
-            GreDeleteObject(hRgnVisible);
+            REGION_Delete(RgnVisible);
          }
-         hRgnVisible = IntSysCreateRectRgn(0, 0, 0, 0);
+         RgnVisible = IntSysCreateRectpRgn(0, 0, 0, 0);
       }
    }
-   else if (Flags & DCX_EXCLUDERGN && Dce->hrgnClip != NULL)
+   else if ((Flags & DCX_EXCLUDERGN) && Dce->hrgnClip != NULL)
    {
-      NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hrgnClip, RGN_DIFF);
+       PREGION RgnClip = REGION_LockRgn(Dce->hrgnClip);
+       IntGdiCombineRgn(RgnVisible, RgnVisible, RgnClip, RGN_DIFF);
+       REGION_UnlockRgn(RgnClip);
    }
 
    Dce->DCXFlags &= ~DCX_DCEDIRTY;
-   GdiSelectVisRgn(Dce->hDC, hRgnVisible);
+   GdiSelectVisRgn(Dce->hDC, RgnVisible);
+   /* Tell GDI driver */
+   if (Window)
+       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
 
-   if (VerifyWnd(Window)) // Window maybe dead by this time before finishing the DCE release.
+   if (RgnVisible != NULL)
    {
-      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-   }
-
-   if (hRgnVisible != NULL)
-   {
-      GreDeleteObject(hRgnVisible);
+      REGION_Delete(RgnVisible);
    }
 }
 
@@ -889,10 +919,10 @@ DceResetActiveDCEs(PWND Window)
                dc->ptlDCOrig.y = CurrentWindow->rcClient.top;
             }
 
-            if (NULL != dc->rosdc.hClipRgn)
+            if (NULL != dc->dclevel.prgnClip)
             {
-               NtGdiOffsetRgn(dc->rosdc.hClipRgn, DeltaX, DeltaY);
-               CLIPPING_UpdateGCRegion(dc);
+               IntGdiOffsetRgn(dc->dclevel.prgnClip, DeltaX, DeltaY);
+               dc->fs |= DC_FLAG_DIRTY_RAO;
             }
             if (NULL != pDCE->hrgnClip)
             {
@@ -903,12 +933,6 @@ DceResetActiveDCEs(PWND Window)
 
          DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
          IntGdiSetHookFlags(pDCE->hDC, DCHF_VALIDATEVISRGN);
-
-         if (Window->head.h != pDCE->hwndCurrent)
-         {
-//            IntEngWindowChanged(CurrentWindow, WOC_RGN_CLIENT);
-//            UserDerefObject(CurrentWindow);
-         }
       }
       pLE = pDCE->List.Flink;
       pDCE = CONTAINING_RECORD(pLE, DCE, List);
@@ -983,22 +1007,22 @@ UserGetWindowDC(PWND Wnd)
 HWND FASTCALL
 UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 {
-  PWNDGDI pWndgdi;
+  XCLIPOBJ* Clip;
   PWND Wnd;
   HWND hWnd;
   PPROPERTY pprop;
 
   hWnd = IntWindowFromDC(hdc);
 
-  if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
+  if (hWnd && (Wnd = UserGetWindowObject(hWnd)))
   {
      pprop = IntGetProp(Wnd, AtomWndObj);
 
-     pWndgdi = (WNDGDI *)pprop->Data;
+     Clip = (XCLIPOBJ*)pprop->Data;
 
-     if ( pWndgdi && pWndgdi->Hwnd == hWnd )
+     if ( Clip && Clip->Hwnd == hWnd )
      {
-        if (pwndo) *pwndo = (PWNDOBJ)pWndgdi;
+        if (pwndo) *pwndo = &Clip->WndObj;
      }
   }
   return hWnd;

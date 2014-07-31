@@ -1,16 +1,16 @@
-﻿; UTF-8
+; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Qmmp (Qt-based Multimedia Player)
-Version = 0.7.7
+Version = 0.8.0
 Licence = GPL
 Description = Qmmp is an audio-player, written with the help of the Qt library. The user interface is similar to WinAMP or XMMS. Alternative user interfaces also are available.
-Size = 10.5 MB
+Size = 12.49 MB
 Category = 1
 URLSite = http://qmmp.ylsoftware.com/index.php
-URLDownload = http://qmmp.ylsoftware.com/files/windows/qmmp-0.7.7-win32.exe
+URLDownload = http://qmmp.ylsoftware.com/files/windows/qmmp-0.8.0-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -23,8 +23,9 @@ Description = Qmmp è un lettore multimediale, scritto con l'aiuto della libreri
 Description = Gmmp to odtwarzacz audio, napisany z pomocą biblioteki Qt. Interfejs podobny jest do Winampa lub XMMS. Dostępnme są także dodatkowe skórki.
 
 [Section.0418]
+Name = Qmmp (Lector Multimedia bazat pe Qt)
 Description = Qmmp este un lector audio, ce utilizează biblioteca QT. Interfața de utilizare e asemănătoare cu cea din WinAMP sau XMMS. De asemenea sunt disponibile interfețe de utilizare alternative.
-Size = 10,5 Mo
+Size = 12,49 Mo
 
 [Section.0419]
 Description = Аудиоплеер Qmmp (Qt-based Multimedia Player).
@@ -32,4 +33,4 @@ Description = Аудиоплеер Qmmp (Qt-based Multimedia Player).
 [Section.041f]
 Name = Qmmp (Qt Tabanlı Çoklu Ortam Oynatıcısı)
 Description = Qmmp, Qt kitaplığının yardımıyla yazılmış bir ses oynatıcısıdır. Kullanıcı arayüzü WinAMP'a ve XMMS'ye benzer. Başka kullanıcı arayüzleri de vardır.
-Size = 10,5 MB
+Size = 12,49 MB

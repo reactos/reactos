@@ -465,7 +465,7 @@ static HRESULT WINAPI AsyncReader_QueryInterface(IBaseFilter * iface, REFIID rii
 static ULONG WINAPI AsyncReader_Release(IBaseFilter * iface)
 {
     AsyncReader *This = impl_from_IBaseFilter(iface);
-    ULONG refCount = BaseFilterImpl_Release(iface);
+    ULONG refCount = InterlockedDecrement(&This->filter.refCount);
     
     TRACE("(%p)->() Release from %d\n", This, refCount + 1);
     
@@ -485,6 +485,7 @@ static ULONG WINAPI AsyncReader_Release(IBaseFilter * iface)
         CoTaskMemFree(This->pszFileName);
         if (This->pmt)
             FreeMediaType(This->pmt);
+        BaseFilter_Destroy(&This->filter);
         CoTaskMemFree(This);
         return 0;
     }

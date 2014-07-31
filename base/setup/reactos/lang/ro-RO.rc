@@ -1,10 +1,17 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+ * PROJECT: ReactOS GUI first stage setup application
+ * FILE:    base/setup/reactos/lang/ro-RO.rc
+ * PURPOSE: Romanian Language File for ReactOS GUI first stage setup
+ * TRANSLATORS:
+ *          Petre Dumitriu (petrimetri-at-gmail-dot-com)
+ *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la Instalarea ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
@@ -14,7 +21,7 @@ END
 
 IDD_LANGSELPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
@@ -27,7 +34,7 @@ END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tipul de instalare", IDC_STATIC, "Button", BS_GROUPBOX, 10, 0, 297, 172
@@ -38,7 +45,7 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Configurare dispozitive", IDC_STATIC, "Button", BS_GROUPBOX, 10, 0, 297, 172
@@ -53,7 +60,7 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Partiția pentru instalarea ReactOS", IDC_STATIC, "Button", BS_GROUPBOX, 10, 1, 298, 176
@@ -98,7 +105,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Sumar", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
@@ -107,18 +114,18 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Acțiune de instalare", IDC_ACTION, "Button", BS_GROUPBOX, 10, 0, 297, 172
-    LTEXT "Instalarea fișierelor…", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Se instalează fișierele…", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistentul de instalare ReactOS"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Finalizarea primei etape", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10, 0, 297, 172

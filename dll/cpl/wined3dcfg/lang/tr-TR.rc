@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,32 +8,32 @@ CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
-    GROUPBOX "Shaders", -1, 5, 25, 230, 80
-    LTEXT "Enable GLSL:", -1, 15, 42, 80, 10
+    GROUPBOX "Gölgelendiriciler", -1, 5, 25, 230, 80
+    LTEXT "G&LSL'yi Etkinleştir:", -1, 15, 42, 80, 10
     COMBOBOX IDC_GLSL, 95, 40, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Maximum GS Level:", -1, 15, 57, 80, 10
+    LTEXT "&GS Düzeyi En Çok:", -1, 15, 57, 80, 10
     COMBOBOX IDC_GSLEVEL, 95, 55, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Maximum PS Level:", -1, 15, 72, 80, 10
+    LTEXT "&PS Düzeyi En Çok:", -1, 15, 72, 80, 10
     COMBOBOX IDC_PSLEVEL, 95, 70, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Maximum VS Level:", -1, 15, 87, 80, 10
+    LTEXT "&VS Düzeyi En Çok:", -1, 15, 87, 80, 10
     COMBOBOX IDC_VSLEVEL, 95, 85, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    GROUPBOX "Rendering", -1, 5, 110, 230, 110
-    LTEXT "Multisampling:", -1, 15, 127, 80, 10
+    GROUPBOX "İşleme", -1, 5, 110, 230, 110
+    LTEXT "&Çoklu Örnekleme:", -1, 15, 127, 80, 10
     COMBOBOX IDC_MULTISAMPLING, 95, 125, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Strict draw ordering:", -1, 15, 142, 80, 10
+    LTEXT "&Sıkı Çizim Düzenlemesi:", -1, 15, 142, 80, 10
     COMBOBOX IDC_STRICTDRAWORDERING, 95, 140, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Offscreen rendering:", -1, 15, 157, 80, 10
+    LTEXT "&Görüntülük Dışı İşleme:", -1, 15, 157, 80, 10
     COMBOBOX IDC_OFFSCREEN, 95, 155, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Always offscreen:", -1, 15, 172, 72, 10, SS_LEFT
+    LTEXT "S&ürekli Görüntülük Dışı:", -1, 15, 172, 72, 10, SS_LEFT
     COMBOBOX IDC_ALWAYSOFFSCREEN, 95, 170, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Video memory size:", -1, 15, 187, 72, 10, SS_LEFT
+    LTEXT "V&idyo Belleği Boyutu:", -1, 15, 187, 72, 10, SS_LEFT
     COMBOBOX IDC_VIDMEMSIZE, 95, 185, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "DirectDraw Renderer:", -1, 15, 202, 72, 10, SS_LEFT
+    LTEXT "&DirectDraw İşleyicisi:", -1, 15, 202, 72, 10, SS_LEFT
     COMBOBOX IDC_DDRENDERER, 95, 200, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "WineD3D Ayarları"
-    IDS_CPLDESCRIPTION "WinD3D yürütücüsünün ayarlarını yapılandırır."
+    IDS_CPLNAME "WineD3D"
+    IDS_CPLDESCRIPTION "WinD3D yürütücüsü ayarlarını yapılandırır."
 END

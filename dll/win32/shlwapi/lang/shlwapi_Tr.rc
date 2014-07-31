@@ -1,7 +1,7 @@
 /*
  * Turkish resources for shlwapi
  *
- * Copyright 2006 Fatih Aþýcý
+ * Copyright 2006 Fatih AÅŸÄ±cÄ±
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,11 +27,11 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "Bu iletiyi bir daha &gösterme", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Bu iletiyi bir daha &gÃ¶sterme", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Tamam", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Ýptal", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Ä°ptal", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Evet", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Hayýr", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&HayÄ±r", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 STRINGTABLE

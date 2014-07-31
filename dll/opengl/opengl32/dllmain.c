@@ -19,16 +19,15 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 #endif
     switch ( Reason )
     {
-        /* The DLL is loading due to process
-         * initialization or a call to LoadLibrary.
-         */
         case DLL_PROCESS_ATTACH:
 #ifdef OPENGL32_USE_TLS
             OglTlsIndex = TlsAlloc();
             if(OglTlsIndex == TLS_OUT_OF_INDEXES)
                 return FALSE;
 #endif
-        /* Fall through */
+            /* Initialize Context list */
+            InitializeListHead(&ContextListHead);
+            /* no break */
         case DLL_THREAD_ATTACH:
 #ifdef OPENGL32_USE_TLS
             ThreadData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ThreadData));
@@ -45,26 +44,34 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
             break;
 
         case DLL_THREAD_DETACH:
+            /* Set NULL context for this thread */
+            wglMakeCurrent(NULL, NULL);
             /* Clean up */
 #ifdef OPENGL32_USE_TLS
             ThreadData = TlsGetValue(OglTlsIndex);
             if(ThreadData)
                 HeapFree(GetProcessHeap(), 0, ThreadData);
 #else
-            NtCurrentTeb->glTable = NULL;
+            NtCurrentTeb()->glTable = NULL;
 #endif // defined(OPENGL32_USE_TLS)
-            break;
-        
+        break;
         case DLL_PROCESS_DETACH:
             /* Clean up */
+            if (!Reserved)
+            {
+                /* The process is not shutting down: release everything */
+                wglMakeCurrent(NULL, NULL);
+                IntDeleteAllContexts();
+                IntDeleteAllICDs();
 #ifdef OPENGL32_USE_TLS
-            ThreadData = TlsGetValue(OglTlsIndex);
-            if(ThreadData)
-                HeapFree(GetProcessHeap(), 0, ThreadData);
+                ThreadData = TlsGetValue(OglTlsIndex);
+                if(ThreadData)
+                    HeapFree(GetProcessHeap(), 0, ThreadData);
+#endif
+            }
+#ifdef OPENGL32_USE_TLS
             TlsFree(OglTlsIndex);
-#else
-            NtCurrentTeb->glTable = NULL;
-#endif // defined(OPENGL32_USE_TLS)
+#endif
             break;
     }
 

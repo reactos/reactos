@@ -2300,11 +2300,13 @@ REGION_Delete(PROSRGNDATA pRgn)
 VOID FASTCALL
 IntGdiReleaseRaoRgn(PDC pDC)
 {
-  INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
-  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-  pDC->fs |= DC_FLAG_DIRTY_RAO;
-  Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
-  RECTL_vSetEmptyRect(&pDC->erclClip);
+    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+    pDC->fs |= DC_FLAG_DIRTY_RAO;
+    Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
+    RECTL_vSetEmptyRect(&pDC->erclClip);
+    REGION_Delete(pDC->prgnRao);
+    pDC->prgnRao = NULL;
 }
 
 VOID FASTCALL
@@ -2482,7 +2484,7 @@ IntGdiPaintRgn(
 {
     HRGN tmpVisRgn;
     PROSRGNDATA visrgn;
-    CLIPOBJ* ClipRegion;
+    XCLIPOBJ ClipRegion;
     BOOL bRet = FALSE;
     POINTL BrushOrigin;
     SURFACE *psurf;
@@ -2503,8 +2505,6 @@ IntGdiPaintRgn(
         return FALSE;
     }
 
-    NtGdiCombineRgn(tmpVisRgn, tmpVisRgn, dc->rosdc.hGCClipRgn, RGN_AND);
-
     visrgn = RGNOBJAPI_Lock(tmpVisRgn, NULL);
     if (visrgn == NULL)
     {
@@ -2512,10 +2512,11 @@ IntGdiPaintRgn(
         return FALSE;
     }
 
-    ClipRegion = IntEngCreateClipRegion(visrgn->rdh.nCount,
-                                        visrgn->Buffer,
-                                        &visrgn->rdh.rcBound );
-    ASSERT(ClipRegion);
+    if (dc->prgnRao)
+        IntGdiCombineRgn(visrgn, visrgn, dc->prgnRao, RGN_AND);
+
+    IntEngInitClipObj(&ClipRegion);
+    IntEngUpdateClipRegion(&ClipRegion, visrgn->rdh.nCount, visrgn->Buffer, &visrgn->rdh.rcBound );
 
     BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
     BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
@@ -2523,16 +2524,40 @@ IntGdiPaintRgn(
     /* FIXME: Handle psurf == NULL !!!! */
 
     bRet = IntEngPaint(&psurf->SurfObj,
-                       ClipRegion,
+                       &ClipRegion.ClipObj,
                        &dc->eboFill.BrushObject,
                        &BrushOrigin,
                        0xFFFF); // FIXME: Don't know what to put here
 
     RGNOBJAPI_Unlock(visrgn);
     GreDeleteObject(tmpVisRgn);
+    IntEngFreeClipResources(&ClipRegion);
 
     // Fill the region
     return bRet;
+}
+
+BOOL
+FASTCALL
+REGION_PtInRegion(
+    PREGION prgn,
+    INT X,
+    INT Y)
+{
+    ULONG i;
+    PRECT r;
+
+    if (prgn->rdh.nCount > 0 && INRECT(prgn->rdh.rcBound, X, Y))
+    {
+        r =  prgn->Buffer;
+        for (i = 0; i < prgn->rdh.nCount; i++)
+        {
+            if (INRECT(r[i], X, Y))
+                return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 BOOL
@@ -3861,27 +3886,19 @@ NtGdiPtInRegion(
     INT Y
 )
 {
-    PROSRGNDATA rgn;
-    ULONG i;
-    PRECTL r;
+    PREGION prgn;
+    BOOL ret;
 
-    if (!(rgn = RGNOBJAPI_Lock(hRgn, NULL) ) )
+    if (!(prgn = RGNOBJAPI_Lock(hRgn, NULL) ) )
         return FALSE;
 
-    if (rgn->rdh.nCount > 0 && INRECT(rgn->rdh.rcBound, X, Y))
-    {
-        r =  rgn->Buffer;
-        for (i = 0; i < rgn->rdh.nCount; i++)
-        {
-            if (INRECT(*r, X, Y))
-            {
-                RGNOBJAPI_Unlock(rgn);
-                return TRUE;
-            }
-            r++;
-        }
-    }
-    RGNOBJAPI_Unlock(rgn);
+    ret = REGION_PtInRegion(prgn, X, Y);
+
+    RGNOBJAPI_Unlock(prgn);
+    return ret;
+
+
+    RGNOBJAPI_Unlock(prgn);
     return FALSE;
 }
 

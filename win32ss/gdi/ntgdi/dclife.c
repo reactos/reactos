@@ -95,22 +95,11 @@ DC_AllocDcWithHandle()
 void
 DC_InitHack(PDC pdc)
 {
-    HRGN hVisRgn;
-
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
     /* This should never fail */
     ASSERT(pdc->dclevel.ppal);
-
-    /* Select regions */
-    pdc->rosdc.hClipRgn = NULL;
-    pdc->rosdc.hGCClipRgn = NULL;
-
-    hVisRgn = IntSysCreateRectRgn(0, 0, 1, 1);
-    ASSERT(hVisRgn);
-    GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
-    GreDeleteObject(hVisRgn);
 }
 
 VOID
@@ -170,7 +159,7 @@ DC_vInitDc(
         pdc->erclBoundsApp.right = 0x00007ffc; // FIXME
         pdc->erclBoundsApp.bottom = 0x00000333; // FIXME
         pdc->erclClip = pdc->erclBounds;
-//        pdc->co
+        pdc->co = gxcoTrivial;
 
         pdc->fs |= DC_SYNCHRONIZEACCESS | DC_ACCUM_APP | DC_PERMANANT | DC_DISPLAY;
     }
@@ -185,7 +174,7 @@ DC_vInitDc(
         pdc->erclBounds.bottom = 0;
         pdc->erclBoundsApp = pdc->erclBounds;
         pdc->erclClip = pdc->erclWindow;
-        //pdc->co = NULL
+        pdc->co = gxcoTrivial;
     }
 
       //pdc->dcattr.VisRectRegion:
@@ -237,9 +226,14 @@ DC_vInitDc(
     /* Setup regions */
     pdc->prgnAPI = NULL;
 	pdc->prgnRao = NULL;
+	pdc->dclevel.prgnClip = NULL;
+	pdc->dclevel.prgnMeta = NULL;
     /* Allocate a Vis region */
     pdc->prgnVis = IntSysCreateRectpRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
 	ASSERT(pdc->prgnVis);
+
+	/* Initialize Clip object */
+	IntEngInitClipObj(&pdc->co);
 
     /* Setup palette */
     pdc->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
@@ -324,7 +318,7 @@ DC_vInitDc(
     /* Other stuff */
     pdc->hdcNext = NULL;
     pdc->hdcPrev = NULL;
-    pdc->ipfdDevMax = 0x0000ffff;
+    pdc->ipfdDevMax = 0;
     pdc->ulCopyCount = -1;
     pdc->ptlDoBanding.x = 0;
     pdc->ptlDoBanding.y = 0;
@@ -372,18 +366,19 @@ DC_vCleanup(PVOID ObjectBody)
     LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
 
     /*  Free regions */
-    if (pdc->rosdc.hClipRgn && GreIsHandleValid(pdc->rosdc.hClipRgn))
-        GreDeleteObject(pdc->rosdc.hClipRgn);
+    if (pdc->dclevel.prgnClip)
+        REGION_Delete(pdc->dclevel.prgnClip);
+    if (pdc->dclevel.prgnMeta)
+        REGION_Delete(pdc->dclevel.prgnMeta);
     if (pdc->prgnVis)
-    {
         REGION_Delete(pdc->prgnVis);
-    }
-    if (pdc->rosdc.hGCClipRgn && GreIsHandleValid(pdc->rosdc.hGCClipRgn))
-    {
-        GreDeleteObject(pdc->rosdc.hGCClipRgn);
-    }
-    if (NULL != pdc->rosdc.CombinedClip)
-        IntEngDeleteClipRegion(pdc->rosdc.CombinedClip);
+    if (pdc->prgnRao)
+        REGION_Delete(pdc->prgnRao);
+    if (pdc->prgnAPI)
+        REGION_Delete(pdc->prgnAPI);
+
+    /* Free CLIPOBJ resources */
+    IntEngFreeClipResources(&pdc->co);
 
     PATH_Delete(pdc->dclevel.hPath);
 
@@ -397,17 +392,6 @@ VOID
 NTAPI
 DC_vSetOwner(PDC pdc, ULONG ulOwner)
 {
-
-    if (pdc->rosdc.hClipRgn)
-    {
-        IntGdiSetRegionOwner(pdc->rosdc.hClipRgn, ulOwner);
-    }
-
-    if (pdc->rosdc.hGCClipRgn)
-    {
-        IntGdiSetRegionOwner(pdc->rosdc.hGCClipRgn, ulOwner);
-    }
-
     if (pdc->dclevel.hPath)
     {
         GreSetObjectOwner(pdc->dclevel.hPath, ulOwner);
@@ -466,7 +450,7 @@ static
 void
 DC_vUpdateDC(PDC pdc)
 {
-    HRGN hVisRgn ;
+    // PREGION VisRgn ;
     PPDEVOBJ ppdev = pdc->ppdev ;
 
     pdc->dhpdev = ppdev->dhpdev;
@@ -475,10 +459,12 @@ DC_vUpdateDC(PDC pdc)
     pdc->dclevel.pSurface = PDEVOBJ_pSurface(ppdev);
 
     PDEVOBJ_sizl(pdc->ppdev, &pdc->dclevel.sizl);
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
-    ASSERT(hVisRgn);
-    GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
-    GreDeleteObject(hVisRgn);
+#if 0
+    VisRgn = IntSysCreateRectpRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
+    ASSERT(VisRgn);
+    GdiSelectVisRgn(pdc->BaseObject.hHmgr, VisRgn);
+    REGION_Delete(VisRgn);
+#endif
 
     pdc->flGraphicsCaps = ppdev->devinfo.flGraphicsCaps;
     pdc->flGraphicsCaps2 = ppdev->devinfo.flGraphicsCaps2;
@@ -492,75 +478,106 @@ DC_vUpdateDC(PDC pdc)
  * from where we take pixels. */
 VOID
 FASTCALL
-DC_vPrepareDCsForBlit(PDC pdc1,
-                      RECT rc1,
-                      PDC pdc2,
-                      RECT rc2)
+DC_vPrepareDCsForBlit(
+    PDC pdcDest,
+    const RECT* rcDest,
+    PDC pdcSrc,
+    const RECT* rcSrc)
 {
     PDC pdcFirst, pdcSecond;
-    PRECT prcFirst, prcSecond;
+    const RECT *prcFirst, *prcSecond;
 
     /* Update brushes */
-    if (pdc1->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(pdc1);
-    if (pdc1->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-        DC_vUpdateLineBrush(pdc1);
-    if(pdc1->pdcattr->ulDirty_ & DIRTY_TEXT)
-        DC_vUpdateTextBrush(pdc1);
+    if (pdcDest->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdcDest);
+    if (pdcDest->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(pdcDest);
+    if(pdcDest->pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(pdcDest);
 
     /* Lock them in good order */
-    if(pdc2)
+    if(pdcSrc)
     {
-        if((ULONG_PTR)pdc1->ppdev->hsemDevLock >= (ULONG_PTR)pdc2->ppdev->hsemDevLock)
+        if((ULONG_PTR)pdcDest->ppdev->hsemDevLock >= (ULONG_PTR)pdcSrc->ppdev->hsemDevLock)
         {
-            pdcFirst = pdc1;
-            prcFirst = &rc1;
-            pdcSecond = pdc2;
-            prcSecond = &rc2;
+            pdcFirst = pdcDest;
+            prcFirst = rcDest;
+            pdcSecond = pdcSrc;
+            prcSecond = rcSrc;
         }
         else
         {
-            pdcFirst = pdc2;
-            prcFirst = &rc2;
-            pdcSecond = pdc1;
-            prcSecond = &rc1;
+            pdcFirst = pdcSrc;
+            prcFirst = rcSrc;
+            pdcSecond = pdcDest;
+            prcSecond = rcDest;
         }
     }
     else
     {
-        pdcFirst = pdc1 ;
-        prcFirst = &rc1;
+        pdcFirst = pdcDest ;
+        prcFirst = rcDest;
         pdcSecond = NULL;
         prcSecond = NULL;
     }
 
-    if(pdcFirst && pdcFirst->dctype == DCTYPE_DIRECT)
+    /* Update clipping of dest DC if needed */
+    if (pdcDest->dctype == DCTYPE_DIRECT)
+    {
+        DCE* dce = DceGetDceFromDC(pdcDest->BaseObject.hHmgr);
+        if (dce)
+            DceUpdateVisRgn(dce, dce->pwndOrg, dce->DCXFlags);
+    }
+
+    if (pdcDest->fs & DC_FLAG_DIRTY_RAO)
+        CLIPPING_UpdateGCRegion(pdcDest);
+
+    /* Lock and update first DC */
+    if(pdcFirst->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcFirst->ppdev->hsemDevLock);
-        MouseSafetyOnDrawStart(pdcFirst->ppdev,
-                                    prcFirst->left,
-                                    prcFirst->top,
-                                    prcFirst->right,
-                                    prcFirst->bottom) ;
         /* Update surface if needed */
         if(pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
         {
             DC_vUpdateDC(pdcFirst);
         }
     }
-    if(pdcSecond && pdcSecond->dctype == DCTYPE_DIRECT)
+
+    if(pdcFirst->dctype == DCTYPE_DIRECT)
+    {
+        if (!prcFirst)
+            prcFirst = &pdcFirst->erclClip;
+
+        MouseSafetyOnDrawStart(pdcFirst->ppdev,
+                               prcFirst->left,
+                               prcFirst->top,
+                               prcFirst->right,
+                               prcFirst->bottom) ;
+    }
+
+    if (!pdcSecond)
+        return;
+
+    /* Lock and update second DC */
+    if(pdcSecond->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcSecond->ppdev->hsemDevLock);
-        MouseSafetyOnDrawStart(pdcSecond->ppdev,
-                                    prcSecond->left,
-                                    prcSecond->top,
-                                    prcSecond->right,
-                                    prcSecond->bottom) ;
         /* Update surface if needed */
         if(pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
         {
             DC_vUpdateDC(pdcSecond);
         }
+    }
+
+    if(pdcSecond->dctype == DCTYPE_DIRECT)
+    {
+        if (!prcSecond)
+            prcSecond = &pdcSecond->erclClip;
+        MouseSafetyOnDrawStart(pdcSecond->ppdev,
+                               prcSecond->left,
+                               prcSecond->top,
+                               prcSecond->right,
+                               prcSecond->bottom) ;
     }
 }
 

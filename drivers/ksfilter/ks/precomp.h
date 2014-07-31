@@ -7,6 +7,7 @@
 #include <portcls.h>
 #include <kcom.h>
 #include <pseh/pseh2.h>
+#include <ntstrsafe.h>
 
 #include "ksiface.h"
 #include "kstypes.h"

@@ -8,7 +8,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistentul pentru creare de legătură"
+CAPTION "Asistent pentru creare de legătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1", -1, 115, 15, 160, 24
@@ -17,7 +17,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistentul pentru creare de legătură"
+CAPTION "Asistent pentru creare de legătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1",-1,10,0,225,40
@@ -27,10 +27,10 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistentul pentru creare de scurtătură"
+CAPTION "Asistent pentru creare de scurtătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Acest expert vă va asista în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
+    LTEXT       "Acest asistent vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
     LTEXT       "Scrieți adresa elementului:", -1, 120, 50, 120, 10
     EDITTEXT                   IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON  "Spe&cificare…",  IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -39,10 +39,10 @@ END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistentul pentru creare de scurtătură"
+CAPTION "Asistent pentru creare de scurtătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT     "Scrieți un &nume pentru scurtătură:", -1, 120, 15, 150, 10
+    LTEXT     "Scrieți un n&ume pentru scurtătură:", -1, 120, 15, 150, 10
     EDITTEXT                   IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
     LTEXT     "Apăsați „Sfârșit” pentru a crea scurtătura.", -1, 118, 97, 178, 17
 END
@@ -51,7 +51,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME         "Gestionar de programe"
     IDS_CPLSYSTEMDESCRIPTION  "Instalează programe și crează scurtături."
-    IDS_CREATE_SHORTCUT       "Asistentul pentru creare de scurtătură"
+    IDS_CREATE_SHORTCUT       "Asistent pentru creare de scurtătură"
     IDS_ERROR_NOT_FOUND       "Elementul „%s” nu poate fi localizat."
 END
 

@@ -502,7 +502,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* This is actually a blit */
-    DC_vPrepareDCsForBlit(pDC, rcDest, NULL, rcDest);
+    DC_vPrepareDCsForBlit(pDC, &rcDest, NULL, NULL);
     pSurf = pDC->dclevel.pSurface;
     if (!pSurf)
     {
@@ -530,7 +530,7 @@ NtGdiSetDIBitsToDeviceInternal(
     Status = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           NULL,
-                          pDC->rosdc.CombinedClip,
+                          &pDC->co.ClipObj,
                           &exlo.xlo,
                           &rcDest,
                           &ptSource,
@@ -1184,7 +1184,7 @@ NtGdiStretchDIBitsInternal(
     }
 
     /* Prepare DC for blit */
-    DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcSrc);
+    DC_vPrepareDCsForBlit(pdc, &rcDst, NULL, NULL);
 
     psurfDst = pdc->dclevel.pSurface;
 
@@ -1200,7 +1200,7 @@ NtGdiStretchDIBitsInternal(
     bResult = IntEngStretchBlt(&psurfDst->SurfObj,
                                &psurfTmp->SurfObj,
                                NULL,
-                               pdc->rosdc.CombinedClip,
+                               &pdc->co.ClipObj,
                                &exlo.xlo,
                                &pdc->dclevel.ca,
                                &rcDst,

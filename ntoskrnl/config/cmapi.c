@@ -2173,7 +2173,8 @@ CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
                        OUT PHCELL_INDEX DestKeyCell OPTIONAL)
 {
     NTSTATUS Status;
-    PCM_KEY_NODE SrcNode, DestNode;
+    PCM_KEY_NODE SrcNode;
+    PCM_KEY_NODE DestNode = NULL;
     HCELL_INDEX NewKeyCell, SubKey, NewSubKey;
     ULONG Index, SubKeyCount;
     PAGED_CODE();

@@ -1,46 +1,46 @@
-﻿; UTF-8
+; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = LibreOffice
-Version = 4.2.4
+Version = 4.2.5
 Licence = LGPL
 Description = A powerful and open source office suite. It has been forked from OpenOffice.
-Size = 209.3 MB
+Size = 209.36 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.2.4/win/x86/LibreOffice_4.2.4_Win_x86.msi
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.2.5/win/x86/LibreOffice_4.2.5_Win_x86.msi
 CDPath = none
 
 [Section.0407]
-Description = Vorher bekannt als OpenOffice. Open Source Office Suite. (FIXME)
+Description = Vorher bekannt als OpenOffice. Open Source Office Suite.
 
 [Section.040a]
-Description = La suite de ofimática de código abierto. (FIXME)
+Description = La suite de ofimática de código abierto.
 
 [Section.040c]
-Description = Précédemment appelé OpenOffice. Suite bureautique open source. (FIXME)
-Size = 209,3 Mo
+Description = Précédemment appelé OpenOffice. Suite bureautique open source.
+Size = 209,36 Mo
 
 [Section.0410]
-Description = Precedentemente chiamato OpenOffice. Open Source Office Suite. (FIXME)
+Description = Precedentemente chiamato OpenOffice. Open Source Office Suite.
 
 [Section.0413]
-Description = Voorheen OpenOffice. Open-bron Office pakket. (FIXME)
+Description = Voorheen OpenOffice. Open-bron Office pakket.
 
 [Section.0415]
-Description = Otwarty pakiet biurowy. (FIXME)
+Description = Otwarty pakiet biurowy.
 
 [Section.0418]
-Description = Fostul OpenOffice. Suita de aplicații de birotică open-source. (FIXME)
-Size = 209,3 Mo
+Description = O suită office completă, cu surse deschise. Reprezintă o bifurcare a dezvoltării OpenOffice.
+Size = 209,36 Mo
 
 [Section.041f]
 Description = Güçlü ve açık kaynak bir büro takımı. OpenOffice'ten çatallanılmıştır.
-Size = 209,3 MB
+Size = 209,36 MB
 
 [Section.0422]
-Description = Відкритий офісний пакет. (FIXME)
+Description = Відкритий офісний пакет.
 
 [Section.0813]
-Description = Voorheen OpenOffice. Open-bron Office pakket. (FIXME)
+Description = Voorheen OpenOffice. Open-bron Office pakket.
