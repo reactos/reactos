@@ -610,7 +610,6 @@ GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData);
 static VOID
 OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
-    PCONSOLE Console = GuiData->Console;
     WORD ActivationState = LOWORD(wParam);
 
     DPRINT1("WM_ACTIVATE - ActivationState = %d\n");
@@ -637,12 +636,11 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
     }
 
     /*
-     * When we are in QuickEdit mode, ignore the next mouse signal
-     * when we are going to be enabled again via the mouse, in order
-     * to prevent e.g. an erroneous right-click from the user which
-     * would have as an effect to paste some unwanted text...
+     * Ignore the next mouse signal when we are going to be enabled again via
+     * the mouse, in order to prevent, e.g. when we are in Edit mode, erroneous
+     * mouse actions from the user that could spoil text selection or copy/pastes.
      */
-    if (Console->QuickEdit && (ActivationState == WA_CLICKACTIVE))
+    if (ActivationState == WA_CLICKACTIVE)
         GuiData->IgnoreNextMouseSignal = TRUE;
 }
 
@@ -1386,15 +1384,18 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     BOOL Err = FALSE;
     PCONSOLE Console = GuiData->Console;
 
+    // FIXME: It's here that we need to check whether we has focus or not
+    // and whether we are in edit mode or not, to know if we need to deal
+    // with the mouse, or not.
+
     if (GuiData->IgnoreNextMouseSignal)
     {
         if (msg != WM_LBUTTONDOWN &&
             msg != WM_MBUTTONDOWN &&
-            msg != WM_RBUTTONDOWN &&
-            msg != WM_MOUSEMOVE)
+            msg != WM_RBUTTONDOWN)
         {
             /*
-             * If this mouse signal is not a button-down action or a move,
+             * If this mouse signal is not a button-down action
              * then it is the last signal being ignored.
              */
             GuiData->IgnoreNextMouseSignal = FALSE;
@@ -1402,7 +1403,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         else
         {
             /*
-             * This mouse signal is a button-down action or a move.
+             * This mouse signal is a button-down action.
              * Ignore it and perform default action.
              */
             Err = TRUE;
@@ -1607,6 +1608,20 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 
             default:
                 Err = TRUE;
+                break;
+        }
+
+        /*
+         * HACK FOR CORE-8394: Ignore the next mouse move signal
+         * just after mouse down click actions.
+         */
+        switch (msg)
+        {
+            case WM_LBUTTONDOWN:
+            case WM_MBUTTONDOWN:
+            case WM_RBUTTONDOWN:
+                GuiData->IgnoreNextMouseSignal = TRUE;
+            default:
                 break;
         }
 
