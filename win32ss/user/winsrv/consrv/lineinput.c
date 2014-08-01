@@ -43,22 +43,21 @@ ConvertInputUnicodeToAnsi(PCONSOLE Console,
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static PHISTORY_BUFFER
-HistoryCurrentBuffer(PCONSOLE Console)
+HistoryCurrentBuffer(PCONSOLE Console,
+                     PUNICODE_STRING ExeName)
 {
-    /* TODO: use actual EXE name sent from process that called ReadConsole */
-    UNICODE_STRING ExeName = { 14, 14, L"cmd.exe" };
     PLIST_ENTRY Entry = Console->HistoryBuffers.Flink;
     PHISTORY_BUFFER Hist;
 
     for (; Entry != &Console->HistoryBuffers; Entry = Entry->Flink)
     {
         Hist = CONTAINING_RECORD(Entry, HISTORY_BUFFER, ListEntry);
-        if (RtlEqualUnicodeString(&ExeName, &Hist->ExeName, FALSE))
+        if (RtlEqualUnicodeString(ExeName, &Hist->ExeName, FALSE))
             return Hist;
     }
 
     /* Couldn't find the buffer, create a new one */
-    Hist = ConsoleAllocHeap(0, sizeof(HISTORY_BUFFER) + ExeName.Length);
+    Hist = ConsoleAllocHeap(0, sizeof(HISTORY_BUFFER) + ExeName->Length);
     if (!Hist) return NULL;
     Hist->MaxEntries = Console->HistoryBufferSize;
     Hist->NumEntries = 0;
@@ -68,18 +67,19 @@ HistoryCurrentBuffer(PCONSOLE Console)
         ConsoleFreeHeap(Hist);
         return NULL;
     }
-    Hist->ExeName.Length = Hist->ExeName.MaximumLength = ExeName.Length;
+    Hist->ExeName.Length = Hist->ExeName.MaximumLength = ExeName->Length;
     Hist->ExeName.Buffer = (PWCHAR)(Hist + 1);
-    memcpy(Hist->ExeName.Buffer, ExeName.Buffer, ExeName.Length);
+    memcpy(Hist->ExeName.Buffer, ExeName->Buffer, ExeName->Length);
     InsertHeadList(&Console->HistoryBuffers, &Hist->ListEntry);
     return Hist;
 }
 
 static VOID
-HistoryAddEntry(PCONSOLE Console)
+HistoryAddEntry(PCONSOLE Console,
+                PUNICODE_STRING ExeName)
 {
     UNICODE_STRING NewEntry;
-    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console);
+    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console, ExeName);
     INT i;
 
     if (!Hist) return;
@@ -127,9 +127,11 @@ HistoryAddEntry(PCONSOLE Console)
 }
 
 static VOID
-HistoryGetCurrentEntry(PCONSOLE Console, PUNICODE_STRING Entry)
+HistoryGetCurrentEntry(PCONSOLE Console,
+                       PUNICODE_STRING ExeName,
+                       PUNICODE_STRING Entry)
 {
-    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console);
+    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console, ExeName);
 
     if (!Hist || Hist->NumEntries == 0)
         Entry->Length = 0;
@@ -275,9 +277,11 @@ LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, PWCHAR Inser
 }
 
 static VOID
-LineInputRecallHistory(PCONSOLE Console, INT Offset)
+LineInputRecallHistory(PCONSOLE Console,
+                       PUNICODE_STRING ExeName,
+                       INT Offset)
 {
-    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console);
+    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console, ExeName);
     UINT Position = 0;
 
     if (!Hist || Hist->NumEntries == 0) return;
@@ -293,7 +297,9 @@ LineInputRecallHistory(PCONSOLE Console, INT Offset)
 }
 
 VOID
-LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
+LineInputKeyDown(PCONSOLE Console,
+                 PUNICODE_STRING ExeName,
+                 KEY_EVENT_RECORD *KeyEvent)
 {
     UINT Pos = Console->LinePos;
     PHISTORY_BUFFER Hist;
@@ -346,7 +352,7 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         else
         {
             /* Recall one character (but don't overwrite current line) */
-            HistoryGetCurrentEntry(Console, &Entry);
+            HistoryGetCurrentEntry(Console, ExeName, &Entry);
             if (Pos < Console->LineSize)
                 LineInputSetPos(Console, Pos + 1);
             else if (Pos * sizeof(WCHAR) < Entry.Length)
@@ -365,26 +371,26 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         return;
     case VK_PRIOR:
         /* Recall first history entry */
-        LineInputRecallHistory(Console, -((WORD)-1));
+        LineInputRecallHistory(Console, ExeName, -((WORD)-1));
         return;
     case VK_NEXT:
         /* Recall last history entry */
-        LineInputRecallHistory(Console, +((WORD)-1));
+        LineInputRecallHistory(Console, ExeName, +((WORD)-1));
         return;
     case VK_UP:
     case VK_F5:
         /* Recall previous history entry. On first time, actually recall the
          * current (usually last) entry; on subsequent times go back. */
-        LineInputRecallHistory(Console, Console->LineUpPressed ? -1 : 0);
+        LineInputRecallHistory(Console, ExeName, Console->LineUpPressed ? -1 : 0);
         Console->LineUpPressed = TRUE;
         return;
     case VK_DOWN:
         /* Recall next history entry */
-        LineInputRecallHistory(Console, +1);
+        LineInputRecallHistory(Console, ExeName, +1);
         return;
     case VK_F3:
         /* Recall remainder of current history entry */
-        HistoryGetCurrentEntry(Console, &Entry);
+        HistoryGetCurrentEntry(Console, ExeName, &Entry);
         if (Pos * sizeof(WCHAR) < Entry.Length)
         {
             UINT InsertSize = (Entry.Length / sizeof(WCHAR) - Pos);
@@ -398,11 +404,11 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         break;
     case VK_F7:
         if (KeyEvent->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
-            HistoryDeleteBuffer(HistoryCurrentBuffer(Console));
+            HistoryDeleteBuffer(HistoryCurrentBuffer(Console, ExeName));
         return;
     case VK_F8:
         /* Search for history entries starting with input. */
-        Hist = HistoryCurrentBuffer(Console);
+        Hist = HistoryCurrentBuffer(Console, ExeName);
         if (!Hist || Hist->NumEntries == 0) return;
 
         /* Like Up/F5, on first time start from current (usually last) entry,
@@ -446,7 +452,7 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
     }
     else if (KeyEvent->uChar.UnicodeChar == L'\r')
     {
-        HistoryAddEntry(Console);
+        HistoryAddEntry(Console, ExeName);
 
         /* TODO: Expand aliases */
 

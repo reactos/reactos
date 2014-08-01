@@ -24,58 +24,154 @@
  * Read functions *
  ******************/
 
+DWORD
+WINAPI
+GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer);
+
 static
 BOOL
-IntReadConsole(HANDLE hConsoleInput,
-               PVOID lpBuffer,
-               DWORD nNumberOfCharsToRead,
-               LPDWORD lpNumberOfCharsRead,
-               PCONSOLE_READCONSOLE_CONTROL pInputControl,
-               BOOL bUnicode)
+IntReadConsole(IN HANDLE hConsoleInput,
+               OUT PVOID lpBuffer,
+               IN DWORD nNumberOfCharsToRead,
+               OUT LPDWORD lpNumberOfCharsRead,
+               IN PCONSOLE_READCONSOLE_CONTROL pInputControl OPTIONAL,
+               IN BOOLEAN bUnicode)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_READCONSOLE ReadConsoleRequest = &ApiMessage.Data.ReadConsoleRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
-    ULONG CharSize;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
+    ULONG CharSize, SizeBytes;
 
-    /* Determine the needed size */
-    CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-    ReadConsoleRequest->BufferSize = nNumberOfCharsToRead * CharSize;
-
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, ReadConsoleRequest->BufferSize);
-    if (CaptureBuffer == NULL)
-    {
-        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    /* Allocate space in the Buffer */
-    CsrAllocateMessagePointer(CaptureBuffer,
-                              ReadConsoleRequest->BufferSize,
-                              (PVOID*)&ReadConsoleRequest->Buffer);
+    DPRINT("IntReadConsole\n");
 
     /* Set up the data to send to the Console Server */
-    ReadConsoleRequest->InputHandle = hConsoleInput;
-    ReadConsoleRequest->Unicode = bUnicode;
-    ReadConsoleRequest->NrCharactersToRead = nNumberOfCharsToRead;
-    ReadConsoleRequest->NrCharactersRead = 0;
-    ReadConsoleRequest->CtrlWakeupMask = 0;
-    if (pInputControl && pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
+    ReadConsoleRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ReadConsoleRequest->InputHandle   = hConsoleInput;
+    ReadConsoleRequest->Unicode       = bUnicode;
+
+    /*
+     * Retrieve the current console executable name string and length (always
+     * in UNICODE format).
+     * FIXME: Do not use GetConsoleInputExeNameW but use something else...
+     */
+    // 1- Get the exe name length in characters, including NULL character.
+    ReadConsoleRequest->ExeLength =
+        GetConsoleInputExeNameW(0, (PWCHAR)ReadConsoleRequest->StaticBuffer);
+    // 2- Get the exe name (GetConsoleInputExeNameW returns 1 in case of success).
+    if (GetConsoleInputExeNameW(ReadConsoleRequest->ExeLength,
+                                (PWCHAR)ReadConsoleRequest->StaticBuffer) != 1)
     {
-        /*
-         * From MSDN (ReadConsole function), the description
-         * for pInputControl says:
-         * "This parameter requires Unicode input by default.
-         * For ANSI mode, set this parameter to NULL."
-         */
-        ReadConsoleRequest->NrCharactersRead = pInputControl->nInitialChars;
-        RtlCopyMemory(ReadConsoleRequest->Buffer,
-                      lpBuffer,
-                      pInputControl->nInitialChars * sizeof(WCHAR));
-        ReadConsoleRequest->CtrlWakeupMask = pInputControl->dwCtrlWakeupMask;
+        // Nothing
+        ReadConsoleRequest->ExeLength = 0;
     }
+    else
+    {
+        // Remove the NULL character, and convert in number of bytes.
+        ReadConsoleRequest->ExeLength--;
+        ReadConsoleRequest->ExeLength *= sizeof(WCHAR);
+    }
+
+    /*** For DEBUGGING purposes ***/
+    {
+        UNICODE_STRING ExeName;
+        ExeName.Length = ExeName.MaximumLength = ReadConsoleRequest->ExeLength;
+        ExeName.Buffer = (PWCHAR)ReadConsoleRequest->StaticBuffer;
+        DPRINT1("IntReadConsole(ExeName = %wZ)\n", &ExeName);
+    }
+    /******************************/
+
+    /* Determine the needed size */
+    CharSize  = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    SizeBytes = nNumberOfCharsToRead * CharSize;
+
+    ReadConsoleRequest->CaptureBufferSize =
+    ReadConsoleRequest->NumBytes          = SizeBytes;
+
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are read. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (SizeBytes <= sizeof(ReadConsoleRequest->StaticBuffer))
+    {
+        ReadConsoleRequest->Buffer = ReadConsoleRequest->StaticBuffer;
+        // CaptureBuffer = NULL;
+    }
+    else
+    {
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, SizeBytes);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Allocate space in the Buffer */
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  SizeBytes,
+                                  (PVOID*)&ReadConsoleRequest->Buffer);
+    }
+
+    ReadConsoleRequest->InitialNumBytes = 0;
+    ReadConsoleRequest->CtrlWakeupMask  = 0;
+    ReadConsoleRequest->ControlKeyState = 0;
+
+    /*
+     * From MSDN (ReadConsole function), the description
+     * for pInputControl says:
+     * "This parameter requires Unicode input by default.
+     * For ANSI mode, set this parameter to NULL."
+     */
+    if (bUnicode && pInputControl &&
+        pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
+    {
+        /* Sanity check */
+        if (pInputControl->nInitialChars <= nNumberOfCharsToRead)
+        {
+            ReadConsoleRequest->InitialNumBytes =
+                pInputControl->nInitialChars * sizeof(WCHAR); // CharSize
+
+            if (pInputControl->nInitialChars != 0)
+            {
+                /*
+                 * It is possible here to overwrite the static buffer, in case
+                 * the number of bytes to read was smaller than the static buffer.
+                 * In this case, this means we are continuing a pending read,
+                 * and we do not need in fact the executable name that was
+                 * stored in the static buffer because it was first grabbed when
+                 * we started the first read.
+                 */
+                RtlCopyMemory(ReadConsoleRequest->Buffer,
+                              lpBuffer,
+                              ReadConsoleRequest->InitialNumBytes);
+            }
+
+            ReadConsoleRequest->CtrlWakeupMask = pInputControl->dwCtrlWakeupMask;
+        }
+        else
+        {
+            // Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        /* We are in a situation where pInputControl has no meaning */
+        pInputControl = NULL;
+    }
+
+    /* Check for sanity */
+/*
+    if (!NT_SUCCESS(Status) && pInputControl)
+    {
+        // Free CaptureBuffer if needed
+        // Set last error to last status
+        // Return FALSE
+    }
+*/
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -84,35 +180,49 @@ IntReadConsole(HANDLE hConsoleInput,
                         sizeof(*ReadConsoleRequest));
 
     /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
+    Success = NT_SUCCESS(ApiMessage.Status);
+
+    /* Retrieve the results */
+    if (Success)
     {
-        RtlCopyMemory(lpBuffer,
-                      ReadConsoleRequest->Buffer,
-                      ReadConsoleRequest->NrCharactersRead * CharSize);
+        _SEH2_TRY
+        {
+            *lpNumberOfCharsRead = ReadConsoleRequest->NumBytes / CharSize;
 
-        if (lpNumberOfCharsRead != NULL)
-            *lpNumberOfCharsRead = ReadConsoleRequest->NrCharactersRead;
+            if (bUnicode && pInputControl)
+                pInputControl->dwControlKeyState = ReadConsoleRequest->ControlKeyState;
 
-        if (pInputControl && pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
-            pInputControl->dwControlKeyState = ReadConsoleRequest->ControlKeyState;
+            RtlCopyMemory(lpBuffer,
+                          ReadConsoleRequest->Buffer,
+                          ReadConsoleRequest->NumBytes);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastError(ERROR_INVALID_ACCESS);
+            Success = FALSE;
+        }
+        _SEH2_END;
     }
     else
     {
-        DPRINT1("CSR returned error in ReadConsole\n");
-
-        if (lpNumberOfCharsRead != NULL)
-            *lpNumberOfCharsRead = 0;
-
-        /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
     }
 
-    CsrFreeCaptureBuffer(CaptureBuffer);
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Return TRUE or FALSE */
-    // return TRUE;
-    return (ReadConsoleRequest->NrCharactersRead > 0);
-    // return NT_SUCCESS(ApiMessage.Status);
+    if (Success)
+    {
+        /* Yield execution to another thread if Ctrl-C or Ctrl-Break happened */
+        if (ApiMessage.Status == STATUS_ALERTED /* || ApiMessage.Status == STATUS_CANCELLED */)
+        {
+            NtYieldExecution();
+            SetLastError(ERROR_OPERATION_ABORTED); // STATUS_CANCELLED
+        }
+    }
+
+    /* Return success status */
+    return Success;
 }
 
 
@@ -228,12 +338,12 @@ IntGetConsoleInput(IN HANDLE hConsoleInput,
 
 static
 BOOL
-IntReadConsoleOutput(HANDLE hConsoleOutput,
-                     PCHAR_INFO lpBuffer,
-                     COORD dwBufferSize,
-                     COORD dwBufferCoord,
-                     PSMALL_RECT lpReadRegion,
-                     BOOL bUnicode)
+IntReadConsoleOutput(IN HANDLE hConsoleOutput,
+                     OUT PCHAR_INFO lpBuffer,
+                     IN COORD dwBufferSize,
+                     IN COORD dwBufferCoord,
+                     IN OUT PSMALL_RECT lpReadRegion,
+                     IN BOOLEAN bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_READOUTPUT ReadOutputRequest = &ApiMessage.Data.ReadOutputRequest;
@@ -292,7 +402,6 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     }
     else
     {
-        /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
     }
 
@@ -321,7 +430,7 @@ IntReadConsoleOutputCode(IN HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &ApiMessage.Data.ReadOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
-    ULONG SizeBytes, CodeSize;
+    ULONG CodeSize, SizeBytes;
 
     DPRINT("IntReadConsoleOutputCode\n");
 
@@ -431,42 +540,79 @@ IntReadConsoleOutputCode(IN HANDLE hConsoleOutput,
 
 static
 BOOL
-IntWriteConsole(HANDLE hConsoleOutput,
-                PVOID lpBuffer,
-                DWORD nNumberOfCharsToWrite,
-                LPDWORD lpNumberOfCharsWritten,
+IntWriteConsole(IN HANDLE hConsoleOutput,
+                IN PVOID lpBuffer,
+                IN DWORD nNumberOfCharsToWrite,
+                OUT LPDWORD lpNumberOfCharsWritten,
                 LPVOID lpReserved,
-                BOOL bUnicode)
+                IN BOOLEAN bUnicode)
 {
-    BOOL bRet = TRUE;
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITECONSOLE WriteConsoleRequest = &ApiMessage.Data.WriteConsoleRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
-    ULONG CharSize;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
+    ULONG CharSize, SizeBytes;
+
+    DPRINT("IntWriteConsole\n");
+
+    /* Set up the data to send to the Console Server */
+    WriteConsoleRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    WriteConsoleRequest->OutputHandle  = hConsoleOutput;
+    WriteConsoleRequest->Unicode       = bUnicode;
+
+    /* Those members are unused by the client, on Windows */
+    WriteConsoleRequest->Reserved1 = 0;
+    // WriteConsoleRequest->Reserved2 = {0};
 
     /* Determine the needed size */
-    CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-    WriteConsoleRequest->BufferSize = nNumberOfCharsToWrite * CharSize;
+    CharSize  = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    SizeBytes = nNumberOfCharsToWrite * CharSize;
 
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, WriteConsoleRequest->BufferSize);
-    if (CaptureBuffer == NULL)
+    WriteConsoleRequest->NumBytes = SizeBytes;
+
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are written. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (SizeBytes <= sizeof(WriteConsoleRequest->StaticBuffer))
     {
-        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        WriteConsoleRequest->Buffer = WriteConsoleRequest->StaticBuffer;
+        // CaptureBuffer = NULL;
+        WriteConsoleRequest->UsingStaticBuffer = TRUE;
+
+        _SEH2_TRY
+        {
+            RtlCopyMemory(WriteConsoleRequest->Buffer,
+                          lpBuffer,
+                          SizeBytes);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastError(ERROR_INVALID_ACCESS);
+            return FALSE;
+        }
+        _SEH2_END;
     }
+    else
+    {
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, SizeBytes);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
 
-    /* Capture the buffer to write */
-    CsrCaptureMessageBuffer(CaptureBuffer,
-                            (PVOID)lpBuffer,
-                            WriteConsoleRequest->BufferSize,
-                            (PVOID*)&WriteConsoleRequest->Buffer);
-
-    /* Start writing */
-    WriteConsoleRequest->NrCharactersToWrite = nNumberOfCharsToWrite;
-    WriteConsoleRequest->OutputHandle = hConsoleOutput;
-    WriteConsoleRequest->Unicode = bUnicode;
+        /* Capture the buffer to write */
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                (PVOID)lpBuffer,
+                                SizeBytes,
+                                (PVOID*)&WriteConsoleRequest->Buffer);
+        WriteConsoleRequest->UsingStaticBuffer = FALSE;
+    }
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -475,26 +621,32 @@ IntWriteConsole(HANDLE hConsoleOutput,
                         sizeof(*WriteConsoleRequest));
 
     /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
-    {
-        if (lpNumberOfCharsWritten != NULL)
-            *lpNumberOfCharsWritten = WriteConsoleRequest->NrCharactersWritten;
+    Success = NT_SUCCESS(ApiMessage.Status);
 
-        bRet = TRUE;
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
+
+    /* Retrieve the results */
+    if (Success)
+    {
+        _SEH2_TRY
+        {
+            *lpNumberOfCharsWritten = WriteConsoleRequest->NumBytes / CharSize;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastError(ERROR_INVALID_ACCESS);
+            Success = FALSE;
+        }
+        _SEH2_END;
     }
     else
     {
-        if (lpNumberOfCharsWritten != NULL)
-            *lpNumberOfCharsWritten = 0;
-
-        /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
-        bRet = FALSE;
     }
 
-    CsrFreeCaptureBuffer(CaptureBuffer);
-
-    return bRet;
+    /* Return success status */
+    return Success;
 }
 
 
@@ -600,12 +752,12 @@ IntWriteConsoleInput(IN HANDLE hConsoleInput,
 
 static
 BOOL
-IntWriteConsoleOutput(HANDLE hConsoleOutput,
-                      CONST CHAR_INFO *lpBuffer,
-                      COORD dwBufferSize,
-                      COORD dwBufferCoord,
-                      PSMALL_RECT lpWriteRegion,
-                      BOOL bUnicode)
+IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
+                      IN CONST CHAR_INFO *lpBuffer,
+                      IN COORD dwBufferSize,
+                      IN COORD dwBufferCoord,
+                      IN OUT PSMALL_RECT lpWriteRegion,
+                      IN BOOLEAN bUnicode)
 {
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEOUTPUT WriteOutputRequest = &ApiMessage.Data.WriteOutputRequest;
@@ -660,7 +812,6 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
     /* Check for success */
     if (!NT_SUCCESS(ApiMessage.Status))
     {
-        /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
     }
 
@@ -689,7 +840,7 @@ IntWriteConsoleOutputCode(IN HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &ApiMessage.Data.WriteOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
-    ULONG SizeBytes, CodeSize;
+    ULONG CodeSize, SizeBytes;
 
     if ( (CodeType != CODE_ASCII    ) &&
          (CodeType != CODE_UNICODE  ) &&
@@ -872,11 +1023,11 @@ IntFillConsoleOutputCode(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-ReadConsoleW(HANDLE hConsoleInput,
-             LPVOID lpBuffer,
-             DWORD nNumberOfCharsToRead,
-             LPDWORD lpNumberOfCharsRead,
-             PCONSOLE_READCONSOLE_CONTROL pInputControl)
+ReadConsoleW(IN HANDLE hConsoleInput,
+             OUT LPVOID lpBuffer,
+             IN DWORD nNumberOfCharsToRead,
+             OUT LPDWORD lpNumberOfCharsRead,
+             IN PCONSOLE_READCONSOLE_CONTROL pInputControl OPTIONAL)
 {
     return IntReadConsole(hConsoleInput,
                           lpBuffer,
@@ -894,11 +1045,11 @@ ReadConsoleW(HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-ReadConsoleA(HANDLE hConsoleInput,
-             LPVOID lpBuffer,
-             DWORD nNumberOfCharsToRead,
-             LPDWORD lpNumberOfCharsRead,
-             PCONSOLE_READCONSOLE_CONTROL pInputControl)
+ReadConsoleA(IN HANDLE hConsoleInput,
+             OUT LPVOID lpBuffer,
+             IN DWORD nNumberOfCharsToRead,
+             OUT LPDWORD lpNumberOfCharsRead,
+             IN PCONSOLE_READCONSOLE_CONTROL pInputControl OPTIONAL)
 {
     return IntReadConsole(hConsoleInput,
                           lpBuffer,
@@ -1044,11 +1195,11 @@ ReadConsoleInputExA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-ReadConsoleOutputW(HANDLE hConsoleOutput,
-                   PCHAR_INFO lpBuffer,
-                   COORD dwBufferSize,
-                   COORD dwBufferCoord,
-                   PSMALL_RECT lpReadRegion)
+ReadConsoleOutputW(IN HANDLE hConsoleOutput,
+                   OUT PCHAR_INFO lpBuffer,
+                   IN COORD dwBufferSize,
+                   IN COORD dwBufferCoord,
+                   IN OUT PSMALL_RECT lpReadRegion)
 {
     return IntReadConsoleOutput(hConsoleOutput,
                                 lpBuffer,
@@ -1066,11 +1217,11 @@ ReadConsoleOutputW(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-ReadConsoleOutputA(HANDLE hConsoleOutput,
-                   PCHAR_INFO lpBuffer,
-                   COORD dwBufferSize,
-                   COORD dwBufferCoord,
-                   PSMALL_RECT lpReadRegion)
+ReadConsoleOutputA(IN HANDLE hConsoleOutput,
+                   OUT PCHAR_INFO lpBuffer,
+                   IN COORD dwBufferSize,
+                   IN COORD dwBufferCoord,
+                   IN OUT PSMALL_RECT lpReadRegion)
 {
     return IntReadConsoleOutput(hConsoleOutput,
                                 lpBuffer,
@@ -1158,10 +1309,10 @@ ReadConsoleOutputAttribute(IN HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-WriteConsoleW(HANDLE hConsoleOutput,
-              CONST VOID *lpBuffer,
-              DWORD nNumberOfCharsToWrite,
-              LPDWORD lpNumberOfCharsWritten,
+WriteConsoleW(IN HANDLE hConsoleOutput,
+              IN CONST VOID *lpBuffer,
+              IN DWORD nNumberOfCharsToWrite,
+              OUT LPDWORD lpNumberOfCharsWritten,
               LPVOID lpReserved)
 {
     return IntWriteConsole(hConsoleOutput,
@@ -1180,10 +1331,10 @@ WriteConsoleW(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-WriteConsoleA(HANDLE hConsoleOutput,
-              CONST VOID *lpBuffer,
-              DWORD nNumberOfCharsToWrite,
-              LPDWORD lpNumberOfCharsWritten,
+WriteConsoleA(IN HANDLE hConsoleOutput,
+              IN CONST VOID *lpBuffer,
+              IN DWORD nNumberOfCharsToWrite,
+              OUT LPDWORD lpNumberOfCharsWritten,
               LPVOID lpReserved)
 {
     return IntWriteConsole(hConsoleOutput,
@@ -1286,11 +1437,11 @@ WriteConsoleInputVDMA(IN HANDLE hConsoleInput,
  */
 BOOL
 WINAPI
-WriteConsoleOutputW(HANDLE hConsoleOutput,
-                    CONST CHAR_INFO *lpBuffer,
-                    COORD dwBufferSize,
-                    COORD dwBufferCoord,
-                    PSMALL_RECT lpWriteRegion)
+WriteConsoleOutputW(IN HANDLE hConsoleOutput,
+                    IN CONST CHAR_INFO *lpBuffer,
+                    IN COORD dwBufferSize,
+                    IN COORD dwBufferCoord,
+                    IN OUT PSMALL_RECT lpWriteRegion)
 {
     return IntWriteConsoleOutput(hConsoleOutput,
                                  lpBuffer,
@@ -1308,11 +1459,11 @@ WriteConsoleOutputW(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-WriteConsoleOutputA(HANDLE hConsoleOutput,
-                    CONST CHAR_INFO *lpBuffer,
-                    COORD dwBufferSize,
-                    COORD dwBufferCoord,
-                    PSMALL_RECT lpWriteRegion)
+WriteConsoleOutputA(IN HANDLE hConsoleOutput,
+                    IN CONST CHAR_INFO *lpBuffer,
+                    IN COORD dwBufferSize,
+                    IN COORD dwBufferCoord,
+                    IN OUT PSMALL_RECT lpWriteRegion)
 {
     return IntWriteConsoleOutput(hConsoleOutput,
                                  lpBuffer,

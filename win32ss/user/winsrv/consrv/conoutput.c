@@ -373,17 +373,45 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
     PCONSOLE_WRITECONSOLE WriteConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleRequest;
     PTEXTMODE_SCREEN_BUFFER ScreenBuffer;
 
+    PVOID Buffer;
+    ULONG NrCharactersWritten = 0;
+    ULONG CharSize = (WriteConsoleRequest->Unicode ? sizeof(WCHAR) : sizeof(CHAR));
+
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(ClientThread->Process),
                                      WriteConsoleRequest->OutputHandle,
                                      &ScreenBuffer, GENERIC_WRITE, FALSE);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are written. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     */
+    if (WriteConsoleRequest->UsingStaticBuffer &&
+        WriteConsoleRequest->NumBytes <= sizeof(WriteConsoleRequest->StaticBuffer))
+    {
+        /*
+         * Adjust the internal pointer, because its old value points to
+         * the static buffer in the original ApiMessage structure.
+         */
+        // WriteConsoleRequest->Buffer = WriteConsoleRequest->StaticBuffer;
+        Buffer = WriteConsoleRequest->StaticBuffer;
+    }
+    else
+    {
+        Buffer = WriteConsoleRequest->Buffer;
+    }
+
+    DPRINT("Calling ConDrvWriteConsole\n");
     Status = ConDrvWriteConsole(ScreenBuffer->Header.Console,
                                 ScreenBuffer,
                                 WriteConsoleRequest->Unicode,
-                                WriteConsoleRequest->Buffer,
-                                WriteConsoleRequest->NrCharactersToWrite,
-                                &WriteConsoleRequest->NrCharactersWritten);
+                                Buffer,
+                                WriteConsoleRequest->NumBytes / CharSize, // NrCharactersToWrite
+                                &NrCharactersWritten);
+    DPRINT("ConDrvWriteConsole returned (%d ; Status = 0x%08x)\n",
+           NrCharactersWritten, Status);
 
     if (Status == STATUS_PENDING)
     {
@@ -403,6 +431,11 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
 
         /* Wait until we un-pause the console */
         // Status = STATUS_PENDING;
+    }
+    else
+    {
+        /* We read all what we wanted. Set the number of bytes written. */
+        WriteConsoleRequest->NumBytes = NrCharactersWritten * CharSize;
     }
 
 Quit:
@@ -502,12 +535,30 @@ CSR_API(SrvWriteConsole)
 
     DPRINT("SrvWriteConsole\n");
 
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID)&WriteConsoleRequest->Buffer,
-                                  WriteConsoleRequest->BufferSize,
-                                  sizeof(BYTE)))
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than eighty
+     * bytes are written. Otherwise a new buffer is used.
+     * The client-side expects that we know this behaviour.
+     */
+    if (WriteConsoleRequest->UsingStaticBuffer &&
+        WriteConsoleRequest->NumBytes <= sizeof(WriteConsoleRequest->StaticBuffer))
     {
-        return STATUS_INVALID_PARAMETER;
+        /*
+         * Adjust the internal pointer, because its old value points to
+         * the static buffer in the original ApiMessage structure.
+         */
+        // WriteConsoleRequest->Buffer = WriteConsoleRequest->StaticBuffer;
+    }
+    else
+    {
+        if (!CsrValidateMessageBuffer(ApiMessage,
+                                      (PVOID)&WriteConsoleRequest->Buffer,
+                                      WriteConsoleRequest->NumBytes,
+                                      sizeof(BYTE)))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
     }
 
     Status = DoWriteConsole(ApiMessage, CsrGetClientThread(), TRUE);

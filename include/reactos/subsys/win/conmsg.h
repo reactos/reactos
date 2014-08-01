@@ -218,30 +218,40 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
 
-    BOOL Unicode;
-    ULONG NrCharactersToWrite;
-    ULONG NrCharactersWritten;
+    CHAR  StaticBuffer[80];
+    PVOID Buffer; // BufPtr
+    ULONG NumBytes;
 
-    ULONG BufferSize;
-    PVOID Buffer;
+    // On Windows, the client never uses this member
+    ULONG Reserved1;
+
+    BOOLEAN UsingStaticBuffer;
+    BOOLEAN Unicode;
+
+    // On Windows, the client never uses this member
+    CHAR Reserved2[6];
 } CONSOLE_WRITECONSOLE, *PCONSOLE_WRITECONSOLE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
 
-    BOOL Unicode;
-    ULONG NrCharactersToRead;
-    ULONG NrCharactersRead;
+    USHORT ExeLength;
 
-    UNICODE_STRING ExeName;
-    DWORD CtrlWakeupMask;
-    DWORD ControlKeyState;
+    CHAR  StaticBuffer[80];
+    PVOID Buffer; // BufPtr
+    ULONG NumBytes;
 
-    ULONG BufferSize;
-    PVOID Buffer;
+    ULONG CaptureBufferSize;
+
+    ULONG   InitialNumBytes;
+    ULONG   CtrlWakeupMask;
+    ULONG   ControlKeyState;
+    BOOLEAN Unicode;
 } CONSOLE_READCONSOLE, *PCONSOLE_READCONSOLE;
 
 typedef struct

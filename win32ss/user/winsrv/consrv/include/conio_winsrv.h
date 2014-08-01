@@ -140,11 +140,15 @@ ConSrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
-NTSTATUS ConioAddInputEvent(PCONSOLE Console,
-                                     PINPUT_RECORD InputEvent,
-                                     BOOLEAN AppendToEnd);
-NTSTATUS ConioProcessInputEvent(PCONSOLE Console,
-                                         PINPUT_RECORD InputEvent);
+NTSTATUS
+ConioAddInputEvents(PCONSOLE Console,
+                    PINPUT_RECORD InputRecords,
+                    ULONG NumEventsToWrite,
+                    PULONG NumEventsWritten,
+                    BOOLEAN AppendToEnd);
+NTSTATUS
+ConioProcessInputEvent(PCONSOLE Console,
+                       PINPUT_RECORD InputEvent);
 
 /* conoutput.c */
 #define ConioInitRect(Rect, top, left, bottom, right) \
