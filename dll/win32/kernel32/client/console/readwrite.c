@@ -126,42 +126,53 @@ IntReadConsole(IN HANDLE hConsoleInput,
      * "This parameter requires Unicode input by default.
      * For ANSI mode, set this parameter to NULL."
      */
-    if (bUnicode && pInputControl &&
-        pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
+    _SEH2_TRY
     {
-        /* Sanity check */
-        if (pInputControl->nInitialChars <= nNumberOfCharsToRead)
+        if (bUnicode && pInputControl &&
+            pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
         {
-            ReadConsoleRequest->InitialNumBytes =
-                pInputControl->nInitialChars * sizeof(WCHAR); // CharSize
-
-            if (pInputControl->nInitialChars != 0)
+            /* Sanity check */
+            if (pInputControl->nInitialChars <= nNumberOfCharsToRead)
             {
-                /*
-                 * It is possible here to overwrite the static buffer, in case
-                 * the number of bytes to read was smaller than the static buffer.
-                 * In this case, this means we are continuing a pending read,
-                 * and we do not need in fact the executable name that was
-                 * stored in the static buffer because it was first grabbed when
-                 * we started the first read.
-                 */
-                RtlCopyMemory(ReadConsoleRequest->Buffer,
-                              lpBuffer,
-                              ReadConsoleRequest->InitialNumBytes);
-            }
+                ReadConsoleRequest->InitialNumBytes =
+                    pInputControl->nInitialChars * sizeof(WCHAR); // CharSize
 
-            ReadConsoleRequest->CtrlWakeupMask = pInputControl->dwCtrlWakeupMask;
+                if (pInputControl->nInitialChars != 0)
+                {
+                    /*
+                     * It is possible here to overwrite the static buffer, in case
+                     * the number of bytes to read was smaller than the static buffer.
+                     * In this case, this means we are continuing a pending read,
+                     * and we do not need in fact the executable name that was
+                     * stored in the static buffer because it was first grabbed when
+                     * we started the first read.
+                     */
+                    RtlCopyMemory(ReadConsoleRequest->Buffer,
+                                  lpBuffer,
+                                  ReadConsoleRequest->InitialNumBytes);
+                }
+
+                ReadConsoleRequest->CtrlWakeupMask = pInputControl->dwCtrlWakeupMask;
+            }
+            else
+            {
+                // Status = STATUS_INVALID_PARAMETER;
+            }
         }
         else
         {
-            // Status = STATUS_INVALID_PARAMETER;
+            /* We are in a situation where pInputControl has no meaning */
+            pInputControl = NULL;
         }
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* We are in a situation where pInputControl has no meaning */
-        pInputControl = NULL;
+        // HACK
+        if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
+        SetLastError(ERROR_INVALID_ACCESS);
+        return FALSE;
     }
+    _SEH2_END;
 
     /* Check for sanity */
 /*
