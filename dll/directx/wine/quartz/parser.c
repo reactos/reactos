@@ -180,6 +180,7 @@ void Parser_Destroy(ParserImpl *This)
     }
 
     CoTaskMemFree(This->ppPins);
+    BaseFilter_Destroy(&This->filter);
 
     TRACE("Destroying parser\n");
     CoTaskMemFree(This);
@@ -188,7 +189,7 @@ void Parser_Destroy(ParserImpl *This)
 ULONG WINAPI Parser_Release(IBaseFilter * iface)
 {
     ParserImpl *This = impl_from_IBaseFilter(iface);
-    ULONG refCount = BaseFilterImpl_Release(iface);
+    ULONG refCount = InterlockedDecrement(&This->filter.refCount);
 
     TRACE("(%p)->() Release from %d\n", This, refCount + 1);
 

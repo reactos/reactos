@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
@@ -13,29 +13,29 @@ URLDownload = https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-2.5.2-in
 CDPath = none
 
 [Section.0407]
-Description = Sumatra PDF ist ein freies, schlankes, Open-Source PDF-Anzeigeprogramm. (FIXME)
+Description = Sumatra PDF ist ein freies, schlankes, Open-Source PDF-Anzeigeprogramm.
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-de.html
 
 [Section.040a]
-Description = Sumatra PDF es un lector PDF ligero, libre y open-source. (FIXME)
+Description = Sumatra PDF es un lector PDF ligero, libre y open-source.
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-es.html
 
 [Section.040c]
-Description = Sumatra PDF est un lecteur PDF lÃ©ger, libre et open-source. (FIXME)
+Description = Sumatra PDF est un lecteur PDF lÃ©ger, libre et open-source.
 Size = 4,0 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-fr.html
 
 [Section.0410]
-Description = Sumatra PDF è un visualizzatore di file PDF, leggero e open source. (FIXME)
+Description = Sumatra PDF è un visualizzatore di file PDF, leggero e open source.
 
 [Section.0413]
-Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer. (FIXME)
+Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.
 
 [Section.0415]
-Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF. (FIXME)
+Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.
 
 [Section.0418]
-Description = Lector PDF - ușor, gratuit (open-source), și portabil. (FIXME)
+Description = Lector PDF - ușor, gratuit (cu surse deschise), și portabil.
 Size = 4,0 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 
@@ -45,4 +45,4 @@ Description = SumatraPDF; yeğni, ücretsiz ve açık kaynak bir PDF okuyucusudu
 Size = 4,0 MB
 
 [Section.0813]
-Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer. (FIXME)
+Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.

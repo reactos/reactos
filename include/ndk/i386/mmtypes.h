@@ -34,6 +34,7 @@ extern "C" {
 #define PAGE_SHIFT                        12L
 #define MM_ALLOCATION_GRANULARITY         0x10000
 #define MM_ALLOCATION_GRANULARITY_SHIFT   16L
+#define MM_PAGE_FRAME_NUMBER_SIZE         20
 
 //
 // Address of the shared user page

@@ -60,14 +60,7 @@ ULONG WINAPI BaseFilterImpl_Release(IBaseFilter * iface)
     TRACE("(%p)->() Release from %d\n", This, refCount + 1);
 
     if (!refCount)
-    {
-        if (This->pClock)
-            IReferenceClock_Release(This->pClock);
-
-        This->IBaseFilter_iface.lpVtbl = NULL;
-        This->csFilter.DebugInfo->Spare[0] = 0;
-        DeleteCriticalSection(&This->csFilter);
-    }
+        BaseFilter_Destroy(This);
 
     return refCount;
 }
@@ -206,6 +199,18 @@ HRESULT WINAPI BaseFilter_Init(BaseFilter * This, const IBaseFilterVtbl *Vtbl, c
     This->pinVersion = 1;
 
     This->pFuncsTable = pBaseFuncsTable;
+
+    return S_OK;
+}
+
+HRESULT WINAPI BaseFilter_Destroy(BaseFilter * This)
+{
+    if (This->pClock)
+        IReferenceClock_Release(This->pClock);
+
+    This->IBaseFilter_iface.lpVtbl = NULL;
+    This->csFilter.DebugInfo->Spare[0] = 0;
+    DeleteCriticalSection(&This->csFilter);
 
     return S_OK;
 }

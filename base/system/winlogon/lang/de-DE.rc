@@ -17,8 +17,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Benutzerinterface-Fehler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Die Logon-Benutzerschnittstellen-DLL %s konnte nicht geladen werden.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Kontaktieren Sie Ihren Systemadministrator, um die DLL zu ersetzen, oder stellen Sie die Original-DLL wieder her.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "Die DLL %s konnte nicht geladen werden.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Kontaktieren Sie Ihren Systemadministrator, um die Datei zu ersetzen, oder stellen Sie die Originaldatei wieder her.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "Neusta&rt", 1, 80, 91, 68, 14
 END
 
@@ -28,7 +28,7 @@ BEGIN
     IDS_APPLYINGCOMPUTERSETTINGS "Computereinstellungen laden..."
     IDS_RUNNINGSTARTUPSCRIPTS "Startskripte ausführen..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Skripte zum Herunterfahren ausführen..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Ihre persönlichen Einstellungen setzen..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Persönliche Einstellungen werden übernommen..."
     IDS_RUNNINGLOGOFFSCRIPTS "Abmeldeskripte ausführen..."
     IDS_RUNNINGLOGONSCRIPTS "Anmeldeskripte ausführen..."
     IDS_LOADINGYOURPERSONALSETTINGS "Ihre persönlichen Einstellungen laden..."

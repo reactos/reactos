@@ -23,7 +23,7 @@ void CreateSol()
     // Compute the value for yRowStackCardOffset based on the height of the card, so the card number isn't hidden on larger cards
     yRowStackCardOffset = (int)(__cardheight / 6.7);
 
-    pDeck = SolWnd.CreateRegion(DECK_ID, true, X_BORDER, Y_BORDER, 2, 1);
+    pDeck = SolWnd.CreateRegion(DECK_ID, true, X_BORDER, Y_BORDERWITHFRAME, 2, 1);
     pDeck->SetEmptyImage(CS_EI_CIRC);
     pDeck->SetThreedCount(6);
     pDeck->SetDragRule(CS_DRAG_NONE, 0);
@@ -32,7 +32,7 @@ void CreateSol()
     pDeck->SetDblClickProc(DeckClickProc);
     pDeck->SetFaceDirection(CS_FACE_DOWN, 0);
 
-    pPile = SolWnd.CreateRegion(PILE_ID, true, X_BORDER + __cardwidth + X_PILE_BORDER, Y_BORDER, CS_DEFXOFF, 1);
+    pPile = SolWnd.CreateRegion(PILE_ID, true, X_BORDER + __cardwidth + X_PILE_BORDER, Y_BORDERWITHFRAME, CS_DEFXOFF, 1);
     pPile->SetEmptyImage(CS_EI_NONE);
     pPile->SetDragRule(CS_DRAG_TOP, 0);
     pPile->SetDropRule(CS_DROP_NONE, 0);
@@ -45,7 +45,7 @@ void CreateSol()
     //
     for(i = 0; i < 4; i++)
     {
-        pSuitStack[i] = SolWnd.CreateRegion(SUIT_ID+i, true, 0, Y_BORDER, 0, 0);
+        pSuitStack[i] = SolWnd.CreateRegion(SUIT_ID+i, true, 0, Y_BORDERWITHFRAME, 0, 0);
         pSuitStack[i]->SetEmptyImage(CS_EI_SUNK);
         pSuitStack[i]->SetPlacement(CS_XJUST_CENTER, 0, i * (__cardwidth + X_SUITSTACK_BORDER) , 0);
 
@@ -61,7 +61,7 @@ void CreateSol()
     //
     for(i = 0; i < NUM_ROW_STACKS; i++)
     {
-        pRowStack[i] = SolWnd.CreateRegion(ROW_ID+i, true, 0, Y_BORDER + __cardheight + Y_ROWSTACK_BORDER, 0, yRowStackCardOffset);
+        pRowStack[i] = SolWnd.CreateRegion(ROW_ID+i, true, 0, Y_BORDERWITHFRAME + __cardheight + Y_ROWSTACK_BORDER, 0, yRowStackCardOffset);
         pRowStack[i]->SetEmptyImage(CS_EI_SUNK);
         pRowStack[i]->SetFaceDirection(CS_FACE_DOWNUP, i);
 

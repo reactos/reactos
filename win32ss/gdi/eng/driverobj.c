@@ -29,7 +29,7 @@ DRIVEROBJ_vCleanup(PVOID pObject)
     pFreeProc = pedo->drvobj.pFreeProc;
     if (pFreeProc)
     {
-        NT_VERIFY(pFreeProc(pedo->drvobj.pvObj));
+        NT_VERIFY(pFreeProc(&pedo->drvobj));
     }
 }
 
@@ -88,7 +88,7 @@ EngDeleteDriverObj(
     /* Manually call cleanup callback */
     if (bCallBack)
     {
-        if (!pedo->drvobj.pFreeProc(pedo->drvobj.pvObj))
+        if (!pedo->drvobj.pFreeProc(&pedo->drvobj))
         {
             /* Callback failed */
             DRIVEROBJ_UnlockObject(pedo);

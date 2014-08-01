@@ -12,6 +12,9 @@ URLSite = http://www.libsdl.org/
 URLDownload = http://www.libsdl.org/release/SDL-1.2.15-win32.zip
 CDPath = none
 
+[Section.0405]
+Description = Nutný pro spuštění některých open source her. K rozbalení je nutný 7-zip nebo podobný nástroj.
+
 [Section.0407]
 Name = Simple Direct Media Layer (SDL) Laufzeitsystem
 Description = Erforderlich um einige Open Source Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
@@ -36,7 +39,7 @@ Name = Biblioteka uruchomieniowa Simple Direct Media Layer (SDL)
 Description = Wymagana przez wiele gier (głównie o otwartym źródle). Do jej rozpakowania potrzebny jest program 7-Zip lub podobny.
 
 [Section.0418]
-Description = Necesar pentru execuția multor jocuri (open-source). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
+Description = Necesar pentru execuția multor jocuri (cu surse deschise). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
 Size = 136,67 ko
 
 [Section.041f]

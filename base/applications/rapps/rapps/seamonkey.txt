@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
@@ -43,8 +43,8 @@ Size = 24.72 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.26/win32/pl/SeaMonkey%20Setup%202.26.exe
 
 [Section.0418]
-Description = Suita Mozilla. Acest pachet ce încorporează navigator, poștă electronică, client IRC și editor HTML, acoperind astfel o arie largă de necesități.
-Size = 23,90 Mo
+Description = Suita Mozilla. Acest pachet încorporează navigator, poștă electronică, client IRC și editor HTML, acoperind astfel o arie largă de necesități.
+Size = 24,7 Mo
 
 [Section.0419]
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.

@@ -12,6 +12,9 @@ URLSite = http://www.opera.com/
 URLDownload = http://arc.opera.com/pub/opera/win/964/int/Opera_964_int_Setup.exe
 CDPath = none
 
+[Section.0405]
+Description = Populární prohlížeč Opera s mnoha pokročilými vlastnostmi, včetně vestavené podpory pro e-mail a BitTorrent.
+
 [Section.0407]
 Description = Der populäre Opera Browser mit vielen fortschrittlichen Eigenschaften, enthält einen Mail und BitTorrent Client.
 

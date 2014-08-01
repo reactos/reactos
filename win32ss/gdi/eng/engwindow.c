@@ -96,6 +96,7 @@ IntEngWndUpdateClipObj(
 
     /* Update the WNDOBJ */
     Clip->WndObj.rclClient = Window->rcClient;
+    Clip->WndObj.coClient.iUniq++;
 
     return TRUE;
 }
@@ -111,12 +112,6 @@ IntEngWindowChanged(
 {
     XCLIPOBJ *Clip;
 
-    /*
-     * This function is broken because AtomWndObj conflicts with
-     * properties set from user mode using SetPropW
-     */
-    return;
-
     ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
     Clip = UserGetProp(Window, AtomWndObj);
@@ -126,7 +121,7 @@ IntEngWindowChanged(
     }
 
     ASSERT(Clip->Hwnd == Window->head.h);
-    if (Clip->WndObj.pvConsumer != NULL)
+    // if (Clip->WndObj.pvConsumer != NULL)
     {
         /* Update the WNDOBJ */
         switch (flChanged)
@@ -173,6 +168,11 @@ EngCreateWnd(
     TRACE("EngCreateWnd: pso = 0x%p, hwnd = 0x%p, pfn = 0x%p, fl = 0x%lx, pixfmt = %d\n",
             pso, hWnd, pfn, fl, iPixelFormat);
 
+    if (fl & (WO_RGN_WINDOW | WO_RGN_DESKTOP_COORD | WO_RGN_UPDATE_ALL))
+    {
+        FIXME("Unsupported flags: 0x%lx\n", fl & ~(WO_RGN_CLIENT_DELTA | WO_RGN_CLIENT | WO_RGN_SURFACE_DELTA | WO_RGN_SURFACE));
+    }
+
     calledFromUser = UserIsEntered();
     if (!calledFromUser) {
         UserEnterShared();
@@ -209,7 +209,12 @@ EngCreateWnd(
     /* Fill internal object */
     Clip->Hwnd = hWnd;
     Clip->ChangeProc = pfn;
-    Clip->Flags = fl;
+    /* Keep track of relevant flags */
+    Clip->Flags = fl & (WO_RGN_CLIENT_DELTA | WO_RGN_CLIENT | WO_RGN_SURFACE_DELTA | WO_RGN_SURFACE | WO_DRAW_NOTIFY);
+    if (fl & WO_SPRITE_NOTIFY)
+        Clip->Flags |= WOC_SPRITE_OVERLAP | WOC_SPRITE_NO_OVERLAP;
+    /* Those should always be sent */
+    Clip->Flags |= WOC_CHANGED | WOC_DELETE;
     Clip->PixelFormat = iPixelFormat;
 
     /* associate object with window */
@@ -259,8 +264,8 @@ EngDeleteWnd(
     {
         /* Remove object from window */
         IntRemoveProp(Window, AtomWndObj);
-        --gcountPWO;
     }
+    --gcountPWO;
 
     if (!calledFromUser) {
         UserLeave();

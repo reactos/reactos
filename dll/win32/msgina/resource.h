@@ -34,6 +34,10 @@
 
 #define IDD_LOGOFF_DLG         107
 
+#define IDD_LEGALNOTICE_DLG      1018
+#define IDC_LEGALNOTICE_TEXT     1019
+
+
 #define IDI_ROSLOGO         20000
 #define IDI_SHELL_SHUTDOWN  20001
 

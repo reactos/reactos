@@ -1,16 +1,16 @@
-﻿; UTF-8
+; UTF-8
 ; Polish translation by wojo664
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Lazarus
-Version = 1.2.2
+Version = 1.2.4
 Licence = modified LGPL, GPL
 Description = A cross-platform integrated development environment (IDE) that lets you create visual (GUI) and non-visual Object Pascal programs, and uses the Free Pascal compiler to generate your executable.
 Size = 114 MB
 Category = 7
 URLSite = http://www.lazarus.freepascal.org/
-URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.2.2/lazarus-1.2.2-fpc-2.6.4-win32.exe
+URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.2.4/lazarus-1.2.4-fpc-2.6.4-win32.exe
 CDPath = none
 
 [Section.0407]

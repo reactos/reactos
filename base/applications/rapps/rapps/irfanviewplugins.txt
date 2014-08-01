@@ -3,13 +3,13 @@
 
 [Section]
 Name = IrfanView Plugins
-Version = 4.37
+Version = 4.38
 Licence = Freeware (for personal use)
 Description = Additional Plugins for supporting more file types.
-Size = 10.2 MB
+Size = 10.24 MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://ring.maffin.ad.jp/archives/pc/forest/i/irfanview/10830/irfanview_plugins_437_setup.exe
+URLDownload = http://www.irfanview.info/files/irfanview_plugins_438_setup.exe
 CDPath = none
 
 [Section.0407]
@@ -23,7 +23,7 @@ Description = Complementos adicionales para soportar más formatos.
 [Section.040c]
 Licence = Gratuit (pour un usage personnel)
 Description = Modules additionnels pour supporter plus de types de fichiers.
-Size = 10,2 Mo
+Size = 10,24 Mo
 
 [Section.0410]
 Licence = Gratuita (per uso personale)
@@ -40,13 +40,13 @@ Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
 [Section.0418]
 Licence = Gratuită (pentru uz personal)
 Description = Extensii adiționale pentru a spori numărul de formate de fișiere recunoscute.
-Size = 10,2 Mo
+Size = 10,24 Mo
 
 [Section.041f]
 Name = IrfanView Eklentileri
 Licence = Şahsî kullanım için ücretsiz.
 Description = Daha çok kütük türü desteklemek için eklentiler.
-Size = 10,2 MB
+Size = 10,24 MB
 
 [Section.0422]
 Licence = Freeware (для домашнього використання)

@@ -757,12 +757,13 @@ KspStartBusDevice(
     NTSTATUS Status;
     ULONG ResultLength;
     LPWSTR Name;
+    ULONG NameLength;
     PBUS_DEVICE_ENTRY DeviceEntry;
 
     /* FIXME handle pending remove */
 
     /* get full device name */
-    Status = IoGetDeviceProperty(DeviceObject, DevicePropertyPhysicalDeviceObjectName, sizeof(PDOName), (PVOID)PDOName, &ResultLength);
+    Status = IoGetDeviceProperty(DeviceObject, DevicePropertyPhysicalDeviceObjectName, sizeof(PDOName), PDOName, &ResultLength);
 
     if (!NT_SUCCESS(Status))
     {
@@ -771,7 +772,8 @@ KspStartBusDevice(
     }
 
     /* allocate device name buffer */
-    Name = AllocateItem(NonPagedPool, (ResultLength + 1) * sizeof(WCHAR));
+    NameLength = ResultLength + sizeof(UNICODE_NULL);
+    Name = AllocateItem(NonPagedPool, NameLength);
     if (!Name)
     {
         /* no memory */
@@ -779,7 +781,7 @@ KspStartBusDevice(
     }
 
     /* copy name */
-    wcscpy(Name, PDOName);
+    NT_VERIFY(NT_SUCCESS(RtlStringCbCopyW(Name, NameLength, PDOName)));
 
     /* TODO: time stamp creation time */
 

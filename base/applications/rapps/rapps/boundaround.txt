@@ -18,6 +18,11 @@ Description = Ein Spiel, ähnlich zu Frozen Fruits.
 Name = Bound Around (Versione di prova)
 Description = Un gioco simile a Frozen Fruits.
 
+[Section.0418]
+Licence = Versiune de evaluare
+Description = Un joc similar jocului Frozen Fruits.
+Size = 1,95 Mo
+
 [Section.041f]
 Name = Bound Around (Göstermelik)
 Licence = Paylaşımlı

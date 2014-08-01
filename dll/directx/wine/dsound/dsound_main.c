@@ -150,7 +150,8 @@ static HRESULT get_mmdevenum(IMMDeviceEnumerator **devenum)
     hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL,
             CLSCTX_INPROC_SERVER, &IID_IMMDeviceEnumerator, (void**)devenum);
     if(FAILED(hr)){
-        CoUninitialize();
+        if(SUCCEEDED(init_hr))
+            CoUninitialize();
         *devenum = NULL;
         ERR("CoCreateInstance failed: %08x\n", hr);
         return hr;

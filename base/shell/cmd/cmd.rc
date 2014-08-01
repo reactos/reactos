@@ -14,14 +14,14 @@
 STRINGTABLE
 BEGIN
     STRING_FREEDOS_DEV "    Tim Norman        Matt Rains\n\
-        Evan Jeffrey      Steffen Kaiser\n\
-        Svante Frey       Oliver Mueller\n\
-        Aaron Kaufman     Marc Desrochers\n\
-        Rob Lake          John P Price\n\
-        Hans B Pufal\n"
+    Evan Jeffrey      Steffen Kaiser\n\
+    Svante Frey       Oliver Mueller\n\
+    Aaron Kaufman     Marc Desrochers\n\
+    Rob Lake          John P Price\n\
+    Hans B Pufal\n"
     STRING_REACTOS_DEV  "    Eric Kohl         Emanuele Aliberti\n\
-        Paolo Pantaleo    Phillip Susi\n\
-        Sylvain Petreolle\n"
+    Paolo Pantaleo    Phillip Susi\n\
+    Sylvain Petreolle\n"
 END
 
 1 ICON "res/terminal.ico"

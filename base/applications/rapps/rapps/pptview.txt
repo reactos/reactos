@@ -43,7 +43,9 @@ Size = 60.43 MB
 URLDownload = http://download.microsoft.com/download/9/E/4/9E4A5F9A-210D-44B7-ADA2-F47CE00541ED/PowerPointViewer.exe
 
 [Section.0418]
+Name = Lector Microsoft Powerpoint
 Licence = Necunoscută
+Description = Lector Microsoft Powerpoint
 Size = 60,4 Mo
 URLDownload = http://download.microsoft.com/download/5/6/E/56E4DBA3-D725-43EA-B1E5-DC148022999C/PowerPointViewer.exe
 

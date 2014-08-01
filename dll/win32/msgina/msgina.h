@@ -97,6 +97,12 @@ MyLogonUser(
 
 /* msgina.c */
 
+LONG
+ReadRegSzValue(
+    IN HKEY hKey,
+    IN LPCWSTR pszValue,
+    OUT LPWSTR *pValue);
+
 BOOL
 DoAdminUnlock(
     IN PGINA_CONTEXT pgContext,

@@ -1,0 +1,17 @@
+[Section]
+Name = Ghostscript
+Version = 9.14
+Licence = AGPL
+Description = An open interpreter for the PostScript language and for PDF.
+Size = 12.44 MB
+Category = 6
+URLSite =  http://www.ghostscript.com/
+URLDownload = http://downloads.ghostscript.com/public/gs914w32.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein offener Interpreter für die PostScript Sprache und PDF.
+
+[Section.0418]
+Description = Un interpretor pentru limbajul PostScript și pentru PDF.
+Size = 12,44 Mo

@@ -21,10 +21,55 @@
 
 #include "icd.h"
 
+/* *$%$£^§! headers inclusion */
+static __inline
+BOOLEAN
+RemoveEntryList(
+    _In_ PLIST_ENTRY Entry)
+{
+    PLIST_ENTRY OldFlink;
+    PLIST_ENTRY OldBlink;
+
+    OldFlink = Entry->Flink;
+    OldBlink = Entry->Blink;
+    OldFlink->Blink = OldBlink;
+    OldBlink->Flink = OldFlink;
+    return (OldFlink == OldBlink);
+}
+
+static __inline
+VOID
+InsertTailList(
+    _In_ PLIST_ENTRY ListHead,
+    _In_ PLIST_ENTRY Entry
+)
+{
+    PLIST_ENTRY OldBlink;
+    OldBlink = ListHead->Blink;
+    Entry->Flink = ListHead;
+    Entry->Blink = OldBlink;
+    OldBlink->Flink = Entry;
+    ListHead->Blink = Entry;
+}
+
+
+static __inline
+VOID
+InitializeListHead(
+    _Inout_ PLIST_ENTRY ListHead
+)
+{
+    ListHead->Flink = ListHead->Blink = ListHead;
+}
+
+extern LIST_ENTRY ContextListHead;
+
 struct wgl_context
 {
     DWORD magic;
     volatile LONG lock;
+
+    LIST_ENTRY ListEntry;
 
     DHGLRC dhglrc;
     struct ICD_Data* icd_data;
@@ -58,6 +103,10 @@ struct wgl_dc_data
     /* Linked list */
     struct wgl_dc_data* next;
 };
+
+/* Clean up functions */
+void IntDeleteAllContexts(void);
+void IntDeleteAllICDs(void);
 
 #ifdef OPENGL32_USE_TLS
 extern DWORD OglTlsIndex;

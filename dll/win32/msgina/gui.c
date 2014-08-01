@@ -9,6 +9,7 @@
 
 #include <wingdi.h>
 #include <winnls.h>
+#include <winreg.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
@@ -19,6 +20,13 @@ typedef struct _DISPLAYSTATUSMSG
     PWSTR pMessage;
     HANDLE StartupEvent;
 } DISPLAYSTATUSMSG, *PDISPLAYSTATUSMSG;
+
+typedef struct _LEGALNOTICEDATA
+{
+    LPWSTR pszCaption;
+    LPWSTR pszText;
+} LEGALNOTICEDATA, *PLEGALNOTICEDATA;
+
 
 static BOOL
 GUIInitialize(
@@ -1162,13 +1170,89 @@ LoggedOutWindowProc(
     return FALSE;
 }
 
+
+static
+INT_PTR
+CALLBACK
+LegalNoticeDialogProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
+{
+    PLEGALNOTICEDATA pLegalNotice;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pLegalNotice = (PLEGALNOTICEDATA)lParam;
+            SetWindowTextW(hwndDlg, pLegalNotice->pszCaption);
+            SetDlgItemTextW(hwndDlg, IDC_LEGALNOTICE_TEXT, pLegalNotice->pszText);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, 0);
+                    return TRUE;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, 0);
+                    return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
 static INT
 GUILoggedOutSAS(
     IN OUT PGINA_CONTEXT pgContext)
 {
+    LEGALNOTICEDATA LegalNotice = {NULL, NULL};
+    HKEY hKey = NULL;
+    LONG rc;
     int result;
 
     TRACE("GUILoggedOutSAS()\n");
+
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    if (rc == ERROR_SUCCESS)
+    {
+        ReadRegSzValue(hKey,
+                       L"LegalNoticeCaption",
+                       &LegalNotice.pszCaption);
+
+        ReadRegSzValue(hKey,
+                       L"LegalNoticeText",
+                       &LegalNotice.pszText);
+
+        RegCloseKey(hKey);
+    }
+
+    if (LegalNotice.pszCaption != NULL && wcslen(LegalNotice.pszCaption) != 0 &&
+        LegalNotice.pszText != NULL && wcslen(LegalNotice.pszText) != 0)
+    {
+        pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
+                                                pgContext->hDllInstance,
+                                                MAKEINTRESOURCEW(IDD_LEGALNOTICE_DLG),
+                                                GetDesktopWindow(),
+                                                LegalNoticeDialogProc,
+                                                (LPARAM)&LegalNotice);
+    }
+
+    if (LegalNotice.pszCaption != NULL)
+        HeapFree(GetProcessHeap(), 0, LegalNotice.pszCaption);
+
+    if (LegalNotice.pszText != NULL)
+        HeapFree(GetProcessHeap(), 0, LegalNotice.pszText);
 
     result = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,

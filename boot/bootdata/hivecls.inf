@@ -1,4 +1,4 @@
-﻿[Version]
+[Version]
 Signature="$ReactOS$"
 
 [AddReg]
@@ -477,14 +477,19 @@ CPLFILE_OPENWITH="Open with Control Panel"
 CPLFILE="Systemsteuerungselement"
 CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 
+; LANG_FRENCH SUBLANG_NEUTRAL
+[Strings.000C]
+CPLFILE="Extension du Panneau de Contrôle"
+CPLFILE_OPENWITH="Ouvrir avec le Panneau de Contrôle"
+
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 CPLFILE="Aplet Panelu Sterowania"
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
 
-; LANG_FRENCH SUBLANG_NEUTRAL
-[Strings.000C]
-CPLFILE="Extension du Panneau de Contrôle"
-CPLFILE_OPENWITH="Ouvrir avec le Panneau de Contrôle"
+; LANG_ROMANIAN SUBLANG_NEUTRAL
+[Strings.0018]
+CPLFILE="Extensie pentru panou de control"
+CPLFILE_OPENWITH="Deschide în panou de control"
 
 ; EOF

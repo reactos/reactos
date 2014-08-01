@@ -881,14 +881,13 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Tastaîi C pentru a crea o nouÇ partiîie.",
+        "\x07  Tastaîi P pentru a crea o partiîie primarÇ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Tastaîi E pentru a crea o partiîie extinsÇ.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1349,7 +1348,7 @@ MUI_ERROR roROErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "Succes\n"
     },
     {
         //ERROR_NOT_INSTALLED
@@ -1579,29 +1578,29 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "Nu se poate crea o nouÇ partiîie primarÇ sau extinsÇ Œn tabela\n"
+        "de partiîii a acestui disc deoarece tabela de partiîii e plinÇ.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Tastaîi pentru a continua."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "Nu se poate crea mai mult de o partiîie extinsÇ pe un disc.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Tastaîi pentru a continua."
     },
     {
         //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        "Nu se poate crea o partiîie dupÇ o partiîie extinsÇ.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Tastaîi pentru a continua."
     },
     {
         //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
+        "O partiîie extinsÇ trebuie sÇ fie Œntotdeauna\n"
+        "ultima partiîie din tabela de partiîii.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Tastaîi pentru a continua."
     },
     {
         NULL,
@@ -1714,23 +1713,21 @@ MUI_STRING roROStrings[] =
     {STRING_PLEASEWAIT,
      "   A­teptaîi..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Instalare   C = Creare partiîie   F3 = Ie­ire"},
+     "   ENTER = Instalare   P/E = Creare partiîie PrimarÇ/ExtinsÇ   F3 = Ie­ire"},
     {STRING_INSTALLCREATELOGICAL,
      "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalare   D = ¸tergere partiîie   F3 = Ie­ire"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = ¸tergere partiîie   F3 = Ie­ire"},
     {STRING_PARTITIONSIZE,
      "MÇrimea noii partiîii:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
-//     "Aîi ales crearea unei noi partiîii pe"},
+     "Aîi ales crearea unei partiîii primare pe"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "Aîi ales crearea unei partiîii extinse pe"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "Aîi ales crearea unei partiîii logice pe"},
     {STRING_HDDSIZE,
     "Introduceîi mÇrimea noii partiîii Œn megaocteîi."},
     {STRING_CREATEPARTITION,
@@ -1814,7 +1811,7 @@ MUI_STRING roROStrings[] =
     {STRING_MAXSIZE,
     "Mo (max. %lu Mo)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Partiîie extinsÇ"},
     {STRING_UNFORMATTED,
     "Part. nouÇ (neformatatÇ)"},
     {STRING_FORMATUNUSED,

@@ -138,6 +138,104 @@ CmpHiveRootSecurityDescriptor(VOID)
 }
 
 NTSTATUS
+CmpQuerySecurityDescriptor(IN PCM_KEY_BODY KeyBody,
+                           IN SECURITY_INFORMATION SecurityInformation,
+                           OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+                           IN OUT PULONG BufferLength)
+{
+    PISECURITY_DESCRIPTOR_RELATIVE RelSd;
+    ULONG SidSize;
+    ULONG AclSize;
+    ULONG SdSize;
+    NTSTATUS Status;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
+    ULONG Owner = 0;
+    ULONG Group = 0;
+    ULONG Dacl = 0;
+
+    DBG_UNREFERENCED_PARAMETER(KeyBody);
+
+    if (SecurityInformation == 0)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    SidSize = RtlLengthSid(SeWorldSid);
+    RelSd = SecurityDescriptor;
+    SdSize = sizeof(*RelSd);
+
+    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    {
+        Owner = SdSize;
+        SdSize += SidSize;
+    }
+
+    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+    {
+        Group = SdSize;
+        SdSize += SidSize;
+    }
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+        Control |= SE_DACL_PRESENT;
+        Dacl = SdSize;
+        AclSize = sizeof(ACL) + sizeof(ACE) + SidSize;
+        SdSize += AclSize;
+    }
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        Control |= SE_SACL_PRESENT;
+    }
+
+    if (*BufferLength < SdSize)
+    {
+        *BufferLength = SdSize;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    *BufferLength = SdSize;
+
+    Status = RtlCreateSecurityDescriptorRelative(RelSd,
+                                                 SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    RelSd->Control |= Control;
+    RelSd->Owner = Owner;
+    RelSd->Group = Group;
+    RelSd->Dacl = Dacl;
+
+    if (Owner)
+        RtlCopyMemory((PUCHAR)RelSd + Owner,
+                      SeWorldSid,
+                      SidSize);
+
+    if (Group)
+        RtlCopyMemory((PUCHAR)RelSd + Group,
+                      SeWorldSid,
+                      SidSize);
+
+    if (Dacl)
+    {
+        Status = RtlCreateAcl((PACL)((PUCHAR)RelSd + Dacl),
+                              AclSize,
+                              ACL_REVISION);
+        if (NT_SUCCESS(Status))
+        {
+            Status = RtlAddAccessAllowedAce((PACL)((PUCHAR)RelSd + Dacl),
+                                            ACL_REVISION,
+                                            GENERIC_ALL,
+                                            SeWorldSid);
+        }
+    }
+
+    ASSERT(Status == STATUS_SUCCESS);
+    return Status;
+}
+
+NTSTATUS
 NTAPI
 CmpSecurityMethod(IN PVOID ObjectBody,
                   IN SECURITY_OPERATION_CODE OperationCode,
@@ -148,6 +246,38 @@ CmpSecurityMethod(IN PVOID ObjectBody,
                   IN POOL_TYPE PoolType,
                   IN PGENERIC_MAPPING GenericMapping)
 {
+    DBG_UNREFERENCED_PARAMETER(OldSecurityDescriptor);
+    DBG_UNREFERENCED_PARAMETER(GenericMapping);
+
+    switch (OperationCode)
+    {
+        case SetSecurityDescriptor:
+            DPRINT("Set security descriptor\n");
+            ASSERT((PoolType == PagedPool) || (PoolType == NonPagedPool));
+            /* HACK */
+            break;
+
+        case QuerySecurityDescriptor:
+            DPRINT("Query security descriptor\n");
+            return CmpQuerySecurityDescriptor(ObjectBody,
+                                              *SecurityInformation,
+                                              SecurityDescriptor,
+                                              BufferLength);
+
+        case DeleteSecurityDescriptor:
+            DPRINT("Delete security descriptor\n");
+            /* HACK */
+            break;
+
+        case AssignSecurityDescriptor:
+            DPRINT("Assign security descriptor\n");
+            /* HACK */
+            break;
+
+        default:
+            KeBugCheckEx(SECURITY_SYSTEM, 0, STATUS_INVALID_PARAMETER, 0, 0);
+    }
+
     /* HACK */
     return STATUS_SUCCESS;
 }
