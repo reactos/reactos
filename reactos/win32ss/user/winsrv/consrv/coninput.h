@@ -9,13 +9,4 @@
 
 #pragma once
 
-VOID FASTCALL PurgeInputBuffer(PCONSOLE Console);
-
-VOID NTAPI
-ConDrvProcessKey(IN PCONSOLE Console,
-                 IN BOOLEAN Down,
-                 IN UINT VirtualKeyCode,
-                 IN UINT VirtualScanCode,
-                 IN WCHAR UnicodeChar,
-                 IN ULONG ShiftState,
-                 IN BYTE KeyStateCtrl);
+VOID PurgeInputBuffer(PCONSOLE Console);

@@ -48,7 +48,7 @@ SetConWndConsoleLeaderCID(IN PGUI_CONSOLE_DATA GuiData)
     PCONSOLE_PROCESS_DATA ProcessData;
     CLIENT_ID ConsoleLeaderCID;
 
-    ProcessData = ConDrvGetConsoleLeaderProcess(GuiData->Console);
+    ProcessData = ConSrvGetConsoleLeaderProcess(GuiData->Console);
     ConsoleLeaderCID = ProcessData->Process->ClientId;
     SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_PID,
                       (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));
@@ -610,7 +610,6 @@ GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData);
 static VOID
 OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
-    PCONSOLE Console = GuiData->Console;
     WORD ActivationState = LOWORD(wParam);
 
     DPRINT1("WM_ACTIVATE - ActivationState = %d\n");
@@ -637,12 +636,11 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
     }
 
     /*
-     * When we are in QuickEdit mode, ignore the next mouse signal
-     * when we are going to be enabled again via the mouse, in order
-     * to prevent e.g. an erroneous right-click from the user which
-     * would have as an effect to paste some unwanted text...
+     * Ignore the next mouse signal when we are going to be enabled again via
+     * the mouse, in order to prevent, e.g. when we are in Edit mode, erroneous
+     * mouse actions from the user that could spoil text selection or copy/pastes.
      */
-    if (Console->QuickEdit && (ActivationState == WA_CLICKACTIVE))
+    if (ActivationState == WA_CLICKACTIVE)
         GuiData->IgnoreNextMouseSignal = TRUE;
 }
 
@@ -947,11 +945,9 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 OnPaint(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
     PAINTSTRUCT ps;
     RECT rcPaint;
-
-    ActiveBuffer = GuiData->ActiveBuffer;
 
     BeginPaint(GuiData->hWindow, &ps);
     if (ps.hdc != NULL &&
@@ -1325,7 +1321,7 @@ OnClose(PGUI_CONSOLE_DATA GuiData)
      * We shouldn't wait here, though, since the console lock is entered.
      * A copy of the thread list probably needs to be made.
      */
-    ConDrvConsoleProcessCtrlEvent(Console, 0, CTRL_CLOSE_EVENT);
+    ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_CLOSE_EVENT);
 
     LeaveCriticalSection(&Console->Lock);
     return FALSE;
@@ -1386,15 +1382,18 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     BOOL Err = FALSE;
     PCONSOLE Console = GuiData->Console;
 
+    // FIXME: It's here that we need to check whether we has focus or not
+    // and whether we are in edit mode or not, to know if we need to deal
+    // with the mouse, or not.
+
     if (GuiData->IgnoreNextMouseSignal)
     {
         if (msg != WM_LBUTTONDOWN &&
             msg != WM_MBUTTONDOWN &&
-            msg != WM_RBUTTONDOWN &&
-            msg != WM_MOUSEMOVE)
+            msg != WM_RBUTTONDOWN)
         {
             /*
-             * If this mouse signal is not a button-down action or a move,
+             * If this mouse signal is not a button-down action
              * then it is the last signal being ignored.
              */
             GuiData->IgnoreNextMouseSignal = FALSE;
@@ -1402,7 +1401,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         else
         {
             /*
-             * This mouse signal is a button-down action or a move.
+             * This mouse signal is a button-down action.
              * Ignore it and perform default action.
              */
             Err = TRUE;
@@ -1607,6 +1606,20 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 
             default:
                 Err = TRUE;
+                break;
+        }
+
+        /*
+         * HACK FOR CORE-8394: Ignore the next mouse move signal
+         * just after mouse down click actions.
+         */
+        switch (msg)
+        {
+            case WM_LBUTTONDOWN:
+            case WM_MBUTTONDOWN:
+            case WM_RBUTTONDOWN:
+                GuiData->IgnoreNextMouseSignal = TRUE;
+            default:
                 break;
         }
 
@@ -1832,7 +1845,6 @@ OnMove(PGUI_CONSOLE_DATA GuiData)
 // HACK: This functionality is standard for general scrollbars. Don't add it by hand.
 
 VOID
-FASTCALL
 GuiConsoleHandleScrollbarMenu(VOID)
 {
     HMENU hMenu;
@@ -2071,7 +2083,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Detect Alt-Esc/Space/Tab presses defer to DefWindowProc */
             if ( (HIWORD(lParam) & KF_ALTDOWN) && (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_TAB))
             {
-               return DefWindowProcW(hWnd, msg, wParam, lParam);
+                return DefWindowProcW(hWnd, msg, wParam, lParam);
             }
 
             OnKey(GuiData, msg, wParam, lParam);

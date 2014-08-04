@@ -18,61 +18,195 @@
 
 typedef struct _ALIAS_ENTRY
 {
-    LPCWSTR lpSource;
-    LPCWSTR lpTarget;
+    UNICODE_STRING Source;
+    UNICODE_STRING Target;
     struct _ALIAS_ENTRY* Next;
 } ALIAS_ENTRY, *PALIAS_ENTRY;
 
 typedef struct _ALIAS_HEADER
 {
-    LPCWSTR lpExeName;
-    PALIAS_ENTRY Data;
+    UNICODE_STRING ExeName;
+    PALIAS_ENTRY   Data;
     struct _ALIAS_HEADER* Next;
 } ALIAS_HEADER, *PALIAS_HEADER;
 
 
+
+
+BOOLEAN
+ConvertInputAnsiToUnicode(PCONSOLE Console,
+                          PVOID    Source,
+                          USHORT   SourceLength,
+                          // BOOLEAN  IsUnicode,
+                          PWCHAR*  Target,
+                          PUSHORT  TargetLength)
+{
+    ASSERT(Source && Target && TargetLength);
+
+    /* Use the console input CP for the conversion */
+    *TargetLength = MultiByteToWideChar(Console->InputCodePage, 0,
+                                        Source, SourceLength,
+                                        NULL, 0);
+    *Target = ConsoleAllocHeap(0, *TargetLength * sizeof(WCHAR));
+    if (*Target == NULL) return FALSE;
+
+    MultiByteToWideChar(Console->InputCodePage, 0,
+                        Source, SourceLength,
+                        *Target, *TargetLength);
+
+    /* The returned Length was in number of WCHARs, convert it in bytes */
+    *TargetLength *= sizeof(WCHAR);
+
+    return TRUE;
+}
+
+BOOLEAN
+ConvertInputUnicodeToAnsi(PCONSOLE Console,
+                          PVOID    Source,
+                          USHORT   SourceLength,
+                          // BOOLEAN  IsAnsi,
+                          PCHAR/* * */   Target,
+                          /*P*/USHORT  TargetLength)
+{
+    ASSERT(Source && Target && TargetLength);
+
+    /*
+     * From MSDN:
+     * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
+     *  If they are the same, the function fails, and GetLastError returns
+     *  ERROR_INVALID_PARAMETER."
+     */
+    ASSERT((ULONG_PTR)Source != (ULONG_PTR)Target);
+
+    /* Use the console input CP for the conversion */
+    // *TargetLength = WideCharToMultiByte(Console->InputCodePage, 0,
+                                        // Source, SourceLength,
+                                        // NULL, 0, NULL, NULL);
+    // *Target = ConsoleAllocHeap(0, *TargetLength * sizeof(WCHAR));
+    // if (*Target == NULL) return FALSE;
+
+    WideCharToMultiByte(Console->InputCodePage, 0,
+                        Source, SourceLength,
+                        /* * */Target, /* * */TargetLength,
+                        NULL, NULL);
+
+    // /* The returned Length was in number of WCHARs, convert it in bytes */
+    // *TargetLength *= sizeof(WCHAR);
+
+    return TRUE;
+}
+
+
+
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static
-PALIAS_HEADER
-IntFindAliasHeader(PALIAS_HEADER RootHeader, LPCWSTR lpExeName)
+static PALIAS_HEADER
+IntFindAliasHeader(PCONSOLE Console,
+                   PVOID    ExeName,
+                   USHORT   ExeLength,
+                   BOOLEAN  UnicodeExe)
 {
+    UNICODE_STRING ExeNameU;
+
+    PALIAS_HEADER RootHeader = Console->Aliases;
+    INT Diff;
+
+    if (ExeName == NULL) return NULL;
+
+    if (UnicodeExe)
+    {
+        ExeNameU.Buffer = ExeName;
+        /* Length is in bytes */
+        ExeNameU.MaximumLength = ExeLength;
+    }
+    else
+    {
+        if (!ConvertInputAnsiToUnicode(Console,
+                                       ExeName, ExeLength,
+                                       &ExeNameU.Buffer, &ExeNameU.MaximumLength))
+        {
+            return NULL;
+        }
+    }
+    ExeNameU.Length = ExeNameU.MaximumLength;
+
     while (RootHeader)
     {
-        INT diff = _wcsicmp(RootHeader->lpExeName, lpExeName);
-        if (!diff) return RootHeader;
-        if (diff > 0) break;
+        Diff = RtlCompareUnicodeString(&RootHeader->ExeName, &ExeNameU, TRUE);
+        if (!Diff)
+        {
+            if (!UnicodeExe) ConsoleFreeHeap(ExeNameU.Buffer);
+            return RootHeader;
+        }
+        if (Diff > 0) break;
 
         RootHeader = RootHeader->Next;
     }
+
+    if (!UnicodeExe) ConsoleFreeHeap(ExeNameU.Buffer);
     return NULL;
 }
 
-PALIAS_HEADER
-IntCreateAliasHeader(LPCWSTR lpExeName)
+static PALIAS_HEADER
+IntCreateAliasHeader(PCONSOLE Console,
+                     PVOID    ExeName,
+                     USHORT   ExeLength,
+                     BOOLEAN  UnicodeExe)
 {
+    UNICODE_STRING ExeNameU;
+
     PALIAS_HEADER Entry;
-    UINT dwLength = wcslen(lpExeName) + 1;
 
-    Entry = ConsoleAllocHeap(0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
-    if (!Entry) return Entry;
+    if (ExeName == NULL) return NULL;
 
-    Entry->lpExeName = (LPCWSTR)(Entry + 1);
-    wcscpy((PWCHAR)Entry->lpExeName, lpExeName);
+    if (UnicodeExe)
+    {
+        ExeNameU.Buffer = ExeName;
+        /* Length is in bytes */
+        ExeNameU.MaximumLength = ExeLength;
+    }
+    else
+    {
+        if (!ConvertInputAnsiToUnicode(Console,
+                                       ExeName, ExeLength,
+                                       &ExeNameU.Buffer, &ExeNameU.MaximumLength))
+        {
+            return NULL;
+        }
+    }
+    ExeNameU.Length = ExeNameU.MaximumLength;
+
+    Entry = ConsoleAllocHeap(0, sizeof(ALIAS_HEADER) + ExeNameU.Length);
+    if (!Entry)
+    {
+        if (!UnicodeExe) ConsoleFreeHeap(ExeNameU.Buffer);
+        return Entry;
+    }
+
+    Entry->ExeName.Buffer = (PWSTR)(Entry + 1);
+    Entry->ExeName.Length = 0;
+    Entry->ExeName.MaximumLength = ExeNameU.Length;
+    RtlCopyUnicodeString(&Entry->ExeName, &ExeNameU);
+
     Entry->Data = NULL;
     Entry->Next = NULL;
+
+    if (!UnicodeExe) ConsoleFreeHeap(ExeNameU.Buffer);
     return Entry;
 }
 
-VOID
-IntInsertAliasHeader(PALIAS_HEADER * RootHeader, PALIAS_HEADER NewHeader)
+static VOID
+IntInsertAliasHeader(PALIAS_HEADER* RootHeader,
+                     PALIAS_HEADER  NewHeader)
 {
     PALIAS_HEADER CurrentHeader;
     PALIAS_HEADER *LastLink = RootHeader;
+    INT Diff;
 
     while ((CurrentHeader = *LastLink) != NULL)
     {
-        INT Diff = _wcsicmp(NewHeader->lpExeName, CurrentHeader->lpExeName);
+        Diff = RtlCompareUnicodeString(&NewHeader->ExeName, &CurrentHeader->ExeName, TRUE);
         if (Diff < 0) break;
 
         LastLink = &CurrentHeader->Next;
@@ -82,36 +216,139 @@ IntInsertAliasHeader(PALIAS_HEADER * RootHeader, PALIAS_HEADER NewHeader)
     NewHeader->Next = CurrentHeader;
 }
 
-PALIAS_ENTRY
-IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
+static PALIAS_ENTRY
+IntGetAliasEntry(PCONSOLE Console,
+                 PALIAS_HEADER Header,
+                 PVOID    Source,
+                 USHORT   SourceLength,
+                 BOOLEAN  Unicode)
 {
-    PALIAS_ENTRY RootHeader;
+    UNICODE_STRING SourceU;
 
-    if (Header == NULL) return NULL;
+    PALIAS_ENTRY Entry;
+    INT Diff;
 
-    RootHeader = Header->Data;
-    while (RootHeader)
+    if (Header == NULL || Source == NULL) return NULL;
+
+    if (Unicode)
     {
-        INT diff;
-        DPRINT("IntGetAliasEntry->lpSource %S\n", RootHeader->lpSource);
-        diff = _wcsicmp(RootHeader->lpSource, lpSrcName);
-        if (!diff) return RootHeader;
-        if (diff > 0) break;
-
-        RootHeader = RootHeader->Next;
+        SourceU.Buffer = Source;
+        /* Length is in bytes */
+        SourceU.MaximumLength = SourceLength;
     }
+    else
+    {
+        if (!ConvertInputAnsiToUnicode(Console,
+                                       Source, SourceLength,
+                                       &SourceU.Buffer, &SourceU.MaximumLength))
+        {
+            return NULL;
+        }
+    }
+    SourceU.Length = SourceU.MaximumLength;
+
+    Entry = Header->Data;
+    while (Entry)
+    {
+        Diff = RtlCompareUnicodeString(&Entry->Source, &SourceU, TRUE);
+        if (!Diff)
+        {
+            if (!Unicode) ConsoleFreeHeap(SourceU.Buffer);
+            return Entry;
+        }
+        if (Diff > 0) break;
+
+        Entry = Entry->Next;
+    }
+
+    if (!Unicode) ConsoleFreeHeap(SourceU.Buffer);
     return NULL;
 }
 
-VOID
-IntInsertAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY NewEntry)
+static PALIAS_ENTRY
+IntCreateAliasEntry(PCONSOLE Console,
+                    PVOID    Source,
+                    USHORT   SourceLength,
+                    PVOID    Target,
+                    USHORT   TargetLength,
+                    BOOLEAN  Unicode)
+{
+    UNICODE_STRING SourceU;
+    UNICODE_STRING TargetU;
+
+    PALIAS_ENTRY Entry;
+
+    if (Unicode)
+    {
+        SourceU.Buffer = Source;
+        TargetU.Buffer = Target;
+        /* Length is in bytes */
+        SourceU.MaximumLength = SourceLength;
+        TargetU.MaximumLength = TargetLength;
+    }
+    else
+    {
+        if (!ConvertInputAnsiToUnicode(Console,
+                                       Source, SourceLength,
+                                       &SourceU.Buffer, &SourceU.MaximumLength))
+        {
+            return NULL;
+        }
+
+        if (!ConvertInputAnsiToUnicode(Console,
+                                       Target, TargetLength,
+                                       &TargetU.Buffer, &TargetU.MaximumLength))
+        {
+            ConsoleFreeHeap(SourceU.Buffer);
+            return NULL;
+        }
+    }
+    SourceU.Length = SourceU.MaximumLength;
+    TargetU.Length = TargetU.MaximumLength;
+
+    Entry = ConsoleAllocHeap(0, sizeof(ALIAS_ENTRY) +
+                                SourceU.Length + TargetU.Length);
+    if (!Entry)
+    {
+        if (!Unicode)
+        {
+            ConsoleFreeHeap(TargetU.Buffer);
+            ConsoleFreeHeap(SourceU.Buffer);
+        }
+        return Entry;
+    }
+
+    Entry->Source.Buffer = (PWSTR)(Entry + 1);
+    Entry->Source.Length = 0;
+    Entry->Source.MaximumLength = SourceU.Length;
+    RtlCopyUnicodeString(&Entry->Source, &SourceU);
+
+    Entry->Target.Buffer = (PWSTR)((ULONG_PTR)Entry->Source.Buffer + Entry->Source.MaximumLength);
+    Entry->Target.Length = 0;
+    Entry->Target.MaximumLength = TargetU.Length;
+    RtlCopyUnicodeString(&Entry->Target, &TargetU);
+
+    Entry->Next = NULL;
+
+    if (!Unicode)
+    {
+        ConsoleFreeHeap(TargetU.Buffer);
+        ConsoleFreeHeap(SourceU.Buffer);
+    }
+    return Entry;
+}
+
+static VOID
+IntInsertAliasEntry(PALIAS_HEADER Header,
+                    PALIAS_ENTRY  NewEntry)
 {
     PALIAS_ENTRY CurrentEntry;
     PALIAS_ENTRY *LastLink = &Header->Data;
+    INT Diff;
 
     while ((CurrentEntry = *LastLink) != NULL)
     {
-        INT Diff = _wcsicmp(NewEntry->lpSource, CurrentEntry->lpSource);
+        Diff = RtlCompareUnicodeString(&NewEntry->Source, &CurrentEntry->Source, TRUE);
         if (Diff < 0) break;
 
         LastLink = &CurrentEntry->Next;
@@ -121,120 +358,9 @@ IntInsertAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY NewEntry)
     NewEntry->Next = CurrentEntry;
 }
 
-PALIAS_ENTRY
-IntCreateAliasEntry(LPCWSTR lpSource, LPCWSTR lpTarget)
-{
-    UINT dwSource;
-    UINT dwTarget;
-    PALIAS_ENTRY Entry;
-
-    dwSource = wcslen(lpSource) + 1;
-    dwTarget = wcslen(lpTarget) + 1;
-
-    Entry = ConsoleAllocHeap(0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
-    if (!Entry) return Entry;
-
-    Entry->lpSource = (LPCWSTR)(Entry + 1);
-    wcscpy((LPWSTR)Entry->lpSource, lpSource);
-    Entry->lpTarget = Entry->lpSource + dwSource;
-    wcscpy((LPWSTR)Entry->lpTarget, lpTarget);
-    Entry->Next = NULL;
-
-    return Entry;
-}
-
-UINT
-IntGetConsoleAliasesExesLength(PALIAS_HEADER RootHeader)
-{
-    UINT length = 0;
-
-    while (RootHeader)
-    {
-        length += (wcslen(RootHeader->lpExeName) + 1) * sizeof(WCHAR);
-        RootHeader = RootHeader->Next;
-    }
-    if (length)
-        length += sizeof(WCHAR); // last entry entry is terminated with 2 zero bytes
-
-    return length;
-}
-
-UINT
-IntGetConsoleAliasesExes(PALIAS_HEADER RootHeader, LPWSTR TargetBuffer, UINT TargetBufferSize)
-{
-    UINT Offset = 0;
-    UINT Length;
-
-    TargetBufferSize /= sizeof(WCHAR);
-    while (RootHeader)
-    {
-        Length = wcslen(RootHeader->lpExeName) + 1;
-        if (TargetBufferSize > Offset + Length)
-        {
-            wcscpy(&TargetBuffer[Offset], RootHeader->lpExeName);
-            Offset += Length;
-        }
-        else
-        {
-            break;
-        }
-        RootHeader = RootHeader->Next;
-    }
-    Length = min(Offset+1, TargetBufferSize);
-    TargetBuffer[Length] = L'\0';
-    return Length * sizeof(WCHAR);
-}
-
-UINT
-IntGetAllConsoleAliasesLength(PALIAS_HEADER Header)
-{
-    UINT Length = 0;
-    PALIAS_ENTRY CurEntry = Header->Data;
-
-    while (CurEntry)
-    {
-        Length += wcslen(CurEntry->lpSource);
-        Length += wcslen(CurEntry->lpTarget);
-        Length += 2; // zero byte and '='
-        CurEntry = CurEntry->Next;
-    }
-
-    if (Length)
-    {
-        return (Length+1) * sizeof(WCHAR);
-    }
-    return 0;
-}
-
-UINT
-IntGetAllConsoleAliases(PALIAS_HEADER Header, LPWSTR TargetBuffer, UINT TargetBufferLength)
-{
-    PALIAS_ENTRY CurEntry = Header->Data;
-    UINT Offset = 0;
-    UINT SrcLength, TargetLength;
-
-    TargetBufferLength /= sizeof(WCHAR);
-    while (CurEntry)
-    {
-        SrcLength = wcslen(CurEntry->lpSource) + 1;
-        TargetLength = wcslen(CurEntry->lpTarget) + 1;
-        if (Offset + TargetLength + SrcLength >= TargetBufferLength)
-            break;
-
-        wcscpy(&TargetBuffer[Offset], CurEntry->lpSource);
-        Offset += SrcLength;
-        TargetBuffer[Offset] = L'=';
-        wcscpy(&TargetBuffer[Offset], CurEntry->lpTarget);
-        Offset += TargetLength;
-
-        CurEntry = CurEntry->Next;
-    }
-    TargetBuffer[Offset] = L'\0';
-    return Offset * sizeof(WCHAR);
-}
-
-VOID
-IntDeleteAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY Entry)
+static VOID
+IntDeleteAliasEntry(PALIAS_HEADER Header,
+                    PALIAS_ENTRY  Entry)
 {
     PALIAS_ENTRY *LastLink = &Header->Data;
     PALIAS_ENTRY CurEntry;
@@ -249,6 +375,53 @@ IntDeleteAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY Entry)
         }
         LastLink = &CurEntry->Next;
     }
+}
+
+static UINT
+IntGetConsoleAliasesExesLength(PALIAS_HEADER RootHeader,
+                               BOOLEAN IsUnicode)
+{
+    UINT Length = 0;
+
+    while (RootHeader)
+    {
+        Length += RootHeader->ExeName.Length + sizeof(WCHAR); // NULL-termination
+        RootHeader = RootHeader->Next;
+    }
+
+    /*
+     * Quick and dirty way of getting the number of bytes of the
+     * corresponding ANSI string from the one in UNICODE.
+     */
+    if (!IsUnicode)
+        Length /= sizeof(WCHAR);
+
+    return Length;
+}
+
+static UINT
+IntGetAllConsoleAliasesLength(PALIAS_HEADER Header,
+                              BOOLEAN IsUnicode)
+{
+    UINT Length = 0;
+    PALIAS_ENTRY CurEntry = Header->Data;
+
+    while (CurEntry)
+    {
+        Length += CurEntry->Source.Length;
+        Length += CurEntry->Target.Length;
+        Length += 2 * sizeof(WCHAR); // '=' and NULL-termination
+        CurEntry = CurEntry->Next;
+    }
+
+    /*
+     * Quick and dirty way of getting the number of bytes of the
+     * corresponding ANSI string from the one in UNICODE.
+     */
+    if (!IsUnicode)
+        Length /= sizeof(WCHAR);
+
+    return Length;
 }
 
 VOID
@@ -274,13 +447,14 @@ IntDeleteAllAliases(PCONSOLE Console)
 
 CSR_API(SrvAddConsoleAlias)
 {
+    NTSTATUS Status;
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
     PCONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
-    LPWSTR lpSource, lpTarget, lpExeName;
+    PVOID lpTarget;
 
-    DPRINT("SrvAddConsoleAlias entered ApiMessage %p\n", ApiMessage);
+    DPRINT1("SrvAddConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&ConsoleAliasRequest->Source,
@@ -291,81 +465,86 @@ CSR_API(SrvAddConsoleAlias)
                                    ConsoleAliasRequest->TargetLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAliasRequest->Exe,
+                                   (PVOID*)&ConsoleAliasRequest->ExeName,
                                    ConsoleAliasRequest->ExeLength,
                                    sizeof(BYTE)) )
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    lpSource  = ConsoleAliasRequest->Source;
-    lpTarget  = (ConsoleAliasRequest->TargetLength != 0 ? ConsoleAliasRequest->Target : NULL);
-    lpExeName = ConsoleAliasRequest->Exe;
+    lpTarget = (ConsoleAliasRequest->TargetLength != 0 ? ConsoleAliasRequest->Target : NULL);
 
-    DPRINT("SrvAddConsoleAlias lpSource %p lpExeName %p lpTarget %p\n", lpSource, lpExeName, lpTarget);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    if (lpExeName == NULL || lpSource == NULL)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
+    Status = STATUS_SUCCESS;
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(ApiMessage->Status))
-    {
-        return ApiMessage->Status;
-    }
-
-    Header = IntFindAliasHeader(Console->Aliases, lpExeName);
+    Header = IntFindAliasHeader(Console,
+                                ConsoleAliasRequest->ExeName,
+                                ConsoleAliasRequest->ExeLength,
+                                ConsoleAliasRequest->Unicode2);
     if (!Header && lpTarget != NULL)
     {
-        Header = IntCreateAliasHeader(lpExeName);
+        Header = IntCreateAliasHeader(Console,
+                                      ConsoleAliasRequest->ExeName,
+                                      ConsoleAliasRequest->ExeLength,
+                                      ConsoleAliasRequest->Unicode2);
         if (!Header)
         {
-            ConSrvReleaseConsole(Console, TRUE);
-            return STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_NO_MEMORY;
+            goto Quit;
         }
+
         IntInsertAliasHeader(&Console->Aliases, Header);
     }
 
     if (lpTarget == NULL) // Delete the entry
     {
-        Entry = IntGetAliasEntry(Header, lpSource);
-        if (Entry)
+        Entry = IntGetAliasEntry(Console, Header,
+                                 ConsoleAliasRequest->Source,
+                                 ConsoleAliasRequest->SourceLength,
+                                 ConsoleAliasRequest->Unicode);
+        if (!Entry)
         {
-            IntDeleteAliasEntry(Header, Entry);
-            ApiMessage->Status = STATUS_SUCCESS;
+            Status = STATUS_UNSUCCESSFUL;
+            goto Quit;
         }
-        else
-        {
-            ApiMessage->Status = STATUS_INVALID_PARAMETER;
-        }
-        ConSrvReleaseConsole(Console, TRUE);
-        return ApiMessage->Status;
+
+        IntDeleteAliasEntry(Header, Entry);
     }
-
-    Entry = IntCreateAliasEntry(lpSource, lpTarget);
-
-    if (!Entry)
+    else // Add the entry
     {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Entry = IntCreateAliasEntry(Console,
+                                    ConsoleAliasRequest->Source,
+                                    ConsoleAliasRequest->SourceLength,
+                                    ConsoleAliasRequest->Target,
+                                    ConsoleAliasRequest->TargetLength,
+                                    ConsoleAliasRequest->Unicode);
+        if (!Entry)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Quit;
+        }
+
+        IntInsertAliasEntry(Header, Entry);
     }
 
-    IntInsertAliasEntry(Header, Entry);
+Quit:
     ConSrvReleaseConsole(Console, TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 CSR_API(SrvGetConsoleAlias)
 {
+    NTSTATUS Status;
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
     PCONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     UINT Length;
-    LPWSTR lpSource, lpTarget, lpExeName;
+    PVOID lpTarget;
 
-    DPRINT("SrvGetConsoleAlias entered ApiMessage %p\n", ApiMessage);
+    DPRINT1("SrvGetConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&ConsoleAliasRequest->Source,
@@ -376,19 +555,14 @@ CSR_API(SrvGetConsoleAlias)
                                    ConsoleAliasRequest->TargetLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAliasRequest->Exe,
+                                   (PVOID*)&ConsoleAliasRequest->ExeName,
                                    ConsoleAliasRequest->ExeLength,
                                    sizeof(BYTE)) )
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    lpSource  = ConsoleAliasRequest->Source;
-    lpTarget  = ConsoleAliasRequest->Target;
-    lpExeName = ConsoleAliasRequest->Exe;
-
-    DPRINT("SrvGetConsoleAlias lpExeName %p lpSource %p TargetBuffer %p TargetLength %u\n",
-           lpExeName, lpSource, lpTarget, ConsoleAliasRequest->TargetLength);
+    lpTarget = ConsoleAliasRequest->Target;
 
     if (ConsoleAliasRequest->ExeLength == 0 || lpTarget == NULL ||
             ConsoleAliasRequest->TargetLength == 0 || ConsoleAliasRequest->SourceLength == 0)
@@ -396,45 +570,70 @@ CSR_API(SrvGetConsoleAlias)
         return STATUS_INVALID_PARAMETER;
     }
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(ApiMessage->Status))
-    {
-        return ApiMessage->Status;
-    }
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    Header = IntFindAliasHeader(Console->Aliases, lpExeName);
+    Header = IntFindAliasHeader(Console,
+                                ConsoleAliasRequest->ExeName,
+                                ConsoleAliasRequest->ExeLength,
+                                ConsoleAliasRequest->Unicode2);
     if (!Header)
     {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
     }
 
-    Entry = IntGetAliasEntry(Header, lpSource);
+    Entry = IntGetAliasEntry(Console, Header,
+                             ConsoleAliasRequest->Source,
+                             ConsoleAliasRequest->SourceLength,
+                             ConsoleAliasRequest->Unicode);
     if (!Entry)
     {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
     }
 
-    Length = (wcslen(Entry->lpTarget) + 1) * sizeof(WCHAR);
-    if (Length > ConsoleAliasRequest->TargetLength)
+    if (ConsoleAliasRequest->Unicode)
     {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_BUFFER_TOO_SMALL;
+        Length = Entry->Target.Length + sizeof(WCHAR);
+        if (Length > ConsoleAliasRequest->TargetLength) // FIXME: Refine computation.
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            goto Quit;
+        }
+
+        RtlCopyMemory(lpTarget, Entry->Target.Buffer, Entry->Target.Length);
+        ConsoleAliasRequest->TargetLength = Length;
+    }
+    else
+    {
+        Length = (Entry->Target.Length + sizeof(WCHAR)) / sizeof(WCHAR);
+        if (Length > ConsoleAliasRequest->TargetLength) // FIXME: Refine computation.
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            goto Quit;
+        }
+
+        ConvertInputUnicodeToAnsi(Console,
+                                  Entry->Target.Buffer, Entry->Target.Length,
+                                  lpTarget, Entry->Target.Length / sizeof(WCHAR));
+        ConsoleAliasRequest->TargetLength = Length;
     }
 
-    wcscpy(lpTarget, Entry->lpTarget);
-    ConsoleAliasRequest->TargetLength = Length;
+Quit:
     ConSrvReleaseConsole(Console, TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 CSR_API(SrvGetConsoleAliases)
 {
+    NTSTATUS Status;
     PCONSOLE_GETALLALIASES GetAllAliasesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesRequest;
     PCONSOLE Console;
-    ULONG BytesWritten;
+    ULONG BytesWritten = 0;
     PALIAS_HEADER Header;
+
+    DPRINT1("SrvGetConsoleAliases entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID)&GetAllAliasesRequest->ExeName,
@@ -448,45 +647,97 @@ CSR_API(SrvGetConsoleAliases)
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (GetAllAliasesRequest->ExeName == NULL)
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Header = IntFindAliasHeader(Console,
+                                GetAllAliasesRequest->ExeName,
+                                GetAllAliasesRequest->ExeLength,
+                                GetAllAliasesRequest->Unicode2);
+    if (!Header) goto Quit;
+
+    if (IntGetAllConsoleAliasesLength(Header, GetAllAliasesRequest->Unicode) > GetAllAliasesRequest->AliasesBufferLength)
     {
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto Quit;
     }
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(ApiMessage->Status))
     {
-        return ApiMessage->Status;
+        LPSTR  TargetBufferA;
+        LPWSTR TargetBufferW;
+        UINT TargetBufferLength = GetAllAliasesRequest->AliasesBufferLength;
+
+        PALIAS_ENTRY CurEntry = Header->Data;
+        UINT Offset = 0;
+        UINT SourceLength, TargetLength;
+
+        if (GetAllAliasesRequest->Unicode)
+        {
+            TargetBufferW = GetAllAliasesRequest->AliasesBuffer;
+            TargetBufferLength /= sizeof(WCHAR);
+        }
+        else
+        {
+            TargetBufferA = GetAllAliasesRequest->AliasesBuffer;
+        }
+
+        while (CurEntry)
+        {
+            SourceLength = CurEntry->Source.Length / sizeof(WCHAR);
+            TargetLength = CurEntry->Target.Length / sizeof(WCHAR);
+            if (Offset + TargetLength + SourceLength + 2 > TargetBufferLength)
+            {
+                Status = STATUS_BUFFER_OVERFLOW;
+                break;
+            }
+
+            if (GetAllAliasesRequest->Unicode)
+            {
+                RtlCopyMemory(&TargetBufferW[Offset], CurEntry->Source.Buffer, SourceLength * sizeof(WCHAR));
+                Offset += SourceLength;
+                TargetBufferW[Offset++] = L'=';
+                RtlCopyMemory(&TargetBufferW[Offset], CurEntry->Target.Buffer, TargetLength * sizeof(WCHAR));
+                Offset += TargetLength;
+                TargetBufferW[Offset++] = L'\0';
+            }
+            else
+            {
+                ConvertInputUnicodeToAnsi(Console,
+                                          CurEntry->Source.Buffer, SourceLength * sizeof(WCHAR),
+                                          &TargetBufferA[Offset], SourceLength);
+                Offset += SourceLength;
+                TargetBufferA[Offset++] = '=';
+                ConvertInputUnicodeToAnsi(Console,
+                                          CurEntry->Target.Buffer, TargetLength * sizeof(WCHAR),
+                                          &TargetBufferA[Offset], TargetLength);
+                Offset += TargetLength;
+                TargetBufferA[Offset++] = '\0';
+            }
+
+            CurEntry = CurEntry->Next;
+        }
+
+        if (GetAllAliasesRequest->Unicode)
+            BytesWritten = Offset * sizeof(WCHAR);
+        else
+            BytesWritten = Offset;
     }
 
-    Header = IntFindAliasHeader(Console->Aliases, GetAllAliasesRequest->ExeName);
-    if (!Header)
-    {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    if (IntGetAllConsoleAliasesLength(Header) > GetAllAliasesRequest->AliasesBufferLength)
-    {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_BUFFER_OVERFLOW;
-    }
-
-    BytesWritten = IntGetAllConsoleAliases(Header,
-                                           GetAllAliasesRequest->AliasesBuffer,
-                                           GetAllAliasesRequest->AliasesBufferLength);
-
+Quit:
     GetAllAliasesRequest->AliasesBufferLength = BytesWritten;
+
     ConSrvReleaseConsole(Console, TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 CSR_API(SrvGetConsoleAliasesLength)
 {
+    NTSTATUS Status;
     PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesLengthRequest;
     PCONSOLE Console;
     PALIAS_HEADER Header;
-    UINT Length;
+
+    DPRINT1("SrvGetConsoleAliasesLength entered ApiMessage %p\n", ApiMessage);
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&GetAllAliasesLengthRequest->ExeName,
@@ -496,89 +747,132 @@ CSR_API(SrvGetConsoleAliasesLength)
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (GetAllAliasesLengthRequest->ExeName == NULL)
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Header = IntFindAliasHeader(Console,
+                                GetAllAliasesLengthRequest->ExeName,
+                                GetAllAliasesLengthRequest->ExeLength,
+                                GetAllAliasesLengthRequest->Unicode2);
+    if (Header)
     {
-        return STATUS_INVALID_PARAMETER;
+        GetAllAliasesLengthRequest->Length =
+            IntGetAllConsoleAliasesLength(Header,
+                                          GetAllAliasesLengthRequest->Unicode);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        GetAllAliasesLengthRequest->Length = 0;
     }
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(ApiMessage->Status))
-    {
-        return ApiMessage->Status;
-    }
-
-    Header = IntFindAliasHeader(Console->Aliases, GetAllAliasesLengthRequest->ExeName);
-    if (!Header)
-    {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Length = IntGetAllConsoleAliasesLength(Header);
-    GetAllAliasesLengthRequest->Length = Length;
     ConSrvReleaseConsole(Console, TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 CSR_API(SrvGetConsoleAliasExes)
 {
+    NTSTATUS Status;
     PCONSOLE_GETALIASESEXES GetAliasesExesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesRequest;
     PCONSOLE Console;
-    UINT BytesWritten;
-    UINT ExesLength;
+    UINT BytesWritten = 0;
 
-    DPRINT("SrvGetConsoleAliasExes entered\n");
+    DPRINT1("SrvGetConsoleAliasExes entered\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID)&GetAliasesExesRequest->ExeNames,
+                                  (PVOID*)&GetAliasesExesRequest->ExeNames,
                                   GetAliasesExesRequest->Length,
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(ApiMessage->Status))
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    if (IntGetConsoleAliasesExesLength(Console->Aliases, GetAliasesExesRequest->Unicode) > GetAliasesExesRequest->Length)
     {
-        return ApiMessage->Status;
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto Quit;
     }
 
-    ExesLength = IntGetConsoleAliasesExesLength(Console->Aliases);
-
-    if (ExesLength > GetAliasesExesRequest->Length)
     {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_BUFFER_OVERFLOW;
+        PALIAS_HEADER RootHeader = Console->Aliases;
+
+        LPSTR  TargetBufferA;
+        LPWSTR TargetBufferW;
+        UINT TargetBufferSize = GetAliasesExesRequest->Length;
+
+        UINT Offset = 0;
+        UINT Length;
+
+        if (GetAliasesExesRequest->Unicode)
+        {
+            TargetBufferW = GetAliasesExesRequest->ExeNames;
+            TargetBufferSize /= sizeof(WCHAR);
+        }
+        else
+        {
+            TargetBufferA = GetAliasesExesRequest->ExeNames;
+        }
+
+        while (RootHeader)
+        {
+            Length = RootHeader->ExeName.Length / sizeof(WCHAR);
+            if (Offset + Length + 1 > TargetBufferSize)
+            {
+                Status = STATUS_BUFFER_OVERFLOW;
+                break;
+            }
+
+            if (GetAliasesExesRequest->Unicode)
+            {
+                RtlCopyMemory(&TargetBufferW[Offset], RootHeader->ExeName.Buffer, Length * sizeof(WCHAR));
+                Offset += Length;
+                TargetBufferW[Offset++] = L'\0';
+            }
+            else
+            {
+                ConvertInputUnicodeToAnsi(Console,
+                                          RootHeader->ExeName.Buffer, Length * sizeof(WCHAR),
+                                          &TargetBufferA[Offset], Length);
+                Offset += Length;
+                TargetBufferA[Offset++] = '\0';
+            }
+
+            RootHeader = RootHeader->Next;
+        }
+
+        if (GetAliasesExesRequest->Unicode)
+            BytesWritten = Offset * sizeof(WCHAR);
+        else
+            BytesWritten = Offset;
     }
 
-    if (GetAliasesExesRequest->ExeNames == NULL)
-    {
-        ConSrvReleaseConsole(Console, TRUE);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    BytesWritten = IntGetConsoleAliasesExes(Console->Aliases,
-                                            GetAliasesExesRequest->ExeNames,
-                                            GetAliasesExesRequest->Length);
-
+Quit:
     GetAliasesExesRequest->Length = BytesWritten;
+
     ConSrvReleaseConsole(Console, TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 CSR_API(SrvGetConsoleAliasExesLength)
 {
+    NTSTATUS Status;
     PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;
     PCONSOLE Console;
-    DPRINT("SrvGetConsoleAliasExesLength entered\n");
 
-    ApiMessage->Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (NT_SUCCESS(ApiMessage->Status))
-    {
-        GetAliasesExesLengthRequest->Length = IntGetConsoleAliasesExesLength(Console->Aliases);
-        ConSrvReleaseConsole(Console, TRUE);
-    }
-    return ApiMessage->Status;
+    DPRINT1("SrvGetConsoleAliasExesLength entered ApiMessage %p\n", ApiMessage);
+
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    GetAliasesExesLengthRequest->Length =
+        IntGetConsoleAliasesExesLength(Console->Aliases,
+                                       GetAliasesExesLengthRequest->Unicode);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 /* EOF */

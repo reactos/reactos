@@ -18,10 +18,11 @@ list(APPEND CONSRV_SOURCE
     consrv/condrv/coninput.c
     consrv/condrv/conoutput.c
     consrv/condrv/console.c
-    consrv/condrv/dummyfrontend.c
+    consrv/condrv/dummyterm.c
     consrv/condrv/graphics.c
     consrv/condrv/text.c
     consrv/frontends/input.c
+    consrv/frontends/terminal.c
     consrv/frontends/gui/conwnd.c
     consrv/frontends/gui/fullscreen.c
     consrv/frontends/gui/guiterm.c

@@ -34,6 +34,7 @@ static CONSOLE_SCREEN_BUFFER_VTBL GraphicsVtbl =
 NTSTATUS
 CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                  IN OUT PCONSOLE Console,
+                                 IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
                                  IN SIZE_T Size);
 VOID
 CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
@@ -58,10 +59,10 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     Status = CONSOLE_SCREEN_BUFFER_Initialize((PCONSOLE_SCREEN_BUFFER*)&NewBuffer,
                                               Console,
+                                              &GraphicsVtbl,
                                               sizeof(GRAPHICS_SCREEN_BUFFER));
     if (!NT_SUCCESS(Status)) return Status;
     NewBuffer->Header.Type = GRAPHICS_BUFFER;
-    NewBuffer->Vtbl = &GraphicsVtbl;
 
     /*
      * Remember the handle to the process so that we can close or unmap

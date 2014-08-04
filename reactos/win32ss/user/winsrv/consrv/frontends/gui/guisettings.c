@@ -357,7 +357,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     NtUnmapViewOfSection(NtCurrentProcess(), pSharedInfo);
 
     /* Get the console leader process, our client */
-    ProcessData = ConDrvGetConsoleLeaderProcess(Console);
+    ProcessData = ConSrvGetConsoleLeaderProcess(Console);
 
     /* Duplicate the section handle for the client */
     Status = NtDuplicateObject(NtCurrentProcess(),
@@ -433,7 +433,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
     /* Get the console leader process, our client */
-    ProcessData = ConDrvGetConsoleLeaderProcess(Console);
+    ProcessData = ConSrvGetConsoleLeaderProcess(Console);
 
     /* Duplicate the section handle for ourselves */
     Status = NtDuplicateObject(ProcessData->Process->ProcessHandle,
@@ -457,7 +457,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                                 &ViewSize,
                                 ViewUnmap,
                                 0,
-                                PAGE_READONLY);
+                                PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error when mapping view of file, Status = %lu\n", Status);

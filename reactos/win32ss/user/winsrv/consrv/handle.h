@@ -10,23 +10,23 @@
 
 #pragma once
 
-VOID FASTCALL ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
+VOID ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
                                IN CONSOLE_IO_OBJECT_TYPE Type,
                                IN PCONSOLE Console);
-NTSTATUS FASTCALL ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
+NTSTATUS ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                      PHANDLE Handle,
                                      PCONSOLE_IO_OBJECT Object,
                                      DWORD Access,
                                      BOOL Inheritable,
                                      DWORD ShareMode);
-NTSTATUS FASTCALL ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
+NTSTATUS ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
                                      HANDLE Handle);
-NTSTATUS FASTCALL ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
+NTSTATUS ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
                                   HANDLE Handle,
                                   PCONSOLE_IO_OBJECT* Object,
                                   PVOID* Entry OPTIONAL,
                                   DWORD Access,
                                   BOOL LockConsole,
                                   CONSOLE_IO_OBJECT_TYPE Type);
-VOID FASTCALL ConSrvReleaseObject(PCONSOLE_IO_OBJECT Object,
+VOID ConSrvReleaseObject(PCONSOLE_IO_OBJECT Object,
                                   BOOL IsConsoleLocked);
