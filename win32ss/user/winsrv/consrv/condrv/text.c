@@ -40,6 +40,7 @@ ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff);
 NTSTATUS
 CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                  IN OUT PCONSOLE Console,
+                                 IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
                                  IN SIZE_T Size);
 VOID
 CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
@@ -60,10 +61,10 @@ TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     Status = CONSOLE_SCREEN_BUFFER_Initialize((PCONSOLE_SCREEN_BUFFER*)&NewBuffer,
                                               Console,
+                                              &TextVtbl,
                                               sizeof(TEXTMODE_SCREEN_BUFFER));
     if (!NT_SUCCESS(Status)) return Status;
     NewBuffer->Header.Type = TEXTMODE_BUFFER;
-    NewBuffer->Vtbl = &TextVtbl;
 
     NewBuffer->Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
                                          TextModeInfo->ScreenBufferSize.X *
@@ -751,11 +752,8 @@ ConDrvWriteConsole(IN PCONSOLE Console,
     ASSERT(Console == ScreenBuffer->Header.Console);
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCharsToWrite == 0));
 
-    // if (Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION))
-    if (Console->PauseFlags && Console->UnpauseEvent != NULL)
-    {
-        return STATUS_PENDING;
-    }
+    /* Stop here if the console is paused */
+    if (Console->UnpauseEvent != NULL) return STATUS_PENDING;
 
     if (Unicode)
     {

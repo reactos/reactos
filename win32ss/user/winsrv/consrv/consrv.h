@@ -56,7 +56,7 @@ typedef struct _CONSOLE_PROCESS_DATA
     HANDLE ConsoleHandle;
     HANDLE ParentConsoleHandle;
 
-    BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
+    BOOLEAN ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 
     RTL_CRITICAL_SECTION HandleTableLock;
     ULONG HandleTableSize;

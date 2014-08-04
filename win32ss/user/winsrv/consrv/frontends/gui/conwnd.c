@@ -945,11 +945,9 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 OnPaint(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
     PAINTSTRUCT ps;
     RECT rcPaint;
-
-    ActiveBuffer = GuiData->ActiveBuffer;
 
     BeginPaint(GuiData->hWindow, &ps);
     if (ps.hdc != NULL &&
