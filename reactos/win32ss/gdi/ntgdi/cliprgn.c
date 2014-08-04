@@ -60,6 +60,8 @@ IntGdiExtSelectClipRgn(
         if (!dc->dclevel.prgnClip)
             dc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
 
+        dc->fs |= DC_FLAG_DIRTY_RAO;
+
         return IntGdiCombineRgn(dc->dclevel.prgnClip, prgn, NULL, RGN_COPY);
     }
 
