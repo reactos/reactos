@@ -142,6 +142,9 @@ ConSrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
 
 /* coninput.c */
 VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
+DWORD ConioEffectiveCursorSize(PCONSOLE Console,
+                               DWORD Scale);
+
 NTSTATUS
 ConioAddInputEvents(PCONSOLE Console,
                     PINPUT_RECORD InputRecords,
@@ -178,7 +181,5 @@ NTSTATUS ConioWriteConsole(PCONSOLE Console,
                            PWCHAR Buffer,
                            DWORD Length,
                            BOOL Attrib);
-DWORD ConioEffectiveCursorSize(PCONSOLE Console,
-                                        DWORD Scale);
 
 /* EOF */

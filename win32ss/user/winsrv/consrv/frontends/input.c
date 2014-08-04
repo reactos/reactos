@@ -204,4 +204,14 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
                      KeyState[VK_CONTROL]);
 }
 
+DWORD
+ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale)
+{
+    DWORD Size = (Console->ActiveBuffer->CursorInfo.dwSize * Scale + 99) / 100;
+    /* If line input in progress, perhaps adjust for insert toggle */
+    if (Console->LineBuffer && !Console->LineComplete && (Console->InsertMode ? !Console->LineInsertToggle : Console->LineInsertToggle))
+        return (Size * 2 <= Scale) ? (Size * 2) : (Size / 2);
+    return Size;
+}
+
 /* EOF */

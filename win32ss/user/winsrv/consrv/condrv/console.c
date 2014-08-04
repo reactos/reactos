@@ -260,7 +260,7 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
 
     Console->InsertMode = ConsoleInfo->InsertMode;
     Console->LineBuffer = NULL;
-    Console->LineMaxSize = Console->LineSize = Console->LinePos = 0;
+    Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
     Console->LineComplete = Console->LineUpPressed = FALSE;
     Console->LineInsertToggle = Console->InsertMode;
     // LineWakeupMask

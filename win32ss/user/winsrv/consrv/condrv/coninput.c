@@ -66,103 +66,18 @@ ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
 }
 
 
-/*
- * This pre-processing code MUST be IN consrv ONLY
- */
-static ULONG
-PreprocessInput(PCONSOLE Console,
-                PINPUT_RECORD InputEvent,
-                ULONG NumEventsToWrite)
-{
-    ULONG NumEvents;
-
-    /*
-     * Loop each event, and for each, check for pause or unpause
-     * and perform adequate behaviour.
-     */
-    for (NumEvents = NumEventsToWrite; NumEvents > 0; --NumEvents)
-    {
-        /* Check for pause or unpause */
-        if (InputEvent->EventType == KEY_EVENT && InputEvent->Event.KeyEvent.bKeyDown)
-        {
-            WORD vk = InputEvent->Event.KeyEvent.wVirtualKeyCode;
-            if (!(Console->PauseFlags & PAUSED_FROM_KEYBOARD))
-            {
-                DWORD cks = InputEvent->Event.KeyEvent.dwControlKeyState;
-                if (Console->InputBuffer.Mode & ENABLE_LINE_INPUT &&
-                    (vk == VK_PAUSE ||
-                    (vk == 'S' && (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &&
-                                 !(cks & (LEFT_ALT_PRESSED  | RIGHT_ALT_PRESSED)))))
-                {
-                    ConioPause(Console, PAUSED_FROM_KEYBOARD);
-
-                    /* Skip the event */
-                    RtlMoveMemory(InputEvent,
-                                  InputEvent + 1,
-                                  (NumEvents - 1) * sizeof(INPUT_RECORD));
-                    --NumEventsToWrite;
-                    continue;
-                }
-            }
-            else
-            {
-                if ((vk < VK_SHIFT || vk > VK_CAPITAL) && vk != VK_LWIN &&
-                    vk != VK_RWIN && vk != VK_NUMLOCK && vk != VK_SCROLL)
-                {
-                    ConioUnpause(Console, PAUSED_FROM_KEYBOARD);
-
-                    /* Skip the event */
-                    RtlMoveMemory(InputEvent,
-                                  InputEvent + 1,
-                                  (NumEvents - 1) * sizeof(INPUT_RECORD));
-                    --NumEventsToWrite;
-                    continue;
-                }
-            }
-        }
-
-        /* Go to the next event */
-        ++InputEvent;
-    }
-
-    return NumEventsToWrite;
-}
-
-/*
- * This post-processing code MUST be IN consrv ONLY
- */
-static VOID
-PostprocessInput(PCONSOLE Console)
-{
-    CsrNotifyWait(&Console->ReadWaitQueue,
-                  FALSE,
-                  NULL,
-                  NULL);
-    if (!IsListEmpty(&Console->ReadWaitQueue))
-    {
-        CsrDereferenceWait(&Console->ReadWaitQueue);
-    }
-}
-
 NTSTATUS
-ConioAddInputEvents(PCONSOLE Console,
-                    PINPUT_RECORD InputRecords, // InputEvent
-                    ULONG NumEventsToWrite,
-                    PULONG NumEventsWritten,
-                    BOOLEAN AppendToEnd)
+ConDrvAddInputEvents(PCONSOLE Console,
+                     PINPUT_RECORD InputRecords, // InputEvent
+                     ULONG NumEventsToWrite,
+                     PULONG NumEventsWritten,
+                     BOOLEAN AppendToEnd)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG i = 0;
     BOOLEAN SetWaitEvent = FALSE;
 
     if (NumEventsWritten) *NumEventsWritten = 0;
-
-    /*
-     * This pre-processing code MUST be IN consrv ONLY!!
-     */
-    NumEventsToWrite = PreprocessInput(Console, InputRecords, NumEventsToWrite);
-    if (NumEventsToWrite == 0) return STATUS_SUCCESS;
-
 
     /*
      * When adding many single events, in the case of repeated mouse move or
@@ -300,6 +215,39 @@ ConioAddInputEvents(PCONSOLE Console,
 Done:
     if (NumEventsWritten) *NumEventsWritten = i;
 
+    return Status;
+}
+
+
+ULONG
+PreprocessInput(PCONSOLE Console,
+                PINPUT_RECORD InputEvent,
+                ULONG NumEventsToWrite);
+VOID
+PostprocessInput(PCONSOLE Console);
+
+NTSTATUS
+ConioAddInputEvents(PCONSOLE Console,
+                    PINPUT_RECORD InputRecords, // InputEvent
+                    ULONG NumEventsToWrite,
+                    PULONG NumEventsWritten,
+                    BOOLEAN AppendToEnd)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (NumEventsWritten) *NumEventsWritten = 0;
+
+    /*
+     * This pre-processing code MUST be IN consrv ONLY!!
+     */
+    NumEventsToWrite = PreprocessInput(Console, InputRecords, NumEventsToWrite);
+    if (NumEventsToWrite == 0) return STATUS_SUCCESS;
+
+    Status = ConDrvAddInputEvents(Console,
+                                  InputRecords,
+                                  NumEventsToWrite,
+                                  NumEventsWritten,
+                                  AppendToEnd);
 
     /*
      * This post-processing code MUST be IN consrv ONLY!!
@@ -307,9 +255,10 @@ Done:
     // if (NT_SUCCESS(Status))
     if (Status == STATUS_SUCCESS) PostprocessInput(Console);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
+/* Move elsewhere...*/
 NTSTATUS
 ConioProcessInputEvent(PCONSOLE Console,
                        PINPUT_RECORD InputEvent)
@@ -377,17 +326,15 @@ ConDrvReadConsole(IN PCONSOLE Console,
         if (Console->LineBuffer == NULL)
         {
             /* Starting a new line */
-            Console->LineMaxSize = (WORD)max(256, NumCharsToRead);
+            Console->LineMaxSize = max(256, NumCharsToRead);
 
             Console->LineBuffer = ConsoleAllocHeap(0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL) return STATUS_NO_MEMORY;
 
-            Console->LineComplete = FALSE;
-            Console->LineUpPressed = FALSE;
+            Console->LinePos = Console->LineSize = ReadControl->nInitialChars;
+            Console->LineComplete = Console->LineUpPressed = FALSE;
             Console->LineInsertToggle = Console->InsertMode;
             Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
-            Console->LineSize = ReadControl->nInitialChars;
-            Console->LinePos = Console->LineSize;
 
             /*
              * Pre-filling the buffer is only allowed in the Unicode API,
@@ -597,6 +544,7 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
 
     /* Now, add the events */
     // if (NumEventsWritten) *NumEventsWritten = 0;
+    // ConDrvAddInputEvents
     Status = ConioAddInputEvents(Console,
                                  InputRecord,
                                  NumEventsToWrite,

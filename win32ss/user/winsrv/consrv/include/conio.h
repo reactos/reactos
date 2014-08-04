@@ -282,16 +282,16 @@ typedef struct _CONSOLE
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
     UINT InputCodePage;
 
-    /** Put those things in TEXTMODE_SCREEN_BUFFER ?? **/
-    PWCHAR LineBuffer;                      /* Current line being input, in line buffered mode */
-    ULONG  LineMaxSize;                     /* Maximum size of line in characters (including CR+LF) */
-    ULONG  LineSize;                        /* Current size of line */
-    ULONG  LinePos;                         /* Current position within line */
+    /** Put those things in CONSOLE_INPUT_BUFFER ?? **/
+    PWCHAR  LineBuffer;                     /* Current line being input, in line buffered mode */
+    ULONG   LineMaxSize;                    /* Maximum size of line in characters (including CR+LF) */
+    ULONG   LineSize;                       /* Current size of line */
+    ULONG   LinePos;                        /* Current position within line */
     BOOLEAN LineComplete;                   /* User pressed enter, ready to send back to client */
     BOOLEAN LineUpPressed;
     BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
-    ULONG LineWakeupMask;                   /* Bitmap of which control characters will end line input */
-    /***************************************************/
+    ULONG   LineWakeupMask;                 /* Bitmap of which control characters will end line input */
+    /*************************************************/
 
     BOOLEAN InsertMode;
 

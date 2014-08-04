@@ -36,6 +36,88 @@ typedef struct _GET_INPUT_INFO
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/*
+ * This pre-processing code MUST be IN consrv ONLY
+ */
+/* static */ ULONG
+PreprocessInput(PCONSOLE Console,
+                PINPUT_RECORD InputEvent,
+                ULONG NumEventsToWrite)
+{
+    ULONG NumEvents;
+
+    /*
+     * Loop each event, and for each, check for pause or unpause
+     * and perform adequate behaviour.
+     */
+    for (NumEvents = NumEventsToWrite; NumEvents > 0; --NumEvents)
+    {
+        /* Check for pause or unpause */
+        if (InputEvent->EventType == KEY_EVENT && InputEvent->Event.KeyEvent.bKeyDown)
+        {
+            WORD vk = InputEvent->Event.KeyEvent.wVirtualKeyCode;
+            if (!(Console->PauseFlags & PAUSED_FROM_KEYBOARD))
+            {
+                DWORD cks = InputEvent->Event.KeyEvent.dwControlKeyState;
+                if (Console->InputBuffer.Mode & ENABLE_LINE_INPUT &&
+                    (vk == VK_PAUSE ||
+                    (vk == 'S' && (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &&
+                                 !(cks & (LEFT_ALT_PRESSED  | RIGHT_ALT_PRESSED)))))
+                {
+                    ConioPause(Console, PAUSED_FROM_KEYBOARD);
+
+                    /* Skip the event */
+                    RtlMoveMemory(InputEvent,
+                                  InputEvent + 1,
+                                  (NumEvents - 1) * sizeof(INPUT_RECORD));
+                    --NumEventsToWrite;
+                    continue;
+                }
+            }
+            else
+            {
+                if ((vk < VK_SHIFT || vk > VK_CAPITAL) && vk != VK_LWIN &&
+                    vk != VK_RWIN && vk != VK_NUMLOCK && vk != VK_SCROLL)
+                {
+                    ConioUnpause(Console, PAUSED_FROM_KEYBOARD);
+
+                    /* Skip the event */
+                    RtlMoveMemory(InputEvent,
+                                  InputEvent + 1,
+                                  (NumEvents - 1) * sizeof(INPUT_RECORD));
+                    --NumEventsToWrite;
+                    continue;
+                }
+            }
+        }
+
+        /* Go to the next event */
+        ++InputEvent;
+    }
+
+    return NumEventsToWrite;
+}
+
+/*
+ * This post-processing code MUST be IN consrv ONLY
+ */
+/* static */ VOID
+PostprocessInput(PCONSOLE Console)
+{
+    CsrNotifyWait(&Console->ReadWaitQueue,
+                  FALSE,
+                  NULL,
+                  NULL);
+    if (!IsListEmpty(&Console->ReadWaitQueue))
+    {
+        CsrDereferenceWait(&Console->ReadWaitQueue);
+    }
+}
+
+
+
+
+
 static NTSTATUS
 WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
                   IN PCSR_API_MESSAGE ApiMessage,
