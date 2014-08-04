@@ -3161,12 +3161,38 @@ LRESULT CShellBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
 LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    HMENU                                   theMenu;
+    HMENU  theMenu;
+    LPARAM menuIndex = lParam;
 
     theMenu = reinterpret_cast<HMENU>(wParam);
-    if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_VIEW))
+
+    if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_FILE))
+    {
+        menuIndex = 0;
+    }
+    else if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_EDIT))
+    {
+        menuIndex = 1;
+    }
+    else if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_VIEW))
+    {
         UpdateViewMenu(theMenu);
-    return RelayMsgToShellView(uMsg, wParam, lParam, bHandled);
+        menuIndex = 2;
+    }
+    else if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_FAVORITES))
+    {
+        menuIndex = 3;
+    }
+    else if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_TOOLS))
+    {
+        menuIndex = 4;
+    }
+    else if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_HELP))
+    {
+        menuIndex = 5;
+    }
+
+    return RelayMsgToShellView(uMsg, wParam, menuIndex, bHandled);
 }
 
 LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
