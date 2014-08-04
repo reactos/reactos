@@ -18,6 +18,13 @@
 #include <debug.h>
 
 
+/* See consrv/include/rect.h */
+#define ConioRectHeight(Rect) \
+    (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
+#define ConioRectWidth(Rect) \
+    (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
+
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /******************
@@ -57,7 +64,7 @@ IntReadConsole(IN HANDLE hConsoleInput,
      */
     // 1- Get the exe name length in characters, including NULL character.
     ReadConsoleRequest->ExeLength =
-        GetConsoleInputExeNameW(0, (PWCHAR)ReadConsoleRequest->StaticBuffer);
+        (USHORT)GetConsoleInputExeNameW(0, (PWCHAR)ReadConsoleRequest->StaticBuffer);
     // 2- Get the exe name (GetConsoleInputExeNameW returns 1 in case of success).
     if (GetConsoleInputExeNameW(ReadConsoleRequest->ExeLength,
                                 (PWCHAR)ReadConsoleRequest->StaticBuffer) != 1)
@@ -170,7 +177,7 @@ IntReadConsole(IN HANDLE hConsoleInput,
         // HACK
         if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
         SetLastError(ERROR_INVALID_ACCESS);
-        return FALSE;
+        _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
 
@@ -356,41 +363,73 @@ IntReadConsoleOutput(IN HANDLE hConsoleOutput,
                      IN OUT PSMALL_RECT lpReadRegion,
                      IN BOOLEAN bUnicode)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_READOUTPUT ReadOutputRequest = &ApiMessage.Data.ReadOutputRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
-    DWORD Size, SizeX, SizeY;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
 
-    if (lpBuffer == NULL)
-    {
-        SetLastError(ERROR_INVALID_ACCESS);
-        return FALSE;
-    }
-
-    Size = dwBufferSize.X * dwBufferSize.Y * sizeof(CHAR_INFO);
-
-    DPRINT("IntReadConsoleOutput: %lx %p\n", Size, lpReadRegion);
-
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
-    if (CaptureBuffer == NULL)
-    {
-        DPRINT1("CsrAllocateCaptureBuffer failed with size 0x%x!\n", Size);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    /* Allocate space in the Buffer */
-    CsrAllocateMessagePointer(CaptureBuffer,
-                              Size,
-                              (PVOID*)&ReadOutputRequest->CharInfo);
+    SHORT SizeX, SizeY;
+    ULONG NumCells;
 
     /* Set up the data to send to the Console Server */
-    ReadOutputRequest->OutputHandle = hConsoleOutput;
-    ReadOutputRequest->Unicode = bUnicode;
-    ReadOutputRequest->BufferSize = dwBufferSize;
-    ReadOutputRequest->BufferCoord = dwBufferCoord;
-    ReadOutputRequest->ReadRegion = *lpReadRegion;
+    ReadOutputRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    ReadOutputRequest->OutputHandle  = hConsoleOutput;
+    ReadOutputRequest->Unicode       = bUnicode;
+
+    /* Update lpReadRegion */
+    _SEH2_TRY
+    {
+        SizeX = min(dwBufferSize.X - dwBufferCoord.X, ConioRectWidth(lpReadRegion));
+        SizeY = min(dwBufferSize.Y - dwBufferCoord.Y, ConioRectHeight(lpReadRegion));
+        if (SizeX <= 0 || SizeY <= 0)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            _SEH2_YIELD(return FALSE);
+        }
+        lpReadRegion->Right  = lpReadRegion->Left + SizeX - 1;
+        lpReadRegion->Bottom = lpReadRegion->Top  + SizeY - 1;
+
+        ReadOutputRequest->ReadRegion = *lpReadRegion;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    NumCells = SizeX * SizeY;
+    DPRINT1("IntReadConsoleOutput: (%d x %d)\n", SizeX, SizeY);
+
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than one
+     * cell is read. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (NumCells <= 1)
+    {
+        ReadOutputRequest->CharInfo = &ReadOutputRequest->StaticBuffer;
+        // CaptureBuffer = NULL;
+    }
+    else
+    {
+        ULONG Size = NumCells * sizeof(CHAR_INFO);
+
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed with size %ld!\n", Size);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Allocate space in the Buffer */
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  Size,
+                                  (PVOID*)&ReadOutputRequest->CharInfo);
+    }
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -399,32 +438,56 @@ IntReadConsoleOutput(IN HANDLE hConsoleOutput,
                         sizeof(*ReadOutputRequest));
 
     /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
+    Success = NT_SUCCESS(ApiMessage.Status);
+
+    /* Retrieve the results */
+    _SEH2_TRY
     {
-        /* Copy into the buffer */
-        DPRINT("Copying to buffer\n");
-        SizeX = ReadOutputRequest->ReadRegion.Right -
-                ReadOutputRequest->ReadRegion.Left + 1;
-        SizeY = ReadOutputRequest->ReadRegion.Bottom -
-                ReadOutputRequest->ReadRegion.Top + 1;
-        RtlCopyMemory(lpBuffer,
-                      ReadOutputRequest->CharInfo,
-                      sizeof(CHAR_INFO) * SizeX * SizeY);
+        *lpReadRegion = ReadOutputRequest->ReadRegion;
+
+        if (Success)
+        {
+#if 0
+            SHORT x, X;
+#endif
+            SHORT y, Y;
+
+            /* Copy into the buffer */
+
+            SizeX = ReadOutputRequest->ReadRegion.Right -
+                    ReadOutputRequest->ReadRegion.Left + 1;
+
+            for (y = 0, Y = ReadOutputRequest->ReadRegion.Top; Y <= ReadOutputRequest->ReadRegion.Bottom; ++y, ++Y)
+            {
+                RtlCopyMemory(lpBuffer + (y + dwBufferCoord.Y) * dwBufferSize.X + dwBufferCoord.X,
+                              ReadOutputRequest->CharInfo + y * SizeX,
+                              SizeX * sizeof(CHAR_INFO));
+#if 0
+                for (x = 0, X = ReadOutputRequest->ReadRegion.Left; X <= ReadOutputRequest->ReadRegion.Right; ++x, ++X)
+                {
+                    *(lpBuffer + (y + dwBufferCoord.Y) * dwBufferSize.X + (x + dwBufferCoord.X)) =
+                    *(ReadOutputRequest->CharInfo + y * SizeX + x);
+                }
+#endif
+            }
+        }
+        else
+        {
+            BaseSetLastNTError(ApiMessage.Status);
+        }
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        BaseSetLastNTError(ApiMessage.Status);
+        SetLastError(ERROR_INVALID_ACCESS);
+        Success = FALSE;
     }
+    _SEH2_END;
 
-    /* Return the read region */
-    DPRINT("read region: %p\n", ReadOutputRequest->ReadRegion);
-    *lpReadRegion = ReadOutputRequest->ReadRegion;
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
-    /* Release the capture buffer */
-    CsrFreeCaptureBuffer(CaptureBuffer);
-
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(ApiMessage.Status);
+    /* Return success status */
+    return Success;
 }
 
 
@@ -602,7 +665,7 @@ IntWriteConsole(IN HANDLE hConsoleOutput,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             SetLastError(ERROR_INVALID_ACCESS);
-            return FALSE;
+            _SEH2_YIELD(return FALSE);
         }
         _SEH2_END;
     }
@@ -704,7 +767,7 @@ IntWriteConsoleInput(IN HANDLE hConsoleInput,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             SetLastError(ERROR_INVALID_ACCESS);
-            return FALSE;
+            _SEH2_YIELD(return FALSE);
         }
         _SEH2_END;
     }
@@ -770,49 +833,107 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
                       IN OUT PSMALL_RECT lpWriteRegion,
                       IN BOOLEAN bUnicode)
 {
+    BOOL Success;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEOUTPUT WriteOutputRequest = &ApiMessage.Data.WriteOutputRequest;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
-    ULONG Size;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
 
-    if ((lpBuffer == NULL) || (lpWriteRegion == NULL))
-    {
-        SetLastError(ERROR_INVALID_ACCESS);
-        return FALSE;
-    }
-    /*
-    if (lpWriteRegion == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    */
-
-    Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
-
-    DPRINT("IntWriteConsoleOutput: %lx %p\n", Size, lpWriteRegion);
-
-    /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
-    if (CaptureBuffer == NULL)
-    {
-        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    /* Capture the user buffer */
-    CsrCaptureMessageBuffer(CaptureBuffer,
-                            (PVOID)lpBuffer,
-                            Size,
-                            (PVOID*)&WriteOutputRequest->CharInfo);
+    SHORT SizeX, SizeY;
+    ULONG NumCells;
 
     /* Set up the data to send to the Console Server */
-    WriteOutputRequest->OutputHandle = hConsoleOutput;
-    WriteOutputRequest->Unicode = bUnicode;
-    WriteOutputRequest->BufferSize = dwBufferSize;
-    WriteOutputRequest->BufferCoord = dwBufferCoord;
-    WriteOutputRequest->WriteRegion = *lpWriteRegion;
+    WriteOutputRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    WriteOutputRequest->OutputHandle  = hConsoleOutput;
+    WriteOutputRequest->Unicode       = bUnicode;
+
+    /* Update lpWriteRegion */
+    _SEH2_TRY
+    {
+        SizeX = min(dwBufferSize.X - dwBufferCoord.X, ConioRectWidth(lpWriteRegion));
+        SizeY = min(dwBufferSize.Y - dwBufferCoord.Y, ConioRectHeight(lpWriteRegion));
+        if (SizeX <= 0 || SizeY <= 0)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            _SEH2_YIELD(return FALSE);
+        }
+        lpWriteRegion->Right  = lpWriteRegion->Left + SizeX - 1;
+        lpWriteRegion->Bottom = lpWriteRegion->Top  + SizeY - 1;
+
+        WriteOutputRequest->WriteRegion = *lpWriteRegion;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    NumCells = SizeX * SizeY;
+    DPRINT1("IntWriteConsoleOutput: (%d x %d)\n", SizeX, SizeY);
+
+    /*
+     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * compatibility reasons) uses a static buffer if no more than one
+     * cell is written. Otherwise a new buffer is allocated.
+     * This behaviour is also expected in the server-side.
+     */
+    if (NumCells <= 1)
+    {
+        WriteOutputRequest->CharInfo = &WriteOutputRequest->StaticBuffer;
+        // CaptureBuffer = NULL;
+    }
+    else
+    {
+        ULONG Size = NumCells * sizeof(CHAR_INFO);
+
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed with size %ld!\n", Size);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Allocate space in the Buffer */
+        CsrAllocateMessagePointer(CaptureBuffer,
+                                  Size,
+                                  (PVOID*)&WriteOutputRequest->CharInfo);
+    }
+
+    /* Capture the user buffer contents */
+    _SEH2_TRY
+    {
+#if 0
+        SHORT x, X;
+#endif
+        SHORT y, Y;
+
+        /* Copy into the buffer */
+
+        SizeX = WriteOutputRequest->WriteRegion.Right -
+                WriteOutputRequest->WriteRegion.Left + 1;
+
+        for (y = 0, Y = WriteOutputRequest->WriteRegion.Top; Y <= WriteOutputRequest->WriteRegion.Bottom; ++y, ++Y)
+        {
+            RtlCopyMemory(WriteOutputRequest->CharInfo + y * SizeX,
+                          lpBuffer + (y + dwBufferCoord.Y) * dwBufferSize.X + dwBufferCoord.X,
+                          SizeX * sizeof(CHAR_INFO));
+#if 0
+            for (x = 0, X = WriteOutputRequest->WriteRegion.Left; X <= WriteOutputRequest->WriteRegion.Right; ++x, ++X)
+            {
+                *(WriteOutputRequest->CharInfo + y * SizeX + x) =
+                *(lpBuffer + (y + dwBufferCoord.Y) * dwBufferSize.X + (x + dwBufferCoord.X));
+            }
+#endif
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
 
     /* Call the server */
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -821,20 +942,28 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
                         sizeof(*WriteOutputRequest));
 
     /* Check for success */
-    if (!NT_SUCCESS(ApiMessage.Status))
+    Success = NT_SUCCESS(ApiMessage.Status);
+
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
+
+    /* Retrieve the results */
+    _SEH2_TRY
     {
-        BaseSetLastNTError(ApiMessage.Status);
+        *lpWriteRegion = WriteOutputRequest->WriteRegion;
+
+        if (!Success)
+            BaseSetLastNTError(ApiMessage.Status);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        Success = FALSE;
+    }
+    _SEH2_END;
 
-    /* Return the read region */
-    DPRINT("read region: %p\n", WriteOutputRequest->WriteRegion);
-    *lpWriteRegion = WriteOutputRequest->WriteRegion;
-
-    /* Release the capture buffer */
-    CsrFreeCaptureBuffer(CaptureBuffer);
-
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(ApiMessage.Status);
+    /* Return success status */
+    return Success;
 }
 
 
@@ -907,7 +1036,7 @@ IntWriteConsoleOutputCode(IN HANDLE hConsoleOutput,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             SetLastError(ERROR_INVALID_ACCESS);
-            return FALSE;
+            _SEH2_YIELD(return FALSE);
         }
         _SEH2_END;
     }

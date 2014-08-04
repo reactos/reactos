@@ -140,65 +140,6 @@ ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff)
     }
 }
 
-static __inline BOOLEAN
-ConioGetIntersection(OUT PSMALL_RECT Intersection,
-                     IN PSMALL_RECT Rect1,
-                     IN PSMALL_RECT Rect2)
-{
-    if ( ConioIsRectEmpty(Rect1) ||
-         ConioIsRectEmpty(Rect2) ||
-        (Rect1->Top  > Rect2->Bottom) ||
-        (Rect1->Left > Rect2->Right)  ||
-        (Rect1->Bottom < Rect2->Top)  ||
-        (Rect1->Right  < Rect2->Left) )
-    {
-        /* The rectangles do not intersect */
-        ConioInitRect(Intersection, 0, -1, 0, -1);
-        return FALSE;
-    }
-
-    ConioInitRect(Intersection,
-                  max(Rect1->Top   , Rect2->Top   ),
-                  max(Rect1->Left  , Rect2->Left  ),
-                  min(Rect1->Bottom, Rect2->Bottom),
-                  min(Rect1->Right , Rect2->Right ));
-
-    return TRUE;
-}
-
-static __inline BOOLEAN
-ConioGetUnion(OUT PSMALL_RECT Union,
-              IN PSMALL_RECT Rect1,
-              IN PSMALL_RECT Rect2)
-{
-    if (ConioIsRectEmpty(Rect1))
-    {
-        if (ConioIsRectEmpty(Rect2))
-        {
-            ConioInitRect(Union, 0, -1, 0, -1);
-            return FALSE;
-        }
-        else
-        {
-            *Union = *Rect2;
-        }
-    }
-    else if (ConioIsRectEmpty(Rect2))
-    {
-        *Union = *Rect1;
-    }
-    else
-    {
-        ConioInitRect(Union,
-                      min(Rect1->Top   , Rect2->Top   ),
-                      min(Rect1->Left  , Rect2->Left  ),
-                      max(Rect1->Bottom, Rect2->Bottom),
-                      max(Rect1->Right , Rect2->Right ));
-    }
-
-    return TRUE;
-}
-
 static VOID
 ConioComputeUpdateRect(IN PTEXTMODE_SCREEN_BUFFER Buff,
                        IN OUT PSMALL_RECT UpdateRect,
@@ -669,21 +610,15 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
                         IN PTEXTMODE_SCREEN_BUFFER Buffer,
                         IN BOOLEAN Unicode,
                         OUT PCHAR_INFO CharInfo/*Buffer*/,
-                        IN PCOORD BufferSize,
-                        IN PCOORD BufferCoord,
                         IN OUT PSMALL_RECT ReadRegion)
 {
+    SHORT X, Y;
+    SMALL_RECT ScreenBuffer;
     PCHAR_INFO CurCharInfo;
-    SHORT SizeX, SizeY;
     SMALL_RECT CapturedReadRegion;
-    SMALL_RECT ScreenRect;
-    DWORD i;
     PCHAR_INFO Ptr;
-    LONG X, Y;
-    UINT CodePage;
 
-    if (Console == NULL || Buffer == NULL || CharInfo == NULL ||
-        BufferSize == NULL || BufferCoord == NULL || ReadRegion == NULL)
+    if (Console == NULL || Buffer == NULL || CharInfo == NULL || ReadRegion == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -693,26 +628,24 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
 
     CapturedReadRegion = *ReadRegion;
 
-    /* FIXME: Is this correct? */
-    CodePage = Console->OutputCodePage;
-
-    SizeX = min(BufferSize->X - BufferCoord->X, ConioRectWidth(&CapturedReadRegion));
-    SizeY = min(BufferSize->Y - BufferCoord->Y, ConioRectHeight(&CapturedReadRegion));
-    CapturedReadRegion.Right  = CapturedReadRegion.Left + SizeX;
-    CapturedReadRegion.Bottom = CapturedReadRegion.Top  + SizeY;
-
-    ConioInitRect(&ScreenRect, 0, 0, Buffer->ScreenBufferSize.Y, Buffer->ScreenBufferSize.X);
-    if (!ConioGetIntersection(&CapturedReadRegion, &ScreenRect, &CapturedReadRegion))
+    /* Make sure ReadRegion is inside the screen buffer */
+    ConioInitRect(&ScreenBuffer, 0, 0,
+                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+    if (!ConioGetIntersection(&CapturedReadRegion, &ScreenBuffer, &CapturedReadRegion))
     {
+        /*
+         * It is okay to have a ReadRegion completely outside
+         * the screen buffer. No data is read then.
+         */
         return STATUS_SUCCESS;
     }
 
-    for (i = 0, Y = CapturedReadRegion.Top; Y < CapturedReadRegion.Bottom; ++i, ++Y)
-    {
-        CurCharInfo = CharInfo + (i * BufferSize->X);
+    CurCharInfo = CharInfo;
 
+    for (Y = CapturedReadRegion.Top; Y <= CapturedReadRegion.Bottom; ++Y)
+    {
         Ptr = ConioCoordToPointer(Buffer, CapturedReadRegion.Left, Y);
-        for (X = CapturedReadRegion.Left; X < CapturedReadRegion.Right; ++X)
+        for (X = CapturedReadRegion.Left; X <= CapturedReadRegion.Right; ++X)
         {
             if (Unicode)
             {
@@ -721,7 +654,7 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
             else
             {
                 // ConsoleUnicodeCharToAnsiChar(Console, &CurCharInfo->Char.AsciiChar, &Ptr->Char.UnicodeChar);
-                WideCharToMultiByte(CodePage, 0, &Ptr->Char.UnicodeChar, 1,
+                WideCharToMultiByte(Console->OutputCodePage, 0, &Ptr->Char.UnicodeChar, 1,
                                     &CurCharInfo->Char.AsciiChar, 1, NULL, NULL);
             }
             CurCharInfo->Attributes = Ptr->Attributes;
@@ -730,10 +663,7 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
         }
     }
 
-    ReadRegion->Left   = CapturedReadRegion.Left;
-    ReadRegion->Top    = CapturedReadRegion.Top ;
-    ReadRegion->Right  = CapturedReadRegion.Left + SizeX - 1;
-    ReadRegion->Bottom = CapturedReadRegion.Top  + SizeY - 1;
+    *ReadRegion = CapturedReadRegion;
 
     return STATUS_SUCCESS;
 }
@@ -743,18 +673,15 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
                          IN PTEXTMODE_SCREEN_BUFFER Buffer,
                          IN BOOLEAN Unicode,
                          IN PCHAR_INFO CharInfo/*Buffer*/,
-                         IN PCOORD BufferSize,
-                         IN PCOORD BufferCoord,
                          IN OUT PSMALL_RECT WriteRegion)
 {
-    SHORT i, X, Y, SizeX, SizeY;
+    SHORT X, Y;
     SMALL_RECT ScreenBuffer;
     PCHAR_INFO CurCharInfo;
     SMALL_RECT CapturedWriteRegion;
     PCHAR_INFO Ptr;
 
-    if (Console == NULL || Buffer == NULL || CharInfo == NULL ||
-        BufferSize == NULL || BufferCoord == NULL || WriteRegion == NULL)
+    if (Console == NULL || Buffer == NULL || CharInfo == NULL || WriteRegion == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -764,13 +691,9 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
     CapturedWriteRegion = *WriteRegion;
 
-    SizeX = min(BufferSize->X - BufferCoord->X, ConioRectWidth(&CapturedWriteRegion));
-    SizeY = min(BufferSize->Y - BufferCoord->Y, ConioRectHeight(&CapturedWriteRegion));
-    CapturedWriteRegion.Right  = CapturedWriteRegion.Left + SizeX - 1;
-    CapturedWriteRegion.Bottom = CapturedWriteRegion.Top  + SizeY - 1;
-
     /* Make sure WriteRegion is inside the screen buffer */
-    ConioInitRect(&ScreenBuffer, 0, 0, Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+    ConioInitRect(&ScreenBuffer, 0, 0,
+                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
     {
         /*
@@ -780,12 +703,12 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
         return STATUS_SUCCESS;
     }
 
-    for (i = 0, Y = CapturedWriteRegion.Top; Y <= CapturedWriteRegion.Bottom; i++, Y++)
-    {
-        CurCharInfo = CharInfo + (i + BufferCoord->Y) * BufferSize->X + BufferCoord->X;
+    CurCharInfo = CharInfo;
 
+    for (Y = CapturedWriteRegion.Top; Y <= CapturedWriteRegion.Bottom; ++Y)
+    {
         Ptr = ConioCoordToPointer(Buffer, CapturedWriteRegion.Left, Y);
-        for (X = CapturedWriteRegion.Left; X <= CapturedWriteRegion.Right; X++)
+        for (X = CapturedWriteRegion.Left; X <= CapturedWriteRegion.Right; ++X)
         {
             if (Unicode)
             {
@@ -803,10 +726,7 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
     TermDrawRegion(Console, &CapturedWriteRegion);
 
-    WriteRegion->Left   = CapturedWriteRegion.Left;
-    WriteRegion->Top    = CapturedWriteRegion.Top ;
-    WriteRegion->Right  = CapturedWriteRegion.Left + SizeX - 1;
-    WriteRegion->Bottom = CapturedWriteRegion.Top  + SizeY - 1;
+    *WriteRegion = CapturedWriteRegion;
 
     return STATUS_SUCCESS;
 }
@@ -1293,7 +1213,8 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
     CapturedDestinationOrigin = *DestinationOrigin;
 
     /* Make sure the source rectangle is inside the screen buffer */
-    ConioInitRect(&ScreenBuffer, 0, 0, Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+    ConioInitRect(&ScreenBuffer, 0, 0,
+                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&SrcRegion, &ScreenBuffer, ScrollRectangle))
     {
         return STATUS_SUCCESS;

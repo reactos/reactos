@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "rect.h"
+
 #define CSR_DEFAULT_CURSOR_SIZE 25
 
 /* Default attributes */
@@ -342,19 +344,6 @@ ConioProcessInputEvent(PCONSOLE Console,
                        PINPUT_RECORD InputEvent);
 
 /* conoutput.c */
-#define ConioInitRect(Rect, top, left, bottom, right) \
-do {    \
-    ((Rect)->Top) = top;    \
-    ((Rect)->Left) = left;  \
-    ((Rect)->Bottom) = bottom;  \
-    ((Rect)->Right) = right;    \
-} while (0)
-#define ConioIsRectEmpty(Rect) \
-    (((Rect)->Left > (Rect)->Right) || ((Rect)->Top > (Rect)->Bottom))
-#define ConioRectHeight(Rect) \
-    (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
-#define ConioRectWidth(Rect) \
-    (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 
 /*
  * From MSDN:

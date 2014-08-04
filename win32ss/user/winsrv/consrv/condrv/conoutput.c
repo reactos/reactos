@@ -159,7 +159,8 @@ ConioDrawConsole(PCONSOLE Console)
 
     if (ActiveBuffer)
     {
-        ConioInitRect(&Region, 0, 0, ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
+        ConioInitRect(&Region, 0, 0,
+                      ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
         TermDrawRegion(Console, &Region);
     }
 }

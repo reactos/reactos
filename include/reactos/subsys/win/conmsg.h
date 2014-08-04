@@ -429,17 +429,6 @@ typedef struct
 
 typedef struct
 {
-    HANDLE OutputHandle;
-
-    BOOL Unicode;
-    COORD BufferSize;
-    COORD BufferCoord; // WriteCoord
-    SMALL_RECT WriteRegion;
-    PCHAR_INFO CharInfo;
-} CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
-
-typedef struct
-{
     HANDLE ConsoleHandle;
     HANDLE InputHandle;
 } CONSOLE_FLUSHINPUTBUFFER, *PCONSOLE_FLUSHINPUTBUFFER;
@@ -533,14 +522,29 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
 
-    BOOL Unicode;
-    COORD BufferSize;
-    COORD BufferCoord;
-    SMALL_RECT ReadRegion;
+    CHAR_INFO  StaticBuffer;
     PCHAR_INFO CharInfo;
+
+    SMALL_RECT ReadRegion;
+    BOOLEAN Unicode;
 } CONSOLE_READOUTPUT, *PCONSOLE_READOUTPUT;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+
+    CHAR_INFO  StaticBuffer;
+    PCHAR_INFO CharInfo;
+
+    SMALL_RECT WriteRegion;
+    BOOLEAN Unicode;
+
+    ULONG Unknown;
+} CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
 
 typedef struct
 {
