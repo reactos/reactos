@@ -457,7 +457,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                                 &ViewSize,
                                 ViewUnmap,
                                 0,
-                                PAGE_READONLY);
+                                PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error when mapping view of file, Status = %lu\n", Status);
