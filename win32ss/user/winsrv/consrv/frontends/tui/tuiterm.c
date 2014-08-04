@@ -24,13 +24,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#define GetNextConsole(Console) \
-    CONTAINING_RECORD(Console->Entry.Flink, TUI_CONSOLE_DATA, Entry)
-
-#define GetPrevConsole(Console) \
-    CONTAINING_RECORD(Console->Entry.Blink, TUI_CONSOLE_DATA, Entry)
-
-
 /* TUI Console Window Class name */
 #define TUI_CONSOLE_WINDOW_CLASS L"TuiConsoleWindowClass"
 
@@ -45,6 +38,13 @@ typedef struct _TUI_CONSOLE_DATA
     PCONSOLE Console;           /* Pointer to the owned console */
     // TUI_CONSOLE_INFO TuiInfo;   /* TUI terminal settings */
 } TUI_CONSOLE_DATA, *PTUI_CONSOLE_DATA;
+
+#define GetNextConsole(Console) \
+    CONTAINING_RECORD(Console->Entry.Flink, TUI_CONSOLE_DATA, Entry)
+
+#define GetPrevConsole(Console) \
+    CONTAINING_RECORD(Console->Entry.Blink, TUI_CONSOLE_DATA, Entry)
+
 
 /* List of the maintained virtual consoles and its lock */
 static LIST_ENTRY VirtConsList;

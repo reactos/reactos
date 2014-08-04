@@ -966,6 +966,12 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
         {
             Status = STATUS_NO_MEMORY;
         }
+
+        // FIXME: Quick fix: fix the CodeType and CodeSize since the
+        // ASCII string was converted into UNICODE.
+        // A proper fix needs to be written.
+        CodeType = CODE_UNICODE;
+        CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
     }
     else
     {
