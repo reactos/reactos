@@ -422,7 +422,7 @@ typedef struct
 typedef struct
 {
     HANDLE  ConsoleHandle;
-    DWORD   Length;
+    ULONG   Length;
     PVOID   Title;
     BOOLEAN Unicode;
 } CONSOLE_GETSETCONSOLETITLE, *PCONSOLE_GETSETCONSOLETITLE;

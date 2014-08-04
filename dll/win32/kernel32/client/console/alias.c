@@ -20,9 +20,9 @@
 
 static BOOL
 IntAddConsoleAlias(LPCVOID Source,
-                   DWORD SourceBufferLength,
+                   USHORT SourceBufferLength,
                    LPCVOID Target,
-                   DWORD TargetBufferLength,
+                   USHORT TargetBufferLength,
                    LPCVOID lpExeName,
                    BOOLEAN bUnicode)
 {
@@ -31,9 +31,9 @@ IntAddConsoleAlias(LPCVOID Source,
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     ULONG CapturedStrings;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -43,7 +43,7 @@ IntAddConsoleAlias(LPCVOID Source,
 
     /* Determine the needed sizes */
     ConsoleAliasRequest->SourceLength = SourceBufferLength;
-    ConsoleAliasRequest->ExeLength    = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    ConsoleAliasRequest->ExeLength    = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     ConsoleAliasRequest->Unicode  =
     ConsoleAliasRequest->Unicode2 = bUnicode;
 
@@ -120,9 +120,8 @@ AddConsoleAliasW(LPCWSTR lpSource,
                  LPCWSTR lpTarget,
                  LPCWSTR lpExeName)
 {
-    DWORD SourceBufferLength, TargetBufferLength;
-    SourceBufferLength = wcslen(lpSource) * sizeof(WCHAR);
-    TargetBufferLength = (lpTarget ? wcslen(lpTarget) * sizeof(WCHAR) : 0);
+    USHORT SourceBufferLength = (USHORT)wcslen(lpSource) * sizeof(WCHAR);
+    USHORT TargetBufferLength = (USHORT)(lpTarget ? wcslen(lpTarget) * sizeof(WCHAR) : 0);
 
     DPRINT1("AddConsoleAliasW entered with lpSource '%S' lpTarget '%S' lpExeName '%S'\n",
             lpSource, lpTarget, lpExeName);
@@ -145,9 +144,8 @@ AddConsoleAliasA(LPCSTR lpSource,
                  LPCSTR lpTarget,
                  LPCSTR lpExeName)
 {
-    DWORD SourceBufferLength, TargetBufferLength;
-    SourceBufferLength = strlen(lpSource) * sizeof(CHAR);
-    TargetBufferLength = (lpTarget ? strlen(lpTarget) * sizeof(CHAR) : 0);
+    USHORT SourceBufferLength = (USHORT)strlen(lpSource) * sizeof(CHAR);
+    USHORT TargetBufferLength = (USHORT)(lpTarget ? strlen(lpTarget) * sizeof(CHAR) : 0);
 
     DPRINT1("AddConsoleAliasA entered with lpSource '%s' lpTarget '%s' lpExeName '%s'\n",
             lpSource, lpTarget, lpExeName);
@@ -163,9 +161,9 @@ AddConsoleAliasA(LPCSTR lpSource,
 
 static DWORD
 IntGetConsoleAlias(LPVOID Source,
-                   DWORD SourceBufferLength,
+                   USHORT SourceBufferLength,
                    LPVOID Target,
-                   DWORD TargetBufferLength,
+                   USHORT TargetBufferLength,
                    LPVOID lpExeName,
                    BOOLEAN bUnicode)
 {
@@ -173,7 +171,7 @@ IntGetConsoleAlias(LPVOID Source,
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &ApiMessage.Data.ConsoleAliasRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
     if (Source == NULL || Target == NULL)
     {
@@ -181,7 +179,7 @@ IntGetConsoleAlias(LPVOID Source,
         return 0;
     }
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
@@ -191,7 +189,7 @@ IntGetConsoleAlias(LPVOID Source,
 
     /* Determine the needed sizes */
     ConsoleAliasRequest->SourceLength = SourceBufferLength;
-    ConsoleAliasRequest->ExeLength    = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    ConsoleAliasRequest->ExeLength    = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     ConsoleAliasRequest->Unicode  =
     ConsoleAliasRequest->Unicode2 = bUnicode;
 
@@ -240,9 +238,9 @@ IntGetConsoleAlias(LPVOID Source,
     }
 
     /* Copy the returned target string into the user buffer */
-    memcpy(Target,
-           ConsoleAliasRequest->Target,
-           ConsoleAliasRequest->TargetLength);
+    RtlCopyMemory(Target,
+                  ConsoleAliasRequest->Target,
+                  ConsoleAliasRequest->TargetLength);
 
     /* Release the capture buffer and exit */
     CsrFreeCaptureBuffer(CaptureBuffer);
@@ -265,7 +263,7 @@ GetConsoleAliasW(LPWSTR lpSource,
             lpSource, lpExeName);
 
     return IntGetConsoleAlias(lpSource,
-                              wcslen(lpSource) * sizeof(WCHAR),
+                              (USHORT)wcslen(lpSource) * sizeof(WCHAR),
                               lpTargetBuffer,
                               TargetBufferLength,
                               lpExeName,
@@ -287,7 +285,7 @@ GetConsoleAliasA(LPSTR lpSource,
             lpSource, lpExeName);
 
     return IntGetConsoleAlias(lpSource,
-                              strlen(lpSource) * sizeof(CHAR),
+                              (USHORT)strlen(lpSource) * sizeof(CHAR),
                               lpTargetBuffer,
                               TargetBufferLength,
                               lpExeName,
@@ -305,9 +303,9 @@ IntGetConsoleAliases(LPVOID  AliasBuffer,
     PCONSOLE_GETALLALIASES GetAllAliasesRequest = &ApiMessage.Data.GetAllAliasesRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
@@ -316,7 +314,7 @@ IntGetConsoleAliases(LPVOID  AliasBuffer,
     GetAllAliasesRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
 
     /* Determine the needed sizes */
-    GetAllAliasesRequest->ExeLength = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    GetAllAliasesRequest->ExeLength = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     GetAllAliasesRequest->Unicode   =
     GetAllAliasesRequest->Unicode2  = bUnicode;
 
@@ -354,9 +352,9 @@ IntGetConsoleAliases(LPVOID  AliasBuffer,
     }
 
     /* Copy the returned aliases string into the user buffer */
-    memcpy(AliasBuffer,
-           GetAllAliasesRequest->AliasesBuffer,
-           GetAllAliasesRequest->AliasesBufferLength);
+    RtlCopyMemory(AliasBuffer,
+                  GetAllAliasesRequest->AliasesBuffer,
+                  GetAllAliasesRequest->AliasesBufferLength);
 
     /* Release the capture buffer and exit */
     CsrFreeCaptureBuffer(CaptureBuffer);
@@ -410,16 +408,16 @@ IntGetConsoleAliasesLength(LPVOID lpExeName, BOOLEAN bUnicode)
     PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &ApiMessage.Data.GetAllAliasesLengthRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
     GetAllAliasesLengthRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-    GetAllAliasesLengthRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    GetAllAliasesLengthRequest->ExeLength     = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     GetAllAliasesLengthRequest->Unicode  =
     GetAllAliasesLengthRequest->Unicode2 = bUnicode;
 
@@ -511,9 +509,9 @@ IntGetConsoleAliasExes(PVOID lpExeNameBuffer,
         return 0;
     }
 
-    memcpy(lpExeNameBuffer,
-           GetAliasesExesRequest->ExeNames,
-           GetAliasesExesRequest->Length);
+    RtlCopyMemory(lpExeNameBuffer,
+                  GetAliasesExesRequest->ExeNames,
+                  GetAliasesExesRequest->Length);
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 

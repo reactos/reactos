@@ -284,9 +284,9 @@ typedef struct _CONSOLE
 
     /** Put those things in TEXTMODE_SCREEN_BUFFER ?? **/
     PWCHAR LineBuffer;                      /* Current line being input, in line buffered mode */
-    WORD LineMaxSize;                       /* Maximum size of line in characters (including CR+LF) */
-    WORD LineSize;                          /* Current size of line */
-    WORD LinePos;                           /* Current position within line */
+    ULONG  LineMaxSize;                     /* Maximum size of line in characters (including CR+LF) */
+    ULONG  LineSize;                        /* Current size of line */
+    ULONG  LinePos;                         /* Current position within line */
     BOOLEAN LineComplete;                   /* User pressed enter, ready to send back to client */
     BOOLEAN LineUpPressed;
     BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */

@@ -1887,10 +1887,10 @@ IntSetConsoleTitle(CONST VOID *lpConsoleTitle, BOOLEAN bUnicode)
     PCONSOLE_GETSETCONSOLETITLE TitleRequest = &ApiMessage.Data.TitleRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpConsoleTitle ? (bUnicode ? wcslen(lpConsoleTitle) : strlen(lpConsoleTitle)) : 0);
+    ULONG NumChars = (ULONG)(lpConsoleTitle ? (bUnicode ? wcslen(lpConsoleTitle) : strlen(lpConsoleTitle)) : 0);
 
     TitleRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-    TitleRequest->Length        = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    TitleRequest->Length        = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     TitleRequest->Unicode       = bUnicode;
 
     CaptureBuffer = CsrAllocateCaptureBuffer(1, TitleRequest->Length);

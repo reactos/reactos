@@ -58,16 +58,16 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOLEAN bUnicode)
     PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &ApiMessage.Data.ExpungeCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return;
     }
 
     ExpungeCommandHistoryRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-    ExpungeCommandHistoryRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    ExpungeCommandHistoryRequest->ExeLength     = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     ExpungeCommandHistoryRequest->Unicode  =
     ExpungeCommandHistoryRequest->Unicode2 = bUnicode;
 
@@ -106,9 +106,9 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
     PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &ApiMessage.Data.GetCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
@@ -116,7 +116,7 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
 
     GetCommandHistoryRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     GetCommandHistoryRequest->HistoryLength = cbHistory;
-    GetCommandHistoryRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    GetCommandHistoryRequest->ExeLength     = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     GetCommandHistoryRequest->Unicode  =
     GetCommandHistoryRequest->Unicode2 = bUnicode;
 
@@ -153,9 +153,9 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
         return 0;
     }
 
-    memcpy(lpHistory,
-           GetCommandHistoryRequest->History,
-           GetCommandHistoryRequest->HistoryLength);
+    RtlCopyMemory(lpHistory,
+                  GetCommandHistoryRequest->History,
+                  GetCommandHistoryRequest->HistoryLength);
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
@@ -170,16 +170,16 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
     PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &ApiMessage.Data.GetCommandHistoryLengthRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
     GetCommandHistoryLengthRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-    GetCommandHistoryLengthRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    GetCommandHistoryLengthRequest->ExeLength     = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     GetCommandHistoryLengthRequest->Unicode  =
     GetCommandHistoryLengthRequest->Unicode2 = bUnicode;
 
@@ -225,9 +225,9 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
     PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &ApiMessage.Data.SetHistoryNumberCommandsRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DWORD dwNumChars = (lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
+    USHORT NumChars = (USHORT)(lpExeName ? (bUnicode ? wcslen(lpExeName) : strlen(lpExeName)) : 0);
 
-    if (lpExeName == NULL || dwNumChars == 0)
+    if (lpExeName == NULL || NumChars == 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -235,7 +235,7 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
 
     SetHistoryNumberCommandsRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     SetHistoryNumberCommandsRequest->NumCommands   = dwNumCommands;
-    SetHistoryNumberCommandsRequest->ExeLength     = dwNumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    SetHistoryNumberCommandsRequest->ExeLength     = NumChars * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     SetHistoryNumberCommandsRequest->Unicode  =
     SetHistoryNumberCommandsRequest->Unicode2 = bUnicode;
 
