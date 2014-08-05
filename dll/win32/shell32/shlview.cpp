@@ -1095,15 +1095,13 @@ void CDefView::MergeViewMenu(HMENU hSubMenu)
     if (!hSubMenu)
         return;
 
-    __debugbreak();
+    // FIXME: I believe windows has all of the items initially in the menu,
+    // and actively calls DeleteMenu on the items that should not be disaplyed.
 
-    DWORD item;
-    item |= SHCheckMenuItem(hSubMenu, FCIDM_SHVIEW_BIGICON,    FALSE);
-    item |= SHCheckMenuItem(hSubMenu, FCIDM_SHVIEW_SMALLICON,  FALSE);
-    item |= SHCheckMenuItem(hSubMenu, FCIDM_SHVIEW_LISTVIEW,   FALSE);
-    item |= SHCheckMenuItem(hSubMenu, FCIDM_SHVIEW_REPORTVIEW, FALSE);
-
-    if (item == -1)
+    MENUITEMINFOW mii = { 0 };
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_ID | MIIM_STATE;
+    if (::GetMenuItemInfoW(hSubMenu, FCIDM_SHVIEW_BIGICON, FALSE, &mii) == 0)
     {
         HMENU menubase = ::LoadMenuW(shell32_hInstance, L"MENU_001");
 
@@ -1112,9 +1110,9 @@ void CDefView::MergeViewMenu(HMENU hSubMenu)
         INT count = ::GetMenuItemCount(menubase);
         for (int i = 0; i < count; i++)
         {
-            MENUITEMINFOW mii = { 0 };
             WCHAR label[128];
 
+            ZeroMemory(&mii, sizeof(mii));
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
             mii.dwTypeData = label;
@@ -1131,18 +1129,12 @@ void CDefView::MergeViewMenu(HMENU hSubMenu)
         ::DestroyMenu(menubase);
     }
 
-    DbgPrint("View mode is %d\n", m_FolderSettings.ViewMode);
-
     if (m_FolderSettings.ViewMode >= FVM_FIRST && m_FolderSettings.ViewMode <= FVM_LAST)
     {
-        UINT iItem = FCIDM_SHVIEW_BIGICON + m_FolderSettings.ViewMode - FVM_FIRST;
-        DbgPrint("Checking item %d ...\n", iItem);
-        item = SHCheckMenuItem(hSubMenu, iItem, TRUE);
-        DbgPrint("SHCheckMenuItem returned %d\n", item);
-        if (item == -1)
-        {
-            DbgPrint("GetLastError returned %d\n", GetLastError());
-        }
+        UINT iItemFirst = FCIDM_SHVIEW_BIGICON;
+        UINT iItemLast = iItemFirst + FVM_LAST - FVM_FIRST;
+        UINT iItem = iItemFirst + m_FolderSettings.ViewMode - FVM_FIRST;
+        CheckMenuRadioItem(hSubMenu, iItemFirst, iItemLast, iItem, MF_BYCOMMAND);
     }
 }
 
