@@ -359,7 +359,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             MINMAXINFO *mmi;
 
             mmi = (MINMAXINFO *)lParam;
-            mmi->ptMinTrackSize.x = NUM_STACKS * __cardwidth + (NUM_STACKS + 3) * X_BORDER + 20; // Border left and right of 10px
+            mmi->ptMinTrackSize.x = NUM_STACKS * __cardwidth + (NUM_STACKS + 3) * X_BORDER + 12; // Border left and right of 6px
             mmi->ptMinTrackSize.y = GetSystemMetrics(SM_CYCAPTION) +
                                     GetSystemMetrics(SM_CYMENU) +
                                     2 * Y_BORDER +
