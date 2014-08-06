@@ -16,3 +16,8 @@ Description = MiKTeX ist eine aktuelle Implementierung von TeX/LaTeX und zugehö
 Licence = Gratuită
 Description = MikTEX este o implementare actualizată de TeX/LaTeX și aprogramelor aferente.
 Size = 163,18 Mo
+
+[Section.041f]
+Licence = Ücretsiz
+Description = MiKTeX, Windows için, TeX'in, LaTeX'in ve ilişkili izlencelerin bir şimdiki uygulaması.
+Size = 163,18 MB

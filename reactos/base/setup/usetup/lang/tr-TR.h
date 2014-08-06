@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 #pragma once
 
@@ -27,25 +27,25 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Kurulum sçrasçnda kullançlacak dili seáiniz.",
+        "\x07  LÅtfen kurulum sÅreci iáin kullançlacak dili seáiniz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Ardçndan giriü dÅßmesine basçnçz.",
+        "   Ardçndan Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Bu dil, kurulacak dizgenin întançmlç dili olacaktçr.",
+        "\x07  Bu dil, kurulacak dizgenin în tançmlç dili olacaktçr.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -67,49 +67,49 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur'a hoügeldiniz.",
+        "ReactOS Kur'a hoü geldiniz.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "Kurulumun bu aüamasç, ReactOS kÅtÅklerini bilgisayara áoaßltçr",
+        "Kurulumun bu bîlÅmÅ, ReactOS òületim Dizgesi'ni bilgisayarçnçza",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "ve kurulumun ikinci aüamasçnç ançklar.",
+        "áoßaltçr ve kurulumun ikinci bîlÅmÅnÅ ançklar.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  ReactOS'u kurmak iáin giriü dÅßmesine basçnçz.",
+        "\x07  ReactOS'u kurmak iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ReactOS'u onarmak veyÉ yÅkseltmek iáin R dÅßmesine basçnçz.",
+        "\x07  ReactOS'u onarmak veyÉ yÅkseltmek iáin R'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  ReactOS Ruhsat Koüullarç'nç gîrÅntÅlemek iáin L dÅßmesine basçnçz.",
+        "\x07  ReactOS Ruhsatlama Istçlahlarç ve Koüullarç'nç gîrÅntÅlemek iáin L'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ReactOS'u kurmadan áçkmak iáin F3 dÅßmesine basçnçz.",
+        "\x07  ReactOS'u kurmadan áçkmak iáin F3'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Daha áok bilgi iáin buraya gidiniz:",
+        "Daha áok bilgi iáin lÅtfen ußrayçnçz:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -121,7 +121,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr  R = Onar veyÉ YÅkselt  L = Ruhsat Koüullarç F3 = Äçkçü",
+        "Giriü = SÅrdÅr  R = Onar veyÉ YÅkselt  L = Ruhsat F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -143,49 +143,49 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur, în geliüme evresinde oldußundan daha",
+        "ReactOS Kur, bir în geliüme evresindedir. Daha tÅmÅyle kullançülç",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "her tÅrlÅ iülevi desteklemez.",
+        "bir kurulum uygulamasçnçn tÅm iülevlerini desteklemez.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Desteklenmeyen iülevler üunlardçr:",
+        "Aüaßçdaki kçsçtlamalar uygulançr:",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "- Kur, bir diskte birden fazla birincil bîlÅmÅ yînetemez.",
+        "- Kur, bir diskte birden áok ana bîlÅmÅ yînetemez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- Kur, bir diskte, geniületilmiü bir bîlÅm oldußu sÅrece",
+        "- Kur, bir diskte geniületilmiü bîlÅmler oldußu sÅrece",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "  o diskteki birincil bîlÅmÅ silemez.",
+        "  o diskten bir ana bîlÅm silemez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "- Kur, bir diskte, dißer geniületilmiü bîlÅmlerin oldußu sÅrece",
+        "- Kur, bir diskte baüka geniületilmiü bîlÅmlerin oldußu sÅrece",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "  o diskteki ilk geniületilmiü bîlÅmÅ silemez.",
+        "  o diskten ilk geniületilmiü bîlÅmÅ silemez.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -203,19 +203,19 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         8,
         23,
-        "\x07  ReactOS'u kurmak iáin giriü dÅßmesine basçnçz.",
+        "\x07  ReactOS'u kurmak iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  ReactOS'u kurmadan áçkmak iáin F3 dÅßmesine basçnçz.",
+        "\x07  ReactOS'u kurmadan áçkmak iáin F3'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -237,67 +237,67 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         6,
         6,
-        "Ruhsat Koüullarç:",
+        "Ruhsatlama:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
-        "ReactOS, GNU GPL'nin yançsçra X11, BSD ve",
+        "ReactOS Dizgesi, GNU GPL'yle X11, BSD ve GNU LPGL",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "GNU LPGL gibi dißer uygun ruhsatlardan alçnan",
+        "ruhsatlarç gibi baüka uygun ruhsatlardan kod iáeren",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "dÅzgÅleri iáeren bîlÅmlerin koüullarçyla ruhsatlanmçütçr.",
+        "kçsçmlarçn koüullarç altçnda ruhsatlanmçütçr.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "Bu yÅzden ReactOS'un tÅm paráalarç, GNU GPL ile birlikte",
+        "Bu yÅzden ReactOS dizgesinin kçsmç olan tÅm yazçlçmlar, korunan",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "dißer îzgÅn ruhsatlarla yayçnlançr.",
+        "îzgÅn ruhsatçyla birlikte GNU GPL altçnda yayçnlançr.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Bu yazçlçm, mahallå ve uluslararasç yasalarçn uygunlußu aáçsçndan",
+        "Bu yazçlçm, yerli ve uluslararasç yasa uygulanabilir kullançm",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "hiábir gÅvenceyle ve hiábir kçsçtlamayla gelmez.",
+        "Åzerine hiábir gÅvence ve kçsçtlamayla gelmez. ReactOS'un",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "ReactOS'un ruhsatlanmasç, yalnçzca ÅáÅncÅ kiüilere daßçtmayç kapsar.",
+        " ruhsatlanmasç yalnçzca ÅáÅncÅ yanlara daßçtmayç kapsar.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "Eßer birtakçm nedenlerle ReactOS ile birlikte GNU Umñmå",
+        "Eßer birtakçm nedenlerden dolayç ReactOS ile GNU Umñmå",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "Kamu Ruhsatç'nç elde edememiüseniz buraya gidiniz:",
+        "Kamu Ruhsatç'nçn bir kopyasçnç almadçysançz lÅtfen ußrayçnçz:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -315,19 +315,19 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         23,
-        "Bu bir Åcretsiz yazçlçmdçr, áoßaltma koüullarç iáin kaynaßa bakçnçz.",
+        "Bu îzgÅr yazçlçmdçr, áoßaltma koüullarç iáin kaynaßa bakçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "Burada hiábir gÅvence YOKTUR, hele hele SATILABòLòRLòK veyÉ",
+        "Burada hiábir gÅvence YOKTUR, SATILABòLòRLòK veyÉ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "BELòRLò BòR AMACA UYGUNLUK aáçsçndan.",
+        "BELòRLò BòR AMACA UYGUNLUK iáin bile.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -355,25 +355,25 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     {
         6,
         8,
-        "Aüaßçdaki dizelge, üimdiki aygçt ayarlarçnç gîsterir.",
+        "Aüaßçdaki dizelge üimdiki aygçt ayarlarçnç gîsterir.",
         TEXT_STYLE_NORMAL
     },
     {
         24,
         11,
-        "Bilgisayar TÅrÅ:",
+        "Bilgisayar:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         12,
-        "GîrÅntÅ Ayarlarç:",
+        "GîrÅntÅ:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         13,
-        "DÅßme Takçmç TÅrÅ:",
+        "DÅßme Takçmç:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -385,43 +385,49 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     {
         24,
         16,
-        "Onayla:",
+        "Doßrula:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
         16,
-		"Bu aygçt ayarlarçnç onayla.",
+		"Bu aygçt ayarlarçnç doßrula.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "Aygçt ayarlarçnç, bir seáeneßi seámek iáin yukarç veyÉ aüaßç dÅßmelerine",
+        "Aygçt ayarlarçnç, bir seáenek seámek iáin Yukarç veyÉ Aüaßç dÅßmelerine",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "basarak deßiütirebilirsiniz. Seátikten sonra giriü dÅßmesine basçnçz.",
+        "basarak deßiütirebilirsiniz. Sonra baüka ayarlar seámek iáin Giriü",
         TEXT_STYLE_NORMAL
     },
-    {
+	{
         6,
-        22,
-        "Deßiütirme iüleminden sonra \"Bu aygçt ayarlarçnç onayla.\"",
+        21,
+        "dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "seáeneßini seáiniz, ardçndan giriü dÅßmesine basçnçz.",
+        "TÅm ayarlar uygun oldußunda ""Bu aygçt ayarlarçnç doßrula.""yç",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        24,
+        "seáiniz ve Giriü dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -443,49 +449,49 @@ static MUI_ENTRY trTRRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur, în geliüme evresinde oldußundan daha",
+        "ReactOS Kur, bir în geliüme evresindedir. Daha tÅmÅyle kullançülç",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "her tÅrlÅ iülevi desteklemez.",
+        "bir kurulum uygulamasçnçn tÅm iülevlerini desteklemez.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Onarma iülevi daha bitirilmemiütir.",
+        "Onarma iülevleri daha bitirilmemiütir.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  òületim dizgesini yÅkseltmek iáin U dÅßmesine basçnçz.",
+        "\x07  òületim dizgesini yÅkseltmek iáin U'ya basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Kurtarma Konsolu iáin R dÅßmesine basçnçz.",
+        "\x07  Kurtarma Konsolu iáin R'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Bir înceki sayfaya geri dînmek iáin áçkçü dÅßmesine basçnçz.",
+        "\x07  Ana sayfaya geri dînmek iáin Äçkçü'a basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Bilgisayarç yeniden baülatmak iáin giriü dÅßmesine basçnçz.",
+        "\x07  Bilgisayarçnçzç yeniden baülatmak iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Äçkçü = Geri Dîn  U = YÅkselt  R = Kurtar  Giriü = Bilgisayarç Yeniden Baülat",
+        "Äçkçü = Ana Sayfa  U = YÅkselt  R = Kurtarma  Giriü = Yeniden Baülat",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -507,37 +513,37 @@ static MUI_ENTRY trTRComputerPageEntries[] =
     {
         6,
         8,
-        "Kurulum yapçlacak bilgisayarçn tÅrÅnÅ seáiniz.",
+        "Kurulum yapçlacak bilgisayarçn tÅrÅnÅ seámek isteyebilirsiniz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Seámek istedißiniz bilgisyar tÅrÅnÅ yukarç ve aüaßç dÅßmeleriyle",
+        "\x07  òstenen bilgisyar tÅrÅnÅ seámek iáin Yukarç'ya veyÉ Aüaßç'ya basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   seáiniz, ardçndan giriü dÅßmesine basçnçz.",
+        "   Ardçndan Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Bilgisayar tÅrÅnde hiábir deßiüiklik yapçlmadan bir înceki sayfaya",
+        "\x07  Bilgisayar tÅrÅnÅ deßiütirmeden bir înceki sayfaya",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   geri dînmek iáin áçkçü dÅßmesine basçnçz.",
+        "   dînmek iáin Äçkçü dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -559,25 +565,25 @@ static MUI_ENTRY trTRFlushPageEntries[] =
     {
         10,
         6,
-        "Dizge, üimdi diskteki tÅm verileri onaylçyor.",
+        "Dizge, üimdi diskinize saklanmçü tÅm veriyi doßruluyor.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Bu iülem bir dakåka sÅrebilir.",
+        "Bu bir dakåka sÅrebilir.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "?òülem bittißinde bilgisayar yeniden baülayacaktçr.",
+        "Bittißinde bilgisayarçnçz kendilißinden yeniden baülayacaktçr.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ônbellek temizleniyor...",
+        "ôn bellek arçnçyor...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -599,25 +605,25 @@ static MUI_ENTRY trTRQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS, bÅtÅnÅyle kurulmadç.",
+        "ReactOS, tÅmÅyle kurulmadç.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "A: sÅrÅcÅsÅndeki disketi ve",
+        "A: sÅrÅcÅsÅnden disketi ve tÅm CD sÅrÅcÅlerinden",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "tÅm CD sÅrÅcÅlerindeki CD-ROM'larç áçkartçnçz.",
+        "CD-ROM'larç áçkarçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Bilgisayarç yeniden baülatmak iáin giriü dÅßmesine basçnçz.",
+        "Bilgisayarçnçzç yeniden baülatmak iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -645,36 +651,36 @@ static MUI_ENTRY trTRDisplayPageEntries[] =
     {
         6,
         8,
-        "Kurulum yapçlacak bilgisayarçn gîrÅntÅ ayarlarçnç seáiniz.",
+        "Kurulum yapçlacak gîrÅntÅnÅn tÅrÅnÅ seámek isteyebilirsiniz.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-        "\x07  Seámek istedißiniz gîrÅntÅ ayarlarçnç yukarç ve aüaßç dÅßmeleriyle",
+        "\x07  òstenen gîrÅntÅ tÅrÅnÅ seámek iáin Yukarç'ya veyÉ Aüaßç'ya basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   seáiniz, ardçndan giriü dÅßmesine basçnçz.",
+        "   Ardçndan Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  GîrÅntÅ ayarlarçnda hiábir deßiüiklik yapçlmadan bir înceki sayfaya",
+        "\x07  GîrÅntÅ tÅrÅnÅ deßiütirmeden bir înceki sayfaya",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   geri dînmek iáin áçkçü dÅßmesine basçnçz.",
+        "   dînmek iáin Äçkçü dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -696,25 +702,25 @@ static MUI_ENTRY trTRSuccessPageEntries[] =
     {
         10,
         6,
-        "ReactOS'un ana bileüenleri baüarçlç bir üekilde kuruldu.",
+        "ReactOS'un ana bileüenleri baüarçlç olarak kuruldu.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "A: sÅrÅcÅsÅndeki disketi ve",
+        "A: sÅrÅcÅsÅnden disketi ve tÅm CD sÅrÅcÅlerinden",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "tÅm CD sÅrÅcÅlerindeki CD-ROM'larç áçkartçnçz.",
+        "CD-ROM'larç áçkarçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Bilgisayarç yeniden baülatmak iáin giriü dÅßmesine basçnçz.",
+        "Bilgisayarçnçzç yeniden baülatmak iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -742,25 +748,25 @@ static MUI_ENTRY trTRBootPageEntries[] =
     {
         6,
         8,
-        "Kur, diske înyÅkleyiciyi kuramadç.",
+        "Kur, bilgisayarçnçzçn sÉbit diskine în yÅkleyiciyi kuramadç.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "LÅtfen A: sÅrÅcÅsÅne biáimlendirilmiü bir disket takçnçz",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "A: sÅrÅcÅsÅne biáimlendirilmiü bir disk takçnçz, ardçndan",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        14,
-        "giriü dÅßmesine basçnçz.",
+        "ve Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -783,44 +789,43 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         6,
         8,
-        "Aüaßçdaki dizelge, var olan bîlÅmlerle yeni bîlÅmler oluüturmak iáin",
+        "Aüaßçdaki dizelge, var olan bîlÅmleri ve yeni bîlÅmler iáin",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "kullançlmayan boülußu gîsterir.",
+        "kullançlmayan disk boülußunu gîsterir.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Bir îßeyi seámek iáin yukarç veyÉ aüaßç dÅßmelerine basçnçz.",
+        "\x07  Bir dizelge girdisini seámek iáin Yukarç'ya veyÉ Aüaßç'ya basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  ReactOS'u seáili bîlÅme yÅklemek iáin giriü dÅßmesine basçnçz.",
+        "\x07  Seáili bîlÅme ReactOS'u yÅklemek iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Seáili boüluktan yeni bir bîlÅm oluüturmak iáin C dÅßmesine basçnçz.",
+        "\x07  Bir ana bîlÅm oluüturmak iáin P'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Bir geniületilmiü bîlÅm oluüturmak iáin E'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Seáili bîlÅmÅ silmek iáin D dÅßmesine basçnçz.",
+        "\x07  Var olan bir bîlÅm silmek iáin D'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -848,19 +853,19 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     {
         6,
         8,
-        "Kur, üimdi seátißiniz bîlÅmÅ biáimlendirecek.",
+        "BîlÅm Biáimlendirme",
         TEXT_STYLE_NORMAL
     },
 	{
         6,
         10,
-        "SÅrdÅrmek iáin giriü dÅßmesine basçnçz.",
+        "Kur, üimdi bîlÅmÅ biáimlendirecek. SÅrdÅrmek iáin Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -882,31 +887,31 @@ static MUI_ENTRY trTRInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Kur, seáili bîlÅme ReactOS kÅtÅklerini yÅkleyecek. ReactOS'un yÅkleneceßi",
+        "Kur, seáili bîlÅme ReactOS kÅtÅklerini yÅkler. ReactOS'un",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "dizini seáiniz.",
+        "yÅklenmesini istedißiniz bir dizin seáiniz.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "ônerilen dizini deßiütirmek iáin geri dÅßmesi ile damgalarç siliniz,",
+        "ônerilen dizini deßiütirmek iáin, damgalarç silmek iáin Silme'ye basçnçz",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "ardçndan ReactOS'un kurulacaßç yeni dizini yazçnçz.",
+        "ve ardçndan ReactOS'un yÅklenmesini istedißiniz dizini yazçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -928,13 +933,19 @@ static MUI_ENTRY trTRFileCopyEntries[] =
     {
         0,
         12,
-        "Kur, ReactOS'un kurulacaßç dizine kÅtÅkleri áoßaltçrken lÅtfen bekleyiniz.",
+        "ReactOS Kur, ReactOS kurulum dizininize kÅtÅkleri áoßaltçrken",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+	{
+        0,
+        13,
+        " lÅtfen bekleyiniz.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         14,
-        "Bu iülem birkaá dakåka sÅrebilir.",
+        "Bu, bitirmek iáin birkaá dakåka sÅrebilir.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -962,37 +973,37 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
     {
         6,
         8,
-        "Kur, üimdi înyÅkleyiciyi kuracak.",
+        "Kur, în yÅkleyiciyi kuruyor.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "ônyÅkleyiciyi diskin MBR'sine ve VBR'sine kur.",
+        "ôn yÅkleyiciyi sÉbit diskin Åzerine kur. (MBR ve VBR)",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "ônyÅkleyiciyi diskin yalnçzca VBR'sine kur.",
+        "ôn yÅkleyiciyi sÉbit diskin Åzerine kur. (Yalnçzca VBR)",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "ônyÅkleyiciyi bir diskete kur.",
+        "ôn yÅkleyiciyi bir diskete kur.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "ônyÅkleyiciyi kurma.",
+        "ôn yÅkleyici kurulumunu geá.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1014,37 +1025,37 @@ static MUI_ENTRY trTRKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Kurulum yapçlacak bilgisayarçn dÅßme takçmç tÅrÅnÅ seáiniz.",
+        "Kurulum yapçlacak dÅßme takçmçnçn tÅrÅnÅ seámek isteyebilirsiniz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Seámek istedißiniz dÅßme takçmç tÅrÅnÅ yukarç ve aüaßç dÅßmeleriyle",
+        "\x07  òstenen dÅßme takçmç tÅrÅnÅ seámek iáin Yukarç'ya veyÉ Aüaßç'ya basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   seáiniz, ardçndan giriü dÅßmesine basçnçz.",
+        "   Ardçndan Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  DÅßme takçmç tÅrÅnde hiábir deßiüiklik yapçlmadan bir înceki sayfaya",
+        "\x07  DÅßme takçmç tÅrÅnÅ deßiütirmeden bir înceki sayfaya",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   geri dînmek iáin áçkçü dÅßmesine basçnçz.",
+        "   dînmek iáin Äçkçü dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1066,37 +1077,37 @@ static MUI_ENTRY trTRLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Kurulum yapçlacak bilgisayarçn dÅßme takçmç dÅzenini seáiniz.",
+        "LÅtfen în tançmlç olarak kurulacak bir dÅzen seáiniz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Seámek istedißiniz dÅßme takçmç dÅzenini yukarç ve aüaßç",
+        "\x07  òstenen dÅßme takçmç dÅzenini seámek iáin Yukarç'ya veyÉ Aüaßç'ya basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   dÅßmeleriyle seáiniz, ardçndan giriü dÅßmesine basçnçz.",
+        "   Ardçndan Giriü'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  DÅßme takçmç dÅzeninde hiábir deßiüiklik yapçlmadan bir înceki",
+        "\x07  GîrÅntÅ tÅrÅnÅ deßiütirmeden bir înceki sayfaya",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   sayfaya geri dînmek iáin áçkçü dÅßmesine basçnçz.",
+        "   dînmek iáin Äçkçü dÅßmesine basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1119,13 +1130,13 @@ static MUI_ENTRY trTRPrepareCopyEntries[] =
     {
         6,
         8,
-        "Kur, bilgisayarç ReactOS kÅtÅklerinin áoßaltçlmasçna ançklçyor.",
+        "Kur, ReactOS kÅtÅklerini áoßaltmak iáin bilgisayarçnçzç ançklçyor.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Äoßaltma dizelgesi oluüturuluyor...",
+        "KÅtÅk áoßaltma dizelgesi oluüturuluyor...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1148,31 +1159,31 @@ static MUI_ENTRY trTRSelectFSEntries[] =
     {
         6,
         17,
-        "Aüaßçdaki kÅtÅk dizgelerinden birini seáiniz.",
+        "Aüaßçdaki dizelgeden bir kÅtÅk dizgesi seáiniz.",
         0
     },
     {
         8,
         19,
-        "\x07  Bir îßeyi seámek iáin yukarç veyÉ aüaßç dÅßmelerine basçnçz.",
+        "\x07  Bir kÅtÅk dizgesi seámek iáin Yukarç'ya veyÉ Aüaßç'ya basçnçz.",
         0
     },
     {
         8,
         21,
-        "\x07  BîlÅmÅ biáimlendirmek iáin giriü dÅßmesine basçnçz.",
+        "\x07  BîlÅmÅ biáimlendirmek iáin Giriü'e basçnçz.",
         0
     },
     {
         8,
         23,
-        "\x07  Baüka bir bîlÅm seámek iáin áçkçü dÅßmesine basçnçz.",
+        "\x07  Baüka bir bîlÅm seámek iáin Äçkçü'a basçnçz.",
         0
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçkçü",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1195,31 +1206,31 @@ static MUI_ENTRY trTRDeletePartitionEntries[] =
     {
         6,
         8,
-        "BîlÅmÅ silmeye karar verdiniz.",
+        "BîlÅmÅ silmeyi seátiniz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  BîlÅmÅ silmek iáin D dÅßmesine basçnçz.",
+        "\x07  BîlÅmÅ silmek iáin D'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "UYARI: Bu bîlÅmdeki tÅm bilgiler silinecektir!",
+        "UYARI: Bu bîlÅmdeki tÅm veriler yitirilecektir!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Silme iüleminden vazgeámek iáin áçkçü dÅßmesine basçnçz.",
+        "\x07  òptal etmek iáin Äçkçü'a basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "D = BîlÅmÅ Sil   Äçkçü = òptal   F3 = Äçkçü",
+        "D = BîlÅm Sil   Äçkçü = òptal   F3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1263,101 +1274,102 @@ MUI_ERROR trTRErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "Baüarçlç\n"
     },
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS, bilgisayara bÅtÅnÅyle kurulmadç.\n"
-        "Eßer Kur'dan áçkarsançz ReactOS'u kurmak\n"
-        "iáin Kur'u yeniden áalçütçrmalçsçnçz.\n"
+        "ReactOS, bilgisayara tÅmÅyle kurulmadç. Eßer üimdi\n"
+        "Kur'dan áçkarsançz ReactOS'u kurmak iáin Kur'u\n"
+        "yeniden áalçütçrmaya gereksinim duyacaksçnçz.\n"
         "\n"
-        "  \x07  Kurulumu sÅrdÅrmek iáin giriü dÅßmesine basçnçz.\n"
-        "  \x07  Kur'dan áçkmak iáin F3 dÅßmesine basçnçz.",
-        "F3 = Äçkçü  Giriü = SÅrdÅr"
+        "  \x07  Kur'u sÅrdÅrmek iáin Giriü'e basçnçz.\n"
+        "  \x07  Kur'dan áçkmak iáin F3'e basçnçz.",
+        "F3 = Äçk  Giriü = SÅrdÅr"
     },
     {
         //ERROR_NO_HDD
-        "Kur, bir disk algçlayamadç.\n",
+        "Kur, bir sÉbit disk bulamadç.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Kur, kaynak sÅrÅcÅyÅ algçlayamadç.\n",
+        "Kur, kaynak sÅrÅcÅyÅ bulamadç.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Kur, TXTSETUP.SIF kÅtÅßÅnÅ yÅkleyemedi.\n",
+        "Kur, TXTSETUP.SIF kÅtÅßÅnÅ yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Kur, bozuk bir TXTSETUP.SIF kÅtÅßÅ buldu.\n",
+        "Kur, bozuk bir TXTSETUP.SIF buldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Kur, TXTSETUP.SIF kÅtÅßÅnde geáersiz bir imzÉ buldu.\n",
+        "Kur, TXTSETUP.SIF'ta geáersiz bir im buldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Kur, dizge sÅrÅcÅsÅ bilgisini yÅkleyemedi.\n",
+        "Kur, dizge sÅrÅcÅ bilgisini alamadç.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Kur, dizge sÅrÅcÅsÅne FAT înyÅkleme dÅzgÅsÅnÅ kuramadç.",
+        "Kur, dizge bîlÅmÅne FAT în yÅkleme kodunu kuramadç.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Kur, bilgisayar tÅrÅ dizelgesini yÅkleyemedi.\n",
+        "Kur, bilgisayar tÅrÅ dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Kur, gîrÅntÅ ayarlarç dizelgesini yÅkleyemedi.\n",
+        "Kur, gîrÅntÅ ayarlarç dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Kur, dÅßme takçmç tÅrÅ dizelgesini yÅkleyemedi.\n",
+        "Kur, dÅßme takçmç tÅrÅ dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Kur, dÅßme takçmç dÅzeni dizelgesini yÅkleyemedi.\n",
+        "Kur, dÅßme takçmç dÅzeni dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_WARN_PARTITION,
-        "Kur, en az bir diskte, uyumsuz bir bîlÅm buldu.\n"
+        "Kur, dÅzgÅn yînetilemeyen bir uyumsuz bîlÅm tablosu iáeren en az\n"
+		"bir sÉbit disk buldu!\n"
         "\n"         
-        "Bir bîlÅm silmek veyÉ bir bîlÅm oluüturmak bîyle bir bîlÅmÅ yok edebilir.\n"
+        "BîlÅmleri oluüturmak veyÉ silmek bîlÅm tablosunu yok edebilir.\n"
         "\n"
-        "  \x07  Kur'dan áçkmak iáin F3 dÅßmesine basçnçz.\n"
-        "  \x07  SÅrdÅrmek iáin giriü dÅßmesine basçnçz.",
-        "F3 = Äçkçü   Giriü = SÅrdÅr"
+        "  \x07  Kur'dan áçkmak iáin F3'e basçnçz.\n"
+        "  \x07  SÅrdÅrmek iáin Giriü'e basçnçz.",
+        "F3 = Äçk   Giriü = SÅrdÅr"
     },
     {
         //ERROR_NEW_PARTITION,
-        "Var olan bir bîlÅmÅn iáine yeni\n"
-        "bir bîlÅm oluüturulamaz!\n"
+        "ôneden var olan bir bîlÅmÅn iáine yeni\n"
+        "bir bîlÅm oluüturamazsçnçz!\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "Kullançlmayan disk boülußu silinemez!\n"
+        "BîlÅmlenmemiü disk boülußunu silemezsiniz!\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Kur, dizge sÅrÅcÅsÅne FAT înyÅkleme dÅzgÅsÅnÅ kuramadç.",
+        "Kur, dizge bîlÅmÅ Åzerinde FAT în yÅkleme kodunu kurmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
@@ -1367,37 +1379,37 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Kur, dÅßme takçmç dÅzeni ayarlarçnç üimdikileütiremedi.",
+        "Kur, dÅßme takçmç dÅzeni ayarlarçnç üimdikileütirmede baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Kur, gîrÅntÅ ayarlarçnç üimdikileütiremedi.",
+        "Kur, gîrÅntÅ deßer ayarlarçnç üimdikileütirmede baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Kur, bir yçßçn dosyasçndan bir üey alamadç.",
+        "Kur, bir yçßçn kÅtÅßÅ almada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Kur, deßer kÅtÅklerini bulamadç.",
+        "Kur, deßer veri kÅtÅklerini bulmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Kur, deßer yçßçnlarçnç oluüturamadç.",
+        "Kur, deßer yçßçnlarçnç oluüturmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Kur, Deßer Defteri'ni baülatamadç.",
+        "Kur, Deßer Defteri'ni baülatmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Dolabçn geáerli bir yapçlandçrma kÅtÅßÅ yok.\n",
+        "Dolabçn geáerli yapçlandçrma kÅtÅßÅ yok.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
@@ -1412,24 +1424,24 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         //ERROR_COPY_QUEUE,
-        "Kur, kÅtÅk áoßaltma sçrasçnç aáamadç.\n",
+        "Kur, kÅtÅk áoßaltma kuyrußunu aámada baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_CREATE_DIR,
-        "Kur, kurulum dizinlerini oluüturamadç.",
+        "Kur, kurulum dizinlerini oluüturmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Kur, TXTSETUP.SIF kÅtÅßÅnde \"Directories\"\n"
-        "bîlÅmÅnÅ bulamadç.\n",
+        "Kur, TXTSETUP.SIF'de ""Directories"" bîlÅmÅnÅ\n"
+        "bulmada baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Kur, dolapta \"Directories\"\n"
-        "bîlÅmÅnÅ bulamadç.\n",
+        "Kur, dolapta ""Directories"" bîlÅmÅnÅ\n"
+        "bulmada baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
@@ -1439,66 +1451,66 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Kur, TXTSETUP.SIF kÅtÅßÅnde \"SetupData\"\n"
-        "bîlÅmÅnÅ bulamadç.\n",
+        "Kur, TXTSETUP.SIF'de ""SetupData"" bîlÅmÅnÅ\n"
+        "bulmada baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Kur, bîlÅm bilgilerini yazamadç.\n"
+        "Kur, bîlÅm tablolarç yazmada baüarçsçz oldu.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Kur, Deßer Defteri'ne dÅzgÅ sayfasç bilgisini ekleyemedi.\n"
+        "Kur, Deßer Defteri'ne kod sayfasç eklemede baüarçsçz oldu.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Kur, dizge mahallå ayÉrçnç yapamadç.\n"
+        "Kur, dizge yerli ayÉrçnç yapamadç.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Kur, Deßer Defteri'ne dÅßme takçmç dÅzenlerini ekleyemedi.\n"
+        "Kur, Deßer Defteri'ne dÅßme takçmç dÅzenleri eklemede baüarçsçz oldu.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Kur, coßrÉfå konumu ayarlayamadç.\n"
+        "Kur, coßrÉfå kimlißi ayarlayamadç.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Seáili bîlÅmde yeteri kadar boü alan yok.\n"
+        "Seáili bîlÅmde yeterli boü alan yok.\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz.",
         NULL
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "BîlÅm tablosu dolu oldußundan dolayç bu diskin bîlÅm tablosunda\n"
+        "yeni bir ana bîlÅm ya da geniületilmiü bîlÅm oluüturamazsçnçz.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "Bir diskte birden áok geniületilmiü bîlÅm oluüturamazsçnçz.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
         //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        "Bir geniületilmiü bîlÅm arkasçnda bir bîlÅm oluüturamazsçnçz.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
         //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
+        "Bir geniületilmiü bîlÅm, her zaman bir bîlÅm\n"
+        "tablosunda son bîlÅm olmalçdçr.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
         NULL,
@@ -1611,41 +1623,39 @@ MUI_STRING trTRStrings[] =
     {STRING_PLEASEWAIT,
     "   LÅtfen bekleyiniz..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//    "   Giriü = Kur   C = BîlÅm Oluütur   F3 = Äçkçü"},
+    "   Giriü = Kur  P = Ana BîlÅm Oluütur  E = Geniületilmiü BîlÅm Oluütur  F3 = Äçk"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+    "   ENTER = Kur   L = Mantçklçk BîlÅm Oluütur   F3 = Äçk"},
     {STRING_INSTALLDELETEPARTITION,
-    "   Giriü = Kur   D = BîlÅmÅ Sil   F3 = Äçkçü"},
+    "   Giriü = Kur   D = BîlÅmÅ Sil   F3 = Äçk"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+    "   D = BîlÅmÅ Sil   F3 = Äçk"},
     {STRING_PARTITIONSIZE,
-    "BÅyÅklÅßÅ giriniz:"},
+    "Yeni bîlÅmÅn bÅyÅklÅßÅnÅ giriniz:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
-//    "Yeni bir bîlÅm oluüturmayç seátiniz."},
+    "özerinde bir ana bîlÅm oluüturmayç seátiniz:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+    "özerinde bir geniületilmiü bîlÅm oluüturmayç seátiniz:"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+    "özerinde bir mantçklçk bîlÅm oluüturmayç seátiniz:"},
     {STRING_HDDSIZE,
-    "Oluüturulacak bîlÅmÅn bÅyÅklÅßÅnÅ megaáoklu olarak giriniz."},
+    "LÅtfen yeni bîlÅmÅn bÅyÅklÅßÅnÅ megabayt olarak giriniz."},
     {STRING_CREATEPARTITION,
-    "   Giriü = BîlÅm Oluütur   Äçkçü = òptal   F3 = Äçkçü"},
+    "   Giriü = BîlÅm Oluütur   Äçkçü = òptal   F3 = Äçk"},
     {STRING_PARTFORMAT,
     "Bu bîlÅm ileride biáimlendirilecektir."},
     {STRING_NONFORMATTEDPART,
-    "ReactOS'u yeni ve biáimlendirilmemiü bir bîlÅme kurmayç seátiniz."},
+    "ReactOS'u yeni ya da biáimlendirilmemiü bir bîlÅme kurmayç seátiniz."},
     {STRING_INSTALLONPART,
-    "Kur, ReactOS'u bir bîlÅme kurar."},
+    "Kur, ReactOS'u bîlÅm Åzerine kurar."},
     {STRING_CHECKINGPART,
     "Kur, üimdi seáili bîlÅmÅ gîzden geáiriyor."},
     {STRING_QUITCONTINUE,
-    "F3 = Äçkçü   Giriü = SÅrdÅr"},
+    "F3 = Äçk   Giriü = SÅrdÅr"},
     {STRING_REBOOTCOMPUTER,
     "Giriü = Bilgisayarç Yeniden Baülat"},
     {STRING_TXTSETUPFAILED,
-    "Kur, TXTSETUP.SIF kÅtÅßÅndeki \"%S\" bîlÅmÅnÅ\nbulamadç.\n"},
+    "Kur, TXTSETUP.SIF'de ""%S"" bîlÅmÅnÅ\nbulmada baüarçsçz oldu.\n"},
     {STRING_COPYING,
     "   KÅtÅk áoßaltçlçyor: %S..."},
     {STRING_SETUPCOPYINGFILES,
@@ -1653,65 +1663,65 @@ MUI_STRING trTRStrings[] =
     {STRING_REGHIVEUPDATE,
     "   Deßer yçßçnlarç üimdikileütiriliyor..."},
     {STRING_IMPORTFILE,
-    "   KÅtÅkten alçnçyor: %S..."},
+    "   Alçnçyor: %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   GîrÅntÅ ayarlarçnçn deßerleri üimdikileütiriliyor..."},
+    "   GîrÅntÅ ayarlarç deßerleri üimdikileütiriliyor..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Mahallå ayarlar üimdikileütiriliyor..."},
+    "   Yerli ayarlar üimdikileütiriliyor..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   DÅßme takçmç dÅzeni ayarlarçnçn deßerleri üimdikileütiriliyor..."},
+    "   DÅßme takçmç dÅzeni ayarlarç üimdikileütiriliyor..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Deßer Defteri'ne dÅzgÅ sayfasç bilgisi ekleniyor..."},
+    "   Deßer Defteri'ne kod sayfasç bilgisi ekleniyor..."},
     {STRING_DONE,
-    "   Bitti!"},
+    "   Bitti..."},
     {STRING_REBOOTCOMPUTER2,
     "   Giriü = Bilgisayarç Yeniden Baülat"},
     {STRING_CONSOLEFAIL1,
-    "Konsol aáçlamadç.\r\n\r\n"},
+    "Konsol aáçlamçyor.\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "Bunun en bilinen nedeni, bir USB dÅßme takçmç kullançlmasçdçr.\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB dÅßme takçmç, daha tÅmÅyle desteklenmemektedir.\r\n"},
+    "USB dÅßme takçmlarç daha tÅmÅyle desteklenmemektedir.\r\n"},
     {STRING_FORMATTINGDISK,
-    "Kur, diski biáimlendiriyor."},
+    "Kur, diskinizi biáimlendiriyor."},
     {STRING_CHECKINGDISK,
-    "Kur, diski gîzden geáiriyor."},
+    "Kur, diskinizi gîzden geáiriyor."},
     {STRING_FORMATDISK1,
     " BîlÅmÅ %S kÅtÅk dizgesiyle hçzlç biáimlendir. "},
     {STRING_FORMATDISK2,
     " BîlÅmÅ %S kÅtÅk dizgesiyle biáimlendir. "},
     {STRING_KEEPFORMAT,
-    " BîlÅmÅ biáimlendirme. Hiábir deßiüiklik olmayacak. "},
+    " ûimdiki kÅtÅk dizgesini koru. (Deßiüiklik yok.) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
+    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu)."},
+    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu)."},
     {STRING_HDDINFOUNK2,
     "   %c%c  TÅr  %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "özerinde: %I64u %s  Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
+    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
     {STRING_HDDINFOUNK3,
-    "özerinde: %I64u %s  Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu)."},
+    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "Disk %lu (%I64u %s), Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu, %wZ Åzerinde."},
+    "SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
     "%c%c  TÅr  %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "özerinde: Disk %lu (%I64u %s), Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu, %wZ Åzerinde."},
+    "özerinde: SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
     "%c%c  %sTÅr  %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu), %S Åzerinde"},
+    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu), %S Åzerinde"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu)"},
+    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veri Yolu=%hu, Kimlik=%hu)"},
     {STRING_NEWPARTITION,
-    "Kur, üu bîlÅmÅ oluüturdu:"},
+    "Kur, Åzerinde bir yeni bîlÅm oluüturdu:"},
     {STRING_UNPSPACE,
     "    %sKullançlmayan Boüluk%s           %6lu %s"},
     {STRING_MAXSIZE,
     "MB (En áok %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Geniületilmiü BîlÅm"},
     {STRING_UNFORMATTED,
     "Yeni (Biáimlendirilmemiü)"},
     {STRING_FORMATUNUSED,

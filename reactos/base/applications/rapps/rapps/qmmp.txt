@@ -9,7 +9,7 @@ Licence = GPL
 Description = Qmmp is an audio-player, written with the help of the Qt library. The user interface is similar to WinAMP or XMMS. Alternative user interfaces also are available.
 Size = 12.49 MB
 Category = 1
-URLSite = http://qmmp.ylsoftware.com/index.php
+URLSite = http://qmmp.ylsoftware.com/
 URLDownload = http://qmmp.ylsoftware.com/files/windows/qmmp-0.8.0-win32.exe
 CDPath = none
 
