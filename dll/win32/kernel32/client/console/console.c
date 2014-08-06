@@ -1076,24 +1076,37 @@ BOOL
 WINAPI
 FreeConsole(VOID)
 {
-    // AG: I'm not sure if this is correct (what happens to std handles?)
-    // but I just tried to reverse what AllocConsole() does...
-
-    NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_FREECONSOLE FreeConsoleRequest = &ApiMessage.Data.FreeConsoleRequest;
+    HANDLE ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepFree),
-                                 sizeof(CONSOLE_FREECONSOLE));
-    if (!NT_SUCCESS(Status))
+    /* We must have a non-trivial handle to close */
+    if (ConsoleHandle == NULL) // IsConsoleHandle(ConsoleHandle)
     {
-        BaseSetLastNTError(Status);
+        SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
+    /* Set up the data to send to the Console Server */
+    FreeConsoleRequest->ConsoleHandle = ConsoleHandle;
+
+    /* Call the server */
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepFree),
+                        sizeof(*FreeConsoleRequest));
+
+    /* Check for success */
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    /* Reset the console handle */
     NtCurrentPeb()->ProcessParameters->ConsoleHandle = NULL;
 
+    /* Close the associated input handle */
     CloseHandle(InputWaitHandle);
     InputWaitHandle = INVALID_HANDLE_VALUE;
 
@@ -1311,7 +1324,7 @@ GetLargestConsoleWindowSize(HANDLE hConsoleOutput)
         BaseSetLastNTError(ApiMessage.Status);
     }
 
-    DPRINT1("GetLargestConsoleWindowSize, X = %d, Y = %d\n", GetLargestWindowSizeRequest->Size.X, GetLargestWindowSizeRequest->Size.Y);
+    DPRINT("GetLargestConsoleWindowSize, X = %d, Y = %d\n", GetLargestWindowSizeRequest->Size.X, GetLargestWindowSizeRequest->Size.Y);
     return GetLargestWindowSizeRequest->Size;
 }
 
@@ -2602,22 +2615,67 @@ UnregisterConsoleIME(VOID)
 }
 
 
-/*
- * @unimplemented
- */
-BOOL WINAPI GetConsoleKeyboardLayoutNameA(LPSTR name)
+BOOL
+IntGetConsoleKeyboardLayoutName(OUT PVOID pszLayoutName,
+                                IN BOOL bAnsi)
 {
-    STUB;
-    return 0;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest = &ApiMessage.Data.GetKbdLayoutNameRequest;
+
+    /* Set up the data to send to the Console Server */
+    GetKbdLayoutNameRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetKbdLayoutNameRequest->Ansi          = bAnsi;
+
+    /* Call the server */
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetKeyboardLayoutName),
+                        sizeof(*GetKbdLayoutNameRequest));
+
+    /* Check for success */
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    /* Retrieve the results */
+    _SEH2_TRY
+    {
+        /* Copy only KL_NAMELENGTH == 9 characters, ANSI or UNICODE */
+        if (bAnsi)
+            strncpy(pszLayoutName, (PCHAR)GetKbdLayoutNameRequest->LayoutBuffer, KL_NAMELENGTH);
+        else
+            wcsncpy(pszLayoutName, (PWCHAR)GetKbdLayoutNameRequest->LayoutBuffer, KL_NAMELENGTH);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented (undocumented)
  */
-BOOL WINAPI GetConsoleKeyboardLayoutNameW(LPWSTR name)
+BOOL
+WINAPI
+GetConsoleKeyboardLayoutNameA(OUT LPSTR pszLayoutName)
 {
-    STUB;
-    return 0;
+    return IntGetConsoleKeyboardLayoutName(pszLayoutName, TRUE);
+}
+
+/*
+ * @implemented (undocumented)
+ */
+BOOL
+WINAPI
+GetConsoleKeyboardLayoutNameW(OUT LPWSTR pszLayoutName)
+{
+    return IntGetConsoleKeyboardLayoutName(pszLayoutName, FALSE);
 }
 
 /*

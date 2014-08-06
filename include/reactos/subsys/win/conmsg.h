@@ -164,6 +164,7 @@ typedef struct _CONSOLE_START_INFO
     DWORD dwHotKey;
     DWORD dwStartupFlags;
     CONSOLE_PROPERTIES;
+
     BOOLEAN ConsoleNeeded; // Used for GUI apps only.
     LPTHREAD_START_ROUTINE CtrlDispatcher;
     LPTHREAD_START_ROUTINE ImeDispatcher;
@@ -281,7 +282,7 @@ typedef struct
 
 typedef struct
 {
-    ULONG Dummy;
+    HANDLE ConsoleHandle;
 } CONSOLE_FREECONSOLE, *PCONSOLE_FREECONSOLE;
 
 typedef struct
@@ -793,6 +794,13 @@ typedef struct
     HANDLE EventHandle;
 } CONSOLE_SETINPUTOUTPUTCP, *PCONSOLE_SETINPUTOUTPUTCP;
 
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    CHAR   LayoutBuffer[KL_NAMELENGTH * sizeof(WCHAR)]; // Can hold up to 9 wchars
+    BOOL   Ansi;
+} CONSOLE_GETKBDLAYOUTNAME, *PCONSOLE_GETKBDLAYOUTNAME;
+
 typedef struct _CONSOLE_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -886,9 +894,10 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
         CONSOLE_SETHISTORYMODE SetHistoryModeRequest;
 
-        /* Input and Output Code Pages */
+        /* Input and Output Code Pages; keyboard */
         CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
         CONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest;
+        CONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 
