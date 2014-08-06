@@ -506,8 +506,8 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     GuiData->hWindow = hWnd;
 
-    GuiData->Font = CreateFontW(LOWORD(GuiData->GuiInfo.FontSize),
-                                0, // HIWORD(GuiData->GuiInfo.FontSize),
+    GuiData->Font = CreateFontW(GuiData->GuiInfo.FontSize.X,
+                                0, // GuiData->GuiInfo.FontSize.Y,
                                 0,
                                 TA_BASELINE,
                                 GuiData->GuiInfo.FontWeight,
@@ -2318,6 +2318,18 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case PM_APPLY_CONSOLE_INFO:
         {
             GuiApplyUserSettings(GuiData, (HANDLE)wParam, (BOOL)lParam);
+            break;
+        }
+
+        /*
+         * Undocumented message sent by Windows' console.dll for applying console info.
+         * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c
+         * and http://www.scn.rain.com/~neighorn/PDF/MSBugPaper.pdf
+         * for more information.
+         */
+        case WM_SETCONSOLEINFO:
+        {
+            GuiApplyWindowsConsoleSettings(GuiData, (HANDLE)wParam);
             break;
         }
 

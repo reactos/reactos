@@ -11,6 +11,8 @@
 
 /* STRUCTURES *****************************************************************/
 
+#pragma pack(push, 1)
+
 /*
  * Structure used to hold terminal-specific information
  */
@@ -68,6 +70,8 @@ typedef struct _CONSOLE_PROPS
     CONSOLE_INFO  ci;           /* Console-specific informations */
     TERMINAL_INFO TerminalInfo; /* Frontend-specific parameters  */
 } CONSOLE_PROPS, *PCONSOLE_PROPS;
+
+#pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 
