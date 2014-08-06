@@ -810,6 +810,96 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
 
 NTSTATUS
 NTAPI
+MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
+                       _In_ PVOID FaultingAddress,
+                       _In_ PMMPTE PointerPte,
+                       _In_ PEPROCESS CurrentProcess,
+                       _Inout_ KIRQL *OldIrql)
+{
+    ULONG Color;
+    PFN_NUMBER Page;
+    NTSTATUS Status;
+    MMPTE TempPte = *PointerPte;
+    KEVENT Event;
+    PMMPFN Pfn1;
+    ULONG PageFileIndex = TempPte.u.Soft.PageFileLow;
+    ULONG_PTR PageFileOffset = TempPte.u.Soft.PageFileHigh;
+
+    /* Things we don't support yet */
+    ASSERT(CurrentProcess > HYDRA_PROCESS);
+    ASSERT(*OldIrql != MM_NOIRQL);
+
+    /* We must hold the PFN lock */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* Some sanity checks */
+    ASSERT(TempPte.u.Hard.Valid == 0);
+    ASSERT(TempPte.u.Soft.PageFileHigh != 0);
+    ASSERT(TempPte.u.Soft.PageFileHigh != MI_PTE_LOOKUP_NEEDED);
+
+    /* Get any page, it will be overwritten */
+    Color = MI_GET_NEXT_PROCESS_COLOR(CurrentProcess);
+    Page = MiRemoveAnyPage(Color);
+
+    /* Initialize this PFN */
+    MiInitializePfn(Page, PointerPte, StoreInstruction);
+
+    /* Sets the PFN as being in IO operation */
+    Pfn1 = MI_PFN_ELEMENT(Page);
+    ASSERT(Pfn1->u1.Event == NULL);
+    ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
+    ASSERT(Pfn1->u3.e1.WriteInProgress == 0);
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Pfn1->u1.Event = &Event;
+    Pfn1->u3.e1.ReadInProgress = 1;
+
+    /* We must write the PTE now as the PFN lock will be released while performing the IO operation */
+    TempPte.u.Soft.Transition = 1;
+    TempPte.u.Soft.PageFileLow = 0;
+    TempPte.u.Soft.Prototype = 0;
+    TempPte.u.Trans.PageFrameNumber = Page;
+
+    MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+
+    /* Release the PFN lock while we proceed */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, *OldIrql);
+
+    /* Do the paging IO */
+    Status = MiReadPageFile(Page, PageFileIndex, PageFileOffset);
+
+    /* Lock the PFN database again */
+    *OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Nobody should have changed that while we were not looking */
+    ASSERT(Pfn1->u1.Event == &Event);
+    ASSERT(Pfn1->u3.e1.ReadInProgress == 1);
+    ASSERT(Pfn1->u3.e1.WriteInProgress == 0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* Malheur! */
+        ASSERT(FALSE);
+        Pfn1->u4.InPageError = 1;
+        Pfn1->u1.ReadStatus = Status;
+    }
+
+    /* This is now a nice and normal PFN */
+    Pfn1->u1.Event = NULL;
+    Pfn1->u3.e1.ReadInProgress = 0;
+
+    /* And the PTE can finally be valid */
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, TempPte.u.Trans.Protection, Page);
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+    /* Waiters gonna wait */
+    KeSetEvent(&Event, IO_NO_INCREMENT, FALSE);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 MiResolveTransitionFault(IN PVOID FaultingAddress,
                          IN PMMPTE PointerPte,
                          IN PEPROCESS CurrentProcess,
@@ -846,8 +936,19 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     /* This is from ARM3 -- Windows normally handles this here */
     ASSERT(Pfn1->u4.InPageError == 0);
 
-    /* Not supported in ARM3 */
-    ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
+    /* See if we should wait before terminating the fault */
+    if (Pfn1->u3.e1.ReadInProgress == 1)
+    {
+    	DPRINT1("The page is currently being read!\n");
+    	ASSERT(Pfn1->u1.Event != NULL);
+    	*InPageBlock = Pfn1->u1.Event;
+    	if (PointerPte == Pfn1->PteAddress)
+    	{
+    	    DPRINT1("And this if for this particular PTE.\n");
+    	    /* The PTE will be made valid by the thread serving the fault */
+    	    return STATUS_SUCCESS; // FIXME: Maybe something more descriptive
+    	}
+    }
 
     /* Windows checks there's some free pages and this isn't an in-page error */
     ASSERT(MmAvailablePages > 0);
@@ -1325,6 +1426,30 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         /* And now release the lock and leave*/
         KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
 
+        if (InPageBlock != NULL)
+        {
+        	/* The page is being paged in by another process */
+        	KeWaitForSingleObject(InPageBlock, WrPageIn, KernelMode, FALSE, NULL);
+        }
+
+        ASSERT(OldIrql == KeGetCurrentIrql());
+        ASSERT(OldIrql <= APC_LEVEL);
+        ASSERT(KeAreAllApcsDisabled() == TRUE);
+        return Status;
+    }
+
+    /* Should we page the data back in ? */
+    if (TempPte.u.Soft.PageFileHigh != 0)
+    {
+        /* Lock the PFN database */
+        LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* Resolve */
+        Status = MiResolvePageFileFault(StoreInstruction, Address, PointerPte, Process, &LockIrql);
+
+        /* And now release the lock and leave*/
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
+
         ASSERT(OldIrql == KeGetCurrentIrql());
         ASSERT(OldIrql <= APC_LEVEL);
         ASSERT(KeAreAllApcsDisabled() == TRUE);
@@ -1333,19 +1458,14 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
 
     //
     // The PTE must be invalid but not completely empty. It must also not be a
-    // prototype or transition PTE as those scenarii should've been handled above.
+    // prototype a transition or a paged-out PTE as those scenarii should've been handled above.
     // These are all Windows checks
     //
     ASSERT(TempPte.u.Hard.Valid == 0);
     ASSERT(TempPte.u.Soft.Prototype == 0);
     ASSERT(TempPte.u.Soft.Transition == 0);
-    ASSERT(TempPte.u.Long != 0);
-
-    //
-    // No page file software PTEs in ARM3 yet, so this must be a
-    // demand zero page. This is a ReactOS check.
-    //
     ASSERT(TempPte.u.Soft.PageFileHigh == 0);
+    ASSERT(TempPte.u.Long != 0);
 
     //
     // If we got this far, the PTE can only be a demand zero PTE, which is what
