@@ -356,8 +356,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 }
 
 
-extern MMPFNLIST MmModifiedPageListByColor[];
-
 VOID NTAPI
 MiBalancerThread(PVOID Unused)
 {
@@ -427,9 +425,6 @@ MiBalancerThread(PVOID Unused)
                   KeBugCheck(NO_PAGES_AVAILABLE);
               }
           } while (InitialTarget != 0);
-
-          if (MmModifiedPageListByColor[0].Total != 0)
-              DPRINT1("There are %u pages ready to be paged out in the modified list.\n", MmModifiedPageListByColor[0].Total);
       }
       else
       {

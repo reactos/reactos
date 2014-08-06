@@ -2274,6 +2274,12 @@ MiLocateSubsection(
     IN ULONG_PTR Vpn
 );
 
+VOID
+NTAPI
+MiDeleteARM3Section(
+    PVOID ObjectBody
+);
+
 NTSTATUS
 NTAPI
 MiQueryMemorySectionName(
