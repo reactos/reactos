@@ -1,9 +1,7 @@
 /*
  * Top level resource file for avifil32.dll
  *
- * Copyright 2002 Michael Günnewig
- *
- * Translated to Turkish by Fatih Aşıcı in 2006 and Erdem Ersoy (eersoy93) (erdemersoy@live.com) in 2013.
+ * Copyrights: 2006 Fatih Aşıcı; 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,11 +24,11 @@ STRINGTABLE
 {
   IDS_WAVESTREAMFORMAT	"Dalga Biçimi: %s"
   IDS_WAVEFILETYPE	"Dalga Biçimi"
-  IDS_ALLMULTIMEDIA	"Tüm Çokluortam Kütükleri"
+  IDS_ALLMULTIMEDIA	"Tüm Çoklu Ortam Kütükleri"
   IDS_ALLFILES		"Tüm Kütükler (*.*)"
   IDS_VIDEO		"Vidyo"
   IDS_AUDIO		"Ses"
-  IDS_AVIFILETYPE	"Wine AVI-default-filehandler"
+  IDS_AVIFILETYPE	"Wine AVI Ön Tanımlı Kütük İşleyicisi"
   IDS_UNCOMPRESSED      "Sıkıştırılmamış"
 }
 
@@ -43,7 +41,7 @@ BEGIN
     COMBOBOX        IDC_STREAM,5,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
     PUSHBUTTON      "&Seçenekler...",IDC_OPTIONS,170,17,50,14
-    AUTOCHECKBOX    "&Her Ara Kare",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
+    AUTOCHECKBOX    "&Tüm Aralıklar",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
     EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
     LTEXT           "kare",-1,129,43,36,9
     LTEXT           "Şimdiki Biçim:",-1,5,56,73,9

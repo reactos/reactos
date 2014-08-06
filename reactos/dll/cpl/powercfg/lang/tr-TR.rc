@@ -114,7 +114,7 @@ BEGIN
     IDS_CONFIG2 "%1 İçin Gelişmiş Ayarlar"
     IDS_SIZEBYTS "%i Çoklu"
     IDS_SIZEMB "%i MB"
-    IDS_NOACTION "Hiçbir Şey Yapma"
+    IDS_NOACTION "Bir Şey Yapma"
     IDS_PowerActionNone1 "Eylem Yok"
     IDS_PowerActionUnknown "Bilinmiyor"
     IDS_PowerActionSleep "Uykuya Geçir"
@@ -140,6 +140,6 @@ BEGIN
     IDS_TIMEOUT14 "4 Saat Sonra"
     IDS_TIMEOUT15 "5 Saat Sonra"
     IDS_TIMEOUT16 "Hiçbir Zaman"
-    IDS_DEL_SCHEME "Güç düzenini silmek istediğinizi doğruluyor musunuz?"
+    IDS_DEL_SCHEME "Güç düzenini silmek istediğinizden emin misiniz?"
     IDS_DEL_SCHEME_TITLE "Düzeni Sil"
 END

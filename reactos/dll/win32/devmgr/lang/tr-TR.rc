@@ -16,17 +16,17 @@ BEGIN
     IDS_ENABLEDEVICE "Bu Aygıtı Kullan (Etkinleştir)"
     IDS_DISABLEDEVICE "Bu Aygıtı Kullanma (Edilginleştir)"
     IDS_UNKNOWNDEVICE "Bilinmeyen Aygıt"
-    IDS_NODRIVERLOADED "Bu aygıt için hiçbir sürücü kurulmadı."
-    IDS_DEVONPARENT "%1 Üzerinde"
+    IDS_NODRIVERLOADED "Bu aygıt için kurulmuş sürücü yok."
+    IDS_DEVONPARENT "%1 üzerinde."
     IDS_TROUBLESHOOTDEV "&Sorun Giderme..."
-    IDS_ENABLEDEV "&Sürücüyü Etkinleştir"
+    IDS_ENABLEDEV "&Aygıtı Etkinleştir"
     IDS_REINSTALLDRV "&Sürücüyü Yeniden Kur"
     IDS_PROPERTIES "&Husûsiyetler"
     IDS_UPDATEDRV "&Sürücüyü Şimdikileştir..."
     IDS_REBOOT "&Bilgisayarı Yeniden Başlat..."
     IDS_NOTAVAILABLE "Yok"
     IDS_NOTDIGITALLYSIGNED "Sayılık olarak imzâlanmamış."
-    IDS_NODRIVERS "Bu aygıt için gerekli olan veyâ yüklenen sürücü kütükleri yok."
+    IDS_NODRIVERS "Bu aygıt için gerekli olan veyâ yüklenmiş sürücü kütükleri yok."
     IDS_RESOURCE_COLUMN "Kaynak Türü"
     IDS_SETTING_COLUMN "Ayar"
     IDS_RESOURCE_MEMORY_RANGE "Bellek Erimi"
@@ -40,61 +40,61 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Bu aygıt düzgün çalışıyor."
     IDS_DEV_NOT_CONFIGURED "Bu aygıt doğru yapılandırılmamış."
-    IDS_DEV_DEVLOADER_FAILED "Bilgisayar, iki tür veri yolu bildirdiğinden dolayı ReactOS bu aygıtın sürücüsünü yükleyemedi."
-    IDS_DEV_DEVLOADER_FAILED2 "Bu aygıtın %1 aygıt yükleyicisi/yükleyicileri aygıtın sürücüsünü yükleyemedi."
-    IDS_DEV_OUT_OF_MEMORY "Bu aygıtın sürücüsü kötü olabilir veyâ dizgeniz bellekte veyâ başka kaynaklarda yavaş çalışıyor olabilir."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Bu aygıtın sürücülerinin kötü veyâ değer defterinizin bozuk olabilmesinden dolayı bu aygıt düzgün bir şekilde çalışmıyor."
-    IDS_DEV_LACKED_ARBITRATOR "Bu aygıtın sürücüsü, ReactOS'un nasıl yöneteceğini bilmediği bir kaynağa gereksinim duyuyor."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Bu aygıtın gereksinim duyduğu kaynakları başka bir aygıt kullanıyor."
+    IDS_DEV_DEVLOADER_FAILED "Bilgisayar, iki %1 veri yolu türü bildirdiğinden dolayı ReactOS bu aygıt için sürücüyü yükleyemedi."
+    IDS_DEV_DEVLOADER_FAILED2 "Bu aygıt için %1 aygıt yükleyicisi/yükleyicileri aygıt sürücüsünü yükleyemedi."
+    IDS_DEV_OUT_OF_MEMORY "Bu aygıt için sürücü kötü olabilir veyâ dizgeniz, bellekte veyâ başka kaynaklarda yavaş çalışıyor olabilir."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Sürücülerinin kötü olabilmesinden veyâ değer defterinizin bozuk olabilmesinden dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_LACKED_ARBITRATOR "Bu aygıt için sürücü, ReactOS'un nasıl yöneteceğini bilmediği bir kaynağı istedi."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Başka bir aygıt, bu aygıtın gereksinim duyduğu kaynakları kullanıyor."
     IDS_DEV_FAILED_FILTER "Bu aygıtın sürücüleri yeniden kurulmaya gereksinim duyuyor."
-    IDS_DEV_DEVLOADER_NOT_FOUND "ReactOS'un bu aygıtın sürücülerini yükleyen %1 kütüğünü yükleyemesinden dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Bu aygıtın sürücülerini yükleyen %1 kütüğünün kötü olmasından dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Aygıt başarısızlığı: Bu aygıtın sürücüsünü değiştirmeyi deneyiniz. Eğer olmuyorsa donanımınızın belgelerine bakınız."
-    IDS_DEV_INVALID_DATA "Bilgisayarınızın BIOS'u bu aygıtın kaynaklarının yanlış olduğunu bildirdiğinden dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_INVALID_DATA2 "Bu aygıtın BIOS'u bu aygıtın kaynaklarının yanlış olduğunu bildirdiğinden dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_FAILED_START "Bu aygıt ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
-    IDS_DEV_LIAR "ReactOS, bu aygıtı başlatırken yanıt vermeyi durdurdu, bu yüzden bu aygıt bir daha başlatılmayacak."
-    IDS_DEV_NORMAL_CONFLICT "Bu aygıt, kullanmak için hiç boş %1 kaynaklarını bulamıyor."
-    IDS_DEV_NOT_VERIFIED "Bu aygıt ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
-    IDS_DEV_NEED_RESTART "Bu aygıt bilgisayarınızı yeniden başlatana dek düzgün çalışamaz."
-    IDS_DEV_REENUMERATION "Bu aygıt, kaynak çakışmasına neden oldu."
+    IDS_DEV_DEVLOADER_NOT_FOUND "ReactOS, bu aygıt için sürücüleri yükleyen %1 kütüğünü yükleyememesinden dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Bu aygıt için sürücüleri yükleyen %1 kütüğünün bozuk olmasından dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Aygıt başarısızlığı: Bu aygıt için yü değiştirmeyi deneyiniz. Eğer çalışmıyorsa donanımınızın belgelerine bakınız."
+    IDS_DEV_INVALID_DATA "Bilgisayarınızdaki BIOS'un bu aygıt için kaynakları yanlış bildirdiğinden dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_INVALID_DATA2 "Aygıttaki BIOS'un bu aygıt için kaynakları yanlış bildirdiğinden dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_FAILED_START "Bu aygıt; ya yok, ya düzgün çalışmıyor, ya da kurulu tüm sürücüleri yok."
+    IDS_DEV_LIAR "ReactOS, bu aygıtı başlatmaya kalkışırken yanıt vermeyi durdurdu, bu yüzden bu aygıtı bir daha başlatmaya kalkışmayacak."
+    IDS_DEV_NORMAL_CONFLICT "Bu aygıt, kullanmak için boş %1 kaynaklarını bulamıyor."
+    IDS_DEV_NOT_VERIFIED "Bu aygıt; ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
+    IDS_DEV_NEED_RESTART "Bu aygıt, bilgisayarınızı yeniden başlatana dek düzgün çalışamaz."
+    IDS_DEV_REENUMERATION "Bu aygıt, bir kaynak çakışmasına neden oluyor."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS, bu aygıtın kullandığı tüm kaynakları tanılayamadı."
-    IDS_DEV_UNKNOWN_RESOURCE "%1 sürücü bilgi kütüğü, bu alt aygıtın, bu üst aygıtın iye olmadığı ya da tanımadığı kaynağı kullandığını gösteriyor."
-    IDS_DEV_REINSTALL "Bu aygıtın sürücüleri yeniden başlatılmaya gereksinim duyuyor."
+    IDS_DEV_UNKNOWN_RESOURCE "%1 sürücü bilgi kütüğü, bu alt aygıtın, üst aygıtın iye olmadığı veyâ tanımadığı bir kaynağı kullanması için bildiriyor."
+    IDS_DEV_REINSTALL "Bu aygıt için sürücüler yeniden başlatılmaya gereksinim duyuyor."
     IDS_DEV_REGISTRY "Değer defteriniz bozuk olabilir."
     IDS_DEV_WILL_BE_REMOVED "ReactOS bu aygıtı kaldırıyor."
-    IDS_DEV_DISABLED "Bu aygıt başlatılmamış."
+    IDS_DEV_DISABLED "Bu aygıt başlamamış."
     IDS_DEV_DISABLED2 "Bu aygıt edilgin."
-    IDS_DEV_DEVLOADER_NOT_READY "Bu aygıtın yükleyicileri gerekli sürücüleri yükleyemiyor."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Bu görüntü bağdaştırıcısı düzgün çalışıyor."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Bu aygıtın yükleyicileri gerekli sürücüleri yükleyemiyor."
-    IDS_DEV_DEVICE_NOT_THERE "Bu aygıt ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
+    IDS_DEV_DEVLOADER_NOT_READY "Bu aygıt için yükleyiciler gerekli sürücüleri yükleyemiyor."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Bu görüntü bağdaştırıcısı doğru çalışıyor."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Bu aygıt için yükleyiciler gerekli sürücüleri yükleyemiyor."
+    IDS_DEV_DEVICE_NOT_THERE "Bu aygıt; ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
     IDS_DEV_MOVED "ReactOS, bu aygıtı kurma işleminde."
     IDS_DEV_TOO_EARLY "ReactOS, bu aygıtı kurma işleminde."
-    IDS_DEV_NO_VALID_LOG_CONF "ReactOS, bu aygıtın kaynaklarını belirleyemez."
-    IDS_DEV_FAILED_INSTALL "Bu aygıtın sürücüleri kurulu değil."
-    IDS_DEV_HARDWARE_DISABLED "Bu aygıtın BIOS'u aygıta hiç kaynak vermediğinden dolayı bu aygıt edilgin."
-    IDS_DEV_CANT_SHARE_IRQ "Bu aygıt, başka bir aygıtın kullandığı paylaşılamayan Kesme İsteği (IRQ) kaynağı kullanıyor.\nÇakışan ayârı değiştirmeli ya da çakışmaya neden olan gerçek kip sürücüsünü kaldırmalısınız."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS, bu aygıt için kaynakları belirleyemez."
+    IDS_DEV_FAILED_INSTALL "Bu aygıt için sürücüler kurulu değil."
+    IDS_DEV_HARDWARE_DISABLED "Bu aygıt için BIOS bu aygıta kaynak vermediğinden dolayı bu aygıt edilgin."
+    IDS_DEV_CANT_SHARE_IRQ "Bu aygıt, başka bir aygıt eliyle kullanımda olan ve paylaşılamayan bir Kesme İsteği (IRQ) kaynağı kullanıyor.\nÇakışan ayârı değiştirmeli ya da çakışmaya neden olan gerçek kip sürücüyü kaldırmalısınız."
     IDS_DEV_FAILED_ADD "%1 şeyinin düzgün çalışmamasından dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_DISABLED_SERVICE "ReactOS, kurulum kütüklerinin üzerinde bulunduğu, sürücüye ya da ağ konumuna erişememesinden dolayı bu aygıtın sürücülerini kuramıyor."
+    IDS_DEV_DISABLED_SERVICE "ReactOS, kurulum kütüklerinin üzerinde bulunduğu, sürücüye ya da ağ konumuna erişememesinden dolayı bu aygıt için sürücüleri kuramıyor."
     IDS_DEV_TRANSLATION_FAILED "Bu aygıt sürücüsüne yanıt vermiyor."
-    IDS_DEV_NO_SOFTCONFIG "ReactOS, bu aygıtın ayarlarını belirleyemiyor. Bu aygıtla gelen belgelere bakınız ve yapılandırmayı ayarlamak için ""Kaynaklar"" sekmesini kullanınız."
-    IDS_DEV_BIOS_TABLE "Bilgisayarınızın dizge bellenimi, bu aygıtı, düzgün olarak, yapılandırmak ve kullanmak için yeterli bilgi içermiyor.\nBu aygıtı kullanmak için, bellenim veyâ BIOS güncellemesi elde etmek için bilgisayarınızın üreticisiyle iletişime geçiniz."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Bu aygıt, bir PCI kesmesi istemektedir ancak bir ISA kesmesi için yapılandırılmıştır (ya da tersi).\nBu aygıtın kesmesini yapılandırmak için bilgisayarın dizge kurulum izlencesini kullanınız."
-    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS, bu donanımın aygıt sürücüsünü başlatamıyor."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS, bellekte hâlâ aygıt sürücüsünün bir önceki tıpkısı olduğundan dolayı bu donanımın aygıt sürücüsünü yükleyemiyor."
-    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS, bu donanımın aygıt sürücüsünü yükleyemiyor. Sürücü eksik ya da bozulmuş olabilir."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS, bu donanımın, değer defterinde hizmet dizini bilgisinin eksik ya da yanlış kaydedildiğinden dolayı bu donanıma erişemiyor."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS, bu donanımın aygıt sürücüsünü başarılı bir şekilde yükledi ancak donanım aygıtını bulamıyor."
-    IDS_DEV_DUPLICATE_DEVICE "ReactOS, dizgede önceden bir tıpkı aygıt çalışıyor olmasından dolayı bu donanımın aygıt sürücüsünü yükleyemiyor."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS, bu aygıt için ayarları belirleyemiyor. Bu aygıtla gelen belgelere bakınız ve yapılandırmayı yapmak için ""Kaynaklar"" sekmesini kullanınız."
+    IDS_DEV_BIOS_TABLE "Bilgisayarınızın dizge bellenimi, bu aygıtı, düzgün olarak, yapılandırmak ve kullanmak için yeterli bilgi içermiyor.\nBu aygıtı kullanmak için, bir bellenim veyâ BIOS güncellemesi elde etmek için bilgisayarınızın üreticisiyle iletişime geçiniz."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Bu aygıt, bir PCI kesmesi istiyor ancak bir ISA kesmesi için yapılandırılmıştır (ya da tersi).\nBu aygıt için kesmeyi yeniden yapılandırmak için lütfen bilgisayarın dizge kurulum izlencesini kullanınız."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS, bu donanım için aygıt sürücüsünü başlatamıyor."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS, bellekte şimdi bile aygıt sürücüsünün bir önceki kopyası olduğundan dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS, bu donanım için aygıt sürücüsünü yükleyemiyor. Sürücü bozulmuş ya da eksik olabilir."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS, bu donanımın, değer defterindeki hizmet dizini bilgisinin eksik ya da yanlış kaydedildiğinden dolayı bu donanıma erişemiyor."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS, bu donanım için aygıt sürücüsünü başarıyla yükledi ancak donanım aygıtını bulamıyor."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS, dizgede bir kopya aygıtın önceden çalışıyor olmasından dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_FAILED_POST_START "ReactOS, bu aygıtı, sorunlar bildirdiğinden dolayı durdurdu."
-    IDS_DEV_HALTED "Bir uygulama ya da bir hizmet, bu donanım aygıtını kapattı."
-    IDS_DEV_PHANTOM "Şu an bu donanım aygıtı bilgisayara bağlı değil."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS, işletim dizgesinin kapatma işleminde olmasından dolayı bu donanım aygıtının erişimini elde edemiyor."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS, bu donanım aygıtının, güvenli kaldırılmaya anıklandığından ancak bilgisayardan kaldırılmadığından dolayı onu kullanamıyor."
-    IDS_DEV_DRIVER_BLOCKED "Bu aygıtın yazılımı, ReactOS'la sorunları olduğu bilindiğinden dolayı başlatmaktan engellendi. Yeni bir donanım için donanımın satıcısıyla iletişime geçiniz."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS, dizge yığınının çok büyük olmasından dolayı yeni donanım aygıtlarını başlatamıyor. (Değer Defteri Büyüklük Hudûdu'nu aşar.)"
-    IDS_DEV_SETPROPERTIES_FAILED "ReactOS, bu aygıtın ayarlarını değiştiremez."
+    IDS_DEV_HALTED "Bir uygulama ya da bir hizmet bu donanım aygıtını kapattı."
+    IDS_DEV_PHANTOM "Şimdi bu donanım aygıtı bilgisayara bağlı değil."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS, işletim dizgesinin kapatma işleminde olmasından dolayı bu donanım aygıtı için erişim elde edemiyor."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS, bu donanım aygıtının, güvenli kaldırılmaya anıklandığından ancak bilgisayardan kaldırılmadığından dolayı bu donanım aygıtını kullanamıyor."
+    IDS_DEV_DRIVER_BLOCKED "Bu aygıt için yazılım, ReactOS'la sorunları olduğu biliniyor olmasından dolayı başlatılmaktan engellendi. Yeni bir donanım için donanımın satıcısıyla iletişime geçiniz."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS, dizge yığınının, çok büyük olmasından, Değer Defteri Büyüklük Hudûdu'nu aşmasından dolayı yeni donanım aygıtlarını başlatamıyor."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS, bu aygıtın ayarlarını değiştiremedi."
 END
 
 STRINGTABLE
@@ -106,7 +106,7 @@ BEGIN
     IDS_PROP_SERVICE "Hizmet"
     IDS_PROP_ENUMERATOR "Numaralandırıcı"
     IDS_PROP_CAPABILITIES "Yetenekler"
-    IDS_PROP_DEVNODEFLAGS "Aygıt Bileşeni İmleri"
+    IDS_PROP_DEVNODEFLAGS "Aygıt Düğümü İmleri"
     IDS_PROP_CONFIGFLAGS "Yapılandırma İmleri"
     IDS_PROP_CSCONFIGFLAGS "CSConfig İmleri"
     IDS_PROP_EJECTIONRELATIONS "Çıkarma İlişkileri"
@@ -149,9 +149,9 @@ BEGIN
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Aygıt Türü:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Üretici:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Üreticisi:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Konum:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "Konumu:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     GROUPBOX "Aygıt Durumu", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
@@ -169,16 +169,16 @@ BEGIN
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Sürücü Sağlayıcısı:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Sürücü Zamânı:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Sürücü Târihi:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Sürücü Sürümü:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Sürücü İmzâlayıcısı:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    LTEXT "Sayılık İmzâlayıcısı:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Sürücü Ayrıntıları...", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "Sürücü kütükleri üzerine ayrıntıları görmek için.", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "S&ürücüyü Şimdikileştir...", IDC_UPDATEDRIVER, 7, 126, 75, 15
-    LTEXT "Bu aygıtın sürücüsünü şimdikileştir.", -1, 91, 130, 154, 17, SS_NOPREFIX
+    LTEXT "Aygıt sürücüsünü şimdikileştir.", -1, 91, 130, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
@@ -192,13 +192,13 @@ BEGIN
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Sağlayıcı:", -1, 14, 134, 50, 8
+    LTEXT "Sağlayıcısı:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Kütük Sürümü:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Telif Hakkı:", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Sayılık İmzâlayıcı:", -1, 14, 182, 50, 8
+    LTEXT "Sayılık İmzâlayıcısı:", -1, 14, 182, 50, 8
     EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "Tamam", IDOK, 167, 208, 50, 14
 END

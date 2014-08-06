@@ -32,7 +32,7 @@ MAIN_MENU MENU
   MENUITEM SEPARATOR
   MENUITEM "&Çıkış",                   MNID_FILE_EXIT
  }
- POPUP "&Düzenleme" {
+ POPUP "&Düzen" {
    MENUITEM "&Çoğalt",                 MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Hâşiye Ekle...",         MNID_EDIT_ANNOTATE
@@ -83,7 +83,7 @@ CAPTION "Bul"
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP,        "Yardım Kütüğü Görüntüleyicisi"
+STID_WINE_HELP,        "Yardım"
 STID_WHERROR,          "YANLIŞLIK"
 STID_WARNING,          "UYARI"
 STID_INFO,             "Bilgi"
