@@ -62,7 +62,9 @@ NpCompleteStalledWrites(IN PNP_DATA_QUEUE DataQueue,
     {
         if (!QuotaLeft) break;
 
-        DataQueueEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, Irp);
+        DataQueueEntry = CONTAINING_RECORD(NextEntry,
+                                           NP_DATA_QUEUE_ENTRY,
+                                           QueueEntry);
 
         Irp = DataQueueEntry->Irp;
 
