@@ -18,10 +18,14 @@ foreach(_hive ${_common_hives})
                        COMMAND native-utf16le ${_hive} ${_converted_hive}
                        DEPENDS native-utf16le ${_hive})
     list(APPEND _converted_common_hives ${_converted_hive})
-    add_cd_file(FILE ${_converted_hive} DESTINATION reactos NO_CAB FOR bootcd regtest)
 endforeach()
 
 add_custom_target(converted_hives DEPENDS ${_converted_common_hives})
+add_cd_file(TARGET converted_hives
+            FILE ${_converted_common_hives}
+            DESTINATION reactos
+            NO_CAB
+            FOR bootcd regtest)
 
 # livecd hives
 list(APPEND _livecd_hives
@@ -84,7 +88,7 @@ macro(add_livecd_shortcut name app dest)
 	add_link(NAME ${name} CMD_LINE_ARGS ${app} ICON ${app} PATH livecd_start.cmd GUID "{450D8FBA-AD25-11D0-98A8-0800361B1103}" MINIMIZE)
 	list(APPEND LIVECD_SHORTCUTS "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk")
 	add_cd_file(FILE "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk"
-		        TARGET livecd_links
+                    TARGET livecd_links
 	            DESTINATION ${dest}
 	            FOR livecd)
 endmacro(add_livecd_shortcut)
