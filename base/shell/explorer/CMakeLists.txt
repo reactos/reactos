@@ -63,4 +63,9 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATI
 
 if(NOT MSVC)
     add_compile_flags("-Wno-error=narrowing")
+
+    # GCC bug #59472
+    if(LTCG)
+        add_target_link_flags(explorer "-Wno-error")
+    endif()
 endif()

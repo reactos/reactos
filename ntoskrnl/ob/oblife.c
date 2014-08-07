@@ -1145,7 +1145,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
             /* Set the key and free the converted name */
             LocalObjectType->Key = *(PULONG)AnsiName.Buffer;
-            ExFreePool(AnsiName.Buffer);
+            RtlFreeAnsiString(&AnsiName);
         }
         else
         {
@@ -1227,7 +1227,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     InitializeListHead(&LocalObjectType->TypeList);
 
     /* Lock the object type */
-    ObpEnterObjectTypeMutex(LocalObjectType);
+    ObpEnterObjectTypeMutex(ObpTypeObjectType);
 
     /* Get creator info and insert it into the type list */
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
@@ -1246,7 +1246,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* Release the object type */
-    ObpLeaveObjectTypeMutex(LocalObjectType);
+    ObpLeaveObjectTypeMutex(ObpTypeObjectType);
 
     /* Check if we're actually creating the directory object itself */
     if (!(ObpTypeDirectoryObject) ||

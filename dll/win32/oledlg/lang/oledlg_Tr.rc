@@ -49,8 +49,8 @@ END
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"Belgeye yeni bir %s nesnesi ekle."
-  IDS_RESULTFILEOBJDESC	"Kütük içeriğini belgenize nesne olarak ekleyiniz, böylece kendisini oluşturan izlenceyi kullanarak onu etkinleştirebilirsiniz."
+  IDS_RESULTOBJDESC	"Belgenize yeni bir %s nesnesi ekleyiniz."
+  IDS_RESULTFILEOBJDESC	"Belgenize kütüğün içeriğini bir nesne olarak ekleyiniz, böylece onu, kendisini oluşturan izlenceyi kullanarak etkinleştirebilirsiniz."
   IDS_BROWSE            "Göz At"
   IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi kaydedilemiyor."
   IDS_NOTOLEMODCAPTION  "Denetim Ekle"
@@ -61,7 +61,7 @@ STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Husûsî Yapıştır"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT         "&Kaynak:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    LTEXT         "Kaynak:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
     CONTROL       "Y&apıştır", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
                   6, 38, 55, 10
     CONTROL       "&Bağlantıyı Yapıştır", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
@@ -77,20 +77,20 @@ BEGIN
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
     CONTROL       "S&imgeyi Değiştir...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
     CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
-    CONTROL       "<< Sonuç Metni Buraya Gelecek >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "<< Sonuç metni buraya gelir. >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
     CONTROL       "So&nuç", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
     CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
 END
 
 STRINGTABLE
 {
-    IDS_PS_PASTE_DATA                     "Belgeye panonun içeriğini %s olarak ekler."
-    IDS_PS_PASTE_OBJECT                   "Belgeye panonun içeriğini ekler, böylece onu %s kullanarak etkinleştirebilirsiniz."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "Belgeye panonun içeriğini ekler, böylece onu %s kullanarak etkinleştirebilirsiniz. Bu simge olarak gösterilecektir."
-    IDS_PS_PASTE_LINK_DATA                "Belgeye panonun içeriğini %s olarak ekler. Bu bilgi, kaynak kütüğüne bağlanır, böylece bu kütüğün değişiklikleri belgeye yansıtılır."
-    IDS_PS_PASTE_LINK_OBJECT              "Belgeye panonun içeriğinin resmini ekler. Bu resim, kaynak kütüğüne bağlanır, böylece bu kütüğün değişiklikleri belgeye yansıtılır."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Pano içeriğinin konumunu belirten bir kısayol ekler. Bu kısayol, kaynak kütüğüne bağlanır, böylece bu kütüğün değişiklikleri belgeye yansıtılır."
-    IDS_PS_NON_OLE                        "Belgeye panonun içeriğini ekler."
+    IDS_PS_PASTE_DATA                     "Belgenize panonun içeriğini %s olarak ekler."
+    IDS_PS_PASTE_OBJECT                   "Belgenize panonun içeriğini ekler, böylece onu %s kullanarak etkinleştirebilirsiniz."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Belgenize panonun içeriğini ekler, böylece onu %s kullanarak etkinleştirebilirsiniz. O, bir simge olarak gösterilecektir."
+    IDS_PS_PASTE_LINK_DATA                "Belgenize panonun içeriğini %s olarak ekler. Bilgi, kaynak kütüğüne bağlanır, böylece kütüğe yapılan değişiklikler belgenize yansıtılacaktır."
+    IDS_PS_PASTE_LINK_OBJECT              "Belgenizine pano içeriğinden bir resim ekler. Resim, kaynak kütüğüne bağlanır, böylece kütüğe yapılan değişiklikler belgenize yansıtılacaktır."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Pano içeriğinin konumunu belirten bir kısayol ekler. Kısayol, kaynak kütüğüne bağlanır, böylece kütüğe yapılan değişiklikler belgenize yansıtılacaktır."
+    IDS_PS_NON_OLE                        "Belgenize panonun içeriğini ekler."
     IDS_PS_UNKNOWN_TYPE                   "Bilinmeyen Tür"
     IDS_PS_UNKNOWN_SRC                    "Bilinmeyen Kaynak"
     IDS_PS_UNKNOWN_APP                    "onu oluşturan izlence"

@@ -298,7 +298,7 @@ void CreateSpider()
         pStack[i]->SetFaceDirection(CS_FACE_DOWN, 0);
         pos = i - NUM_STACKS/2;
         pStack[i]->SetPlacement(CS_XJUST_CENTER, 0,
-            pos * (__cardwidth + X_BORDER) + 6 * X_BORDER, 0);
+            pos * (__cardwidth + X_BORDER) + 6 * (X_BORDER + 1) + 3, 0);
         pStack[i]->SetEmptyImage(CS_EI_SUNK);
         pStack[i]->SetDragRule(CS_DRAG_CALLBACK, StackDragProc);
         pStack[i]->SetDropRule(CS_DROP_CALLBACK, StackDropProc);

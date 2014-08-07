@@ -137,10 +137,10 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
-    if((NOT DEFINED PCH) AND (CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS") AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
-        set(PCH 1)
+    if((CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS") AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+        set(PCH 1 CACHE BOOL "Whether to use precompiled headers")
     else()
-        set(PCH 0)
+        set(PCH 0 CACHE BOOL "Whether to use precompiled headers")
     endif()
 
     # Version Options

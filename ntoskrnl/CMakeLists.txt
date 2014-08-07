@@ -33,11 +33,6 @@ else()
     set_image_base(ntoskrnl 0x80800000)
 endif()
 
-# Linker bug
-if(NOT MSVC AND LTCG)
-    add_target_link_flags(ntoskrnl "-shared")
-endif()
-
 target_link_libraries(ntoskrnl
     cportlib
     csq

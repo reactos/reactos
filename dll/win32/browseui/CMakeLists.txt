@@ -61,4 +61,9 @@ add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
     add_target_compile_flags(browseui "-Wno-unused-but-set-variable")
+
+    # Binutils linker bug
+    if(LTCG)
+        add_target_link_flags(browseui "-Wl,--allow-multiple-definition")
+    endif()
 endif()

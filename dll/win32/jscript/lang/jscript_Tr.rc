@@ -20,12 +20,12 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_TO_PRIMITIVE        "Nesneyi ilk türe dönüştürürken yanlışlık oldu."
-    IDS_INVALID_CALL_ARG    "Geçersiz yordam çağrısı ya da geçersiz değiştirgen."
-    IDS_CREATE_OBJ_ERROR    "Öz devinim sunucusu nesne oluşturamadı."
+    IDS_TO_PRIMITIVE        "Nesneyi ilk türe dönüştürmede yanlışlık."
+    IDS_INVALID_CALL_ARG    "Geçersiz yordam çağrısı ya da geçersiz yordam değiştirgeni."
+    IDS_CREATE_OBJ_ERROR    "Öz devinim sunucusu nesne oluşturamıyor."
     IDS_NO_PROPERTY         "Nesne bu husûsiyeti/yöntemi desteklemiyor."
-    IDS_ARG_NOT_OPT         "Değiştirgen, isteğe bağlı değil."
-    IDS_SYNTAX_ERROR        "Yazım yanlışlığı."
+    IDS_ARG_NOT_OPT         "Değiştirgen seçimlik değil."
+    IDS_SYNTAX_ERROR        "Söz dizimi yanlışlığı."
     IDS_SEMICOLON           """;"" bekleniyordu."
     IDS_LBRACKET            """("" bekleniyordu."
     IDS_RBRACKET            """)"" bekleniyordu."
@@ -35,11 +35,11 @@ STRINGTABLE
     IDS_NOT_NUM             "Sayı bekleniyordu."
     IDS_OBJECT_EXPECTED     "Nesne bekleniyordu."
     IDS_ILLEGAL_ASSIGN      "Geçersiz atama."
-    IDS_UNDEFINED           """|"" tanımlanmamış."
+    IDS_UNDEFINED           """|"" tanımlı değil."
     IDS_NOT_BOOL            "Boolean nesnesi bekleniyordu."
     IDS_JSCRIPT_EXPECTED    "JScript nesnesi bekleniyordu."
-    IDS_REGEXP_SYNTAX_ERROR "Düzenli deyişte yazım yanlışlığı."
-    IDS_URI_INVALID_CHAR    "Şifrelenmiş URI geçersiz damgalar içeriyor."
-    IDS_INVALID_LENGTH      "Dizi büyüklüğü sonlu artı tam sayı olmalı."
+    IDS_REGEXP_SYNTAX_ERROR "Düzenli deyişte söz dizimi yanlışlığı."
+    IDS_URI_INVALID_CHAR    "Kodlanacak URI geçersiz damgalar içeriyor."
+    IDS_INVALID_LENGTH      "Dizi büyüklüğü bir sonlu artı tam sayı olmalı."
     IDS_ARRAY_EXPECTED      "Dizi nesnesi bekleniyordu."
 }

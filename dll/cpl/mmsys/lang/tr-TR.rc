@@ -125,7 +125,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Başarım"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu ayarlar, ReactOS'un sesi nasıl çalacağını denetler. Sesle ilgili sorunları çözmenize yardımcı olabilir.", 8492, 34, 7, 218, 23
+    LTEXT "Bu ayarlar, ReactOS'un sesi ne biçimde çalacağını denetler. Sesle ilgili sorunları çözmenize yardımcı olabilir.", 8492, 34, 7, 218, 23
     GROUPBOX "Ses Çalma", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Donanım İvmesi:", 8495, 13, 56, 111, 14
@@ -146,7 +146,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Başarım"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu ayarlar, ReactOS'un sesi nasıl çalacağını denetler. Sesle ilgili sorunları çözmenize yardımcı olabilir.", 8492, 34, 7, 217, 20
+    LTEXT "Bu ayarlar, ReactOS'un sesi ne biçimde çalacağını denetler. Sesle ilgili sorunları çözmenize yardımcı olabilir.", 8492, 34, 7, 217, 20
     GROUPBOX "Ses Çalma", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Donanım İvmesi:", 8495, 13, 46, 103, 9

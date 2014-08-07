@@ -639,6 +639,7 @@ typedef struct _SECTION_OBJECT
 {
     PVOID StartingVa;
     PVOID EndingVa;
+    PVOID Parent;
     PVOID LeftChild;
     PVOID RightChild;
     PSEGMENT_OBJECT Segment;

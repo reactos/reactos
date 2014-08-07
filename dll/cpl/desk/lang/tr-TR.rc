@@ -34,7 +34,7 @@ BEGIN
     LTEXT "Dakîka", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL "&Çıkışta Şifre Sor", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "Göstergecin Güç Tutumu Husûsiyetleri", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    GROUPBOX "Göstergecin Erke Tutumu Husûsiyetleri", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT "Göstergeciniz için güç ayarlarını düzenlemek için ""Güç""e tıklayınız.", IDC_STATIC, 14, 166, 146, 27
     PUSHBUTTON "G&üç...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END

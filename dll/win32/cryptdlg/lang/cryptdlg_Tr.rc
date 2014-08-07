@@ -1,9 +1,7 @@
 /*
  * cryptdlg dll resources
  *
- * Copyright 2008 Juan Lang
- *
- * Translated to Turkish by Erdem Ersoy (eersoy93) (erdemersoy@live.com) in 2013.
+ * Copyright: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,8 +28,8 @@ STRINGTABLE
     IDS_POLICY_ID "İlke Tanımlayıcısı: "
     IDS_POLICY_QUALIFIER_INFO "İlke Niteleyici Bilgisi"
     IDS_POLICY_QUALIFIER_ID "İlke Niteleyici Kimliği="
-    IDS_CPS "CPS" /* Certification Practice Statement (Onay Belgesi Uygulama Esasları) */
-    IDS_USER_NOTICE "Kullanıcı Bildirisi"
+    IDS_CPS "CPS" /* Onay Belgesi Uygulama Esasları (Certification Practice Statement) */
+    IDS_USER_NOTICE "Kullanıcı Bildirimi"
     IDS_QUALIFIER "Niteleyici"
     IDS_NOTICE_REF "Bildirim Kaynağı"
     IDS_ORGANIZATION "Kurum="

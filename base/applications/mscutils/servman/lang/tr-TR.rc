@@ -145,7 +145,7 @@ FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-    LTEXT "Aşağıdaki hizmeti silmek istemeyi doğruluyor musunuz? Bu silinme geri alınamaz!", IDC_STATIC, 50, 6, 125, 25
+    LTEXT "Aşağıdaki hizmeti silmek istediğinizden emin misiniz? Bu silinme geri alınamaz!", IDC_STATIC, 50, 6, 125, 25
     LTEXT "Hizmet Adı:", IDC_STATIC, 6, 40, 80, 9
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
     EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |

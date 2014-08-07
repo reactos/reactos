@@ -423,10 +423,18 @@ MiDeletePte(IN PMMPTE PointerPte,
             /* Drop the reference on the page table. */
             MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
 
+            ASSERT(Pfn1->u3.e1.PrototypePte == 0);
+
+            /* Make the page free. For prototypes, it will be made free when deleting the section object */
             if (Pfn1->u2.ShareCount == 0)
             {
                 NT_ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-                /* Mark the page temporarily as valid, we're going to make it free soon */
+
+                /* And it should be in standby or modified list */
+                ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) || (Pfn1->u3.e1.PageLocation == StandbyPageList));
+
+                /* Unlink it and put it back in free list */
+                MiUnlinkPageFromList(Pfn1);
                 Pfn1->u3.e1.PageLocation = ActiveAndValid;
 
                 /* Bring it back into the free list */

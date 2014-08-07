@@ -325,7 +325,7 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
-    POPUP "&Düzenleme"
+    POPUP "&Düzen"
     BEGIN
         MENUITEM "&Çoğalt\tCtrl+C", IDM_EDIT_COPY
         MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
@@ -357,7 +357,7 @@ END
 
 IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
-    POPUP "&Düzenleme"
+    POPUP "&Düzen"
     BEGIN
         MENUITEM "&Çoğalt\tCtrl+C", IDM_EDIT_COPY
         MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
@@ -390,7 +390,7 @@ END
 
 IDR_MENU_STANDARD MENU
 BEGIN
-    POPUP "&Düzenleme"
+    POPUP "&Düzen"
     BEGIN
         MENUITEM "&Çoğalt\tCtrl+C", IDM_EDIT_COPY
         MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
@@ -490,7 +490,7 @@ STRINGTABLE
 BEGIN
     IDS_CONSUMPTION_KM_PER_L "Kilometre/Litre"
     IDS_CONSUMPTION_L_PER_100_KM "Litre/100 Kilometre"
-    IDS_CONSUMPTION_MILES_GALLON_UK "Mil/Galon (BB)"
+    IDS_CONSUMPTION_MILES_GALLON_UK "Mil/Galon (BK)"
     IDS_CONSUMPTION_MILES_GALLON_US "Mil/Galon (ABD)"
 END
 
@@ -541,7 +541,7 @@ BEGIN
     IDS_LENGTH_ASTRONOMICAL_UNITS "Astronomi birimi"
     IDS_LENGTH_BARLEYCORNS "Arpa tânesi"
     IDS_LENGTH_CENTIMETERS "Santimetre"
-    IDS_LENGTH_CHAINS_UK "Zincir (BB)"
+    IDS_LENGTH_CHAINS_UK "Zincir (BK)"
     IDS_LENGTH_CHI "Çi"
     IDS_LENGTH_CHOU "Çou"
     IDS_LENGTH_CHR "Çır"
@@ -562,7 +562,7 @@ BEGIN
     IDS_LENGTH_KILOMETERS "Kilometre"
     IDS_LENGTH_LAR "Lar"
     IDS_LENGTH_LIGHT_YEARS "Işık yılı"
-    IDS_LENGTH_LINKS_UK "Zincir bağlantısı (BB)"
+    IDS_LENGTH_LINKS_UK "Zincir bağlantısı (BK)"
     IDS_LENGTH_METERS "Metre"
     IDS_LENGTH_MICRONS "Mikron"
     IDS_LENGTH_MILES "Mil"
@@ -648,10 +648,10 @@ END
 /* Volumes */
 STRINGTABLE
 BEGIN
-    IDS_VOLUME_BARRELS_UK "Fıçı (BB)"
+    IDS_VOLUME_BARRELS_UK "Fıçı (BK)"
     IDS_VOLUME_BARRELS_OIL "Yağ Fıçısı"
     IDS_VOLUME_BUN "Bun"
-    IDS_VOLUME_BUSHELS_UK "Ölçek (BB)"
+    IDS_VOLUME_BUSHELS_UK "Ölçek (BK)"
     IDS_VOLUME_BUSHELS_US "Ölçek (ABD)"
     IDS_VOLUME_CUBIC_CENTIMETERS "Santimetreküp"
     IDS_VOLUME_CUBIC_FEET "Ayakküp"
@@ -659,9 +659,9 @@ BEGIN
     IDS_VOLUME_CUBIC_METERS "Metreküp"
     IDS_VOLUME_CUBIC_YARDS "Yardaküp"
     IDS_VOLUME_DOE "Do"
-    IDS_VOLUME_FLUID_OUNCES_UK "Sıvı onsu (BB)"
+    IDS_VOLUME_FLUID_OUNCES_UK "Sıvı onsu (BK)"
     IDS_VOLUME_FLUID_OUNCES_US "Sıvı onsu (ABD)"
-    IDS_VOLUME_GALLONS_UK "Galon (BB)"
+    IDS_VOLUME_GALLONS_UK "Galon (BK)"
     IDS_VOLUME_GALLONS_DRY_US "Galon, kuru (ABD)"
     IDS_VOLUME_GALLONS_LIQUID_US "Galon, sıvı (ABD)"
     IDS_VOLUME_GOU "Go"
@@ -671,10 +671,10 @@ BEGIN
     IDS_VOLUME_LITERS "Litre"
     IDS_VOLUME_MAL "Mal"
     IDS_VOLUME_MILLILITERS "Mililitre"
-    IDS_VOLUME_PINTS_UK "Bira bardağı (BB)"
+    IDS_VOLUME_PINTS_UK "Bira bardağı (BK)"
     IDS_VOLUME_PINTS_DRY_US "Bira bardağı, katı (ABD)"
     IDS_VOLUME_PINTS_LIQUID_US "Bira bardağı, sıvı (ABD)"
-    IDS_VOLUME_QUARTS_UK "Kuart (BB)"
+    IDS_VOLUME_QUARTS_UK "Kuart (BK)"
     IDS_VOLUME_QUARTS_DRY_US "Kuart, katı (ABD)"
     IDS_VOLUME_QUARTS_LIQUID_US "Kuart, sıvı (ABD)"
     IDS_VOLUME_SEKI "Seki"
@@ -711,6 +711,6 @@ BEGIN
     IDS_WEIGHT_STONES "Taş"
     IDS_WEIGHT_TAMLUNG "Tamlung"
     IDS_WEIGHT_TONNES "Ton"
-    IDS_WEIGHT_TONS_UK "Ton (BB)"
+    IDS_WEIGHT_TONS_UK "Ton (BK)"
     IDS_WEIGHT_TONS_US "Ton (ABD)"
 END

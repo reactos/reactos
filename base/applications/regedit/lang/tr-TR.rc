@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
-    POPUP "&Düzenleme"
+    POPUP "&Düzen"
     BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -320,11 +320,11 @@ BEGIN
     IDS_UNSUPPORTED_TYPE "Bu türdeki dizinler değiştirilemiyor: %ld"
     IDS_TOO_BIG_VALUE "Değer çok büyük: %ld"
     IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ veri türü boş dizgi içeremez.\nBoş dizgiler dizelgeden silinmiştir."
-    IDS_QUERY_DELETE_KEY_ONE "Bu dizini silmek istemeyi doğruluyor musunuz?"
-    IDS_QUERY_DELETE_KEY_MORE "Bu dizinleri silmek istemeyi doğruluyor musunuz?"
+    IDS_QUERY_DELETE_KEY_ONE "Bu dizini silmek istediğinizden emin misiniz?"
+    IDS_QUERY_DELETE_KEY_MORE "Bu dizinleri silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Dizin Silme Doğrulaması"
-    IDS_QUERY_DELETE_ONE "Bu değeri silmek istemeyi doğruluyor musunuz?"
-    IDS_QUERY_DELETE_MORE "Bu değerleri silmek istemeyi doğruluyor musunuz?"
+    IDS_QUERY_DELETE_ONE "Bu değeri silmek istediğinizden emin misiniz?"
+    IDS_QUERY_DELETE_MORE "Bu değerleri silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_CONFIRM "Değer Silme Doğrulaması"
     IDS_ERR_DELVAL_CAPTION "Değerler Silinmesi Yanlışlığı"
     IDS_ERR_DELETEVALUE "Tüm belirtilmiş değerler silinemiyor."
@@ -396,7 +396,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "Bilgi ekleme, yanlışlıkla değerleri değiştirebilir ya da silebilir ve bileşenlerin doğru çalışmasını engelleyebilir.\nEğer ""%s"" içindeki bilginin kaynağına güvenmiyorsanız onu Değer Defteri'ne eklemeyiniz.\n\nSürdürmek istediğinizi doğruluyor musunuz?"
+    IDS_IMPORT_PROMPT "Bilgi ekleme, yanlışlıkla değerleri değiştirebilir ya da silebilir ve bileşenlerin doğru çalışmasını engelleyebilir.\nEğer ""%s"" içindeki bilginin kaynağına güvenmiyorsanız onu Değer Defteri'ne eklemeyiniz.\n\nSürdürmek istediğinizden emin misiniz?"
     IDS_IMPORT_OK """%s"" içinde bulunan dizinler ve değerler Değer Defteri'ne başarıyla eklendi."
     IDS_IMPORT_ERROR """%s"" alınamıyor: Kütüğü açmada yanlışlık. Bir disk yanlışlığı, bir kütük dizgesi yanlışlığı ya da kütüğün olmaması olabilir."
     IDS_EXPORT_ERROR """%s"" verilemiyor: Kütüğü oluşturmada ya da kütüğe yazmada yanlışlık. Bir disk yanlışlığı ya da bir kütük dizgesi yanlışlığı olabilir."

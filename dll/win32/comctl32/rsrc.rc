@@ -162,11 +162,11 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_SK_SK
     #include "lang/comctl_Sk.rc"
 #endif
-#ifdef LANGUAGE_SQ_AL
-    #include "lang/comctl_Sq.rc"
-#endif
 #ifdef LANGUAGE_SL_SI
     #include "lang/comctl_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/comctl_Sq.rc"
 #endif
 #ifdef LANGUAGE_SR_SP
     #include "lang/comctl_Sr.rc"

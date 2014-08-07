@@ -45,8 +45,8 @@ STRINGTABLE
 {
     IDS_TITLEFORMAT     "Bağlan: %s"
     IDS_MESSAGEFORMAT   "Bağlanıyor: %s"
-    IDS_INCORRECTPASSWORDTITLE  "Oturum açma başarısız oldu."
-    IDS_INCORRECTPASSWORD       "Kullanıcı adınızın ve şifrenizin\ndoğrulundan emin olunuz."
+    IDS_INCORRECTPASSWORDTITLE  "Oturum açma başarısız."
+    IDS_INCORRECTPASSWORD       "Kullanıcı adınızın ve şifrenizin\ndoğru olduğundan emin olunuz."
     IDS_CAPSLOCKONTITLE "Büyük Harf Kilidi açık."
-    IDS_CAPSLOCKON      "Büyük Harf Kilidi'nin açık olması girdiğiniz şifrenin yanlış olmasına neden olabilir.\n\nŞifrenizi girmeden önce Büyük Harf Kilidi'ni kapatmak için düğme takımınızdaki Büyük Harf Kilidi düğmesine basınız."
+    IDS_CAPSLOCKON      "Büyük Harf Kilidi'nin açık olması şifrenizi yanlış girmenize neden olabilir.\n\nŞifrenizi girmeden önce Büyük Harf Kilidi'ni kapatmak için düğme takımınızdaki Büyük Harf Kilidi düğmesine basınız."
 }

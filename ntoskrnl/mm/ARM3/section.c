@@ -608,6 +608,8 @@ MiSegmentDelete(IN PSEGMENT Segment)
     SEGMENT_FLAGS SegmentFlags;
     PSUBSECTION Subsection;
     PMMPTE PointerPte, LastPte, PteForProto;
+    PMMPFN Pfn1;
+    PFN_NUMBER PageFrameIndex;
     MMPTE TempPte;
     KIRQL OldIrql;
 
@@ -621,7 +623,7 @@ MiSegmentDelete(IN PSEGMENT Segment)
 
     /* These things are not supported yet */
     ASSERT(ControlArea->DereferenceList.Flink == NULL);
-    ASSERT(!(ControlArea->u.Flags.Image) & !(ControlArea->u.Flags.File));
+    ASSERT(!(ControlArea->u.Flags.Image) && !(ControlArea->u.Flags.File));
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
     ASSERT(ControlArea->u.Flags.Rom == 0);
 
@@ -661,7 +663,52 @@ MiSegmentDelete(IN PSEGMENT Segment)
         TempPte = *PointerPte;
         ASSERT(SegmentFlags.LargePages == 0);
         ASSERT(TempPte.u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Soft.Prototype == 1);
+
+        /* See if we should clean things up */
+        if (!(ControlArea->u.Flags.Image) && !(ControlArea->u.Flags.File))
+        {
+            /*
+             * This is a section backed by the pagefile. Now that it doesn't exist anymore,
+             * we can give everything back to the system.
+             */
+            ASSERT(TempPte.u.Soft.Prototype == 0);
+
+            if (TempPte.u.Soft.Transition == 1)
+            {
+                /* We can give the page back for other use */
+                DPRINT1("Releasing page for transition PTE %p\n", PointerPte);
+                PageFrameIndex = PFN_FROM_PTE(&TempPte);
+                Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+
+                /* As this is a paged-backed section, nobody should reference it anymore (no cache or whatever) */
+                ASSERT(Pfn1->u3.ReferenceCount == 0);
+
+                /* And it should be in standby or modified list */
+                ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) || (Pfn1->u3.e1.PageLocation == StandbyPageList));
+
+                /* Unlink it and put it back in free list */
+                MiUnlinkPageFromList(Pfn1);
+
+                /* Temporarily mark this as active and make it free again */
+                Pfn1->u3.e1.PageLocation = ActiveAndValid;
+                MI_SET_PFN_DELETED(Pfn1);
+
+                MiInsertPageInFreeList(PageFrameIndex);
+            }
+            else if (TempPte.u.Soft.PageFileHigh != 0)
+            {
+                /* Should not happen for now */
+                ASSERT(FALSE);
+            }
+        }
+        else
+        {
+            /* unsupported for now */
+            ASSERT(FALSE);
+
+            /* File-backed section must have prototype PTEs */
+            ASSERT(TempPte.u.Soft.Prototype == 1);
+        }
 
         /* Zero the PTE and keep going */
         PointerPte->u.Long = 0;
@@ -3048,6 +3095,34 @@ MmCommitSessionMappedView(IN PVOID MappedBase,
     KeReleaseGuardedMutexUnsafe(&MmSectionCommitMutex);
     KeReleaseGuardedMutex(Session->SystemSpaceViewLockPointer);
     return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MiDeleteARM3Section(PVOID ObjectBody)
+{
+    PSECTION SectionObject;
+    PCONTROL_AREA ControlArea;
+    KIRQL OldIrql;
+
+    SectionObject = (PSECTION)ObjectBody;
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    ASSERT(SectionObject->Segment);
+    ASSERT(SectionObject->Segment->ControlArea);
+
+    ControlArea = SectionObject->Segment->ControlArea;
+
+    /* Dereference */
+    ControlArea->NumberOfSectionReferences--;
+    ControlArea->NumberOfUserReferences--;
+
+    ASSERT(ControlArea->u.Flags.BeingDeleted == 0);
+
+    /* Check it. It will delete it if there is no more reference to it */
+    MiCheckControlArea(ControlArea, OldIrql);
 }
 
 /* SYSTEM CALLS ***************************************************************/

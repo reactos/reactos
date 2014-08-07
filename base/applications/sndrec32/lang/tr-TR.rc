@@ -32,7 +32,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_FILE_EXIT
     END
-    POPUP "&Düzenleme"
+    POPUP "&Düzen"
     BEGIN
         MENUITEM "&Çoğalt", ID_EDIT_COPY
         MENUITEM "&Ekleyerek Yapıştır", ID_EDIT_PASTE, GRAYED

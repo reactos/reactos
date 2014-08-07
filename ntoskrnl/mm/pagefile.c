@@ -48,8 +48,8 @@ typedef struct _PAGINGFILE
    PFILE_OBJECT FileObject;
    LARGE_INTEGER MaximumSize;
    LARGE_INTEGER CurrentSize;
-   ULONG FreePages;
-   ULONG UsedPages;
+   PFN_NUMBER FreePages;
+   PFN_NUMBER UsedPages;
    PULONG AllocMap;
    KSPIN_LOCK AllocMapLock;
    ULONG AllocMapSize;
@@ -68,7 +68,7 @@ RETRIEVEL_DESCRIPTOR_LIST, *PRETRIEVEL_DESCRIPTOR_LIST;
 
 #define PAIRS_PER_RUN (1024)
 
-#define MAX_PAGING_FILES  (32)
+#define MAX_PAGING_FILES  (16)
 
 /* List of paging files, both used and free */
 static PPAGINGFILE PagingFileList[MAX_PAGING_FILES];
@@ -77,7 +77,6 @@ static PPAGINGFILE PagingFileList[MAX_PAGING_FILES];
 static KSPIN_LOCK PagingFileListLock;
 
 /* Number of paging files */
-static ULONG MiPagingFileCount;
 ULONG MmNumberOfPagingFiles;
 
 /* Number of pages that are available for swapping */
@@ -140,7 +139,7 @@ MmIsFileObjectAPagingFile(PFILE_OBJECT FileObject)
     ULONG i;
 
     /* Loop through all the paging files */
-    for (i = 0; i < MiPagingFileCount; i++)
+    for (i = 0; i < MmNumberOfPagingFiles; i++)
     {
         /* Check if this is one of them */
         if (PagingFileList[i]->FileObject == FileObject) return TRUE;
@@ -275,34 +274,44 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
    return(Status);
 }
 
+
 NTSTATUS
 NTAPI
 MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
-   ULONG i;
-   ULONG_PTR offset;
+	return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry));
+}
+
+NTSTATUS
+NTAPI
+MiReadPageFile(
+	_In_ PFN_NUMBER Page,
+	_In_ ULONG PageFileIndex,
+	_In_ ULONG_PTR PageFileOffset)
+{
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    KEVENT Event;
    UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
    PMDL Mdl = (PMDL)MdlBase;
+   PPAGINGFILE PagingFile;
 
-   DPRINT("MmReadFromSwapPage\n");
+   DPRINT("MiReadSwapFile\n");
 
-   if (SwapEntry == 0)
+   if (PageFileOffset == 0)
    {
       KeBugCheck(MEMORY_MANAGEMENT);
       return(STATUS_UNSUCCESSFUL);
    }
 
-   i = FILE_FROM_ENTRY(SwapEntry);
-   offset = OFFSET_FROM_ENTRY(SwapEntry);
+   ASSERT(PageFileIndex < MAX_PAGING_FILES);
 
-   if (PagingFileList[i]->FileObject == NULL ||
-         PagingFileList[i]->FileObject->DeviceObject == NULL)
+   PagingFile = PagingFileList[PageFileIndex];
+
+   if (PagingFile->FileObject == NULL || PagingFile->FileObject->DeviceObject == NULL)
    {
-      DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
+      DPRINT1("Bad paging file %u\n", PageFileIndex);
       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
@@ -310,11 +319,11 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
    MmBuildMdlFromPages(Mdl, &Page);
    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 
-   file_offset.QuadPart = offset * PAGE_SIZE;
-   file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
+   file_offset.QuadPart = PageFileOffset * PAGE_SIZE;
+   file_offset = MmGetOffsetPageFile(PagingFile->RetrievalPointers, file_offset);
 
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-   Status = IoPageRead(PagingFileList[i]->FileObject,
+   Status = IoPageRead(PagingFile->FileObject,
                        Mdl,
                        &file_offset,
                        &Event,
@@ -348,7 +357,7 @@ MmInitPagingFile(VOID)
    {
       PagingFileList[i] = NULL;
    }
-   MiPagingFileCount = 0;
+   MmNumberOfPagingFiles = 0;
 }
 
 static ULONG
@@ -498,7 +507,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
           FileName, InitialSize->QuadPart);
 
-   if (MiPagingFileCount >= MAX_PAGING_FILES)
+   if (MmNumberOfPagingFiles >= MAX_PAGING_FILES)
    {
       return(STATUS_TOO_MANY_PAGING_FILES);
    }
@@ -800,7 +809,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       }
    }
    MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
-   MiPagingFileCount++;
+   MmNumberOfPagingFiles++;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 
    ZwClose(FileHandle);

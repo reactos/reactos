@@ -346,6 +346,7 @@ GetRawInputDeviceList(
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 GetRegisteredRawInputDevices(
     PRAWINPUTDEVICE pRawInputDevices,
     PUINT puiNumDevices,

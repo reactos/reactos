@@ -2350,6 +2350,8 @@ NtReadFile(IN HANDLE FileHandle,
             {
                 /* Allocate an MDL */
                 Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
+                if (!Mdl)
+                    ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
                 MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -3269,6 +3271,8 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* Allocate an MDL */
                 Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
+                if (!Mdl)
+                    ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
                 MmProbeAndLockPages(Mdl, PreviousMode, IoReadAccess);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

@@ -62,11 +62,13 @@ NpCompleteStalledWrites(IN PNP_DATA_QUEUE DataQueue,
     {
         if (!QuotaLeft) break;
 
-        DataQueueEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, Irp);
+        DataQueueEntry = CONTAINING_RECORD(NextEntry,
+                                           NP_DATA_QUEUE_ENTRY,
+                                           QueueEntry);
 
         Irp = DataQueueEntry->Irp;
 
-        if ((DataQueueEntry->DataEntryType == 0) && (Irp))
+        if ((DataQueueEntry->DataEntryType == Buffered) && (Irp))
         {
             DataLeft = DataQueueEntry->DataSize - ByteOffset;
 
@@ -125,12 +127,12 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
         DataQueue->BytesInQueue -= QueueEntry->DataSize;
         --DataQueue->EntriesInQueue;
 
-        HasWrites = 1;
+        HasWrites = TRUE;
         if (DataQueue->QueueState != WriteEntries ||
             DataQueue->QuotaUsed < DataQueue->Quota ||
             !QueueEntry->QuotaInEntry)
         {
-            HasWrites = 0;
+            HasWrites = FALSE;
         }
 
         DataQueue->QuotaUsed -= QueueEntry->QuotaInEntry;
@@ -138,7 +140,7 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
         if (IsListEmpty(&DataQueue->Queue))
         {
             DataQueue->QueueState = Empty;
-            HasWrites = 0;
+            HasWrites = FALSE;
         }
 
         Irp = QueueEntry->Irp;
@@ -181,7 +183,9 @@ NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
          NextEntry != &DataQueue->Queue;
          NextEntry = DataQueue->Queue.Flink)
     {
-        DataEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, QueueEntry);
+        DataEntry = CONTAINING_RECORD(NextEntry,
+                                      NP_DATA_QUEUE_ENTRY,
+                                      QueueEntry);
 
         Type = DataEntry->DataEntryType;
         if (Type == Buffered || Type == Unbuffered) break;
@@ -221,29 +225,29 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         NpAcquireExclusiveVcb();
     }
 
-    DataEntry = (PNP_DATA_QUEUE_ENTRY)Irp->Tail.Overlay.DriverContext[3];
+    DataEntry = Irp->Tail.Overlay.DriverContext[3];
     if (DataEntry)
     {
         if (DataEntry->QueueEntry.Blink == &DataQueue->Queue)
         {
             DataQueue->ByteOffset = 0;
-            FirstEntry = 1;
+            FirstEntry = TRUE;
         }
         else
         {
-            FirstEntry = 0;
+            FirstEntry = FALSE;
         }
 
         RemoveEntryList(&DataEntry->QueueEntry);
 
         ClientSecurityContext = DataEntry->ClientSecurityContext;
 
-        CompleteWrites = 1;
+        CompleteWrites = TRUE;
         if (DataQueue->QueueState != WriteEntries ||
             DataQueue->QuotaUsed < DataQueue->Quota ||
             !DataEntry->QuotaInEntry)
         {
-            CompleteWrites = 0;
+            CompleteWrites = FALSE;
         }
 
         DataQueue->BytesInQueue -= DataEntry->DataSize;
