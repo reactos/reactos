@@ -999,8 +999,21 @@ CSR_API(SrvSetConsoleKeyShortcuts)
 
 CSR_API(SrvGetConsoleKeyboardLayoutName)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetKbdLayoutNameRequest;
+    PCONSOLE Console;
+
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Retrieve the keyboard layout name of the system */
+    if (GetKbdLayoutNameRequest->Ansi)
+        GetKeyboardLayoutNameA((PCHAR)GetKbdLayoutNameRequest->LayoutBuffer);
+    else
+        GetKeyboardLayoutNameW((PWCHAR)GetKbdLayoutNameRequest->LayoutBuffer);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleCharType)

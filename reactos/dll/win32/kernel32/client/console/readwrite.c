@@ -399,7 +399,7 @@ IntReadConsoleOutput(IN HANDLE hConsoleOutput,
     _SEH2_END;
 
     NumCells = SizeX * SizeY;
-    DPRINT1("IntReadConsoleOutput: (%d x %d)\n", SizeX, SizeY);
+    DPRINT("IntReadConsoleOutput: (%d x %d)\n", SizeX, SizeY);
 
     /*
      * For optimization purposes, Windows (and hence ReactOS, too, for
@@ -869,7 +869,7 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
     _SEH2_END;
 
     NumCells = SizeX * SizeY;
-    DPRINT1("IntWriteConsoleOutput: (%d x %d)\n", SizeX, SizeY);
+    DPRINT("IntWriteConsoleOutput: (%d x %d)\n", SizeX, SizeY);
 
     /*
      * For optimization purposes, Windows (and hence ReactOS, too, for
