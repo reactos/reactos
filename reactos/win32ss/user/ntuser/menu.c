@@ -1151,7 +1151,7 @@ IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
       KeAttachProcess(&Process->Pcb);
    }
 
-   while (!IsEmptyList(&Win32Process->MenuListHead))
+   while (!IsListEmpty(&Win32Process->MenuListHead))
    {
       MenuObject = CONTAINING_RECORD(Win32Process->MenuListHead.Flink, MENU, ListEntry);
       TRACE("Menus are stuck on the process list!\n");
