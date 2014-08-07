@@ -2329,6 +2329,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
          */
         case WM_SETCONSOLEINFO:
         {
+            DPRINT1("WM_SETCONSOLEINFO message\n");
             GuiApplyWindowsConsoleSettings(GuiData, (HANDLE)wParam);
             break;
         }
