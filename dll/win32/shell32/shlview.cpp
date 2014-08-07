@@ -87,6 +87,7 @@ class CDefView :
         HWND                      m_hWndParent;
         FOLDERSETTINGS            m_FolderSettings;
         HMENU                     m_hMenu;
+        BOOL                      m_menusLoaded;
         UINT                      m_uState;
         UINT                      m_cidl;
         LPITEMIDLIST              *m_apidl;
@@ -125,8 +126,8 @@ class CDefView :
         static INT CALLBACK fill_list(LPVOID ptr, LPVOID arg);
         HRESULT FillList();
         HMENU BuildFileMenu();
-        void MergeFileMenu(HMENU hSubMenu);
-        void MergeViewMenu(HMENU hSubMenu);
+        void PrepareShowFileMenu(HMENU hSubMenu);
+        void PrepareShowViewMenu(HMENU hSubMenu);
         UINT GetSelections();
         HRESULT OpenSelectedItems();
         void OnDeactivate();
@@ -360,6 +361,7 @@ CDefView::CDefView()
     m_FolderSettings.fFlags = 0;
     m_FolderSettings.ViewMode = 0;
     m_hMenu = NULL;
+    m_menusLoaded = FALSE;
     m_uState = 0;
     m_cidl = 0;
     m_apidl = NULL;
@@ -999,56 +1001,34 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
  *    #### Handling of the menus ####
  */
 
-/**********************************************************
-* ShellView_BuildFileMenu()
-*/
 HMENU CDefView::BuildFileMenu()
-{   WCHAR    szText[MAX_PATH];
-    MENUITEMINFOW    mii;
-    int    nTools, i;
-    HMENU    hSubMenu;
+{
+    HRESULT hr;
+    CComPtr<IContextMenu> cm;
 
-    TRACE("(%p)\n", this);
+    GetSelections();
 
-    hSubMenu = CreatePopupMenu();
-    if (hSubMenu)
-    {
-        /*get the number of items in our global array*/
-        for(nTools = 0; Tools[nTools].idCommand != -1; nTools++) {}
+    LPCITEMIDLIST * apidl = (LPCITEMIDLIST *)m_apidl;
 
-        /*add the menu items*/
-        for(i = 0; i < nTools; i++)
-        {
-            LoadStringW(shell32_hInstance, Tools[i].idMenuString, szText, MAX_PATH);
+    hr = m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, apidl, IID_NULL_PPV_ARG(IContextMenu, &cm));
+    if (FAILED(hr))
+        return NULL;
 
-            ZeroMemory(&mii, sizeof(mii));
-            mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+    HMENU hmenu = CreatePopupMenu();
 
-            if(BTNS_SEP != Tools[i].bStyle) /* no separator*/
-            {
-                mii.fType = MFT_STRING;
-                mii.fState = MFS_ENABLED;
-                mii.dwTypeData = szText;
-                mii.wID = Tools[i].idCommand;
-            }
-            else
-            {
-                mii.fType = MFT_SEPARATOR;
-            }
-            /* tack This item onto the end of the menu */
-            InsertMenuItemW(hSubMenu, (UINT) - 1, TRUE, &mii);
-        }
-    }
+    //FIXME: get proper numbers ?
+    const UINT first = 0x7800;
+    const UINT last  = 0x7A00;
+    hr = cm->QueryContextMenu(hmenu, 0, first, last, 0);
+    if (FAILED(hr))
+        return NULL;
 
-    TRACE("-- return (menu=%p)\n", hSubMenu);
-    return hSubMenu;
+    // TODO: filter or something
+
+    return hmenu;
 }
 
-/**********************************************************
-* ShellView_MergeFileMenu()
-*/
-void CDefView::MergeFileMenu(HMENU hSubMenu)
+void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
 {
     TRACE("(%p)->(submenu=%p) stub\n", this, hSubMenu);
 
@@ -1075,44 +1055,23 @@ void CDefView::MergeFileMenu(HMENU hSubMenu)
 
     /* Insert This item at the beginning of the menu. */
     _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
-    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+4, MFT_STRING, L"Properties", MFS_DISABLED);
-    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+3, MFT_STRING, L"Rename", MFS_DISABLED);
-    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+2, MFT_STRING, L"Delete", MFS_DISABLED);
-    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM+1, MFT_STRING, L"Create Shortcut", MFS_DISABLED);
+    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 4, MFT_STRING, L"Properties", MFS_DISABLED);
+    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 3, MFT_STRING, L"Rename", MFS_DISABLED);
+    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 2, MFT_STRING, L"Delete", MFS_DISABLED);
+    _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 1, MFT_STRING, L"Create Shortcut", MFS_DISABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM, MFT_STRING, L"New", MFS_ENABLED);
 
-    TRACE("--\n");
-}
-
-/**********************************************************
-* ShellView_MergeViewMenu()
-*/
-void CDefView::MergeViewMenu(HMENU hSubMenu)
-{
-    TRACE("(%p)->(submenu=%p)\n", this, hSubMenu);
-
-    if (!hSubMenu)
-        return;
-
-    // FIXME: I believe windows has all of the items initially in the menu,
-    // and actively calls DeleteMenu on the items that should not be disaplyed.
-
-    MENUITEMINFOW mii = { 0 };
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_ID | MIIM_STATE;
-    if (::GetMenuItemInfoW(hSubMenu, FCIDM_SHVIEW_BIGICON, FALSE, &mii) == 0)
+    HMENU menubase = BuildFileMenu();
+    if (menubase)
     {
-        HMENU menubase = ::LoadMenuW(shell32_hInstance, L"MENU_001");
+        int count = ::GetMenuItemCount(menubase);
 
-        _InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        
-        INT count = ::GetMenuItemCount(menubase);
         for (int i = 0; i < count; i++)
         {
             WCHAR label[128];
 
-            ZeroMemory(&mii, sizeof(mii));
+            MENUITEMINFOW mii = { 0 };
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
             mii.dwTypeData = label;
@@ -1123,11 +1082,22 @@ void CDefView::MergeViewMenu(HMENU hSubMenu)
 
             mii.fType |= MFT_RADIOCHECK;
 
-            ::InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, &mii);
+            ::InsertMenuItemW(hSubMenu, IDM_MYFILEITEM, FALSE, &mii);
         }
+
+        _InsertMenuItemW(hSubMenu, IDM_MYFILEITEM, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
 
         ::DestroyMenu(menubase);
     }
+    TRACE("--\n");
+}
+
+void CDefView::PrepareShowViewMenu(HMENU hSubMenu)
+{
+    TRACE("(%p)->(submenu=%p)\n", this, hSubMenu);
+
+    if (!hSubMenu)
+        return;
 
     if (m_FolderSettings.ViewMode >= FVM_FIRST && m_FolderSettings.ViewMode <= FVM_LAST)
     {
@@ -1422,8 +1392,80 @@ void CDefView::DoActivate(UINT uState)
     {
         if(m_hMenu)
         {
-            TRACE("-- before fnSetMenuSB\n");
-            m_pShellBrowser->SetMenuSB(m_hMenu, 0, m_hWnd);
+            if (!m_menusLoaded)
+            {
+                MENUITEMINFOW mii = { 0 };
+
+                /* initialize EDIT menu */
+                mii.cbSize = sizeof(mii);
+                mii.fMask = MIIM_SUBMENU;
+                if (::GetMenuItemInfoW(m_hMenu, FCIDM_MENU_EDIT, FALSE, &mii))
+                {
+                    HMENU hSubMenu = mii.hSubMenu;
+
+                    HMENU menubase = ::LoadMenuW(shell32_hInstance, L"MENU_003");
+
+                    int count = ::GetMenuItemCount(menubase);
+                    for (int i = 0; i < count; i++)
+                    {
+                        WCHAR label[128];
+
+                        ZeroMemory(&mii, sizeof(mii));
+                        mii.cbSize = sizeof(mii);
+                        mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
+                        mii.dwTypeData = label;
+                        mii.cch = _countof(label);
+                        ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
+
+                        DbgPrint("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
+
+                        mii.fType |= MFT_RADIOCHECK;
+
+                        ::InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, &mii);
+                    }
+
+                    ::DestroyMenu(menubase);
+                }
+
+                /* initialize VIEW menu */
+                mii.cbSize = sizeof(mii);
+                mii.fMask = MIIM_SUBMENU;
+                if (::GetMenuItemInfoW(m_hMenu, FCIDM_MENU_VIEW, FALSE, &mii))
+                {
+                    HMENU menubase = ::LoadMenuW(shell32_hInstance, L"MENU_001");
+
+                    HMENU hSubMenu = mii.hSubMenu;
+
+                    _InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
+
+                    int count = ::GetMenuItemCount(menubase);
+                    for (int i = 0; i < count; i++)
+                    {
+                        WCHAR label[128];
+
+                        ZeroMemory(&mii, sizeof(mii));
+                        mii.cbSize = sizeof(mii);
+                        mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
+                        mii.dwTypeData = label;
+                        mii.cch = _countof(label);
+                        ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
+
+                        DbgPrint("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
+
+                        mii.fType |= MFT_RADIOCHECK;
+
+                        ::InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, &mii);
+                    }
+
+                    ::DestroyMenu(menubase);
+                }
+
+
+                TRACE("-- before fnSetMenuSB\n");
+                m_pShellBrowser->SetMenuSB(m_hMenu, 0, m_hWnd);
+
+                m_menusLoaded = TRUE;
+            }
         }
 
         if (SVUIA_ACTIVATE_FOCUS == uState)
@@ -1900,13 +1942,13 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     switch (menuItemId)
     {
     case FCIDM_MENU_FILE:
-        MergeFileMenu(hSubmenu);
+        PrepareShowFileMenu(hSubmenu);
         break;
     case FCIDM_MENU_EDIT:
-        //MergeEditMenu(hSubmenu);
+        //PrepareShowEditMenu(hSubmenu);
         break;
     case FCIDM_MENU_VIEW:
-        MergeViewMenu(hSubmenu);
+        PrepareShowViewMenu(hSubmenu);
         break;
     }
 

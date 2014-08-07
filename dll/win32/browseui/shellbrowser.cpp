@@ -33,6 +33,47 @@ extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
 #include "newatlinterfaces.h"
 
+static void DbgDumpMenuInternal(HMENU hmenu, char* padding, int padlevel)
+{
+    WCHAR label[128];
+
+    padding[padlevel] = '.';
+    padding[padlevel + 1] = '.';
+    padding[padlevel + 2] = 0;
+
+    int count = GetMenuItemCount(hmenu);
+    for (int i = 0; i < count; i++)
+    {
+        MENUITEMINFOW mii = { 0 };
+
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_STRING | MIIM_FTYPE | MIIM_SUBMENU | MIIM_STATE | MIIM_ID;
+        mii.dwTypeData = label;
+        mii.cch = _countof(label);
+
+        GetMenuItemInfo(hmenu, i, TRUE, &mii);
+
+        if (mii.fType & MFT_BITMAP)
+            DbgPrint("%s%2d - %08x: BITMAP %08p (state=%d, has submenu=%s)\n", padding, i, mii.wID, mii.hbmpItem, mii.fState, mii.hSubMenu ? "TRUE" : "FALSE");
+        else if (mii.fType & MFT_SEPARATOR)
+            DbgPrint("%s%2d - %08x ---SEPARATOR---\n", padding, i, mii.wID);
+        else
+            DbgPrint("%s%2d - %08x: %S (state=%d, has submenu=%s)\n", padding, i, mii.wID, mii.dwTypeData, mii.fState, mii.hSubMenu ? "TRUE" : "FALSE");
+
+        if (mii.hSubMenu)
+            DbgDumpMenuInternal(mii.hSubMenu, padding, padlevel + 2);
+
+    }
+
+    padding[padlevel] = 0;
+}
+
+static void DbgDumpMenu(HMENU hmenu)
+{
+    char padding[128];
+    DbgDumpMenuInternal(hmenu, padding, 0);
+}
+
 /*
 TODO:
   **Provide implementation of new and delete that use LocalAlloc
@@ -1851,7 +1892,17 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::ContextSensitiveHelp(BOOL fEnterMode)
 HRESULT STDMETHODCALLTYPE CShellBrowser::InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths)
 {
     HMENU mainMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_CABINET_MAINMENU));
+
+    //DbgPrint("Menu from shell32:\n");
+    //DbgDumpMenu(hmenuShared);
+
+    //DbgPrint("Menu from browseui:\n");
+    //DbgDumpMenu(mainMenu);
+
     Shell_MergeMenus(hmenuShared, mainMenu, 0, 0, FCIDM_BROWSERLAST, MM_SUBMENUSHAVEIDS);
+
+    //DbgPrint("Merged menu:\n");
+    //DbgDumpMenu(hmenuShared);
 
     int GCCU(itemCount3) = GetMenuItemCount(hmenuShared);
     Unused(itemCount3);
@@ -1868,6 +1919,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetMenuSB(HMENU hmenuShared, HOLEMENU h
 {
     CComPtr<IShellMenu>                     shellMenu;
     HRESULT                                 hResult;
+
+    //DbgPrint("SetMenuSB:\n");
+    //DbgDumpMenu(hmenuShared);
 
     if (hmenuShared && IsMenu(hmenuShared) == FALSE)
         return E_FAIL;
@@ -3192,7 +3246,15 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         menuIndex = 5;
     }
 
-    return RelayMsgToShellView(uMsg, wParam, menuIndex, bHandled);
+    //DbgPrint("Before relay:\n");
+    //DbgDumpMenu(theMenu);
+
+    LRESULT ret = RelayMsgToShellView(uMsg, wParam, menuIndex, bHandled);
+
+    //DbgPrint("After relay:\n");
+    //DbgDumpMenu(theMenu);
+
+    return ret;
 }
 
 LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
