@@ -17,7 +17,7 @@
 
 VOID
 NTAPI
-NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject, 
+NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
     KIRQL OldIrql;
@@ -53,7 +53,7 @@ NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = STATUS_CANCELLED;
     IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
 }
- 
+
 VOID
 NTAPI
 NpTimerDispatch(IN PKDPC Dpc,
@@ -243,7 +243,7 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
     WaitEntry->WaitQueue = WaitQueue;
     WaitEntry->Irp = Irp;
 
-    WaitBuffer = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
+    WaitBuffer = Irp->AssociatedIrp.SystemBuffer;
     if (WaitBuffer->TimeoutSpecified)
     {
         DueTime = WaitBuffer->Timeout;
@@ -281,7 +281,6 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
 
         KeSetTimer(&WaitEntry->Timer, DueTime, &WaitEntry->Dpc);
         WaitEntry = NULL;
-
     }
 
     KeReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
