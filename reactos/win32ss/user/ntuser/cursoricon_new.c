@@ -670,7 +670,7 @@ NtUserClipCursor(
         prcl = &rclLocal;
     }
 
-	UserEnterExclusive();
+    UserEnterExclusive();
 
     /* Call the internal function */
     bResult = UserClipCursor(prcl);
@@ -1327,9 +1327,9 @@ UserDrawIconEx(
     }
 
     /* Now do the rendering */
-	if(hbmAlpha && ((diFlags & DI_NORMAL) == DI_NORMAL))
-	{
-	    BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
+    if(hbmAlpha && ((diFlags & DI_NORMAL) == DI_NORMAL))
+    {
+        BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
         PSURFACE psurf = NULL;
 
         psurf = SURFACE_ShareLockSurface(hbmAlpha);
@@ -1354,7 +1354,7 @@ UserDrawIconEx(
         EXLATEOBJ_vCleanup(&exlo);
         SURFACE_ShareUnlockSurface(psurf);
         if(Ret) goto done;
-		ERR("NtGdiAlphaBlend failed!\n");
+        ERR("NtGdiAlphaBlend failed!\n");
     }
 NoAlpha:
     if (diFlags & DI_MASK)
@@ -1387,7 +1387,7 @@ NoAlpha:
 
     if(diFlags & DI_IMAGE)
     {
-		if (psurfColor)
+        if (psurfColor)
         {
             DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY ;
             
