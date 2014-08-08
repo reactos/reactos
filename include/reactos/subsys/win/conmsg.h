@@ -544,7 +544,12 @@ typedef struct
     SMALL_RECT WriteRegion;
     BOOLEAN Unicode;
 
-    ULONG Unknown;
+    /*
+     * If we are going to write too large (>= 64 kB, size of the CSR heap)
+     * data buffers, we allocate a heap buffer in the process' memory, and
+     * CSR will read it via NtReadVirtualMemory.
+     */
+    BOOLEAN UseVirtualMemory;
 } CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
 
 typedef struct
