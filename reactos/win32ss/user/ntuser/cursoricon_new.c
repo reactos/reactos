@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Cursor and icon functions
- * FILE:             subsystems/win32/win32k/ntuser/cursoricon.c
+ * FILE:             win32ss/user/ntuser/cursoricon.c
  * PROGRAMER:        ReactOS Team
  */
 /*
@@ -298,7 +298,7 @@ IntDestroyCursor(
 
     if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
     {
-        RETURN(FALSE);
+        return(FALSE);
     }
 
     ret = IntDestroyCurIconObject(CurIcon, bForce);
@@ -1291,7 +1291,7 @@ UserDrawIconEx(
         /* We now have our destination surface */
         psurfDest = psurfOffScreen;
 #else
-        pdcClipObj = pdc->rosdc.CombinedClip;
+        pdcClipObj = &pdc->co.ClipObj;
         /* Paint the brush */
         EBRUSHOBJ_vInit(&eboFill, pbrush, psurfDest, 0x00FFFFFF, 0, NULL);
         
@@ -1322,7 +1322,7 @@ UserDrawIconEx(
     {
         /* We directly draw to the DC */
         TRACE("Performing on screen rendering.\n");
-        pdcClipObj = pdc->rosdc.CombinedClip;
+        pdcClipObj = &pdc->co.ClipObj;
         // psurfOffScreen = NULL;
     }
 
