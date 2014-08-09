@@ -26,13 +26,11 @@
 extern "C"
 BOOL WINAPI Shell_GetImageLists(
     _Out_  HIMAGELIST *phiml,
-    _Out_  HIMAGELIST *phimlSmall
-    );
+    _Out_  HIMAGELIST *phimlSmall);
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
 #include "newatlinterfaces.h"
-
 
 /*
 TODO:
@@ -1853,16 +1851,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::InsertMenusSB(HMENU hmenuShared, LPOLEM
 {
     HMENU mainMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_CABINET_MAINMENU));
 
-    //DbgPrint("Menu from shell32:\n");
-    //DbgDumpMenu(hmenuShared);
-
-    //DbgPrint("Menu from browseui:\n");
-    //DbgDumpMenu(mainMenu);
-
     Shell_MergeMenus(hmenuShared, mainMenu, 0, 0, FCIDM_BROWSERLAST, MM_SUBMENUSHAVEIDS);
-
-    //DbgPrint("Merged menu:\n");
-    //DbgDumpMenu(hmenuShared);
 
     int GCCU(itemCount3) = GetMenuItemCount(hmenuShared);
     Unused(itemCount3);
@@ -1879,9 +1868,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetMenuSB(HMENU hmenuShared, HOLEMENU h
 {
     CComPtr<IShellMenu>                     shellMenu;
     HRESULT                                 hResult;
-
-    //DbgPrint("SetMenuSB:\n");
-    //DbgDumpMenu(hmenuShared);
 
     if (hmenuShared && IsMenu(hmenuShared) == FALSE)
         return E_FAIL;
@@ -3206,13 +3192,7 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         menuIndex = 5;
     }
 
-    //DbgPrint("Before relay:\n");
-    //DbgDumpMenu(theMenu);
-
     LRESULT ret = RelayMsgToShellView(uMsg, wParam, menuIndex, bHandled);
-
-    //DbgPrint("After relay:\n");
-    //DbgDumpMenu(theMenu);
 
     return ret;
 }

@@ -21,6 +21,7 @@
 
 #include "CMergedFolder.h"
 
+// TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
 IID IID_IAugmentedShellFolder = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
 IID IID_IAugmentedShellFolder2 = { 0x8DB3B3F4, 0x6CFE, 0x11D1, { 0x8A, 0xE9, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0 } };
 CLSID CLSID_MergedFolder = { 0x26FDC864, 0xBE88, 0x46E7, { 0x92, 0x35, 0x03, 0x2D, 0x8E, 0xA5, 0x16, 0x2E } };
@@ -309,7 +310,7 @@ HRESULT BindToDesktop(LPCITEMIDLIST pidl, IShellFolder ** ppsfResult)
     return hr;
 }
 
-HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
+static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
 {
     HRESULT hr;
     LPITEMIDLIST pidlUserStartMenu;

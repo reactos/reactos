@@ -31,6 +31,22 @@ toolbar, and address band for an explorer window
 
 #define USE_CUSTOM_MENUBAND 1
 
+#if 1
+// TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
+
+IID IID_IAugmentedShellFolder = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
+CLSID CLSID_MergedFolder = { 0x26FDC864, 0xBE88, 0x46E7, { 0x92, 0x35, 0x03, 0x2D, 0x8E, 0xA5, 0x16, 0x2E } };
+
+interface IAugmentedShellFolder : public IShellFolder
+{
+    virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetNameSpaceID(LPCITEMIDLIST, LPGUID) = 0;
+    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace(ULONG, LPGUID, IShellFolder **) = 0;
+    virtual HRESULT STDMETHODCALLTYPE EnumNameSpace(ULONG, PULONG) = 0;
+};
+
+#endif
+
 // navigation controls and menubar just send a message to parent window
 /*
 TODO:
@@ -74,7 +90,11 @@ extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
 extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
 
 typedef HRESULT(WINAPI * PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
-typedef HRESULT(WINAPI * PMERGEDFOLDER_CONSTRUCTOR)(IShellFolder* userLocal, IShellFolder* allUsers, REFIID riid, LPVOID *ppv);
+typedef HRESULT(WINAPI * PMERGEDFOLDER_CONSTRUCTOR)(REFIID riid, void **ppv);
+
+HMODULE hRShell = NULL;
+PMERGEDFOLDER_CONSTRUCTOR pCMergedFolder_Constructor = NULL;
+PMENUBAND_CONSTRUCTOR     pCMenuBand_Constructor = NULL;
 
 HRESULT IUnknown_HasFocusIO(IUnknown * punk)
 {
@@ -392,15 +412,105 @@ CMenuCallback::~CMenuCallback()
 {
 }
 
+static HRESULT BindToDesktop(LPCITEMIDLIST pidl, IShellFolder ** ppsfResult)
+{
+    HRESULT hr;
+    CComPtr<IShellFolder> psfDesktop;
+
+    *ppsfResult = NULL;
+
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+        return hr;
+
+    hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, ppsfResult));
+
+    return hr;
+}
+
+static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * ppidl)
+{
+    HRESULT hr;
+    LPITEMIDLIST pidlUserFavorites;
+    LPITEMIDLIST pidlCommonFavorites;
+    CComPtr<IShellFolder> psfUserFavorites;
+    CComPtr<IShellFolder> psfCommonFavorites;
+    CComPtr<IAugmentedShellFolder> pasf;
+
+    *ppsfFavorites = NULL;
+
+    hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidlUserFavorites);
+    if (FAILED(hr))
+        return hr;
+
+    if (FAILED(SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &pidlCommonFavorites)))
+    {
+        hr = BindToDesktop(pidlUserFavorites, ppsfFavorites);
+        *ppidl = pidlUserFavorites;
+        return hr;
+    }
+
+    hr = BindToDesktop(pidlUserFavorites, &psfUserFavorites);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = BindToDesktop(pidlCommonFavorites, &psfCommonFavorites);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+#if 1
+    if (!hRShell)
+    {
+        hRShell = GetModuleHandle(L"rshell.dll");
+        if (!hRShell)
+            hRShell = LoadLibrary(L"rshell.dll");
+    }
+
+    if (!pCMergedFolder_Constructor)
+        pCMergedFolder_Constructor = (PMERGEDFOLDER_CONSTRUCTOR) GetProcAddress(hRShell, "CMergedFolder_Constructor");
+
+    if (pCMergedFolder_Constructor)
+    {
+        hr = pCMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+    }
+    else
+    {
+        hr = E_FAIL;
+    }
+#else
+    hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+#endif
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        *ppsfFavorites = psfUserFavorites.Detach();
+        *ppidl = pidlUserFavorites;
+        ILFree(pidlCommonFavorites);
+        return hr;
+    }
+
+    hr = pasf->AddNameSpace(NULL, psfUserFavorites, pidlUserFavorites, 0xFF00);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pasf->AddNameSpace(NULL, psfCommonFavorites, pidlCommonFavorites, 0);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pasf->QueryInterface(IID_PPV_ARG(IShellFolder, ppsfFavorites));
+    pasf.Release();
+
+    ILFree(pidlCommonFavorites);
+    ILFree(pidlUserFavorites);
+
+    return hr;
+}
+
 HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, void **ppvObject)
 {
     CComPtr<IShellMenu>                     parentMenu;
     CComPtr<IShellMenu>                     newMenu;
     CComPtr<IShellFolder>                   favoritesFolder;
     LPITEMIDLIST                            favoritesPIDL;
-    CComPtr<IShellFolder>                   commonFavsFolder;
-    LPITEMIDLIST                            commonFavsPIDL;
-    CComPtr<IShellFolder>                   mergedFolder;
     HWND                                    ownerWindow;
     HMENU                                   parentHMenu;
     HMENU                                   favoritesHMenu;
@@ -428,12 +538,19 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         if (favoritesHMenu == NULL)
             return E_FAIL;
 #if USE_CUSTOM_MENUBAND
-        HMODULE hrs = LoadLibrary(L"rshell.dll");
-
-        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hrs, "CMenuBand_Constructor");
-        if (func)
+        if (!hRShell)
         {
-            hResult = func(IID_PPV_ARG(IShellMenu, &newMenu));
+            hRShell = GetModuleHandle(L"rshell.dll");
+            if (!hRShell)
+                hRShell = LoadLibrary(L"rshell.dll");
+        }
+
+        if (!pCMenuBand_Constructor)
+            pCMenuBand_Constructor = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hRShell, "CMenuBand_Constructor");
+
+        if (pCMenuBand_Constructor)
+        {
+            hResult = pCMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &newMenu));
         }
         else
         {
@@ -452,36 +569,15 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         hResult = newMenu->SetMenu(favoritesHMenu, ownerWindow, SMSET_TOP | SMSET_DONTOWN);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        hResult = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &favoritesPIDL);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-        hResult = SHBindToFolder(favoritesPIDL, &favoritesFolder);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
+
         RegCreateKeyEx(HKEY_CURRENT_USER, szFavoritesKey,
                 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &orderRegKey, &disposition);
-#if 1 /*USE_MERGED_FAVORITES*/
-        hResult = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &commonFavsPIDL);
+
+        hResult = GetFavoritesFolder(&favoritesFolder, &favoritesPIDL);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        hResult = SHBindToFolder(commonFavsPIDL, &commonFavsFolder);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-        ILFree(commonFavsPIDL);
-        
-        PMERGEDFOLDER_CONSTRUCTOR mfconstruct = (PMERGEDFOLDER_CONSTRUCTOR) GetProcAddress(hrs, "CMergedFolder_Constructor");
-        if (mfconstruct)
-        {
-            hResult = mfconstruct(favoritesFolder, commonFavsFolder, IID_PPV_ARG(IShellFolder, &mergedFolder));
-        }
-        else
-        {
-            mergedFolder = favoritesFolder;
-        }
-#else
-        mergedFolder = favoritesFolder;
-#endif
-        hResult = newMenu->SetShellFolder(mergedFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
+
+        hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
         ILFree(favoritesPIDL);
         if (SUCCEEDED(hResult))
             fFavoritesMenu.Attach(newMenu.Detach());
