@@ -19,6 +19,7 @@ list(APPEND SOURCE
     hardware/speaker.c
     hardware/timer.c
     hardware/vga.c
+    hardware/mouse.c
     dos/dos32krnl/bios.c
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c
