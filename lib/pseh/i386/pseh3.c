@@ -82,8 +82,8 @@ _SEH3$_InvokeNestedFunctionFilter(
 
         /* Second call to get the filter result */
         "mov $1, %%ecx\n\t"
-        "call *%[Filter]\n\t"
-        : "=a"(FilterResult)
+        "call *%[Filter]"
+        : "=a" (FilterResult)
         : [RegistrationFrame] "m" (RegistrationFrame), [Filter] "m" (Filter)
         : "ecx", "edx");
 
@@ -197,14 +197,14 @@ _SEH3$_JumpToTarget(
     {
         asm volatile (
             /* Load the registers */
-            "movl 20(%%ecx), %%esp\n"
-            "movl 24(%%ecx), %%ebp\n"
+            "movl 20(%%ecx), %%esp\n\t"
+            "movl 24(%%ecx), %%ebp\n\t"
 
             /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
-            "addl $4, %%esp\n"
+            "addl $4, %%esp\n\t"
 
             /* Jump into the exception handler */
-            "jmp *%[Target]\n"
+            "jmp *%[Target]"
             : :
             "c" (RegistrationFrame),
             "a" (RegistrationFrame->ScopeTable),
@@ -215,14 +215,14 @@ _SEH3$_JumpToTarget(
     {
         asm volatile (
             /* Load the registers */
-            "movl 20(%%ecx), %%esp\n"
-            "movl 24(%%ecx), %%ebp\n"
+            "movl 20(%%ecx), %%esp\n\t"
+            "movl 24(%%ecx), %%ebp\n\t"
 
             /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
-            "addl $4, %%esp\n"
+            "addl $4, %%esp\n\t"
 
             /* Jump into the exception handler */
-            "jmp *%[Target]\n"
+            "jmp *%[Target]"
             : :
             "c" (RegistrationFrame),
             "a" (RegistrationFrame->ScopeTable),
@@ -253,7 +253,7 @@ _SEH3$_except_handler(
     LONG FilterResult;
 
     /* Clear the direction flag. */
-    asm volatile ("cld\n" : : : "memory");
+    asm volatile ("cld" : : : "memory");
 
     /* Save the exception pointers on the stack */
     ExceptionPointers.ExceptionRecord = ExceptionRecord;

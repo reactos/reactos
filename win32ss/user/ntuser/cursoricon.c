@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Cursor and icon functions
- * FILE:             subsystems/win32/win32k/ntuser/cursoricon.c
+ * FILE:             win32ss/user/ntuser/cursoricon.c
  * PROGRAMER:        ReactOS Team
  */
 /*

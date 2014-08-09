@@ -1,10 +1,7 @@
 /*
  * Top level resource file for Common Controls
  *
- * Copyright 1999 Bertho Stultiens
- * Copyright 1999 Eric Kohl
- *
- * Translated to Turkish by Fatih Aşıcı in 2006 and Erdem Ersoy (eersoy93) (erdemersoy@live.com) in 2013.
+ * Copyrights: 2006 Fatih Aşıcı; 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,12 +33,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_SEPARATOR "Ayraç"
+    IDS_SEPARATOR "Ayırıcı"
 }
 
 STRINGTABLE
 {
-    HKY_NONE "Hiçbiri"
+    HKY_NONE "Yok"
 }
 
 IDD_PROPSHEET DIALOG 0, 0, 220, 140
@@ -64,7 +61,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   PUSHBUTTON    "< &Geri", IDC_BACK_BUTTON,56,138,55,14
   DEFPUSHBUTTON "&İleri >", IDC_NEXT_BUTTON,111,138,55,14
-  DEFPUSHBUTTON "Son",  IDC_FINISH_BUTTON,111,138,55,14
+  DEFPUSHBUTTON "&Son",  IDC_FINISH_BUTTON,111,138,55,14
   PUSHBUTTON    "İptal",  IDCANCEL,173,138,55,14
   PUSHBUTTON    "Yardım",    IDHELP,235,138,55,14,WS_GROUP
   LTEXT         "",        IDC_SUNKEN_LINE,7,129,278,1,SS_SUNKEN
@@ -80,10 +77,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "Ka&pat",     IDCANCEL,320,6,70,14
   PUSHBUTTON    "&Sıfırla",     IDC_RESET_BTN,320,23,70,14
-  PUSHBUTTON    "Yar&dım",      IDC_HELP_BTN,320,40,70,14
-  PUSHBUTTON    "&Yukarı Taşı",   IDC_MOVEUP_BTN,320,74,70,14
+  PUSHBUTTON    "&Yardım",      IDC_HELP_BTN,320,40,70,14
+  PUSHBUTTON    "Y&ukarı Taşı",   IDC_MOVEUP_BTN,320,74,70,14
   PUSHBUTTON    "&Aşağı Taşı", IDC_MOVEDN_BTN,320,91,70,14
-  LTEXT         "K&ullanılabilir Düğmeler:", -1,4,5,120,10
+  LTEXT         "Ku&llanılabilir Düğmeler:", -1,4,5,120,10
   LISTBOX       IDC_AVAILBTN_LBOX,5,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
   PUSHBUTTON    "&Ekle ->",    IDOK, 132, 42, 55, 14
   PUSHBUTTON    "<- &Kaldır", IDC_REMOVE_BTN,132,62,55,14

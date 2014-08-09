@@ -56,7 +56,7 @@ CloseConsoleHandle(HANDLE Handle);
 HANDLE WINAPI
 GetConsoleInputWaitHandle(VOID);
 
-HANDLE FASTCALL
+HANDLE
 TranslateStdHandle(HANDLE hHandle);
 
 VOID

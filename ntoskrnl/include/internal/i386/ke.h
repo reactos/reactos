@@ -687,13 +687,13 @@ KiSystemCallTrampoline(IN PVOID Handler,
 
     __asm__ __volatile__
     (
-        "subl %1, %%esp\n"
-        "movl %%esp, %%edi\n"
-        "movl %2, %%esi\n"
-        "shrl $2, %1\n"
-        "rep movsd\n"
-        "call *%3\n"
-        "movl %%eax, %0\n"
+        "subl %1, %%esp\n\t"
+        "movl %%esp, %%edi\n\t"
+        "movl %2, %%esi\n\t"
+        "shrl $2, %1\n\t"
+        "rep movsd\n\t"
+        "call *%3\n\t"
+        "movl %%eax, %0"
         : "=r"(Result)
         : "c"(StackBytes),
           "d"(Arguments),
@@ -772,6 +772,7 @@ FORCEINLINE
 NTSTATUS
 KiConvertToGuiThread(VOID)
 {
+    NTSTATUS NTAPI PsConvertToGuiThread(VOID);
     NTSTATUS Result;
     PVOID StackFrame;
 
@@ -799,7 +800,7 @@ KiConvertToGuiThread(VOID)
         "addl %%esp, %1\n\t"
         "movl %1, %%ebp"
         : "=a"(Result), "=r"(StackFrame)
-        :
+        : "p"(PsConvertToGuiThread)
         : "%esp", "%ecx", "%edx", "memory"
     );
     return Result;
@@ -819,22 +820,24 @@ FORCEINLINE
 VOID
 KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 {
+    VOID NTAPI KiSystemStartupBootStack(VOID);
+
     /* We have to switch to a new stack before continuing kernel initialization */
 #ifdef __GNUC__
     __asm__
     (
-        "movl %0, %%esp\n"
-        "subl %1, %%esp\n"
-        "pushl %2\n"
-        "jmp _KiSystemStartupBootStack@0\n"
+        "movl %0, %%esp\n\t"
+        "subl %1, %%esp\n\t"
+        "pushl %2\n\t"
+        "jmp _KiSystemStartupBootStack@0"
         :
         : "c"(InitialStack),
           "i"(NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH),
-          "i"(CR0_EM | CR0_TS | CR0_MP)
+          "i"(CR0_EM | CR0_TS | CR0_MP),
+          "p"(KiSystemStartupBootStack)
         : "%esp"
     );
 #elif defined(_MSC_VER)
-    VOID NTAPI KiSystemStartupBootStack(VOID);
     __asm
     {
         mov esp, InitialStack
@@ -858,7 +861,7 @@ KiIret(VOID)
 #if defined(__GNUC__)
     __asm__ __volatile__
     (
-        "iret\n"
+        "iret"
     );
 #elif defined(_MSC_VER)
     __asm

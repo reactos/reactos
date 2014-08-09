@@ -15,8 +15,8 @@
 #define CARDBACK_OPTIONS_WIDTH   72
 #define CARDBACK_OPTIONS_HEIGHT  112
 
-#define X_BORDER                  6
-#define Y_BORDER                  6
+#define X_BORDER                  5
+#define Y_BORDER                  5
 
 #define NUM_STACKS         10
 

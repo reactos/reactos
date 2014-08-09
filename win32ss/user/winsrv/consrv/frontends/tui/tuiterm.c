@@ -24,13 +24,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#define GetNextConsole(Console) \
-    CONTAINING_RECORD(Console->Entry.Flink, TUI_CONSOLE_DATA, Entry)
-
-#define GetPrevConsole(Console) \
-    CONTAINING_RECORD(Console->Entry.Blink, TUI_CONSOLE_DATA, Entry)
-
-
 /* TUI Console Window Class name */
 #define TUI_CONSOLE_WINDOW_CLASS L"TuiConsoleWindowClass"
 
@@ -45,6 +38,13 @@ typedef struct _TUI_CONSOLE_DATA
     PCONSOLE Console;           /* Pointer to the owned console */
     // TUI_CONSOLE_INFO TuiInfo;   /* TUI terminal settings */
 } TUI_CONSOLE_DATA, *PTUI_CONSOLE_DATA;
+
+#define GetNextConsole(Console) \
+    CONTAINING_RECORD(Console->Entry.Flink, TUI_CONSOLE_DATA, Entry)
+
+#define GetPrevConsole(Console) \
+    CONTAINING_RECORD(Console->Entry.Blink, TUI_CONSOLE_DATA, Entry)
+
 
 /* List of the maintained virtual consoles and its lock */
 static LIST_ENTRY VirtConsList;
@@ -164,7 +164,7 @@ done:
 /**\
 \******************************************************************************/
 
-static BOOL FASTCALL
+static BOOL
 TuiSwapConsole(INT Next)
 {
     static PTUI_CONSOLE_DATA SwapConsole = NULL; /* Console we are thinking about swapping with */
@@ -231,7 +231,7 @@ TuiSwapConsole(INT Next)
     }
 }
 
-static VOID FASTCALL
+static VOID
 TuiCopyRect(PCHAR Dest, PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
 {
     UINT SrcDelta, DestDelta;
@@ -276,6 +276,21 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
+#if 0
+            if ((HIWORD(lParam) & KF_ALTDOWN) && wParam == VK_TAB)
+            {
+                // if ((HIWORD(lParam) & (KF_UP | KF_REPEAT)) != KF_REPEAT)
+                    TuiSwapConsole(ShiftState & SHIFT_PRESSED ? -1 : 1);
+
+                break;
+            }
+            else if (wParam == VK_MENU /* && !Down */)
+            {
+                TuiSwapConsole(0);
+                break;
+            }
+#endif
+
             if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 MSG Message;
@@ -459,7 +474,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
         // return STATUS_INVALID_PARAMETER;
 
     // /* Initialize the console */
-    // Console->TermIFace.Vtbl = &TuiVtbl;
+    // Console->FrontEndIFace.Vtbl = &TuiVtbl;
 
     TuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(TUI_CONSOLE_DATA));
     if (!TuiData)
@@ -467,7 +482,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
         DPRINT1("CONSRV: Failed to create TUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
     }
-    // Console->TermIFace.Data = (PVOID)TuiData;
+    // Console->FrontEndIFace.Data = (PVOID)TuiData;
     TuiData->Console = Console;
     TuiData->hWindow = NULL;
 
@@ -525,7 +540,7 @@ static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
     // PCONSOLE Console = This->Console;
-    PTUI_CONSOLE_DATA TuiData = This->Data; // Console->TermIFace.Data;
+    PTUI_CONSOLE_DATA TuiData = This->Data; // Console->FrontEndIFace.Data;
 
     /* Close the notification window */
     DestroyWindow(TuiData->hWindow);
@@ -556,7 +571,7 @@ TuiDeinitFrontEnd(IN OUT PFRONTEND This)
     /* Switch to the next console */
     if (NULL != ActiveConsole) ConioDrawConsole(ActiveConsole->Console);
 
-    // Console->TermIFace.Data = NULL;
+    // Console->FrontEndIFace.Data = NULL;
     This->Data = NULL;
     DeleteCriticalSection(&TuiData->Lock);
     ConsoleFreeHeap(TuiData);
@@ -688,32 +703,6 @@ TuiResizeTerminal(IN OUT PFRONTEND This)
 {
 }
 
-static BOOL NTAPI
-TuiProcessKeyCallback(IN OUT PFRONTEND This,
-                      MSG* msg,
-                      BYTE KeyStateMenu,
-                      DWORD ShiftState,
-                      UINT VirtualKeyCode,
-                      BOOL Down)
-{
-    if (0 != (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) &&
-        VK_TAB == VirtualKeyCode)
-    {
-        if (Down)
-        {
-            TuiSwapConsole(ShiftState & SHIFT_PRESSED ? -1 : 1);
-        }
-
-        return TRUE;
-    }
-    else if (VK_MENU == VirtualKeyCode && !Down)
-    {
-        return TuiSwapConsole(0);
-    }
-
-    return FALSE;
-}
-
 static VOID NTAPI
 TuiRefreshInternalInfo(IN OUT PFRONTEND This)
 {
@@ -814,7 +803,6 @@ static FRONTEND_VTBL TuiVtbl =
     TuiSetCursorInfo,
     TuiSetScreenInfo,
     TuiResizeTerminal,
-    TuiProcessKeyCallback,
     TuiRefreshInternalInfo,
     TuiChangeTitle,
     TuiChangeIcon,

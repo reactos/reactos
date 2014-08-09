@@ -115,7 +115,8 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     wcsncpy(GuiInfo->FaceName, L"VGA", LF_FACESIZE); // HACK: !!
     // GuiInfo->FaceName[0] = L'\0';
     GuiInfo->FontFamily = FF_DONTCARE;
-    GuiInfo->FontSize = 0;
+    GuiInfo->FontSize.X = 0;
+    GuiInfo->FontSize.Y = 0;
     GuiInfo->FontWeight = FW_DONTCARE;
     GuiInfo->UseRasterFonts = TRUE;
 

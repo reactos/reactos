@@ -7,7 +7,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #include <commctrl.h>
 #include <richedit.h>

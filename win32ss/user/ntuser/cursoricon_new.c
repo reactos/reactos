@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Cursor and icon functions
- * FILE:             subsystems/win32/win32k/ntuser/cursoricon.c
+ * FILE:             win32ss/user/ntuser/cursoricon.c
  * PROGRAMER:        ReactOS Team
  */
 /*
@@ -298,7 +298,7 @@ IntDestroyCursor(
 
     if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
     {
-        RETURN(FALSE);
+        return(FALSE);
     }
 
     ret = IntDestroyCurIconObject(CurIcon, bForce);
@@ -670,7 +670,7 @@ NtUserClipCursor(
         prcl = &rclLocal;
     }
 
-	UserEnterExclusive();
+    UserEnterExclusive();
 
     /* Call the internal function */
     bResult = UserClipCursor(prcl);
@@ -1291,7 +1291,7 @@ UserDrawIconEx(
         /* We now have our destination surface */
         psurfDest = psurfOffScreen;
 #else
-        pdcClipObj = pdc->rosdc.CombinedClip;
+        pdcClipObj = &pdc->co.ClipObj;
         /* Paint the brush */
         EBRUSHOBJ_vInit(&eboFill, pbrush, psurfDest, 0x00FFFFFF, 0, NULL);
         
@@ -1322,14 +1322,14 @@ UserDrawIconEx(
     {
         /* We directly draw to the DC */
         TRACE("Performing on screen rendering.\n");
-        pdcClipObj = pdc->rosdc.CombinedClip;
+        pdcClipObj = &pdc->co.ClipObj;
         // psurfOffScreen = NULL;
     }
 
     /* Now do the rendering */
-	if(hbmAlpha && ((diFlags & DI_NORMAL) == DI_NORMAL))
-	{
-	    BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
+    if(hbmAlpha && ((diFlags & DI_NORMAL) == DI_NORMAL))
+    {
+        BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
         PSURFACE psurf = NULL;
 
         psurf = SURFACE_ShareLockSurface(hbmAlpha);
@@ -1354,7 +1354,7 @@ UserDrawIconEx(
         EXLATEOBJ_vCleanup(&exlo);
         SURFACE_ShareUnlockSurface(psurf);
         if(Ret) goto done;
-		ERR("NtGdiAlphaBlend failed!\n");
+        ERR("NtGdiAlphaBlend failed!\n");
     }
 NoAlpha:
     if (diFlags & DI_MASK)
@@ -1387,7 +1387,7 @@ NoAlpha:
 
     if(diFlags & DI_IMAGE)
     {
-		if (psurfColor)
+        if (psurfColor)
         {
             DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY ;
             

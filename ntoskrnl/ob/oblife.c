@@ -1145,7 +1145,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
             /* Set the key and free the converted name */
             LocalObjectType->Key = *(PULONG)AnsiName.Buffer;
-            ExFreePool(AnsiName.Buffer);
+            RtlFreeAnsiString(&AnsiName);
         }
         else
         {
@@ -1227,12 +1227,19 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     InitializeListHead(&LocalObjectType->TypeList);
 
     /* Lock the object type */
-    ObpEnterObjectTypeMutex(LocalObjectType);
+    ObpEnterObjectTypeMutex(ObpTypeObjectType);
 
     /* Get creator info and insert it into the type list */
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
-    if (CreatorInfo) InsertTailList(&ObpTypeObjectType->TypeList,
-                                    &CreatorInfo->TypeList);
+    if (CreatorInfo)
+    {
+        InsertTailList(&ObpTypeObjectType->TypeList,
+                       &CreatorInfo->TypeList);
+
+        /* CORE-8423: Avoid inserting this a second time if someone creates a
+         * handle to the object type (bug in Windows 2003) */
+        Header->Flags &= ~OB_FLAG_CREATE_INFO;
+    }
 
     /* Set the index and the entry into the object type array */
     LocalObjectType->Index = ObpTypeObjectType->TotalNumberOfObjects;
@@ -1246,7 +1253,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* Release the object type */
-    ObpLeaveObjectTypeMutex(LocalObjectType);
+    ObpLeaveObjectTypeMutex(ObpTypeObjectType);
 
     /* Check if we're actually creating the directory object itself */
     if (!(ObpTypeDirectoryObject) ||

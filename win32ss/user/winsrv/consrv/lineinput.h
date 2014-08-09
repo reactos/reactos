@@ -8,5 +8,9 @@
 
 #pragma once
 
-VOID FASTCALL HistoryDeleteBuffers(PCONSOLE Console);
-VOID FASTCALL LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent);
+VOID HistoryDeleteBuffers(PCONSOLE Console);
+
+VOID
+LineInputKeyDown(PCONSOLE Console,
+                 PUNICODE_STRING ExeName,
+                 KEY_EVENT_RECORD *KeyEvent);

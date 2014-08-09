@@ -22,6 +22,10 @@ Description = Microsoft .NET Framework versión 2.0 - Paquete redistribuible.
 Description = Microsoft .NET Framework version 2.0 - Paquet redistribuable.
 Size = 22,42 Mo
 
+[Section.0410]
+Description = Microsoft .NET Framework Version 2.0 - Redistributable Package.
+Size = 22.42 MB
+
 [Section.0415]
 Description = Microsoft .NET Framework Wersja 2.0 - Pakiet Dystrybucyjny.
 

@@ -76,6 +76,47 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #define DbgPrint(fmt, ...) \
     Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
+static void DbgDumpMenuInternal(HMENU hmenu, char* padding, int padlevel)
+{
+    WCHAR label[128];
+
+    padding[padlevel] = '.';
+    padding[padlevel + 1] = '.';
+    padding[padlevel + 2] = 0;
+
+    int count = GetMenuItemCount(hmenu);
+    for (int i = 0; i < count; i++)
+    {
+        MENUITEMINFOW mii = { 0 };
+
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_STRING | MIIM_FTYPE | MIIM_SUBMENU | MIIM_STATE | MIIM_ID;
+        mii.dwTypeData = label;
+        mii.cch = _countof(label);
+
+        GetMenuItemInfo(hmenu, i, TRUE, &mii);
+
+        if (mii.fType & MFT_BITMAP)
+            DbgPrint("%s%2d - %08x: BITMAP %08p (state=%d, has submenu=%s)\n", padding, i, mii.wID, mii.hbmpItem, mii.fState, mii.hSubMenu ? "TRUE" : "FALSE");
+        else if (mii.fType & MFT_SEPARATOR)
+            DbgPrint("%s%2d - %08x ---SEPARATOR---\n", padding, i, mii.wID);
+        else
+            DbgPrint("%s%2d - %08x: %S (state=%d, has submenu=%s)\n", padding, i, mii.wID, mii.dwTypeData, mii.fState, mii.hSubMenu ? "TRUE" : "FALSE");
+
+        if (mii.hSubMenu)
+            DbgDumpMenuInternal(mii.hSubMenu, padding, padlevel + 2);
+
+    }
+
+    padding[padlevel] = 0;
+}
+
+static __inline void DbgDumpMenu(HMENU hmenu)
+{
+    char padding[128];
+    DbgDumpMenuInternal(hmenu, padding, 0);
+}
+
 #if 1
 #define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (DbgPrint("Unexpected failure %08x.\n", hr), TRUE))
 #else

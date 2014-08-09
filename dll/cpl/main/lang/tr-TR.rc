@@ -166,7 +166,7 @@ BEGIN
     IDS_BROWSE_FILTER "İmleçler (*.ani, *.cur)\0*.ani;*.cur\0Devingen İmleçler (*.ani)\0*.ani\0Durgun İmleçler (*.cur)\0*.cur\0Tüm Kütükler\0*.*\0\0"
     IDS_BROWSE_TITLE "Göz At"
     IDS_REMOVE_TITLE "İmleç Düzeni Silmeyi Doğrula"
-    IDS_REMOVE_TEXT """%s"" imleç düzenini silmek istediğinizi doğrula musunuz?"
+    IDS_REMOVE_TEXT """%s"" imleç düzenini silmek istediğinizden emin misiniz?"
     IDS_OVERWRITE_TITLE "İmleç Düzeninin Üzerine Yazmayı Doğrula"
     IDS_OVERWRITE_TEXT "Seçtiğiniz imleç düzeni adı önceden kullanımda. Var olan imleç düzeninin üzerine yazmayı istiyor musunuz?"
     IDS_ANIMATE_CURSOR "Devingen İmleç"

@@ -16,21 +16,19 @@
 
 /* GLOBALS ********************************************************************/
 
-#define ConSrvGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole)     \
-    ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), NULL,  \
-                    (Access), (LockConsole), INPUT_BUFFER)
-#define ConSrvGetInputBufferAndHandleEntry(ProcessData, Handle, Ptr, Entry, Access, LockConsole)    \
-    ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), (Entry),                   \
-                    (Access), (LockConsole), INPUT_BUFFER)
-#define ConSrvReleaseInputBuffer(Buff, IsConsoleLocked) \
-    ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
-
-
+/*
+ * From MSDN:
+ * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
+ *  If they are the same, the function fails, and GetLastError returns
+ *  ERROR_INVALID_PARAMETER."
+ */
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
-    WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
+    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
 #define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    MultiByteToWideChar((Console)->CodePage, 0, (sChar), 1, (dWChar), 1)
+    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
+    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
 
 typedef struct ConsoleInput_t
 {
@@ -41,7 +39,7 @@ typedef struct ConsoleInput_t
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID FASTCALL
+static VOID
 ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
 {
     if (InputEvent->EventType == KEY_EVENT)
@@ -54,7 +52,7 @@ ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
     }
 }
 
-static VOID FASTCALL
+static VOID
 ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
 {
     if (InputEvent->EventType == KEY_EVENT)
@@ -67,78 +65,214 @@ ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
     }
 }
 
-NTSTATUS FASTCALL
-ConioAddInputEvent(PCONSOLE Console,
-                   PINPUT_RECORD InputEvent,
-                   BOOLEAN AppendToEnd)
-{
-    ConsoleInput *ConInRec;
 
-    /* Check for pause or unpause */
-    if (InputEvent->EventType == KEY_EVENT && InputEvent->Event.KeyEvent.bKeyDown)
+NTSTATUS
+ConDrvAddInputEvents(PCONSOLE Console,
+                     PINPUT_RECORD InputRecords, // InputEvent
+                     ULONG NumEventsToWrite,
+                     PULONG NumEventsWritten,
+                     BOOLEAN AppendToEnd)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG i = 0;
+    BOOLEAN SetWaitEvent = FALSE;
+
+    if (NumEventsWritten) *NumEventsWritten = 0;
+
+    /*
+     * When adding many single events, in the case of repeated mouse move or
+     * key down events, we try to coalesce them so that we do not saturate
+     * too quickly the input buffer.
+     */
+    if (NumEventsToWrite == 1 && !IsListEmpty(&Console->InputBuffer.InputEvents))
     {
-        WORD vk = InputEvent->Event.KeyEvent.wVirtualKeyCode;
-        if (!(Console->PauseFlags & PAUSED_FROM_KEYBOARD))
+        PINPUT_RECORD InputRecord = InputRecords; // Only one element
+        PINPUT_RECORD LastInputRecord;
+        ConsoleInput* ConInRec; // Input
+
+        /* Get the "next" event of the input buffer */
+        if (AppendToEnd)
         {
-            DWORD cks = InputEvent->Event.KeyEvent.dwControlKeyState;
-            if (Console->InputBuffer.Mode & ENABLE_LINE_INPUT &&
-                (vk == VK_PAUSE || (vk == 'S' &&
-                                    (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &&
-                                   !(cks & (LEFT_ALT_PRESSED  | RIGHT_ALT_PRESSED)))))
-            {
-                ConioPause(Console, PAUSED_FROM_KEYBOARD);
-                return STATUS_SUCCESS;
-            }
+            /* Get the tail element */
+            ConInRec = CONTAINING_RECORD(Console->InputBuffer.InputEvents.Blink,
+                                         ConsoleInput, ListEntry);
         }
         else
         {
-            if ((vk < VK_SHIFT || vk > VK_CAPITAL) && vk != VK_LWIN &&
-                vk != VK_RWIN && vk != VK_NUMLOCK && vk != VK_SCROLL)
+            /* Get the head element */
+            ConInRec = CONTAINING_RECORD(Console->InputBuffer.InputEvents.Flink,
+                                         ConsoleInput, ListEntry);
+        }
+        LastInputRecord = &ConInRec->InputEvent;
+
+        if (InputRecord->EventType == MOUSE_EVENT &&
+            InputRecord->Event.MouseEvent.dwEventFlags == MOUSE_MOVED)
+        {
+            if (LastInputRecord->EventType == MOUSE_EVENT &&
+                LastInputRecord->Event.MouseEvent.dwEventFlags == MOUSE_MOVED)
             {
-                ConioUnpause(Console, PAUSED_FROM_KEYBOARD);
-                return STATUS_SUCCESS;
+                /* Update the mouse position */
+                LastInputRecord->Event.MouseEvent.dwMousePosition.X =
+                    InputRecord->Event.MouseEvent.dwMousePosition.X;
+                LastInputRecord->Event.MouseEvent.dwMousePosition.Y =
+                    InputRecord->Event.MouseEvent.dwMousePosition.Y;
+
+                i = 1;
+                // return STATUS_SUCCESS;
+                Status = STATUS_SUCCESS;
+            }
+        }
+        else if (InputRecord->EventType == KEY_EVENT &&
+                 InputRecord->Event.KeyEvent.bKeyDown)
+        {
+            if (LastInputRecord->EventType == KEY_EVENT &&
+                LastInputRecord->Event.KeyEvent.bKeyDown &&
+                (LastInputRecord->Event.KeyEvent.wVirtualScanCode ==    // Same scancode
+                     InputRecord->Event.KeyEvent.wVirtualScanCode) &&
+                (LastInputRecord->Event.KeyEvent.uChar.UnicodeChar ==   // Same character
+                     InputRecord->Event.KeyEvent.uChar.UnicodeChar) &&
+                (LastInputRecord->Event.KeyEvent.dwControlKeyState ==   // Same Ctrl/Alt/Shift state
+                     InputRecord->Event.KeyEvent.dwControlKeyState) )
+            {
+                /* Update the repeat count */
+                LastInputRecord->Event.KeyEvent.wRepeatCount +=
+                    InputRecord->Event.KeyEvent.wRepeatCount;
+
+                i = 1;
+                // return STATUS_SUCCESS;
+                Status = STATUS_SUCCESS;
             }
         }
     }
 
-    /* Add event to the queue */
-    ConInRec = ConsoleAllocHeap(0, sizeof(ConsoleInput));
-    if (ConInRec == NULL) return STATUS_INSUFFICIENT_RESOURCES;
+    /* If we coalesced the only one element, we can quit */
+    if (i == 1 && Status == STATUS_SUCCESS /* && NumEventsToWrite == 1 */)
+        goto Done;
 
-    ConInRec->InputEvent = *InputEvent;
+    /*
+     * No event coalesced, add them in the usual way.
+     */
 
     if (AppendToEnd)
     {
-        /* Append the event to the end of the queue */
-        InsertTailList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
+        /* Go to the beginning of the list */
+        // InputRecords = InputRecords;
     }
     else
     {
-        /* Append the event to the beginning of the queue */
-        InsertHeadList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
+        /* Go to the end of the list */
+        InputRecords = &InputRecords[NumEventsToWrite - 1];
     }
 
-    SetEvent(Console->InputBuffer.ActiveEvent);
-    CsrNotifyWait(&Console->InputBuffer.ReadWaitQueue,
-                  FALSE,
-                  NULL,
-                  NULL);
-    if (!IsListEmpty(&Console->InputBuffer.ReadWaitQueue))
+    /* Set the event if the list is going to be non-empty */
+    if (IsListEmpty(&Console->InputBuffer.InputEvents))
+        SetWaitEvent = TRUE;
+
+    for (i = 0; i < NumEventsToWrite && NT_SUCCESS(Status); ++i)
     {
-        CsrDereferenceWait(&Console->InputBuffer.ReadWaitQueue);
+        PINPUT_RECORD InputRecord;
+        ConsoleInput* ConInRec;
+
+        if (AppendToEnd)
+        {
+            /* Select the event and go to the next one */
+            InputRecord = InputRecords++;
+        }
+        else
+        {
+            /* Select the event and go to the previous one */
+            InputRecord = InputRecords--;
+        }
+
+        /* Add event to the queue */
+        ConInRec = ConsoleAllocHeap(0, sizeof(ConsoleInput));
+        if (ConInRec == NULL)
+        {
+            // return STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            continue;
+        }
+
+        ConInRec->InputEvent = *InputRecord;
+
+        if (AppendToEnd)
+        {
+            /* Append the event to the end of the queue */
+            InsertTailList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
+        }
+        else
+        {
+            /* Append the event to the beginning of the queue */
+            InsertHeadList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
+        }
+
+        // return STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
     }
 
-    return STATUS_SUCCESS;
+    if (SetWaitEvent) SetEvent(Console->InputBuffer.ActiveEvent);
+
+Done:
+    if (NumEventsWritten) *NumEventsWritten = i;
+
+    return Status;
 }
 
-NTSTATUS FASTCALL
+
+ULONG
+PreprocessInput(PCONSOLE Console,
+                PINPUT_RECORD InputEvent,
+                ULONG NumEventsToWrite);
+VOID
+PostprocessInput(PCONSOLE Console);
+
+NTSTATUS
+ConioAddInputEvents(PCONSOLE Console,
+                    PINPUT_RECORD InputRecords, // InputEvent
+                    ULONG NumEventsToWrite,
+                    PULONG NumEventsWritten,
+                    BOOLEAN AppendToEnd)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (NumEventsWritten) *NumEventsWritten = 0;
+
+    /*
+     * This pre-processing code MUST be IN consrv ONLY!!
+     */
+    NumEventsToWrite = PreprocessInput(Console, InputRecords, NumEventsToWrite);
+    if (NumEventsToWrite == 0) return STATUS_SUCCESS;
+
+    Status = ConDrvAddInputEvents(Console,
+                                  InputRecords,
+                                  NumEventsToWrite,
+                                  NumEventsWritten,
+                                  AppendToEnd);
+
+    /*
+     * This post-processing code MUST be IN consrv ONLY!!
+     */
+    // if (NT_SUCCESS(Status))
+    if (Status == STATUS_SUCCESS) PostprocessInput(Console);
+
+    return Status;
+}
+
+/* Move elsewhere...*/
+NTSTATUS
 ConioProcessInputEvent(PCONSOLE Console,
                        PINPUT_RECORD InputEvent)
 {
-    return ConioAddInputEvent(Console, InputEvent, TRUE);
+    ULONG NumEventsWritten;
+    return ConioAddInputEvents(Console,
+                               InputEvent,
+                               1,
+                               &NumEventsWritten,
+                               TRUE);
 }
 
-VOID FASTCALL
+
+VOID
 PurgeInputBuffer(PCONSOLE Console)
 {
     PLIST_ENTRY CurrentEntry;
@@ -154,88 +288,13 @@ PurgeInputBuffer(PCONSOLE Console)
     CloseHandle(Console->InputBuffer.ActiveEvent);
 }
 
-/*
- * This function explicitely references Console->ActiveBuffer
- * (and also makes use of keyboard functions...).
- * It is possible that it will move into frontends...
- */
-VOID NTAPI
-ConDrvProcessKey(IN PCONSOLE Console,
-                 IN BOOLEAN Down,
-                 IN UINT VirtualKeyCode,
-                 IN UINT VirtualScanCode,
-                 IN WCHAR UnicodeChar,
-                 IN ULONG ShiftState,
-                 IN BYTE KeyStateCtrl)
-{
-    INPUT_RECORD er;
-
-    /* process Ctrl-C and Ctrl-Break */
-    if ( Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
-         Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
-         (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyStateCtrl & 0x80) )
-    {
-        DPRINT1("Console_Api Ctrl-C\n");
-        ConDrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
-
-        if (Console->LineBuffer && !Console->LineComplete)
-        {
-            /* Line input is in progress; end it */
-            Console->LinePos = Console->LineSize = 0;
-            Console->LineComplete = TRUE;
-        }
-        return;
-    }
-
-    if ( (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) != 0 &&
-         (VK_UP == VirtualKeyCode || VK_DOWN == VirtualKeyCode) )
-    {
-        if (!Down) return;
-
-        /* scroll up or down */
-        if (VK_UP == VirtualKeyCode)
-        {
-            /* only scroll up if there is room to scroll up into */
-            if (Console->ActiveBuffer->CursorPosition.Y != Console->ActiveBuffer->ScreenBufferSize.Y - 1)
-            {
-                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y - 1) %
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
-                Console->ActiveBuffer->CursorPosition.Y++;
-            }
-        }
-        else
-        {
-            /* only scroll down if there is room to scroll down into */
-            if (Console->ActiveBuffer->CursorPosition.Y != 0)
-            {
-                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
-                Console->ActiveBuffer->CursorPosition.Y--;
-            }
-        }
-
-        ConioDrawConsole(Console);
-        return;
-    }
-
-    er.EventType                        = KEY_EVENT;
-    er.Event.KeyEvent.bKeyDown          = Down;
-    er.Event.KeyEvent.wRepeatCount      = 1;
-    er.Event.KeyEvent.wVirtualKeyCode   = VirtualKeyCode;
-    er.Event.KeyEvent.wVirtualScanCode  = VirtualScanCode;
-    er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
-    er.Event.KeyEvent.dwControlKeyState = ShiftState;
-
-    ConioProcessInputEvent(Console, &er);
-}
-
 
 /* PUBLIC DRIVER APIS *********************************************************/
 
 NTSTATUS NTAPI
 ConDrvReadConsole(IN PCONSOLE Console,
                   IN PCONSOLE_INPUT_BUFFER InputBuffer,
+                  /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
                   IN BOOLEAN Unicode,
                   OUT PVOID Buffer,
                   IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
@@ -256,8 +315,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (Buffer != NULL && NumCharsToRead >= 0) ||
-            (Buffer == NULL && NumCharsToRead == 0) );
+    ASSERT((Buffer != NULL) || (Buffer == NULL && NumCharsToRead == 0));
 
     /* We haven't read anything (yet) */
 
@@ -268,17 +326,15 @@ ConDrvReadConsole(IN PCONSOLE Console,
         if (Console->LineBuffer == NULL)
         {
             /* Starting a new line */
-            Console->LineMaxSize = (WORD)max(256, NumCharsToRead);
+            Console->LineMaxSize = max(256, NumCharsToRead);
 
             Console->LineBuffer = ConsoleAllocHeap(0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL) return STATUS_NO_MEMORY;
 
-            Console->LineComplete = FALSE;
-            Console->LineUpPressed = FALSE;
+            Console->LinePos = Console->LineSize = ReadControl->nInitialChars;
+            Console->LineComplete = Console->LineUpPressed = FALSE;
             Console->LineInsertToggle = Console->InsertMode;
             Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
-            Console->LineSize = ReadControl->nInitialChars;
-            Console->LinePos = Console->LineSize;
 
             /*
              * Pre-filling the buffer is only allowed in the Unicode API,
@@ -307,7 +363,8 @@ ConDrvReadConsole(IN PCONSOLE Console,
             if (Input->InputEvent.EventType == KEY_EVENT &&
                 Input->InputEvent.Event.KeyEvent.bKeyDown)
             {
-                LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
+                LineInputKeyDown(Console, ExeName,
+                                 &Input->InputEvent.Event.KeyEvent);
                 ReadControl->dwControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
             }
             ConsoleFreeHeap(Input);
@@ -378,6 +435,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
         }
     }
 
+    // FIXME: Only set if Status == STATUS_SUCCESS ???
     if (NumCharsRead) *NumCharsRead = i;
 
     return Status;
@@ -402,11 +460,9 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (InputRecord != NULL && NumEventsToRead >= 0) ||
-            (InputRecord == NULL && NumEventsToRead == 0) );
+    ASSERT((InputRecord != NULL) || (InputRecord == NULL && NumEventsToRead == 0));
 
-    // Do NOT do that !! Use the existing number of events already read, if any...
-    // if (NumEventsRead) *NumEventsRead = 0;
+    if (NumEventsRead) *NumEventsRead = 0;
 
     if (IsListEmpty(&InputBuffer->InputEvents))
     {
@@ -419,18 +475,12 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 
     /* Only get input if there is any */
     CurrentInput = InputBuffer->InputEvents.Flink;
-    if (NumEventsRead) i = *NumEventsRead; // We will read the remaining events...
-
+    i = 0;
     while ((CurrentInput != &InputBuffer->InputEvents) && (i < NumEventsToRead))
     {
         Input = CONTAINING_RECORD(CurrentInput, ConsoleInput, ListEntry);
 
         *InputRecord = Input->InputEvent;
-
-        if (!Unicode)
-        {
-            ConioInputEventToAnsi(InputBuffer->Header.Console, InputRecord);
-        }
 
         ++InputRecord;
         ++i;
@@ -445,6 +495,15 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
     }
 
     if (NumEventsRead) *NumEventsRead = i;
+
+    /* Now translate everything to ANSI */
+    if (!Unicode)
+    {
+        for (; i > 0; --i)
+        {
+            ConioInputEventToAnsi(InputBuffer->Header.Console, --InputRecord);
+        }
+    }
 
     if (IsListEmpty(&InputBuffer->InputEvents))
     {
@@ -472,23 +531,26 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
 
     /* Validity checks */
     ASSERT(Console == InputBuffer->Header.Console);
-    ASSERT( (InputRecord != NULL && NumEventsToWrite >= 0) ||
-            (InputRecord == NULL && NumEventsToWrite == 0) );
+    ASSERT((InputRecord != NULL) || (InputRecord == NULL && NumEventsToWrite == 0));
 
-    // Do NOT do that !! Use the existing number of events already written, if any...
-    // if (NumEventsWritten) *NumEventsWritten = 0;
-
-    for (i = (NumEventsWritten ? *NumEventsWritten : 0); i < NumEventsToWrite && NT_SUCCESS(Status); ++i)
+    /* First translate everything to UNICODE */
+    if (!Unicode)
     {
-        if (!Unicode)
+        for (i = 0; i < NumEventsToWrite; ++i)
         {
-            ConioInputEventToUnicode(Console, InputRecord);
+            ConioInputEventToUnicode(Console, &InputRecord[i]);
         }
-
-        Status = ConioAddInputEvent(Console, InputRecord++, AppendToEnd);
     }
 
-    if (NumEventsWritten) *NumEventsWritten = i;
+    /* Now, add the events */
+    // if (NumEventsWritten) *NumEventsWritten = 0;
+    // ConDrvAddInputEvents
+    Status = ConioAddInputEvents(Console,
+                                 InputRecord,
+                                 NumEventsToWrite,
+                                 NumEventsWritten,
+                                 AppendToEnd);
+    // if (NumEventsWritten) *NumEventsWritten = i;
 
     return Status;
 }

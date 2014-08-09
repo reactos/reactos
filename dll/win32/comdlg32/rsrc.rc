@@ -115,11 +115,11 @@
 #ifdef LANGUAGE_SK_SK
     #include "lang/cdlg_Sk.rc"
 #endif
-#ifdef LANGUAGE_SQ_AL
-    #include "lang/cdlg_Sq.rc"
-#endif
 #ifdef LANGUAGE_SL_SI
     #include "lang/cdlg_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/cdlg_Sq.rc"
 #endif
 #ifdef LANGUAGE_SR_SP
     #include "lang/cdlg_Sr.rc"

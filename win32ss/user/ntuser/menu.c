@@ -1143,7 +1143,6 @@ BOOL FASTCALL
 IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
 {
    PEPROCESS CurrentProcess;
-   PLIST_ENTRY LastHead = NULL;
    PMENU MenuObject;
 
    CurrentProcess = PsGetCurrentProcess();
@@ -1152,10 +1151,8 @@ IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
       KeAttachProcess(&Process->Pcb);
    }
 
-   while (Win32Process->MenuListHead.Flink != &(Win32Process->MenuListHead) &&
-          Win32Process->MenuListHead.Flink != LastHead)
+   while (!IsListEmpty(&Win32Process->MenuListHead))
    {
-      LastHead = Win32Process->MenuListHead.Flink;
       MenuObject = CONTAINING_RECORD(Win32Process->MenuListHead.Flink, MENU, ListEntry);
       TRACE("Menus are stuck on the process list!\n");
       IntDestroyMenuObject(MenuObject, FALSE, TRUE);

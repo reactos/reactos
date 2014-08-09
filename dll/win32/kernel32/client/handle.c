@@ -16,7 +16,6 @@
 /* PRIVATE FUNCTIONS **********************************************************/
 
 HANDLE
-FASTCALL
 TranslateStdHandle(IN HANDLE hHandle)
 {
     PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;

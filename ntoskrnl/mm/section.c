@@ -2624,6 +2624,13 @@ MmpDeleteSection(PVOID ObjectBody)
 {
    PROS_SECTION_OBJECT Section = (PROS_SECTION_OBJECT)ObjectBody;
 
+    /* Check if it's an ARM3, or ReactOS section */
+    if (!MiIsRosSectionObject(Section))
+    {
+        MiDeleteARM3Section(ObjectBody);
+        return;
+    }
+
    DPRINT("MmpDeleteSection(ObjectBody %p)\n", ObjectBody);
    if (Section->AllocationAttributes & SEC_IMAGE)
    {

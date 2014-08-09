@@ -35,6 +35,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Bir Sonrakine Geç"
     IDS_APPTITLE "Çoklu Ortam Oynatıcısı"
     IDS_PLAY "Çal"
-    IDS_DEFAULTMCIERRMSG "Bu yanlışlığın hiçbir tanımı yoktur."
+    IDS_DEFAULTMCIERRMSG "Bu yanlışlığın tanımı yoktur."
     IDS_UNKNOWNFILEEXT "Verilen kütük türünden aygıt türü belirlenemiyor."
 END

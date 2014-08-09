@@ -64,14 +64,14 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
      * loaded from, their resource index and the fact if they have a shortcut
      * icon overlay or not.
      */
-    if (e1->dwSourceIndex != e2->dwSourceIndex || /* first the faster one */
-        (e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT))
-      return 1;
+    /* first the faster one */
+    if (e1->dwSourceIndex != e2->dwSourceIndex)
+      return (e1->dwSourceIndex < e2->dwSourceIndex) ? -1 : 1;
 
-    if (wcsicmp(e1->sSourceFile,e2->sSourceFile))
-      return 1;
-
-    return 0;
+    if ((e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT)) 
+      return ((e1->dwFlags & GIL_FORSHORTCUT) < (e2->dwFlags & GIL_FORSHORTCUT)) ? -1 : 1;
+  
+    return wcsicmp(e1->sSourceFile,e2->sSourceFile);
 }
 
 /* declare SIC_LoadOverlayIcon() */
@@ -338,7 +338,8 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
 
     EnterCriticalSection(&SHELL32_SicCS);
 
-    indexDPA = DPA_InsertPtr(sic_hdpa, 0x7fff, lpsice);
+    indexDPA = DPA_Search (sic_hdpa, lpsice, 0, SIC_CompareEntries, 0, DPAS_SORTED|DPAS_INSERTAFTER);
+    indexDPA = DPA_InsertPtr(sic_hdpa, indexDPA, lpsice);
     if ( -1 == indexDPA )
     {
         ret = INVALID_INDEX;
@@ -468,7 +469,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
     if (NULL != DPA_GetPtr (sic_hdpa, 0))
     {
       /* search linear from position 0*/
-      index = DPA_Search (sic_hdpa, &sice, 0, SIC_CompareEntries, 0, 0);
+      index = DPA_Search (sic_hdpa, &sice, 0, SIC_CompareEntries, 0, DPAS_SORTED);
     }
 
     if ( INVALID_INDEX == index )

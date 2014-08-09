@@ -20,7 +20,78 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static DWORD FASTCALL
+static VOID
+ConDrvProcessKey(IN PCONSOLE Console,
+                 IN BOOLEAN Down,
+                 IN UINT VirtualKeyCode,
+                 IN UINT VirtualScanCode,
+                 IN WCHAR UnicodeChar,
+                 IN ULONG ShiftState,
+                 IN BYTE KeyStateCtrl)
+{
+    INPUT_RECORD er;
+
+    /* process Ctrl-C and Ctrl-Break */
+    if ( Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
+         Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
+         (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyStateCtrl & 0x80) )
+    {
+        DPRINT1("Console_Api Ctrl-C\n");
+        ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
+
+        if (Console->LineBuffer && !Console->LineComplete)
+        {
+            /* Line input is in progress; end it */
+            Console->LinePos = Console->LineSize = 0;
+            Console->LineComplete = TRUE;
+        }
+        return;
+    }
+
+    if ( (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) != 0 &&
+         (VK_UP == VirtualKeyCode || VK_DOWN == VirtualKeyCode) )
+    {
+        if (!Down) return;
+
+        /* scroll up or down */
+        if (VK_UP == VirtualKeyCode)
+        {
+            /* only scroll up if there is room to scroll up into */
+            if (Console->ActiveBuffer->CursorPosition.Y != Console->ActiveBuffer->ScreenBufferSize.Y - 1)
+            {
+                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
+                                                   Console->ActiveBuffer->ScreenBufferSize.Y - 1) %
+                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
+                Console->ActiveBuffer->CursorPosition.Y++;
+            }
+        }
+        else
+        {
+            /* only scroll down if there is room to scroll down into */
+            if (Console->ActiveBuffer->CursorPosition.Y != 0)
+            {
+                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
+                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
+                Console->ActiveBuffer->CursorPosition.Y--;
+            }
+        }
+
+        ConioDrawConsole(Console);
+        return;
+    }
+
+    er.EventType                        = KEY_EVENT;
+    er.Event.KeyEvent.bKeyDown          = Down;
+    er.Event.KeyEvent.wRepeatCount      = 1;
+    er.Event.KeyEvent.wVirtualKeyCode   = VirtualKeyCode;
+    er.Event.KeyEvent.wVirtualScanCode  = VirtualScanCode;
+    er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
+    er.Event.KeyEvent.dwControlKeyState = ShiftState;
+
+    ConioProcessInputEvent(Console, &er);
+}
+
+static DWORD
 ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
 {
     DWORD ssOut = 0;
@@ -104,16 +175,6 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
         UnicodeChar = (1 == RetChars ? Chars[0] : 0);
     }
 
-    if (TermProcessKeyCallback(Console,
-                               msg,
-                               KeyState[VK_MENU],
-                               ShiftState,
-                               VirtualKeyCode,
-                               Down))
-    {
-        return;
-    }
-
     Fake = UnicodeChar &&
             (msg->message != WM_CHAR && msg->message != WM_SYSCHAR &&
              msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);
@@ -141,6 +202,16 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
                      UnicodeChar,
                      ShiftState,
                      KeyState[VK_CONTROL]);
+}
+
+DWORD
+ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale)
+{
+    DWORD Size = (Console->ActiveBuffer->CursorInfo.dwSize * Scale + 99) / 100;
+    /* If line input in progress, perhaps adjust for insert toggle */
+    if (Console->LineBuffer && !Console->LineComplete && (Console->InsertMode ? !Console->LineInsertToggle : Console->LineInsertToggle))
+        return (Size * 2 <= Scale) ? (Size * 2) : (Size / 2);
+    return Size;
 }
 
 /* EOF */

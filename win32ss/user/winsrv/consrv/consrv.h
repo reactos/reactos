@@ -51,12 +51,12 @@ typedef struct _CONSOLE_PROCESS_DATA
 {
     LIST_ENTRY ConsoleLink;
     PCSR_PROCESS Process;   // Process owning this structure.
-    HANDLE ConsoleEvent;
+    HANDLE InputWaitHandle;
 
     HANDLE ConsoleHandle;
     HANDLE ParentConsoleHandle;
 
-    BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
+    BOOLEAN ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 
     RTL_CRITICAL_SECTION HandleTableLock;
     ULONG HandleTableSize;

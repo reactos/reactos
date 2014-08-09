@@ -30,11 +30,6 @@ else()
     set_image_base(ntkrnlmp 0x80800000)
 endif()
 
-# Linker bug
-if(NOT MSVC AND LTCG)
-    add_target_link_flags(ntkrnlmp "-shared")
-endif()
-
 target_link_libraries(ntkrnlmp
     cportlib
     csq

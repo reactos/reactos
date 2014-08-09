@@ -17,12 +17,12 @@
 
 IO_STATUS_BLOCK
 NTAPI
-NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue, 
+NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
                 IN BOOLEAN Peek,
                 IN BOOLEAN ReadOverflowOperation,
                 IN PVOID Buffer,
-                IN ULONG BufferSize, 
-                IN ULONG Mode, 
+                IN ULONG BufferSize,
+                IN ULONG Mode,
                 IN PNP_CCB Ccb,
                 IN PLIST_ENTRY List)
 {
@@ -30,14 +30,14 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
     PVOID DataBuffer;
     ULONG DataSize, DataLength, TotalBytesCopied, RemainingSize, Offset;
     PIRP Irp;
-    IO_STATUS_BLOCK Status;
+    IO_STATUS_BLOCK IoStatus;
     BOOLEAN CompleteWrites = FALSE;
     PAGED_CODE();
 
     if (ReadOverflowOperation) Peek = TRUE;
 
     RemainingSize = BufferSize;
-    Status.Status = STATUS_SUCCESS;
+    IoStatus.Status = STATUS_SUCCESS;
     TotalBytesCopied = 0;
 
     if (Peek)
@@ -110,7 +110,7 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
             {
                 if (Mode == FILE_PIPE_MESSAGE_MODE)
                 {
-                    Status.Status = STATUS_BUFFER_OVERFLOW;
+                    IoStatus.Status = STATUS_BUFFER_OVERFLOW;
                     break;
                 }
             }
@@ -137,7 +137,7 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
 
                 if (Mode == FILE_PIPE_MESSAGE_MODE)
                 {
-                    Status.Status = STATUS_SUCCESS;
+                    IoStatus.Status = STATUS_SUCCESS;
                     break;
                 }
 
@@ -159,9 +159,9 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
         }
     }
 
-    Status.Information = TotalBytesCopied;
+    IoStatus.Information = TotalBytesCopied;
     if (CompleteWrites) NpCompleteStalledWrites(DataQueue, List);
-    return Status;
+    return IoStatus;
 }
 
 /* EOF */

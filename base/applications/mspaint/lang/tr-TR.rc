@@ -23,7 +23,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tAlt+F4", IDM_FILEEXIT
     END
-    POPUP "&Düzenleme"
+    POPUP "&Düzen"
     BEGIN
         MENUITEM "&Geri Al\tCtrl+Z", IDM_EDITUNDO
         MENUITEM "&Yinele\tCtrl+Y", IDM_EDITREDO

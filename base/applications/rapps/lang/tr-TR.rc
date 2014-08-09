@@ -188,7 +188,7 @@ BEGIN
     IDS_APPLICATIONS "Uygulamalar"
     IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
-    IDS_APP_REG_REMOVE "Kurulan izlencenin girişini değer defterinden silmek istemeyi doğruluyor musunuz?"
+    IDS_APP_REG_REMOVE "Kurulan izlencenin girişini değer defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
 END

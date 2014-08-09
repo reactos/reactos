@@ -318,6 +318,12 @@ function(add_cd_file)
             if(_CD_TARGET)
                 #manage dependency
                 add_dependencies(reactos_cab ${_CD_TARGET})
+                # add this so that the combination make target/fast reactos_cab/fast bootcd/fast properly detects that reactos.cab must be rebuilt
+                if (CMAKE_BUILD_TOOL STREQUAL "make")
+                    add_custom_command(TARGET ${_CD_TARGET}
+                                       POST_BUILD
+                                       COMMAND ${CMAKE_COMMAND} -E touch ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff)
+                endif()
             endif()
         endif()
     endif() #end bootcd

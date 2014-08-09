@@ -338,10 +338,11 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
 
     /* We are not on a list anymore */
     Pfn->u1.Flink = Pfn->u2.Blink = 0;
-    ASSERT_LIST_INVARIANT(ListHead);
 
     /* Remove one entry from the list */
     ListHead->Total--;
+
+    ASSERT_LIST_INVARIANT(ListHead);
 }
 
 PFN_NUMBER
@@ -1234,6 +1235,9 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
                      0);
     }
 
+    /* Page should at least have one reference */
+    ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+
     /* Check if the share count is now 0 */
     ASSERT(Pfn1->u2.ShareCount < 0xF000000);
     if (!--Pfn1->u2.ShareCount)
@@ -1257,7 +1261,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
             TempPte.u.Soft.Prototype = 0;
             TempPte.u.Soft.Protection = Pfn1->OriginalPte.u.Soft.Protection;
             MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-            DPRINT("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
+            DPRINT1("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
         }
 
         /* Put the page in transition */
@@ -1266,8 +1270,6 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         /* PFN lock must be held */
         ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
-        /* Page should at least have one reference */
-        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
             /* Is there still a PFN for this page? */

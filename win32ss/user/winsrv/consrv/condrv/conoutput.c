@@ -34,6 +34,7 @@ GRAPHICS_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 NTSTATUS
 CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                  IN OUT PCONSOLE Console,
+                                 IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
                                  IN SIZE_T Size)
 {
     if (Buffer == NULL || Console == NULL)
@@ -44,7 +45,7 @@ CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
 
     /* Initialize the header with the default type */
     ConSrvInitObject(&(*Buffer)->Header, SCREEN_BUFFER, Console);
-    (*Buffer)->Vtbl = NULL;
+    (*Buffer)->Vtbl = Vtbl;
     return STATUS_SUCCESS;
 }
 
@@ -74,7 +75,7 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 }
 
 // ConDrvCreateConsoleScreenBuffer
-NTSTATUS FASTCALL
+NTSTATUS
 ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                          IN OUT PCONSOLE Console,
                          IN ULONG BufferType,
@@ -151,7 +152,7 @@ ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
     CONSOLE_SCREEN_BUFFER_Destroy(Buffer);
 }
 
-VOID FASTCALL
+VOID
 ConioDrawConsole(PCONSOLE Console)
 {
     SMALL_RECT Region;
@@ -159,7 +160,8 @@ ConioDrawConsole(PCONSOLE Console)
 
     if (ActiveBuffer)
     {
-        ConioInitRect(&Region, 0, 0, ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
+        ConioInitRect(&Region, 0, 0,
+                      ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
         TermDrawRegion(Console, &Region);
     }
 }

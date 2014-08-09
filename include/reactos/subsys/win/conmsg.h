@@ -164,6 +164,7 @@ typedef struct _CONSOLE_START_INFO
     DWORD dwHotKey;
     DWORD dwStartupFlags;
     CONSOLE_PROPERTIES;
+
     BOOLEAN ConsoleNeeded; // Used for GUI apps only.
     LPTHREAD_START_ROUTINE CtrlDispatcher;
     LPTHREAD_START_ROUTINE ImeDispatcher;
@@ -218,30 +219,40 @@ typedef struct
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
 
-    BOOL Unicode;
-    ULONG NrCharactersToWrite;
-    ULONG NrCharactersWritten;
+    CHAR  StaticBuffer[80];
+    PVOID Buffer; // BufPtr
+    ULONG NumBytes;
 
-    ULONG BufferSize;
-    PVOID Buffer;
+    // On Windows, the client never uses this member
+    ULONG Reserved1;
+
+    BOOLEAN UsingStaticBuffer;
+    BOOLEAN Unicode;
+
+    // On Windows, the client never uses this member
+    CHAR Reserved2[6];
 } CONSOLE_WRITECONSOLE, *PCONSOLE_WRITECONSOLE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
 
-    BOOL Unicode;
-    ULONG NrCharactersToRead;
-    ULONG NrCharactersRead;
+    USHORT ExeLength;
 
-    UNICODE_STRING ExeName;
-    DWORD CtrlWakeupMask;
-    DWORD ControlKeyState;
+    CHAR  StaticBuffer[80];
+    PVOID Buffer; // BufPtr
+    ULONG NumBytes;
 
-    ULONG BufferSize;
-    PVOID Buffer;
+    ULONG CaptureBufferSize;
+
+    ULONG   InitialNumBytes;
+    ULONG   CtrlWakeupMask;
+    ULONG   ControlKeyState;
+    BOOLEAN Unicode;
 } CONSOLE_READCONSOLE, *PCONSOLE_READCONSOLE;
 
 typedef struct
@@ -271,7 +282,7 @@ typedef struct
 
 typedef struct
 {
-    ULONG Dummy;
+    HANDLE ConsoleHandle;
 } CONSOLE_FREECONSOLE, *PCONSOLE_FREECONSOLE;
 
 typedef struct
@@ -318,6 +329,12 @@ typedef struct
     BOOLEAN Visible;
 */
 } CONSOLE_GETSETCURSORINFO, *PCONSOLE_GETSETCURSORINFO;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    ULONG  NumButtons;
+} CONSOLE_GETMOUSEINFO, *PCONSOLE_GETMOUSEINFO;
 
 typedef struct
 {
@@ -370,7 +387,8 @@ typedef struct
     DWORD  DesiredAccess;
     BOOL   InheritHandle;
     DWORD  ShareMode;
-    DWORD  ScreenBufferType; /* Type of the screen buffer: CONSOLE_TEXTMODE_BUFFER or CONSOLE_GRAPHICS_BUFFER */
+    /* Type of the screen buffer: CONSOLE_TEXTMODE_BUFFER or CONSOLE_GRAPHICS_BUFFER */
+    DWORD  ScreenBufferType;
     /*
      * This structure holds the initialization information
      * for graphics screen buffers.
@@ -405,21 +423,10 @@ typedef struct
 typedef struct
 {
     HANDLE  ConsoleHandle;
-    DWORD   Length;
+    ULONG   Length;
     PVOID   Title;
     BOOLEAN Unicode;
 } CONSOLE_GETSETCONSOLETITLE, *PCONSOLE_GETSETCONSOLETITLE;
-
-typedef struct
-{
-    HANDLE OutputHandle;
-
-    BOOL Unicode;
-    COORD BufferSize;
-    COORD BufferCoord;
-    SMALL_RECT WriteRegion;
-    PCHAR_INFO CharInfo;
-} CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
 
 typedef struct
 {
@@ -429,14 +436,14 @@ typedef struct
 
 typedef struct
 {
-    HANDLE OutputHandle;
-
-    BOOL Unicode;
+    HANDLE     ConsoleHandle;
+    HANDLE     OutputHandle;
     SMALL_RECT ScrollRectangle;
-    BOOL UseClipRectangle;
     SMALL_RECT ClipRectangle;
-    COORD DestinationOrigin;
-    CHAR_INFO Fill;
+    BOOL       UseClipRectangle;
+    COORD      DestinationOrigin;
+    CHAR_INFO  Fill;
+    BOOLEAN    Unicode;
 } CONSOLE_SCROLLSCREENBUFFER, *PCONSOLE_SCROLLSCREENBUFFER;
 
 
@@ -452,100 +459,99 @@ typedef enum _CODE_TYPE
     CODE_ATTRIBUTE  = 0x03
 } CODE_TYPE;
 
-typedef struct
+typedef union _CODE_ELEMENT
 {
-    HANDLE OutputHandle;
-
-    DWORD NumCodesToRead;
-    COORD ReadCoord;
-    COORD EndCoord;
-
-    DWORD CodesRead;
-
-    CODE_TYPE CodeType;
-    union
-    {
-        PVOID  pCode;
-        PCHAR  AsciiChar;
-        PWCHAR UnicodeChar;
-        PWORD  Attribute;
-    } pCode;    // Either a pointer to a character or to an attribute.
-} CONSOLE_READOUTPUTCODE, *PCONSOLE_READOUTPUTCODE;
+    CHAR  AsciiChar;
+    WCHAR UnicodeChar;
+    WORD  Attribute;
+} CODE_ELEMENT;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
-
-    ULONG BufferSize; // Seems unusued
-    WORD Length;
-    COORD Coord;
-    COORD EndCoord;
-
-    ULONG NrCharactersWritten; // Seems unusued
+    COORD  Coord;
 
     CODE_TYPE CodeType;
-    union
-    {
-        PVOID  pCode;
-        PCHAR  AsciiChar;
-        PWCHAR UnicodeChar;
-        PWORD  Attribute;
-    } pCode;    // Either a pointer to a character or to an attribute.
-} CONSOLE_WRITEOUTPUTCODE, *PCONSOLE_WRITEOUTPUTCODE;
+    CHAR      CodeStaticBuffer[80]; // == 40 * sizeof(CODE_ELEMENT)
+    PVOID     pCode; // Either a pointer to a character or to an attribute.
+    // union
+    // {
+        // PVOID  pCode;
+        // PCHAR  AsciiChar;
+        // PWCHAR UnicodeChar;
+        // PWORD  Attribute;
+    // } pCode;    // Either a pointer to a character or to an attribute.
+
+    ULONG NumCodes;
+} CONSOLE_READOUTPUTCODE , *PCONSOLE_READOUTPUTCODE,
+  CONSOLE_WRITEOUTPUTCODE, *PCONSOLE_WRITEOUTPUTCODE;
 
 typedef struct
 {
+    HANDLE ConsoleHandle;
     HANDLE OutputHandle;
+    COORD  WriteCoord;
 
-    CODE_TYPE CodeType;
-    union
-    {
-        CHAR  AsciiChar;
-        WCHAR UnicodeChar;
-        WORD  Attribute;
-    } Code; // Either a character or an attribute.
+    CODE_TYPE    CodeType;
+    CODE_ELEMENT Code; // Either a character or an attribute.
 
-    COORD Coord;
-    ULONG Length;
-
-    ULONG NrCharactersWritten; // FIXME: Only for chars, is it removable ?
+    ULONG NumCodes;
 } CONSOLE_FILLOUTPUTCODE, *PCONSOLE_FILLOUTPUTCODE;
 
 typedef struct
 {
-    HANDLE InputHandle;
-    ULONG InputsRead;
-    PINPUT_RECORD InputRecord;
-    ULONG Length;
-    WORD wFlags;
-    BOOLEAN Unicode;
+    HANDLE        ConsoleHandle;
+    HANDLE        InputHandle;
+    INPUT_RECORD  RecordStaticBuffer[5];
+    PINPUT_RECORD RecordBufPtr;
+    ULONG         NumRecords;
+    WORD          Flags;
+    BOOLEAN       Unicode;
 } CONSOLE_GETINPUT, *PCONSOLE_GETINPUT;
 
 typedef struct
 {
-    HANDLE OutputHandle;
-
-    BOOL Unicode;
-    COORD BufferSize;
-    COORD BufferCoord;
-    SMALL_RECT ReadRegion;
-    PCHAR_INFO CharInfo;
-} CONSOLE_READOUTPUT, *PCONSOLE_READOUTPUT;
-
-typedef struct
-{
-    HANDLE InputHandle;
-    DWORD Length;
-    INPUT_RECORD* InputRecord;
-    BOOL Unicode;
-    BOOL AppendToEnd;
+    HANDLE        ConsoleHandle;
+    HANDLE        InputHandle;
+    INPUT_RECORD  RecordStaticBuffer[5];
+    PINPUT_RECORD RecordBufPtr;
+    ULONG         NumRecords;
+    BOOLEAN       Unicode;
+    BOOLEAN       AppendToEnd;
 } CONSOLE_WRITEINPUT, *PCONSOLE_WRITEINPUT;
 
 typedef struct
 {
     HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+
+    CHAR_INFO  StaticBuffer;
+    PCHAR_INFO CharInfo;
+
+    SMALL_RECT ReadRegion;
+    BOOLEAN Unicode;
+} CONSOLE_READOUTPUT, *PCONSOLE_READOUTPUT;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+
+    CHAR_INFO  StaticBuffer;
+    PCHAR_INFO CharInfo;
+
+    SMALL_RECT WriteRegion;
+    BOOLEAN Unicode;
+
+    ULONG Unknown;
+} CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
-    DWORD  NumberOfEvents;
+    ULONG  NumberOfEvents;
 } CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
 
 
@@ -656,65 +662,84 @@ typedef struct
 
 typedef struct
 {
-    ULONG  SourceLength;
-    ULONG  TargetLength; // Also used for storing the number of bytes written.
-    ULONG  ExeLength;
-    LPWSTR Source;
-    LPWSTR Target;
-    LPWSTR Exe;
+    HANDLE  ConsoleHandle;
+    USHORT  SourceLength;
+    USHORT  TargetLength; // Also used for storing the number of bytes written.
+    USHORT  ExeLength;
+    PVOID   Source;
+    PVOID   Target;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_ADDGETALIAS, *PCONSOLE_ADDGETALIAS;
 
 typedef struct
 {
-    DWORD ExeLength;
-    DWORD AliasesBufferLength;
-    LPWSTR ExeName;
-    LPWSTR AliasesBuffer;
+    HANDLE  ConsoleHandle;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
+    ULONG   AliasesBufferLength;
+    PVOID   AliasesBuffer;
 } CONSOLE_GETALLALIASES, *PCONSOLE_GETALLALIASES;
 
 typedef struct
 {
-    DWORD Length;
-    DWORD ExeLength;
-    LPWSTR ExeName;
+    HANDLE  ConsoleHandle;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    ULONG   Length;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_GETALLALIASESLENGTH, *PCONSOLE_GETALLALIASESLENGTH;
 
 typedef struct
 {
-    DWORD Length;
-    LPWSTR ExeNames;
+    HANDLE  ConsoleHandle;
+    ULONG   Length ; // ExeLength; // ExesLength
+    PVOID   ExeNames;
+    BOOLEAN Unicode;
 } CONSOLE_GETALIASESEXES, *PCONSOLE_GETALIASESEXES;
 
 typedef struct
 {
-    DWORD Length;
+    HANDLE  ConsoleHandle;
+    ULONG   Length;
+    BOOLEAN Unicode;
 } CONSOLE_GETALIASESEXESLENGTH, *PCONSOLE_GETALIASESEXESLENGTH;
 
 
 
 typedef struct
 {
-    UNICODE_STRING ExeName;
-    PWCHAR History;
-    DWORD Length;
+    HANDLE  ConsoleHandle;
+    ULONG   HistoryLength;
+    PVOID   History;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_GETCOMMANDHISTORY, *PCONSOLE_GETCOMMANDHISTORY;
 
 typedef struct
 {
-    UNICODE_STRING ExeName;
-    DWORD Length;
+    HANDLE  ConsoleHandle;
+    ULONG   HistoryLength;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_GETCOMMANDHISTORYLENGTH, *PCONSOLE_GETCOMMANDHISTORYLENGTH;
 
 typedef struct
 {
-    UNICODE_STRING ExeName;
+    HANDLE  ConsoleHandle;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
 } CONSOLE_EXPUNGECOMMANDHISTORY, *PCONSOLE_EXPUNGECOMMANDHISTORY;
-
-typedef struct
-{
-    UNICODE_STRING ExeName;
-    DWORD NumCommands;
-} CONSOLE_SETHISTORYNUMBERCOMMANDS, *PCONSOLE_SETHISTORYNUMBERCOMMANDS;
 
 typedef struct
 {
@@ -722,6 +747,22 @@ typedef struct
     UINT NumberOfHistoryBuffers;
     DWORD dwFlags;
 } CONSOLE_GETSETHISTORYINFO, *PCONSOLE_GETSETHISTORYINFO;
+
+typedef struct
+{
+    HANDLE  ConsoleHandle;
+    ULONG   NumCommands;
+    USHORT  ExeLength;
+    PVOID   ExeName;
+    BOOLEAN Unicode;
+    BOOLEAN Unicode2;
+} CONSOLE_SETHISTORYNUMBERCOMMANDS, *PCONSOLE_SETHISTORYNUMBERCOMMANDS;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    ULONG  Mode;
+} CONSOLE_SETHISTORYMODE, *PCONSOLE_SETHISTORYMODE;
 
 
 
@@ -753,6 +794,13 @@ typedef struct
     HANDLE EventHandle;
 } CONSOLE_SETINPUTOUTPUTCP, *PCONSOLE_SETINPUTOUTPUTCP;
 
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    CHAR   LayoutBuffer[KL_NAMELENGTH * sizeof(WCHAR)]; // Can hold up to 9 wchars
+    BOOL   Ansi;
+} CONSOLE_GETKBDLAYOUTNAME, *PCONSOLE_GETKBDLAYOUTNAME;
+
 typedef struct _CONSOLE_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -781,11 +829,12 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETHANDLEINFO GetHandleInfoRequest;
         CONSOLE_SETHANDLEINFO SetHandleInfoRequest;
 
-        /* Cursor */
+        /* Cursor & Mouse */
         CONSOLE_SHOWCURSOR ShowCursorRequest;
         CONSOLE_SETCURSOR SetCursorRequest;
         CONSOLE_GETSETCURSORINFO CursorInfoRequest;
         CONSOLE_SETCURSORPOSITION SetCursorPositionRequest;
+        CONSOLE_GETMOUSEINFO GetMouseInfoRequest;
 
         /* Screen-buffer */
         CONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest;
@@ -841,12 +890,14 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest;
         CONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest;
         CONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest;
-        CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
         CONSOLE_GETSETHISTORYINFO HistoryInfoRequest;
+        CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
+        CONSOLE_SETHISTORYMODE SetHistoryModeRequest;
 
-        /* Input and Output Code Pages */
+        /* Input and Output Code Pages; keyboard */
         CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
         CONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest;
+        CONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 

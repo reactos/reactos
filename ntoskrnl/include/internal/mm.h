@@ -648,6 +648,13 @@ VOID
 NTAPI
 MmShowOutOfSpaceMessagePagingFile(VOID);
 
+NTSTATUS
+NTAPI
+MiReadPageFile(
+    _In_ PFN_NUMBER Page,
+    _In_ ULONG PageFileIndex,
+    _In_ ULONG_PTR PageFileOffset);
+
 /* process.c ****************************************************************/
 
 NTSTATUS
