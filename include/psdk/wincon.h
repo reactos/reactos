@@ -618,6 +618,12 @@ BOOL WINAPI CloseConsoleHandle(_In_ HANDLE);
 // BOOL WINAPI SetStdHandle(_In_ DWORD, _In_ HANDLE);
 /* Undocumented */
 BOOL WINAPI VerifyConsoleIoHandle(_In_ HANDLE);
+/* Undocumented */
+BOOL
+WINAPI
+RegisterConsoleVDM(_In_ DWORD, _In_ HANDLE, _In_ HANDLE, _In_ HANDLE, _In_ DWORD,
+                   _Out_ LPDWORD, _Out_ PVOID*, _In_ PVOID, _In_ DWORD, _In_ COORD,
+                   _Out_ PVOID*);
 
 BOOL
 WINAPI

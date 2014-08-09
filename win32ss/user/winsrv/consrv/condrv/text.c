@@ -722,6 +722,68 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
     return STATUS_SUCCESS;
 }
 
+/*
+ * NOTE: This function is strongly inspired by ConDrvWriteConsoleOutput...
+ */
+NTSTATUS NTAPI
+ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
+                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                            IN PCHAR_CELL CharInfo/*Buffer*/,
+                            IN COORD CharInfoSize,
+                            IN OUT PSMALL_RECT WriteRegion,
+                            IN BOOLEAN DrawRegion)
+{
+    SHORT X, Y;
+    SMALL_RECT ScreenBuffer;
+    PCHAR_CELL CurCharInfo;
+    SMALL_RECT CapturedWriteRegion;
+    PCHAR_INFO Ptr;
+
+    if (Console == NULL || Buffer == NULL || CharInfo == NULL || WriteRegion == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
+
+    CapturedWriteRegion = *WriteRegion;
+
+    /* Make sure WriteRegion is inside the screen buffer */
+    ConioInitRect(&ScreenBuffer, 0, 0,
+                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+    if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
+    {
+        /*
+         * It is okay to have a WriteRegion completely outside
+         * the screen buffer. No data is written then.
+         */
+        return STATUS_SUCCESS;
+    }
+
+    // CurCharInfo = CharInfo;
+
+    for (Y = CapturedWriteRegion.Top; Y <= CapturedWriteRegion.Bottom; ++Y)
+    {
+        /**/CurCharInfo = CharInfo + Y * CharInfoSize.X + CapturedWriteRegion.Left;/**/
+
+        Ptr = ConioCoordToPointer(Buffer, CapturedWriteRegion.Left, Y);
+        for (X = CapturedWriteRegion.Left; X <= CapturedWriteRegion.Right; ++X)
+        {
+            ConsoleAnsiCharToUnicodeChar(Console, &Ptr->Char.UnicodeChar, &CurCharInfo->Char);
+            Ptr->Attributes = CurCharInfo->Attributes;
+            ++Ptr;
+            ++CurCharInfo;
+        }
+    }
+
+    if (DrawRegion) TermDrawRegion(Console, &CapturedWriteRegion);
+
+    *WriteRegion = CapturedWriteRegion;
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS NTAPI
 ConDrvWriteConsole(IN PCONSOLE Console,
                    IN PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
