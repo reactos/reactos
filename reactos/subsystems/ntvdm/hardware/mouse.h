@@ -49,7 +49,7 @@
 #define MOUSE_SCROLL_UP     1
 #define MOUSE_SCROLL_DOWN   -1
 #define MOUSE_SCROLL_RIGHT  2
-#define MOUSE_SCROLL_LET    -2
+#define MOUSE_SCROLL_LEFT   -2
 
 typedef enum _MOUSE_MODE
 {
