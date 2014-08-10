@@ -7,7 +7,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #include <winreg.h>
 #include <windowsx.h>

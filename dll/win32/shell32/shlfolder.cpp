@@ -81,6 +81,33 @@ BOOL SHELL32_GetCustomFolderAttribute(
     return FALSE;
 }
 
+BOOL SHELL32_GetCustomFolderAttributes(
+    LPCITEMIDLIST pidl, LPCWSTR pwszHeading,
+    LPWSTR pwszValue, DWORD cchValue)
+{
+    DWORD dwAttrib = FILE_ATTRIBUTE_SYSTEM;
+    WCHAR wszFolderPath[MAX_PATH];
+
+    /* Hack around not having system attribute on non-Windows file systems */
+    if (0)
+        dwAttrib = _ILGetFileAttributes(pidl, NULL, 0);
+
+    if (dwAttrib & FILE_ATTRIBUTE_SYSTEM)
+    {
+        if (!SHGetPathFromIDListW(pidl, wszFolderPath))
+            return FALSE;
+
+        static const WCHAR wszDesktopIni[] =
+                {'d','e','s','k','t','o','p','.','i','n','i',0};
+
+        PathAddBackslashW(wszFolderPath);
+        PathAppendW(wszFolderPath, wszDesktopIni);
+        return GetPrivateProfileSectionW(pwszHeading, pwszValue, cchValue, wszFolderPath);
+    }
+    return FALSE;
+}
+
+
 /***************************************************************************
  *  GetNextElement (internal function)
  *

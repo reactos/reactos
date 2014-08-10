@@ -28,6 +28,7 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
                                         LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     int icon_idx;
+    bool cont=TRUE;
     WCHAR wszPath[MAX_PATH];
     WCHAR wszCLSIDValue[CHARS_IN_GUID];
     static const WCHAR shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
@@ -36,27 +37,40 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
     static const WCHAR clsid2[] = { 'C', 'L', 'S', 'I', 'D', '2', 0 };
     static const WCHAR iconIndex[] = { 'I', 'c', 'o', 'n', 'I', 'n', 'd', 'e', 'x', 0 };
 
-    if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconFile,
-                                         wszPath, MAX_PATH))
+    /*
+    Optimisation. GetCustomFolderAttribute has a critical lock on it, and isn't fast.
+    Test the water (i.e., see if the attribute exists) before questioning it three times
+    when most folders don't use it at all.
+    */
+    WCHAR wszBigToe[3];
+    if (!(uFlags & GIL_DEFAULTICON) && SHELL32_GetCustomFolderAttributes(pidl, shellClassInfo,
+                                         wszBigToe, 3))
     {
-        WCHAR wszIconIndex[10];
-        SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconIndex,
-                                         wszIconIndex, 10);
-        *piIndex = _wtoi(wszIconIndex);
+        if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconFile,
+                                             wszPath, MAX_PATH))
+        {
+            WCHAR wszIconIndex[10];
+            SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconIndex,
+                                             wszIconIndex, 10);
+            *piIndex = _wtoi(wszIconIndex);
+            cont=FALSE;
+        }
+        else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid,
+                 wszCLSIDValue, CHARS_IN_GUID) &&
+                 HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
+        {
+            *piIndex = icon_idx;
+            cont=FALSE;
+        }
+        else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid2,
+                 wszCLSIDValue, CHARS_IN_GUID) &&
+                 HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
+        {
+            *piIndex = icon_idx;
+            cont=FALSE;
+        }
     }
-    else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid,
-             wszCLSIDValue, CHARS_IN_GUID) &&
-             HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
-    {
-        *piIndex = icon_idx;
-    }
-    else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid2,
-             wszCLSIDValue, CHARS_IN_GUID) &&
-             HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
-    {
-        *piIndex = icon_idx;
-    }
-    else
+    if (cont)
     {
         static const WCHAR folder[] = { 'F', 'o', 'l', 'd', 'e', 'r', 0 };
 
@@ -322,6 +336,10 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
                           &flags)))
         {
             initIcon->SetNormalIcon(wTemp, icon_idx);
+            // FIXME: if/when getIconLocationForFolder does something for 
+            //        GIL_FORSHORTCUT, code below should be uncommented. and
+            //        the following line removed.
+            initIcon->SetShortcutIcon(wTemp, icon_idx);
         }
         if (SUCCEEDED(getIconLocationForFolder(
                           pidl, GIL_DEFAULTICON, wTemp, MAX_PATH,
@@ -330,13 +348,13 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
         {
             initIcon->SetDefaultIcon(wTemp, icon_idx);
         }
-        if (SUCCEEDED(getIconLocationForFolder(
-                          pidl, GIL_FORSHORTCUT, wTemp, MAX_PATH,
-                          &icon_idx,
-                          &flags)))
-        {
-            initIcon->SetShortcutIcon(wTemp, icon_idx);
-        }
+        // if (SUCCEEDED(getIconLocationForFolder(
+        //                   pidl, GIL_FORSHORTCUT, wTemp, MAX_PATH,
+        //                   &icon_idx,
+        //                   &flags)))
+        // {
+        //     initIcon->SetShortcutIcon(wTemp, icon_idx);
+        // }
         if (SUCCEEDED(getIconLocationForFolder(
                           pidl, GIL_OPENICON, wTemp, MAX_PATH,
                           &icon_idx,

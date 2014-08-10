@@ -90,7 +90,7 @@ public:
     CComPtr<IUnknown>                       fLogoBar;           // the reactos logo
     CComPtr<IUnknown>                       fControlsBar;       // navigation controls
     CComPtr<IUnknown>                       fNavigationBar;     // address bar
-    CComObject<CMenuCallback>               fMenuCallback;
+    CComPtr<CMenuCallback>                  fMenuCallback;
     CComPtr<IOleCommandTarget>              fCommandTarget;
     GUID                                    fCommandCategory;
     HWND                                    fToolbarWindow;

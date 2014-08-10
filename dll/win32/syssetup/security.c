@@ -330,7 +330,7 @@ SetAdministratorPassword(LPCWSTR Password)
     SAM_HANDLE UserHandle = NULL;
     NTSTATUS Status;
 
-    DPRINT1("SYSSETUP: SetAdministratorPassword(%S)\n", Password);
+    DPRINT("SYSSETUP: SetAdministratorPassword(%p)\n", Password);
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);

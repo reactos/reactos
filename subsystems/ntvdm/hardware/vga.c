@@ -21,6 +21,12 @@
 static CONST DWORD MemoryBase[]  = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
 static CONST DWORD MemoryLimit[] = { 0xAFFFF, 0xAFFFF, 0xB7FFF, 0xBFFFF };
 
+/*
+ * Activate this line if you want to use the real
+ * RegisterConsoleVDM API of ReactOS/Windows.
+ */
+// #define USE_REAL_REGISTERCONSOLEVDM
+
 #define USE_REACTOS_COLORS
 // #define USE_DOSBOX_COLORS
 
@@ -288,44 +294,12 @@ static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 
 #include <ntddvdeo.h>
 
-typedef
-BOOL
-(WINAPI *pRegisterConsoleVDM)
-(
-    BOOL IsDosVDM_flag,
-    HANDLE EventHandle_1,
-    HANDLE EventHandle_2,
-    HANDLE EventHandle_3,
-    int Unused1,
-    PVOID returned_val_1,
-    PVOID *returned_val_2,
-    PVOID lpUnknownBuffer,
-    DWORD theUnknownBufferLength,
-    COORD theVDMBufferSize,
-    PCHAR *lpVDMBuffer
-);
+#ifdef USE_REAL_REGISTERCONSOLEVDM
 
-#if 0
-BOOL
-WINAPI
-RegisterConsoleVDM
-(
-    BOOL IsDosVDM_flag,
-    HANDLE EventHandle_1,
-    HANDLE EventHandle_2,
-    HANDLE EventHandle_3,
-    int Unused1,
-    PVOID returned_val_1,
-    PVOID *returned_val_2,
-    PVOID lpUnknownBuffer,
-    DWORD theUnknownBufferLength,
-    COORD theVDMBufferSize,
-    PVOID *lpVDMBuffer
-);
+#define __RegisterConsoleVDM        RegisterConsoleVDM
+#define __InvalidateConsoleDIBits   InvalidateConsoleDIBits
 
-HMODULE hKernel32 = NULL;
-pRegisterConsoleVDM RegisterConsoleVDM = NULL;
-#endif
+#else
 
 /*
  * This private buffer, per-console, is used by
@@ -340,49 +314,49 @@ static PCHAR_INFO CharBuff  = NULL; // This is a hack, which is unneeded
 
 BOOL
 WINAPI
-__RegisterConsoleVDM(BOOL IsDosVDM_flag,
-                     HANDLE EventHandle_1,
-                     HANDLE EventHandle_2,
-                     HANDLE EventHandle_3,
-                     int Unused1,
-                     PVOID returned_val_1,
-                     PVOID *returned_val_2,
-                     PVOID lpUnknownBuffer,
-                     DWORD theUnknownBufferLength,
-                     COORD theVDMBufferSize,
-                     PCHAR *lpVDMBuffer)
+__RegisterConsoleVDM(IN DWORD dwRegisterFlags,
+                     IN HANDLE hStartHardwareEvent,
+                     IN HANDLE hEndHardwareEvent,
+                     IN HANDLE hErrorHardwareEvent,
+                     IN DWORD dwUnusedVar,
+                     OUT LPDWORD lpVideoStateLength,
+                     OUT PVOID* lpVideoState, // PVIDEO_HARDWARE_STATE_HEADER*
+                     IN PVOID lpUnusedBuffer,
+                     IN DWORD dwUnusedBufferLength,
+                     IN COORD dwVDMBufferSize,
+                     OUT PVOID* lpVDMBuffer)
 {
-    UNREFERENCED_PARAMETER(EventHandle_3);
-    UNREFERENCED_PARAMETER(Unused1);
-    UNREFERENCED_PARAMETER(returned_val_1);
-    UNREFERENCED_PARAMETER(returned_val_2);
-    UNREFERENCED_PARAMETER(lpUnknownBuffer);
-    UNREFERENCED_PARAMETER(theUnknownBufferLength);
+    UNREFERENCED_PARAMETER(hErrorHardwareEvent);
+    UNREFERENCED_PARAMETER(dwUnusedVar);
+    UNREFERENCED_PARAMETER(lpVideoStateLength);
+    UNREFERENCED_PARAMETER(lpVideoState);
+    UNREFERENCED_PARAMETER(lpUnusedBuffer);
+    UNREFERENCED_PARAMETER(dwUnusedBufferLength);
 
     SetLastError(0);
-    DPRINT1("__RegisterConsoleVDM(%d)\n", IsDosVDM_flag);
+    DPRINT1("__RegisterConsoleVDM(%d)\n", dwRegisterFlags);
 
     if (lpVDMBuffer == NULL) return FALSE;
 
-    if (IsDosVDM_flag)
+    if (dwRegisterFlags != 0)
     {
-        // if (EventHandle_1 == NULL || EventHandle_2 == NULL) return FALSE;
+        // if (hStartHardwareEvent == NULL || hEndHardwareEvent == NULL) return FALSE;
         if (VDMBuffer != NULL) return FALSE;
 
-        VDMBufferSize = theVDMBufferSize;
+        VDMBufferSize = dwVDMBufferSize;
 
         /* HACK: Cache -- to be removed in the real implementation */
         CharBuff = HeapAlloc(GetProcessHeap(),
                              HEAP_ZERO_MEMORY,
-                             theVDMBufferSize.X * theVDMBufferSize.Y
-                                                * sizeof(CHAR_INFO));
+                             VDMBufferSize.X * VDMBufferSize.Y
+                                             * sizeof(CHAR_INFO));
         ASSERT(CharBuff);
 
         VDMBuffer = HeapAlloc(GetProcessHeap(),
                               HEAP_ZERO_MEMORY,
-                              theVDMBufferSize.X * theVDMBufferSize.Y
-                                                 * sizeof(CHAR_CELL));
-        *lpVDMBuffer = (PCHAR)VDMBuffer;
+                              VDMBufferSize.X * VDMBufferSize.Y
+                                              * sizeof(CHAR_CELL));
+        *lpVDMBuffer = VDMBuffer;
         return (VDMBuffer != NULL);
     }
     else
@@ -432,6 +406,8 @@ __InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
     return InvalidateConsoleDIBits(hConsoleOutput, lpRect);
 }
 
+#endif
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static inline DWORD VgaGetAddressSize(VOID);
@@ -458,6 +434,9 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     ULONG Length = 0;
     PVIDEO_HARDWARE_STATE_HEADER State;
 
+#ifdef USE_REAL_REGISTERCONSOLEVDM
+    PCHAR_INFO CharBuff = NULL;
+#endif
     SHORT i, j;
     DWORD AddressSize, ScanlineSize;
     DWORD Address = 0;
@@ -472,7 +451,7 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     /*
      * Windows 2k3 winsrv.dll calls NtVdmControl(VdmQueryVdmProcess == 14, &ConsoleHandle);
      * in the two following APIs:
-     * SrvRegisterConsoleVDM  (corresponding win32 API: RegisterConsoleVDM)
+     * SrvRegisterConsoleVDM  (corresponding Win32 API: RegisterConsoleVDM)
      * SrvVDMConsoleOperation (corresponding Win32 API: )
      * to check whether the current process is a VDM process, and fails otherwise with the
      * error 0xC0000022 ().
@@ -492,13 +471,21 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
                          NULL,
                          0,
                          TextResolution,
-                         (PCHAR*)&TextFramebuffer);
+                         (PVOID*)&TextFramebuffer);
     if (!Success)
     {
         DisplayMessage(L"RegisterConsoleVDM failed with error %d\n", GetLastError());
         EmulatorTerminate();
         return FALSE;
     }
+
+#ifdef USE_REAL_REGISTERCONSOLEVDM
+    CharBuff = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         TextResolution.X * TextResolution.Y
+                                          * sizeof(CHAR_INFO));
+    ASSERT(CharBuff);
+#endif
 
     /*
      * Resize the console
@@ -559,6 +546,10 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
         /* Move to the next scanline */
         Address += ScanlineSize;
     }
+
+#ifdef USE_REAL_REGISTERCONSOLEVDM
+    if (CharBuff) HeapFree(GetProcessHeap(), 0, CharBuff);
+#endif
 
     VgaUpdateCursorPosition();
 
@@ -1950,7 +1941,7 @@ VOID VgaDetachFromConsole(BOOL ChangingMode)
                          NULL,
                          0,
                          dummySize,
-                         (PCHAR*)&dummyPtr);
+                         &dummyPtr);
 
     TextFramebuffer = NULL;
 
@@ -2039,11 +2030,6 @@ VOID VgaCleanup(VOID)
     CloseHandle(AnotherEvent);
     CloseHandle(EndEvent);
     CloseHandle(StartEvent);
-
-#if 0
-    RegisterConsoleVDM = NULL;
-    FreeLibrary(hKernel32);
-#endif
 }
 
 /* EOF */

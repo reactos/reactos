@@ -14,6 +14,7 @@
 #include "io.h"
 #include "ps2.h"
 #include "pic.h"
+#include "mouse.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -27,69 +28,6 @@ static BYTE KeyboardConfig = PS2_DEFAULT_CONFIG;
 static HANDLE QueueMutex = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-static BOOLEAN KeyboardQueuePush(BYTE ScanCode)
-{
-    BOOLEAN Result = TRUE;
-
-    WaitForSingleObject(QueueMutex, INFINITE);
-
-    /* Check if the keyboard queue is full */
-    if (!KeyboardQueueEmpty && (KeyboardQueueStart == KeyboardQueueEnd))
-    {
-        Result = FALSE;
-        goto Done;
-    }
-
-    /* Insert the value in the queue */
-    KeyboardQueue[KeyboardQueueEnd] = ScanCode;
-    KeyboardQueueEnd++;
-    KeyboardQueueEnd %= KEYBOARD_BUFFER_SIZE;
-
-    /* Since we inserted a value, it's not empty anymore */
-    KeyboardQueueEmpty = FALSE;
-
-Done:
-    ReleaseMutex(QueueMutex);
-    return Result;
-}
-
-static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
-{
-    BOOLEAN Result = TRUE;
-
-    /* Make sure the keyboard queue is not empty (fast check) */
-    if (KeyboardQueueEmpty) return FALSE;
-
-    WaitForSingleObject(QueueMutex, INFINITE);
-
-    /*
-     * Recheck whether keyboard queue is not empty (it
-     * may have changed after having grabbed the mutex).
-     */
-    if (KeyboardQueueEmpty)
-    {
-        Result = FALSE;
-        goto Done;
-    }
-
-    /* Get the scan code */
-    *ScanCode = KeyboardQueue[KeyboardQueueStart];
-
-    /* Remove the value from the queue */
-    KeyboardQueueStart++;
-    KeyboardQueueStart %= KEYBOARD_BUFFER_SIZE;
-
-    /* Check if the queue is now empty */
-    if (KeyboardQueueStart == KeyboardQueueEnd)
-    {
-        KeyboardQueueEmpty = TRUE;
-    }
-
-Done:
-    ReleaseMutex(QueueMutex);
-    return Result;
-}
 
 static BYTE WINAPI PS2ReadPort(ULONG Port)
 {
@@ -156,14 +94,14 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
             /* Disable mouse */
             case 0xA7:
             {
-                // TODO: Mouse support
+                // TODO: Not implemented
                 break;
             }
 
             /* Enable mouse */
             case 0xA8:
             {
-                // TODO: Mouse support
+                // TODO: Not implemented
                 break;
             }
 
@@ -268,7 +206,7 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
 
                 case 0xD4:
                 {
-                    // TODO: Mouse support
+                    MouseCommand(Data);
                     break;
                 }
             }
@@ -281,6 +219,69 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+BOOLEAN KeyboardQueuePush(BYTE ScanCode)
+{
+    BOOLEAN Result = TRUE;
+
+    WaitForSingleObject(QueueMutex, INFINITE);
+
+    /* Check if the keyboard queue is full */
+    if (!KeyboardQueueEmpty && (KeyboardQueueStart == KeyboardQueueEnd))
+    {
+        Result = FALSE;
+        goto Done;
+    }
+
+    /* Insert the value in the queue */
+    KeyboardQueue[KeyboardQueueEnd] = ScanCode;
+    KeyboardQueueEnd++;
+    KeyboardQueueEnd %= KEYBOARD_BUFFER_SIZE;
+
+    /* Since we inserted a value, it's not empty anymore */
+    KeyboardQueueEmpty = FALSE;
+
+Done:
+    ReleaseMutex(QueueMutex);
+    return Result;
+}
+
+BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
+{
+    BOOLEAN Result = TRUE;
+
+    /* Make sure the keyboard queue is not empty (fast check) */
+    if (KeyboardQueueEmpty) return FALSE;
+
+    WaitForSingleObject(QueueMutex, INFINITE);
+
+    /*
+     * Recheck whether keyboard queue is not empty (it
+     * may have changed after having grabbed the mutex).
+     */
+    if (KeyboardQueueEmpty)
+    {
+        Result = FALSE;
+        goto Done;
+    }
+
+    /* Get the scan code */
+    *ScanCode = KeyboardQueue[KeyboardQueueStart];
+
+    /* Remove the value from the queue */
+    KeyboardQueueStart++;
+    KeyboardQueueStart %= KEYBOARD_BUFFER_SIZE;
+
+    /* Check if the queue is now empty */
+    if (KeyboardQueueStart == KeyboardQueueEnd)
+    {
+        KeyboardQueueEmpty = TRUE;
+    }
+
+Done:
+    ReleaseMutex(QueueMutex);
+    return Result;
+}
 
 VOID PS2Dispatch(PINPUT_RECORD InputRecord)
 {

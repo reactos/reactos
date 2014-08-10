@@ -24,6 +24,8 @@
 
 /* FUNCTIONS ******************************************************************/
 
+BOOLEAN KeyboardQueuePush(BYTE ScanCode);
+BOOLEAN KeyboardQueuePop(BYTE *ScanCode);
 VOID PS2Dispatch(PINPUT_RECORD InputRecord);
 VOID GenerateKeyboardInterrupts(VOID);
 

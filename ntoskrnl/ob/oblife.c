@@ -1231,8 +1231,15 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
     /* Get creator info and insert it into the type list */
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
-    if (CreatorInfo) InsertTailList(&ObpTypeObjectType->TypeList,
-                                    &CreatorInfo->TypeList);
+    if (CreatorInfo)
+    {
+        InsertTailList(&ObpTypeObjectType->TypeList,
+                       &CreatorInfo->TypeList);
+
+        /* CORE-8423: Avoid inserting this a second time if someone creates a
+         * handle to the object type (bug in Windows 2003) */
+        Header->Flags &= ~OB_FLAG_CREATE_INFO;
+    }
 
     /* Set the index and the entry into the object type array */
     LocalObjectType->Index = ObpTypeObjectType->TotalNumberOfObjects;

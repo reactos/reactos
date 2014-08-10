@@ -481,14 +481,13 @@ CInternetToolbar::CInternetToolbar()
     fLocked = false;
     fMenuBandWindow = NULL;
     fNavigationWindow = NULL;
-    fMenuCallback.AddRef();
+    fMenuCallback = new CComObject<CMenuCallback>();
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
 }
 
 CInternetToolbar::~CInternetToolbar()
 {
-    fMenuCallback.Release();
 }
 
 void CInternetToolbar::AddDockItem(IUnknown *newItem, int bandID, int flags)
@@ -540,7 +539,7 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **menuBar)
         IID_IShellMenu, reinterpret_cast<void **>(menuBar));
     if (FAILED(hResult))
         return hResult;
-    hResult = fMenuCallback.QueryInterface(IID_IShellMenuCallback, reinterpret_cast<void **>(&callback));
+    hResult = fMenuCallback->QueryInterface(IID_IShellMenuCallback, reinterpret_cast<void **>(&callback));
     if (FAILED(hResult))
         return hResult;
     hResult = (*menuBar)->Initialize(callback, -1, ANCESTORDEFAULT, SMINIT_HORIZONTAL | SMINIT_TOPLEVEL);

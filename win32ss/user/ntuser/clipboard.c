@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Clipboard routines
- * FILE:             subsys/win32k/ntuser/clipboard.c
+ * FILE:             win32ss/user/ntuser/clipboard.c
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  *                   Pablo Borobia <pborobia@gmail.com>
  *                   Rafal Harabien <rafalh@reactos.org>
@@ -622,7 +622,7 @@ UserEmptyClipboard(VOID)
 
         if (pWinStaObj->spwndClipOwner)
         {
-            TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p", pWinStaObj->spwndClipOwner->head.h);
+            TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p\n", pWinStaObj->spwndClipOwner->head.h);
             co_IntSendMessageNoWait(pWinStaObj->spwndClipOwner->head.h, WM_DESTROYCLIPBOARD, 0, 0);
         }
 
