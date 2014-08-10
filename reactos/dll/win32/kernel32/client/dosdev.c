@@ -219,7 +219,8 @@ DefineDosDeviceW(
         }
     }
 
-    if (NtTargetPathU.Buffer)
+    if (NtTargetPathU.Buffer &&
+        NtTargetPathU.Buffer != lpTargetPath)
     {
         RtlFreeHeap(RtlGetProcessHeap(),
                     0,
