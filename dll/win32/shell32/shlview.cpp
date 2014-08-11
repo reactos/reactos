@@ -497,7 +497,7 @@ BOOL CDefView::CreateList()
     if (m_FolderSettings.fFlags & FWF_DESKTOP)
         dwStyle |= LVS_ALIGNLEFT;
     else
-        dwStyle |= LVS_ALIGNTOP;
+        dwStyle |= LVS_ALIGNTOP | LVS_SHOWSELALWAYS;
 
     switch (m_FolderSettings.ViewMode)
     {
