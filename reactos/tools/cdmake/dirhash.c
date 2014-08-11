@@ -210,7 +210,8 @@ dir_hash_destroy_dir(struct target_dir_hash *dh, struct target_dir_entry *de)
         free(tf->target_name);
         free(tf);
     }
-    delete_entry_by_normname(dh, de->normalized_name);
+    if (de->normalized_name)
+        delete_entry_by_normname(dh, de->normalized_name);
     free(de->normalized_name);
     free(de->case_name);
 }
