@@ -188,7 +188,7 @@ ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
     if (Buffer == Console->ActiveBuffer) return STATUS_SUCCESS;
 
     /* If old buffer has no handles, it's now unreferenced */
-    if (Console->ActiveBuffer->Header.HandleCount == 0)
+    if (Console->ActiveBuffer->Header.ReferenceCount == 0)
     {
         ConioDeleteScreenBuffer(Console->ActiveBuffer);
     }

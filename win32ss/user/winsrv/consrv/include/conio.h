@@ -31,20 +31,23 @@ C_ASSERT(sizeof(CHAR_CELL) == 2);
 /* Object type magic numbers */
 typedef enum _CONSOLE_IO_OBJECT_TYPE
 {
-//  ANY_TYPE_BUFFER = 0x00, // --> Match any types of IO handles
-    TEXTMODE_BUFFER = 0x01, // --> Output-type handles for text SBs
-    GRAPHICS_BUFFER = 0x02, // --> Output-type handles for graphics SBs
+    UNKNOWN         = 0x00, // --> Unknown object
+    TEXTMODE_BUFFER = 0x01, // --> Output-type object for text SBs
+    GRAPHICS_BUFFER = 0x02, // --> Output-type object for graphics SBs
     SCREEN_BUFFER   = 0x03, // --> Any SB type
-    INPUT_BUFFER    = 0x04  // --> Input-type handles
+    INPUT_BUFFER    = 0x04, // --> Input-type object
+    ANY_TYPE_BUFFER = 0x07, // --> Any IO object
 } CONSOLE_IO_OBJECT_TYPE;
 
 typedef struct _CONSOLE_IO_OBJECT
 {
     CONSOLE_IO_OBJECT_TYPE Type;
+
     struct _CONSOLE* /* PCONSOLE */ Console;
+    LONG ReferenceCount;    /* Is incremented each time a console object gets referenced */
+
     LONG AccessRead, AccessWrite;
     LONG ExclusiveRead, ExclusiveWrite;
-    LONG HandleCount;
 } CONSOLE_IO_OBJECT, *PCONSOLE_IO_OBJECT;
 
 

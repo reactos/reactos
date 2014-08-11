@@ -19,53 +19,45 @@
 
 /* GLOBALS ********************************************************************/
 
+/* Console handle */
 typedef struct _CONSOLE_IO_HANDLE
 {
     PCONSOLE_IO_OBJECT Object;   /* The object on which the handle points to */
-    DWORD Access;
-    BOOL Inheritable;
-    DWORD ShareMode;
+    ULONG   Access;
+    ULONG   ShareMode;
+    BOOLEAN Inheritable;
 } CONSOLE_IO_HANDLE, *PCONSOLE_IO_HANDLE;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static INT
-AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
+static LONG
+AdjustHandleCounts(IN PCONSOLE_IO_HANDLE Handle,
+                   IN LONG Change)
 {
-    PCONSOLE_IO_OBJECT Object = Entry->Object;
+    PCONSOLE_IO_OBJECT Object = Handle->Object;
 
-    DPRINT("AdjustHandleCounts(0x%p, %d), Object = 0x%p\n", Entry, Change, Object);
-    DPRINT("\tAdjustHandleCounts(0x%p, %d), Object = 0x%p, Object->HandleCount = %d, Object->Type = %lu\n", Entry, Change, Object, Object->HandleCount, Object->Type);
+    DPRINT("AdjustHandleCounts(0x%p, %d), Object = 0x%p\n",
+           Handle, Change, Object);
+    DPRINT("\tAdjustHandleCounts(0x%p, %d), Object = 0x%p, Object->ReferenceCount = %d, Object->Type = %lu\n",
+           Handle, Change, Object, Object->ReferenceCount, Object->Type);
 
-    if (Entry->Access & GENERIC_READ)           Object->AccessRead += Change;
-    if (Entry->Access & GENERIC_WRITE)          Object->AccessWrite += Change;
-    if (!(Entry->ShareMode & FILE_SHARE_READ))  Object->ExclusiveRead += Change;
-    if (!(Entry->ShareMode & FILE_SHARE_WRITE)) Object->ExclusiveWrite += Change;
+    if (Handle->Access & GENERIC_READ)           Object->AccessRead += Change;
+    if (Handle->Access & GENERIC_WRITE)          Object->AccessWrite += Change;
+    if (!(Handle->ShareMode & FILE_SHARE_READ))  Object->ExclusiveRead += Change;
+    if (!(Handle->ShareMode & FILE_SHARE_WRITE)) Object->ExclusiveWrite += Change;
 
-    Object->HandleCount += Change;
+    Object->ReferenceCount += Change;
 
-    return Object->HandleCount;
+    return Object->ReferenceCount;
 }
 
 static VOID
-ConSrvCreateHandleEntry(PCONSOLE_IO_HANDLE Entry)
+ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
 {
-    /// LOCK /// PCONSOLE_IO_OBJECT Object = Entry->Object;
-    /// LOCK /// EnterCriticalSection(&Object->Console->Lock);
-    AdjustHandleCounts(Entry, +1);
-    /// LOCK /// LeaveCriticalSection(&Object->Console->Lock);
-}
-
-static VOID
-ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
-{
-    PCONSOLE_IO_OBJECT Object = Entry->Object;
+    PCONSOLE_IO_OBJECT Object = Handle->Object;
     if (Object != NULL)
     {
-        /// LOCK /// PCONSOLE Console = Object->Console;
-        /// LOCK /// EnterCriticalSection(&Console->Lock);
-
         /*
          * If this is a input handle, notify and dereference
          * all the waits related to this handle.
@@ -87,7 +79,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
             CsrNotifyWait(&Console->ReadWaitQueue,
                           TRUE,
                           NULL,
-                          (PVOID)Entry);
+                          (PVOID)Handle);
             if (!IsListEmpty(&Console->ReadWaitQueue))
             {
                 CsrDereferenceWait(&Console->ReadWaitQueue);
@@ -95,7 +87,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
         }
 
         /* If the last handle to a screen buffer is closed, delete it... */
-        if (AdjustHandleCounts(Entry, -1) == 0)
+        if (AdjustHandleCounts(Handle, -1) == 0)
         {
             if (Object->Type == TEXTMODE_BUFFER || Object->Type == GRAPHICS_BUFFER)
             {
@@ -116,14 +108,16 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
             }
         }
 
-        /// LOCK /// LeaveCriticalSection(&Console->Lock);
-
         /* Invalidate (zero-out) this handle entry */
-        // Entry->Object = NULL;
-        // RtlZeroMemory(Entry, sizeof(*Entry));
+        // Handle->Object = NULL;
+        // RtlZeroMemory(Handle, sizeof(*Handle));
     }
-    RtlZeroMemory(Entry, sizeof(*Entry)); // Be sure the whole entry is invalidated.
+    RtlZeroMemory(Handle, sizeof(*Handle)); // Be sure the whole entry is invalidated.
 }
+
+
+
+
 
 
 /* Forward declaration, used in ConSrvInitHandlesTable */
@@ -244,10 +238,10 @@ ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
         {
             /*
              * Copy the handle data and increment the reference count of the
-             * pointed object (via the call to ConSrvCreateHandleEntry).
+             * pointed object (via the call to ConSrvCreateHandleEntry == AdjustHandleCounts).
              */
             TargetProcessData->HandleTable[j] = SourceProcessData->HandleTable[i];
-            ConSrvCreateHandleEntry(&TargetProcessData->HandleTable[j]);
+            AdjustHandleCounts(&TargetProcessData->HandleTable[j], +1);
             ++j;
         }
     }
@@ -258,7 +252,7 @@ Quit:
 }
 
 static VOID
-ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
+ConSrvFreeHandlesTable(IN PCONSOLE_PROCESS_DATA ProcessData)
 {
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -277,7 +271,7 @@ ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
             /* Close all the console handles */
             for (i = 0; i < ProcessData->HandleTableSize; i++)
             {
-                ConSrvCloseHandleEntry(&ProcessData->HandleTable[i]);
+                ConSrvCloseHandle(&ProcessData->HandleTable[i]);
             }
         }
         /* Free the handles table memory */
@@ -290,6 +284,12 @@ ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 }
 
+
+
+
+
+
+// ConSrvCreateObject
 VOID
 ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
                  IN CONSOLE_IO_OBJECT_TYPE Type,
@@ -300,18 +300,19 @@ ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
 
     Object->Type    = Type;
     Object->Console = Console;
+    Object->ReferenceCount = 0;
+
     Object->AccessRead    = Object->AccessWrite    = 0;
     Object->ExclusiveRead = Object->ExclusiveWrite = 0;
-    Object->HandleCount   = 0;
 }
 
 NTSTATUS
-ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
-                   PHANDLE Handle,
-                   PCONSOLE_IO_OBJECT Object,
-                   DWORD Access,
-                   BOOL Inheritable,
-                   DWORD ShareMode)
+ConSrvInsertObject(IN PCONSOLE_PROCESS_DATA ProcessData,
+                   OUT PHANDLE Handle,
+                   IN PCONSOLE_IO_OBJECT Object,
+                   IN ULONG Access,
+                   IN BOOLEAN Inheritable,
+                   IN ULONG ShareMode)
 {
 #define IO_HANDLES_INCREMENT    2 * 3
 
@@ -362,7 +363,7 @@ ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
     ProcessData->HandleTable[i].Access      = Access;
     ProcessData->HandleTable[i].Inheritable = Inheritable;
     ProcessData->HandleTable[i].ShareMode   = ShareMode;
-    ConSrvCreateHandleEntry(&ProcessData->HandleTable[i]);
+    AdjustHandleCounts(&ProcessData->HandleTable[i], +1);
     *Handle = ULongToHandle((i << 2) | 0x3);
 
     // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -371,8 +372,8 @@ ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
 }
 
 NTSTATUS
-ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
-                   HANDLE Handle)
+ConSrvRemoveObject(IN PCONSOLE_PROCESS_DATA ProcessData,
+                   IN HANDLE Handle)
 {
     ULONG Index = HandleToULong(Handle) >> 2;
 
@@ -390,20 +391,20 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
     }
 
     ASSERT(ProcessData->ConsoleHandle);
-    ConSrvCloseHandleEntry(&ProcessData->HandleTable[Index]);
+    ConSrvCloseHandle(&ProcessData->HandleTable[Index]);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
-ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
-                HANDLE Handle,
-                PCONSOLE_IO_OBJECT* Object,
-                PVOID* Entry OPTIONAL,
-                DWORD Access,
-                BOOL LockConsole,
-                CONSOLE_IO_OBJECT_TYPE Type)
+ConSrvGetObject(IN PCONSOLE_PROCESS_DATA ProcessData,
+                IN HANDLE Handle,
+                OUT PCONSOLE_IO_OBJECT* Object,
+                OUT PVOID* Entry OPTIONAL,
+                IN ULONG Access,
+                IN BOOLEAN LockConsole,
+                IN CONSOLE_IO_OBJECT_TYPE Type)
 {
     // NTSTATUS Status;
     ULONG Index = HandleToULong(Handle) >> 2;
@@ -461,11 +462,16 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
 }
 
 VOID
-ConSrvReleaseObject(PCONSOLE_IO_OBJECT Object,
-                    BOOL IsConsoleLocked)
+ConSrvReleaseObject(IN PCONSOLE_IO_OBJECT Object,
+                    IN BOOLEAN IsConsoleLocked)
 {
     ConSrvReleaseConsole(Object->Console, IsConsoleLocked);
 }
+
+
+
+
+
 
 NTSTATUS
 ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
@@ -548,7 +554,7 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
 NTSTATUS
 ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                      HANDLE ConsoleHandle,
-                     BOOL CreateNewHandlesTable,
+                     BOOLEAN CreateNewHandlesTable,
                      PHANDLE pInputHandle,
                      PHANDLE pOutputHandle,
                      PHANDLE pErrorHandle)
@@ -826,7 +832,7 @@ CSR_API(SrvDuplicateHandle)
         (DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE))
     {
         /* Close the original handle if needed */
-        ConSrvCloseHandleEntry(Entry);
+        ConSrvCloseHandle(Entry);
     }
 
 Quit:
