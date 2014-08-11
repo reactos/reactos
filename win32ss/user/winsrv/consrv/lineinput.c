@@ -43,7 +43,7 @@ ConvertInputUnicodeToAnsi(PCONSOLE Console,
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static PHISTORY_BUFFER
-HistoryCurrentBuffer(PCONSOLE Console,
+HistoryCurrentBuffer(PCONSRV_CONSOLE Console,
                      PUNICODE_STRING ExeName)
 {
     PLIST_ENTRY Entry = Console->HistoryBuffers.Flink;
@@ -75,7 +75,7 @@ HistoryCurrentBuffer(PCONSOLE Console,
 }
 
 static VOID
-HistoryAddEntry(PCONSOLE Console,
+HistoryAddEntry(PCONSRV_CONSOLE Console,
                 PUNICODE_STRING ExeName)
 {
     UNICODE_STRING NewEntry;
@@ -127,7 +127,7 @@ HistoryAddEntry(PCONSOLE Console,
 }
 
 static VOID
-HistoryGetCurrentEntry(PCONSOLE Console,
+HistoryGetCurrentEntry(PCONSRV_CONSOLE Console,
                        PUNICODE_STRING ExeName,
                        PUNICODE_STRING Entry)
 {
@@ -140,7 +140,7 @@ HistoryGetCurrentEntry(PCONSOLE Console,
 }
 
 static PHISTORY_BUFFER
-HistoryFindBuffer(PCONSOLE Console,
+HistoryFindBuffer(PCONSRV_CONSOLE Console,
                   PVOID    ExeName,
                   USHORT   ExeLength,
                   BOOLEAN  UnicodeExe)
@@ -202,7 +202,7 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
 }
 
 VOID
-HistoryDeleteBuffers(PCONSOLE Console)
+HistoryDeleteBuffers(PCONSRV_CONSOLE Console)
 {
     PLIST_ENTRY CurrentEntry;
     PHISTORY_BUFFER HistoryBuffer;
@@ -216,7 +216,7 @@ HistoryDeleteBuffers(PCONSOLE Console)
 }
 
 static VOID
-LineInputSetPos(PCONSOLE Console, UINT Pos)
+LineInputSetPos(PCONSRV_CONSOLE Console, UINT Pos)
 {
     if (Pos != Console->LinePos && Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
     {
@@ -240,7 +240,7 @@ LineInputSetPos(PCONSOLE Console, UINT Pos)
 }
 
 static VOID
-LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, PWCHAR Insertion)
+LineInputEdit(PCONSRV_CONSOLE Console, UINT NumToDelete, UINT NumToInsert, PWCHAR Insertion)
 {
     PTEXTMODE_SCREEN_BUFFER ActiveBuffer;
     UINT Pos = Console->LinePos;
@@ -277,7 +277,7 @@ LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, PWCHAR Inser
 }
 
 static VOID
-LineInputRecallHistory(PCONSOLE Console,
+LineInputRecallHistory(PCONSRV_CONSOLE Console,
                        PUNICODE_STRING ExeName,
                        INT Offset)
 {
@@ -297,7 +297,7 @@ LineInputRecallHistory(PCONSOLE Console,
 }
 
 VOID
-LineInputKeyDown(PCONSOLE Console,
+LineInputKeyDown(PCONSRV_CONSOLE Console,
                  PUNICODE_STRING ExeName,
                  KEY_EVENT_RECORD *KeyEvent)
 {
@@ -511,7 +511,7 @@ CSR_API(SrvGetConsoleCommandHistory)
 {
     NTSTATUS Status;
     PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     ULONG BytesWritten = 0;
     PHISTORY_BUFFER Hist;
 
@@ -599,7 +599,7 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
 {
     NTSTATUS Status;
     PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLengthRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     ULONG Length = 0;
     UINT  i;
@@ -641,7 +641,7 @@ CSR_API(SrvExpungeConsoleCommandHistory)
 {
     NTSTATUS Status;
     PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistoryRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PHISTORY_BUFFER Hist;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
@@ -669,7 +669,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
 {
     NTSTATUS Status;
     PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommandsRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PHISTORY_BUFFER Hist;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
@@ -720,7 +720,7 @@ CSR_API(SrvGetConsoleHistory)
 {
 #if 0 // Vista+
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     NTSTATUS Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (NT_SUCCESS(Status))
     {
@@ -740,7 +740,7 @@ CSR_API(SrvSetConsoleHistory)
 {
 #if 0 // Vista+
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     NTSTATUS Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (NT_SUCCESS(Status))
     {
@@ -760,7 +760,7 @@ CSR_API(SrvSetConsoleCommandHistoryMode)
 {
     NTSTATUS Status;
     PCONSOLE_SETHISTORYMODE SetHistoryModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryModeRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     DPRINT1("SrvSetConsoleCommandHistoryMode(Mode = %d) is not yet implemented\n",
             SetHistoryModeRequest->Mode);
