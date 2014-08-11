@@ -12,8 +12,8 @@
 #pragma once
 
 NTSTATUS TuiInitConsole(PCONSOLE Console,
-                                 /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
-                                 PCONSOLE_INFO ConsoleInfo,
-                                 DWORD ProcessId);
+                        /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
+                        PCONSOLE_INFO ConsoleInfo,
+                        DWORD ProcessId);
 
 /* EOF */

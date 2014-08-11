@@ -15,8 +15,8 @@
 #include "conwnd.h"
 
 NTSTATUS GuiInitConsole(PCONSOLE Console,
-                                 /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
-                                 PCONSOLE_INFO ConsoleInfo,
-                                 DWORD ProcessId,
-                                 LPCWSTR IconPath,
-                                 INT IconIndex);
+                        /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
+                        PCONSOLE_INFO ConsoleInfo,
+                        DWORD ProcessId,
+                        LPCWSTR IconPath,
+                        INT IconIndex);

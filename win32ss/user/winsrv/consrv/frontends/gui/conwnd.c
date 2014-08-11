@@ -282,7 +282,7 @@ CreateSysMenu(HWND hWnd)
 }
 
 static VOID
-SendMenuEvent(PCONSOLE Console, UINT CmdId)
+SendMenuEvent(PCONSRV_CONSOLE Console, UINT CmdId)
 {
     INPUT_RECORD er;
 
@@ -366,7 +366,7 @@ static LRESULT
 OnCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
     LRESULT Ret = TRUE;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     /*
      * In case the selected menu item belongs to the user-reserved menu id range,
@@ -490,7 +490,7 @@ static BOOL
 OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Create->lpCreateParams;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     HDC hDC;
     HFONT OldFont;
     TEXTMETRICW Metrics;
@@ -647,7 +647,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 static VOID
 OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     INPUT_RECORD er;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
@@ -814,7 +814,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
                 PCOORD SelectionAnchor OPTIONAL,
                 PCOORD coord)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     HRGN oldRgn = CreateSelectionRgn(GuiData, GuiData->LineSelection,
                                      &GuiData->Selection.dwSelectionAnchor,
                                      &GuiData->Selection.srSelection);
@@ -1039,7 +1039,7 @@ IsSystemKey(WORD VirtualKeyCode)
 static VOID
 OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
@@ -1204,7 +1204,7 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
 static VOID
 OnTimer(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
@@ -1309,7 +1309,7 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
 static BOOL
 OnClose(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
         return TRUE;
@@ -1380,7 +1380,7 @@ static LRESULT
 OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     BOOL Err = FALSE;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     // FIXME: It's here that we need to check whether we has focus or not
     // and whether we are in edit mode or not, to know if we need to deal
@@ -1735,7 +1735,7 @@ Paste(PGUI_CONSOLE_DATA GuiData)
 static VOID
 OnGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     DWORD windx, windy;
     UINT  WidthUnit, HeightUnit;
@@ -1767,7 +1767,7 @@ OnGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 static VOID
 OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -1872,7 +1872,7 @@ GuiConsoleHandleScrollbarMenu(VOID)
 static LRESULT
 OnScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER Buff;
     SCROLLINFO sInfo;
     int fnBar;
@@ -1983,7 +1983,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT Result = 0;
     PGUI_CONSOLE_DATA GuiData = NULL;
-    PCONSOLE Console = NULL;
+    PCONSRV_CONSOLE Console = NULL;
 
     /*
      * - If it's the first time we create a window for the terminal,

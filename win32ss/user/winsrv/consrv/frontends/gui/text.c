@@ -25,7 +25,7 @@
 /* FUNCTIONS ******************************************************************/
 
 static COLORREF
-PaletteRGBFromAttrib(PCONSOLE Console, WORD Attribute)
+PaletteRGBFromAttrib(PCONSRV_CONSOLE Console, WORD Attribute)
 {
     HPALETTE hPalette = Console->ActiveBuffer->PaletteHandle;
     PALETTEENTRY pe;
@@ -309,7 +309,7 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
      * This function supposes that the system clipboard was opened.
      */
 
-    PCONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = Buffer->Header.Console;
 
     HANDLE hData;
     LPWSTR str;
@@ -377,7 +377,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PRECT rcView,
                        PRECT rcFramebuffer)
 {
-    PCONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = Buffer->Header.Console;
     // ASSERT(Console == GuiData->Console);
 
     ULONG TopLine, BottomLine, LeftChar, RightChar;

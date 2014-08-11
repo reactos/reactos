@@ -230,7 +230,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                                 BOOL Defaults)
 {
     NTSTATUS Status;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL, hClientSection = NULL;
@@ -510,7 +510,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                      BOOL SaveSettings)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL;
     ULONG ViewSize = 0;
@@ -654,7 +654,7 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
                                HANDLE hClientSection)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL;
     ULONG ViewSize = 0;
