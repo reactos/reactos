@@ -12,6 +12,13 @@
 
 #include "rect.h"
 
+// This is ALMOST a HACK!!!!!!!
+// Helpers for code refactoring
+#define _CONSRV_CONSOLE  _CONSOLE
+#define  CONSRV_CONSOLE   CONSOLE
+#define PCONSRV_CONSOLE  PCONSOLE
+
+
 #define CSR_DEFAULT_CURSOR_SIZE 25
 
 typedef struct _FRONTEND FRONTEND, *PFRONTEND;
@@ -24,7 +31,7 @@ typedef struct _FRONTEND_VTBL
      * Internal interface (functions called by the console server only)
      */
     NTSTATUS (NTAPI *InitFrontEnd)(IN OUT PFRONTEND This,
-                                   IN struct _CONSOLE* Console);
+                                   IN struct _CONSRV_CONSOLE* Console);
     VOID (NTAPI *DeinitFrontEnd)(IN OUT PFRONTEND This);
 
     /* Interface used for both text-mode and graphics screen buffers */
@@ -84,7 +91,7 @@ struct _FRONTEND
     NTSTATUS (NTAPI *UnloadFrontEnd)(IN OUT PFRONTEND This);
 
     // struct _WINSRV_CONSOLE*
-    struct _CONSOLE* Console;   /* Console to which the frontend is attached to */
+    struct _CONSRV_CONSOLE* Console;   /* Console to which the frontend is attached to */
     PVOID Data;                 /* Private data  */
     PVOID OldData;              /* Reserved      */
 };
@@ -125,35 +132,49 @@ typedef struct _WINSRV_CONSOLE
     ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
+/************************ Virtual DOS Machine support *************************/
+    COORD   VDMBufferSize;             /* Real size of the VDM buffer, in units of ??? */
+    HANDLE  VDMBufferSection;          /* Handle to the memory shared section for the VDM buffer */
+    PVOID   VDMBuffer;                 /* Our VDM buffer */
+    PVOID   ClientVDMBuffer;           /* A copy of the client view of our VDM buffer */
+    HANDLE  VDMClientProcess;          /* Handle to the client process who opened the buffer, to unmap the view */
+
+    HANDLE StartHardwareEvent;
+    HANDLE EndHardwareEvent;
+    HANDLE ErrorHardwareEvent;
+
+/****************************** Other properties ******************************/
+    COLORREF Colors[16];                    /* Colour palette */
+
 } WINSRV_CONSOLE, *PWINSRV_CONSOLE;
 
 /* console.c */
-VOID ConioPause(PCONSOLE Console, UINT Flags);
-VOID ConioUnpause(PCONSOLE Console, UINT Flags);
+VOID ConioPause(PCONSRV_CONSOLE Console, UINT Flags);
+VOID ConioUnpause(PCONSRV_CONSOLE Console, UINT Flags);
 
 PCONSOLE_PROCESS_DATA NTAPI
-ConSrvGetConsoleLeaderProcess(IN PCONSOLE Console);
+ConSrvGetConsoleLeaderProcess(IN PCONSRV_CONSOLE Console);
 NTSTATUS
 ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS NTAPI
-ConSrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
+ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
                               IN ULONG ProcessGroupId,
                               IN ULONG CtrlEvent);
 
 /* coninput.c */
-VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
-DWORD ConioEffectiveCursorSize(PCONSOLE Console,
+VOID NTAPI ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg);
+DWORD ConioEffectiveCursorSize(PCONSRV_CONSOLE Console,
                                DWORD Scale);
 
 NTSTATUS
-ConioAddInputEvents(PCONSOLE Console,
+ConioAddInputEvents(PCONSRV_CONSOLE Console,
                     PINPUT_RECORD InputRecords,
                     ULONG NumEventsToWrite,
                     PULONG NumEventsWritten,
                     BOOLEAN AppendToEnd);
 NTSTATUS
-ConioProcessInputEvent(PCONSOLE Console,
+ConioProcessInputEvent(PCONSRV_CONSOLE Console,
                        PINPUT_RECORD InputEvent);
 
 /* conoutput.c */
@@ -173,11 +194,11 @@ ConioProcessInputEvent(PCONSOLE Console,
     MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
 
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID ConioDrawConsole(PCONSOLE Console);
-NTSTATUS ConioResizeBuffer(PCONSOLE Console,
+VOID ConioDrawConsole(PCONSRV_CONSOLE Console);
+NTSTATUS ConioResizeBuffer(PCONSRV_CONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
-NTSTATUS ConioWriteConsole(PCONSOLE Console,
+NTSTATUS ConioWriteConsole(PCONSRV_CONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER Buff,
                            PWCHAR Buffer,
                            DWORD Length,

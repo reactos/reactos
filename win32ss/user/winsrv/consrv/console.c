@@ -210,14 +210,14 @@ ConSrvValidateConsole(OUT PCONSOLE* Console,
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
-ConioPause(PCONSOLE Console, UINT Flags)
+ConioPause(PCONSRV_CONSOLE Console, UINT Flags)
 {
     Console->PauseFlags |= Flags;
     ConDrvPause(Console);
 }
 
 VOID
-ConioUnpause(PCONSOLE Console, UINT Flags)
+ConioUnpause(PCONSRV_CONSOLE Console, UINT Flags)
 {
     Console->PauseFlags &= ~Flags;
 
@@ -429,6 +429,9 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     Console->QuickEdit = ConsoleInfo.QuickEdit;
 
+    /* Colour table */
+    memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
+
     /* Attach the ConSrv terminal to the console */
     Status = ConDrvRegisterTerminal(Console, &Terminal);
     if (!NT_SUCCESS(Status))
@@ -528,7 +531,7 @@ ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
 }
 
 PCONSOLE_PROCESS_DATA NTAPI
-ConSrvGetConsoleLeaderProcess(IN PCONSOLE Console)
+ConSrvGetConsoleLeaderProcess(IN PCONSRV_CONSOLE Console)
 {
     if (Console == NULL) return NULL;
 
@@ -567,7 +570,7 @@ ConSrvGetConsoleProcessList(IN PCONSOLE Console,
 
 // ConSrvGenerateConsoleCtrlEvent
 NTSTATUS NTAPI
-ConSrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
+ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
                               IN ULONG ProcessGroupId,
                               IN ULONG CtrlEvent)
 {
