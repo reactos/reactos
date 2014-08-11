@@ -120,8 +120,8 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
     hBrush = CreateSolidBrush(nbkColor);
     if (!hBrush) return FALSE;
 
-    Font = CreateFontW(GuiInfo->FontSize.X,
-                       0, // GuiInfo->FontSize.Y,
+    Font = CreateFontW(GuiInfo->FontSize.Y,
+                       0, // GuiInfo->FontSize.X,
                        0,
                        TA_BASELINE,
                        GuiInfo->FontWeight,
