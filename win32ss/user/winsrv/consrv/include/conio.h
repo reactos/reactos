@@ -12,20 +12,10 @@
 
 #include "rect.h"
 
-#define CSR_DEFAULT_CURSOR_SIZE 25
-
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED   | \
                                  BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY)
-
-/* VGA character cell */
-typedef struct _CHAR_CELL
-{
-    CHAR Char;
-    BYTE Attributes;
-} CHAR_CELL, *PCHAR_CELL;
-C_ASSERT(sizeof(CHAR_CELL) == 2);
 
 
 /* Object type magic numbers */
@@ -322,8 +312,6 @@ typedef struct _CONSOLE
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
 
 } CONSOLE; // , *PCONSOLE;
-
-// #include "conio_winsrv.h"
 
 /* console.c */
 VOID NTAPI

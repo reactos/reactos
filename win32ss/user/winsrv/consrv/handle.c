@@ -482,7 +482,7 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     HANDLE ConsoleHandle;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     /*
      * We are about to create a new console. However when ConSrvNewProcess

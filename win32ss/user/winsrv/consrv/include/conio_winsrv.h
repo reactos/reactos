@@ -18,8 +18,21 @@
 #define  CONSRV_CONSOLE   CONSOLE
 #define PCONSRV_CONSOLE  PCONSOLE
 
+// #define _CONSRV_CONSOLE  _WINSRV_CONSOLE
+// #define  CONSRV_CONSOLE   WINSRV_CONSOLE
+// #define PCONSRV_CONSOLE  PWINSRV_CONSOLE
+
 
 #define CSR_DEFAULT_CURSOR_SIZE 25
+
+/* VGA character cell */
+typedef struct _CHAR_CELL
+{
+    CHAR Char;
+    BYTE Attributes;
+} CHAR_CELL, *PCHAR_CELL;
+C_ASSERT(sizeof(CHAR_CELL) == 2);
+
 
 typedef struct _FRONTEND FRONTEND, *PFRONTEND;
 /* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
@@ -105,6 +118,7 @@ typedef struct _WINSRV_CONSOLE
 /******************************* Console Set-up *******************************/
     /* This **MUST** be FIRST!! */
     // CONSOLE;
+    // PCONSOLE Console;
 
     // LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     // CRITICAL_SECTION Lock;
