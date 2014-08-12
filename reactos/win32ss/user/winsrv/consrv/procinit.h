@@ -15,7 +15,7 @@ NTSTATUS ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                         PCONSOLE_START_INFO ConsoleStartInfo);
 NTSTATUS ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                        HANDLE ConsoleHandle,
-                                       BOOL CreateNewHandlesTable,
+                                       BOOLEAN CreateNewHandlesTable,
                                        PHANDLE pInputHandle,
                                        PHANDLE pOutputHandle,
                                        PHANDLE pErrorHandle);

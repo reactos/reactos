@@ -506,8 +506,8 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     GuiData->hWindow = hWnd;
 
-    GuiData->Font = CreateFontW(GuiData->GuiInfo.FontSize.X,
-                                0, // GuiData->GuiInfo.FontSize.Y,
+    GuiData->Font = CreateFontW(GuiData->GuiInfo.FontSize.Y,
+                                0, // GuiData->GuiInfo.FontSize.X,
                                 0,
                                 TA_BASELINE,
                                 GuiData->GuiInfo.FontWeight,

@@ -881,6 +881,7 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
     {
         WriteOutputRequest->CharInfo = &WriteOutputRequest->StaticBuffer;
         // CaptureBuffer = NULL;
+        WriteOutputRequest->UseVirtualMemory = FALSE;
     }
     else
     {
@@ -888,17 +889,36 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
 
         /* Allocate a Capture Buffer */
         CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
-        if (CaptureBuffer == NULL)
+        if (CaptureBuffer)
         {
-            DPRINT1("CsrAllocateCaptureBuffer failed with size %ld!\n", Size);
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
+            /* Allocate space in the Buffer */
+            CsrAllocateMessagePointer(CaptureBuffer,
+                                      Size,
+                                      (PVOID*)&WriteOutputRequest->CharInfo);
+            WriteOutputRequest->UseVirtualMemory = FALSE;
         }
+        else
+        {
+            /*
+             * CsrAllocateCaptureBuffer failed because we tried to allocate
+             * a too large (>= 64 kB, size of the CSR heap) data buffer.
+             * To circumvent this, Windows uses a trick (that we reproduce for
+             * compatibility reasons): we allocate a heap buffer in the process'
+             * memory, and CSR will read it via NtReadVirtualMemory.
+             */
+            DPRINT1("CsrAllocateCaptureBuffer failed with size %ld, let's use local heap buffer...\n", Size);
 
-        /* Allocate space in the Buffer */
-        CsrAllocateMessagePointer(CaptureBuffer,
-                                  Size,
-                                  (PVOID*)&WriteOutputRequest->CharInfo);
+            WriteOutputRequest->CharInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+            WriteOutputRequest->UseVirtualMemory = TRUE;
+
+            /* Bail out if we still cannot allocate memory */
+            if (WriteOutputRequest->CharInfo == NULL)
+            {
+                DPRINT1("Failed to allocate heap buffer with size %ld!\n", Size);
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+        }
     }
 
     /* Capture the user buffer contents */
@@ -945,7 +965,16 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
     Success = NT_SUCCESS(ApiMessage.Status);
 
     /* Release the capture buffer if needed */
-    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
+    if (CaptureBuffer)
+    {
+        CsrFreeCaptureBuffer(CaptureBuffer);
+    }
+    else
+    {
+        /* If we used a heap buffer, free it */
+        if (WriteOutputRequest->UseVirtualMemory)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, WriteOutputRequest->CharInfo);
+    }
 
     /* Retrieve the results */
     _SEH2_TRY

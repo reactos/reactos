@@ -188,7 +188,7 @@ ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
     if (Buffer == Console->ActiveBuffer) return STATUS_SUCCESS;
 
     /* If old buffer has no handles, it's now unreferenced */
-    if (Console->ActiveBuffer->Header.HandleCount == 0)
+    if (Console->ActiveBuffer->Header.ReferenceCount == 0)
     {
         ConioDeleteScreenBuffer(Console->ActiveBuffer);
     }
@@ -208,6 +208,13 @@ ConDrvGetActiveScreenBuffer(IN PCONSOLE Console)
 /* PUBLIC DRIVER APIS *********************************************************/
 
 NTSTATUS NTAPI
+ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
+                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                            IN PCHAR_CELL CharInfo/*Buffer*/,
+                            IN COORD CharInfoSize,
+                            IN OUT PSMALL_RECT WriteRegion,
+                            IN BOOLEAN DrawRegion);
+NTSTATUS NTAPI
 ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
                            IN PCONSOLE_SCREEN_BUFFER Buffer,
                            IN PSMALL_RECT Region)
@@ -217,6 +224,19 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
 
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
+
+    /* In text-mode only, draw the VDM buffer if present */
+    if (GetType(Buffer) == TEXTMODE_BUFFER)
+    {
+        PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
+
+        /*Status =*/ ConDrvWriteConsoleOutputVDM(Buffer->Header.Console,
+                                                 TextBuffer,
+                                                 Console->VDMBuffer,
+                                                 Console->VDMBufferSize,
+                                                 Region,
+                                                 FALSE);
+    }
 
     /* If the output buffer is the current one, redraw the correct portion of the screen */
     if (Buffer == Console->ActiveBuffer) TermDrawRegion(Console, Region);

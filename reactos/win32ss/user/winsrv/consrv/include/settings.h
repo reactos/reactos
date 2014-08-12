@@ -51,10 +51,14 @@ typedef struct _CONSOLE_INFO
     WCHAR ConsoleTitle[MAX_PATH + 1];
 } CONSOLE_INFO, *PCONSOLE_INFO;
 
+/*
+ * BYTE Foreground = LOBYTE(Attributes) & 0x0F;
+ * BYTE Background = (LOBYTE(Attributes) & 0xF0) >> 4;
+ */
 #define RGBFromAttrib(Console, Attribute)   ((Console)->Colors[(Attribute) & 0xF])
-#define TextAttribFromAttrib(Attribute)     ((Attribute) & 0xF)
-#define BkgdAttribFromAttrib(Attribute)     (((Attribute) >> 4) & 0xF)
-#define MakeAttrib(TextAttrib, BkgdAttrib)  (DWORD)((((BkgdAttrib) & 0xF) << 4) | ((TextAttrib) & 0xF))
+#define TextAttribFromAttrib(Attribute)     ( !((Attribute) & COMMON_LVB_REVERSE_VIDEO) ? (Attribute) & 0xF : ((Attribute) >> 4) & 0xF )
+#define BkgdAttribFromAttrib(Attribute)     ( !((Attribute) & COMMON_LVB_REVERSE_VIDEO) ? ((Attribute) >> 4) & 0xF : (Attribute) & 0xF )
+#define MakeAttrib(TextAttrib, BkgdAttrib)  (USHORT)((((BkgdAttrib) & 0xF) << 4) | ((TextAttrib) & 0xF))
 
 /*
  * Structure used to communicate with console.dll

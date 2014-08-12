@@ -1640,26 +1640,101 @@ GetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
 
 
 /*
- * @unimplemented
+ * @implemented (undocumented)
  */
 BOOL
 WINAPI
-RegisterConsoleVDM (
-    DWORD   Unknown0,
-    DWORD   Unknown1,
-    DWORD   Unknown2,
-    DWORD   Unknown3,
-    DWORD   Unknown4,
-    DWORD   Unknown5,
-    DWORD   Unknown6,
-    DWORD   Unknown7,
-    DWORD   Unknown8,
-    DWORD   Unknown9,
-    DWORD   Unknown10
-    )
+RegisterConsoleVDM(IN DWORD dwRegisterFlags,
+                   IN HANDLE hStartHardwareEvent,
+                   IN HANDLE hEndHardwareEvent,
+                   IN HANDLE hErrorHardwareEvent,
+                   IN DWORD dwUnusedVar,
+                   OUT LPDWORD lpVideoStateLength,
+                   OUT PVOID* lpVideoState, // PVIDEO_HARDWARE_STATE_HEADER*
+                   IN PVOID lpUnusedBuffer,
+                   IN DWORD dwUnusedBufferLength,
+                   IN COORD dwVDMBufferSize,
+                   OUT PVOID* lpVDMBuffer)
 {
-    STUB;
-    return FALSE;
+    BOOL Success;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_REGISTERVDM RegisterVDMRequest = &ApiMessage.Data.RegisterVDMRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
+
+    /* Set up the data to send to the Console Server */
+    RegisterVDMRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    RegisterVDMRequest->RegisterFlags = dwRegisterFlags;
+
+    if (dwRegisterFlags != 0)
+    {
+        RegisterVDMRequest->StartHardwareEvent = hStartHardwareEvent;
+        RegisterVDMRequest->EndHardwareEvent   = hEndHardwareEvent;
+        RegisterVDMRequest->ErrorHardwareEvent = hErrorHardwareEvent;
+
+        RegisterVDMRequest->VDMBufferSize = dwVDMBufferSize;
+
+#if 0
+        RegisterVDMRequest->UnusedBufferLength = dwUnusedBufferLength;
+
+        /* Allocate a Capture Buffer */
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, dwUnusedBufferLength);
+        if (CaptureBuffer == NULL)
+        {
+            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Capture the buffer to write */
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                (PVOID)lpUnusedBuffer,
+                                dwUnusedBufferLength,
+                                (PVOID*)&RegisterVDMRequest->UnusedBuffer);
+#endif
+    }
+    else
+    {
+        // CaptureBuffer = NULL;
+    }
+
+    /* Call the server */
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        CaptureBuffer,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepRegisterVDM),
+                        sizeof(*RegisterVDMRequest));
+
+    /* Check for success */
+    Success = NT_SUCCESS(ApiMessage.Status);
+
+    /* Release the capture buffer if needed */
+    if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
+
+    /* Retrieve the results */
+    if (Success)
+    {
+        if (dwRegisterFlags != 0)
+        {
+            _SEH2_TRY
+            {
+                *lpVideoStateLength = RegisterVDMRequest->VideoStateLength;
+                *lpVideoState       = RegisterVDMRequest->VideoState;
+                *lpVDMBuffer        = RegisterVDMRequest->VDMBuffer;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                SetLastError(ERROR_INVALID_ACCESS);
+                Success = FALSE;
+            }
+            _SEH2_END;
+        }
+    }
+    else
+    {
+        BaseSetLastNTError(ApiMessage.Status);
+    }
+
+    /* Return success status */
+    return Success;
 }
 
 
@@ -1756,9 +1831,8 @@ VDMOperationStarted(IN ULONG Unknown0)
 {
     DPRINT1("VDMOperationStarted(%d)\n", Unknown0);
 
-    return
-    BaseUpdateVDMEntry(VdmEntryUpdateControlCHandler,
-                       NULL,
-                       0,
-                       Unknown0);
+    return BaseUpdateVDMEntry(VdmEntryUpdateControlCHandler,
+                              NULL,
+                              0,
+                              Unknown0);
 }
