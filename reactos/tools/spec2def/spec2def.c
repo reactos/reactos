@@ -664,6 +664,10 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             else if (CompareToken(pc, "-ordinal"))
             {
                 exp.uFlags |= FL_ORDINAL;
+                /* GCC doesn't automatically import by ordinal if an ordinal
+                 * is found in the def file. Force it. */
+                if (gbImportLib && !gbMSComp)
+                    exp.uFlags |= FL_NONAME;
             }
             else if (CompareToken(pc, "-stub"))
             {
