@@ -316,7 +316,7 @@ START_TEST(RtlMemory)
     KeRaiseIrql(HIGH_LEVEL, &Irql);
 
     /* RtlCompareMemoryUlong */
-    MakeBuffer(Buffer, 8, 0x55, Size - 4, 0, 0);
+    MakeBuffer(Buffer, 8, 0x55, Size - 8, 0, 0);
     RetSize = RtlCompareMemoryUlong(Buffer, sizeof(ULONG), 0x55555555LU);
     ok_eq_size(RetSize, 4);
     RetSize = RtlCompareMemoryUlong(Buffer + 1, sizeof(ULONG), 0x55555555LU);
