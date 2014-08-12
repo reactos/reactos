@@ -123,8 +123,7 @@ class CFSFolder :
 
 struct _DoDropData {
     CFSFolder *This;
-    IDataObject *pDataObject;
-    IAsyncOperation *pAsyncOperation;
+    IStream *pStream;
     DWORD dwKeyState;
     POINTL pt; 
     DWORD pdwEffect;

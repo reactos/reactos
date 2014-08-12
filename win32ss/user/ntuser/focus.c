@@ -315,28 +315,22 @@ FindRemoveAsyncMsg(PWND Wnd, WPARAM wParam)
 
    pti = Wnd->head.pti;
 
-   if (!IsListEmpty(&pti->SentMessagesListHead))
+   Entry = pti->SentMessagesListHead.Flink;
+   while (Entry != &pti->SentMessagesListHead)
    {
       // Scan sent queue messages to see if we received async messages.
-      Entry = pti->SentMessagesListHead.Flink;
       Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
-      do
-      {
-         if (IsListEmpty(Entry)) return;
-         if (!Message) return;
-         Entry = Message->ListEntry.Flink;
+      Entry = Entry->Flink;
 
-         if (Message->Msg.message == WM_ASYNC_SETACTIVEWINDOW &&
-             Message->Msg.hwnd == UserHMGetHandle(Wnd) &&
-             Message->Msg.wParam == wParam )
-         {
-             ERR("ASYNC SAW: Found one in the Sent Msg Queue! %p Activate/Deactivate %d\n", Message->Msg.hwnd,!!wParam);
-             RemoveEntryList(&Message->ListEntry); // Purge the entry.
-             ExFreePoolWithTag(Message, TAG_USRMSG);
-         }
-         Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+      if (Message->Msg.message == WM_ASYNC_SETACTIVEWINDOW &&
+          Message->Msg.hwnd == UserHMGetHandle(Wnd) &&
+          Message->Msg.wParam == wParam)
+      {
+         ERR("ASYNC SAW: Found one in the Sent Msg Queue! %p Activate/Deactivate %d\n", Message->Msg.hwnd, !!wParam);
+         RemoveEntryList(&Message->ListEntry); // Purge the entry.
+         ClearMsgBitsMask(pti, Message->QS_Flags);
+         ExFreePoolWithTag(Message, TAG_USRMSG);
       }
-      while (Entry != &pti->SentMessagesListHead);
    }
 }
 

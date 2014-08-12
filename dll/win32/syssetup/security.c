@@ -170,7 +170,11 @@ InstallBuiltinAccounts(VOID)
 
     for (i = 0; i < 10; i++)
     {
-        ConvertStringSidToSid(BuiltinAccounts[i], &AccountSid);
+        if (!ConvertStringSidToSid(BuiltinAccounts[i], &AccountSid))
+        {
+            DPRINT1("ConvertStringSidToSid(%S) failed: %lu\n", BuiltinAccounts[i], GetLastError());
+            continue;
+        }
 
         Status = LsaCreateAccount(PolicyHandle,
                                   AccountSid,
@@ -277,7 +281,11 @@ InstallPrivileges(VOID)
             }
             DPRINT("SID: %S\n", szSidString);
 
-            ConvertStringSidToSid(szSidString, &AccountSid);
+            if (!ConvertStringSidToSid(szSidString, &AccountSid))
+            {
+                DPRINT1("ConvertStringSidToSid(%S) failed: %lu\n", szSidString, GetLastError());
+                continue;
+            }
 
             Status = LsaOpenAccount(PolicyHandle,
                                     AccountSid,

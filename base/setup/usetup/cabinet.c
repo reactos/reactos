@@ -1098,7 +1098,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
         Size -= OutputLength;
         /* reduce remaining block size by bytes consumed */
         RemainingBlock -= InputLength;
-        if (RemainingBlock == 0)
+        if (Size > 0 && RemainingBlock == 0)
         {
             /* used up this block, move on to the next */
             DPRINT("Out of block data\n");
