@@ -316,15 +316,11 @@ function(add_cd_file)
             file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "\"${__relative_file}\" ${_num}\n")
             unset(__relative_file)
             if(_CD_TARGET)
-                #manage dependency
-                add_dependencies(reactos_cab ${_CD_TARGET})
-                # add this so that the combination make target/fast reactos_cab/fast bootcd/fast properly detects that reactos.cab must be rebuilt
-                if (CMAKE_BUILD_TOOL STREQUAL "make")
-                    add_custom_command(TARGET ${_CD_TARGET}
-                                       POST_BUILD
-                                       COMMAND ${CMAKE_COMMAND} -E touch ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff)
-                endif()
+                #manage dependency - target level
+                add_dependencies(reactos_cab_inf ${_CD_TARGET})
             endif()
+            # manage dependency - file level
+            set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${_CD_FILE})
         endif()
     endif() #end bootcd
 
@@ -378,6 +374,22 @@ function(add_cd_file)
 endfunction()
 
 function(create_iso_lists)
+    # generate reactos.cab before anything else
+    get_property(_filelist GLOBAL PROPERTY REACTOS_CAB_DEPENDS)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
+        COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
+    DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf native-cabman ${_filelist})
+
+    add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
+    add_dependencies(reactos_cab reactos_cab_inf)
+
+    add_cd_file(
+        TARGET reactos_cab
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
+        DESTINATION reactos
+        NO_CAB FOR bootcd regtest)
+
     get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.lst "${_filelist}")
