@@ -76,11 +76,25 @@
     if (GetTextExtentPoint32W(drawItem->hDC, L"R", 1, &CharSize))
         GuiData->CharWidth = CharSize.cx;
 }
+
+/*
+ * See also: Display_SetTypeFace in applications/fontview/display.c
+ */
 #endif
 
 
-BOOL CALLBACK
-EnumFontFamExProc(PLOGFONTW    lplf,
+/*
+ * Font pixel heights for TrueType fonts
+ */
+static SHORT TrueTypePoints[] =
+{
+    // 8, 9, 10, 11, 12, 14, 16, 18, 20,
+    // 22, 24, 26, 28, 36, 48, 72
+    5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 24, 28, 36, 72
+};
+
+static BOOL CALLBACK
+EnumFontNamesProc(PLOGFONTW lplf,
                   PNEWTEXTMETRICW lpntm,
                   DWORD  FontType,
                   LPARAM lParam)
@@ -197,6 +211,161 @@ EnumFontFamExProc(PLOGFONTW    lplf,
     return TRUE;
 }
 
+static BOOL CALLBACK
+EnumFontSizesProc(PLOGFONTW lplf,
+                  PNEWTEXTMETRICW lpntm,
+                  DWORD  FontType,
+                  LPARAM lParam)
+{
+    HWND hwndCombo = (HWND)lParam;
+    WCHAR FontSize[100];
+
+    if (FontType != TRUETYPE_FONTTYPE)
+    {
+        // int logsize     = lpntm->tmHeight - lpntm->tmInternalLeading;
+        // LONG pointsize  = MulDiv(logsize, 72, GetDeviceCaps(hdc, LOGPIXELSY));
+
+        // swprintf(FontSize, L"%2d (%d x %d)", pointsize, lplf->lfWidth, lplf->lfHeight);
+        swprintf(FontSize, L"%d x %d", lplf->lfWidth, lplf->lfHeight);
+
+        /* Make sure the size doesn't already exist in the list */
+        if (SendMessageW(hwndCombo, LB_FINDSTRINGEXACT, 0, (LPARAM)FontSize) == LB_ERR)
+        {
+            /* Add the size */
+            INT idx = (INT)SendMessageW(hwndCombo, LB_ADDSTRING, 0, (LPARAM)FontSize);
+
+            /*
+             * Store this information in the list-item's userdata area.
+             * Format:
+             * Width  = FontSize.X = LOWORD(FontSize);
+             * Height = FontSize.Y = HIWORD(FontSize);
+             */
+            SendMessageW(hwndCombo, LB_SETITEMDATA, idx, MAKEWPARAM(lplf->lfWidth, lplf->lfHeight));
+        }
+
+        return TRUE;
+    }
+    else
+    {
+        int i;
+        for (i = 0; i < sizeof(TrueTypePoints) / sizeof(TrueTypePoints[0]); ++i)
+        {
+            swprintf(FontSize, L"%2d", TrueTypePoints[i]);
+
+            /* Make sure the size doesn't already exist in the list */
+            if (SendMessageW(hwndCombo, LB_FINDSTRINGEXACT, 0, (LPARAM)FontSize) == LB_ERR)
+            {
+                /* Add the size */
+                INT idx = (INT)SendMessageW(hwndCombo, LB_ADDSTRING, 0, (LPARAM)FontSize);
+
+                /*
+                 * Store this information in the list-item's userdata area.
+                 * Format:
+                 * Width  = FontSize.X = LOWORD(FontSize);
+                 * Height = FontSize.Y = HIWORD(FontSize);
+                 */
+                SendMessageW(hwndCombo, LB_SETITEMDATA, idx, MAKEWPARAM(0, TrueTypePoints[i]));
+            }
+        }
+
+        return FALSE;
+    }
+}
+
+
+
+static VOID
+FontSizeChange(HWND hwndDlg,
+               PGUI_CONSOLE_INFO GuiInfo);
+
+static VOID
+FontTypeChange(HWND hwndDlg,
+               PGUI_CONSOLE_INFO GuiInfo)
+{
+    INT Length, nSel;
+    LPWSTR FaceName;
+
+    HDC hDC;
+    LOGFONTW lf;
+
+    nSel = (INT)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
+                                    LB_GETCURSEL, 0, 0);
+    if (nSel == LB_ERR) return;
+
+    Length = (INT)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
+                                      LB_GETTEXTLEN, nSel, 0);
+    if (Length == LB_ERR) return;
+
+    FaceName = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         (Length + 1) * sizeof(WCHAR));
+    if (FaceName == NULL) return;
+
+    Length = (INT)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
+                                      LB_GETTEXT, nSel, (LPARAM)FaceName);
+    FaceName[Length] = '\0';
+
+    Length = min(Length/*wcslen(FaceName) + 1*/, LF_FACESIZE); // wcsnlen
+    wcsncpy(GuiInfo->FaceName, FaceName, LF_FACESIZE);
+    GuiInfo->FaceName[Length] = L'\0';
+    DPRINT1("GuiInfo->FaceName = '%S'\n", GuiInfo->FaceName);
+
+    /* Enumerate the available sizes for the selected font */
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfCharSet  = DEFAULT_CHARSET; // OEM_CHARSET;
+    // lf.lfPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
+    wcsncpy(lf.lfFaceName, FaceName, LF_FACESIZE);
+    lf.lfFaceName[Length] = L'\0';
+
+    hDC = GetDC(NULL);
+    EnumFontFamiliesExW(hDC, &lf, (FONTENUMPROCW)EnumFontSizesProc,
+                        (LPARAM)GetDlgItem(hwndDlg, IDC_LBOX_FONTSIZE), 0);
+    ReleaseDC(NULL, hDC);
+
+    HeapFree(GetProcessHeap(), 0, FaceName);
+
+    // TODO: Select a default font size????
+    FontSizeChange(hwndDlg, GuiInfo);
+
+    // InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_FONT_WINDOW_PREVIEW), NULL, TRUE);
+    // InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SELECT_FONT_PREVIEW), NULL, TRUE);
+}
+
+static VOID
+FontSizeChange(HWND hwndDlg,
+               PGUI_CONSOLE_INFO GuiInfo)
+{
+    INT nSel;
+    ULONG FontSize;
+    WCHAR FontSizeStr[20];
+
+    nSel = (INT)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTSIZE,
+                                    LB_GETCURSEL, 0, 0);
+    if (nSel == LB_ERR) return;
+
+    /*
+     * Format:
+     * Width  = FontSize.X = LOWORD(FontSize);
+     * Height = FontSize.Y = HIWORD(FontSize);
+     */
+    FontSize = (ULONG)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTSIZE,
+                                          LB_GETITEMDATA, nSel, 0);
+    if (FontSize == LB_ERR) return;
+
+    GuiInfo->FontSize.X = LOWORD(FontSize);
+    GuiInfo->FontSize.Y = HIWORD(FontSize);
+    DPRINT1("GuiInfo->FontSize = (%d x %d)\n", GuiInfo->FontSize.X, GuiInfo->FontSize.Y);
+
+    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_FONT_WINDOW_PREVIEW), NULL, TRUE);
+    InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SELECT_FONT_PREVIEW), NULL, TRUE);
+
+    swprintf(FontSizeStr, L"%2d", GuiInfo->FontSize.X);
+    SetWindowText(GetDlgItem(hwndDlg, IDC_FONT_SIZE_X), FontSizeStr);
+    swprintf(FontSizeStr, L"%2d", GuiInfo->FontSize.Y);
+    SetWindowText(GetDlgItem(hwndDlg, IDC_FONT_SIZE_Y), FontSizeStr);
+}
+
+
 INT_PTR
 CALLBACK
 FontProc(HWND hwndDlg,
@@ -214,7 +383,6 @@ FontProc(HWND hwndDlg,
         case WM_INITDIALOG:
         {
             HDC  hDC;
-            HWND hwndCombo;
             LOGFONTW lf;
             INT idx;
 
@@ -225,19 +393,19 @@ FontProc(HWND hwndDlg,
             ZeroMemory(&lf, sizeof(lf));
             lf.lfCharSet  = DEFAULT_CHARSET; // OEM_CHARSET;
             // lf.lfPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
-            // lf.lfFaceName = L"";
 
             hDC = GetDC(NULL);
-            hwndCombo = GetDlgItem(hwndDlg, IDC_LBOX_FONTTYPE);
-            EnumFontFamiliesExW(hDC, &lf, (FONTENUMPROCW)EnumFontFamExProc, (LPARAM)hwndCombo, 0);
+            EnumFontFamiliesExW(hDC, &lf, (FONTENUMPROCW)EnumFontNamesProc,
+                                (LPARAM)GetDlgItem(hwndDlg, IDC_LBOX_FONTTYPE), 0);
             ReleaseDC(NULL, hDC);
 
             DPRINT1("GuiInfo->FaceName = '%S'\n", GuiInfo->FaceName);
-            idx = (INT)SendMessageW(hwndCombo, LB_FINDSTRINGEXACT, 0, (LPARAM)GuiInfo->FaceName);
-            if (idx != LB_ERR)
-            {
-                SendMessageW(hwndCombo, LB_SETCURSEL, (WPARAM)idx, 0);
-            }
+            idx = (INT)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
+                                           LB_FINDSTRINGEXACT, 0, (LPARAM)GuiInfo->FaceName);
+            if (idx != LB_ERR) SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
+                                                   LB_SETCURSEL, (WPARAM)idx, 0);
+
+            FontTypeChange(hwndDlg, GuiInfo);
 
             return TRUE;
         }
@@ -247,14 +415,64 @@ FontProc(HWND hwndDlg,
             LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
 
             if (drawItem->CtlID == IDC_STATIC_FONT_WINDOW_PREVIEW)
-            {
                 PaintConsole(drawItem, pConInfo);
-            }
             else if (drawItem->CtlID == IDC_STATIC_SELECT_FONT_PREVIEW)
-            {
                 PaintText(drawItem, pConInfo, Screen);
-            }
+
             return TRUE;
+        }
+
+        case WM_NOTIFY:
+        {
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case PSN_APPLY:
+                {
+                    if (!pConInfo->AppliedConfig)
+                    {
+                        return ApplyConsoleInfo(hwndDlg, pConInfo);
+                    }
+                    else
+                    {
+                        /* Options have already been applied */
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
+                        return TRUE;
+                    }
+                    break;
+                }
+            }
+
+            break;
+        }
+
+        case WM_COMMAND:
+        {
+            switch (HIWORD(wParam))
+            {
+                case LBN_SELCHANGE:
+                {
+                    switch (LOWORD(wParam))
+                    {
+                        case IDC_LBOX_FONTTYPE:
+                        {
+                            FontTypeChange(hwndDlg, GuiInfo);
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                            break;
+                        }
+
+                        case IDC_LBOX_FONTSIZE:
+                        {
+                            FontSizeChange(hwndDlg, GuiInfo);
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            break;
         }
 
         default:

@@ -35,22 +35,18 @@ DefineDosDeviceA(
     BOOL Result;
 
     if (lpDeviceName &&
-        ! RtlCreateUnicodeStringFromAsciiz(&DeviceNameU,
-        (LPSTR)lpDeviceName))
+        !RtlCreateUnicodeStringFromAsciiz(&DeviceNameU, lpDeviceName))
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
     if (lpTargetPath &&
-        ! RtlCreateUnicodeStringFromAsciiz(&TargetPathU,
-        (LPSTR)lpTargetPath))
+        !RtlCreateUnicodeStringFromAsciiz(&TargetPathU, lpTargetPath))
     {
         if (DeviceNameU.Buffer)
         {
-            RtlFreeHeap(RtlGetProcessHeap (),
-                        0,
-                        DeviceNameU.Buffer);
+            RtlFreeUnicodeString(&DeviceNameU);
         }
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
@@ -62,16 +58,12 @@ DefineDosDeviceA(
 
     if (TargetPathU.Buffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap (),
-                    0,
-                    TargetPathU.Buffer);
+        RtlFreeUnicodeString(&TargetPathU);
     }
 
     if (DeviceNameU.Buffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap (),
-                    0,
-                    DeviceNameU.Buffer);
+        RtlFreeUnicodeString(&DeviceNameU);
     }
     return Result;
 }
@@ -114,7 +106,7 @@ DefineDosDeviceW(
 
     ArgumentCount = 1;
     BufferSize = 0;
-    if (! lpTargetPath)
+    if (!lpTargetPath)
     {
         RtlInitUnicodeString(&NtTargetPathU,
                              NULL);
@@ -128,10 +120,10 @@ DefineDosDeviceW(
         }
         else
         {
-            if (! RtlDosPathNameToNtPathName_U(lpTargetPath,
-                                               &NtTargetPathU,
-                                               0,
-                                               0))
+            if (!RtlDosPathNameToNtPathName_U(lpTargetPath,
+                                              &NtTargetPathU,
+                                              NULL,
+                                              NULL))
             {
                 WARN("RtlDosPathNameToNtPathName_U() failed\n");
                 BaseSetLastNTError(STATUS_OBJECT_NAME_INVALID);
@@ -151,7 +143,7 @@ DefineDosDeviceW(
 
     CaptureBuffer = CsrAllocateCaptureBuffer(ArgumentCount,
                                              BufferSize);
-    if (! CaptureBuffer)
+    if (!CaptureBuffer)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         Result = FALSE;
@@ -161,7 +153,7 @@ DefineDosDeviceW(
         DefineDosDeviceRequest->Flags = dwFlags;
 
         CsrCaptureMessageBuffer(CaptureBuffer,
-                                (PVOID)DeviceUpcaseNameU.Buffer,
+                                DeviceUpcaseNameU.Buffer,
                                 DeviceUpcaseNameU.Length,
                                 (PVOID*)&DefineDosDeviceRequest->DeviceName.Buffer);
 
@@ -173,7 +165,7 @@ DefineDosDeviceW(
         if (NtTargetPathU.Buffer)
         {
             CsrCaptureMessageBuffer(CaptureBuffer,
-                                    (PVOID)NtTargetPathU.Buffer,
+                                    NtTargetPathU.Buffer,
                                     NtTargetPathU.Length,
                                     (PVOID*)&DefineDosDeviceRequest->TargetPath.Buffer);
         }
@@ -212,7 +204,7 @@ DefineDosDeviceW(
                         dbcv.dbcv_size = sizeof(DEV_BROADCAST_VOLUME);
                         dbcv.dbcv_devicetype = DBT_DEVTYP_VOLUME;
                         dbcv.dbcv_reserved = 0;
-                        dbcv.dbcv_unitmask |= 
+                        dbcv.dbcv_unitmask |=
                             (1 << (DeviceUpcaseNameU.Buffer[0] - L'A'));
                         dbcv.dbcv_flags = DBTF_NET;
                         (void) BSM_ptr(BSF_SENDNOTIFYMESSAGE | BSF_FLUSHDISK,
@@ -227,7 +219,8 @@ DefineDosDeviceW(
         }
     }
 
-    if (NtTargetPathU.Buffer)
+    if (NtTargetPathU.Buffer &&
+        NtTargetPathU.Buffer != lpTargetPath)
     {
         RtlFreeHeap(RtlGetProcessHeap(),
                     0,
@@ -293,7 +286,7 @@ QueryDosDeviceA(
     {
       CurrentLength = min (ucchMax, MAXUSHORT / 2);
       TargetPathU.MaximumLength = TargetPathU.Length = (USHORT)CurrentLength * sizeof(WCHAR);
-     
+
       TargetPathA.Length = 0;
       TargetPathA.MaximumLength = (USHORT)CurrentLength;
 

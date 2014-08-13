@@ -463,15 +463,15 @@ CSR_API(SrvReadConsoleOutput)
 
     DPRINT("SrvReadConsoleOutput\n");
 
+    NumCells = (ReadOutputRequest->ReadRegion.Right - ReadOutputRequest->ReadRegion.Left + 1) *
+               (ReadOutputRequest->ReadRegion.Bottom - ReadOutputRequest->ReadRegion.Top + 1);
+
     /*
      * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than one
      * cell is read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
      */
-    NumCells = (ReadOutputRequest->ReadRegion.Right - ReadOutputRequest->ReadRegion.Left + 1) *
-               (ReadOutputRequest->ReadRegion.Bottom - ReadOutputRequest->ReadRegion.Top + 1);
-
     if (NumCells <= 1)
     {
         /*
@@ -520,47 +520,83 @@ CSR_API(SrvWriteConsoleOutput)
     NTSTATUS Status;
     PCONSOLE_WRITEOUTPUT WriteOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteOutputRequest;
     PTEXTMODE_SCREEN_BUFFER Buffer;
+    PCSR_PROCESS Process = CsrGetClientThread()->Process;
 
     ULONG NumCells;
     PCHAR_INFO CharInfo;
 
     DPRINT("SrvWriteConsoleOutput\n");
 
-    /*
-     * For optimization purposes, Windows (and hence ReactOS, too, for
-     * compatibility reasons) uses a static buffer if no more than one
-     * cell is written. Otherwise a new buffer is used.
-     * The client-side expects that we know this behaviour.
-     */
     NumCells = (WriteOutputRequest->WriteRegion.Right - WriteOutputRequest->WriteRegion.Left + 1) *
                (WriteOutputRequest->WriteRegion.Bottom - WriteOutputRequest->WriteRegion.Top + 1);
 
-    if (NumCells <= 1)
-    {
-        /*
-         * Adjust the internal pointer, because its old value points to
-         * the static buffer in the original ApiMessage structure.
-         */
-        // WriteOutputRequest->CharInfo = &WriteOutputRequest->StaticBuffer;
-        CharInfo = &WriteOutputRequest->StaticBuffer;
-    }
-    else
-    {
-        if (!CsrValidateMessageBuffer(ApiMessage,
-                                      (PVOID*)&WriteOutputRequest->CharInfo,
-                                      NumCells,
-                                      sizeof(CHAR_INFO)))
-        {
-            return STATUS_INVALID_PARAMETER;
-        }
-
-        CharInfo = WriteOutputRequest->CharInfo;
-    }
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(Process),
                                      WriteOutputRequest->OutputHandle,
                                      &Buffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /*
+     * Validate the message buffer if we do not use a process' heap buffer
+     * (CsrAllocateCaptureBuffer succeeded because we haven't allocated
+     * a too large (>= 64 kB, size of the CSR heap) data buffer).
+     */
+    if (!WriteOutputRequest->UseVirtualMemory)
+    {
+        /*
+         * For optimization purposes, Windows (and hence ReactOS, too, for
+         * compatibility reasons) uses a static buffer if no more than one
+         * cell is written. Otherwise a new buffer is used.
+         * The client-side expects that we know this behaviour.
+         */
+        if (NumCells <= 1)
+        {
+            /*
+             * Adjust the internal pointer, because its old value points to
+             * the static buffer in the original ApiMessage structure.
+             */
+            // WriteOutputRequest->CharInfo = &WriteOutputRequest->StaticBuffer;
+            CharInfo = &WriteOutputRequest->StaticBuffer;
+        }
+        else
+        {
+            if (!CsrValidateMessageBuffer(ApiMessage,
+                                          (PVOID*)&WriteOutputRequest->CharInfo,
+                                          NumCells,
+                                          sizeof(CHAR_INFO)))
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                goto Quit;
+            }
+
+            CharInfo = WriteOutputRequest->CharInfo;
+        }
+    }
+    else
+    {
+        /*
+         * This was not the case: we use a heap buffer. Retrieve its contents.
+         */
+        ULONG Size = NumCells * sizeof(CHAR_INFO);
+
+        CharInfo = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size);
+        if (CharInfo == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Quit;
+        }
+
+        Status = NtReadVirtualMemory(Process->ProcessHandle,
+                                     WriteOutputRequest->CharInfo,
+                                     CharInfo,
+                                     Size,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ConsoleFreeHeap(CharInfo);
+            // Status = STATUS_NO_MEMORY;
+            goto Quit;
+        }
+    }
 
     Status = ConDrvWriteConsoleOutput(Buffer->Header.Console,
                                       Buffer,
@@ -568,6 +604,11 @@ CSR_API(SrvWriteConsoleOutput)
                                       CharInfo,
                                       &WriteOutputRequest->WriteRegion);
 
+    /* Free the temporary buffer if we used the process' heap buffer */
+    if (WriteOutputRequest->UseVirtualMemory && CharInfo)
+        ConsoleFreeHeap(CharInfo);
+
+Quit:
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;
 }

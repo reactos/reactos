@@ -677,7 +677,6 @@ CInternetToolbar::CInternetToolbar()
 
 CInternetToolbar::~CInternetToolbar()
 {
-    fMenuCallback.Release();
 }
 
 void CInternetToolbar::AddDockItem(IUnknown *newItem, int bandID, int flags)

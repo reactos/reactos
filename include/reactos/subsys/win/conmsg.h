@@ -544,7 +544,12 @@ typedef struct
     SMALL_RECT WriteRegion;
     BOOLEAN Unicode;
 
-    ULONG Unknown;
+    /*
+     * If we are going to write too large (>= 64 kB, size of the CSR heap)
+     * data buffers, we allocate a heap buffer in the process' memory, and
+     * CSR will read it via NtReadVirtualMemory.
+     */
+    BOOLEAN UseVirtualMemory;
 } CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
 
 typedef struct
@@ -801,6 +806,28 @@ typedef struct
     BOOL   Ansi;
 } CONSOLE_GETKBDLAYOUTNAME, *PCONSOLE_GETKBDLAYOUTNAME;
 
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    ULONG  RegisterFlags;
+    HANDLE StartHardwareEvent;
+    HANDLE EndHardwareEvent;
+    HANDLE ErrorHardwareEvent;
+
+    /* Unused member */
+    ULONG  UnusedVar;
+
+    ULONG  VideoStateLength;
+    PVOID  VideoState;  // PVIDEO_HARDWARE_STATE_HEADER
+
+    /* Unused members */
+    PVOID  UnusedBuffer;
+    ULONG  UnusedBufferLength;
+
+    COORD  VDMBufferSize;
+    PVOID  VDMBuffer;
+} CONSOLE_REGISTERVDM, *PCONSOLE_REGISTERVDM;
+
 typedef struct _CONSOLE_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -898,6 +925,9 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
         CONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest;
         CONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest;
+
+        /* Virtual DOS Machine */
+        CONSOLE_REGISTERVDM RegisterVDMRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 

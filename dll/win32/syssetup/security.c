@@ -170,7 +170,11 @@ InstallBuiltinAccounts(VOID)
 
     for (i = 0; i < 10; i++)
     {
-        ConvertStringSidToSid(BuiltinAccounts[i], &AccountSid);
+        if (!ConvertStringSidToSid(BuiltinAccounts[i], &AccountSid))
+        {
+            DPRINT1("ConvertStringSidToSid(%S) failed: %lu\n", BuiltinAccounts[i], GetLastError());
+            continue;
+        }
 
         Status = LsaCreateAccount(PolicyHandle,
                                   AccountSid,
@@ -277,7 +281,11 @@ InstallPrivileges(VOID)
             }
             DPRINT("SID: %S\n", szSidString);
 
-            ConvertStringSidToSid(szSidString, &AccountSid);
+            if (!ConvertStringSidToSid(szSidString, &AccountSid))
+            {
+                DPRINT1("ConvertStringSidToSid(%S) failed: %lu\n", szSidString, GetLastError());
+                continue;
+            }
 
             Status = LsaOpenAccount(PolicyHandle,
                                     AccountSid,
@@ -330,7 +338,7 @@ SetAdministratorPassword(LPCWSTR Password)
     SAM_HANDLE UserHandle = NULL;
     NTSTATUS Status;
 
-    DPRINT1("SYSSETUP: SetAdministratorPassword(%S)\n", Password);
+    DPRINT("SYSSETUP: SetAdministratorPassword(%p)\n", Password);
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);

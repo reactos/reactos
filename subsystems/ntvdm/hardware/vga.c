@@ -23,7 +23,7 @@ static CONST DWORD MemoryLimit[] = { 0xAFFFF, 0xAFFFF, 0xB7FFF, 0xBFFFF };
 
 /*
  * Activate this line if you want to use the real
- * RegisterConsoleVDM API of Windows/ReactOS.
+ * RegisterConsoleVDM API of ReactOS/Windows.
  */
 // #define USE_REAL_REGISTERCONSOLEVDM
 
@@ -314,33 +314,33 @@ static PCHAR_INFO CharBuff  = NULL; // This is a hack, which is unneeded
 
 BOOL
 WINAPI
-__RegisterConsoleVDM(IN DWORD dwDosVDMFlag,
-                     IN HANDLE hEventHandle1,
-                     IN HANDLE hEventHandle2,
-                     IN HANDLE hEventHandle3,
-                     IN DWORD Unused1,
-                     OUT PULONG returned_val_1,
-                     OUT PVOID* returned_val_2,
-                     IN PVOID lpUnknownBuffer,
-                     IN DWORD dwUnknownBufferLength,
+__RegisterConsoleVDM(IN DWORD dwRegisterFlags,
+                     IN HANDLE hStartHardwareEvent,
+                     IN HANDLE hEndHardwareEvent,
+                     IN HANDLE hErrorHardwareEvent,
+                     IN DWORD dwUnusedVar,
+                     OUT LPDWORD lpVideoStateLength,
+                     OUT PVOID* lpVideoState, // PVIDEO_HARDWARE_STATE_HEADER*
+                     IN PVOID lpUnusedBuffer,
+                     IN DWORD dwUnusedBufferLength,
                      IN COORD dwVDMBufferSize,
                      OUT PVOID* lpVDMBuffer)
 {
-    UNREFERENCED_PARAMETER(hEventHandle3);
-    UNREFERENCED_PARAMETER(Unused1);
-    UNREFERENCED_PARAMETER(returned_val_1);
-    UNREFERENCED_PARAMETER(returned_val_2);
-    UNREFERENCED_PARAMETER(lpUnknownBuffer);
-    UNREFERENCED_PARAMETER(dwUnknownBufferLength);
+    UNREFERENCED_PARAMETER(hErrorHardwareEvent);
+    UNREFERENCED_PARAMETER(dwUnusedVar);
+    UNREFERENCED_PARAMETER(lpVideoStateLength);
+    UNREFERENCED_PARAMETER(lpVideoState);
+    UNREFERENCED_PARAMETER(lpUnusedBuffer);
+    UNREFERENCED_PARAMETER(dwUnusedBufferLength);
 
     SetLastError(0);
-    DPRINT1("__RegisterConsoleVDM(%d)\n", dwDosVDMFlag);
+    DPRINT1("__RegisterConsoleVDM(%d)\n", dwRegisterFlags);
 
     if (lpVDMBuffer == NULL) return FALSE;
 
-    if (dwDosVDMFlag != 0)
+    if (dwRegisterFlags != 0)
     {
-        // if (EventHandle_1 == NULL || EventHandle_2 == NULL) return FALSE;
+        // if (hStartHardwareEvent == NULL || hEndHardwareEvent == NULL) return FALSE;
         if (VDMBuffer != NULL) return FALSE;
 
         VDMBufferSize = dwVDMBufferSize;
@@ -451,7 +451,7 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     /*
      * Windows 2k3 winsrv.dll calls NtVdmControl(VdmQueryVdmProcess == 14, &ConsoleHandle);
      * in the two following APIs:
-     * SrvRegisterConsoleVDM  (corresponding win32 API: RegisterConsoleVDM)
+     * SrvRegisterConsoleVDM  (corresponding Win32 API: RegisterConsoleVDM)
      * SrvVDMConsoleOperation (corresponding Win32 API: )
      * to check whether the current process is a VDM process, and fails otherwise with the
      * error 0xC0000022 ().

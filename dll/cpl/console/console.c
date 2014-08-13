@@ -118,7 +118,6 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     GuiInfo->FontSize.X = 0;
     GuiInfo->FontSize.Y = 0;
     GuiInfo->FontWeight = FW_DONTCARE;
-    GuiInfo->UseRasterFonts = TRUE;
 
     GuiInfo->FullScreen   = FALSE;
     GuiInfo->ShowWindow   = SW_SHOWNORMAL;

@@ -1439,20 +1439,17 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
             _DoDropData *data = static_cast<_DoDropData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(_DoDropData)));
             data->This = this;
             // Need to maintain this class in case the window is closed or the class exists temporarily (when dropping onto a folder).
+            pDataObject->AddRef();
+            pAsyncOperation->StartOperation(NULL);
+            CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObject, &data->pStream);
             this->AddRef();
-            data->pDataObject = pDataObject;
-            data->pAsyncOperation = pAsyncOperation;
             data->dwKeyState = dwKeyState;
             data->pt = pt;
             // Need to dereference as pdweffect gets freed.
             data->pdwEffect = *pdwEffect;
-            data->pDataObject->AddRef();
-            data->pAsyncOperation->StartOperation(NULL);
             SHCreateThread(CFSFolder::_DoDropThreadProc, data, NULL, NULL);
             return S_OK;
         }
-        else
-            pAsyncOperation->Release();
     }
     return this->_DoDrop(pDataObject, dwKeyState, pt, pdwEffect);
 }
@@ -1753,12 +1750,22 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
 }
 
 DWORD WINAPI CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
+    CoInitialize(NULL);
     _DoDropData *data = static_cast<_DoDropData*>(lpParameter);
-    HRESULT hr = data->This->_DoDrop(data->pDataObject, data->dwKeyState, data->pt, &data->pdwEffect);
+    IDataObject *pDataObject;
+    HRESULT hr = CoGetInterfaceAndReleaseStream (data->pStream, IID_IDataObject, (void**) &pDataObject);
+
+    if (SUCCEEDED(hr))
+    {
+        CComPtr<IAsyncOperation> pAsyncOperation;
+        hr = data->This->_DoDrop(pDataObject, data->dwKeyState, data->pt, &data->pdwEffect);
+        if (SUCCEEDED(pDataObject->QueryInterface(IID_PPV_ARG(IAsyncOperation, &pAsyncOperation))))
+        {
+            pAsyncOperation->EndOperation(hr, NULL, data->pdwEffect);
+        }
+        pDataObject->Release();
+    }
     //Release the CFSFolder and data object holds in the copying thread.
-    data->pAsyncOperation->EndOperation(hr, NULL, data->pdwEffect);
-    data->pAsyncOperation->Release();
-    data->pDataObject->Release();
     data->This->Release();
     //Release the parameter from the heap.
     HeapFree(GetProcessHeap(), 0, data);

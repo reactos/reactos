@@ -486,13 +486,15 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
      * Set up GUI data
      */
 
+    // Font data
     Length = min(wcslen(TermInfo.FaceName) + 1, LF_FACESIZE); // wcsnlen
     wcsncpy(GuiData->GuiInfo.FaceName, TermInfo.FaceName, LF_FACESIZE);
     GuiData->GuiInfo.FaceName[Length] = L'\0';
     GuiData->GuiInfo.FontFamily     = TermInfo.FontFamily;
     GuiData->GuiInfo.FontSize       = TermInfo.FontSize;
     GuiData->GuiInfo.FontWeight     = TermInfo.FontWeight;
-    GuiData->GuiInfo.UseRasterFonts = TermInfo.UseRasterFonts;
+
+    // Display
     GuiData->GuiInfo.FullScreen     = TermInfo.FullScreen;
     GuiData->GuiInfo.ShowWindow     = TermInfo.ShowWindow;
     GuiData->GuiInfo.AutoPosition   = TermInfo.AutoPosition;

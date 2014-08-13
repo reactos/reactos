@@ -34,7 +34,6 @@ typedef struct _GUI_CONSOLE_INFO
     ULONG FontFamily;
     COORD FontSize;
     ULONG FontWeight;
-    BOOL  UseRasterFonts;
 
     BOOL  FullScreen;       /* Whether the console is displayed in full-screen or windowed mode */
 //  ULONG HardwareState;    /* _GDI_MANAGED, _DIRECT */
