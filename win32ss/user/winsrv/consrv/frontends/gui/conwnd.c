@@ -282,7 +282,7 @@ CreateSysMenu(HWND hWnd)
 }
 
 static VOID
-SendMenuEvent(PCONSOLE Console, UINT CmdId)
+SendMenuEvent(PCONSRV_CONSOLE Console, UINT CmdId)
 {
     INPUT_RECORD er;
 
@@ -366,7 +366,7 @@ static LRESULT
 OnCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
     LRESULT Ret = TRUE;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     /*
      * In case the selected menu item belongs to the user-reserved menu id range,
@@ -486,15 +486,166 @@ ResizeConWnd(PGUI_CONSOLE_DATA GuiData, DWORD WidthUnit, DWORD HeightUnit)
     // to: InvalidateRect(GuiData->hWindow, NULL, TRUE);
 }
 
+
+VOID
+DeleteFonts(PGUI_CONSOLE_DATA GuiData)
+{
+    ULONG i;
+    for (i = 0; i < sizeof(GuiData->Font) / sizeof(GuiData->Font[0]); ++i)
+    {
+        if (GuiData->Font[i] != NULL) DeleteObject(GuiData->Font[i]);
+        GuiData->Font[i] = NULL;
+    }
+}
+
+static HFONT
+CreateDerivedFont(HFONT OrgFont,
+                  // COORD   FontSize,
+                  ULONG   FontWeight,
+                  // BOOLEAN bItalic,
+                  BOOLEAN bUnderline,
+                  BOOLEAN bStrikeOut)
+{
+    LOGFONT lf;
+
+    /* Initialize the LOGFONT structure */
+    RtlZeroMemory(&lf, sizeof(lf));
+
+    /* Retrieve the details of the current font */
+    if (GetObject(OrgFont, sizeof(lf), &lf) == 0)
+        return NULL;
+
+    /* Change the font attributes */
+    // lf.lfHeight = FontSize.Y;
+    // lf.lfWidth  = FontSize.X;
+    lf.lfWeight = FontWeight;
+    // lf.lfItalic = bItalic;
+    lf.lfUnderline = bUnderline;
+    lf.lfStrikeOut = bStrikeOut;
+
+    /* Build a new font */
+    return CreateFontIndirect(&lf);
+}
+
+BOOL
+InitFonts(PGUI_CONSOLE_DATA GuiData,
+          LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements.
+          ULONG  FontFamily,
+          COORD  FontSize,
+          ULONG  FontWeight)
+{
+    HDC hDC;
+    HFONT OldFont, NewFont;
+    TEXTMETRICW Metrics;
+    SIZE CharSize;
+
+    /*
+     * Initialize a new NORMAL font and get its metrics.
+     */
+
+    NewFont = CreateFontW(FontSize.Y,
+                          FontSize.X,
+                          0,
+                          TA_BASELINE,
+                          FontWeight,
+                          FALSE,
+                          FALSE,
+                          FALSE,
+                          OEM_CHARSET,
+                          OUT_DEFAULT_PRECIS,
+                          CLIP_DEFAULT_PRECIS,
+                          DEFAULT_QUALITY, // NONANTIALIASED_QUALITY ; ANTIALIASED_QUALITY
+                          FIXED_PITCH | FontFamily,
+                          FaceName);
+    if (NewFont == NULL)
+    {
+        DPRINT1("InitFonts: CreateFontW failed\n");
+        return FALSE;
+    }
+
+    hDC = GetDC(GuiData->hWindow);
+    if (hDC == NULL)
+    {
+        DPRINT1("InitFonts: GetDC failed\n");
+        DeleteObject(NewFont);
+        return FALSE;
+    }
+
+    OldFont = SelectObject(hDC, NewFont);
+    if (OldFont == NULL)
+    {
+        DPRINT1("InitFonts: SelectObject failed\n");
+        ReleaseDC(GuiData->hWindow, hDC);
+        DeleteObject(NewFont);
+        return FALSE;
+    }
+
+    if (!GetTextMetricsW(hDC, &Metrics))
+    {
+        DPRINT1("InitFonts: GetTextMetrics failed\n");
+        SelectObject(hDC, OldFont);
+        ReleaseDC(GuiData->hWindow, hDC);
+        DeleteObject(NewFont);
+        return FALSE;
+    }
+    GuiData->CharWidth  = Metrics.tmMaxCharWidth;
+    GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
+
+    /* Measure real char width more precisely if possible. */
+    if (GetTextExtentPoint32W(hDC, L"R", 1, &CharSize))
+        GuiData->CharWidth = CharSize.cx;
+
+    SelectObject(hDC, OldFont);
+    ReleaseDC(GuiData->hWindow, hDC);
+
+    /*
+     * Initialization succeeded.
+     */
+    // Delete all the old fonts first.
+    DeleteFonts(GuiData);
+    GuiData->Font[FONT_NORMAL] = NewFont;
+
+    /*
+     * Now build the other fonts (bold, underlined, mixed).
+     */
+    GuiData->Font[FONT_BOLD] =
+        CreateDerivedFont(GuiData->Font[FONT_NORMAL],
+                          FontWeight < FW_BOLD ? FW_BOLD : FontWeight,
+                          FALSE,
+                          FALSE);
+    GuiData->Font[FONT_UNDERLINE] =
+        CreateDerivedFont(GuiData->Font[FONT_NORMAL],
+                          FontWeight,
+                          TRUE,
+                          FALSE);
+    GuiData->Font[FONT_BOLD | FONT_UNDERLINE] =
+        CreateDerivedFont(GuiData->Font[FONT_NORMAL],
+                          FontWeight < FW_BOLD ? FW_BOLD : FontWeight,
+                          TRUE,
+                          FALSE);
+
+    /*
+     * Save the settings.
+     */
+    if (FaceName != GuiData->GuiInfo.FaceName)
+    {
+        SIZE_T Length = min(wcslen(FaceName) + 1, LF_FACESIZE); // wcsnlen
+        wcsncpy(GuiData->GuiInfo.FaceName, FaceName, LF_FACESIZE);
+        GuiData->GuiInfo.FaceName[Length] = L'\0'; // NULL-terminate
+    }
+    GuiData->GuiInfo.FontFamily = FontFamily;
+    GuiData->GuiInfo.FontSize   = FontSize;
+    GuiData->GuiInfo.FontWeight = FontWeight;
+
+    return TRUE;
+}
+
+
 static BOOL
 OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Create->lpCreateParams;
-    PCONSOLE Console;
-    HDC hDC;
-    HFONT OldFont;
-    TEXTMETRICW Metrics;
-    SIZE CharSize;
+    PCONSRV_CONSOLE Console;
 
     if (NULL == GuiData)
     {
@@ -506,67 +657,18 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     GuiData->hWindow = hWnd;
 
-    GuiData->Font = CreateFontW(GuiData->GuiInfo.FontSize.Y,
-                                0, // GuiData->GuiInfo.FontSize.X,
-                                0,
-                                TA_BASELINE,
-                                GuiData->GuiInfo.FontWeight,
-                                FALSE,
-                                FALSE,
-                                FALSE,
-                                OEM_CHARSET,
-                                OUT_DEFAULT_PRECIS,
-                                CLIP_DEFAULT_PRECIS,
-                                NONANTIALIASED_QUALITY,
-                                FIXED_PITCH | GuiData->GuiInfo.FontFamily /* FF_DONTCARE */,
-                                GuiData->GuiInfo.FaceName);
-
-    if (NULL == GuiData->Font)
+    /* Initialize the fonts */
+    if (!InitFonts(GuiData,
+                   GuiData->GuiInfo.FaceName,
+                   GuiData->GuiInfo.FontFamily,
+                   GuiData->GuiInfo.FontSize,
+                   GuiData->GuiInfo.FontWeight))
     {
-        DPRINT1("GuiConsoleNcCreate: CreateFont failed\n");
+        DPRINT1("GuiConsoleNcCreate: InitFonts failed\n");
         GuiData->hWindow = NULL;
         SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
-    hDC = GetDC(GuiData->hWindow);
-    if (NULL == hDC)
-    {
-        DPRINT1("GuiConsoleNcCreate: GetDC failed\n");
-        DeleteObject(GuiData->Font);
-        GuiData->hWindow = NULL;
-        SetEvent(GuiData->hGuiInitEvent);
-        return FALSE;
-    }
-    OldFont = SelectObject(hDC, GuiData->Font);
-    if (NULL == OldFont)
-    {
-        DPRINT1("GuiConsoleNcCreate: SelectObject failed\n");
-        ReleaseDC(GuiData->hWindow, hDC);
-        DeleteObject(GuiData->Font);
-        GuiData->hWindow = NULL;
-        SetEvent(GuiData->hGuiInitEvent);
-        return FALSE;
-    }
-    if (!GetTextMetricsW(hDC, &Metrics))
-    {
-        DPRINT1("GuiConsoleNcCreate: GetTextMetrics failed\n");
-        SelectObject(hDC, OldFont);
-        ReleaseDC(GuiData->hWindow, hDC);
-        DeleteObject(GuiData->Font);
-        GuiData->hWindow = NULL;
-        SetEvent(GuiData->hGuiInitEvent);
-        return FALSE;
-    }
-    GuiData->CharWidth  = Metrics.tmMaxCharWidth;
-    GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
-
-    /* Measure real char width more precisely if possible. */
-    if (GetTextExtentPoint32W(hDC, L"R", 1, &CharSize))
-        GuiData->CharWidth = CharSize.cx;
-
-    SelectObject(hDC, OldFont);
-
-    ReleaseDC(GuiData->hWindow, hDC);
 
     /* Initialize the terminal framebuffer */
     GuiData->hMemDC  = CreateCompatibleDC(NULL);
@@ -647,7 +749,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 static VOID
 OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     INPUT_RECORD er;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
@@ -814,7 +916,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
                 PCOORD SelectionAnchor OPTIONAL,
                 PCOORD coord)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     HRGN oldRgn = CreateSelectionRgn(GuiData, GuiData->LineSelection,
                                      &GuiData->Selection.dwSelectionAnchor,
                                      &GuiData->Selection.srSelection);
@@ -1039,7 +1141,7 @@ IsSystemKey(WORD VirtualKeyCode)
 static VOID
 OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
@@ -1204,7 +1306,7 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
 static VOID
 OnTimer(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
@@ -1309,7 +1411,7 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
 static BOOL
 OnClose(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
         return TRUE;
@@ -1341,7 +1443,7 @@ OnNcDestroy(HWND hWnd)
         if (GuiData->hMemDC ) DeleteDC(GuiData->hMemDC);
         if (GuiData->hBitmap) DeleteObject(GuiData->hBitmap);
         // if (GuiData->hSysPalette) DeleteObject(GuiData->hSysPalette);
-        if (GuiData->Font) DeleteObject(GuiData->Font);
+        DeleteFonts(GuiData);
     }
 
     /* Free the GuiData registration */
@@ -1380,7 +1482,7 @@ static LRESULT
 OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     BOOL Err = FALSE;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     // FIXME: It's here that we need to check whether we has focus or not
     // and whether we are in edit mode or not, to know if we need to deal
@@ -1735,7 +1837,7 @@ Paste(PGUI_CONSOLE_DATA GuiData)
 static VOID
 OnGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     DWORD windx, windy;
     UINT  WidthUnit, HeightUnit;
@@ -1767,7 +1869,7 @@ OnGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 static VOID
 OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -1872,7 +1974,7 @@ GuiConsoleHandleScrollbarMenu(VOID)
 static LRESULT
 OnScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER Buff;
     SCROLLINFO sInfo;
     int fnBar;
@@ -1983,7 +2085,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT Result = 0;
     PGUI_CONSOLE_DATA GuiData = NULL;
-    PCONSOLE Console = NULL;
+    PCONSRV_CONSOLE Console = NULL;
 
     /*
      * - If it's the first time we create a window for the terminal,

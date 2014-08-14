@@ -25,7 +25,7 @@
 /* FUNCTIONS ******************************************************************/
 
 static COLORREF
-PaletteRGBFromAttrib(PCONSOLE Console, WORD Attribute)
+PaletteRGBFromAttrib(PCONSRV_CONSOLE Console, WORD Attribute)
 {
     HPALETTE hPalette = Console->ActiveBuffer->PaletteHandle;
     PALETTEENTRY pe;
@@ -34,44 +34,6 @@ PaletteRGBFromAttrib(PCONSOLE Console, WORD Attribute)
 
     GetPaletteEntries(hPalette, Attribute, 1, &pe);
     return PALETTERGB(pe.peRed, pe.peGreen, pe.peBlue);
-}
-
-static HFONT
-ChangeFontAttributes(PGUI_CONSOLE_DATA GuiData,
-                     // COORD   FontSize,
-                     ULONG   FontWeight,
-                     BOOLEAN bItalic,
-                     BOOLEAN bUnderline,
-                     BOOLEAN bStrikeOut)
-{
-    HFONT NewFont;
-    LOGFONT lf;
-
-    /* Initialize the LOGFONT structure */
-    RtlZeroMemory(&lf, sizeof(lf));
-
-    /* Retrieve the details of the current font */
-    if (GetObject(GuiData->Font, sizeof(lf), &lf) == 0)
-        return NULL; // GuiData->Font;
-
-    /* Change the font attributes */
-    // lf.lfHeight = FontSize.Y;
-    // lf.lfWidth  = FontSize.X;
-    lf.lfWeight = FontWeight;
-    lf.lfItalic = bItalic;
-    lf.lfUnderline = bUnderline;
-    lf.lfStrikeOut = bStrikeOut;
-
-    /* Build a new font */
-    NewFont = CreateFontIndirect(&lf);
-    if (NewFont == NULL)
-        return NULL; // GuiData->Font;
-
-    // FIXME: Do we need to update GuiData->CharWidth and GuiData->CharHeight ??
-
-    /* Select it (return the old font) */
-    // return SelectObject(GuiData->hMemDC, NewFont);
-    return NewFont;
 }
 
 static VOID
@@ -309,7 +271,7 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
      * This function supposes that the system clipboard was opened.
      */
 
-    PCONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = Buffer->Header.Console;
 
     HANDLE hData;
     LPWSTR str;
@@ -377,7 +339,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PRECT rcView,
                        PRECT rcFramebuffer)
 {
-    PCONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = Buffer->Header.Console;
     // ASSERT(Console == GuiData->Console);
 
     ULONG TopLine, BottomLine, LeftChar, RightChar;
@@ -388,7 +350,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     ULONG CursorX, CursorY, CursorHeight;
     HBRUSH CursorBrush, OldBrush;
     HFONT OldFont, NewFont;
-    BOOLEAN IsUnderscore;
+    BOOLEAN IsUnderline;
 
     if (Buffer->Buffer == NULL) return;
 
@@ -412,17 +374,10 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
     SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
 
-    // OldFont = ChangeFontAttributes(GuiData, /* {0}, */ GuiData->GuiInfo.FontWeight, FALSE, FALSE, FALSE);
-    IsUnderscore = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
-    NewFont = ChangeFontAttributes(GuiData, /* {0}, */ GuiData->GuiInfo.FontWeight,
-                                   FALSE,
-                                   IsUnderscore,
-                                   FALSE);
-    if (NewFont == NULL)
-    {
-        DPRINT1("ChangeFontAttributes failed, use the original font\n");
-        NewFont = GuiData->Font;
-    }
+    /* We use the underscore flag as a underline flag */
+    IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
+    /* Select the new font */
+    NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
     OldFont = SelectObject(GuiData->hMemDC, NewFont);
 
     for (Line = TopLine; Line <= BottomLine; Line++)
@@ -454,25 +409,12 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                     SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
                     SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
 
-                    /* Change underscore state if needed */
-                    if (!!(LastAttribute & COMMON_LVB_UNDERSCORE) != IsUnderscore)
+                    /* Change underline state if needed */
+                    if (!!(LastAttribute & COMMON_LVB_UNDERSCORE) != IsUnderline)
                     {
-                        IsUnderscore = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
-
-                        /* Delete the font we used up to now */
-                        // SelectObject(GuiData->hMemDC, OldFont);
-                        if (NewFont != GuiData->Font) DeleteObject(NewFont);
-                        /* Recreate it */
-                        NewFont = ChangeFontAttributes(GuiData, /* {0}, */ GuiData->GuiInfo.FontWeight,
-                                                       FALSE,
-                                                       IsUnderscore,
-                                                       FALSE);
-                        if (NewFont == NULL)
-                        {
-                            DPRINT1("ChangeFontAttributes failed, use the original font\n");
-                            NewFont = GuiData->Font;
-                        }
-                        /* Select it */
+                        IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
+                        /* Select the new font */
+                        NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
                         /* OldFont = */ SelectObject(GuiData->hMemDC, NewFont);
                     }
                 }
@@ -487,6 +429,9 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                  LineBuffer,
                  RightChar - Start + 1);
     }
+
+    /* Restore the old font */
+    SelectObject(GuiData->hMemDC, OldFont);
 
     /*
      * Draw the caret
@@ -519,10 +464,6 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
             DeleteObject(CursorBrush);
         }
     }
-
-    /* Restore the old font and delete the font we used up to now */
-    SelectObject(GuiData->hMemDC, OldFont);
-    if (NewFont != GuiData->Font) DeleteObject(NewFont);
 
     LeaveCriticalSection(&Console->Lock);
 }

@@ -37,9 +37,11 @@ class CDefaultContextMenu :
     public IContextMenu2
 {
     private:
-        DEFCONTEXTMENU m_Dcm;
+        IShellFolder *m_psf;
+        UINT m_cidl;
+        PCUITEMID_CHILD_ARRAY m_apidl;
         IDataObject *m_pDataObj;
-        LPCITEMIDLIST m_pidlFolder;
+        PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
         PDynamicShellEntry m_pDynamicEntries; /* first dynamic shell extension entry */
         UINT m_iIdSHEFirst; /* first used id */
@@ -92,18 +94,20 @@ class CDefaultContextMenu :
         END_COM_MAP()
 };
 
-CDefaultContextMenu::CDefaultContextMenu()
+CDefaultContextMenu::CDefaultContextMenu() :
+    m_psf(NULL),
+    m_cidl(0),
+    m_apidl(NULL),
+    m_pDataObj(NULL),
+    m_pidlFolder(NULL),
+    m_bGroupPolicyActive(0),
+    m_pDynamicEntries(NULL),
+    m_iIdSHEFirst(0),
+    m_iIdSHELast(0),
+    m_pStaticEntries(NULL),
+    m_iIdSCMFirst(0),
+    m_iIdSCMLast(0)
 {
-    memset(&m_Dcm, 0, sizeof(m_Dcm));
-    m_pDataObj = NULL;
-    m_pidlFolder = NULL;
-    m_bGroupPolicyActive = 0;
-    m_pDynamicEntries = NULL;
-    m_iIdSHEFirst = 0;
-    m_iIdSHELast = 0;
-    m_pStaticEntries = NULL;
-    m_iIdSCMFirst = 0;
-    m_iIdSCMLast = 0;
 }
 
 CDefaultContextMenu::~CDefaultContextMenu()
@@ -130,9 +134,12 @@ CDefaultContextMenu::~CDefaultContextMenu()
     }
 
     if (m_pidlFolder)
-        ILFree((_ITEMIDLIST*)m_pidlFolder);
+        CoTaskMemFree(m_pidlFolder);
     if (m_pDataObj)
         m_pDataObj->Release();
+    _ILFreeaPidl(const_cast<PITEMID_CHILD *>(m_apidl), m_cidl);
+    if (m_psf)
+        m_psf->Release();
 }
 
 HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
@@ -140,28 +147,33 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     IDataObject *pDataObj;
 
     TRACE("cidl %u\n", pdcm->cidl);
+
+    m_cidl = pdcm->cidl;
+    m_apidl = const_cast<PCUITEMID_CHILD_ARRAY>(_ILCopyaPidl(pdcm->apidl, m_cidl));
+    if (m_cidl && !m_apidl)
+        return E_OUTOFMEMORY;
+    m_psf = pdcm->psf;
+    m_psf->AddRef();
+
     if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
         m_pDataObj = pDataObj;
 
-    if (!pdcm->cidl)
+    if (pdcm->pidlFolder)
     {
-        /* Init pidlFolder only if it is background context menu. See IShellExtInit::Initialize */
-        if (pdcm->pidlFolder)
-            m_pidlFolder = ILClone(pdcm->pidlFolder);
-        else
+        m_pidlFolder = ILClone(pdcm->pidlFolder);
+    }
+    else
+    {
+        IPersistFolder2 *pf = NULL;
+        if (SUCCEEDED(m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
         {
-            IPersistFolder2 *pf = NULL;
-            if (SUCCEEDED(pdcm->psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
-            {
-                if (FAILED(pf->GetCurFolder((_ITEMIDLIST**)&m_pidlFolder)))
-                    ERR("GetCurFolder failed\n");
-                pf->Release();
-            }
+            if (FAILED(pf->GetCurFolder(reinterpret_cast<LPITEMIDLIST*>(&m_pidlFolder))))
+                ERR("GetCurFolder failed\n");
+            pf->Release();
         }
         TRACE("pidlFolder %p\n", m_pidlFolder);
     }
 
-    CopyMemory(&m_Dcm, pdcm, sizeof(DEFCONTEXTMENU));
     return S_OK;
 }
 
@@ -603,7 +615,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         /* set first entry as default */
         if (pEntry == m_pStaticEntries)
             fState |= MFS_DEFAULT;
-        
+
         if (!wcsicmp(pEntry->szVerb, L"open"))
         {
             /* override default when open verb is found */
@@ -714,14 +726,14 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     HRESULT hr;
 
     TRACE("BuildShellItemContextMenu entered\n");
-    ASSERT(m_Dcm.cidl >= 1);
+    ASSERT(m_cidl >= 1);
 
     STRRET strFile;
-    hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile);
+    hr = m_psf->GetDisplayNameOf(m_apidl[0], SHGDN_FORPARSING, &strFile);
     if (hr == S_OK)
     {
         WCHAR wszPath[MAX_PATH];
-        hr = StrRetToBufW(&strFile, m_Dcm.apidl[0], wszPath, _countof(wszPath));
+        hr = StrRetToBufW(&strFile, m_apidl[0], wszPath, _countof(wszPath));
         if (hr == S_OK)
         {
             LPCWSTR pwszExt = PathFindExtensionW(wszPath);
@@ -765,7 +777,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     else
         ERR("GetDisplayNameOf failed: %x\n", hr);
 
-    GUID *pGuid = _ILGetGUIDPointer(m_Dcm.apidl[0]);
+    GUID *pGuid = _ILGetGUIDPointer(m_apidl[0]);
     if (pGuid)
     {
         LPOLESTR pwszCLSID;
@@ -787,7 +799,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         }
     }
 
-    if (_ILIsDrive(m_Dcm.apidl[0]))
+    if (_ILIsDrive(m_apidl[0]))
     {
         AddStaticEntryForFileClass(L"Drive");
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Drive", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -800,7 +812,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
 
     /* add static actions */
     SFGAOF rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
-    hr = m_Dcm.psf->GetAttributesOf(m_Dcm.cidl, m_Dcm.apidl, &rfg);
+    hr = m_psf->GetAttributesOf(m_cidl, m_apidl, &rfg);
     if (FAILED(hr))
     {
         ERR("GetAttributesOf failed: %x\n", hr);
@@ -818,7 +830,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         }
 
         /* Directory is only loaded for real filesystem directories */
-        if (_ILIsFolder(m_Dcm.apidl[0]))
+        if (_ILIsFolder(m_apidl[0]))
         {
             AddStaticEntryForFileClass(L"Directory");
             if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -830,7 +842,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     }
 
     /* AllFilesystemObjects class is loaded only for files and directories */
-    if (_ILIsFolder(m_Dcm.apidl[0]) || _ILIsValue(m_Dcm.apidl[0]))
+    if (_ILIsFolder(m_apidl[0]) || _ILIsValue(m_apidl[0]))
     {
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"AllFilesystemObjects", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
@@ -848,7 +860,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     IndexMenu = InsertMenuItemsOfDynamicContextMenuExtension(hMenu, IndexMenu, iIdCmdFirst, iIdCmdLast);
     TRACE("IndexMenu %d\n", IndexMenu);
 
-    if (_ILIsDrive(m_Dcm.apidl[0]))
+    if (_ILIsDrive(m_apidl[0]))
     {
         /* The 'Format' option must be always available,
          * thus it is not registered as a static shell extension */
@@ -916,7 +928,7 @@ CDefaultContextMenu::QueryContextMenu(
     UINT idCmdLast,
     UINT uFlags)
 {
-    if (m_Dcm.cidl)
+    if (m_cidl)
         idCmdFirst = BuildShellItemContextMenu(hMenu, idCmdFirst, idCmdLast, uFlags);
     else
         idCmdFirst = BuildBackgroundContextMenu(hMenu, idCmdFirst, idCmdLast, uFlags);
@@ -951,7 +963,7 @@ CDefaultContextMenu::DoRefresh(
 {
     CComPtr<IPersistFolder2> ppf2 = NULL;
     LPITEMIDLIST pidl;
-    HRESULT hr = m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+    HRESULT hr = m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
     if (SUCCEEDED(hr))
     {
         hr = ppf2->GetCurFolder(&pidl);
@@ -984,9 +996,9 @@ CDefaultContextMenu::DoPaste(
         return hr;
 
     /* Find target folder */
-    if (m_Dcm.cidl)
+    if (m_cidl)
     {
-        hr = m_Dcm.psf->BindToObject(m_Dcm.apidl[0], NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
+        hr = m_psf->BindToObject(m_apidl[0], NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
     }
     else
     {
@@ -994,7 +1006,7 @@ CDefaultContextMenu::DoPaste(
         LPITEMIDLIST pidl;
 
         /* cidl is zero due to explorer view */
-        hr = m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+        hr = m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
         if (SUCCEEDED(hr))
         {
             hr = ppf2->GetCurFolder(&pidl);
@@ -1087,9 +1099,9 @@ CDefaultContextMenu::DoCreateLink(
     if (FAILED(hr))
         return hr;
 
-    if (SUCCEEDED(hr = SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
+    if (SUCCEEDED(hr = SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
     {
-        hr = m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+        hr = m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
         if (SUCCEEDED(hr))
         {
             hr = ppf2->GetCurFolder(&pidl);
@@ -1134,13 +1146,13 @@ HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi) {
 
     LPDATAOBJECT pDataObj;
 
-    if (SUCCEEDED(SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
+    if (SUCCEEDED(SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
     {
         pDataObj->AddRef();
         SHCreateThread(DoDeleteThreadProc, pDataObj, NULL, NULL);
         pDataObj->Release();
-    } 
-    else 
+    }
+    else
         return E_FAIL;
     return S_OK;
 
@@ -1154,7 +1166,7 @@ CDefaultContextMenu::DoCopyOrCut(
     LPDATAOBJECT pDataObj;
     HRESULT hr;
 
-    if (SUCCEEDED(SHCreateDataObject(m_Dcm.pidlFolder, m_Dcm.cidl, m_Dcm.apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
+    if (SUCCEEDED(SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
     {
         if (!bCopy)
         {
@@ -1233,7 +1245,7 @@ CDefaultContextMenu::DoRename(
         return hr;
     }
 
-    lpSV->SelectItem(m_Dcm.apidl[0],
+    lpSV->SelectItem(m_apidl[0],
                      SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT);
     lpSV->Release();
     return S_OK;
@@ -1244,26 +1256,26 @@ CDefaultContextMenu::DoProperties(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
     HRESULT hr = S_OK;
-    const ITEMIDLIST *pidlParent = m_Dcm.pidlFolder, *pidlChild;
+    const ITEMIDLIST *pidlParent = m_pidlFolder, *pidlChild;
 
     if (!pidlParent)
     {
         IPersistFolder2 *pf;
 
         /* pidlFolder is optional */
-        if (SUCCEEDED(m_Dcm.psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
+        if (SUCCEEDED(m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
         {
             pf->GetCurFolder((_ITEMIDLIST**)&pidlParent);
             pf->Release();
         }
     }
 
-    if (m_Dcm.cidl > 0)
-        pidlChild = m_Dcm.apidl[0];
+    if (m_cidl > 0)
+        pidlChild = m_apidl[0];
     else
     {
         /* Set pidlChild to last pidl of current folder */
-        if (pidlParent == m_Dcm.pidlFolder)
+        if (pidlParent == m_pidlFolder)
             pidlParent = (ITEMIDLIST*)ILClone(pidlParent);
 
         pidlChild = (ITEMIDLIST*)ILClone(ILFindLastID(pidlParent));
@@ -1303,11 +1315,11 @@ CDefaultContextMenu::DoProperties(
     }
     else
     {
-        if (m_Dcm.cidl > 1)
+        if (m_cidl > 1)
             WARN("SHMultiFileProperties is not yet implemented\n");
 
         STRRET strFile;
-        hr = m_Dcm.psf->GetDisplayNameOf(pidlChild, SHGDN_FORPARSING, &strFile);
+        hr = m_psf->GetDisplayNameOf(pidlChild, SHGDN_FORPARSING, &strFile);
         if (SUCCEEDED(hr))
         {
             WCHAR wszBuf[MAX_PATH];
@@ -1322,9 +1334,9 @@ CDefaultContextMenu::DoProperties(
     }
 
     /* Free allocated PIDLs */
-    if (pidlParent != m_Dcm.pidlFolder)
+    if (pidlParent != m_pidlFolder)
         ILFree((ITEMIDLIST*)pidlParent);
-    if (m_Dcm.cidl < 1 || pidlChild != m_Dcm.apidl[0])
+    if (m_cidl < 1 || pidlChild != m_apidl[0])
         ILFree((ITEMIDLIST*)pidlChild);
 
     return hr;
@@ -1336,7 +1348,7 @@ CDefaultContextMenu::DoFormat(
 {
     char szDrive[8] = {0};
 
-    if (!_ILGetDrive(m_Dcm.apidl[0], szDrive, sizeof(szDrive)))
+    if (!_ILGetDrive(m_apidl[0], szDrive, sizeof(szDrive)))
     {
         ERR("pidl is not a drive\n");
         return E_FAIL;
@@ -1417,7 +1429,7 @@ CDefaultContextMenu::TryToBrowse(
     if (lpSB == NULL)
         return E_FAIL;
 
-    hr = lpSB->BrowseObject(ILCombine(m_Dcm.pidlFolder, pidl), wFlags);
+    hr = lpSB->BrowseObject(ILCombine(m_pidlFolder, pidl), wFlags);
 
     return hr;
 }
@@ -1425,7 +1437,7 @@ CDefaultContextMenu::TryToBrowse(
 HRESULT
 CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
-    LPITEMIDLIST pidlFull = ILCombine(m_Dcm.pidlFolder, pidl);
+    LPITEMIDLIST pidlFull = ILCombine(m_pidlFolder, pidl);
     if (pidlFull == NULL)
     {
         return E_FAIL;
@@ -1442,7 +1454,7 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
     }
     else
     {
-        SHGetPathFromIDListW(m_Dcm.pidlFolder, wszDir);
+        SHGetPathFromIDListW(m_pidlFolder, wszDir);
     }
 
     HKEY hkeyClass;
@@ -1491,7 +1503,7 @@ CDefaultContextMenu::DoStaticShellExtensions(
     DWORD wFlags = BrowserFlagsFromVerb(lpcmi, pEntry);
     BOOL bBrowsed = FALSE;
 
-    for (i=0; i < m_Dcm.cidl; i++)
+    for (i=0; i < m_cidl; i++)
     {
         /* Check if we need to browse */
         if (wFlags > 0)
@@ -1502,7 +1514,7 @@ CDefaultContextMenu::DoStaticShellExtensions(
             if (bBrowsed)
                 continue;
 
-            hr = TryToBrowse(lpcmi, m_Dcm.apidl[i], wFlags);
+            hr = TryToBrowse(lpcmi, m_apidl[i], wFlags);
             if (SUCCEEDED(hr))
             {
                 bBrowsed = TRUE;
@@ -1510,7 +1522,7 @@ CDefaultContextMenu::DoStaticShellExtensions(
             }
         }
 
-        InvokePidl(lpcmi, m_Dcm.apidl[i], pEntry);
+        InvokePidl(lpcmi, m_apidl[i], pEntry);
     }
 
     return S_OK;

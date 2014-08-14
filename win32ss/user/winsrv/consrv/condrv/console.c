@@ -233,7 +233,6 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     /* Initialize the terminal interface */
     ResetTerminal(Console);
 
-    memcpy(Console->Colors, ConsoleInfo->Colors, sizeof(ConsoleInfo->Colors));
     Console->ConsoleSize = ConsoleInfo->ConsoleSize;
     Console->FixedSize   = FALSE; // Value by default; is reseted by the terminals if needed.
 

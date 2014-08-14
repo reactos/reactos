@@ -23,7 +23,7 @@ CSR_API(SrvRegisterConsoleVDM)
 {
     NTSTATUS Status;
     PCONSOLE_REGISTERVDM RegisterVDMRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.RegisterVDMRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     DPRINT1("SrvRegisterConsoleVDM(%d)\n", RegisterVDMRequest->RegisterFlags);
 

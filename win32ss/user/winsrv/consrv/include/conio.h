@@ -12,20 +12,10 @@
 
 #include "rect.h"
 
-#define CSR_DEFAULT_CURSOR_SIZE 25
-
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED   | \
                                  BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY)
-
-/* VGA character cell */
-typedef struct _CHAR_CELL
-{
-    CHAR Char;
-    BYTE Attributes;
-} CHAR_CELL, *PCHAR_CELL;
-C_ASSERT(sizeof(CHAR_CELL) == 2);
 
 
 /* Object type magic numbers */
@@ -272,7 +262,6 @@ typedef enum _CONSOLE_STATE
 
 // HACK!!
 struct _CONSOLE;
-struct _WINSRV_CONSOLE;
 /* HACK: */ typedef struct _CONSOLE *PCONSOLE;
 #include "conio_winsrv.h"
 
@@ -294,7 +283,7 @@ typedef struct _CONSOLE
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
     UINT InputCodePage;
 
-    /** Put those things in CONSOLE_INPUT_BUFFER ?? **/
+    /** Put those things in CONSOLE_INPUT_BUFFER in PWINSRV_CONSOLE ?? **/
     PWCHAR  LineBuffer;                     /* Current line being input, in line buffered mode */
     ULONG   LineMaxSize;                    /* Maximum size of line in characters (including CR+LF) */
     ULONG   LineSize;                       /* Current size of line */
@@ -303,25 +292,15 @@ typedef struct _CONSOLE
     BOOLEAN LineUpPressed;
     BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
     ULONG   LineWakeupMask;                 /* Bitmap of which control characters will end line input */
-    /*************************************************/
 
+    /** In PWINSRV_CONSOLE ?? **/
     BOOLEAN InsertMode;
+    /*************************************************/
 
 /******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
     UINT OutputCodePage;
-
-    /**** Per-console Virtual DOS Machine Text-mode Buffer ****/
-    COORD   VDMBufferSize;             /* Real size of the VDM buffer, in units of ??? */
-    HANDLE  VDMBufferSection;          /* Handle to the memory shared section for the VDM buffer */
-    PVOID   VDMBuffer;                 /* Our VDM buffer */
-    PVOID   ClientVDMBuffer;           /* A copy of the client view of our VDM buffer */
-    HANDLE  VDMClientProcess;          /* Handle to the client process who opened the buffer, to unmap the view */
-
-    HANDLE StartHardwareEvent;
-    HANDLE EndHardwareEvent;
-    HANDLE ErrorHardwareEvent;
 
 /****************************** Other properties ******************************/
     UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */
@@ -332,11 +311,7 @@ typedef struct _CONSOLE
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
 
-    COLORREF Colors[16];                    /* Colour palette */
-
 } CONSOLE; // , *PCONSOLE;
-
-// #include "conio_winsrv.h"
 
 /* console.c */
 VOID NTAPI
@@ -344,18 +319,11 @@ ConDrvPause(PCONSOLE Console);
 VOID NTAPI
 ConDrvUnpause(PCONSOLE Console);
 
-PCONSOLE_PROCESS_DATA NTAPI
-ConSrvGetConsoleLeaderProcess(IN PCONSOLE Console);
 NTSTATUS
 ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData);
-NTSTATUS NTAPI
-ConSrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
-                              IN ULONG ProcessGroupId,
-                              IN ULONG CtrlEvent);
 
 /* coninput.c */
-VOID NTAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
 NTSTATUS
 ConioAddInputEvents(PCONSOLE Console,
                     PINPUT_RECORD InputRecords,
@@ -392,7 +360,5 @@ NTSTATUS ConioWriteConsole(PCONSOLE Console,
                            PWCHAR Buffer,
                            DWORD Length,
                            BOOL Attrib);
-DWORD ConioEffectiveCursorSize(PCONSOLE Console,
-                                        DWORD Scale);
 
 /* EOF */

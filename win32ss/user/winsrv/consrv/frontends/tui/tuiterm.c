@@ -35,7 +35,7 @@ typedef struct _TUI_CONSOLE_DATA
 
     HWND hWindow;               /* Handle to the console's window (used for the window's procedure */
 
-    PCONSOLE Console;           /* Pointer to the owned console */
+    PCONSRV_CONSOLE Console;           /* Pointer to the owned console */
     // TUI_CONSOLE_INFO TuiInfo;   /* TUI terminal settings */
 } TUI_CONSOLE_DATA, *PTUI_CONSOLE_DATA;
 
@@ -261,7 +261,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 /*
     PTUI_CONSOLE_DATA TuiData = NULL;
-    PCONSOLE Console = NULL;
+    PCONSRV_CONSOLE Console = NULL;
 
     TuiData = TuiGetGuiData(hWnd);
     if (TuiData == NULL) return 0;
@@ -330,7 +330,7 @@ static DWORD NTAPI
 TuiConsoleThread(PVOID Data)
 {
     PTUI_CONSOLE_DATA TuiData = (PTUI_CONSOLE_DATA)Data;
-    PCONSOLE Console = TuiData->Console;
+    PCONSRV_CONSOLE Console = TuiData->Console;
     HWND NewWindow;
     MSG msg;
 
@@ -458,11 +458,11 @@ Quit:
 
 static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This /*,
-                  IN PCONSOLE Console */);
+                  IN PCONSRV_CONSOLE Console */);
 
-NTSTATUS NTAPI
+static NTSTATUS NTAPI
 TuiInitFrontEnd(IN OUT PFRONTEND This,
-                IN PCONSOLE Console)
+                IN PCONSRV_CONSOLE Console)
 {
     PTUI_CONSOLE_DATA TuiData;
     HANDLE ThreadHandle;
@@ -539,7 +539,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
 static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
-    // PCONSOLE Console = This->Console;
+    // PCONSRV_CONSOLE Console = This->Console;
     PTUI_CONSOLE_DATA TuiData = This->Data; // Console->FrontEndIFace.Data;
 
     /* Close the notification window */

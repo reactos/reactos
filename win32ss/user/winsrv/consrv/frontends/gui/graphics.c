@@ -115,7 +115,7 @@ GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
      * This function supposes that the system clipboard was opened.
      */
 
-    // PCONSOLE Console = Buffer->Header.Console;
+    // PCONSRV_CONSOLE Console = Buffer->Header.Console;
 
     UNIMPLEMENTED;
 }
@@ -126,7 +126,7 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
                        PRECT rcView,
                        PRECT rcFramebuffer)
 {
-    PCONSOLE Console = Buffer->Header.Console;
+    PCONSRV_CONSOLE Console = Buffer->Header.Console;
     // ASSERT(Console == GuiData->Console);
 
     if (Buffer->BitMap == NULL) return;

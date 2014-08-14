@@ -126,7 +126,7 @@ ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
 }
 
 VOID NTAPI
-ConioProcessKey(PCONSOLE Console, MSG* msg)
+ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
 {
     static BYTE KeyState[256] = { 0 };
     /* MSDN mentions that you should use the last virtual key code received
@@ -205,7 +205,7 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
 }
 
 DWORD
-ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale)
+ConioEffectiveCursorSize(PCONSRV_CONSOLE Console, DWORD Scale)
 {
     DWORD Size = (Console->ActiveBuffer->CursorInfo.dwSize * Scale + 99) / 100;
     /* If line input in progress, perhaps adjust for insert toggle */

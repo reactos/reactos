@@ -21,6 +21,17 @@
 #define PM_CONSOLE_BEEP         (WM_APP + 4)
 #define PM_CONSOLE_SET_TITLE    (WM_APP + 5)
 
+/*
+typedef struct _CONSOLE_FONT
+{
+    HFONT Font;
+    ULONG Flag;
+} CONSOLE_FONT, *PCONSOLE_FONT;
+*/
+#define FONT_NORMAL     0x00
+#define FONT_BOLD       0x01
+#define FONT_UNDERLINE  0x02
+#define FONT_MAXNO      0x04
 
 typedef struct _GUI_CONSOLE_DATA
 {
@@ -56,12 +67,12 @@ typedef struct _GUI_CONSOLE_DATA
 
 //  PVOID   ScreenBuffer;       /* Hardware screen buffer */
 
-    HFONT Font;
-    UINT CharWidth;
-    UINT CharHeight;
+    HFONT Font[FONT_MAXNO];
+    UINT CharWidth;     /* The character width and height should be the same for */
+    UINT CharHeight;    /* both normal and bold/underlined fonts...              */
 /*****************************************************/
 
-    PCONSOLE Console;           /* Pointer to the owned console */
+    PCONSRV_CONSOLE Console;           /* Pointer to the owned console */
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to the active screen buffer (then maybe the previous Console member is redundant?? Or not...) */
     CONSOLE_SELECTION_INFO Selection;       /* Contains information about the selection */
     COORD dwSelectionCursor;                /* Selection cursor position, most of the time different from Selection.dwSelectionAnchor */
