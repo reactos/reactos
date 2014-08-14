@@ -20,3 +20,18 @@ NTSTATUS GuiInitConsole(PCONSOLE Console,
                         DWORD ProcessId,
                         LPCWSTR IconPath,
                         INT IconIndex);
+
+VOID
+GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
+
+VOID
+SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
+
+BOOL
+InitFonts(PGUI_CONSOLE_DATA GuiData,
+          LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements.
+          ULONG  FontFamily,
+          COORD  FontSize,
+          ULONG  FontWeight);
+VOID
+DeleteFonts(PGUI_CONSOLE_DATA GuiData);

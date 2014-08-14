@@ -121,7 +121,7 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
     if (!hBrush) return FALSE;
 
     Font = CreateFontW(GuiInfo->FontSize.Y,
-                       0, // GuiInfo->FontSize.X,
+                       GuiInfo->FontSize.X,
                        0,
                        TA_BASELINE,
                        GuiInfo->FontWeight,
@@ -131,8 +131,8 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
                        OEM_CHARSET,
                        OUT_DEFAULT_PRECIS,
                        CLIP_DEFAULT_PRECIS,
-                       NONANTIALIASED_QUALITY,
-                       FIXED_PITCH | GuiInfo->FontFamily /* FF_DONTCARE */,
+                       DEFAULT_QUALITY, // NONANTIALIASED_QUALITY ; ANTIALIASED_QUALITY
+                       FIXED_PITCH | GuiInfo->FontFamily,
                        GuiInfo->FaceName);
     if (Font == NULL)
     {
