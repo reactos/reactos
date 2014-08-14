@@ -102,7 +102,7 @@ ConvertInputUnicodeToAnsi(PCONSOLE Console,
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static PALIAS_HEADER
-IntFindAliasHeader(PCONSOLE Console,
+IntFindAliasHeader(PCONSRV_CONSOLE Console,
                    PVOID    ExeName,
                    USHORT   ExeLength,
                    BOOLEAN  UnicodeExe)
@@ -149,7 +149,7 @@ IntFindAliasHeader(PCONSOLE Console,
 }
 
 static PALIAS_HEADER
-IntCreateAliasHeader(PCONSOLE Console,
+IntCreateAliasHeader(PCONSRV_CONSOLE Console,
                      PVOID    ExeName,
                      USHORT   ExeLength,
                      BOOLEAN  UnicodeExe)
@@ -217,7 +217,7 @@ IntInsertAliasHeader(PALIAS_HEADER* RootHeader,
 }
 
 static PALIAS_ENTRY
-IntGetAliasEntry(PCONSOLE Console,
+IntGetAliasEntry(PCONSRV_CONSOLE Console,
                  PALIAS_HEADER Header,
                  PVOID    Source,
                  USHORT   SourceLength,
@@ -266,7 +266,7 @@ IntGetAliasEntry(PCONSOLE Console,
 }
 
 static PALIAS_ENTRY
-IntCreateAliasEntry(PCONSOLE Console,
+IntCreateAliasEntry(PCONSRV_CONSOLE Console,
                     PVOID    Source,
                     USHORT   SourceLength,
                     PVOID    Target,
@@ -425,7 +425,7 @@ IntGetAllConsoleAliasesLength(PALIAS_HEADER Header,
 }
 
 VOID
-IntDeleteAllAliases(PCONSOLE Console)
+IntDeleteAllAliases(PCONSRV_CONSOLE Console)
 {
     PALIAS_HEADER Header, NextHeader;
     PALIAS_ENTRY Entry, NextEntry;
@@ -449,7 +449,7 @@ CSR_API(SrvAddConsoleAlias)
 {
     NTSTATUS Status;
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     PVOID lpTarget;
@@ -538,7 +538,7 @@ CSR_API(SrvGetConsoleAlias)
 {
     NTSTATUS Status;
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     UINT Length;
@@ -629,7 +629,7 @@ CSR_API(SrvGetConsoleAliases)
 {
     NTSTATUS Status;
     PCONSOLE_GETALLALIASES GetAllAliasesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     ULONG BytesWritten = 0;
     PALIAS_HEADER Header;
 
@@ -734,7 +734,7 @@ CSR_API(SrvGetConsoleAliasesLength)
 {
     NTSTATUS Status;
     PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesLengthRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PALIAS_HEADER Header;
 
     DPRINT1("SrvGetConsoleAliasesLength entered ApiMessage %p\n", ApiMessage);
@@ -774,7 +774,7 @@ CSR_API(SrvGetConsoleAliasExes)
 {
     NTSTATUS Status;
     PCONSOLE_GETALIASESEXES GetAliasesExesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     UINT BytesWritten = 0;
 
     DPRINT1("SrvGetConsoleAliasExes entered\n");
@@ -860,7 +860,7 @@ CSR_API(SrvGetConsoleAliasExesLength)
 {
     NTSTATUS Status;
     PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
 
     DPRINT1("SrvGetConsoleAliasExesLength entered ApiMessage %p\n", ApiMessage);
 

@@ -40,7 +40,7 @@ typedef struct _GET_INPUT_INFO
  * This pre-processing code MUST be IN consrv ONLY
  */
 /* static */ ULONG
-PreprocessInput(PCONSOLE Console,
+PreprocessInput(PCONSRV_CONSOLE Console,
                 PINPUT_RECORD InputEvent,
                 ULONG NumEventsToWrite)
 {
@@ -102,7 +102,7 @@ PreprocessInput(PCONSOLE Console,
  * This post-processing code MUST be IN consrv ONLY
  */
 /* static */ VOID
-PostprocessInput(PCONSOLE Console)
+PostprocessInput(PCONSRV_CONSOLE Console)
 {
     CsrNotifyWait(&Console->ReadWaitQueue,
                   FALSE,

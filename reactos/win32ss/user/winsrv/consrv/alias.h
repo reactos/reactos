@@ -9,4 +9,4 @@
 
 #pragma once
 
-VOID IntDeleteAllAliases(PCONSOLE Console);
+VOID IntDeleteAllAliases(PCONSRV_CONSOLE Console);

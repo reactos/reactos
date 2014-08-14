@@ -561,7 +561,7 @@ InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
 HANDLE
 WINAPI

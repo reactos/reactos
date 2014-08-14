@@ -17,9 +17,6 @@
 #include "guiterm.h"
 #include "guisettings.h"
 
-VOID GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
-VOID SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
-
 /* FUNCTIONS ******************************************************************/
 
 BOOL
@@ -199,14 +196,14 @@ GuiConsoleGetDefaultSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
     // wcsncpy(TermInfo->FaceName, L"DejaVu Sans Mono", LF_FACESIZE);
     // TermInfo->FontSize = MAKELONG(8, 12); // 0x000C0008; // font is 8x12
     // TermInfo->FontSize = MAKELONG(16, 16); // font is 16x16
-    // TermInfo->FontWeight = FW_NORMAL;
 
     wcsncpy(TermInfo->FaceName, L"VGA", LF_FACESIZE); // HACK: !!
     // TermInfo->FaceName[0] = L'\0';
     TermInfo->FontFamily = FF_DONTCARE;
     TermInfo->FontSize.X = 0;
     TermInfo->FontSize.Y = 0;
-    TermInfo->FontWeight = FW_DONTCARE;
+    TermInfo->FontWeight = FW_NORMAL; // HACK: !!
+    // TermInfo->FontWeight = FW_DONTCARE;
 
     TermInfo->FullScreen   = FALSE;
     TermInfo->ShowWindow   = SW_SHOWNORMAL;
@@ -230,7 +227,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                                 BOOL Defaults)
 {
     NTSTATUS Status;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL, hClientSection = NULL;
@@ -418,99 +415,13 @@ Quit:
     return;
 }
 
-
-
-
-BOOL
-ChangeFont(PGUI_CONSOLE_DATA GuiData,
-           LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements.
-           ULONG  FontFamily,
-           COORD  FontSize,
-           ULONG  FontWeight)
-{
-    HDC hDC;
-    HFONT OldFont, NewFont;
-    TEXTMETRICW Metrics;
-    SIZE CharSize;
-    SIZE_T Length;
-
-    NewFont = CreateFontW(FontSize.Y,
-                          0, // FontSize.X,
-                          0,
-                          TA_BASELINE,
-                          FontWeight,
-                          FALSE,
-                          FALSE,
-                          FALSE,
-                          OEM_CHARSET,
-                          OUT_DEFAULT_PRECIS,
-                          CLIP_DEFAULT_PRECIS,
-                          NONANTIALIASED_QUALITY,
-                          FIXED_PITCH | FontFamily /* FF_DONTCARE */,
-                          FaceName);
-    if (NewFont == NULL)
-    {
-        DPRINT1("ChangeFont: CreateFont failed\n");
-        return FALSE;
-    }
-
-    hDC = GetDC(GuiData->hWindow);
-    if (hDC == NULL)
-    {
-        DPRINT1("ChangeFont: GetDC failed\n");
-        DeleteObject(NewFont);
-        return FALSE;
-    }
-
-    OldFont = SelectObject(hDC, NewFont);
-    if (OldFont == NULL)
-    {
-        DPRINT1("ChangeFont: SelectObject failed\n");
-        ReleaseDC(GuiData->hWindow, hDC);
-        DeleteObject(NewFont);
-        return FALSE;
-    }
-
-    if (!GetTextMetricsW(hDC, &Metrics))
-    {
-        DPRINT1("ChangeFont: GetTextMetrics failed\n");
-        SelectObject(hDC, OldFont);
-        ReleaseDC(GuiData->hWindow, hDC);
-        DeleteObject(NewFont);
-        return FALSE;
-    }
-    GuiData->CharWidth  = Metrics.tmMaxCharWidth;
-    GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
-
-    /* Measure real char width more precisely if possible. */
-    if (GetTextExtentPoint32W(hDC, L"R", 1, &CharSize))
-        GuiData->CharWidth = CharSize.cx;
-
-    SelectObject(hDC, OldFont);
-    ReleaseDC(GuiData->hWindow, hDC);
-
-    if (GuiData->Font != NULL) DeleteObject(GuiData->Font);
-    GuiData->Font = NewFont;
-
-    Length = min(wcslen(FaceName) + 1, LF_FACESIZE); // wcsnlen
-    wcsncpy(GuiData->GuiInfo.FaceName, FaceName, LF_FACESIZE);
-    GuiData->GuiInfo.FaceName[Length] = L'\0'; // NULL-terminate
-    GuiData->GuiInfo.FontFamily     = FontFamily;
-    GuiData->GuiInfo.FontSize       = FontSize;
-    GuiData->GuiInfo.FontWeight     = FontWeight;
-
-    return TRUE;
-}
-
-
-
 VOID
 GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                      HANDLE hClientSection,
                      BOOL SaveSettings)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL;
     ULONG ViewSize = 0;
@@ -586,11 +497,11 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
             // memcpy(&GuiData->GuiInfo, GuiInfo, sizeof(GUI_CONSOLE_INFO));
 
             /* Change the font */
-            ChangeFont(GuiData,
-                       GuiInfo->FaceName,
-                       GuiInfo->FontFamily,
-                       GuiInfo->FontSize,
-                       GuiInfo->FontWeight);
+            InitFonts(GuiData,
+                      GuiInfo->FaceName,
+                      GuiInfo->FontFamily,
+                      GuiInfo->FontSize,
+                      GuiInfo->FontWeight);
            // HACK, needed because changing font may change the size of the window
            /**/TermResizeTerminal(Console);/**/
 
@@ -654,7 +565,7 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
                                HANDLE hClientSection)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL;
     ULONG ViewSize = 0;
@@ -768,11 +679,11 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
             // memcpy(&GuiData->GuiInfo, &GuiInfo, sizeof(GUI_CONSOLE_INFO));
 
             /* Change the font */
-            ChangeFont(GuiData,
-                       GuiInfo.FaceName,
-                       GuiInfo.FontFamily,
-                       GuiInfo.FontSize,
-                       GuiInfo.FontWeight);
+            InitFonts(GuiData,
+                      GuiInfo.FaceName,
+                      GuiInfo.FontFamily,
+                      GuiInfo.FontSize,
+                      GuiInfo.FontWeight);
            // HACK, needed because changing font may change the size of the window
            /**/TermResizeTerminal(Console);/**/
 

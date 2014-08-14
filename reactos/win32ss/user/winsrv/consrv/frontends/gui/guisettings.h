@@ -29,7 +29,6 @@
 
 typedef struct _GUI_CONSOLE_INFO
 {
-    // FONTSIGNATURE FontSignature;
     WCHAR FaceName[LF_FACESIZE];
     ULONG FontFamily;
     COORD FontSize;

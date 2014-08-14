@@ -48,7 +48,7 @@ LeaveFullScreen(PGUI_CONSOLE_DATA GuiData)
 VOID
 SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
 
     /*
      * See:
@@ -174,7 +174,7 @@ SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen)
 VOID
 GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
+    PCONSRV_CONSOLE Console = GuiData->Console;
     BOOL FullScreen;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;

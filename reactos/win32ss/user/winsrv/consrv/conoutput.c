@@ -170,7 +170,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PCONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CreateScreenBufferRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSRV_CONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
     PVOID ScreenBufferInfo = NULL;
