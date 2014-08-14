@@ -150,7 +150,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
 
     m_cidl = pdcm->cidl;
     m_apidl = const_cast<PCUITEMID_CHILD_ARRAY>(_ILCopyaPidl(pdcm->apidl, m_cidl));
-    if (!m_apidl)
+    if (m_cidl && !m_apidl)
         return E_OUTOFMEMORY;
     m_psf = pdcm->psf;
     m_psf->AddRef();
