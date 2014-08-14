@@ -164,7 +164,7 @@ class CDefView :
         virtual HRESULT STDMETHODCALLTYPE GetDefaultSpacing(POINT *ppt);
         virtual HRESULT STDMETHODCALLTYPE GetAutoArrange();
         virtual HRESULT STDMETHODCALLTYPE SelectItem(int iItem, DWORD dwFlags);
-        virtual HRESULT STDMETHODCALLTYPE SelectAndPositionItems(UINT cidl, LPCITEMIDLIST *apidl, POINT *apt, DWORD dwFlags);
+        virtual HRESULT STDMETHODCALLTYPE SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags);
 
         // *** IOleCommandTarget methods ***
         virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
@@ -2309,7 +2309,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, LPCITEMIDLIST *apidl, POINT *apt, DWORD dwFlags)
+HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags)
 {
     return E_NOTIMPL;
 }
