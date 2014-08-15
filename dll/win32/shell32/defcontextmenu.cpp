@@ -1684,21 +1684,13 @@ CDefFolderMenu_Create2(
     const HKEY *ahkeyClsKeys,
     IContextMenu **ppcm)
 {
-    // FIXME: This needs to be freed somewhere (like in the destructor of the context  menu)
-    LPCITEMIDLIST *apidl2 = (LPCITEMIDLIST *) SHAlloc(sizeof(LPCITEMIDLIST) * cidl);
-
-    for (int i = 0; i < (int)cidl; i++)
-    {
-        apidl2[i] = apidl[i];
-    }
-
     DEFCONTEXTMENU pdcm;
     pdcm.hwnd = hwnd;
     pdcm.pcmcb = NULL;
     pdcm.pidlFolder = pidlFolder;
     pdcm.psf = psf;
     pdcm.cidl = cidl;
-    pdcm.apidl = apidl2;
+    pdcm.apidl = apidl;
     pdcm.punkAssociationInfo = NULL;
     pdcm.cKeys = nKeys;
     pdcm.aKeys = ahkeyClsKeys;
