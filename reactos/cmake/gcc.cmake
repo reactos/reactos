@@ -115,7 +115,7 @@ endif()
 
 # Link-time code generation
 if(LTCG)
-    add_compile_flags("-flto -ffat-lto-objects")
+    add_compile_flags("-flto -fno-fat-lto-objects")
 endif()
 
 if(ARCH STREQUAL "i386")
