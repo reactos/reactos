@@ -493,7 +493,7 @@ HRESULT WINAPI CRecycleBin::GetCurFolder(LPITEMIDLIST *ppidl)
  */
 
 HRESULT WINAPI CRecycleBin::ParseDisplayName(HWND hwnd, LPBC pbc,
-        LPOLESTR pszDisplayName, ULONG *pchEaten, LPITEMIDLIST *ppidl,
+        LPOLESTR pszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl,
         ULONG *pdwAttributes)
 {
     FIXME("stub\n");
@@ -537,19 +537,19 @@ HRESULT WINAPI CRecycleBin::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDL
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::BindToObject(LPCITEMIDLIST pidl, LPBC pbc, REFIID riid, void **ppv)
+HRESULT WINAPI CRecycleBin::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbc, REFIID riid, void **ppv)
 {
     FIXME("(%p, %p, %p, %s, %p) - stub\n", this, pidl, pbc, debugstr_guid(&riid), ppv);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CRecycleBin::BindToStorage(LPCITEMIDLIST pidl, LPBC pbc, REFIID riid, void **ppv)
+HRESULT WINAPI CRecycleBin::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbc, REFIID riid, void **ppv)
 {
     FIXME("(%p, %p, %p, %s, %p) - stub\n", this, pidl, pbc, debugstr_guid(&riid), ppv);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     /* TODO */
     TRACE("(%p, %p, %p, %p)\n", this, (void *)lParam, pidl1, pidl2);
@@ -594,7 +594,7 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
 
 }
 
-HRESULT WINAPI CRecycleBin::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
+HRESULT WINAPI CRecycleBin::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         SFGAOF *rgfInOut)
 {
     TRACE("(%p, %d, {%p, ...}, {%x})\n", this, cidl, apidl ? apidl[0] : NULL, (unsigned int)*rgfInOut);
@@ -602,7 +602,7 @@ HRESULT WINAPI CRecycleBin::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl,
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
+HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT *prgfInOut, void **ppv)
 {
     IUnknown *pObj = NULL;
@@ -635,7 +635,7 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLI
     return hr;
 }
 
-HRESULT WINAPI CRecycleBin::GetDisplayNameOf(LPCITEMIDLIST pidl, SHGDNF uFlags, STRRET *pName)
+HRESULT WINAPI CRecycleBin::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags, STRRET *pName)
 {
     PIDLRecycleStruct *pFileDetails;
     LPWSTR pFileName;
@@ -679,8 +679,8 @@ HRESULT WINAPI CRecycleBin::GetDisplayNameOf(LPCITEMIDLIST pidl, SHGDNF uFlags, 
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::SetNameOf(HWND hwnd, LPCITEMIDLIST pidl, LPCOLESTR pszName,
-                                      SHGDNF uFlags, LPITEMIDLIST *ppidlOut)
+HRESULT WINAPI CRecycleBin::SetNameOf(HWND hwnd, PCUITEMID_CHILD pidl, LPCOLESTR pszName,
+                                      SHGDNF uFlags, PITEMID_CHILD *ppidlOut)
 {
     TRACE("\n");
     return E_FAIL; /* not supported */
@@ -716,7 +716,7 @@ HRESULT WINAPI CRecycleBin::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcs
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+HRESULT WINAPI CRecycleBin::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
     FIXME("stub\n");
     return E_NOTIMPL;
@@ -742,7 +742,7 @@ static HRESULT FormatDateTime(LPWSTR buffer, int size, FILETIME * ft)
     return (ret != 0 ? E_FAIL : S_OK);
 }
 
-HRESULT WINAPI CRecycleBin::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, LPSHELLDETAILS pDetails)
+HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPSHELLDETAILS pDetails)
 {
     PIDLRecycleStruct * pFileDetails;
     WCHAR buffer[MAX_PATH];

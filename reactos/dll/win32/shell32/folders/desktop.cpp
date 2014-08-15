@@ -300,7 +300,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     LPBC pbc,
     LPOLESTR lpszDisplayName,
     DWORD *pchEaten,
-    LPITEMIDLIST *ppidl,
+    PIDLIST_RELATIVE *ppidl,
     DWORD *pdwAttributes)
 {
     WCHAR szElement[MAX_PATH];
@@ -462,7 +462,7 @@ HRESULT WINAPI CDesktopFolder::EnumObjects(
  *        CDesktopFolder::BindToObject
  */
 HRESULT WINAPI CDesktopFolder::BindToObject(
-    LPCITEMIDLIST pidl,
+    PCUIDLIST_RELATIVE pidl,
     LPBC pbcReserved,
     REFIID riid,
     LPVOID *ppvOut)
@@ -477,7 +477,7 @@ HRESULT WINAPI CDesktopFolder::BindToObject(
  *    CDesktopFolder::BindToStorage
  */
 HRESULT WINAPI CDesktopFolder::BindToStorage(
-    LPCITEMIDLIST pidl,
+    PCUIDLIST_RELATIVE pidl,
     LPBC pbcReserved,
     REFIID riid,
     LPVOID *ppvOut)
@@ -492,7 +492,7 @@ HRESULT WINAPI CDesktopFolder::BindToStorage(
 /**************************************************************************
  *     CDesktopFolder::CompareIDs
  */
-HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     int nReturn;
 
@@ -545,7 +545,7 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
  */
 HRESULT WINAPI CDesktopFolder::GetAttributesOf(
     UINT cidl,
-    LPCITEMIDLIST *apidl,
+    PCUITEMID_CHILD_ARRAY apidl,
     DWORD *rgfInOut)
 {
     HRESULT hr = S_OK;
@@ -609,7 +609,7 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
 HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     HWND hwndOwner,
     UINT cidl,
-    LPCITEMIDLIST *apidl,
+    PCUITEMID_CHILD_ARRAY apidl,
     REFIID riid,
     UINT *prgfInOut,
     LPVOID *ppvOut)
@@ -679,7 +679,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
  * NOTES
  *    special case: pidl = null gives desktop-name back
  */
-HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     HRESULT hr = S_OK;
     LPWSTR pszPath;
@@ -854,10 +854,10 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
  */
 HRESULT WINAPI CDesktopFolder::SetNameOf(
     HWND hwndOwner,
-    LPCITEMIDLIST pidl,    /* simple pidl */
+    PCUITEMID_CHILD pidl,    /* simple pidl */
     LPCOLESTR lpName,
     DWORD dwFlags,
-    LPITEMIDLIST *pPidlOut)
+    PITEMID_CHILD *pPidlOut)
 {
     CComPtr<IShellFolder2>                psf;
     HRESULT hr;
@@ -963,7 +963,7 @@ HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFla
 }
 
 HRESULT WINAPI CDesktopFolder::GetDetailsEx(
-    LPCITEMIDLIST pidl,
+    PCUITEMID_CHILD pidl,
     const SHCOLUMNID *pscid,
     VARIANT *pv)
 {
@@ -973,7 +973,7 @@ HRESULT WINAPI CDesktopFolder::GetDetailsEx(
 }
 
 HRESULT WINAPI CDesktopFolder::GetDetailsOf(
-    LPCITEMIDLIST pidl,
+    PCUITEMID_CHILD pidl,
     UINT iColumn,
     SHELLDETAILS *psd)
 {

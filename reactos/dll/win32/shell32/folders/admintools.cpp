@@ -116,7 +116,7 @@ HRESULT WINAPI CAdminToolsFolder::FinalConstruct()
  *
  */
 HRESULT WINAPI CAdminToolsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
           this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
@@ -167,7 +167,7 @@ HRESULT WINAPI CAdminToolsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPE
 /**************************************************************************
  *        CAdminToolsFolder::BindToObject
  */
-HRESULT WINAPI CAdminToolsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CAdminToolsFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -178,7 +178,7 @@ HRESULT WINAPI CAdminToolsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReser
 /**************************************************************************
  *    CAdminToolsFolder::BindToStorage
  */
-HRESULT WINAPI CAdminToolsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CAdminToolsFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n",
            this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -190,7 +190,7 @@ HRESULT WINAPI CAdminToolsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcRese
 /**************************************************************************
  *     CAdminToolsFolder::CompareIDs
  */
-HRESULT WINAPI CAdminToolsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CAdminToolsFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     int nReturn;
 
@@ -234,7 +234,7 @@ HRESULT WINAPI CAdminToolsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, 
 /**************************************************************************
  *  ISF_AdminTools_fnGetAttributesOf
  */
-HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
+HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
     HRESULT hr = S_OK;
     static const DWORD dwAdminToolsAttributes =
@@ -286,7 +286,7 @@ HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apid
  *  LPVOID*        ppvObject) //[out] Resulting Interface
  *
  */
-HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
+HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
@@ -349,7 +349,7 @@ HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCIT
  *    CAdminToolsFolder::GetDisplayNameOf
  *
  */
-HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     HRESULT hr = S_OK;
     LPWSTR pszPath, pOffset;
@@ -451,8 +451,8 @@ HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwF
  *  DWORD         dwFlags,    //[in ] SHGNO formatting flags
  *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
  */
-HRESULT WINAPI CAdminToolsFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
-        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+HRESULT WINAPI CAdminToolsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
+        LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%lu,%p)\n", this, hwndOwner, pidl,
            debugstr_w (lpName), dwFlags, pPidlOut);
@@ -490,14 +490,14 @@ HRESULT WINAPI CAdminToolsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcs
 
 }
 
-HRESULT WINAPI CAdminToolsFolder::GetDetailsEx (LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+HRESULT WINAPI CAdminToolsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
     FIXME ("(%p): stub\n", this);
 
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CAdminToolsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
+HRESULT WINAPI CAdminToolsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     WCHAR buffer[MAX_PATH] = {0};
     HRESULT hr = E_FAIL;
