@@ -76,7 +76,7 @@ typedef struct _CONSOLE_STATE_INFO
     COLORREF    ColorTable[16];
 
     ULONG       CodePage;
-    HWND        HWnd;
+    HWND        hWnd;
 
     WCHAR       ConsoleTitle[256];
 } CONSOLE_STATE_INFO, *PCONSOLE_STATE_INFO;
