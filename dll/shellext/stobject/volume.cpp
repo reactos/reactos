@@ -32,7 +32,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     DWORD waveOutId = 0;
     DWORD param2    = 0;
 
-    DbgPrint("Volume_FindDefaultMixerID\n");
+    TRACE("Volume_FindDefaultMixerID\n");
 
     result = waveOutMessage((HWAVEOUT) WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET, (DWORD_PTR) &waveOutId, (DWORD_PTR) &param2);
     if (result)
@@ -40,19 +40,19 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 
     if (waveOutId == (DWORD)-1)
     {
-        DbgPrint("WARNING: waveOut has no default device, trying with first available device...\n", waveOutId);
+        TRACE("WARNING: waveOut has no default device, trying with first available device...\n", waveOutId);
 
         mixerId = 0;
     }
     else
     {
-        DbgPrint("waveOut default device is %d\n", waveOutId);
+        TRACE("waveOut default device is %d\n", waveOutId);
 
         result = mixerGetID((HMIXEROBJ) waveOutId, &mixerId, MIXER_OBJECTF_WAVEOUT);
         if (result)
             return E_FAIL;
 
-        DbgPrint("mixerId for waveOut default device is %d\n", mixerId);
+        TRACE("mixerId for waveOut default device is %d\n", mixerId);
     }
 
     g_mixerId = mixerId;
@@ -72,7 +72,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     if (mixerCaps.cDestinations == 0)
         return S_FALSE;
 
-    DbgPrint("mixerCaps.cDestinations %d\n", mixerCaps.cDestinations);
+    TRACE("mixerCaps.cDestinations %d\n", mixerCaps.cDestinations);
 
     DWORD idx;
     for (idx = 0; idx < mixerCaps.cDestinations; idx++)
@@ -84,14 +84,14 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
             if (mixerLine.dwComponentType >= MIXERLINE_COMPONENTTYPE_DST_SPEAKERS &&
                 mixerLine.dwComponentType <= MIXERLINE_COMPONENTTYPE_DST_HEADPHONES)
                 break;
-            DbgPrint("Destination %d was not speakers or headphones.\n");
+            TRACE("Destination %d was not speakers or headphones.\n");
         }
     }
 
     if (idx >= mixerCaps.cDestinations)
         return E_FAIL;
 
-    DbgPrint("Valid destination %d found.\n");
+    TRACE("Valid destination %d found.\n");
 
     g_mixerLineID = mixerLine.dwLineID;
 
@@ -105,7 +105,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     if (mixerGetLineControlsW((HMIXEROBJ) g_mixerId, &mixerLineControls, MIXER_GETLINECONTROLSF_ONEBYTYPE))
         return E_FAIL;
 
-    DbgPrint("Found control id %d for mute: %d\n", mixerControl.dwControlID);
+    TRACE("Found control id %d for mute: %d\n", mixerControl.dwControlID);
     
     g_muteControlID = mixerControl.dwControlID;
 
@@ -128,7 +128,7 @@ HRESULT Volume_IsMute()
         if (mixerGetControlDetailsW((HMIXEROBJ) g_mixerId, &mixerControlDetails, 0))
             return E_FAIL;
 
-        DbgPrint("Obtained mute status %d\n", detailsResult);
+        TRACE("Obtained mute status %d\n", detailsResult);
 
         g_IsMute = detailsResult != 0;
     }
@@ -140,7 +140,7 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 {
     HRESULT hr;
 
-    DbgPrint("Volume_Init\n");
+    TRACE("Volume_Init\n");
 
     if (!g_hMixer)
     {
@@ -168,7 +168,7 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 
 HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
 {
-    DbgPrint("Volume_Update\n");
+    TRACE("Volume_Update\n");
 
     Volume_IsMute();
 
@@ -183,7 +183,7 @@ HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
 
 HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
 {
-    DbgPrint("Volume_Shutdown\n");
+    TRACE("Volume_Shutdown\n");
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_VOLUME, NULL, NULL);
 }
@@ -201,9 +201,9 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
     if (uMsg != ID_ICON_VOLUME)
         return S_FALSE;
 
-    DbgPrint("Volume_Message\n");
+    TRACE("Volume_Message\n");
 
-    DbgPrint("Calling update...\n");
+    TRACE("Calling update...\n");
     Volume_Update(pSysTray);
 
     switch (lParam)
@@ -211,7 +211,7 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
     case WM_LBUTTONDOWN:
         break;
     case WM_LBUTTONUP:
-        DbgPrint("TODO: display volume slider\n");
+        TRACE("TODO: display volume slider\n");
         break;
     case WM_LBUTTONDBLCLK:
         // FIXME: ensure we are loading the right one

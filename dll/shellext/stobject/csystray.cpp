@@ -133,7 +133,7 @@ HRESULT CSysTray::SysTrayThreadProc()
 
 HRESULT CSysTray::CreateSysTrayThread()
 {
-    DbgPrint("CSysTray Init TODO: Initialize tray icon handlers.\n");
+    TRACE("CSysTray Init TODO: Initialize tray icon handlers.\n");
 
     HANDLE hThread = CreateThread(NULL, 0, s_SysTrayThreadProc, this, 0, NULL);
 
@@ -192,7 +192,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         return TRUE;
     }
 
-    DbgPrint("SysTray message received %u (%08p %08p)\n", uMsg, wParam, lParam);
+    TRACE("SysTray message received %u (%08p %08p)\n", uMsg, wParam, lParam);
 
     hr = ProcessIconMessage(uMsg, wParam, lParam);
     if (FAILED(hr))
