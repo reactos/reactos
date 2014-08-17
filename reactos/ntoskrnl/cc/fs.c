@@ -87,6 +87,7 @@ CcInitializeCacheMap (
 
     /* Call old ROS cache init function */
     CcRosInitializeFileCache(FileObject,
+                             FileSizes,
                              CallBacks,
                              LazyWriterContext);
 }

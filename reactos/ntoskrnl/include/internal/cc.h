@@ -287,6 +287,7 @@ NTSTATUS
 NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
+    PCC_FILE_SIZES FileSizes,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext
 );

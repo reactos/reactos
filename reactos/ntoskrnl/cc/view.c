@@ -1187,6 +1187,7 @@ NTSTATUS
 NTAPI
 CcRosInitializeFileCache (
     PFILE_OBJECT FileObject,
+    PCC_FILE_SIZES FileSizes,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext)
 /*
@@ -1216,13 +1217,8 @@ CcRosInitializeFileCache (
         SharedCacheMap->FileObject = FileObject;
         SharedCacheMap->Callbacks = CallBacks;
         SharedCacheMap->LazyWriteContext = LazyWriterContext;
-        if (FileObject->FsContext)
-        {
-            SharedCacheMap->SectionSize =
-                ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->AllocationSize;
-            SharedCacheMap->FileSize =
-                ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
-        }
+        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
+        SharedCacheMap->FileSize = FileSizes->FileSize;
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
