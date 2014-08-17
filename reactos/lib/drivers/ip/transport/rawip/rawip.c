@@ -321,6 +321,7 @@ VOID RawIpReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
                     0,
                     IPPacket,
                     DataSize);
+      DereferenceObject(AddrFile);
     } while ((AddrFile = AddrSearchNext(&SearchContext)) != NULL);
   } else {
     /* There are no open address files that will take this datagram */

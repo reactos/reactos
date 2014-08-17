@@ -222,7 +222,7 @@ PADDRESS_FILE AddrFindShared(
  * ARGUMENTS:
  *     SearchContext = Pointer to search context
  * RETURNS:
- *     Pointer to address file, NULL if none was found
+ *     Pointer to referenced address file, NULL if none was found
  */
 PADDRESS_FILE AddrSearchNext(
     PAF_SEARCH SearchContext)
@@ -232,6 +232,7 @@ PADDRESS_FILE AddrSearchNext(
     KIRQL OldIrql;
     PADDRESS_FILE Current = NULL;
     BOOLEAN Found = FALSE;
+    PADDRESS_FILE StartingAddrFile;
     
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
@@ -241,8 +242,8 @@ PADDRESS_FILE AddrSearchNext(
         return NULL;
     }
 
-    /* Remove the extra reference we added to keep this address file in memory */
-    DereferenceObject(CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry));
+    /* Save this pointer so we can dereference it later */
+    StartingAddrFile = CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry);
 
     CurrentEntry = SearchContext->Next;
 
@@ -279,9 +280,15 @@ PADDRESS_FILE AddrSearchNext(
             /* Reference the next address file to prevent the link from disappearing behind our back */
             ReferenceObject(CONTAINING_RECORD(SearchContext->Next, ADDRESS_FILE, ListEntry));
         }
+
+        /* Reference the returned address file before dereferencing the starting
+         * address file because it may be that Current == StartingAddrFile */
+        ReferenceObject(Current);
     }
     else
         Current = NULL;
+
+    DereferenceObject(StartingAddrFile);
 
     TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
