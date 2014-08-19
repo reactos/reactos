@@ -1058,7 +1058,7 @@ HRESULT WINAPI CFSFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
 HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
                                     LPCITEMIDLIST * apidl, bool bCopy)
 {
-    IPersistFolder2 *ppf2 = NULL;
+    CComPtr<IPersistFolder2> ppf2 = NULL;
     WCHAR szSrcPath[MAX_PATH];
     WCHAR szTargetPath[MAX_PATH];
     SHFILEOPSTRUCTW op;
@@ -1076,10 +1076,8 @@ HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
         hr = ppf2->GetCurFolder(&pidl);
         if (FAILED(hr))
         {
-            ppf2->Release();
             return hr;
         }
-        ppf2->Release();
 
         hr = pSFFrom->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strRet);
         if (FAILED(hr))
@@ -1113,7 +1111,6 @@ HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
                 HeapFree(GetProcessHeap(), 0, pszTargetList);
 
             SHFree(pidl);
-            ppf2->Release();
             return E_OUTOFMEMORY;
         }
 
