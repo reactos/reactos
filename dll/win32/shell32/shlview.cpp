@@ -105,6 +105,8 @@ class CDefView :
         POINT                     m_ptLastMousePos;        /* Mouse position at last DragOver call */
         //
         CComPtr<IContextMenu>     m_pCM;
+
+        BOOL                      m_isEditing;
     public:
         CDefView();
         ~CDefView();
@@ -173,7 +175,6 @@ class CDefView :
         virtual HRESULT STDMETHODCALLTYPE GetArrangeParam(LPARAM *sort);
         virtual HRESULT STDMETHODCALLTYPE ArrangeGrid();
         virtual HRESULT STDMETHODCALLTYPE AutoArrange();
-        virtual HRESULT STDMETHODCALLTYPE IShellFolderView_GetAutoArrange();
         virtual HRESULT STDMETHODCALLTYPE AddObject(PITEMID_CHILD pidl, UINT *item);
         virtual HRESULT STDMETHODCALLTYPE GetObject(PITEMID_CHILD *pidl, UINT item);
         virtual HRESULT STDMETHODCALLTYPE RemoveObject(PITEMID_CHILD pidl, UINT *item);
@@ -376,6 +377,7 @@ CDefView::CDefView()
     m_cScrollDelay = 0;
     m_ptLastMousePos.x = 0;
     m_ptLastMousePos.y = 0;
+    m_isEditing = FALSE;
 }
 
 CDefView::~CDefView()
@@ -1795,6 +1797,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             m_pSFParent->GetAttributesOf(1, (LPCITEMIDLIST*)&pidl, &dwAttr);
             if (SFGAO_CANRENAME & dwAttr)
             {
+                m_isEditing = TRUE;
                 return FALSE;
             }
             return TRUE;
@@ -1803,6 +1806,9 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case LVN_ENDLABELEDITW:
         {
             TRACE("-- LVN_ENDLABELEDITW %p\n", this);
+
+            m_isEditing = FALSE;
+
             if (lpdi->item.pszText)
             {
                 HRESULT hr;
@@ -1991,6 +1997,9 @@ HRESULT WINAPI CDefView::ContextSensitiveHelp(BOOL fEnterMode)
 */
 HRESULT WINAPI CDefView::TranslateAccelerator(LPMSG lpmsg)
 {
+    if (m_isEditing)
+        return S_FALSE;
+
     if (lpmsg->message >= WM_KEYFIRST && lpmsg->message <= WM_KEYLAST)
     {
         if (::TranslateAcceleratorW(m_hWnd, m_hAccel, lpmsg) != 0)
@@ -1999,7 +2008,7 @@ HRESULT WINAPI CDefView::TranslateAccelerator(LPMSG lpmsg)
         TRACE("-- key=0x04%lx\n", lpmsg->wParam) ;
     }
 
-    return S_FALSE; /* not handled */
+    return m_pShellBrowser->TranslateAcceleratorSB(lpmsg, 0);
 }
 
 HRESULT WINAPI CDefView::EnableModeless(BOOL fEnable)
@@ -2452,12 +2461,6 @@ HRESULT STDMETHODCALLTYPE CDefView::AutoArrange()
 {
     FIXME("(%p) stub\n", this);
     return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CDefView::IShellFolderView_GetAutoArrange()
-{
-    TRACE("(%p)\n", this);
-    return GetAutoArrange();
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::AddObject(PITEMID_CHILD pidl, UINT *item)

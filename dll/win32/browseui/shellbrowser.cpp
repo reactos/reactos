@@ -2563,13 +2563,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::v_MayTranslateAccelerator(MSG *pmsg)
             return S_OK;
     }
 
-    if (fCurrentShellView->TranslateAcceleratorW(pmsg) != S_OK)
-    {
-        if (TranslateAcceleratorSB(pmsg, 0) != S_OK)
-            return S_FALSE;
-        return S_OK;
-    }
-    return S_OK;
+    return fCurrentShellView->TranslateAcceleratorW(pmsg);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::_GetBorderDWHelper(IUnknown *punkSrc, LPRECT lprectBorder, BOOL bUseHmonitor)
