@@ -972,7 +972,6 @@ CDefaultContextMenu::DoRefresh(
             SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, pidl, NULL);
             ILFree(pidl);
         }
-        ppf2->Release();
     }
     return hr;
 }
