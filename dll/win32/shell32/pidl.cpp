@@ -71,7 +71,7 @@ static BOOL ILGetDisplayNameExA(IShellFolder * psf, LPCITEMIDLIST pidl, LPSTR pa
 BOOL WINAPI ILGetDisplayNameExW(IShellFolder * psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type)
 {
     CComPtr<IShellFolder>        psfParent;
-    IShellFolder * lsf = psf;
+    CComPtr<IShellFolder> lsf = psf;
     HRESULT ret = NO_ERROR;
     LPCITEMIDLIST pidllast;
     STRRET strret;
@@ -133,8 +133,6 @@ BOOL WINAPI ILGetDisplayNameExW(IShellFolder * psf, LPCITEMIDLIST pidl, LPWSTR p
 
     TRACE("%p %p %s\n", psf, pidl, debugstr_w(path));
 
-    if (!psf)
-        lsf->Release();
     return SUCCEEDED(ret);
 }
 

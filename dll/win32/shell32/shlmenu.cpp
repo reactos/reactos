@@ -114,7 +114,9 @@ static LPFMINFO FM_SetMenuParameter(
  *
  */
 static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
-{    IShellFolder    *lpsf, *lpsf2;
+{
+    CComPtr<IShellFolder> lpsf;
+    CComPtr<IShellFolder> lpsf2;
     ULONG        ulItemAttr = SFGAO_FOLDER;
     UINT        uID, uEnumFlags;
     LPFNFMCALLBACK    lpfnCallback;
@@ -129,23 +131,23 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
     MenuInfo.cbSize = sizeof(MENUINFO);
     MenuInfo.fMask = MIM_MENUDATA;
 
-    if (! GetMenuInfo(hmenu, &MenuInfo))
-      return FALSE;
+    if (!GetMenuInfo(hmenu, &MenuInfo))
+        return FALSE;
 
-    menudata = (LPFMINFO)MenuInfo.dwMenuData;
+    menudata = (LPFMINFO) MenuInfo.dwMenuData;
 
     if ((menudata == 0) || (MenuInfo.cbSize != sizeof(MENUINFO)))
     {
-      ERR("menudata corrupt: %p %u\n", menudata, MenuInfo.cbSize);
-      return 0;
+        ERR("menudata corrupt: %p %u\n", menudata, MenuInfo.cbSize);
+        return 0;
     }
 
     if (menudata->bInitialized)
-      return 0;
+        return 0;
 
-    pidl = (pAlternatePidl? pAlternatePidl: menudata->pidl);
+    pidl = (pAlternatePidl ? pAlternatePidl : menudata->pidl);
     if (!pidl)
-      return 0;
+        return 0;
 
     uID = menudata->uID;
     uEnumFlags = menudata->uEnumFlags;
@@ -154,73 +156,70 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 
     SetMenuInfo(hmenu, &MenuInfo);
 
-    if (SUCCEEDED (SHGetDesktopFolder(&lpsf)))
+    if (SUCCEEDED(SHGetDesktopFolder(&lpsf)))
     {
-      if (SUCCEEDED(lpsf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &lpsf2))))
-      {
-        IEnumIDList    *lpe = NULL;
-
-        if (SUCCEEDED (lpsf2->EnumObjects(0, uEnumFlags, &lpe )))
+        if (SUCCEEDED(lpsf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &lpsf2))))
         {
+            CComPtr<IEnumIDList> lpe;
 
-          LPITEMIDLIST pidlTemp = NULL;
-          ULONG ulFetched;
+            if (SUCCEEDED(lpsf2->EnumObjects(0, uEnumFlags, &lpe)))
+            {
 
-          while ((!bAbortInit) && (S_OK == lpe->Next(1,&pidlTemp,&ulFetched)))
-          {
-        if (SUCCEEDED (lpsf->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlTemp, &ulItemAttr)))
-        {
-          ILGetDisplayNameExW(NULL, pidlTemp, sTemp, ILGDN_FORPARSING);
-          if (! (PidlToSicIndex(lpsf, pidlTemp, FALSE, 0, &iIcon)))
-            iIcon = FM_BLANK_ICON;
-          if ( SFGAO_FOLDER & ulItemAttr)
-          {
-            LPFMINFO lpFmMi;
-            MENUINFO MenuInfo;
-            HMENU hMenuPopup = CreatePopupMenu();
+                LPITEMIDLIST pidlTemp = NULL;
+                ULONG ulFetched;
 
-            lpFmMi = (LPFMINFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
+                while ((!bAbortInit) && (S_OK == lpe->Next(1, &pidlTemp, &ulFetched)))
+                {
+                    if (SUCCEEDED(lpsf->GetAttributesOf(1, (LPCITEMIDLIST*) &pidlTemp, &ulItemAttr)))
+                    {
+                        ILGetDisplayNameExW(NULL, pidlTemp, sTemp, ILGDN_FORPARSING);
+                        if (!(PidlToSicIndex(lpsf, pidlTemp, FALSE, 0, &iIcon)))
+                            iIcon = FM_BLANK_ICON;
+                        if (SFGAO_FOLDER & ulItemAttr)
+                        {
+                            LPFMINFO lpFmMi;
+                            MENUINFO MenuInfo;
+                            HMENU hMenuPopup = CreatePopupMenu();
 
-            lpFmMi->pidl = ILCombine(pidl, pidlTemp);
-            lpFmMi->uEnumFlags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+                            lpFmMi = (LPFMINFO) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
 
-            MenuInfo.cbSize = sizeof(MENUINFO);
-            MenuInfo.fMask = MIM_MENUDATA;
-            MenuInfo.dwMenuData = (ULONG_PTR) lpFmMi;
-            SetMenuInfo (hMenuPopup, &MenuInfo);
+                            lpFmMi->pidl = ILCombine(pidl, pidlTemp);
+                            lpFmMi->uEnumFlags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
 
-            FileMenu_AppendItemW (hmenu, sTemp, uID, iIcon, hMenuPopup, FM_DEFAULT_HEIGHT);
-          }
-          else
-          {
-            LPWSTR pExt = PathFindExtensionW(sTemp);
-            if (pExt)
-              *pExt = 0;
-            FileMenu_AppendItemW (hmenu, sTemp, uID, iIcon, 0, FM_DEFAULT_HEIGHT);
-          }
+                            MenuInfo.cbSize = sizeof(MENUINFO);
+                            MenuInfo.fMask = MIM_MENUDATA;
+                            MenuInfo.dwMenuData = (ULONG_PTR) lpFmMi;
+                            SetMenuInfo(hMenuPopup, &MenuInfo);
+
+                            FileMenu_AppendItemW(hmenu, sTemp, uID, iIcon, hMenuPopup, FM_DEFAULT_HEIGHT);
+                        }
+                        else
+                        {
+                            LPWSTR pExt = PathFindExtensionW(sTemp);
+                            if (pExt)
+                                *pExt = 0;
+                            FileMenu_AppendItemW(hmenu, sTemp, uID, iIcon, 0, FM_DEFAULT_HEIGHT);
+                        }
+                    }
+
+                    if (lpfnCallback)
+                    {
+                        TRACE("enter callback\n");
+                        lpfnCallback(pidl, pidlTemp);
+                        TRACE("leave callback\n");
+                    }
+
+                    NumberOfItems++;
+                }
+            }
         }
-
-        if (lpfnCallback)
-        {
-          TRACE("enter callback\n");
-          lpfnCallback ( pidl, pidlTemp);
-          TRACE("leave callback\n");
-        }
-
-        NumberOfItems++;
-          }
-          lpe->Release();
-        }
-        lpsf2->Release();
-      }
-      lpsf->Release();
     }
 
-    if ( GetMenuItemCount (hmenu) == 0 )
+    if (GetMenuItemCount(hmenu) == 0)
     {
-          static const WCHAR szEmpty[] = { '(','e','m','p','t','y',')',0 };
-      FileMenu_AppendItemW (hmenu, szEmpty, uID, FM_BLANK_ICON, 0, FM_DEFAULT_HEIGHT);
-      NumberOfItems++;
+        static const WCHAR szEmpty [] = { '(', 'e', 'm', 'p', 't', 'y', ')', 0 };
+        FileMenu_AppendItemW(hmenu, szEmpty, uID, FM_BLANK_ICON, 0, FM_DEFAULT_HEIGHT);
+        NumberOfItems++;
     }
 
     menudata->bInitialized = TRUE;
@@ -228,6 +227,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 
     return NumberOfItems;
 }
+
 /*************************************************************************
  * FileMenu_Create                [SHELL32.114]
  *

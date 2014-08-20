@@ -241,11 +241,11 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
         {
             static const WCHAR szFull[] = {'F','u','l','l',0};
             static const WCHAR szEmpty[] = {'E','m','p','t','y',0};
-            IEnumIDList *EnumIDList = NULL;
+            CComPtr<IEnumIDList> EnumIDList;
             CoInitialize(NULL);
 
-            IShellFolder2 *psfRecycleBin = NULL;
-            IShellFolder *psfDesktop = NULL;
+            CComPtr<IShellFolder2> psfRecycleBin;
+            CComPtr<IShellFolder> psfDesktop;
             hr = SHGetDesktopFolder(&psfDesktop);
 
             if (SUCCEEDED(hr))
@@ -262,13 +262,6 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             } else {
                 iconname = szEmpty;
             }
-
-            if (psfDesktop)
-                psfDesktop->Release();
-            if (psfRecycleBin)
-                psfRecycleBin->Release();
-            if (EnumIDList)
-                EnumIDList->Release();
         }
 
         if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))

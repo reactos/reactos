@@ -1761,7 +1761,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                 if (SUCCEEDED(m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, (LPCITEMIDLIST*)m_apidl, IID_NULL_PPV_ARG(IDataObject, &pda))))
                 {
-                    IDropSource * pds = (IDropSource *)this;    /* own DropSource interface */
+                    CComPtr<IDropSource> pds = static_cast<IDropSource *>(this);    /* own DropSource interface */
 
                     if (SUCCEEDED(m_pSFParent->GetAttributesOf(m_cidl, (LPCITEMIDLIST*)m_apidl, &dwAttributes)))
                     {

@@ -1274,8 +1274,8 @@ static HKEY ShellExecute_GetClassKey(const SHELLEXECUTEINFOW *sei)
 static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
 {
     LPCITEMIDLIST pidllast = NULL;
-    IDataObject *dataobj = NULL;
-    IShellFolder *shf = NULL;
+    CComPtr<IDataObject> dataobj;
+    CComPtr<IShellFolder> shf;
     LPITEMIDLIST pidl = NULL;
     HRESULT r;
 
@@ -1303,15 +1303,13 @@ static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
 end:
     if (pidl != sei->lpIDList)
         ILFree(pidl);
-    if (shf)
-        shf->Release();
-    return dataobj;
+    return dataobj.Detach();
 }
 
 static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
         LPSHELLEXECUTEINFOW sei)
 {
-    IContextMenu *cm = NULL;
+    CComPtr<IContextMenu> cm = NULL;
     CMINVOKECOMMANDINFOEX ici;
     MENUITEMINFOW info;
     WCHAR string[0x80];
@@ -1374,13 +1372,12 @@ static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
 end:
     if (hmenu)
         DestroyMenu( hmenu );
-    if (cm)
-        cm->Release();
     return r;
 }
 
 static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECUTEINFOW sei)
 {
+    // Can not use CComPtr here because of CoUninitialize at the end, before the destructors would run.
     IDataObject *dataobj = NULL;
     IObjectWithSite *ows = NULL;
     IShellExtInit *obj = NULL;

@@ -54,7 +54,7 @@ private:
     LPWSTR m_wszPath;
     SHELLNEW_ITEM *m_pItems;
     SHELLNEW_ITEM *m_pLinkItem;
-    IUnknown *m_pSite;
+    CComPtr<IUnknown> m_pSite;
     HMENU m_hSubMenu;
     HBITMAP m_hbmFolder, m_hbmLink;
 

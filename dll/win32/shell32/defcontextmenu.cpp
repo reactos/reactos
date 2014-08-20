@@ -308,7 +308,7 @@ HasClipboardData()
         STGMEDIUM medium;
         FORMATETC formatetc;
 
-        TRACE("pDataObj=%p\n", pDataObj);
+        TRACE("pDataObj=%p\n", pDataObj.p);
 
         /* Set the FORMATETC structure*/
         InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
@@ -933,15 +933,13 @@ NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh)
     if (!lpSB)
         return E_FAIL;
 
-    IShellView * lpSV = NULL;
+    CComPtr<IShellView> lpSV;
     if (FAILED(lpSB->QueryActiveShellView(&lpSV)))
         return E_FAIL;
 
     HWND hwndSV = NULL;
     if (SUCCEEDED(lpSV->GetWindow(&hwndSV)))
         SendMessageW(hwndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0), 0);
-
-    lpSV->Release();
     return S_OK;
 }
 

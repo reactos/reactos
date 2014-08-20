@@ -177,8 +177,9 @@ static void InitializeTreeView( browse_info *info )
     LPITEMIDLIST pidlParent, pidlChild;
     HIMAGELIST hImageList;
     HRESULT hr;
-    IShellFolder *lpsfParent, *lpsfRoot;
-    IEnumIDList * pEnumChildren = NULL;
+    CComPtr<IShellFolder> lpsfParent;
+    CComPtr<IShellFolder> lpsfRoot;
+    CComPtr<IEnumIDList> pEnumChildren;
     HTREEITEM item;
     DWORD flags;
     LPCITEMIDLIST root = info->lpBrowseInfo->pidlRoot;
@@ -232,12 +233,10 @@ static void InitializeTreeView( browse_info *info )
         hr = lpsfParent->BindToObject(pidlChild, 0, IID_PPV_ARG(IShellFolder, &lpsfRoot));
     } else {
         lpsfRoot = lpsfParent;
-        hr = lpsfParent->AddRef();
     }
 
     if (FAILED(hr)) {
         WARN("Could not bind to root shell folder! hr = %08x\n", hr);
-        lpsfParent->Release();
         ILFree(pidlChild);
         ILFree(pidlParent);
         return;
@@ -247,8 +246,6 @@ static void InitializeTreeView( browse_info *info )
     hr = lpsfRoot->EnumObjects(info->hWnd, flags, &pEnumChildren );
     if (FAILED(hr)) {
         WARN("Could not get child iterator! hr = %08x\n", hr);
-        lpsfParent->Release();
-        lpsfRoot->Release();
         ILFree(pidlChild);
         ILFree(pidlParent);
         return;
@@ -261,8 +258,6 @@ static void InitializeTreeView( browse_info *info )
 
     ILFree(pidlChild);
     ILFree(pidlParent);
-    lpsfRoot->Release();
-    lpsfParent->Release();
 }
 
 static int GetIcon(LPCITEMIDLIST lpi, UINT uFlags)
@@ -366,6 +361,7 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
     tvi.lParam = (LPARAM)lptvid;
 
     lpsf->AddRef();
+    pEnumIL->AddRef();
     lptvid->lpsfParent = lpsf;
     lptvid->lpi    = ILClone(pidl);
     lptvid->lpifq    = pidlParent ? ILCombine(pidlParent, pidl) : ILClone(pidl);
@@ -411,8 +407,8 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
     while (S_OK == lpe->Next(1,&pidlTemp,&ulFetched))
     {
         ULONG ulAttrs = SFGAO_HASSUBFOLDER | SFGAO_FOLDER;
-        IEnumIDList* pEnumIL = NULL;
-        IShellFolder* pSFChild = NULL;
+        CComPtr<IEnumIDList> pEnumIL;
+        CComPtr<IShellFolder> pSFChild;
         lpsf->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlTemp, &ulAttrs);
         if (ulAttrs & SFGAO_FOLDER)
         {
@@ -426,11 +422,9 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                         if ((pEnumIL->Skip(1) != S_OK) ||
                              FAILED(pEnumIL->Reset()))
                         {
-                            pEnumIL->Release();
                             pEnumIL = NULL;
                         }
                     }
-                    pSFChild->Release();
                 }
         }
 
@@ -508,7 +502,7 @@ static LRESULT BrsFolder_Treeview_Delete( browse_info *info, NMTREEVIEWW *pnmtv 
 
 static LRESULT BrsFolder_Treeview_Expand( browse_info *info, NMTREEVIEWW *pnmtv )
 {
-    IShellFolder *lpsf2 = NULL;
+    CComPtr<IShellFolder> lpsf2;
     LPTV_ITEMDATA lptvid = (LPTV_ITEMDATA) pnmtv->itemNew.lParam;
     HRESULT r;
 

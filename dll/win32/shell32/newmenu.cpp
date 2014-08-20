@@ -544,12 +544,7 @@ HRESULT STDMETHODCALLTYPE CNewMenu::SetSite(IUnknown *pUnkSite)
 
 HRESULT STDMETHODCALLTYPE CNewMenu::GetSite(REFIID riid, void **ppvSite)
 {
-    if (ppvSite == NULL)
-        return E_POINTER;
-    *ppvSite = m_pSite;
-    if (m_pSite != NULL)
-        m_pSite->AddRef();
-    return S_OK;
+    return m_pSite->QueryInterface(riid, ppvSite);
 }
 
 HRESULT
@@ -596,8 +591,8 @@ HRESULT
 WINAPI
 CNewMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
-    IShellBrowser *lpSB = NULL;
-    CComPtr<IShellView> lpSV = NULL;
+    CComPtr<IShellBrowser> lpSB;
+    CComPtr<IShellView> lpSV;
     HRESULT hr = E_FAIL;
 
     /* Note: CWM_GETISHELLBROWSER returns shell browser without adding reference */

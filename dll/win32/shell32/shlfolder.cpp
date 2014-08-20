@@ -204,7 +204,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
                 LPCITEMIDLIST pidlChild, REFCLSID clsid, LPVOID * ppvOut)
 {
     HRESULT hr;
-    IShellFolder* pShellFolder = NULL;
+    CComPtr<IShellFolder> pShellFolder;
 
     TRACE ("%p %s %p\n", pidlRoot, debugstr_w(pathRoot), pidlChild);
 
@@ -250,7 +250,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
         ILFree (pidlAbsolute);
     }
 
-    *ppvOut = pShellFolder;
+    *ppvOut = pShellFolder.Detach();
 
     TRACE ("-- (%p) ret=0x%08x\n", *ppvOut, hr);
 
@@ -490,12 +490,11 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
             CComPtr<IShellFolder> psf2;
             if (SUCCEEDED(psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &psf2))))
             {
-                IEnumIDList *pEnumIL = NULL;
+                CComPtr<IEnumIDList> pEnumIL;
                 if (SUCCEEDED(psf2->EnumObjects(0, SHCONTF_FOLDERS, &pEnumIL)))
                 {
                     if (pEnumIL->Skip(1) != S_OK)
                         *pdwAttributes &= ~SFGAO_HASSUBFOLDER;
-                    pEnumIL->Release();
                 }
             }
         }

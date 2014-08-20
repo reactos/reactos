@@ -76,7 +76,7 @@ private:
     BOOL          bDirty;
     INT           iIdOpen;  /* id of the "Open" entry in the context menu */
     CComPtr<IUnknown>        site;
-    IDropTarget   *mDropTarget;
+    CComPtr<IDropTarget>   mDropTarget;
 public:
     CShellLink();
     ~CShellLink();
