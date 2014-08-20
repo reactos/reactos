@@ -393,7 +393,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
     pEntry->iIdCmdFirst = 0;
     pEntry->pNext = NULL;
     pEntry->NumIds = 0;
-    pEntry->pCM = pcm;
+    pEntry->pCM = pcm.Detach();
     memcpy(&pEntry->ClassID, pclsid, sizeof(CLSID));
 
     if (m_pDynamicEntries)
