@@ -404,7 +404,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
 static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
 {
     STRRET strret;
-    IShellFolder *desktop;
+    CComPtr<IShellFolder> desktop;
 
     HRESULT hr = SHGetDesktopFolder(&desktop);
 
@@ -414,8 +414,6 @@ static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR psz
 
         if (SUCCEEDED(hr))
             StrRetToStrNW(pszPath, uOutSize, &strret, pidl);
-
-        desktop->Release();
     }
 
     return hr;
@@ -1782,15 +1780,13 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     /* process the IDList */
     if (sei_tmp.fMask & SEE_MASK_IDLIST)
     {
-        IShellExecuteHookW* pSEH;
+        CComPtr<IShellExecuteHookW> pSEH;
 
         HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
 
         if (SUCCEEDED(hr))
         {
             hr = pSEH->Execute(&sei_tmp);
-
-            pSEH->Release();
 
             if (hr == S_OK)
             {

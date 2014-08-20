@@ -448,7 +448,7 @@ HRESULT WINAPI CPrinterFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LP
  */
 HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID * ppvOut)
 {
-    LPSHELLVIEW pShellView;
+    CComPtr<IShellView> pShellView;
     HRESULT hr = E_INVALIDARG;
 
     TRACE("(%p)->(hwnd=%p,%s,%p)\n", this,

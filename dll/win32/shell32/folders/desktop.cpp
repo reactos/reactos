@@ -637,14 +637,14 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
     {
         pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
+        pObj = IExtractIconA_Constructor (pidl);
         SHFree (pidl);
         hr = S_OK;
     }
     else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
     {
         pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
+        pObj = IExtractIconW_Constructor (pidl);
         SHFree (pidl);
         hr = S_OK;
     }
@@ -1476,7 +1476,7 @@ HRESULT WINAPI CDesktopFolder::Drop(IDataObject *pDataObject,
 
         if (SUCCEEDED(hr))
         {
-            IDropTarget *pDT;
+            CComPtr<IDropTarget> pDT;
             hr = this->BindToObject(pidl, NULL, IID_PPV_ARG(IDropTarget, &pDT));
             CoTaskMemFree(pidl);
             if (SUCCEEDED(hr))
@@ -1517,13 +1517,12 @@ HRESULT WINAPI CDesktopFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut
 
             if (SUCCEEDED(hr))
             {
-                IShellFolder *psf;
+                CComPtr<IShellFolder> psf;
                 hr = this->BindToObject(pidlNext, NULL, IID_PPV_ARG(IShellFolder, &psf));
                 CoTaskMemFree(pidlNext);
                 if (SUCCEEDED(hr))
                 {
                     hr = psf->GetUIObjectOf(NULL, 1, &pidl, IID_IDropTarget, NULL, ppvOut);
-                    psf->Release();
                     if (FAILED(hr))
                         ERR("FS GetUIObjectOf failed: %x\n", hr);
                 }

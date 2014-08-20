@@ -2173,7 +2173,7 @@ HRESULT WINAPI CShellLink::DragEnter(IDataObject *pDataObject,
 {
     TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
     LPCITEMIDLIST pidlLast;
-    IShellFolder *psf;
+    CComPtr<IShellFolder> psf;
 
     HRESULT hr = SHBindToParent(pPidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
 
@@ -2185,8 +2185,6 @@ HRESULT WINAPI CShellLink::DragEnter(IDataObject *pDataObject,
             hr = mDropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
         else 
             *pdwEffect = DROPEFFECT_NONE;
-
-        psf->Release();
     }
     else
         *pdwEffect = DROPEFFECT_NONE;

@@ -46,7 +46,7 @@ typedef struct tagbrowse_info
 
 typedef struct tagTV_ITEMDATA
 {
-   LPSHELLFOLDER lpsfParent; /* IShellFolder of the parent */
+   IShellFolder* lpsfParent; /* IShellFolder of the parent */
    LPITEMIDLIST  lpi;        /* PIDL relative to parent */
    LPITEMIDLIST  lpifq;      /* Fully qualified PIDL */
    IEnumIDList*  pEnumIL;    /* Children iterator */
@@ -81,9 +81,9 @@ static const LAYOUT_INFO g_layout_info[] =
                         BIF_NEWDIALOGSTYLE | \
                         BIF_BROWSEINCLUDEFILES)
 
-static void FillTreeView(browse_info*, LPSHELLFOLDER,
+static void FillTreeView(browse_info*, IShellFolder*,
                LPITEMIDLIST, HTREEITEM, IEnumIDList*);
-static HTREEITEM InsertTreeViewItem( browse_info*, IShellFolder *,
+static HTREEITEM InsertTreeViewItem( browse_info*, IShellFolder*,
                LPCITEMIDLIST, LPCITEMIDLIST, IEnumIDList*, HTREEITEM);
 
 static const WCHAR szBrowseFolderInfo[] = L"__WINE_BRSFOLDERDLG_INFO";
@@ -206,10 +206,11 @@ static void InitializeTreeView( browse_info *info )
     ILRemoveLastID(pidlParent);
     pidlChild = ILClone(ILFindLastID(root));
 
-    if (_ILIsDesktop(pidlParent)) {
+    if (_ILIsDesktop(pidlParent))
+    {
         hr = SHGetDesktopFolder(&lpsfParent);
     } else {
-        IShellFolder *lpsfDesktop;
+        CComPtr<IShellFolder> lpsfDesktop;
         hr = SHGetDesktopFolder(&lpsfDesktop);
         if (FAILED(hr)) {
             WARN("SHGetDesktopFolder failed! hr = %08x\n", hr);
@@ -218,7 +219,6 @@ static void InitializeTreeView( browse_info *info )
             return;
         }
         hr = lpsfDesktop->BindToObject(pidlParent, 0, IID_PPV_ARG(IShellFolder, &lpsfParent));
-        lpsfDesktop->Release();
     }
 
     if (FAILED(hr)) {
@@ -310,7 +310,7 @@ static void GetNormalAndSelectedIcons(LPITEMIDLIST lpifq, LPTVITEMW lpTV_ITEM)
  *  Success: TRUE
  *  Failure: FALSE
  */
-static BOOL GetName(LPSHELLFOLDER lpsf, LPCITEMIDLIST lpi, DWORD dwFlags, LPWSTR lpFriendlyName)
+static BOOL GetName(IShellFolder * lpsf, LPCITEMIDLIST lpi, DWORD dwFlags, LPWSTR lpFriendlyName)
 {
     BOOL   bSuccess=TRUE;
     STRRET str;
@@ -714,8 +714,9 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
 static HRESULT BrsFolder_NewFolder(browse_info *info)
 {
     DWORD flags = BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags);
-    IShellFolder *desktop, *cur;
-    ISFHelper *sfhelper;
+    CComPtr<IShellFolder> desktop;
+    CComPtr<IShellFolder> cur;
+    CComPtr<ISFHelper> sfhelper;
     WCHAR name[MAX_PATH];
     HTREEITEM parent, added;
     LPTV_ITEMDATA item_data;
@@ -734,7 +735,6 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(FAILED(hr))
         return hr;
     hr = desktop->BindToObject(info->pidlRet, 0, IID_PPV_ARG(IShellFolder, &cur));
-    desktop->Release();
     if(FAILED(hr))
         return hr;
 
@@ -750,7 +750,6 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(len<MAX_PATH)
         name[len++] = '\\';
     hr = sfhelper->GetUniqueName(&name[len], MAX_PATH-len);
-    sfhelper->Release();
     if(FAILED(hr))
         goto cleanup;
 
@@ -792,7 +791,6 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
         goto cleanup;
 
     added = InsertTreeViewItem(info, cur, new_item, item_data->lpifq, NULL, parent);
-    cur->Release();
     SHFree(new_item);
 
     SendMessageW(info->hwndTreeView, TVM_SORTCHILDREN, FALSE, (LPARAM)parent);
@@ -842,7 +840,7 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
 
     /* If 'selection' is a string, convert to a Shell ID List. */ 
     if (is_str) {
-        IShellFolder *psfDesktop;
+        CComPtr<IShellFolder> psfDesktop;
         HRESULT hr;
 
         hr = SHGetDesktopFolder(&psfDesktop);
@@ -851,7 +849,6 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
 
         hr = psfDesktop->ParseDisplayName(NULL, NULL, (LPOLESTR)selection,
                                           NULL, &pidlSelection, NULL);
-        psfDesktop->Release();
         if (FAILED(hr))
             goto done;
     }

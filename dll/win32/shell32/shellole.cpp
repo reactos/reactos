@@ -68,7 +68,7 @@ DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
 HRESULT WINAPI SHCoCreateInstance(
     LPCWSTR aclsid,
     const CLSID *clsid,
-    LPUNKNOWN pUnkOuter,
+    IUnknown * pUnkOuter,
     REFIID refiid,
     LPVOID *ppv)
 {
@@ -314,7 +314,7 @@ public:
     HRESULT Initialize(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInstx);
 
     // IClassFactory
-    virtual HRESULT WINAPI CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, LPVOID *ppvObject);
+    virtual HRESULT WINAPI CreateInstance(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject);
     virtual HRESULT WINAPI LockServer(BOOL fLock);
 
 BEGIN_COM_MAP(IDefClFImpl)
@@ -346,7 +346,7 @@ HRESULT IDefClFImpl::Initialize(LPFNCREATEINSTANCE lpfnCIx, PLONG pcRefDllx, con
 /******************************************************************************
  * IDefClF_fnCreateInstance
  */
-HRESULT WINAPI IDefClFImpl::CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, LPVOID *ppvObject)
+HRESULT WINAPI IDefClFImpl::CreateInstance(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject)
 {
     TRACE("%p->(%p,%s,%p)\n", this, pUnkOuter, shdebugstr_guid(&riid), ppvObject);
 

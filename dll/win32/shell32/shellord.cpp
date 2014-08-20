@@ -484,13 +484,13 @@ HRESULT WINAPI SHRevokeDragDrop(HWND hWnd)
  */
 HRESULT WINAPI SHDoDragDrop(
     HWND hWnd,
-    LPDATAOBJECT lpDataObject,
+    IDataObject * lpDataObject,
     LPDROPSOURCE lpDropSource,
     DWORD dwOKEffect,
     LPDWORD pdwEffect)
 {
     FIXME("(%p %p %p 0x%08x %p):stub.\n",
-    hWnd, lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
+        hWnd, lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
     return DoDragDrop(lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
 }
 
@@ -1015,7 +1015,7 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
     LPCSFV psvcbi,    /* [in] shelltemplate struct */
     IShellView **ppv) /* [out] IShellView pointer */
 {
-    IShellView *psf;
+    CComPtr<IShellView> psf;
     HRESULT hRes;
 
     TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
@@ -1028,7 +1028,6 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
         return hRes;
 
     hRes = psf->QueryInterface(IID_PPV_ARG(IShellView, ppv));
-    psf->Release();
 
     return hRes;
 }
@@ -1050,14 +1049,14 @@ EXTERN_C BOOL WINAPI SHRunControlPanel (LPCWSTR lpcszCmdLine, HWND hwndMsgParent
     return 0;
 }
 
-static LPUNKNOWN SHELL32_IExplorerInterface=0;
+static IUnknown * SHELL32_IExplorerInterface=0;
 /*************************************************************************
  * SHSetInstanceExplorer            [SHELL32.176]
  *
  * NOTES
  *  Sets the interface
  */
-VOID WINAPI SHSetInstanceExplorer (LPUNKNOWN lpUnknown)
+VOID WINAPI SHSetInstanceExplorer (IUnknown * lpUnknown)
 {    TRACE("%p\n", lpUnknown);
     SHELL32_IExplorerInterface = lpUnknown;
 }
@@ -1897,7 +1896,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
     const FORMATETC *lpFormats,
     LPENUMFORMATETC *ppenumFormatetc)
 {
-    IEnumFORMATETC *pef;
+    CComPtr<IEnumFORMATETC> pef;
     HRESULT hRes;
     TRACE("cf=%d fe=%p pef=%p\n", cFormats, lpFormats, ppenumFormatetc);
 
@@ -1907,7 +1906,6 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 
     pef->AddRef();
     hRes = pef->QueryInterface(IID_PPV_ARG(IEnumFORMATETC, ppenumFormatetc));
-    pef->Release();
 
     return hRes;
 }
@@ -1918,7 +1916,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
  */
 HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
-    IShellView *psf;
+    CComPtr<IShellView> psf;
     HRESULT hRes;
 
     *ppsv = NULL;
@@ -1933,7 +1931,6 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **pps
         return hRes;
 
     hRes = psf->QueryInterface(IID_PPV_ARG(IShellView, ppsv));
-    psf->Release();
 
     return hRes;
 }

@@ -212,11 +212,11 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
     if (SUCCEEDED (hr))
     {
         LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
-        IPersistFolder *pPF;
-        IPersistFolder3 *ppf;
+        CComPtr<IPersistFolder> ppf;
+        CComPtr<IPersistFolder3> ppf3;
 
         if (_ILIsFolder(pidlChild) &&
-            SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf))))
+            SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3))))
         {
             PERSIST_FOLDER_TARGET_INFO ppfti;
 
@@ -241,13 +241,11 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
                     hr = E_INVALIDARG;
             }
 
-            ppf->InitializeEx(NULL, pidlAbsolute, &ppfti);
-            ppf->Release();
+            ppf3->InitializeEx(NULL, pidlAbsolute, &ppfti);
         }
-        else if (SUCCEEDED((hr = pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder, &pPF)))))
+        else if (SUCCEEDED((hr = pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder, &ppf)))))
         {
-            pPF->Initialize(pidlAbsolute);
-            pPF->Release();
+            ppf->Initialize(pidlAbsolute);
         }
         ILFree (pidlAbsolute);
     }
@@ -280,7 +278,7 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
                              LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut)
 {
     GUID const *clsid;
-    IShellFolder *pSF;
+    CComPtr<IShellFolder> pSF;
     HRESULT hr;
     LPITEMIDLIST pidlChild;
 
@@ -325,7 +323,6 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
             /* go deeper */
             hr = pSF->BindToObject(ILGetNext (pidlComplete), NULL, riid, ppvOut);
         }
-        pSF->Release();
     }
 
     TRACE ("-- returning (%p) %08x\n", *ppvOut, hr);
@@ -359,7 +356,7 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
     pidlFirst = ILCloneFirst(pidl);
     if (pidlFirst)
     {
-        IShellFolder *psfChild;
+        CComPtr<IShellFolder> psfChild;
 
         hr = psf->BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
         if (SUCCEEDED (hr))
@@ -373,7 +370,6 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
                 if(!StrRetToStrNW (szOut, dwOutLen, &strTemp, pidlNext))
                     hr = E_FAIL;
             }
-            psfChild->Release();
         }
         ILFree (pidlFirst);
     } else
@@ -491,7 +487,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 
         if (SFGAO_HASSUBFOLDER & *pdwAttributes)
         {
-            IShellFolder *psf2;
+            CComPtr<IShellFolder> psf2;
             if (SUCCEEDED(psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &psf2))))
             {
                 IEnumIDList *pEnumIL = NULL;
@@ -501,7 +497,6 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
                         *pdwAttributes &= ~SFGAO_HASSUBFOLDER;
                     pEnumIL->Release();
                 }
-                psf2->Release();
             }
         }
     } else
@@ -514,68 +509,73 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 /***********************************************************************
  *  SHELL32_CompareIDs
  */
-HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT SHELL32_CompareIDs(IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     int type1,
-      type2;
+        type2;
     char szTemp1[MAX_PATH];
     char szTemp2[MAX_PATH];
     HRESULT nReturn;
-    LPITEMIDLIST firstpidl,
-      nextpidl1,
-      nextpidl2;
-    IShellFolder *psf;
+    LPITEMIDLIST firstpidl;
+    LPITEMIDLIST nextpidl1;
+    LPITEMIDLIST nextpidl2;
+    CComPtr<IShellFolder> psf;
 
     /* test for empty pidls */
-    BOOL isEmpty1 = _ILIsDesktop (pidl1);
-    BOOL isEmpty2 = _ILIsDesktop (pidl2);
+    BOOL isEmpty1 = _ILIsDesktop(pidl1);
+    BOOL isEmpty2 = _ILIsDesktop(pidl2);
 
     if (isEmpty1 && isEmpty2)
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 0 );
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
     if (isEmpty1)
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
     if (isEmpty2)
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
 
     /* test for different types. Sort order is the PT_* constant */
-    type1 = _ILGetDataPointer (pidl1)->type;
-    type2 = _ILGetDataPointer (pidl2)->type;
+    type1 = _ILGetDataPointer(pidl1)->type;
+    type2 = _ILGetDataPointer(pidl2)->type;
     if (type1 < type2)
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
     else if (type1 > type2)
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
 
     /* test for name of pidl */
-    _ILSimpleGetText (pidl1, szTemp1, MAX_PATH);
-    _ILSimpleGetText (pidl2, szTemp2, MAX_PATH);
-    nReturn = lstrcmpiA (szTemp1, szTemp2);
+    _ILSimpleGetText(pidl1, szTemp1, MAX_PATH);
+    _ILSimpleGetText(pidl2, szTemp2, MAX_PATH);
+    nReturn = lstrcmpiA(szTemp1, szTemp2);
     if (nReturn < 0)
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
     else if (nReturn > 0)
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
 
     /* test of complex pidls */
-    firstpidl = ILCloneFirst (pidl1);
-    nextpidl1 = ILGetNext (pidl1);
-    nextpidl2 = ILGetNext (pidl2);
+    firstpidl = ILCloneFirst(pidl1);
+    nextpidl1 = ILGetNext(pidl1);
+    nextpidl2 = ILGetNext(pidl2);
 
     /* optimizing: test special cases and bind not deeper */
     /* the deeper shellfolder would do the same */
-    isEmpty1 = _ILIsDesktop (nextpidl1);
-    isEmpty2 = _ILIsDesktop (nextpidl2);
+    isEmpty1 = _ILIsDesktop(nextpidl1);
+    isEmpty2 = _ILIsDesktop(nextpidl2);
 
-    if (isEmpty1 && isEmpty2) {
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 0 );
-    } else if (isEmpty1) {
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
-    } else if (isEmpty2) {
-        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
-    /* optimizing end */
-    } else if (SUCCEEDED (iface->BindToObject(firstpidl, NULL, IID_PPV_ARG(IShellFolder, &psf)))) {
-    nReturn = psf->CompareIDs(lParam, nextpidl1, nextpidl2);
-    psf->Release();
+    if (isEmpty1 && isEmpty2) 
+    {
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
     }
-    ILFree (firstpidl);
+    else if (isEmpty1) 
+    {
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (WORD) -1);
+    }
+    else if (isEmpty2)
+    {
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 1);
+        /* optimizing end */
+    }
+    else if (SUCCEEDED(iface->BindToObject(firstpidl, NULL, IID_PPV_ARG(IShellFolder, &psf)))) {
+        nReturn = psf->CompareIDs(lParam, nextpidl1, nextpidl2);
+    }
+    ILFree(firstpidl);
     return nReturn;
 }
 
@@ -584,10 +584,10 @@ HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST p
  *
  *   Undocumented.
  */
-HRESULT WINAPI SHCreateLinks( HWND hWnd, LPCSTR lpszDir, LPDATAOBJECT lpDataObject,
+HRESULT WINAPI SHCreateLinks( HWND hWnd, LPCSTR lpszDir, IDataObject * lpDataObject,
                               UINT uFlags, LPITEMIDLIST *lppidlLinks)
 {
-    FIXME("%p %s %p %08x %p\n",hWnd,lpszDir,lpDataObject,uFlags,lppidlLinks);
+    FIXME("%p %s %p %08x %p\n", hWnd, lpszDir, lpDataObject, uFlags, lppidlLinks);
     return E_NOTIMPL;
 }
 

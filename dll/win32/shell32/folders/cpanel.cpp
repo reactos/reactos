@@ -547,12 +547,12 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
             hr = IDataObject_Constructor(hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
         } else if (IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1)) {
             pidl = ILCombine(pidlRoot, apidl[0]);
-            pObj = (LPUNKNOWN) IExtractIconA_Constructor(pidl);
+            pObj = IExtractIconA_Constructor(pidl);
             SHFree(pidl);
             hr = S_OK;
         } else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1)) {
             pidl = ILCombine(pidlRoot, apidl[0]);
-            pObj = (LPUNKNOWN) IExtractIconW_Constructor(pidl);
+            pObj = IExtractIconW_Constructor(pidl);
             SHFree(pidl);
             hr = S_OK;
         } else if ((IsEqualIID(riid, IID_IShellLinkW) || IsEqualIID(riid, IID_IShellLinkA))

@@ -560,7 +560,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCIT
 
 HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void **ppv)
 {
-    LPSHELLVIEW pShellView;
+    CComPtr<IShellView> pShellView;
     HRESULT hr = E_NOINTERFACE;
 
     TRACE("(%p, %p, %s, %p)\n", this, hwndOwner, debugstr_guid(&riid), ppv);
@@ -584,7 +584,6 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
         if (pShellView)
         {
             hr = pShellView->QueryInterface(riid, ppv);
-            pShellView->Release();
         }
     }
     else
@@ -855,7 +854,7 @@ HRESULT WINAPI CRecycleBin::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     HRESULT hr;
     LPSHELLBROWSER lpSB;
-    LPSHELLVIEW lpSV = NULL;
+    IShellView * lpSV = NULL;
 
     TRACE("%p %p verb %p\n", this, lpcmi, lpcmi->lpVerb);
 

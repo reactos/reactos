@@ -1755,7 +1755,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
             if (GetSelections())
             {
-                IDataObject * pda;
+                CComPtr<IDataObject> pda;
                 DWORD dwAttributes = SFGAO_CANLINK;
                 DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
 
@@ -1775,14 +1775,12 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     if (SUCCEEDED(pda->QueryInterface(IID_PPV_ARG(IAsyncOperation, &piaso))))
                     {
                         piaso->SetAsyncMode(TRUE);
-                        piaso->Release();
                     }
 
                     if (pds)
                     {                        DWORD dwEffect2;
                         DoDragDrop(pda, pds, dwEffect, &dwEffect2);
                     }
-                    pda->Release();
                 }
             }
             break;

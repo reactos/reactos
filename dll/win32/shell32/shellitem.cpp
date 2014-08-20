@@ -244,7 +244,7 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
     IShellFolder *psfParent, LPCITEMIDLIST pidl, IShellItem **ppsi)
 {
     HRESULT hr;
-    IShellItem *newShellItem;
+    CComPtr<IShellItem> newShellItem;
     LPITEMIDLIST new_pidl;
     CComPtr<IPersistIDList>            newPersistIDList;
 
@@ -308,6 +308,8 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
         return hr;
     }
     ILFree(new_pidl);
-    *ppsi = newShellItem;
+
+    *ppsi = newShellItem.Detach();
+
     return hr;
 }

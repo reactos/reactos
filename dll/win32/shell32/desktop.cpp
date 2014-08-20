@@ -45,7 +45,7 @@ private:
     HWND hWndDesktopListView;
     CComPtr<IShellDesktopTray>        ShellDesk;
     CComPtr<IShellView>                DesktopView;
-    IShellBrowser *DefaultShellBrowser;
+    CComPtr<IShellBrowser> DefaultShellBrowser;
     LPITEMIDLIST pidlDesktopDirectory;
     LPITEMIDLIST pidlDesktop;
 public:
@@ -159,7 +159,7 @@ HRESULT CDesktopBrowser::Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx)
 
 static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 {
-    IShellDesktopTray        *ShellDesk;
+    CComPtr<IShellDesktopTray>       ShellDesk;
     CComObject<CDesktopBrowser>        *pThis;
     HRESULT                    hRet;
 

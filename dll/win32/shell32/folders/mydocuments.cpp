@@ -283,7 +283,7 @@ HRESULT WINAPI CMyDocsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPC
  */
 HRESULT WINAPI CMyDocsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
-    LPSHELLVIEW pShellView;
+    CComPtr<IShellView> pShellView;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n",
@@ -309,7 +309,6 @@ HRESULT WINAPI CMyDocsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
         if (pShellView)
         {
             hr = pShellView->QueryInterface(riid, ppvOut);
-            pShellView->Release();
         }
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
@@ -401,14 +400,14 @@ HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMID
     else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
     {
         pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
+        pObj = IExtractIconA_Constructor (pidl);
         SHFree (pidl);
         hr = S_OK;
     }
     else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
     {
         pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
+        pObj = IExtractIconW_Constructor (pidl);
         SHFree (pidl);
         hr = S_OK;
     }

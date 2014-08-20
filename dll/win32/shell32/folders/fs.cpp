@@ -350,7 +350,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
 HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
         REFIID riid, LPVOID * ppvOut)
 {
-    LPSHELLVIEW pShellView;
+    CComPtr<IShellView> pShellView;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n", this, hwndOwner, shdebugstr_guid (&riid),
@@ -373,7 +373,6 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
             if (pShellView)
             {
                 hr = pShellView->QueryInterface(riid, ppvOut);
-                pShellView->Release();
             }
         }
     }
@@ -494,14 +493,14 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
         {
             pidl = ILCombine (pidlRoot, apidl[0]);
-            pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
+            pObj = IExtractIconA_Constructor (pidl);
             SHFree (pidl);
             hr = S_OK;
         }
         else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
         {
             pidl = ILCombine (pidlRoot, apidl[0]);
-            pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
+            pObj = IExtractIconW_Constructor (pidl);
             SHFree (pidl);
             hr = S_OK;
         }
@@ -862,7 +861,7 @@ HRESULT WINAPI CFSFolder::MapColumnToSCID (UINT column,
 
 HRESULT WINAPI CFSFolder::GetUniqueName(LPWSTR pwszName, UINT uLen)
 {
-    IEnumIDList *penum;
+    CComPtr<IEnumIDList> penum;
     HRESULT hr;
     WCHAR wszText[MAX_PATH];
     WCHAR wszNewFolder[25];
@@ -900,8 +899,6 @@ next:
                 goto next;
             }
         }
-
-        penum->Release();
     }
     return hr;
 }
@@ -1749,8 +1746,8 @@ HRESULT WINAPI CFSFolder::_DoDrop(IDataObject *pDataObject,
 DWORD WINAPI CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
     CoInitialize(NULL);
     _DoDropData *data = static_cast<_DoDropData*>(lpParameter);
-    IDataObject *pDataObject;
-    HRESULT hr = CoGetInterfaceAndReleaseStream (data->pStream, IID_IDataObject, (void**) &pDataObject);
+    CComPtr<IDataObject> pDataObject;
+    HRESULT hr = CoGetInterfaceAndReleaseStream (data->pStream, IID_PPV_ARG(IDataObject, &pDataObject));
 
     if (SUCCEEDED(hr))
     {
@@ -1760,7 +1757,6 @@ DWORD WINAPI CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
         {
             pAsyncOperation->EndOperation(hr, NULL, data->pdwEffect);
         }
-        pDataObject->Release();
     }
     //Release the CFSFolder and data object holds in the copying thread.
     data->This->Release();
@@ -1861,7 +1857,7 @@ HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandler(const CLSID *pclsid, LPC
     TRACE("CFSFolder::_LoadDynamicDropTargetHandler entered\n");
     HRESULT hr;
 
-    IPersistFile *pp;
+    CComPtr<IPersistFile> pp;
     hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IPersistFile, &pp));
     if (hr != S_OK)
     {
@@ -1875,6 +1871,5 @@ HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandler(const CLSID *pclsid, LPC
         ERR("Failed to query for interface IID_IShellExtInit hr %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
         return hr;
     }
-    pp->Release();
     return hr;
 }

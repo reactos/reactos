@@ -51,7 +51,7 @@ static LPWSTR _ILGetTextPointerW(LPCITEMIDLIST pidl);
  * RETURNS
  *  True if the display name could be retrieved successfully, False otherwise
  */
-static BOOL ILGetDisplayNameExA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPSTR path, DWORD type)
+static BOOL ILGetDisplayNameExA(IShellFolder * psf, LPCITEMIDLIST pidl, LPSTR path, DWORD type)
 {
     BOOL ret = FALSE;
     WCHAR wPath[MAX_PATH];
@@ -68,10 +68,10 @@ static BOOL ILGetDisplayNameExA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPSTR pat
     return ret;
 }
 
-BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type)
+BOOL WINAPI ILGetDisplayNameExW(IShellFolder * psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type)
 {
     CComPtr<IShellFolder>        psfParent;
-    LPSHELLFOLDER lsf = psf;
+    IShellFolder * lsf = psf;
     HRESULT ret = NO_ERROR;
     LPCITEMIDLIST pidllast;
     STRRET strret;
@@ -141,7 +141,7 @@ BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR pa
 /*************************************************************************
  * ILGetDisplayNameEx        [SHELL32.186]
  */
-BOOL WINAPI ILGetDisplayNameEx(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPVOID path, DWORD type)
+BOOL WINAPI ILGetDisplayNameEx(IShellFolder * psf, LPCITEMIDLIST pidl, LPVOID path, DWORD type)
 {
     TRACE_(shell)("%p %p %p %d\n", psf, pidl, path, type);
 
@@ -681,7 +681,7 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
  *
  * NOTES
  */
-HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST *pidlReal)
+HRESULT WINAPI SHGetRealIDL(IShellFolder * lpsf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST *pidlReal)
 {
     CComPtr<IDataObject>        pDataObj;
     HRESULT hr;
@@ -1063,7 +1063,7 @@ EXTERN_C LPITEMIDLIST WINAPI SHSimpleIDListFromPathAW(LPCVOID lpszPath)
  *  the pidl can be a simple one. since we can't get the path out of the pidl
  *  we have to take all data from the pidl
  */
-HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
+HRESULT WINAPI SHGetDataFromIDListA(IShellFolder * psf, LPCITEMIDLIST pidl,
                                     int nFormat, LPVOID dest, int len)
 {
     LPSTR filename, shortname;
@@ -1121,7 +1121,7 @@ HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
  * SHGetDataFromIDListW [SHELL32.248]
  *
  */
-HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
+HRESULT WINAPI SHGetDataFromIDListW(IShellFolder * psf, LPCITEMIDLIST pidl,
                                     int nFormat, LPVOID dest, int len)
 {
     LPSTR filename, shortname;

@@ -316,14 +316,14 @@ HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCIT
     else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
     {
         pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
+        pObj = IExtractIconA_Constructor (pidl);
         SHFree (pidl);
         hr = S_OK;
     }
     else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
     {
         pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
+        pObj = IExtractIconW_Constructor (pidl);
         SHFree (pidl);
         hr = S_OK;
     }

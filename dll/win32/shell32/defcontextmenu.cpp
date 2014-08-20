@@ -37,10 +37,10 @@ class CDefaultContextMenu :
     public IContextMenu2
 {
     private:
-        IShellFolder *m_psf;
+        CComPtr<IShellFolder> m_psf;
         UINT m_cidl;
         PCUITEMID_CHILD_ARRAY m_apidl;
-        IDataObject *m_pDataObj;
+        CComPtr<IDataObject> m_pDataObj;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
         PDynamicShellEntry m_pDynamicEntries; /* first dynamic shell extension entry */
@@ -135,16 +135,12 @@ CDefaultContextMenu::~CDefaultContextMenu()
 
     if (m_pidlFolder)
         CoTaskMemFree(m_pidlFolder);
-    if (m_pDataObj)
-        m_pDataObj->Release();
     _ILFreeaPidl(const_cast<PITEMID_CHILD *>(m_apidl), m_cidl);
-    if (m_psf)
-        m_psf->Release();
 }
 
 HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
 {
-    IDataObject *pDataObj;
+    CComPtr<IDataObject> pDataObj;
 
     TRACE("cidl %u\n", pdcm->cidl);
 
@@ -153,7 +149,6 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     if (m_cidl && !m_apidl)
         return E_OUTOFMEMORY;
     m_psf = pdcm->psf;
-    m_psf->AddRef();
 
     if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
         m_pDataObj = pDataObj;
@@ -164,12 +159,11 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     }
     else
     {
-        IPersistFolder2 *pf = NULL;
+        CComPtr<IPersistFolder2> pf = NULL;
         if (SUCCEEDED(m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
         {
             if (FAILED(pf->GetCurFolder(reinterpret_cast<LPITEMIDLIST*>(&m_pidlFolder))))
                 ERR("GetCurFolder failed\n");
-            pf->Release();
         }
         TRACE("pidlFolder %p\n", m_pidlFolder);
     }
@@ -307,7 +301,7 @@ BOOL
 HasClipboardData()
 {
     BOOL bRet = FALSE;
-    IDataObject *pDataObj;
+    CComPtr<IDataObject> pDataObj;
 
     if(SUCCEEDED(OleGetClipboard(&pDataObj)))
     {
@@ -323,8 +317,6 @@ HasClipboardData()
             bRet = TRUE;
             ReleaseStgMedium(&medium);
         }
-
-        pDataObj->Release();
     }
 
     return bRet;
@@ -369,7 +361,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
     if (IsShellExtensionAlreadyLoaded(pclsid))
         return S_OK;
 
-    IContextMenu *pcm;
+    CComPtr<IContextMenu> pcm;
     hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IContextMenu, &pcm));
     if (hr != S_OK)
     {
@@ -377,28 +369,24 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
         return hr;
     }
 
-    IShellExtInit *pExtInit;
+    CComPtr<IShellExtInit> pExtInit;
     hr = pcm->QueryInterface(IID_PPV_ARG(IShellExtInit, &pExtInit));
     if (hr != S_OK)
     {
         ERR("Failed to query for interface IID_IShellExtInit hr %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
-        pcm->Release();
         return hr;
     }
 
     hr = pExtInit->Initialize(m_pidlFolder, m_pDataObj, hKey);
-    pExtInit->Release();
     if (hr != S_OK)
     {
         TRACE("Failed to initialize shell extension error %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
-        pcm->Release();
         return hr;
     }
 
     PDynamicShellEntry pEntry = (DynamicShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DynamicShellEntry));
     if (!pEntry)
     {
-        pcm->Release();
         return E_OUTOFMEMORY;
     }
 
@@ -945,7 +933,7 @@ NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh)
     if (!lpSB)
         return E_FAIL;
 
-    LPSHELLVIEW lpSV = NULL;
+    IShellView * lpSV = NULL;
     if (FAILED(lpSB->QueryActiveShellView(&lpSV)))
         return E_FAIL;
 
@@ -1060,7 +1048,7 @@ CDefaultContextMenu::DoPaste(
         dwKey = MK_CONTROL|MK_SHIFT;
     }
 
-    IDropTarget *pdrop;
+    CComPtr<IDropTarget> pdrop;
     hr = psfTarget->QueryInterface(IID_PPV_ARG(IDropTarget, &pdrop));
     if (FAILED(hr))
     {
@@ -1086,8 +1074,8 @@ HRESULT
 CDefaultContextMenu::DoCreateLink(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    LPDATAOBJECT pDataObj;
-    IDropTarget *pDT;
+    CComPtr<IDataObject> pDataObj;
+    CComPtr<IDropTarget> pDT;
     HRESULT hr;
     CComPtr<IPersistFolder2> ppf2 = NULL;
     LPITEMIDLIST pidl;
@@ -1143,13 +1131,11 @@ CDefaultContextMenu::DoCreateLink(
 HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi) {
     TRACE("(%p) Deleting\n", this);
 
-    LPDATAOBJECT pDataObj;
+    CComPtr<IDataObject> pDataObj;
 
     if (SUCCEEDED(SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
     {
-        pDataObj->AddRef();
         SHCreateThread(DoDeleteThreadProc, pDataObj, NULL, NULL);
-        pDataObj->Release();
     }
     else
         return E_FAIL;
@@ -1162,7 +1148,7 @@ CDefaultContextMenu::DoCopyOrCut(
     LPCMINVOKECOMMANDINFO lpcmi,
     BOOL bCopy)
 {
-    LPDATAOBJECT pDataObj;
+    CComPtr<IDataObject> pDataObj;
     HRESULT hr;
 
     if (SUCCEEDED(SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
@@ -1181,7 +1167,6 @@ CDefaultContextMenu::DoCopyOrCut(
         }
 
         hr = OleSetClipboard(pDataObj);
-        pDataObj->Release();
         return hr;
     }
 
@@ -1193,7 +1178,7 @@ CDefaultContextMenu::DoCopyOrCut(
         return E_FAIL;
     }
 
-    LPSHELLVIEW lpSV;
+    CComPtr<IShellView> lpSV;
     hr = lpSB->QueryActiveShellView(&lpSV);
     if (FAILED(hr))
     {
@@ -1211,7 +1196,6 @@ CDefaultContextMenu::DoCopyOrCut(
     } else
         ERR("failed to get item object\n");
 
-    lpSV->Release();
     return hr;
 }
 
@@ -1236,7 +1220,7 @@ CDefaultContextMenu::DoRename(
             (void)TreeView_EditLabel(hwnd, hItem);
     }
 
-    LPSHELLVIEW lpSV;
+    CComPtr<IShellView> lpSV;
     HRESULT hr = lpSB->QueryActiveShellView(&lpSV);
     if (FAILED(hr))
     {
@@ -1244,9 +1228,8 @@ CDefaultContextMenu::DoRename(
         return hr;
     }
 
-    lpSV->SelectItem(m_apidl[0],
-                     SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT);
-    lpSV->Release();
+    SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
+    lpSV->SelectItem(m_apidl[0], selFlags);
     return S_OK;
 }
 
@@ -1259,13 +1242,12 @@ CDefaultContextMenu::DoProperties(
 
     if (!pidlParent)
     {
-        IPersistFolder2 *pf;
+        CComPtr<IPersistFolder2> pf;
 
         /* pidlFolder is optional */
         if (SUCCEEDED(m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
         {
             pf->GetCurFolder((_ITEMIDLIST**)&pidlParent);
-            pf->Release();
         }
     }
 
