@@ -152,7 +152,7 @@ ITrayBandSiteImpl_QueryInterface(IN OUT ITrayBandSite *iface,
     else if (IsEqualIID(riid,
                         &IID_IWinEventHandler))
     {
-        DbgPrint("ITaskBandSite: IWinEventHandler queried!\n");
+        TRACE("ITaskBandSite: IWinEventHandler queried!\n");
         *ppvObj = NULL;
         return E_NOINTERFACE;
     }
@@ -231,7 +231,7 @@ ITrayBandSiteImpl_OnLoad(IN OUT ITrayBandSite *iface,
                 if (SUCCEEDED(hRet))
                 {
                     /* Load the stream */
-                    DbgPrint("IBandSiteStreamCallback::OnLoad intercepted the task band CLSID!\n");
+                    TRACE("IBandSiteStreamCallback::OnLoad intercepted the task band CLSID!\n");
                 }
 
                 return hRet;
@@ -254,7 +254,7 @@ ITrayBandSiteImpl_OnLoad(IN OUT ITrayBandSite *iface,
 
     if (!SUCCEEDED(hRet))
     {
-        DbgPrint("IBandSiteStreamCallback::OnLoad(0x%p, 0x%p, 0x%p) returns 0x%x\n", pStm, riid, pvObj, hRet);
+        TRACE("IBandSiteStreamCallback::OnLoad(0x%p, 0x%p, 0x%p) returns 0x%x\n", pStm, riid, pvObj, hRet);
     }
 
     return hRet;
@@ -269,7 +269,7 @@ ITrayBandSiteImpl_OnSave(IN OUT ITrayBandSite *iface,
              stream. We use it to intercept the default behavior when the task
              band is saved to the stream */
     /* FIXME: Implement */
-    DbgPrint("IBandSiteStreamCallback::OnSave(0x%p, 0x%p) returns E_NOTIMPL\n", pUnk, pStm);
+    TRACE("IBandSiteStreamCallback::OnSave(0x%p, 0x%p) returns E_NOTIMPL\n", pUnk, pStm);
     return E_NOTIMPL;
 }
 
@@ -353,7 +353,7 @@ ITrayBandSiteImpl_ProcessMessage(IN OUT ITrayBandSite *iface,
                 }
             }
 
-            //DbgPrint("ITrayBandSite::ProcessMessage: WM_NOTIFY for 0x%p, From: 0x%p, Code: NM_FIRST-%u...\n", hWnd, nmh->hwndFrom, NM_FIRST - nmh->code);
+            //TRACE("ITrayBandSite::ProcessMessage: WM_NOTIFY for 0x%p, From: 0x%p, Code: NM_FIRST-%u...\n", hWnd, nmh->hwndFrom, NM_FIRST - nmh->code);
             break;
         }
     };
@@ -362,7 +362,7 @@ ITrayBandSiteImpl_ProcessMessage(IN OUT ITrayBandSite *iface,
        shell behavior! */
     if (This->WindowEventHandler != NULL)
     {
-        /*DbgPrint("Calling IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p) This->hWndRebar=0x%p\n", hWnd, uMsg, wParam, lParam, plResult, This->hWndRebar);*/
+        /*TRACE("Calling IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p) This->hWndRebar=0x%p\n", hWnd, uMsg, wParam, lParam, plResult, This->hWndRebar);*/
         hRet = IWinEventHandler_OnWinEvent(This->WindowEventHandler,
                                                   hWnd,
                                                   uMsg,
@@ -374,11 +374,11 @@ ITrayBandSiteImpl_ProcessMessage(IN OUT ITrayBandSite *iface,
             if (uMsg == WM_NOTIFY)
             {
                 const NMHDR *nmh = (const NMHDR *)lParam;
-                DbgPrint("ITrayBandSite->IWinEventHandler::ProcessMessage: WM_NOTIFY for 0x%p, From: 0x%p, Code: NM_FIRST-%u returned 0x%x\n", hWnd, nmh->hwndFrom, NM_FIRST - nmh->code, hRet);
+                TRACE("ITrayBandSite->IWinEventHandler::ProcessMessage: WM_NOTIFY for 0x%p, From: 0x%p, Code: NM_FIRST-%u returned 0x%x\n", hWnd, nmh->hwndFrom, NM_FIRST - nmh->code, hRet);
             }
             else
             {
-                DbgPrint("ITrayBandSite->IWinEventHandler::ProcessMessage(0x%p,0x%x,0x%p,0x%p,0x%p->0x%p) returned: 0x%x\n", hWnd, uMsg, wParam, lParam, plResult, *plResult, hRet);
+                TRACE("ITrayBandSite->IWinEventHandler::ProcessMessage(0x%p,0x%x,0x%p,0x%p,0x%p->0x%p) returned: 0x%x\n", hWnd, uMsg, wParam, lParam, plResult, *plResult, hRet);
             }
         }
     }
@@ -409,7 +409,7 @@ ITrayBandSiteImpl_AddContextMenus(IN OUT ITrayBandSite *iface,
                                 CLSCTX_INPROC_SERVER,
                                 &IID_IShellService,
                                 (PVOID*)&pSs);
-        DbgPrint("CoCreateInstance(CLSID_IShellBandSiteMenu) for IShellService returned: 0x%x\n", hRet);
+        TRACE("CoCreateInstance(CLSID_IShellBandSiteMenu) for IShellService returned: 0x%x\n", hRet);
         if (!SUCCEEDED(hRet))
             return hRet;
 
@@ -810,7 +810,7 @@ ITrayBandSiteImpl_LoadFromStream(IN OUT ITrayBandSiteImpl *This,
     {
         hRet = IPersistStream_Load(pPStm,
                                    pStm);
-        DbgPrint("IPersistStream_Load() returned 0x%x\n", hRet);
+        TRACE("IPersistStream_Load() returned 0x%x\n", hRet);
         IPersistStream_Release(pPStm);
     }
 
@@ -872,7 +872,7 @@ ITrayBandSiteImpl_Load(IN OUT ITrayBandSiteImpl *This)
         hRet = ITrayBandSiteImpl_LoadFromStream(This,
                                                 pStm);
 
-        DbgPrint("Loaded user bands settings: 0x%x\n", hRet);
+        TRACE("Loaded user bands settings: 0x%x\n", hRet);
         IStream_Release(pStm);
     }
     else
@@ -889,7 +889,7 @@ ITrayBandSiteImpl_Load(IN OUT ITrayBandSiteImpl *This)
             hRet = ITrayBandSiteImpl_LoadFromStream(This,
                                                     pStm);
 
-            DbgPrint("Loaded default user bands settings: 0x%x\n", hRet);
+            TRACE("Loaded default user bands settings: 0x%x\n", hRet);
             IStream_Release(pStm);
         }
         else

@@ -75,12 +75,12 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
 
     if (!CreateProcessW(NULL, szCmdLineExp, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
     {
-        DbgPrint("Failed to run command (%lu)\n", GetLastError());
+        TRACE("Failed to run command (%lu)\n", GetLastError());
 
         return INVALID_RUNCMD_RETURN;
     }
 
-    DbgPrint("Successfully ran command\n");
+    TRACE("Successfully ran command\n");
 
     if (wait)
     {   /* wait for the process to exit */
@@ -114,9 +114,9 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     WCHAR *szValue = NULL;
 
     if (hkRoot == HKEY_LOCAL_MACHINE)
-        DbgPrint("processing %ls entries under HKLM\n", szKeyName);
+        TRACE("processing %ls entries under HKLM\n", szKeyName);
     else
-        DbgPrint("processing %ls entries under HKCU\n", szKeyName);
+        TRACE("processing %ls entries under HKCU\n", szKeyName);
 
     res = RegOpenKeyExW(hkRoot,
                         L"Software\\Microsoft\\Windows\\CurrentVersion",
@@ -125,7 +125,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                         &hkWin);
     if (res != ERROR_SUCCESS)
     {
-        DbgPrint("RegOpenKey failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n", res);
+        TRACE("RegOpenKey failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n", res);
 
         goto end;
     }
@@ -139,12 +139,12 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     {
         if (res == ERROR_FILE_NOT_FOUND)
         {
-            DbgPrint("Key doesn't exist - nothing to be done\n");
+            TRACE("Key doesn't exist - nothing to be done\n");
 
             res = ERROR_SUCCESS;
         }
         else
-            DbgPrint("RegOpenKeyEx failed on run key (%ld)\n", res);
+            TRACE("RegOpenKeyEx failed on run key (%ld)\n", res);
 
         goto end;
     }
@@ -163,14 +163,14 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                            NULL);
     if (res != ERROR_SUCCESS)
     {
-        DbgPrint("Couldn't query key info (%ld)\n", res);
+        TRACE("Couldn't query key info (%ld)\n", res);
 
         goto end;
     }
 
     if (i == 0)
     {
-        DbgPrint("No commands to execute.\n");
+        TRACE("No commands to execute.\n");
 
         res = ERROR_SUCCESS;
         goto end;
@@ -181,7 +181,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                           cbMaxCmdLine);
     if (szCmdLine == NULL)
     {
-        DbgPrint("Couldn't allocate memory for the commands to be executed\n");
+        TRACE("Couldn't allocate memory for the commands to be executed\n");
 
         res = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
@@ -193,7 +193,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                         cchMaxValue * sizeof(*szValue));
     if (szValue == NULL)
     {
-        DbgPrint("Couldn't allocate memory for the value names\n");
+        TRACE("Couldn't allocate memory for the value names\n");
 
         res = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
@@ -216,7 +216,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                             &cbDataLength);
         if (res != ERROR_SUCCESS)
         {
-            DbgPrint("Couldn't read in value %lu - %ld\n", i, res);
+            TRACE("Couldn't read in value %lu - %ld\n", i, res);
 
             continue;
         }
@@ -226,12 +226,12 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
 
         if (bDelete && (res = RegDeleteValueW(hkRun, szValue)) != ERROR_SUCCESS)
         {
-            DbgPrint("Couldn't delete value - %lu, %ld. Running command anyways.\n", i, res);
+            TRACE("Couldn't delete value - %lu, %ld. Running command anyways.\n", i, res);
         }
 
         if (type != REG_SZ)
         {
-            DbgPrint("Incorrect type of value #%lu (%lu)\n", i, type);
+            TRACE("Incorrect type of value #%lu (%lu)\n", i, type);
 
             continue;
         }
@@ -239,10 +239,10 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         res = runCmd(szCmdLine, NULL, bSynchronous, FALSE);
         if (res == INVALID_RUNCMD_RETURN)
         {
-            DbgPrint("Error running cmd #%lu (%lu)\n", i, GetLastError());
+            TRACE("Error running cmd #%lu (%lu)\n", i, GetLastError());
         }
 
-        DbgPrint("Done processing cmd #%lu\n", i);
+        TRACE("Done processing cmd #%lu\n", i);
     }
 
     res = ERROR_SUCCESS;
@@ -256,7 +256,7 @@ end:
     if (hkWin != NULL)
         RegCloseKey(hkWin);
 
-    DbgPrint("done\n");
+    TRACE("done\n");
 
     return res == ERROR_SUCCESS ? TRUE : FALSE;
 }
@@ -276,14 +276,14 @@ ProcessStartupItems(VOID)
     res = GetWindowsDirectoryW(gen_path, sizeof(gen_path) / sizeof(gen_path[0]));
     if (res == 0)
     {
-        DbgPrint("Couldn't get the windows directory - error %lu\n", GetLastError());
+        TRACE("Couldn't get the windows directory - error %lu\n", GetLastError());
 
         return 100;
     }
 
     if (!SetCurrentDirectoryW(gen_path))
     {
-        DbgPrint("Cannot set the dir to %ls (%lu)\n", gen_path, GetLastError());
+        TRACE("Cannot set the dir to %ls (%lu)\n", gen_path, GetLastError());
 
         return 100;
     }
@@ -330,7 +330,7 @@ ProcessStartupItems(VOID)
     if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
         res = ProcessRunKeys(HKEY_CURRENT_USER, L"RunOnce", TRUE, FALSE);
 
-    DbgPrint("Operation done\n");
+    TRACE("Operation done\n");
 
     return res ? 0 : 101;
 }

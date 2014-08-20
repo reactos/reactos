@@ -21,7 +21,7 @@ list(APPEND SOURCE
     precomp.h)
 
 add_executable(explorer ${SOURCE} explorer.rc)
-target_link_libraries(explorer uuid)
+target_link_libraries(explorer uuid wine)
 set_module_type(explorer win32gui UNICODE)
 add_importlibs(explorer
     advapi32

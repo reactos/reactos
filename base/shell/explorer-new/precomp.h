@@ -29,6 +29,10 @@
 #include "resource.h"
 #include "comcsup.h"
 
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(explorernew);
+
 /* dynamic imports due to lack of support in msvc linker libs */
 typedef INT (APIENTRY *REGSHELLHOOK)(HWND, DWORD);
 #ifdef UNICODE

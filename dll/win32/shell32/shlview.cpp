@@ -1080,7 +1080,7 @@ void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
             mii.cch = _countof(label);
             ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
 
-            DbgPrint("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
+            TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
 
             mii.fType |= MFT_RADIOCHECK;
 
@@ -1419,7 +1419,7 @@ void CDefView::DoActivate(UINT uState)
                         mii.cch = _countof(label);
                         ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
 
-                        DbgPrint("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
+                        TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
 
                         mii.fType |= MFT_RADIOCHECK;
 
@@ -1452,7 +1452,7 @@ void CDefView::DoActivate(UINT uState)
                         mii.cch = _countof(label);
                         ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
 
-                        DbgPrint("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
+                        TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
 
                         mii.fType |= MFT_RADIOCHECK;
 

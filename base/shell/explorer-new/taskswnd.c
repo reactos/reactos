@@ -142,13 +142,13 @@ TaskSwitchWnd_DumpTasks(IN OUT PTASK_SWITCH_WND This)
     PTASK_GROUP CurrentGroup;
     PTASK_ITEM CurrentTaskItem, LastTaskItem;
 
-    DbgPrint("Tasks dump:\n");
+    TRACE("Tasks dump:\n");
     if (This->IsGroupingEnabled)
     {
         CurrentGroup = This->TaskGroups;
         while (CurrentGroup != NULL)
         {
-            DbgPrint("- Group PID: 0x%p Tasks: %d Index: %d\n", CurrentGroup->dwProcessId, CurrentGroup->dwTaskCount, CurrentGroup->Index);
+            TRACE("- Group PID: 0x%p Tasks: %d Index: %d\n", CurrentGroup->dwProcessId, CurrentGroup->dwTaskCount, CurrentGroup->Index);
 
             CurrentTaskItem = This->TaskItems;
             LastTaskItem = CurrentTaskItem + This->TaskItemCount;
@@ -156,7 +156,7 @@ TaskSwitchWnd_DumpTasks(IN OUT PTASK_SWITCH_WND This)
             {
                 if (CurrentTaskItem->Group == CurrentGroup)
                 {
-                    DbgPrint("  + Task hwnd: 0x%p Index: %d\n", CurrentTaskItem->hWnd, CurrentTaskItem->Index);
+                    TRACE("  + Task hwnd: 0x%p Index: %d\n", CurrentTaskItem->hWnd, CurrentTaskItem->Index);
                 }
                 CurrentTaskItem++;
             }
@@ -170,7 +170,7 @@ TaskSwitchWnd_DumpTasks(IN OUT PTASK_SWITCH_WND This)
         {
             if (CurrentTaskItem->Group == NULL)
             {
-                DbgPrint("- Task hwnd: 0x%p Index: %d\n", CurrentTaskItem->hWnd, CurrentTaskItem->Index);
+                TRACE("- Task hwnd: 0x%p Index: %d\n", CurrentTaskItem->hWnd, CurrentTaskItem->Index);
             }
             CurrentTaskItem++;
         }
@@ -181,7 +181,7 @@ TaskSwitchWnd_DumpTasks(IN OUT PTASK_SWITCH_WND This)
         LastTaskItem = CurrentTaskItem + This->TaskItemCount;
         while (CurrentTaskItem != LastTaskItem)
         {
-            DbgPrint("- Task hwnd: 0x%p Index: %d\n", CurrentTaskItem->hWnd, CurrentTaskItem->Index);
+            TRACE("- Task hwnd: 0x%p Index: %d\n", CurrentTaskItem->hWnd, CurrentTaskItem->Index);
             CurrentTaskItem++;
         }
     }
@@ -445,7 +445,7 @@ TaskSwitchWnd_UpdateTaskItemButton(IN OUT PTASK_SWITCH_WND This,
         return -1;
     }
 
-    DbgPrint("Updated button %d for hwnd 0x%p\n", TaskItem->Index, TaskItem->hWnd);
+    TRACE("Updated button %d for hwnd 0x%p\n", TaskItem->Index, TaskItem->hWnd);
     return TaskItem->Index;
 }
 
@@ -620,7 +620,7 @@ TaskSwitchWnd_AddTaskItemButton(IN OUT PTASK_SWITCH_WND This,
         TaskSwitchWnd_UpdateIndexesAfterButtonInserted(This,
                                                        iIndex);
 
-        DbgPrint("Added button %d for hwnd 0x%p\n", iIndex, TaskItem->hWnd);
+        TRACE("Added button %d for hwnd 0x%p\n", iIndex, TaskItem->hWnd);
 
         TaskItem->Index = iIndex;
         This->ToolbarBtnCount++;
@@ -688,7 +688,7 @@ TaskSwitchWnd_AddToTaskGroup(IN OUT PTASK_SWITCH_WND This,
     if (!GetWindowThreadProcessId(hWnd,
                                   &dwProcessId))
     {
-        DbgPrint("Cannot get process id of hwnd 0x%p\n", hWnd);
+        TRACE("Cannot get process id of hwnd 0x%p\n", hWnd);
         return NULL;
     }
 
@@ -986,7 +986,7 @@ TaskSwitchWnd_CheckActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
     }
     else if (TaskItem == NULL)
     {
-        DbgPrint("Active TaskItem now NULL\n");
+        TRACE("Active TaskItem now NULL\n");
     }
 }
 
@@ -1040,7 +1040,7 @@ TaskSwitchWnd_AddTask(IN OUT PTASK_SWITCH_WND This,
                                           hWnd);
     if (TaskItem == NULL)
     {
-        DbgPrint("Add window 0x%p\n", hWnd);
+        TRACE("Add window 0x%p\n", hWnd);
         TaskItem = TaskSwitchWnd_AllocTaskItem(This);
         if (TaskItem != NULL)
         {
@@ -1068,7 +1068,7 @@ TaskSwitchWnd_ActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
 {
     if (TaskItem != NULL)
     {
-        DbgPrint("Activate window 0x%p on button %d\n", TaskItem->hWnd, TaskItem->Index);
+        TRACE("Activate window 0x%p on button %d\n", TaskItem->hWnd, TaskItem->Index);
     }
 
     TaskSwitchWnd_CheckActivateTaskItem(This, TaskItem);
@@ -1097,7 +1097,7 @@ TaskSwitchWnd_ActivateTask(IN OUT PTASK_SWITCH_WND This,
 
     if (TaskItem == NULL)
     {
-        DbgPrint("Activate window 0x%p, could not find task\n", hWnd);
+        TRACE("Activate window 0x%p, could not find task\n", hWnd);
     }
 
     return TaskSwitchWnd_ActivateTaskItem(This, TaskItem);
@@ -1113,13 +1113,13 @@ TaskSwitchWnd_DeleteTask(IN OUT PTASK_SWITCH_WND This,
                                           hWnd);
     if (TaskItem != NULL)
     {
-        DbgPrint("Delete window 0x%p on button %d\n", hWnd, TaskItem->Index);
+        TRACE("Delete window 0x%p on button %d\n", hWnd, TaskItem->Index);
         TaskSwitchWnd_DeleteTaskItem(This,
                                      TaskItem);
         return TRUE;
     }
     //else
-        //DbgPrint("Failed to delete window 0x%p\n", hWnd);
+        //TRACE("Failed to delete window 0x%p\n", hWnd);
 
     return FALSE;
 }
@@ -1159,7 +1159,7 @@ TaskSwitchWnd_FlashTask(IN OUT PTASK_SWITCH_WND This,
                                           hWnd);
     if (TaskItem != NULL)
     {
-        DbgPrint("Flashing window 0x%p on button %d\n", hWnd, TaskItem->Index);
+        TRACE("Flashing window 0x%p on button %d\n", hWnd, TaskItem->Index);
         TaskSwitchWnd_FlashTaskItem(This,
                                     TaskItem);
         return TRUE;
@@ -1573,7 +1573,7 @@ TaskSwitchWnd_HandleAppCommand(IN OUT PTASK_SWITCH_WND This,
         case APPCOMMAND_BROWSER_HOME:
         case APPCOMMAND_LAUNCH_MAIL:
         default:
-            DbgPrint("Shell app command %d unhandled!\n", (INT)GET_APPCOMMAND_LPARAM(lParam));
+            TRACE("Shell app command %d unhandled!\n", (INT)GET_APPCOMMAND_LPARAM(lParam));
             break;
     }
 
@@ -1671,14 +1671,14 @@ UnhandledShellMessage:
             {
                 if (hshell_msg[i].msg == (INT)wParam)
                 {
-                    DbgPrint("Shell message %ws unhandled (lParam = 0x%p)!\n", hshell_msg[i].msg_name, lParam);
+                    TRACE("Shell message %ws unhandled (lParam = 0x%p)!\n", hshell_msg[i].msg_name, lParam);
                     found = 1;
                     break;
                 }
             }
             if (!found)
             {
-                DbgPrint("Shell message %d unhandled (lParam = 0x%p)!\n", (INT)wParam, lParam);
+                TRACE("Shell message %d unhandled (lParam = 0x%p)!\n", (INT)wParam, lParam);
             }
             break;
         }
@@ -1710,11 +1710,11 @@ TaskSwitchWnd_HandleTaskItemClick(IN OUT PTASK_SWITCH_WND This,
         bIsMinimized = IsIconic(TaskItem->hWnd);
         bIsActive = (TaskItem == This->ActiveTaskItem);
 
-        DbgPrint("Active TaskItem %p, selected TaskItem %p\n", This->ActiveTaskItem, TaskItem);
+        TRACE("Active TaskItem %p, selected TaskItem %p\n", This->ActiveTaskItem, TaskItem);
         if (This->ActiveTaskItem)
-            DbgPrint("Active TaskItem hWnd=%p, TaskItem hWnd %p\n", This->ActiveTaskItem->hWnd, TaskItem->hWnd);
+            TRACE("Active TaskItem hWnd=%p, TaskItem hWnd %p\n", This->ActiveTaskItem->hWnd, TaskItem->hWnd);
 
-        DbgPrint("Valid button clicked. HWND=%p, IsMinimized=%s, IsActive=%s...\n",
+        TRACE("Valid button clicked. HWND=%p, IsMinimized=%s, IsActive=%s...\n",
             TaskItem->hWnd, bIsMinimized ? "Yes" : "No", bIsActive ? "Yes" : "No");
 
         if (!bIsMinimized && bIsActive)
@@ -1723,7 +1723,7 @@ TaskSwitchWnd_HandleTaskItemClick(IN OUT PTASK_SWITCH_WND This,
                         WM_SYSCOMMAND,
                         SC_MINIMIZE,
                         0);
-            DbgPrint("Valid button clicked. App window Minimized.\n");
+            TRACE("Valid button clicked. App window Minimized.\n");
         }
         else
         {
@@ -1733,11 +1733,11 @@ TaskSwitchWnd_HandleTaskItemClick(IN OUT PTASK_SWITCH_WND This,
                              WM_SYSCOMMAND,
                              SC_RESTORE,
                              0);
-                 DbgPrint("Valid button clicked. App window Restored.\n");
+                 TRACE("Valid button clicked. App window Restored.\n");
             }
 
             SetForegroundWindow(TaskItem->hWnd);
-            DbgPrint("Valid button clicked. App window Activated.\n");
+            TRACE("Valid button clicked. App window Activated.\n");
         }
     }
 }

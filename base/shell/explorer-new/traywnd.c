@@ -719,7 +719,7 @@ ITrayWindowImpl_CheckTrayWndPosition(IN OUT ITrayWindowImpl *This)
     RECT rcTray;
 
     rcTray = This->rcTrayWnd[This->Position];
-//    DbgPrint("CheckTray: %d: %d,%d,%d,%d\n", This->Position, rcTray.left, rcTray.top, rcTray.right, rcTray.bottom);
+//    TRACE("CheckTray: %d: %d,%d,%d,%d\n", This->Position, rcTray.left, rcTray.top, rcTray.right, rcTray.bottom);
 
     /* Move the tray window */
     SetWindowPos(This->hWnd,
@@ -850,7 +850,7 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
                                                   &rcScreen,
                                                   &This->TraySize,
                                                   &This->rcTrayWnd[Pos]);
-//        DbgPrint("rcTrayWnd[%d(%d)]: %d,%d,%d,%d\n", Pos, This->Position, This->rcTrayWnd[Pos].left, This->rcTrayWnd[Pos].top, This->rcTrayWnd[Pos].right, This->rcTrayWnd[Pos].bottom);
+//        TRACE("rcTrayWnd[%d(%d)]: %d,%d,%d,%d\n", Pos, This->Position, This->rcTrayWnd[Pos].left, This->rcTrayWnd[Pos].top, This->rcTrayWnd[Pos].right, This->rcTrayWnd[Pos].bottom);
     }
 
     /* Determine which monitor we are on. It shouldn't matter which docked
@@ -1914,7 +1914,7 @@ ITrayWindowImpl_ExecContextMenuCmd(IN OUT ITrayWindow *iface,
             break;
 
         default:
-            DbgPrint("ITrayWindow::ExecContextMenuCmd(%u): Unhandled Command ID!\n", uiCmd);
+            TRACE("ITrayWindow::ExecContextMenuCmd(%u): Unhandled Command ID!\n", uiCmd);
             bHandled = FALSE;
             break;
     }
@@ -2769,7 +2769,7 @@ CreateTrayWindowContextMenu(IN HWND hWndOwner,
                                                         CMF_NORMAL,
                                                         &pcm)))
             {
-                DbgPrint("ITrayBandSite::AddContextMenus succeeded!\n");
+                TRACE("ITrayBandSite::AddContextMenus succeeded!\n");
                 *(IContextMenu **)ppcmContext = pcm;
             }
         }
@@ -2970,7 +2970,7 @@ ITrayWindowImpl_IShellDesktopTray_QueryInterface(IN OUT IShellDesktopTray *iface
     ITrayWindowImpl *This = impl_from_IShellDesktopTray(iface);
     ITrayWindow *tray = ITrayWindow_from_impl(This);
 
-    DbgPrint("IShellDesktopTray::QueryInterface(0x%p, 0x%p)\n", riid, ppvObj);
+    TRACE("IShellDesktopTray::QueryInterface(0x%p, 0x%p)\n", riid, ppvObj);
     return ITrayWindowImpl_QueryInterface(tray,
                                           riid,
                                           ppvObj);
@@ -2982,7 +2982,7 @@ ITrayWindowImpl_IShellDesktopTray_Release(IN OUT IShellDesktopTray *iface)
     ITrayWindowImpl *This = impl_from_IShellDesktopTray(iface);
     ITrayWindow *tray = ITrayWindow_from_impl(This);
 
-    DbgPrint("IShellDesktopTray::Release()\n");
+    TRACE("IShellDesktopTray::Release()\n");
     return ITrayWindowImpl_Release(tray);
 }
 
@@ -2992,7 +2992,7 @@ ITrayWindowImpl_IShellDesktopTray_AddRef(IN OUT IShellDesktopTray *iface)
     ITrayWindowImpl *This = impl_from_IShellDesktopTray(iface);
     ITrayWindow *tray = ITrayWindow_from_impl(This);
 
-    DbgPrint("IShellDesktopTray::AddRef()\n");
+    TRACE("IShellDesktopTray::AddRef()\n");
     return ITrayWindowImpl_AddRef(tray);
 }
 
@@ -3000,7 +3000,7 @@ static ULONG STDMETHODCALLTYPE
 ITrayWindowImpl_IShellDesktopTray_GetState(IN OUT IShellDesktopTray *iface)
 {
     /* FIXME: Return ABS_ flags? */
-    DbgPrint("IShellDesktopTray::GetState() unimplemented!\n");
+    TRACE("IShellDesktopTray::GetState() unimplemented!\n");
     return 0;
 }
 
@@ -3009,7 +3009,7 @@ ITrayWindowImpl_IShellDesktopTray_GetTrayWindow(IN OUT IShellDesktopTray *iface,
                                                 OUT HWND *phWndTray)
 {
     ITrayWindowImpl *This = impl_from_IShellDesktopTray(iface);
-    DbgPrint("IShellDesktopTray::GetTrayWindow(0x%p)\n", phWndTray);
+    TRACE("IShellDesktopTray::GetTrayWindow(0x%p)\n", phWndTray);
     *phWndTray = This->hWnd;
     return S_OK;
 }
@@ -3019,7 +3019,7 @@ ITrayWindowImpl_IShellDesktopTray_RegisterDesktopWindow(IN OUT IShellDesktopTray
                                                         IN HWND hWndDesktop)
 {
     ITrayWindowImpl *This = impl_from_IShellDesktopTray(iface);
-    DbgPrint("IShellDesktopTray::RegisterDesktopWindow(0x%p)\n", hWndDesktop);
+    TRACE("IShellDesktopTray::RegisterDesktopWindow(0x%p)\n", hWndDesktop);
 
     This->hWndDesktop = hWndDesktop;
     return S_OK;
@@ -3030,7 +3030,7 @@ ITrayWindowImpl_IShellDesktopTray_Unknown(IN OUT IShellDesktopTray *iface,
                                           IN DWORD dwUnknown1,
                                           IN DWORD dwUnknown2)
 {
-    DbgPrint("IShellDesktopTray::Unknown(%u,%u) unimplemented!\n", dwUnknown1, dwUnknown2);
+    TRACE("IShellDesktopTray::Unknown(%u,%u) unimplemented!\n", dwUnknown1, dwUnknown2);
     return S_OK;
 }
 

@@ -218,7 +218,7 @@ ITaskBandImpl_GetWindow(IN OUT IDeskBand *iface,
     else
         *phwnd = ITrayWindow_GetHWND(This->Tray);
 
-    DbgPrint("ITaskBand::GetWindow(0x%p->0x%p)\n", phwnd, *phwnd);
+    TRACE("ITaskBand::GetWindow(0x%p->0x%p)\n", phwnd, *phwnd);
 
     if (*phwnd != NULL)
         return S_OK;
@@ -267,7 +267,7 @@ ITaskBandImpl_GetBandInfo(IN OUT IDeskBand *iface,
                           IN OUT DESKBANDINFO *pdbi)
 {
     ITaskBandImpl *This = ITaskBandImpl_from_IDeskBand(iface);
-    DbgPrint("ITaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, This->hWnd);
+    TRACE("ITaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, This->hWnd);
 
     /* NOTE: We could save dwBandID in the instance in case we need it later... */
 
@@ -310,7 +310,7 @@ ITaskBandImpl_GetBandInfo(IN OUT IDeskBand *iface,
            is the task band */
         This->dwBandID = dwBandID;
 
-        DbgPrint("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
+        TRACE("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
                                                         pdbi->ptMinSize.x, pdbi->ptMinSize.y, pdbi->ptIntegral.y,
                                                         pdbi->ptActual.x,pdbi->ptActual.y);
 
@@ -371,7 +371,7 @@ static HRESULT STDMETHODCALLTYPE
 IDeskBarImpl_SetClient(IN OUT IDeskBar *iface,
                        IN IUnknown *punkClient)
 {
-    DbgPrint("IDeskBar::SetClient(0x%p)\n", punkClient);
+    TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
     return E_NOTIMPL;
 }
 
@@ -379,7 +379,7 @@ static HRESULT STDMETHODCALLTYPE
 IDeskBarImpl_GetClient(IN OUT IDeskBar *iface,
                        OUT IUnknown **ppunkClient)
 {
-    DbgPrint("IDeskBar::GetClient(0x%p)\n", ppunkClient);
+    TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
     return E_NOTIMPL;
 }
 
@@ -387,7 +387,7 @@ static HRESULT STDMETHODCALLTYPE
 IDeskBarImpl_OnPosRectChangeDB(IN OUT IDeskBar *iface,
                                IN RECT *prc)
 {
-    DbgPrint("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);
+    TRACE("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);
     if (prc->bottom - prc->top == 0)
         return S_OK;
 
@@ -419,7 +419,7 @@ static HRESULT STDMETHODCALLTYPE
 ITaskBandImpl_GetClassID(IN OUT IPersistStream *iface,
                          OUT CLSID *pClassID)
 {
-    DbgPrint("ITaskBand::GetClassID(0x%p)\n", pClassID);
+    TRACE("ITaskBand::GetClassID(0x%p)\n", pClassID);
     /* We're going to return the (internal!) CLSID of the task band interface */
     *pClassID = CLSID_ITaskBand;
     return S_OK;
@@ -436,7 +436,7 @@ static HRESULT STDMETHODCALLTYPE
 ITaskBandImpl_Load(IN OUT IPersistStream *iface,
                    IN IStream *pStm)
 {
-    DbgPrint("ITaskBand::Load called\n");
+    TRACE("ITaskBand::Load called\n");
     /* Nothing to do */
     return S_OK;
 }
@@ -454,7 +454,7 @@ static HRESULT STDMETHODCALLTYPE
 ITaskBandImpl_GetSizeMax(IN OUT IPersistStream *iface,
                          OUT ULARGE_INTEGER *pcbSize)
 {
-    DbgPrint("ITaskBand::GetSizeMax called\n");
+    TRACE("ITaskBand::GetSizeMax called\n");
     /* We don't need any space for the task band */
     pcbSize->QuadPart = 0;
     return S_OK;
@@ -488,7 +488,7 @@ ITaskBandImpl_SetSite(IN OUT IObjectWithSite *iface,
     ITaskBandImpl *This = ITaskBandImpl_from_IObjectWithSite(iface);
     HRESULT hRet = E_FAIL;
 
-    DbgPrint("ITaskBand::SetSite(0x%p)\n", pUnkSite);
+    TRACE("ITaskBand::SetSite(0x%p)\n", pUnkSite);
 
     /* Release the current site */
     if (This->punkSite != NULL)
@@ -517,7 +517,7 @@ ITaskBandImpl_SetSite(IN OUT IObjectWithSite *iface,
             {
                 /* Attempt to create the task switch window */
 
-                DbgPrint("CreateTaskSwitchWnd(Parent: 0x%p)\n", hWndParent);
+                TRACE("CreateTaskSwitchWnd(Parent: 0x%p)\n", hWndParent);
                 This->hWnd = CreateTaskSwitchWnd(hWndParent,
                                                  This->Tray);
                 if (This->hWnd != NULL)
@@ -527,7 +527,7 @@ ITaskBandImpl_SetSite(IN OUT IObjectWithSite *iface,
                 }
                 else
                 {
-                    DbgPrint("CreateTaskSwitchWnd() failed!\n");
+                    TRACE("CreateTaskSwitchWnd() failed!\n");
                     IUnknown_Release(OleWindow);
                     hRet = E_FAIL;
                 }
@@ -536,7 +536,7 @@ ITaskBandImpl_SetSite(IN OUT IObjectWithSite *iface,
                 IUnknown_Release(OleWindow);
         }
         else
-            DbgPrint("Querying IOleWindow failed: 0x%x\n", hRet);
+            TRACE("Querying IOleWindow failed: 0x%x\n", hRet);
     }
 
     return hRet;
@@ -548,7 +548,7 @@ ITaskBandImpl_GetSite(IN OUT IObjectWithSite *iface,
                       OUT VOID **ppvSite)
 {
     ITaskBandImpl *This = ITaskBandImpl_from_IObjectWithSite(iface);
-    DbgPrint("ITaskBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
+    TRACE("ITaskBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
     if (This->punkSite != NULL)
     {
@@ -587,7 +587,7 @@ IWinEventHandlerImpl_ProcessMessage(IN OUT IWinEventHandler *iface,
                                        IN LPARAM lParam,
                                        OUT LRESULT *plrResult)
 {
-    DbgPrint("ITaskBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
+    TRACE("ITaskBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
     return E_NOTIMPL;
 }
 
@@ -600,7 +600,7 @@ IWinEventHandlerImpl_ContainsWindow(IN OUT IWinEventHandler *iface,
     if (This->hWnd == hWnd ||
         IsChild(This->hWnd, hWnd))
     {
-        DbgPrint("ITaskBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
+        TRACE("ITaskBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
         return S_OK;
     }
 

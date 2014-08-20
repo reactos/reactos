@@ -478,7 +478,7 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
                 break;
             }
             default:
-                DbgPrint("NotifyMessage received with unknown code %d.\n", data->notify_code);
+                TRACE("NotifyMessage received with unknown code %d.\n", data->notify_code);
                 break;
         }
         SendMessage(parentHWND,

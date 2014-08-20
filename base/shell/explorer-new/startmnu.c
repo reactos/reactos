@@ -398,7 +398,7 @@ IStartMenuSiteImpl_QueryInterface(IN OUT IStartMenuSite *iface,
     }
     else
     {
-        DbgPrint("IStartMenuSite::QueryInterface queried unsupported interface: "
+        TRACE("IStartMenuSite::QueryInterface queried unsupported interface: "
                  "{0x%8x,0x%4x,0x%4x,{0x%2x,0x%2x,0x%2x,0x%2x,0x%2x,0x%2x,0x%2x,0x%2x}}\n",
                  riid->Data1, riid->Data2, riid->Data3, riid->Data4[0], riid->Data4[1],
                  riid->Data4[2], riid->Data4[3], riid->Data4[4], riid->Data4[5],
@@ -466,7 +466,7 @@ IStartMenuSiteImpl_GetWindow(IN OUT ITrayPriv *iface,
                              OUT HWND *phwnd)
 {
     IStartMenuSiteImpl *This = IStartMenuSiteImpl_from_ITrayPriv(iface);
-    DbgPrint("ITrayPriv::GetWindow\n");
+    TRACE("ITrayPriv::GetWindow\n");
 
     *phwnd = ITrayWindow_GetHWND(This->Tray);
     if (*phwnd != NULL)
@@ -479,7 +479,7 @@ static HRESULT STDMETHODCALLTYPE
 IStartMenuSiteImpl_ContextSensitiveHelp(IN OUT ITrayPriv *iface,
                                         IN BOOL fEnterMode)
 {
-    DbgPrint("ITrayPriv::ContextSensitiveHelp\n");
+    TRACE("ITrayPriv::ContextSensitiveHelp\n");
     return E_NOTIMPL;
 }
 
@@ -493,7 +493,7 @@ IStartMenuSiteImpl_Execute(IN OUT ITrayPriv *iface,
 
     IStartMenuSiteImpl *This = IStartMenuSiteImpl_from_ITrayPriv(iface);
 
-    DbgPrint("ITrayPriv::Execute\n");
+    TRACE("ITrayPriv::Execute\n");
 
     hShlwapi = GetModuleHandle(TEXT("SHLWAPI.DLL"));
     if (hShlwapi != NULL)
@@ -521,14 +521,14 @@ IStartMenuSiteImpl_Unknown(IN OUT ITrayPriv *iface,
                            IN PVOID Unknown3,
                            IN PVOID Unknown4)
 {
-    DbgPrint("ITrayPriv::Unknown(0x%p,0x%p,0x%p,0x%p)\n", Unknown1, Unknown2, Unknown3, Unknown4);
+    TRACE("ITrayPriv::Unknown(0x%p,0x%p,0x%p,0x%p)\n", Unknown1, Unknown2, Unknown3, Unknown4);
     return E_NOTIMPL;
 }
 
 static BOOL
 ShowUndockMenuItem(VOID)
 {
-    DbgPrint("ShowUndockMenuItem() not implemented!\n");
+    TRACE("ShowUndockMenuItem() not implemented!\n");
     /* FIXME: How do we detect this?! */
     return FALSE;
 }
@@ -536,7 +536,7 @@ ShowUndockMenuItem(VOID)
 static BOOL
 ShowSynchronizeMenuItem(VOID)
 {
-    DbgPrint("ShowSynchronizeMenuItem() not implemented!\n");
+    TRACE("ShowSynchronizeMenuItem() not implemented!\n");
     /* FIXME: How do we detect this?! */
     return FALSE;
 }
@@ -551,7 +551,7 @@ IStartMenuSiteImpl_AppendMenu(IN OUT ITrayPriv *iface,
     UINT uLastItemsCount = 5; /* 5 menu items below the last separator */
     TCHAR szUser[128];
 
-    DbgPrint("ITrayPriv::AppendMenu\n");
+    TRACE("ITrayPriv::AppendMenu\n");
 
     hMenu = LoadPopupMenu(hExplorerInstance,
                           MAKEINTRESOURCE(IDM_STARTMENU));
@@ -968,7 +968,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
 #endif
     if (FAILED(hr))
     {
-        DbgPrint("CoCreateInstance failed: %x\n", hr);
+        TRACE("CoCreateInstance failed: %x\n", hr);
         goto cleanup;
     }
 
@@ -977,7 +977,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
                                    (PVOID *)&pOws);
     if (FAILED(hr))
     {
-        DbgPrint("IMenuPopup_QueryInterface failed: %x\n", hr);
+        TRACE("IMenuPopup_QueryInterface failed: %x\n", hr);
         goto cleanup;
     }
 
@@ -985,7 +985,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
     hr = IObjectWithSite_SetSite(pOws, (IUnknown *)pSms);
     if (FAILED(hr))
     {
-        DbgPrint("IObjectWithSite_SetSite failed: %x\n", hr);
+        TRACE("IObjectWithSite_SetSite failed: %x\n", hr);
         goto cleanup;
     }
 
@@ -1002,21 +1002,21 @@ CreateStartMenu(IN ITrayWindow *Tray,
     /* Everything is initialized now. Let's get the IMenuBand interface. */
     if (FAILED(hr))
     {
-        DbgPrint("IMenuPopup_QueryInterface failed: %x\n", hr);
+        TRACE("IMenuPopup_QueryInterface failed: %x\n", hr);
         goto cleanup;
     }
 
     hr = IMenuPopup_GetClient(pMp, &pUnk);
     if (FAILED(hr))
     {
-        DbgPrint("IMenuPopup_GetClient failed: %x\n", hr);
+        TRACE("IMenuPopup_GetClient failed: %x\n", hr);
         goto cleanup;
     }
 
     hr = IUnknown_QueryInterface(pUnk, &IID_IBandSite, (PVOID *)&pBs);
     if (FAILED(hr))
     {
-        DbgPrint("IUnknown_QueryInterface pBs failed: %x\n", hr);
+        TRACE("IUnknown_QueryInterface pBs failed: %x\n", hr);
         goto cleanup;
     }
 
@@ -1025,14 +1025,14 @@ CreateStartMenu(IN ITrayWindow *Tray,
     hr = IBandSite_EnumBands(pBs, 0, &dwBandId);
     if (FAILED(hr))
     {
-        DbgPrint("IBandSite_EnumBands failed: %x\n", hr);
+        TRACE("IBandSite_EnumBands failed: %x\n", hr);
         goto cleanup;
     }
 
     hr = IBandSite_GetBandObject(pBs, dwBandId, &IID_IMenuBand, (PVOID *)&pMb);
     if (FAILED(hr))
     {
-        DbgPrint("IBandSite_GetBandObject failed: %x\n", hr);
+        TRACE("IBandSite_GetBandObject failed: %x\n", hr);
         goto cleanup;
     }
 
