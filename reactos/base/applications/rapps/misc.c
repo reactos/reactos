@@ -293,7 +293,7 @@ ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
 VOID
 InitLogs(VOID)
 {
-    WCHAR szBuf[MAX_PATH] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\ReactOS Application Manager\\ReactOS Application Manager";
+    WCHAR szBuf[MAX_PATH] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager";
     WCHAR szPath[MAX_PATH];
     DWORD dwCategoryNum = 1;
     DWORD dwDisp, dwData;
