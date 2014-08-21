@@ -25,6 +25,8 @@
  // Martin Fuchs, 23.07.2003
  //
 
+/* Enable this when the BackupRead API is implemented */
+// #define BACKUP_READ_IMPLEMENTED
 
  /// Windows file system file-entry
 struct WinEntry : public Entry
@@ -65,4 +67,6 @@ struct WinDirectory : public WinEntry, public Directory
 	virtual Entry* find_entry(const void*);
 };
 
+#ifdef BACKUP_READ_IMPLEMENTED
 extern int ScanNTFSStreams(Entry* entry, HANDLE hFile);
+#endif
