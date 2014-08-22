@@ -597,6 +597,7 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
                                   &GUID_TARGET_DEVICE_REMOVE_COMPLETE,
                                   NULL,
                                   NULL);
+    ObDereferenceObject(DeviceObject);
 }
 
 static
@@ -4431,7 +4432,6 @@ IopSendRemoveDeviceRelations(PDEVICE_RELATIONS DeviceRelations)
     for (i = 0; i < DeviceRelations->Count; i++)
     {
         IopSendRemoveDevice(DeviceRelations->Objects[i]);
-        ObDereferenceObject(DeviceRelations->Objects[i]);
         DeviceRelations->Objects[i] = NULL;
     }
     
