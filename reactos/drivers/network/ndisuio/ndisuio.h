@@ -134,6 +134,11 @@ NTAPI
 NduCloseAdapterComplete(NDIS_HANDLE ProtocolBindingContext,
                         NDIS_STATUS Status);
 
+NDIS_STATUS
+NTAPI
+NduNetPnPEvent(NDIS_HANDLE ProtocolBindingContext,
+               PNET_PNP_EVENT NetPnPEvent);
+
 VOID
 NTAPI
 NduSendComplete(NDIS_HANDLE ProtocolBindingContext,

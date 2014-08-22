@@ -40,6 +40,25 @@ NduCloseAdapterComplete(NDIS_HANDLE ProtocolBindingContext,
     KeSetEvent(&AdapterContext->AsyncEvent, IO_NO_INCREMENT, FALSE);
 }
 
+NDIS_STATUS
+NTAPI
+NduNetPnPEvent(NDIS_HANDLE ProtocolBindingContext,
+               PNET_PNP_EVENT NetPnPEvent)
+{
+    DPRINT("NetPnPEvent\n");
+
+    switch (NetPnPEvent->NetEvent)
+    {
+        case NetEventQueryRemoveDevice:
+            /* Nothing to do */
+            return NDIS_STATUS_SUCCESS;
+
+        default:
+            DPRINT1("NetPnPEvent unimplemented for net event 0x%x\n", NetPnPEvent->NetEvent);
+            return NDIS_STATUS_FAILURE;
+    }
+}
+
 VOID
 NTAPI
 NduSendComplete(NDIS_HANDLE ProtocolBindingContext,
