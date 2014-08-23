@@ -377,11 +377,11 @@ function(create_iso_lists)
     # generate reactos.cab before anything else
     get_property(_filelist GLOBAL PROPERTY REACTOS_CAB_DEPENDS)
 
-    # begin with reactos.inf. It doesn't depend on anything so that it's always generated (that's for optional modules)
+    # begin with reactos.inf. We want this command to be always executed, so we pretend it generates another file although it will never do.
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/__some_non_existent_file
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
-        DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf)
+        DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf reactos_cab_inf)
 
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
