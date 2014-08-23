@@ -351,7 +351,7 @@ HRESULT WINAPI CPrinterFolder::FinalConstruct()
  * This is E_NOTIMPL in Windows too.
  */
 HRESULT WINAPI CPrinterFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
     TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
           this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
@@ -410,7 +410,7 @@ HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
 /**************************************************************************
  *        CPrinterFolder::BindToObject
  */
-HRESULT WINAPI CPrinterFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
+HRESULT WINAPI CPrinterFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -421,7 +421,7 @@ HRESULT WINAPI CPrinterFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved
 /**************************************************************************
  *    ISF_Printers_fnBindToStorage
  */
-HRESULT WINAPI CPrinterFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
+HRESULT WINAPI CPrinterFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n",
            this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -433,7 +433,7 @@ HRESULT WINAPI CPrinterFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserve
 /**************************************************************************
  *     CPrinterFolder::CompareIDs
  */
-HRESULT WINAPI CPrinterFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CPrinterFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     int nReturn;
 
@@ -485,7 +485,7 @@ HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPV
 /**************************************************************************
  *  CPrinterFolder::GetAttributesOf
  */
-HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
+HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
     static const DWORD dwPrintersAttributes =
         SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
@@ -514,7 +514,7 @@ HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, 
  *  LPVOID*        ppvObject) //[out] Resulting Interface
  *
  */
-HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
+HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     IUnknown *pObj = NULL;
@@ -545,7 +545,7 @@ HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMI
  *    CPrinterFolder::GetDisplayNameOf
  *
  */
-HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     LPWSTR pszName;
     PIDLPrinterStruct * p;
@@ -604,8 +604,8 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlag
  *  DWORD         dwFlags,    //[in ] SHGNO formatting flags
  *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
  */
-HRESULT WINAPI CPrinterFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
-        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+HRESULT WINAPI CPrinterFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
+        LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
     FIXME("(%p)->(%p,pidl=%p,%s,%lu,%p)\n", this, hwndOwner, pidl,
           debugstr_w (lpName), dwFlags, pPidlOut);
@@ -644,14 +644,14 @@ HRESULT WINAPI CPrinterFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFla
 
 }
 
-HRESULT WINAPI CPrinterFolder::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+HRESULT WINAPI CPrinterFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
     FIXME("(%p): stub\n", this);
 
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CPrinterFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
+HRESULT WINAPI CPrinterFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     WCHAR buffer[MAX_PATH] = {0};
     HRESULT hr = E_FAIL;

@@ -193,7 +193,7 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
 *    CDrivesFolder::ParseDisplayName
 */
 HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+        DWORD * pchEaten, PIDLIST_RELATIVE * ppidl, DWORD * pdwAttributes)
 {
     HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
@@ -287,7 +287,7 @@ HRESULT WINAPI CDrivesFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMI
 /**************************************************************************
 *        CDrivesFolder::BindToObject
 */
-HRESULT WINAPI CDrivesFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE("(%p)->(pidl=%p,%p,%s,%p)\n", this,
           pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
@@ -298,7 +298,7 @@ HRESULT WINAPI CDrivesFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved,
 /**************************************************************************
 *    CDrivesFolder::BindToStorage
 */
-HRESULT WINAPI CDrivesFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CDrivesFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     FIXME("(%p)->(pidl=%p,%p,%s,%p) stub\n", this,
           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -311,7 +311,7 @@ HRESULT WINAPI CDrivesFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved
 *     CDrivesFolder::CompareIDs
 */
 
-HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     int nReturn;
 
@@ -363,7 +363,7 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 /**************************************************************************
 *  CDrivesFolder::GetAttributesOf
 */
-HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
+HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
     static const DWORD dwComputerAttributes =
         SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
@@ -422,7 +422,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl, 
 *
 */
 HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
-    UINT cidl, LPCITEMIDLIST *apidl,
+    UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
     REFIID riid, UINT *prgfInOut, LPVOID *ppvOut)
 {
     LPITEMIDLIST pidl;
@@ -486,7 +486,7 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
 /**************************************************************************
 *    CDrivesFolder::GetDisplayNameOf
 */
-HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     LPWSTR pszPath;
     HRESULT hr = S_OK;
@@ -682,8 +682,8 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
 *  dwFlags    [in]   SHGNO formatting flags
 *  ppidlOut   [out]  simple pidl returned
 */
-HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
-                                        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut)
+HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,
+                                        LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
     LPWSTR sName;
     HKEY hKey;
@@ -766,14 +766,14 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, DWORD * pcsFla
     return S_OK;
 }
 
-HRESULT WINAPI CDrivesFolder::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID * pscid, VARIANT * pv)
+HRESULT WINAPI CDrivesFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID * pscid, VARIANT * pv)
 {
     FIXME ("(%p)\n", this);
     return E_NOTIMPL;
 }
 
 /* FIXME: drive size >4GB is rolling over */
-HRESULT WINAPI CDrivesFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
+HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     HRESULT hr;
 

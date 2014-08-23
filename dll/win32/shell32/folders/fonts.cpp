@@ -198,7 +198,7 @@ HRESULT WINAPI CFontsFolder::ParseDisplayName(
     LPBC pbcReserved,
     LPOLESTR lpszDisplayName,
     DWORD *pchEaten,
-    LPITEMIDLIST *ppidl,
+    PIDLIST_RELATIVE *ppidl,
     DWORD * pdwAttributes)
 {
     HRESULT hr = E_UNEXPECTED;
@@ -252,7 +252,7 @@ HRESULT WINAPI CFontsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMID
 /**************************************************************************
 *        CFontsFolder::BindToObject
 */
-HRESULT WINAPI CFontsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CFontsFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -263,7 +263,7 @@ HRESULT WINAPI CFontsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, 
 /**************************************************************************
 *    CFontsFolder::BindToStorage
 */
-HRESULT WINAPI CFontsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CFontsFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n", this,
            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -276,7 +276,7 @@ HRESULT WINAPI CFontsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved,
 *     CFontsFolder::CompareIDs
 */
 
-HRESULT WINAPI CFontsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CFontsFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     int nReturn;
 
@@ -325,7 +325,7 @@ HRESULT WINAPI CFontsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOI
 /**************************************************************************
 *  CFontsFolder::GetAttributesOf
 */
-HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
+HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
     HRESULT hr = S_OK;
 
@@ -381,7 +381,7 @@ HRESULT WINAPI CFontsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DW
 */
 HRESULT WINAPI CFontsFolder::GetUIObjectOf(
     HWND hwndOwner,
-    UINT cidl, LPCITEMIDLIST *apidl,
+    UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
     REFIID riid, UINT *prgfInOut, LPVOID *ppvOut)
 {
     LPITEMIDLIST pidl;
@@ -439,7 +439,7 @@ HRESULT WINAPI CFontsFolder::GetUIObjectOf(
 *    CFontsFolder::GetDisplayNameOf
 *
 */
-HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CFontsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     PIDLFontStruct *pFont;
 
@@ -497,8 +497,8 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags,
 *  dwFlags   [in]  SHGNO formatting flags
 *  ppidlOut  [out] simple pidl returned
 */
-HRESULT WINAPI CFontsFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /*simple pidl */
-                                       LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+HRESULT WINAPI CFontsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /*simple pidl */
+                                       LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this,
            hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
@@ -539,13 +539,13 @@ HRESULT WINAPI CFontsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags
     return S_OK;
 }
 
-HRESULT WINAPI CFontsFolder::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+HRESULT WINAPI CFontsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
     FIXME ("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CFontsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
+HRESULT WINAPI CFontsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     WCHAR buffer[MAX_PATH] = {0};
     HRESULT hr = E_FAIL;

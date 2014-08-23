@@ -919,6 +919,7 @@ typedef struct _SCATTER_GATHER_CONTEXT {
 	PVOID AdapterListControlContext, MapRegisterBase;
 	ULONG MapRegisterCount;
 	BOOLEAN WriteToDevice;
+	WAIT_CONTEXT_BLOCK Wcb;
 } SCATTER_GATHER_CONTEXT, *PSCATTER_GATHER_CONTEXT;
 
 
@@ -1041,11 +1042,14 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	AdapterControlContext->AdapterListControlContext = Context;
 	AdapterControlContext->WriteToDevice = WriteToDevice;
 
-	return IoAllocateAdapterChannel(AdapterObject,
-	                                DeviceObject,
-									AdapterControlContext->MapRegisterCount,
-									HalpScatterGatherAdapterControl,
-									AdapterControlContext);
+	AdapterControlContext->Wcb.DeviceObject = DeviceObject;
+	AdapterControlContext->Wcb.DeviceContext = AdapterControlContext;
+	AdapterControlContext->Wcb.CurrentIrp = DeviceObject->CurrentIrp;
+
+	return HalAllocateAdapterChannel(AdapterObject,
+		&AdapterControlContext->Wcb,
+		AdapterControlContext->MapRegisterCount,
+		HalpScatterGatherAdapterControl);
 }
 
 /**

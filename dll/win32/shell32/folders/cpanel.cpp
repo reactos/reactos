@@ -312,7 +312,7 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
     LPBC pbc,
     LPOLESTR lpszDisplayName,
     DWORD *pchEaten,
-    LPITEMIDLIST *ppidl,
+    PIDLIST_RELATIVE *ppidl,
     DWORD *pdwAttributes)
 {
     WCHAR szElement[MAX_PATH];
@@ -408,7 +408,7 @@ HRESULT WINAPI CControlPanelFolder::EnumObjects(
 *        CControlPanelFolder::BindToObject
 */
 HRESULT WINAPI CControlPanelFolder::BindToObject(
-    LPCITEMIDLIST pidl,
+    PCUIDLIST_RELATIVE pidl,
     LPBC pbcReserved,
     REFIID riid,
     LPVOID *ppvOut)
@@ -422,7 +422,7 @@ HRESULT WINAPI CControlPanelFolder::BindToObject(
 *    CControlPanelFolder::BindToStorage
 */
 HRESULT WINAPI CControlPanelFolder::BindToStorage(
-    LPCITEMIDLIST pidl,
+    PCUIDLIST_RELATIVE pidl,
     LPBC pbcReserved,
     REFIID riid,
     LPVOID *ppvOut)
@@ -437,7 +437,7 @@ HRESULT WINAPI CControlPanelFolder::BindToStorage(
 *     CControlPanelFolder::CompareIDs
 */
 
-HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     int nReturn;
 
@@ -480,7 +480,7 @@ HRESULT WINAPI CControlPanelFolder::CreateViewObject(HWND hwndOwner, REFIID riid
 /**************************************************************************
 *  CControlPanelFolder::GetAttributesOf
 */
-HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
+HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
     HRESULT hr = S_OK;
 
@@ -522,7 +522,7 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST * a
 *
 */
 HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
-        UINT cidl, LPCITEMIDLIST * apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
+        UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
@@ -576,7 +576,7 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
 /**************************************************************************
 *    CControlPanelFolder::GetDisplayNameOf
 */
-HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     CHAR szName[MAX_PATH];
     WCHAR wszName[MAX_PATH+1]; /* +1 for potential backslash */
@@ -656,8 +656,8 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
 *  DWORD         dwFlags,    //[in ] SHGNO formatting flags
 *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
 */
-HRESULT WINAPI CControlPanelFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /*simple pidl */
-        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+HRESULT WINAPI CControlPanelFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /*simple pidl */
+        LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
     FIXME("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this, hwndOwner, pidl, debugstr_w(lpName), dwFlags, pPidlOut);
     return E_FAIL;
@@ -693,13 +693,13 @@ HRESULT WINAPI CControlPanelFolder::GetDefaultColumnState(UINT iColumn, DWORD *p
     return S_OK;
 }
 
-HRESULT WINAPI CControlPanelFolder::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+HRESULT WINAPI CControlPanelFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
     FIXME("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CControlPanelFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
+HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     HRESULT hr;
 

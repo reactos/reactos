@@ -84,7 +84,7 @@ NpCommonSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
                                          IoGetFileObjectGenericMapping());
     if (!NT_SUCCESS(Status)) return Status;
 
-    Status = ObLogSecurityDescriptor(TempSecurityDescriptor, &NewSecurityDescriptor, TRUE);
+    Status = ObLogSecurityDescriptor(TempSecurityDescriptor, &NewSecurityDescriptor, 1);
     ExFreePool(TempSecurityDescriptor);
 
     if (!NT_SUCCESS(Status)) return Status;

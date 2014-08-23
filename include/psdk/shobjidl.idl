@@ -215,7 +215,7 @@ interface IShellFolder : IUnknown
         [in] LPBC pbcReserved,
         [in, string] LPOLESTR lpszDisplayName,
         [out] ULONG *pchEaten,
-        [out] LPITEMIDLIST *ppidl,
+        [out] PIDLIST_RELATIVE *ppidl,
         [in, out, unique] ULONG *pdwAttributes);
 
     HRESULT EnumObjects(
@@ -224,21 +224,21 @@ interface IShellFolder : IUnknown
         [out] IEnumIDList **ppenumIDList);
 
     HRESULT BindToObject(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUIDLIST_RELATIVE pidl,
         [in] LPBC pbcReserved,
         [in] REFIID riid,
         [out, iid_is(riid)] void **ppvOut);
 
     HRESULT BindToStorage(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUIDLIST_RELATIVE pidl,
         [in] LPBC pbcReserved,
         [in] REFIID riid,
         [out, iid_is(riid)] void **ppvObj);
 
     HRESULT CompareIDs(
         [in] LPARAM lParam,
-        [in] LPCITEMIDLIST pidl1,
-        [in] LPCITEMIDLIST pidl2);
+        [in] PCUIDLIST_RELATIVE pidl1,
+        [in] PCUIDLIST_RELATIVE pidl2);
 
     HRESULT CreateViewObject(
         [in] HWND hwndOwner,
@@ -247,28 +247,28 @@ interface IShellFolder : IUnknown
 
     HRESULT GetAttributesOf(
         [in] UINT cidl,
-        [in, size_is(cidl)] LPCITEMIDLIST *apidl,
+        [in, size_is(cidl)] PCUITEMID_CHILD_ARRAY apidl,
         [in, out] SFGAOF *rgfInOut);
 
     HRESULT GetUIObjectOf(
         [in] HWND hwndOwner,
         [in] UINT cidl,
-        [in, size_is(cidl)] LPCITEMIDLIST *apidl,
+        [in, size_is(cidl)] PCUITEMID_CHILD_ARRAY apidl,
         [in] REFIID riid,
         [in, out, unique] UINT *prgfInOut,
         [out, iid_is(riid)] void **ppvOut);
 
     HRESULT GetDisplayNameOf(
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUITEMID_CHILD pidl,
         [in] SHGDNF uFlags,
         [out] STRRET *lpName);
 
     HRESULT SetNameOf(
         [in] HWND hwnd,
-        [in] LPCITEMIDLIST pidl,
+        [in] PCUITEMID_CHILD pidl,
         [in, string] LPCOLESTR lpszName,
         [in] SHGDNF uFlags,
-        [out] LPITEMIDLIST *ppidlOut);
+        [out] PITEMID_CHILD *ppidlOut);
 }
 
 
@@ -332,8 +332,8 @@ interface IShellFolder2 : IShellFolder
     HRESULT EnumSearches( [out] IEnumExtraSearch **ppenum );
     HRESULT GetDefaultColumn( [in] DWORD dwReserved, [out] ULONG *pSort, [out] ULONG *pDisplay );
     HRESULT GetDefaultColumnState( [in] UINT iColumn, [out] SHCOLSTATEF *pcsFlags );
-    HRESULT GetDetailsEx( [in] LPCITEMIDLIST pidl, [in] const SHCOLUMNID *pscid, [out] VARIANT *pv);
-    HRESULT GetDetailsOf( [in] LPCITEMIDLIST pidl, [in] UINT iColumn, [out] SHELLDETAILS *psd);
+    HRESULT GetDetailsEx( [in] PCUITEMID_CHILD pidl, [in] const SHCOLUMNID *pscid, [out] VARIANT *pv);
+    HRESULT GetDetailsOf( [in] PCUITEMID_CHILD pidl, [in] UINT iColumn, [out] SHELLDETAILS *psd);
     HRESULT MapColumnToSCID( [in] UINT iColumn, [in] SHCOLUMNID *pscid );
 }
 

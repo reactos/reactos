@@ -26,11 +26,11 @@ NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-    WaitQueue = (PNP_WAIT_QUEUE)Irp->Tail.Overlay.DriverContext[0];
+    WaitQueue = Irp->Tail.Overlay.DriverContext[0];
 
     KeAcquireSpinLock(&WaitQueue->WaitLock, &OldIrql);
 
-    WaitEntry = (PNP_WAIT_QUEUE_ENTRY)Irp->Tail.Overlay.DriverContext[1];
+    WaitEntry = Irp->Tail.Overlay.DriverContext[1];
     if (WaitEntry)
     {
         RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
@@ -102,94 +102,91 @@ NpInitializeWaitQueue(IN PNP_WAIT_QUEUE WaitQueue)
 NTSTATUS
 NTAPI
 NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
-               IN PUNICODE_STRING PipeName,
+               IN PUNICODE_STRING PipePath,
                IN NTSTATUS Status,
                IN PLIST_ENTRY List)
 {
-    UNICODE_STRING DestinationString;
+    UNICODE_STRING PipePathUpper;
     KIRQL OldIrql;
     PWCHAR Buffer;
     PLIST_ENTRY NextEntry;
     PNP_WAIT_QUEUE_ENTRY WaitEntry, Linkage;
     PIRP WaitIrp;
     PFILE_PIPE_WAIT_FOR_BUFFER WaitBuffer;
-    ULONG i, NameLength;
+    UNICODE_STRING WaitName, PipeName;
 
     Linkage = NULL;
 
     Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                   PipeName->Length,
+                                   PipePath->Length,
                                    NPFS_WAIT_BLOCK_TAG);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
-    RtlInitEmptyUnicodeString(&DestinationString, Buffer, PipeName->Length);
-    RtlUpcaseUnicodeString(&DestinationString, PipeName, FALSE);
+    RtlInitEmptyUnicodeString(&PipePathUpper, Buffer, PipePath->Length);
+    RtlUpcaseUnicodeString(&PipePathUpper, PipePath, FALSE);
 
     KeAcquireSpinLock(&WaitQueue->WaitLock, &OldIrql);
 
-    for (NextEntry = WaitQueue->WaitList.Flink;
-         NextEntry != &WaitQueue->WaitList;
-         NextEntry = NextEntry->Flink)
+    NextEntry = WaitQueue->WaitList.Flink;
+    while (NextEntry != &WaitQueue->WaitList)
     {
         WaitIrp = CONTAINING_RECORD(NextEntry, IRP, Tail.Overlay.ListEntry);
+        NextEntry = NextEntry->Flink;
         WaitEntry = WaitIrp->Tail.Overlay.DriverContext[1];
 
         if (WaitEntry->AliasName.Length)
         {
             ASSERT(FALSE);
-            if (DestinationString.Length == WaitEntry->AliasName.Length)
-            {
-                if (RtlCompareMemory(WaitEntry->AliasName.Buffer,
-                                     DestinationString.Buffer,
-                                     DestinationString.Length) ==
-                    DestinationString.Length)
-                {
-CancelWait:
-                    RemoveEntryList(&WaitIrp->Tail.Overlay.ListEntry);
-                    if (KeCancelTimer(&WaitEntry->Timer))
-                    {
-                        WaitEntry->WaitQueue = (PNP_WAIT_QUEUE)Linkage;
-                        Linkage = WaitEntry;
-                    }
-                    else
-                    {
-                        WaitEntry->Irp = NULL;
-                        WaitIrp->Tail.Overlay.DriverContext[1] = NULL;
-                    }
-
-                    if (IoSetCancelRoutine(WaitIrp, NULL))
-                    {
-                        WaitIrp->IoStatus.Information = 0;
-                        WaitIrp->IoStatus.Status = Status;
-                        InsertTailList(List, &WaitIrp->Tail.Overlay.ListEntry);
-                    }
-                    else
-                    {
-                        WaitIrp->Tail.Overlay.DriverContext[1] = NULL;
-                    }
-                }
-            }
+            /* We have an alias. Use that for comparison */
+            WaitName = WaitEntry->AliasName;
+            PipeName = PipePathUpper;
         }
         else
         {
+            /* Use the name from the wait buffer to compare */
             WaitBuffer = WaitIrp->AssociatedIrp.SystemBuffer;
+            WaitName.Buffer = WaitBuffer->Name;
+            WaitName.Length = WaitBuffer->NameLength;
+            WaitName.MaximumLength = WaitName.Length;
 
-            if (WaitBuffer->NameLength + sizeof(WCHAR) == DestinationString.Length)
+            /* WaitName doesn't have a leading backslash,
+             * so skip the one in PipePathUpper for the comparison */
+            PipeName.Buffer = PipePathUpper.Buffer + 1;
+            PipeName.Length = PipePathUpper.Length - sizeof(WCHAR);
+            PipeName.MaximumLength = PipeName.Length;
+        }
+
+        if (RtlEqualUnicodeString(&WaitName, &PipeName, FALSE))
+        {
+            /* Found a matching wait. Cancel it */
+            RemoveEntryList(&WaitIrp->Tail.Overlay.ListEntry);
+            if (KeCancelTimer(&WaitEntry->Timer))
             {
-                NameLength = WaitBuffer->NameLength / sizeof(WCHAR);
-                for (i = 0; i < NameLength; i++)
-                {
-                    if (WaitBuffer->Name[i] != DestinationString.Buffer[i + 1]) break;
-                }
+                WaitEntry->WaitQueue = (PNP_WAIT_QUEUE)Linkage;
+                Linkage = WaitEntry;
+            }
+            else
+            {
+                WaitEntry->Irp = NULL;
+                WaitIrp->Tail.Overlay.DriverContext[1] = NULL;
+            }
 
-                if (i >= NameLength) goto CancelWait;
+            if (IoSetCancelRoutine(WaitIrp, NULL))
+            {
+                WaitIrp->IoStatus.Information = 0;
+                WaitIrp->IoStatus.Status = Status;
+                InsertTailList(List, &WaitIrp->Tail.Overlay.ListEntry);
+            }
+            else
+            {
+                WaitIrp->Tail.Overlay.DriverContext[1] = NULL;
             }
         }
     }
 
     KeReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
 
-    ExFreePool(DestinationString.Buffer);
+    ExFreePoolWithTag(Buffer, NPFS_WAIT_BLOCK_TAG);
 
     while (Linkage)
     {

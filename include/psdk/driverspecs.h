@@ -207,7 +207,7 @@ __ANNOTATION(SAL_IoGetDmaAdapter(void);)
 #define __drv_formatString(kind)
 #define __drv_freesMem(kind)
 #define __drv_fun(annotes)
-#define __drv_functionClass
+#define __drv_functionClass(x)
 #define __drv_holdsCancelSpinLock()
 #define __drv_holdsCriticalRegion()
 #define __drv_holdsPriorityRegion()

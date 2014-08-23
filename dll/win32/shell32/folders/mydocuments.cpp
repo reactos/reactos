@@ -126,8 +126,8 @@ HRESULT WINAPI CMyDocsFolder::FinalConstruct()
     return S_OK;
 }
 
-HRESULT WINAPI CMyDocsFolder::ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-        DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+HRESULT WINAPI CMyDocsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
+        DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
     WCHAR szElement[MAX_PATH];
     LPCWSTR szNext = NULL;
@@ -245,7 +245,7 @@ HRESULT WINAPI CMyDocsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMI
 /**************************************************************************
  *        CMyDocsFolder::BindToObject
  */
-HRESULT WINAPI CMyDocsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CMyDocsFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     TRACE("(%p)->(pidl=%p,%p,%s,%p)\n",
            this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -256,7 +256,7 @@ HRESULT WINAPI CMyDocsFolder::BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved,
 /**************************************************************************
  *    CMyDocsFolder::BindToStorage
  */
-HRESULT WINAPI CMyDocsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+HRESULT WINAPI CMyDocsFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
     FIXME("(%p)->(pidl=%p,%p,%s,%p) stub\n",
            this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
@@ -268,7 +268,7 @@ HRESULT WINAPI CMyDocsFolder::BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved
 /**************************************************************************
  *     CMyDocsFolder::CompareIDs
  */
-HRESULT WINAPI CMyDocsFolder::CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+HRESULT WINAPI CMyDocsFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     int nReturn;
 
@@ -319,7 +319,7 @@ HRESULT WINAPI CMyDocsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 /**************************************************************************
  *  CMyDocsFolder::GetAttributesOf
  */
-HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut)
+HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
     HRESULT hr = S_OK;
     static const DWORD dwMyDocumentsAttributes =
@@ -371,7 +371,7 @@ HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, LPCITEMIDLIST *apidl, D
  *  LPVOID*        ppvObject) //[out] Resulting Interface
  *
  */
-HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
+HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     LPITEMIDLIST pidl;
@@ -431,7 +431,7 @@ HRESULT WINAPI CMyDocsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMID
     return hr;
 }
 
-HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     HRESULT hr = S_OK;
     LPWSTR pszPath;
@@ -571,8 +571,8 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags
     return hr;
 }
 
-HRESULT WINAPI CMyDocsFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,    /* simple pidl */
-                                        LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+HRESULT WINAPI CMyDocsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
+                                        LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
     FIXME ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this, hwndOwner, pidl,
            debugstr_w (lpName), dwFlags, pPidlOut);
@@ -616,14 +616,14 @@ HRESULT WINAPI CMyDocsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlag
     return S_OK;
 }
 
-HRESULT WINAPI CMyDocsFolder::GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+HRESULT WINAPI CMyDocsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
     FIXME ("(%p)\n", this);
 
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CMyDocsFolder::GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd)
+HRESULT WINAPI CMyDocsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     HRESULT hr = S_OK;
 

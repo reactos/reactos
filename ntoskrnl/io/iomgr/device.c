@@ -351,6 +351,11 @@ IopEditDeviceList(IN PDRIVER_OBJECT DriverObject,
             while (Previous->NextDevice != DeviceObject)
             {
                 /* Not this one, keep moving */
+                if (!Previous->NextDevice)
+                {
+                    DPRINT1("Failed to remove PDO %p on driver %wZ (not found)\n", DeviceObject, &DeviceObject->DriverObject->DriverName);
+                    return;
+                }
                 Previous = Previous->NextDevice;
             }
 
