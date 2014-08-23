@@ -604,7 +604,6 @@ NtGdiSetDIBitsToDeviceInternal(
     /* HACK: If this is a RLE bitmap, only the relevant pixels must be set. */
     if ((bmi->bmiHeader.biCompression == BI_RLE8) || (bmi->bmiHeader.biCompression == BI_RLE4))
     {
-        ASSERT(ScanLines == bmi->bmiHeader.biHeight);
         hMaskBitmap = IntGdiCreateMaskFromRLE(bmi->bmiHeader.biWidth,
             ScanLines,
             bmi->bmiHeader.biCompression,
