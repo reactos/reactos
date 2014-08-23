@@ -376,10 +376,17 @@ endfunction()
 function(create_iso_lists)
     # generate reactos.cab before anything else
     get_property(_filelist GLOBAL PROPERTY REACTOS_CAB_DEPENDS)
+
+    # begin with reactos.inf. It doesn't depend on anything so that it's always generated (that's for optional modules)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
+        DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf)
+
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
-        COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
-    DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf native-cabman ${_filelist})
+        COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf native-cabman ${_filelist})
 
     add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
     add_dependencies(reactos_cab reactos_cab_inf)
