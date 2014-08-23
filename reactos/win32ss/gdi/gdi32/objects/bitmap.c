@@ -671,8 +671,7 @@ SetDIBitsToDevice(
     if (ColorUse && ColorUse != DIB_PAL_COLORS && ColorUse != DIB_PAL_COLORS + 1)
         return 0;
 
-    pConvertedInfo = ConvertBitmapInfo(lpbmi, ColorUse, &ConvertedInfoSize,
-    FALSE);
+    pConvertedInfo = ConvertBitmapInfo(lpbmi, ColorUse, &ConvertedInfoSize, FALSE);
     if (!pConvertedInfo)
         return 0;
 
@@ -720,6 +719,15 @@ SetDIBitsToDevice(
         }
     }
 #endif
+
+    if ((pConvertedInfo->bmiHeader.biCompression == BI_RLE8) ||
+            (pConvertedInfo->bmiHeader.biCompression == BI_RLE4))
+    {
+        /* For compressed data, we must set the whole thing */
+        StartScan = 0;
+        ScanLines = pConvertedInfo->bmiHeader.biHeight;
+    }
+
     cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO) lpbmi, ScanLines);
 
     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
