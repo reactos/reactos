@@ -41,6 +41,7 @@
 #define IDM_VOLUMECTL  1004
 #define IDM_DEVPROPS   1005
 #define IDM_REPEAT     1006
+#define IDM_SWITCHVIEW 1007
 
 /* ToolBar Icons */
 #define TBICON_PLAY     0

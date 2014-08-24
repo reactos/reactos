@@ -16,6 +16,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "W&iederholen\tStrg+T", IDM_REPEAT
     END
+    POPUP "&Ansicht"
+    BEGIN
+        MENUITEM "Einzelfenster-&Modus", IDM_SWITCHVIEW
+    END
     POPUP "&Gerät"
     BEGIN
         MENUITEM "&Eigenschaften", IDM_DEVPROPS

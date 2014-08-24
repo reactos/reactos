@@ -18,6 +18,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
     END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+    END
     POPUP "&Aygıt"
     BEGIN
         MENUITEM "&Husûsiyetler", IDM_DEVPROPS

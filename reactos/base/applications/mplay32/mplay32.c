@@ -19,7 +19,9 @@ WORD wDeviceId;
 BOOL bIsOpened = FALSE;
 BOOL bIsPaused = FALSE;
 BOOL bRepeat = FALSE;
+BOOL bIsSingleWindow = FALSE;
 UINT MaxFilePos = 0;
+RECT PrevWindowPos;
 
 
 /* ToolBar Buttons */
@@ -35,9 +37,11 @@ static const TBBUTTON Buttons[] =
     {TBICON_FORWARD,   IDC_FORWARD,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0}
 };
 
-void EnableMenuItems(void)
+void EnableMenuItems(HWND hwnd)
 {
     MCI_GENERIC_PARMS mciGeneric;
+    MCI_DGV_RECT_PARMS mciVideoRect;
+    MCI_DGV_WINDOW_PARMSW mciVideoWindow; 
     DWORD dwError;
 
     EnableMenuItem(hMainMenu, IDM_CLOSE_FILE, MF_BYCOMMAND | MF_ENABLED);
@@ -47,12 +51,38 @@ void EnableMenuItems(void)
     {
         EnableMenuItem(hMainMenu, IDM_DEVPROPS, MF_BYCOMMAND | MF_ENABLED);
     }
+
+    mciVideoWindow.hWnd = hwnd;
+
+    dwError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD)(LPSTR)&mciVideoWindow); 
+    if (!dwError)
+    {
+        dwError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD)(LPSTR)&mciVideoRect);
+        if (!dwError)
+        {
+            EnableMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_ENABLED);
+        }
+    }
 }
 
 void DisableMenuItems(void)
 {
     EnableMenuItem(hMainMenu, IDM_CLOSE_FILE, MF_BYCOMMAND | MF_GRAYED);
     EnableMenuItem(hMainMenu, IDM_DEVPROPS, MF_BYCOMMAND | MF_GRAYED);
+    EnableMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_GRAYED);
+}
+
+void ResizeClientArea(HWND hwnd, int nWidth, int nHeight)
+{
+    RECT rcClientRect;
+    RECT rcWindowRect;
+    POINT ptDifference;
+
+    GetClientRect(hwnd, &rcClientRect);
+    GetWindowRect(hwnd, &rcWindowRect);
+    ptDifference.x = (rcWindowRect.right - rcWindowRect.left) - rcClientRect.right;
+    ptDifference.y = (rcWindowRect.bottom - rcWindowRect.top) - rcClientRect.bottom;
+    MoveWindow(hwnd, rcWindowRect.left, rcWindowRect.top, nWidth + ptDifference.x, nHeight + ptDifference.y, TRUE);
 }
 
 static VOID
@@ -213,6 +243,77 @@ IsSupportedFileExtension(LPTSTR lpFileName, LPTSTR lpDeviceName, LPDWORD dwSize)
     return FALSE;
 }
 
+static VOID
+SwitchViewMode(HWND hwnd)
+{
+    MCIERROR mciError;
+    MCI_DGV_RECT_PARMS mciVideoRect;
+    MCI_DGV_WINDOW_PARMSW mciVideoWindow; 
+    RECT rcToolbarRect;
+    RECT rcTempRect;
+
+    mciVideoWindow.hWnd = hwnd;
+
+    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD)(LPSTR)&mciVideoWindow); 
+    if (mciError)
+    {
+        return;
+    }
+
+    mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD)(LPSTR)&mciVideoRect);
+    if (mciError)
+    {
+        return;
+    }
+
+    if (!bIsSingleWindow)
+    {
+        GetWindowRect(hwnd, &PrevWindowPos);
+
+        SetParent(hTrackBar, hToolBar);
+
+        mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE, (DWORD)(LPSTR)&mciVideoRect);
+        if (mciError)
+        {
+            ShowMCIError(hwnd, mciError);
+            return;
+        }
+
+        GetWindowRect(hToolBar, &rcToolbarRect);         
+        ResizeClientArea(hwnd, mciVideoRect.rc.right, mciVideoRect.rc.bottom + (rcToolbarRect.bottom - rcToolbarRect.top));
+
+        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD)(LPSTR)&mciVideoWindow); 
+        if (mciError)
+        {
+            ShowMCIError(hwnd, mciError);
+            return;
+        }
+
+        GetWindowRect(hToolBar, &rcTempRect);
+        MoveWindow(hTrackBar, 180, 0, rcTempRect.right - rcTempRect.left - 180, 25, TRUE);
+
+        CheckMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_CHECKED);
+        bIsSingleWindow = TRUE;
+    }
+    else
+    {
+        bIsSingleWindow = FALSE;
+        CheckMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_UNCHECKED);
+
+        mciVideoWindow.hWnd = MCI_DGV_WINDOW_DEFAULT;
+        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD)(LPSTR)&mciVideoWindow);
+        if (mciError)
+        {
+            ShowMCIError(hwnd, mciError);
+            return;
+        }
+
+        SetParent(hTrackBar, hwnd);
+
+        MoveWindow(hwnd, PrevWindowPos.left, PrevWindowPos.top, PrevWindowPos.right - PrevWindowPos.left, PrevWindowPos.bottom - PrevWindowPos.top, TRUE);
+    }
+}
+
 static DWORD
 CloseMciDevice(VOID)
 {
@@ -295,7 +396,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     bIsOpened = TRUE;
     _tcscpy(szPrevFile, lpFileName);
 
-    EnableMenuItems();
+    EnableMenuItems(hwnd);
 
     return 0;
 }
@@ -307,6 +408,12 @@ StopPlayback(HWND hwnd)
     {
         SendMessage(hTrackBar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 1);
         KillTimer(hwnd, IDT_PLAYTIMER);
+
+        if (bIsSingleWindow)
+        {
+            SwitchViewMode(hwnd);
+        }
+
         CloseMciDevice();
     }
 }
@@ -499,6 +606,11 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
         return;
     }
 
+    if (bIsOpened)
+    {
+        StopPlayback(hwnd);
+    }
+
     mciError = OpenMciDevice(hwnd, szDeviceName, szLocalFileName);
     if (mciError != 0)
     {
@@ -622,12 +734,14 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             LPRECT pRect = (LPRECT)lParam;
 
-            if (pRect->right - pRect->left < MAIN_WINDOW_MIN_WIDTH)
-                pRect->right = pRect->left + MAIN_WINDOW_MIN_WIDTH;
+            if (!bIsSingleWindow)
+            {
+                if (pRect->right - pRect->left < MAIN_WINDOW_MIN_WIDTH)
+                    pRect->right = pRect->left + MAIN_WINDOW_MIN_WIDTH;
 
-            if (pRect->bottom - pRect->top != MAIN_WINDOW_HEIGHT)
-                pRect->bottom = pRect->top + MAIN_WINDOW_HEIGHT;
-
+                if (pRect->bottom - pRect->top != MAIN_WINDOW_HEIGHT)
+                    pRect->bottom = pRect->top + MAIN_WINDOW_HEIGHT;
+            }
             return TRUE;
         }
 
@@ -635,14 +749,33 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             RECT Rect;
             UINT Size;
+            RECT ToolbarRect;
+            MCI_DGV_PUT_PARMS mciPut;
 
             if (hToolBar && hTrackBar)
             {
                 SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
                 SendMessage(hToolBar, TB_GETITEMRECT, 1, (LPARAM)&Rect);
 
-                Size = GetSystemMetrics(SM_CYMENU) + Rect.bottom;
-                MoveWindow(hTrackBar, 0, 0, LOWORD(lParam), HIWORD(lParam) - Size, TRUE);
+                if (!bIsSingleWindow)
+                {
+                    Size = GetSystemMetrics(SM_CYMENU) + Rect.bottom;
+                    MoveWindow(hTrackBar, 0, 0, LOWORD(lParam), HIWORD(lParam) - Size, TRUE);
+                }
+                else
+                {
+                    MoveWindow(hTrackBar, 180, 0, LOWORD(lParam) - 180, 25, TRUE);
+
+                    GetClientRect(hwnd, &Rect);
+                    GetClientRect(hToolBar, &ToolbarRect);
+
+                    mciPut.rc.top = 0;
+                    mciPut.rc.left = 0;
+                    mciPut.rc.right = Rect.right;
+                    mciPut.rc.bottom = Rect.bottom - (ToolbarRect.bottom - ToolbarRect.top) - 2;
+
+                    mciSendCommand(wDeviceId, MCI_PUT, MCI_DGV_PUT_DESTINATION | MCI_DGV_RECT | MCI_WAIT, (DWORD)&mciPut);
+                }
             }
             return 0L;
         }
@@ -660,6 +793,15 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 {
                     SendMessage(hTrackBar, TBM_SETPOS, TRUE, 0);
                 }
+            }
+        }
+        break;
+
+        case WM_NCLBUTTONDBLCLK:
+        {
+            if (wParam == HTCAPTION)
+            {
+                SwitchViewMode(hwnd);
             }
         }
         break;
@@ -731,6 +873,10 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
                     break;
                 }
+
+                case IDM_SWITCHVIEW:
+                    SwitchViewMode(hwnd);
+                    break;
 
                 case IDM_DEVPROPS:
                     ShowDeviceProperties(hwnd);

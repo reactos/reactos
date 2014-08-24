@@ -24,6 +24,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
     END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+    END
     POPUP "&Device"
     BEGIN
         MENUITEM "&Properties", IDM_DEVPROPS

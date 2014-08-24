@@ -16,6 +16,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
     END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+    END
     POPUP "&Устройство"
     BEGIN
         MENUITEM "&Свойства", IDM_DEVPROPS
