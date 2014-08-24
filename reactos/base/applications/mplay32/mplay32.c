@@ -55,15 +55,26 @@ void DisableMenuItems(void)
 }
 
 static VOID
+ShowLastWin32Error(HWND hwnd)
+{
+    DWORD dwError;
+    LPTSTR lpMessageBuffer;
+
+    dwError = GetLastError();
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError, 0, (LPWSTR)&lpMessageBuffer, 0, NULL);
+    MessageBox(hwnd, lpMessageBuffer, szAppTitle, MB_OK | MB_ICONERROR);
+    LocalFree(lpMessageBuffer);
+}
+
+static VOID
 SetImageList(HWND hwnd)
 {
     HIMAGELIST hImageList;
 
     hImageList = ImageList_Create(16, 16, ILC_MASK | ILC_COLOR24, 1, 1);
-
     if (!hImageList)
     {
-        MessageBox(hwnd, _T("ImageList it is not created!"), NULL, MB_OK);
+        ShowLastWin32Error(hwnd);
         return;
     }
 
@@ -106,7 +117,7 @@ ShowMCIError(HWND hwnd, DWORD dwError)
 {
     TCHAR szErrorMessage[256];
     TCHAR szTempMessage[300];
-    
+
     if (mciGetErrorString(dwError, szErrorMessage, sizeof(szErrorMessage) / sizeof(TCHAR)) == FALSE)
     {
         LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, sizeof(szErrorMessage) / sizeof(TCHAR));
@@ -138,7 +149,7 @@ InitControls(HWND hwnd)
                                NULL);
     if (!hTrackBar)
     {
-        MessageBox(hwnd, _T("TrackBar it is not created!"), NULL, MB_OK);
+        ShowLastWin32Error(hwnd);
         return;
     }
 
@@ -158,7 +169,7 @@ InitControls(HWND hwnd)
                               NULL);
     if (!hToolBar)
     {
-        MessageBox(hwnd, _T("ToolBar it is not created!"), NULL, MB_OK);
+        ShowLastWin32Error(hwnd);
         return;
     }
 
@@ -194,7 +205,7 @@ IsSupportedFileExtension(LPTSTR lpFileName, LPTSTR lpDeviceName, LPDWORD dwSize)
 
             return TRUE;
         }
-        
+
         RegCloseKey(hKey);
     }
 
@@ -545,7 +556,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             HDROP drophandle;
             TCHAR droppedfile[MAX_PATH];
-            
+
             drophandle = (HDROP)wParam;
             DragQueryFile(drophandle, 0, droppedfile, sizeof(droppedfile) / sizeof(TCHAR));
             DragFinish(drophandle);
@@ -693,7 +704,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case IDM_DEVPROPS:
                     ShowDeviceProperties(hwnd);
                     break;
-                
+
                 case IDM_VOLUMECTL:
                     ShellExecute(hwnd, NULL, _T("SNDVOL32.EXE"), NULL, NULL, SW_SHOWNORMAL);
                     break;
@@ -743,7 +754,11 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     WndClass.hbrBackground     = (HBRUSH)(COLOR_BTNFACE + 1);
     WndClass.lpszMenuName      = MAKEINTRESOURCE(IDR_MAINMENU);
 
-    RegisterClassEx(&WndClass);
+    if (!RegisterClassEx(&WndClass))
+    {
+        ShowLastWin32Error(0);
+        return 0;
+    }
 
     hwnd = CreateWindow(szClassName,
                         szAppTitle,
@@ -756,6 +771,11 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
                         NULL,
                         hInstance,
                         NULL);
+    if (!hwnd)
+    {
+        ShowLastWin32Error(0);
+        return 0;
+    }
 
     DragAcceptFiles(hwnd, TRUE);
 
@@ -780,5 +800,5 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
         DispatchMessage(&msg);
     }
 
-    return 0;
+    return (INT)msg.wParam;
 }
