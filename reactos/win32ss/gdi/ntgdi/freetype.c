@@ -1600,12 +1600,12 @@ ftGdiGetGlyphOutline(
         }
     }
 
-//  FT_Set_Pixel_Sizes(ft_face,
-//                     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+    FT_Set_Pixel_Sizes(ft_face,
+                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
     /* FIXME: Should set character height if neg */
-//                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
-//                      dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
-//    FtSetCoordinateTransform(face, DC_pmxWorldToDevice(dc));
+                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                        dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
+    FtSetCoordinateTransform(ft_face, DC_pmxWorldToDevice(dc));
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -3674,6 +3674,7 @@ GreExtTextOutW(
         }
         else
         {
+            // FIXME this should probably be a matrix transform with TextTop as well.
             Scale = pdcattr->mxWorldToDevice.efM11;
             if (_FLOATOBJ_Equal0(&Scale))
                 FLOATOBJ_Set1(&Scale);
