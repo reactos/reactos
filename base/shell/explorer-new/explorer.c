@@ -360,7 +360,7 @@ HideMinimizedWindows(IN BOOL bHide)
     mm.cbSize = sizeof(mm);
     if (!SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
     {
-        DbgPrint("SystemParametersInfo failed with %lu\n", GetLastError());
+        ERR("SystemParametersInfo failed with %lu\n", GetLastError());
         return;
     }
     if (bHide)
@@ -368,7 +368,7 @@ HideMinimizedWindows(IN BOOL bHide)
     else
         mm.iArrange &= ~ARW_HIDE;
     if (!SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
-        DbgPrint("SystemParametersInfo failed with %lu\n", GetLastError());
+        ERR("SystemParametersInfo failed with %lu\n", GetLastError());
 }
 
 INT WINAPI
@@ -470,7 +470,7 @@ _tWinMain(IN HINSTANCE hInstance,
          * /root,<object>   Open a window for the given object path.
          * /select,<object> Open a window with the given object selected.
          */
-        
+
         /* FIXME: Do it right */
         WCHAR* tmp = wcsstr(lpCmdLine,L"/root,");
         if (tmp)
