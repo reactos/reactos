@@ -8,10 +8,17 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Отваряне...", IDM_OPEN_FILE
-        MENUITEM "&Затваряне", IDM_CLOSE_FILE
+        MENUITEM "&Отваряне...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Затваряне\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "Из&ход", IDM_EXIT
+    END
+    POPUP "&Play"
+    BEGIN
+        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
     END
     POPUP "&Device"
     BEGIN
@@ -23,6 +30,15 @@ BEGIN
     BEGIN
         MENUITEM "&За...", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE

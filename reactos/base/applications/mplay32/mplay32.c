@@ -18,6 +18,7 @@ TCHAR szPrevFile[MAX_PATH] = _T("\0");
 WORD wDeviceId;
 BOOL bIsOpened = FALSE;
 BOOL bIsPaused = FALSE;
+BOOL bRepeat = FALSE;
 UINT MaxFilePos = 0;
 
 
@@ -432,6 +433,7 @@ VOID CALLBACK
 PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
     MCI_STATUS_PARMS mciStatus;
+    MCI_PLAY_PARMS mciPlay;
     DWORD dwPos;
 
     if (!bIsOpened) KillTimer(hwnd, IDT_PLAYTIMER);
@@ -442,7 +444,16 @@ PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 
     if((UINT)dwPos >= MaxFilePos)
     {
-        StopPlayback(hwnd);
+        if (!bRepeat)
+        {
+            StopPlayback(hwnd);
+        }
+        else
+        {
+            mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
+            mciPlay.dwCallback = (DWORD_PTR)hwnd;
+            mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD_PTR)&mciPlay);
+        }
     }
     else
     {
@@ -548,9 +559,11 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     switch (Message)
     {
         case WM_CREATE:
+        {
             InitControls(hwnd);
             hMainMenu = GetMenu(hwnd);
             break;
+        }
 
         case WM_DROPFILES:
         {
@@ -579,25 +592,25 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     {
                         case IDC_PLAY:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_PLAY);
-                        break;
+                            break;
                         case IDC_STOP:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_STOP);
-                        break;
+                            break;
                         case IDC_EJECT:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EJECT);
-                        break;
+                            break;
                         case IDC_BACKWARD:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_BACKWARD);
-                        break;
+                            break;
                         case IDC_SEEKBACK:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_SEEKBACK);
-                        break;
+                            break;
                         case IDC_SEEKFORW:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_SEEKFORW);
-                        break;
+                            break;
                         case IDC_FORWARD:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_FORWARD);
-                        break;
+                            break;
                     }
                     break;
                 }
@@ -652,9 +665,11 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         break;
 
         case WM_COMMAND:
+        {
             switch (LOWORD(wParam))
             {
                 case IDC_PLAY:
+                {
                     if (bIsOpened)
                     {
                         if (bIsPaused)
@@ -670,6 +685,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                             PlayFile(hwnd, NULL);
                     }
                     break;
+                }
 
                 case IDC_STOP:
                     StopPlayback(hwnd);
@@ -701,6 +717,21 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     _tcscpy(szPrevFile, _T("\0"));
                     break;
 
+                case IDM_REPEAT:
+                {
+                    if (!bRepeat)
+                    {
+                        CheckMenuItem(hMainMenu, IDM_REPEAT, MF_BYCOMMAND | MF_CHECKED);
+                        bRepeat = TRUE;
+                    }
+                    else
+                    {
+                        CheckMenuItem(hMainMenu, IDM_REPEAT, MF_BYCOMMAND | MF_UNCHECKED);
+                        bRepeat = FALSE;
+                    }
+                    break;
+                }
+
                 case IDM_DEVPROPS:
                     ShowDeviceProperties(hwnd);
                     break;
@@ -710,17 +741,19 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDM_ABOUT:
-        {
+                {
                     HICON mplayIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
                     ShellAbout(hwnd, szAppTitle, 0, mplayIcon);
-            DeleteObject(mplayIcon);
+                    DeleteObject(mplayIcon);
                     break;
-        }
+                }
+
                 case IDM_EXIT:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                     return 0;
             }
             break;
+        }
 
         case WM_DESTROY:
             StopPlayback(hwnd);
@@ -739,6 +772,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     HWND hwnd;
     MSG msg;
     DWORD dwError;
+    HANDLE hAccel;
 
     hInstance = hInst;
 
@@ -777,6 +811,8 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
         return 0;
     }
 
+    hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCELERATORS));
+
     DragAcceptFiles(hwnd, TRUE);
 
     DisableMenuItems();
@@ -796,9 +832,14 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     /* Message Loop */
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!TranslateAccelerator(hwnd, hAccel, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
+
+    DestroyAcceleratorTable(hAccel);
 
     return (INT)msg.wParam;
 }

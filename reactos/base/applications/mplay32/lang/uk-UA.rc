@@ -12,10 +12,17 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Відкрити...", IDM_OPEN_FILE
-        MENUITEM "&Закрити", IDM_CLOSE_FILE
+        MENUITEM "&Відкрити...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Закрити\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "&Вихід", IDM_EXIT
+    END
+    POPUP "&Play"
+    BEGIN
+        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
     END
     POPUP "&Device"
     BEGIN
@@ -27,6 +34,15 @@ BEGIN
     BEGIN
         MENUITEM "&Про програму...", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE
