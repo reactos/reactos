@@ -1763,6 +1763,7 @@ DWORD WINAPI CFSFolder::_DoDropThreadProc(LPVOID lpParameter) {
     data->This->Release();
     //Release the parameter from the heap.
     HeapFree(GetProcessHeap(), 0, data);
+    CoUninitialize();
     return 0;
 }
 

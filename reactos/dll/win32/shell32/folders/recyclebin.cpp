@@ -1459,8 +1459,9 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
 
     /* Handle cfShellIDList Drop objects here, otherwise send the approriate message to other software */
     if (SUCCEEDED(pDataObject->QueryGetData(&fmt))) {
-        pDataObject->AddRef();
-        SHCreateThread(DoDeleteThreadProc, pDataObject, NULL, NULL);
+        IStream *s;
+        CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObject, &s);
+        SHCreateThread(DoDeleteThreadProc, s, NULL, NULL);
     }
     else
     {
@@ -1474,10 +1475,14 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
 
 DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter) 
 {
-    IDataObject *pda = (IDataObject*) lpParameter;
-    DoDeleteDataObject(pda);
-    //Release the data object
-    pda->Release();
+    CoInitialize(NULL);
+    CComPtr<IDataObject> pDataObject;
+    HRESULT hr = CoGetInterfaceAndReleaseStream (static_cast<IStream*>(lpParameter), IID_PPV_ARG(IDataObject, &pDataObject));
+    if (SUCCEEDED(hr))
+    {
+        DoDeleteDataObject(pDataObject);
+    }
+    CoUninitialize();
     return 0;
 }
 
