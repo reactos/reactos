@@ -4,10 +4,6 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Protokol"
     BEGIN
-        MENUITEM "&Aplikace", ID_LOG_APPLICATION
-        MENUITEM "&Zabezpečení", ID_LOG_SECURITY
-        MENUITEM "&Systém", ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
         MENUITEM "Uložit &Protokol...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Odstranit události", ID_CLEAR_EVENTS, GRAYED

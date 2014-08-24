@@ -6,10 +6,6 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Логи"
     BEGIN
-        MENUITEM "&Приложений", ID_LOG_APPLICATION
-        MENUITEM "&Безопасности", ID_LOG_SECURITY
-        MENUITEM "&Системы", ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
         MENUITEM "Save &Protocol...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", ID_CLEAR_EVENTS, GRAYED

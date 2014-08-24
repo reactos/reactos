@@ -6,10 +6,6 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Protokoll"
     BEGIN
-        MENUITEM "&Anwendung", ID_LOG_APPLICATION
-        MENUITEM "&Sicherheit", ID_LOG_SECURITY
-        MENUITEM "&System", ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
         MENUITEM "Protokoll s&peichern...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Alle E&reignisse löschen", ID_CLEAR_EVENTS, GRAYED
