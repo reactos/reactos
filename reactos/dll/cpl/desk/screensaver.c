@@ -123,7 +123,7 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
     if (pData->Selection > 0)
     {
         _stprintf(szCmdline,
-                  _T("%s /p %lu"),
+                  _T("%s /p %Iu"),
                   pData->ScreenSaverItems[pData->Selection].szFilename,
                   (ULONG_PTR)hPreview);
 
@@ -199,7 +199,7 @@ ScreensaverConfig(HWND hwndDlg, PDATA pData)
         return;
 
     _stprintf(szCmdline,
-              _T("%s /c:%lu"),
+              _T("%s /c:%Iu"),
               pData->ScreenSaverItems[pData->Selection].szFilename,
               (ULONG_PTR)hwndDlg);
 
