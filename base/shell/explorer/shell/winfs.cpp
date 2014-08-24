@@ -33,6 +33,7 @@
 //#include "winfs.h"
 
 
+#ifdef BACKUP_READ_IMPLEMENTED
 int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 {
 	PVOID ctx = 0;
@@ -116,6 +117,7 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 
 	return cnt;
 }
+#endif
 
 
 void WinDirectory::read_directory(int scan_flags)
@@ -167,8 +169,10 @@ void WinDirectory::read_directory(int scan_flags)
 					if (GetFileInformationByHandle(hFile, &entry->_bhfi))
 						entry->_bhfi_valid = true;
 
+#ifdef BACKUP_READ_IMPLEMENTED
 					if (ScanNTFSStreams(entry, hFile))
 						entry->_scanned = true;	// There exist named NTFS sub-streams in this file.
+#endif
 
 					CloseHandle(hFile);
 				}

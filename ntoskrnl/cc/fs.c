@@ -87,6 +87,7 @@ CcInitializeCacheMap (
 
     /* Call old ROS cache init function */
     CcRosInitializeFileCache(FileObject,
+                             FileSizes,
                              CallBacks,
                              LazyWriterContext);
 }
@@ -234,12 +235,12 @@ CcUninitializeCacheMap (
     IN PLARGE_INTEGER TruncateSize OPTIONAL,
     IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL)
 {
-#if 0
-    UNIMPLEMENTED;
-    return FALSE;
-#else
-    return NT_SUCCESS(CcRosReleaseFileCache(FileObject));
-#endif
+    NTSTATUS Status;
+
+    Status = CcRosReleaseFileCache(FileObject);
+    if (UninitializeCompleteEvent)
+        KeSetEvent(&UninitializeCompleteEvent->Event, IO_NO_INCREMENT, FALSE);
+    return NT_SUCCESS(Status);
 }
 
 BOOLEAN

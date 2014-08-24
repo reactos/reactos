@@ -340,12 +340,14 @@ vfatFCBInitializeCacheFromVolume(
 {
     PFILE_OBJECT fileObject;
     PVFATCCB newCCB;
+    NTSTATUS status;
 
     fileObject = IoCreateStreamFileObject (NULL, vcb->StorageDevice);
 
     newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
     if (newCCB == NULL)
     {
+        ObDereferenceObject(fileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     RtlZeroMemory(newCCB, sizeof (VFATCCB));
@@ -356,11 +358,24 @@ vfatFCBInitializeCacheFromVolume(
     fcb->FileObject = fileObject;
     fcb->RefCount++;
 
-    CcInitializeCacheMap(fileObject,
-                         (PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
-                         TRUE,
-                         &VfatGlobalData->CacheMgrCallbacks,
-                         fcb);
+    _SEH2_TRY
+    {
+        CcInitializeCacheMap(fileObject,
+                             (PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
+                             TRUE,
+                             &VfatGlobalData->CacheMgrCallbacks,
+                             fcb);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = _SEH2_GetExceptionCode();
+        fcb->RefCount--;
+        fcb->FileObject = NULL;
+        ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, newCCB);
+        ObDereferenceObject(fileObject);
+        return status;
+    }
+    _SEH2_END;
 
     fcb->Flags |= FCB_CACHE_INITIALIZED;
     return STATUS_SUCCESS;

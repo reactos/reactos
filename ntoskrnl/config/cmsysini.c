@@ -2043,12 +2043,35 @@ VOID
 NTAPI
 CmShutdownSystem(VOID)
 {
+    PLIST_ENTRY ListEntry;
+    PCMHIVE Hive;
+    ULONG i;
+
     /* Kill the workers */
     if (!CmFirstTime) CmpShutdownWorkers();
 
     /* Flush all hives */
     CmpLockRegistryExclusive();
     CmpDoFlushAll(TRUE);
+
+    /* Close all hive files */
+    ListEntry = CmpHiveListHead.Flink;
+    while (ListEntry != &CmpHiveListHead)
+    {
+        Hive = CONTAINING_RECORD(ListEntry, CMHIVE, HiveList);
+
+        for (i = 0; i < HFILE_TYPE_MAX; i++)
+        {
+            if (Hive->FileHandles[i] != NULL)
+            {
+                ZwClose(Hive->FileHandles[i]);
+                Hive->FileHandles[i] = NULL;
+            }
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
     CmpUnlockRegistry();
 }
 

@@ -74,6 +74,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     Chars.MinorNdisVersion = NDIS_MINOR_VERSION;
     Chars.OpenAdapterCompleteHandler = NduOpenAdapterComplete;
     Chars.CloseAdapterCompleteHandler = NduCloseAdapterComplete;
+    Chars.PnPEventHandler = NduNetPnPEvent;
     Chars.SendCompleteHandler = NduSendComplete;
     Chars.TransferDataCompleteHandler = NduTransferDataComplete;
     Chars.ResetCompleteHandler = NduResetComplete;

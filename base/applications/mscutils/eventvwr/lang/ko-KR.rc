@@ -6,10 +6,6 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "로그(&L)"
     BEGIN
-        MENUITEM "애플리케이션(&A)", ID_LOG_APPLICATION
-        MENUITEM "보안(&S)", ID_LOG_SECURITY
-        MENUITEM "시스템(&S)", ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
         MENUITEM "Save &Protocol...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", ID_CLEAR_EVENTS, GRAYED

@@ -1129,16 +1129,17 @@ CDefaultContextMenu::DoCreateLink(
 HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi) {
     TRACE("(%p) Deleting\n", this);
 
-    CComPtr<IDataObject> pDataObj;
+    CComPtr<IDataObject> pDataObject;
 
-    if (SUCCEEDED(SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
+    if (SUCCEEDED(SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObject))))
     {
-        SHCreateThread(DoDeleteThreadProc, pDataObj, NULL, NULL);
+        IStream *s;
+        CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObject, &s);
+        SHCreateThread(DoDeleteThreadProc, s, NULL, NULL);
     }
     else
         return E_FAIL;
     return S_OK;
-
 }
 
 HRESULT

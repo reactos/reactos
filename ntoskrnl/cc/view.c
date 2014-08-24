@@ -727,73 +727,6 @@ CcRosCreateVacb (
 
 NTSTATUS
 NTAPI
-CcRosGetVacbChain (
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset,
-    ULONG Length,
-    PROS_VACB *Vacb)
-{
-    PROS_VACB current;
-    ULONG i;
-    PROS_VACB *VacbList;
-    PROS_VACB Previous = NULL;
-
-    ASSERT(SharedCacheMap);
-
-    DPRINT("CcRosGetVacbChain()\n");
-
-    Length = ROUND_UP(Length, VACB_MAPPING_GRANULARITY);
-
-    VacbList = _alloca(sizeof(PROS_VACB) *
-                       (Length / VACB_MAPPING_GRANULARITY));
-
-    /*
-     * Look for a VACB already mapping the same data.
-     */
-    for (i = 0; i < (Length / VACB_MAPPING_GRANULARITY); i++)
-    {
-        ULONG CurrentOffset = FileOffset + (i * VACB_MAPPING_GRANULARITY);
-        current = CcRosLookupVacb(SharedCacheMap, CurrentOffset);
-        if (current != NULL)
-        {
-            KeAcquireGuardedMutex(&ViewLock);
-
-            /* Move to tail of LRU list */
-            RemoveEntryList(&current->VacbLruListEntry);
-            InsertTailList(&VacbLruListHead, &current->VacbLruListEntry);
-
-            KeReleaseGuardedMutex(&ViewLock);
-
-            VacbList[i] = current;
-        }
-        else
-        {
-            CcRosCreateVacb(SharedCacheMap, CurrentOffset, &current);
-            VacbList[i] = current;
-        }
-    }
-
-    for (i = 0; i < Length / VACB_MAPPING_GRANULARITY; i++)
-    {
-        if (i == 0)
-        {
-            *Vacb = VacbList[i];
-            Previous = VacbList[i];
-        }
-        else
-        {
-            Previous->NextInChain = VacbList[i];
-            Previous = VacbList[i];
-        }
-    }
-    ASSERT(Previous);
-    Previous->NextInChain = NULL;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 CcRosGetVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     ULONG FileOffset,
@@ -1187,6 +1120,7 @@ NTSTATUS
 NTAPI
 CcRosInitializeFileCache (
     PFILE_OBJECT FileObject,
+    PCC_FILE_SIZES FileSizes,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext)
 /*
@@ -1216,13 +1150,8 @@ CcRosInitializeFileCache (
         SharedCacheMap->FileObject = FileObject;
         SharedCacheMap->Callbacks = CallBacks;
         SharedCacheMap->LazyWriteContext = LazyWriterContext;
-        if (FileObject->FsContext)
-        {
-            SharedCacheMap->SectionSize =
-                ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->AllocationSize;
-            SharedCacheMap->FileSize =
-                ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
-        }
+        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
+        SharedCacheMap->FileSize = FileSizes->FileSize;
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;

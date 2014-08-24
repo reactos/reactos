@@ -145,7 +145,6 @@ typedef struct _ROS_VACB
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
-    struct _ROS_VACB *NextInChain;
 } ROS_VACB, *PROS_VACB;
 
 typedef struct _INTERNAL_BCB
@@ -223,15 +222,6 @@ CcRosLookupVacb(
     ULONG FileOffset
 );
 
-NTSTATUS
-NTAPI
-CcRosGetVacbChain(
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset,
-    ULONG Length,
-    PROS_VACB *Vacb
-);
-
 VOID
 NTAPI
 CcInitCacheZeroPage(VOID);
@@ -287,6 +277,7 @@ NTSTATUS
 NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
+    PCC_FILE_SIZES FileSizes,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext
 );

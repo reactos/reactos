@@ -375,6 +375,115 @@ cleanup:
     return result;
 }
 
+static
+HBITMAP
+IntGdiCreateMaskFromRLE(
+    DWORD Width,
+    DWORD Height,
+    ULONG Compression,
+    const BYTE* Bits,
+    DWORD BitsSize)
+{
+    HBITMAP Mask;
+    DWORD x, y;
+    SURFOBJ* SurfObj;
+    UINT i = 0;
+    BYTE Data, NumPixels, ToSkip;
+
+    ASSERT((Compression == BI_RLE8) || (Compression == BI_RLE4));
+
+    /* Create the bitmap */
+    Mask = GreCreateBitmapEx(Width, Height, 0, BMF_1BPP, 0, 0, NULL, 0);
+    if (!Mask)
+        return NULL;
+
+    SurfObj = EngLockSurface((HSURF)Mask);
+    if (!SurfObj)
+    {
+        GreDeleteObject(Mask);
+        return NULL;
+    }
+    ASSERT(SurfObj->pvBits != NULL);
+
+    x = y = 0;
+
+    while (i < BitsSize)
+    {
+        NumPixels = Bits[i];
+        Data = Bits[i + 1];
+        i += 2;
+
+        if (NumPixels != 0)
+        {
+            if ((x + NumPixels) > Width)
+                NumPixels = Width - x;
+
+            if (NumPixels == 0)
+                continue;
+
+            DIB_1BPP_HLine(SurfObj, x, x + NumPixels, y, 1);
+            x += NumPixels;
+            continue;
+        }
+
+        if (Data < 3)
+        {
+            switch (Data)
+            {
+                case 0:
+                    /* End of line */
+                    y++;
+                    if (y == Height)
+                        goto done;
+                    x = 0;
+                    break;
+                case 1:
+                    /* End of file */
+                    goto done;
+                case 2:
+                    /* Jump */
+                    if (i >= (BitsSize - 1))
+                        goto done;
+                    x += Bits[i];
+                    if (x > Width)
+                        x = Width;
+                    y += Bits[i + 1];
+                    if (y >= Height)
+                        goto done;
+                    i += 2;
+                    break;
+            }
+            /* Done for this run */
+            continue;
+        }
+
+        /* Embedded data into the RLE */
+        NumPixels = Data;
+        if (Compression == BI_RLE8)
+            ToSkip = NumPixels;
+        else
+            ToSkip = (NumPixels / 2) + (NumPixels & 1);
+
+        if ((i + ToSkip) > BitsSize)
+            goto done;
+        ToSkip = (ToSkip + 1) & ~1;
+
+        if ((x + NumPixels) > Width)
+            NumPixels = Width - x;
+
+        if (NumPixels != 0)
+        {
+            DIB_1BPP_HLine(SurfObj, x, x + NumPixels, y, 1);
+            x += NumPixels;
+        }
+        i += ToSkip;
+    }
+
+done:
+    EngUnlockSurface(SurfObj);
+    return Mask;
+}
+
 W32KAPI
 INT
 APIENTRY
@@ -399,8 +508,8 @@ NtGdiSetDIBitsToDeviceInternal(
     INT ret = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     PDC pDC;
-    HBITMAP hSourceBitmap = NULL;
-    SURFOBJ *pDestSurf, *pSourceSurf = NULL;
+    HBITMAP hSourceBitmap = NULL, hMaskBitmap = NULL;
+    SURFOBJ *pDestSurf, *pSourceSurf = NULL, *pMaskSurf = NULL;
     SURFACE *pSurf;
     RECTL rcDest;
     POINTL ptSource;
@@ -492,6 +601,28 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit;
     }
 
+    /* HACK: If this is a RLE bitmap, only the relevant pixels must be set. */
+    if ((bmi->bmiHeader.biCompression == BI_RLE8) || (bmi->bmiHeader.biCompression == BI_RLE4))
+    {
+        hMaskBitmap = IntGdiCreateMaskFromRLE(bmi->bmiHeader.biWidth,
+            ScanLines,
+            bmi->bmiHeader.biCompression,
+            Bits,
+            cjMaxBits);
+        if (!hMaskBitmap)
+        {
+            EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
+            Status = STATUS_NO_MEMORY;
+            goto Exit;
+        }
+        pMaskSurf = EngLockSurface((HSURF)hMaskBitmap);
+        if (!pMaskSurf)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            goto Exit;
+        }
+    }
+
     /* Create a palette for the DIB */
     ppalDIB = CreateDIBPalette(bmi, pDC, ColorUse);
     if (!ppalDIB)
@@ -529,15 +660,15 @@ NtGdiSetDIBitsToDeviceInternal(
            ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
     Status = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
-                          NULL,
+                          pMaskSurf,
                           &pDC->co.ClipObj,
                           &exlo.xlo,
                           &rcDest,
                           &ptSource,
+                          pMaskSurf ? &ptSource : NULL,
                           NULL,
                           NULL,
-                          NULL,
-                          ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY));
+                          pMaskSurf ? ROP4_MASK : ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY));
 
     /* Cleanup EXLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);
@@ -555,6 +686,8 @@ Exit:
 
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
+    if (pMaskSurf) EngUnlockSurface(pMaskSurf);
+    if (hMaskBitmap) EngDeleteSurface((HSURF)hMaskBitmap);
     DC_UnlockDc(pDC);
 Exit2:
     ExFreePoolWithTag(pbmiSafe, 'pmTG');

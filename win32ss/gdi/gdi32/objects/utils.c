@@ -296,6 +296,35 @@ ConvertBitmapInfo(
             RtlCopyMemory((PVOID)NewDataPtr, (PVOID)OldDataPtr, DataSize);
         }
     }
+    else
+    {
+        /* Verify some data validity */
+        switch (BitmapInfo->bmiHeader.biCompression)
+        {
+            case BI_RLE8:
+                if (BitmapInfo->bmiHeader.biBitCount != 8)
+                    return NULL;
+                if (BitmapInfo->bmiHeader.biHeight < 0)
+                    return NULL;
+                break;
+            case BI_RLE4:
+                if (BitmapInfo->bmiHeader.biBitCount != 4)
+                    return NULL;
+                if (BitmapInfo->bmiHeader.biHeight < 0)
+                    return NULL;
+                break;
+            default:
+                break;
+        }
+
+        /* Non "standard" formats must have a valid size set */
+        if ((BitmapInfo->bmiHeader.biCompression != BI_RGB) &&
+                (BitmapInfo->bmiHeader.biCompression != BI_BITFIELDS))
+        {
+            if (BitmapInfo->bmiHeader.biSizeImage == 0)
+                return NULL;
+        }
+    }
 
     Size = NewBitmapInfo->bmiHeader.biSize;
     if (ColorSpec == DIB_RGB_COLORS)

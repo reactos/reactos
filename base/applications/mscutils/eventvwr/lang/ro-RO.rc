@@ -6,10 +6,6 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "J&urnal"
     BEGIN
-        MENUITEM "&Aplicație", ID_LOG_APPLICATION
-        MENUITEM "Se&curitate", ID_LOG_SECURITY
-        MENUITEM "&Sistem", ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
         MENUITEM "Păstrare p&rotocol…", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Înlăt&ură toate evenimentele", ID_CLEAR_EVENTS, GRAYED
