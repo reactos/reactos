@@ -95,9 +95,13 @@ InitRadioButtons(HWND hWnd)
                     break;
             }
         }
+        else
+            SendDlgItemMessage(hWnd, IDC_WITHOUTREBOOT_RB, BM_SETCHECK, 1, 1);
 
         RegCloseKey(hKey);
     }
+    else
+        SendDlgItemMessage(hWnd, IDC_WITHOUTREBOOT_RB, BM_SETCHECK, 1, 1);
 }
 
 INT_PTR CALLBACK
