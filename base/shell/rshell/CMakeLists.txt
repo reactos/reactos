@@ -16,6 +16,7 @@ list(APPEND SOURCE
     CMergedFolder.cpp
     CStartMenu.cpp
     misc.cpp
+    ShellDDE.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 
 add_library(rshell SHARED ${SOURCE})
