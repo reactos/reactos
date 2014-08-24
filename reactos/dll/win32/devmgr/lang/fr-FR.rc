@@ -44,7 +44,7 @@ BEGIN
     IDS_DEV_OUT_OF_MEMORY "Le pilote de ce périphérique peut être mauvais, ou votre système peut être à court de mémoire ou d'autres ressources."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Ce périphérique ne fonctionne pas correctement parce qu'un des pilotes de ce périphérique peut être mauvais, ou votre base de registres peut être mauvaise."
     IDS_DEV_LACKED_ARBITRATOR "Le pilote de ce périphérique a demandé une ressource que ReactOS ne sait pas prendre en compte."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Un autre périphérique utilise les ressources nécéssaires à ce périphérique."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Un autre périphérique utilise les ressources nécessaires à ce périphérique."
     IDS_DEV_FAILED_FILTER "Les pilotes de ce périphérique doivent être réinstallés."
     IDS_DEV_DEVLOADER_NOT_FOUND "Ce périphérique ne fonctionne pas correctement parce que ReactOS ne peut charger le fichier %1 qui charge les pilotes de ce périphérique."
     IDS_DEV_DEVLOADER_NOT_FOUND2 "Ce périphérique ne fonctionne pas correctement parce que le fichier %1 qui charge les pilotes de ce périphérique est mauvais."
