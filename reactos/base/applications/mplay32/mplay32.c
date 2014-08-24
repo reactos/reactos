@@ -756,7 +756,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 
     if (!RegisterClassEx(&WndClass))
     {
-        ShowLastWin32Error(0);
+        ShowLastWin32Error(NULL);
         return 0;
     }
 
@@ -773,7 +773,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
                         NULL);
     if (!hwnd)
     {
-        ShowLastWin32Error(0);
+        ShowLastWin32Error(NULL);
         return 0;
     }
 
