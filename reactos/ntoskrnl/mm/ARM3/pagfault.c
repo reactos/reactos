@@ -709,12 +709,9 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     Pfn1->u3.e1.PrototypePte = 1;
 
     /* Increment the share count for the page table */
-    // FIXME: This doesn't work because we seem to bump the sharecount to two, and MiDeletePte gets annoyed and ASSERTs.
-    // This could be beause MiDeletePte is now being called from strange code in Rosmm
     PageTablePte = MiAddressToPte(PointerPte);
     Pfn2 = MiGetPfnEntry(PageTablePte->u.Hard.PageFrameNumber);
-    //Pfn2->u2.ShareCount++;
-    DBG_UNREFERENCED_LOCAL_VARIABLE(Pfn2);
+    Pfn2->u2.ShareCount++;
 
     /* Check where we should be getting the protection information from */
     if (PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
