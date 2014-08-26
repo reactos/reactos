@@ -61,6 +61,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
     IDS_APPTITLE "Odtwarzacz multimedialny ReactOS"
     IDS_PLAY "Odtwórz"
-    IDS_DEFAULTMCIERRMSG "Brak dostępnego opisu dla tego błędu"
+    IDS_DEFAULTMCIERRMSG "Brak dostępnego opisu dla tego błędu."
     IDS_UNKNOWNFILEEXT "Nie można określić typu urządzenia z podanego rozszerzenia pliku."
 END

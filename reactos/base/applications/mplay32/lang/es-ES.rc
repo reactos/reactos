@@ -9,22 +9,22 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Salir", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "&Reproducir"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "Reproducir/&Pausa\tCtrl+P", IDC_PLAY
+        MENUITEM "&Detener\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "Repe&tir\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Vista"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "&Modo Ventana Única", IDM_SWITCHVIEW
     END
-    POPUP "&Device"
+    POPUP "&Dispositivo"
     BEGIN
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&Propiedades", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "Control de &Volumen", IDM_VOLUMECTL
     END
     POPUP "Ay&uda"
     BEGIN
@@ -53,6 +53,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Marca siguiente"
     IDS_APPTITLE "Reproductor Multimedia de ReactOS"
     IDS_PLAY "Reproducir"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error"
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
+    IDS_DEFAULTMCIERRMSG "No hay una descripción disponible para este error."
+    IDS_UNKNOWNFILEEXT "No se puede determinar el tipo de dispositivo a partir de la extensión del fichero."
 END
