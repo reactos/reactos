@@ -210,8 +210,8 @@ HvpInitializeMemoryHive(
       if (Bin->Signature != HV_BIN_SIGNATURE ||
           (Bin->Size % HV_BLOCK_SIZE) != 0)
       {
-         DPRINT1("Invalid bin at BlockIndex %Iu, Signature 0x%lx, Size 0x%lx\n",
-                 BlockIndex, Bin->Signature, Bin->Size);
+         DPRINT1("Invalid bin at BlockIndex %lu, Signature 0x%x, Size 0x%x\n",
+                 (unsigned long)BlockIndex, (unsigned)Bin->Signature, (unsigned)Bin->Size);
          Hive->Free(Hive->BaseBlock, 0);
          Hive->Free(Hive->Storage[Stable].BlockList, 0);
          return STATUS_REGISTRY_CORRUPT;
