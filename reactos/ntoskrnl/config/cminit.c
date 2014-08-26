@@ -201,6 +201,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup allocations and fail */
+        ExDeleteResourceLite(Hive->FlusherLock);
         ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
         ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
         ExFreePoolWithTag(Hive, TAG_CM);
@@ -218,6 +219,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
         if (CheckStatus != 0)
         {
             /* Cleanup allocations and fail */
+            ExDeleteResourceLite(Hive->FlusherLock);
             ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
             ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
             ExFreePoolWithTag(Hive, TAG_CM);
