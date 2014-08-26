@@ -197,8 +197,8 @@ _SEH3$_JumpToTarget(
     {
         asm volatile (
             /* Load the registers */
-            "movl 20(%%ecx), %%esp\n\t"
-            "movl 24(%%ecx), %%ebp\n\t"
+            "movl 24(%%ecx), %%esp\n\t"
+            "movl 28(%%ecx), %%ebp\n\t"
 
             /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
             "addl $4, %%esp\n\t"
@@ -215,8 +215,8 @@ _SEH3$_JumpToTarget(
     {
         asm volatile (
             /* Load the registers */
-            "movl 20(%%ecx), %%esp\n\t"
-            "movl 24(%%ecx), %%ebp\n\t"
+            "movl 24(%%ecx), %%esp\n\t"
+            "movl 28(%%ecx), %%ebp\n\t"
 
             /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
             "addl $4, %%esp\n\t"
@@ -274,8 +274,9 @@ _SEH3$_except_handler(
             /* Check if we have an exception handler */
             if (CurrentFrame->ScopeTable->Target != NULL)
             {
-                /* Set exception pointers for this frame */
+                /* Set exception pointers and code for this frame */
                 CurrentFrame->ExceptionPointers = &ExceptionPointers;
+                CurrentFrame->ExceptionCode = ExceptionRecord->ExceptionCode;
 
                 /* Get the filter result */
                 FilterResult = _SEH3$_GetFilterResult(CurrentFrame);
@@ -316,8 +317,9 @@ _SEH3$_except_handler(
         /* Check if this is an unwind frame */
         if (CurrentFrame->ScopeTable->Target == NULL)
         {
-            /* Set exception pointers for this frame */
+            /* Set exception pointers and code for this frame */
             CurrentFrame->ExceptionPointers = &ExceptionPointers;
+            CurrentFrame->ExceptionCode = ExceptionRecord->ExceptionCode;
 
             /* Call the finally function */
             _SEH3$_CallFinally(CurrentFrame);
