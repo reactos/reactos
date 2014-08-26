@@ -442,8 +442,7 @@ VfatMount(
         goto ByeBye;
     }
 
-    DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
-    DeviceExt = (PVOID) DeviceObject->DeviceExtension;
+    DeviceExt = DeviceObject->DeviceExtension;
     RtlZeroMemory(DeviceExt, ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize);
     DeviceExt->FcbHashTable = (HASHENTRY**)((ULONG_PTR)DeviceExt + ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)));
     DeviceExt->HashTableSize = HashTableSize;
