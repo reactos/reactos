@@ -2723,6 +2723,33 @@ DEFINE_TEST(test_PSEH3_bug)
     return (count == 1);
 }
 
+void
+use_lots_of_stack(void)
+{
+    int i;
+    volatile int arr[512];
+    for (i = 0; i < 512; i++)
+        arr[i] = 123;
+    (void)arr;
+}
+
+DEFINE_TEST(test_PSEH3_bug2)
+{
+    unsigned long status = 0;
+    _SEH2_TRY
+    {
+        *(volatile int*)0x12345678 = 0x12345678;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        use_lots_of_stack();
+        status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return (status == STATUS_ACCESS_VIOLATION);
+}
+
 #define USE_TEST_NAME_(NAME_) # NAME_
 #define USE_TEST_NAME(NAME_) USE_TEST_NAME_(NAME_)
 #define USE_TEST(NAME_) { USE_TEST_NAME(NAME_), NAME_ }
@@ -2857,6 +2884,7 @@ void testsuite_syntax(void)
 		USE_TEST(test_finally_goto),
 		USE_TEST(test_nested_exception),
 		USE_TEST(test_PSEH3_bug),
+		USE_TEST(test_PSEH3_bug2),
 	};
 
 	size_t i;
