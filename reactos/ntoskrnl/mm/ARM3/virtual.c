@@ -409,7 +409,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     {
         /* Prototype and paged out PTEs not supported yet */
         ASSERT(TempPte.u.Soft.Prototype == 0);
-        ASSERT(TempPte.u.Soft.PageFileHigh == 0);
+        ASSERT((TempPte.u.Soft.PageFileHigh == 0) || (TempPte.u.Soft.Transition == 1));
 
         if (TempPte.u.Soft.Transition)
         {
