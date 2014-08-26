@@ -180,6 +180,15 @@
 #define ID_PROCESS_PAGE_SETPRIORITY_LOW         32814
 #define ID_PROCESS_PAGE_DEBUGCHANNELS           32815
 
+#define ID_POWER_SAVING                 32816
+#define ID_HIBERNATION                  32817
+#define ID_SHUTDOWN                     32818
+#define ID_RESTART                      32819
+#define ID_LOGOFF_USER                  32820
+#define ID_SWITCH_USER                  32821
+#define ID_DISCONNECT                   32822
+#define ID_EJECT_COMPUTER               32823
+
 #define IDC_STATIC -1
 
 #define IDS_TAB_APPS          310
@@ -241,5 +250,5 @@
 #define IDS_STATUS_MEMUSAGE  363
 #define IDS_STATUS_CPUUSAGE  364
 #define IDS_STATUS_PROCESSES 365
-#define IDS_Not_Responding   366
-#define IDS_Running          367
+#define IDS_NOT_RESPONDING   366
+#define IDS_RUNNING          367

@@ -554,11 +554,11 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
             {
                 if (pAPLI->bHung)
                 {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_Not_Responding , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    LoadStringW( GetModuleHandleW(NULL), IDS_NOT_RESPONDING , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                 }
                 else
                 {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_Running, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    LoadStringW( GetModuleHandleW(NULL), IDS_RUNNING, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                 }
                 wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
             }

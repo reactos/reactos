@@ -48,6 +48,17 @@ BEGIN
         MENUITEM "Übe&rlappend", ID_WINDOWS_CASCADE
         MENUITEM "&In Vordergrund", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_POWER_SAVING
+        MENUITEM "&Hibernate",                 ID_HIBERNATION
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN
+        MENUITEM "&Restart",                   ID_RESTART
+        MENUITEM "&Log Off %s",                ID_LOGOFF_USER
+        MENUITEM "&Switch user\tWinKey+L",     ID_SWITCH_USER, GRAYED
+        MENUITEM "&Disconnect",                ID_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&?"
     BEGIN
         MENUITEM "&Hilfethemen", ID_HELP_TOPICS
@@ -426,6 +437,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "zugesicherter Speicher: %dK / %dK"
     IDS_STATUS_CPUUSAGE "CPU-Auslastung: %3d%%"
     IDS_STATUS_PROCESSES "Prozesse: %d"
-    IDS_Not_Responding "Keine Rückmeldung"
-    IDS_Running "Wird ausgeführt"
+    IDS_NOT_RESPONDING "Keine Rückmeldung"
+    IDS_RUNNING "Wird ausgeführt"
 END

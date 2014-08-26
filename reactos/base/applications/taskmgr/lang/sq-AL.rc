@@ -50,6 +50,17 @@ BEGIN
         MENUITEM "Ujevare", ID_WINDOWS_CASCADE
         MENUITEM "Sjelle para", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_POWER_SAVING
+        MENUITEM "&Hibernate",                 ID_HIBERNATION
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN
+        MENUITEM "&Restart",                   ID_RESTART
+        MENUITEM "&Log Off %s",                ID_LOGOFF_USER
+        MENUITEM "&Switch user\tWinKey+L",     ID_SWITCH_USER, GRAYED
+        MENUITEM "&Disconnect",                ID_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_EJECT_COMPUTER, GRAYED
+    END
     POPUP "Ndihme"
     BEGIN
         MENUITEM "Task Manager &Ndihme me teme", ID_HELP_TOPICS
@@ -426,6 +437,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Perdorimi i  Mem: %dK / %dK"
     IDS_STATUS_CPUUSAGE "Perdorimi i CPU: %3d%%"
     IDS_STATUS_PROCESSES "Proceset: %d"
-    IDS_Not_Responding "Nuk pergjigjet"
-    IDS_Running "Ne pune"
+    IDS_NOT_RESPONDING "Nuk pergjigjet"
+    IDS_RUNNING "Ne pune"
 END

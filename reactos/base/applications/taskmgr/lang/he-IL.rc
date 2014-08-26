@@ -48,6 +48,17 @@ BEGIN
         MENUITEM "מדורג", ID_WINDOWS_CASCADE
         MENUITEM "ה&בא לפנים", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_POWER_SAVING
+        MENUITEM "&Hibernate",                 ID_HIBERNATION
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN
+        MENUITEM "&Restart",                   ID_RESTART
+        MENUITEM "&Log Off %s",                ID_LOGOFF_USER
+        MENUITEM "&Switch user\tWinKey+L",     ID_SWITCH_USER, GRAYED
+        MENUITEM "&Disconnect",                ID_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&עזרה"
     BEGIN
         MENUITEM "&נושאי עזרה של מנהל המשימות", ID_HELP_TOPICS
@@ -426,6 +437,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Mem Usage: %dK / %dK"
     IDS_STATUS_CPUUSAGE "CPU Usage: %3d%%"
     IDS_STATUS_PROCESSES "Processes: %d"
-    IDS_Not_Responding "Not Responding"
-    IDS_Running "Running"
+    IDS_NOT_RESPONDING "Not Responding"
+    IDS_RUNNING "Running"
 END

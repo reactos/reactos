@@ -18,6 +18,7 @@ list(APPEND SOURCE
     trayicon.c
     taskmgr.c
     graphctl.c
+    shutdown.c
     precomp.h)
 
 add_executable(taskmgr ${SOURCE} taskmgr.rc)

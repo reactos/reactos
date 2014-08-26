@@ -317,6 +317,33 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_PROCESS_PAGE_DEBUGCHANNELS:
             ProcessPage_OnDebugChannels();
             break;
+
+/* ShutDown items */
+        case ID_POWER_SAVING:
+            ShutDown_PowerSaving();
+            break;
+        case ID_HIBERNATION:
+            ShutDown_Hibernation();
+            break;
+        case ID_SHUTDOWN:
+            ShutDown_PowerOff();
+            break;
+        case ID_RESTART:
+            ShutDown_Restart();
+            break;
+        case ID_LOGOFF_USER:
+            ShutDown_LogOffUser();
+            break;
+        case ID_SWITCH_USER:
+            ShutDown_SwitchUser();
+            break;
+        case ID_DISCONNECT:
+            ShutDown_Disconnect();
+            break;
+        case ID_EJECT_COMPUTER:
+            ShutDown_Eject_Computer();
+            break;
+
         case ID_HELP_ABOUT:
             OnAbout();
             break;
@@ -957,7 +984,7 @@ void TaskManager_OnTabWndSelChange(void)
         LoadStringW(hInst, IDS_MENU_DETAILS, szTemp, 256);
         AppendMenuW(hViewMenu, MF_STRING, ID_VIEW_DETAILS, szTemp);
 
-        if (GetMenuItemCount(hMenu) <= 4) {
+        if (GetMenuItemCount(hMenu) <= 5) {
             hSubMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_WINDOWSMENU));
 
             LoadStringW(hInst, IDS_MENU_WINDOWS, szTemp, 256);
@@ -987,7 +1014,7 @@ void TaskManager_OnTabWndSelChange(void)
 
         if (TaskManagerSettings.Show16BitTasks)
             CheckMenuItem(hOptionsMenu, ID_OPTIONS_SHOW16BITTASKS, MF_BYCOMMAND|MF_CHECKED);
-        if (GetMenuItemCount(hMenu) > 4)
+        if (GetMenuItemCount(hMenu) > 5)
         {
             DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
@@ -1003,7 +1030,7 @@ void TaskManager_OnTabWndSelChange(void)
         ShowWindow(hProcessPage, SW_HIDE);
         ShowWindow(hPerformancePage, SW_SHOW);
         BringWindowToTop(hPerformancePage);
-        if (GetMenuItemCount(hMenu) > 4) {
+        if (GetMenuItemCount(hMenu) > 5) {
             DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
         }

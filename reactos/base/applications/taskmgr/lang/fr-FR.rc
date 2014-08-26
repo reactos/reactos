@@ -48,6 +48,17 @@ BEGIN
         MENUITEM "&Cascade", ID_WINDOWS_CASCADE
         MENUITEM "Mettre au &premier plan", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_POWER_SAVING
+        MENUITEM "&Hibernate",                 ID_HIBERNATION
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN
+        MENUITEM "&Restart",                   ID_RESTART
+        MENUITEM "&Log Off %s",                ID_LOGOFF_USER
+        MENUITEM "&Switch user\tWinKey+L",     ID_SWITCH_USER, GRAYED
+        MENUITEM "&Disconnect",                ID_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&Aide"
     BEGIN
         MENUITEM "&Rubriques d'aide du Gestionnaire des tâches", ID_HELP_TOPICS
@@ -426,6 +437,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Fichier d'échange utilisé : %dK / %dK"
     IDS_STATUS_CPUUSAGE "UC utilisée : %3d%%"
     IDS_STATUS_PROCESSES "Processus : %d"
-    IDS_Not_Responding "Ne répond pas"
-    IDS_Running "En cours d'exécution"
+    IDS_NOT_RESPONDING "Ne répond pas"
+    IDS_RUNNING "En cours d'exécution"
 END
