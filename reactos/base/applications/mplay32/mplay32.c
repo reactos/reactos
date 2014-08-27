@@ -88,13 +88,19 @@ void ResizeClientArea(HWND hwnd, int nWidth, int nHeight)
 static VOID
 ShowLastWin32Error(HWND hwnd)
 {
-    DWORD dwError;
     LPTSTR lpMessageBuffer;
+    DWORD dwError = GetLastError();
 
-    dwError = GetLastError();
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError, 0, (LPWSTR)&lpMessageBuffer, 0, NULL);
-    MessageBox(hwnd, lpMessageBuffer, szAppTitle, MB_OK | MB_ICONERROR);
-    LocalFree(lpMessageBuffer);
+    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                      NULL,
+                      dwError,
+                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      (LPTSTR)&lpMessageBuffer,
+                      0, NULL) != 0)
+    {
+        MessageBox(hwnd, lpMessageBuffer, szAppTitle, MB_OK | MB_ICONERROR);
+        if (lpMessageBuffer) LocalFree(lpMessageBuffer);
+    }
 }
 
 static VOID
