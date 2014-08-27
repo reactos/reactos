@@ -180,14 +180,15 @@
 #define ID_PROCESS_PAGE_SETPRIORITY_LOW         32814
 #define ID_PROCESS_PAGE_DEBUGCHANNELS           32815
 
-#define ID_POWER_SAVING                 32816
-#define ID_HIBERNATION                  32817
-#define ID_SHUTDOWN                     32818
-#define ID_RESTART                      32819
-#define ID_LOGOFF_USER                  32820
-#define ID_SWITCH_USER                  32821
-#define ID_DISCONNECT                   32822
-#define ID_EJECT_COMPUTER               32823
+#define ID_SHUTDOWN_STANDBY         32816
+#define ID_SHUTDOWN_HIBERNATE       32817
+#define ID_SHUTDOWN_POWEROFF        32818
+#define ID_SHUTDOWN_REBOOT          32819
+#define ID_SHUTDOWN_LOGOFF          32820
+#define ID_SHUTDOWN_SWITCHUSER      32821
+#define ID_SHUTDOWN_LOCKCOMPUTER    32822
+#define ID_SHUTDOWN_DISCONNECT      32823
+#define ID_SHUTDOWN_EJECT_COMPUTER  32824
 
 #define IDC_STATIC -1
 

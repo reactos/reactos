@@ -5,6 +5,7 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *                2011         Mário Kacmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ *                2014         Robert Naumann  <gonzomdx@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +25,7 @@
 #include "precomp.h"
 #include <ndk/exfuncs.h>
 #include <ndk/pofuncs.h>
+#include <ndk/rtlfuncs.h>
 
 // Uncomment when NtInitiatePowerAction() is implemented
 // #define NT_INITIATE_POWERACTION_IMPLEMENTED
@@ -33,63 +35,78 @@ EnablePrivilege(LPCWSTR lpszPrivilegeName, BOOL bEnablePrivilege)
 {
     BOOL   Success;
     HANDLE hToken;
+    TOKEN_PRIVILEGES tp;
 
     Success = OpenProcessToken(GetCurrentProcess(),
                                TOKEN_ADJUST_PRIVILEGES,
                                &hToken);
-    if (Success)
-    {
-        TOKEN_PRIVILEGES tp;
+    if (!Success) return Success;
 
-        tp.PrivilegeCount = 1;
-        tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
+    Success = LookupPrivilegeValueW(NULL,
+                                    lpszPrivilegeName,
+                                    &tp.Privileges[0].Luid);
+    if (!Success) goto Quit;
 
-        Success = LookupPrivilegeValueW(NULL,
-                                        lpszPrivilegeName,
-                                        &tp.Privileges[0].Luid);
-        if (Success)
-        {
-            Success = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
-        }
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
 
-        CloseHandle(hToken);
-    }
+    Success = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
 
+Quit:
+    CloseHandle(hToken);
     return Success;
 }
 
 VOID
-ShutDown_PowerSaving(VOID) // StandBy
+ShutDown_StandBy(VOID)
 {
-    EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+    NTSTATUS Status;
+
+    if (!EnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+    {
+        ShowWin32Error(GetLastError());
+        return;
+    }
 
 #ifdef NT_INITIATE_POWERACTION_IMPLEMENTED
-    NtInitiatePowerAction(PowerActionSleep,
-                          PowerSystemSleeping1,
-                          0, FALSE);
+    Status = NtInitiatePowerAction(PowerActionSleep,
+                                   PowerSystemSleeping1,
+                                   0, FALSE);
 #else
-    NtSetSystemPowerState(PowerActionSleep,
-                          PowerSystemSleeping1,
-                          0);
+    Status = NtSetSystemPowerState(PowerActionSleep,
+                                   PowerSystemSleeping1,
+                                   0);
 #endif
+
+    if (!NT_SUCCESS(Status))
+        ShowWin32Error(RtlNtStatusToDosError(Status));
 
     EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
 }
 
 VOID
-ShutDown_Hibernation(VOID)
+ShutDown_Hibernate(VOID)
 {
-    EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+    NTSTATUS Status;
+
+    if (!EnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+    {
+        ShowWin32Error(GetLastError());
+        return;
+    }
 
 #ifdef NT_INITIATE_POWERACTION_IMPLEMENTED
-    NtInitiatePowerAction(PowerActionHibernate,
-                          PowerSystemHibernate,
-                          0, FALSE);
+    Status = NtInitiatePowerAction(PowerActionHibernate,
+                                   PowerSystemHibernate,
+                                   0, FALSE);
 #else
-    NtSetSystemPowerState(PowerActionHibernate,
-                          PowerSystemHibernate,
-                          0);
+    Status = NtSetSystemPowerState(PowerActionHibernate,
+                                   PowerSystemHibernate,
+                                   0);
 #endif
+
+    if (!NT_SUCCESS(Status))
+        ShowWin32Error(RtlNtStatusToDosError(Status));
 
     EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
 }
@@ -100,43 +117,60 @@ ShutDown_PowerOff(VOID)
     /* Trick: on Windows, pressing the CTRL key forces shutdown via NT API */
     BOOL ForceShutdown = !!(GetKeyState(VK_CONTROL) & 0x8000);
 
-    EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+    if (!EnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+    {
+        ShowWin32Error(GetLastError());
+        return;
+    }
+
     if (ForceShutdown)
     {
-        NtShutdownSystem(ShutdownPowerOff);
+        NTSTATUS Status = NtShutdownSystem(ShutdownPowerOff);
+        if (!NT_SUCCESS(Status))
+            ShowWin32Error(RtlNtStatusToDosError(Status));
     }
     else
     {
         // The choice of EWX_SHUTDOWN or EWX_POWEROFF may be done with NtPowerInformation
-        ExitWindowsEx(EWX_POWEROFF, // EWX_SHUTDOWN
-                      SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER);
+        if (!ExitWindowsEx(EWX_POWEROFF /* EWX_SHUTDOWN */, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER))
+            ShowWin32Error(GetLastError());
     }
+
     EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
 }
 
 VOID
-ShutDown_Restart(VOID) // Reboot
+ShutDown_Reboot(VOID)
 {
     /* Trick: on Windows, pressing the CTRL key forces reboot via NT API */
     BOOL ForceReboot = !!(GetKeyState(VK_CONTROL) & 0x8000);
 
-    EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+    if (!EnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+    {
+        ShowWin32Error(GetLastError());
+        return;
+    }
+
     if (ForceReboot)
     {
-        NtShutdownSystem(ShutdownReboot);
+        NTSTATUS Status = NtShutdownSystem(ShutdownReboot);
+        if (!NT_SUCCESS(Status))
+            ShowWin32Error(RtlNtStatusToDosError(Status));
     }
     else
     {
-        ExitWindowsEx(EWX_REBOOT,
-                      SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER);
+        if (!ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER))
+            ShowWin32Error(GetLastError());
     }
+
     EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
 }
 
 VOID
 ShutDown_LogOffUser(VOID)
 {
-    ExitWindowsEx(EWX_LOGOFF, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER);
+    if (!ExitWindowsEx(EWX_LOGOFF, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER))
+        ShowWin32Error(GetLastError());
 }
 
 VOID
@@ -145,11 +179,18 @@ ShutDown_SwitchUser(VOID)
 }
 
 VOID
+ShutDown_LockComputer(VOID)
+{
+    if (!LockWorkStation())
+        ShowWin32Error(GetLastError());
+}
+
+VOID
 ShutDown_Disconnect(VOID)
 {
 }
 
 VOID
-ShutDown_Eject_Computer(VOID)
+ShutDown_EjectComputer(VOID)
 {
 }

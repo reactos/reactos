@@ -319,29 +319,32 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
 /* ShutDown items */
-        case ID_POWER_SAVING:
-            ShutDown_PowerSaving();
+        case ID_SHUTDOWN_STANDBY:
+            ShutDown_StandBy();
             break;
-        case ID_HIBERNATION:
-            ShutDown_Hibernation();
+        case ID_SHUTDOWN_HIBERNATE:
+            ShutDown_Hibernate();
             break;
-        case ID_SHUTDOWN:
+        case ID_SHUTDOWN_POWEROFF:
             ShutDown_PowerOff();
             break;
-        case ID_RESTART:
-            ShutDown_Restart();
+        case ID_SHUTDOWN_REBOOT:
+            ShutDown_Reboot();
             break;
-        case ID_LOGOFF_USER:
+        case ID_SHUTDOWN_LOGOFF:
             ShutDown_LogOffUser();
             break;
-        case ID_SWITCH_USER:
+        case ID_SHUTDOWN_SWITCHUSER:
             ShutDown_SwitchUser();
             break;
-        case ID_DISCONNECT:
+        case ID_SHUTDOWN_LOCKCOMPUTER:
+            ShutDown_LockComputer();
+            break;
+        case ID_SHUTDOWN_DISCONNECT:
             ShutDown_Disconnect();
             break;
-        case ID_EJECT_COMPUTER:
-            ShutDown_Eject_Computer();
+        case ID_SHUTDOWN_EJECT_COMPUTER:
+            ShutDown_EjectComputer();
             break;
 
         case ID_HELP_ABOUT:
@@ -1070,6 +1073,22 @@ void TaskManager_OnTabWndSelChange(void)
          */
         SetFocus(hTabWnd);
         break;
+    }
+}
+
+VOID ShowWin32Error(DWORD dwError)
+{
+    LPWSTR lpMessageBuffer;
+
+    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                       NULL,
+                       dwError,
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                       (LPWSTR)&lpMessageBuffer,
+                       0, NULL) != 0)
+    {
+        MessageBoxW(hMainWnd, lpMessageBuffer, NULL, MB_OK | MB_ICONERROR);
+        if (lpMessageBuffer) LocalFree(lpMessageBuffer);
     }
 }
 
