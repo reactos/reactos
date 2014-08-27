@@ -20,6 +20,7 @@ using namespace std;
 #include <reason.h>
 #include <shlobj.h>
 #include <wininet.h>
+#include <winreg.h>
 
 #include <ndk/rtlfuncs.h>
 #include <reactos/buildno.h>
@@ -39,6 +40,8 @@ using namespace std;
 #include "CWebService.h"
 #include "CWineTest.h"
 
+#include <rosautotestmsg.h>
+
 /* Useful macros */
 #define EXCEPTION(Message)   throw CSimpleException(Message)
 #define FATAL(Message)       throw CFatalException(__FILE__, __LINE__, Message)
@@ -46,6 +49,11 @@ using namespace std;
 
 /* main.c */
 extern CConfiguration Configuration;
+
+/* misc.c */
+VOID FreeLogs(VOID);
+VOID InitLogs(VOID);
+extern HANDLE hLog;
 
 /* shutdown.c */
 bool ShutdownSystem();

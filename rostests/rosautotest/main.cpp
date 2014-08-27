@@ -61,6 +61,18 @@ wmain(int argc, wchar_t* argv[])
         ss << "\n\nSystem uptime " << setprecision(2) << fixed ;
         ss << ((float)GetTickCount()/1000) << " seconds\n";
         StringOut(ss.str());
+        
+        /* Report tests startup */
+        InitLogs();
+        ReportEventW(hLog,
+                      EVENTLOG_INFORMATION_TYPE,
+                      0,
+                      MSG_TESTS_STARTED,
+                      NULL,
+                      0,
+                      0,
+                      NULL,
+                      NULL);
 
         /* Run the tests */
         WineTest.Run();
@@ -93,6 +105,18 @@ wmain(int argc, wchar_t* argv[])
     /* For sysreg2 to notice if rosautotest itself failed */
     if(ReturnValue == 1)
         DbgPrint("SYSREG_ROSAUTOTEST_FAILURE\n");
+
+    /* Report successful end of tests */
+    ReportEventW(hLog,
+                  EVENTLOG_SUCCESS,
+                  0,
+                  MSG_TESTS_SUCCESSFUL,
+                  NULL,
+                  0,
+                  0,
+                  NULL,
+                  NULL);
+    FreeLogs();
 
     /* Shut down the system if requested, also in case of an exception above */
     if(Configuration.DoShutdown() && !ShutdownSystem())
