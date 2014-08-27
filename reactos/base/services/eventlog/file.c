@@ -355,7 +355,8 @@ LogfCreate(PLOGFILE *LogFile,
         goto fail;
     }
 
-    lstrcpyW(pLogFile->LogName, LogName);
+    if(LogName)
+        StringCchCopy(pLogFile->LogName,lstrlenW(LogName) + 1, LogName);
 
     pLogFile->FileName =
         (WCHAR *) HeapAlloc(MyHeap,
@@ -368,7 +369,7 @@ LogfCreate(PLOGFILE *LogFile,
         goto fail;
     }
 
-    lstrcpyW(pLogFile->FileName, FileName->Buffer);
+    StringCchCopy(pLogFile->FileName, lstrlenW(FileName->Buffer) + 1, FileName->Buffer);
 
     pLogFile->OffsetInfo =
         (PEVENT_OFFSET_INFO) HeapAlloc(MyHeap,
