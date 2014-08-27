@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-//static 
+#include "precomp.h"
 HANDLE hLog = NULL;
 
 VOID
