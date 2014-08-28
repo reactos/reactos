@@ -3,6 +3,7 @@
  *      Use ReactOS forum PM or IRC to contact me
  *      http://www.reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
+ *      Updated by Saibamen and Wojo664 (July, 2014)
  */
 
 #pragma once
@@ -828,14 +829,13 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Naci˜nij C, by stworzy† now¥ partycj©.",
+        "\x07  Naci˜nij P, by stworzy† partycj© podstawow¥.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Naci˜nij E, by stworzy† partycj© rozszerzon¥.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1296,7 +1296,7 @@ MUI_ERROR plPLErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "Sukces\n"
     },
     {
         //ERROR_NOT_INSTALLED
@@ -1510,29 +1510,29 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "Nie mo¾na utworzy† na tym dysku partycji podstawowej lub\n" // FIXME
+        "rozszerzonej, poniewa¾ tabela partycji jest pe©na.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "Nie mo¾esz utworzy† wi©cej ni¾ jednej partycji rozszerzonej na dysku.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
         //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        "Nie mo¾esz utworzy† partycji za partycj¥ rozszerzon¥.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
         //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
+        "Partycja rozszerzona musi by† zawsze ostatni¥\n"
+        "partycj¥ w tabeli partycji.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
         NULL,
@@ -1646,23 +1646,21 @@ MUI_STRING plPLStrings[] =
     {STRING_PLEASEWAIT,
      "   Prosz© czeka†..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Instalacja   C = Utworzenie Partycji   F3 = Wyj˜cie"},
+     "  ENTER = Instalacja   P = Partycja Podstawowa   E = Rozszerzona   F3 = Wyj˜cie"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Instalacja   L = Utworzenie Partycji Logicznej   F3 = Wyj˜cie"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalacja   D = Skasowanie Partycji   F3 = Wyj˜cie"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Skasowanie Partycji   F3 = Wyj˜cie"},
     {STRING_PARTITIONSIZE,
      "Rozmiar nowej partycji:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
-//     "Wybrane: utworzenie nowej partycji na"},
+     "Wybrane: utworzenie nowej partycji podstawowej na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "Wybrane: utworzenie nowej partycji rozszerzonej na"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "Wybrane: utworzenie nowej partycji logicznej na"},
     {STRING_HDDSIZE,
     "Prosz© wprowadzi† rozmiar nowej partycji w megabajtach."},
     {STRING_CREATEPARTITION,
