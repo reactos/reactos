@@ -20,7 +20,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu araç, dizgenizdeki yüklü ReactX bileşenleri ve sürücüleri üzerine ayrıntılı bilgi raporlar.", -1, 10, 10, 443, 17
-    LTEXT "Soruna neden olan bölümü biliyorsanız yukarıdaki uygun sekmeyi tıklayınız. Yoksa sırayla tüm bölümlere gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
+    LTEXT "Soruna neden olan bölümü biliyorsanız yukarıdaki uygun sekmeyi tıklayınız. Yoksa diziyle tüm bölümlere gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
     GROUPBOX "Dizge Bilgisi", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Geçerli Zaman:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Bilgisayar Adı:", -1, 70, 80, 80, 10, SS_RIGHT

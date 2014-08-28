@@ -27,7 +27,7 @@ BEGIN
         MENUITEM "&Aç...", ID_FILE_OPEN
         MENUITEM "&Kaydet", ID_FILE_SAVE, GRAYED
         MENUITEM "Ay&rı Kaydet...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "&Eski Durumuna Döndür...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Y&eniden Yükle...", ID_FILE_RESTORE, GRAYED
         MENUITEM "&Husûsiyetler", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_FILE_EXIT

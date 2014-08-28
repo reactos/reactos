@@ -114,7 +114,7 @@ BEGIN
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-    LTEXT "Birtakım hizmetler, başka hizmetlere, dizge sürücülerine ve yükleme sıra öbeklerine bağımlıdır. Eğer bir dizge bileşeni, durdurulmuşsa ya da düzgün çalışmıyorsa bağımlı hizmetler etkilenebilir.", IDC_STATIC, 8, 7, 238, 26
+    LTEXT "Birtakım hizmetler, başka hizmetlere, dizge sürücülerine ve yükleme dizisi öbeklerine bağımlıdır. Eğer bir dizge bileşeni, durdurulmuşsa ya da düzgün çalışmıyorsa bağımlı hizmetler etkilenebilir.", IDC_STATIC, 8, 7, 238, 26
     LTEXT "Bu hizmet aşağıdaki bileşenlere bağımlıdır:", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
@@ -241,7 +241,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "OLUŞTURMA SEÇENEKLERİ:\r\nÖNEMLİ: Seçenek adı, eşittir imini kapsar.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Ön tanımlı = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Ön tanımlı = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Ön tanımlı = normal)\r\n group= <Yükleme sırası öbeği>\r\n tag= <yes|no>\r\n depend= <Bağımlılıklar (Ters bölü çizgisiyle birbirinden ayrılmalıdır.)>\r\n obj= <Hesap adı|Nesne adı>\r\n       (Ön tanımlı = LocalSystem)\r\n password= <Şifre>\r\n"
+    IDS_HELP_OPTIONS "OLUŞTURMA SEÇENEKLERİ:\r\nÖNEMLİ: Seçenek adı, eşittir imini kapsar.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Ön tanımlı = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Ön tanımlı = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Ön tanımlı = normal)\r\n group= <Yükleme dizisi öbeği>\r\n tag= <yes|no>\r\n depend= <Bağımlılıklar (Ters bölü çizgisiyle birbirinden ayrılmalıdır.)>\r\n obj= <Hesap adı|Nesne adı>\r\n       (Ön tanımlı = LocalSystem)\r\n password= <Şifre>\r\n"
 END
 
 /* Hints */
