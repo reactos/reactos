@@ -57,7 +57,7 @@ Size = 113 Mo
 URLSite = http://www.openoffice.org/ro/
 
 [Section.041f]
-Description = Bir açık kaynak büro takımı.
+Description = Bir açık kaynak ofis paketi.
 URLSite = http://www.openoffice.org/tr/
 
 [Section.0422]

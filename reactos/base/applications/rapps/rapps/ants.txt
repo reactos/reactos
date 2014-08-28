@@ -30,5 +30,5 @@ Size = 632 ko
 [Section.041f]
 Version = Yok
 Licence = Ücretsiz
-Description = Bir kartlarla izlem oyunu. Kendi kurganınızı yapınız ve rakip kaleyi yıkmaya çalışınız. Kurmak için bir ZIP çıkarma izlencesi gerekir.
+Description = Bir kartlarla izlem oyunu. Kendi kurganınızı yapınız ve rakip kaleyi yıkmaya çalışınız. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 632 KB

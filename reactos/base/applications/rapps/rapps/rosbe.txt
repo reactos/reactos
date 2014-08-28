@@ -39,7 +39,7 @@ Description = Permite compilarea surselor ReactOS. Pentru instrucțiuni, consult
 Size = 28,3 Mo
 
 [Section.041f]
-Name = ReactOS Derleme Ortamı
+Name = ReactOS Yapma Ortamı
 Description = ReactOS Kaynak Kodları'nı derlemenize olanak sağlar. Daha çok açıklama için ReactOS Wiki'ye bakınız.
 Size = 28,3 MB
 

@@ -36,7 +36,7 @@ Description = O suită office completă, cu surse deschise. Reprezintă o bifurc
 Size = 209,36 Mo
 
 [Section.041f]
-Description = Güçlü ve açık kaynak bir büro takımı. OpenOffice'ten çatallanılmıştır.
+Description = Güçlü ve açık kaynak bir ofis paketi. OpenOffice'ten çatallanılmıştır.
 Size = 209,36 MB
 
 [Section.0422]
