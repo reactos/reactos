@@ -10,31 +10,31 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Plik"
+    POPUP "Pli&k"
     BEGIN
         MENUITEM "&Otwórz...\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "&Zamknij\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjdź", IDM_EXIT
+        MENUITEM "Za&kończ", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "&Graj"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "Play/&Pauza\tCtrl+P", IDC_PLAY
         MENUITEM "St&op\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "Pow&tarzaj\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Widok"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "Tryb po&jedynczego okna", IDM_SWITCHVIEW
     END
     POPUP "&Urządzenie"
     BEGIN
-        MENUITEM "&Właściwości", IDM_DEVPROPS
+        MENUITEM "Właś&ciwości", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Regulacja głośności", IDM_VOLUMECTL
     END
-    POPUP "&Pomoc"
+    POPUP "Pomo&c"
     BEGIN
         MENUITEM "&O programie...", IDM_ABOUT
     END
