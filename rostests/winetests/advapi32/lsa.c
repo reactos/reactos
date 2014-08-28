@@ -341,8 +341,8 @@ static void test_LsaLookupNames2(void)
     status = pLsaLookupNames2(handle, 0, 3, name, &domains, &sids);
     ok(status == STATUS_SOME_NOT_MAPPED, "expected STATUS_SOME_NOT_MAPPED, got %x)\n", status);
     ok(sids[0].Use == SidTypeWellKnownGroup, "expected SidTypeWellKnownGroup, got %u\n", sids[0].Use);
-    ok(sids[1].Use == SidTypeUnknown, "expected SidTypeUnknown, got %u\n", sids[0].Use);
-    ok(sids[2].Use == SidTypeWellKnownGroup, "expected SidTypeWellKnownGroup, got %u\n", sids[0].Use);
+    ok(sids[1].Use == SidTypeUnknown, "expected SidTypeUnknown, got %u\n", sids[1].Use);
+    ok(sids[2].Use == SidTypeWellKnownGroup, "expected SidTypeWellKnownGroup, got %u\n", sids[2].Use);
     ok(sids[0].DomainIndex == 0, "expected 0, got %u\n", sids[0].DomainIndex);
     ok(domains->Entries == 1, "expected 1, got %u\n", domains->Entries);
     pLsaFreeMemory(sids);
