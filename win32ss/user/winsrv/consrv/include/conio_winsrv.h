@@ -131,8 +131,6 @@ typedef struct _WINSRV_CONSOLE
     PCONSOLE_PROCESS_DATA NotifiedLastCloseProcess; /* Pointer to the unique process that needs to be notified when the console leader process is killed */
     BOOLEAN NotifyLastClose;        /* TRUE if the console should send a control event when the console leader process is killed */
 
-    BOOLEAN QuickEdit;
-
 /******************************* Pausing support ******************************/
     BYTE PauseFlags;
     LIST_ENTRY  ReadWaitQueue;      /* List head for the queue of unique input buffer read wait blocks */
@@ -144,6 +142,19 @@ typedef struct _WINSRV_CONSOLE
     ULONG HistoryBufferSize;                /* Size for newly created history buffers */
     ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
+
+/**************************** Input Line Discipline ***************************/
+    PWCHAR  LineBuffer;                     /* Current line being input, in line buffered mode */
+    ULONG   LineMaxSize;                    /* Maximum size of line in characters (including CR+LF) */
+    ULONG   LineSize;                       /* Current size of line */
+    ULONG   LinePos;                        /* Current position within line */
+    BOOLEAN LineComplete;                   /* User pressed enter, ready to send back to client */
+    BOOLEAN LineUpPressed;
+    BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
+    ULONG   LineWakeupMask;                 /* Bitmap of which control characters will end line input */
+
+    BOOLEAN InsertMode;
+    BOOLEAN QuickEdit;
 
 /************************ Virtual DOS Machine support *************************/
     COORD   VDMBufferSize;             /* Real size of the VDM buffer, in units of ??? */

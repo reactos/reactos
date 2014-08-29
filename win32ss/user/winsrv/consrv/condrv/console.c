@@ -257,13 +257,6 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
                                 ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
 
-    Console->InsertMode = ConsoleInfo->InsertMode;
-    Console->LineBuffer = NULL;
-    Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
-    Console->LineComplete = Console->LineUpPressed = FALSE;
-    Console->LineInsertToggle = Console->InsertMode;
-    // LineWakeupMask
-
     /* Set-up the code page */
     Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
 
@@ -518,17 +511,7 @@ ConDrvGetConsoleMode(IN PCONSOLE Console,
     if (INPUT_BUFFER == Object->Type)
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-
         *ConsoleMode = InputBuffer->Mode;
-
-        if (Console->QuickEdit || Console->InsertMode)
-        {
-            // Windows does this, even if it's not documented on MSDN
-            *ConsoleMode |= ENABLE_EXTENDED_FLAGS;
-
-            if (Console->QuickEdit ) *ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
-            if (Console->InsertMode) *ConsoleMode |= ENABLE_INSERT_MODE;
-        }
     }
     else if (TEXTMODE_BUFFER == Object->Type || GRAPHICS_BUFFER == Object->Type)
     {
@@ -548,8 +531,6 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      IN ULONG ConsoleMode)
 {
-#define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS   | \
-                                      ENABLE_INSERT_MODE      | ENABLE_QUICK_EDIT_MODE )
 #define CONSOLE_VALID_INPUT_MODES   ( ENABLE_PROCESSED_INPUT  | ENABLE_LINE_INPUT   | \
                                       ENABLE_ECHO_INPUT       | ENABLE_WINDOW_INPUT | \
                                       ENABLE_MOUSE_INPUT )
@@ -567,45 +548,21 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
 
-        DPRINT("SetConsoleMode(Input, %d)\n", ConsoleMode);
-
-        /*
-         * 1. Only the presence of valid mode flags is allowed.
-         */
-        if (ConsoleMode & ~(CONSOLE_VALID_INPUT_MODES | CONSOLE_VALID_CONTROL_MODES))
+        /* Only the presence of valid mode flags is allowed */
+        if (ConsoleMode & ~CONSOLE_VALID_INPUT_MODES)
         {
             Status = STATUS_INVALID_PARAMETER;
-            goto Quit;
         }
-
-        /*
-         * 2. If we use control mode flags without ENABLE_EXTENDED_FLAGS,
-         *    then consider the flags invalid.
-         *
-        if ( (ConsoleMode & CONSOLE_VALID_CONTROL_MODES) &&
-             (ConsoleMode & ENABLE_EXTENDED_FLAGS) == 0 )
+        else
         {
-            Status = STATUS_INVALID_PARAMETER;
-            goto Quit;
+            InputBuffer->Mode = (ConsoleMode & CONSOLE_VALID_INPUT_MODES);
         }
-        */
-
-        /*
-         * 3. Now we can continue.
-         */
-        if (ConsoleMode & CONSOLE_VALID_CONTROL_MODES)
-        {
-            Console->QuickEdit  = !!(ConsoleMode & ENABLE_QUICK_EDIT_MODE);
-            Console->InsertMode = !!(ConsoleMode & ENABLE_INSERT_MODE);
-        }
-        InputBuffer->Mode = (ConsoleMode & CONSOLE_VALID_INPUT_MODES);
     }
     else if (TEXTMODE_BUFFER == Object->Type || GRAPHICS_BUFFER == Object->Type)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
 
-        DPRINT("SetConsoleMode(Output, %d)\n", ConsoleMode);
-
+        /* Only the presence of valid mode flags is allowed */
         if (ConsoleMode & ~CONSOLE_VALID_OUTPUT_MODES)
         {
             Status = STATUS_INVALID_PARAMETER;
@@ -620,7 +577,6 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
         Status = STATUS_INVALID_HANDLE;
     }
 
-Quit:
     return Status;
 }
 

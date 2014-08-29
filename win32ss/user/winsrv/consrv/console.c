@@ -15,6 +15,7 @@
 #include <ndk/psfuncs.h>
 
 #include <alias.h>
+#include <history.h>
 #include "procinit.h"
 
 #define NDEBUG
@@ -427,7 +428,14 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->NumberOfHistoryBuffers = ConsoleInfo.NumberOfHistoryBuffers;
     Console->HistoryNoDup           = ConsoleInfo.HistoryNoDup;
 
-    Console->QuickEdit = ConsoleInfo.QuickEdit;
+    /* Initialize the Input Line Discipline */
+    Console->LineBuffer = NULL;
+    Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
+    Console->LineComplete = Console->LineUpPressed = FALSE;
+    // LineWakeupMask
+    Console->LineInsertToggle =
+    Console->InsertMode = ConsoleInfo.InsertMode;
+    Console->QuickEdit  = ConsoleInfo.QuickEdit;
 
     /* Colour table */
     memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
@@ -755,13 +763,34 @@ CSR_API(SrvGetConsoleMode)
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     PCONSOLE_IO_OBJECT Object;
 
+    PULONG ConsoleMode = &ConsoleModeRequest->Mode;
+
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                              ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_READ, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Get the standard console modes */
     Status = ConDrvGetConsoleMode(Object->Console, Object,
-                                  &ConsoleModeRequest->Mode);
+                                  ConsoleMode);
+    if (NT_SUCCESS(Status))
+    {
+        /*
+         * If getting the console modes succeeds, then retrieve
+         * the extended CONSRV-specific input modes.
+         */
+        if (INPUT_BUFFER == Object->Type)
+        {
+            if (Object->Console->InsertMode || Object->Console->QuickEdit)
+            {
+                /* Windows does this, even if it is not documented on MSDN */
+                *ConsoleMode |= ENABLE_EXTENDED_FLAGS;
+
+                if (Object->Console->InsertMode) *ConsoleMode |= ENABLE_INSERT_MODE;
+                if (Object->Console->QuickEdit ) *ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
+            }
+        }
+    }
 
     ConSrvReleaseObject(Object, TRUE);
     return Status;
@@ -773,17 +802,52 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN ULONG ConsoleMode);
 CSR_API(SrvSetConsoleMode)
 {
+#define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS | \
+                                      ENABLE_INSERT_MODE    | ENABLE_QUICK_EDIT_MODE )
+
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     PCONSOLE_IO_OBJECT Object;
+
+    ULONG ConsoleMode = ConsoleModeRequest->Mode;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                              ConsoleModeRequest->Handle,
                              &Object, NULL, GENERIC_WRITE, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Set the standard console modes (without the CONSRV-specific input modes) */
+    ConsoleMode &= ~CONSOLE_VALID_CONTROL_MODES; // Remove CONSRV-specific input modes.
     Status = ConDrvSetConsoleMode(Object->Console, Object,
-                                  ConsoleModeRequest->Mode);
+                                  ConsoleMode);
+    if (NT_SUCCESS(Status))
+    {
+        /*
+         * If setting the console modes succeeds, then set
+         * the extended CONSRV-specific input modes.
+         */
+        if (INPUT_BUFFER == Object->Type)
+        {
+            ConsoleMode = ConsoleModeRequest->Mode;
+
+            if (ConsoleMode & CONSOLE_VALID_CONTROL_MODES)
+            {
+                /*
+                 * If we use control mode flags without ENABLE_EXTENDED_FLAGS,
+                 * then consider the flags invalid.
+                 */
+                if ((ConsoleMode & ENABLE_EXTENDED_FLAGS) == 0)
+                {
+                    Status = STATUS_INVALID_PARAMETER;
+                }
+                else
+                {
+                    Object->Console->InsertMode = !!(ConsoleMode & ENABLE_INSERT_MODE);
+                    Object->Console->QuickEdit  = !!(ConsoleMode & ENABLE_QUICK_EDIT_MODE);
+                }
+            }
+        }
+    }
 
     ConSrvReleaseObject(Object, TRUE);
     return Status;

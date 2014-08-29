@@ -279,23 +279,11 @@ typedef struct _CONSOLE
     ULONG ConsoleID;                        /* The ID of the console */
     LIST_ENTRY ListEntry;                   /* Entry in the list of consoles */
 
-/**************************** Input buffer and data ***************************/
+    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
+
+/******************************** Input buffer ********************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
     UINT InputCodePage;
-
-    /** Put those things in CONSOLE_INPUT_BUFFER in PWINSRV_CONSOLE ?? **/
-    PWCHAR  LineBuffer;                     /* Current line being input, in line buffered mode */
-    ULONG   LineMaxSize;                    /* Maximum size of line in characters (including CR+LF) */
-    ULONG   LineSize;                       /* Current size of line */
-    ULONG   LinePos;                        /* Current position within line */
-    BOOLEAN LineComplete;                   /* User pressed enter, ready to send back to client */
-    BOOLEAN LineUpPressed;
-    BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
-    ULONG   LineWakeupMask;                 /* Bitmap of which control characters will end line input */
-
-    /** In PWINSRV_CONSOLE ?? **/
-    BOOLEAN InsertMode;
-    /*************************************************/
 
 /******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
@@ -305,8 +293,6 @@ typedef struct _CONSOLE
 /****************************** Other properties ******************************/
     UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */
     UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
-
-    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
 
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */

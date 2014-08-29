@@ -18,16 +18,16 @@
 
 typedef struct _ALIAS_ENTRY
 {
+    struct _ALIAS_ENTRY* Next;
     UNICODE_STRING Source;
     UNICODE_STRING Target;
-    struct _ALIAS_ENTRY* Next;
 } ALIAS_ENTRY, *PALIAS_ENTRY;
 
 typedef struct _ALIAS_HEADER
 {
+    struct _ALIAS_HEADER* Next;
     UNICODE_STRING ExeName;
     PALIAS_ENTRY   Data;
-    struct _ALIAS_HEADER* Next;
 } ALIAS_HEADER, *PALIAS_HEADER;
 
 
