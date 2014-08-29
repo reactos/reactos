@@ -12,9 +12,17 @@
 
 #define TermDrawRegion(Console, Region) \
     (Console)->TermIFace.Vtbl->DrawRegion(&(Console)->TermIFace, (Region))
-#define TermWriteStream(Console, Region, CurStartX, CurStartY, ScrolledLines, Buffer, Length) \
-    (Console)->TermIFace.Vtbl->WriteStream(&(Console)->TermIFace, (Region), (CurStartX), (CurStartY), \
-                                           (ScrolledLines), (Buffer), (Length))
+
+
+#define TermReadStream(Console, ExeName, /**/ Unicode, /**/ Buffer, ReadControl, NumCharsToRead, NumCharsRead) \
+    (Console)->TermIFace.Vtbl->ReadStream(&(Console)->TermIFace, (ExeName), /**/ (Unicode), /**/ \
+                                           (Buffer), (ReadControl), (NumCharsToRead), (NumCharsRead))
+
+#define TermWriteStream(Console, ScreenBuffer, Buffer, Length, Attrib) \
+    (Console)->TermIFace.Vtbl->WriteStream(&(Console)->TermIFace, (ScreenBuffer), (Buffer), \
+                                           (Length), (Attrib))
+
+
 #define TermSetCursorInfo(Console, ScreenBuffer) \
     (Console)->TermIFace.Vtbl->SetCursorInfo(&(Console)->TermIFace, (ScreenBuffer))
 #define TermSetScreenInfo(Console, ScreenBuffer, OldCursorX, OldCursorY) \

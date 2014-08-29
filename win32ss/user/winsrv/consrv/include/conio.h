@@ -197,14 +197,31 @@ typedef struct _TERMINAL_VTBL
     /* Interface used for both text-mode and graphics screen buffers */
     VOID (NTAPI *DrawRegion)(IN OUT PTERMINAL This,
                              SMALL_RECT* Region);
+
+
+
+/************ Line discipline ***************/
+
     /* Interface used only for text-mode screen buffers */
-    VOID (NTAPI *WriteStream)(IN OUT PTERMINAL This,
-                              SMALL_RECT* Region,
-                              SHORT CursorStartX,
-                              SHORT CursorStartY,
-                              UINT ScrolledLines,
-                              PWCHAR Buffer,
-                              UINT Length);
+
+    NTSTATUS (NTAPI *ReadStream)(IN OUT PTERMINAL This,
+                                /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
+                                IN BOOLEAN Unicode,
+                                /**PWCHAR Buffer,**/
+                                OUT PVOID Buffer,
+                                IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                                IN ULONG NumCharsToRead,
+                                OUT PULONG NumCharsRead OPTIONAL);
+    NTSTATUS (NTAPI *WriteStream)(IN OUT PTERMINAL This,
+                                  PTEXTMODE_SCREEN_BUFFER Buff,
+                                  PWCHAR Buffer,
+                                  DWORD Length,
+                                  BOOL Attrib);
+
+/************ Line discipline ***************/
+
+
+
     BOOL (NTAPI *SetCursorInfo)(IN OUT PTERMINAL This,
                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (NTAPI *SetScreenInfo)(IN OUT PTERMINAL This,
@@ -341,10 +358,5 @@ VOID ConioDrawConsole(PCONSOLE Console);
 NTSTATUS ConioResizeBuffer(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
-NTSTATUS ConioWriteConsole(PCONSOLE Console,
-                           PTEXTMODE_SCREEN_BUFFER Buff,
-                           PWCHAR Buffer,
-                           DWORD Length,
-                           BOOL Attrib);
 
 /* EOF */

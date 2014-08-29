@@ -302,10 +302,7 @@ ConDrvReadConsole(IN PCONSOLE Console,
                   OUT PULONG NumCharsRead OPTIONAL)
 {
     // STATUS_PENDING : Wait if more to read ; STATUS_SUCCESS : Don't wait.
-    NTSTATUS Status = STATUS_PENDING;
-    PLIST_ENTRY CurrentEntry;
-    ConsoleInput *Input;
-    ULONG i;
+    // NTSTATUS Status; = STATUS_PENDING;
 
     if (Console == NULL || InputBuffer == NULL || /* Buffer == NULL  || */
         ReadControl == NULL || ReadControl->nLength != sizeof(CONSOLE_READCONSOLE_CONTROL))
@@ -317,128 +314,14 @@ ConDrvReadConsole(IN PCONSOLE Console,
     ASSERT(Console == InputBuffer->Header.Console);
     ASSERT((Buffer != NULL) || (Buffer == NULL && NumCharsToRead == 0));
 
-    /* We haven't read anything (yet) */
-
-    i = ReadControl->nInitialChars;
-
-    if (InputBuffer->Mode & ENABLE_LINE_INPUT)
-    {
-        if (Console->LineBuffer == NULL)
-        {
-            /* Starting a new line */
-            Console->LineMaxSize = max(256, NumCharsToRead);
-
-            Console->LineBuffer = ConsoleAllocHeap(0, Console->LineMaxSize * sizeof(WCHAR));
-            if (Console->LineBuffer == NULL) return STATUS_NO_MEMORY;
-
-            Console->LinePos = Console->LineSize = ReadControl->nInitialChars;
-            Console->LineComplete = Console->LineUpPressed = FALSE;
-            Console->LineInsertToggle = Console->InsertMode;
-            Console->LineWakeupMask = ReadControl->dwCtrlWakeupMask;
-
-            /*
-             * Pre-filling the buffer is only allowed in the Unicode API,
-             * so we don't need to worry about ANSI <-> Unicode conversion.
-             */
-            memcpy(Console->LineBuffer, Buffer, Console->LineSize * sizeof(WCHAR));
-            if (Console->LineSize == Console->LineMaxSize)
-            {
-                Console->LineComplete = TRUE;
-                Console->LinePos = 0;
-            }
-        }
-
-        /* If we don't have a complete line yet, process the pending input */
-        while (!Console->LineComplete && !IsListEmpty(&InputBuffer->InputEvents))
-        {
-            /* Remove input event from queue */
-            CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
-            if (IsListEmpty(&InputBuffer->InputEvents))
-            {
-                ResetEvent(InputBuffer->ActiveEvent);
-            }
-            Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-
-            /* Only pay attention to key down */
-            if (Input->InputEvent.EventType == KEY_EVENT &&
-                Input->InputEvent.Event.KeyEvent.bKeyDown)
-            {
-                LineInputKeyDown(Console, ExeName,
-                                 &Input->InputEvent.Event.KeyEvent);
-                ReadControl->dwControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
-            }
-            ConsoleFreeHeap(Input);
-        }
-
-        /* Check if we have a complete line to read from */
-        if (Console->LineComplete)
-        {
-            while (i < NumCharsToRead && Console->LinePos != Console->LineSize)
-            {
-                WCHAR Char = Console->LineBuffer[Console->LinePos++];
-
-                if (Unicode)
-                {
-                    ((PWCHAR)Buffer)[i] = Char;
-                }
-                else
-                {
-                    ConsoleInputUnicodeCharToAnsiChar(Console, &((PCHAR)Buffer)[i], &Char);
-                }
-                ++i;
-            }
-
-            if (Console->LinePos == Console->LineSize)
-            {
-                /* Entire line has been read */
-                ConsoleFreeHeap(Console->LineBuffer);
-                Console->LineBuffer = NULL;
-            }
-
-            Status = STATUS_SUCCESS;
-        }
-    }
-    else
-    {
-        /* Character input */
-        while (i < NumCharsToRead && !IsListEmpty(&InputBuffer->InputEvents))
-        {
-            /* Remove input event from queue */
-            CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
-            if (IsListEmpty(&InputBuffer->InputEvents))
-            {
-                ResetEvent(InputBuffer->ActiveEvent);
-            }
-            Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-
-            /* Only pay attention to valid ASCII chars, on key down */
-            if (Input->InputEvent.EventType == KEY_EVENT  &&
-                Input->InputEvent.Event.KeyEvent.bKeyDown &&
-                Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar != L'\0')
-            {
-                WCHAR Char = Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar;
-
-                if (Unicode)
-                {
-                    ((PWCHAR)Buffer)[i] = Char;
-                }
-                else
-                {
-                    ConsoleInputUnicodeCharToAnsiChar(Console, &((PCHAR)Buffer)[i], &Char);
-                }
-                ++i;
-
-                /* Did read something */
-                Status = STATUS_SUCCESS;
-            }
-            ConsoleFreeHeap(Input);
-        }
-    }
-
-    // FIXME: Only set if Status == STATUS_SUCCESS ???
-    if (NumCharsRead) *NumCharsRead = i;
-
-    return Status;
+    /* Call the line-discipline */
+    return TermReadStream(Console,
+                          ExeName,
+                          Unicode,
+                          Buffer,
+                          ReadControl,
+                          NumCharsToRead,
+                          NumCharsRead);
 }
 
 NTSTATUS NTAPI

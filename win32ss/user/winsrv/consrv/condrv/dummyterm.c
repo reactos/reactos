@@ -31,16 +31,50 @@ DummyDrawRegion(IN OUT PTERMINAL This,
 {
 }
 
-static VOID NTAPI
-DummyWriteStream(IN OUT PTERMINAL This,
-                 SMALL_RECT* Region,
-                 SHORT CursorStartX,
-                 SHORT CursorStartY,
-                 UINT ScrolledLines,
-                 PWCHAR Buffer,
-                 UINT Length)
+
+
+/************ Line discipline ***************/
+
+static NTSTATUS NTAPI
+DummyReadStream(IN OUT PTERMINAL This,
+                /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
+                IN BOOLEAN Unicode,
+                /**PWCHAR Buffer,**/
+                OUT PVOID Buffer,
+                IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                IN ULONG NumCharsToRead,
+                OUT PULONG NumCharsRead OPTIONAL)
 {
+    /*
+     * We were called because the console was in cooked mode.
+     * There is nothing to read, wait until a real terminal
+     * is plugged into the console.
+     */
+    return STATUS_PENDING;
 }
+
+static NTSTATUS NTAPI
+DummyWriteStream(IN OUT PTERMINAL This,
+                 PTEXTMODE_SCREEN_BUFFER Buff,
+                 PWCHAR Buffer,
+                 DWORD Length,
+                 BOOL Attrib)
+{
+    /*
+     * We were called because the console was in cooked mode.
+     * There is nothing to write, wait until a real terminal
+     * is plugged into the console.
+     */
+
+    // /* Stop here if the console is paused */
+    // if (Console->UnpauseEvent != NULL) return STATUS_PENDING;
+
+    return STATUS_PENDING;
+}
+
+/************ Line discipline ***************/
+
+
 
 static BOOL NTAPI
 DummySetCursorInfo(IN OUT PTERMINAL This,
@@ -114,7 +148,10 @@ static TERMINAL_VTBL DummyVtbl =
     DummyInitTerminal,
     DummyDeinitTerminal,
     DummyDrawRegion,
+
+    DummyReadStream,
     DummyWriteStream,
+
     DummySetCursorInfo,
     DummySetScreenInfo,
     DummyResizeTerminal,

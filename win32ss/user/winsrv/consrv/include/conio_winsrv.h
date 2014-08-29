@@ -222,10 +222,5 @@ VOID ConioDrawConsole(PCONSRV_CONSOLE Console);
 NTSTATUS ConioResizeBuffer(PCONSRV_CONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
-NTSTATUS ConioWriteConsole(PCONSRV_CONSOLE Console,
-                           PTEXTMODE_SCREEN_BUFFER Buff,
-                           PWCHAR Buffer,
-                           DWORD Length,
-                           BOOL Attrib);
 
 /* EOF */

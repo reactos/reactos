@@ -108,11 +108,11 @@ LineInputEdit(PCONSRV_CONSOLE Console,
     {
         for (i = Pos; i < NewSize; i++)
         {
-            ConioWriteConsole(Console, ActiveBuffer, &Console->LineBuffer[i], 1, TRUE);
+            TermWriteStream(Console, ActiveBuffer, &Console->LineBuffer[i], 1, TRUE);
         }
         for (; i < Console->LineSize; i++)
         {
-            ConioWriteConsole(Console, ActiveBuffer, L" ", 1, TRUE);
+            TermWriteStream(Console, ActiveBuffer, L" ", 1, TRUE);
         }
         Console->LinePos = i;
     }
@@ -361,7 +361,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         {
             if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
             {
-                ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\r", 1, TRUE);
+                TermWriteStream(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\r", 1, TRUE);
             }
         }
 
@@ -378,7 +378,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
             {
                 if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
                 {
-                    ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\n", 1, TRUE);
+                    TermWriteStream(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\n", 1, TRUE);
                 }
             }
         }
