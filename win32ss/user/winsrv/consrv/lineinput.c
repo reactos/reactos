@@ -165,7 +165,6 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 {
     UINT Pos = Console->LinePos;
     UNICODE_STRING Entry;
-    // INT HistPos;
 
     /*
      * First, deal with control keys...
@@ -173,159 +172,207 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
     switch (KeyEvent->wVirtualKeyCode)
     {
-    case VK_ESCAPE:
-        /* Clear entire line */
-        LineInputSetPos(Console, 0);
-        LineInputEdit(Console, Console->LineSize, 0, NULL);
-        return;
-    case VK_HOME:
-        /* Move to start of line. With CTRL, erase everything left of cursor */
-        LineInputSetPos(Console, 0);
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-            LineInputEdit(Console, Pos, 0, NULL);
-        return;
-    case VK_END:
-        /* Move to end of line. With CTRL, erase everything right of cursor */
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-            LineInputEdit(Console, Console->LineSize - Pos, 0, NULL);
-        else
-            LineInputSetPos(Console, Console->LineSize);
-        return;
-    case VK_LEFT:
-        /* Move left. With CTRL, move to beginning of previous word */
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+        case VK_ESCAPE:
         {
-            while (Pos > 0 && Console->LineBuffer[Pos - 1] == L' ') Pos--;
-            while (Pos > 0 && Console->LineBuffer[Pos - 1] != L' ') Pos--;
+            /* Clear entire line */
+            LineInputSetPos(Console, 0);
+            LineInputEdit(Console, Console->LineSize, 0, NULL);
+            return;
         }
-        else
+
+        case VK_HOME:
         {
-            Pos -= (Pos > 0);
+            /* Move to start of line. With CTRL, erase everything left of cursor */
+            LineInputSetPos(Console, 0);
+            if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+                LineInputEdit(Console, Pos, 0, NULL);
+            return;
         }
-        LineInputSetPos(Console, Pos);
-        return;
-    case VK_RIGHT:
-    case VK_F1:
-        /* Move right. With CTRL, move to beginning of next word */
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+
+        case VK_END:
         {
-            while (Pos < Console->LineSize && Console->LineBuffer[Pos] != L' ') Pos++;
-            while (Pos < Console->LineSize && Console->LineBuffer[Pos] == L' ') Pos++;
-            LineInputSetPos(Console, Pos);
+            /* Move to end of line. With CTRL, erase everything right of cursor */
+            if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+                LineInputEdit(Console, Console->LineSize - Pos, 0, NULL);
+            else
+                LineInputSetPos(Console, Console->LineSize);
+            return;
         }
-        else
+
+        case VK_LEFT:
         {
-            /* Recall one character (but don't overwrite current line) */
-            HistoryGetCurrentEntry(Console, ExeName, &Entry);
-            if (Pos < Console->LineSize)
-                LineInputSetPos(Console, Pos + 1);
-            else if (Pos * sizeof(WCHAR) < Entry.Length)
-                LineInputEdit(Console, 0, 1, &Entry.Buffer[Pos]);
-        }
-        return;
-    case VK_INSERT:
-        /* Toggle between insert and overstrike */
-        Console->LineInsertToggle = !Console->LineInsertToggle;
-        TermSetCursorInfo(Console, Console->ActiveBuffer);
-        return;
-    case VK_DELETE:
-        /* Remove character to right of cursor */
-        if (Pos != Console->LineSize)
-            LineInputEdit(Console, 1, 0, NULL);
-        return;
-    case VK_PRIOR:
-        /* Recall first history entry */
-        LineInputRecallHistory(Console, ExeName, -((WORD)-1));
-        return;
-    case VK_NEXT:
-        /* Recall last history entry */
-        LineInputRecallHistory(Console, ExeName, +((WORD)-1));
-        return;
-    case VK_UP:
-    case VK_F5:
-        /*
-         * Recall previous history entry. On first time, actually recall the
-         * current (usually last) entry; on subsequent times go back.
-         */
-        LineInputRecallHistory(Console, ExeName, Console->LineUpPressed ? -1 : 0);
-        Console->LineUpPressed = TRUE;
-        return;
-    case VK_DOWN:
-        /* Recall next history entry */
-        LineInputRecallHistory(Console, ExeName, +1);
-        return;
-    case VK_F3:
-        /* Recall remainder of current history entry */
-        HistoryGetCurrentEntry(Console, ExeName, &Entry);
-        if (Pos * sizeof(WCHAR) < Entry.Length)
-        {
-            UINT InsertSize = (Entry.Length / sizeof(WCHAR) - Pos);
-            UINT DeleteSize = min(Console->LineSize - Pos, InsertSize);
-            LineInputEdit(Console, DeleteSize, InsertSize, &Entry.Buffer[Pos]);
-        }
-        return;
-    case VK_F6:
-        /* Insert a ^Z character */
-        KeyEvent->uChar.UnicodeChar = 26;
-        break;
-    case VK_F7:
-        if (KeyEvent->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
-            HistoryDeleteCurrentBuffer(Console, ExeName);
-        return;
-    case VK_F8:
-
-    {
-        UNICODE_STRING EntryFound;
-
-        Entry.Length = Console->LinePos * sizeof(WCHAR); // == Pos * sizeof(WCHAR)
-        Entry.Buffer = Console->LineBuffer;
-
-        if (HistoryFindEntryByPrefix(Console, ExeName, &Entry, &EntryFound))
-        {
-            LineInputEdit(Console, Console->LineSize - Pos,
-                          EntryFound.Length / sizeof(WCHAR) - Pos,
-                          &EntryFound.Buffer[Pos]);
-            /* Cursor stays where it was */
-            LineInputSetPos(Console, Pos);
-        }
-    }
-#if 0
-        PHISTORY_BUFFER Hist;
-
-        /* Search for history entries starting with input. */
-        Hist = HistoryCurrentBuffer(Console, ExeName);
-        if (!Hist || Hist->NumEntries == 0) return;
-
-        /*
-         * Like Up/F5, on first time start from current (usually last) entry,
-         * but on subsequent times start at previous entry.
-         */
-        if (Console->LineUpPressed)
-            Hist->Position = (Hist->Position ? Hist->Position : Hist->NumEntries) - 1;
-        Console->LineUpPressed = TRUE;
-
-        Entry.Length = Console->LinePos * sizeof(WCHAR); // == Pos * sizeof(WCHAR)
-        Entry.Buffer = Console->LineBuffer;
-
-        /*
-         * Keep going backwards, even wrapping around to the end,
-         * until we get back to starting point.
-         */
-        HistPos = Hist->Position;
-        do
-        {
-            if (RtlPrefixUnicodeString(&Entry, &Hist->Entries[HistPos], FALSE))
+            /* Move left. With CTRL, move to beginning of previous word */
+            if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
             {
-                Hist->Position = HistPos;
+                while (Pos > 0 && Console->LineBuffer[Pos - 1] == L' ') Pos--;
+                while (Pos > 0 && Console->LineBuffer[Pos - 1] != L' ') Pos--;
+            }
+            else
+            {
+                Pos -= (Pos > 0);
+            }
+            LineInputSetPos(Console, Pos);
+            return;
+        }
+
+        case VK_RIGHT:
+        case VK_F1:
+        {
+            /* Move right. With CTRL, move to beginning of next word */
+            if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+            {
+                while (Pos < Console->LineSize && Console->LineBuffer[Pos] != L' ') Pos++;
+                while (Pos < Console->LineSize && Console->LineBuffer[Pos] == L' ') Pos++;
+                LineInputSetPos(Console, Pos);
+            }
+            else
+            {
+                /* Recall one character (but don't overwrite current line) */
+                HistoryGetCurrentEntry(Console, ExeName, &Entry);
+                if (Pos < Console->LineSize)
+                    LineInputSetPos(Console, Pos + 1);
+                else if (Pos * sizeof(WCHAR) < Entry.Length)
+                    LineInputEdit(Console, 0, 1, &Entry.Buffer[Pos]);
+            }
+            return;
+        }
+
+        case VK_INSERT:
+        {
+            /* Toggle between insert and overstrike */
+            Console->LineInsertToggle = !Console->LineInsertToggle;
+            TermSetCursorInfo(Console, Console->ActiveBuffer);
+            return;
+        }
+
+        case VK_DELETE:
+        {
+            /* Remove character to right of cursor */
+            if (Pos != Console->LineSize)
+                LineInputEdit(Console, 1, 0, NULL);
+            return;
+        }
+
+        case VK_PRIOR:
+        {
+            /* Recall first history entry */
+            LineInputRecallHistory(Console, ExeName, -((WORD)-1));
+            return;
+        }
+
+        case VK_NEXT:
+        {
+            /* Recall last history entry */
+            LineInputRecallHistory(Console, ExeName, +((WORD)-1));
+            return;
+        }
+
+        case VK_UP:
+        case VK_F5:
+        {
+            /*
+             * Recall previous history entry. On first time, actually recall the
+             * current (usually last) entry; on subsequent times go back.
+             */
+            LineInputRecallHistory(Console, ExeName, Console->LineUpPressed ? -1 : 0);
+            Console->LineUpPressed = TRUE;
+            return;
+        }
+
+        case VK_DOWN:
+        {
+            /* Recall next history entry */
+            LineInputRecallHistory(Console, ExeName, +1);
+            return;
+        }
+
+        case VK_F3:
+        {
+            /* Recall remainder of current history entry */
+            HistoryGetCurrentEntry(Console, ExeName, &Entry);
+            if (Pos * sizeof(WCHAR) < Entry.Length)
+            {
+                UINT InsertSize = (Entry.Length / sizeof(WCHAR) - Pos);
+                UINT DeleteSize = min(Console->LineSize - Pos, InsertSize);
+                LineInputEdit(Console, DeleteSize, InsertSize, &Entry.Buffer[Pos]);
+            }
+            return;
+        }
+
+        case VK_F6:
+        {
+            /* Insert a ^Z character */
+            KeyEvent->uChar.UnicodeChar = 26;
+            break;
+        }
+
+        case VK_F7:
+        {
+            if (KeyEvent->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+                HistoryDeleteCurrentBuffer(Console, ExeName);
+            return;
+        }
+
+        case VK_F8:
+        {
+            UNICODE_STRING EntryFound;
+
+            Entry.Length = Console->LinePos * sizeof(WCHAR); // == Pos * sizeof(WCHAR)
+            Entry.Buffer = Console->LineBuffer;
+
+            if (HistoryFindEntryByPrefix(Console, ExeName, &Entry, &EntryFound))
+            {
                 LineInputEdit(Console, Console->LineSize - Pos,
-                              Hist->Entries[HistPos].Length / sizeof(WCHAR) - Pos,
-                              &Hist->Entries[HistPos].Buffer[Pos]);
+                              EntryFound.Length / sizeof(WCHAR) - Pos,
+                              &EntryFound.Buffer[Pos]);
                 /* Cursor stays where it was */
                 LineInputSetPos(Console, Pos);
-                return;
             }
-            if (--HistPos < 0) HistPos += Hist->NumEntries;
-        } while (HistPos != Hist->Position);
+
+            return;
+        }
+#if 0
+        {
+            PHISTORY_BUFFER Hist;
+            INT HistPos;
+
+            /* Search for history entries starting with input. */
+            Hist = HistoryCurrentBuffer(Console, ExeName);
+            if (!Hist || Hist->NumEntries == 0) return;
+
+            /*
+             * Like Up/F5, on first time start from current (usually last) entry,
+             * but on subsequent times start at previous entry.
+             */
+            if (Console->LineUpPressed)
+                Hist->Position = (Hist->Position ? Hist->Position : Hist->NumEntries) - 1;
+            Console->LineUpPressed = TRUE;
+
+            Entry.Length = Console->LinePos * sizeof(WCHAR); // == Pos * sizeof(WCHAR)
+            Entry.Buffer = Console->LineBuffer;
+
+            /*
+             * Keep going backwards, even wrapping around to the end,
+             * until we get back to starting point.
+             */
+            HistPos = Hist->Position;
+            do
+            {
+                if (RtlPrefixUnicodeString(&Entry, &Hist->Entries[HistPos], FALSE))
+                {
+                    Hist->Position = HistPos;
+                    LineInputEdit(Console, Console->LineSize - Pos,
+                                  Hist->Entries[HistPos].Length / sizeof(WCHAR) - Pos,
+                                  &Hist->Entries[HistPos].Buffer[Pos]);
+                    /* Cursor stays where it was */
+                    LineInputSetPos(Console, Pos);
+                    return;
+                }
+                if (--HistPos < 0) HistPos += Hist->NumEntries;
+            } while (HistPos != Hist->Position);
+
+            return;
+        }
 #endif
 
         return;
@@ -333,7 +380,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
 
     /*
-     * OK, we can continue...
+     * OK, we deal with normal keys, we can continue...
      */
 
     if (KeyEvent->uChar.UnicodeChar == L'\b' && Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT)
