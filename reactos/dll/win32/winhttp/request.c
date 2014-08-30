@@ -1197,6 +1197,7 @@ BOOL WINAPI WinHttpSendRequest( HINTERNET hrequest, LPCWSTR headers, DWORD heade
     return ret;
 }
 
+#undef ARRAYSIZE
 #define ARRAYSIZE(array) (sizeof(array) / sizeof((array)[0]))
 
 static const WCHAR basicW[]     = {'B','a','s','i','c',0};
