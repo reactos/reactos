@@ -313,6 +313,16 @@ User32 -
   reactos/dll/win32/user32/windows/text.c       # Forked (lstr.c)
   reactos/dll/win32/user32/windows/winpos.c     # Forked
 
+schannel.c
+  reactos/dll/win32/schannel/schannel_wine.c    # synced to wine-1.7.17 (secur32/schannel.c)
+  reactos/dll/win32/schannel/schannel_gnutls.c  # synced to wine-1.7.17 (secur32/schannel_gnutls.c)
+  reactos/dll/win32/schannel/secur32_wine.c     # partial sync to wine-1.7.17 (secur32/secur32.c)
+
+secur32 -
+  reactos/dll/win32/secur32/sspi.c              # partial sync to wine-1.7.17 (secur32.c)
+  reactos/dll/win32/secur32/thunks.c            # synced to wine-1.7.17
+  reactos/dll/win32/secur32/wrapper.c           # synced to wine-1.7.17
+
 ws2_32 -
   reactos/dll/win32/ws2_32/misc/async.c         # Synced to Wine-1.5.4
 
