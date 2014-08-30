@@ -437,6 +437,9 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Console->InsertMode = ConsoleInfo.InsertMode;
     Console->QuickEdit  = ConsoleInfo.QuickEdit;
 
+    /* Popup windows */
+    InitializeListHead(&Console->PopupWindows);
+
     /* Colour table */
     memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
 

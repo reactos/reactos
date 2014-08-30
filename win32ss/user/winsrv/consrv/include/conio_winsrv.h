@@ -168,7 +168,8 @@ typedef struct _WINSRV_CONSOLE
     HANDLE ErrorHardwareEvent;
 
 /****************************** Other properties ******************************/
-    COLORREF Colors[16];                    /* Colour palette */
+    LIST_ENTRY PopupWindows;                /*List of popup windows */
+    COLORREF   Colors[16];                  /* Colour palette */
 
 } WINSRV_CONSOLE, *PWINSRV_CONSOLE;
 
