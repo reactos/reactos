@@ -41,6 +41,14 @@ GetPciIrqRoutingTable(VOID)
         {
             TRACE("Found signature\n");
 
+            if (Table->TableSize < FIELD_OFFSET(PCI_IRQ_ROUTING_TABLE, Slot) ||
+                Table->TableSize % 16 != 0)
+            {
+                ERR("Invalid routing table size (%u) at %p. Continue searching...\n", Table->TableSize, Table);
+                Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG_PTR)Table + 0x10);
+                continue;
+            }
+
             Ptr = (PUCHAR)Table;
             Sum = 0;
             for (i = 0; i < Table->TableSize; i++)
@@ -50,17 +58,19 @@ GetPciIrqRoutingTable(VOID)
 
             if ((Sum & 0xFF) != 0)
             {
-                ERR("Invalid routing table\n");
-                return NULL;
+                ERR("Invalid routing table checksum (%#lx) at %p. Continue searching...\n", Sum & 0xFF, Table);
             }
-
-            TRACE("Valid checksum\n");
-
-            return Table;
+            else
+            {
+                TRACE("Valid checksum\n");
+                return Table;
+            }
         }
 
         Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG_PTR)Table + 0x10);
     }
+
+    ERR("No valid routing table found!\n");
 
     return NULL;
 }
