@@ -33,6 +33,7 @@
 #include <winreg.h>
 #include <commctrl.h>
 #include <commdlg.h>
+#include <strsafe.h>
 
 #include "resource.h"
 
@@ -202,7 +203,7 @@ BOOL
 GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                        IN LPCWSTR SourceName,
                        IN LPCWSTR EntryName,
-                       OUT LPWSTR ExpandedName)
+                       OUT PWCHAR ExpandedName)
 {
     DWORD dwSize;
     BYTE szModuleName[MAX_PATH];
@@ -211,8 +212,8 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
     HKEY hSourceKey = NULL;
     BOOL bReturn = FALSE;
 
-    wcscpy(szKeyName, L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\");
-    wcscat(szKeyName, lpLogName);
+    StringCbCopyW(szKeyName, sizeof(szKeyName), L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\");
+    StringCbCatW(szKeyName, sizeof(szKeyName), lpLogName);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                      szKeyName,
@@ -261,7 +262,7 @@ BOOL
 GetEventCategory(IN LPCWSTR KeyName,
                  IN LPCWSTR SourceName,
                  IN EVENTLOGRECORD *pevlr,
-                 OUT LPWSTR CategoryName)
+                 OUT PWCHAR CategoryName)
 {
     HANDLE hLibrary = NULL;
     WCHAR szMessageDLL[MAX_PATH];
@@ -287,7 +288,7 @@ GetEventCategory(IN LPCWSTR KeyName,
                 TrimNulls(lpMsgBuf);
 
                 /* Copy the category name */
-                wcscpy(CategoryName, lpMsgBuf);
+                StringCchCopyW(CategoryName, MAX_PATH, lpMsgBuf);
             }
             else
             {
@@ -315,7 +316,7 @@ BOOL
 GetEventMessage(IN LPCWSTR KeyName,
                 IN LPCWSTR SourceName,
                 IN EVENTLOGRECORD *pevlr,
-                OUT LPWSTR EventText)
+                OUT PWCHAR EventText)
 {
     DWORD i;
     HANDLE hLibrary = NULL;
@@ -394,7 +395,7 @@ GetEventMessage(IN LPCWSTR KeyName,
                         TrimNulls((LPWSTR)lpMsgBuf);
 
                         /* Copy the event text */
-                        wcscpy(EventText ,lpMsgBuf);
+                        StringCchCopyW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, lpMsgBuf);
                     }
                 }
 
@@ -405,7 +406,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         if (!bDone)
         {
             LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
-            swprintf(EventText, szStringIDNotFound, (pevlr->EventID & 0xFFFF), SourceName);
+            StringCchPrintfW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, szStringIDNotFound, (pevlr->EventID & 0xFFFF), SourceName);
         }
 
         free(szArguments);
@@ -415,7 +416,7 @@ GetEventMessage(IN LPCWSTR KeyName,
     }
 
     LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
-    swprintf(EventText, szStringIDNotFound, (pevlr->EventID & 0xFFFF), SourceName);
+    StringCchPrintfW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, szStringIDNotFound, (pevlr->EventID & 0xFFFF), SourceName);
 
     return FALSE;
 }
@@ -423,7 +424,7 @@ GetEventMessage(IN LPCWSTR KeyName,
 
 VOID
 GetEventType(IN WORD dwEventType,
-             OUT LPWSTR eventTypeText)
+             OUT PWCHAR eventTypeText)
 {
     switch (dwEventType)
     {
@@ -453,7 +454,7 @@ GetEventType(IN WORD dwEventType,
 
 BOOL
 GetEventUserName(EVENTLOGRECORD *pelr,
-                 OUT LPWSTR pszUser)
+                 OUT PWCHAR pszUser)
 {
     PSID lpSid;
     WCHAR szName[1024];
@@ -476,7 +477,7 @@ GetEventUserName(EVENTLOGRECORD *pelr,
                              &cbDomain,
                              &peUse))
         {
-            wcscpy(pszUser, szName);
+            StringCchCopyW(pszUser, MAX_PATH, szName);
             return TRUE;
         }
     }
@@ -523,23 +524,24 @@ QueryEventMessages(LPWSTR lpMachineName,
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 0, dwRecordsToRead = 0, dwFlags, dwMaxLength;
+    size_t cchRemaining;
     LPWSTR lpSourceName;
     LPWSTR lpComputerName;
     LPSTR lpData;
     BOOL bResult = TRUE; /* Read succeeded. */
-    int i;
 
     WCHAR szWindowTitle[MAX_PATH];
     WCHAR szStatusText[MAX_PATH];
     WCHAR szLocalDate[MAX_PATH];
     WCHAR szLocalTime[MAX_PATH];
     WCHAR szEventID[MAX_PATH];
-    WCHAR szEventTypeText[MAX_PATH];
+    WCHAR szEventTypeText[MAX_LOADSTRING];
     WCHAR szCategoryID[MAX_PATH];
     WCHAR szUsername[MAX_PATH];
     WCHAR szEventText[EVENT_MESSAGE_FILE_BUFFER];
     WCHAR szCategory[MAX_PATH];
     WCHAR szData[MAX_PATH];
+    PWCHAR lpTitleTemplateEnd;
 
     SYSTEMTIME time;
     LVITEMW lviEventItem;
@@ -649,8 +651,8 @@ QueryEventMessages(LPWSTR lpMachineName,
             GetEventType(pevlr->EventType, szEventTypeText);
             GetEventCategory(lpLogName, lpSourceName, pevlr, szCategory);
 
-            swprintf(szEventID, L"%u", (pevlr->EventID & 0xFFFF));
-            swprintf(szCategoryID, L"%u", pevlr->EventCategory);
+            StringCbPrintfW(szEventID, sizeof(szEventID), L"%u", (pevlr->EventID & 0xFFFF));
+            StringCbPrintfW(szCategoryID, sizeof(szCategoryID), L"%u", pevlr->EventCategory);
 
             lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
             lviEventItem.iItem = 0;
@@ -713,16 +715,20 @@ QueryEventMessages(LPWSTR lpMachineName,
     // All events loaded
     EndDialog(hwndDlg, 0);
 
-
-    i = swprintf(szWindowTitle, szTitleTemplate, szTitle, lpLogName); /* i = number of characters written */
+    StringCchPrintfExW(szWindowTitle,
+                       sizeof(szWindowTitle) / sizeof(WCHAR),
+                       &lpTitleTemplateEnd,
+                       &cchRemaining,
+                       0,
+                       szTitleTemplate, szTitle, lpLogName); /* i = number of characters written */
     /* lpComputerName can be NULL here if no records was read */
-    dwMaxLength = sizeof(szWindowTitle) / sizeof(WCHAR) - i;
-    if(!lpComputerName)
-        GetComputerNameW(szWindowTitle+i, &dwMaxLength);
+    dwMaxLength = cchRemaining;
+    if (!lpComputerName)
+        GetComputerNameW(lpTitleTemplateEnd, &dwMaxLength);
     else
-        _snwprintf(szWindowTitle+i, dwMaxLength, L"%s", lpComputerName);
+        StringCchCopyW(lpTitleTemplateEnd, dwMaxLength, lpComputerName);
 
-    swprintf(szStatusText, szStatusBarTemplate, lpLogName, dwTotalRecords);
+    StringCbPrintfW(szStatusText, sizeof(szStatusText), szStatusBarTemplate, lpLogName, dwTotalRecords);
 
     // Update the status bar
     SendMessageW(hwndStatus, SB_SETTEXT, (WPARAM)0, (LPARAM)szStatusText);
@@ -863,22 +869,24 @@ MyRegisterClass(HINSTANCE hInstance)
 
 
 VOID
-GetDisplayNameFile(LPCWSTR lpLogName, LPWSTR lpModuleName)
+GetDisplayNameFile(IN LPCWSTR lpLogName,
+                   OUT PWCHAR lpModuleName)
 {
     HKEY hKey;
     WCHAR *KeyPath;
     WCHAR szModuleName[MAX_PATH];
-    DWORD dwData;
+    DWORD cbData;
+    DWORD cbKeyPath;
 
-
-    KeyPath = (WCHAR*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR));
+    cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
+    KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
     if (!KeyPath)
     {
         return;
     }
 
-    wcscpy(KeyPath, EVENTLOG_BASE_KEY);
-    wcscat(KeyPath, lpLogName);
+    StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
+    StringCbCatW(KeyPath, cbKeyPath, lpLogName);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KeyPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
@@ -886,9 +894,8 @@ GetDisplayNameFile(LPCWSTR lpLogName, LPWSTR lpModuleName)
         return;
     }
 
-    dwData = MAX_PATH;
-
-    if (RegQueryValueExW(hKey, L"DisplayNameFile", NULL, NULL, (LPBYTE)szModuleName, &dwData) == ERROR_SUCCESS)
+    cbData = sizeof(szModuleName);
+    if (RegQueryValueExW(hKey, L"DisplayNameFile", NULL, NULL, (LPBYTE)szModuleName, &cbData) == ERROR_SUCCESS)
     {
         ExpandEnvironmentStringsW(szModuleName, lpModuleName, MAX_PATH);
     }
@@ -899,21 +906,23 @@ GetDisplayNameFile(LPCWSTR lpLogName, LPWSTR lpModuleName)
 
 
 DWORD
-GetDisplayNameID(LPCWSTR lpLogName)
+GetDisplayNameID(IN LPCWSTR lpLogName)
 {
     HKEY hKey;
     WCHAR *KeyPath;
     DWORD dwMessageID = 0;
-    DWORD dwData;
+    DWORD cbData;
+    DWORD cbKeyPath;
 
-    KeyPath = (WCHAR*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR));
+    cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
+    KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
     if (!KeyPath)
     {
         return 0;
     }
 
-    wcscpy(KeyPath, EVENTLOG_BASE_KEY);
-    wcscat(KeyPath, lpLogName);
+    StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
+    StringCbCatW(KeyPath, cbKeyPath, lpLogName);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KeyPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
@@ -921,9 +930,8 @@ GetDisplayNameID(LPCWSTR lpLogName)
         return 0;
     }
 
-    dwData = sizeof(dwMessageID);
-
-    RegQueryValueExW(hKey, L"DisplayNameID", NULL, NULL, (LPBYTE)&dwMessageID, &dwData);
+    cbData = sizeof(dwMessageID);
+    RegQueryValueExW(hKey, L"DisplayNameID", NULL, NULL, (LPBYTE)&dwMessageID, &cbData);
 
     RegCloseKey(hKey);
     HeapFree(GetProcessHeap(), 0, KeyPath);
@@ -961,7 +969,7 @@ BuildLogList(void)
         return;
     }
 
-    LogNames = (WCHAR**)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (dwNumLogs + 1) * sizeof(WCHAR*));
+    LogNames = HeapAlloc(GetProcessHeap(), 0, (dwNumLogs + 1) * sizeof(WCHAR*));
 
     if (!LogNames)
     {
