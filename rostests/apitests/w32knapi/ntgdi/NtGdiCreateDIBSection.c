@@ -417,7 +417,7 @@ printf("dib with bitfileds: %p\n", hbmp);
     pbV5h->bV5BlueMask = 0;
     pbV5h->bV5AlphaMask = 0;
     pbV5h->bV5CSType = 0;
-    memset(&pbV5h->bV5Endpoints, sizeof(CIEXYZTRIPLE), 0);
+    memset(&pbV5h->bV5Endpoints, 0, sizeof(CIEXYZTRIPLE));
     pbV5h->bV5GammaRed = 0;
     pbV5h->bV5GammaGreen = 0;
     pbV5h->bV5GammaBlue = 0;
