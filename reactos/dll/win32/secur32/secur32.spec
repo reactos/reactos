@@ -5,8 +5,7 @@
 @ stdcall AddCredentialsW(ptr wstr wstr long ptr ptr ptr ptr)
 @ stdcall AddSecurityPackageA(str ptr)
 @ stdcall AddSecurityPackageW(wstr ptr)
-@ stdcall ApplyControlTokenA(ptr ptr)
-@ stdcall ApplyControlToken(ptr ptr) ApplyControlTokenW
+@ stdcall ApplyControlToken(ptr ptr)
 @ stdcall CompleteAuthToken(ptr ptr)
 @ stub CredMarshalTargetInfo
 @ stub CredUnmarshalTargetInfo
