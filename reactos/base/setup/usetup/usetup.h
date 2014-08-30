@@ -48,6 +48,7 @@
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
 
 /* Filesystem headers */
 #include <fslib/ext2lib.h>
