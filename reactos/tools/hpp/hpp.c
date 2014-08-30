@@ -23,9 +23,12 @@
 typedef struct _DEFINE
 {
     struct _DEFINE *pNext;
-    int len;
     int val;
-    char szName[1];
+    char *pszName;
+    unsigned int cchName;
+    char *pszValue;
+    unsigned int cchValue;
+    char achBuffer[1];
 } DEFINE, *PDEFINE;
 
 DEFINE *gpDefines = 0;
@@ -58,7 +61,7 @@ convert_path(const char* origpath)
 #endif
 		i++;
 	}
-	return(newpath);
+	return newpath;
 }
 
 char*
@@ -160,17 +163,74 @@ strxlen(const char *psz)
     return len;
 }
 
+PDEFINE
+FindDefine(const char *p, char **pNext)
+{
+    PDEFINE pDefine;
+    int cchName;
+
+    cchName = strxlen(p);
+    if (pNext)
+        *pNext = (char*)p + cchName;
+
+    /* search for the define in the global list */
+    pDefine = gpDefines;
+    while (pDefine != 0)
+    {
+        trace("found a define: %s\n", pDefine->pszName);
+        if (pDefine->cchName == cchName)
+        {
+            if (strncmp(p, pDefine->pszName, cchName) == 0)
+            {
+                return pDefine;
+            }
+        }
+        pDefine = pDefine->pNext;
+    }
+    return 0;
+}
 
 void
-WriteLine(char *pszLine, FILE *fileOut)
+WriteLine(char *pchLine, FILE *fileOut)
 {
-    char * pszEnd;
+    char *pch, *pchLineEnd, *pchVariable;
+    int len;
+    PDEFINE pDefine;
 
-    pszEnd = strchr(pszLine, '\n');
-    if (pszEnd)
+    pchLineEnd = strchr(pchLine, '\n');
+    if (pchLineEnd == 0)
+        return;
+
+    len = pchLineEnd - pchLine + 1;
+
+    pch = pchLine;
+    while (len > 0)
     {
-        int len = pszEnd - pszLine + 1;
-        fwrite(pszLine, 1, len, fileOut);
+        /* Check if there is a $ variable in the line */
+        pchVariable = strchr(pch, '$');
+        if (pchVariable && (pchVariable < pchLineEnd))
+        {
+            fwrite(pch, 1, pchVariable - pch, fileOut);
+
+            pDefine = FindDefine(pchVariable + 1, &pch);
+            if (pDefine != 0)
+            {
+                fwrite(pDefine->pszValue, 1, pDefine->cchValue, fileOut);
+            }
+            else
+            {
+                len = strxlen(pchVariable + 1) + 1;
+                error("Could not find variable '%.*s'\n", len, pchVariable);
+                fwrite(pchVariable, 1, pch - pchVariable, fileOut);
+            }
+
+            len = pchLineEnd - pch;
+        }
+        else
+        {
+            fwrite(pch, 1, len, fileOut);
+            break;
+        }
     }
 }
 
@@ -178,27 +238,12 @@ int
 EvaluateConstant(const char *p, char **pNext)
 {
     PDEFINE pDefine;
-    int len;
 
-    len = strxlen(p);
-    if (pNext)
-        *pNext = (char*)p + len;
+    pDefine = FindDefine(p, pNext);
+    if (!pDefine)
+        return 0;
 
-    /* search for the define in the global list */
-    pDefine = gpDefines;
-    while (pDefine != 0)
-    {
-        trace("found a define: %s\n", pDefine->szName);
-        if (pDefine->len == len)
-        {
-            if (strncmp(p, pDefine->szName, len) == 0)
-            {
-                return pDefine->val;
-            }
-        }
-        pDefine = pDefine->pNext;
-    }
-    return 0;
+    return pDefine->val;
 }
 
 int
@@ -289,7 +334,7 @@ EvaluateExpression(char *pExpression, char **pNext)
         }
         else
         {
-            error("+Parse error: expected '(' or operator in Line %d, got %c\n", 
+            error("+Parse error: expected '(' or operator in Line %d, got %c\n",
                   iLine, pstart[0]);
             return -1;
         }
@@ -317,7 +362,7 @@ int
 ParseInputFile(const char *pszInFile, FILE *fileOut)
 {
     char* pInputData, *pCurrentLine, *p1, *p2;
-    size_t cbInFileLenth, len;
+    size_t cbInFileLenth;
     int iIfLevel, iCopyLevel;
 
     trace("parsing input file: %s\n", pszInFile);
@@ -393,33 +438,75 @@ ParseInputFile(const char *pszInFile, FILE *fileOut)
         if (strncmp(pCurrentLine, "$define", 7) == 0)
         {
             PDEFINE pDefine;
+            char *pchName, *pchValue;
+            size_t cchName, cchValue;
 
             trace("found $define\n");
             p1 = GetNextChar(pCurrentLine + 7);
             if (*p1 != '(')
             {
-                error("Parse error: expected '(' at %s:%d\n", 
+                error("Parse error: expected '(' at %s:%d\n",
                       pszInFile, iLine);
                 return -1;
             }
-            p1 = GetNextChar(p1 + 1);
-            len = strxlen(p1);
-            p2 = p1 + len;
-            if (*p2 != ')')
+
+            pchName = GetNextChar(p1 + 1);
+            cchName = strxlen(pchName);
+            p1 = GetNextChar(pchName + cchName);
+
+            /* Check for assignment */
+            if (*p1 == '=')
+            {
+                trace("found $define with assignment\n");
+                pchValue = GetNextChar(p1 + 1);
+                cchValue = strxlen(pchValue);
+                p1 = GetNextChar(pchValue + cchValue);
+            }
+            else
+            {
+                pchValue = 0;
+                cchValue = 0;
+            }
+
+            /* Allocate a DEFINE structure */
+            pDefine = malloc(sizeof(DEFINE) + cchName + cchValue + 2);
+            if (pDefine == 0)
+            {
+                error("Failed to allocate %u bytes\n",
+                      sizeof(DEFINE) + cchName + cchValue + 2);
+                return -1;
+            }
+
+            pDefine->pszName = pDefine->achBuffer;
+            strncpy(pDefine->pszName, pchName, cchName);
+            pDefine->pszName[cchName] = 0;
+            pDefine->cchName = cchName;
+            pDefine->val = 1;
+
+            if (pchValue != 0)
+            {
+                pDefine->pszValue = &pDefine->achBuffer[cchName + 1];
+                strncpy(pDefine->pszValue, pchValue, cchValue);
+                pDefine->pszValue[cchValue] = 0;
+                pDefine->cchValue = cchValue;
+            }
+            else
+            {
+                pDefine->pszValue = 0;
+                pDefine->cchValue = 0;
+            }
+
+            /* Insert the new define into the global list */
+            pDefine->pNext = gpDefines;
+            gpDefines = pDefine;
+
+            /* Check for closing ')' */
+            if (*p1 != ')')
             {
                 error("Parse error: expected ')' at %s:%d\n",
                       pszInFile, iLine);
                 return -1;
             }
-
-            /* Insert the new define into the global list */
-            pDefine = malloc(sizeof(DEFINE) + len);
-            strncpy(pDefine->szName, p1, len);
-            pDefine->szName[len] = 0;
-            pDefine->len = len;
-            pDefine->val = 1;
-            pDefine->pNext = gpDefines;
-            gpDefines = pDefine;
         }
 
         /* Check for $if */
@@ -457,7 +544,7 @@ ParseInputFile(const char *pszInFile, FILE *fileOut)
             p1 = GetNextChar(pCurrentLine + 8);
             if (*p1 != '(')
             {
-                error("Parse error: expected '(' at %s:%d, found '%c'\n", 
+                error("Parse error: expected '(' at %s:%d, found '%c'\n",
                       pszInFile, iLine, *p1);
                 return -1;
             }
@@ -470,7 +557,7 @@ ParseInputFile(const char *pszInFile, FILE *fileOut)
 
             /* Restore the global file name */
             gpszCurFile = pszInFile;
-            
+
             /* Restore the zeroed character */
             *p2 = ')';
 
