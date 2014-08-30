@@ -363,7 +363,7 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
 
     COORD  TopLeft = {0};
     ULONG  NumCodesToWrite;
-    USHORT OldScreenAttrib;
+    USHORT OldScreenAttrib, OldPopupAttrib;
 
     if (Console == NULL || Buffer == NULL)
     {
@@ -375,6 +375,7 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
 
     NumCodesToWrite = Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y;
     OldScreenAttrib = Buffer->ScreenDefaultAttrib;
+    OldPopupAttrib  = Buffer->PopupDefaultAttrib;
 
     X = TopLeft.X;
     Y = (TopLeft.Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
@@ -395,10 +396,14 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
         /* Foreground color */
         if ((Ptr->Attributes & 0x0F) == (OldScreenAttrib & 0x0F))
             Ptr->Attributes = (Ptr->Attributes & 0xFFF0) | (NewScreenAttrib & 0x0F);
+        if ((Ptr->Attributes & 0x0F) == (OldPopupAttrib & 0x0F))
+            Ptr->Attributes = (Ptr->Attributes & 0xFFF0) | (NewPopupAttrib & 0x0F);
 
         /* Background color */
         if ((Ptr->Attributes & 0xF0) == (OldScreenAttrib & 0xF0))
             Ptr->Attributes = (Ptr->Attributes & 0xFF0F) | (NewScreenAttrib & 0xF0);
+        if ((Ptr->Attributes & 0xF0) == (OldPopupAttrib & 0xF0))
+            Ptr->Attributes = (Ptr->Attributes & 0xFF0F) | (NewPopupAttrib & 0xF0);
 
         // ++Ptr;
 
@@ -716,6 +721,10 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     ASSERT(Console == Buffer->Header.Console);
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCodesToRead == 0));
 
+    //
+    // FIXME: Make overflow checks on ReadCoord !!!!!!
+    //
+
     if (NumCodesRead) *NumCodesRead = 0;
 
     switch (CodeType)
@@ -825,6 +834,10 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     /* Validity checks */
     ASSERT(Console == Buffer->Header.Console);
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCodesToWrite == 0));
+
+    //
+    // FIXME: Make overflow checks on WriteCoord !!!!!!
+    //
 
     if (NumCodesWritten) *NumCodesWritten = 0;
 
@@ -953,6 +966,10 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
+
+    //
+    // FIXME: Make overflow checks on WriteCoord !!!!!!
+    //
 
     if (NumCodesWritten) *NumCodesWritten = 0;
 
