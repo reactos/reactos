@@ -319,12 +319,13 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ATA_M88SX6042           0x604211ab
 #define ATA_M88SX6081           0x608111ab
 #define ATA_M88SX7042           0x704211ab
-#define ATA_M88SX6101           0x610111ab
-#define ATA_M88SX6102           0x610211ab
-#define ATA_M88SX6111           0x611111ab
-#define ATA_M88SX6121           0x612111ab
-#define ATA_M88SX6141           0x614111ab
-#define ATA_M88SX6145           0x614511ab
+#define ATA_M88SE6101           0x610111ab
+#define ATA_M88SE6102           0x610211ab
+#define ATA_M88SE6111           0x611111ab
+#define ATA_M88SE6121           0x612111ab
+#define ATA_M88SE6141           0x614111ab
+#define ATA_M88SE6145           0x614511ab
+#define ATA_M88SE9123           0x91231b4b
 #define ATA_MARVELL2_ID         0x1b4b
 
 #define ATA_MICRON_ID           0x1042
@@ -934,6 +935,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 6121, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6121" , UNIATA_SATA | UNIATA_AHCI       ),
     PCI_DEV_HW_SPEC_BM( 6141, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6141" , UNIATA_SATA | UNIATA_AHCI       ),
     PCI_DEV_HW_SPEC_BM( 6145, 11ab, 0x00, ATA_UDMA6, "Marvell 88SX6145" , UNIATA_SATA | UNIATA_AHCI       ),
+    PCI_DEV_HW_SPEC_BM( 9123, 1b4b, 0x00, ATA_UDMA6, "Marvell 88SX9123" , UNIATA_SATA | UNIATA_AHCI       ),
 /*    PCI_DEV_HW_SPEC_BM( 91a4, 1b4b, 0x00, ATA_UDMA6, "Marvell 88SE912x" , 0                                       ),*/
 
     PCI_DEV_HW_SPEC_BM( 01bc, 10de, 0x00, ATA_UDMA5, "nVidia nForce"    , 0                               ),
@@ -1139,11 +1141,12 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 */
     PCI_DEV_HW_SPEC_BM( 5513, 1039, 0xc2, ATA_UDMA2, "SiS ATA-xxx"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 5513, 1039, 0x00, ATA_WDMA2, "SiS ATA-xxx"      , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 5518, 1039, 0x00, ATA_UDMA6, "SiS 962/3"        , SIS133NEW | SIS_BASE                            ),
     PCI_DEV_HW_SPEC_BM( 0601, 1039, 0x00, ATA_WDMA2, "SiS ATA-xxx"      , 0                                       ),
 
-    PCI_DEV_HW_SPEC_BM( 1183, 1039, 0x00, ATA_UDMA6, "SiS PATA-1183" , SIS133NEW),
-    PCI_DEV_HW_SPEC_BM( 1182, 1039, 0x00, ATA_SA150, "SiS SATA 1182" , SISSATA   | UNIATA_SATA),
-    PCI_DEV_HW_SPEC_BM( 0183, 1039, 0x00, ATA_SA150, "SiS SATA 183"  , SISSATA   | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 1183, 1039, 0x00, ATA_SA150, "SiS 1183 SATA" , SISSATA),
+    PCI_DEV_HW_SPEC_BM( 1182, 1039, 0x00, ATA_SA150, "SiS 1182"      , SISSATA   | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 0183, 1039, 0x00, ATA_SA150, "SiS 183 RAID"  , SISSATA   | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 0182, 1039, 0x00, ATA_SA150, "SiS SATA 182"  , SISSATA   | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 0181, 1039, 0x00, ATA_SA150, "SiS SATA 181"  , SISSATA   | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 0180, 1039, 0x00, ATA_SA150, "SiS SATA 180"  , SISSATA   | UNIATA_SATA),

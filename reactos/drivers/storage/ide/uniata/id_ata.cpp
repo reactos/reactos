@@ -1677,6 +1677,25 @@ IssueIdentify(
         ULONGLONG NativeNumOfSectors=0;
         ULONGLONG cylinders=0;
         ULONGLONG tmp_cylinders=0;
+
+        KdPrint2((PRINT_PREFIX "PhysLogSectorSize %#x, %#x, offset %#x\n", 
+                deviceExtension->FullIdentifyData.PhysLogSectorSize,
+                deviceExtension->FullIdentifyData.LargeSectorSize,
+                deviceExtension->FullIdentifyData.LogicalSectorOffset
+                ));
+
+        KdPrint2((PRINT_PREFIX "NV PM_Sup %d, PM_En %d, En %d, PM ver %#x ver %#x\n", 
+                deviceExtension->FullIdentifyData.NVCache_PM_Supported,
+                deviceExtension->FullIdentifyData.NVCache_PM_Enabled,
+                deviceExtension->FullIdentifyData.NVCache_Enabled,
+                deviceExtension->FullIdentifyData.NVCache_PM_Version,
+                deviceExtension->FullIdentifyData.NVCache_Version
+                ));
+
+        KdPrint2((PRINT_PREFIX "R-rate %#x\n",
+                deviceExtension->FullIdentifyData.NominalMediaRotationRate
+                ));
+
         // Read very-old-style drive geometry
         KdPrint2((PRINT_PREFIX "CHS %#x:%#x:%#x\n", 
                 deviceExtension->FullIdentifyData.NumberOfCylinders,
@@ -2243,6 +2262,7 @@ AtapiResetController__(
                 UniataAhciReset(HwDeviceExtension, j);
             } else {
                 KdPrint2((PRINT_PREFIX "  skip not implemented\n"));
+                continue;
             }
         } else {
             KdPrint2((PRINT_PREFIX "  ATA path, chan %#x\n", chan));
@@ -5181,6 +5201,7 @@ continue_PIO:
 
         } else {
 
+            KdPrint2((PRINT_PREFIX "AtapiInterrupt: !DRQ, !BUSY, WordsLeft %#x\n", AtaReq->WordsLeft));
             if (AtaReq->WordsLeft) {
 
                 // Funky behaviour seen with PCI IDE (not all, just one).
@@ -5568,7 +5589,7 @@ IntrPrepareResetController:
     } else if (interruptReason == (ATAPI_IR_IO_toHost | ATAPI_IR_COD_Cmd) && !(statusByte & IDE_STATUS_DRQ)) {
 
         KdPrint2((PRINT_PREFIX "AtapiInterrupt: interruptReason = CompleteRequest\n"));
-        // Command complete. We exactly know this because os IReason.
+        // Command complete. We exactly know this because of IReason.
 
         if(DmaTransfer) {
             KdPrint2((PRINT_PREFIX "AtapiInterrupt: CompleteRequest, was DmaTransfer\n"));
@@ -5582,6 +5603,9 @@ IntrPrepareResetController:
             AtaReq->DataBuffer += wordCount;
             AtaReq->WordsLeft -= wordCount;
             AtaReq->WordsTransfered += wordCount;
+
+            KdPrint2((PRINT_PREFIX "AtapiInterrupt: wordCount %#x, WordsTransfered %#x\n", wordCount, AtaReq->WordsTransfered));
+
         }
         //if (AtaReq->WordsLeft) {
         //    status = SRB_STATUS_DATA_OVERRUN;
@@ -6921,6 +6945,13 @@ AtapiSendCommand(
         case SCSIOP_WRITE16:
             // all right
             break;
+        case SCSIOP_READ_CD:
+        case SCSIOP_READ_CD_MSF:
+            if(deviceExtension->opt_AtapiDmaRawRead) {
+                // all right
+                break;
+            }
+            /* FALL THROUGH */
         default:
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: SRB_STATUS_BUSY\n"));
             return SRB_STATUS_BUSY;
@@ -7100,6 +7131,7 @@ call_dma_setup:
                 }
                 break;
             case SCSIOP_READ_CD:
+            case SCSIOP_READ_CD_MSF:
                 if(deviceExtension->opt_AtapiDmaRawRead)
                     goto call_dma_setup;
                 break;
