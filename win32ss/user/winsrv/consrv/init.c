@@ -380,7 +380,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     if (TargetProcessData->ConsoleApp /* && SourceProcessData->ConsoleApp */)
     {
         PCONSOLE_PROCESS_DATA SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
-        PCONSOLE SourceConsole;
+        PCONSRV_CONSOLE SourceConsole;
 
         /* Validate and lock the parent's console */
         if (ConSrvValidateConsole(&SourceConsole,

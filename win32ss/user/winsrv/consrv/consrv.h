@@ -66,8 +66,16 @@ typedef struct _CONSOLE_PROCESS_DATA
     LPTHREAD_START_ROUTINE PropDispatcher; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
+
+// Helper for code refactoring
+// #define USE_NEW_CONSOLE_WAY
+
+#ifndef USE_NEW_CONSOLE_WAY
 #include "include/conio.h"
-// #include "include/conio_winsrv.h"
+#else
+#include "include/conio_winsrv.h"
+#endif
+
 #include "include/console.h"
 #include "include/settings.h"
 #include "include/term.h"

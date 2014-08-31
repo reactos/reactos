@@ -473,6 +473,9 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
     /* Remove the console from the list */
     RemoveConsoleByPointer(Console);
 
+    /* Clean the Input Line Discipline */
+    if (Console->LineBuffer) ConsoleFreeHeap(Console->LineBuffer);
+
     /* Clean aliases and history */
     IntDeleteAllAliases(Console);
     HistoryDeleteBuffers(Console);

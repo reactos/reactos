@@ -14,14 +14,19 @@
 
 // This is ALMOST a HACK!!!!!!!
 // Helpers for code refactoring
+#ifdef USE_NEW_CONSOLE_WAY
+
+#define _CONSRV_CONSOLE  _WINSRV_CONSOLE
+#define  CONSRV_CONSOLE   WINSRV_CONSOLE
+#define PCONSRV_CONSOLE  PWINSRV_CONSOLE
+
+#else
+
 #define _CONSRV_CONSOLE  _CONSOLE
 #define  CONSRV_CONSOLE   CONSOLE
 #define PCONSRV_CONSOLE  PCONSOLE
 
-// #define _CONSRV_CONSOLE  _WINSRV_CONSOLE
-// #define  CONSRV_CONSOLE   WINSRV_CONSOLE
-// #define PCONSRV_CONSOLE  PWINSRV_CONSOLE
-
+#endif
 
 #define CSR_DEFAULT_CURSOR_SIZE 25
 
@@ -33,6 +38,12 @@ typedef struct _CHAR_CELL
 } CHAR_CELL, *PCHAR_CELL;
 C_ASSERT(sizeof(CHAR_CELL) == 2);
 
+// HACK!!
+struct _WINSRV_CONSOLE;
+/* HACK: */ typedef struct _WINSRV_CONSOLE *PWINSRV_CONSOLE;
+#ifdef USE_NEW_CONSOLE_WAY
+#include "conio.h"
+#endif
 
 typedef struct _FRONTEND FRONTEND, *PFRONTEND;
 /* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
@@ -118,8 +129,10 @@ typedef struct _WINSRV_CONSOLE
 {
 /******************************* Console Set-up *******************************/
     /* This **MUST** be FIRST!! */
-    // CONSOLE;
+#ifdef USE_NEW_CONSOLE_WAY
+    CONSOLE;
     // PCONSOLE Console;
+#endif
 
     // LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     // CRITICAL_SECTION Lock;
@@ -172,7 +185,7 @@ typedef struct _WINSRV_CONSOLE
     LIST_ENTRY PopupWindows;                /*List of popup windows */
     COLORREF   Colors[16];                  /* Colour palette */
 
-} WINSRV_CONSOLE, *PWINSRV_CONSOLE;
+} WINSRV_CONSOLE; // , *PWINSRV_CONSOLE;
 
 /* console.c */
 VOID ConioPause(PCONSRV_CONSOLE Console, UINT Flags);
@@ -199,8 +212,8 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID ConioDrawConsole(PCONSRV_CONSOLE Console);
-NTSTATUS ConioResizeBuffer(PCONSRV_CONSOLE Console,
+VOID ConioDrawConsole(PCONSOLE /*PCONSRV_CONSOLE*/ Console);
+NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
 

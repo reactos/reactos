@@ -34,7 +34,7 @@ typedef struct _ALIAS_HEADER
 
 
 BOOLEAN
-ConvertInputAnsiToUnicode(PCONSOLE Console,
+ConvertInputAnsiToUnicode(PCONSRV_CONSOLE Console,
                           PVOID    Source,
                           USHORT   SourceLength,
                           // BOOLEAN  IsUnicode,
@@ -61,7 +61,7 @@ ConvertInputAnsiToUnicode(PCONSOLE Console,
 }
 
 BOOLEAN
-ConvertInputUnicodeToAnsi(PCONSOLE Console,
+ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
                           PVOID    Source,
                           USHORT   SourceLength,
                           // BOOLEAN  IsAnsi,

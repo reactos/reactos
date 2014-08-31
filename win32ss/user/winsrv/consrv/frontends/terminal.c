@@ -260,7 +260,7 @@ ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal)
 
 static NTSTATUS NTAPI
 ConSrvTermInitTerminal(IN OUT PTERMINAL This,
-                  IN PCONSOLE Console)
+                       IN PCONSOLE Console)
 {
     NTSTATUS Status;
     PFRONTEND FrontEnd = This->Data;

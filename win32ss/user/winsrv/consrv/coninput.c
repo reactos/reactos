@@ -158,7 +158,7 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
                         IN ULONG NumEventsToWrite,
                         OUT PULONG NumEventsWritten OPTIONAL);
 static NTSTATUS
-ConioAddInputEvents(PCONSOLE Console,
+ConioAddInputEvents(PCONSRV_CONSOLE Console,
                     PINPUT_RECORD InputRecords, // InputEvent
                     ULONG NumEventsToWrite,
                     PULONG NumEventsWritten,
@@ -177,7 +177,7 @@ ConioAddInputEvents(PCONSOLE Console,
                                   // NumEventsWritten,
                                   // AppendToEnd);
 
-    Status = ConDrvWriteConsoleInput(Console,
+    Status = ConDrvWriteConsoleInput((PCONSOLE)Console,
                                      &Console->InputBuffer,
                                      AppendToEnd,
                                      InputRecords,
@@ -192,7 +192,7 @@ ConioAddInputEvents(PCONSOLE Console,
 
 /* FIXME: This function can be called by CONDRV, in ConioResizeBuffer() in text.c */
 NTSTATUS
-ConioProcessInputEvent(PCONSOLE Console,
+ConioProcessInputEvent(PCONSRV_CONSOLE Console,
                        PINPUT_RECORD InputEvent)
 {
     ULONG NumEventsWritten;
@@ -213,13 +213,14 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
     if (CreateWaitBlock)
     {
         PGET_INPUT_INFO CapturedInputInfo;
+        PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)InputInfo->InputBuffer->Header.Console;
 
         CapturedInputInfo = ConsoleAllocHeap(0, sizeof(GET_INPUT_INFO));
         if (!CapturedInputInfo) return STATUS_NO_MEMORY;
 
         RtlMoveMemory(CapturedInputInfo, InputInfo, sizeof(GET_INPUT_INFO));
 
-        if (!CsrCreateWait(&InputInfo->InputBuffer->Header.Console->ReadWaitQueue,
+        if (!CsrCreateWait(&Console->ReadWaitQueue,
                            WaitFunction,
                            InputInfo->CallingThread,
                            ApiMessage,
@@ -728,7 +729,7 @@ CSR_API(SrvWriteConsoleInput)
 
     /* Now, add the events */
     NumEventsWritten = 0;
-    Status = ConioAddInputEvents(InputBuffer->Header.Console,
+    Status = ConioAddInputEvents((PCONSRV_CONSOLE)InputBuffer->Header.Console,
                                  // InputBuffer,
                                  InputRecord,
                                  WriteInputRequest->NumRecords,

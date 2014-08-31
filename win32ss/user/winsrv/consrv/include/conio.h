@@ -12,6 +12,22 @@
 
 #include "rect.h"
 
+// This is ALMOST a HACK!!!!!!!
+// Helpers for code refactoring
+#ifdef USE_NEW_CONSOLE_WAY
+
+#define _CONSRV_CONSOLE  _WINSRV_CONSOLE
+#define  CONSRV_CONSOLE   WINSRV_CONSOLE
+#define PCONSRV_CONSOLE  PWINSRV_CONSOLE
+
+#else
+
+#define _CONSRV_CONSOLE  _CONSOLE
+#define  CONSRV_CONSOLE   CONSOLE
+#define PCONSRV_CONSOLE  PCONSOLE
+
+#endif
+
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED   | \
@@ -277,7 +293,9 @@ typedef enum _CONSOLE_STATE
 // HACK!!
 struct _CONSOLE;
 /* HACK: */ typedef struct _CONSOLE *PCONSOLE;
+#ifndef USE_NEW_CONSOLE_WAY
 #include "conio_winsrv.h"
+#endif
 
 typedef struct _CONSOLE
 {
@@ -285,7 +303,9 @@ typedef struct _CONSOLE
     LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     CRITICAL_SECTION Lock;
 
+#ifndef USE_NEW_CONSOLE_WAY
     /**/WINSRV_CONSOLE;/**/ // HACK HACK!!
+#endif
 
     CONSOLE_STATE State;                    /* State of the console */
     TERMINAL TermIFace;                     /* Frontend-specific interface */
@@ -325,8 +345,8 @@ ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID ConioDrawConsole(PCONSOLE Console);
-NTSTATUS ConioResizeBuffer(PCONSOLE Console,
+VOID ConioDrawConsole(PCONSOLE /*PCONSRV_CONSOLE*/ Console);
+NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
 

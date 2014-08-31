@@ -460,7 +460,6 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
 
     /* Discard all entries in the input event queue */
     PurgeInputBuffer(Console);
-    if (Console->LineBuffer) ConsoleFreeHeap(Console->LineBuffer);
 
     /* Delete the last screen buffer */
     ConioDeleteScreenBuffer(Console->ActiveBuffer);
