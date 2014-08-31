@@ -131,7 +131,8 @@ typedef struct _WINSRV_CONSOLE
     /* This **MUST** be FIRST!! */
 #ifdef USE_NEW_CONSOLE_WAY
     CONSOLE;
-    // PCONSOLE Console;
+    // CONSOLE Console;
+    // // PCONSOLE Console;
 #endif
 
     // LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */

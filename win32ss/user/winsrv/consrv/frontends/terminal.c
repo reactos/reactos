@@ -137,7 +137,7 @@ NTSTATUS (NTAPI *FRONTEND_UNLOAD)(IN OUT PFRONTEND FrontEnd);
  * NOTE: Each entry of the table should be retrieved when loading a front-end
  *       (examples of the CSR servers which register some data for CSRSS).
  */
-struct
+static struct
 {
     CHAR            FrontEndName[80];
     FRONTEND_LOAD   FrontEndLoad;

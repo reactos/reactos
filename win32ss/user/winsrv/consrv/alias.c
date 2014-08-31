@@ -474,7 +474,8 @@ CSR_API(SrvAddConsoleAlias)
 
     lpTarget = (ConsoleAliasRequest->TargetLength != 0 ? ConsoleAliasRequest->Target : NULL);
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = STATUS_SUCCESS;
@@ -570,7 +571,8 @@ CSR_API(SrvGetConsoleAlias)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Header = IntFindAliasHeader(Console,
@@ -647,7 +649,8 @@ CSR_API(SrvGetConsoleAliases)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Header = IntFindAliasHeader(Console,
@@ -747,7 +750,8 @@ CSR_API(SrvGetConsoleAliasesLength)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Header = IntFindAliasHeader(Console,
@@ -787,7 +791,8 @@ CSR_API(SrvGetConsoleAliasExes)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     if (IntGetConsoleAliasesExesLength(Console->Aliases, GetAliasesExesRequest->Unicode) > GetAliasesExesRequest->Length)
@@ -864,7 +869,8 @@ CSR_API(SrvGetConsoleAliasExesLength)
 
     DPRINT1("SrvGetConsoleAliasExesLength entered ApiMessage %p\n", ApiMessage);
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     GetAliasesExesLengthRequest->Length =

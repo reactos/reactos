@@ -300,12 +300,13 @@ struct _CONSOLE;
 typedef struct _CONSOLE
 {
 /******************************* Console Set-up *******************************/
-    LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
-    CRITICAL_SECTION Lock;
 
 #ifndef USE_NEW_CONSOLE_WAY
-    /**/WINSRV_CONSOLE;/**/ // HACK HACK!!
+    WINSRV_CONSOLE; // HACK HACK!!
 #endif
+
+    LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
+    CRITICAL_SECTION Lock;
 
     CONSOLE_STATE State;                    /* State of the console */
     TERMINAL TermIFace;                     /* Frontend-specific interface */
