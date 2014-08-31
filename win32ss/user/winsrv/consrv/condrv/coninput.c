@@ -25,12 +25,13 @@ typedef struct ConsoleInput_t
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+// ConDrvAddInputEvents
 static NTSTATUS
-ConDrvAddInputEvents(PCONSOLE Console,
-                     PINPUT_RECORD InputRecords, // InputEvent
-                     ULONG NumEventsToWrite,
-                     PULONG NumEventsWritten,
-                     BOOLEAN AppendToEnd)
+AddInputEvents(PCONSOLE Console,
+               PINPUT_RECORD InputRecords, // InputEvent
+               ULONG NumEventsToWrite,
+               PULONG NumEventsWritten,
+               BOOLEAN AppendToEnd)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG i = 0;
@@ -288,6 +289,8 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
         ResetEvent(InputBuffer->ActiveEvent);
     }
 
+    // FIXME: If we add back UNICODE support, it's here that we need to do the translation.
+
     /* We read all the inputs available, we return success */
     return STATUS_SUCCESS;
 }
@@ -310,11 +313,13 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
     /* Now, add the events */
     if (NumEventsWritten) *NumEventsWritten = 0;
 
-    return ConDrvAddInputEvents(Console,
-                                InputRecord,
-                                NumEventsToWrite,
-                                NumEventsWritten,
-                                AppendToEnd);
+    // FIXME: If we add back UNICODE support, it's here that we need to do the translation.
+
+    return AddInputEvents(Console,
+                          InputRecord,
+                          NumEventsToWrite,
+                          NumEventsWritten,
+                          AppendToEnd);
 }
 
 NTSTATUS NTAPI

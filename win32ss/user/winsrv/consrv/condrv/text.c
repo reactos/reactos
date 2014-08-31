@@ -16,6 +16,20 @@
 
 /* GLOBALS ********************************************************************/
 
+/*
+ * From MSDN:
+ * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
+ *  If they are the same, the function fails, and GetLastError returns
+ *  ERROR_INVALID_PARAMETER."
+ */
+#define ConsoleOutputUnicodeToAnsiChar(Console, dChar, sWChar) \
+    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
+    WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+
+#define ConsoleOutputAnsiToUnicodeChar(Console, dWChar, sChar) \
+    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
+    MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 CONSOLE_IO_OBJECT_TYPE
@@ -500,7 +514,7 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
             }
             else
             {
-                // ConsoleUnicodeCharToAnsiChar(Console, &CurCharInfo->Char.AsciiChar, &Ptr->Char.UnicodeChar);
+                // ConsoleOutputUnicodeToAnsiChar(Console, &CurCharInfo->Char.AsciiChar, &Ptr->Char.UnicodeChar);
                 WideCharToMultiByte(Console->OutputCodePage, 0, &Ptr->Char.UnicodeChar, 1,
                                     &CurCharInfo->Char.AsciiChar, 1, NULL, NULL);
             }
@@ -563,7 +577,7 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
             }
             else
             {
-                ConsoleAnsiCharToUnicodeChar(Console, &Ptr->Char.UnicodeChar, &CurCharInfo->Char.AsciiChar);
+                ConsoleOutputAnsiToUnicodeChar(Console, &Ptr->Char.UnicodeChar, &CurCharInfo->Char.AsciiChar);
             }
             Ptr->Attributes = CurCharInfo->Attributes;
             ++Ptr;
@@ -626,7 +640,7 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
         Ptr = ConioCoordToPointer(Buffer, CapturedWriteRegion.Left, Y);
         for (X = CapturedWriteRegion.Left; X <= CapturedWriteRegion.Right; ++X)
         {
-            ConsoleAnsiCharToUnicodeChar(Console, &Ptr->Char.UnicodeChar, &CurCharInfo->Char);
+            ConsoleOutputAnsiToUnicodeChar(Console, &Ptr->Char.UnicodeChar, &CurCharInfo->Char);
             Ptr->Attributes = CurCharInfo->Attributes;
             ++Ptr;
             ++CurCharInfo;
@@ -787,7 +801,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
         switch (CodeType)
         {
             case CODE_ASCII:
-                ConsoleUnicodeCharToAnsiChar(Console, (PCHAR)ReadBuffer, &Ptr->Char.UnicodeChar);
+                ConsoleOutputUnicodeToAnsiChar(Console, (PCHAR)ReadBuffer, &Ptr->Char.UnicodeChar);
                 break;
 
             case CODE_UNICODE:
@@ -993,7 +1007,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
     {
         /* Conversion from the ASCII char to the UNICODE char */
         CODE_ELEMENT tmp;
-        ConsoleAnsiCharToUnicodeChar(Console, &tmp.UnicodeChar, &Code.AsciiChar);
+        ConsoleOutputAnsiToUnicodeChar(Console, &tmp.UnicodeChar, &Code.AsciiChar);
         Code = tmp;
     }
 
@@ -1178,7 +1192,7 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
     if (!Unicode)
     {
         WCHAR tmp;
-        ConsoleAnsiCharToUnicodeChar(Console, &tmp, &FillChar.Char.AsciiChar);
+        ConsoleOutputAnsiToUnicodeChar(Console, &tmp, &FillChar.Char.AsciiChar);
         FillChar.Char.UnicodeChar = tmp;
     }
 

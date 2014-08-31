@@ -26,23 +26,19 @@
     ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
 
 
-
-
 /*
  * From MSDN:
  * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
  *  If they are the same, the function fails, and GetLastError returns
  *  ERROR_INVALID_PARAMETER."
  */
-#define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
+#define ConsoleInputUnicodeToAnsiChar(Console, dChar, sWChar) \
     ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
     WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
-#define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+#define ConsoleInputAnsiToUnicodeChar(Console, dWChar, sChar) \
     ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
     MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
-
-
 
 
 typedef struct _GET_INPUT_INFO
@@ -62,9 +58,9 @@ ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
     {
         WCHAR UnicodeChar = InputEvent->Event.KeyEvent.uChar.UnicodeChar;
         InputEvent->Event.KeyEvent.uChar.UnicodeChar = 0;
-        ConsoleInputUnicodeCharToAnsiChar(Console,
-                                          &InputEvent->Event.KeyEvent.uChar.AsciiChar,
-                                          &UnicodeChar);
+        ConsoleInputUnicodeToAnsiChar(Console,
+                                      &InputEvent->Event.KeyEvent.uChar.AsciiChar,
+                                      &UnicodeChar);
     }
 }
 
@@ -75,9 +71,9 @@ ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
     {
         CHAR AsciiChar = InputEvent->Event.KeyEvent.uChar.AsciiChar;
         InputEvent->Event.KeyEvent.uChar.AsciiChar = 0;
-        ConsoleInputAnsiCharToUnicodeChar(Console,
-                                          &InputEvent->Event.KeyEvent.uChar.UnicodeChar,
-                                          &AsciiChar);
+        ConsoleInputAnsiToUnicodeChar(Console,
+                                      &InputEvent->Event.KeyEvent.uChar.UnicodeChar,
+                                      &AsciiChar);
     }
 }
 

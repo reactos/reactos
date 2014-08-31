@@ -197,21 +197,6 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
                        PINPUT_RECORD InputEvent);
 
 /* conoutput.c */
-
-/*
- * From MSDN:
- * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
- *  If they are the same, the function fails, and GetLastError returns
- *  ERROR_INVALID_PARAMETER."
- */
-#define ConsoleUnicodeCharToAnsiChar(Console, dChar, sWChar) \
-    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
-    WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
-
-#define ConsoleAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
-    MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
-
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
 VOID ConioDrawConsole(PCONSRV_CONSOLE Console);
 NTSTATUS ConioResizeBuffer(PCONSRV_CONSOLE Console,
