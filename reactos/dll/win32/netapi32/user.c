@@ -657,6 +657,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo0 = (PUSER_INFO_0)LocalBuffer;
 
             Ptr = (LPWSTR)((ULONG_PTR)UserInfo0 + sizeof(USER_INFO_0));
+
             UserInfo0->usri0_name = Ptr;
 
             memcpy(UserInfo0->usri0_name,
@@ -680,10 +681,9 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
             UserInfo1->usri1_password = NULL;
-
             UserInfo1->usri1_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
-            /* FIXME: UserInfo1->usri1_priv */
+            /* FIXME: usri1_priv */
 
             if (UserInfo->HomeDirectory.Length > 0)
             {
@@ -737,6 +737,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
 
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
+            UserInfo2->usri2_password = NULL;
             UserInfo2->usri2_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
             /* FIXME: usri2_priv */
@@ -886,6 +887,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
 
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
+            UserInfo3->usri3_password = NULL;
             UserInfo3->usri3_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
             /* FIXME: usri3_priv */
@@ -1275,8 +1277,6 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
                        UserInfo->FullName.Buffer,
                        UserInfo->FullName.Length);
                 UserInfo10->usri10_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
             }
             break;
 
@@ -1497,7 +1497,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
                                                        Dacl);
 
             /* FIXME: usri23_user_sid */
-           break;
+            break;
     }
 
 done:
