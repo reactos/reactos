@@ -240,7 +240,7 @@ TestGuardedMutexConcurrent(
     THREAD_DATA ThreadDataTry;
     PKTHREAD Thread = KeGetCurrentThread();
     LARGE_INTEGER Timeout;
-    Timeout.QuadPart = -10 * 1000 * 10; /* 10 ms */
+    Timeout.QuadPart = -50 * 1000 * 10; /* 50 ms */
 
     InitThreadData(&ThreadData, Mutex, KeAcquireGuardedMutex, NULL, KeReleaseGuardedMutex);
     InitThreadData(&ThreadData2, Mutex, KeAcquireGuardedMutex, NULL, KeReleaseGuardedMutex);
