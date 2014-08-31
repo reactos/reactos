@@ -288,14 +288,6 @@ ConSrvTermDeinitTerminal(IN OUT PTERMINAL This)
     FrontEnd->Vtbl->DeinitFrontEnd(FrontEnd);
 }
 
-static VOID NTAPI
-ConSrvTermDrawRegion(IN OUT PTERMINAL This,
-                SMALL_RECT* Region)
-{
-    PFRONTEND FrontEnd = This->Data;
-    FrontEnd->Vtbl->DrawRegion(FrontEnd, Region);
-}
-
 
 
 /************ Line discipline ***************/
@@ -588,14 +580,12 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 }
                 continue;
             }
-            // /* --- BEL ---*/
-            // else if (Buffer[i] == L'\a')
-            // {
-                // // FIXME: This MUST BE moved to the terminal emulator frontend!!
-                // DPRINT1("Bell\n");
-                // // SendNotifyMessage(Console->hWindow, PM_CONSOLE_BEEP, 0, 0);
-                // continue;
-            // }
+            /* --- BEL ---*/
+            else if (Buffer[i] == L'\a')
+            {
+                FrontEnd->Vtbl->RingBell(FrontEnd);
+                continue;
+            }
         }
         UpdateRect.Left  = min(UpdateRect.Left, Buff->CursorPosition.X);
         UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
@@ -656,6 +646,14 @@ ConSrvTermWriteStream(IN OUT PTERMINAL This,
 
 
 
+static VOID NTAPI
+ConSrvTermDrawRegion(IN OUT PTERMINAL This,
+                SMALL_RECT* Region)
+{
+    PFRONTEND FrontEnd = This->Data;
+    FrontEnd->Vtbl->DrawRegion(FrontEnd, Region);
+}
+
 static BOOL NTAPI
 ConSrvTermSetCursorInfo(IN OUT PTERMINAL This,
                    PCONSOLE_SCREEN_BUFFER ScreenBuffer)
@@ -714,16 +712,6 @@ ConSrvTermGetLargestConsoleWindowSize(IN OUT PTERMINAL This,
     FrontEnd->Vtbl->GetLargestConsoleWindowSize(FrontEnd, pSize);
 }
 
-/*
-static BOOL NTAPI
-ConSrvTermGetSelectionInfo(IN OUT PTERMINAL This,
-                      PCONSOLE_SELECTION_INFO pSelectionInfo)
-{
-    PFRONTEND FrontEnd = This->Data;
-    return FrontEnd->Vtbl->GetSelectionInfo(FrontEnd, pSelectionInfo);
-}
-*/
-
 static BOOL NTAPI
 ConSrvTermSetPalette(IN OUT PTERMINAL This,
                 HPALETTE PaletteHandle,
@@ -745,11 +733,11 @@ static TERMINAL_VTBL ConSrvTermVtbl =
 {
     ConSrvTermInitTerminal,
     ConSrvTermDeinitTerminal,
-    ConSrvTermDrawRegion,
 
     ConSrvTermReadStream,
     ConSrvTermWriteStream,
 
+    ConSrvTermDrawRegion,
     ConSrvTermSetCursorInfo,
     ConSrvTermSetScreenInfo,
     ConSrvTermResizeTerminal,
@@ -757,7 +745,6 @@ static TERMINAL_VTBL ConSrvTermVtbl =
     ConSrvTermReleaseScreenBuffer,
     ConSrvTermChangeTitle,
     ConSrvTermGetLargestConsoleWindowSize,
-    // ConSrvTermGetSelectionInfo,
     ConSrvTermSetPalette,
     ConSrvTermShowMouseCursor,
 };

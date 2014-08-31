@@ -2435,7 +2435,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         case PM_CONSOLE_BEEP:
-            DPRINT1("Beep !!\n");
+            DPRINT1("Beep\n");
             Beep(800, 200);
             break;
 

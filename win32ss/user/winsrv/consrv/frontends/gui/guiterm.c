@@ -675,6 +675,15 @@ GuiWriteStream(IN OUT PFRONTEND This,
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
 }
 
+/* static */ VOID NTAPI
+GuiRingBell(IN OUT PFRONTEND This)
+{
+    PGUI_CONSOLE_DATA GuiData = This->Data;
+
+    /* Emit an error beep sound */
+    SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0);
+}
+
 static BOOL NTAPI
 GuiSetCursorInfo(IN OUT PFRONTEND This,
                  PCONSOLE_SCREEN_BUFFER Buff)
@@ -1083,6 +1092,7 @@ static FRONTEND_VTBL GuiVtbl =
     GuiDeinitFrontEnd,
     GuiDrawRegion,
     GuiWriteStream,
+    GuiRingBell,
     GuiSetCursorInfo,
     GuiSetScreenInfo,
     GuiResizeTerminal,

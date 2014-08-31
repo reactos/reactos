@@ -194,10 +194,6 @@ typedef struct _TERMINAL_VTBL
                                    IN struct _CONSOLE* Console);
     VOID (NTAPI *DeinitTerminal)(IN OUT PTERMINAL This);
 
-    /* Interface used for both text-mode and graphics screen buffers */
-    VOID (NTAPI *DrawRegion)(IN OUT PTERMINAL This,
-                             SMALL_RECT* Region);
-
 
 
 /************ Line discipline ***************/
@@ -222,6 +218,9 @@ typedef struct _TERMINAL_VTBL
 
 
 
+    /* Interface used for both text-mode and graphics screen buffers */
+    VOID (NTAPI *DrawRegion)(IN OUT PTERMINAL This,
+                             SMALL_RECT* Region);
     BOOL (NTAPI *SetCursorInfo)(IN OUT PTERMINAL This,
                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (NTAPI *SetScreenInfo)(IN OUT PTERMINAL This,
@@ -239,8 +238,6 @@ typedef struct _TERMINAL_VTBL
     VOID (NTAPI *ChangeTitle)(IN OUT PTERMINAL This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PTERMINAL This,
                                               PCOORD pSize);
-    // BOOL (NTAPI *GetSelectionInfo)(IN OUT PTERMINAL This,
-                                   // PCONSOLE_SELECTION_INFO pSelectionInfo);
     BOOL (NTAPI *SetPalette)(IN OUT PTERMINAL This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);

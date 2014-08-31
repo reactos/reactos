@@ -25,12 +25,6 @@ DummyDeinitTerminal(IN OUT PTERMINAL This)
 {
 }
 
-static VOID NTAPI
-DummyDrawRegion(IN OUT PTERMINAL This,
-                SMALL_RECT* Region)
-{
-}
-
 
 
 /************ Line discipline ***************/
@@ -76,6 +70,12 @@ DummyWriteStream(IN OUT PTERMINAL This,
 
 
 
+static VOID NTAPI
+DummyDrawRegion(IN OUT PTERMINAL This,
+                SMALL_RECT* Region)
+{
+}
+
 static BOOL NTAPI
 DummySetCursorInfo(IN OUT PTERMINAL This,
                    PCONSOLE_SCREEN_BUFFER ScreenBuffer)
@@ -119,15 +119,6 @@ DummyGetLargestConsoleWindowSize(IN OUT PTERMINAL This,
 {
 }
 
-/*
-static BOOL NTAPI
-DummyGetSelectionInfo(IN OUT PTERMINAL This,
-                      PCONSOLE_SELECTION_INFO pSelectionInfo)
-{
-    return TRUE;
-}
-*/
-
 static BOOL NTAPI
 DummySetPalette(IN OUT PTERMINAL This,
                 HPALETTE PaletteHandle,
@@ -147,11 +138,11 @@ static TERMINAL_VTBL DummyVtbl =
 {
     DummyInitTerminal,
     DummyDeinitTerminal,
-    DummyDrawRegion,
 
     DummyReadStream,
     DummyWriteStream,
 
+    DummyDrawRegion,
     DummySetCursorInfo,
     DummySetScreenInfo,
     DummyResizeTerminal,
@@ -159,7 +150,6 @@ static TERMINAL_VTBL DummyVtbl =
     DummyReleaseScreenBuffer,
     DummyChangeTitle,
     DummyGetLargestConsoleWindowSize,
-    // DummyGetSelectionInfo,
     DummySetPalette,
     DummyShowMouseCursor,
 };

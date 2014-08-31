@@ -58,6 +58,7 @@ typedef struct _FRONTEND_VTBL
                               UINT ScrolledLines,
                               PWCHAR Buffer,
                               UINT Length);
+    VOID (NTAPI *RingBell)(IN OUT PFRONTEND This);
     BOOL (NTAPI *SetCursorInfo)(IN OUT PFRONTEND This,
                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (NTAPI *SetScreenInfo)(IN OUT PFRONTEND This,
