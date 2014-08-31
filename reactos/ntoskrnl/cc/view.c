@@ -865,6 +865,7 @@ CcFlushCache (
 {
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     LARGE_INTEGER Offset;
+    LONGLONG RemainingLength;
     PROS_VACB current;
     NTSTATUS Status;
     KIRQL oldIrql;
@@ -879,11 +880,12 @@ CcFlushCache (
         if (FileOffset)
         {
             Offset = *FileOffset;
+            RemainingLength = Length;
         }
         else
         {
-            Offset.QuadPart = (LONGLONG)0;
-            Length = SharedCacheMap->FileSize.u.LowPart;
+            Offset.QuadPart = 0;
+            RemainingLength = SharedCacheMap->FileSize.QuadPart;
         }
 
         if (IoStatus)
@@ -892,7 +894,7 @@ CcFlushCache (
             IoStatus->Information = 0;
         }
 
-        while (Length > 0)
+        while (RemainingLength > 0)
         {
             current = CcRosLookupVacb(SharedCacheMap, Offset.u.LowPart);
             if (current != NULL)
@@ -915,14 +917,7 @@ CcFlushCache (
             }
 
             Offset.QuadPart += VACB_MAPPING_GRANULARITY;
-            if (Length > VACB_MAPPING_GRANULARITY)
-            {
-                Length -= VACB_MAPPING_GRANULARITY;
-            }
-            else
-            {
-                Length = 0;
-            }
+            RemainingLength -= min(RemainingLength, VACB_MAPPING_GRANULARITY);
         }
     }
     else
