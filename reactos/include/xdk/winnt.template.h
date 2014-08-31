@@ -5,8 +5,7 @@
  *
  * This file is part of the ReactOS PSDK package.
  *
- * Contributors:
- *   Timo Kreuzer (timo.kreuzer@reactos.org)
+ * This file is auto-generated from ReactOS XDK.
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *

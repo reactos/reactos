@@ -64,8 +64,6 @@
 
 #define DECLSPEC_HIDDEN
 
-#ifndef RC_INVOKED
-
 /*#ifdef _WINE*/
 #if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
 # define __WINE_ALLOC_SIZE(x) __attribute__((__alloc_size__(x)))
@@ -84,8 +82,6 @@
 #elif (defined(__WATCOMC__) || defined(_MSC_VER)) && (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64 )
 # define _HAVE_INT64
 #endif /* __GNUC__/__WATCOMC */
-
-#endif
 
 #ifdef _MSC_VER
 # pragma warning(push)
@@ -1585,9 +1581,6 @@ typedef struct _ACL_SIZE_INFORMATION {
   DWORD AclBytesInUse;
   DWORD AclBytesFree;
 } ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
-
-struct _EXCEPTION_RECORD;
-struct _CONTEXT;
 
 #ifndef _LDT_ENTRY_DEFINED
 #define _LDT_ENTRY_DEFINED

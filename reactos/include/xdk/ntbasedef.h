@@ -10,7 +10,7 @@
  #else
   #define __GNU_EXTENSION
  #endif
-#endif
+#endif /* __GNU_EXTENSION */
 
 #ifndef DUMMYUNIONNAME
  #if defined(NONAMELESSUNION)// || !defined(_MSC_EXTENSIONS)
@@ -65,107 +65,91 @@
 #endif /* DUMMYSTRUCTNAME */
 
 #if defined(STRICT_GS_ENABLED)
-# pragma strict_gs_check(push, on)
+ #pragma strict_gs_check(push, on)
 #endif
 
 #if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM)
-# define ALIGNMENT_MACHINE
-# define UNALIGNED __unaligned
-# if defined(_WIN64)
-#  define UNALIGNED64 __unaligned
-# else
-#  define UNALIGNED64
-# endif
+ #define ALIGNMENT_MACHINE
+ #define UNALIGNED __unaligned
+ #if defined(_WIN64)
+  #define UNALIGNED64 __unaligned
+ #else
+  #define UNALIGNED64
+ #endif
 #else
-# undef ALIGNMENT_MACHINE
-# define UNALIGNED
-# define UNALIGNED64
+ #undef ALIGNMENT_MACHINE
+ #define UNALIGNED
+ #define UNALIGNED64
 #endif
 
 #if defined(_WIN64) || defined(_M_ALPHA)
-# define MAX_NATURAL_ALIGNMENT sizeof(ULONGLONG)
-# define MEMORY_ALLOCATION_ALIGNMENT 16
+ #define MAX_NATURAL_ALIGNMENT sizeof(ULONGLONG)
+ #define MEMORY_ALLOCATION_ALIGNMENT 16
 #else
-# define MAX_NATURAL_ALIGNMENT sizeof($ULONG)
-# define MEMORY_ALLOCATION_ALIGNMENT 8
+ #define MAX_NATURAL_ALIGNMENT sizeof($ULONG)
+ #define MEMORY_ALLOCATION_ALIGNMENT 8
 #endif
 
 /* C99 restrict support */
 #if defined(ENABLE_RESTRICTED) && defined(_M_MRX000) && !defined(MIDL_PASS) && !defined(RC_INVOKED)
-# define RESTRICTED_POINTER __restrict
+ #define RESTRICTED_POINTER __restrict
 #else
-# define RESTRICTED_POINTER
+ #define RESTRICTED_POINTER
 #endif
-
-$if(_NTDEF_)
-#define ARGUMENT_PRESENT(ArgumentPointer) \
-  ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
-$endif(_NTDEF_)
 
 /* Returns the base address of a structure from a structure member */
 #ifndef CONTAINING_RECORD
-# define CONTAINING_RECORD(address, type, field) \
+ #define CONTAINING_RECORD(address, type, field) \
    ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #endif
 
 /* Returns the byte offset of the specified structure's member */
 #ifndef __GNUC__
-# define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
+ #define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
 #else
-# define FIELD_OFFSET(Type, Field) ((LONG)__builtin_offsetof(Type, Field))
-#endif
+ #define FIELD_OFFSET(Type, Field) ((LONG)__builtin_offsetof(Type, Field))
+#endif /* __GNUC__ */
 
 /* Returns the type's alignment */
 #if defined(_MSC_VER)
-# define TYPE_ALIGNMENT(t) __alignof(t)
+ #define TYPE_ALIGNMENT(t) __alignof(t)
 #else
-# define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
-#endif
+ #define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#endif /* _MSC_VER */
 
 #if defined(_AMD64_) || defined(_X86_)
-# define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(LONG)
+ #define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT($ULONG)
 #elif defined(_IA64_) || defined(_ARM_)
-# define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT(LONG))
+ #define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT($ULONG))
 #else
-# error "unknown architecture"
+ #error "unknown architecture"
 #endif
 
 #if defined(_WIN64)
-# define PROBE_ALIGNMENT32(_s) TYPE_ALIGNMENT(LONG)
-#endif
+ #define PROBE_ALIGNMENT32(_s) TYPE_ALIGNMENT($ULONG)
+#endif /* _WIN64 */
 
 #ifdef __cplusplus
-# define EXTERN_C extern "C"
+ #define EXTERN_C extern "C"
 #else
-# define EXTERN_C extern
-#endif
-
-$if(_NTDEF_)
-/* Calling Conventions */
-#if defined(_MANAGED)
-# define FASTCALL __stdcall
-#elif defined(_M_IX86)
-# define FASTCALL __fastcall
-#else
-# define FASTCALL
-#endif
-$endif(_NTDEF_)
+ #define EXTERN_C extern
+#endif /* __cplusplus */
 
 #define NTAPI __stdcall
 
 #ifndef STDMETHODCALLTYPE
-# define STDMETHODCALLTYPE  __stdcall
-# define STDMETHODVCALLTYPE __cdecl
-# define STDAPICALLTYPE     __stdcall
-# define STDAPIVCALLTYPE    __cdecl
-# define STDAPI             EXTERN_C HRESULT STDAPICALLTYPE
-# define STDAPI_(t)         EXTERN_C t STDAPICALLTYPE
-# define STDMETHODIMP       HRESULT STDMETHODCALLTYPE
-# define STDMETHODIMP_(t)   t STDMETHODCALLTYPE
-# define STDAPIV            EXTERN_C HRESULT STDAPIVCALLTYPE
-# define STDAPIV_(t)        EXTERN_C t STDAPIVCALLTYPE
-# define STDMETHODIMPV      HRESULT STDMETHODVCALLTYPE
-# define STDMETHODIMPV_(t)  t STDMETHODVCALLTYPE
+ #define STDMETHODCALLTYPE  __stdcall
+ #define STDMETHODVCALLTYPE __cdecl
+ #define STDAPICALLTYPE     __stdcall
+ #define STDAPIVCALLTYPE    __cdecl
+ #define STDAPI             EXTERN_C HRESULT STDAPICALLTYPE
+ #define STDAPI_(t)         EXTERN_C t STDAPICALLTYPE
+ #define STDMETHODIMP       HRESULT STDMETHODCALLTYPE
+ #define STDMETHODIMP_(t)   t STDMETHODCALLTYPE
+ #define STDAPIV            EXTERN_C HRESULT STDAPIVCALLTYPE
+ #define STDAPIV_(t)        EXTERN_C t STDAPIVCALLTYPE
+ #define STDMETHODIMPV      HRESULT STDMETHODVCALLTYPE
+ #define STDMETHODIMPV_(t)  t STDMETHODVCALLTYPE
 #endif /* !STDMETHODCALLTYPE */
 
 #define STDOVERRIDEMETHODIMP      __override STDMETHODIMP
@@ -184,67 +168,67 @@ $endif(_NTDEF_)
 #define DECLSPEC_NORETURN __declspec(noreturn)
 
 #ifndef DECLSPEC_ADDRSAFE
-# if defined(_MSC_VER) && (defined(_M_ALPHA) || defined(_M_AXP64))
-#  define DECLSPEC_ADDRSAFE __declspec(address_safe)
-# else
-#  define DECLSPEC_ADDRSAFE
-# endif
+ #if defined(_MSC_VER) && (defined(_M_ALPHA) || defined(_M_AXP64))
+  #define DECLSPEC_ADDRSAFE __declspec(address_safe)
+ #else
+  #define DECLSPEC_ADDRSAFE
+ #endif
 #endif /* DECLSPEC_ADDRSAFE */
 
 #ifndef DECLSPEC_NOTHROW
-# if !defined(MIDL_PASS)
-#  define DECLSPEC_NOTHROW __declspec(nothrow)
-# else
-#  define DECLSPEC_NOTHROW
-# endif
-#endif
+ #if !defined(MIDL_PASS)
+  #define DECLSPEC_NOTHROW __declspec(nothrow)
+ #else
+  #define DECLSPEC_NOTHROW
+ #endif
+#endif /* DECLSPEC_NOTHROW */
 
 #ifndef NOP_FUNCTION
-# if defined(_MSC_VER)
-#  define NOP_FUNCTION __noop
-# else
-#  define NOP_FUNCTION (void)0
-# endif
-#endif
+ #if defined(_MSC_VER)
+  #define NOP_FUNCTION __noop
+ #else
+  #define NOP_FUNCTION (void)0
+ #endif
+#endif /* NOP_FUNCTION */
 
 #if !defined(_NTSYSTEM_)
-# define NTSYSAPI     DECLSPEC_IMPORT
-# define NTSYSCALLAPI DECLSPEC_IMPORT
+ #define NTSYSAPI     DECLSPEC_IMPORT
+ #define NTSYSCALLAPI DECLSPEC_IMPORT
 #else
-# define NTSYSAPI
-# if defined(_NTDLLBUILD_)
-#  define NTSYSCALLAPI
-# else
-#  define NTSYSCALLAPI DECLSPEC_ADDRSAFE
-# endif
-#endif
+ #define NTSYSAPI
+ #if defined(_NTDLLBUILD_)
+  #define NTSYSCALLAPI
+ #else
+  #define NTSYSCALLAPI DECLSPEC_ADDRSAFE
+ #endif
+#endif /* _NTSYSTEM_ */
 
 /* Inlines */
 #ifndef FORCEINLINE
-# if defined(_MSC_VER)
-#  define FORCEINLINE __forceinline
-# elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-#  define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
-# else
-#  define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
-# endif
+ #if defined(_MSC_VER)
+  #define FORCEINLINE __forceinline
+ #elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+  #define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
+ #else
+  #define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
+ #endif
 #endif /* FORCEINLINE */
 
 #ifndef DECLSPEC_NOINLINE
-# if (_MSC_VER >= 1300)
-#  define DECLSPEC_NOINLINE  __declspec(noinline)
-# elif defined(__GNUC__)
-#  define DECLSPEC_NOINLINE __attribute__((noinline))
-# else
-#  define DECLSPEC_NOINLINE
-# endif
+ #if (_MSC_VER >= 1300)
+  #define DECLSPEC_NOINLINE  __declspec(noinline)
+ #elif defined(__GNUC__)
+  #define DECLSPEC_NOINLINE __attribute__((noinline))
+ #else
+  #define DECLSPEC_NOINLINE
+ #endif
 #endif /* DECLSPEC_NOINLINE */
 
 #if !defined(_M_CEE_PURE)
-# define NTAPI_INLINE NTAPI
+ #define NTAPI_INLINE NTAPI
 #else
-# define NTAPI_INLINE
-#endif
+ #define NTAPI_INLINE
+#endif /* _M_CEE_PURE */
 
 /* Use to specify structure alignment. Note: VS and GCC behave slightly
    different. Therefore it is important to stick to the following rules:
@@ -257,98 +241,81 @@ $endif(_NTDEF_)
      typedef DECLSPEC_ALIGN(16) struct _BAR BAR, *ALIGNEDPBAR;
      _alignof(ALIGNEDPBAR) is 16 now! */
 #ifndef DECLSPEC_ALIGN
-# if defined(_MSC_VER) && !defined(MIDL_PASS)
-#  define DECLSPEC_ALIGN(x) __declspec(align(x))
-# elif defined(__GNUC__)
-#  define DECLSPEC_ALIGN(x) __attribute__ ((__aligned__(x)))
-# else
-#  define DECLSPEC_ALIGN(x)
-# endif
+ #if defined(_MSC_VER) && !defined(MIDL_PASS)
+  #define DECLSPEC_ALIGN(x) __declspec(align(x))
+ #elif defined(__GNUC__)
+  #define DECLSPEC_ALIGN(x) __attribute__((aligned(x)))
+ #else
+  #define DECLSPEC_ALIGN(x)
+ #endif
 #endif /* DECLSPEC_ALIGN */
 
 #ifndef SYSTEM_CACHE_ALIGNMENT_SIZE
-# if defined(_AMD64_) || defined(_X86_)
-#  define SYSTEM_CACHE_ALIGNMENT_SIZE 64
-# else
-#  define SYSTEM_CACHE_ALIGNMENT_SIZE 128
-# endif
-#endif
+ #if defined(_AMD64_) || defined(_X86_)
+  #define SYSTEM_CACHE_ALIGNMENT_SIZE 64
+ #else
+  #define SYSTEM_CACHE_ALIGNMENT_SIZE 128
+ #endif
+#endif /* SYSTEM_CACHE_ALIGNMENT_SIZE */
 
 #ifndef DECLSPEC_CACHEALIGN
-# define DECLSPEC_CACHEALIGN DECLSPEC_ALIGN(SYSTEM_CACHE_ALIGNMENT_SIZE)
-#endif
+ #define DECLSPEC_CACHEALIGN DECLSPEC_ALIGN(SYSTEM_CACHE_ALIGNMENT_SIZE)
+#endif /* DECLSPEC_CACHEALIGN */
 
 #ifndef DECLSPEC_UUID
-# if defined(_MSC_VER) && defined(__cplusplus)
-#  define DECLSPEC_UUID(x) __declspec(uuid(x))
-# else
-#  define DECLSPEC_UUID(x)
-# endif
-#endif
+ #if defined(_MSC_VER) && defined(__cplusplus)
+  #define DECLSPEC_UUID(x) __declspec(uuid(x))
+ #else
+  #define DECLSPEC_UUID(x)
+ #endif
+#endif /* DECLSPEC_UUID */
 
 #ifndef DECLSPEC_NOVTABLE
-# if defined(_MSC_VER) && defined(__cplusplus)
-#  define DECLSPEC_NOVTABLE __declspec(novtable)
-# else
-#  define DECLSPEC_NOVTABLE
-# endif
-#endif
+ #if defined(_MSC_VER) && defined(__cplusplus)
+  #define DECLSPEC_NOVTABLE __declspec(novtable)
+ #else
+  #define DECLSPEC_NOVTABLE
+ #endif
+#endif /* DECLSPEC_NOVTABLE */
 
 #ifndef DECLSPEC_SELECTANY
-# if defined(_MSC_VER) || defined(__GNUC__)
-#  define DECLSPEC_SELECTANY __declspec(selectany)
-# else
-#  define DECLSPEC_SELECTANY
-# endif
-#endif
+ #if defined(_MSC_VER) || defined(__GNUC__)
+  #define DECLSPEC_SELECTANY __declspec(selectany)
+ #else
+  #define DECLSPEC_SELECTANY
+ #endif
+#endif /* DECLSPEC_SELECTANY */
 
 #ifndef DECLSPEC_DEPRECATED
-# if (defined(_MSC_VER) || defined(__GNUC__)) && !defined(MIDL_PASS)
-#  define DECLSPEC_DEPRECATED __declspec(deprecated)
-#  define DEPRECATE_SUPPORTED
-# else
-#  define DECLSPEC_DEPRECATED
-#  undef  DEPRECATE_SUPPORTED
-# endif
-#endif
+ #if (defined(_MSC_VER) || defined(__GNUC__)) && !defined(MIDL_PASS)
+  #define DECLSPEC_DEPRECATED __declspec(deprecated)
+  #define DEPRECATE_SUPPORTED
+ #else
+  #define DECLSPEC_DEPRECATED
+  #undef  DEPRECATE_SUPPORTED
+ #endif
+#endif /* DECLSPEC_DEPRECATED */
 
 #ifdef DEPRECATE_DDK_FUNCTIONS
-# ifdef _NTDDK_
-#  define DECLSPEC_DEPRECATED_DDK DECLSPEC_DEPRECATED
-#  ifdef DEPRECATE_SUPPORTED
-#   define PRAGMA_DEPRECATED_DDK 1
-#  endif
-# else
-#  define DECLSPEC_DEPRECATED_DDK
-#  define PRAGMA_DEPRECATED_DDK 1
-# endif
+ #ifdef _NTDDK_
+  #define DECLSPEC_DEPRECATED_DDK DECLSPEC_DEPRECATED
+  #ifdef DEPRECATE_SUPPORTED
+   #define PRAGMA_DEPRECATED_DDK 1
+  #endif
+ #else
+  #define DECLSPEC_DEPRECATED_DDK
+  #define PRAGMA_DEPRECATED_DDK 1
+ #endif
 #else
-# define DECLSPEC_DEPRECATED_DDK
-# define PRAGMA_DEPRECATED_DDK 0
-#endif
+ #define DECLSPEC_DEPRECATED_DDK
+ #define PRAGMA_DEPRECATED_DDK 0
+#endif /* DEPRECATE_DDK_FUNCTIONS */
 
 /* Use to silence unused variable warnings when it is intentional */
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
 #define UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 #define DBG_UNREFERENCED_PARAMETER(P) {(P)=(P);}
 #define DBG_UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
-
-$if (_NTDEF_) // move to bottom of ntdef.h
-/* min/max helper macros */
-#ifndef NOMINMAX
-# ifndef min
-#  define min(a,b) (((a) < (b)) ? (a) : (b))
-# endif
-# ifndef max
-#  define max(a,b) (((a) > (b)) ? (a) : (b))
-# endif
-#endif /* NOMINMAX */
-$endif (_NTDEF_)
-
-$if(_NTDEF_)
-/* Tell windef.h that we have defined some basic types */
-#define BASETYPES
-$endif(_NTDEF_)
 
 /* Void Pointers */
 typedef void *PVOID;
@@ -357,32 +324,29 @@ typedef void * POINTER_64 PVOID64;
 /* Handle Type */
 typedef void *HANDLE, **PHANDLE;;
 #ifdef STRICT
-# define DECLARE_HANDLE(n) typedef struct n##__{int unused;} *n
+ #define DECLARE_HANDLE(n) typedef struct n##__{int unused;} *n
 #else
-# define DECLARE_HANDLE(n) typedef HANDLE n
+ #define DECLARE_HANDLE(n) typedef HANDLE n
 #endif
 
 /* Upper-Case Versions of Some Standard C Types */
 #ifndef VOID
-# define VOID void
-typedef char CHAR;
-typedef short SHORT;
+ #define VOID void
+ typedef char CHAR;
+ typedef short SHORT;
 
-# if defined(__ROS_LONG64__) && !defined(_M_AMD64)
-typedef int LONG;
-# else
-typedef long LONG;
-# endif
+ #if defined(__ROS_LONG64__) && !defined(_M_AMD64)
+  typedef int LONG;
+ #else
+  typedef long LONG;
+ #endif
 
-# if !defined(MIDL_PASS)
-typedef int INT;
-# endif /* !MIDL_PASS */
+ #if !defined(MIDL_PASS)
+ typedef int INT;
+ #endif /* !MIDL_PASS */
 #endif /* VOID */
 
 $if(_NTDEF_)
-/* Avoid redefinition in windef.h */
-#define BASETYPES
-
 /* Unsigned Types */
 typedef unsigned char UCHAR, *PUCHAR;
 typedef unsigned short USHORT, *PUSHORT;
@@ -412,9 +376,9 @@ typedef signed char SCHAR, *PSCHAR;
 $endif(_NTDEF_)
 
 #ifndef _HRESULT_DEFINED
-# define _HRESULT_DEFINED
-typedef _Return_type_success_(return >= 0) LONG HRESULT;
-#endif
+ #define _HRESULT_DEFINED
+ typedef _Return_type_success_(return >= 0) LONG HRESULT;
+#endif /* _HRESULT_DEFINED */
 
 /* 64-bit types */
 #define _ULONGLONG_
@@ -467,70 +431,70 @@ typedef  WCHAR UNALIGNED *PUNZWCH;
 typedef  CONST WCHAR UNALIGNED *PCUNZWCH;
 
 #if (_WIN32_WINNT >= 0x0600) || (defined(__cplusplus) && defined(WINDOWS_ENABLE_CPLUSPLUS))
-typedef CONST WCHAR *LPCWCHAR, *PCWCHAR;
-typedef CONST WCHAR UNALIGNED *LPCUWCHAR, *PCUWCHAR;
-typedef unsigned long UCSCHAR, *PUCSCHAR, *PUCSSTR;
-typedef const UCSCHAR *PCUCSCHAR, *PCUCSSTR;
-typedef UCSCHAR UNALIGNED *PUUCSCHAR, *PUUCSSTR;
-typedef const UCSCHAR UNALIGNED *PCUUCSCHAR, *PCUUCSSTR;
-# define UCSCHAR_INVALID_CHARACTER (0xffffffff)
-# define MIN_UCSCHAR (0)
-# define MAX_UCSCHAR (0x0010FFFF)
+ typedef CONST WCHAR *LPCWCHAR, *PCWCHAR;
+ typedef CONST WCHAR UNALIGNED *LPCUWCHAR, *PCUWCHAR;
+ typedef unsigned long UCSCHAR, *PUCSCHAR, *PUCSSTR;
+ typedef const UCSCHAR *PCUCSCHAR, *PCUCSSTR;
+ typedef UCSCHAR UNALIGNED *PUUCSCHAR, *PUUCSSTR;
+ typedef const UCSCHAR UNALIGNED *PCUUCSCHAR, *PCUUCSSTR;
+ #define UCSCHAR_INVALID_CHARACTER (0xffffffff)
+ #define MIN_UCSCHAR (0)
+ #define MAX_UCSCHAR (0x0010FFFF)
 #endif /* _WIN32_WINNT >= 0x0600 */
 
 #ifdef  UNICODE
 
-# ifndef _TCHAR_DEFINED
-typedef WCHAR TCHAR, *PTCHAR;
+ #ifndef _TCHAR_DEFINED
+  typedef WCHAR TCHAR, *PTCHAR;
 $if(_NTDEF_)
-typedef WCHAR TUCHAR, *PTUCHAR;
+  typedef WCHAR TUCHAR, *PTUCHAR;
 $endif(_NTDEF_)
 $if(_WINNT_)
-typedef WCHAR TBYTE, *PTBYTE;
+  typedef WCHAR TBYTE, *PTBYTE;
 $endif(_WINNT_)
-#  define _TCHAR_DEFINED
-# endif /* !_TCHAR_DEFINED */
+  #define _TCHAR_DEFINED
+ #endif /* !_TCHAR_DEFINED */
 
-typedef LPWCH LPTCH, PTCH;
-typedef LPCWCH LPCTCH, PCTCH;
-typedef LPWSTR PTSTR, LPTSTR;
-typedef LPCWSTR PCTSTR, LPCTSTR;
-typedef LPUWSTR PUTSTR, LPUTSTR;
-typedef LPCUWSTR PCUTSTR, LPCUTSTR;
-typedef LPWSTR LP;
-typedef PZZWSTR PZZTSTR;
-typedef PCZZWSTR PCZZTSTR;
-typedef PUZZWSTR PUZZTSTR;
-typedef PCUZZWSTR PCUZZTSTR;
-typedef PZPWSTR PZPTSTR;
-typedef PNZWCH PNZTCH;
-typedef PCNZWCH PCNZTCH;
-typedef PUNZWCH PUNZTCH;
-typedef PCUNZWCH PCUNZTCH;
-# define __TEXT(quote) L##quote
+ typedef LPWCH LPTCH, PTCH;
+ typedef LPCWCH LPCTCH, PCTCH;
+ typedef LPWSTR PTSTR, LPTSTR;
+ typedef LPCWSTR PCTSTR, LPCTSTR;
+ typedef LPUWSTR PUTSTR, LPUTSTR;
+ typedef LPCUWSTR PCUTSTR, LPCUTSTR;
+ typedef LPWSTR LP;
+ typedef PZZWSTR PZZTSTR;
+ typedef PCZZWSTR PCZZTSTR;
+ typedef PUZZWSTR PUZZTSTR;
+ typedef PCUZZWSTR PCUZZTSTR;
+ typedef PZPWSTR PZPTSTR;
+ typedef PNZWCH PNZTCH;
+ typedef PCNZWCH PCNZTCH;
+ typedef PUNZWCH PUNZTCH;
+ typedef PCUNZWCH PCUNZTCH;
+ #define __TEXT(quote) L##quote
 
 #else /* UNICODE */
 
-# ifndef _TCHAR_DEFINED
-typedef char TCHAR, *PTCHAR;
+ #ifndef _TCHAR_DEFINED
+  typedef char TCHAR, *PTCHAR;
 $if(_NTDEF_)
-typedef unsigned char TUCHAR, *PTUCHAR;
+  typedef unsigned char TUCHAR, *PTUCHAR;
 $endif(_NTDEF_)
 $if(_WINNT_)
-typedef unsigned char TBYTE, *PTBYTE;
+  typedef unsigned char TBYTE, *PTBYTE;
 $endif(_WINNT_)
-#  define _TCHAR_DEFINED
-# endif /* !_TCHAR_DEFINED */
-typedef LPCH LPTCH, PTCH;
-typedef LPCCH LPCTCH, PCTCH;
-typedef LPSTR PTSTR, LPTSTR, PUTSTR, LPUTSTR;
-typedef LPCSTR PCTSTR, LPCTSTR, PCUTSTR, LPCUTSTR;
-typedef PZZSTR PZZTSTR, PUZZTSTR;
-typedef PCZZSTR PCZZTSTR, PCUZZTSTR;
-typedef PZPSTR PZPTSTR;
-typedef PNZCH PNZTCH, PUNZTCH;
-typedef PCNZCH PCNZTCH, PCUNZTCH;
-# define __TEXT(quote) quote
+  #define _TCHAR_DEFINED
+ #endif /* !_TCHAR_DEFINED */
+ typedef LPCH LPTCH, PTCH;
+ typedef LPCCH LPCTCH, PCTCH;
+ typedef LPSTR PTSTR, LPTSTR, PUTSTR, LPUTSTR;
+ typedef LPCSTR PCTSTR, LPCTSTR, PCUTSTR, LPCUTSTR;
+ typedef PZZSTR PZZTSTR, PUZZTSTR;
+ typedef PCZZSTR PCZZTSTR, PCUZZTSTR;
+ typedef PZPSTR PZPTSTR;
+ typedef PNZCH PNZTCH, PUNZTCH;
+ typedef PCNZCH PCNZTCH, PCUNZTCH;
+ #define __TEXT(quote) quote
 
 #endif /* UNICODE */
 
@@ -546,10 +510,10 @@ $endif(_NTDEF_)
 
 /* NLS basics (Locale and Language Ids) */
 typedef $ULONG LCID, *PLCID;
-typedef unsigned short LANGID;
+typedef $USHORT LANGID;
 
 #ifndef __COMPARTMENT_ID_DEFINED__
-# define __COMPARTMENT_ID_DEFINED__
+#define __COMPARTMENT_ID_DEFINED__
 typedef enum
 {
     UNSPECIFIED_COMPARTMENT_ID = 0,
@@ -558,29 +522,17 @@ typedef enum
 #endif /* __COMPARTMENT_ID_DEFINED__ */
 
 #ifndef __OBJECTID_DEFINED
-# define __OBJECTID_DEFINED
+#define __OBJECTID_DEFINED
 typedef struct  _OBJECTID {
     GUID Lineage;
-    DWORD Uniquifier;
+    $ULONG Uniquifier;
 } OBJECTID;
-#endif
+#endif /* __OBJECTID_DEFINED */
 
 #ifdef _MSC_VER
-# pragma warning(push)
-# pragma warning(disable:4201) // nameless struct / union
+ #pragma warning(push)
+ #pragma warning(disable:4201) // nameless struct / union
 #endif
-
-$if(_NTDEF_)
-/* Used to store a non-float 8 byte aligned structure */
-typedef struct _QUAD
-{
-    _ANONYMOUS_UNION union
-    {
-        __GNU_EXTENSION __int64 UseThisFieldToCopy;
-        double DoNotUseThisField;
-    } DUMMYUNIONNAME;
-} QUAD, *PQUAD, UQUAD, *PUQUAD;
-$endif(_NTDEF_)
 
 typedef struct
 #if defined(_M_IA64)
@@ -599,12 +551,12 @@ typedef struct _LARGE_INTEGER {
 typedef union _LARGE_INTEGER {
     _ANONYMOUS_STRUCT struct
     {
-        unsigned long LowPart;
+        $ULONG LowPart;
         LONG HighPart;
     } DUMMYSTRUCTNAME;
     struct
     {
-        unsigned long LowPart;
+        $ULONG LowPart;
         LONG HighPart;
     } u;
 #endif /* MIDL_PASS */
@@ -633,11 +585,6 @@ typedef union _ULARGE_INTEGER {
 #pragma warning(pop) /* disable:4201 */
 #endif
 
-$if(_NTDEF_)
-/* Physical Addresses are always treated as 64-bit wide */
-typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
-$endif(_NTDEF_)
-
 /* Locally Unique Identifier */
 typedef struct _LUID
 {
@@ -659,183 +606,10 @@ $if(_NTDEF_)
 #define NT_ERROR(Status)                ((((ULONG)(Status)) >> 30) == 3)
 $endif(_NTDEF_)
 
-$if(_NTDEF_)
-/* String Types */
-typedef struct _STRING {
-  USHORT Length;
-  USHORT MaximumLength;
-#ifdef MIDL_PASS
-  [size_is(MaximumLength), length_is(Length) ]
-#endif
-  _Field_size_bytes_part_opt_(MaximumLength, Length) PCHAR Buffer;
-} STRING, *PSTRING,
-  ANSI_STRING, *PANSI_STRING,
-  OEM_STRING, *POEM_STRING;
-
-typedef CONST STRING* PCOEM_STRING;
-typedef STRING CANSI_STRING;
-typedef PSTRING PCANSI_STRING;
-
-typedef struct _STRING32 {
-  USHORT   Length;
-  USHORT   MaximumLength;
-  $ULONG  Buffer;
-} STRING32, *PSTRING32,
-  UNICODE_STRING32, *PUNICODE_STRING32,
-  ANSI_STRING32, *PANSI_STRING32;
-
-typedef struct _STRING64 {
-  USHORT   Length;
-  USHORT   MaximumLength;
-  ULONGLONG  Buffer;
-} STRING64, *PSTRING64,
-  UNICODE_STRING64, *PUNICODE_STRING64,
-  ANSI_STRING64, *PANSI_STRING64;
-
-typedef struct _CSTRING {
-  USHORT Length;
-  USHORT MaximumLength;
-  CONST CHAR *Buffer;
-} CSTRING, *PCSTRING;
-
-typedef struct _UNICODE_STRING {
-  USHORT Length;
-  USHORT MaximumLength;
-#ifdef MIDL_PASS
-  [size_is(MaximumLength / 2), length_is((Length) / 2)] PUSHORT Buffer;
-#else
-  _Field_size_bytes_part_(MaximumLength, Length) PWCH Buffer;
-#endif
-} UNICODE_STRING, *PUNICODE_STRING;
-typedef const UNICODE_STRING* PCUNICODE_STRING;
-
-typedef USHORT RTL_STRING_LENGTH_TYPE;
-
-#ifdef __cplusplus
-extern "C++" template<typename _Type> struct _RTL_remove_const_template;
-extern "C++" template<typename _Type> struct _RTL_remove_const_template<const _Type&> { typedef _Type type; };
-#define _RTL_CONSTANT_STRING_remove_const_macro(s) \
-    (const_cast<_RTL_remove_const_template<decltype((s)[0])>::type*>(s))
-extern "C++" template<class _Ty> struct _RTL_CONSTANT_STRING_type_check_template;
-extern "C++" template<class _Ty, int _Count>	struct _RTL_CONSTANT_STRING_type_check_template<const _Ty (&)[_Count]> { typedef char type; };
-#define _RTL_CONSTANT_STRING_type_check(s) _RTL_CONSTANT_STRING_type_check_template<decltype(s)>::type
-#else
-# define _RTL_CONSTANT_STRING_remove_const_macro(s) (s)
-char _RTL_CONSTANT_STRING_type_check(const void *s);
-#endif
-#define RTL_CONSTANT_STRING(s) { \
-    sizeof(s)-sizeof((s)[0]), \
-    sizeof(s) / sizeof(_RTL_CONSTANT_STRING_type_check(s)), \
-    _RTL_CONSTANT_STRING_remove_const_macro(s) }
-
-#define DECLARE_UNICODE_STRING_SIZE(_var, _size) \
-  WCHAR _var ## _buffer[_size]; \
-  __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
-  UNICODE_STRING _var = { 0, (_size) * sizeof(WCHAR) , _var ## _buffer } \
-  __pragma(warning(pop))
-
-#define DECLARE_CONST_UNICODE_STRING(_var, _string) \
-  const WCHAR _var##_buffer[] = _string; \
-  __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
-  const UNICODE_STRING _var = { sizeof(_string) - sizeof(WCHAR), sizeof(_string), (PWCH)_var##_buffer } \
-  __pragma(warning(pop))
-
-#define DECLARE_GLOBAL_CONST_UNICODE_STRING(_var, _str) \
-  extern const __declspec(selectany) UNICODE_STRING _var = RTL_CONSTANT_STRING(_str)
-$endif(_NTDEF_)
-
 #define ANSI_NULL ((CHAR)0)
 #define UNICODE_NULL ((WCHAR)0)
 #define UNICODE_STRING_MAX_BYTES ((USHORT) 65534)
 #define UNICODE_STRING_MAX_CHARS (32767)
-
-$if(_NTDEF_)
-/* Object Attributes */
-typedef struct _OBJECT_ATTRIBUTES {
-  ULONG Length;
-  HANDLE RootDirectory;
-  PUNICODE_STRING ObjectName;
-  ULONG Attributes;
-  PVOID SecurityDescriptor;
-  PVOID SecurityQualityOfService;
-} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
-typedef CONST OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;
-
-typedef struct _OBJECT_ATTRIBUTES32 {
-  ULONG Length;
-  ULONG RootDirectory;
-  ULONG ObjectName;
-  ULONG Attributes;
-  ULONG SecurityDescriptor;
-  ULONG SecurityQualityOfService;
-} OBJECT_ATTRIBUTES32, *POBJECT_ATTRIBUTES32;
-typedef CONST OBJECT_ATTRIBUTES32 *PCOBJECT_ATTRIBUTES32;
-
-typedef struct _OBJECT_ATTRIBUTES64 {
-  ULONG Length;
-  ULONG64 RootDirectory;
-  ULONG64 ObjectName;
-  ULONG Attributes;
-  ULONG64 SecurityDescriptor;
-  ULONG64 SecurityQualityOfService;
-} OBJECT_ATTRIBUTES64, *POBJECT_ATTRIBUTES64;
-typedef CONST OBJECT_ATTRIBUTES64 *PCOBJECT_ATTRIBUTES64;
-
-/* Values for the Attributes member */
-#define OBJ_INHERIT             0x00000002L
-#define OBJ_PERMANENT           0x00000010L
-#define OBJ_EXCLUSIVE           0x00000020L
-#define OBJ_CASE_INSENSITIVE    0x00000040L
-#define OBJ_OPENIF              0x00000080L
-#define OBJ_OPENLINK            0x00000100L
-#define OBJ_KERNEL_HANDLE       0x00000200L
-#define OBJ_FORCE_ACCESS_CHECK  0x00000400L
-#define OBJ_VALID_ATTRIBUTES    0x000007F2L
-
-/* Helper Macro */
-#define InitializeObjectAttributes(p,n,a,r,s) { \
-  (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
-  (p)->RootDirectory = (r); \
-  (p)->ObjectName = (n); \
-  (p)->Attributes = (a); \
-  (p)->SecurityDescriptor = (s); \
-  (p)->SecurityQualityOfService = NULL; \
-}
-
-#define RTL_CONSTANT_OBJECT_ATTRIBUTES(n,a) { \
-  sizeof(OBJECT_ATTRIBUTES), \
-  NULL, \
-  RTL_CONST_CAST(PUNICODE_STRING)(n), \
-  a, \
-  NULL, \
-  NULL  \
-}
-
-#define RTL_INIT_OBJECT_ATTRIBUTES(n, a) \
-    RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
-
-/* Product Types */
-typedef enum _NT_PRODUCT_TYPE {
-  NtProductWinNt = 1,
-  NtProductLanManNt,
-  NtProductServer
-} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
-
-typedef enum _EVENT_TYPE {
-  NotificationEvent,
-  SynchronizationEvent
-} EVENT_TYPE;
-
-typedef enum _TIMER_TYPE {
-  NotificationTimer,
-  SynchronizationTimer
-} TIMER_TYPE;
-
-typedef enum _WAIT_TYPE {
-  WaitAll,
-  WaitAny
-} WAIT_TYPE;
-$endif(_NTDEF_)
 
 /* Doubly Linked Lists */
 typedef struct _LIST_ENTRY {
@@ -872,10 +646,9 @@ typedef struct _PROCESSOR_NUMBER {
 
 #define ALL_PROCESSOR_GROUPS 0xffff
 
-/// \todo check if the annotations are at the right location
+typedef
 _IRQL_requires_same_
 _Function_class_(EXCEPTION_ROUTINE)
-typedef
 EXCEPTION_DISPOSITION
 NTAPI
 EXCEPTION_ROUTINE(
@@ -908,18 +681,18 @@ typedef struct _GROUP_AFFINITY {
 #define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
 
 #ifdef __GNUC__
-#define RTL_NUMBER_OF_V2(A) \
-    (({ int _check_array_type[__builtin_types_compatible_p(typeof(A), typeof(&A[0])) ? -1 : 1]; (void)_check_array_type; }), \
-    RTL_NUMBER_OF_V1(A))
+ #define RTL_NUMBER_OF_V2(A) \
+     (({ int _check_array_type[__builtin_types_compatible_p(typeof(A), typeof(&A[0])) ? -1 : 1]; (void)_check_array_type; }), \
+     RTL_NUMBER_OF_V1(A))
 #else
-/// \todo implement security checks for cplusplus / MSVC
-#define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
+ /// \todo implement security checks for cplusplus / MSVC
+ #define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
 #endif
 
 #ifdef ENABLE_RTL_NUMBER_OF_V2
-#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
+ #define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
 #else
-#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
+ #define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
 #endif
 
 #define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
@@ -934,9 +707,9 @@ typedef struct _GROUP_AFFINITY {
         : (FIELD_OFFSET(type, field1) - FIELD_OFFSET(type, field2) - RTL_FIELD_SIZE(type, field2)))
 
 #if defined(__cplusplus)
-# define RTL_CONST_CAST(type) const_cast<type>
+ #define RTL_CONST_CAST(type) const_cast<type>
 #else
-# define RTL_CONST_CAST(type) (type)
+ #define RTL_CONST_CAST(type) (type)
 #endif
 
 /* Type Limits */
@@ -965,14 +738,14 @@ $endif(_WINNT_)
 
 #if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE)
 /* Use native math */
-# define Int64ShllMod32(a,b) ((unsigned __int64)(a)<<(b))
-# define Int64ShraMod32(a,b) (((__int64)(a))>>(b))
-# define Int64ShrlMod32(a,b) (((unsigned __int64)(a))>>(b))
+ #define Int64ShllMod32(a,b) ((unsigned __int64)(a)<<(b))
+ #define Int64ShraMod32(a,b) (((__int64)(a))>>(b))
+ #define Int64ShrlMod32(a,b) (((unsigned __int64)(a))>>(b))
 #else
 /* Use intrinsics */
-# define Int64ShllMod32(a,b) __ll_lshift(a,b)
-# define Int64ShraMod32(a,b) __ll_rshift(a,b)
-# define Int64ShrlMod32(a,b) __ull_rshift(a,b)
+ #define Int64ShllMod32(a,b) __ll_lshift(a,b)
+ #define Int64ShraMod32(a,b) __ll_rshift(a,b)
+ #define Int64ShrlMod32(a,b) __ull_rshift(a,b)
 #endif
 
 #define RotateLeft32 _rotl
@@ -981,10 +754,10 @@ $endif(_WINNT_)
 #define RotateRight64 _rotr64
 
 #if defined(_M_AMD64)
-# define RotateLeft8 _rotl8
-# define RotateLeft16 _rotl16
-# define RotateRight8 _rotr8
-# define RotateRight16 _rotr16
+ #define RotateLeft8 _rotl8
+ #define RotateLeft16 _rotl16
+ #define RotateRight8 _rotr8
+ #define RotateRight16 _rotr16
 #endif /* _M_AMD64 */
 
 /* C_ASSERT Definition */
@@ -992,11 +765,11 @@ $endif(_WINNT_)
 
 /* Eliminate Microsoft C/C++ compiler warning 4715 */
 #if defined(_MSC_VER)
-# define DEFAULT_UNREACHABLE default: __assume(0)
+ #define DEFAULT_UNREACHABLE default: __assume(0)
 #elif defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 5))))
-# define DEFAULT_UNREACHABLE default: __builtin_unreachable()
+ #define DEFAULT_UNREACHABLE default: __builtin_unreachable()
 #else
-# define DEFAULT_UNREACHABLE default: break
+ #define DEFAULT_UNREACHABLE default: break
 #endif
 
 #define VER_WORKSTATION_NT                  0x40000000
@@ -1018,6 +791,7 @@ $endif(_WINNT_)
 #define VER_SUITE_COMPUTE_SERVER            0x00004000
 #define VER_SUITE_WH_SERVER                 0x00008000
 
+/* Product types */
 #define PRODUCT_UNDEFINED                           0x00000000
 #define PRODUCT_ULTIMATE                            0x00000001
 #define PRODUCT_HOME_BASIC                          0x00000002

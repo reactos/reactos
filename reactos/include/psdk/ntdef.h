@@ -303,30 +303,30 @@ extern "C" {
 
 /* Inlines */
 #ifndef FORCEINLINE
-# if defined(_MSC_VER)
-#  define FORCEINLINE __forceinline
-# elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-#  define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
-# else
-#  define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
-# endif
+ #if defined(_MSC_VER)
+  #define FORCEINLINE __forceinline
+ #elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+  #define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
+ #else
+  #define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
+ #endif
 #endif /* FORCEINLINE */
 
 #ifndef DECLSPEC_NOINLINE
-# if (_MSC_VER >= 1300)
-#  define DECLSPEC_NOINLINE  __declspec(noinline)
-# elif defined(__GNUC__)
-#  define DECLSPEC_NOINLINE __attribute__((noinline))
-# else
-#  define DECLSPEC_NOINLINE
-# endif
+ #if (_MSC_VER >= 1300)
+  #define DECLSPEC_NOINLINE  __declspec(noinline)
+ #elif defined(__GNUC__)
+  #define DECLSPEC_NOINLINE __attribute__((noinline))
+ #else
+  #define DECLSPEC_NOINLINE
+ #endif
 #endif /* DECLSPEC_NOINLINE */
 
 #if !defined(_M_CEE_PURE)
-# define NTAPI_INLINE NTAPI
+ #define NTAPI_INLINE NTAPI
 #else
-# define NTAPI_INLINE
-#endif
+ #define NTAPI_INLINE
+#endif /* _M_CEE_PURE */
 
 /* Use to specify structure alignment. Note: VS and GCC behave slightly
    different. Therefore it is important to stick to the following rules:
@@ -339,75 +339,75 @@ extern "C" {
      typedef DECLSPEC_ALIGN(16) struct _BAR BAR, *ALIGNEDPBAR;
      _alignof(ALIGNEDPBAR) is 16 now! */
 #ifndef DECLSPEC_ALIGN
-# if defined(_MSC_VER) && !defined(MIDL_PASS)
-#  define DECLSPEC_ALIGN(x) __declspec(align(x))
-# elif defined(__GNUC__)
-#  define DECLSPEC_ALIGN(x) __attribute__ ((__aligned__(x)))
-# else
-#  define DECLSPEC_ALIGN(x)
-# endif
+ #if defined(_MSC_VER) && !defined(MIDL_PASS)
+  #define DECLSPEC_ALIGN(x) __declspec(align(x))
+ #elif defined(__GNUC__)
+  #define DECLSPEC_ALIGN(x) __attribute__ ((__aligned__(x)))
+ #else
+  #define DECLSPEC_ALIGN(x)
+ #endif
 #endif /* DECLSPEC_ALIGN */
 
 #ifndef SYSTEM_CACHE_ALIGNMENT_SIZE
-# if defined(_AMD64_) || defined(_X86_)
-#  define SYSTEM_CACHE_ALIGNMENT_SIZE 64
-# else
-#  define SYSTEM_CACHE_ALIGNMENT_SIZE 128
-# endif
-#endif
+ #if defined(_AMD64_) || defined(_X86_)
+  #define SYSTEM_CACHE_ALIGNMENT_SIZE 64
+ #else
+  #define SYSTEM_CACHE_ALIGNMENT_SIZE 128
+ #endif
+#endif /* SYSTEM_CACHE_ALIGNMENT_SIZE */
 
 #ifndef DECLSPEC_CACHEALIGN
-# define DECLSPEC_CACHEALIGN DECLSPEC_ALIGN(SYSTEM_CACHE_ALIGNMENT_SIZE)
-#endif
+ #define DECLSPEC_CACHEALIGN DECLSPEC_ALIGN(SYSTEM_CACHE_ALIGNMENT_SIZE)
+#endif /* DECLSPEC_CACHEALIGN */
 
 #ifndef DECLSPEC_UUID
-# if defined(_MSC_VER) && defined(__cplusplus)
-#  define DECLSPEC_UUID(x) __declspec(uuid(x))
-# else
-#  define DECLSPEC_UUID(x)
-# endif
-#endif
+ #if defined(_MSC_VER) && defined(__cplusplus)
+  #define DECLSPEC_UUID(x) __declspec(uuid(x))
+ #else
+  #define DECLSPEC_UUID(x)
+ #endif
+#endif /* DECLSPEC_UUID */
 
 #ifndef DECLSPEC_NOVTABLE
-# if defined(_MSC_VER) && defined(__cplusplus)
-#  define DECLSPEC_NOVTABLE __declspec(novtable)
-# else
-#  define DECLSPEC_NOVTABLE
-# endif
-#endif
+ #if defined(_MSC_VER) && defined(__cplusplus)
+  #define DECLSPEC_NOVTABLE __declspec(novtable)
+ #else
+  #define DECLSPEC_NOVTABLE
+ #endif
+#endif /* DECLSPEC_NOVTABLE */
 
 #ifndef DECLSPEC_SELECTANY
-# if defined(_MSC_VER) || defined(__GNUC__)
-#  define DECLSPEC_SELECTANY __declspec(selectany)
-# else
-#  define DECLSPEC_SELECTANY
-# endif
-#endif
+ #if defined(_MSC_VER) || defined(__GNUC__)
+  #define DECLSPEC_SELECTANY __declspec(selectany)
+ #else
+  #define DECLSPEC_SELECTANY
+ #endif
+#endif /* DECLSPEC_SELECTANY */
 
 #ifndef DECLSPEC_DEPRECATED
-# if (defined(_MSC_VER) || defined(__GNUC__)) && !defined(MIDL_PASS)
-#  define DECLSPEC_DEPRECATED __declspec(deprecated)
-#  define DEPRECATE_SUPPORTED
-# else
-#  define DECLSPEC_DEPRECATED
-#  undef  DEPRECATE_SUPPORTED
-# endif
-#endif
+ #if (defined(_MSC_VER) || defined(__GNUC__)) && !defined(MIDL_PASS)
+  #define DECLSPEC_DEPRECATED __declspec(deprecated)
+  #define DEPRECATE_SUPPORTED
+ #else
+  #define DECLSPEC_DEPRECATED
+  #undef  DEPRECATE_SUPPORTED
+ #endif
+#endif /* DECLSPEC_DEPRECATED */
 
 #ifdef DEPRECATE_DDK_FUNCTIONS
-# ifdef _NTDDK_
-#  define DECLSPEC_DEPRECATED_DDK DECLSPEC_DEPRECATED
-#  ifdef DEPRECATE_SUPPORTED
-#   define PRAGMA_DEPRECATED_DDK 1
-#  endif
-# else
-#  define DECLSPEC_DEPRECATED_DDK
-#  define PRAGMA_DEPRECATED_DDK 1
-# endif
+ #ifdef _NTDDK_
+  #define DECLSPEC_DEPRECATED_DDK DECLSPEC_DEPRECATED
+  #ifdef DEPRECATE_SUPPORTED
+   #define PRAGMA_DEPRECATED_DDK 1
+  #endif
+ #else
+  #define DECLSPEC_DEPRECATED_DDK
+  #define PRAGMA_DEPRECATED_DDK 1
+ #endif
 #else
-# define DECLSPEC_DEPRECATED_DDK
-# define PRAGMA_DEPRECATED_DDK 0
-#endif
+ #define DECLSPEC_DEPRECATED_DDK
+ #define PRAGMA_DEPRECATED_DDK 0
+#endif /* DEPRECATE_DDK_FUNCTIONS */
 
 /* Use to silence unused variable warnings when it is intentional */
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
@@ -435,26 +435,26 @@ typedef void * POINTER_64 PVOID64;
 /* Handle Type */
 typedef void *HANDLE, **PHANDLE;;
 #ifdef STRICT
-# define DECLARE_HANDLE(n) typedef struct n##__{int unused;} *n
+ #define DECLARE_HANDLE(n) typedef struct n##__{int unused;} *n
 #else
-# define DECLARE_HANDLE(n) typedef HANDLE n
+ #define DECLARE_HANDLE(n) typedef HANDLE n
 #endif
 
 /* Upper-Case Versions of Some Standard C Types */
 #ifndef VOID
-# define VOID void
-typedef char CHAR;
-typedef short SHORT;
+ #define VOID void
+ typedef char CHAR;
+ typedef short SHORT;
 
-# if defined(__ROS_LONG64__) && !defined(_M_AMD64)
-typedef int LONG;
-# else
-typedef long LONG;
-# endif
+ #if defined(__ROS_LONG64__) && !defined(_M_AMD64)
+  typedef int LONG;
+ #else
+  typedef long LONG;
+ #endif
 
-# if !defined(MIDL_PASS)
-typedef int INT;
-# endif /* !MIDL_PASS */
+ #if !defined(MIDL_PASS)
+ typedef int INT;
+ #endif /* !MIDL_PASS */
 #endif /* VOID */
 
 /* Avoid redefinition in windef.h */
@@ -486,8 +486,8 @@ typedef _Return_type_success_(return >= 0) LONG NTSTATUS, *PNTSTATUS;;
 typedef signed char SCHAR, *PSCHAR;
 
 #ifndef _HRESULT_DEFINED
-# define _HRESULT_DEFINED
-typedef _Return_type_success_(return >= 0) LONG HRESULT;
+ #define _HRESULT_DEFINED
+ typedef _Return_type_success_(return >= 0) LONG HRESULT;
 #endif
 
 /* 64-bit types */
@@ -539,60 +539,60 @@ typedef  WCHAR UNALIGNED *PUNZWCH;
 typedef  CONST WCHAR UNALIGNED *PCUNZWCH;
 
 #if (_WIN32_WINNT >= 0x0600) || (defined(__cplusplus) && defined(WINDOWS_ENABLE_CPLUSPLUS))
-typedef CONST WCHAR *LPCWCHAR, *PCWCHAR;
-typedef CONST WCHAR UNALIGNED *LPCUWCHAR, *PCUWCHAR;
-typedef unsigned long UCSCHAR, *PUCSCHAR, *PUCSSTR;
-typedef const UCSCHAR *PCUCSCHAR, *PCUCSSTR;
-typedef UCSCHAR UNALIGNED *PUUCSCHAR, *PUUCSSTR;
-typedef const UCSCHAR UNALIGNED *PCUUCSCHAR, *PCUUCSSTR;
-# define UCSCHAR_INVALID_CHARACTER (0xffffffff)
-# define MIN_UCSCHAR (0)
-# define MAX_UCSCHAR (0x0010FFFF)
+ typedef CONST WCHAR *LPCWCHAR, *PCWCHAR;
+ typedef CONST WCHAR UNALIGNED *LPCUWCHAR, *PCUWCHAR;
+ typedef unsigned long UCSCHAR, *PUCSCHAR, *PUCSSTR;
+ typedef const UCSCHAR *PCUCSCHAR, *PCUCSSTR;
+ typedef UCSCHAR UNALIGNED *PUUCSCHAR, *PUUCSSTR;
+ typedef const UCSCHAR UNALIGNED *PCUUCSCHAR, *PCUUCSSTR;
+ #define UCSCHAR_INVALID_CHARACTER (0xffffffff)
+ #define MIN_UCSCHAR (0)
+ #define MAX_UCSCHAR (0x0010FFFF)
 #endif /* _WIN32_WINNT >= 0x0600 */
 
 #ifdef  UNICODE
 
-# ifndef _TCHAR_DEFINED
-typedef WCHAR TCHAR, *PTCHAR;
-typedef WCHAR TUCHAR, *PTUCHAR;
-#  define _TCHAR_DEFINED
-# endif /* !_TCHAR_DEFINED */
+ #ifndef _TCHAR_DEFINED
+  typedef WCHAR TCHAR, *PTCHAR;
+  typedef WCHAR TUCHAR, *PTUCHAR;
+  #define _TCHAR_DEFINED
+ #endif /* !_TCHAR_DEFINED */
 
-typedef LPWCH LPTCH, PTCH;
-typedef LPCWCH LPCTCH, PCTCH;
-typedef LPWSTR PTSTR, LPTSTR;
-typedef LPCWSTR PCTSTR, LPCTSTR;
-typedef LPUWSTR PUTSTR, LPUTSTR;
-typedef LPCUWSTR PCUTSTR, LPCUTSTR;
-typedef LPWSTR LP;
-typedef PZZWSTR PZZTSTR;
-typedef PCZZWSTR PCZZTSTR;
-typedef PUZZWSTR PUZZTSTR;
-typedef PCUZZWSTR PCUZZTSTR;
-typedef PZPWSTR PZPTSTR;
-typedef PNZWCH PNZTCH;
-typedef PCNZWCH PCNZTCH;
-typedef PUNZWCH PUNZTCH;
-typedef PCUNZWCH PCUNZTCH;
-# define __TEXT(quote) L##quote
+ typedef LPWCH LPTCH, PTCH;
+ typedef LPCWCH LPCTCH, PCTCH;
+ typedef LPWSTR PTSTR, LPTSTR;
+ typedef LPCWSTR PCTSTR, LPCTSTR;
+ typedef LPUWSTR PUTSTR, LPUTSTR;
+ typedef LPCUWSTR PCUTSTR, LPCUTSTR;
+ typedef LPWSTR LP;
+ typedef PZZWSTR PZZTSTR;
+ typedef PCZZWSTR PCZZTSTR;
+ typedef PUZZWSTR PUZZTSTR;
+ typedef PCUZZWSTR PCUZZTSTR;
+ typedef PZPWSTR PZPTSTR;
+ typedef PNZWCH PNZTCH;
+ typedef PCNZWCH PCNZTCH;
+ typedef PUNZWCH PUNZTCH;
+ typedef PCUNZWCH PCUNZTCH;
+ #define __TEXT(quote) L##quote
 
 #else /* UNICODE */
 
-# ifndef _TCHAR_DEFINED
-typedef char TCHAR, *PTCHAR;
-typedef unsigned char TUCHAR, *PTUCHAR;
-#  define _TCHAR_DEFINED
-# endif /* !_TCHAR_DEFINED */
-typedef LPCH LPTCH, PTCH;
-typedef LPCCH LPCTCH, PCTCH;
-typedef LPSTR PTSTR, LPTSTR, PUTSTR, LPUTSTR;
-typedef LPCSTR PCTSTR, LPCTSTR, PCUTSTR, LPCUTSTR;
-typedef PZZSTR PZZTSTR, PUZZTSTR;
-typedef PCZZSTR PCZZTSTR, PCUZZTSTR;
-typedef PZPSTR PZPTSTR;
-typedef PNZCH PNZTCH, PUNZTCH;
-typedef PCNZCH PCNZTCH, PCUNZTCH;
-#define __TEXT(quote) quote
+ #ifndef _TCHAR_DEFINED
+  typedef char TCHAR, *PTCHAR;
+  typedef unsigned char TUCHAR, *PTUCHAR;
+  #define _TCHAR_DEFINED
+ #endif /* !_TCHAR_DEFINED */
+ typedef LPCH LPTCH, PTCH;
+ typedef LPCCH LPCTCH, PCTCH;
+ typedef LPSTR PTSTR, LPTSTR, PUTSTR, LPUTSTR;
+ typedef LPCSTR PCTSTR, LPCTSTR, PCUTSTR, LPCUTSTR;
+ typedef PZZSTR PZZTSTR, PUZZTSTR;
+ typedef PCZZSTR PCZZTSTR, PCUZZTSTR;
+ typedef PZPSTR PZPTSTR;
+ typedef PNZCH PNZTCH, PUNZTCH;
+ typedef PCNZCH PCNZTCH, PCUNZTCH;
+ #define __TEXT(quote) quote
 
 #endif /* UNICODE */
 
@@ -609,7 +609,7 @@ typedef ULONG LCID, *PLCID;
 typedef USHORT LANGID;
 
 #ifndef __COMPARTMENT_ID_DEFINED__
-# define __COMPARTMENT_ID_DEFINED__
+#define __COMPARTMENT_ID_DEFINED__
 typedef enum
 {
     UNSPECIFIED_COMPARTMENT_ID = 0,
@@ -618,7 +618,7 @@ typedef enum
 #endif /* __COMPARTMENT_ID_DEFINED__ */
 
 #ifndef __OBJECTID_DEFINED
-# define __OBJECTID_DEFINED
+#define __OBJECTID_DEFINED
 typedef struct  _OBJECTID {
     GUID Lineage;
     ULONG Uniquifier;
@@ -626,7 +626,7 @@ typedef struct  _OBJECTID {
 #endif
 
 #ifdef _MSC_VER
-#pragma warning(push)
+ #pragma warning(push)
 #pragma warning(disable:4201)
 #endif
 
@@ -695,7 +695,8 @@ typedef union _ULARGE_INTEGER {
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 
 /* Locally Unique Identifier */
-typedef struct _LUID {
+typedef struct _LUID
+{
     ULONG LowPart;
     LONG HighPart;
 } LUID, *PLUID;
@@ -954,18 +955,18 @@ typedef struct _GROUP_AFFINITY {
 #define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
 
 #ifdef __GNUC__
-#define RTL_NUMBER_OF_V2(A) \
-    (({ int _check_array_type[__builtin_types_compatible_p(typeof(A), typeof(&A[0])) ? -1 : 1]; (void)_check_array_type; }), \
-    RTL_NUMBER_OF_V1(A))
+ #define RTL_NUMBER_OF_V2(A) \
+     (({ int _check_array_type[__builtin_types_compatible_p(typeof(A), typeof(&A[0])) ? -1 : 1]; (void)_check_array_type; }), \
+     RTL_NUMBER_OF_V1(A))
 #else
-/// \todo implement security checks for cplusplus / MSVC
-#define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
+ /// \todo implement security checks for cplusplus / MSVC
+ #define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
 #endif
 
 #ifdef ENABLE_RTL_NUMBER_OF_V2
-#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
+ #define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
 #else
-#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
+ #define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
 #endif
 
 #define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
@@ -980,9 +981,9 @@ typedef struct _GROUP_AFFINITY {
         : (FIELD_OFFSET(type, field1) - FIELD_OFFSET(type, field2) - RTL_FIELD_SIZE(type, field2)))
 
 #if defined(__cplusplus)
-# define RTL_CONST_CAST(type) const_cast<type>
+ #define RTL_CONST_CAST(type) const_cast<type>
 #else
-# define RTL_CONST_CAST(type) (type)
+ #define RTL_CONST_CAST(type) (type)
 #endif
 
 /* Type Limits */
@@ -1004,14 +1005,14 @@ typedef struct _GROUP_AFFINITY {
 
 #if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE)
 /* Use native math */
-# define Int64ShllMod32(a,b) ((unsigned __int64)(a)<<(b))
-# define Int64ShraMod32(a,b) (((__int64)(a))>>(b))
-# define Int64ShrlMod32(a,b) (((unsigned __int64)(a))>>(b))
+ #define Int64ShllMod32(a,b) ((unsigned __int64)(a)<<(b))
+ #define Int64ShraMod32(a,b) (((__int64)(a))>>(b))
+ #define Int64ShrlMod32(a,b) (((unsigned __int64)(a))>>(b))
 #else
 /* Use intrinsics */
-# define Int64ShllMod32(a,b) __ll_lshift(a,b)
-# define Int64ShraMod32(a,b) __ll_rshift(a,b)
-# define Int64ShrlMod32(a,b) __ull_rshift(a,b)
+ #define Int64ShllMod32(a,b) __ll_lshift(a,b)
+ #define Int64ShraMod32(a,b) __ll_rshift(a,b)
+ #define Int64ShrlMod32(a,b) __ull_rshift(a,b)
 #endif
 
 #define RotateLeft32 _rotl
@@ -1020,10 +1021,10 @@ typedef struct _GROUP_AFFINITY {
 #define RotateRight64 _rotr64
 
 #if defined(_M_AMD64)
-# define RotateLeft8 _rotl8
-# define RotateLeft16 _rotl16
-# define RotateRight8 _rotr8
-# define RotateRight16 _rotr16
+ #define RotateLeft8 _rotl8
+ #define RotateLeft16 _rotl16
+ #define RotateRight8 _rotr8
+ #define RotateRight16 _rotr16
 #endif /* _M_AMD64 */
 
 /* C_ASSERT Definition */
@@ -1031,11 +1032,11 @@ typedef struct _GROUP_AFFINITY {
 
 /* Eliminate Microsoft C/C++ compiler warning 4715 */
 #if defined(_MSC_VER)
-# define DEFAULT_UNREACHABLE default: __assume(0)
+ #define DEFAULT_UNREACHABLE default: __assume(0)
 #elif defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 5))))
-# define DEFAULT_UNREACHABLE default: __builtin_unreachable()
+ #define DEFAULT_UNREACHABLE default: __builtin_unreachable()
 #else
-# define DEFAULT_UNREACHABLE default: break
+ #define DEFAULT_UNREACHABLE default: break
 #endif
 
 #define VER_WORKSTATION_NT                  0x40000000
