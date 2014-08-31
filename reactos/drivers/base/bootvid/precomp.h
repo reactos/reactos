@@ -31,11 +31,13 @@ typedef struct tagBITMAPINFOHEADER
     ULONG biClrImportant;
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 
+/* Supported bitmap compression formats */
+#define BI_RGB  0
+#define BI_RLE4 2
+
 VOID
 NTAPI
-InitializePalette(
-    VOID
-);
+InitializePalette(VOID);
 
 /* Globals */
 extern USHORT AT_Initialization[];

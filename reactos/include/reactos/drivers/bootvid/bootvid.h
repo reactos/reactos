@@ -11,22 +11,21 @@ VidResetDisplay(IN BOOLEAN HalReset);
 
 ULONG
 NTAPI
-VidSetTextColor(ULONG Color);
+VidSetTextColor(IN ULONG Color);
 
 VOID
 NTAPI
-VidDisplayStringXY(PUCHAR String,
-                   ULONG Left,
-                   ULONG Top,
-                   BOOLEAN Transparent);
+VidDisplayStringXY(IN PUCHAR String,
+                   IN ULONG Left,
+                   IN ULONG Top,
+                   IN BOOLEAN Transparent);
 
 VOID
 NTAPI
-VidSetScrollRegion(ULONG x1,
-                   ULONG y1,
-                   ULONG x2,
-                   ULONG y2);
-
+VidSetScrollRegion(IN ULONG Left,
+                   IN ULONG Top,
+                   IN ULONG Right,
+                   IN ULONG Bottom);
 
 VOID
 NTAPI
@@ -43,22 +42,22 @@ VidBufferToScreenBlt(IN PUCHAR Buffer,
 
 VOID
 NTAPI
-VidDisplayString(PUCHAR String);
+VidDisplayString(IN PUCHAR String);
 
 VOID
 NTAPI
-VidBitBlt(PUCHAR Buffer,
-          ULONG Left,
-          ULONG Top);
+VidBitBlt(IN PUCHAR Buffer,
+          IN ULONG Left,
+          IN ULONG Top);
 
 VOID
 NTAPI
-VidScreenToBufferBlt(PUCHAR Buffer,
-                     ULONG Left,
-                     ULONG Top,
-                     ULONG Width,
-                     ULONG Height,
-                     ULONG Delta);
+VidScreenToBufferBlt(IN PUCHAR Buffer,
+                     IN ULONG Left,
+                     IN ULONG Top,
+                     IN ULONG Width,
+                     IN ULONG Height,
+                     IN ULONG Delta);
 
 VOID
 NTAPI
