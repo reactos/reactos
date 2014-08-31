@@ -434,7 +434,7 @@ PROS_VACB
 NTAPI
 CcRosLookupVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset)
+    LONGLONG FileOffset)
 {
     PLIST_ENTRY current_entry;
     PROS_VACB current;
@@ -442,7 +442,7 @@ CcRosLookupVacb (
 
     ASSERT(SharedCacheMap);
 
-    DPRINT("CcRosLookupVacb(SharedCacheMap 0x%p, FileOffset %lu)\n",
+    DPRINT("CcRosLookupVacb(SharedCacheMap 0x%p, FileOffset %I64u)\n",
            SharedCacheMap, FileOffset);
 
     KeAcquireGuardedMutex(&ViewLock);
@@ -483,14 +483,14 @@ NTSTATUS
 NTAPI
 CcRosMarkDirtyVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset)
+    LONGLONG FileOffset)
 {
     PROS_VACB Vacb;
     KIRQL oldIrql;
 
     ASSERT(SharedCacheMap);
 
-    DPRINT("CcRosMarkDirtyVacb(SharedCacheMap 0x%p, FileOffset %lu)\n",
+    DPRINT("CcRosMarkDirtyVacb(SharedCacheMap 0x%p, FileOffset %I64u)\n",
            SharedCacheMap, FileOffset);
 
     Vacb = CcRosLookupVacb(SharedCacheMap, FileOffset);
@@ -529,7 +529,7 @@ NTSTATUS
 NTAPI
 CcRosUnmapVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset,
+    LONGLONG FileOffset,
     BOOLEAN NowDirty)
 {
     PROS_VACB Vacb;
@@ -538,7 +538,7 @@ CcRosUnmapVacb (
 
     ASSERT(SharedCacheMap);
 
-    DPRINT("CcRosUnmapVacb(SharedCacheMap 0x%p, FileOffset %lu, NowDirty %u)\n",
+    DPRINT("CcRosUnmapVacb(SharedCacheMap 0x%p, FileOffset %I64u, NowDirty %u)\n",
            SharedCacheMap, FileOffset, NowDirty);
 
     Vacb = CcRosLookupVacb(SharedCacheMap, FileOffset);
@@ -582,7 +582,7 @@ static
 NTSTATUS
 CcRosCreateVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset,
+    LONGLONG FileOffset,
     PROS_VACB *Vacb)
 {
     PROS_VACB current;
@@ -595,7 +595,7 @@ CcRosCreateVacb (
 
     DPRINT("CcRosCreateVacb()\n");
 
-    if (FileOffset >= SharedCacheMap->FileSize.u.LowPart)
+    if (FileOffset >= SharedCacheMap->FileSize.QuadPart)
     {
         *Vacb = NULL;
         return STATUS_INVALID_PARAMETER;
@@ -729,8 +729,8 @@ NTSTATUS
 NTAPI
 CcRosGetVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset,
-    PULONGLONG BaseOffset,
+    LONGLONG FileOffset,
+    PLONGLONG BaseOffset,
     PVOID* BaseAddress,
     PBOOLEAN UptoDate,
     PROS_VACB *Vacb)
@@ -781,7 +781,7 @@ NTSTATUS
 NTAPI
 CcRosRequestVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
-    ULONG FileOffset,
+    LONGLONG FileOffset,
     PVOID* BaseAddress,
     PBOOLEAN UptoDate,
     PROS_VACB *Vacb)
@@ -789,13 +789,13 @@ CcRosRequestVacb (
  * FUNCTION: Request a page mapping for a shared cache map
  */
 {
-    ULONGLONG BaseOffset;
+    LONGLONG BaseOffset;
 
     ASSERT(SharedCacheMap);
 
     if (FileOffset % VACB_MAPPING_GRANULARITY != 0)
     {
-        DPRINT1("Bad fileoffset %x should be multiple of %x",
+        DPRINT1("Bad fileoffset %I64x should be multiple of %x",
                 FileOffset, VACB_MAPPING_GRANULARITY);
         KeBugCheck(CACHE_MANAGER);
     }
@@ -896,7 +896,7 @@ CcFlushCache (
 
         while (RemainingLength > 0)
         {
-            current = CcRosLookupVacb(SharedCacheMap, Offset.u.LowPart);
+            current = CcRosLookupVacb(SharedCacheMap, Offset.QuadPart);
             if (current != NULL)
             {
                 if (current->Dirty)
