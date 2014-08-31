@@ -15,7 +15,7 @@
 #include <excpt.h>
 #include <basetsd.h>
 #include <guiddef.h>
-#include "intrin.h"
+#include <intrin.h>
 
 #undef __need_wchar_t
 #include <winerror.h>
@@ -26,7 +26,10 @@
 #endif
 
 
+/* Defines the "size" of an any-size array */
+#ifndef ANYSIZE_ARRAY
 #define ANYSIZE_ARRAY 1
+#endif
 
 #ifndef __ANONYMOUS_DEFINED
 #define __ANONYMOUS_DEFINED
@@ -101,7 +104,7 @@
 #define MAX_NATURAL_ALIGNMENT sizeof(ULONGLONG)
 #define MEMORY_ALLOCATION_ALIGNMENT 16
 #else
-#define MAX_NATURAL_ALIGNMENT sizeof(ULONG)
+ #define MAX_NATURAL_ALIGNMENT sizeof(DWORD)
 #define MEMORY_ALLOCATION_ALIGNMENT 8
 #endif
 
@@ -139,11 +142,15 @@
 #endif
 
 #if defined(_AMD64_) || defined(_X86_)
-#define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(ULONG)
+ #define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(DWORD)
 #elif defined(_IA64_) || defined(_ARM_)
-#define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT(ULONG))
+ #define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT(DWORD))
 #else
 #error "unknown architecture"
+#endif
+
+#if defined(_WIN64)
+ #define PROBE_ALIGNMENT32(_s) TYPE_ALIGNMENT(DWORD)
 #endif
 
 #ifdef __cplusplus
@@ -179,6 +186,13 @@
 #endif
 #endif /* DECLSPEC_ADDRSAFE */
 
+#ifndef DECLSPEC_NOTHROW
+ #if !defined(MIDL_PASS)
+  #define DECLSPEC_NOTHROW __declspec(nothrow)
+ #else
+  #define DECLSPEC_NOTHROW
+ #endif
+#endif
 
 #ifndef NOP_FUNCTION
 #if (_MSC_VER >= 1210)
@@ -226,6 +240,25 @@
 # endif
 #endif /* DECLSPEC_ALIGN */
 
+#ifndef SYSTEM_CACHE_ALIGNMENT_SIZE
+ #if defined(_AMD64_) || defined(_X86_)
+  #define SYSTEM_CACHE_ALIGNMENT_SIZE 64
+ #else
+  #define SYSTEM_CACHE_ALIGNMENT_SIZE 128
+ #endif
+#endif /* SYSTEM_CACHE_ALIGNMENT_SIZE */
+
+#ifndef DECLSPEC_CACHEALIGN
+ #define DECLSPEC_CACHEALIGN DECLSPEC_ALIGN(SYSTEM_CACHE_ALIGNMENT_SIZE)
+#endif /* DECLSPEC_CACHEALIGN */
+
+#ifndef DECLSPEC_UUID
+ #if defined(_MSC_VER) && defined(__cplusplus)
+  #define DECLSPEC_UUID(x) __declspec(uuid(x))
+ #else
+  #define DECLSPEC_UUID(x)
+ #endif
+#endif /* DECLSPEC_UUID */
 
 #ifndef DECLSPEC_NOVTABLE
 # if defined(_MSC_VER) && (_MSC_VER >= 1100) && defined(__cplusplus)
@@ -243,6 +276,32 @@
 #endif
 #endif
 
+#ifndef DECLSPEC_DEPRECATED
+ #if (defined(_MSC_VER) || defined(__GNUC__)) && !defined(MIDL_PASS)
+  #define DECLSPEC_DEPRECATED __declspec(deprecated)
+  #define DEPRECATE_SUPPORTED
+ #else
+  #define DECLSPEC_DEPRECATED
+  #undef  DEPRECATE_SUPPORTED
+ #endif
+#endif /* DECLSPEC_DEPRECATED */
+
+#ifdef DEPRECATE_DDK_FUNCTIONS
+ #ifdef _NTDDK_
+  #define DECLSPEC_DEPRECATED_DDK DECLSPEC_DEPRECATED
+  #ifdef DEPRECATE_SUPPORTED
+   #define PRAGMA_DEPRECATED_DDK 1
+  #endif
+ #else
+  #define DECLSPEC_DEPRECATED_DDK
+  #define PRAGMA_DEPRECATED_DDK 1
+ #endif
+#else
+ #define DECLSPEC_DEPRECATED_DDK
+ #define PRAGMA_DEPRECATED_DDK 0
+#endif /* DEPRECATE_DDK_FUNCTIONS */
+
+/* Use to silence unused variable warnings when it is intentional */
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
 #define UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 #define DBG_UNREFERENCED_PARAMETER(P) {(P)=(P);}
@@ -366,6 +425,22 @@ typedef DWORD LCID;
 typedef PDWORD PLCID;
 typedef WORD LANGID;
 
+#ifndef __COMPARTMENT_ID_DEFINED__
+#define __COMPARTMENT_ID_DEFINED__
+typedef enum
+{
+    UNSPECIFIED_COMPARTMENT_ID = 0,
+    DEFAULT_COMPARTMENT_ID
+} COMPARTMENT_ID, *PCOMPARTMENT_ID;
+#endif /* __COMPARTMENT_ID_DEFINED__ */
+
+#ifndef __OBJECTID_DEFINED
+#define __OBJECTID_DEFINED
+typedef struct  _OBJECTID {
+    GUID Lineage;
+    DWORD Uniquifier;
+} OBJECTID;
+#endif /* __OBJECTID_DEFINED */
 
 #ifdef _M_PPC
 #define LARGE_INTEGER_ORDER(x) x HighPart; DWORD LowPart;
@@ -414,21 +489,23 @@ typedef struct _LUID {
 #define UNICODE_STRING_MAX_CHARS (32767)
 
 
+/* Doubly Linked Lists */
 typedef struct _LIST_ENTRY {
   struct _LIST_ENTRY *Flink;
   struct _LIST_ENTRY *Blink;
 } LIST_ENTRY, *PLIST_ENTRY, *RESTRICTED_POINTER PRLIST_ENTRY;
 
-typedef struct _LIST_ENTRY32 {
+typedef struct LIST_ENTRY32 {
   DWORD Flink;
   DWORD Blink;
 } LIST_ENTRY32,*PLIST_ENTRY32;
 
-typedef struct _LIST_ENTRY64 {
+typedef struct LIST_ENTRY64 {
   ULONGLONG Flink;
   ULONGLONG Blink;
 } LIST_ENTRY64,*PLIST_ENTRY64;
 
+/* Singly Linked Lists */
 typedef struct _SINGLE_LIST_ENTRY {
   struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY,*PSINGLE_LIST_ENTRY;
@@ -439,6 +516,8 @@ typedef struct _PROCESSOR_NUMBER {
   BYTE Number;
   BYTE Reserved;
 } PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
+
+#define ALL_PROCESSOR_GROUPS 0xffff
 
 typedef
 _IRQL_requires_same_
@@ -514,7 +593,7 @@ typedef struct _GROUP_AFFINITY {
 #define MAXBYTE	0xff
 #define MAXWORD	0xffff
 #define MAXDWORD	0xffffffff
-#define MAXLONGLONG (((LONGLONG)0x7fffffff << 32) | 0xffffffff)
+#define MAXLONGLONG (0x7fffffffffffffffLL)
 
 #ifdef _HAVE_INT64
  #define Int32x32To64(a,b) ((LONGLONG)(a)*(LONGLONG)(b))
@@ -554,9 +633,7 @@ typedef struct _GROUP_AFFINITY {
 #define VER_SUITE_COMPUTE_SERVER 16384
 #define VER_SUITE_WH_SERVER 32768
 
-/*
- * Product types
- */
+/* Product types */
 #define PRODUCT_UNDEFINED                               0x00000000
 #define PRODUCT_ULTIMATE                                0x00000001
 #define PRODUCT_HOME_BASIC                              0x00000002
@@ -595,7 +672,6 @@ typedef struct _GROUP_AFFINITY {
 #define PRODUCT_SERVER_FOR_SMALLBUSINESS_V              0x00000023
 #define PRODUCT_STANDARD_SERVER_V                       0x00000024
 #define PRODUCT_DATACENTER_SERVER_V                     0x00000025
-#define PRODUCT_SERVER_V                                0x00000025
 #define PRODUCT_ENTERPRISE_SERVER_V                     0x00000026
 #define PRODUCT_DATACENTER_SERVER_CORE_V                0x00000027
 #define PRODUCT_STANDARD_SERVER_CORE_V                  0x00000028
@@ -615,6 +691,7 @@ typedef struct _GROUP_AFFINITY {
 #define PRODUCT_SB_SOLUTION_SERVER_EM                   0x00000036
 #define PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM              0x00000037
 #define PRODUCT_SOLUTION_EMBEDDEDSERVER                 0x00000038
+#define PRODUCT_SOLUTION_EMBEDDEDSERVER_CORE        0x00000039
 #define PRODUCT_ESSENTIALBUSINESS_SERVER_MGMT           0x0000003B
 #define PRODUCT_ESSENTIALBUSINESS_SERVER_ADDL           0x0000003C
 #define PRODUCT_ESSENTIALBUSINESS_SERVER_MGMTSVC        0x0000003D
@@ -634,12 +711,20 @@ typedef struct _GROUP_AFFINITY {
 #define PRODUCT_STANDARD_EVALUATION_SERVER              0x0000004F
 #define PRODUCT_DATACENTER_EVALUATION_SERVER            0x00000050
 #define PRODUCT_ENTERPRISE_N_EVALUATION                 0x00000054
+#define PRODUCT_EMBEDDED_AUTOMOTIVE                 0x00000055
+#define PRODUCT_EMBEDDED_INDUSTRY_A                 0x00000056
+#define PRODUCT_THINPC                              0x00000057
+#define PRODUCT_EMBEDDED_A                          0x00000058
+#define PRODUCT_EMBEDDED_INDUSTRY                   0x00000059
+#define PRODUCT_EMBEDDED_E                          0x0000005A
+#define PRODUCT_EMBEDDED_INDUSTRY_E                 0x0000005B
+#define PRODUCT_EMBEDDED_INDUSTRY_A_E               0x0000005C
 #define PRODUCT_STORAGE_WORKGROUP_EVALUATION_SERVER     0x0000005F
 #define PRODUCT_STORAGE_STANDARD_EVALUATION_SERVER      0x00000060
 #define PRODUCT_CORE_ARM                                0x00000061
 #define PRODUCT_CORE_N                                  0x00000062
 #define PRODUCT_CORE_COUNTRYSPECIFIC                    0x00000063
-#define PRODUCT_CORE_LANGUAGESPECIFIC                   0x00000064
+#define PRODUCT_CORE_SINGLELANGUAGE                 0x00000064
 #define PRODUCT_CORE                                    0x00000065
 #define PRODUCT_PROFESSIONAL_WMC                        0x00000067
 #define PRODUCT_UNLICENSED                              0xABCDABCD
@@ -652,9 +737,10 @@ typedef struct _GROUP_AFFINITY {
 #define SORTIDFROMLCID(l)	((WORD)((((DWORD)(l))&NLS_VALID_LOCALE_MASK)>>16))
 #define SORTVERSIONFROMLCID(l) ((WORD)((((DWORD)(l))>>20)&0xf))
 
-#define NLS_VALID_LOCALE_MASK	1048575
+#define NLS_VALID_LOCALE_MASK  0x000fffff
 #define LOCALE_NAME_MAX_LENGTH 85
 
+/*  Primary language IDs. */
 #define LANG_NEUTRAL   0x00
 #define LANG_INVARIANT   0x7f
 #define LANG_AFRIKAANS   0x36
@@ -665,19 +751,23 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_ARMENIAN   0x2b
 #define LANG_ASSAMESE   0x4d
 #define LANG_AZERI   0x2c
+#define LANG_AZERBAIJANI                          0x2c
+#define LANG_BANGLA                               0x45
 #define LANG_BASHKIR   0x6d
 #define LANG_BASQUE   0x2d
 #define LANG_BELARUSIAN   0x23
 #define LANG_BENGALI   0x45
 #define LANG_BOSNIAN   0x1a
+#define LANG_BOSNIAN_NEUTRAL                    0x781a
 #define LANG_BRETON   0x7e
 #define LANG_BULGARIAN   0x02
 #define LANG_CATALAN   0x03
+#define LANG_CENTRAL_KURDISH                      0x92
+#define LANG_CHEROKEE                             0x5c
 #define LANG_CHINESE   0x04
 #define LANG_CHINESE_SIMPLIFIED   0x04
 #define LANG_CHINESE_TRADITIONAL  0x7c04
 #define LANG_CORSICAN   0x83
-#define LANG_CROATIAN   0x1a
 #define LANG_CROATIAN   0x1a
 #define LANG_CZECH   0x05
 #define LANG_DANISH   0x06
@@ -687,10 +777,12 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_ENGLISH   0x09
 #define LANG_ESTONIAN   0x25
 #define LANG_FAEROESE   0x38
+#define LANG_FARSI                                0x29
 #define LANG_FILIPINO   0x64
 #define LANG_FINNISH   0x0b
 #define LANG_FRENCH   0x0c
 #define LANG_FRISIAN   0x62
+#define LANG_FULAH                                0x67
 #define LANG_GALICIAN   0x56
 #define LANG_GEORGIAN   0x37
 #define LANG_GERMAN   0x07
@@ -698,6 +790,7 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_GREENLANDIC   0x6f
 #define LANG_GUJARATI   0x47
 #define LANG_HAUSA   0x68
+#define LANG_HAWAIIAN                             0x75
 #define LANG_HEBREW   0x0d
 #define LANG_HINDI   0x39
 #define LANG_HUNGARIAN   0x0e
@@ -735,27 +828,29 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_NEPALI   0x61
 #define LANG_NORWEGIAN   0x14
 #define LANG_OCCITAN   0x82
+#define LANG_ODIA                                 0x48
 #define LANG_ORIYA   0x48
 #define LANG_PASHTO   0x63
-#define LANG_FARSI   0x29
 #define LANG_PERSIAN 0x29
 #define LANG_POLISH   0x15
 #define LANG_PORTUGUESE   0x16
+#define LANG_PULAR                                0x67
 #define LANG_PUNJABI   0x46
 #define LANG_QUECHUA   0x6b
 #define LANG_ROMANIAN   0x18
 #define LANG_ROMANSH   0x17
 #define LANG_RUSSIAN   0x19
+#define LANG_SAKHA                                0x85
 #define LANG_SAMI   0x3b
 #define LANG_SANSKRIT   0x4f
 #define LANG_SCOTTISH_GAELIC   0x91
 #define LANG_SERBIAN   0x1a
-#define LANG_SOTHO   0x6c
-#define LANG_TSWANA   0x32
+#define LANG_SERBIAN_NEUTRAL                    0x7c1a
 #define LANG_SINDHI   0x59
 #define LANG_SINHALESE   0x5b
 #define LANG_SLOVAK   0x1b
 #define LANG_SLOVENIAN   0x24
+#define LANG_SOTHO                                0x6c
 #define LANG_SPANISH   0x0a
 #define LANG_SWAHILI   0x41
 #define LANG_SWEDISH   0x1d
@@ -768,6 +863,8 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_THAI   0x1e
 #define LANG_TIBETAN   0x51
 #define LANG_TIGRIGNA   0x73
+#define LANG_TIGRINYA                             0x73
+#define LANG_TSWANA                               0x32
 #define LANG_TURKISH   0x1f
 #define LANG_TURKMEN   0x42
 #define LANG_UIGHUR   0x80
@@ -775,6 +872,7 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_UPPER_SORBIAN   0x2e
 #define LANG_URDU   0x20
 #define LANG_UZBEK   0x43
+#define LANG_VALENCIAN                            0x03
 #define LANG_VIETNAMESE   0x2a
 #define LANG_WELSH   0x52
 #define LANG_WOLOF   0x88
@@ -1012,27 +1110,33 @@ typedef struct _GROUP_AFFINITY {
 #define SUBLANG_YORUBA_NIGERIA   0x01
 #define SUBLANG_ZULU_SOUTH_AFRICA   0x01
 
-#define SORT_DEFAULT	0
-#define SORT_JAPANESE_XJIS	0
-#define SORT_JAPANESE_UNICODE	1
-#define SORT_CHINESE_BIG5	0
-#define SORT_CHINESE_PRCP	0
-#define SORT_CHINESE_UNICODE	1
-#define SORT_CHINESE_PRC	2
-#define SORT_CHINESE_BOPOMOFO	3
-#define SORT_KOREAN_KSC	0
-#define SORT_KOREAN_UNICODE	1
-#define SORT_GERMAN_PHONE_BOOK	1
-#define SORT_HUNGARIAN_DEFAULT	0
-#define SORT_HUNGARIAN_TECHNICAL	1
-#define SORT_GEORGIAN_TRADITIONAL	0
-#define SORT_GEORGIAN_MODERN	1
+#define SORT_DEFAULT                     0x0
+#define SORT_INVARIANT_MATH              0x1
+#define SORT_JAPANESE_XJIS               0x0
+#define SORT_JAPANESE_UNICODE            0x1
+#define SORT_JAPANESE_RADICALSTROKE      0x4
+#define SORT_CHINESE_BIG5                0x0
+#define SORT_CHINESE_PRCP                0x0
+#define SORT_CHINESE_UNICODE             0x1
+#define SORT_CHINESE_PRC                 0x2
+#define SORT_CHINESE_BOPOMOFO            0x3
+#define SORT_CHINESE_RADICALSTROKE       0x4
+#define SORT_KOREAN_KSC                  0x0
+#define SORT_KOREAN_UNICODE              0x1
+#define SORT_GERMAN_PHONE_BOOK           0x1
+#define SORT_HUNGARIAN_DEFAULT           0x0
+#define SORT_HUNGARIAN_TECHNICAL         0x1
+#define SORT_GEORGIAN_TRADITIONAL        0x0
+#define SORT_GEORGIAN_MODERN             0x1
 
 #define LANG_SYSTEM_DEFAULT	MAKELANGID(LANG_NEUTRAL,SUBLANG_SYS_DEFAULT)
 #define LANG_USER_DEFAULT	MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT)
 
 #define LOCALE_SYSTEM_DEFAULT MAKELCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT)
 #define LOCALE_USER_DEFAULT MAKELCID(LANG_USER_DEFAULT, SORT_DEFAULT)
+#define LOCALE_CUSTOM_DEFAULT     MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_DEFAULT), SORT_DEFAULT)
+#define LOCALE_CUSTOM_UNSPECIFIED MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_UNSPECIFIED), SORT_DEFAULT)
+#define LOCALE_CUSTOM_UI_DEFAULT  MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_UI_CUSTOM_DEFAULT), SORT_DEFAULT)
 #define LOCALE_NEUTRAL	MAKELCID(MAKELANGID(LANG_NEUTRAL,SUBLANG_NEUTRAL),SORT_DEFAULT)
 #define LOCALE_INVARIANT MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
 
@@ -1833,7 +1937,6 @@ typedef enum {
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
 
-/* end winddk.h */
 #define IMAGE_SIZEOF_FILE_HEADER	20
 #define IMAGE_FILE_RELOCS_STRIPPED	1
 #define IMAGE_FILE_EXECUTABLE_IMAGE	2
@@ -2909,13 +3012,13 @@ typedef struct _RUNTIME_FUNCTION {
 
 typedef struct _UNWIND_HISTORY_TABLE_ENTRY
 {
-    ULONG64 ImageBase;
+    DWORD64 ImageBase;
     PRUNTIME_FUNCTION FunctionEntry;
 } UNWIND_HISTORY_TABLE_ENTRY, *PUNWIND_HISTORY_TABLE_ENTRY;
 
 typedef struct _UNWIND_HISTORY_TABLE
 {
-    ULONG Count;
+    DWORD Count;
     UCHAR Search;
     ULONG64 LowAddress;
     ULONG64 HighAddress;
@@ -3166,16 +3269,16 @@ typedef struct _CONTEXT {
 
 /* These are the debug or break registers on the SH3 */
 typedef struct _DEBUG_REGISTERS {
-	ULONG  BarA;
+    DWORD  BarA;
 	UCHAR  BasrA;
 	UCHAR  BamrA;
 	USHORT BbrA;
-	ULONG  BarB;
+    DWORD  BarB;
 	UCHAR  BasrB;
 	UCHAR  BamrB;
 	USHORT BbrB;
-	ULONG  BdrB;
-	ULONG  BdmrB;
+    DWORD  BdrB;
+    DWORD  BdmrB;
 	USHORT Brcr;
 	USHORT Align;
 } DEBUG_REGISTERS, *PDEBUG_REGISTERS;
@@ -3221,7 +3324,7 @@ typedef struct _CONTEXT {
 	/* The context record is never used as an OUT only parameter. */
 
 
-	ULONG ContextFlags;
+    DWORD ContextFlags;
 
 	/* This section is specified/returned if the ContextFlags word contains */
 	/* the flag CONTEXT_INTEGER. */
@@ -3230,26 +3333,26 @@ typedef struct _CONTEXT {
 	/*  considered part of the control context rather than part of the integer */
 	/*  context. */
 
-	ULONG PR;
-	ULONG MACH;
-	ULONG MACL;
-	ULONG GBR;
-	ULONG R0;
-	ULONG R1;
-	ULONG R2;
-	ULONG R3;
-	ULONG R4;
-	ULONG R5;
-	ULONG R6;
-	ULONG R7;
-	ULONG R8;
-	ULONG R9;
-	ULONG R10;
-	ULONG R11;
-	ULONG R12;
-	ULONG R13;
-	ULONG R14;
-	ULONG R15;
+    DWORD PR;
+    DWORD MACH;
+    DWORD MACL;
+    DWORD GBR;
+    DWORD R0;
+    DWORD R1;
+    DWORD R2;
+    DWORD R3;
+    DWORD R4;
+    DWORD R5;
+    DWORD R6;
+    DWORD R7;
+    DWORD R8;
+    DWORD R9;
+    DWORD R10;
+    DWORD R11;
+    DWORD R12;
+    DWORD R13;
+    DWORD R14;
+    DWORD R15;
 
 	/* This section is specified/returned if the ContextFlags word contains */
 	/* the flag CONTEXT_CONTROL. */
@@ -3258,18 +3361,18 @@ typedef struct _CONTEXT {
 	/*   but are considered part of the control context rather than part of */
 	/*   the integer context. */
 
-	ULONG Fir;
-	ULONG Psr;
+    DWORD Fir;
+    DWORD Psr;
 
 #if !defined(SH3e) && !defined(SH4)
-	ULONG	OldStuff[2];
+    DWORD    OldStuff[2];
 	DEBUG_REGISTERS DebugRegisters;
 #else
-	ULONG	Fpscr;
-	ULONG	Fpul;
-	ULONG	FRegs[16];
+    DWORD    Fpscr;
+    DWORD    Fpul;
+    DWORD    FRegs[16];
 #if defined(SH4)
-	ULONG	xFRegs[16];
+    DWORD    xFRegs[16];
 #endif
 #endif
 } CONTEXT;
@@ -3453,28 +3556,28 @@ typedef struct _CONTEXT {
 
 	   The context record is never used as an OUT only parameter. */
 
-	ULONG ContextFlags;
+    DWORD ContextFlags;
 
 	/* This section is specified/returned if the ContextFlags word contains
 	   the flag CONTEXT_INTEGER. */
-	ULONG R0;
-	ULONG R1;
-	ULONG R2;
-	ULONG R3;
-	ULONG R4;
-	ULONG R5;
-	ULONG R6;
-	ULONG R7;
-	ULONG R8;
-	ULONG R9;
-	ULONG R10;
-	ULONG R11;
-	ULONG R12;
+    DWORD R0;
+    DWORD R1;
+    DWORD R2;
+    DWORD R3;
+    DWORD R4;
+    DWORD R5;
+    DWORD R6;
+    DWORD R7;
+    DWORD R8;
+    DWORD R9;
+    DWORD R10;
+    DWORD R11;
+    DWORD R12;
 
-	ULONG Sp;
-	ULONG Lr;
-	ULONG Pc;
-	ULONG Psr;
+    DWORD Sp;
+    DWORD Lr;
+    DWORD Pc;
+    DWORD Psr;
 } CONTEXT;
 
 #else
@@ -3767,6 +3870,14 @@ typedef struct _QUOTA_LIMITS {
   LARGE_INTEGER TimeLimit;
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
 
+typedef union _RATE_QUOTA_LIMIT {
+  DWORD RateData;
+  struct {
+    DWORD RatePercent : 7;
+    DWORD Reserved0 : 25;
+  } DUMMYSTRUCTNAME;
+} RATE_QUOTA_LIMIT, *PRATE_QUOTA_LIMIT;
+
 typedef struct _QUOTA_LIMITS_EX {
   SIZE_T PagedPoolLimit;
   SIZE_T NonPagedPoolLimit;
@@ -3778,8 +3889,8 @@ typedef struct _QUOTA_LIMITS_EX {
   SIZE_T Reserved2;
   SIZE_T Reserved3;
   SIZE_T Reserved4;
-  ULONG Flags;
-  ULONG Reserved5;
+  DWORD Flags;
+  RATE_QUOTA_LIMIT CpuRateLimit;
 } QUOTA_LIMITS_EX, *PQUOTA_LIMITS_EX;
 
 typedef struct _IO_COUNTERS {
@@ -3826,8 +3937,8 @@ typedef struct _TAPE_GET_MEDIA_PARAMETERS {
 } TAPE_GET_MEDIA_PARAMETERS, *PTAPE_GET_MEDIA_PARAMETERS;
 
 typedef struct _TAPE_GET_POSITION {
-  ULONG Type;
-  ULONG Partition;
+  DWORD Type;
+  DWORD Partition;
   LARGE_INTEGER Offset;
 } TAPE_GET_POSITION, *PTAPE_GET_POSITION;
 
@@ -5265,6 +5376,7 @@ typedef struct _SYSTEM_BATTERY_STATE {
   DWORD DefaultAlert2;
 } SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
+// FIXME: This should not be here!
 typedef struct _PROCESSOR_POWER_INFORMATION {
 	ULONG Number;
 	ULONG MaxMhz;
@@ -5274,7 +5386,7 @@ typedef struct _PROCESSOR_POWER_INFORMATION {
 	ULONG CurrentIdleState;
 } PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
 
-typedef DWORD EXECUTION_STATE;
+typedef DWORD EXECUTION_STATE, *PEXECUTION_STATE;
 
 typedef enum _POWER_INFORMATION_LEVEL {
   SystemPowerPolicyAc,
@@ -5595,7 +5707,19 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
   #endif
 }
 #elif defined (_M_ARM)
-    PVOID WINAPI GetCurrentFiber(VOID);
+#define CP15_PMSELR      15, 0,  9, 12, 5
+#define CP15_PMXEVCNTR   15, 0,  9, 13, 2
+#define CP15_TPIDRURW    15, 0, 13,  0, 2
+#define CP15_TPIDRURO    15, 0, 13,  0, 3
+#define CP15_TPIDRPRW    15, 0, 13,  0, 4
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
+{
+    return (struct _TEB *)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW);
+}
+FORCEINLINE PVOID GetCurrentFiber(VOID)
+{
+    return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
+}
 #elif defined(_M_PPC)
 FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
 {
@@ -5619,7 +5743,7 @@ FORCEINLINE PVOID GetCurrentFiber(void)
 #error Unknown architecture
 #endif
 
-static __inline PVOID GetFiberData(void)
+FORCEINLINE PVOID GetFiberData(void)
 {
 	return *((PVOID *)GetCurrentFiber());
 }
