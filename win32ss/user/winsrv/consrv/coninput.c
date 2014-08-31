@@ -26,6 +26,25 @@
     ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
 
 
+
+
+/*
+ * From MSDN:
+ * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
+ *  If they are the same, the function fails, and GetLastError returns
+ *  ERROR_INVALID_PARAMETER."
+ */
+#define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
+    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
+    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+
+#define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
+    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
+
+
+
+
 typedef struct _GET_INPUT_INFO
 {
     PCSR_THREAD           CallingThread;    // The thread which called the input API.
@@ -36,10 +55,33 @@ typedef struct _GET_INPUT_INFO
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-/*
- * This pre-processing code MUST be IN consrv ONLY
- */
-/* static */ ULONG
+static VOID
+ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
+{
+    if (InputEvent->EventType == KEY_EVENT)
+    {
+        WCHAR UnicodeChar = InputEvent->Event.KeyEvent.uChar.UnicodeChar;
+        InputEvent->Event.KeyEvent.uChar.UnicodeChar = 0;
+        ConsoleInputUnicodeCharToAnsiChar(Console,
+                                          &InputEvent->Event.KeyEvent.uChar.AsciiChar,
+                                          &UnicodeChar);
+    }
+}
+
+static VOID
+ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
+{
+    if (InputEvent->EventType == KEY_EVENT)
+    {
+        CHAR AsciiChar = InputEvent->Event.KeyEvent.uChar.AsciiChar;
+        InputEvent->Event.KeyEvent.uChar.AsciiChar = 0;
+        ConsoleInputAnsiCharToUnicodeChar(Console,
+                                          &InputEvent->Event.KeyEvent.uChar.UnicodeChar,
+                                          &AsciiChar);
+    }
+}
+
+static ULONG
 PreprocessInput(PCONSRV_CONSOLE Console,
                 PINPUT_RECORD InputEvent,
                 ULONG NumEventsToWrite)
@@ -98,10 +140,7 @@ PreprocessInput(PCONSRV_CONSOLE Console,
     return NumEventsToWrite;
 }
 
-/*
- * This post-processing code MUST be IN consrv ONLY
- */
-/* static */ VOID
+static VOID
 PostprocessInput(PCONSRV_CONSOLE Console)
 {
     CsrNotifyWait(&Console->ReadWaitQueue,
@@ -115,7 +154,58 @@ PostprocessInput(PCONSRV_CONSOLE Console)
 }
 
 
+NTSTATUS NTAPI
+ConDrvWriteConsoleInput(IN PCONSOLE Console,
+                        IN PCONSOLE_INPUT_BUFFER InputBuffer,
+                        IN BOOLEAN AppendToEnd,
+                        IN PINPUT_RECORD InputRecord,
+                        IN ULONG NumEventsToWrite,
+                        OUT PULONG NumEventsWritten OPTIONAL);
+static NTSTATUS
+ConioAddInputEvents(PCONSOLE Console,
+                    PINPUT_RECORD InputRecords, // InputEvent
+                    ULONG NumEventsToWrite,
+                    PULONG NumEventsWritten,
+                    BOOLEAN AppendToEnd)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
 
+    if (NumEventsWritten) *NumEventsWritten = 0;
+
+    NumEventsToWrite = PreprocessInput(Console, InputRecords, NumEventsToWrite);
+    if (NumEventsToWrite == 0) return STATUS_SUCCESS;
+
+    // Status = ConDrvAddInputEvents(Console,
+                                  // InputRecords,
+                                  // NumEventsToWrite,
+                                  // NumEventsWritten,
+                                  // AppendToEnd);
+
+    Status = ConDrvWriteConsoleInput(Console,
+                                     &Console->InputBuffer,
+                                     AppendToEnd,
+                                     InputRecords,
+                                     NumEventsToWrite,
+                                     NumEventsWritten);
+
+    // if (NT_SUCCESS(Status))
+    if (Status == STATUS_SUCCESS) PostprocessInput(Console);
+
+    return Status;
+}
+
+/* FIXME: This function can be called by CONDRV, in ConioResizeBuffer() in text.c */
+NTSTATUS
+ConioProcessInputEvent(PCONSOLE Console,
+                       PINPUT_RECORD InputEvent)
+{
+    ULONG NumEventsWritten;
+    return ConioAddInputEvents(Console,
+                               InputEvent,
+                               1,
+                               &NumEventsWritten,
+                               TRUE);
+}
 
 
 static NTSTATUS
@@ -381,7 +471,6 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
                       IN PCONSOLE_INPUT_BUFFER InputBuffer,
                       IN BOOLEAN KeepEvents,
                       IN BOOLEAN WaitForMoreEvents,
-                      IN BOOLEAN Unicode,
                       OUT PINPUT_RECORD InputRecord,
                       IN ULONG NumEventsToRead,
                       OUT PULONG NumEventsRead OPTIONAL);
@@ -422,7 +511,6 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
                                    InputBuffer,
                                    (GetInputRequest->Flags & CONSOLE_READ_KEEPEVENT) != 0,
                                    (GetInputRequest->Flags & CONSOLE_READ_CONTINUE ) == 0,
-                                   GetInputRequest->Unicode,
                                    InputRecord,
                                    GetInputRequest->NumRecords,
                                    &NumEventsRead);
@@ -442,6 +530,18 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
          * return the error code we were given.
          */
         GetInputRequest->NumRecords = NumEventsRead;
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Now translate everything to ANSI */
+            if (!GetInputRequest->Unicode)
+            {
+                for (; NumEventsRead > 0; --NumEventsRead)
+                {
+                    ConioInputEventToAnsi(InputBuffer->Header.Console, --InputRecord);
+                }
+            }
+        }
 
         return Status;
         // return STATUS_SUCCESS;
@@ -563,14 +663,15 @@ CSR_API(SrvGetConsoleInput)
     return Status;
 }
 
+#if 0
 NTSTATUS NTAPI
 ConDrvWriteConsoleInput(IN PCONSOLE Console,
                         IN PCONSOLE_INPUT_BUFFER InputBuffer,
-                        IN BOOLEAN Unicode,
                         IN BOOLEAN AppendToEnd,
                         IN PINPUT_RECORD InputRecord,
                         IN ULONG NumEventsToWrite,
                         OUT PULONG NumEventsWritten OPTIONAL);
+#endif
 CSR_API(SrvWriteConsoleInput)
 {
     NTSTATUS Status;
@@ -619,14 +720,32 @@ CSR_API(SrvWriteConsoleInput)
         return Status;
     }
 
+    /* First translate everything to UNICODE */
+    if (!WriteInputRequest->Unicode)
+    {
+        ULONG i;
+        for (i = 0; i < WriteInputRequest->NumRecords; ++i)
+        {
+            ConioInputEventToUnicode(InputBuffer->Header.Console, &InputRecord[i]);
+        }
+    }
+
+    /* Now, add the events */
     NumEventsWritten = 0;
-    Status = ConDrvWriteConsoleInput(InputBuffer->Header.Console,
-                                     InputBuffer,
-                                     WriteInputRequest->Unicode,
-                                     WriteInputRequest->AppendToEnd,
-                                     InputRecord,
-                                     WriteInputRequest->NumRecords,
-                                     &NumEventsWritten);
+    Status = ConioAddInputEvents(InputBuffer->Header.Console,
+                                 // InputBuffer,
+                                 InputRecord,
+                                 WriteInputRequest->NumRecords,
+                                 &NumEventsWritten,
+                                 WriteInputRequest->AppendToEnd);
+
+    // Status = ConDrvWriteConsoleInput(InputBuffer->Header.Console,
+                                     // InputBuffer,
+                                     // WriteInputRequest->AppendToEnd,
+                                     // InputRecord,
+                                     // WriteInputRequest->NumRecords,
+                                     // &NumEventsWritten);
+
     WriteInputRequest->NumRecords = NumEventsWritten;
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);

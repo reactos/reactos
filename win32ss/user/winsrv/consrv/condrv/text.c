@@ -233,6 +233,15 @@ ConioMoveRegion(PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
     }
 }
 
+// FIXME!
+NTSTATUS NTAPI
+ConDrvWriteConsoleInput(IN PCONSOLE Console,
+                        IN PCONSOLE_INPUT_BUFFER InputBuffer,
+                        IN BOOLEAN AppendToEnd,
+                        IN PINPUT_RECORD InputRecord,
+                        IN ULONG NumEventsToWrite,
+                        OUT PULONG NumEventsWritten OPTIONAL);
+
 NTSTATUS
 ConioResizeBuffer(PCONSOLE Console,
                   PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
@@ -341,12 +350,19 @@ ConioResizeBuffer(PCONSOLE Console,
      */
     if (Console->InputBuffer.Mode & ENABLE_WINDOW_INPUT)
     {
+        ULONG NumEventsWritten;
         INPUT_RECORD er;
 
         er.EventType = WINDOW_BUFFER_SIZE_EVENT;
         er.Event.WindowBufferSizeEvent.dwSize = ScreenBuffer->ScreenBufferSize;
 
-        ConioProcessInputEvent(Console, &er);
+        // ConioProcessInputEvent(Console, &er);
+        ConDrvWriteConsoleInput(Console,
+                                &Console->InputBuffer,
+                                TRUE,
+                                &er,
+                                1,
+                                &NumEventsWritten);
     }
 
     return STATUS_SUCCESS;

@@ -16,20 +16,6 @@
 
 /* GLOBALS ********************************************************************/
 
-/*
- * From MSDN:
- * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
- *  If they are the same, the function fails, and GetLastError returns
- *  ERROR_INVALID_PARAMETER."
- */
-#define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
-    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
-    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
-
-#define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
-    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
-
 typedef struct ConsoleInput_t
 {
     LIST_ENTRY ListEntry;
@@ -39,34 +25,7 @@ typedef struct ConsoleInput_t
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID
-ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
-{
-    if (InputEvent->EventType == KEY_EVENT)
-    {
-        WCHAR UnicodeChar = InputEvent->Event.KeyEvent.uChar.UnicodeChar;
-        InputEvent->Event.KeyEvent.uChar.UnicodeChar = 0;
-        ConsoleInputUnicodeCharToAnsiChar(Console,
-                                          &InputEvent->Event.KeyEvent.uChar.AsciiChar,
-                                          &UnicodeChar);
-    }
-}
-
-static VOID
-ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
-{
-    if (InputEvent->EventType == KEY_EVENT)
-    {
-        CHAR AsciiChar = InputEvent->Event.KeyEvent.uChar.AsciiChar;
-        InputEvent->Event.KeyEvent.uChar.AsciiChar = 0;
-        ConsoleInputAnsiCharToUnicodeChar(Console,
-                                          &InputEvent->Event.KeyEvent.uChar.UnicodeChar,
-                                          &AsciiChar);
-    }
-}
-
-
-NTSTATUS
+static NTSTATUS
 ConDrvAddInputEvents(PCONSOLE Console,
                      PINPUT_RECORD InputRecords, // InputEvent
                      ULONG NumEventsToWrite,
@@ -218,60 +177,6 @@ Done:
     return Status;
 }
 
-
-ULONG
-PreprocessInput(PCONSOLE Console,
-                PINPUT_RECORD InputEvent,
-                ULONG NumEventsToWrite);
-VOID
-PostprocessInput(PCONSOLE Console);
-
-NTSTATUS
-ConioAddInputEvents(PCONSOLE Console,
-                    PINPUT_RECORD InputRecords, // InputEvent
-                    ULONG NumEventsToWrite,
-                    PULONG NumEventsWritten,
-                    BOOLEAN AppendToEnd)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (NumEventsWritten) *NumEventsWritten = 0;
-
-    /*
-     * This pre-processing code MUST be IN consrv ONLY!!
-     */
-    NumEventsToWrite = PreprocessInput(Console, InputRecords, NumEventsToWrite);
-    if (NumEventsToWrite == 0) return STATUS_SUCCESS;
-
-    Status = ConDrvAddInputEvents(Console,
-                                  InputRecords,
-                                  NumEventsToWrite,
-                                  NumEventsWritten,
-                                  AppendToEnd);
-
-    /*
-     * This post-processing code MUST be IN consrv ONLY!!
-     */
-    // if (NT_SUCCESS(Status))
-    if (Status == STATUS_SUCCESS) PostprocessInput(Console);
-
-    return Status;
-}
-
-/* Move elsewhere...*/
-NTSTATUS
-ConioProcessInputEvent(PCONSOLE Console,
-                       PINPUT_RECORD InputEvent)
-{
-    ULONG NumEventsWritten;
-    return ConioAddInputEvents(Console,
-                               InputEvent,
-                               1,
-                               &NumEventsWritten,
-                               TRUE);
-}
-
-
 VOID
 PurgeInputBuffer(PCONSOLE Console)
 {
@@ -329,7 +234,6 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
                       IN PCONSOLE_INPUT_BUFFER InputBuffer,
                       IN BOOLEAN KeepEvents,
                       IN BOOLEAN WaitForMoreEvents,
-                      IN BOOLEAN Unicode,
                       OUT PINPUT_RECORD InputRecord,
                       IN ULONG NumEventsToRead,
                       OUT PULONG NumEventsRead OPTIONAL)
@@ -379,15 +283,6 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 
     if (NumEventsRead) *NumEventsRead = i;
 
-    /* Now translate everything to ANSI */
-    if (!Unicode)
-    {
-        for (; i > 0; --i)
-        {
-            ConioInputEventToAnsi(InputBuffer->Header.Console, --InputRecord);
-        }
-    }
-
     if (IsListEmpty(&InputBuffer->InputEvents))
     {
         ResetEvent(InputBuffer->ActiveEvent);
@@ -400,15 +295,11 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
 NTSTATUS NTAPI
 ConDrvWriteConsoleInput(IN PCONSOLE Console,
                         IN PCONSOLE_INPUT_BUFFER InputBuffer,
-                        IN BOOLEAN Unicode,
                         IN BOOLEAN AppendToEnd,
                         IN PINPUT_RECORD InputRecord,
                         IN ULONG NumEventsToWrite,
                         OUT PULONG NumEventsWritten OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    ULONG i;
-
     if (Console == NULL || InputBuffer == NULL /* || InputRecord == NULL */)
         return STATUS_INVALID_PARAMETER;
 
@@ -416,26 +307,14 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
     ASSERT(Console == InputBuffer->Header.Console);
     ASSERT((InputRecord != NULL) || (InputRecord == NULL && NumEventsToWrite == 0));
 
-    /* First translate everything to UNICODE */
-    if (!Unicode)
-    {
-        for (i = 0; i < NumEventsToWrite; ++i)
-        {
-            ConioInputEventToUnicode(Console, &InputRecord[i]);
-        }
-    }
-
     /* Now, add the events */
-    // if (NumEventsWritten) *NumEventsWritten = 0;
-    // ConDrvAddInputEvents
-    Status = ConioAddInputEvents(Console,
-                                 InputRecord,
-                                 NumEventsToWrite,
-                                 NumEventsWritten,
-                                 AppendToEnd);
-    // if (NumEventsWritten) *NumEventsWritten = i;
+    if (NumEventsWritten) *NumEventsWritten = 0;
 
-    return Status;
+    return ConDrvAddInputEvents(Console,
+                                InputRecord,
+                                NumEventsToWrite,
+                                NumEventsWritten,
+                                AppendToEnd);
 }
 
 NTSTATUS NTAPI

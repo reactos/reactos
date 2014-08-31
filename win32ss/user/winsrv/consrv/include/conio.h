@@ -326,17 +326,6 @@ NTSTATUS
 ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData);
 
-/* coninput.c */
-NTSTATUS
-ConioAddInputEvents(PCONSOLE Console,
-                    PINPUT_RECORD InputRecords,
-                    ULONG NumEventsToWrite,
-                    PULONG NumEventsWritten,
-                    BOOLEAN AppendToEnd);
-NTSTATUS
-ConioProcessInputEvent(PCONSOLE Console,
-                       PINPUT_RECORD InputEvent);
-
 /* conoutput.c */
 
 /*

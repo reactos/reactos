@@ -193,12 +193,6 @@ DWORD ConioEffectiveCursorSize(PCONSRV_CONSOLE Console,
                                DWORD Scale);
 
 NTSTATUS
-ConioAddInputEvents(PCONSRV_CONSOLE Console,
-                    PINPUT_RECORD InputRecords,
-                    ULONG NumEventsToWrite,
-                    PULONG NumEventsWritten,
-                    BOOLEAN AppendToEnd);
-NTSTATUS
 ConioProcessInputEvent(PCONSRV_CONSOLE Console,
                        PINPUT_RECORD InputEvent);
 
