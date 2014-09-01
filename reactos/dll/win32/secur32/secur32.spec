@@ -68,8 +68,8 @@
 @ stub SecpFreeMemory
 @ stub SecpTranslateName
 @ stub SecpTranslateNameEx
-@ stub SetContextAttributesA
-@ stub SetContextAttributesW
+@ stdcall SetContextAttributesA(ptr long ptr long)
+@ stdcall SetContextAttributesW(ptr long ptr long)
 @ stdcall TranslateNameA(str long long ptr ptr)
 @ stdcall TranslateNameW(wstr long long ptr ptr)
 @ stdcall UnsealMessage(ptr ptr long ptr) DecryptMessage
