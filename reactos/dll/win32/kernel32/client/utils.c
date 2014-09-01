@@ -292,7 +292,7 @@ BaseFormatTimeOut(OUT PLARGE_INTEGER Timeout,
     if (dwMilliseconds == INFINITE) return NULL;
 
     /* Otherwise, convert the time to NT Format */
-    Timeout->QuadPart = UInt32x32To64(dwMilliseconds, -10000);
+    Timeout->QuadPart = dwMilliseconds * -10000LL;
     return Timeout;
 }
 

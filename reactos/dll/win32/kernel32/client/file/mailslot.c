@@ -78,7 +78,7 @@ CreateMailslotW(IN LPCWSTR lpName,
     else
     {
         /* Convert to NT format */
-        DefaultTimeOut.QuadPart = UInt32x32To64(-10000, lReadTimeout);
+        DefaultTimeOut.QuadPart = lReadTimeout * -10000LL;
     }
 
     Status = NtCreateMailslotFile(&MailslotHandle,
@@ -185,7 +185,7 @@ SetMailslotInfo(IN HANDLE hMailslot,
     else
     {
         /* Convert to NT format */
-        Timeout.QuadPart = UInt32x32To64(-10000, lReadTimeout);
+        Timeout.QuadPart = lReadTimeout * -10000LL;
     }
 
     Buffer.ReadTimeout = &Timeout;
