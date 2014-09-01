@@ -35,7 +35,11 @@
 #if defined(SONAME_LIBGNUTLS) && !defined(HAVE_SECURITY_SECURITY_H)
 
 static void *libgnutls_handle;
+#if (_MSC_VER >= 1600)
+#define MAKE_FUNCPTR(f) static decltype(f) p##f
+#else
 #define MAKE_FUNCPTR(f) static typeof(f) * p##f
+#endif
 MAKE_FUNCPTR(gnutls_alert_get);
 MAKE_FUNCPTR(gnutls_alert_get_name);
 MAKE_FUNCPTR(gnutls_certificate_allocate_credentials);
