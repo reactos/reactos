@@ -932,6 +932,7 @@ SECURITY_STATUS SEC_ENTRY schan_InitializeSecurityContextA(
     return ret;
 }
 
+static
 SECURITY_STATUS SEC_ENTRY schan_QueryContextAttributesW(
         PCtxtHandle context_handle, ULONG attribute, PVOID buffer)
 {
@@ -1002,6 +1003,7 @@ SECURITY_STATUS SEC_ENTRY schan_QueryContextAttributesW(
     }
 }
 
+static
 SECURITY_STATUS SEC_ENTRY schan_QueryContextAttributesA(
         PCtxtHandle context_handle, ULONG attribute, PVOID buffer)
 {
@@ -1068,7 +1070,7 @@ static int schan_encrypt_message_get_next_buffer_token(const struct schan_transp
     return -1;
 }
 
-SECURITY_STATUS SEC_ENTRY schan_EncryptMessage(PCtxtHandle context_handle,
+static SECURITY_STATUS SEC_ENTRY schan_EncryptMessage(PCtxtHandle context_handle,
         ULONG quality, PSecBufferDesc message, ULONG message_seq_no)
 {
     struct schan_transport transport;
@@ -1190,7 +1192,7 @@ static void schan_decrypt_fill_buffer(PSecBufferDesc message, ULONG buffer_type,
     buffer->cbBuffer = size;
 }
 
-SECURITY_STATUS SEC_ENTRY schan_DecryptMessage(PCtxtHandle context_handle,
+static SECURITY_STATUS SEC_ENTRY schan_DecryptMessage(PCtxtHandle context_handle,
         PSecBufferDesc message, ULONG message_seq_no, PULONG quality)
 {
     struct schan_transport transport;

@@ -25,6 +25,6 @@ add_library(schannel SHARED
 
 set_module_type(schannel win32dll)
 target_link_libraries(schannel wine)
-add_importlibs(schannel crypt32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(schannel crypt32 secur32 advapi32 msvcrt kernel32 ntdll)
 add_pch(schannel precomp.h SOURCE)
 add_cd_file(TARGET schannel DESTINATION reactos/system32 FOR all)
