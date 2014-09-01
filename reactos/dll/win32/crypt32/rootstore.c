@@ -800,6 +800,18 @@ static HCERTSTORE create_root_store(void)
         read_trusted_roots_from_known_locations(memStore);
         add_ms_root_certs(memStore);
         root = CRYPT_ProvCreateStore(0, memStore, &provInfo);
+#ifdef __REACTOS__
+        {
+            HCERTSTORE regStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"AuthRoot");
+            if (regStore)
+            {
+                HCERTSTORE collStore = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
+                    CERT_STORE_CREATE_NEW_FLAG, NULL);
+                CertAddStoreToCollection(collStore, regStore, 0, 0);
+                root = collStore;
+            }
+        }
+#endif
     }
     TRACE("returning %p\n", root);
     return root;
