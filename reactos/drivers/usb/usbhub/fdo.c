@@ -1291,7 +1291,7 @@ CreateUsbChildDeviceObject(
 
     if (ConfigDesc.bNumInterfaces > 1)
     {
-        DPRINT1("Warning: Device has more that one interface. Only one interface (the first) is currently supported\n");
+        DPRINT1("Warning: Device has more than one interface. Only one interface (the first) is currently supported\n");
     }
 
     ConfigDescSize = ConfigDesc.wTotalLength;
@@ -1328,7 +1328,7 @@ CreateUsbChildDeviceObject(
     //DumpFullConfigurationDescriptor(UsbChildExtension->FullConfigDesc);
 
     //
-    // Construct all the strings that will described the device to PNP
+    // Construct all the strings that will describe the device to PNP
     //
     Status = CreateDeviceIds(NewChildDeviceObject);
     if (!NT_SUCCESS(Status))
