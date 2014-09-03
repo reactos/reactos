@@ -1234,7 +1234,7 @@ LogfBackupFile(PLOGFILE LogFile,
             goto Done;
         }
 
-        if (!ReadFile(LogFile->hFile, &Buffer, dwRecSize, &dwRead, NULL))
+        if (!ReadFile(LogFile->hFile, Buffer, dwRecSize, &dwRead, NULL))
         {
             DPRINT1("ReadFile() failed!\n");
             goto Done;
