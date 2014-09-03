@@ -6,6 +6,7 @@
 #105 stub CDLGetLongPathNameW
 106 stdcall CoGetClassObjectFromURL(ptr wstr long long wstr ptr long ptr ptr ptr)
 #107 stub CoInstall
+@ stdcall CoInternetCombineIUri(ptr ptr long ptr long)
 108 stdcall CoInternetCombineUrl(wstr wstr long ptr long ptr long)
 109 stdcall CoInternetCompareUrl(wstr wstr long)
 110 stdcall CoInternetCreateSecurityManager(ptr ptr long)
