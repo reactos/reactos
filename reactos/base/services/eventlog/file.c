@@ -1252,7 +1252,7 @@ LogfBackupFile(PLOGFILE LogFile,
                              NULL);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("NtWriteFile() failed!\n");
+            DPRINT1("NtWriteFile() failed! (Status: 0x%08lx)\n", Status);
             goto Done;
         }
 
@@ -1311,7 +1311,7 @@ LogfBackupFile(PLOGFILE LogFile,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtWriteFile() failed!\n");
+        DPRINT1("NtWriteFile() failed! (Status: 0x%08lx)\n", Status);
     }
 
 Done:

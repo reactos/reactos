@@ -215,9 +215,9 @@ ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
     if (!ElfGetLogHandleEntryByHandle(lpLogHandle))
         return STATUS_INVALID_HANDLE;
 
+    RemoveEntryList(&lpLogHandle->LogHandleListEntry);
     LogfClose(lpLogHandle->LogFile, FALSE);
 
-    RemoveEntryList(&lpLogHandle->LogHandleListEntry);
     HeapFree(GetProcessHeap(),0,lpLogHandle);
 
     return STATUS_SUCCESS;
@@ -291,7 +291,7 @@ NTSTATUS ElfrNumberOfRecords(
     PLOGHANDLE lpLogHandle;
     PLOGFILE lpLogFile;
 
-    DPRINT("ElfrNumberOfRecords()");
+    DPRINT("ElfrNumberOfRecords()\n");
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
