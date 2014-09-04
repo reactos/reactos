@@ -21,6 +21,14 @@
 int alloc_fd(HANDLE hand, int flag); //FIXME: Remove
 unsigned split_oflags(unsigned oflags); //FIXME: Remove
 
+#ifndef _UNICODE
+static struct popen_handle {
+    FILE *f;
+    HANDLE proc;
+} *popen_handles;
+static DWORD popen_handles_size;
+#endif
+
 /*
  * @implemented
  */
@@ -130,16 +138,40 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
 /*
  * @implemented
  */
-int _pclose (FILE *pp)
+int CDECL _pclose(FILE* file)
 {
-    TRACE("_pclose(%x)",pp);
+    HANDLE h;
+    DWORD i;
 
-    fclose(pp);
-    //if (!TerminateProcess(pp->_tmpfname ,0))
-    //  return( -1 );
-    return( 0 );
+    if (!MSVCRT_CHECK_PMT(file != NULL)) return -1;
+
+    _mlock(_POPEN_LOCK);
+    for(i=0; i<popen_handles_size; i++)
+    {
+        if (popen_handles[i].f == file)
+            break;
+    }
+    if(i == popen_handles_size)
+    {
+        _munlock(_POPEN_LOCK);
+        *_errno() = EBADF;
+        return -1;
+    }
+
+    h = popen_handles[i].proc;
+    popen_handles[i].f = NULL;
+    _munlock(_POPEN_LOCK);
+
+    fclose(file);
+    if(WaitForSingleObject(h, INFINITE)==WAIT_FAILED || !GetExitCodeProcess(h, &i))
+    {
+        _dosmaperr(GetLastError());
+        CloseHandle(h);
+        return -1;
+    }
+
+    CloseHandle(h);
+    return i;
 }
 
 #endif
-
-
