@@ -126,7 +126,7 @@
 #endif
 
 #ifndef UNALIGNED
-#if defined(__ia64__) || defined(__x86_64)
+#if defined(__ia64__) || defined(__x86_64) || defined(__arm__)
 #define UNALIGNED __unaligned
 #else
 #define UNALIGNED

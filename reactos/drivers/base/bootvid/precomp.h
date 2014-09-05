@@ -1,7 +1,7 @@
 #ifndef _BOOTVID_PCH_
 #define _BOOTVID_PCH_
 
-#include <wdm.h>
+#include <ntddk.h>
 #include <drivers/bootvid/bootvid.h>
 
 /* Define if FontData has upside down characters */

@@ -259,56 +259,82 @@ OutputHeader_asmstub(FILE *file, char *libname)
 
     if (giArch == ARCH_X86)
     {
-        fprintf(file, ".586\n.model flat\n");
+        fprintf(file, ".586\n.model flat\n.code\n");
+    }
+    else if (giArch == ARCH_AMD64)
+    {
+        fprintf(file, ".code\n");
     }
     else if (giArch == ARCH_ARM)
     {
-        fprintf(file, "#include <kxarm.h>\n        TEXTAREA\n");
+        fprintf(file,
+                "    AREA |.text|,ALIGN=2,CODE,READONLY\n\n");
     }
+}
 
-    fprintf(file, ".code\n");
+void
+Output_symbol(FILE *fileDest, char* pszSymbolName)
+{
+    if (giArch == ARCH_ARM)
+    {
+        fprintf(fileDest,
+                "	EXPORT %s [FUNC]\n%s\n",
+                pszSymbolName,
+                pszSymbolName);
+    }
+    else
+    {
+        fprintf(fileDest,
+                "PUBLIC %s\n%s: nop\n",
+                pszSymbolName,
+                pszSymbolName);
+    }
 }
 
 int
 OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
 {
+    char szNameBuffer[128];
+
     /* Handle autoname */
     if (pexp->strName.len == 1 && pexp->strName.buf[0] == '@')
     {
-        fprintf(fileDest, "PUBLIC %sordinal%d\n%sordinal%d: nop\n",
+        sprintf(szNameBuffer, "%sordinal%d\n%sordinal%d: nop\n",
                 gpszUnderscore, pexp->nOrdinal, gpszUnderscore, pexp->nOrdinal);
     }
     else if (giArch != ARCH_X86)
     {
-        fprintf(fileDest, "PUBLIC _stub_%.*s\n_stub_%.*s: nop\n",
+        sprintf(szNameBuffer, "_stub_%.*s",
                 pexp->strName.len, pexp->strName.buf,
                 pexp->strName.len, pexp->strName.buf);
     }
     else if (pexp->nCallingConvention == CC_STDCALL)
     {
-        fprintf(fileDest, "PUBLIC __stub_%.*s@%d\n__stub_%.*s@%d: nop\n",
+        sprintf(szNameBuffer, "__stub_%.*s@%d",
                 pexp->strName.len, pexp->strName.buf, pexp->nStackBytes,
                 pexp->strName.len, pexp->strName.buf, pexp->nStackBytes);
     }
     else if (pexp->nCallingConvention == CC_FASTCALL)
     {
-        fprintf(fileDest, "PUBLIC @_stub_%.*s@%d\n@_stub_%.*s@%d: nop\n",
+        sprintf(szNameBuffer, "@_stub_%.*s@%d",
                 pexp->strName.len, pexp->strName.buf, pexp->nStackBytes,
                 pexp->strName.len, pexp->strName.buf, pexp->nStackBytes);
     }
     else if (pexp->nCallingConvention == CC_CDECL ||
              pexp->nCallingConvention == CC_STUB)
     {
-        fprintf(fileDest, "PUBLIC __stub_%.*s\n__stub_%.*s: nop\n",
+        sprintf(szNameBuffer, "__stub_%.*s",
                 pexp->strName.len, pexp->strName.buf,
                 pexp->strName.len, pexp->strName.buf);
     }
     else if (pexp->nCallingConvention == CC_EXTERN)
     {
-        fprintf(fileDest, "PUBLIC __stub_%.*s\n__stub_%.*s:\n",
+        sprintf(szNameBuffer, "__stub_%.*s",
                 pexp->strName.len, pexp->strName.buf,
                 pexp->strName.len, pexp->strName.buf);
     }
+
+    Output_symbol(fileDest, szNameBuffer);
 
     return 1;
 }
@@ -1038,7 +1064,7 @@ int main(int argc, char *argv[])
 
         OutputHeader_asmstub(file, pszDllName);
         result = ParseFile(pszSource, file, OutputLine_asmstub);
-        fprintf(file, "\nEND\n");
+        fprintf(file, "\n    END\n");
         fclose(file);
     }
 
