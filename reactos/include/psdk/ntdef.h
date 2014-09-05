@@ -84,6 +84,30 @@ extern "C" {
 #endif
 #endif /* NULL */
 
+#define ARGUMENT_PRESENT(ArgumentPointer) \
+  ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
+
+#if defined(_MANAGED)
+ #define FASTCALL __stdcall
+#elif defined(_M_IX86)
+ #define FASTCALL __fastcall
+#else
+ #define FASTCALL
+#endif /* _MANAGED */
+
+/* min/max helper macros */
+#ifndef NOMINMAX
+# ifndef min
+#  define min(a,b) (((a) < (b)) ? (a) : (b))
+# endif
+# ifndef max
+#  define max(a,b) (((a) > (b)) ? (a) : (b))
+# endif
+#endif /* NOMINMAX */
+
+/* Tell windef.h that we have defined some basic types */
+#define BASETYPES
+
 /* Defines the "size" of an any-size array */
 #ifndef ANYSIZE_ARRAY
 #define ANYSIZE_ARRAY 1
@@ -96,7 +120,7 @@ extern "C" {
  #else
   #define __GNU_EXTENSION
  #endif
-#endif
+#endif /* __GNU_EXTENSION */
 
 #ifndef DUMMYUNIONNAME
  #if defined(NONAMELESSUNION)// || !defined(_MSC_EXTENSIONS)
@@ -183,9 +207,6 @@ extern "C" {
  #define RESTRICTED_POINTER
 #endif
 
-#define ARGUMENT_PRESENT(ArgumentPointer) \
-  ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
-
 /* Returns the base address of a structure from a structure member */
 #ifndef CONTAINING_RECORD
  #define CONTAINING_RECORD(address, type, field) \
@@ -197,14 +218,14 @@ extern "C" {
  #define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
 #else
  #define FIELD_OFFSET(Type, Field) ((LONG)__builtin_offsetof(Type, Field))
-#endif
+#endif /* __GNUC__ */
 
 /* Returns the type's alignment */
 #if defined(_MSC_VER)
  #define TYPE_ALIGNMENT(t) __alignof(t)
 #else
  #define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
-#endif
+#endif /* _MSC_VER */
 
 #if defined(_AMD64_) || defined(_X86_)
  #define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(ULONG)
@@ -216,22 +237,13 @@ extern "C" {
 
 #if defined(_WIN64)
  #define PROBE_ALIGNMENT32(_s) TYPE_ALIGNMENT(ULONG)
-#endif
+#endif /* _WIN64 */
 
 #ifdef __cplusplus
  #define EXTERN_C extern "C"
 #else
  #define EXTERN_C extern
-#endif
-
-/* Calling Conventions */
-#if defined(_MANAGED)
- #define FASTCALL __stdcall
-#elif defined(_M_IX86)
- #define FASTCALL __fastcall
-#else
- #define FASTCALL
-#endif
+#endif /* __cplusplus */
 
 #define NTAPI __stdcall
 
@@ -262,7 +274,7 @@ extern "C" {
 /* Import and Export Specifiers */
 
 /* Done the same way as in windef.h for now */
-#define DECLSPEC_IMPORT __declspec(dllimport)
+#define DECLSPEC_IMPORT __declspec(dllimport) // MIDL?
 #define DECLSPEC_NORETURN __declspec(noreturn)
 
 #ifndef DECLSPEC_ADDRSAFE
@@ -279,7 +291,7 @@ extern "C" {
  #else
   #define DECLSPEC_NOTHROW
  #endif
-#endif
+#endif /* DECLSPEC_NOTHROW */
 
 #ifndef NOP_FUNCTION
  #if defined(_MSC_VER)
@@ -287,7 +299,7 @@ extern "C" {
  #else
   #define NOP_FUNCTION (void)0
  #endif
-#endif
+#endif /* NOP_FUNCTION */
 
 #if !defined(_NTSYSTEM_)
  #define NTSYSAPI     DECLSPEC_IMPORT
@@ -299,7 +311,7 @@ extern "C" {
  #else
   #define NTSYSCALLAPI DECLSPEC_ADDRSAFE
  #endif
-#endif
+#endif /* _NTSYSTEM_ */
 
 /* Inlines */
 #ifndef FORCEINLINE
@@ -342,7 +354,7 @@ extern "C" {
  #if defined(_MSC_VER) && !defined(MIDL_PASS)
   #define DECLSPEC_ALIGN(x) __declspec(align(x))
  #elif defined(__GNUC__)
-  #define DECLSPEC_ALIGN(x) __attribute__ ((__aligned__(x)))
+  #define DECLSPEC_ALIGN(x) __attribute__((aligned(x)))
  #else
   #define DECLSPEC_ALIGN(x)
  #endif
@@ -415,19 +427,6 @@ extern "C" {
 #define DBG_UNREFERENCED_PARAMETER(P) {(P)=(P);}
 #define DBG_UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 
-/* min/max helper macros */
-#ifndef NOMINMAX
-# ifndef min
-#  define min(a,b) (((a) < (b)) ? (a) : (b))
-# endif
-# ifndef max
-#  define max(a,b) (((a) > (b)) ? (a) : (b))
-# endif
-#endif /* NOMINMAX */
-
-/* Tell windef.h that we have defined some basic types */
-#define BASETYPES
-
 /* Void Pointers */
 typedef void *PVOID;
 typedef void * POINTER_64 PVOID64;
@@ -457,9 +456,6 @@ typedef void *HANDLE, **PHANDLE;;
  #endif /* !MIDL_PASS */
 #endif /* VOID */
 
-/* Avoid redefinition in windef.h */
-#define BASETYPES
-
 /* Unsigned Types */
 typedef unsigned char UCHAR, *PUCHAR;
 typedef unsigned short USHORT, *PUSHORT;
@@ -488,7 +484,7 @@ typedef signed char SCHAR, *PSCHAR;
 #ifndef _HRESULT_DEFINED
  #define _HRESULT_DEFINED
  typedef _Return_type_success_(return >= 0) LONG HRESULT;
-#endif
+#endif /* _HRESULT_DEFINED */
 
 /* 64-bit types */
 #define _ULONGLONG_
@@ -623,22 +619,12 @@ typedef struct  _OBJECTID {
     GUID Lineage;
     ULONG Uniquifier;
 } OBJECTID;
-#endif
+#endif /* __OBJECTID_DEFINED */
 
 #ifdef _MSC_VER
  #pragma warning(push)
-#pragma warning(disable:4201)
+ #pragma warning(disable:4201) // nameless struct / union
 #endif
-
-/* Used to store a non-float 8 byte aligned structure */
-typedef struct _QUAD
-{
-    _ANONYMOUS_UNION union
-    {
-        __GNU_EXTENSION __int64 UseThisFieldToCopy;
-        double DoNotUseThisField;
-    } DUMMYUNIONNAME;
-} QUAD, *PQUAD, UQUAD, *PUQUAD;
 
 typedef struct
 #if defined(_M_IA64)
@@ -691,9 +677,6 @@ typedef union _ULARGE_INTEGER {
 #pragma warning(pop) /* disable:4201 */
 #endif
 
-/* Physical Addresses are always treated as 64-bit wide */
-typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
-
 /* Locally Unique Identifier */
 typedef struct _LUID
 {
@@ -713,179 +696,10 @@ typedef struct _LUID
 #define NT_WARNING(Status)              ((((ULONG)(Status)) >> 30) == 2)
 #define NT_ERROR(Status)                ((((ULONG)(Status)) >> 30) == 3)
 
-/* String Types */
-typedef struct _STRING {
-  USHORT Length;
-  USHORT MaximumLength;
-#ifdef MIDL_PASS
-  [size_is(MaximumLength), length_is(Length) ]
-#endif
-  _Field_size_bytes_part_opt_(MaximumLength, Length) PCHAR Buffer;
-} STRING, *PSTRING,
-  ANSI_STRING, *PANSI_STRING,
-  OEM_STRING, *POEM_STRING;
-
-typedef CONST STRING* PCOEM_STRING;
-typedef STRING CANSI_STRING;
-typedef PSTRING PCANSI_STRING;
-
-typedef struct _STRING32 {
-  USHORT   Length;
-  USHORT   MaximumLength;
-  ULONG  Buffer;
-} STRING32, *PSTRING32,
-  UNICODE_STRING32, *PUNICODE_STRING32,
-  ANSI_STRING32, *PANSI_STRING32;
-
-typedef struct _STRING64 {
-  USHORT   Length;
-  USHORT   MaximumLength;
-  ULONGLONG  Buffer;
-} STRING64, *PSTRING64,
-  UNICODE_STRING64, *PUNICODE_STRING64,
-  ANSI_STRING64, *PANSI_STRING64;
-
-typedef struct _CSTRING {
-  USHORT Length;
-  USHORT MaximumLength;
-  CONST CHAR *Buffer;
-} CSTRING, *PCSTRING;
-
-typedef struct _UNICODE_STRING {
-  USHORT Length;
-  USHORT MaximumLength;
-#ifdef MIDL_PASS
-  [size_is(MaximumLength / 2), length_is((Length) / 2)] PUSHORT Buffer;
-#else
-  _Field_size_bytes_part_(MaximumLength, Length) PWCH Buffer;
-#endif
-} UNICODE_STRING, *PUNICODE_STRING;
-typedef const UNICODE_STRING* PCUNICODE_STRING;
-
-typedef USHORT RTL_STRING_LENGTH_TYPE;
-
-#ifdef __cplusplus
-extern "C++" template<typename _Type> struct _RTL_remove_const_template;
-extern "C++" template<typename _Type> struct _RTL_remove_const_template<const _Type&> { typedef _Type type; };
-#define _RTL_CONSTANT_STRING_remove_const_macro(s) \
-    (const_cast<_RTL_remove_const_template<decltype((s)[0])>::type*>(s))
-extern "C++" template<class _Ty> struct _RTL_CONSTANT_STRING_type_check_template;
-extern "C++" template<class _Ty, int _Count>	struct _RTL_CONSTANT_STRING_type_check_template<const _Ty (&)[_Count]> { typedef char type; };
-#define _RTL_CONSTANT_STRING_type_check(s) _RTL_CONSTANT_STRING_type_check_template<decltype(s)>::type
-#else
-# define _RTL_CONSTANT_STRING_remove_const_macro(s) (s)
-char _RTL_CONSTANT_STRING_type_check(const void *s);
-#endif
-#define RTL_CONSTANT_STRING(s) { \
-    sizeof(s)-sizeof((s)[0]), \
-    sizeof(s) / sizeof(_RTL_CONSTANT_STRING_type_check(s)), \
-    _RTL_CONSTANT_STRING_remove_const_macro(s) }
-
-#define DECLARE_UNICODE_STRING_SIZE(_var, _size) \
-  WCHAR _var ## _buffer[_size]; \
-  __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
-  UNICODE_STRING _var = { 0, (_size) * sizeof(WCHAR) , _var ## _buffer } \
-  __pragma(warning(pop))
-
-#define DECLARE_CONST_UNICODE_STRING(_var, _string) \
-  const WCHAR _var##_buffer[] = _string; \
-  __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
-  const UNICODE_STRING _var = { sizeof(_string) - sizeof(WCHAR), sizeof(_string), (PWCH)_var##_buffer } \
-  __pragma(warning(pop))
-
-#define DECLARE_GLOBAL_CONST_UNICODE_STRING(_var, _str) \
-  extern const __declspec(selectany) UNICODE_STRING _var = RTL_CONSTANT_STRING(_str)
-
 #define ANSI_NULL ((CHAR)0)
 #define UNICODE_NULL ((WCHAR)0)
 #define UNICODE_STRING_MAX_BYTES ((USHORT) 65534)
 #define UNICODE_STRING_MAX_CHARS (32767)
-
-/* Object Attributes */
-typedef struct _OBJECT_ATTRIBUTES {
-  ULONG Length;
-  HANDLE RootDirectory;
-  PUNICODE_STRING ObjectName;
-  ULONG Attributes;
-  PVOID SecurityDescriptor;
-  PVOID SecurityQualityOfService;
-} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
-typedef CONST OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;
-
-typedef struct _OBJECT_ATTRIBUTES32 {
-  ULONG Length;
-  ULONG RootDirectory;
-  ULONG ObjectName;
-  ULONG Attributes;
-  ULONG SecurityDescriptor;
-  ULONG SecurityQualityOfService;
-} OBJECT_ATTRIBUTES32, *POBJECT_ATTRIBUTES32;
-typedef CONST OBJECT_ATTRIBUTES32 *PCOBJECT_ATTRIBUTES32;
-
-typedef struct _OBJECT_ATTRIBUTES64 {
-  ULONG Length;
-  ULONG64 RootDirectory;
-  ULONG64 ObjectName;
-  ULONG Attributes;
-  ULONG64 SecurityDescriptor;
-  ULONG64 SecurityQualityOfService;
-} OBJECT_ATTRIBUTES64, *POBJECT_ATTRIBUTES64;
-typedef CONST OBJECT_ATTRIBUTES64 *PCOBJECT_ATTRIBUTES64;
-
-/* Values for the Attributes member */
-#define OBJ_INHERIT             0x00000002L
-#define OBJ_PERMANENT           0x00000010L
-#define OBJ_EXCLUSIVE           0x00000020L
-#define OBJ_CASE_INSENSITIVE    0x00000040L
-#define OBJ_OPENIF              0x00000080L
-#define OBJ_OPENLINK            0x00000100L
-#define OBJ_KERNEL_HANDLE       0x00000200L
-#define OBJ_FORCE_ACCESS_CHECK  0x00000400L
-#define OBJ_VALID_ATTRIBUTES    0x000007F2L
-
-/* Helper Macro */
-#define InitializeObjectAttributes(p,n,a,r,s) { \
-  (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
-  (p)->RootDirectory = (r); \
-  (p)->ObjectName = (n); \
-  (p)->Attributes = (a); \
-  (p)->SecurityDescriptor = (s); \
-  (p)->SecurityQualityOfService = NULL; \
-}
-
-#define RTL_CONSTANT_OBJECT_ATTRIBUTES(n,a) { \
-  sizeof(OBJECT_ATTRIBUTES), \
-  NULL, \
-  RTL_CONST_CAST(PUNICODE_STRING)(n), \
-  a, \
-  NULL, \
-  NULL  \
-}
-
-#define RTL_INIT_OBJECT_ATTRIBUTES(n, a) \
-    RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
-
-/* Product Types */
-typedef enum _NT_PRODUCT_TYPE {
-  NtProductWinNt = 1,
-  NtProductLanManNt,
-  NtProductServer
-} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
-
-typedef enum _EVENT_TYPE {
-  NotificationEvent,
-  SynchronizationEvent
-} EVENT_TYPE;
-
-typedef enum _TIMER_TYPE {
-  NotificationTimer,
-  SynchronizationTimer
-} TIMER_TYPE;
-
-typedef enum _WAIT_TYPE {
-  WaitAll,
-  WaitAny
-} WAIT_TYPE;
 
 /* Doubly Linked Lists */
 typedef struct _LIST_ENTRY {
@@ -920,9 +734,9 @@ typedef struct _PROCESSOR_NUMBER {
 
 #define ALL_PROCESSOR_GROUPS 0xffff
 
+typedef
 _IRQL_requires_same_
 _Function_class_(EXCEPTION_ROUTINE)
-typedef
 EXCEPTION_DISPOSITION
 NTAPI
 EXCEPTION_ROUTINE(
@@ -1058,6 +872,7 @@ typedef struct _GROUP_AFFINITY {
 #define VER_SUITE_COMPUTE_SERVER            0x00004000
 #define VER_SUITE_WH_SERVER                 0x00008000
 
+/* Product types */
 #define PRODUCT_UNDEFINED                           0x00000000
 #define PRODUCT_ULTIMATE                            0x00000001
 #define PRODUCT_HOME_BASIC                          0x00000002
@@ -1585,6 +1400,188 @@ typedef struct _GROUP_AFFINITY {
 #define LOCALE_CUSTOM_UI_DEFAULT  MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_UI_CUSTOM_DEFAULT), SORT_DEFAULT)
 #define LOCALE_NEUTRAL            MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT)
 #define LOCALE_INVARIANT          MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
+
+/* Physical Addresses are always treated as 64-bit wide */
+typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
+
+/* Used to store a non-float 8 byte aligned structure */
+typedef struct _QUAD
+{
+    _ANONYMOUS_UNION union
+    {
+        __GNU_EXTENSION __int64 UseThisFieldToCopy;
+        double DoNotUseThisField;
+    } DUMMYUNIONNAME;
+} QUAD, *PQUAD, UQUAD, *PUQUAD;
+
+/* String Types */
+typedef struct _STRING {
+  USHORT Length;
+  USHORT MaximumLength;
+#ifdef MIDL_PASS
+  [size_is(MaximumLength), length_is(Length) ]
+#endif
+  _Field_size_bytes_part_opt_(MaximumLength, Length) PCHAR Buffer;
+} STRING, *PSTRING,
+  ANSI_STRING, *PANSI_STRING,
+  OEM_STRING, *POEM_STRING;
+
+typedef CONST STRING* PCOEM_STRING;
+typedef STRING CANSI_STRING;
+typedef PSTRING PCANSI_STRING;
+
+typedef struct _STRING32 {
+  USHORT   Length;
+  USHORT   MaximumLength;
+  ULONG  Buffer;
+} STRING32, *PSTRING32,
+  UNICODE_STRING32, *PUNICODE_STRING32,
+  ANSI_STRING32, *PANSI_STRING32;
+
+typedef struct _STRING64 {
+  USHORT   Length;
+  USHORT   MaximumLength;
+  ULONGLONG  Buffer;
+} STRING64, *PSTRING64,
+  UNICODE_STRING64, *PUNICODE_STRING64,
+  ANSI_STRING64, *PANSI_STRING64;
+
+typedef struct _CSTRING {
+  USHORT Length;
+  USHORT MaximumLength;
+  CONST CHAR *Buffer;
+} CSTRING, *PCSTRING;
+
+typedef struct _UNICODE_STRING {
+  USHORT Length;
+  USHORT MaximumLength;
+#ifdef MIDL_PASS
+  [size_is(MaximumLength / 2), length_is((Length) / 2)] PUSHORT Buffer;
+#else
+  _Field_size_bytes_part_(MaximumLength, Length) PWCH Buffer;
+#endif
+} UNICODE_STRING, *PUNICODE_STRING;
+typedef const UNICODE_STRING* PCUNICODE_STRING;
+
+typedef USHORT RTL_STRING_LENGTH_TYPE;
+
+#ifdef __cplusplus
+extern "C++" template<typename _Type> struct _RTL_remove_const_template;
+extern "C++" template<typename _Type> struct _RTL_remove_const_template<const _Type&> { typedef _Type type; };
+#define _RTL_CONSTANT_STRING_remove_const_macro(s) \
+    (const_cast<_RTL_remove_const_template<decltype((s)[0])>::type*>(s))
+extern "C++" template<class _Ty> struct _RTL_CONSTANT_STRING_type_check_template;
+extern "C++" template<class _Ty, int _Count>	struct _RTL_CONSTANT_STRING_type_check_template<const _Ty (&)[_Count]> { typedef char type; };
+#define _RTL_CONSTANT_STRING_type_check(s) _RTL_CONSTANT_STRING_type_check_template<decltype(s)>::type
+#else
+# define _RTL_CONSTANT_STRING_remove_const_macro(s) (s)
+char _RTL_CONSTANT_STRING_type_check(const void *s);
+#endif
+#define RTL_CONSTANT_STRING(s) { \
+    sizeof(s)-sizeof((s)[0]), \
+    sizeof(s) / sizeof(_RTL_CONSTANT_STRING_type_check(s)), \
+    _RTL_CONSTANT_STRING_remove_const_macro(s) }
+
+#define DECLARE_UNICODE_STRING_SIZE(_var, _size) \
+  WCHAR _var ## _buffer[_size]; \
+  __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
+  UNICODE_STRING _var = { 0, (_size) * sizeof(WCHAR) , _var ## _buffer } \
+  __pragma(warning(pop))
+
+#define DECLARE_CONST_UNICODE_STRING(_var, _string) \
+  const WCHAR _var##_buffer[] = _string; \
+  __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
+  const UNICODE_STRING _var = { sizeof(_string) - sizeof(WCHAR), sizeof(_string), (PWCH)_var##_buffer } \
+  __pragma(warning(pop))
+
+#define DECLARE_GLOBAL_CONST_UNICODE_STRING(_var, _str) \
+  extern const __declspec(selectany) UNICODE_STRING _var = RTL_CONSTANT_STRING(_str)
+
+/* Object Attributes */
+typedef struct _OBJECT_ATTRIBUTES {
+  ULONG Length;
+  HANDLE RootDirectory;
+  PUNICODE_STRING ObjectName;
+  ULONG Attributes;
+  PVOID SecurityDescriptor;
+  PVOID SecurityQualityOfService;
+} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+typedef CONST OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;
+
+typedef struct _OBJECT_ATTRIBUTES32 {
+  ULONG Length;
+  ULONG RootDirectory;
+  ULONG ObjectName;
+  ULONG Attributes;
+  ULONG SecurityDescriptor;
+  ULONG SecurityQualityOfService;
+} OBJECT_ATTRIBUTES32, *POBJECT_ATTRIBUTES32;
+typedef CONST OBJECT_ATTRIBUTES32 *PCOBJECT_ATTRIBUTES32;
+
+typedef struct _OBJECT_ATTRIBUTES64 {
+  ULONG Length;
+  ULONG64 RootDirectory;
+  ULONG64 ObjectName;
+  ULONG Attributes;
+  ULONG64 SecurityDescriptor;
+  ULONG64 SecurityQualityOfService;
+} OBJECT_ATTRIBUTES64, *POBJECT_ATTRIBUTES64;
+typedef CONST OBJECT_ATTRIBUTES64 *PCOBJECT_ATTRIBUTES64;
+
+/* Values for the Attributes member */
+#define OBJ_INHERIT             0x00000002L
+#define OBJ_PERMANENT           0x00000010L
+#define OBJ_EXCLUSIVE           0x00000020L
+#define OBJ_CASE_INSENSITIVE    0x00000040L
+#define OBJ_OPENIF              0x00000080L
+#define OBJ_OPENLINK            0x00000100L
+#define OBJ_KERNEL_HANDLE       0x00000200L
+#define OBJ_FORCE_ACCESS_CHECK  0x00000400L
+#define OBJ_VALID_ATTRIBUTES    0x000007F2L
+
+/* Helper Macro */
+#define InitializeObjectAttributes(p,n,a,r,s) { \
+  (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
+  (p)->RootDirectory = (r); \
+  (p)->ObjectName = (n); \
+  (p)->Attributes = (a); \
+  (p)->SecurityDescriptor = (s); \
+  (p)->SecurityQualityOfService = NULL; \
+}
+
+#define RTL_CONSTANT_OBJECT_ATTRIBUTES(n,a) { \
+  sizeof(OBJECT_ATTRIBUTES), \
+  NULL, \
+  RTL_CONST_CAST(PUNICODE_STRING)(n), \
+  a, \
+  NULL, \
+  NULL  \
+}
+
+#define RTL_INIT_OBJECT_ATTRIBUTES(n, a) \
+    RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
+
+/* Product Types */
+typedef enum _NT_PRODUCT_TYPE {
+  NtProductWinNt = 1,
+  NtProductLanManNt,
+  NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
+
+typedef enum _EVENT_TYPE {
+  NotificationEvent,
+  SynchronizationEvent
+} EVENT_TYPE;
+
+typedef enum _TIMER_TYPE {
+  NotificationTimer,
+  SynchronizationTimer
+} TIMER_TYPE;
+
+typedef enum _WAIT_TYPE {
+  WaitAll,
+  WaitAny
+} WAIT_TYPE;
 
 #ifdef __cplusplus
 } // extern "C"
