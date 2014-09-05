@@ -2567,7 +2567,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                   AccessMode,
                                   NULL,
                                   Handle);
-        if (!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status2))
         {
             ObDereferenceObject(Object);
             Status = Status2;
