@@ -1192,7 +1192,6 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                     // if (SUCCEEDED(hRes)) ConsoleStartInfo->HotKey = HotKey;
 
                     /* Get the icon location, if any */
-
                     hRes = IShellLinkW_GetIconLocation(pshl,
                                                        ConsoleStartInfo->IconPath,
                                                        sizeof(ConsoleStartInfo->IconPath)/sizeof(ConsoleStartInfo->IconPath[0]) - 1, // == MAX_PATH

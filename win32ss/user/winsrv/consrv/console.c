@@ -26,8 +26,9 @@ NTSTATUS NTAPI RtlGetLastNtStatus(VOID);
 
 /* GLOBALS ********************************************************************/
 
+/* The list of the ConSrv consoles */
 static ULONG ConsoleListSize;
-static PCONSRV_CONSOLE* ConsoleList;   /* The list of the ConSrv consoles */
+static PCONSRV_CONSOLE* ConsoleList;
 static RTL_RESOURCE ListLock;
 
 #define ConSrvLockConsoleListExclusive()    \
@@ -156,9 +157,8 @@ RemoveConsoleByPointer(IN PCONSRV_CONSOLE Console)
         }
     }
 
-    /* Unlock the console list */
+    /* Unlock the console list and return */
     ConSrvUnlockConsoleList();
-
     return STATUS_SUCCESS;
 }
 
@@ -188,9 +188,8 @@ ConSrvValidateConsole(OUT PCONSRV_CONSOLE* Console,
     if (Index >= ConsoleListSize ||
         (ValidatedConsole = ConsoleList[Index]) == NULL)
     {
-        /* Unlock the console list */
+        /* Unlock the console list and return */
         ConSrvUnlockConsoleList();
-
         return FALSE;
     }
 
@@ -199,7 +198,7 @@ ConSrvValidateConsole(OUT PCONSRV_CONSOLE* Console,
     /* Unlock the console list and return */
     ConSrvUnlockConsoleList();
 
-    RetVal = ConDrvValidateConsoleUnsafe(ValidatedConsole,
+    RetVal = ConDrvValidateConsoleUnsafe((PCONSOLE)ValidatedConsole,
                                          ExpectedState,
                                          LockConsole);
     if (RetVal) *Console = ValidatedConsole;
@@ -214,7 +213,7 @@ VOID
 ConioPause(PCONSRV_CONSOLE Console, UINT Flags)
 {
     Console->PauseFlags |= Flags;
-    ConDrvPause(Console);
+    ConDrvPause((PCONSOLE)Console);
 }
 
 VOID
@@ -225,7 +224,7 @@ ConioUnpause(PCONSRV_CONSOLE Console, UINT Flags)
     // if ((Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION)) == 0)
     if (Console->PauseFlags == 0)
     {
-        ConDrvUnpause(Console);
+        ConDrvUnpause((PCONSOLE)Console);
 
         CsrNotifyWait(&Console->WriteWaitQueue,
                       TRUE,
@@ -443,7 +442,10 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     /* Colour table */
     memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
 
-    /* Attach the ConSrv terminal to the console */
+    /*
+     * Attach the ConSrv terminal to the console.
+     * This call makes a copy of our local Terminal variable.
+     */
     Status = ConDrvRegisterTerminal(Console, &Terminal);
     if (!NT_SUCCESS(Status))
     {
@@ -481,7 +483,11 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
     HistoryDeleteBuffers(Console);
 
     /* Now, call the driver. ConDrvDeregisterTerminal is called on-demand. */
-    ConDrvDeleteConsole(Console);
+    ConDrvDeleteConsole((PCONSOLE)Console);
+
+    /* Deinit the ConSrv terminal */
+    // FIXME!!
+    // ConSrvDeinitTerminal(&Terminal); // &ConSrvConsole->Console->TermIFace
 }
 
 
@@ -593,7 +599,7 @@ ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
     PCONSOLE_PROCESS_DATA current;
 
     /* If the console is already being destroyed, just return */
-    if (!ConDrvValidateConsoleState(Console, CONSOLE_RUNNING))
+    if (!ConDrvValidateConsoleState((PCONSOLE)Console, CONSOLE_RUNNING))
         return STATUS_UNSUCCESSFUL;
 
     /*
@@ -789,7 +795,7 @@ CSR_API(SrvGetConsoleMode)
         {
             if (Object->Console->InsertMode || Object->Console->QuickEdit)
             {
-                /* Windows does this, even if it is not documented on MSDN */
+                /* Windows also adds ENABLE_EXTENDED_FLAGS, even if it's not documented on MSDN */
                 *ConsoleMode |= ENABLE_EXTENDED_FLAGS;
 
                 if (Object->Console->InsertMode) *ConsoleMode |= ENABLE_INSERT_MODE;
@@ -924,6 +930,7 @@ CSR_API(SrvSetConsoleTitle)
                                    TitleRequest->Unicode,
                                    TitleRequest->Title,
                                    TitleRequest->Length);
+    // FIXME: Keep this call here, or put it in ConDrvSetConsoleTitle ??
     if (NT_SUCCESS(Status)) TermChangeTitle(Console);
 
     ConSrvReleaseConsole(Console, TRUE);

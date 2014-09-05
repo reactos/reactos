@@ -296,7 +296,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         pSharedInfo->ci.HistoryNoDup = Console->HistoryNoDup;
         pSharedInfo->ci.QuickEdit = Console->QuickEdit;
         pSharedInfo->ci.InsertMode = Console->InsertMode;
-        pSharedInfo->ci.InputBufferSize = 0;
+        /////////////pSharedInfo->ci.InputBufferSize = 0;
         pSharedInfo->ci.ScreenBufferSize = ActiveBuffer->ScreenBufferSize;
         pSharedInfo->ci.ConsoleSize = ActiveBuffer->ViewSize;
         pSharedInfo->ci.CursorBlinkOn;
@@ -643,7 +643,6 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
                Console->OriginalTitle.Length / sizeof(WCHAR));
         wcsncpy(pSharedInfo->ci.ConsoleTitle, Console->OriginalTitle.Buffer, Length);
 #endif
-        // ULONG   ConInfo.InputBufferSize = pConInfo->
         // BOOLEAN ConInfo.CursorBlinkOn = pConInfo->
         // BOOLEAN ConInfo.ForceCursorOff = pConInfo->
 
