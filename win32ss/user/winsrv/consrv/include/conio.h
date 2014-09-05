@@ -191,7 +191,7 @@ typedef struct _CONSOLE_INPUT_BUFFER
 {
     CONSOLE_IO_OBJECT Header;       /* Object header - MUST BE IN FIRST PLACE */
 
-    ULONG       InputBufferSize;    /* Size of this input buffer */
+    ULONG       InputBufferSize;    /* Size of this input buffer -- UNUSED!! */
     LIST_ENTRY  InputEvents;        /* List head for input event queue */
     HANDLE      ActiveEvent;        /* Event set when an input event is added in its queue */
 
@@ -343,6 +343,11 @@ ConDrvUnpause(PCONSOLE Console);
 NTSTATUS
 ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData);
+
+
+#define GetConsoleInputBufferMode(Console)  \
+    (Console)->InputBuffer.Mode
+
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);

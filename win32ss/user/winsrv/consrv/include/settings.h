@@ -62,6 +62,9 @@ typedef struct _CONSOLE_INFO
 
 /*
  * Structure used to communicate with console.dll
+ *
+ * FIXME: It should overlap with the Windows' CONSOLE_STATE_INFO structure
+ * for GUI terminals!!
  */
 typedef struct _CONSOLE_PROPS
 {

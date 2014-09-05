@@ -96,7 +96,7 @@ ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
                  * even of the last buffer, but having to deal with a lack of
                  * any active buffer might be error-prone. */
                 if (Buffer->ListEntry.Flink != Buffer->ListEntry.Blink)
-                    ConioDeleteScreenBuffer(Buffer);
+                    ConDrvDeleteScreenBuffer(Buffer);
             }
             else if (Object->Type == INPUT_BUFFER)
             {

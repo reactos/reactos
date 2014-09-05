@@ -404,7 +404,7 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
 
     ConsoleInfo->QuickEdit  = FALSE;
     ConsoleInfo->InsertMode = TRUE;
-    // ConsoleInfo->InputBufferSize;
+    // ConsoleInfo->InputBufferSize = 0;
 
     // Rule: ScreenBufferSize >= ConsoleSize
     ConsoleInfo->ScreenBufferSize.X = 80;
