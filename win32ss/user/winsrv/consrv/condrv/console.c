@@ -190,7 +190,6 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
                   IN PCONSOLE_INFO ConsoleInfo)
 {
     NTSTATUS Status;
-    SECURITY_ATTRIBUTES SecurityAttributes;
     // CONSOLE_INFO CapturedConsoleInfo;
     TEXTMODE_BUFFER_INFO ScreenBufferInfo;
     PCONSOLE Console;
@@ -236,26 +235,15 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->ConsoleSize = ConsoleInfo->ConsoleSize;
     Console->FixedSize   = FALSE; // Value by default; is reseted by the terminals if needed.
 
-    /*
-     * Initialize the input buffer
-     */
-    ConSrvInitObject(&Console->InputBuffer.Header, INPUT_BUFFER, Console);
-
-    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-    SecurityAttributes.lpSecurityDescriptor = NULL;
-    SecurityAttributes.bInheritHandle = TRUE;
-    Console->InputBuffer.ActiveEvent = CreateEventW(&SecurityAttributes, TRUE, FALSE, NULL);
-    if (NULL == Console->InputBuffer.ActiveEvent)
+    /* Initialize the input buffer */
+    Status = ConDrvInitInputBuffer(Console, 0 /* ConsoleInfo->InputBufferSize */);
+    if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ConDrvInitInputBuffer: failed, Status = 0x%08lx\n", Status);
         DeleteCriticalSection(&Console->Lock);
         ConsoleFreeHeap(Console);
-        return STATUS_UNSUCCESSFUL;
+        return Status;
     }
-
-    Console->InputBuffer.InputBufferSize = 0; // FIXME!
-    InitializeListHead(&Console->InputBuffer.InputEvents);
-    Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
-                                ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
 
     /* Set-up the code page */
     Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
@@ -275,7 +263,7 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ConDrvCreateScreenBuffer: failed, Status = 0x%08lx\n", Status);
-        CloseHandle(Console->InputBuffer.ActiveEvent);
+        ConDrvDeinitInputBuffer(Console);
         DeleteCriticalSection(&Console->Lock);
         ConsoleFreeHeap(Console);
         return Status;
@@ -430,10 +418,10 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
 
     /* FIXME: Send a terminate message to all the processes owning this console */
 
-    /* Cleanup the UI-oriented part */
-    DPRINT("Deregister console\n");
+    /* Deregister the terminal */
+    DPRINT("Deregister terminal\n");
     ConDrvDeregisterTerminal(Console);
-    DPRINT("Console deregistered\n");
+    DPRINT("Terminal deregistered\n");
 
     /***
      * Check that the console is in terminating state before continuing
@@ -458,19 +446,18 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     /* Remove the console from the list */
     RemoveConsole(Console);
 
-    /* Discard all entries in the input event queue */
-    PurgeInputBuffer(Console);
-
     /* Delete the last screen buffer */
-    ConioDeleteScreenBuffer(Console->ActiveBuffer);
+    ConDrvDeleteScreenBuffer(Console->ActiveBuffer);
     Console->ActiveBuffer = NULL;
     if (!IsListEmpty(&Console->BufferList))
     {
-        DPRINT1("BUG: screen buffer list not empty\n");
-        ASSERT(FALSE);
+        /***ConDrvUnlockConsoleList();***/
+        ASSERTMSG("BUGBUGBUG!! screen buffer list not empty\n", FALSE);
     }
 
-    /**/ CloseHandle(Console->InputBuffer.ActiveEvent); /**/
+    /* Deinitialize the input buffer */
+    ConDrvDeinitInputBuffer(Console);
+
     if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
 
     ConsoleFreeUnicodeString(&Console->OriginalTitle);

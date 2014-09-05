@@ -178,7 +178,7 @@ Done:
     return Status;
 }
 
-VOID
+static VOID
 PurgeInputBuffer(PCONSOLE Console)
 {
     PLIST_ENTRY CurrentEntry;
@@ -191,6 +191,36 @@ PurgeInputBuffer(PCONSOLE Console)
         ConsoleFreeHeap(Event);
     }
 
+    // CloseHandle(Console->InputBuffer.ActiveEvent);
+}
+
+NTSTATUS NTAPI
+ConDrvInitInputBuffer(IN PCONSOLE Console,
+                      IN ULONG InputBufferSize)
+{
+    SECURITY_ATTRIBUTES SecurityAttributes;
+
+    ConSrvInitObject(&Console->InputBuffer.Header, INPUT_BUFFER, Console);
+
+    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+    SecurityAttributes.lpSecurityDescriptor = NULL;
+    SecurityAttributes.bInheritHandle = TRUE;
+
+    Console->InputBuffer.ActiveEvent = CreateEventW(&SecurityAttributes, TRUE, FALSE, NULL);
+    if (Console->InputBuffer.ActiveEvent == NULL) return STATUS_UNSUCCESSFUL;
+
+    Console->InputBuffer.InputBufferSize = InputBufferSize;
+    InitializeListHead(&Console->InputBuffer.InputEvents);
+    Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
+                                ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
+
+    return STATUS_SUCCESS;
+}
+
+VOID NTAPI
+ConDrvDeinitInputBuffer(IN PCONSOLE Console)
+{
+    PurgeInputBuffer(Console);
     CloseHandle(Console->InputBuffer.ActiveEvent);
 }
 

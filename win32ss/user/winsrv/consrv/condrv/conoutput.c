@@ -115,7 +115,7 @@ static VOID
 ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 
 VOID NTAPI
-ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
+ConDrvDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
     PCONSOLE Console = Buffer->Header.Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
@@ -190,7 +190,7 @@ ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
     /* If old buffer has no handles, it's now unreferenced */
     if (Console->ActiveBuffer->Header.ReferenceCount == 0)
     {
-        ConioDeleteScreenBuffer(Console->ActiveBuffer);
+        ConDrvDeleteScreenBuffer(Console->ActiveBuffer);
     }
 
     /* Tie console to new buffer and signal the change to the frontend */
