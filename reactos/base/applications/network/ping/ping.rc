@@ -35,6 +35,9 @@
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif

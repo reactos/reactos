@@ -23,8 +23,8 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_STATUS_DONE            "Done"
-    IDS_STATUS_DOWNLOADINGFROM "Downloading from %s..."
+    IDS_STATUS_DONE            "Готово"
+    IDS_STATUS_DOWNLOADINGFROM "Скачивание с %s..."
 }
 
 STRINGTABLE

@@ -9,16 +9,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Выход", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "&Воспроизведение"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "Воспроизведение/&Пауза\tCtrl+P", IDC_PLAY
+        MENUITEM "&Остановить\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "&Повтор\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Отображение"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "Одно-оконный &режим", IDM_SWITCHVIEW
     END
     POPUP "&Устройство"
     BEGIN

@@ -3,9 +3,9 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     STRING_USAGE "Использование программы:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
-    STRING_ADD_USAGE "REG ADD <ключ> [/v <параметр> | /ve] [/t <тип>] [/s <разделитель>] [/d данные] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE <ключ> [/v <параметр> | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY <ключ> [/v <параметр> | /ve] [/s]\n"
+    STRING_ADD_USAGE "REG ADD <имя_раздела> [/v <имя_параметра> | /ve] [/t <тип>] [/s <разделитель>] [/d <данные>] [/f]\n"
+    STRING_DELETE_USAGE "REG DELETE <имя_раздела> [/v <имя_параметра> | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE "REG QUERY <имя_раздела> [/v [имя_параметра] | /ve] [/s]\n"
     STRING_SUCCESS "Операция успешно завершена\n"
     STRING_INVALID_KEY "Ошибка: неправильное имя ключа\n"
     STRING_INVALID_CMDLINE "Ошибка: неправильные параметры командной строки\n"

@@ -16,9 +16,9 @@ BEGIN
         MENUITEM "&Вопросительные знаки", IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "Нови&чок", IDM_BEGINNER
-        MENUITEM "&Мастер", IDM_ADVANCED
+        MENUITEM "&Любитель", IDM_ADVANCED
         MENUITEM "&Эксперт", IDM_EXPERT
-        MENUITEM "Нестандартные &параметры", IDM_CUSTOM
+        MENUITEM "Особые...", IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "&Закрыть\tAlt+X", IDM_EXIT
     END
@@ -36,7 +36,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Лучшее время", -1, 10, 10, 140, 45
     LTEXT "Новичок", -1, 20, 20, 40, 8
-    LTEXT "Мастер", -1, 20, 30, 40, 8
+    LTEXT "Любитель", -1, 20, 30, 40, 8
     LTEXT "Эксперт", -1, 20, 40, 40, 8
     LTEXT "999", IDC_TIME1, 70, 20, 15, 8
     LTEXT "999", IDC_TIME2, 70, 30, 15, 8
@@ -57,17 +57,17 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 60, 40, 40, 15
 END
 
-DLG_CUSTOM DIALOGEX 0, 0, 140, 100
+DLG_CUSTOM DIALOGEX 0, 0, 130, 85
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Нестандартные параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "По вертикали", -1, 5, 5, 70, 10
-    LTEXT "По горизонтали", -1, 5, 35, 70, 10
-    LTEXT "Число мин", -1, 5, 65, 70, 10
-    EDITTEXT IDC_EDITROWS, 5, 15, 20, 12, ES_NUMBER
-    EDITTEXT IDC_EDITCOLS, 5, 45, 20, 12, ES_NUMBER
-    EDITTEXT IDC_EDITMINES, 5, 75, 20, 12, ES_NUMBER
-    DEFPUSHBUTTON "OK", IDOK, 40, 30, 50, 15
-    PUSHBUTTON "Отмена", IDCANCEL, 80, 50, 50, 15
+    LTEXT "Высота:", -1, 8, 22, 28, 10
+    LTEXT "Ширина:", -1, 8, 37, 29, 10
+    LTEXT "Число мин:", -1, 8, 52, 40, 10
+    EDITTEXT IDC_EDITROWS, 50, 20, 25, 12, ES_NUMBER
+    EDITTEXT IDC_EDITCOLS, 50, 35, 25, 12, ES_NUMBER
+    EDITTEXT IDC_EDITMINES, 50, 50, 25, 12, ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 84, 20, 40, 16
+    PUSHBUTTON "Отмена", IDCANCEL, 84, 46, 40, 16
 END

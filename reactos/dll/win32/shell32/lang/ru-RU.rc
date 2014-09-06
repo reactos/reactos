@@ -136,7 +136,7 @@ END
 
 IDD_RUN DIALOGEX 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Run"
+CAPTION "Выполнить"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
@@ -357,7 +357,7 @@ BEGIN
     GROUPBOX "Установки для выбранного расположения", -1, 10, 66, 220, 73
     RADIOBUTTON "&Другой размер:", 14001, 17, 80, 80, 10, NOT WS_TABSTOP
     EDITTEXT 14002, 100, 78, 65, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Максимальный размер(Мб):", -1, 17, 95, 102, 10
+    LTEXT "&Максимальный размер (МБ):", -1, 17, 95, 102, 10
     RADIOBUTTON "&Уничтожать файлы сразу после удаления, не помещая их в корзину.", 14003, 17, 108, 206, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Запрашивать подтверждение на удаление", 14004, 20, 145, 176, 10, WS_TABSTOP
 END

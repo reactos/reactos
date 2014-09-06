@@ -18,7 +18,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Обновить", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Обновить &базу данных", ID_RESETDB
     END
     POPUP "Справка"
     BEGIN
@@ -48,7 +48,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Обновить", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Обновить &базу данных", ID_RESETDB
     END
 END
 
