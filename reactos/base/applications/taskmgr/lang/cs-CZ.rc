@@ -46,17 +46,17 @@ BEGIN
         MENUITEM "&Kaskáda", ID_WINDOWS_CASCADE
         MENUITEM "&Přenést do popředí", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "Vy&pnout"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Režim &spánku",              ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernace",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Vypnout",                   ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restartovat",               ID_SHUTDOWN_REBOOT
+        MENUITEM "&Odhlásit uživatele %s",     ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Přepnout uživatele\tWin+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Zamknout počítač\tWin+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "O&dpojit se",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Vy&jmout počítač",           ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Nápověda"
     BEGIN

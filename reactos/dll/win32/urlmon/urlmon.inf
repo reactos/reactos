@@ -459,3 +459,71 @@ ZICON_INTERNET="inetcpl.cpl#001313"
 NAME_UNTRUSTED="Restricted sites"
 DESC_UNTRUSTED="This zone contains Web sites that could potentially damage your computer or data."
 ZICON_UNTRUSTED="inetcpl.cpl#00004481"
+
+; LANG_POLISH SUBLANG_NEUTRAL
+[Strings.0015]
+PATH_ZONEMAP="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap"
+PATH_ZONEMAP_PROTOCOLS="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\ProtocolDefaults"
+PATH_ZONEMAP_DOMAINS="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains"
+PATH_ZONEMAP_RANGES="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Ranges"
+
+PATH_ZONES="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones"
+ZONES_LOCAL="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\0"
+ZONES_INTRANET="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\1"
+ZONES_TRUSTED="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\2"
+ZONES_INTERNET="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\3"
+ZONES_UNTRUSTED="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\4"
+
+NAME_LOCAL="Mój komputer"
+DESC_LOCAL="Twój komputer"
+ZICON_LOCAL="explorer.exe#0100"
+
+NAME_INTRANET="Lokalny intranet"
+DESC_INTRANET="Ta strefa zawiera wszystkie witryny sieci Web, które znajdują się w firmowym intranecie."
+ZICON_INTRANET="shell32.dll#0018"
+
+NAME_TRUSTED="Zaufane witryny"
+DESC_TRUSTED="Ta strefa zawiera wszystkie witryny sieci Web, którym ufasz, że nie zniszczą tego komputera."
+ZICON_TRUSTED="inetcpl.cpl#00004480"
+
+NAME_INTERNET="Internet"
+DESC_INTERNET="Ta strefa zawiera witryny sieci Web, których nie umieszczono w innych strefach."
+ZICON_INTERNET="inetcpl.cpl#001313"
+
+NAME_UNTRUSTED="Witryny z ograniczeniami"
+DESC_UNTRUSTED="Ta strefa zawiera witryny sieci Web, które mogą potencjalnie zniszczyć komputer lub dane."
+ZICON_UNTRUSTED="inetcpl.cpl#00004481"
+
+; Czech
+[Strings.0405]
+PATH_ZONEMAP="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap"
+PATH_ZONEMAP_PROTOCOLS="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\ProtocolDefaults"
+PATH_ZONEMAP_DOMAINS="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains"
+PATH_ZONEMAP_RANGES="Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Ranges"
+
+PATH_ZONES="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones"
+ZONES_LOCAL="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\0"
+ZONES_INTRANET="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\1"
+ZONES_TRUSTED="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\2"
+ZONES_INTERNET="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\3"
+ZONES_UNTRUSTED="Software\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\4"
+
+NAME_LOCAL="Tento počítač"
+DESC_LOCAL="Váš počítač"
+ZICON_LOCAL="explorer.exe#0100"
+
+NAME_INTRANET="Místní intranet"
+DESC_INTRANET="Tato zóna obsahuje všechny webové stránky, které jsou v místním intranetu (například v rámci organizace)."
+ZICON_INTRANET="shell32.dll#0018"
+
+NAME_TRUSTED="Důvěryhodné stránky"
+DESC_TRUSTED="Tato zóna obsahuje webové stránky, jimž věříte."
+ZICON_TRUSTED="inetcpl.cpl#00004480"
+
+NAME_INTERNET="Internet"
+DESC_INTERNET="Tato zóna obsahuje všechny stránky, které nebyly umístěny do jiných zón."
+ZICON_INTERNET="inetcpl.cpl#001313"
+
+NAME_UNTRUSTED="Omezené stránky"
+DESC_UNTRUSTED="Tato zóna obsahuje webové stránky, které by mohly poškodit tento počítač či data."
+ZICON_UNTRUSTED="inetcpl.cpl#00004481"

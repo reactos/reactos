@@ -1,6 +1,6 @@
 /* FILE:       base/applications/mplay32/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2009-08-03
+ * UPDATED:    2014-08-31
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -14,22 +14,22 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ukončit", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "&Přehrát"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "Přehrát/&Pozastavit\tCtrl+P", IDC_PLAY
+        MENUITEM "Za&stavit\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "Opakova&t\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "Reži&m s jedním oknem", IDM_SWITCHVIEW
     END
-    POPUP "&Device"
+    POPUP "&Zařízení"
     BEGIN
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&Vlastnosti", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "Ovládání &hlasitosti", IDM_VOLUMECTL
     END
     POPUP "&Nápověda"
     BEGIN
@@ -58,6 +58,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Přeskočit vpřed"
     IDS_APPTITLE "ReactOS Přehrávač multimédií"
     IDS_PLAY "Přehrát"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
+    IDS_DEFAULTMCIERRMSG "Pro tuto chybu není dostupný žádný popis."
+    IDS_UNKNOWNFILEEXT "Nelze určit typ zařízení z dané přípony souboru."
 END
