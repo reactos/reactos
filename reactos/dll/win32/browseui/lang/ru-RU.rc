@@ -1,21 +1,3 @@
-/*
-* Copyright 2009 Andrew Hill
-*
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU Lesser General Public
-* License as published by the Free Software Foundation; either
-* version 2.1 of the License, or (at your option) any later version.
-*
-* This library is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-* Lesser General Public License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public
-* License along with this library; if not, write to the Free Software
-* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-*/
- 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
  
 /* Menus */
@@ -67,7 +49,7 @@ BEGIN
        BEGIN
            MENUITEM "&Назад\tAlt+Стрелка влево", IDM_GOTO_BACK
            MENUITEM "&Вперед\tAlt+Стрелка вправо", IDM_GOTO_FORWARD
-           MENUITEM "&На один уровень вверх", IDM_GOTO_UPONELEVEL
+           MENUITEM "&Вверх", IDM_GOTO_UPONELEVEL
            MENUITEM "", -1, MFT_SEPARATOR
            MENUITEM "&Домой\tAlt+Home", IDM_GOTO_HOMEPAGE
        END
@@ -119,6 +101,7 @@ BEGIN
    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+   VK_BACK, 41010, NOINVERT, VIRTKEY
    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
@@ -155,7 +138,7 @@ END
 STRINGTABLE
 BEGIN
    9025 "Закрыть окно."
-   9026 "Goes up one level."
+   9026 "Вверх."
 END
  
 STRINGTABLE
