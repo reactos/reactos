@@ -77,6 +77,9 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     unsigned long Esi;
     unsigned long Edi;
 #endif
+#ifdef __clang__
+    void *ReturnAddress;
+#endif
 } SEH3$_REGISTRATION_FRAME ,*PSEH3$_REGISTRATION_FRAME;
 
 /* Prevent gcc from inlining functions that use SEH. */
