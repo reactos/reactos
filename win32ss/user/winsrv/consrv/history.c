@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "popup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -25,14 +26,14 @@ typedef struct _HISTORY_BUFFER
 
 
 BOOLEAN
-ConvertInputAnsiToUnicode(PCONSOLE Console,
+ConvertInputAnsiToUnicode(PCONSRV_CONSOLE Console,
                           PVOID    Source,
                           USHORT   SourceLength,
                           // BOOLEAN  IsUnicode,
                           PWCHAR*  Target,
                           PUSHORT  TargetLength);
 BOOLEAN
-ConvertInputUnicodeToAnsi(PCONSOLE Console,
+ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
                           PVOID    Source,
                           USHORT   SourceLength,
                           // BOOLEAN  IsAnsi,
@@ -266,9 +267,44 @@ HistoryFindEntryByPrefix(PCONSRV_CONSOLE Console,
     return FALSE;
 }
 
+PPOPUP_WINDOW
+HistoryDisplayCurrentHistory(PCONSRV_CONSOLE Console,
+                             PUNICODE_STRING ExeName)
+{
+    PTEXTMODE_SCREEN_BUFFER ActiveBuffer;
+    PPOPUP_WINDOW Popup;
+
+    SHORT xLeft, yTop;
+    SHORT Width, Height;
+
+    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console, ExeName);
+
+    if (!Hist) return NULL;
+    if (Hist->NumEntries == 0) return NULL;
+
+    if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER) return NULL;
+    ActiveBuffer = (PTEXTMODE_SCREEN_BUFFER)Console->ActiveBuffer;
+
+    Width  = 40;
+    Height = 10;
+
+    /* Center the popup window on the screen */
+    xLeft = ActiveBuffer->ViewOrigin.X + (ActiveBuffer->ViewSize.X - Width ) / 2;
+    yTop  = ActiveBuffer->ViewOrigin.Y + (ActiveBuffer->ViewSize.Y - Height) / 2;
+
+    /* Create the popup */
+    Popup = CreatePopupWindow(Console, ActiveBuffer,
+                              xLeft, yTop, Width, Height);
+    if (Popup == NULL) return NULL;
+
+    Popup->PopupInputRoutine = NULL;
+
+    return Popup;
+}
+
 VOID
 HistoryDeleteCurrentBuffer(PCONSRV_CONSOLE Console,
-                           PVOID ExeName)
+                           PUNICODE_STRING ExeName)
 {
     HistoryDeleteBuffer(HistoryCurrentBuffer(Console, ExeName));
 }
@@ -312,7 +348,8 @@ CSR_API(SrvGetConsoleCommandHistory)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Hist = HistoryFindBuffer(Console,
@@ -394,7 +431,8 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Hist = HistoryFindBuffer(Console,
@@ -435,7 +473,8 @@ CSR_API(SrvExpungeConsoleCommandHistory)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Hist = HistoryFindBuffer(Console,
@@ -463,7 +502,8 @@ CSR_API(SrvSetConsoleNumberOfCommands)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Hist = HistoryFindBuffer(Console,
@@ -504,12 +544,13 @@ CSR_API(SrvGetConsoleHistory)
 #if 0 // Vista+
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCONSRV_CONSOLE Console;
-    NTSTATUS Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    NTSTATUS Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                       &Console, TRUE);
     if (NT_SUCCESS(Status))
     {
         HistoryInfoRequest->HistoryBufferSize      = Console->HistoryBufferSize;
         HistoryInfoRequest->NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
-        HistoryInfoRequest->dwFlags                = Console->HistoryNoDup;
+        HistoryInfoRequest->dwFlags                = (Console->HistoryNoDup ? HISTORY_NO_DUP_FLAG : 0);
         ConSrvReleaseConsole(Console, TRUE);
     }
     return Status;
@@ -524,12 +565,13 @@ CSR_API(SrvSetConsoleHistory)
 #if 0 // Vista+
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCONSRV_CONSOLE Console;
-    NTSTATUS Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    NTSTATUS Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                       &Console, TRUE);
     if (NT_SUCCESS(Status))
     {
         Console->HistoryBufferSize      = HistoryInfoRequest->HistoryBufferSize;
         Console->NumberOfHistoryBuffers = HistoryInfoRequest->NumberOfHistoryBuffers;
-        Console->HistoryNoDup           = HistoryInfoRequest->dwFlags & HISTORY_NO_DUP_FLAG;
+        Console->HistoryNoDup           = !!(HistoryInfoRequest->dwFlags & HISTORY_NO_DUP_FLAG);
         ConSrvReleaseConsole(Console, TRUE);
     }
     return Status;
@@ -548,14 +590,14 @@ CSR_API(SrvSetConsoleCommandHistoryMode)
     DPRINT1("SrvSetConsoleCommandHistoryMode(Mode = %d) is not yet implemented\n",
             SetHistoryModeRequest->Mode);
 
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* This API is not yet implemented */
-    Status = STATUS_NOT_IMPLEMENTED;
+    Console->InsertMode = !!(SetHistoryModeRequest->Mode & CONSOLE_OVERSTRIKE);
 
     ConSrvReleaseConsole(Console, TRUE);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

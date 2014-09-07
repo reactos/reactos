@@ -9,20 +9,21 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "popup.h"
 
 #define NDEBUG
 #include <debug.h>
 
 
 BOOLEAN
-ConvertInputAnsiToUnicode(PCONSOLE Console,
+ConvertInputAnsiToUnicode(PCONSRV_CONSOLE Console,
                           PVOID    Source,
                           USHORT   SourceLength,
                           // BOOLEAN  IsUnicode,
                           PWCHAR*  Target,
                           PUSHORT  TargetLength);
 BOOLEAN
-ConvertInputUnicodeToAnsi(PCONSOLE Console,
+ConvertInputUnicodeToAnsi(PCONSRV_CONSOLE Console,
                           PVOID    Source,
                           USHORT   SourceLength,
                           // BOOLEAN  IsAnsi,
@@ -45,13 +46,12 @@ HistoryGetCurrentEntry(PCONSRV_CONSOLE Console,
                        PUNICODE_STRING Entry);
 VOID
 HistoryDeleteCurrentBuffer(PCONSRV_CONSOLE Console,
-                           PVOID ExeName);
+                           PUNICODE_STRING ExeName);
 BOOL
 HistoryFindEntryByPrefix(PCONSRV_CONSOLE Console,
                          PUNICODE_STRING ExeName,
                          PUNICODE_STRING Prefix,
                          PUNICODE_STRING Entry);
-
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -60,7 +60,7 @@ static VOID
 LineInputSetPos(PCONSRV_CONSOLE Console,
                 UINT Pos)
 {
-    if (Pos != Console->LinePos && Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
+    if (Pos != Console->LinePos && GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
         SHORT OldCursorX = Buffer->CursorPosition.X;
@@ -104,7 +104,7 @@ LineInputEdit(PCONSRV_CONSOLE Console,
             (Console->LineSize - (Pos + NumToDelete)) * sizeof(WCHAR));
     memcpy(&Console->LineBuffer[Pos], Insertion, NumToInsert * sizeof(WCHAR));
 
-    if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
+    if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
     {
         for (i = Pos; i < NewSize; i++)
         {
@@ -158,6 +158,14 @@ LineInputRecallHistory(PCONSRV_CONSOLE Console,
 }
 #endif
 
+
+// TESTS!!
+PPOPUP_WINDOW Popup = NULL;
+
+PPOPUP_WINDOW
+HistoryDisplayCurrentHistory(PCONSRV_CONSOLE Console,
+                             PUNICODE_STRING ExeName);
+
 VOID
 LineInputKeyDown(PCONSRV_CONSOLE Console,
                  PUNICODE_STRING ExeName,
@@ -177,6 +185,13 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
             /* Clear entire line */
             LineInputSetPos(Console, 0);
             LineInputEdit(Console, Console->LineSize, 0, NULL);
+
+            // TESTS!!
+            if (Popup)
+            {
+                DestroyPopupWindow(Popup);
+                Popup = NULL;
+            }
             return;
         }
 
@@ -310,6 +325,11 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         {
             if (KeyEvent->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
                 HistoryDeleteCurrentBuffer(Console, ExeName);
+            else
+            {
+                if (Popup) DestroyPopupWindow(Popup);
+                Popup = HistoryDisplayCurrentHistory(Console, ExeName);
+            }
             return;
         }
 
@@ -383,7 +403,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
      * OK, we deal with normal keys, we can continue...
      */
 
-    if (KeyEvent->uChar.UnicodeChar == L'\b' && Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT)
+    if (KeyEvent->uChar.UnicodeChar == L'\b' && GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT)
     {
         /* backspace handling - if processed input enabled then we handle it here
          * otherwise we treat it like a normal char. */
@@ -404,7 +424,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         LineInputSetPos(Console, Console->LineSize);
         Console->LineBuffer[Console->LineSize++] = L'\r';
-        if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
+        if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
         {
             if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
             {
@@ -417,11 +437,11 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
          * but an exception to the rule exists: the buffer could have been 
          * pre-filled with LineMaxSize - 1 characters.
          */
-        if (Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
+        if (GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT &&
             Console->LineSize < Console->LineMaxSize)
         {
             Console->LineBuffer[Console->LineSize++] = L'\n';
-            if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
+            if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
             {
                 if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
                 {
@@ -447,6 +467,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         {
             /* Normal character */
             BOOL Overstrike = !Console->LineInsertToggle && (Console->LinePos != Console->LineSize);
+            DPRINT("Overstrike = %s\n", Overstrike ? "true" : "false");
             LineInputEdit(Console, (Overstrike ? 1 : 0), 1, &KeyEvent->uChar.UnicodeChar);
         }
     }
