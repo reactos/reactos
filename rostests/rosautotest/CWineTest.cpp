@@ -342,7 +342,9 @@ CWineTest::Run()
 
     m_StartupInfo.cb = sizeof(m_StartupInfo);
     m_StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+    m_StartupInfo.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
     m_StartupInfo.hStdOutput = m_hWritePipe;
+    m_StartupInfo.hStdError  = m_hWritePipe;
 
     /* The virtual test list is of course faster, so it should be preferred over
        the journaled one.
