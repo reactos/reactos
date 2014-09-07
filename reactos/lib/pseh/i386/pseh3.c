@@ -64,7 +64,7 @@ _SEH3$_Unregister(
 static inline
 LONG
 _SEH3$_InvokeNestedFunctionFilter(
-    PSEH3$_REGISTRATION_FRAME RegistrationFrame,
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame,
     PVOID Filter)
 {
     LONG FilterResult;
@@ -93,17 +93,17 @@ _SEH3$_InvokeNestedFunctionFilter(
 long
 __attribute__((regparm(1)))
 _SEH3$_InvokeEmbeddedFilter(
-    PSEH3$_REGISTRATION_FRAME RegistrationFrame);
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame);
 
 long
 __attribute__((regparm(1)))
 _SEH3$_InvokeEmbeddedFilterFromRegistration(
-    PSEH3$_REGISTRATION_FRAME RegistrationFrame);
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame);
 
 static inline
 LONG
 _SEH3$_InvokeFilter(
-    PSEH3$_REGISTRATION_FRAME RegistrationFrame,
+    volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame,
     PVOID Filter)
 {
     LONG FilterResult;
@@ -133,7 +133,7 @@ _SEH3$_InvokeFilter(
 void
 __attribute__((regparm(1)))
 _SEH3$_AutoCleanup(
-    SEH3$_REGISTRATION_FRAME *Frame)
+    volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
     /* Check for __finally frames */
     if (Frame->ScopeTable->Target == NULL)
@@ -241,7 +241,9 @@ _SEH3$_CallRtlUnwind(
 
 EXCEPTION_DISPOSITION
 __cdecl
+#ifndef __clang__
 __attribute__ ((__target__ ("cld")))
+#endif
 _SEH3$_except_handler(
     struct _EXCEPTION_RECORD * ExceptionRecord,
     PSEH3$_REGISTRATION_FRAME EstablisherFrame,

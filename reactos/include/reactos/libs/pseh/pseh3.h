@@ -64,7 +64,7 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     /* Except handler stores pointer to exception pointers here */
     PSEH3$_EXCEPTION_POINTERS volatile ExceptionPointers;
 
-    /* Except handle stores the exception code here */
+    /* Except handler stores the exception code here */
     unsigned long ExceptionCode;
 
     /* Registers that we need to save */

@@ -128,6 +128,8 @@ __SEH3$_InvokeEmbeddedFilterFromRegistration:
     mov edi, [eax + SEH3_REGISTRATION_FRAME_Edi]
     mov ebp, [eax + SEH3_REGISTRATION_FRAME_Ebp]
 
+    jmp __SEH3$_InvokeEmbeddedFilter2
+
     /* Get the saved stack pointer */
     mov edx, [eax + SEH3_REGISTRATION_FRAME_Esp]
 
@@ -155,7 +157,7 @@ __SEH3$_InvokeEmbeddedFilter:
 
     /* Load ebp from the registration invocation */
     mov ebp, [eax + SEH3_REGISTRATION_FRAME_Ebp]
-
+__SEH3$_InvokeEmbeddedFilter2:
     /* Calculate the size of the temp stack frame region */
     mov ecx, [eax + SEH3_REGISTRATION_FRAME_AllocaFrame]
     sub ecx, [eax + SEH3_REGISTRATION_FRAME_Esp]
