@@ -273,6 +273,8 @@ ConSrvTermInitTerminal(IN OUT PTERMINAL This,
     Console->FrontEndIFace = *FrontEnd;
 
     Status = FrontEnd->Vtbl->InitFrontEnd(FrontEnd, FrontEnd->Console);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("InitFrontEnd failed, Status = 0x%08lx\n", Status);
 
     /** HACK HACK!! Be sure FrontEndIFace is correctly updated in the console!! **/
     DPRINT1("Using FrontEndIFace HACK(2), should be removed after proper implementation!\n");
@@ -698,13 +700,6 @@ ConSrvTermReleaseScreenBuffer(IN OUT PTERMINAL This,
 }
 
 static VOID NTAPI
-ConSrvTermChangeTitle(IN OUT PTERMINAL This)
-{
-    PFRONTEND FrontEnd = This->Data;
-    FrontEnd->Vtbl->ChangeTitle(FrontEnd);
-}
-
-static VOID NTAPI
 ConSrvTermGetLargestConsoleWindowSize(IN OUT PTERMINAL This,
                                  PCOORD pSize)
 {
@@ -743,7 +738,6 @@ static TERMINAL_VTBL ConSrvTermVtbl =
     ConSrvTermResizeTerminal,
     ConSrvTermSetActiveScreenBuffer,
     ConSrvTermReleaseScreenBuffer,
-    ConSrvTermChangeTitle,
     ConSrvTermGetLargestConsoleWindowSize,
     ConSrvTermSetPalette,
     ConSrvTermShowMouseCursor,

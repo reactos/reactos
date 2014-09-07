@@ -14,13 +14,6 @@
 #include "guisettings.h"
 #include "conwnd.h"
 
-NTSTATUS GuiInitConsole(PCONSOLE Console,
-                        /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
-                        PCONSOLE_INFO ConsoleInfo,
-                        DWORD ProcessId,
-                        LPCWSTR IconPath,
-                        INT IconIndex);
-
 VOID
 GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
 

@@ -109,11 +109,6 @@ DummyReleaseScreenBuffer(IN OUT PTERMINAL This,
 }
 
 static VOID NTAPI
-DummyChangeTitle(IN OUT PTERMINAL This)
-{
-}
-
-static VOID NTAPI
 DummyGetLargestConsoleWindowSize(IN OUT PTERMINAL This,
                                  PCOORD pSize)
 {
@@ -148,7 +143,6 @@ static TERMINAL_VTBL DummyVtbl =
     DummyResizeTerminal,
     DummySetActiveScreenBuffer,
     DummyReleaseScreenBuffer,
-    DummyChangeTitle,
     DummyGetLargestConsoleWindowSize,
     DummySetPalette,
     DummyShowMouseCursor,

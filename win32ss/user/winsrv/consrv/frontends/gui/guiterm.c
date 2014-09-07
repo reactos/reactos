@@ -13,9 +13,6 @@
 
 #include <consrv.h>
 
-#define COBJMACROS
-#include <shlobj.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -405,9 +402,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     PGUI_CONSOLE_DATA GuiData;
     GUI_CONSOLE_INFO  TermInfo;
 
-    SIZE_T Length    = 0;
-    LPWSTR IconPath  = NULL;
-    INT    IconIndex = 0;
+    SIZE_T Length = 0;
 
     if (This == NULL || Console == NULL || This->OldData == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -421,10 +416,6 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
 
     ConsoleInfo      = GuiInitInfo->ConsoleInfo;
     ConsoleStartInfo = GuiInitInfo->ConsoleStartInfo;
-
-    IconPath  = ConsoleStartInfo->IconPath;
-    IconIndex = ConsoleStartInfo->IconIndex;
-
 
     /* Terminal data allocation */
     GuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(GUI_CONSOLE_DATA));
@@ -451,10 +442,10 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     /* 1. Load the default settings */
     GuiConsoleGetDefaultSettings(&TermInfo, GuiInitInfo->ProcessId);
 
-    /* 3. Load the remaining console settings via the registry. */
+    /* 3. Load the remaining console settings via the registry */
     if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
     {
-        /* Load the terminal infos from the registry. */
+        /* Load the terminal infos from the registry */
         GuiConsoleReadUserSettings(&TermInfo,
                                    ConsoleInfo->ConsoleTitle,
                                    GuiInitInfo->ProcessId);
@@ -500,29 +491,17 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     GuiData->GuiInfo.AutoPosition   = TermInfo.AutoPosition;
     GuiData->GuiInfo.WindowOrigin   = TermInfo.WindowOrigin;
 
-    /* Initialize the icon handles to their default values */
-    GuiData->hIcon   = ghDefaultIcon;
-    GuiData->hIconSm = ghDefaultIconSm;
+    /* Initialize the icon handles */
+    if (ConsoleStartInfo->hIcon != NULL)
+        GuiData->hIcon = ConsoleStartInfo->hIcon;
+    else
+        GuiData->hIcon = ghDefaultIcon;
 
-    /* Get the associated icon, if any */
-    if (IconPath == NULL || IconPath[0] == L'\0')
-    {
-        IconPath  = ConsoleStartInfo->AppPath;
-        IconIndex = 0;
-    }
-    DPRINT("IconPath = %S ; IconIndex = %lu\n", (IconPath ? IconPath : L"n/a"), IconIndex);
-    if (IconPath && IconPath[0] != L'\0')
-    {
-        HICON hIcon = NULL, hIconSm = NULL;
-        PrivateExtractIconExW(IconPath,
-                              IconIndex,
-                              &hIcon,
-                              &hIconSm,
-                              1);
-        DPRINT("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
-        if (hIcon   != NULL) GuiData->hIcon   = hIcon;
-        if (hIconSm != NULL) GuiData->hIconSm = hIconSm;
-    }
+    if (ConsoleStartInfo->hIconSm != NULL)
+        GuiData->hIconSm = ConsoleStartInfo->hIconSm;
+    else
+        GuiData->hIconSm = ghDefaultIconSm;
+
     ASSERT(GuiData->hIcon && GuiData->hIconSm);
 
     /* Mouse is shown by default with its default cursor shape */
@@ -1114,137 +1093,20 @@ static FRONTEND_VTBL GuiVtbl =
 };
 
 
-static BOOL
-LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
-                         IN OUT PCONSOLE_INFO ConsoleInfo)
-{
-#define PATH_SEPARATOR L'\\'
-
-    BOOL    RetVal   = FALSE;
-    HRESULT hRes     = S_OK;
-    LPWSTR  LinkName = NULL;
-    SIZE_T  Length   = 0;
-
-    if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
-        return FALSE;
-
-    ConsoleStartInfo->IconPath[0] = L'\0';
-    ConsoleStartInfo->IconIndex   = 0;
-
-    /* 1- Find the last path separator if any */
-    LinkName = wcsrchr(ConsoleStartInfo->ConsoleTitle, PATH_SEPARATOR);
-    if (LinkName == NULL)
-    {
-        LinkName = ConsoleStartInfo->ConsoleTitle;
-    }
-    else
-    {
-        /* Skip the path separator */
-        ++LinkName;
-    }
-
-    /* 2- Check for the link extension. The name ".lnk" is considered invalid. */
-    Length = wcslen(LinkName);
-    if ( (Length <= 4) || (wcsicmp(LinkName + (Length - 4), L".lnk") != 0) )
-        return FALSE;
-
-    /* 3- It may be a link. Try to retrieve some properties */
-    hRes = CoInitialize(NULL);
-    if (SUCCEEDED(hRes))
-    {
-        /* Get a pointer to the IShellLink interface */
-        IShellLinkW* pshl = NULL;
-        hRes = CoCreateInstance(&CLSID_ShellLink,
-                                NULL, 
-                                CLSCTX_INPROC_SERVER,
-                                &IID_IShellLinkW,
-                                (LPVOID*)&pshl);
-        if (SUCCEEDED(hRes))
-        {
-            /* Get a pointer to the IPersistFile interface */
-            IPersistFile* ppf = NULL;
-            hRes = IPersistFile_QueryInterface(pshl, &IID_IPersistFile, (LPVOID*)&ppf);
-            if (SUCCEEDED(hRes))
-            {
-                /* Load the shortcut */
-                hRes = IPersistFile_Load(ppf, ConsoleStartInfo->ConsoleTitle, STGM_READ);
-                if (SUCCEEDED(hRes))
-                {
-                    /*
-                     * Finally we can get the properties !
-                     * Update the old ones if needed.
-                     */
-                    INT ShowCmd = 0;
-                    // WORD HotKey = 0;
-
-                    /* Reset the name of the console with the name of the shortcut */
-                    Length = min(/*Length*/ Length - 4, // 4 == len(".lnk")
-                                 sizeof(ConsoleInfo->ConsoleTitle) / sizeof(ConsoleInfo->ConsoleTitle[0]) - 1);
-                    wcsncpy(ConsoleInfo->ConsoleTitle, LinkName, Length);
-                    ConsoleInfo->ConsoleTitle[Length] = L'\0';
-
-                    /* Get the window showing command */
-                    hRes = IShellLinkW_GetShowCmd(pshl, &ShowCmd);
-                    if (SUCCEEDED(hRes)) ConsoleStartInfo->wShowWindow = (WORD)ShowCmd;
-
-                    /* Get the hotkey */
-                    // hRes = pshl->GetHotkey(&ShowCmd);
-                    // if (SUCCEEDED(hRes)) ConsoleStartInfo->HotKey = HotKey;
-
-                    /* Get the icon location, if any */
-                    hRes = IShellLinkW_GetIconLocation(pshl,
-                                                       ConsoleStartInfo->IconPath,
-                                                       sizeof(ConsoleStartInfo->IconPath)/sizeof(ConsoleStartInfo->IconPath[0]) - 1, // == MAX_PATH
-                                                       &ConsoleStartInfo->IconIndex);
-                    if (!SUCCEEDED(hRes))
-                    {
-                        ConsoleStartInfo->IconPath[0] = L'\0';
-                        ConsoleStartInfo->IconIndex   = 0;
-                    }
-
-                    // FIXME: Since we still don't load console properties from the shortcut,
-                    // return false. When this will be done, we will return true instead.
-                    RetVal = FALSE;
-                }
-                IPersistFile_Release(ppf);
-            }
-            IShellLinkW_Release(pshl);
-        }
-    }
-    CoUninitialize();
-
-    return RetVal;
-}
-
 NTSTATUS NTAPI
 GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
                 IN OUT PCONSOLE_INFO ConsoleInfo,
                 IN OUT PVOID ExtraConsoleInfo,
                 IN ULONG ProcessId)
 {
-    PCONSOLE_START_INFO ConsoleStartInfo = ExtraConsoleInfo;
+    PCONSOLE_INIT_INFO ConsoleInitInfo = ExtraConsoleInfo;
     PGUI_INIT_INFO GuiInitInfo;
 
-    if (FrontEnd == NULL || ConsoleInfo == NULL || ConsoleStartInfo == NULL)
+    if (FrontEnd == NULL || ConsoleInfo == NULL || ConsoleInitInfo == NULL)
         return STATUS_INVALID_PARAMETER;
 
     /* Initialize GUI terminal emulator common functionalities */
     if (!GuiInit()) return STATUS_UNSUCCESSFUL;
-
-    /*
-     * Load per-application terminal settings.
-     *
-     * Check whether the process creating the console was launched via
-     * a shell-link. ConsoleInfo->ConsoleTitle may be updated with the
-     * name of the shortcut, and ConsoleStartInfo->Icon[Path|Index] too.
-     */
-    if (ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME)
-    {
-        if (!LoadShellLinkConsoleInfo(ConsoleStartInfo, ConsoleInfo))
-        {
-            ConsoleStartInfo->dwStartupFlags &= ~STARTF_TITLEISLINKNAME;
-        }
-    }
 
     /*
      * Initialize a private initialization info structure for later use.
@@ -1255,8 +1117,9 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
 
     // HACK: We suppose that the pointers will be valid in GuiInitFrontEnd...
     GuiInitInfo->ConsoleInfo      = ConsoleInfo;
-    GuiInitInfo->ConsoleStartInfo = ConsoleStartInfo;
+    GuiInitInfo->ConsoleStartInfo = ConsoleInitInfo->ConsoleStartInfo;
     GuiInitInfo->ProcessId        = ProcessId;
+
 
     /* Finally, initialize the frontend structure */
     FrontEnd->Vtbl    = &GuiVtbl;

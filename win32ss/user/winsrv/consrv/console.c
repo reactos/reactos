@@ -14,6 +14,11 @@
 
 #include <ndk/psfuncs.h>
 
+/* This is for COM usage */
+#define COBJMACROS
+#include <shlobj.h>
+
+
 #include <alias.h>
 #include <history.h>
 #include "procinit.h"
@@ -209,6 +214,35 @@ ConSrvValidateConsole(OUT PCONSRV_CONSOLE* Console,
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+// Adapted from reactos/lib/rtl/unicode.c, RtlCreateUnicodeString line 2180
+static BOOLEAN
+ConsoleCreateUnicodeString(IN OUT PUNICODE_STRING UniDest,
+                           IN PCWSTR Source)
+{
+    SIZE_T Size = (wcslen(Source) + 1) * sizeof(WCHAR);
+    if (Size > MAXUSHORT) return FALSE;
+
+    UniDest->Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size);
+    if (UniDest->Buffer == NULL) return FALSE;
+
+    RtlCopyMemory(UniDest->Buffer, Source, Size);
+    UniDest->MaximumLength = (USHORT)Size;
+    UniDest->Length = (USHORT)Size - sizeof(WCHAR);
+
+    return TRUE;
+}
+
+// Adapted from reactos/lib/rtl/unicode.c, RtlFreeUnicodeString line 431
+static VOID
+ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
+{
+    if (UnicodeString->Buffer)
+    {
+        ConsoleFreeHeap(UnicodeString->Buffer);
+        RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
+    }
+}
+
 VOID
 ConioPause(PCONSRV_CONSOLE Console, UINT Flags)
 {
@@ -317,10 +351,157 @@ ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
 NTSTATUS NTAPI
 ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal);
 
+
+static BOOL
+LoadShellLinkConsoleInfo(IN OUT PCONSOLE_INFO ConsoleInfo,
+                         IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo)
+{
+#define PATH_SEPARATOR L'\\'
+
+    BOOL    RetVal   = FALSE;
+    HRESULT hRes     = S_OK;
+    SIZE_T  Length   = 0;
+    LPWSTR  LinkName = NULL;
+    LPWSTR  IconPath = NULL;
+    WCHAR   Buffer[MAX_PATH + 1];
+
+    ConsoleInitInfo->ConsoleStartInfo->IconIndex = 0;
+
+    if ((ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
+    {
+        // return FALSE; // FIXME!! (for icon loading)
+        RetVal = TRUE;
+        goto Finish;
+    }
+
+    /* 1- Find the last path separator if any */
+    LinkName = wcsrchr(ConsoleInfo->ConsoleTitle, PATH_SEPARATOR);
+    if (LinkName == NULL)
+        LinkName = ConsoleInfo->ConsoleTitle;
+    else
+        ++LinkName; // Skip the path separator
+
+    /* 2- Check for the link extension. The name ".lnk" is considered invalid. */
+    Length = wcslen(LinkName);
+    if ( (Length <= 4) || (wcsicmp(LinkName + (Length - 4), L".lnk") != 0) )
+        return FALSE;
+
+    /* 3- It may be a link. Try to retrieve some properties */
+    hRes = CoInitialize(NULL);
+    if (SUCCEEDED(hRes))
+    {
+        /* Get a pointer to the IShellLink interface */
+        IShellLinkW* pshl = NULL;
+        hRes = CoCreateInstance(&CLSID_ShellLink,
+                                NULL, 
+                                CLSCTX_INPROC_SERVER,
+                                &IID_IShellLinkW,
+                                (LPVOID*)&pshl);
+        if (SUCCEEDED(hRes))
+        {
+            /* Get a pointer to the IPersistFile interface */
+            IPersistFile* ppf = NULL;
+            hRes = IPersistFile_QueryInterface(pshl, &IID_IPersistFile, (LPVOID*)&ppf);
+            if (SUCCEEDED(hRes))
+            {
+                /* Load the shortcut */
+                hRes = IPersistFile_Load(ppf, ConsoleInfo->ConsoleTitle, STGM_READ);
+                if (SUCCEEDED(hRes))
+                {
+                    /*
+                     * Finally we can get the properties !
+                     * Update the old ones if needed.
+                     */
+                    INT ShowCmd = 0;
+                    // WORD HotKey = 0;
+
+                    /* Reset the name of the console with the name of the shortcut */
+                    Length = min(/*Length*/ Length - 4, // 4 == len(".lnk")
+                                 sizeof(ConsoleInfo->ConsoleTitle) / sizeof(ConsoleInfo->ConsoleTitle[0]) - 1);
+                    wcsncpy(ConsoleInfo->ConsoleTitle, LinkName, Length);
+                    ConsoleInfo->ConsoleTitle[Length] = L'\0';
+
+                    /* Get the window showing command */
+                    hRes = IShellLinkW_GetShowCmd(pshl, &ShowCmd);
+                    if (SUCCEEDED(hRes)) ConsoleInitInfo->ConsoleStartInfo->wShowWindow = (WORD)ShowCmd;
+
+                    /* Get the hotkey */
+                    // hRes = pshl->GetHotkey(&ShowCmd);
+                    // if (SUCCEEDED(hRes)) ConsoleInitInfo->ConsoleStartInfo->HotKey = HotKey;
+
+                    /* Get the icon location, if any */
+                    hRes = IShellLinkW_GetIconLocation(pshl,
+                                                       Buffer,
+                                                       sizeof(Buffer)/sizeof(Buffer[0]) - 1, // == MAX_PATH
+                                                       &ConsoleInitInfo->ConsoleStartInfo->IconIndex);
+                    if (!SUCCEEDED(hRes))
+                    {
+                        ConsoleInitInfo->ConsoleStartInfo->IconIndex = 0;
+                    }
+                    else
+                    {
+                        IconPath = Buffer;
+                    }
+
+                    // FIXME: Since we still don't load console properties from the shortcut,
+                    // return false. When this will be done, we will return true instead.
+                    RetVal = TRUE; // FALSE;
+                }
+                IPersistFile_Release(ppf);
+            }
+            IShellLinkW_Release(pshl);
+        }
+    }
+    CoUninitialize();
+
+Finish:
+
+    if (RetVal)
+    {
+        /* Get the associated icon, if any */
+        if (IconPath == NULL)
+        {
+            // Question: How to retrieve the full path name
+            // of the app we are going to run??
+            Length = RtlDosSearchPath_U(ConsoleInitInfo->CurDir,
+                                        ConsoleInitInfo->AppName,
+                                        NULL,
+                                        sizeof(Buffer),
+                                        Buffer,
+                                        NULL);
+            if (Length > 0 && Length < sizeof(Buffer))
+                IconPath = Buffer;
+            else
+                IconPath = ConsoleInitInfo->AppName;
+
+            // ConsoleInitInfo->ConsoleStartInfo->IconIndex = 0;
+        }
+        DPRINT1("IconPath = '%S' ; IconIndex = %lu\n",
+                IconPath, ConsoleInitInfo->ConsoleStartInfo->IconIndex);
+        if (IconPath && *IconPath)
+        {
+            HICON hIcon = NULL, hIconSm = NULL;
+            PrivateExtractIconExW(IconPath,
+                                  ConsoleInitInfo->ConsoleStartInfo->IconIndex,
+                                  &hIcon,
+                                  &hIconSm,
+                                  1);
+            DPRINT1("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
+            if (hIcon   != NULL) ConsoleInitInfo->ConsoleStartInfo->hIcon   = hIcon;
+            if (hIconSm != NULL) ConsoleInitInfo->ConsoleStartInfo->hIconSm = hIconSm;
+        }
+    }
+
+    // FIXME: See the previous FIXME above.
+    RetVal = FALSE;
+
+    return RetVal;
+}
+
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSRV_CONSOLE* NewConsole,
-                  IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
+                  IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
                   IN ULONG ConsoleLeaderProcessId)
 {
     NTSTATUS Status;
@@ -331,7 +512,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     TERMINAL Terminal; /* The ConSrv terminal for this console */
 
-    if (NewConsole == NULL || ConsoleStartInfo == NULL)
+    if (NewConsole == NULL || ConsoleInitInfo == NULL)
         return STATUS_INVALID_PARAMETER;
 
     *NewConsole = NULL;
@@ -344,15 +525,15 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     ConSrvGetDefaultSettings(&ConsoleInfo, ConsoleLeaderProcessId);
 
     /* 2. Get the title of the console (initialize ConsoleInfo.ConsoleTitle) */
-    Length = min(wcslen(ConsoleStartInfo->ConsoleTitle),
+    Length = min(ConsoleInitInfo->TitleLength,
                  sizeof(ConsoleInfo.ConsoleTitle) / sizeof(ConsoleInfo.ConsoleTitle[0]) - 1);
-    wcsncpy(ConsoleInfo.ConsoleTitle, ConsoleStartInfo->ConsoleTitle, Length);
-    ConsoleInfo.ConsoleTitle[Length] = L'\0';
+    wcsncpy(ConsoleInfo.ConsoleTitle, ConsoleInitInfo->ConsoleTitle, Length);
+    ConsoleInfo.ConsoleTitle[Length] = L'\0'; // NULL-terminate it.
 
     /* 3. Initialize the ConSrv terminal */
     Status = ConSrvInitTerminal(&Terminal,
                                 &ConsoleInfo,
-                                ConsoleStartInfo,
+                                ConsoleInitInfo,
                                 ConsoleLeaderProcessId);
     if (!NT_SUCCESS(Status))
     {
@@ -362,9 +543,24 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     DPRINT("CONSRV: Terminal initialized\n");
 
     /*
+     * Load per-application terminal settings.
+     *
+     * Check whether the process creating the console was launched via
+     * a shell-link. ConsoleInfo->ConsoleTitle may be updated with the
+     * name of the shortcut, and ConsoleStartInfo->Icon[Path|Index] too.
+     */
+    // if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) // FIXME!! (for icon loading)
+    {
+        if (!LoadShellLinkConsoleInfo(&ConsoleInfo, ConsoleInitInfo))
+        {
+            ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags &= ~STARTF_TITLEISLINKNAME;
+        }
+    }
+
+    /*
      * 4. Load the remaining console settings via the registry.
      */
-    if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
+    if ((ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
     {
         /*
          * Either we weren't created by an app launched via a shell-link,
@@ -379,17 +575,17 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
          * (and which was transmitted via the ConsoleStartInfo structure).
          * We therefore overwrite the values read in the registry.
          */
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
+        if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
         {
-            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleStartInfo->wFillAttribute;
+            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleInitInfo->ConsoleStartInfo->wFillAttribute;
         }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USECOUNTCHARS)
+        if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_USECOUNTCHARS)
         {
-            ConsoleInfo.ScreenBufferSize = ConsoleStartInfo->dwScreenBufferSize;
+            ConsoleInfo.ScreenBufferSize = ConsoleInitInfo->ConsoleStartInfo->dwScreenBufferSize;
         }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USESIZE)
+        if (ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_USESIZE)
         {
-            ConsoleInfo.ConsoleSize = ConsoleStartInfo->dwWindowSize;
+            ConsoleInfo.ConsoleSize = ConsoleInitInfo->ConsoleStartInfo->dwWindowSize;
         }
     }
 
@@ -409,6 +605,31 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     DPRINT("Console initialized\n");
 
     /*** Register ConSrv features ***/
+
+    /* Initialize the console title */
+#if 0
+    WCHAR DefaultTitle[128];
+#endif
+    ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo.ConsoleTitle);
+#if 0
+    if (ConsoleInfo.ConsoleTitle[0] == L'\0')
+    {
+        if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, DefaultTitle, sizeof(DefaultTitle) / sizeof(DefaultTitle[0])))
+        {
+            ConsoleCreateUnicodeString(&Console->Title, DefaultTitle);
+        }
+        else
+        {
+            ConsoleCreateUnicodeString(&Console->Title, L"ReactOS Console");
+        }
+    }
+    else
+    {
+#endif
+        ConsoleCreateUnicodeString(&Console->Title, ConsoleInfo.ConsoleTitle);
+#if 0
+    }
+#endif
 
     /* Initialize process support */
     InitializeListHead(&Console->ProcessList);
@@ -482,6 +703,10 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
     IntDeleteAllAliases(Console);
     HistoryDeleteBuffers(Console);
 
+    /* Free the console title */
+    ConsoleFreeUnicodeString(&Console->OriginalTitle);
+    ConsoleFreeUnicodeString(&Console->Title);
+
     /* Now, call the driver. ConDrvDeregisterTerminal is called on-demand. */
     ConDrvDeleteConsole((PCONSOLE)Console);
 
@@ -504,7 +729,7 @@ ConSrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
 
     DPRINT("ConSrvConsoleCtrlEventTimeout Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
 
-    if (ProcessData->CtrlDispatcher)
+    if (ProcessData->CtrlRoutine)
     {
         _SEH2_TRY
         {
@@ -513,7 +738,7 @@ ConSrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
             _SEH2_TRY
             {
                 Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
-                                            ProcessData->CtrlDispatcher,
+                                            ProcessData->CtrlRoutine,
                                             UlongToPtr(CtrlEvent), 0, NULL);
                 if (NULL == Thread)
                 {
@@ -522,7 +747,8 @@ ConSrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
                 }
                 else
                 {
-                    DPRINT("ProcessData->CtrlDispatcher remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+                    DPRINT("ProcessData->CtrlRoutine remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n",
+                           ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
                     WaitForSingleObject(Thread, Timeout);
                 }
             }
@@ -628,9 +854,6 @@ ConSrvConsoleProcessCtrlEvent(IN PCONSRV_CONSOLE Console,
 }
 
 
-
-
-
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvAllocConsole)
@@ -639,6 +862,7 @@ CSR_API(SrvAllocConsole)
     PCONSOLE_ALLOCCONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
     PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
+    CONSOLE_INIT_INFO ConsoleInitInfo;
 
     if (ProcessData->ConsoleHandle != NULL)
     {
@@ -646,33 +870,64 @@ CSR_API(SrvAllocConsole)
         return STATUS_ACCESS_DENIED;
     }
 
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&AllocConsoleRequest->ConsoleStartInfo,
-                                  1,
-                                  sizeof(CONSOLE_START_INFO)))
+    if ( !CsrValidateMessageBuffer(ApiMessage,
+                                   (PVOID*)&AllocConsoleRequest->ConsoleStartInfo,
+                                   1,
+                                   sizeof(CONSOLE_START_INFO))      ||
+         !CsrValidateMessageBuffer(ApiMessage,
+                                   (PVOID*)&AllocConsoleRequest->ConsoleTitle,
+                                   AllocConsoleRequest->TitleLength,
+                                   sizeof(BYTE))                    ||
+         !CsrValidateMessageBuffer(ApiMessage,
+                                   (PVOID*)&AllocConsoleRequest->Desktop,
+                                   AllocConsoleRequest->DesktopLength,
+                                   sizeof(BYTE))                    ||
+         !CsrValidateMessageBuffer(ApiMessage,
+                                   (PVOID*)&AllocConsoleRequest->CurDir,
+                                   AllocConsoleRequest->CurDirLength,
+                                   sizeof(BYTE))                    ||
+         !CsrValidateMessageBuffer(ApiMessage,
+                                   (PVOID*)&AllocConsoleRequest->AppName,
+                                   AllocConsoleRequest->AppNameLength,
+                                   sizeof(BYTE)) )
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Initialize the console initialization info structure */
+    ConsoleInitInfo.ConsoleStartInfo = AllocConsoleRequest->ConsoleStartInfo;
+    ConsoleInitInfo.TitleLength      = AllocConsoleRequest->TitleLength;
+    ConsoleInitInfo.ConsoleTitle     = AllocConsoleRequest->ConsoleTitle;
+    ConsoleInitInfo.DesktopLength    = AllocConsoleRequest->DesktopLength;
+    ConsoleInitInfo.Desktop          = AllocConsoleRequest->Desktop;
+    ConsoleInitInfo.AppNameLength    = AllocConsoleRequest->AppNameLength;
+    ConsoleInitInfo.AppName          = AllocConsoleRequest->AppName;
+    ConsoleInitInfo.CurDirLength     = AllocConsoleRequest->CurDirLength;
+    ConsoleInitInfo.CurDir           = AllocConsoleRequest->CurDir;
+
     /* Initialize a new Console owned by the Console Leader Process */
     Status = ConSrvAllocateConsole(ProcessData,
-                                   &AllocConsoleRequest->InputHandle,
-                                   &AllocConsoleRequest->OutputHandle,
-                                   &AllocConsoleRequest->ErrorHandle,
-                                   AllocConsoleRequest->ConsoleStartInfo);
+                                   &AllocConsoleRequest->ConsoleStartInfo->InputHandle,
+                                   &AllocConsoleRequest->ConsoleStartInfo->OutputHandle,
+                                   &AllocConsoleRequest->ConsoleStartInfo->ErrorHandle,
+                                   &ConsoleInitInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console allocation failed\n");
         return Status;
     }
 
+    /* Mark the process as having a console */
+    ProcessData->ConsoleApp = TRUE;
+    CsrProcess->Flags |= CsrProcessIsConsoleApp;
+
     /* Return the console handle and the input wait handle to the caller */
-    AllocConsoleRequest->ConsoleHandle   = ProcessData->ConsoleHandle;
-    AllocConsoleRequest->InputWaitHandle = ProcessData->InputWaitHandle;
+    AllocConsoleRequest->ConsoleStartInfo->ConsoleHandle   = ProcessData->ConsoleHandle;
+    AllocConsoleRequest->ConsoleStartInfo->InputWaitHandle = ProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
-    ProcessData->PropDispatcher = AllocConsoleRequest->PropDispatcher;
-    ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
+    ProcessData->PropRoutine = AllocConsoleRequest->PropRoutine;
+    ProcessData->CtrlRoutine = AllocConsoleRequest->CtrlRoutine;
 
     return STATUS_SUCCESS;
 }
@@ -692,6 +947,14 @@ CSR_API(SrvAttachConsole)
     {
         DPRINT1("Process already has a console\n");
         return STATUS_ACCESS_DENIED;
+    }
+
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&AttachConsoleRequest->ConsoleStartInfo,
+                                  1,
+                                  sizeof(CONSOLE_START_INFO)))
+    {
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* Check whether we try to attach to the parent's console */
@@ -734,22 +997,26 @@ CSR_API(SrvAttachConsole)
     Status = ConSrvInheritConsole(TargetProcessData,
                                   SourceProcessData->ConsoleHandle,
                                   TRUE,
-                                  &AttachConsoleRequest->InputHandle,
-                                  &AttachConsoleRequest->OutputHandle,
-                                  &AttachConsoleRequest->ErrorHandle);
+                                  &AttachConsoleRequest->ConsoleStartInfo->InputHandle,
+                                  &AttachConsoleRequest->ConsoleStartInfo->OutputHandle,
+                                  &AttachConsoleRequest->ConsoleStartInfo->ErrorHandle);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console inheritance failed\n");
         goto Quit;
     }
 
+    /* Mark the process as having a console */
+    TargetProcessData->ConsoleApp = TRUE;
+    TargetProcess->Flags |= CsrProcessIsConsoleApp;
+
     /* Return the console handle and the input wait handle to the caller */
-    AttachConsoleRequest->ConsoleHandle   = TargetProcessData->ConsoleHandle;
-    AttachConsoleRequest->InputWaitHandle = TargetProcessData->InputWaitHandle;
+    AttachConsoleRequest->ConsoleStartInfo->ConsoleHandle   = TargetProcessData->ConsoleHandle;
+    AttachConsoleRequest->ConsoleStartInfo->InputWaitHandle = TargetProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
-    TargetProcessData->PropDispatcher = AttachConsoleRequest->PropDispatcher;
-    TargetProcessData->CtrlDispatcher = AttachConsoleRequest->CtrlDispatcher;
+    TargetProcessData->PropRoutine = AttachConsoleRequest->PropRoutine;
+    TargetProcessData->CtrlRoutine = AttachConsoleRequest->CtrlRoutine;
 
     Status = STATUS_SUCCESS;
 
@@ -761,7 +1028,15 @@ Quit:
 
 CSR_API(SrvFreeConsole)
 {
+    PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
+
     ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
+
+    /* Mark the process as not having a console anymore */
+    ProcessData->ConsoleApp = FALSE;
+    CsrProcess->Flags &= ~CsrProcessIsConsoleApp;
+
     return STATUS_SUCCESS;
 }
 
@@ -865,16 +1140,12 @@ CSR_API(SrvSetConsoleMode)
     return Status;
 }
 
-NTSTATUS NTAPI
-ConDrvGetConsoleTitle(IN PCONSOLE Console,
-                      IN BOOLEAN Unicode,
-                      IN OUT PVOID TitleBuffer,
-                      IN OUT PULONG BufLength);
 CSR_API(SrvGetConsoleTitle)
 {
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLETITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
     PCONSRV_CONSOLE Console;
+    ULONG Length;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&TitleRequest->Title,
@@ -891,26 +1162,52 @@ CSR_API(SrvGetConsoleTitle)
         return Status;
     }
 
-    Status = ConDrvGetConsoleTitle(Console,
-                                   TitleRequest->Unicode,
-                                   TitleRequest->Title,
-                                   &TitleRequest->Length);
+    /* Copy title of the console to the user title buffer */
+    if (TitleRequest->Unicode)
+    {
+        if (TitleRequest->Length >= sizeof(WCHAR))
+        {
+            Length = min(TitleRequest->Length - sizeof(WCHAR), Console->Title.Length);
+            RtlCopyMemory(TitleRequest->Title, Console->Title.Buffer, Length);
+            ((PWCHAR)TitleRequest->Title)[Length / sizeof(WCHAR)] = L'\0';
+            TitleRequest->Length = Length;
+        }
+        else
+        {
+            TitleRequest->Length = Console->Title.Length;
+        }
+    }
+    else
+    {
+        if (TitleRequest->Length >= sizeof(CHAR))
+        {
+            Length = min(TitleRequest->Length - sizeof(CHAR), Console->Title.Length / sizeof(WCHAR));
+            Length = WideCharToMultiByte(Console->InputCodePage, 0,
+                                         Console->Title.Buffer, Length,
+                                         TitleRequest->Title, Length,
+                                         NULL, NULL);
+            ((PCHAR)TitleRequest->Title)[Length] = '\0';
+            TitleRequest->Length = Length;
+        }
+        else
+        {
+            TitleRequest->Length = Console->Title.Length / sizeof(WCHAR);
+        }
+    }
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
-NTSTATUS NTAPI
-ConDrvSetConsoleTitle(IN PCONSOLE Console,
-                      IN BOOLEAN Unicode,
-                      IN PVOID TitleBuffer,
-                      IN ULONG BufLength);
 CSR_API(SrvSetConsoleTitle)
 {
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLETITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
     PCONSRV_CONSOLE Console;
 
+    PWCHAR Buffer;
+    ULONG  Length;
+
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&TitleRequest->Title,
                                   TitleRequest->Length,
@@ -926,13 +1223,56 @@ CSR_API(SrvSetConsoleTitle)
         return Status;
     }
 
-    Status = ConDrvSetConsoleTitle(Console,
-                                   TitleRequest->Unicode,
-                                   TitleRequest->Title,
-                                   TitleRequest->Length);
-    // FIXME: Keep this call here, or put it in ConDrvSetConsoleTitle ??
-    if (NT_SUCCESS(Status)) TermChangeTitle(Console);
+    if (TitleRequest->Unicode)
+    {
+        /* Length is in bytes */
+        Length = TitleRequest->Length;
+    }
+    else
+    {
+        /* Use the console input CP for the conversion */
+        Length = MultiByteToWideChar(Console->InputCodePage, 0,
+                                     TitleRequest->Title, TitleRequest->Length,
+                                     NULL, 0);
+        /* The returned Length was in number of wchars, convert it in bytes */
+        Length *= sizeof(WCHAR);
+    }
 
+    /* Allocate a new buffer to hold the new title (NULL-terminated) */
+    Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Length + sizeof(WCHAR));
+    if (!Buffer)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+
+    /* Free the old title */
+    ConsoleFreeUnicodeString(&Console->Title);
+
+    /* Copy title to console */
+    Console->Title.Buffer = Buffer;
+    Console->Title.Length = Length;
+    Console->Title.MaximumLength = Console->Title.Length + sizeof(WCHAR);
+
+    if (TitleRequest->Unicode)
+    {
+        RtlCopyMemory(Console->Title.Buffer, TitleRequest->Title, Console->Title.Length);
+    }
+    else
+    {
+        MultiByteToWideChar(Console->InputCodePage, 0,
+                            TitleRequest->Title, TitleRequest->Length,
+                            Console->Title.Buffer,
+                            Console->Title.Length / sizeof(WCHAR));
+    }
+
+    /* NULL-terminate */
+    Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
+
+    TermChangeTitle(Console);
+    Status = STATUS_SUCCESS;
+
+Quit:
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }

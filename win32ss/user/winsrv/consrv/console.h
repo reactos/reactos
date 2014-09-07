@@ -8,13 +8,27 @@
 
 #pragma once
 
+typedef struct _CONSOLE_INIT_INFO
+{
+    PCONSOLE_START_INFO ConsoleStartInfo;
+
+    ULONG  TitleLength;
+    PWCHAR ConsoleTitle;
+    ULONG  DesktopLength;
+    PWCHAR Desktop;
+    ULONG  AppNameLength;
+    PWCHAR AppName;
+    ULONG  CurDirLength;
+    PWCHAR CurDir;
+} CONSOLE_INIT_INFO, *PCONSOLE_INIT_INFO;
+
 VOID NTAPI
 ConSrvInitConsoleSupport(VOID);
 
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT struct _CONSRV_CONSOLE** /* PCONSRV_CONSOLE* */ NewConsole,
-                  IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
+                  IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
                   IN ULONG ConsoleLeaderProcessId);
 VOID NTAPI ConSrvDeleteConsole(struct _CONSRV_CONSOLE* /* PCONSRV_CONSOLE */ Console);
 

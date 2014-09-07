@@ -31,10 +31,6 @@
  * Read functions *
  ******************/
 
-DWORD
-WINAPI
-GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer);
-
 static
 BOOL
 IntReadConsole(IN HANDLE hConsoleInput,
@@ -58,26 +54,12 @@ IntReadConsole(IN HANDLE hConsoleInput,
     ReadConsoleRequest->Unicode       = bUnicode;
 
     /*
-     * Retrieve the current console executable name string and length (always
-     * in UNICODE format).
-     * FIXME: Do not use GetConsoleInputExeNameW but use something else...
+     * Retrieve the (current) Input EXE name string and length,
+     * not NULL-terminated (always in UNICODE format).
      */
-    // 1- Get the exe name length in characters, including NULL character.
     ReadConsoleRequest->ExeLength =
-        (USHORT)GetConsoleInputExeNameW(0, (PWCHAR)ReadConsoleRequest->StaticBuffer);
-    // 2- Get the exe name (GetConsoleInputExeNameW returns 1 in case of success).
-    if (GetConsoleInputExeNameW(ReadConsoleRequest->ExeLength,
-                                (PWCHAR)ReadConsoleRequest->StaticBuffer) != 1)
-    {
-        // Nothing
-        ReadConsoleRequest->ExeLength = 0;
-    }
-    else
-    {
-        // Remove the NULL character, and convert in number of bytes.
-        ReadConsoleRequest->ExeLength--;
-        ReadConsoleRequest->ExeLength *= sizeof(WCHAR);
-    }
+        GetCurrentExeName((PWCHAR)ReadConsoleRequest->StaticBuffer,
+                          sizeof(ReadConsoleRequest->StaticBuffer));
 
     /*** For DEBUGGING purposes ***/
     {

@@ -251,7 +251,6 @@ typedef struct _TERMINAL_VTBL
     /*
      * External interface (functions corresponding to the Console API)
      */
-    VOID (NTAPI *ChangeTitle)(IN OUT PTERMINAL This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PTERMINAL This,
                                               PCOORD pSize);
     BOOL (NTAPI *SetPalette)(IN OUT PTERMINAL This,
@@ -326,9 +325,6 @@ typedef struct _CONSOLE
     UINT OutputCodePage;
 
 /****************************** Other properties ******************************/
-    UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */
-    UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
-
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
 

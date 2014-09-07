@@ -119,6 +119,13 @@ typedef enum _CONSRV_API_NUMBER
 //
 typedef struct _CONSOLE_PROPERTIES
 {
+    INT   IconIndex;
+    HICON hIcon;
+    HICON hIconSm;
+    DWORD dwHotKey;
+    DWORD dwStartupFlags;
+
+    // NT_CONSOLE_PROPS
     WORD wFillAttribute;
     WORD wPopupFillAttribute;
 
@@ -134,62 +141,60 @@ typedef struct _CONSOLE_PROPERTIES
     DWORD nFont;
     DWORD nInputBufferSize;
     COORD dwFontSize;
-    UINT uFontFamily;
-    UINT uFontWeight;
+    UINT  uFontFamily;
+    UINT  uFontWeight;
     WCHAR FaceName[LF_FACESIZE];
-    UINT uCursorSize;
-    BOOL bFullScreen;
-    BOOL bQuickEdit;
-    BOOL bInsertMode;
-    BOOL bAutoPosition;
-    UINT uHistoryBufferSize;
-    UINT uNumberOfHistoryBuffers;
-    BOOL bHistoryNoDup;
+    UINT  uCursorSize;
+    BOOL  bFullScreen;
+    BOOL  bQuickEdit;
+    BOOL  bInsertMode;
+    BOOL  bAutoPosition;
+    UINT  uHistoryBufferSize;
+    UINT  uNumberOfHistoryBuffers;
+    BOOL  bHistoryNoDup;
     COLORREF ColorTable[16];
 
-    //NT_FE_CONSOLE_PROPS
+    // NT_FE_CONSOLE_PROPS
     UINT uCodePage;
 } CONSOLE_PROPERTIES;
 
-//
-// To minimize code changes, some fields were put here even though they really only belong in
-// CONSRV_API_CONNECTINFO. Do not change the ordering however, as it's required for Windows
-// compatibility.
-//
 typedef struct _CONSOLE_START_INFO
-{
-    INT IconIndex;
-    HICON IconHandle1;
-    HICON IconHandle2;
-    DWORD dwHotKey;
-    DWORD dwStartupFlags;
-    CONSOLE_PROPERTIES;
-
-    BOOLEAN ConsoleNeeded; // Used for GUI apps only.
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-    LPTHREAD_START_ROUTINE ImeDispatcher;
-    LPTHREAD_START_ROUTINE PropDispatcher;
-    ULONG TitleLength;
-    WCHAR ConsoleTitle[MAX_PATH + 1];   // Console title or full path to the startup shortcut
-    ULONG DesktopLength;
-    PWCHAR DesktopPath;
-    ULONG AppNameLength;
-    WCHAR AppPath[128];        // Full path of the launched app
-    ULONG IconPathLength;
-    WCHAR IconPath[MAX_PATH + 1];       // Path to the file containing the icon
-} CONSOLE_START_INFO, *PCONSOLE_START_INFO;
-
-typedef struct _CONSRV_API_CONNECTINFO
 {
     HANDLE ConsoleHandle;
     HANDLE InputWaitHandle;
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
-    HANDLE Event1;
-    HANDLE Event2;
-    /* Adapted from CONSOLE_ALLOCCONSOLE */
+    HANDLE Events[2];
+
+    CONSOLE_PROPERTIES;
+} CONSOLE_START_INFO, *PCONSOLE_START_INFO;
+
+#if defined(_M_IX86)
+C_ASSERT(sizeof(CONSOLE_START_INFO) == 0xFC);
+#endif
+
+typedef struct _CONSRV_API_CONNECTINFO
+{
     CONSOLE_START_INFO ConsoleStartInfo;
+
+    BOOLEAN IsConsoleApp;
+    BOOLEAN IsWindowVisible;
+
+    // USHORT Padding;
+
+    LPTHREAD_START_ROUTINE CtrlRoutine;
+    LPTHREAD_START_ROUTINE PropRoutine;
+    LPTHREAD_START_ROUTINE ImeRoutine;
+
+    ULONG  TitleLength;
+    WCHAR  ConsoleTitle[MAX_PATH + 1];  // Console title or full path to the startup shortcut
+    ULONG  DesktopLength;
+    PWCHAR Desktop;
+    ULONG  AppNameLength;
+    WCHAR  AppName[128];                // Full path of the launched app
+    ULONG  CurDirLength;
+    WCHAR  CurDir[MAX_PATH + 1];
 } CONSRV_API_CONNECTINFO, *PCONSRV_API_CONNECTINFO;
 
 #if defined(_M_IX86)
@@ -259,25 +264,31 @@ typedef struct _CONSOLE_ALLOCCONSOLE
 {
     PCONSOLE_START_INFO ConsoleStartInfo;
 
-    HANDLE ConsoleHandle;
-    HANDLE InputHandle;
-    HANDLE OutputHandle;
-    HANDLE ErrorHandle;
-    HANDLE InputWaitHandle;
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-    LPTHREAD_START_ROUTINE PropDispatcher;
+    ULONG  TitleLength;
+    PWCHAR ConsoleTitle;    // Console title or full path to the startup shortcut
+    ULONG  DesktopLength;
+    PWCHAR Desktop;
+    ULONG  AppNameLength;
+    PWCHAR AppName;         // Full path of the launched app
+    ULONG  CurDirLength;
+    PWCHAR CurDir;
+
+    LPTHREAD_START_ROUTINE CtrlRoutine;
+    LPTHREAD_START_ROUTINE PropRoutine;
 } CONSOLE_ALLOCCONSOLE, *PCONSOLE_ALLOCCONSOLE;
 
 typedef struct _CONSOLE_ATTACHCONSOLE
 {
-    DWORD ProcessId; // If ProcessId == ATTACH_PARENT_PROCESS == -1, then attach the current process to its parent process console.
-    HANDLE ConsoleHandle;
-    HANDLE InputHandle;
-    HANDLE OutputHandle;
-    HANDLE ErrorHandle;
-    HANDLE InputWaitHandle;
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-    LPTHREAD_START_ROUTINE PropDispatcher;
+    /*
+     * If ProcessId == ATTACH_PARENT_PROCESS == -1, then attach
+     * the current process to its parent process console.
+     */
+    DWORD ProcessId;
+
+    PCONSOLE_START_INFO ConsoleStartInfo;
+
+    LPTHREAD_START_ROUTINE CtrlRoutine;
+    LPTHREAD_START_ROUTINE PropRoutine;
 } CONSOLE_ATTACHCONSOLE, *PCONSOLE_ATTACHCONSOLE;
 
 typedef struct _CONSOLE_FREECONSOLE

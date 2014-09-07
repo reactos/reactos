@@ -76,35 +76,6 @@ RemoveConsole(IN PCONSOLE Console)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-// Adapted from reactos/lib/rtl/unicode.c, RtlCreateUnicodeString line 2180
-static BOOLEAN
-ConsoleCreateUnicodeString(IN OUT PUNICODE_STRING UniDest,
-                           IN PCWSTR Source)
-{
-    SIZE_T Size = (wcslen(Source) + 1) * sizeof(WCHAR);
-    if (Size > MAXUSHORT) return FALSE;
-
-    UniDest->Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size);
-    if (UniDest->Buffer == NULL) return FALSE;
-
-    RtlCopyMemory(UniDest->Buffer, Source, Size);
-    UniDest->MaximumLength = (USHORT)Size;
-    UniDest->Length = (USHORT)Size - sizeof(WCHAR);
-
-    return TRUE;
-}
-
-// Adapted from reactos/lib/rtl/unicode.c, RtlFreeUnicodeString line 431
-static VOID
-ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
-{
-    if (UnicodeString->Buffer)
-    {
-        ConsoleFreeHeap(UnicodeString->Buffer);
-        RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
-    }
-}
-
 VOID NTAPI
 ConDrvPause(PCONSOLE Console)
 {
@@ -194,9 +165,6 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     TEXTMODE_BUFFER_INFO ScreenBufferInfo;
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
-#if 0
-    WCHAR DefaultTitle[128];
-#endif
 
     if (NewConsole == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -271,28 +239,6 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
     Console->UnpauseEvent = NULL;
-
-    /* Initialize the console title */
-    ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo->ConsoleTitle);
-#if 0
-    if (ConsoleInfo.ConsoleTitle[0] == L'\0')
-    {
-        if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, DefaultTitle, sizeof(DefaultTitle) / sizeof(DefaultTitle[0])))
-        {
-            ConsoleCreateUnicodeString(&Console->Title, DefaultTitle);
-        }
-        else
-        {
-            ConsoleCreateUnicodeString(&Console->Title, L"ReactOS Console");
-        }
-    }
-    else
-    {
-#endif
-        ConsoleCreateUnicodeString(&Console->Title, ConsoleInfo->ConsoleTitle);
-#if 0
-    }
-#endif
 
     DPRINT("Console initialized\n");
 
@@ -460,9 +406,6 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
 
     if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
 
-    ConsoleFreeUnicodeString(&Console->OriginalTitle);
-    ConsoleFreeUnicodeString(&Console->Title);
-
     DPRINT("ConDrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);
     DPRINT("ConDrvDeleteConsole - Destroying lock\n");
@@ -564,111 +507,6 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
     }
 
     return Status;
-}
-
-NTSTATUS NTAPI
-ConDrvGetConsoleTitle(IN PCONSOLE Console,
-                      IN BOOLEAN Unicode,
-                      IN OUT PVOID TitleBuffer,
-                      IN OUT PULONG BufLength)
-{
-    ULONG Length;
-
-    if (Console == NULL || TitleBuffer == NULL || BufLength == NULL)
-        return STATUS_INVALID_PARAMETER;
-
-    /* Copy title of the console to the user title buffer */
-    if (Unicode)
-    {
-        if (*BufLength >= sizeof(WCHAR))
-        {
-            Length = min(*BufLength - sizeof(WCHAR), Console->Title.Length);
-            RtlCopyMemory(TitleBuffer, Console->Title.Buffer, Length);
-            ((PWCHAR)TitleBuffer)[Length / sizeof(WCHAR)] = L'\0';
-            *BufLength = Length;
-        }
-        else
-        {
-            *BufLength = Console->Title.Length;
-        }
-    }
-    else
-    {
-        if (*BufLength >= sizeof(CHAR))
-        {
-            Length = min(*BufLength - sizeof(CHAR), Console->Title.Length / sizeof(WCHAR));
-            Length = WideCharToMultiByte(Console->InputCodePage, 0,
-                                         Console->Title.Buffer, Length,
-                                         TitleBuffer, Length,
-                                         NULL, NULL);
-            ((PCHAR)TitleBuffer)[Length] = '\0';
-            *BufLength = Length;
-        }
-        else
-        {
-            *BufLength = Console->Title.Length / sizeof(WCHAR);
-        }
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS NTAPI
-ConDrvSetConsoleTitle(IN PCONSOLE Console,
-                      IN BOOLEAN Unicode,
-                      IN PVOID TitleBuffer,
-                      IN ULONG BufLength)
-{
-    PWCHAR Buffer;
-    ULONG  Length;
-
-    if (Console == NULL || TitleBuffer == NULL)
-        return STATUS_INVALID_PARAMETER;
-
-    if (Unicode)
-    {
-        /* Length is in bytes */
-        Length = BufLength;
-    }
-    else
-    {
-        /* Use the console input CP for the conversion */
-        Length = MultiByteToWideChar(Console->InputCodePage, 0,
-                                     TitleBuffer, BufLength,
-                                     NULL, 0);
-        /* The returned Length was in number of wchars, convert it in bytes */
-        Length *= sizeof(WCHAR);
-    }
-
-    /* Allocate a new buffer to hold the new title (NULL-terminated) */
-    Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Length + sizeof(WCHAR));
-    if (!Buffer) return STATUS_NO_MEMORY;
-
-    /* Free the old title */
-    ConsoleFreeUnicodeString(&Console->Title);
-
-    /* Copy title to console */
-    Console->Title.Buffer = Buffer;
-    Console->Title.Length = Length;
-    Console->Title.MaximumLength = Console->Title.Length + sizeof(WCHAR);
-
-    if (Unicode)
-    {
-        RtlCopyMemory(Console->Title.Buffer, TitleBuffer, Console->Title.Length);
-    }
-    else
-    {
-        MultiByteToWideChar(Console->InputCodePage, 0,
-                            TitleBuffer, BufLength,
-                            Console->Title.Buffer,
-                            Console->Title.Length / sizeof(WCHAR));
-    }
-
-    /* NULL-terminate */
-    Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
-
-    // TermChangeTitle(Console);
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI

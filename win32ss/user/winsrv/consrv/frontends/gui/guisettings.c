@@ -372,7 +372,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     }
 
     /* Start the properties dialog */
-    if (ProcessData->PropDispatcher)
+    if (ProcessData->PropRoutine)
     {
         _SEH2_TRY
         {
@@ -381,7 +381,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
             _SEH2_TRY
             {
                 Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
-                                            ProcessData->PropDispatcher,
+                                            ProcessData->PropRoutine,
                                             (PVOID)hClientSection, 0, NULL);
                 if (NULL == Thread)
                 {
@@ -389,7 +389,8 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                 }
                 else
                 {
-                    DPRINT("ProcessData->PropDispatcher remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+                    DPRINT("ProcessData->PropRoutine remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n",
+                           ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
                     /// WaitForSingleObject(Thread, INFINITE);
                 }
             }

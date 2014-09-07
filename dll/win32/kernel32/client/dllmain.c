@@ -200,7 +200,7 @@ DllMain(HANDLE hDll,
             }
 
             /* Initialize Console Support */
-            if (!BasepInitConsole())
+            if (!ConDllInitialize(dwReason, SessionDir))
             {
                 DPRINT1("Failed to set up console\n");
                 return FALSE;

@@ -183,7 +183,9 @@ typedef struct _WINSRV_CONSOLE
     HANDLE ErrorHardwareEvent;
 
 /****************************** Other properties ******************************/
-    LIST_ENTRY PopupWindows;                /*List of popup windows */
+    LIST_ENTRY PopupWindows;                /* List of popup windows */
+    UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */
+    UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
     COLORREF   Colors[16];                  /* Colour palette */
 
 } WINSRV_CONSOLE; // , *PWINSRV_CONSOLE;

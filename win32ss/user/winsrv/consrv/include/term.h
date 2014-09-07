@@ -31,8 +31,6 @@
     (Console)->TermIFace.Vtbl->SetActiveScreenBuffer(&(Console)->TermIFace)
 #define TermReleaseScreenBuffer(Console, ScreenBuffer) \
     (Console)->TermIFace.Vtbl->ReleaseScreenBuffer(&(Console)->TermIFace, (ScreenBuffer))
-#define TermChangeTitle(Console) \
-    (Console)->TermIFace.Vtbl->ChangeTitle(&(Console)->TermIFace)
 #define TermGetLargestConsoleWindowSize(Console, pSize) \
     (Console)->TermIFace.Vtbl->GetLargestConsoleWindowSize(&(Console)->TermIFace, (pSize))
 #define TermSetPalette(Console, PaletteHandle, PaletteUsage) \
@@ -45,6 +43,8 @@
 
 #define TermRefreshInternalInfo(Console) \
     (Console)->FrontEndIFace.Vtbl->RefreshInternalInfo(&(Console)->FrontEndIFace)
+#define TermChangeTitle(Console) \
+    (Console)->FrontEndIFace.Vtbl->ChangeTitle(&(Console)->FrontEndIFace)
 #define TermChangeIcon(Console, IconHandle) \
     (Console)->FrontEndIFace.Vtbl->ChangeIcon(&(Console)->FrontEndIFace, (IconHandle))
 #define TermGetConsoleWindowHandle(Console) \
