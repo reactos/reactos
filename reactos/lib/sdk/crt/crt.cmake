@@ -510,6 +510,11 @@ endif()
 set_source_files_properties(${CRT_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "__MINGW_IMPORT=extern;USE_MSVCRT_PREFIX;_MSVCRT_LIB_;_MSVCRT_;_MT;CRTDLL")
 add_asm_files(crt_asm ${CRT_ASM_SOURCE})
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    #FIXME: http://llvm.org/bugs/show_bug.cgi?id=19027
+    set_property(SOURCE except/cpp.c APPEND_STRING PROPERTY COMPILE_FLAGS " -no-integrated-as")
+endif()
+
 add_library(crt ${CRT_SOURCE} ${crt_asm})
 target_link_libraries(crt chkstk)
 add_target_compile_definitions(crt
