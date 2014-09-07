@@ -19,7 +19,7 @@ static void call_varargs(char* buf, size_t buf_size, int expected_ret, LPCSTR fo
     int ret;
     /* Test the basic functionality */
     va_start(args, formatString);
-    ret = _vsnprintf(buf, 255, formatString, args);
+    ret = _vsnprintf(buf, buf_size, formatString, args);
     ok(expected_ret == ret, "Test failed: expected %i, got %i.\n", expected_ret, ret);
 }
 
