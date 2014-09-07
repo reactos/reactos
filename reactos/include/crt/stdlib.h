@@ -1202,6 +1202,7 @@ extern "C" {
     _In_ int _Shift);
 
 #if _INTEGRAL_MAX_BITS >= 64
+  _Check_return_
   __MINGW_EXTENSION
   unsigned __int64
   __cdecl
@@ -1217,6 +1218,7 @@ extern "C" {
     _In_ int _Shift);
 
 #if _INTEGRAL_MAX_BITS >= 64
+  _Check_return_
   __MINGW_EXTENSION
   unsigned __int64
   __cdecl
