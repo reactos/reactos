@@ -34,11 +34,16 @@ endif()
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags_language("-std=gnu89" "C")
     add_compile_flags("-Wno-microsoft")
+    set(CMAKE_LINK_DEF_FILE_FLAG "")
 endif()
 
 if(DBG)
-    add_compile_flags_language("-Wold-style-declaration -Wdeclaration-after-statement" "C")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_flags_language("-Wold-style-declaration" "C")
+    endif()
+    add_compile_flags_language("-Wdeclaration-after-statement" "C")
 endif()
+
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
 
 #bug
