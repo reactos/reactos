@@ -35,6 +35,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags_language("-std=gnu89" "C")
     add_compile_flags("-Wno-microsoft")
     set(CMAKE_LINK_DEF_FILE_FLAG "")
+    set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
+    set(CMAKE_LINK_LIBRARY_SUFFIX "")
 endif()
 
 if(DBG)
