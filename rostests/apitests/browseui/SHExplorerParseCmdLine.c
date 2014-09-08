@@ -11,6 +11,16 @@
 #include <strsafe.h>
 #include <shlobj.h>
 
+// Macro parameters are only expanded in the second nesting...
+#define _WIDEN(x) L##x
+#define WIDEN(x) _WIDEN(x)
+
+#define TEST_FILENAMEA "SHExplorerParseCmdLine.test"
+#define TEST_FILENAMEW WIDEN(TEST_FILENAMEA)
+
+#define TEST_PATHA "C:\\SHExplorerParseCmdLine.test"
+#define TEST_PATHW WIDEN(TEST_PATHA)
+
 #define PADDING_SIZE 0x100
 
 typedef struct _EXPLORER_INFO
@@ -75,6 +85,8 @@ _Out_opt_ PUINT PWriteEnd)
         }
     }
 
+    ok(Info.dwFlags == ExpectedFlags, "dwFlags = %08lx, expected %08lx\n", Info.dwFlags, ExpectedFlags);
+
     if (ExpectedCsidl == PIDL_IS_UNTOUCHED)
         ok(Info.pidl == InvalidPointer, "pidl = %p\n", Info.pidl);
     else if (ExpectedCsidl == PIDL_IS_NULL)
@@ -128,11 +140,12 @@ _Out_opt_ PUINT PWriteEnd)
                     }
                 }
             }
-            ILFree(Info.pidl);
+
+            if (Info.pidl != NULL && Info.pidl != (LPITEMIDLIST) 0x55555555)
+                ILFree(Info.pidl);
         }
     }
 
-    ok(Info.dwFlags == ExpectedFlags, "dwFlags = %08lx, expected %08lx\n", Info.dwFlags, ExpectedFlags);
     for (i = 0; i < sizeof(Info) / sizeof(DWORD); i++)
     {
         switch (i*4)
@@ -206,7 +219,7 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"c:\\Program Files\\", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
         { __LINE__, L"c:\\Program Files/", TRUE, PIDL_IS_NULL, 0x02000000, L"c:\\Program Files/"},
         { __LINE__, L"c:/Program Files/", TRUE, PIDL_IS_NULL, 0x02000000, L"c:/Program Files/"},
-        { __LINE__, L"c:\\ntldr", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\ntldr" },
+        { __LINE__, TEST_PATHW, TRUE, PIDL_IS_PATH, 0x00000200, NULL, TEST_PATHW },
         { __LINE__, L"\"c:\\\"\"program files\"", TRUE, PIDL_IS_NULL, 0x02000000, L"c:\\\"program files"},
         { __LINE__, L"\"c:\\\"program files", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
         { __LINE__, L"\"c:\\ \"program files", TRUE, PIDL_IS_NULL, 0x02000000, L"c:\\ program files"},
@@ -238,12 +251,12 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"/select,0", TRUE, PIDL_IS_NULL, 0x02000040, L"0"},
         { __LINE__, L"/select,c:\\", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\" },
         { __LINE__, L"c:\\,/select", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\" },
-        { __LINE__, L"/select,c:\\ntldr", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\ntldr" },
+        { __LINE__, L"/select," TEST_PATHW, TRUE, PIDL_IS_PATH, 0x00000240, NULL, TEST_PATHW },
         { __LINE__, L"/select,c:\\Program Files,c:\\Documents and settings", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\Documents and Settings" },
-        { __LINE__, L"c:\\,/select,ntldr", TRUE, PIDL_IS_NULL, 0x02000240, L"ntldr"},
-        { __LINE__, L"c:\\,/select,c:\\ntldr", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\ntldr" },
-        { __LINE__, L"a:\\,/select,c:\\ntldr", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\ntldr" },
-        { __LINE__, L"z:\\,/select,c:\\ntldr", TRUE, PIDL_IS_PATH, 0x02000240, L"z:\\", L"C:\\ntldr" },
+        { __LINE__, L"c:\\,/select," TEST_FILENAMEW, TRUE, PIDL_IS_NULL, 0x02000240, TEST_FILENAMEW },
+        { __LINE__, L"c:\\,/select," TEST_PATHW, TRUE, PIDL_IS_PATH, 0x00000240, NULL, TEST_PATHW },
+        { __LINE__, L"a:\\,/select," TEST_PATHW, TRUE, PIDL_IS_PATH, 0x00000240, NULL, TEST_PATHW },
+        { __LINE__, L"z:\\,/select," TEST_PATHW, TRUE, PIDL_IS_PATH, 0x02000240, L"z:\\", TEST_PATHW },
         { __LINE__, L"select,c:\\ ", TRUE, PIDL_IS_PATH, 0x02000200, L"select", L"C:\\" },
         { __LINE__, L"/select c:\\ ", TRUE, PIDL_IS_NULL, 0x02000000, L"/select c:\\"},
         { __LINE__, L"a:\\,/select,c:\\", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\" },
@@ -256,16 +269,16 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"/e,c:\\", TRUE, PIDL_IS_PATH, 0x00000208, NULL, L"C:\\" },
         { __LINE__, L"c:\\,/e", TRUE, PIDL_IS_PATH, 0x00000208, NULL, L"C:\\" },
         { __LINE__, L"/e,c", TRUE, PIDL_IS_NULL, 0x02000008, L"c"},
-        { __LINE__, L"/root,c:\\,/select,ntldr", TRUE, PIDL_IS_NULL, 0x02000040, L"ntldr"},
-        { __LINE__, L"/select,ntldr,/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x02000040, L"ntldr", L"c:\\" },
-        { __LINE__, L"/root,c:\\,/select,c:\\ntldr", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\ntldr" },
-        { __LINE__, L"/select,c:\\ntldr,/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x00000240, NULL, L"c:\\" },
-        { __LINE__, L"/e,/select,ntldr,/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x02000048, L"ntldr", L"c:\\" },
-        { __LINE__, L"/e,/root,c:\\,/select,ntldr", TRUE, PIDL_IS_NULL, 0x02000048, L"ntldr"},
+        { __LINE__, L"/root,c:\\,/select," TEST_FILENAMEW, TRUE, PIDL_IS_NULL, 0x02000040, TEST_FILENAMEW },
+        { __LINE__, L"/select," TEST_FILENAMEW L",/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x02000040, TEST_FILENAMEW, L"c:\\" },
+        { __LINE__, L"/root,c:\\,/select," TEST_PATHW, TRUE, PIDL_IS_PATH, 0x00000240, NULL, TEST_PATHW },
+        { __LINE__, L"/select," TEST_PATHW L",/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x00000240, NULL, L"c:\\" },
+        { __LINE__, L"/e,/select," TEST_FILENAMEW L",/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x02000048, TEST_FILENAMEW, L"c:\\" },
+        { __LINE__, L"/e,/root,c:\\,/select," TEST_FILENAMEW, TRUE, PIDL_IS_NULL, 0x02000048, TEST_FILENAMEW },
         { __LINE__, L"/e,/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x00000008, NULL, L"c:\\" },
-        { __LINE__, L"/e,c:\\,/select,ntldr", TRUE, PIDL_IS_NULL, 0x02000248, L"ntldr"},
-        { __LINE__, L"c:\\,/e,/select,ntldr", TRUE, PIDL_IS_NULL, 0x02000248, L"ntldr"},
-        { __LINE__, L"c:\\,/select,ntldr,/e", TRUE, PIDL_IS_NULL, 0x02000248, L"ntldr"},
+        { __LINE__, L"/e,c:\\,/select," TEST_FILENAMEW, TRUE, PIDL_IS_NULL, 0x02000248, TEST_FILENAMEW },
+        { __LINE__, L"c:\\,/e,/select," TEST_FILENAMEW, TRUE, PIDL_IS_NULL, 0x02000248, TEST_FILENAMEW },
+        { __LINE__, L"c:\\,/select," TEST_FILENAMEW L",/e", TRUE, PIDL_IS_NULL, 0x02000248, TEST_FILENAMEW },
         { __LINE__, L"http:\\\\www.reactos.org", TRUE, PIDL_IS_NULL, 0x02000000, L"http:\\\\www.reactos.org"},
         { __LINE__, L"/e,http:\\\\www.reactos.org", TRUE, PIDL_IS_NULL, 0x02000008, L"http:\\\\www.reactos.org"},
         { __LINE__, L"/root,c:\\,http:\\\\www.reactos.org", TRUE, PIDL_IS_NULL, 0x02000000, L"http:\\\\www.reactos.org"},
@@ -279,7 +292,7 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"c:\\Documents and settings,/inproc,/noui,/s,/separate,/n,/e,/root,{450D8FBA-AD25-11D0-98A8-0800361B1103, 0},test,/select,c:\\Program files,", FALSE, PIDL_PATH_EQUALS_PATH, 0x00000200, NULL, L"C:\\Documents and Settings" },
         { __LINE__, L"=", TRUE, CSIDL_DRIVES, 0x00000200 },
         { __LINE__, L"=c:\\", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\" },
-        { __LINE__, L"=c:\\ntldr", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\ntldr" },
+        { __LINE__, L"=" TEST_PATHW, TRUE, PIDL_IS_PATH, 0x00000200, NULL, TEST_PATHW },
         { __LINE__, L"/root,=", TRUE, CSIDL_DRIVES, 0x00000200 },
         { __LINE__, L"/root=c:\\", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\" },
         { __LINE__, L"/root=c:\\Program files", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
@@ -331,9 +344,13 @@ START_TEST(SHExplorerParseCmdLine)
     WCHAR OriginalCommandLine[1024];
     int i;
     UINT maxWrite = 0;
+    FILE * ff;
 
     CommandLine = GetCommandLineW();
     StringCbCopyW(OriginalCommandLine, sizeof(OriginalCommandLine), CommandLine);
+
+    ff = fopen(TEST_PATHA, "wb");
+    fclose(ff);
 
     for (i = 0; i < TestCount; i++)
     {
@@ -356,4 +373,6 @@ START_TEST(SHExplorerParseCmdLine)
     trace("Writes reached the byte right before 0x%08x\n", maxWrite);
 
     wcscpy(CommandLine, OriginalCommandLine);
+
+    remove(TEST_PATHA);
 }
