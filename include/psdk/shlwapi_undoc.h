@@ -25,7 +25,7 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-struct IEThreadParamBlock
+typedef struct IEThreadParamBlock
 {
 	long							offset0;
 	long							offset4;
@@ -43,9 +43,9 @@ struct IEThreadParamBlock
 	char							filler3[116];	// unknown contents
 	IUnknown						*offsetF8;		// instance explorer
 	long							filler4;		// unknown contents
-};
+} IE_THREAD_PARAM_BLOCK, *PIE_THREAD_PARAM_BLOCK;
 
-struct ExplorerCommandLineParseResults
+typedef struct ExplorerCommandLineParseResults
 {
     LPWSTR strPath;
     LPITEMIDLIST pidlPath;
@@ -61,7 +61,7 @@ struct ExplorerCommandLineParseResults
     DWORD unk_44;
     DWORD unk_48;
     GUID guidInproc;
-};
+} EXPLORER_CMDLINE_PARSE_RESULTS, *PEXPLORER_CMDLINE_PARSE_RESULTS;
 
 #define SH_EXPLORER_CMDLINE_FLAG_ONE      0x00000001
 #define SH_EXPLORER_CMDLINE_FLAG_S        0x00000002
@@ -122,18 +122,18 @@ HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 
 void WINAPI InitOCHostClass(long param8);
-long WINAPI SHOpenFolderWindow(IEThreadParamBlock *param8);
+long WINAPI SHOpenFolderWindow(PIE_THREAD_PARAM_BLOCK param8);
 void WINAPI SHCreateSavedWindows(void);
 long WINAPI SHCreateFromDesktop(long param8);
-UINT WINAPI SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pParseResults);
+UINT WINAPI SHExplorerParseCmdLine(PEXPLORER_CMDLINE_PARSE_RESULTS pParseResults);
 void WINAPI UEMRegisterNotify(long param8, long paramC);
 HRESULT WINAPI SHCreateBandForPidl(LPCITEMIDLIST param8, IUnknown *paramC, BOOL param10);
 HRESULT WINAPI SHPidlFromDataObject(IDataObject *param8, long *paramC, long param10, FILEDESCRIPTORW *param14);
 long WINAPI IDataObject_GetDeskBandState(long param8);
-IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(long param8, long paramC, IUnknown *param10, IUnknown *param14);
-IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *param);
+PIE_THREAD_PARAM_BLOCK WINAPI SHCreateIETHREADPARAM(long param8, long paramC, IUnknown *param10, IUnknown *param14);
+PIE_THREAD_PARAM_BLOCK WINAPI SHCloneIETHREADPARAM(PIE_THREAD_PARAM_BLOCK param);
 long WINAPI SHParseIECommandLine(long param8, long paramC);
-void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param);
+void WINAPI SHDestroyIETHREADPARAM(PIE_THREAD_PARAM_BLOCK param);
 HRESULT WINAPI SHOnCWMCommandLine(long param8);
 LPITEMIDLIST WINAPI Channel_GetFolderPidl(void);
 IUnknown *WINAPI ChannelBand_Create(LPITEMIDLIST pidl);

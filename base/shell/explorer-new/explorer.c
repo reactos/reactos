@@ -19,7 +19,7 @@
  */
 
 #include "precomp.h"
-
+#include <shlwapi_undoc.h>
 #include <winver.h>
 
 HINSTANCE hExplorerInstance;
@@ -450,108 +450,28 @@ _tWinMain(IN HINSTANCE hInstance,
     }
     else
     {
-        WCHAR root[MAX_PATH];
-        HMODULE hBrowseui;
         HRESULT hr;
-        LPSHELLFOLDER pDesktopFolder = NULL;
-        LPITEMIDLIST pidlRoot = NULL;
-        typedef HRESULT(WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
-        SH_OPEN_NEW_FRAME SHOpenNewFrame;
+        EXPLORER_CMDLINE_PARSE_RESULTS parseResults = { 0 };
 
-        /* A shell is already loaded. Parse the command line arguments
-           and unless we need to do something specific simply display
-           the desktop in a separate explorer window */
-        /* FIXME */
+        if (!SHExplorerParseCmdLine(&parseResults))
+            return 0;
 
-        /* Commandline switches:
-         *
-         * /n               Open a new window, even if an existing one still exists.
-         * /e               Start with the explorer sidebar shown.
-         * /root,<object>   Open a window for the given object path.
-         * /select,<object> Open a window with the given object selected.
-         */
+        // TODO: Handle the case where .strPath was assigned instead of .pidlPath
 
-        /* FIXME: Do it right */
-        WCHAR* tmp = wcsstr(lpCmdLine,L"/root,");
-        if (tmp)
+        if (parseResults.dwFlags & SH_EXPLORER_CMDLINE_FLAG_IDLIST)
         {
-            WCHAR* tmp2;
-            
-            tmp += 6; // skip to beginning of path
-            tmp2 = wcschr(tmp, L',');
+            TRACE("Trying to open browser window... \n");
 
-            if (tmp2)
-            {
-                wcsncpy(root, tmp, tmp2 - tmp);
-            }
-            else
-            {
-                wcscpy(root, tmp);
-            }
-        }
-        else
-        {
-            wcscpy(root, lpCmdLine);
-        }
-
-        if (root[0] == L'"')
-        {
-            int len = wcslen(root) - 2;
-            wcsncpy(root, root + 1, len);
-            root[len] = 0;
-        }
-
-        if (wcslen(root) > 0)
-        {
-            LPITEMIDLIST  pidl;
-            ULONG         chEaten;
-            ULONG         dwAttributes;
-
-            if (SUCCEEDED(SHGetDesktopFolder(&pDesktopFolder)))
-            {
-                hr = pDesktopFolder->lpVtbl->ParseDisplayName(pDesktopFolder,
-                    NULL,
-                    NULL,
-                    root,
-                    &chEaten,
-                    &pidl,
-                    &dwAttributes);
-                if (SUCCEEDED(hr))
-                {
-                    pidlRoot = pidl;
-                    DbgPrint("Got PIDL for folder '%S'\n", root);
-                }
-            }
-        }
-
-        if (!pidlRoot)
-        {
-            DbgPrint("No folder, getting PIDL for My Computer.\n", root);
-            hr = SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidlRoot);
+            hr = SHOpenNewFrame(parseResults.pidlPath, NULL, 0, 0);
             if (FAILED(hr))
                 return 0;
-        }
 
-        DbgPrint("Trying to open browser window... \n");
+            /* FIXME: we should wait a bit here and see if a window was created. If not we should exit this process. */
+            Sleep(1000);
+            ExitThread(0);
 
-        hBrowseui = LoadLibraryW(L"browseui.dll");
-        if (!hBrowseui)
-        {
-            DbgPrint("Browseui not found.. \n");
             return 0;
         }
-
-        SHOpenNewFrame = (SH_OPEN_NEW_FRAME) GetProcAddress(hBrowseui, (LPCSTR) 103);
-
-        hr = SHOpenNewFrame(pidlRoot, (IUnknown*)pDesktopFolder, 0, 0);
-        if (FAILED(hr))
-            return 0;
-
-        /* FIXME: we should wait a bit here and see if a window was created. If not we should exit this process. */
-        Sleep(1000);
-        ExitThread(0);
-
-        return 0;
     }
 
     if (Tray != NULL)
