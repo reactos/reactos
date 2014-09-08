@@ -9,7 +9,7 @@ list(APPEND SOURCE
     explorer.c
     rshell.c
     settings.c
-	shellservice.c
+    shellservice.c
     startmnu.c
     startup.c
     taskband.c
@@ -31,7 +31,7 @@ add_importlibs(explorer
     ole32
     oleaut32
     shell32
-	browseui
+    browseui
     shlwapi
     shdocvw
     version
