@@ -38,6 +38,7 @@ typedef struct _GUI_CONSOLE_DATA
     CRITICAL_SECTION Lock;
     BOOL WindowSizeLock;
     HANDLE hGuiInitEvent;
+    HANDLE hGuiTermEvent;
 
     POINT OldCursor;
 
