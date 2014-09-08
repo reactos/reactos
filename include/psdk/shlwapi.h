@@ -1862,6 +1862,30 @@ HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 
 #endif /* NO_SHLWAPI_STREAM */
 
+#ifndef NO_SHLWAPI_SHARED
+
+PVOID
+WINAPI
+SHLockShared(
+    _In_  HANDLE hData,
+    _In_  DWORD dwProcessId
+    );
+
+BOOL
+WINAPI
+SHUnlockShared(
+    _In_  void *pvData
+    );
+
+BOOL
+WINAPI
+SHFreeShared(
+    _In_  HANDLE hData,
+    _In_  DWORD dwProcessId
+    );
+
+#endif /* NO_SHLWAPI_SHARED */
+
 /* SHAutoComplete flags */
 #define SHACF_DEFAULT               0x00000000
 #define SHACF_FILESYSTEM            0x00000001

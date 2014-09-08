@@ -45,6 +45,45 @@ struct IEThreadParamBlock
 	long							filler4;		// unknown contents
 };
 
+struct ExplorerCommandLineParseResults
+{
+    LPWSTR strPath;
+    LPITEMIDLIST pidlPath;
+    DWORD dwFlags;
+    DWORD unk_12;
+    DWORD unk_16;
+    DWORD unk_20;
+    DWORD unk_24;
+    DWORD unk_28;
+    LPITEMIDLIST pidlRoot;
+    DWORD unk_36;
+    DWORD unk_40;
+    DWORD unk_44;
+    DWORD unk_48;
+    GUID guidInproc;
+};
+
+#define SH_EXPLORER_CMDLINE_FLAG_ONE      0x00000001
+#define SH_EXPLORER_CMDLINE_FLAG_S        0x00000002
+// unknown/unused                         0x00000004
+#define SH_EXPLORER_CMDLINE_FLAG_E        0x00000008
+// unknown/unused                         0x00000010
+// unknown/unused                         0x00000020
+#define SH_EXPLORER_CMDLINE_FLAG_SELECT   0x00000040
+#define SH_EXPLORER_CMDLINE_FLAG_EMBED    0x00000080
+// unknown/unused                         0x00000100
+#define SH_EXPLORER_CMDLINE_FLAG_IDLIST   0x00000200
+#define SH_EXPLORER_CMDLINE_FLAG_INPROC   0x00000400
+// unknown/unused                         0x00000800
+#define SH_EXPLORER_CMDLINE_FLAG_NOUI     0x00001000
+// unknown/unused                         0x00002000
+#define SH_EXPLORER_CMDLINE_FLAG_N        0x00004000
+// unknown/unused                         0x00008000
+// unknown/unused                         0x00010000
+#define SH_EXPLORER_CMDLINE_FLAG_SEPARATE 0x00020000
+#define SH_EXPLORER_CMDLINE_FLAG_STRING   0x02000000
+
+
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 HRESULT WINAPI IUnknown_QueryStatus(IUnknown *lpUnknown, REFGUID pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT* pCmdText);
@@ -86,7 +125,7 @@ void WINAPI InitOCHostClass(long param8);
 long WINAPI SHOpenFolderWindow(IEThreadParamBlock *param8);
 void WINAPI SHCreateSavedWindows(void);
 long WINAPI SHCreateFromDesktop(long param8);
-long WINAPI SHExplorerParseCmdLine(LPCTSTR commandLine);
+UINT WINAPI SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pParseResults);
 void WINAPI UEMRegisterNotify(long param8, long paramC);
 HRESULT WINAPI SHCreateBandForPidl(LPCITEMIDLIST param8, IUnknown *paramC, BOOL param10);
 HRESULT WINAPI SHPidlFromDataObject(IDataObject *param8, long *paramC, long param10, FILEDESCRIPTORW *param14);

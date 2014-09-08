@@ -24,6 +24,7 @@ list(APPEND SOURCE
     commonbrowser.cpp
     globalfoldersettings.cpp
     internettoolbar.cpp
+    parsecmdline.cpp
     regtreeoptions.cpp
     shellbrowser.cpp
     toolsband.cpp

@@ -58,10 +58,7 @@ extern "C" long WINAPI SHCreateFromDesktop(long param8)
 /*************************************************************************
  * SHExplorerParseCmdLine		[BROWSEUI.107]
  */
-extern "C" long WINAPI SHExplorerParseCmdLine(LPCTSTR commandLine)
-{
-    return -1;
-}
+/****** MOVED TO parsecmdline.cpp ******/
 
 /*************************************************************************
  * UEMRegisterNotify			[BROWSEUI.118]
