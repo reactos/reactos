@@ -184,7 +184,7 @@
 		return intgr ;
 	}
 #else
-	static __inline long int
+	extern __inline long int
 	lrint (double flt)
 	{
 		int intgr ;
@@ -192,7 +192,7 @@
 		return intgr ;
 	}
 
-	static __inline long int
+	extern __inline long int
 	lrintf (float flt)
 	{
 		int intgr ;
