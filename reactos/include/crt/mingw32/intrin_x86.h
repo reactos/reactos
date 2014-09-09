@@ -684,9 +684,9 @@ __INTRIN_INLINE long _InterlockedAddLargeStatistic(volatile long long * const Ad
 {
 	__asm__
 	(
-		"lock; add %[Value], %[Lo32];"
+		"lock; addl %[Value], %[Lo32];"
 		"jae LABEL%=;"
-		"lock; adc $0, %[Hi32];"
+		"lock; adcl $0, %[Hi32];"
 		"LABEL%=:;" :
 		[Lo32] "+m" (*((volatile long *)(Addend) + 0)), [Hi32] "+m" (*((volatile long *)(Addend) + 1)) :
 		[Value] "ir" (Value) :
