@@ -27,10 +27,6 @@ ConDllInitialize(IN ULONG Reason,
                  IN PWSTR SessionDir);
 
 VOID
-WINAPI
-BasepUninitConsole(VOID);
-
-VOID
 InitializeCtrlHandling(VOID);
 
 DWORD

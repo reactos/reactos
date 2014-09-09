@@ -26,7 +26,7 @@ BOOLEAN ConsoleInitialized = FALSE;
 
 extern HANDLE InputWaitHandle;
 
-static HMODULE ConsoleLibrary = NULL;
+static HMODULE ConsoleApplet = NULL;
 static BOOL AlreadyDisplayingProps = FALSE;
 
 static const PWSTR DefaultConsoleTitle = L"ReactOS Console";
@@ -60,14 +60,14 @@ PropDialogHandler(IN LPVOID lpThreadParameter)
     AlreadyDisplayingProps = TRUE;
 
     /* Load the Control Applet if needed */
-    if (ConsoleLibrary == NULL)
+    if (ConsoleApplet == NULL)
     {
         WCHAR szBuffer[MAX_PATH];
 
         GetSystemDirectoryW(szBuffer, MAX_PATH);
         wcscat(szBuffer, L"\\console.dll");
-        ConsoleLibrary = LoadLibraryW(szBuffer);
-        if (ConsoleLibrary == NULL)
+        ConsoleApplet = LoadLibraryW(szBuffer);
+        if (ConsoleApplet == NULL)
         {
             DPRINT1("Failed to load console.dll\n");
             Status = STATUS_UNSUCCESSFUL;
@@ -76,7 +76,7 @@ PropDialogHandler(IN LPVOID lpThreadParameter)
     }
 
     /* Load its main function */
-    CPLFunc = (APPLET_PROC)GetProcAddress(ConsoleLibrary, "CPlApplet");
+    CPLFunc = (APPLET_PROC)GetProcAddress(ConsoleApplet, "CPlApplet");
     if (CPLFunc == NULL)
     {
         DPRINT1("Error: Console.dll misses CPlApplet export\n");
@@ -261,7 +261,7 @@ SetUpHandles(IN PCONSOLE_START_INFO ConsoleStartInfo)
     /* We got the handles, let's set them */
     Parameters->ConsoleHandle = ConsoleStartInfo->ConsoleHandle;
 
-    if (!(ConsoleStartInfo->dwStartupFlags & STARTF_USESTDHANDLES))
+    if ((ConsoleStartInfo->dwStartupFlags & STARTF_USESTDHANDLES) == 0)
     {
         Parameters->StandardInput  = ConsoleStartInfo->InputHandle;
         Parameters->StandardOutput = ConsoleStartInfo->OutputHandle;
@@ -345,11 +345,24 @@ ConDllInitialize(IN ULONG Reason,
 
     if (Reason != DLL_PROCESS_ATTACH)
     {
-        if (Reason != DLL_THREAD_ATTACH || !IsConsoleApp())
-            return TRUE;
+        if ((Reason == DLL_THREAD_ATTACH) && IsConsoleApp())
+        {
+            /* Sets the current console locale for the new thread */
+            SetTEBLangID(lcid);
+        }
+        else if (Reason == DLL_PROCESS_DETACH)
+        {
+            /* Free our resources */
+            if (ConsoleInitialized == TRUE)
+            {
+                if (ConsoleApplet) FreeLibrary(ConsoleApplet);
 
-        // Reason == DLL_THREAD_ATTACH and IsConsoleApp;
-        goto Exit;
+                ConsoleInitialized = FALSE;
+                RtlDeleteCriticalSection(&ConsoleLock);
+            }
+        }
+
+        return TRUE;
     }
 
     DPRINT("ConDllInitialize for: %wZ\n"
@@ -509,7 +522,8 @@ ConDllInitialize(IN ULONG Reason,
             SetUpHandles(&ConnectInfo.ConsoleStartInfo);
 
         InputWaitHandle = ConnectInfo.ConsoleStartInfo.InputWaitHandle;
-Exit:
+
+        /* Sets the current console locale for this thread */
         SetTEBLangID(lcid);
     }
 
@@ -520,21 +534,6 @@ Exit:
            Parameters->StandardError);
 
     return TRUE;
-}
-
-
-VOID
-WINAPI
-BasepUninitConsole(VOID)
-{
-    /* Delete our critical section if we were initialized */
-    if (ConsoleInitialized == TRUE)
-    {
-        if (ConsoleLibrary) FreeLibrary(ConsoleLibrary);
-
-        ConsoleInitialized = FALSE;
-        RtlDeleteCriticalSection(&ConsoleLock);
-    }
 }
 
 /* EOF */

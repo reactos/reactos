@@ -18,9 +18,7 @@
 
 #if _WIN32_WINNT >= 0x600
 
-/*--------------------------------------------------------------
- *  GetConsoleHistoryInfo
- *
+/*
  * @implemented
  */
 BOOL
@@ -55,9 +53,7 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 }
 
 
-/*--------------------------------------------------------------
- *  SetConsoleHistoryInfo
- *
+/*
  * @implemented
  */
 BOOL
@@ -92,9 +88,7 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 }
 
 
-/*--------------------------------------------------------------
- *  GetConsoleOriginalTitleW
- *
+/*
  * @unimplemented
  */
 DWORD
@@ -108,9 +102,7 @@ GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
 }
 
 
-/*--------------------------------------------------------------
- *  GetConsoleOriginalTitleA
- *
+/*
  * @unimplemented
  */
 DWORD
@@ -124,9 +116,7 @@ GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
 }
 
 
-/*--------------------------------------------------------------
- *  GetConsoleScreenBufferInfoEx
- *
+/*
  * @unimplemented
  */
 BOOL
@@ -140,9 +130,7 @@ GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *  SetConsoleScreenBufferInfoEx
- *
+/*
  * @unimplemented
  */
 BOOL
@@ -156,9 +144,7 @@ SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *  GetCurrentConsoleFontEx
- *
+/*
  * @unimplemented
  */
 BOOL

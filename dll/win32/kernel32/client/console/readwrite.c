@@ -163,7 +163,7 @@ IntReadConsole(IN HANDLE hConsoleInput,
     }
     _SEH2_END;
 
-    /* Check for sanity */
+    /* FIXME: Check for sanity */
 /*
     if (!NT_SUCCESS(Status) && pInputControl)
     {
@@ -1167,9 +1167,7 @@ IntFillConsoleOutputCode(IN HANDLE hConsoleOutput,
  * Read functions *
  ******************/
 
-/*--------------------------------------------------------------
- *    ReadConsoleW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1189,9 +1187,7 @@ ReadConsoleW(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *    ReadConsoleA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1211,9 +1207,7 @@ ReadConsoleA(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     PeekConsoleInputW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1232,9 +1226,7 @@ PeekConsoleInputW(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     PeekConsoleInputA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1253,9 +1245,7 @@ PeekConsoleInputA(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleInputW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1274,9 +1264,7 @@ ReadConsoleInputW(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleInputA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1295,9 +1283,7 @@ ReadConsoleInputA(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleInputExW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1317,9 +1303,7 @@ ReadConsoleInputExW(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleInputExA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1339,9 +1323,7 @@ ReadConsoleInputExA(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleOutputW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1361,9 +1343,7 @@ ReadConsoleOutputW(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleOutputA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1383,9 +1363,7 @@ ReadConsoleOutputA(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *      ReadConsoleOutputCharacterW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1405,9 +1383,7 @@ ReadConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleOutputCharacterA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1427,9 +1403,7 @@ ReadConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     ReadConsoleOutputAttribute
- *
+/*
  * @implemented
  */
 BOOL
@@ -1453,9 +1427,7 @@ ReadConsoleOutputAttribute(IN HANDLE hConsoleOutput,
  * Write functions *
  *******************/
 
-/*--------------------------------------------------------------
- *    WriteConsoleW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1475,9 +1447,7 @@ WriteConsoleW(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *    WriteConsoleA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1497,9 +1467,7 @@ WriteConsoleA(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleInputW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1518,9 +1486,7 @@ WriteConsoleInputW(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleInputA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1539,9 +1505,7 @@ WriteConsoleInputA(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleInputVDMW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1560,9 +1524,7 @@ WriteConsoleInputVDMW(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleInputVDMA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1581,9 +1543,7 @@ WriteConsoleInputVDMA(IN HANDLE hConsoleInput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleOutputW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1603,9 +1563,7 @@ WriteConsoleOutputW(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleOutputA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1625,9 +1583,7 @@ WriteConsoleOutputA(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleOutputCharacterW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1647,9 +1603,7 @@ WriteConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleOutputCharacterA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1669,9 +1623,7 @@ WriteConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     WriteConsoleOutputAttribute
- *
+/*
  * @implemented
  */
 BOOL
@@ -1691,9 +1643,7 @@ WriteConsoleOutputAttribute(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *    FillConsoleOutputCharacterW
- *
+/*
  * @implemented
  */
 BOOL
@@ -1715,9 +1665,7 @@ FillConsoleOutputCharacterW(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *    FillConsoleOutputCharacterA
- *
+/*
  * @implemented
  */
 BOOL
@@ -1739,9 +1687,7 @@ FillConsoleOutputCharacterA(IN HANDLE hConsoleOutput,
 }
 
 
-/*--------------------------------------------------------------
- *     FillConsoleOutputAttribute
- *
+/*
  * @implemented
  */
 BOOL
