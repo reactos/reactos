@@ -305,32 +305,27 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     else if (giArch != ARCH_X86)
     {
         sprintf(szNameBuffer, "_stub_%.*s",
-                pexp->strName.len, pexp->strName.buf,
                 pexp->strName.len, pexp->strName.buf);
     }
     else if (pexp->nCallingConvention == CC_STDCALL)
     {
         sprintf(szNameBuffer, "__stub_%.*s@%d",
-                pexp->strName.len, pexp->strName.buf, pexp->nStackBytes,
                 pexp->strName.len, pexp->strName.buf, pexp->nStackBytes);
     }
     else if (pexp->nCallingConvention == CC_FASTCALL)
     {
         sprintf(szNameBuffer, "@_stub_%.*s@%d",
-                pexp->strName.len, pexp->strName.buf, pexp->nStackBytes,
                 pexp->strName.len, pexp->strName.buf, pexp->nStackBytes);
     }
     else if (pexp->nCallingConvention == CC_CDECL ||
              pexp->nCallingConvention == CC_STUB)
     {
         sprintf(szNameBuffer, "__stub_%.*s",
-                pexp->strName.len, pexp->strName.buf,
                 pexp->strName.len, pexp->strName.buf);
     }
     else if (pexp->nCallingConvention == CC_EXTERN)
     {
         sprintf(szNameBuffer, "__stub_%.*s",
-                pexp->strName.len, pexp->strName.buf,
                 pexp->strName.len, pexp->strName.buf);
     }
 
