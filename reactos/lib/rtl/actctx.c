@@ -582,7 +582,6 @@ static const WCHAR dependencyW[] = {'d','e','p','e','n','d','e','n','c','y',0};
 static const WCHAR dependentAssemblyW[] = {'d','e','p','e','n','d','e','n','t','A','s','s','e','m','b','l','y',0};
 static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR fileW[] = {'f','i','l','e',0};
-static const WCHAR asmv2hashW[] = {'a','s','m','v','2',':','h','a','s','h',0};
 static const WCHAR noInheritW[] = {'n','o','I','n','h','e','r','i','t',0};
 static const WCHAR noInheritableW[] = {'n','o','I','n','h','e','r','i','t','a','b','l','e',0};
 static const WCHAR typelibW[] = {'t','y','p','e','l','i','b',0};
