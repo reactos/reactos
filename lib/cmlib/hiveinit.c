@@ -210,6 +210,8 @@ HvpInitializeMemoryHive(
       if (Bin->Signature != HV_BIN_SIGNATURE ||
           (Bin->Size % HV_BLOCK_SIZE) != 0)
       {
+         DPRINT1("Invalid bin at BlockIndex %lu, Signature 0x%x, Size 0x%x\n",
+                 (unsigned long)BlockIndex, (unsigned)Bin->Signature, (unsigned)Bin->Size);
          Hive->Free(Hive->BaseBlock, 0);
          Hive->Free(Hive->Storage[Stable].BlockList, 0);
          return STATUS_REGISTRY_CORRUPT;
@@ -506,7 +508,7 @@ HvInitialize(
          }
 
          /* Check for previous damage */
-         if (Status == STATUS_REGISTRY_RECOVERED) ASSERT(FALSE);
+         ASSERT(Status != STATUS_REGISTRY_RECOVERED);
          break;
      }
 

@@ -200,7 +200,7 @@ CcCopyData (
     _In_ PFILE_OBJECT FileObject,
     _In_ LONGLONG FileOffset,
     _Inout_ PVOID Buffer,
-    _In_ ULONG Length,
+    _In_ LONGLONG Length,
     _In_ CC_COPY_OPERATION Operation,
     _In_ BOOLEAN Wait,
     _Out_ PIO_STATUS_BLOCK IoStatus)
@@ -467,7 +467,7 @@ CcZeroData (
 {
     NTSTATUS Status;
     LARGE_INTEGER WriteOffset;
-    ULONG Length;
+    LONGLONG Length;
     ULONG CurrentLength;
     PMDL Mdl;
     ULONG i;
@@ -478,7 +478,7 @@ CcZeroData (
            "Wait %u)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,
            Wait);
 
-    Length = EndOffset->u.LowPart - StartOffset->u.LowPart;
+    Length = EndOffset->QuadPart - StartOffset->QuadPart;
     WriteOffset.QuadPart = StartOffset->QuadPart;
 
     if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
@@ -489,9 +489,9 @@ CcZeroData (
 
         while (Length > 0)
         {
-            if (Length + WriteOffset.u.LowPart % PAGE_SIZE > MAX_ZERO_LENGTH)
+            if (Length + WriteOffset.QuadPart % PAGE_SIZE > MAX_ZERO_LENGTH)
             {
-                CurrentLength = MAX_ZERO_LENGTH - WriteOffset.u.LowPart % PAGE_SIZE;
+                CurrentLength = MAX_ZERO_LENGTH - WriteOffset.QuadPart % PAGE_SIZE;
             }
             else
             {

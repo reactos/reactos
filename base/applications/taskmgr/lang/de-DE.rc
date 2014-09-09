@@ -8,14 +8,14 @@ BEGIN
     BEGIN
         MENUITEM "&Neuer Task (Ausführen...)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Beenden",  ID_FILE_EXIT
+        MENUITEM "&Beenden", ID_FILE_EXIT
     END
     POPUP "&Optionen"
     BEGIN
         MENUITEM "&Immer im Vordergrund", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Nach Programmstart minimieren", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ausblenden, wenn minimiert", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&16-bit Tasks anzeigen", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "&16-Bit-Tasks anzeigen", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Ansicht"
     BEGIN
@@ -39,7 +39,7 @@ BEGIN
         END
         MENUITEM "K&ernel-Zeiten anzeigen", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "F&enster"
+    POPUP "&Fenster"
     BEGIN
         MENUITEM "&Untereinander", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "&Nebeneinander", ID_WINDOWS_TILEVERTICALLY
@@ -48,9 +48,21 @@ BEGIN
         MENUITEM "Übe&rlappend", ID_WINDOWS_CASCADE
         MENUITEM "&In Vordergrund", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "&Herunterfahren"
+    BEGIN
+        MENUITEM "&Standby", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Ruhezustand", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Ausschalten", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Neu starten", ID_SHUTDOWN_REBOOT
+        MENUITEM "%s ab&melden", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Benutzer wechseln\tWindows-Taste+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Computer sperren\tWindows-Taste+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Trennen", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "C&omputer abdocken", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Hilfethemen", ID_HELP_TOPICS
+        MENUITEM "&Hilfethemen\tF1", ID_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "Inf&o", ID_HELP_ABOUT
     END
@@ -73,7 +85,7 @@ BEGIN
         MENUITEM "&Neuer Task (Ausführen...)", ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Große Symbole", ID_VIEW_LARGE
-        MENUITEM "K&leine Symbole", ID_VIEW_SMALL
+        MENUITEM "&Kleine Symbole", ID_VIEW_SMALL
         MENUITEM "&Details", ID_VIEW_DETAILS, CHECKED
     END
 END
@@ -89,7 +101,7 @@ BEGIN
         MENUITEM "&Nebeneinander", ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimieren", ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximieren", ID_WINDOWS_MAXIMIZE
-        MENUITEM "Übe&rlappend", ID_WINDOWS_CASCADE
+        MENUITEM "Ü&berlappend", ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&Task beenden", ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&Zu Prozess wechseln", ID_APPLICATION_PAGE_GOTOPROCESS
@@ -101,9 +113,9 @@ BEGIN
     POPUP "DUMMY"
     BEGIN
         MENUITEM "&Wiederherstellen", ID_RESTORE
-        MENUITEM "&Schließen", ID_FILE_EXIT
+        MENUITEM "S&chließen", ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Immer im Vordergrund", ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "Immer im &Vordergrund", ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -115,7 +127,7 @@ BEGIN
         MENUITEM "Pr&ozessstruktur beenden", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Debuggen", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Pr&iorität festlegen"
+        POPUP "P&riorität festlegen"
         BEGIN
             MENUITEM "&Echtzeit", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&Hoch", ID_PROCESS_PAGE_SETPRIORITY_HIGH
@@ -387,9 +399,9 @@ BEGIN
     IDS_TAB_PAGEFAULT "Seitenfehler"
     IDS_TAB_PFDELTA "Maximale Seitenfehler"
     IDS_TAB_VMSIZE "Virtuelle Arbeitsspeichergröße"
-    IDS_TAB_PAGEDPOOL "Paged Pool"
-    IDS_TAB_NPPOOL "NP Pool"
-    IDS_TAB_BASEPRI "Basispri"
+    IDS_TAB_PAGEDPOOL "Ausgelagerter Pool"
+    IDS_TAB_NPPOOL "Nichtausgelagerter Pool"
+    IDS_TAB_BASEPRI "Basispriorität"
     IDS_TAB_HANDLES "Handleanzahl"
     IDS_TAB_THREADS "Threadanzahl"
     IDS_TAB_USERPBJECTS "Benutzer-Objekte"
@@ -426,6 +438,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "zugesicherter Speicher: %dK / %dK"
     IDS_STATUS_CPUUSAGE "CPU-Auslastung: %3d%%"
     IDS_STATUS_PROCESSES "Prozesse: %d"
-    IDS_Not_Responding "Keine Rückmeldung"
-    IDS_Running "Wird ausgeführt"
+    IDS_NOT_RESPONDING "Keine Rückmeldung"
+    IDS_RUNNING "Wird ausgeführt"
 END

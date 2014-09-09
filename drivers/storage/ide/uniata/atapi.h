@@ -938,6 +938,7 @@ typedef struct _IDENTIFY_DATA {
             USHORT v30:1;
             USHORT Reserved:10;
         } SATA;
+        USHORT Flags;
     } TransportMajor;
     USHORT TransportMinor;                   //     223
 

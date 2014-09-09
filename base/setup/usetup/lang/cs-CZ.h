@@ -1,7 +1,7 @@
 /* FILE:        setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   preston for bugfix advice at line 842
- * UPDATED:     2011-03-31
+ * UPDATED:     2014-08-31
  */
 
 #pragma once
@@ -827,14 +827,13 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Stisknut¡m C umo§n¡te vytvoýen¡ nov‚ho odd¡lu.",
+        "\x07  Stistknut¡m P vytvoý¡te prim rn¡ odd¡l.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Stistknut¡m E vytvoý¡te rozç¡ýenì odd¡l.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1509,29 +1508,29 @@ MUI_ERROR csCZErrorEntries[] =
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "Nepodaýilo se vytvoýit novì prim rn¡ nebo rozç¡ýenì odd¡l\n"
+        "v tabulce odd¡l… na zvolen‚m disku, proto§e tabulka odd¡l… je pln .\n"
         "\n"
-        "  * Press any key to continue."
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "Nen¡ mo§n‚ vytvoýit v¡ce ne§ jeden rozç¡ýenì odd¡l na disk.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
         //ERROR_NOT_BEHIND_EXTENDED,
-        "You can not create a partition behind an extended partition.\n"
+        "Nen¡ mo§n‚ vytvoýit odd¡l za rozç¡ýenìm odd¡lem.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
         //ERROR_EXTENDED_NOT_LAST,
-        "An extended partition must always be the last\n"
-        "partition in a partition table.\n"
+        "Rozç¡ýenì odd¡l mus¡ bìt v§dy posledn¡ odd¡l\n"
+        "v tabulce odd¡l….\n"
         "\n"
-        "  * Press any key to continue."
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
         NULL,
@@ -1645,23 +1644,21 @@ MUI_STRING csCZStrings[] =
     {STRING_PLEASEWAIT,
      "   ¬ekejte, pros¡m..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Instalovat   C = Vytvoýit odd¡l    F3 = UkonŸit"},
+     "   ENTER = Instalovat   P = Novì prim rn¡   E = Novì rozç¡ýenì   F3 = UkonŸit"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Instalovat   L = Vytvoýit logickì odd¡l   F3 = UkonŸit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalovat   D = Odstranit odd¡l   F3 = UkonŸit"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Odstranit odd¡l   F3 = UkonŸit"},
     {STRING_PARTITIONSIZE,
      "Velikost nov‚ho odd¡lu:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
-//     "Zvolili jste vytvoýen¡ nov‚ho odd¡lu na"},
+     "Zvolili jste vytvoýen¡ nov‚ho prim rn¡ho odd¡lu na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "Zvolili jste vytvoýen¡ nov‚ho rozç¡ýen‚ho odd¡lu na"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "Zvolili jste vytvoýen¡ nov‚ho logick‚ho odd¡lu na"},
     {STRING_HDDSIZE,
     "Zadejte velikost nov‚ho odd¡lu v megabajtech."},
     {STRING_CREATEPARTITION,
@@ -1745,7 +1742,7 @@ MUI_STRING csCZStrings[] =
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Rozç¡ýenì odd¡l"},
     {STRING_UNFORMATTED,
     "Novì (Nenaform tovanì)"},
     {STRING_FORMATUNUSED,

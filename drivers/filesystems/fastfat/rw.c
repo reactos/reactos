@@ -673,22 +673,35 @@ VfatRead(
             Status = /*STATUS_END_OF_FILE*/STATUS_SUCCESS;
         }
 
-        if (IrpContext->FileObject->PrivateCacheMap == NULL)
+        _SEH2_TRY
         {
-            CcInitializeCacheMap(IrpContext->FileObject,
-                                 (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                                 FALSE,
-                                 &(VfatGlobalData->CacheMgrCallbacks),
-                                 Fcb);
-        }
+            if (IrpContext->FileObject->PrivateCacheMap == NULL)
+            {
+                CcInitializeCacheMap(IrpContext->FileObject,
+                                     (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                                     FALSE,
+                                     &(VfatGlobalData->CacheMgrCallbacks),
+                                     Fcb);
+            }
 
-        if (!CcCopyRead(IrpContext->FileObject, &ByteOffset, Length,
-                        (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT), Buffer,
-                        &IrpContext->Irp->IoStatus))
+            if (!CcCopyRead(IrpContext->FileObject,
+                            &ByteOffset,
+                            Length,
+                            (IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0,
+                            Buffer,
+                            &IrpContext->Irp->IoStatus))
+            {
+                ASSERT((IrpContext->Flags & IRPCONTEXT_CANWAIT) == 0);
+                Status = STATUS_PENDING;
+                goto ByeBye;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = STATUS_PENDING;
+            Status = _SEH2_GetExceptionCode();
             goto ByeBye;
         }
+        _SEH2_END;
 
         if (!NT_SUCCESS(IrpContext->Irp->IoStatus.Status))
         {
@@ -947,30 +960,42 @@ VfatWrite(
     {
         // cached write
 
-        if (IrpContext->FileObject->PrivateCacheMap == NULL)
+        _SEH2_TRY
         {
-            CcInitializeCacheMap(IrpContext->FileObject,
-                                 (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                                 FALSE,
-                                 &VfatGlobalData->CacheMgrCallbacks,
-                                 Fcb);
-        }
+            if (IrpContext->FileObject->PrivateCacheMap == NULL)
+            {
+                CcInitializeCacheMap(IrpContext->FileObject,
+                                     (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                                     FALSE,
+                                     &VfatGlobalData->CacheMgrCallbacks,
+                                     Fcb);
+            }
 
-        if (ByteOffset.QuadPart > OldFileSize.QuadPart)
-        {
-            CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
-        }
+            if (ByteOffset.QuadPart > OldFileSize.QuadPart)
+            {
+                CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
+            }
 
-        if (CcCopyWrite(IrpContext->FileObject, &ByteOffset, Length,
-                        1 /*IrpContext->Flags & IRPCONTEXT_CANWAIT*/, Buffer))
-        {
-            IrpContext->Irp->IoStatus.Information = Length;
-            Status = STATUS_SUCCESS;
+            if (CcCopyWrite(IrpContext->FileObject,
+                            &ByteOffset,
+                            Length,
+                            TRUE /*(IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0*/,
+                            Buffer))
+            {
+                IrpContext->Irp->IoStatus.Information = Length;
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                ASSERT(FALSE /*(IrpContext->Flags & IRPCONTEXT_CANWAIT) == 0*/);
+                Status = STATUS_UNSUCCESSFUL;
+            }
         }
-        else
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = STATUS_UNSUCCESSFUL;
+            Status = _SEH2_GetExceptionCode();
         }
+        _SEH2_END;
     }
     else
     {

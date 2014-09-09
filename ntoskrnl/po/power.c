@@ -830,7 +830,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         {
             /* Not granted */
             DPRINT1("ERROR: Privilege not held for shutdown\n");
-            //return STATUS_PRIVILEGE_NOT_HELD; HACK!
+            return STATUS_PRIVILEGE_NOT_HELD;
         }
 
         /* Do it as a kernel-mode caller for consistency with system state */

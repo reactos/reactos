@@ -32,13 +32,19 @@ if(GCC_VERSION VERSION_GREATER 4.7)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_flags_language("-std=gnu89" "C")
-    add_compile_flags("-Wno-microsoft")
+    add_compile_flags_language("-std=gnu89 -Wno-microsoft" "C")
+    set(CMAKE_LINK_DEF_FILE_FLAG "")
+    set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
+    set(CMAKE_LINK_LIBRARY_SUFFIX "")
 endif()
 
 if(DBG)
-    add_compile_flags_language("-Wold-style-declaration -Wdeclaration-after-statement" "C")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_flags_language("-Wold-style-declaration" "C")
+    endif()
+    add_compile_flags_language("-Wdeclaration-after-statement" "C")
 endif()
+
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
 
 #bug

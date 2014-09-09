@@ -48,6 +48,18 @@ BEGIN
         MENUITEM "&Överlappande", ID_WINDOWS_CASCADE
         MENUITEM "&För till förgrunden", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&Hjälp"
     BEGIN
         MENUITEM "Aktivitetshanteraren &hjälpavsnitt", ID_HELP_TOPICS
@@ -426,6 +438,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Minnesanv: %dK / %dK"
     IDS_STATUS_CPUUSAGE "Processoranv: %3d%%"
     IDS_STATUS_PROCESSES "Processer: %d"
-    IDS_Not_Responding "Svarar inte"
-    IDS_Running "Igång"
+    IDS_NOT_RESPONDING "Svarar inte"
+    IDS_RUNNING "Igång"
 END

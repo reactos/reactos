@@ -10,23 +10,43 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Plik"
+    POPUP "Pli&k"
     BEGIN
-        MENUITEM "&Otwórz...", IDM_OPEN_FILE
-        MENUITEM "&Zamknij", IDM_CLOSE_FILE
+        MENUITEM "&Otwórz...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Zamknij\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjdź", IDM_EXIT
+        MENUITEM "Za&kończ", IDM_EXIT
+    END
+    POPUP "&Graj"
+    BEGIN
+        MENUITEM "Play/&Pauza\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Pow&tarzaj\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&Widok"
+    BEGIN
+        MENUITEM "Tryb po&jedynczego okna", IDM_SWITCHVIEW
     END
     POPUP "&Urządzenie"
     BEGIN
-        MENUITEM "&Właściwości", IDM_DEVPROPS
+        MENUITEM "Właś&ciwości", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Regulacja głośności", IDM_VOLUMECTL
     END
-    POPUP "&Pomoc"
+    POPUP "Pomo&c"
     BEGIN
         MENUITEM "&O programie...", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE
@@ -41,6 +61,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
     IDS_APPTITLE "Odtwarzacz multimedialny ReactOS"
     IDS_PLAY "Odtwórz"
-    IDS_DEFAULTMCIERRMSG "Brak dostępnego opisu dla tego błędu"
+    IDS_DEFAULTMCIERRMSG "Brak dostępnego opisu dla tego błędu."
     IDS_UNKNOWNFILEEXT "Nie można określić typu urządzenia z podanego rozszerzenia pliku."
 END

@@ -264,12 +264,10 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 #define UCHAR_ERROR '\0'
 #define CHAR_ERROR '\0'
 
-
 /* 32 bit x 32 bit to 64 bit unsigned multiplication */
 #ifndef UInt32x32To64
-#define UInt32x32To64(a,b) ((DWORDLONG)(a)*(DWORDLONG)(b))
+#define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
 #endif
-
 
 /* Convert unsigned to signed or unsigned */
 #define DEFINE_SAFE_CONVERT_UTOX(_Name, _TypeFrom, _TypeTo) \

@@ -235,51 +235,6 @@ inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 /******************************************************************************
  *                           INTERLOCKED Functions                            *
  ******************************************************************************/
-//
-// Intrinsics (note: taken from our winnt.h)
-// FIXME: 64-bit
-//
-#if defined(__GNUC__)
-
-static __inline__ BOOLEAN
-InterlockedBitTestAndSet(
-    _Inout_updates_bytes_((Bit+7)/8) _Interlocked_operand_ LONG volatile *Base,
-    _In_ LONG Bit)
-{
-#if defined(_M_IX86)
-  LONG OldBit;
-  __asm__ __volatile__("lock "
-                       "btsl %2,%1\n\t"
-                       "sbbl %0,%0\n\t"
-                       :"=r" (OldBit),"+m" (*Base)
-                       :"Ir" (Bit)
-                       : "memory");
-  return OldBit;
-#else
-  return (_InterlockedOr(Base, 1 << Bit) >> Bit) & 1;
-#endif
-}
-
-static __inline__ BOOLEAN
-InterlockedBitTestAndReset(
-    _Inout_updates_bytes_((Bit+7)/8) _Interlocked_operand_ LONG volatile *Base,
-    _In_ LONG Bit)
-{
-#if defined(_M_IX86)
-  LONG OldBit;
-  __asm__ __volatile__("lock "
-                       "btrl %2,%1\n\t"
-                       "sbbl %0,%0\n\t"
-                       :"=r" (OldBit),"+m" (*Base)
-                       :"Ir" (Bit)
-                       : "memory");
-  return OldBit;
-#else
-  return (_InterlockedAnd(Base, ~(1 << Bit)) >> Bit) & 1;
-#endif
-}
-
-#endif /* defined(__GNUC__) */
 
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
@@ -16136,6 +16091,7 @@ typedef struct _TRANSACTIONMANAGER_RECOVERY_INFORMATION {
   ULONGLONG LastRecoveredLsn;
 } TRANSACTIONMANAGER_RECOVERY_INFORMATION, *PTRANSACTIONMANAGER_RECOVERY_INFORMATION;
 
+
 typedef struct _TRANSACTION_PROPERTIES_INFORMATION {
   ULONG IsolationLevel;
   ULONG IsolationFlags;
@@ -16184,7 +16140,7 @@ typedef enum _KTMOBJECT_TYPE {
 
 typedef struct _KTMOBJECT_CURSOR {
   GUID LastQuery;
-  ULONG ObjectIdCount;
+  unsigned long ObjectIdCount;
   GUID ObjectIds[1];
 } KTMOBJECT_CURSOR, *PKTMOBJECT_CURSOR;
 
@@ -16192,14 +16148,14 @@ typedef enum _TRANSACTION_INFORMATION_CLASS {
   TransactionBasicInformation,
   TransactionPropertiesInformation,
   TransactionEnlistmentInformation,
-  TransactionSuperiorEnlistmentInformation
+  TransactionSuperiorEnlistmentInformation,
 } TRANSACTION_INFORMATION_CLASS;
 
 typedef enum _TRANSACTIONMANAGER_INFORMATION_CLASS {
   TransactionManagerBasicInformation,
   TransactionManagerLogInformation,
   TransactionManagerLogPathInformation,
-  TransactionManagerRecoveryInformation = 4
+  TransactionManagerRecoveryInformation = 4,
 } TRANSACTIONMANAGER_INFORMATION_CLASS;
 
 typedef enum _RESOURCEMANAGER_INFORMATION_CLASS {

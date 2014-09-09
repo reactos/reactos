@@ -235,12 +235,6 @@ static const int extra_flush_current[] = {
    EXTRA_END
 };
 
-static const int extra_EXT_secondary_color_flush_current[] = {
-   EXT(EXT_secondary_color),
-   EXTRA_FLUSH_CURRENT,
-   EXTRA_END
-};
-
 static const int extra_EXT_fog_coord_flush_current[] = {
    EXT(EXT_fog_coord),
    EXTRA_FLUSH_CURRENT,
@@ -254,7 +248,6 @@ static const int extra_EXT_texture_integer[] = {
 
 
 EXTRA_EXT(ARB_texture_cube_map);
-EXTRA_EXT(EXT_secondary_color);
 EXTRA_EXT(EXT_fog_coord);
 EXTRA_EXT(NV_fog_distance);
 EXTRA_EXT(EXT_texture_filter_anisotropic);

@@ -64,6 +64,9 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     /* Except handler stores pointer to exception pointers here */
     PSEH3$_EXCEPTION_POINTERS volatile ExceptionPointers;
 
+    /* Except handler stores the exception code here */
+    unsigned long ExceptionCode;
+
     /* Registers that we need to save */
     unsigned long Esp;
     unsigned long Ebp;
@@ -73,6 +76,9 @@ typedef struct _SEH3$_REGISTRATION_FRAME
     unsigned long Ebx;
     unsigned long Esi;
     unsigned long Edi;
+#endif
+#ifdef __clang__
+    void *ReturnAddress;
 #endif
 } SEH3$_REGISTRATION_FRAME ,*PSEH3$_REGISTRATION_FRAME;
 
@@ -252,14 +258,14 @@ _SEH3$_AutoCleanup(
 
 /* Since we cannot use nested functions, we declare these globally as macros */
 #define _abnormal_termination() (_SEH3$_TrylevelFrame.ExceptionPointers != 0)
-#define _exception_code() (_SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode)
+#define _exception_code() (_SEH3$_TrylevelFrame.ExceptionCode)
 #define _exception_info() (_SEH3$_TrylevelFrame.ExceptionPointers)
 
 #else /* __cplusplus || __clang__ */
 
 #define _SEH3$_DECLARE_EXCEPT_INTRINSICS() \
     inline __attribute__((always_inline, gnu_inline)) \
-    unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; }
+    unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionCode; }
 
 /* On GCC the filter function is a nested function with __fastcall calling
    convention. The eax register contains a base address the function uses
@@ -284,7 +290,7 @@ _SEH3$_AutoCleanup(
 _Pragma("GCC diagnostic push") \
 _Pragma("GCC diagnostic ignored \"-Wshadow\"") \
         inline __attribute__((always_inline, gnu_inline)) \
-        unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; } \
+        unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionCode; } \
         inline __attribute__((always_inline, gnu_inline)) \
         void * _exception_info() { return _SEH3$_TrylevelFrame.ExceptionPointers; } \
 _Pragma("GCC diagnostic pop") \

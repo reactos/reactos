@@ -2220,6 +2220,7 @@ ExFreePoolWithTag(IN PVOID P,
     //
     Entry = P;
     Entry--;
+    ASSERT((ULONG_PTR)Entry % POOL_BLOCK_SIZE == 0);
 
     //
     // Get the size of the entry, and it's pool type, then load the descriptor

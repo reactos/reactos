@@ -24,6 +24,7 @@
 #include <initguid.h>
 #include <fil_data.h>
 
+#undef ARRAYSIZE
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 typedef struct FilterMapper3Impl
@@ -1164,7 +1165,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
 
     if (FAILED(hr))
         return hr;
-    
+
     while(IEnumMoniker_Next(ppEnumMoniker, 1, &IMon, &nb) == S_OK)
     {
         IMoniker_Release(IMon);
@@ -1184,7 +1185,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
         return E_OUTOFMEMORY;
     }
     ZeroMemory(regfilters, nb_mon * sizeof(REGFILTER)); /* will prevent bad free of Name in case of error. */
-    
+
     IEnumMoniker_Reset(ppEnumMoniker);
     while(IEnumMoniker_Next(ppEnumMoniker, 1, &IMon, &nb) == S_OK)
     {
@@ -1238,7 +1239,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
         CoTaskMemFree(regfilters[idx].Name);
     CoTaskMemFree(regfilters);
     IEnumMoniker_Release(ppEnumMoniker);
-    
+
     return hr;
 }
 
@@ -1259,7 +1260,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
     {
         strcpyW(wszKeyName, wszFilterSlash);
         strcatW(wszKeyName, wszClsid);
-    
+
         lRet = RegCreateKeyExW(HKEY_CLASSES_ROOT, wszKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
         hr = HRESULT_FROM_WIN32(lRet);
     }
@@ -1275,7 +1276,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
     {
         strcpyW(wszKeyName, wszClsidSlash);
         strcatW(wszKeyName, wszClsid);
-    
+
         lRet = RegCreateKeyExW(HKEY_CLASSES_ROOT, wszKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
         hr = HRESULT_FROM_WIN32(lRet);
     }
@@ -1286,7 +1287,7 @@ static HRESULT WINAPI FilterMapper_RegisterFilter(IFilterMapper * iface, CLSID c
         hr = HRESULT_FROM_WIN32(lRet);
         RegCloseKey(hKey);
     }
-    
+
     CoTaskMemFree(wszClsid);
 
     return hr;
@@ -1346,7 +1347,7 @@ static HRESULT WINAPI FilterMapper_RegisterPin(
         strcpyW(wszPinsKeyName, wszPins);
         strcatW(wszPinsKeyName, wszSlash);
         strcatW(wszPinsKeyName, szName);
-    
+
         lRet = RegCreateKeyExW(hKey, wszPinsKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hPinsKey, NULL);
         hr = HRESULT_FROM_WIN32(lRet);
         CoTaskMemFree(wszPinsKeyName);

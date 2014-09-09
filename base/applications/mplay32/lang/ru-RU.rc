@@ -4,10 +4,21 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Открыть...", IDM_OPEN_FILE
-        MENUITEM "&Закрыть", IDM_CLOSE_FILE
+        MENUITEM "&Открыть...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Закрыть\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "&Выход", IDM_EXIT
+    END
+    POPUP "&Воспроизведение"
+    BEGIN
+        MENUITEM "Воспроизведение/&Пауза\tCtrl+P", IDC_PLAY
+        MENUITEM "&Остановить\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "&Повтор\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&Отображение"
+    BEGIN
+        MENUITEM "Одно-оконный &режим", IDM_SWITCHVIEW
     END
     POPUP "&Устройство"
     BEGIN
@@ -19,6 +30,15 @@ BEGIN
     BEGIN
         MENUITEM "&О программе...", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE

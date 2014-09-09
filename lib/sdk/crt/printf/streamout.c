@@ -227,6 +227,11 @@ static
 int
 streamout_char(FILE *stream, int chr)
 {
+#ifdef _LIBCNT_
+     if ((stream->_flag & _IOSTRG) && (!stream->_ptr))
+        return 1;
+#endif 
+ 
 #if defined(_USER32_WSPRINTF) || defined(_LIBCNT_)
     /* Check if the buffer is full */
     if (stream->_cnt < sizeof(TCHAR))

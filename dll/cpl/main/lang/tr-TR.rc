@@ -18,7 +18,7 @@ BEGIN
     LTEXT "Yavaş", -1, 40, 85, 20, 10
     LTEXT "Hızlı", -1, 200, 85, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-    LTEXT "Yi&nelenme hızını sınamak için buraya tıklayınız ve bir düğmeyi basılı tutunuz:", -1, 15, 105, 216, 10
+    LTEXT "Yi&nelenme hızını sınamak için şuraya tıklayınız ve bir düğmeyi basılı tutunuz:", -1, 15, 105, 216, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "İ&mleç Yanıp Sönme Hızı", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8

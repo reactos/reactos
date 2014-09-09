@@ -29,5 +29,5 @@ Size = 730 ko
 
 [Section.041f]
 Licence = Ücretsiz
-Description = Resoure Hacker, 32 ve 64 bitlik Windows çaılştırılabilirlerindeki ve kaynak kütüklerindeki (*.res) kaynakları görüntülemek, değiştirmek, yeniden adlandırmak, eklemek, silmek ve çıkarmak için ücretsiz bir araçtır.
+Description = Resoure Hacker, 32 ve 64 bitlik Windows çaılştırılabilirlerindeki ve kaynak kütüklerindeki (*.res) kaynakları görüntülemek, değiştirmek, yeniden adlandırmak, eklemek, silmek ve çıkartmak için ücretsiz bir araçtır.
 Size = 730 KB

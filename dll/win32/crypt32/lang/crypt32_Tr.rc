@@ -113,7 +113,7 @@ STRINGTABLE
     IDS_CA_EXCHANGE "CA Şifreleme Onay Belgesi"
     IDS_KEY_RECOVERY_AGENT "Anahtar Kurtarma Yardımcısı"
     IDS_CERTIFICATE_TEMPLATE "Onay Belgesi Kalıp Bilgisi"
-    IDS_ENTERPRISE_ROOT_OID "Kuruluş Kök OID'si"
+    IDS_ENTERPRISE_ROOT_OID "İşletme Kök OID'si"
     IDS_RDN_DUMMY_SIGNER "Kukla İmzâlayıcısı"
     IDS_ARCHIVED_KEY_ATTR "Şifrelenmiş Husûsî Anahtarı"
     IDS_CRL_SELF_CDP "Yayımlanan CRL Konumları"

@@ -407,15 +407,17 @@ MiDeletePte(IN PMMPTE PointerPte,
     /* See if the PTE is valid */
     if (TempPte.u.Hard.Valid == 0)
     {
-        /* Prototype PTEs not supported yet */
+        /* Prototype and paged out PTEs not supported yet */
         ASSERT(TempPte.u.Soft.Prototype == 0);
+        ASSERT((TempPte.u.Soft.PageFileHigh == 0) || (TempPte.u.Soft.Transition == 1));
+
         if (TempPte.u.Soft.Transition)
         {
             /* Get the PFN entry */
             PageFrameIndex = PFN_FROM_PTE(&TempPte);
             Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
-            DPRINT1("Pte %p is transitional!\n", PointerPte);
+            DPRINT("Pte %p is transitional!\n", PointerPte);
 
             /* Destroy the PTE */
             MI_ERASE_PTE(PointerPte);
@@ -433,12 +435,14 @@ MiDeletePte(IN PMMPTE PointerPte,
                 /* And it should be in standby or modified list */
                 ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) || (Pfn1->u3.e1.PageLocation == StandbyPageList));
 
-                /* Unlink it and put it back in free list */
+                /* Unlink it and temporarily mark it as active */
                 MiUnlinkPageFromList(Pfn1);
+                Pfn1->u3.e2.ReferenceCount++;
                 Pfn1->u3.e1.PageLocation = ActiveAndValid;
 
-                /* Bring it back into the free list */
-                MiInsertPageInFreeList(PageFrameIndex);
+                /* This will put it back in free list and clean properly up */
+                MI_SET_PFN_DELETED(Pfn1);
+                MiDecrementReferenceCount(Pfn1, PageFrameIndex);
             }
             return;
         }
@@ -470,6 +474,11 @@ MiDeletePte(IN PMMPTE PointerPte,
 #if (_MI_PAGING_LEVELS == 2)
         }
 #endif
+        /* Drop the share count on the page table */
+        PointerPde = MiPteToPde(PointerPte);
+        MiDecrementShareCount(MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber),
+            PointerPde->u.Hard.PageFrameNumber);
+
         /* Drop the share count */
         MiDecrementShareCount(Pfn1, PageFrameIndex);
 

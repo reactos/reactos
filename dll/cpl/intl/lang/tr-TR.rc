@@ -171,12 +171,12 @@ END
 
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sıralama"
+CAPTION "Dizme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sıralama", -1, 7, 7, 230, 74
-    LTEXT "Sıralama yöntemleri; damgaların, sözcüklerin, kütüklerin ve dizinlerin sıralama düzenini tanımlar.", -1, 14, 17, 220, 25
-    LTEXT "Diliniz için bir sıralama yöntemi seçiniz:", -1, 14, 37, 220, 22
+    GROUPBOX "Dizme", -1, 7, 7, 230, 74
+    LTEXT "Dizme yöntemleri; damgaların, sözcüklerin, kütüklerin ve dizinlerin dizme düzenini tanımlar.", -1, 14, 17, 220, 25
+    LTEXT "Diliniz için bir dizme yöntemi seçiniz:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 

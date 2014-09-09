@@ -136,7 +136,7 @@ END
 
 IDD_RUN DIALOGEX 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Run"
+CAPTION "Выполнить"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
@@ -169,7 +169,7 @@ BEGIN
     CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "Ок&но:", 14016, 8, 136, 68, 10
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Коментарий:", 14018, 8, 154, 68, 10
+    LTEXT "&Комментарий:", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Найти объект...", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON "См&енить значок...", 14021, 84, 172, 70, 14, ES_LEFT
@@ -203,7 +203,7 @@ BEGIN
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Размер:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "На диске:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Содержит:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -213,9 +213,9 @@ BEGIN
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Атрибуты:", 14020, 8, 152, 46, 10
     AUTOCHECKBOX "&Только чтение", 14021, 56, 152, 70, 10
-    AUTOCHECKBOX "&Скрыто", 14022, 56, 166, 70, 10
+    AUTOCHECKBOX "&Скрытый", 14022, 56, 166, 70, 10
     AUTOCHECKBOX "&Архивный", 14023, 56, 180, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Д&ополнительно...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -230,14 +230,14 @@ BEGIN
     CONTROL "файл", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "Приложение:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Изменить...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Размещение:", 14008, 8, 75, 45, 10
     EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Размер:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "На диске:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Создан:", 14014, 8, 131, 45, 10
@@ -251,7 +251,7 @@ BEGIN
     AUTOCHECKBOX "Только &чтение", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "Скр&ытый", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "&Архивный", 14023, 181, 189, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "Д&ополнительно...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -357,7 +357,7 @@ BEGIN
     GROUPBOX "Установки для выбранного расположения", -1, 10, 66, 220, 73
     RADIOBUTTON "&Другой размер:", 14001, 17, 80, 80, 10, NOT WS_TABSTOP
     EDITTEXT 14002, 100, 78, 65, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Максимальный размер(Мб):", -1, 17, 95, 102, 10
+    LTEXT "&Максимальный размер (МБ):", -1, 17, 95, 102, 10
     RADIOBUTTON "&Уничтожать файлы сразу после удаления, не помещая их в корзину.", 14003, 17, 108, 206, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Запрашивать подтверждение на удаление", 14004, 20, 145, 176, 10, WS_TABSTOP
 END
@@ -380,12 +380,12 @@ END
 
 IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copying..."
+CAPTION "Копирование..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
+    PUSHBUTTON "Отмена", 14002, 195, 14, 60, 16 
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001, 8, 6, 169, 10
+    LTEXT "Файл", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 238
@@ -477,7 +477,7 @@ END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Отключение ReactOS"
+CAPTION "Отключить ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
@@ -587,7 +587,7 @@ BEGIN
     GROUPBOX "Параметры проверки диска", -1, 7, 5, 218, 50
     PUSHBUTTON "Отмена", IDCANCEL, 165, 91, 60, 14
     AUTOCHECKBOX "&Автоматически исправлять системные ошибки", 14000, 16, 19, 178, 10
-    AUTOCHECKBOX "&Проверять и востанавливать поврежденные сектора", 14001, 16, 35, 200, 10
+    AUTOCHECKBOX "&Проверять и восстанавливать поврежденные сектора", 14001, 16, 35, 200, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 218, 8
     LTEXT "", 14003, 7, 75, 218, 10
 END
@@ -612,9 +612,9 @@ BEGIN
     IDS_SHV_COLUMN1 "Имя"
     IDS_SHV_COLUMN2 "Размер"
     IDS_SHV_COLUMN3 "Тип"
-    IDS_SHV_COLUMN4 "Изменён"
+    IDS_SHV_COLUMN4 "Изменен"
     IDS_SHV_COLUMN5 "Атрибуты"
-    IDS_SHV_COLUMN6 "Полный объём"
+    IDS_SHV_COLUMN6 "Полный объем"
     IDS_SHV_COLUMN7 "Свободно"
     IDS_SHV_COLUMN8 "Имя"
     IDS_SHV_COLUMN9 "Комментарий"
@@ -629,7 +629,7 @@ BEGIN
     IDS_SHV_NETWORKLOCATION "Сетевое расположение"
     IDS_SHV_COLUMN_DOCUMENTS "Документы"
     IDS_SHV_COLUMN_STATUS "Состояние"
-    IDS_SHV_COLUMN_COMMENTS "Коментарии"
+    IDS_SHV_COLUMN_COMMENTS "Комментарии"
     IDS_SHV_COLUMN_LOCATION "Расположение"
     IDS_SHV_COLUMN_MODEL "Модель"
 
@@ -652,37 +652,37 @@ BEGIN
     IDS_DELETE "Удалить"
     IDS_PROPERTIES "Свойства"
     IDS_CUT "Вырезать"
-    IDS_RESTORE "Востановить"
+    IDS_RESTORE "Восстановить"
     IDS_FORMATDRIVE "Форматировать..."
     IDS_RENAME "Переименовать"
     IDS_INSERT "Вставить"
 
-    IDS_CREATEFOLDER_DENIED "Невозможно создать папку - нет полномочий."
+    IDS_CREATEFOLDER_DENIED "Недостаточно прав для создания папки"
     IDS_CREATEFOLDER_CAPTION "Ошибка во время создания папки"
     IDS_DELETEITEM_CAPTION "Подтверждение удаления файла"
     IDS_DELETEFOLDER_CAPTION "Подтверждение удаления папки"
     IDS_DELETEITEM_TEXT "Удалить '%1'?"
-    IDS_DELETEMULTIPLE_TEXT "Удалить эти обьекты (%1?"
+    IDS_DELETEMULTIPLE_TEXT "Удалить эти объекты (%1?"
     IDS_DELETESELECTED_TEXT "Вы действительно хотите удалить выбранный элементы(ы)?"
-    IDS_TRASHITEM_TEXT "Вы действильно хотите поместить '%1' в Корзину?"
+    IDS_TRASHITEM_TEXT "Вы действительно хотите поместить '%1' в Корзину?"
     IDS_TRASHFOLDER_TEXT "Вы действительно хотите поместить '%1' и все содержащиеся файлы в Корзину?"
     IDS_TRASHMULTIPLE_TEXT "Вы действительно хотите переместить элементы %1 в Корзину?"
     IDS_CANTTRASH_TEXT "Файл '%1' не может быть помещен в Корзину. Удалить безвозвратно?"
     IDS_OVERWRITEFILE_TEXT "В этой папке уже имеется элемент '%1'.\n\nЗаменить его?"
     IDS_OVERWRITEFILE_CAPTION "Подтверждение замены файла"
-    IDS_OVERWRITEFOLDER_TEXT "Эта папка уже содержит папку с именем '%1'.\n\nЕсли в папке содержатся файлы с одинаковыми именами, то они так же будут\nземенены. Продолжить?"
+    IDS_OVERWRITEFOLDER_TEXT "Эта папка уже содержит папку с именем '%1'.\n\nЕсли в папке содержатся файлы с одинаковыми именами, то они так же будут\nзаменены. Продолжить?"
 
     /* message box strings */
-    IDS_RESTART_TITLE "Перезагрузить"
+    IDS_RESTART_TITLE "Перезагрузка"
     IDS_RESTART_PROMPT "Вы действительно хотите перезагрузить ReactOS?"
-    IDS_SHUTDOWN_TITLE "Выключить питание"
+    IDS_SHUTDOWN_TITLE "Завершение работы"
     IDS_SHUTDOWN_PROMPT "Закончить работу с ReactOS?"
-    IDS_LOGOFF_TITLE "Log Off"
-    IDS_LOGOFF_PROMPT "Do you want to log off?"
+    IDS_LOGOFF_TITLE "Завершение сеанса"
+    IDS_LOGOFF_PROMPT "Вы действительно хотите выйти из системы?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Невозможно отобразить Диалог Выполнить Файл (внутренняя ошибка)"
-    IDS_RUNDLG_BROWSE_ERROR "Невозможно отобразить Диалог Обзор (внутренняя ошибка)"
+    IDS_RUNDLG_ERROR "Невозможно отобразить диалоговое окно Выполнить (внутренняя ошибка)"
+    IDS_RUNDLG_BROWSE_ERROR "Невозможно отобразить диалоговое окно Обзор (внутренняя ошибка)"
     IDS_RUNDLG_BROWSE_CAPTION "Обзор"
     IDS_RUNDLG_BROWSE_FILTER "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
 
@@ -695,7 +695,7 @@ BEGIN
     IDS_SENDTO "Отправить"
     IDS_STARTMENU "Главное меню"
     IDS_MYMUSIC "Моя музыка"
-    IDS_MYVIDEO "Мои фильмы"
+    IDS_MYVIDEO "Мои видеозаписи"
     IDS_DESKTOPDIRECTORY "Рабочий стол"
     IDS_NETHOOD "Сетевое окружение"
     IDS_TEMPLATES "Шаблоны"
@@ -712,7 +712,7 @@ BEGIN
     IDS_ADMINTOOLS "Главное меню\\Программы\\Администрирование"
     IDS_COMMON_MUSIC "Общие документы\\Моя музыка"
     IDS_COMMON_PICTURES "Общие документы\\Мои рисунки"
-    IDS_COMMON_VIDEO "Общие документы\\Мои фильмы"
+    IDS_COMMON_VIDEO "Общие документы\\Мои видеозаписи"
     IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
     IDS_NETWORKPLACE "Сетевое окружение"
 
@@ -725,8 +725,8 @@ BEGIN
     /* Open With */
     IDS_OPEN_WITH "Открыть с помощью"
     IDS_OPEN_WITH_CHOOSE "Выбрать программу..."
-    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED "Рекомендуемые программы:"
+    IDS_OPEN_WITH_OTHER "Другие программы:"
 
     IDS_SHELL_ABOUT_AUTHORS "&Авторы"
     IDS_SHELL_ABOUT_BACK "< &Назад"
@@ -745,7 +745,7 @@ BEGIN
     IDS_BAT_FILE "Пакетный файл ReactOS"
     IDS_CMD_FILE "Командный скрипт ReactOS"
     IDS_COM_FILE "Приложение Dos"
-    IDS_CPL_FILE "Аплет панели управления"
+    IDS_CPL_FILE "Апплет панели управления"
     IDS_CUR_FILE "Курсор"
     IDS_DLL_FILE "Расширение приложения"
     IDS_DRV_FILE "Драйвер устройства"
@@ -778,7 +778,7 @@ BEGIN
     IDS_FILE_DETAILSADV "Файлы с расширением '%s' имеют тип '%s'. Для изменения параметров всех файлов '%s', нажмите 'Дополнительно'."
     IDS_FILE_TYPES "Типы файлов"
     IDS_COLUMN_EXTENSION "Расширения"
-    IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_BYTES_FORMAT "байт"
+    IDS_UNKNOWN_APP "Неизвестное приложение"
+    IDS_EXE_DESCRIPTION "Описание:"
 END

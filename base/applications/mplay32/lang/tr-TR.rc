@@ -6,10 +6,21 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Aç...", IDM_OPEN_FILE
-        MENUITEM "&Kapat", IDM_CLOSE_FILE
+        MENUITEM "&Aç...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Kapat\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
+    END
+    POPUP "&Oynat"
+    BEGIN
+        MENUITEM "&Oynat ya da Duraklat\tCtrl+P", IDC_PLAY
+        MENUITEM "&Durdur\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "&Yinele\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&Görünüm"
+    BEGIN
+        MENUITEM "&Ayrı Pencere Kipi", IDM_SWITCHVIEW
     END
     POPUP "&Aygıt"
     BEGIN
@@ -23,12 +34,21 @@ BEGIN
     END
 END
 
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
+END
+
 STRINGTABLE
 BEGIN
     IDS_ALL_TYPES_FILTER "Desteklenen Kütükler (*.wav, *.cda, *.mid, *.midi, *.avi)\0*.wav;*.cda;*.mid;*.midi;*.avi\0"
     IDS_TOOLTIP_PLAY "Çal"
     IDS_TOOLTIP_STOP "Durdur"
-    IDS_TOOLTIP_EJECT "Çıkar"
+    IDS_TOOLTIP_EJECT "Çıkart"
     IDS_TOOLTIP_BACKWARD "Bir Öncekine Geç"
     IDS_TOOLTIP_SEEKBACK "Geri Sar"
     IDS_TOOLTIP_SEEKFORW "İleri Sar"

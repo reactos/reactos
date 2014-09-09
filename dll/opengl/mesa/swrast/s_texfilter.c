@@ -58,26 +58,6 @@ lerp_2d(GLfloat a, GLfloat b,
    return LERP(b, temp0, temp1);
 }
 
-
-/**
- * Do 3D/trilinear interpolation of float values.
- * \sa lerp_2d
- */
-static inline GLfloat
-lerp_3d(GLfloat a, GLfloat b, GLfloat c,
-        GLfloat v000, GLfloat v100, GLfloat v010, GLfloat v110,
-        GLfloat v001, GLfloat v101, GLfloat v011, GLfloat v111)
-{
-   const GLfloat temp00 = LERP(a, v000, v100);
-   const GLfloat temp10 = LERP(a, v010, v110);
-   const GLfloat temp01 = LERP(a, v001, v101);
-   const GLfloat temp11 = LERP(a, v011, v111);
-   const GLfloat temp0 = LERP(b, temp00, temp10);
-   const GLfloat temp1 = LERP(b, temp01, temp11);
-   return LERP(c, temp0, temp1);
-}
-
-
 /**
  * Do linear interpolation of colors.
  */
@@ -104,26 +84,6 @@ lerp_rgba_2d(GLfloat result[4], GLfloat a, GLfloat b,
    result[2] = lerp_2d(a, b, t00[2], t10[2], t01[2], t11[2]);
    result[3] = lerp_2d(a, b, t00[3], t10[3], t01[3], t11[3]);
 }
-
-
-/**
- * Do trilinear interpolation of colors.
- */
-static inline void
-lerp_rgba_3d(GLfloat result[4], GLfloat a, GLfloat b, GLfloat c,
-             const GLfloat t000[4], const GLfloat t100[4],
-             const GLfloat t010[4], const GLfloat t110[4],
-             const GLfloat t001[4], const GLfloat t101[4],
-             const GLfloat t011[4], const GLfloat t111[4])
-{
-   GLuint k;
-   /* compiler should unroll these short loops */
-   for (k = 0; k < 4; k++) {
-      result[k] = lerp_3d(a, b, c, t000[k], t100[k], t010[k], t110[k],
-                                   t001[k], t101[k], t011[k], t111[k]);
-   }
-}
-
 
 /**
  * Used for GL_REPEAT wrap mode.  Using A % B doesn't produce the
@@ -256,7 +216,6 @@ nearest_texel_location(GLenum wrapMode,
    }
 }
 
-
 /* Power of two image sizes only */
 static inline void
 linear_repeat_texel_location(GLuint size, GLfloat s,
@@ -267,110 +226,6 @@ linear_repeat_texel_location(GLuint size, GLfloat s,
    *i1 = (*i0 + 1) & (size - 1);
    *weight = FRAC(u);
 }
-
-
-/**
- * Do clamp/wrap for a texture rectangle coord, GL_NEAREST filter mode.
- */
-static inline GLint
-clamp_rect_coord_nearest(GLenum wrapMode, GLfloat coord, GLint max)
-{
-   return IFLOOR( CLAMP(coord, 0.0F, max - 1) );
-}
-
-
-/**
- * As above, but GL_LINEAR filtering.
- */
-static inline void
-clamp_rect_coord_linear(GLenum wrapMode, GLfloat coord, GLint max,
-                        GLint *i0out, GLint *i1out, GLfloat *weight)
-{
-   GLfloat fcol;
-   /* Not exactly what the spec says, but it matches NVIDIA output */
-   fcol = CLAMP(coord - 0.5F, 0.0F, max - 1);
-   *weight = FRAC(fcol);
-   *i0out = IFLOOR(fcol);
-   *i1out = *i0out + 1;
-}
-
-
-/**
- * Compute slice/image to use for 1D or 2D array texture.
- */
-static inline GLint
-tex_array_slice(GLfloat coord, GLsizei size)
-{
-   GLint slice = IFLOOR(coord + 0.5f);
-   slice = CLAMP(slice, 0, size - 1);
-   return slice;
-}
-
-
-/**
- * Compute nearest integer texcoords for given texobj and coordinate.
- * NOTE: only used for depth texture sampling.
- */
-static inline void
-nearest_texcoord(const struct gl_texture_object *texObj,
-                 GLuint level,
-                 const GLfloat texcoord[4],
-                 GLint *i, GLint *j, GLint *k)
-{
-   const struct gl_texture_image *img = texObj->Image[0][level];
-   const GLint width = img->Width;
-   const GLint height = img->Height;
-
-   switch (texObj->Target) {
-   case GL_TEXTURE_1D:
-      *i = nearest_texel_location(texObj->Sampler.WrapS, img, width, texcoord[0]);
-      *j = 0;
-      *k = 0;
-      break;
-   case GL_TEXTURE_2D:
-      *i = nearest_texel_location(texObj->Sampler.WrapS, img, width, texcoord[0]);
-      *j = nearest_texel_location(texObj->Sampler.WrapT, img, height, texcoord[1]);
-      *k = 0;
-      break;
-   default:
-      *i = *j = *k = 0;
-      break;
-   }
-}
-
-
-/**
- * Compute linear integer texcoords for given texobj and coordinate.
- * NOTE: only used for depth texture sampling.
- */
-static inline void
-linear_texcoord(const struct gl_texture_object *texObj,
-                GLuint level,
-                const GLfloat texcoord[4],
-                GLint *i0, GLint *i1, GLint *j0, GLint *j1, GLint *slice,
-                GLfloat *wi, GLfloat *wj)
-{
-   const struct gl_texture_image *img = texObj->Image[0][level];
-   const GLint width = img->Width;
-   const GLint height = img->Height;
-
-   switch (texObj->Target) {
-   case GL_TEXTURE_1D:
-   case GL_TEXTURE_2D:
-      linear_texel_locations(texObj->Sampler.WrapS, img, width,
-                             texcoord[0], i0, i1, wi);
-      linear_texel_locations(texObj->Sampler.WrapT, img, height,
-                             texcoord[1], j0, j1, wj);
-      *slice = 0;
-      break;
-
-   default:
-      *slice = 0;
-      break;
-   }
-}
-
-
 
 /**
  * For linear interpolation between mipmap levels N and N+1, this function
@@ -1959,101 +1814,6 @@ sample_lambda_cube(struct gl_context *ctx,
          _mesa_problem(ctx, "Bad mag filter in sample_lambda_cube");
          break;
       }
-   }
-}
-
-/**
- * Compare texcoord against depth sample.  Return 1.0 or the ambient value.
- */
-static inline GLfloat
-shadow_compare(GLenum function, GLfloat coord, GLfloat depthSample,
-               GLfloat ambient)
-{
-   switch (function) {
-   case GL_LEQUAL:
-      return (coord <= depthSample) ? 1.0F : ambient;
-   case GL_GEQUAL:
-      return (coord >= depthSample) ? 1.0F : ambient;
-   case GL_LESS:
-      return (coord < depthSample) ? 1.0F : ambient;
-   case GL_GREATER:
-      return (coord > depthSample) ? 1.0F : ambient;
-   case GL_EQUAL:
-      return (coord == depthSample) ? 1.0F : ambient;
-   case GL_NOTEQUAL:
-      return (coord != depthSample) ? 1.0F : ambient;
-   case GL_ALWAYS:
-      return 1.0F;
-   case GL_NEVER:
-      return ambient;
-   case GL_NONE:
-      return depthSample;
-   default:
-      _mesa_problem(NULL, "Bad compare func in shadow_compare");
-      return ambient;
-   }
-}
-
-
-/**
- * Compare texcoord against four depth samples.
- */
-static inline GLfloat
-shadow_compare4(GLenum function, GLfloat coord,
-                GLfloat depth00, GLfloat depth01,
-                GLfloat depth10, GLfloat depth11,
-                GLfloat ambient, GLfloat wi, GLfloat wj)
-{
-   const GLfloat d = (1.0F - (GLfloat) ambient) * 0.25F;
-   GLfloat luminance = 1.0F;
-
-   switch (function) {
-   case GL_LEQUAL:
-      if (coord > depth00)  luminance -= d;
-      if (coord > depth01)  luminance -= d;
-      if (coord > depth10)  luminance -= d;
-      if (coord > depth11)  luminance -= d;
-      return luminance;
-   case GL_GEQUAL:
-      if (coord < depth00)  luminance -= d;
-      if (coord < depth01)  luminance -= d;
-      if (coord < depth10)  luminance -= d;
-      if (coord < depth11)  luminance -= d;
-      return luminance;
-   case GL_LESS:
-      if (coord >= depth00)  luminance -= d;
-      if (coord >= depth01)  luminance -= d;
-      if (coord >= depth10)  luminance -= d;
-      if (coord >= depth11)  luminance -= d;
-      return luminance;
-   case GL_GREATER:
-      if (coord <= depth00)  luminance -= d;
-      if (coord <= depth01)  luminance -= d;
-      if (coord <= depth10)  luminance -= d;
-      if (coord <= depth11)  luminance -= d;
-      return luminance;
-   case GL_EQUAL:
-      if (coord != depth00)  luminance -= d;
-      if (coord != depth01)  luminance -= d;
-      if (coord != depth10)  luminance -= d;
-      if (coord != depth11)  luminance -= d;
-      return luminance;
-   case GL_NOTEQUAL:
-      if (coord == depth00)  luminance -= d;
-      if (coord == depth01)  luminance -= d;
-      if (coord == depth10)  luminance -= d;
-      if (coord == depth11)  luminance -= d;
-      return luminance;
-   case GL_ALWAYS:
-      return 1.0F;
-   case GL_NEVER:
-      return ambient;
-   case GL_NONE:
-      /* ordinary bilinear filtering */
-      return lerp_2d(wi, wj, depth00, depth10, depth01, depth11);
-   default:
-      _mesa_problem(NULL, "Bad compare func in sample_compare4");
-      return ambient;
    }
 }
 

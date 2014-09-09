@@ -46,6 +46,18 @@ BEGIN
         MENUITEM "Em &cascata", ID_WINDOWS_CASCADE
         MENUITEM "&Trazer para a frente", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "Aj&uda"
     BEGIN
         MENUITEM "&Tópicos da Ajuda do Gerenciador de tarefas", ID_HELP_TOPICS
@@ -424,6 +436,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Uso de Memória: %dK / %dK"
     IDS_STATUS_CPUUSAGE "Uso de CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processo: %d"
-    IDS_Not_Responding "Não respondendo"
-    IDS_Running "Execuando"
+    IDS_NOT_RESPONDING "Não respondendo"
+    IDS_RUNNING "Execuando"
 END

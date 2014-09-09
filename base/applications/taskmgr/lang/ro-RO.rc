@@ -48,6 +48,18 @@ BEGIN
         MENUITEM "Aranjări în casca&dă", ID_WINDOWS_CASCADE
         MENUITEM "&Aduce în prim plan", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&?"
     BEGIN
         MENUITEM "&Manual…", ID_HELP_TOPICS
@@ -426,6 +438,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Utilizare memorie: %dko/%dko"
     IDS_STATUS_CPUUSAGE "Utilizare procesor: %3d%%"
     IDS_STATUS_PROCESSES "Procese: %d"
-    IDS_Not_Responding "EXECUȚIE ANORMALĂ"
-    IDS_Running "execuție normală"
+    IDS_NOT_RESPONDING "EXECUȚIE ANORMALĂ"
+    IDS_RUNNING "execuție normală"
 END

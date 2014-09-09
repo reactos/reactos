@@ -323,7 +323,7 @@ GdiAllocBatchCommand(
     else if (Cmd == GdiBCPolyPatBlt) cjSize = 0;
     else if (Cmd == GdiBCTextOut) cjSize = 0;
     else if (Cmd == GdiBCExtTextOut) cjSize = 0;
-    else if (Cmd == GdiBCSetBrushOrg) cjSize = 0;
+    else if (Cmd == GdiBCSetBrushOrg) cjSize = sizeof(GDIBSSETBRHORG);
     else if (Cmd == GdiBCExtSelClipRgn) cjSize = 0;
     else if (Cmd == GdiBCSelObj) cjSize = sizeof(GDIBSOBJECT);
     else if (Cmd == GdiBCDelRgn) cjSize = sizeof(GDIBSOBJECT);

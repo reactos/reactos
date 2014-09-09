@@ -4,6 +4,7 @@
 #include <ntifs.h>
 #include <ntdddisk.h>
 #include <dos.h>
+#include <pseh/pseh2.h>
 
 #define USE_ROS_CC_AND_FS
 

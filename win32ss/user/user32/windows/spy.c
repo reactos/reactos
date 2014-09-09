@@ -31,6 +31,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(message);
 
 #define SPY_MAX_MSGNUM   WM_USER
 #define SPY_INDENT_UNIT  4  /* 4 spaces */
+#undef ARRAYSIZE
 #define ARRAYSIZE(a) ((sizeof(a) / sizeof((a)[0])))
 
 #define DEBUG_SPY 0
@@ -2095,7 +2096,7 @@ const char *SPY_GetClassLongOffsetName( INT offset )
 {
     INT index;
     if (offset < 0 && offset % 2 == 0 && ((index = -(offset + 8) / 2) <
-        sizeof(ClassLongOffsetNames) / sizeof(*ClassLongOffsetNames))) 
+        sizeof(ClassLongOffsetNames) / sizeof(*ClassLongOffsetNames)))
     {
         return ClassLongOffsetNames[index];
     }

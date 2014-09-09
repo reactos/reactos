@@ -12,10 +12,6 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Kayıt"
     BEGIN
-        MENUITEM "&Uygulama", ID_LOG_APPLICATION
-        MENUITEM "&Güvenlik", ID_LOG_SECURITY
-        MENUITEM "&Dizge", ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
         MENUITEM "&Protokolü Kaydet...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Tüm Olayları Sil", ID_CLEAR_EVENTS, GRAYED

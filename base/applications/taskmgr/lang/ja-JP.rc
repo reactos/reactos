@@ -46,6 +46,18 @@ BEGIN
         MENUITEM "重ねて表示(&C)", ID_WINDOWS_CASCADE
         MENUITEM "手前に表示(&B)", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "ヘルプ(&H)"
     BEGIN
         MENUITEM "トピックの検索(&H)", ID_HELP_TOPICS
@@ -424,6 +436,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "メモリ使用量: %dKB / %dKB"
     IDS_STATUS_CPUUSAGE "CPU 使用率: %3d%%"
     IDS_STATUS_PROCESSES "プロセス: %d"
-    IDS_Not_Responding "応答なし"
-    IDS_Running "実行中"
+    IDS_NOT_RESPONDING "応答なし"
+    IDS_RUNNING "実行中"
 END

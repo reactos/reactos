@@ -123,9 +123,9 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
     if (pData->Selection > 0)
     {
         _stprintf(szCmdline,
-                  _T("%s /p %u"),
+                  _T("%s /p %Iu"),
                   pData->ScreenSaverItems[pData->Selection].szFilename,
-                  hPreview);
+                  (ULONG_PTR)hPreview);
 
         ZeroMemory(&si, sizeof(si));
         si.cb = sizeof(si);
@@ -188,8 +188,8 @@ static VOID
 ScreensaverConfig(HWND hwndDlg, PDATA pData)
 {
     /*
-       /c:<hwnd>  Run configuration, hwnd is handle of calling window
-    */
+     * /c:<hwnd>  Run configuration, hwnd is handle of calling window
+     */
 
     TCHAR szCmdline[2048];
     STARTUPINFO si;
@@ -199,9 +199,9 @@ ScreensaverConfig(HWND hwndDlg, PDATA pData)
         return;
 
     _stprintf(szCmdline,
-              _T("%s /c:%u"),
+              _T("%s /c:%Iu"),
               pData->ScreenSaverItems[pData->Selection].szFilename,
-              hwndDlg);
+              (ULONG_PTR)hwndDlg);
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);

@@ -8,10 +8,21 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Skeda"
     BEGIN
-        MENUITEM "&Hape...", IDM_OPEN_FILE
-        MENUITEM "&Mbylle", IDM_CLOSE_FILE
+        MENUITEM "&Hape...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Mbylle\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "&Dil", IDM_EXIT
+    END
+    POPUP "&Play"
+    BEGIN
+        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
     END
     POPUP "&Device"
     BEGIN
@@ -23,6 +34,15 @@ BEGIN
     BEGIN
         MENUITEM "&Rreth...", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE
@@ -37,6 +57,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Kalo para"
     IDS_APPTITLE "Programi muzikor i ReactOS"
     IDS_PLAY "Fillo"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error."
     IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

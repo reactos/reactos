@@ -3,6 +3,7 @@
  *    xxrogers@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2014)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -25,11 +26,11 @@ BEGIN
     POPUP "&Widok"
     BEGIN
         MENUITEM "&Odśwież teraz", ID_VIEW_REFRESH
-        POPUP "&Częstotliwość aktualizacji"
+        POPUP "Szy&bkość aktualizacji"
         BEGIN
-            MENUITEM "&Wysoka", ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&Duża", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normalna", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
-            MENUITEM "&Niska", ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&Mała", ID_VIEW_UPDATESPEED_LOW
             MENUITEM "&Wstrzymana", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
@@ -52,6 +53,18 @@ BEGIN
         MENUITEM "&Maksymalizuj", ID_WINDOWS_MAXIMIZE
         MENUITEM "&Kaskadowo", ID_WINDOWS_CASCADE
         MENUITEM "&Przesuń na wierzch", ID_WINDOWS_BRINGTOFRONT
+    END
+    POPUP "&Zamknij"
+    BEGIN
+        MENUITEM "Przejdź w &stan gotowości",           ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernuj",                           ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Wyłą&cz",                             ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Uruchom ponownie",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Wyloguj: %s",                        ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Przełącz użytkownika\tLogo Win+L",   ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Zablokuj komputer\tLogo Win+L",      ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Rozłącz",                            ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Wysuń komputer",                     ID_SHUTDOWN_EJECT_COMPUTER, GRAYED //FIXME ?
     END
     POPUP "Pomo&c"
     BEGIN
@@ -167,7 +180,7 @@ BEGIN
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&Zakończ proces", IDC_ENDPROCESS, 171, 189, 69, 14
     CONTROL "Po&każ procesy wszystkich użytkowników", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 153, 10
 END
 
 /* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
@@ -201,7 +214,7 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Razem", IDS_PHYSICAL_MEMORY_TOTAL, 137, 131, 27, 8
     LTEXT "Dostępne", IDS_PHYSICAL_MEMORY_AVAILABLE, 137, 140, 30, 8
-    LTEXT "Bufor systemu", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 46, 8
+    LTEXT "Bufor systemu", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 80, 8
     EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 185, 131, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 185, 140, 48, 8, ES_RIGHT | ES_READONLY |
@@ -209,8 +222,8 @@ BEGIN
     EDITTEXT IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, 185, 149, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Razem", IDS_KERNEL_MEMORY_TOTAL, 137, 174, 27, 8
-    LTEXT "Stronicowana", IDS_KERNEL_MEMORY_PAGED, 137, 184, 21, 8
-    LTEXT "Niestronicowana", IDS_KERNEL_MEMORY_NONPAGED, 137, 193, 34, 8
+    LTEXT "Stronicowana", IDS_KERNEL_MEMORY_PAGED, 137, 184, 70, 8
+    LTEXT "Niestronicowana", IDS_KERNEL_MEMORY_NONPAGED, 137, 193, 80, 8
     EDITTEXT IDC_KERNEL_MEMORY_TOTAL, 185, 174, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_KERNEL_MEMORY_PAGED, 185, 184, 48, 8, ES_RIGHT | ES_READONLY |
@@ -407,7 +420,7 @@ BEGIN
     IDS_TAB_IOOTHERBYTES "Inne We/Wy w bajtach"
     IDS_MENU_SELECTCOLUMNS "Wybierz &kolumny..."
     IDS_MENU_16BITTASK "Pokaż 16-&bitowe zadania"
-    IDS_MENU_WINDOWS "&Okna"
+    IDS_MENU_WINDOWS "O&kna"
     IDS_MENU_LARGEICONS "Duże ikony"
     IDS_MENU_SMALLICONS "Małe ikony"
     IDS_MENU_DETAILS "Szczegóły"
@@ -431,6 +444,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Pam. zadeklar.: %dK / %dK"
     IDS_STATUS_CPUUSAGE "Użycie procesora: %3d%%"
     IDS_STATUS_PROCESSES "Procesy: %d"
-    IDS_Not_Responding "Nie odpowiada"
-    IDS_Running "Uruchomiony"
+    IDS_NOT_RESPONDING "Nie odpowiada"
+    IDS_RUNNING "Uruchomiony"
 END

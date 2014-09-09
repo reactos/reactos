@@ -646,6 +646,7 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
                 {
                     if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSEXTSELCLPRGN)) <= GDIBATCHBUFSIZE)
                     {
+                        // FIXME: This is broken, use GdiAllocBatchCommand!
                         PGDIBSEXTSELCLPRGN pgO = (PGDIBSEXTSELCLPRGN)(&pTeb->GdiTebBatch.Buffer[0] +
                                                  pTeb->GdiTebBatch.Offset);
                         pgO->gbHdr.Cmd = GdiBCExtSelClipRgn;

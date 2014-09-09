@@ -31,7 +31,6 @@ C_ASSERT(RTL_CURDIR_ALL_FLAGS == OBJ_HANDLE_TAGBITS);
 
 /* GLOBALS ********************************************************************/
 
-static const WCHAR DeviceRootW[] = L"\\\\.\\";
 const UNICODE_STRING DeviceRootString = RTL_CONSTANT_STRING(L"\\\\.\\");
 
 const UNICODE_STRING RtlpDosDevicesUncPrefix = RTL_CONSTANT_STRING(L"\\??\\UNC\\");

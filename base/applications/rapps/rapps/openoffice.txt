@@ -54,7 +54,7 @@ Size = 136,79 Mo
 URLSite = http://www.openoffice.org/ro/
 
 [Section.041f]
-Description = Bir açık kaynak büro takımı.
+Description = Bir açık kaynak ofis paketi.
 Size = 124,36 MB
 URLSite = http://www.openoffice.org/tr/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.0/binaries/tr/Apache_OpenOffice_4.1.0_Win_x86_install_tr.exe

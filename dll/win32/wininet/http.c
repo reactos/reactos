@@ -123,6 +123,7 @@ static const WCHAR emptyW[] = {0};
 
 #define COLLECT_TIME 60000
 
+#undef ARRAYSIZE
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 struct HttpAuthInfo
@@ -1299,7 +1300,7 @@ BOOL WINAPI HttpAddRequestHeadersW(HINTERNET hHttpRequest,
 
     TRACE("%p, %s, %i, %i\n", hHttpRequest, debugstr_wn(lpszHeader, dwHeaderLength), dwHeaderLength, dwModifier);
 
-    if (!lpszHeader) 
+    if (!lpszHeader)
       return TRUE;
 
     request = (http_request_t*) get_handle_object( hHttpRequest );
@@ -3841,13 +3842,13 @@ BOOL WINAPI HttpQueryInfoW(HINTERNET hHttpRequest, DWORD dwInfoLevel,
 		info_mod &= ~ modifier_flags[i].val;
 	    }
 	}
-	
+
 	if (info_mod) {
 	    TRACE(" Unknown (%08x)", info_mod);
 	}
 	TRACE("\n");
     }
-    
+
     request = (http_request_t*) get_handle_object( hHttpRequest );
     if (NULL == request ||  request->hdr.htype != WH_HHTTPREQ)
     {
@@ -4943,7 +4944,7 @@ static DWORD HTTP_HttpSendRequestW(http_request_t *request, LPCWSTR lpszHeaders,
         else
             requestString = build_request_header(request, request->verb, request->path, request->version, TRUE);
 
- 
+
         TRACE("Request header -> %s\n", debugstr_w(requestString) );
 
         res = open_http_connection(request, &reusing_connection);
@@ -4991,7 +4992,7 @@ static DWORD HTTP_HttpSendRequestW(http_request_t *request, LPCWSTR lpszHeaders,
 
             INTERNET_SendCallback(&request->hdr, request->hdr.dwContext,
                                 INTERNET_STATUS_RECEIVING_RESPONSE, NULL, 0);
-    
+
             if (HTTP_GetResponseHeaders(request, &responseLen))
             {
                 http_release_netconn(request, FALSE);
@@ -6038,7 +6039,7 @@ static DWORD HTTP_ProcessHeader(http_request_t *request, LPCWSTR field, LPCWSTR 
     /* REPLACE wins out over ADD */
     if (dwModifier & HTTP_ADDHDR_FLAG_REPLACE)
         dwModifier &= ~HTTP_ADDHDR_FLAG_ADD;
-    
+
     if (dwModifier & HTTP_ADDHDR_FLAG_ADD)
         index = -1;
     else

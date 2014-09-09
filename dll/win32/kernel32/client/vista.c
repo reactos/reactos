@@ -45,7 +45,7 @@ SleepConditionVariableCS(IN OUT PCONDITION_VARIABLE ConditionVariable,
 
     if (dwMilliseconds != INFINITE)
     {
-        TimeOut.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
+        TimeOut.QuadPart = dwMilliseconds * -10000LL;
         TimeOutPtr = &TimeOut;
     }
 
@@ -80,7 +80,7 @@ SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
 
     if (dwMilliseconds != INFINITE)
     {
-        TimeOut.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
+        TimeOut.QuadPart = dwMilliseconds * -10000LL;
         TimeOutPtr = &TimeOut;
     }
 

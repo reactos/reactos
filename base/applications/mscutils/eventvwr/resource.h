@@ -35,19 +35,18 @@
 #define IDC_WORDRADIO           1013
 #define IDC_EVENTDATAEDIT       1014
 
-#define ID_LOG_APPLICATION 32771
-#define ID_LOG_SECURITY    32772
-#define ID_LOG_SYSTEM      32773
-#define ID_HELP_HELP       32775
-#define ID_HELP            32776
-#define ID_OPTIONS         32777
-#define ID_VIEW            32778
-#define IDM_HELP           32779
-#define ID_VIEW_REFRESH    32780
-#define ID_REFRESH         32781
-#define IDM_REFRESH        32782
-#define ID_CLEAR_EVENTS    32783
-#define ID_SAVE_PROTOCOL   32784
+#define ID_HELP_HELP       32771
+#define ID_HELP            32772
+#define ID_OPTIONS         32773
+#define ID_VIEW            32774
+#define IDM_HELP           32775
+#define ID_VIEW_REFRESH    32776
+#define ID_REFRESH         32777
+#define IDM_REFRESH        32778
+#define ID_CLEAR_EVENTS    32779
+#define ID_SAVE_PROTOCOL   32780
+
+#define ID_FIRST_LOG       45000
 
 /* String IDs */
 #define IDS_APP_TITLE                 103

@@ -11,10 +11,21 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Arkiv"
     BEGIN
-        MENUITEM "&Öppna...", IDM_OPEN_FILE
-        MENUITEM "&Stäng", IDM_CLOSE_FILE
+        MENUITEM "&Öppna...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Stäng\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta", IDM_EXIT
+    END
+    POPUP "&Play"
+    BEGIN
+        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
     END
     POPUP "&Device"
     BEGIN
@@ -26,6 +37,15 @@ BEGIN
     BEGIN
         MENUITEM "&Om...", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE
@@ -40,6 +60,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Spola fremåt"
     IDS_APPTITLE "ReactOS Multimediaspelare"
     IDS_PLAY "Play"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error."
     IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

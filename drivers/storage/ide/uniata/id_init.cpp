@@ -355,9 +355,9 @@ unknown_dev:
     }
 
     static BUSMASTER_CONTROLLER_INFORMATION const SiSAdapters[] = {
-        PCI_DEV_HW_SPEC_BM( 1183, 1039, 0x00, ATA_UDMA6, "SiS 1183" , SIS133NEW),
+        PCI_DEV_HW_SPEC_BM( 1183, 1039, 0x00, ATA_SA150, "SiS 1183 IDE" , SIS133NEW),
         PCI_DEV_HW_SPEC_BM( 1182, 1039, 0x00, ATA_SA150, "SiS 1182" , SISSATA   | UNIATA_SATA),
-        PCI_DEV_HW_SPEC_BM( 0183, 1039, 0x00, ATA_SA150, "SiS 183"  , SISSATA   | UNIATA_SATA),
+        PCI_DEV_HW_SPEC_BM( 0183, 1039, 0x00, ATA_SA150, "SiS 183 RAID"  , SISSATA   | UNIATA_SATA),
         PCI_DEV_HW_SPEC_BM( 0182, 1039, 0x00, ATA_SA150, "SiS 182"  , SISSATA   | UNIATA_SATA),
         PCI_DEV_HW_SPEC_BM( 0181, 1039, 0x00, ATA_SA150, "SiS 181"  , SISSATA   | UNIATA_SATA),
         PCI_DEV_HW_SPEC_BM( 0180, 1039, 0x00, ATA_SA150, "SiS 180"  , SISSATA   | UNIATA_SATA),
@@ -376,7 +376,7 @@ unknown_dev:
 /*        PCI_DEV_HW_SPEC_BM( 0640, 1039, 0x00, ATA_UDMA4, "SiS 640"  , SIS_SOUTH        ),*/
         PCI_DEV_HW_SPEC_BM( 0635, 1039, 0x00, ATA_UDMA5, "SiS 635"  , SIS100NEW        ),
         PCI_DEV_HW_SPEC_BM( 0633, 1039, 0x00, ATA_UDMA5, "SiS 633"  , SIS100NEW        ),
-        PCI_DEV_HW_SPEC_BM( 0630, 1039, 0x00, ATA_UDMA5, "SiS 630S" , SIS100OLD        ),
+        PCI_DEV_HW_SPEC_BM( 0630, 1039, 0x30, ATA_UDMA5, "SiS 630S" , SIS100OLD        ),
         PCI_DEV_HW_SPEC_BM( 0630, 1039, 0x00, ATA_UDMA4, "SiS 630"  , SIS66            ),
         PCI_DEV_HW_SPEC_BM( 0620, 1039, 0x00, ATA_UDMA4, "SiS 620"  , SIS66            ),
 
@@ -2390,6 +2390,9 @@ AtapiChipInit(
                 break;
             }
         }
+        if(deviceExtension->HwFlags & UNIATA_SATA) {
+            // do nothing for SATA
+        } else
         if(ChipType == SIS133NEW) {
             USHORT tmp16;
             // check 80-pin cable

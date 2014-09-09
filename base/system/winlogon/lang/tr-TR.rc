@@ -34,7 +34,7 @@ BEGIN
     IDS_LOADINGYOURPERSONALSETTINGS "Şahsî Ayarlarınız Yükleniyor..."
     IDS_CLOSINGNETWORKCONNECTIONS "Ağ Bağlantıları Kapatılıyor..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS Kapatılıyor..."
-    IDS_PREPARETOSTANDBY "Beklemeye Anıklanıyor..."
+    IDS_PREPARETOSTANDBY "Uykuya Anıklanıyor..."
     IDS_PREPARETOHIBERNATE "Anıkta Beklemeye Anıklanıyor..."
     IDS_SAVEYOURSETTINGS "Ayarlarınız Kaydediliyor..."
     IDS_REACTOSISSTARTINGUP "ReactOS Başlatılıyor..."

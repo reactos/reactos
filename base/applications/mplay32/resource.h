@@ -30,6 +30,9 @@
 /* Menu */
 #define IDR_MAINMENU 500
 
+/* Accelerators */
+#define ID_ACCELERATORS 800
+
 /* Menu items */
 #define IDM_OPEN_FILE  1000
 #define IDM_CLOSE_FILE 1001
@@ -37,6 +40,8 @@
 #define IDM_ABOUT      1003
 #define IDM_VOLUMECTL  1004
 #define IDM_DEVPROPS   1005
+#define IDM_REPEAT     1006
+#define IDM_SWITCHVIEW 1007
 
 /* ToolBar Icons */
 #define TBICON_PLAY     0

@@ -43,6 +43,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
+#undef ARRAYSIZE
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 /****************************************************************************
@@ -1173,7 +1174,7 @@ DWORD apartment_release(struct apartment *apt)
     return ret;
 }
 
-/* The given OXID must be local to this process: 
+/* The given OXID must be local to this process:
  *
  * The ref parameter is here mostly to ensure people remember that
  * they get one, you should normally take a ref for thread safety.
@@ -2482,7 +2483,7 @@ HRESULT WINAPI CLSIDFromProgIDEx(LPCOLESTR progid, LPCLSID clsid)
  * PARAMS
  *  riid   [I] Interface whose proxy/stub CLSID is to be returned.
  *  pclsid [O] Where to store returned proxy/stub CLSID.
- * 
+ *
  * RETURNS
  *   S_OK
  *   E_OUTOFMEMORY
@@ -2594,7 +2595,7 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
  * PARAMS
  *  riid   [I] Interface whose proxy/stub CLSID is to be registered.
  *  rclsid [I] CLSID of the proxy/stub.
- * 
+ *
  * RETURNS
  *   Success: S_OK
  *   Failure: E_OUTOFMEMORY
@@ -3576,14 +3577,14 @@ HRESULT WINAPI CoLockObjectExternal(
     if (!apt) return CO_E_NOTINITIALIZED;
 
     stubmgr = get_stub_manager_from_object(apt, pUnk);
-    
+
     if (stubmgr)
     {
         if (fLock)
             stub_manager_ext_addref(stubmgr, 1, FALSE);
         else
             stub_manager_ext_release(stubmgr, 1, FALSE, fLastUnlockReleases);
-        
+
         stub_manager_int_release(stubmgr);
 
         return S_OK;
@@ -4036,7 +4037,7 @@ HRESULT WINAPI CoAllowSetForegroundWindow(IUnknown *pUnk, void *pvReserved)
     FIXME("(%p, %p): stub\n", pUnk, pvReserved);
     return S_OK;
 }
- 
+
 /***********************************************************************
  *           CoQueryProxyBlanket [OLE32.@]
  *

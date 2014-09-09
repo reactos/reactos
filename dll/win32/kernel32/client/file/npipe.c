@@ -287,7 +287,7 @@ CreateNamedPipeW(LPCWSTR lpName,
     if (nDefaultTimeOut)
     {
         /* Convert the time to NT format */
-        DefaultTimeOut.QuadPart = UInt32x32To64(nDefaultTimeOut, -10000);
+        DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000LL;
     }
     else
     {
@@ -517,7 +517,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         else
         {
             /* Convert to NT format */
-            WaitPipeInfo->Timeout.QuadPart = UInt32x32To64(-10000, nTimeOut);
+            WaitPipeInfo->Timeout.QuadPart = nTimeOut * -10000LL;
         }
 
         /* In both cases, we do have a timeout */
@@ -699,8 +699,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
         if (lpCollectDataTimeout)
         {
             /* Convert it to Quad */
-            RemoteSettings.CollectDataTime.QuadPart =
-                -(LONGLONG)UInt32x32To64(10000, *lpCollectDataTimeout);
+            RemoteSettings.CollectDataTime.QuadPart = *lpCollectDataTimeout * -10000LL;
         }
 
         /* Tell the driver to change them */

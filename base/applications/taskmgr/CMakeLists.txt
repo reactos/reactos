@@ -8,16 +8,17 @@ list(APPEND SOURCE
     debug.c
     endproc.c
     graph.c
+    graphctl.c
     optnmenu.c
     perfdata.c
     perfpage.c
     priority.c
-    procpage.c
     proclist.c
+    procpage.c
     run.c
-    trayicon.c
+    shutdown.c
     taskmgr.c
-    graphctl.c
+    trayicon.c
     precomp.h)
 
 add_executable(taskmgr ${SOURCE} taskmgr.rc)

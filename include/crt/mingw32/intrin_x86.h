@@ -190,16 +190,18 @@ __INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * const Desti
 }
 
 #ifndef __clang__
+
 __INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
-#endif
 
 __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
 	return (void *)__sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
+
+#endif
 
 __INTRIN_INLINE char _InterlockedExchange8(volatile char * const Target, const char Value)
 {
@@ -215,12 +217,23 @@ __INTRIN_INLINE short _InterlockedExchange16(volatile short * const Target, cons
 	return __sync_lock_test_and_set(Target, Value);
 }
 
+#ifndef __clang__
+
 __INTRIN_INLINE long _InterlockedExchange(volatile long * const Target, const long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
 	return __sync_lock_test_and_set(Target, Value);
 }
+
+__INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
+{
+	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
+	__sync_synchronize();
+	return (void *)__sync_lock_test_and_set(Target, Value);
+}
+
+#endif
 
 #if defined(_M_AMD64)
 __INTRIN_INLINE long long _InterlockedExchange64(volatile long long * const Target, const long long Value)
@@ -230,13 +243,6 @@ __INTRIN_INLINE long long _InterlockedExchange64(volatile long long * const Targ
 	return __sync_lock_test_and_set(Target, Value);
 }
 #endif
-
-__INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
-{
-	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
-	__sync_synchronize();
-	return (void *)__sync_lock_test_and_set(Target, Value);
-}
 
 __INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
 {
@@ -678,9 +684,9 @@ __INTRIN_INLINE long _InterlockedAddLargeStatistic(volatile long long * const Ad
 {
 	__asm__
 	(
-		"lock; add %[Value], %[Lo32];"
+		"lock; addl %[Value], %[Lo32];"
 		"jae LABEL%=;"
-		"lock; adc $0, %[Hi32];"
+		"lock; adcl $0, %[Hi32];"
 		"LABEL%=:;" :
 		[Lo32] "+m" (*((volatile long *)(Addend) + 0)), [Hi32] "+m" (*((volatile long *)(Addend) + 1)) :
 		[Value] "ir" (Value) :

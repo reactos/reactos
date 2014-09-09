@@ -48,6 +48,18 @@ BEGIN
         MENUITEM "&Lépcsõzetes rendezés", ID_WINDOWS_CASCADE
         MENUITEM "&Elõtérbe helyezés", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&Súgó"
     BEGIN
         MENUITEM "&Témakörök", ID_HELP_TOPICS
@@ -426,6 +438,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Mem használat: %dK / %dK"
     IDS_STATUS_CPUUSAGE "CPU használat: %3d%%"
     IDS_STATUS_PROCESSES "Folyamatok: %d"
-    IDS_Not_Responding "Nem válaszol"
-    IDS_Running "Fut"
+    IDS_NOT_RESPONDING "Nem válaszol"
+    IDS_RUNNING "Fut"
 END

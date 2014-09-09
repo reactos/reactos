@@ -355,7 +355,8 @@ LogfCreate(PLOGFILE *LogFile,
         goto fail;
     }
 
-    lstrcpyW(pLogFile->LogName, LogName);
+    if(LogName)
+        StringCchCopy(pLogFile->LogName,lstrlenW(LogName) + 1, LogName);
 
     pLogFile->FileName =
         (WCHAR *) HeapAlloc(MyHeap,
@@ -368,7 +369,7 @@ LogfCreate(PLOGFILE *LogFile,
         goto fail;
     }
 
-    lstrcpyW(pLogFile->FileName, FileName->Buffer);
+    StringCchCopy(pLogFile->FileName, lstrlenW(FileName->Buffer) + 1, FileName->Buffer);
 
     pLogFile->OffsetInfo =
         (PEVENT_OFFSET_INFO) HeapAlloc(MyHeap,
@@ -1233,7 +1234,7 @@ LogfBackupFile(PLOGFILE LogFile,
             goto Done;
         }
 
-        if (!ReadFile(LogFile->hFile, &Buffer, dwRecSize, &dwRead, NULL))
+        if (!ReadFile(LogFile->hFile, Buffer, dwRecSize, &dwRead, NULL))
         {
             DPRINT1("ReadFile() failed!\n");
             goto Done;
@@ -1251,7 +1252,7 @@ LogfBackupFile(PLOGFILE LogFile,
                              NULL);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("NtWriteFile() failed!\n");
+            DPRINT1("NtWriteFile() failed! (Status: 0x%08lx)\n", Status);
             goto Done;
         }
 
@@ -1310,7 +1311,7 @@ LogfBackupFile(PLOGFILE LogFile,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtWriteFile() failed!\n");
+        DPRINT1("NtWriteFile() failed! (Status: 0x%08lx)\n", Status);
     }
 
 Done:

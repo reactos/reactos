@@ -9,10 +9,6 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Záznam"
     BEGIN
-        MENUITEM "&Application", ID_LOG_APPLICATION
-        MENUITEM "&Security", ID_LOG_SECURITY
-        MENUITEM "&System", ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
         MENUITEM "Save &Protocol...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", ID_CLEAR_EVENTS, GRAYED

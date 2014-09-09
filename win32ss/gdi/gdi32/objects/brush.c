@@ -393,44 +393,37 @@ SetBrushOrgEx(HDC hdc,
         return FALSE;
     }
 #endif
-    if (GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
+    if (GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID)&Dc_Attr))
     {
-        PTEB pTeb = NtCurrentTeb();
+        PGDIBSSETBRHORG pgSBO;
+
+        /* Does the caller want the current brush origin to be returned? */
         if (lppt)
         {
             lppt->x = Dc_Attr->ptlBrushOrigin.x;
             lppt->y = Dc_Attr->ptlBrushOrigin.y;
         }
-        if ((nXOrg == Dc_Attr->ptlBrushOrigin.x) && (nYOrg == Dc_Attr->ptlBrushOrigin.y))
+
+        /* Check if we have nothing to do */
+        if ((nXOrg == Dc_Attr->ptlBrushOrigin.x) &&
+            (nYOrg == Dc_Attr->ptlBrushOrigin.y))
             return TRUE;
 
-        if(((pTeb->GdiTebBatch.HDC == NULL) || (pTeb->GdiTebBatch.HDC == hdc)) &&
-                ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSSETBRHORG)) <= GDIBATCHBUFSIZE) &&
-                (!(Dc_Attr->ulDirty_ & DC_DIBSECTION)) )
+        /* Allocate a batch command buffer */
+        pgSBO = GdiAllocBatchCommand(hdc, GdiBCSetBrushOrg);
+        if (pgSBO != NULL)
         {
-            PGDIBSSETBRHORG pgSBO = (PGDIBSSETBRHORG)(&pTeb->GdiTebBatch.Buffer[0] +
-                                    pTeb->GdiTebBatch.Offset);
-
+            /* Set current brush origin in the DC attribute */
             Dc_Attr->ptlBrushOrigin.x = nXOrg;
             Dc_Attr->ptlBrushOrigin.y = nYOrg;
 
-            pgSBO->gbHdr.Cmd = GdiBCSetBrushOrg;
-            pgSBO->gbHdr.Size = sizeof(GDIBSSETBRHORG);
+            /* Setup the GDI batch command */
             pgSBO->ptlBrushOrigin = Dc_Attr->ptlBrushOrigin;
 
-            pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
-            pTeb->GdiTebBatch.HDC = hdc;
-            pTeb->GdiBatchCount++;
-            DPRINT("Loading the Flush!! COUNT-> %lu\n", pTeb->GdiBatchCount);
-
-            if (pTeb->GdiBatchCount >= GDI_BatchLimit)
-            {
-                DPRINT("Call GdiFlush!!\n");
-                NtGdiFlush();
-                DPRINT("Exit GdiFlush!!\n");
-            }
             return TRUE;
         }
     }
-    return NtGdiSetBrushOrg(hdc,nXOrg,nYOrg,lppt);
+
+    /* Fall back to the slower kernel path */
+    return NtGdiSetBrushOrg(hdc, nXOrg, nYOrg, lppt);
 }
