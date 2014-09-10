@@ -2199,6 +2199,179 @@ static void PopupStartMenu(IN ITrayWindowImpl *This)
     }
 }
 
+static void ProcessMouseTracking(ITrayWindowImpl * This)
+{
+    RECT rcCurrent;
+    POINT pt;
+    BOOL over;
+    UINT state = This->AutoHideState;
+
+    GetCursorPos(&pt);
+    GetWindowRect(This->hWnd, &rcCurrent);
+    over = PtInRect(&rcCurrent, pt);
+
+    if (SendMessage(This->hwndStart, BM_GETSTATE, 0, 0) != BST_UNCHECKED)
+    {
+        over = TRUE;
+    }
+
+    if (over)
+    {
+        if (state == AUTOHIDE_HIDING)
+        {
+            TRACE("AutoHide cancelling hide.\n");
+            This->AutoHideState = AUTOHIDE_SHOWING;
+            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
+        }
+        else if (state == AUTOHIDE_HIDDEN)
+        {
+            TRACE("AutoHide starting show.\n");
+            This->AutoHideState = AUTOHIDE_SHOWING;
+            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_SHOW, NULL);
+        }
+    }
+    else
+    {
+        if (state == AUTOHIDE_SHOWING)
+        {
+            TRACE("AutoHide cancelling show.\n");
+            This->AutoHideState = AUTOHIDE_HIDING;
+            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
+        }
+        else if (state == AUTOHIDE_SHOWN)
+        {
+            TRACE("AutoHide starting hide.\n");
+            This->AutoHideState = AUTOHIDE_HIDING;
+            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
+        }
+
+        KillTimer(This->hWnd, TIMER_ID_MOUSETRACK);
+    }
+}
+
+static void ProcessAutoHide(ITrayWindowImpl * This)
+{
+    BOOL ret;
+    RECT rc = This->rcTrayWnd[This->Position];
+    INT w = This->TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;
+    INT h = This->TraySize.cy - GetSystemMetrics(SM_CYBORDER) * 2 - 1;
+
+    TRACE("AutoHide Timer received for %u, rc=(%d, %d, %d, %d), w=%d, h=%d.\n", This->AutoHideState, rc.left, rc.top, rc.right, rc.bottom, w, h);
+
+    switch (This->AutoHideState)
+    {
+    case AUTOHIDE_HIDING:
+        switch (This->Position)
+        {
+        case ABE_LEFT:
+            This->AutoHideOffset.cy = 0;
+            This->AutoHideOffset.cx -= AUTOHIDE_SPEED_HIDE;
+            if (This->AutoHideOffset.cx < -w)
+                This->AutoHideOffset.cx = -w;
+            break;
+        case ABE_TOP:
+            This->AutoHideOffset.cx = 0;
+            This->AutoHideOffset.cy -= AUTOHIDE_SPEED_HIDE;
+            if (This->AutoHideOffset.cy < -h)
+                This->AutoHideOffset.cy = -h;
+            break;
+        case ABE_RIGHT:
+            This->AutoHideOffset.cy = 0;
+            This->AutoHideOffset.cx += AUTOHIDE_SPEED_HIDE;
+            if (This->AutoHideOffset.cx > w)
+                This->AutoHideOffset.cx = w;
+            break;
+        case ABE_BOTTOM:
+            This->AutoHideOffset.cx = 0;
+            This->AutoHideOffset.cy += AUTOHIDE_SPEED_HIDE;
+            if (This->AutoHideOffset.cy > h)
+                This->AutoHideOffset.cy = h;
+            break;
+        }
+
+        if (This->AutoHideOffset.cx != w && This->AutoHideOffset.cy != h)
+        {
+            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
+            break;
+        }
+
+        /* fallthrough */
+    case AUTOHIDE_HIDDEN:
+
+        switch (This->Position)
+        {
+        case ABE_LEFT:
+            This->AutoHideOffset.cx = -w;
+            This->AutoHideOffset.cy = 0;
+            break;
+        case ABE_TOP:
+            This->AutoHideOffset.cx = 0;
+            This->AutoHideOffset.cy = -h;
+            break;
+        case ABE_RIGHT:
+            This->AutoHideOffset.cx = w;
+            This->AutoHideOffset.cy = 0;
+            break;
+        case ABE_BOTTOM:
+            This->AutoHideOffset.cx = 0;
+            This->AutoHideOffset.cy = h;
+            break;
+        }
+
+        KillTimer(This->hWnd, TIMER_ID_AUTOHIDE);
+        This->AutoHideState = AUTOHIDE_HIDDEN;
+        break;
+
+    case AUTOHIDE_SHOWING:
+        if (This->AutoHideOffset.cx >= AUTOHIDE_SPEED_SHOW)
+        {
+            This->AutoHideOffset.cx -= AUTOHIDE_SPEED_SHOW;
+        }
+        else if (This->AutoHideOffset.cx <= -AUTOHIDE_SPEED_SHOW)
+        {
+            This->AutoHideOffset.cx += AUTOHIDE_SPEED_SHOW;
+        }
+        else
+        {
+            This->AutoHideOffset.cx = 0;
+        }
+
+        if (This->AutoHideOffset.cy >= AUTOHIDE_SPEED_SHOW)
+        {
+            This->AutoHideOffset.cy -= AUTOHIDE_SPEED_SHOW;
+        }
+        else if (This->AutoHideOffset.cy <= -AUTOHIDE_SPEED_SHOW)
+        {
+            This->AutoHideOffset.cy += AUTOHIDE_SPEED_SHOW;
+        }
+        else
+        {
+            This->AutoHideOffset.cy = 0;
+        }
+
+        if (This->AutoHideOffset.cx != 0 || This->AutoHideOffset.cy != 0)
+        {
+            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
+            break;
+        }
+
+        /* fallthrough */
+    case AUTOHIDE_SHOWN:
+
+        KillTimer(This->hWnd, TIMER_ID_AUTOHIDE);
+        This->AutoHideState = AUTOHIDE_SHOWN;
+        break;
+    }
+
+    rc.left += This->AutoHideOffset.cx;
+    rc.right += This->AutoHideOffset.cx;
+    rc.top += This->AutoHideOffset.cy;
+    rc.bottom += This->AutoHideOffset.cy;
+
+    TRACE("AutoHide Changing position to (%d, %d, %d, %d) and state=%u.\n", rc.left, rc.top, rc.right, rc.bottom, This->AutoHideState);
+    SetWindowPos(This->hWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOACTIVATE | SWP_NOZORDER);
+}
+
 static LRESULT CALLBACK
 TrayWndProc(IN HWND hwnd,
             IN UINT uMsg,
@@ -2811,175 +2984,11 @@ HandleTrayContextMenu:
             case WM_TIMER:
                 if (wParam == TIMER_ID_MOUSETRACK)
                 {
-                    RECT rcCurrent;
-                    POINT pt;
-                    BOOL over;
-                    UINT state = This->AutoHideState;
-
-                    GetCursorPos(&pt);
-                    GetWindowRect(This->hWnd, &rcCurrent);
-                    over = PtInRect(&rcCurrent, pt);
-
-                    if (SendMessage(This->hwndStart, BM_GETSTATE, 0, 0) != BST_UNCHECKED)
-                    {
-                        over = TRUE;
-                    }
-
-                    if (over)
-                    {
-                        if (state == AUTOHIDE_HIDING)
-                        {
-                            TRACE("AutoHide cancelling hide.\n");
-                            This->AutoHideState = AUTOHIDE_SHOWING;
-                            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
-                        }
-                        else if (state == AUTOHIDE_HIDDEN)
-                        {
-                            TRACE("AutoHide starting show.\n");
-                            This->AutoHideState = AUTOHIDE_SHOWING;
-                            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_SHOW, NULL);
-                        }
-                    }
-                    else
-                    {
-                        if (state == AUTOHIDE_SHOWING)
-                        {
-                            TRACE("AutoHide cancelling show.\n");
-                            This->AutoHideState = AUTOHIDE_HIDING;
-                            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
-                        }
-                        else if (state == AUTOHIDE_SHOWN)
-                        {
-                            TRACE("AutoHide starting hide.\n");
-                            This->AutoHideState = AUTOHIDE_HIDING;
-                            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
-                        }
-                        
-                        KillTimer(This->hWnd, TIMER_ID_MOUSETRACK);
-                    }
+                    ProcessMouseTracking(This);
                 }
                 else if (wParam == TIMER_ID_AUTOHIDE)
                 {
-                    BOOL ret;
-                    RECT rc = This->rcTrayWnd[This->Position];
-                    INT w = This->TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;
-                    INT h = This->TraySize.cy - GetSystemMetrics(SM_CYBORDER) * 2 - 1;
-
-                    TRACE("AutoHide Timer received for %u, rc=(%d, %d, %d, %d), w=%d, h=%d.\n", This->AutoHideState, rc.left, rc.top, rc.right, rc.bottom, w, h);
-
-                    switch (This->AutoHideState)
-                    {
-                    case AUTOHIDE_HIDING:
-                        switch (This->Position)
-                        {
-                        case ABE_LEFT:
-                            This->AutoHideOffset.cy = 0;
-                            This->AutoHideOffset.cx -= AUTOHIDE_SPEED_HIDE;
-                            if (This->AutoHideOffset.cx < -w)
-                                This->AutoHideOffset.cx = -w;
-                            break;
-                        case ABE_TOP:
-                            This->AutoHideOffset.cx = 0;
-                            This->AutoHideOffset.cy -= AUTOHIDE_SPEED_HIDE;
-                            if (This->AutoHideOffset.cy < -h)
-                                This->AutoHideOffset.cy = -h;
-                            break;
-                        case ABE_RIGHT:
-                            This->AutoHideOffset.cy = 0;
-                            This->AutoHideOffset.cx += AUTOHIDE_SPEED_HIDE;
-                            if (This->AutoHideOffset.cx > w)
-                                This->AutoHideOffset.cx = w;
-                            break;
-                        case ABE_BOTTOM:
-                            This->AutoHideOffset.cx = 0;
-                            This->AutoHideOffset.cy += AUTOHIDE_SPEED_HIDE;
-                            if (This->AutoHideOffset.cy > h)
-                                This->AutoHideOffset.cy = h;
-                            break;
-                        }
-
-                        if (This->AutoHideOffset.cx != w && This->AutoHideOffset.cy != h)
-                        {
-                            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
-                            break;
-                        }
-                        
-                        /* fallthrough */
-                    case AUTOHIDE_HIDDEN:
-
-                        switch (This->Position)
-                        {
-                        case ABE_LEFT:
-                            This->AutoHideOffset.cx = -w;
-                            This->AutoHideOffset.cy = 0;
-                            break;
-                        case ABE_TOP:
-                            This->AutoHideOffset.cx = 0;
-                            This->AutoHideOffset.cy = -h;
-                            break;
-                        case ABE_RIGHT:
-                            This->AutoHideOffset.cx = w;
-                            This->AutoHideOffset.cy = 0;
-                            break;
-                        case ABE_BOTTOM:
-                            This->AutoHideOffset.cx = 0;
-                            This->AutoHideOffset.cy = h;
-                            break;
-                        }
-
-                        KillTimer(This->hWnd, TIMER_ID_AUTOHIDE);
-                        This->AutoHideState = AUTOHIDE_HIDDEN;
-                        break;
-
-                    case AUTOHIDE_SHOWING:
-                        if (This->AutoHideOffset.cx >= AUTOHIDE_SPEED_SHOW)
-                        {
-                            This->AutoHideOffset.cx -= AUTOHIDE_SPEED_SHOW;
-                        }
-                        else if (This->AutoHideOffset.cx <= -AUTOHIDE_SPEED_SHOW)
-                        {
-                            This->AutoHideOffset.cx += AUTOHIDE_SPEED_SHOW;
-                        }
-                        else
-                        {
-                            This->AutoHideOffset.cx = 0;
-                        }
-
-                        if (This->AutoHideOffset.cy >= AUTOHIDE_SPEED_SHOW)
-                        {
-                            This->AutoHideOffset.cy -= AUTOHIDE_SPEED_SHOW;
-                        }
-                        else if (This->AutoHideOffset.cy <= -AUTOHIDE_SPEED_SHOW)
-                        {
-                            This->AutoHideOffset.cy += AUTOHIDE_SPEED_SHOW;
-                        }
-                        else
-                        {
-                            This->AutoHideOffset.cy = 0;
-                        }
-
-                        if (This->AutoHideOffset.cx != 0 || This->AutoHideOffset.cy != 0)
-                        {
-                            SetTimer(This->hWnd, TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
-                            break;
-                        }
-
-                        /* fallthrough */
-                    case AUTOHIDE_SHOWN:
-
-                        KillTimer(This->hWnd, TIMER_ID_AUTOHIDE);
-                        This->AutoHideState = AUTOHIDE_SHOWN;
-                        break;
-                    }
-
-                    rc.left   += This->AutoHideOffset.cx;
-                    rc.right  += This->AutoHideOffset.cx;
-                    rc.top    += This->AutoHideOffset.cy;
-                    rc.bottom += This->AutoHideOffset.cy;
-
-                    TRACE("AutoHide Changing position to (%d, %d, %d, %d) and state=%u.\n", rc.left, rc.top, rc.right, rc.bottom, This->AutoHideState);
-                    ret = SetWindowPos(This->hWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOACTIVATE | SWP_NOZORDER);
-                    TRACE("ret=%d, err=%d\n", ret, GetLastError());
+                    ProcessAutoHide(This);
                 }
 
                 goto DefHandler;
