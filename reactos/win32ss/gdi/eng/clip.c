@@ -153,40 +153,6 @@ CompareLeftUp(
     return Cmp;
 }
 
-static __inline int
-CompareSpans(
-    const SPAN *Span1,
-    const SPAN *Span2)
-{
-    int Cmp;
-
-    if (Span1->Y < Span2->Y)
-    {
-        Cmp = -1;
-    }
-    else if (Span2->Y < Span1->Y)
-    {
-        Cmp = +1;
-    }
-    else
-    {
-        if (Span1->X < Span2->X)
-        {
-            Cmp = -1;
-        }
-        else if (Span2->X < Span1->X)
-        {
-            Cmp = +1;
-        }
-        else
-        {
-            Cmp = 0;
-        }
-    }
-
-    return Cmp;
-}
-
 VOID
 FASTCALL
 IntEngInitClipObj(XCLIPOBJ *Clip)
