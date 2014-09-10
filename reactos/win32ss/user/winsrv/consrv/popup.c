@@ -54,15 +54,17 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
 {
     COORD coPos;
     DWORD Written;
+    CODE_ELEMENT Code;
 
     /* Set screen attributes */
     coPos.X = xLeft;
     for (coPos.Y = yTop; coPos.Y < yTop + Height; coPos.Y++)
     {
+        Code.Attribute = Buffer->PopupDefaultAttrib;
         ConDrvFillConsoleOutput(Buffer->Header.Console,
                                 Buffer,
                                 CODE_ATTRIBUTE,
-                                (CODE_ELEMENT)(WORD)Buffer->PopupDefaultAttrib,
+                                Code,
                                 Width,
                                 &coPos,
                                 &Written);
@@ -71,10 +73,11 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
     /* draw upper left corner */
     coPos.X = xLeft;
     coPos.Y = yTop;
+    Code.AsciiChar = 0xDA; // '+'
     ConDrvFillConsoleOutput(Buffer->Header.Console,
                             Buffer,
                             CODE_ASCII,
-                            (CODE_ELEMENT)(CHAR)0xDA, // '+',
+                            Code,
                             1,
                             &coPos,
                             &Written);
@@ -82,10 +85,11 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
     /* draw upper edge */
     coPos.X = xLeft + 1;
     coPos.Y = yTop;
+    Code.AsciiChar = 0xC4; // '-'
     ConDrvFillConsoleOutput(Buffer->Header.Console,
                             Buffer,
                             CODE_ASCII,
-                            (CODE_ELEMENT)(CHAR)0xC4, // '-',
+                            Code,
                             Width - 2,
                             &coPos,
                             &Written);
@@ -93,10 +97,11 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
     /* draw upper right corner */
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop;
+    Code.AsciiChar = 0xBF; // '+'
     ConDrvFillConsoleOutput(Buffer->Header.Console,
                             Buffer,
                             CODE_ASCII,
-                            (CODE_ELEMENT)(CHAR)0xBF, // '+',
+                            Code,
                             1,
                             &coPos,
                             &Written);
@@ -105,28 +110,31 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
     for (coPos.Y = yTop + 1; coPos.Y < yTop + Height - 1; coPos.Y++)
     {
         coPos.X = xLeft;
+        Code.AsciiChar = 0xB3; // '|'
         ConDrvFillConsoleOutput(Buffer->Header.Console,
                                 Buffer,
                                 CODE_ASCII,
-                                (CODE_ELEMENT)(CHAR)0xB3, // '|',
+                                Code,
                                 1,
                                 &coPos,
                                 &Written);
 
         coPos.X = xLeft + 1;
+        Code.AsciiChar = ' ';
         ConDrvFillConsoleOutput(Buffer->Header.Console,
                                 Buffer,
                                 CODE_ASCII,
-                                (CODE_ELEMENT)(CHAR)' ',
+                                Code,
                                 Width - 2,
                                 &coPos,
                                 &Written);
 
         coPos.X = xLeft + Width - 1;
+        Code.AsciiChar = 0xB3; // '|'
         ConDrvFillConsoleOutput(Buffer->Header.Console,
                                 Buffer,
                                 CODE_ASCII,
-                                (CODE_ELEMENT)(CHAR)0xB3, // '|',
+                                Code,
                                 1,
                                 &coPos,
                                 &Written);
@@ -135,10 +143,11 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
     /* draw lower left corner */
     coPos.X = xLeft;
     coPos.Y = yTop + Height - 1;
+    Code.AsciiChar = 0xC0; // '+'
     ConDrvFillConsoleOutput(Buffer->Header.Console,
                             Buffer,
                             CODE_ASCII,
-                            (CODE_ELEMENT)(CHAR)0xC0, // '+',
+                            Code,
                             1,
                             &coPos,
                             &Written);
@@ -146,10 +155,11 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
     /* draw lower edge */
     coPos.X = xLeft + 1;
     coPos.Y = yTop + Height - 1;
+    Code.AsciiChar = 0xC4; // '-'
     ConDrvFillConsoleOutput(Buffer->Header.Console,
                             Buffer,
                             CODE_ASCII,
-                            (CODE_ELEMENT)(CHAR)0xC4, // '-',
+                            Code,
                             Width - 2,
                             &coPos,
                             &Written);
@@ -157,10 +167,11 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
     /* draw lower right corner */
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop + Height - 1;
+    Code.AsciiChar = 0xD9; // '+'
     ConDrvFillConsoleOutput(Buffer->Header.Console,
                             Buffer,
                             CODE_ASCII,
-                            (CODE_ELEMENT)(CHAR)0xD9, // '+',
+                            Code,
                             1,
                             &coPos,
                             &Written);
