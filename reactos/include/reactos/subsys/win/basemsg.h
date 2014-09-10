@@ -86,7 +86,7 @@ typedef struct _BASE_SXS_CREATEPROCESS_MSG
     UNICODE_STRING AssemblyName;
 } BASE_SXS_CREATEPROCESS_MSG, *PBASE_SXS_CREATEPROCESS_MSG;
 
-typedef struct
+typedef struct _BASE_CREATE_PROCESS
 {
     //
     // NT-type structure (BASE_CREATEPROCESS_MSG)
@@ -104,23 +104,23 @@ typedef struct
     USHORT ProcessorArchitecture;
 } BASE_CREATE_PROCESS, *PBASE_CREATE_PROCESS;
 
-typedef struct
+typedef struct _BASE_CREATE_THREAD
 {
     HANDLE ThreadHandle;
     CLIENT_ID ClientId;
 } BASE_CREATE_THREAD, *PBASE_CREATE_THREAD;
 
-typedef struct
+typedef struct _BASE_GET_TEMP_FILE
 {
     UINT UniqueID;
 } BASE_GET_TEMP_FILE, *PBASE_GET_TEMP_FILE;
 
-typedef struct
+typedef struct _BASE_EXIT_PROCESS
 {
     UINT uExitCode;
 } BASE_EXIT_PROCESS, *PBASE_EXIT_PROCESS;
 
-typedef struct
+typedef struct _BASE_CHECK_VDM
 {
     ULONG  iTask;
     HANDLE ConsoleHandle;
@@ -152,7 +152,7 @@ typedef struct
     USHORT VDMState;
 } BASE_CHECK_VDM, *PBASE_CHECK_VDM;
 
-typedef struct
+typedef struct _BASE_UPDATE_VDM_ENTRY
 {
     ULONG  iTask;
     ULONG  BinaryType;
@@ -163,7 +163,7 @@ typedef struct
     USHORT VDMCreationState;
 } BASE_UPDATE_VDM_ENTRY, *PBASE_UPDATE_VDM_ENTRY;
 
-typedef struct
+typedef struct _BASE_GET_NEXT_VDM_COMMAND
 {
     ULONG  iTask;
     HANDLE ConsoleHandle;
@@ -196,80 +196,80 @@ typedef struct
     ULONG  fComingFromBat;
 } BASE_GET_NEXT_VDM_COMMAND, *PBASE_GET_NEXT_VDM_COMMAND;
 
-typedef struct
+typedef struct _BASE_EXIT_VDM
 {
     HANDLE ConsoleHandle;
     ULONG  iWowTask;
     HANDLE WaitObjectForVDM;
 } BASE_EXIT_VDM, *PBASE_EXIT_VDM;
 
-typedef struct
+typedef struct _BASE_IS_FIRST_VDM
 {
     ULONG FirstVDM;
 } BASE_IS_FIRST_VDM, *PBASE_IS_FIRST_VDM;
 
-typedef struct
+typedef struct _BASE_GET_VDM_EXIT_CODE
 {
     HANDLE ConsoleHandle;
     HANDLE hParent;
     ULONG  ExitCode;
 } BASE_GET_VDM_EXIT_CODE, *PBASE_GET_VDM_EXIT_CODE;
 
-typedef struct
+typedef struct _BASE_SET_REENTER_COUNT
 {
     HANDLE ConsoleHandle;
     ULONG  fIncDec;
 } BASE_SET_REENTER_COUNT, *PBASE_SET_REENTER_COUNT;
 
-typedef struct
+typedef struct _BASE_GETSET_PROCESS_SHUTDOWN_PARAMS
 {
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
 } BASE_GETSET_PROCESS_SHUTDOWN_PARAMS, *PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS;
 
-typedef struct
+typedef struct _BASE_GETSET_VDM_CURDIRS
 {
     HANDLE ConsoleHandle;
     PCHAR  lpszzCurDirs;
     ULONG  cchCurDirs;
 } BASE_GETSET_VDM_CURDIRS, *PBASE_GETSET_VDM_CURDIRS;
 
-typedef struct
+typedef struct _BASE_BAT_NOTIFICATION
 {
     HANDLE ConsoleHandle;
     ULONG  fBeginEnd;
 } BASE_BAT_NOTIFICATION, *PBASE_BAT_NOTIFICATION;
 
-typedef struct
+typedef struct _BASE_REGISTER_WOWEXEC
 {
     HANDLE hwndWowExec;
 } BASE_REGISTER_WOWEXEC, *PBASE_REGISTER_WOWEXEC;
 
-typedef struct
+typedef struct _BASE_SOUND_SENTRY
 {
     ULONG VideoMode;
 } BASE_SOUND_SENTRY, *PBASE_SOUND_SENTRY;
 
-typedef struct
+typedef struct _BASE_REFRESH_INIFILE_MAPPING
 {
     UNICODE_STRING IniFileName;
 } BASE_REFRESH_INIFILE_MAPPING, *PBASE_REFRESH_INIFILE_MAPPING;
 
-typedef struct
+typedef struct _BASE_DEFINE_DOS_DEVICE
 {
     ULONG Flags;
     UNICODE_STRING DeviceName;
     UNICODE_STRING TargetPath;
 } BASE_DEFINE_DOS_DEVICE, *PBASE_DEFINE_DOS_DEVICE;
 
-typedef struct
+typedef struct _BASE_NLS_CREATE_SECTION
 {
     HANDLE SectionHandle;
     ULONG Type;
     ULONG LocaleId;
 } BASE_NLS_CREATE_SECTION, *PBASE_NLS_CREATE_SECTION;
 
-typedef struct
+typedef struct _BASE_NLS_GET_USER_INFO
 {
     PVOID /*PNLS_USER_INFO*/ NlsUserInfo;
     ULONG Size;

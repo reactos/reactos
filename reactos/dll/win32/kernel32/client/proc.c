@@ -726,7 +726,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         ProcessParameters->StandardError = StartupInfo->hStdError;
     }
 
-    /* Use Special Flags for BasepInitConsole in Kernel32 */
+    /* Use Special Flags for ConDllInitialize in Kernel32 */
     if (CreationFlags & DETACHED_PROCESS)
     {
         ProcessParameters->ConsoleHandle = HANDLE_DETACHED_PROCESS;

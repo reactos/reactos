@@ -76,35 +76,6 @@ RemoveConsole(IN PCONSOLE Console)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-// Adapted from reactos/lib/rtl/unicode.c, RtlCreateUnicodeString line 2180
-static BOOLEAN
-ConsoleCreateUnicodeString(IN OUT PUNICODE_STRING UniDest,
-                           IN PCWSTR Source)
-{
-    SIZE_T Size = (wcslen(Source) + 1) * sizeof(WCHAR);
-    if (Size > MAXUSHORT) return FALSE;
-
-    UniDest->Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size);
-    if (UniDest->Buffer == NULL) return FALSE;
-
-    RtlCopyMemory(UniDest->Buffer, Source, Size);
-    UniDest->MaximumLength = (USHORT)Size;
-    UniDest->Length = (USHORT)Size - sizeof(WCHAR);
-
-    return TRUE;
-}
-
-// Adapted from reactos/lib/rtl/unicode.c, RtlFreeUnicodeString line 431
-static VOID
-ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
-{
-    if (UnicodeString->Buffer)
-    {
-        ConsoleFreeHeap(UnicodeString->Buffer);
-        RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
-    }
-}
-
 VOID NTAPI
 ConDrvPause(PCONSOLE Console)
 {
@@ -190,14 +161,10 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
                   IN PCONSOLE_INFO ConsoleInfo)
 {
     NTSTATUS Status;
-    SECURITY_ATTRIBUTES SecurityAttributes;
     // CONSOLE_INFO CapturedConsoleInfo;
     TEXTMODE_BUFFER_INFO ScreenBufferInfo;
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
-#if 0
-    WCHAR DefaultTitle[128];
-#endif
 
     if (NewConsole == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -236,33 +203,15 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->ConsoleSize = ConsoleInfo->ConsoleSize;
     Console->FixedSize   = FALSE; // Value by default; is reseted by the terminals if needed.
 
-    /*
-     * Initialize the input buffer
-     */
-    ConSrvInitObject(&Console->InputBuffer.Header, INPUT_BUFFER, Console);
-
-    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-    SecurityAttributes.lpSecurityDescriptor = NULL;
-    SecurityAttributes.bInheritHandle = TRUE;
-    Console->InputBuffer.ActiveEvent = CreateEventW(&SecurityAttributes, TRUE, FALSE, NULL);
-    if (NULL == Console->InputBuffer.ActiveEvent)
+    /* Initialize the input buffer */
+    Status = ConDrvInitInputBuffer(Console, 0 /* ConsoleInfo->InputBufferSize */);
+    if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ConDrvInitInputBuffer: failed, Status = 0x%08lx\n", Status);
         DeleteCriticalSection(&Console->Lock);
         ConsoleFreeHeap(Console);
-        return STATUS_UNSUCCESSFUL;
+        return Status;
     }
-
-    Console->InputBuffer.InputBufferSize = 0; // FIXME!
-    InitializeListHead(&Console->InputBuffer.InputEvents);
-    Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
-                                ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
-
-    Console->InsertMode = ConsoleInfo->InsertMode;
-    Console->LineBuffer = NULL;
-    Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
-    Console->LineComplete = Console->LineUpPressed = FALSE;
-    Console->LineInsertToggle = Console->InsertMode;
-    // LineWakeupMask
 
     /* Set-up the code page */
     Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
@@ -282,7 +231,7 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ConDrvCreateScreenBuffer: failed, Status = 0x%08lx\n", Status);
-        CloseHandle(Console->InputBuffer.ActiveEvent);
+        ConDrvDeinitInputBuffer(Console);
         DeleteCriticalSection(&Console->Lock);
         ConsoleFreeHeap(Console);
         return Status;
@@ -290,28 +239,6 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
     Console->UnpauseEvent = NULL;
-
-    /* Initialize the console title */
-    ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo->ConsoleTitle);
-#if 0
-    if (ConsoleInfo.ConsoleTitle[0] == L'\0')
-    {
-        if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, DefaultTitle, sizeof(DefaultTitle) / sizeof(DefaultTitle[0])))
-        {
-            ConsoleCreateUnicodeString(&Console->Title, DefaultTitle);
-        }
-        else
-        {
-            ConsoleCreateUnicodeString(&Console->Title, L"ReactOS Console");
-        }
-    }
-    else
-    {
-#endif
-        ConsoleCreateUnicodeString(&Console->Title, ConsoleInfo->ConsoleTitle);
-#if 0
-    }
-#endif
 
     DPRINT("Console initialized\n");
 
@@ -437,10 +364,10 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
 
     /* FIXME: Send a terminate message to all the processes owning this console */
 
-    /* Cleanup the UI-oriented part */
-    DPRINT("Deregister console\n");
+    /* Deregister the terminal */
+    DPRINT("Deregister terminal\n");
     ConDrvDeregisterTerminal(Console);
-    DPRINT("Console deregistered\n");
+    DPRINT("Terminal deregistered\n");
 
     /***
      * Check that the console is in terminating state before continuing
@@ -465,24 +392,19 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     /* Remove the console from the list */
     RemoveConsole(Console);
 
-    /* Discard all entries in the input event queue */
-    PurgeInputBuffer(Console);
-    if (Console->LineBuffer) ConsoleFreeHeap(Console->LineBuffer);
-
     /* Delete the last screen buffer */
-    ConioDeleteScreenBuffer(Console->ActiveBuffer);
+    ConDrvDeleteScreenBuffer(Console->ActiveBuffer);
     Console->ActiveBuffer = NULL;
     if (!IsListEmpty(&Console->BufferList))
     {
-        DPRINT1("BUG: screen buffer list not empty\n");
-        ASSERT(FALSE);
+        /***ConDrvUnlockConsoleList();***/
+        ASSERTMSG("BUGBUGBUG!! screen buffer list not empty\n", FALSE);
     }
 
-    /**/ CloseHandle(Console->InputBuffer.ActiveEvent); /**/
-    if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
+    /* Deinitialize the input buffer */
+    ConDrvDeinitInputBuffer(Console);
 
-    ConsoleFreeUnicodeString(&Console->OriginalTitle);
-    ConsoleFreeUnicodeString(&Console->Title);
+    if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
 
     DPRINT("ConDrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);
@@ -518,17 +440,7 @@ ConDrvGetConsoleMode(IN PCONSOLE Console,
     if (INPUT_BUFFER == Object->Type)
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-
         *ConsoleMode = InputBuffer->Mode;
-
-        if (Console->QuickEdit || Console->InsertMode)
-        {
-            // Windows does this, even if it's not documented on MSDN
-            *ConsoleMode |= ENABLE_EXTENDED_FLAGS;
-
-            if (Console->QuickEdit ) *ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
-            if (Console->InsertMode) *ConsoleMode |= ENABLE_INSERT_MODE;
-        }
     }
     else if (TEXTMODE_BUFFER == Object->Type || GRAPHICS_BUFFER == Object->Type)
     {
@@ -548,8 +460,6 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      IN ULONG ConsoleMode)
 {
-#define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS   | \
-                                      ENABLE_INSERT_MODE      | ENABLE_QUICK_EDIT_MODE )
 #define CONSOLE_VALID_INPUT_MODES   ( ENABLE_PROCESSED_INPUT  | ENABLE_LINE_INPUT   | \
                                       ENABLE_ECHO_INPUT       | ENABLE_WINDOW_INPUT | \
                                       ENABLE_MOUSE_INPUT )
@@ -567,45 +477,21 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
 
-        DPRINT("SetConsoleMode(Input, %d)\n", ConsoleMode);
-
-        /*
-         * 1. Only the presence of valid mode flags is allowed.
-         */
-        if (ConsoleMode & ~(CONSOLE_VALID_INPUT_MODES | CONSOLE_VALID_CONTROL_MODES))
+        /* Only the presence of valid mode flags is allowed */
+        if (ConsoleMode & ~CONSOLE_VALID_INPUT_MODES)
         {
             Status = STATUS_INVALID_PARAMETER;
-            goto Quit;
         }
-
-        /*
-         * 2. If we use control mode flags without ENABLE_EXTENDED_FLAGS,
-         *    then consider the flags invalid.
-         *
-        if ( (ConsoleMode & CONSOLE_VALID_CONTROL_MODES) &&
-             (ConsoleMode & ENABLE_EXTENDED_FLAGS) == 0 )
+        else
         {
-            Status = STATUS_INVALID_PARAMETER;
-            goto Quit;
+            InputBuffer->Mode = (ConsoleMode & CONSOLE_VALID_INPUT_MODES);
         }
-        */
-
-        /*
-         * 3. Now we can continue.
-         */
-        if (ConsoleMode & CONSOLE_VALID_CONTROL_MODES)
-        {
-            Console->QuickEdit  = !!(ConsoleMode & ENABLE_QUICK_EDIT_MODE);
-            Console->InsertMode = !!(ConsoleMode & ENABLE_INSERT_MODE);
-        }
-        InputBuffer->Mode = (ConsoleMode & CONSOLE_VALID_INPUT_MODES);
     }
     else if (TEXTMODE_BUFFER == Object->Type || GRAPHICS_BUFFER == Object->Type)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
 
-        DPRINT("SetConsoleMode(Output, %d)\n", ConsoleMode);
-
+        /* Only the presence of valid mode flags is allowed */
         if (ConsoleMode & ~CONSOLE_VALID_OUTPUT_MODES)
         {
             Status = STATUS_INVALID_PARAMETER;
@@ -620,113 +506,7 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
         Status = STATUS_INVALID_HANDLE;
     }
 
-Quit:
     return Status;
-}
-
-NTSTATUS NTAPI
-ConDrvGetConsoleTitle(IN PCONSOLE Console,
-                      IN BOOLEAN Unicode,
-                      IN OUT PVOID TitleBuffer,
-                      IN OUT PULONG BufLength)
-{
-    ULONG Length;
-
-    if (Console == NULL || TitleBuffer == NULL || BufLength == NULL)
-        return STATUS_INVALID_PARAMETER;
-
-    /* Copy title of the console to the user title buffer */
-    if (Unicode)
-    {
-        if (*BufLength >= sizeof(WCHAR))
-        {
-            Length = min(*BufLength - sizeof(WCHAR), Console->Title.Length);
-            RtlCopyMemory(TitleBuffer, Console->Title.Buffer, Length);
-            ((PWCHAR)TitleBuffer)[Length / sizeof(WCHAR)] = L'\0';
-            *BufLength = Length;
-        }
-        else
-        {
-            *BufLength = Console->Title.Length;
-        }
-    }
-    else
-    {
-        if (*BufLength >= sizeof(CHAR))
-        {
-            Length = min(*BufLength - sizeof(CHAR), Console->Title.Length / sizeof(WCHAR));
-            Length = WideCharToMultiByte(Console->InputCodePage, 0,
-                                         Console->Title.Buffer, Length,
-                                         TitleBuffer, Length,
-                                         NULL, NULL);
-            ((PCHAR)TitleBuffer)[Length] = '\0';
-            *BufLength = Length;
-        }
-        else
-        {
-            *BufLength = Console->Title.Length / sizeof(WCHAR);
-        }
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS NTAPI
-ConDrvSetConsoleTitle(IN PCONSOLE Console,
-                      IN BOOLEAN Unicode,
-                      IN PVOID TitleBuffer,
-                      IN ULONG BufLength)
-{
-    PWCHAR Buffer;
-    ULONG  Length;
-
-    if (Console == NULL || TitleBuffer == NULL)
-        return STATUS_INVALID_PARAMETER;
-
-    if (Unicode)
-    {
-        /* Length is in bytes */
-        Length = BufLength;
-    }
-    else
-    {
-        /* Use the console input CP for the conversion */
-        Length = MultiByteToWideChar(Console->InputCodePage, 0,
-                                     TitleBuffer, BufLength,
-                                     NULL, 0);
-        /* The returned Length was in number of wchars, convert it in bytes */
-        Length *= sizeof(WCHAR);
-    }
-
-    /* Allocate a new buffer to hold the new title (NULL-terminated) */
-    Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Length + sizeof(WCHAR));
-    if (!Buffer) return STATUS_NO_MEMORY;
-
-    /* Free the old title */
-    ConsoleFreeUnicodeString(&Console->Title);
-
-    /* Copy title to console */
-    Console->Title.Buffer = Buffer;
-    Console->Title.Length = Length;
-    Console->Title.MaximumLength = Console->Title.Length + sizeof(WCHAR);
-
-    if (Unicode)
-    {
-        RtlCopyMemory(Console->Title.Buffer, TitleBuffer, Console->Title.Length);
-    }
-    else
-    {
-        MultiByteToWideChar(Console->InputCodePage, 0,
-                            TitleBuffer, BufLength,
-                            Console->Title.Buffer,
-                            Console->Title.Length / sizeof(WCHAR));
-    }
-
-    /* NULL-terminate */
-    Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
-
-    // TermChangeTitle(Console);
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI

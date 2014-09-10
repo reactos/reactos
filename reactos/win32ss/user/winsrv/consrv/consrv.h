@@ -51,10 +51,9 @@ typedef struct _CONSOLE_PROCESS_DATA
 {
     LIST_ENTRY ConsoleLink;
     PCSR_PROCESS Process;   // Process owning this structure.
-    HANDLE InputWaitHandle;
 
     HANDLE ConsoleHandle;
-    HANDLE ParentConsoleHandle;
+    HANDLE InputWaitHandle;
 
     BOOLEAN ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 
@@ -62,12 +61,21 @@ typedef struct _CONSOLE_PROCESS_DATA
     ULONG HandleTableSize;
     struct _CONSOLE_IO_HANDLE* /* PCONSOLE_IO_HANDLE */ HandleTable; // Length-varying table
 
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-    LPTHREAD_START_ROUTINE PropDispatcher; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
+    LPTHREAD_START_ROUTINE CtrlRoutine;
+    LPTHREAD_START_ROUTINE PropRoutine; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
+    // LPTHREAD_START_ROUTINE ImeRoutine;
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
+
+// Helper for code refactoring
+// #define USE_NEW_CONSOLE_WAY
+
+#ifndef USE_NEW_CONSOLE_WAY
 #include "include/conio.h"
-// #include "include/conio_winsrv.h"
+#else
+#include "include/conio_winsrv.h"
+#endif
+
 #include "include/console.h"
 #include "include/settings.h"
 #include "include/term.h"

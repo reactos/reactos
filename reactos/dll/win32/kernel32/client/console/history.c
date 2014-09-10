@@ -25,30 +25,6 @@ IntStringSize(LPCVOID String,
     ULONG Size = (Unicode ? wcslen(String) : strlen(String)) * sizeof(WCHAR);
     return (Size + 3) & ~3;
 }
-
-
-/* Copy a string to a capture buffer */
-static VOID
-IntCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        LPCVOID String,
-                        BOOL Unicode,
-                        PUNICODE_STRING RequestString)
-{
-    ULONG Size;
-    if (Unicode)
-    {
-        Size = wcslen(String) * sizeof(WCHAR);
-        CsrCaptureMessageBuffer(CaptureBuffer, (PVOID)String, Size, (PVOID *)&RequestString->Buffer);
-    }
-    else
-    {
-        Size = strlen(String);
-        CsrAllocateMessagePointer(CaptureBuffer, Size * sizeof(WCHAR), (PVOID *)&RequestString->Buffer);
-        Size = MultiByteToWideChar(CP_ACP, 0, String, Size, RequestString->Buffer, Size * sizeof(WCHAR))
-               * sizeof(WCHAR);
-    }
-    RequestString->Length = RequestString->MaximumLength = (USHORT)Size;
-}
 #endif
 
 static VOID
@@ -80,8 +56,6 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOLEAN bUnicode)
         return;
     }
 
-    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-    //                         &ExpungeCommandHistoryRequest->ExeName);
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
                             ExpungeCommandHistoryRequest->ExeLength,
@@ -131,14 +105,11 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
         return 0;
     }
 
-    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-    //                         &GetCommandHistoryRequest->ExeName);
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
                             GetCommandHistoryRequest->ExeLength,
                             (PVOID)&GetCommandHistoryRequest->ExeName);
 
-    // CsrAllocateMessagePointer(CaptureBuffer, HistoryLength,
     CsrAllocateMessagePointer(CaptureBuffer, GetCommandHistoryRequest->HistoryLength,
                               (PVOID*)&GetCommandHistoryRequest->History);
 
@@ -192,8 +163,6 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
         return 0;
     }
 
-    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-    //                         &GetCommandHistoryLengthRequest->ExeName);
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
                             GetCommandHistoryLengthRequest->ExeLength,
@@ -248,8 +217,6 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
         return FALSE;
     }
 
-    // IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-    //                         &SetHistoryNumberCommandsRequest->ExeName);
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
                             SetHistoryNumberCommandsRequest->ExeLength,

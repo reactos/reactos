@@ -252,7 +252,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     }
 
     Status = ConDrvCreateScreenBuffer(&Buff,
-                                      Console,
+                                      (PCONSOLE)Console,
                                       CreateScreenBufferRequest->ScreenBufferType,
                                       ScreenBufferInfo);
     if (!NT_SUCCESS(Status)) goto Quit;
@@ -417,7 +417,9 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
     {
         if (CreateWaitBlock)
         {
-            if (!CsrCreateWait(&ScreenBuffer->Header.Console->WriteWaitQueue,
+            PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)ScreenBuffer->Header.Console;
+
+            if (!CsrCreateWait(&Console->WriteWaitQueue,
                                WriteConsoleThread,
                                ClientThread,
                                ApiMessage,

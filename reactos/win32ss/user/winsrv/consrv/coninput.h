@@ -9,4 +9,8 @@
 
 #pragma once
 
-VOID PurgeInputBuffer(PCONSOLE Console);
+NTSTATUS NTAPI
+ConDrvInitInputBuffer(IN PCONSOLE Console,
+                      IN ULONG InputBufferSize);
+VOID NTAPI
+ConDrvDeinitInputBuffer(IN PCONSOLE Console);

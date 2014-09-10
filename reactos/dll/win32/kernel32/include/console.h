@@ -10,26 +10,31 @@
 
 /* CONSTANTS ******************************************************************/
 
-#define HANDLE_DETACHED_PROCESS    (HANDLE)-2
-#define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
-#define HANDLE_CREATE_NO_WINDOW    (HANDLE)-4
+#define HANDLE_DETACHED_PROCESS     (HANDLE)-1
+#define HANDLE_CREATE_NEW_CONSOLE   (HANDLE)-2
+#define HANDLE_CREATE_NO_WINDOW     (HANDLE)-3
+
+// Enable (and then get rid of) this define when support for
+// console initialization handles is implemented in CONSRV.
+// #define USE_CONSOLE_INIT_HANDLES
 
 
 /* FUNCTION PROTOTYPES ********************************************************/
 
-BOOL WINAPI
-BasepInitConsole(VOID);
+BOOLEAN
+WINAPI
+ConDllInitialize(IN ULONG Reason,
+                 IN PWSTR SessionDir);
 
-VOID WINAPI
-BasepUninitConsole(VOID);
+VOID
+InitializeCtrlHandling(VOID);
 
-VOID WINAPI
-InitConsoleCtrlHandling(VOID);
-
-DWORD WINAPI
+DWORD
+WINAPI
 ConsoleControlDispatcher(IN LPVOID lpThreadParameter);
 
-DWORD WINAPI
+DWORD
+WINAPI
 PropDialogHandler(IN LPVOID lpThreadParameter);
 
 HANDLE WINAPI
@@ -59,9 +64,32 @@ GetConsoleInputWaitHandle(VOID);
 HANDLE
 TranslateStdHandle(HANDLE hHandle);
 
+#define SetTEBLangID(p) (p)
+
 VOID
-InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
-                IN PUNICODE_STRING ImagePathName);
+SetUpConsoleInfo(IN BOOLEAN CaptureTitle,
+                 IN OUT LPDWORD pTitleLength,
+                 IN OUT LPWSTR* lpTitle OPTIONAL,
+                 IN OUT LPDWORD pDesktopLength,
+                 IN OUT LPWSTR* lpDesktop OPTIONAL,
+                 IN OUT PCONSOLE_START_INFO ConsoleStartInfo);
+
+VOID
+SetUpHandles(IN PCONSOLE_START_INFO ConsoleStartInfo);
+
+VOID
+InitExeName(VOID);
+
+VOID
+SetUpAppName(IN BOOLEAN CaptureStrings,
+             IN OUT LPDWORD CurDirLength,
+             IN OUT LPWSTR* CurDir,
+             IN OUT LPDWORD AppNameLength,
+             IN OUT LPWSTR* AppName);
+
+USHORT
+GetCurrentExeName(OUT PWCHAR ExeName,
+                  IN USHORT BufferSize);
 
 LPCWSTR
 IntCheckForConsoleFileName(IN LPCWSTR pszName,
@@ -72,8 +100,5 @@ OpenConsoleW(LPCWSTR wsName,
              DWORD   dwDesiredAccess,
              BOOL    bInheritHandle,
              DWORD   dwShareMode);
-
-BOOL WINAPI
-SetConsoleInputExeNameW(LPCWSTR lpInputExeName);
 
 /* EOF */

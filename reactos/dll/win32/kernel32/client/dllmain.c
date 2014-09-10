@@ -200,7 +200,7 @@ DllMain(HANDLE hDll,
             }
 
             /* Initialize Console Support */
-            if (!BasepInitConsole())
+            if (!ConDllInitialize(dwReason, SessionDir))
             {
                 DPRINT1("Failed to set up console\n");
                 return FALSE;
@@ -219,16 +219,22 @@ DllMain(HANDLE hDll,
         {
             if (DllInitialized == TRUE)
             {
+                /* Uninitialize console support */
+                ConDllInitialize(dwReason, NULL);
+
                 /* Insert more dll detach stuff here! */
                 NlsUninit();
-
-                /* Uninitialize console support */
-                BasepUninitConsole();
 
                 /* Delete DLL critical section */
                 RtlDeleteCriticalSection(&BaseDllDirectoryLock);
             }
             break;
+        }
+
+        case DLL_THREAD_ATTACH:
+        {
+            /* ConDllInitialize sets the current console locale for the new thread */
+            return ConDllInitialize(dwReason, NULL);
         }
 
         default:

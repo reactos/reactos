@@ -96,7 +96,7 @@ ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
                  * even of the last buffer, but having to deal with a lack of
                  * any active buffer might be error-prone. */
                 if (Buffer->ListEntry.Flink != Buffer->ListEntry.Blink)
-                    ConioDeleteScreenBuffer(Buffer);
+                    ConDrvDeleteScreenBuffer(Buffer);
             }
             else if (Object->Type == INPUT_BUFFER)
             {
@@ -470,15 +470,12 @@ ConSrvReleaseObject(IN PCONSOLE_IO_OBJECT Object,
 
 
 
-
-
-
 NTSTATUS
 ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                       PHANDLE pInputHandle,
                       PHANDLE pOutputHandle,
                       PHANDLE pErrorHandle,
-                      PCONSOLE_START_INFO ConsoleStartInfo)
+                      PCONSOLE_INIT_INFO ConsoleInitInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     HANDLE ConsoleHandle;
@@ -499,7 +496,7 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     /* Initialize a new Console owned by this process */
     Status = ConSrvInitConsole(&ConsoleHandle,
                                &Console,
-                               ConsoleStartInfo,
+                               ConsoleInitInfo,
                                HandleToUlong(ProcessData->Process->ClientId.UniqueProcess));
     if (!NT_SUCCESS(Status))
     {
