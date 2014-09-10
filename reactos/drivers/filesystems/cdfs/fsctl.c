@@ -201,14 +201,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     ULONG Size;
     ULONG Offset;
     ULONG i;
-    struct
-    {
-        UCHAR  Length[2];
-        UCHAR  FirstSession;
-        UCHAR  LastSession;
-        TRACK_DATA  TrackData;
-    }
-    Toc;
+    CDROM_TOC Toc;
 
     DPRINT("CdfsGetVolumeData\n");
 
@@ -219,7 +212,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
     Size = sizeof(Toc);
     Status = CdfsDeviceIoControl(DeviceObject,
-        IOCTL_CDROM_GET_LAST_SESSION,
+        IOCTL_CDROM_READ_TOC,
         NULL,
         0,
         &Toc,
@@ -231,13 +224,13 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
-    DPRINT("FirstSession %u, LastSession %u, FirstTrack %u\n",
-        Toc.FirstSession, Toc.LastSession, Toc.TrackData.TrackNumber);
+    DPRINT("FirstTrack %u, LastTrack %u, TrackNumber %u\n",
+        Toc.FirstTrack, Toc.LastTrack, Toc.TrackData[0].TrackNumber);
 
     Offset = 0;
     for (i = 0; i < 4; i++)
     {
-        Offset = (Offset << 8) + Toc.TrackData.Address[i];
+        Offset = (Offset << 8) + Toc.TrackData[0].Address[i];
     }
     CdInfo->VolumeOffset = Offset;
 
