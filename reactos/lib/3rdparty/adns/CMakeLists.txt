@@ -25,6 +25,6 @@ add_library(adns ${SOURCE})
 add_dependencies(adns psdk)
 add_pch(adns src/internal.h SOURCE)
 
-if(NOT MSVC)
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
     add_target_compile_flags(adns "-Wno-unused-but-set-variable")
 endif()

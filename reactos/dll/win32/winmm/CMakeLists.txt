@@ -29,6 +29,6 @@ add_pch(winmm winemm.h SOURCE)
 add_subdirectory(midimap)
 add_cd_file(TARGET winmm DESTINATION reactos/system32 FOR all)
 
-if(NOT MSVC)
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
     add_target_compile_flags(winmm "-Wno-unused-but-set-variable")
 endif()

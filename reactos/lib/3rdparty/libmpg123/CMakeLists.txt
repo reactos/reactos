@@ -45,6 +45,6 @@ add_library(libmpg123 ${SOURCE})
 add_dependencies(libmpg123 psdk)
 add_pch(libmpg123 precomp.h SOURCE)
 
-if(NOT MSVC)
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
     add_target_compile_flags(libmpg123 "-Wno-unused-but-set-variable")
 endif()
