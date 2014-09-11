@@ -62,13 +62,13 @@ set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if((NOT CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT SEPARATE_DBG))
     add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
 endif()
 
 # Debugging
 if(SEPARATE_DBG)
-    add_compile_flags("-gdwarf-2 -g2")
+    add_compile_flags("-gdwarf-4 -fvar-tracking-assignments")
 else()
     add_compile_flags("-gdwarf-2 -gstrict-dwarf")
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
