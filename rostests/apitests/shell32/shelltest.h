@@ -25,7 +25,6 @@
 #define test_S_OK(hres, message) ok(hres == S_OK, "%s (0x%lx instead of S_OK)\n",message, hResult);
 #define test_HRES(hres, hresExpected, message) ok(hres == hresExpected, "%s (0x%lx instead of 0x%lx)\n",message, hResult,hresExpected);
 
-DEFINE_GUID(CLSID_MenuDeskBar,  0xECD4FC4F, 0x521C, 0x11D0, 0xB7, 0x92, 0x00, 0xA0, 0xC9, 0x03, 0x12, 0xE1);
 DEFINE_GUID(CLSID_MenuBandSite, 0xE13EF4E4, 0xD2F2, 0x11D0, 0x98, 0x16, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72);
 
 template<typename Interface>
