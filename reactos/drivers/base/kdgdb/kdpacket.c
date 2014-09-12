@@ -12,6 +12,9 @@
 DBGKD_ANY_WAIT_STATE_CHANGE CurrentStateChange;
 DBGKD_GET_VERSION64 KdVersion;
 KDDEBUGGER_DATA64* KdDebuggerDataBlock;
+/* Callbacks used to communicate with KD aside from GDB */
+KDP_SEND_HANDLER KdpSendPacketHandler = NULL;
+KDP_MANIPULATESTATE_HANDLER KdpManipulateStateHandler = NULL;
 
 /* LOCALS *********************************************************************/
 static BOOLEAN FakeNextManipulatePacket = FALSE;
@@ -159,6 +162,10 @@ KdReceivePacket(
 
     State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
 
+    /* Maybe we are in a send<->receive loop that GDB doesn't need to know about */
+    if (KdpManipulateStateHandler != NULL)
+        return KdpManipulateStateHandler(State, MessageData, DataLength, KdContext);
+
     if (FakeNextManipulatePacket)
     {
         FakeNextManipulatePacket = FALSE;
@@ -183,6 +190,13 @@ KdSendPacket(
     IN PSTRING MessageData,
     IN OUT PKD_CONTEXT KdContext)
 {
+    /* Maybe we are in a send <-> receive loop that GDB doesn't need to know about */
+    if (KdpSendPacketHandler)
+    {
+        KdpSendPacketHandler(PacketType, MessageHeader, MessageData);
+        return;
+    }
+
     switch (PacketType)
     {
     case PACKET_TYPE_KD_STATE_CHANGE64:

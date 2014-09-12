@@ -11,6 +11,7 @@
 static HANDLE gdb_run_thread;
 static HANDLE gdb_dbg_process;
 HANDLE gdb_dbg_thread;
+CONTEXT CurrentContext;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 static
@@ -200,6 +201,147 @@ handle_gdb_read_mem(
 }
 
 static
+VOID
+GetCurrentContextSendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData
+)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+    const CONTEXT* Context = (const CONTEXT*)MessageData->Buffer;
+
+    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+            || (State->ApiNumber != DbgKdGetContextApi)
+            || (MessageData->Length < sizeof(*Context)))
+    {
+        /* Should we bugcheck ? */
+        while (1);
+    }
+
+    /* Just copy it */
+    RtlCopyMemory(&CurrentContext, Context, sizeof(*Context));
+}
+
+static
+VOID
+GetCurrentContext(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext,
+    _In_opt_ KDP_MANIPULATESTATE_HANDLER ManipulateStateHandler
+)
+{
+    State->ApiNumber = DbgKdGetContextApi;
+    State->Processor = CurrentStateChange.Processor;
+    State->ReturnStatus = STATUS_SUCCESS;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+    MessageData->Length = 0;
+
+    /* Update the send <-> receive loop handler */
+    KdpSendPacketHandler = GetCurrentContextSendHandler;
+    KdpManipulateStateHandler = ManipulateStateHandler;
+}
+
+static
+VOID
+SetContextSendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData
+)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+
+    /* We just confirm that all went well */
+    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+            || (State->ApiNumber != DbgKdSetContextApi)
+            || (State->ReturnStatus != STATUS_SUCCESS))
+    {
+        /* Should we bugcheck ? */
+        while (1);
+    }
+}
+
+static
+KDSTATUS
+SetContext(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext,
+    _In_opt_ KDP_MANIPULATESTATE_HANDLER ManipulateStateHandler
+)
+{
+    State->ApiNumber = DbgKdSetContextApi;
+    State->Processor = CurrentStateChange.Processor;
+    State->ReturnStatus = STATUS_SUCCESS;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+    MessageData->Length = sizeof(CurrentContext);
+
+    if (MessageData->MaximumLength < sizeof(CurrentContext))
+    {
+        while (1);
+    }
+
+    RtlCopyMemory(MessageData->Buffer, &CurrentContext, sizeof(CurrentContext));
+
+    /* Update the send <-> receive loop handlers */
+    KdpSendPacketHandler = SetContextSendHandler;
+    KdpManipulateStateHandler = ManipulateStateHandler;
+
+    return KdPacketReceived;
+}
+
+static
+KDSTATUS
+SendContinue(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext
+)
+{
+    /* Let's go on */
+    State->ApiNumber = DbgKdContinueApi;
+    State->ReturnStatus = STATUS_SUCCESS; /* ? */
+    State->Processor = CurrentStateChange.Processor;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+    if (MessageData)
+        MessageData->Length = 0;
+    *MessageLength = 0;
+    State->u.Continue.ContinueStatus = STATUS_SUCCESS;
+
+    /* We definitely are at the end of the send <-> receive loop, if any */
+    KdpSendPacketHandler = NULL;
+    KdpManipulateStateHandler = NULL;
+
+    /* Tell GDB we are fine */
+    send_gdb_packet("OK");
+    return KdPacketReceived;
+}
+
+static
+KDSTATUS
+UpdateProgramCounterSendContinue(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    ULONG_PTR ProgramCounter;
+
+    /* So we must get past the breakpoint instruction */
+    ProgramCounter = KdpGetContextPc(&CurrentContext);
+    KdpSetContextPc(&CurrentContext, ProgramCounter + KD_BREAKPOINT_SIZE);
+
+    /* Set the context and continue */
+    SetContext(State, MessageData, MessageLength, KdContext, SendContinue);
+    return KdPacketReceived;
+}
+
+static
 KDSTATUS
 handle_gdb_v(
     _Out_ DBGKD_MANIPULATE_STATE64* State,
@@ -222,18 +364,21 @@ handle_gdb_v(
 
         if (strcmp(gdb_input, "vCont;c") == 0)
         {
-            /* Let's go on */
-            State->ApiNumber = DbgKdContinueApi;
-            State->ReturnStatus = STATUS_SUCCESS; /* ? */
-            State->Processor = CurrentStateChange.Processor;
-            State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
-            if (MessageData)
-                MessageData->Length = 0;
-            *MessageLength = 0;
-            State->u.Continue.ContinueStatus = STATUS_SUCCESS;
-            /* Tell GDB we are fine */
-            send_gdb_packet("OK");
-            return KdPacketReceived;
+            DBGKM_EXCEPTION64* Exception = NULL;
+
+            if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
+                Exception = &CurrentStateChange.u.Exception;
+
+            /* See if we should update the program counter (unlike windbg, gdb doesn't do it for us) */
+            if (Exception && (Exception->ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT)
+                    && (Exception->ExceptionRecord.ExceptionInformation[0] == 0))
+            {
+                /* So we get the context, update it and send it back */
+                GetCurrentContext(State, MessageData, MessageLength, KdContext, UpdateProgramCounterSendContinue);
+                return KdPacketReceived;
+            }
+
+            return SendContinue(State, MessageData, MessageLength, KdContext);
         }
     }
 
