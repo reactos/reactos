@@ -2620,7 +2620,7 @@ static
 DECLSPEC_NOINLINE
 int sanity_check(int ret, struct volatile_context * before, struct volatile_context * after)
 {
-	if(ret && memcmp(before, after, sizeof(before)))
+	if(ret && memcmp(before, after, sizeof(*before)))
 	{
 		trace("volatile context corrupted\n");
 		return 0;
