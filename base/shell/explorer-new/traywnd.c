@@ -2251,7 +2251,6 @@ static void ProcessMouseTracking(ITrayWindowImpl * This)
 
 static void ProcessAutoHide(ITrayWindowImpl * This)
 {
-    BOOL ret;
     RECT rc = This->rcTrayWnd[This->Position];
     INT w = This->TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;
     INT h = This->TraySize.cy - GetSystemMetrics(SM_CYBORDER) * 2 - 1;
