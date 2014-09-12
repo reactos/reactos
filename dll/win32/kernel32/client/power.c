@@ -87,9 +87,8 @@ SetSystemPowerState(IN BOOL fSuspend,
 {
     NTSTATUS Status;
 
-    Status = NtInitiatePowerAction(PowerActionSleep,
-                                   (fSuspend != FALSE) ?
-                                   PowerSystemSleeping1 : PowerSystemHibernate,
+    Status = NtInitiatePowerAction((fSuspend != FALSE) ? PowerActionSleep     : PowerActionHibernate,
+                                   (fSuspend != FALSE) ? PowerSystemSleeping1 : PowerSystemHibernate,
                                    fForce != TRUE,
                                    FALSE);
     if (!NT_SUCCESS(Status))

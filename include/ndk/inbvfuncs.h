@@ -94,8 +94,8 @@ NTAPI
 InbvSetScrollRegion(
     _In_ ULONG Left,
     _In_ ULONG Top,
-    _In_ ULONG Width,
-    _In_ ULONG Height
+    _In_ ULONG Right,
+    _In_ ULONG Bottom
 );
 
 VOID
@@ -109,8 +109,8 @@ NTAPI
 InbvSolidColorFill(
     _In_ ULONG Left,
     _In_ ULONG Top,
-    _In_ ULONG Width,
-    _In_ ULONG Height,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
     _In_ ULONG Color
 );
 

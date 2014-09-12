@@ -19,6 +19,6 @@ list(APPEND SOURCE
 add_library(fullfat ${SOURCE})
 add_dependencies(fullfat bugcodes)
 
-if(NOT MSVC)
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
     add_target_compile_flags(fullfat "-Wno-unused-but-set-variable")
 endif()

@@ -12,6 +12,22 @@
 
 #include "rect.h"
 
+// This is ALMOST a HACK!!!!!!!
+// Helpers for code refactoring
+#ifdef USE_NEW_CONSOLE_WAY
+
+#define _CONSRV_CONSOLE  _WINSRV_CONSOLE
+#define  CONSRV_CONSOLE   WINSRV_CONSOLE
+#define PCONSRV_CONSOLE  PWINSRV_CONSOLE
+
+#else
+
+#define _CONSRV_CONSOLE  _CONSOLE
+#define  CONSRV_CONSOLE   CONSOLE
+#define PCONSRV_CONSOLE  PCONSOLE
+
+#endif
+
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED   | \
@@ -175,7 +191,7 @@ typedef struct _CONSOLE_INPUT_BUFFER
 {
     CONSOLE_IO_OBJECT Header;       /* Object header - MUST BE IN FIRST PLACE */
 
-    ULONG       InputBufferSize;    /* Size of this input buffer */
+    ULONG       InputBufferSize;    /* Size of this input buffer -- UNUSED!! */
     LIST_ENTRY  InputEvents;        /* List head for input event queue */
     HANDLE      ActiveEvent;        /* Event set when an input event is added in its queue */
 
@@ -194,17 +210,33 @@ typedef struct _TERMINAL_VTBL
                                    IN struct _CONSOLE* Console);
     VOID (NTAPI *DeinitTerminal)(IN OUT PTERMINAL This);
 
+
+
+/************ Line discipline ***************/
+
+    /* Interface used only for text-mode screen buffers */
+
+    NTSTATUS (NTAPI *ReadStream)(IN OUT PTERMINAL This,
+                                /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
+                                IN BOOLEAN Unicode,
+                                /**PWCHAR Buffer,**/
+                                OUT PVOID Buffer,
+                                IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                                IN ULONG NumCharsToRead,
+                                OUT PULONG NumCharsRead OPTIONAL);
+    NTSTATUS (NTAPI *WriteStream)(IN OUT PTERMINAL This,
+                                  PTEXTMODE_SCREEN_BUFFER Buff,
+                                  PWCHAR Buffer,
+                                  DWORD Length,
+                                  BOOL Attrib);
+
+/************ Line discipline ***************/
+
+
+
     /* Interface used for both text-mode and graphics screen buffers */
     VOID (NTAPI *DrawRegion)(IN OUT PTERMINAL This,
                              SMALL_RECT* Region);
-    /* Interface used only for text-mode screen buffers */
-    VOID (NTAPI *WriteStream)(IN OUT PTERMINAL This,
-                              SMALL_RECT* Region,
-                              SHORT CursorStartX,
-                              SHORT CursorStartY,
-                              UINT ScrolledLines,
-                              PWCHAR Buffer,
-                              UINT Length);
     BOOL (NTAPI *SetCursorInfo)(IN OUT PTERMINAL This,
                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (NTAPI *SetScreenInfo)(IN OUT PTERMINAL This,
@@ -219,11 +251,8 @@ typedef struct _TERMINAL_VTBL
     /*
      * External interface (functions corresponding to the Console API)
      */
-    VOID (NTAPI *ChangeTitle)(IN OUT PTERMINAL This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PTERMINAL This,
                                               PCOORD pSize);
-    // BOOL (NTAPI *GetSelectionInfo)(IN OUT PTERMINAL This,
-                                   // PCONSOLE_SELECTION_INFO pSelectionInfo);
     BOOL (NTAPI *SetPalette)(IN OUT PTERMINAL This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);
@@ -263,15 +292,20 @@ typedef enum _CONSOLE_STATE
 // HACK!!
 struct _CONSOLE;
 /* HACK: */ typedef struct _CONSOLE *PCONSOLE;
+#ifndef USE_NEW_CONSOLE_WAY
 #include "conio_winsrv.h"
+#endif
 
 typedef struct _CONSOLE
 {
 /******************************* Console Set-up *******************************/
+
+#ifndef USE_NEW_CONSOLE_WAY
+    WINSRV_CONSOLE; // HACK HACK!!
+#endif
+
     LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     CRITICAL_SECTION Lock;
-
-    /**/WINSRV_CONSOLE;/**/ // HACK HACK!!
 
     CONSOLE_STATE State;                    /* State of the console */
     TERMINAL TermIFace;                     /* Frontend-specific interface */
@@ -279,23 +313,11 @@ typedef struct _CONSOLE
     ULONG ConsoleID;                        /* The ID of the console */
     LIST_ENTRY ListEntry;                   /* Entry in the list of consoles */
 
-/**************************** Input buffer and data ***************************/
+    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
+
+/******************************** Input buffer ********************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
     UINT InputCodePage;
-
-    /** Put those things in CONSOLE_INPUT_BUFFER in PWINSRV_CONSOLE ?? **/
-    PWCHAR  LineBuffer;                     /* Current line being input, in line buffered mode */
-    ULONG   LineMaxSize;                    /* Maximum size of line in characters (including CR+LF) */
-    ULONG   LineSize;                       /* Current size of line */
-    ULONG   LinePos;                        /* Current position within line */
-    BOOLEAN LineComplete;                   /* User pressed enter, ready to send back to client */
-    BOOLEAN LineUpPressed;
-    BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
-    ULONG   LineWakeupMask;                 /* Bitmap of which control characters will end line input */
-
-    /** In PWINSRV_CONSOLE ?? **/
-    BOOLEAN InsertMode;
-    /*************************************************/
 
 /******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
@@ -303,11 +325,6 @@ typedef struct _CONSOLE
     UINT OutputCodePage;
 
 /****************************** Other properties ******************************/
-    UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */
-    UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
-
-    HANDLE UnpauseEvent;                    /* When != NULL, event for pausing the console */
-
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
 
@@ -323,42 +340,16 @@ NTSTATUS
 ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
                        IN PCONSOLE_PROCESS_DATA ProcessData);
 
-/* coninput.c */
-NTSTATUS
-ConioAddInputEvents(PCONSOLE Console,
-                    PINPUT_RECORD InputRecords,
-                    ULONG NumEventsToWrite,
-                    PULONG NumEventsWritten,
-                    BOOLEAN AppendToEnd);
-NTSTATUS
-ConioProcessInputEvent(PCONSOLE Console,
-                       PINPUT_RECORD InputEvent);
+
+#define GetConsoleInputBufferMode(Console)  \
+    (Console)->InputBuffer.Mode
+
 
 /* conoutput.c */
-
-/*
- * From MSDN:
- * "The lpMultiByteStr and lpWideCharStr pointers must not be the same.
- *  If they are the same, the function fails, and GetLastError returns
- *  ERROR_INVALID_PARAMETER."
- */
-#define ConsoleUnicodeCharToAnsiChar(Console, dChar, sWChar) \
-    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
-    WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
-
-#define ConsoleAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
-    MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
-
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID ConioDrawConsole(PCONSOLE Console);
-NTSTATUS ConioResizeBuffer(PCONSOLE Console,
+VOID ConioDrawConsole(PCONSOLE /*PCONSRV_CONSOLE*/ Console);
+NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
-NTSTATUS ConioWriteConsole(PCONSOLE Console,
-                           PTEXTMODE_SCREEN_BUFFER Buff,
-                           PWCHAR Buffer,
-                           DWORD Length,
-                           BOOL Attrib);
 
 /* EOF */

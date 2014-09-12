@@ -539,9 +539,14 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
     TEXTMETRICW Metrics;
     SIZE CharSize;
 
+    hDC = GetDC(GuiData->hWindow);
+
     /*
      * Initialize a new NORMAL font and get its metrics.
      */
+
+    FontSize.Y = FontSize.Y > 0 ? -MulDiv(FontSize.Y, GetDeviceCaps(hDC, LOGPIXELSY), 72)
+                                : FontSize.Y;
 
     NewFont = CreateFontW(FontSize.Y,
                           FontSize.X,
@@ -554,20 +559,13 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
                           OEM_CHARSET,
                           OUT_DEFAULT_PRECIS,
                           CLIP_DEFAULT_PRECIS,
-                          DEFAULT_QUALITY, // NONANTIALIASED_QUALITY ; ANTIALIASED_QUALITY
+                          DEFAULT_QUALITY,
                           FIXED_PITCH | FontFamily,
                           FaceName);
     if (NewFont == NULL)
     {
         DPRINT1("InitFonts: CreateFontW failed\n");
-        return FALSE;
-    }
-
-    hDC = GetDC(GuiData->hWindow);
-    if (hDC == NULL)
-    {
-        DPRINT1("InitFonts: GetDC failed\n");
-        DeleteObject(NewFont);
+        ReleaseDC(GuiData->hWindow, hDC);
         return FALSE;
     }
 
@@ -591,7 +589,7 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
     GuiData->CharWidth  = Metrics.tmMaxCharWidth;
     GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
 
-    /* Measure real char width more precisely if possible. */
+    /* Measure real char width more precisely if possible */
     if (GetTextExtentPoint32W(hDC, L"R", 1, &CharSize))
         GuiData->CharWidth = CharSize.cx;
 
@@ -2437,7 +2435,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         case PM_CONSOLE_BEEP:
-            DPRINT1("Beep !!\n");
+            DPRINT1("Beep\n");
             Beep(800, 200);
             break;
 

@@ -57,12 +57,6 @@ _sxprintf(
     int result;
     FILE stream;
 
-    /* Check trivial case */
-    if ((buffer == NULL) && (count == 0) && (sizeOfBuffer == 0))
-    {
-        return 0;
-    }
-
 #if IS_SECAPI
     /* Validate parameters */
     if (MSVCRT_CHECK_PMT(((buffer == NULL) || (format == NULL) || (sizeOfBuffer <= 0))))
@@ -118,7 +112,8 @@ _sxprintf(
     buffer[result] = _T('\0');
 #else
     /* Only zero terminate if there is enough space left */
-    if (stream._cnt >= sizeof(TCHAR)) *(TCHAR*)stream._ptr = _T('\0');
+    if ((stream._cnt >= sizeof(TCHAR)) && (stream._ptr))
+        *(TCHAR*)stream._ptr = _T('\0');
 #endif
 
     return result;

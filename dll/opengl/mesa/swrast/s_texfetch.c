@@ -33,35 +33,6 @@
 
 #include <precomp.h>
 
-/**
- * Convert an 8-bit sRGB value from non-linear space to a
- * linear RGB value in [0, 1].
- * Implemented with a 256-entry lookup table.
- */
-static inline GLfloat
-nonlinear_to_linear(GLubyte cs8)
-{
-   static GLfloat table[256];
-   static GLboolean tableReady = GL_FALSE;
-   if (!tableReady) {
-      /* compute lookup table now */
-      GLuint i;
-      for (i = 0; i < 256; i++) {
-         const GLfloat cs = UBYTE_TO_FLOAT(i);
-         if (cs <= 0.04045) {
-            table[i] = cs / 12.92f;
-         }
-         else {
-            table[i] = (GLfloat) pow((cs + 0.055) / 1.055, 2.4);
-         }
-      }
-      tableReady = GL_TRUE;
-   }
-   return table[cs8];
-}
-
-
-
 /* Texel fetch routines for all supported formats
  */
 #define DIM 1

@@ -48,6 +48,18 @@ BEGIN
         MENUITEM "B&asamaklandır", ID_WINDOWS_CASCADE
         MENUITEM "&Öne Getir", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "&Bilgisayarı Kapat"
+    BEGIN
+        MENUITEM "&Uykuya Geçir",              ID_SHUTDOWN_STANDBY
+        MENUITEM "&Anıkta Beklet",             ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Kapat",                     ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Yeniden Başlat",            ID_SHUTDOWN_REBOOT
+        MENUITEM """%s"" &Oturumunu Kapat",    ID_SHUTDOWN_LOGOFF
+        MENUITEM "Ku&llanıcı Değiştir\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Bilgisayarı Kilitle\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "Ba&ğlantıyı Kes",            ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "B&ilgisayarı Çıkar",         ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım Konuları", ID_HELP_TOPICS
@@ -125,7 +137,7 @@ BEGIN
             MENUITEM "Dü&şük", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "İ&lişkiyi Ayarla...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Y&anlışlık Ayıklama Kanallarını Düzenle...", ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "Y&anlışlık Ayıklama Yollarını Düzenle...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -220,7 +232,7 @@ END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Yanlışlık Ayıklama Kanalları"
+CAPTION "Yanlışlık Ayıklama Yolları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
@@ -424,6 +436,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "Bellek Kullanımı: %d KB / %d KB"
     IDS_STATUS_CPUUSAGE "CPU Kullanımı: %%%3d"
     IDS_STATUS_PROCESSES "İşlem: %d"
-    IDS_Not_Responding "Yanıt Vermiyor"
-    IDS_Running "Çalışıyor"
+    IDS_NOT_RESPONDING "Yanıt Vermiyor"
+    IDS_RUNNING "Çalışıyor"
 END

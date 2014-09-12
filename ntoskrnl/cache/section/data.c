@@ -89,14 +89,6 @@ extern KEVENT MpwThreadEvent;
 extern KSPIN_LOCK MiSectionPageTableLock;
 extern PMMWSL MmWorkingSetList;
 
-/* GLOBALS *******************************************************************/
-
-static const INFORMATION_CLASS_INFO ExSectionInfoClass[] =
-{
-    ICI_SQ_SAME( sizeof(SECTION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionBasicInformation */
-    ICI_SQ_SAME( sizeof(SECTION_IMAGE_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionImageInformation */
-};
-
 /* FUNCTIONS *****************************************************************/
 
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */

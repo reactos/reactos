@@ -132,7 +132,7 @@ BEGIN
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
     LTEXT "&Örnekleme Hızı Dönüştürme Niteliği:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
-    PUSHBUTTON "Ö&ntanımlılara Geri Dön", 5400, 7, 191, 110, 14
+    PUSHBUTTON "Ö&n Tanımlıları Geri Getir", 5400, 7, 191, 110, 14
     LTEXT "Yok", 8497, 128, 56, 21, 10
     LTEXT "Tüm", 8498, 214, 56, 21, 9
     LTEXT "İyi", 8499, 128, 123, 21, 10
@@ -153,7 +153,7 @@ BEGIN
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
     LTEXT "&Örnekleme Hızı Dönüştürme Niteliği:", 8496, 13, 103, 103, 9
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
-    PUSHBUTTON "Ö&ntanımlılara Geri Dön", 5400, 9, 158, 110, 14
+    PUSHBUTTON "Ö&n Tanımlıları Geri Getir", 5400, 9, 158, 110, 14
     LTEXT "Yok", 8497, 125, 46, 24, 10
     LTEXT "Tüm", 8498, 217, 46, 19, 9
     LTEXT "İyi", 8499, 125, 103, 24, 10
@@ -178,7 +178,7 @@ END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Çoklu Kanal"
+CAPTION "Çoklu Yol"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Buraya tanım gelecek.", 9506, 8, 4, 212, 24
@@ -215,7 +215,7 @@ BEGIN
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
     LTEXT "Yüksek", 9502, 202, 164, 17, 8
     AUTOCHECKBOX "&Tüm sürgüleri aynı anda devindir.", 9504, 5, 185, 216, 9
-    PUSHBUTTON "&Ön Tanımlılara Geri Dön", 9505, 110, 199, 110, 14
+    PUSHBUTTON "&Ön Tanımlıları Geri Getir", 9505, 110, 199, 110, 14
 END
 
 IDD_SETUP2 DIALOG 0, 0, 227, 206

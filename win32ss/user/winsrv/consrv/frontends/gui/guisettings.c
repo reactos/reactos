@@ -296,7 +296,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         pSharedInfo->ci.HistoryNoDup = Console->HistoryNoDup;
         pSharedInfo->ci.QuickEdit = Console->QuickEdit;
         pSharedInfo->ci.InsertMode = Console->InsertMode;
-        pSharedInfo->ci.InputBufferSize = 0;
+        /////////////pSharedInfo->ci.InputBufferSize = 0;
         pSharedInfo->ci.ScreenBufferSize = ActiveBuffer->ScreenBufferSize;
         pSharedInfo->ci.ConsoleSize = ActiveBuffer->ViewSize;
         pSharedInfo->ci.CursorBlinkOn;
@@ -372,7 +372,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     }
 
     /* Start the properties dialog */
-    if (ProcessData->PropDispatcher)
+    if (ProcessData->PropRoutine)
     {
         _SEH2_TRY
         {
@@ -381,7 +381,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
             _SEH2_TRY
             {
                 Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
-                                            ProcessData->PropDispatcher,
+                                            ProcessData->PropRoutine,
                                             (PVOID)hClientSection, 0, NULL);
                 if (NULL == Thread)
                 {
@@ -389,7 +389,8 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                 }
                 else
                 {
-                    DPRINT("ProcessData->PropDispatcher remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+                    DPRINT("ProcessData->PropRoutine remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n",
+                           ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
                     /// WaitForSingleObject(Thread, INFINITE);
                 }
             }
@@ -643,7 +644,6 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
                Console->OriginalTitle.Length / sizeof(WCHAR));
         wcsncpy(pSharedInfo->ci.ConsoleTitle, Console->OriginalTitle.Buffer, Length);
 #endif
-        // ULONG   ConInfo.InputBufferSize = pConInfo->
         // BOOLEAN ConInfo.CursorBlinkOn = pConInfo->
         // BOOLEAN ConInfo.ForceCursorOff = pConInfo->
 

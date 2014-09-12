@@ -27,7 +27,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	if (fdwReason == DLL_WINE_PREATTACH) return FALSE;	/* prefer native version */
 
 	if (fdwReason == DLL_PROCESS_ATTACH)
+	{
 		DisableThreadLibraryCalls(hinstDLL);
+		SECUR32_initSchannelSP();
+	}
 
 	return TRUE;
 }
@@ -42,4 +45,20 @@ BOOL WINAPI SslEmptyCacheW(LPWSTR target, DWORD flags)
 {
     FIXME("%s %x\n", debugstr_w(target), flags);
     return TRUE;
+}
+
+PSecurityFunctionTableW
+WINAPI
+schan_InitSecurityInterfaceW(VOID)
+{
+    TRACE("InitSecurityInterfaceW() called\n");
+    return &schanTableW;
+}
+
+PSecurityFunctionTableA
+WINAPI
+schan_InitSecurityInterfaceA(VOID)
+{
+    TRACE("InitSecurityInterfaceA() called\n");
+    return &schanTableA;
 }

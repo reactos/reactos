@@ -30,5 +30,6 @@
 #include "optnmenu.h"
 #include "run.h"
 #include "trayicon.h"
+#include "shutdown.h"
 
 #endif /* __PRECOMP_H */

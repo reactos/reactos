@@ -317,6 +317,36 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_PROCESS_PAGE_DEBUGCHANNELS:
             ProcessPage_OnDebugChannels();
             break;
+
+/* ShutDown items */
+        case ID_SHUTDOWN_STANDBY:
+            ShutDown_StandBy();
+            break;
+        case ID_SHUTDOWN_HIBERNATE:
+            ShutDown_Hibernate();
+            break;
+        case ID_SHUTDOWN_POWEROFF:
+            ShutDown_PowerOff();
+            break;
+        case ID_SHUTDOWN_REBOOT:
+            ShutDown_Reboot();
+            break;
+        case ID_SHUTDOWN_LOGOFF:
+            ShutDown_LogOffUser();
+            break;
+        case ID_SHUTDOWN_SWITCHUSER:
+            ShutDown_SwitchUser();
+            break;
+        case ID_SHUTDOWN_LOCKCOMPUTER:
+            ShutDown_LockComputer();
+            break;
+        case ID_SHUTDOWN_DISCONNECT:
+            ShutDown_Disconnect();
+            break;
+        case ID_SHUTDOWN_EJECT_COMPUTER:
+            ShutDown_EjectComputer();
+            break;
+
         case ID_HELP_ABOUT:
             OnAbout();
             break;
@@ -957,7 +987,7 @@ void TaskManager_OnTabWndSelChange(void)
         LoadStringW(hInst, IDS_MENU_DETAILS, szTemp, 256);
         AppendMenuW(hViewMenu, MF_STRING, ID_VIEW_DETAILS, szTemp);
 
-        if (GetMenuItemCount(hMenu) <= 4) {
+        if (GetMenuItemCount(hMenu) <= 5) {
             hSubMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_WINDOWSMENU));
 
             LoadStringW(hInst, IDS_MENU_WINDOWS, szTemp, 256);
@@ -987,7 +1017,7 @@ void TaskManager_OnTabWndSelChange(void)
 
         if (TaskManagerSettings.Show16BitTasks)
             CheckMenuItem(hOptionsMenu, ID_OPTIONS_SHOW16BITTASKS, MF_BYCOMMAND|MF_CHECKED);
-        if (GetMenuItemCount(hMenu) > 4)
+        if (GetMenuItemCount(hMenu) > 5)
         {
             DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
@@ -1003,7 +1033,7 @@ void TaskManager_OnTabWndSelChange(void)
         ShowWindow(hProcessPage, SW_HIDE);
         ShowWindow(hPerformancePage, SW_SHOW);
         BringWindowToTop(hPerformancePage);
-        if (GetMenuItemCount(hMenu) > 4) {
+        if (GetMenuItemCount(hMenu) > 5) {
             DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
         }
@@ -1043,6 +1073,22 @@ void TaskManager_OnTabWndSelChange(void)
          */
         SetFocus(hTabWnd);
         break;
+    }
+}
+
+VOID ShowWin32Error(DWORD dwError)
+{
+    LPWSTR lpMessageBuffer;
+
+    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                       NULL,
+                       dwError,
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                       (LPWSTR)&lpMessageBuffer,
+                       0, NULL) != 0)
+    {
+        MessageBoxW(hMainWnd, lpMessageBuffer, NULL, MB_OK | MB_ICONERROR);
+        if (lpMessageBuffer) LocalFree(lpMessageBuffer);
     }
 }
 

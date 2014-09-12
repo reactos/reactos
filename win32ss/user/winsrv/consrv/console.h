@@ -8,27 +8,41 @@
 
 #pragma once
 
+typedef struct _CONSOLE_INIT_INFO
+{
+    PCONSOLE_START_INFO ConsoleStartInfo;
+
+    ULONG  TitleLength;
+    PWCHAR ConsoleTitle;
+    ULONG  DesktopLength;
+    PWCHAR Desktop;
+    ULONG  AppNameLength;
+    PWCHAR AppName;
+    ULONG  CurDirLength;
+    PWCHAR CurDir;
+} CONSOLE_INIT_INFO, *PCONSOLE_INIT_INFO;
+
 VOID NTAPI
 ConSrvInitConsoleSupport(VOID);
 
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
-                  OUT struct _CONSOLE** /* PCONSOLE* */ NewConsole,
-                  IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
+                  OUT struct _CONSRV_CONSOLE** /* PCONSRV_CONSOLE* */ NewConsole,
+                  IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
                   IN ULONG ConsoleLeaderProcessId);
-VOID NTAPI ConSrvDeleteConsole(struct _CONSOLE* /* PCONSOLE */ Console);
+VOID NTAPI ConSrvDeleteConsole(struct _CONSRV_CONSOLE* /* PCONSRV_CONSOLE */ Console);
 
 NTSTATUS
 ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
-                 OUT struct _CONSOLE** /* PCONSOLE* */ Console,
+                 OUT struct _CONSRV_CONSOLE** /* PCONSRV_CONSOLE* */ Console,
                  IN BOOLEAN LockConsole);
 VOID
-ConSrvReleaseConsole(IN struct _CONSOLE* /* PCONSOLE */ Console,
+ConSrvReleaseConsole(IN struct _CONSRV_CONSOLE* /* PCONSRV_CONSOLE */ Console,
                      IN BOOLEAN WasConsoleLocked);
 
 
 BOOLEAN NTAPI
-ConSrvValidateConsole(OUT struct _CONSOLE** /* PCONSOLE* */ Console,
+ConSrvValidateConsole(OUT struct _CONSRV_CONSOLE** /* PCONSRV_CONSOLE* */ Console,
                       IN HANDLE ConsoleHandle,
                       IN CONSOLE_STATE ExpectedState,
                       IN BOOLEAN LockConsole);

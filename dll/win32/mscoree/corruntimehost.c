@@ -1205,6 +1205,7 @@ HRESULT RuntimeHost_Destroy(RuntimeHost *This)
 }
 
 #define CHARS_IN_GUID 39
+#undef ARRAYSIZE
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 HRESULT create_monodata(REFIID riid, LPVOID *ppObj )

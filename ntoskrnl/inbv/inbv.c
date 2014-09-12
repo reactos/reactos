@@ -363,7 +363,7 @@ InbvDisplayString(IN PCHAR String)
         InbvAcquireLock();
 
         /* Make sure we're installed and display the string */
-        if (InbvBootDriverInstalled) VidDisplayString((PUCHAR) String);
+        if (InbvBootDriverInstalled) VidDisplayString((PUCHAR)String);
 
         /* Print the string on the EMS port */
         HeadlessDispatch(HeadlessCmdPutString,
@@ -462,11 +462,11 @@ VOID
 NTAPI
 InbvSetScrollRegion(IN ULONG Left,
                     IN ULONG Top,
-                    IN ULONG Width,
-                    IN ULONG Height)
+                    IN ULONG Right,
+                    IN ULONG Bottom)
 {
     /* Just call bootvid */
-    VidSetScrollRegion(Left, Top, Width, Height);
+    VidSetScrollRegion(Left, Top, Right, Bottom);
 }
 
 VOID
@@ -483,8 +483,8 @@ VOID
 NTAPI
 InbvSolidColorFill(IN ULONG Left,
                    IN ULONG Top,
-                   IN ULONG Width,
-                   IN ULONG Height,
+                   IN ULONG Right,
+                   IN ULONG Bottom,
                    IN ULONG Color)
 {
     /* Make sure we own it */
@@ -497,7 +497,7 @@ InbvSolidColorFill(IN ULONG Left,
         if (InbvBootDriverInstalled)
         {
             /* Call bootvid */
-            VidSolidColorFill(Left, Top, Width, Height, (UCHAR)Color);
+            VidSolidColorFill(Left, Top, Right, Bottom, (UCHAR)Color);
         }
 
         /* FIXME: Headless */

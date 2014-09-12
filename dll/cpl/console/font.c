@@ -72,7 +72,7 @@
     GuiData->CharWidth  = Metrics.tmMaxCharWidth;
     GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
 
-    /* Measure real char width more precisely if possible. */
+    /* Measure real char width more precisely if possible */
     if (GetTextExtentPoint32W(drawItem->hDC, L"R", 1, &CharSize))
         GuiData->CharWidth = CharSize.cx;
 }
@@ -102,12 +102,9 @@ EnumFontNamesProc(PLOGFONTW lplf,
     HWND hwndCombo = (HWND)lParam;
     LPWSTR pszName = lplf->lfFaceName;
 
-    BOOL fFixed;
-    BOOL fTrueType;
-
     /* Record the font's attributes (Fixedwidth and Truetype) */
-    fFixed    = ((lplf->lfPitchAndFamily & 0x03) == FIXED_PITCH);
-    fTrueType = (lplf->lfOutPrecision == OUT_STROKE_PRECIS) ? TRUE : FALSE;
+    // BOOL fFixed    = ((lplf->lfPitchAndFamily & 0x03) == FIXED_PITCH);
+    // BOOL fTrueType = (lplf->lfOutPrecision == OUT_STROKE_PRECIS);
 
     /*
      * According to: http://support.microsoft.com/kb/247815
@@ -158,7 +155,8 @@ EnumFontNamesProc(PLOGFONTW lplf,
     /* Reject TrueType fonts that are not FF_MODERN */
     if ((FontType == TRUETYPE_FONTTYPE) && ((lplf->lfPitchAndFamily & 0xF0) != FF_MODERN))
     {
-        DPRINT1("TrueType font '%S' rejected because it's not FF_MODERN (lfPitchAndFamily = %d)\n", pszName, lplf->lfPitchAndFamily);
+        DPRINT1("TrueType font '%S' rejected because it's not FF_MODERN (lfPitchAndFamily = %d)\n",
+                pszName, lplf->lfPitchAndFamily);
         return TRUE;
     }
 
@@ -166,14 +164,16 @@ EnumFontNamesProc(PLOGFONTW lplf,
 #if 0
     if ((FontType != TRUETYPE_FONTTYPE) && (lplf->lfCharSet != OEM_CHARSET))
     {
-        DPRINT1("Non-TrueType font '%S' rejected because it's not OEM_CHARSET %d\n", pszName, lplf->lfCharSet);
+        DPRINT1("Non-TrueType font '%S' rejected because it's not OEM_CHARSET %d\n",
+                pszName, lplf->lfCharSet);
         return TRUE;
     }
 #else // Improved criterium
     if ((FontType != TRUETYPE_FONTTYPE) &&
         ((lplf->lfCharSet != ANSI_CHARSET) && (lplf->lfCharSet != DEFAULT_CHARSET) && (lplf->lfCharSet != OEM_CHARSET)))
     {
-        DPRINT1("Non-TrueType font '%S' rejected because it's not ANSI_CHARSET or DEFAULT_CHARSET or OEM_CHARSET (lfCharSet = %d)\n", pszName, lplf->lfCharSet);
+        DPRINT1("Non-TrueType font '%S' rejected because it's not ANSI_CHARSET or DEFAULT_CHARSET or OEM_CHARSET (lfCharSet = %d)\n",
+                pszName, lplf->lfCharSet);
         return TRUE;
     }
 #endif
@@ -205,7 +205,8 @@ EnumFontNamesProc(PLOGFONTW lplf,
         DPRINT1("Add font '%S' (lfPitchAndFamily = %d)\n", pszName, lplf->lfPitchAndFamily);
 
         /* Store this information in the list-item's userdata area */
-        SendMessageW(hwndCombo, LB_SETITEMDATA, idx, MAKEWPARAM(fFixed, fTrueType));
+        // SendMessageW(hwndCombo, LB_SETITEMDATA, idx, MAKEWPARAM(fFixed, fTrueType));
+        SendMessageW(hwndCombo, LB_SETITEMDATA, idx, (WPARAM)FontType);
     }
 
     return TRUE;
@@ -247,7 +248,7 @@ EnumFontSizesProc(PLOGFONTW lplf,
     }
     else
     {
-        int i;
+        ULONG i;
         for (i = 0; i < sizeof(TrueTypePoints) / sizeof(TrueTypePoints[0]); ++i)
         {
             swprintf(FontSize, L"%2d", TrueTypePoints[i]);
@@ -271,7 +272,6 @@ EnumFontSizesProc(PLOGFONTW lplf,
         return FALSE;
     }
 }
-
 
 
 static VOID

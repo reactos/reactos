@@ -12,8 +12,8 @@ list(APPEND SOURCE
 
 add_library(fbtusb SHARED ${SOURCE} fbtusb.rc)
 
-if(NOT MSVC)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-unused-but-set-variable")
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    add_target_compile_flags(fbtusb "-Wno-unused-but-set-variable")
 endif()
 
 set_module_type(fbtusb kernelmodedriver)

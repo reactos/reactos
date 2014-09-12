@@ -273,68 +273,6 @@ interpolate_int_colors(struct gl_context *ctx, SWspan *span)
    span->arrayMask |= SPAN_RGBA;
 }
 
-
-/**
- * Populate the FRAG_ATTRIB_COL array.
- */
-static inline void
-interpolate_float_colors(SWspan *span)
-{
-   GLfloat (*col0)[4] = span->array->attribs[FRAG_ATTRIB_COL];
-   const GLuint n = span->end;
-   GLuint i;
-
-   assert(!(span->arrayAttribs & FRAG_BIT_COL0));
-
-   if (span->arrayMask & SPAN_RGBA) {
-      /* convert array of int colors */
-      for (i = 0; i < n; i++) {
-         col0[i][0] = UBYTE_TO_FLOAT(span->array->rgba8[i][0]);
-         col0[i][1] = UBYTE_TO_FLOAT(span->array->rgba8[i][1]);
-         col0[i][2] = UBYTE_TO_FLOAT(span->array->rgba8[i][2]);
-         col0[i][3] = UBYTE_TO_FLOAT(span->array->rgba8[i][3]);
-      }
-   }
-   else {
-      /* interpolate red/green/blue/alpha to get float colors */
-      ASSERT(span->interpMask & SPAN_RGBA);
-      if (span->interpMask & SPAN_FLAT) {
-         GLfloat r = FixedToFloat(span->red);
-         GLfloat g = FixedToFloat(span->green);
-         GLfloat b = FixedToFloat(span->blue);
-         GLfloat a = FixedToFloat(span->alpha);
-         for (i = 0; i < n; i++) {
-            ASSIGN_4V(col0[i], r, g, b, a);
-         }
-      }
-      else {
-         GLfloat r = FixedToFloat(span->red);
-         GLfloat g = FixedToFloat(span->green);
-         GLfloat b = FixedToFloat(span->blue);
-         GLfloat a = FixedToFloat(span->alpha);
-         GLfloat dr = FixedToFloat(span->redStep);
-         GLfloat dg = FixedToFloat(span->greenStep);
-         GLfloat db = FixedToFloat(span->blueStep);
-         GLfloat da = FixedToFloat(span->alphaStep);
-         for (i = 0; i < n; i++) {
-            col0[i][0] = r;
-            col0[i][1] = g;
-            col0[i][2] = b;
-            col0[i][3] = a;
-            r += dr;
-            g += dg;
-            b += db;
-            a += da;
-         }
-      }
-   }
-
-   span->arrayAttribs |= FRAG_BIT_COL;
-   span->array->ChanType = GL_FLOAT;
-}
-
-
-
 /**
  * Fill in the span.zArray array from the span->z, zStep values.
  */
@@ -524,41 +462,6 @@ interpolate_texcoords(struct gl_context *ctx, SWspan *span)
       } /* lambda */
    } /* if */
 }
-
-
-/**
- * Fill in the arrays->attribs[FRAG_ATTRIB_WPOS] array.
- */
-static inline void
-interpolate_wpos(struct gl_context *ctx, SWspan *span)
-{
-   GLfloat (*wpos)[4] = span->array->attribs[FRAG_ATTRIB_WPOS];
-   GLuint i;
-   const GLfloat zScale = 1.0F / ctx->DrawBuffer->_DepthMaxF;
-   GLfloat w, dw;
-
-   if (span->arrayMask & SPAN_XY) {
-      for (i = 0; i < span->end; i++) {
-         wpos[i][0] = (GLfloat) span->array->x[i];
-         wpos[i][1] = (GLfloat) span->array->y[i];
-      }
-   }
-   else {
-      for (i = 0; i < span->end; i++) {
-         wpos[i][0] = (GLfloat) span->x + i;
-         wpos[i][1] = (GLfloat) span->y;
-      }
-   }
-
-   dw = span->attrStepX[FRAG_ATTRIB_WPOS][3];
-   w = span->attrStart[FRAG_ATTRIB_WPOS][3] + span->leftClip * dw;
-   for (i = 0; i < span->end; i++) {
-      wpos[i][2] = (GLfloat) span->array->z[i] * zScale;
-      wpos[i][3] = w;
-      w += dw;
-   }
-}
-
 
 /**
  * Apply the current polygon stipple pattern to a span of pixels.
@@ -763,25 +666,6 @@ apply_aa_coverage(SWspan *span)
       }
    }
 }
-
-
-/**
- * Clamp span's float colors to [0,1]
- */
-static inline void
-clamp_colors(SWspan *span)
-{
-   GLfloat (*rgba)[4] = span->array->attribs[FRAG_ATTRIB_COL];
-   GLuint i;
-   ASSERT(span->array->ChanType == GL_FLOAT);
-   for (i = 0; i < span->end; i++) {
-      rgba[i][RCOMP] = CLAMP(rgba[i][RCOMP], 0.0F, 1.0F);
-      rgba[i][GCOMP] = CLAMP(rgba[i][GCOMP], 0.0F, 1.0F);
-      rgba[i][BCOMP] = CLAMP(rgba[i][BCOMP], 0.0F, 1.0F);
-      rgba[i][ACOMP] = CLAMP(rgba[i][ACOMP], 0.0F, 1.0F);
-   }
-}
-
 
 /**
  * Convert the span's color arrays to the given type.

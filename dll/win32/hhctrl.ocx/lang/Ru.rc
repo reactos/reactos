@@ -54,7 +54,7 @@ BEGIN
     IDTB_FAVORITES   "Избранное"
     IDTB_JUMP1       "Переход 1"
     IDTB_JUMP2       "Переход 2"
-    IDTB_CUSTOMIZE   "Персонализовать"
+    IDTB_CUSTOMIZE   "Персонализировать"
     IDTB_ZOOM        "Масштаб"
     IDTB_TOC_NEXT    "Следующая глава"
     IDTB_TOC_PREV    "Предыдущая глава"

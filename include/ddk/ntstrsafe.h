@@ -919,21 +919,21 @@ RtlStringCbVPrintfW(
     return RtlStringVPrintfWorkerW(pszDest,cchDest,pszFormat,argList);
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfA(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cchDest,
   _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfW(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cchDest,
   _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfA(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cchDest,
@@ -950,7 +950,7 @@ RtlStringCchPrintfA(
     return Status;
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfW(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cchDest,
@@ -967,21 +967,21 @@ RtlStringCchPrintfW(
     return Status;
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfA(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cbDest,
   _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfW(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cbDest,
   _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfA(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cbDest,
@@ -998,7 +998,7 @@ RtlStringCbPrintfA(
     return Status;
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfW(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cbDest,
@@ -1016,7 +1016,7 @@ RtlStringCbPrintfW(
     return Status;
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfExA(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cchDest,
@@ -1026,7 +1026,7 @@ RtlStringCchPrintfExA(
   _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfExW(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cchDest,
@@ -1036,7 +1036,7 @@ RtlStringCchPrintfExW(
   _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfExA(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cchDest,
@@ -1056,7 +1056,7 @@ RtlStringCchPrintfExA(
     return Status;
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCchPrintfExW(
   _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cchDest,
@@ -1077,7 +1077,7 @@ RtlStringCchPrintfExW(
     return Status;
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfExA(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cbDest,
@@ -1087,7 +1087,7 @@ RtlStringCbPrintfExA(
   _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfExW(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cbDest,
@@ -1097,7 +1097,7 @@ RtlStringCbPrintfExW(
   _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
   ...);
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfExA(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
   _In_ size_t cbDest,
@@ -1130,7 +1130,7 @@ RtlStringCbPrintfExA(
     return Status;
 }
 
-NTSTRSAFEAPI
+static __inline NTSTATUS
 RtlStringCbPrintfExW(
   _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
   _In_ size_t cbDest,

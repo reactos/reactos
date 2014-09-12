@@ -215,7 +215,7 @@ DceUpdateVisRgn(DCE *Dce, PWND Window, ULONG Flags)
       PWND Parent;
 
       Parent = Window->spwndParent;
-      if(!Parent)
+      if (!Parent)
       {
          RgnVisible = NULL;
          goto noparent;
@@ -252,15 +252,19 @@ DceUpdateVisRgn(DCE *Dce, PWND Window, ULONG Flags)
 noparent:
    if (Flags & DCX_INTERSECTRGN)
    {
-      if(Dce->hrgnClip != NULL)
+      PREGION RgnClip = NULL;
+
+      if (Dce->hrgnClip != NULL)
+          RgnClip = REGION_LockRgn(Dce->hrgnClip);
+      
+      if (RgnClip)
       {
-         PREGION RgnClip = REGION_LockRgn(Dce->hrgnClip);
          IntGdiCombineRgn(RgnVisible, RgnVisible, RgnClip, RGN_AND);
          REGION_UnlockRgn(RgnClip);
       }
       else
       {
-         if(RgnVisible != NULL)
+         if (RgnVisible != NULL)
          {
             REGION_Delete(RgnVisible);
          }

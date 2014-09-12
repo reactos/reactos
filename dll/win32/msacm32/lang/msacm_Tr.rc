@@ -1,7 +1,7 @@
 /*
  * Turkish resource file for MS ACM
  *
- * Copyright 2006 Fatih Aşıcı
+ * Copyrights: 2006 Fatih Aşıcı; 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 DLG_ACMFORMATCHOOSE_ID DIALOG  10, 20, 225, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ses Seçimi"
+CAPTION "Ses Seçme"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
@@ -31,7 +31,7 @@ BEGIN
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 115, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Farklı Kaydet...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
+    PUSHBUTTON      "Ay&rı Kaydet...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 125, 14, 45, 14
     PUSHBUTTON      "&Kaldır", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 175, 14, 45, 14
 
     LTEXT           "&Biçim:", -1, 5, 41, 44, 8, NOT WS_GROUP
@@ -39,7 +39,7 @@ BEGIN
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 39, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Öznitelikler:", -1, 5, 59, 44, 8, NOT WS_GROUP
+    LTEXT           "&Öz Nitelikler:", -1, 5, 59, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP

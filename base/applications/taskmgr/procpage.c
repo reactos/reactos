@@ -186,14 +186,14 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         InvalidateRect(hProcessPageListCtrl, NULL, TRUE);
 
         GetClientRect(hProcessPageEndProcessButton, &rc);
-        MapWindowPoints(hProcessPageEndProcessButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hProcessPageEndProcessButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
            cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hProcessPageEndProcessButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hProcessPageEndProcessButton, NULL, TRUE);
 
         GetClientRect(hProcessPageShowAllProcessesButton, &rc);
-        MapWindowPoints(hProcessPageShowAllProcessesButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hProcessPageShowAllProcessesButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
            cx = rc.left;
         cy = rc.top + nYDifference;
         SetWindowPos(hProcessPageShowAllProcessesButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);

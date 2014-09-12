@@ -1601,7 +1601,7 @@ ftGdiGetGlyphOutline(
     }
 
     FT_Set_Pixel_Sizes(ft_face,
-                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+                       abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth),
     /* FIXME: Should set character height if neg */
                        (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                         dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));

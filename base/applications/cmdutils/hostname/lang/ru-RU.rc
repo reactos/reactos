@@ -1,0 +1,8 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Печать имени текущего узла.\n\nhostname"
+    IDS_NOSET "hostname -s не поддерживается."
+    IDS_ERROR "Ошибка Win32"
+END

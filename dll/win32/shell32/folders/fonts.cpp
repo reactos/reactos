@@ -78,30 +78,28 @@ HRESULT WINAPI CDesktopFolderEnumZ::Initialize(DWORD dwFlags)
 
 static LPITEMIDLIST _ILCreateFontItem(LPWSTR pszFont, LPWSTR pszFile)
 {
-    PIDLDATA tmp;
     LPITEMIDLIST pidl;
-    PIDLFontStruct * p;
-    int size0 = (char*)&tmp.u.cfont.szName - (char*)&tmp.u.cfont;
-    int size = size0;
+    LPPIDLDATA data;
+    int length = wcslen(pszFont) + 1;
+    int size = sizeof(PIDLDATA) + sizeof(ITEMIDLIST);
 
-    tmp.type = 0x00;
-    tmp.u.cfont.dummy = 0xFF;
-    tmp.u.cfont.offsFile = wcslen(pszFont) + 1;
+    size += length * sizeof(WCHAR);
+    size += (wcslen(pszFile) + 1) * sizeof(WCHAR);
 
-    size += (tmp.u.cfont.offsFile + wcslen(pszFile) + 1) * sizeof(WCHAR);
-
-    pidl = (LPITEMIDLIST)SHAlloc(size + 4);
+    pidl = (LPITEMIDLIST)SHAlloc(size + 5);
     if (!pidl)
         return pidl;
 
-    pidl->mkid.cb = size + 2;
-    memcpy(pidl->mkid.abID, &tmp, 2 + size0);
+    ZeroMemory(pidl, size + 5);
+    pidl->mkid.cb = size + 3;
 
-    p = &((PIDLDATA*)pidl->mkid.abID)->u.cfont;
-    wcscpy(p->szName, pszFont);
-    wcscpy(p->szName + tmp.u.cfont.offsFile, pszFile);
+    data = _ILGetDataPointer(pidl);
+    data->type = 0x00;
+    data->u.cfont.dummy = 0xFF;
+    data->u.cfont.offsFile = length;
+    wcscpy(data->u.cfont.szName, pszFont);
+    wcscpy(&data->u.cfont.szName[length], pszFile);
 
-    *(WORD*)((char*)pidl + (size + 2)) = 0;
     return pidl;
 }
 
@@ -609,7 +607,7 @@ HRESULT WINAPI CFontsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SH
                     {
                         if (StrFormatByteSizeW(FileSize.QuadPart, buffer, sizeof(buffer) / sizeof(WCHAR)))
                         {
-                            psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(wcslen(buffer) + 1);
+                            psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc((wcslen(buffer) + 1) * sizeof(WCHAR));
                             if (!psd->str.pOleStr)
                             {
                                 CloseHandle(hFile);

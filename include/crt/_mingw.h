@@ -217,7 +217,8 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 
 /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
 #ifndef DECLSPEC_HOTPATCH
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__clang__)
+/* FIXME: http://llvm.org/bugs/show_bug.cgi?id=20888 */
 #define DECLSPEC_HOTPATCH
 #else
 #define DECLSPEC_HOTPATCH __attribute__((__ms_hook_prologue__))

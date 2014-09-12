@@ -30,7 +30,6 @@ VfIsVerificationEnabled(IN VF_OBJECT_TYPE VfObjectType,
  * @unimplemented
  */
 VOID
-NTAPI
 VfFailDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject,
                  IN ULONG BugCheckMajorCode,
                  IN ULONG BugCheckMinorCode,
@@ -47,7 +46,6 @@ VfFailDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject,
  * @unimplemented
  */
 VOID
-NTAPI
 VfFailSystemBIOS(IN ULONG BugCheckMajorCode,
                  IN ULONG BugCheckMinorCode,
                  IN VF_FAILURE_CLASS FailureClass,

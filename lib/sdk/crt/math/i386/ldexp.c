@@ -39,18 +39,10 @@ double ldexp (double value, int exp)
     }
 
 #ifdef __GNUC__
-#if defined(__clang__)
-    asm ("fild %[exp]\n"
-         "fscale\n"
-         "fstp %%st(1)\n"
-         : [result] "=t" (result)
-         : [value] "0" (value), [exp] "m" (exp));
-#else
     asm ("fscale"
          : "=t" (result)
          : "0" (value), "u" ((double)exp)
          : "1");
-#endif
 #else /* !__GNUC__ */
     __asm
     {

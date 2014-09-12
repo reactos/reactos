@@ -776,6 +776,7 @@ HandleShutdown(
     PLOGOFF_SHUTDOWN_DATA LSData;
     HANDLE hThread;
     DWORD exitCode;
+    BOOLEAN Old;
 
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
@@ -821,6 +822,7 @@ HandleShutdown(
     UninitializeSAS(Session);
 
     FIXME("FIXME: Call SMSS API #1\n");
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
     if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
         NtShutdownSystem(ShutdownReboot);
     else
@@ -832,6 +834,7 @@ HandleShutdown(
         }
         NtShutdownSystem(ShutdownNoReboot);
     }
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
     return STATUS_SUCCESS;
 }
 

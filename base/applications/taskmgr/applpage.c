@@ -184,21 +184,21 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         InvalidateRect(hApplicationPageListCtrl, NULL, TRUE);
 
         GetClientRect(hApplicationPageEndTaskButton, &rc);
-        MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageEndTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageEndTaskButton, NULL, TRUE);
 
         GetClientRect(hApplicationPageSwitchToButton, &rc);
-        MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageSwitchToButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageSwitchToButton, NULL, TRUE);
 
         GetClientRect(hApplicationPageNewTaskButton, &rc);
-        MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), sizeof(RECT)/sizeof(POINT));
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageNewTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
@@ -332,11 +332,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     WCHAR   szText[260];
     BOOL    bLargeIcon;
     BOOL    bHung = FALSE;
-    HICON*  xhIcon = (HICON*)&hIcon;
 
     typedef int (FAR __stdcall *IsHungAppWindowProc)(HWND);
     IsHungAppWindowProc IsHungAppWindow;
-
 
     /* Skip our window */
     if (hWnd == hMainWnd)
@@ -357,20 +355,21 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     }
 
     noApps = FALSE;
+
     /* Get the icon for this window */
     hIcon = NULL;
-    SendMessageTimeoutW(hWnd, WM_GETICON,bLargeIcon ? ICON_BIG /*1*/ : ICON_SMALL /*0*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
-
+    SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_BIG : ICON_SMALL, 0, 0, 1000, (PDWORD_PTR)&hIcon);
     if (!hIcon)
     {
+        /* We failed, try to retrieve other icons... */
         hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
         if (!hIcon) hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)xhIcon);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL /*0*/ : ICON_BIG /*1*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
-    }
+        if (!hIcon) SendMessageTimeoutW(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)&hIcon);
+        if (!hIcon) SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL : ICON_BIG, 0, 0, 1000, (PDWORD_PTR)&hIcon);
 
-    if (!hIcon)
-        hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
+        /* If we still do not have any icon, load the default one */
+        if (!hIcon) hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
+    }
 
     bHung = FALSE;
 
@@ -555,11 +554,11 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
             {
                 if (pAPLI->bHung)
                 {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_Not_Responding , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    LoadStringW( GetModuleHandleW(NULL), IDS_NOT_RESPONDING , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                 }
                 else
                 {
-                    LoadStringW( GetModuleHandleW(NULL), IDS_Running, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+                    LoadStringW( GetModuleHandleW(NULL), IDS_RUNNING, (LPWSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                 }
                 wcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
             }

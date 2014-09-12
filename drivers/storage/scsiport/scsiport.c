@@ -5296,7 +5296,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			  L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE,
 			     0,
 			     NULL);
   Status = ZwCreateKey(&ScsiKey,
@@ -5323,7 +5323,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		       NameBuffer);
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
-			     0,
+			     OBJ_KERNEL_HANDLE,
 			     ScsiKey,
 			     NULL);
   Status = ZwCreateKey(&ScsiPortKey,

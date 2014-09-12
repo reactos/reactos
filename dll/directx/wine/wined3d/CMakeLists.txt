@@ -46,6 +46,11 @@ add_library(wined3d SHARED
 
 set_module_type(wined3d win32dll)
 target_link_libraries(wined3d wine)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(wined3d mingwex)
+endif()
+
 add_importlibs(wined3d user32 opengl32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(wined3d wined3d_private.h SOURCE)
 add_cd_file(TARGET wined3d DESTINATION reactos/system32 FOR all)

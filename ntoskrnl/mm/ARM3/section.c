@@ -2204,7 +2204,9 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
             OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
             ASSERT(((Pfn1->u3.e1.PrototypePte) && (Pfn1->OriginalPte.u.Soft.Prototype)) == 0);
 
-            /* FIXME: Dirty bit management */
+            /* Mark the page as modified accordingly */
+            if (PteContents.u.Hard.Dirty)
+                Pfn1->u3.e1.Modified = 1;
 
             /* Was the PDE invalid */
             if (PointerPde->u.Long == 0)
@@ -2223,7 +2225,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
 
             /* Dereference the PDE and the PTE */
             Pfn2 = MiGetPfnEntry(PFN_FROM_PTE(PointerPde));
-            //MiDecrementShareCount(Pfn2, PFN_FROM_PTE(PointerPde));
+            MiDecrementShareCount(Pfn2, PFN_FROM_PTE(PointerPde));
             DBG_UNREFERENCED_LOCAL_VARIABLE(Pfn2);
             MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&PteContents));
 

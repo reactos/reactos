@@ -36,7 +36,7 @@ STRINGTABLE
     IDS_OBJECT_EXPECTED     "Nesne bekleniyordu."
     IDS_ILLEGAL_ASSIGN      "Geçersiz atama."
     IDS_UNDEFINED           """|"" tanımlı değil."
-    IDS_NOT_BOOL            "Boolean nesnesi bekleniyordu."
+    IDS_NOT_BOOL            "Boole nesnesi bekleniyordu."
     IDS_JSCRIPT_EXPECTED    "JScript nesnesi bekleniyordu."
     IDS_REGEXP_SYNTAX_ERROR "Düzenli deyişte söz dizimi yanlışlığı."
     IDS_URI_INVALID_CHAR    "Kodlanacak URI geçersiz damgalar içeriyor."

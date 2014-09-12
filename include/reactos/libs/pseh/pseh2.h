@@ -37,7 +37,7 @@
 #define _SEH2_LEAVE __leave
 #define _SEH2_VOLATILE
 
-#elif defined(_USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
+#elif defined(_USE_DUMMY_PSEH) || defined (__arm__) || defined(_M_AMD64)
 
 extern int _SEH2_Volatile0;
 extern int _SEH2_VolatileExceptionCode;

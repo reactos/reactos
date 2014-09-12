@@ -4586,11 +4586,10 @@ CheckMenuItem(HMENU hmenu,
 	      UINT uIDCheckItem,
 	      UINT uCheck)
 {
-  PMENU pMenu;
   PITEM item;
   DWORD Ret;
 
-  if (!(pMenu = ValidateHandle(hmenu, TYPE_MENU)))
+  if (!ValidateHandle(hmenu, TYPE_MENU))
      return -1;
 
   if (!(item = MENU_FindItem( &hmenu, &uIDCheckItem, uCheck ))) return -1;

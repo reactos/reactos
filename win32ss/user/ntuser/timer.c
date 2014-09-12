@@ -512,7 +512,7 @@ DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
    PTIMER pTmr;
    BOOL TimersRemoved = FALSE;
 
-   if ((Window == NULL))
+   if (Window == NULL)
       return FALSE;
 
    TimerEnterExclusive();

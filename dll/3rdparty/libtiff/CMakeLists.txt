@@ -61,5 +61,7 @@ add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
     allow_warnings(libtiff)
-    add_target_compile_flags(libtiff "-Wno-unused-but-set-variable")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_target_compile_flags(libtiff "-Wno-unused-but-set-variable")
+    endif()
 endif()

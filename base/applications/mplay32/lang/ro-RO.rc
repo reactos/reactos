@@ -10,10 +10,21 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Deschidere…", IDM_OPEN_FILE
-        MENUITEM "Î&nchide", IDM_CLOSE_FILE
+        MENUITEM "&Deschidere…\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "Î&nchide\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
+    END
+    POPUP "&Play"
+    BEGIN
+        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
     END
     POPUP "&Dispozitiv"
     BEGIN
@@ -25,6 +36,15 @@ BEGIN
     BEGIN
         MENUITEM "&Despre…", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE
@@ -39,6 +59,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Salt la următor"
     IDS_APPTITLE "Lector multimedia"
     IDS_PLAY "Lecturare"
-    IDS_DEFAULTMCIERRMSG "Nu există descriere pentru această eroare"
+    IDS_DEFAULTMCIERRMSG "Nu există descriere pentru această eroare."
     IDS_UNKNOWNFILEEXT "Nu se poate determina tipul dispozitivului din extensia fișierului."
 END

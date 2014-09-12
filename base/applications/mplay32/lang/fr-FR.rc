@@ -4,21 +4,41 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Fichier"
     BEGIN
-        MENUITEM "&Ouvrir...", IDM_OPEN_FILE
-        MENUITEM "&Fermer", IDM_CLOSE_FILE
+        MENUITEM "&Ouvrir...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Fermer\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "&Quitter", IDM_EXIT
     END
-    POPUP "&Device"
+    POPUP "&Lecture"
     BEGIN
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "Lecture/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "St&op\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "Répé&ter\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+    END
+    POPUP "Périp&hérique"
+    BEGIN
+        MENUITEM "&Propriétés", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "Contrôle du &volume", IDM_VOLUMECTL
     END
     POPUP "&Aide"
     BEGIN
         MENUITEM "&À propos...", IDM_ABOUT
     END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
 END
 
 STRINGTABLE
@@ -33,6 +53,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Suivant"
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Lire"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error"
+    IDS_DEFAULTMCIERRMSG "No description is available for this error."
     IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

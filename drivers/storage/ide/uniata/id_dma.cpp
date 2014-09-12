@@ -105,6 +105,7 @@ AtapiVirtToPhysAddr_(
     ULONG addr;
 
     ph_addr = MmGetPhysicalAddress(data);
+    KdPrint3((PRINT_PREFIX "AtapiVirtToPhysAddr_: %x -> %8.8x:%8.8x\n", data, ph_addr.HighPart, ph_addr.LowPart));
     if(!ph_addru && ph_addr.HighPart) {
         // do so until we add 64bit address support
         // or some workaround

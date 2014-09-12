@@ -48,6 +48,18 @@ BEGIN
         MENUITEM "계단식 창 배열(&C)", ID_WINDOWS_CASCADE
         MENUITEM "맨 앞으로 가져오기(&B)", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "도움말(&H)"
     BEGIN
         MENUITEM "작업 관리자 도움말 항목(&H)", ID_HELP_TOPICS
@@ -426,6 +438,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "메모리 사용: %dK / %dK"
     IDS_STATUS_CPUUSAGE "CPU 사용: %3d%%"
     IDS_STATUS_PROCESSES "프로세스: %d"
-    IDS_Not_Responding "응답 없음"
-    IDS_Running "실행 중"
+    IDS_NOT_RESPONDING "응답 없음"
+    IDS_RUNNING "실행 중"
 END

@@ -62,7 +62,9 @@ add_pch(browseui precomp.h SOURCE)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(browseui "-Wno-unused-but-set-variable")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_target_compile_flags(browseui "-Wno-unused-but-set-variable")
+    endif()
 
     # Binutils linker bug
     if(LTCG)

@@ -295,7 +295,7 @@ IoctlName(ULONG Ioctl)
 
 static
 NTSTATUS
-VideoPortUseDeviceInSesion(
+VideoPortUseDeviceInSession(
     _Inout_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PVIDEO_DEVICE_SESSION_STATUS SessionState,
     _In_ ULONG BufferLength,
@@ -475,10 +475,10 @@ IntVideoPortDispatchDeviceControl(
 
         case IOCTL_VIDEO_USE_DEVICE_IN_SESSION:
             INFO_(VIDEOPRT, "- IOCTL_VIDEO_USE_DEVICE_IN_SESSION\n");
-            Status = VideoPortUseDeviceInSesion(DeviceObject,
-                                                Irp->AssociatedIrp.SystemBuffer,
-                                                IrpStack->Parameters.DeviceIoControl.InputBufferLength,
-                                                &Irp->IoStatus.Information);
+            Status = VideoPortUseDeviceInSession(DeviceObject,
+                                                 Irp->AssociatedIrp.SystemBuffer,
+                                                 IrpStack->Parameters.DeviceIoControl.InputBufferLength,
+                                                 &Irp->IoStatus.Information);
             break;
 
         default:

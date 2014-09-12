@@ -188,7 +188,7 @@ NTAPI
 NtReplyPort(IN HANDLE PortHandle,
             IN PPORT_MESSAGE ReplyMessage)
 {
-    PLPCP_PORT_OBJECT Port, ConnectionPort = NULL;
+    PLPCP_PORT_OBJECT Port;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
     PLPCP_MESSAGE Message;
@@ -256,7 +256,6 @@ NtReplyPort(IN HANDLE PortHandle,
     {
         /* No thread found, fail */
         ObDereferenceObject(Port);
-        if (ConnectionPort) ObDereferenceObject(ConnectionPort);
         return Status;
     }
 
@@ -265,7 +264,6 @@ NtReplyPort(IN HANDLE PortHandle,
     if (!Message)
     {
         /* Fail if we couldn't allocate a message */
-        if (ConnectionPort) ObDereferenceObject(ConnectionPort);
         ObDereferenceObject(WakeupThread);
         ObDereferenceObject(Port);
         return STATUS_NO_MEMORY;
@@ -282,7 +280,6 @@ NtReplyPort(IN HANDLE PortHandle,
     {
         /* It isn't, fail */
         LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
-        if (ConnectionPort) ObDereferenceObject(ConnectionPort);
         ObDereferenceObject(WakeupThread);
         ObDereferenceObject(Port);
         return STATUS_REPLY_MESSAGE_MISMATCH;

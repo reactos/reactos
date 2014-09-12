@@ -928,7 +928,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
             SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
             IsDirectMapped = TRUE;
 #ifndef NEWCC
-            Status = CcRosUnmapVacb(SharedCacheMap, FileOffset.LowPart, Dirty);
+            Status = CcRosUnmapVacb(SharedCacheMap, FileOffset.QuadPart, Dirty);
 #else
             Status = STATUS_SUCCESS;
 #endif
@@ -1017,7 +1017,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 }
 
 BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
-                       ULONG SegOffset)
+                       LONGLONG SegOffset)
 {
 #ifndef NEWCC
    if (!(MemoryArea->Data.SectionData.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
@@ -1025,7 +1025,7 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
       PROS_SHARED_CACHE_MAP SharedCacheMap;
       PROS_VACB Vacb;
       SharedCacheMap = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
-      Vacb = CcRosLookupVacb(SharedCacheMap, (ULONG)(SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset));
+      Vacb = CcRosLookupVacb(SharedCacheMap, SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset);
       if (Vacb)
       {
          CcRosReleaseVacb(SharedCacheMap, Vacb, Vacb->Valid, FALSE, TRUE);
@@ -1063,7 +1063,7 @@ MiCopyFromUserPage(PFN_NUMBER DestPage, PFN_NUMBER SrcPage)
 NTSTATUS
 NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
-           ULONG_PTR SegOffset,
+           LONGLONG SegOffset,
            PPFN_NUMBER Page)
 /*
  * FUNCTION: Read a page for a section backed memory area.
@@ -1073,21 +1073,21 @@ MiReadPage(PMEMORY_AREA MemoryArea,
  *       Page - Variable that receives a page contains the read data.
  */
 {
-   ULONGLONG BaseOffset;
-   ULONGLONG FileOffset;
+   LONGLONG BaseOffset;
+   LONGLONG FileOffset;
    PVOID BaseAddress;
    BOOLEAN UptoDate;
    PROS_VACB Vacb;
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
-   ULONG_PTR RawLength;
+   LONGLONG RawLength;
    PROS_SHARED_CACHE_MAP SharedCacheMap;
    BOOLEAN IsImageSection;
-   ULONG_PTR Length;
+   LONGLONG Length;
 
    FileObject = MemoryArea->Data.SectionData.Section->FileObject;
    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-   RawLength = (ULONG_PTR)(MemoryArea->Data.SectionData.Segment->RawLength.QuadPart);
+   RawLength = MemoryArea->Data.SectionData.Segment->RawLength.QuadPart;
    FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset;
    IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
@@ -1111,7 +1111,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * alignment less than the file system block size.
        */
       Status = CcRosGetVacb(SharedCacheMap,
-                            (ULONG)FileOffset,
+                            FileOffset,
                             &BaseOffset,
                             &BaseAddress,
                             &UptoDate,
@@ -1150,7 +1150,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       PEPROCESS Process;
       KIRQL Irql;
       PVOID PageAddr;
-      ULONG_PTR VacbOffset;
+      LONGLONG VacbOffset;
 
       /*
        * Allocate a page, this is rather complicated by the possibility
@@ -1164,7 +1164,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          return(Status);
       }
       Status = CcRosGetVacb(SharedCacheMap,
-                            (ULONG)FileOffset,
+                            FileOffset,
                             &BaseOffset,
                             &BaseAddress,
                             &UptoDate,
@@ -1189,7 +1189,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
       Process = PsGetCurrentProcess();
       PageAddr = MiMapPageInHyperSpace(Process, *Page, &Irql);
-      VacbOffset = (ULONG_PTR)(BaseOffset + VACB_MAPPING_GRANULARITY - FileOffset);
+      VacbOffset = BaseOffset + VACB_MAPPING_GRANULARITY - FileOffset;
       Length = RawLength - SegOffset;
       if (Length <= VacbOffset && Length <= PAGE_SIZE)
       {
@@ -1205,7 +1205,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          MiUnmapPageInHyperSpace(Process, PageAddr, Irql);
          CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
          Status = CcRosGetVacb(SharedCacheMap,
-                               (ULONG)(FileOffset + VacbOffset),
+                               FileOffset + VacbOffset,
                                &BaseOffset,
                                &BaseAddress,
                                &UptoDate,
@@ -1246,7 +1246,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 NTSTATUS
 NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
-           ULONG_PTR SegOffset,
+           LONGLONG SegOffset,
            PPFN_NUMBER Page)
 /*
  * FUNCTION: Read a page for a section backed memory area.
@@ -1514,7 +1514,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       else
       {
-         Status = MiReadPage(MemoryArea, (ULONG_PTR)Offset.QuadPart, &Page);
+         Status = MiReadPage(MemoryArea, Offset.QuadPart, &Page);
          if (!NT_SUCCESS(Status))
          {
             DPRINT1("MiReadPage failed (Status %x)\n", Status);
@@ -1981,7 +1981,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (DirectMapped && !Context.Private)
    {
-      if(!MiIsPageFromCache(MemoryArea, Context.Offset.LowPart))
+      if(!MiIsPageFromCache(MemoryArea, Context.Offset.QuadPart))
       {
          DPRINT1("Direct mapped non private page is not associated with the cache.\n");
           KeBugCheck(MEMORY_MANAGEMENT);
@@ -2073,7 +2073,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          KeBugCheckEx(MEMORY_MANAGEMENT, STATUS_UNSUCCESSFUL, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
 #ifndef NEWCC
-      Status = CcRosUnmapVacb(SharedCacheMap, (ULONG)FileOffset, FALSE);
+      Status = CcRosUnmapVacb(SharedCacheMap, FileOffset, FALSE);
 #else
       Status = STATUS_SUCCESS;
 #endif
@@ -2373,7 +2373,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
       ASSERT(SwapEntry == 0);
       //SOffset.QuadPart = Offset.QuadPart + Segment->Image.FileOffset;
 #ifndef NEWCC
-      CcRosMarkDirtyVacb(SharedCacheMap, Offset.LowPart);
+      CcRosMarkDirtyVacb(SharedCacheMap, Offset.QuadPart);
 #endif
       MmLockSectionSegment(Segment);
       MmSetPageEntrySectionSegment(Segment, &Offset, PageEntry);
@@ -4027,7 +4027,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
          SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
 #ifndef NEWCC
-         CcRosMarkDirtyVacb(SharedCacheMap, (ULONG)(Offset.QuadPart + Segment->Image.FileOffset));
+         CcRosMarkDirtyVacb(SharedCacheMap, Offset.QuadPart + Segment->Image.FileOffset);
 #endif
          ASSERT(SwapEntry == 0);
       }

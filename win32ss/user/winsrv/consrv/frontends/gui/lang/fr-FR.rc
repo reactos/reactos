@@ -1,18 +1,16 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-/* Fixme : Translation could be really improved, with context
-           La traduction pourrait réellement être améliorée grâce au contexte */
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Éditer"
-    IDS_MARK "Marquer"
-    IDS_COPY "Copier\tEntrée"
-    IDS_PASTE "Coller"
-    IDS_SELECTALL "Tout sélectionner"
-    IDS_SCROLL "Défiler"
-    IDS_FIND "Trouver..."
-    IDS_DEFAULTS "Défauts"
-    IDS_PROPERTIES "Propriétés"
+    IDS_EDIT "Éd&ition"
+    IDS_MARK "&Marquer"
+    IDS_COPY "&Copier\tEntrée"
+    IDS_PASTE "C&oller"
+    IDS_SELECTALL "Sélectionner &tout"
+    IDS_SCROLL "&Défiler"
+    IDS_FIND "&Rechercher..."
+    IDS_DEFAULTS "&Défauts"
+    IDS_PROPERTIES "&Propriétés"
 /*
     IDS_SCROLLHERE "Défiler ici"
     IDS_SCROLLTOP "Défiler tout en haut"

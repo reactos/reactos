@@ -30,6 +30,10 @@ __SEH3$_RegisterFrameWithNonVolatiles:
     mov [eax + SEH3_REGISTRATION_FRAME_Esi], esi
     mov [eax + SEH3_REGISTRATION_FRAME_Edi], edi
 
+    /* Safe the return address */
+    mov ebx, [esp]
+    mov [eax + SEH3_REGISTRATION_FRAME_ReturnAddress], ebx
+
 .global __SEH3$_RegisterFrameWithStackLayout
 __SEH3$_RegisterFrameWithStackLayout:
 
@@ -78,6 +82,10 @@ __SEH3$_RegisterTryLevelWithNonVolatiles:
     mov [eax + SEH3_REGISTRATION_FRAME_Ebx], ebx
     mov [eax + SEH3_REGISTRATION_FRAME_Esi], esi
     mov [eax + SEH3_REGISTRATION_FRAME_Edi], edi
+
+    /* Safe the return address */
+    mov ebx, [esp]
+    mov [eax + SEH3_REGISTRATION_FRAME_ReturnAddress], ebx
 
 .global __SEH3$_RegisterTryLevelWithStackLayout
 __SEH3$_RegisterTryLevelWithStackLayout:
@@ -128,20 +136,26 @@ __SEH3$_InvokeEmbeddedFilterFromRegistration:
     mov edi, [eax + SEH3_REGISTRATION_FRAME_Edi]
     mov ebp, [eax + SEH3_REGISTRATION_FRAME_Ebp]
 
-    /* Get the saved stack pointer */
-    mov edx, [eax + SEH3_REGISTRATION_FRAME_Esp]
+    /* Calculate the size of the temp stack frame region */
+    mov ecx, [eax + SEH3_REGISTRATION_FRAME_AllocaFrame]
+    sub ecx, [eax + SEH3_REGISTRATION_FRAME_Esp]
 
+    /* Put the return address on the stack */
+    push offset __SEH3$_InvokeEmbeddedFilterReturn
+
+    /* Save the current stack pointer in the AllocaFrame member */
+    mov [eax + SEH3_REGISTRATION_FRAME_AllocaFrame], esp
+
+    /* Allocate enough temp stack space on the stack */
+    sub esp, ecx
+
+    /* Get the return address that was saved when registering the frame */
+    mov edx, [eax + SEH3_REGISTRATION_FRAME_ReturnAddress]
+
+    /* Jump into the filter or finally function */
     xor eax, eax
     inc eax
-    call [edx]
-
-    /* Restore the current non-volatiles */
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-
-    ret
+    jmp edx
 
 
 .global __SEH3$_InvokeEmbeddedFilter

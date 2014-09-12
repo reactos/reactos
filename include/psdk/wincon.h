@@ -27,9 +27,6 @@ extern "C" {
 // These codes are answered by GetConsoleDisplayMode
 #define CONSOLE_WINDOWED            0
 #define CONSOLE_FULLSCREEN          1
-#if (_WIN32_WINNT >= 0x0600)
-#define CONSOLE_OVERSTRIKE          1
-#endif
 #define CONSOLE_FULLSCREEN_HARDWARE 2
 
 // These codes should be given to SetConsoleDisplayMode
@@ -103,11 +100,15 @@ extern "C" {
 #define CONSOLE_MOUSE_DOWN              0x0008
 
 /*
- * History duplicate flags
+ * History information and mode flags
  */
 #if (_WIN32_WINNT >= 0x0600)
+// For Get/SetConsoleHistoryInfo
 #define HISTORY_NO_DUP_FLAG             0x0001
+// For SetConsoleCommandHistoryMode
+#define CONSOLE_OVERSTRIKE              0x0001
 #endif
+
 
 /*
  * Read input flags

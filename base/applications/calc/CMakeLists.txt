@@ -13,8 +13,12 @@ list(APPEND SOURCE
 add_executable(calc ${SOURCE} resource.rc)
 set_module_type(calc win32gui UNICODE)
 add_importlibs(calc advapi32 user32 gdi32 msvcrt kernel32)
-if(MSVC)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(calc mingwex)
+elseif(MSVC)
     add_importlibs(calc ntdll)
 endif()
+
 add_pch(calc calc.h SOURCE)
 add_cd_file(TARGET calc DESTINATION reactos/system32 FOR all)

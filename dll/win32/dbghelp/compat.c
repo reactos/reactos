@@ -291,7 +291,7 @@ const char *wine_dbgstr_an( const char *str, int n )
     static const char hex[16] = "0123456789abcdef";
     char *dst, *res;
     size_t size;
-    char buffer[256];
+    static char buffer[256];
 
     if (!((ULONG_PTR)str >> 16))
     {

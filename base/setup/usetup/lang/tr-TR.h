@@ -617,7 +617,7 @@ static MUI_ENTRY trTRQuitPageEntries[] =
     {
         10,
         9,
-        "CD-ROM'larç áçkarçnçz.",
+        "CD-ROM'larç áçkartçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -714,7 +714,7 @@ static MUI_ENTRY trTRSuccessPageEntries[] =
     {
         10,
         9,
-        "CD-ROM'larç áçkarçnçz.",
+        "CD-ROM'larç áçkartçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1639,7 +1639,7 @@ MUI_STRING trTRStrings[] =
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
     "özerinde bir mantçklçk bîlÅm oluüturmayç seátiniz:"},
     {STRING_HDDSIZE,
-    "LÅtfen yeni bîlÅmÅn bÅyÅklÅßÅnÅ megabayt olarak giriniz."},
+    "LÅtfen yeni bîlÅmÅn bÅyÅklÅßÅnÅ megaáoklu olarak giriniz."},
     {STRING_CREATEPARTITION,
     "   Giriü = BîlÅm Oluütur   Äçkçü = òptal   F3 = Äçk"},
     {STRING_PARTFORMAT,

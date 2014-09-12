@@ -18,13 +18,6 @@
 #include <winbase.h>
 #include <winreg.h>
 
-#define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
-#define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
-#ifdef ENABLE_RTL_NUMBER_OF_V2
-#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
-#else
-#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
-#endif
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>

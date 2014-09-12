@@ -199,9 +199,6 @@ static GLboolean *_tnl_import_edgeflag( struct gl_context *ctx,
    return space;
 }
 
-static const GLfloat zero_floats[4] = {0.0, 0.0, 0.0, 0.0};
-
-
 static void bind_inputs( struct gl_context *ctx, 
 			 const struct gl_client_array *inputs[],
 			 GLint count,

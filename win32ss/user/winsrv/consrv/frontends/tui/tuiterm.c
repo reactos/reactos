@@ -12,7 +12,7 @@
 #ifdef TUITERM_COMPILE
 
 #include "consrv.h"
-#include "include/conio.h"
+// #include "include/conio.h"
 #include "include/console.h"
 #include "include/settings.h"
 #include "tuiterm.h"

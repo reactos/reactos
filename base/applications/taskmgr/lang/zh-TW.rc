@@ -54,6 +54,18 @@ BEGIN
         MENUITEM "層疊(&C)", ID_WINDOWS_CASCADE
         MENUITEM "前置(&B)", ID_WINDOWS_BRINGTOFRONT
     END
+    POPUP "Sh&ut Down"
+    BEGIN
+        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
     POPUP "說明(&H)"
     BEGIN
         MENUITEM "工作管理員說明主题(&H)", ID_HELP_TOPICS
@@ -432,6 +444,6 @@ BEGIN
     IDS_STATUS_MEMUSAGE "記憶體使用情況: %dK / %dK"
     IDS_STATUS_CPUUSAGE "CPU 使用情況: %3d%%"
     IDS_STATUS_PROCESSES "處理程序: %d"
-    IDS_Not_Responding "沒有回應"
-    IDS_Running "正在運行"
+    IDS_NOT_RESPONDING "沒有回應"
+    IDS_RUNNING "正在運行"
 END

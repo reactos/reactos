@@ -1,0 +1,26 @@
+/* Russian translation by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Редактирование и повторный вызов команд ReactOS; создание макросов DOSKey.\n\
+\n\
+DOSKEY [/REINSTALL] [/LISTSIZE=размер] [/MACROS[:ALL | :модуль]]\n\
+  [/HISTORY] [/INSERT | /OVERSTRIKE] [/EXENAME=модуль] [/MACROFILE=файл]\n\
+  [макрос=[текст]]\n\n\
+  /REINSTALL          Установка новой копии DOSKey.\n\
+  /LISTSIZE=размер    Размер буфера журнала команд.\n\
+  /MACROS             Вывод всех макросов DOSKey.\n\
+  /MACROS:ALL         Вывод всех макросов DOSKey для всех исполняемых\n\
+                      модулей, содержащих макросы DOSKey.\n\
+  /MACROS:модуль      Вывод всех макросов DOSKey для указанного модуля.\n\
+  /HISTORY            Вывод всех команд, хранящихся в памяти.\n\
+  /INSERT             Включение режима вставки.\n\
+  /OVERSTRIKE         Включение режима замены.\n\
+  /EXENAME=модуль     Исполняемый модуль.\n\
+  /MACROFILE=файл     Файл макросов, который следует установить.\n\
+  макрос              Имя нового макроса.\n\
+  текст               Команды, которые следует включить в макрос."
+    IDS_INVALID_MACRO_DEF "Неверный макрос: %s\n"
+END
