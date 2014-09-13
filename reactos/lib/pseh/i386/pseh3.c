@@ -145,16 +145,17 @@ __attribute__((regparm(1)))
 _SEH3$_AutoCleanup(
     volatile SEH3$_REGISTRATION_FRAME *Frame)
 {
+    if (Frame->Handler)
+        _SEH3$_UnregisterFrame(Frame);
+    else
+        _SEH3$_UnregisterTryLevel(Frame);
+
     /* Check for __finally frames */
     if (Frame->ScopeTable->Target == NULL)
     {
          _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter);
     }
 
-    if (Frame->Handler)
-        _SEH3$_UnregisterFrame(Frame);
-    else
-        _SEH3$_UnregisterTryLevel(Frame);
 }
 
 static inline
@@ -209,6 +210,10 @@ _SEH3$_JumpToTarget(
             /* Load the registers */
             "movl 24(%%ecx), %%esp\n\t"
             "movl 28(%%ecx), %%ebp\n\t"
+
+            "movl 36(%%ecx), %%ebx\n\t"
+            "movl 40(%%ecx), %%esi\n\t"
+            "movl 44(%%ecx), %%edi\n\t"
 
             /* Stack pointer is 4 off from the call to __SEH3$_RegisterFrame */
             "addl $4, %%esp\n\t"
