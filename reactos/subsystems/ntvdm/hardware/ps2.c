@@ -310,6 +310,7 @@ VOID PS2Dispatch(PINPUT_RECORD InputRecord)
         {
             /* Notify the BIOS driver */
             MouseBiosUpdatePosition(&InputRecord->Event.MouseEvent.dwMousePosition);
+            MouseBiosUpdateButtons(LOWORD(InputRecord->Event.MouseEvent.dwButtonState));
 
             // TODO: PS/2, other stuff
 

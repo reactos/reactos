@@ -151,6 +151,63 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             break;
         }
 
+        /* Return Position And Button Status */
+        case 0x03:
+        {
+            setBX(DriverState.ButtonState);
+            setCX(DriverState.Position.X);
+            setDX(DriverState.Position.Y);
+
+            break;
+        }
+
+        /* Position Mouse Cursor */
+        case 0x04:
+        {
+            POINT Point;
+
+            Point.x = getCX();
+            Point.y = getDX();
+
+            ClientToScreen(GetConsoleWindow(), &Point);
+            SetCursorPos(Point.x, Point.y);
+
+            break;
+        }
+
+        /* Return Button Press Data */
+        case 0x05:
+        {
+            WORD Button = getBX();
+
+            setAX(DriverState.ButtonState);
+            setBX(DriverState.PressCount[Button]);
+            setCX(DriverState.LastPress[Button].X);
+            setDX(DriverState.LastPress[Button].Y);
+
+            /* Reset the counter */
+            DriverState.PressCount[Button] = 0;
+
+            break;
+        }
+
+        /* Return Button Release Data */
+        case 0x06:
+        {
+            WORD Button = getBX();
+
+            setAX(DriverState.ButtonState);
+            setBX(DriverState.ReleaseCount[Button]);
+            setCX(DriverState.LastRelease[Button].X);
+            setDX(DriverState.LastRelease[Button].Y);
+
+            /* Reset the counter */
+            DriverState.ReleaseCount[Button] = 0;
+
+            break;
+
+        }
+
         /* Define Graphics Cursor */
         case 0x09:
         {
@@ -203,6 +260,9 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
         /* Disable Mouse Driver */
         case 0x1F:
         {
+            setES(0x0000);
+            setBX(0x0000);
+
             DriverEnabled = FALSE;
             break;
         }
@@ -231,6 +291,34 @@ VOID MouseBiosUpdatePosition(PCOORD NewPosition)
         DriverState.Position = *NewPosition;
         PaintMouseCursor();
     }
+}
+
+VOID MouseBiosUpdateButtons(WORD ButtonState)
+{
+    WORD i;
+
+    if (!DriverEnabled) return;
+
+    for (i = 0; i < NUM_MOUSE_BUTTONS; i++)
+    {
+        BOOLEAN OldState = (DriverState.ButtonState >> i) & 1;
+        BOOLEAN NewState = (ButtonState >> i) & 1;
+
+        if (NewState > OldState)
+        {
+            /* Mouse press */
+            DriverState.PressCount[i]++;
+            DriverState.LastPress[i] = DriverState.Position;
+        }
+        else if (NewState < OldState)
+        {
+            /* Mouse release */
+            DriverState.ReleaseCount[i]++;
+            DriverState.LastRelease[i] = DriverState.Position;
+        }
+    }
+
+    DriverState.ButtonState = ButtonState;
 }
 
 BOOLEAN MouseBios32Initialize(VOID)
