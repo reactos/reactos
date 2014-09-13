@@ -130,6 +130,10 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             DriverState.GraphicsCursor.CursorMask[14] = 0x0030; // 0000000000110000
             DriverState.GraphicsCursor.CursorMask[15] = 0x0000; // 0000000000000000
 
+            /* Return mouse information */
+            setAX(0xFFFF);  // Hardware & driver installed
+            setBX(NUM_MOUSE_BUTTONS);
+
             break;
         }
 
