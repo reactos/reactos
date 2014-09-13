@@ -85,8 +85,11 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
         /* Reset Driver */
         case 0x00:
         {
+            SHORT i;
+
             DriverEnabled = TRUE;
             DriverState.ShowCount = 0;
+            DriverState.ButtonState = 0;
 
             /* Set the default text cursor */
             DriverState.TextCursor.ScreenMask = 0xFFFF; /* Display everything */
@@ -129,6 +132,18 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             DriverState.GraphicsCursor.CursorMask[13] = 0x0070; // 0000000001110000
             DriverState.GraphicsCursor.CursorMask[14] = 0x0030; // 0000000000110000
             DriverState.GraphicsCursor.CursorMask[15] = 0x0000; // 0000000000000000
+
+            /* Initialize the counters */
+            DriverState.HorizCount = DriverState.VertCount = 0;
+
+            for (i = 0; i < NUM_MOUSE_BUTTONS; i++)
+            {
+                DriverState.PressCount[i] = DriverState.ReleaseCount[i] = 0;
+            }
+
+            /* Initialize the resolution */
+            DriverState.MickeysPerCellHoriz = 8;
+            DriverState.MickeysPerCellVert = 16;
 
             /* Return mouse information */
             setAX(0xFFFF);  // Hardware & driver installed
@@ -240,6 +255,27 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             break;
         }
 
+        /* Read Motion Counters */
+        case 0x0B:
+        {
+            setCX(DriverState.HorizCount);
+            setDX(DriverState.VertCount);
+
+            /* Reset the counters */
+            DriverState.HorizCount = DriverState.VertCount = 0;
+
+            break;
+        }
+
+        /* Define Mickey/Pixel Ratio */
+        case 0x0F:
+        {
+            DriverState.MickeysPerCellHoriz = getCX();
+            DriverState.MickeysPerCellVert = getDX();
+
+            break;
+        }
+
         /* Return Driver Storage Requirements */
         case 0x15:
         {
@@ -289,7 +325,15 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
 
 VOID MouseBiosUpdatePosition(PCOORD NewPosition)
 {
-    if (DriverEnabled && (DriverState.ShowCount > 0))
+    SHORT DeltaX = NewPosition->X - DriverState.Position.X;
+    SHORT DeltaY = NewPosition->Y - DriverState.Position.Y;
+
+    if (!DriverEnabled) return;
+
+    DriverState.HorizCount += (DeltaX * (SHORT)DriverState.MickeysPerCellHoriz) / 8;
+    DriverState.VertCount += (DeltaY * (SHORT)DriverState.MickeysPerCellVert) / 8;
+    
+    if (DriverState.ShowCount > 0)
     {
         EraseMouseCursor();
         DriverState.Position = *NewPosition;

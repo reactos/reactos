@@ -35,6 +35,10 @@ typedef struct _MOUSE_DRIVER_STATE
     COORD LastPress[NUM_MOUSE_BUTTONS];
     WORD ReleaseCount[NUM_MOUSE_BUTTONS];
     COORD LastRelease[NUM_MOUSE_BUTTONS];
+    SHORT HorizCount;
+    SHORT VertCount;
+    WORD MickeysPerCellHoriz;
+    WORD MickeysPerCellVert;
 
     struct
     {
