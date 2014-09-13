@@ -9,6 +9,7 @@ list(APPEND SOURCE
     bios/bios32/bios32.c
     bios/bios32/kbdbios32.c
     bios/bios32/vidbios32.c
+    bios/bios32/moubios32.c
     bios/bios.c
     bios/kbdbios.c
     bios/rom.c

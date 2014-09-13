@@ -20,6 +20,7 @@
 #include "bios32p.h"
 #include "kbdbios32.h"
 #include "vidbios32.h"
+#include "moubios32.h"
 
 #include "io.h"
 #include "hardware/cmos.h"
@@ -412,7 +413,7 @@ BOOLEAN Bios32Initialize(VOID)
     BiosHwSetup();
 
     /* Initialize the Keyboard and Video BIOS */
-    if (!KbdBios32Initialize() || !VidBios32Initialize()) return FALSE;
+    if (!KbdBios32Initialize() || !VidBios32Initialize() || !MouseBios32Initialize()) return FALSE;
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
@@ -428,6 +429,7 @@ BOOLEAN Bios32Initialize(VOID)
 
 VOID Bios32Cleanup(VOID)
 {
+    MouseBios32Cleanup();
     VidBios32Cleanup();
     KbdBios32Cleanup();
 }

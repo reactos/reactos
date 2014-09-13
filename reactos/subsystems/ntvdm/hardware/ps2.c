@@ -15,6 +15,7 @@
 #include "ps2.h"
 #include "pic.h"
 #include "mouse.h"
+#include "../bios/bios32/moubios32.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -307,8 +308,11 @@ VOID PS2Dispatch(PINPUT_RECORD InputRecord)
 
         case MOUSE_EVENT:
         {
-            // TODO: NOT IMPLEMENTED
-            UNIMPLEMENTED;
+            /* Notify the BIOS driver */
+            MouseBiosUpdatePosition(&InputRecord->Event.MouseEvent.dwMousePosition);
+
+            // TODO: PS/2, other stuff
+
             break;
         }
 
@@ -326,9 +330,7 @@ VOID GenerateKeyboardInterrupts(VOID)
 
 BOOLEAN PS2Initialize(HANDLE ConsoleInput)
 {
-#if 0
     DWORD ConInMode;
-#endif
 
     /* Create the mutex */
     QueueMutex = CreateMutex(NULL, FALSE, NULL);
@@ -337,23 +339,25 @@ BOOLEAN PS2Initialize(HANDLE ConsoleInput)
     RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
     RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
 
-#if 0
     if (GetConsoleMode(ConsoleInput, &ConInMode))
     {
+#if 0
         if (MousePresent)
         {
+#endif
             /* Support mouse input events if there is a mouse on the system */
             ConInMode |= ENABLE_MOUSE_INPUT;
+#if 0
         }
         else
         {
             /* Do not support mouse input events if there is no mouse on the system */
             ConInMode &= ~ENABLE_MOUSE_INPUT;
         }
+#endif
 
         SetConsoleMode(ConsoleInput, ConInMode);
     }
-#endif
 
     return TRUE;
 }
