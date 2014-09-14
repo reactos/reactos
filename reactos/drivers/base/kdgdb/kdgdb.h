@@ -52,6 +52,7 @@ void send_gdb_packet(_In_ CHAR* Buffer);
 void send_gdb_memory(_In_ VOID* Buffer, size_t Length);
 void gdb_send_debug_io(_In_ PSTRING String);
 void gdb_send_exception(void);
+void send_gdb_ntstatus(_In_ NTSTATUS Status);
 
 /* kdcom.c */
 KDSTATUS NTAPI KdpPollBreakIn(VOID);

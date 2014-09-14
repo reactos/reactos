@@ -100,10 +100,6 @@ send_kd_state_manipulate(
         gdb_send_registers((CONTEXT*)MessageData->Buffer);
         return;
 #endif
-    case DbgKdReadVirtualMemoryApi:
-        /* Answer to 'm' GDB request */
-        send_gdb_memory(MessageData->Buffer, State->u.ReadMemory.ActualBytesRead);
-        break;
     case DbgKdGetVersionApi:
     {
         LIST_ENTRY* DebuggerDataList;

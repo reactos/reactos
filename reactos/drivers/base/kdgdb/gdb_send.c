@@ -185,3 +185,15 @@ gdb_send_exception(void)
     ptr += sprintf(ptr, "core:%x;", CurrentStateChange.Processor);
     send_gdb_packet(gdb_out);
 }
+
+void
+send_gdb_ntstatus(
+    _In_ NTSTATUS Status)
+{
+    /* Just build a EXX packet and send it */
+    char gdb_out[4];
+    gdb_out[0] = 'E';
+    exception_code_to_gdb(Status, &gdb_out[1]);
+    gdb_out[3] = '\0';
+    send_gdb_packet(gdb_out);
+}

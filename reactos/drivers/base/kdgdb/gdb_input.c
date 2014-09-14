@@ -276,6 +276,35 @@ handle_gdb_registers(
 #endif
 
 static
+void
+ReadMemorySendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+
+    if (PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        // KdAssert
+        KDDBGPRINT("Wrong packet type (%lu) received after DbgKdReadVirtualMemoryApi request.\n", PacketType);
+        while (1);
+    }
+
+    if (State->ApiNumber != DbgKdReadVirtualMemoryApi)
+    {
+        KDDBGPRINT("Wrong API number (%lu) after DbgKdReadVirtualMemoryApi request.\n", State->ApiNumber);
+    }
+
+    /* Check status */
+    if (!NT_SUCCESS(State->ReturnStatus))
+        send_gdb_ntstatus(State->ReturnStatus);
+    else
+        send_gdb_memory(MessageData->Buffer, MessageData->Length);
+    KdpSendPacketHandler = NULL;
+}
+
+static
 KDSTATUS
 handle_gdb_read_mem(
     _Out_ DBGKD_MANIPULATE_STATE64* State,
@@ -292,6 +321,10 @@ handle_gdb_read_mem(
 
     State->u.ReadMemory.TargetBaseAddress = hex_to_address(&gdb_input[1]);
     State->u.ReadMemory.TransferCount = hex_to_address(strstr(&gdb_input[1], ",") + 1);
+
+    /* KD will reply with KdSendPacket. Catch it */
+    KdpSendPacketHandler = ReadMemorySendHandler;
+
     return KdPacketReceived;
 }
 
