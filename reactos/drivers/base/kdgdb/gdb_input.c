@@ -11,6 +11,8 @@
 
 /* LOCALS *********************************************************************/
 static HANDLE gdb_run_thread;
+/* We might have to attach to a process to read its memory */
+static PEPROCESS AttachedProcess = NULL;
 /* Keep track of where we are for qfThreadInfo/qsThreadInfo */
 static LIST_ENTRY* CurrentProcessEntry;
 static LIST_ENTRY* CurrentThreadEntry;
@@ -316,6 +318,13 @@ ReadMemorySendHandler(
         send_gdb_memory(MessageData->Buffer, MessageData->Length);
     KdpSendPacketHandler = NULL;
     KdpManipulateStateHandler = NULL;
+
+    /* Detach if we have to */
+    if (AttachedProcess != NULL)
+    {
+        KeDetachProcess();
+        AttachedProcess = NULL;
+    }
 }
 
 static
@@ -323,7 +332,8 @@ KDSTATUS
 handle_gdb_read_mem(
     _Out_ DBGKD_MANIPULATE_STATE64* State,
     _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength)
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
 {
     State->ApiNumber = DbgKdReadVirtualMemoryApi;
     State->ReturnStatus = STATUS_SUCCESS; /* ? */
@@ -332,6 +342,19 @@ handle_gdb_read_mem(
     if (MessageData)
         MessageData->Length = 0;
     *MessageLength = 0;
+
+    /* Attach to the debug process to read its memory */
+    if (gdb_dbg_process != PsGetCurrentProcessId())
+    {
+        NTSTATUS Status = PsLookupProcessByProcessId(gdb_dbg_process, &AttachedProcess);
+        if (!NT_SUCCESS(Status))
+        {
+            KDDBGPRINT("The current GDB debug thread is invalid!");
+            send_gdb_packet("E03");
+            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+        }
+        KeAttachProcess(&AttachedProcess->Pcb);
+    }
 
     State->u.ReadMemory.TargetBaseAddress = hex_to_address(&gdb_input[1]);
     State->u.ReadMemory.TransferCount = hex_to_address(strstr(&gdb_input[1], ",") + 1);
@@ -416,7 +439,7 @@ gdb_interpret_input(
         handle_gdb_set_thread();
         break;
     case 'm':
-        return handle_gdb_read_mem(State, MessageData, MessageLength);
+        return handle_gdb_read_mem(State, MessageData, MessageLength, KdContext);
     case 'p':
         return gdb_send_register(State, MessageData, MessageLength, KdContext);
     case 'q':

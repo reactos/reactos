@@ -14,6 +14,7 @@ FirstSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
     _In_ PSTRING MessageData);
+static BOOLEAN CanSendData = FALSE;
 
 /* GLOBALS ********************************************************************/
 DBGKD_GET_VERSION64 KdVersion;
@@ -141,11 +142,13 @@ send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
         /* Save current state for later GDB queries */
         CurrentStateChange = *StateChange;
         /* Unless GDB tells us otherwise, those are what we should have */
-        gdb_dbg_thread = PsGetThreadId((PETHREAD)StateChange->Thread);
-        gdb_dbg_process = PsGetThreadProcessId((PETHREAD)StateChange->Thread);
+        gdb_dbg_thread = PsGetThreadId((PETHREAD)(ULONG_PTR)StateChange->Thread);
+        gdb_dbg_process = PsGetThreadProcessId((PETHREAD)(ULONG_PTR)StateChange->Thread);
         gdb_send_exception();
         /* Next receive call will ask for the context */
         KdpManipulateStateHandler = GetContextManipulateHandler;
+        /* We can now send data, since after this we will be connected to GDB */
+        CanSendData = TRUE;
         break;
     default:
         /* FIXME */
@@ -159,6 +162,9 @@ send_kd_debug_io(
     _In_ DBGKD_DEBUG_IO* DebugIO,
     _In_ PSTRING String)
 {
+    if (!CanSendData)
+        return;
+
     switch (DebugIO->ApiNumber)
     {
     case DbgKdPrintStringApi:

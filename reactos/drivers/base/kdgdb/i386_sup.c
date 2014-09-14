@@ -7,6 +7,8 @@
 
 #include "kdgdb.h"
 
+#include <pstypes.h>
+
 enum reg_name
 {
     EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
@@ -79,6 +81,44 @@ ctx_to_reg(CONTEXT* ctx, enum reg_name name, unsigned short* size)
     return 0;
 }
 
+static
+void*
+thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
+{
+    PKTRAP_FRAME TrapFrame = Thread->Tcb.TrapFrame;
+
+    /* See if the thread was actually scheduled */
+    if (TrapFrame == NULL)
+    {
+        return NULL;
+    }
+
+    *size = 4;
+    switch (reg_name)
+    {
+        case EAX: return &TrapFrame->Eax;
+        case ECX: return &TrapFrame->Ecx;
+        case EDX: return &TrapFrame->Edx;
+        case EBX: return &TrapFrame->Ebx;
+        case ESP: return (TrapFrame->PreviousPreviousMode == KernelMode) ?
+                &TrapFrame->TempEsp : &TrapFrame->HardwareEsp;
+        case EBP: return &TrapFrame->Ebp;
+        case ESI: return &TrapFrame->Esi;
+        case EDI: return &TrapFrame->Edi;
+        case EIP: return &TrapFrame->Eip;
+        case EFLAGS: return &TrapFrame->EFlags;
+        case CS: return &TrapFrame->SegCs;
+        case SS: return &TrapFrame->HardwareSegSs;
+        case DS: return &TrapFrame->SegDs;
+        case ES: return &TrapFrame->SegEs;
+        case FS: return &TrapFrame->SegFs;
+        case GS: return &TrapFrame->SegGs;
+        default:
+            KDDBGPRINT("Unhandled regname: %d.\n", reg_name);
+    }
+    return NULL;
+}
+
 KDSTATUS
 gdb_send_registers(
     _Out_ DBGKD_MANIPULATE_STATE64* State,
@@ -86,15 +126,62 @@ gdb_send_registers(
     _Out_ PULONG MessageLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
-    ULONG32 Registers[16];
+    CHAR Registers[16*8 + 1];
+    UCHAR* RegisterPtr;
     unsigned i;
     unsigned short size;
+    CHAR* ptr = Registers;
 
-    for(i=0; i < 16; i++)
+    if (gdb_dbg_thread == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
     {
-        Registers[i] = *(ULONG32*)ctx_to_reg(&CurrentContext, i, &size);
+        for(i=0; i < 16; i++)
+        {
+            RegisterPtr = ctx_to_reg(&CurrentContext, i, &size);
+            *ptr++ = hex_chars[RegisterPtr[0] >> 4];
+            *ptr++ = hex_chars[RegisterPtr[0] & 0xF];
+            *ptr++ = hex_chars[RegisterPtr[1] >> 4];
+            *ptr++ = hex_chars[RegisterPtr[1] & 0xF];
+            *ptr++ = hex_chars[RegisterPtr[2] >> 4];
+            *ptr++ = hex_chars[RegisterPtr[2] & 0xF];
+            *ptr++ = hex_chars[RegisterPtr[3] >> 4];
+            *ptr++ = hex_chars[RegisterPtr[3] & 0xF];
+        }
     }
-    send_gdb_memory(Registers, sizeof(Registers));
+    else
+    {
+        PETHREAD DbgThread;
+        NTSTATUS Status;
+
+        Status = PsLookupThreadByThreadId(gdb_dbg_thread, &DbgThread);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Thread is dead */
+            send_gdb_packet("E03");
+            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+        }
+
+        for(i=0; i < 16; i++)
+        {
+            RegisterPtr = thread_to_reg(DbgThread, i, &size);
+            if (RegisterPtr)
+            {
+                *ptr++ = hex_chars[RegisterPtr[0] >> 4];
+                *ptr++ = hex_chars[RegisterPtr[0] & 0xF];
+                *ptr++ = hex_chars[RegisterPtr[1] >> 4];
+                *ptr++ = hex_chars[RegisterPtr[1] & 0xF];
+                *ptr++ = hex_chars[RegisterPtr[2] >> 4];
+                *ptr++ = hex_chars[RegisterPtr[2] & 0xF];
+                *ptr++ = hex_chars[RegisterPtr[3] >> 4];
+                *ptr++ = hex_chars[RegisterPtr[3] & 0xF];
+            }
+            else
+            {
+                ptr += sprintf(ptr, "xxxxxxxx");
+            }
+        }
+    }
+    *ptr = '\0';
+    send_gdb_packet(Registers);
     return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
 
@@ -112,7 +199,27 @@ gdb_send_register(
     /* Get the GDB register name (gdb_input = "pXX") */
     reg_name = (hex_value(gdb_input[1]) << 4) | hex_value(gdb_input[2]);
 
-    ptr = ctx_to_reg(&CurrentContext, reg_name, &size);
+    if (gdb_dbg_thread == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
+    {
+        /* We can get it from the context of the current exception */
+        ptr = ctx_to_reg(&CurrentContext, reg_name, &size);
+    }
+    else
+    {
+        PETHREAD DbgThread;
+        NTSTATUS Status;
+
+        Status = PsLookupThreadByThreadId(gdb_dbg_thread, &DbgThread);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Thread is dead */
+            send_gdb_packet("E03");
+            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+        }
+
+        ptr = thread_to_reg(DbgThread, reg_name, &size);
+    }
+
     if (!ptr)
     {
         /* Undefined. Let's assume 32 bit register */
@@ -122,5 +229,6 @@ gdb_send_register(
     {
         send_gdb_memory(ptr, size);
     }
+
     return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
