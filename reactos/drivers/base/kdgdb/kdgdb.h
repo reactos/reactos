@@ -25,6 +25,18 @@ extern ULONG KdpDbgPrint(const char* Format, ...);
 #define KDDBGPRINT KdpDbgPrint
 #endif
 
+FORCEINLINE
+VOID
+InitManipulateFromStateChange(
+    _In_ ULONG ApiNumber,
+    _In_ const DBGKD_ANY_WAIT_STATE_CHANGE* StateChange,
+    _Out_ DBGKD_MANIPULATE_STATE64* Manipulate)
+{
+    Manipulate->ApiNumber = ApiNumber;
+    Manipulate->Processor = StateChange->Processor;
+    Manipulate->ProcessorLevel = StateChange->ProcessorLevel;
+}
+
 /* Callbacks to simulate a KdReceive <-> KdSend loop without GDB being aware of it */
 typedef VOID (*KDP_SEND_HANDLER)(
     _In_ ULONG PacketType,
@@ -40,7 +52,9 @@ typedef KDSTATUS (*KDP_MANIPULATESTATE_HANDLER)(
 
 /* gdb_input.c */
 extern HANDLE gdb_dbg_thread;
-KDSTATUS gdb_interpret_input(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
+extern HANDLE gdb_dbg_process;
+extern KDSTATUS gdb_interpret_input(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
+extern KDSTATUS gdb_receive_and_interpret_packet(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 
 /* gdb_receive.c */
 extern CHAR gdb_input[];
@@ -61,14 +75,18 @@ KDSTATUS NTAPI KdpReceiveByte(_Out_ PUCHAR OutByte);
 
 /* kdpacket.c */
 extern DBGKD_ANY_WAIT_STATE_CHANGE CurrentStateChange;
+extern CONTEXT CurrentContext;
 extern DBGKD_GET_VERSION64 KdVersion;
 extern KDDEBUGGER_DATA64* KdDebuggerDataBlock;
 extern KDP_SEND_HANDLER KdpSendPacketHandler;
 extern KDP_MANIPULATESTATE_HANDLER KdpManipulateStateHandler;
-
+/* Commone ManipulateState handlers */
+extern KDSTATUS ContinueManipulateStateHandler(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
+extern KDSTATUS SetContextManipulateHandler(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 
 /* arch_sup.c */
-void gdb_send_registers(void);
+extern KDSTATUS gdb_send_register(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
+extern KDSTATUS gdb_send_registers(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 
 /* Architecture specific defines. See ntoskrnl/include/internal/arch/ke.h */
 #ifdef _M_IX86

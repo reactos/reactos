@@ -11,12 +11,13 @@
 
 /* LOCALS *********************************************************************/
 static HANDLE gdb_run_thread;
-static HANDLE gdb_dbg_process;
-HANDLE gdb_dbg_thread;
-CONTEXT CurrentContext;
 /* Keep track of where we are for qfThreadInfo/qsThreadInfo */
 static LIST_ENTRY* CurrentProcessEntry;
 static LIST_ENTRY* CurrentThreadEntry;
+
+/* GLOBALS ********************************************************************/
+HANDLE gdb_dbg_process;
+HANDLE gdb_dbg_thread;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 static
@@ -68,6 +69,7 @@ handle_gdb_set_thread(void)
         send_gdb_packet("OK");
         break;
     case 'g':
+        KDDBGPRINT("Setting debug thread: %s.\n", gdb_input);
         if (strncmp(&gdb_input[2], "p-1", 3) == 0)
         {
             gdb_dbg_process = (HANDLE)-1;
@@ -88,6 +90,20 @@ handle_gdb_set_thread(void)
         KDDBGPRINT("KDGBD: Unknown 'H' command: %s\n", gdb_input);
         send_gdb_packet("");
     }
+}
+
+KDSTATUS
+gdb_receive_and_interpret_packet(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    KDSTATUS Status = gdb_receive_packet(KdContext);
+
+    if (Status != KdPacketReceived)
+        return Status;
+    return gdb_interpret_input(State, MessageData, MessageLength, KdContext);
 }
 
 static
@@ -118,7 +134,7 @@ handle_gdb_thread_alive(void)
 
 /* q* packets */
 static
-void
+KDSTATUS
 handle_gdb_query(
     _Out_ DBGKD_MANIPULATE_STATE64* State,
     _Out_ PSTRING MessageData,
@@ -128,20 +144,20 @@ handle_gdb_query(
     if (strncmp(gdb_input, "qSupported:", 11) == 0)
     {
         send_gdb_packet("PacketSize=4096;multiprocess+;");
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     if (strncmp(gdb_input, "qAttached", 9) == 0)
     {
-        /* Say yes: the remote server didn't create the process, ReactOS did! */
+        /* Say no: We didn't attach, we create the process! */
         send_gdb_packet("0");
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     if (strncmp(gdb_input, "qRcmd,", 6) == 0)
     {
         send_gdb_packet("OK");
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     if (strcmp(gdb_input, "qC") == 0)
@@ -151,7 +167,7 @@ handle_gdb_query(
             PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread),
             PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));
         send_gdb_packet(gdb_out);
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     if ((strncmp(gdb_input, "qfThreadInfo", 12) == 0)
@@ -174,15 +190,13 @@ handle_gdb_query(
             {
                 /* there is only one thread to tell about */
                 send_gdb_packet("l");
-                return;
+                return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
             }
             /* Just tell GDB about the current thread */
             sprintf(gdb_out, "mp%p.%p", PsGetCurrentProcessId(), PsGetCurrentThreadId());
             send_gdb_packet(gdb_out);
             /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
-            gdb_receive_packet(KdContext);
-            gdb_interpret_input(State, MessageData, MessageLength, KdContext);
-            return;
+            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
         }
 
         if (Resuming)
@@ -197,7 +211,7 @@ handle_gdb_query(
         {
             /* We're done */
             send_gdb_packet("l");
-            return;
+            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
         }
 
         Process = CONTAINING_RECORD(CurrentProcessEntry, EPROCESS, ActiveProcessLinks);
@@ -234,9 +248,7 @@ handle_gdb_query(
                 /* send what we got */
                 send_gdb_packet(gdb_out);
                 /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
-                gdb_receive_packet(KdContext);
-                gdb_interpret_input(State, MessageData, MessageLength, KdContext);
-                return;
+                return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
             }
         }
 
@@ -244,13 +256,12 @@ handle_gdb_query(
         send_gdb_packet(gdb_out);
         CurrentThreadEntry = NULL;
         /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
-        gdb_receive_packet(KdContext);
-        gdb_interpret_input(State, MessageData, MessageLength, KdContext);
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     KDDBGPRINT("KDGDB: Unknown query: %s\n", gdb_input);
     send_gdb_packet("");
+    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
 
 #if 0
@@ -304,6 +315,7 @@ ReadMemorySendHandler(
     else
         send_gdb_memory(MessageData->Buffer, MessageData->Length);
     KdpSendPacketHandler = NULL;
+    KdpManipulateStateHandler = NULL;
 }
 
 static
@@ -327,150 +339,6 @@ handle_gdb_read_mem(
     /* KD will reply with KdSendPacket. Catch it */
     KdpSendPacketHandler = ReadMemorySendHandler;
 
-    return KdPacketReceived;
-}
-
-static
-VOID
-GetCurrentContextSendHandler(
-    _In_ ULONG PacketType,
-    _In_ PSTRING MessageHeader,
-    _In_ PSTRING MessageData
-)
-{
-    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
-    const CONTEXT* Context = (const CONTEXT*)MessageData->Buffer;
-
-    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
-            || (State->ApiNumber != DbgKdGetContextApi)
-            || (MessageData->Length < sizeof(*Context)))
-    {
-        /* Should we bugcheck ? */
-        while (1);
-    }
-
-    /* Just copy it */
-    RtlCopyMemory(&CurrentContext, Context, sizeof(*Context));
-    KdpSendPacketHandler = NULL;
-}
-
-static
-VOID
-GetCurrentContext(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext,
-    _In_opt_ KDP_MANIPULATESTATE_HANDLER ManipulateStateHandler
-)
-{
-    State->ApiNumber = DbgKdGetContextApi;
-    State->Processor = CurrentStateChange.Processor;
-    State->ReturnStatus = STATUS_SUCCESS;
-    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
-    MessageData->Length = 0;
-
-    /* Update the send <-> receive loop handler */
-    KdpSendPacketHandler = GetCurrentContextSendHandler;
-    KdpManipulateStateHandler = ManipulateStateHandler;
-}
-
-static
-VOID
-SetContextSendHandler(
-    _In_ ULONG PacketType,
-    _In_ PSTRING MessageHeader,
-    _In_ PSTRING MessageData
-)
-{
-    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
-
-    /* We just confirm that all went well */
-    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
-            || (State->ApiNumber != DbgKdSetContextApi)
-            || (State->ReturnStatus != STATUS_SUCCESS))
-    {
-        /* Should we bugcheck ? */
-        while (1);
-    }
-
-    KdpSendPacketHandler = NULL;
-}
-
-static
-KDSTATUS
-SetContext(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext,
-    _In_opt_ KDP_MANIPULATESTATE_HANDLER ManipulateStateHandler
-)
-{
-    State->ApiNumber = DbgKdSetContextApi;
-    State->Processor = CurrentStateChange.Processor;
-    State->ReturnStatus = STATUS_SUCCESS;
-    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
-    MessageData->Length = sizeof(CurrentContext);
-
-    if (MessageData->MaximumLength < sizeof(CurrentContext))
-    {
-        while (1);
-    }
-
-    RtlCopyMemory(MessageData->Buffer, &CurrentContext, sizeof(CurrentContext));
-
-    /* Update the send <-> receive loop handlers */
-    KdpSendPacketHandler = SetContextSendHandler;
-    KdpManipulateStateHandler = ManipulateStateHandler;
-
-    return KdPacketReceived;
-}
-
-static
-KDSTATUS
-SendContinue(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext
-)
-{
-    /* Let's go on */
-    State->ApiNumber = DbgKdContinueApi;
-    State->ReturnStatus = STATUS_SUCCESS; /* ? */
-    State->Processor = CurrentStateChange.Processor;
-    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
-    if (MessageData)
-        MessageData->Length = 0;
-    *MessageLength = 0;
-    State->u.Continue.ContinueStatus = STATUS_SUCCESS;
-
-    /* We definitely are at the end of the send <-> receive loop, if any */
-    KdpSendPacketHandler = NULL;
-    KdpManipulateStateHandler = NULL;
-
-    /* Tell GDB we are fine */
-    send_gdb_packet("OK");
-    return KdPacketReceived;
-}
-
-static
-KDSTATUS
-UpdateProgramCounterSendContinue(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext)
-{
-    ULONG_PTR ProgramCounter;
-
-    /* So we must get past the breakpoint instruction */
-    ProgramCounter = KdpGetContextPc(&CurrentContext);
-    KdpSetContextPc(&CurrentContext, ProgramCounter + KD_BREAKPOINT_SIZE);
-
-    /* Set the context and continue */
-    SetContext(State, MessageData, MessageLength, KdContext, SendContinue);
     return KdPacketReceived;
 }
 
@@ -499,6 +367,9 @@ handle_gdb_v(
         {
             DBGKM_EXCEPTION64* Exception = NULL;
 
+            /* Tell GDB everything is fine, we will handle it */
+            send_gdb_packet("OK");
+
             if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
                 Exception = &CurrentStateChange.u.Exception;
 
@@ -506,15 +377,22 @@ handle_gdb_v(
             if (Exception && (Exception->ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT)
                     && (Exception->ExceptionRecord.ExceptionInformation[0] == 0))
             {
-                /* So we get the context, update it and send it back */
-                GetCurrentContext(State, MessageData, MessageLength, KdContext, UpdateProgramCounterSendContinue);
+                ULONG_PTR ProgramCounter;
+
+                /* So we must get past the breakpoint instruction */
+                ProgramCounter = KdpGetContextPc(&CurrentContext);
+                KdpSetContextPc(&CurrentContext, ProgramCounter + KD_BREAKPOINT_SIZE);
+
+                SetContextManipulateHandler(State, MessageData, MessageLength, KdContext);
+                KdpManipulateStateHandler = ContinueManipulateStateHandler;
                 return KdPacketReceived;
             }
 
-            return SendContinue(State, MessageData, MessageLength, KdContext);
+            return ContinueManipulateStateHandler(State, MessageData, MessageLength, KdContext);
         }
     }
 
+    KDDBGPRINT("Unhandled 'v' packet: %s\n", gdb_input);
     return KdPacketReceived;
 }
 
@@ -526,7 +404,6 @@ gdb_interpret_input(
     _Out_ PULONG MessageLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
-    KDSTATUS Status;
     switch (gdb_input[0])
     {
     case '?':
@@ -534,16 +411,16 @@ gdb_interpret_input(
         gdb_send_exception();
         break;
     case 'g':
-        gdb_send_registers();
-        break;
+        return gdb_send_registers(State, MessageData, MessageLength, KdContext);
     case 'H':
         handle_gdb_set_thread();
         break;
     case 'm':
         return handle_gdb_read_mem(State, MessageData, MessageLength);
+    case 'p':
+        return gdb_send_register(State, MessageData, MessageLength, KdContext);
     case 'q':
-        handle_gdb_query(State, MessageData, MessageLength, KdContext);
-        break;
+        return handle_gdb_query(State, MessageData, MessageLength, KdContext);
     case 'T':
         handle_gdb_thread_alive();
         break;
@@ -552,12 +429,8 @@ gdb_interpret_input(
     default:
         /* We don't know how to handle this request. Maybe this is something for KD */
         State->ReturnStatus = STATUS_NOT_SUPPORTED;
+        KDDBGPRINT("Unsupported GDB command: %s.\n", gdb_input);
         return KdPacketReceived;
     }
-    /* Get the answer from GDB */
-    Status = gdb_receive_packet(KdContext);
-    if (Status != KdPacketReceived)
-        return Status;
-    /* Try interpreting this new packet */
-    return gdb_interpret_input(State, MessageData, MessageLength, KdContext);
+    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }

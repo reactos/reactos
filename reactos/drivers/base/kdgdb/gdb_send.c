@@ -168,17 +168,12 @@ gdb_send_exception(void)
 {
     char gdb_out[1024];
     char* ptr = gdb_out;
-    DBGKM_EXCEPTION64* Exception = NULL;
-
-    if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
-        Exception = &CurrentStateChange.u.Exception;
+    DBGKM_EXCEPTION64* Exception = &CurrentStateChange.u.Exception;
 
     /* Report to GDB */
     *ptr++ = 'T';
-    if (Exception)
-        ptr = exception_code_to_gdb(Exception->ExceptionRecord.ExceptionCode, ptr);
-    else
-        ptr += sprintf(ptr, "05");
+
+    ptr = exception_code_to_gdb(Exception->ExceptionRecord.ExceptionCode, ptr);
     ptr += sprintf(ptr, "thread:p%p.%p;",
         PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread),
         PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));

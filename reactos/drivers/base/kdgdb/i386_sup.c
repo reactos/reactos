@@ -79,21 +79,48 @@ ctx_to_reg(CONTEXT* ctx, enum reg_name name, unsigned short* size)
     return 0;
 }
 
-void
-gdb_send_registers(void)
+KDSTATUS
+gdb_send_registers(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
 {
-    CONTEXT* ctx;
-    PKPRCB* ProcessorBlockLists;
     ULONG32 Registers[16];
     unsigned i;
     unsigned short size;
 
-    ProcessorBlockLists = (PKPRCB*)KdDebuggerDataBlock->KiProcessorBlock.Pointer;
-    ctx = (CONTEXT*)((char*)ProcessorBlockLists[CurrentStateChange.Processor] + KdDebuggerDataBlock->OffsetPrcbProcStateContext);
-
     for(i=0; i < 16; i++)
     {
-        Registers[i] = *(ULONG32*)ctx_to_reg(ctx, i, &size);
+        Registers[i] = *(ULONG32*)ctx_to_reg(&CurrentContext, i, &size);
     }
     send_gdb_memory(Registers, sizeof(Registers));
+    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+}
+
+KDSTATUS
+gdb_send_register(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    enum reg_name reg_name;
+    void *ptr;
+    unsigned short size;
+
+    /* Get the GDB register name (gdb_input = "pXX") */
+    reg_name = (hex_value(gdb_input[1]) << 4) | hex_value(gdb_input[2]);
+
+    ptr = ctx_to_reg(&CurrentContext, reg_name, &size);
+    if (!ptr)
+    {
+        /* Undefined. Let's assume 32 bit register */
+        send_gdb_packet("xxxxxxxx");
+    }
+    else
+    {
+        send_gdb_memory(ptr, size);
+    }
+    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
