@@ -1584,8 +1584,8 @@ FsRtlRemovePerFileObjectContext(
 extern const UCHAR * const FsRtlLegalAnsiCharacterArray;
 #define LEGAL_ANSI_CHARACTER_ARRAY FsRtlLegalAnsiCharacterArray
 #else
-extern const UCHAR * const *FsRtlLegalAnsiCharacterArray;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(FsRtlLegalAnsiCharacterArray)
+extern const UCHAR * const *FsRtlLegalAnsiCharacterArray;
 #define LEGAL_ANSI_CHARACTER_ARRAY (*FsRtlLegalAnsiCharacterArray)
 #endif
 

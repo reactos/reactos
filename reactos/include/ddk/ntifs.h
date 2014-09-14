@@ -8396,8 +8396,8 @@ FsRtlRemovePerFileObjectContext(
 extern const UCHAR * const FsRtlLegalAnsiCharacterArray;
 #define LEGAL_ANSI_CHARACTER_ARRAY FsRtlLegalAnsiCharacterArray
 #else
-extern const UCHAR * const *FsRtlLegalAnsiCharacterArray;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(FsRtlLegalAnsiCharacterArray)
+extern const UCHAR * const *FsRtlLegalAnsiCharacterArray;
 #define LEGAL_ANSI_CHARACTER_ARRAY (*FsRtlLegalAnsiCharacterArray)
 #endif
 
@@ -10993,8 +10993,8 @@ HalGetDmaAlignmentRequirement(
 extern PUSHORT NlsOemLeadByteInfo;
 #define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
 #else
-extern PUSHORT *NlsOemLeadByteInfo;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsOemLeadByteInfo)
+extern PUSHORT *NlsOemLeadByteInfo;
 #define NLS_OEM_LEAD_BYTE_INFO (*NlsOemLeadByteInfo)
 #endif
 

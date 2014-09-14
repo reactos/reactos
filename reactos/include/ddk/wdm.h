@@ -1661,8 +1661,8 @@ extern NTSYSAPI volatile CCHAR KeNumberProcessors;
 #elif (NTDDI_VERSION >= NTDDI_WINXP)
 extern NTSYSAPI CCHAR KeNumberProcessors;
 #else
-extern PCCHAR KeNumberProcessors;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(KeNumberProcessors)
+extern PCCHAR KeNumberProcessors;
 #endif
 
 
@@ -1815,8 +1815,8 @@ typedef enum _MM_SYSTEM_SIZE {
 } MM_SYSTEMSIZE;
 
 #ifndef _NTSYSTEM_
-extern PBOOLEAN Mm64BitPhysicalAddress;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(Mm64BitPhysicalAddress)
+extern PBOOLEAN Mm64BitPhysicalAddress;
 #endif
 extern NTKERNELAPI PVOID MmBadPointer;
 
