@@ -324,12 +324,12 @@ DbgGdiHTIntegrityCheck()
 				r = 0;
 				DPRINT1("Used entry has KernelData == 0\n");
 			}
-			if (pEntry->KernelData <= MmHighestUserAddress)
+			else if (pEntry->KernelData <= MmHighestUserAddress)
 			{
 				r = 0;
 				DPRINT1("Used entry invalid KernelData\n");
 			}
-			if (((POBJ)(pEntry->KernelData))->hHmgr != Handle)
+			else if (((POBJ)(pEntry->KernelData))->hHmgr != Handle)
 			{
 				r = 0;
 				DPRINT1("Used entry %lu, has invalid hHmg %p (expected: %p)\n",
@@ -606,7 +606,7 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     }
 
     iChannel = ChannelEntry->Id;
-    ASSERT(iChannel >= 0 && iChannel < DbgChCount);
+    ASSERT(iChannel < DbgChCount);
 
     if(level == NULL || *level == L'\0' ||wcslen(level) == 0 )
         iLevel = MAX_LEVEL;
