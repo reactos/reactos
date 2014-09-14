@@ -119,7 +119,7 @@ AppendMenuItems(HMENU hMenu,
     } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
-static VOID
+/*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle)
 {
     hConsoleMenu = ConsoleMenuControl(ConOutHandle,
@@ -132,7 +132,7 @@ CreateVdmMenu(HANDLE ConOutHandle)
     DrawMenuBar(GetConsoleWindow());
 }
 
-static VOID
+/*static*/ VOID
 DestroyVdmMenu(VOID)
 {
     UINT i = 0;

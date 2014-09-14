@@ -355,6 +355,8 @@ VOID DumpMemory(VOID)
     _snwprintf(FileName, MAX_PATH, L"memdump%lu.txt", DumpNumber);
     ++DumpNumber;
 
+    DPRINT1("Creating memory dump file '%S'...\n", FileName);
+
     /* Always create the dump file */
     hFile = CreateFileW(FileName,
                         GENERIC_WRITE,
@@ -415,6 +417,8 @@ VOID DumpMemory(VOID)
 
     /* Close the file */
     CloseHandle(hFile);
+
+    DPRINT1("Memory dump done\n");
 }
 
 DWORD WINAPI PumpConsoleInput(LPVOID Parameter);

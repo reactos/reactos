@@ -942,6 +942,16 @@ Cleanup:
     return Result;
 }
 
+static VOID VgaSetActiveScreenBuffer(HANDLE ScreenBuffer)
+{
+    /* Set the active buffer */
+    SetConsoleActiveScreenBuffer(ScreenBuffer);
+
+    /* Reinitialize the VDM menu */
+    DestroyVdmMenu();
+    CreateVdmMenu(ScreenBuffer);
+}
+
 static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
 {
     DWORD i;
@@ -999,7 +1009,7 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     ZeroMemory(ConsoleFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
 
     /* Set the active buffer */
-    SetConsoleActiveScreenBuffer(GraphicsConsoleBuffer);
+    VgaSetActiveScreenBuffer(GraphicsConsoleBuffer);
 
     /* Set the graphics mode palette */
     SetConsolePalette(GraphicsConsoleBuffer,
@@ -1018,7 +1028,7 @@ static VOID VgaLeaveGraphicsMode(VOID)
     ReleaseMutex(ConsoleMutex);
 
     /* Switch back to the default console text buffer */
-    // SetConsoleActiveScreenBuffer(TextConsoleBuffer);
+    // VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
     /* Cleanup the video data */
     CloseHandle(ConsoleMutex);
@@ -1034,7 +1044,7 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
     DPRINT1("VgaEnterTextMode\n");
 
     /* Switch to the text buffer */
-    SetConsoleActiveScreenBuffer(TextConsoleBuffer);
+    VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
     /* Adjust the text framebuffer if we changed the resolution */
     if (TextResolution.X != Resolution->X ||
@@ -1950,7 +1960,7 @@ VOID VgaDetachFromConsole(BOOL ChangingMode)
         SMALL_RECT ConRect;
 
         /* Restore the old screen buffer */
-        SetConsoleActiveScreenBuffer(TextConsoleBuffer);
+        VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
         /* Restore the original console size */
         ConRect.Left   = 0;
@@ -1988,7 +1998,7 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     /***/ VgaResetPalette(); /***/
 
     /* Switch to the text buffer */
-    SetConsoleActiveScreenBuffer(TextConsoleBuffer);
+    VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
     /* Clear the VGA memory */
     VgaClearMemory();

@@ -48,6 +48,11 @@ extern HANDLE VdmTaskEvent;
 
 VOID DisplayMessage(LPCWSTR Format, ...);
 
+/*static*/ VOID
+CreateVdmMenu(HANDLE ConOutHandle);
+/*static*/ VOID
+DestroyVdmMenu(VOID);
+
 #endif // _NTVDM_H_
 
 /* EOF */
