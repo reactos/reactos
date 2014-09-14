@@ -139,7 +139,7 @@ extern "C" {
 #ifdef _M_IX86
 #define __SYMBOL(_Name) "_"#_Name
 #define __IMPORTSYMBOL(_Name) "__imp__"#_Name
-#define __IMPORTNAME(_Name) _imp__##_Name
+#define __IMPORTNAME(_Name) __imp__##_Name
 #else
 #define __SYMBOL(_Name) #_Name
 #define __IMPORTSYMBOL(_Name) "__imp_"#_Name
@@ -586,11 +586,11 @@ extern BOOLEAN NlsMbCodePageTag;
 extern BOOLEAN NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #else
-extern BOOLEAN *NlsMbCodePageTag;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbCodePageTag)
+extern BOOLEAN *NlsMbCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
-extern BOOLEAN *NlsMbOemCodePageTag;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbOemCodePageTag)
+extern BOOLEAN *NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
 #endif
 
