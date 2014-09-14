@@ -8,6 +8,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers/ksecdd
     ${REACTOS_SOURCE_DIR}/lib/cryptlib
     ${CMAKE_CURRENT_BINARY_DIR})
 

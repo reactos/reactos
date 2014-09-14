@@ -14,6 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 extern BOOL RegInitialize(VOID);
 extern BOOL RegCleanup(VOID);
 extern VOID UnloadNtMarta(VOID);
+extern VOID CloseKsecDdHandle(VOID);
 
 BOOL
 WINAPI
@@ -33,6 +34,7 @@ DllMain(
             CloseLogonLsaHandle();
             RegCleanup();
             UnloadNtMarta();
+            CloseKsecDdHandle();
             break;
     }
 

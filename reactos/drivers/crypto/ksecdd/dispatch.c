@@ -33,7 +33,7 @@ KsecQueryFileInformation(
     }
 
     /* Validate buffer size */
-    if (*BufferLength >= sizeof(FILE_STANDARD_INFORMATION))
+    if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
     {
         *BufferLength = sizeof(FILE_STANDARD_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
@@ -92,7 +92,28 @@ KsecDeviceControl(
 {
     NTSTATUS Status;
 
-    Status = STATUS_SUCCESS;
+    if ((IoControlCode == IOCTL_KSEC_RANDOM_FILL_BUFFER) ||
+        (IoControlCode == IOCTL_KSEC_ENCRYPT_SAME_PROCESS) ||
+        (IoControlCode == IOCTL_KSEC_DECRYPT_SAME_PROCESS) ||
+        (IoControlCode == IOCTL_KSEC_ENCRYPT_CROSS_PROCESS) ||
+        (IoControlCode == IOCTL_KSEC_DECRYPT_CROSS_PROCESS) ||
+        (IoControlCode == IOCTL_KSEC_ENCRYPT_SAME_LOGON) ||
+        (IoControlCode == IOCTL_KSEC_DECRYPT_SAME_LOGON))
+    {
+        /* Make sure we have a valid output buffer */
+        if ((Buffer == NULL) || (OutputLength == NULL))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Check if the input is smaller than the output */
+        if (InputLength < *OutputLength)
+        {
+            /* We might have uninitialized memory, zero it out */
+            RtlSecureZeroMemory((PUCHAR)Buffer + InputLength,
+                                *OutputLength - InputLength);
+        }
+    }
 
     /* Check ioctl code */
     switch (IoControlCode)
@@ -105,6 +126,48 @@ KsecDeviceControl(
         case IOCTL_KSEC_RANDOM_FILL_BUFFER:
 
             Status = KsecGenRandom(Buffer, *OutputLength);
+            break;
+
+        case IOCTL_KSEC_ENCRYPT_SAME_PROCESS:
+
+            Status = KsecEncryptMemory(Buffer,
+                                       *OutputLength,
+                                       RTL_ENCRYPT_OPTION_SAME_PROCESS);
+            break;
+
+        case IOCTL_KSEC_DECRYPT_SAME_PROCESS:
+
+            Status = KsecDecryptMemory(Buffer,
+                                       *OutputLength,
+                                       RTL_ENCRYPT_OPTION_SAME_PROCESS);
+            break;
+
+        case IOCTL_KSEC_ENCRYPT_CROSS_PROCESS:
+
+            Status = KsecEncryptMemory(Buffer,
+                                       *OutputLength,
+                                       RTL_ENCRYPT_OPTION_CROSS_PROCESS);
+            break;
+
+        case IOCTL_KSEC_DECRYPT_CROSS_PROCESS:
+
+            Status = KsecDecryptMemory(Buffer,
+                                       *OutputLength,
+                                       RTL_ENCRYPT_OPTION_CROSS_PROCESS);
+            break;
+
+        case IOCTL_KSEC_ENCRYPT_SAME_LOGON:
+
+            Status = KsecEncryptMemory(Buffer,
+                                       *OutputLength,
+                                       RTL_ENCRYPT_OPTION_SAME_LOGON);
+            break;
+
+        case IOCTL_KSEC_DECRYPT_SAME_LOGON:
+
+            Status = KsecDecryptMemory(Buffer,
+                                       *OutputLength,
+                                       RTL_ENCRYPT_OPTION_SAME_LOGON);
             break;
 
         default:
@@ -188,10 +251,30 @@ KsecDdDispatch(
         case IRP_MJ_DEVICE_CONTROL:
 
             /* Extract the parameters */
-            Buffer = Irp->AssociatedIrp.SystemBuffer;
             InputLength = IoStackLocation->Parameters.DeviceIoControl.InputBufferLength;
             OutputLength = IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength;
             IoControlCode = IoStackLocation->Parameters.DeviceIoControl.IoControlCode;
+
+            /* Check for METHOD_OUT_DIRECT method */
+            if ((METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_OUT_DIRECT) &&
+                (OutputLength != 0))
+            {
+                /* Use the provided MDL */
+                OutputLength = Irp->MdlAddress->ByteCount;
+                Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress,
+                                                      NormalPagePriority);
+                if (Buffer == NULL)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    Information = 0;
+                    break;
+                }
+            }
+            else
+            {
+                /* Otherwise this is METHOD_BUFFERED, use the SystemBuffer */
+                Buffer = Irp->AssociatedIrp.SystemBuffer;
+            }
 
             /* Call the internal function */
             Status = KsecDeviceControl(IoControlCode,
@@ -205,6 +288,7 @@ KsecDdDispatch(
             DPRINT1("Unhandled major function %lu!\n",
                     IoStackLocation->MajorFunction);
             ASSERT(FALSE);
+            return STATUS_INVALID_DEVICE_REQUEST;
     }
 
     /* Return the information */

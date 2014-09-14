@@ -8,6 +8,7 @@ include_directories(
 list(APPEND SOURCE
      ksecdd.c
      dispatch.c
+     crypt.c
      random.c
      stubs.c
      ksecdd.rc
