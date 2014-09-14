@@ -121,7 +121,7 @@ static VOID MouseGetPacket(PMOUSE_PACKET Packet)
 VOID MouseUpdatePosition(PCOORD NewPosition)
 {
     /* Update the counters */
-    HorzCounter += ((NewPosition->X - Position.X) * WidthMm * Resolution) / WidthPixels;
+    HorzCounter += ((NewPosition->X - Position.X) * WidthMm  * Resolution) / WidthPixels;
     VertCounter += ((NewPosition->Y - Position.Y) * HeightMm * Resolution) / HeightPixels;
 
     /* Update the position */
