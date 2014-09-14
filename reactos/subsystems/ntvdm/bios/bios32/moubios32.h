@@ -25,6 +25,16 @@ enum
     NUM_MOUSE_BUTTONS
 };
 
+typedef struct _MOUSE_USER_HANDLER
+{
+    /*
+     * CallMask format: see table: http://www.ctyme.com/intr/rb-5968.htm#Table3171
+     * Alternatively, see table:   http://www.ctyme.com/intr/rb-5981.htm#Table3174
+     */
+    USHORT CallMask;
+    ULONG  Callback; // Far pointer to the callback
+} MOUSE_USER_HANDLER, *PMOUSE_USER_HANDLER;
+
 typedef struct _MOUSE_DRIVER_STATE
 {
     SHORT ShowCount;
@@ -39,6 +49,12 @@ typedef struct _MOUSE_DRIVER_STATE
     SHORT VertCount;
     WORD MickeysPerCellHoriz;
     WORD MickeysPerCellVert;
+
+    /*
+     * User Subroutine Handlers called on mouse events
+     */
+    MOUSE_USER_HANDLER Handler0;    // Handler  compatible MS MOUSE v1.0+
+    MOUSE_USER_HANDLER Handlers[3]; // Handlers compatible MS MOUSE v6.0+
 
     struct
     {

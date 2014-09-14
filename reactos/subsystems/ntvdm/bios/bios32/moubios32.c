@@ -78,6 +78,60 @@ static VOID EraseMouseCursor(VOID)
     }
 }
 
+static VOID CallMouseUserHandlers(USHORT CallMask)
+{
+    USHORT i;
+
+    /* Call handler 0 */
+    if ((DriverState.Handler0.CallMask & CallMask) != 0 &&
+         DriverState.Handler0.Callback != (ULONG)NULL)
+    {
+        /*
+         * Set the parameters for the callback.
+         * NOTE: In text modes, the row and column will be reported
+         *       as a multiple of the cell size, typically 8x8 pixels.
+         */
+        setAX(CallMask);
+        setBX(DriverState.ButtonState);
+        setCX(DriverState.Position.X);
+        setDX(DriverState.Position.Y);
+        setSI(DriverState.MickeysPerCellHoriz);
+        setDI(DriverState.MickeysPerCellVert);
+
+        DPRINT1("Calling Handler0 0x%08x with CallMask 0x%04x\n",
+                DriverState.Handler0.Callback, CallMask);
+
+        /* Call the callback */
+        RunCallback16(&BiosContext, DriverState.Handler0.Callback);
+    }
+
+    for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+    {
+        /* Call the suitable handlers */
+        if ((DriverState.Handlers[i].CallMask & CallMask) != 0 &&
+             DriverState.Handlers[i].Callback != (ULONG)NULL)
+        {
+            /*
+             * Set the parameters for the callback.
+             * NOTE: In text modes, the row and column will be reported
+             *       as a multiple of the cell size, typically 8x8 pixels.
+             */
+            setAX(CallMask);
+            setBX(DriverState.ButtonState);
+            setCX(DriverState.Position.X);
+            setDX(DriverState.Position.Y);
+            setSI(DriverState.MickeysPerCellHoriz);
+            setDI(DriverState.MickeysPerCellVert);
+
+            DPRINT1("Calling Handler[%d] 0x%08x with CallMask 0x%04x\n",
+                    i, DriverState.Handlers[i].Callback, CallMask);
+
+            /* Call the callback */
+            RunCallback16(&BiosContext, DriverState.Handlers[i].Callback);
+        }
+    }
+}
+
 static VOID WINAPI BiosMouseService(LPWORD Stack)
 {
     switch (getAX())
@@ -176,7 +230,6 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             setBX(DriverState.ButtonState);
             setCX(DriverState.Position.X);
             setDX(DriverState.Position.Y);
-
             break;
         }
 
@@ -249,8 +302,26 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
         /* Define Text Cursor */
         case 0x0A:
         {
-            DriverState.TextCursor.ScreenMask = getCX();
-            DriverState.TextCursor.CursorMask = getDX();
+            USHORT BX = getBX();
+
+            if (BX == 0x0000)
+            {
+                /* Define software cursor */
+                DriverState.TextCursor.ScreenMask = getCX();
+                DriverState.TextCursor.CursorMask = getDX();
+            }
+            else if (BX == 0x0001)
+            {
+                /* Define hardware cursor */
+                DPRINT1("Defining hardware cursor is unimplemented\n");
+                UNIMPLEMENTED;
+                // CX == start scan line
+                // DX == end scan line
+            }
+            else
+            {
+                DPRINT1("Invalid BX value 0x%04x\n", BX);
+            }
 
             break;
         }
@@ -267,11 +338,37 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             break;
         }
 
+        /* Define Interrupt Subroutine Parameters, compatible MS MOUSE v1.0+ */
+        case 0x0C:
+        {
+            DriverState.Handler0.CallMask = getCX();
+            DriverState.Handler0.Callback = MAKELONG(getDX(), getES()); // Far pointer to the callback
+            DPRINT1("Define callback 0x%04x, 0x%08x\n",
+                    DriverState.Handler0.CallMask, DriverState.Handler0.Callback);
+            break;
+        }
+
         /* Define Mickey/Pixel Ratio */
         case 0x0F:
         {
             DriverState.MickeysPerCellHoriz = getCX();
-            DriverState.MickeysPerCellVert = getDX();
+            DriverState.MickeysPerCellVert  = getDX();
+            break;
+        }
+
+        /* Exchange Interrupt Subroutines, compatible MS MOUSE v3.0+ (see function 0x0C) */
+        case 0x14:
+        {
+            USHORT OldCallMask = DriverState.Handler0.CallMask;
+            ULONG  OldCallback = DriverState.Handler0.Callback;
+
+            DriverState.Handler0.CallMask = getCX();
+            DriverState.Handler0.Callback = MAKELONG(getDX(), getES()); // Far pointer to the callback
+
+            /* Return old callmask in CX and callback vector in ES:DX */
+            setCX(OldCallMask);
+            setES(HIWORD(OldCallback));
+            setDX(LOWORD(OldCallback));
 
             break;
         }
@@ -294,6 +391,150 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
         case 0x17:
         {
             DriverState = *((PMOUSE_DRIVER_STATE)SEG_OFF_TO_PTR(getES(), getDX()));
+            break;
+        }
+
+        /* Set Alternate Mouse User Handler, compatible MS MOUSE v6.0+ */
+        case 0x18:
+        {
+            /*
+             * Up to three handlers can be defined by separate calls to this
+             * function, each with a different combination of shift states in
+             * the call mask; calling this function again with a call mask of
+             * 0000h undefines the specified handler (official documentation);
+             * specifying the same call mask and an address of 0000h:0000h
+             * undefines the handler (real life).
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-5981.htm
+             * for more information.
+             */
+
+            USHORT i;
+            USHORT CallMask = getCX();
+            ULONG  Callback = MAKELONG(getDX(), getES()); // Far pointer to the callback
+            BOOLEAN Success = FALSE;
+
+            DPRINT1("Define v6.0+ callback 0x%04x, 0x%08x\n",
+                    CallMask, Callback);
+
+            if (CallMask == 0x0000)
+            {
+                /*
+                 * Find the handler entry corresponding to the given
+                 * callback and undefine it.
+                 */
+                for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+                {
+                    if (DriverState.Handlers[i].Callback == Callback)
+                    {
+                        /* Found it, undefine the handler */
+                        DriverState.Handlers[i].CallMask = 0x0000;
+                        DriverState.Handlers[i].Callback = (ULONG)NULL;
+                        Success = TRUE;
+                        break;
+                    }
+                }
+            }
+            else if (Callback == (ULONG)NULL)
+            {
+                /*
+                 * Find the handler entry corresponding to the given
+                 * callmask and undefine it.
+                 */
+                for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+                {
+                    if (DriverState.Handlers[i].CallMask == CallMask)
+                    {
+                        /* Found it, undefine the handler */
+                        DriverState.Handlers[i].CallMask = 0x0000;
+                        DriverState.Handlers[i].Callback = (ULONG)NULL;
+                        Success = TRUE;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                /*
+                 * Try to find a handler entry corresponding to the given
+                 * callmask to redefine it, otherwise find an empty handler
+                 * entry and set the new handler in there.
+                 */
+
+                USHORT EmptyHandler = 0xFFFF; // Invalid handler
+
+                for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+                {
+                    /* Find the first empty handler */
+                    if (EmptyHandler == 0xFFFF &&
+                        DriverState.Handlers[i].CallMask == 0x0000 &&
+                        DriverState.Handlers[i].Callback == (ULONG)NULL)
+                    {
+                        EmptyHandler = i;
+                    }
+
+                    if (DriverState.Handlers[i].CallMask == CallMask)
+                    {
+                        /* Found it, redefine the handler */
+                        DriverState.Handlers[i].CallMask = CallMask;
+                        DriverState.Handlers[i].Callback = Callback;
+                        Success = TRUE;
+                        break;
+                    }
+                }
+
+                /*
+                 * If we haven't found anything and we found
+                 * an empty handler, set it.
+                 */
+                if (!Success && EmptyHandler != 0xFFFF
+                    /* && EmptyHandler < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]) */)
+                {
+                    DriverState.Handlers[EmptyHandler].CallMask = CallMask;
+                    DriverState.Handlers[EmptyHandler].Callback = Callback;
+                    Success = TRUE;
+                }
+            }
+
+            /* If we failed, set error code */
+            if (!Success) setAX(0xFFFF);
+
+            break;
+        }
+
+        /* Return User Alternate Interrupt Vector, compatible MS MOUSE v6.0+ */
+        case 0x19:
+        {
+            USHORT i;
+            USHORT CallMask = getCX();
+            ULONG  Callback;
+            BOOLEAN Success = FALSE;
+
+            /*
+             * Find the handler entry corresponding to the given callmask.
+             */
+            for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+            {
+                if (DriverState.Handlers[i].CallMask == CallMask)
+                {
+                    /* Found it */
+                    Callback = DriverState.Handlers[i].Callback;
+                    Success = TRUE;
+                    break;
+                }
+            }
+
+            if (Success)
+            {
+                /* Return the callback vector in BX:DX */
+                setBX(HIWORD(Callback));
+                setDX(LOWORD(Callback));
+            }
+            else
+            {
+                /* We failed, set error code */
+                setCX(0x0000);
+            }
+
             break;
         }
 
@@ -331,19 +572,23 @@ VOID MouseBiosUpdatePosition(PCOORD NewPosition)
     if (!DriverEnabled) return;
 
     DriverState.HorizCount += (DeltaX * (SHORT)DriverState.MickeysPerCellHoriz) / 8;
-    DriverState.VertCount += (DeltaY * (SHORT)DriverState.MickeysPerCellVert) / 8;
-    
+    DriverState.VertCount  += (DeltaY * (SHORT)DriverState.MickeysPerCellVert ) / 8;
+
     if (DriverState.ShowCount > 0)
     {
         EraseMouseCursor();
         DriverState.Position = *NewPosition;
         PaintMouseCursor();
     }
+
+    /* Call the mouse handlers */
+    CallMouseUserHandlers(0x0001); // We use MS MOUSE v1.0+ format
 }
 
 VOID MouseBiosUpdateButtons(WORD ButtonState)
 {
-    WORD i;
+    USHORT i;
+    USHORT CallMask = 0x0000; // We use MS MOUSE v1.0+ format
 
     if (!DriverEnabled) return;
 
@@ -357,16 +602,23 @@ VOID MouseBiosUpdateButtons(WORD ButtonState)
             /* Mouse press */
             DriverState.PressCount[i]++;
             DriverState.LastPress[i] = DriverState.Position;
+
+            CallMask |= (1 << (2 * i + 1));
         }
         else if (NewState < OldState)
         {
             /* Mouse release */
             DriverState.ReleaseCount[i]++;
             DriverState.LastRelease[i] = DriverState.Position;
+
+            CallMask |= (1 << (2 * i + 2));
         }
     }
 
     DriverState.ButtonState = ButtonState;
+
+    /* Call the mouse handlers */
+    CallMouseUserHandlers(CallMask);
 }
 
 BOOLEAN MouseBios32Initialize(VOID)
