@@ -185,36 +185,3 @@ gdb_send_exception(void)
     ptr += sprintf(ptr, "core:%x;", CurrentStateChange.Processor);
     send_gdb_packet(gdb_out);
 }
-
-#ifdef KDDEBUG
-ULONG KdpDbgPrint(const char* Format, ...)
-{
-    va_list ap;
-    CHAR Buffer[512];
-    struct _STRING Str;
-    int Length;
-
-    va_start(ap, Format);
-    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
-    va_end(ap);
-
-    /* Check if we went past the buffer */
-    if (Length == -1)
-    {
-        /* Terminate it if we went over-board */
-        Buffer[sizeof(Buffer) - 1] = '\n';
-
-        /* Put maximum */
-        Length = sizeof(Buffer);
-    }
-
-    Str.Buffer = Buffer;
-    Str.Length = Length;
-    Str.MaximumLength = sizeof(Buffer);
-
-    gdb_send_debug_io(&Str);
-
-    return 0;
-}
-#endif
-

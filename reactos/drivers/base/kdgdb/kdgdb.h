@@ -16,7 +16,7 @@
 #include <windbgkd.h>
 #include <kddll.h>
 
-// #define KDDEBUG /* uncomment to enable debugging this dll */
+#define KDDEBUG /* uncomment to enable debugging this dll */
 
 #ifndef KDDEBUG
 #define KDDBGPRINT(...)
