@@ -14,6 +14,9 @@ static HANDLE gdb_run_thread;
 static HANDLE gdb_dbg_process;
 HANDLE gdb_dbg_thread;
 CONTEXT CurrentContext;
+/* Keep track of where we are for qfThreadInfo/qsThreadInfo */
+static LIST_ENTRY* CurrentProcessEntry;
+static LIST_ENTRY* CurrentThreadEntry;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 static
@@ -116,7 +119,11 @@ handle_gdb_thread_alive(void)
 /* q* packets */
 static
 void
-handle_gdb_query(_Inout_ PKD_CONTEXT KdContext)
+handle_gdb_query(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
 {
     if (strncmp(gdb_input, "qSupported:", 11) == 0)
     {
@@ -147,103 +154,98 @@ handle_gdb_query(_Inout_ PKD_CONTEXT KdContext)
         return;
     }
 
-    if (strncmp(gdb_input, "qfThreadInfo", 12) == 0)
+    if ((strncmp(gdb_input, "qfThreadInfo", 12) == 0)
+            || (strncmp(gdb_input, "qsThreadInfo", 12) == 0))
     {
         LIST_ENTRY* ProcessListHead = (LIST_ENTRY*)KdDebuggerDataBlock->PsActiveProcessHead.Pointer;
-        LIST_ENTRY* ProcessEntry;
+        BOOLEAN FirstThread = TRUE;
         PEPROCESS Process;
-
-        KDDBGPRINT("ProcessListHead: %p.\n", ProcessListHead);
+        PETHREAD Thread;
+        char gdb_out[1024];
+        char* ptr;
+        BOOLEAN Resuming = strncmp(gdb_input, "qsThreadInfo", 12) == 0;
 
         /* Maybe this was not initialized yet */
         if (!ProcessListHead->Flink)
         {
             char gdb_out[64];
+
+            if (Resuming)
+            {
+                /* there is only one thread to tell about */
+                send_gdb_packet("l");
+                return;
+            }
             /* Just tell GDB about the current thread */
             sprintf(gdb_out, "mp%p.%p", PsGetCurrentProcessId(), PsGetCurrentThreadId());
             send_gdb_packet(gdb_out);
+            /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
             gdb_receive_packet(KdContext);
-            if (strncmp(gdb_input, "qsThreadInfo", 12) != 0)
-            {
-                // KdAssert
-                KDDBGPRINT("Received %s instead of qsThreadInfo!\n", gdb_input);
-                while(1);
-            }
+            gdb_interpret_input(State, MessageData, MessageLength, KdContext);
+            return;
+        }
+
+        if (Resuming)
+        {
+            if (CurrentThreadEntry == NULL)
+                CurrentProcessEntry = CurrentProcessEntry->Flink;
+        }
+        else
+            CurrentProcessEntry = ProcessListHead->Flink;
+
+        if (CurrentProcessEntry == ProcessListHead)
+        {
+            /* We're done */
             send_gdb_packet("l");
             return;
         }
 
-        /* List all processes */
-        for (ProcessEntry = ProcessListHead->Flink;
-                ProcessEntry != ProcessListHead;
-                ProcessEntry = ProcessEntry->Flink)
+        Process = CONTAINING_RECORD(CurrentProcessEntry, EPROCESS, ActiveProcessLinks);
+
+        if (Resuming && CurrentThreadEntry != NULL)
+            CurrentThreadEntry = CurrentThreadEntry->Flink;
+        else
+            CurrentThreadEntry = Process->ThreadListHead.Flink;
+
+        ptr = gdb_out;
+
+        *ptr++ = 'm';
+        /* List threads from this process */
+        for ( ;
+             CurrentThreadEntry != &Process->ThreadListHead;
+             CurrentThreadEntry = CurrentThreadEntry->Flink)
         {
-            BOOLEAN FirstThread = TRUE;
-            LIST_ENTRY* ThreadEntry;
-            PETHREAD Thread;
-            static char gdb_out[1024];
-            char* ptr;
+            Thread = CONTAINING_RECORD(CurrentThreadEntry, ETHREAD, ThreadListEntry);
 
-            ptr = gdb_out;
-            Process = CONTAINING_RECORD(ProcessEntry, EPROCESS, ActiveProcessLinks);
-
-            KDDBGPRINT("gdb_out %p.\n", gdb_out);
-
-            *ptr++ = 'm';
-            /* List threads from this process */
-            for (ThreadEntry = Process->ThreadListHead.Flink;
-                    ThreadEntry != &Process->ThreadListHead;
-                    ThreadEntry = ThreadEntry->Flink)
+            /* See if we should add a comma */
+            if (FirstThread)
             {
-                Thread = CONTAINING_RECORD(ThreadEntry, ETHREAD, ThreadListEntry);
-
-                KDDBGPRINT("ptr %p.\n", ptr);
-
-                /* See if we should add a comma */
-                if (FirstThread)
-                {
-                    FirstThread = FALSE;
-                }
-                else
-                {
-                    *ptr++ = ',';
-                }
-
-                ptr += _snprintf(ptr, 1024 - (ptr - gdb_out),
-                    "p%p.%p", PsGetProcessId(Process), PsGetThreadId(Thread));
-                if (ptr > (gdb_out + 1024))
-                {
-                    /* send what we got */
-                    KDDBGPRINT("Sending %s.\n", gdb_out);
-                    send_gdb_packet(gdb_out);
-                    gdb_receive_packet(KdContext);
-                    if (strncmp(gdb_input, "qsThreadInfo", 12) != 0)
-                    {
-                        // KdAssert
-                        KDDBGPRINT("Received %s instead of qsThreadInfo!\n", gdb_input);
-                        while(1);
-                    }
-                    /* Start anew */
-                    ptr = gdb_out;
-                    *ptr++ = 'm';
-                    FirstThread = TRUE;
-                }
+                FirstThread = FALSE;
+            }
+            else
+            {
+                *ptr++ = ',';
             }
 
-            /* send the list for this process */
-            KDDBGPRINT("Sending %s.\n", gdb_out);
-            send_gdb_packet(gdb_out);
-            gdb_receive_packet(KdContext);
-            if (strncmp(gdb_input, "qsThreadInfo", 12) != 0)
+            ptr += _snprintf(ptr, 1024 - (ptr - gdb_out),
+                "p%p.%p", PsGetProcessId(Process), PsGetThreadId(Thread));
+            if (ptr > (gdb_out + 1024))
             {
-                // KdAssert
-                KDDBGPRINT("Received %s instead of qsThreadInfo!\n", gdb_input);
-                while(1);
+                /* send what we got */
+                send_gdb_packet(gdb_out);
+                /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
+                gdb_receive_packet(KdContext);
+                gdb_interpret_input(State, MessageData, MessageLength, KdContext);
+                return;
             }
         }
 
-        /* We're done. Send end-of-list packet */
-        send_gdb_packet("l");
+        /* send the list for this process */
+        send_gdb_packet(gdb_out);
+        CurrentThreadEntry = NULL;
+        /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
+        gdb_receive_packet(KdContext);
+        gdb_interpret_input(State, MessageData, MessageLength, KdContext);
         return;
     }
 
@@ -349,6 +351,7 @@ GetCurrentContextSendHandler(
 
     /* Just copy it */
     RtlCopyMemory(&CurrentContext, Context, sizeof(*Context));
+    KdpSendPacketHandler = NULL;
 }
 
 static
@@ -390,6 +393,8 @@ SetContextSendHandler(
         /* Should we bugcheck ? */
         while (1);
     }
+
+    KdpSendPacketHandler = NULL;
 }
 
 static
@@ -537,7 +542,7 @@ gdb_interpret_input(
     case 'm':
         return handle_gdb_read_mem(State, MessageData, MessageLength);
     case 'q':
-        handle_gdb_query(KdContext);
+        handle_gdb_query(State, MessageData, MessageLength, KdContext);
         break;
     case 'T':
         handle_gdb_thread_alive();
