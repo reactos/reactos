@@ -12,15 +12,11 @@
  */
 
 #include <advapi32.h>
+#include <ntsecapi.h>
 #include <ksecioctl.h>
 #include <md4.h>
 #include <md5.h>
 #include <rc4.h>
-
-/* FIXME: this should be in some shared header */
-#define RTL_ENCRYPT_OPTION_SAME_PROCESS   0
-#define RTL_ENCRYPT_OPTION_CROSS_PROCESS  1
-#define RTL_ENCRYPT_OPTION_SAME_LOGON     2
 
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
@@ -635,11 +631,11 @@ KsecOpenDevice()
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &DeviceName,
-                               0x18,
+                               OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
     Status = NtOpenFile(&DeviceHandle,
-                        0x100001,
+                        FILE_READ_DATA | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -744,9 +740,6 @@ SystemFunction040(
 {
     ULONG IoControlCode;
 
-	//FIXME("(%p, %x, %x): stub [RtlEncryptMemory]\n", memory, length, flags);
-	return STATUS_SUCCESS;
-
     if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_PROCESS)
     {
         IoControlCode = IOCTL_KSEC_ENCRYPT_SAME_PROCESS;
@@ -797,9 +790,6 @@ SystemFunction041(
     _In_ ULONG OptionFlags)
 {
     ULONG IoControlCode;
-
-	//FIXME("(%p, %x, %x): stub [RtlDecryptMemory]\n", memory, length, flags);
-	return STATUS_SUCCESS;
 
     if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_PROCESS)
     {

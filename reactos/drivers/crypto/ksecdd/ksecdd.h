@@ -8,11 +8,15 @@
 
 #define _NO_KSECDD_IMPORT_
 #include <ntifs.h>
-#include <ndk/extypes.h>
-#include <ndk/rtlfuncs.h>
-#include <ndk/lpcfuncs.h>
-#include <ndk/obfuncs.h>
+#include <ndk/exfuncs.h>
+#include <pseh/pseh2.h>
 #include <ntstrsafe.h>
+
+#include <md4.h>
+#include <md5.h>
+#include <tomcrypt.h>
+typedef aes_key AES_KEY, *PAES_KEY;
+typedef des3_key DES3_KEY, *PDES3_KEY;
 
 #define STATUS_KSEC_INTERNAL_ERROR ((NTSTATUS)0x80090304)
 
@@ -70,12 +74,21 @@ KsecDdDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
+NTSTATUS
+NTAPI
+KsecGatherEntropyData(
+    PKSEC_ENTROPY_DATA EntropyData);
 
 NTSTATUS
 NTAPI
 KsecGenRandom(
     PVOID Buffer,
     SIZE_T Length);
+
+VOID
+NTAPI
+KsecInitializeEncryptionSupport (
+    VOID);
 
 NTSTATUS
 NTAPI
@@ -90,24 +103,4 @@ KsecDecryptMemory (
     _Inout_ PVOID Buffer,
     _In_ ULONG Length,
     _In_ ULONG OptionFlags);
-
-NTSTATUS
-NTAPI
-KsecInitLsaMemory(VOID);
-
-///
-PVOID
-NTAPI
-PsGetProcessSecurityPort(
-    PEPROCESS Process);
-
-NTSTATUS
-NTAPI
-PsSetProcessSecurityPort(
-    PEPROCESS Process,
-    PVOID SecurityPort);
-
-HANDLE
-NTAPI
-PsGetCurrentThreadProcessId(VOID);
 
