@@ -3,13 +3,13 @@
 
 [Section]
 Name = LibreOffice
-Version = 4.2.5
+Version = 4.3.1
 Licence = LGPL
 Description = A powerful and open source office suite. It has been forked from OpenOffice.
-Size = 209.36 MB
+Size = 214.52 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.2.5/win/x86/LibreOffice_4.2.5_Win_x86.msi
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.1/win/x86/LibreOffice_4.3.1_Win_x86.msi
 CDPath = none
 
 [Section.0407]

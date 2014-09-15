@@ -3,13 +3,13 @@
 
 [Section]
 Name = SMPlayer
-Version = 14.3.0
+Version = 14.9.0
 Licence = GPL
 Description = Graphical Frontend for MPlayer.
 Size = 20.7 MB
 Category = 2
 URLSite = http://smplayer.sourceforge.net/en/
-URLDownload = http://download.sourceforge.net/project/smplayer/SMPlayer/14.3.0/smplayer-14.3.0-oc2-win32.exe
+URLDownload = http://download.sourceforge.net/project/smplayer/SMPlayer/14.9.0/smplayer-14.9.0-win32.exe
 CDPath = none
 
 [Section.0407]

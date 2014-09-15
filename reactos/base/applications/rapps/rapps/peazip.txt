@@ -3,13 +3,13 @@
 
 [Section]
 Name = PeaZip
-Version = 5.4.0
+Version = 5.4.1
 Licence = LGPL v3, OpenCandy EULA
 Description = PeaZip is a free, cross-platform, open source file and archive manager. It supports over 150 archive formats.
 Size = 5.8 MB
 Category = 12
 URLSite = http://peazip.sourceforge.net/
-URLDownload = http://download.sourceforge.net/project/peazip/5.4.0/peazip-5.4.0.WINDOWS.exe
+URLDownload = http://download.sourceforge.net/project/peazip/5.4.1/peazip-5.4.1.WINDOWS.exe
 CDPath = none
 
 [Section.0407]
