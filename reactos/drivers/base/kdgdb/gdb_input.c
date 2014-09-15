@@ -7,24 +7,20 @@
 
 #include "kdgdb.h"
 
-#include <pstypes.h>
-
 /* LOCALS *********************************************************************/
-static HANDLE gdb_run_thread;
-/* We might have to attach to a process to read its memory */
-static PEPROCESS AttachedProcess = NULL;
+static ULONG_PTR gdb_run_tid;
 /* Keep track of where we are for qfThreadInfo/qsThreadInfo */
 static LIST_ENTRY* CurrentProcessEntry;
 static LIST_ENTRY* CurrentThreadEntry;
 
 /* GLOBALS ********************************************************************/
-HANDLE gdb_dbg_process;
-HANDLE gdb_dbg_thread;
+UINT_PTR gdb_dbg_pid;
+UINT_PTR gdb_dbg_tid;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 static
-HANDLE
-hex_to_thread(char* buffer)
+UINT_PTR
+hex_to_tid(char* buffer)
 {
     ULONG_PTR ret = 0;
     char hex;
@@ -32,12 +28,13 @@ hex_to_thread(char* buffer)
     {
         hex = hex_value(*buffer++);
         if (hex < 0)
-            return (HANDLE)ret;
+            return ret;
         ret <<= 4;
         ret += hex;
     }
-    return (HANDLE)ret;
+    return ret;
 }
+#define hex_to_pid hex_to_tid
 
 static
 ULONG64
@@ -65,26 +62,26 @@ handle_gdb_set_thread(void)
     {
     case 'c':
         if (strcmp(&gdb_input[2], "-1") == 0)
-            gdb_run_thread = (HANDLE)-1;
+            gdb_run_tid = (ULONG_PTR)-1;
         else
-            gdb_run_thread = hex_to_thread(&gdb_input[2]);
+            gdb_run_tid = hex_to_tid(&gdb_input[2]);
         send_gdb_packet("OK");
         break;
     case 'g':
         KDDBGPRINT("Setting debug thread: %s.\n", gdb_input);
         if (strncmp(&gdb_input[2], "p-1", 3) == 0)
         {
-            gdb_dbg_process = (HANDLE)-1;
-            gdb_dbg_thread = (HANDLE)-1;
+            gdb_dbg_pid = (UINT_PTR)-1;
+            gdb_dbg_tid = (UINT_PTR)-1;
         }
         else
         {
             char* ptr = strstr(gdb_input, ".") + 1;
-            gdb_dbg_process = hex_to_thread(&gdb_input[3]);
+            gdb_dbg_pid = hex_to_pid(&gdb_input[3]);
             if (strncmp(ptr, "-1", 2) == 0)
-                gdb_dbg_thread = (HANDLE)-1;
+                gdb_dbg_tid = (UINT_PTR)-1;
             else
-                gdb_dbg_thread = hex_to_thread(ptr);
+                gdb_dbg_tid = hex_to_tid(ptr);
         }
         send_gdb_packet("OK");
         break;
@@ -112,26 +109,22 @@ static
 void
 handle_gdb_thread_alive(void)
 {
-    char* ptr = strstr(gdb_input, ".") + 1;
-    CLIENT_ID ClientId;
+    ULONG_PTR Pid, Tid;
     PETHREAD Thread;
-    NTSTATUS Status;
 
-    ClientId.UniqueProcess = hex_to_thread(&gdb_input[2]);
-    ClientId.UniqueThread = hex_to_thread(ptr);
+    Pid = hex_to_pid(&gdb_input[2]);
+    Tid = hex_to_tid(strstr(gdb_input, ".") + 1);
 
-    Status = PsLookupProcessThreadByCid(&ClientId, NULL, &Thread);
+    /* We cannot use PsLookupProcessThreadByCid as we could be running at any IRQL.
+     * So loop. */
+    KDDBGPRINT("Checking if p%p.%p is alive.\n", Pid, Tid);
 
-    if (!NT_SUCCESS(Status))
-    {
-        /* Thread doesn't exist */
+    Thread = find_thread(Pid, Tid);
+
+    if (Thread != NULL)
+        send_gdb_packet("OK");
+    else
         send_gdb_packet("E03");
-        return;
-    }
-
-    /* It's OK */
-    ObDereferenceObject(Thread);
-    send_gdb_packet("OK");
 }
 
 /* q* packets */
@@ -165,9 +158,9 @@ handle_gdb_query(
     if (strcmp(gdb_input, "qC") == 0)
     {
         char gdb_out[64];
-        sprintf(gdb_out, "QC:p%p.%p;",
-            PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread),
-            PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));
+        sprintf(gdb_out, "QC:p%"PRIxPTR".%"PRIxPTR";",
+            handle_to_gdb_pid(PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)),
+            handle_to_gdb_tid(PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)));
         send_gdb_packet(gdb_out);
         return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
@@ -175,44 +168,35 @@ handle_gdb_query(
     if ((strncmp(gdb_input, "qfThreadInfo", 12) == 0)
             || (strncmp(gdb_input, "qsThreadInfo", 12) == 0))
     {
-        LIST_ENTRY* ProcessListHead = (LIST_ENTRY*)KdDebuggerDataBlock->PsActiveProcessHead.Pointer;
         BOOLEAN FirstThread = TRUE;
         PEPROCESS Process;
         PETHREAD Thread;
         char gdb_out[1024];
-        char* ptr;
+        char* ptr = gdb_out;
         BOOLEAN Resuming = strncmp(gdb_input, "qsThreadInfo", 12) == 0;
-
-        /* Maybe this was not initialized yet */
-        if (!ProcessListHead->Flink)
-        {
-            char gdb_out[64];
-
-            if (Resuming)
-            {
-                /* there is only one thread to tell about */
-                send_gdb_packet("l");
-                return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
-            }
-            /* Just tell GDB about the current thread */
-            sprintf(gdb_out, "mp%p.%p", PsGetCurrentProcessId(), PsGetCurrentThreadId());
-            send_gdb_packet(gdb_out);
-            /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
-            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
-        }
 
         if (Resuming)
         {
+            if (CurrentProcessEntry == (LIST_ENTRY*)1)
+            {
+                /* We're done */
+                send_gdb_packet("l");
+                CurrentProcessEntry = NULL;
+                return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+            }
+
             if (CurrentThreadEntry == NULL)
                 CurrentProcessEntry = CurrentProcessEntry->Flink;
         }
         else
             CurrentProcessEntry = ProcessListHead->Flink;
 
-        if (CurrentProcessEntry == ProcessListHead)
+        if ((CurrentProcessEntry == ProcessListHead) ||
+                (CurrentProcessEntry == NULL)) /* Ps is not initialized */
         {
-            /* We're done */
-            send_gdb_packet("l");
+            /* We're almost done. Tell GDB about the idle thread */
+            send_gdb_packet("mp1.1");
+            CurrentProcessEntry = (LIST_ENTRY*)1;
             return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
         }
 
@@ -244,7 +228,9 @@ handle_gdb_query(
             }
 
             ptr += _snprintf(ptr, 1024 - (ptr - gdb_out),
-                "p%p.%p", PsGetProcessId(Process), PsGetThreadId(Thread));
+                "p%p.%p",
+                handle_to_gdb_pid(Process->UniqueProcessId),
+                handle_to_gdb_tid(Thread->Cid.UniqueThread));
             if (ptr > (gdb_out + 1024))
             {
                 /* send what we got */
@@ -319,11 +305,10 @@ ReadMemorySendHandler(
     KdpSendPacketHandler = NULL;
     KdpManipulateStateHandler = NULL;
 
-    /* Detach if we have to */
-    if (AttachedProcess != NULL)
+    /* Reset the TLB */
+    if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
     {
-        KeDetachProcess();
-        AttachedProcess = NULL;
+        __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
     }
 }
 
@@ -343,17 +328,17 @@ handle_gdb_read_mem(
         MessageData->Length = 0;
     *MessageLength = 0;
 
-    /* Attach to the debug process to read its memory */
-    if (gdb_dbg_process != PsGetCurrentProcessId())
+    /* Set the TLB according to the process being read. Pid 0 means any process. */
+    if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
     {
-        NTSTATUS Status = PsLookupProcessByProcessId(gdb_dbg_process, &AttachedProcess);
-        if (!NT_SUCCESS(Status))
+        PEPROCESS AttachedProcess = find_process(gdb_dbg_pid);
+        if (AttachedProcess == NULL)
         {
             KDDBGPRINT("The current GDB debug thread is invalid!");
             send_gdb_packet("E03");
             return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
         }
-        KeAttachProcess(&AttachedProcess->Pcb);
+        __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
     }
 
     State->u.ReadMemory.TargetBaseAddress = hex_to_address(&gdb_input[1]);

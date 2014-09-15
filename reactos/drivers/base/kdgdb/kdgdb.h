@@ -13,8 +13,11 @@
 #include <halfuncs.h>
 #include <stdio.h>
 #include <arc/arc.h>
+#include <inttypes.h>
 #include <windbgkd.h>
 #include <kddll.h>
+
+#include <pstypes.h>
 
 #define KDDEBUG /* uncomment to enable debugging this dll */
 
@@ -24,6 +27,18 @@
 extern ULONG KdpDbgPrint(const char* Format, ...);
 #define KDDBGPRINT KdpDbgPrint
 #endif
+
+/* GDB doesn't like pid - tid 0, so +1 them */
+FORCEINLINE HANDLE gdb_tid_to_handle(UINT_PTR Tid)
+{
+    return (HANDLE)(Tid - 1);
+}
+#define gdb_pid_to_handle gdb_tid_to_handle
+FORCEINLINE UINT_PTR handle_to_gdb_tid(HANDLE Handle)
+{
+    return (UINT_PTR)Handle + 1;
+}
+#define handle_to_gdb_pid handle_to_gdb_tid
 
 FORCEINLINE
 VOID
@@ -51,8 +66,8 @@ typedef KDSTATUS (*KDP_MANIPULATESTATE_HANDLER)(
 );
 
 /* gdb_input.c */
-extern HANDLE gdb_dbg_thread;
-extern HANDLE gdb_dbg_process;
+extern UINT_PTR gdb_dbg_tid;
+extern UINT_PTR gdb_dbg_pid;
 extern KDSTATUS gdb_interpret_input(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 extern KDSTATUS gdb_receive_and_interpret_packet(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 
@@ -79,11 +94,18 @@ extern DBGKD_ANY_WAIT_STATE_CHANGE CurrentStateChange;
 extern CONTEXT CurrentContext;
 extern DBGKD_GET_VERSION64 KdVersion;
 extern KDDEBUGGER_DATA64* KdDebuggerDataBlock;
+extern LIST_ENTRY* ProcessListHead;
 extern KDP_SEND_HANDLER KdpSendPacketHandler;
 extern KDP_MANIPULATESTATE_HANDLER KdpManipulateStateHandler;
 /* Commone ManipulateState handlers */
 extern KDSTATUS ContinueManipulateStateHandler(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 extern KDSTATUS SetContextManipulateHandler(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
+extern PEPROCESS TheIdleProcess;
+extern PETHREAD TheIdleThread;
+
+/* utils.c */
+extern PEPROCESS find_process( _In_ UINT_PTR Pid);
+extern PETHREAD find_thread(_In_ UINT_PTR Pid, _In_ UINT_PTR Tid);
 
 /* arch_sup.c */
 extern KDSTATUS gdb_send_register(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);

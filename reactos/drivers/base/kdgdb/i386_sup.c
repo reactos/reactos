@@ -7,8 +7,6 @@
 
 #include "kdgdb.h"
 
-#include <pstypes.h>
-
 enum reg_name
 {
     EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
@@ -85,36 +83,62 @@ static
 void*
 thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
 {
-    PKTRAP_FRAME TrapFrame = Thread->Tcb.TrapFrame;
-
-    /* See if the thread was actually scheduled */
-    if (TrapFrame == NULL)
+    /* See if the guy got a stack */
+    if (Thread->Tcb.InitialStack == NULL)
     {
-        return NULL;
+        static const void* NullValue = NULL;
+        /* Terminated thread ? */
+        switch (reg_name)
+        {
+            case ESP:
+            case EBP:
+            case EIP:
+                *size = 4;
+                return &NullValue;
+            default:
+                return NULL;
+        }
     }
-
-    *size = 4;
-    switch (reg_name)
+    else if (Thread->Tcb.TrapFrame)
     {
-        case EAX: return &TrapFrame->Eax;
-        case ECX: return &TrapFrame->Ecx;
-        case EDX: return &TrapFrame->Edx;
-        case EBX: return &TrapFrame->Ebx;
-        case ESP: return (TrapFrame->PreviousPreviousMode == KernelMode) ?
-                &TrapFrame->TempEsp : &TrapFrame->HardwareEsp;
-        case EBP: return &TrapFrame->Ebp;
-        case ESI: return &TrapFrame->Esi;
-        case EDI: return &TrapFrame->Edi;
-        case EIP: return &TrapFrame->Eip;
-        case EFLAGS: return &TrapFrame->EFlags;
-        case CS: return &TrapFrame->SegCs;
-        case SS: return &TrapFrame->HardwareSegSs;
-        case DS: return &TrapFrame->SegDs;
-        case ES: return &TrapFrame->SegEs;
-        case FS: return &TrapFrame->SegFs;
-        case GS: return &TrapFrame->SegGs;
-        default:
-            KDDBGPRINT("Unhandled regname: %d.\n", reg_name);
+        PKTRAP_FRAME TrapFrame = Thread->Tcb.TrapFrame;
+
+        *size = 4;
+        switch (reg_name)
+        {
+            case EAX: return &TrapFrame->Eax;
+            case ECX: return &TrapFrame->Ecx;
+            case EDX: return &TrapFrame->Edx;
+            case EBX: return &TrapFrame->Ebx;
+            case ESP: return (TrapFrame->PreviousPreviousMode == KernelMode) ?
+                    &TrapFrame->TempEsp : &TrapFrame->HardwareEsp;
+            case EBP: return &TrapFrame->Ebp;
+            case ESI: return &TrapFrame->Esi;
+            case EDI: return &TrapFrame->Edi;
+            case EIP: return &TrapFrame->Eip;
+            case EFLAGS: return &TrapFrame->EFlags;
+            case CS: return &TrapFrame->SegCs;
+            case SS: return &TrapFrame->HardwareSegSs;
+            case DS: return &TrapFrame->SegDs;
+            case ES: return &TrapFrame->SegEs;
+            case FS: return &TrapFrame->SegFs;
+            case GS: return &TrapFrame->SegGs;
+            default:
+                KDDBGPRINT("Unhandled regname: %d.\n", reg_name);
+        }
+    }
+    else
+    {
+        /* The thread was not yet scheduled */
+        *size = 4;
+        switch(reg_name)
+        {
+            case ESP: return &Thread->Tcb.KernelStack;
+            case EBP: return &((ULONG*)Thread->Tcb.KernelStack)[4];
+            case EIP: return &Thread->StartAddress;
+            default:
+                return NULL;
+        }
     }
     return NULL;
 }
@@ -132,7 +156,10 @@ gdb_send_registers(
     unsigned short size;
     CHAR* ptr = Registers;
 
-    if (gdb_dbg_thread == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
+    KDDBGPRINT("Sending registers of thread %" PRIxPTR ".\n", gdb_dbg_tid);
+    KDDBGPRINT("Current thread_id: %p.\n", PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));
+    if (((gdb_dbg_pid == 0) && (gdb_dbg_tid == 0)) ||
+            gdb_tid_to_handle(gdb_dbg_tid) == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
     {
         for(i=0; i < 16; i++)
         {
@@ -150,10 +177,10 @@ gdb_send_registers(
     else
     {
         PETHREAD DbgThread;
-        NTSTATUS Status;
 
-        Status = PsLookupThreadByThreadId(gdb_dbg_thread, &DbgThread);
-        if (!NT_SUCCESS(Status))
+        DbgThread = find_thread(gdb_dbg_pid, gdb_dbg_tid);
+
+        if (DbgThread == NULL)
         {
             /* Thread is dead */
             send_gdb_packet("E03");
@@ -199,7 +226,8 @@ gdb_send_register(
     /* Get the GDB register name (gdb_input = "pXX") */
     reg_name = (hex_value(gdb_input[1]) << 4) | hex_value(gdb_input[2]);
 
-    if (gdb_dbg_thread == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
+    if (((gdb_dbg_pid == 0) && (gdb_dbg_tid == 0)) ||
+            gdb_tid_to_handle(gdb_dbg_tid) == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
     {
         /* We can get it from the context of the current exception */
         ptr = ctx_to_reg(&CurrentContext, reg_name, &size);
@@ -207,10 +235,10 @@ gdb_send_register(
     else
     {
         PETHREAD DbgThread;
-        NTSTATUS Status;
 
-        Status = PsLookupThreadByThreadId(gdb_dbg_thread, &DbgThread);
-        if (!NT_SUCCESS(Status))
+        DbgThread = find_thread(gdb_dbg_pid, gdb_dbg_tid);
+
+        if (DbgThread == NULL)
         {
             /* Thread is dead */
             send_gdb_packet("E03");
