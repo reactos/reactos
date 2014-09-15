@@ -3,6 +3,7 @@ list(APPEND SOURCE
     CreateService.c
     LockDatabase.c
     QueryServiceConfig2.c
+    RtlEncryptMemory.c
     SaferIdentifyLevel.c
     testlist.c)
 
