@@ -156,6 +156,8 @@ NTSTATUS
 LogfCreate(PLOGFILE *Logfile,
            WCHAR * LogName,
            PUNICODE_STRING FileName,
+           ULONG ulMaxSize,
+           ULONG ulRetention,
            BOOL Permanent,
            BOOL Backup);
 
