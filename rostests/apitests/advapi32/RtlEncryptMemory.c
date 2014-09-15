@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 #include <winsafer.h>
-#include <Ntsecapi.h>
+#include <ntsecapi.h>
 
 START_TEST(RtlEncryptMemory)
 {
