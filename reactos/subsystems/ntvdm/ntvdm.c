@@ -328,69 +328,32 @@ ConsoleCleanup(VOID)
     if (ConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
 }
 
-DWORD
-WINAPI
-PumpConsoleInput(LPVOID Parameter)
+VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
 {
-    HANDLE ConsoleInput = (HANDLE)Parameter;
-    INPUT_RECORD InputRecord;
-    DWORD Count;
-
-    while (VdmRunning)
+    switch (MenuEvent->dwCommandId)
     {
-        /* Make sure the task event is signaled */
-        WaitForSingleObject(VdmTaskEvent, INFINITE);
+        case ID_SHOWHIDE_MOUSE:
+            ShowHideMousePointer(ConsoleOutput, ShowPointer);
+            ShowPointer = !ShowPointer;
+            break;
 
-        /* Wait for an input record */
-        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
-        {
-            DWORD LastError = GetLastError();
-            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
-            return LastError;
-        }
+        case ID_VDM_DUMPMEM:
+            DumpMemory();
+            break;
 
-        ASSERT(Count != 0);
+        case ID_VDM_QUIT:
+            /* Stop the VDM */
+            EmulatorTerminate();
+            break;
 
-        /* Check the event type */
-        switch (InputRecord.EventType)
-        {
-            case KEY_EVENT:
-            case MOUSE_EVENT:
-                /* Send it to the PS/2 controller */
-                PS2Dispatch(&InputRecord);
-                break;
-
-            case MENU_EVENT:
-            {
-                switch (InputRecord.Event.MenuEvent.dwCommandId)
-                {
-                    case ID_SHOWHIDE_MOUSE:
-                        ShowHideMousePointer(ConsoleOutput, ShowPointer);
-                        ShowPointer = !ShowPointer;
-                        break;
-
-                    case ID_VDM_DUMPMEM:
-                        DumpMemory();
-                        break;
-
-                    case ID_VDM_QUIT:
-                        /* Stop the VDM */
-                        EmulatorTerminate();
-                        break;
-
-                    default:
-                        break;
-                }
-
-                break;
-            }
-
-            default:
-                break;
-        }
+        default:
+            break;
     }
+}
 
-    return 0;
+VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent)
+{
+    DPRINT1("Focus events not handled\n");
 }
 
 #ifndef STANDALONE

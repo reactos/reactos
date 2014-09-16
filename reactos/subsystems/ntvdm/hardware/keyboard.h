@@ -1,14 +1,13 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            ps2.h
- * PURPOSE:         PS/2 controller emulation
+ * FILE:            keyboard.h
+ * PURPOSE:         Keyboard emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
- *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#ifndef _PS2_H_
-#define _PS2_H_
+#ifndef _KEYBOARD_H_
+#define _KEYBOARD_H_
 
 /* INCLUDES *******************************************************************/
 
@@ -16,19 +15,14 @@
 
 /* DEFINES ********************************************************************/
 
-#define PS2_DATA_PORT       0x60
-#define PS2_CONTROL_PORT    0x64
+/* Command responses */
+#define KEYBOARD_ACK    0xFA
+#define KEYBOARD_RESEND 0xFE
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN PS2QueuePush(BYTE PS2Port, BYTE Data);
+VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent);
+VOID KeyboardCommand(BYTE Command);
+BOOLEAN KeyboardInit(BYTE PS2Connector);
 
-VOID GenerateIrq1(VOID);
-VOID GenerateIrq12(VOID);
-
-BOOLEAN PS2Initialize(VOID);
-VOID PS2Cleanup(VOID);
-
-#endif // _PS2_H_
-
-/* EOF */
+#endif // _KEYBOARD_H_

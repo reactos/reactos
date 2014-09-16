@@ -1917,6 +1917,11 @@ VOID VgaResetPalette(VOID)
 
 
 
+VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent)
+{
+    DPRINT1("Screen events not handled\n");
+}
+
 BOOL VgaAttachToConsole(VOID)
 {
     //

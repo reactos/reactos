@@ -4,6 +4,7 @@
  * FILE:            ps2.c
  * PURPOSE:         PS/2 controller emulation
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,19 +15,39 @@
 #include "io.h"
 #include "ps2.h"
 #include "pic.h"
+
+#include "keyboard.h"
 #include "mouse.h"
-#include "../bios/bios32/moubios32.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static BYTE KeyboardQueue[KEYBOARD_BUFFER_SIZE];
-static BOOLEAN KeyboardQueueEmpty = TRUE;
-static UINT KeyboardQueueStart = 0;
-static UINT KeyboardQueueEnd = 0;
-static BYTE KeyboardData = 0, KeyboardResponse = 0;
-static BOOLEAN KeyboardReadResponse = FALSE, KeyboardWriteResponse = FALSE;
-static BYTE KeyboardConfig = PS2_DEFAULT_CONFIG;
-static HANDLE QueueMutex = NULL;
+#define BUFFER_SIZE 32
+
+typedef struct _PS2_PORT
+{
+    BOOLEAN IsEnabled;
+
+    BOOLEAN QueueEmpty;
+    BYTE    Queue[BUFFER_SIZE];
+    UINT    QueueStart;
+    UINT    QueueEnd;
+    HANDLE  QueueMutex;
+} PS2_PORT, *PPS2_PORT;
+
+/*
+ * Port 1: Keyboard
+ * Port 2: Mouse
+ */
+#define PS2_PORTS  2
+static PS2_PORT Ports[PS2_PORTS];
+
+#define PS2_DEFAULT_CONFIG  0x47
+static BYTE ControllerConfig = PS2_DEFAULT_CONFIG;
+static BYTE ControllerCommand = 0x00;
+
+static BYTE StatusRegister = 0x00;
+// static BYTE InputBuffer  = 0x00; // PS/2 Input  Buffer
+static BYTE OutputBuffer = 0x00; // PS/2 Output Buffer
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -34,31 +55,28 @@ static BYTE WINAPI PS2ReadPort(ULONG Port)
 {
     if (Port == PS2_CONTROL_PORT)
     {
-        BYTE Status = 0;
+        /* Be sure bit 2 is always set */
+        StatusRegister |= 1 << 2;
 
-        /* Set the first bit if the data can be read */
-        if (KeyboardReadResponse || !KeyboardQueueEmpty) Status |= 1 << 0;
+        // FIXME: Should clear bits 6 and 7 because there are
+        // no timeouts and no parity errors.
 
-        /* Always set bit 2 */
-        Status |= 1 << 2;
-
-        /* Set bit 3 if the next byte goes to the controller */
-        if (KeyboardWriteResponse) Status |= 1 << 3;
-
-        return Status;
+        return StatusRegister;
     }
     else if (Port == PS2_DATA_PORT)
     {
-        /* If there was a response byte from the controller, return it */
-        if (KeyboardReadResponse)
-        {
-            KeyboardReadResponse = FALSE;
-            KeyboardData = KeyboardResponse;
-        }
+        /*
+         * If there is something to read (response byte from the
+         * controller or data from a PS/2 device), read it.
+         */
+        if (StatusRegister &   (1 << 0)) // || StatusRegister &   (1 << 5) for second PS/2 port
+            StatusRegister &= ~(1 << 0); //    StatusRegister &= ~(1 << 5);
 
-        return KeyboardData;
+        /* Always return the available byte stored in the output buffer */
+        return OutputBuffer;
     }
-    else return 0;
+
+    return 0;
 }
 
 static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
@@ -70,8 +88,8 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
             /* Read configuration byte */
             case 0x20:
             {
-                KeyboardResponse = KeyboardConfig;
-                KeyboardReadResponse = TRUE;
+                OutputBuffer = ControllerConfig;
+                StatusRegister |= (1 << 0); // There is something to read
                 break;
             }
 
@@ -79,60 +97,68 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
             case 0x60:
             /* Write controller output port */
             case 0xD1:
-            /* Write keyboard output buffer */
+            /* Write to the first PS/2 port output buffer */
             case 0xD2:
-            /* Write mouse output buffer */
+            /* Write to the second PS/2 port output buffer */
             case 0xD3:
-            /* Write mouse input buffer */
+            /* Write to the second PS/2 port input buffer */
             case 0xD4:
             {
                 /* These commands require a response */
-                KeyboardResponse = Data;
-                KeyboardWriteResponse = TRUE;
+                ControllerCommand = Data;
+                StatusRegister |= (1 << 3); // This is a controller command
                 break;
             }
 
-            /* Disable mouse */
+            /* Disable second PS/2 port */
             case 0xA7:
             {
-                // TODO: Not implemented
+                Ports[1].IsEnabled = FALSE;
                 break;
             }
 
-            /* Enable mouse */
+            /* Enable second PS/2 port */
             case 0xA8:
             {
-                // TODO: Not implemented
+                Ports[1].IsEnabled = TRUE;
                 break;
             }
 
-            /* Test mouse port */
+            /* Test second PS/2 port */
             case 0xA9:
             {
-                KeyboardResponse = 0;
-                KeyboardReadResponse = TRUE;
+                OutputBuffer = 0x00; // Success code
+                StatusRegister |= (1 << 0); // There is something to read
                 break;
             }
 
             /* Test PS/2 controller */
             case 0xAA:
             {
-                KeyboardResponse = 0x55;
-                KeyboardReadResponse = TRUE;
+                OutputBuffer = 0x55; // Success code
+                StatusRegister |= (1 << 0); // There is something to read
                 break;
             }
 
-            /* Disable keyboard */
+            /* Test first PS/2 port */
+            case 0xAB:
+            {
+                OutputBuffer = 0x00; // Success code
+                StatusRegister |= (1 << 0); // There is something to read
+                break;
+            }
+
+            /* Disable first PS/2 port */
             case 0xAD:
             {
-                // TODO: Not implemented
+                Ports[0].IsEnabled = FALSE;
                 break;
             }
 
-            /* Enable keyboard */
+            /* Enable first PS/2 port */
             case 0xAE:
             {
-                // TODO: Not implemented
+                Ports[0].IsEnabled = TRUE;
                 break;
             }
 
@@ -162,17 +188,17 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
     else if (Port == PS2_DATA_PORT)
     {
         /* Check if the controller is waiting for a response */
-        if (KeyboardWriteResponse)
+        if (StatusRegister & (1 << 3)) // If we have data for the controller
         {
-            KeyboardWriteResponse = FALSE;
+            StatusRegister &= ~(1 << 3);
 
             /* Check which command it was */
-            switch (KeyboardResponse)
+            switch (ControllerCommand)
             {
                 /* Write configuration byte */
                 case 0x60:
                 {
-                    KeyboardConfig = Data;
+                    ControllerConfig = Data;
                     break;
                 }
 
@@ -191,23 +217,31 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
 
                     break;
                 }
-            
+
+                /* Push the data byte into the first PS/2 port queue */
                 case 0xD2:
                 {
-                    /* Push the data byte to the keyboard queue */
-                    KeyboardQueuePush(Data);
+                    PS2QueuePush(0, Data);
                     break;
                 }
 
+                /* Push the data byte into the second PS/2 port queue */
                 case 0xD3:
                 {
-                    // TODO: Mouse support
+                    PS2QueuePush(1, Data);
                     break;
                 }
 
+                /*
+                 * Send a command to the second PS/2 port (by default
+                 * it is a command for the first PS/2 port)
+                 */
                 case 0xD4:
                 {
-                    MouseCommand(Data);
+                    if (Ports[1].IsEnabled)
+                        // Ports[1].Function
+                        MouseCommand(Data);
+
                     break;
                 }
             }
@@ -216,156 +250,148 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
         }
 
         // TODO: Implement PS/2 device commands
+        if (Ports[0].IsEnabled)
+            // Ports[0].Function
+            KeyboardCommand(Data);
     }
+}
+
+static BOOLEAN PS2PortQueueRead(BYTE PS2Port)
+{
+    BOOLEAN Result = TRUE;
+    PPS2_PORT Port;
+
+    if (PS2Port >= PS2_PORTS) return FALSE;
+    Port = &Ports[PS2Port];
+
+    if (!Port->IsEnabled) return FALSE;
+
+    /* Make sure the queue is not empty (fast check) */
+    if (Port->QueueEmpty) return FALSE;
+
+    WaitForSingleObject(Port->QueueMutex, INFINITE);
+
+    /*
+     * Recheck whether the queue is not empty (it may
+     * have changed after having grabbed the mutex).
+     */
+    if (Port->QueueEmpty)
+    {
+        Result = FALSE;
+        goto Done;
+    }
+
+    /* Get the data */
+    OutputBuffer = Port->Queue[Port->QueueStart];
+    StatusRegister |= (1 << 0); // There is something to read
+    // Sometimes StatusRegister |= (1 << 5); for the second PS/2 port
+
+    /* Remove the value from the queue */
+    Port->QueueStart++;
+    Port->QueueStart %= BUFFER_SIZE;
+
+    /* Check if the queue is now empty */
+    if (Port->QueueStart == Port->QueueEnd)
+        Port->QueueEmpty = TRUE;
+
+Done:
+    ReleaseMutex(Port->QueueMutex);
+    return Result;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN KeyboardQueuePush(BYTE ScanCode)
+// PS2SendToPort
+BOOLEAN PS2QueuePush(BYTE PS2Port, BYTE Data)
 {
     BOOLEAN Result = TRUE;
+    PPS2_PORT Port;
 
-    WaitForSingleObject(QueueMutex, INFINITE);
+    if (PS2Port >= PS2_PORTS) return FALSE;
+    Port = &Ports[PS2Port];
 
-    /* Check if the keyboard queue is full */
-    if (!KeyboardQueueEmpty && (KeyboardQueueStart == KeyboardQueueEnd))
+    if (!Port->IsEnabled) return FALSE;
+
+    WaitForSingleObject(Port->QueueMutex, INFINITE);
+
+    /* Check if the queue is full */
+    if (!Port->QueueEmpty && (Port->QueueStart == Port->QueueEnd))
     {
         Result = FALSE;
         goto Done;
     }
 
     /* Insert the value in the queue */
-    KeyboardQueue[KeyboardQueueEnd] = ScanCode;
-    KeyboardQueueEnd++;
-    KeyboardQueueEnd %= KEYBOARD_BUFFER_SIZE;
+    Port->Queue[Port->QueueEnd] = Data;
+    Port->QueueEnd++;
+    Port->QueueEnd %= BUFFER_SIZE;
 
     /* Since we inserted a value, it's not empty anymore */
-    KeyboardQueueEmpty = FALSE;
+    Port->QueueEmpty = FALSE;
+
+/*
+    // Get the data
+    OutputBuffer = Port->Queue[Port->QueueStart];
+    StatusRegister |= (1 << 0); // There is something to read
+    // FIXME: Sometimes StatusRegister |= (1 << 5); for the second PS/2 port
+
+    if (PS2Port == 0)
+        PicInterruptRequest(1);
+    else if (PS2Port == 1)
+        PicInterruptRequest(12);
+*/
 
 Done:
-    ReleaseMutex(QueueMutex);
+    ReleaseMutex(Port->QueueMutex);
     return Result;
 }
 
-BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
+VOID GenerateIrq1(VOID)
 {
-    BOOLEAN Result = TRUE;
-
-    /* Make sure the keyboard queue is not empty (fast check) */
-    if (KeyboardQueueEmpty) return FALSE;
-
-    WaitForSingleObject(QueueMutex, INFINITE);
-
-    /*
-     * Recheck whether keyboard queue is not empty (it
-     * may have changed after having grabbed the mutex).
-     */
-    if (KeyboardQueueEmpty)
+    /* Generate an interrupt if interrupts for the first PS/2 port are enabled */
+    if (ControllerConfig & 0x01)
     {
-        Result = FALSE;
-        goto Done;
-    }
-
-    /* Get the scan code */
-    *ScanCode = KeyboardQueue[KeyboardQueueStart];
-
-    /* Remove the value from the queue */
-    KeyboardQueueStart++;
-    KeyboardQueueStart %= KEYBOARD_BUFFER_SIZE;
-
-    /* Check if the queue is now empty */
-    if (KeyboardQueueStart == KeyboardQueueEnd)
-    {
-        KeyboardQueueEmpty = TRUE;
-    }
-
-Done:
-    ReleaseMutex(QueueMutex);
-    return Result;
-}
-
-VOID PS2Dispatch(PINPUT_RECORD InputRecord)
-{
-    /* Check the event type */
-    switch (InputRecord->EventType)
-    {
-        case KEY_EVENT:
-        {
-            WORD i;
-            BYTE ScanCode = (BYTE)InputRecord->Event.KeyEvent.wVirtualScanCode;
-
-            /* If this is a key release, set the highest bit in the scan code */
-            if (!InputRecord->Event.KeyEvent.bKeyDown) ScanCode |= 0x80;
-
-            /* Push the scan code onto the keyboard queue */
-            for (i = 0; i < InputRecord->Event.KeyEvent.wRepeatCount; i++)
-            {
-                KeyboardQueuePush(ScanCode);
-            }
-
-            break;
-        }
-
-        case MOUSE_EVENT:
-        {
-            /* Notify the BIOS driver */
-            MouseBiosUpdatePosition(&InputRecord->Event.MouseEvent.dwMousePosition);
-            MouseBiosUpdateButtons(LOWORD(InputRecord->Event.MouseEvent.dwButtonState));
-
-            // TODO: PS/2, other stuff
-
-            break;
-        }
-
-        /* We ignore all the rest */
-        default:
-            break;
+        /* Generate an IRQ 1 if there is data ready in the output queue */
+        if (PS2PortQueueRead(0)) PicInterruptRequest(1);
     }
 }
 
-VOID GenerateKeyboardInterrupts(VOID)
+VOID GenerateIrq12(VOID)
 {
-    /* Generate an IRQ 1 if there is a key ready in the queue */
-    if (KeyboardQueuePop(&KeyboardData)) PicInterruptRequest(1);
+    /* Generate an interrupt if interrupts for the second PS/2 port are enabled */
+    if (ControllerConfig & 0x02)
+    {
+        /* Generate an IRQ 12 if there is data ready in the output queue */
+        if (PS2PortQueueRead(1)) PicInterruptRequest(12);
+    }
 }
 
-BOOLEAN PS2Initialize(HANDLE ConsoleInput)
+BOOLEAN PS2Initialize(VOID)
 {
-    DWORD ConInMode;
+    /* Initialize the PS/2 ports */
+    Ports[0].IsEnabled  = TRUE;
+    Ports[0].QueueEmpty = TRUE;
+    Ports[0].QueueStart = 0;
+    Ports[0].QueueEnd   = 0;
+    Ports[0].QueueMutex = CreateMutex(NULL, FALSE, NULL);
 
-    /* Create the mutex */
-    QueueMutex = CreateMutex(NULL, FALSE, NULL);
+    Ports[1].IsEnabled  = TRUE;
+    Ports[1].QueueEmpty = TRUE;
+    Ports[1].QueueStart = 0;
+    Ports[1].QueueEnd   = 0;
+    Ports[1].QueueMutex = CreateMutex(NULL, FALSE, NULL);
 
     /* Register the I/O Ports */
     RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
     RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
-
-    if (GetConsoleMode(ConsoleInput, &ConInMode))
-    {
-#if 0
-        if (MousePresent)
-        {
-#endif
-            /* Support mouse input events if there is a mouse on the system */
-            ConInMode |= ENABLE_MOUSE_INPUT;
-#if 0
-        }
-        else
-        {
-            /* Do not support mouse input events if there is no mouse on the system */
-            ConInMode &= ~ENABLE_MOUSE_INPUT;
-        }
-#endif
-
-        SetConsoleMode(ConsoleInput, ConInMode);
-    }
 
     return TRUE;
 }
 
 VOID PS2Cleanup(VOID)
 {
-    CloseHandle(QueueMutex);
+    CloseHandle(Ports[1].QueueMutex);
+    CloseHandle(Ports[0].QueueMutex);
 }
 
 /* EOF */

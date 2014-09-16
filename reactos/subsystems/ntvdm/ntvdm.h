@@ -46,12 +46,18 @@ extern ULONG SessionId;
 
 extern HANDLE VdmTaskEvent;
 
+/*
+ * Interface functions
+ */
 VOID DisplayMessage(LPCWSTR Format, ...);
 
 /*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle);
 /*static*/ VOID
 DestroyVdmMenu(VOID);
+
+VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent);
+VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent);
 
 #endif // _NTVDM_H_
 

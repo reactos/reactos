@@ -21,6 +21,7 @@
 #include "bop.h"
 
 #include "bios/bios.h"
+#include "mouse32.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/obtypes.h>
@@ -234,6 +235,7 @@ BOOLEAN DosInitialize(IN LPCSTR DosKernelFileName)
         BOOLEAN Result;
 
         Result  = DosBIOSInitialize();
+        DosMouseInitialize(); // FIXME: Should be done by the DOS BIOS
         // Result &= DosKRNLInitialize();
 
         return Result;

@@ -37,7 +37,8 @@
 
 /* Processor speed */
 #define STEPS_PER_CYCLE 256
-#define KBD_INT_CYCLES 16
+#define IRQ1_CYCLES     16
+#define IRQ12_CYCLES    16
 
 /* VARIABLES ******************************************************************/
 
@@ -48,7 +49,9 @@ LONGLONG TimerTicks;
 DWORD StartTickCount, CurrentTickCount;
 DWORD LastClockUpdate;
 DWORD LastVerticalRefresh;
-INT KeyboardIntCounter = 0;
+
+UINT Irq1Counter = 0;
+UINT Irq12Counter = 0;
 
 #ifdef IPS_DISPLAY
     DWORD LastCyclePrintout;
@@ -118,10 +121,16 @@ VOID ClockUpdate(VOID)
         LastVerticalRefresh = CurrentTickCount;
     }
 
-    if (++KeyboardIntCounter == KBD_INT_CYCLES)
+    if (++Irq1Counter == IRQ1_CYCLES)
     {
-        GenerateKeyboardInterrupts();
-        KeyboardIntCounter = 0;
+        GenerateIrq1();
+        Irq1Counter = 0;
+    }
+
+    if (++Irq12Counter == IRQ12_CYCLES)
+    {
+        GenerateIrq12();
+        Irq12Counter = 0;
     }
 
     /* Horizontal retrace occurs as fast as possible */

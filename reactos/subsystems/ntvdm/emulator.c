@@ -16,6 +16,8 @@
 #include "clock.h"
 #include "bios/rom.h"
 #include "hardware/cmos.h"
+#include "hardware/keyboard.h"
+#include "hardware/mouse.h"
 #include "hardware/pic.h"
 #include "hardware/ps2.h"
 #include "hardware/speaker.h"
@@ -335,6 +337,95 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
         // SpeakerChange();
 }
 
+
+static DWORD
+WINAPI
+PumpConsoleInput(LPVOID Parameter)
+{
+    HANDLE ConsoleInput = (HANDLE)Parameter;
+    INPUT_RECORD InputRecord;
+    DWORD Count;
+
+    while (VdmRunning)
+    {
+        /* Make sure the task event is signaled */
+        WaitForSingleObject(VdmTaskEvent, INFINITE);
+
+        /* Wait for an input record */
+        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
+        {
+            DWORD LastError = GetLastError();
+            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
+            return LastError;
+        }
+
+        ASSERT(Count != 0);
+
+        /* Check the event type */
+        switch (InputRecord.EventType)
+        {
+            /*
+             * Hardware events
+             */
+            case KEY_EVENT:
+                KeyboardEventHandler(&InputRecord.Event.KeyEvent);
+                break;
+
+            case MOUSE_EVENT:
+                MouseEventHandler(&InputRecord.Event.MouseEvent);
+                break;
+
+            case WINDOW_BUFFER_SIZE_EVENT:
+                ScreenEventHandler(&InputRecord.Event.WindowBufferSizeEvent);
+                break;
+
+            /*
+             * Interface events
+             */
+            case MENU_EVENT:
+                MenuEventHandler(&InputRecord.Event.MenuEvent);
+                break;
+
+            case FOCUS_EVENT:
+                FocusEventHandler(&InputRecord.Event.FocusEvent);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return 0;
+}
+
+static VOID EnableExtraHardware(HANDLE ConsoleInput)
+{
+    DWORD ConInMode;
+
+    if (GetConsoleMode(ConsoleInput, &ConInMode))
+    {
+#if 0
+        // GetNumberOfConsoleMouseButtons();
+        // GetSystemMetrics(SM_CMOUSEBUTTONS);
+        // GetSystemMetrics(SM_MOUSEPRESENT);
+        if (MousePresent)
+        {
+#endif
+            /* Support mouse input events if there is a mouse on the system */
+            ConInMode |= ENABLE_MOUSE_INPUT;
+#if 0
+        }
+        else
+        {
+            /* Do not support mouse input events if there is no mouse on the system */
+            ConInMode &= ~ENABLE_MOUSE_INPUT;
+        }
+#endif
+
+        SetConsoleMode(ConsoleInput, ConInMode);
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID DumpMemory(VOID)
@@ -421,8 +512,6 @@ VOID DumpMemory(VOID)
     DPRINT1("Memory dump done\n");
 }
 
-DWORD WINAPI PumpConsoleInput(LPVOID Parameter);
-
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
     /* Allocate memory for the 16-bit address space */
@@ -476,8 +565,14 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     SetConsoleMode(ConsoleInput, ENABLE_PROCESSED_INPUT /* | ENABLE_WINDOW_INPUT */);
     // SetConsoleMode(ConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
 
-    /* Initialize the PS2 port */
-    PS2Initialize(ConsoleInput);
+    /**/EnableExtraHardware(ConsoleInput);/**/
+
+    /* Initialize the PS/2 port */
+    PS2Initialize();
+
+    /* Initialize the keyboard and mouse and connect them to their PS/2 ports */
+    KeyboardInit(0);
+    MouseInit(1);
 
     /**************** ATTACH INPUT WITH CONSOLE *****************/
     /* Start the input thread */
