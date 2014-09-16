@@ -28,7 +28,6 @@ list(APPEND SOURCE
     misc/msi.c
     misc/shutdown.c
     misc/sysfunc.c
-    misc/trace.c
     reg/reg.c
     sec/ac.c
     sec/audit.c

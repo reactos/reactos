@@ -22,6 +22,7 @@ list(APPEND SOURCE
     ldr/ldrutils.c
     rtl/libsupp.c
     rtl/version.c
+    etw/trace.c
     include/ntdll.h)
 
 if(ARCH STREQUAL "i386")
