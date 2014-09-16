@@ -16,9 +16,6 @@
 #include "ps2.h"
 #include "pic.h"
 
-#include "keyboard.h"
-#include "mouse.h"
-
 /* PRIVATE VARIABLES **********************************************************/
 
 #define BUFFER_SIZE 32
@@ -32,6 +29,9 @@ typedef struct _PS2_PORT
     UINT    QueueStart;
     UINT    QueueEnd;
     HANDLE  QueueMutex;
+
+    LPVOID             Param;
+    PS2_DEVICE_CMDPROC DeviceCommand;
 } PS2_PORT, *PPS2_PORT;
 
 /*
@@ -50,6 +50,14 @@ static BYTE StatusRegister = 0x00;
 static BYTE OutputBuffer = 0x00; // PS/2 Output Buffer
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static VOID PS2SendCommand(PPS2_PORT Port, BYTE Command)
+{
+    if (!Port->IsEnabled) return;
+
+    /* Call the device command */
+    if (Port->DeviceCommand) Port->DeviceCommand(Port->Param, Command);
+}
 
 static BYTE WINAPI PS2ReadPort(ULONG Port)
 {
@@ -238,10 +246,7 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
                  */
                 case 0xD4:
                 {
-                    if (Ports[1].IsEnabled)
-                        // Ports[1].Function
-                        MouseCommand(Data);
-
+                    PS2SendCommand(&Ports[1], Data);
                     break;
                 }
             }
@@ -249,10 +254,8 @@ static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
             return;
         }
 
-        // TODO: Implement PS/2 device commands
-        if (Ports[0].IsEnabled)
-            // Ports[0].Function
-            KeyboardCommand(Data);
+        /* By default, send a command to the first PS/2 port */
+        PS2SendCommand(&Ports[0], Data);
     }
 }
 
@@ -300,6 +303,14 @@ Done:
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID PS2SetDeviceCmdProc(BYTE PS2Port, LPVOID Param, PS2_DEVICE_CMDPROC DeviceCommand)
+{
+    if (PS2Port >= PS2_PORTS) return;
+
+    Ports[PS2Port].Param         = Param;
+    Ports[PS2Port].DeviceCommand = DeviceCommand;
+}
 
 // PS2SendToPort
 BOOLEAN PS2QueuePush(BYTE PS2Port, BYTE Data)

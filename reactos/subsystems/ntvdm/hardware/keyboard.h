@@ -22,7 +22,6 @@
 /* FUNCTIONS ******************************************************************/
 
 VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent);
-VOID KeyboardCommand(BYTE Command);
 BOOLEAN KeyboardInit(BYTE PS2Connector);
 
 #endif // _KEYBOARD_H_

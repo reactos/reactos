@@ -136,31 +136,17 @@ static VOID MouseGetPacket(PMOUSE_PACKET Packet)
     ButtonState = NewButtonState;
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
-{
-    // FIXME: Sync our private data
-
-    // HACK: Bypass PS/2 and instead, notify the MOUSE.COM driver directly
-    MouseBiosUpdatePosition(&MouseEvent->dwMousePosition);
-    MouseBiosUpdateButtons(LOWORD(MouseEvent->dwButtonState));
-
-    // PS2QueuePush(PS2Port, Data);
-    // PicInterruptRequest(12);
-}
-
-VOID MouseScroll(LONG Direction)
+/*static*/ VOID MouseScroll(LONG Direction)
 {
     ScrollCounter += Direction;
 }
 
-COORD MouseGetPosition(VOID)
+/*static*/ COORD MouseGetPosition(VOID)
 {
     return Position;
 }
 
-VOID MouseCommand(BYTE Command)
+static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
 {
     switch (Command)
     {
@@ -319,6 +305,20 @@ VOID MouseCommand(BYTE Command)
     }
 }
 
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
+{
+    // FIXME: Sync our private data
+
+    // HACK: Bypass PS/2 and instead, notify the MOUSE.COM driver directly
+    MouseBiosUpdatePosition(&MouseEvent->dwMousePosition);
+    MouseBiosUpdateButtons(LOWORD(MouseEvent->dwButtonState));
+
+    // PS2QueuePush(PS2Port, Data);
+    // PicInterruptRequest(12);
+}
+
 BOOLEAN MouseInit(BYTE PS2Connector)
 {
     HWND hWnd;
@@ -341,7 +341,9 @@ BOOLEAN MouseInit(BYTE PS2Connector)
     /* Release the device context */
     ReleaseDC(hWnd, hDC);
 
+    /* Finish to plug the mouse to the specified PS/2 port */
     PS2Port = PS2Connector;
+    PS2SetDeviceCmdProc(PS2Port, NULL, MouseCommand);
 
     MouseReset();
     return TRUE;

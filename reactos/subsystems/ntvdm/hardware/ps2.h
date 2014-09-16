@@ -19,7 +19,11 @@
 #define PS2_DATA_PORT       0x60
 #define PS2_CONTROL_PORT    0x64
 
+typedef VOID (WINAPI *PS2_DEVICE_CMDPROC)(LPVOID Param, BYTE Command);
+
 /* FUNCTIONS ******************************************************************/
+
+VOID PS2SetDeviceCmdProc(BYTE PS2Port, LPVOID Param, PS2_DEVICE_CMDPROC DeviceCommand);
 
 BOOLEAN PS2QueuePush(BYTE PS2Port, BYTE Data);
 

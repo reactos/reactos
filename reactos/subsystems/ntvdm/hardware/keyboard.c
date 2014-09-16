@@ -13,7 +13,16 @@
 #include "keyboard.h"
 #include "ps2.h"
 
+/* PRIVATE VARIABLES **********************************************************/
+
 static BYTE PS2Port = 0;
+
+/* PRIVATE FUNCTIONS **********************************************************/
+
+static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
+{
+    UNIMPLEMENTED;
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -34,13 +43,11 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
     // PicInterruptRequest(1);
 }
 
-VOID KeyboardCommand(BYTE Command)
-{
-    UNIMPLEMENTED;
-}
-
 BOOLEAN KeyboardInit(BYTE PS2Connector)
 {
+    /* Finish to plug the mouse to the specified PS/2 port */
     PS2Port = PS2Connector;
+    PS2SetDeviceCmdProc(PS2Port, NULL, KeyboardCommand);
+
     return TRUE;
 }
