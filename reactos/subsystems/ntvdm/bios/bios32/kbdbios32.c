@@ -198,7 +198,7 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     WORD Character;
 
     /* Get the scan code and virtual key code */
-    ScanCode = IOReadB(PS2_DATA_PORT);
+    ScanCode   = IOReadB(PS2_DATA_PORT);
     VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
 
     /* Check if this is a key press or release */
@@ -280,7 +280,6 @@ BOOLEAN KbdBios32Initialize(VOID)
 
     /* Set up the HW vector interrupts */
     EnableHwIRQ(1, BiosKeyboardIrq);
-    // EnableHwIRQ(12, BiosMouseIrq);
 
     return TRUE;
 }

@@ -128,6 +128,13 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        case 0xC1:
+        case 0xC2:
+        {
+            DPRINT1("INT 15h, AH = 0x%02X must be implemented in order to support vendor mouse drivers\n");
+            break;
+        }
+
         default:
         {
             DPRINT1("BIOS Function INT 15h, AH = 0x%02X NOT IMPLEMENTED\n",
@@ -412,8 +419,9 @@ BOOLEAN Bios32Initialize(VOID)
     /* Initialize platform hardware (PIC/PIT chips, ...) */
     BiosHwSetup();
 
-    /* Initialize the Keyboard and Video BIOS */
-    if (!KbdBios32Initialize() || !VidBios32Initialize() || !MouseBios32Initialize()) return FALSE;
+    /* Initialize the Keyboard, Video and Mouse BIOS */
+    if (!KbdBios32Initialize() || !VidBios32Initialize() || !MouseBios32Initialize())
+        return FALSE;
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
