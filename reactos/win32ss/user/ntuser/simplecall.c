@@ -793,8 +793,15 @@ NtUserCallHwndParamLock(
    switch (Routine)
    {
       case TWOPARAM_ROUTINE_VALIDATERGN:
-         Ret = (DWORD)co_UserRedrawWindow( Window, NULL, (HRGN)Param, RDW_VALIDATE);
-         break;
+      {
+          PREGION Rgn = RGNOBJAPI_Lock((HRGN)Param, NULL);
+          if (Rgn)
+          {
+              Ret = (DWORD)co_UserRedrawWindow( Window, NULL, Rgn, RDW_VALIDATE);
+              RGNOBJAPI_Unlock(Rgn);
+          }
+          break;
+      }
    }
 
    UserDerefObjectCo(Window);

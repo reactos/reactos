@@ -1010,16 +1010,20 @@ IntDefWindowProc(
 
       case WM_SYNCPAINT:
       {
-         HRGN hRgn;
+         PREGION Rgn;
          Wnd->state &= ~WNDS_SYNCPAINTPENDING;
          ERR("WM_SYNCPAINT\n");
-         hRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         if (co_UserGetUpdateRgn(Wnd, hRgn, FALSE) != NULLREGION)
+         Rgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+         if (Rgn)
          {
-            if (!wParam) wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
-            co_UserRedrawWindow(Wnd, NULL, hRgn, wParam);
+             if (co_UserGetUpdateRgn(Wnd, Rgn, FALSE) != NULLREGION)
+             {
+                if (!wParam)
+                    wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
+                co_UserRedrawWindow(Wnd, NULL, Rgn, wParam);
+             }
+             REGION_Delete(Rgn);
          }
-         GreDeleteObject(hRgn);
          return 0;
       }
 

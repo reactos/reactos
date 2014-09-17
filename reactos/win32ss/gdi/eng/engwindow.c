@@ -52,41 +52,31 @@ IntEngWndUpdateClipObj(
     XCLIPOBJ* Clip,
     PWND Window)
 {
-    HRGN hVisRgn;
     PROSRGNDATA visRgn;
 
     TRACE("IntEngWndUpdateClipObj\n");
 
-    hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
-    if (hVisRgn != NULL)
+    visRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
+    if (visRgn != NULL)
     {
-        visRgn = RGNOBJAPI_Lock(hVisRgn, NULL);
-        if (visRgn != NULL)
+        if (visRgn->rdh.nCount > 0)
         {
-            if (visRgn->rdh.nCount > 0)
+            IntEngUpdateClipRegion(Clip, visRgn->rdh.nCount, visRgn->Buffer, &visRgn->rdh.rcBound);
+            TRACE("Created visible region with %lu rects\n", visRgn->rdh.nCount);
+            TRACE("  BoundingRect: %d, %d  %d, %d\n",
+                   visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
+                   visRgn->rdh.rcBound.right, visRgn->rdh.rcBound.bottom);
             {
-                IntEngUpdateClipRegion(Clip, visRgn->rdh.nCount, visRgn->Buffer, &visRgn->rdh.rcBound);
-                TRACE("Created visible region with %lu rects\n", visRgn->rdh.nCount);
-                TRACE("  BoundingRect: %d, %d  %d, %d\n",
-                       visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
-                       visRgn->rdh.rcBound.right, visRgn->rdh.rcBound.bottom);
+                ULONG i;
+                for (i = 0; i < visRgn->rdh.nCount; i++)
                 {
-                    ULONG i;
-                    for (i = 0; i < visRgn->rdh.nCount; i++)
-                    {
-                        TRACE("  Rect #%lu: %ld,%ld  %ld,%ld\n", i+1,
-                               visRgn->Buffer[i].left, visRgn->Buffer[i].top,
-                               visRgn->Buffer[i].right, visRgn->Buffer[i].bottom);
-                    }
+                    TRACE("  Rect #%lu: %ld,%ld  %ld,%ld\n", i+1,
+                           visRgn->Buffer[i].left, visRgn->Buffer[i].top,
+                           visRgn->Buffer[i].right, visRgn->Buffer[i].bottom);
                 }
             }
-            RGNOBJAPI_Unlock(visRgn);
         }
-        else
-        {
-            WARN("Couldn't lock visible region of window DC\n");
-        }
-        GreDeleteObject(hVisRgn);
+        REGION_Delete(visRgn);
     }
     else
     {

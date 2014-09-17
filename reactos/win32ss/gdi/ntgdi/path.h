@@ -67,7 +67,7 @@ BOOL FASTCALL PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UI
 BOOL FASTCALL PATH_PolyPolyline( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylines);
 BOOL FASTCALL PATH_Rectangle (PDC dc, INT x1, INT y1, INT x2, INT y2);
 BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height);
-BOOL FASTCALL PATH_PathToRegion (PPATH pPath, INT nPolyFillMode, HRGN *pHrgn);
+BOOL FASTCALL PATH_PathToRegion (PPATH pPath, INT nPolyFillMode, PREGION Rgn);
 BOOL FASTCALL PATH_ExtTextOut(PDC dc,INT x,INT y,UINT flags,const RECTL *lprc,LPCWSTR str,UINT count,const INT *dx);
 
 BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);

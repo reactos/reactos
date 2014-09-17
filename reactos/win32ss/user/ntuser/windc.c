@@ -69,24 +69,10 @@ static
 PREGION FASTCALL
 DceGetVisRgn(PWND Window, ULONG Flags, HWND hWndChild, ULONG CFlags)
 {
-  PREGION RetRgn;
-  HRGN hVisRgn;
-  hVisRgn = VIS_ComputeVisibleRegion( Window,
-                                      0 == (Flags & DCX_WINDOW),
-                                      0 != (Flags & DCX_CLIPCHILDREN),
-                                      0 != (Flags & DCX_CLIPSIBLINGS));
-
-  RetRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
-
-  if (hVisRgn != NULL)
-  {
-      PREGION VisRgn = REGION_LockRgn(hVisRgn);
-      IntGdiCombineRgn(RetRgn, VisRgn, NULL, RGN_COPY);
-      REGION_UnlockRgn(VisRgn);
-      GreDeleteObject(hVisRgn);
-  }
-
-  return RetRgn;
+  return VIS_ComputeVisibleRegion( Window,
+                                   0 == (Flags & DCX_WINDOW),
+                                   0 != (Flags & DCX_CLIPCHILDREN),
+                                   0 != (Flags & DCX_CLIPSIBLINGS));
 }
 
 PDCE FASTCALL
@@ -582,11 +568,19 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       if (!(Flags & DCX_WINDOW))
       {
-         Dce->hrgnClip = IntSysCreateRectRgnIndirect(&Wnd->rcClient);
+         Dce->hrgnClip = NtGdiCreateRectRgn(
+             Wnd->rcClient.left,
+             Wnd->rcClient.top,
+             Wnd->rcClient.right,
+             Wnd->rcClient.bottom);
       }
       else
       {
-         Dce->hrgnClip = IntSysCreateRectRgnIndirect(&Wnd->rcWindow);
+          Dce->hrgnClip = NtGdiCreateRectRgn(
+              Wnd->rcWindow.left,
+              Wnd->rcWindow.top,
+              Wnd->rcWindow.right,
+              Wnd->rcWindow.bottom);
       }
       Dce->DCXFlags &= ~DCX_KEEPCLIPRGN;
       bUpdateVisRgn = TRUE;

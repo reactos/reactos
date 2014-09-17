@@ -1956,46 +1956,35 @@ REGION_CreateFrameRgn(
 }
 
 
+static
 BOOL FASTCALL
 REGION_LPTODP(
-    PDC  dc,
-    HRGN hDest,
-    HRGN hSrc)
+    _In_ PDC  dc,
+    _Inout_ PREGION RgnDest,
+    _In_ PREGION RgnSrc)
 {
     RECTL *pCurRect, *pEndRect;
-    PROSRGNDATA srcObj = NULL;
-    PROSRGNDATA destObj = NULL;
-
     RECTL tmpRect;
-    BOOL ret = FALSE;
     PDC_ATTR pdcattr;
 
     if (!dc)
-        return ret;
+        return FALSE;
     pdcattr = dc->pdcattr;
 
     if (pdcattr->iMapMode == MM_TEXT) // Requires only a translation
     {
-        if (NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
-            goto done;
+        if (IntGdiCombineRgn(RgnDest, RgnSrc, 0, RGN_COPY) == ERROR)
+            return FALSE;
 
-        NtGdiOffsetRgn(hDest, pdcattr->ptlViewportOrg.x - pdcattr->ptlWindowOrg.x,
+        IntGdiOffsetRgn(RgnDest, pdcattr->ptlViewportOrg.x - pdcattr->ptlWindowOrg.x,
                        pdcattr->ptlViewportOrg.y - pdcattr->ptlWindowOrg.y);
-        ret = TRUE;
-        goto done;
+        return TRUE;
     }
 
-    if ( !(srcObj = RGNOBJAPI_Lock(hSrc, NULL)) )
-        goto done;
-    if ( !(destObj = RGNOBJAPI_Lock(hDest, NULL)) )
-    {
-        RGNOBJAPI_Unlock(srcObj);
-        goto done;
-    }
-    EMPTY_REGION(destObj);
+    EMPTY_REGION(RgnDest);
 
-    pEndRect = srcObj->Buffer + srcObj->rdh.nCount;
-    for (pCurRect = srcObj->Buffer; pCurRect < pEndRect; pCurRect++)
+    pEndRect = RgnSrc->Buffer + RgnSrc->rdh.nCount;
+    for (pCurRect = RgnSrc->Buffer; pCurRect < pEndRect; pCurRect++)
     {
         tmpRect = *pCurRect;
         tmpRect.left = XLPTODP(pdcattr, tmpRect.left);
@@ -2016,15 +2005,10 @@ REGION_LPTODP(
             tmpRect.bottom = tmp;
         }
 
-        REGION_UnionRectWithRgn(destObj, &tmpRect);
+        REGION_UnionRectWithRgn(RgnDest, &tmpRect);
     }
-    ret = TRUE;
 
-    RGNOBJAPI_Unlock(srcObj);
-    RGNOBJAPI_Unlock(destObj);
-
-done:
-    return ret;
+    return TRUE;
 }
 
 PROSRGNDATA
@@ -2236,7 +2220,7 @@ IntSysCreateRectpRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     PREGION prgn;
 
     /* Allocate a region, witout a handle */
-    prgn = (PREGION)GDIOBJ_AllocateObject(GDIObjType_RGN_TYPE, sizeof(REGION), 0);
+    prgn = (PREGION)GDIOBJ_AllocateObject(GDIObjType_RGN_TYPE, sizeof(REGION), BASEFLAG_LOOKASIDE);
     if (!prgn)
     {
         return NULL;
@@ -2248,31 +2232,6 @@ IntSysCreateRectpRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     REGION_SetRectRgn(prgn, LeftRect, TopRect, RightRect, BottomRect);
 
     return prgn;
-}
-
-HRGN
-FASTCALL
-IntSysCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
-{
-    PREGION prgn;
-    HRGN hrgn;
-
-    /* Allocate a region, witout a handle */
-    prgn = (PREGION)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION, sizeof(REGION));
-    if (!prgn)
-    {
-        return NULL;
-    }
-
-    /* Initialize it */
-    prgn->Buffer = &prgn->rdh.rcBound;
-    REGION_SetRectRgn(prgn, LeftRect, TopRect, RightRect, BottomRect);
-    hrgn = prgn->BaseObject.hHmgr;
-    prgn->prgnattr = &prgn->rgnattr;
-
-    REGION_UnlockRgn(prgn);
-
-    return hrgn;
 }
 
 VOID NTAPI
@@ -2479,44 +2438,42 @@ BOOL
 FASTCALL
 IntGdiPaintRgn(
     PDC dc,
-    HRGN hRgn
+    PREGION Rgn
 )
 {
-    HRGN tmpVisRgn;
-    PROSRGNDATA visrgn;
+    PROSRGNDATA VisRgn;
     XCLIPOBJ ClipRegion;
     BOOL bRet = FALSE;
     POINTL BrushOrigin;
     SURFACE *psurf;
     PDC_ATTR pdcattr;
 
-    if (!dc) return FALSE;
+    if (!dc || !Rgn)
+        return FALSE;
+
     pdcattr = dc->pdcattr;
 
     ASSERT(!(pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY)));
 
-    if (!(tmpVisRgn = IntSysCreateRectRgn(0, 0, 0, 0))) return FALSE;
-
-    // Transform region into device co-ords
-    if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) ||
-         NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
+    VisRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (!VisRgn)
     {
-        GreDeleteObject(tmpVisRgn);
         return FALSE;
     }
 
-    visrgn = RGNOBJAPI_Lock(tmpVisRgn, NULL);
-    if (visrgn == NULL)
+    // Transform region into device co-ords
+    if (!REGION_LPTODP(dc, VisRgn, Rgn) ||
+         IntGdiOffsetRgn(VisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
-        GreDeleteObject(tmpVisRgn);
+        REGION_Delete(VisRgn);
         return FALSE;
     }
 
     if (dc->prgnRao)
-        IntGdiCombineRgn(visrgn, visrgn, dc->prgnRao, RGN_AND);
+        IntGdiCombineRgn(VisRgn, VisRgn, dc->prgnRao, RGN_AND);
 
     IntEngInitClipObj(&ClipRegion);
-    IntEngUpdateClipRegion(&ClipRegion, visrgn->rdh.nCount, visrgn->Buffer, &visrgn->rdh.rcBound );
+    IntEngUpdateClipRegion(&ClipRegion, VisRgn->rdh.nCount, VisRgn->Buffer, &VisRgn->rdh.rcBound );
 
     BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
     BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
@@ -2529,8 +2486,7 @@ IntGdiPaintRgn(
                        &BrushOrigin,
                        0xFFFF); // FIXME: Don't know what to put here
 
-    RGNOBJAPI_Unlock(visrgn);
-    GreDeleteObject(tmpVisRgn);
+    REGION_Delete(VisRgn);
     IntEngFreeClipResources(&ClipRegion);
 
     // Fill the region
@@ -3129,16 +3085,15 @@ REGION_CreateETandAET(
     }
 }
 
-HRGN FASTCALL
-IntCreatePolyPolygonRgn(
+BOOL FASTCALL
+IntSetPolyPolygonRgn(
     POINT *Pts,
     PULONG Count,
     INT nbpolygons,
-    INT mode
+    INT mode,
+    PREGION Rgn
 )
 {
-    HRGN hrgn;
-    ROSRGNDATA *region;
     EdgeTableEntry *pAET;                       /* Active Edge Table        */
     INT y;                                      /* Current scanline         */
     int iPts = 0;                               /* Number of pts in buffer  */
@@ -3158,10 +3113,6 @@ IntCreatePolyPolygonRgn(
 
     if (mode == 0 || mode > 2) return 0;
 
-    if (!(region = REGION_AllocUserRgnWithHandle(nbpolygons)))
-        return 0;
-    hrgn = region->BaseObject.hHmgr;
-
     /* Special case a rectangle */
 
     if (((nbpolygons == 1) && ((*Count == 4) ||
@@ -3175,18 +3126,19 @@ IntCreatePolyPolygonRgn(
               (Pts[2].x == Pts[3].x) &&
               (Pts[3].y == Pts[0].y))))
     {
-        RGNOBJAPI_Unlock(region);
-        NtGdiSetRectRgn(hrgn, min(Pts[0].x, Pts[2].x), min(Pts[0].y, Pts[2].y),
-                        max(Pts[0].x, Pts[2].x), max(Pts[0].y, Pts[2].y));
-        return hrgn;
+        REGION_SetRectRgn(Rgn,
+            min(Pts[0].x, Pts[2].x),
+            min(Pts[0].y, Pts[2].y),
+            max(Pts[0].x, Pts[2].x),
+            max(Pts[0].y, Pts[2].y));
+        return TRUE;
     }
 
     for (poly = total = 0; poly < nbpolygons; poly++)
         total += Count[poly];
     if (! (pETEs = ExAllocatePoolWithTag(PagedPool, sizeof(EdgeTableEntry) * total, TAG_REGION)) )
     {
-        GreDeleteObject(hrgn);
-        return 0;
+        return FALSE;
     }
     pts = FirstPtBlock.pts;
     REGION_CreateETandAET(Count, nbpolygons, Pts, &ET, &AET, pETEs, &SLLBlock);
@@ -3230,7 +3182,7 @@ IntCreatePolyPolygonRgn(
                     {
                         DPRINT1("Can't alloc tPB\n");
                         ExFreePoolWithTag(pETEs, TAG_REGION);
-                        return 0;
+                        return FALSE;
                     }
                     curPtBlock->next = tmpPtBlock;
                     curPtBlock = tmpPtBlock;
@@ -3289,8 +3241,7 @@ IntCreatePolyPolygonRgn(
                         {
                             DPRINT1("Can't alloc tPB\n");
                             ExFreePoolWithTag(pETEs, TAG_REGION);
-                            GreDeleteObject(hrgn);
-                            return 0;
+                            return FALSE;
                         }
                         curPtBlock->next = tmpPtBlock;
                         curPtBlock = tmpPtBlock;
@@ -3315,7 +3266,7 @@ IntCreatePolyPolygonRgn(
         }
     }
     REGION_FreeStorage(SLLBlock.next);
-    REGION_PtsToRegion(numFullPtBlocks, iPts, &FirstPtBlock, region);
+    REGION_PtsToRegion(numFullPtBlocks, iPts, &FirstPtBlock, Rgn);
 
     for (curPtBlock = FirstPtBlock.next; --numFullPtBlocks >= 0;)
     {
@@ -3324,8 +3275,7 @@ IntCreatePolyPolygonRgn(
         curPtBlock = tmpPtBlock;
     }
     ExFreePoolWithTag(pETEs, TAG_REGION);
-    RGNOBJAPI_Unlock(region);
-    return hrgn;
+    return TRUE;
 }
 
 BOOL
@@ -3431,6 +3381,8 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 
     REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
     RGNOBJAPI_Unlock(pRgn);
+
+    DPRINT1("Returning %p.\n", hRgn);
 
     return hRgn;
 }
@@ -3762,7 +3714,7 @@ NtGdiFrameRgn(
     HRGN FrameRgn;
     BOOL Ret;
 
-    if (!(FrameRgn = IntSysCreateRectRgn(0, 0, 0, 0)))
+    if (!(FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
     {
         return FALSE;
     }

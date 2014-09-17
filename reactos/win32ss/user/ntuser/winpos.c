@@ -1652,13 +1652,10 @@ co_WinPosSetWindowPos(
    RECTL NewWindowRect;
    RECTL NewClientRect;
    RECTL valid_rects[2];
-   PROSRGNDATA VisRgn;
-   HRGN VisBefore = NULL;
-   HRGN VisBeforeJustClient = NULL;
-   HRGN VisAfter = NULL;
-   HRGN DirtyRgn = NULL;
-   HRGN ExposedRgn = NULL;
-   HRGN CopyRgn = NULL;
+   PREGION VisBefore = NULL;
+   PREGION VisBeforeJustClient = NULL;
+   PREGION VisAfter = NULL;
+   PREGION CopyRgn = NULL;
    ULONG WvrFlags = 0;
    RECTL OldWindowRect, OldClientRect;
    int RgnType;
@@ -1736,20 +1733,16 @@ co_WinPosSetWindowPos(
       {
          VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
                                               (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
-         VisRgn = NULL;
 
          if ( VisBefore != NULL &&
-             (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisBefore, NULL)) &&
-              REGION_Complexity(VisRgn) == NULLREGION )
+              REGION_Complexity(VisBefore) == NULLREGION )
          {
-            RGNOBJAPI_Unlock(VisRgn);
-            GreDeleteObject(VisBefore);
+            REGION_Delete(VisBefore);
             VisBefore = NULL;
          }
-         else if(VisRgn)
+         else if(VisBefore)
          {
-            RGNOBJAPI_Unlock(VisRgn);
-            NtGdiOffsetRgn(VisBefore, -Window->rcWindow.left, -Window->rcWindow.top);
+            IntGdiOffsetRgn(VisBefore, -Window->rcWindow.left, -Window->rcWindow.top);
          }
 
          /* Calculate the non client area for resizes, as this is used in the copy region */ 
@@ -1757,20 +1750,16 @@ co_WinPosSetWindowPos(
          {
              VisBeforeJustClient = VIS_ComputeVisibleRegion(Window, TRUE, FALSE,
                  (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
-             VisRgn = NULL;
 
              if ( VisBeforeJustClient != NULL &&
-                 (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisBeforeJustClient, NULL)) &&
-                 REGION_Complexity(VisRgn) == NULLREGION )
+                 REGION_Complexity(VisBeforeJustClient) == NULLREGION )
              {
-                 RGNOBJAPI_Unlock(VisRgn);
-                 GreDeleteObject(VisBeforeJustClient);
+                 REGION_Delete(VisBeforeJustClient);
                  VisBeforeJustClient = NULL;
              }
-             else if(VisRgn)
+             else if(VisBeforeJustClient)
              {
-                 RGNOBJAPI_Unlock(VisRgn);
-                 NtGdiOffsetRgn(VisBeforeJustClient, -Window->rcWindow.left, -Window->rcWindow.top);
+                 IntGdiOffsetRgn(VisBeforeJustClient, -Window->rcWindow.left, -Window->rcWindow.top);
              }
          }
       }
@@ -1843,20 +1832,16 @@ co_WinPosSetWindowPos(
       /* Determine the new visible region */
       VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
                                           (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
-      VisRgn = NULL;
 
       if ( VisAfter != NULL &&
-          (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(VisAfter, NULL)) &&
-           REGION_Complexity(VisRgn) == NULLREGION )
+           REGION_Complexity(VisAfter) == NULLREGION )
       {
-         RGNOBJAPI_Unlock(VisRgn);
-         GreDeleteObject(VisAfter);
+         REGION_Delete(VisAfter);
          VisAfter = NULL;
       }
-      else if(VisRgn)
+      else if(VisAfter)
       {
-         RGNOBJAPI_Unlock(VisRgn);
-         NtGdiOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
+         IntGdiOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
       }
 
       /*
@@ -1882,21 +1867,26 @@ co_WinPosSetWindowPos(
           * region...)
           */
 
-         CopyRgn = IntSysCreateRectRgn(0, 0, 0, 0);
+         CopyRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
          if (WinPos.flags & SWP_NOSIZE)
-            RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
+            RgnType = IntGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
          else if (VisBeforeJustClient != NULL)
          {
-            RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBeforeJustClient, RGN_AND);
-            GreDeleteObject(VisBeforeJustClient);
+            RgnType = IntGdiCombineRgn(CopyRgn, VisAfter, VisBeforeJustClient, RGN_AND);
+            REGION_Delete(VisBeforeJustClient);
          }
 
          /* No use in copying bits which are in the update region. */
          if (Window->hrgnUpdate != NULL)
          {
-            NtGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
-            NtGdiCombineRgn(CopyRgn, CopyRgn, Window->hrgnUpdate, RGN_DIFF);
-            NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
+            PREGION RgnUpdate = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
+            if (RgnUpdate)
+            {
+                IntGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
+                IntGdiCombineRgn(CopyRgn, CopyRgn, RgnUpdate, RGN_DIFF);
+                IntGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
+                RGNOBJAPI_Unlock(RgnUpdate);
+            }
          }
 
          /*
@@ -1904,21 +1894,17 @@ co_WinPosSetWindowPos(
           * there's nothing to copy. Also, it's no use copying bits onto
           * themselves.
           */
-         if ( (VisRgn = (PROSRGNDATA)RGNOBJAPI_Lock(CopyRgn, NULL)) &&
-               REGION_GetRgnBox(VisRgn, &CopyRect) == NULLREGION)
+         if (REGION_GetRgnBox(CopyRgn, &CopyRect) == NULLREGION)
          {
             /* Nothing to copy, clean up */
-            RGNOBJAPI_Unlock(VisRgn);
-            GreDeleteObject(CopyRgn);
+            REGION_Delete(CopyRgn);
             CopyRgn = NULL;
          }
          else if (OldWindowRect.left != NewWindowRect.left ||
                   OldWindowRect.top != NewWindowRect.top)
          {
-            if(VisRgn)
-            {
-               RGNOBJAPI_Unlock(VisRgn);
-            }
+             HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+             PREGION DcRgnObj = RGNOBJAPI_Lock(DcRgn, NULL);
 
           /*
            * Small trick here: there is no function to bitblt a region. So
@@ -1929,9 +1915,11 @@ co_WinPosSetWindowPos(
            * Since NtUserGetDCEx takes ownership of the clip region, we need
            * to create a copy of CopyRgn and pass that. We need CopyRgn later
            */
-            NtGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
+            IntGdiCombineRgn(DcRgnObj, CopyRgn, NULL, RGN_COPY);
+            IntGdiOffsetRgn(DcRgnObj, NewWindowRect.left, NewWindowRect.top);
+            RGNOBJAPI_Unlock(DcRgnObj);
             Dc = UserGetDCEx( Window,
-                              CopyRgn,
+                              DcRgn,
                               DCX_WINDOW|DCX_CACHE|DCX_INTERSECTRGN|DCX_CLIPSIBLINGS|DCX_KEEPCLIPRGN);
             NtGdiBitBlt( Dc,
                          CopyRect.left, CopyRect.top,
@@ -1946,11 +1934,7 @@ co_WinPosSetWindowPos(
 
             UserReleaseDC(Window, Dc, FALSE);
             IntValidateParent(Window, CopyRgn, FALSE);
-            NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
-         }
-         else if(VisRgn)
-         {
-            RGNOBJAPI_Unlock(VisRgn);
+            GreDeleteObject(DcRgn);
          }
       }
       else
@@ -1961,78 +1945,84 @@ co_WinPosSetWindowPos(
       /* We need to redraw what wasn't visible before */
       if (VisAfter != NULL)
       {
-         DirtyRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         if (CopyRgn != NULL)
+         PREGION DirtyRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+         if (DirtyRgn)
          {
-            RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
-         }
-         else
-         {
-            RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, 0, RGN_COPY);
-         }
-         if (RgnType != ERROR && RgnType != NULLREGION)
-         {
-        /* old code
-            NtGdiOffsetRgn(DirtyRgn, Window->rcWindow.left, Window->rcWindow.top);
-            IntInvalidateWindows( Window,
-                                  DirtyRgn,
-               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-         }
-         GreDeleteObject(DirtyRgn);
-         */
-
-            PWND Parent = Window->spwndParent;
-
-            NtGdiOffsetRgn( DirtyRgn,
-                            Window->rcWindow.left,
-                            Window->rcWindow.top);
-            if ( (Window->style & WS_CHILD) &&
-                 (Parent) &&
-                !(Parent->style & WS_CLIPCHILDREN))
-            {
-               IntInvalidateWindows( Parent,
-                                     DirtyRgn,
-                                     RDW_ERASE | RDW_INVALIDATE);
-               co_IntPaintWindows(Parent, RDW_ERASENOW, FALSE);
-            }
-            else
-            {
+             if (CopyRgn != NULL)
+             {
+                RgnType = IntGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
+             }
+             else
+             {
+                RgnType = IntGdiCombineRgn(DirtyRgn, VisAfter, 0, RGN_COPY);
+             }
+             if (RgnType != ERROR && RgnType != NULLREGION)
+             {
+            /* old code
+                NtGdiOffsetRgn(DirtyRgn, Window->rcWindow.left, Window->rcWindow.top);
                 IntInvalidateWindows( Window,
                                       DirtyRgn,
-                    RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-            }
+                   RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+             }
+             GreDeleteObject(DirtyRgn);
+             */
+
+                PWND Parent = Window->spwndParent;
+
+                IntGdiOffsetRgn( DirtyRgn,
+                                Window->rcWindow.left,
+                                Window->rcWindow.top);
+                if ( (Window->style & WS_CHILD) &&
+                     (Parent) &&
+                    !(Parent->style & WS_CLIPCHILDREN))
+                {
+                   IntInvalidateWindows( Parent,
+                                         DirtyRgn,
+                                         RDW_ERASE | RDW_INVALIDATE);
+                   co_IntPaintWindows(Parent, RDW_ERASENOW, FALSE);
+                }
+                else
+                {
+                    IntInvalidateWindows( Window,
+                                          DirtyRgn,
+                        RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+                }
+             }
+             REGION_Delete(DirtyRgn);
          }
-         GreDeleteObject(DirtyRgn);
       }
 
       if (CopyRgn != NULL)
       {
-         GreDeleteObject(CopyRgn);
+         REGION_Delete(CopyRgn);
       }
 
       /* Expose what was covered before but not covered anymore */
       if (VisBefore != NULL)
       {
-         ExposedRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         RgnType = NtGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
-         NtGdiOffsetRgn( ExposedRgn,
-                         OldWindowRect.left - NewWindowRect.left,
-                         OldWindowRect.top  - NewWindowRect.top);
-
-         if (VisAfter != NULL)
-            RgnType = NtGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
-
-         if (RgnType != ERROR && RgnType != NULLREGION)
+         PREGION ExposedRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+         if (ExposedRgn)
          {
-            co_VIS_WindowLayoutChanged(Window, ExposedRgn);
+             RgnType = IntGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
+             IntGdiOffsetRgn( ExposedRgn,
+                             OldWindowRect.left - NewWindowRect.left,
+                             OldWindowRect.top  - NewWindowRect.top);
+
+             if (VisAfter != NULL)
+                RgnType = IntGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
+
+             if (RgnType != ERROR && RgnType != NULLREGION)
+             {
+                co_VIS_WindowLayoutChanged(Window, ExposedRgn);
+             }
+             REGION_Delete(ExposedRgn);
          }
-         GreDeleteObject(ExposedRgn);
-         GreDeleteObject(VisBefore);
+         REGION_Delete(VisBefore);
       }
 
       if (VisAfter != NULL)
       {
-         GreDeleteObject(VisAfter);
+         REGION_Delete(VisAfter);
       }
    }
 
@@ -3112,7 +3102,7 @@ NtUserSetWindowRgn(
    HRGN hRgn,
    BOOL bRedraw)
 {
-   HRGN hrgnCopy;
+   HRGN hrgnCopy = NULL;
    PWND Window;
    INT flags = (SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE);
    BOOLEAN Ret = FALSE;
@@ -3132,17 +3122,13 @@ NtUserSetWindowRgn(
    {
       if (GreIsHandleValid(hRgn))
       {
-         hrgnCopy = IntSysCreateRectRgn(0, 0, 0, 0);
+         hrgnCopy = NtGdiCreateRectRgn(0, 0, 0, 0);
       /* The coordinates of a window's window region are relative to the
          upper-left corner of the window, not the client area of the window. */
          NtGdiCombineRgn( hrgnCopy, hRgn, 0, RGN_COPY);
       }
       else
          RETURN( 0);
-   }
-   else
-   {
-      hrgnCopy = NULL;
    }
 
    if (Window->hrgnClip)

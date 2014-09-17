@@ -40,8 +40,8 @@ VOID FASTCALL IntGdiReleaseRaoRgn(PDC);
 VOID FASTCALL IntGdiReleaseVisRgn(PDC);
 
 INT APIENTRY IntGdiGetRgnBox(HRGN, RECTL*);
-BOOL FASTCALL IntGdiPaintRgn(PDC, HRGN );
-HRGN FASTCALL IntCreatePolyPolygonRgn(PPOINT, PULONG, INT, INT);
+BOOL FASTCALL IntGdiPaintRgn(PDC, PREGION );
+BOOL FASTCALL IntSetPolyPolygonRgn(PPOINT, PULONG, INT, INT, PREGION);
 INT FASTCALL IntGdiOffsetRgn(PROSRGNDATA,INT,INT);
 BOOL FASTCALL IntRectInRegion(HRGN,LPRECTL);
 
@@ -49,12 +49,8 @@ INT FASTCALL IntGdiCombineRgn(PROSRGNDATA, PROSRGNDATA, PROSRGNDATA, INT);
 INT FASTCALL REGION_Complexity(PROSRGNDATA);
 PROSRGNDATA FASTCALL RGNOBJAPI_Lock(HRGN,PRGN_ATTR *);
 VOID FASTCALL RGNOBJAPI_Unlock(PROSRGNDATA);
-HRGN FASTCALL IntSysCreateRectRgn(INT,INT,INT,INT);
 PROSRGNDATA FASTCALL IntSysCreateRectpRgn(INT,INT,INT,INT);
 BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
-
-#define IntSysCreateRectRgnIndirect(prc) \
-  IntSysCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
 
 #define IntSysCreateRectpRgnIndirect(prc) \
   IntSysCreateRectpRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
