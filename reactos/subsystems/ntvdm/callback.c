@@ -212,7 +212,7 @@ RegisterInt32(IN  ULONG   FarPtr,
 #if 0
     if (Int32Proc[IntNumber] != NULL)
     {
-        DPRINT1("RegisterInt32: Interrupt 0x%X already registered!\n", IntNumber);
+        DPRINT1("RegisterInt32: Interrupt 0x%02X already registered!\n", IntNumber);
         return 0;
     }
 #endif
@@ -240,7 +240,7 @@ Int32Call(IN PCALLBACK16 Context,
     PUCHAR Trampoline     = TrampolineBase;
     UCHAR  OldTrampoline[INT16_TRAMPOLINE_SIZE];
 
-    DPRINT("Int32Call(0x%X)\n", IntNumber);
+    DPRINT("Int32Call(0x%02X)\n", IntNumber);
 
     /* Save the old trampoline */
     ((PULONGLONG)&OldTrampoline)[0] = ((PULONGLONG)TrampolineBase)[0];

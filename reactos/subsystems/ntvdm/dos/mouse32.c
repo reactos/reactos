@@ -108,8 +108,10 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
         setSI(DriverState.MickeysPerCellHoriz);
         setDI(DriverState.MickeysPerCellVert);
 
-        DPRINT1("Calling Handler0 0x%08x with CallMask 0x%04x\n",
-                DriverState.Handler0.Callback, CallMask);
+        DPRINT1("Calling Handler0 %04X:%04X with CallMask 0x%04X\n",
+                HIWORD(DriverState.Handler0.Callback),
+                LOWORD(DriverState.Handler0.Callback),
+                CallMask);
 
         /* Call the callback */
         RunCallback16(&DosContext, DriverState.Handler0.Callback);
@@ -148,8 +150,11 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
             setSI(DriverState.MickeysPerCellHoriz);
             setDI(DriverState.MickeysPerCellVert);
 
-            DPRINT1("Calling Handler[%d] 0x%08x with CallMask 0x%04x\n",
-                    i, DriverState.Handlers[i].Callback, CallMask);
+            DPRINT1("Calling Handler[%d] %04X:%04X with CallMask 0x%04X\n",
+                    i,
+                    HIWORD(DriverState.Handlers[i].Callback),
+                    LOWORD(DriverState.Handlers[i].Callback),
+                    CallMask);
 
             /* Call the callback */
             RunCallback16(&DosContext, DriverState.Handlers[i].Callback);
@@ -353,7 +358,7 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             }
             else
             {
-                DPRINT1("Invalid BX value 0x%04x\n", BX);
+                DPRINT1("Invalid BX value 0x%04X\n", BX);
             }
 
             break;
@@ -376,8 +381,10 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
         {
             DriverState.Handler0.CallMask = getCX();
             DriverState.Handler0.Callback = MAKELONG(getDX(), getES()); // Far pointer to the callback
-            DPRINT1("Define callback 0x%04x, 0x%08x\n",
-                    DriverState.Handler0.CallMask, DriverState.Handler0.Callback);
+            DPRINT1("Define callback 0x%04X, %04X:%04X\n",
+                    DriverState.Handler0.CallMask,
+                    HIWORD(DriverState.Handler0.Callback),
+                    LOWORD(DriverState.Handler0.Callback));
             break;
         }
 
@@ -446,8 +453,8 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             ULONG  Callback = MAKELONG(getDX(), getES()); // Far pointer to the callback
             BOOLEAN Success = FALSE;
 
-            DPRINT1("Define v6.0+ callback 0x%04x, 0x%08x\n",
-                    CallMask, Callback);
+            DPRINT1("Define v6.0+ callback 0x%04X, %04X:%04X\n",
+                    CallMask, HIWORD(Callback), LOWORD(Callback));
 
             if (CallMask == 0x0000)
             {
