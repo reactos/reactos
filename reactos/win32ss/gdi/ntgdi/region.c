@@ -2323,23 +2323,22 @@ IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
     PRGN_ATTR prgnattr;
     PPROCESSINFO ppi;
 
-    prgn = REGION_LockRgn(hRgn);
+    prgn = RGNOBJAPI_Lock(hRgn, &prgnattr);
     if (!prgn)
     {
         return FALSE;
     }
 
-    prgnattr = GDIOBJ_pvGetObjectAttr(&prgn->BaseObject);
-    if (prgnattr)
+    if (prgnattr != &prgn->rgnattr)
     {
         GDIOBJ_vSetObjectAttr(&prgn->BaseObject, NULL);
-        prgn->prgnattr = NULL;
+        prgn->prgnattr = &prgn->rgnattr;
         ppi = PsGetCurrentProcessWin32Process();
         GdiPoolFree(ppi->pPoolRgnAttr, prgnattr);
     }
     RGNOBJAPI_Unlock(prgn);
 
-     return GreSetObjectOwner(hRgn, OwnerMask);
+    return GreSetObjectOwner(hRgn, OwnerMask);
 }
 
 INT
