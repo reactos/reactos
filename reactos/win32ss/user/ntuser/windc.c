@@ -69,10 +69,15 @@ static
 PREGION FASTCALL
 DceGetVisRgn(PWND Window, ULONG Flags, HWND hWndChild, ULONG CFlags)
 {
-  return VIS_ComputeVisibleRegion( Window,
-                                   0 == (Flags & DCX_WINDOW),
-                                   0 != (Flags & DCX_CLIPCHILDREN),
-                                   0 != (Flags & DCX_CLIPSIBLINGS));
+    PREGION Rgn;
+    Rgn = VIS_ComputeVisibleRegion( Window,
+                                    0 == (Flags & DCX_WINDOW),
+                                    0 != (Flags & DCX_CLIPCHILDREN),
+                                    0 != (Flags & DCX_CLIPSIBLINGS));
+    /* Caller expects a non-null region */
+    if (!Rgn)
+        Rgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+    return Rgn;
 }
 
 PDCE FASTCALL
