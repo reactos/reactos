@@ -1619,6 +1619,9 @@ IntCallWindowProcA(BOOL IsAnsiProc,
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
 
+  TRACE("IntCallWindowProcA: IsAnsiProc : %s, WndProc %p, pWnd %p, hWnd %p, Msg %u, wParam %Iu, lParam %Iu.\n",
+      IsAnsiProc ? "TRUE" : "FALSE", WndProc, pWnd, hWnd, Msg, wParam, lParam);
+
   if (WndProc == NULL)
   {
       WARN("IntCallWindowsProcA() called with WndProc = NULL!\n");

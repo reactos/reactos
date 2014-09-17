@@ -281,9 +281,15 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
 
    Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
 
+   TRACE("DefWndNCPaint: hWnd %p, hRgn %p, Active %s.\n",
+       hWnd, hRgn, Active ? "TRUE" : "FALSE");
+
    hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
    if (hDC == 0)
    {
+      ERR("hDC is NULL!\n");
+      if (hRgn != HRGN_WINDOW)
+          DeleteObject(hRgn);
       return 0;
    }
 

@@ -1037,7 +1037,8 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
   PWND Wnd=NULL;
   DECLARE_RETURN(HDC);
 
-  TRACE("Enter NtUserGetDCEx\n");
+  TRACE("Enter NtUserGetDCEx: hWnd %p, ClipRegion %p, Flags %x.\n",
+      hWnd, ClipRegion, Flags);
   UserEnterExclusive();
 
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
