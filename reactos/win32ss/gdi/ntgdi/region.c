@@ -3381,7 +3381,7 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
     RGNOBJAPI_Unlock(pRgn);
 
-    DPRINT1("Returning %p.\n", hRgn);
+    DPRINT("Returning %p.\n", hRgn);
 
     return hRgn;
 }
