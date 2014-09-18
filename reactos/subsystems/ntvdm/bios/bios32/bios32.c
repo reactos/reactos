@@ -10,6 +10,9 @@
 
 #define NDEBUG
 
+/* For BIOS Version number */
+#include <reactos/buildno.h>
+
 #include "emulator.h"
 #include "callback.h"
 #include "bop.h"
@@ -30,6 +33,105 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 CALLBACK16 BiosContext;
+
+/*
+
+Bochs BIOS, see rombios.h
+=========================
+
+// model byte 0xFC = AT
+#define SYS_MODEL_ID     0xFC
+#define SYS_SUBMODEL_ID  0x00
+#define BIOS_REVISION    1
+#define BIOS_CONFIG_TABLE 0xe6f5
+
+#ifndef BIOS_BUILD_DATE
+#  define BIOS_BUILD_DATE "06/23/99"
+#endif
+
+// 1K of base memory used for Extended Bios Data Area (EBDA)
+// EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
+#define EBDA_SEG           0x9FC0
+#define EBDA_SIZE          1              // In KiB
+#define BASE_MEM_IN_K   (640 - EBDA_SIZE)
+
+
+See rombios.c
+=============
+
+ROM BIOS compatibility entry points:
+===================================
+$e05b ; POST Entry Point
+$e2c3 ; NMI Handler Entry Point
+$e3fe ; INT 13h Fixed Disk Services Entry Point
+$e401 ; Fixed Disk Parameter Table
+$e6f2 ; INT 19h Boot Load Service Entry Point
+$e6f5 ; Configuration Data Table
+$e729 ; Baud Rate Generator Table
+$e739 ; INT 14h Serial Communications Service Entry Point
+$e82e ; INT 16h Keyboard Service Entry Point
+$e987 ; INT 09h Keyboard Service Entry Point
+$ec59 ; INT 13h Diskette Service Entry Point
+$ef57 ; INT 0Eh Diskette Hardware ISR Entry Point
+$efc7 ; Diskette Controller Parameter Table
+$efd2 ; INT 17h Printer Service Entry Point
+$f045 ; INT 10 Functions 0-Fh Entry Point
+$f065 ; INT 10h Video Support Service Entry Point
+$f0a4 ; MDA/CGA Video Parameter Table (INT 1Dh)
+$f841 ; INT 12h Memory Size Service Entry Point
+$f84d ; INT 11h Equipment List Service Entry Point
+$f859 ; INT 15h System Services Entry Point
+$fa6e ; Character Font for 320x200 & 640x200 Graphics (lower 128 characters)
+$fe6e ; INT 1Ah Time-of-day Service Entry Point
+$fea5 ; INT 08h System Timer ISR Entry Point
+$fef3 ; Initial Interrupt Vector Offsets Loaded by POST
+$ff53 ; IRET Instruction for Dummy Interrupt Handler
+$ff54 ; INT 05h Print Screen Service Entry Point
+$fff0 ; Power-up Entry Point
+$fff5 ; ASCII Date ROM was built - 8 characters in MM/DD/YY
+$fffe ; System Model ID
+
+*/
+
+/*
+ * See Ralf Brown: http://www.ctyme.com/intr/rb-1594.htm#Table515
+ * for more information.
+ */
+#define BIOS_MODEL      0xFC // PC-AT
+#define BIOS_SUBMODEL   0x01 // AT models 319,339 8 MHz, Enh Keyb, 3.5"
+#define BIOS_REVISION   0x00
+// FIXME: Find a nice PS/2 486 + 487 BIOS combination!
+
+/*
+ * WARNING! For compatibility purposes the string "IBM" should be at F000:E00E .
+ * Some programs alternatively look at "COPR. IBM" that is at F000:E008 .
+ */
+static const CHAR BiosCopyright[] = "0000000 NTVDM IBM Compatible 486 32-bit BIOS Copyright (C) ReactOS Team 1996-2014";
+static const CHAR BiosVersion[]   = "ReactOS NTVDM 32-bit BIOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")";
+static const CHAR BiosDate[]      = "06/17/13";
+
+C_ASSERT(sizeof(BiosCopyright)-1 <= 0x5B); // Ensures that we won't overflow on the POST Code starting at F000:E05B
+C_ASSERT(sizeof(BiosDate)-1      == 0x08);
+
+/* 16-bit bootstrap code at F000:FFF0 */
+static BYTE Bootstrap[] =
+{
+    0xEA,                   // jmp far ptr
+    0x5B, 0xE0, 0x00, 0xF0, // F000:E05B
+};
+
+/*
+ * Normally at F000:E05B there is the POST that finally calls the bootstrap
+ * interrupt. It should also check the value of Bda->SoftReset. Since we do
+ * all the POST in 32 bit from the start, we just place there the bootstrap
+ * interrupt call.
+ */
+static BYTE PostCode[] =
+{
+    0xCD, 0x19, // int 0x19, the bootstrap loader interrupt
+//  LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
+};
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -143,6 +245,30 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
     }
 }
 
+static VOID WINAPI BiosRomBasic(LPWORD Stack)
+{
+    /* ROM Basic is unsupported, display a message to the user */
+    DisplayMessage(L"NTVDM doesn't support ROM Basic. The VDM is closing.");
+
+    /* Stop the VDM */
+    EmulatorTerminate();
+    return;
+}
+
+static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
+{
+    /*
+     * In real bioses one loads the bootsector read from a diskette
+     * or from a disk, to 0000:7C00 and then one runs it.
+     * Since we are 32-bit VM and we hardcode our DOS at the moment,
+     * just call the DOS 32-bit initialization code.
+     */
+
+    DPRINT1("BiosBootstrapLoader -->\n");
+
+    DPRINT1("<-- BiosBootstrapLoader\n");
+}
+
 static VOID WINAPI BiosTimeService(LPWORD Stack)
 {
     switch (getAH())
@@ -240,7 +366,7 @@ static VOID WINAPI BiosHandleMasterPicIRQ(LPWORD Stack)
     IOWriteB(PIC_MASTER_CMD, PIC_OCW3_READ_ISR /* == 0x0B */);
     IrqNumber = IOReadB(PIC_MASTER_CMD);
 
-    DPRINT("Master - IrqNumber = 0x%x\n", IrqNumber);
+    DPRINT("Master - IrqNumber = 0x%02X\n", IrqNumber);
 
     PicIRQComplete(Stack);
 }
@@ -252,7 +378,7 @@ static VOID WINAPI BiosHandleSlavePicIRQ(LPWORD Stack)
     IOWriteB(PIC_SLAVE_CMD, PIC_OCW3_READ_ISR /* == 0x0B */);
     IrqNumber = IOReadB(PIC_SLAVE_CMD);
 
-    DPRINT("Slave - IrqNumber = 0x%x\n", IrqNumber);
+    DPRINT("Slave - IrqNumber = 0x%02X\n", IrqNumber);
 
     PicIRQComplete(Stack);
 }
@@ -348,6 +474,8 @@ static VOID InitializeBiosInt32(VOID)
     RegisterBiosInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
     RegisterBiosInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
     RegisterBiosInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
+    RegisterBiosInt32(BIOS_ROM_BASIC          , BiosRomBasic            );
+    RegisterBiosInt32(BIOS_BOOTSTRAP_LOADER   , BiosBootstrapLoader     );
     RegisterBiosInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
     RegisterBiosInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
 
@@ -361,20 +489,32 @@ static VOID InitializeBiosInt32(VOID)
 
 static VOID InitializeBiosInfo(VOID)
 {
-    Bct->Length         = sizeof(*Bct);
-    Bct->Model          = 0xFC; // PC-AT; see http://www.ctyme.com/intr/rb-1594.htm#Table515
-    Bct->SubModel       = 0x00;
-    Bct->BiosRevision   = 0x01;
-    Bct->BiosFeature[0] = 0x64; // At the moment we don't support "INT 15/AH=4Fh called upon INT 09h" nor "wait for external event (INT 15/AH=41h) supported"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
-    Bct->BiosFeature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
-    Bct->BiosFeature[2] = 0x00;
-    Bct->BiosFeature[3] = 0x00;
-    Bct->BiosFeature[4] = 0x00;
+    Bct->Length     = sizeof(*Bct);
+    Bct->Model      = BIOS_MODEL;
+    Bct->SubModel   = BIOS_SUBMODEL;
+    Bct->Revision   = BIOS_REVISION;
+    Bct->Feature[0] = 0x64; // At the moment we don't support "INT 15/AH=4Fh called upon INT 09h" nor "wait for external event (INT 15/AH=41h) supported"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
+    Bct->Feature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
+    Bct->Feature[2] = 0x00;
+    Bct->Feature[3] = 0x00;
+    Bct->Feature[4] = 0x00;
 }
 
 static VOID InitializeBiosData(VOID)
 {
     UCHAR Low, High;
+
+    /* System BIOS Copyright */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE000), BiosCopyright, sizeof(BiosCopyright)-1);
+
+    /* System BIOS Version */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE080), BiosVersion, sizeof(BiosVersion)-1); // FIXME: or E061, or E100 ??
+
+    /* System BIOS Date */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xFFF5), BiosDate, sizeof(BiosDate)-1);
+
+    /* System BIOS Model (same as Bct->Model) */
+    *(PBYTE)(SEG_OFF_TO_PTR(0xF000, 0xFFFE)) = BIOS_MODEL;
 
     /* Initialize the BDA contents */
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
@@ -430,6 +570,10 @@ BOOLEAN Bios32Initialize(VOID)
     DPRINT1("Test ROM loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
 
     SearchAndInitRoms(&BiosContext);
+
+    /* Bootstrap code */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE05B), PostCode , sizeof(PostCode ));
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xFFF0), Bootstrap, sizeof(Bootstrap));
 
     /* We are done */
     return TRUE;

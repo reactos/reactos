@@ -112,8 +112,8 @@ typedef struct _BIOS_CONFIG_TABLE
     WORD    Length;                             // 0x00
     BYTE    Model;                              // 0x02
     BYTE    SubModel;                           // 0x03
-    BYTE    BiosRevision;                       // 0x04
-    BYTE    BiosFeature[5];                     // 0x05 -- 0x09
+    BYTE    Revision;                           // 0x04
+    BYTE    Feature[5];                         // 0x05 -- 0x09
     // Other BIOSes may extend this table. We don't.
 } BIOS_CONFIG_TABLE, *PBIOS_CONFIG_TABLE;
 

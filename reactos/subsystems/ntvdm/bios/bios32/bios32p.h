@@ -24,6 +24,8 @@
 #define BIOS_EQUIPMENT_INTERRUPT    0x11
 #define BIOS_MEMORY_SIZE            0x12
 #define BIOS_MISC_INTERRUPT         0x15
+#define BIOS_ROM_BASIC              0x18
+#define BIOS_BOOTSTRAP_LOADER       0x19
 #define BIOS_TIME_INTERRUPT         0x1A
 #define BIOS_SYS_TIMER_INTERRUPT    0x1C
 
