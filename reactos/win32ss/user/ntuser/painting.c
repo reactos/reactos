@@ -1930,7 +1930,7 @@ NtUserScrollWindowEx(
    RETURN(Result);
 
 CLEANUP:
-   if (hrgnUpdate && (Result != ERROR))
+   if (hrgnUpdate && (_ret_ != ERROR))
    {
        /* Give everything back to the caller */
        RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
