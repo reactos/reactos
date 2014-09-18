@@ -30,6 +30,55 @@ PUBLIC MsgUnimplemented
 MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
+MsgPageFault:
+.asciz "Page fault! Code = 0x%x, RIP = %p, FaultingAddress = %p\n"
+
+MsgGeneralProtFault:
+.asciz "General protection fault at %p!\n"
+
+MsgBreakpointTrap:
+.asciz "BreakpointTrap at %p\n"
+
+MsgUnexpectedInterrupt:
+.asciz "UnexpectedInterrupt Vector=0x%02lx\n"
+
+MsgInvalidOpcodeFault:
+.asciz "Invalid opcode fault at %p!\n"
+
+MsgDoubleFault:
+.asciz "Double fault at %p, rbp=%p!\n"
+
+MsgTrapInfo:
+.asciz "Trap: %s at %p\n"
+
+MACRO(TRAPINFO, func)
+LOCAL label1, label2
+#if 0
+    jmp label2
+label1:  .asciz "\func"
+label2:
+    push rax
+    push rcx
+    push rdx
+    push r8
+    push r9
+    push r10
+    push r11
+    sub rsp, 32
+    lea rcx, MsgTrapInfo[rip]
+    lea rdx, 1b[rip]
+    mov r8, [rbp + KTRAP_FRAME_Rip]
+    call qword ptr FrLdrDbgPrint[rip]
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdx
+    pop rcx
+    pop rax
+    add rsp, 32
+#endif
+ENDM
 
 /* Helper Macros *************************************************************/
 
@@ -87,7 +136,7 @@ KiInterruptDispatchTemplate:
 
 
 // rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
-.PROC InternalDispatchException
+FUNC InternalDispatchException
 
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
     sub rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
@@ -155,7 +204,7 @@ KiInterruptDispatchTemplate:
 
     add rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
     ret
-.ENDP
+ENDFUNC InternalDispatchException
 
 
 /* CPU EXCEPTION HANDLERS ****************************************************/
@@ -173,13 +222,15 @@ FUNC KiDivideErrorFault
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiDivideErrorFault
 
 
 PUBLIC KiDebugTrapOrFault
 FUNC KiDebugTrapOrFault
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
+
+    TRAPINFO KiDebugTrapOrFault
 
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
@@ -194,7 +245,7 @@ KiDebugTrapOrFaultKMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiDebugTrapOrFault
 
 
 PUBLIC KiNmiInterrupt
@@ -207,7 +258,7 @@ FUNC KiNmiInterrupt
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiNmiInterrupt
 
 
 PUBLIC KiBreakpointTrap
@@ -228,7 +279,7 @@ KiBreakpointTrapKMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiBreakpointTrap
 
 
 PUBLIC KiOverflowTrap
@@ -244,7 +295,7 @@ FUNC KiOverflowTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiOverflowTrap
 
 
 PUBLIC KiBoundFault
@@ -268,13 +319,19 @@ KiBoundFaultUserMode:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiBoundFault
 
 
 PUBLIC KiInvalidOpcodeFault
 FUNC KiInvalidOpcodeFault
    /* No error code */
     EnterTrap TF_SAVE_ALL
+
+    TRAPINFO KiInvalidOpcodeFault
+
+    mov rdx, [rbp + KTRAP_FRAME_Rip]
+    lea rcx, MsgInvalidOpcodeFault[rip]
+    call qword ptr FrLdrDbgPrint[rip]
 
     /* Enable interrupts */
     sti
@@ -293,7 +350,7 @@ KiInvalidOpcodeKernel:
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiInvalidOpcodeFault
 
 
 PUBLIC KiNpxNotAvailableFault
@@ -315,7 +372,7 @@ FUNC KiNpxNotAvailableFault
 KiNpxNotAvailableFaultExit:
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiNpxNotAvailableFault
 
 
 PUBLIC KiDoubleFaultAbort
@@ -323,10 +380,15 @@ FUNC KiDoubleFaultAbort
    /* No error code */
     EnterTrap TF_SAVE_ALL
 
+    lea rcx, MsgDoubleFault[rip]
+    mov rdx, [rbp + KTRAP_FRAME_FaultAddress]
+    mov r8, rbp
+    call qword ptr FrLdrDbgPrint[rip]
+
     /* Bugcheck */
     Fatal 8 // EXCEPTION_DOUBLE_FAULT
     jmp $
-ENDFUNC
+ENDFUNC KiDoubleFaultAbort
 
 
 PUBLIC KiNpxSegmentOverrunAbort
@@ -336,8 +398,9 @@ FUNC KiNpxSegmentOverrunAbort
 
     /* Bugcheck */
     Fatal EXCEPTION_NPX_OVERRUN
+
     jmp $
-ENDFUNC
+ENDFUNC KiNpxSegmentOverrunAbort
 
 
 PUBLIC KiInvalidTssFault
@@ -348,7 +411,7 @@ FUNC KiInvalidTssFault
     /* Bugcheck */
     Fatal EXCEPTION_INVALID_TSS
     jmp $
-ENDFUNC
+ENDFUNC KiInvalidTssFault
 
 
 PUBLIC KiSegmentNotPresentFault
@@ -359,7 +422,7 @@ FUNC KiSegmentNotPresentFault
     /* Bugcheck */
     Fatal EXCEPTION_SEGMENT_NOT_PRESENT
     jmp $
-ENDFUNC
+ENDFUNC KiSegmentNotPresentFault
 
 
 PUBLIC KiStackFault
@@ -370,13 +433,18 @@ FUNC KiStackFault
     /* Bugcheck */
     Fatal EXCEPTION_STACK_FAULT
     jmp $
-ENDFUNC
+ENDFUNC KiStackFault
 
 
 PUBLIC KiGeneralProtectionFault
 FUNC KiGeneralProtectionFault
     /* We have an error code */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
+
+    //TRAPINFO KiGeneralProtectionFault
+    //mov rdx, [rbp + KTRAP_FRAME_Rip]
+    //lea rcx, MsgGeneralProtFault[rip]
+    //call qword ptr FrLdrDbgPrint[rip]
 
     /* Call the C handler */
     mov rcx, rbp
@@ -404,13 +472,23 @@ KiGpfExit:
     /* Return */
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiGeneralProtectionFault
 
 
 PUBLIC KiPageFault
 FUNC KiPageFault
     /* We have an error code */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
+
+    TRAPINFO KiPageFault
+
+#if 0
+    lea rcx, MsgPageFault[rip]
+    mov rdx, [rbp + KTRAP_FRAME_ErrorCode]
+    mov r8, [rbp + KTRAP_FRAME_Rip]
+    mov r9, [rbp + KTRAP_FRAME_FaultAddress]
+    call qword ptr FrLdrDbgPrint[rip]
+#endif
 
     /* Save page fault address */
     mov rdx, cr2
@@ -482,7 +560,7 @@ FUNC KiFloatingErrorFault
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiFloatingErrorFault
 
 
 PUBLIC KiAlignmentFault
@@ -493,7 +571,7 @@ FUNC KiAlignmentFault
     /* Bugcheck */
     Fatal EXCEPTION_ALIGNMENT_CHECK
     jmp $
-ENDFUNC
+ENDFUNC KiAlignmentFault
 
 
 PUBLIC KiMcheckAbort
@@ -504,7 +582,7 @@ FUNC KiMcheckAbort
     /* Bugcheck */
     Fatal HEX(12)
     jmp $
-ENDFUNC
+ENDFUNC KiMcheckAbort
 
 
 PUBLIC KiXmmException
@@ -526,7 +604,7 @@ FUNC KiXmmException
 KiXmmExit:
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiXmmException
 
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
@@ -534,7 +612,7 @@ ENDFUNC
 PUBLIC KiRaiseAssertion
 FUNC KiRaiseAssertion
     /* We have an error code */
-    EnterTrap (TF_SAVE_ALL)
+    EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
 
     /* Decrement RIP to point to the INT2C instruction (2 bytes, not 1 like INT3) */
     sub qword ptr [rbp + KTRAP_FRAME_Rip], 2
@@ -544,13 +622,15 @@ FUNC KiRaiseAssertion
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiRaiseAssertion
 
 
 PUBLIC KiDebugServiceTrap
-.PROC KiDebugServiceTrap
+FUNC KiDebugServiceTrap
    /* No error code */
     EnterTrap TF_SAVE_ALL
+
+    TRAPINFO KiDebugServiceTrap
 
     /* Increase Rip to skip the int3 */
     inc qword ptr [rbp + KTRAP_FRAME_Rip]
@@ -560,7 +640,7 @@ PUBLIC KiDebugServiceTrap
 
     /* Return */
     ExitTrap TF_SAVE_ALL
-.ENDP
+ENDFUNC KiDebugServiceTrap
 
 
 PUBLIC KiApcInterrupt
@@ -666,7 +746,7 @@ FUNC KiUnexpectedInterrupt
 #endif
     /* Return */
     ExitTrap TF_SAVE_ALL
-ENDFUNC
+ENDFUNC KiUnexpectedInterrupt
 
 PUBLIC KiInterruptDispatch
 FUNC KiInterruptDispatch
