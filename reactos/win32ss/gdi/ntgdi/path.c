@@ -2716,19 +2716,20 @@ NtGdiPathToRegion(HDC  hDC)
         {
             PATH_UnlockPath(pPath);
             DC_UnlockDc(pDc);
+            return NULL;
         }
         hrgnRval = Rgn->BaseObject.hHmgr;
         /* FIXME: Should we empty the path even if conversion failed? */
         if (PATH_PathToRegion(pPath, pdcattr->jFillMode, Rgn))
         {
             PATH_EmptyPath(pPath);
+            RGNOBJAPI_Unlock(Rgn);
         }
         else
         {
-            GreDeleteObject(hrgnRval);
+            REGION_Delete(Rgn);
             hrgnRval = NULL;
         }
-        RGNOBJAPI_Unlock(Rgn);
     }
 
     PATH_UnlockPath(pPath);
