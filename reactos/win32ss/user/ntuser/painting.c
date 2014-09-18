@@ -1230,13 +1230,12 @@ co_UserGetUpdateRgn(PWND Window, PREGION Rgn, BOOL bErase)
     REGION_SetRectRgn(Rgn, Rect.left, Rect.top, Rect.right, Rect.bottom);
     RegionType = IntGdiCombineRgn(Rgn, Rgn, UpdateRgn, RGN_AND);
     IntGdiOffsetRgn(Rgn, -Window->rcClient.left, -Window->rcClient.top);
+    RGNOBJAPI_Unlock(UpdateRgn);
 
    if (bErase && RegionType != NULLREGION && RegionType != ERROR)
    {
       co_UserRedrawWindow(Window, NULL, NULL, RDW_ERASENOW | RDW_NOCHILDREN);
    }
-
-   RGNOBJAPI_Unlock(UpdateRgn);
 
    return RegionType;
 }
@@ -1265,7 +1264,8 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
       RETURN(ERROR);
    }
 
-   Rgn = RGNOBJAPI_Lock(hRgn, NULL);
+   /* Use a system region, we can't hold GDI locks when doing roundtrips to user mode */
+   Rgn = IntSysCreateRectpRgn(0, 0, 0, 0);
    if (!Rgn)
        RETURN(ERROR);
 
@@ -1276,8 +1276,21 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
    RETURN(ret);
 
 CLEANUP:
+   if (Rgn && (_ret_ != ERROR))
+   {
+       PREGION TheRgn = RGNOBJAPI_Lock(hRgn, NULL);
+       if (!TheRgn)
+       {
+           EngSetLastError(ERROR_INVALID_HANDLE);
+           _ret_ = ERROR;
+       }
+       IntGdiCombineRgn(TheRgn, Rgn, NULL, RGN_COPY);
+       RGNOBJAPI_Unlock(TheRgn);
+   }
+
    if (Rgn)
-       RGNOBJAPI_Unlock(Rgn);
+       REGION_Delete(Rgn);
+
    TRACE("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -1427,14 +1440,27 @@ NtUserRedrawWindow(
       RETURN( FALSE);
    }
 
+   /* We can't hold lock on GDI obects while doing roundtrips to user mode,
+    * so use a copy instead */
    if (hrgnUpdate)
    {
-       RgnUpdate = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       PREGION RgnTemp;
+
+       RgnUpdate = IntSysCreateRectpRgn(0, 0, 0, 0);
        if (!RgnUpdate)
+       {
+           EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+           RETURN(FALSE);
+       }
+
+       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       if (!RgnTemp)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
            RETURN(FALSE);
        }
+       IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
+       RGNOBJAPI_Unlock(RgnTemp);
    }
 
    UserRefObjectCo(Wnd, &Ref);
@@ -1450,7 +1476,7 @@ NtUserRedrawWindow(
 
 CLEANUP:
     if (RgnUpdate)
-        RGNOBJAPI_Unlock(RgnUpdate);
+        REGION_Delete(RgnUpdate);
    TRACE("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -1687,11 +1713,10 @@ NtUserScrollWindowEx(
    INT Result;
    PWND Window = NULL, CaretWnd;
    HDC hDC;
-   PREGION RgnOwn = NULL, RgnTemp, RgnWinupd = NULL;
+   PREGION RgnUpdate = NULL, RgnTemp, RgnWinupd = NULL;
    HWND hwndCaret;
    DWORD dcxflags = 0;
    int rdw_flags;
-   BOOL bOwnRgn = TRUE;
    NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(DWORD);
    USER_REFERENCE_ENTRY Ref, CaretRef;
@@ -1743,17 +1768,26 @@ NtUserScrollWindowEx(
       RETURN(NULLREGION);
    }
 
+   /* We must use a copy of the region, as we can't hold an exclusive lock
+    * on it while doing callouts to user-mode */
+   RgnUpdate = IntSysCreateRectpRgn(0, 0, 0, 0);
+   if(!RgnUpdate)
+   {
+       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+       RETURN(ERROR);
+   }
+
    if (hrgnUpdate)
    {
-      RgnOwn = RGNOBJAPI_Lock(hrgnUpdate, NULL);
-      if (!RgnOwn)
-      {
-          RETURN(ERROR);
-      }
-      bOwnRgn = FALSE;
+       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       if (!RgnTemp)
+       {
+           EngSetLastError(ERROR_INVALID_HANDLE);
+           RETURN(ERROR);
+       }
+       IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
+       RGNOBJAPI_Unlock(RgnTemp);
    }
-   else
-      RgnOwn = IntSysCreateRectpRgn(0, 0, 0, 0);
 
    /* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
    if (flags & SW_SCROLLWNDDCE)
@@ -1788,9 +1822,9 @@ NtUserScrollWindowEx(
    Result = UserScrollDC( hDC,
                           dx,
                           dy,
-                         &rcScroll,
-                         &rcClip,
-                          RgnOwn,
+                          &rcScroll,
+                          &rcClip,
+                          RgnUpdate,
                           prcUnsafeUpdate? &rcUpdate : NULL);
 
    UserReleaseDC(Window, hDC, FALSE);
@@ -1801,28 +1835,31 @@ NtUserScrollWindowEx(
     */
 
    RgnTemp = IntSysCreateRectpRgn(0, 0, 0, 0);
-   if (RgnTemp)
+   if (!RgnTemp)
    {
-       if (co_UserGetUpdateRgn(Window, RgnTemp, FALSE) != NULLREGION)
-       {
-          PREGION RgnClip = IntSysCreateRectpRgnIndirect(&rcClip);
-          if (RgnClip)
-          {
-              if (!bOwnRgn)
-              {
-                 RgnWinupd = IntSysCreateRectpRgn( 0, 0, 0, 0);
-                 IntGdiCombineRgn( RgnWinupd, RgnTemp, 0, RGN_COPY);
-              }
-              IntGdiOffsetRgn(RgnTemp, dx, dy);
-              IntGdiCombineRgn(RgnTemp, RgnTemp, RgnClip, RGN_AND);
-              if (!bOwnRgn)
-                  IntGdiCombineRgn( RgnWinupd, RgnWinupd, RgnTemp, RGN_OR );
-              co_UserRedrawWindow(Window, NULL, RgnTemp, rdw_flags );
-              REGION_Delete(RgnClip);
-          }
-       }
-       REGION_Delete(RgnTemp);
+       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+       RETURN(ERROR);
    }
+
+   if (co_UserGetUpdateRgn(Window, RgnTemp, FALSE) != NULLREGION)
+   {
+      PREGION RgnClip = IntSysCreateRectpRgnIndirect(&rcClip);
+      if (RgnClip)
+      {
+          if (hrgnUpdate)
+          {
+             RgnWinupd = IntSysCreateRectpRgn( 0, 0, 0, 0);
+             IntGdiCombineRgn( RgnWinupd, RgnTemp, 0, RGN_COPY);
+          }
+          IntGdiOffsetRgn(RgnTemp, dx, dy);
+          IntGdiCombineRgn(RgnTemp, RgnTemp, RgnClip, RGN_AND);
+          if (hrgnUpdate)
+              IntGdiCombineRgn( RgnWinupd, RgnWinupd, RgnTemp, RGN_OR );
+          co_UserRedrawWindow(Window, NULL, RgnTemp, rdw_flags );
+          REGION_Delete(RgnClip);
+      }
+   }
+   REGION_Delete(RgnTemp);
 
    if (flags & SW_SCROLLCHILDREN)
    {
@@ -1854,7 +1891,7 @@ NtUserScrollWindowEx(
 
    if (flags & (SW_INVALIDATE | SW_ERASE))
    {
-      co_UserRedrawWindow(Window, NULL, RgnOwn, rdw_flags |
+      co_UserRedrawWindow(Window, NULL, RgnUpdate, rdw_flags |
                           ((flags & SW_ERASE) ? RDW_ERASENOW : 0) |
                           ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : 0));
    }
@@ -1893,19 +1930,27 @@ NtUserScrollWindowEx(
    RETURN(Result);
 
 CLEANUP:
-   if (RgnWinupd && !bOwnRgn)
+   if (hrgnUpdate && (Result != ERROR))
    {
-      IntGdiCombineRgn( RgnOwn, RgnOwn, RgnWinupd, RGN_OR);
-      REGION_Delete(RgnWinupd);
+       /* Give everything back to the caller */
+       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       /* The handle should still be valid */
+       ASSERT(RgnTemp);
+       if (RgnWinupd)
+           IntGdiCombineRgn(RgnTemp, RgnUpdate, RgnWinupd, RGN_OR);
+       else
+           IntGdiCombineRgn(RgnTemp, RgnUpdate, NULL, RGN_COPY);
+       RGNOBJAPI_Unlock(RgnTemp);
    }
 
-   if (RgnOwn && !hrgnUpdate)
+   if (RgnWinupd)
    {
-      REGION_Delete(RgnOwn);
+       REGION_Delete(RgnWinupd);
    }
-   else if (RgnOwn)
+
+   if (RgnUpdate)
    {
-       RGNOBJAPI_Unlock(RgnOwn);
+      REGION_Delete(RgnUpdate);
    }
 
    if (Window)
