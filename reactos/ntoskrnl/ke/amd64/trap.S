@@ -612,7 +612,7 @@ ENDFUNC KiXmmException
 PUBLIC KiRaiseAssertion
 FUNC KiRaiseAssertion
     /* We have an error code */
-    EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
+    EnterTrap (TF_SAVE_ALL)
 
     /* Decrement RIP to point to the INT2C instruction (2 bytes, not 1 like INT3) */
     sub qword ptr [rbp + KTRAP_FRAME_Rip], 2
