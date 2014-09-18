@@ -1258,6 +1258,7 @@ co_WinPosDoWinPosChanging(PWND Window,
 
    if (!(WinPos->flags & SWP_NOSENDCHANGING))
    {
+      TRACE("Sending WM_WINDOWPOSCHANGING to hwnd %p.\n", Window->head.h);
       co_IntSendMessageNoWait(Window->head.h, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
    }
 

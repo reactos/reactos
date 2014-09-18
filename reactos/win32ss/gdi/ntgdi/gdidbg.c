@@ -595,6 +595,16 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     DBG_CHANNEL *ChannelEntry;
     UINT iLevel, iChannel;
 
+    /* Special treatment for the "all" channel */
+    if (wcscmp(channel, L"all") == 0)
+    {
+        for (iChannel = 0; iChannel < DbgChCount; iChannel++)
+        {
+            DbgAddDebugChannel(ppi, DbgChannels[iChannel].Name, level, op);
+        }
+        return TRUE;
+    }
+
     ChannelEntry = (DBG_CHANNEL*)bsearch(channel,
                                          DbgChannels,
                                          DbgChCount,

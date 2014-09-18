@@ -244,6 +244,7 @@ VOID FASTCALL UserEnterExclusive(VOID)
 VOID FASTCALL UserLeave(VOID)
 {
    ASSERT_NOGDILOCKS();
+   ASSERT(UserIsEntered());
    ExReleaseResourceLite(&UserLock);
    KeLeaveCriticalRegion();
 }
