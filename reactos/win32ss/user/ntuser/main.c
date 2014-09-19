@@ -266,7 +266,6 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     NTSTATUS Status = STATUS_SUCCESS;
     PTEB pTeb;
     LARGE_INTEGER LargeTickCount;
-    OBJECT_ATTRIBUTES EventQueueObjAttr;
 
     Process = Thread->ThreadsProcess;
 
@@ -314,9 +313,8 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     ptiCurrent->ppi->cThreads++;
 
     ptiCurrent->hEventQueueClient = NULL;
-    InitializeObjectAttributes(&EventQueueObjAttr, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
     Status = ZwCreateEvent(&ptiCurrent->hEventQueueClient, EVENT_ALL_ACCESS,
-                            &EventQueueObjAttr, SynchronizationEvent, FALSE);
+                            NULL, SynchronizationEvent, FALSE);
     if (!NT_SUCCESS(Status))
     {
        goto error;
