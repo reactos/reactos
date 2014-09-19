@@ -19,17 +19,21 @@ _call_method:
     push esi
     push edi
     mov edx, dword ptr ds:[ebp + 12]
+    mov edi, esp
     shl edx, 2
     jz cm1
-    sub esp, edx
-    and esp, HEX(0FFFFFFF0)
+    sub edi, edx
+    and edi, HEX(0FFFFFFF0)
+    mov esp, edi
     mov ecx, dword ptr ds:[ebp + 12]
     mov esi, dword ptr ds:[ebp + 16]
-    mov edi, esp
     cld
     rep movsd
 cm1:
     call dword ptr ds:[ebp + 8]
+    sub edi, esp
+    mov ecx,[ebp + 20]
+    mov [ecx], edi
     lea esp, [ebp - 8]
     pop edi
     pop esi
