@@ -316,7 +316,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     ptiCurrent->hEventQueueClient = NULL;
     InitializeObjectAttributes(&EventQueueObjAttr, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
     Status = ZwCreateEvent(&ptiCurrent->hEventQueueClient, EVENT_ALL_ACCESS,
-                            NULL, SynchronizationEvent, FALSE);
+                            &EventQueueObjAttr, SynchronizationEvent, FALSE);
     if (!NT_SUCCESS(Status))
     {
        goto error;
