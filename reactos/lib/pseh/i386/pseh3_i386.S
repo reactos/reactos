@@ -87,6 +87,7 @@ __SEH3$_RegisterTryLevelWithNonVolatiles:
     /* Safe the return address */
     mov ebx, [esp]
     mov [eax + SEH3_REGISTRATION_FRAME_ReturnAddress], ebx
+    mov ebx, [eax + SEH3_REGISTRATION_FRAME_Ebx]
 
 .global __SEH3$_RegisterTryLevelWithStackLayout
 __SEH3$_RegisterTryLevelWithStackLayout:

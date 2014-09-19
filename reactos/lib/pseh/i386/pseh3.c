@@ -153,7 +153,7 @@ _SEH3$_AutoCleanup(
     /* Check for __finally frames */
     if (Frame->ScopeTable->Target == NULL)
     {
-         _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter);
+       _SEH3$_InvokeFilter(Frame, Frame->ScopeTable->Filter);
     }
 
 }
