@@ -718,6 +718,8 @@ static void doChildren(int argc, char **argv)
 
     blackbox.failures = child_failures;
     save_blackbox(blackbox_file, &blackbox, sizeof(blackbox));
+
+    HeapFree(GetProcessHeap(), 0, cmd);
 }
 
 static void test_debug_children(char *name, DWORD flag, BOOL debug_child)

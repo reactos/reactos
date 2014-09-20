@@ -3959,6 +3959,63 @@ static void test_SetFileValidData(void)
     DeleteFileA(filename);
 }
 
+static void test_WriteFileGather(void)
+{
+    char temp_path[MAX_PATH], filename[MAX_PATH];
+    HANDLE hfile, hiocp1, hiocp2;
+    DWORD ret, size;
+    ULONG_PTR key;
+    FILE_SEGMENT_ELEMENT fse[2];
+    OVERLAPPED ovl, *povl = NULL;
+    SYSTEM_INFO si;
+    LPVOID buf = NULL;
+
+    ret = GetTempPathA( MAX_PATH, temp_path );
+    ok( ret != 0, "GetTempPathA error %d\n", GetLastError() );
+    ok( ret < MAX_PATH, "temp path should fit into MAX_PATH\n" );
+    ret = GetTempFileNameA( temp_path, "wfg", 0, filename );
+    ok( ret != 0, "GetTempFileNameA error %d\n", GetLastError() );
+
+    hfile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+                         FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED | FILE_ATTRIBUTE_NORMAL, 0 );
+    ok( hfile != INVALID_HANDLE_VALUE, "CreateFile failed err %u\n", GetLastError() );
+    if (hfile == INVALID_HANDLE_VALUE) return;
+
+    hiocp1 = CreateIoCompletionPort( INVALID_HANDLE_VALUE, NULL, 999, 0 );
+    hiocp2 = CreateIoCompletionPort( hfile, hiocp1, 999, 0 );
+    ok( hiocp2 != 0, "CreateIoCompletionPort failed err %u\n", GetLastError() );
+
+    GetSystemInfo( &si );
+    buf = VirtualAlloc( NULL, si.dwPageSize, MEM_COMMIT, PAGE_READWRITE );
+    ok( buf != NULL, "VirtualAlloc failed err %u\n", GetLastError() );
+
+    memset( &ovl, 0, sizeof(ovl) );
+    memset( fse, 0, sizeof(fse) );
+    fse[0].Buffer = buf;
+    if (!WriteFileGather( hfile, fse, si.dwPageSize, NULL, &ovl ))
+        ok( GetLastError() == ERROR_IO_PENDING, "WriteFileGather failed err %u\n", GetLastError() );
+
+    ret = GetQueuedCompletionStatus( hiocp2, &size, &key, &povl, 1000 );
+    ok( ret, "GetQueuedCompletionStatus failed err %u\n", GetLastError());
+    ok( povl == &ovl, "wrong ovl %p\n", povl );
+
+    memset( &ovl, 0, sizeof(ovl) );
+    memset( fse, 0, sizeof(fse) );
+    fse[0].Buffer = buf;
+    if (!ReadFileScatter( hfile, fse, si.dwPageSize, NULL, &ovl ))
+        ok( GetLastError() == ERROR_IO_PENDING, "ReadFileScatter failed err %u\n", GetLastError() );
+
+    ret = GetQueuedCompletionStatus( hiocp2, &size, &key, &povl, 1000 );
+    ok( ret, "GetQueuedCompletionStatus failed err %u\n", GetLastError());
+    ok( povl == &ovl, "wrong ovl %p\n", povl );
+
+    CloseHandle( hfile );
+    CloseHandle( hiocp1 );
+    CloseHandle( hiocp2 );
+    VirtualFree( buf, 0, MEM_RELEASE );
+    DeleteFileA( filename );
+}
+
 static unsigned file_map_access(unsigned access)
 {
     if (access & GENERIC_READ)    access |= FILE_GENERIC_READ;
@@ -4132,5 +4189,6 @@ START_TEST(file)
     test_GetFileInformationByHandleEx();
     test_OpenFileById();
     test_SetFileValidData();
+    test_WriteFileGather();
     test_file_access();
 }

@@ -61,8 +61,8 @@ static void (WINAPI *pLdrShutdownProcess)(void);
 static BOOLEAN (WINAPI *pRtlDllShutdownInProgress)(void);
 static NTSTATUS (WINAPI *pNtAllocateVirtualMemory)(HANDLE, PVOID *, ULONG, SIZE_T *, ULONG, ULONG);
 static NTSTATUS (WINAPI *pNtFreeVirtualMemory)(HANDLE, PVOID *, SIZE_T *, ULONG);
-static NTSTATUS (WINAPI *pLdrLockLoaderLock)(ULONG, ULONG *, ULONG *);
-static NTSTATUS (WINAPI *pLdrUnlockLoaderLock)(ULONG, ULONG);
+static NTSTATUS (WINAPI *pLdrLockLoaderLock)(ULONG, ULONG *, ULONG_PTR *);
+static NTSTATUS (WINAPI *pLdrUnlockLoaderLock)(ULONG, ULONG_PTR);
 static void (WINAPI *pRtlAcquirePebLock)(void);
 static void (WINAPI *pRtlReleasePebLock)(void);
 static PVOID    (WINAPI *pResolveDelayLoadedAPI)(PVOID, PCIMAGE_DELAYLOAD_DESCRIPTOR,
@@ -1367,7 +1367,7 @@ static DWORD WINAPI mutex_thread_proc(void *param)
         if (ret == WAIT_OBJECT_0) break;
         else if (ret == WAIT_OBJECT_0 + 1)
         {
-            ULONG loader_lock_magic;
+            ULONG_PTR loader_lock_magic;
             trace("%04u: mutex_thread_proc: Entering loader lock\n", GetCurrentThreadId());
             ret = pLdrLockLoaderLock(0, NULL, &loader_lock_magic);
             ok(!ret, "LdrLockLoaderLock error %#x\n", ret);

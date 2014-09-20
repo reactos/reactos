@@ -394,6 +394,7 @@ static void check_exe( const sec_verify *verify )
     int i;
     IMAGE_DOS_HEADER *dos;
     IMAGE_NT_HEADERS *nt;
+    IMAGE_OPTIONAL_HEADER *opt;
     IMAGE_SECTION_HEADER *sec;
     IMAGE_RESOURCE_DIRECTORY *dir;
     HANDLE file, mapping;
@@ -415,6 +416,7 @@ static void check_exe( const sec_verify *verify )
         goto end;
 
     nt = (void*) ((BYTE*) dos + dos->e_lfanew);
+    opt = &nt->OptionalHeader;
     sec = (void*) &nt[1];
 
     for(i = 0; i < max_sections; i++)
@@ -444,6 +446,10 @@ static void check_exe( const sec_verify *verify )
                 verify->NumberOfNamedEntries, dir->NumberOfNamedEntries);
         ok( dir->NumberOfIdEntries == verify->NumberOfIdEntries, "NumberOfIdEntries should be %d instead of %d\n",
                 verify->NumberOfIdEntries, dir->NumberOfIdEntries);
+
+        ok(opt->DataDirectory[IMAGE_FILE_RESOURCE_DIRECTORY].VirtualAddress == sec[verify->rsrc_section].VirtualAddress,
+                "VirtualAddress in optional header should be %d instead of %d\n",
+                sec[verify->rsrc_section].VirtualAddress, opt->DataDirectory[IMAGE_FILE_RESOURCE_DIRECTORY].VirtualAddress);
     }
 
 end:

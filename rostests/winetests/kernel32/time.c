@@ -667,7 +667,7 @@ static void test_GetCalendarInfo(void)
     char bufferA[20];
     WCHAR bufferW[20];
     DWORD val1, val2;
-    int ret;
+    int ret, ret2;
 
     if (!pGetCalendarInfoA || !pGetCalendarInfoW)
     {
@@ -716,6 +716,21 @@ static void test_GetCalendarInfo(void)
     ret = pGetCalendarInfoW( 0x0409, CAL_GREGORIAN, CAL_ITWODIGITYEARMAX, NULL, 0, NULL );
     ok( ret, "GetCalendarInfoW failed err %u\n", GetLastError() );
     ok( ret == 5, "wrong size %u\n", ret );
+
+    ret = pGetCalendarInfoA( LANG_SYSTEM_DEFAULT, CAL_GREGORIAN, CAL_SDAYNAME1,
+                             bufferA, sizeof(bufferA), NULL);
+    ok( ret, "GetCalendarInfoA failed err %u\n", GetLastError() );
+    ret2 = pGetCalendarInfoA( LANG_SYSTEM_DEFAULT, CAL_GREGORIAN, CAL_SDAYNAME1,
+                              bufferA, 0, NULL);
+    ok( ret2, "GetCalendarInfoA failed err %u\n", GetLastError() );
+    ok( ret == ret2, "got %d, expected %d\n", ret2, ret );
+
+    ret2 = pGetCalendarInfoW( LANG_SYSTEM_DEFAULT, CAL_GREGORIAN, CAL_SDAYNAME1,
+                              bufferW, sizeof(bufferW), NULL);
+    ok( ret2, "GetCalendarInfoW failed err %u\n", GetLastError() );
+    ret2 = WideCharToMultiByte( CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL );
+    ok( ret == ret2, "got %d, expected %d\n", ret, ret2 );
+
 }
 
 START_TEST(time)

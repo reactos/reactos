@@ -1127,7 +1127,7 @@ static void test_child_heap( const char *arg )
 
     if (!(heap->flags & HEAP_GROWABLE) || heap->pattern == 0xffeeffee)  /* vista layout */
     {
-        ok( heap->flags == 0, "%s: got heap flags %08x expected 0\n", arg, heap->flags );
+        ok( (heap->flags & ~HEAP_GROWABLE) == 0, "%s: got heap flags %08x\n", arg, heap->flags );
     }
     else if (heap->pattern == 0xeeeeeeee && heap->flags == 0xeeeeeeee)
     {
