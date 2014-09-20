@@ -206,7 +206,7 @@ int wpp_parse( const char *input, FILE *output )
         return 2;
     }
 
-    pp_status.input = input;
+    pp_status.input = input ? pp_xstrdup(input) : NULL;
 
     ppy_out = output;
     pp_writestring("# 1 \"%s\" 1\n", input ? input : "");
@@ -215,7 +215,11 @@ int wpp_parse( const char *input, FILE *output )
     /* If there were errors during processing, return an error code */
     if (!ret && pp_status.state) ret = pp_status.state;
 
-    if (input) wpp_callbacks->close(pp_status.file);
+    if (input)
+    {
+	wpp_callbacks->close(pp_status.file);
+	free(pp_status.input);
+    }
     /* Clean if_stack, it could remain dirty on errors */
     while (pp_get_if_depth()) pp_pop_if();
     del_special_defines();

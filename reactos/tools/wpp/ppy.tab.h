@@ -1,19 +1,19 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison interface for Yacc-like parsers in C
-   
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
-   
+
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
@@ -26,71 +26,77 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-   
+
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-
-/* Tokens.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     tRCINCLUDE = 258,
-     tIF = 259,
-     tIFDEF = 260,
-     tIFNDEF = 261,
-     tELSE = 262,
-     tELIF = 263,
-     tENDIF = 264,
-     tDEFINED = 265,
-     tNL = 266,
-     tINCLUDE = 267,
-     tLINE = 268,
-     tGCCLINE = 269,
-     tERROR = 270,
-     tWARNING = 271,
-     tPRAGMA = 272,
-     tPPIDENT = 273,
-     tUNDEF = 274,
-     tMACROEND = 275,
-     tCONCAT = 276,
-     tELIPSIS = 277,
-     tSTRINGIZE = 278,
-     tIDENT = 279,
-     tLITERAL = 280,
-     tMACRO = 281,
-     tDEFINE = 282,
-     tDQSTRING = 283,
-     tSQSTRING = 284,
-     tIQSTRING = 285,
-     tUINT = 286,
-     tSINT = 287,
-     tULONG = 288,
-     tSLONG = 289,
-     tULONGLONG = 290,
-     tSLONGLONG = 291,
-     tRCINCLUDEPATH = 292,
-     tLOGOR = 293,
-     tLOGAND = 294,
-     tNE = 295,
-     tEQ = 296,
-     tGTE = 297,
-     tLTE = 298,
-     tRSHIFT = 299,
-     tLSHIFT = 300
-   };
+#ifndef YY_PPY_PPY_TAB_H_INCLUDED
+# define YY_PPY_PPY_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int ppy_debug;
 #endif
 
+/* Token type.  */
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+  enum yytokentype
+  {
+    tRCINCLUDE = 258,
+    tIF = 259,
+    tIFDEF = 260,
+    tIFNDEF = 261,
+    tELSE = 262,
+    tELIF = 263,
+    tENDIF = 264,
+    tDEFINED = 265,
+    tNL = 266,
+    tINCLUDE = 267,
+    tLINE = 268,
+    tGCCLINE = 269,
+    tERROR = 270,
+    tWARNING = 271,
+    tPRAGMA = 272,
+    tPPIDENT = 273,
+    tUNDEF = 274,
+    tMACROEND = 275,
+    tCONCAT = 276,
+    tELIPSIS = 277,
+    tSTRINGIZE = 278,
+    tIDENT = 279,
+    tLITERAL = 280,
+    tMACRO = 281,
+    tDEFINE = 282,
+    tDQSTRING = 283,
+    tSQSTRING = 284,
+    tIQSTRING = 285,
+    tUINT = 286,
+    tSINT = 287,
+    tULONG = 288,
+    tSLONG = 289,
+    tULONGLONG = 290,
+    tSLONGLONG = 291,
+    tRCINCLUDEPATH = 292,
+    tLOGOR = 293,
+    tLOGAND = 294,
+    tEQ = 295,
+    tNE = 296,
+    tLTE = 297,
+    tGTE = 298,
+    tLSHIFT = 299,
+    tRSHIFT = 300
+  };
+#endif
 
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
+typedef union YYSTYPE YYSTYPE;
+union YYSTYPE
 {
-
-/* Line 2068 of yacc.c  */
-#line 126 "ppy.y"
+#line 126 "ppy.y" /* yacc.c:1909  */
 
 	int		sint;
 	unsigned int	uint;
@@ -104,16 +110,15 @@ typedef union YYSTYPE
 	marg_t		*marg;
 	mtext_t		*mtext;
 
-
-
-/* Line 2068 of yacc.c  */
-#line 111 "ppy.tab.h"
-} YYSTYPE;
+#line 114 "ppy.tab.h" /* yacc.c:1909  */
+};
 # define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+
 extern YYSTYPE ppy_lval;
 
+int ppy_parse (void);
 
+#endif /* !YY_PPY_PPY_TAB_H_INCLUDED  */

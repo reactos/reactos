@@ -228,7 +228,7 @@ void pp_internal_error(const char *file, int line, const char *s, ...) __attribu
 /* everything is in this structure to avoid polluting the global symbol space */
 struct pp_status
 {
-    const char *input;  /* current input file name */
+    char *input;        /* current input file name */
     void *file;         /* current input file descriptor */
     int line_number;    /* current line number */
     int char_number;    /* current char number in line */
