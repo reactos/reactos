@@ -2179,7 +2179,7 @@ SamrEnumerateGroupsInDomain(IN SAMPR_HANDLE DomainHandle,
         EnumBuffer->Buffer[i].RelativeId = Rid;
 
         EnumBuffer->Buffer[i].Name.Length = (USHORT)NameLength;
-        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(DataLength + sizeof(UNICODE_NULL));
+        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(NameLength + sizeof(UNICODE_NULL));
 
 /* FIXME: Disabled because of bugs in widl and rpcrt4 */
 #if 0
@@ -2790,7 +2790,7 @@ SamrEnumerateUsersInDomain(IN SAMPR_HANDLE DomainHandle,
         EnumBuffer->Buffer[i].RelativeId = Rid;
 
         EnumBuffer->Buffer[i].Name.Length = (USHORT)NameLength;
-        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(DataLength + sizeof(UNICODE_NULL));
+        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(NameLength + sizeof(UNICODE_NULL));
 
 /* FIXME: Disabled because of bugs in widl and rpcrt4 */
 #if 0
@@ -3171,7 +3171,7 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
         EnumBuffer->Buffer[i].RelativeId = Rid;
 
         EnumBuffer->Buffer[i].Name.Length = (USHORT)NameLength;
-        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(DataLength + sizeof(UNICODE_NULL));
+        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(NameLength + sizeof(UNICODE_NULL));
 
 /* FIXME: Disabled because of bugs in widl and rpcrt4 */
 #if 0
