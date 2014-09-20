@@ -90,6 +90,8 @@ static CHAR *    (WINAPI *pRtlIpv4AddressToStringA)(const IN_ADDR *, LPSTR);
 static NTSTATUS  (WINAPI *pRtlIpv4AddressToStringExA)(const IN_ADDR *, USHORT, LPSTR, PULONG);
 static NTSTATUS  (WINAPI *pRtlIpv4StringToAddressA)(PCSTR, BOOLEAN, PCSTR *, IN_ADDR *);
 static NTSTATUS  (WINAPI *pLdrAddRefDll)(ULONG, HMODULE);
+static NTSTATUS  (WINAPI *pLdrLockLoaderLock)(ULONG, ULONG*, ULONG_PTR*);
+static NTSTATUS  (WINAPI *pLdrUnlockLoaderLock)(ULONG, ULONG_PTR);
 
 static HMODULE hkernel32 = 0;
 static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
@@ -135,6 +137,8 @@ static void InitFunctionPtrs(void)
         pRtlIpv4AddressToStringExA = (void *)GetProcAddress(hntdll, "RtlIpv4AddressToStringExA");
         pRtlIpv4StringToAddressA = (void *)GetProcAddress(hntdll, "RtlIpv4StringToAddressA");
         pLdrAddRefDll = (void *)GetProcAddress(hntdll, "LdrAddRefDll");
+        pLdrLockLoaderLock = (void *)GetProcAddress(hntdll, "LdrLockLoaderLock");
+        pLdrUnlockLoaderLock = (void *)GetProcAddress(hntdll, "LdrUnlockLoaderLock");
     }
     hkernel32 = LoadLibraryA("kernel32.dll");
     ok(hkernel32 != 0, "LoadLibrary failed\n");
@@ -1551,6 +1555,58 @@ static void test_LdrAddRefDll(void)
     ok(mod2 != NULL, "got %p\n", mod2);
 }
 
+static void test_LdrLockLoaderLock(void)
+{
+    ULONG_PTR magic;
+    ULONG result;
+    NTSTATUS status;
+
+    if (!pLdrLockLoaderLock)
+    {
+        win_skip("LdrLockLoaderLock() is not available\n");
+        return;
+    }
+
+    /* invalid flags */
+    result = 10;
+    magic = 0xdeadbeef;
+    status = pLdrLockLoaderLock(0x10, &result, &magic);
+    ok(status == STATUS_INVALID_PARAMETER_1, "got 0x%08x\n", status);
+    ok(result == 0, "got %d\n", result);
+    ok(magic == 0, "got %lx\n", magic);
+
+    magic = 0xdeadbeef;
+    status = pLdrLockLoaderLock(0x10, NULL, &magic);
+    ok(status == STATUS_INVALID_PARAMETER_1, "got 0x%08x\n", status);
+    ok(magic == 0, "got %lx\n", magic);
+
+    result = 10;
+    status = pLdrLockLoaderLock(0x10, &result, NULL);
+    ok(status == STATUS_INVALID_PARAMETER_1, "got 0x%08x\n", status);
+    ok(result == 0, "got %d\n", result);
+
+    /* non-blocking mode, result is null */
+    magic = 0xdeadbeef;
+    status = pLdrLockLoaderLock(0x2, NULL, &magic);
+    ok(status == STATUS_INVALID_PARAMETER_2, "got 0x%08x\n", status);
+    ok(magic == 0, "got %lx\n", magic);
+
+    /* magic pointer is null */
+    result = 10;
+    status = pLdrLockLoaderLock(0, &result, NULL);
+    ok(status == STATUS_INVALID_PARAMETER_3, "got 0x%08x\n", status);
+    ok(result == 0, "got %d\n", result);
+
+    /* lock in non-blocking mode */
+    result = 0;
+    magic = 0;
+    status = pLdrLockLoaderLock(0x2, &result, &magic);
+    ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+    ok(result == 1, "got %d\n", result);
+    ok(magic != 0, "got %lx\n", magic);
+    pLdrUnlockLoaderLock(0, magic);
+}
+
 START_TEST(rtl)
 {
     InitFunctionPtrs();
@@ -1576,4 +1632,5 @@ START_TEST(rtl)
     test_RtlIpv4AddressToStringEx();
     test_RtlIpv4StringToAddress();
     test_LdrAddRefDll();
+    test_LdrLockLoaderLock();
 }

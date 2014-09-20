@@ -267,6 +267,7 @@ static void create_file_test(void)
                            FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     ok(status == STATUS_OBJECT_NAME_INVALID,
        "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status);
+    pRtlFreeUnicodeString(&nameW);
 
     pRtlDosPathNameToNtPathName_U(pipeInvalidNameW, &nameW, NULL, NULL);
     attr.ObjectName = &nameW;
@@ -281,6 +282,7 @@ static void create_file_test(void)
                            FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     ok(status == STATUS_OBJECT_NAME_INVALID,
        "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status);
+    pRtlFreeUnicodeString(&nameW);
 }
 
 static void open_file_test(void)
@@ -1966,6 +1968,7 @@ static void test_NtCreateFile(void)
         }
     }
 
+    pRtlFreeUnicodeString( &nameW );
     SetFileAttributesW(path, FILE_ATTRIBUTE_ARCHIVE);
     DeleteFileW( path );
 }

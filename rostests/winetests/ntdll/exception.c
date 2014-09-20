@@ -43,6 +43,7 @@ static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
 static NTSTATUS  (WINAPI *pNtGetContextThread)(HANDLE,CONTEXT*);
 static NTSTATUS  (WINAPI *pNtSetContextThread)(HANDLE,CONTEXT*);
 static NTSTATUS  (WINAPI *pRtlRaiseException)(EXCEPTION_RECORD *rec);
+static PVOID     (WINAPI *pRtlUnwind)(PVOID, PVOID, PEXCEPTION_RECORD, PVOID);
 static PVOID     (WINAPI *pRtlAddVectoredExceptionHandler)(ULONG first, PVECTORED_EXCEPTION_HANDLER func);
 static ULONG     (WINAPI *pRtlRemoveVectoredExceptionHandler)(PVOID handler);
 static NTSTATUS  (WINAPI *pNtReadVirtualMemory)(HANDLE, const void*, void*, SIZE_T, SIZE_T*);
@@ -388,6 +389,83 @@ static void test_rtlraiseexception(void)
     run_rtlraiseexception_test(0x12345);
     run_rtlraiseexception_test(EXCEPTION_BREAKPOINT);
     run_rtlraiseexception_test(EXCEPTION_INVALID_HANDLE);
+}
+
+static DWORD unwind_expected_eax;
+
+static DWORD unwind_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *frame,
+                             CONTEXT *context, EXCEPTION_REGISTRATION_RECORD **dispatcher )
+{
+    trace("exception: %08x flags:%x addr:%p context: Eip:%x\n",
+          rec->ExceptionCode, rec->ExceptionFlags, rec->ExceptionAddress, context->Eip);
+
+    ok(rec->ExceptionCode == STATUS_UNWIND, "ExceptionCode is %08x instead of %08x\n",
+       rec->ExceptionCode, STATUS_UNWIND);
+    ok(rec->ExceptionAddress == (char *)code_mem + 0x22, "ExceptionAddress at %p instead of %p\n",
+       rec->ExceptionAddress, (char *)code_mem + 0x22);
+    ok(context->Eax == unwind_expected_eax, "context->Eax is %08x instead of %08x\n",
+       context->Eax, unwind_expected_eax);
+
+    context->Eax += 1;
+    return ExceptionContinueSearch;
+}
+
+static const BYTE call_unwind_code[] = {
+    0x55,                           /* push %ebp */
+    0x53,                           /* push %ebx */
+    0x56,                           /* push %esi */
+    0x57,                           /* push %edi */
+    0xe8, 0x00, 0x00, 0x00, 0x00,   /* call 0 */
+    0x58,                           /* 0: pop %eax */
+    0x05, 0x1e, 0x00, 0x00, 0x00,   /* add $0x1e,%eax */
+    0xff, 0x74, 0x24, 0x20,         /* push 0x20(%esp) */
+    0xff, 0x74, 0x24, 0x20,         /* push 0x20(%esp) */
+    0x50,                           /* push %eax */
+    0xff, 0x74, 0x24, 0x24,         /* push 0x24(%esp) */
+    0x8B, 0x44, 0x24, 0x24,         /* mov 0x24(%esp),%eax */
+    0xff, 0xd0,                     /* call *%eax */
+    0x5f,                           /* pop %edi */
+    0x5e,                           /* pop %esi */
+    0x5b,                           /* pop %ebx */
+    0x5d,                           /* pop %ebp */
+    0xc3,                           /* ret */
+    0xcc,                           /* int $3 */
+};
+
+static void test_unwind(void)
+{
+    EXCEPTION_REGISTRATION_RECORD frames[2], *frame2 = &frames[0], *frame1 = &frames[1];
+    DWORD (*func)(void* function, EXCEPTION_REGISTRATION_RECORD *pEndFrame, EXCEPTION_RECORD* record, DWORD retval) = code_mem;
+    DWORD retval;
+
+    memcpy(code_mem, call_unwind_code, sizeof(call_unwind_code));
+
+    /* add first unwind handler */
+    frame1->Handler = unwind_handler;
+    frame1->Prev = pNtCurrentTeb()->Tib.ExceptionList;
+    pNtCurrentTeb()->Tib.ExceptionList = frame1;
+
+    /* add second unwind handler */
+    frame2->Handler = unwind_handler;
+    frame2->Prev = pNtCurrentTeb()->Tib.ExceptionList;
+    pNtCurrentTeb()->Tib.ExceptionList = frame2;
+
+    /* test unwind to current frame */
+    unwind_expected_eax = 0xDEAD0000;
+    retval = func(pRtlUnwind, frame2, NULL, 0xDEAD0000);
+    ok(retval == 0xDEAD0000, "RtlUnwind returned eax %08x instead of %08x\n", retval, 0xDEAD0000);
+    ok(pNtCurrentTeb()->Tib.ExceptionList == frame2, "Exception record points to %p instead of %p\n",
+       pNtCurrentTeb()->Tib.ExceptionList, frame2);
+
+    /* unwind to frame1 */
+    unwind_expected_eax = 0xDEAD0000;
+    retval = func(pRtlUnwind, frame1, NULL, 0xDEAD0000);
+    ok(retval == 0xDEAD0001, "RtlUnwind returned eax %08x instead of %08x\n", retval, 0xDEAD0001);
+    ok(pNtCurrentTeb()->Tib.ExceptionList == frame1, "Exception record points to %p instead of %p\n",
+       pNtCurrentTeb()->Tib.ExceptionList, frame1);
+
+    /* restore original handler */
+    pNtCurrentTeb()->Tib.ExceptionList = frame1->Prev;
 }
 
 static DWORD handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *frame,
@@ -864,6 +942,51 @@ static void test_debugger(void)
                 status = pNtSetContextThread(pi.hThread, &ctx);
                 ok(!status, "NtSetContextThread failed with 0x%x\n", status);
             }
+        }
+        else if (de.dwDebugEventCode == OUTPUT_DEBUG_STRING_EVENT)
+        {
+            int stage;
+            char buffer[64];
+
+            status = pNtReadVirtualMemory(pi.hProcess, &test_stage, &stage,
+                                          sizeof(stage), &size_read);
+            ok(!status,"NtReadVirtualMemory failed with 0x%x\n", status);
+
+            ok(!de.u.DebugString.fUnicode, "unepxected unicode debug string event\n");
+            ok(de.u.DebugString.nDebugStringLength < sizeof(buffer) - 1, "buffer not large enough to hold %d bytes\n",
+               de.u.DebugString.nDebugStringLength);
+
+            memset(buffer, 0, sizeof(buffer));
+            status = pNtReadVirtualMemory(pi.hProcess, de.u.DebugString.lpDebugStringData, buffer,
+                                          de.u.DebugString.nDebugStringLength, &size_read);
+            ok(!status,"NtReadVirtualMemory failed with 0x%x\n", status);
+
+            if (stage == 3 || stage == 4)
+                ok(!strcmp(buffer, "Hello World"), "got unexpected debug string '%s'\n", buffer);
+            else /* ignore unrelated debug strings like 'SHIMVIEW: ShimInfo(Complete)' */
+                ok(strstr(buffer, "SHIMVIEW") != NULL, "unexpected stage %x, got debug string event '%s'\n", stage, buffer);
+
+            if (stage == 4) continuestatus = DBG_EXCEPTION_NOT_HANDLED;
+        }
+        else if (de.dwDebugEventCode == RIP_EVENT)
+        {
+            int stage;
+
+            status = pNtReadVirtualMemory(pi.hProcess, &test_stage, &stage,
+                                          sizeof(stage), &size_read);
+            ok(!status,"NtReadVirtualMemory failed with 0x%x\n", status);
+
+            if (stage == 5 || stage == 6)
+            {
+                ok(de.u.RipInfo.dwError == 0x11223344, "got unexpected rip error code %08x, expected %08x\n",
+                   de.u.RipInfo.dwError, 0x11223344);
+                ok(de.u.RipInfo.dwType  == 0x55667788, "got unexpected rip type %08x, expected %08x\n",
+                   de.u.RipInfo.dwType, 0x55667788);
+            }
+            else
+                ok(FALSE, "unexpected stage %x\n", stage);
+
+            if (stage == 6) continuestatus = DBG_EXCEPTION_NOT_HANDLED;
         }
 
         ContinueDebugEvent(de.dwProcessId, de.dwThreadId, continuestatus);
@@ -1487,8 +1610,8 @@ static void test_dynamic_unwind(void)
     func = pRtlLookupFunctionEntry( (ULONG_PTR)code_mem + code_offset + 16, &base, NULL );
     ok( func == NULL,
         "RtlLookupFunctionEntry returned unexpected function, expected: NULL, got: %p\n", func );
-    ok( base == 0xdeadbeef,
-        "RtlLookupFunctionEntry modified base address, expected: 0xdeadbeef, got: %lx\n", base );
+    ok( !base || broken(base == 0xdeadbeef),
+        "RtlLookupFunctionEntry modified base address, expected: 0, got: %lx\n", base );
 
     /* Test with pointer inside of our function */
     base = 0xdeadbeef;
@@ -1546,8 +1669,8 @@ static void test_dynamic_unwind(void)
     func = pRtlLookupFunctionEntry( (ULONG_PTR)code_mem + code_offset + 32, &base, NULL );
     ok( func == NULL,
         "RtlLookupFunctionEntry returned unexpected function, expected: NULL, got: %p\n", func );
-    ok( base == 0xdeadbeef,
-        "RtlLookupFunctionEntry modified base address, expected: 0xdeadbeef, got: %lx\n", base );
+    ok( !base || broken(base == 0xdeadbeef),
+        "RtlLookupFunctionEntry modified base address, expected: 0, got: %lx\n", base );
     ok( !count,
         "RtlLookupFunctionEntry issued %d unexpected calls to dynamic_unwind_callback\n", count );
 
@@ -1572,6 +1695,99 @@ static void test_dynamic_unwind(void)
 
 #endif  /* __x86_64__ */
 
+static DWORD outputdebugstring_exceptions;
+
+static LONG CALLBACK outputdebugstring_vectored_handler(EXCEPTION_POINTERS *ExceptionInfo)
+{
+    PEXCEPTION_RECORD rec = ExceptionInfo->ExceptionRecord;
+    trace("vect. handler %08x addr:%p\n", rec->ExceptionCode, rec->ExceptionAddress);
+
+    ok(rec->ExceptionCode == DBG_PRINTEXCEPTION_C, "ExceptionCode is %08x instead of %08x\n",
+        rec->ExceptionCode, DBG_PRINTEXCEPTION_C);
+    ok(rec->NumberParameters == 2, "ExceptionParameters is %d instead of 2\n", rec->NumberParameters);
+    ok(rec->ExceptionInformation[0] == 12, "ExceptionInformation[0] = %d instead of 12\n", (DWORD)rec->ExceptionInformation[0]);
+    ok(!strcmp((char *)rec->ExceptionInformation[1], "Hello World"),
+        "ExceptionInformation[1] = '%s' instead of 'Hello World'\n", (char *)rec->ExceptionInformation[1]);
+
+    outputdebugstring_exceptions++;
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void test_outputdebugstring(DWORD numexc, BOOL todo)
+{
+    PVOID vectored_handler;
+
+    if (!pRtlAddVectoredExceptionHandler || !pRtlRemoveVectoredExceptionHandler)
+    {
+        skip("RtlAddVectoredExceptionHandler or RtlRemoveVectoredExceptionHandler not found\n");
+        return;
+    }
+
+    vectored_handler = pRtlAddVectoredExceptionHandler(TRUE, &outputdebugstring_vectored_handler);
+    ok(vectored_handler != 0, "RtlAddVectoredExceptionHandler failed\n");
+
+    outputdebugstring_exceptions = 0;
+    OutputDebugStringA("Hello World");
+    if (todo)
+        todo_wine
+        ok(outputdebugstring_exceptions == numexc, "OutputDebugStringA generated %d exceptions, expected %d\n",
+           outputdebugstring_exceptions, numexc);
+    else
+        ok(outputdebugstring_exceptions == numexc, "OutputDebugStringA generated %d exceptions, expected %d\n",
+           outputdebugstring_exceptions, numexc);
+
+    pRtlRemoveVectoredExceptionHandler(vectored_handler);
+}
+
+static DWORD ripevent_exceptions;
+
+static LONG CALLBACK ripevent_vectored_handler(EXCEPTION_POINTERS *ExceptionInfo)
+{
+    PEXCEPTION_RECORD rec = ExceptionInfo->ExceptionRecord;
+    trace("vect. handler %08x addr:%p\n", rec->ExceptionCode, rec->ExceptionAddress);
+
+    ok(rec->ExceptionCode == DBG_RIPEXCEPTION, "ExceptionCode is %08x instead of %08x\n",
+       rec->ExceptionCode, DBG_RIPEXCEPTION);
+    ok(rec->NumberParameters == 2, "ExceptionParameters is %d instead of 2\n", rec->NumberParameters);
+    ok(rec->ExceptionInformation[0] == 0x11223344, "ExceptionInformation[0] = %08x instead of %08x\n",
+       (NTSTATUS)rec->ExceptionInformation[0], 0x11223344);
+    ok(rec->ExceptionInformation[1] == 0x55667788, "ExceptionInformation[1] = %08x instead of %08x\n",
+       (NTSTATUS)rec->ExceptionInformation[1], 0x55667788);
+
+    ripevent_exceptions++;
+    return (rec->ExceptionCode == DBG_RIPEXCEPTION) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void test_ripevent(DWORD numexc)
+{
+    EXCEPTION_RECORD record;
+    PVOID vectored_handler;
+
+    if (!pRtlAddVectoredExceptionHandler || !pRtlRemoveVectoredExceptionHandler || !pRtlRaiseException)
+    {
+        skip("RtlAddVectoredExceptionHandler or RtlRemoveVectoredExceptionHandler or RtlRaiseException not found\n");
+        return;
+    }
+
+    vectored_handler = pRtlAddVectoredExceptionHandler(TRUE, &ripevent_vectored_handler);
+    ok(vectored_handler != 0, "RtlAddVectoredExceptionHandler failed\n");
+
+    record.ExceptionCode = DBG_RIPEXCEPTION;
+    record.ExceptionFlags = 0;
+    record.ExceptionRecord = NULL;
+    record.ExceptionAddress = NULL;
+    record.NumberParameters = 2;
+    record.ExceptionInformation[0] = 0x11223344;
+    record.ExceptionInformation[1] = 0x55667788;
+
+    ripevent_exceptions = 0;
+    pRtlRaiseException(&record);
+    ok(ripevent_exceptions == numexc, "RtlRaiseException generated %d exceptions, expected %d\n",
+       ripevent_exceptions, numexc);
+
+    pRtlRemoveVectoredExceptionHandler(vectored_handler);
+}
+
 START_TEST(exception)
 {
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
@@ -1586,6 +1802,7 @@ START_TEST(exception)
     pNtGetContextThread  = (void *)GetProcAddress( hntdll, "NtGetContextThread" );
     pNtSetContextThread  = (void *)GetProcAddress( hntdll, "NtSetContextThread" );
     pNtReadVirtualMemory = (void *)GetProcAddress( hntdll, "NtReadVirtualMemory" );
+    pRtlUnwind           = (void *)GetProcAddress( hntdll, "RtlUnwind" );
     pRtlRaiseException   = (void *)GetProcAddress( hntdll, "RtlRaiseException" );
     pNtTerminateProcess  = (void *)GetProcAddress( hntdll, "NtTerminateProcess" );
     pRtlAddVectoredExceptionHandler    = (void *)GetProcAddress( hntdll,
@@ -1640,6 +1857,14 @@ START_TEST(exception)
             run_rtlraiseexception_test(0x12345);
             run_rtlraiseexception_test(EXCEPTION_BREAKPOINT);
             run_rtlraiseexception_test(EXCEPTION_INVALID_HANDLE);
+            test_stage = 3;
+            test_outputdebugstring(0, FALSE);
+            test_stage = 4;
+            test_outputdebugstring(2, TRUE); /* is this a Windows bug? */
+            test_stage = 5;
+            test_ripevent(0);
+            test_stage = 6;
+            test_ripevent(1);
         }
         else
             skip( "RtlRaiseException not found\n" );
@@ -1648,13 +1873,16 @@ START_TEST(exception)
         return;
     }
 
-    test_prot_fault();
+    test_unwind();
     test_exceptions();
     test_rtlraiseexception();
+    test_outputdebugstring(1, FALSE);
+    test_ripevent(1);
     test_debugger();
     test_simd_exceptions();
     test_fpu_exceptions();
     test_dpe_exceptions();
+    test_prot_fault();
 
 #elif defined(__x86_64__)
     pRtlAddFunctionTable               = (void *)GetProcAddress( hntdll,
@@ -1666,6 +1894,8 @@ START_TEST(exception)
     pRtlLookupFunctionEntry            = (void *)GetProcAddress( hntdll,
                                                                  "RtlLookupFunctionEntry" );
 
+    test_outputdebugstring(1, FALSE);
+    test_ripevent(1);
     test_virtual_unwind();
 
     if (pRtlAddFunctionTable && pRtlDeleteFunctionTable && pRtlInstallFunctionTableCallback && pRtlLookupFunctionEntry)

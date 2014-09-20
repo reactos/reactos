@@ -34,6 +34,11 @@
 #ifndef __WINE_WINTERNL_H
 
 typedef struct {
+  ULONG ReadMode;
+  ULONG CompletionMode;
+} FILE_PIPE_INFORMATION;
+
+typedef struct {
   ULONG NamedPipeType;
   ULONG NamedPipeConfiguration;
   ULONG MaximumInstances;
@@ -68,6 +73,7 @@ static NTSTATUS (WINAPI *pNtCreateNamedPipeFile) (PHANDLE handle, ULONG access,
                                         ULONG inbound_quota, ULONG outbound_quota,
                                         PLARGE_INTEGER timeout);
 static NTSTATUS (WINAPI *pNtQueryInformationFile) (IN HANDLE FileHandle, OUT PIO_STATUS_BLOCK IoStatusBlock, OUT PVOID FileInformation, IN ULONG Length, IN FILE_INFORMATION_CLASS FileInformationClass);
+static NTSTATUS (WINAPI *pNtSetInformationFile) (HANDLE handle, PIO_STATUS_BLOCK io, PVOID ptr, ULONG len, FILE_INFORMATION_CLASS class);
 static NTSTATUS (WINAPI *pNtCancelIoFile) (HANDLE hFile, PIO_STATUS_BLOCK io_status);
 static void (WINAPI *pRtlInitUnicodeString) (PUNICODE_STRING target, PCWSTR source);
 
@@ -87,6 +93,7 @@ static BOOL init_func_ptrs(void)
     loadfunc(NtFsControlFile)
     loadfunc(NtCreateNamedPipeFile)
     loadfunc(NtQueryInformationFile)
+    loadfunc(NtSetInformationFile)
     loadfunc(NtCancelIoFile)
     loadfunc(RtlInitUnicodeString)
 
@@ -479,6 +486,190 @@ static void test_cancelio(void)
     CloseHandle(hPipe);
 }
 
+static void _check_pipe_handle_state(int line, HANDLE handle, ULONG read, ULONG completion)
+{
+    IO_STATUS_BLOCK iosb;
+    FILE_PIPE_INFORMATION fpi;
+    NTSTATUS res;
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        memset(&fpi, 0x55, sizeof(fpi));
+        res = pNtQueryInformationFile(handle, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok_(__FILE__, line)(!res, "NtQueryInformationFile returned %x\n", res);
+        ok_(__FILE__, line)(fpi.ReadMode == read, "Unexpected ReadMode, expected %x, got %x\n",
+                            read, fpi.ReadMode);
+        ok_(__FILE__, line)(fpi.CompletionMode == completion, "Unexpected CompletionMode, expected %x, got %x\n",
+                            completion, fpi.CompletionMode);
+    }
+}
+#define check_pipe_handle_state(handle, r, c) _check_pipe_handle_state(__LINE__, handle, r, c)
+
+static void test_filepipeinfo(void)
+{
+    IO_STATUS_BLOCK iosb;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING name;
+    LARGE_INTEGER timeout;
+    HANDLE hServer, hClient;
+    FILE_PIPE_INFORMATION fpi;
+    NTSTATUS res;
+
+    pRtlInitUnicodeString(&name, testpipe_nt);
+
+    attr.Length                   = sizeof(attr);
+    attr.RootDirectory            = 0;
+    attr.ObjectName               = &name;
+    attr.Attributes               = 0x40; /* case insensitive */
+    attr.SecurityDescriptor       = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    timeout.QuadPart = -100000000000ll;
+
+    /* test with INVALID_HANDLE_VALUE */
+    res = pNtQueryInformationFile(INVALID_HANDLE_VALUE, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+    ok(res == STATUS_OBJECT_TYPE_MISMATCH, "NtQueryInformationFile returned %x\n", res);
+
+    fpi.ReadMode = 0;
+    fpi.CompletionMode = 0;
+    res = pNtSetInformationFile(INVALID_HANDLE_VALUE, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+    ok(res == STATUS_OBJECT_TYPE_MISMATCH, "NtSetInformationFile returned %x\n", res);
+
+    /* server end with read-only attributes */
+    res = pNtCreateNamedPipeFile(&hServer, FILE_READ_ATTRIBUTES | SYNCHRONIZE, &attr, &iosb,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,  2 /* FILE_CREATE */,
+                                 0, 0, 0, 1, 0xFFFFFFFF, 500, 500, &timeout);
+    ok(!res, "NtCreateNamedPipeFile returned %x\n", res);
+
+    check_pipe_handle_state(hServer, 0, 1);
+
+    hClient = CreateFileW(testpipe, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+    ok(hClient != INVALID_HANDLE_VALUE, "can't open pipe, GetLastError: %x\n", GetLastError());
+
+    check_pipe_handle_state(hServer, 0, 1);
+    check_pipe_handle_state(hClient, 0, 0);
+
+    fpi.ReadMode = 0;
+    fpi.CompletionMode = 0;
+    res = pNtSetInformationFile(hServer, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+    ok(res == STATUS_ACCESS_DENIED, "NtSetInformationFile returned %x\n", res);
+
+    check_pipe_handle_state(hServer, 0, 1);
+    check_pipe_handle_state(hClient, 0, 0);
+
+    fpi.ReadMode = 1; /* invalid on a byte stream pipe */
+    fpi.CompletionMode = 1;
+    res = pNtSetInformationFile(hServer, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+    ok(res == STATUS_ACCESS_DENIED, "NtSetInformationFile returned %x\n", res);
+
+    check_pipe_handle_state(hServer, 0, 1);
+    check_pipe_handle_state(hClient, 0, 0);
+
+    if (hClient != INVALID_HANDLE_VALUE)
+    {
+        fpi.ReadMode = 1; /* invalid on a byte stream pipe */
+        fpi.CompletionMode = 1;
+        res = pNtSetInformationFile(hClient, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok(res == STATUS_INVALID_PARAMETER, "NtSetInformationFile returned %x\n", res);
+    }
+
+    check_pipe_handle_state(hServer, 0, 1);
+    check_pipe_handle_state(hClient, 0, 0);
+
+    if (hClient != INVALID_HANDLE_VALUE)
+    {
+        fpi.ReadMode = 0;
+        fpi.CompletionMode = 1;
+        res = pNtSetInformationFile(hClient, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok(!res, "NtSetInformationFile returned %x\n", res);
+    }
+
+    check_pipe_handle_state(hServer, 0, 1);
+    check_pipe_handle_state(hClient, 0, 1);
+
+    if (hClient != INVALID_HANDLE_VALUE)
+    {
+        fpi.ReadMode = 0;
+        fpi.CompletionMode = 2; /* not in range 0-1 */
+        res = pNtSetInformationFile(hClient, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok(res == STATUS_INVALID_PARAMETER || broken(!res) /* < Vista */, "NtSetInformationFile returned %x\n", res);
+
+        fpi.ReadMode = 2; /* not in range 0-1 */
+        fpi.CompletionMode = 0;
+        res = pNtSetInformationFile(hClient, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok(res == STATUS_INVALID_PARAMETER || broken(!res) /* < Vista */, "NtSetInformationFile returned %x\n", res);
+    }
+
+    CloseHandle(hClient);
+
+    check_pipe_handle_state(hServer, 0, 1);
+
+    fpi.ReadMode = 0;
+    fpi.CompletionMode = 0;
+    res = pNtSetInformationFile(hServer, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+    ok(res == STATUS_ACCESS_DENIED, "NtSetInformationFile returned %x\n", res);
+
+    CloseHandle(hServer);
+
+    /* message mode server with read/write attributes */
+    res = pNtCreateNamedPipeFile(&hServer, FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES | SYNCHRONIZE, &attr, &iosb,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,  2 /* FILE_CREATE */,
+                                 0, 1, 1, 0, 0xFFFFFFFF, 500, 500, &timeout);
+    ok(!res, "NtCreateNamedPipeFile returned %x\n", res);
+
+    check_pipe_handle_state(hServer, 1, 0);
+
+    hClient = CreateFileW(testpipe, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+    ok(hClient != INVALID_HANDLE_VALUE, "can't open pipe, GetLastError: %x\n", GetLastError());
+
+    check_pipe_handle_state(hServer, 1, 0);
+    check_pipe_handle_state(hClient, 0, 0);
+
+    if (hClient != INVALID_HANDLE_VALUE)
+    {
+        fpi.ReadMode = 1;
+        fpi.CompletionMode = 1;
+        res = pNtSetInformationFile(hClient, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok(!res, "NtSetInformationFile returned %x\n", res);
+    }
+
+    check_pipe_handle_state(hServer, 1, 0);
+    check_pipe_handle_state(hClient, 1, 1);
+
+    fpi.ReadMode = 0;
+    fpi.CompletionMode = 1;
+    res = pNtSetInformationFile(hServer, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+    ok(!res, "NtSetInformationFile returned %x\n", res);
+
+    check_pipe_handle_state(hServer, 0, 1);
+    check_pipe_handle_state(hClient, 1, 1);
+
+    if (hClient != INVALID_HANDLE_VALUE)
+    {
+        fpi.ReadMode = 0;
+        fpi.CompletionMode = 2; /* not in range 0-1 */
+        res = pNtSetInformationFile(hClient, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok(res == STATUS_INVALID_PARAMETER || broken(!res) /* < Vista */, "NtSetInformationFile returned %x\n", res);
+
+        fpi.ReadMode = 2; /* not in range 0-1 */
+        fpi.CompletionMode = 0;
+        res = pNtSetInformationFile(hClient, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+        ok(res == STATUS_INVALID_PARAMETER || broken(!res) /* < Vista */, "NtSetInformationFile returned %x\n", res);
+    }
+
+    CloseHandle(hClient);
+
+    check_pipe_handle_state(hServer, 0, 1);
+
+    fpi.ReadMode = 1;
+    fpi.CompletionMode = 0;
+    res = pNtSetInformationFile(hServer, &iosb, &fpi, sizeof(fpi), (FILE_INFORMATION_CLASS)23);
+    ok(!res, "NtSetInformationFile returned %x\n", res);
+
+    check_pipe_handle_state(hServer, 1, 0);
+
+    CloseHandle(hServer);
+}
+
 START_TEST(pipe)
 {
     if (!init_func_ptrs())
@@ -492,6 +683,9 @@ START_TEST(pipe)
 
     trace("starting overlapped tests\n");
     test_overlapped();
+
+    trace("starting FILE_PIPE_INFORMATION tests\n");
+    test_filepipeinfo();
 
     if (!pOpenThread || !pQueueUserAPC)
         return;
