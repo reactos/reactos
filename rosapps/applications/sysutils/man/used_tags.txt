@@ -1,7 +1,0 @@
-.B bold
-.I italic
-.SH section (BOLD string without /n)
-.TH at the end (page comment)
-.NL
-.\" comment
-
