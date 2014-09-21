@@ -219,7 +219,7 @@ PWND_CONTEXT ThemeGetWndContext(HWND hWnd);
 
 extern HINSTANCE hDllInst;
 extern ATOM atWindowTheme;
-extern ATOM atWndContrext;
+extern ATOM atWndContext;
 extern BOOL gbThemeHooksActive;
 extern PTHEME_FILE ActiveThemeFile;
 
