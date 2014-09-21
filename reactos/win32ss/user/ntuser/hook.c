@@ -1028,14 +1028,13 @@ IntFreeHook(PHOOK Hook)
 }
 
 /* Remove a hook, freeing it from the chain */
-static
-VOID
-FASTCALL
-IntRemoveHook(PHOOK Hook)
+BOOLEAN
+IntRemoveHook(PVOID Object)
 {
     INT HookId;
     PTHREADINFO pti;
     PDESKTOP pdo;
+    PHOOK Hook = Object;
 
     HookId = Hook->HookId;
 
@@ -1073,65 +1072,8 @@ IntRemoveHook(PHOOK Hook)
           pdo->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
        }
     }
-}
 
-VOID
-FASTCALL
-HOOK_DestroyThreadHooks(PETHREAD Thread)
-{
-   PTHREADINFO pti;
-   PDESKTOP pdo;
-   int HookId;
-   PHOOK HookObj;
-   PLIST_ENTRY pElem;
-
-   pti = Thread->Tcb.Win32Thread;
-   pdo = IntGetActiveDesktop();
-
-   if (!pti || !pdo)
-   {
-      ERR("Kill Thread Hooks pti %p pdo %p\n", pti, pdo);
-      return;
-   }
-
-// Local Thread cleanup.
-   if (pti->fsHooks)
-   {
-      for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
-      {
-         PLIST_ENTRY pLastHead = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
-
-         pElem = pLastHead->Flink;
-         while (pElem != pLastHead)
-         {
-            HookObj = CONTAINING_RECORD(pElem, HOOK, Chain);
-            pElem = HookObj->Chain.Flink; // get next element before hook is destroyed
-            IntRemoveHook(HookObj);
-         }
-      }
-      pti->fsHooks = 0;
-      pti->pClientInfo->fsHooks = 0;
-   }
-// Global search based on Thread and cleanup.
-   if (pdo->pDeskInfo->fsHooks)
-   {
-      for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
-      {
-         PLIST_ENTRY pGLE = &pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
-
-         pElem = pGLE->Flink;
-         while (pElem != pGLE)
-         {
-            HookObj = CONTAINING_RECORD(pElem, HOOK, Chain);
-            pElem = HookObj->Chain.Flink; // Get next element before hook is destroyed
-            if (HookObj->head.pti == pti)
-            {
-               IntRemoveHook(HookObj);
-            }
-         }
-      }
-   }
-   return;
+    return TRUE;
 }
 
 /*
@@ -1576,7 +1518,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
     ObDereferenceObject(WinStaObj);
 
-    Hook = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&Handle, TYPE_HOOK, sizeof(HOOK));
+    Hook = UserCreateObject(gHandleTable, NULL, ptiHook, (PHANDLE)&Handle, TYPE_HOOK, sizeof(HOOK));
 
     if (!Hook)
     {

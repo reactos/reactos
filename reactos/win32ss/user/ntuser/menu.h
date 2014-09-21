@@ -23,8 +23,11 @@ IntGetMenuObject(HMENU hMenu);
 #define IntReleaseMenuObject(MenuObj) \
   UserDereferenceObject(MenuObj)
 
+BOOLEAN
+UserDestroyMenuObject(PVOID Object);
+
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU MenuObject, BOOL bRecurse, BOOL RemoveFromProcess);
+IntDestroyMenuObject(PMENU MenuObject, BOOL bRecurse);
 
 PMENU FASTCALL
 IntCloneMenu(PMENU Source);

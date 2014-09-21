@@ -209,7 +209,13 @@ IntCreateCurIconHandle(BOOLEAN Anim)
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
 
-    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, TYPE_CURSOR, sizeof(CURICON_OBJECT));
+    CurIcon = UserCreateObject(
+        gHandleTable,
+        NULL,
+        GetW32ThreadInfo(),
+        &hCurIcon,
+        TYPE_CURSOR,
+        sizeof(CURICON_OBJECT));
 
     if (!CurIcon)
     {
@@ -315,19 +321,6 @@ emptyList:
     Ret = UserDeleteObject(CurIcon->Self, TYPE_CURSOR);
 
     return Ret;
-}
-
-VOID FASTCALL
-IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
-{
-    PCURICON_OBJECT CurIcon, tmp;
-
-    /* Run through the list of icon objects */
-    LIST_FOR_EACH_SAFE(CurIcon, tmp, &gCurIconList, CURICON_OBJECT, ListEntry)
-    {
-        UserReferenceObject(CurIcon);
-        IntDestroyCurIconObject(CurIcon, Win32Process);
-    }
 }
 
 HCURSOR FASTCALL

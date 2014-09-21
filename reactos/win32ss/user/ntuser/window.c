@@ -587,14 +587,14 @@ static LRESULT co_UserFreeWindow(PWND Window,
         Window->IDMenu &&
         (Menu = UserGetMenuObject((HMENU)Window->IDMenu)))
    {
-      IntDestroyMenuObject(Menu, TRUE, TRUE);
+      IntDestroyMenuObject(Menu, TRUE);
       Window->IDMenu = 0;
    }
 
    if(Window->SystemMenu
          && (Menu = UserGetMenuObject(Window->SystemMenu)))
    {
-      IntDestroyMenuObject(Menu, TRUE, TRUE);
+      IntDestroyMenuObject(Menu, TRUE);
       Window->SystemMenu = (HMENU)0;
    }
 
@@ -860,40 +860,6 @@ IntSetMenu(
 
 /* INTERNAL ******************************************************************/
 
-
-VOID FASTCALL
-co_DestroyThreadWindows(struct _ETHREAD *Thread)
-{
-   PTHREADINFO WThread;
-   PLIST_ENTRY Current;
-   PWND Wnd;
-   USER_REFERENCE_ENTRY Ref;
-   WThread = (PTHREADINFO)Thread->Tcb.Win32Thread;
-
-   while (!IsListEmpty(&WThread->WindowListHead))
-   {
-      Current = WThread->WindowListHead.Flink;
-      Wnd = CONTAINING_RECORD(Current, WND, ThreadListEntry);
-
-      TRACE("thread cleanup: while destroy wnds, wnd=%p\n", Wnd);
-
-      /* Window removes itself from the list */
-
-      /*
-       * FIXME: It is critical that the window removes itself! If now, we will loop
-       * here forever...
-       */
-
-      //ASSERT(co_UserDestroyWindow(Wnd));
-
-      UserRefObjectCo(Wnd, &Ref); // FIXME: Temp HACK??
-      if (!co_UserDestroyWindow(Wnd))
-      {
-         ERR("Unable to destroy window %p at thread cleanup... This is _VERY_ bad!\n", Wnd);
-      }
-      UserDerefObjectCo(Wnd); // FIXME: Temp HACK??
-   }
-}
 
 BOOL FASTCALL
 IntIsChildWindow(PWND Parent, PWND BaseWindow)
@@ -1788,7 +1754,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    if (Class->atomClassName == gpsi->atomSysClass[ICLS_EDIT])
    {
       PCALLPROCDATA CallProc;
-      CallProc = CreateCallProc(NULL, pWnd->lpfnWndProc, pWnd->Unicode , pWnd->head.pti->ppi);
+      CallProc = CreateCallProc(pWnd->head.rpdesk, pWnd->lpfnWndProc, pWnd->Unicode , pWnd->head.pti->ppi);
 
       if (!CallProc)
       {
@@ -2431,9 +2397,10 @@ NtUserCreateWindowEx(
     if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD) 
     {
         /* check hMenu is valid handle */
-        if (hMenu && !ValidateHandle(hMenu, TYPE_MENU))
+        if (hMenu && !UserGetMenuObject(hMenu))
         {
-            /* error is set in ValidateHandle */
+            ERR("NtUserCreateWindowEx: Got an invalid menu handle!\n");
+            EngSetLastError(ERROR_INVALID_MENU_HANDLE);
             return NULL;
         }
     } 
@@ -2520,12 +2487,13 @@ cleanup:
 }
 
 
-BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
+BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
    HWND hWnd;
    PWND pwndTemp;
    PTHREADINFO ti;
    MSG msg;
+   PWND Window = Object;
 
    ASSERT_REFS_CO(Window); // FIXME: Temp HACK?
 

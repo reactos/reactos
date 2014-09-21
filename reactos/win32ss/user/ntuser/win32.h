@@ -158,14 +158,28 @@ typedef struct _THREADINFO
 #define IntReferenceThreadInfo(pti) \
   InterlockedIncrement(&(pti)->RefCount)
 
-VOID FASTCALL UserDeleteW32Thread(PTHREADINFO);
+VOID UserDeleteW32Thread(PTHREADINFO);
 
 #define IntDereferenceThreadInfo(pti) \
   do { \
     if(InterlockedDecrement(&(pti)->RefCount) == 0) \
     { \
-      ASSERT(pti->TIF_flags &= (TIF_INCLEANUP|TIF_DONTATTACHQUEUE) == (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)); \
+      ASSERT(((pti)->TIF_flags & (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)) == (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)); \
       UserDeleteW32Thread(pti); \
+    } \
+  } while(0)
+
+#define IntReferenceProcessInfo(ppi) \
+  InterlockedIncrement((volatile LONG*)(&(ppi)->RefCount))
+
+VOID UserDeleteW32Process(PPROCESSINFO);
+
+#define IntDereferenceProcessInfo(ppi) \
+  do { \
+    if(InterlockedDecrement((volatile LONG*)(&(ppi)->RefCount)) == 0) \
+    { \
+      ASSERT(((ppi)->W32PF_flags & W32PF_TERMINATED) != 0); \
+      UserDeleteW32Process(ppi); \
     } \
   } while(0)
 
@@ -242,7 +256,6 @@ typedef struct _PROCESSINFO
   DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */
-  LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;
   FAST_MUTEX DriverObjListLock;

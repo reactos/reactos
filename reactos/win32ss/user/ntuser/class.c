@@ -224,8 +224,7 @@ IntDestroyClass(IN OUT PCLS Class)
             NextCallProc = CallProc->spcpdNext;
 
             CallProc->spcpdNext = NULL;
-            DestroyCallProc(NULL,
-                            CallProc);
+            DestroyCallProc(CallProc);
 
             CallProc = NextCallProc;
         }
