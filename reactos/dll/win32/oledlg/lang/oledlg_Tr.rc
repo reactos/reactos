@@ -52,7 +52,7 @@ STRINGTABLE
   IDS_RESULTOBJDESC	"Belgenize yeni bir %s nesnesi ekleyiniz."
   IDS_RESULTFILEOBJDESC	"Belgenize kütüğün içeriğini bir nesne olarak ekleyiniz, böylece onu, kendisini oluşturan izlenceyi kullanarak etkinleştirebilirsiniz."
   IDS_BROWSE            "Göz At"
-  IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi kaydedilemiyor."
+  IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi saklanamıyor."
   IDS_NOTOLEMODCAPTION  "Denetim Ekle"
 }
 

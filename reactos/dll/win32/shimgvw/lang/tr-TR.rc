@@ -1,0 +1,19 @@
+/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Resim ve Belgegeçer Görüntüleyicisi"
+    IDS_SETASDESKBG "Masaüstü Arka Planı Olarak Ayarla"
+    IDS_PREVIEW "Ön İzleme"
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC "Sonraki Resim"
+    IDS_TOOLTIP_PREV_PIC "Önceki Resim"
+    IDS_TOOLTIP_ZOOM_IN "Yakınlaştır (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Uzaklaştır (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Saat Yönünde Döndür (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Saat Yönünün Tersi Yönünde Döndür (Ctrl+L)"
+    IDS_TOOLTIP_PRINT "Yazdır (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Ayrı Sakla... (Ctrl+S)"
+END

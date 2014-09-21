@@ -29,12 +29,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sesler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bir ses düzeni, ReactOS'taki ve izlencelerdeki olaylara uygulayan bir ses kümesidir. Var olan bir düzeni seçebilir veyâ değiştirdiğinizi kaydedebilirsiniz.", -1, 8, 7, 230, 30
+    LTEXT "Bir ses düzeni, ReactOS'taki ve izlencelerdeki olaylara uygulayan bir ses kümesidir. Var olan bir düzeni seçebilir veyâ değiştirdiğinizi saklayabilirsiniz.", -1, 8, 7, 230, 30
     LTEXT "&Ses Düzeni:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "&Ayrı Sakla...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "S&il", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Sesleri değiştirmek için aşağıdaki dizelgede bir izlence olayına tıklayınız, sonra uygulamak için bir ses seçiniz. Değişiklikleri yeni bir ses düzeni olarak kaydedebilirsiniz.", -1, 8, 90, 230, 27
+    LTEXT "Sesleri değiştirmek için aşağıdaki dizelgede bir izlence olayına tıklayınız, sonra uygulamak için bir ses seçiniz. Değişiklikleri yeni bir ses düzeni olarak saklayabilirsiniz.", -1, 8, 90, 230, 27
     LTEXT "İ&zlence Olayları:", -1, 8, 118, 150, 9
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
     LTEXT "S&esler:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
@@ -54,7 +54,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Ses Düzeyi...", IDC_VOLUME1_BTN, 85, 47, 70, 15
     PUSHBUTTON "&Gelişmiş...", IDC_ADV2_BTN, 160, 47, 70, 15
-    GROUPBOX "Ses Kaydetme", -1, 7, 75, 230, 60
+    GROUPBOX "Ses Saklama", -1, 7, 75, 230, 60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
     LTEXT "Ö&ntanımlı Aygıt:", -1, 50, 88, 80, 9
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
@@ -74,14 +74,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "İnsan Sesi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu ayarlar, seçtiğiniz insan sesi çalma veyâ insan sesi kaydetme aygıtı için ses düzeyini ve gelişmiş seçenekleri denetler.", -1, 8, 7, 230, 40
+    LTEXT "Bu ayarlar, seçtiğiniz insan sesi çalma veyâ insan sesi saklama aygıtı için ses düzeyini ve gelişmiş seçenekleri denetler.", -1, 8, 7, 230, 40
     GROUPBOX "İnsan Sesi Çalma", -1, 7, 37, 230, 60
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
     LTEXT "&Ön Tanımlı Aygıt:", -1, 50, 50, 80, 9
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Ses Düzeyi...", IDC_VOLUME4_BTN, 85, 77, 70, 15
     PUSHBUTTON "&Gelişmiş...", IDC_ADV4_BTN, 160, 77, 70, 15
-    GROUPBOX "İnsan Sesi Kaydetme", -1, 7, 105, 230, 60
+    GROUPBOX "İnsan Sesi Saklama", -1, 7, 105, 230, 60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
     LTEXT "Ö&ntanımlı Aygıt:", -1, 50, 118, 80, 9
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
@@ -99,10 +99,10 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Düzeni Kaydet"
+CAPTION "Düzeni Sakla"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Bu ses düzenini ayrı kaydet:", -1, 7, 7, 212, 9
+    LTEXT "&Bu ses düzenini ayrı sakla:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Tamam", IDOK, 93, 36, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 157, 36, 60, 14
@@ -225,7 +225,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Ses", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "ReactOS Ses hizmeti şimdi etkin. Bununla birlikte ReactOS'u yeniden başlatana dek ses düzgün çalışamayabilir. Eğer şimdi bilgisayarı yeniden başlatmak isterseniz ilk önce çalışmalarınızı kaydediniz ve tüm izlenceleri kapatınız.", 10261, 60, 25, 150, 50
+    LTEXT "ReactOS Ses hizmeti şimdi etkin. Bununla birlikte ReactOS'u yeniden başlatana dek ses düzgün çalışamayabilir. Eğer şimdi bilgisayarı yeniden başlatmak isterseniz ilk önce çalışmalarınızı saklayınız ve tüm izlenceleri kapatınız.", 10261, 60, 25, 150, 50
     LTEXT "ReactOS'u yeniden başlatmak için Tamam'a tıklayınız.", 10262, 60, 75, 150, 20
     LTEXT "Eğer iptal ederseniz ReactOS Ses'in düzgün çalışması için bilgisayarı yeniden başlatmaya gereksinim duyacaksınız.", 10263, 60, 100, 150, 40
 END
@@ -233,7 +233,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Ses ve Ses Aygıtları"
-    IDS_CPLDESCRIPTION "Bilgisayarınız için ses düzenini değiştirir, hoparlörleriniz ve kaydetme aygıtlarınız için ayarları yapılandırır."
+    IDS_CPLDESCRIPTION "Bilgisayarınız için ses düzenini değiştirir, hoparlörleriniz ve saklama aygıtlarınız için ayarları yapılandırır."
     IDS_NO_SOUND "(Yok)"
     IDS_NO_DEVICES "Aygıt Yok"
     5825 "İzlence Yanlışlığı"

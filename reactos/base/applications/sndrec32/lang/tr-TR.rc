@@ -10,11 +10,11 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ses Kaydedicisi Üzerine"
+CAPTION "Ses Saklayıcısı Üzerine"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
-    LTEXT "Ses Kaydedicisi: Sürüm 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Ses Saklayıcısı: Sürüm 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
     LTEXT "Tekif Hakkı - 2009", IDC_STATIC, 56, 25, 114, 8
     DEFPUSHBUTTON "Tamam", IDOK, 139, 54, 50, 14, WS_GROUP
 END
@@ -25,8 +25,8 @@ BEGIN
     BEGIN
         MENUITEM "&Yeni", ID_FILE_NEW
         MENUITEM "&Aç...", ID_FILE_OPEN
-        MENUITEM "&Kaydet", ID_FILE_SAVE, GRAYED
-        MENUITEM "Ay&rı Kaydet...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Sakla", ID_FILE_SAVE, GRAYED
+        MENUITEM "Ay&rı Sakla...", ID_FILE_SAVEAS, GRAYED
         MENUITEM "Y&eniden Yükle...", ID_FILE_RESTORE, GRAYED
         MENUITEM "&Husûsiyetler", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
@@ -44,7 +44,7 @@ BEGIN
         MENUITEM "&Şimdiki Konumun Öncesini Sil",ID_EDIT_DELETEBEFORE, GRAYED
         MENUITEM "Ş&imdiki Konumun Sonrasını Sil",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Ses Husûsîyetleri", ID_EDIT_AUDIOPROPS
+        MENUITEM "&Ses Husûsiyetleri", ID_EDIT_AUDIOPROPS
     END
     POPUP "&Etkiler"
     BEGIN
@@ -65,7 +65,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Ses Kaydedicisi"
+    IDS_APP_TITLE "Ses Saklayıcısı"
     IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 

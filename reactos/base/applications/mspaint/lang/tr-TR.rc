@@ -14,8 +14,8 @@ BEGIN
     BEGIN
         MENUITEM "&Yeni\tCtrl+N", IDM_FILENEW
         MENUITEM "&Aç...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "&Kaydet\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Ay&rı Kaydet...", IDM_FILESAVEAS
+        MENUITEM "&Sakla\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Ay&rı Sakla...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Döşeyerek Duvar Kağıdı Yap", IDM_FILEASWALLPAPERPLANE
         MENUITEM "&Ortalayarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERCENTERED
@@ -187,7 +187,7 @@ BEGIN
     IDS_WINDOWTITLE "%s - Boyama"
     IDS_INFOTITLE "Boyama"
     IDS_INFOTEXT "Boyama, GNU Kısıtlı Umûmî Kamu Ruhsatı (LGPL) altında vardır. (LGPL için bakınız: www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "%s için yapılan değişiklikleri kaydetmek ister misiniz?"
+    IDS_SAVEPROMPTTEXT "%s için yapılan değişiklikleri saklamak ister misiniz?"
     IDS_DEFAULTFILENAME "Adsız.bmp"
     IDS_MINIATURETITLE "Küçüğü"
     IDS_TOOLTIP1 "Özgür Seçim"

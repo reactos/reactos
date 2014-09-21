@@ -60,9 +60,9 @@ CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Umûmî", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Pencere Konumunu Sakla", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Başlangıçta Erişilebilir İzlencelerin Dizelgesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&İzlencelerin Kuruluşlarını ve Kaldırılışlarını Kaydet", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&İzlencelerin Kuruluşlarını ve Kaldırılışlarını Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
