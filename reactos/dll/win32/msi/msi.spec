@@ -281,16 +281,9 @@
 285 stdcall MsiBeginTransactionW(wstr long ptr ptr)
 286 stdcall MsiEndTransaction(long)
 287 stub MsiJoinTransaction
-288 stub MsiSetOfflineContextW
-289 stdcall MsiEnumComponentsExA(str long long ptr ptr ptr ptr)
-290 stdcall MsiEnumComponentsExW(wstr long long ptr ptr ptr ptr)
-291 stub MsiEnumClientsExA
-292 stub MsiEnumClientsExW
-293 stub MsiGetComponentPathExA
-294 stub MsiGetComponentPathExW
-295 stub QueryInstanceCount
-
+288 stub QueryInstanceCount
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
+
