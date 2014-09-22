@@ -7,6 +7,7 @@
 #include <apitest.h>
 
 #define WIN32_NO_STATUS
+#include <stdio.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/cmfuncs.h>
 #include <ndk/obfuncs.h>
@@ -34,7 +35,9 @@ CreateRegistryKeyHandle(PHANDLE KeyHandle,
 START_TEST(NtDeleteKey)
 {
     NTSTATUS Status;
-    HANDLE ParentKey, ChildKey;
+    HANDLE ParentKey, ChildKey, PetKey;
+    WCHAR Buffer[sizeof("\\Registry\\Machine\\Software\\RosTests\\Child\\Pet") + 5];
+    ULONG i;
 
     /* Create a registry key */
     Status = CreateRegistryKeyHandle(&ParentKey, KEY_READ | DELETE, L"\\Registry\\Machine\\Software\\RosTests");
@@ -92,5 +95,54 @@ START_TEST(NtDeleteKey)
 
     /* Close everything */
     NtClose(ChildKey);
+    NtClose(ParentKey);
+
+    /* Stress test key creation */
+    Status = CreateRegistryKeyHandle(&ParentKey, KEY_READ | DELETE, L"\\Registry\\Machine\\Software\\RosTests");
+
+    for (i = 0; i <= 9999; i++) {
+        swprintf(Buffer, L"\\Registry\\Machine\\Software\\RosTests\\Child%04d", i);
+        Status = CreateRegistryKeyHandle(&ChildKey, KEY_READ, Buffer);
+        NtClose(ChildKey);
+
+        swprintf(Buffer, L"\\Registry\\Machine\\Software\\RosTests\\Child%04d\\Pet", i);
+        Status = CreateRegistryKeyHandle(&PetKey, KEY_READ, Buffer);
+        NtClose(PetKey);
+    }
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Test hive rerooting */
+    Status = CreateRegistryKeyHandle(&PetKey, DELETE, L"\\Registry\\Machine\\Software\\RosTests\\Child5000\\Pet");
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtDeleteKey(PetKey);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    NtClose(PetKey);
+
+    Status = CreateRegistryKeyHandle(&ChildKey, DELETE, L"\\Registry\\Machine\\Software\\RosTests\\Child5000");
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtDeleteKey(ChildKey);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Test mass key deletion */
+    for (i = 0; i <= 9999; i++) {
+        if (i != 5000) {
+            swprintf(Buffer, L"\\Registry\\Machine\\Software\\RosTests\\Child%04d\\Pet", i);
+            CreateRegistryKeyHandle(&PetKey, DELETE, Buffer);
+            Status = NtDeleteKey(PetKey);
+            NtClose(PetKey);
+
+            swprintf(Buffer, L"\\Registry\\Machine\\Software\\RosTests\\Child%04d", i);
+            CreateRegistryKeyHandle(&ChildKey, DELETE, Buffer);
+            Status = NtDeleteKey(ChildKey);
+            NtClose(ChildKey);
+        }
+    }
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    Status = NtDeleteKey(ParentKey);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Close ParentKey */
     NtClose(ParentKey);
 }
