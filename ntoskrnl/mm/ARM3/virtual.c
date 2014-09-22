@@ -317,6 +317,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
         {
             /* As always, only handle current ARM3 scenarios */
             ASSERT(PointerPte->u.Soft.Prototype == 0);
+            ASSERT(PointerPte->u.Soft.Transition == 0);
 
             /* Normally this is one possibility -- freeing a valid page */
             if (PointerPte->u.Hard.Valid)
@@ -351,64 +352,16 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 /* Destroy the PTE */
                 MI_ERASE_PTE(PointerPte);
             }
-            else if (PointerPte->u.Soft.Transition == 1)
-            {
-                /* Get the page PFN */
-                PageFrameIndex = PFN_FROM_PTE(PointerPte);
-                Pfn1 = MiGetPfnEntry(PageFrameIndex);
-
-                /* The page should be out of any working set */
-                ASSERT(Pfn1->u1.WsIndex == 0);
-
-                /* Get the page table entry */
-                PageTableIndex = Pfn1->u4.PteFrame;
-                Pfn2 = MiGetPfnEntry(PageTableIndex);
-
-                /* Lock the PFN database */
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-                /* Delete the page */
-                MI_SET_PFN_DELETED(Pfn1);
-
-                /* Decrement the page table */
-                MiDecrementShareCount(Pfn2, PageTableIndex);
-
-                ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-                /* Unlink it and temporarily take a reference */
-                MiUnlinkPageFromList(Pfn1);
-                Pfn1->u3.e2.ReferenceCount++;
-
-                /* This will put it back in free list and clean properly up */
-                MI_SET_PFN_DELETED(Pfn1);
-                MiDecrementReferenceCount(Pfn1, PageFrameIndex);
-
-                /* Release the PFN database */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-                /* Destroy the PTE */
-                MI_ERASE_PTE(PointerPte);
-            }
-            else if (PointerPte->u.Soft.PageFileHigh != 0)
-            {
-                /* The PFN lock also protects the page files */
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-                /* Pretty easy: free the page file slot and go look elsewhere */
-                MiFreePageFileEntry(PointerPte);
-
-                /* Release the PFN database */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-                /* Destroy the PTE */
-                MI_ERASE_PTE(PointerPte);
-            }
             else
             {
                 /*
                  * The only other ARM3 possibility is a demand zero page, which would
                  * mean freeing some of the paged pool pages that haven't even been
                  * touched yet, as part of a larger allocation.
+                 *
+                 * Right now, we shouldn't expect any page file information in the PTE
                  */
+                ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
 
                 /* Destroy the PTE */
                 MI_ERASE_PTE(PointerPte);
@@ -454,8 +407,9 @@ MiDeletePte(IN PMMPTE PointerPte,
     /* See if the PTE is valid */
     if (TempPte.u.Hard.Valid == 0)
     {
-        /* Prototype PTEs not supported yet */
+        /* Prototype and paged out PTEs not supported yet */
         ASSERT(TempPte.u.Soft.Prototype == 0);
+        ASSERT((TempPte.u.Soft.PageFileHigh == 0) || (TempPte.u.Soft.Transition == 1));
 
         if (TempPte.u.Soft.Transition)
         {
@@ -481,24 +435,15 @@ MiDeletePte(IN PMMPTE PointerPte,
                 /* And it should be in standby or modified list */
                 ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) || (Pfn1->u3.e1.PageLocation == StandbyPageList));
 
-                /* Unlink it and temporarily take a reference */
+                /* Unlink it and temporarily mark it as active */
                 MiUnlinkPageFromList(Pfn1);
                 Pfn1->u3.e2.ReferenceCount++;
+                Pfn1->u3.e1.PageLocation = ActiveAndValid;
 
                 /* This will put it back in free list and clean properly up */
                 MI_SET_PFN_DELETED(Pfn1);
                 MiDecrementReferenceCount(Pfn1, PageFrameIndex);
             }
-            return;
-        }
-
-        if (TempPte.u.Soft.PageFileHigh != 0)
-        {
-            /* Release the page file entry */
-            MiFreePageFileEntry(&TempPte);
-
-            /* And that's pretty much it */
-            MI_ERASE_PTE(PointerPte);
             return;
         }
     }
@@ -530,6 +475,7 @@ MiDeletePte(IN PMMPTE PointerPte,
         }
 #endif
         /* Drop the share count on the page table */
+        PointerPde = MiPteToPde(PointerPte);
         MiDecrementShareCount(MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber),
             PointerPde->u.Hard.PageFrameNumber);
 

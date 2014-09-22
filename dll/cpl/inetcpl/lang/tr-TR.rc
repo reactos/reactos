@@ -39,7 +39,7 @@ BEGIN
     PUSHBUTTON  "&Ön Tanımlı Sayfa", IDC_HOME_DEFAULT, 144, 36, 80, 14
     PUSHBUTTON  "&Boş Sayfa", IDC_HOME_BLANK, 230, 36, 80, 14
     GROUPBOX    " Tarama Geçmişi ", IDC_STATIC, 4, 60, 312, 46
-    LTEXT       "Saklanan sayfaları, çerezleri ve başka verileri silebilirsiniz.",
+    LTEXT       "Saklanan sayfaları, tanımlama bilgilerini ve başka verileri silebilirsiniz.",
                 IDC_STATIC, 58, 72, 252, 10
     PUSHBUTTON  "&Kütükleri Sil...", IDC_HISTORY_DELETE, 144, 86, 80, 14
     PUSHBUTTON  "&Ayarlar...", IDC_HISTORY_SETTINGS, 230, 86, 80, 14
@@ -55,13 +55,13 @@ BEGIN
 
     AUTOCHECKBOX   "&Geçici Umûmî Ağ Kütüleri:\nUmûmî Ağ sayfalarının, resimlerin ve onay belgelerinin saklanmış kopyaları.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 30, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "&Çerezler:\nUmûmî Ağ siteleri eliyle bilgisayarınıza kaydedilmiş, kullanıcı yeğlemeleri ve oturum açma bilgileri gibi şeyleri saklayan kütükler.",
+    AUTOCHECKBOX   "&Tanımlama Bilgileri:\nUmûmî Ağ siteleri eliyle bilgisayarınıza saklanmış, kullanıcı yeğlemeleri ve oturum açma bilgileri gibi şeyleri saklayan kütükler.",
                     IDC_DELETE_COOKIES, 10, 38, 230, 30, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "G&eçmiş:\nEriştiğiniz Umûmî Ağ sitelerinin dizelgesi.",
                     IDC_DELETE_HISTORY, 10, 68, 230, 30, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Form Verileri:\nFormlarda girdiğiniz kullanıcı adlarıyla başka bilgiler.",
                     IDC_DELETE_FORM_DATA, 10, 98, 230, 30, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "&Şifreler:\nFormlarda girdiğiniz kaydedilmiş şifreler.",
+    AUTOCHECKBOX   "&Şifreler:\nFormlarda girdiğiniz saklanmış şifreler.",
                     IDC_DELETE_PASSWORDS, 10, 128, 230, 30, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "İptal", IDCANCEL, 185, 230, 60, 15, WS_GROUP
     PUSHBUTTON     "Sil", IDOK, 120, 230, 60, 15, WS_GROUP

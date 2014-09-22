@@ -17,7 +17,7 @@ PWND_CONTEXT ThemeGetWndContext(HWND hWnd)
 {
     PWND_CONTEXT pcontext;
 
-    pcontext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext));
+    pcontext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
     if(pcontext == NULL)
     {
         pcontext = HeapAlloc(GetProcessHeap(), 
@@ -28,13 +28,13 @@ PWND_CONTEXT ThemeGetWndContext(HWND hWnd)
             return NULL;
         }
         
-        SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext), pcontext);
+        SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContext), pcontext);
     }
 
     return pcontext;
 }
 
-void ThemeDetroyWndContext(HWND hWnd)
+void ThemeDestroyWndContext(HWND hWnd)
 {
     PWND_CONTEXT pContext;
     DWORD ProcessId;
@@ -46,7 +46,7 @@ void ThemeDetroyWndContext(HWND hWnd)
         return;
     }
 
-    pContext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext));
+    pContext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
     if(pContext == NULL)
     {
         return;
@@ -59,12 +59,12 @@ void ThemeDetroyWndContext(HWND hWnd)
     
     HeapFree(GetProcessHeap(), 0, pContext);
 
-    SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContrext), NULL);
+    SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContext), NULL);
 }
 
 static BOOL CALLBACK ThemeCleanupChildWndContext (HWND hWnd, LPARAM msg)
 {
-    ThemeDetroyWndContext(hWnd);
+    ThemeDestroyWndContext(hWnd);
     return TRUE;
 }
 
@@ -76,7 +76,7 @@ static BOOL CALLBACK ThemeCleanupWndContext(HWND hWnd, LPARAM msg)
     }
     else
     {
-        ThemeDetroyWndContext(hWnd);
+        ThemeDestroyWndContext(hWnd);
         EnumChildWindows (hWnd, ThemeCleanupChildWndContext, 0);
     }
 
@@ -249,7 +249,7 @@ ThemePostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR
         }
         case WM_DESTROY:
         {
-            ThemeDetroyWndContext(hWnd);
+            ThemeDestroyWndContext(hWnd);
             return 0;
         }
     }

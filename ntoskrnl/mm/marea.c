@@ -787,6 +787,12 @@ MiCheckAllProcessMemoryAreas(VOID)
  *
  * @remarks Lock the address space before calling this function.
  */
+VOID
+NTAPI
+MiDeletePte(IN PMMPTE PointerPte,
+            IN PVOID VirtualAddress,
+            IN PEPROCESS CurrentProcess,
+            IN PMMPTE PrototypePte);
 
 NTSTATUS NTAPI
 MmFreeMemoryArea(

@@ -49,7 +49,7 @@ static DWORD dwThemeAppProperties = STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS;
 ATOM atWindowTheme;
 static ATOM atSubAppName;
 static ATOM atSubIdList;
-ATOM atWndContrext;
+ATOM atWndContext;
 
 PTHEME_FILE ActiveThemeFile;
 
@@ -581,7 +581,7 @@ void UXTHEME_InitSystem(HINSTANCE hInst)
     atSubAppName         = GlobalAddAtomW(szSubAppName);
     atSubIdList          = GlobalAddAtomW(szSubIdList);
     atDialogThemeEnabled = GlobalAddAtomW(szDialogThemeEnabled);
-    atWndContrext        = GlobalAddAtomW(L"ux_WndContext");
+    atWndContext        = GlobalAddAtomW(L"ux_WndContext");
 }
 
 /***********************************************************************

@@ -680,55 +680,25 @@ MiSegmentDelete(IN PSEGMENT Segment)
                 PageFrameIndex = PFN_FROM_PTE(&TempPte);
                 Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
 
-                if (Pfn1->u3.e1.WriteInProgress == 1)
-                {
-                    KEVENT WriteEvent;
+                /* As this is a paged-backed section, nobody should reference it anymore (no cache or whatever) */
+                ASSERT(Pfn1->u3.ReferenceCount == 0);
 
-                    DPRINT1("Setting the page free while it is being paged out!\n");
+                /* And it should be in standby or modified list */
+                ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) || (Pfn1->u3.e1.PageLocation == StandbyPageList));
 
-                    /* Only the page writer thread should hold a reference to it */
-                    ASSERT(Pfn1->u3.ReferenceCount == 1);
+                /* Unlink it and put it back in free list */
+                MiUnlinkPageFromList(Pfn1);
 
-                    /* Set the page event */
-                    KeInitializeEvent(&WriteEvent, NotificationEvent, FALSE);
-                    /* We must be the only ones waiting */
-                    ASSERT(Pfn1->u1.Event == NULL);
-                    Pfn1->u1.Event = &WriteEvent;
+                /* Temporarily mark this as active and make it free again */
+                Pfn1->u3.e1.PageLocation = ActiveAndValid;
+                MI_SET_PFN_DELETED(Pfn1);
 
-                    /* Tell the page-out thread to abort */
-                    Pfn1->u3.e1.WriteInProgress = 0;
-                    /* We canceled the write operation, so the page-write-thread will simply dereference
-                     * the Pfn. It has no way to know whether the page will be re-used again (page fault case)
-                     * or if it should be made free. So mark it as deleted here */
-                    MI_SET_PFN_DELETED(Pfn1);
-
-                    /* Let the writer thread finish and go along */
-                    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-                    KeWaitForSingleObject(&WriteEvent, FreePage, KernelMode, FALSE, NULL);
-                    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-                }
-                else
-                {
-                    /* As this is a paged-backed section, nobody should reference it anymore (no cache or whatever) */
-                    ASSERT(Pfn1->u3.ReferenceCount == 0);
-
-                    /* And it should be in standby or modified list */
-                    ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) ||
-                        (Pfn1->u3.e1.PageLocation == StandbyPageList));
-
-                    /* Unlink it and temporarily take a reference */
-                    MiUnlinkPageFromList(Pfn1);
-                    Pfn1->u3.e2.ReferenceCount++;
-
-                    /* This will put it back in free list and clean up properly */
-                    MI_SET_PFN_DELETED(Pfn1);
-                    MiDecrementReferenceCount(Pfn1, PageFrameIndex);
-                }
+                MiInsertPageInFreeList(PageFrameIndex);
             }
             else if (TempPte.u.Soft.PageFileHigh != 0)
             {
-                /* There isn't much to do */
-                MiFreePageFileEntry(&TempPte);
+                /* Should not happen for now */
+                ASSERT(FALSE);
             }
         }
         else

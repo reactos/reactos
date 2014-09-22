@@ -73,11 +73,11 @@ NtUserCallNoParam(DWORD Routine)
    switch(Routine)
    {
       case NOPARAM_ROUTINE_CREATEMENU:
-         Result = (DWORD_PTR)UserCreateMenu(FALSE);
+         Result = (DWORD_PTR)UserCreateMenu(GetW32ThreadInfo()->rpdesk, FALSE);
          break;
 
       case NOPARAM_ROUTINE_CREATEMENUPOPUP:
-         Result = (DWORD_PTR)UserCreateMenu(TRUE);
+         Result = (DWORD_PTR)UserCreateMenu(GetW32ThreadInfo()->rpdesk, TRUE);
          break;
 
       case NOPARAM_ROUTINE_DESTROY_CARET:

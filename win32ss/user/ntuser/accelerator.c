@@ -235,6 +235,7 @@ NtUserCreateAcceleratorTable(
     ULONG Index;
     NTSTATUS Status = STATUS_SUCCESS;
     DECLARE_RETURN(HACCEL);
+    PTHREADINFO pti;
 
     TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u)\n",
           Entries, EntriesCount);
@@ -246,7 +247,14 @@ NtUserCreateAcceleratorTable(
         RETURN( (HACCEL) NULL );
     }
 
-    Accel = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&hAccel, TYPE_ACCELTABLE, sizeof(ACCELERATOR_TABLE));
+    pti = PsGetCurrentThreadWin32Thread();
+
+    Accel = UserCreateObject(gHandleTable,
+        pti->rpdesk,
+        pti,
+        (PHANDLE)&hAccel,
+        TYPE_ACCELTABLE,
+        sizeof(ACCELERATOR_TABLE));
 
     if (Accel == NULL)
     {
@@ -314,6 +322,21 @@ CLEANUP:
 }
 
 BOOLEAN
+UserDestroyAccelTable(PVOID Object)
+{
+    PACCELERATOR_TABLE Accel = Object;
+
+    if (Accel->Table != NULL)
+    {
+        ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
+        Accel->Table = NULL;
+    }
+
+    UserDeleteObject(Accel->head.h, TYPE_ACCELTABLE);
+    return TRUE;
+}
+
+BOOLEAN
 APIENTRY
 NtUserDestroyAcceleratorTable(
     HACCEL hAccel)
@@ -334,13 +357,7 @@ NtUserDestroyAcceleratorTable(
         RETURN( FALSE);
     }
 
-    if (Accel->Table != NULL)
-    {
-        ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
-        Accel->Table = NULL;
-    }
-
-    UserDeleteObject(hAccel, TYPE_ACCELTABLE);
+    UserDestroyAccelTable(Accel);
 
     RETURN( TRUE);
 

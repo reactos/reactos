@@ -208,11 +208,11 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
                                  sizeof(PCIPBUSDATA));
 
     /* Set it up */
-    Bus->GetBusData = (PGETSETBUSDATA)HalpGetPCIData;
-    Bus->SetBusData = (PGETSETBUSDATA)HalpSetPCIData;
-    Bus->GetInterruptVector = (PGETINTERRUPTVECTOR)HalpGetPCIIntOnISABus;
-    Bus->AdjustResourceList = (PADJUSTRESOURCELIST)HalpAdjustPCIResourceList;
-    Bus->AssignSlotResources = (PASSIGNSLOTRESOURCES)HalpAssignPCISlotResources;
+    Bus->GetBusData = HalpGetPCIData;
+    Bus->SetBusData = HalpSetPCIData;
+    Bus->GetInterruptVector = HalpGetPCIIntOnISABus;
+    Bus->AdjustResourceList = HalpAdjustPCIResourceList;
+    Bus->AssignSlotResources = HalpAssignPCISlotResources;
     Bus->BusAddresses->Dma.Limit = 0;
 
     /* Get our custom bus data */
@@ -221,12 +221,12 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
     /* Setup custom bus data */
     BusData->CommonData.Tag = PCI_DATA_TAG;
     BusData->CommonData.Version = PCI_DATA_VERSION;
-    BusData->CommonData.ReadConfig = (PciReadWriteConfig)HalpReadPCIConfig;
-    BusData->CommonData.WriteConfig = (PciReadWriteConfig)HalpWritePCIConfig;
-    BusData->CommonData.Pin2Line = (PciPin2Line)HalpPCIPin2ISALine;
-    BusData->CommonData.Line2Pin = (PciLine2Pin)HalpPCIISALine2Pin;
+    BusData->CommonData.ReadConfig = HalpReadPCIConfig;
+    BusData->CommonData.WriteConfig = HalpWritePCIConfig;
+    BusData->CommonData.Pin2Line = HalpPCIPin2ISALine;
+    BusData->CommonData.Line2Pin = HalpPCIISALine2Pin;
     BusData->MaxDevice = PCI_MAX_DEVICES;
-    BusData->GetIrqRange = (PciIrqRange)HalpGetISAFixedPCIIrq;
+    BusData->GetIrqRange = HalpGetISAFixedPCIIrq;
 
     /* Initialize the bitmap */
     RtlInitializeBitMap(&BusData->DeviceConfigured, BusData->ConfiguredBits, 256);

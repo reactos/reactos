@@ -22,14 +22,22 @@
 #pragma alloc_text(INIT, MiInitBalancerThread)
 #endif
 
-#define TEST_PAGING
 
-
+/* TYPES ********************************************************************/
+typedef struct _MM_ALLOCATION_REQUEST
+{
+   PFN_NUMBER Page;
+   LIST_ENTRY ListEntry;
+   KEVENT Event;
+}
+MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 /* GLOBALS ******************************************************************/
 
 MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 static ULONG MiMinimumAvailablePages;
 static ULONG MiNrTotalPages;
+static LIST_ENTRY AllocationListHead;
+static KSPIN_LOCK AllocationListLock;
 static ULONG MiMinimumPagesPerRun;
 
 static CLIENT_ID MiBalancerThreadId;
@@ -45,6 +53,8 @@ NTAPI
 MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
    memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
+   InitializeListHead(&AllocationListHead);
+   KeInitializeSpinLock(&AllocationListLock);
 
    MiNrTotalPages = NrAvailablePages;
 
@@ -76,10 +86,18 @@ MmInitializeMemoryConsumer(ULONG Consumer,
    MiMemoryConsumers[Consumer].Trim = Trim;
 }
 
+VOID
+NTAPI
+MiZeroPhysicalPage(
+    IN PFN_NUMBER PageFrameIndex
+);
+
 NTSTATUS
 NTAPI
 MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
 {
+   PMM_ALLOCATION_REQUEST Request;
+   PLIST_ENTRY Entry;
    KIRQL OldIrql;
 
    if (Page == 0)
@@ -92,11 +110,26 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
    {
       if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
       (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+      if ((Entry = ExInterlockedRemoveHeadList(&AllocationListHead, &AllocationListLock)) == NULL)
+      {
+         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+         MmDereferencePage(Page);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+      }
+      else
+      {
+         Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
+         MiZeroPhysicalPage(Page);
+         Request->Page = Page;
+         KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
+      }
    }
-
-   OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MmDereferencePage(Page);
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+   else
+   {
+      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+      MmDereferencePage(Page);
+      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+   }
 
    return(STATUS_SUCCESS);
 }
@@ -116,13 +149,10 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
         return InitialTarget;
     }
 
-    // if (MiFreeSwapPages == 0)
+    if (MiMemoryConsumers[Consumer].PagesUsed > MiMemoryConsumers[Consumer].PagesTarget)
     {
-        if (MiMemoryConsumers[Consumer].PagesUsed > MiMemoryConsumers[Consumer].PagesTarget)
-        {
-            /* Consumer page limit exceeded */
-            Target = max(Target, MiMemoryConsumers[Consumer].PagesUsed - MiMemoryConsumers[Consumer].PagesTarget);
-        }
+        /* Consumer page limit exceeded */
+        Target = max(Target, MiMemoryConsumers[Consumer].PagesUsed - MiMemoryConsumers[Consumer].PagesTarget);
     }
     if (MmAvailablePages < MiMinimumAvailablePages)
     {
@@ -132,6 +162,13 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
 
     if (Target)
     {
+        if (!InitialTarget)
+        {
+            /* If there was no initial target,
+             * swap at least MiMinimumPagesPerRun */
+            Target = max(Target, MiMinimumPagesPerRun);
+        }
+
         /* Now swap the pages out */
         Status = MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
 
@@ -199,6 +236,13 @@ MiIsBalancerThread(VOID)
 
 VOID
 NTAPI
+MiDeletePte(IN PMMPTE PointerPte,
+            IN PVOID VirtualAddress,
+            IN PEPROCESS CurrentProcess,
+            IN PMMPTE PrototypePte);
+
+VOID
+NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
     if (MiBalancerThreadHandle != NULL &&
@@ -221,9 +265,8 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
     * Make sure we don't exceed our individual target.
     */
    PagesUsed = InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-   if ((PagesUsed > MiMemoryConsumers[Consumer].PagesTarget) &&
-       !MiIsBalancerThread() &&
-       (MmNumberOfPagingFiles == 0))
+   if (PagesUsed > MiMemoryConsumers[Consumer].PagesTarget &&
+       !MiIsBalancerThread())
    {
       MmRebalanceMemoryConsumers();
    }
@@ -242,6 +285,52 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       }
       if (Consumer == MC_USER) MmInsertLRULastUserPage(Page);
       *AllocatedPage = Page;
+      if (MmAvailablePages < MiMinimumAvailablePages)
+          MmRebalanceMemoryConsumers();
+      return(STATUS_SUCCESS);
+   }
+
+   /*
+    * Make sure we don't exceed global targets.
+    */
+   if (MmAvailablePages < MiMinimumAvailablePages)
+   {
+      MM_ALLOCATION_REQUEST Request;
+
+      if (!CanWait)
+      {
+         (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+         MmRebalanceMemoryConsumers();
+         return(STATUS_NO_MEMORY);
+      }
+
+      /* Insert an allocation request. */
+      Request.Page = 0;
+      KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
+
+      ExInterlockedInsertTailList(&AllocationListHead, &Request.ListEntry, &AllocationListLock);
+      MmRebalanceMemoryConsumers();
+
+      KeWaitForSingleObject(&Request.Event,
+                            0,
+                            KernelMode,
+                            FALSE,
+                            NULL);
+
+      Page = Request.Page;
+      if (Page == 0)
+      {
+         KeBugCheck(NO_PAGES_AVAILABLE);
+      }
+
+      if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
+      *AllocatedPage = Page;
+
+      if (MmAvailablePages < MiMinimumAvailablePages)
+      {
+          MmRebalanceMemoryConsumers();
+      }
+
       return(STATUS_SUCCESS);
    }
 
@@ -258,246 +347,91 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
    *AllocatedPage = Page;
 
+   if (MmAvailablePages < MiMinimumAvailablePages)
+   {
+       MmRebalanceMemoryConsumers();
+   }
+
    return(STATUS_SUCCESS);
 }
 
-/* Old implementation of the balancer thread */
-static
-VOID
-NTAPI
-MiRosBalancerThread(VOID)
-{
-    ULONG InitialTarget = 0;
-
-    DPRINT1("Legacy MM balancer in action!\n");
-
-#if (_MI_PAGING_LEVELS == 2)
-    if (!MiIsBalancerThread())
-    {
-        /* Clean up the unused PDEs */
-        ULONG_PTR Address;
-        PEPROCESS Process = PsGetCurrentProcess();
-
-        /* Acquire PFN lock */
-        KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-        PMMPDE pointerPde;
-        for (Address = (ULONG_PTR) MI_LOWEST_VAD_ADDRESS ;
-                Address < (ULONG_PTR) MM_HIGHEST_VAD_ADDRESS; Address += (PAGE_SIZE * PTE_COUNT))
-        {
-            if (MiQueryPageTableReferences((PVOID) Address) == 0)
-            {
-                pointerPde = MiAddressToPde(Address);
-                if (pointerPde->u.Hard.Valid)
-                    MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
-                ASSERT(pointerPde->u.Hard.Valid == 0);
-            }
-        }
-        /* Release lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    }
-#endif
-    do
-    {
-        ULONG OldTarget = InitialTarget;
-        ULONG i;
-
-        /* Trim each consumer */
-        for (i = 0; i < MC_MAXIMUM; i++)
-        {
-            InitialTarget = MiTrimMemoryConsumer(i, InitialTarget);
-        }
-
-        /* No pages left to swap! */
-        if (InitialTarget != 0 && InitialTarget == OldTarget)
-        {
-            /* Game over */
-            KeBugCheck(NO_PAGES_AVAILABLE);
-        }
-    } while (InitialTarget != 0);
-}
 
 VOID NTAPI
 MiBalancerThread(PVOID Unused)
 {
-    PVOID WaitObjects[2];
-    NTSTATUS Status;
-    ULONG i;
-    PVOID LastPagedPoolAddress = MmPagedPoolStart;
-#ifdef TEST_PAGING
-    PULONG PagingTestBuffer;
-    BOOLEAN TestPage = FALSE;
-#endif
+   PVOID WaitObjects[2];
+   NTSTATUS Status;
+   ULONG i;
 
-    WaitObjects[0] = &MiBalancerTimer;
-    WaitObjects[1] = &MiBalancerEvent;
+   WaitObjects[0] = &MiBalancerEvent;
+   WaitObjects[1] = &MiBalancerTimer;
 
-#ifdef TEST_PAGING
-    PagingTestBuffer = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'tseT');
-    DPRINT1("PagingTestBuffer: %p, PTE %p\n", PagingTestBuffer, MiAddressToPte(PagingTestBuffer));
-    for (i = 0; i < (PAGE_SIZE / sizeof(ULONG)); i++)
-        PagingTestBuffer[i] = i;
-#endif
+   while (1)
+   {
+      Status = KeWaitForMultipleObjects(2,
+                                        WaitObjects,
+                                        WaitAny,
+                                        Executive,
+                                        KernelMode,
+                                        FALSE,
+                                        NULL,
+                                        NULL);
 
-    while (1)
-    {
-        /* For now, we only age the paged pool, with 100 pages per run. */
-        LONG Count = 100;
-        PVOID Address = LastPagedPoolAddress;
-        KIRQL OldIrql;
-        PMMPTE PointerPte;
-        PMMPDE PointerPde;
-        ULONG PdeIndex;
-        MMPTE TempPte;
-        PMMPFN Pfn1;
-        BOOLEAN Flush;
+      if (Status == STATUS_WAIT_0 || Status == STATUS_WAIT_1)
+      {
+        ULONG InitialTarget = 0;
 
-        Status = KeWaitForMultipleObjects(
-            2,
-            WaitObjects,
-            WaitAny,
-            Executive,
-            KernelMode,
-            FALSE,
-            NULL,
-            NULL);
-        if (!NT_SUCCESS(Status))
+#if (_MI_PAGING_LEVELS == 2)
+        if (!MiIsBalancerThread())
         {
-            DPRINT1("KeWaitForMultipleObjects failed, status = %x\n", Status);
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
+            /* Clean up the unused PDEs */
+            ULONG_PTR Address;
+            PEPROCESS Process = PsGetCurrentProcess();
 
-        DPRINT("MM Balancer: Starting to loop.\n");
-
-        while (Count-- > 0)
-        {
-            Address = (PVOID)((ULONG_PTR) Address + PAGE_SIZE);
-
-            /* Acquire PFN lock while we are cooking */
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-            if (Address > MmPagedPoolEnd)
+            /* Acquire PFN lock */
+            KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            PMMPDE pointerPde;
+            for (Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
+                 Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+                 Address += (PAGE_SIZE * PTE_COUNT))
             {
-                Address = MmPagedPoolStart;
-            }
-
-            PointerPde = MiAddressToPde(Address);
-            PointerPte = MiAddressToPte(Address);
-
-            PdeIndex = ((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE);
-
-            if (MmSystemPagePtes[PdeIndex].u.Hard.Valid == 0)
-                TempPte.u.Long = 0;
-            else
-                TempPte = *PointerPte;
-
-            if (TempPte.u.Hard.Valid == 0)
-            {
-                /* Bad luck, not a paged-in address */
-#ifdef TEST_PAGING
-                if (PointerPte == MiAddressToPte(PagingTestBuffer))
+                if (MiQueryPageTableReferences((PVOID)Address) == 0)
                 {
-                    /* Of course it should not magically become a prototype pte */
-                    ASSERT(TempPte.u.Soft.Prototype == 0);
-                    if (TempPte.u.Soft.Transition == 0)
-                    {
-                        /* It was paged out! */
-                        ASSERT(TempPte.u.Soft.PageFileHigh != 0);
-                        TestPage = TRUE;
-                    }
+                    pointerPde = MiAddressToPde(Address);
+                    if (pointerPde->u.Hard.Valid)
+                        MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
+                    ASSERT(pointerPde->u.Hard.Valid == 0);
                 }
-#endif
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-                continue;
             }
-
-            Flush = FALSE;
-
-            /* Get the Pfn */
-            Pfn1 = MI_PFN_ELEMENT(PFN_FROM_PTE(&TempPte));
-            ASSERT(Pfn1->PteAddress == PointerPte);
-            ASSERT(Pfn1->u3.e1.PrototypePte == 0);
-
-            /* First check if it was written to */
-            if (TempPte.u.Hard.Dirty)
-                Pfn1->u3.e1.Modified = 1;
-
-            /* See if it was accessed since the last time we looked */
-            if (TempPte.u.Hard.Accessed)
-            {
-                /* Yes! Mark the page as young and fresh again */
-                Pfn1->Wsle.u1.e1.Age = 0;
-                /* Tell the CPU we want to know for the next time */
-                TempPte.u.Hard.Accessed = 0;
-                MI_UPDATE_VALID_PTE(PointerPte, TempPte);
-                Flush = TRUE;
-            }
-            else if (Pfn1->Wsle.u1.e1.Age == 3)
-            {
-                /* Page is getting old: Mark the PTE as transition */
-                DPRINT1("MM Balancer: putting %p (page %x) as transition.\n", PointerPte,
-                    PFN_FROM_PTE(&TempPte));
-                TempPte.u.Hard.Valid = 0;
-                TempPte.u.Soft.Transition = 1;
-                TempPte.u.Trans.Protection = MM_READWRITE;
-                MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&TempPte));
-                MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-                Flush = TRUE;
-            }
-            else
-            {
-                /* The page is just getting older */
-                Pfn1->Wsle.u1.e1.Age++;
-            }
-
-            /* Flush the TLB entry if we have to */
-            if (Flush)
-            {
-#ifdef CONFIG_SMP
-                // FIXME: Should invalidate entry in every CPU TLB
-                ASSERT(FALSE);
-#endif
-                KeInvalidateTlbEntry(Address);
-            }
-
-            /* Unlock, we're done for this address */
+            /* Release lock */
             KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
         }
-
-        DPRINT("MM Balancer: End of the loop.\n");
-
-#ifdef TEST_PAGING
-        if (TestPage)
-        {
-            BOOLEAN Passed = TRUE;
-            DPRINT1("Verifying data integrity of paged out data!\n");
-            for (i = 0; i < (PAGE_SIZE / sizeof(ULONG)); i++)
-            {
-                if (PagingTestBuffer[i] != i)
-                    Passed = FALSE;
-            }
-            if (Passed)
-                DPRINT1("PASSED! \\o/\n");
-            else
-                DPRINT1("FAILED /o\\\n");
-            TestPage = FALSE;
-        }
 #endif
-        /* Remember this for the next run */
-        LastPagedPoolAddress = Address;
+          do
+          {
+              ULONG OldTarget = InitialTarget;
 
-        if (Status == STATUS_WAIT_1)
-        {
-            /* Balancer thread was woken up by legacy MM
-             * This means we are really starving. Let's see if this still a problem */
-            if ((MmAvailablePages >= MmMinimumFreePages) && (MmNumberOfPagingFiles != 0))
-            {
-                /* Yay! No need to trust the old balancer */
-                continue;
-            }
+              /* Trim each consumer */
+              for (i = 0; i < MC_MAXIMUM; i++)
+              {
+                  InitialTarget = MiTrimMemoryConsumer(i, InitialTarget);
+              }
 
-            MiRosBalancerThread();
-        }
-    }
+              /* No pages left to swap! */
+              if (InitialTarget != 0 &&
+                  InitialTarget == OldTarget)
+              {
+                  /* Game over */
+                  KeBugCheck(NO_PAGES_AVAILABLE);
+              }
+          } while (InitialTarget != 0);
+      }
+      else
+      {
+         DPRINT1("KeWaitForMultipleObjects failed, status = %x\n", Status);
+         KeBugCheck(MEMORY_MANAGEMENT);
+      }
+   }
 }
 
 VOID

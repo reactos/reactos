@@ -45,7 +45,7 @@ BEGIN
     LTEXT "&Bilgisayar Adı:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Kur,'Administrator' adıyla bir yönetici hesabı oluşturacak. Bu hesabı bilgisayara tam erişim için kullanabileceksiniz.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Kur, ""Yönetici"" adıyla bir yönetici hesabı oluşturacak. Bu hesabı bilgisayara tam erişim için kullanabileceksiniz.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "127 karakter yada daha az bir Yönetici Parolası yazın.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Yönetici Parolası:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -154,7 +154,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_ADMINISTRATOR_NAME "Yönetici"
 END
 
 STRINGTABLE

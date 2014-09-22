@@ -687,7 +687,6 @@ extern PKEVENT MiLowPagedPoolEvent;
 extern PKEVENT MiHighPagedPoolEvent;
 extern PKEVENT MiLowNonPagedPoolEvent;
 extern PKEVENT MiHighNonPagedPoolEvent;
-extern KEVENT MpwThreadEvent;
 extern PFN_NUMBER MmLowMemoryThreshold;
 extern PFN_NUMBER MmHighMemoryThreshold;
 extern PFN_NUMBER MiLowPagedPoolThreshold;
@@ -696,7 +695,6 @@ extern PFN_NUMBER MiLowNonPagedPoolThreshold;
 extern PFN_NUMBER MiHighNonPagedPoolThreshold;
 extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
-extern ULONG_PTR MmTotalPagesForPagingFile;
 extern SIZE_T MmMinimumStackCommitInBytes;
 extern PFN_COUNT MiExpansionPoolPagesInitialCharge;
 extern PFN_NUMBER MmResidentAvailablePages;
@@ -2246,15 +2244,6 @@ MiDeleteVirtualAddresses(
     IN ULONG_PTR Va,
     IN ULONG_PTR EndingAddress,
     IN PMMVAD Vad
-);
-
-VOID
-NTAPI
-MiDeletePte(
-    IN PMMPTE PointerPte,
-    IN PVOID VirtualAddress,
-    IN PEPROCESS CurrentProcess,
-    IN PMMPTE PrototypePte
 );
 
 ULONG

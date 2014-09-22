@@ -373,7 +373,6 @@ extern MMPFNLIST MmZeroedPageListHead;
 extern MMPFNLIST MmFreePageListHead;
 extern MMPFNLIST MmStandbyPageListHead;
 extern MMPFNLIST MmModifiedPageListHead;
-extern MMPFNLIST MmModifiedPageListByColor[1];
 extern MMPFNLIST MmModifiedNoWritePageListHead;
 
 typedef struct _MM_MEMORY_CONSUMER
@@ -653,27 +652,8 @@ NTSTATUS
 NTAPI
 MiReadPageFile(
     _In_ PFN_NUMBER Page,
-    _In_ const MMPTE* PointerPte
-);
-
-NTSTATUS
-NTAPI
-MiWritePageFile(
-    _In_ PFN_NUMBER Page,
-    _In_ const MMPTE* PointerPte
-);
-
-VOID
-NTAPI
-MiFreePageFileEntry(
-    _In_ PMMPTE PointerPte
-);
-
-NTSTATUS
-NTAPI
-MiReservePageFileEntry(
-    _Out_ PMMPTE PointerPte
-);
+    _In_ ULONG PageFileIndex,
+    _In_ ULONG_PTR PageFileOffset);
 
 /* process.c ****************************************************************/
 

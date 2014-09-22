@@ -172,7 +172,7 @@ typedef struct _THRDESKHEAD
 typedef struct _PROCDESKHEAD
 {
   HEAD;
-  DWORD hTaskWow;
+  DWORD_PTR hTaskWow;
   struct _DESKTOP *rpdesk;
   PVOID       pSelf;
 } PROCDESKHEAD, *PPROCDESKHEAD;

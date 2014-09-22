@@ -365,7 +365,7 @@ NTAPI
 HalpGetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
-    IN PCI_SLOT_NUMBER SlotNumber,
+    IN ULONG SlotNumber,
     IN PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
@@ -376,7 +376,7 @@ NTAPI
 HalpSetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
-    IN PCI_SLOT_NUMBER SlotNumber,
+    IN ULONG SlotNumber,
     IN PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
@@ -503,7 +503,7 @@ NTAPI
 HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
                           IN PBUS_HANDLER RootHandler,
                           IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList);
-                          
+
 ULONG
 NTAPI
 HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
@@ -518,7 +518,7 @@ HalpPCIPin2ISALine(IN PBUS_HANDLER BusHandler,
                    IN PBUS_HANDLER RootHandler,
                    IN PCI_SLOT_NUMBER SlotNumber,
                    IN PPCI_COMMON_CONFIG PciData);
-        
+
 VOID
 NTAPI
 HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
@@ -533,7 +533,7 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
                       IN PBUS_HANDLER RootHandler,
                       IN PCI_SLOT_NUMBER PciSlot,
                       OUT PSUPPORTED_RANGE *Range);
-                      
+
 VOID
 NTAPI
 HalpInitBusHandler(
@@ -590,7 +590,7 @@ BOOLEAN
 NTAPI
 HalpTranslateSystemBusAddress(
     IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler, 
+    IN PBUS_HANDLER RootHandler,
     IN PHYSICAL_ADDRESS BusAddress,
     IN OUT PULONG AddressSpace,
     OUT PPHYSICAL_ADDRESS TranslatedAddress
@@ -600,7 +600,7 @@ BOOLEAN
 NTAPI
 HalpTranslateIsaBusAddress(
     IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler, 
+    IN PBUS_HANDLER RootHandler,
     IN PHYSICAL_ADDRESS BusAddress,
     IN OUT PULONG AddressSpace,
     OUT PPHYSICAL_ADDRESS TranslatedAddress
@@ -616,7 +616,7 @@ HalpGetSystemInterruptVector(
     OUT PKIRQL Irql,
     OUT PKAFFINITY Affinity
 );
-                     
+
 extern ULONG HalpBusType;
 extern BOOLEAN HalpPCIConfigInitialized;
 extern BUS_HANDLER HalpFakePciBusHandler;

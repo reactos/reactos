@@ -129,11 +129,10 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
    return NT_SUCCESS(Status) ? uResult : 0;
 }
 
-static
-BOOL
-FASTCALL
-IntRemoveEvent(PEVENTHOOK pEH)
+BOOLEAN
+IntRemoveEvent(PVOID Object)
 {
+   PEVENTHOOK pEH = Object;
    if (pEH)
    {
       TRACE("IntRemoveEvent pEH %p\n", pEH);
@@ -146,38 +145,6 @@ IntRemoveEvent(PEVENTHOOK pEH)
       return TRUE;
    }
    return FALSE;
-}
-
-VOID
-FASTCALL
-EVENT_DestroyThreadEvents(PETHREAD Thread)
-{
-   PTHREADINFO pti;
-   PEVENTHOOK pEH;
-   PLIST_ENTRY pLE;
-
-   pti = Thread->Tcb.Win32Thread;
-   if (!pti) return;
-
-   if (!GlobalEvents || !GlobalEvents->Counts) return;
-
-   pLE = GlobalEvents->Events.Flink;
-   if (IsListEmpty(pLE)) return;
-
-   pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
-   do
-   {
-      if (IsListEmpty(pLE)) break;
-      if (!pEH) break;
-      pLE = pEH->Chain.Flink;
-      if (pEH->head.pti == pti)
-      {
-         IntRemoveEvent(pEH);
-      }
-      pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
-   } while (pLE != &GlobalEvents->Events);
-
-   return;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -332,7 +299,7 @@ NtUserSetWinEventHook(
    HWINEVENTHOOK Ret = NULL;
    NTSTATUS Status;
    HANDLE Handle;
-   PETHREAD Thread = NULL;
+   PTHREADINFO pti;
 
    TRACE("NtUserSetWinEventHook hmod %p, pfn %p\n", hmodWinEventProc, lpfnWinEventProc);
 
@@ -370,15 +337,22 @@ NtUserSetWinEventHook(
 
    if (idThread)
    {
+      PETHREAD Thread;
       Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if (!NT_SUCCESS(Status))
       {   
          EngSetLastError(ERROR_INVALID_THREAD_ID);
          goto SetEventExit;
       }
+      pti = PsGetThreadWin32Thread(Thread);
+      ObDereferenceObject(Thread);
+   }
+   else
+   {
+       pti = PsGetCurrentThreadWin32Thread();
    }
    // Creator, pti is set here.
-   pEH = UserCreateObject(gHandleTable, NULL, NULL, &Handle, TYPE_WINEVENTHOOK, sizeof(EVENTHOOK));
+   pEH = UserCreateObject(gHandleTable, NULL, pti, &Handle, TYPE_WINEVENTHOOK, sizeof(EVENTHOOK));
    if (pEH)
    {
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);
@@ -413,7 +387,6 @@ NtUserSetWinEventHook(
    }
 
 SetEventExit:
-   if (Thread) ObDereferenceObject(Thread);
    UserLeave();
    return Ret;
 }

@@ -105,7 +105,6 @@ typedef struct _SYSTEM_CURSORINFO
 
 BOOL InitCursorImpl(VOID);
 HANDLE IntCreateCurIconHandle(BOOLEAN Anim);
-VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxWidth,
    INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
@@ -115,6 +114,7 @@ BOOL APIENTRY UserClipCursor(RECTL *prcl);
 PSYSTEM_CURSORINFO IntGetSysCursorInfo(VOID);
 HCURSOR FASTCALL IntSetCursor(HCURSOR hCursor);
 BOOL FASTCALL IntDestroyCursor(HANDLE hCurIcon, BOOL bForce);
+BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi);
 
 #define IntReleaseCurIconObject(CurIconObj) \
   UserDereferenceObject(CurIconObj)
