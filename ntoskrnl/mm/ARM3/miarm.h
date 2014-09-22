@@ -2248,6 +2248,15 @@ MiDeleteVirtualAddresses(
     IN PMMVAD Vad
 );
 
+VOID
+NTAPI
+MiDeletePte(
+    IN PMMPTE PointerPte,
+    IN PVOID VirtualAddress,
+    IN PEPROCESS CurrentProcess,
+    IN PMMPTE PrototypePte
+);
+
 ULONG
 NTAPI
 MiMakeSystemAddressValid(
