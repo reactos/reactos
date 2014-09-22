@@ -186,6 +186,14 @@ typedef enum
     AttributeLoggedUtilityStream = 0x100
 } ATTRIBUTE_TYPE, *PATTRIBUTE_TYPE;
 
+#define COLLATION_BINARY              0x00
+#define COLLATION_FILE_NAME           0x01
+#define COLLATION_UNICODE_STRING      0x02
+#define COLLATION_NTOFS_ULONG         0x10
+#define COLLATION_NTOFS_SID           0x11
+#define COLLATION_NTOFS_SECURITY_HASH 0x12
+#define COLLATION_NTOFS_ULONGS        0x13
+
 
 typedef struct
 {
@@ -302,6 +310,15 @@ typedef struct
     UCHAR NameType;
     WCHAR Name[1];
 } FILENAME_ATTRIBUTE, *PFILENAME_ATTRIBUTE;
+
+typedef struct
+{
+    ULONG AttributeType;
+    ULONG CollationRule;
+    ULONG SizeOfEntry;
+    UCHAR ClustersPerIndexRecord;
+    UCHAR Padding[3];
+} INDEX_ROOT_ATTRIBUTE, *PINDEX_ROOT_ATTRIBUTE;
 
 typedef struct
 {
