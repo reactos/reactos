@@ -106,7 +106,7 @@ ServiceControlHandler(DWORD dwControl,
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
-        default :
+        default:
             DPRINT1("  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
@@ -275,6 +275,7 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
     LONG Result;
     PLOGFILE pLogf = NULL;
     UNICODE_STRING FileName;
+    ULONG ulMaxSize, ulRetention;
     NTSTATUS Status;
 
     DPRINT("LoadLogFile: %S\n", LogName);
@@ -333,7 +334,27 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 
     DPRINT("%S -> %S\n", Buf, Expanded);
 
-    Status = LogfCreate(&pLogf, LogName, &FileName, TRUE, FALSE);
+    ValueLen = sizeof(ULONG);
+    Result = RegQueryValueEx(hKey,
+                             L"MaxSize",
+                             NULL,
+                             &Type,
+                             (LPBYTE)&ulMaxSize,
+                             &ValueLen);
+    if (Result != ERROR_SUCCESS)
+        ulMaxSize = 512 * 1024; /* 512 kBytes */
+
+    ValueLen = sizeof(ULONG);
+    Result = RegQueryValueEx(hKey,
+                             L"Retention",
+                             NULL,
+                             &Type,
+                             (LPBYTE)&ulRetention,
+                             &ValueLen);
+    if (Result != ERROR_SUCCESS)
+        ulRetention = 0;
+
+    Status = LogfCreate(&pLogf, LogName, &FileName, ulMaxSize, ulRetention, TRUE, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create %S! (Status %08lx)\n", Expanded, Status);

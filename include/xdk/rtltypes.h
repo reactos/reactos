@@ -203,11 +203,11 @@ extern BOOLEAN NlsMbCodePageTag;
 extern BOOLEAN NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #else
-extern BOOLEAN *NlsMbCodePageTag;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbCodePageTag)
+extern BOOLEAN *NlsMbCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
-extern BOOLEAN *NlsMbOemCodePageTag;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbOemCodePageTag)
+extern BOOLEAN *NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
 #endif
 

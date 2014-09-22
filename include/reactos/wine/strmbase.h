@@ -136,6 +136,7 @@ HRESULT WINAPI BaseOutputPinImpl_DecideAllocator(BaseOutputPin *This, IMemInputP
 HRESULT WINAPI BaseOutputPinImpl_AttemptConnection(BasePin *This, IPin * pReceivePin, const AM_MEDIA_TYPE * pmt);
 
 HRESULT WINAPI BaseOutputPin_Construct(const IPinVtbl *OutputPin_Vtbl, LONG outputpin_size, const PIN_INFO * pPinInfo, const BaseOutputPinFuncTable* pBaseOutputFuncsTable, LPCRITICAL_SECTION pCritSec, IPin ** ppPin);
+HRESULT WINAPI BaseOutputPin_Destroy(BaseOutputPin *This);
 
 /* Base Input Pin */
 HRESULT WINAPI BaseInputPinImpl_QueryInterface(IPin * iface, REFIID riid, LPVOID * ppv);
@@ -151,6 +152,7 @@ HRESULT WINAPI BaseInputPinImpl_NewSegment(IPin * iface, REFERENCE_TIME tStart, 
 HRESULT BaseInputPin_Construct(const IPinVtbl *InputPin_Vtbl, LONG inputpin_size, const PIN_INFO * pPinInfo,
         const BaseInputPinFuncTable* pBaseInputFuncsTable,
         LPCRITICAL_SECTION pCritSec, IMemAllocator *, IPin ** ppPin);
+HRESULT WINAPI BaseInputPin_Destroy(BaseInputPin *This);
 
 typedef struct BaseFilter
 {

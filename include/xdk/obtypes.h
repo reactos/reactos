@@ -134,17 +134,6 @@ extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
 #else
-extern POBJECT_TYPE *CmKeyObjectType;
-extern POBJECT_TYPE *IoFileObjectType;
-extern POBJECT_TYPE *ExEventObjectType;
-extern POBJECT_TYPE *ExSemaphoreObjectType;
-extern POBJECT_TYPE *TmTransactionManagerObjectType;
-extern POBJECT_TYPE *TmResourceManagerObjectType;
-extern POBJECT_TYPE *TmEnlistmentObjectType;
-extern POBJECT_TYPE *TmTransactionObjectType;
-extern POBJECT_TYPE *PsProcessType;
-extern POBJECT_TYPE *PsThreadType;
-extern POBJECT_TYPE *SeTokenObjectType;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(CmKeyObjectType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(IoFileObjectType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(ExEventObjectType)
@@ -156,6 +145,17 @@ __CREATE_NTOS_DATA_IMPORT_ALIAS(TmTransactionObjectType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(PsProcessType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(PsThreadType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(SeTokenObjectType)
+extern POBJECT_TYPE *CmKeyObjectType;
+extern POBJECT_TYPE *IoFileObjectType;
+extern POBJECT_TYPE *ExEventObjectType;
+extern POBJECT_TYPE *ExSemaphoreObjectType;
+extern POBJECT_TYPE *TmTransactionManagerObjectType;
+extern POBJECT_TYPE *TmResourceManagerObjectType;
+extern POBJECT_TYPE *TmEnlistmentObjectType;
+extern POBJECT_TYPE *TmTransactionObjectType;
+extern POBJECT_TYPE *PsProcessType;
+extern POBJECT_TYPE *PsThreadType;
+extern POBJECT_TYPE *SeTokenObjectType;
 #endif
 
 $endif (_WDMDDK_)

@@ -9,8 +9,19 @@
 
 #include <precomp.h>
 
+#include <math.h>
+
 #define NDEBUG
 #include <debug.h>
+
+/* Rounds a floating point number to integer. The world-to-viewport
+ * transformation process is done in floating point internally. This function
+ * is then used to round these coordinates to integer values.
+ */
+static __inline INT GDI_ROUND(FLOAT val)
+{
+   return (int)floor(val + 0.5);
+}
 
 /*
  *  For TranslateCharsetInfo
@@ -1204,6 +1215,29 @@ end:
     return ret;
 }
 
+/* Performs a device to world transformation on the specified size (which
+ * is in integer format).
+ */
+static inline INT INTERNAL_YDSTOWS(XFORM *xForm, INT height)
+{
+    double floatHeight;
+
+    /* Perform operation with floating point */
+    floatHeight = (double)height * xForm->eM22;
+    /* Round to integers */
+    return GDI_ROUND(floatHeight);
+}
+
+/* scale width and height but don't mirror them */
+static inline INT width_to_LP( XFORM *xForm, INT width )
+{
+    return GDI_ROUND( (double)width * fabs( xForm->eM11));
+}
+
+static inline INT height_to_LP( XFORM *xForm, INT height )
+{
+    return GDI_ROUND( (double)height * fabs( xForm->eM22 ));
+}
 
 /*
  * @implemented
@@ -1217,8 +1251,146 @@ GetOutlineTextMetricsW(
 )
 {
     TMDIFF Tmd;   // Should not be zero.
+    UINT Size, AvailableSize = 0, StringSize;
+    XFORM DevToWorld;
+    OUTLINETEXTMETRICW* LocalOTM;
+    WCHAR* Str;
+    BYTE* Ptr;
 
-    return NtGdiGetOutlineTextMetricsInternalW(hdc, cbData, lpOTM, &Tmd);
+    /* Get the structure */
+    Size = NtGdiGetOutlineTextMetricsInternalW(hdc, 0, NULL, &Tmd);
+    if (!Size)
+        return 0;
+    if (!lpOTM || (cbData < sizeof(*lpOTM)))
+        return Size;
+
+    LocalOTM = HeapAlloc(GetProcessHeap(), 0, Size);
+    LocalOTM->otmSize = Size;
+    Size = NtGdiGetOutlineTextMetricsInternalW(hdc, Size, LocalOTM, &Tmd);
+    if (!Size)
+    {
+        HeapFree(GetProcessHeap(), 0, LocalOTM);
+        return 0;
+    }
+
+    if (!NtGdiGetTransform(hdc, GdiDeviceSpaceToWorldSpace, &DevToWorld))
+    {
+        DPRINT1("NtGdiGetTransform failed!\n");
+        HeapFree(GetProcessHeap(), 0, LocalOTM);
+        SetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    /* Fill in DC specific data */
+    LocalOTM->otmTextMetrics.tmDigitizedAspectX = GetDeviceCaps(hdc, LOGPIXELSX);
+    LocalOTM->otmTextMetrics.tmDigitizedAspectY = GetDeviceCaps(hdc, LOGPIXELSY);
+    LocalOTM->otmTextMetrics.tmHeight = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmHeight );
+    LocalOTM->otmTextMetrics.tmAscent = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmAscent );
+    LocalOTM->otmTextMetrics.tmDescent = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmDescent );
+    LocalOTM->otmTextMetrics.tmInternalLeading = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmInternalLeading );
+    LocalOTM->otmTextMetrics.tmExternalLeading = height_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmExternalLeading );
+    LocalOTM->otmTextMetrics.tmAveCharWidth = width_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmAveCharWidth );
+    LocalOTM->otmTextMetrics.tmMaxCharWidth = width_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmMaxCharWidth );
+    LocalOTM->otmTextMetrics.tmOverhang = width_to_LP( &DevToWorld, LocalOTM->otmTextMetrics.tmOverhang );
+    LocalOTM->otmAscent                = height_to_LP( &DevToWorld, LocalOTM->otmAscent);
+    LocalOTM->otmDescent               = height_to_LP( &DevToWorld, LocalOTM->otmDescent);
+    LocalOTM->otmLineGap               = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmLineGap));
+    LocalOTM->otmsCapEmHeight          = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmsCapEmHeight));
+    LocalOTM->otmsXHeight              = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmsXHeight));
+    LocalOTM->otmrcFontBox.top         = height_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.top);
+    LocalOTM->otmrcFontBox.bottom      = height_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.bottom);
+    LocalOTM->otmrcFontBox.left        = width_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.left);
+    LocalOTM->otmrcFontBox.right       = width_to_LP( &DevToWorld, LocalOTM->otmrcFontBox.right);
+    LocalOTM->otmMacAscent             = height_to_LP( &DevToWorld, LocalOTM->otmMacAscent);
+    LocalOTM->otmMacDescent            = height_to_LP( &DevToWorld, LocalOTM->otmMacDescent);
+    LocalOTM->otmMacLineGap            = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmMacLineGap));
+    LocalOTM->otmptSubscriptSize.x     = width_to_LP( &DevToWorld, LocalOTM->otmptSubscriptSize.x);
+    LocalOTM->otmptSubscriptSize.y     = height_to_LP( &DevToWorld, LocalOTM->otmptSubscriptSize.y);
+    LocalOTM->otmptSubscriptOffset.x   = width_to_LP( &DevToWorld, LocalOTM->otmptSubscriptOffset.x);
+    LocalOTM->otmptSubscriptOffset.y   = height_to_LP( &DevToWorld, LocalOTM->otmptSubscriptOffset.y);
+    LocalOTM->otmptSuperscriptSize.x   = width_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptSize.x);
+    LocalOTM->otmptSuperscriptSize.y   = height_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptSize.y);
+    LocalOTM->otmptSuperscriptOffset.x = width_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptOffset.x);
+    LocalOTM->otmptSuperscriptOffset.y = height_to_LP( &DevToWorld, LocalOTM->otmptSuperscriptOffset.y);
+    LocalOTM->otmsStrikeoutSize        = abs(INTERNAL_YDSTOWS(&DevToWorld,LocalOTM->otmsStrikeoutSize));
+    LocalOTM->otmsStrikeoutPosition    = height_to_LP( &DevToWorld, LocalOTM->otmsStrikeoutPosition);
+    LocalOTM->otmsUnderscoreSize       = height_to_LP( &DevToWorld, LocalOTM->otmsUnderscoreSize);
+    LocalOTM->otmsUnderscorePosition   = height_to_LP( &DevToWorld, LocalOTM->otmsUnderscorePosition);
+
+    /* Copy what we can */
+    CopyMemory(lpOTM, LocalOTM, min(Size, cbData));
+
+    lpOTM->otmpFamilyName = NULL;
+    lpOTM->otmpFaceName = NULL;
+    lpOTM->otmpStyleName = NULL;
+    lpOTM->otmpFullName = NULL;
+
+    Size = sizeof(*lpOTM);
+    AvailableSize = cbData - Size;
+    Ptr = (BYTE*)lpOTM + sizeof(*lpOTM);
+
+    /* Fix string values up */
+    if (LocalOTM->otmpFamilyName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpFamilyName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpFamilyName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    if (LocalOTM->otmpFaceName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpFaceName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpFaceName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    if (LocalOTM->otmpStyleName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpStyleName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpStyleName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    if (LocalOTM->otmpFullName)
+    {
+        Str = (WCHAR*)((char*)LocalOTM + (ptrdiff_t)LocalOTM->otmpFullName);
+        StringSize = (wcslen(Str) + 1) * sizeof(WCHAR);
+        if (AvailableSize >= StringSize)
+        {
+            CopyMemory(Ptr, Str, StringSize);
+            lpOTM->otmpFullName = (PSTR)(Ptr - (BYTE*)lpOTM);
+            Ptr += StringSize;
+            AvailableSize -= StringSize;
+            Size += StringSize;
+        }
+    }
+
+    lpOTM->otmSize = Size;
+
+    HeapFree(GetProcessHeap(), 0, LocalOTM);
+
+    return Size;
 }
 
 /*

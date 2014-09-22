@@ -225,7 +225,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         /* Call PCI function */
         return HalpGetPCIData(&BusHandler,
                               &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
+                              SlotNumber,
                               Buffer,
                               Offset,
                               Length);
@@ -304,7 +304,7 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         /* Call PCI function */
         return HalpSetPCIData(&BusHandler,
                               &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
+                              SlotNumber,
                               Buffer,
                               Offset,
                               Length);

@@ -26,10 +26,10 @@ BEGIN
     BEGIN
         MENUITEM "&Yeni\tCtrl+N", CMD_NEW
         MENUITEM "&Aç...\tCtrl+O", CMD_OPEN
-        MENUITEM "&Kaydet\tCtrl+S", CMD_SAVE
-        MENUITEM "Ay&rı Kaydet...", CMD_SAVE_AS
+        MENUITEM "&Sakla\tCtrl+S", CMD_SAVE
+        MENUITEM "Ay&rı Sakla...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Sayfa Ayarla...", CMD_PAGE_SETUP
+        MENUITEM "Say&fa Ayarla...", CMD_PAGE_SETUP
         MENUITEM "Ya&zdır...\tCtrl+P", CMD_PRINT
         MENUITEM "Yaz&ıcı Ayarla...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
@@ -155,7 +155,7 @@ BEGIN
     STRING_TOOLARGE "%s kütüğü Not Defteri için çok büyük. Lütfen başka bir düzenleyici kullanınız."
     STRING_NOTEXT "Hiç metin girmediniz. Lütfen birşeyler yazıp yeniden deneyiniz."
     STRING_DOESNOTEXIST "%s kütüğü yok. Yeni bir kütük oluşturmak ister misiniz?"
-    STRING_NOTSAVED "%s kütüğü değiştirilmiş. Değişiklikleri kaydetmek ister misiniz?"
+    STRING_NOTSAVED "%s kütüğü değiştirilmiş. Değişiklikleri saklamak ister misiniz?"
     STRING_NOTFOUND "%s bulunamadı."
     STRING_OUT_OF_MEMORY "Bu işi bitirmek için bellek yetersiz. Kullanılabilen belleği arttırmak için bir ya da daha çok uygulama kapatınız."
     STRING_CANNOTFIND "%s bulunamadı."

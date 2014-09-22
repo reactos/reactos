@@ -752,19 +752,19 @@ VOID APIENTRY
 UserRedrawDesktop()
 {
     PWND Window = NULL;
-    HRGN hRgn;
+    PREGION Rgn;
 
     Window = UserGetDesktopWindow();
-    hRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
+    Rgn = IntSysCreateRectpRgnIndirect(&Window->rcWindow);
 
     IntInvalidateWindows( Window,
-                            hRgn,
+                             Rgn,
                        RDW_FRAME |
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
 
-    GreDeleteObject(hRgn);
+    REGION_Delete(Rgn);
 }
 
 

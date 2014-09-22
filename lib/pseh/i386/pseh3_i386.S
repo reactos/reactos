@@ -20,7 +20,7 @@
  *  _SEH3$_RegisterFrame[WithNonVolatiles](
  *       PSEH3$_REGISTRATION_FRAME RegistrationFrame<eax>,
  *       PSEH3$_SCOPE_TABLE ScopeTable<edx>,
- *       PVOID AllocaFrame);
+ *       PVOID AllocaFrame<ecx>);
  */
 .global __SEH3$_RegisterFrameWithNonVolatiles
 __SEH3$_RegisterFrameWithNonVolatiles:
@@ -33,6 +33,7 @@ __SEH3$_RegisterFrameWithNonVolatiles:
     /* Safe the return address */
     mov ebx, [esp]
     mov [eax + SEH3_REGISTRATION_FRAME_ReturnAddress], ebx
+    mov ebx, [eax + SEH3_REGISTRATION_FRAME_Ebx]
 
 .global __SEH3$_RegisterFrameWithStackLayout
 __SEH3$_RegisterFrameWithStackLayout:
@@ -71,9 +72,9 @@ __SEH3$_RegisterFrame:
  *  __attribute__((regparm(3)))
  *  __attribute__((returns_twice))
  *  _SEH3$_RegisterTryLevel[WithNonVolatiles](
- *       PSEH3$_REGISTRATION_FRAME RegistrationFrame<edx>,
- *       PSEH3$_SCOPE_TABLE ScopeTable<eax>,
- *       PVOID AllocaFrame);
+ *       PSEH3$_REGISTRATION_FRAME RegistrationFrame<eax>,
+ *       PSEH3$_SCOPE_TABLE ScopeTable<edx>,
+ *       PVOID AllocaFrame<ecx>);
  */
 .global __SEH3$_RegisterTryLevelWithNonVolatiles
 __SEH3$_RegisterTryLevelWithNonVolatiles:
@@ -86,6 +87,7 @@ __SEH3$_RegisterTryLevelWithNonVolatiles:
     /* Safe the return address */
     mov ebx, [esp]
     mov [eax + SEH3_REGISTRATION_FRAME_ReturnAddress], ebx
+    mov ebx, [eax + SEH3_REGISTRATION_FRAME_Ebx]
 
 .global __SEH3$_RegisterTryLevelWithStackLayout
 __SEH3$_RegisterTryLevelWithStackLayout:
@@ -130,6 +132,9 @@ __SEH3$_InvokeEmbeddedFilterFromRegistration:
     push esi
     push edi
 
+    /* Save the registration frame pointer */
+    push eax
+
     /* Load the non-volatiles from the registration invocation */
     mov ebx, [eax + SEH3_REGISTRATION_FRAME_Ebx]
     mov esi, [eax + SEH3_REGISTRATION_FRAME_Esi]
@@ -141,7 +146,7 @@ __SEH3$_InvokeEmbeddedFilterFromRegistration:
     sub ecx, [eax + SEH3_REGISTRATION_FRAME_Esp]
 
     /* Put the return address on the stack */
-    push offset __SEH3$_InvokeEmbeddedFilterReturn
+    push offset __SEH3$_InvokeEmbeddedFilterReturnClang
 
     /* Save the current stack pointer in the AllocaFrame member */
     mov [eax + SEH3_REGISTRATION_FRAME_AllocaFrame], esp
@@ -156,6 +161,26 @@ __SEH3$_InvokeEmbeddedFilterFromRegistration:
     xor eax, eax
     inc eax
     jmp edx
+
+    /* We return to this label with a cleaned up stack */
+__SEH3$_InvokeEmbeddedFilterReturnClang:
+
+    /* Restore the registration frame pointer */
+    pop ecx
+
+    /* Save the non-volatiles back in the registration frame */
+    mov [ecx + SEH3_REGISTRATION_FRAME_Ebx], ebx
+    mov [ecx + SEH3_REGISTRATION_FRAME_Esi], esi
+    mov [ecx + SEH3_REGISTRATION_FRAME_Edi], edi
+    mov [ecx + SEH3_REGISTRATION_FRAME_Ebp], ebp
+
+    /* Restore the current non-volatiles */
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    ret
 
 
 .global __SEH3$_InvokeEmbeddedFilter

@@ -11,7 +11,7 @@ BEGIN
     LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesi seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 209, 36
     GROUPBOX "&Güç Düzenleri", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Ayrı Sakla...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "&Sil", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "Bilinmiyor", IDC_GRPDETAIL, 6, 95, 240, 136
     LTEXT "Bilgisyar:", IDC_SAT, 12, 109, 60, 12
@@ -92,7 +92,7 @@ CAPTION "Anıkta Bekleme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "Bilgisayar anıkta bekletildiğinde sâbit diskinize bellekte ne varsa kaydedilir ve sonra bilgisayar kapatılır. Bilgisayarınız anıkta beklemeden çıktığında bir önceki durumuna döner.", -1, 37, 6, 210, 35
+    LTEXT "Bilgisayar anıkta bekletildiğinde sâbit diskinize bellekte ne varsa saklanır ve sonra bilgisayar kapatılır. Bilgisayarınız anıkta beklemeden çıktığında bir önceki durumuna döner.", -1, 37, 6, 210, 35
     GROUPBOX "Anıkta Bekleme", -1, 6, 41, 240, 32
     CONTROL "&Anıkta Beklemeyi Etkinleştir", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
     GROUPBOX "Anıkta Bekleme İçin Disk Alanı", -1, 6, 80, 240, 76

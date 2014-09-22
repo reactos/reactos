@@ -16,8 +16,8 @@
 /* GLOBALS *******************************************************************/
 
 /* Boot and double-fault/NMI/DPC stack */
-UCHAR DECLSPEC_ALIGN(16) P0BootStackData[KERNEL_STACK_SIZE] = {0};
-UCHAR DECLSPEC_ALIGN(16) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
+UCHAR DECLSPEC_ALIGN(PAGE_SIZE) P0BootStackData[KERNEL_STACK_SIZE] = {0};
+UCHAR DECLSPEC_ALIGN(PAGE_SIZE) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
 ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
 ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
 
@@ -679,6 +679,28 @@ KiSystemStartupBootStack(VOID)
     KiIdleLoop();
 }
 
+static
+VOID
+KiMarkPageAsReadOnly(
+    PVOID Address)
+{
+    PHARDWARE_PTE PointerPte;
+
+    /* Make sure the address is page aligned */
+    ASSERT(ALIGN_DOWN_POINTER_BY(Address, PAGE_SIZE) == Address);
+
+    /* Get the PTE address */
+    PointerPte = ((PHARDWARE_PTE)PTE_BASE) + ((ULONG_PTR)Address / PAGE_SIZE);
+    ASSERT(PointerPte->Valid);
+    ASSERT(PointerPte->Write);
+
+    /* Set as read-only */
+    PointerPte->Write = 0;
+
+    /* Flush the TLB entry */
+    __invlpg(Address);
+}
+
 VOID
 NTAPI
 INIT_FUNCTION
@@ -796,6 +818,10 @@ AppCpuInit:
 
         /* Check for break-in */
         if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+
+        /* Make the lowest page of the boot and double fault stack read-only */
+        KiMarkPageAsReadOnly(P0BootStackData);
+        KiMarkPageAsReadOnly(KiDoubleFaultStackData);
     }
 
     /* Raise to HIGH_LEVEL */

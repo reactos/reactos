@@ -49,6 +49,7 @@ HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\DefaultIcon","",0x00000000
 HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\shell\open\command","",0x00000000,"%programfiles%\Internet Explorer\iexplore.exe"
 
 ; DirectX
+HKLM,"SOFTWARE\Microsoft\DirectX","InstalledVersion",0x00000001, 0x00,0x00,0x00,0x09,0x00,0x00,0x00,0x00
 HKLM,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"4.09.00.0904"
 
 ; RPC

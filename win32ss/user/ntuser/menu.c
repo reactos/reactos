@@ -176,7 +176,7 @@ PMENU FASTCALL VerifyMenu(PMENU pMenu)
    return pMenu;
 }
 
-BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse, BOOL RemoveFromProcess)
+BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse)
 {
     PMENU SubMenu;
 
@@ -204,7 +204,7 @@ BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse, BOOL RemoveFromProcess)
            {
               /* Release submenu since it was referenced when inserted */
               IntReleaseMenuObject(SubMenu);
-              IntDestroyMenuObject(SubMenu, bRecurse, RemoveFromProcess);
+              IntDestroyMenuObject(SubMenu, bRecurse);
            }
        }
        /* Free the Item */
@@ -215,20 +215,22 @@ BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse, BOOL RemoveFromProcess)
     return TRUE;
 }
 
+/* Callback for the object manager */
+BOOLEAN
+UserDestroyMenuObject(PVOID Object)
+{
+    return IntDestroyMenuObject(Object, TRUE);
+}
+
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU Menu, BOOL bRecurse, BOOL RemoveFromProcess)
+IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
 {
    if(Menu)
    {
       PWND Window;
 
       /* Remove all menu items */
-      IntDestroyMenu( Menu, bRecurse, RemoveFromProcess);
-
-      if (RemoveFromProcess)
-      {
-         RemoveEntryList(&Menu->ListEntry);
-      }
+      IntDestroyMenu( Menu, bRecurse);
 
       if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->rpwinstaParent->dwSessionId)
       {
@@ -361,7 +363,7 @@ IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
     FreeMenuText(pMenu,item);
     if (bRecurse && item->spSubMenu)
     {
-       IntDestroyMenuObject(item->spSubMenu, bRecurse, TRUE);
+       IntDestroyMenuObject(item->spSubMenu, bRecurse);
     }
     ////// Use cAlloced with inc's of 8's....
     if (--pMenu->cItems == 0)
@@ -477,14 +479,17 @@ IntInsertMenuItem(
 }
 
 PMENU FASTCALL
-IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
+IntCreateMenu(
+    _Out_ PHANDLE Handle,
+    _In_ BOOL IsMenuBar,
+    _In_ PDESKTOP Desktop,
+    _In_ PPROCESSINFO ppi)
 {
    PMENU Menu;
-   PPROCESSINFO CurrentWin32Process;
 
    Menu = (PMENU)UserCreateObject( gHandleTable,
-                                          NULL,
-                                          NULL,
+                                          Desktop,
+                                          ppi->ptiList,
                                           Handle,
                                           TYPE_MENU,
                                           sizeof(MENU));
@@ -511,10 +516,6 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 
    Menu->hWnd = NULL;
    Menu->TimeToHide = FALSE;
-
-   /* Insert menu item into process menu handle list */
-   CurrentWin32Process = PsGetCurrentProcessWin32Process();
-   InsertTailList(&CurrentWin32Process->MenuListHead, &Menu->ListEntry);
 
    return Menu;
 }
@@ -572,19 +573,19 @@ IntCloneMenuItems(PMENU Destination, PMENU Source)
 PMENU FASTCALL
 IntCloneMenu(PMENU Source)
 {
-   PPROCESSINFO CurrentWin32Process;
    HANDLE hMenu;
    PMENU Menu;
 
    if(!Source)
       return NULL;
 
+   /* A menu is valid process wide. We can pass to the object manager any thread ptr */
    Menu = (PMENU)UserCreateObject( gHandleTable,
-                                          NULL,
-                                          NULL,
-                                          &hMenu,
-                                          TYPE_MENU,
-                                          sizeof(MENU));
+                                   Source->head.rpdesk,
+                                   ((PPROCESSINFO)Source->head.hTaskWow)->ptiList,
+                                   &hMenu,
+                                   TYPE_MENU,
+                                   sizeof(MENU));
    if(!Menu)
       return NULL;
 
@@ -605,10 +606,6 @@ IntCloneMenu(PMENU Source)
 
    Menu->hWnd = NULL;
    Menu->TimeToHide = FALSE;
-
-   /* Insert menu item into process menu handle list */
-   CurrentWin32Process = PsGetCurrentProcessWin32Process();
-   InsertTailList(&CurrentWin32Process->MenuListHead, &Menu->ListEntry);
 
    IntCloneMenuItems(Menu, Source);
 
@@ -870,7 +867,10 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
             {
                HANDLE hMenu;
                ERR("Pop Up Menu Double Trouble!\n");
-               SubMenuObject = IntCreateMenu(&hMenu, FALSE); // It will be marked.
+               SubMenuObject = IntCreateMenu(&hMenu,
+                   FALSE,
+                   MenuObject->head.rpdesk,
+                   (PPROCESSINFO)MenuObject->head.hTaskWow); // It will be marked.
                if (!SubMenuObject) return FALSE;
                IntReleaseMenuObject(SubMenuObject); // This will be referenced again after insertion.
                circref = TRUE;
@@ -878,7 +878,7 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
             if ( MENU_depth( SubMenuObject, 0) > MAXMENUDEPTH )
             {
                ERR( "Loop detected in menu hierarchy or maximum menu depth exceeded!\n");
-               if (circref) IntDestroyMenuObject(SubMenuObject, FALSE, TRUE);
+               if (circref) IntDestroyMenuObject(SubMenuObject, FALSE);
                return FALSE;
             }
             /* Make sure the submenu is marked as a popup menu */
@@ -1135,36 +1135,6 @@ co_IntTrackPopupMenu(PMENU Menu, PWND Window,
    return FALSE;
 }
 
-
-/*!
- * Internal function. Called when the process is destroyed to free the remaining menu handles.
-*/
-BOOL FASTCALL
-IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
-{
-   PEPROCESS CurrentProcess;
-   PMENU MenuObject;
-
-   CurrentProcess = PsGetCurrentProcess();
-   if (CurrentProcess != Process)
-   {
-      KeAttachProcess(&Process->Pcb);
-   }
-
-   while (!IsListEmpty(&Win32Process->MenuListHead))
-   {
-      MenuObject = CONTAINING_RECORD(Win32Process->MenuListHead.Flink, MENU, ListEntry);
-      TRACE("Menus are stuck on the process list!\n");
-      IntDestroyMenuObject(MenuObject, FALSE, TRUE);
-   }
-
-   if (CurrentProcess != Process)
-   {
-      KeDetachProcess();
-   }
-   return TRUE;
-}
-
 BOOLEAN APIENTRY
 intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
 {
@@ -1415,7 +1385,7 @@ UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget )
 }
 
 
-HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
+HMENU FASTCALL UserCreateMenu(PDESKTOP Desktop, BOOL PopupMenu)
 {
    PWINSTATION_OBJECT WinStaObject;
    HANDLE Handle;
@@ -1441,7 +1411,7 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
           SetLastNtError(Status);
           return (HMENU)0;
        }
-       Menu = IntCreateMenu(&Handle, !PopupMenu);
+       Menu = IntCreateMenu(&Handle, !PopupMenu, Desktop, GetW32ProcessInfo());
        if (Menu && Menu->head.rpdesk->rpwinstaParent != WinStaObject)
        {
           ERR("Desktop Window Station does not match Process one!\n");
@@ -1450,7 +1420,7 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
    }
    else
    {
-       Menu = IntCreateMenu(&Handle, !PopupMenu);
+       Menu = IntCreateMenu(&Handle, !PopupMenu, GetW32ThreadInfo()->rpdesk, GetW32ProcessInfo());
    }
 
    if (Menu) UserDereferenceObject(Menu);
@@ -1678,7 +1648,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
    ROSMENUITEMINFO ItemInfo = {0};
    UNICODE_STRING MenuName;
 
-   hSysMenu = UserCreateMenu(FALSE);
+   hSysMenu = UserCreateMenu(Window->head.rpdesk, FALSE);
    if (NULL == hSysMenu)
    {
       return NULL;
@@ -1742,7 +1712,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
       IntReleaseMenuObject(NewMenu);
       UserSetMenuDefaultItem(NewMenu, SC_CLOSE, FALSE);
 
-      IntDestroyMenuObject(Menu, FALSE, TRUE);
+      IntDestroyMenuObject(Menu, FALSE);
    }
    else
    {
@@ -1782,7 +1752,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert)
          Menu = UserGetMenuObject(Window->SystemMenu);
          if (Menu && !(Menu->fFlags & MNF_SYSDESKMN))
          {
-            IntDestroyMenuObject(Menu, TRUE, TRUE);
+            IntDestroyMenuObject(Menu, TRUE);
             Window->SystemMenu = NULL;
          }
       }
@@ -1826,7 +1796,7 @@ IntSetSystemMenu(PWND Window, PMENU Menu)
       if (OldMenu)
       {
           OldMenu->fFlags &= ~MNF_SYSMENU;
-         IntDestroyMenuObject(OldMenu, TRUE, TRUE);
+         IntDestroyMenuObject(OldMenu, TRUE);
       }
    }
 
@@ -2091,7 +2061,7 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu)
       EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
-   return IntDestroyMenuObject(Menu, FALSE, TRUE);
+   return IntDestroyMenuObject(Menu, FALSE);
 }
 
 /*
@@ -2116,7 +2086,7 @@ NtUserDestroyMenu(
       EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN( FALSE);
    }
-   RETURN( IntDestroyMenuObject(Menu, TRUE, TRUE));
+   RETURN( IntDestroyMenuObject(Menu, TRUE));
 
 CLEANUP:
    TRACE("Leave NtUserDestroyMenu, ret=%i\n",_ret_);

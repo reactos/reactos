@@ -1,18 +1,22 @@
 /*
- * Advapi32.dll Event Tracing Functions
+ * ntdll.dll Event Tracing Functions
  */
 
-#include <advapi32.h>
+#include <ntdll.h>
 
 #include <wmistr.h>
 #include <evntrace.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
+#define NDEBUG
+#include <debug.h>
+
+#define FIXME DPRINT1
+
 /*
  * @unimplemented
  */
 ULONG CDECL
-TraceMessage(
+EtwTraceMessage(
     TRACEHANDLE  SessionHandle,
     ULONG        MessageFlags,
     LPCGUID      MessageGuid,
@@ -24,24 +28,24 @@ TraceMessage(
 }
 
 TRACEHANDLE
-WMIAPI
-GetTraceLoggerHandle(
+NTAPI
+EtwGetTraceLoggerHandle(
     PVOID Buffer
 )
 {
-    FIXME("GetTraceLoggerHandle stub()\n");
+    FIXME("EtwGetTraceLoggerHandle stub()\n");
     return (TRACEHANDLE)-1;
 }
 
 
 ULONG
-WMIAPI
-TraceEvent(
+NTAPI
+EtwTraceEvent(
     TRACEHANDLE SessionHandle,
     PEVENT_TRACE_HEADER EventTrace
 )
 {
-    FIXME("TraceEvent stub()\n");
+    FIXME("EtwTraceEvent stub()\n");
 
     if (!SessionHandle || !EventTrace)
     {
@@ -59,38 +63,38 @@ TraceEvent(
 }
 
 ULONG
-WMIAPI
-GetTraceEnableFlags(
+NTAPI
+EtwGetTraceEnableFlags(
     TRACEHANDLE TraceHandle
 )
 {
-    FIXME("GetTraceEnableFlags stub()\n");
+    FIXME("EtwGetTraceEnableFlags stub()\n");
     return 0xFF;
 }
 
 UCHAR
-WMIAPI
-GetTraceEnableLevel(
+NTAPI
+EtwGetTraceEnableLevel(
     TRACEHANDLE TraceHandle
 )
 {
-    FIXME("GetTraceEnableLevel stub()\n");
+    FIXME("EtwGetTraceEnableLevel stub()\n");
     return 0xFF;
 }
 
 ULONG
-WMIAPI
-UnregisterTraceGuids(
+NTAPI
+EtwUnregisterTraceGuids(
     TRACEHANDLE RegistrationHandle
 )
 {
-    FIXME("UnregisterTraceGuids stub()\n");
+    FIXME("EtwUnregisterTraceGuids stub()\n");
     return ERROR_SUCCESS;
 }
 
 ULONG
-WMIAPI
-RegisterTraceGuidsA(
+NTAPI
+EtwRegisterTraceGuidsA(
     WMIDPREQUEST RequestAddress,
     PVOID RequestContext,
     LPCGUID ControlGuid,
@@ -101,13 +105,13 @@ RegisterTraceGuidsA(
     PTRACEHANDLE RegistrationHandle
 )
 {
-    FIXME("RegisterTraceGuidsA stub()\n");
+    FIXME("EtwRegisterTraceGuidsA stub()\n");
     return ERROR_SUCCESS;
 }
 
 ULONG
-WMIAPI
-RegisterTraceGuidsW(
+NTAPI
+EtwRegisterTraceGuidsW(
     WMIDPREQUEST RequestAddress,
     PVOID RequestContext,
     LPCGUID ControlGuid,
@@ -118,66 +122,66 @@ RegisterTraceGuidsW(
     PTRACEHANDLE RegistrationHandle
 )
 {
-    FIXME("RegisterTraceGuidsW stub()\n");
+    FIXME("EtwRegisterTraceGuidsW stub()\n");
     return ERROR_SUCCESS;
 }
 
-ULONG WINAPI StartTraceW( PTRACEHANDLE pSessionHandle, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+ULONG WINAPI EtwStartTraceW( PTRACEHANDLE pSessionHandle, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
 {
-    FIXME("(%p, %s, %p) stub\n", pSessionHandle, debugstr_w(SessionName), Properties);
+    FIXME("(%p, %s, %p) stub\n", pSessionHandle, SessionName, Properties);
     if (pSessionHandle) *pSessionHandle = 0xcafe4242;
     return ERROR_SUCCESS;
 }
 
-ULONG WINAPI StartTraceA( PTRACEHANDLE pSessionHandle, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+ULONG WINAPI EtwStartTraceA( PTRACEHANDLE pSessionHandle, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
 {
-    FIXME("(%p, %s, %p) stub\n", pSessionHandle, debugstr_a(SessionName), Properties);
+    FIXME("(%p, %s, %p) stub\n", pSessionHandle, SessionName, Properties);
     if (pSessionHandle) *pSessionHandle = 0xcafe4242;
     return ERROR_SUCCESS;
 }
 
 /******************************************************************************
- * ControlTraceW [ADVAPI32.@]
+ * EtwControlTraceW [NTDLL.@]
  *
  * Control a givel event trace session
  *
  */
-ULONG WINAPI ControlTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties, ULONG control )
+ULONG WINAPI EtwControlTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties, ULONG control )
 {
-    FIXME("(%s, %s, %p, %d) stub\n", wine_dbgstr_longlong(hSession), debugstr_w(SessionName), Properties, control);
+    FIXME("(%I64x, %s, %p, %d) stub\n", hSession, SessionName, Properties, control);
     return ERROR_SUCCESS;
 }
 
 /******************************************************************************
- * ControlTraceA [ADVAPI32.@]
+ * EtwControlTraceA [NTDLL.@]
  *
  * See ControlTraceW.
  *
  */
-ULONG WINAPI ControlTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties, ULONG control )
+ULONG WINAPI EtwControlTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties, ULONG control )
 {
-    FIXME("(%s, %s, %p, %d) stub\n", wine_dbgstr_longlong(hSession), debugstr_a(SessionName), Properties, control);
+    FIXME("(%I64x, %s, %p, %d) stub\n", hSession, SessionName, Properties, control);
     return ERROR_SUCCESS;
 }
 
 /******************************************************************************
- * EnableTrace [ADVAPI32.@]
+ * EtwEnableTrace [NTDLL.@]
  */
-ULONG WINAPI EnableTrace( ULONG enable, ULONG flag, ULONG level, LPCGUID guid, TRACEHANDLE hSession )
+ULONG WINAPI EtwEnableTrace( ULONG enable, ULONG flag, ULONG level, LPCGUID guid, TRACEHANDLE hSession )
 {
-    FIXME("(%d, 0x%x, %d, %s, %s): stub\n", enable, flag, level,
-            debugstr_guid(guid), wine_dbgstr_longlong(hSession));
+    FIXME("(%d, 0x%x, %d, %p, %I64x): stub\n", enable, flag, level,
+            guid, hSession);
 
     return ERROR_SUCCESS;
 }
 
 /******************************************************************************
- * QueryAllTracesW [ADVAPI32.@]
+ * EtwQueryAllTracesW [NTDLL.@]
  *
  * Query information for started event trace sessions
  *
  */
-ULONG WINAPI QueryAllTracesW( PEVENT_TRACE_PROPERTIES * parray, ULONG arraycount, PULONG psessioncount )
+ULONG WINAPI EtwQueryAllTracesW( PEVENT_TRACE_PROPERTIES * parray, ULONG arraycount, PULONG psessioncount )
 {
     FIXME("(%p, %d, %p) stub\n", parray, arraycount, psessioncount);
 
@@ -186,11 +190,11 @@ ULONG WINAPI QueryAllTracesW( PEVENT_TRACE_PROPERTIES * parray, ULONG arraycount
 }
 
 /******************************************************************************
- * QueryAllTracesA [ADVAPI32.@]
+ * QueryAllTracesA [NTDLL.@]
  *
- * See QueryAllTracesW.
+ * See EtwQueryAllTracesA.
  */
-ULONG WINAPI QueryAllTracesA( PEVENT_TRACE_PROPERTIES * parray, ULONG arraycount, PULONG psessioncount )
+ULONG WINAPI EtwQueryAllTracesA( PEVENT_TRACE_PROPERTIES * parray, ULONG arraycount, PULONG psessioncount )
 {
     FIXME("(%p, %d, %p) stub\n", parray, arraycount, psessioncount);
 

@@ -51,12 +51,232 @@ DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
 }
 #endif
 
+static
+NTSTATUS
+CreateProcessInfo(PEPROCESS Process)
+{
+    PPROCESSINFO ppiCurrent;
+    NTSTATUS Status;
+    SIZE_T ViewSize = 0;
+    LARGE_INTEGER Offset;
+    PVOID UserBase = NULL;
+    PRTL_USER_PROCESS_PARAMETERS pParams = Process->Peb->ProcessParameters;
+
+    /* We might be called with an already allocated win32 process */
+    ppiCurrent = PsGetProcessWin32Process(Process);
+    if (ppiCurrent != NULL)
+    {
+        /* There is no more to do for us (this is a success code!) */
+        return STATUS_ALREADY_WIN32;
+    }
+
+    /* Allocate a new win32 process */
+    ppiCurrent = ExAllocatePoolWithTag(NonPagedPool,
+                                       sizeof(PROCESSINFO),
+                                       USERTAG_PROCESSINFO);
+    if (ppiCurrent == NULL)
+    {
+        ERR_CH(UserProcess, "Failed to allocate ppi for PID:0x%lx\n",
+               HandleToUlong(Process->UniqueProcessId));
+        return STATUS_NO_MEMORY;
+    }
+
+    RtlZeroMemory(ppiCurrent, sizeof(PROCESSINFO));
+
+    PsSetProcessWin32Process(Process, ppiCurrent, NULL);
+
+#if DBG
+    DbgInitDebugChannels();
+#if KDBG
+    KdRosRegisterCliCallback(DbgGdiKdbgCliCallback);
+#endif
+#endif
+
+    TRACE_CH(UserProcess,"Allocated ppi 0x%p for PID:0x%lx\n", ppiCurrent, HandleToUlong(Process->UniqueProcessId));
+
+    /* map the global heap into the process */
+    Offset.QuadPart = 0;
+    Status = MmMapViewOfSection(GlobalUserHeapSection,
+                                PsGetCurrentProcess(),
+                                &UserBase,
+                                0,
+                                0,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                SEC_NO_CHANGE,
+                                PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE_CH(UserProcess,"Failed to map the global heap! 0x%x\n", Status);
+        return Status;
+    }
+    ppiCurrent->HeapMappings.Next = NULL;
+    ppiCurrent->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
+    ppiCurrent->HeapMappings.UserMapping = UserBase;
+    ppiCurrent->HeapMappings.Count = 1;
+
+    InitializeListHead(&ppiCurrent->GDIBrushAttrFreeList);
+    InitializeListHead(&ppiCurrent->GDIDcAttrFreeList);
+
+    InitializeListHead(&ppiCurrent->PrivateFontListHead);
+    ExInitializeFastMutex(&ppiCurrent->PrivateFontListLock);
+
+    InitializeListHead(&ppiCurrent->DriverObjListHead);
+    ExInitializeFastMutex(&ppiCurrent->DriverObjListLock);
+
+    ppiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
+    if (!EngCreateEvent((PEVENT *)&ppiCurrent->InputIdleEvent))
+    {
+        KeBugCheck(0);
+    }
+
+    KeInitializeEvent(ppiCurrent->InputIdleEvent, NotificationEvent, FALSE);
+
+
+    /* map the gdi handle table to user land */
+    Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
+    Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
+    pParams = Process->Peb->ProcessParameters;
+
+    ppiCurrent->peProcess = Process;
+    /* setup process flags */
+    ppiCurrent->W32PF_flags = W32PF_THREADCONNECTED;
+
+    if ( pParams &&
+         pParams->WindowFlags & STARTF_SCRNSAVER )
+    {
+       ppiScrnSaver = ppiCurrent;
+       ppiCurrent->W32PF_flags |= W32PF_SCREENSAVER;
+    }
+
+    // Fixme check if this process is allowed.
+    ppiCurrent->W32PF_flags |= W32PF_ALLOWFOREGROUNDACTIVATE; // Starting application it will get toggled off.
+
+    /* Create pools for GDI object attributes */
+    ppiCurrent->pPoolDcAttr = GdiPoolCreate(sizeof(DC_ATTR), 'acdG');
+    ppiCurrent->pPoolBrushAttr = GdiPoolCreate(sizeof(BRUSH_ATTR), 'arbG');
+    ppiCurrent->pPoolRgnAttr = GdiPoolCreate(sizeof(RGN_ATTR), 'agrG');
+    ASSERT(ppiCurrent->pPoolDcAttr);
+    ASSERT(ppiCurrent->pPoolBrushAttr);
+    ASSERT(ppiCurrent->pPoolRgnAttr);
+
+    /* Add the process to the global list */
+    ppiCurrent->ppiNext = gppiList;
+    gppiList = ppiCurrent;
+    IntReferenceProcessInfo(ppiCurrent);
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+DestroyProcessInfo(PEPROCESS Process)
+{
+    PPROCESSINFO ppiCurrent, *pppi;
+
+    /* Get the Win32 Process */
+    ppiCurrent = PsGetProcessWin32Process(Process);
+
+    ASSERT(ppiCurrent);
+
+    TRACE_CH(UserProcess, "Destroying ppi 0x%p\n", ppiCurrent);
+    ppiCurrent->W32PF_flags |= W32PF_TERMINATED;
+
+    if (ppiScrnSaver == ppiCurrent)
+        ppiScrnSaver = NULL;
+
+    /* Destroy user objects */
+    UserDestroyObjectsForOwner(gHandleTable, ppiCurrent);
+
+    TRACE_CH(UserProcess,"Freeing ppi 0x%p\n", ppiCurrent);
+#if DBG
+    if (DBG_IS_CHANNEL_ENABLED(ppiCurrent, DbgChUserObj, WARN_LEVEL))
+    {
+        TRACE_CH(UserObj, "Dumping user handles at the end of the process %s (Info %p).\n",
+            ppiCurrent->peProcess->ImageFileName, ppiCurrent);
+        DbgUserDumpHandleTable();
+    }
+#endif
+
+    /* And GDI ones too */
+    GDI_CleanupForProcess(Process);
+
+    /* So we can now free the pools */
+    GdiPoolDestroy(ppiCurrent->pPoolDcAttr);
+    GdiPoolDestroy(ppiCurrent->pPoolBrushAttr);
+    GdiPoolDestroy(ppiCurrent->pPoolRgnAttr);
+
+    /* Remove it from the list of GUI apps */
+    co_IntGraphicsCheck(FALSE);
+
+    /*
+     * Deregister logon application automatically
+     */
+    if(LogonProcess == ppiCurrent)
+    {
+        LogonProcess = NULL;
+    }
+
+    /* Close the current window station */
+    UserSetProcessWindowStation(NULL);
+
+    if (gppiInputProvider == ppiCurrent) gppiInputProvider = NULL;
+
+    /* Remove it from the list */
+    pppi = &gppiList;
+    while (*pppi != NULL && *pppi != ppiCurrent)
+        pppi = &(*pppi)->ppiNext;
+
+    ASSERT(*pppi == ppiCurrent);
+
+    *pppi = ppiCurrent->ppiNext;
+
+    if(ppiCurrent->hdeskStartup)
+    {
+        ZwClose(ppiCurrent->hdeskStartup);
+        ppiCurrent->hdeskStartup = NULL;
+    }
+
+    /* The process is dying */
+    PsSetProcessWin32Process(Process, NULL, ppiCurrent);
+    ppiCurrent->peProcess = NULL;
+
+    /* At last, dereference */
+    IntDereferenceProcessInfo(ppiCurrent);
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+UserDeleteW32Process(PPROCESSINFO ppiCurrent)
+{
+    if (ppiCurrent->InputIdleEvent)
+    {
+       EngDeleteEvent((PEVENT)ppiCurrent->InputIdleEvent);
+    }
+
+    /* Close the startup desktop */
+    if(ppiCurrent->rpdeskStartup)
+        ObDereferenceObject(ppiCurrent->rpdeskStartup);
+
+#if DBG
+    if (DBG_IS_CHANNEL_ENABLED(ppiCurrent, DbgChUserObj, WARN_LEVEL))
+    {
+        TRACE_PPI(ppiCurrent, UserObj, "Dumping user handles now that process info %p is gets freed.\n", ppiCurrent);
+        DbgUserDumpHandleTable();
+    }
+#endif
+
+    /* Free the PROCESSINFO */
+    ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
+}
+
 NTSTATUS
 APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
-    PPROCESSINFO ppiCurrent, *pppi;
     NTSTATUS Status;
 
     ASSERT(Process->Peb);
@@ -65,193 +285,13 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
     if (Create)
     {
-        SIZE_T ViewSize = 0;
-        LARGE_INTEGER Offset;
-        PVOID UserBase = NULL;
-        PRTL_USER_PROCESS_PARAMETERS pParams = Process->Peb->ProcessParameters;
-
-        /* We might be called with an already allocated win32 process */
-        ppiCurrent = PsGetProcessWin32Process(Process);
-        if (ppiCurrent != NULL)
-        {
-            /* There is no more to do for us (this is a success code!) */
-            Status = STATUS_ALREADY_WIN32;
-            goto Leave;
-        }
-
-        /* Allocate a new win32 process */
-        ppiCurrent = ExAllocatePoolWithTag(NonPagedPool,
-                                           sizeof(PROCESSINFO),
-                                           USERTAG_PROCESSINFO);
-        if (ppiCurrent == NULL)
-        {
-            ERR_CH(UserProcess, "Failed to allocate ppi for PID:0x%lx\n",
-                   HandleToUlong(Process->UniqueProcessId));
-            Status = STATUS_NO_MEMORY;
-            goto Leave;
-        }
-
-        RtlZeroMemory(ppiCurrent, sizeof(PROCESSINFO));
-
-        PsSetProcessWin32Process(Process, ppiCurrent, NULL);
-
-#if DBG
-        DbgInitDebugChannels();
-#if KDBG
-        KdRosRegisterCliCallback(DbgGdiKdbgCliCallback);
-#endif
-#endif
-
-        TRACE_CH(UserProcess,"Allocated ppi 0x%p for PID:0x%lx\n", ppiCurrent, HandleToUlong(Process->UniqueProcessId));
-
-        /* map the global heap into the process */
-        Offset.QuadPart = 0;
-        Status = MmMapViewOfSection(GlobalUserHeapSection,
-                                    PsGetCurrentProcess(),
-                                    &UserBase,
-                                    0,
-                                    0,
-                                    &Offset,
-                                    &ViewSize,
-                                    ViewUnmap,
-                                    SEC_NO_CHANGE,
-                                    PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
-        if (!NT_SUCCESS(Status))
-        {
-            TRACE_CH(UserProcess,"Failed to map the global heap! 0x%x\n", Status);
-            goto Leave;
-        }
-        ppiCurrent->HeapMappings.Next = NULL;
-        ppiCurrent->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
-        ppiCurrent->HeapMappings.UserMapping = UserBase;
-        ppiCurrent->HeapMappings.Count = 1;
-
-        InitializeListHead(&ppiCurrent->MenuListHead);
-
-        InitializeListHead(&ppiCurrent->GDIBrushAttrFreeList);
-        InitializeListHead(&ppiCurrent->GDIDcAttrFreeList);
-
-        InitializeListHead(&ppiCurrent->PrivateFontListHead);
-        ExInitializeFastMutex(&ppiCurrent->PrivateFontListLock);
-
-        InitializeListHead(&ppiCurrent->DriverObjListHead);
-        ExInitializeFastMutex(&ppiCurrent->DriverObjListLock);
-
-        ppiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
-        if (!EngCreateEvent((PEVENT *)&ppiCurrent->InputIdleEvent))
-        {
-            KeBugCheck(0);
-        }
-
-        KeInitializeEvent(ppiCurrent->InputIdleEvent, NotificationEvent, FALSE);
-
-
-        /* map the gdi handle table to user land */
-        Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
-        Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
-        pParams = Process->Peb->ProcessParameters;
-
-        ppiCurrent->peProcess = Process;
-        /* setup process flags */
-        ppiCurrent->W32PF_flags = W32PF_THREADCONNECTED;
-
-        if ( pParams &&
-             pParams->WindowFlags & STARTF_SCRNSAVER )
-        {
-           ppiScrnSaver = ppiCurrent;
-           ppiCurrent->W32PF_flags |= W32PF_SCREENSAVER;
-        }
-
-        // Fixme check if this process is allowed.
-        ppiCurrent->W32PF_flags |= W32PF_ALLOWFOREGROUNDACTIVATE; // Starting application it will get toggled off.
-
-        /* Create pools for GDI object attributes */
-        ppiCurrent->pPoolDcAttr = GdiPoolCreate(sizeof(DC_ATTR), 'acdG');
-        ppiCurrent->pPoolBrushAttr = GdiPoolCreate(sizeof(BRUSH_ATTR), 'arbG');
-        ppiCurrent->pPoolRgnAttr = GdiPoolCreate(sizeof(RGN_ATTR), 'agrG');
-        ASSERT(ppiCurrent->pPoolDcAttr);
-        ASSERT(ppiCurrent->pPoolBrushAttr);
-        ASSERT(ppiCurrent->pPoolRgnAttr);
-
-        /* Add the process to the global list */
-        ppiCurrent->ppiNext = gppiList;
-        gppiList = ppiCurrent;
+        Status = CreateProcessInfo(Process);
     }
     else
     {
-        /* Get the Win32 Process */
-        ppiCurrent = PsGetProcessWin32Process(Process);
-
-        ASSERT(ppiCurrent);
-
-        TRACE_CH(UserProcess, "Destroying ppi 0x%p\n", ppiCurrent);
-        ppiCurrent->W32PF_flags |= W32PF_TERMINATED;
-
-        if (ppiScrnSaver == ppiCurrent)
-            ppiScrnSaver = NULL;
-
-        if (ppiCurrent->InputIdleEvent)
-        {
-           EngFreeMem(ppiCurrent->InputIdleEvent);
-           ppiCurrent->InputIdleEvent = NULL;
-        }
-
-        IntCleanupMenus(Process, ppiCurrent);
-        IntCleanupCurIcons(Process, ppiCurrent);
-
-
-        GDI_CleanupForProcess(Process);
-
-        co_IntGraphicsCheck(FALSE);
-
-        /*
-         * Deregister logon application automatically
-         */
-        if(LogonProcess == ppiCurrent)
-        {
-            LogonProcess = NULL;
-        }
-
-        /* Close the startup desktop */
-        if(ppiCurrent->rpdeskStartup)
-            ObDereferenceObject(ppiCurrent->rpdeskStartup);
-        if(ppiCurrent->hdeskStartup)
-            ZwClose(ppiCurrent->hdeskStartup);
-
-        /* Close the current window station */
-        UserSetProcessWindowStation(NULL);
-
-        /* Destroy GDI pools */
-        GdiPoolDestroy(ppiCurrent->pPoolDcAttr);
-        GdiPoolDestroy(ppiCurrent->pPoolBrushAttr);
-        GdiPoolDestroy(ppiCurrent->pPoolRgnAttr);
-
-        if (gppiInputProvider == ppiCurrent) gppiInputProvider = NULL;
-
-        pppi = &gppiList;
-        while (*pppi != NULL && *pppi != ppiCurrent)
-            pppi = &(*pppi)->ppiNext;
-
-        ASSERT(*pppi == ppiCurrent);
-
-        *pppi = ppiCurrent->ppiNext;
-
-        TRACE_CH(UserProcess,"Freeing ppi 0x%p\n", ppiCurrent);
-#if DBG
-        if (DBG_IS_CHANNEL_ENABLED(ppiCurrent, DbgChUserObj, WARN_LEVEL))
-        {
-            DbgUserDumpHandleTable();
-        }
-#endif
-
-        /* Free the PROCESSINFO */
-        PsSetProcessWin32Process(Process, NULL, ppiCurrent);
-        ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
+        Status = DestroyProcessInfo(Process);
     }
 
-    Status = STATUS_SUCCESS;
-
-Leave:
     UserLeave();
     return Status;
 }
@@ -291,7 +331,8 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     PsSetThreadWin32Thread(Thread, ptiCurrent, NULL);
     IntReferenceThreadInfo(ptiCurrent);
     ptiCurrent->pEThread = Thread;
-    ptiCurrent->ppi = PsGetCurrentProcessWin32Process();
+    ptiCurrent->ppi = PsGetProcessWin32Process(Process);
+    IntReferenceProcessInfo(ptiCurrent->ppi);
     pTeb->Win32ThreadInfo = ptiCurrent;
     ptiCurrent->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
 
@@ -317,6 +358,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
                             NULL, SynchronizationEvent, FALSE);
     if (!NT_SUCCESS(Status))
     {
+       ERR_CH(UserThread, "Event creation failed, Status 0x%08x.\n", Status);
        goto error;
     }
     Status = ObReferenceObjectByHandle(ptiCurrent->hEventQueueClient, 0,
@@ -324,6 +366,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
                                        (PVOID*)&ptiCurrent->pEventQueueServer, NULL);
     if (!NT_SUCCESS(Status))
     {
+       ERR_CH(UserThread, "Failed referencing the event object, Status 0x%08x.\n", Status);
        ZwClose(ptiCurrent->hEventQueueClient);
        ptiCurrent->hEventQueueClient = NULL;
        goto error;
@@ -451,29 +494,23 @@ error:
   Called from IntDereferenceThreadInfo.
  */
 VOID
-FASTCALL
 UserDeleteW32Thread(PTHREADINFO pti)
 {
-    if (!pti->RefCount)
-    {
-       TRACE_CH(UserThread,"UserDeleteW32Thread pti 0x%p\n",pti);
-       if (pti->hEventQueueClient != NULL)
-          ZwClose(pti->hEventQueueClient);
-       pti->hEventQueueClient = NULL;
+   PPROCESSINFO ppi = pti->ppi;
 
-       /* Free the message queue */
-       if (pti->MessageQueue)
-       {
-          MsqDestroyMessageQueue(pti);
-       }
+   TRACE_CH(UserThread,"UserDeleteW32Thread pti 0x%p\n",pti);
 
-       MsqCleanupThreadMsgs(pti);
+   /* Free the message queue */
+   if (pti->MessageQueue)
+   {
+      MsqDestroyMessageQueue(pti);
+   }
 
-       IntSetThreadDesktop(NULL, TRUE);
+   MsqCleanupThreadMsgs(pti);
 
-       PsSetThreadWin32Thread(pti->pEThread, NULL, pti);
-       ExFreePoolWithTag(pti, USERTAG_THREADINFO);
-    }
+   ExFreePoolWithTag(pti, USERTAG_THREADINFO);
+
+   IntDereferenceProcessInfo(ppi);
 }
 
 NTSTATUS
@@ -541,18 +578,16 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         }
 
         DceFreeThreadDCE(ptiCurrent);
-        HOOK_DestroyThreadHooks(Thread);
-        EVENT_DestroyThreadEvents(Thread);
         DestroyTimersForThread(ptiCurrent);
         KeSetEvent(ptiCurrent->pEventQueueServer, IO_NO_INCREMENT, FALSE);
         UnregisterThreadHotKeys(ptiCurrent);
-/*
-        if (IsListEmpty(&ptiCurrent->WindowListHead))
+
+        if (!UserDestroyObjectsForOwner(gHandleTable, ptiCurrent))
         {
-           ERR_CH(UserThread,"Thread Window List is Empty!\n");
+            DPRINT1("Failed to delete objects belonging to thread %p. This is VERY BAD!.\n", ptiCurrent);
+            ASSERT(FALSE);
+            return STATUS_UNSUCCESSFUL;
         }
-*/
-        co_DestroyThreadWindows(Thread);
 
         if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling &&
             ppiCurrent->W32PF_flags & W32PF_CLASSESREGISTERED)
@@ -613,6 +648,19 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
     }
 */
     TRACE_CH(UserThread,"Freeing pti 0x%p\n", ptiCurrent);
+
+    IntSetThreadDesktop(NULL, TRUE);
+
+    if (ptiCurrent->hEventQueueClient != NULL)
+    {
+       ZwClose(ptiCurrent->hEventQueueClient);
+       ObDereferenceObject(ptiCurrent->pEventQueueServer);
+    }
+    ptiCurrent->hEventQueueClient = NULL;
+
+    /* The thread is dying */
+    PsSetThreadWin32Thread(ptiCurrent->pEThread, NULL, ptiCurrent);
+    ptiCurrent->pEThread = NULL;
 
     /* Free the THREADINFO */
     IntDereferenceThreadInfo(ptiCurrent);

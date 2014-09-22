@@ -68,11 +68,7 @@ typedef struct _MOUSE_PACKET
 
 /* FUNCTIONS ******************************************************************/
 
-VOID MouseUpdatePosition(PCOORD NewPosition);
-VOID MouseUpdateButtons(ULONG NewButtonState);
-VOID MouseScroll(LONG Direction);
-COORD MouseGetPosition(VOID);
-VOID MouseCommand(BYTE Command);
-BOOLEAN MouseInit(VOID);
+VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent);
+BOOLEAN MouseInit(BYTE PS2Connector);
 
 #endif // _MOUSE_H_

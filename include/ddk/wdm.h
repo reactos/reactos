@@ -139,7 +139,7 @@ extern "C" {
 #ifdef _M_IX86
 #define __SYMBOL(_Name) "_"#_Name
 #define __IMPORTSYMBOL(_Name) "__imp__"#_Name
-#define __IMPORTNAME(_Name) _imp__##_Name
+#define __IMPORTNAME(_Name) __imp__##_Name
 #else
 #define __SYMBOL(_Name) #_Name
 #define __IMPORTSYMBOL(_Name) "__imp_"#_Name
@@ -586,11 +586,11 @@ extern BOOLEAN NlsMbCodePageTag;
 extern BOOLEAN NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #else
-extern BOOLEAN *NlsMbCodePageTag;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbCodePageTag)
+extern BOOLEAN *NlsMbCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
-extern BOOLEAN *NlsMbOemCodePageTag;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsMbOemCodePageTag)
+extern BOOLEAN *NlsMbOemCodePageTag;
 #define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
 #endif
 
@@ -1661,8 +1661,8 @@ extern NTSYSAPI volatile CCHAR KeNumberProcessors;
 #elif (NTDDI_VERSION >= NTDDI_WINXP)
 extern NTSYSAPI CCHAR KeNumberProcessors;
 #else
-extern PCCHAR KeNumberProcessors;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(KeNumberProcessors)
+extern PCCHAR KeNumberProcessors;
 #endif
 
 
@@ -1815,8 +1815,8 @@ typedef enum _MM_SYSTEM_SIZE {
 } MM_SYSTEMSIZE;
 
 #ifndef _NTSYSTEM_
-extern PBOOLEAN Mm64BitPhysicalAddress;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(Mm64BitPhysicalAddress)
+extern PBOOLEAN Mm64BitPhysicalAddress;
 #endif
 extern NTKERNELAPI PVOID MmBadPointer;
 
@@ -7859,17 +7859,6 @@ extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
 #else
-extern POBJECT_TYPE *CmKeyObjectType;
-extern POBJECT_TYPE *IoFileObjectType;
-extern POBJECT_TYPE *ExEventObjectType;
-extern POBJECT_TYPE *ExSemaphoreObjectType;
-extern POBJECT_TYPE *TmTransactionManagerObjectType;
-extern POBJECT_TYPE *TmResourceManagerObjectType;
-extern POBJECT_TYPE *TmEnlistmentObjectType;
-extern POBJECT_TYPE *TmTransactionObjectType;
-extern POBJECT_TYPE *PsProcessType;
-extern POBJECT_TYPE *PsThreadType;
-extern POBJECT_TYPE *SeTokenObjectType;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(CmKeyObjectType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(IoFileObjectType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(ExEventObjectType)
@@ -7881,6 +7870,17 @@ __CREATE_NTOS_DATA_IMPORT_ALIAS(TmTransactionObjectType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(PsProcessType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(PsThreadType)
 __CREATE_NTOS_DATA_IMPORT_ALIAS(SeTokenObjectType)
+extern POBJECT_TYPE *CmKeyObjectType;
+extern POBJECT_TYPE *IoFileObjectType;
+extern POBJECT_TYPE *ExEventObjectType;
+extern POBJECT_TYPE *ExSemaphoreObjectType;
+extern POBJECT_TYPE *TmTransactionManagerObjectType;
+extern POBJECT_TYPE *TmResourceManagerObjectType;
+extern POBJECT_TYPE *TmEnlistmentObjectType;
+extern POBJECT_TYPE *TmTransactionObjectType;
+extern POBJECT_TYPE *PsProcessType;
+extern POBJECT_TYPE *PsThreadType;
+extern POBJECT_TYPE *SeTokenObjectType;
 #endif
 
 
@@ -15794,11 +15794,11 @@ extern BOOLEAN KdDebuggerEnabled;
 extern BOOLEAN KdDebuggerNotPresent;
 #define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
 #else
-extern BOOLEAN *KdDebuggerEnabled;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(KdDebuggerEnabled)
+extern BOOLEAN *KdDebuggerEnabled;
 #define KD_DEBUGGER_ENABLED (*KdDebuggerEnabled)
-extern BOOLEAN *KdDebuggerNotPresent;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(KdDebuggerNotPresent)
+extern BOOLEAN *KdDebuggerNotPresent;
 #define KD_DEBUGGER_NOT_PRESENT (*KdDebuggerNotPresent)
 #endif
 

@@ -1438,10 +1438,18 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
 
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","File",0x00020000,"%SystemRoot%\system32\config\AppEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","Retention",0x00010003,604800
+
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","File",0x00020000,"%SystemRoot%\system32\config\SecEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","Retention",0x00010003,604800
+
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","File",0x00020000,"%SystemRoot%\system32\config\SysEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","Retention",0x00010003,604800
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","TypesSupported",0x00010001,0x00000007
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
@@ -1469,6 +1477,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters","ConnectMultiplePorts",0x00010001,1
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
+
+; Kernel Security Support Provider Interface Driver
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ImagePath",0x00020000,"system32\drivers\ksecdd.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Type",0x00010001,0x00000001
 
 ; MPU-401 MIDI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
@@ -1623,12 +1638,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Type",0x00010001,0x00000001
 
 ; MountMgr driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ErrorControl",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Group",0x00000000,"Boot Bus Extender"
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ImagePath",0x00020000,"system32\drivers\mountmgr.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Start",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Tag",0x00010001,0x00000008
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ImagePath",0x00020000,"system32\drivers\mountmgr.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Tag",0x00010001,0x00000008
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Type",0x00010001,0x00000001
 
 ; ACPI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\acpi","ErrorControl",0x00010001,0x00000001

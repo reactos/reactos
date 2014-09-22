@@ -666,8 +666,17 @@ typedef struct _TRUSTED_DOMAIN_FULL_INFORMATION {
 } TRUSTED_DOMAIN_FULL_INFORMATION, *PTRUSTED_DOMAIN_FULL_INFORMATION;
 
 #define RtlGenRandom                    SystemFunction036
+#define RtlEncryptMemory                SystemFunction040
+#define RtlDecryptMemory                SystemFunction041
 
 BOOLEAN WINAPI RtlGenRandom(PVOID,ULONG);
+NTSTATUS WINAPI RtlEncryptMemory(PVOID Memory, ULONG MemorySize, ULONG OptionFlags);
+NTSTATUS WINAPI RtlDecryptMemory(PVOID Memory, ULONG MemorySize, ULONG OptionFlags);
+
+#define RTL_ENCRYPT_MEMORY_SIZE           8
+#define RTL_ENCRYPT_OPTION_SAME_PROCESS   0x00
+#define RTL_ENCRYPT_OPTION_CROSS_PROCESS  0x01
+#define RTL_ENCRYPT_OPTION_SAME_LOGON     0x02
 
 NTSTATUS NTAPI LsaAddAccountRights(LSA_HANDLE,PSID,PLSA_UNICODE_STRING,ULONG);
 NTSTATUS NTAPI LsaAddPrivilegesToAccount(LSA_HANDLE, PPRIVILEGE_SET);

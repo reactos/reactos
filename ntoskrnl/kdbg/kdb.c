@@ -1662,7 +1662,7 @@ KdbEnterDebuggerException(
     /* Decrement the entry count */
     InterlockedDecrement(&KdbEntryCount);
 
-    /* HACK: Raise back to old IRWL */
+    /* HACK: Raise back to old IRQL */
     KeRaiseIrql(OldIrql, &OldIrql);
 
     /* Leave critical section */

@@ -14,11 +14,11 @@ BEGIN
     LTEXT "Kullanıcı Adı:", IDC_STATIC, 47, 58, 38, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Kaydet", IDC_SAVE, 67, 139, 50, 14
-    PUSHBUTTON "Ayrı Kaydet...", IDC_SAVEAS, 123, 139, 50, 14
+    PUSHBUTTON "Sakla", IDC_SAVE, 67, 139, 50, 14
+    PUSHBUTTON "Ayrı Sakla...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "Aç...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Şimdiki bağlantı ayarlarını kaydedebilir ya da var olan bir ayar kütüğünü açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Şimdiki bağlantı ayarlarını saklayabilir ya da var olan bir ayar kütüğünü açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175

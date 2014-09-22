@@ -1128,8 +1128,8 @@ HalGetDmaAlignmentRequirement(
 extern PUSHORT NlsOemLeadByteInfo;
 #define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
 #else
-extern PUSHORT *NlsOemLeadByteInfo;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(NlsOemLeadByteInfo)
+extern PUSHORT *NlsOemLeadByteInfo;
 #define NLS_OEM_LEAD_BYTE_INFO (*NlsOemLeadByteInfo)
 #endif
 

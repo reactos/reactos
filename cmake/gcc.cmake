@@ -43,6 +43,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_COMPILE_OPTIONS_PIE "")
     set(CMAKE_SHARED_LIBRARY_C_FLAGS "")
     set(CMAKE_SHARED_LIBRARY_CXX_FLAGS "")
+    set(CMAKE_ASM_FLAGS_DEBUG "")
+    set(CMAKE_C_FLAGS_DEBUG "")
+    set(CMAKE_CXX_FLAGS_DEBUG "")
 endif()
 
 if(DBG)
@@ -68,7 +71,7 @@ endif()
 
 # Debugging
 if(SEPARATE_DBG)
-    add_compile_flags("-gdwarf-4 -fvar-tracking-assignments")
+    add_compile_flags("-gdwarf-2 -ggdb")
 else()
     add_compile_flags("-gdwarf-2 -gstrict-dwarf")
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")

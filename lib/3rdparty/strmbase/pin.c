@@ -71,7 +71,6 @@ static HRESULT SendFurther( IPin *from, SendPinFunc fnMiddle, LPVOID arg, SendPi
     hr = IPin_QueryInternalConnections( from, NULL, &amount );
     if (hr != E_NOTIMPL && amount)
         FIXME("Use QueryInternalConnections!\n");
-     hr = S_OK;
 
     pin_info.pFilter = NULL;
     hr = IPin_QueryPinInfo( from, &pin_info );
@@ -391,11 +390,7 @@ ULONG WINAPI BaseOutputPinImpl_Release(IPin * iface)
 
     if (!refCount)
     {
-        FreeMediaType(&This->pin.mtCurrent);
-        if (This->pAllocator)
-            IMemAllocator_Release(This->pAllocator);
-        This->pAllocator = NULL;
-        CoTaskMemFree(This);
+        BaseOutputPin_Destroy(This);
         return 0;
     }
     return refCount;
@@ -839,6 +834,16 @@ HRESULT WINAPI BaseOutputPin_Construct(const IPinVtbl *OutputPin_Vtbl, LONG outp
     return E_FAIL;
 }
 
+HRESULT WINAPI BaseOutputPin_Destroy(BaseOutputPin *This)
+{
+    FreeMediaType(&This->pin.mtCurrent);
+    if (This->pAllocator)
+        IMemAllocator_Release(This->pAllocator);
+    This->pAllocator = NULL;
+    CoTaskMemFree(This);
+    return S_OK;
+}
+
 /*** Input Pin implementation ***/
 
 static inline BaseInputPin *impl_BaseInputPin_from_IPin( IPin *iface )
@@ -890,12 +895,7 @@ ULONG WINAPI BaseInputPinImpl_Release(IPin * iface)
 
     if (!refCount)
     {
-        FreeMediaType(&This->pin.mtCurrent);
-        if (This->pAllocator)
-            IMemAllocator_Release(This->pAllocator);
-        This->pAllocator = NULL;
-        This->pin.IPin_iface.lpVtbl = NULL;
-        CoTaskMemFree(This);
+        BaseInputPin_Destroy(This);
         return 0;
     }
     else
@@ -1262,4 +1262,15 @@ HRESULT BaseInputPin_Construct(const IPinVtbl *InputPin_Vtbl, LONG inputpin_size
 
     CoTaskMemFree(pPinImpl);
     return E_FAIL;
+}
+
+HRESULT WINAPI BaseInputPin_Destroy(BaseInputPin *This)
+{
+    FreeMediaType(&This->pin.mtCurrent);
+    if (This->pAllocator)
+        IMemAllocator_Release(This->pAllocator);
+    This->pAllocator = NULL;
+    This->pin.IPin_iface.lpVtbl = NULL;
+    CoTaskMemFree(This);
+    return S_OK;
 }

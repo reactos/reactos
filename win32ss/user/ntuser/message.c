@@ -652,7 +652,6 @@ IntDispatchMessage(PMSG pMsg)
     LRESULT retval = 0;
     PTHREADINFO pti;
     PWND Window = NULL;
-    HRGN hrgn;
     BOOL DoCallBack = TRUE;
 
     if (pMsg->hwnd)
@@ -743,11 +742,12 @@ IntDispatchMessage(PMSG pMsg)
 
     if (pMsg->message == WM_PAINT)
     {
+        PREGION Rgn;
         Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
-        hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
-        co_UserGetUpdateRgn( Window, hrgn, TRUE );
-        GreDeleteObject(hrgn);
+        Rgn = IntSysCreateRectpRgn( 0, 0, 0, 0 );
+        co_UserGetUpdateRgn( Window, Rgn, TRUE );
+        REGION_Delete(Rgn);
     }
 
     return retval;

@@ -84,7 +84,7 @@ BEGIN
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS, bu donanım için aygıt sürücüsünü başlatamıyor."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS, bellekte şimdi bile aygıt sürücüsünün bir önceki kopyası olduğundan dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS, bu donanım için aygıt sürücüsünü yükleyemiyor. Sürücü bozulmuş ya da eksik olabilir."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS, bu donanımın, değer defterindeki hizmet dizini bilgisinin eksik ya da yanlış kaydedildiğinden dolayı bu donanıma erişemiyor."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS, bu donanımın, değer defterindeki hizmet dizini bilgisinin eksik ya da yanlış saklandığından dolayı bu donanıma erişemiyor."
     IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS, bu donanım için aygıt sürücüsünü başarıyla yükledi ancak donanım aygıtını bulamıyor."
     IDS_DEV_DUPLICATE_DEVICE "ReactOS, dizgede bir kopya aygıtın önceden çalışıyor olmasından dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_FAILED_POST_START "ReactOS, bu aygıtı, sorunlar bildirdiğinden dolayı durdurdu."

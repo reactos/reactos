@@ -7,59 +7,158 @@
 
 #include "kdgdb.h"
 
-/* GLOBALS ********************************************************************/
+/* LOCALS *********************************************************************/
+static
+VOID
+FirstSendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData);
+static BOOLEAN InException = FALSE;
 
-DBGKD_ANY_WAIT_STATE_CHANGE CurrentStateChange;
+/* GLOBALS ********************************************************************/
 DBGKD_GET_VERSION64 KdVersion;
 KDDEBUGGER_DATA64* KdDebuggerDataBlock;
-
-/* LOCALS *********************************************************************/
-static BOOLEAN FakeNextManipulatePacket = FALSE;
-static DBGKD_MANIPULATE_STATE64 FakeManipulateState = {0};
+LIST_ENTRY* ProcessListHead;
+/* Callbacks used to communicate with KD aside from GDB */
+KDP_SEND_HANDLER KdpSendPacketHandler = FirstSendHandler;
+KDP_MANIPULATESTATE_HANDLER KdpManipulateStateHandler = NULL;
+/* Data describing the current exception */
+DBGKD_ANY_WAIT_STATE_CHANGE CurrentStateChange;
+CONTEXT CurrentContext;
+PEPROCESS TheIdleProcess;
+PETHREAD TheIdleThread;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static
+VOID
+GetContextSendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData
+)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+    const CONTEXT* Context = (const CONTEXT*)MessageData->Buffer;
+
+    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+            || (State->ApiNumber != DbgKdGetContextApi)
+            || (MessageData->Length < sizeof(*Context)))
+    {
+        /* Should we bugcheck ? */
+        KDDBGPRINT("ERROR: Received wrong packet from KD.\n");
+        while (1);
+    }
+
+    /* Just copy it */
+    RtlCopyMemory(&CurrentContext, Context, sizeof(*Context));
+    KdpSendPacketHandler = NULL;
+}
+
+static
+KDSTATUS
+GetContextManipulateHandler(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext
+)
+{
+    State->ApiNumber = DbgKdGetContextApi;
+    State->Processor = CurrentStateChange.Processor;
+    State->ReturnStatus = STATUS_SUCCESS;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+    MessageData->Length = 0;
+
+    /* Update the send <-> receive loop handler */
+    KdpSendPacketHandler = GetContextSendHandler;
+    KdpManipulateStateHandler = NULL;
+
+    return KdPacketReceived;
+}
+
+static
+VOID
+SetContextSendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData
+)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+
+    /* We just confirm that all went well */
+    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+            || (State->ApiNumber != DbgKdSetContextApi)
+            || (State->ReturnStatus != STATUS_SUCCESS))
+    {
+        /* Should we bugcheck ? */
+        while (1);
+    }
+
+    KdpSendPacketHandler = NULL;
+}
+
+KDSTATUS
+SetContextManipulateHandler(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext
+)
+{
+    State->ApiNumber = DbgKdSetContextApi;
+    State->Processor = CurrentStateChange.Processor;
+    State->ReturnStatus = STATUS_SUCCESS;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+    MessageData->Length = sizeof(CurrentContext);
+
+    if (MessageData->MaximumLength < sizeof(CurrentContext))
+    {
+        while (1);
+    }
+
+    RtlCopyMemory(MessageData->Buffer, &CurrentContext, sizeof(CurrentContext));
+
+    /* Update the send <-> receive loop handlers */
+    KdpSendPacketHandler = SetContextSendHandler;
+    KdpManipulateStateHandler = NULL;
+
+    return KdPacketReceived;
+}
+
 static
 void
 send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
 {
-    static BOOLEAN first = TRUE;
-
-    /* Save current state for later GDB queries */
-    CurrentStateChange = *StateChange;
-
-    if (first)
-    {
-        /*
-         * This is the first packet we receive.
-         * We take this as an opportunity to connect with GDB and to
-         * get the KD version block
-         */
-        FakeNextManipulatePacket = TRUE;
-        FakeManipulateState.ApiNumber = DbgKdGetVersionApi;
-        FakeManipulateState.Processor = StateChange->Processor;
-        FakeManipulateState.ProcessorLevel = StateChange->ProcessorLevel;
-        FakeManipulateState.ReturnStatus = STATUS_SUCCESS;
-
-        first = FALSE;
-        return;
-    }
+    InException = TRUE;
 
     switch (StateChange->NewState)
     {
     case DbgKdLoadSymbolsStateChange:
     {
         /* We don't care about symbols loading */
-        FakeNextManipulatePacket = TRUE;
-        FakeManipulateState.ApiNumber = DbgKdContinueApi;
-        FakeManipulateState.Processor = StateChange->Processor;
-        FakeManipulateState.ProcessorLevel = StateChange->ProcessorLevel;
-        FakeManipulateState.ReturnStatus = STATUS_SUCCESS;
-        FakeManipulateState.u.Continue.ContinueStatus = STATUS_SUCCESS;
+        KdpManipulateStateHandler = ContinueManipulateStateHandler;
         break;
     }
     case DbgKdExceptionStateChange:
+    {
+        PETHREAD Thread = (PETHREAD)(ULONG_PTR)StateChange->Thread;
+        /* Save current state for later GDB queries */
+        CurrentStateChange = *StateChange;
+        KDDBGPRINT("Exception 0x%08x in thread p%p.%p.\n",
+            StateChange->u.Exception.ExceptionRecord.ExceptionCode,
+            PsGetThreadProcessId(Thread),
+            PsGetThreadId(Thread));
+        /* Set the current debugged process/thread accordingly */
+        gdb_dbg_tid = handle_to_gdb_tid(PsGetThreadId(Thread));
+        gdb_dbg_pid = handle_to_gdb_pid(PsGetThreadProcessId(Thread));
         gdb_send_exception();
+        /* Next receive call will ask for the context */
+        KdpManipulateStateHandler = GetContextManipulateHandler;
         break;
+    }
     default:
         /* FIXME */
         while (1);
@@ -72,6 +171,9 @@ send_kd_debug_io(
     _In_ DBGKD_DEBUG_IO* DebugIO,
     _In_ PSTRING String)
 {
+    if (InException)
+        return;
+
     switch (DebugIO->ApiNumber)
     {
     case DbgKdPrintStringApi:
@@ -97,23 +199,131 @@ send_kd_state_manipulate(
         gdb_send_registers((CONTEXT*)MessageData->Buffer);
         return;
 #endif
-    case DbgKdReadVirtualMemoryApi:
-        /* Answer to 'm' GDB request */
-        send_gdb_memory(MessageData->Buffer, State->u.ReadMemory.ActualBytesRead);
-        break;
-    case DbgKdGetVersionApi:
-    {
-        LIST_ENTRY* DebuggerDataList;
-        /* Simply get a copy */
-        RtlCopyMemory(&KdVersion, &State->u.GetVersion64, sizeof(KdVersion));
-        DebuggerDataList = (LIST_ENTRY*)(ULONG_PTR)KdVersion.DebuggerDataList;
-        KdDebuggerDataBlock = CONTAINING_RECORD(DebuggerDataList->Flink, KDDEBUGGER_DATA64, Header.List);
-        return;
-    }
     default:
         /* FIXME */
         while (1);
     }
+}
+
+KDSTATUS
+ContinueManipulateStateHandler(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext
+)
+{
+    /* Let's go on */
+    State->ApiNumber = DbgKdContinueApi;
+    State->ReturnStatus = STATUS_SUCCESS; /* ? */
+    State->Processor = CurrentStateChange.Processor;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+    if (MessageData)
+        MessageData->Length = 0;
+    *MessageLength = 0;
+    State->u.Continue.ContinueStatus = STATUS_SUCCESS;
+
+    /* We definitely are at the end of the send <-> receive loop, if any */
+    KdpSendPacketHandler = NULL;
+    KdpManipulateStateHandler = NULL;
+    /* We're not handling an exception anymore */
+    InException = FALSE;
+
+    return KdPacketReceived;
+}
+
+static
+VOID
+GetVersionSendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+    LIST_ENTRY* DebuggerDataList;
+
+    /* Confirm that all went well */
+    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+            || (State->ApiNumber != DbgKdGetVersionApi)
+            || !NT_SUCCESS(State->ReturnStatus))
+    {
+        /* FIXME: should detach from KD and go along without debugging */
+        KDDBGPRINT("Wrong packet received after asking for data.\n");
+        while(1);
+    }
+
+    /* Copy the relevant data */
+    RtlCopyMemory(&KdVersion, &State->u.GetVersion64, sizeof(KdVersion));
+    DebuggerDataList = (LIST_ENTRY*)(ULONG_PTR)KdVersion.DebuggerDataList;
+    KdDebuggerDataBlock = CONTAINING_RECORD(DebuggerDataList->Flink, KDDEBUGGER_DATA64, Header.List);
+    ProcessListHead = (LIST_ENTRY*)KdDebuggerDataBlock->PsActiveProcessHead.Pointer;
+
+    /* Now we can get the context for the current state */
+    KdpSendPacketHandler = NULL;
+    KdpManipulateStateHandler = GetContextManipulateHandler;
+}
+
+static
+KDSTATUS
+GetVersionManipulateStateHandler(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    /* Ask for the version data */
+    State->ApiNumber = DbgKdGetVersionApi;
+    State->Processor = CurrentStateChange.Processor;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+
+    /* The next send call will serve this query */
+    KdpSendPacketHandler = GetVersionSendHandler;
+    KdpManipulateStateHandler = NULL;
+
+    return KdPacketReceived;
+}
+
+static
+VOID
+FirstSendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData)
+{
+    DBGKD_ANY_WAIT_STATE_CHANGE* StateChange = (DBGKD_ANY_WAIT_STATE_CHANGE*)MessageHeader->Buffer;
+    PETHREAD Thread;
+
+    if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
+    {
+        /* This is not the packet we are waiting for */
+        send_kd_debug_io((DBGKD_DEBUG_IO*)MessageHeader->Buffer, MessageData);
+        return;
+    }
+
+    if (PacketType != PACKET_TYPE_KD_STATE_CHANGE64)
+    {
+        KDDBGPRINT("First KD packet is not a state change!\n");
+        /* FIXME: What should we send back to KD ? */
+        while(1);
+    }
+
+    KDDBGPRINT("KDGDB: START!\n");
+
+    Thread = (PETHREAD)(ULONG_PTR)StateChange->Thread;
+
+    /* Set up the current state */
+    CurrentStateChange = *StateChange;
+    gdb_dbg_tid = handle_to_gdb_tid(PsGetThreadId(Thread));
+    gdb_dbg_pid = handle_to_gdb_pid(PsGetThreadProcessId(Thread));
+    /* This is the idle process. Save it! */
+    TheIdleThread = Thread;
+    TheIdleProcess = (PEPROCESS)Thread->Tcb.ApcState.Process;
+
+    KDDBGPRINT("Pid Tid of the first message: %" PRIxPTR", %" PRIxPTR ".\n", gdb_dbg_pid, gdb_dbg_tid);
+
+    /* The next receive call will be asking for the version data */
+    KdpSendPacketHandler = NULL;
+    KdpManipulateStateHandler = GetVersionManipulateStateHandler;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -159,12 +369,9 @@ KdReceivePacket(
 
     State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
 
-    if (FakeNextManipulatePacket)
-    {
-        FakeNextManipulatePacket = FALSE;
-        *State = FakeManipulateState;
-        return KdPacketReceived;
-    }
+    /* Maybe we are in a send<->receive loop that GDB doesn't need to know about */
+    if (KdpManipulateStateHandler != NULL)
+        return KdpManipulateStateHandler(State, MessageData, DataLength, KdContext);
 
     /* Receive data from GDB */
     Status = gdb_receive_packet(KdContext);
@@ -183,6 +390,13 @@ KdSendPacket(
     IN PSTRING MessageData,
     IN OUT PKD_CONTEXT KdContext)
 {
+    /* Maybe we are in a send <-> receive loop that GDB doesn't need to know about */
+    if (KdpSendPacketHandler)
+    {
+        KdpSendPacketHandler(PacketType, MessageHeader, MessageData);
+        return;
+    }
+
     switch (PacketType)
     {
     case PACKET_TYPE_KD_STATE_CHANGE64:

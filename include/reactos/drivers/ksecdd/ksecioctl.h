@@ -15,11 +15,11 @@
     CTL_CODE(FILE_DEVICE_KSEC, 0x02, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 // 3: 0x39000E - called from SystemFunction040 aka RtlEncryptMemory with OptionFlags == 0
-#define IOCTL_KSEC_ENCRYPT_PROCESS \
+#define IOCTL_KSEC_ENCRYPT_SAME_PROCESS \
     CTL_CODE(FILE_DEVICE_KSEC, 0x03, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 
 // 4: 0x390012 - called from SystemFunction041 aka RtlDecryptMemory with OptionFlags == 0
-#define IOCTL_KSEC_DECRYPT_PROCESS \
+#define IOCTL_KSEC_DECRYPT_SAME_PROCESS \
     CTL_CODE(FILE_DEVICE_KSEC, 0x04, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 
 // 5: 0x390016 - called from SystemFunction040 aka RtlEncryptMemory with OptionFlags == 1

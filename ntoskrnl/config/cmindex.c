@@ -12,6 +12,8 @@
 #define NDEBUG
 #include "debug.h"
 
+#define SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
+
 /* GLOBALS *******************************************************************/
 
 ULONG CmpMaxFastIndexPerHblock =
@@ -218,7 +220,7 @@ CmpFindSubKeyInRoot(IN PHHIVE Hive,
 
                     /* Return it */
                     *SubKey = LeafCell;
-                    ReturnIndex = Low;
+                    ReturnIndex = i;
                     goto Return;
                 }
 

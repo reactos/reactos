@@ -477,7 +477,7 @@ NtGdiSelectClipPath(
     HDC hDC,
     int Mode)
 {
-    HRGN  hrgnPath;
+    PREGION  RgnPath;
     PPATH pPath;
     BOOL  success = FALSE;
     PDC_ATTR pdcattr;
@@ -507,20 +507,30 @@ NtGdiSelectClipPath(
     }
 
     /* Construct a region from the path */
-    else if (PATH_PathToRegion(pPath, pdcattr->jFillMode, &hrgnPath))
+    RgnPath = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (!RgnPath)
     {
-        PREGION prgnPath = REGION_LockRgn(hrgnPath);
-        ASSERT(prgnPath);
-        success = IntGdiExtSelectClipRgn(pdc, prgnPath, Mode) != ERROR;
-        REGION_UnlockRgn(prgnPath);
-        GreDeleteObject( hrgnPath );
-
-        /* Empty the path */
-        if (success)
-            PATH_EmptyPath(pPath);
-
-        /* FIXME: Should this function delete the path even if it failed? */
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        DC_UnlockDc(pdc);
+        return FALSE;
     }
+
+    if (!PATH_PathToRegion(pPath, pdcattr->jFillMode, RgnPath))
+    {
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+        REGION_Delete(RgnPath);
+        DC_UnlockDc(pdc);
+        return FALSE;
+    }
+
+    success = IntGdiExtSelectClipRgn(pdc, RgnPath, Mode) != ERROR;
+    REGION_Delete(RgnPath);
+
+    /* Empty the path */
+    if (success)
+        PATH_EmptyPath(pPath);
+
+    /* FIXME: Should this function delete the path even if it failed? */
 
     PATH_UnlockPath(pPath);
     DC_UnlockDc(pdc);

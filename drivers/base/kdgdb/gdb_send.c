@@ -168,53 +168,34 @@ gdb_send_exception(void)
 {
     char gdb_out[1024];
     char* ptr = gdb_out;
-    DBGKM_EXCEPTION64* Exception = NULL;
-
-    if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
-        Exception = &CurrentStateChange.u.Exception;
+    PETHREAD Thread = (PETHREAD)(ULONG_PTR)CurrentStateChange.Thread;
 
     /* Report to GDB */
     *ptr++ = 'T';
-    if (Exception)
-        ptr = exception_code_to_gdb(Exception->ExceptionRecord.ExceptionCode, ptr);
+
+    if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
+    {
+        EXCEPTION_RECORD64* ExceptionRecord = &CurrentStateChange.u.Exception.ExceptionRecord;
+        ptr = exception_code_to_gdb(ExceptionRecord->ExceptionCode, ptr);
+    }
     else
         ptr += sprintf(ptr, "05");
-    ptr += sprintf(ptr, "thread:p%p.%p;",
-        PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread),
-        PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));
+
+    ptr += sprintf(ptr, "thread:p%" PRIxPTR ".%" PRIxPTR ";",
+        handle_to_gdb_pid(PsGetThreadProcessId(Thread)),
+        handle_to_gdb_tid(PsGetThreadId(Thread)));
     ptr += sprintf(ptr, "core:%x;", CurrentStateChange.Processor);
     send_gdb_packet(gdb_out);
 }
 
-#ifdef KDDEBUG
-ULONG KdpDbgPrint(const char* Format, ...)
+void
+send_gdb_ntstatus(
+    _In_ NTSTATUS Status)
 {
-    va_list ap;
-    CHAR Buffer[512];
-    struct _STRING Str;
-    int Length;
-
-    va_start(ap, Format);
-    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
-    va_end(ap);
-
-    /* Check if we went past the buffer */
-    if (Length == -1)
-    {
-        /* Terminate it if we went over-board */
-        Buffer[sizeof(Buffer) - 1] = '\n';
-
-        /* Put maximum */
-        Length = sizeof(Buffer);
-    }
-
-    Str.Buffer = Buffer;
-    Str.Length = Length;
-    Str.MaximumLength = sizeof(Buffer);
-
-    gdb_send_debug_io(&Str);
-
-    return 0;
+    /* Just build a EXX packet and send it */
+    char gdb_out[4];
+    gdb_out[0] = 'E';
+    exception_code_to_gdb(Status, &gdb_out[1]);
+    gdb_out[3] = '\0';
+    send_gdb_packet(gdb_out);
 }
-#endif
-

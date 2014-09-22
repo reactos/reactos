@@ -17,11 +17,11 @@ GetCallProcHandle(IN PCALLPROCDATA CallProc)
     return (WNDPROC)((ULONG_PTR)UserHMGetHandle(CallProc) | 0xFFFF0000);
 }
 
-VOID
-DestroyCallProc(IN PDESKTOPINFO Desktop,
-                IN OUT PCALLPROCDATA CallProc)
+BOOLEAN
+DestroyCallProc(_Inout_ PVOID Object)
 {
-    UserDeleteObject(UserHMGetHandle(CallProc), TYPE_CALLPROC);
+    UserDeleteObject(UserHMGetHandle((PCALLPROCDATA)Object), TYPE_CALLPROC);
+    return TRUE;
 }
 
 PCALLPROCDATA
@@ -33,9 +33,11 @@ CreateCallProc(IN PDESKTOP Desktop,
     PCALLPROCDATA NewCallProc;
     HANDLE Handle;
 
+    /* We can send any thread pointer to the object manager here,
+     * What's important is the process info */
     NewCallProc = (PCALLPROCDATA)UserCreateObject(gHandleTable,
                                              Desktop,
-                                             NULL,
+                                             pi->ptiList,
                                              &Handle,
                                              TYPE_CALLPROC,
                                              sizeof(CALLPROCDATA));
@@ -129,7 +131,7 @@ UserGetCPD(
    // No luck, create a new one for the requested proc.
    if (!CallProc)
    {
-      CallProc = CreateCallProc( NULL,
+      CallProc = CreateCallProc( pCls->rpdeskParent,
                                  (WNDPROC)ProcIn,
                                  !!(Flags & UserGetCPDA2U),
                                  pti->ppi);

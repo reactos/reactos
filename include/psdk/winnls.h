@@ -260,6 +260,8 @@ extern "C" {
 #define C3_LEXICAL 1024
 #define C3_ALPHA 32768
 #define C3_NOTAPPLICABLE 0
+#define C3_HIGHSURROGATE 0x0800
+#define C3_LOWSURROGATE 0x1000
 #define TIME_NOMINUTESORSECONDS 1
 #define TIME_NOSECONDS 2
 #define TIME_NOTIMEMARKER 4
@@ -528,18 +530,23 @@ enum SYSGEOCLASS {
 	GEOCLASS_NATION = 16,
 	GEOCLASS_REGION = 14
 };
-enum SYSGEOTYPE {
-	GEO_NATION            = 0x0001,
-	GEO_LATITUDE          = 0x0002,
-	GEO_LONGITUDE         = 0x0003,
-	GEO_ISO2              = 0x0004,
-	GEO_ISO3              = 0x0005,
-	GEO_RFC1766           = 0x0006,
-	GEO_LCID              = 0x0007,
-	GEO_FRIENDLYNAME      = 0x0008,
-	GEO_OFFICIALNAME      = 0x0009,
-	GEO_TIMEZONES         = 0x000a,
-	GEO_OFFICIALLANGUAGES = 0x000b
+
+/* Geographic Information types */
+enum SYSGEOTYPE
+{
+    GEO_NATION = 1,
+    GEO_LATITUDE,
+    GEO_LONGITUDE,
+    GEO_ISO2,
+    GEO_ISO3,
+    GEO_RFC1766,
+    GEO_LCID,
+    GEO_FRIENDLYNAME,
+    GEO_OFFICIALNAME,
+    GEO_TIMEZONES,
+    GEO_OFFICIALLANGUAGES,
+    GEO_ISO_UN_NUMBER,
+    GEO_PARENT
 };
 
 typedef struct _cpinfo {

@@ -3,13 +3,13 @@
 
 [Section]
 Name = Orwell Dev-C++ TDM GCC x64
-Version = 5.7.0
+Version = 5.7.1
 Licence = GPLv2
 Description = A maintained version of Dev-C++. It contains 64 bit TDM-GCC compiler.
 Size = 44.7 MB
 Category = 7
 URLSite = http://orwelldevcpp.blogspot.com/
-URLDownload = http://download.sourceforge.net/project/orwelldevcpp/Setup%20Releases/Dev-Cpp%205.7.0%20TDM-GCC%20x64%204.8.1%20Setup.exe
+URLDownload = http://download.sourceforge.net/project/orwelldevcpp/Setup%20Releases/Dev-Cpp%205.7.1%20TDM-GCC%20x64%204.8.1%20Setup.exe
 CDPath = none
 
 [Section.0407]

@@ -30,7 +30,7 @@ set_subsystem(ntoskrnl native)
 if(MSVC)
     set_image_base(ntoskrnl 0x00400000)
 else()
-    set_image_base(ntoskrnl 0x80800000)
+    set_image_base(ntoskrnl 0x00800000)
 endif()
 
 target_link_libraries(ntoskrnl

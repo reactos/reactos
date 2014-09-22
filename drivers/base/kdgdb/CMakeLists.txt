@@ -7,6 +7,7 @@ list(APPEND SOURCE
 	gdb_send.c
     kdcom.c
     kdpacket.c
+    utils.c
     kdgdb.h)
 
 # TODO: AMD64, ARM...

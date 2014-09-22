@@ -73,11 +73,11 @@ NtUserCallNoParam(DWORD Routine)
    switch(Routine)
    {
       case NOPARAM_ROUTINE_CREATEMENU:
-         Result = (DWORD_PTR)UserCreateMenu(FALSE);
+         Result = (DWORD_PTR)UserCreateMenu(GetW32ThreadInfo()->rpdesk, FALSE);
          break;
 
       case NOPARAM_ROUTINE_CREATEMENUPOPUP:
-         Result = (DWORD_PTR)UserCreateMenu(TRUE);
+         Result = (DWORD_PTR)UserCreateMenu(GetW32ThreadInfo()->rpdesk, TRUE);
          break;
 
       case NOPARAM_ROUTINE_DESTROY_CARET:
@@ -793,8 +793,15 @@ NtUserCallHwndParamLock(
    switch (Routine)
    {
       case TWOPARAM_ROUTINE_VALIDATERGN:
-         Ret = (DWORD)co_UserRedrawWindow( Window, NULL, (HRGN)Param, RDW_VALIDATE);
-         break;
+      {
+          PREGION Rgn = RGNOBJAPI_Lock((HRGN)Param, NULL);
+          if (Rgn)
+          {
+              Ret = (DWORD)co_UserRedrawWindow( Window, NULL, Rgn, RDW_VALIDATE);
+              RGNOBJAPI_Unlock(Rgn);
+          }
+          break;
+      }
    }
 
    UserDerefObjectCo(Window);

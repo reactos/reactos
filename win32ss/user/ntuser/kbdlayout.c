@@ -475,7 +475,10 @@ NtUserGetKeyboardLayoutList(
     UserEnterShared();
 
     if (!gspklBaseLayout)
+    {
+        UserLeave();
         return 0;
+    }
     pKl = gspklBaseLayout;
 
     if (nBuff == 0)

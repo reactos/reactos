@@ -9,20 +9,23 @@ list(APPEND SOURCE
     bios/bios32/bios32.c
     bios/bios32/kbdbios32.c
     bios/bios32/vidbios32.c
+    bios/bios32/moubios32.c
     bios/bios.c
     bios/kbdbios.c
     bios/rom.c
     bios/vidbios.c
     hardware/cmos.c
+    hardware/keyboard.c
+    hardware/mouse.c
     hardware/pic.c
     hardware/ps2.c
     hardware/speaker.c
     hardware/timer.c
     hardware/vga.c
-    hardware/mouse.c
     dos/dos32krnl/bios.c
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c
+    dos/mouse32.c
     dos/dem.c
     bop.c
     callback.c

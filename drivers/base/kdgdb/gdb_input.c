@@ -8,14 +8,19 @@
 #include "kdgdb.h"
 
 /* LOCALS *********************************************************************/
-static HANDLE gdb_run_thread;
-static HANDLE gdb_dbg_process;
-HANDLE gdb_dbg_thread;
+static ULONG_PTR gdb_run_tid;
+/* Keep track of where we are for qfThreadInfo/qsThreadInfo */
+static LIST_ENTRY* CurrentProcessEntry;
+static LIST_ENTRY* CurrentThreadEntry;
+
+/* GLOBALS ********************************************************************/
+UINT_PTR gdb_dbg_pid;
+UINT_PTR gdb_dbg_tid;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 static
-HANDLE
-hex_to_thread(char* buffer)
+UINT_PTR
+hex_to_tid(char* buffer)
 {
     ULONG_PTR ret = 0;
     char hex;
@@ -23,12 +28,13 @@ hex_to_thread(char* buffer)
     {
         hex = hex_value(*buffer++);
         if (hex < 0)
-            return (HANDLE)ret;
+            return ret;
         ret <<= 4;
         ret += hex;
     }
-    return (HANDLE)ret;
+    return ret;
 }
+#define hex_to_pid hex_to_tid
 
 static
 ULONG64
@@ -56,25 +62,26 @@ handle_gdb_set_thread(void)
     {
     case 'c':
         if (strcmp(&gdb_input[2], "-1") == 0)
-            gdb_run_thread = (HANDLE)-1;
+            gdb_run_tid = (ULONG_PTR)-1;
         else
-            gdb_run_thread = hex_to_thread(&gdb_input[2]);
+            gdb_run_tid = hex_to_tid(&gdb_input[2]);
         send_gdb_packet("OK");
         break;
     case 'g':
+        KDDBGPRINT("Setting debug thread: %s.\n", gdb_input);
         if (strncmp(&gdb_input[2], "p-1", 3) == 0)
         {
-            gdb_dbg_process = (HANDLE)-1;
-            gdb_dbg_thread = (HANDLE)-1;
+            gdb_dbg_pid = (UINT_PTR)-1;
+            gdb_dbg_tid = (UINT_PTR)-1;
         }
         else
         {
             char* ptr = strstr(gdb_input, ".") + 1;
-            gdb_dbg_process = hex_to_thread(&gdb_input[3]);
+            gdb_dbg_pid = hex_to_pid(&gdb_input[3]);
             if (strncmp(ptr, "-1", 2) == 0)
-                gdb_dbg_thread = (HANDLE)-1;
+                gdb_dbg_tid = (UINT_PTR)-1;
             else
-                gdb_dbg_thread = hex_to_thread(ptr);
+                gdb_dbg_tid = hex_to_tid(ptr);
         }
         send_gdb_packet("OK");
         break;
@@ -84,75 +91,165 @@ handle_gdb_set_thread(void)
     }
 }
 
+KDSTATUS
+gdb_receive_and_interpret_packet(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    KDSTATUS Status = gdb_receive_packet(KdContext);
+
+    if (Status != KdPacketReceived)
+        return Status;
+    return gdb_interpret_input(State, MessageData, MessageLength, KdContext);
+}
+
 static
 void
 handle_gdb_thread_alive(void)
 {
-    char* ptr = strstr(gdb_input, ".") + 1;
-    CLIENT_ID ClientId;
+    ULONG_PTR Pid, Tid;
     PETHREAD Thread;
-    NTSTATUS Status;
 
-    ClientId.UniqueProcess = hex_to_thread(&gdb_input[2]);
-    ClientId.UniqueThread = hex_to_thread(ptr);
+    Pid = hex_to_pid(&gdb_input[2]);
+    Tid = hex_to_tid(strstr(gdb_input, ".") + 1);
 
-    Status = PsLookupProcessThreadByCid(&ClientId, NULL, &Thread);
+    /* We cannot use PsLookupProcessThreadByCid as we could be running at any IRQL.
+     * So loop. */
+    KDDBGPRINT("Checking if p%p.%p is alive.\n", Pid, Tid);
 
-    if (!NT_SUCCESS(Status))
-    {
-        /* Thread doesn't exist */
+    Thread = find_thread(Pid, Tid);
+
+    if (Thread != NULL)
+        send_gdb_packet("OK");
+    else
         send_gdb_packet("E03");
-        return;
-    }
-
-    /* It's OK */
-    ObDereferenceObject(Thread);
-    send_gdb_packet("OK");
 }
 
 /* q* packets */
 static
-void
-handle_gdb_query(void)
+KDSTATUS
+handle_gdb_query(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
 {
     if (strncmp(gdb_input, "qSupported:", 11) == 0)
     {
         send_gdb_packet("PacketSize=4096;multiprocess+;");
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     if (strncmp(gdb_input, "qAttached", 9) == 0)
     {
-        /* Say yes: the remote server didn't create the process, ReactOS did! */
+        /* Say no: We didn't attach, we create the process! */
         send_gdb_packet("0");
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     if (strncmp(gdb_input, "qRcmd,", 6) == 0)
     {
         send_gdb_packet("OK");
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     if (strcmp(gdb_input, "qC") == 0)
     {
         char gdb_out[64];
-        sprintf(gdb_out, "QC:p%p.%p;",
-            PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread),
-            PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));
+        sprintf(gdb_out, "QC:p%"PRIxPTR".%"PRIxPTR";",
+            handle_to_gdb_pid(PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)),
+            handle_to_gdb_tid(PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)));
         send_gdb_packet(gdb_out);
-        return;
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
-    if (strncmp(gdb_input, "qTStatus", 8) == 0)
+    if ((strncmp(gdb_input, "qfThreadInfo", 12) == 0)
+            || (strncmp(gdb_input, "qsThreadInfo", 12) == 0))
     {
-        /* We don't support tracepoints. */
-        send_gdb_packet("T0");
-        return;
+        BOOLEAN FirstThread = TRUE;
+        PEPROCESS Process;
+        PETHREAD Thread;
+        char gdb_out[1024];
+        char* ptr = gdb_out;
+        BOOLEAN Resuming = strncmp(gdb_input, "qsThreadInfo", 12) == 0;
+
+        if (Resuming)
+        {
+            if (CurrentProcessEntry == (LIST_ENTRY*)1)
+            {
+                /* We're done */
+                send_gdb_packet("l");
+                CurrentProcessEntry = NULL;
+                return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+            }
+
+            if (CurrentThreadEntry == NULL)
+                CurrentProcessEntry = CurrentProcessEntry->Flink;
+        }
+        else
+            CurrentProcessEntry = ProcessListHead->Flink;
+
+        if ((CurrentProcessEntry == ProcessListHead) ||
+                (CurrentProcessEntry == NULL)) /* Ps is not initialized */
+        {
+            /* We're almost done. Tell GDB about the idle thread */
+            send_gdb_packet("mp1.1");
+            CurrentProcessEntry = (LIST_ENTRY*)1;
+            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+        }
+
+        Process = CONTAINING_RECORD(CurrentProcessEntry, EPROCESS, ActiveProcessLinks);
+
+        if (Resuming && CurrentThreadEntry != NULL)
+            CurrentThreadEntry = CurrentThreadEntry->Flink;
+        else
+            CurrentThreadEntry = Process->ThreadListHead.Flink;
+
+        ptr = gdb_out;
+
+        *ptr++ = 'm';
+        /* List threads from this process */
+        for ( ;
+             CurrentThreadEntry != &Process->ThreadListHead;
+             CurrentThreadEntry = CurrentThreadEntry->Flink)
+        {
+            Thread = CONTAINING_RECORD(CurrentThreadEntry, ETHREAD, ThreadListEntry);
+
+            /* See if we should add a comma */
+            if (FirstThread)
+            {
+                FirstThread = FALSE;
+            }
+            else
+            {
+                *ptr++ = ',';
+            }
+
+            ptr += _snprintf(ptr, 1024 - (ptr - gdb_out),
+                "p%p.%p",
+                handle_to_gdb_pid(Process->UniqueProcessId),
+                handle_to_gdb_tid(Thread->Cid.UniqueThread));
+            if (ptr > (gdb_out + 1024))
+            {
+                /* send what we got */
+                send_gdb_packet(gdb_out);
+                /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
+                return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+            }
+        }
+
+        /* send the list for this process */
+        send_gdb_packet(gdb_out);
+        CurrentThreadEntry = NULL;
+        /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
+        return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
     }
 
     KDDBGPRINT("KDGDB: Unknown query: %s\n", gdb_input);
     send_gdb_packet("");
+    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
 
 #if 0
@@ -180,11 +277,48 @@ handle_gdb_registers(
 #endif
 
 static
+void
+ReadMemorySendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+
+    if (PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        // KdAssert
+        KDDBGPRINT("Wrong packet type (%lu) received after DbgKdReadVirtualMemoryApi request.\n", PacketType);
+        while (1);
+    }
+
+    if (State->ApiNumber != DbgKdReadVirtualMemoryApi)
+    {
+        KDDBGPRINT("Wrong API number (%lu) after DbgKdReadVirtualMemoryApi request.\n", State->ApiNumber);
+    }
+
+    /* Check status */
+    if (!NT_SUCCESS(State->ReturnStatus))
+        send_gdb_ntstatus(State->ReturnStatus);
+    else
+        send_gdb_memory(MessageData->Buffer, MessageData->Length);
+    KdpSendPacketHandler = NULL;
+    KdpManipulateStateHandler = NULL;
+
+    /* Reset the TLB */
+    if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
+    {
+        __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
+    }
+}
+
+static
 KDSTATUS
 handle_gdb_read_mem(
     _Out_ DBGKD_MANIPULATE_STATE64* State,
     _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength)
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
 {
     State->ApiNumber = DbgKdReadVirtualMemoryApi;
     State->ReturnStatus = STATUS_SUCCESS; /* ? */
@@ -194,8 +328,25 @@ handle_gdb_read_mem(
         MessageData->Length = 0;
     *MessageLength = 0;
 
+    /* Set the TLB according to the process being read. Pid 0 means any process. */
+    if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
+    {
+        PEPROCESS AttachedProcess = find_process(gdb_dbg_pid);
+        if (AttachedProcess == NULL)
+        {
+            KDDBGPRINT("The current GDB debug thread is invalid!");
+            send_gdb_packet("E03");
+            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+        }
+        __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
+    }
+
     State->u.ReadMemory.TargetBaseAddress = hex_to_address(&gdb_input[1]);
     State->u.ReadMemory.TransferCount = hex_to_address(strstr(&gdb_input[1], ",") + 1);
+
+    /* KD will reply with KdSendPacket. Catch it */
+    KdpSendPacketHandler = ReadMemorySendHandler;
+
     return KdPacketReceived;
 }
 
@@ -222,21 +373,34 @@ handle_gdb_v(
 
         if (strcmp(gdb_input, "vCont;c") == 0)
         {
-            /* Let's go on */
-            State->ApiNumber = DbgKdContinueApi;
-            State->ReturnStatus = STATUS_SUCCESS; /* ? */
-            State->Processor = CurrentStateChange.Processor;
-            State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
-            if (MessageData)
-                MessageData->Length = 0;
-            *MessageLength = 0;
-            State->u.Continue.ContinueStatus = STATUS_SUCCESS;
-            /* Tell GDB we are fine */
+            DBGKM_EXCEPTION64* Exception = NULL;
+
+            /* Tell GDB everything is fine, we will handle it */
             send_gdb_packet("OK");
-            return KdPacketReceived;
+
+            if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
+                Exception = &CurrentStateChange.u.Exception;
+
+            /* See if we should update the program counter (unlike windbg, gdb doesn't do it for us) */
+            if (Exception && (Exception->ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT)
+                    && (Exception->ExceptionRecord.ExceptionInformation[0] == 0))
+            {
+                ULONG_PTR ProgramCounter;
+
+                /* So we must get past the breakpoint instruction */
+                ProgramCounter = KdpGetContextPc(&CurrentContext);
+                KdpSetContextPc(&CurrentContext, ProgramCounter + KD_BREAKPOINT_SIZE);
+
+                SetContextManipulateHandler(State, MessageData, MessageLength, KdContext);
+                KdpManipulateStateHandler = ContinueManipulateStateHandler;
+                return KdPacketReceived;
+            }
+
+            return ContinueManipulateStateHandler(State, MessageData, MessageLength, KdContext);
         }
     }
 
+    KDDBGPRINT("Unhandled 'v' packet: %s\n", gdb_input);
     return KdPacketReceived;
 }
 
@@ -248,7 +412,6 @@ gdb_interpret_input(
     _Out_ PULONG MessageLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
-    KDSTATUS Status;
     switch (gdb_input[0])
     {
     case '?':
@@ -256,16 +419,16 @@ gdb_interpret_input(
         gdb_send_exception();
         break;
     case 'g':
-        gdb_send_registers();
-        break;
+        return gdb_send_registers(State, MessageData, MessageLength, KdContext);
     case 'H':
         handle_gdb_set_thread();
         break;
     case 'm':
-        return handle_gdb_read_mem(State, MessageData, MessageLength);
+        return handle_gdb_read_mem(State, MessageData, MessageLength, KdContext);
+    case 'p':
+        return gdb_send_register(State, MessageData, MessageLength, KdContext);
     case 'q':
-        handle_gdb_query();
-        break;
+        return handle_gdb_query(State, MessageData, MessageLength, KdContext);
     case 'T':
         handle_gdb_thread_alive();
         break;
@@ -274,12 +437,8 @@ gdb_interpret_input(
     default:
         /* We don't know how to handle this request. Maybe this is something for KD */
         State->ReturnStatus = STATUS_NOT_SUPPORTED;
+        KDDBGPRINT("Unsupported GDB command: %s.\n", gdb_input);
         return KdPacketReceived;
     }
-    /* Get the answer from GDB */
-    Status = gdb_receive_packet(KdContext);
-    if (Status != KdPacketReceived)
-        return Status;
-    /* Try interpreting this new packet */
-    return gdb_interpret_input(State, MessageData, MessageLength, KdContext);
+    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }

@@ -343,15 +343,17 @@ ULONG
 NTAPI
 HalpGetPCIData(IN PBUS_HANDLER BusHandler,
                IN PBUS_HANDLER RootHandler,
-               IN PCI_SLOT_NUMBER Slot,
+               IN ULONG SlotNumber,
                IN PVOID Buffer,
                IN ULONG Offset,
                IN ULONG Length)
 {
+    PCI_SLOT_NUMBER Slot;
     UCHAR PciBuffer[PCI_COMMON_HDR_LENGTH];
     PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)PciBuffer;
     ULONG Len = 0;
 
+    Slot.u.AsULONG = SlotNumber;
 #ifdef SARCH_XBOX
     /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
      * hang the Xbox. Also, the device number doesn't seem to be decoded for the
@@ -433,15 +435,17 @@ ULONG
 NTAPI
 HalpSetPCIData(IN PBUS_HANDLER BusHandler,
                IN PBUS_HANDLER RootHandler,
-               IN PCI_SLOT_NUMBER Slot,
+               IN ULONG SlotNumber,
                IN PVOID Buffer,
                IN ULONG Offset,
                IN ULONG Length)
 {
+    PCI_SLOT_NUMBER Slot;
     UCHAR PciBuffer[PCI_COMMON_HDR_LENGTH];
     PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)PciBuffer;
     ULONG Len = 0;
 
+    Slot.u.AsULONG = SlotNumber;
 #ifdef SARCH_XBOX
     /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
      * hang the Xbox. Also, the device number doesn't seem to be decoded for the

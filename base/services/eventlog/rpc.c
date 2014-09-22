@@ -162,6 +162,8 @@ ElfCreateBackupLogHandle(PLOGHANDLE *LogHandle,
     Status = LogfCreate(&lpLogHandle->LogFile,
                         NULL,
                         FileName,
+                        0,
+                        0,
                         FALSE,
                         TRUE);
     if (!NT_SUCCESS(Status))
