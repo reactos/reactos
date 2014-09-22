@@ -3847,10 +3847,6 @@ NtGdiPtInRegion(
 
     RGNOBJAPI_Unlock(prgn);
     return ret;
-
-
-    RGNOBJAPI_Unlock(prgn);
-    return FALSE;
 }
 
 BOOL

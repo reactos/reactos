@@ -116,6 +116,7 @@ VIS_ComputeVisibleRegion(
                    IntGdiOffsetRgn(ClipRgn, -CurrentWindow->rcWindow.left, -CurrentWindow->rcWindow.top);
                    IntGdiCombineRgn(ClipRgn, ClipRgn, CurrentRgnClip, RGN_AND);
                    IntGdiOffsetRgn(ClipRgn, CurrentWindow->rcWindow.left, CurrentWindow->rcWindow.top);
+                   RGNOBJAPI_Unlock(CurrentRgnClip);
                }
             }
             IntGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
