@@ -299,36 +299,179 @@ VOID
 NTAPI
 MmMpwThreadMain(PVOID Parameter)
 {
-   NTSTATUS Status;
-   ULONG PagesWritten;
-   LARGE_INTEGER Timeout;
+    NTSTATUS Status;
+    PMMPTE SysPte, PteTable;
 
-   UNREFERENCED_PARAMETER(Parameter);
+    UNREFERENCED_PARAMETER(Parameter);
 
-   Timeout.QuadPart = -50000000;
+    /* Reserve a PTE for the page table */
+    SysPte = MiReserveSystemPtes(1, SystemPteSpace);
+    ASSERT(SysPte != NULL);
+    PteTable = MiPteToAddress(SysPte);
 
-   for(;;)
-   {
-      Status = KeWaitForSingleObject(&MpwThreadEvent,
-                                     0,
-                                     KernelMode,
-                                     FALSE,
-                                     &Timeout);
-      if (!NT_SUCCESS(Status))
-      {
-         DbgPrint("MpwThread: Wait failed\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-         return;
-      }
+    for(;;)
+    {
+        KIRQL OldIrql;
+        PFN_NUMBER PageFrameIndex;
+        PMMPFN Pfn;
+        MMPTE TempPte, PdePte;
+        PMMPTE PointerPte;
+        BOOLEAN PageFileEntryFromPage = FALSE;
+        /*
+         * To start working, we wait for two conditions:
+         *  - there are pages to be paged out.
+         *  - We are in a low memory situation.
+         */
+        Status = KeWaitForSingleObject(
+            &MpwThreadEvent,
+            WrPageOut,
+            KernelMode,
+            FALSE,
+            NULL);
 
-      PagesWritten = 0;
+        DPRINT("THE KRAKEN WAS RELEASED AND WILL PAGE YOUR ASS OUT!\n");
 
-#ifndef NEWCC
-      // XXX arty -- we flush when evicting pages or destorying cache
-      // sections.
-      CcRosFlushDirtyPages(128, &PagesWritten, FALSE);
-#endif
-   }
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("MpwThread: Wait failed\n");
+            KeBugCheck(MEMORY_MANAGEMENT);
+            return;
+        }
+
+        /* Lock the PFN database */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* The true main loop */
+        while ((MmTotalPagesForPagingFile != 0) && (MiFreeSwapPages != 0))
+        {
+            /* Get the first page from the list */
+            PageFrameIndex = MmModifiedPageListByColor[0].Flink;
+
+            /* Get The Pfn */
+            Pfn = MI_PFN_ELEMENT(PageFrameIndex);
+
+            /* Some things which must always hold */
+            ASSERT(Pfn->OriginalPte.u.Soft.Transition == 0);
+            ASSERT(Pfn->u3.ReferenceCount == 0);
+
+            /* And some that are not yet supported */
+            ASSERT(Pfn->OriginalPte.u.Soft.Prototype == 0);
+
+            /* Maybe this is not the first time */
+            if ((Pfn->OriginalPte.u.Soft.Prototype == 0) &&
+                    (Pfn->OriginalPte.u.Soft.PageFileHigh != 0))
+            {
+                /* Use that */
+                TempPte = Pfn->OriginalPte;
+                PageFileEntryFromPage = TRUE;
+            }
+            else
+            {
+                MiReservePageFileEntry(&TempPte);
+            }
+
+            /* Get it out of the list and reference it */
+            MiUnlinkPageFromList(Pfn);
+            MiReferenceUnusedPageAndBumpLockCount(Pfn);
+
+            ASSERT(Pfn->u3.e1.PageLocation == ModifiedPageList);
+
+            /* Mark it as write in progress */
+            Pfn->u3.e1.WriteInProgress = 1;
+            Pfn->u1.Event = NULL;
+
+            /* Release the PFN lock while we are writing */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+            /* Do the actual write */
+            Status = MiWritePageFile(PageFrameIndex, &TempPte);
+
+            /* Get the lock again */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+            /* Get a mapping to the page table */
+            MI_MAKE_HARDWARE_PTE_KERNEL(&PdePte,
+                                        SysPte,
+                                        MM_READWRITE,
+                                        Pfn->u4.PteFrame);
+            MI_WRITE_VALID_PTE(SysPte, PdePte);
+
+            /* Finally get a pointer to the PTE this page represents */
+            PointerPte = &PteTable[MiAddressToPteOffset(MiPteToAddress(Pfn->PteAddress))];
+
+            /* Get relevant values from the original PTE */
+            TempPte.u.Soft.Protection = PointerPte->u.Soft.Protection;
+
+            /* Maybe someone aborted the operation */
+            if (Pfn->u3.e1.WriteInProgress == 0)
+            {
+                DPRINT1("Someone aborted the page-out operation!\n");
+                /* Just set the event and let the waiter go along */
+                ASSERT(Pfn->u1.Event != NULL);
+                KeSetEvent(Pfn->u1.Event, IO_NO_INCREMENT, FALSE);
+                Pfn->u1.Event = NULL;
+                /* This is now useless */
+                if (!PageFileEntryFromPage)
+                    MiFreePageFileEntry(&TempPte);
+            }
+            /* Maybe someone tried to access the page while we were not looking */
+            else if (Pfn->u1.Event != NULL)
+            {
+                DPRINT1("Page fault occured while we were paging out!\n");
+
+                /* So the page fault handler marked the page as unmodified */
+                ASSERT(Pfn->u3.e1.Modified == 0);
+
+                /* Save the pagefile entry for this page */
+                Pfn->OriginalPte = TempPte;
+                KeSetEvent(Pfn->u1.Event, IO_NO_INCREMENT, FALSE);
+                Pfn->u1.Event = NULL;
+            }
+            else if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to write page to pagefile!\n");
+                /* This is now useless */
+                if (!PageFileEntryFromPage)
+                    MiFreePageFileEntry(&TempPte);
+                /* MiDereferencePfnAndDropLockCount will put it back on the tail of the list */
+            }
+            else
+            {
+                DPRINT1("Page %x successfully paged out. PTE pointer %p (-> %x)\n",
+                    PageFrameIndex, Pfn->PteAddress, TempPte.u.Long);
+
+                /* Of course it must already be invalid */
+                ASSERT(PointerPte->u.Hard.Valid == 0);
+
+                /* And be in transition */
+                ASSERT(PointerPte->u.Soft.Transition == 1);
+
+                /* So the PTE is now officially paged out */
+                MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+
+                /* And the pagefile entry belongs to the PTE, not to the page! */
+                Pfn->OriginalPte.u.Long = 0;
+
+                /* And dereference the page table frame */
+                MiDecrementShareCount(MI_PFN_ELEMENT(Pfn->u4.PteFrame), Pfn->u4.PteFrame);
+                /* We can finally make it available for real */
+                MI_SET_PFN_DELETED(Pfn);
+            }
+
+            /* We're done with this */
+            Pfn->u3.e1.WriteInProgress = 0;
+
+            /* This will put it back in the free list */
+            MiDereferencePfnAndDropLockCount(Pfn);
+
+            /* Unmap the Page Table */
+            MI_ERASE_PTE(SysPte);
+            KeInvalidateTlbEntry(PteTable);
+        }
+
+        /* We're done for this run */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    }
 }
 
 NTSTATUS
