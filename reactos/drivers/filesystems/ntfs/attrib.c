@@ -175,6 +175,16 @@ NtfsDumpIndexRootAttribute(PATTRIBUTE Attribute)
         ASSERT(IndexRootAttr->CollationRule == COLLATION_FILE_NAME);
 
     DbgPrint("  $INDEX_ROOT (%uB, %u) ", IndexRootAttr->SizeOfEntry, IndexRootAttr->ClustersPerIndexRecord);
+
+    if (IndexRootAttr->Header.Flags == INDEX_ROOT_SMALL)
+    {
+        DbgPrint(" (small) ");
+    }
+    else
+    {
+        ASSERT(IndexRootAttr->Header.Flags == INDEX_ROOT_LARGE);
+        DbgPrint(" (large) ");
+    }
 }
 
 

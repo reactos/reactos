@@ -194,6 +194,8 @@ typedef enum
 #define COLLATION_NTOFS_SECURITY_HASH 0x12
 #define COLLATION_NTOFS_ULONGS        0x13
 
+#define INDEX_ROOT_SMALL 0x0
+#define INDEX_ROOT_LARGE 0x1
 
 typedef struct
 {
@@ -313,11 +315,21 @@ typedef struct
 
 typedef struct
 {
+    ULONG FirstEntryOffset;
+    ULONG TotalSizeOfEntries;
+    ULONG AllocatedSize;
+    UCHAR Flags;
+    UCHAR Padding[3];
+} INDEX_HEADER_ATTRIBUTE, *PINDEX_HEADER_ATTRIBUTE;
+
+typedef struct
+{
     ULONG AttributeType;
     ULONG CollationRule;
     ULONG SizeOfEntry;
     UCHAR ClustersPerIndexRecord;
     UCHAR Padding[3];
+    INDEX_HEADER_ATTRIBUTE Header;
 } INDEX_ROOT_ATTRIBUTE, *PINDEX_ROOT_ATTRIBUTE;
 
 typedef struct
