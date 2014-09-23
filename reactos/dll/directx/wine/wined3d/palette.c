@@ -39,10 +39,7 @@ ULONG CDECL wined3d_palette_decref(struct wined3d_palette *palette)
     TRACE("%p decreasing refcount to %u.\n", palette, refcount);
 
     if (!refcount)
-    {
-        DeleteObject(palette->hpal);
         HeapFree(GetProcessHeap(), 0, palette);
-    }
 
     return refcount;
 }
@@ -50,32 +47,46 @@ ULONG CDECL wined3d_palette_decref(struct wined3d_palette *palette)
 HRESULT CDECL wined3d_palette_get_entries(const struct wined3d_palette *palette,
         DWORD flags, DWORD start, DWORD count, PALETTEENTRY *entries)
 {
+    unsigned int i;
     TRACE("palette %p, flags %#x, start %u, count %u, entries %p.\n",
             palette, flags, start, count, entries);
 
     if (flags)
         return WINED3DERR_INVALIDCALL; /* unchecked */
-    if (start > palette->palNumEntries || count > palette->palNumEntries - start)
+    if (start > palette->size || count > palette->size - start)
         return WINED3DERR_INVALIDCALL;
 
     if (palette->flags & WINED3D_PALETTE_8BIT_ENTRIES)
     {
         BYTE *entry = (BYTE *)entries;
-        unsigned int i;
 
         for (i = start; i < count + start; ++i)
-            *entry++ = palette->palents[i].peRed;
+            *entry++ = palette->colors[i].rgbRed;
     }
     else
-        memcpy(entries, palette->palents + start, count * sizeof(*entries));
+    {
+        for (i = 0; i < count; ++i)
+        {
+            entries[i].peRed = palette->colors[i + start].rgbRed;
+            entries[i].peGreen = palette->colors[i + start].rgbGreen;
+            entries[i].peBlue = palette->colors[i + start].rgbBlue;
+            entries[i].peFlags = palette->colors[i + start].rgbReserved;
+        }
+    }
 
     return WINED3D_OK;
+}
+
+void CDECL wined3d_palette_apply_to_dc(const struct wined3d_palette *palette, HDC dc)
+{
+    if (SetDIBColorTable(dc, 0, 256, palette->colors) != 256)
+        ERR("Failed to set DIB color table.\n");
 }
 
 HRESULT CDECL wined3d_palette_set_entries(struct wined3d_palette *palette,
         DWORD flags, DWORD start, DWORD count, const PALETTEENTRY *entries)
 {
-    struct wined3d_resource *resource;
+    unsigned int i;
 
     TRACE("palette %p, flags %#x, start %u, count %u, entries %p.\n",
             palette, flags, start, count, entries);
@@ -84,40 +95,31 @@ HRESULT CDECL wined3d_palette_set_entries(struct wined3d_palette *palette,
     if (palette->flags & WINED3D_PALETTE_8BIT_ENTRIES)
     {
         const BYTE *entry = (const BYTE *)entries;
-        unsigned int i;
 
         for (i = start; i < count + start; ++i)
-            palette->palents[i].peRed = *entry++;
+            palette->colors[i].rgbRed = *entry++;
     }
     else
     {
-        memcpy(palette->palents + start, entries, count * sizeof(*palette->palents));
+        for (i = 0; i < count; ++i)
+        {
+            palette->colors[i + start].rgbRed = entries[i].peRed;
+            palette->colors[i + start].rgbGreen = entries[i].peGreen;
+            palette->colors[i + start].rgbBlue = entries[i].peBlue;
+            palette->colors[i + start].rgbReserved = entries[i].peFlags;
+        }
 
         /* When WINEDDCAPS_ALLOW256 isn't set we need to override entry 0 with black and 255 with white */
         if (!(palette->flags & WINED3D_PALETTE_ALLOW_256))
         {
             TRACE("WINED3D_PALETTE_ALLOW_256 not set, overriding palette entry 0 with black and 255 with white.\n");
-            palette->palents[0].peRed = 0;
-            palette->palents[0].peGreen = 0;
-            palette->palents[0].peBlue = 0;
+            palette->colors[0].rgbRed = 0;
+            palette->colors[0].rgbGreen = 0;
+            palette->colors[0].rgbBlue = 0;
 
-            palette->palents[255].peRed = 255;
-            palette->palents[255].peGreen = 255;
-            palette->palents[255].peBlue = 255;
-        }
-
-        if (palette->hpal)
-            SetPaletteEntries(palette->hpal, start, count, palette->palents + start);
-    }
-
-    /* If the palette is attached to the render target, update all render targets */
-    LIST_FOR_EACH_ENTRY(resource, &palette->device->resources, struct wined3d_resource, resource_list_entry)
-    {
-        if (resource->type == WINED3D_RTYPE_SURFACE)
-        {
-            struct wined3d_surface *surface = surface_from_resource(resource);
-            if (surface->palette == palette)
-                surface->surface_ops->surface_realize_palette(surface);
+            palette->colors[255].rgbRed = 255;
+            palette->colors[255].rgbGreen = 255;
+            palette->colors[255].rgbBlue = 255;
         }
     }
 
@@ -132,19 +134,11 @@ static HRESULT wined3d_palette_init(struct wined3d_palette *palette, struct wine
     palette->ref = 1;
     palette->device = device;
     palette->flags = flags;
-
-    palette->palNumEntries = entry_count;
-    palette->hpal = CreatePalette((const LOGPALETTE *)&palette->palVersion);
-    if (!palette->hpal)
-    {
-        WARN("Failed to create palette.\n");
-        return E_FAIL;
-    }
+    palette->size = entry_count;
 
     if (FAILED(hr = wined3d_palette_set_entries(palette, 0, 0, entry_count, entries)))
     {
         WARN("Failed to set palette entries, hr %#x.\n", hr);
-        DeleteObject(palette->hpal);
         return hr;
     }
 

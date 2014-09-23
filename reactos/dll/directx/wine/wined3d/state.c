@@ -373,7 +373,7 @@ static GLenum gl_blend_factor(enum wined3d_blend factor, const struct wined3d_fo
 
 static void state_blend(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_surface *target = state->fb->render_targets[0];
+    const struct wined3d_format *rt_format = state->fb->render_targets[0]->format;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     GLenum srcBlend, dstBlend;
     enum wined3d_blend d3d_blend;
@@ -387,8 +387,7 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
         /* Disable blending in all cases even without pixelshaders.
          * With blending on we could face a big performance penalty.
          * The d3d9 visual test confirms the behavior. */
-        if (context->render_offscreen
-                && !(target->resource.format->flags & WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING))
+        if (context->render_offscreen && !(rt_format->flags & WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING))
         {
             gl_info->gl_ops.gl.p_glDisable(GL_BLEND);
             checkGLcall("glDisable GL_BLEND");
@@ -424,9 +423,8 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
     }
     else
     {
-        srcBlend = gl_blend_factor(d3d_blend, target->resource.format);
-        dstBlend = gl_blend_factor(state->render_states[WINED3D_RS_DESTBLEND],
-                target->resource.format);
+        srcBlend = gl_blend_factor(d3d_blend, rt_format);
+        dstBlend = gl_blend_factor(state->render_states[WINED3D_RS_DESTBLEND], rt_format);
     }
 
     if (state->render_states[WINED3D_RS_EDGEANTIALIAS]
@@ -476,9 +474,8 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
         }
         else
         {
-            srcBlendAlpha = gl_blend_factor(d3d_blend, target->resource.format);
-            dstBlendAlpha = gl_blend_factor(state->render_states[WINED3D_RS_DESTBLENDALPHA],
-                    target->resource.format);
+            srcBlendAlpha = gl_blend_factor(d3d_blend, rt_format);
+            dstBlendAlpha = gl_blend_factor(state->render_states[WINED3D_RS_DESTBLENDALPHA], rt_format);
         }
 
         GL_EXTCALL(glBlendFuncSeparateEXT(srcBlend, dstBlend, srcBlendAlpha, dstBlendAlpha));
@@ -1760,7 +1757,7 @@ static void state_depthbias(struct wined3d_context *context, const struct wined3
     if (state->render_states[WINED3D_RS_SLOPESCALEDEPTHBIAS]
             || state->render_states[WINED3D_RS_DEPTHBIAS])
     {
-        const struct wined3d_surface *depth = state->fb->depth_stencil;
+        const struct wined3d_rendertarget_view *depth = state->fb->depth_stencil;
         float scale;
 
         union
@@ -1785,7 +1782,7 @@ static void state_depthbias(struct wined3d_context *context, const struct wined3
         {
             if (depth)
             {
-                const struct wined3d_format *fmt = depth->resource.format;
+                const struct wined3d_format *fmt = depth->format;
                 scale = powf(2, fmt->depth_size) - 1;
                 TRACE("Depth format %s, using depthbias scale of %.8e.\n",
                       debug_d3dformat(fmt->id), scale);
@@ -4198,13 +4195,32 @@ static void load_numbered_arrays(struct wined3d_context *context,
                     break;
 
                 case WINED3DFMT_R16G16_FLOAT:
-                    /* Are those 16 bit floats. C doesn't have a 16 bit float type. I could read the single bits and calculate a 4
-                     * byte float according to the IEEE standard
-                     */
-                    FIXME("Unsupported WINED3DDECLTYPE_FLOAT16_2\n");
+                    if (gl_info->supported[NV_HALF_FLOAT] && gl_info->supported[NV_VERTEX_PROGRAM])
+                    {
+                        /* Not supported by GL_ARB_half_float_vertex. */
+                        GL_EXTCALL(glVertexAttrib2hvNV(i, (const GLhalfNV *)ptr));
+                    }
+                    else
+                    {
+                        float x = float_16_to_32(((const unsigned short *)ptr) + 0);
+                        float y = float_16_to_32(((const unsigned short *)ptr) + 1);
+                        GL_EXTCALL(glVertexAttrib2fARB(i, x, y));
+                    }
                     break;
                 case WINED3DFMT_R16G16B16A16_FLOAT:
-                    FIXME("Unsupported WINED3DDECLTYPE_FLOAT16_4\n");
+                    if (gl_info->supported[NV_HALF_FLOAT] && gl_info->supported[NV_VERTEX_PROGRAM])
+                    {
+                        /* Not supported by GL_ARB_half_float_vertex. */
+                        GL_EXTCALL(glVertexAttrib4hvNV(i, (const GLhalfNV *)ptr));
+                    }
+                    else
+                    {
+                        float x = float_16_to_32(((const unsigned short *)ptr) + 0);
+                        float y = float_16_to_32(((const unsigned short *)ptr) + 1);
+                        float z = float_16_to_32(((const unsigned short *)ptr) + 2);
+                        float w = float_16_to_32(((const unsigned short *)ptr) + 3);
+                        GL_EXTCALL(glVertexAttrib4fARB(i, x, y, z, w));
+                    }
                     break;
 
                 default:
@@ -4629,14 +4645,14 @@ void vertexdeclaration(struct wined3d_context *context, const struct wined3d_sta
 
 static void viewport_miscpart(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_surface *target = state->fb->render_targets[0];
+    const struct wined3d_rendertarget_view *target = state->fb->render_targets[0];
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_viewport vp = state->viewport;
 
-    if (vp.width > target->resource.width)
-        vp.width = target->resource.width;
-    if (vp.height > target->resource.height)
-        vp.height = target->resource.height;
+    if (vp.width > target->width)
+        vp.width = target->width;
+    if (vp.height > target->height)
+        vp.height = target->height;
 
     gl_info->gl_ops.gl.p_glDepthRange(vp.min_z, vp.max_z);
     checkGLcall("glDepthRange");
@@ -4650,7 +4666,7 @@ static void viewport_miscpart(struct wined3d_context *context, const struct wine
     {
         UINT width, height;
 
-        target->get_drawable_size(context, &width, &height);
+        surface_get_drawable_size(wined3d_rendertarget_view_get_surface(target), context, &width, &height);
         gl_info->gl_ops.gl.p_glViewport(vp.x, (height - (vp.y + vp.height)),
                 vp.width, vp.height);
     }
@@ -4809,11 +4825,11 @@ static void scissorrect(struct wined3d_context *context, const struct wined3d_st
     }
     else
     {
-        const struct wined3d_surface *target = state->fb->render_targets[0];
+        const struct wined3d_rendertarget_view *target = state->fb->render_targets[0];
         UINT height;
         UINT width;
 
-        target->get_drawable_size(context, &width, &height);
+        surface_get_drawable_size(wined3d_rendertarget_view_get_surface(target), context, &width, &height);
         gl_info->gl_ops.gl.p_glScissor(r->left, height - r->bottom, r->right - r->left, r->bottom - r->top);
     }
     checkGLcall("glScissor");
@@ -4876,19 +4892,76 @@ static void psorigin(struct wined3d_context *context, const struct wined3d_state
 
 void state_srgbwrite(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
+    const struct wined3d_format *rt_format = state->fb->render_targets[0]->format;
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    const struct wined3d_surface *rt = state->fb->render_targets[0];
 
     TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
 
     if (state->render_states[WINED3D_RS_SRGBWRITEENABLE]
-            && rt->resource.format->flags & WINED3DFMT_FLAG_SRGB_WRITE)
+            && rt_format->flags & WINED3DFMT_FLAG_SRGB_WRITE)
         gl_info->gl_ops.gl.p_glEnable(GL_FRAMEBUFFER_SRGB);
     else
         gl_info->gl_ops.gl.p_glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
-const struct StateEntryTemplate misc_state_template[] = {
+static void state_cb(const struct wined3d_gl_info *gl_info, const struct wined3d_state *state,
+        enum wined3d_shader_type type, unsigned int base, unsigned int count)
+{
+    struct wined3d_buffer *buffer;
+    unsigned int i;
+
+    for (i = 0; i < count; ++i)
+    {
+        buffer = state->cb[type][i];
+        GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0));
+    }
+    checkGLcall("glBindBufferBase");
+}
+
+static void state_cb_vs(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    const struct wined3d_gl_limits *limits = &context->gl_info->limits;
+
+    TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
+
+    state_cb(context->gl_info, state, WINED3D_SHADER_TYPE_VERTEX, 0, limits->vertex_uniform_blocks);
+}
+
+static void state_cb_gs(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    const struct wined3d_gl_limits *limits = &context->gl_info->limits;
+
+    TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
+
+    state_cb(context->gl_info, state, WINED3D_SHADER_TYPE_GEOMETRY,
+            limits->vertex_uniform_blocks, limits->geometry_uniform_blocks);
+}
+
+static void state_cb_ps(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    const struct wined3d_gl_limits *limits = &context->gl_info->limits;
+
+    TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
+
+    state_cb(context->gl_info, state, WINED3D_SHADER_TYPE_PIXEL,
+            limits->vertex_uniform_blocks + limits->geometry_uniform_blocks, limits->fragment_uniform_blocks);
+}
+
+static void state_cb_warn(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
+
+    WARN("Constant buffers (%s) no supported.\n", debug_d3dstate(state_id));
+}
+
+const struct StateEntryTemplate misc_state_template[] =
+{
+    { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  state_cb_vs,        }, ARB_UNIFORM_BUFFER_OBJECT       },
+    { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),  state_cb_warn,      }, WINED3D_GL_EXT_NONE             },
+    { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_GEOMETRY),{ STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_GEOMETRY),state_cb_gs,        }, ARB_UNIFORM_BUFFER_OBJECT       },
+    { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_GEOMETRY),{ STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_GEOMETRY),state_cb_warn,      }, WINED3D_GL_EXT_NONE             },
+    { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_PIXEL),   { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_PIXEL),   state_cb_ps,        }, ARB_UNIFORM_BUFFER_OBJECT       },
+    { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_PIXEL),   { STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_PIXEL),   state_cb_warn,      }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_SRCBLEND),                  { STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE),          NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_DESTBLEND),                 { STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE),          NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE),          { STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE),          state_blend         }, WINED3D_GL_EXT_NONE             },
@@ -5083,7 +5156,7 @@ const struct StateEntryTemplate misc_state_template[] = {
     {0 /* Terminate */,                                   { 0,                                                  0                   }, WINED3D_GL_EXT_NONE             },
 };
 
-const struct StateEntryTemplate vp_ffp_states[] =
+static const struct StateEntryTemplate vp_ffp_states[] =
 {
     { STATE_VDECL,                                        { STATE_VDECL,                                        vertexdeclaration   }, WINED3D_GL_EXT_NONE             },
     { STATE_SHADER(WINED3D_SHADER_TYPE_VERTEX),           { STATE_VDECL,                                        NULL                }, WINED3D_GL_EXT_NONE             },
@@ -5817,6 +5890,9 @@ static void validate_state_table(struct StateEntry *state_table)
         STATE_SHADER(WINED3D_SHADER_TYPE_VERTEX),
         STATE_SHADER(WINED3D_SHADER_TYPE_GEOMETRY),
         STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL),
+        STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_VERTEX),
+        STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_GEOMETRY),
+        STATE_CONSTANT_BUFFER(WINED3D_SHADER_TYPE_PIXEL),
         STATE_VIEWPORT,
         STATE_LIGHT_TYPE,
         STATE_SCISSORRECT,

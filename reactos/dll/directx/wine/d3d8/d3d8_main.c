@@ -51,15 +51,6 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
     return &object->IDirect3D8_iface;
 }
 
-/* At process attach */
-BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
-{
-    if (reason == DLL_PROCESS_ATTACH)
-        DisableThreadLibraryCalls(inst);
-
-    return TRUE;
-}
-
 /***********************************************************************
  *              ValidateVertexShader (D3D8.@)
  *
