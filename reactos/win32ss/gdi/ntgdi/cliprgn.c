@@ -117,91 +117,77 @@ NtGdiExtSelectClipRgn(
     return retval;
 }
 
-INT FASTCALL
-GdiGetClipBox(HDC hDC, PRECTL rc)
+INT
+FASTCALL
+GdiGetClipBox(
+    _In_ HDC hdc,
+    _Out_ LPRECT prc)
 {
-   INT retval;
-   PDC dc;
-   PROSRGNDATA pRgnNew, pRgn = NULL;
+    PDC pdc;
+    INT iComplexity;
 
-   if (!(dc = DC_LockDc(hDC)))
-   {
-      return ERROR;
-   }
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return ERROR;
+    }
 
-   if (dc->fs & DC_FLAG_DIRTY_RAO)
-       CLIPPING_UpdateGCRegion(dc);
+    /* Update RAO region if necessary */
+    if (pdc->fs & DC_FLAG_DIRTY_RAO)
+        CLIPPING_UpdateGCRegion(pdc);
 
-   /* FIXME: Rao and Vis only! */
-   if (dc->prgnAPI) // APIRGN
-   {
-      pRgn = dc->prgnAPI;
-   }
-   else if (dc->dclevel.prgnMeta) // METARGN
-   {
-      pRgn = dc->dclevel.prgnMeta;
-   }
-   else if (dc->dclevel.prgnClip) // CLIPRGN
-   {
-       pRgn = dc->dclevel.prgnClip;
-   }
+    /* Check if we have a RAO region (intersection of API and VIS region) */
+    if (pdc->prgnRao)
+    {
+        /* We have a RAO region, use it */
+        iComplexity = REGION_GetRgnBox(pdc->prgnRao, prc);
+    }
+    else
+    {
+        /* No RAO region means no API region, so use the VIS region */
+        ASSERT(pdc->prgnVis);
+        iComplexity = REGION_GetRgnBox(pdc->prgnVis, prc);
+    }
 
-   if (pRgn)
-   {
-      pRgnNew = IntSysCreateRectpRgn( 0, 0, 0, 0 );
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
 
-	  if (!pRgnNew)
-      {
-         DC_UnlockDc(dc);
-         return ERROR;
-      }
+    /* Convert the rect to logical coordinates */
+    IntDPtoLP(pdc, (LPPOINT)prc, 2);
 
-      IntGdiCombineRgn(pRgnNew, dc->prgnVis, pRgn, RGN_AND);
-
-      retval = REGION_GetRgnBox(pRgnNew, rc);
-
-	  REGION_Delete(pRgnNew);
-
-      DC_UnlockDc(dc);
-      return retval;
-   }
-
-   retval = REGION_GetRgnBox(dc->prgnVis, rc);
-
-   DC_UnlockDc(dc);
-
-   return retval;
+    /* Return the complexity */
+    return iComplexity;
 }
 
-INT APIENTRY
-NtGdiGetAppClipBox(HDC hDC, PRECTL rc)
+INT
+APIENTRY
+NtGdiGetAppClipBox(
+    _In_ HDC hdc,
+    _Out_ LPRECT prc)
 {
-  INT Ret;
-  NTSTATUS Status = STATUS_SUCCESS;
-  RECTL Saferect;
+    RECT rect;
+    INT iComplexity;
 
-  Ret = GdiGetClipBox(hDC, &Saferect);
+    /* Call the internal function */
+    iComplexity = GdiGetClipBox(hdc, &rect);
 
-  _SEH2_TRY
-  {
-    ProbeForWrite(rc,
-                  sizeof(RECT),
-                  1);
-    *rc = Saferect;
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-    Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END;
+    if (iComplexity != ERROR)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(prc, sizeof(RECT), 1);
+            *prc = rect;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            iComplexity = ERROR;
+        }
+        _SEH2_END
+    }
 
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return ERROR;
-  }
-
-  return Ret;
+    /* Return the complexity */
+    return iComplexity;
 }
 
 int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
