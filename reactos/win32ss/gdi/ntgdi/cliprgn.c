@@ -241,54 +241,71 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
     return Result;
 }
 
-int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
-                           int  LeftRect,
-                           int  TopRect,
-                           int  RightRect,
-                           int  BottomRect)
+INT
+APIENTRY
+NtGdiIntersectClipRect(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-    INT Result;
-    RECTL Rect;
-    PREGION pNewRgn;
-    PDC dc = DC_LockDc(hDC);
+    INT iComplexity;
+    RECTL rect;
+    PREGION prgnNew;
+    PDC pdc;
 
     DPRINT("NtGdiIntersectClipRect(%p, %d,%d-%d,%d)\n",
-            hDC, LeftRect, TopRect, RightRect, BottomRect);
+            hdc, xLeft, yTop, xRight, yBottom);
 
-    if (!dc)
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 
-    Rect.left = LeftRect;
-    Rect.top = TopRect;
-    Rect.right = RightRect;
-    Rect.bottom = BottomRect;
+    /* Convert coordinates to device space */
+    rect.left = xLeft;
+    rect.top = yTop;
+    rect.right = xRight;
+    rect.bottom = yBottom;
+    IntLPtoDP(pdc, (LPPOINT)&rect, 2);
 
-    IntLPtoDP(dc, (LPPOINT)&Rect, 2);
-
-    pNewRgn = IntSysCreateRectpRgnIndirect(&Rect);
-    if (!pNewRgn)
+    /* Check if we already have a clip region */
+    if (pdc->dclevel.prgnClip != NULL)
     {
-        Result = ERROR;
-    }
-    else if (!dc->dclevel.prgnClip)
-    {
-        dc->dclevel.prgnClip = pNewRgn;
-        Result = SIMPLEREGION;
+        /* We have a region, crop it */
+        iComplexity = REGION_CropAndOffsetRegion(pdc->dclevel.prgnClip,
+                                                 pdc->dclevel.prgnClip,
+                                                 &rect,
+                                                 NULL);
     }
     else
     {
-        Result = IntGdiCombineRgn(dc->dclevel.prgnClip, dc->dclevel.prgnClip, pNewRgn, RGN_AND);
-        REGION_Delete(pNewRgn);
+        /* We don't have a region yet, allocate a new one */
+        prgnNew = IntSysCreateRectpRgnIndirect(&rect);
+        if (prgnNew == NULL)
+        {
+            iComplexity = ERROR;
+        }
+        else
+        {
+            /* Set the new region */
+            pdc->dclevel.prgnClip = prgnNew;
+            iComplexity = SIMPLEREGION;
+        }
     }
-    if (Result != ERROR)
-        dc->fs |= DC_FLAG_DIRTY_RAO;
 
-    DC_UnlockDc(dc);
+    /* If we succeeded, mark the RAO region as dirty */
+    if (iComplexity != ERROR)
+        pdc->fs |= DC_FLAG_DIRTY_RAO;
 
-    return Result;
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    return iComplexity;
 }
 
 int APIENTRY NtGdiOffsetClipRgn(HDC  hDC,
