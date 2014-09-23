@@ -20,7 +20,7 @@
  * Page space:
  * This is the coordinate system on the screen or on the paper layout for
  * printer devices. The coordinate system is also orthogonal but one unit
- * does not neccesarily match one pixel. Instead there are different mapping
+ * does not necessarily match one pixel. Instead there are different mapping
  * modes that can be set using SetMapMode() that specify how page space units
  * are transformed into device space units. These mapping modes are:
  * - MM_TEXT: One unit matches one unit in device space (one pixel)
@@ -32,15 +32,15 @@
  * - MM_ISOTROPIC:
  * - MM_ANISOTROPIC:
  * If the mapping mode is either MM_ISOTROPIC or MM_ANISOTROPIC, the actual
- * transormation is calculated from the window and viewport extension.
+ * transformation is calculated from the window and viewport extension.
  * The window extension can be set using SetWindowExtEx() and describes the
  * extents of an arbitrary window (not to confuse with the gui element!) in
  * page space coordinates.
  * The viewport extension can be set using SetViewportExtEx() and describes
  * the extent of the same window in device space coordinates. If the mapping
  * mode is MM_ISOTROPIC one of the viewport extensions can be adjusted by GDI
- * to make sure the mapping stays isotropic, that is it has the same x/y ratio
- * as the window extension.
+ * to make sure the mapping stays isotropic, i.e. that it has the same x/y
+ * ratio as the window extension.
  *
  * World space:
  * World space is the coordinate system that is used for all GDI drawing
@@ -52,13 +52,14 @@
  * can be set using SetWorldTransform(), which is applied to transform world
  * space coordinates into page space coordinates.
  *
- * User mode data
- * All coordinate translation data is stored in the dc attribute, so the values
- * might be invalid. This has to be taken into account. Integer values might be
+ * User mode data:
+ * All coordinate translation data is stored in the DC attribute, so the values
+ * might be invalid. This has to be taken into account. Values might also be
  * zero, so when a division is made, the value has to be read first and then
- * checked! For floating point values (FLOATOBJ as well) these restrictions do
- * not apply, since we cannot get dividy-by-zero exceptions.
- * Though the result might be a completely random and invalid value, if it was
+ * checked! This is true for both integer and floating point values, even if
+ * we cannot get floating point exceptions on x86, we can get them on all other
+ * architectures that use the FPU directly instead of emulation.
+ * The result of all operations might be completely random and invalid, if it was
  * messed with in an illegal way in user mode. This is not a problem, since the
  * result of coordinate transformations are never expected to be "valid" values.
  * In the worst case, the drawing operation draws rubbish into the DC.
@@ -135,27 +136,31 @@ DC_vGetPageToDevice(PDC pdc, MATRIX *pmx)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
     PSIZEL pszlViewPortExt;
+    SIZEL szlWindowExt;
 
     /* Get the viewport extension */
     pszlViewPortExt = DC_pszlViewportExt(pdc);
+
+    /* Copy the window extension, so no one can mess with it */
+    szlWindowExt = pdcattr->szlWindowExt;
 
     /* No shearing / rotation */
     FLOATOBJ_SetLong(&pmx->efM12, 0);
     FLOATOBJ_SetLong(&pmx->efM21, 0);
 
     /* Calculate scaling */
-    if (pdcattr->szlWindowExt.cx != 0)
+    if (szlWindowExt.cx != 0)
     {
         FLOATOBJ_SetLong(&pmx->efM11, pszlViewPortExt->cx);
-        FLOATOBJ_DivLong(&pmx->efM11, pdcattr->szlWindowExt.cx);
+        FLOATOBJ_DivLong(&pmx->efM11, szlWindowExt.cx);
     }
     else
         FLOATOBJ_SetLong(&pmx->efM11, 1);
 
-    if (pdcattr->szlWindowExt.cy != 0)
+    if (szlWindowExt.cy != 0)
     {
         FLOATOBJ_SetLong(&pmx->efM22, pszlViewPortExt->cy);
-        FLOATOBJ_DivLong(&pmx->efM22, pdcattr->szlWindowExt.cy);
+        FLOATOBJ_DivLong(&pmx->efM22, szlWindowExt.cy);
     }
     else
         FLOATOBJ_SetLong(&pmx->efM22, 1);
@@ -512,7 +517,7 @@ NtGdiModifyWorldTransform(
     /* The xform is permitted to be NULL for MWT_IDENTITY.
      * However, if it is not NULL, then it must be valid even
      * though it is not used. */
-    if (pxformUnsafe != NULL || dwMode != MWT_IDENTITY)
+    if ((pxformUnsafe != NULL) || (dwMode != MWT_IDENTITY))
     {
         _SEH2_TRY
         {
@@ -806,13 +811,11 @@ IntGdiSetMapMode(
     PDC dc,
     int MapMode)
 {
-    int PrevMapMode;
+    INT iPrevMapMode;
+    FLONG flXform;
     PDC_ATTR pdcattr = dc->pdcattr;
 
-    PrevMapMode = pdcattr->iMapMode;
-
-    pdcattr->iMapMode = MapMode;
-    pdcattr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
+    flXform = pdcattr->flXform & ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
         PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP|PAGE_TO_DEVICE_SCALE_IDENTITY|
         PAGE_TO_DEVICE_IDENTITY);
 
@@ -823,11 +826,11 @@ IntGdiSetMapMode(
             pdcattr->szlWindowExt.cy = 1;
             pdcattr->szlViewportExt.cx = 1;
             pdcattr->szlViewportExt.cy = 1;
-            pdcattr->flXform |= PAGE_TO_DEVICE_SCALE_IDENTITY;
+            flXform |= PAGE_TO_DEVICE_SCALE_IDENTITY;
             break;
 
         case MM_ISOTROPIC:
-            pdcattr->flXform |= ISO_OR_ANISO_MAP_MODE;
+            flXform |= ISO_OR_ANISO_MAP_MODE;
             /* Fall through */
 
         case MM_LOMETRIC:
@@ -866,19 +869,23 @@ IntGdiSetMapMode(
             break;
 
         case MM_ANISOTROPIC:
-            pdcattr->flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
-            pdcattr->flXform |= ISO_OR_ANISO_MAP_MODE;
+            flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
+            flXform |= ISO_OR_ANISO_MAP_MODE;
             break;
 
         default:
-            pdcattr->iMapMode = PrevMapMode;
-            PrevMapMode = 0;
+            return 0;
     }
 
-    pdcattr->flXform |= (PAGE_XLATE_CHANGED|PAGE_EXTENTS_CHANGED|
+    /* Save the old map mode and set the new one */
+    iPrevMapMode = pdcattr->iMapMode;
+    pdcattr->iMapMode = MapMode;
+
+    /* Update xform flags */
+    pdcattr->flXform = flXform | (PAGE_XLATE_CHANGED|PAGE_EXTENTS_CHANGED|
         INVALIDATE_ATTRIBUTES|DEVICE_TO_PAGE_INVALID|DEVICE_TO_WORLD_INVALID);
 
-    return PrevMapMode;
+    return iPrevMapMode;
 }
 
 
@@ -994,7 +1001,7 @@ FASTCALL
 IntMirrorWindowOrg(PDC dc)
 {
     PDC_ATTR pdcattr;
-    LONG X;
+    LONG X, cx;
 
     pdcattr = dc->pdcattr;
 
@@ -1003,13 +1010,16 @@ IntMirrorWindowOrg(PDC dc)
         pdcattr->ptlWindowOrg.x = pdcattr->lWindowOrgx; // Flip it back.
         return;
     }
-    if (!pdcattr->szlViewportExt.cx) return;
+
+    /* Copy the window extension, so no one can mess with it */
+    cx = pdcattr->szlViewportExt.cx;
+    if (cx == 0) return;
     //
     // WOrgx = wox - (Width - 1) * WExtx / VExtx
     //
     X = (dc->erclWindow.right - dc->erclWindow.left) - 1; // Get device width - 1
 
-    X = (X * pdcattr->szlWindowExt.cx) / pdcattr->szlViewportExt.cx;
+    X = (X * pdcattr->szlWindowExt.cx) / cx;
 
     pdcattr->ptlWindowOrg.x = pdcattr->lWindowOrgx - X; // Now set the inverted win origion.
     pdcattr->flXform |= PAGE_XLATE_CHANGED;

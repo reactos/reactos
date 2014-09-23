@@ -113,7 +113,7 @@ typedef struct _DC
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
   PREGION     prgnAPI;
-  PREGION     prgnVis; /* Visible region (must never be 0) */
+  _Notnull_ PREGION     prgnVis; /* Visible region (must never be 0) */
   PREGION     prgnRao;
   POINTL      ptlFillOrigin;
   EBRUSHOBJ   eboFill;
