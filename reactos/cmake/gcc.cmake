@@ -371,7 +371,7 @@ if(PCH)
         # Include the gch in the specified source files, skipping the pch file itself
         list(REMOVE_ITEM ${_sources} ${_pch})
         foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${_pch_final_name}")
+            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}")
             set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
         endforeach()
     endmacro()
