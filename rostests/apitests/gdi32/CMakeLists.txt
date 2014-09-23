@@ -35,6 +35,7 @@ list(APPEND SOURCE
     GdiGetLocalDC.c
     GdiReleaseLocalDC.c
     GdiSetAttrs.c
+    GetClipBox.c
     GetClipRgn.c
     GetCurrentObject.c
     GetDIBColorTable.c
