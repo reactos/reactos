@@ -240,7 +240,7 @@ ScConnectControlPipe(HANDLE *hPipe)
 
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", dwServiceCurrent);
 
-    if (!WaitNamedPipeW(NtControlPipeName, 15000))
+    if (!WaitNamedPipeW(NtControlPipeName, 30000))
     {
         ERR("WaitNamedPipe(%S) failed (Error %lu)\n", NtControlPipeName, GetLastError());
         return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
