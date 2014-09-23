@@ -830,7 +830,13 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
     {
         if (!wildcards)
         {
-            destname = strdupW(sourcename);
+            WCHAR *p;
+            if (sourcename)
+                destname = strdupW(sourcename);
+            else if ((p = strrchrW(sourcedir, '\\')))
+                destname = strdupW(p + 1);
+            else
+                destname = strdupW(sourcedir);
             if (!destname)
                 goto done;
         }

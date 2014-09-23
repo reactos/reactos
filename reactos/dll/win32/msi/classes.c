@@ -1443,14 +1443,14 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 
     LIST_FOR_EACH_ENTRY( mt, &package->mimes, MSIMIME, entry )
     {
-        LPWSTR extension, key;
+        LPWSTR extension = NULL, key;
 
         /* 
          * check if the MIME is to be installed. Either as requested by an
          * extension or Class
          */
         if ((!mt->Class || mt->Class->action != INSTALLSTATE_LOCAL) &&
-            mt->Extension->action != INSTALLSTATE_LOCAL)
+            (!mt->Extension || mt->Extension->action != INSTALLSTATE_LOCAL))
         {
             TRACE("MIME %s not scheduled to be installed\n", debugstr_w(mt->ContentType));
             continue;
@@ -1458,7 +1458,7 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 
         TRACE("Registering MIME type %s\n", debugstr_w(mt->ContentType));
 
-        extension = msi_alloc( (strlenW( mt->Extension->Extension ) + 2) * sizeof(WCHAR) );
+        if (mt->Extension) extension = msi_alloc( (strlenW( mt->Extension->Extension ) + 2) * sizeof(WCHAR) );
         key = msi_alloc( (strlenW( mt->ContentType ) + strlenW( szMIMEDatabase ) + 1) * sizeof(WCHAR) );
 
         if (extension && key)
@@ -1501,7 +1501,7 @@ UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
         LPWSTR mime_key;
 
         if ((!mime->Class || mime->Class->action != INSTALLSTATE_ABSENT) &&
-            mime->Extension->action != INSTALLSTATE_ABSENT)
+            (!mime->Extension || mime->Extension->action != INSTALLSTATE_ABSENT))
         {
             TRACE("MIME %s not scheduled to be removed\n", debugstr_w(mime->ContentType));
             continue;
