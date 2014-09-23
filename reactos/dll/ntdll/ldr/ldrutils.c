@@ -235,7 +235,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     ULONG i;
 
     /* Check the action we need to perform */
-    if (Flags == LDRP_UPDATE_REFCOUNT)
+    if ((Flags == LDRP_UPDATE_REFCOUNT) || (Flags == LDRP_UPDATE_PIN))
     {
         /* Make sure entry is not being loaded already */
         if (LdrEntry->Flags & LDRP_LOAD_IN_PROGRESS)
