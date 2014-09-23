@@ -229,20 +229,22 @@ static void init_functionpointers(void)
 static BOOL is_process_limited(void)
 {
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group;
+    PSID Group = NULL;
     BOOL IsInGroup;
     HANDLE token;
 
     if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
 
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS,
-                                  0, 0, 0, 0, 0, 0, &Group) ||
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
         !pCheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
+        FreeSid(Group);
         return FALSE;
     }
+    FreeSid(Group);
+
     if (!IsInGroup)
     {
         /* Only administrators have enough privileges for these tests */

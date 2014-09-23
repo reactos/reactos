@@ -173,20 +173,22 @@ static BOOL delete_pf(const char *rel_path, BOOL is_file)
 static BOOL is_process_limited(void)
 {
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group;
+    PSID Group = NULL;
     BOOL IsInGroup;
     HANDLE token;
 
     if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
 
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS,
-                                  0, 0, 0, 0, 0, 0, &Group) ||
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
         !pCheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
+        FreeSid(Group);
         return FALSE;
     }
+    FreeSid(Group);
+
     if (!IsInGroup)
     {
         /* Only administrators have enough privileges for these tests */
@@ -3004,11 +3006,25 @@ static void test_MsiGetComponentPath(void)
     create_file("C:\\imapath", "C:\\imapath", 11);
 
     /* file exists */
+    path[0] = 'a';
+    size = 0;
+    state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_MOREDATA, "Expected INSTALLSTATE_MOREDATA, got %d\n", state);
+    ok(path[0] == 'a', "got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
     path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    size = 0;
+    path[0] = 'a';
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_MOREDATA, "Expected INSTALLSTATE_MOREDATA, got %d\n", state);
+    ok(path[0] == 'a', "got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
 
     path[0] = 0;

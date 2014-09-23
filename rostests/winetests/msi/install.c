@@ -1086,7 +1086,11 @@ static const char mixed_registry_dat[] =
     "s72\ti2\tl255\tL255\tL0\ts72\n"
     "Registry\tRegistry\n"
     "regdata1\t2\tSOFTWARE\\Wine\\msitest\ttest1\t\tcomp1\n"
-    "regdata2\t2\tSOFTWARE\\Wine\\msitest\ttest2\t\tcomp2\n";
+    "regdata2\t2\tSOFTWARE\\Wine\\msitest\ttest2\t\tcomp2\n"
+    "regdata3\t0\tCLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\t\tCLSID_Winetest32\tcomp1\n"
+    "regdata4\t0\tCLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\\InProcServer32\t\twinetest32.dll\tcomp1\n"
+    "regdata5\t0\tCLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\t\tCLSID_Winetest64\tcomp2\n"
+    "regdata6\t0\tCLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\\InProcServer32\t\twinetest64.dll\tcomp2\n";
 
 static const char mixed_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -2041,20 +2045,22 @@ static void init_functionpointers(void)
 static BOOL is_process_limited(void)
 {
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group;
+    PSID Group = NULL;
     BOOL IsInGroup;
     HANDLE token;
 
     if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
 
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS,
-                                  0, 0, 0, 0, 0, 0, &Group) ||
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
         !pCheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
+        FreeSid(Group);
         return FALSE;
     }
+    FreeSid(Group);
+
     if (!IsInGroup)
     {
         /* Only administrators have enough privileges for these tests */
@@ -5674,6 +5680,8 @@ static void test_mixed_package(void)
     UINT r;
     LONG res;
     HKEY hkey;
+    char value[MAX_PATH];
+    DWORD size;
 
     if (is_process_limited())
     {
@@ -5697,16 +5705,42 @@ static void test_mixed_package(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\msitest", 0, KEY_ALL_ACCESS|KEY_WOW64_32KEY, &hkey);
-    ok(!res, "can't open 32-bit component key\n");
+    ok(!res, "can't open 32-bit component key, got %d\n", res);
     res = RegQueryValueExA(hkey, "test1", NULL, NULL, NULL, NULL);
-    ok(!res, "value test1 not found\n");
+    ok(!res, "expected RegQueryValueEx to succeed, got %d\n", res);
+    res = RegQueryValueExA(hkey, "test2", NULL, NULL, NULL, NULL);
+    ok(res, "expected RegQueryValueEx to fail, got %d\n", res);
     RegCloseKey(hkey);
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\msitest", 0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
-    ok(!res, "can't open 64-bit component key\n");
+    ok(!res, "can't open 64-bit component key, got %d\n", res);
+    res = RegQueryValueExA(hkey, "test1", NULL, NULL, NULL, NULL);
+    ok(res, "expected RegQueryValueEx to fail, got %d\n", res);
     res = RegQueryValueExA(hkey, "test2", NULL, NULL, NULL, NULL);
-    ok(!res, "value test2 not found\n");
+    ok(!res, "expected RegQueryValueEx to succeed, got %d\n", res);
     RegCloseKey(hkey);
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\\InProcServer32",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_32KEY, &hkey);
+    todo_wine ok(res == ERROR_SUCCESS, "can't open 32-bit CLSID key, got %d\n", res);
+    if (res == ERROR_SUCCESS) {
+        size = sizeof(value);
+        res = RegQueryValueExA(hkey, "", NULL, NULL, (LPBYTE)value, &size);
+        ok(!strcmp(value, "winetest32.dll"), "got %s\n", value);
+        RegCloseKey(hkey);
+    }
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\\InProcServer32",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
+    ok(res == ERROR_SUCCESS, "can't open 64-bit CLSID key, got %d\n", res);
+    if (res == ERROR_SUCCESS) {
+        size = sizeof(value);
+        res = RegQueryValueExA(hkey, "", NULL, NULL, (LPBYTE)value, &size);
+        ok(!strcmp(value, "winetest64.dll"), "got %s\n", value);
+        RegCloseKey(hkey);
+    }
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5716,6 +5750,16 @@ static void test_mixed_package(void)
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\msitest", 0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "64-bit component key not removed\n");
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_32KEY, &hkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "32-bit CLSID key not removed\n");
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "64-bit CLSID key not removed\n");
 
     DeleteFileA( msifile );
     create_database_template(msifile, mixed_tables, sizeof(mixed_tables)/sizeof(msi_table), 200, "Intel;1033");
@@ -5724,16 +5768,42 @@ static void test_mixed_package(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\msitest", 0, KEY_ALL_ACCESS|KEY_WOW64_32KEY, &hkey);
-    ok(!res, "can't open 32-bit component key\n");
+    ok(!res, "can't open 32-bit component key, got %d\n", res);
     res = RegQueryValueExA(hkey, "test1", NULL, NULL, NULL, NULL);
-    ok(!res, "value test1 not found\n");
+    ok(!res, "expected RegQueryValueEx to succeed, got %d\n", res);
+    res = RegQueryValueExA(hkey, "test2", NULL, NULL, NULL, NULL);
+    ok(res, "expected RegQueryValueEx to fail, got %d\n", res);
     RegCloseKey(hkey);
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\msitest", 0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
-    ok(!res, "can't open 64-bit component key\n");
+    ok(!res, "can't open 64-bit component key, got %d\n", res);
+    res = RegQueryValueExA(hkey, "test1", NULL, NULL, NULL, NULL);
+    ok(res, "expected RegQueryValueEx to fail, got %d\n", res);
     res = RegQueryValueExA(hkey, "test2", NULL, NULL, NULL, NULL);
-    ok(!res, "value test2 not found\n");
+    ok(!res, "expected RegQueryValueEx to succeed, got %d\n", res);
     RegCloseKey(hkey);
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\\InProcServer32",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_32KEY, &hkey);
+    todo_wine ok(res == ERROR_SUCCESS, "can't open 32-bit CLSID key, got %d\n", res);
+    if (res == ERROR_SUCCESS) {
+        size = sizeof(value);
+        res = RegQueryValueExA(hkey, "", NULL, NULL, (LPBYTE)value, &size);
+        ok(!strcmp(value, "winetest32.dll"), "got %s\n", value);
+        RegCloseKey(hkey);
+    }
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}\\InProcServer32",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
+    ok(res == ERROR_SUCCESS, "can't open 64-bit CLSID key, got %d\n", res);
+    if (res == ERROR_SUCCESS) {
+        size = sizeof(value);
+        res = RegQueryValueExA(hkey, "", NULL, NULL, (LPBYTE)value, &size);
+        ok(!strcmp(value, "winetest64.dll"), "got %s\n", value);
+        RegCloseKey(hkey);
+    }
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5743,6 +5813,16 @@ static void test_mixed_package(void)
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\msitest", 0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "64-bit component key not removed\n");
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_32KEY, &hkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "32-bit CLSID key not removed\n");
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT,
+                        "CLSID\\{8dfef911-6885-41eb-b280-8f0304728e8b}",
+                        0, KEY_ALL_ACCESS|KEY_WOW64_64KEY, &hkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "64-bit CLSID key not removed\n");
 
 error:
     DeleteFileA( msifile );

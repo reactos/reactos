@@ -88,20 +88,22 @@ static void init_functionpointers(void)
 static BOOL is_process_limited(void)
 {
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group;
+    PSID Group = NULL;
     BOOL IsInGroup;
     HANDLE token;
 
     if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
 
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS,
-                                  0, 0, 0, 0, 0, 0, &Group) ||
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
         !pCheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
+        FreeSid(Group);
         return FALSE;
     }
+    FreeSid(Group);
+
     if (!IsInGroup)
     {
         if (!AllocateAndInitializeSid(&NtAuthority, 2,
@@ -933,6 +935,11 @@ static void remove_restore_point(DWORD seq_number)
         trace("Failed to remove the restore point : %08x\n", res);
 }
 
+static BOOL is_root(const char *path)
+{
+    return (isalpha(path[0]) && path[1] == ':' && path[2] == '\\' && !path[3]);
+}
+
 static void test_createpackage(void)
 {
     MSIHANDLE hPackage = 0;
@@ -1137,6 +1144,12 @@ static void test_settargetpath(void)
 
     r = MsiDoActionA( hpkg, "CostFinalize");
     ok( r == ERROR_SUCCESS, "cost finalize failed\n");
+
+    buffer[0] = 0;
+    sz = sizeof(buffer);
+    r = MsiGetPropertyA( hpkg, "OutOfNoRbDiskSpace", buffer, &sz );
+    ok( r == ERROR_SUCCESS, "MsiGetProperty returned %u\n", r );
+    trace( "OutOfNoRbDiskSpace = \"%s\"\n", buffer );
 
     r = MsiSetTargetPathA( 0, NULL, NULL );
     ok( r == ERROR_INVALID_PARAMETER, "wrong return val\n");
@@ -2687,6 +2700,7 @@ static void test_states(void)
         {'w','i','n','e','t','e','s','t','3','-','p','a','c','k','a','g','e','.','m','s','i',0};
     static const WCHAR msifile4W[] =
         {'w','i','n','e','t','e','s','t','4','-','p','a','c','k','a','g','e','.','m','s','i',0};
+    INSTALLSTATE state;
     MSIHANDLE hpkg;
     UINT r;
     MSIHANDLE hdb;
@@ -2897,6 +2911,17 @@ static void test_states(void)
     r = add_component_entry( hdb, "'psi', '{A06B23B5-746B-427A-8A6E-FD6AC8F46A95}', 'TARGETDIR', 1, '', 'psi_file'" );
     ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
 
+    /* high install level */
+    r = add_feature_entry( hdb, "'twelve', '', '', '', 2, 2, '', 0" );
+    ok( r == ERROR_SUCCESS, "cannot add feature: %d\n", r );
+
+    r = add_component_entry( hdb, "'upsilon', '{557e0c04-ceba-4c58-86a9-4a73352e8cf6}', 'TARGETDIR', 1, '', 'upsilon_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
+    /* msidbFeatureAttributesFollowParent */
+    r = add_feature_entry( hdb, "'thirteen', '', '', '', 2, 2, '', 2" );
+    ok( r == ERROR_SUCCESS, "cannot add feature: %d\n", r );
+
     r = create_feature_components_table( hdb );
     ok( r == ERROR_SUCCESS, "cannot create FeatureComponents table: %d\n", r );
 
@@ -2969,6 +2994,12 @@ static void test_states(void)
     r = add_feature_components_entry( hdb, "'eleven', 'psi'" );
     ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
 
+    r = add_feature_components_entry( hdb, "'twelve', 'upsilon'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'thirteen', 'upsilon'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
     r = create_file_table( hdb );
     ok( r == ERROR_SUCCESS, "cannot create File table: %d\n", r );
 
@@ -3039,6 +3070,9 @@ static void test_states(void)
     r = add_file_entry( hdb, "'psi_file', 'psi', 'psi.txt', 100, '', '1033', 8192, 1" );
     ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
 
+    r = add_file_entry( hdb, "'upsilon_file', 'upsilon', 'upsilon.txt', 0, '', '1033', 16384, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
     MsiDatabaseCommit(hdb);
 
     /* these properties must not be in the saved msi file */
@@ -3103,6 +3137,8 @@ static void test_states(void)
     test_feature_states( __LINE__, hpkg, "nine", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_feature_states( __LINE__, hpkg, "ten", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_feature_states( __LINE__, hpkg, "eleven", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
+    test_feature_states( __LINE__, hpkg, "twelve", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
+    test_feature_states( __LINE__, hpkg, "thirteen", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
 
     test_component_states( __LINE__, hpkg, "alpha", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_LOCAL, FALSE );
     test_component_states( __LINE__, hpkg, "beta", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_SOURCE, FALSE );
@@ -3126,6 +3162,7 @@ static void test_states(void)
     test_component_states( __LINE__, hpkg, "phi", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "chi", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "psi", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
+    test_component_states( __LINE__, hpkg, "upsilon", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
 
     MsiCloseHandle( hpkg );
 
@@ -3185,6 +3222,8 @@ static void test_states(void)
     test_feature_states( __LINE__, hpkg, "nine", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_feature_states( __LINE__, hpkg, "ten", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_feature_states( __LINE__, hpkg, "eleven", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
+    test_feature_states( __LINE__, hpkg, "twelve", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
+    test_feature_states( __LINE__, hpkg, "thirteen", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
 
     test_component_states( __LINE__, hpkg, "alpha", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, FALSE );
     test_component_states( __LINE__, hpkg, "beta", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, FALSE );
@@ -3208,6 +3247,7 @@ static void test_states(void)
     test_component_states( __LINE__, hpkg, "phi", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "chi", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "psi", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
+    test_component_states( __LINE__, hpkg, "upsilon", ERROR_SUCCESS, INSTALLSTATE_ABSENT, INSTALLSTATE_UNKNOWN, FALSE );
 
     MsiCloseHandle(hpkg);
 
@@ -3215,15 +3255,25 @@ static void test_states(void)
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "five");
+    ok(state == INSTALLSTATE_UNKNOWN, "state = %d\n", state);
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "twelve");
+    ok(state == INSTALLSTATE_UNKNOWN, "state = %d\n", state);
+
     /* all features installed locally */
     r = MsiInstallProductA(msifile2, "ADDLOCAL=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "five");
+    ok(state == INSTALLSTATE_UNKNOWN, "state = %d\n", state);
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "twelve");
+    ok(state == INSTALLSTATE_LOCAL, "state = %d\n", state);
 
     r = MsiOpenDatabaseW(msifile2W, MSIDBOPEN_DIRECT, &hdb);
     ok(r == ERROR_SUCCESS, "failed to open database: %d\n", r);
 
     /* these properties must not be in the saved msi file */
-    r = add_property_entry( hdb, "'ADDLOCAL', 'one,two,three,four,five,six,seven,eight,nine,ten'");
+    r = add_property_entry( hdb, "'ADDLOCAL', 'one,two,three,four,five,six,seven,eight,nine,ten,twelve'");
     ok( r == ERROR_SUCCESS, "cannot add property: %d\n", r );
 
     r = package_from_db( hdb, &hpkg );
@@ -3252,6 +3302,8 @@ static void test_states(void)
     test_feature_states( __LINE__, hpkg, "nine", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, TRUE );
     test_feature_states( __LINE__, hpkg, "ten", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, TRUE );
     test_feature_states( __LINE__, hpkg, "eleven", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, TRUE );
+    test_feature_states( __LINE__, hpkg, "twelve", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, FALSE );
+    test_feature_states( __LINE__, hpkg, "thirteen", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_UNKNOWN, FALSE );
 
     test_component_states( __LINE__, hpkg, "alpha", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, FALSE );
     test_component_states( __LINE__, hpkg, "beta", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, FALSE );
@@ -3275,6 +3327,7 @@ static void test_states(void)
     test_component_states( __LINE__, hpkg, "phi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, TRUE );
     test_component_states( __LINE__, hpkg, "chi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, TRUE );
     test_component_states( __LINE__, hpkg, "psi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
+    test_component_states( __LINE__, hpkg, "upsilon", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, FALSE );
 
     MsiCloseHandle(hpkg);
 
@@ -3285,6 +3338,11 @@ static void test_states(void)
     /* all features installed from source */
     r = MsiInstallProductA(msifile3, "ADDSOURCE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "five");
+    ok(state == INSTALLSTATE_UNKNOWN, "state = %d\n", state);
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "twelve");
+    ok(state == INSTALLSTATE_LOCAL, "state = %d\n", state);
 
     r = MsiOpenDatabaseW(msifile3W, MSIDBOPEN_DIRECT, &hdb);
     ok(r == ERROR_SUCCESS, "failed to open database: %d\n", r);
@@ -3325,6 +3383,8 @@ static void test_states(void)
     test_feature_states( __LINE__, hpkg, "nine", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, FALSE );
     test_feature_states( __LINE__, hpkg, "ten", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, FALSE );
     test_feature_states( __LINE__, hpkg, "eleven", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, TRUE );
+    test_feature_states( __LINE__, hpkg, "twelve", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_UNKNOWN, FALSE );
+    test_feature_states( __LINE__, hpkg, "thirteen", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_UNKNOWN, FALSE );
 
     test_component_states( __LINE__, hpkg, "alpha", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, FALSE );
     test_component_states( __LINE__, hpkg, "beta", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
@@ -3348,12 +3408,18 @@ static void test_states(void)
     test_component_states( __LINE__, hpkg, "phi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "chi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "psi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
+    test_component_states( __LINE__, hpkg, "upsilon", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, TRUE );
 
     MsiCloseHandle(hpkg);
 
     /* reinstall the product */
     r = MsiInstallProductA(msifile3, "REINSTALL=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "five");
+    ok(state == INSTALLSTATE_UNKNOWN, "state = %d\n", state);
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "twelve");
+    ok(state == INSTALLSTATE_LOCAL, "state = %d\n", state);
 
     r = MsiOpenDatabaseW(msifile4W, MSIDBOPEN_DIRECT, &hdb);
     ok(r == ERROR_SUCCESS, "failed to open database: %d\n", r);
@@ -3394,6 +3460,8 @@ static void test_states(void)
     test_feature_states( __LINE__, hpkg, "nine", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, FALSE );
     test_feature_states( __LINE__, hpkg, "ten", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_SOURCE, FALSE );
     test_feature_states( __LINE__, hpkg, "eleven", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, TRUE );
+    test_feature_states( __LINE__, hpkg, "twelve", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_UNKNOWN, FALSE );
+    test_feature_states( __LINE__, hpkg, "thirteen", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_UNKNOWN, FALSE );
 
     test_component_states( __LINE__, hpkg, "alpha", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, FALSE );
     test_component_states( __LINE__, hpkg, "beta", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
@@ -3417,6 +3485,7 @@ static void test_states(void)
     test_component_states( __LINE__, hpkg, "phi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "chi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
     test_component_states( __LINE__, hpkg, "psi", ERROR_SUCCESS, INSTALLSTATE_SOURCE, INSTALLSTATE_UNKNOWN, FALSE );
+    test_component_states( __LINE__, hpkg, "upsilon", ERROR_SUCCESS, INSTALLSTATE_LOCAL, INSTALLSTATE_LOCAL, TRUE );
 
     MsiCloseHandle(hpkg);
 
@@ -3687,6 +3756,8 @@ static void test_appsearch(void)
     MSIHANDLE hdb;
     CHAR prop[MAX_PATH];
     DWORD size;
+    HKEY hkey;
+    const char reg_expand_value[] = "%systemroot%\\system32\\notepad.exe";
 
     hdb = create_package_db();
     ok ( hdb, "failed to create package database\n" );
@@ -3700,10 +3771,21 @@ static void test_appsearch(void)
     r = add_appsearch_entry( hdb, "'NOTEPAD', 'NewSignature2'" );
     ok( r == ERROR_SUCCESS, "cannot add entry: %d\n", r );
 
+    r = add_appsearch_entry( hdb, "'REGEXPANDVAL', 'NewSignature3'" );
+    ok( r == ERROR_SUCCESS, "cannot add entry: %d\n", r );
+
     r = create_reglocator_table( hdb );
     ok( r == ERROR_SUCCESS, "cannot create RegLocator table: %d\n", r );
 
     r = add_reglocator_entry( hdb, "NewSignature1", 0, "htmlfile\\shell\\open\\command", "", 1 );
+    ok( r == ERROR_SUCCESS, "cannot create RegLocator table: %d\n", r );
+
+    r = RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\Winetest_msi", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    ok( r == ERROR_SUCCESS, "Could not create key: %d.\n", r );
+    r = RegSetValueExA(hkey, NULL, 0, REG_EXPAND_SZ, (const BYTE*)reg_expand_value, strlen(reg_expand_value) + 1);
+    ok( r == ERROR_SUCCESS, "Could not set key value: %d.\n", r);
+    RegCloseKey(hkey);
+    r = add_reglocator_entry( hdb, "NewSignature3", 1, "Software\\Winetest_msi", "", 1 );
     ok( r == ERROR_SUCCESS, "cannot create RegLocator table: %d\n", r );
 
     r = create_drlocator_table( hdb );
@@ -3719,6 +3801,9 @@ static void test_appsearch(void)
     ok( r == ERROR_SUCCESS, "cannot add signature: %d\n", r );
 
     r = add_signature_entry( hdb, "'NewSignature2', 'NOTEPAD.EXE|notepad.exe', '', '', '', '', '', '', ''" );
+    ok( r == ERROR_SUCCESS, "cannot add signature: %d\n", r );
+
+    r = add_signature_entry( hdb, "'NewSignature3', 'NOTEPAD.EXE|notepad.exe', '', '', '', '', '', '', ''" );
     ok( r == ERROR_SUCCESS, "cannot add signature: %d\n", r );
 
     r = package_from_db( hdb, &hpkg );
@@ -3747,16 +3832,21 @@ static void test_appsearch(void)
     r = MsiGetPropertyA( hpkg, "NOTEPAD", prop, &size );
     ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
 
+    size = sizeof(prop);
+    r = MsiGetPropertyA( hpkg, "REGEXPANDVAL", prop, &size );
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok( lstrlenA(prop) != 0, "Expected non-zero length\n");
+
 done:
     MsiCloseHandle( hpkg );
     DeleteFileA(msifile);
+    RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Winetest_msi");
 }
 
 static void test_appsearch_complocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    CHAR path[MAX_PATH];
-    CHAR prop[MAX_PATH];
+    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
     LPSTR usersid;
     DWORD size;
     UINT r;
@@ -3947,44 +4037,47 @@ static void test_appsearch_complocator(void)
     r = MsiDoActionA(hpkg, "AppSearch");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
+    strcpy(expected, CURR_DIR);
+    if (is_root(CURR_DIR)) expected[2] = 0;
+
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP1", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName2", CURR_DIR);
+    sprintf(path, "%s\\FileName2", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP2", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName3", CURR_DIR);
+    sprintf(path, "%s\\FileName3", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP3", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName4", CURR_DIR);
+    sprintf(path, "%s\\FileName4", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP4", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName5", CURR_DIR);
+    sprintf(path, "%s\\FileName5", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP5", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP6", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP7", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4000,7 +4093,7 @@ static void test_appsearch_complocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName8.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName8.dll", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP10", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4011,7 +4104,7 @@ static void test_appsearch_complocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName10.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName10.dll", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP12", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4057,7 +4150,7 @@ error:
 static void test_appsearch_reglocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    CHAR path[MAX_PATH], prop[MAX_PATH];
+    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
     DWORD binary[2], size, val;
     BOOL space, version, is_64bit = sizeof(void *) > sizeof(int);
     HKEY hklm, classes, hkcu, users;
@@ -4147,18 +4240,21 @@ static void test_appsearch_reglocator(void)
                          (const BYTE *)"#regszdata", 11);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
+    strcpy(expected, CURR_DIR);
+    if (is_root(CURR_DIR)) expected[2] = 0;
+
     create_test_file("FileName1");
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     res = RegSetValueExA(hklm, "Value9", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
-    sprintf(path, "%s\\FileName2", CURR_DIR);
+    sprintf(path, "%s\\FileName2", expected);
     res = RegSetValueExA(hklm, "Value10", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
-    lstrcpyA(path, CURR_DIR);
+    lstrcpyA(path, expected);
     res = RegSetValueExA(hklm, "Value11", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -4168,30 +4264,30 @@ static void test_appsearch_reglocator(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     create_file_with_version("FileName3.dll", MAKELONG(2, 1), MAKELONG(4, 3));
-    sprintf(path, "%s\\FileName3.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName3.dll", expected);
     res = RegSetValueExA(hklm, "Value13", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     create_file_with_version("FileName4.dll", MAKELONG(1, 2), MAKELONG(3, 4));
-    sprintf(path, "%s\\FileName4.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName4.dll", expected);
     res = RegSetValueExA(hklm, "Value14", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     create_file_with_version("FileName5.dll", MAKELONG(2, 1), MAKELONG(4, 3));
-    sprintf(path, "%s\\FileName5.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName5.dll", expected);
     res = RegSetValueExA(hklm, "Value15", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
-    sprintf(path, "\"%s\\FileName1\" -option", CURR_DIR);
+    sprintf(path, "\"%s\\FileName1\" -option", expected);
     res = RegSetValueExA(hklm, "value16", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok( res == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", res);
 
-    space = strchr(CURR_DIR, ' ') != NULL;
-    sprintf(path, "%s\\FileName1 -option", CURR_DIR);
+    space = strchr(expected, ' ') != NULL;
+    sprintf(path, "%s\\FileName1 -option", expected);
     res = RegSetValueExA(hklm, "value17", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok( res == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", res);
@@ -4470,11 +4566,13 @@ static void test_appsearch_reglocator(void)
     r = add_signature_entry(hdb, str);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    ptr = strrchr(CURR_DIR, '\\') + 1;
-    sprintf(path, "'NewSignature26', '%s', '', '', '', '', '', '', ''", ptr);
-    r = add_signature_entry(hdb, path);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
+    if (!is_root(CURR_DIR))
+    {
+        ptr = strrchr(expected, '\\') + 1;
+        sprintf(path, "'NewSignature26', '%s', '', '', '', '', '', '', ''", ptr);
+        r = add_signature_entry(hdb, path);
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    }
     str = "'NewSignature27', 'FileName2', '', '', '', '', '', '', ''";
     r = add_signature_entry(hdb, str);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
@@ -4562,7 +4660,7 @@ static void test_appsearch_reglocator(void)
        "Expected \"##regszdata\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP9", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4573,7 +4671,7 @@ static void test_appsearch_reglocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP11", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4584,7 +4682,7 @@ static void test_appsearch_reglocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP13", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4634,7 +4732,7 @@ static void test_appsearch_reglocator(void)
     if (version)
     {
         size = MAX_PATH;
-        sprintf(path, "%s\\FileName3.dll", CURR_DIR);
+        sprintf(path, "%s\\FileName3.dll", expected);
         r = MsiGetPropertyA(hpkg, "SIGPROP21", prop, &size);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
         ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4645,22 +4743,24 @@ static void test_appsearch_reglocator(void)
         ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
         size = MAX_PATH;
-        sprintf(path, "%s\\FileName5.dll", CURR_DIR);
+        sprintf(path, "%s\\FileName5.dll", expected);
         r = MsiGetPropertyA(hpkg, "SIGPROP23", prop, &size);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
         ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
     }
 
+    if (!is_root(CURR_DIR))
+    {
+        size = MAX_PATH;
+        lstrcpyA(path, expected);
+        ptr = strrchr(path, '\\') + 1;
+        *ptr = '\0';
+        r = MsiGetPropertyA(hpkg, "SIGPROP24", prop, &size);
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+        ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
+    }
     size = MAX_PATH;
-    lstrcpyA(path, CURR_DIR);
-    ptr = strrchr(path, '\\') + 1;
-    *ptr = '\0';
-    r = MsiGetPropertyA(hpkg, "SIGPROP24", prop, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
-
-    size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP25", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4668,7 +4768,10 @@ static void test_appsearch_reglocator(void)
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "SIGPROP26", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
+    if (is_root(CURR_DIR))
+        ok(!lstrcmpA(prop, CURR_DIR), "Expected \"%s\", got \"%s\"\n", CURR_DIR, prop);
+    else
+        ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "SIGPROP27", prop, &size);
@@ -4681,13 +4784,13 @@ static void test_appsearch_reglocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP29", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP30", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     if (space)
@@ -4750,8 +4853,7 @@ static void delete_win_ini(LPCSTR file)
 static void test_appsearch_inilocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    CHAR path[MAX_PATH];
-    CHAR prop[MAX_PATH];
+    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
     BOOL version;
     LPCSTR str;
     LPSTR ptr;
@@ -4766,25 +4868,28 @@ static void test_appsearch_inilocator(void)
 
     WritePrivateProfileStringA("Section", "Key", "keydata,field2", "IniFile.ini");
 
+    strcpy(expected, CURR_DIR);
+    if (is_root(CURR_DIR)) expected[2] = 0;
+
     create_test_file("FileName1");
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     WritePrivateProfileStringA("Section", "Key2", path, "IniFile.ini");
 
-    WritePrivateProfileStringA("Section", "Key3", CURR_DIR, "IniFile.ini");
+    WritePrivateProfileStringA("Section", "Key3", expected, "IniFile.ini");
 
-    sprintf(path, "%s\\IDontExist", CURR_DIR);
+    sprintf(path, "%s\\IDontExist", expected);
     WritePrivateProfileStringA("Section", "Key4", path, "IniFile.ini");
 
     create_file_with_version("FileName2.dll", MAKELONG(2, 1), MAKELONG(4, 3));
-    sprintf(path, "%s\\FileName2.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName2.dll", expected);
     WritePrivateProfileStringA("Section", "Key5", path, "IniFile.ini");
 
     create_file_with_version("FileName3.dll", MAKELONG(1, 2), MAKELONG(3, 4));
-    sprintf(path, "%s\\FileName3.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName3.dll", expected);
     WritePrivateProfileStringA("Section", "Key6", path, "IniFile.ini");
 
     create_file_with_version("FileName4.dll", MAKELONG(2, 1), MAKELONG(4, 3));
-    sprintf(path, "%s\\FileName4.dll", CURR_DIR);
+    sprintf(path, "%s\\FileName4.dll", expected);
     WritePrivateProfileStringA("Section", "Key7", path, "IniFile.ini");
 
     hdb = create_package_db();
@@ -4940,7 +5045,7 @@ static void test_appsearch_inilocator(void)
        "Expected \"keydata,field2\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP4", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4951,25 +5056,27 @@ static void test_appsearch_inilocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP6", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP7", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
-    size = MAX_PATH;
-    lstrcpyA(path, CURR_DIR);
-    ptr = strrchr(path, '\\');
-    *(ptr + 1) = '\0';
-    r = MsiGetPropertyA(hpkg, "SIGPROP8", prop, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
-
+    if (!is_root(CURR_DIR))
+    {
+        size = MAX_PATH;
+        lstrcpyA(path, expected);
+        ptr = strrchr(path, '\\');
+        *(ptr + 1) = 0;
+        r = MsiGetPropertyA(hpkg, "SIGPROP8", prop, &size);
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+        ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
+    }
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "SIGPROP9", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
@@ -4978,7 +5085,7 @@ static void test_appsearch_inilocator(void)
     if (version)
     {
         size = MAX_PATH;
-        sprintf(path, "%s\\FileName2.dll", CURR_DIR);
+        sprintf(path, "%s\\FileName2.dll", expected);
         r = MsiGetPropertyA(hpkg, "SIGPROP10", prop, &size);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
         ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -4989,7 +5096,7 @@ static void test_appsearch_inilocator(void)
         ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
         size = MAX_PATH;
-        sprintf(path, "%s\\FileName4.dll", CURR_DIR);
+        sprintf(path, "%s\\FileName4.dll", expected);
         r = MsiGetPropertyA(hpkg, "SIGPROP12", prop, &size);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
         ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -5045,8 +5152,7 @@ static void search_absolute_directory(LPSTR absolute, LPCSTR relative)
 static void test_appsearch_drlocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    CHAR path[MAX_PATH];
-    CHAR prop[MAX_PATH];
+    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
     BOOL version;
     LPCSTR str;
     DWORD size;
@@ -5113,33 +5219,36 @@ static void test_appsearch_drlocator(void)
     r = create_drlocator_table(hdb);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
+    strcpy(expected, CURR_DIR);
+    if (is_root(CURR_DIR)) expected[2] = 0;
+
     /* no parent, full path, depth 0, signature */
-    sprintf(path, "'NewSignature1', '', '%s', 0", CURR_DIR);
+    sprintf(path, "'NewSignature1', '', '%s', 0", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, full path, depth 0, no signature */
-    sprintf(path, "'NewSignature2', '', '%s', 0", CURR_DIR);
+    sprintf(path, "'NewSignature2', '', '%s', 0", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, relative path, depth 0, no signature */
-    sprintf(path, "'NewSignature3', '', '%s', 0", CURR_DIR + 3);
+    sprintf(path, "'NewSignature3', '', '%s', 0", expected + 3);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, full path, depth 2, signature */
-    sprintf(path, "'NewSignature4', '', '%s', 2", CURR_DIR);
+    sprintf(path, "'NewSignature4', '', '%s', 2", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, full path, depth 3, signature */
-    sprintf(path, "'NewSignature5', '', '%s', 3", CURR_DIR);
+    sprintf(path, "'NewSignature5', '', '%s', 3", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, full path, depth 1, signature is dir */
-    sprintf(path, "'NewSignature6', '', '%s', 1", CURR_DIR);
+    sprintf(path, "'NewSignature6', '', '%s', 1", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -5149,17 +5258,17 @@ static void test_appsearch_drlocator(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, full path, depth 0, signature w/ version */
-    sprintf(path, "'NewSignature8', '', '%s', 0", CURR_DIR);
+    sprintf(path, "'NewSignature8', '', '%s', 0", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, full path, depth 0, signature w/ version, ver > max */
-    sprintf(path, "'NewSignature9', '', '%s', 0", CURR_DIR);
+    sprintf(path, "'NewSignature9', '', '%s', 0", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* no parent, full path, depth 0, signature w/ version, sig->name not ignored */
-    sprintf(path, "'NewSignature10', '', '%s', 0", CURR_DIR);
+    sprintf(path, "'NewSignature10', '', '%s', 0", expected);
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -5229,19 +5338,19 @@ static void test_appsearch_drlocator(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\FileName1", CURR_DIR);
+    sprintf(path, "%s\\FileName1", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP1", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\", CURR_DIR);
+    sprintf(path, "%s\\", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP2", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
 
     size = MAX_PATH;
-    search_absolute_directory(path, CURR_DIR + 3);
+    search_absolute_directory(path, expected + 3);
     r = MsiGetPropertyA(hpkg, "SIGPROP3", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpiA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -5252,7 +5361,7 @@ static void test_appsearch_drlocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\one\\two\\three\\FileName2", CURR_DIR);
+    sprintf(path, "%s\\one\\two\\three\\FileName2", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP5", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -5263,7 +5372,7 @@ static void test_appsearch_drlocator(void)
     ok(!lstrcmpA(prop, ""), "Expected \"\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
-    sprintf(path, "%s\\one\\two\\three\\FileName2", CURR_DIR);
+    sprintf(path, "%s\\one\\two\\three\\FileName2", expected);
     r = MsiGetPropertyA(hpkg, "SIGPROP7", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -5271,7 +5380,7 @@ static void test_appsearch_drlocator(void)
     if (version)
     {
         size = MAX_PATH;
-        sprintf(path, "%s\\FileName3.dll", CURR_DIR);
+        sprintf(path, "%s\\FileName3.dll", expected);
         r = MsiGetPropertyA(hpkg, "SIGPROP8", prop, &size);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
         ok(!lstrcmpA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
@@ -5579,8 +5688,8 @@ static void test_installprops(void)
     if (is_wow64)
         access |= KEY_WOW64_64KEY;
 
-    GetCurrentDirectoryA(MAX_PATH, path);
-    lstrcatA(path, "\\");
+    lstrcpyA(path, CURR_DIR);
+    if (!is_root(CURR_DIR)) lstrcatA(path, "\\");
     lstrcatA(path, msifile);
 
     uilevel = MsiSetInternalUI(INSTALLUILEVEL_BASIC|INSTALLUILEVEL_SOURCERESONLY, NULL);
@@ -6249,7 +6358,8 @@ static void test_complocator(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     lstrcpyA(expected, CURR_DIR);
-    lstrcatA(expected, "\\abelisaurus");
+    if (!is_root(CURR_DIR)) lstrcatA(expected, "\\");
+    lstrcatA(expected, "abelisaurus");
     ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
        "Expected %s or empty string, got %s\n", expected, prop);
 
@@ -6273,7 +6383,7 @@ static void test_complocator(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     lstrcpyA(expected, CURR_DIR);
-    lstrcatA(expected, "\\");
+    if (!is_root(CURR_DIR)) lstrcatA(expected, "\\");
     ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
        "Expected %s or empty string, got %s\n", expected, prop);
 
@@ -6317,7 +6427,7 @@ static void test_complocator(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     lstrcpyA(expected, CURR_DIR);
-    lstrcatA(expected, "\\");
+    if (!is_root(CURR_DIR)) lstrcatA(expected, "\\");
     ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
        "Expected %s or empty string, got %s\n", expected, prop);
 
@@ -6326,7 +6436,8 @@ static void test_complocator(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     lstrcpyA(expected, CURR_DIR);
-    lstrcatA(expected, "\\neosodon\\");
+    if (!is_root(CURR_DIR)) lstrcatA(expected, "\\");
+    lstrcatA(expected, "neosodon\\");
     ok(!lstrcmpA(prop, expected) || !lstrcmpA(prop, ""),
        "Expected %s or empty string, got %s\n", expected, prop);
 
@@ -6404,7 +6515,7 @@ static void test_MsiGetSourcePath(void)
     UINT r;
 
     lstrcpyA(cwd, CURR_DIR);
-    lstrcatA(cwd, "\\");
+    if (!is_root(CURR_DIR)) lstrcatA(cwd, "\\");
 
     lstrcpyA(subsrc, cwd);
     lstrcatA(subsrc, "subsource");
@@ -7189,7 +7300,7 @@ static void test_shortlongsource(void)
     UINT r;
 
     lstrcpyA(cwd, CURR_DIR);
-    lstrcatA(cwd, "\\");
+    if (!is_root(CURR_DIR)) lstrcatA(cwd, "\\");
 
     lstrcpyA(subsrc, cwd);
     lstrcatA(subsrc, "long");
@@ -7532,7 +7643,7 @@ static void test_sourcedir(void)
     UINT r;
 
     lstrcpyA(cwd, CURR_DIR);
-    lstrcatA(cwd, "\\");
+    if (!is_root(CURR_DIR)) lstrcatA(cwd, "\\");
 
     lstrcpyA(subsrc, cwd);
     lstrcatA(subsrc, "long");
