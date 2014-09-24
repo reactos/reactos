@@ -2247,6 +2247,9 @@ UserFault:
 
                 MiCopyPfn(PageFrameIndex, OldPageFrameIndex);
 
+                /* Delete the WS entry, we will soon replace it */
+                MiDeleteFromWorkingSetList(&CurrentProcess->Vm, Address);
+
                 /* Dereference whatever this PTE is referencing */
                 Pfn1 = MI_PFN_ELEMENT(OldPageFrameIndex);
                 ASSERT(Pfn1->u3.e1.PrototypePte == 1);
@@ -2261,6 +2264,9 @@ UserFault:
                 TempPte.u.Hard.CopyOnWrite = 0;
 
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+                /* Insert into the WS again */
+                MiInsertInWorkingSetList(&CurrentProcess->Vm, Address, ProtectionCode);
 
                 KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
 
@@ -2293,6 +2299,9 @@ UserFault:
                                  PointerPte,
                                  CurrentProcess,
                                  MM_NOIRQL);
+
+        /* Insert into the WS */
+        MiInsertInWorkingSetList(&CurrentProcess->Vm, Address, ProtectionCode);
 
         /* Return the status */
         MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
@@ -2527,6 +2536,12 @@ UserFault:
                              CurrentProcess,
                              TrapInformation,
                              Vad);
+
+    /* Add it to the WS */
+    if (NT_SUCCESS(Status))
+    {
+        MiInsertInWorkingSetList(&CurrentProcess->Vm, Address, ProtectionCode);
+    }
 
     /* Return the status */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);

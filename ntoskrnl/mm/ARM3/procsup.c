@@ -896,25 +896,155 @@ MmCreateTeb(IN PEPROCESS Process,
 
 VOID
 NTAPI
+MiDeleteFromWorkingSetList(
+    _Inout_ PMMSUPPORT Vm,
+    _In_ PVOID Address)
+{
+    ULONG i;
+    PMMWSLE Wsle = NULL;
+
+    /* Only the virtual page number is interesting */
+    Address = PAGE_ALIGN(Address);
+
+    /* Check we got the right lock */
+    NT_ASSERT((PsGetCurrentThread()->OwnsSessionWorkingSetExclusive) || !MI_IS_SESSION_ADDRESS(Address));
+    NT_ASSERT((PsGetCurrentThread()->OwnsSystemWorkingSetExclusive) || (Address < MmSystemRangeStart) ||
+        MI_IS_SESSION_ADDRESS(Address));
+    NT_ASSERT((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) || (Address > MmSystemRangeStart));
+
+    /* Loop over the entries */
+    for (i = 0; i < Vm->VmWorkingSetList->LastInitializedWsle; i++)
+    {
+        if (!Vm->VmWorkingSetList->Wsle[i].u1.e1.Valid)
+            continue;
+
+        if (PAGE_ALIGN(Vm->VmWorkingSetList->Wsle[i].u1.VirtualAddress) == Address)
+        {
+            Wsle = &Vm->VmWorkingSetList->Wsle[i];
+            break;
+        }
+    }
+
+    if (Wsle == NULL)
+    {
+        /* Most likely because we don't expand the thing */
+        DPRINT1("Address %p not found in Vm %p.\n", Address, Vm);
+        return;
+    }
+
+    /* Simply relink it and voilà */
+    Wsle->u1.Long = Vm->VmWorkingSetList->FirstFree << 1;
+    Vm->VmWorkingSetList->FirstFree = i;
+    Vm->WorkingSetSize--;
+}
+
+VOID
+NTAPI
+MiInsertInWorkingSetList(
+    _Inout_ PMMSUPPORT Vm,
+    _In_ PVOID Address,
+    _In_ ULONG Protection)
+{
+    PMMWSLE Wsle = Vm->VmWorkingSetList->Wsle;
+    PMMPFN Pfn1;
+    PMMPTE PointerPte;
+
+    /* Only the virtual page number is interesting */
+    Address = PAGE_ALIGN(Address);
+
+    /* Check we got the right lock */
+    NT_ASSERT((PsGetCurrentThread()->OwnsSessionWorkingSetExclusive) || !MI_IS_SESSION_ADDRESS(Address));
+    NT_ASSERT((PsGetCurrentThread()->OwnsSystemWorkingSetExclusive) || (Address < MmSystemRangeStart) ||
+        MI_IS_SESSION_ADDRESS(Address));
+    NT_ASSERT((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) || (Address > MmSystemRangeStart));
+
+    /* Get the entry where we will insert it */
+    if (Vm->VmWorkingSetList->FirstFree == Vm->VmWorkingSetList->LastInitializedWsle)
+    {
+        ULONG i;
+
+        if (Vm->VmWorkingSetList->FirstFree == Vm->VmWorkingSetList->LastEntry)
+        {
+            DPRINT1("FIXME: Could not add address %p to Vm %p because it is FULL!\n", Address, Vm);
+            return;
+        }
+
+        /* Double that */
+        Vm->VmWorkingSetList->LastInitializedWsle *= 2;
+        if (Vm->VmWorkingSetList->LastInitializedWsle > Vm->VmWorkingSetList->LastEntry)
+            Vm->VmWorkingSetList->LastInitializedWsle = Vm->VmWorkingSetList->LastEntry;
+
+        /* Initialize them */
+        for (i = Vm->VmWorkingSetList->FirstFree; i < Vm->VmWorkingSetList->LastInitializedWsle; i++)
+            Wsle[i].u1.Long = (i + 1) << 1;
+    }
+
+    /* Get the entry where we will insert it */
+    Wsle = &Vm->VmWorkingSetList->Wsle[Vm->VmWorkingSetList->FirstFree];
+
+    /* See if the PFN deserves to have an entry into the WS */
+    PointerPte = MiAddressToPte(Address);
+    NT_ASSERT(PointerPte->u.Hard.Valid);
+    Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
+    if ((Address >= MmSystemRangeStart) || (Pfn1->u3.e1.PrototypePte == 0))
+    {
+        Pfn1->u1.WsIndex = Vm->VmWorkingSetList->FirstFree;
+    }
+
+    /* Update the list head */
+    Vm->VmWorkingSetList->FirstFree = Wsle->u1.Long >> 1;
+
+    /* Set the entry address */
+    Wsle->u1.VirtualAddress = Address;
+
+    Wsle->u1.e1.Valid = 1;
+    Wsle->u1.e1.Protection = Protection;
+
+    /* Bump it */
+    Vm->WorkingSetSize++;
+}
+
+VOID
+NTAPI
 MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
 {
     PMMPFN Pfn1;
     PMMPTE sysPte;
     MMPTE tempPte;
+    ULONG i;
+    PFN_NUMBER WslePageIndex;
 
-    /* Setup some bogus list data */
-    MmWorkingSetList->LastEntry = CurrentProcess->Vm.MinimumWorkingSetSize;
+    /* Initialize the WS sizes */
+    // FIXME: hardcoded for now
+    CurrentProcess->Vm.MinimumWorkingSetSize = 50;
+    CurrentProcess->Vm.MaximumWorkingSetSize = 345;
+
+    /* Setup list data */
+    MmWorkingSetList->LastEntry = PAGE_SIZE / sizeof(MMWSLE);
     MmWorkingSetList->HashTable = NULL;
     MmWorkingSetList->HashTableSize = 0;
     MmWorkingSetList->NumberOfImageWaiters = 0;
-    MmWorkingSetList->Wsle = (PVOID)0xDEADBABE;
     MmWorkingSetList->VadBitMapHint = 1;
-    MmWorkingSetList->HashTableStart = (PVOID)0xBADAB00B;
-    MmWorkingSetList->HighestPermittedHashAddress = (PVOID)0xCAFEBABE;
+    MmWorkingSetList->HashTableStart = NULL;
+    MmWorkingSetList->HighestPermittedHashAddress = NULL;
     MmWorkingSetList->FirstFree = 1;
-    MmWorkingSetList->FirstDynamic = 2;
-    MmWorkingSetList->NextSlot = 3;
-    MmWorkingSetList->LastInitializedWsle = 4;
+    MmWorkingSetList->FirstDynamic = 0;
+    MmWorkingSetList->NextSlot = 0;
+    MmWorkingSetList->LastInitializedWsle = CurrentProcess->Vm.MaximumWorkingSetSize;
+
+    /* Reserve a page for the entries */
+    WslePageIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
+    sysPte = MiReserveSystemPtes(1, SystemPteSpace);
+    MI_MAKE_HARDWARE_PTE_KERNEL(&tempPte, sysPte, MM_READWRITE, WslePageIndex);
+    MiInitializePfnAndMakePteValid(WslePageIndex, sysPte, tempPte);
+    MmWorkingSetList->Wsle = MiPteToAddress(sysPte);
+
+    /* Initialize the linked-list of free entries */
+    for (i = 0; i < MmWorkingSetList->LastInitializedWsle; i++)
+    {
+        /* Save LSB to keep track of active/non active state */
+        MmWorkingSetList->Wsle[i].u1.Long = (i + 1) << 1;
+    }
 
     /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
     Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
@@ -926,6 +1056,20 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     MI_MAKE_HARDWARE_PTE_KERNEL(&tempPte, sysPte, MM_READWRITE, CurrentProcess->WorkingSetPage);
     MI_WRITE_VALID_PTE(sysPte, tempPte);
     CurrentProcess->Vm.VmWorkingSetList = MiPteToAddress(sysPte);
+}
+
+VOID
+NTAPI
+MiDeleteWorkingSetList(PMMWSL WorkingSetList)
+{
+    PMMPTE SysPte;
+    PMMPFN Pfn1;
+
+    SysPte = MiAddressToPte(WorkingSetList->Wsle);
+    Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(SysPte));
+    MI_SET_PFN_DELETED(Pfn1);
+    MiDecrementShareCount(Pfn1, PFN_FROM_PTE(SysPte));
+    MiReleaseSystemPtes(SysPte, 1, SystemPteSpace);
 }
 
 NTSTATUS
@@ -1387,6 +1531,9 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     /* Check for fully initialized process */
     if (Process->AddressSpaceInitialized == 2)
     {
+        /* Free the working set list entries */
+        MiDeleteWorkingSetList(Process->Vm.VmWorkingSetList);
+
         /* Map the working set page and its page table */
         Pfn1 = MiGetPfnEntry(Process->WorkingSetPage);
         Pfn2 = MiGetPfnEntry(Pfn1->u4.PteFrame);

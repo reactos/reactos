@@ -721,6 +721,11 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                     }
                     else
                     {
+                        if (TempPte.u.Hard.Valid == 1)
+                        {
+                            MiDeleteFromWorkingSetList(&CurrentProcess->Vm, MiPteToAddress(PointerPte));
+                        }
+
                         /* Delete the PTE proper */
                         MiDeletePte(PointerPte,
                                     (PVOID)Va,
@@ -2360,9 +2365,12 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                     PteContents.u.Hard.Valid = 0;
                     PteContents.u.Soft.Transition = 1;
                     PteContents.u.Trans.Protection = ProtectionMask;
+
+                    /* Remove it from the WS */
+                    MiDeleteFromWorkingSetList(&Process->Vm, MiPteToAddress(PointerPte));
+
                     /* Decrease PFN share count and write the PTE */
                     MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&PteContents));
-                    // FIXME: remove the page from the WS
                     MI_WRITE_INVALID_PTE(PointerPte, PteContents);
 #ifdef CONFIG_SMP
                     // FIXME: Should invalidate entry in every CPU TLB

@@ -2321,6 +2321,19 @@ MiMakePdeExistAndMakeValid(
     IN KIRQL OldIrql
 );
 
+VOID
+NTAPI
+MiDeleteFromWorkingSetList(
+    _Inout_ PMMSUPPORT Vm,
+    _In_ PVOID Address);
+
+VOID
+NTAPI
+MiInsertInWorkingSetList(
+    _Inout_ PMMSUPPORT Vm,
+    _In_ PVOID Address,
+    _In_ ULONG Protection);
+
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of
