@@ -4614,7 +4614,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                         WINEDDFXCAPS_BLTSHRINKX             |
                                         WINEDDFXCAPS_BLTSHRINKXN            |
                                         WINEDDFXCAPS_BLTSHRINKY             |
-                                        WINEDDFXCAPS_BLTSHRINKXN            |
+                                        WINEDDFXCAPS_BLTSHRINKYN            |
                                         WINEDDFXCAPS_BLTSTRETCHX            |
                                         WINEDDFXCAPS_BLTSTRETCHXN           |
                                         WINEDDFXCAPS_BLTSTRETCHY            |
