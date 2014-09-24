@@ -798,7 +798,6 @@ ClearEvents(VOID)
         case IDCANCEL:
         {
             return FALSE;
-            break;
         }
 
         case IDNO:
