@@ -117,91 +117,77 @@ NtGdiExtSelectClipRgn(
     return retval;
 }
 
-INT FASTCALL
-GdiGetClipBox(HDC hDC, PRECTL rc)
+INT
+FASTCALL
+GdiGetClipBox(
+    _In_ HDC hdc,
+    _Out_ LPRECT prc)
 {
-   INT retval;
-   PDC dc;
-   PROSRGNDATA pRgnNew, pRgn = NULL;
+    PDC pdc;
+    INT iComplexity;
 
-   if (!(dc = DC_LockDc(hDC)))
-   {
-      return ERROR;
-   }
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return ERROR;
+    }
 
-   if (dc->fs & DC_FLAG_DIRTY_RAO)
-       CLIPPING_UpdateGCRegion(dc);
+    /* Update RAO region if necessary */
+    if (pdc->fs & DC_FLAG_DIRTY_RAO)
+        CLIPPING_UpdateGCRegion(pdc);
 
-   /* FIXME: Rao and Vis only! */
-   if (dc->prgnAPI) // APIRGN
-   {
-      pRgn = dc->prgnAPI;
-   }
-   else if (dc->dclevel.prgnMeta) // METARGN
-   {
-      pRgn = dc->dclevel.prgnMeta;
-   }
-   else if (dc->dclevel.prgnClip) // CLIPRGN
-   {
-       pRgn = dc->dclevel.prgnClip;
-   }
+    /* Check if we have a RAO region (intersection of API and VIS region) */
+    if (pdc->prgnRao)
+    {
+        /* We have a RAO region, use it */
+        iComplexity = REGION_GetRgnBox(pdc->prgnRao, prc);
+    }
+    else
+    {
+        /* No RAO region means no API region, so use the VIS region */
+        ASSERT(pdc->prgnVis);
+        iComplexity = REGION_GetRgnBox(pdc->prgnVis, prc);
+    }
 
-   if (pRgn)
-   {
-      pRgnNew = IntSysCreateRectpRgn( 0, 0, 0, 0 );
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
 
-	  if (!pRgnNew)
-      {
-         DC_UnlockDc(dc);
-         return ERROR;
-      }
+    /* Convert the rect to logical coordinates */
+    IntDPtoLP(pdc, (LPPOINT)prc, 2);
 
-      IntGdiCombineRgn(pRgnNew, dc->prgnVis, pRgn, RGN_AND);
-
-      retval = REGION_GetRgnBox(pRgnNew, rc);
-
-	  REGION_Delete(pRgnNew);
-
-      DC_UnlockDc(dc);
-      return retval;
-   }
-
-   retval = REGION_GetRgnBox(dc->prgnVis, rc);
-
-   DC_UnlockDc(dc);
-
-   return retval;
+    /* Return the complexity */
+    return iComplexity;
 }
 
-INT APIENTRY
-NtGdiGetAppClipBox(HDC hDC, PRECTL rc)
+INT
+APIENTRY
+NtGdiGetAppClipBox(
+    _In_ HDC hdc,
+    _Out_ LPRECT prc)
 {
-  INT Ret;
-  NTSTATUS Status = STATUS_SUCCESS;
-  RECTL Saferect;
+    RECT rect;
+    INT iComplexity;
 
-  Ret = GdiGetClipBox(hDC, &Saferect);
+    /* Call the internal function */
+    iComplexity = GdiGetClipBox(hdc, &rect);
 
-  _SEH2_TRY
-  {
-    ProbeForWrite(rc,
-                  sizeof(RECT),
-                  1);
-    *rc = Saferect;
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-    Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END;
+    if (iComplexity != ERROR)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(prc, sizeof(RECT), 1);
+            *prc = rect;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            iComplexity = ERROR;
+        }
+        _SEH2_END
+    }
 
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return ERROR;
-  }
-
-  return Ret;
+    /* Return the complexity */
+    return iComplexity;
 }
 
 int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
@@ -255,54 +241,71 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
     return Result;
 }
 
-int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
-                           int  LeftRect,
-                           int  TopRect,
-                           int  RightRect,
-                           int  BottomRect)
+INT
+APIENTRY
+NtGdiIntersectClipRect(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-    INT Result;
-    RECTL Rect;
-    PREGION pNewRgn;
-    PDC dc = DC_LockDc(hDC);
+    INT iComplexity;
+    RECTL rect;
+    PREGION prgnNew;
+    PDC pdc;
 
     DPRINT("NtGdiIntersectClipRect(%p, %d,%d-%d,%d)\n",
-            hDC, LeftRect, TopRect, RightRect, BottomRect);
+            hdc, xLeft, yTop, xRight, yBottom);
 
-    if (!dc)
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 
-    Rect.left = LeftRect;
-    Rect.top = TopRect;
-    Rect.right = RightRect;
-    Rect.bottom = BottomRect;
+    /* Convert coordinates to device space */
+    rect.left = xLeft;
+    rect.top = yTop;
+    rect.right = xRight;
+    rect.bottom = yBottom;
+    IntLPtoDP(pdc, (LPPOINT)&rect, 2);
 
-    IntLPtoDP(dc, (LPPOINT)&Rect, 2);
-
-    pNewRgn = IntSysCreateRectpRgnIndirect(&Rect);
-    if (!pNewRgn)
+    /* Check if we already have a clip region */
+    if (pdc->dclevel.prgnClip != NULL)
     {
-        Result = ERROR;
-    }
-    else if (!dc->dclevel.prgnClip)
-    {
-        dc->dclevel.prgnClip = pNewRgn;
-        Result = SIMPLEREGION;
+        /* We have a region, crop it */
+        iComplexity = REGION_CropAndOffsetRegion(pdc->dclevel.prgnClip,
+                                                 pdc->dclevel.prgnClip,
+                                                 &rect,
+                                                 NULL);
     }
     else
     {
-        Result = IntGdiCombineRgn(dc->dclevel.prgnClip, dc->dclevel.prgnClip, pNewRgn, RGN_AND);
-        REGION_Delete(pNewRgn);
+        /* We don't have a region yet, allocate a new one */
+        prgnNew = IntSysCreateRectpRgnIndirect(&rect);
+        if (prgnNew == NULL)
+        {
+            iComplexity = ERROR;
+        }
+        else
+        {
+            /* Set the new region */
+            pdc->dclevel.prgnClip = prgnNew;
+            iComplexity = SIMPLEREGION;
+        }
     }
-    if (Result != ERROR)
-        dc->fs |= DC_FLAG_DIRTY_RAO;
 
-    DC_UnlockDc(dc);
+    /* If we succeeded, mark the RAO region as dirty */
+    if (iComplexity != ERROR)
+        pdc->fs |= DC_FLAG_DIRTY_RAO;
 
-    return Result;
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    return iComplexity;
 }
 
 int APIENTRY NtGdiOffsetClipRgn(HDC  hDC,

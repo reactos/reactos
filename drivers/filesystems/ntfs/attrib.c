@@ -163,6 +163,33 @@ NtfsDumpVolumeInformationAttribute(PATTRIBUTE Attribute)
 
 static
 VOID
+NtfsDumpIndexRootAttribute(PATTRIBUTE Attribute)
+{
+    PRESIDENT_ATTRIBUTE ResAttr;
+    PINDEX_ROOT_ATTRIBUTE IndexRootAttr;
+
+    ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
+    IndexRootAttr = (PINDEX_ROOT_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
+
+    if (IndexRootAttr->AttributeType == AttributeFileName)
+        ASSERT(IndexRootAttr->CollationRule == COLLATION_FILE_NAME);
+
+    DbgPrint("  $INDEX_ROOT (%uB, %u) ", IndexRootAttr->SizeOfEntry, IndexRootAttr->ClustersPerIndexRecord);
+
+    if (IndexRootAttr->Header.Flags == INDEX_ROOT_SMALL)
+    {
+        DbgPrint(" (small) ");
+    }
+    else
+    {
+        ASSERT(IndexRootAttr->Header.Flags == INDEX_ROOT_LARGE);
+        DbgPrint(" (large) ");
+    }
+}
+
+
+static
+VOID
 NtfsDumpAttribute (PATTRIBUTE Attribute)
 {
     PNONRESIDENT_ATTRIBUTE NresAttr;
@@ -207,7 +234,7 @@ NtfsDumpAttribute (PATTRIBUTE Attribute)
             break;
 
         case AttributeIndexRoot:
-            DbgPrint("  $INDEX_ROOT ");
+            NtfsDumpIndexRootAttribute(Attribute);
             break;
 
         case AttributeIndexAllocation:

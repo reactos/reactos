@@ -48,8 +48,8 @@ VOID SpeakerChange(VOID)
         if (PitChannel2ReloadValue == 0) PitChannel2ReloadValue = 65536;
 
         /* Set beep data */
-        BeepSetParameters.Frequency = (PIT_BASE_FREQUENCY / PitChannel2ReloadValue) *
-                                      (PitChannel2->Mode == PIT_MODE_SQUARE_WAVE ? 2 : 1);
+        BeepSetParameters.Frequency = (PIT_BASE_FREQUENCY / PitChannel2ReloadValue)
+                                          /* * (PitChannel2->Mode == PIT_MODE_SQUARE_WAVE ? 2 : 1) */;
         BeepSetParameters.Duration  = INFINITE;
 
         /* Send the beep */

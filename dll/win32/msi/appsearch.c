@@ -438,6 +438,19 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
     if (sz == 0)
         goto end;
 
+    /* expand if needed */
+    if (regType == REG_EXPAND_SZ)
+    {
+        sz = ExpandEnvironmentStringsW((LPCWSTR)value, NULL, 0);
+        if (sz)
+        {
+            LPWSTR buf = msi_alloc(sz * sizeof(WCHAR));
+            ExpandEnvironmentStringsW((LPCWSTR)value, buf, sz);
+            msi_free(value);
+            value = (LPBYTE)buf;
+        }
+    }
+
     if ((regType == REG_SZ || regType == REG_EXPAND_SZ) &&
         (ptr = strchrW((LPWSTR)value, '"')) && (end = strchrW(++ptr, '"')))
         *end = '\0';

@@ -24,7 +24,7 @@ WINE_DECLARE_DEBUG_CHANNEL(d3d_bytecode);
 #define WINED3D_SM4_INSTRUCTION_MODIFIER        (1 << 31)
 
 #define WINED3D_SM4_INSTRUCTION_LENGTH_SHIFT    24
-#define WINED3D_SM4_INSTRUCTION_LENGTH_MASK     (0xf << WINED3D_SM4_INSTRUCTION_LENGTH_SHIFT)
+#define WINED3D_SM4_INSTRUCTION_LENGTH_MASK     (0x1f << WINED3D_SM4_INSTRUCTION_LENGTH_SHIFT)
 
 #define WINED3D_SM4_PRIMITIVE_TYPE_SHIFT        11
 #define WINED3D_SM4_PRIMITIVE_TYPE_MASK         (0x7 << WINED3D_SM4_PRIMITIVE_TYPE_SHIFT)
@@ -75,7 +75,9 @@ enum wined3d_sm4_opcode
     WINED3D_SM4_OP_CUT                  = 0x09,
     WINED3D_SM4_OP_DERIV_RTX            = 0x0b,
     WINED3D_SM4_OP_DERIV_RTY            = 0x0c,
+    WINED3D_SM4_OP_DISCARD              = 0x0d,
     WINED3D_SM4_OP_DIV                  = 0x0e,
+    WINED3D_SM4_OP_DP2                  = 0x0f,
     WINED3D_SM4_OP_DP3                  = 0x10,
     WINED3D_SM4_OP_DP4                  = 0x11,
     WINED3D_SM4_OP_EMIT                 = 0x13,
@@ -91,6 +93,7 @@ enum wined3d_sm4_opcode
     WINED3D_SM4_OP_IEQ                  = 0x20,
     WINED3D_SM4_OP_IGE                  = 0x21,
     WINED3D_SM4_OP_IMUL                 = 0x26,
+    WINED3D_SM4_OP_ISHL                 = 0x29,
     WINED3D_SM4_OP_ITOF                 = 0x2b,
     WINED3D_SM4_OP_LD                   = 0x2d,
     WINED3D_SM4_OP_LOG                  = 0x2f,
@@ -209,7 +212,9 @@ static const struct wined3d_sm4_opcode_info opcode_table[] =
     {WINED3D_SM4_OP_CUT,                    WINED3DSIH_CUT,                 "",     ""},
     {WINED3D_SM4_OP_DERIV_RTX,              WINED3DSIH_DSX,                 "F",    "F"},
     {WINED3D_SM4_OP_DERIV_RTY,              WINED3DSIH_DSY,                 "F",    "F"},
+    {WINED3D_SM4_OP_DISCARD,                WINED3DSIH_TEXKILL,             "",     "U"},
     {WINED3D_SM4_OP_DIV,                    WINED3DSIH_DIV,                 "F",    "FF"},
+    {WINED3D_SM4_OP_DP2,                    WINED3DSIH_DP2,                 "F",    "FF"},
     {WINED3D_SM4_OP_DP3,                    WINED3DSIH_DP3,                 "F",    "FF"},
     {WINED3D_SM4_OP_DP4,                    WINED3DSIH_DP4,                 "F",    "FF"},
     {WINED3D_SM4_OP_EMIT,                   WINED3DSIH_EMIT,                "",     ""},
@@ -225,6 +230,7 @@ static const struct wined3d_sm4_opcode_info opcode_table[] =
     {WINED3D_SM4_OP_IEQ,                    WINED3DSIH_IEQ,                 "U",    "II"},
     {WINED3D_SM4_OP_IGE,                    WINED3DSIH_IGE,                 "U",    "II"},
     {WINED3D_SM4_OP_IMUL,                   WINED3DSIH_IMUL,                "II",   "II"},
+    {WINED3D_SM4_OP_ISHL,                   WINED3DSIH_ISHL,                "I",    "II"},
     {WINED3D_SM4_OP_ITOF,                   WINED3DSIH_ITOF,                "F",    "I"},
     {WINED3D_SM4_OP_LD,                     WINED3DSIH_LD,                  "U",    "FR"},
     {WINED3D_SM4_OP_LOG,                    WINED3DSIH_LOG,                 "F",    "F"},

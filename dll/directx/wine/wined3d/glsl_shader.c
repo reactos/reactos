@@ -32,7 +32,6 @@
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
-WINE_DECLARE_DEBUG_CHANNEL(d3d_constants);
 WINE_DECLARE_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
@@ -105,6 +104,7 @@ struct glsl_vs_program
     GLenum vertex_color_clamp;
     GLint *uniform_f_locations;
     GLint uniform_i_locations[MAX_CONST_I];
+    GLint uniform_b_locations[MAX_CONST_B];
     GLint pos_fixup_location;
 };
 
@@ -120,9 +120,11 @@ struct glsl_ps_program
     GLhandleARB id;
     GLint *uniform_f_locations;
     GLint uniform_i_locations[MAX_CONST_I];
+    GLint uniform_b_locations[MAX_CONST_B];
     GLint bumpenv_mat_location[MAX_TEXTURES];
     GLint bumpenv_lum_scale_location[MAX_TEXTURES];
     GLint bumpenv_lum_offset_location[MAX_TEXTURES];
+    GLint tss_constant_location[MAX_TEXTURES];
     GLint tex_factor_location;
     GLint specular_enable_location;
     GLint ycorrection_location;
@@ -638,12 +640,8 @@ static void shader_glsl_load_constantsI(const struct wined3d_shader *shader, con
     {
         if (!(constants_set & 1)) continue;
 
-        TRACE_(d3d_constants)("Loading constants %u: %i, %i, %i, %i\n",
-                i, constants[i*4], constants[i*4+1], constants[i*4+2], constants[i*4+3]);
-
         /* We found this uniform name in the program - go ahead and send the data */
         GL_EXTCALL(glUniform4ivARB(locations[i], 1, &constants[i*4]));
-        checkGLcall("glUniform4ivARB");
     }
 
     /* Load immediate constants */
@@ -654,41 +652,25 @@ static void shader_glsl_load_constantsI(const struct wined3d_shader *shader, con
         unsigned int idx = lconst->idx;
         const GLint *values = (const GLint *)lconst->value;
 
-        TRACE_(d3d_constants)("Loading local constants %i: %i, %i, %i, %i\n", idx,
-            values[0], values[1], values[2], values[3]);
-
         /* We found this uniform name in the program - go ahead and send the data */
         GL_EXTCALL(glUniform4ivARB(locations[idx], 1, values));
-        checkGLcall("glUniform4ivARB");
         ptr = list_next(&shader->constantsI, ptr);
     }
+    checkGLcall("glUniform4ivARB()");
 }
 
 /* Context activation is done by the caller. */
 static void shader_glsl_load_constantsB(const struct wined3d_shader *shader, const struct wined3d_gl_info *gl_info,
-        GLhandleARB programId, const BOOL *constants, WORD constants_set)
+        const GLint locations[MAX_CONST_B], const BOOL *constants, WORD constants_set)
 {
-    GLint tmp_loc;
     unsigned int i;
-    char tmp_name[10];
-    const char *prefix;
     struct list* ptr;
 
-    prefix = shader_glsl_get_prefix(shader->reg_maps.shader_version.type);
-
-    /* TODO: Benchmark and see if it would be beneficial to store the
-     * locations of the constants to avoid looking up each time */
     for (i = 0; constants_set; constants_set >>= 1, ++i)
     {
         if (!(constants_set & 1)) continue;
 
-        TRACE_(d3d_constants)("Loading constants %i: %i;\n", i, constants[i]);
-
-        /* TODO: Benchmark and see if it would be beneficial to store the
-         * locations of the constants to avoid looking up each time */
-        snprintf(tmp_name, sizeof(tmp_name), "%s_b[%i]", prefix, i);
-        tmp_loc = GL_EXTCALL(glGetUniformLocationARB(programId, tmp_name));
-        GL_EXTCALL(glUniform1ivARB(tmp_loc, 1, &constants[i]));
+        GL_EXTCALL(glUniform1ivARB(locations[i], 1, &constants[i]));
     }
 
     /* Load immediate constants */
@@ -699,15 +681,10 @@ static void shader_glsl_load_constantsB(const struct wined3d_shader *shader, con
         unsigned int idx = lconst->idx;
         const GLint *values = (const GLint *)lconst->value;
 
-        TRACE_(d3d_constants)("Loading local constants %i: %i\n", idx, values[0]);
-
-        snprintf(tmp_name, sizeof(tmp_name), "%s_b[%i]", prefix, idx);
-        tmp_loc = GL_EXTCALL(glGetUniformLocationARB(programId, tmp_name));
-        GL_EXTCALL(glUniform1ivARB(tmp_loc, 1, values));
+        GL_EXTCALL(glUniform1ivARB(locations[idx], 1, values));
         ptr = list_next(&shader->constantsB, ptr);
     }
-
-    checkGLcall("shader_glsl_load_constantsB()");
+    checkGLcall("glUniform1ivARB()");
 }
 
 static void reset_program_constant_version(struct wine_rb_entry *entry, void *context)
@@ -762,7 +739,6 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
     float position_fixup[4];
     DWORD update_mask = 0;
 
-    GLhandleARB programId;
     struct glsl_shader_prog_link *prog = ctx_data->glsl_program;
     UINT constant_version;
     int i;
@@ -771,7 +747,6 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
         /* No GLSL program set - nothing to do. */
         return;
     }
-    programId = prog->programId;
     constant_version = prog->constant_version;
     update_mask = context->constant_update_mask & prog->constant_update_mask;
 
@@ -784,7 +759,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
                 vshader->reg_maps.integer_constants);
 
     if (update_mask & WINED3D_SHADER_CONST_VS_B)
-        shader_glsl_load_constantsB(vshader, gl_info, programId, state->vs_consts_b,
+        shader_glsl_load_constantsB(vshader, gl_info, prog->vs.uniform_b_locations, state->vs_consts_b,
                 vshader->reg_maps.boolean_constants);
 
     if (update_mask & WINED3D_SHADER_CONST_VS_POS_FIXUP)
@@ -803,7 +778,7 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
                 pshader->reg_maps.integer_constants);
 
     if (update_mask & WINED3D_SHADER_CONST_PS_B)
-        shader_glsl_load_constantsB(pshader, gl_info, programId, state->ps_consts_b,
+        shader_glsl_load_constantsB(pshader, gl_info, prog->ps.uniform_b_locations, state->ps_consts_b,
                 pshader->reg_maps.boolean_constants);
 
     if (update_mask & WINED3D_SHADER_CONST_PS_BUMP_ENV)
@@ -861,6 +836,15 @@ static void shader_glsl_load_constants(void *shader_priv, struct wined3d_context
             GL_EXTCALL(glUniform4fARB(prog->ps.specular_enable_location, 1.0f, 1.0f, 1.0f, 0.0f));
         else
             GL_EXTCALL(glUniform4fARB(prog->ps.specular_enable_location, 0.0f, 0.0f, 0.0f, 0.0f));
+
+        for (i = 0; i < MAX_TEXTURES; ++i)
+        {
+            if (prog->ps.tss_constant_location[i] == -1)
+                continue;
+
+            D3DCOLORTOGLFLOAT4(state->texture_states[i][WINED3D_TSS_CONSTANT], col);
+            GL_EXTCALL(glUniform4fvARB(prog->ps.tss_constant_location[i], 1, col));
+        }
 
         checkGLcall("fixed function uniforms");
     }
@@ -1064,7 +1048,8 @@ static void shader_generate_glsl_declarations(const struct wined3d_context *cont
     for (i = 0; i < WINED3D_MAX_CBS; ++i)
     {
         if (reg_maps->cb_sizes[i])
-            shader_addline(buffer, "uniform vec4 %s_cb%u[%u];\n", prefix, i, reg_maps->cb_sizes[i]);
+            shader_addline(buffer, "layout(std140) uniform block_%s_cb%u { vec4 %s_cb%u[%u]; };\n",
+                    prefix, i, prefix, i, reg_maps->cb_sizes[i]);
     }
 
     /* Declare texture samplers */
@@ -1237,7 +1222,7 @@ static void shader_generate_glsl_declarations(const struct wined3d_context *cont
             {
                 float ycorrection[] =
                 {
-                    context->render_offscreen ? 0.0f : fb->render_targets[0]->resource.height,
+                    context->render_offscreen ? 0.0f : fb->render_targets[0]->height,
                     context->render_offscreen ? 1.0f : -1.0f,
                     0.0f,
                     0.0f,
@@ -2316,6 +2301,7 @@ static void shader_glsl_binop(const struct wined3d_shader_instruction *ins)
         case WINED3DSIH_AND:  op = "&";  break;
         case WINED3DSIH_DIV:  op = "/";  break;
         case WINED3DSIH_IADD: op = "+";  break;
+        case WINED3DSIH_ISHL: op = "<<"; break;
         case WINED3DSIH_MUL:  op = "*";  break;
         case WINED3DSIH_SUB:  op = "-";  break;
         case WINED3DSIH_USHR: op = ">>"; break;
@@ -4054,6 +4040,8 @@ static void shader_glsl_texkill(const struct wined3d_shader_instruction *ins)
     shader_glsl_add_dst_param(ins, &ins->dst[0], &dst_param);
     if (ins->ctx->reg_maps->shader_version.major >= 2)
     {
+        if (ins->ctx->reg_maps->shader_version.major >= 4)
+            FIXME("SM4 discard not implemented.\n");
         /* 2.0 shaders compare all 4 components in texkill */
         shader_addline(ins->ctx->buffer, "if (any(lessThan(%s.xyzw, vec4(0.0)))) discard;\n", dst_param.reg_name);
     } else {
@@ -4466,6 +4454,8 @@ static GLuint shader_glsl_generate_pshader(const struct wined3d_context *context
      * nvidia drivers write a warning if we don't do so. */
     if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
         shader_addline(buffer, "#extension GL_ARB_texture_rectangle : enable\n");
+    if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
+        shader_addline(buffer, "#extension GL_ARB_uniform_buffer_object : enable\n");
     if (gl_info->supported[EXT_GPU_SHADER4])
         shader_addline(buffer, "#extension GL_EXT_gpu_shader4 : enable\n");
 
@@ -4519,6 +4509,8 @@ static GLuint shader_glsl_generate_vshader(const struct wined3d_context *context
 
     if (gl_info->supported[ARB_SHADER_BIT_ENCODING])
         shader_addline(buffer, "#extension GL_ARB_shader_bit_encoding : enable\n");
+    if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
+        shader_addline(buffer, "#extension GL_ARB_uniform_buffer_object : enable\n");
     if (gl_info->supported[EXT_GPU_SHADER4])
         shader_addline(buffer, "#extension GL_EXT_gpu_shader4 : enable\n");
 
@@ -4592,6 +4584,8 @@ static GLhandleARB shader_glsl_generate_geometry_shader(const struct wined3d_con
         shader_addline(buffer, "#extension GL_ARB_geometry_shader4 : enable\n");
     if (gl_info->supported[ARB_SHADER_BIT_ENCODING])
         shader_addline(buffer, "#extension GL_ARB_shader_bit_encoding : enable\n");
+    if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
+        shader_addline(buffer, "#extension GL_ARB_uniform_buffer_object : enable\n");
     if (gl_info->supported[EXT_GPU_SHADER4])
         shader_addline(buffer, "#extension GL_EXT_gpu_shader4 : enable\n");
 
@@ -5077,17 +5071,16 @@ static const char *shader_glsl_get_ffp_fragment_op_arg(struct wined3d_shader_buf
             break;
 
         case WINED3DTA_CONSTANT:
-            FIXME("Per-stage constants not implemented.\n");
             switch (stage)
             {
-                case 0: ret = "const0"; break;
-                case 1: ret = "const1"; break;
-                case 2: ret = "const2"; break;
-                case 3: ret = "const3"; break;
-                case 4: ret = "const4"; break;
-                case 5: ret = "const5"; break;
-                case 6: ret = "const6"; break;
-                case 7: ret = "const7"; break;
+                case 0: ret = "tss_const0"; break;
+                case 1: ret = "tss_const1"; break;
+                case 2: ret = "tss_const2"; break;
+                case 3: ret = "tss_const3"; break;
+                case 4: ret = "tss_const4"; break;
+                case 5: ret = "tss_const5"; break;
+                case 6: ret = "tss_const6"; break;
+                case 7: ret = "tss_const7"; break;
                 default:
                     ret = "<invalid constant>";
                     break;
@@ -5278,8 +5271,8 @@ static void shader_glsl_ffp_fragment_op(struct wined3d_shader_buffer *buffer, un
 static GLuint shader_glsl_generate_ffp_fragment_shader(struct wined3d_shader_buffer *buffer,
         const struct ffp_frag_settings *settings, const struct wined3d_gl_info *gl_info)
 {
+    BYTE lum_map = 0, bump_map = 0, tex_map = 0, tss_const_map = 0;
     BOOL tempreg_used = FALSE, tfactor_used = FALSE;
-    BYTE lum_map = 0, bump_map = 0, tex_map = 0;
     const char *final_combiner_src = "ret";
     UINT lowest_disabled_stage;
     GLhandleARB shader_obj;
@@ -5306,6 +5299,8 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct wined3d_shader_buf
             tempreg_used = TRUE;
         if (settings->op[stage].dst == tempreg)
             tempreg_used = TRUE;
+        if (arg0 == WINED3DTA_CONSTANT || arg1 == WINED3DTA_CONSTANT || arg2 == WINED3DTA_CONSTANT)
+            tss_const_map |= 1 << stage;
 
         switch (settings->op[stage].cop)
         {
@@ -5341,6 +5336,8 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct wined3d_shader_buf
             tfactor_used = TRUE;
         if (arg0 == WINED3DTA_TEMP || arg1 == WINED3DTA_TEMP || arg2 == WINED3DTA_TEMP)
             tempreg_used = TRUE;
+        if (arg0 == WINED3DTA_CONSTANT || arg1 == WINED3DTA_CONSTANT || arg2 == WINED3DTA_CONSTANT)
+            tss_const_map |= 1 << stage;
     }
     lowest_disabled_stage = stage;
 
@@ -5357,6 +5354,9 @@ static GLuint shader_glsl_generate_ffp_fragment_shader(struct wined3d_shader_buf
 
     for (stage = 0; stage < MAX_TEXTURES; ++stage)
     {
+        if (tss_const_map & (1 << stage))
+            shader_addline(buffer, "uniform vec4 tss_const%u;\n", stage);
+
         if (!(tex_map & (1 << stage)))
             continue;
 
@@ -5684,6 +5684,12 @@ static void shader_glsl_init_vs_uniform_locations(const struct wined3d_gl_info *
         vs->uniform_i_locations[i] = GL_EXTCALL(glGetUniformLocationARB(program_id, name));
     }
 
+    for (i = 0; i < MAX_CONST_B; ++i)
+    {
+        snprintf(name, sizeof(name), "vs_b[%u]", i);
+        vs->uniform_b_locations[i] = GL_EXTCALL(glGetUniformLocationARB(program_id, name));
+    }
+
     vs->pos_fixup_location = GL_EXTCALL(glGetUniformLocationARB(program_id, "posFixup"));
 }
 
@@ -5709,6 +5715,12 @@ static void shader_glsl_init_ps_uniform_locations(const struct wined3d_gl_info *
         ps->uniform_i_locations[i] = GL_EXTCALL(glGetUniformLocationARB(program_id, name));
     }
 
+    for (i = 0; i < MAX_CONST_B; ++i)
+    {
+        snprintf(name, sizeof(name), "ps_b[%u]", i);
+        ps->uniform_b_locations[i] = GL_EXTCALL(glGetUniformLocationARB(program_id, name));
+    }
+
     for (i = 0; i < MAX_TEXTURES; ++i)
     {
         snprintf(name, sizeof(name), "bumpenv_mat%u", i);
@@ -5717,12 +5729,34 @@ static void shader_glsl_init_ps_uniform_locations(const struct wined3d_gl_info *
         ps->bumpenv_lum_scale_location[i] = GL_EXTCALL(glGetUniformLocationARB(program_id, name));
         snprintf(name, sizeof(name), "bumpenv_lum_offset%u", i);
         ps->bumpenv_lum_offset_location[i] = GL_EXTCALL(glGetUniformLocationARB(program_id, name));
+        snprintf(name, sizeof(name), "tss_const%u", i);
+        ps->tss_constant_location[i] = GL_EXTCALL(glGetUniformLocationARB(program_id, name));
     }
 
     ps->tex_factor_location = GL_EXTCALL(glGetUniformLocationARB(program_id, "tex_factor"));
     ps->specular_enable_location = GL_EXTCALL(glGetUniformLocationARB(program_id, "specular_enable"));
     ps->np2_fixup_location = GL_EXTCALL(glGetUniformLocationARB(program_id, "ps_samplerNP2Fixup"));
     ps->ycorrection_location = GL_EXTCALL(glGetUniformLocationARB(program_id, "ycorrection"));
+}
+
+static void shader_glsl_init_uniform_block_bindings(const struct wined3d_gl_info *gl_info, GLhandleARB program_id,
+        const struct wined3d_shader_reg_maps *reg_maps, unsigned int base, unsigned int count)
+{
+    const char *prefix = shader_glsl_get_prefix(reg_maps->shader_version.type);
+    GLuint block_idx;
+    unsigned int i;
+    char name[16];
+
+    for (i = 0; i < count; ++i)
+    {
+        if (!reg_maps->cb_sizes[i])
+            continue;
+
+        snprintf(name, sizeof(name), "block_%s_cb%u", prefix, i);
+        block_idx = GL_EXTCALL(glGetUniformBlockIndex(program_id, name));
+        GL_EXTCALL(glUniformBlockBinding(program_id, block_idx, base + i));
+    }
+    checkGLcall("glUniformBlockBinding");
 }
 
 /* Context activation is done by the caller. */
@@ -5955,7 +5989,14 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
         if (vshader->reg_maps.boolean_constants)
             entry->constant_update_mask |= WINED3D_SHADER_CONST_VS_B;
         entry->constant_update_mask |= WINED3D_SHADER_CONST_VS_POS_FIXUP;
+
+        shader_glsl_init_uniform_block_bindings(gl_info, programId, &vshader->reg_maps,
+                0, gl_info->limits.vertex_uniform_blocks);
     }
+
+    if (gshader)
+        shader_glsl_init_uniform_block_bindings(gl_info, programId, &gshader->reg_maps,
+                gl_info->limits.vertex_uniform_blocks, gl_info->limits.geometry_uniform_blocks);
 
     if (ps_id)
     {
@@ -5968,6 +6009,10 @@ static void set_glsl_shader_program(const struct wined3d_context *context, const
                 entry->constant_update_mask |= WINED3D_SHADER_CONST_PS_B;
             if (entry->ps.ycorrection_location != -1)
                 entry->constant_update_mask |= WINED3D_SHADER_CONST_PS_Y_CORR;
+
+            shader_glsl_init_uniform_block_bindings(gl_info, programId, &pshader->reg_maps,
+                    gl_info->limits.vertex_uniform_blocks + gl_info->limits.geometry_uniform_blocks,
+                    gl_info->limits.fragment_uniform_blocks);
         }
         else
         {
@@ -5995,7 +6040,7 @@ static GLhandleARB create_glsl_blt_shader(const struct wined3d_gl_info *gl_info,
     GLhandleARB vshader_id, pshader_id;
     const char *blt_pshader;
 
-    static const char *blt_vshader =
+    static const char blt_vshader[] =
         "#version 120\n"
         "void main(void)\n"
         "{\n"
@@ -6537,7 +6582,8 @@ static void shader_glsl_get_caps(const struct wined3d_gl_info *gl_info, struct s
 
     if (gl_info->supported[EXT_GPU_SHADER4] && gl_info->supported[ARB_SHADER_BIT_ENCODING]
             && gl_info->supported[ARB_GEOMETRY_SHADER4] && gl_info->glsl_version >= MAKEDWORD_VERSION(1, 50)
-            && gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX] && gl_info->supported[ARB_DRAW_INSTANCED])
+            && gl_info->supported[ARB_DRAW_ELEMENTS_BASE_VERTEX] && gl_info->supported[ARB_DRAW_INSTANCED]
+            && gl_info->supported[ARB_TEXTURE_RG])
         shader_model = 4;
     /* ARB_shader_texture_lod or EXT_gpu_shader4 is required for the SM3
      * texldd and texldl instructions. */
@@ -6566,7 +6612,10 @@ static void shader_glsl_get_caps(const struct wined3d_gl_info *gl_info, struct s
      * the shader will generate incorrect results too. Unfortunately, GL deliberately doesn't
      * offer a way to query this.
      */
-    caps->ps_1x_max_value = 8.0;
+    if (shader_model >= 4)
+        caps->ps_1x_max_value = FLT_MAX;
+    else
+        caps->ps_1x_max_value = 1024.0f;
 
     /* Ideally we'd only set caps like sRGB writes here if supported by both
      * the shader backend and the fragment pipe, but we can get called before
@@ -6618,6 +6667,7 @@ static const SHADER_HANDLER shader_glsl_instruction_handler_table[WINED3DSIH_TAB
     /* WINED3DSIH_DEFB                  */ shader_glsl_nop,
     /* WINED3DSIH_DEFI                  */ shader_glsl_nop,
     /* WINED3DSIH_DIV                   */ shader_glsl_binop,
+    /* WINED3DSIH_DP2                   */ shader_glsl_dot,
     /* WINED3DSIH_DP2ADD                */ shader_glsl_dp2add,
     /* WINED3DSIH_DP3                   */ shader_glsl_dot,
     /* WINED3DSIH_DP4                   */ shader_glsl_dot,
@@ -6641,6 +6691,7 @@ static const SHADER_HANDLER shader_glsl_instruction_handler_table[WINED3DSIH_TAB
     /* WINED3DSIH_IFC                   */ shader_glsl_ifc,
     /* WINED3DSIH_IGE                   */ shader_glsl_relop,
     /* WINED3DSIH_IMUL                  */ shader_glsl_imul,
+    /* WINED3DSIH_ISHL                  */ shader_glsl_binop,
     /* WINED3DSIH_ITOF                  */ shader_glsl_to_float,
     /* WINED3DSIH_LABEL                 */ shader_glsl_label,
     /* WINED3DSIH_LD                    */ NULL,
@@ -7021,7 +7072,8 @@ static void glsl_fragment_pipe_get_caps(const struct wined3d_gl_info *gl_info, s
 {
     caps->wined3d_caps = WINED3D_FRAGMENT_CAP_PROJ_CONTROL
             | WINED3D_FRAGMENT_CAP_SRGB_WRITE;
-    caps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP;
+    caps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP
+            | WINED3DPMISCCAPS_PERSTAGECONSTANT;
     caps->TextureOpCaps = WINED3DTEXOPCAPS_DISABLE
             | WINED3DTEXOPCAPS_SELECTARG1
             | WINED3DTEXOPCAPS_SELECTARG2
@@ -7247,6 +7299,14 @@ static const struct StateEntryTemplate glsl_fragment_pipe_state_template[] =
     {STATE_TEXTURESTAGE(5,WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), {STATE_TEXTURESTAGE(5, WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), glsl_fragment_pipe_tex_transform       }, WINED3D_GL_EXT_NONE },
     {STATE_TEXTURESTAGE(6,WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), {STATE_TEXTURESTAGE(6, WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), glsl_fragment_pipe_tex_transform       }, WINED3D_GL_EXT_NONE },
     {STATE_TEXTURESTAGE(7,WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), {STATE_TEXTURESTAGE(7, WINED3D_TSS_TEXTURE_TRANSFORM_FLAGS), glsl_fragment_pipe_tex_transform       }, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(0, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(0, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(1, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(1, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(2, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(2, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(3, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(3, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(4, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(4, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(5, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(5, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(6, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(6, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
+    {STATE_TEXTURESTAGE(7, WINED3D_TSS_CONSTANT),               {STATE_TEXTURESTAGE(7, WINED3D_TSS_CONSTANT),                glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
     {STATE_RENDER(WINED3D_RS_SPECULARENABLE),                   {STATE_RENDER(WINED3D_RS_SPECULARENABLE),                    glsl_fragment_pipe_invalidate_constants}, WINED3D_GL_EXT_NONE },
     {0 /* Terminate */,                                         {0,                                                          0                                      }, WINED3D_GL_EXT_NONE },
 };

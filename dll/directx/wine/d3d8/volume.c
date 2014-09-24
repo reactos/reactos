@@ -48,29 +48,9 @@ static ULONG WINAPI d3d8_volume_AddRef(IDirect3DVolume8 *iface)
     struct d3d8_volume *volume = impl_from_IDirect3DVolume8(iface);
 
     TRACE("iface %p.\n", iface);
+    TRACE("Forwarding to %p.\n", volume->texture);
 
-    if (volume->forwardReference)
-    {
-        /* Forward to the containerParent */
-        TRACE("Forwarding to %p,\n", volume->forwardReference);
-        return IUnknown_AddRef(volume->forwardReference);
-    }
-    else
-    {
-        /* No container, handle our own refcounting */
-        ULONG ref = InterlockedIncrement(&volume->resource.refcount);
-
-        TRACE("%p increasing refcount to %u.\n", iface, ref);
-
-        if (ref == 1)
-        {
-            wined3d_mutex_lock();
-            wined3d_volume_incref(volume->wined3d_volume);
-            wined3d_mutex_unlock();
-        }
-
-        return ref;
-    }
+    return IDirect3DBaseTexture8_AddRef(&volume->texture->IDirect3DBaseTexture8_iface);
 }
 
 static ULONG WINAPI d3d8_volume_Release(IDirect3DVolume8 *iface)
@@ -78,49 +58,18 @@ static ULONG WINAPI d3d8_volume_Release(IDirect3DVolume8 *iface)
     struct d3d8_volume *volume = impl_from_IDirect3DVolume8(iface);
 
     TRACE("iface %p.\n", iface);
+    TRACE("Forwarding to %p.\n", volume->texture);
 
-    if (volume->forwardReference)
-    {
-        /* Forward to the containerParent */
-        TRACE("Forwarding to %p.\n", volume->forwardReference);
-        return IUnknown_Release(volume->forwardReference);
-    }
-    else
-    {
-        /* No container, handle our own refcounting */
-        ULONG ref = InterlockedDecrement(&volume->resource.refcount);
-
-        TRACE("%p decreasing refcount to %u.\n", iface, ref);
-
-        if (!ref)
-        {
-            wined3d_mutex_lock();
-            wined3d_volume_decref(volume->wined3d_volume);
-            wined3d_mutex_unlock();
-        }
-
-        return ref;
-    }
+    return IDirect3DBaseTexture8_Release(&volume->texture->IDirect3DBaseTexture8_iface);
 }
 
 static HRESULT WINAPI d3d8_volume_GetDevice(IDirect3DVolume8 *iface, IDirect3DDevice8 **device)
 {
     struct d3d8_volume *volume = impl_from_IDirect3DVolume8(iface);
-    IDirect3DResource8 *resource;
-    HRESULT hr;
 
     TRACE("iface %p, device %p.\n", iface, device);
 
-    hr = IUnknown_QueryInterface(volume->forwardReference, &IID_IDirect3DResource8, (void **)&resource);
-    if (SUCCEEDED(hr))
-    {
-        hr = IDirect3DResource8_GetDevice(resource, device);
-        IDirect3DResource8_Release(resource);
-
-        TRACE("Returning device %p.\n", *device);
-    }
-
-    return hr;
+    return IDirect3DBaseTexture8_GetDevice(&volume->texture->IDirect3DBaseTexture8_iface, device);
 }
 
 static HRESULT WINAPI d3d8_volume_SetPrivateData(IDirect3DVolume8 *iface, REFGUID guid,
@@ -154,19 +103,10 @@ static HRESULT WINAPI d3d8_volume_FreePrivateData(IDirect3DVolume8 *iface, REFGU
 static HRESULT WINAPI d3d8_volume_GetContainer(IDirect3DVolume8 *iface, REFIID riid, void **container)
 {
     struct d3d8_volume *volume = impl_from_IDirect3DVolume8(iface);
-    HRESULT res;
 
-    TRACE("iface %p, riid %s, container %p.\n",
-            iface, debugstr_guid(riid), container);
+    TRACE("iface %p, riid %s, container %p.\n", iface, debugstr_guid(riid), container);
 
-    if (!volume->container)
-        return E_NOINTERFACE;
-
-    res = IUnknown_QueryInterface(volume->container, riid, container);
-
-    TRACE("Returning %p.\n", *container);
-
-    return res;
+    return IDirect3DBaseTexture8_QueryInterface(&volume->texture->IDirect3DBaseTexture8_iface, riid, container);
 }
 
 static HRESULT WINAPI d3d8_volume_GetDesc(IDirect3DVolume8 *iface, D3DVOLUME_DESC *desc)
@@ -258,13 +198,14 @@ static const struct wined3d_parent_ops d3d8_volume_wined3d_parent_ops =
     volume_wined3d_object_destroyed,
 };
 
-void volume_init(struct d3d8_volume *volume, struct wined3d_volume *wined3d_volume,
-        const struct wined3d_parent_ops **parent_ops)
+void volume_init(struct d3d8_volume *volume, struct d3d8_texture *texture,
+        struct wined3d_volume *wined3d_volume, const struct wined3d_parent_ops **parent_ops)
 {
     volume->IDirect3DVolume8_iface.lpVtbl = &d3d8_volume_vtbl;
     d3d8_resource_init(&volume->resource);
-    wined3d_volume_incref(wined3d_volume);
+    volume->resource.refcount = 0;
     volume->wined3d_volume = wined3d_volume;
+    volume->texture = texture;
 
     *parent_ops = &d3d8_volume_wined3d_parent_ops;
 }

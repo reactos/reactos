@@ -63,7 +63,7 @@ KsecReadMachineSpecificCounters(
         /* Read the TSC value */
         MachineSpecificCounters->Tsc = __rdtsc();
     }
-
+#if 0 // FIXME: investigate what the requirements are for these
     /* Read the CPU event counter MSRs */
     //MachineSpecificCounters->Ctr0 = __readmsr(0x12);
     //MachineSpecificCounters->Ctr1 = __readmsr(0x13);
@@ -75,6 +75,7 @@ KsecReadMachineSpecificCounters(
         MachineSpecificCounters->Pmc0 = __readpmc(0);
         MachineSpecificCounters->Pmc1 = __readpmc(1);
     }
+#endif
 #else
     #error Implement me!
 #endif
