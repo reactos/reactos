@@ -850,7 +850,7 @@ typedef struct _MMWSLENTRY
     ULONG_PTR Hashed:1;
     ULONG_PTR Direct:1;
     ULONG_PTR Age:2;
-    ULONG_PTR VirtualPageNumber: MM_PAGE_FRAME_NUMBER_SIZE;
+    ULONG_PTR VirtualPageNumber: MM_VPN_BITS_SIZE;
 } MMWSLENTRY, *PMMWSLENTRY;
 
 typedef struct _MMWSLE
