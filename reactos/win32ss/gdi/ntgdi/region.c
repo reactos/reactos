@@ -1773,6 +1773,23 @@ REGION_UnionRectWithRgn(
     REGION_UnionRegion(rgn, rgn, &region);
 }
 
+INT
+FASTCALL
+REGION_SubtractRectFromRgn(
+    PREGION prgnDest,
+    PREGION prgnSrc,
+    const RECTL *prcl)
+{
+    REGION rgnLocal;
+
+    rgnLocal.Buffer = &rgnLocal.rdh.rcBound;
+    rgnLocal.rdh.nCount = 1;
+    rgnLocal.rdh.nRgnSize = sizeof(RECT);
+    rgnLocal.rdh.rcBound = *prcl;
+    REGION_SubtractRegion(prgnDest, prgnSrc, &rgnLocal);
+    return REGION_Complexity(prgnDest);
+}
+
 BOOL FASTCALL
 REGION_CreateSimpleFrameRgn(
     PROSRGNDATA rgn,

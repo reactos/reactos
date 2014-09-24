@@ -190,55 +190,79 @@ NtGdiGetAppClipBox(
     return iComplexity;
 }
 
-int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
-                         int  LeftRect,
-                         int  TopRect,
-                         int  RightRect,
-                         int  BottomRect)
+INT
+APIENTRY
+NtGdiExcludeClipRect(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-    INT Result;
-    RECTL Rect;
-    PREGION prgnNew;
-    PDC dc = DC_LockDc(hDC);
+    INT iComplexity;
+    RECTL rect;
+    PDC pdc;
 
-    if (!dc)
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 
-    Rect.left = LeftRect;
-    Rect.top = TopRect;
-    Rect.right = RightRect;
-    Rect.bottom = BottomRect;
+    /* Convert coordinates to device space */
+    rect.left = xLeft;
+    rect.top = yTop;
+    rect.right = xRight;
+    rect.bottom = yBottom;
+    RECTL_vMakeWellOrdered(&rect);
+    IntLPtoDP(pdc, (LPPOINT)&rect, 2);
 
-    IntLPtoDP(dc, (LPPOINT)&Rect, 2);
-
-    prgnNew = IntSysCreateRectpRgnIndirect(&Rect);
-    if (!prgnNew)
+    /* Check if we already have a clip region */
+    if (pdc->dclevel.prgnClip != NULL)
     {
-        Result = ERROR;
+        /* We have a region, subtract the rect */
+        iComplexity = REGION_SubtractRectFromRgn(pdc->dclevel.prgnClip,
+                                                 pdc->dclevel.prgnClip,
+                                                 &rect);
+
+        /* Emulate Windows behavior */
+        if (iComplexity == SIMPLEREGION)
+            iComplexity = COMPLEXREGION;
     }
     else
     {
-        if (!dc->dclevel.prgnClip)
+        /* Check if the rect intersects with the window rect */
+        if (RECTL_bIntersectRect(&rect, &rect, &pdc->erclWindow))
         {
-            dc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
-            IntGdiCombineRgn(dc->dclevel.prgnClip, dc->prgnVis, prgnNew, RGN_DIFF);
-            Result = SIMPLEREGION;
+            /* It does. In this case create an empty region */
+            pdc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+            iComplexity = NULLREGION;
         }
         else
         {
-            Result = IntGdiCombineRgn(dc->dclevel.prgnClip, dc->dclevel.prgnClip, prgnNew, RGN_DIFF);
+            /* Otherwise, emulate strange Windows behavior... */
+            pdc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 1, 1);
+            iComplexity = COMPLEXREGION;
         }
-        REGION_Delete(prgnNew);
+
+        /* Check if creating the region failed */
+        if (pdc->dclevel.prgnClip == NULL)
+        {
+            /* Return error code */
+            iComplexity = ERROR;
+        }
     }
-    if (Result != ERROR)
-        dc->fs |= DC_FLAG_DIRTY_RAO;
 
-    DC_UnlockDc(dc);
+    /* If we succeeded, mark the RAO region as dirty */
+    if (iComplexity != ERROR)
+        pdc->fs |= DC_FLAG_DIRTY_RAO;
 
-    return Result;
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    return iComplexity;
 }
 
 INT
