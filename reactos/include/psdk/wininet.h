@@ -2559,6 +2559,31 @@ InternetGetConnectedStateExW(
 
 #define InternetGetConnectedStateEx WINELIB_NAME_AW(InternetGetConnectedStateEx)
 
+typedef struct AutoProxyHelperVtbl
+{
+    BOOL  (WINAPI *IsResolvable)(LPSTR);
+    DWORD (WINAPI *GetIPAddress)(LPSTR, LPDWORD);
+    DWORD (WINAPI *ResolveHostName)(LPSTR, LPSTR, LPDWORD);
+    BOOL  (WINAPI *IsInNet)(LPSTR, LPSTR, LPSTR);
+    BOOL  (WINAPI *IsResolvableEx)(LPSTR);
+    DWORD (WINAPI *GetIPAddressEx)(LPSTR, LPDWORD);
+    DWORD (WINAPI *ResolveHostNameEx)(LPSTR, LPSTR, LPDWORD);
+    BOOL  (WINAPI *IsInNetEx)(LPSTR, LPSTR);
+    DWORD (WINAPI *SortIpList)(LPSTR, LPSTR, LPDWORD);
+} AutoProxyHelperVtbl;
+
+typedef struct AutoProxyHelperFunctions
+{
+    const struct AutoProxyHelperVtbl *lpVtbl;
+} AutoProxyHelperFunctions;
+
+typedef struct
+{
+    DWORD dwStructSize;
+    LPSTR lpszScriptBuffer;
+    DWORD dwScriptBufferSize;
+} AUTO_PROXY_SCRIPT_BUFFER, *LPAUTO_PROXY_SCRIPT_BUFFER;
+
 BOOLAPI InternetInitializeAutoProxyDll(_In_ DWORD);
 
 BOOLAPI
