@@ -764,12 +764,20 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     exp.nStackBytes += 8;
                     exp.anArgs[exp.nArgCount] = ARG_DBL;
                 }
-                else if (CompareToken(pc, "ptr") ||
-                         CompareToken(pc, "str") ||
-                         CompareToken(pc, "wstr"))
+                else if (CompareToken(pc, "ptr"))
                 {
                     exp.nStackBytes += 4; // sizeof(void*) on x86
-                    exp.anArgs[exp.nArgCount] = ARG_PTR; // FIXME: handle strings
+                    exp.anArgs[exp.nArgCount] = ARG_PTR;
+                }
+                else if (CompareToken(pc, "str"))
+                {
+                    exp.nStackBytes += 4; // sizeof(void*) on x86
+                    exp.anArgs[exp.nArgCount] = ARG_STR;
+                }
+                else if (CompareToken(pc, "wstr"))
+                {
+                    exp.nStackBytes += 4; // sizeof(void*) on x86
+                    exp.anArgs[exp.nArgCount] = ARG_WSTR;
                 }
                 else if (CompareToken(pc, "int64"))
                 {
