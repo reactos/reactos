@@ -181,6 +181,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     ULONG Size;
     PNTFS_INFO NtfsInfo = &DeviceExt->NtfsInfo;
     NTSTATUS Status;
+    PNTFS_FCB VolumeFcb;
+    PWSTR VolumeNameU;
 
     DPRINT("NtfsGetVolumeData() called\n");
 
@@ -286,6 +288,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                             MftRecord);
     if (!NT_SUCCESS(Status))
     {
+        ExFreePool(VolumeRecord);
         ExFreePool(MftRecord);
         return Status;
     }
@@ -308,11 +311,27 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         RtlCopyMemory(NtfsInfo->VolumeLabel,
                       (PVOID)((ULONG_PTR)Attribute + ((PRESIDENT_ATTRIBUTE)Attribute)->ValueOffset),
                       NtfsInfo->VolumeLabelLength);
+        VolumeNameU = NtfsInfo->VolumeLabel;
     }
     else
     {
         NtfsInfo->VolumeLabelLength = 0;
+        VolumeNameU = L"\0";
     }
+
+    VolumeFcb = NtfsCreateFCB(VolumeNameU, DeviceExt);
+    if (VolumeFcb == NULL)
+    {
+        ExFreePool(VolumeRecord);
+        ExFreePool(MftRecord);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    VolumeFcb->Flags = FCB_IS_VOLUME;
+    VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->NtfsInfo.SectorCount * DeviceExt->NtfsInfo.BytesPerSector;
+    VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
+    VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
+    DeviceExt->VolumeFcb = VolumeFcb;
 
     /* Get volume information */
     Attribute = FindAttribute (VolumeRecord, AttributeVolumeInformation, NULL);

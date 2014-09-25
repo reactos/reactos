@@ -101,6 +101,8 @@ typedef struct
     PDEVICE_OBJECT StorageDevice;
     PFILE_OBJECT StreamFileObject;
 
+    struct _FCB *VolumeFcb;
+
     NTFS_INFO NtfsInfo;
 
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, NTFS_VCB, *PNTFS_VCB;
