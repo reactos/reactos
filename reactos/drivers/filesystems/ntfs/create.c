@@ -159,7 +159,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
     ULONG RequestedDisposition;
-//    ULONG RequestedOptions;
+    ULONG RequestedOptions;
 //    PFCB Fcb;
 //    PWSTR FileName;
     NTSTATUS Status;
@@ -172,12 +172,13 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     ASSERT(Stack);
 
     RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
-//  RequestedOptions =
-//    Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
+    RequestedOptions = Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
 //  PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;
-//  if ((RequestedOptions & FILE_DIRECTORY_FILE)
-//      && RequestedDisposition == FILE_SUPERSEDE)
-//    return STATUS_INVALID_PARAMETER;
+    if (RequestedOptions & FILE_DIRECTORY_FILE &&
+        RequestedDisposition == FILE_SUPERSEDE)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     FileObject = Stack->FileObject;
 
@@ -186,6 +187,28 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         RequestedDisposition == FILE_SUPERSEDE)
     {
         return STATUS_ACCESS_DENIED;
+    }
+
+    /* This a open operation for the volume itself */
+    if (FileObject->FileName.Length == 0 &&
+        (FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
+    {
+        if (RequestedDisposition != FILE_OPEN &&
+            RequestedDisposition != FILE_OPEN_IF)
+        {
+            return STATUS_ACCESS_DENIED;
+        }
+
+        if (RequestedOptions & FILE_DIRECTORY_FILE)
+        {
+            return STATUS_NOT_A_DIRECTORY;
+        }
+
+        NtfsAttachFCBToFileObject(DeviceExt, DeviceExt->VolumeFcb, FileObject);
+        DeviceExt->VolumeFcb->RefCount++;
+
+        Irp->IoStatus.Information = FILE_OPENED;
+        return STATUS_SUCCESS;
     }
 
     Status = NtfsOpenFile(DeviceExt,
