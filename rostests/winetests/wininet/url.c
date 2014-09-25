@@ -851,12 +851,9 @@ static void InternetCreateUrlA_test(void)
 	/* alloc-ed szUrl, NULL lpszScheme
 	 * shows that it uses nScheme instead
 	 */
-	SetLastError(0xdeadbeef);
 	urlComp.lpszScheme = NULL;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL1), "Expected %s, got %s\n", CREATE_URL1, szUrl);
 
@@ -864,48 +861,36 @@ static void InternetCreateUrlA_test(void)
 	 * any nScheme out of range seems ignored
 	 */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.nScheme = -3;
 	len++;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 
 	/* test valid lpUrlComponents, alloc-ed szUrl */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(strstr(szUrl, "80") == NULL, "Didn't expect to find 80 in szUrl\n");
 	ok(!strcmp(szUrl, CREATE_URL1), "Expected %s, got %s\n", CREATE_URL1, szUrl);
 
 	/* valid username, NULL password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszPassword = NULL;
 	len = 42;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 41, "Expected len 41, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL2), "Expected %s, got %s\n", CREATE_URL2, szUrl);
 
 	/* valid username, empty password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszPassword = empty;
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL3), "Expected %s, got %s\n", CREATE_URL3, szUrl);
 
@@ -927,39 +912,30 @@ static void InternetCreateUrlA_test(void)
 	 * if password is provided, username has to exist
 	 */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszUserName = empty;
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL5), "Expected %s, got %s\n", CREATE_URL5, szUrl);
 
 	/* NULL username, NULL password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszUserName = NULL;
 	urlComp.lpszPassword = NULL;
 	len = 42;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 32, "Expected len 32, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL4), "Expected %s, got %s\n", CREATE_URL4, szUrl);
 
 	/* empty username, empty password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszUserName = empty;
 	urlComp.lpszPassword = empty;
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL5), "Expected %s, got %s\n", CREATE_URL5, szUrl);
 

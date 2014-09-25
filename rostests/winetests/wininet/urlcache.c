@@ -103,6 +103,7 @@ static void test_find_url_cache_entriesA(void)
 
     ret = FindCloseUrlCache(hEnumHandle);
     ok(ret, "FindCloseUrlCache failed with error %d\n", GetLastError());
+    HeapFree(GetProcessHeap(), 0, lpCacheEntryInfo);
 }
 
 static void test_GetUrlCacheEntryInfoExA(void)
@@ -1038,6 +1039,45 @@ static void test_GetDiskInfoA(void)
     ok(error == ERROR_INVALID_PARAMETER, "got %u expected ERROR_INVALID_PARAMETER\n", error);
 }
 
+static BOOL cache_entry_exists(const char *url)
+{
+    static char buf[10000];
+    DWORD size = sizeof(buf);
+    BOOL ret;
+
+    ret = GetUrlCacheEntryInfoA(url, (void*)buf, &size);
+    ok(ret || GetLastError() == ERROR_FILE_NOT_FOUND, "GetUrlCacheEntryInfoA returned %x (%u)\n", ret, GetLastError());
+
+    return ret;
+}
+
+static void test_trailing_slash(void)
+{
+    char filename[MAX_PATH];
+    BYTE zero_byte = 0;
+    BOOL ret;
+
+    static const FILETIME filetime_zero;
+    static char url_with_slash[] = "http://testing.cache.com/";
+
+
+    ret = CreateUrlCacheEntryA(url_with_slash, 0, "html", filename, 0);
+    ok(ret, "CreateUrlCacheEntry failed with error %d\n", GetLastError());
+
+    create_and_write_file(filenameA, &zero_byte, sizeof(zero_byte));
+
+    ret = CommitUrlCacheEntryA("Visited: http://testing.cache.com/", NULL, filetime_zero, filetime_zero,
+            NORMAL_CACHE_ENTRY, NULL, 0, "html", NULL);
+    ok(ret, "CommitUrlCacheEntry failed with error %d\n", GetLastError());
+
+    ok(cache_entry_exists("Visited: http://testing.cache.com/"), "cache entry does not exist\n");
+    ok(!cache_entry_exists("Visited: http://testing.cache.com"), "cache entry exists\n");
+
+    ret = DeleteUrlCacheEntryA("Visited: http://testing.cache.com/");
+    ok(ret, "DeleteCacheEntryA failed\n");
+    DeleteFileA(filename);
+}
+
 START_TEST(urlcache)
 {
     HMODULE hdll;
@@ -1061,4 +1101,5 @@ START_TEST(urlcache)
     test_urlcacheW();
     test_FindCloseUrlCache();
     test_GetDiskInfoA();
+    test_trailing_slash();
 }
