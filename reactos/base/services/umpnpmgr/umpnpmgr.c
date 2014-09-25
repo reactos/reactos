@@ -27,6 +27,7 @@
  */
 
 /* INCLUDES *****************************************************************/
+
 //#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -52,13 +53,7 @@
 
 /* GLOBALS ******************************************************************/
 
-static VOID CALLBACK ServiceMain(DWORD argc, LPWSTR *argv);
 static WCHAR ServiceName[] = L"PlugPlay";
-static SERVICE_TABLE_ENTRYW ServiceTable[] =
-{
-    {ServiceName, ServiceMain},
-    {NULL, NULL}
-};
 
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
@@ -102,7 +97,7 @@ RpcServerThread(LPVOID lpParameter)
     DPRINT("RpcServerThread() called\n");
 
 #if 0
-    /* XP-compatible protocol sequence/endpoint */
+    /* 2k/XP/2k3-compatible protocol sequence/endpoint */
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     20,
                                     L"\\pipe\\ntsvcs",
@@ -113,7 +108,7 @@ RpcServerThread(LPVOID lpParameter)
         DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
 #endif
 
-    /* Vista-compatible protocol sequence/endpoint */
+    /* Vista/7-compatible protocol sequence/endpoint */
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     20,
                                     L"\\pipe\\plugplay",
@@ -1333,7 +1328,7 @@ DWORD PNP_GetClassRegProp(
         }
     }
 
-done:;
+done:
     if (ret == CR_SUCCESS)
         *pulTransferLen = *pulLength;
 
@@ -1438,7 +1433,7 @@ DWORD PNP_SetClassRegProp(
             ret = CR_REGISTRY_ERROR;
     }
 
-done:;
+done:
     if (hPropKey != NULL)
         RegCloseKey(hPropKey);
 
@@ -2642,7 +2637,7 @@ DWORD PNP_GetCustomDevProp(
         }
     }
 
-done:;
+done:
     if (ret == CR_SUCCESS)
         *pulTransferLen = *pulLength;
 
@@ -2792,7 +2787,9 @@ DWORD PNP_RegisterServiceNotification(
 
 /* Function 73 */
 DWORD PNP_SetActiveService(
-    handle_t hBinding)
+    handle_t hBinding,
+    LPWSTR pszFilter,
+    DWORD ulFlags)
 {
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
@@ -3309,7 +3306,7 @@ ServiceControlHandler(DWORD dwControl,
 }
 
 
-static VOID CALLBACK
+VOID WINAPI
 ServiceMain(DWORD argc, LPTSTR *argv)
 {
     HANDLE hThread;
@@ -3363,22 +3360,18 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     DPRINT("ServiceMain() done\n");
 }
 
-
-int
-wmain(int argc, WCHAR *argv[])
+static DWORD
+InitializePnPManager(VOID)
 {
     BOOLEAN OldValue;
     DWORD dwError;
 
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
-
-    DPRINT("Umpnpmgr: main() started\n");
+    DPRINT("UMPNPMGR: InitializePnPManager() started\n");
 
     /* We need this privilege for using CreateProcessAsUserW */
     RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &OldValue);
 
-    hInstallEvent = CreateEvent(NULL, TRUE, SetupIsActive()/*FALSE*/, NULL);
+    hInstallEvent = CreateEventW(NULL, TRUE, SetupIsActive()/*FALSE*/, NULL);
     if (hInstallEvent == NULL)
     {
         dwError = GetLastError();
@@ -3386,7 +3379,7 @@ wmain(int argc, WCHAR *argv[])
         return dwError;
     }
 
-    hDeviceInstallListNotEmpty = CreateEvent(NULL, FALSE, FALSE, NULL);
+    hDeviceInstallListNotEmpty = CreateEventW(NULL, FALSE, FALSE, NULL);
     if (hDeviceInstallListNotEmpty == NULL)
     {
         dwError = GetLastError();
@@ -3433,13 +3426,28 @@ wmain(int argc, WCHAR *argv[])
         return dwError;
     }
 
-    StartServiceCtrlDispatcher(ServiceTable);
-
-    DPRINT("Umpnpmgr: main() done\n");
-
-    ExitThread(0);
+    DPRINT("UMPNPMGR: InitializePnPManager() done\n");
 
     return 0;
+}
+
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL,
+        DWORD fdwReason,
+        LPVOID lpvReserved)
+{
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            InitializePnPManager();
+            break;
+
+        case DLL_PROCESS_DETACH:
+            break;
+    }
+
+    return TRUE;
 }
 
 /* EOF */
