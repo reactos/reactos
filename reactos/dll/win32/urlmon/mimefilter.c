@@ -277,7 +277,12 @@ static BOOL text_html_filter(const BYTE *b, DWORD size)
                 && (b[1] == 'h' || b[1] == 'H')
                 && (b[2] == 'e' || b[2] == 'E')
                 && (b[3] == 'a' || b[3] == 'A')
-                && (b[4] == 'd' || b[4] == 'D'))) return TRUE;
+                && (b[4] == 'd' || b[4] == 'D'))
+            || (b[0] == '<'
+                && (b[1] == 'b' || b[1] == 'B')
+                && (b[2] == 'o' || b[2] == 'O')
+                && (b[3] == 'd' || b[3] == 'D')
+                && (b[4] == 'y' || b[4] == 'Y'))) return TRUE;
 
     return FALSE;
 }
