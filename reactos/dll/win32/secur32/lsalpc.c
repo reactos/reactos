@@ -71,7 +71,7 @@ LsapOpenLsaPort(VOID)
     SecurityQos.EffectiveOnly       = TRUE;
 
     RtlZeroMemory(&ConnectInfo,
-                  ConnectInfoLength);
+                  sizeof(ConnectInfo));
 
     ConnectInfo.CreateContext = FALSE;
 
