@@ -122,4 +122,93 @@ LsapDeleteLogonSession(IN PLUID LogonId)
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE ProcessHandle = NULL;
+    PLIST_ENTRY SessionEntry;
+    PLSAP_LOGON_SESSION CurrentSession;
+    PLUID SessionList;
+    ULONG i, Length;
+    PVOID ClientBaseAddress;
+    NTSTATUS Status;
+
+    TRACE("LsapEnumLogonSessions()\n");
+
+    Length = SessionCount * sizeof(LUID);
+    SessionList = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  Length);
+    if (SessionList == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    i = 0;
+    SessionEntry = SessionListHead.Flink;
+    while (SessionEntry != &SessionListHead)
+    {
+        CurrentSession = CONTAINING_RECORD(SessionEntry,
+                                           LSAP_LOGON_SESSION,
+                                           Entry);
+
+        RtlCopyLuid(&SessionList[i],
+                    &CurrentSession->LogonId);
+
+        SessionEntry = SessionEntry->Flink;
+        i++;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenProcess(&ProcessHandle,
+                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE,
+                           &ObjectAttributes,
+                           &RequestMsg->h.ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtOpenProcess() failed (Status %lx)\n", Status);
+        goto done;
+    }
+
+    Status = NtAllocateVirtualMemory(ProcessHandle,
+                                     &ClientBaseAddress,
+                                     0,
+                                     &Length,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtAllocateVirtualMemory() failed (Status %lx)\n", Status);
+        goto done;
+    }
+
+    Status = NtWriteVirtualMemory(ProcessHandle,
+                                  ClientBaseAddress,
+                                  SessionList,
+                                  Length,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtWriteVirtualMemory() failed (Status %lx)\n", Status);
+        goto done;
+    }
+
+    RequestMsg->EnumLogonSessions.Reply.LogonSessionCount = SessionCount;
+    RequestMsg->EnumLogonSessions.Reply.LogonSessionBuffer = ClientBaseAddress;
+
+done:
+    if (ProcessHandle != NULL)
+        NtClose(ProcessHandle);
+
+    if (SessionList != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SessionList);
+
+    return Status;
+}
+
 /* EOF */

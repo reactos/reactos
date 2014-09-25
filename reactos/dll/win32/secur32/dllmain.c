@@ -9,6 +9,9 @@
 
 #include "precomp.h"
 
+VOID LsapInitLsaPort(VOID);
+VOID LsapCloseLsaPort(VOID);
+
 /* GLOBALS *******************************************************************/
 
 HANDLE Secur32Heap;
@@ -29,9 +32,11 @@ DllMain(HINSTANCE hInstance,
             {
                 return FALSE;
             }
+            LsapInitLsaPort();
             break;
 
         case DLL_PROCESS_DETACH:
+            LsapCloseLsaPort();
             if (!RtlDestroyHeap(Secur32Heap))
             {
                 return FALSE;

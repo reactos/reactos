@@ -699,6 +699,7 @@ NTSTATUS NTAPI LsaEnumerateAccounts(LSA_HANDLE,PLSA_ENUMERATION_HANDLE,PVOID*,
                             ULONG,PULONG);
 NTSTATUS NTAPI LsaEnumerateAccountsWithUserRight(LSA_HANDLE,PLSA_UNICODE_STRING,
                             PVOID*,PULONG);
+NTSTATUS NTAPI LsaEnumerateLogonSessions(PULONG,PLUID*);
 NTSTATUS NTAPI LsaEnumeratePrivileges(LSA_HANDLE,PLSA_ENUMERATION_HANDLE,
                                       PVOID*,ULONG,PULONG);
 NTSTATUS NTAPI LsaEnumeratePrivilegesOfAccount(LSA_HANDLE,PPRIVILEGE_SET*);
