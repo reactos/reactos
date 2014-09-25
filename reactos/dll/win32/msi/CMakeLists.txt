@@ -83,6 +83,7 @@ add_importlibs(msi
 #fixme : should be in delayed imports
     imagehlp
     msvcrt
+    kernel32_vista
     kernel32
     ntdll)
 
