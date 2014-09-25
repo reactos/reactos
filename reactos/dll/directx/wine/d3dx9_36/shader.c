@@ -207,6 +207,20 @@ HRESULT WINAPI D3DXAssembleShader(const char *data, UINT data_len, const D3DXMAC
     return hr;
 }
 
+static const void *main_file_data;
+
+static CRITICAL_SECTION from_file_mutex;
+static CRITICAL_SECTION_DEBUG from_file_mutex_debug =
+{
+    0, 0, &from_file_mutex,
+    {
+        &from_file_mutex_debug.ProcessLocksList,
+        &from_file_mutex_debug.ProcessLocksList
+    },
+    0, 0, {(DWORD_PTR)(__FILE__ ": from_file_mutex")}
+};
+static CRITICAL_SECTION from_file_mutex = {&from_file_mutex_debug, -1, 0, 0, 0, 0};
+
 /* D3DXInclude private implementation, used to implement
  * D3DXAssembleShaderFromFile() from D3DXAssembleShader(). */
 /* To be able to correctly resolve include search paths we have to store the
@@ -216,24 +230,40 @@ static HRESULT WINAPI d3dincludefromfile_open(ID3DXInclude *iface, D3DXINCLUDE_T
         const char *filename, const void *parent_data, const void **data, UINT *bytes)
 {
     const char *p, *parent_name = "";
-    char *pathname = NULL;
+    char *pathname = NULL, *ptr;
     char **buffer = NULL;
     HANDLE file;
     UINT size;
 
-    if(parent_data != NULL)
+    if (parent_data)
+    {
         parent_name = *((const char **)parent_data - 1);
+    }
+    else
+    {
+        if (main_file_data)
+            parent_name = *((const char **)main_file_data - 1);
+    }
 
     TRACE("Looking up for include file %s, parent %s\n", debugstr_a(filename), debugstr_a(parent_name));
 
-    if ((p = strrchr(parent_name, '\\')) || (p = strrchr(parent_name, '/'))) p++;
-    else p = parent_name;
+    if ((p = strrchr(parent_name, '\\')))
+        ++p;
+    else
+        p = parent_name;
     pathname = HeapAlloc(GetProcessHeap(), 0, (p - parent_name) + strlen(filename) + 1);
     if(!pathname)
         return HRESULT_FROM_WIN32(GetLastError());
 
     memcpy(pathname, parent_name, p - parent_name);
     strcpy(pathname + (p - parent_name), filename);
+    ptr = pathname + (p - parent_name);
+    while (*ptr)
+    {
+        if (*ptr == '/')
+            *ptr = '\\';
+        ++ptr;
+    }
 
     file = CreateFileA(pathname, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if(file == INVALID_HANDLE_VALUE)
@@ -253,6 +283,8 @@ static HRESULT WINAPI d3dincludefromfile_open(ID3DXInclude *iface, D3DXINCLUDE_T
         goto error;
 
     *data = buffer + 1;
+    if (!main_file_data)
+        main_file_data = *data;
 
     CloseHandle(file);
     return S_OK;
@@ -268,6 +300,8 @@ static HRESULT WINAPI d3dincludefromfile_close(ID3DXInclude *iface, const void *
 {
     HeapFree(GetProcessHeap(), 0, *((char **)data - 1));
     HeapFree(GetProcessHeap(), 0, (char **)data - 1);
+    if (main_file_data == data)
+        main_file_data = NULL;
     return S_OK;
 }
 
@@ -327,9 +361,11 @@ HRESULT WINAPI D3DXAssembleShaderFromFileW(const WCHAR *filename, const D3DXMACR
         return E_OUTOFMEMORY;
     WideCharToMultiByte(CP_ACP, 0, filename, -1, filename_a, len, NULL, NULL);
 
+    EnterCriticalSection(&from_file_mutex);
     hr = ID3DXInclude_Open(include, D3D_INCLUDE_LOCAL, filename_a, NULL, &buffer, &len);
     if (FAILED(hr))
     {
+        LeaveCriticalSection(&from_file_mutex);
         HeapFree(GetProcessHeap(), 0, filename_a);
         return D3DXERR_INVALIDDATA;
     }
@@ -337,6 +373,7 @@ HRESULT WINAPI D3DXAssembleShaderFromFileW(const WCHAR *filename, const D3DXMACR
     hr = D3DXAssembleShader(buffer, len, defines, include, flags, shader, error_messages);
 
     ID3DXInclude_Close(include, buffer);
+    LeaveCriticalSection(&from_file_mutex);
     HeapFree(GetProcessHeap(), 0, filename_a);
     return hr;
 }
@@ -459,9 +496,11 @@ HRESULT WINAPI D3DXCompileShaderFromFileW(const WCHAR *filename, const D3DXMACRO
         return E_OUTOFMEMORY;
     WideCharToMultiByte(CP_ACP, 0, filename, -1, filename_a, filename_len, NULL, NULL);
 
+    EnterCriticalSection(&from_file_mutex);
     hr = ID3DXInclude_Open(include, D3D_INCLUDE_LOCAL, filename_a, NULL, &buffer, &len);
     if (FAILED(hr))
     {
+        LeaveCriticalSection(&from_file_mutex);
         HeapFree(GetProcessHeap(), 0, filename_a);
         return D3DXERR_INVALIDDATA;
     }
@@ -475,6 +514,7 @@ HRESULT WINAPI D3DXCompileShaderFromFileW(const WCHAR *filename, const D3DXMACRO
                                         constant_table);
 
     ID3DXInclude_Close(include, buffer);
+    LeaveCriticalSection(&from_file_mutex);
     HeapFree(GetProcessHeap(), 0, filename_a);
     return hr;
 }
@@ -579,9 +619,11 @@ HRESULT WINAPI D3DXPreprocessShaderFromFileW(const WCHAR *filename, const D3DXMA
         return E_OUTOFMEMORY;
     WideCharToMultiByte(CP_ACP, 0, filename, -1, filename_a, len, NULL, NULL);
 
+    EnterCriticalSection(&from_file_mutex);
     hr = ID3DXInclude_Open(include, D3D_INCLUDE_LOCAL, filename_a, NULL, &buffer, &len);
     if (FAILED(hr))
     {
+        LeaveCriticalSection(&from_file_mutex);
         HeapFree(GetProcessHeap(), 0, filename_a);
         return D3DXERR_INVALIDDATA;
     }
@@ -592,6 +634,7 @@ HRESULT WINAPI D3DXPreprocessShaderFromFileW(const WCHAR *filename, const D3DXMA
                        (ID3DBlob **)shader, (ID3DBlob **)error_messages);
 
     ID3DXInclude_Close(include, buffer);
+    LeaveCriticalSection(&from_file_mutex);
     HeapFree(GetProcessHeap(), 0, filename_a);
     return hr;
 }

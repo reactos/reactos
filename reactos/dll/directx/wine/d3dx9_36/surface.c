@@ -1026,7 +1026,7 @@ HRESULT WINAPI D3DXGetImageInfoFromResourceW(HMODULE module, const WCHAR *resour
  *
  * RETURNS
  *   Success: D3D_OK
- *   Failure: D3DERR_INVALIDCALL, if pDestSurface or pSrcData or SrcDataSize are NULL
+ *   Failure: D3DERR_INVALIDCALL, if pDestSurface, pSrcData or SrcDataSize is NULL
  *            D3DXERR_INVALIDDATA, if pSrcData is no valid image file
  *
  */
@@ -1362,12 +1362,28 @@ static void init_argb_conversion_info(const struct pixel_format_desc *srcformat,
  * Extracts the relevant components from the source color and
  * drops the less significant bits if they aren't used by the destination format.
  */
-static void get_relevant_argb_components(const struct argb_conversion_info *info, DWORD col, DWORD *out)
+static void get_relevant_argb_components(const struct argb_conversion_info *info, const BYTE *col, DWORD *out)
 {
-    UINT i = 0;
-    for(;i < 4;i++)
-        if(info->process_channel[i])
-            out[i] = (col & info->srcmask[i]) >> info->srcshift[i];
+    unsigned int i, j;
+    unsigned int component, mask;
+
+    for (i = 0; i < 4; ++i)
+    {
+        if (!info->process_channel[i])
+            continue;
+
+        component = 0;
+        mask = info->srcmask[i];
+        for (j = 0; j < 4 && mask; ++j)
+        {
+            if (info->srcshift[i] < j * 8)
+                component |= (col[j] & mask) << (j * 8 - info->srcshift[i]);
+            else
+                component |= (col[j] & mask) >> (info->srcshift[i] - j * 8);
+            mask >>= 8;
+        }
+        out[i] = component;
+    }
 }
 
 /************************************************************
@@ -1545,14 +1561,14 @@ void convert_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slice_pit
                 {
                     DWORD val;
 
-                    get_relevant_argb_components(&conv_info, *(DWORD *)src_ptr, channels);
+                    get_relevant_argb_components(&conv_info, src_ptr, channels);
                     val = make_argb_color(&conv_info, channels);
 
                     if (color_key)
                     {
                         DWORD ck_pixel;
 
-                        get_relevant_argb_components(&ck_conv_info, *(DWORD *)src_ptr, channels);
+                        get_relevant_argb_components(&ck_conv_info, src_ptr, channels);
                         ck_pixel = make_argb_color(&ck_conv_info, channels);
                         if (ck_pixel == color_key)
                             val &= ~conv_info.destmask[0];
@@ -1648,14 +1664,14 @@ void point_filter_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slic
                 {
                     DWORD val;
 
-                    get_relevant_argb_components(&conv_info, *(DWORD *)src_ptr, channels);
+                    get_relevant_argb_components(&conv_info, src_ptr, channels);
                     val = make_argb_color(&conv_info, channels);
 
                     if (color_key)
                     {
                         DWORD ck_pixel;
 
-                        get_relevant_argb_components(&ck_conv_info, *(DWORD *)src_ptr, channels);
+                        get_relevant_argb_components(&ck_conv_info, src_ptr, channels);
                         ck_pixel = make_argb_color(&ck_conv_info, channels);
                         if (ck_pixel == color_key)
                             val &= ~conv_info.destmask[0];
@@ -1716,7 +1732,7 @@ void point_filter_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slic
  * RETURNS
  *   Success: D3D_OK, if we successfully load the pixel data into our surface or
  *                    if pSrcMemory is NULL but the other parameters are valid
- *   Failure: D3DERR_INVALIDCALL, if pDestSurface, SrcPitch or pSrcRect are NULL or
+ *   Failure: D3DERR_INVALIDCALL, if pDestSurface, SrcPitch or pSrcRect is NULL or
  *                                if SrcFormat is an invalid format (other than D3DFMT_UNKNOWN) or
  *                                if DestRect is invalid
  *            D3DXERR_INVALIDDATA, if we fail to lock pDestSurface
@@ -1867,7 +1883,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
  *
  * RETURNS
  *   Success: D3D_OK
- *   Failure: D3DERR_INVALIDCALL, if pDestSurface or pSrcSurface are NULL
+ *   Failure: D3DERR_INVALIDCALL, if pDestSurface or pSrcSurface is NULL
  *            D3DXERR_INVALIDDATA, if one of the surfaces is not lockable
  *
  */

@@ -140,8 +140,8 @@ static HDC WINAPI ID3DXFontImpl_GetDC(ID3DXFont *iface)
 static HRESULT WINAPI ID3DXFontImpl_GetGlyphData(ID3DXFont *iface, UINT glyph,
         IDirect3DTexture9 **texture, RECT *blackbox, POINT *cellinc)
 {
-    FIXME("iface %p, glyph %#x, texture %p, blackbox %s, cellinc %s stub!\n",
-            iface, glyph, texture, wine_dbgstr_rect(blackbox), wine_dbgstr_point(cellinc));
+    FIXME("iface %p, glyph %#x, texture %p, blackbox %p, cellinc %p stub!\n",
+            iface, glyph, texture, blackbox, cellinc);
     return E_NOTIMPL;
 }
 
