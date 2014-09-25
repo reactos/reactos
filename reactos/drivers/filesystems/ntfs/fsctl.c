@@ -232,6 +232,10 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         NtfsInfo->BytesPerFileRecord = BootSector->EBPB.ClustersPerMftRecord * NtfsInfo->BytesPerCluster;
     else
         NtfsInfo->BytesPerFileRecord = 1 << (-BootSector->EBPB.ClustersPerMftRecord);
+    if (BootSector->EBPB.ClustersPerIndexRecord > 0)
+        NtfsInfo->BytesPerIndexRecord = BootSector->EBPB.ClustersPerIndexRecord * NtfsInfo->BytesPerCluster;
+    else
+        NtfsInfo->BytesPerIndexRecord = 1 << (-BootSector->EBPB.ClustersPerIndexRecord);
 
     DPRINT("Boot sector information:\n");
     DPRINT("  BytesPerSector:         %hu\n", BootSector->BPB.BytesPerSector);

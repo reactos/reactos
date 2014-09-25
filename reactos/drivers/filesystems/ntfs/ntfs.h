@@ -63,6 +63,7 @@ typedef struct _NTFS_INFO
     ULARGE_INTEGER MftStart;
     ULARGE_INTEGER MftMirrStart;
     ULONG BytesPerFileRecord;
+    ULONG BytesPerIndexRecord;
 
     ULONGLONG SerialNumber;
     USHORT VolumeLabelLength;
