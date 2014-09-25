@@ -419,15 +419,15 @@ ServiceMain(DWORD argc, LPWSTR* argv)
     UpdateServiceStatus(SERVICE_STOPPED);
 }
 
-INT WINAPI
-DllMain(PVOID hinstDll,
-        ULONG dwReason,
-        PVOID reserved)
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL,
+        DWORD fdwReason,
+        LPVOID lpvReserved)
 {
-    switch (dwReason)
+    switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDll);
+            DisableThreadLibraryCalls(hinstDLL);
             break;
 
         case DLL_PROCESS_DETACH:
