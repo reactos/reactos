@@ -4091,4 +4091,3 @@ START_TEST(url)
     CloseHandle(complete_event2);
     CoUninitialize();
 }
-

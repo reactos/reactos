@@ -392,6 +392,31 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
     },
+    {   "file:///z:/test dir/README.txt#hash part", 0, S_OK, FALSE,
+        {
+            {"file:///z:/test%20dir/README.txt#hash%20part",S_OK},
+            {"",S_FALSE},
+            {"file:///z:/test%20dir/README.txt#hash%20part",S_OK},
+            {"",S_FALSE},
+            {".txt#hash%20part",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"/z:/test%20dir/README.txt#hash%20part",S_OK},
+            {"/z:/test%20dir/README.txt#hash%20part",S_OK},
+            {"",S_FALSE},
+            {"file:///z:/test dir/README.txt#hash part",S_OK},
+            {"file",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
     {   "urn:nothing:should:happen here", 0, S_OK, FALSE,
         {
             {"urn:nothing:should:happen here",S_OK,FALSE},
@@ -589,6 +614,81 @@ static const uri_properties uri_tests[] = {
         },
         {
             {Uri_HOST_DNS,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "C:/test/test.mp3#fragment|part", Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME|Uri_CREATE_FILE_USE_DOS_PATH|Uri_CREATE_NO_DECODE_EXTRA_INFO, S_OK, FALSE,
+        {
+            {"file://C:\\test\\test.mp3#fragment|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file://C:\\test\\test.mp3#fragment|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".mp3#fragment|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"C:\\test\\test.mp3#fragment|part",S_OK,FALSE},
+            {"C:\\test\\test.mp3#fragment|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"C:/test/test.mp3#fragment|part",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "C:/test/test.mp3?query|part", Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME|Uri_CREATE_FILE_USE_DOS_PATH|Uri_CREATE_NO_DECODE_EXTRA_INFO, S_OK, FALSE,
+        {
+            {"file://C:\\test\\test.mp3?query|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file://C:\\test\\test.mp3?query|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".mp3",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"C:\\test\\test.mp3",S_OK,FALSE},
+            {"C:\\test\\test.mp3?query|part",S_OK,FALSE},
+            {"?query|part",S_OK,FALSE},
+            {"C:/test/test.mp3?query|part",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "C:/test/test.mp3?query|part#hash|part", Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME|Uri_CREATE_FILE_USE_DOS_PATH|Uri_CREATE_NO_DECODE_EXTRA_INFO, S_OK, FALSE,
+        {
+            {"file://C:\\test\\test.mp3?query|part#hash|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file://C:\\test\\test.mp3?query|part#hash|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".mp3",S_OK,FALSE},
+            {"#hash|part",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"C:\\test\\test.mp3",S_OK,FALSE},
+            {"C:\\test\\test.mp3?query|part",S_OK,FALSE},
+            {"?query|part",S_OK,FALSE},
+            {"C:/test/test.mp3?query|part#hash|part",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
             {0,S_FALSE,FALSE},
             {URL_SCHEME_FILE,S_OK,FALSE},
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
@@ -4578,7 +4678,107 @@ static const uri_properties uri_tests[] = {
             {URL_SCHEME_MAILTO,S_OK},
             {URLZONE_INVALID,E_NOTIMPL}
         }
-     }
+    },
+    {   "c:\\test file.html", Uri_CREATE_FILE_USE_DOS_PATH|Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME, S_OK, FALSE,
+        {
+            {"file://c:\\test file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file://c:\\test file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"c:\\test file.html",S_OK,FALSE},
+            {"c:\\test file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"c:\\test file.html",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "c:\\test%20file.html", Uri_CREATE_FILE_USE_DOS_PATH|Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME, S_OK, FALSE,
+        {
+            {"file://c:\\test%20file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file://c:\\test%20file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"c:\\test%20file.html",S_OK,FALSE},
+            {"c:\\test%20file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"c:\\test%20file.html",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "c:\\test file.html", Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME, S_OK, FALSE,
+        {
+            {"file:///c:/test%20file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file:///c:/test%20file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"/c:/test%20file.html",S_OK,FALSE},
+            {"/c:/test%20file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"c:\\test file.html",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "c:\\test%20file.html", Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME, S_OK, FALSE,
+        {
+            {"file:///c:/test%2520file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file:///c:/test%2520file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"/c:/test%2520file.html",S_OK,FALSE},
+            {"/c:/test%2520file.html",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"c:\\test%20file.html",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    }
 };
 
 typedef struct _invalid_uri {
@@ -4590,7 +4790,7 @@ typedef struct _invalid_uri {
 static const invalid_uri invalid_uri_tests[] = {
     /* Has to have a scheme name. */
     {"://www.winehq.org",0,FALSE},
-    /* Window's doesn't like URI's which are implicitly file paths without the
+    /* Windows doesn't like URIs which are implicitly file paths without the
      * ALLOW_IMPLICIT_FILE_SCHEME flag set.
      */
     {"C:/test/test.mp3",0,FALSE},
@@ -11044,6 +11244,14 @@ static const create_urlmon_test_t create_urlmon_tests[] = {
         "file:///c:/dir/file.txt",
         "file:///c:/dir/file.txt",
         "file:///c:/dir/file.txt",
+    },
+    {
+        "c:\\dir\\file.txt#frag|part",Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME,
+        NULL,0,
+        "file://c:\\dir\\file.txt#frag|part",
+        "file:///c:/dir/file.txt#frag%7Cpart",
+        "file:///c:/dir/file.txt#frag%7Cpart",
+        "file:///c:/dir/file.txt#frag%7Cpart",
     }
 };
 

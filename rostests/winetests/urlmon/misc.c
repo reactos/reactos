@@ -581,6 +581,8 @@ static BYTE data93[] = {'<','?','x','m','l',' ',' ','<','h','t','m','l','>'};
 static BYTE data94[] = {'<','h','t','m','l','>','<','?','x','m','l',' ',' '};
 static BYTE data95[] = {'{','\\','r','t','f','<','?','x','m','l',' ',' '};
 static BYTE data96[] = {'<','?','x','m','l',' '};
+static BYTE data97[] = "<body";
+static BYTE data98[] = "blah<BoDyblahblah";
 
 static const struct {
     BYTE *data;
@@ -687,6 +689,8 @@ static const struct {
     {data94, sizeof(data94), "text/html", "text/plain"},
     {data95, sizeof(data95), "text/xml", "text/richtext"},
     {data96, sizeof(data96), "text/plain"},
+    {data97, sizeof(data97), "text/html", "text/plain"},
+    {data98, sizeof(data98), "text/html", "text/plain"},
     {data1, sizeof(data1), "text/plain", NULL, NULL, "res://mshtml.dll/blank.htm"},
     {NULL, 0, "text/html", NULL, NULL, "res://mshtml.dll/blank.htm"},
     {data1, sizeof(data1), "text/plain", NULL, NULL, "res://mshtml.dll/blank.htm", "application/octet-stream"},
