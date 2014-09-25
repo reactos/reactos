@@ -1786,6 +1786,16 @@ HttpQueryInfoW(
 
 #define HttpQueryInfo WINELIB_NAME_AW(HttpQueryInfo)
 
+typedef enum {
+    COOKIE_STATE_UNKNOWN,
+    COOKIE_STATE_ACCEPT,
+    COOKIE_STATE_PROMPT,
+    COOKIE_STATE_LEASH,
+    COOKIE_STATE_DOWNGRADE,
+    COOKIE_STATE_REJECT,
+    COOKIE_STATE_MAX = COOKIE_STATE_REJECT
+} InternetCookieState;
+
 BOOLAPI InternetClearAllPerSiteCookieDecisions(VOID);
 
 BOOLAPI
@@ -1814,6 +1824,7 @@ InternetEnumPerSiteCookieDecisionW(
 #define INTERNET_COOKIE_IS_RESTRICTED   0x00000200
 #define INTERNET_COOKIE_IE6             0x00000400
 #define INTERNET_COOKIE_IS_LEGACY       0x00000800
+#define INTERNET_COOKIE_HTTPONLY        0x00002000
 
 BOOLAPI
 InternetGetCookieExA(
