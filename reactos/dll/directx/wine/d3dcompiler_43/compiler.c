@@ -140,11 +140,12 @@ static void wpp_warning(const char *file, int line, int col, const char *_near,
 static char *wpp_lookup_mem(const char *filename, int type, const char *parent_name,
                             char **include_path, int include_path_count)
 {
-    /* Here we return always ok. We will maybe fail on the next wpp_open_mem */
+    /* We don't check for file existence here. We will potentially fail on
+     * the following wpp_open_mem(). */
     char *path;
     int i;
 
-    TRACE("Looking for include %s.\n", debugstr_a(filename));
+    TRACE("Looking for include %s, parent %s.\n", debugstr_a(filename), debugstr_a(parent_name));
 
     parent_include = NULL;
     if (strcmp(parent_name, initial_filename))

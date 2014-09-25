@@ -46,7 +46,7 @@ void hlsl_message(const char *fmt, ...)
 
 static const char *hlsl_get_error_level_name(enum hlsl_error_level level)
 {
-    const char *names[] =
+    static const char * const names[] =
     {
         "error",
         "warning",
@@ -199,7 +199,7 @@ static void declare_predefined_types(struct hlsl_scope *scope)
 {
     struct hlsl_type *type;
     unsigned int x, y, bt;
-    static const char *names[] =
+    static const char * const names[] =
     {
         "float",
         "half",
@@ -808,6 +808,31 @@ static BOOL add_typedef(DWORD modifiers, struct hlsl_type *orig_type, struct lis
     return TRUE;
 }
 
+static BOOL add_func_parameter(struct list *list, struct parse_parameter *param, const struct source_location *loc)
+{
+    struct hlsl_ir_var *decl = d3dcompiler_alloc(sizeof(*decl));
+
+    if (!decl)
+    {
+        ERR("Out of memory.\n");
+        return FALSE;
+    }
+    decl->node.type = HLSL_IR_VAR;
+    decl->node.data_type = param->type;
+    decl->node.loc = *loc;
+    decl->name = param->name;
+    decl->semantic = param->semantic;
+    decl->modifiers = param->modifiers;
+
+    if (!add_declaration(hlsl_ctx.cur_scope, decl, FALSE))
+    {
+        free_declaration(decl);
+        return FALSE;
+    }
+    list_add_tail(list, &decl->node.entry);
+    return TRUE;
+}
+
 static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tree *funcs, char *name,
         struct list *params, BOOL exact_signature)
 {
@@ -1400,7 +1425,6 @@ base_type:                KW_VOID
                             {
                                 struct hlsl_type *type;
 
-                                TRACE("Type %s.\n", $1);
                                 type = get_type(hlsl_ctx.cur_scope, $1, TRUE);
                                 $$ = type;
                                 d3dcompiler_free($1);
@@ -1409,7 +1433,6 @@ base_type:                KW_VOID
                             {
                                 struct hlsl_type *type;
 
-                                TRACE("Struct type %s.\n", $2);
                                 type = get_type(hlsl_ctx.cur_scope, $2, TRUE);
                                 if (type->type != HLSL_CLASS_STRUCT)
                                 {
@@ -1850,7 +1873,7 @@ postfix_expr:             primary_expr
                                 }
                                 operands[0] = $1;
                                 operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_BINOP_POSTINC, operands, &loc)->node;
+                                $$ = &new_expr(HLSL_IR_UNOP_POSTINC, operands, &loc)->node;
                                 /* Post increment/decrement expressions are considered const */
                                 $$->data_type = clone_hlsl_type($$->data_type);
                                 $$->data_type->modifiers |= HLSL_MODIFIER_CONST;
@@ -1869,7 +1892,7 @@ postfix_expr:             primary_expr
                                 }
                                 operands[0] = $1;
                                 operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_BINOP_POSTDEC, operands, &loc)->node;
+                                $$ = &new_expr(HLSL_IR_UNOP_POSTDEC, operands, &loc)->node;
                                 /* Post increment/decrement expressions are considered const */
                                 $$->data_type = clone_hlsl_type($$->data_type);
                                 $$->data_type->modifiers |= HLSL_MODIFIER_CONST;
@@ -2042,7 +2065,7 @@ unary_expr:               postfix_expr
                                 }
                                 operands[0] = $2;
                                 operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_BINOP_PREINC, operands, &loc)->node;
+                                $$ = &new_expr(HLSL_IR_UNOP_PREINC, operands, &loc)->node;
                             }
                         | OP_DEC unary_expr
                             {
@@ -2058,7 +2081,7 @@ unary_expr:               postfix_expr
                                 }
                                 operands[0] = $2;
                                 operands[1] = operands[2] = NULL;
-                                $$ = &new_expr(HLSL_IR_BINOP_PREDEC, operands, &loc)->node;
+                                $$ = &new_expr(HLSL_IR_UNOP_PREDEC, operands, &loc)->node;
                             }
                         | unary_op unary_expr
                             {
