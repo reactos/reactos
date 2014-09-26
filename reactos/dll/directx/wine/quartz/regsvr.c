@@ -592,7 +592,7 @@ static HRESULT register_filters(struct regsvr_filter const *list)
 		    if (list->pins[i].mediatypes[j].subtype)
 			memcpy(lpClsid + j*2 + 1, list->pins[i].mediatypes[j].subtype, sizeof(CLSID));
 		    else {
-			/* Subtype are often a combination of major type + fourcc/tag */
+                        /* Subtypes are often a combination of major type + fourcc/tag */
 			memcpy(lpClsid + j*2 + 1, list->pins[i].mediatypes[j].majortype, sizeof(CLSID));
 			*(DWORD*)(lpClsid + j*2 + 1) = list->pins[i].mediatypes[j].fourcc;
 		    }
