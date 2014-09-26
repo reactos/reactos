@@ -71,7 +71,7 @@ static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
   if (dwDstProcId == dwMyProcId)
     hDst = GetCurrentProcess();
   else
-    hDst = OpenProcess(PROCESS_DUP_HANDLE, 0, dwDstProcId);
+    hDst = OpenProcess(PROCESS_DUP_HANDLE, FALSE, dwDstProcId);
 
   if (hDst)
   {
@@ -79,12 +79,12 @@ static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
     if (dwSrcProcId == dwMyProcId)
       hSrc = GetCurrentProcess();
     else
-      hSrc = OpenProcess(PROCESS_DUP_HANDLE, 0, dwSrcProcId);
+      hSrc = OpenProcess(PROCESS_DUP_HANDLE, FALSE, dwSrcProcId);
 
     if (hSrc)
     {
       /* Make handle available to dest process */
-      if (!DuplicateHandle(hDst, hShared, hSrc, &hRet,
+      if (!DuplicateHandle(hSrc, hShared, hDst, &hRet,
                            dwAccess, 0, dwOptions | DUPLICATE_SAME_ACCESS))
         hRet = NULL;
 
@@ -175,18 +175,32 @@ PVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
 {
   HANDLE hDup;
   LPVOID pMapped;
+  DWORD thisProcessId = GetCurrentProcessId();
 
   TRACE("(%p %d)\n", hShared, dwProcId);
 
-  /* Get handle to shared memory for current process */
-  hDup = SHLWAPI_DupSharedHandle(hShared, dwProcId, GetCurrentProcessId(),
-                                 FILE_MAP_ALL_ACCESS, 0);
+  if (dwProcId != thisProcessId)
+  {
+      /* Get handle to shared memory for current process */
+      hDup = SHLWAPI_DupSharedHandle(hShared, dwProcId, GetCurrentProcessId(),
+          FILE_MAP_ALL_ACCESS, 0);
+  }
+  else
+  {
+      hDup = hShared;
+  }
+
   /* Get View */
   pMapped = MapViewOfFile(hDup, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
-  CloseHandle(hDup);
+
+  if (dwProcId != thisProcessId)
+  {
+      CloseHandle(hDup);
+  }
 
   if (pMapped)
-    return (char *) pMapped + sizeof(DWORD); /* Hide size */
+        return (char *) pMapped + sizeof(DWORD); /* Hide size */
+
   return NULL;
 }
 
@@ -231,7 +245,7 @@ BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
 
   /* Get a copy of the handle for our process, closing the source handle */
   hClose = SHLWAPI_DupSharedHandle(hShared, dwProcId, GetCurrentProcessId(),
-                                   FILE_MAP_ALL_ACCESS,DUPLICATE_CLOSE_SOURCE);
+                                   FILE_MAP_ALL_ACCESS, DUPLICATE_CLOSE_SOURCE);
   /* Close local copy */
   return CloseHandle(hClose);
 }

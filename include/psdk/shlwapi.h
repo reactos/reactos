@@ -1864,6 +1864,16 @@ HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 
 #ifndef NO_SHLWAPI_SHARED
 
+// These functions are only included in this file starting with the Windows 7 platform SDK
+
+HANDLE
+WINAPI
+SHAllocShared(
+    _In_opt_  const void *pvData,
+    _In_      DWORD dwSize,
+    _In_      DWORD dwDestinationProcessId
+    );
+
 PVOID
 WINAPI
 SHLockShared(

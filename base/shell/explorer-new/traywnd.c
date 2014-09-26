@@ -2199,7 +2199,8 @@ static void PopupStartMenu(IN ITrayWindowImpl *This)
     }
 }
 
-static void ProcessMouseTracking(ITrayWindowImpl * This)
+static void
+ProcessMouseTracking(ITrayWindowImpl * This)
 {
     RECT rcCurrent;
     POINT pt;
@@ -2249,7 +2250,8 @@ static void ProcessMouseTracking(ITrayWindowImpl * This)
     }
 }
 
-static void ProcessAutoHide(ITrayWindowImpl * This)
+static void
+ProcessAutoHide(ITrayWindowImpl * This)
 {
     RECT rc = This->rcTrayWnd[This->Position];
     INT w = This->TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;

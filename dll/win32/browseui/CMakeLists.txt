@@ -22,6 +22,7 @@ list(APPEND SOURCE
     browseui.cpp
     browseuiord.cpp
     commonbrowser.cpp
+    desktopipc.cpp
     globalfoldersettings.cpp
     internettoolbar.cpp
     parsecmdline.cpp

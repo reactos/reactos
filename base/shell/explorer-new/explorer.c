@@ -383,6 +383,25 @@ _tWinMain(IN HINSTANCE hInstance,
 
     DbgPrint("Explorer starting... Commandline: %S\n", lpCmdLine);
 
+    /*
+    * Set our shutdown parameters: we want to shutdown the very last,
+    * but before any TaskMgr instance (which has a shutdown level of 1).
+    */
+    SetProcessShutdownParameters(2, 0);
+
+    if (GetShellWindow() == NULL)
+        CreateShellDesktop = TRUE;
+
+    /* FIXME - initialize SSO Thread */
+
+    if (!CreateShellDesktop)
+    {
+        EXPLORER_CMDLINE_PARSE_RESULTS parseResults = { 0 };
+
+        if (SHExplorerParseCmdLine(&parseResults))
+            return SHCreateFromDesktop(&parseResults);
+    }
+
     if (RegOpenKey(HKEY_CURRENT_USER,
                    TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"),
                    &hkExplorer) != ERROR_SUCCESS)
@@ -407,72 +426,33 @@ _tWinMain(IN HINSTANCE hInstance,
     InitCommonControls();
     OleInitialize(NULL);
 
-    /*
-     * Set our shutdown parameters: we want to shutdown the very last,
-     * but before any TaskMgr instance (which has a shutdown level of 1).
-     */
-    SetProcessShutdownParameters(2, 0);
-
     ProcessStartupItems();
 
-    if (GetShellWindow() == NULL)
-        CreateShellDesktop = TRUE;
+    /* Initialize shell dde support */
+    ShellDDEInit(TRUE);
 
-    /* FIXME - initialize SSO Thread */
+    /* Initialize shell icons */
+    FileIconInit(TRUE);
 
-    if (CreateShellDesktop)
+    /* Initialize CLSID_ShellWindows class */
+    WinList_Init();
+
+    if (RegisterTrayWindowClass() && RegisterTaskSwitchWndClass())
     {
-        /* Initialize shell dde support */
-        ShellDDEInit(TRUE);
+        Tray = CreateTrayWindow();
+        /* This not only hides the minimized window captions in the bottom
+        left screen corner, but is also needed in order to receive
+        HSHELL_* notification messages (which are required for taskbar
+        buttons to work right) */
+        HideMinimizedWindows(TRUE);
 
-        /* Initialize shell icons */
-        FileIconInit(TRUE);
-
-        /* Initialize CLSID_ShellWindows class */
-        WinList_Init();
-
-        if (RegisterTrayWindowClass() && RegisterTaskSwitchWndClass())
-        {
-            Tray = CreateTrayWindow();
-            /* This not only hides the minimized window captions in the bottom
-               left screen corner, but is also needed in order to receive
-               HSHELL_* notification messages (which are required for taskbar
-               buttons to work right) */
-            HideMinimizedWindows(TRUE);
-
-            if (Tray != NULL)
-                hShellDesktop = DesktopCreateWindow(Tray);
-        }
-
-        /* WinXP: Notify msgina to hide the welcome screen */
-        if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
-            SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+        if (Tray != NULL)
+            hShellDesktop = DesktopCreateWindow(Tray);
     }
-    else
-    {
-        HRESULT hr;
-        EXPLORER_CMDLINE_PARSE_RESULTS parseResults = { 0 };
 
-        if (!SHExplorerParseCmdLine(&parseResults))
-            return 0;
-
-        // TODO: Handle the case where .strPath was assigned instead of .pidlPath
-
-        if (parseResults.dwFlags & SH_EXPLORER_CMDLINE_FLAG_IDLIST)
-        {
-            TRACE("Trying to open browser window... \n");
-
-            hr = SHOpenNewFrame(parseResults.pidlPath, NULL, 0, 0);
-            if (FAILED(hr))
-                return 0;
-
-            /* FIXME: we should wait a bit here and see if a window was created. If not we should exit this process. */
-            Sleep(1000);
-            ExitThread(0);
-
-            return 0;
-        }
-    }
+    /* WinXP: Notify msgina to hide the welcome screen */
+    if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
+        SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
 
     if (Tray != NULL)
     {
