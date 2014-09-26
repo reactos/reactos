@@ -1847,17 +1847,17 @@ static void test_render_filter_priority(void)
         get_connected_filter_name(ptestfilter, ConnectedFilterName1);
         ok(!strcmp(ConnectedFilterName1, "TestfilterInstance3"),
            "unexpected connected filter: %s\n", ConnectedFilterName1);
-    }
 
-    hr = IFilterMapper2_UnregisterFilter(pMapper2, &CLSID_LegacyAmFilterCategory, NULL,
-            &CLSID_TestFilter2);
-    ok(SUCCEEDED(hr), "IFilterMapper2_UnregisterFilter failed with %x\n", hr);
-    hr = IFilterMapper2_UnregisterFilter(pMapper2, &CLSID_LegacyAmFilterCategory, NULL,
-            &CLSID_TestFilter3);
-    ok(SUCCEEDED(hr), "IFilterMapper2_UnregisterFilter failed with %x\n", hr);
-    hr = IFilterMapper2_UnregisterFilter(pMapper2, &CLSID_LegacyAmFilterCategory, NULL,
-             &CLSID_TestFilter4);
-    ok(SUCCEEDED(hr), "IFilterMapper2_UnregisterFilter failed with %x\n", hr);
+        hr = IFilterMapper2_UnregisterFilter(pMapper2, &CLSID_LegacyAmFilterCategory, NULL,
+                &CLSID_TestFilter2);
+        ok(hr == S_OK, "IFilterMapper2_UnregisterFilter failed with %x\n", hr);
+        hr = IFilterMapper2_UnregisterFilter(pMapper2, &CLSID_LegacyAmFilterCategory, NULL,
+                &CLSID_TestFilter3);
+        ok(hr == S_OK, "IFilterMapper2_UnregisterFilter failed with %x\n", hr);
+        hr = IFilterMapper2_UnregisterFilter(pMapper2, &CLSID_LegacyAmFilterCategory, NULL,
+                 &CLSID_TestFilter4);
+        ok(hr == S_OK, "IFilterMapper2_UnregisterFilter failed with %x\n", hr);
+    }
 
     out:
 
@@ -1877,7 +1877,6 @@ static void test_render_filter_priority(void)
 START_TEST(filtergraph)
 {
     HRESULT hr;
-
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
     hr = CoCreateInstance(&CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IGraphBuilder, (LPVOID*)&pgraph);
@@ -1885,6 +1884,7 @@ START_TEST(filtergraph)
         skip("Creating filtergraph returned %08x, skipping tests\n", hr);
         return;
     }
+    IGraphBuilder_Release(pgraph);
     test_render_run(avifile);
     test_render_run(mpegfile);
     test_graph_builder();

@@ -28,19 +28,21 @@
 static void test_IReferenceClock_query_interface(const char * clockdesc, IReferenceClock * pClock)
 {
     HRESULT hr;
-    IUnknown *pF;
+    void *pF;
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IUnknown, (LPVOID *)&pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IUnknown, &pF);
     ok(hr == S_OK, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF != NULL, "pF is NULL\n");
+    if (SUCCEEDED(hr)) IUnknown_Release((IUnknown *)pF);
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IDirectDraw, (LPVOID *)&pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IDirectDraw, &pF);
     ok(hr == E_NOINTERFACE, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF == NULL, "pF is not NULL\n");
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IReferenceClock, (LPVOID *)&pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IReferenceClock, &pF);
     ok(hr == S_OK, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF != NULL, "pF is NULL\n");
+    if (SUCCEEDED(hr)) IReferenceClock_Release((IReferenceClock *)pF);
 }
 
 /* The following method expects a reference clock that will keep ticking for
