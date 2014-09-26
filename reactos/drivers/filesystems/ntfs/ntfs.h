@@ -386,6 +386,13 @@ NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 /* blockdev.c */
 
 NTSTATUS
+NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
+             IN LONGLONG StartingOffset,
+             IN ULONG Length,
+             IN OUT PUCHAR Buffer,
+             IN BOOLEAN Override);
+
+NTSTATUS
 NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
                 IN ULONG DiskSector,
                 IN ULONG SectorCount,
