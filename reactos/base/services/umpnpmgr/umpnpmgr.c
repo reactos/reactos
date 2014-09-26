@@ -179,7 +179,9 @@ NtStatusToCrError(NTSTATUS Status)
 
 
 /* Function 0 */
-DWORD PNP_Disconnect(
+DWORD
+WINAPI
+PNP_Disconnect(
     handle_t hBinding)
 {
     UNREFERENCED_PARAMETER(hBinding);
@@ -188,7 +190,9 @@ DWORD PNP_Disconnect(
 
 
 /* Function 1 */
-DWORD PNP_Connect(
+DWORD
+WINAPI
+PNP_Connect(
     handle_t hBinding)
 {
     UNREFERENCED_PARAMETER(hBinding);
@@ -197,7 +201,9 @@ DWORD PNP_Connect(
 
 
 /* Function 2 */
-DWORD PNP_GetVersion(
+DWORD
+WINAPI
+PNP_GetVersion(
     handle_t hBinding,
     WORD *pVersion)
 {
@@ -209,7 +215,9 @@ DWORD PNP_GetVersion(
 
 
 /* Function 3 */
-DWORD PNP_GetGlobalState(
+DWORD
+WINAPI
+PNP_GetGlobalState(
     handle_t hBinding,
     DWORD *pulState,
     DWORD ulFlags)
@@ -223,7 +231,9 @@ DWORD PNP_GetGlobalState(
 
 
 /* Function 4 */
-DWORD PNP_InitDetection(
+DWORD
+WINAPI
+PNP_InitDetection(
     handle_t hBinding)
 {
     UNREFERENCED_PARAMETER(hBinding);
@@ -234,7 +244,9 @@ DWORD PNP_InitDetection(
 
 
 /* Function 5 */
-DWORD PNP_ReportLogOn(
+DWORD
+WINAPI
+PNP_ReportLogOn(
     handle_t hBinding,
     BOOL Admin,
     DWORD ProcessId)
@@ -283,7 +295,9 @@ cleanup:
 
 
 /* Function 6 */
-DWORD PNP_ValidateDeviceInstance(
+DWORD
+WINAPI
+PNP_ValidateDeviceInstance(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulFlags)
@@ -321,7 +335,9 @@ Done:
 
 
 /* Function 7 */
-DWORD PNP_GetRootDeviceInstance(
+DWORD
+WINAPI
+PNP_GetRootDeviceInstance(
     handle_t hBinding,
     LPWSTR pDeviceID,
     PNP_RPC_STRING_LEN ulLength)
@@ -354,7 +370,9 @@ Done:
 
 
 /* Function 8 */
-DWORD PNP_GetRelatedDeviceInstance(
+DWORD
+WINAPI
+PNP_GetRelatedDeviceInstance(
     handle_t hBinding,
     DWORD ulRelationship,
     LPWSTR pDeviceID,
@@ -400,7 +418,9 @@ DWORD PNP_GetRelatedDeviceInstance(
 
 
 /* Function 9 */
-DWORD PNP_EnumerateSubKeys(
+DWORD
+WINAPI
+PNP_EnumerateSubKeys(
     handle_t hBinding,
     DWORD ulBranch,
     DWORD ulIndex,
@@ -457,7 +477,9 @@ DWORD PNP_EnumerateSubKeys(
 
 
 /* Function 10 */
-DWORD PNP_GetDeviceList(
+DWORD
+WINAPI
+PNP_GetDeviceList(
     handle_t hBinding,
     LPWSTR pszFilter,
     LPWSTR Buffer,
@@ -470,7 +492,9 @@ DWORD PNP_GetDeviceList(
 
 
 /* Function 11 */
-DWORD PNP_GetDeviceListSize(
+DWORD
+WINAPI
+PNP_GetDeviceListSize(
     handle_t hBinding,
     LPWSTR pszFilter,
     PNP_RPC_BUFFER_SIZE *pulLen,
@@ -482,7 +506,9 @@ DWORD PNP_GetDeviceListSize(
 
 
 /* Function 12 */
-DWORD PNP_GetDepth(
+DWORD
+WINAPI
+PNP_GetDepth(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     DWORD *pulDepth,
@@ -519,7 +545,9 @@ DWORD PNP_GetDepth(
 
 
 /* Function 13 */
-DWORD PNP_GetDeviceRegProp(
+DWORD
+WINAPI
+PNP_GetDeviceRegProp(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulProperty,
@@ -838,7 +866,9 @@ done:
 
 
 /* Function 14 */
-DWORD PNP_SetDeviceRegProp(
+DWORD
+WINAPI
+PNP_SetDeviceRegProp(
     handle_t hBinding,
     LPWSTR pDeviceId,
     DWORD ulProperty,
@@ -978,7 +1008,9 @@ DWORD PNP_SetDeviceRegProp(
 
 
 /* Function 15 */
-DWORD PNP_GetClassInstance(
+DWORD
+WINAPI
+PNP_GetClassInstance(
     handle_t hBinding,
     LPWSTR pDeviceId,
     LPWSTR pszClassInstance,
@@ -990,7 +1022,9 @@ DWORD PNP_GetClassInstance(
 
 
 /* Function 16 */
-DWORD PNP_CreateKey(
+DWORD
+WINAPI
+PNP_CreateKey(
     handle_t hBinding,
     LPWSTR pszSubKey,
     DWORD samDesired,
@@ -1018,7 +1052,9 @@ DWORD PNP_CreateKey(
 
 
 /* Function 17 */
-DWORD PNP_DeleteRegistryKey(
+DWORD
+WINAPI
+PNP_DeleteRegistryKey(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     LPWSTR pszParentKey,
@@ -1031,7 +1067,9 @@ DWORD PNP_DeleteRegistryKey(
 
 
 /* Function 18 */
-DWORD PNP_GetClassCount(
+DWORD
+WINAPI
+PNP_GetClassCount(
     handle_t hBinding,
     DWORD *pulClassCount,
     DWORD ulFlags)
@@ -1071,7 +1109,9 @@ DWORD PNP_GetClassCount(
 
 
 /* Function 19 */
-DWORD PNP_GetClassName(
+DWORD
+WINAPI
+PNP_GetClassName(
     handle_t hBinding,
     LPWSTR pszClassGuid,
     LPWSTR Buffer,
@@ -1125,7 +1165,9 @@ DWORD PNP_GetClassName(
 
 
 /* Function 20 */
-DWORD PNP_DeleteClassKey(
+DWORD
+WINAPI
+PNP_DeleteClassKey(
     handle_t hBinding,
     LPWSTR pszClassGuid,
     DWORD ulFlags)
@@ -1154,7 +1196,9 @@ DWORD PNP_DeleteClassKey(
 
 
 /* Function 21 */
-DWORD PNP_GetInterfaceDeviceAlias(
+DWORD
+WINAPI
+PNP_GetInterfaceDeviceAlias(
     handle_t hBinding,
     LPWSTR pszInterfaceDevice,
     GUID *AliasInterfaceGuid,
@@ -1169,7 +1213,9 @@ DWORD PNP_GetInterfaceDeviceAlias(
 
 
 /* Function 22 */
-DWORD PNP_GetInterfaceDeviceList(
+DWORD
+WINAPI
+PNP_GetInterfaceDeviceList(
     handle_t hBinding,
     GUID *InterfaceGuid,
     LPWSTR pszDeviceID,
@@ -1183,7 +1229,9 @@ DWORD PNP_GetInterfaceDeviceList(
 
 
 /* Function 23 */
-DWORD PNP_GetInterfaceDeviceListSize(
+DWORD
+WINAPI
+PNP_GetInterfaceDeviceListSize(
     handle_t hBinding,
     PNP_RPC_BUFFER_SIZE *pulLen,
     GUID *InterfaceGuid,
@@ -1196,7 +1244,9 @@ DWORD PNP_GetInterfaceDeviceListSize(
 
 
 /* Function 24 */
-DWORD PNP_RegisterDeviceClassAssociation(
+DWORD
+WINAPI
+PNP_RegisterDeviceClassAssociation(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     GUID *InterfaceGuid,
@@ -1212,7 +1262,9 @@ DWORD PNP_RegisterDeviceClassAssociation(
 
 
 /* Function 25 */
-DWORD PNP_UnregisterDeviceClassAssociation(
+DWORD
+WINAPI
+PNP_UnregisterDeviceClassAssociation(
     handle_t hBinding,
     LPWSTR pszInterfaceDevice,
     DWORD ulFlags)
@@ -1223,7 +1275,9 @@ DWORD PNP_UnregisterDeviceClassAssociation(
 
 
 /* Function 26 */
-DWORD PNP_GetClassRegProp(
+DWORD
+WINAPI
+PNP_GetClassRegProp(
     handle_t hBinding,
     LPWSTR pszClassGuid,
     DWORD ulProperty,
@@ -1345,7 +1399,9 @@ done:
 
 
 /* Function 27 */
-DWORD PNP_SetClassRegProp(
+DWORD
+WINAPI
+PNP_SetClassRegProp(
     handle_t hBinding,
     LPWSTR pszClassGuid,
     DWORD ulProperty,
@@ -1596,7 +1652,9 @@ CreateDeviceInstance(LPWSTR pszDeviceID)
 
 
 /* Function 28 */
-DWORD PNP_CreateDevInst(
+DWORD
+WINAPI
+PNP_CreateDevInst(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     LPWSTR pszParentDeviceID,
@@ -1708,7 +1766,9 @@ ReenumerateDeviceInstance(LPWSTR pszDeviceInstance)
 
 
 /* Function 29 */
-DWORD PNP_DeviceInstanceAction(
+DWORD
+WINAPI
+PNP_DeviceInstanceAction(
     handle_t hBinding,
     DWORD ulAction,
     DWORD ulFlags,
@@ -1757,7 +1817,9 @@ DWORD PNP_DeviceInstanceAction(
 
 
 /* Function 30 */
-DWORD PNP_GetDeviceStatus(
+DWORD
+WINAPI
+PNP_GetDeviceStatus(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD *pulStatus,
@@ -1797,7 +1859,9 @@ DWORD PNP_GetDeviceStatus(
 
 
 /* Function 31 */
-DWORD PNP_SetDeviceProblem(
+DWORD
+WINAPI
+PNP_SetDeviceProblem(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulProblem,
@@ -1809,7 +1873,9 @@ DWORD PNP_SetDeviceProblem(
 
 
 /* Function 32 */
-DWORD PNP_DisableDevInst(
+DWORD
+WINAPI
+PNP_DisableDevInst(
     handle_t hBinding,
     LPWSTR pDeviceID,
     PPNP_VETO_TYPE pVetoType,
@@ -1822,7 +1888,9 @@ DWORD PNP_DisableDevInst(
 }
 
 /* Function 33 */
-DWORD PNP_UninstallDevInst(
+DWORD
+WINAPI
+PNP_UninstallDevInst(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulFlags)
@@ -1875,7 +1943,9 @@ AppendDeviceId(LPWSTR lpDeviceIdList,
 
 
 /* Function 34 */
-DWORD PNP_AddID(
+DWORD
+WINAPI
+PNP_AddID(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     LPWSTR pszID,
@@ -1982,7 +2052,9 @@ Done:
 
 
 /* Function 35 */
-DWORD PNP_RegisterDriver(
+DWORD
+WINAPI
+PNP_RegisterDriver(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     DWORD ulFlags)
@@ -1993,7 +2065,9 @@ DWORD PNP_RegisterDriver(
 
 
 /* Function 36 */
-DWORD PNP_QueryRemove(
+DWORD
+WINAPI
+PNP_QueryRemove(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     PPNP_VETO_TYPE pVetoType,
@@ -2007,7 +2081,9 @@ DWORD PNP_QueryRemove(
 
 
 /* Function 37 */
-DWORD PNP_RequestDeviceEject(
+DWORD
+WINAPI
+PNP_RequestDeviceEject(
     handle_t hBinding,
     LPWSTR pszDeviceID,
     PPNP_VETO_TYPE pVetoType,
@@ -2019,10 +2095,13 @@ DWORD PNP_RequestDeviceEject(
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
+
 /* Function 38 */
 CONFIGRET
-PNP_IsDockStationPresent(handle_t hBinding,
-                         BOOL *Present)
+WINAPI
+PNP_IsDockStationPresent(
+    handle_t hBinding,
+    BOOL *Present)
 {
     HKEY hKey;
     DWORD dwType;
@@ -2073,7 +2152,9 @@ PNP_IsDockStationPresent(handle_t hBinding,
 
 
 /* Function 39 */
-DWORD PNP_RequestEjectPC(
+DWORD
+WINAPI
+PNP_RequestEjectPC(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2082,7 +2163,9 @@ DWORD PNP_RequestEjectPC(
 
 
 /* Function 40 */
-DWORD PNP_HwProfFlags(
+DWORD
+WINAPI
+PNP_HwProfFlags(
     handle_t hBinding,
     DWORD ulAction,
     LPWSTR pDeviceID,
@@ -2161,7 +2244,9 @@ DWORD PNP_HwProfFlags(
 
 
 /* Function 41 */
-DWORD PNP_GetHwProfInfo(
+DWORD
+WINAPI
+PNP_GetHwProfInfo(
     handle_t hBinding,
     DWORD ulIndex,
     HWPROFILEINFO *pHWProfileInfo,
@@ -2294,7 +2379,9 @@ done:
 
 
 /* Function 42 */
-DWORD PNP_AddEmptyLogConf(
+DWORD
+WINAPI
+PNP_AddEmptyLogConf(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulPriority,
@@ -2307,7 +2394,9 @@ DWORD PNP_AddEmptyLogConf(
 
 
 /* Function 43 */
-DWORD PNP_FreeLogConf(
+DWORD
+WINAPI
+PNP_FreeLogConf(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfType,
@@ -2320,7 +2409,9 @@ DWORD PNP_FreeLogConf(
 
 
 /* Function 44 */
-DWORD PNP_GetFirstLogConf(
+DWORD
+WINAPI
+PNP_GetFirstLogConf(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfType,
@@ -2333,7 +2424,9 @@ DWORD PNP_GetFirstLogConf(
 
 
 /* Function 45 */
-DWORD PNP_GetNextLogConf(
+DWORD
+WINAPI
+PNP_GetNextLogConf(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfType,
@@ -2347,7 +2440,9 @@ DWORD PNP_GetNextLogConf(
 
 
 /* Function 46 */
-DWORD PNP_GetLogConfPriority(
+DWORD
+WINAPI
+PNP_GetLogConfPriority(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulType,
@@ -2361,7 +2456,9 @@ DWORD PNP_GetLogConfPriority(
 
 
 /* Function 47 */
-DWORD PNP_AddResDes(
+DWORD
+WINAPI
+PNP_AddResDes(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfTag,
@@ -2378,7 +2475,9 @@ DWORD PNP_AddResDes(
 
 
 /* Function 48 */
-DWORD PNP_FreeResDes(
+DWORD
+WINAPI
+PNP_FreeResDes(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfTag,
@@ -2395,7 +2494,9 @@ DWORD PNP_FreeResDes(
 
 
 /* Function 49 */
-DWORD PNP_GetNextResDes(
+DWORD
+WINAPI
+PNP_GetNextResDes(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfTag,
@@ -2412,7 +2513,9 @@ DWORD PNP_GetNextResDes(
 
 
 /* Function 50 */
-DWORD PNP_GetResDesData(
+DWORD
+WINAPI
+PNP_GetResDesData(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfTag,
@@ -2429,7 +2532,9 @@ DWORD PNP_GetResDesData(
 
 
 /* Function 51 */
-DWORD PNP_GetResDesDataSize(
+DWORD
+WINAPI
+PNP_GetResDesDataSize(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfTag,
@@ -2445,7 +2550,9 @@ DWORD PNP_GetResDesDataSize(
 
 
 /* Function 52 */
-DWORD PNP_ModifyResDes(
+DWORD
+WINAPI
+PNP_ModifyResDes(
     handle_t hBinding,
     LPWSTR pDeviceID,
     DWORD ulLogConfTag,
@@ -2463,7 +2570,9 @@ DWORD PNP_ModifyResDes(
 
 
 /* Function 53 */
-DWORD PNP_DetectResourceConflict(
+DWORD
+WINAPI
+PNP_DetectResourceConflict(
     handle_t hBinding,
     LPWSTR pDeviceID,
     RESOURCEID ResourceID,
@@ -2478,7 +2587,9 @@ DWORD PNP_DetectResourceConflict(
 
 
 /* Function 54 */
-DWORD PNP_QueryResConfList(
+DWORD
+WINAPI
+PNP_QueryResConfList(
     handle_t hBinding,
     LPWSTR pDeviceID,
     RESOURCEID ResourceID,
@@ -2494,7 +2605,9 @@ DWORD PNP_QueryResConfList(
 
 
 /* Function 55 */
-DWORD PNP_SetHwProf(
+DWORD
+WINAPI
+PNP_SetHwProf(
     handle_t hBinding,
     DWORD ulHardwareProfile,
     DWORD ulFlags)
@@ -2505,7 +2618,9 @@ DWORD PNP_SetHwProf(
 
 
 /* Function 56 */
-DWORD PNP_QueryArbitratorFreeData(
+DWORD
+WINAPI
+PNP_QueryArbitratorFreeData(
     handle_t hBinding,
     BYTE *pData,
     DWORD DataLen,
@@ -2519,7 +2634,9 @@ DWORD PNP_QueryArbitratorFreeData(
 
 
 /* Function 57 */
-DWORD PNP_QueryArbitratorFreeSize(
+DWORD
+WINAPI
+PNP_QueryArbitratorFreeSize(
     handle_t hBinding,
     DWORD *pulSize,
     LPWSTR pDeviceID,
@@ -2533,6 +2650,7 @@ DWORD PNP_QueryArbitratorFreeSize(
 
 /* Function 58 */
 CONFIGRET
+WINAPI
 PNP_RunDetection(
     handle_t hBinding,
     DWORD ulFlags)
@@ -2542,7 +2660,9 @@ PNP_RunDetection(
 
 
 /* Function 59 */
-DWORD PNP_RegisterNotification(
+DWORD
+WINAPI
+PNP_RegisterNotification(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2551,7 +2671,9 @@ DWORD PNP_RegisterNotification(
 
 
 /* Function 60 */
-DWORD PNP_UnregisterNotification(
+DWORD
+WINAPI
+PNP_UnregisterNotification(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2560,7 +2682,9 @@ DWORD PNP_UnregisterNotification(
 
 
 /* Function 61 */
-DWORD PNP_GetCustomDevProp(
+DWORD
+WINAPI
+PNP_GetCustomDevProp(
     handle_t hBinding,
     LPWSTR pDeviceID,
     LPWSTR CustomPropName,
@@ -2654,19 +2778,21 @@ done:
 
 
 /* Function 62 */
-DWORD PNP_GetVersionInternal(
+DWORD
+WINAPI
+PNP_GetVersionInternal(
     handle_t hBinding,
     WORD *pwVersion)
 {
     *pwVersion = 0x501;
     return CR_SUCCESS;
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* Function 63 */
-DWORD PNP_GetBlockedDriverInfo(
+DWORD
+WINAPI
+PNP_GetBlockedDriverInfo(
     handle_t hBinding,
     BYTE *Buffer,
     PNP_RPC_BUFFER_SIZE *pulTransferLen,
@@ -2679,7 +2805,9 @@ DWORD PNP_GetBlockedDriverInfo(
 
 
 /* Function 64 */
-DWORD PNP_GetServerSideDeviceInstallFlags(
+DWORD
+WINAPI
+PNP_GetServerSideDeviceInstallFlags(
     handle_t hBinding,
     DWORD *pulSSDIFlags,
     DWORD ulFlags)
@@ -2690,7 +2818,9 @@ DWORD PNP_GetServerSideDeviceInstallFlags(
 
 
 /* Function 65 */
-DWORD PNP_GetObjectPropKeys(
+DWORD
+WINAPI
+PNP_GetObjectPropKeys(
     handle_t hBinding,
     LPWSTR ObjectName,
     DWORD ObjectType,
@@ -2706,7 +2836,9 @@ DWORD PNP_GetObjectPropKeys(
 
 
 /* Function 66 */
-DWORD PNP_GetObjectProp(
+DWORD
+WINAPI
+PNP_GetObjectProp(
     handle_t hBinding,
     LPWSTR ObjectName,
     DWORD ObjectType,
@@ -2724,7 +2856,9 @@ DWORD PNP_GetObjectProp(
 
 
 /* Function 67 */
-DWORD PNP_SetObjectProp(
+DWORD
+WINAPI
+PNP_SetObjectProp(
     handle_t hBinding,
     LPWSTR ObjectName,
     DWORD ObjectType,
@@ -2741,7 +2875,9 @@ DWORD PNP_SetObjectProp(
 
 
 /* Function 68 */
-DWORD PNP_InstallDevInst(
+DWORD
+WINAPI
+PNP_InstallDevInst(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2750,7 +2886,9 @@ DWORD PNP_InstallDevInst(
 
 
 /* Function 69 */
-DWORD PNP_ApplyPowerSettings(
+DWORD
+WINAPI
+PNP_ApplyPowerSettings(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2759,7 +2897,9 @@ DWORD PNP_ApplyPowerSettings(
 
 
 /* Function 70 */
-DWORD PNP_DriverStoreAddDriverPackage(
+DWORD
+WINAPI
+PNP_DriverStoreAddDriverPackage(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2768,7 +2908,9 @@ DWORD PNP_DriverStoreAddDriverPackage(
 
 
 /* Function 71 */
-DWORD PNP_DriverStoreDeleteDriverPackage(
+DWORD
+WINAPI
+PNP_DriverStoreDeleteDriverPackage(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2777,7 +2919,9 @@ DWORD PNP_DriverStoreDeleteDriverPackage(
 
 
 /* Function 72 */
-DWORD PNP_RegisterServiceNotification(
+DWORD
+WINAPI
+PNP_RegisterServiceNotification(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -2786,7 +2930,9 @@ DWORD PNP_RegisterServiceNotification(
 
 
 /* Function 73 */
-DWORD PNP_SetActiveService(
+DWORD
+WINAPI
+PNP_SetActiveService(
     handle_t hBinding,
     LPWSTR pszFilter,
     DWORD ulFlags)
@@ -2797,7 +2943,9 @@ DWORD PNP_SetActiveService(
 
 
 /* Function 74 */
-DWORD PNP_DeleteServiceDevices(
+DWORD
+WINAPI
+PNP_DeleteServiceDevices(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
