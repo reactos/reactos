@@ -1117,7 +1117,7 @@ static VOID VgaChangeMode(VOID)
         /* Enter new text mode */
         if (!VgaEnterTextMode(&Resolution))
         {
-            DisplayMessage(L"An unexpected VGA error occurred while switching into text mode.");
+            DisplayMessage(L"An unexpected VGA error occurred while switching into text mode. Error: %u", GetLastError());
             EmulatorTerminate();
             return;
         }
@@ -1127,7 +1127,7 @@ static VOID VgaChangeMode(VOID)
         /* Enter graphics mode */
         if (!VgaEnterGraphicsMode(&Resolution))
         {
-            DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode.");
+            DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode. Error: %u", GetLastError());
             EmulatorTerminate();
             return;
         }
