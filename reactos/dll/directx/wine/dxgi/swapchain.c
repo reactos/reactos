@@ -67,19 +67,7 @@ static ULONG STDMETHODCALLTYPE dxgi_swapchain_Release(IDXGISwapChain *iface)
     TRACE("%p decreasing refcount to %u\n", This, refcount);
 
     if (!refcount)
-    {
-        struct wined3d_device *wined3d_device;
-        HRESULT hr;
-
-        FIXME("Only a single swapchain is supported\n");
-
-        wined3d_device = wined3d_swapchain_get_device(This->wined3d_swapchain);
-        hr = wined3d_device_uninit_3d(wined3d_device);
-        if (FAILED(hr))
-        {
-            ERR("Uninit3D failed, hr %#x\n", hr);
-        }
-    }
+        wined3d_swapchain_decref(This->wined3d_swapchain);
 
     return refcount;
 }

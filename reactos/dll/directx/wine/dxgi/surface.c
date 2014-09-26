@@ -149,9 +149,13 @@ static HRESULT STDMETHODCALLTYPE dxgi_surface_GetDevice(IDXGISurface *iface, REF
 /* IDXGISurface methods */
 static HRESULT STDMETHODCALLTYPE dxgi_surface_GetDesc(IDXGISurface *iface, DXGI_SURFACE_DESC *desc)
 {
-    FIXME("iface %p, desc %p stub!\n", iface, desc);
+    struct dxgi_surface *surface = impl_from_IDXGISurface(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, desc %p.\n", iface, desc);
+
+    *desc = surface->desc;
+
+    return S_OK;
 }
 
 static HRESULT STDMETHODCALLTYPE dxgi_surface_Map(IDXGISurface *iface, DXGI_MAPPED_RECT *mapped_rect, UINT flags)
@@ -195,13 +199,15 @@ static const struct IUnknownVtbl dxgi_surface_inner_unknown_vtbl =
     dxgi_surface_inner_Release,
 };
 
-HRESULT dxgi_surface_init(struct dxgi_surface *surface, IDXGIDevice *device, IUnknown *outer)
+HRESULT dxgi_surface_init(struct dxgi_surface *surface, IDXGIDevice *device,
+        IUnknown *outer, const DXGI_SURFACE_DESC *desc)
 {
     surface->IDXGISurface_iface.lpVtbl = &dxgi_surface_vtbl;
     surface->IUnknown_iface.lpVtbl = &dxgi_surface_inner_unknown_vtbl;
     surface->refcount = 1;
     surface->outer_unknown = outer ? outer : &surface->IUnknown_iface;
     surface->device = device;
+    surface->desc = *desc;
 
     return S_OK;
 }
