@@ -282,7 +282,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         {
             fprintf(file, "\tint retval;\n");
         }
-        fprintf(file, "\tif(TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s(",
+        fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s(",
                         pszDllName, pexp->strName.len, pexp->strName.buf);
     }
 
@@ -350,13 +350,13 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     {
         if (pexp->uFlags & FL_RET64)
         {
-            fprintf(file, "\tif(TRACE_ON(relay))\n\t\t(\"%s: %.*s: retval = %%\"PRIx64\"\\n\", retval);\n",
+            fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = %%\"PRIx64\"\\n\", retval);\n",
                 pszDllName, pexp->strName.len, pexp->strName.buf);
         }
         else
         {
-            fprintf(file, "\tTRACE_(relay)(\"%.*s: retval = 0x%%lx\\n\", retval);\n",
-                pexp->strName.len, pexp->strName.buf);
+            fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = 0x%%lx\\n\", retval);\n",
+                pszDllName, pexp->strName.len, pexp->strName.buf);
         }
         fprintf(file, "\treturn retval;\n}\n\n");
     }
