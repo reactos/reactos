@@ -97,7 +97,7 @@ static void test_devenum(IBindCtx *bind_ctx)
                     if (SUCCEEDED(hr))
                     {
                         if (winetest_debug > 1)
-                            trace("  %s\n", wine_dbgstr_w(V_UNION(&var, bstrVal)));
+                            trace("  %s\n", wine_dbgstr_w(V_BSTR(&var)));
                         VariantClear(&var);
                     }
                     else
