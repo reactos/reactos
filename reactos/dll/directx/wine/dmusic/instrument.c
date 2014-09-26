@@ -60,8 +60,6 @@ static ULONG WINAPI IDirectMusicInstrumentImpl_AddRef(LPDIRECTMUSICINSTRUMENT if
 
     TRACE("(%p)->(): new ref = %u\n", iface, ref);
 
-    DMUSIC_LockModule();
-
     return ref;
 }
 
@@ -81,9 +79,8 @@ static ULONG WINAPI IDirectMusicInstrumentImpl_Release(LPDIRECTMUSICINSTRUMENT i
             HeapFree(GetProcessHeap(), 0, This->articulations->connections);
         HeapFree(GetProcessHeap(), 0, This->articulations);
         HeapFree(GetProcessHeap(), 0, This);
+        DMUSIC_UnlockModule();
     }
-
-    DMUSIC_UnlockModule();
 
     return ref;
 }
@@ -123,16 +120,22 @@ static const IDirectMusicInstrumentVtbl DirectMusicInstrument_Vtbl =
 /* for ClassFactory */
 HRESULT DMUSIC_CreateDirectMusicInstrumentImpl (LPCGUID lpcGUID, LPVOID* ppobj, LPUNKNOWN pUnkOuter) {
 	IDirectMusicInstrumentImpl* dminst;
-	
+        HRESULT hr;
+
 	dminst = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectMusicInstrumentImpl));
 	if (NULL == dminst) {
 		*ppobj = NULL;
 		return E_OUTOFMEMORY;
 	}
 	dminst->IDirectMusicInstrument_iface.lpVtbl = &DirectMusicInstrument_Vtbl;
-	dminst->ref = 0; /* will be inited by QueryInterface */
-	
-	return IDirectMusicInstrument_QueryInterface(&dminst->IDirectMusicInstrument_iface, lpcGUID, ppobj);
+        dminst->ref = 1;
+
+        DMUSIC_LockModule();
+        hr = IDirectMusicInstrument_QueryInterface(&dminst->IDirectMusicInstrument_iface, lpcGUID,
+                ppobj);
+        IDirectMusicInstrument_Release(&dminst->IDirectMusicInstrument_iface);
+
+        return hr;
 }
 
 static HRESULT read_from_stream(IStream *stream, void *data, ULONG size)
