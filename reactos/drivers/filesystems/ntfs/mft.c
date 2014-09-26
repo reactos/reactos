@@ -645,18 +645,17 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb, ULONGLONG MFTIndex, PUNICODE_STRING Fil
 }
 
 NTSTATUS
-NtfsLookupFile(PDEVICE_EXTENSION Vcb,
-               PUNICODE_STRING PathName,
-               PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext)
+NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
+                 PUNICODE_STRING PathName,
+                 PFILE_RECORD_HEADER *FileRecord,
+                 PNTFS_ATTR_CONTEXT *DataContext,
+                 ULONGLONG CurrentMFTIndex)
 {
-    ULONGLONG CurrentMFTIndex;
     UNICODE_STRING Current, Remaining;
     NTSTATUS Status;
 
-    DPRINT1("NtfsLookupFile(%p, %wZ, %p)\n", Vcb, PathName, FileRecord);
+    DPRINT1("NtfsLookupFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, PathName, FileRecord, DataContext, CurrentMFTIndex);
 
-    CurrentMFTIndex = NTFS_FILE_ROOT;
     FsRtlDissectName(*PathName, &Current, &Remaining);
 
     while (Current.Length != 0)
@@ -694,5 +693,14 @@ NtfsLookupFile(PDEVICE_EXTENSION Vcb,
     }
 
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NtfsLookupFile(PDEVICE_EXTENSION Vcb,
+               PUNICODE_STRING PathName,
+               PFILE_RECORD_HEADER *FileRecord,
+               PNTFS_ATTR_CONTEXT *DataContext)
+{
+    return NtfsLookupFileAt(Vcb, PathName, FileRecord, DataContext, NTFS_FILE_ROOT);
 }
 /* EOF */
