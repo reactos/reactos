@@ -344,6 +344,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->NtfsInfo.SectorCount * DeviceExt->NtfsInfo.BytesPerSector;
     VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
     VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
+    VolumeFcb->MFTIndex = 0;
     DeviceExt->VolumeFcb = VolumeFcb;
 
     /* Get volume information */

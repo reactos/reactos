@@ -288,6 +288,7 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
     Fcb->RFCB.FileSize.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
     Fcb->RFCB.ValidDataLength.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
     Fcb->RFCB.AllocationSize.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
+    Fcb->MFTIndex = NTFS_FILE_ROOT;
 
     NtfsFCBInitializeCache(Vcb, Fcb);
     NtfsAddFCBToTable(Vcb, Fcb);

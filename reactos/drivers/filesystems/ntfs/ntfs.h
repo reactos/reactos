@@ -138,6 +138,8 @@ typedef struct _FCB
     LONG RefCount;
     ULONG Flags;
 
+    ULONGLONG MFTIndex;
+
 //  DIR_RECORD Entry;
 
 } NTFS_FCB, *PNTFS_FCB;
