@@ -608,6 +608,7 @@ static void test_DirectInputJoyConfig8(void)
                "IDirectInput_CreateDevice failed with guid from GetConfig hr = 0x%08x\n", hr);
     }
 
+    IDirectInput_Release(pDI);
 }
 
 START_TEST(dinput)
