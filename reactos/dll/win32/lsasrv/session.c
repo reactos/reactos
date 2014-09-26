@@ -131,8 +131,8 @@ LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg)
     PLIST_ENTRY SessionEntry;
     PLSAP_LOGON_SESSION CurrentSession;
     PLUID SessionList;
-    ULONG i, Length;
-    PVOID ClientBaseAddress;
+    ULONG i, Length, MemSize;
+    PVOID ClientBaseAddress = NULL;
     NTSTATUS Status;
 
     TRACE("LsapEnumLogonSessions()\n");
@@ -175,10 +175,11 @@ LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg)
         goto done;
     }
 
+    MemSize = Length;
     Status = NtAllocateVirtualMemory(ProcessHandle,
                                      &ClientBaseAddress,
                                      0,
-                                     &Length,
+                                     &MemSize,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
