@@ -51,7 +51,12 @@ void Test_ExcludeClipRect()
     ok_int(GetRandomRgn(hdc, hrgn2, CLIPRGN), 1);
     ok_int(CombineRgn(hrgn2, hrgn2, hrgn, RGN_XOR), NULLREGION);
 
-    /* Now exclude something for real */
+    /* Exclude something on one side of the clip rect */
+    ok_int(ExcludeClipRect(hdc, 0, 0, 13, 50), COMPLEXREGION);
+    ok_int(GetRandomRgn(hdc, hrgn2, CLIPRGN), 1);
+    ok_int(CombineRgn(hrgn, hrgn2, NULL, RGN_COPY), SIMPLEREGION);
+
+    /* Exclude something on the edge of the clip rect */
     ok_int(ExcludeClipRect(hdc, 0, 0, 15, 15), COMPLEXREGION);
     ok_int(GetRandomRgn(hdc, hrgn2, CLIPRGN), 1);
     ok_int(CombineRgn(hrgn, hrgn2, NULL, RGN_COPY), COMPLEXREGION);
