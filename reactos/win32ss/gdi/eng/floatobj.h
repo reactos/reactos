@@ -6,36 +6,36 @@ FORCEINLINE
 BOOL
 _FLOATOBJ_Equal(FLOATOBJ *pf1, FLOATOBJ *pf2)
 {
-	EFLOAT_S *pef1 = (EFLOAT_S*)pf1;
-	EFLOAT_S *pef2 = (EFLOAT_S*)pf2;
-	return (pef1->lMant == pef2->lMant && pef1->lExp == pef2->lExp);
+    EFLOAT_S *pef1 = (EFLOAT_S*)pf1;
+    EFLOAT_S *pef2 = (EFLOAT_S*)pf2;
+    return (pef1->lMant == pef2->lMant && pef1->lExp == pef2->lExp);
 }
 
 FORCEINLINE
 LONG
 _FLOATOBJ_GetLong(FLOATOBJ *pf)
 {
-	EFLOAT_S *pef = (EFLOAT_S*)pf;
-	return pef->lMant >> (32 - pef->lExp);
+    EFLOAT_S *pef = (EFLOAT_S*)pf;
+    return pef->lMant >> (32 - pef->lExp);
 }
 
 FORCEINLINE
 LONG
 _FLOATOBJ_GetFix(FLOATOBJ *pf)
 {
-	EFLOAT_S *pef = (EFLOAT_S*)pf;
-	LONG Shift = (28 - pef->lExp);
-	return (Shift >= 0 ? pef->lMant >> Shift : pef->lMant << -Shift);
+    EFLOAT_S *pef = (EFLOAT_S*)pf;
+    LONG Shift = (28 - pef->lExp);
+    return (Shift >= 0 ? pef->lMant >> Shift : pef->lMant << -Shift);
 }
 
 FORCEINLINE
 BOOL
 _FLOATOBJ_IsLong(FLOATOBJ *pf)
 {
-	EFLOAT_S *pef = (EFLOAT_S*)pf;
-	ULONG ulShift = pef->lExp;
-	if (ulShift < 32)
-	    return ((pef->lMant << ulShift) == 0);
+    EFLOAT_S *pef = (EFLOAT_S*)pf;
+    ULONG ulShift = pef->lExp;
+    if (ulShift < 32)
+        return ((pef->lMant << ulShift) == 0);
     else
         return (ulShift == 32);
 }
@@ -44,16 +44,16 @@ FORCEINLINE
 BOOL
 _FLOATOBJ_Equal0(FLOATOBJ *pf)
 {
-	EFLOAT_S *pef = (EFLOAT_S*)pf;
-	return (pef->lMant == 0 && pef->lExp == 0);
+    EFLOAT_S *pef = (EFLOAT_S*)pf;
+    return (pef->lMant == 0 && pef->lExp == 0);
 }
 
 FORCEINLINE
 BOOL
 _FLOATOBJ_Equal1(FLOATOBJ *pf)
 {
-	EFLOAT_S *pef = (EFLOAT_S*)pf;
-	return (pef->lMant == 0x40000000 && pef->lExp == 2);
+    EFLOAT_S *pef = (EFLOAT_S*)pf;
+    return (pef->lMant == 0x40000000 && pef->lExp == 2);
 }
 
 extern const FLOATOBJ gef0;
