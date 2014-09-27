@@ -226,34 +226,27 @@ NtGdiExcludeClipRect(
         iComplexity = REGION_SubtractRectFromRgn(pdc->dclevel.prgnClip,
                                                  pdc->dclevel.prgnClip,
                                                  &rect);
-
-        /* Emulate Windows behavior */
-        if (iComplexity == SIMPLEREGION)
-            iComplexity = COMPLEXREGION;
     }
     else
     {
-        /* Check if the rect intersects with the window rect */
-        if (RECTL_bIntersectRect(&rect, &rect, &pdc->erclWindow))
+        /* We don't have a clip region yet, create an empty region */
+        pdc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+        if (pdc->dclevel.prgnClip == NULL)
         {
-            /* It does. In this case create an empty region */
-            pdc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
-            iComplexity = NULLREGION;
+            iComplexity = ERROR;
         }
         else
         {
-            /* Otherwise, emulate strange Windows behavior... */
-            pdc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 1, 1);
-            iComplexity = COMPLEXREGION;
-        }
-
-        /* Check if creating the region failed */
-        if (pdc->dclevel.prgnClip == NULL)
-        {
-            /* Return error code */
-            iComplexity = ERROR;
+            /* Subtract the rect from the VIS region */
+            iComplexity = REGION_SubtractRectFromRgn(pdc->dclevel.prgnClip,
+                                                     pdc->prgnVis,
+                                                     &rect);
         }
     }
+
+    /* Emulate Windows behavior */
+    if (iComplexity == SIMPLEREGION)
+        iComplexity = COMPLEXREGION;
 
     /* If we succeeded, mark the RAO region as dirty */
     if (iComplexity != ERROR)
