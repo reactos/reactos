@@ -1,6 +1,6 @@
 @ stub BCryptAddContextFunction
 @ stub BCryptAddContextFunctionProvider
-@ stub BCryptCloseAlgorithmProvider
+@ stdcall BCryptCloseAlgorithmProvider(ptr long)
 @ stub BCryptConfigureContext
 @ stub BCryptConfigureContextFunction
 @ stub BCryptCreateContext
@@ -27,12 +27,12 @@
 @ stdcall BCryptGenRandom(ptr ptr long long)
 @ stub BCryptGenerateKeyPair
 @ stub BCryptGenerateSymmetricKey
-@ stub BCryptGetFipsAlgorithmMode
+@ stdcall BCryptGetFipsAlgorithmMode(ptr)
 @ stub BCryptGetProperty
 @ stub BCryptHashData
 @ stub BCryptImportKey
 @ stub BCryptImportKeyPair
-@ stub BCryptOpenAlgorithmProvider
+@ stdcall BCryptOpenAlgorithmProvider(ptr wstr wstr long)
 @ stub BCryptQueryContextConfiguration
 @ stub BCryptQueryContextFunctionConfiguration
 @ stub BCryptQueryContextFunctionProperty
