@@ -182,7 +182,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
 {
     int i;
     int bRelay = 0;
-    int bInPrototype;
+    int bInPrototype = 0;
 
     if (pexp->nCallingConvention != CC_STUB &&
         (pexp->uFlags & FL_STUB) == 0)
