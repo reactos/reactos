@@ -79,6 +79,7 @@ static VOID PitSetOut(PPIT_CHANNEL Channel, BOOLEAN State)
     Channel->Out = State;
 
     /* Call the callback */
+    if (!Channel->Gate) return; // HACK: This is a HACK until gates are properly used (needed for the speaker to work properly).
     if (Channel->OutFunction) Channel->OutFunction(Channel->OutParam, State);
 }
 
@@ -423,7 +424,7 @@ static VOID PitDecrementCount(PPIT_CHANNEL Channel, DWORD Count)
             if (ReloadCount & 1)
             {
                 Channel->FlipFlop = !Channel->FlipFlop;
-                // PitSetOut(Channel, !Channel->Out);
+                PitSetOut(Channel, !Channel->Out);
             }
 
             /* Was there any rising edge? */
