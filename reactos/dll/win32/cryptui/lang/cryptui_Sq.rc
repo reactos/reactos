@@ -105,22 +105,16 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Emer Miqesor"
     IDS_ALLOWED_PURPOSE_ALL "<Te gjith>"
     IDS_ALLOWED_PURPOSE_NONE "<Asnje>"
-    IDS_WARN_REMOVE_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këtë certifikatë, ose të nënshkruajë mesazhe me të.\n\
-Jeni te sigurte qe doni te hiqni këtë certifikatë?"
-    IDS_WARN_REMOVE_PLURAL_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këto certifikata, ose të nënshkruajë mesazhe me ta.\n\
-Jeni te sigurte qe doni te hiqni këto certifikata?"
+    IDS_WARN_REMOVE_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këtë certifikatë, ose të nënshkruajë mesazhe me të.\nJeni te sigurte qe doni te hiqni këtë certifikatë?"
+    IDS_WARN_REMOVE_PLURAL_MY "Ju nuk do të jenë më në gjendje të decrypt mesazhe me këto certifikata, ose të nënshkruajë mesazhe me ta.\nJeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_WARN_REMOVE_ADDRESSBOOK "Ju nuk do të jenë më në gjendje të encrypt mesazhe me këtë certifikatë, ose të verifikojë mesazhe të nënshkruara me të.\n\Jeni te sigurte qe doni te hiqni këtë certifikatë?"
     IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Ju do të jenë më në gjendje të encrypt mesazhe me këtë certifikatë, ose të verifikojë mesazhe të nënshkruara me të.\n\Jeni te sigurte qe doni te hiqni këto certifikata?"
-    IDS_WARN_REMOVE_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\n\
-Jeni te sigurte qe doni te hiqni këtë certifikatë?"
-    IDS_WARN_REMOVE_PLURAL_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\n\
-Jeni te sigurte qe doni te hiqni këto certifikata?"
+    IDS_WARN_REMOVE_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\nJeni te sigurte qe doni te hiqni këtë certifikatë?"
+    IDS_WARN_REMOVE_PLURAL_CA "Certifikatat e lëshuara nga ky autoritet certifikues nuk do t'i besohet më.\nJeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_WARN_REMOVE_ROOT "Certifikatat e lëshuara nga ky autoritet certifikues rrënjë, ose çdo autoritet certifikimit të lëshuara, më nuk do të besohet.\n\Jeni te sigurte qe doni te hiqni certifikatën root te besuar?"
     IDS_WARN_REMOVE_PLURAL_ROOT "Certifikatat e lëshuara nga ky autoritet certifikues rrënjë, ose çdo autoritet certifikimit të lëshuara, më nuk do të besohet.\n\Jeni te sigurte qe doni te hiqni certifikatën root te besuar?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\n\
-Jeni te sigurte qe doni te hiqni këtë certifikatë?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\n\
-Jeni te sigurte qe doni te hiqni këto certifikata?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\nJeni te sigurte qe doni te hiqni këtë certifikatë?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software nënshkruar nga ky botues nuk do t'i besohet.\nJeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_WARN_REMOVE_DEFAULT "Jeni te sigurte qe doni te hiqni këtë certifikatë?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Jeni te sigurte qe doni te hiqni këto certifikata?"
     IDS_CERT_MGR "Çertifikata"
@@ -285,10 +279,8 @@ CAPTION "Magjistrari Importimit Çetifikatave"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Mirë se vini në Magjistarin Importues te Certifikatave", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Ky magjistar ju ndihmon ne importimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\
-\n\
-Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\
-\n\
+  LTEXT "Ky magjistar ju ndihmon ne importimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\n\
+Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\n\
 Për të vazhduar, klikoni Tjetër.",
     -1, 115,40,195,120
 END
@@ -302,11 +294,11 @@ BEGIN
   PUSHBUTTON "Shfleto...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Shenim:  Formati i mëposhtme mund të përmbajë më shumë se një certifikatë, certifikatë listë revokimi ose certifikatën listën e besimit:",
     -1, 21,30,265,16
-  LTEXT "Mesazh kriptografike Sintaksa Standard/PKCS #7 Messages (.p7b)",
+  LTEXT "Mesazh kriptografike Sintaksa Standard/PKCS #7 Messages (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Shkëmbim Informacione Personale/PKCS #12 (.pfx, .p12)",
+  LTEXT "Shkëmbim Informacione Personale/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft Serialized Certificate Store (.sst)",
+  LTEXT "Microsoft Serialized Certificate Store (*.sst)",
     -1, 31,83,265,10
 END
 
@@ -377,10 +369,8 @@ CAPTION "Magjistrari Eksportimit Çetifikatave"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Mirë se vini në Magjistarin Eksportues te Certifikatave", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Ky magjistar ju ndihmon ne eksmportimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\
-\n\
-Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\
-\n\
+  LTEXT "Ky magjistar ju ndihmon ne eksmportimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\n\
+Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\n\
 Për të vazhduar, klikoni Tjetër.",
     -1, 115,40,195,120
 END
@@ -413,15 +403,15 @@ CAPTION "Magjistrari Eksportimit Çetifikatave"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Zgjidhni formatin që dëshironi të përdorni:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
+  AUTORADIOBUTTON "&DER-encoded X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
+  AUTORADIOBUTTON "Ba&se64-encoded X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "Mesazh kriptografike Sintaksa Standard/PKCS #7 Message (.p7b)",
+  AUTORADIOBUTTON "Mesazh kriptografike Sintaksa Standard/PKCS #7 Message (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "Përfshirja e të gjitha certifikatat në rrugën e certifikimit nëse është e mundur",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "Shkëmbim Informacione Personale/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "Shkëmbim Informacione Personale/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Përfshirja e të gjitha certifikatat në rrugën e certifikimit nëse është e mundur",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED

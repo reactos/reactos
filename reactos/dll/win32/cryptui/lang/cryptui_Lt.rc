@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Draugiškas vardas"
     IDS_ALLOWED_PURPOSE_ALL "<visi laukai>"
     IDS_ALLOWED_PURPOSE_NONE "<jokios>"
-    IDS_WARN_REMOVE_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
-    IDS_WARN_REMOVE_CA "Liudijimais, išduotais šios liudijimo įstaigos, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_CA "Liudijimais, išduotais šių liudijimo įstaigų, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
-    IDS_WARN_REMOVE_ROOT "Liudijimais, išduotais šios vyriausiosios liudijimo įstaigos, ar bet kurios jos išduotos liudijimų įstaigos liudijimais, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šį patikimą vyriausiąjį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Liudijimais, išduotais šių vyriausiųjų liudijimo įstaigų, ar bet kurių jų išduotų liudijimų įstaigų liudijimais, nebebus pasitikima.\n\
-Ar tikrai norite pašalinti šiuos patikimus vyriausiuosius liudijimus?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šio leidėjo.\n\
-Ar tikrai norite pašalinti šį liudijimą?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šių leidėjų.\n\
-Ar tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_MY "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar pasirašyti pranešimų.\nAr tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Su šiuo liudijimu jūs daugiau nebegalėsite iššifruoti pranešimų ar patikrinti pasirašytų pranešimų.\nAr tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_CA "Liudijimais, išduotais šios liudijimo įstaigos, nebebus pasitikima.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_CA "Liudijimais, išduotais šių liudijimo įstaigų, nebebus pasitikima.\nAr tikrai norite pašalinti šiuos liudijimus?"
+    IDS_WARN_REMOVE_ROOT "Liudijimais, išduotais šios vyriausiosios liudijimo įstaigos, ar bet kurios jos išduotos liudijimų įstaigos liudijimais, nebebus pasitikima.\nAr tikrai norite pašalinti šį patikimą vyriausiąjį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Liudijimais, išduotais šių vyriausiųjų liudijimo įstaigų, ar bet kurių jų išduotų liudijimų įstaigų liudijimais, nebebus pasitikima.\nAr tikrai norite pašalinti šiuos patikimus vyriausiuosius liudijimus?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šio leidėjo.\nAr tikrai norite pašalinti šį liudijimą?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Nebebus pasitikima programine įranga pasirašyta šių leidėjų.\nAr tikrai norite pašalinti šiuos liudijimus?"
     IDS_WARN_REMOVE_DEFAULT "Ar tikrai norite pašalinti šį liudijimą?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Ar tikrai norite pašalinti šiuos liudijimus?"
     IDS_CERT_MGR "Liudijimai"
     IDS_FRIENDLY_NAME_NONE "<jokios>"
     IDS_PURPOSE_SERVER_AUTH "Garantuoja nutolusio kompiuterio tapatumą"
     IDS_PURPOSE_CLIENT_AUTH "Įrodo jūsų tapatumą nutolusiam kompiuteriui"
-    IDS_PURPOSE_CODE_SIGNING "Garantuoja, kad programinė įranga yra iš šio leidėjo\n\
-Apsaugo programinę įrangą nuo pakeitimų po išleidimo"
+    IDS_PURPOSE_CODE_SIGNING "Garantuoja, kad programinė įranga yra iš šio leidėjo\nApsaugo programinę įrangą nuo pakeitimų po išleidimo"
     IDS_PURPOSE_EMAIL_PROTECTION "Apsaugo el. pašto pranešimus"
     IDS_PURPOSE_IPSEC "Leidžia saugu ryšį internete"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Leidžia pasirašyti duomenis dabartiniu laiku"
@@ -289,10 +278,8 @@ CAPTION "Liudijimo importo vediklis"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sveiki atvėrę liudijimo importo vediklį", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Šis vediklis padeda jums importuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš failo į liudijimų saugyklą.\n\
-\n\
-Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\
-\n\
+  LTEXT "Šis vediklis padeda jums importuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš failo į liudijimų saugyklą.\n\n\
+Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\n\
 Jei norite tęsti, spauskite Kitas.",
     -1, 115,40,195,120
 END
@@ -306,11 +293,11 @@ BEGIN
   PUSHBUTTON "Pari&nkti...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Pastaba: Šie failų formatai gali turėti daugiau negu vieną liudijimą, atšauktų liudijimų sąrašą ar patikintų liudijimų sąrašą:",
     -1, 21,30,265,16
-  LTEXT "Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimai (.p7b)",
+  LTEXT "Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimai (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Asmeninės informacijos mainai/PKCS #12 (.pfx, .p12)",
+  LTEXT "Asmeninės informacijos mainai/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft išdėstyta serijomis liudijimų saugykla (.sst)",
+  LTEXT "Microsoft išdėstyta serijomis liudijimų saugykla (*.sst)",
     -1, 31,83,265,10
 END
 
@@ -381,10 +368,8 @@ CAPTION "Liudijimo eksporto vediklis"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sveiki atvėrę liudijimo eksporto vediklį", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Šis vediklis padeda jums eksportuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš liudijimų saugyklos į failą.\n\
-\n\
-Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\
-\n\
+  LTEXT "Šis vediklis padeda jums eksportuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš liudijimų saugyklos į failą.\n\n\
+Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\n\
 Jei norite tęsti, spauskite Kitas.",
     -1, 115,40,195,120
 END
@@ -417,15 +402,15 @@ CAPTION "Liudijimo eksporto vediklis"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Išrinkite formatą, kurį norite naudoti:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-užkoduotas X.509 (.cer)",
+  AUTORADIOBUTTON "&DER-užkoduotas X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-užkoduotas X.509 (.cer)",
+  AUTORADIOBUTTON "Ba&se64-užkoduotas X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimas (.p7b):",
+  AUTORADIOBUTTON "&Kriptografinio pranešimo sintaksės standarto/PKCS #7 pranešimas (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Jei įmanoma, apimti visus liudijimus liudijimų kelyje",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "&Asmeninės informacijos mainai/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "&Asmeninės informacijos mainai/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "A&pimti visus liudijimus liudijimų kelyje",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
