@@ -34,6 +34,31 @@ static PIT_MODE OldMode = 0;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+VOID PlaySound(DWORD Frequency,
+               DWORD Duration)
+{
+    /* Adapted from kernel32:Beep() */
+
+    IO_STATUS_BLOCK IoStatusBlock;
+    BEEP_SET_PARAMETERS BeepSetParameters;
+
+    /* Set beep data */
+    BeepSetParameters.Frequency = Frequency;
+    BeepSetParameters.Duration  = Duration;
+
+    /* Send the beep */
+    NtDeviceIoControlFile(hBeep,
+                          NULL,
+                          NULL,
+                          NULL,
+                          &IoStatusBlock,
+                          IOCTL_BEEP_SET,
+                          &BeepSetParameters,
+                          sizeof(BeepSetParameters),
+                          NULL,
+                          0);
+}
+
 VOID SpeakerChange(VOID)
 {
     BYTE    Port61hState = IOReadB(CONTROL_SYSTEM_PORT61H);
@@ -42,15 +67,14 @@ VOID SpeakerChange(VOID)
 
     if (PitChannel2 && IsConnectedToPITChannel2 && SpeakerDataOn)
     {
-        /* Start beeping - Adapted from kernel32:Beep() */
-        NTSTATUS Status;
-        IO_STATUS_BLOCK IoStatusBlock;
-        BEEP_SET_PARAMETERS BeepSetParameters;
+        /* Start beeping */
+
+        DWORD Frequency, Duration;
 
         DWORD PitChannel2ReloadValue = PitChannel2->ReloadValue;
         if (PitChannel2ReloadValue == 0) PitChannel2ReloadValue = 65536;
 
-        DPRINT("(1) PitChannel2(Bcd = %s, Mode = %d ; ReloadValue = %d)\n", PitChannel2->Bcd ? "true" : "false", PitChannel2->Mode, PitChannel2ReloadValue);
+        DPRINT("(1) PitChannel2(Mode = %d ; ReloadValue = %d)\n", PitChannel2->Mode, PitChannel2ReloadValue);
 
         if (OldMode == PitChannel2->Mode && OldReloadValue == PitChannel2ReloadValue)
             return;
@@ -58,63 +82,21 @@ VOID SpeakerChange(VOID)
         OldMode = PitChannel2->Mode;
         OldReloadValue = PitChannel2ReloadValue;
 
-        DPRINT("(2) PitChannel2(Bcd = %s, Mode = %d ; ReloadValue = %d)\n", PitChannel2->Bcd ? "true" : "false", PitChannel2->Mode, PitChannel2ReloadValue);
+        DPRINT("(2) PitChannel2(Mode = %d ; ReloadValue = %d)\n", PitChannel2->Mode, PitChannel2ReloadValue);
 
-        /* Set beep data */
-        BeepSetParameters.Frequency = (PIT_BASE_FREQUENCY / PitChannel2ReloadValue);
-        BeepSetParameters.Duration  = INFINITE;
+        Frequency = (PIT_BASE_FREQUENCY / PitChannel2ReloadValue);
+        Duration  = INFINITE;
 
-        /* Send the beep */
-        Status = NtDeviceIoControlFile(hBeep,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &IoStatusBlock,
-                                       IOCTL_BEEP_SET,
-                                       &BeepSetParameters,
-                                       sizeof(BeepSetParameters),
-                                       NULL,
-                                       0);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Beep (%lu, %lu) failed, Status 0x%08lx\n",
-                    BeepSetParameters.Frequency,
-                    BeepSetParameters.Duration,
-                    Status);
-        }
+        PlaySound(Frequency, Duration);
     }
     else
     {
         /* Stop beeping */
-        NTSTATUS Status;
-        IO_STATUS_BLOCK IoStatusBlock;
-        BEEP_SET_PARAMETERS BeepSetParameters;
 
         OldMode = 0;
         OldReloadValue = 0;
 
-        /* Set beep data */
-        BeepSetParameters.Frequency = 0x00;
-        BeepSetParameters.Duration  = 0x00;
-
-        /* Send the beep */
-        Status = NtDeviceIoControlFile(hBeep,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &IoStatusBlock,
-                                       IOCTL_BEEP_SET,
-                                       &BeepSetParameters,
-                                       sizeof(BeepSetParameters),
-                                       NULL,
-                                       0);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Beep (%lu, %lu) failed, Status 0x%08lx\n",
-                    BeepSetParameters.Frequency,
-                    BeepSetParameters.Duration,
-                    Status);
-        }
+        PlaySound(0x00, 0x00);
     }
 }
 
@@ -126,11 +108,6 @@ VOID SpeakerInitialize(VOID)
     IO_STATUS_BLOCK IoStatusBlock;
 
     /* Adapted from kernel32:Beep() */
-
-    //
-    // On TS systems, we need to Load Winsta.dll and call WinstationBeepOpen
-    // after doing a GetProcAddress for it
-    //
 
     /* Open the device */
     RtlInitUnicodeString(&BeepDevice, L"\\Device\\Beep");
