@@ -30,6 +30,9 @@ BEGIN
     IDS_INDEX        "&Оглавление"
     IDS_SEARCH       "&Поиск"
     IDS_FAVORITES    "&Избранное"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
@@ -44,18 +47,19 @@ BEGIN
     IDTB_PRINT       "Печать"
     IDTB_OPTIONS     "Настройки"
     IDTB_FORWARD     "Вперёд"
-    IDTB_NOTES       "Записки"
-    IDTB_BROWSE_FWD  "Просмотр вперёд"
-    IDTB_BROWSE_BACK "Просмотр назад"
-    IDTB_CONTENTS    "Содержание"
-    IDTB_INDEX       "Оглавление"
-    IDTB_SEARCH      "Поиск"
-    IDTB_HISTORY     "История"
-    IDTB_FAVORITES   "Избранное"
-    IDTB_JUMP1       "Переход 1"
-    IDTB_JUMP2       "Переход 2"
-    IDTB_CUSTOMIZE   "Персонализировать"
-    IDTB_ZOOM        "Масштаб"
-    IDTB_TOC_NEXT    "Следующая глава"
-    IDTB_TOC_PREV    "Предыдущая глава"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}

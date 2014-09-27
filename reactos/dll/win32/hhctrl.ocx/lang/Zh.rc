@@ -29,6 +29,9 @@ BEGIN
     IDS_INDEX        "目录(&N)"
     IDS_SEARCH       "搜寻(&S)"
     IDS_FAVORITES    "最爱(&I)"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
@@ -43,21 +46,22 @@ BEGIN
     IDTB_PRINT       "打印"
     IDTB_OPTIONS     "选项"
     IDTB_FORWARD     "向前"
-    IDTB_NOTES       "说明"
-    IDTB_BROWSE_FWD  "向前"
-    IDTB_BROWSE_BACK "向后"
-    IDTB_CONTENTS    "内容"
-    IDTB_INDEX       "目录"
-    IDTB_SEARCH      "搜寻"
-    IDTB_HISTORY     "历史"
-    IDTB_FAVORITES   "最爱"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "个性化"
-    IDTB_ZOOM        "放大"
-    IDTB_TOC_NEXT    "后一项"
-    IDTB_TOC_PREV    "前一项"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -81,18 +85,19 @@ BEGIN
     IDTB_PRINT       "列印"
     IDTB_OPTIONS     "選項"
     IDTB_FORWARD     "向前"
-    IDTB_NOTES       "說明"
-    IDTB_BROWSE_FWD  "向前"
-    IDTB_BROWSE_BACK "向後"
-    IDTB_CONTENTS    "內容"
-    IDTB_INDEX       "目錄"
-    IDTB_SEARCH      "搜尋"
-    IDTB_HISTORY     "歷史"
-    IDTB_FAVORITES   "最愛"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "個性化"
-    IDTB_ZOOM        "放大"
-    IDTB_TOC_NEXT    "後一項"
-    IDTB_TOC_PREV    "前一項"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}
