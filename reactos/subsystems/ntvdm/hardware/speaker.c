@@ -29,6 +29,9 @@ static HANDLE hBeep = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static DWORD OldReloadValue = 0;
+static PIT_MODE OldMode = 0;
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID SpeakerChange(VOID)
@@ -47,9 +50,18 @@ VOID SpeakerChange(VOID)
         DWORD PitChannel2ReloadValue = PitChannel2->ReloadValue;
         if (PitChannel2ReloadValue == 0) PitChannel2ReloadValue = 65536;
 
+        DPRINT("(1) PitChannel2(Bcd = %s, Mode = %d ; ReloadValue = %d)\n", PitChannel2->Bcd ? "true" : "false", PitChannel2->Mode, PitChannel2ReloadValue);
+
+        if (OldMode == PitChannel2->Mode && OldReloadValue == PitChannel2ReloadValue)
+            return;
+
+        OldMode = PitChannel2->Mode;
+        OldReloadValue = PitChannel2ReloadValue;
+
+        DPRINT("(2) PitChannel2(Bcd = %s, Mode = %d ; ReloadValue = %d)\n", PitChannel2->Bcd ? "true" : "false", PitChannel2->Mode, PitChannel2ReloadValue);
+
         /* Set beep data */
-        BeepSetParameters.Frequency = (PIT_BASE_FREQUENCY / PitChannel2ReloadValue)
-                                          /* * (PitChannel2->Mode == PIT_MODE_SQUARE_WAVE ? 2 : 1) */;
+        BeepSetParameters.Frequency = (PIT_BASE_FREQUENCY / PitChannel2ReloadValue);
         BeepSetParameters.Duration  = INFINITE;
 
         /* Send the beep */
@@ -77,6 +89,9 @@ VOID SpeakerChange(VOID)
         NTSTATUS Status;
         IO_STATUS_BLOCK IoStatusBlock;
         BEEP_SET_PARAMETERS BeepSetParameters;
+
+        OldMode = 0;
+        OldReloadValue = 0;
 
         /* Set beep data */
         BeepSetParameters.Frequency = 0x00;

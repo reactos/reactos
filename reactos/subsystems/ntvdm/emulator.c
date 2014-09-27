@@ -262,7 +262,7 @@ static BYTE WINAPI Port61hRead(ULONG Port)
 
 static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
 {
-    // BOOLEAN SpeakerChange = FALSE;
+    // BOOLEAN SpeakerStateChange = FALSE;
     BYTE OldPort61hState = Port61hState;
 
     /* Only the four lowest bytes can be written */
@@ -271,18 +271,17 @@ static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
     if ((OldPort61hState ^ Port61hState) & 0x01)
     {
         DPRINT("PIT 2 Gate %s\n", Port61hState & 0x01 ? "on" : "off");
-        // SpeakerChange = TRUE;
+        PitSetGate(2, !!(Port61hState & 0x01));
+        // SpeakerStateChange = TRUE;
     }
-
-    PitSetGate(2, !!(Port61hState & 0x01));
 
     if ((OldPort61hState ^ Port61hState) & 0x02)
     {
         /* There were some change for the speaker... */
         DPRINT("Speaker %s\n", Port61hState & 0x02 ? "on" : "off");
-        // SpeakerChange = TRUE;
+        // SpeakerStateChange = TRUE;
     }
-    // if (SpeakerChange) SpeakerChange();
+    // if (SpeakerStateChange) SpeakerChange();
     SpeakerChange();
 }
 
@@ -316,7 +315,7 @@ static VOID WINAPI PitChan1Out(LPVOID Param, BOOLEAN State)
 
 static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 {
-    // BYTE OldPort61hState = Port61hState;
+    BYTE OldPort61hState = Port61hState;
 
 #if 0
     if (State)
@@ -332,9 +331,12 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 #else
     Port61hState = (Port61hState & 0xDF) | (State << 5);
 #endif
-    DPRINT("Speaker PIT out\n");
-    // if ((OldPort61hState ^ Port61hState) & 0x20)
-        // SpeakerChange();
+
+    if ((OldPort61hState ^ Port61hState) & 0x20)
+    {
+        DPRINT("PitChan2Out -- Port61hState changed\n");
+        SpeakerChange();
+    }
 }
 
 
