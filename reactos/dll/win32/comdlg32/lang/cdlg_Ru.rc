@@ -34,7 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "Путь не существует"
     IDS_FILENOTEXISTING     "Файл не существует"
-    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "Выбор содержит объект не являющийся папкой"
 }
 
 STRINGTABLE
@@ -69,8 +69,8 @@ STRINGTABLE
 
     PD32_DEFAULT_PRINTER                  "Принтер по умолчанию; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Документов в очереди: %d"
-    PD32_MARGINS_IN_INCHES                "Границы [дюймы)"
-    PD32_MARGINS_IN_MILLIMETERS           "Границы [мм]"
+    PD32_MARGINS_IN_INCHES                "Поля (дюймы)"
+    PD32_MARGINS_IN_MILLIMETERS           "Поля (мм)"
     PD32_MILLIMETERS                      "мм"
 
     PD32_PRINTER_STATUS_READY             "Готово"
@@ -95,7 +95,7 @@ STRINGTABLE
     PD32_PRINTER_STATUS_NO_TONER          "Нет тонера; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Страница не напечатана; "
     PD32_PRINTER_STATUS_USER_INTERVENTION "Прервано пользователем; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Мало памяти; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Недостаточно памяти; "
     PD32_PRINTER_STATUS_DOOR_OPEN         "Крышка принтера открыта; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Неизвестный принт-сервер; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Режим экономии энергии; "
@@ -112,19 +112,19 @@ STRINGTABLE /* Font styles */
 STRINGTABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Чёрный"
-    IDS_COLOR_MAROON    "Тёмно-бордовый"
+    IDS_COLOR_MAROON    "Малиновый"
     IDS_COLOR_GREEN     "Зелёный"
     IDS_COLOR_OLIVE     "Оливковый"
     IDS_COLOR_NAVY      "Тёмно-синий"
-    IDS_COLOR_PURPLE    "Пурпурный"
-    IDS_COLOR_TEAL      "Морской волны"
+    IDS_COLOR_PURPLE    "Сиреневый"
+    IDS_COLOR_TEAL      "Бирюзовый"
     IDS_COLOR_GRAY      "Серый"
     IDS_COLOR_SILVER    "Серебряный"
     IDS_COLOR_RED       "Красный"
     IDS_COLOR_LIME      "Лимонный"
     IDS_COLOR_YELLOW    "Жёлтый"
     IDS_COLOR_BLUE      "Синий"
-    IDS_COLOR_FUCHSIA   "Ярко-розовый"
+    IDS_COLOR_FUCHSIA   "Розовый"
     IDS_COLOR_AQUA      "Голубой"
     IDS_COLOR_WHITE     "Белый"
 }
@@ -137,7 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Сохранить"
     IDS_SAVE_AS     "Сохранить как"
     IDS_OPEN_FILE   "Открыть файл"
-    IDS_SELECT_FOLDER "Select Folder"
+    IDS_SELECT_FOLDER "Выбрать папку"
 }
 
 /*
@@ -387,9 +387,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTE
 CAPTION "Настройка принтера"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "ОК",IDOK,176,156,50,14,WS_GROUP
-    PUSHBUTTON      "Отмена",IDCANCEL,230,156,50,14
-/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+    DEFPUSHBUTTON   "ОК", IDOK, 176, 156, 50, 14, WS_GROUP
+    PUSHBUTTON      "Отмена", IDCANCEL, 230, 156, 50, 14
+/*    PUSHBUTTON      "Сеть...", psh5, 284, 156, 48, 14 */
 
     GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Свойства",    psh2, 212, 17,  60,14, WS_GROUP
