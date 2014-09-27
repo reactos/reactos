@@ -33,9 +33,11 @@ BOOL
 _FLOATOBJ_IsLong(FLOATOBJ *pf)
 {
 	EFLOAT_S *pef = (EFLOAT_S*)pf;
-	ULONG Shift = 32 - pef->lExp;
-	if (Shift > 31) return FALSE;
-	return (((pef->lMant >> Shift) << Shift) == pef->lMant);
+	ULONG ulShift = pef->lExp;
+	if (ulShift < 32)
+	    return ((pef->lMant << ulShift) == 0);
+    else
+        return (ulShift == 32);
 }
 
 FORCEINLINE
