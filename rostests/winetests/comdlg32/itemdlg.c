@@ -30,6 +30,16 @@
 
 #include <shlobj.h>
 
+#define IDT_CHANGEFILETYPE 500
+#define IDT_CLOSEDIALOG    501
+
+typedef enum {
+    IFDEVENT_TEST_NONE = 0,
+    IFDEVENT_TEST1     = 0x1,
+    IFDEVENT_TEST2     = 0x2,
+    IFDEVENT_TEST3     = 0x3
+} FileDialogEventsTest;
+
 static HRESULT (WINAPI *pSHCreateShellItem)(LPCITEMIDLIST,IShellFolder*,LPCITEMIDLIST,IShellItem**);
 static HRESULT (WINAPI *pSHGetIDListFromObject)(IUnknown*, PIDLIST_ABSOLUTE*);
 static HRESULT (WINAPI *pSHCreateItemFromParsingName)(PCWSTR,IBindCtx*,REFIID,void**);
@@ -48,6 +58,62 @@ static void init_function_pointers(void)
 #include <initguid.h>
 DEFINE_GUID(IID_IFileDialogCustomizeAlt, 0x8016B7B3, 0x3D49, 0x4504, 0xA0,0xAA, 0x2A,0x37,0x49,0x4E,0x60,0x6F);
 
+struct fw_arg {
+    LPCWSTR class, text;
+    HWND hwnd_res;
+};
+
+static BOOL CALLBACK find_window_callback(HWND hwnd, LPARAM lparam)
+{
+    struct fw_arg *arg = (struct fw_arg*)lparam;
+    WCHAR buf[1024];
+
+    if(arg->class)
+    {
+        GetClassNameW(hwnd, buf, 1024);
+        if(lstrcmpW(buf, arg->class))
+            return TRUE;
+    }
+
+    if(arg->text)
+    {
+        GetWindowTextW(hwnd, buf, 1024);
+        if(lstrcmpW(buf, arg->text))
+            return TRUE;
+    }
+
+    arg->hwnd_res = hwnd;
+    return FALSE;
+}
+
+static HWND find_window(HWND parent, LPCWSTR class, LPCWSTR text)
+{
+    struct fw_arg arg = {class, text, NULL};
+
+    EnumChildWindows(parent, find_window_callback, (LPARAM)&arg);
+    return arg.hwnd_res;
+}
+
+static HWND get_hwnd_from_ifiledialog(IFileDialog *pfd)
+{
+    IOleWindow *pow;
+    HWND dlg_hwnd;
+    HRESULT hr;
+
+    hr = IFileDialog_QueryInterface(pfd, &IID_IOleWindow, (void**)&pow);
+    ok(hr == S_OK, "Got 0x%08x\n", hr);
+
+    hr = IOleWindow_GetWindow(pow, &dlg_hwnd);
+    ok(hr == S_OK, "Got 0x%08x\n", hr);
+
+    IOleWindow_Release(pow);
+
+    return dlg_hwnd;
+}
+
+static void test_customize_onfolderchange(IFileDialog *pfd);
+static void filedialog_change_filetype(IFileDialog *pfd, HWND dlg_hwnd);
+
 /**************************************************************************
  * IFileDialogEvents implementation
  */
@@ -60,7 +126,7 @@ typedef struct {
     LONG OnOverwrite;
     LPCWSTR set_filename;
     BOOL set_filename_tried;
-    BOOL cfd_test1;
+    FileDialogEventsTest events_test;
 } IFileDialogEventsImpl;
 
 static inline IFileDialogEventsImpl *impl_from_IFileDialogEvents(IFileDialogEvents *iface)
@@ -108,25 +174,39 @@ static HRESULT WINAPI IFileDialogEvents_fnOnFolderChanging(IFileDialogEvents *if
     return S_OK;
 }
 
-static void test_customize_onfolderchange(IFileDialog *pfd);
-
-static LRESULT CALLBACK test_customize_dlgproc(HWND hwnd, UINT message, LPARAM lparam, WPARAM wparam)
+static LRESULT CALLBACK test_customize_dlgproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
     WNDPROC oldwndproc = GetPropA(hwnd, "WT_OLDWC");
+    IFileDialog *pfd = GetPropA(hwnd, "WT_PFD");
+    BOOL br;
 
-    if(message == WM_USER+0x1234)
+    switch(message)
     {
-        IFileDialog *pfd = (IFileDialog*)lparam;
+    case WM_USER+0x1234:
         test_customize_onfolderchange(pfd);
+        break;
+    case WM_TIMER:
+        switch(wparam)
+        {
+        case IDT_CHANGEFILETYPE:
+            filedialog_change_filetype(pfd, hwnd);
+            KillTimer(hwnd, IDT_CHANGEFILETYPE);
+            SetTimer(hwnd, IDT_CLOSEDIALOG, 100, 0);
+            return TRUE;
+        case IDT_CLOSEDIALOG:
+            /* Calling IFileDialog_Close here does not work */
+            br = PostMessageW(hwnd, WM_COMMAND, IDCANCEL, 0);
+            ok(br, "Failed\n");
+            return TRUE;
+        }
     }
 
-    return CallWindowProcW(oldwndproc, hwnd, message, lparam, wparam);
+    return CallWindowProcW(oldwndproc, hwnd, message, wparam, lparam);
 }
 
 static HRESULT WINAPI IFileDialogEvents_fnOnFolderChange(IFileDialogEvents *iface, IFileDialog *pfd)
 {
     IFileDialogEventsImpl *This = impl_from_IFileDialogEvents(iface);
-    IOleWindow *pow;
     HWND dlg_hwnd;
     HRESULT hr;
     BOOL br;
@@ -134,14 +214,8 @@ static HRESULT WINAPI IFileDialogEvents_fnOnFolderChange(IFileDialogEvents *ifac
 
     if(This->set_filename)
     {
-        hr = IFileDialog_QueryInterface(pfd, &IID_IOleWindow, (void**)&pow);
-        ok(hr == S_OK, "Got 0x%08x\n", hr);
-
-        hr = IOleWindow_GetWindow(pow, &dlg_hwnd);
-        ok(hr == S_OK, "Got 0x%08x\n", hr);
+        dlg_hwnd = get_hwnd_from_ifiledialog(pfd);
         ok(dlg_hwnd != NULL, "Got NULL.\n");
-
-        IOleWindow_Release(pow);
 
         hr = IFileDialog_SetFileName(pfd, This->set_filename);
         ok(hr == S_OK, "Got 0x%08x\n", hr);
@@ -154,27 +228,35 @@ static HRESULT WINAPI IFileDialogEvents_fnOnFolderChange(IFileDialogEvents *ifac
         }
     }
 
-    if(This->cfd_test1)
+    if(This->events_test)
     {
         WNDPROC oldwndproc;
-        hr = IFileDialog_QueryInterface(pfd, &IID_IOleWindow, (void**)&pow);
-        ok(hr == S_OK, "Got 0x%08x\n", hr);
 
-        hr = IOleWindow_GetWindow(pow, &dlg_hwnd);
-        ok(hr == S_OK, "Got 0x%08x\n", hr);
-        ok(dlg_hwnd != NULL, "Got NULL.\n");
-
-        IOleWindow_Release(pow);
+        dlg_hwnd = get_hwnd_from_ifiledialog(pfd);
 
         /* On Vista, the custom control area of the dialog is not
          * fully set up when the first OnFolderChange event is
          * issued. */
         oldwndproc = (WNDPROC)GetWindowLongPtrW(dlg_hwnd, GWLP_WNDPROC);
         SetPropA(dlg_hwnd, "WT_OLDWC", (HANDLE)oldwndproc);
+        SetPropA(dlg_hwnd, "WT_PFD", (HANDLE)pfd);
         SetWindowLongPtrW(dlg_hwnd, GWLP_WNDPROC, (LPARAM)test_customize_dlgproc);
 
-        br = PostMessageW(dlg_hwnd, WM_USER+0x1234, (LPARAM)pfd, 0);
-        ok(br, "Failed\n");
+        switch(This->events_test)
+        {
+        case IFDEVENT_TEST1:
+            br = PostMessageW(dlg_hwnd, WM_USER+0x1234, 0, 0);
+            ok(br, "Failed\n");
+            break;
+        case IFDEVENT_TEST2:
+            SetTimer(dlg_hwnd, IDT_CLOSEDIALOG, 100, 0);
+            break;
+        case IFDEVENT_TEST3:
+            SetTimer(dlg_hwnd, IDT_CHANGEFILETYPE, 100, 0);
+            break;
+        default:
+            ok(FALSE, "Should not happen (%d)\n", This->events_test);
+        }
     }
 
     return S_OK;
@@ -566,8 +648,6 @@ static void test_basics(void)
     hr = IFileOpenDialog_SetFileTypes(pfod, 0, filterspec);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
 
-    hr = IFileOpenDialog_SetFileTypeIndex(pfod, -1);
-    ok(hr == E_FAIL, "got 0x%08x.\n", hr);
     hr = IFileOpenDialog_SetFileTypeIndex(pfod, 0);
     ok(hr == E_FAIL, "got 0x%08x.\n", hr);
     hr = IFileOpenDialog_SetFileTypeIndex(pfod, 1);
@@ -578,25 +658,39 @@ static void test_basics(void)
     ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
     hr = IFileOpenDialog_SetFileTypeIndex(pfod, 0);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
+    hr = IFileOpenDialog_GetFileTypeIndex(pfod, &filetype);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(filetype == 1, "got %d\n", filetype);
     hr = IFileOpenDialog_SetFileTypeIndex(pfod, 100);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
+    hr = IFileOpenDialog_GetFileTypeIndex(pfod, &filetype);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(filetype == 1, "got %d\n", filetype);
     hr = IFileOpenDialog_SetFileTypes(pfod, 1, filterspec);
     ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
     hr = IFileOpenDialog_SetFileTypes(pfod, 1, &filterspec[1]);
     ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
 
-    hr = IFileSaveDialog_SetFileTypeIndex(pfsd, -1);
-    ok(hr == E_FAIL, "got 0x%08x.\n", hr);
     hr = IFileSaveDialog_SetFileTypeIndex(pfsd, 0);
     ok(hr == E_FAIL, "got 0x%08x.\n", hr);
     hr = IFileSaveDialog_SetFileTypeIndex(pfsd, 1);
     ok(hr == E_FAIL, "got 0x%08x.\n", hr);
-    hr = IFileSaveDialog_SetFileTypes(pfsd, 1, filterspec);
+    hr = IFileSaveDialog_SetFileTypes(pfsd, 2, filterspec);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
+    hr = IFileSaveDialog_GetFileTypeIndex(pfsd, &filetype);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    /* I hope noone relies on this one */
+    todo_wine ok(filetype == 0, "got %d\n", filetype);
     hr = IFileSaveDialog_SetFileTypeIndex(pfsd, 0);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
+    hr = IFileSaveDialog_GetFileTypeIndex(pfsd, &filetype);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(filetype == 1, "got %d\n", filetype);
     hr = IFileSaveDialog_SetFileTypeIndex(pfsd, 100);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
+    hr = IFileSaveDialog_GetFileTypeIndex(pfsd, &filetype);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(filetype == 2, "got %d\n", filetype);
     hr = IFileSaveDialog_SetFileTypes(pfsd, 1, filterspec);
     ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
     hr = IFileSaveDialog_SetFileTypes(pfsd, 1, &filterspec[1]);
@@ -1013,6 +1107,168 @@ static void test_advise(void)
     ok(!ref, "Got refcount %d, should have been released.\n", ref);
 }
 
+static void filedialog_change_filetype(IFileDialog *pfd, HWND dlg_hwnd)
+{
+    HWND cb_filetype;
+    const WCHAR filetype1[] = {'f','n','a','m','e','1',0};
+    const WCHAR filetype1_broken[] = {'f','n','a','m','e','1',' ', '(','*','.','t','x','t',')',0};
+
+    cb_filetype = find_window(dlg_hwnd, NULL, filetype1);
+    ok(cb_filetype != NULL || broken(cb_filetype == NULL), "Could not find combobox on first attempt\n");
+
+    if(!cb_filetype)
+    {
+        /* Not sure when this happens. Some specific version?
+         * Seen on 32-bit English Vista */
+        trace("Didn't find combobox on first attempt, trying broken string..\n");
+        cb_filetype = find_window(dlg_hwnd, NULL, filetype1_broken);
+        ok(broken(cb_filetype != NULL), "Failed to find combobox on second attempt\n");
+        if(!cb_filetype)
+            return;
+    }
+
+    /* Making the combobox send a CBN_SELCHANGE */
+    SendMessageW( cb_filetype, CB_SHOWDROPDOWN, 1, 0 );
+    SendMessageW( cb_filetype, CB_SETCURSEL, 1, 0 );
+    SendMessageW( cb_filetype, WM_LBUTTONDOWN, 0, -1 );
+    SendMessageW( cb_filetype, WM_LBUTTONUP, 0, -1 );
+}
+
+static void test_events(void)
+{
+    IFileDialog *pfd;
+    IFileDialogEventsImpl *pfdeimpl;
+    IFileDialogEvents *pfde;
+    DWORD cookie;
+    ULONG ref;
+    HRESULT hr;
+    const WCHAR fname1[] = {'f','n','a','m','e','1', 0};
+    const WCHAR fspec1[] = {'*','.','t','x','t',0};
+    const WCHAR fname2[] = {'f','n','a','m','e','2', 0};
+    const WCHAR fspec2[] = {'*','.','e','x','e',0};
+    COMDLG_FILTERSPEC filterspec[3] = {{fname1, fspec1}, {fname2, fspec2}};
+
+
+    /*
+     * 1. Show the dialog with no filetypes added
+     */
+    hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IFileDialog, (void**)&pfd);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    pfde = IFileDialogEvents_Constructor();
+    pfdeimpl = impl_from_IFileDialogEvents(pfde);
+    pfdeimpl->events_test = IFDEVENT_TEST2;
+
+    hr = IFileDialog_Advise(pfd, pfde, &cookie);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    hr = IFileDialog_Show(pfd, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_CANCELLED), "got 0x%08x.\n", hr);
+
+    ok(pfdeimpl->OnFolderChanging == 1, "Got %d\n", pfdeimpl->OnFolderChanging);
+    pfdeimpl->OnFolderChanging = 0;
+    ok(pfdeimpl->OnFolderChange == 1, "Got %d\n", pfdeimpl->OnFolderChange);
+    pfdeimpl->OnFolderChange = 0;
+    /* pfdeimpl->OnSelectionChange too unreliable to test. Can be 0, 1 or even 2. */
+    pfdeimpl->OnSelectionChange = 0;
+    ok(pfdeimpl->OnTypeChange == 0, "Got %d\n", pfdeimpl->OnTypeChange);
+    pfdeimpl->OnTypeChange = 0;
+
+    ensure_zero_events(pfdeimpl);
+
+    hr = IFileDialog_Unadvise(pfd, cookie);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    IFileDialogEvents_Release(pfde);
+    ref = IFileDialog_Release(pfd);
+    ok(!ref || broken(ref /* win2008_64 (intermittently) */), "Got %d\n", ref);
+
+
+    /*
+     * 2. Show the dialog with filetypes added
+     */
+    hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IFileDialog, (void**)&pfd);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    pfde = IFileDialogEvents_Constructor();
+    pfdeimpl = impl_from_IFileDialogEvents(pfde);
+    pfdeimpl->events_test = IFDEVENT_TEST2;
+
+    hr = IFileDialog_Advise(pfd, pfde, &cookie);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    hr = IFileDialog_SetFileTypes(pfd, 2, filterspec);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    ensure_zero_events(pfdeimpl);
+
+    hr = IFileDialog_Show(pfd, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_CANCELLED), "got 0x%08x.\n", hr);
+
+    ok(pfdeimpl->OnFolderChanging == 1, "Got %d\n", pfdeimpl->OnFolderChanging);
+    pfdeimpl->OnFolderChanging = 0;
+    ok(pfdeimpl->OnFolderChange == 1, "Got %d\n", pfdeimpl->OnFolderChange);
+    pfdeimpl->OnFolderChange = 0;
+    /* pfdeimpl->OnSelectionChange too unreliable to test. Can be 0, 1 or even 2. */
+    pfdeimpl->OnSelectionChange = 0;
+    /* Called once just by showing the dialog */
+    ok(pfdeimpl->OnTypeChange == 1, "Got %d\n", pfdeimpl->OnTypeChange);
+    pfdeimpl->OnTypeChange = 0;
+
+    ensure_zero_events(pfdeimpl);
+
+    hr = IFileDialog_Unadvise(pfd, cookie);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    IFileDialogEvents_Release(pfde);
+    ref = IFileDialog_Release(pfd);
+    ok(!ref || broken(ref /* win2008_64 (intermittently) */), "Got %d\n", ref);
+
+
+    /*
+     * 3. Show the dialog with filetypes added and simulate manual change of filetype
+     */
+    hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IFileDialog, (void**)&pfd);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    pfde = IFileDialogEvents_Constructor();
+    pfdeimpl = impl_from_IFileDialogEvents(pfde);
+    pfdeimpl->events_test = IFDEVENT_TEST3;
+
+    hr = IFileDialog_Advise(pfd, pfde, &cookie);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    hr = IFileDialog_SetFileTypes(pfd, 2, filterspec);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    ensure_zero_events(pfdeimpl);
+
+    hr = IFileDialog_Show(pfd, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_CANCELLED), "got 0x%08x.\n", hr);
+
+    ok(pfdeimpl->OnFolderChanging == 1, "Got %d\n", pfdeimpl->OnFolderChanging);
+    pfdeimpl->OnFolderChanging = 0;
+    ok(pfdeimpl->OnFolderChange == 1, "Got %d\n", pfdeimpl->OnFolderChange);
+    pfdeimpl->OnFolderChange = 0;
+    /* pfdeimpl->OnSelectionChange too unreliable to test. Can be 0, 1 or even 2. */
+    pfdeimpl->OnSelectionChange = 0;
+    /* Called once by showing the dialog and once again when changing the filetype */
+    todo_wine ok(pfdeimpl->OnTypeChange == 2, "Got %d\n", pfdeimpl->OnTypeChange);
+    pfdeimpl->OnTypeChange = 0;
+
+    ensure_zero_events(pfdeimpl);
+
+    hr = IFileDialog_Unadvise(pfd, cookie);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    IFileDialogEvents_Release(pfde);
+    ref = IFileDialog_Release(pfd);
+    ok(!ref || broken(ref /* win2008_64 (intermittently) */), "Got %d\n", ref);
+}
+
 static void touch_file(LPCWSTR filename)
 {
     HANDLE file;
@@ -1274,57 +1530,16 @@ static const WCHAR visualgroup2W[] = {'v','i','s','u','a','l','g','r','o','u','p
 static const WCHAR floatnotifysinkW[] = {'F','l','o','a','t','N','o','t','i','f','y','S','i','n','k',0};
 static const WCHAR RadioButtonListW[] = {'R','a','d','i','o','B','u','t','t','o','n','L','i','s','t',0};
 
-struct fw_arg {
-    LPCWSTR class, text;
-    HWND hwnd_res;
-};
-static BOOL CALLBACK find_window_callback(HWND hwnd, LPARAM lparam)
-{
-    struct fw_arg *arg = (struct fw_arg*)lparam;
-    WCHAR buf[1024];
-
-    if(arg->class)
-    {
-        GetClassNameW(hwnd, buf, 1024);
-        if(lstrcmpW(buf, arg->class))
-            return TRUE;
-    }
-
-    if(arg->text)
-    {
-        GetWindowTextW(hwnd, buf, 1024);
-        if(lstrcmpW(buf, arg->text))
-            return TRUE;
-    }
-
-    arg->hwnd_res = hwnd;
-    return FALSE;
-}
-
-static HWND find_window(HWND parent, LPCWSTR class, LPCWSTR text)
-{
-    struct fw_arg arg = {class, text, NULL};
-
-    EnumChildWindows(parent, find_window_callback, (LPARAM)&arg);
-    return arg.hwnd_res;
-}
-
 static void test_customize_onfolderchange(IFileDialog *pfd)
 {
-    IOleWindow *pow;
     HWND dlg_hwnd, item, item_parent;
-    HRESULT hr;
     BOOL br;
     WCHAR buf[1024];
 
     buf[0] = '\0';
 
-    hr = IFileDialog_QueryInterface(pfd, &IID_IOleWindow, (void**)&pow);
-    ok(hr == S_OK, "Got 0x%08x\n", hr);
-    hr = IOleWindow_GetWindow(pow, &dlg_hwnd);
-    ok(hr == S_OK, "Got 0x%08x\n", hr);
+    dlg_hwnd = get_hwnd_from_ifiledialog(pfd);
     ok(dlg_hwnd != NULL, "Got NULL.\n");
-    IOleWindow_Release(pow);
 
     item = find_window(dlg_hwnd, NULL, checkbutton2W);
     ok(item != NULL, "Failed to find item.\n");
@@ -1368,7 +1583,7 @@ static void test_customize_onfolderchange(IFileDialog *pfd)
     item = find_window(dlg_hwnd, NULL, visualgroup1W);
     ok(item == NULL, "Found item: %p\n", item);
     item = find_window(dlg_hwnd, NULL, visualgroup2W);
-    ok(item == NULL, "Found item: %p\n", item);
+    todo_wine ok(item == NULL, "Found item: %p\n", item);
 
     br = PostMessageW(dlg_hwnd, WM_COMMAND, IDCANCEL, 0);
     ok(br, "Failed\n");
@@ -1385,6 +1600,7 @@ static void test_customize(void)
     DWORD cookie;
     LPWSTR tmpstr;
     UINT i;
+    UINT id_vgroup1, id_text, id_editbox1;
     LONG ref;
     HWND dlg_hwnd;
     HRESULT hr;
@@ -1637,25 +1853,25 @@ static void test_customize(void)
     ok(hr == S_OK, "got 0x%08x (control: %d).\n", hr, i);
 
     hr = IFileDialogCustomize_StartVisualGroup(pfdc, i, label);
-    todo_wine ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
+    ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
     hr = IFileDialogCustomize_StartVisualGroup(pfdc, ++i, visualgroup1W);
-    todo_wine ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
 
     hr = IFileDialogCustomize_AddControlItem(pfdc, i, 0, label);
-    todo_wine ok(hr == E_NOINTERFACE, "got 0x%08x.\n", hr);
+    ok(hr == E_NOINTERFACE, "got 0x%08x.\n", hr);
 
     hr = IFileDialogCustomize_SetControlLabel(pfdc, i, visualgroup2W);
-    todo_wine ok(hr == S_OK, "got 0x%08x (control: %d).\n", hr, i);
+    ok(hr == S_OK, "got 0x%08x (control: %d).\n", hr, i);
 
     cdstate = 0xdeadbeef;
     hr = IFileDialogCustomize_GetControlState(pfdc, i, &cdstate);
-    todo_wine ok(hr == S_OK, "got 0x%08x.\n", hr);
-    todo_wine ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
 
     hr = IFileDialogCustomize_StartVisualGroup(pfdc, ++i, label);
-    todo_wine ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
+    ok(hr == E_UNEXPECTED, "got 0x%08x.\n", hr);
     hr = IFileDialogCustomize_EndVisualGroup(pfdc);
-    todo_wine ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
 
     i++; /* Nonexisting control */
     hr = IFileDialogCustomize_AddControlItem(pfdc, i, 0, label);
@@ -1669,7 +1885,7 @@ static void test_customize(void)
 
     pfde = IFileDialogEvents_Constructor();
     pfdeimpl = impl_from_IFileDialogEvents(pfde);
-    pfdeimpl->cfd_test1 = TRUE;
+    pfdeimpl->events_test = IFDEVENT_TEST1;
     hr = IFileDialog_Advise(pfod, pfde, &cookie);
     ok(hr == S_OK, "Got 0x%08x\n", hr);
 
@@ -1901,6 +2117,127 @@ static void test_customize(void)
     IFileDialogCustomize_Release(pfdc);
     ref = IFileDialog_Release(pfod);
     ok(!ref, "Refcount not zero (%d).\n", ref);
+
+
+    /* Some more tests for VisualGroup behavior */
+    hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IFileDialog, (void**)&pfod);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    hr = IFileDialog_QueryInterface(pfod, &IID_IFileDialogCustomize, (void**)&pfdc);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    i = -1;
+    id_vgroup1 = ++i;
+    hr = IFileDialogCustomize_StartVisualGroup(pfdc, id_vgroup1, visualgroup1W);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_vgroup1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    id_text = ++i;
+    hr = IFileDialogCustomize_AddText(pfdc, id_text, label);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_text, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    id_editbox1 = ++i;
+    hr = IFileDialogCustomize_AddEditBox(pfdc, id_editbox1, editbox1W);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_editbox1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+
+    /* Set all Visible but not Enabled */
+    hr = IFileDialogCustomize_SetControlState(pfdc, id_vgroup1, CDCS_VISIBLE);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_vgroup1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_VISIBLE, "got 0x%08x.\n", cdstate);
+    cdstate = 0xdeadbeef;
+
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_text, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_editbox1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    /* Set text to Visible but not Enabled */
+    hr = IFileDialogCustomize_SetControlState(pfdc, id_text, CDCS_VISIBLE);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_vgroup1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_VISIBLE, "got 0x%08x.\n", cdstate);
+    cdstate = 0xdeadbeef;
+
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_text, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_VISIBLE, "got 0x%08x.\n", cdstate);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_editbox1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    /* Set vgroup to inactive */
+    hr = IFileDialogCustomize_SetControlState(pfdc, id_vgroup1, CDCS_INACTIVE);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_vgroup1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_INACTIVE, "got 0x%08x.\n", cdstate);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_text, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_VISIBLE, "got 0x%08x.\n", cdstate);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_editbox1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    /* Set vgroup to Enabled and Visible again */
+    hr = IFileDialogCustomize_SetControlState(pfdc, id_vgroup1, CDCS_ENABLEDVISIBLE);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_vgroup1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_text, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_VISIBLE, "got 0x%08x.\n", cdstate);
+
+    cdstate = 0xdeadbeef;
+    hr = IFileDialogCustomize_GetControlState(pfdc, id_editbox1, &cdstate);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+    ok(cdstate == CDCS_ENABLEDVISIBLE, "got 0x%08x.\n", cdstate);
+
+    hr = IFileDialogCustomize_MakeProminent(pfdc, id_vgroup1);
+    todo_wine ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+    IFileDialogCustomize_Release(pfdc);
+    ref = IFileDialog_Release(pfod);
+    ok(!ref, "Refcount not zero (%d).\n", ref);
 }
 
 static void test_persistent_state(void)
@@ -1936,6 +2273,7 @@ START_TEST(itemdlg)
     {
         test_basics();
         test_advise();
+        test_events();
         test_filename();
         test_customize();
         test_persistent_state();
