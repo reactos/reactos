@@ -34,6 +34,7 @@ Ar norite jį pakeisti?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Kelias neegzistuoja"
     IDS_FILENOTEXISTING     "Failas neegzistuoja"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Išsaugoti"
     IDS_SAVE_AS     "Išsaugoti kaip"
     IDS_OPEN_FILE   "Atverti failą"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

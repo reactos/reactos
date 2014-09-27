@@ -34,6 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "Vojo estas neekzistanta"
     IDS_FILENOTEXISTING     "Dosiero estas neekzistanta"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Konservu"
     IDS_SAVE_AS     "Konservu"
     IDS_OPEN_FILE   "Malfermu Dosieron"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

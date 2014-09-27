@@ -34,6 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "パスが見つかりません"
     IDS_FILENOTEXISTING     "ファイルが見つかりません"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "保存"
     IDS_SAVE_AS     "名前を付けて保存"
     IDS_OPEN_FILE   "ファイルを開く"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

@@ -34,6 +34,7 @@ Wollen Sie sie überschreiben?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Der Pfad existiert nicht"
     IDS_FILENOTEXISTING     "Die Datei existiert nicht"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Speichern"
     IDS_SAVE_AS     "Speichern als"
     IDS_OPEN_FILE   "Öffne Datei"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

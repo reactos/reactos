@@ -34,6 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "Putanja ne postoji"
     IDS_FILENOTEXISTING     "Datoteka ne postoji"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Sačuvaj"
     IDS_SAVE_AS     "Sačuvaj kao"
     IDS_OPEN_FILE   "Otvori datoteku"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

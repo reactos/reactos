@@ -38,6 +38,7 @@ Doni ta zevendesoni?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Rruga nuk ekziston"
     IDS_FILENOTEXISTING     "Dokumenti nuk ekziston"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -69,6 +70,7 @@ Ju lutem fusni nje vlere mes 1 dhe %d."
     PD32_GENERIC_ERROR                    "Nje error."
     PD32_DRIVER_UNKNOWN                   "Driveri i printerir i panjohur."
     PD32_NO_DEVICES                       "Para se te besh nje detyre ne lidhje me printerin si konfigurimi i faqes ose printimi i dokumentit, duhet te instaloni nje printer. Ju lutem instaloni nje dhe provoni perseri."
+
     PD32_DEFAULT_PRINTER                  "Printeri i perzgjedhur; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Dokumentet %d jane ne rradhe/pritje"
     PD32_MARGINS_IN_INCHES                "Diferenca [inches]"
@@ -139,6 +141,7 @@ STRINGTABLE
     IDS_SAVE        "Ruaj"
     IDS_SAVE_AS     "Ruaj si "
     IDS_OPEN_FILE   "Hap"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*
@@ -370,6 +373,7 @@ FONT 8, "MS Shell Dlg"
     ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
     CONTROL         "Mbledh",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
+
     GROUPBOX        "Printo gamen",    grp1,   8,92,  144,64, WS_GROUP
     CONTROL         "Te gjith",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
     CONTROL         "Faqet",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12

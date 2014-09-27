@@ -34,6 +34,7 @@ El voleu reemplaçar?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "La ruta no existeix"
     IDS_FILENOTEXISTING     "El fitxer no existeix"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Desa"
     IDS_SAVE_AS     "Anomenar i Desar"
     IDS_OPEN_FILE   "Obre Fitxer"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

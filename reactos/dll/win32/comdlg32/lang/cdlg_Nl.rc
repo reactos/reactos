@@ -34,6 +34,7 @@ Wilt u het vervangen?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Het pad bestaat niet"
     IDS_FILENOTEXISTING     "Kan het bestand niet vinden"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -135,6 +136,7 @@ STRINGTABLE
     IDS_SAVE        "Opslaan"
     IDS_SAVE_AS     "&Opslaan als"
     IDS_OPEN_FILE   "Open bestand"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*
