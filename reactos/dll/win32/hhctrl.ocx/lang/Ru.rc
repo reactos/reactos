@@ -31,8 +31,8 @@ BEGIN
     IDS_SEARCH       "&Поиск"
     IDS_FAVORITES    "&Избранное"
 
-    IDS_HIDETABS     "Hide &Tabs"
-    IDS_SHOWTABS     "Show &Tabs"
+    IDS_HIDETABS     "&Скрыть вкладки"
+    IDS_SHOWTABS     "&Показать вкладки"
 END
 
 STRINGTABLE
@@ -54,12 +54,12 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "S&ync", IDTB_SYNC
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
-        MENUITEM "&Home", IDTB_HOME
-        MENUITEM "&Stop", IDTB_STOP
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "С&инхронизировать", IDTB_SYNC
+        MENUITEM "&Назад", IDTB_BACK
+        MENUITEM "&Вперед", IDTB_FORWARD
+        MENUITEM "&Домой", IDTB_HOME
+        MENUITEM "&Остановить", IDTB_STOP
+        MENUITEM "О&бновить", IDTB_REFRESH
+        MENUITEM "&Печать...", IDTB_PRINT
     }
 }
