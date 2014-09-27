@@ -251,10 +251,20 @@ foo
 ''
 'foo@space@'
 'foo@tab@'
+'value@space@'
+'value'
+'jim fred'
+'"jim" fred'
+'jim fred'
+'jim'
+'apple"banana"grape'
 ------------ Testing variable expansion ------------
+~p0 should be path containing batch file
+@path@
+@path@
 ~dp0 should be directory containing batch file
-@pwd@\
-@pwd@\
+@drive@@path@
+@drive@@path@
 CD value @pwd@@or_broken@CD value@space@
 %
 P
@@ -289,8 +299,8 @@ C
 C
 'A B'@or_broken@''
 'C'@or_broken@''
-@pwd@\C D@or_broken@%~ff
-@pwd@\E@or_broken@%~ff
+@drive@@path@C D@or_broken@%~ff
+@drive@@path@E@or_broken@%~ff
 @drive@
 @drive@
 @path@@or_broken@%~pd
@@ -319,13 +329,14 @@ N
 @drive@
 ''
 '.eh'
+',,,,,,,,,'
 --- in parameters
 "A B"
 C
 'A B'@or_broken@''
 'C'@or_broken@''
-@pwd@\C D
-@pwd@\E
+@drive@@path@C D
+@drive@@path@E
 @drive@
 @drive@
 @path@
@@ -381,22 +392,22 @@ foo5
 foo6@space@
 @todo_wine@------------ Testing cd ------------
 singleFile
-Current dir: @pwd@\foobar@or_broken@Current dir:@space@
-@pwd@\foobar
+Current dir: @drive@@path@foobar@or_broken@Current dir:@space@
+@drive@@path@foobar
 @pwd@
-@pwd@\foobar
+@drive@@path@foobar
 @pwd@
-@pwd@\foobar
+@drive@@path@foobar
 @pwd@
 @pwd@
 @pwd@
-@pwd@\foobar\bar bak
-@pwd@\foobar\bar bak
-@pwd@\foobar\bar bak
-@pwd@\foobar\bar bak
-@pwd@\foobar\bar bak
+@drive@@path@foobar\bar bak
+@drive@@path@foobar\bar bak
+@drive@@path@foobar\bar bak
+@drive@@path@foobar\bar bak
+@drive@@path@foobar\bar bak
 @pwd@
-@pwd@\foobar
+@drive@@path@foobar
 ------------ Testing type ------------
 
 @pwd@>type foobaz@space@
@@ -683,6 +694,18 @@ Mixed enumeration from provided root
 With duplicates enumeration
 Strip missing wildcards, keep unwildcarded names
 for /R passed
+--- Complex wildcards unix and windows slash
+Windows slashs, valid path
+ASIS: foobar\baz\bazbaz
+WC  : foobar\baz\bazbaz
+Windows slashs, invalid path
+ASIS: foobar\jim\bazbaz
+Unix slashs, valid path
+ASIS: foobar/baz/bazbaz
+WC  : bazbaz
+Unix slashs, invalid path
+ASIS: foobar/jim/bazbaz
+Done
 --- for /L
 1
 3
@@ -1067,31 +1090,31 @@ bar\baz removed
 --- pushing non-existing dir
 @pwd@
 --- basic behaviour
-@pwd@\foobar
+@drive@@path@foobar
 @pwd@
-@pwd@\foobar\baz
-@pwd@\foobar
-@pwd@\foobar
+@drive@@path@foobar\baz
+@drive@@path@foobar
+@drive@@path@foobar
 @pwd@
-@pwd@\foobar
+@drive@@path@foobar
 @pwd@
 ------------ Testing attrib ------------
-A            @pwd@\foobar\foo@or_broken@A          @pwd@\foobar\foo@or_broken@A       I    @pwd@\foobar\foo
+A            @drive@@path@foobar\foo@or_broken@A          @drive@@path@foobar\foo@or_broken@A       I    @drive@@path@foobar\foo
 --- read-only attribute
-A    R       @pwd@\foobar\foo@or_broken@A    R     @pwd@\foobar\foo@or_broken@A    R  I    @pwd@\foobar\foo
+A    R       @drive@@path@foobar\foo@or_broken@A    R     @drive@@path@foobar\foo@or_broken@A    R  I    @drive@@path@foobar\foo
 foo
 foo original contents
 Read-only file not deleted
 Read-only file forcibly deleted
 --- recursive behaviour
-A            @pwd@\foobar\baz\level2@or_broken@A          @pwd@\foobar\baz\level2@or_broken@A       I    @pwd@\foobar\baz\level2
-A    R       @pwd@\foobar\level1@or_broken@A    R     @pwd@\foobar\level1@or_broken@A    R  I    @pwd@\foobar\level1
-A    R       @pwd@\foobar\baz\level2@or_broken@A    R     @pwd@\foobar\baz\level2@or_broken@A    R  I    @pwd@\foobar\baz\level2
-A            @pwd@\foobar\bar@or_broken@A          @pwd@\foobar\bar@or_broken@A       I    @pwd@\foobar\bar
+A            @drive@@path@foobar\baz\level2@or_broken@A          @drive@@path@foobar\baz\level2@or_broken@A       I    @drive@@path@foobar\baz\level2
+A    R       @drive@@path@foobar\level1@or_broken@A    R     @drive@@path@foobar\level1@or_broken@A    R  I    @drive@@path@foobar\level1
+A    R       @drive@@path@foobar\baz\level2@or_broken@A    R     @drive@@path@foobar\baz\level2@or_broken@A    R  I    @drive@@path@foobar\baz\level2
+A            @drive@@path@foobar\bar@or_broken@A          @drive@@path@foobar\bar@or_broken@A       I    @drive@@path@foobar\bar
 --- folders processing
-             @pwd@\foobar@or_broken@           @pwd@\foobar@or_broken@        I    @pwd@\foobar
-@todo_wine@     R       @pwd@\foobar\baz@or_broken@     R     @pwd@\foobar\baz@or_broken@           @pwd@\foobar\baz@or_broken@     R  I    @pwd@\foobar\baz
-A            @pwd@\foobar\baz\toto@or_broken@A          @pwd@\foobar\baz\toto@or_broken@A       I    @pwd@\foobar\baz\toto
+             @drive@@path@foobar@or_broken@           @drive@@path@foobar@or_broken@        I    @drive@@path@foobar
+@todo_wine@     R       @drive@@path@foobar\baz@or_broken@     R     @drive@@path@foobar\baz@or_broken@           @drive@@path@foobar\baz@or_broken@     R  I    @drive@@path@foobar\baz
+A            @drive@@path@foobar\baz\toto@or_broken@A          @drive@@path@foobar\baz\toto@or_broken@A       I    @drive@@path@foobar\baz\toto
 toto
 lulu
 file created in read-only dir
@@ -1228,17 +1251,17 @@ ErrLev: 0
 --- setlocal with corresponding endlocal
 globalval
 localval
-@pwd@\foobar\foobar2
+@drive@@path@foobar\foobar2
 globalval
-@pwd@\foobar
+@drive@@path@foobar
 globalval
-@pwd@\foobar
+@drive@@path@foobar
 --- setlocal with no corresponding endlocal
 globalval
 localval
-@pwd@\foobar\foobar2
+@drive@@path@foobar\foobar2
 globalval
-@pwd@\foobar
+@drive@@path@foobar
 --- setlocal within same batch program
 Var1 ok 1
 Var2 ok 2
@@ -1256,23 +1279,23 @@ Directory is ok 3
 --- Extra setlocal in called batch
 value2
 2set1endvalue1
-@pwd@\foobar\foodir3
+@drive@@path@foobar\foodir3
 Finished:
 value2
-@pwd@\foobar\foodir2
+@drive@@path@foobar\foodir2
 value1
-@pwd@\foobar
+@drive@@path@foobar
 --- Extra endlocal in called batch
 value2
 value2
-@pwd@\foobar\foodir2
+@drive@@path@foobar\foodir2
 value2
-@pwd@\foobar\foodir2
+@drive@@path@foobar\foodir2
 Finished:
 value2
-@pwd@\foobar\foodir2
+@drive@@path@foobar\foodir2
 value1
-@pwd@\foobar
+@drive@@path@foobar
 --- endlocal in called function rather than batch pgm is ineffective
 2
 2
@@ -1294,9 +1317,15 @@ errorlevel zero, good@or_broken@errorlevel nonzero, bad
 7 should still be 7
 ------------ Testing GOTO ------------
 goto with no leading space worked
+goto with colon and no leading space worked
 goto with a leading space worked
 goto with a leading tab worked
 goto with a following space worked
+goto with following amphersands worked
+goto with redirections worked
+Ignoring double colons worked
+label with mixed whitespace and no echo worked
+Correctly ignored trailing information
 ------------ Testing PATH ------------
 PATH=original
 PATH=try2

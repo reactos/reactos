@@ -95,6 +95,7 @@ echo @echo 1 > "say one.bat"
 echo @echo 2 > "saytwo.bat"
 echo @echo 3 > "say (3).bat"
 echo @echo 4 > "say .bat"
+echo @echo 5 > "bazbaz(5).bat"
 
 echo ------ Testing invocation of batch files ----------
 call say one
@@ -144,6 +145,11 @@ if errorlevel 2 echo error %ErrorLevel%
 call :setError 0
 cmd /c say" "(3) prints 4?!
 if errorlevel 2 echo error %ErrorLevel%
+call :setError 0
+rem Deliberately invoking a fully qualified batch name containing a bracket
+rem should fail, as a bracket is a command delimiter.
+cmd /c "bazbaz(5).bat"
+if errorlevel 1 echo Passed
 
 echo ---------- Testing CMD /C quoting -----------------
 cmd /c @echo "hi"
@@ -261,7 +267,7 @@ call tell(1234)
 call tell(12(34)
 call tell(12;34)
 echo --------- Finished  --------------
-del tell.bat say*.*
+del tell.bat say*.* bazbaz*.bat
 exit
 :setError
 exit /B %1

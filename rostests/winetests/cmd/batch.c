@@ -140,9 +140,9 @@ static DWORD map_file(const char *file_name, const char **ret)
 
     size = GetFileSize(file, NULL);
 
-    map = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    map = CreateFileMappingA(file, NULL, PAGE_READONLY, 0, 0, NULL);
     CloseHandle(file);
-    ok(map != NULL, "CreateFileMapping(%s) failed: %u\n", file_name, GetLastError());
+    ok(map != NULL, "CreateFileMappingA(%s) failed: %u\n", file_name, GetLastError());
     if(!map)
         return 0;
 
@@ -409,7 +409,7 @@ static DWORD load_resource(const char *name, const char *type, const char **ret)
     return size;
 }
 
-static BOOL WINAPI test_enum_proc(HMODULE module, LPCTSTR type, LPSTR name, LONG_PTR param)
+static BOOL WINAPI test_enum_proc(HMODULE module, LPCSTR type, LPSTR name, LONG_PTR param)
 {
     const char *cmd_data, *out_data;
     DWORD cmd_size, out_size;
@@ -466,8 +466,14 @@ START_TEST(batch)
     drive[0] = workdir[0];
     drive[1] = workdir[1]; /* Should be ':' */
     memcpy(path, workdir + drive_len, (workdir_len - drive_len) * sizeof(drive[0]));
-    path[workdir_len - drive_len] = '\\';
-    path_len = workdir_len - drive_len + 1;
+
+    /* Only add trailing backslash to 'path' for non-root directory */
+    if (workdir_len - drive_len > 1) {
+        path[workdir_len - drive_len] = '\\';
+        path_len = workdir_len - drive_len + 1;
+    } else {
+        path_len = 1; /* \ */
+    }
     shortpath_len = GetShortPathNameA(path, shortpath,
                                       sizeof(shortpath)/sizeof(shortpath[0]));
 

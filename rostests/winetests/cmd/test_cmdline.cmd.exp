@@ -70,6 +70,7 @@ var=33@space@
 0@space@
 3@space@
 4@space@
+Passed
 ---------- Testing CMD /C quoting -----------------
 "hi"
 1@space@
