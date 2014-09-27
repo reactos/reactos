@@ -160,7 +160,6 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
         message != WM_GETICON &&
         message != WM_DEVICECHANGE)
     {
-        trace("parent: %p, %04x, %08lx, %08lx\n", hWnd, message, wParam, lParam);
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
     }
 

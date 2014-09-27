@@ -748,10 +748,10 @@ todo_wine
     ok(lstrcmpW(nameW, WC_BUTTONW), "got %s\n", wine_dbgstr_w(nameW));
 
     ret = GetClassInfoExW(NULL, nameW, &ex2W);
-todo_wine {
+todo_wine
     ok(ret, "got %d\n", ret);
+if (ret) /* TODO: remove once Wine is fixed */
     ok(ex2W.lpfnWndProc == exW.lpfnWndProc, "got %p, %p\n", exW.lpfnWndProc, ex2W.lpfnWndProc);
-}
 
     /* Check reported class name */
     hwnd = create_button(BS_CHECKBOX, NULL);

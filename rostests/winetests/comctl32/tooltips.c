@@ -470,6 +470,7 @@ static void test_ttm_gettoolinfo(void)
     tiW.hwnd = NULL;
     tiW.uId = 0x1234ABCD;
     tiW.lParam = 0xaaaaaaaa;
+    tiW.lpszText = NULL;
     r = SendMessageA(hwnd, TTM_GETTOOLINFOW, 0, (LPARAM)&tiW);
     ok(r, "Getting tooltip info failed\n");
     ok(0x1abe11ed == tiW.lParam ||

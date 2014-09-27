@@ -3,7 +3,7 @@
  *
  * Copyright 2006 Mike McCormack for CodeWeavers
  * Copyright 2007 George Gov
- * Copyright 2009-2013 Nikolay Sivov
+ * Copyright 2009-2014 Nikolay Sivov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,12 +31,15 @@
 #include "v6util.h"
 #include "msg.h"
 
-#define PARENT_SEQ_INDEX       0
-#define PARENT_FULL_SEQ_INDEX  1
-#define LISTVIEW_SEQ_INDEX     2
-#define EDITBOX_SEQ_INDEX      3
-#define COMBINED_SEQ_INDEX     4
-#define NUM_MSG_SEQUENCES      5
+enum seq_index {
+    PARENT_SEQ_INDEX,
+    PARENT_FULL_SEQ_INDEX,
+    PARENT_CD_SEQ_INDEX,
+    LISTVIEW_SEQ_INDEX,
+    EDITBOX_SEQ_INDEX,
+    COMBINED_SEQ_INDEX,
+    NUM_MSG_SEQUENCES
+};
 
 #define LISTVIEW_ID 0
 #define HEADER_ID   1
@@ -389,6 +392,26 @@ static const struct message parent_insert_focused_seq[] = {
     { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGED },
     { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGED },
     { WM_NOTIFY, sent|id, 0, 0, LVN_INSERTITEM },
+    { 0 }
+};
+
+static const struct message parent_report_cd_seq[] = {
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPREPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPREPAINT|CDDS_SUBITEM },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPOSTPAINT|CDDS_SUBITEM },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPREPAINT|CDDS_SUBITEM },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPOSTPAINT|CDDS_SUBITEM },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPOSTPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_POSTPAINT },
+    { 0 }
+};
+
+static const struct message parent_list_cd_seq[] = {
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPREPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPOSTPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_POSTPAINT },
     { 0 }
 };
 
@@ -1761,24 +1784,36 @@ static void test_redraw(void)
     DestroyWindow(hwnd);
 }
 
-static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     COLORREF clr, c0ffee = RGB(0xc0, 0xff, 0xee);
 
-    if(msg == WM_NOTIFY) {
-        NMHDR *nmhdr = (PVOID)lp;
+    if(message == WM_NOTIFY) {
+        NMHDR *nmhdr = (NMHDR*)lParam;
         if(nmhdr->code == NM_CUSTOMDRAW) {
             NMLVCUSTOMDRAW *nmlvcd = (NMLVCUSTOMDRAW*)nmhdr;
+            struct message msg;
+
+            msg.message = message;
+            msg.flags = sent|wparam|lparam|custdraw;
+            msg.wParam = wParam;
+            msg.lParam = lParam;
+            msg.id = nmhdr->code;
+            msg.stage = nmlvcd->nmcd.dwDrawStage;
+            add_message(sequences, PARENT_CD_SEQ_INDEX, &msg);
 
             switch(nmlvcd->nmcd.dwDrawStage) {
             case CDDS_PREPAINT:
                 SetBkColor(nmlvcd->nmcd.hdc, c0ffee);
-                return CDRF_NOTIFYITEMDRAW;
+                return CDRF_NOTIFYITEMDRAW|CDRF_NOTIFYPOSTPAINT;
             case CDDS_ITEMPREPAINT:
                 nmlvcd->clrTextBk = CLR_DEFAULT;
-                return CDRF_NOTIFYSUBITEMDRAW;
+                nmlvcd->clrText = RGB(0, 255, 0);
+                return CDRF_NOTIFYSUBITEMDRAW|CDRF_NOTIFYPOSTPAINT;
             case CDDS_ITEMPREPAINT | CDDS_SUBITEM:
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
+                ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
+                ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
                 if (nmlvcd->iSubItem)
                     todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
                 else
@@ -1787,13 +1822,15 @@ static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             case CDDS_ITEMPOSTPAINT | CDDS_SUBITEM:
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
                 todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
+                ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
+                ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
                 return CDRF_DODEFAULT;
             }
             return CDRF_DODEFAULT;
         }
     }
 
-    return DefWindowProcA(hwnd, msg, wp, lp);
+    return DefWindowProcA(hwnd, message, wParam, lParam);
 }
 
 static void test_customdraw(void)
@@ -1813,8 +1850,26 @@ static void test_customdraw(void)
     InvalidateRect(hwnd, NULL, TRUE);
     UpdateWindow(hwnd);
 
-    SetWindowLongPtrA(hwndparent, GWLP_WNDPROC, (LONG_PTR)oldwndproc);
+    /* message tests */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+    ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_report_cd_seq, "parent customdraw, LVS_REPORT", FALSE);
 
+    DestroyWindow(hwnd);
+
+    hwnd = create_listview_control(LVS_LIST);
+
+    insert_column(hwnd, 0);
+    insert_column(hwnd, 1);
+    insert_item(hwnd, 0);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+    ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_list_cd_seq, "parent customdraw, LVS_LIST", FALSE);
+
+    SetWindowLongPtrA(hwndparent, GWLP_WNDPROC, (LONG_PTR)oldwndproc);
     DestroyWindow(hwnd);
 }
 
