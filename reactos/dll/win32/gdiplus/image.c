@@ -1370,6 +1370,8 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromFile(GDIPCONST WCHAR* filename,
     if(!filename || !bitmap)
         return InvalidParameter;
 
+    *bitmap = NULL;
+
     stat = GdipCreateStreamOnFile(filename, GENERIC_READ, &stream);
 
     if(stat != Ok)
@@ -2927,6 +2929,8 @@ GpStatus WINGDIPAPI GdipLoadImageFromFile(GDIPCONST WCHAR* filename,
 
     if (!filename || !image)
         return InvalidParameter;
+
+    *image = NULL;
 
     stat = GdipCreateStreamOnFile(filename, GENERIC_READ, &stream);
 
