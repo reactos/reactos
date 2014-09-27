@@ -91,7 +91,6 @@ Quit:
 
         default:
         {
-
             DPRINT1("Unknown DOS System BOP Function: 0x%02X\n", FuncNum);
             // setCF(1); // Disable, otherwise we enter an infinite loop
             break;

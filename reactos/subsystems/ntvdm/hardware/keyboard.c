@@ -40,6 +40,8 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
         PS2QueuePush(PS2Port, ScanCode);
     }
 
+    DPRINT("Press 0x%X\n", ScanCode);
+
     // PicInterruptRequest(1);
 }
 
