@@ -27,6 +27,7 @@
 
 static NTSTATUS (WINAPI *pBCryptGenRandom)(BCRYPT_ALG_HANDLE hAlgorithm, PUCHAR pbBuffer,
                                            ULONG cbBuffer, ULONG dwFlags);
+static NTSTATUS (WINAPI *pBCryptGetFipsAlgorithmMode)(BOOLEAN *enabled);
 
 static BOOL Init(void)
 {
@@ -38,6 +39,7 @@ static BOOL Init(void)
     }
 
     pBCryptGenRandom = (void *)GetProcAddress(hbcrypt, "BCryptGenRandom");
+    pBCryptGetFipsAlgorithmMode = (void *)GetProcAddress(hbcrypt, "BCryptGetFipsAlgorithmMode");
 
     return TRUE;
 }
@@ -78,10 +80,29 @@ static void test_BCryptGenRandom(void)
     ok(memcmp(buffer, buffer + 8, 8), "Expected a random number, got 0\n");
 }
 
+static void test_BCryptGetFipsAlgorithmMode(void)
+{
+    NTSTATUS ret;
+    BOOLEAN enabled;
+
+    if (!pBCryptGetFipsAlgorithmMode)
+    {
+        win_skip("BCryptGetFipsAlgorithmMode is not available\n");
+        return;
+    }
+
+    ret = pBCryptGetFipsAlgorithmMode(&enabled);
+    ok(ret == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got 0x%x\n", ret);
+
+    ret = pBCryptGetFipsAlgorithmMode(NULL);
+    ok(ret == STATUS_INVALID_PARAMETER, "Expected STATUS_INVALID_PARAMETER, got 0x%x\n", ret);
+}
+
 START_TEST(bcrypt)
 {
     if (!Init())
         return;
 
     test_BCryptGenRandom();
+    test_BCryptGetFipsAlgorithmMode();
 }
