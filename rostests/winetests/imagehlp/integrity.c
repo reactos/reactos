@@ -135,7 +135,7 @@ static DWORD get_file_size(void)
     return filesize;
 }
 
-static void test_add_certificate(const char *cert_data, int len)
+static DWORD test_add_certificate(const char *cert_data, int len)
 {
     HANDLE hFile;
     LPWIN_CERTIFICATE cert;
@@ -148,7 +148,7 @@ static void test_add_certificate(const char *cert_data, int len)
     if (hFile == INVALID_HANDLE_VALUE)
     {
         skip("Unable to open %s, skipping test\n", test_dll_path);
-        return;
+        return ~0;
     }
 
     cert_len = sizeof(WIN_CERTIFICATE) + len;
@@ -158,7 +158,7 @@ static void test_add_certificate(const char *cert_data, int len)
     {
         skip("Unable to allocate memory, skipping test\n");
         CloseHandle(hFile);
-        return;
+        return ~0;
     }
 
     cert->dwLength = cert_len;
@@ -168,9 +168,11 @@ static void test_add_certificate(const char *cert_data, int len)
 
     ret = pImageAddCertificate(hFile, cert, &index);
     ok(ret, "Unable to add certificate to image, error %x\n", GetLastError());
+    trace("added cert index %d\n", index);
 
     HeapFree(GetProcessHeap(), 0, cert);
     CloseHandle(hFile);
+    return index;
 }
 
 static void test_get_certificate(const char *cert_data, int index)
@@ -239,7 +241,7 @@ static void test_remove_certificate(int index)
 
 START_TEST(integrity)
 {
-    DWORD file_size, file_size_orig;
+    DWORD file_size, file_size_orig, first, second;
 
     hImageHlp = LoadLibraryA("imagehlp.dll");
 
@@ -272,25 +274,27 @@ START_TEST(integrity)
     pImageGetCertificateHeader = (void *) GetProcAddress(hImageHlp, "ImageGetCertificateHeader");
     pImageRemoveCertificate = (void *) GetProcAddress(hImageHlp, "ImageRemoveCertificate");
 
-    test_add_certificate(test_cert_data, sizeof(test_cert_data));
-    test_get_certificate(test_cert_data, 0);
-    test_remove_certificate(0);
+    first = test_add_certificate(test_cert_data, sizeof(test_cert_data));
+    test_get_certificate(test_cert_data, first);
+    test_remove_certificate(first);
 
     file_size = get_file_size();
     ok(file_size == file_size_orig, "File size different after add and remove (old: %d; new: %d)\n", file_size_orig, file_size);
 
     /* Try adding multiple certificates */
-    test_add_certificate(test_cert_data, sizeof(test_cert_data));
-    test_add_certificate(test_cert_data_2, sizeof(test_cert_data_2));
+    first = test_add_certificate(test_cert_data, sizeof(test_cert_data));
+    second = test_add_certificate(test_cert_data_2, sizeof(test_cert_data_2));
+    ok(second == first + 1, "got %d %d\n", first, second);
 
-    test_get_certificate(test_cert_data, 0);
-    test_get_certificate(test_cert_data_2, 1);
+    test_get_certificate(test_cert_data, first);
+    test_get_certificate(test_cert_data_2, second);
 
     /* Remove the first one and verify the second certificate is intact */
-    test_remove_certificate(0);
-    test_get_certificate(test_cert_data_2, 0);
+    test_remove_certificate(first);
+    second--;
+    test_get_certificate(test_cert_data_2, second);
 
-    test_remove_certificate(0);
+    test_remove_certificate(second);
 
     file_size = get_file_size();
     ok(file_size == file_size_orig, "File size different after add and remove (old: %d; new: %d)\n", file_size_orig, file_size);

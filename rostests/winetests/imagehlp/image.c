@@ -31,6 +31,8 @@
 static HMODULE hImageHlp;
 
 static BOOL (WINAPI *pImageGetDigestStream)(HANDLE, DWORD, DIGEST_FUNCTION, DIGEST_HANDLE);
+static BOOL (WINAPI *pBindImageEx)(DWORD Flags, const char *ImageName, const char *DllPath,
+                                   const char *SymbolPath, PIMAGEHLP_STATUS_ROUTINE StatusRoutine);
 
 /* minimal PE file image */
 #define VA_START 0x400000
@@ -148,6 +150,9 @@ struct expected_update_accum
     const struct expected_blob *updates;
     BOOL  todo;
 };
+
+static int status_routine_called[BindSymbolsNotUpdated+1];
+
 
 static BOOL WINAPI accumulating_stream_output(DIGEST_HANDLE handle, BYTE *pb,
  DWORD cb)
@@ -273,6 +278,40 @@ static void update_checksum(void)
     bin.nt_headers.OptionalHeader.CheckSum = sum;
 }
 
+static BOOL CALLBACK testing_status_routine(IMAGEHLP_STATUS_REASON reason, const char *ImageName,
+                                            const char *DllName, ULONG_PTR Va, ULONG_PTR Parameter)
+{
+    char kernel32_path[MAX_PATH];
+
+    if (0 <= (int)reason && reason <= BindSymbolsNotUpdated)
+      status_routine_called[reason]++;
+    else
+      ok(0, "expected reason between 0 and %d, got %d\n", BindSymbolsNotUpdated+1, reason);
+
+    switch(reason)
+    {
+        case BindImportModule:
+            ok(!strcmp(DllName, "KERNEL32.DLL"), "expected DllName to be KERNEL32.DLL, got %s\n",
+               DllName);
+            break;
+
+        case BindImportProcedure:
+        case BindForwarderNOT:
+            GetSystemDirectoryA(kernel32_path, MAX_PATH);
+            strcat(kernel32_path, "\\KERNEL32.DLL");
+            ok(!lstrcmpiA(DllName, kernel32_path), "expected DllName to be %s, got %s\n",
+               kernel32_path, DllName);
+            ok(!strcmp((char *)Parameter, "ExitProcess"),
+               "expected Parameter to be ExitProcess, got %s\n", (char *)Parameter);
+            break;
+
+        default:
+            ok(0, "got unexpected reason %d\n", reason);
+            break;
+    }
+    return TRUE;
+}
+
 static void test_get_digest_stream(void)
 {
     BOOL ret;
@@ -281,6 +320,11 @@ static void test_get_digest_stream(void)
     DWORD count;
     struct update_accum accum = { 0, NULL };
 
+    if (!pImageGetDigestStream)
+    {
+        win_skip("ImageGetDigestStream function is not available\n");
+        return;
+    }
     SetLastError(0xdeadbeef);
     ret = pImageGetDigestStream(NULL, 0, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
@@ -329,6 +373,60 @@ static void test_get_digest_stream(void)
     DeleteFileA(temp_file);
 }
 
+static void test_bind_image_ex(void)
+{
+    BOOL ret;
+    HANDLE file;
+    char temp_file[MAX_PATH];
+    DWORD count;
+
+    if (!pBindImageEx)
+    {
+        win_skip("BindImageEx function is not available\n");
+        return;
+    }
+
+    /* call with a non-existent file */
+    SetLastError(0xdeadbeef);
+    ret = pBindImageEx(BIND_NO_BOUND_IMPORTS | BIND_NO_UPDATE | BIND_ALL_IMAGES, "nonexistent.dll", 0, 0,
+                       testing_status_routine);
+    todo_wine ok(!ret && ((GetLastError() == ERROR_FILE_NOT_FOUND) ||
+                 (GetLastError() == ERROR_INVALID_PARAMETER)),
+                 "expected ERROR_FILE_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
+                 GetLastError());
+
+    file = create_temp_file(temp_file);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        skip("couldn't create temp file\n");
+        return;
+    }
+
+    WriteFile(file, &bin, sizeof(bin), &count, NULL);
+    CloseHandle(file);
+
+    /* call with a proper PE file, but with StatusRoutine set to NULL */
+    ret = pBindImageEx(BIND_NO_BOUND_IMPORTS | BIND_NO_UPDATE | BIND_ALL_IMAGES, temp_file, 0, 0,
+                       NULL);
+    ok(ret, "BindImageEx failed: %d\n", GetLastError());
+
+    /* call with a proper PE file and StatusRoutine */
+    ret = pBindImageEx(BIND_NO_BOUND_IMPORTS | BIND_NO_UPDATE | BIND_ALL_IMAGES, temp_file, 0, 0,
+                       testing_status_routine);
+    ok(ret, "BindImageEx failed: %d\n", GetLastError());
+
+    todo_wine ok(status_routine_called[BindImportModule] == 1,
+                 "StatusRoutine was called %d times\n", status_routine_called[BindImportModule]);
+
+    todo_wine ok((status_routine_called[BindImportProcedure] == 1)
+#if defined(_WIN64)
+                 || broken(status_routine_called[BindImportProcedure] == 0) /* < Win8 */
+#endif
+                 , "StatusRoutine was called %d times\n", status_routine_called[BindImportProcedure]);
+
+    DeleteFileA(temp_file);
+}
+
 START_TEST(image)
 {
     hImageHlp = LoadLibraryA("imagehlp.dll");
@@ -340,14 +438,10 @@ START_TEST(image)
     }
 
     pImageGetDigestStream = (void *) GetProcAddress(hImageHlp, "ImageGetDigestStream");
+    pBindImageEx = (void *) GetProcAddress(hImageHlp, "BindImageEx");
 
-    if (!pImageGetDigestStream)
-    {
-        win_skip("ImageGetDigestStream function is not available\n");
-    } else
-    {
-        test_get_digest_stream();
-    }
+    test_get_digest_stream();
+    test_bind_image_ex();
 
     FreeLibrary(hImageHlp);
 }
