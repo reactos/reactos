@@ -2055,7 +2055,6 @@ static const unsigned char bin54[] = { 0x03,0x03,0x01,0xff,0xfe };
 static const unsigned char bin55[] = { 0xff,0xfe };
 static const unsigned char bin56[] = { 0x03,0x02,0x01,0xfe };
 static const unsigned char bin57[] = { 0xfe };
-static const unsigned char bin58[] = { 0x03,0x01,0x00 };
 
 static const struct encodedBits bits[] = {
     /* normal test cases */

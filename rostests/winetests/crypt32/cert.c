@@ -797,7 +797,7 @@ static void testLinkCert(void)
     ok(link->pCertInfo == context->pCertInfo, "unexpected pCertInfo\n");
 
     CertFreeCertificateContext(link);
-
+    CertFreeCertificateContext(context);
     CertCloseStore(store, 0);
 }
 
@@ -1564,8 +1564,12 @@ static const BYTE chain7_1[] = {
 static void testGetIssuerCert(void)
 {
     BOOL ret;
-    PCCERT_CONTEXT parent, child, cert1, cert2;
-    DWORD flags = 0xffffffff;
+    PCCERT_CONTEXT parent, child, cert1, cert2, cert3;
+    DWORD flags = 0xffffffff, size;
+    CERT_NAME_BLOB certsubject;
+    BYTE *certencoded;
+    WCHAR rootW[] = {'R', 'O', 'O', 'T', '\0'},
+          certname[] = {'C', 'N', '=', 'd', 'u', 'm', 'm', 'y', ',', ' ', 'T', '=', 'T', 'e', 's', 't', '\0'};
     HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
 
@@ -1640,6 +1644,7 @@ static void testGetIssuerCert(void)
     ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
     parent = CertGetIssuerCertificateFromStore(store, child, NULL, &flags);
     ok(parent == NULL, "Expected no issuer\n");
+    ok(GetLastError() == CRYPT_E_NOT_FOUND, "Expected CRYPT_E_NOT_FOUND, got %08X\n", GetLastError());
     /* Adding an issuer allows one (and only one) issuer to be found */
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      chain10_1, sizeof(chain10_1), CERT_STORE_ADD_ALWAYS, &cert1);
@@ -1648,6 +1653,7 @@ static void testGetIssuerCert(void)
     ok(parent == cert1, "Expected cert1 to be the issuer\n");
     parent = CertGetIssuerCertificateFromStore(store, child, parent, &flags);
     ok(parent == NULL, "Expected only one issuer\n");
+    ok(GetLastError() == CRYPT_E_NOT_FOUND, "Expected CRYPT_E_NOT_FOUND, got %08X\n", GetLastError());
     /* Adding a second issuer allows two issuers to be found - and the second
      * issuer is found before the first, implying certs are added to the head
      * of a list.
@@ -1661,6 +1667,7 @@ static void testGetIssuerCert(void)
     ok(parent == cert1, "Expected cert1 to be the second issuer\n");
     parent = CertGetIssuerCertificateFromStore(store, child, parent, &flags);
     ok(parent == NULL, "Expected no more than two issuers\n");
+    ok(GetLastError() == CRYPT_E_NOT_FOUND, "Expected CRYPT_E_NOT_FOUND, got %08X\n", GetLastError());
     CertFreeCertificateContext(child);
     CertFreeCertificateContext(cert1);
     CertFreeCertificateContext(cert2);
@@ -1677,6 +1684,7 @@ static void testGetIssuerCert(void)
     ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
     parent = CertGetIssuerCertificateFromStore(store, child, NULL, &flags);
     ok(parent == NULL, "Expected no issuer\n");
+    ok(GetLastError() == CRYPT_E_NOT_FOUND, "Expected CRYPT_E_NOT_FOUND, got %08X\n", GetLastError());
     /* Adding an issuer allows one (and only one) issuer to be found */
     ret = CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING,
      chain10_0, sizeof(chain10_0), CERT_STORE_ADD_ALWAYS, &cert1);
@@ -1685,6 +1693,7 @@ static void testGetIssuerCert(void)
     ok(parent == cert1, "Expected cert1 to be the issuer\n");
     parent = CertGetIssuerCertificateFromStore(store, child, parent, &flags);
     ok(parent == NULL, "Expected only one issuer\n");
+    ok(GetLastError() == CRYPT_E_NOT_FOUND, "Expected CRYPT_E_NOT_FOUND, got %08X\n", GetLastError());
     /* Adding a second issuer allows two issuers to be found - and the second
      * issuer is found before the first, implying certs are added to the head
      * of a list.
@@ -1698,9 +1707,47 @@ static void testGetIssuerCert(void)
     ok(parent == cert1, "Expected cert1 to be the second issuer\n");
     parent = CertGetIssuerCertificateFromStore(store, child, parent, &flags);
     ok(parent == NULL, "Expected no more than two issuers\n");
+    ok(GetLastError() == CRYPT_E_NOT_FOUND, "Expected CRYPT_E_NOT_FOUND, got %08X\n", GetLastError());
+
+    /* Self-sign a certificate, add to the store and test getting the issuer */
+    size = 0;
+    ok(CertStrToNameW(X509_ASN_ENCODING, certname, CERT_X500_NAME_STR, NULL, NULL, &size, NULL),
+       "CertStrToName should have worked\n");
+    certencoded = HeapAlloc(GetProcessHeap(), 0, size);
+    ok(CertStrToNameW(X509_ASN_ENCODING, certname, CERT_X500_NAME_STR, NULL, certencoded, &size, NULL),
+       "CertStrToName should have worked\n");
+    certsubject.pbData = certencoded;
+    certsubject.cbData = size;
+    cert3 = CertCreateSelfSignCertificate(0, &certsubject, 0, NULL, NULL, NULL, NULL, NULL);
+    ok(cert3 != NULL, "CertCreateSelfSignCertificate should have worked\n");
+    ret = CertAddCertificateContextToStore(store, cert3, CERT_STORE_ADD_REPLACE_EXISTING, 0);
+    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n", GetLastError());
+    CertFreeCertificateContext(cert3);
+    cert3 = CertEnumCertificatesInStore(store, NULL);
+    ok(cert3 != NULL, "CertEnumCertificatesInStore should have worked\n");
+    SetLastError(0xdeadbeef);
+    flags = 0;
+    parent = CertGetIssuerCertificateFromStore(store, cert3, NULL, &flags);
+    ok(!parent, "Expected NULL\n");
+    ok(GetLastError() == CRYPT_E_SELF_SIGNED,
+       "Expected CRYPT_E_SELF_SIGNED, got %08X\n", GetLastError());
     CertFreeCertificateContext(child);
     CertFreeCertificateContext(cert1);
     CertFreeCertificateContext(cert2);
+    CertCloseStore(store, 0);
+    HeapFree(GetProcessHeap(), 0, certencoded);
+
+    /* Test root storage self-signed certificate */
+    store = CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, 0, CERT_SYSTEM_STORE_CURRENT_USER, rootW);
+    ok(store != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    flags = 0;
+    cert1 = CertEnumCertificatesInStore(store, NULL);
+    ok(cert1 != NULL, "CertEnumCertificatesInStore should have worked\n");
+    SetLastError(0xdeadbeef);
+    parent = CertGetIssuerCertificateFromStore(store, cert1, NULL, &flags);
+    ok(!parent, "Expected NULL\n");
+    ok(GetLastError() == CRYPT_E_SELF_SIGNED,
+       "Expected CRYPT_E_SELF_SIGNED, got %08X\n", GetLastError());
     CertCloseStore(store, 0);
 }
 
@@ -2343,6 +2390,7 @@ static void testCreateSelfSignCert(void)
      "Expected NTE_NO_KEY, got %08x\n", GetLastError());
     ret = CryptGenKey(csp, AT_KEYEXCHANGE, 0, &key);
     ok(ret, "CryptGenKey failed: %08x\n", GetLastError());
+    CryptDestroyKey(key);
 
     memset(&info,0,sizeof(info));
     info.dwProvType = PROV_RSA_FULL;

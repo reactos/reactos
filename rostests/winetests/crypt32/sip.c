@@ -119,6 +119,9 @@ static void test_AddRemoveProvider(void)
     newprov.pwszRemoveFuncName = dummyfunction;
     newprov.pwszIsFunctionNameFmt2 = dummyfunction;
     newprov.pwszIsFunctionName = dummyfunction;
+    /* If GetCapFuncName set to NULL, then CryptSIPRemoveProvider fails on win 8 */
+    newprov.pwszGetCapFuncName = dummyfunction;
+
     SetLastError(0xdeadbeef);
     ret = CryptSIPAddProvider(&newprov);
     ok ( ret, "CryptSIPAddProvider should have succeeded, last error %d\n", GetLastError());

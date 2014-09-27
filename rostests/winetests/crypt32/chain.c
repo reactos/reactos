@@ -3347,14 +3347,6 @@ static CONST_DATA_BLOB chain29[] = {
  { sizeof(chain0_0), chain0_0 },
  { sizeof(chain29_1), chain29_1 },
 };
-static const CERT_TRUST_STATUS elementStatus29[] = {
- { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
- { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
-   CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
-};
-static const SimpleChainStatusCheck simpleStatus29[] = {
- { sizeof(elementStatus29) / sizeof(elementStatus29[0]), elementStatus29 },
-};
 static CONST_DATA_BLOB chain30[] = {
  { sizeof(chain0_0), chain0_0 },
  { sizeof(chain30_1), chain30_1 },
@@ -4227,10 +4219,6 @@ static const ChainPolicyCheck googlePolicyCheckWithMatchingName = {
  { sizeof(googleChain) / sizeof(googleChain[0]), googleChain },
  { 0, 0, -1, -1, NULL}, &expiredStatus, 0
 };
-
-/* Windows NT 4 has a different error code when the name doesn't match. */
-static const CERT_CHAIN_POLICY_STATUS noMatchingNameBrokenStatus =
- { 0, CERT_E_ROLE, 0, 0, NULL };
 
 /* Win98 does not trust the root of the OpenSSL chain or the Stanford chain */
 static const CERT_CHAIN_POLICY_STATUS untrustedRootStatus =
