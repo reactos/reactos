@@ -891,6 +891,3 @@
 @ cdecl wctomb(ptr long)
 @ varargs wprintf(wstr)
 @ varargs wscanf(wstr)
-
-# Functions not exported in native dll:
-@ cdecl -arch=i386 -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
