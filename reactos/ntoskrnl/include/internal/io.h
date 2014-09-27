@@ -1058,6 +1058,7 @@ NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
                 IN PUNICODE_STRING RegistryPath,
+                IN PCUNICODE_STRING ServiceName,
                 PLDR_DATA_TABLE_ENTRY ModuleObject,
                 OUT PDRIVER_OBJECT *pDriverObject);
 
