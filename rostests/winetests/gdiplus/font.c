@@ -39,11 +39,8 @@
 
 static const WCHAR nonexistent[] = {'T','h','i','s','F','o','n','t','s','h','o','u','l','d','N','o','t','E','x','i','s','t','\0'};
 static const WCHAR MSSansSerif[] = {'M','S',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
-static const WCHAR MicrosoftSansSerif[] = {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
 static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R','o','m','a','n','\0'};
-static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
 static const WCHAR Tahoma[] = {'T','a','h','o','m','a',0};
-static const WCHAR LiberationSerif[] = {'L','i','b','e','r','a','t','i','o','n',' ','S','e','r','i','f',0};
 
 static void set_rect_empty(RectF *rc)
 {
@@ -809,17 +806,23 @@ static void test_font_substitution(void)
     lf.lfWeight = 0;
     lf.lfCharSet = 0;
     lstrcpyA(lf.lfFaceName, "ThisFontShouldNotExist");
+    font = NULL;
     status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
 todo_wine
     ok(status == NotTrueTypeFont || broken(status == FileNotFound), /* before XP */
        "expected NotTrueTypeFont, got %d\n", status);
+    /* FIXME: remove when wine is fixed */
+    if (font) GdipDeleteFont(font);
 
     /* empty FaceName */
     lf.lfFaceName[0] = 0;
+    font = NULL;
     status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
 todo_wine
     ok(status == NotTrueTypeFont || broken(status == FileNotFound), /* before XP */
        "expected NotTrueTypeFont, got %d\n", status);
+    /* FIXME: remove when wine is fixed */
+    if (font) GdipDeleteFont(font);
 
     GdipDeleteGraphics(graphics);
     DeleteDC(hdc);

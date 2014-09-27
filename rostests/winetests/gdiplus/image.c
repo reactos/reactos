@@ -381,24 +381,48 @@ static void test_GdipImageGetFrameDimensionsCount(void)
 static void test_LoadingImages(void)
 {
     GpStatus stat;
+    GpBitmap *bm;
+    GpImage *img;
+    static const WCHAR nonexistentW[] = {'n','o','n','e','x','i','s','t','e','n','t',0};
 
     stat = GdipCreateBitmapFromFile(0, 0);
     expect(InvalidParameter, stat);
 
-    stat = GdipCreateBitmapFromFile(0, (GpBitmap**)0xdeadbeef);
+    bm = (GpBitmap *)0xdeadbeef;
+    stat = GdipCreateBitmapFromFile(0, &bm);
     expect(InvalidParameter, stat);
+    ok(bm == (GpBitmap *)0xdeadbeef, "returned %p\n", bm);
+
+    bm = (GpBitmap *)0xdeadbeef;
+    stat = GdipCreateBitmapFromFile(nonexistentW, &bm);
+    todo_wine expect(InvalidParameter, stat);
+    ok(!bm, "returned %p\n", bm);
 
     stat = GdipLoadImageFromFile(0, 0);
     expect(InvalidParameter, stat);
 
-    stat = GdipLoadImageFromFile(0, (GpImage**)0xdeadbeef);
+    img = (GpImage *)0xdeadbeef;
+    stat = GdipLoadImageFromFile(0, &img);
     expect(InvalidParameter, stat);
+    ok(img == (GpImage *)0xdeadbeef, "returned %p\n", img);
+
+    img = (GpImage *)0xdeadbeef;
+    stat = GdipLoadImageFromFile(nonexistentW, &img);
+    todo_wine expect(OutOfMemory, stat);
+    ok(!img, "returned %p\n", img);
 
     stat = GdipLoadImageFromFileICM(0, 0);
     expect(InvalidParameter, stat);
 
-    stat = GdipLoadImageFromFileICM(0, (GpImage**)0xdeadbeef);
+    img = (GpImage *)0xdeadbeef;
+    stat = GdipLoadImageFromFileICM(0, &img);
     expect(InvalidParameter, stat);
+    ok(img == (GpImage *)0xdeadbeef, "returned %p\n", img);
+
+    img = (GpImage *)0xdeadbeef;
+    stat = GdipLoadImageFromFileICM(nonexistentW, &img);
+    todo_wine expect(OutOfMemory, stat);
+    ok(!img, "returned %p\n", img);
 }
 
 static void test_SavingImages(void)
