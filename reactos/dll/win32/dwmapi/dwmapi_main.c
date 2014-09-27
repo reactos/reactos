@@ -112,6 +112,18 @@ HRESULT WINAPI DwmFlush(void)
 }
 
 /**********************************************************************
+ *        DwmInvalidateIconicBitmaps      (DWMAPI.@)
+ */
+HRESULT WINAPI DwmInvalidateIconicBitmaps(HWND hwnd)
+{
+    static BOOL once;
+
+    if (!once++) FIXME("(%p) stub\n", hwnd);
+
+    return E_NOTIMPL;
+}
+
+/**********************************************************************
  *           DwmSetWindowAttribute         (DWMAPI.@)
  */
 HRESULT WINAPI DwmSetWindowAttribute(HWND hwnd, DWORD attributenum, LPCVOID attribute, DWORD size)
