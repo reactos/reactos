@@ -11,15 +11,17 @@
 //#define NDEBUG
 #include <debug.h>
 
+#define BASE_POOL_TYPE_MASK 1
+
 typedef enum
 {
-    DriverEntry,
-    DriverIrp,
-    DriverUnload
+    DriverStatusEntry,
+    DriverStatusIrp,
+    DriverStatusUnload
 } DRIVER_STATUS;
 
 static DRIVER_DISPATCH TestDispatch;
-static VOID TestDriverObject(IN PDRIVER_OBJECT DriverObject, IN DRIVER_STATUS DriverStatus);
+static VOID TestDriverObject(IN PDRIVER_OBJECT DriverObject, IN PCUNICODE_STRING RegistryPath OPTIONAL, IN DRIVER_STATUS DriverStatus);
 static BOOLEAN TestZwLoad(IN PDRIVER_OBJECT DriverObject, IN PCUNICODE_STRING DriverRegistryPath, IN PWCHAR NewDriverRegPath);
 static BOOLEAN TestZwUnload(IN PDRIVER_OBJECT DriverObject, IN PCUNICODE_STRING DriverRegistryPath, IN PWCHAR NewDriverRegPath);
 static VOID TestLowerDeviceKernelAPI(IN PDEVICE_OBJECT DeviceObject);
@@ -52,7 +54,7 @@ TestEntry(
 
     ThisDriverObject = DriverObject;
 
-    TestDriverObject(DriverObject, DriverEntry);
+    TestDriverObject(DriverObject, RegistryPath, DriverStatusEntry);
 
     /* Create and delete device, on return MainDeviceObject has been created */
     TestDeviceCreateDelete(DriverObject);
@@ -99,7 +101,7 @@ TestUnload(
     }
 
     TestDeviceDeletion(MainDeviceObject, FALSE, FALSE);
-    TestDriverObject(DriverObject, DriverUnload);
+    TestDriverObject(DriverObject, NULL, DriverStatusUnload);
 
     if (MainDeviceObject)
         IoDeleteDevice(MainDeviceObject);
@@ -131,7 +133,7 @@ TestDispatch(
         return Status;
     }
 
-    TestDriverObject(DeviceObject->DriverObject, DriverIrp);
+    TestDriverObject(DeviceObject->DriverObject, NULL, DriverStatusIrp);
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
@@ -141,35 +143,85 @@ TestDispatch(
     return Status;
 }
 
+extern DRIVER_INITIALIZE DriverEntry;
+
 static
 VOID
 TestDriverObject(
     IN PDRIVER_OBJECT DriverObject,
+    IN PCUNICODE_STRING RegistryPath OPTIONAL,
     IN DRIVER_STATUS DriverStatus)
 {
     BOOLEAN CheckThisDispatchRoutine;
     PVOID FirstMajorFunc;
     int i;
+    UNICODE_STRING HardwareDatabase = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
+    UNICODE_STRING RegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\ControlSet001\\Services\\Kmtest-IoDeviceObject");
+    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"\\Driver\\Kmtest-IoDeviceObject");
+    UNICODE_STRING ServiceKeyName = RTL_CONSTANT_STRING(L"Kmtest-IoDeviceObject");
+    BOOLEAN Equal;
 
     ok(DriverObject->Size == sizeof(DRIVER_OBJECT), "Size does not match, got %x\n",DriverObject->Size);
     ok(DriverObject->Type == 4, "Type does not match 4. got %d\n", DriverObject->Type);
 
-    if (DriverStatus == DriverEntry)
+    if (DriverStatus == DriverStatusEntry)
     {
         ok(DriverObject->DeviceObject == NULL, "Expected DeviceObject pointer to be 0, got %p\n",
             DriverObject->DeviceObject);
         ok (DriverObject->Flags == DRVO_LEGACY_DRIVER,
             "Expected Flags to be DRVO_LEGACY_DRIVER, got %lu\n",
             DriverObject->Flags);
+
+        ok(DriverObject->DriverStart < (PVOID)TestEntry,
+           "DriverStart is %p, expected < %p\n",
+           DriverObject->DriverStart, (PVOID)TestEntry);
+        ok(DriverObject->DriverSize > 0x2000,
+           "DriverSize 0x%lx\n", DriverObject->DriverSize);
+        ok_eq_pointer(DriverObject->DriverExtension, (PDRIVER_EXTENSION)(DriverObject + 1));
+        ok_eq_pointer(DriverObject->DriverExtension->DriverObject, DriverObject);
+        ok_eq_pointer(DriverObject->DriverExtension->AddDevice, NULL);
+        ok_eq_ulong(DriverObject->DriverExtension->Count, 0UL);
+        Equal = RtlEqualUnicodeString(RegistryPath,
+                                      &RegPath,
+                                      FALSE);
+        ok(Equal, "RegistryPath is '%wZ'\n", RegistryPath);
+        ok((ULONG_PTR)RegistryPath % PAGE_SIZE == 0, "RegistryPath %p not page-aligned\n", RegistryPath);
+        ok_eq_pointer(RegistryPath->Buffer, (PWCHAR)(RegistryPath + 1));
+        ok_eq_uint(RegistryPath->MaximumLength, RegistryPath->Length);
+        Equal = RtlEqualUnicodeString(&DriverObject->DriverExtension->ServiceKeyName,
+                                      &ServiceKeyName,
+                                      FALSE);
+        ok(Equal, "ServiceKeyName is '%wZ'\n", &DriverObject->DriverExtension->ServiceKeyName);
+        ok_eq_tag(KmtGetPoolTag(DriverObject->DriverExtension->ServiceKeyName.Buffer), '  oI');
+        ok_eq_uint((KmtGetPoolType(DriverObject->DriverExtension->ServiceKeyName.Buffer) - 1) & BASE_POOL_TYPE_MASK, NonPagedPool);
+        ok_eq_uint(DriverObject->DriverExtension->ServiceKeyName.MaximumLength, DriverObject->DriverExtension->ServiceKeyName.Length + sizeof(UNICODE_NULL));
+        ok_eq_uint(DriverObject->DriverExtension->ServiceKeyName.Buffer[DriverObject->DriverExtension->ServiceKeyName.Length / sizeof(WCHAR)], UNICODE_NULL);
+        Equal = RtlEqualUnicodeString(&DriverObject->DriverName,
+                                      &DriverName,
+                                      FALSE);
+        ok(Equal, "DriverName is '%wZ'\n", &DriverObject->DriverName);
+        ok_eq_tag(KmtGetPoolTag(DriverObject->DriverName.Buffer), '  oI');
+        ok_eq_uint((KmtGetPoolType(DriverObject->DriverName.Buffer) - 1) & BASE_POOL_TYPE_MASK, PagedPool);
+        ok_eq_uint(DriverObject->DriverName.MaximumLength, DriverObject->DriverName.Length);
+        // TODO: show that both string and buffer are constants inside ntos
+        Equal = RtlEqualUnicodeString(DriverObject->HardwareDatabase,
+                                      &HardwareDatabase,
+                                      FALSE);
+        ok(Equal, "HardwareDatabase is '%wZ'\n", DriverObject->HardwareDatabase);
+        ok_eq_uint(DriverObject->HardwareDatabase->MaximumLength, DriverObject->HardwareDatabase->Length + sizeof(UNICODE_NULL));
+        ok_eq_uint(DriverObject->HardwareDatabase->Buffer[DriverObject->HardwareDatabase->Length / sizeof(WCHAR)], UNICODE_NULL);
+        ok(DriverObject->DriverInit == DriverEntry,
+           "DriverInit is %p, expected %p\n",
+           (PVOID)DriverObject->DriverInit, (PVOID)DriverEntry);
     }
-    else if (DriverStatus == DriverIrp)
+    else if (DriverStatus == DriverStatusIrp)
     {
         ok(DriverObject->DeviceObject != NULL, "Expected DeviceObject pointer to non null\n");
         ok (DriverObject->Flags == (DRVO_LEGACY_DRIVER | DRVO_INITIALIZED),
             "Expected Flags to be DRVO_LEGACY_DRIVER | DRVO_INITIALIZED, got %lu\n",
             DriverObject->Flags);
     }
-    else if (DriverStatus == DriverUnload)
+    else if (DriverStatus == DriverStatusUnload)
     {
         ok(DriverObject->DeviceObject != NULL, "Expected DeviceObject pointer to non null\n");
         ok (DriverObject->Flags == (DRVO_LEGACY_DRIVER | DRVO_INITIALIZED | DRVO_UNLOAD_INVOKED),
