@@ -194,6 +194,7 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
 // Keyboard IRQ 1
 static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 {
+    BOOLEAN SkipScanCode;
     BYTE ScanCode, VirtualKey;
     WORD Character;
 
@@ -204,17 +205,24 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
      * In return, if CF is set we continue processing the scan code
      * stored in AL, and if not, we skip it.
      */
+    BYTE CF, AX;
+    CF = getCF();
+    AX = getAX();
+
     setCF(1);
     setAL(IOReadB(PS2_DATA_PORT));
     setAH(0x4F);
     Int32Call(&BiosContext, BIOS_MISC_INTERRUPT);
 
-    /* Check whether CL is clear. If so, skip the scan code. */
-    if (getCF() == 0) goto Quit;
-    /**/setCF(0);/**/ // FIXME: HACK: Reset CF otherwise we enter in an infinite loop.
-
     /* Retrieve the modified scan code in AL */
+    SkipScanCode = (getCF() == 0);
     ScanCode = getAL();
+
+    setAX(AX);
+    setCF(CF);
+
+    /* Check whether CF is clear. If so, skip the scan code. */
+    if (SkipScanCode) goto Quit;
 
     /* Get the corresponding virtual key code */
     VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
