@@ -734,10 +734,10 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, I
 
 /* draws a blank frame for a toolbar button */
 static void
-TOOLBAR_DrawFrame(const TOOLBAR_INFO *infoPtr, const NMTBCUSTOMDRAW *tbcd, DWORD dwItemCDFlag)
+TOOLBAR_DrawFrame(const TOOLBAR_INFO *infoPtr, const NMTBCUSTOMDRAW *tbcd, const RECT *rect, DWORD dwItemCDFlag)
 {
     HDC hdc = tbcd->nmcd.hdc;
-    RECT rc = tbcd->nmcd.rc;
+    RECT rc = *rect;
     /* if the state is disabled or indeterminate then the button
      * cannot have an interactive look like pressed or hot */
     BOOL non_interactive_state = (tbcd->nmcd.uItemState & CDIS_DISABLED) ||
@@ -940,7 +940,7 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
     tbcd.rcText.bottom = rcText.bottom - rc.top;
     tbcd.nmcd.uItemState = TOOLBAR_TranslateState(btnPtr);
     tbcd.nmcd.hdc = hdc;
-    tbcd.nmcd.rc = rc;
+    tbcd.nmcd.rc = btnPtr->rect;
     tbcd.hbrMonoDither = COMCTL32_hPattern55AABrush;
 
     /* FIXME: what are these used for? */
@@ -958,7 +958,7 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
 	ntfret = TOOLBAR_SendNotify(&tbcd.nmcd.hdr, infoPtr, NM_CUSTOMDRAW);
         /* reset these fields so the user can't alter the behaviour like native */
         tbcd.nmcd.hdc = hdc;
-        tbcd.nmcd.rc = rc;
+        tbcd.nmcd.rc = btnPtr->rect;
 
 	dwItemCustDraw = ntfret & 0xffff;
 	dwItemCDFlag = ntfret & 0xffff0000;
@@ -1007,10 +1007,10 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
             || (drawSepDropDownArrow && btnPtr->bDropDownPressed))
             stateId = TS_HOT;
             
-        DrawThemeBackground (theme, hdc, partId, stateId, &tbcd.nmcd.rc, NULL);
+        DrawThemeBackground (theme, hdc, partId, stateId, &rc, NULL);
     }
     else
-        TOOLBAR_DrawFrame(infoPtr, &tbcd, dwItemCDFlag);
+        TOOLBAR_DrawFrame(infoPtr, &tbcd, &rc, dwItemCDFlag);
 
     if (drawSepDropDownArrow)
     {
