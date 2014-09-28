@@ -419,6 +419,9 @@ static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
     /* Add the string buffer size */
     TotalSize += strlen(ProgramName) + 1;
 
+    /* Add the two extra bytes */
+    TotalSize += 2;
+
     /* Allocate the memory for the environment block */
     DestSegment = DosAllocateMemory((WORD)((TotalSize + 0x0F) >> 4), NULL);
     if (!DestSegment) return 0;
@@ -1012,7 +1015,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         /* Check if at least the lowest allocation was successful */
         if (Segment == 0)
         {
-            Result = ERROR_NOT_ENOUGH_MEMORY;
+            Result = DosLastError;
             goto Cleanup;
         }
 
@@ -1081,7 +1084,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         Segment = DosAllocateMemory(MaxAllocSize, NULL);
         if (Segment == 0)
         {
-            Result = ERROR_ARENA_TRASHED;
+            Result = DosLastError;
             goto Cleanup;
         }
 
