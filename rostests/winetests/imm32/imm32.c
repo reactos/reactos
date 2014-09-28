@@ -753,7 +753,7 @@ static void test_ImmGetIMCLockCount(void)
     count = ImmGetIMCLockCount(0x00000000);
     ok(count == 0, "NULL IMC should return 0\n");
     ret = GetLastError();
-    ok(ret == 0xdeadbeef, "Last Error should remain unchangedi %08x\n",ret);
+    ok(ret == 0xdeadbeef, "Last Error should remain unchanged: %08x\n",ret);
     count = ImmGetIMCLockCount(imc);
     ok(count == 0, "Destroyed IMC should return 0\n");
     ret = GetLastError();
