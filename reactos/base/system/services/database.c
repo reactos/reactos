@@ -1456,6 +1456,19 @@ ScmWaitForServiceConnect(PSERVICE Service)
             return dwError;
         }
     }
+    else
+    {
+        if (dwProcessId != Service->lpImage->dwProcessId)
+        {
+/*
+            LPWSTR Strings[3]
+
+            ScmLogError(EVENT_SERVICE_DIFFERENT_PID_CONNECTED,
+                        3,
+                        lpStrings);
+*/
+        }
+    }
 
     DPRINT("ScmWaitForServiceConnect() done\n");
 
@@ -1578,7 +1591,7 @@ ScmLoadService(PSERVICE Service,
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
-    LPCWSTR ErrorLogStrings[2];
+    LPCWSTR lpErrorStrings[2];
     WCHAR szErrorBuffer[32];
 
     DPRINT("ScmLoadService() called\n");
@@ -1633,6 +1646,14 @@ ScmLoadService(PSERVICE Service,
         {
             Group->ServicesRunning = TRUE;
         }
+
+        /* Log a successful service start */
+        lpErrorStrings[0] = Service->lpDisplayName;
+        lpErrorStrings[1] = L"start";
+        ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
+                    EVENTLOG_INFORMATION_TYPE,
+                    2,
+                    lpErrorStrings);
     }
     else
     {
@@ -1640,11 +1661,12 @@ ScmLoadService(PSERVICE Service,
         {
             /* Log a failed service start */
             swprintf(szErrorBuffer, L"%lu", dwError);
-            ErrorLogStrings[0] = Service->lpServiceName;
-            ErrorLogStrings[1] = szErrorBuffer;
-            ScmLogError(EVENT_SERVICE_START_FAILED,
+            lpErrorStrings[0] = Service->lpServiceName;
+            lpErrorStrings[1] = szErrorBuffer;
+            ScmLogEvent(EVENT_SERVICE_START_FAILED,
+                        EVENTLOG_ERROR_TYPE,
                         2,
-                        ErrorLogStrings);
+                        lpErrorStrings);
         }
 
 #if 0

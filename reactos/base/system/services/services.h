@@ -175,6 +175,7 @@ DWORD ScmSetServiceGroup(PSERVICE lpService,
 
 
 /* lock.c */
+
 DWORD ScmAcquireServiceStartLock(IN BOOL IsServiceController,
                                  OUT LPSC_RPC_LOCK lpLock);
 DWORD ScmReleaseServiceStartLock(IN OUT LPSC_RPC_LOCK lpLock);
@@ -190,7 +191,8 @@ VOID ScmStartRpcServer(VOID);
 /* services.c */
 
 VOID PrintString(LPCSTR fmt, ...);
-VOID ScmLogError(DWORD dwEventId,
+VOID ScmLogEvent(DWORD dwEventId,
+                 WORD wType,
                  WORD wStrings,
                  LPCWSTR *lpStrings);
 VOID ScmWaitForLsa(VOID);

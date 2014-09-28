@@ -1085,6 +1085,7 @@ DWORD RControlService(
     DWORD dwControlsAccepted;
     DWORD dwCurrentState;
     HKEY hServicesKey = NULL;
+    LPCWSTR lpErrorStrings[2];
 
     DPRINT("RControlService() called\n");
 
@@ -1240,6 +1241,39 @@ DWORD RControlService(
         RtlCopyMemory(lpServiceStatus,
                       &lpService->Status,
                       sizeof(SERVICE_STATUS));
+    }
+
+    if (dwError == ERROR_SUCCESS)
+    {
+            if (dwControl != SERVICE_CONTROL_INTERROGATE)
+            {
+                /* Log a sucessful send control */
+                lpErrorStrings[0] = lpService->lpDisplayName;
+
+                switch(dwControl)
+                {
+                    case SERVICE_CONTROL_STOP:
+                        lpErrorStrings[1] = L"stop";
+                        break;
+
+                    case SERVICE_CONTROL_PAUSE:
+                        lpErrorStrings[1] = L"pause";
+                        break;
+
+                    case SERVICE_CONTROL_CONTINUE:
+                        lpErrorStrings[1] = L"continue";
+                        break;
+
+                    default:
+                        lpErrorStrings[1] = L"other";
+                        break;
+                }
+
+                ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
+                            EVENTLOG_INFORMATION_TYPE,
+                            2,
+                            lpErrorStrings);
+            }
     }
 
     return dwError;
@@ -1691,20 +1725,47 @@ DWORD RSetServiceStatus(
     /* Unlock the service database */
     ScmUnlockDatabase();
 
-    /* Log a failed service stop */
     if ((lpServiceStatus->dwCurrentState == SERVICE_STOPPED) &&
-        (dwPreviousState != SERVICE_STOPPED))
+        (dwPreviousState != SERVICE_STOPPED) &&
+        (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS))
     {
-        if (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS)
-        {
-            swprintf(szErrorBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
-            lpErrorStrings[0] = lpService->lpDisplayName;
-            lpErrorStrings[1] = szErrorBuffer;
+        /* Log a failed service stop */
+        swprintf(szErrorBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
+        lpErrorStrings[0] = lpService->lpDisplayName;
+        lpErrorStrings[1] = szErrorBuffer;
 
-            ScmLogError(EVENT_SERVICE_EXIT_FAILED,
-                        2,
-                        lpErrorStrings);
+        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
+                    EVENTLOG_ERROR_TYPE,
+                    2,
+                    lpErrorStrings);
+    }
+    else if (lpServiceStatus->dwCurrentState != dwPreviousState &&
+             (lpServiceStatus->dwCurrentState == SERVICE_STOPPED ||
+              lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
+              lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
+    {
+        /* Log a successful service status change */
+        lpErrorStrings[0] = lpService->lpDisplayName;
+
+        switch(lpServiceStatus->dwCurrentState)
+        {
+            case SERVICE_STOPPED:
+                lpErrorStrings[1] = L"stopped";
+                break;
+
+            case SERVICE_RUNNING:
+                lpErrorStrings[1] = L"running";
+                break;
+
+            case SERVICE_PAUSED:
+                lpErrorStrings[1] = L"paused";
+                break;
         }
+
+        ScmLogEvent(EVENT_SERVICE_STATUS_SUCCESS,
+                    EVENTLOG_INFORMATION_TYPE,
+                    2,
+                    lpErrorStrings);
     }
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
