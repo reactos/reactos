@@ -299,81 +299,83 @@ VOID
 NTAPI
 Fast486DumpState(PFAST486_STATE State)
 {
-    DPRINT1("\nCPU currently executing in %s mode at %04X:%08X\n",
+    DbgPrint("\nFast486DumpState -->\n");
+    DbgPrint("\nCPU currently executing in %s mode at %04X:%08X\n",
             (State->ControlRegisters[0] & FAST486_CR0_PE) ? "protected" : "real",
-            State->SegmentRegs[FAST486_REG_CS].Selector,
-            State->InstPtr.Long);
-    DPRINT1("\nGeneral purpose registers:\n"
-            "EAX = %08X\tECX = %08X\tEDX = %08X\tEBX = %08X\n"
-            "ESP = %08X\tEBP = %08X\tESI = %08X\tEDI = %08X\n",
-            State->GeneralRegs[FAST486_REG_EAX].Long,
-            State->GeneralRegs[FAST486_REG_ECX].Long,
-            State->GeneralRegs[FAST486_REG_EDX].Long,
-            State->GeneralRegs[FAST486_REG_EBX].Long,
-            State->GeneralRegs[FAST486_REG_ESP].Long,
-            State->GeneralRegs[FAST486_REG_EBP].Long,
-            State->GeneralRegs[FAST486_REG_ESI].Long,
-            State->GeneralRegs[FAST486_REG_EDI].Long);
-    DPRINT1("\nSegment registers:\n"
-            "ES = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-            "CS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-            "SS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-            "DS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-            "FS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-            "GS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n",
-            State->SegmentRegs[FAST486_REG_ES].Selector,
-            State->SegmentRegs[FAST486_REG_ES].Base,
-            State->SegmentRegs[FAST486_REG_ES].Limit,
-            State->SegmentRegs[FAST486_REG_ES].Dpl,
-            State->SegmentRegs[FAST486_REG_CS].Selector,
-            State->SegmentRegs[FAST486_REG_CS].Base,
-            State->SegmentRegs[FAST486_REG_CS].Limit,
-            State->SegmentRegs[FAST486_REG_CS].Dpl,
-            State->SegmentRegs[FAST486_REG_SS].Selector,
-            State->SegmentRegs[FAST486_REG_SS].Base,
-            State->SegmentRegs[FAST486_REG_SS].Limit,
-            State->SegmentRegs[FAST486_REG_SS].Dpl,
-            State->SegmentRegs[FAST486_REG_DS].Selector,
-            State->SegmentRegs[FAST486_REG_DS].Base,
-            State->SegmentRegs[FAST486_REG_DS].Limit,
-            State->SegmentRegs[FAST486_REG_DS].Dpl,
-            State->SegmentRegs[FAST486_REG_FS].Selector,
-            State->SegmentRegs[FAST486_REG_FS].Base,
-            State->SegmentRegs[FAST486_REG_FS].Limit,
-            State->SegmentRegs[FAST486_REG_FS].Dpl,
-            State->SegmentRegs[FAST486_REG_GS].Selector,
-            State->SegmentRegs[FAST486_REG_GS].Base,
-            State->SegmentRegs[FAST486_REG_GS].Limit,
-            State->SegmentRegs[FAST486_REG_GS].Dpl);
-    DPRINT1("\nFlags: %08X (%s %s %s %s %s %s %s %s %s %s %s %s) Iopl: %u\n",
-            State->Flags.Long,
-            State->Flags.Cf ? "CF" : "cf",
-            State->Flags.Pf ? "PF" : "pf",
-            State->Flags.Af ? "AF" : "af",
-            State->Flags.Zf ? "ZF" : "zf",
-            State->Flags.Sf ? "SF" : "sf",
-            State->Flags.Tf ? "TF" : "tf",
-            State->Flags.If ? "IF" : "if",
-            State->Flags.Df ? "DF" : "df",
-            State->Flags.Of ? "OF" : "of",
-            State->Flags.Nt ? "NT" : "nt",
-            State->Flags.Rf ? "RF" : "rf",
-            State->Flags.Vm ? "VM" : "vm",
-            State->Flags.Iopl);
-    DPRINT1("\nControl Registers:\n"
-            "CR0 = %08X\tCR2 = %08X\tCR3 = %08X\n",
-            State->ControlRegisters[FAST486_REG_CR0],
-            State->ControlRegisters[FAST486_REG_CR2],
-            State->ControlRegisters[FAST486_REG_CR3]);
-    DPRINT1("\nDebug Registers:\n"
-            "DR0 = %08X\tDR1 = %08X\tDR2 = %08X\n"
-            "DR3 = %08X\tDR4 = %08X\tDR5 = %08X\n",
-            State->DebugRegisters[FAST486_REG_DR0],
-            State->DebugRegisters[FAST486_REG_DR1],
-            State->DebugRegisters[FAST486_REG_DR2],
-            State->DebugRegisters[FAST486_REG_DR3],
-            State->DebugRegisters[FAST486_REG_DR4],
-            State->DebugRegisters[FAST486_REG_DR5]);
+             State->SegmentRegs[FAST486_REG_CS].Selector,
+             State->InstPtr.Long);
+    DbgPrint("\nGeneral purpose registers:\n"
+             "EAX = %08X\tECX = %08X\tEDX = %08X\tEBX = %08X\n"
+             "ESP = %08X\tEBP = %08X\tESI = %08X\tEDI = %08X\n",
+             State->GeneralRegs[FAST486_REG_EAX].Long,
+             State->GeneralRegs[FAST486_REG_ECX].Long,
+             State->GeneralRegs[FAST486_REG_EDX].Long,
+             State->GeneralRegs[FAST486_REG_EBX].Long,
+             State->GeneralRegs[FAST486_REG_ESP].Long,
+             State->GeneralRegs[FAST486_REG_EBP].Long,
+             State->GeneralRegs[FAST486_REG_ESI].Long,
+             State->GeneralRegs[FAST486_REG_EDI].Long);
+    DbgPrint("\nSegment registers:\n"
+             "ES = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
+             "CS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
+             "SS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
+             "DS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
+             "FS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
+             "GS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n",
+             State->SegmentRegs[FAST486_REG_ES].Selector,
+             State->SegmentRegs[FAST486_REG_ES].Base,
+             State->SegmentRegs[FAST486_REG_ES].Limit,
+             State->SegmentRegs[FAST486_REG_ES].Dpl,
+             State->SegmentRegs[FAST486_REG_CS].Selector,
+             State->SegmentRegs[FAST486_REG_CS].Base,
+             State->SegmentRegs[FAST486_REG_CS].Limit,
+             State->SegmentRegs[FAST486_REG_CS].Dpl,
+             State->SegmentRegs[FAST486_REG_SS].Selector,
+             State->SegmentRegs[FAST486_REG_SS].Base,
+             State->SegmentRegs[FAST486_REG_SS].Limit,
+             State->SegmentRegs[FAST486_REG_SS].Dpl,
+             State->SegmentRegs[FAST486_REG_DS].Selector,
+             State->SegmentRegs[FAST486_REG_DS].Base,
+             State->SegmentRegs[FAST486_REG_DS].Limit,
+             State->SegmentRegs[FAST486_REG_DS].Dpl,
+             State->SegmentRegs[FAST486_REG_FS].Selector,
+             State->SegmentRegs[FAST486_REG_FS].Base,
+             State->SegmentRegs[FAST486_REG_FS].Limit,
+             State->SegmentRegs[FAST486_REG_FS].Dpl,
+             State->SegmentRegs[FAST486_REG_GS].Selector,
+             State->SegmentRegs[FAST486_REG_GS].Base,
+             State->SegmentRegs[FAST486_REG_GS].Limit,
+             State->SegmentRegs[FAST486_REG_GS].Dpl);
+    DbgPrint("\nFlags: %08X (%s %s %s %s %s %s %s %s %s %s %s %s) Iopl: %u\n",
+             State->Flags.Long,
+             State->Flags.Cf ? "CF" : "cf",
+             State->Flags.Pf ? "PF" : "pf",
+             State->Flags.Af ? "AF" : "af",
+             State->Flags.Zf ? "ZF" : "zf",
+             State->Flags.Sf ? "SF" : "sf",
+             State->Flags.Tf ? "TF" : "tf",
+             State->Flags.If ? "IF" : "if",
+             State->Flags.Df ? "DF" : "df",
+             State->Flags.Of ? "OF" : "of",
+             State->Flags.Nt ? "NT" : "nt",
+             State->Flags.Rf ? "RF" : "rf",
+             State->Flags.Vm ? "VM" : "vm",
+             State->Flags.Iopl);
+    DbgPrint("\nControl Registers:\n"
+             "CR0 = %08X\tCR2 = %08X\tCR3 = %08X\n",
+             State->ControlRegisters[FAST486_REG_CR0],
+             State->ControlRegisters[FAST486_REG_CR2],
+             State->ControlRegisters[FAST486_REG_CR3]);
+    DbgPrint("\nDebug Registers:\n"
+             "DR0 = %08X\tDR1 = %08X\tDR2 = %08X\n"
+             "DR3 = %08X\tDR4 = %08X\tDR5 = %08X\n",
+             State->DebugRegisters[FAST486_REG_DR0],
+             State->DebugRegisters[FAST486_REG_DR1],
+             State->DebugRegisters[FAST486_REG_DR2],
+             State->DebugRegisters[FAST486_REG_DR3],
+             State->DebugRegisters[FAST486_REG_DR4],
+             State->DebugRegisters[FAST486_REG_DR5]);
+    DbgPrint("\n<-- Fast486DumpState\n\n");
 }
 
 VOID
