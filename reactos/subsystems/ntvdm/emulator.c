@@ -549,8 +549,12 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         wprintf(L"FATAL: Failed to allocate VDM memory.\n");
         return FALSE;
     }
-    // For diagnostics purposes!!
-    RtlFillMemory(BaseAddress, MAX_ADDRESS, 0xFF);
+    /*
+     * For diagnostics purposes, we fill the memory with INT 0x03 codes
+     * so that if a program wants to execute random code in memory, we can
+     * retrieve the exact CS:IP where the problem happens.
+     */
+    RtlFillMemory(BaseAddress, MAX_ADDRESS, 0xCC);
 
     /* Initialize I/O ports */
     /* Initialize RAM */
