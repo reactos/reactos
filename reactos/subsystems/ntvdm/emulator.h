@@ -98,7 +98,7 @@ extern BOOLEAN VdmRunning;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID DumpMemory(VOID);
+VOID DumpMemory(BOOLEAN TextFormat);
 
 VOID WINAPI EmulatorReadMemory
 (
