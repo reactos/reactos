@@ -237,6 +237,11 @@ AuthPortThreadRoutine(PVOID Param)
                         ReplyMsg = &RequestMsg;
                         break;
 
+                    case LSASS_REQUEST_GET_LOGON_SESSION_DATA:
+                        RequestMsg.Status = LsapGetLogonSessionData(&RequestMsg);
+                        ReplyMsg = &RequestMsg;
+                        break;
+
                     default:
                         RequestMsg.Status = STATUS_INVALID_SYSTEM_SERVICE;
                         ReplyMsg = &RequestMsg;

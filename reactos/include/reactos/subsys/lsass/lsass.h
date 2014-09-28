@@ -22,6 +22,7 @@ typedef enum _LSA_API_NUMBER
     LSASS_REQUEST_LOGON_USER,
     LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE,
     LSASS_REQUEST_ENUM_LOGON_SESSIONS,
+    LSASS_REQUEST_GET_LOGON_SESSION_DATA,
     LSASS_REQUEST_MAXIMUM
 } LSA_API_NUMBER, *PLSA_API_NUMBER;
 
@@ -129,11 +130,26 @@ typedef struct _LSA_ENUM_LOGON_SESSIONS_MSG
         struct
         {
             ULONG LogonSessionCount;
-            ULONG LogonSessionBufferLength;
             PVOID LogonSessionBuffer;
         } Reply;
     };
 } LSA_ENUM_LOGON_SESSIONS_MSG, *PLSA_ENUM_LOGON_SESSIONS_MSG;
+
+
+typedef struct _LSA_GET_LOGON_SESSION_DATA_MSG
+{
+    union
+    {
+        struct
+        {
+            LUID LogonId;
+        } Request;
+        struct
+        {
+            PVOID SessionDataBuffer;
+        } Reply;
+    };
+} LSA_GET_LOGON_SESSION_DATA_MSG, *PLSA_GET_LOGON_SESSION_DATA_MSG;
 
 
 typedef struct _LSA_API_MSG
@@ -153,6 +169,7 @@ typedef struct _LSA_API_MSG
                 LSA_DEREGISTER_LOGON_PROCESS_MSG DeregisterLogonProcess;
                 LSA_LOOKUP_AUTHENTICATION_PACKAGE_MSG LookupAuthenticationPackage;
                 LSA_ENUM_LOGON_SESSIONS_MSG EnumLogonSessions;
+                LSA_GET_LOGON_SESSION_DATA_MSG GetLogonSessionData;
             };
         };
     };

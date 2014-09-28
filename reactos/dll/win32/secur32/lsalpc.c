@@ -108,9 +108,11 @@ LsapOpenLsaPort(VOID)
  */
 NTSTATUS
 NTAPI
-LsaEnumerateLogonSessions(PULONG LogonSessionCount,
-                          PLUID *LogonSessionList)
+LsaEnumerateLogonSessions(
+    PULONG LogonSessionCount,
+    PLUID *LogonSessionList)
 {
+#if 1
     LSA_API_MSG ApiMessage;
     NTSTATUS Status;
 
@@ -144,6 +146,10 @@ LsaEnumerateLogonSessions(PULONG LogonSessionCount,
     *LogonSessionList = ApiMessage.EnumLogonSessions.Reply.LogonSessionBuffer;
 
     return Status;
+#else
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 
@@ -152,11 +158,59 @@ LsaEnumerateLogonSessions(PULONG LogonSessionCount,
  */
 NTSTATUS
 NTAPI
-LsaGetLogonSessionData(PLUID LogonId,
-                       PSECURITY_LOGON_SESSION_DATA *ppLogonSessionData)
+LsaGetLogonSessionData(
+    PLUID LogonId,
+    PSECURITY_LOGON_SESSION_DATA *ppLogonSessionData)
 {
+#if 1
+    LSA_API_MSG ApiMessage;
+    PSECURITY_LOGON_SESSION_DATA SessionData;
+    NTSTATUS Status;
+
+    TRACE("LsaGetLogonSessionData(%p %p)\n", LogonId, ppLogonSessionData);
+
+    Status = LsapOpenLsaPort();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ApiMessage.ApiNumber = LSASS_REQUEST_GET_LOGON_SESSION_DATA;
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.GetLogonSessionData);
+    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    RtlCopyLuid(&ApiMessage.GetLogonSessionData.Request.LogonId,
+                LogonId);
+
+    Status = NtRequestWaitReplyPort(LsaPortHandle,
+                                    (PPORT_MESSAGE)&ApiMessage,
+                                    (PPORT_MESSAGE)&ApiMessage);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        ERR("NtRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
+        return ApiMessage.Status;
+    }
+
+    SessionData = ApiMessage.GetLogonSessionData.Reply.SessionDataBuffer;
+
+    if (SessionData->UserName.Buffer != NULL)
+        SessionData->UserName.Buffer = (LPWSTR)((ULONG_PTR)&SessionData->UserName.Buffer + (ULONG_PTR)SessionData->UserName.Buffer);
+
+    if (SessionData->Sid != NULL)
+        SessionData->Sid = (LPWSTR)((ULONG_PTR)&SessionData->Sid + (ULONG_PTR)SessionData->Sid);
+
+    *ppLogonSessionData = SessionData;
+
+    return Status;
+#else
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 
