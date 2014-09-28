@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Vennlig navn"
     IDS_ALLOWED_PURPOSE_ALL "<Alle>"
     IDS_ALLOWED_PURPOSE_NONE "<Ingen>"
-    IDS_WARN_REMOVE_MY "Du vil ikke lenger ha mulighet til å dekryptere meldinger med dette sertifikatet, eller til å signere med det.\n\
-Er du sikker på at du vil fjerne dette sertifikatet?"
-    IDS_WARN_REMOVE_PLURAL_MY "Du vil ikke lenger ha mulighet til å dekryptere meldinger med disse sertifikatene, eller til å signere med dem.\n\
-Er du sikker på at du vil fjerne disse sertifikatene?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Du vil ikke lenger ha mulighet til å kryptere meldinger med dette sertifikatet, eller til å kontrollere meldinger som er signert med det.\n\
-Er du sikker på at du vil fjerne dette sertifikatet?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Du vil ikke lenger ha mulighet til å kryptere meldinger med disse sertifikatene, eller til å kontrollere meldinger som er signert med dem.\n\
-Er du sikker på at du vil fjerne disse sertifikatene?"
-    IDS_WARN_REMOVE_CA "Sertifikater utstedt av denne sertifiseringsenheten vil ikke lenger være tiltrodd.\n\
-Er du sikker på at du vil fjerne dette sertifikatet?"
-    IDS_WARN_REMOVE_PLURAL_CA "Sertifikater utstedt av disse sertifiseringsenhetene vil ikke lenger være tiltrodde.\n\
-Er du sikker på at du vil fjerne disse sertifikatene?"
-    IDS_WARN_REMOVE_ROOT "Sertifikater utstedt av denne rotsertifikatenheten, eller underenheter av denne, vil ikke lenger være tiltrodd.\n\
-Er du sikker på at du vil fjerne dette rotsertifikatet?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Sertifikater utstedt av disse rotsertifikatenhetene, eller underenheter av disse, vil ikke lenger være tiltrodde.\n\
-Er du sikker på at du vil fjerne disse rotsertifikatene?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Programvare signert av denne utgiveren vil ikke lenger være tiltrodd.\n\
-Er du sikker på at du vil fjerne dette sertifikatet?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Programvare signert av disse utgiverne vil ikke lenger være tiltrodd.\n\
-Er du sikker på at du vil fjerne disse sertifikatene?"
+    IDS_WARN_REMOVE_MY "Du vil ikke lenger ha mulighet til å dekryptere meldinger med dette sertifikatet, eller til å signere med det.\nEr du sikker på at du vil fjerne dette sertifikatet?"
+    IDS_WARN_REMOVE_PLURAL_MY "Du vil ikke lenger ha mulighet til å dekryptere meldinger med disse sertifikatene, eller til å signere med dem.\nEr du sikker på at du vil fjerne disse sertifikatene?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Du vil ikke lenger ha mulighet til å kryptere meldinger med dette sertifikatet, eller til å kontrollere meldinger som er signert med det.\nEr du sikker på at du vil fjerne dette sertifikatet?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Du vil ikke lenger ha mulighet til å kryptere meldinger med disse sertifikatene, eller til å kontrollere meldinger som er signert med dem.\nEr du sikker på at du vil fjerne disse sertifikatene?"
+    IDS_WARN_REMOVE_CA "Sertifikater utstedt av denne sertifiseringsenheten vil ikke lenger være tiltrodd.\nEr du sikker på at du vil fjerne dette sertifikatet?"
+    IDS_WARN_REMOVE_PLURAL_CA "Sertifikater utstedt av disse sertifiseringsenhetene vil ikke lenger være tiltrodde.\nEr du sikker på at du vil fjerne disse sertifikatene?"
+    IDS_WARN_REMOVE_ROOT "Sertifikater utstedt av denne rotsertifikatenheten, eller underenheter av denne, vil ikke lenger være tiltrodd.\nEr du sikker på at du vil fjerne dette rotsertifikatet?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Sertifikater utstedt av disse rotsertifikatenhetene, eller underenheter av disse, vil ikke lenger være tiltrodde.\nEr du sikker på at du vil fjerne disse rotsertifikatene?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Programvare signert av denne utgiveren vil ikke lenger være tiltrodd.\nEr du sikker på at du vil fjerne dette sertifikatet?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Programvare signert av disse utgiverne vil ikke lenger være tiltrodd.\nEr du sikker på at du vil fjerne disse sertifikatene?"
     IDS_WARN_REMOVE_DEFAULT "Er du sikker på at du vil fjerne dette sertifikatet?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Er du sikker på at du vil fjerne disse sertifikatene?"
     IDS_CERT_MGR "Sertifikater"
     IDS_FRIENDLY_NAME_NONE "<Ingen>"
     IDS_PURPOSE_SERVER_AUTH "Kontrollerer identiteten til en ekstern datamaskin"
     IDS_PURPOSE_CLIENT_AUTH "Bekrefter din identitet overfor en ekstern datamaskin"
-    IDS_PURPOSE_CODE_SIGNING "Forsikrer at programvare kommer fra den originale utgiveren\n\
-Beskytter programvare mot endringer"
+    IDS_PURPOSE_CODE_SIGNING "Forsikrer at programvare kommer fra den originale utgiveren\nBeskytter programvare mot endringer"
     IDS_PURPOSE_EMAIL_PROTECTION "Beskytter e-postmeldinger"
     IDS_PURPOSE_IPSEC "Muliggjør sikker kommunikasjon over Internett"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Gjør det mulig å signere data med klokkeslett"
@@ -302,11 +291,11 @@ BEGIN
   PUSHBUTTON "Bla", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Merk:  Følgende filformater kan inneholde mer enn ett sertifikat eller liste over tiltrodde eller tilbakekalte sertifikater:",
     -1, 21,30,265,16
-  LTEXT "Standardformat for kryptografiske meldinger/PKCS #7 Messages (.p7b)",
+  LTEXT "Standardformat for kryptografiske meldinger/PKCS #7 Messages (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Personlig informasjonsutveksling/PKCS #12 (.pfx, .p12)",
+  LTEXT "Personlig informasjonsutveksling/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft Serialized Certificate Store (.sst)",
+  LTEXT "Microsoft Serialized Certificate Store (*.sst)",
     -1, 31,83,265,10
 END
 
@@ -409,15 +398,15 @@ CAPTION "Veiviser for eksport av sertifikater"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Velg formatet du ønsker å bruke:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-kodet X.509 (.cer)",
+  AUTORADIOBUTTON "&DER-kodet X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-kodet X.509 (.cer):",
+  AUTORADIOBUTTON "Ba&se64-kodet X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "Standardformat for &kryptografiske meldinger/PKCS #7 Message (.p7b)",
+  AUTORADIOBUTTON "Standardformat for &kryptografiske meldinger/PKCS #7 Message (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "Ta med alle sertifikater &i sertifikatstien, hvis mulig",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "&Personlig informasjonsutveksling/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "&Personlig informasjonsutveksling/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Ta med aller sertifikater i sertifikatstien, hvis m&ulig",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED

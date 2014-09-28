@@ -80,8 +80,11 @@ GdiDbgAssertNoLocks(char * pszFile, ULONG nLine)
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
+        ULONG i;
         DbgPrint("(%s:%lu) There are %lu exclusive locks!\n",
                  pszFile, nLine, pti->cExclusiveLocks);
+        for (i = 0; i < (GDIObjTypeTotal + 1); i++)
+            DbgPrint("    Type %u: %u.\n", i, pti->acExclusiveLockCount[i]);
         ASSERT(FALSE);
     }
 }

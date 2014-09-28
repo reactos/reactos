@@ -34,6 +34,7 @@ Skal den overskrives?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Stien finnes ikke"
     IDS_FILENOTEXISTING     "Filen finnes ikke"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Lagre"
     IDS_SAVE_AS     "Lagre som"
     IDS_OPEN_FILE   "Åpne fil"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

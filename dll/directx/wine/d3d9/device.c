@@ -320,27 +320,35 @@ static HRESULT WINAPI d3d9_device_TestCooperativeLevel(IDirect3DDevice9Ex *iface
 
     TRACE("iface %p.\n", iface);
 
-    if (device->not_reset)
-    {
-        TRACE("D3D9 device is marked not reset.\n");
-        return D3DERR_DEVICENOTRESET;
-    }
+    TRACE("device state: %#x.\n", device->device_state);
 
-    return D3D_OK;
+    if (device->d3d_parent->extended)
+        return D3D_OK;
+
+    switch (device->device_state)
+    {
+        default:
+        case D3D9_DEVICE_STATE_OK:
+            return D3D_OK;
+        case D3D9_DEVICE_STATE_LOST:
+            return D3DERR_DEVICELOST;
+        case D3D9_DEVICE_STATE_NOT_RESET:
+            return D3DERR_DEVICENOTRESET;
+    }
 }
 
 static UINT WINAPI d3d9_device_GetAvailableTextureMem(IDirect3DDevice9Ex *iface)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
-    HRESULT hr;
+    UINT ret;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = wined3d_device_get_available_texture_mem(device->wined3d_device);
+    ret = wined3d_device_get_available_texture_mem(device->wined3d_device);
     wined3d_mutex_unlock();
 
-    return hr;
+    return ret;
 }
 
 static HRESULT WINAPI d3d9_device_EvictManagedResources(IDirect3DDevice9Ex *iface)
@@ -618,9 +626,9 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Reset(IDirect3DDevice9Ex *if
     hr = wined3d_device_reset(device->wined3d_device, &swapchain_desc,
             NULL, reset_enum_callback, !device->d3d_parent->extended);
     if (FAILED(hr) && !device->d3d_parent->extended)
-        device->not_reset = TRUE;
+        device->device_state = D3D9_DEVICE_STATE_NOT_RESET;
     else
-        device->not_reset = FALSE;
+        device->device_state = D3D9_DEVICE_STATE_OK;
     wined3d_mutex_unlock();
 
     return hr;
@@ -634,6 +642,9 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Present(IDirect3DDevice9Ex *
 
     TRACE("iface %p, src_rect %p, dst_rect %p, dst_window_override %p, dirty_region %p.\n",
             iface, src_rect, dst_rect, dst_window_override, dirty_region);
+
+    if (device->device_state != D3D9_DEVICE_STATE_OK)
+        return device->d3d_parent->extended ? S_PRESENT_OCCLUDED : D3DERR_DEVICELOST;
 
     wined3d_mutex_lock();
     hr = wined3d_device_present(device->wined3d_device, src_rect, dst_rect,
@@ -1012,7 +1023,6 @@ static HRESULT d3d9_device_create_surface(struct d3d9_device *device, UINT width
 
     sub_resource = wined3d_texture_get_sub_resource(texture, 0);
     surface_impl = wined3d_resource_get_parent(sub_resource);
-    surface_impl->forwardReference = NULL;
     surface_impl->parent_device = &device->IDirect3DDevice9Ex_iface;
     *surface = &surface_impl->IDirect3DSurface9_iface;
     IDirect3DSurface9_AddRef(*surface);
@@ -1258,8 +1268,14 @@ static HRESULT WINAPI d3d9_device_ColorFill(IDirect3DDevice9Ex *iface,
         return D3DERR_INVALIDCALL;
     }
 
-    /* Colorfill can only be used on rendertarget surfaces, or offscreen plain surfaces in D3DPOOL_DEFAULT */
-    hr = wined3d_device_color_fill(device->wined3d_device, surface_impl->wined3d_surface, rect, &c);
+    if (desc.pool != WINED3D_POOL_DEFAULT && desc.pool != WINED3D_POOL_SYSTEM_MEM)
+    {
+        WARN("Color-fill not allowed on surfaces in pool %#x.\n", desc.pool);
+        return D3DERR_INVALIDCALL;
+    }
+
+    hr = wined3d_device_clear_rendertarget_view(device->wined3d_device,
+            d3d9_surface_get_rendertarget_view(surface_impl), rect, &c);
 
     wined3d_mutex_unlock();
 
@@ -1332,8 +1348,8 @@ static HRESULT WINAPI d3d9_device_SetRenderTarget(IDirect3DDevice9Ex *iface, DWO
     }
 
     wined3d_mutex_lock();
-    hr = wined3d_device_set_render_target(device->wined3d_device, idx,
-            surface_impl ? surface_impl->wined3d_surface : NULL, TRUE);
+    hr = wined3d_device_set_rendertarget_view(device->wined3d_device, idx,
+            surface_impl ? d3d9_surface_get_rendertarget_view(surface_impl) : NULL, TRUE);
     wined3d_mutex_unlock();
 
     return hr;
@@ -1342,7 +1358,7 @@ static HRESULT WINAPI d3d9_device_SetRenderTarget(IDirect3DDevice9Ex *iface, DWO
 static HRESULT WINAPI d3d9_device_GetRenderTarget(IDirect3DDevice9Ex *iface, DWORD idx, IDirect3DSurface9 **surface)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
-    struct wined3d_surface *wined3d_surface;
+    struct wined3d_rendertarget_view *wined3d_rtv;
     struct d3d9_surface *surface_impl;
     HRESULT hr = D3D_OK;
 
@@ -1358,9 +1374,11 @@ static HRESULT WINAPI d3d9_device_GetRenderTarget(IDirect3DDevice9Ex *iface, DWO
     }
 
     wined3d_mutex_lock();
-    if ((wined3d_surface = wined3d_device_get_render_target(device->wined3d_device, idx)))
+    if ((wined3d_rtv = wined3d_device_get_rendertarget_view(device->wined3d_device, idx)))
     {
-        surface_impl = wined3d_surface_get_parent(wined3d_surface);
+        /* We want the sub resource parent here, since the view itself may be
+         * internal to wined3d and may not have a parent. */
+        surface_impl = wined3d_rendertarget_view_get_sub_resource_parent(wined3d_rtv);
         *surface = &surface_impl->IDirect3DSurface9_iface;
         IDirect3DSurface9_AddRef(*surface);
     }
@@ -1382,7 +1400,8 @@ static HRESULT WINAPI d3d9_device_SetDepthStencilSurface(IDirect3DDevice9Ex *ifa
     TRACE("iface %p, depth_stencil %p.\n", iface, depth_stencil);
 
     wined3d_mutex_lock();
-    wined3d_device_set_depth_stencil(device->wined3d_device, ds_impl ? ds_impl->wined3d_surface : NULL);
+    wined3d_device_set_depth_stencil_view(device->wined3d_device,
+            ds_impl ? d3d9_surface_get_rendertarget_view(ds_impl) : NULL);
     wined3d_mutex_unlock();
 
     return D3D_OK;
@@ -1391,7 +1410,7 @@ static HRESULT WINAPI d3d9_device_SetDepthStencilSurface(IDirect3DDevice9Ex *ifa
 static HRESULT WINAPI d3d9_device_GetDepthStencilSurface(IDirect3DDevice9Ex *iface, IDirect3DSurface9 **depth_stencil)
 {
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
-    struct wined3d_surface *wined3d_surface;
+    struct wined3d_rendertarget_view *wined3d_dsv;
     struct d3d9_surface *surface_impl;
     HRESULT hr = D3D_OK;
 
@@ -1401,9 +1420,11 @@ static HRESULT WINAPI d3d9_device_GetDepthStencilSurface(IDirect3DDevice9Ex *ifa
         return D3DERR_INVALIDCALL;
 
     wined3d_mutex_lock();
-    if ((wined3d_surface = wined3d_device_get_depth_stencil(device->wined3d_device)))
+    if ((wined3d_dsv = wined3d_device_get_depth_stencil_view(device->wined3d_device)))
     {
-        surface_impl = wined3d_surface_get_parent(wined3d_surface);
+        /* We want the sub resource parent here, since the view itself may be
+         * internal to wined3d and may not have a parent. */
+        surface_impl = wined3d_rendertarget_view_get_sub_resource_parent(wined3d_dsv);
         *depth_stencil = &surface_impl->IDirect3DSurface9_iface;
         IDirect3DSurface9_AddRef(*depth_stencil);
     }
@@ -2745,7 +2766,6 @@ static HRESULT WINAPI d3d9_device_GetStreamSource(IDirect3DDevice9Ex *iface,
         buffer_impl = wined3d_buffer_get_parent(wined3d_buffer);
         *buffer = &buffer_impl->IDirect3DVertexBuffer9_iface;
         IDirect3DVertexBuffer9_AddRef(*buffer);
-        wined3d_buffer_decref(wined3d_buffer);
     }
     else
     {
@@ -3074,6 +3094,9 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_PresentEx(IDirect3DDevice9Ex
             iface, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect),
             dst_window_override, dirty_region, flags);
 
+    if (device->device_state != D3D9_DEVICE_STATE_OK)
+        return S_PRESENT_OCCLUDED;
+
     wined3d_mutex_lock();
     hr = wined3d_device_present(device->wined3d_device, src_rect, dst_rect,
             dst_window_override, dirty_region, flags);
@@ -3130,14 +3153,26 @@ static HRESULT WINAPI d3d9_device_GetMaximumFrameLatency(IDirect3DDevice9Ex *ifa
 
 static HRESULT WINAPI d3d9_device_CheckDeviceState(IDirect3DDevice9Ex *iface, HWND dst_window)
 {
-    static int i;
+    struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
+    struct wined3d_swapchain_desc swapchain_desc;
+    struct wined3d_swapchain *swapchain;
 
-    TRACE("iface %p, dst_window %p stub!\n", iface, dst_window);
+    TRACE("iface %p, dst_window %p.\n", iface, dst_window);
 
-    if (!i++)
-        FIXME("iface %p, dst_window %p stub!\n", iface, dst_window);
+    wined3d_mutex_lock();
+    swapchain = wined3d_device_get_swapchain(device->wined3d_device, 0);
+    wined3d_swapchain_get_desc(swapchain, &swapchain_desc);
+    wined3d_mutex_unlock();
 
-    return D3D_OK;
+    if (swapchain_desc.windowed)
+        return D3D_OK;
+
+    /* FIXME: This is actually supposed to check if any other device is in
+     * fullscreen mode. */
+    if (dst_window != swapchain_desc.device_window)
+        return device->device_state == D3D9_DEVICE_STATE_OK ? S_PRESENT_OCCLUDED : D3D_OK;
+
+    return device->device_state == D3D9_DEVICE_STATE_OK ? D3D_OK : S_PRESENT_OCCLUDED;
 }
 
 static HRESULT WINAPI d3d9_device_CreateRenderTargetEx(IDirect3DDevice9Ex *iface,
@@ -3411,32 +3446,38 @@ static void CDECL device_parent_mode_changed(struct wined3d_device_parent *devic
     TRACE("device_parent %p.\n", device_parent);
 }
 
+static void CDECL device_parent_activate(struct wined3d_device_parent *device_parent, BOOL activate)
+{
+    struct d3d9_device *device = device_from_device_parent(device_parent);
+
+    TRACE("device_parent %p, activate %#x.\n", device_parent, activate);
+
+    if (!device->d3d_parent)
+        return;
+
+    if (!activate)
+        InterlockedCompareExchange(&device->device_state, D3D9_DEVICE_STATE_LOST, D3D9_DEVICE_STATE_OK);
+    else if (device->d3d_parent->extended)
+        InterlockedCompareExchange(&device->device_state, D3D9_DEVICE_STATE_OK, D3D9_DEVICE_STATE_LOST);
+    else
+        InterlockedCompareExchange(&device->device_state, D3D9_DEVICE_STATE_NOT_RESET, D3D9_DEVICE_STATE_LOST);
+}
+
 static HRESULT CDECL device_parent_surface_created(struct wined3d_device_parent *device_parent,
         void *container_parent, struct wined3d_surface *surface, void **parent,
         const struct wined3d_parent_ops **parent_ops)
 {
-    struct d3d9_device *device = device_from_device_parent(device_parent);
     struct d3d9_surface *d3d_surface;
 
     TRACE("device_parent %p, container_parent %p, surface %p, parent %p, parent_ops %p.\n",
             device_parent, container_parent, surface, parent, parent_ops);
 
     if (!(d3d_surface = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*d3d_surface))))
-    {
-        FIXME("Failed to allocate surface memory.\n");
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
+        return E_OUTOFMEMORY;
 
-    surface_init(d3d_surface, surface, device, parent_ops);
+    surface_init(d3d_surface, container_parent, surface, parent_ops);
     *parent = d3d_surface;
     TRACE("Created surface %p.\n", d3d_surface);
-
-    d3d_surface->container = container_parent;
-    IDirect3DDevice9Ex_Release(d3d_surface->parent_device);
-    d3d_surface->parent_device = NULL;
-
-    IDirect3DSurface9_Release(&d3d_surface->IDirect3DSurface9_iface);
-    d3d_surface->forwardReference = container_parent;
 
     return D3D_OK;
 }
@@ -3453,14 +3494,9 @@ static HRESULT CDECL device_parent_volume_created(struct wined3d_device_parent *
     if (!(d3d_volume = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*d3d_volume))))
         return E_OUTOFMEMORY;
 
-    volume_init(d3d_volume, volume, parent_ops);
+    volume_init(d3d_volume, container_parent, volume, parent_ops);
     *parent = d3d_volume;
     TRACE("Created volume %p.\n", d3d_volume);
-
-    d3d_volume->container = container_parent;
-
-    IDirect3DVolume9_Release(&d3d_volume->IDirect3DVolume9_iface);
-    d3d_volume->forwardReference = container_parent;
 
     return D3D_OK;
 }
@@ -3494,7 +3530,6 @@ static HRESULT CDECL device_parent_create_swapchain_surface(struct wined3d_devic
     wined3d_texture_decref(texture);
 
     d3d_surface = wined3d_surface_get_parent(*surface);
-    d3d_surface->forwardReference = NULL;
     d3d_surface->parent_device = &device->IDirect3DDevice9Ex_iface;
 
     return hr;
@@ -3528,6 +3563,7 @@ static const struct wined3d_device_parent_ops d3d9_wined3d_device_parent_ops =
 {
     device_parent_wined3d_device_created,
     device_parent_mode_changed,
+    device_parent_activate,
     device_parent_surface_created,
     device_parent_volume_created,
     device_parent_create_swapchain_surface,

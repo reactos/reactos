@@ -264,7 +264,7 @@ static PVGA_REGISTERS VideoModes[BIOS_MAX_VIDEO_MODE + 1] =
     &VideoMode_80x25_text,          /* Mode 02h */      // 16 color (mono)
     &VideoMode_80x25_text,          /* Mode 03h */      // 16 color
     &VideoMode_320x200_4color,      /* Mode 04h */      // CGA 4 color
-    &VideoMode_320x200_4color,      /* Mode 05h */      // CGA same (m)
+    &VideoMode_320x200_4color,      /* Mode 05h */      // CGA same (m) (uses 3rd CGA palette)
     &VideoMode_640x200_2color,      /* Mode 06h */      // CGA 640*200 2 color
     NULL,                           /* Mode 07h */      // MDA monochrome text 80*25
     NULL,                           /* Mode 08h */      // PCjr
@@ -369,6 +369,8 @@ static CONST COLORREF mtext_s3_palette[64] =
     RGB(0xFF, 0xFF, 0xFF), RGB(0xFF, 0xFF, 0xFF), RGB(0xFF, 0xFF, 0xFF), RGB(0xFF, 0xFF, 0xFF)
 };
 
+#if 0
+
 // Unused at the moment
 static CONST COLORREF CgaPalette[16] =
 {
@@ -378,28 +380,69 @@ static CONST COLORREF CgaPalette[16] =
     RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF)
 };
 
-// Unused at the moment
+/* CGA palette 1 */
+static CONST BYTE CgaPalette1[] =
+{
+    0x00,   /* 0 - Black  */
+    0x03,   /* 1 - Cyan   */
+    0x05,   /* 2- Magenta */
+    0x07,   /* 3 - White  */
+}
+
+/* CGA palette 1 bright */
+static CONST BYTE CgaPalette1i[] =
+{
+    0x00,   /* 0 - Black         */
+    0x13,   /* 1 - Light cyan    */
+    0x15,   /* 2 - Light magenta */
+    0x17,   /* 3 - Bright White  */
+};
+
+/* CGA palette 2 */
+static CONST BYTE CgaPalette2[] =
+{
+    0x00,   /* 0 - Black */
+    0x02,   /* 1 - Green */
+    0x04,   /* 2 - Red   */
+    0x06,   /* 3 - Brown */
+};
+
+/* CGA palette 2 bright */
+static CONST BYTE CgaPalette2i[] =
+{
+    0x00,   /* 0 - Black       */
+    0x12,   /* 1 - Light green */
+    0x14,   /* 2 - Light red   */
+    0x16,   /* 3 - Yellow      */
+};
+
+// Unused at the moment; same palette as EgaPalette__16Colors
 static CONST COLORREF CgaPalette2[VGA_MAX_COLORS / 4] =
 {
     RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xAA), RGB(0x00, 0xAA, 0x00), RGB(0x00, 0xAA, 0xAA),
     RGB(0xAA, 0x00, 0x00), RGB(0xAA, 0x00, 0xAA), RGB(0xAA, 0x55, 0x00), RGB(0xAA, 0xAA, 0xAA),
     RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xAA), RGB(0x00, 0xAA, 0x00), RGB(0x00, 0xAA, 0xAA),
     RGB(0xAA, 0x00, 0x00), RGB(0xAA, 0x00, 0xAA), RGB(0xAA, 0x55, 0x00), RGB(0xAA, 0xAA, 0xAA),
+
     RGB(0x55, 0x55, 0x55), RGB(0x55, 0x55, 0xFF), RGB(0x55, 0xFF, 0x55), RGB(0x55, 0xFF, 0xFF),
     RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF),
     RGB(0x55, 0x55, 0x55), RGB(0x55, 0x55, 0xFF), RGB(0x55, 0xFF, 0x55), RGB(0x55, 0xFF, 0xFF),
     RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF),
+
     RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xAA), RGB(0x00, 0xAA, 0x00), RGB(0x00, 0xAA, 0xAA),
     RGB(0xAA, 0x00, 0x00), RGB(0xAA, 0x00, 0xAA), RGB(0xAA, 0x55, 0x00), RGB(0xAA, 0xAA, 0xAA),
     RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xAA), RGB(0x00, 0xAA, 0x00), RGB(0x00, 0xAA, 0xAA),
     RGB(0xAA, 0x00, 0x00), RGB(0xAA, 0x00, 0xAA), RGB(0xAA, 0x55, 0x00), RGB(0xAA, 0xAA, 0xAA),
+
     RGB(0x55, 0x55, 0x55), RGB(0x55, 0x55, 0xFF), RGB(0x55, 0xFF, 0x55), RGB(0x55, 0xFF, 0xFF),
     RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF),
     RGB(0x55, 0x55, 0x55), RGB(0x55, 0x55, 0xFF), RGB(0x55, 0xFF, 0x55), RGB(0x55, 0xFF, 0xFF),
     RGB(0xFF, 0x55, 0x55), RGB(0xFF, 0x55, 0xFF), RGB(0xFF, 0xFF, 0x55), RGB(0xFF, 0xFF, 0xFF)
 };
 
-static CONST COLORREF EgaPalette___16ColorFixed_DOSBox[VGA_MAX_COLORS / 4] =
+#endif
+
+static CONST COLORREF EgaPalette__16Colors[VGA_MAX_COLORS / 4] =
 {
     RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xAA), RGB(0x00, 0xAA, 0x00), RGB(0x00, 0xAA, 0xAA),
     RGB(0xAA, 0x00, 0x00), RGB(0xAA, 0x00, 0xAA), RGB(0xAA, 0x55, 0x00), RGB(0xAA, 0xAA, 0xAA),
@@ -740,6 +783,16 @@ Done:
     return TRUE;
 }
 
+static __inline VOID VgaSetSinglePaletteRegister(BYTE Index, BYTE Value)
+{
+    /* Write the index */
+    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+    IOWriteB(VGA_AC_INDEX, Index);
+
+    /* Write the data */
+    IOWriteB(VGA_AC_WRITE, Value);
+}
+
 static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
 {
     INT i;
@@ -803,9 +856,7 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
     // DbgPrint("\n");
     for (i = 0; i < VGA_AC_MAX_REG; i++)
     {
-        IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
-        IOWriteB(VGA_AC_INDEX, i);
-        IOWriteB(VGA_AC_WRITE, Registers->Attribute[i]);
+        VgaSetSinglePaletteRegister(i, Registers->Attribute[i]);
         // DbgPrint("Registers->Attribute[%d] = %d\n", i, Registers->Attribute[i]);
     }
     // DbgPrint("\n");
@@ -864,17 +915,28 @@ static VOID VgaChangePalette(BYTE ModeNumber)
         Palette = VgaPalette;
         Size    = sizeof(VgaPalette)/sizeof(VgaPalette[0]);
     }
-    else if (ModeNumber == 0x10)
+    else if (ModeNumber == 0x10) // || (ModeNumber == 0x0D) || (ModeNumber == 0x0E)
     {
         /* EGA HiRes mode */
         Palette = EgaPalette__HiRes;
         Size    = sizeof(EgaPalette__HiRes)/sizeof(EgaPalette__HiRes[0]);
     }
+#if 0
+    else if ((ModeNumber == 0x04) || (ModeNumber == 0x05))
+    {
+        /*
+         * CGA modes; this palette contains both normal and
+         * bright versions of CGA palettes 0 and 1
+         */
+        Palette = CgaPalette2;
+        Size    = sizeof(CgaPalette2)/sizeof(CgaPalette2[0]);
+    }
+#endif
     else // if ((ModeNumber == 0x0D) || (ModeNumber == 0x0E))
     {
         /* EGA modes */
-        Palette = EgaPalette___16ColorFixed_DOSBox;
-        Size    = sizeof(EgaPalette___16ColorFixed_DOSBox)/sizeof(EgaPalette___16ColorFixed_DOSBox[0]);
+        Palette = EgaPalette__16Colors;
+        Size    = sizeof(EgaPalette__16Colors)/sizeof(EgaPalette__16Colors[0]);
     }
 
     VgaSetPalette(Palette, Size);
@@ -1271,6 +1333,87 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             break;
         }
 
+        /* Set Video Colors */
+        case 0x0B:
+        {
+            if (Bda->VideoMode < 4 || Bda->VideoMode > 6)
+            {
+                DPRINT1("BIOS Function INT 10h, AH = 0Bh, BH = 0x%02X is unsupported for non-CGA modes\n",
+                        getAH(), getBH());
+                break;
+            }
+
+            switch (getBH())
+            {
+                case 0x00: /* Set Background/Border Color */
+                {
+#ifdef DOSBOX
+                    BYTE Index = getBL();
+                    BYTE CrtColorPaletteMask = Bda->CrtColorPaletteMask;
+                    CrtColorPaletteMask = (CrtColorPaletteMask & 0xE0) | (Index & 0x1F);
+                    Bda->CrtColorPaletteMask = CrtColorPaletteMask;
+
+                    Index = ((Index << 1) & 0x10) | (Index & 0x7);
+
+                    /* Always set the overscan color */
+                    VgaSetSinglePaletteRegister(VGA_AC_OVERSCAN_REG, Index);
+
+                    /* Don't set any extra colors when in text mode */
+                    if (Bda->VideoMode <= 3) break;
+
+                    VgaSetSinglePaletteRegister(0x00, Index);
+
+                    Index = (CrtColorPaletteMask & 0x10) | 0x02 | ((CrtColorPaletteMask & 0x20) >> 5);
+
+                    VgaSetSinglePaletteRegister(0x01, Index);
+                    Index += 2;
+                    VgaSetSinglePaletteRegister(0x02, Index);
+                    Index += 2;
+                    VgaSetSinglePaletteRegister(0x03, Index);
+#else
+                    /* Background/Border Color is modifiable via the first index */
+                    VgaSetSinglePaletteRegister(0x00, getBL());
+#endif
+
+                    /* Enable screen and disable palette access */
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
+                    break;
+                }
+
+                case 0x01: /* Set Palette */
+                {
+                    BYTE Index = getBL();
+                    BYTE CrtColorPaletteMask = Bda->CrtColorPaletteMask;
+                    CrtColorPaletteMask = (CrtColorPaletteMask & 0xDF) | ((Index & 1) ? 0x20 : 0x0);
+                    Bda->CrtColorPaletteMask = CrtColorPaletteMask;
+
+                    /* Don't set any extra colors when in text mode */
+                    if (Bda->VideoMode <= 3) break;
+
+                    Index = (CrtColorPaletteMask & 0x10) | 0x02 | Index;
+
+                    VgaSetSinglePaletteRegister(0x01, Index);
+                    Index += 2;
+                    VgaSetSinglePaletteRegister(0x02, Index);
+                    Index += 2;
+                    VgaSetSinglePaletteRegister(0x03, Index);
+
+                    /* Enable screen and disable palette access */
+                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
+                    IOWriteB(VGA_AC_INDEX, 0x20);
+                    break;
+                }
+
+                default:
+                    DPRINT1("BIOS Function INT 10h, AH = 0Bh, BH = 0x%02X NOT IMPLEMENTED\n",
+                            getAH(), getBH());
+                    break;
+            }
+
+            break;
+        }
+
         /* Teletype Output */
         case 0x0E:
         {
@@ -1294,12 +1437,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Set Single Palette Register */
                 case 0x00:
                 {
-                    /* Write the index */
-                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
-                    IOWriteB(VGA_AC_INDEX, getBL());
-
-                    /* Write the data */
-                    IOWriteB(VGA_AC_WRITE, getBH());
+                    VgaSetSinglePaletteRegister(getBL(), getBH());
 
                     /* Enable screen and disable palette access */
                     IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
@@ -1310,12 +1448,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Set Overscan Color */
                 case 0x01:
                 {
-                    /* Write the index */
-                    IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
-                    IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
-
-                    /* Write the data */
-                    IOWriteB(VGA_AC_WRITE, getBH());
+                    VgaSetSinglePaletteRegister(VGA_AC_OVERSCAN_REG, getBH());
 
                     /* Enable screen and disable palette access */
                     IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
@@ -1332,15 +1465,11 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     /* Set the palette registers */
                     for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
                     {
-                        /* Write the index */
-                        IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
-                        IOWriteB(VGA_AC_INDEX, i);
-
-                        /* Write the data */
-                        IOWriteB(VGA_AC_WRITE, Buffer[i]);
+                        VgaSetSinglePaletteRegister(i, Buffer[i]);
                     }
 
                     /* Set the overscan register */
+                    // VgaSetSinglePaletteRegister(VGA_AC_OVERSCAN_REG, Buffer[VGA_AC_PAL_F_REG + 1]);
                     IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
                     IOWriteB(VGA_AC_WRITE, Buffer[VGA_AC_PAL_F_REG + 1]);
 
@@ -1509,7 +1638,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Display combination code */
         case 0x1A:
         {
-            switch(getAL())
+            switch (getAL())
             {
                 case 0x00: /* Get Display combiantion code */
                    setAX(MAKEWORD(0x1A, 0x1A));
@@ -1526,8 +1655,8 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
         default:
         {
-            DPRINT1("BIOS Function INT 10h, AH = 0x%02X NOT IMPLEMENTED\n",
-                    getAH());
+            DPRINT1("BIOS Function INT 10h, AH = 0x%02X, AL = 0x%02X, BH = 0x%02X NOT IMPLEMENTED\n",
+                    getAH(), getAL(), getBH());
         }
     }
 }
@@ -1573,8 +1702,8 @@ BOOLEAN VidBiosInitialize(VOID)
     ((PULONG)BaseAddress)[0x44] = (ULONG)NULL;
 
     /* Initialize the VGA BDA data */
-    Bda->VGAOptions = 0x30;     /* 256 KB Video RAM */
-    Bda->VGASwitches = 0x09;    /* High-resolution */
+    Bda->VGAOptions  = 0x30;    /* 256 KB Video RAM */
+    Bda->VGASwitches = 0x09;    /* High-resolution  */
 
     //
     // FIXME: At the moment we always set a VGA mode. In the future,

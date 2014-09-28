@@ -236,6 +236,9 @@ typedef struct {
 
 tls_data_t *get_tls_data(void) DECLSPEC_HIDDEN;
 
+#ifndef __REACTOS__
+void unregister_notif_wnd_class(void) DECLSPEC_HIDDEN;
+#endif
 HWND get_notif_hwnd(void) DECLSPEC_HIDDEN;
 void release_notif_hwnd(HWND) DECLSPEC_HIDDEN;
 

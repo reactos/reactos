@@ -33,6 +33,7 @@
 @ stdcall DwmGetGraphicsStreamTransformHint(long ptr)
 @ stdcall DwmGetTransportAttributes(ptr ptr ptr)
 @ stdcall DwmGetWindowAttribute(ptr long ptr long)
+@ stdcall DwmInvalidateIconicBitmaps(ptr)
 @ stdcall DwmIsCompositionEnabled(ptr)
 @ stub DwmModifyPreviousDxFrameDuration
 @ stub DwmQueryThumbnailSourceSize

@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Nom convivial"
     IDS_ALLOWED_PURPOSE_ALL "<Tous>"
     IDS_ALLOWED_PURPOSE_NONE "<Aucun>"
-    IDS_WARN_REMOVE_MY "Vous ne pourrez plus déchiffrer ou signer de messages avec ce certificat.\n\
-Voulez-vous réellement supprimer ce certificat ?"
-    IDS_WARN_REMOVE_PLURAL_MY "Vous ne pourrez plus déchiffrer ou signer de messages avec ces certificats.\n\
-Voulez-vous réellement supprimer ces certificats ?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Vous ne pourrez plus chiffrer ou vérifier de signature de messages avec ce certificat.\n\
-Voulez-vous réellement supprimer ce certificat ?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Vous ne pourrez plus chiffrer ou vérifier de signature de messages avec ces certificats.\n\
-Voulez-vous réellement supprimer ces certificats ?"
-    IDS_WARN_REMOVE_CA "Les certificats émis par cette autorité de certification ne seront plus considérés comme valables.\n\
-Voulez-vous réellement supprimer ce certificat ?"
-    IDS_WARN_REMOVE_PLURAL_CA "Les certificats émis par cette autorité de certification ne seront plus considérés comme valables.\n\
-Voulez-vous réellement supprimer ces certificats ?"
-    IDS_WARN_REMOVE_ROOT "Les certificats émis par cette autorité de certification racine, ou par toute autorité de certification qu'elle valide, ne seront plus considérés comme valables.\n\
-Voulez-vous réellement supprimer ce certificat racine de confiance ?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Les certificats émis par ces autorités de certification racines, ou par toute autorité de certification qu'elles valident, ne seront plus considérés comme valables.\n\
-Voulez-vous réellement supprimer ces certificats racines de confiance ?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Les logiciels signés par cet éditeur ne seront plus considérés comme valables.\n\
-Voulez-vous réellement supprimer ce certificat ?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Les logiciels signés par ces éditeurs ne seront plus considérés comme valables.\n\
-Voulez-vous réellement supprimer ces certificats ?"
+    IDS_WARN_REMOVE_MY "Vous ne pourrez plus déchiffrer ou signer de messages avec ce certificat.\nVoulez-vous réellement supprimer ce certificat ?"
+    IDS_WARN_REMOVE_PLURAL_MY "Vous ne pourrez plus déchiffrer ou signer de messages avec ces certificats.\nVoulez-vous réellement supprimer ces certificats ?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Vous ne pourrez plus chiffrer ou vérifier de signature de messages avec ce certificat.\nVoulez-vous réellement supprimer ce certificat ?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Vous ne pourrez plus chiffrer ou vérifier de signature de messages avec ces certificats.\nVoulez-vous réellement supprimer ces certificats ?"
+    IDS_WARN_REMOVE_CA "Les certificats émis par cette autorité de certification ne seront plus considérés comme valables.\nVoulez-vous réellement supprimer ce certificat ?"
+    IDS_WARN_REMOVE_PLURAL_CA "Les certificats émis par cette autorité de certification ne seront plus considérés comme valables.\nVoulez-vous réellement supprimer ces certificats ?"
+    IDS_WARN_REMOVE_ROOT "Les certificats émis par cette autorité de certification racine, ou par toute autorité de certification qu'elle valide, ne seront plus considérés comme valables.\nVoulez-vous réellement supprimer ce certificat racine de confiance ?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Les certificats émis par ces autorités de certification racines, ou par toute autorité de certification qu'elles valident, ne seront plus considérés comme valables.\nVoulez-vous réellement supprimer ces certificats racines de confiance ?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Les logiciels signés par cet éditeur ne seront plus considérés comme valables.\nVoulez-vous réellement supprimer ce certificat ?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Les logiciels signés par ces éditeurs ne seront plus considérés comme valables.\nVoulez-vous réellement supprimer ces certificats ?"
     IDS_WARN_REMOVE_DEFAULT "Voulez-vous réellement supprimer ce certificat ?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Voulez-vous réellement supprimer ces certificats ?"
     IDS_CERT_MGR "Certificats"
     IDS_FRIENDLY_NAME_NONE "<Aucun>"
     IDS_PURPOSE_SERVER_AUTH "Prouve l'identité d'un ordinateur distant"
     IDS_PURPOSE_CLIENT_AUTH "Prouve votre identité à un ordinateur distant"
-    IDS_PURPOSE_CODE_SIGNING "Garantit que des logiciels proviennent bien d'un éditeur de logiciels donné\n\
-Protège le logiciel contre toute altération après publication"
+    IDS_PURPOSE_CODE_SIGNING "Garantit que des logiciels proviennent bien d'un éditeur de logiciels donné\nProtège le logiciel contre toute altération après publication"
     IDS_PURPOSE_EMAIL_PROTECTION "Protège les courriers électroniques"
     IDS_PURPOSE_IPSEC "Permet des communications sécurisées sur Internet"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Permet de signer des données avec l'heure courante"
@@ -289,10 +278,8 @@ CAPTION "Assistant d'importation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Bienvenue dans l'assistant d'importation de certificats", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Cet assistant vous aide à importer des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un magasin de certificats à partir d'un fichier.\n\
-\n\
-Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.\n\
-\n\
+  LTEXT "Cet assistant vous aide à importer des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un magasin de certificats à partir d'un fichier.\n\n\
+Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.\n\n\
 Pour continuer, cliquez sur Suivant.",
     -1, 115,40,195,120
 END
@@ -306,11 +293,11 @@ BEGIN
   PUSHBUTTON "Parcou&rir...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Remarque : les formats de fichiers suivants peuvent contenir plus d'un certificat, liste de révocation de certificats ou liste de certificats de confiance :",
     -1, 21,30,265,16
-  LTEXT "Standard de syntaxe de message cryptographique - Messages PKCS #7 (.p7b)",
+  LTEXT "Standard de syntaxe de message cryptographique - Messages PKCS #7 (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Échange d'informations personnelles - PKCS #12 (.pfx, .p12)",
+  LTEXT "Échange d'informations personnelles - PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Magasin de certificats sérialisés Microsoft (.sst)",
+  LTEXT "Magasin de certificats sérialisés Microsoft (*.sst)",
     -1, 31,83,265,10
 END
 
@@ -381,10 +368,8 @@ CAPTION "Assistant Exportation de certificats"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Bienvenue dans l'assistant d'exportation de certificats", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Cet assistant vous aide à exporter des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un fichier à partir d'un magasin de certificats.\n\
-\n\
-Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.\n\
-\n\
+  LTEXT "Cet assistant vous aide à exporter des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un fichier à partir d'un magasin de certificats.\n\n\
+Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.\n\n\
 Pour continuer, cliquez sur Suivant.",
     -1, 115,40,195,120
 END
@@ -419,13 +404,13 @@ BEGIN
   LTEXT "Sélectionnez le format à utiliser :", -1, 21,1,195,10
   AUTORADIOBUTTON "Binaire codé &DER X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Binaire codé Ba&se64 X.509 (.cer) :",
+  AUTORADIOBUTTON "Binaire codé Ba&se64 X.509 (*.cer) :",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "Standard de syntaxe de message cryptographique - Messages PKCS #7 (.p7b)",
+  AUTORADIOBUTTON "Standard de syntaxe de message cryptographique - Messages PKCS #7 (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Inclure tous les certificats dans le chemin de certification si possible",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "Échange d'informations &Personnelles - PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "Échange d'informations &Personnelles - PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Inclure &tous les certificats dans le chemin de certification si possible",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED

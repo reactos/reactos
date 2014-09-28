@@ -23,7 +23,9 @@
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
@@ -401,6 +403,9 @@ LsapDeleteLogonSession(IN PLUID LogonId);
 
 NTSTATUS
 LsapSetLogonSessionData(IN PLUID LogonId);
+
+NTSTATUS
+LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg);
 
 /* utils.c */
 INT

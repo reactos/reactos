@@ -66,9 +66,7 @@ cpp_quote("HRESULT WINAPI ImageList_CoCreateInstance(REFCLSID,const IUnknown *, 
 const UINT ILIF_ALPHA = 1;
 
 [
-    object,
-    uuid(46EB5926-582E-4017-9FDF-E8998DAA0950),
-    helpstring("Image List"),
+    uuid(46eb5926-582e-4017-9fdf-e8998daa0950),
     local
 ]
 interface IImageList : IUnknown
@@ -200,15 +198,44 @@ interface IImageList : IUnknown
 }
 
 [
-    uuid(BCADA15B-B428-420c-8D28-023590924C9F)
+    uuid(192b9d83-50fc-457b-90a0-2b82a8b5dae1),
+    local
+]
+interface IImageList2 : IImageList
+{
+    typedef struct tagIMAGELISTSTATS
+    {
+        DWORD cbSize;
+        INT   cAlloc;
+        INT   cUsed;
+        INT   cStandby;
+    } IMAGELISTSTATS;
+
+    HRESULT Resize(INT x_size, INT y_size);
+    HRESULT GetOriginalSize([in] INT image, [in] DWORD flags, [out] INT *cx, [out] INT *cy);
+    HRESULT SetOriginalSize([in] INT image, [in] INT cx, [in] INT cy);
+    HRESULT SetCallback([in, unique] IUnknown *callback);
+    HRESULT GetCallback([in] REFIID riid, [out, iid_is(riid)] void** ppv);
+    HRESULT ForceImagePresent([in] INT image, DWORD flags);
+    HRESULT DiscardImages([in] INT first_image, [in] INT last_image, [in] DWORD flags);
+    HRESULT PreloadImages([in] IMAGELISTDRAWPARAMS *params);
+    HRESULT GetStatistics([in, out] IMAGELISTSTATS *stats);
+    HRESULT Initialize([in] INT cx, [in] INT cy, [in] UINT flags, [in] INT initial, [in] INT grow);
+    HRESULT Replace2([in] INT i, [in] HBITMAP image, [in, unique] HBITMAP mask, [in, unique] IUnknown *unk, [in] DWORD flags);
+    HRESULT ReplaceFromImageList([in] INT i, [in] IImageList *imagelist, [in] INT src, [in, unique] IUnknown *unk, [in] DWORD flags);
+}
+
+[
+    uuid(bcada15B-b428-420c-8d28-023590924c9f)
 ]
 library CommonControlObjects
 {
     [
-        uuid(7C476BA2-02B1-48f4-8048-B24619DDC058)
+        uuid(7c476ba2-02b1-48f4-8048-b24619ddc058)
     ]
     coclass ImageList
     {
         interface IImageList;
+        interface IImageList2;
     }
 }

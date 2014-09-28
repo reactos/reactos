@@ -2741,16 +2741,20 @@ static HRESULT parse_material(ID3DXFileData *filedata, D3DXMATERIAL *material)
             return hr;
         hr = child->lpVtbl->GetType(child, &type);
         if (FAILED(hr))
-            return hr;
+            goto err;
 
         if (IsEqualGUID(&type, &TID_D3DRMTextureFilename)) {
             hr = parse_texture_filename(child, &material->pTextureFilename);
             if (FAILED(hr))
-                return hr;
+                goto err;
         }
+        IUnknown_Release(child);
     }
-
     return D3D_OK;
+
+err:
+    IUnknown_Release(child);
+    return hr;
 }
 
 static void destroy_materials(struct mesh_data *mesh)
@@ -2771,7 +2775,7 @@ static HRESULT parse_material_list(ID3DXFileData *filedata, struct mesh_data *me
     SIZE_T data_size;
     const DWORD *data, *in_ptr;
     GUID type;
-    ID3DXFileData *child;
+    ID3DXFileData *child = NULL;
     DWORD num_materials;
     DWORD i;
     SIZE_T nb_children;
@@ -2854,6 +2858,9 @@ static HRESULT parse_material_list(ID3DXFileData *filedata, struct mesh_data *me
             if (FAILED(hr))
                 goto end;
         }
+
+        IUnknown_Release(child);
+        child = NULL;
     }
     if (num_materials != mesh->num_materials) {
         WARN("only %u of %u materials defined\n", num_materials, mesh->num_materials);
@@ -2861,6 +2868,8 @@ static HRESULT parse_material_list(ID3DXFileData *filedata, struct mesh_data *me
     }
 
 end:
+    if (child)
+        IUnknown_Release(child);
     filedata->lpVtbl->Unlock(filedata);
     return hr;
 }
@@ -3158,7 +3167,7 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
     const BYTE *data, *in_ptr;
     DWORD *index_out_ptr;
     GUID type;
-    ID3DXFileData *child;
+    ID3DXFileData *child = NULL;
     DWORD i;
     SIZE_T nb_children;
     DWORD nb_skin_weigths_info = 0;
@@ -3275,9 +3284,6 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
             hr = parse_vertex_colors(child, mesh_data);
         } else if (IsEqualGUID(&type, &TID_D3DRMMeshTextureCoords)) {
             hr = parse_texture_coords(child, mesh_data);
-        hr = filedata->lpVtbl->GetChild(filedata, i, &child);
-        if (FAILED(hr))
-            goto end;
         } else if (IsEqualGUID(&type, &TID_D3DRMMeshMaterialList) &&
                    (provide_flags & PROVIDE_MATERIALS))
         {
@@ -3306,6 +3312,9 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
         }
         if (FAILED(hr))
             goto end;
+
+        IUnknown_Release(child);
+        child = NULL;
     }
 
     if (mesh_data->skin_info && (nb_skin_weigths_info != mesh_data->nb_bones)) {
@@ -3318,6 +3327,8 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
     hr = D3D_OK;
 
 end:
+    if (child)
+        IUnknown_Release(child);
     filedata->lpVtbl->Unlock(filedata);
     return hr;
 }
@@ -3846,7 +3857,7 @@ static HRESULT load_frame(struct ID3DXFileData *filedata, DWORD options, struct 
             return hr;
         hr = child->lpVtbl->GetType(child, &type);
         if (FAILED(hr))
-            return hr;
+            goto err;
 
         if (IsEqualGUID(&type, &TID_D3DRMMesh)) {
             hr = load_mesh_container(child, options, device, alloc_hier, next_container);
@@ -3860,10 +3871,15 @@ static HRESULT load_frame(struct ID3DXFileData *filedata, DWORD options, struct 
                 next_child = &(*next_child)->pFrameSibling;
         }
         if (FAILED(hr))
-            return hr;
-    }
+            goto err;
 
+        IUnknown_Release(child);
+    }
     return D3D_OK;
+
+err:
+    IUnknown_Release(child);
+    return hr;
 }
 
 HRESULT WINAPI D3DXLoadMeshHierarchyFromXInMemory(const void *memory, DWORD memory_size, DWORD options,
@@ -4129,12 +4145,15 @@ static HRESULT parse_frame(struct ID3DXFileData *filedata, DWORD options, struct
             return hr;
         hr = child->lpVtbl->GetType(child, &type);
         if (FAILED(hr))
-            return hr;
+            goto err;
 
         if (IsEqualGUID(&type, &TID_D3DRMMesh)) {
             struct mesh_container *container = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*container));
             if (!container)
-                return E_OUTOFMEMORY;
+            {
+                hr = E_OUTOFMEMORY;
+                goto err;
+            }
             list_add_tail(container_list, &container->entry);
             container->transform = transform;
 
@@ -4150,10 +4169,15 @@ static HRESULT parse_frame(struct ID3DXFileData *filedata, DWORD options, struct
             hr = parse_frame(child, options, device, &transform, container_list, provide_flags);
         }
         if (FAILED(hr))
-            return hr;
-    }
+            goto err;
 
+        IUnknown_Release(child);
+    }
     return D3D_OK;
+
+err:
+    IUnknown_Release(child);
+    return hr;
 }
 
 HRESULT WINAPI D3DXLoadMeshFromXInMemory(const void *memory, DWORD memory_size, DWORD options,
@@ -4683,12 +4707,6 @@ HRESULT WINAPI D3DXCreateSphere(struct IDirect3DDevice9 *device, float radius, U
         return D3DERR_INVALIDCALL;
     }
 
-    if (adjacency)
-    {
-        FIXME("Case of adjacency != NULL not implemented.\n");
-        return E_NOTIMPL;
-    }
-
     number_of_vertices = 2 + slices * (stacks-1);
     number_of_faces = 2 * slices + (stacks - 2) * (2 * slices);
 
@@ -4826,6 +4844,24 @@ HRESULT WINAPI D3DXCreateSphere(struct IDirect3DDevice9 *device, float radius, U
     free_sincos_table(&phi);
     sphere->lpVtbl->UnlockIndexBuffer(sphere);
     sphere->lpVtbl->UnlockVertexBuffer(sphere);
+
+
+    if (adjacency)
+    {
+        if (FAILED(hr = D3DXCreateBuffer(number_of_faces * sizeof(DWORD) * 3, adjacency)))
+        {
+            sphere->lpVtbl->Release(sphere);
+            return hr;
+        }
+
+        if (FAILED(hr = sphere->lpVtbl->GenerateAdjacency(sphere, 0.0f, (*adjacency)->lpVtbl->GetBufferPointer(*adjacency))))
+        {
+            (*adjacency)->lpVtbl->Release(*adjacency);
+            sphere->lpVtbl->Release(sphere);
+            return hr;
+        }
+    }
+
     *mesh = sphere;
 
     return D3D_OK;
@@ -5044,6 +5080,113 @@ HRESULT WINAPI D3DXCreateTextA(struct IDirect3DDevice9 *device, HDC hdc, const c
     HeapFree(GetProcessHeap(), 0, textW);
 
     return hr;
+}
+
+HRESULT WINAPI D3DXCreateTorus(struct IDirect3DDevice9 *device,
+        float innerradius, float outerradius, UINT sides, UINT rings, struct ID3DXMesh **mesh, ID3DXBuffer **adjacency)
+{
+    HRESULT hr;
+    ID3DXMesh *torus;
+    WORD (*faces)[3];
+    struct vertex *vertices;
+    float phi, phi_step, sin_phi, cos_phi;
+    float theta, theta_step, sin_theta, cos_theta;
+    unsigned int i, j, numvert, numfaces;
+
+    TRACE("device %p, innerradius %.8e, outerradius %.8e, sides %u, rings %u, mesh %p, adjacency %p.\n",
+            device, innerradius, outerradius, sides, rings, mesh, adjacency);
+
+    numvert = sides * rings;
+    numfaces = numvert * 2;
+
+    if (!device || innerradius < 0.0f || outerradius < 0.0f || sides < 3 || rings < 3 || !mesh)
+    {
+        WARN("Invalid arguments.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (FAILED(hr = D3DXCreateMeshFVF(numfaces, numvert, D3DXMESH_MANAGED, D3DFVF_XYZ | D3DFVF_NORMAL, device, &torus)))
+        return hr;
+
+    if (FAILED(hr = torus->lpVtbl->LockVertexBuffer(torus, 0, (void **)&vertices)))
+    {
+        torus->lpVtbl->Release(torus);
+        return hr;
+    }
+
+    if (FAILED(hr = torus->lpVtbl->LockIndexBuffer(torus, 0, (void **)&faces)))
+    {
+        torus->lpVtbl->UnlockVertexBuffer(torus);
+        torus->lpVtbl->Release(torus);
+        return hr;
+    }
+
+    phi_step = D3DX_PI / sides * 2.0f;
+    theta_step = D3DX_PI / rings * -2.0f;
+
+    theta = 0.0f;
+
+    for (i = 0; i < rings; ++i)
+    {
+        phi = 0.0f;
+
+        sin_theta = sinf(theta);
+        cos_theta = cosf(theta);
+
+        for (j = 0; j < sides; ++j)
+        {
+            sin_phi = sinf(phi);
+            cos_phi = cosf(phi);
+
+            vertices[i * sides + j].position.x = (innerradius * cos_phi + outerradius) * cos_theta;
+            vertices[i * sides + j].position.y = (innerradius * cos_phi + outerradius) * sin_theta;
+            vertices[i * sides + j].position.z = innerradius * sin_phi;
+            vertices[i * sides + j].normal.x = cos_phi * cos_theta;
+            vertices[i * sides + j].normal.y = cos_phi * sin_theta;
+            vertices[i * sides + j].normal.z = sin_phi;
+
+            phi += phi_step;
+        }
+
+        theta += theta_step;
+    }
+
+    for (i = 0; i < numfaces - sides * 2; ++i)
+    {
+        faces[i][0] = i % 2 ? i / 2 + sides : i / 2;
+        faces[i][1] = (i / 2 + 1) % sides ? i / 2 + 1 : i / 2 + 1 - sides;
+        faces[i][2] = (i + 1) % (sides * 2) ? (i + 1) / 2 + sides : (i + 1) / 2;
+    }
+
+    for (j = 0; i < numfaces; ++i, ++j)
+    {
+        faces[i][0] = i % 2 ? j / 2 : i / 2;
+        faces[i][1] = (i / 2 + 1) % sides ? i / 2 + 1 : i / 2 + 1 - sides;
+        faces[i][2] = i == numfaces - 1 ? 0 : (j + 1) / 2;
+    }
+
+    torus->lpVtbl->UnlockIndexBuffer(torus);
+    torus->lpVtbl->UnlockVertexBuffer(torus);
+
+    if (adjacency)
+    {
+        if (FAILED(hr = D3DXCreateBuffer(numfaces * sizeof(DWORD) * 3, adjacency)))
+        {
+            torus->lpVtbl->Release(torus);
+            return hr;
+        }
+
+        if (FAILED(hr = torus->lpVtbl->GenerateAdjacency(torus, 0.0f, (*adjacency)->lpVtbl->GetBufferPointer(*adjacency))))
+        {
+            (*adjacency)->lpVtbl->Release(*adjacency);
+            torus->lpVtbl->Release(torus);
+            return hr;
+        }
+    }
+
+    *mesh = torus;
+
+    return D3D_OK;
 }
 
 enum pointtype {

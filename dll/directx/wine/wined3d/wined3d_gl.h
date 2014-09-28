@@ -90,6 +90,7 @@ enum wined3d_gl_extension
     ARB_TEXTURE_RECTANGLE,
     ARB_TEXTURE_RG,
     ARB_TIMER_QUERY,
+    ARB_UNIFORM_BUFFER_OBJECT,
     ARB_VERTEX_ARRAY_BGRA,
     ARB_VERTEX_BLEND,
     ARB_VERTEX_BUFFER_OBJECT,
@@ -325,6 +326,17 @@ enum wined3d_gl_extension
     /* GL_ARB_timer_query */ \
     USE_GL_FUNC(glQueryCounter) \
     USE_GL_FUNC(glGetQueryObjectui64v) \
+    /* GL_ARB_uniform_buffer_object */ \
+    USE_GL_FUNC(glBindBufferBase) \
+    USE_GL_FUNC(glBindBufferRange) \
+    USE_GL_FUNC(glGetActiveUniformBlockName) \
+    USE_GL_FUNC(glGetActiveUniformBlockiv) \
+    USE_GL_FUNC(glGetActiveUniformName) \
+    USE_GL_FUNC(glGetActiveUniformsiv) \
+    USE_GL_FUNC(glGetIntegeri_v) \
+    USE_GL_FUNC(glGetUniformBlockIndex) \
+    USE_GL_FUNC(glGetUniformIndices) \
+    USE_GL_FUNC(glUniformBlockBinding) \
     /* GL_ARB_vertex_blend */ \
     USE_GL_FUNC(glVertexBlendARB) \
     USE_GL_FUNC(glWeightPointerARB) \

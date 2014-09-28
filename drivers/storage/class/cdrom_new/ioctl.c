@@ -1197,7 +1197,6 @@ RetryControl:
         IoMarkIrpPending(Irp);
         IoStartPacket(DeviceObject, Irp, NULL, NULL);
         return STATUS_PENDING;
-        break;
     }
 
     case IOCTL_DVD_READ_KEY: {

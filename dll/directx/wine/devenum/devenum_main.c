@@ -33,7 +33,9 @@ typedef struct
     BOOL instance;
 } register_info;
 
+#ifdef __REACTOS__
 static void DEVENUM_RegisterQuartz(void);
+#endif
 
 /***********************************************************************
  *		Global string constant definitions
@@ -96,8 +98,10 @@ HRESULT WINAPI DllRegisterServer(void)
 
     res = __wine_register_resources( DEVENUM_hInstance );
 
+#ifdef __REACTOS__
     /* Quartz is needed for IFilterMapper2 */
     DEVENUM_RegisterQuartz();
+#endif
 
 /*** ActiveMovieFilter Categories ***/
 
@@ -146,6 +150,8 @@ HRESULT WINAPI DllUnregisterServer(void)
     return __wine_unregister_resources( DEVENUM_hInstance );
 }
 
+#ifdef __REACTOS__
+
 typedef HRESULT (WINAPI *DllRegisterServer_func)(void);
 
 /* calls DllRegisterServer() for the Quartz DLL */
@@ -162,3 +168,5 @@ static void DEVENUM_RegisterQuartz(void)
             ERR("Failed to register Quartz. Error was 0x%x)\n", hr);
     }
 }
+
+#endif

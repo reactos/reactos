@@ -34,6 +34,7 @@ Vil du erstatte den?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Stien eksisterer ikke."
     IDS_FILENOTEXISTING     "Filen eksisterer ikke."
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Gem"
     IDS_SAVE_AS     "Gem som"
     IDS_OPEN_FILE   "Åben fil"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

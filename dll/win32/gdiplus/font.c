@@ -1506,7 +1506,7 @@ GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
 
         if (!EnumFontFamiliesExW(hdc, &lfw, add_font_proc, (LPARAM)fontCollection, 0))
         {
-            ReleaseDC(0, hdc);
+            DeleteDC(hdc);
             return OutOfMemory;
         }
 
@@ -1634,7 +1634,7 @@ GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
         if (!EnumFontFamiliesExW(hdc, &lfw, add_font_proc, (LPARAM)&installedFontCollection, 0))
         {
             free_installed_fonts();
-            ReleaseDC(0, hdc);
+            DeleteDC(hdc);
             return OutOfMemory;
         }
 

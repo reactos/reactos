@@ -19,7 +19,6 @@ list(APPEND SOURCE
     netconnection.c
     urlcache.c
     utility.c
-    wininet_main.c
     internet.h)
 
 add_library(wininet SHARED

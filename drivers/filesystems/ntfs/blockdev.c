@@ -33,39 +33,32 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
-                IN ULONG DiskSector,
-                IN ULONG SectorCount,
-                IN ULONG SectorSize,
-                IN OUT PUCHAR Buffer,
-                IN BOOLEAN Override)
+NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
+             IN LONGLONG StartingOffset,
+             IN ULONG Length,
+             IN OUT PUCHAR Buffer,
+             IN BOOLEAN Override)
 {
     PIO_STACK_LOCATION Stack;
     IO_STATUS_BLOCK IoStatus;
     LARGE_INTEGER Offset;
-    ULONG BlockSize;
     KEVENT Event;
     PIRP Irp;
     NTSTATUS Status;
+
+    DPRINT("NtfsReadDisk(%p, %I64x, %u, %p, %d)\n", DeviceObject, StartingOffset, Length, Buffer, Override);
 
     KeInitializeEvent(&Event,
                       NotificationEvent,
                       FALSE);
 
-    Offset.QuadPart = (LONGLONG)DiskSector * (LONGLONG)SectorSize;
-    BlockSize = SectorCount * SectorSize;
-
-    DPRINT("NtfsReadSectors(DeviceObject %p, DiskSector %d, Buffer %p)\n",
-           DeviceObject, DiskSector, Buffer);
-    DPRINT("Offset %I64x BlockSize %ld\n",
-           Offset.QuadPart,
-           BlockSize);
+    Offset.QuadPart = StartingOffset;
 
     DPRINT("Building synchronous FSD Request...\n");
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
                                        DeviceObject,
                                        Buffer,
-                                       BlockSize,
+                                       Length,
                                        &Offset,
                                        &Event,
                                        &IoStatus);
@@ -93,9 +86,26 @@ NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
         Status = IoStatus.Status;
     }
 
-    DPRINT("NtfsReadSectors() done (Status %x)\n", Status);
+    DPRINT("NtfsReadDisk() done (Status %x)\n", Status);
 
     return Status;
+}
+
+NTSTATUS
+NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
+                IN ULONG DiskSector,
+                IN ULONG SectorCount,
+                IN ULONG SectorSize,
+                IN OUT PUCHAR Buffer,
+                IN BOOLEAN Override)
+{
+    LONGLONG Offset;
+    ULONG BlockSize;
+
+    Offset = (LONGLONG)DiskSector * (LONGLONG)SectorSize;
+    BlockSize = SectorCount * SectorSize;
+
+    return NtfsReadDisk(DeviceObject, Offset, BlockSize, Buffer, Override);
 }
 
 

@@ -180,6 +180,27 @@ HRESULT WINAPI D3DXFilterTexture(IDirect3DBaseTexture9 *texture,
     }
 }
 
+static D3DFORMAT get_luminance_replacement_format(D3DFORMAT format)
+{
+    static const struct
+    {
+        D3DFORMAT luminance_format;
+        D3DFORMAT replacement_format;
+    } luminance_replacements[] =
+    {
+        {D3DFMT_L8, D3DFMT_X8R8G8B8},
+        {D3DFMT_A8L8, D3DFMT_A8R8G8B8},
+        {D3DFMT_A4L4, D3DFMT_A4R4G4B4},
+        {D3DFMT_L16, D3DFMT_A16B16G16R16}
+    };
+    unsigned int i;
+
+    for (i = 0; i < sizeof(luminance_replacements) / sizeof(luminance_replacements[0]); ++i)
+        if (format == luminance_replacements[i].luminance_format)
+            return luminance_replacements[i].replacement_format;
+    return format;
+}
+
 HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UINT *width, UINT *height,
         UINT *miplevels, DWORD usage, D3DFORMAT *format, D3DPOOL pool)
 {
@@ -251,16 +272,16 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
             FIXME("Pixel format %x not handled\n", usedformat);
             goto cleanup;
         }
+        fmt = get_format_info(get_luminance_replacement_format(usedformat));
 
         allow_24bits = fmt->bytes_per_pixel == 3;
-        channels = (fmt->bits[0] ? 1 : 0) + (fmt->bits[1] ? 1 : 0)
-            + (fmt->bits[2] ? 1 : 0) + (fmt->bits[3] ? 1 : 0);
+        channels = !!fmt->bits[0] + !!fmt->bits[1] + !!fmt->bits[2] + !!fmt->bits[3];
         usedformat = D3DFMT_UNKNOWN;
 
         while ((curfmt = get_format_info_idx(i)))
         {
-            unsigned int curchannels = (curfmt->bits[0] ? 1 : 0) + (curfmt->bits[1] ? 1 : 0)
-                + (curfmt->bits[2] ? 1 : 0) + (curfmt->bits[3] ? 1 : 0);
+            unsigned int curchannels = !!curfmt->bits[0] + !!curfmt->bits[1]
+                    + !!curfmt->bits[2] + !!curfmt->bits[3];
             int score;
 
             i++;
@@ -521,8 +542,6 @@ HRESULT WINAPI D3DXCreateTextureFromFileInMemoryEx(struct IDirect3DDevice9 *devi
     IDirect3DTexture9 **texptr;
     IDirect3DTexture9 *buftex;
     IDirect3DSurface9 *surface;
-    BOOL file_width = FALSE, file_height = FALSE;
-    BOOL file_format = FALSE, file_miplevels = FALSE;
     BOOL dynamic_texture;
     D3DXIMAGE_INFO imginfo;
     UINT loaded_miplevels, skip_levels;
@@ -565,25 +584,21 @@ HRESULT WINAPI D3DXCreateTextureFromFileInMemoryEx(struct IDirect3DDevice9 *devi
 
     if (width == D3DX_FROM_FILE)
     {
-        file_width = TRUE;
         width = imginfo.Width;
     }
 
     if (height == D3DX_FROM_FILE)
     {
-        file_height = TRUE;
         height = imginfo.Height;
     }
 
     if (format == D3DFMT_FROM_FILE)
     {
-        file_format = TRUE;
         format = imginfo.Format;
     }
 
     if (miplevels == D3DX_FROM_FILE)
     {
-        file_miplevels = TRUE;
         miplevels = imginfo.MipLevels;
     }
 
@@ -621,14 +636,6 @@ HRESULT WINAPI D3DXCreateTextureFromFileInMemoryEx(struct IDirect3DDevice9 *devi
     {
         FIXME("Generation of mipmaps for compressed pixel formats is not implemented yet.\n");
         miplevels = 1;
-    }
-
-    if (((file_width) && (width != imginfo.Width))    ||
-        ((file_height) && (height != imginfo.Height)) ||
-        ((file_format) && (format != imginfo.Format)) ||
-        ((file_miplevels) && (miplevels != imginfo.MipLevels)))
-    {
-        return D3DERR_NOTAVAILABLE;
     }
 
     if (FAILED(IDirect3DDevice9_GetDeviceCaps(device, &caps)))

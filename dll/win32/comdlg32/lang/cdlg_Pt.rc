@@ -34,6 +34,7 @@ Gostaria de o substituir?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "A localização não existe"
     IDS_FILENOTEXISTING     "O ficheiro não existe"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Gravar"
     IDS_SAVE_AS     "Gravar Como"
     IDS_OPEN_FILE   "Abrir Ficheiro"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

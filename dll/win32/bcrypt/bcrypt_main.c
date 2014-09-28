@@ -30,20 +30,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(bcrypt);
 
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
-{
-    TRACE("fdwReason %u\n", fdwReason);
-
-    switch(fdwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hInstDLL);
-            break;
-    }
-
-    return TRUE;
-}
-
 NTSTATUS WINAPI BCryptEnumAlgorithms(ULONG dwAlgOperations, ULONG *pAlgCount,
                                      BCRYPT_ALGORITHM_IDENTIFIER **ppAlgList, ULONG dwFlags)
 {
@@ -89,4 +75,35 @@ NTSTATUS WINAPI BCryptGenRandom(BCRYPT_ALG_HANDLE algorithm, UCHAR *buffer, ULON
 
     FIXME("called with unsupported parameters, returning error\n");
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptOpenAlgorithmProvider(BCRYPT_ALG_HANDLE *algorithm, LPCWSTR algorithmId,
+                                            LPCWSTR implementation, DWORD flags)
+{
+    FIXME("%p, %s, %s, %08x - stub\n", algorithm, wine_dbgstr_w(algorithmId), wine_dbgstr_w(implementation), flags);
+
+    if (!algorithm)
+        return STATUS_INVALID_PARAMETER;
+
+    *algorithm = NULL;
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptCloseAlgorithmProvider(BCRYPT_ALG_HANDLE algorithm, DWORD flags)
+{
+    FIXME("%p, %08x - stub\n", algorithm, flags);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptGetFipsAlgorithmMode(BOOLEAN *enabled)
+{
+    FIXME("%p - semi-stub\n", enabled);
+
+    if (!enabled)
+        return STATUS_INVALID_PARAMETER;
+
+    *enabled = FALSE;
+    return STATUS_SUCCESS;
 }

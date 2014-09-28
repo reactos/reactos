@@ -4956,7 +4956,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXlat)
 
     /* Read a byte from DS:[(E)BX + AL] */
     if (!Fast486ReadMemory(State,
-                           FAST486_REG_DS,
+                           (State->PrefixFlags & FAST486_PREFIX_SEG)
+                           ? State->SegmentOverride : FAST486_REG_DS,
                            (AddressSize ? State->GeneralRegs[FAST486_REG_EBX].Long
                                         : State->GeneralRegs[FAST486_REG_EBX].LowWord)
                            + State->GeneralRegs[FAST486_REG_EAX].LowByte,
@@ -6214,8 +6215,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
             if (!AddressSize)
             {
                 ULONG MaxBytes = State->Flags.Df
-                                 ? (ULONG)State->GeneralRegs[FAST486_REG_EDI].LowWord
-                                 : (0x10000 - (ULONG)State->GeneralRegs[FAST486_REG_EDI].LowWord);
+                                 ? (ULONG)State->GeneralRegs[FAST486_REG_ESI].LowWord
+                                 : (0x10000 - (ULONG)State->GeneralRegs[FAST486_REG_ESI].LowWord);
 
                 Processed = min(Processed, MaxBytes / DataSize);
                 if (Processed == 0) Processed = 1;
@@ -6223,9 +6224,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
 
             /* Read from memory */
             if (!Fast486ReadMemory(State,
-                                   FAST486_REG_ES,
-                                   AddressSize ? State->GeneralRegs[FAST486_REG_EDI].Long
-                                               : State->GeneralRegs[FAST486_REG_EDI].LowWord,
+                                   (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                   ? State->SegmentOverride : FAST486_REG_DS,
+                                   AddressSize ? State->GeneralRegs[FAST486_REG_ESI].Long
+                                               : State->GeneralRegs[FAST486_REG_ESI].LowWord,
                                    FALSE,
                                    Block,
                                    Processed * DataSize))
@@ -6242,9 +6244,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
             {
                 ULONG i, j;
 
-                /* Reduce EDI by the number of bytes to transfer */
-                if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long -= Processed * DataSize;
-                else State->GeneralRegs[FAST486_REG_EDI].LowWord -= Processed * DataSize;
+                /* Reduce ESI by the number of bytes to transfer */
+                if (AddressSize) State->GeneralRegs[FAST486_REG_ESI].Long -= Processed * DataSize;
+                else State->GeneralRegs[FAST486_REG_ESI].LowWord -= Processed * DataSize;
 
                 /* Reverse the block data */
                 for (i = 0; i < Processed / 2; i++)
@@ -6268,9 +6270,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
 
             if (!State->Flags.Df)
             {
-                /* Increase EDI by the number of bytes transfered */
-                if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long += Processed * DataSize;
-                else State->GeneralRegs[FAST486_REG_EDI].LowWord += Processed * DataSize;
+                /* Increase ESI by the number of bytes transfered */
+                if (AddressSize) State->GeneralRegs[FAST486_REG_ESI].Long += Processed * DataSize;
+                else State->GeneralRegs[FAST486_REG_ESI].LowWord += Processed * DataSize;
             }
 
             /* Reduce the total count by the number processed in this run */
@@ -6287,7 +6289,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
 
         /* Read from the source operand */
         if (!Fast486ReadMemory(State,
-                               FAST486_REG_DS,
+                               (State->PrefixFlags & FAST486_PREFIX_SEG)
+                               ? State->SegmentOverride : FAST486_REG_DS,
                                AddressSize ? State->GeneralRegs[FAST486_REG_ESI].Long
                                            : State->GeneralRegs[FAST486_REG_ESI].LowWord,
                                FALSE,

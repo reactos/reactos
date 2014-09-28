@@ -23,7 +23,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 UIINSERTOBJECT DIALOG  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Вставить объект"
+CAPTION "Вставка объекта"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
@@ -65,7 +65,7 @@ BEGIN
     LTEXT         "Источник:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
     CONTROL       "&Вставить", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
                   6, 38, 55, 10
-    CONTROL       "Вставить &Ссылку", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+    CONTROL       "Вставить св&язь", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   6, 63, 55, 10
     LTEXT         "&Как:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
     LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
@@ -76,7 +76,7 @@ BEGIN
     CONTROL       "С&правка", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
     CONTROL       "&Показывать как значок", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
-    CONTROL       "Изменить &значок...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "Сменить &значок...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
     CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
     CONTROL       "<< result text goes here >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
     CONTROL       "Результат", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
@@ -89,9 +89,9 @@ STRINGTABLE
     IDS_PS_PASTE_OBJECT                   "Вставка содержимого буфера обмена в документ так, что его можно активировать, используя %s."
     IDS_PS_PASTE_OBJECT_AS_ICON           "Вставка содержимого буфера обмена в документ так, что его можно активировать, используя %s. Он будет отображаться в виде значка."
     IDS_PS_PASTE_LINK_DATA                "Вставка содержимого буфера обмена в документ как %s. Данные будут связаны с исходным файлом, так что изменения в нём будут отражаться в документе."
-    IDS_PS_PASTE_LINK_OBJECT              "Вставка изображения из буфера обмена в документ. Изображение будет связано с исходным файлом, так что изменения в нём будут отражаться в документе."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Вставка ссылки, которая будет указывать на расположение содержимого буфера обмена. Ссылка будет связана с исходным файлом, так что изменения в нём будут отражаться в документе."
-    IDS_PS_NON_OLE                        "Вставка содержимое буфера обмена в документ."
+    IDS_PS_PASTE_LINK_OBJECT              "Вставка в документ изображение содержимого буфера. Связь изображения с исходным файлом позволит отражать в документе внесенные изменения."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Вставка в документ ярлыка, указывающего на источник содержимого буфера. Связь ярлыка с файлом позволит отражать в документе внесенные изменения."
+    IDS_PS_NON_OLE                        "Вставка в документ содержимого буфера."
     IDS_PS_UNKNOWN_TYPE                   "Неизвестный тип"
     IDS_PS_UNKNOWN_SRC                    "Неизвестный источник"
     IDS_PS_UNKNOWN_APP                    "программа, которая его создала"

@@ -294,7 +294,6 @@ USBHUB_PdoHandleInternalDeviceControl(
             //
             Status = FowardUrbToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Irp, Urb, NULL);
             return Status;
-            break;
         }
         //
         // FIXME: Can these be sent to RootHub?

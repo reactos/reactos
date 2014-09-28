@@ -34,6 +34,7 @@ Haluatko ylikirjoitaa sen?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Kansiota ei ole"
     IDS_FILENOTEXISTING     "Tiedostoa ei ole"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Tallenna"
     IDS_SAVE_AS     "Tallenna nimellä"
     IDS_OPEN_FILE   "Avaa tiedosto"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

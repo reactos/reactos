@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/xformobj.c
+ * FILE:            win32ss/gdi/ntgdi/xformobj.c
  * PURPOSE:         XFORMOBJ API
  * PROGRAMMER:      Timo Kreuzer
  */
@@ -195,8 +195,8 @@ XFORMOBJ_iCombine(
     MATRIX mx;
     PMATRIX pmx, pmx1, pmx2;
 
-    pmx = XFORMOBJ_pmx(pxo);
-    pmx1 =XFORMOBJ_pmx(pxo1);
+    /* Get the source matrices */
+    pmx1 = XFORMOBJ_pmx(pxo1);
     pmx2 = XFORMOBJ_pmx(pxo2);
 
     /* Do a 3 x 3 matrix multiplication with mx as destinantion */
@@ -210,6 +210,7 @@ XFORMOBJ_iCombine(
     FLOATOBJ_Add(&mx.efDy, &pmx2->efDy);
 
     /* Copy back */
+    pmx = XFORMOBJ_pmx(pxo);
     *pmx = mx;
 
     /* Update accelerators and return complexity */
@@ -322,11 +323,14 @@ XFORMOBJ_bXformFixPoints(
         if (flAccel & XFORM_UNITY)
         {
             /* 1-scale integer transform */
+            LONG lM12 = FLOATOBJ_GetLong(&pmx->efM12);
+            LONG lM21 = FLOATOBJ_GetLong(&pmx->efM21);
+
             i = cPoints - 1;
             do
             {
-                LONG x = pptIn[i].x + pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
-                LONG y = pptIn[i].y + pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
+                LONG x = pptIn[i].x + pptIn[i].y * lM21;
+                LONG y = pptIn[i].y + pptIn[i].x * lM12;
                 pptOut[i].y = y;
                 pptOut[i].x = x;
             }
@@ -335,25 +339,33 @@ XFORMOBJ_bXformFixPoints(
         else if (flAccel & XFORM_SCALE)
         {
             /* Diagonal integer transform */
+            LONG lM11 = FLOATOBJ_GetLong(&pmx->efM11);
+            LONG lM22 = FLOATOBJ_GetLong(&pmx->efM22);
+
             i = cPoints - 1;
             do
             {
-                pptOut[i].x = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
-                pptOut[i].y = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
+                pptOut[i].x = pptIn[i].x * lM11;
+                pptOut[i].y = pptIn[i].y * lM22;
             }
             while (--i >= 0);
         }
         else
         {
             /* Full integer transform */
+            LONG lM11 = FLOATOBJ_GetLong(&pmx->efM11);
+            LONG lM12 = FLOATOBJ_GetLong(&pmx->efM12);
+            LONG lM21 = FLOATOBJ_GetLong(&pmx->efM21);
+            LONG lM22 = FLOATOBJ_GetLong(&pmx->efM22);
+
             i = cPoints - 1;
             do
             {
                 LONG x;
-                x  = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
-                x += pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
-                pptOut[i].y  = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
-                pptOut[i].y += pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
+                x  = pptIn[i].x * lM11;
+                x += pptIn[i].y * lM21;
+                pptOut[i].y  = pptIn[i].y * lM22;
+                pptOut[i].y += pptIn[i].x * lM12;
                 pptOut[i].x = x;
             }
             while (--i >= 0);

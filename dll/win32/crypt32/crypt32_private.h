@@ -366,6 +366,7 @@ WINECRYPT_CERTSTORE *CRYPT_FileNameOpenStoreA(HCRYPTPROV hCryptProv,
 WINECRYPT_CERTSTORE *CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
  DWORD dwFlags, const void *pvPara) DECLSPEC_HIDDEN;
 WINECRYPT_CERTSTORE *CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags) DECLSPEC_HIDDEN;
+BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert) DECLSPEC_HIDDEN;
 
 /* Allocates and initializes a certificate chain engine, but without creating
  * the root store.  Instead, it uses root, and assumes the caller has done any

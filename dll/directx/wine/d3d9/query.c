@@ -150,8 +150,11 @@ static HRESULT WINAPI d3d9_query_GetData(IDirect3DQuery9 *iface, void *data, DWO
     {
         struct wined3d_query_data_timestamp_disjoint data_disjoint;
 
+        if (size > sizeof(data_disjoint.disjoint))
+            size = sizeof(data_disjoint.disjoint);
+
         hr = wined3d_query_get_data(query->wined3d_query, &data_disjoint, sizeof(data_disjoint), flags);
-        *(BOOL *)data = data_disjoint.disjoint;
+        memcpy(data, &data_disjoint.disjoint, size);
     }
     else
     {
@@ -183,7 +186,7 @@ HRESULT query_init(struct d3d9_query *query, struct d3d9_device *device, D3DQUER
     query->refcount = 1;
 
     wined3d_mutex_lock();
-    hr = wined3d_query_create(device->wined3d_device, type, &query->wined3d_query);
+    hr = wined3d_query_create(device->wined3d_device, type, query, &query->wined3d_query);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {

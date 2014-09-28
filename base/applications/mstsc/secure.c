@@ -13,9 +13,9 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
 #include "precomp.h"
@@ -56,7 +56,7 @@ int
 ssl_mod_exp(char* out, int out_len, char* in, int in_len,
             char* mod, int mod_len, char* exp, int exp_len);
 
-extern char g_hostname[];
+extern char g_hostname[16];
 extern int g_width;
 extern int g_height;
 extern unsigned int g_keylayout;
@@ -77,13 +77,14 @@ static void * rc4_decrypt_key = 0;
 static void * rc4_encrypt_key = 0;
 //static RSA *server_public_key;
 static void * server_public_key;
+static uint32 server_public_key_len;
 
 static uint8 sec_sign_key[16];
 static uint8 sec_decrypt_key[16];
 static uint8 sec_encrypt_key[16];
 static uint8 sec_decrypt_update_key[16];
 static uint8 sec_encrypt_update_key[16];
-static uint8 sec_crypted_random[SEC_MODULUS_SIZE];
+static uint8 sec_crypted_random[SEC_MAX_MODULUS_SIZE];
 
 uint16 g_server_rdp_version = 0;
 
@@ -263,7 +264,7 @@ sec_sign(uint8 * signature, int siglen, uint8 * session_key, int keylen, uint8 *
 	ssl_md5_transform(md5, (char *)pad_92, 48);
 	ssl_md5_transform(md5, (char *)shasig, 20);
 	ssl_md5_complete(md5, (char *)md5sig);
-	ssl_md5_info_delete(md5);
+	ssl_md5_info_delete(md5);	
 
 	memcpy(signature, md5sig, siglen);
 }
@@ -347,16 +348,32 @@ reverse(uint8 * p, int len)
 
 /* Perform an RSA public key encryption operation */
 static void
-sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint8 * modulus, uint8 * exponent)
+//sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint8 * modulus, uint8 * exponent)
+sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint32 modulus_size, uint8 * modulus, uint8 * exponent)
 {
 	ssl_mod_exp((char *)out, 64, (char *)in, 32, (char *)modulus, 64, (char *)exponent, 4);
 /*
+ssl_mod_exp(out, 64, in, 32, modulus, 64, exponent, 4);
+
+ssl_mod_exp(char* out, int out_len, char* in, int in_len,
+            char* mod, int mod_len, char* exp, int exp_len)
+
+e = (DIGIT_T*)l_exp;
+x = (DIGIT_T*)l_in;
+y = (DIGIT_T*)l_out;
+m = (DIGIT_T*)l_mod;
+
+*/
+
+	//BN_CTX *ctx;
+
+/*
 	BN_CTX *ctx;
 	BIGNUM mod, exp, x, y;
-	uint8 inr[SEC_MODULUS_SIZE];
+	uint8 inr[SEC_MAX_MODULUS_SIZE];
 	int outlen;
 
-	reverse(modulus, SEC_MODULUS_SIZE);
+	reverse(modulus, modulus_size);
 	reverse(exponent, SEC_EXPONENT_SIZE);
 	memcpy(inr, in, len);
 	reverse(inr, len);
@@ -367,14 +384,14 @@ sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint8 * modulus, uint8 * expon
 	BN_init(&x);
 	BN_init(&y);
 
-	BN_bin2bn(modulus, SEC_MODULUS_SIZE, &mod);
+	BN_bin2bn(modulus, modulus_size, &mod);
 	BN_bin2bn(exponent, SEC_EXPONENT_SIZE, &exp);
 	BN_bin2bn(inr, len, &x);
 	BN_mod_exp(&y, &x, &exp, &mod, ctx);
 	outlen = BN_bn2bin(&y, out);
 	reverse(out, outlen);
-	if (outlen < SEC_MODULUS_SIZE)
-		memset(out + outlen, 0, SEC_MODULUS_SIZE - outlen);
+	if (outlen < modulus_size)
+		memset(out + outlen, 0, modulus_size - outlen);
 
 	BN_free(&y);
 	BN_clear_free(&x);
@@ -440,14 +457,14 @@ sec_send(STREAM s, uint32 flags)
 static void
 sec_establish_key(void)
 {
-	uint32 length = SEC_MODULUS_SIZE + SEC_PADDING_SIZE;
+	uint32 length = server_public_key_len + SEC_PADDING_SIZE;
 	uint32 flags = SEC_CLIENT_RANDOM;
 	STREAM s;
 
-	s = sec_init(flags, 76);
+	s = sec_init(flags, length+4);
 
 	out_uint32_le(s, length);
-	out_uint8p(s, sec_crypted_random, SEC_MODULUS_SIZE);
+	out_uint8p(s, sec_crypted_random, server_public_key_len);
 	out_uint8s(s, SEC_PADDING_SIZE);
 
 	s_mark_end(s);
@@ -559,16 +576,18 @@ sec_parse_public_key(STREAM s, uint8 ** modulus, uint8 ** exponent)
 	}
 
 	in_uint32_le(s, modulus_len);
-	if (modulus_len != SEC_MODULUS_SIZE + SEC_PADDING_SIZE)
+	modulus_len -= SEC_PADDING_SIZE;
+	if ((modulus_len < 64) || (modulus_len > SEC_MAX_MODULUS_SIZE))
 	{
-		error("modulus len 0x%x\n", modulus_len);
+		error("Bad server public key size (%u bits)\n", modulus_len*8);
 		return False;
 	}
 
 	in_uint8s(s, 8);	/* modulus_bits, unknown */
 	in_uint8p(s, *exponent, SEC_EXPONENT_SIZE);
-	in_uint8p(s, *modulus, SEC_MODULUS_SIZE);
+	in_uint8p(s, *modulus, modulus_len);
 	in_uint8s(s, SEC_PADDING_SIZE);
+	server_public_key_len = modulus_len;
 
 	return s_check(s);
 }
@@ -740,10 +759,10 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 static void
 sec_process_crypt_info(STREAM s)
 {
-	uint8 *server_random, *modulus = NULL, *exponent = NULL;
+	uint8 *server_random, *modulus, *exponent;
 	uint8 client_random[SEC_RANDOM_SIZE];
 	uint32 rc4_key_size;
-	uint8 inr[SEC_MODULUS_SIZE];
+	//uint8 inr[SEC_MODULUS_SIZE];
 
 	if (!sec_parse_crypt_info(s, &rc4_key_size, &server_random, &modulus, &exponent))
 	{
@@ -754,15 +773,14 @@ sec_process_crypt_info(STREAM s)
 	DEBUG(("Generating client random\n"));
 	/* Generate a client random, and hence determine encryption keys */
 	/* This is what the MS client do: */
-	memset(inr, 0, SEC_RANDOM_SIZE);
+	//memset(inr, 0, SEC_RANDOM_SIZE);
 	/*  *ARIGL!* Plaintext attack, anyone?
-	   I tried doing:
-	   generate_random(inr);
-	   ..but that generates connection errors now and then (yes, 
-	   "now and then". Something like 0 to 3 attempts needed before a 
-	   successful connection. Nice. Not! 
-	 */
-
+	I tried doing:
+	 generate_random(inr);
+	..but that generates connection errors now and then (yes, 
+	"now and then". Something like 0 to 3 attempts needed before a 
+	successful connection. Nice. Not! 
+	*/
 	generate_random(client_random);
 	if (NULL != server_public_key)
 	{			/* Which means we should use 
@@ -783,7 +801,7 @@ sec_process_crypt_info(STREAM s)
 	else
 	{			/* RDP4-style encryption */
 		sec_rsa_encrypt(sec_crypted_random,
-				client_random, SEC_RANDOM_SIZE, modulus, exponent);
+				client_random, SEC_RANDOM_SIZE, server_public_key_len, modulus, exponent);
 	}
 	sec_generate_keys(client_random, server_random, rc4_key_size);
 }

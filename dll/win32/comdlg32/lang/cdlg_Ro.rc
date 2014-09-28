@@ -36,6 +36,7 @@ Doriți să îl suprascrieți?"
                           / : < > |"
     IDS_PATHNOTEXISTING         "Calea nu există"
     IDS_FILENOTEXISTING         "Fișierul nu există"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -138,6 +139,7 @@ STRINGTABLE
     IDS_SAVE        "Păstrare"
     IDS_SAVE_AS     "Păstrare în:"
     IDS_OPEN_FILE   "Deschidere fișier"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

@@ -262,7 +262,7 @@ static BYTE WINAPI Port61hRead(ULONG Port)
 
 static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
 {
-    // BOOLEAN SpeakerChange = FALSE;
+    // BOOLEAN SpeakerStateChange = FALSE;
     BYTE OldPort61hState = Port61hState;
 
     /* Only the four lowest bytes can be written */
@@ -271,18 +271,17 @@ static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
     if ((OldPort61hState ^ Port61hState) & 0x01)
     {
         DPRINT("PIT 2 Gate %s\n", Port61hState & 0x01 ? "on" : "off");
-        // SpeakerChange = TRUE;
+        PitSetGate(2, !!(Port61hState & 0x01));
+        // SpeakerStateChange = TRUE;
     }
-
-    PitSetGate(2, !!(Port61hState & 0x01));
 
     if ((OldPort61hState ^ Port61hState) & 0x02)
     {
         /* There were some change for the speaker... */
         DPRINT("Speaker %s\n", Port61hState & 0x02 ? "on" : "off");
-        // SpeakerChange = TRUE;
+        // SpeakerStateChange = TRUE;
     }
-    // if (SpeakerChange) SpeakerChange();
+    // if (SpeakerStateChange) SpeakerChange();
     SpeakerChange();
 }
 
@@ -316,7 +315,7 @@ static VOID WINAPI PitChan1Out(LPVOID Param, BOOLEAN State)
 
 static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 {
-    // BYTE OldPort61hState = Port61hState;
+    BYTE OldPort61hState = Port61hState;
 
 #if 0
     if (State)
@@ -332,9 +331,12 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 #else
     Port61hState = (Port61hState & 0xDF) | (State << 5);
 #endif
-    DPRINT("Speaker PIT out\n");
-    // if ((OldPort61hState ^ Port61hState) & 0x20)
-        // SpeakerChange();
+
+    if ((OldPort61hState ^ Port61hState) & 0x20)
+    {
+        DPRINT("PitChan2Out -- Port61hState changed\n");
+        SpeakerChange();
+    }
 }
 
 
@@ -428,41 +430,28 @@ static VOID EnableExtraHardware(HANDLE ConsoleInput)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID DumpMemory(VOID)
+static VOID
+DumpMemoryRaw(HANDLE hFile)
 {
-    static ULONG DumpNumber = 0;
+    PVOID  Buffer;
+    SIZE_T Size;
 
-    HANDLE hFile;
-    WCHAR  FileName[MAX_PATH];
+    /* Dump the VM memory */
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+    Buffer = REAL_TO_PHYS(NULL);
+    Size   = MAX_ADDRESS - (ULONG_PTR)(NULL);
+    WriteFile(hFile, Buffer, Size, &Size, NULL);
+}
 
+static VOID
+DumpMemoryTxt(HANDLE hFile)
+{
 #define LINE_SIZE   75 + 2
     ULONG  i;
     PBYTE  Ptr1, Ptr2;
     CHAR   LineBuffer[LINE_SIZE];
     PCHAR  Line;
     SIZE_T LineSize;
-
-    /* Build a suitable file name */
-    _snwprintf(FileName, MAX_PATH, L"memdump%lu.txt", DumpNumber);
-    ++DumpNumber;
-
-    DPRINT1("Creating memory dump file '%S'...\n", FileName);
-
-    /* Always create the dump file */
-    hFile = CreateFileW(FileName,
-                        GENERIC_WRITE,
-                        0,
-                        NULL,
-                        CREATE_ALWAYS,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
-
-    if (hFile == INVALID_HANDLE_VALUE)
-    {
-        DPRINT1("Error when creating '%S' for memory dumping, GetLastError() = %u\n",
-                FileName, GetLastError());
-        return;
-    }
 
     /* Dump the VM memory */
     SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
@@ -505,6 +494,45 @@ VOID DumpMemory(VOID)
         LineSize = Line - LineBuffer;
         WriteFile(hFile, LineBuffer, LineSize, &LineSize, NULL);
     }
+}
+
+VOID DumpMemory(BOOLEAN TextFormat)
+{
+    static ULONG DumpNumber = 0;
+
+    HANDLE hFile;
+    WCHAR  FileName[MAX_PATH];
+
+    /* Build a suitable file name */
+    _snwprintf(FileName, MAX_PATH,
+               L"memdump%lu.%s",
+               DumpNumber,
+               TextFormat ? L"txt" : L"dat");
+    ++DumpNumber;
+
+    DPRINT1("Creating memory dump file '%S'...\n", FileName);
+
+    /* Always create the dump file */
+    hFile = CreateFileW(FileName,
+                        GENERIC_WRITE,
+                        0,
+                        NULL,
+                        CREATE_ALWAYS,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("Error when creating '%S' for memory dumping, GetLastError() = %u\n",
+                FileName, GetLastError());
+        return;
+    }
+
+    /* Dump the VM memory in the chosen format */
+    if (TextFormat)
+        DumpMemoryTxt(hFile);
+    else
+        DumpMemoryRaw(hFile);
 
     /* Close the file */
     CloseHandle(hFile);
@@ -515,12 +543,14 @@ VOID DumpMemory(VOID)
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
     /* Allocate memory for the 16-bit address space */
-    BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
+    BaseAddress = HeapAlloc(GetProcessHeap(), /*HEAP_ZERO_MEMORY*/ 0, MAX_ADDRESS);
     if (BaseAddress == NULL)
     {
         wprintf(L"FATAL: Failed to allocate VDM memory.\n");
         return FALSE;
     }
+    // For diagnostics purposes!!
+    FillMemory(BaseAddress, MAX_ADDRESS, 0xFF);
 
     /* Initialize I/O ports */
     /* Initialize RAM */

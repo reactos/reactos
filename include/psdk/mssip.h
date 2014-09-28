@@ -156,6 +156,9 @@ typedef struct SIP_ADD_NEWPROVIDER_
   WCHAR *pwszRemoveFuncName;
 
   WCHAR *pwszIsFunctionNameFmt2;
+
+  /* NTDDI_VERSION >= NTDDI_WIN8 */
+  WCHAR *pwszGetCapFuncName;
 } SIP_ADD_NEWPROVIDER, *PSIP_ADD_NEWPROVIDER;
 #include <poppack.h>
 

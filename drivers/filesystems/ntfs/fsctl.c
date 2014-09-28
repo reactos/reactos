@@ -34,6 +34,8 @@
 #define NDEBUG
 #include <debug.h>
 
+UNICODE_STRING EmptyName = RTL_CONSTANT_STRING(L"");
+
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -173,14 +175,16 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                   PDEVICE_EXTENSION DeviceExt)
 {
     DISK_GEOMETRY DiskGeometry;
-    PFILE_RECORD_HEADER MftRecord;
     PFILE_RECORD_HEADER VolumeRecord;
     PVOLINFO_ATTRIBUTE VolumeInfo;
     PBOOT_SECTOR BootSector;
-    PATTRIBUTE Attribute;
     ULONG Size;
     PNTFS_INFO NtfsInfo = &DeviceExt->NtfsInfo;
     NTSTATUS Status;
+    PNTFS_ATTR_CONTEXT AttrCtxt;
+    PNTFS_ATTR_RECORD Attribute;
+    PNTFS_FCB VolumeFcb;
+    PWSTR VolumeNameU;
 
     DPRINT("NtfsGetVolumeData() called\n");
 
@@ -232,6 +236,10 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         NtfsInfo->BytesPerFileRecord = BootSector->EBPB.ClustersPerMftRecord * NtfsInfo->BytesPerCluster;
     else
         NtfsInfo->BytesPerFileRecord = 1 << (-BootSector->EBPB.ClustersPerMftRecord);
+    if (BootSector->EBPB.ClustersPerIndexRecord > 0)
+        NtfsInfo->BytesPerIndexRecord = BootSector->EBPB.ClustersPerIndexRecord * NtfsInfo->BytesPerCluster;
+    else
+        NtfsInfo->BytesPerIndexRecord = 1 << (-BootSector->EBPB.ClustersPerIndexRecord);
 
     DPRINT("Boot sector information:\n");
     DPRINT("  BytesPerSector:         %hu\n", BootSector->BPB.BytesPerSector);
@@ -245,10 +253,10 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
     ExFreePool(BootSector);
 
-    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                      NtfsInfo->BytesPerFileRecord,
-                                      TAG_NTFS);
-    if (MftRecord == NULL)
+    DeviceExt->MasterFileTable = ExAllocatePoolWithTag(NonPagedPool,
+                                                       NtfsInfo->BytesPerFileRecord,
+                                                       TAG_NTFS);
+    if (DeviceExt->MasterFileTable == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -257,11 +265,20 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                              NtfsInfo->MftStart.u.LowPart * NtfsInfo->SectorsPerCluster,
                              NtfsInfo->BytesPerFileRecord / NtfsInfo->BytesPerSector,
                              NtfsInfo->BytesPerSector,
-                             (PVOID)MftRecord,
+                             (PVOID)DeviceExt->MasterFileTable,
                              TRUE);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(MftRecord);
+        DPRINT1("Failed reading MFT.\n");
+        ExFreePool(DeviceExt->MasterFileTable);
+        return Status;
+    }
+
+    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeData, &EmptyName, &DeviceExt->MFTContext);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't find data attribute for Master File Table.\n");
+        ExFreePool(DeviceExt->MasterFileTable);
         return Status;
     }
 
@@ -270,61 +287,80 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                                          TAG_NTFS);
     if (VolumeRecord == NULL)
     {
-        ExFreePool(MftRecord);
+        DPRINT1("Allocation failed for volume record\n");
+        ExFreePool(DeviceExt->MasterFileTable);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Read Volume File (MFT index 3) */
     DeviceExt->StorageDevice = DeviceObject;
     Status = ReadFileRecord(DeviceExt,
-                            3,
-                            VolumeRecord,
-                            MftRecord);
+                            NTFS_FILE_VOLUME,
+                            VolumeRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(MftRecord);
+        DPRINT1("Failed reading volume file\n");
+        ExFreePool(VolumeRecord);
+        ExFreePool(DeviceExt->MasterFileTable);
         return Status;
     }
 
     /* Enumerate attributes */
-    NtfsDumpFileAttributes (MftRecord);
+    NtfsDumpFileAttributes(DeviceExt->MasterFileTable);
 
     /* Enumerate attributes */
-    NtfsDumpFileAttributes (VolumeRecord);
+    NtfsDumpFileAttributes(VolumeRecord);
 
     /* Get volume name */
-    Attribute = FindAttribute (VolumeRecord, AttributeVolumeName, NULL);
-    DPRINT("Attribute %p\n", Attribute);
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, &EmptyName, &AttrCtxt);
 
-    if (Attribute != NULL && ((PRESIDENT_ATTRIBUTE)Attribute)->ValueLength != 0)
+    if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
     {
-        DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
+        Attribute = &AttrCtxt->Record;
+        DPRINT("Data length %lu\n", AttributeDataLength(Attribute));
         NtfsInfo->VolumeLabelLength =
-           min (((PRESIDENT_ATTRIBUTE)Attribute)->ValueLength, MAXIMUM_VOLUME_LABEL_LENGTH);
+           min (Attribute->Resident.ValueLength, MAXIMUM_VOLUME_LABEL_LENGTH);
         RtlCopyMemory(NtfsInfo->VolumeLabel,
-                      (PVOID)((ULONG_PTR)Attribute + ((PRESIDENT_ATTRIBUTE)Attribute)->ValueOffset),
+                      (PVOID)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset),
                       NtfsInfo->VolumeLabelLength);
+        VolumeNameU = NtfsInfo->VolumeLabel;
     }
     else
     {
         NtfsInfo->VolumeLabelLength = 0;
+        VolumeNameU = L"\0";
     }
 
-    /* Get volume information */
-    Attribute = FindAttribute (VolumeRecord, AttributeVolumeInformation, NULL);
-    DPRINT("Attribute %p\n", Attribute);
-
-    if (Attribute != NULL && ((PRESIDENT_ATTRIBUTE)Attribute)->ValueLength != 0)
+    VolumeFcb = NtfsCreateFCB(VolumeNameU, DeviceExt);
+    if (VolumeFcb == NULL)
     {
+        DPRINT1("Failed allocating volume FCB\n");
+        ExFreePool(VolumeRecord);
+        ExFreePool(DeviceExt->MasterFileTable);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    VolumeFcb->Flags = FCB_IS_VOLUME;
+    VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->NtfsInfo.SectorCount * DeviceExt->NtfsInfo.BytesPerSector;
+    VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
+    VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
+    VolumeFcb->MFTIndex = 0;
+    DeviceExt->VolumeFcb = VolumeFcb;
+
+    /* Get volume information */
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, &EmptyName, &AttrCtxt);
+
+    if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
+    {
+        Attribute = &AttrCtxt->Record;
         DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
-        VolumeInfo = (PVOID)((ULONG_PTR)Attribute + ((PRESIDENT_ATTRIBUTE)Attribute)->ValueOffset);
+        VolumeInfo = (PVOID)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
 
         NtfsInfo->MajorVersion = VolumeInfo->MajorVersion;
         NtfsInfo->MinorVersion = VolumeInfo->MinorVersion;
         NtfsInfo->Flags = VolumeInfo->Flags;
     }
 
-    ExFreePool(MftRecord);
     ExFreePool(VolumeRecord);
 
     return Status;

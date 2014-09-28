@@ -426,7 +426,6 @@ int TMapLoader::LoadCharMap(string buf) {
 		Charmap.modmap(bHost, 'B', bConsole);
 	};
 	return (Charmap.enabled = 1);
-	return 1;
 };
 
 // AVS

@@ -852,17 +852,6 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Check for hardware events. */
-        if ((ProcessMask & QS_MOUSE) &&
-            co_MsqPeekMouseMove( pti,
-                                 RemoveMessages,
-                                 Window,
-                                 MsgFilterMin,
-                                 MsgFilterMax,
-                                 Msg ))
-        {
-            return TRUE;
-        }
-
         if ((ProcessMask & QS_INPUT) &&
             co_MsqPeekHardwareMessage( pti,
                                        RemoveMessages,
@@ -871,6 +860,17 @@ co_IntPeekMessage( PMSG Msg,
                                        MsgFilterMax,
                                        ProcessMask,
                                        Msg))
+        {
+            return TRUE;
+        }
+
+        if ((ProcessMask & QS_MOUSE) &&
+            co_MsqPeekMouseMove( pti,
+                                 RemoveMessages,
+                                 Window,
+                                 MsgFilterMin,
+                                 MsgFilterMax,
+                                 Msg ))
         {
             return TRUE;
         }
@@ -1198,7 +1198,7 @@ UserPostMessage( HWND Wnd,
         Window = UserGetWindowObject(Wnd);
         if ( !Window )
         {
-            ERR("UserPostMessage: Invalid handle 0x%p!\n",Wnd);
+            ERR("UserPostMessage: Invalid handle 0x%p Msg %d!\n",Wnd,Msg);
             return FALSE;
         }
 

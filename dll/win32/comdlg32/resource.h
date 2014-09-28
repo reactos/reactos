@@ -126,11 +126,12 @@
 #define IDC_COLOR_GL     727
 #define IDC_COLOR_BL     728
 
-#define IDS_FONT_SIZE    1200
-#define IDS_SAVE_BUTTON  1201
-#define IDS_SAVE_IN      1202
-#define IDS_SAVE         1203
-#define IDS_SAVE_AS      1204
-#define IDS_OPEN_FILE    1205
+#define IDS_FONT_SIZE     1200
+#define IDS_SAVE_BUTTON   1201
+#define IDS_SAVE_IN       1202
+#define IDS_SAVE          1203
+#define IDS_SAVE_AS       1204
+#define IDS_OPEN_FILE     1205
+#define IDS_SELECT_FOLDER 1206
 
 #define IDS_FAKEDOCTEXT  1300

@@ -1555,7 +1555,8 @@ static DWORD verify_cert_revocation_from_dist_points_ext(
                 endTime = timeout = 0;
             if (!ret)
                 error = GetLastError();
-            for (j = 0; !error && j < urlArray->cUrl; j++)
+            /* continue looping if one was offline; break if revoked or timed out */
+            for (j = 0; (!error || error == CRYPT_E_REVOCATION_OFFLINE) && j < urlArray->cUrl; j++)
             {
                 PCCRL_CONTEXT crl;
 

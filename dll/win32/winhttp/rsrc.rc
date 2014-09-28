@@ -22,9 +22,6 @@
 /* @makedep: winhttp_tlb.rgs */
 1 WINE_REGISTRY winhttp_tlb.rgs
 
-/* @makedep: pac.js */
-pac.js 40 "pac.js"
-
 #define WINE_FILEDESCRIPTION_STR "Wine HTTP Library"
 #define WINE_FILENAME_STR "winhttp.dll"
 #define WINE_FILEVERSION_MAJOR 5

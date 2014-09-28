@@ -51,8 +51,9 @@ typedef struct _VDM_MENUITEM
 
 static const VDM_MENUITEM VdmMenuItems[] =
 {
-    { IDS_VDM_DUMPMEM, NULL, ID_VDM_DUMPMEM },
-    { IDS_VDM_QUIT   , NULL, ID_VDM_QUIT    },
+    { IDS_VDM_DUMPMEM_TXT, NULL, ID_VDM_DUMPMEM_TXT },
+    { IDS_VDM_DUMPMEM_BIN, NULL, ID_VDM_DUMPMEM_BIN },
+    { IDS_VDM_QUIT       , NULL, ID_VDM_QUIT        },
 
     { 0, NULL, 0 }      /* End of list */
 };
@@ -337,8 +338,12 @@ VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
             ShowPointer = !ShowPointer;
             break;
 
-        case ID_VDM_DUMPMEM:
-            DumpMemory();
+        case ID_VDM_DUMPMEM_TXT:
+            DumpMemory(TRUE);
+            break;
+
+        case ID_VDM_DUMPMEM_BIN:
+            DumpMemory(FALSE);
             break;
 
         case ID_VDM_QUIT:

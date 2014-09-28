@@ -90,14 +90,12 @@ IopDeleteDriver(IN PVOID ObjectBody)
         ExFreePool(DriverObject->DriverName.Buffer);
     }
 
-#if 0 /* See a bit of hack in IopCreateDriver */
     /* Check if it has a service key name */
     if (DriverObject->DriverExtension->ServiceKeyName.Buffer)
     {
         /* Free it */
         ExFreePool(DriverObject->DriverExtension->ServiceKeyName.Buffer);
     }
-#endif
 }
 
 NTSTATUS FASTCALL
@@ -516,6 +514,7 @@ IopInitializeDriverModule(
        DriverName.Length > 0 ? &DriverName : NULL,
        DriverEntry,
        &RegistryKey,
+       ServiceName,
        ModuleObject,
        &Driver);
    RtlFreeUnicodeString(&RegistryKey);
@@ -558,7 +557,7 @@ IopAttachFilterDriversCallback(
    PLDR_DATA_TABLE_ENTRY ModuleObject;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
-   
+
    /* No filter value present */
    if (ValueType == REG_NONE)
        return STATUS_SUCCESS;
@@ -594,7 +593,7 @@ IopAttachFilterDriversCallback(
 
        /* Remove extra reference */
        ObDereferenceObject(DriverObject);
-       
+
        if (!NT_SUCCESS(Status))
            return Status;
    }
@@ -663,7 +662,7 @@ IopAttachFilterDrivers(
       NULL);
    if (!NT_SUCCESS(Status))
    {
-       DPRINT1("Failed to load device %s filters: %08X\n", 
+       DPRINT1("Failed to load device %s filters: %08X\n",
          Lower ? "lower" : "upper", Status);
        ZwClose(SubKey);
        ZwClose(EnumRootKey);
@@ -737,10 +736,10 @@ IopAttachFilterDrivers(
       /* Clean up */
       ZwClose(SubKey);
       ZwClose(EnumRootKey);
-      
+
       if (!NT_SUCCESS(Status))
       {
-         DPRINT1("Failed to load class %s filters: %08X\n", 
+         DPRINT1("Failed to load class %s filters: %08X\n",
             Lower ? "lower" : "upper", Status);
          ZwClose(SubKey);
          ZwClose(EnumRootKey);
@@ -1479,6 +1478,7 @@ NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
                 IN PUNICODE_STRING RegistryPath,
+                IN PCUNICODE_STRING ServiceName,
                 PLDR_DATA_TABLE_ENTRY ModuleObject,
                 OUT PDRIVER_OBJECT *pDriverObject)
 {
@@ -1550,9 +1550,9 @@ try_again:
     }
 
     /* Set up the service key name buffer */
-    ServiceKeyName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                  LocalDriverName.Length +
-                                                  sizeof(WCHAR),
+    ServiceKeyName.MaximumLength = ServiceName->Length + sizeof(UNICODE_NULL);
+    ServiceKeyName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                  ServiceKeyName.MaximumLength,
                                                   TAG_IO);
     if (!ServiceKeyName.Buffer)
     {
@@ -1562,21 +1562,26 @@ try_again:
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Fill out the key data and copy the buffer */
-    ServiceKeyName.Length = LocalDriverName.Length;
-    ServiceKeyName.MaximumLength = LocalDriverName.MaximumLength;
-    RtlCopyMemory(ServiceKeyName.Buffer,
-                  LocalDriverName.Buffer,
-                  LocalDriverName.Length);
-
-    /* Null-terminate it and set it */
-    ServiceKeyName.Buffer[ServiceKeyName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    /* Copy the name and set it in the driver extension */
+    RtlCopyUnicodeString(&ServiceKeyName,
+                         ServiceName);
     DriverObject->DriverExtension->ServiceKeyName = ServiceKeyName;
 
-    /* Also store it in the Driver Object. This is a bit of a hack. */
-    RtlCopyMemory(&DriverObject->DriverName,
-                  &ServiceKeyName,
-                  sizeof(UNICODE_STRING));
+    /* Make a copy of the driver name to store in the driver object */
+    DriverObject->DriverName.MaximumLength = LocalDriverName.Length;
+    DriverObject->DriverName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                            DriverObject->DriverName.MaximumLength,
+                                                            TAG_IO);
+    if (!DriverObject->DriverName.Buffer)
+    {
+        /* Fail */
+        ObMakeTemporaryObject(DriverObject);
+        ObDereferenceObject(DriverObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlCopyUnicodeString(&DriverObject->DriverName,
+                         &LocalDriverName);
 
     /* Add the Object and get its handle */
     Status = ObInsertObject(DriverObject,
@@ -1678,7 +1683,7 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                IN PDRIVER_INITIALIZE InitializationFunction)
 {
    PDRIVER_OBJECT DriverObject;
-   return IopCreateDriver(DriverName, InitializationFunction, NULL, NULL, &DriverObject);
+   return IopCreateDriver(DriverName, InitializationFunction, NULL, DriverName, NULL, &DriverObject);
 }
 
 /*

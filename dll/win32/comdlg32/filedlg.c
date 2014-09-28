@@ -1776,7 +1776,7 @@ static LRESULT FILEDLG95_ResizeControls(HWND hwnd, WPARAM wParam, LPARAM lParam)
   }
   else
   {
-    /* Resize the height, if open as read only checkbox ad help button are
+    /* Resize the height; if opened as read-only, checkbox and help button are
      * hidden and we are not using a custom template nor a customDialog
      */
     if ( (fodInfos->ofnInfos->Flags & OFN_HIDEREADONLY) &&

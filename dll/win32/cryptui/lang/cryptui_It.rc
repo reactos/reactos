@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Nome amichevole"
     IDS_ALLOWED_PURPOSE_ALL "<Tutti>"
     IDS_ALLOWED_PURPOSE_NONE "<Nessuno>"
-    IDS_WARN_REMOVE_MY "Non sarai più in grado di decriptare messaggi con questo certificato, o di firmare messaggi con questo.\n\
-Sei sicuro di voler rimuovere questo certificato?"
-    IDS_WARN_REMOVE_PLURAL_MY "Non sarai più in grado di decriptare messaggi con questi certificati, o di firmare messaggi con questi.\n\
-Sei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questo certificato, o di verificare messaggi con questo.\n\
-Sei sicuro di voler rimuovere questo certificato?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questi certificati, o di verificare messaggi con questi.\n\
-Sei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_CA "I certificati emessi da questa autorità di certificazione non saranno più fidati.\n\
-Sei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_PLURAL_CA "I certificati emessi da queste autorità di certificazione non saranno più fidati.\n\
-Sei sicuro di voler rimuovere questi certificati?"
-    IDS_WARN_REMOVE_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\n\
-Sei sicuro di voler rimuovere questo certificato root fidato?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\n\
-Sei sicuro di voler rimuovere questi certificati root fidati?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software firmato da questo editore non sarà più fidato.\n\
-Sei sicuro di voler rimuovere questo certificato?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software firmato da questi editori non sarà più fidato.\n\
-Sei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_MY "Non sarai più in grado di decriptare messaggi con questo certificato, o di firmare messaggi con questo.\nSei sicuro di voler rimuovere questo certificato?"
+    IDS_WARN_REMOVE_PLURAL_MY "Non sarai più in grado di decriptare messaggi con questi certificati, o di firmare messaggi con questi.\nSei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questo certificato, o di verificare messaggi con questo.\nSei sicuro di voler rimuovere questo certificato?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Non sarai più in grado di criptare messaggi con questi certificati, o di verificare messaggi con questi.\nSei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_CA "I certificati emessi da questa autorità di certificazione non saranno più fidati.\nSei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_PLURAL_CA "I certificati emessi da queste autorità di certificazione non saranno più fidati.\nSei sicuro di voler rimuovere questi certificati?"
+    IDS_WARN_REMOVE_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\nSei sicuro di voler rimuovere questo certificato root fidato?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "I certificati emessi da questa autorità di certificazione root, o qualsiasi altre autorità di certificati emesse da essa, non saranno più fidate.\nSei sicuro di voler rimuovere questi certificati root fidati?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software firmato da questo editore non sarà più fidato.\nSei sicuro di voler rimuovere questo certificato?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software firmato da questi editori non sarà più fidato.\nSei sicuro di voler rimuovere questi certificati?"
     IDS_WARN_REMOVE_DEFAULT "Sei sicuro di voler rimuovere questo certificato?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Sei sicuro di voler rimuovere questi certificati?"
     IDS_CERT_MGR "Certificati"
     IDS_FRIENDLY_NAME_NONE "<Nessuno>"
     IDS_PURPOSE_SERVER_AUTH "Assicura l'identità di un computer remoto"
     IDS_PURPOSE_CLIENT_AUTH "Prova la tua identità ad un computer remoto"
-    IDS_PURPOSE_CODE_SIGNING "Assicura che il software venga dall'editore del software\n\
-Protegge i software da alterazioni dopo la pubblicazione"
+    IDS_PURPOSE_CODE_SIGNING "Assicura che il software venga dall'editore del software\nProtegge i software da alterazioni dopo la pubblicazione"
     IDS_PURPOSE_EMAIL_PROTECTION "Protegge messaggi e-mail"
     IDS_PURPOSE_IPSEC "Permette la comunicazione sicura tramite Internet"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Permette di firmare i dati con l'ora corrente"
@@ -289,10 +278,8 @@ CAPTION "Guida all'Importazione di Certificati"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Benvenuto alla Guida all'Importazione di Certificati", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Questa guida ti aiuta a importare certificate, liste di revoca di certificati e liste di fiducia di certificati da un file in un deposito di certificati.\n\
-\n\
-Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\
-\n\
+  LTEXT "Questa guida ti aiuta a importare certificate, liste di revoca di certificati e liste di fiducia di certificati da un file in un deposito di certificati.\n\n\
+Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\n\
 Per continuare, premere Avanti.",
     -1, 115,40,195,120
 END
@@ -306,11 +293,11 @@ BEGIN
   PUSHBUTTON "&Naviga", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Nota:  i seguenti formati di file potrebbero contenere più di un certificato, lista di revoca di certificati, o lista di fiducia di certificati:",
     -1, 21,30,265,16
-  LTEXT "Messaggio Crittografico con Sintassi Standard/Messaggi PKCS #7 (.p7b)",
+  LTEXT "Messaggio Crittografico con Sintassi Standard/Messaggi PKCS #7 (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Scambio di Informazioni Personali/PKCS #12 (.pfx, .p12)",
+  LTEXT "Scambio di Informazioni Personali/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Deposito Certificati Serializzato Microsoft (.sst)",
+  LTEXT "Deposito Certificati Serializzato Microsoft (*.sst)",
     -1, 31,83,265,10
 END
 
@@ -381,10 +368,8 @@ CAPTION "Guida all'Esportazione del Certificato"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Benvenuto alla Guida all'Esportazione del Certificato", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Questa guida ti aiuta a esportare certificate, liste di revoca di certificati e liste di fiducia di certificati da un deposito di certificati in un file.\n\
-\n\
-Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\
-\n\
+  LTEXT "Questa guida ti aiuta a esportare certificate, liste di revoca di certificati e liste di fiducia di certificati da un deposito di certificati in un file.\n\n\
+Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\n\
 Per continuare, premere Avanti.",
     -1, 115,40,195,120
 END
@@ -417,15 +402,15 @@ CAPTION "Guida all'Esportazione del Certificato"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Seleziona il formato che vuoi usare:", -1, 21,1,195,10
-  AUTORADIOBUTTON "X.509 &DER-encoded (.cer)",
+  AUTORADIOBUTTON "X.509 &DER-encoded (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "X.509 Ba&se64-encoded (.cer):",
+  AUTORADIOBUTTON "X.509 Ba&se64-encoded (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "Messaggio &Crittografico con Sintassi Standard/Messaggio PKCS #7 (.p7b)",
+  AUTORADIOBUTTON "Messaggio &Crittografico con Sintassi Standard/Messaggio PKCS #7 (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Includi tutti i certificati nel percorso di certificazione se possibile",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "Scambia di Informazioni &Personali/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "Scambia di Informazioni &Personali/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Incl&udi tutti i certificati nel percorso di certificazione se possibile",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED

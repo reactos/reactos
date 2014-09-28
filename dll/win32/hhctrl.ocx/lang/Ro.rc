@@ -31,6 +31,9 @@ BEGIN
     IDS_INDEX        "&Index"
     IDS_SEARCH       "&Caută"
     IDS_FAVORITES    "F&avorite"
+
+    IDS_HIDETABS     "Hide &Tabs"
+    IDS_SHOWTABS     "Show &Tabs"
 END
 
 STRINGTABLE
@@ -45,18 +48,19 @@ BEGIN
     IDTB_PRINT       "Imprimă"
     IDTB_OPTIONS     "Opțiuni"
     IDTB_FORWARD     "Înainte"
-    IDTB_NOTES       "Note"
-    IDTB_BROWSE_FWD  "Caută înainte"
-    IDTB_BROWSE_BACK "Caută înapoi"
-    IDTB_CONTENTS    "Cuprins"
-    IDTB_INDEX       "Index"
-    IDTB_SEARCH      "Caută"
-    IDTB_HISTORY     "Istoric"
-    IDTB_FAVORITES   "Favorite"
-    IDTB_JUMP1       "Salt1"
-    IDTB_JUMP2       "Salt2"
-    IDTB_CUSTOMIZE   "Personalizare"
-    IDTB_ZOOM        "Scară"
-    IDTB_TOC_NEXT    "Capitol următor"
-    IDTB_TOC_PREV    "Capitol precedent"
 END
+
+MENU_POPUP MENU
+{
+    POPUP "" /* Options */
+    {
+        MENUITEM "", IDTB_EXPAND
+        MENUITEM "S&ync", IDTB_SYNC
+        MENUITEM "&Back", IDTB_BACK
+        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Home", IDTB_HOME
+        MENUITEM "&Stop", IDTB_STOP
+        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "&Print...", IDTB_PRINT
+    }
+}

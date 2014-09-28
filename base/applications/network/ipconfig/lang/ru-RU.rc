@@ -15,11 +15,11 @@ STRINGTABLE
 BEGIN
     IDS_OTHER "Другой тип адаптера"
     IDS_ETH "Ethernet адаптер"
-    IDS_TOKEN "Token Ring адаптер"
-    IDS_FDDI "FDDI адаптер"
-    IDS_PPP "PPP адаптер"
-    IDS_LOOP "Loopback адаптер"
-    IDS_SLIP "SLIP адаптер"
+    IDS_TOKEN "Адаптер Token Ring"
+    IDS_FDDI "Адаптер FDDI"
+    IDS_PPP "Адаптер PPP"
+    IDS_LOOP "Адаптер замыкания на себя"
+    IDS_SLIP "Адаптер SLIP"
 END
 
 STRINGTABLE
@@ -37,7 +37,7 @@ BEGIN
                        (* - любое количество знаков, ? - один любой знак, см. примеры)\n \
     \n \
         Ключи:\n \
-           /?           Обобразить это справочное сообщение.\n \
+           /?           Отобразить это справочное сообщение.\n \
            /all         Отобразить полную информацию о настройке параметров.\n \
            /release     Освободить IP-адрес для указанного адаптера.\n \
            /renew       Обновить IP-адрес для указанного адаптера.\n \

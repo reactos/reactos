@@ -179,7 +179,7 @@ typedef struct
 
 /* List of all containers available */
 static struct list UrlContainers = LIST_INIT(UrlContainers);
-// ReactOS r54992
+/* ReactOS r54992 */
 BOOL bDefaultContainersAdded = FALSE;
 
 static inline char *heap_strdupWtoUTF8(LPCWSTR str)
@@ -731,7 +731,7 @@ static void cache_containers_init(void)
     static const WCHAR UrlSuffix[] = {'C','o','n','t','e','n','t','.','I','E','5',0};
     static const WCHAR HistorySuffix[] = {'H','i','s','t','o','r','y','.','I','E','5',0};
     static const WCHAR CookieSuffix[] = {0};
-    // ReactOS r50916
+    /* ReactOS r50916 */
     static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
     static const struct
     {
@@ -747,7 +747,7 @@ static void cache_containers_init(void)
     };
     DWORD i;
 
-    // ReactOS r50916
+    /* ReactOS r50916 */
     if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
         TRACE("Environment variable 'USERPROFILE' does not exist!\n");
@@ -823,7 +823,7 @@ static DWORD cache_containers_find(const char *url, cache_container **ret)
     if(!url)
         return ERROR_INVALID_PARAMETER;
 
-    // ReactOS r54992
+    /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
 
@@ -853,7 +853,7 @@ static BOOL cache_containers_enum(char *search_pattern, DWORD index, cache_conta
     if (search_pattern && index > 0)
         return FALSE;
 
-    // ReactOS r54992
+    /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
 
@@ -1477,7 +1477,7 @@ static DWORD urlcache_hash_key(LPCSTR lpszKey)
     for (i = 0; i < sizeof(key) / sizeof(key[0]); i++)
         key[i] = lookupTable[(*lpszKey + i) & 0xFF];
 
-    for (lpszKey++; *lpszKey && ((lpszKey[0] != '/') || (lpszKey[1] != 0)); lpszKey++)
+    for (lpszKey++; *lpszKey; lpszKey++)
     {
         for (i = 0; i < sizeof(key) / sizeof(key[0]); i++)
             key[i] = lookupTable[*lpszKey ^ key[i]];

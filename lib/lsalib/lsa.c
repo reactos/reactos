@@ -92,6 +92,8 @@ LsaConnectUntrusted(PHANDLE LsaHandle)
     RtlZeroMemory(&ConnectInfo,
                   ConnectInfoLength);
 
+    ConnectInfo.CreateContext = TRUE;
+
     Status = ZwConnectPort(LsaHandle,
                            &PortName,
                            &SecurityQos,
@@ -328,6 +330,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
             LsaLogonProcessName->Length);
     ConnectInfo.Length = LsaLogonProcessName->Length;
     ConnectInfo.LogonProcessNameBuffer[ConnectInfo.Length] = '\0';
+    ConnectInfo.CreateContext = TRUE;
 
     Status = ZwConnectPort(Handle,
                            &PortName,
@@ -354,54 +357,3 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     return ConnectInfo.Status;
 }
 
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaEnumerateLogonSessions(PULONG LogonSessionCount,
-                          PLUID *LogonSessionList)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaGetLogonSessionData(PLUID LogonId,
-                       PSECURITY_LOGON_SESSION_DATA *ppLogonSessionData)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaRegisterPolicyChangeNotification(POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
-                                    HANDLE NotificationEventHandle)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaUnregisterPolicyChangeNotification(POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
-                                      HANDLE NotificationEventHandle)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}

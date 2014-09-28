@@ -694,6 +694,8 @@ done:
     {
         HeapFree(GetProcessHeap(), 0, name->displayname);
         HeapFree(GetProcessHeap(), 0, name->name);
+        HeapFree(GetProcessHeap(), 0, name->culture);
+        HeapFree(GetProcessHeap(), 0, name->procarch);
     }
     return hr;
 }

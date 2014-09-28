@@ -194,11 +194,37 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
 // Keyboard IRQ 1
 static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 {
+    BOOLEAN SkipScanCode;
     BYTE ScanCode, VirtualKey;
     WORD Character;
 
-    /* Get the scan code and virtual key code */
-    ScanCode   = IOReadB(PS2_DATA_PORT);
+    /*
+     * Get the scan code from the PS/2 port, then call the
+     * INT 15h, AH=4Fh Keyboard Intercept function to try to
+     * translate the scan code. CF must be set before the call.
+     * In return, if CF is set we continue processing the scan code
+     * stored in AL, and if not, we skip it.
+     */
+    BYTE CF, AX;
+    CF = getCF();
+    AX = getAX();
+
+    setCF(1);
+    setAL(IOReadB(PS2_DATA_PORT));
+    setAH(0x4F);
+    Int32Call(&BiosContext, BIOS_MISC_INTERRUPT);
+
+    /* Retrieve the modified scan code in AL */
+    SkipScanCode = (getCF() == 0);
+    ScanCode = getAL();
+
+    setAX(AX);
+    setCF(CF);
+
+    /* Check whether CF is clear. If so, skip the scan code. */
+    if (SkipScanCode) goto Quit;
+
+    /* Get the corresponding virtual key code */
     VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
 
     /* Check if this is a key press or release */
@@ -255,6 +281,10 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     if (BiosKeyboardMap[VK_CAPITAL]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK;
     if (BiosKeyboardMap[VK_INSERT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT;
 
+    DPRINT("BiosKeyboardIrq - Character = 0x%X, ScanCode = 0x%X, KeybdShiftFlags = 0x%X\n",
+           Character, ScanCode, Bda->KeybdShiftFlags);
+
+Quit:
     PicIRQComplete(Stack);
 }
 

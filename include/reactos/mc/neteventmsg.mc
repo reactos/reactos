@@ -180,7 +180,7 @@ Language=English
 The %1 service depends on the following nonexistent service: %2
 .
 
-MessageId=7004
+MessageId=7005
 Severity=Error
 Facility=System
 SymbolicName=EVENT_CALL_TO_FUNCTION_FAILED
@@ -188,7 +188,7 @@ Language=English
 The %1 call failed with the following error: %n%2
 .
 
-MessageId=7005
+MessageId=7006
 Severity=Error
 Facility=System
 SymbolicName=EVENT_CALL_TO_FUNCTION_FAILED_II
@@ -196,7 +196,7 @@ Language=English
 The %1 call failed for %2 with the following error: %n%3
 .
 
-MessageId=7006
+MessageId=7007
 Severity=Error
 Facility=System
 SymbolicName=EVENT_REVERTED_TO_LASTKNOWNGOOD
@@ -204,7 +204,7 @@ Language=English
 The system reverted to its last known good configuration.  The system is restarting....
 .
 
-MessageId=7007
+MessageId=7008
 Severity=Error
 Facility=System
 SymbolicName=EVENT_BAD_ACCOUNT_NAME
@@ -212,7 +212,7 @@ Language=English
 No backslash is in the account name.
 .
 
-MessageId=7008
+MessageId=7009
 Severity=Error
 Facility=System
 SymbolicName=EVENT_CONNECTION_TIMEOUT
@@ -220,7 +220,7 @@ Language=English
 Timeout (%1 milliseconds) waiting for the %2 service to connect.
 .
 
-MessageId=7009
+MessageId=7010
 Severity=Error
 Facility=System
 SymbolicName=EVENT_READFILE_TIMEOUT
@@ -228,7 +228,7 @@ Language=English
 Timeout (%1 milliseconds) waiting for ReadFile.
 .
 
-MessageId=7010
+MessageId=7011
 Severity=Error
 Facility=System
 SymbolicName=EVENT_TRANSACT_TIMEOUT
@@ -236,7 +236,7 @@ Language=English
 Timeout (%1 milliseconds) waiting for a transaction response from the %2 service.
 .
 
-MessageId=7011
+MessageId=7012
 Severity=Error
 Facility=System
 SymbolicName=EVENT_TRANSACT_INVALID
@@ -244,7 +244,7 @@ Language=English
 Message returned in transaction has incorrect size.
 .
 
-MessageId=7012
+MessageId=7013
 Severity=Error
 Facility=System
 SymbolicName=EVENT_FIRST_LOGON_FAILED
@@ -252,7 +252,7 @@ Language=English
 Logon attempt with current password failed with the following error: %n%1
 .
 
-MessageId=7013
+MessageId=7014
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SECOND_LOGON_FAILED
@@ -260,7 +260,7 @@ Language=English
 Second logon attempt with old password also failed with the following error: %n%1
 .
 
-MessageId=7014
+MessageId=7015
 Severity=Error
 Facility=System
 SymbolicName=EVENT_INVALID_DRIVER_DEPENDENCY
@@ -268,7 +268,7 @@ Language=English
 Boot-start or system-start driver (%1) must not depend on a service.
 .
 
-MessageId=7015
+MessageId=7016
 Severity=Error
 Facility=System
 SymbolicName=EVENT_BAD_SERVICE_STATE
@@ -276,7 +276,7 @@ Language=English
 The %1 service has reported an invalid current state %2.
 .
 
-MessageId=7016
+MessageId=7017
 Severity=Error
 Facility=System
 SymbolicName=EVENT_CIRCULAR_DEPENDENCY_DEMAND
@@ -284,7 +284,7 @@ Language=English
 Detected circular dependencies demand starting %1.
 .
 
-MessageId=7017
+MessageId=7018
 Severity=Error
 Facility=System
 SymbolicName=EVENT_CIRCULAR_DEPENDENCY_AUTO
@@ -292,7 +292,7 @@ Language=English
 Detected circular dependencies auto-starting services.
 .
 
-MessageId=7018
+MessageId=7019
 Severity=Error
 Facility=System
 SymbolicName=EVENT_DEPEND_ON_LATER_SERVICE
@@ -300,7 +300,7 @@ Language=English
 Circular dependency: The %1 service depends on a service in a group which starts later.
 .
 
-MessageId=7019
+MessageId=7020
 Severity=Error
 Facility=System
 SymbolicName=EVENT_DEPEND_ON_LATER_GROUP
@@ -308,7 +308,7 @@ Language=English
 Circular dependency: The %1 service depends on a group which starts later.
 .
 
-MessageId=7020
+MessageId=7021
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SEVERE_SERVICE_FAILED
@@ -316,7 +316,7 @@ Language=English
 About to revert to the last known good configuration because the %1 service failed to start.
 .
 
-MessageId=7021
+MessageId=7022
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_START_HUNG
@@ -324,7 +324,7 @@ Language=English
 The %1 service hung on starting.
 .
 
-MessageId=7022
+MessageId=7023
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_EXIT_FAILED
@@ -332,7 +332,7 @@ Language=English
 The %1 service terminated with the following error: %n%2
 .
 
-MessageId=7023
+MessageId=7024
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_EXIT_FAILED_SPECIFIC
@@ -340,7 +340,7 @@ Language=English
 The %1 service terminated with service-specific error %2.
 .
 
-MessageId=7024
+MessageId=7025
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_START_AT_BOOT_FAILED
@@ -348,7 +348,7 @@ Language=English
 At least one service or driver failed during system startup.  Use Event Viewer to examine the event log for details.
 .
 
-MessageId=7025
+MessageId=7026
 Severity=Error
 Facility=System
 SymbolicName=EVENT_BOOT_SYSTEM_DRIVERS_FAILED
@@ -356,7 +356,7 @@ Language=English
 The following boot-start or system-start driver(s) failed to load: %1
 .
 
-MessageId=7026
+MessageId=7027
 Severity=Error
 Facility=System
 SymbolicName=EVENT_RUNNING_LASTKNOWNGOOD
@@ -364,7 +364,7 @@ Language=English
 ReactOS could not be started as configured.  A previous working configuration was used instead.
 .
 
-MessageId=7027
+MessageId=7028
 Severity=Error
 Facility=System
 SymbolicName=EVENT_TAKE_OWNERSHIP
@@ -372,7 +372,7 @@ Language=English
 The %1 Registry key denied access to SYSTEM account programs so the Service Control Manager took ownership of the Registry key.
 .
 
-MessageId=7028
+MessageId=7029
 Severity=Error
 Facility=System
 SymbolicName=TITLE_SC_MESSAGE_BOX
@@ -380,7 +380,7 @@ Language=English
 Service Control Manager %0
 .
 
-MessageId=7029
+MessageId=7030
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_NOT_INTERACTIVE
@@ -388,7 +388,7 @@ Language=English
 The %1 service is marked as an interactive service.  However, the system is configured to not allow interactive services.  This service may not function properly.
 .
 
-MessageId=7030
+MessageId=7031
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_CRASH
@@ -396,7 +396,7 @@ Language=English
 The %1 service terminated unexpectedly.  It has done this %2 time(s).  The following corrective action will be taken in %3 milliseconds: %5.
 .
 
-MessageId=7031
+MessageId=7032
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_RECOVERY_FAILED
@@ -404,7 +404,7 @@ Language=English
 The Service Control Manager tried to take a corrective action (%2) after the unexpected termination of the %3 service, but this action failed with the following error: %n%4
 .
 
-MessageId=7032
+MessageId=7033
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_SCESRV_FAILED
@@ -414,7 +414,7 @@ configuration server (scesrv.dll) failed to initialize with error %1.  The
 system is restarting...
 .
 
-MessageId=7033
+MessageId=7034
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_CRASH_NO_ACTION
@@ -422,7 +422,7 @@ Language=English
 The %1 service terminated unexpectedly.  It has done this %2 time(s).
 .
 
-MessageId=7034
+MessageId=7035
 Severity=Informational
 Facility=System
 SymbolicName=EVENT_SERVICE_CONTROL_SUCCESS
@@ -430,15 +430,15 @@ Language=English
 The %1 service was successfully sent a %2 control.
 .
 
-MessageId=7035
+MessageId=7036
 Severity=Informational
 Facility=System
 SymbolicName=EVENT_SERVICE_STATUS_SUCCESS
 Language=English
-Service Control Manager %0
+The %1 service entered the %2 state.
 .
 
-MessageId=7036
+MessageId=7037
 Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_CONFIG_BACKOUT_FAILED
@@ -451,7 +451,7 @@ service or may encounter other errors.  To ensure that the service is configured
 properly, use the Services snap-in in Microsoft Management Console (MMC).
 .
 
-MessageId=7037
+MessageId=7038
 Severity=Error
 Facility=System
 SymbolicName=EVENT_FIRST_LOGON_FAILED_II
@@ -460,6 +460,65 @@ The %1 service was unable to log on as %2 with the currently configured
 password due to the following error: %n%3%n%nTo ensure that the service is
 configured properly, use the Services snap-in in Microsoft Management
 Console (MMC).
+.
+
+MessageId=7039
+Severity=Warning
+Facility=System
+SymbolicName=EVENT_SERVICE_DIFFERENT_PID_CONNECTED
+Language=English
+A service process other than the one launched by the Service Control Manager
+connected when starting the %1 service.  The Service Control Manager launched
+process %2 and process %3 connected instead.%n%n
+
+Note that if this service is configured to start under a debugger, this behavior is expected.
+.
+
+MessageId=7040
+Severity=Informational
+Facility=System
+SymbolicName=EVENT_SERVICE_START_TYPE_CHANGED
+Language=English
+The start type of the %1 service was changed from %2 to %3.
+.
+
+MessageId=7041
+Severity=Error
+Facility=System
+SymbolicName=EVENT_SERVICE_LOGON_TYPE_NOT_GRANTED
+Language=English
+The %1 service was unable to log on as %2 with the currently configured password due to the following error:%n
+Logon failure: the user has not been granted the requested logon type at this computer.%n%n
+Service: %1%n
+Domain and account: %2%n%n
+This service account does not have the necessary user right "Log on as a service."%n%n
+User Action%n%n
+Assign "Log on as a service" to the service account on this computer. You can
+use Local Security Settings (Secpol.msc) to do this. If this computer is a
+node in a cluster, check that this user right is assigned to the Cluster
+service account on all nodes in the cluster.%n%n
+If you have already assigned this user right to the service account, and the
+user right appears to be removed, a Group Policy object associated with this
+node might be removing the right. Check with your domain administrator to find
+out if this is happening.
+.
+
+MessageId=7042
+Severity=Informational
+Facility=System
+SymbolicName=EVENT_SERVICE_STOP_SUCCESS_WITH_REASON
+Language=English
+The %1 service was successfully sent a %2 control.%n%n
+The reason specified was: %3 [%4]%n%n
+Comment: %5
+.
+
+MessageId=7043
+Severity=Error
+Facility=System
+SymbolicName=EVENT_SERVICE_SHUTDOWN_FAILED
+Language=English
+The %1 service did not shut down properly after receiving a preshutdown control.
 .
 
 

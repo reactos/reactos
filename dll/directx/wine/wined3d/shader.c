@@ -55,6 +55,7 @@ static const char * const shader_opcode_names[] =
     /* WINED3DSIH_DEFB                  */ "defb",
     /* WINED3DSIH_DEFI                  */ "defi",
     /* WINED3DSIH_DIV                   */ "div",
+    /* WINED3DSIH_DP2                   */ "dp2",
     /* WINED3DSIH_DP2ADD                */ "dp2add",
     /* WINED3DSIH_DP3                   */ "dp3",
     /* WINED3DSIH_DP4                   */ "dp4",
@@ -78,6 +79,7 @@ static const char * const shader_opcode_names[] =
     /* WINED3DSIH_IFC                   */ "ifc",
     /* WINED3DSIH_IGE                   */ "ige",
     /* WINED3DSIH_IMUL                  */ "imul",
+    /* WINED3DSIH_ISHL                  */ "ishl",
     /* WINED3DSIH_ITOF                  */ "itof",
     /* WINED3DSIH_LABEL                 */ "label",
     /* WINED3DSIH_LD                    */ "ld",
@@ -1144,7 +1146,7 @@ void shader_dump_dst_param(const struct wined3d_shader_dst_param *param,
 
     if (write_mask && write_mask != WINED3DSP_WRITEMASK_ALL)
     {
-        static const char *write_mask_chars = "xyzw";
+        static const char write_mask_chars[] = "xyzw";
 
         TRACE(".");
         if (write_mask & WINED3DSP_WRITEMASK_0) TRACE("%c", write_mask_chars[0]);
@@ -1200,7 +1202,7 @@ void shader_dump_src_param(const struct wined3d_shader_src_param *param,
 
     if (swizzle != WINED3DSP_NOSWIZZLE)
     {
-        static const char *swizzle_chars = "xyzw";
+        static const char swizzle_chars[] = "xyzw";
         DWORD swizzle_x = swizzle & 0x03;
         DWORD swizzle_y = (swizzle >> 2) & 0x03;
         DWORD swizzle_z = (swizzle >> 4) & 0x03;
@@ -2027,8 +2029,8 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
     memset(args, 0, sizeof(*args)); /* FIXME: Make sure all bits are set. */
     if (!gl_info->supported[ARB_FRAMEBUFFER_SRGB] && state->render_states[WINED3D_RS_SRGBWRITEENABLE])
     {
-        const struct wined3d_surface *rt = state->fb->render_targets[0];
-        if (rt->resource.format->flags & WINED3DFMT_FLAG_SRGB_WRITE)
+        const struct wined3d_format *rt_format = state->fb->render_targets[0]->format;
+        if (rt_format->flags & WINED3DFMT_FLAG_SRGB_WRITE)
         {
             static unsigned int warned = 0;
 

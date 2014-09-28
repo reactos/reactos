@@ -299,37 +299,6 @@ void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
 extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
 
-static inline const char *debugstr_variant( const VARIANT *v )
-{
-    if (!v) return "(null)";
-    switch (V_VT(v))
-    {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf( "{VT_I4: %d}", V_I4(v) );
-    case VT_R8:
-        return wine_dbg_sprintf( "{VT_R8: %lf}", V_R8(v) );
-    case VT_BSTR:
-        return wine_dbg_sprintf( "{VT_BSTR: %s}", debugstr_w(V_BSTR(v)) );
-    case VT_DISPATCH:
-        return wine_dbg_sprintf( "{VT_DISPATCH: %p}", V_DISPATCH(v) );
-    case VT_BOOL:
-        return wine_dbg_sprintf( "{VT_BOOL: %x}", V_BOOL(v) );
-    case VT_UNKNOWN:
-        return wine_dbg_sprintf( "{VT_UNKNOWN: %p}", V_UNKNOWN(v) );
-    case VT_UINT:
-        return wine_dbg_sprintf( "{VT_UINT: %u}", V_UINT(v) );
-    case VT_BSTR|VT_BYREF:
-        return wine_dbg_sprintf( "{VT_BSTR|VT_BYREF: ptr %p, data %s}",
-            V_BSTRREF(v), V_BSTRREF(v) ? debugstr_w( *V_BSTRREF(v) ) : NULL );
-    default:
-        return wine_dbg_sprintf( "{vt %d}", V_VT(v) );
-    }
-}
-
 static inline void *heap_alloc( SIZE_T size )
 {
     return HeapAlloc( GetProcessHeap(), 0, size );

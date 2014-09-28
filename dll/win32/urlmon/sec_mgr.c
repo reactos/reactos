@@ -230,11 +230,9 @@ static BOOL matches_domain_pattern(LPCWSTR pattern, LPCWSTR str, BOOL implicit_w
              *
              * Doesn't match the pattern.
              */
-            if(str_len > pattern_len) {
-                if(str[str_len-pattern_len-1] == '.' && !strcmpiW(str+(str_len-pattern_len), pattern)) {
-                    matches = TRUE;
-                    *matched = str+(str_len-pattern_len);
-                }
+            if(str[str_len-pattern_len-1] == '.' && !strcmpiW(str+(str_len-pattern_len), pattern)) {
+                matches = TRUE;
+                *matched = str+(str_len-pattern_len);
             }
         } else {
             /* The pattern doesn't have an implicit wildcard, or an explicit wildcard,
@@ -2066,7 +2064,7 @@ HRESULT WINAPI CompareSecurityIds(BYTE *secid1, DWORD size1, BYTE *secid2, DWORD
 /********************************************************************
  *      IsInternetESCEnabledLocal (URLMON.108)
  *
- * Undocumented, returns if IE is running in Enhanced Security Configuration.
+ * Undocumented, returns TRUE if IE is running in Enhanced Security Configuration.
  */
 BOOL WINAPI IsInternetESCEnabledLocal(void)
 {

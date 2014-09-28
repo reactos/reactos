@@ -146,6 +146,16 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
 {
     switch (getAH())
     {
+        /* Keyboard intercept */
+        case 0x4F:
+        {
+            /* CF should be set but let's just set it again just in case */
+            /* Do not modify AL (the hardware scan code), but set CF to continue processing */
+            // setCF(1);
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+            break;
+        }
+
         /* Wait */
         case 0x86:
         {
@@ -493,7 +503,7 @@ static VOID InitializeBiosInfo(VOID)
     Bct->Model      = BIOS_MODEL;
     Bct->SubModel   = BIOS_SUBMODEL;
     Bct->Revision   = BIOS_REVISION;
-    Bct->Feature[0] = 0x64; // At the moment we don't support "INT 15/AH=4Fh called upon INT 09h" nor "wait for external event (INT 15/AH=41h) supported"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
+    Bct->Feature[0] = 0x70; // At the moment we don't support "wait for external event (INT 15/AH=41h)", we also don't have any "extended BIOS area allocated (usually at top of RAM)"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
     Bct->Feature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
     Bct->Feature[2] = 0x00;
     Bct->Feature[3] = 0x00;

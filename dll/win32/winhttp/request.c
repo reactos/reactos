@@ -2241,6 +2241,8 @@ static BOOL handle_redirect( request_t *request, DWORD status )
             request->read_chunked = FALSE;
             request->read_chunked_eof = FALSE;
         }
+        else heap_free( hostname );
+
         if (!(ret = add_host_header( request, WINHTTP_ADDREQ_FLAG_REPLACE ))) goto end;
         if (!(ret = open_connection( request ))) goto end;
 
@@ -2269,7 +2271,6 @@ static BOOL handle_redirect( request_t *request, DWORD status )
     ret = TRUE;
 
 end:
-    if (!ret) heap_free( hostname );
     heap_free( location );
     return ret;
 }
@@ -2981,7 +2982,7 @@ static HRESULT WINAPI winhttp_request_Open(
     path[uc.dwUrlPathLength + uc.dwExtraInfoLength] = 0;
 
     if (!(verb = strdupW( method ))) goto error;
-    if (V_BOOL( &async )) flags |= WINHTTP_FLAG_ASYNC;
+    if (V_VT( &async ) == VT_BOOL && V_BOOL( &async )) flags |= WINHTTP_FLAG_ASYNC;
     if (!(hsession = WinHttpOpen( user_agentW, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, flags )))
     {
         err = get_last_error();
@@ -3341,7 +3342,7 @@ static HRESULT request_send( struct winhttp_request *request )
         {
             sa = V_ARRAY( &data );
             if ((hr = SafeArrayAccessData( sa, (void **)&ptr )) != S_OK) return hr;
-            if ((hr = SafeArrayGetUBound( sa, 1, &size ) != S_OK))
+            if ((hr = SafeArrayGetUBound( sa, 1, &size )) != S_OK)
             {
                 SafeArrayUnaccessData( sa );
                 return hr;

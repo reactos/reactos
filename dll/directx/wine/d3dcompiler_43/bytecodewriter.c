@@ -2618,6 +2618,7 @@ void SlDeleteShader(struct bwriter_shader *shader) {
             d3dcompiler_free(shader->instr[i]->src[j].rel_reg);
         }
         d3dcompiler_free(shader->instr[i]->src);
+        d3dcompiler_free(shader->instr[i]->dst.rel_reg);
         d3dcompiler_free(shader->instr[i]);
     }
     d3dcompiler_free(shader->instr);

@@ -63,6 +63,7 @@ typedef struct _NTFS_INFO
     ULARGE_INTEGER MftStart;
     ULARGE_INTEGER MftMirrStart;
     ULONG BytesPerFileRecord;
+    ULONG BytesPerIndexRecord;
 
     ULONGLONG SerialNumber;
     USHORT VolumeLabelLength;
@@ -85,7 +86,6 @@ typedef struct
     ULONG Size;
 } NTFSIDENTIFIER, *PNTFSIDENTIFIER;
 
-
 typedef struct
 {
     NTFSIDENTIFIER Identifier;
@@ -99,6 +99,10 @@ typedef struct
     PVPB Vpb;
     PDEVICE_OBJECT StorageDevice;
     PFILE_OBJECT StreamFileObject;
+
+    struct _NTFS_ATTR_CONTEXT* MFTContext;
+    struct _FILE_RECORD_HEADER* MasterFileTable;
+    struct _FCB *VolumeFcb;
 
     NTFS_INFO NtfsInfo;
 
@@ -133,6 +137,8 @@ typedef struct _FCB
 
     LONG RefCount;
     ULONG Flags;
+
+    ULONGLONG MFTIndex;
 
 //  DIR_RECORD Entry;
 
@@ -183,9 +189,41 @@ typedef enum
     AttributeEAInformation = 0xD0,
     AttributeEA = 0xE0,
     AttributePropertySet = 0xF0,
-    AttributeLoggedUtilityStream = 0x100
+    AttributeLoggedUtilityStream = 0x100,
+    AttributeEnd = 0xFFFFFFFF
 } ATTRIBUTE_TYPE, *PATTRIBUTE_TYPE;
 
+#define NTFS_FILE_MFT                0
+#define NTFS_FILE_MFTMIRR            1
+#define NTFS_FILE_LOGFILE            2
+#define NTFS_FILE_VOLUME            3
+#define NTFS_FILE_ATTRDEF            4
+#define NTFS_FILE_ROOT                5
+#define NTFS_FILE_BITMAP            6
+#define NTFS_FILE_BOOT                7
+#define NTFS_FILE_BADCLUS            8
+#define NTFS_FILE_QUOTA                9
+#define NTFS_FILE_UPCASE            10
+#define NTFS_FILE_EXTEND            11
+
+#define COLLATION_BINARY              0x00
+#define COLLATION_FILE_NAME           0x01
+#define COLLATION_UNICODE_STRING      0x02
+#define COLLATION_NTOFS_ULONG         0x10
+#define COLLATION_NTOFS_SID           0x11
+#define COLLATION_NTOFS_SECURITY_HASH 0x12
+#define COLLATION_NTOFS_ULONGS        0x13
+
+#define INDEX_ROOT_SMALL 0x0
+#define INDEX_ROOT_LARGE 0x1
+
+#define NTFS_INDEX_ENTRY_NODE            1
+#define NTFS_INDEX_ENTRY_END            2
+
+#define NTFS_FILE_NAME_POSIX            0
+#define NTFS_FILE_NAME_WIN32            1
+#define NTFS_FILE_NAME_DOS            2
+#define NTFS_FILE_NAME_WIN32_AND_DOS        3
 
 typedef struct
 {
@@ -199,7 +237,7 @@ typedef struct
 #define NRH_FILE_TYPE  0x454C4946  /* 'FILE' */
 
 
-typedef struct
+typedef struct _FILE_RECORD_HEADER
 {
     NTFS_RECORD_HEADER Ntfs;
     USHORT SequenceNumber;        /* Sequence number */
@@ -223,39 +261,38 @@ typedef struct
 
 typedef struct
 {
-    ATTRIBUTE_TYPE AttributeType;
-    ULONG Length;
-    BOOLEAN Nonresident;
-    UCHAR NameLength;
-    USHORT NameOffset;
-    USHORT Flags;
-    USHORT AttributeNumber;
-} ATTRIBUTE, *PATTRIBUTE;
-
-typedef struct
-{
-    ATTRIBUTE Attribute;
-    ULONG ValueLength;
-    USHORT ValueOffset;
-    UCHAR Flags;
-//    UCHAR Padding0;
-} RESIDENT_ATTRIBUTE, *PRESIDENT_ATTRIBUTE;
-
-typedef struct
-{
-    ATTRIBUTE Attribute;
-    ULONGLONG StartVcn; // LowVcn
-    ULONGLONG LastVcn; // HighVcn
-    USHORT RunArrayOffset;
-    USHORT CompressionUnit;
-    ULONG Padding0;
-    UCHAR IndexedFlag;
-    ULONGLONG AllocatedSize;
-    ULONGLONG DataSize;
-    ULONGLONG InitializedSize;
-    ULONGLONG CompressedSize;
-} NONRESIDENT_ATTRIBUTE, *PNONRESIDENT_ATTRIBUTE;
-
+    ULONG        Type;
+    ULONG        Length;
+    UCHAR        IsNonResident;
+    UCHAR        NameLength;
+    USHORT        NameOffset;
+    USHORT        Flags;
+    USHORT        Instance;
+    union
+    {
+        // Resident attributes
+        struct
+        {
+            ULONG        ValueLength;
+            USHORT        ValueOffset;
+            UCHAR        Flags;
+            UCHAR        Reserved;
+        } Resident;
+        // Non-resident attributes
+        struct
+        {
+            ULONGLONG        LowestVCN;
+            ULONGLONG        HighestVCN;
+            USHORT        MappingPairsOffset;
+            USHORT        CompressionUnit;
+            UCHAR        Reserved[4];
+            LONGLONG        AllocatedSize;
+            LONGLONG        DataSize;
+            LONGLONG        InitializedSize;
+            LONGLONG        CompressedSize;
+        } NonResident;
+    };
+} NTFS_ATTR_RECORD, *PNTFS_ATTR_RECORD;
 
 typedef struct
 {
@@ -305,6 +342,47 @@ typedef struct
 
 typedef struct
 {
+    ULONG FirstEntryOffset;
+    ULONG TotalSizeOfEntries;
+    ULONG AllocatedSize;
+    UCHAR Flags;
+    UCHAR Padding[3];
+} INDEX_HEADER_ATTRIBUTE, *PINDEX_HEADER_ATTRIBUTE;
+
+typedef struct
+{
+    ULONG AttributeType;
+    ULONG CollationRule;
+    ULONG SizeOfEntry;
+    UCHAR ClustersPerIndexRecord;
+    UCHAR Padding[3];
+    INDEX_HEADER_ATTRIBUTE Header;
+} INDEX_ROOT_ATTRIBUTE, *PINDEX_ROOT_ATTRIBUTE;
+
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            ULONGLONG    IndexedFile;
+        } Directory;
+        struct
+        {
+            USHORT    DataOffset;
+            USHORT    DataLength;
+            ULONG    Reserved;
+        } ViewIndex;
+    } Data;
+    USHORT            Length;
+    USHORT            KeyLength;
+    USHORT            Flags;
+    USHORT            Reserved;
+    FILENAME_ATTRIBUTE    FileName;
+} INDEX_ENTRY_ATTRIBUTE, *PINDEX_ENTRY_ATTRIBUTE;
+
+typedef struct
+{
     ULONGLONG Unknown1;
     UCHAR MajorVersion;
     UCHAR MinorVersion;
@@ -325,6 +403,16 @@ typedef struct
     NTSTATUS SavedExceptionCode;
 } NTFS_IRP_CONTEXT, *PNTFS_IRP_CONTEXT;
 
+typedef struct _NTFS_ATTR_CONTEXT
+{
+    PUCHAR            CacheRun;
+    ULONGLONG            CacheRunOffset;
+    LONGLONG            CacheRunStartLCN;
+    ULONGLONG            CacheRunLength;
+    LONGLONG            CacheRunLastLCN;
+    ULONGLONG            CacheRunCurrentOffset;
+    NTFS_ATTR_RECORD    Record;
+} NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
@@ -337,21 +425,23 @@ extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 //VOID
 //NtfsDumpAttribute(PATTRIBUTE Attribute);
 
-//LONGLONG RunLCN(PUCHAR run);
-
-//ULONG RunLength(PUCHAR run);
-
-BOOLEAN
-FindRun(PNONRESIDENT_ATTRIBUTE NresAttr,
-        ULONGLONG vcn,
-        PULONGLONG lcn,
-        PULONGLONG count);
+PUCHAR
+DecodeRun(PUCHAR DataRun,
+          LONGLONG *DataRunOffset,
+          ULONGLONG *DataRunLength);
 
 VOID
 NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 
 
 /* blockdev.c */
+
+NTSTATUS
+NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
+             IN LONGLONG StartingOffset,
+             IN ULONG Length,
+             IN OUT PUCHAR Buffer,
+             IN BOOLEAN Override);
 
 NTSTATUS
 NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
@@ -490,35 +580,30 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
 
 /* mft.c */
-NTSTATUS
-NtfsOpenMft(PDEVICE_EXTENSION Vcb);
+ULONG
+ReadAttribute(PDEVICE_EXTENSION Vcb,
+              PNTFS_ATTR_CONTEXT Context,
+              ULONGLONG Offset,
+              PCHAR Buffer,
+              ULONG Length);
 
-
-VOID
-ReadAttribute(PATTRIBUTE attr,
-              PVOID buffer,
-              PDEVICE_EXTENSION Vcb,
-              PDEVICE_OBJECT DeviceObject);
+ULONGLONG
+AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
 
 ULONG
-AttributeDataLength(PATTRIBUTE attr);
-
-ULONG
-AttributeAllocatedLength(PATTRIBUTE Attribute);
+AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
 
 NTSTATUS
 ReadFileRecord(PDEVICE_EXTENSION Vcb,
-               ULONG index,
-               PFILE_RECORD_HEADER file,
-               PFILE_RECORD_HEADER Mft);
+               ULONGLONG index,
+               PFILE_RECORD_HEADER file);
 
-PATTRIBUTE
-FindAttribute(PFILE_RECORD_HEADER file,
-              ATTRIBUTE_TYPE type,
-              PWSTR name);
-
-ULONG
-AttributeLengthAllocated(PATTRIBUTE attr);
+NTSTATUS
+FindAttribute(PDEVICE_EXTENSION Vcb,
+              PFILE_RECORD_HEADER MftRecord,
+              ULONG Type,
+              PUNICODE_STRING Name,
+              PNTFS_ATTR_CONTEXT * AttrCtx);
 
 VOID
 ReadVCN(PDEVICE_EXTENSION Vcb,
@@ -528,15 +613,9 @@ ReadVCN(PDEVICE_EXTENSION Vcb,
         ULONG count,
         PVOID buffer);
 
-VOID
-FixupUpdateSequenceArray(PFILE_RECORD_HEADER file);
-
-VOID
-ReadExternalAttribute(PDEVICE_EXTENSION Vcb,
-                      PNONRESIDENT_ATTRIBUTE NresAttr,
-                      ULONGLONG vcn,
-                      ULONG count,
-                      PVOID buffer);
+NTSTATUS 
+FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
+                         PNTFS_RECORD_HEADER Record);
 
 NTSTATUS
 ReadLCN(PDEVICE_EXTENSION Vcb,
@@ -549,6 +628,18 @@ EnumerAttribute(PFILE_RECORD_HEADER file,
                 PDEVICE_EXTENSION Vcb,
                 PDEVICE_OBJECT DeviceObject);
 
+NTSTATUS
+NtfsLookupFile(PDEVICE_EXTENSION Vcb,
+               PUNICODE_STRING PathName,
+               PFILE_RECORD_HEADER *FileRecord,
+               PNTFS_ATTR_CONTEXT *DataContext);
+
+NTSTATUS
+NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
+                 PUNICODE_STRING PathName,
+                 PFILE_RECORD_HEADER *FileRecord,
+                 PNTFS_ATTR_CONTEXT *DataContext,
+                 ULONGLONG CurrentMFTIndex);
 
 /* misc.c */
 

@@ -1786,6 +1786,16 @@ HttpQueryInfoW(
 
 #define HttpQueryInfo WINELIB_NAME_AW(HttpQueryInfo)
 
+typedef enum {
+    COOKIE_STATE_UNKNOWN,
+    COOKIE_STATE_ACCEPT,
+    COOKIE_STATE_PROMPT,
+    COOKIE_STATE_LEASH,
+    COOKIE_STATE_DOWNGRADE,
+    COOKIE_STATE_REJECT,
+    COOKIE_STATE_MAX = COOKIE_STATE_REJECT
+} InternetCookieState;
+
 BOOLAPI InternetClearAllPerSiteCookieDecisions(VOID);
 
 BOOLAPI
@@ -1814,6 +1824,7 @@ InternetEnumPerSiteCookieDecisionW(
 #define INTERNET_COOKIE_IS_RESTRICTED   0x00000200
 #define INTERNET_COOKIE_IE6             0x00000400
 #define INTERNET_COOKIE_IS_LEGACY       0x00000800
+#define INTERNET_COOKIE_HTTPONLY        0x00002000
 
 BOOLAPI
 InternetGetCookieExA(
@@ -2558,6 +2569,31 @@ InternetGetConnectedStateExW(
   _Reserved_ DWORD dwReserved);
 
 #define InternetGetConnectedStateEx WINELIB_NAME_AW(InternetGetConnectedStateEx)
+
+typedef struct AutoProxyHelperVtbl
+{
+    BOOL  (WINAPI *IsResolvable)(LPSTR);
+    DWORD (WINAPI *GetIPAddress)(LPSTR, LPDWORD);
+    DWORD (WINAPI *ResolveHostName)(LPSTR, LPSTR, LPDWORD);
+    BOOL  (WINAPI *IsInNet)(LPSTR, LPSTR, LPSTR);
+    BOOL  (WINAPI *IsResolvableEx)(LPSTR);
+    DWORD (WINAPI *GetIPAddressEx)(LPSTR, LPDWORD);
+    DWORD (WINAPI *ResolveHostNameEx)(LPSTR, LPSTR, LPDWORD);
+    BOOL  (WINAPI *IsInNetEx)(LPSTR, LPSTR);
+    DWORD (WINAPI *SortIpList)(LPSTR, LPSTR, LPDWORD);
+} AutoProxyHelperVtbl;
+
+typedef struct AutoProxyHelperFunctions
+{
+    const struct AutoProxyHelperVtbl *lpVtbl;
+} AutoProxyHelperFunctions;
+
+typedef struct
+{
+    DWORD dwStructSize;
+    LPSTR lpszScriptBuffer;
+    DWORD dwScriptBufferSize;
+} AUTO_PROXY_SCRIPT_BUFFER, *LPAUTO_PROXY_SCRIPT_BUFFER;
 
 BOOLAPI InternetInitializeAutoProxyDll(_In_ DWORD);
 

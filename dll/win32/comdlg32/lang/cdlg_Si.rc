@@ -34,6 +34,7 @@ Ali jo želite zamenjati?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Pot ne obstaja"
     IDS_FILENOTEXISTING     "Datoteka ne obstaja"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Shrani"
     IDS_SAVE_AS     "Shrani kot"
     IDS_OPEN_FILE   "Odpri datoteko"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

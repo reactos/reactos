@@ -128,12 +128,14 @@ static HRESULT WINAPI d3d8_vertexbuffer_FreePrivateData(IDirect3DVertexBuffer8 *
 static DWORD WINAPI d3d8_vertexbuffer_SetPriority(IDirect3DVertexBuffer8 *iface, DWORD priority)
 {
     struct d3d8_vertexbuffer *buffer = impl_from_IDirect3DVertexBuffer8(iface);
+    struct wined3d_resource *resource;
     DWORD previous;
 
     TRACE("iface %p, priority %u.\n", iface, priority);
 
     wined3d_mutex_lock();
-    previous = wined3d_buffer_set_priority(buffer->wined3d_buffer, priority);
+    resource = wined3d_buffer_get_resource(buffer->wined3d_buffer);
+    previous = wined3d_resource_set_priority(resource, priority);
     wined3d_mutex_unlock();
 
     return previous;
@@ -142,12 +144,14 @@ static DWORD WINAPI d3d8_vertexbuffer_SetPriority(IDirect3DVertexBuffer8 *iface,
 static DWORD WINAPI d3d8_vertexbuffer_GetPriority(IDirect3DVertexBuffer8 *iface)
 {
     struct d3d8_vertexbuffer *buffer = impl_from_IDirect3DVertexBuffer8(iface);
+    const struct wined3d_resource *resource;
     DWORD priority;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    priority = wined3d_buffer_get_priority(buffer->wined3d_buffer);
+    resource = wined3d_buffer_get_resource(buffer->wined3d_buffer);
+    priority = wined3d_resource_get_priority(resource);
     wined3d_mutex_unlock();
 
     return priority;
@@ -401,12 +405,14 @@ static HRESULT WINAPI d3d8_indexbuffer_FreePrivateData(IDirect3DIndexBuffer8 *if
 static DWORD WINAPI d3d8_indexbuffer_SetPriority(IDirect3DIndexBuffer8 *iface, DWORD priority)
 {
     struct d3d8_indexbuffer *buffer = impl_from_IDirect3DIndexBuffer8(iface);
+    struct wined3d_resource *resource;
     DWORD previous;
 
     TRACE("iface %p, priority %u.\n", iface, priority);
 
     wined3d_mutex_lock();
-    previous = wined3d_buffer_set_priority(buffer->wined3d_buffer, priority);
+    resource = wined3d_buffer_get_resource(buffer->wined3d_buffer);
+    previous = wined3d_resource_set_priority(resource, priority);
     wined3d_mutex_unlock();
 
     return previous;
@@ -415,12 +421,14 @@ static DWORD WINAPI d3d8_indexbuffer_SetPriority(IDirect3DIndexBuffer8 *iface, D
 static DWORD WINAPI d3d8_indexbuffer_GetPriority(IDirect3DIndexBuffer8 *iface)
 {
     struct d3d8_indexbuffer *buffer = impl_from_IDirect3DIndexBuffer8(iface);
+    const struct wined3d_resource *resource;
     DWORD priority;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    priority = wined3d_buffer_get_priority(buffer->wined3d_buffer);
+    resource = wined3d_buffer_get_resource(buffer->wined3d_buffer);
+    priority = wined3d_resource_get_priority(resource);
     wined3d_mutex_unlock();
 
     return priority;

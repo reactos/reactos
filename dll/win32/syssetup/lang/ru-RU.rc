@@ -126,7 +126,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Подтверждение лицензии"
-    IDS_ACKSUBTITLE "Информация о разработчиках ReactOS и лизензионное соглашение."
+    IDS_ACKSUBTITLE "Информация о разработчиках ReactOS и лицензионное соглашение."
     IDS_OWNERTITLE "Персональные данные"
     IDS_OWNERSUBTITLE "Установка информации о пользователях ReactOS."
     IDS_COMPUTERTITLE "Имя компьютера и пароль администратора"
@@ -148,7 +148,7 @@ BEGIN
     IDS_GETPROCADDR_FAILED "Ошибка GetProcAddr: "
     IDS_REGSVR_FAILED "Ошибка DllRegisterServer: "
     IDS_DLLINSTALL_FAILED "Ошибка DllInstall: "
-    IDS_TIMEOUT "Таймаут в ходе регистрации"
+    IDS_TIMEOUT "Тайм-аут в ходе регистрации"
     IDS_REASON_UNKNOWN ""
     /*
      * ATTENTION: 

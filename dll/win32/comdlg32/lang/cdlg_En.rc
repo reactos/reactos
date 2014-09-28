@@ -34,6 +34,7 @@ Do you want to replace it?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Path does not exist"
     IDS_FILENOTEXISTING     "File does not exist"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Save"
     IDS_SAVE_AS     "Save As"
     IDS_OPEN_FILE   "Open File"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*
@@ -479,7 +481,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
     LTEXT           "Files of type:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
-    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
                     CBS_HASSTRINGS | CBS_DROPDOWNLIST
 
     DEFPUSHBUTTON   "&Open",  IDOK,     350, 240, 40, 14, WS_GROUP

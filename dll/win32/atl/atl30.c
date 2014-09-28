@@ -508,6 +508,7 @@ static const IClassFactoryVtbl IRegistrarCFVtbl = {
 
 static IClassFactory RegistrarCF = { &IRegistrarCFVtbl };
 
+#ifdef __REACTOS__
 static HRESULT do_register_dll_server(IRegistrar *pRegistrar, LPCOLESTR wszDll,
                                       LPCOLESTR wszId, BOOL do_register,
                                       const struct _ATL_REGMAP_ENTRY* pMapEntries)
@@ -554,7 +555,7 @@ static HRESULT do_register_server(BOOL do_register)
     StringFromGUID2(&CLSID_Registrar, clsid_str, sizeof(clsid_str)/sizeof(WCHAR));
     return do_register_dll_server(NULL, atl_dllW, MAKEINTRESOURCEW(101), do_register, reg_map);
 }
-
+#endif
 
 /**************************************************************
  * DllGetClassObject (ATL.2)

@@ -489,12 +489,12 @@ IntDumpRegion(HRGN hRgn)
 
 INT
 FASTCALL
-REGION_Complexity( PROSRGNDATA obj )
+REGION_Complexity(PREGION prgn)
 {
-    if (!obj) return NULLREGION;
-    switch(obj->rdh.nCount)
+    if (!prgn) return NULLREGION;
+    switch(prgn->rdh.nCount)
     {
-       DPRINT("Region Complexity -> %lu",obj->rdh.nCount);
+       DPRINT("Region Complexity -> %lu", prgn->rdh.nCount);
        case 0:  return NULLREGION;
        case 1:  return SIMPLEREGION;
        default: return COMPLEXREGION;
@@ -581,13 +581,13 @@ REGION_SetExtents(ROSRGNDATA *pReg)
 /***********************************************************************
  *           REGION_CropAndOffsetRegion
  */
-BOOL FASTCALL
+INT
+FASTCALL
 REGION_CropAndOffsetRegion(
-    PROSRGNDATA rgnDst,
-    PROSRGNDATA rgnSrc,
+    PREGION rgnDst,
+    PREGION rgnSrc,
     const RECTL *rect,
-    const POINTL *offset
-)
+    const POINTL *offset) // FIXME: we should probably remove offset from here
 {
     POINT pt = {0,0};
     const POINT *off = offset;
@@ -602,13 +602,13 @@ REGION_CropAndOffsetRegion(
             if (off->x || off->y)
                 xrect = rgnDst->Buffer;
             else
-                return TRUE;
+                return REGION_Complexity(rgnDst);
         }
         else
         {
             xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
 			if(!xrect)
-				return FALSE;
+				return ERROR;
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
                 ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); // Free the old buffer. Will be assigned to xrect below.
         }
@@ -669,7 +669,7 @@ REGION_CropAndOffsetRegion(
             PRECTL temp;
             temp = ExAllocatePoolWithTag(PagedPool, i * sizeof(RECT), TAG_REGION);
             if (!temp)
-                return FALSE;
+                return ERROR;
 
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
                 ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); // free the old buffer
@@ -727,7 +727,7 @@ REGION_CropAndOffsetRegion(
         rgnDst->rdh.iType = RDH_RECTANGLES;
     }
 
-    return TRUE;
+    return REGION_Complexity(rgnDst);
 
 empty:
     if (!rgnDst->Buffer)
@@ -739,10 +739,10 @@ empty:
             rgnDst->rdh.nRgnSize = RGN_DEFAULT_RECTS * sizeof(RECT);
         }
         else
-            return FALSE;
+            return ERROR;
     }
     EMPTY_REGION(rgnDst);
-    return TRUE;
+    return NULLREGION;
 }
 
 
@@ -1771,6 +1771,23 @@ REGION_UnionRectWithRgn(
     region.rdh.nRgnSize = sizeof(RECT);
     region.rdh.rcBound = *rect;
     REGION_UnionRegion(rgn, rgn, &region);
+}
+
+INT
+FASTCALL
+REGION_SubtractRectFromRgn(
+    PREGION prgnDest,
+    PREGION prgnSrc,
+    const RECTL *prcl)
+{
+    REGION rgnLocal;
+
+    rgnLocal.Buffer = &rgnLocal.rdh.rcBound;
+    rgnLocal.rdh.nCount = 1;
+    rgnLocal.rdh.nRgnSize = sizeof(RECT);
+    rgnLocal.rdh.rcBound = *prcl;
+    REGION_SubtractRegion(prgnDest, prgnSrc, &rgnLocal);
+    return REGION_Complexity(prgnDest);
 }
 
 BOOL FASTCALL
@@ -3847,10 +3864,6 @@ NtGdiPtInRegion(
 
     RGNOBJAPI_Unlock(prgn);
     return ret;
-
-
-    RGNOBJAPI_Unlock(prgn);
-    return FALSE;
 }
 
 BOOL

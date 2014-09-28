@@ -156,6 +156,7 @@ void Parser_Destroy(ParserImpl *This)
 {
     IPin *connected = NULL;
     ULONG pinref;
+    HRESULT hr;
 
     assert(!This->filter.refCount);
     PullPin_WaitForStateChange(This->pInputPin, INFINITE);
@@ -164,9 +165,11 @@ void Parser_Destroy(ParserImpl *This)
     IPin_ConnectedTo(&This->pInputPin->pin.IPin_iface, &connected);
     if (connected)
     {
-        assert(IPin_Disconnect(connected) == S_OK);
+        hr = IPin_Disconnect(connected);
+        assert(hr == S_OK);
         IPin_Release(connected);
-        assert(IPin_Disconnect(&This->pInputPin->pin.IPin_iface) == S_OK);
+        hr = IPin_Disconnect(&This->pInputPin->pin.IPin_iface);
+        assert(hr == S_OK);
     }
     pinref = IPin_Release(&This->pInputPin->pin.IPin_iface);
     if (pinref)

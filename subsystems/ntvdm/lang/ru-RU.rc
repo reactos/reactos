@@ -1,0 +1,15 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HIDE_MOUSE, "&Спрятать указатель мыши"
+    IDS_SHOW_MOUSE, "&Отобразить указатель мыши"
+    IDS_VDM_MENU  , "ReactOS &VDM"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VDM_DUMPMEM_TXT,    "Dump Memory (&Text)"
+    IDS_VDM_DUMPMEM_BIN,    "Dump Memory (&Binary)"
+    IDS_VDM_QUIT       ,    "&Выйти из ReactOS VDM"
+END

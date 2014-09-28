@@ -101,6 +101,7 @@ static const struct IClassFactoryVtbl hnetcfg_cf_vtbl =
 
 static hnetcfg_cf fw_manager_cf = { { &hnetcfg_cf_vtbl }, NetFwMgr_create };
 static hnetcfg_cf fw_app_cf = { { &hnetcfg_cf_vtbl }, NetFwAuthorizedApplication_create };
+static hnetcfg_cf fw_openport_cf = { { &hnetcfg_cf_vtbl }, NetFwOpenPort_create };
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -130,6 +131,10 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
     else if (IsEqualGUID( rclsid, &CLSID_NetFwAuthorizedApplication ))
     {
        cf = &fw_app_cf.IClassFactory_iface;
+    }
+    else if (IsEqualGUID( rclsid, &CLSID_NetFwOpenPort ))
+    {
+       cf = &fw_openport_cf.IClassFactory_iface;
     }
 
     if (!cf) return CLASS_E_CLASSNOTAVAILABLE;
