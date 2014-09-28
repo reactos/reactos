@@ -775,7 +775,8 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
             clear_ei(This->ctx);
             hres = exec_source(exec_ctx, code, &code->global_code, TRUE, &r);
             if(SUCCEEDED(hres)) {
-                hres = jsval_to_variant(r, pvarResult);
+                if(pvarResult)
+                    hres = jsval_to_variant(r, pvarResult);
                 jsval_release(r);
             }
             exec_release(exec_ctx);
