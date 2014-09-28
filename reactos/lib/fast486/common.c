@@ -317,6 +317,10 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
     /* Check if this is a triple fault */
     if (State->ExceptionCount == 3)
     {
+        DPRINT("Fast486ExceptionWithErrorCode(%04X:%08X) -- Triple fault\n",
+               State->SegmentRegs[FAST486_REG_CS].Selector,
+               State->InstPtr.Long);
+
         /* Reset the CPU */
         Fast486Reset(State);
         return;
