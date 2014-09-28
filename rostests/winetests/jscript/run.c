@@ -102,12 +102,14 @@ DEFINE_EXPECT(dispexfunc_value);
 DEFINE_EXPECT(testobj_delete_test);
 DEFINE_EXPECT(testobj_delete_nodelete);
 DEFINE_EXPECT(testobj_value);
+DEFINE_EXPECT(testobj_construct);
 DEFINE_EXPECT(testobj_prop_d);
 DEFINE_EXPECT(testobj_withprop_d);
 DEFINE_EXPECT(testobj_withprop_i);
 DEFINE_EXPECT(testobj_noprop_d);
 DEFINE_EXPECT(testobj_onlydispid_d);
 DEFINE_EXPECT(testobj_onlydispid_i);
+DEFINE_EXPECT(testobj_notexists_d);
 DEFINE_EXPECT(GetItemInfo_testVal);
 DEFINE_EXPECT(ActiveScriptSite_OnScriptError);
 DEFINE_EXPECT(invoke_func);
@@ -334,6 +336,11 @@ static HRESULT WINAPI testObj_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD
         *pid = DISPID_TESTOBJ_ONLYDISPID;
         return S_OK;
     }
+    if(!strcmp_wa(bstrName, "notExists")) {
+        CHECK_EXPECT(testobj_notexists_d);
+        test_grfdex(grfdex, fdexNameCaseSensitive);
+        return DISP_E_UNKNOWNNAME;
+    }
 
     ok(0, "unexpected name %s\n", wine_dbgstr_w(bstrName));
     return E_NOTIMPL;
@@ -363,6 +370,10 @@ static HRESULT WINAPI testObj_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid,
             ok(!pdp->cArgs, "cArgs = %d\n", pdp->cArgs);
             break;
         case INVOKE_FUNC|INVOKE_PROPERTYGET:
+            ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+            break;
+        case DISPATCH_CONSTRUCT:
+            CHECK_EXPECT(testobj_construct);
             ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
             break;
         default:
@@ -1952,6 +1963,13 @@ static void test_script_exprs(void)
     hres = parse_script_expr("reportSuccess(); return true", &v);
     ok(hres == 0x800a03fa, "parse_script_expr failed: %08x\n", hres);
 
+    SET_EXPECT(global_success_d);
+    SET_EXPECT(global_success_i);
+    hres = parse_script_expr("reportSuccess(); true", NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    CHECK_CALLED(global_success_d);
+    CHECK_CALLED(global_success_i);
+
     testing_expr = FALSE;
 }
 
@@ -2055,6 +2073,10 @@ static BOOL run_tests(void)
     parse_script_a("var notExists; notExists = 1;");
     CHECK_CALLED(global_notexists_d);
 
+    SET_EXPECT(testobj_notexists_d);
+    parse_script_a("testObj.notExists;");
+    CHECK_CALLED(testobj_notexists_d);
+
     parse_script_a("function f() { var testPropGet; }");
     parse_script_a("(function () { var testPropGet; })();");
     parse_script_a("(function () { eval('var testPropGet;'); })();");
@@ -2110,6 +2132,10 @@ static BOOL run_tests(void)
     SET_EXPECT(testobj_value);
     parse_script_a("ok(String.prototype.concat.call(testObj, ' OK') === '1 OK', 'wrong concat result');");
     CHECK_CALLED(testobj_value);
+
+    SET_EXPECT(testobj_construct);
+    parse_script_a("var t = new testObj(1);");
+    CHECK_CALLED(testobj_construct);
 
     SET_EXPECT(global_propget_d);
     SET_EXPECT(global_propget_i);
