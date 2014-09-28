@@ -550,7 +550,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         return FALSE;
     }
     // For diagnostics purposes!!
-    FillMemory(BaseAddress, MAX_ADDRESS, 0xFF);
+    RtlFillMemory(BaseAddress, MAX_ADDRESS, 0xFF);
 
     /* Initialize I/O ports */
     /* Initialize RAM */

@@ -499,6 +499,8 @@ static VOID InitializeBiosInt32(VOID)
 
 static VOID InitializeBiosInfo(VOID)
 {
+    RtlZeroMemory(Bct, sizeof(*Bct));
+
     Bct->Length     = sizeof(*Bct);
     Bct->Model      = BIOS_MODEL;
     Bct->SubModel   = BIOS_SUBMODEL;
@@ -527,6 +529,7 @@ static VOID InitializeBiosData(VOID)
     *(PBYTE)(SEG_OFF_TO_PTR(0xF000, 0xFFFE)) = BIOS_MODEL;
 
     /* Initialize the BDA contents */
+    RtlZeroMemory(Bda, sizeof(*Bda));
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
 
     /*
