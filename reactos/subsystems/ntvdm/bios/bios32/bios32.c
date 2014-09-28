@@ -240,10 +240,22 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        /* Return Extended-Bios Data-Area Segment Address (PS) */
         case 0xC1:
+        {
+            // Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            // setES(???);
+
+            /* We do not support EBDA yet */
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+            break;
+        }
+
+        /* Pointing Device BIOS Interface (PS) */
         case 0xC2:
         {
-            DPRINT1("INT 15h, AH = 0x%02X must be implemented in order to support vendor mouse drivers\n");
+            DPRINT1("INT 15h, AH = C2h must be implemented in order to support vendor mouse drivers\n");
             break;
         }
 
