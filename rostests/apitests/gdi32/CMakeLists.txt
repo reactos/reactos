@@ -48,6 +48,7 @@ list(APPEND SOURCE
     GetTextExtentExPoint.c
     GetTextFace.c
     MaskBlt.c
+    OffsetClipRgn.c
     PatBlt.c
     Rectangle.c
     SelectObject.c

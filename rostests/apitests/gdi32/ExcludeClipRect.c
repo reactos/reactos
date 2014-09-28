@@ -44,12 +44,12 @@ void Test_ExcludeClipRect()
     hrgn = CreateRectRgn(10, 10, 20, 30);
     ok_int(SelectClipRgn(hdc, hrgn), NULLREGION); // yeah... it's NULLREGION
     ok_int(GetRandomRgn(hdc, hrgn2, CLIPRGN), 1);
-    ok_int(CombineRgn(hrgn2, hrgn2, hrgn, RGN_XOR), NULLREGION); // but in fact it's a rect region!
+    ok_int(EqualRgn(hrgn, hrgn2), TRUE); // but in fact it's the region we set
 
     /* Exclude something outside of the clip region */
     ok_int(ExcludeClipRect(hdc, 0, 0, 1, 1), COMPLEXREGION); // in reality it's a rect region
     ok_int(GetRandomRgn(hdc, hrgn2, CLIPRGN), 1);
-    ok_int(CombineRgn(hrgn2, hrgn2, hrgn, RGN_XOR), NULLREGION);
+    ok_int(EqualRgn(hrgn, hrgn2), TRUE);
 
     /* Exclude something on one side of the clip rect */
     ok_int(ExcludeClipRect(hdc, 0, 0, 13, 50), COMPLEXREGION);
@@ -85,7 +85,8 @@ void Test_ExcludeClipRect()
     ok_int(ExcludeClipRect(hdc, 100000, 100000, 100010, 100010), COMPLEXREGION); // this time it's a complex region?
     ok_int(GetRandomRgn(hdc, hrgn2, CLIPRGN), 1);
     hrgn = CreateRectRgn(0, 0, 1, 1);
-    ok_int(CombineRgn(hrgn2, hrgn2, hrgn, RGN_XOR), NULLREGION);
+    ok_int(EqualRgn(hrgn, hrgn2), TRUE);
+    DeleteObject(hrgn);
 
     /* Test reversed rect negative, but still above 0 */
     ok_int(SelectClipRgn(hdc, NULL), SIMPLEREGION);
