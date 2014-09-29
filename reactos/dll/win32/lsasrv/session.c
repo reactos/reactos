@@ -314,7 +314,7 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
         goto done;
     }
 
-    TRACE("MemSize: %lu\n", MemSize);
+    //TRACE("MemSize: %lu\n", MemSize);
 
     MemSize = Length;
     Status = NtAllocateVirtualMemory(ProcessHandle,
