@@ -98,6 +98,7 @@ add_importlibs(shell32
     browseui
     gdi32
     user32
+    powrprof
     comctl32
     comdlg32
     shdocvw

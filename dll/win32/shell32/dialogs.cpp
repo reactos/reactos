@@ -116,6 +116,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         pIconContext = (PPICK_ICON_CONTEXT)lParam;
         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
+        SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, 32, 0);
         EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
         if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
             SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
@@ -695,6 +696,44 @@ int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
     return RestartDialogEx(hWndOwner, lpstrReason, uFlags, 0);
 }
 
+ /*************************************************************************
+ * Used to get the shutdown privilege
+ */
+VOID ExitWindows_GetShutdownPrivilege(VOID)
+{
+    HANDLE hToken;
+    TOKEN_PRIVILEGES npr;
+
+    /* enable shut down privilege for current process */
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+    {
+        LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
+
+        npr.PrivilegeCount = 1;
+        npr.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+        AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
+
+        CloseHandle(hToken);
+    }
+}
+
+/*************************************************************************
+ * ExitWindowsDialog_backup
+ *
+ * NOTES
+ *     used as a backup solution to shutdown the OS in case msgina.dll somehow
+ *     cannot be found.
+ */
+VOID ExitWindowsDialog_backup(HWND hWndOwner)
+{
+    TRACE("(%p)\n", hWndOwner);
+
+    if (ConfirmDialog(hWndOwner, IDS_SHUTDOWN_PROMPT, IDS_SHUTDOWN_TITLE))
+    {
+        ExitWindows_GetShutdownPrivilege();
+        ExitWindowsEx(EWX_SHUTDOWN, 0);
+    }
+}
 
 /*************************************************************************
  * ExitWindowsDialog                [SHELL32.60]
@@ -702,24 +741,85 @@ int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
  * NOTES
  *     exported by ordinal
  */
+/*
+ * TODO: 
+ * - Implement the ability to show either the Welcome Screen or the classic dialog boxes based upon the
+ *   registry value: SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\LogonType.
+ */
 void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
+    typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
+    HINSTANCE msginaDll = LoadLibraryA("msgina.dll");
+
     TRACE("(%p)\n", hWndOwner);
 
-    if (ConfirmDialog(hWndOwner, IDS_SHUTDOWN_PROMPT, IDS_SHUTDOWN_TITLE))
+    /* If the DLL cannot be found for any reason, then it simply uses a
+       dialog box to ask if the user wants to shut down the computer. */
+    if(!msginaDll)
     {
-        HANDLE hToken;
-        TOKEN_PRIVILEGES npr;
+        TRACE("Unable to load msgina.dll.\n");
+        ExitWindowsDialog_backup(hWndOwner);
+        return;
+    }
 
-        /* enable shutdown privilege for current process */
-        if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+    ShellShFunc pShellShutdownDialog = (ShellShFunc) GetProcAddress(msginaDll, "ShellShutdownDialog");
+
+    if(pShellShutdownDialog)
+    {
+        /* Actually call the function */
+        DWORD returnValue = pShellShutdownDialog(hWndOwner, NULL, FALSE);
+
+        switch(returnValue)
         {
-            LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
-            npr.PrivilegeCount = 1;
-            npr.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-            AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
-            CloseHandle(hToken);
+        case 0x01: /* Log off user */
+        {
+            ExitWindowsEx(EWX_LOGOFF, 0);
+            break;
         }
-        ExitWindowsEx(EWX_SHUTDOWN, 0);
+        case 0x02: /* Shut down */
+        {
+            ExitWindows_GetShutdownPrivilege();
+            ExitWindowsEx(EWX_SHUTDOWN, 0);
+            break;
+        }
+        case 0x03: /* Install Updates/Shutdown (?) */
+        {
+            break;
+        }
+        case 0x04: /* Reboot */
+        {
+            ExitWindows_GetShutdownPrivilege();
+            ExitWindowsEx(EWX_REBOOT, 0);
+            break;
+        }
+        case 0x10: /* Sleep */
+        {
+            if(IsPwrSuspendAllowed())
+            {
+                ExitWindows_GetShutdownPrivilege();
+                SetSuspendState(FALSE, FALSE, FALSE);
+            }
+            break;
+        }
+        case 0x40: /* Hibernate */
+        {
+            if(IsPwrHibernateAllowed())
+            {
+                ExitWindows_GetShutdownPrivilege();
+                SetSuspendState(TRUE, FALSE, TRUE);
+            }
+            break;
+        }
+        /* If the option is any other value */
+        default:
+            break;
+        }
+    }
+    else
+    {
+        /* If the function cannot be found, then revert to using the backup solution */
+        TRACE("Unable to find the 'ShellShutdownDialog' function");
+        FreeLibrary(msginaDll);
+        ExitWindowsDialog_backup(hWndOwner);
     }
 }
