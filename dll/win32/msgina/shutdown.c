@@ -4,8 +4,6 @@
  * FILE:            lib/msgina/shutdown.c
  * PURPOSE:         Shutdown Dialog Box
  * PROGRAMMER:      Lee Schroeder (spaceseel at gmail dot com)
- * UPDATE HISTORY:
- *      24-11-2003  Created
  */
 
 #include "msgina.h"
