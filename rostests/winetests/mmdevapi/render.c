@@ -36,6 +36,7 @@
 #include "unknwn.h"
 #include "uuids.h"
 #include "mmdeviceapi.h"
+#include "mmsystem.h"
 #include "audioclient.h"
 #include "audiopolicy.h"
 
@@ -58,16 +59,6 @@ static IMMDevice *dev = NULL;
 static HRESULT hexcl = S_OK; /* or AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED */
 
 static const LARGE_INTEGER ullZero;
-
-static inline const char *dbgstr_guid( const GUID *id )
-{
-    static char ret[256];
-    sprintf(ret, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-                             id->Data1, id->Data2, id->Data3,
-                             id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
-                             id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7] );
-    return ret;
-}
 
 #define PI 3.14159265358979323846L
 static DWORD wave_generate_tone(PWAVEFORMATEX pwfx, BYTE* data, UINT32 frames)
@@ -255,7 +246,8 @@ static void test_audioclient(void)
     ok(hr == AUDCLNT_E_NOT_INITIALIZED, "Initialize with invalid sharemode returns %08x\n", hr);
 
     hr = IAudioClient_Initialize(ac, AUDCLNT_SHAREMODE_SHARED, 0xffffffff, 5000000, 0, pwfx, NULL);
-    ok(hr == E_INVALIDARG, "Initialize with invalid flags returns %08x\n", hr);
+    ok(hr == E_INVALIDARG ||
+            hr == AUDCLNT_E_INVALID_STREAM_FLAG, "Initialize with invalid flags returns %08x\n", hr);
 
     /* A period != 0 is ignored and the call succeeds.
      * Since we can only initialize successfully once, skip those tests.
@@ -455,9 +447,10 @@ static void test_formats(AUDCLNT_SHAREMODE mode)
              * Some cards Initialize 44100|48000x16x1 yet claim no support;
              * F. Gouget's w7 bots do that for 12000|96000x8|16x1|2 */
             ok(hrs == S_OK ? hr == S_OK || broken(hr == AUDCLNT_E_ENDPOINT_CREATE_FAILED)
-               : hr == AUDCLNT_E_ENDPOINT_CREATE_FAILED || broken(hr == S_OK &&
-                   ((fmt.nChannels == 1 && fmt.wBitsPerSample == 16) ||
-                    (fmt.nSamplesPerSec == 12000 || fmt.nSamplesPerSec == 96000))),
+               : hr == AUDCLNT_E_ENDPOINT_CREATE_FAILED || hr == AUDCLNT_E_UNSUPPORTED_FORMAT ||
+                 broken(hr == S_OK &&
+                     ((fmt.nChannels == 1 && fmt.wBitsPerSample == 16) ||
+                      (fmt.nSamplesPerSec == 12000 || fmt.nSamplesPerSec == 96000))),
                "Initialize(exclus., %ux%2ux%u) returns %08x\n",
                fmt.nSamplesPerSec, fmt.wBitsPerSample, fmt.nChannels, hr);
 
@@ -658,7 +651,7 @@ static void test_event(void)
 
     /* Still receiving events! */
     r = WaitForSingleObject(event, 20);
-    todo_wine ok(r == WAIT_OBJECT_0, "Wait(event) after Stop gave %x\n", r);
+    ok(r == WAIT_OBJECT_0, "Wait(event) after Stop gave %x\n", r);
 
     hr = IAudioClient_Reset(ac);
     ok(hr == S_OK, "Reset failed: %08x\n", hr);
@@ -666,13 +659,13 @@ static void test_event(void)
     ok(ResetEvent(event), "ResetEvent\n");
 
     r = WaitForSingleObject(event, 120);
-    todo_wine ok(r == WAIT_OBJECT_0, "Wait(event) after Reset gave %x\n", r);
+    ok(r == WAIT_OBJECT_0, "Wait(event) after Reset gave %x\n", r);
 
     hr = IAudioClient_SetEventHandle(ac, NULL);
     ok(hr == E_INVALIDARG, "SetEventHandle(NULL) returns %08x\n", hr);
 
     r = WaitForSingleObject(event, 70);
-    todo_wine ok(r == WAIT_OBJECT_0, "Wait(NULL event) gave %x\n", r);
+    ok(r == WAIT_OBJECT_0, "Wait(NULL event) gave %x\n", r);
 
     /* test releasing a playing stream */
     hr = IAudioClient_Start(ac);
@@ -689,8 +682,8 @@ static void test_padding(void)
     IAudioRenderClient *arc;
     WAVEFORMATEX *pwfx;
     REFERENCE_TIME minp, defp;
-    BYTE *buf;
-    UINT32 psize, pad, written;
+    BYTE *buf, silence;
+    UINT32 psize, pad, written, i;
 
     hr = IMMDevice_Activate(dev, &IID_IAudioClient, CLSCTX_INPROC_SERVER,
             NULL, (void**)&ac);
@@ -708,6 +701,11 @@ static void test_padding(void)
     ok(hr == S_OK, "Initialize failed: %08x\n", hr);
     if(hr != S_OK)
         return;
+
+    if(pwfx->wBitsPerSample == 8)
+        silence = 128;
+    else
+        silence = 0;
 
     /** GetDevicePeriod
      * Default (= shared) device period is 10ms (e.g. 441 frames at 44100),
@@ -735,6 +733,12 @@ static void test_padding(void)
     hr = IAudioRenderClient_GetBuffer(arc, psize, &buf);
     ok(hr == S_OK, "GetBuffer failed: %08x\n", hr);
     ok(buf != NULL, "NULL buffer returned\n");
+    for(i = 0; i < psize * pwfx->nBlockAlign; ++i){
+        if(buf[i] != silence){
+            ok(0, "buffer has data in it already\n");
+            break;
+        }
+    }
 
     hr = IAudioRenderClient_GetBuffer(arc, 0, &buf);
     ok(hr == AUDCLNT_E_OUT_OF_ORDER, "GetBuffer 0 size failed: %08x\n", hr);
@@ -870,7 +874,7 @@ static void test_clock(int share)
 
     hr = IAudioClient_GetDevicePeriod(ac, &defp, &minp);
     ok(hr == S_OK, "GetDevicePeriod failed: %08x\n", hr);
-    ok(minp <= period, "desired period %u to small for %u\n", (ULONG)period, (ULONG)minp);
+    ok(minp <= period, "desired period %u too small for %u\n", (ULONG)period, (ULONG)minp);
 
     if (share) {
         trace("Testing shared mode\n");
@@ -931,7 +935,7 @@ static void test_clock(int share)
     if (share)
     ok(gbsize == bufsize,
        "BufferSize %u at rate %u\n", gbsize, pwfx->nSamplesPerSec);
-    else todo_wine
+    else
     ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
        "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
 
@@ -951,7 +955,7 @@ static void test_clock(int share)
     trace("Clock Frequency %u\n", (UINT)freq);
 
     /* MSDN says it's arbitrary units, but shared mode is unlikely to change */
-    if (share) todo_wine
+    if (share)
         ok(freq == pwfx->nSamplesPerSec * pwfx->nBlockAlign,
            "Clock Frequency %u\n", (UINT)freq);
     else

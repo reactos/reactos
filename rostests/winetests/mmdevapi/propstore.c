@@ -81,6 +81,34 @@ static void test_deviceinterface(IPropertyStore *store)
     CoTaskMemFree(pv.u.pwszVal);
 }
 
+static void test_getat(IPropertyStore *store)
+{
+    HRESULT hr;
+    DWORD propcount;
+    DWORD prop;
+    PROPERTYKEY pkey;
+    BOOL found_name = FALSE;
+    BOOL found_desc = FALSE;
+    char temp[128];
+    temp[sizeof(temp)-1] = 0;
+
+    hr = IPropertyStore_GetCount(store, &propcount);
+
+    ok(hr == S_OK, "Failed with %08x\n", hr);
+    ok(propcount > 0, "Propcount %d should be greather than zero\n", propcount);
+
+    for (prop = 0; prop < propcount; prop++) {
+	hr = IPropertyStore_GetAt(store, prop, &pkey);
+	ok(hr == S_OK, "Failed with %08x\n", hr);
+	if (IsEqualPropertyKey(pkey, DEVPKEY_Device_FriendlyName))
+	    found_name = TRUE;
+	if (IsEqualPropertyKey(pkey, DEVPKEY_Device_DeviceDesc))
+	    found_desc = TRUE;
+    }
+    ok(found_name || broken(!found_name), "DEVPKEY_Device_FriendlyName not found\n");
+    ok(found_desc == TRUE, "DEVPKEY_Device_DeviceDesc not found\n");
+}
+
 START_TEST(propstore)
 {
     HRESULT hr;
@@ -127,6 +155,7 @@ START_TEST(propstore)
     {
         test_propertystore(store);
         test_deviceinterface(store);
+        test_getat(store);
         IPropertyStore_Release(store);
     }
     IMMDevice_Release(dev);
