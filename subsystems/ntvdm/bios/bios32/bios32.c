@@ -240,10 +240,22 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        /* Return Extended-Bios Data-Area Segment Address (PS) */
         case 0xC1:
+        {
+            // Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            // setES(???);
+
+            /* We do not support EBDA yet */
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+            break;
+        }
+
+        /* Pointing Device BIOS Interface (PS) */
         case 0xC2:
         {
-            DPRINT1("INT 15h, AH = 0x%02X must be implemented in order to support vendor mouse drivers\n");
+            DPRINT1("INT 15h, AH = C2h must be implemented in order to support vendor mouse drivers\n");
             break;
         }
 
@@ -499,6 +511,8 @@ static VOID InitializeBiosInt32(VOID)
 
 static VOID InitializeBiosInfo(VOID)
 {
+    RtlZeroMemory(Bct, sizeof(*Bct));
+
     Bct->Length     = sizeof(*Bct);
     Bct->Model      = BIOS_MODEL;
     Bct->SubModel   = BIOS_SUBMODEL;
@@ -527,6 +541,7 @@ static VOID InitializeBiosData(VOID)
     *(PBYTE)(SEG_OFF_TO_PTR(0xF000, 0xFFFE)) = BIOS_MODEL;
 
     /* Initialize the BDA contents */
+    RtlZeroMemory(Bda, sizeof(*Bda));
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
 
     /*

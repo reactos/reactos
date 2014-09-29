@@ -130,13 +130,6 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 ExpressionPosition++;
             }
 
-            /* If star is at the end, then eat all rest and leave */
-            if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
-            {
-                NamePosition = Name->Length / sizeof(WCHAR);
-                break;
-            }
-
             /* Save star position */
             StarFound++;
             if (StarFound >= BackTrackingSize)
@@ -149,6 +142,13 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
 
             }
             BackTracking[StarFound] = ExpressionPosition++;
+
+            /* If star is at the end, then eat all rest and leave */
+            if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
+            {
+                NamePosition = Name->Length / sizeof(WCHAR);
+                break;
+            }
 
             /* Allow null matching */
             if (Expression->Buffer[ExpressionPosition] != L'?' &&

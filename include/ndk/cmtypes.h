@@ -296,6 +296,7 @@ typedef struct _KEY_FULL_INFORMATION
 
 typedef struct _KEY_NAME_INFORMATION
 {
+    ULONG NameLength;
     WCHAR Name[1];
 } KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
 

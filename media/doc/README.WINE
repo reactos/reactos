@@ -31,6 +31,7 @@ reactos/dll/directx/wine/amstream       # Synced to Wine-1.7.27
 reactos/dll/directx/wine/d3d8           # Synced to Wine-1.7.27
 reactos/dll/directx/wine/d3d9           # Synced to Wine-1.7.27
 reactos/dll/directx/wine/d3dcompiler_43 # Synced to Wine-1.7.27
+reactos/dll/directx/wine/d3drm          # Synced to Wine-1.7.27
 reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to Wine-1.7.27
 reactos/dll/directx/wine/d3dxof         # Synced to Wine-1.7.27
 reactos/dll/directx/wine/ddraw          # Synced to Wine-1.7.27
@@ -40,7 +41,7 @@ reactos/dll/directx/wine/dinput8        # Synced to Wine-1.7.27
 reactos/dll/directx/wine/dmusic         # Synced to Wine-1.7.27
 reactos/dll/directx/wine/dplay          # Synced to Wine-1.7.27
 reactos/dll/directx/wine/dplayx         # Synced to Wine-1.7.27
-reactos/dll/directx/wine/dsound         # Synced to Wine-1.5.26
+reactos/dll/directx/wine/dsound         # Synced to Wine-1.3.29
 reactos/dll/directx/wine/dxdiagn        # Synced to Wine-1.7.27
 reactos/dll/directx/wine/dxgi           # Synced to Wine-1.7.27
 reactos/dll/directx/wine/msdmo          # Synced to Wine-1.7.27
@@ -97,7 +98,7 @@ reactos/dll/win32/jscript             # Synced to Wine-1.7.27
 reactos/dll/win32/jsproxy             # Synced to Wine-1.7.27
 reactos/dll/win32/loadperf            # Synced to Wine-1.7.17
 reactos/dll/win32/localspl            # Synced to Wine-1.7.17
-reactos/dll/win32/localui             # Synced to Wine-1.7.17
+reactos/dll/win32/localui             # Synced to Wine-1.7.27
 reactos/dll/win32/lz32                # Synced to Wine-1.7.17
 reactos/dll/win32/mapi32              # Synced to Wine-1.7.17
 reactos/dll/win32/mciavi32            # Synced to Wine-1.7.17
@@ -105,9 +106,10 @@ reactos/dll/win32/mcicda              # Synced to Wine-1.7.17
 reactos/dll/win32/mciqtz32            # Synced to Wine-1.7.17
 reactos/dll/win32/mciseq              # Synced to Wine-1.7.17
 reactos/dll/win32/mciwave             # Synced to Wine-1.7.17
+reactos/dll/win32/mgmtapi             # Synced to Wine-1.7.27
 reactos/dll/win32/mlang               # Synced to Wine-1.7.17
-reactos/dll/win32/mmdevapi            # Synced to Wine-1.7.1
-reactos/dll/win32/mpr                 # Synced to Wine-1.7.17
+reactos/dll/win32/mmdevapi            # Synced to Wine-1.7.27
+reactos/dll/win32/mpr                 # Synced to Wine-1.7.27
 reactos/dll/win32/mprapi              # Synced to Wine-1.7.17
 reactos/dll/win32/msacm32             # Synced to Wine-1.7.17
 reactos/dll/win32/msacm32/msacm32.drv # Synced to Wine-1.7.17

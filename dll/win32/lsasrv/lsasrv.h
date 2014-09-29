@@ -407,6 +407,9 @@ LsapSetLogonSessionData(IN PLUID LogonId);
 NTSTATUS
 LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg);
 
+NTSTATUS
+LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg);
+
 /* utils.c */
 INT
 LsapLoadString(HINSTANCE hInstance,
