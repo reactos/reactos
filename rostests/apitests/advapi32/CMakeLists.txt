@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     CreateService.c
+    HKEY_CLASSES_ROOT.c
     LockDatabase.c
     QueryServiceConfig2.c
     RtlEncryptMemory.c
