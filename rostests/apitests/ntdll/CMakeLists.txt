@@ -10,6 +10,7 @@ list(APPEND SOURCE
     NtMapViewOfSection.c
     NtMutant.c
     NtProtectVirtualMemory.c
+    NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQueryVolumeInformationFile.c
     NtSaveKey.c

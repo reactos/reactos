@@ -13,6 +13,7 @@ extern void func_NtFreeVirtualMemory(void);
 extern void func_NtMapViewOfSection(void);
 extern void func_NtMutant(void);
 extern void func_NtProtectVirtualMemory(void);
+extern void func_NtQueryKey(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtSaveKey(void);
@@ -44,6 +45,7 @@ const struct test winetest_testlist[] =
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
     { "NtMutant",                       func_NtMutant },
     { "NtProtectVirtualMemory",         func_NtProtectVirtualMemory },
+    { "NtQueryKey",                     func_NtQueryKey },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtQueryVolumeInformationFile",   func_NtQueryVolumeInformationFile },
     { "NtSaveKey",                      func_NtSaveKey},

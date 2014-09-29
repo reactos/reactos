@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for CreateService
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PURPOSE:         Test for the HKEY_CLASSES_ROOT key
+ * PROGRAMMER:      Jérôme Gardou <jerome.gardou@reactos.org>
  */
 
 #include <apitest.h>
