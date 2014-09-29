@@ -385,7 +385,7 @@ OutputHeader_asmstub(FILE *file, char *libname)
 }
 
 void
-Output_symbol(FILE *fileDest, char* pszSymbolName)
+Output_stublabel(FILE *fileDest, char* pszSymbolName)
 {
     if (giArch == ARCH_ARM)
     {
@@ -429,19 +429,21 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
         sprintf(szNameBuffer, "@_stub_%.*s@%d",
                 pexp->strName.len, pexp->strName.buf, pexp->nStackBytes);
     }
-    else if (pexp->nCallingConvention == CC_CDECL ||
-             pexp->nCallingConvention == CC_STUB)
+    else if ((pexp->nCallingConvention == CC_CDECL) ||
+             (pexp->nCallingConvention == CC_THISCALL) ||
+             (pexp->nCallingConvention == CC_EXTERN) ||
+             (pexp->nCallingConvention == CC_STUB))
     {
         sprintf(szNameBuffer, "__stub_%.*s",
                 pexp->strName.len, pexp->strName.buf);
     }
-    else if (pexp->nCallingConvention == CC_EXTERN)
+    else
     {
-        sprintf(szNameBuffer, "__stub_%.*s",
-                pexp->strName.len, pexp->strName.buf);
+        fprintf(stderr, "Invalid calling convention");
+        return 0;
     }
 
-    Output_symbol(fileDest, szNameBuffer);
+    Output_stublabel(fileDest, szNameBuffer);
 
     return 1;
 }
