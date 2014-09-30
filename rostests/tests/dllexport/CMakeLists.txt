@@ -20,3 +20,13 @@ add_executable(dllexport_test
 
 set_module_type(dllexport_test win32cui)
 add_importlibs(dllexport_test dllexport_test_dll1 msvcrt kernel32 ntdll)
+
+if(MSVC)
+    add_compile_flags("/Zc:wchar_t-")
+endif()
+
+add_executable(dllimport_test
+    dllimport_framedyn.cpp)
+set_module_type(dllimport_test win32dll ENTRYPOINT 0)
+add_importlibs(dllimport_test framedyn)
+target_link_libraries(dllimport_test framedynex)
