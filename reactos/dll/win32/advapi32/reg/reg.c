@@ -3483,6 +3483,9 @@ RegOpenKeyExW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
+    if (IsHKCRKey(KeyHandle))
+        return OpenHKCRKey(KeyHandle, lpSubKey, ulOptions, samDesired, phkResult);
+
     if (ulOptions & REG_OPTION_OPEN_LINK)
         Attributes |= OBJ_OPENLINK;
 
@@ -3500,10 +3503,12 @@ RegOpenKeyExW(HKEY hKey,
     Status = NtOpenKey((PHANDLE)phkResult,
                        samDesired,
                        &ObjectAttributes);
+
     if (!NT_SUCCESS(Status))
     {
         ErrorCode = RtlNtStatusToDosError(Status);
     }
+
 
     ClosePredefKey(KeyHandle);
 

@@ -19,5 +19,14 @@ FORCEINLINE
 void
 MakeHKCRKey(_Inout_ HKEY* hKey)
 {
-    *hKey = (HKEY)((ULONG_PTR)*hKey | 0x2);
+    *hKey = (HKEY)((ULONG_PTR)(*hKey) | 0x2);
 }
+
+LONG
+WINAPI
+OpenHKCRKey(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey,
+    _In_ DWORD ulOptions,
+    _In_ REGSAM samDesired,
+    _In_ PHKEY phkResult);
