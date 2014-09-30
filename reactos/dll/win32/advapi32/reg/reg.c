@@ -1181,20 +1181,13 @@ RegCreateKeyW(HKEY hKey,
  *
  * @implemented
  */
-LONG WINAPI
-RegDeleteKeyA(HKEY hKey,
-              LPCSTR lpSubKey)
+LONG
+WINAPI
+RegDeleteKeyA(
+    _In_ HKEY hKey,
+    _In_ LPCSTR lpSubKey)
 {
-    LONG ErrorCode;
-    UNICODE_STRING SubKeyName;
-
-    RtlCreateUnicodeStringFromAsciiz(&SubKeyName, (LPSTR)lpSubKey);
-
-    ErrorCode = RegDeleteKeyW(hKey, SubKeyName.Buffer);
-
-    RtlFreeUnicodeString(&SubKeyName);
-
-    return ErrorCode;
+    return RegDeleteKeyExA(hKey, lpSubKey, 0, 0);
 }
 
 
@@ -1203,9 +1196,54 @@ RegDeleteKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG WINAPI
-RegDeleteKeyW(HKEY hKey,
-              LPCWSTR lpSubKey)
+LONG
+WINAPI
+RegDeleteKeyW(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey)
+{
+    return RegDeleteKeyExW(hKey, lpSubKey, 0, 0);
+}
+
+
+/************************************************************************
+ *  RegDeleteKeyExA
+ *
+ * @implemented
+ */
+LONG
+WINAPI
+RegDeleteKeyExA(
+    _In_ HKEY hKey,
+    _In_ LPCSTR lpSubKey,
+    _In_ REGSAM samDesired,
+    _In_ DWORD Reserved)
+{
+    LONG ErrorCode;
+    UNICODE_STRING SubKeyName;
+
+    RtlCreateUnicodeStringFromAsciiz(&SubKeyName, (LPSTR)lpSubKey);
+
+    ErrorCode = RegDeleteKeyExW(hKey, SubKeyName.Buffer, samDesired, Reserved);
+
+    RtlFreeUnicodeString(&SubKeyName);
+
+    return ErrorCode;
+}
+
+
+/************************************************************************
+ *  RegDeleteKeyExW
+ *
+ * @implemented
+ */
+LONG
+WINAPI
+RegDeleteKeyExW(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey,
+    _In_ REGSAM samDesired,
+    _In_ DWORD Reserved)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING SubKeyName;
@@ -1228,139 +1266,7 @@ RegDeleteKeyW(HKEY hKey,
     }
 
     if (IsHKCRKey(ParentKey))
-        return DeleteHKCRKey(ParentKey, lpSubKey);
-
-    RtlInitUnicodeString(&SubKeyName,
-                         (LPWSTR)lpSubKey);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SubKeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ParentKey,
-                               NULL);
-    Status = NtOpenKey(&TargetKey,
-                       DELETE,
-                       &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        goto Cleanup;
-    }
-
-    Status = NtDeleteKey(TargetKey);
-    NtClose(TargetKey);
-
-Cleanup:
-    ClosePredefKey(ParentKey);
-
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
-
-    return ERROR_SUCCESS;
-}
-
-
-/************************************************************************
- *  RegDeleteKeyExA
- *
- * @implemented
- */
-LONG
-WINAPI
-RegDeleteKeyExA(HKEY hKey,
-                LPCSTR lpSubKey,
-                REGSAM samDesired,
-                DWORD Reserved)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING SubKeyName;
-    HANDLE ParentKey;
-    HANDLE TargetKey;
-    NTSTATUS Status;
-
-    /* Make sure we got a subkey */
-    if (!lpSubKey)
-    {
-        /* Fail */
-        return ERROR_INVALID_PARAMETER;
-    }
-
-    Status = MapDefaultKey(&ParentKey,
-                           hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
-
-    if (samDesired & KEY_WOW64_32KEY)
-        ERR("Wow64 not yet supported!\n");
-
-    if (samDesired & KEY_WOW64_64KEY)
-        ERR("Wow64 not yet supported!\n");
-
-    RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                     (LPSTR)lpSubKey);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SubKeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ParentKey,
-                               NULL);
-
-    Status = NtOpenKey(&TargetKey,
-                       DELETE,
-                       &ObjectAttributes);
-    RtlFreeUnicodeString(&SubKeyName);
-    if (!NT_SUCCESS(Status))
-    {
-        goto Cleanup;
-    }
-
-    Status = NtDeleteKey(TargetKey);
-    NtClose (TargetKey);
-
-Cleanup:
-    ClosePredefKey(ParentKey);
-
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
-
-    return ERROR_SUCCESS;
-}
-
-
-/************************************************************************
- *  RegDeleteKeyExW
- *
- * @implemented
- */
-LONG
-WINAPI
-RegDeleteKeyExW(HKEY hKey,
-                LPCWSTR lpSubKey,
-                REGSAM samDesired,
-                DWORD Reserved)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING SubKeyName;
-    HANDLE ParentKey;
-    HANDLE TargetKey;
-    NTSTATUS Status;
-
-    /* Make sure we got a subkey */
-    if (!lpSubKey)
-    {
-        /* Fail */
-        return ERROR_INVALID_PARAMETER;
-    }
-
-    Status = MapDefaultKey(&ParentKey,
-                           hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
+        return DeleteHKCRKey(ParentKey, lpSubKey, samDesired, Reserved);
 
     if (samDesired & KEY_WOW64_32KEY)
         ERR("Wow64 not yet supported!\n");

@@ -35,5 +35,7 @@ LONG
 WINAPI
 DeleteHKCRKey(
     _In_ HKEY hKey,
-    _In_ LPCWSTR lpSubKey);
+    _In_ LPCWSTR lpSubKey,
+    _In_ REGSAM RegSam,
+    _In_ DWORD Reserved);
 

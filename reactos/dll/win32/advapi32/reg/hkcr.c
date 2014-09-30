@@ -272,7 +272,9 @@ LONG
 WINAPI
 DeleteHKCRKey(
     _In_ HKEY hKey,
-    _In_ LPCWSTR lpSubKey)
+    _In_ LPCWSTR lpSubKey,
+    _In_ REGSAM RegSam,
+    _In_ DWORD Reserved)
 {
     HKEY QueriedKey;
     LONG ErrorCode;
@@ -287,7 +289,7 @@ DeleteHKCRKey(
     if (ErrorCode == ERROR_FILE_NOT_FOUND)
     {
         /* The key doesn't exist on HKCU side, no chance for a subkey */
-        return RegDeleteKeyW(hKey, lpSubKey);
+        return RegDeleteKeyExW(hKey, lpSubKey, RegSam, Reserved);
     }
 
     if (ErrorCode != ERROR_SUCCESS)
@@ -296,7 +298,7 @@ DeleteHKCRKey(
         return ErrorCode;
     }
 
-    ErrorCode = RegDeleteKeyW(QueriedKey, lpSubKey);
+    ErrorCode = RegDeleteKeyExW(QueriedKey, lpSubKey, RegSam, Reserved);
 
     /* Close it if we must */
     if (QueriedKey != hKey)
@@ -317,7 +319,7 @@ DeleteHKCRKey(
         return ErrorCode;
     }
 
-    ErrorCode = RegDeleteKeyW(QueriedKey, lpSubKey);
+    ErrorCode = RegDeleteKeyExW(QueriedKey, lpSubKey, RegSam, Reserved);
 
     /* Close it if we must */
     if (QueriedKey != hKey)
