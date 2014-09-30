@@ -1013,75 +1013,39 @@ CreateNestedKey(PHKEY KeyHandle,
  * @implemented
  */
 LONG WINAPI
-RegCreateKeyExA(HKEY hKey,
-                LPCSTR lpSubKey,
-                DWORD Reserved,
-                LPSTR lpClass,
-                DWORD dwOptions,
-                REGSAM samDesired,
-                LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                PHKEY phkResult,
-                LPDWORD lpdwDisposition)
+RegCreateKeyExA(
+    _In_ HKEY hKey,
+    _In_ LPCSTR lpSubKey,
+    _In_ DWORD Reserved,
+    _In_ LPSTR lpClass,
+    _In_ DWORD dwOptions,
+    _In_ REGSAM samDesired,
+    _In_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    _Out_ PHKEY phkResult,
+    _Out_ LPDWORD lpdwDisposition)
 {
     UNICODE_STRING SubKeyString;
     UNICODE_STRING ClassString;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE ParentKey;
-    ULONG Attributes = OBJ_CASE_INSENSITIVE;
-    NTSTATUS Status;
+    DWORD ErrorCode;
 
-    TRACE("RegCreateKeyExA() called\n");
+    RtlCreateUnicodeStringFromAsciiz(&ClassString, lpClass);
+    RtlCreateUnicodeStringFromAsciiz(&SubKeyString, (LPSTR)lpSubKey);
 
-    if (lpSecurityAttributes && lpSecurityAttributes->nLength != sizeof(SECURITY_ATTRIBUTES))
-        return ERROR_INVALID_USER_BUFFER;
+    ErrorCode = RegCreateKeyExW(
+        hKey,
+        SubKeyString.Buffer,
+        Reserved,
+        ClassString.Buffer,
+        dwOptions,
+        samDesired,
+        lpSecurityAttributes,
+        phkResult,
+        lpdwDisposition);
 
-    /* get the real parent key */
-    Status = MapDefaultKey(&ParentKey,
-                           hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
-
-    TRACE("ParentKey %p\n", ParentKey);
-
-    if (lpClass != NULL)
-    {
-        RtlCreateUnicodeStringFromAsciiz(&ClassString,
-                                         lpClass);
-    }
-
-    if (dwOptions & REG_OPTION_OPEN_LINK)
-        Attributes |= OBJ_OPENLINK;
-
-    RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
-                                     (LPSTR)lpSubKey);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SubKeyString,
-                               Attributes,
-                               (HANDLE)ParentKey,
-                               lpSecurityAttributes ? (PSECURITY_DESCRIPTOR)lpSecurityAttributes->lpSecurityDescriptor : NULL);
-    Status = CreateNestedKey(phkResult,
-                             &ObjectAttributes,
-                             (lpClass == NULL)? NULL : &ClassString,
-                             dwOptions,
-                             samDesired,
-                             lpdwDisposition);
     RtlFreeUnicodeString(&SubKeyString);
-    if (lpClass != NULL)
-    {
-        RtlFreeUnicodeString(&ClassString);
-    }
+    RtlFreeUnicodeString(&ClassString);
 
-    ClosePredefKey(ParentKey);
-
-    TRACE("Status %x\n", Status);
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
-
-    return ERROR_SUCCESS;
+    return ErrorCode;
 }
 
 
