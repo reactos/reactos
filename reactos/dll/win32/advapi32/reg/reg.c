@@ -18,6 +18,8 @@
 #include <ndk/cmfuncs.h>
 #include <pseh/pseh2.h>
 
+#include "reg.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(reg);
 
 /* DEFINES ******************************************************************/
@@ -231,10 +233,11 @@ CloseDefaultKeys(VOID)
 
 
 static NTSTATUS
-OpenClassesRootKey(PHANDLE KeyHandle)
+OpenClassesRootKey(_Out_ PHANDLE KeyHandle)
 {
     OBJECT_ATTRIBUTES Attributes;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\CLASSES");
+    NTSTATUS Status;
 
     TRACE("OpenClassesRootKey()\n");
 
@@ -243,9 +246,17 @@ OpenClassesRootKey(PHANDLE KeyHandle)
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    return NtOpenKey(KeyHandle,
-                     MAXIMUM_ALLOWED,
-                     &Attributes);
+    Status = NtOpenKey(KeyHandle,
+                       MAXIMUM_ALLOWED,
+                       &Attributes);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Mark it as HKCR */
+    MakeHKCRKey((HKEY*)KeyHandle);
+
+    return Status;
 }
 
 
