@@ -12,8 +12,14 @@
 
 /* DEFINES ********************************************************************/
 
-/* 32-bit Interrupt Identifiers */
-#define EMULATOR_MAX_INT32_NUM  0xFF + 1
+#define BOP(num)            LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), (num)
+#define UnSimulate16(trap)           \
+do {                                 \
+    *(PUSHORT)(trap) = EMULATOR_BOP; \
+    (trap) += sizeof(USHORT);        \
+    *(trap) = BOP_UNSIMULATE;        \
+} while(0)
+// #define UnSimulate16        MAKELONG(EMULATOR_BOP, BOP_UNSIMULATE) // BOP(BOP_UNSIMULATE)
 
 typedef struct _CALLBACK16
 {
@@ -23,11 +29,23 @@ typedef struct _CALLBACK16
     USHORT NextOffset;
 } CALLBACK16, *PCALLBACK16;
 
-extern const ULONG Int16To32StubSize;
+//
+// WARNING WARNING!!
+// If you're changing the indices here, you then need to
+// also fix the BOP code in callback.c !!!!!!!!!!!!!!!!!
+//
+#define STACK_INT_NUM   0
+#define STACK_IP        1
+#define STACK_CS        2
+#define STACK_FLAGS     3
 
 /* FUNCTIONS ******************************************************************/
 
-typedef VOID (WINAPI *EMULATOR_INT32_PROC)(LPWORD Stack);
+VOID
+InitializeContextEx(IN PCALLBACK16 Context,
+                    IN ULONG       TrampolineSize,
+                    IN USHORT      Segment,
+                    IN USHORT      Offset);
 
 VOID
 InitializeContext(IN PCALLBACK16 Context,
@@ -38,35 +56,15 @@ VOID
 Call16(IN USHORT Segment,
        IN USHORT Offset);
 
-ULONG
-RegisterCallback16(IN  ULONG   FarPtr,
-                   IN  LPBYTE  CallbackCode,
-                   IN  SIZE_T  CallbackSize,
-                   OUT PSIZE_T CodeSize OPTIONAL);
-
 VOID
 RunCallback16(IN PCALLBACK16 Context,
               IN ULONG       FarPtr);
 
 ULONG
-RegisterInt16(IN  ULONG   FarPtr,
-              IN  BYTE    IntNumber,
-              IN  LPBYTE  CallbackCode,
-              IN  SIZE_T  CallbackSize,
-              OUT PSIZE_T CodeSize OPTIONAL);
-
-ULONG
-RegisterInt32(IN  ULONG   FarPtr,
-              IN  BYTE    IntNumber,
-              IN  EMULATOR_INT32_PROC IntHandler,
-              OUT PSIZE_T CodeSize OPTIONAL);
-
-VOID
-Int32Call(IN PCALLBACK16 Context,
-          IN BYTE IntNumber);
-
-VOID WINAPI Int32Dispatch(LPWORD Stack);
-VOID InitializeCallbacks(VOID);
+RegisterCallback16(IN  ULONG   FarPtr,
+                   IN  LPBYTE  CallbackCode,
+                   IN  SIZE_T  CallbackSize,
+                   OUT PSIZE_T CodeSize OPTIONAL);
 
 #endif // _CALLBACK_H_
 

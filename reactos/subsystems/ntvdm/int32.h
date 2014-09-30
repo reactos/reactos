@@ -10,21 +10,39 @@
 #ifndef _INT32_H_
 #define _INT32_H_
 
+/* INCLUDES *******************************************************************/
+
+#include "cpu/callback.h"
+
 /* DEFINES ********************************************************************/
 
 /* 32-bit Interrupt Identifiers */
 #define EMULATOR_MAX_INT32_NUM  0xFF + 1
 
-#define INT_HANDLER_OFFSET 0x1000
-#define COMMON_STUB_OFFSET 0x2000
+extern const ULONG Int16To32StubSize;
 
 /* FUNCTIONS ******************************************************************/
 
 typedef VOID (WINAPI *EMULATOR_INT32_PROC)(LPWORD Stack);
 
-VOID WINAPI Int32Dispatch(LPWORD Stack);
-VOID InitializeInt32(WORD BiosSegment);
-VOID RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler);
+ULONG
+RegisterInt16(IN  ULONG   FarPtr,
+              IN  BYTE    IntNumber,
+              IN  LPBYTE  CallbackCode,
+              IN  SIZE_T  CallbackSize,
+              OUT PSIZE_T CodeSize OPTIONAL);
+
+ULONG
+RegisterInt32(IN  ULONG   FarPtr,
+              IN  BYTE    IntNumber,
+              IN  EMULATOR_INT32_PROC IntHandler,
+              OUT PSIZE_T CodeSize OPTIONAL);
+
+VOID
+Int32Call(IN PCALLBACK16 Context,
+          IN BYTE IntNumber);
+
+VOID InitializeInt32(VOID);
 
 #endif // _INT32_H_
 

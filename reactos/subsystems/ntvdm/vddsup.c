@@ -13,8 +13,7 @@
 #include "emulator.h"
 #include "vddsup.h"
 
-#include "bop.h"
-
+#include "cpu/bop.h"
 #include <isvbop.h>
 
 typedef VOID (WINAPI *VDD_PROC)(VOID);

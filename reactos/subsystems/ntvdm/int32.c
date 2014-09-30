@@ -14,25 +14,55 @@
 #include "emulator.h"
 #include "int32.h"
 
-#include "bop.h"
+#include "cpu/bop.h"
+#include <isvbop.h>
 
 /* PRIVATE VARIABLES **********************************************************/
 
 /*
  * This is the list of registered 32-bit Interrupt handlers.
  */
-EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
+static EMULATOR_INT32_PROC Int32Proc[EMULATOR_MAX_INT32_NUM] = { NULL };
 
 /* BOP Identifiers */
 #define BOP_CONTROL             0xFF    // Control BOP Handler
     #define BOP_CONTROL_DEFFUNC 0x00    // Default Control BOP Function
+    #define BOP_CONTROL_INT32   0xFF    // 32-bit Interrupt dispatcher
 
-/* 32-bit Interrupt dispatcher function code for the Control BOP Handler */
-#define BOP_CONTROL_INT32       0xFF
+#define INT16_TRAMPOLINE_SIZE   sizeof(ULONGLONG) // == TRAMPOLINE_SIZE
+
+/* 16-bit generic interrupt code for calling a 32-bit interrupt handler */
+static BYTE Int16To32[] =
+{
+    0xFA,               // cli
+
+    /* Push the value of the interrupt to be called */
+    0x6A, 0xFF,         // push i (patchable to 0x6A, 0xIntNum)
+
+    /* The BOP Sequence */
+// BOP_SEQ:
+    0xF8,               // clc
+    BOP(BOP_CONTROL),   // Control BOP
+    BOP_CONTROL_INT32,  // 32-bit Interrupt dispatcher
+
+    0x73, 0x04,         // jnc EXIT (offset +4)
+
+    0xFB,               // sti
+
+    // HACK: The following instruction should be HLT!
+    0x90,               // nop
+
+    0xEB, 0xF5,         // jmp BOP_SEQ (offset -11)
+
+// EXIT:
+    0x44, 0x44,         // inc sp, inc sp
+    0xCF,               // iret
+};
+const ULONG Int16To32StubSize = sizeof(Int16To32);
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID WINAPI Int32Dispatch(LPWORD Stack)
+static VOID WINAPI Int32Dispatch(LPWORD Stack)
 {
     /* Get the interrupt number */
     BYTE IntNum = LOBYTE(Stack[STACK_INT_NUM]);
@@ -41,88 +71,127 @@ VOID WINAPI Int32Dispatch(LPWORD Stack)
     if (Int32Proc[IntNum] != NULL)
         Int32Proc[IntNum](Stack);
     else
-        DPRINT("Unhandled 32-bit interrupt: 0x%02X, AX = 0x%04X\n", IntNum, getAX());
+        DPRINT1("Unhandled 32-bit interrupt: 0x%02X, AX = 0x%04X\n", IntNum, getAX());
 }
 
-VOID WINAPI ControlBop(LPWORD Stack)
+static VOID WINAPI ControlBop(LPWORD Stack)
 {
     /* Get the Function Number and skip it */
     BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
     setIP(getIP() + 1);
 
-    if (FuncNum == BOP_CONTROL_INT32)
-        Int32Dispatch(Stack);
-    else
-        DPRINT("Unassigned Control BOP Function: 0x%02X\n", FuncNum);
+    switch (FuncNum)
+    {
+        case BOP_CONTROL_INT32:
+            Int32Dispatch(Stack);
+            break;
+
+        default:
+            // DPRINT1("Unassigned Control BOP Function: 0x%02X\n", FuncNum);
+            DisplayMessage(L"Unassigned Control BOP Function: 0x%02X", FuncNum);
+            break;
+    }
 }
 
-VOID InitializeInt32(WORD BiosSegment)
+ULONG
+RegisterInt16(IN  ULONG   FarPtr,
+              IN  BYTE    IntNumber,
+              IN  LPBYTE  CallbackCode,
+              IN  SIZE_T  CallbackSize,
+              OUT PSIZE_T CodeSize OPTIONAL)
 {
-    //
-    // WARNING WARNING!!
-    //
-    // If you modify the code stubs here, think also
-    // about updating them in callback.c too!!
-    //
+    /* Get a pointer to the IVT and set the corresponding entry (far pointer) */
+    LPDWORD IntVecTable = (LPDWORD)SEG_OFF_TO_PTR(0x0000, 0x0000);
+    IntVecTable[IntNumber] = FarPtr;
 
-    LPDWORD IntVecTable = (LPDWORD)BaseAddress;
-    LPBYTE  BiosCode    = (LPBYTE)SEG_OFF_TO_PTR(BiosSegment, 0);
-    USHORT i;
-    WORD BopSeqOffset, Offset = 0;
+    /* Register the 16-bit callback */
+    return RegisterCallback16(FarPtr,
+                              CallbackCode,
+                              CallbackSize,
+                              CodeSize);
+}
 
-    /* Generate ISR stubs and fill the IVT */
-    for (i = 0x00; i <= 0xFF; i++)
+ULONG
+RegisterInt32(IN  ULONG   FarPtr,
+              IN  BYTE    IntNumber,
+              IN  EMULATOR_INT32_PROC IntHandler,
+              OUT PSIZE_T CodeSize OPTIONAL)
+{
+    /* Array for holding our copy of the 16-bit interrupt callback */
+    BYTE IntCallback[sizeof(Int16To32)/sizeof(BYTE)];
+
+    /* Check whether the 32-bit interrupt was already registered */
+#if 0
+    if (Int32Proc[IntNumber] != NULL)
     {
-        Offset = INT_HANDLER_OFFSET + (i << 4);
-        IntVecTable[i] = MAKELONG(Offset, BiosSegment);
-
-        BiosCode[Offset++] = 0xFA; // cli
-
-        BiosCode[Offset++] = 0x6A; // push i
-        BiosCode[Offset++] = (UCHAR)i;
-
-        BopSeqOffset = COMMON_STUB_OFFSET - (Offset + 3);
-
-        BiosCode[Offset++] = 0xE9; // jmp near BOP_SEQ
-        BiosCode[Offset++] = LOBYTE(BopSeqOffset);
-        BiosCode[Offset++] = HIBYTE(BopSeqOffset);
+        DPRINT1("RegisterInt32: Interrupt 0x%02X already registered!\n", IntNumber);
+        return 0;
     }
+#endif
 
-    /* Write the common stub code */
-    Offset = COMMON_STUB_OFFSET;
+    /* Register the 32-bit interrupt handler */
+    Int32Proc[IntNumber] = IntHandler;
 
-// BOP_SEQ:
-    BiosCode[Offset++] = 0xF8; // clc
+    /* Copy the generic 16-bit interrupt callback and patch it */
+    RtlCopyMemory(IntCallback, Int16To32, sizeof(Int16To32));
+    IntCallback[2] = IntNumber;
 
-    BiosCode[Offset++] = LOBYTE(EMULATOR_BOP);  // BOP sequence
-    BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
-    BiosCode[Offset++] = BOP_CONTROL;           // Control BOP
-    BiosCode[Offset++] = BOP_CONTROL_INT32;     // 32-bit Interrupt dispatcher
+    /* Register the 16-bit interrupt callback */
+    return RegisterInt16(FarPtr,
+                         IntNumber,
+                         IntCallback,
+                         sizeof(IntCallback),
+                         CodeSize);
+}
 
-    BiosCode[Offset++] = 0x73; // jnc EXIT (offset +4)
-    BiosCode[Offset++] = 0x04;
+VOID
+Int32Call(IN PCALLBACK16 Context,
+          IN BYTE IntNumber)
+{
+    /*
+     * TODO: This function has almost the same code as RunCallback16.
+     * Something that may be nice is to have a common interface to
+     * build the trampoline...
+     */
 
-    BiosCode[Offset++] = 0xFB; // sti
+    PUCHAR TrampolineBase = (PUCHAR)FAR_POINTER(Context->TrampolineFarPtr);
+    PUCHAR Trampoline     = TrampolineBase;
+    UCHAR  OldTrampoline[INT16_TRAMPOLINE_SIZE];
 
-    // HACK: The following instruction should be HLT!
-    BiosCode[Offset++] = 0x90; // nop
+    DPRINT("Int32Call(0x%02X)\n", IntNumber);
 
-    BiosCode[Offset++] = 0xEB; // jmp BOP_SEQ (offset -11)
-    BiosCode[Offset++] = 0xF5;
+    ASSERT(Context->TrampolineSize == INT16_TRAMPOLINE_SIZE);
 
-// EXIT:
-    BiosCode[Offset++] = 0x44; // inc sp
-    BiosCode[Offset++] = 0x44; // inc sp
+    /* Save the old trampoline */
+    ((PULONGLONG)&OldTrampoline)[0] = ((PULONGLONG)TrampolineBase)[0];
 
-    BiosCode[Offset++] = 0xCF; // iret
+    /* Build the generic entry-point for 16-bit calls */
+    if (IntNumber == 0x03)
+    {
+        /* We are redefining for INT 03h */
+        *Trampoline++ = 0xCC; // Call INT 03h
+        /** *Trampoline++ = 0x90; // nop **/
+    }
+    else
+    {
+        /* Normal interrupt */
+        *Trampoline++ = 0xCD; // Call INT XXh
+        *Trampoline++ = IntNumber;
+    }
+    UnSimulate16(Trampoline);
 
+    /* Perform the call */
+    Call16(HIWORD(Context->TrampolineFarPtr),
+           LOWORD(Context->TrampolineFarPtr));
+
+    /* Restore the old trampoline */
+    ((PULONGLONG)TrampolineBase)[0] = ((PULONGLONG)&OldTrampoline)[0];
+}
+
+VOID InitializeInt32(VOID)
+{
     /* Register the Control BOP */
     RegisterBop(BOP_CONTROL, ControlBop);
-}
-
-VOID RegisterInt32(BYTE IntNumber, EMULATOR_INT32_PROC IntHandler)
-{
-    Int32Proc[IntNumber] = IntHandler;
 }
 
 /* EOF */

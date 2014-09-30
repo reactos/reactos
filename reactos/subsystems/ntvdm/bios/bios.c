@@ -11,8 +11,8 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
-#include "bop.h"
+#include "cpu/callback.h"
+#include "cpu/bop.h"
 
 #include "bios.h"
 #include "bios32/bios32.h"

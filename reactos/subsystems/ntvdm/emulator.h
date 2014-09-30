@@ -16,35 +16,6 @@
 
 /* DEFINES ********************************************************************/
 
-/* FLAGS */
-#define EMULATOR_FLAG_CF (1 << 0)
-#define EMULATOR_FLAG_PF (1 << 2)
-#define EMULATOR_FLAG_AF (1 << 4)
-#define EMULATOR_FLAG_ZF (1 << 6)
-#define EMULATOR_FLAG_SF (1 << 7)
-#define EMULATOR_FLAG_TF (1 << 8)
-#define EMULATOR_FLAG_IF (1 << 9)
-#define EMULATOR_FLAG_DF (1 << 10)
-#define EMULATOR_FLAG_OF (1 << 11)
-#define EMULATOR_FLAG_NT (1 << 14)
-#define EMULATOR_FLAG_RF (1 << 16)
-#define EMULATOR_FLAG_VM (1 << 17)
-#define EMULATOR_FLAG_AC (1 << 18)
-#define EMULATOR_FLAG_VIF (1 << 19)
-#define EMULATOR_FLAG_VIP (1 << 20)
-#define EMULATOR_FLAG_ID (1 << 21)
-
-//
-// WARNING WARNING!!
-// If you're changing the indices here, you then need to
-// also fix the BOP code in callback.c !!!!!!!!!!!!!!!!!
-//
-#define STACK_INT_NUM   0
-#define STACK_IP        1
-#define STACK_CS        2
-#define STACK_FLAGS     3
-
-
 /* Basic Memory Management */
 #define MEM_ALIGN_UP(ptr, align)    MEM_ALIGN_DOWN((ULONG_PTR)(ptr) + (align) - 1l, (align))
 #define MEM_ALIGN_DOWN(ptr, align)  (PVOID)((ULONG_PTR)(ptr) & ~((align) - 1l))
@@ -92,7 +63,7 @@ enum
     EMULATOR_EXCEPTION_PAGE_FAULT
 };
 
-extern FAST486_STATE EmulatorContext;
+// extern FAST486_STATE EmulatorContext;
 extern LPVOID  BaseAddress;
 extern BOOLEAN VdmRunning;
 
@@ -123,10 +94,6 @@ UCHAR WINAPI EmulatorIntAcknowledge
 
 VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack);
 
-VOID EmulatorExecute(WORD Segment, WORD Offset);
-VOID EmulatorStep(VOID);
-VOID EmulatorSimulate(VOID);
-VOID EmulatorUnsimulate(VOID);
 VOID EmulatorTerminate(VOID);
 
 VOID EmulatorInterrupt(BYTE Number);

@@ -11,7 +11,8 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_ZF
+#include "int32.h"
 
 #include "kbdbios32.h"
 #include "../kbdbios.h"

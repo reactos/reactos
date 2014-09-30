@@ -18,7 +18,7 @@
 #include "utils.h"
 
 #include "dem.h"
-#include "bop.h"
+#include "cpu/bop.h"
 
 #include "bios/bios.h"
 #include "mouse32.h"

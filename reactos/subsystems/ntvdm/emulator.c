@@ -11,7 +11,13 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/bop.h"
+#include <isvbop.h>
+
+#include "int32.h"
 
 #include "clock.h"
 #include "bios/rom.h"
@@ -24,20 +30,10 @@
 #include "hardware/timer.h"
 #include "hardware/vga.h"
 
-#include "bop.h"
 #include "vddsup.h"
 #include "io.h"
 
-#include <isvbop.h>
-
 /* PRIVATE VARIABLES **********************************************************/
-
-FAST486_STATE EmulatorContext;
-BOOLEAN CpuSimulate = FALSE;
-
-/* No more than 'MaxCpuCallLevel' recursive CPU calls are allowed */
-static const INT MaxCpuCallLevel = 32;
-static INT CpuCallLevel = 0;
 
 LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
@@ -176,51 +172,6 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
     return;
 }
 
-// FIXME: This function assumes 16-bit mode!!!
-VOID EmulatorExecute(WORD Segment, WORD Offset)
-{
-    /* Tell Fast486 to move the instruction pointer */
-    Fast486ExecuteAt(&EmulatorContext, Segment, Offset);
-}
-
-VOID EmulatorStep(VOID)
-{
-    /* Dump the state for debugging purposes */
-    // Fast486DumpState(&EmulatorContext);
-
-    /* Execute the next instruction */
-    Fast486StepInto(&EmulatorContext);
-}
-
-VOID EmulatorSimulate(VOID)
-{
-    if (CpuCallLevel > MaxCpuCallLevel)
-    {
-        DisplayMessage(L"Too many CPU levels of recursion (%d, expected maximum %d)",
-                       CpuCallLevel, MaxCpuCallLevel);
-
-        /* Stop the VDM */
-        EmulatorTerminate();
-        return;
-    }
-    CpuCallLevel++;
-
-    CpuSimulate = TRUE;
-    while (VdmRunning && CpuSimulate) ClockUpdate();
-
-    CpuCallLevel--;
-    if (CpuCallLevel < 0) CpuCallLevel = 0;
-
-    /* This takes into account for reentrance */
-    CpuSimulate = TRUE;
-}
-
-VOID EmulatorUnsimulate(VOID)
-{
-    /* Stop simulation */
-    CpuSimulate = FALSE;
-}
-
 VOID EmulatorTerminate(VOID)
 {
     /* Stop the VDM */
@@ -248,11 +199,6 @@ static VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
 {
     DPRINT1("NTVDM: BOP_DEBUGGER\n");
     DebugBreak();
-}
-
-static VOID WINAPI EmulatorUnsimulateBop(LPWORD Stack)
-{
-    EmulatorUnsimulate();
 }
 
 static BYTE WINAPI Port61hRead(ULONG Port)
@@ -559,6 +505,8 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     /* Initialize I/O ports */
     /* Initialize RAM */
 
+    /* Initialize the CPU */
+
     /* Initialize the internal clock */
     if (!ClockInitialize())
     {
@@ -567,15 +515,16 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     }
 
     /* Initialize the CPU */
-    Fast486Initialize(&EmulatorContext,
-                      EmulatorReadMemory,
-                      EmulatorWriteMemory,
-                      EmulatorReadIo,
-                      EmulatorWriteIo,
-                      NULL,
-                      EmulatorBiosOperation,
-                      EmulatorIntAcknowledge,
-                      NULL /* TODO: Use a TLB */);
+    CpuInitialize();
+    // Fast486Initialize(&EmulatorContext,
+                      // EmulatorReadMemory,
+                      // EmulatorWriteMemory,
+                      // EmulatorReadIo,
+                      // EmulatorWriteIo,
+                      // NULL,
+                      // EmulatorBiosOperation,
+                      // EmulatorIntAcknowledge,
+                      // NULL /* TODO: Use a TLB */);
 
     /* Initialize DMA */
 
@@ -626,9 +575,9 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     }
 
     /* Initialize the software callback system and register the emulator BOPs */
-    InitializeCallbacks();
+    InitializeInt32();
     RegisterBop(BOP_DEBUGGER  , EmulatorDebugBreakBop);
-    RegisterBop(BOP_UNSIMULATE, EmulatorUnsimulateBop);
+    // RegisterBop(BOP_UNSIMULATE, CpuUnsimulateBop);
 
     /* Initialize VDD support */
     VDDSupInitialize();
@@ -651,7 +600,7 @@ VOID EmulatorCleanup(VOID)
     // PitCleanup();
     // PicCleanup();
 
-    // Fast486Cleanup();
+    CpuCleanup();
 
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
@@ -663,7 +612,7 @@ VOID
 WINAPI
 VDDSimulate16(VOID)
 {
-    EmulatorSimulate();
+    CpuSimulate();
 }
 
 VOID

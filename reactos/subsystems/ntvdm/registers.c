@@ -11,23 +11,9 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "cpu/cpu.h"
 
 /* PUBLIC FUNCTIONS ***********************************************************/
-
-static inline BOOLEAN EmulatorGetFlag(ULONG Flag)
-{
-    return (EmulatorContext.Flags.Long & Flag) ? TRUE : FALSE;
-}
-
-static inline VOID EmulatorSetFlag(ULONG Flag)
-{
-    EmulatorContext.Flags.Long |= Flag;
-}
-
-static inline VOID EmulatorClearFlag(ULONG Flag)
-{
-    EmulatorContext.Flags.Long &= ~Flag;
-}
 
 VOID EmulatorSetStack(WORD Segment, DWORD Offset)
 {
@@ -405,7 +391,7 @@ VOID
 WINAPI
 setEIP(ULONG Value)
 {
-    EmulatorExecute(getCS(), Value);
+    CpuExecute(getCS(), Value);
 }
 
 USHORT
@@ -419,7 +405,7 @@ VOID
 WINAPI
 setIP(USHORT Value)
 {
-    EmulatorExecute(getCS(), Value);
+    CpuExecute(getCS(), Value);
 }
 
 
@@ -514,136 +500,112 @@ ULONG
 WINAPI
 getCF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_CF);
+    return EmulatorContext.Flags.Cf;
 }
 
 VOID
 WINAPI
 setCF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_CF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_CF);
+    EmulatorContext.Flags.Cf = !!(Flag & 1);
 }
 
 ULONG
 WINAPI
 getPF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_PF);
+    return EmulatorContext.Flags.Pf;
 }
 
 VOID
 WINAPI
 setPF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_PF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_PF);
+    EmulatorContext.Flags.Pf = !!(Flag & 1);
 }
 
 ULONG
 WINAPI
 getAF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_AF);
+    return EmulatorContext.Flags.Af;
 }
 
 VOID
 WINAPI
 setAF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_AF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_AF);
+    EmulatorContext.Flags.Af = !!(Flag & 1);
 }
 
 ULONG
 WINAPI
 getZF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_ZF);
+    return EmulatorContext.Flags.Zf;
 }
 
 VOID
 WINAPI
 setZF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_ZF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_ZF);
+    EmulatorContext.Flags.Zf = !!(Flag & 1);
 }
 
 ULONG
 WINAPI
 getSF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_SF);
+    return EmulatorContext.Flags.Sf;
 }
 
 VOID
 WINAPI
 setSF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_SF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_SF);
+    EmulatorContext.Flags.Sf = !!(Flag & 1);
 }
 
 ULONG
 WINAPI
 getIF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_IF);
+    return EmulatorContext.Flags.If;
 }
 
 VOID
 WINAPI
 setIF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_IF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_IF);
+    EmulatorContext.Flags.If = !!(Flag & 1);
 }
 
 ULONG
 WINAPI
 getDF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_DF);
+    return EmulatorContext.Flags.Df;
 }
 
 VOID
 WINAPI
 setDF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_DF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_DF);
+    EmulatorContext.Flags.Df = !!(Flag & 1);
 }
 
 ULONG
 WINAPI
 getOF(VOID)
 {
-    return EmulatorGetFlag(EMULATOR_FLAG_OF);
+    return EmulatorContext.Flags.Of;
 }
 
 VOID
 WINAPI
 setOF(ULONG Flag)
 {
-    if (Flag & 1)
-        EmulatorSetFlag(EMULATOR_FLAG_OF);
-    else
-        EmulatorClearFlag(EMULATOR_FLAG_OF);
+    EmulatorContext.Flags.Of = !!(Flag & 1);
 }
 
 
