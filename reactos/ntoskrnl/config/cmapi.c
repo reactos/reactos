@@ -1556,12 +1556,13 @@ CmpQueryNameInformation(
     /* Do the real copy */
     KeyNameInfo->NameLength = 0;
     CurrentKcb = Kcb;
-    while (CurrentKcb)
-    {
-        ULONG NameLength;
 
-        _SEH2_TRY
+    _SEH2_TRY
+    {
+        while (CurrentKcb)
         {
+            ULONG NameLength;
+
             if (CurrentKcb->NameBlock->Compressed)
             {
                 NameLength = CmpCompressedNameSize(CurrentKcb->NameBlock->Name, CurrentKcb->NameBlock->NameLength);
@@ -1585,15 +1586,15 @@ CmpQueryNameInformation(
             /* Add path separator */
             KeyNameInfo->Name[NeededLength/sizeof(WCHAR)] = OBJ_NAME_PATH_SEPARATOR;
             KeyNameInfo->NameLength += NameLength + sizeof(OBJ_NAME_PATH_SEPARATOR);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            return _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
 
-        CurrentKcb = CurrentKcb->ParentKcb;
+            CurrentKcb = CurrentKcb->ParentKcb;
+        }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     /* Make sure we copied everything */
     ASSERT(NeededLength == 0);
