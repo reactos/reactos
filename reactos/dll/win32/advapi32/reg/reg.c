@@ -3452,54 +3452,25 @@ RegOpenKeyW(HKEY hKey,
  * @implemented
  */
 LONG WINAPI
-RegOpenKeyExA(HKEY hKey,
-              LPCSTR lpSubKey,
-              DWORD ulOptions,
-              REGSAM samDesired,
-              PHKEY phkResult)
+RegOpenKeyExA(
+    _In_ HKEY hKey,
+    _In_ LPCSTR lpSubKey,
+    _In_ DWORD ulOptions,
+    _In_ REGSAM samDesired,
+    _Out_ PHKEY phkResult)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING SubKeyString;
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-    ULONG Attributes = OBJ_CASE_INSENSITIVE;
-    LONG ErrorCode = ERROR_SUCCESS;
+    LONG ErrorCode;
 
     TRACE("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
           hKey, lpSubKey, ulOptions, samDesired, phkResult);
-    if (!phkResult)
-    {
-        return ERROR_INVALID_PARAMETER;
-    }
-
-    Status = MapDefaultKey(&KeyHandle,
-                           hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
-
-    if (ulOptions & REG_OPTION_OPEN_LINK)
-        Attributes |= OBJ_OPENLINK;
 
     RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
                                      (LPSTR)lpSubKey);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SubKeyString,
-                               Attributes,
-                               KeyHandle,
-                               NULL);
 
-    Status = NtOpenKey((PHANDLE)phkResult,
-                       samDesired,
-                       &ObjectAttributes);
+    ErrorCode = RegOpenKeyExW(hKey, SubKeyString.Buffer, ulOptions, samDesired, phkResult);
+
     RtlFreeUnicodeString(&SubKeyString);
-    if (!NT_SUCCESS(Status))
-    {
-        ErrorCode = RtlNtStatusToDosError(Status);
-    }
-
-    ClosePredefKey(KeyHandle);
 
     return ErrorCode;
 }
