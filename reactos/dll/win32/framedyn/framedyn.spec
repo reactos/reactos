@@ -68,7 +68,7 @@
 @ thiscall ??4CHString@@QAEABV0@PBG@Z(wstr) _ZN8CHStringaSEPKw
 @ thiscall ??4CHString@@QAEABV0@G@Z(long) _ZN8CHStringaSEw
 @ thiscall ??ACHString@@QBEGH@Z(long) _ZNK8CHStringixEi
-@ thiscall ??1CHString@@QAE@XZ() _ZN8CHStringD1Ev
+@ thiscall ??1CHString@@QAE@XZ() _ZN8CHStringD1Ev # complete object destructor, identical to _ZN8CHStringD2Ev aka base object destructor
 @ stdcall ??H@YG?AVCHString@@GABV0@@Z(long ptr) _ZplwRK8CHString
 @ stdcall ??H@YG?AVCHString@@ABV0@G@Z(ptr long) _ZplRK8CHStringw
 @ stdcall ??H@YG?AVCHString@@ABV0@PBG@Z(ptr wstr) _ZplRK8CHStringPKw
