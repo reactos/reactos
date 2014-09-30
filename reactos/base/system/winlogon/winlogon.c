@@ -356,6 +356,13 @@ WinMain(
         ExitProcess(1);
     }
 
+    if (!StartRpcServer())
+    {
+        ERR("WL: Could not start the RPC server\n");
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+        ExitProcess(1);
+    }
+
     if (!StartServicesManager())
     {
         ERR("WL: Could not start services.exe\n");
