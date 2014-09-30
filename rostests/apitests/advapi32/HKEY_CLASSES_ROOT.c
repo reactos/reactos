@@ -108,13 +108,15 @@ static
 void
 Test_CreateOpenKey(void)
 {
-    HKEY MachineKey, UserKey, ClassesRootKey;
+    HKEY MachineKey, MachineSubKey;
+    HKEY UserKey, UserSubKey;
+    HKEY ClassesRootKey, ClassesRootSubKey;
     DWORD ErrorCode;
 
     /* First create a subkey in HKLM */
     ErrorCode = RegCreateKeyExW(
         HKEY_LOCAL_MACHINE,
-        L"Software\\Classes\\Apitest_HKLM_Only",
+        L"Software\\Classes\\Apitest_HKLM",
         0,
         NULL,
         0,
@@ -122,25 +124,32 @@ Test_CreateOpenKey(void)
         NULL,
         &MachineKey,
         NULL);
+
+    if (ErrorCode == ERROR_ACCESS_DENIED)
+    {
+        win_skip("Please run those tests with Administrator rights\n");
+        return;
+    }
+
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok(!IS_HKCR(MachineKey), "\n");
 
     /* Open it in HKCR */
     ErrorCode = RegOpenKeyExW(
         HKEY_CLASSES_ROOT,
-        L"Apitest_HKLM_Only",
+        L"Apitest_HKLM",
         0,
         MAXIMUM_ALLOWED,
         &ClassesRootKey);
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok(IS_HKCR(ClassesRootKey), "\n");
-    ok_key_name(ClassesRootKey, &HKLM_ClassesPath, L"Apitest_HKLM_Only");
+    ok_key_name(ClassesRootKey, &HKLM_ClassesPath, L"Apitest_HKLM");
 
     /* Try opening it in HKCU */
     UserKey = (HKEY)0xCAFEF00D;
     ErrorCode = RegOpenKeyExW(
         HKEY_CURRENT_USER,
-        L"Software\\Classes\\Apitest_HKLM_Only",
+        L"Software\\Classes\\Apitest_HKLM",
         0,
         MAXIMUM_ALLOWED,
         &UserKey);
@@ -150,7 +159,7 @@ Test_CreateOpenKey(void)
     /* Cleanup */
     RegCloseKey(ClassesRootKey);
     RegCloseKey(MachineKey);
-    ErrorCode = DeleteSubKey(HKEY_LOCAL_MACHINE, L"Software\\Classes", L"Apitest_HKLM_Only");
+    ErrorCode = DeleteSubKey(HKEY_LOCAL_MACHINE, L"Software\\Classes", L"Apitest_HKLM");
     ok_dec(ErrorCode, ERROR_SUCCESS);
 
     /* Try creating in HKCR */
@@ -313,6 +322,169 @@ Test_CreateOpenKey(void)
     /* This deletes it from HKLM this time */
     ErrorCode = RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Apitest_HKLM_HKCU");
     ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok_key_deleted(MachineKey);
+    RegCloseKey(MachineKey);
+
+    /* See what happens with subkeys */
+    ErrorCode = RegCreateKeyExW(
+        HKEY_LOCAL_MACHINE,
+        L"Software\\Classes\\Apitest_HKLM",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &MachineKey,
+        NULL);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(!IS_HKCR(MachineKey), "\n");
+
+    /* Open it in HKCR */
+    ErrorCode = RegOpenKeyExW(
+        HKEY_CLASSES_ROOT,
+        L"Apitest_HKLM",
+        0,
+        MAXIMUM_ALLOWED,
+        &ClassesRootKey);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootKey), "\n");
+    ok_key_name(ClassesRootKey, &HKLM_ClassesPath, L"Apitest_HKLM");
+
+    /* Create a corresponding subkey in HKCU */
+    ErrorCode = RegCreateKeyExW(
+        HKEY_CURRENT_USER,
+        L"Software\\Classes\\Apitest_HKLM\\HKCU_Subkey",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &UserSubKey,
+        NULL);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(!IS_HKCR(UserSubKey), "\n");
+
+    /* Open it as an HKCR subkey */
+    ErrorCode = RegOpenKeyExW(
+        ClassesRootKey,
+        L"HKCU_Subkey",
+        0,
+        MAXIMUM_ALLOWED,
+        &ClassesRootSubKey);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootSubKey), "\n");
+    ok_key_name(ClassesRootSubKey, &HKCU_ClassesPath, L"Apitest_HKLM\\HKCU_Subkey");
+
+    /* This one now exists */
+    ErrorCode = RegOpenKeyExW(
+        HKEY_CURRENT_USER,
+        L"Software\\Classes\\Apitest_HKLM",
+        0,
+        MAXIMUM_ALLOWED,
+        &UserKey);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(!IS_HKCR(UserKey), "\n");
+
+    /* Delete */
+    ErrorCode = RegDeleteKeyW(UserKey, L"HKCU_Subkey");
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok_key_deleted(UserSubKey);
+    ok_key_deleted(ClassesRootSubKey);
+    RegCloseKey(UserSubKey);
+    RegCloseKey(ClassesRootSubKey);
+
+    /* See what this deletes */
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Apitest_HKLM");
+    ok_key_deleted(UserKey);
+    RegCloseKey(UserKey);
+    ok_key_not_deleted(ClassesRootKey);
+    ok_key_not_deleted(MachineKey);
+
+    /* Once again */
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Apitest_HKLM");
+    ok_key_deleted(ClassesRootKey);
+    ok_key_deleted(MachineKey);
+    RegCloseKey(ClassesRootKey);
+    RegCloseKey(MachineKey);
+
+    /* Same, but with HKCU first */
+    ErrorCode = RegCreateKeyExW(
+        HKEY_CURRENT_USER,
+        L"Software\\Classes\\Apitest_HKCU",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &UserKey,
+        NULL);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(!IS_HKCR(UserKey), "\n");
+
+    /* Open it in HKCR */
+    ErrorCode = RegOpenKeyExW(
+        HKEY_CLASSES_ROOT,
+        L"Apitest_HKCU",
+        0,
+        MAXIMUM_ALLOWED,
+        &ClassesRootKey);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootKey), "\n");
+    ok_key_name(ClassesRootKey, &HKCU_ClassesPath, L"Apitest_HKCU");
+
+    /* Create a corresponding subkey in HKLM */
+    ErrorCode = RegCreateKeyExW(
+        HKEY_LOCAL_MACHINE,
+        L"Software\\Classes\\Apitest_HKCU\\HKLM_Subkey",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &MachineSubKey,
+        NULL);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(!IS_HKCR(MachineSubKey), "\n");
+
+    /* Open it as an HKCR subkey */
+    ErrorCode = RegOpenKeyExW(
+        ClassesRootKey,
+        L"HKLM_Subkey",
+        0,
+        MAXIMUM_ALLOWED,
+        &ClassesRootSubKey);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootSubKey), "\n");
+    ok_key_name(ClassesRootSubKey, &HKLM_ClassesPath, L"Apitest_HKCU\\HKLM_Subkey");
+
+    /* This one now exists */
+    ErrorCode = RegOpenKeyExW(
+        HKEY_LOCAL_MACHINE,
+        L"Software\\Classes\\Apitest_HKCU",
+        0,
+        MAXIMUM_ALLOWED,
+        &MachineKey);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(!IS_HKCR(MachineKey), "\n");
+
+    /* Delete */
+    ErrorCode = RegDeleteKeyW(MachineKey, L"HKLM_Subkey");
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok_key_deleted(MachineSubKey);
+    ok_key_deleted(ClassesRootSubKey);
+    RegCloseKey(MachineSubKey);
+    RegCloseKey(ClassesRootSubKey);
+
+    /* See what this deletes */
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Apitest_HKCU");
+    ok_key_deleted(UserKey);
+    RegCloseKey(UserKey);
+    ok_key_deleted(ClassesRootKey);
+    RegCloseKey(UserKey);
+    ok_key_not_deleted(MachineKey);
+
+    /* Once again */
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Apitest_HKCU");
     ok_key_deleted(MachineKey);
     RegCloseKey(MachineKey);
 }
