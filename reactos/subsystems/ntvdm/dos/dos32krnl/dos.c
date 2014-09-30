@@ -12,7 +12,8 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+#include "cpu/cpu.h"
+#include "int32.h"
 
 #include "dos.h"
 #include "dos/dem.h"
@@ -1062,8 +1063,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             /* Execute */
             CurrentPsp = Segment;
             DiskTransferArea = MAKELONG(0x80, Segment);
-            EmulatorExecute(Segment + Header->e_cs + (sizeof(DOS_PSP) >> 4),
-                            Header->e_ip);
+            CpuExecute(Segment + Header->e_cs + (sizeof(DOS_PSP) >> 4),
+                       Header->e_ip);
         }
     }
     else
@@ -1121,7 +1122,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             /* Execute */
             CurrentPsp = Segment;
             DiskTransferArea = MAKELONG(0x80, Segment);
-            EmulatorExecute(Segment, 0x100);
+            CpuExecute(Segment, 0x100);
         }
     }
 
@@ -1165,7 +1166,7 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
 
     /* Start simulation */
     SetEvent(VdmTaskEvent);
-    EmulatorSimulate();
+    CpuSimulate();
 
     /* Detach from the console */
     VidBiosDetachFromConsole(); // FIXME: And in fact, detach the full NTVDM UI from the console
@@ -1344,7 +1345,7 @@ Done:
         if (CurrentPsp == SYSTEM_PSP)
         {
             ResetEvent(VdmTaskEvent);
-            EmulatorUnsimulate();
+            CpuUnsimulate();
         }
     }
 
@@ -1374,8 +1375,8 @@ Done:
     DosErrorLevel = MAKEWORD(ReturnCode, 0x00);
 
     /* Return control to the parent process */
-    EmulatorExecute(HIWORD(PspBlock->TerminateAddress),
-                    LOWORD(PspBlock->TerminateAddress));
+    CpuExecute(HIWORD(PspBlock->TerminateAddress),
+               LOWORD(PspBlock->TerminateAddress));
 }
 
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
@@ -1752,7 +1753,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x25:
         {
             ULONG FarPointer = MAKELONG(getDX(), getDS());
-            DPRINT1("Setting interrupt 0x%x ...\n", getAL());
+            DPRINT1("Setting interrupt 0x%02X to %04X:%04X ...\n",
+                    getAL(), HIWORD(FarPointer), LOWORD(FarPointer));
 
             /* Write the new far pointer to the IDT */
             ((PULONG)BaseAddress)[getAL()] = FarPointer;
@@ -1837,8 +1839,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                  * Return DOS OEM number:
                  * 0x00 for IBM PC-DOS
                  * 0x02 for packaged MS-DOS
+                 * 0xFF for NT DOS
                  */
-                setBH(0x02);
+                setBH(0xFF);
             }
 
             if (LOBYTE(PspBlock->DosVersion) >= 5 && getAL() == 0x01)
@@ -2806,7 +2809,7 @@ VOID WINAPI DosBreakInterrupt(LPWORD Stack)
 
     /* Stop the VDM task */
     ResetEvent(VdmTaskEvent);
-    EmulatorUnsimulate();
+    CpuUnsimulate();
 }
 
 VOID WINAPI DosFastConOut(LPWORD Stack)
