@@ -1125,6 +1125,9 @@ RegCreateKeyExW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
+    if (IsHKCRKey(ParentKey))
+        MakeHKCRKey(phkResult);
+
     return ERROR_SUCCESS;
 }
 
