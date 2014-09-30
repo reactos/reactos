@@ -30,3 +30,10 @@ OpenHKCRKey(
     _In_ DWORD ulOptions,
     _In_ REGSAM samDesired,
     _In_ PHKEY phkResult);
+
+LONG
+WINAPI
+DeleteHKCRKey(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey);
+

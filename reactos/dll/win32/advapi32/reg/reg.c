@@ -1227,6 +1227,9 @@ RegDeleteKeyW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
+    if (IsHKCRKey(ParentKey))
+        return DeleteHKCRKey(ParentKey, lpSubKey);
+
     RtlInitUnicodeString(&SubKeyName,
                          (LPWSTR)lpSubKey);
     InitializeObjectAttributes(&ObjectAttributes,

@@ -238,7 +238,6 @@ OpenHKCRKey(
     /* Close it if we must */
     if (QueriedKey != hKey)
     {
-        /* The original key is on the machine view */
         RegCloseKey(QueriedKey);
     }
 
@@ -261,7 +260,66 @@ OpenHKCRKey(
     /* Close it if we must */
     if (QueriedKey != hKey)
     {
+        RegCloseKey(QueriedKey);
+    }
+
+    return ErrorCode;
+}
+
+LONG
+WINAPI
+DeleteHKCRKey(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey)
+{
+    HKEY QueriedKey;
+    LONG ErrorCode;
+
+    ASSERT(IsHKCRKey(hKey));
+
+    /* Remove the HKCR flag while we're working */
+    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2);
+
+    ErrorCode = GetPreferredHKCRKey(hKey, &QueriedKey);
+
+    if (ErrorCode == ERROR_FILE_NOT_FOUND)
+    {
+        /* The key doesn't exist on HKCU side, no chance for a subkey */
+        return RegDeleteKeyW(hKey, lpSubKey);
+    }
+
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        /* Somehow we failed for another reason (maybe deleted key or whatever) */
+        return ErrorCode;
+    }
+
+    ErrorCode = RegDeleteKeyW(QueriedKey, lpSubKey);
+
+    /* Close it if we must */
+    if (QueriedKey != hKey)
+    {
         /* The original key is on the machine view */
+        RegCloseKey(QueriedKey);
+    }
+
+    /* Anything else than ERROR_FILE_NOT_FOUND means that we found it, even if it is with failures. */
+    if (ErrorCode != ERROR_FILE_NOT_FOUND)
+        return ErrorCode;
+
+    /* If we're here, we must open from HKLM key. */
+    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey);
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        /* Maybe the key doesn't exist in the HKLM view */
+        return ErrorCode;
+    }
+
+    ErrorCode = RegDeleteKeyW(QueriedKey, lpSubKey);
+
+    /* Close it if we must */
+    if (QueriedKey != hKey)
+    {
         RegCloseKey(QueriedKey);
     }
 
