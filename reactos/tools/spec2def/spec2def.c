@@ -604,7 +604,8 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         /* C++ stubs are forwarded to C stubs */
         fprintf(fileDest, "=stub_function%d", pexp->nNumber);
     }
-    else if (gbTracing && ((pexp->uFlags & FL_NORELAY) == 0) && (pexp->nCallingConvention == CC_STDCALL) &&
+    else if (gbTracing && ((pexp->uFlags & FL_NORELAY) == 0) &&
+             (pexp->nCallingConvention == CC_STDCALL) &&
             (pexp->strName.buf[0] != '?'))
     {
         /* Redirect it to the relay-tracing trampoline */

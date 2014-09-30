@@ -318,6 +318,28 @@ NtGdiSelectPen(
     return hOrgPen;
 }
 
+BOOL
+NTAPI
+DC_bIsBitmapCompatible(PDC pdc, PSURFACE psurf)
+{
+    ULONG cBitsPixel;
+
+    /* Must be an API bitmap */
+    if (!(psurf->flags & API_BITMAP)) return FALSE;
+
+    /* DIB sections are always compatible */
+    if (psurf->hSecure != NULL) return TRUE;
+
+    /* Get the bit depth of the bitmap */
+    cBitsPixel = gajBitsPerFormat[psurf->SurfObj.iBitmapFormat];
+
+    /* 1 BPP is compatible */
+    if ((cBitsPixel == 1) || (cBitsPixel == pdc->ppdev->gdiinfo.cBitsPixel))
+        return TRUE;
+
+    return FALSE;
+}
+
 /*
  * @implemented
  */
@@ -332,7 +354,6 @@ NtGdiSelectBitmap(
     PSURFACE psurfNew, psurfOld;
     PREGION VisRgn;
     HDC hdcOld;
-    ULONG cBitsPixel;
     ASSERT_NOGDILOCKS();
 
     /* Verify parameters */
@@ -395,10 +416,7 @@ NtGdiSelectBitmap(
         }
 
         /* Check if the bitmap is compatile with the dc */
-        cBitsPixel = gajBitsPerFormat[psurfNew->SurfObj.iBitmapFormat];
-        if ((cBitsPixel != 1) &&
-            (cBitsPixel != pdc->ppdev->gdiinfo.cBitsPixel) &&
-            (psurfNew->hSecure == NULL))
+        if (!DC_bIsBitmapCompatible(pdc, psurfNew))
         {
             /* Dereference the bitmap, unlock the DC and fail. */
             SURFACE_ShareUnlockSurface(psurfNew);
