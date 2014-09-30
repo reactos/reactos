@@ -205,7 +205,8 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
      * In return, if CF is set we continue processing the scan code
      * stored in AL, and if not, we skip it.
      */
-    BYTE CF, AX;
+    BYTE CF;
+    WORD AX;
     CF = getCF();
     AX = getAX();
 
