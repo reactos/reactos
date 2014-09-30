@@ -491,22 +491,6 @@ Test_CreateOpenKey(void)
 
 static
 void
-Test_KeyName(void)
-{
-    HKEY KeyHandle;
-    DWORD ErrorCode;
-
-
-    ErrorCode = RegOpenKeyExW(HKEY_CLASSES_ROOT, L"CLSID", 0, KEY_READ, &KeyHandle);
-    ok_dec(ErrorCode, ERROR_SUCCESS);
-    ok(IS_HKCR(KeyHandle), "\n");
-    ok_key_name(KeyHandle, &HKLM_ClassesPath, L"CLSID");
-
-    RegCloseKey(KeyHandle);
-}
-
-static
-void
 Test_DuplicateHandle(void)
 {
     HKEY KeyHandle, DupHandle;
@@ -521,8 +505,6 @@ Test_DuplicateHandle(void)
     ok(Duplicated, "\n");
     ok(DupHandle != NULL, "\n");
     ok(!IS_HKCR(DupHandle), "\n");
-
-    ok_key_name(DupHandle, &HKLM_ClassesPath, L"CLSID");
 
     RegCloseKey(KeyHandle);
     RegCloseKey(DupHandle);
@@ -546,5 +528,4 @@ START_TEST(HKEY_CLASSES_ROOT)
 
     Test_CreateOpenKey();
     Test_DuplicateHandle();
-    Test_KeyName();
 }
