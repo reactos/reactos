@@ -46,6 +46,7 @@ GetKeyName(HKEY hKey, PUNICODE_STRING KeyName)
     Status = NtQueryKey(hKey, KeyNameInformation, NameInformation, InfoLength, &InfoLength);
     if (!NT_SUCCESS(Status))
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NameInformation);
         ERR("NtQueryKey failed: 0x%08x\n", Status);
         return RtlNtStatusToDosError(Status);
     }
@@ -58,6 +59,7 @@ GetKeyName(HKEY hKey, PUNICODE_STRING KeyName)
     Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &InfoName, KeyName);
     if (!NT_SUCCESS(Status))
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NameInformation);
         ERR("RtlDuplicateUnicodeString failed: 0x%08x\n", Status);
         return RtlNtStatusToDosError(Status);
     }
