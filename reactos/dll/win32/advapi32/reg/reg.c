@@ -1306,7 +1306,11 @@ RegDeleteKeyExW(
     }
 
     if (IsHKCRKey(ParentKey))
-        return DeleteHKCRKey(ParentKey, lpSubKey, samDesired, Reserved);
+    {
+        LONG ErrorCode = DeleteHKCRKey(ParentKey, lpSubKey, samDesired, Reserved);
+        ClosePredefKey(ParentKey);
+        return ErrorCode;
+    }
 
     if (samDesired & KEY_WOW64_32KEY)
         ERR("Wow64 not yet supported!\n");
@@ -2442,166 +2446,81 @@ RegEnumKeyW(HKEY hKey,
  *
  * @implemented
  */
-LONG WINAPI
-RegEnumKeyExA(HKEY hKey,
-              DWORD dwIndex,
-              LPSTR lpName,
-              LPDWORD lpcbName,
-              LPDWORD lpReserved,
-              LPSTR lpClass,
-              LPDWORD lpcbClass,
-              PFILETIME lpftLastWriteTime)
+LONG
+WINAPI
+RegEnumKeyExA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_ LPSTR lpName,
+    _Inout_ LPDWORD lpcbName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPSTR lpClass,
+    _Inout_opt_ LPDWORD lpcbClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime)
 {
-    union
-    {
-        KEY_NODE_INFORMATION Node;
-        KEY_BASIC_INFORMATION Basic;
-    } *KeyInfo;
+    WCHAR* NameBuffer = NULL;
+    WCHAR* ClassBuffer = NULL;
+    DWORD NameLength, ClassLength;
+    LONG ErrorCode;
 
-    UNICODE_STRING StringU;
-    ANSI_STRING StringA;
-    LONG ErrorCode = ERROR_SUCCESS;
-    DWORD NameLength;
-    DWORD ClassLength = 0;
-    DWORD BufferSize;
-    ULONG ResultSize;
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-
-    TRACE("RegEnumKeyExA(hKey 0x%x, dwIndex %d, lpName 0x%x, *lpcbName %d, lpClass 0x%x, lpcbClass %d)\n",
-          hKey, dwIndex, lpName, *lpcbName, lpClass, lpcbClass ? *lpcbClass : 0);
-
-    if ((lpClass) && (!lpcbClass))
-    {
-        return ERROR_INVALID_PARAMETER;
-    }
-
-    Status = MapDefaultKey(&KeyHandle, hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
-    }
-
+    /* Allocate our buffers */
     if (*lpcbName > 0)
     {
-        NameLength = min (*lpcbName - 1 , REG_MAX_NAME_SIZE) * sizeof (WCHAR);
-    }
-    else
-    {
-        NameLength = 0;
+        NameLength = *lpcbName;
+        NameBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, *lpcbName * sizeof(WCHAR));
+        if (NameBuffer == NULL)
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
     }
 
     if (lpClass)
     {
         if (*lpcbClass > 0)
         {
-            ClassLength = min (*lpcbClass -1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
+            ClassLength = *lpcbClass;
+            ClassBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, *lpcbClass * sizeof(WCHAR));
+            if (ClassBuffer == NULL)
+            {
+                ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+                goto Exit;
+            }
         }
-        else
-        {
-            ClassLength = 0;
-        }
-
-        /* The class name should start at a dword boundary */
-        BufferSize = ((sizeof(KEY_NODE_INFORMATION) + NameLength + 3) & ~3) + ClassLength;
     }
-    else
+
+    /* Do the actual call */
+    ErrorCode = RegEnumKeyExW(
+        hKey,
+        dwIndex,
+        NameBuffer,
+        lpcbName,
+        lpReserved,
+        ClassBuffer,
+        lpcbClass,
+        lpftLastWriteTime);
+
+    if (ErrorCode != ERROR_SUCCESS)
+        goto Exit;
+
+    /* Convert the strings */
+    RtlUnicodeToMultiByteN(lpName, *lpcbName, 0, NameBuffer, *lpcbName * sizeof(WCHAR));
+    /* NULL terminate if we can */
+    if (NameLength > *lpcbName)
+        lpName[*lpcbName] = '\0';
+
+    if (lpClass)
     {
-        BufferSize = sizeof(KEY_BASIC_INFORMATION) + NameLength;
+        RtlUnicodeToMultiByteN(lpClass, *lpcbClass, 0, NameBuffer, *lpcbClass * sizeof(WCHAR));
+        if (ClassLength > *lpcbClass)
+            lpClass[*lpcbClass] = '\0';
     }
 
-    KeyInfo = RtlAllocateHeap (ProcessHeap, 0, BufferSize);
-    if (KeyInfo == NULL)
-    {
-        ErrorCode = ERROR_OUTOFMEMORY;
-        goto Cleanup;
-    }
-
-    Status = NtEnumerateKey(KeyHandle,
-                            (ULONG)dwIndex,
-                            lpClass == NULL ? KeyBasicInformation : KeyNodeInformation,
-                            KeyInfo,
-                            BufferSize,
-                            &ResultSize);
-    TRACE("NtEnumerateKey() returned status 0x%X\n", Status);
-    if (!NT_SUCCESS(Status))
-    {
-        ErrorCode = RtlNtStatusToDosError (Status);
-    }
-    else
-    {
-        if (lpClass == NULL)
-        {
-            if (KeyInfo->Basic.NameLength > NameLength)
-            {
-                ErrorCode = ERROR_BUFFER_OVERFLOW;
-            }
-            else
-            {
-                StringU.Buffer = KeyInfo->Basic.Name;
-                StringU.Length = KeyInfo->Basic.NameLength;
-                StringU.MaximumLength = KeyInfo->Basic.NameLength;
-            }
-        }
-        else
-        {
-            if (KeyInfo->Node.NameLength > NameLength ||
-                KeyInfo->Node.ClassLength > ClassLength)
-            {
-                ErrorCode = ERROR_BUFFER_OVERFLOW;
-            }
-            else
-            {
-                StringA.Buffer = lpClass;
-                StringA.Length = 0;
-                StringA.MaximumLength = *lpcbClass;
-                StringU.Buffer = (PWCHAR)((ULONG_PTR)KeyInfo->Node.Name + KeyInfo->Node.ClassOffset);
-                StringU.Length = KeyInfo->Node.ClassLength;
-                StringU.MaximumLength = KeyInfo->Node.ClassLength;
-                RtlUnicodeStringToAnsiString (&StringA, &StringU, FALSE);
-                lpClass[StringA.Length] = 0;
-                *lpcbClass = StringA.Length;
-                StringU.Buffer = KeyInfo->Node.Name;
-                StringU.Length = KeyInfo->Node.NameLength;
-                StringU.MaximumLength = KeyInfo->Node.NameLength;
-            }
-        }
-
-        if (ErrorCode == ERROR_SUCCESS)
-        {
-            StringA.Buffer = lpName;
-            StringA.Length = 0;
-            StringA.MaximumLength = *lpcbName;
-            RtlUnicodeStringToAnsiString (&StringA, &StringU, FALSE);
-            lpName[StringA.Length] = 0;
-            *lpcbName = StringA.Length;
-            if (lpftLastWriteTime != NULL)
-            {
-                if (lpClass == NULL)
-                {
-                    lpftLastWriteTime->dwLowDateTime = KeyInfo->Basic.LastWriteTime.u.LowPart;
-                    lpftLastWriteTime->dwHighDateTime = KeyInfo->Basic.LastWriteTime.u.HighPart;
-                }
-                else
-                {
-                    lpftLastWriteTime->dwLowDateTime = KeyInfo->Node.LastWriteTime.u.LowPart;
-                    lpftLastWriteTime->dwHighDateTime = KeyInfo->Node.LastWriteTime.u.HighPart;
-                }
-            }
-        }
-    }
-
-    /*TRACE("Key Namea0 Length %d\n", StringU.Length);*/ /* BUGBUG could be uninitialized */
-    TRACE("Key Name1 Length %d\n", NameLength);
-    TRACE("Key Name Length %d\n", *lpcbName);
-    TRACE("Key Name %s\n", lpName);
-
-    RtlFreeHeap(ProcessHeap,
-                0,
-                KeyInfo);
-
-Cleanup:
-    ClosePredefKey(KeyHandle);
+Exit:
+    if (NameBuffer)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
+    if (ClassBuffer)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ClassBuffer);
 
     return ErrorCode;
 }
@@ -2612,15 +2531,17 @@ Cleanup:
  *
  * @implemented
  */
-LONG WINAPI
-RegEnumKeyExW(HKEY hKey,
-              DWORD dwIndex,
-              LPWSTR lpName,
-              LPDWORD lpcbName,
-              LPDWORD lpReserved,
-              LPWSTR lpClass,
-              LPDWORD lpcbClass,
-              PFILETIME lpftLastWriteTime)
+LONG
+WINAPI
+RegEnumKeyExW(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_ LPWSTR lpName,
+    _Inout_ LPDWORD lpcbName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcbClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime)
 {
     union
     {
@@ -2641,6 +2562,21 @@ RegEnumKeyExW(HKEY hKey,
     if (!NT_SUCCESS(Status))
     {
         return RtlNtStatusToDosError(Status);
+    }
+
+    if (IsHKCRKey(KeyHandle))
+    {
+        ErrorCode = EnumHKCRKey(
+            KeyHandle,
+            dwIndex,
+            lpName,
+            lpcbName,
+            lpReserved,
+            lpClass,
+            lpcbClass,
+            lpftLastWriteTime);
+        ClosePredefKey(KeyHandle);
+        return ErrorCode;
     }
 
     if (*lpcbName > 0)
@@ -3419,7 +3355,11 @@ RegOpenKeyExW(HKEY hKey,
     }
 
     if (IsHKCRKey(KeyHandle))
-        return OpenHKCRKey(KeyHandle, lpSubKey, ulOptions, samDesired, phkResult);
+    {
+        ErrorCode = OpenHKCRKey(KeyHandle, lpSubKey, ulOptions, samDesired, phkResult);
+        ClosePredefKey(KeyHandle);
+        return ErrorCode;
+    }
 
     if (ulOptions & REG_OPTION_OPEN_LINK)
         Attributes |= OBJ_OPENLINK;
@@ -4035,7 +3975,7 @@ RegQueryValueExA(
     ErrorCode = RegQueryValueExW(hkeyorg, nameW.Buffer, NULL, &LocalType, NULL, &BufferSize);
     if (ErrorCode != ERROR_SUCCESS)
     {
-        if (!data)
+        if ((!data) && count)
             *count = 0;
         RtlFreeUnicodeString(&nameW);
         return ErrorCode;

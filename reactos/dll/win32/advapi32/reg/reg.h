@@ -72,3 +72,15 @@ SetHKCRValue(
     _In_ CONST BYTE* Data,
     _In_ DWORD DataSize);
 
+LONG
+WINAPI
+EnumHKCRKey(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_ LPWSTR lpName,
+    _Inout_ LPDWORD lpcbName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcbClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime);
+
