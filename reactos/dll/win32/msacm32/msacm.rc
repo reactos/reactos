@@ -18,10 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wineacm.h"
+#include <windef.h>
+#include <winuser.h>
+#include <msacmdlg.h>
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/msacm_Bg.rc"
