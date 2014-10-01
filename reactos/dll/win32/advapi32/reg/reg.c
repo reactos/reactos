@@ -1039,8 +1039,26 @@ RegCreateKeyExA(
     UNICODE_STRING ClassString;
     DWORD ErrorCode;
 
-    RtlCreateUnicodeStringFromAsciiz(&ClassString, lpClass);
-    RtlCreateUnicodeStringFromAsciiz(&SubKeyString, (LPSTR)lpSubKey);
+    RtlInitEmptyUnicodeString(&ClassString, NULL, 0);
+    RtlInitEmptyUnicodeString(&SubKeyString, NULL, 0);
+
+    if (lpClass)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&ClassString, lpClass))
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
+
+    if (lpSubKey)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyString, lpSubKey))
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
 
     ErrorCode = RegCreateKeyExW(
         hKey,
@@ -1053,6 +1071,7 @@ RegCreateKeyExA(
         phkResult,
         lpdwDisposition);
 
+Exit:
     RtlFreeUnicodeString(&SubKeyString);
     RtlFreeUnicodeString(&ClassString);
 
@@ -1222,7 +1241,13 @@ RegDeleteKeyExA(
     LONG ErrorCode;
     UNICODE_STRING SubKeyName;
 
-    RtlCreateUnicodeStringFromAsciiz(&SubKeyName, (LPSTR)lpSubKey);
+    if (lpSubKey)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName, lpSubKey))
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+        RtlInitEmptyUnicodeString(&SubKeyName, NULL, 0);
 
     ErrorCode = RegDeleteKeyExW(hKey, SubKeyName.Buffer, samDesired, Reserved);
 
@@ -3048,15 +3073,32 @@ RegLoadKeyA(HKEY hKey,
     UNICODE_STRING KeyName;
     LONG ErrorCode;
 
-    RtlCreateUnicodeStringFromAsciiz(&KeyName,
-                                     (LPSTR)lpSubKey);
-    RtlCreateUnicodeStringFromAsciiz(&FileName,
-                                     (LPSTR)lpFile);
+    RtlInitEmptyUnicodeString(&KeyName, NULL, 0);
+    RtlInitEmptyUnicodeString(&FileName, NULL, 0);
+
+    if (lpSubKey)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&KeyName, lpSubKey))
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
+
+    if (lpFile)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFile))
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
 
     ErrorCode = RegLoadKeyW(hKey,
                             KeyName.Buffer,
                             FileName.Buffer);
 
+Exit:
     RtlFreeUnicodeString(&FileName);
     RtlFreeUnicodeString(&KeyName);
 
@@ -3313,8 +3355,13 @@ RegOpenKeyExA(
     TRACE("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
           hKey, lpSubKey, ulOptions, samDesired, phkResult);
 
-    RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
-                                     (LPSTR)lpSubKey);
+    if (lpSubKey)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyString, lpSubKey))
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+        RtlInitEmptyUnicodeString(&SubKeyString, NULL, 0);
 
     ErrorCode = RegOpenKeyExW(hKey, SubKeyString.Buffer, ulOptions, samDesired, phkResult);
 
@@ -3963,7 +4010,10 @@ RegQueryValueExA(
         return ERROR_INVALID_PARAMETER;
 
     if (name)
-        RtlCreateUnicodeStringFromAsciiz(&nameW, name);
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&nameW, name))
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
     else
         RtlInitEmptyUnicodeString(&nameW, NULL, 0);
 
@@ -4205,18 +4255,43 @@ RegReplaceKeyA(HKEY hKey,
     UNICODE_STRING OldFile;
     LONG ErrorCode;
 
-    RtlCreateUnicodeStringFromAsciiz(&SubKey,
-                                     (PCSZ)lpSubKey);
-    RtlCreateUnicodeStringFromAsciiz(&OldFile,
-                                     (PCSZ)lpOldFile);
-    RtlCreateUnicodeStringFromAsciiz(&NewFile,
-                                     (PCSZ)lpNewFile);
+    RtlInitEmptyUnicodeString(&SubKey, NULL, 0);
+    RtlInitEmptyUnicodeString(&OldFile, NULL, 0);
+    RtlInitEmptyUnicodeString(&NewFile, NULL, 0);
+
+    if (lpSubKey)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKey, lpSubKey))
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
+
+    if (lpOldFile)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&OldFile, lpOldFile))
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
+
+    if (lpNewFile)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&NewFile, lpNewFile))
+        {
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
 
     ErrorCode = RegReplaceKeyW(hKey,
                                SubKey.Buffer,
                                NewFile.Buffer,
                                OldFile.Buffer);
 
+Exit:
     RtlFreeUnicodeString(&OldFile);
     RtlFreeUnicodeString(&NewFile);
     RtlFreeUnicodeString(&SubKey);
@@ -4373,8 +4448,13 @@ RegRestoreKeyA(HKEY hKey,
     UNICODE_STRING FileName;
     LONG ErrorCode;
 
-    RtlCreateUnicodeStringFromAsciiz(&FileName,
-                                     (PCSZ)lpFile);
+    if (lpFile)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFile))
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+        RtlInitEmptyUnicodeString(&FileName, NULL, 0);
 
     ErrorCode = RegRestoreKeyW(hKey,
                                FileName.Buffer,
@@ -4474,8 +4554,14 @@ RegSaveKeyA(HKEY hKey,
     UNICODE_STRING FileName;
     LONG ErrorCode;
 
-    RtlCreateUnicodeStringFromAsciiz(&FileName,
-                                     (LPSTR)lpFile);
+    if (lpFile)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFile))
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+        RtlInitEmptyUnicodeString(&FileName, NULL, 0);
+
     ErrorCode = RegSaveKeyW(hKey,
                             FileName.Buffer,
                             lpSecurityAttributes);
@@ -4579,8 +4665,14 @@ RegSaveKeyExA(HKEY hKey,
     UNICODE_STRING FileName;
     LONG ErrorCode;
 
-    RtlCreateUnicodeStringFromAsciiz(&FileName,
-                                     (LPSTR)lpFile);
+    if (lpFile)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFile))
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+        RtlInitEmptyUnicodeString(&FileName, NULL, 0);
+
     ErrorCode = RegSaveKeyExW(hKey,
                               FileName.Buffer,
                               lpSecurityAttributes,
@@ -4917,8 +5009,13 @@ RegUnLoadKeyA(HKEY hKey,
     UNICODE_STRING KeyName;
     DWORD ErrorCode;
 
-    RtlCreateUnicodeStringFromAsciiz(&KeyName,
-                                     (LPSTR)lpSubKey);
+    if (lpSubKey)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&KeyName, lpSubKey))
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+        RtlInitEmptyUnicodeString(&KeyName, NULL, 0);
 
     ErrorCode = RegUnLoadKeyW(hKey,
                               KeyName.Buffer);
