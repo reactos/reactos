@@ -112,6 +112,7 @@ Test_CreateOpenKey(void)
     HKEY UserKey, UserSubKey;
     HKEY ClassesRootKey, ClassesRootSubKey;
     DWORD ErrorCode;
+    DWORD Disposition;
 
     /* First create a subkey in HKLM */
     ErrorCode = RegCreateKeyExW(
@@ -309,6 +310,24 @@ Test_CreateOpenKey(void)
     /* Verify it has opened the HKCU one */
     ok_key_name(ClassesRootKey, &HKCU_ClassesPath, L"Apitest_HKLM_HKCU");
 
+    /* Try the same thing, but this time with RegCreateKeyEx API */
+    RegCloseKey(ClassesRootKey);
+    ErrorCode = RegCreateKeyExW(
+        HKEY_CLASSES_ROOT,
+        L"Apitest_HKLM_HKCU",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &ClassesRootKey,
+        &Disposition);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootKey), "\n");
+    /* Verify it has opened the HKCU one */
+    ok_key_name(ClassesRootKey, &HKCU_ClassesPath, L"Apitest_HKLM_HKCU");
+    ok_hex(Disposition, REG_OPENED_EXISTING_KEY);
+
     /* Deleting it from HKCR first deletes the one in HKCU */
     ErrorCode = RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Apitest_HKLM_HKCU");
     ok_dec(ErrorCode, ERROR_SUCCESS);
@@ -374,6 +393,24 @@ Test_CreateOpenKey(void)
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok(IS_HKCR(ClassesRootSubKey), "\n");
     ok_key_name(ClassesRootSubKey, &HKCU_ClassesPath, L"Apitest_HKLM\\HKCU_Subkey");
+
+    /* Try the same thing, but this time with RegCreateKeyEx API */
+    RegCloseKey(ClassesRootSubKey);
+    ErrorCode = RegCreateKeyExW(
+        ClassesRootKey,
+        L"HKCU_Subkey",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &ClassesRootSubKey,
+        &Disposition);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootSubKey), "\n");
+    /* Verify it has opened the HKCU one */
+    ok_key_name(ClassesRootSubKey, &HKCU_ClassesPath, L"Apitest_HKLM\\HKCU_Subkey");
+    ok_hex(Disposition, REG_OPENED_EXISTING_KEY);
 
     /* This one now exists */
     ErrorCode = RegOpenKeyExW(
@@ -488,31 +525,49 @@ Test_CreateOpenKey(void)
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok(!IS_HKCR(MachineKey), "\n");
 
-    /* Delete */
+    /* Delete this subkey */
     ErrorCode = RegDeleteKeyW(MachineKey, L"HKLM_Subkey");
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok_key_deleted(MachineSubKey);
     ok_key_deleted(ClassesRootSubKey);
 
-    /* Rery creating a subkey with this HKCR handle (which points to HKCU).
-     * It should now be created in the HKLM view. */
+    /* Create another subkey, this time from HKCU */
+    ErrorCode = RegCreateKeyExW(
+        HKEY_CURRENT_USER,
+        L"Software\\Classes\\Apitest_HKCU\\HKCU_Subkey",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &UserSubKey,
+        NULL);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(!IS_HKCR(UserSubKey), "\n");
+
+    /* And try creating it again as a subkey of this HKCR handle (which points to HKCU). */
     ok_key_name(ClassesRootKey, &HKCU_ClassesPath, L"Apitest_HKCU");
     ErrorCode = RegCreateKeyExW(
         ClassesRootKey,
-        L"HKCR_Subkey",
+        L"HKCU_Subkey",
         0,
         NULL,
         0,
         MAXIMUM_ALLOWED,
         NULL,
         &ClassesRootSubKey,
-        NULL);
+        &Disposition);
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok(IS_HKCR(ClassesRootSubKey), "\n");
-    ok_key_name(ClassesRootSubKey, &HKLM_ClassesPath, L"Apitest_HKCU\\HKCR_Subkey");
-    RegDeleteKeyW(MachineKey, L"HKCR_Subkey");
+    /* This time the one in HKCU is opened */
+    ok_key_name(ClassesRootSubKey, &HKCU_ClassesPath, L"Apitest_HKCU\\HKCU_Subkey");
+    ok_hex(Disposition, REG_OPENED_EXISTING_KEY);
+    /* Let's see if we can delete it */
+    RegDeleteKeyW(ClassesRootKey, L"HKCU_Subkey");
     ok_key_deleted(ClassesRootSubKey);
     RegCloseKey(ClassesRootSubKey);
+    ok_key_deleted(UserSubKey);
+    RegCloseKey(UserSubKey);
 
     RegCloseKey(MachineSubKey);
     RegCloseKey(ClassesRootSubKey);
