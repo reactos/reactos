@@ -39,3 +39,13 @@ DeleteHKCRKey(
     _In_ REGSAM RegSam,
     _In_ DWORD Reserved);
 
+LONG
+WINAPI
+QueryHKCRValue(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR Name,
+    _In_ LPDWORD Reserved,
+    _In_ LPDWORD Type,
+    _In_ LPBYTE Data,
+    _In_ LPDWORD Count);
+

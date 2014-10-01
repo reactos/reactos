@@ -4082,12 +4082,13 @@ RegQueryValueExA(
  */
 LONG
 WINAPI
-RegQueryValueExW(HKEY hkeyorg,
-                 LPCWSTR name,
-                 LPDWORD reserved,
-                 LPDWORD type,
-                 LPBYTE data,
-                 LPDWORD count)
+RegQueryValueExW(
+    _In_ HKEY hkeyorg,
+    _In_ LPCWSTR name,
+    _In_ LPDWORD reserved,
+    _In_ LPDWORD type,
+    _In_ LPBYTE data,
+    _In_ LPDWORD count)
 {
     HANDLE hkey;
     NTSTATUS status;
@@ -4107,6 +4108,13 @@ RegQueryValueExW(HKEY hkeyorg,
     if (!NT_SUCCESS(status))
     {
         return RtlNtStatusToDosError(status);
+    }
+
+    if (IsHKCRKey(hkey))
+    {
+        LONG ErrorCode = QueryHKCRValue(hkey, name, reserved, type, data, count);
+        ClosePredefKey(hkey);
+        return ErrorCode;
     }
 
     RtlInitUnicodeString( &name_str, name );
