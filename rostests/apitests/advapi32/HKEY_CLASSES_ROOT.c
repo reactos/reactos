@@ -432,6 +432,26 @@ Test_CreateOpenKey(void)
     ok(IS_HKCR(ClassesRootKey), "\n");
     ok_key_name(ClassesRootKey, &HKCU_ClassesPath, L"Apitest_HKCU");
 
+    /* Try creating a subkey with this HKCR handle, which points to a subkey in HKCU. */
+    ErrorCode = RegCreateKeyExW(
+        ClassesRootKey,
+        L"HKCR_Subkey",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &ClassesRootSubKey,
+        NULL);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootSubKey), "\n");
+    /* It is in fact created in HKLM */
+    ok_key_name(ClassesRootSubKey, &HKLM_ClassesPath, L"Apitest_HKCU\\HKCR_Subkey");
+    /* Let's see if we can delete it */
+    RegDeleteKeyW(ClassesRootKey, L"HKCR_Subkey");
+    ok_key_deleted(ClassesRootSubKey);
+    RegCloseKey(ClassesRootSubKey);
+
     /* Create a corresponding subkey in HKLM */
     ErrorCode = RegCreateKeyExW(
         HKEY_LOCAL_MACHINE,
@@ -446,7 +466,8 @@ Test_CreateOpenKey(void)
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok(!IS_HKCR(MachineSubKey), "\n");
 
-    /* Open it as an HKCR subkey */
+    /* Open it from the HKCR handle (which is still pointing to HKCU) */
+    ok_key_name(ClassesRootKey, &HKCU_ClassesPath, L"Apitest_HKCU");
     ErrorCode = RegOpenKeyExW(
         ClassesRootKey,
         L"HKLM_Subkey",
@@ -472,6 +493,27 @@ Test_CreateOpenKey(void)
     ok_dec(ErrorCode, ERROR_SUCCESS);
     ok_key_deleted(MachineSubKey);
     ok_key_deleted(ClassesRootSubKey);
+
+    /* Rery creating a subkey with this HKCR handle (which points to HKCU).
+     * It should now be created in the HKLM view. */
+    ok_key_name(ClassesRootKey, &HKCU_ClassesPath, L"Apitest_HKCU");
+    ErrorCode = RegCreateKeyExW(
+        ClassesRootKey,
+        L"HKCR_Subkey",
+        0,
+        NULL,
+        0,
+        MAXIMUM_ALLOWED,
+        NULL,
+        &ClassesRootSubKey,
+        NULL);
+    ok_dec(ErrorCode, ERROR_SUCCESS);
+    ok(IS_HKCR(ClassesRootSubKey), "\n");
+    ok_key_name(ClassesRootSubKey, &HKLM_ClassesPath, L"Apitest_HKCU\\HKCR_Subkey");
+    RegDeleteKeyW(MachineKey, L"HKCR_Subkey");
+    ok_key_deleted(ClassesRootSubKey);
+    RegCloseKey(ClassesRootSubKey);
+
     RegCloseKey(MachineSubKey);
     RegCloseKey(ClassesRootSubKey);
 
