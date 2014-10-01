@@ -17,6 +17,7 @@ list(APPEND oleacc_rc_deps
 set_source_files_properties(oleacc.rc PROPERTIES OBJECT_DEPENDS "${oleacc_rc_deps}")
 
 add_library(oleacc SHARED ${SOURCE} oleacc.rc)
+add_dependencies(oleacc stdole2)
 set_module_type(oleacc win32dll)
 target_link_libraries(oleacc wine)
 add_importlibs(oleacc user32 msvcrt kernel32 ntdll)
