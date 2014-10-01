@@ -24,6 +24,19 @@ MakeHKCRKey(_Inout_ HKEY* hKey)
 
 LONG
 WINAPI
+CreateHKCRKey(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey,
+    _In_ DWORD Reserved,
+    _In_opt_ LPWSTR lpClass,
+    _In_ DWORD dwOptions,
+    _In_ REGSAM samDesired,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    _Out_ PHKEY phkResult,
+    _Out_opt_ LPDWORD lpdwDisposition);
+
+LONG
+WINAPI
 OpenHKCRKey(
     _In_ HKEY hKey,
     _In_ LPCWSTR lpSubKey,
@@ -48,4 +61,14 @@ QueryHKCRValue(
     _In_ LPDWORD Type,
     _In_ LPBYTE Data,
     _In_ LPDWORD Count);
+
+LONG
+WINAPI
+SetHKCRValue(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR Name,
+    _In_ DWORD Reserved,
+    _In_ DWORD Type,
+    _In_ CONST BYTE* Data,
+    _In_ DWORD DataSize);
 

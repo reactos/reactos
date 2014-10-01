@@ -96,7 +96,8 @@ static
 LONG
 GetFallbackHKCRKey(
     _In_ HKEY hKey,
-    _Out_ HKEY* MachineKey)
+    _Out_ HKEY* MachineKey,
+    _In_ BOOL MustCreate)
 {
     UNICODE_STRING KeyName;
     LPWSTR SubKeyName;
@@ -135,13 +136,29 @@ GetFallbackHKCRKey(
         return ErrorCode;
     }
 
-    /* Open the key. */
-    ErrorCode = RegOpenKeyExW(
-        HKEY_LOCAL_MACHINE,
-        SubKeyName,
-        0,
-        SamDesired,
-        MachineKey);
+    if (MustCreate)
+    {
+        ErrorCode = RegCreateKeyExW(
+            HKEY_LOCAL_MACHINE,
+            SubKeyName,
+            0,
+            NULL,
+            0,
+            SamDesired,
+            NULL,
+            MachineKey,
+            NULL);
+    }
+    else
+    {
+        /* Open the key. */
+        ErrorCode = RegOpenKeyExW(
+            HKEY_LOCAL_MACHINE,
+            SubKeyName,
+            0,
+            SamDesired,
+            MachineKey);
+    }
 
     RtlFreeUnicodeString(&KeyName);
 
@@ -197,6 +214,110 @@ GetPreferredHKCRKey(
     return ErrorCode;
 }
 
+/* HKCR version of RegCreateKeyExW. */
+LONG
+WINAPI
+CreateHKCRKey(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey,
+    _In_ DWORD Reserved,
+    _In_opt_ LPWSTR lpClass,
+    _In_ DWORD dwOptions,
+    _In_ REGSAM samDesired,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    _Out_ PHKEY phkResult,
+    _Out_opt_ LPDWORD lpdwDisposition)
+{
+    LONG ErrorCode;
+    HKEY QueriedKey, TestKey;
+
+    ASSERT(IsHKCRKey(hKey));
+
+    /* Remove the HKCR flag while we're working */
+    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2);
+
+    ErrorCode = GetPreferredHKCRKey(hKey, &QueriedKey);
+
+    if (ErrorCode == ERROR_FILE_NOT_FOUND)
+    {
+        /* The current key doesn't exist on HKCU side, so we can only create it in HKLM */
+        ErrorCode = RegCreateKeyExW(
+            hKey,
+            lpSubKey,
+            Reserved,
+            lpClass,
+            dwOptions,
+            samDesired,
+            lpSecurityAttributes,
+            phkResult,
+            lpdwDisposition);
+        if (ErrorCode == ERROR_SUCCESS)
+            MakeHKCRKey(phkResult);
+        return ErrorCode;
+    }
+
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        /* Somehow we failed for another reason (maybe deleted key or whatever) */
+        return ErrorCode;
+    }
+
+    /* See if the subkey already exists in HKCU. */
+    ErrorCode = RegOpenKeyExW(QueriedKey, lpSubKey, 0, KEY_READ, &TestKey);
+    if (ErrorCode != ERROR_FILE_NOT_FOUND)
+    {
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            /* Great. Close the test one and do the real create operation */
+            RegCloseKey(TestKey);
+            ErrorCode = RegCreateKeyExW(
+                QueriedKey,
+                lpSubKey,
+                Reserved,
+                lpClass,
+                dwOptions,
+                samDesired,
+                lpSecurityAttributes,
+                phkResult,
+                lpdwDisposition);
+            if (ErrorCode == ERROR_SUCCESS)
+                MakeHKCRKey(phkResult);
+        }
+        if (QueriedKey != hKey)
+            RegCloseKey(QueriedKey);
+
+        return ERROR_SUCCESS;
+    }
+
+    if (QueriedKey != hKey)
+        RegCloseKey(QueriedKey);
+
+    /* So we must do the create operation in HKLM, creating the missing parent keys if needed. */
+    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey, TRUE);
+    if (ErrorCode != ERROR_SUCCESS)
+        return ErrorCode;
+
+    /* Do the key creation */
+    ErrorCode = RegCreateKeyEx(
+        QueriedKey,
+        lpSubKey,
+        Reserved,
+        lpClass,
+        dwOptions,
+        samDesired,
+        lpSecurityAttributes,
+        phkResult,
+        lpdwDisposition);
+
+    if (QueriedKey != hKey)
+        RegCloseKey(QueriedKey);
+
+    if (ErrorCode == ERROR_SUCCESS)
+        MakeHKCRKey(phkResult);
+
+    return ErrorCode;
+}
+
 /* Same as RegOpenKeyExW, but for HKEY_CLASSES_ROOT subkeys */
 LONG
 WINAPI
@@ -248,7 +369,7 @@ OpenHKCRKey(
         return ErrorCode;
 
     /* If we're here, we must open from HKLM key. */
-    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey);
+    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey, FALSE);
     if (ErrorCode != ERROR_SUCCESS)
     {
         /* Maybe the key doesn't exist in the HKLM view */
@@ -313,7 +434,7 @@ DeleteHKCRKey(
         return ErrorCode;
 
     /* If we're here, we must open from HKLM key. */
-    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey);
+    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey, FALSE);
     if (ErrorCode != ERROR_SUCCESS)
     {
         /* Maybe the key doesn't exist in the HKLM view */
@@ -378,7 +499,7 @@ QueryHKCRValue(
         return ErrorCode;
 
     /* If we're here, we must open from HKLM key. */
-    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey);
+    ErrorCode = GetFallbackHKCRKey(hKey, &QueriedKey, FALSE);
     if (ErrorCode != ERROR_SUCCESS)
     {
         /* Maybe the key doesn't exist in the HKLM view */
@@ -392,6 +513,75 @@ QueryHKCRValue(
     {
         RegCloseKey(QueriedKey);
     }
+
+    return ErrorCode;
+}
+
+/* HKCR version of RegSetValueExW */
+LONG
+WINAPI
+SetHKCRValue(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR Name,
+    _In_ DWORD Reserved,
+    _In_ DWORD Type,
+    _In_ CONST BYTE* Data,
+    _In_ DWORD DataSize)
+{
+    HKEY QueriedKey;
+    LONG ErrorCode;
+
+    ASSERT(IsHKCRKey(hKey));
+
+    /* Remove the HKCR flag while we're working */
+    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2);
+
+    ErrorCode = GetPreferredHKCRKey(hKey, &QueriedKey);
+
+    if (ErrorCode == ERROR_FILE_NOT_FOUND)
+    {
+        /* The key doesn't exist on HKCU side, no chance to put a value in it */
+        return RegSetValueExW(hKey, Name, Reserved, Type, Data, DataSize);
+    }
+
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        /* Somehow we failed for another reason (maybe deleted key or whatever) */
+        return ErrorCode;
+    }
+
+    /* Check if the value already exists in the preferred key */
+    ErrorCode = RegQueryValueExW(QueriedKey, Name, NULL, NULL, NULL, NULL);
+    if (ErrorCode != ERROR_FILE_NOT_FOUND)
+    {
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            /* Yes, so we have the right to modify it */
+            ErrorCode = RegSetValueExW(QueriedKey, Name, Reserved, Type, Data, DataSize);
+        }
+        if (QueriedKey != hKey)
+            RegCloseKey(QueriedKey);
+        return ErrorCode;
+    }
+    if (QueriedKey != hKey)
+        RegCloseKey(QueriedKey);
+
+    /* So we must set the value in the HKLM version */
+    ErrorCode = GetPreferredHKCRKey(hKey, &QueriedKey);
+    if (ErrorCode == ERROR_FILE_NOT_FOUND)
+    {
+        /* No choice: put this in HKCU */
+        return RegSetValueExW(hKey, Name, Reserved, Type, Data, DataSize);
+    }
+    else if (ErrorCode != ERROR_SUCCESS)
+    {
+        return ErrorCode;
+    }
+
+    ErrorCode = RegSetValueExW(QueriedKey, Name, Reserved, Type, Data, DataSize);
+
+    if (QueriedKey != hKey)
+        RegCloseKey(QueriedKey);
 
     return ErrorCode;
 }

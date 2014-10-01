@@ -1084,16 +1084,18 @@ Exit:
  *
  * @implemented
  */
-LONG WINAPI
-RegCreateKeyExW(HKEY hKey,
-                LPCWSTR lpSubKey,
-                DWORD Reserved,
-                LPWSTR lpClass,
-                DWORD dwOptions,
-                REGSAM samDesired,
-                LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                PHKEY phkResult,
-                LPDWORD lpdwDisposition)
+LONG
+WINAPI
+RegCreateKeyExW(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey,
+    _In_ DWORD Reserved,
+    _In_opt_ LPWSTR lpClass,
+    _In_ DWORD dwOptions,
+    _In_ REGSAM samDesired,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    _Out_ PHKEY phkResult,
+    _Out_opt_ LPDWORD lpdwDisposition)
 {
     UNICODE_STRING SubKeyString;
     UNICODE_STRING ClassString;
@@ -1116,6 +1118,22 @@ RegCreateKeyExW(HKEY hKey,
     }
 
     TRACE("ParentKey %p\n", ParentKey);
+
+    if (IsHKCRKey(ParentKey))
+    {
+        LONG ErrorCode = CreateHKCRKey(
+            ParentKey,
+            lpSubKey,
+            Reserved,
+            lpClass,
+            dwOptions,
+            samDesired,
+            lpSecurityAttributes,
+            phkResult,
+            lpdwDisposition);
+        ClosePredefKey(ParentKey);
+        return ErrorCode;
+    }
 
     if (dwOptions & REG_OPTION_OPEN_LINK)
         Attributes |= OBJ_OPENLINK;
@@ -1143,9 +1161,6 @@ RegCreateKeyExW(HKEY hKey,
     {
         return RtlNtStatusToDosError(Status);
     }
-
-    if (IsHKCRKey(ParentKey))
-        MakeHKCRKey(phkResult);
 
     return ERROR_SUCCESS;
 }
@@ -4851,17 +4866,33 @@ RegSetValueExA(HKEY hKey,
  *
  * @implemented
  */
-LONG WINAPI
-RegSetValueExW(HKEY hKey,
-               LPCWSTR lpValueName,
-               DWORD Reserved,
-               DWORD dwType,
-               CONST BYTE* lpData,
-               DWORD cbData)
+LONG
+WINAPI
+RegSetValueExW(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpValueName,
+    _In_ DWORD Reserved,
+    _In_ DWORD dwType,
+    _In_ CONST BYTE* lpData,
+    _In_ DWORD cbData)
 {
     UNICODE_STRING ValueName;
     HANDLE KeyHandle;
     NTSTATUS Status;
+
+    Status = MapDefaultKey(&KeyHandle,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (IsHKCRKey(KeyHandle))
+    {
+        LONG ErrorCode = SetHKCRValue(KeyHandle, lpValueName, Reserved, dwType, lpData, cbData);
+        ClosePredefKey(KeyHandle);
+        return ErrorCode;
+    }
 
     if (is_string(dwType) && (cbData != 0))
     {
@@ -4878,16 +4909,10 @@ RegSetValueExW(HKEY hKey,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            _SEH2_YIELD(return ERROR_NOACCESS);
+            ClosePredefKey(KeyHandle);
+            return ERROR_NOACCESS;
         }
         _SEH2_END;
-    }
-
-    Status = MapDefaultKey(&KeyHandle,
-                           hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        return RtlNtStatusToDosError(Status);
     }
 
     RtlInitUnicodeString(&ValueName, lpValueName);
