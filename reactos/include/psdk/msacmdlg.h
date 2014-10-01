@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 #define DLG_ACMFORMATCHOOSE_ID              70
 #define IDD_ACMFORMATCHOOSE_BTN_HELP        9
 #define IDD_ACMFORMATCHOOSE_CMB_CUSTOM      100
@@ -33,4 +35,3 @@
 #define IDD_ACMFILTERCHOOSE_CMB_FILTER      102
 #define IDD_ACMFILTERCHOOSE_BTN_SETNAME     103
 #define IDD_ACMFILTERCHOOSE_BTN_DELNAME     104
-
