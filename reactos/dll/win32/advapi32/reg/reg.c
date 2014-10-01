@@ -3942,102 +3942,86 @@ RegQueryReflectionKey(IN HKEY hBase,
  */
 LONG
 WINAPI
-RegQueryValueExA(HKEY hkeyorg,
-                 LPCSTR name,
-                 LPDWORD reserved,
-                 LPDWORD type,
-                 LPBYTE data,
-                 LPDWORD count)
+RegQueryValueExA(
+    _In_ HKEY hkeyorg,
+    _In_ LPCSTR name,
+    _In_ LPDWORD reserved,
+    _Out_opt_ LPDWORD type,
+    _Out_opt_ LPBYTE data,
+    _Inout_opt_ LPDWORD count)
 {
-    HANDLE hkey;
-    NTSTATUS status;
-    ANSI_STRING nameA;
     UNICODE_STRING nameW;
-    DWORD total_size, datalen = 0;
-    char buffer[256], *buf_ptr = buffer;
-    KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)buffer;
-    static const int info_size = offsetof( KEY_VALUE_PARTIAL_INFORMATION, Data );
+    DWORD DataLength;
+    DWORD ErrorCode;
+    DWORD BufferSize = 0;
+    WCHAR* Buffer;
+    CHAR* DataStr = (CHAR*)data;
+    DWORD LocalType;
 
-    TRACE("(%p,%s,%p,%p,%p,%p=%d)\n",
-          hkeyorg, debugstr_a(name), reserved, type, data, count, count ? *count : 0 );
+    /* Validate those parameters, the rest will be done with the first RegQueryValueExW call */
+    if ((data && !count) || reserved)
+        return ERROR_INVALID_PARAMETER;
 
-    if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
-    status = MapDefaultKey(&hkey, hkeyorg);
-    if (!NT_SUCCESS(status))
+    if (name)
+        RtlCreateUnicodeStringFromAsciiz(&nameW, name);
+    else
+        RtlInitEmptyUnicodeString(&nameW, NULL, 0);
+
+    ErrorCode = RegQueryValueExW(hkeyorg, nameW.Buffer, NULL, &LocalType, NULL, &BufferSize);
+    if (ErrorCode != ERROR_SUCCESS)
     {
-        return RtlNtStatusToDosError(status);
+        if (!data)
+            *count = 0;
+        RtlFreeUnicodeString(&nameW);
+        return ErrorCode;
     }
 
-    if (count) datalen = *count;
-    if (!data && count) *count = 0;
-
-    RtlInitAnsiString( &nameA, name );
-    if ((status = RtlAnsiStringToUnicodeString( &nameW, &nameA, TRUE )))
+    /* See if we can directly handle the call without caring for conversion */
+    if (!is_string(LocalType) || !count)
     {
-        ClosePredefKey(hkey);
-        return RtlNtStatusToDosError(status);
+        ErrorCode = RegQueryValueExW(hkeyorg, nameW.Buffer, reserved, type, data, count);
+        RtlFreeUnicodeString(&nameW);
+        return ErrorCode;
     }
 
-    status = NtQueryValueKey( hkey, &nameW, KeyValuePartialInformation,
-                              buffer, sizeof(buffer), &total_size );
-    if (status && status != STATUS_BUFFER_OVERFLOW) goto done;
-
-    /* we need to fetch the contents for a string type even if not requested,
-     * because we need to compute the length of the ASCII string. */
-    if (data || is_string(info->Type))
+    /* Allocate a unicode string to get the data */
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+    if (!Buffer)
     {
-        /* retry with a dynamically allocated buffer */
-        while (status == STATUS_BUFFER_OVERFLOW)
-        {
-            if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-            if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
-            {
-                status = STATUS_NO_MEMORY;
-                goto done;
-            }
-            info = (KEY_VALUE_PARTIAL_INFORMATION *)buf_ptr;
-            status = NtQueryValueKey( hkey, &nameW, KeyValuePartialInformation,
-                                      buf_ptr, total_size, &total_size );
-        }
-
-        if (status) goto done;
-
-        if (is_string(info->Type))
-        {
-            DWORD len;
-
-            RtlUnicodeToMultiByteSize( &len, (WCHAR *)(buf_ptr + info_size),
-                                       total_size - info_size );
-            if (data && len)
-            {
-                if (len > datalen) status = STATUS_BUFFER_OVERFLOW;
-                else
-                {
-                    RtlUnicodeToMultiByteN( (char*)data, len, NULL, (WCHAR *)(buf_ptr + info_size),
-                                            total_size - info_size );
-                    /* if the type is REG_SZ and data is not 0-terminated
-                     * and there is enough space in the buffer NT appends a \0 */
-                    if (len < datalen && data[len-1]) data[len] = 0;
-                }
-            }
-            total_size = len + info_size;
-        }
-        else if (data)
-        {
-            if (total_size - info_size > datalen) status = STATUS_BUFFER_OVERFLOW;
-            else memcpy( data, buf_ptr + info_size, total_size - info_size );
-        }
+        RtlFreeUnicodeString(&nameW);
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else status = STATUS_SUCCESS;
 
-    if (type) *type = info->Type;
-    if (count) *count = total_size - info_size;
+    ErrorCode = RegQueryValueExW(hkeyorg, nameW.Buffer, reserved, type, (LPBYTE)Buffer, &BufferSize);
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+        RtlFreeUnicodeString(&nameW);
+        return ErrorCode;
+    }
 
- done:
-    if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-    RtlFreeUnicodeString( &nameW );
-    ClosePredefKey(hkey);
-    return RtlNtStatusToDosError(status);
+    /* We don't need this anymore */
+    RtlFreeUnicodeString(&nameW);
+
+    DataLength = *count;
+    RtlUnicodeToMultiByteSize(count, Buffer, BufferSize);
+
+    if ((!data) || (DataLength < *count))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+        return  data ? ERROR_MORE_DATA : ERROR_SUCCESS;
+    }
+
+    /* We can finally do the conversion */
+    RtlUnicodeToMultiByteN(DataStr, DataLength, NULL, Buffer, BufferSize);
+
+    /* NULL-terminate if there is enough room */
+    if ((DataLength > *count) && (DataStr[*count - 1] != '\0'))
+        DataStr[*count] = '\0';
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    return ERROR_SUCCESS;
 }
 
 
