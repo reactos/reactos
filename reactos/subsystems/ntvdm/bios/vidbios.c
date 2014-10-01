@@ -1003,11 +1003,23 @@ BYTE VidBiosGetVideoMode(VOID)
 static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 {
     BYTE Page;
-
     COORD Resolution;
-    PVGA_REGISTERS VgaMode = VideoModes[ModeNumber];
+    BOOLEAN DoNotClear = !!(ModeNumber & 0x80);
+    PVGA_REGISTERS VgaMode;
 
-    DPRINT1("Switching to mode %Xh; VgaMode = 0x%p\n", ModeNumber, VgaMode);
+    /* Retrieve the real mode number and check its validity */
+    ModeNumber &= 0x7F;
+    // if (ModeNumber >= sizeof(VideoModes)/sizeof(VideoModes[0]))
+    if (ModeNumber > BIOS_MAX_VIDEO_MODE)
+    {
+        DPRINT1("VidBiosSetVideoMode -- Mode %02Xh invalid\n", ModeNumber);
+        return FALSE;
+    }
+
+    VgaMode = VideoModes[ModeNumber];
+
+    DPRINT1("Switching to mode %02Xh %s clearing the screen; VgaMode = 0x%p\n",
+            ModeNumber, (DoNotClear ? "without" : "and"), VgaMode);
 
     if (!VgaSetRegisters(VgaMode)) return FALSE;
 
@@ -1019,8 +1031,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
      * See Ralf Brown: http://www.ctyme.com/intr/rb-0069.htm
      * for more information.
      */
-    // if ((ModeNumber & 0x08) == 0) VgaClearMemory();
-    VgaClearMemory();
+    if (!DoNotClear) VgaClearMemory();
 
     // Bda->CrtModeControl;
     // Bda->CrtColorPaletteMask;
