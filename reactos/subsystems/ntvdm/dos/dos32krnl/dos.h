@@ -192,11 +192,31 @@ BOOL IsConsoleHandle(HANDLE hHandle);
 WORD DosOpenHandle(HANDLE Handle);
 HANDLE DosGetRealHandle(WORD DosHandle);
 
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attributes);
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes);
-WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
-WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
-WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset);
+WORD DosCreateFileEx(LPWORD Handle,
+                     LPWORD CreationStatus,
+                     LPCSTR FilePath,
+                     BYTE AccessShareModes,
+                     WORD CreateActionFlags,
+                     WORD Attributes);
+WORD DosCreateFile(LPWORD Handle,
+                   LPCSTR FilePath,
+                   DWORD CreationDisposition,
+                   WORD Attributes);
+WORD DosOpenFile(LPWORD Handle,
+                 LPCSTR FilePath,
+                 BYTE AccessShareModes);
+WORD DosReadFile(WORD FileHandle,
+                 LPVOID Buffer,
+                 WORD Count,
+                 LPWORD BytesRead);
+WORD DosWriteFile(WORD FileHandle,
+                  LPVOID Buffer,
+                  WORD Count,
+                  LPWORD BytesWritten);
+WORD DosSeekFile(WORD FileHandle,
+                 LONG Offset,
+                 BYTE Origin,
+                 LPDWORD NewOffset);
 BOOL DosFlushFileBuffers(WORD FileHandle);
 
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);

@@ -12,36 +12,254 @@
 #define NDEBUG
 
 #include "emulator.h"
-// #include "callback.h"
 
 #include "dos.h"
 #include "dos/dem.h"
 
 #include "bios/bios.h"
 
-/* PRIVATE VARIABLES **********************************************************/
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attributes)
+WORD DosCreateFileEx(LPWORD Handle,
+                     LPWORD CreationStatus,
+                     LPCSTR FilePath,
+                     BYTE AccessShareModes,
+                     WORD CreateActionFlags,
+                     WORD Attributes)
+{
+    WORD LastError;
+    HANDLE FileHandle;
+    WORD DosHandle;
+    ACCESS_MASK AccessMode = 0;
+    DWORD ShareMode = 0;
+    DWORD CreationDisposition = 0;
+    BOOL InheritableFile = FALSE;
+    SECURITY_ATTRIBUTES SecurityAttributes;
+
+    DPRINT1("DosCreateFileEx: FilePath \"%s\", AccessShareModes 0x%04X, CreateActionFlags 0x%04X, Attributes 0x%04X\n",
+           FilePath, AccessShareModes, CreateActionFlags, Attributes);
+
+    //
+    // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
+    // explains what are those AccessShareModes (see the uStyle flag).
+    //
+
+    /* Parse the access mode */
+    switch (AccessShareModes & 0x03)
+    {
+        /* Read-only */
+        case 0:
+            AccessMode = GENERIC_READ;
+            break;
+
+        /* Write only */
+        case 1:
+            AccessMode = GENERIC_WRITE;
+            break;
+
+        /* Read and write */
+        case 2:
+            AccessMode = GENERIC_READ | GENERIC_WRITE;
+            break;
+
+        /* Invalid */
+        default:
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Parse the share mode */
+    switch ((AccessShareModes >> 4) & 0x07)
+    {
+        /* Compatibility mode */
+        case 0:
+            ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+            break;
+
+        /* No sharing "DenyAll" */
+        case 1:
+            ShareMode = 0;
+            break;
+
+        /* No write share "DenyWrite" */
+        case 2:
+            ShareMode = FILE_SHARE_READ;
+            break;
+
+        /* No read share "DenyRead" */
+        case 3:
+            ShareMode = FILE_SHARE_WRITE;
+            break;
+
+        /* Full share "DenyNone" */
+        case 4:
+            ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+            break;
+
+        /* Invalid */
+        default:
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    /*
+     * Parse the creation action flags:
+     *
+     * Bitfields for action:
+     * Bit(s)  Description
+     *
+     * 7-4     Action if file does not exist.
+     * 0000    Fail
+     * 0001    Create
+     *
+     * 3-0     Action if file exists.
+     * 0000    Fail
+     * 0001    Open
+     * 0010    Replace/open
+     */
+    switch (CreateActionFlags)
+    {
+        /* If the file exists, fail, otherwise, fail also */
+        case 0x00:
+            // A special case is used after the call to CreateFileA if it succeeds,
+            // in order to close the opened handle and return an adequate error.
+            CreationDisposition = OPEN_EXISTING;
+            break;
+
+        /* If the file exists, open it, otherwise, fail */
+        case 0x01:
+            CreationDisposition = OPEN_EXISTING;
+            break;
+
+        /* If the file exists, replace it, otherwise, fail */
+        case 0x02:
+            CreationDisposition = TRUNCATE_EXISTING;
+            break;
+
+        /* If the file exists, fail, otherwise, create it */
+        case 0x10:
+            CreationDisposition = CREATE_NEW;
+            break;
+
+        /* If the file exists, open it, otherwise, create it */
+        case 0x11:
+            CreationDisposition = OPEN_ALWAYS;
+            break;
+
+        /* If the file exists, replace it, otherwise, create it */
+        case 0x12:
+            CreationDisposition = CREATE_ALWAYS;
+            break;
+
+        /* Invalid */
+        default:
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Check for inheritance */
+    InheritableFile = ((AccessShareModes & 0x80) == 0);
+
+    /* Assign default security attributes to the file, and set the inheritance flag */
+    SecurityAttributes.nLength = sizeof(SecurityAttributes);
+    SecurityAttributes.lpSecurityDescriptor = NULL;
+    SecurityAttributes.bInheritHandle = InheritableFile;
+
+    /* Open the file */
+    FileHandle = CreateFileA(FilePath,
+                             AccessMode,
+                             ShareMode,
+                             &SecurityAttributes,
+                             CreationDisposition,
+                             Attributes,
+                             NULL);
+
+    LastError = (WORD)GetLastError();
+
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        /* Return the error code */
+        return LastError;
+    }
+
+    /*
+     * Special case: CreateActionFlags == 0, we must fail because
+     * the file exists (if it didn't exist we already failed).
+     */
+    if (CreateActionFlags == 0)
+    {
+        /* Close the file and return the error code */
+        CloseHandle(FileHandle);
+        return ERROR_FILE_EXISTS;
+    }
+
+    /* Set the creation status */
+    switch (CreateActionFlags)
+    {
+        case 0x01:
+            *CreationStatus = 0x01; // The file was opened
+            break;
+
+        case 0x02:
+            *CreationStatus = 0x03; // The file was replaced
+            break;
+
+        case 0x10:
+            *CreationStatus = 0x02; // The file was created
+            break;
+
+        case 0x11:
+        {
+            if (LastError == ERROR_ALREADY_EXISTS)
+                *CreationStatus = 0x01; // The file was opened
+            else
+                *CreationStatus = 0x02; // The file was created
+
+            break;
+        }
+
+        case 0x12:
+        {
+            if (LastError == ERROR_ALREADY_EXISTS)
+                *CreationStatus = 0x03; // The file was replaced
+            else
+                *CreationStatus = 0x02; // The file was created
+
+            break;
+        }
+    }
+
+    /* Open the DOS handle */
+    DosHandle = DosOpenHandle(FileHandle);
+
+    if (DosHandle == INVALID_DOS_HANDLE)
+    {
+        /* Close the file and return the error code */
+        CloseHandle(FileHandle);
+        return ERROR_TOO_MANY_OPEN_FILES;
+    }
+
+    /* It was successful */
+    *Handle = DosHandle;
+    return ERROR_SUCCESS;
+}
+
+WORD DosCreateFile(LPWORD Handle,
+                   LPCSTR FilePath,
+                   DWORD CreationDisposition,
+                   WORD Attributes)
 {
     HANDLE FileHandle;
     WORD DosHandle;
 
-    DPRINT("DosCreateFile: FilePath \"%s\", CreationFlags 0x%04X, Attributes 0x%04X\n",
-            FilePath,
-            CreationFlags,
-            Attributes);
+    DPRINT("DosCreateFile: FilePath \"%s\", CreationDisposition 0x%04X, Attributes 0x%04X\n",
+           FilePath, CreationDisposition, Attributes);
 
     /* Create the file */
     FileHandle = CreateFileA(FilePath,
                              GENERIC_READ | GENERIC_WRITE,
                              FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                              NULL,
-                             CreationFlags,
+                             CreationDisposition,
                              Attributes,
                              NULL);
-
     if (FileHandle == INVALID_HANDLE_VALUE)
     {
         /* Return the error code */
@@ -53,10 +271,8 @@ WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attr
 
     if (DosHandle == INVALID_DOS_HANDLE)
     {
-        /* Close the handle */
+        /* Close the file and return the error code */
         CloseHandle(FileHandle);
-
-        /* Return the error code */
         return ERROR_TOO_MANY_OPEN_FILES;
     }
 
@@ -65,7 +281,9 @@ WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attr
     return ERROR_SUCCESS;
 }
 
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes)
+WORD DosOpenFile(LPWORD Handle,
+                 LPCSTR FilePath,
+                 BYTE AccessShareModes)
 {
     HANDLE FileHandle;
     ACCESS_MASK AccessMode = 0;
@@ -75,83 +293,67 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes)
     WORD DosHandle;
 
     DPRINT("DosOpenFile: FilePath \"%s\", AccessShareModes 0x%04X\n",
-            FilePath,
-            AccessShareModes);
+           FilePath, AccessShareModes);
+
+    //
+    // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
+    // explains what are those AccessShareModes (see the uStyle flag).
+    //
 
     /* Parse the access mode */
     switch (AccessShareModes & 0x03)
     {
+        /* Read-only */
         case 0:
-        {
-            /* Read-only */
             AccessMode = GENERIC_READ;
             break;
-        }
 
+        /* Write only */
         case 1:
-        {
-            /* Write only */
             AccessMode = GENERIC_WRITE;
             break;
-        }
 
+        /* Read and write */
         case 2:
-        {
-            /* Read and write */
             AccessMode = GENERIC_READ | GENERIC_WRITE;
             break;
-        }
 
+        /* Invalid */
         default:
-        {
-            /* Invalid */
             return ERROR_INVALID_PARAMETER;
-        }
     }
 
     /* Parse the share mode */
     switch ((AccessShareModes >> 4) & 0x07)
     {
+        /* Compatibility mode */
         case 0:
-        {
-            /* Compatibility mode */
             ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
             break;
-        }
 
+        /* No sharing "DenyAll" */
         case 1:
-        {
-            /* No sharing "DenyAll" */
             ShareMode = 0;
             break;
-        }
 
+        /* No write share "DenyWrite" */
         case 2:
-        {
-            /* No write share "DenyWrite" */
             ShareMode = FILE_SHARE_READ;
             break;
-        }
 
+        /* No read share "DenyRead" */
         case 3:
-        {
-            /* No read share "DenyRead" */
             ShareMode = FILE_SHARE_WRITE;
             break;
-        }
 
+        /* Full share "DenyNone" */
         case 4:
-        {
-            /* Full share "DenyNone" */
             ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
             break;
-        }
 
+        /* Invalid */
         default:
-        {
-            /* Invalid */
             return ERROR_INVALID_PARAMETER;
-        }
     }
 
     /* Check for inheritance */
@@ -170,7 +372,6 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes)
                              OPEN_EXISTING,
                              FILE_ATTRIBUTE_NORMAL,
                              NULL);
-
     if (FileHandle == INVALID_HANDLE_VALUE)
     {
         /* Return the error code */
@@ -182,10 +383,8 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes)
 
     if (DosHandle == INVALID_DOS_HANDLE)
     {
-        /* Close the handle */
+        /* Close the file and return the error code */
         CloseHandle(FileHandle);
-
-        /* Return the error code */
         return ERROR_TOO_MANY_OPEN_FILES;
     }
 
@@ -194,7 +393,10 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes)
     return ERROR_SUCCESS;
 }
 
-WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
+WORD DosReadFile(WORD FileHandle,
+                 LPVOID Buffer,
+                 WORD Count,
+                 LPWORD BytesRead)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD BytesRead32 = 0;
@@ -259,7 +461,10 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
     return Result;
 }
 
-WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
+WORD DosWriteFile(WORD FileHandle,
+                  LPVOID Buffer,
+                  WORD Count,
+                  LPWORD BytesWritten)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD BytesWritten32 = 0;
@@ -317,7 +522,10 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     return Result;
 }
 
-WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
+WORD DosSeekFile(WORD FileHandle,
+                 LONG Offset,
+                 BYTE Origin,
+                 LPDWORD NewOffset)
 {
     WORD Result = ERROR_SUCCESS;
     DWORD FilePointer;

@@ -2579,6 +2579,14 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Get Extended Error Information */
+        case 0x59:
+        {
+            DPRINT1("INT 21h, AH = 59h, BX = %04Xh - Get Extended Error Information is UNIMPLEMENTED\n",
+                    getBX());
+            break;
+        }
+
         /* Create Temporary File */
         case 0x5A:
         {
@@ -2775,6 +2783,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Extended Open/Create */
         case 0x6C:
         {
+            WORD FileHandle;
+            WORD CreationStatus;
+            WORD ErrorCode;
+
             /* Check for AL == 00 */
             if (getAL() != 0x00)
             {
@@ -2783,10 +2795,31 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 break;
             }
 
-            // TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // FIXME: Extend and merge DosOpenFile and DosCreateFile into
-            // a single wrapper around CreateFileA, which acts as:
-            // http://www.ctyme.com/intr/rb-3179.htm
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-3179.htm
+             * for the full detailed description.
+             *
+             * WARNING: BH contains some extended flags that are NOT SUPPORTED.
+             */
+
+            ErrorCode = DosCreateFileEx(&FileHandle,
+                                        &CreationStatus,
+                                        (LPCSTR)SEG_OFF_TO_PTR(getDS(), getSI()),
+                                        getBL(),
+                                        getDL(),
+                                        getCX());
+
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setCX(CreationStatus);
+                setAX(FileHandle);
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ErrorCode);
+            }
 
             break;
         }
