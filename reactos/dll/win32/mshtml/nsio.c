@@ -2606,10 +2606,27 @@ static nsresult NSAPI nsURL_SetFilePath(nsIFileURL *iface, const nsACString *aFi
 static nsresult NSAPI nsURL_GetQuery(nsIFileURL *iface, nsACString *aQuery)
 {
     nsWineURI *This = impl_from_nsIFileURL(iface);
+    WCHAR *ptr;
+    BSTR query;
+    nsresult nsres;
+    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, aQuery);
 
-    return get_uri_string(This, Uri_PROPERTY_QUERY, aQuery);
+    if(!ensure_uri(This))
+        return NS_ERROR_UNEXPECTED;
+
+    hres = IUri_GetQuery(This->uri, &query);
+    if(FAILED(hres))
+        return NS_ERROR_FAILURE;
+
+    ptr = query;
+    if(ptr && *ptr == '?')
+        ptr++;
+
+    nsres = return_wstr_nsacstr(aQuery, ptr, -1);
+    SysFreeString(query);
+    return nsres;
 }
 
 static nsresult NSAPI nsURL_SetQuery(nsIFileURL *iface, const nsACString *aQuery)

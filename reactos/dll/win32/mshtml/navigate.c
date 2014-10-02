@@ -969,7 +969,7 @@ HRESULT bind_mon_to_wstr(HTMLInnerWindow *window, IMoniker *mon, WCHAR **ret)
             break;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, bsc->buf, bsc->bsc.readed, text, len);
+        MultiByteToWideChar(cp, 0, bsc->buf, bsc->bsc.readed, text, len);
         text[len] = 0;
     }
     }
