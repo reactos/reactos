@@ -70,7 +70,7 @@ static VOID WINAPI DosSystemBop(LPWORD Stack)
                                        ulDosKernelSize,
                                        &ulDosKernelSize);
 
-            DPRINT1("Windows NT DOS loading %s at 0x%04X:0x%04X, size 0x%x ; GetLastError() = %u\n",
+            DPRINT1("Windows NT DOS loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
                     (Success ? "succeeded" : "failed"),
                     getDI(), 0x0000,
                     ulDosKernelSize,
@@ -211,7 +211,7 @@ BOOLEAN DosInitialize(IN LPCSTR DosKernelFileName)
                                    ulDosBiosSize,
                                    &ulDosBiosSize);
 
-        DPRINT1("DOS BIOS loading %s at 0x%04X:0x%04X, size 0x%x ; GetLastError() = %u\n",
+        DPRINT1("DOS BIOS loading %s at %04X:%04X, size 0x%X ; GetLastError() = %u\n",
                 (Success ? "succeeded" : "failed"),
                 0x0070, 0x0000,
                 ulDosBiosSize,
