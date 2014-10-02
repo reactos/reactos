@@ -18,6 +18,7 @@ function nav_back_test() {
     }
 
     iframe.onload = function() {
+        iframe.onload = null;
         var href = iframe.contentWindow.location.href;
 	ok(/.*blank2.html/.test(href), "Unexpected href " + href);
 	next_test();
@@ -27,8 +28,24 @@ function nav_back_test() {
     subframe.src = "blank.html";
 }
 
+function window_navigate_test() {
+    external.trace("Runnint window.navigate() tests...");
+
+    var iframe = document.getElementById("testframe");
+
+    iframe.onload = function() {
+        iframe.onlod = null;
+        var href = iframe.contentWindow.location.href;
+	ok(href === "about:blank", "Unexpected href " + href);
+	next_test();
+    }
+
+    iframe.contentWindow.navigate("about:blank");
+}
+
 var tests = [
     nav_back_test,
+    window_navigate_test,
     function() { external.reportSuccess(); }
 ];
 

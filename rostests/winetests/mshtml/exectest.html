@@ -55,7 +55,7 @@ try {
     testPutSrc();
     testPutText();
 }catch(e) {
-    ok(false, "Got an exception");
+    ok(false, "Got an exception " + e.message);
 }
 
 function testPutSrc2() {
@@ -123,7 +123,7 @@ document.body.onload = function() {
         testPutSrc2();
         testPutText2();
     }catch(e) {
-        ok(false, "got an exception");
+        ok(false, "got an exception " + e.message);
     }
 
     external.reportSuccess();

@@ -88,7 +88,6 @@ DEFINE_EXPECT(iframe_onload);
 static HWND container_hwnd = NULL;
 static IHTMLWindow2 *window;
 static IOleDocumentView *view;
-static BOOL xy_todo;
 static BOOL is_ie9plus;
 
 typedef struct {
@@ -1638,8 +1637,6 @@ static void test_onclick(IHTMLDocument2 *doc)
         CHECK_CALLED(invoke_onclick);
     }
 
-    xy_todo = TRUE;
-
     SET_EXPECT(div_onclick);
     SET_EXPECT(div_onclick_attached);
     SET_EXPECT(body_onclick);
@@ -1847,7 +1844,7 @@ static void test_imgload(IHTMLDocument2 *doc)
     ok(V_DISPATCH(&v) == (IDispatch*)&img_onerror_obj, "V_DISPATCH(onerror) != onerrorFunc\n");
     VariantClear(&v);
 
-    str = a2bstr("http://www.winehq.org/images/winehq_logo_text.png");
+    str = a2bstr("https://www.winehq.org/images/winehq_logo_text.png");
     hres = IHTMLImgElement_put_src(img, str);
     ok(hres == S_OK, "put_src failed: %08x\n", hres);
     SysFreeString(str);
@@ -2757,7 +2754,6 @@ static void run_test(const char *str, testfunc_t test)
     MSG msg;
     HRESULT hres;
 
-    xy_todo = FALSE;
     doc = create_document();
     if (!doc)
         return;

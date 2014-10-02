@@ -165,6 +165,9 @@ function test_override_functions() {
 
     var tmp = div.addBehavior();
     ok(tmp === "test", "div.addBehavior() = " + tmp);
+
+    tmp = String(div.attachEvent);
+    ok(tmp == "\nfunction attachEvent() {\n    [native code]\n}\n", "String(div.attachEvent) = " + tmp);
 }
 
 function test_forin() {
@@ -245,7 +248,7 @@ function runTest() {
     try {
         runTests();
     }catch(e) {
-        ok(false, "got exception");
+        ok(false, "got exception " + e.message);
     }
 
     external.reportSuccess();

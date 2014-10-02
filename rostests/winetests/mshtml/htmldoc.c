@@ -978,6 +978,7 @@ static HRESULT WINAPI PropertyNotifySink_OnChanged(IPropertyNotifySink *iface, D
     case 3000029:
     case 3000030:
     case 3000031:
+    case 3000032:
         /* TODO */
         return S_OK;
     }
@@ -2855,6 +2856,7 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
             test_readyState(NULL);
             return S_OK;
         case OLECMDID_UPDATETRAVELENTRY_DATARECOVERY:
+        case OLECMDID_PAGEAVAILABLE:
         case 6058:
             return E_FAIL; /* FIXME */
         default:
@@ -2864,7 +2866,7 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
     }
 
     if(IsEqualGUID(&CGID_ShellDocView, pguidCmdGroup)) {
-        if(nCmdID != 63 && (!is_refresh || nCmdID != 37))
+        if(nCmdID != 63 && nCmdID != 178 && (!is_refresh || nCmdID != 37))
             test_readyState(NULL);
         ok(nCmdexecopt == 0, "nCmdexecopts=%08x\n", nCmdexecopt);
 
@@ -2976,13 +2978,16 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
 
         case 83:
         case 102:
+        case 133:
         case 134: /* TODO */
         case 135:
         case 136: /* TODO */
+        case 137:
         case 139: /* TODO */
         case 143: /* TODO */
         case 144: /* TODO */
         case 178:
+        case 179:
             return E_NOTIMPL;
 
         default:
@@ -3162,7 +3167,9 @@ static HRESULT WINAPI Dispatch_Invoke(IDispatch *iface, DISPID dispIdMember, REF
     ok(puArgErr != NULL, "puArgErr == NULL\n");
     ok(V_VT(pVarResult) == 0, "V_VT(pVarResult)=%d, expected 0\n", V_VT(pVarResult));
     ok(wFlags == DISPATCH_PROPERTYGET, "wFlags=%08x, expected DISPATCH_PROPERTYGET\n", wFlags);
-    test_readyState(NULL);
+
+    if(dispIdMember != DISPID_AMBIENT_SILENT && dispIdMember != DISPID_AMBIENT_OFFLINEIFNOTCONNECTED)
+        test_readyState(NULL);
 
     switch(dispIdMember) {
     case DISPID_AMBIENT_USERMODE:
@@ -3290,13 +3297,15 @@ static HRESULT WINAPI TravelLog_QueryInterface(ITravelLog *iface, REFIID riid, v
 {
     static const IID IID_IIETravelLog2 = {0xb67cefd2,0xe3f1,0x478a,{0x9b,0xfa,0xd8,0x93,0x70,0x37,0x5e,0x94}};
     static const IID IID_unk_travellog = {0x6afc8b7f,0xbc17,0x4a95,{0x90,0x2f,0x6f,0x5c,0xb5,0x54,0xc3,0xd8}};
+    static const IID IID_unk_travellog2 = {0xf6d02767,0x9c80,0x428d,{0xb9,0x74,0x3f,0x17,0x29,0x45,0x3f,0xdb}};
 
     if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_ITravelLog, riid)) {
         *ppv = iface;
         return S_OK;
     }
 
-    if(!IsEqualGUID(&IID_IIETravelLog2, riid) && !IsEqualGUID(&IID_unk_travellog, riid))
+    if(!IsEqualGUID(&IID_IIETravelLog2, riid) && !IsEqualGUID(&IID_unk_travellog, riid)
+       && !IsEqualGUID(&IID_unk_travellog2, riid))
         ok(0, "unexpected call %s\n", wine_dbgstr_guid(riid));
 
     *ppv = NULL;
@@ -3430,7 +3439,7 @@ static HRESULT  WINAPI DocObjectService_FireBeforeNavigate2(IDocObjectService *i
 
     ok(!pDispatch, "pDispatch = %p\n", pDispatch);
     ok(!strcmp_wa(lpszUrl, nav_url), "lpszUrl = %s, expected %s\n", wine_dbgstr_w(lpszUrl), nav_url);
-    ok(dwFlags == 0x40 || !dwFlags || dwFlags == 0x50, "dwFlags = %x\n", dwFlags);
+    ok(dwFlags == 0x140 /* IE11*/ || dwFlags == 0x40 || !dwFlags || dwFlags == 0x50, "dwFlags = %x\n", dwFlags);
     ok(!lpszFrameName, "lpszFrameName = %s\n", wine_dbgstr_w(lpszFrameName));
     if(!testing_submit) {
         ok(!pPostData, "pPostData = %p\n", pPostData);
@@ -5291,7 +5300,7 @@ static void test_doscroll(IUnknown *unk)
     switch(load_state) {
     case LD_DOLOAD:
     case LD_NO:
-        if(!nav_url)
+        if(!nav_url && !editmode)
             ok(!elem, "elem != NULL\n");
     default:
         break;
@@ -5453,8 +5462,29 @@ static void test_ConnectionPoint(IConnectionPointContainer *container, REFIID ri
         hres = IConnectionPoint_Advise(cp, (IUnknown*)&PropertyNotifySink, NULL);
         ok(hres == S_OK, "Advise failed: %08x\n", hres);
     } else if(IsEqualGUID(&IID_IDispatch, riid)) {
+        IEnumConnections *enum_conn;
+        CONNECTDATA conn_data;
+        ULONG fetched;
+
         hres = IConnectionPoint_Advise(cp, (IUnknown*)&EventDispatch, &cookie);
         ok(hres == S_OK, "Advise failed: %08x\n", hres);
+
+        hres = IConnectionPoint_EnumConnections(cp, &enum_conn);
+        ok(hres == S_OK, "EnumConnections failed: %08x\n", hres);
+
+        fetched = 0;
+        hres = IEnumConnections_Next(enum_conn, 1, &conn_data, &fetched);
+        ok(hres == S_OK, "Next failed: %08x\n", hres);
+        ok(conn_data.pUnk == (IUnknown*)&EventDispatch, "conn_data.pUnk == EventDispatch\n");
+        ok(conn_data.dwCookie == cookie, "conn_data.dwCookie != cookie\n");
+        IUnknown_Release(conn_data.pUnk);
+
+        fetched = 0xdeadbeef;
+        hres = IEnumConnections_Next(enum_conn, 1, &conn_data, &fetched);
+        ok(hres == S_FALSE, "Next failed: %08x\n", hres);
+        ok(!fetched, "fetched = %d\n", fetched);
+
+        IEnumConnections_Release(enum_conn);
     }
 
     IConnectionPoint_Release(cp);
@@ -5722,6 +5752,8 @@ static void test_download(DWORD flags)
         SET_EXPECT(NavigateWithBindCtx);
         SET_EXPECT(Exec_Explorer_38); /* todo_wine */
     }
+    if(editmode || is_refresh)
+        SET_EXPECT(Exec_ShellDocView_138);
     expect_status_text = (LPWSTR)0xdeadbeef; /* TODO */
 
     while(!*b && GetMessageW(&msg, NULL, 0, 0)) {
@@ -5844,6 +5876,8 @@ static void test_download(DWORD flags)
         CHECK_CALLED(NavigateWithBindCtx);
         todo_wine CHECK_NOT_CALLED(Exec_Explorer_38);
     }
+    if(editmode || is_refresh)
+        CLEAR_CALLED(Exec_ShellDocView_138); /* IE11 */
 
     if(!is_extern)
         load_state = LD_COMPLETE;
@@ -5949,7 +5983,7 @@ static void test_put_href(IHTMLDocument2 *doc, BOOL use_replace, const char *hre
         CHECK_CALLED(TranslateUrl);
         if(support_wbapp) {
             CHECK_CALLED(FireBeforeNavigate2);
-            CHECK_CALLED(Exec_ShellDocView_67);
+            CLEAR_CALLED(Exec_ShellDocView_67); /* Not called by IE11 */
             if(!is_hash) {
                 CHECK_CALLED(Invoke_AMBIENT_SILENT);
                 CHECK_CALLED(Invoke_AMBIENT_OFFLINEIFNOTCONNECTED);
@@ -6015,7 +6049,7 @@ static void test_put_href(IHTMLDocument2 *doc, BOOL use_replace, const char *hre
         ok(hres == S_OK, "SuperNavigate failed: %08x\n", hres);
 
         CHECK_CALLED(TranslateUrl);
-        CHECK_CALLED(Exec_ShellDocView_67);
+        CLEAR_CALLED(Exec_ShellDocView_67); /* Not called by IE11 */
         CHECK_CALLED(Invoke_AMBIENT_SILENT);
         CHECK_CALLED(Invoke_AMBIENT_OFFLINEIFNOTCONNECTED);
         CHECK_CALLED(Exec_ShellDocView_63);
@@ -6086,8 +6120,8 @@ static void test_load_history(IHTMLDocument2 *doc)
     hres = IPersistHistory_LoadHistory(per_hist, history_stream, NULL);
     ok(hres == S_OK, "LoadHistory failed: %08x\n", hres);
 
-    CHECK_CALLED_BROKEN(Exec_ShellDocView_138);
-    CHECK_CALLED(Exec_ShellDocView_67);
+    CLEAR_CALLED(Exec_ShellDocView_138); /* Not called by IE11 */
+    CLEAR_CALLED(Exec_ShellDocView_67); /* Not called by IE11 */
     CHECK_CALLED(FireBeforeNavigate2);
     CHECK_CALLED(Invoke_AMBIENT_SILENT);
     CHECK_CALLED(Invoke_AMBIENT_OFFLINEIFNOTCONNECTED);
@@ -7810,11 +7844,11 @@ static void test_submit(void)
 
     CHECK_CALLED(TranslateUrl);
     CHECK_CALLED(FireBeforeNavigate2);
-    CHECK_CALLED(Exec_ShellDocView_67);
+    CLEAR_CALLED(Exec_ShellDocView_67); /* Not called by IE11 */
     CHECK_CALLED(Invoke_AMBIENT_SILENT);
     CHECK_CALLED(Invoke_AMBIENT_OFFLINEIFNOTCONNECTED);
     CHECK_CALLED(Exec_ShellDocView_63);
-    todo_wine CHECK_CALLED(Exec_ShellDocView_84);
+    CLEAR_CALLED(Exec_ShellDocView_84); /* Not called by IE11 */
     CHECK_CALLED(CreateInstance);
     CHECK_CALLED(Start);
     CHECK_CALLED(Protocol_Read);

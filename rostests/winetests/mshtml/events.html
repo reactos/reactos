@@ -114,13 +114,15 @@ function test_handler_this() {
     ok(calls == "div2,div2*,div1,div1*,body,body*", "calls = " + calls);
 }
 
-function runTests(t) {
+window.onload = function() {
     try {
         ok(cnt == 1, "cnt=" + cnt + " exception during loading?");
-        ok(t === window, "t !== window");
+        ok(this === window, "this !== window");
 
         ok(typeof(window.onload) === "function", "typeof(window.onload) = " + typeof(window.onload));
         ok(document.body.onload === window.onload, "document.body.onload !== window.onload");
+
+        ok(img_onload_called, "img.onload not called before window.onload");
 
         test_scriptfor();
         ondataavailable_test();
@@ -132,8 +134,18 @@ function runTests(t) {
     external.reportSuccess();
 }
 </script>
+<script>
+var img = document.createElement("img");
+img.src = "http://test.winehq.org/tests/winehq_snapshot/index_files/winehq_logo_glass.png";
+
+var img_onload_called = false;
+img.onload = function() {
+    external.trace("img.onload");
+    img_onload_called = true;
+}
+</script>
 </head>
-<body onload="runTests(this)">
+<body>
 <div id="divid"></div>
 <div id="divid2"></div>
 <script event="onclick" for="divid2">
@@ -151,6 +163,9 @@ function runTests(t) {
     ok(div.onclick === null, "div.onclick = null");
     cnt++;
 })();
+</script>
+<script>
+document.body.appendChild(img);
 </script>
 </body>
 </html>

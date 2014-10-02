@@ -132,6 +132,8 @@ DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
 DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller);
 DEFINE_EXPECT(external_success);
 DEFINE_EXPECT(QS_VariantConversion);
+DEFINE_EXPECT(QS_IActiveScriptSite);
+DEFINE_EXPECT(QS_GetCaller);
 DEFINE_EXPECT(ChangeType);
 
 #define TESTSCRIPT_CLSID "{178fc163-f585-4e24-9c13-4bb7faf80746}"
@@ -161,6 +163,9 @@ static HWND container_hwnd;
 static HRESULT ax_getopt_hres = S_OK, ax_setopt_dispex_hres = S_OK;
 static HRESULT ax_setopt_disp_caller_hres = S_OK, ax_setopt_disp_data_hres = S_OK;
 static BOOL skip_loadobject_tests;
+
+static IActiveScriptSite *site;
+static SCRIPTSTATE state;
 
 static int strcmp_wa(LPCWSTR strw, const char *stra)
 {
@@ -330,6 +335,19 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
         ok(IsEqualGUID(riid, &IID_IVariantChangeType), "uenxpected riid %s\n", wine_dbgstr_guid(riid));
         *ppv = &VChangeType;
         return S_OK;
+    }
+
+    if(IsEqualGUID(guidService, &IID_IActiveScriptSite)) {
+        CHECK_EXPECT(QS_IActiveScriptSite);
+        ok(IsEqualGUID(riid, &IID_IOleCommandTarget), "uenxpected riid %s\n", wine_dbgstr_guid(riid));
+        return IActiveScriptSite_QueryInterface(site, riid, ppv);
+    }
+
+    if(IsEqualGUID(guidService, &SID_GetCaller)) {
+        CHECK_EXPECT(QS_GetCaller);
+        ok(IsEqualGUID(riid, &IID_IServiceProvider), "uenxpected riid %s\n", wine_dbgstr_guid(riid));
+        *ppv = NULL;
+        return E_NOINTERFACE;
     }
 
     ok(0, "unexpected service %s\n", wine_dbgstr_guid(guidService));
@@ -1280,9 +1298,6 @@ static void load_doc(IHTMLDocument2 *doc, const char *str)
     IHTMLElement_Release(body);
 }
 
-static IActiveScriptSite *site;
-static SCRIPTSTATE state;
-
 static HRESULT WINAPI ObjectSafety_QueryInterface(IObjectSafety *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
@@ -1902,6 +1917,22 @@ static void test_func(IDispatchEx *obj)
     hres = dispex_propput(obj, id, 0, &var, NULL);
     ok(hres == E_NOTIMPL, "InvokeEx failed: %08x\n", hres);
 
+    hres = dispex_propget(dispex, DISPID_VALUE, &var, NULL);
+    ok(hres == E_ACCESSDENIED, "InvokeEx returned: %08x, expected E_ACCESSDENIED\n", hres);
+    if(SUCCEEDED(hres))
+        VariantClear(&var);
+
+    SET_EXPECT(QS_IActiveScriptSite);
+    SET_EXPECT(QS_GetCaller);
+    hres = dispex_propget(dispex, DISPID_VALUE, &var, &caller_sp);
+    ok(hres == S_OK, "InvokeEx returned: %08x, expected S_OK\n", hres);
+    ok(V_VT(&var) == VT_BSTR, "V_VT(var) = %d\n", V_VT(&var));
+    ok(!strcmp_wa(V_BSTR(&var), "\nfunction toString() {\n    [native code]\n}\n"),
+       "V_BSTR(var) = %s\n", wine_dbgstr_w(V_BSTR(&var)));
+    VariantClear(&var);
+    todo_wine CHECK_CALLED(QS_IActiveScriptSite);
+    todo_wine CHECK_CALLED(QS_GetCaller);
+
     IDispatchEx_Release(dispex);
 }
 
@@ -2054,11 +2085,18 @@ static void test_default_arg_conv(IHTMLWindow2 *window)
     test_elem_disabled(elem, VARIANT_TRUE);
 
     V_VT(&v) = VT_I4;
-    V_BSTR(&v) = 0;
+    V_I4(&v) = 0;
     hres = dispex_propput(dispex, DISPID_IHTMLELEMENT3_DISABLED, 0, &v, NULL);
     ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
 
     test_elem_disabled(elem, VARIANT_FALSE);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 1;
+    hres = dispex_propput(dispex, DISPID_IHTMLELEMENT3_DISABLED, DISPATCH_PROPERTYPUTREF, &v, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+
+    test_elem_disabled(elem, VARIANT_TRUE);
 
     IHTMLElement_Release(elem);
     IDispatchEx_Release(dispex);
