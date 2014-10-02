@@ -1187,7 +1187,7 @@ typedef struct _STROBJ {
 #define BMF_UMPDMEM                       0x0080
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 #define BMF_TEMP_ALPHA                    0x0100
-#endif /* (NTDDI_VERSION >= NTDDI_WIN7) *(
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 #if (NTDDI_VERSION >= NTDDI_WIN8)
 #define BMF_ACC_NOTIFY                    0x8000
 #define BMF_RMT_ENTER                     0x4000
