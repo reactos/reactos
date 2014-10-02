@@ -26,6 +26,11 @@
 
 #define GRAPHICS_VIDEO_SEG      0xA000
 #define TEXT_VIDEO_SEG          0xB800
+#define VIDEO_BIOS_DATA_SEG     0xC000
+
+#define FONT_8x8_OFFSET         0x0000
+#define FONT_8x8_HIGH_OFFSET    0x0400
+#define FONT_8x16_OFFSET        0x0800
 
 enum
 {

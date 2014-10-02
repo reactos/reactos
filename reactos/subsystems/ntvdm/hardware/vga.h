@@ -25,6 +25,10 @@
 #define VGA_DAC_TO_COLOR(x) (((x) << 2) | ((x) >> 4))
 #define VGA_COLOR_TO_DAC(x) ((x) >> 2)
 #define VGA_INTERLACE_HIGH_BIT (1 << 13)
+#define VGA_FONT_BANK 2
+#define VGA_FONT_CHARACTERS 256
+#define VGA_MAX_FONT_HEIGHT 32
+#define VGA_FONT_SIZE (VGA_FONT_CHARACTERS * VGA_MAX_FONT_HEIGHT)
 
 
 /* Register I/O ports */
@@ -259,6 +263,7 @@ DWORD VgaGetVideoLimitAddress(VOID);
 COORD VgaGetDisplayResolution(VOID);
 VOID VgaRefreshDisplay(VOID);
 VOID VgaHorizontalRetrace(VOID);
+VOID VgaWriteFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height);
 VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaClearMemory(VOID);
