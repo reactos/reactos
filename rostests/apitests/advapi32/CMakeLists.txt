@@ -4,6 +4,7 @@ list(APPEND SOURCE
     HKEY_CLASSES_ROOT.c
     LockDatabase.c
     QueryServiceConfig2.c
+    RegEnumValueW.c
     RtlEncryptMemory.c
     SaferIdentifyLevel.c
     testlist.c)
