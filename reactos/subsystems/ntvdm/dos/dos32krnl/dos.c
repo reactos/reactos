@@ -1406,15 +1406,18 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
             {
                 /* Console input */
                 InfoWord |= 1 << 0;
+
+                /* It is a device */
+                InfoWord |= 1 << 7;
             }
             else if (Handle == DosSystemFileTable[DOS_OUTPUT_HANDLE].Handle)
             {
                 /* Console output */
                 InfoWord |= 1 << 1;
-            }
 
-            /* It is a device */
-            InfoWord |= 1 << 7;
+                /* It is a device */
+                InfoWord |= 1 << 7;
+            }
 
             /* Return the device information word */
             setDX(InfoWord);
