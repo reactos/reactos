@@ -88,7 +88,7 @@ public:
 };
 
 int
-main()
+test()
 {
     CHString2 String;
 

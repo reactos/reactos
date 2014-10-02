@@ -28,5 +28,5 @@ endif()
 add_library(dllimport_test SHARED
     dllimport_framedyn.cpp)
 set_module_type(dllimport_test win32dll ENTRYPOINT 0)
-add_importlibs(dllimport_test msvcrt framedyn)
+add_importlibs(dllimport_test framedyn)
 target_link_libraries(dllimport_test framedynex)
