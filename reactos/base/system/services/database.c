@@ -1442,7 +1442,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
 
                 ScmLogEvent(EVENT_READFILE_TIMEOUT,
                             EVENTLOG_ERROR_TYPE,
-                            2,
+                            1,
                             lpErrorStrings);
 
                 return ERROR_SERVICE_REQUEST_TIMEOUT;
