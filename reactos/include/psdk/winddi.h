@@ -4345,7 +4345,7 @@ typedef BOOL
     _In_ HANDLE   hLogicalSurface,
     _In_ SIZEL    sizl);
 typedef FN_DrvAssociateSharedSurface *PFN_DrvAssociateSharedSurface;
-extern
+extern FN_DrvAssociateSharedSurface DrvAssociateSharedSurface;
 
 typedef LONG
 (APIENTRY FN_DrvSynchronizeRedirectionBitmaps)(
