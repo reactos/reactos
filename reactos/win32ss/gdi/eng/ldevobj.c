@@ -292,6 +292,7 @@ LDEVOBJ_pvFindImageProcAddress(
     pExportDir = pldev->pGdiDriverInfo->ExportSectionPointer;
     if (!pExportDir)
     {
+        ERR("LDEVOBJ_pvFindImageProcAddress: no export section found\n");
         return NULL;
     }
 
