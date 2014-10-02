@@ -2697,120 +2697,139 @@ Cleanup:
  * @implemented
  */
 LONG WINAPI
-RegEnumValueA(HKEY hKey,
-              DWORD index,
-              LPSTR value,
-              LPDWORD val_count,
-              LPDWORD reserved,
-              LPDWORD type,
-              LPBYTE data,
-              LPDWORD count)
+RegEnumValueA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_ LPSTR lpName,
+    _Inout_ LPDWORD lpcbName,
+    _Reserved_ LPDWORD lpdwReserved,
+    _Out_opt_ LPDWORD lpdwType,
+    _Out_opt_ LPBYTE lpData,
+    _Out_opt_ LPDWORD lpcbData)
 {
-    HANDLE KeyHandle;
-    NTSTATUS status;
-    ULONG total_size;
-    char buffer[256], *buf_ptr = buffer;
-    KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
-    static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );
+    WCHAR* NameBuffer;
+    DWORD NameBufferSize, NameLength;
+    LONG ErrorCode;
+    DWORD LocalType = REG_NONE;
+    BOOL NameOverflow = FALSE;
 
-    //TRACE("(%p,%ld,%p,%p,%p,%p,%p,%p)\n",
-      //    hkey, index, value, val_count, reserved, type, data, count );
-
-    /* NT only checks count, not val_count */
-    if ((data && !count) || reserved)
+    /* Do parameter checks now, once and for all. */
+    if ((lpData && !lpcbData) || lpdwReserved)
         return ERROR_INVALID_PARAMETER;
 
-    status = MapDefaultKey(&KeyHandle, hKey);
-    if (!NT_SUCCESS(status))
+    /* Get the size of the buffer we must use for the first call ro RegEnumValueW */
+    ErrorCode = RegQueryInfoKeyW(
+        hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &NameBufferSize, NULL, NULL, NULL);
+    if (ErrorCode != ERROR_SUCCESS)
+        return ErrorCode;
+
+    /* Allocate the buffer for the unicode name */
+    NameBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, NameBufferSize * sizeof(WCHAR));
+    if (NameBuffer == NULL)
     {
-        return RtlNtStatusToDosError(status);
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    total_size = info_size + (MAX_PATH + 1) * sizeof(WCHAR);
-    if (data) total_size += *count;
-    total_size = min( sizeof(buffer), total_size );
-
-    status = NtEnumerateValueKey( KeyHandle, index, KeyValueFullInformation,
-                                  buffer, total_size, &total_size );
-    if (status && (status != STATUS_BUFFER_OVERFLOW) && (status != STATUS_BUFFER_TOO_SMALL)) goto done;
-
-    /* we need to fetch the contents for a string type even if not requested,
-     * because we need to compute the length of the ASCII string. */
-    if (value || data || is_string(info->Type))
+    /*
+     * This code calls RegEnumValueW twice, because we need to know the type of the enumerated value.
+     * So for the first call, we check if we overflow on the name, as we have no way of knowing if this
+     * is an overflow on the data or on the name during the the second call. So the first time, we make the
+     * call with the supplied value. This is merdique, but this is how it is.
+     */
+    NameLength = *lpcbName;
+    ErrorCode = RegEnumValueW(
+        hKey,
+        dwIndex,
+        NameBuffer,
+        &NameLength,
+        NULL,
+        &LocalType,
+        NULL,
+        NULL);
+    if (ErrorCode != ERROR_SUCCESS)
     {
-        /* retry with a dynamically allocated buffer */
-        while ((status == STATUS_BUFFER_OVERFLOW) || (status == STATUS_BUFFER_TOO_SMALL))
+        if (ErrorCode == ERROR_MORE_DATA)
+            NameOverflow = TRUE;
+        else
+            goto Exit;
+    }
+
+    if (is_string(LocalType) && lpcbData)
+    {
+        /* We must allocate a buffer to get the unicode data */
+        DWORD DataBufferSize = *lpcbData * sizeof(WCHAR);
+        WCHAR* DataBuffer = NULL;
+        DWORD DataLength = *lpcbData;
+        LPSTR DataStr = (LPSTR)lpData;
+
+        if (lpData)
+            DataBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, *lpcbData * sizeof(WCHAR));
+
+        /* Do the real call */
+        ErrorCode = RegEnumValueW(
+            hKey,
+            dwIndex,
+            NameBuffer,
+            &NameBufferSize,
+            lpdwReserved,
+            lpdwType,
+            (LPBYTE)DataBuffer,
+            &DataBufferSize);
+
+        *lpcbData = DataBufferSize / sizeof(WCHAR);
+
+        if (ErrorCode != ERROR_SUCCESS)
         {
-            if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-            if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
-            {
-                status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
-            info = (KEY_VALUE_FULL_INFORMATION *)buf_ptr;
-            status = NtEnumerateValueKey( KeyHandle, index, KeyValueFullInformation,
-                                          buf_ptr, total_size, &total_size );
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DataBuffer);
+            goto Exit;
         }
 
-        if (status) goto done;
-
-        if (is_string(info->Type))
+        /* Copy the data whatever the error code is */
+        if (lpData)
         {
-            ULONG len;
-            RtlUnicodeToMultiByteSize( &len, (WCHAR *)(buf_ptr + info->DataOffset),
-                                       info->DataLength );
-            if (data && len)
-            {
-                if (len > *count) status = STATUS_BUFFER_OVERFLOW;
-                else
-                {
-                    RtlUnicodeToMultiByteN( (PCHAR)data, len, NULL, (WCHAR *)(buf_ptr + info->DataOffset),
-                                            info->DataLength );
-                    /* if the type is REG_SZ and data is not 0-terminated
-                     * and there is enough space in the buffer NT appends a \0 */
-                    if (len < *count && data[len-1]) data[len] = 0;
-                }
-            }
-            info->DataLength = len;
-        }
-        else if (data)
-        {
-            if (info->DataLength > *count) status = STATUS_BUFFER_OVERFLOW;
-            else memcpy( data, buf_ptr + info->DataOffset, info->DataLength );
+            /* Do the data conversion */
+            RtlUnicodeToMultiByteN(DataStr, DataLength, 0, DataBuffer, DataBufferSize);
+            /* NULL-terminate if there is enough room */
+            if ((DataLength > *lpcbData) && (DataStr[*lpcbData - 1] != '\0'))
+                DataStr[*lpcbData] = '\0';
         }
 
-        if (value && !status)
-        {
-            ULONG len;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DataBuffer);
+    }
+    else
+    {
+        /* No data conversion needed. Do the call with provided buffers */
+        ErrorCode = RegEnumValueW(
+            hKey,
+            dwIndex,
+            NameBuffer,
+            &NameBufferSize,
+            lpdwReserved,
+            lpdwType,
+            lpData,
+            lpcbData);
 
-            RtlUnicodeToMultiByteSize( &len, info->Name, info->NameLength );
-            if (len >= *val_count)
-            {
-                status = STATUS_BUFFER_OVERFLOW;
-                if (*val_count)
-                {
-                    len = *val_count - 1;
-                    RtlUnicodeToMultiByteN( value, len, NULL, info->Name, info->NameLength );
-                    value[len] = 0;
-                }
-            }
-            else
-            {
-                RtlUnicodeToMultiByteN( value, len, NULL, info->Name, info->NameLength );
-                value[len] = 0;
-                *val_count = len;
-            }
+        if (ErrorCode != ERROR_SUCCESS)
+        {
+            goto Exit;
         }
     }
-    else status = STATUS_SUCCESS;
 
-    if (type) *type = info->Type;
-    if (count) *count = info->DataLength;
+    if (NameOverflow)
+    {
+        ErrorCode = ERROR_MORE_DATA;
+        goto Exit;
+    }
 
- done:
-    if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-    ClosePredefKey(KeyHandle);
-    return RtlNtStatusToDosError(status);
+    /* Convert the name string */
+    RtlUnicodeToMultiByteN(lpName, *lpcbName, lpcbName, NameBuffer, NameBufferSize * sizeof(WCHAR));
+    ((PSTR)lpName)[*lpcbName] = '\0';
+
+Exit:
+    if (NameBuffer)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
+
+    return ErrorCode;
 }
 
 
