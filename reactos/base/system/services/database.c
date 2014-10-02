@@ -1339,6 +1339,9 @@ ScmWaitForServiceConnect(PSERVICE Service)
 #ifdef USE_ASYNCHRONOUS_IO
     OVERLAPPED Overlapped = {0};
 #endif
+    LPCWSTR lpErrorStrings[3];
+    WCHAR szBuffer1[20];
+    WCHAR szBuffer2[20];
 
     DPRINT("ScmWaitForServiceConnect()\n");
 
@@ -1369,6 +1372,15 @@ ScmWaitForServiceConnect(PSERVICE Service)
                 {
                     DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
                 }
+
+                _ultow(PipeTimeout, szBuffer1, 10);
+                lpErrorStrings[0] = Service->lpDisplayName;
+                lpErrorStrings[1] = szBuffer1;
+
+                ScmLogEvent(EVENT_CONNECTION_TIMEOUT,
+                            EVENTLOG_ERROR_TYPE,
+                            2,
+                            lpErrorStrings);
 
                 return ERROR_SERVICE_REQUEST_TIMEOUT;
             }
@@ -1425,6 +1437,14 @@ ScmWaitForServiceConnect(PSERVICE Service)
                     DPRINT1("CancelIo() failed (Error: %lu)\n", GetLastError());
                 }
 
+                _ultow(PipeTimeout, szBuffer1, 10);
+                lpErrorStrings[0] = szBuffer1;
+
+                ScmLogEvent(EVENT_READFILE_TIMEOUT,
+                            EVENTLOG_ERROR_TYPE,
+                            2,
+                            lpErrorStrings);
+
                 return ERROR_SERVICE_REQUEST_TIMEOUT;
             }
             else if (dwError == WAIT_OBJECT_0)
@@ -1456,18 +1476,20 @@ ScmWaitForServiceConnect(PSERVICE Service)
             return dwError;
         }
     }
-    else
-    {
-        if (dwProcessId != Service->lpImage->dwProcessId)
-        {
-/*
-            LPWSTR Strings[3]
 
-            ScmLogError(EVENT_SERVICE_DIFFERENT_PID_CONNECTED,
-                        3,
-                        lpStrings);
-*/
-        }
+    if (dwProcessId != Service->lpImage->dwProcessId)
+    {
+        _ultow(Service->lpImage->dwProcessId, szBuffer1, 10);
+        _ultow(dwProcessId, szBuffer2, 10);
+
+        lpErrorStrings[0] = Service->lpDisplayName;
+        lpErrorStrings[1] = szBuffer1;
+        lpErrorStrings[2] = szBuffer2;
+
+        ScmLogEvent(EVENT_SERVICE_DIFFERENT_PID_CONNECTED,
+                    EVENTLOG_WARNING_TYPE,
+                    3,
+                    lpErrorStrings);
     }
 
     DPRINT("ScmWaitForServiceConnect() done\n");
