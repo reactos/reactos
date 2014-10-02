@@ -182,7 +182,7 @@ static void test_SetTargetComputer(void)
         hres, wine_dbgstr_w(name), wine_dbgstr_w(buffer));
     CoTaskMemFree(name);
 
-    /* the two backslash are optional */
+    /* the two backslashes are optional */
     hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, oldname + 2);
     ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
 
