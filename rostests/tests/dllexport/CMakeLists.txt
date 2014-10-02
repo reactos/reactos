@@ -25,8 +25,8 @@ if(MSVC)
     add_compile_flags("/Zc:wchar_t-")
 endif()
 
-add_library(dllimport_test
+add_library(dllimport_test SHARED
     dllimport_framedyn.cpp)
 set_module_type(dllimport_test win32dll ENTRYPOINT 0)
-add_importlibs(dllimport_test framedyn)
+add_importlibs(dllimport_test msvcrt framedyn)
 target_link_libraries(dllimport_test framedynex)
