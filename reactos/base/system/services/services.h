@@ -6,6 +6,7 @@
 #define _SERVICES_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
