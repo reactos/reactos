@@ -1331,9 +1331,9 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         DeviceInformation->SuggestedDriveLetter = 0;
     }
     /* Else, it's time to set up one */
-    else if (!DeviceExtension->NoAutoMount && !DeviceInformation->Removable &&
-             DeviceExtension->AutomaticDriveLetter && HasGptDriveLetter &&
-             DeviceInformation->SuggestedDriveLetter &&
+    else if ((DeviceExtension->NoAutoMount || DeviceInformation->Removable) &&
+             DeviceExtension->AutomaticDriveLetter &&
+             (HasGptDriveLetter || DeviceInformation->SuggestedDriveLetter) &&
              !HasNoDriveLetterEntry(UniqueId))
     {
         /* Create a new drive letter */
