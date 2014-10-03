@@ -186,6 +186,11 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
                                 $$=xmlStrcat($$,$2);
                                 xmlFree($2);
                             }
+                            | '@' '*'
+                            {
+                                TRACE("Got All attributes pattern: \"@*\"\n");
+                                $$=xmlStrdup(U("@*"));
+                            }
     ;
 
     /* [2.3] Node Tests */

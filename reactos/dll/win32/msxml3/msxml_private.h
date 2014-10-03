@@ -205,22 +205,6 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
     return ret;
 }
 
-static inline LPSTR heap_strdupWtoA(LPCWSTR str)
-{
-    LPSTR ret = NULL;
-
-    if(str) {
-        DWORD len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-        ret = heap_alloc(len+1);
-        if(!ret)
-            return NULL;
-
-        WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len+1, NULL, NULL);
-    }
-
-    return ret;
-}
-
 /* XSLProcessor parameter list */
 struct xslprocessor_par
 {
@@ -559,8 +543,6 @@ typedef struct bsc_t bsc_t;
 HRESULT create_moniker_from_url(LPCWSTR, IMoniker**) DECLSPEC_HIDDEN;
 HRESULT bind_url(IMoniker*, HRESULT (*onDataAvailable)(void*,char*,DWORD), void*, bsc_t**) DECLSPEC_HIDDEN;
 HRESULT detach_bsc(bsc_t*) DECLSPEC_HIDDEN;
-
-const char *debugstr_variant(const VARIANT*) DECLSPEC_HIDDEN;
 
 /* Error Codes - not defined anywhere in the public headers */
 #define E_XML_ELEMENT_UNDECLARED            0xC00CE00D

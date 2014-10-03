@@ -1263,7 +1263,12 @@ static HRESULT WINAPI domelem_setAttribute(
         xmlFree(local);
 
         if (ns)
-            return xmlStrEqual(ns->href, xml_value) ? S_OK : E_INVALIDARG;
+        {
+            int cmp = xmlStrEqual(ns->href, xml_value);
+            heap_free(xml_value);
+            heap_free(xml_name);
+            return cmp ? S_OK : E_INVALIDARG;
+        }
     }
 
     if (!xmlSetNsProp(element, NULL, xml_name, xml_value))
