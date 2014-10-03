@@ -1654,7 +1654,7 @@ static void test_SafeArrayCreateEx(void)
     sacopy = pSafeArrayCreateEx(VT_RECORD, 1, sab, &iRec->IRecordInfo_iface);
     iRec->recordcopy = 0;
     iRec->clearCalled = 0;
-    /* array copy code doesn't explicitely clear a record */
+    /* array copy code doesn't explicitly clear a record */
     hres = SafeArrayCopyData(sa, sacopy);
     ok(hres == S_OK, "got 0x%08x\n", hres);
     ok(iRec->recordcopy == sab[0].cElements, "got %d\n", iRec->recordcopy);

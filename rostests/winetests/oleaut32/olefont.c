@@ -417,10 +417,12 @@ static void test_font_events_disp(void)
     IConnectionPoint_Release(pCP);
 
     fonteventsdisp_invoke_called = 0;
+    fonteventsdisp_invoke_arg0 = NULL;
     hr = IFont_put_Bold(pFont, TRUE);
     EXPECT_HR(hr, S_OK);
 
     ok(fonteventsdisp_invoke_called == 1, "IFontEventDisp::Invoke wasn't called once\n");
+    SysFreeString(fonteventsdisp_invoke_arg0);
 
     hr = IFont_QueryInterface(pFont, &IID_IFontDisp, (void **)&pFontDisp);
     EXPECT_HR(hr, S_OK);

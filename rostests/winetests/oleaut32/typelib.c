@@ -80,6 +80,8 @@ static BOOL   (WINAPI *pActivateActCtx)(HANDLE,ULONG_PTR*);
 static HANDLE (WINAPI *pCreateActCtxW)(PCACTCTXW);
 static BOOL   (WINAPI *pDeactivateActCtx)(DWORD,ULONG_PTR);
 static VOID   (WINAPI *pReleaseActCtx)(HANDLE);
+static BOOL   (WINAPI *pIsWow64Process)(HANDLE,LPBOOL);
+static LONG   (WINAPI *pRegDeleteKeyExW)(HKEY,LPCWSTR,REGSAM,DWORD);
 
 static const WCHAR wszStdOle2[] = {'s','t','d','o','l','e','2','.','t','l','b',0};
 static WCHAR wszGUID[] = {'G','U','I','D',0};
@@ -171,6 +173,7 @@ static void init_function_pointers(void)
 {
     HMODULE hmod = GetModuleHandleA("oleaut32.dll");
     HMODULE hk32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hadv = GetModuleHandleA("advapi32.dll");
 
     pRegisterTypeLibForUser = (void *)GetProcAddress(hmod, "RegisterTypeLibForUser");
     pUnRegisterTypeLibForUser = (void *)GetProcAddress(hmod, "UnRegisterTypeLibForUser");
@@ -178,6 +181,8 @@ static void init_function_pointers(void)
     pCreateActCtxW = (void *)GetProcAddress(hk32, "CreateActCtxW");
     pDeactivateActCtx = (void *)GetProcAddress(hk32, "DeactivateActCtx");
     pReleaseActCtx = (void *)GetProcAddress(hk32, "ReleaseActCtx");
+    pIsWow64Process = (void *)GetProcAddress(hk32, "IsWow64Process");
+    pRegDeleteKeyExW = (void*)GetProcAddress(hadv, "RegDeleteKeyExW");
 }
 
 static void ref_count_test(LPCWSTR type_lib)
@@ -1158,18 +1163,19 @@ static void test_DispCallFunc(void)
     ok(V_VT(&result) == 0xcccc, "V_VT(result) = %u\n", V_VT(&result));
 }
 
-/* RegDeleteTreeW from dlls/advapi32/registry.c */
-static LSTATUS myRegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey)
+/* RegDeleteTreeW from dlls/advapi32/registry.c, plus additional view flag */
+static LSTATUS myRegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey, REGSAM view)
 {
     LONG ret;
     DWORD dwMaxSubkeyLen, dwMaxValueLen;
     DWORD dwMaxLen, dwSize;
     WCHAR szNameBuf[MAX_PATH], *lpszName = szNameBuf;
     HKEY hSubKey = hKey;
+    view &= (KEY_WOW64_64KEY | KEY_WOW64_32KEY);
 
     if(lpszSubKey)
     {
-        ret = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_READ, &hSubKey);
+        ret = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_READ | view, &hSubKey);
         if (ret) return ret;
     }
 
@@ -1197,12 +1203,15 @@ static LSTATUS myRegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey)
         if (RegEnumKeyExW(hSubKey, 0, lpszName, &dwSize, NULL,
                           NULL, NULL, NULL)) break;
 
-        ret = myRegDeleteTreeW(hSubKey, lpszName);
+        ret = myRegDeleteTreeW(hSubKey, lpszName, view);
         if (ret) goto cleanup;
     }
 
     if (lpszSubKey)
-        ret = RegDeleteKeyW(hKey, lpszSubKey);
+        if (pRegDeleteKeyExW && view != 0)
+            ret = pRegDeleteKeyExW(hKey, lpszSubKey, view, 0);
+        else
+            ret = RegDeleteKeyW(hKey, lpszSubKey);
     else
         while (TRUE)
         {
@@ -1237,7 +1246,7 @@ static BOOL do_typelib_reg_key(GUID *uid, WORD maj, WORD min, DWORD arch, LPCWST
 
     if (remove)
     {
-        ok(myRegDeleteTreeW(HKEY_CLASSES_ROOT, buf) == ERROR_SUCCESS, "SHDeleteKey failed\n");
+        ok(myRegDeleteTreeW(HKEY_CLASSES_ROOT, buf, 0) == ERROR_SUCCESS, "SHDeleteKey failed\n");
         return TRUE;
     }
 
@@ -1304,11 +1313,11 @@ static void test_QueryPathOfRegTypeLib(DWORD arch)
     StringFromGUID2(&uid, uid_str, 40);
     /*trace("GUID: %s\n", wine_dbgstr_w(uid_str));*/
 
-    if (!do_typelib_reg_key(&uid, 3, 0, arch, base, 0)) return;
-    if (!do_typelib_reg_key(&uid, 3, 1, arch, base, 0)) return;
-    if (!do_typelib_reg_key(&uid, 3, 37, arch, base, 0)) return;
-    if (!do_typelib_reg_key(&uid, 5, 37, arch, base, 0)) return;
-    if (arch == 64 && !do_typelib_reg_key(&uid, 5, 37, 32, wrongW, 0)) return;
+    if (!do_typelib_reg_key(&uid, 3, 0, arch, base, FALSE)) return;
+    if (!do_typelib_reg_key(&uid, 3, 1, arch, base, FALSE)) return;
+    if (!do_typelib_reg_key(&uid, 3, 37, arch, base, FALSE)) return;
+    if (!do_typelib_reg_key(&uid, 5, 37, arch, base, FALSE)) return;
+    if (arch == 64 && !do_typelib_reg_key(&uid, 5, 37, 32, wrongW, FALSE)) return;
 
     for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
     {
@@ -1321,7 +1330,7 @@ static void test_QueryPathOfRegTypeLib(DWORD arch)
         }
     }
 
-    do_typelib_reg_key(&uid, 0, 0, arch, NULL, 1);
+    do_typelib_reg_key(&uid, 0, 0, arch, NULL, TRUE);
 }
 
 static void test_inheritance(void)
@@ -4201,6 +4210,8 @@ static void test_register_typelib(BOOL system_registration)
     LONG ret, expect_ret;
     UINT count, i;
     HKEY hkey;
+    REGSAM opposite = (sizeof(void*) == 8 ? KEY_WOW64_32KEY : KEY_WOW64_64KEY);
+    BOOL is_wow64 = FALSE;
     struct
     {
         TYPEKIND kind;
@@ -4230,6 +4241,9 @@ static void test_register_typelib(BOOL system_registration)
         return;
     }
 
+    if (pIsWow64Process)
+        pIsWow64Process(GetCurrentProcess(), &is_wow64);
+
     filenameA = create_test_typelib(3);
     MultiByteToWideChar(CP_ACP, 0, filenameA, -1, filename, MAX_PATH);
 
@@ -4256,7 +4270,6 @@ static void test_register_typelib(BOOL system_registration)
     {
         ITypeInfo *typeinfo;
         TYPEATTR *attr;
-        REGSAM opposite = (sizeof(void*) == 8 ? KEY_WOW64_32KEY : KEY_WOW64_64KEY);
 
         hr = ITypeLib_GetTypeInfo(typelib, i, &typeinfo);
         ok(hr == S_OK, "got %08x\n", hr);
@@ -4307,9 +4320,12 @@ static void test_register_typelib(BOOL system_registration)
         if(ret == ERROR_SUCCESS) RegCloseKey(hkey);
 
         /* 32-bit typelibs should be registered into both registry bit modes */
-        ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, key_name, 0, KEY_READ | opposite, &hkey);
-        ok(ret == expect_ret, "%d: got %d\n", i, ret);
-        if(ret == ERROR_SUCCESS) RegCloseKey(hkey);
+        if (is_win64 || is_wow64)
+        {
+            ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, key_name, 0, KEY_READ | opposite, &hkey);
+            ok(ret == expect_ret, "%d: got %d\n", i, ret);
+            if(ret == ERROR_SUCCESS) RegCloseKey(hkey);
+        }
 
         ITypeInfo_ReleaseTypeAttr(typeinfo, attr);
         ITypeInfo_Release(typeinfo);
@@ -4320,6 +4336,36 @@ static void test_register_typelib(BOOL system_registration)
     else
         hr = pUnRegisterTypeLibForUser(&LIBID_register_test, 1, 0, LOCALE_NEUTRAL, is_win64 ? SYS_WIN64 : SYS_WIN32);
     ok(hr == S_OK, "got %08x\n", hr);
+
+    for(i = 0; i < count; i++)
+    {
+        ITypeInfo *typeinfo;
+        TYPEATTR *attr;
+
+        hr = ITypeLib_GetTypeInfo(typelib, i, &typeinfo);
+        ok(hr == S_OK, "got %08x\n", hr);
+
+        hr = ITypeInfo_GetTypeAttr(typeinfo, &attr);
+        ok(hr == S_OK, "got %08x\n", hr);
+
+        if((attr->typekind == TKIND_INTERFACE && (attr->wTypeFlags & TYPEFLAG_FOLEAUTOMATION)) ||
+           attr->typekind == TKIND_DISPATCH)
+        {
+            StringFromGUID2(&attr->guid, uuidW, sizeof(uuidW) / sizeof(uuidW[0]));
+            WideCharToMultiByte(CP_ACP, 0, uuidW, -1, uuid, sizeof(uuid), NULL, NULL);
+            sprintf(key_name, "Interface\\%s", uuid);
+
+            ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, key_name, 0, KEY_READ, &hkey);
+            ok(ret == ERROR_FILE_NOT_FOUND, "Interface registry remains in %s (%d)\n", key_name, i);
+            if (is_win64 || is_wow64)
+            {
+                ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, key_name, 0, KEY_READ | opposite, &hkey);
+                ok(ret == ERROR_FILE_NOT_FOUND, "Interface registry remains in %s (%d)\n", key_name, i);
+            }
+        }
+        ITypeInfo_ReleaseTypeAttr(typeinfo, attr);
+        ITypeInfo_Release(typeinfo);
+    }
 
     ITypeLib_Release(typelib);
     DeleteFileA( filenameA );
@@ -5297,10 +5343,9 @@ IUnknown uk = {&vt};
 
 static void test_stub(void)
 {
+    BOOL is_wow64 = FALSE;
+    DWORD *sam_list;
     HRESULT hr;
-    CLSID clsid;
-    IPSFactoryBuffer *factory;
-    IRpcStubBuffer *base_stub;
     ITypeLib *stdole;
     ICreateTypeLib2 *ctl;
     ICreateTypeInfo *cti;
@@ -5309,14 +5354,22 @@ static void test_stub(void)
     HREFTYPE href;
     char filenameA[MAX_PATH];
     WCHAR filenameW[MAX_PATH];
-    HKEY hkey;
-    LONG lr;
+    int i;
 
     static const GUID libguid = {0x3b9ff02e,0x9675,0x4861,{0xb7,0x81,0xce,0xae,0xa4,0x78,0x2a,0xcc}};
     static const GUID interfaceguid = {0x3b9ff02f,0x9675,0x4861,{0xb7,0x81,0xce,0xae,0xa4,0x78,0x2a,0xcc}};
     static const GUID coclassguid = {0x3b9ff030,0x9675,0x4861,{0xb7,0x81,0xce,0xae,0xa4,0x78,0x2a,0xcc}};
     static OLECHAR interfaceW[] = {'i','n','t','e','r','f','a','c','e',0};
     static OLECHAR classW[] = {'c','l','a','s','s',0};
+    static DWORD sam_list32[] = { 0, ~0 };
+    static DWORD sam_list64[] = { 0, KEY_WOW64_32KEY, KEY_WOW64_64KEY, ~0 };
+
+    if (pIsWow64Process)
+        pIsWow64Process(GetCurrentProcess(), &is_wow64);
+    if (is_wow64 || is_win64)
+        sam_list = sam_list64;
+    else
+        sam_list = sam_list32;
 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
@@ -5381,44 +5434,180 @@ static void test_stub(void)
     hr = ICreateTypeLib2_QueryInterface(ctl, &IID_ITypeLib, (void**)&tl);
     ok(hr == S_OK, "got %08x\n", hr);
 
-    hr = RegisterTypeLib(tl, filenameW, NULL);
-    if (hr == TYPE_E_REGISTRYACCESS)
+    for (i = 0; sam_list[i] != ~0; i++)
     {
-        win_skip("Insufficient privileges to register typelib in the registry\n");
-        ITypeLib_Release(tl);
-        DeleteFileW(filenameW);
-        CoUninitialize();
-        return;
+        IPSFactoryBuffer *factory;
+        IRpcStubBuffer *base_stub;
+        REGSAM side = sam_list[i];
+        CLSID clsid;
+        HKEY hkey;
+        LONG lr;
+
+        hr = RegisterTypeLib(tl, filenameW, NULL);
+        if (hr == TYPE_E_REGISTRYACCESS)
+        {
+            win_skip("Insufficient privileges to register typelib in the registry\n");
+            break;
+        }
+        ok(hr == S_OK, "got %08x, side: %04x\n", hr, side);
+
+        /* SYS_WIN32 typelibs should be registered only as 32-bit */
+        lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "TypeLib\\{3b9ff02e-9675-4861-b781-ceaea4782acc}\\0.0\\0\\win64", 0, KEY_READ | side, &hkey);
+        ok(lr == ERROR_FILE_NOT_FOUND, "got wrong return code: %u, side: %04x\n", lr, side);
+
+        lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "TypeLib\\{3b9ff02e-9675-4861-b781-ceaea4782acc}\\0.0\\0\\win32", 0, KEY_READ | side, &hkey);
+        ok(lr == ERROR_SUCCESS, "got wrong return code: %u, side: %04x\n", lr, side);
+        RegCloseKey(hkey);
+
+        /* Simulate pre-win7 installers that create interface key on one side */
+        if (side != 0)
+        {
+            WCHAR guidW[40];
+            REGSAM opposite = side ^ (KEY_WOW64_64KEY | KEY_WOW64_32KEY);
+
+            StringFromGUID2(&interfaceguid, guidW, sizeof(guidW)/sizeof(guidW[0]));
+
+            /* Delete the opposite interface key */
+            lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "Interface", 0, KEY_READ | opposite, &hkey);
+            ok(lr == ERROR_SUCCESS, "got wrong return code: %u, side: %04x\n", lr, side);
+            lr = myRegDeleteTreeW(hkey, guidW, opposite);
+            ok(lr == ERROR_SUCCESS, "got wrong return code: %u, side: %04x\n", lr, side);
+            RegCloseKey(hkey);
+
+            /* Is our side interface key affected by above operation? */
+            lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "Interface\\{3b9ff02f-9675-4861-b781-ceaea4782acc}", 0, KEY_READ | side, &hkey);
+            ok(lr == ERROR_SUCCESS || broken(lr == ERROR_FILE_NOT_FOUND), "got wrong return code: %u, side: %04x\n", lr, side);
+            if (lr == ERROR_FILE_NOT_FOUND)
+            {
+                /* win2k3, vista, 2008 */
+                win_skip("Registry reflection is enabled on this platform.\n");
+                goto next;
+            }
+            RegCloseKey(hkey);
+
+            /* Opposite side typelib key still exists */
+            lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "TypeLib\\{3b9ff02e-9675-4861-b781-ceaea4782acc}\\0.0\\0\\win32", 0, KEY_READ | opposite, &hkey);
+            ok(lr == ERROR_SUCCESS, "got wrong return code: %u, side: %04x\n", lr, side);
+            RegCloseKey(hkey);
+        }
+
+        hr = CoGetPSClsid(&interfaceguid, &clsid);
+        ok(hr == S_OK, "got: %x, side: %04x\n", hr, side);
+
+        hr = CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL,
+                              &IID_IPSFactoryBuffer, (void **)&factory);
+        ok(hr == S_OK, "got: %x, side: %04x\n", hr, side);
+
+        hr = IPSFactoryBuffer_CreateStub(factory, &interfaceguid, &uk, &base_stub);
+        ok(hr == S_OK, "got: %x, side: %04x\n", hr, side);
+
+        IPSFactoryBuffer_Release(factory);
+    next:
+        hr = UnRegisterTypeLib(&libguid, 0, 0, 0, SYS_WIN32);
+        ok(hr == S_OK, "got: %x, side: %04x\n", hr, side);
     }
-    ok(hr == S_OK, "got %08x\n", hr);
 
     ITypeLib_Release(tl);
     ok(0 == ICreateTypeLib2_Release(ctl), "Typelib still has references\n");
 
-    /* SYS_WIN32 typelibs should be registered only as 32-bit */
-    lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "TypeLib\\{3b9ff02e-9675-4861-b781-ceaea4782acc}\\0.0\\0\\win64", 0, KEY_READ, &hkey);
-    ok(lr == ERROR_FILE_NOT_FOUND, "got wrong return code: %u\n", lr);
-
-    lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "TypeLib\\{3b9ff02e-9675-4861-b781-ceaea4782acc}\\0.0\\0\\win32", 0, KEY_READ, &hkey);
-    ok(lr == ERROR_SUCCESS, "got wrong return code: %u\n", lr);
-    RegCloseKey(hkey);
-
-    hr = CoGetPSClsid(&interfaceguid, &clsid);
-    ok(hr == S_OK, "got: %x\n", hr);
-
-    hr = CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL,
-            &IID_IPSFactoryBuffer, (void **)&factory);
-    ok(hr == S_OK, "got: %x\n", hr);
-
-    hr = IPSFactoryBuffer_CreateStub(factory, &interfaceguid, &uk, &base_stub);
-    ok(hr == S_OK, "got: %x\n", hr);
-
-    IPSFactoryBuffer_Release(factory);
-
-    UnRegisterTypeLib(&libguid, 0, 0, 0, SYS_WIN32);
     DeleteFileW(filenameW);
 
     CoUninitialize();
+}
+
+static void test_dep(void) {
+    HRESULT          hr;
+    const char      *refFilename;
+    WCHAR            refFilenameW[MAX_PATH];
+    ITypeLib        *preftLib;
+    ITypeInfo       *preftInfo;
+    char             filename[MAX_PATH];
+    WCHAR            filenameW[MAX_PATH];
+    ICreateTypeLib2 *pctLib;
+    ICreateTypeInfo *pctInfo;
+    ITypeLib        *ptLib;
+    ITypeInfo       *ptInfo;
+    ITypeInfo       *ptInfoExt = NULL;
+    HREFTYPE         refType;
+
+    static WCHAR ifacenameW[] = {'I','T','e','s','t','D','e','p',0};
+
+    static const GUID libguid = {0xe0228f26,0x2946,0x478c,{0xb6,0x4a,0x93,0xfe,0xef,0xa5,0x05,0x32}};
+    static const GUID ifaceguid = {0x394376dd,0x3bb8,0x4804,{0x8c,0xcc,0x95,0x59,0x43,0x40,0x04,0xf3}};
+
+    trace("Starting typelib dependency tests\n");
+
+    refFilename = create_test_typelib(2);
+    MultiByteToWideChar(CP_ACP, 0, refFilename, -1, refFilenameW, MAX_PATH);
+
+    hr = LoadTypeLibEx(refFilenameW, REGKIND_NONE, &preftLib);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ITypeLib_GetTypeInfoOfGuid(preftLib, &IID_ISimpleIface, &preftInfo);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    GetTempFileNameA(".", "tlb", 0, filename);
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, filenameW, MAX_PATH);
+
+    if(sizeof(void*) == 8) {
+        hr = CreateTypeLib2(SYS_WIN64, filenameW, &pctLib);
+        ok(hr == S_OK, "got %08x\n", hr);
+    } else {
+        hr = CreateTypeLib2(SYS_WIN32, filenameW, &pctLib);
+        ok(hr == S_OK, "got %08x\n", hr);
+    }
+
+    hr = ICreateTypeLib2_SetGuid(pctLib, &libguid);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeLib2_SetLcid(pctLib, LOCALE_NEUTRAL);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeLib2_CreateTypeInfo(pctLib, ifacenameW, TKIND_INTERFACE, &pctInfo);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeInfo_SetGuid(pctInfo, &ifaceguid);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeInfo_SetTypeFlags(pctInfo, TYPEFLAG_FOLEAUTOMATION);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeInfo_AddRefTypeInfo(pctInfo, preftInfo, &refType);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeInfo_AddImplType(pctInfo, 0, refType);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    ICreateTypeInfo_Release(pctInfo);
+
+    hr = ICreateTypeLib2_SaveAllChanges(pctLib);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    ICreateTypeLib2_Release(pctLib);
+
+    ITypeInfo_Release(preftInfo);
+    ITypeLib_Release(preftLib);
+
+    DeleteFileW(refFilenameW);
+
+    hr = LoadTypeLibEx(filenameW, REGKIND_NONE, &ptLib);
+    ok(hr == S_OK, "got: %x\n", hr);
+
+    hr = ITypeLib_GetTypeInfoOfGuid(ptLib, &ifaceguid, &ptInfo);
+    ok(hr == S_OK, "got: %x\n", hr);
+
+    hr = ITypeInfo_GetRefTypeOfImplType(ptInfo, 0, &refType);
+    ok(hr == S_OK, "got: %x\n", hr);
+
+    hr = ITypeInfo_GetRefTypeInfo(ptInfo, refType, &ptInfoExt);
+    todo_wine ok(hr == S_OK || broken(hr == TYPE_E_CANTLOADLIBRARY) /* win 2000 */, "got: %x\n", hr);
+
+    ITypeInfo_Release(ptInfo);
+    if(ptInfoExt)
+        ITypeInfo_Release(ptInfoExt);
+    ITypeLib_Release(ptLib);
+
+    DeleteFileW(filenameW);
 }
 
 START_TEST(typelib)
@@ -5460,4 +5649,5 @@ START_TEST(typelib)
     test_LoadRegTypeLib();
     test_GetLibAttr();
     test_stub();
+    test_dep();
 }
