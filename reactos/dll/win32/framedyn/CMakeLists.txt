@@ -20,6 +20,6 @@ add_cd_file(TARGET framedyn DESTINATION reactos/system32/wbem FOR all)
 
 if(NOT MSVC)
     add_asm_files(framedynex_asm alias_gcc.s)
+    add_library(framedynex ${framedynex_asm})
+    set_target_properties(framedynex PROPERTIES LINKER_LANGUAGE ASM)
 endif()
-add_library(framedynex ${framedynex_asm})
-set_target_properties(framedynex PROPERTIES LINKER_LANGUAGE ASM)
