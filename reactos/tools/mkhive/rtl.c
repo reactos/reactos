@@ -107,6 +107,37 @@ RtlAnsiStringToUnicodeString(
 	return STATUS_SUCCESS;
 }
 
+LONG NTAPI
+RtlCompareUnicodeString(
+	IN PCUNICODE_STRING String1,
+	IN PCUNICODE_STRING String2,
+	IN BOOLEAN CaseInSensitive)
+{
+	USHORT i;
+	WCHAR c1, c2;
+
+	for (i = 0; i <= String1->Length / sizeof(WCHAR) && i <= String2->Length / sizeof(WCHAR); i++)
+	{
+		if (CaseInSensitive)
+		{
+			c1 = RtlUpcaseUnicodeChar(String1->Buffer[i]);
+			c2 = RtlUpcaseUnicodeChar(String2->Buffer[i]);
+		}
+		else
+		{
+			c1 = String1->Buffer[i];
+			c2 = String2->Buffer[i];
+		}
+
+		if (c1 < c2)
+			return -1;
+		else if (c1 > c2)
+			return 1;
+	}
+
+	return 0;
+}
+
 WCHAR NTAPI
 RtlUpcaseUnicodeChar(
 	IN WCHAR Source)

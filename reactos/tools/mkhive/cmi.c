@@ -26,7 +26,7 @@
 #define NDEBUG
 #include "mkhive.h"
 
-static PVOID
+PVOID
 NTAPI
 CmpAllocate(
 	IN SIZE_T Size,
@@ -36,7 +36,7 @@ CmpAllocate(
 	return (PVOID) malloc((size_t)Size);
 }
 
-static VOID
+VOID
 NTAPI
 CmpFree(
 	IN PVOID Ptr,
@@ -221,16 +221,13 @@ CmiAllocateHashTableCell (
 }
 
 NTSTATUS
-CmiAddSubKey(
+CmiCreateSubKey(
 	IN PCMHIVE RegistryHive,
-	IN PCM_KEY_NODE ParentKeyCell,
 	IN HCELL_INDEX ParentKeyCellOffset,
 	IN PCUNICODE_STRING SubKeyName,
 	IN ULONG CreateOptions,
-	OUT PCM_KEY_NODE *pSubKeyCell,
-	OUT HCELL_INDEX *pBlockOffset)
+	OUT HCELL_INDEX* pNKBOffset)
 {
-	PCM_KEY_FAST_INDEX HashBlock;
 	HCELL_INDEX NKBOffset;
 	PCM_KEY_NODE NewKeyCell;
 	ULONG NewBlockSize;
@@ -240,8 +237,6 @@ CmiAddSubKey(
 	BOOLEAN Packable;
 	HSTORAGE_TYPE Storage;
 	ULONG i;
-
-	VERIFY_KEY_CELL(ParentKeyCell);
 
 	/* Skip leading backslash */
 	if (SubKeyName->Buffer[0] == L'\\')
@@ -325,90 +320,46 @@ CmiAddSubKey(
 		VERIFY_KEY_CELL(NewKeyCell);
 	}
 
+	if (NT_SUCCESS(Status))
+	{
+		*pNKBOffset = NKBOffset;
+	}
+	return Status;
+}
+
+NTSTATUS
+CmiAddSubKey(
+	IN PCMHIVE RegistryHive,
+	IN PCM_KEY_NODE ParentKeyCell,
+	IN HCELL_INDEX ParentKeyCellOffset,
+	IN PCUNICODE_STRING SubKeyName,
+	IN ULONG CreateOptions,
+	OUT PCM_KEY_NODE *pSubKeyCell,
+	OUT HCELL_INDEX *pBlockOffset)
+{
+	HCELL_INDEX NKBOffset;
+	NTSTATUS Status;
+
+	VERIFY_KEY_CELL(ParentKeyCell);
+
+	/* Create the new key */
+	Status = CmiCreateSubKey(RegistryHive, ParentKeyCellOffset, SubKeyName, CreateOptions, &NKBOffset);
 	if (!NT_SUCCESS(Status))
 	{
 		return Status;
 	}
 
-	if (ParentKeyCell->SubKeyLists[Storage] == HCELL_NIL)
+	if (!CmpAddSubKey(&RegistryHive->Hive, ParentKeyCellOffset, NKBOffset))
 	{
-		Status = CmiAllocateHashTableCell (
-			RegistryHive,
-			&HashBlock,
-			&ParentKeyCell->SubKeyLists[Storage],
-			REG_INIT_HASH_TABLE_SIZE,
-			Storage);
-		if (!NT_SUCCESS(Status))
-		{
-			return(Status);
-		}
-	}
-	else
-	{
-		HashBlock = (PCM_KEY_FAST_INDEX)HvGetCell (
-			&RegistryHive->Hive,
-			ParentKeyCell->SubKeyLists[Storage]);
-		ASSERT(HashBlock->Signature == CM_KEY_FAST_LEAF);
-
-		if (HashBlock->Count ==
-		    ((HvGetCellSize(&RegistryHive->Hive, HashBlock) - FIELD_OFFSET(CM_KEY_FAST_INDEX, List)) / sizeof(CM_INDEX)))
-		{
-			PCM_KEY_FAST_INDEX NewHashBlock;
-			HCELL_INDEX HTOffset;
-
-			/* Reallocate the hash table cell */
-			Status = CmiAllocateHashTableCell (
-				RegistryHive,
-				&NewHashBlock,
-				&HTOffset,
-				HashBlock->Count +
-				REG_EXTEND_HASH_TABLE_SIZE,
-				Storage);
-			if (!NT_SUCCESS(Status))
-			{
-				return Status;
-			}
-			RtlCopyMemory(
-				&NewHashBlock->List[0],
-				&HashBlock->List[0],
-				sizeof(NewHashBlock->List[0]) * HashBlock->Count);
-         NewHashBlock->Count = HashBlock->Count;
-			HvFreeCell (&RegistryHive->Hive, ParentKeyCell->SubKeyLists[Storage]);
-			ParentKeyCell->SubKeyLists[Storage] = HTOffset;
-			HashBlock = NewHashBlock;
-		}
-	}
-
-	Status = CmiAddKeyToHashTable(
-		RegistryHive,
-		HashBlock,
-      ParentKeyCell->SubKeyLists[Storage],
-		NewKeyCell,
-		NKBOffset);
-	if (NT_SUCCESS(Status))
-	{
-		ParentKeyCell->SubKeyCounts[Storage]++;
-		if (Packable)
-        {
-            if (NameLength*sizeof(WCHAR) > ParentKeyCell->MaxNameLen)
-                ParentKeyCell->MaxNameLen = NameLength*sizeof(WCHAR);
-        }
-        else
-        {
-            if (NameLength > ParentKeyCell->MaxNameLen)
-                ParentKeyCell->MaxNameLen = NameLength;
-        }
-        if (NewKeyCell->ClassLength > ParentKeyCell->MaxClassLen)
-            ParentKeyCell->MaxClassLen = NewKeyCell->ClassLength;
-
-		*pSubKeyCell = NewKeyCell;
-		*pBlockOffset = NKBOffset;
+		/* FIXME: delete newly created cell */
+		return STATUS_UNSUCCESSFUL;
 	}
 
 	KeQuerySystemTime(&ParentKeyCell->LastWriteTime);
 	HvMarkCellDirty(&RegistryHive->Hive, ParentKeyCellOffset, FALSE);
 
-	return Status;
+	*pBlockOffset = NKBOffset;
+	return STATUS_SUCCESS;
 }
 
 static BOOLEAN

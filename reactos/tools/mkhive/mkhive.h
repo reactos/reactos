@@ -117,9 +117,12 @@ RegOpenKeyW(
 #include "registry.h"
 #include "binhive.h"
 
+#define OBJ_NAME_PATH_SEPARATOR           ((WCHAR)L'\\')
+
 #define HIVE_NO_FILE 2
 #define VERIFY_REGISTRY_HIVE(hive)
 extern LIST_ENTRY CmiHiveListHead;
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
+#define PAGED_CODE()
 
 /* EOF */
