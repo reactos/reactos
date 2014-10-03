@@ -20,7 +20,7 @@
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
  * PURPOSE:         Registry code
- * PROGRAMMER:      Hervé Poussineau
+ * PROGRAMMER:      HervÃ© Poussineau
  */
 
 /*
@@ -159,7 +159,7 @@ RegpOpenOrCreateKey(
 		{
 			CurrentKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
 			if (CurrentKey->NameSize == KeyString.Length
-			 && memcmp(CurrentKey->Name, KeyString.Buffer, KeyString.Length) == 0)
+			 && strncmpiW(CurrentKey->Name, KeyString.Buffer, KeyString.Length / sizeof(WCHAR)) == 0)
 			{
 				goto nextsubkey;
 			}
