@@ -504,7 +504,7 @@ static const char szExampleXML[] =
 "        </description>\n"
 "    </elem>\n"
 "\n"
-"    <elem>\n"
+"    <elem a='a'>\n"
 "        <a>A2 field</a>\n"
 "        <b>B2 field</b>\n"
 "        <c type=\"old\">C2 field</c>\n"
@@ -1084,14 +1084,16 @@ static char *list_to_string(IXMLDOMNodeList *list)
     static char buf[4096];
     char *pos = buf;
     LONG len = 0;
+    HRESULT hr;
     int i;
 
     if (list == NULL)
     {
-        lstrcpyA(buf, "(null)");
+        strcpy(buf, "(null)");
         return buf;
     }
-    ole_check(IXMLDOMNodeList_get_length(list, &len));
+    hr = IXMLDOMNodeList_get_length(list, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     for (i = 0; i < len; i++)
     {
         IXMLDOMNode *node;
@@ -1950,6 +1952,7 @@ static void test_domnode( void )
         ok( r == E_FAIL, "getAttribute ret %08x\n", r );
         ok( V_VT(&var) == VT_NULL || V_VT(&var) == VT_EMPTY, "vt = %x\n", V_VT(&var));
         VariantClear(&var);
+        SysFreeString(str);
 
         str = SysAllocString( szdl );	
         V_VT(&var) = VT_I4;
@@ -3020,8 +3023,24 @@ static void test_create(void)
     IXMLDOMDocument_Release( doc );
 }
 
+struct queryresult_t {
+    const char *query;
+    const char *result;
+    int len;
+};
+
+static const struct queryresult_t elementsbytagname[] = {
+    { "",    "P1.D1 E2.D1 E1.E2.D1 T1.E1.E2.D1 E2.E2.D1 T1.E2.E2.D1 E3.E2.D1 E4.E2.D1 E1.E4.E2.D1 T1.E1.E4.E2.D1", 10 },
+    { "*",   "E2.D1 E1.E2.D1 E2.E2.D1 E3.E2.D1 E4.E2.D1 E1.E4.E2.D1", 6 },
+    { "bs",  "E1.E2.D1", 1 },
+    { "dl",  "", 0 },
+    { "str1","", 0 },
+    { NULL }
+};
+
 static void test_getElementsByTagName(void)
 {
+    const struct queryresult_t *ptr = elementsbytagname;
     IXMLDOMNodeList *node_list;
     IXMLDOMDocument *doc;
     IXMLDOMElement *elem;
@@ -3037,22 +3056,24 @@ static void test_getElementsByTagName(void)
     ok( r == S_OK, "loadXML failed\n");
     ok( b == VARIANT_TRUE, "failed to load XML string\n");
 
-    str = SysAllocString( szstar );
-
     /* null arguments cases */
     r = IXMLDOMDocument_getElementsByTagName(doc, NULL, &node_list);
     ok( r == E_INVALIDARG, "ret %08x\n", r );
-    r = IXMLDOMDocument_getElementsByTagName(doc, str, NULL);
+    r = IXMLDOMDocument_getElementsByTagName(doc, _bstr_("*"), NULL);
     ok( r == E_INVALIDARG, "ret %08x\n", r );
 
-    r = IXMLDOMDocument_getElementsByTagName(doc, str, &node_list);
-    ok( r == S_OK, "ret %08x\n", r );
-    r = IXMLDOMNodeList_get_length( node_list, &len );
-    ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 6, "len %d\n", len );
+    while (ptr->query)
+    {
+        r = IXMLDOMDocument_getElementsByTagName(doc, _bstr_(ptr->query), &node_list);
+        ok(r == S_OK, "ret %08x\n", r);
+        r = IXMLDOMNodeList_get_length(node_list, &len);
+        ok(r == S_OK, "ret %08x\n", r);
+        ok(len == ptr->len, "%s: got len %d, expected %d\n", ptr->query, len, ptr->len);
+        expect_list_and_release(node_list, ptr->result);
 
-    IXMLDOMNodeList_Release( node_list );
-    SysFreeString( str );
+        free_bstrs();
+        ptr++;
+    }
 
     /* broken query BSTR */
     memcpy(&buff[2], szstar, sizeof(szstar));
@@ -3064,33 +3085,6 @@ static void test_getElementsByTagName(void)
     ok( r == S_OK, "ret %08x\n", r );
     ok( len == 6, "len %d\n", len );
     IXMLDOMNodeList_Release( node_list );
-
-    str = SysAllocString( szbs );
-    r = IXMLDOMDocument_getElementsByTagName(doc, str, &node_list);
-    ok( r == S_OK, "ret %08x\n", r );
-    r = IXMLDOMNodeList_get_length( node_list, &len );
-    ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 1, "len %d\n", len );
-    IXMLDOMNodeList_Release( node_list );
-    SysFreeString( str );
-
-    str = SysAllocString( szdl );
-    r = IXMLDOMDocument_getElementsByTagName(doc, str, &node_list);
-    ok( r == S_OK, "ret %08x\n", r );
-    r = IXMLDOMNodeList_get_length( node_list, &len );
-    ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 0, "len %d\n", len );
-    IXMLDOMNodeList_Release( node_list );
-    SysFreeString( str );
-
-    str = SysAllocString( szstr1 );
-    r = IXMLDOMDocument_getElementsByTagName(doc, str, &node_list);
-    ok( r == S_OK, "ret %08x\n", r );
-    r = IXMLDOMNodeList_get_length( node_list, &len );
-    ok( r == S_OK, "ret %08x\n", r );
-    ok( len == 0, "len %d\n", len );
-    IXMLDOMNodeList_Release( node_list );
-    SysFreeString( str );
 
     /* test for element */
     r = IXMLDOMDocument_get_documentElement(doc, &elem);
@@ -4488,12 +4482,13 @@ static const xpath_test_t xpath_test[] = {
     { "child::node()", "E1.E2.D1 E2.E2.D1 E3.E2.D1 E4.E2.D1" },
     { "child::text()", "" },
     { "child::*/..", "E2.D1" },
-    { "child::*//@*/..", "E2.E5.E1.E2.D1 E3.E2.E2.D1" },
+    { "child::*//@*/..", "E2.E5.E1.E2.D1 E2.E2.D1 E3.E2.E2.D1" },
     { "self::node()", "E2.D1" },
     { "ancestor::node()", "D1" },
     { "elem[c][last()]/a", "E1.E2.E2.D1"},
     { "ancestor-or-self::node()[1]", "E2.D1" },
     { "((//a)[1])[last()]", "E1.E1.E2.D1" },
+    { "//elem[@*]", "E2.E2.D1" },
     { NULL }
 };
 
@@ -4556,7 +4551,7 @@ static void test_XPath(void)
 
         str = list_to_string(list);
 
-        ok(strcmp(str, xptest->list)==0, "query=%s, invalid node list: %s, expected %s\n",
+        ok(!strcmp(str, xptest->list), "query=%s, invalid node list: \"%s\", expected \"%s\"\n",
             xptest->query, str, xptest->list);
 
         if (list)
@@ -6879,6 +6874,7 @@ static void test_default_properties(void)
 typedef struct {
     const char *query;
     const char *list;
+    BOOL todo;
 } xslpattern_test_t;
 
 static const xslpattern_test_t xslpattern_test[] = {
@@ -6941,6 +6937,7 @@ static const xslpattern_test_t xslpattern_test[] = {
     { "root/elem[index()>0 $and$ $not$ end()]", "E2.E2.D1 E3.E2.D1" },
     { "root/elem[index()>0 && $not$ end()]", "E2.E2.D1 E3.E2.D1" },
     { "root/elem[d]", "E1.E2.D1 E2.E2.D1 E4.E2.D1" },
+    { "root/elem[@*]", "E2.E2.D1 E3.E2.D1", TRUE },
     { NULL }
 };
 
@@ -7018,8 +7015,16 @@ static void test_XSLPattern(void)
         len = 0;
         hr = IXMLDOMNodeList_get_length(list, &len);
         ok(len != 0, "query=%s, empty list\n", ptr->query);
-        if (len)
-            expect_list_and_release(list, ptr->list);
+        if (len) {
+            if (ptr->todo) {
+                char *str = list_to_string(list);
+            todo_wine
+                ok(!strcmp(str, ptr->list), "Invalid node list: %s, expected %s\n", str, ptr->list);
+                IXMLDOMNodeList_Release(list);
+            }
+            else
+                expect_list_and_release(list, ptr->list);
+        }
 
         ptr++;
     }
@@ -8163,6 +8168,7 @@ static void test_put_nodeTypedValue(void)
     EXPECT_HR(hr, S_OK);
     ok(!lstrcmpW(str, _bstr_("ABCD")), "%s\n", wine_dbgstr_w(str));
     IXMLDOMNode_Release(node);
+    SysFreeString(str);
 
     array = SafeArrayCreateVector(VT_UI1, 0, 7);
     hr = SafeArrayAccessData(array, (void*)&ptr);
@@ -8202,6 +8208,7 @@ static void test_put_nodeTypedValue(void)
     ok(!lstrcmpW(str, _bstr_("ZEdWemRBPQ==")), "%s\n", wine_dbgstr_w(str));
     IXMLDOMNode_Release(node);
     SafeArrayDestroyData(array);
+    SysFreeString(str);
 
     /* bin.hex */
     V_VT(&value) = VT_BSTR;
@@ -8250,6 +8257,7 @@ static void test_put_nodeTypedValue(void)
     ok(!lstrcmpW(str, _bstr_("000102030405060708090a0b0c0d0e0f")), "%s\n", wine_dbgstr_w(str));
     IXMLDOMNode_Release(node);
     SafeArrayDestroyData(array);
+    SysFreeString(str);
 
     IXMLDOMElement_Release(elem);
     IXMLDOMDocument_Release(doc);
@@ -9457,6 +9465,7 @@ static void test_selection(void)
 
     IEnumVARIANT_Release(enum1);
     IEnumVARIANT_Release(enum2);
+    IEnumVARIANT_Release(enum3);
 
     enum1 = NULL;
     hr = IXMLDOMSelection_get__newEnum(selection, (IUnknown**)&enum1);
@@ -9550,6 +9559,7 @@ static void test_selection(void)
     EXPECT_HR(hr, S_OK);
     ok(!lstrcmpW(name, _bstr_("c")), "got node name %s\n", wine_dbgstr_w(name));
     IXMLDOMNode_Release(node);
+    SysFreeString(name);
 
     V_VT(&v) = VT_I2;
     hr = IEnumVARIANT_Next(enum1, 1, &v, NULL);
@@ -9571,6 +9581,7 @@ static void test_selection(void)
     EXPECT_HR(hr, S_OK);
     ok(!lstrcmpW(name, _bstr_("d")), "got node name %s\n", wine_dbgstr_w(name));
     IXMLDOMNode_Release(node);
+    SysFreeString(name);
 
     IXMLDOMSelection_Release(selection);
     IXMLDOMNodeList_Release(list);
@@ -10563,6 +10574,7 @@ todo_wine
     EXPECT_HR(hr, S_OK);
     ok(did == DISPID_DOM_COLLECTION_BASE, "got 0x%08x\n", did);
     IDispatchEx_Release(dispex);
+    IXMLDOMNamedNodeMap_Release(map);
 
     hr = IXMLDOMDocument_selectNodes(doc, _bstr_("root/b"), &node_list);
     EXPECT_HR(hr, S_OK);
@@ -10584,7 +10596,7 @@ todo_wine
     hr = IDispatchEx_GetDispID(dispex, _bstr_("1"), 0, &did);
     EXPECT_HR(hr, S_OK);
     ok(did == DISPID_DOM_COLLECTION_BASE+1, "got 0x%08x\n", did);
-    IDispatchEx_Release(dispex);
+    IXMLDOMNamedNodeMap_Release(map);
 
     did = -1;
     hr = IDispatchEx_GetDispID(dispex, _bstr_("item"), 0, &did);
@@ -10677,7 +10689,7 @@ todo_wine
     ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
     ok(broken(V_I4(&ret) == 1) || (V_I4(&ret) == 0), "got %d\n", V_I4(&ret));
 
-    IXMLDOMNamedNodeMap_Release(map);
+    IDispatchEx_Release(dispex);
     IXMLDOMElement_Release(elem);
 
     /* IXMLDOMImplementation */
@@ -11085,7 +11097,6 @@ static void test_xmlns_attribute(void)
     hr = IXMLDOMDocument_appendChild(doc, (IXMLDOMNode*)root, NULL);
     EXPECT_HR(hr, S_OK);
 
-    str = SysAllocString(szAttribute);
     hr = IXMLDOMDocument_createAttribute(doc, _bstr_("xmlns:dt"), &pAttribute);
     ok( hr == S_OK, "returns %08x\n", hr );
 
@@ -11102,15 +11113,15 @@ static void test_xmlns_attribute(void)
     hr = IXMLDOMDocument_get_documentElement(doc, &elem);
     EXPECT_HR(hr, S_OK);
 
+    str = NULL;
     hr = IXMLDOMElement_get_xml(elem, &str);
     ok( hr == S_OK, "got 0x%08x\n", hr);
     todo_wine ok( lstrcmpW(str, _bstr_("<Testing xmlns:dt=\"urn:schemas-microsoft-com:datatypes\" dt:dt=\"bin.base64\"/>")) == 0,
     "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
 
     IXMLDOMElement_Release(elem);
     IXMLDOMAttribute_Release( pAttribute);
-
-    SysFreeString(str);
 
     IXMLDOMDocument_Release(doc);
 
@@ -11825,6 +11836,7 @@ static void test_create_attribute(void)
             ok(hr == S_FALSE, "%d: got 0x%08x\n", i, hr);
             ok(str == NULL, "%d: got prefix %s\n", i, wine_dbgstr_w(str));
         }
+        SysFreeString(str);
 
         str = NULL;
         hr = IXMLDOMNode_get_namespaceURI(node, &str);

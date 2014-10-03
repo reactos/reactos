@@ -661,7 +661,7 @@ static void test_xmlelem_collection(void)
     WCHAR path[MAX_PATH];
     LONG length, type;
     ULONG num_vars;
-    VARIANT var, vIndex, vName;
+    VARIANT var, dummy, vIndex, vName;
     BSTR url, str;
     static const CHAR szBankXML[] = "bank.xml";
     static const WCHAR szNumber[] = {'N','U','M','B','E','R',0};
@@ -771,14 +771,16 @@ static void test_xmlelem_collection(void)
     ok(num_vars == 1, "Expected 1, got %d\n", num_vars);
 
     /* try advance further, no children left */
-    hr = IEnumVARIANT_Next(enumVar, 1, &var, &num_vars);
+    V_VT(&dummy) = VT_I4;
+    hr = IEnumVARIANT_Next(enumVar, 1, &dummy, &num_vars);
     ok(hr == S_FALSE, "Expected S_FALSE, got %08x\n", hr);
-    ok(V_VT(&var) == 0, "Expected 0, got %d\n", V_VT(&var));
+    ok(V_VT(&dummy) == VT_EMPTY, "Expected 0, got %d\n", V_VT(&dummy));
     ok(num_vars == 0, "Expected 0, got %d\n", num_vars);
 
-    hr = IEnumVARIANT_Next(enumVar, 1, &var, NULL);
+    V_VT(&dummy) = VT_I4;
+    hr = IEnumVARIANT_Next(enumVar, 1, &dummy, NULL);
     ok(hr == S_FALSE, "Expected S_FALSE, got %08x\n", hr);
-    ok(V_VT(&var) == 0, "Expected 0, got %d\n", V_VT(&var));
+    ok(V_VT(&dummy) == VT_EMPTY, "Expected 0, got %d\n", V_VT(&dummy));
 
     hr = IDispatch_QueryInterface(V_DISPATCH(&var), &IID_IXMLElement, (LPVOID *)&child);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);

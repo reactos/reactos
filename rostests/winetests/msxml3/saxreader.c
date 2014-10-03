@@ -1993,7 +1993,6 @@ static HRESULT WINAPI istream_UnlockRegion(IStream *iface, ULARGE_INTEGER libOff
 
 static HRESULT WINAPI istream_Stat(IStream *iface, STATSTG *pstatstg, DWORD grfStatFlag)
 {
-    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -2447,6 +2446,7 @@ static void test_saxreader(void)
         hr = ISAXXMLReader_parse(reader, var);
         EXPECT_HR(hr, S_OK);
         ok_sequence(sequences, CONTENT_HANDLER_INDEX, test_seq, "attribute value normalization", TRUE);
+        IStream_Release(stream);
 
         resolver = (void*)0xdeadbeef;
         hr = ISAXXMLReader_getEntityResolver(reader, &resolver);
@@ -2479,6 +2479,8 @@ static void test_saxreader(void)
         ok(hr == S_OK, "got 0x%08x\n", hr);
         sprintf(seqname, "%s: cdata test", table->name);
         ok_sequence(sequences, CONTENT_HANDLER_INDEX, test_seq, seqname, TRUE);
+
+        IStream_Release(stream);
 
         /* 2. CDATA sections */
         stream = create_test_stream(test2_cdata_xml, -1);
@@ -3301,8 +3303,9 @@ static void test_mxwriter_flush(void)
     ok(pos2.QuadPart == 0, "expected stream beginning\n");
 
     len = 2048;
-    buff = HeapAlloc(GetProcessHeap(), 0, len);
+    buff = HeapAlloc(GetProcessHeap(), 0, len+1);
     memset(buff, 'A', len);
+    buff[len] = 0;
     hr = ISAXContentHandler_characters(content, _bstr_(buff), len);
     EXPECT_HR(hr, S_OK);
 
@@ -3348,6 +3351,7 @@ todo_wine
     ok(pos2.QuadPart == 0, "expected stream beginning\n");
 
     memset(buff, 'A', len);
+    buff[len] = 0;
     hr = ISAXContentHandler_characters(content, _bstr_(buff), len - 8);
     EXPECT_HR(hr, S_OK);
 
@@ -3372,6 +3376,7 @@ todo_wine
     EXPECT_HR(hr, S_OK);
 
     memset(buff, 'A', len);
+    buff[len] = 0;
     hr = ISAXContentHandler_characters(content, _bstr_(buff), len);
     EXPECT_HR(hr, S_OK);
 
@@ -4245,6 +4250,7 @@ static void test_mxwriter_stream(void)
     EXPECT_HR(hr, S_OK);
     ok(pos2.QuadPart == 2, "got wrong position\n");
 
+    IStream_Release(stream);
     ISAXContentHandler_Release(content);
     IMXWriter_Release(writer);
 
@@ -5510,6 +5516,7 @@ static void test_mxattr_localname(void)
 
         ISAXAttributes_Release(saxattr);
         IMXAttributes_Release(mxattr);
+        free_bstrs();
     }
 }
 

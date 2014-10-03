@@ -1463,14 +1463,12 @@ static void test_XMLHTTP(void)
     hr = IXMLHttpRequest_get_responseBody(xhr, &varbody);
     EXPECT_HR(hr, E_PENDING);
     ok(V_VT(&varbody) == VT_EMPTY, "got type %d\n", V_VT(&varbody));
-    ok(V_I2(&varbody) == 1, "got %d\n", V_I2(&varbody));
 
     V_VT(&varbody) = VT_I2;
     V_I2(&varbody) = 1;
     hr = IXMLHttpRequest_get_responseStream(xhr, &varbody);
     EXPECT_HR(hr, E_PENDING);
     ok(V_VT(&varbody) == VT_EMPTY, "got type %d\n", V_VT(&varbody));
-    ok(V_I2(&varbody) == 1, "got %d\n", V_I2(&varbody));
 
     /* send before open */
     hr = IXMLHttpRequest_send(xhr, dummy);
