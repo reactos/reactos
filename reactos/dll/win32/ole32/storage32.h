@@ -42,6 +42,7 @@ static const ULONG OFFSET_SMALLBLOCKSIZEBITS = 0x00000020;
 static const ULONG OFFSET_DIRSECTORCOUNT     = 0x00000028;
 static const ULONG OFFSET_BBDEPOTCOUNT	     = 0x0000002C;
 static const ULONG OFFSET_ROOTSTARTBLOCK     = 0x00000030;
+static const ULONG OFFSET_TRANSACTIONSIG     = 0x00000034;
 static const ULONG OFFSET_SMALLBLOCKLIMIT    = 0x00000038;
 static const ULONG OFFSET_SBDEPOTSTART	     = 0x0000003C;
 static const ULONG OFFSET_SBDEPOTCOUNT       = 0x00000040;
@@ -61,6 +62,7 @@ static const ULONG OFFSET_PS_MTIMELOW        = 0x0000006C;
 static const ULONG OFFSET_PS_MTIMEHIGH       = 0x00000070;
 static const ULONG OFFSET_PS_STARTBLOCK	     = 0x00000074;
 static const ULONG OFFSET_PS_SIZE	     = 0x00000078;
+static const ULONG OFFSET_PS_SIZE_HIGH	     = 0x0000007C;
 static const WORD  DEF_BIG_BLOCK_SIZE_BITS   = 0x0009;
 static const WORD  MIN_BIG_BLOCK_SIZE_BITS   = 0x0009;
 static const WORD  MAX_BIG_BLOCK_SIZE_BITS   = 0x000c;
@@ -146,6 +148,8 @@ struct DirEntry
 };
 
 HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsName, ILockBytes **pLockBytes) DECLSPEC_HIDDEN;
+
+HRESULT FileLockBytesImpl_LockRegionSync(ILockBytes* iface, ULARGE_INTEGER libOffset, ULARGE_INTEGER cb) DECLSPEC_HIDDEN;
 
 /*************************************************************************
  * Ole Convert support
@@ -237,6 +241,10 @@ struct StorageBaseImplVtbl {
   HRESULT (*StreamWriteAt)(StorageBaseImpl*,DirRef,ULARGE_INTEGER,ULONG,const void*,ULONG*);
   HRESULT (*StreamSetSize)(StorageBaseImpl*,DirRef,ULARGE_INTEGER);
   HRESULT (*StreamLink)(StorageBaseImpl*,DirRef,DirRef);
+  HRESULT (*GetTransactionSig)(StorageBaseImpl*,ULONG*,BOOL);
+  HRESULT (*SetTransactionSig)(StorageBaseImpl*,ULONG);
+  HRESULT (*LockTransaction)(StorageBaseImpl*,BOOL);
+  HRESULT (*UnlockTransaction)(StorageBaseImpl*,BOOL);
 };
 
 static inline void StorageBaseImpl_Destroy(StorageBaseImpl *This)
@@ -314,6 +322,28 @@ static inline HRESULT StorageBaseImpl_StreamLink(StorageBaseImpl *This,
   return This->baseVtbl->StreamLink(This, dst, src);
 }
 
+static inline HRESULT StorageBaseImpl_GetTransactionSig(StorageBaseImpl *This,
+  ULONG* result, BOOL refresh)
+{
+  return This->baseVtbl->GetTransactionSig(This, result, refresh);
+}
+
+static inline HRESULT StorageBaseImpl_SetTransactionSig(StorageBaseImpl *This,
+  ULONG value)
+{
+  return This->baseVtbl->SetTransactionSig(This, value);
+}
+
+static inline HRESULT StorageBaseImpl_LockTransaction(StorageBaseImpl *This, BOOL write)
+{
+  return This->baseVtbl->LockTransaction(This, write);
+}
+
+static inline HRESULT StorageBaseImpl_UnlockTransaction(StorageBaseImpl *This, BOOL write)
+{
+  return This->baseVtbl->UnlockTransaction(This, write);
+}
+
 /****************************************************************************
  * StorageBaseImpl stream list handlers
  */
@@ -350,6 +380,7 @@ struct StorageImpl
   ULONG extBigBlockDepotLocationsSize;
   ULONG extBigBlockDepotCount;
   ULONG bigBlockDepotStart[COUNT_BBDEPOTINHEADER];
+  ULONG transactionSig;
 
   ULONG extBlockDepotCached[MAX_BIG_BLOCK_SIZE / 4];
   ULONG indexExtBlockDepotCached;
@@ -373,6 +404,8 @@ struct StorageImpl
   UINT blockChainToEvict;
 
   ILockBytes* lockBytes;
+
+  ULONG locked_bytes[8];
 };
 
 HRESULT StorageImpl_ReadRawDirEntry(
@@ -457,6 +490,54 @@ StgStreamImpl* StgStreamImpl_Construct(
 		StorageBaseImpl* parentStorage,
     DWORD            grfMode,
     DirRef           dirEntry) DECLSPEC_HIDDEN;
+
+
+/* Range lock constants.
+ *
+ * The storage format reserves the region from 0x7fffff00-0x7fffffff for
+ * locking and synchronization. Unfortunately, the spec doesn't say which bytes
+ * within that range are used, and for what. These are guesses based on testing.
+ * In particular, ends of ranges may be wrong.
+
+ 0x0 through 0x57: Unknown. Causes read-only exclusive opens to fail.
+ 0x58 through 0x6b: Priority mode.
+ 0x6c through 0x7f: No snapshot mode.
+ 0x80: Commit lock.
+ 0x81 through 0x91: Priority mode, again. Not sure why it uses two regions.
+ 0x92: Lock-checking lock. Held while opening so ranges can be tested without
+  causing spurious failures if others try to grab or test those ranges at the
+  same time.
+ 0x93 through 0xa6: Read mode.
+ 0xa7 through 0xba: Write mode.
+ 0xbb through 0xce: Deny read.
+ 0xcf through 0xe2: Deny write.
+ 0xe2 through 0xff: Unknown. Causes read-only exclusive opens to fail.
+*/
+
+#define RANGELOCK_UNK1_FIRST            0x7fffff00
+#define RANGELOCK_UNK1_LAST             0x7fffff57
+#define RANGELOCK_PRIORITY1_FIRST       0x7fffff58
+#define RANGELOCK_PRIORITY1_LAST        0x7fffff6b
+#define RANGELOCK_NOSNAPSHOT_FIRST      0x7fffff6c
+#define RANGELOCK_NOSNAPSHOT_LAST       0x7fffff7f
+#define RANGELOCK_COMMIT                0x7fffff80
+#define RANGELOCK_PRIORITY2_FIRST       0x7fffff81
+#define RANGELOCK_PRIORITY2_LAST        0x7fffff91
+#define RANGELOCK_CHECKLOCKS            0x7fffff92
+#define RANGELOCK_READ_FIRST            0x7fffff93
+#define RANGELOCK_READ_LAST             0x7fffffa6
+#define RANGELOCK_WRITE_FIRST           0x7fffffa7
+#define RANGELOCK_WRITE_LAST            0x7fffffba
+#define RANGELOCK_DENY_READ_FIRST       0x7fffffbb
+#define RANGELOCK_DENY_READ_LAST        0x7fffffce
+#define RANGELOCK_DENY_WRITE_FIRST      0x7fffffcf
+#define RANGELOCK_DENY_WRITE_LAST       0x7fffffe2
+#define RANGELOCK_UNK2_FIRST            0x7fffffe3
+#define RANGELOCK_UNK2_LAST             0x7fffffff
+#define RANGELOCK_TRANSACTION_FIRST     RANGELOCK_COMMIT
+#define RANGELOCK_TRANSACTION_LAST      RANGELOCK_CHECKLOCKS
+#define RANGELOCK_FIRST                 RANGELOCK_UNK1_FIRST
+#define RANGELOCK_LAST                  RANGELOCK_UNK2_LAST
 
 
 /******************************************************************************

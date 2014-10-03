@@ -2179,7 +2179,9 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN:
     {
-      OLEDD_TrackStateChange((TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0));
+      TrackerWindowInfo *trackerInfo = (TrackerWindowInfo*)GetWindowLongPtrA(hwnd, 0);
+      if (trackerInfo->trackingDone) break;
+      OLEDD_TrackStateChange(trackerInfo);
       break;
     }
     case WM_DESTROY:
@@ -2843,6 +2845,8 @@ static inline HRESULT PROPVARIANT_ValidateType(VARTYPE vt)
     case VT_LPWSTR:
     case VT_FILETIME:
     case VT_BLOB:
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STORAGE:
     case VT_STREAMED_OBJECT:
@@ -2919,6 +2923,8 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
     case VT_UINT:
     case VT_FILETIME:
         break;
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STREAMED_OBJECT:
     case VT_STORAGE:
@@ -3032,6 +3038,8 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
     case VT_DATE:
     case VT_FILETIME:
         break;
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
     case VT_STREAM:
     case VT_STREAMED_OBJECT:
     case VT_STORAGE:
