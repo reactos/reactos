@@ -799,3 +799,216 @@ Exit:
 
     return ErrorCode;
 }
+
+/* HKCR version of RegEnumValueW */
+LONG
+WINAPI
+EnumHKCRValue(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_ LPWSTR lpName,
+    _Inout_ PDWORD lpcbName,
+    _Reserved_ PDWORD lpReserved,
+    _Out_opt_ PDWORD lpdwType,
+    _Out_opt_ LPBYTE lpData,
+    _Inout_opt_ PDWORD lpcbData)
+{
+    HKEY PreferredKey, FallbackKey;
+    DWORD NumPreferredValues;
+    DWORD MaxFallbackValueNameLen;
+    DWORD FallbackIndex;
+    WCHAR* FallbackValueName = NULL;
+    LONG ErrorCode;
+
+    ASSERT(IsHKCRKey(hKey));
+
+    /* Remove the HKCR flag while we're working */
+    hKey = (HKEY)(((ULONG_PTR)hKey) & ~0x2);
+
+    /* Get the preferred key */
+    ErrorCode = GetPreferredHKCRKey(hKey, &PreferredKey);
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        if (ErrorCode == ERROR_FILE_NOT_FOUND)
+        {
+            /* Only the HKLM key exists */
+            return RegEnumValueW(
+                hKey,
+                dwIndex,
+                lpName,
+                lpcbName,
+                lpReserved,
+                lpdwType,
+                lpData,
+                lpcbData);
+        }
+        return ErrorCode;
+    }
+
+    /* Get the fallback key */
+    ErrorCode = GetFallbackHKCRKey(hKey, &FallbackKey, FALSE);
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        if (PreferredKey != hKey)
+            RegCloseKey(PreferredKey);
+        if (ErrorCode == ERROR_FILE_NOT_FOUND)
+        {
+            /* Only the HKCU key exists */
+            return RegEnumValueW(
+                hKey,
+                dwIndex,
+                lpName,
+                lpcbName,
+                lpReserved,
+                lpdwType,
+                lpData,
+                lpcbData);
+        }
+        return ErrorCode;
+    }
+
+    /* Get some info on the HKCU side */
+    ErrorCode = RegQueryInfoKeyW(
+        PreferredKey,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        &NumPreferredValues,
+        NULL,
+        NULL,
+        NULL,
+        NULL);
+    if (ErrorCode != ERROR_SUCCESS)
+        goto Exit;
+
+    if (dwIndex < NumPreferredValues)
+    {
+        /* HKCU side takes precedence */
+        return RegEnumValueW(
+            PreferredKey,
+            dwIndex,
+            lpName,
+            lpcbName,
+            lpReserved,
+            lpdwType,
+            lpData,
+            lpcbData);
+        goto Exit;
+    }
+
+    /* Here it gets tricky. We must enumerate the values from the HKLM side,
+     * without reporting those which are present on the HKCU side */
+
+    /* Squash out the indices from HKCU */
+    dwIndex -= NumPreferredValues;
+
+    /* Get some info */
+    ErrorCode = RegQueryInfoKeyW(
+        FallbackKey,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        &MaxFallbackValueNameLen,
+        NULL,
+        NULL,
+        NULL);
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        ERR("Could not query info of key %p (Err: %d)\n", FallbackKey, ErrorCode);
+        goto Exit;
+    }
+
+    ERR("Maxfallbacksubkeylen: %d\n", MaxFallbackValueNameLen);
+
+    /* Allocate our buffer */
+    FallbackValueName = RtlAllocateHeap(
+        RtlGetProcessHeap(), 0, (MaxFallbackValueNameLen + 1) * sizeof(WCHAR));
+    if (!FallbackValueName)
+    {
+        ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        goto Exit;
+    }
+
+    /* We must begin at the very first subkey of the fallback key,
+     * and then see if we meet keys that already are in the preferred key.
+     * In that case, we must bump dwIndex, as otherwise we would enumerate a key we already
+     * saw in a previous call.
+     */
+    FallbackIndex = 0;
+    while (TRUE)
+    {
+        DWORD FallbackValueNameLen = MaxFallbackValueNameLen;
+
+        /* Try enumerating */
+        ErrorCode = RegEnumValueW(
+            FallbackKey,
+            FallbackIndex,
+            FallbackValueName,
+            &FallbackValueNameLen,
+            NULL,
+            NULL,
+            NULL,
+            NULL);
+        if (ErrorCode != ERROR_SUCCESS)
+        {
+            /* Most likely ERROR_NO_MORE_ITEMS */
+            ERR("Returning %d.\n", ErrorCode);
+            goto Exit;
+        }
+        FallbackValueName[FallbackValueNameLen] = L'\0';
+
+        /* See if there is such a value on HKCU side */
+        ErrorCode = RegQueryValueExW(
+            PreferredKey,
+            FallbackValueName,
+            NULL,
+            NULL,
+            NULL,
+            NULL);
+
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            /* So we already enumerated it on HKCU side. */
+            dwIndex++;
+        }
+        else if (ErrorCode != ERROR_FILE_NOT_FOUND)
+        {
+            ERR("Got error %d while querying for %s on HKCU side.\n", ErrorCode, FallbackValueName);
+            goto Exit;
+        }
+
+        /* See if we caught up */
+        if (FallbackIndex == dwIndex)
+            break;
+
+        FallbackIndex++;
+    }
+
+    /* We can finally enumerate on the fallback side */
+    ErrorCode = RegEnumValueW(
+        FallbackKey,
+        dwIndex,
+        lpName,
+        lpcbName,
+        lpReserved,
+        lpdwType,
+        lpData,
+        lpcbData);
+
+Exit:
+    if (PreferredKey != hKey)
+        RegCloseKey(PreferredKey);
+    if (FallbackKey != hKey)
+        RegCloseKey(FallbackKey);
+    if (FallbackValueName)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FallbackValueName);
+
+    return ErrorCode;
+}

@@ -84,3 +84,15 @@ EnumHKCRKey(
     _Inout_opt_ LPDWORD lpcbClass,
     _Out_opt_ PFILETIME lpftLastWriteTime);
 
+LONG
+WINAPI
+EnumHKCRValue(
+    _In_ HKEY hKey,
+    _In_ DWORD index,
+    _Out_ LPWSTR value,
+    _Inout_ PDWORD val_count,
+    _Reserved_ PDWORD reserved,
+    _Out_opt_ PDWORD type,
+    _Out_opt_ LPBYTE data,
+    _Inout_opt_ PDWORD count);
+

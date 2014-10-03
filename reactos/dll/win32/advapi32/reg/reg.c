@@ -2705,7 +2705,7 @@ RegEnumValueA(
     _Reserved_ LPDWORD lpdwReserved,
     _Out_opt_ LPDWORD lpdwType,
     _Out_opt_ LPBYTE lpData,
-    _Out_opt_ LPDWORD lpcbData)
+    _Inout_opt_ LPDWORD lpcbData)
 {
     WCHAR* NameBuffer;
     DWORD NameBufferSize, NameLength;
@@ -2714,6 +2714,9 @@ RegEnumValueA(
     BOOL NameOverflow = FALSE;
 
     /* Do parameter checks now, once and for all. */
+    if (!lpName || !lpcbName)
+        return ERROR_INVALID_PARAMETER;
+
     if ((lpData && !lpcbData) || lpdwReserved)
         return ERROR_INVALID_PARAMETER;
 
@@ -2851,15 +2854,17 @@ Exit:
  *  Success: ERROR_SUCCESS
  *  Failure: nonzero error code from Winerror.h
  */
-LONG WINAPI
-RegEnumValueW(HKEY hKey,
-              DWORD index,
-              LPWSTR value,
-              PDWORD val_count,
-              PDWORD reserved,
-              PDWORD type,
-              LPBYTE data,
-              PDWORD count)
+LONG
+WINAPI
+RegEnumValueW(
+    _In_ HKEY hKey,
+    _In_ DWORD index,
+    _Out_ LPWSTR value,
+    _Inout_ PDWORD val_count,
+    _Reserved_ PDWORD reserved,
+    _Out_opt_ PDWORD type,
+    _Out_opt_ LPBYTE data,
+    _Inout_opt_ PDWORD count)
 {
     HANDLE KeyHandle;
     NTSTATUS status;
@@ -2868,16 +2873,34 @@ RegEnumValueW(HKEY hKey,
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
     static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );
 
-    //TRACE("(%p,%ld,%p,%p,%p,%p,%p,%p)\n",
-    //      hkey, index, value, val_count, reserved, type, data, count );
+    TRACE("(%p,%ld,%p,%p,%p,%p,%p,%p)\n",
+          hKey, index, value, val_count, reserved, type, data, count );
 
-    /* NT only checks count, not val_count */
-    if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
+    if (!value || !val_count)
+        return ERROR_INVALID_PARAMETER;
+
+    if ((data && !count) || reserved)
+        return ERROR_INVALID_PARAMETER;
 
     status = MapDefaultKey(&KeyHandle, hKey);
     if (!NT_SUCCESS(status))
     {
         return RtlNtStatusToDosError(status);
+    }
+
+    if (IsHKCRKey(KeyHandle))
+    {
+        LONG ErrorCode = EnumHKCRValue(
+            KeyHandle,
+            index,
+            value,
+            val_count,
+            reserved,
+            type,
+            data,
+            count);
+        ClosePredefKey(KeyHandle);
+        return ErrorCode;
     }
 
     total_size = info_size + (MAX_PATH + 1) * sizeof(WCHAR);
