@@ -210,11 +210,14 @@ WriteLine(char *pchLine, FILE *fileOut)
         pchVariable = strchr(pch, '$');
         if (pchVariable && (pchVariable < pchLineEnd))
         {
+            /* Write all characters up to the $ */
             fwrite(pch, 1, pchVariable - pch, fileOut);
 
+            /* Try to find the define */
             pDefine = FindDefine(pchVariable + 1, &pch);
             if (pDefine != 0)
             {
+                /* We have a define, write the value */
                 fwrite(pDefine->pszValue, 1, pDefine->cchValue, fileOut);
             }
             else
@@ -224,7 +227,7 @@ WriteLine(char *pchLine, FILE *fileOut)
                 fwrite(pchVariable, 1, pch - pchVariable, fileOut);
             }
 
-            len = pchLineEnd - pch;
+            len = pchLineEnd - pch + 1;
         }
         else
         {
