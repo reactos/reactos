@@ -2126,7 +2126,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             if (Bda->VideoMode < 4 || Bda->VideoMode > 6)
             {
                 DPRINT1("BIOS Function INT 10h, AH = 0Bh, BH = 0x%02X is unsupported for non-CGA modes\n",
-                        getAH(), getBH());
+                        getBH());
                 break;
             }
 
