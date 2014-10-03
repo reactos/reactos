@@ -266,14 +266,17 @@ static void test_streamonhglobal(IStream *pStream)
     ok(ull.u.LowPart == 0x80000008, "should have set LowPart to 0x80000008 instead of %08x\n", ull.u.LowPart);
     ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
 
-    /* IStream_Seek -- seek wraps position/size on integer overflow */
+    /* IStream_Seek -- seek wraps position/size on integer overflow, but not on win8 */
     ull.u.HighPart = 0xCAFECAFE;
     ull.u.LowPart = 0xCAFECAFE;
     ll.u.HighPart = 0;
     ll.u.LowPart = 0x7FFFFFFF;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
-    ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0x00000007, "should have set LowPart to 0x00000007 instead of %08x\n", ull.u.LowPart);
+    ok(hr == S_OK || hr == STG_E_SEEKERROR /* win8 */, "IStream_Seek\n");
+    if (SUCCEEDED(hr))
+        ok(ull.u.LowPart == 0x00000007, "should have set LowPart to 0x00000007 instead of %08x\n", ull.u.LowPart);
+    else
+        ok(ull.u.LowPart == 0x80000008, "should have set LowPart to 0x80000008 instead of %08x\n", ull.u.LowPart);
     ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
 
     hr = IStream_Commit(pStream, STGC_DEFAULT);
