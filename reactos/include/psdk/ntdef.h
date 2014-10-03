@@ -1664,8 +1664,8 @@ ListEntry32To64(
     _In_ PLIST_ENTRY32 ListEntry32,
     _Out_ PLIST_ENTRY64 ListEntry64)
 {
-    ListEntry64->Flink = (ULONG)ListEntry32->Flink;
-    ListEntry64->Blink = (ULONG)ListEntry32->Blink;
+    ListEntry64->Flink = ListEntry32->Flink;
+    ListEntry64->Blink = ListEntry32->Blink;
 }
 
 FORCEINLINE
@@ -1674,6 +1674,12 @@ ListEntry64To32(
     _In_ PLIST_ENTRY64 ListEntry64,
     _Out_ PLIST_ENTRY32 ListEntry32)
 {
+    /* ASSERT without ASSERT or intrinsics ... */
+    if (((ListEntry64->Flink >> 32) != 0) ||
+        ((ListEntry64->Blink >> 32) != 0))
+    {
+        (VOID)*(volatile LONG*)(LONG_PTR)-1;
+    }
     ListEntry32->Flink = ListEntry64->Flink & 0xFFFFFFFF;
     ListEntry32->Blink = ListEntry64->Blink & 0xFFFFFFFF;
 }
