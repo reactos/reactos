@@ -50,7 +50,7 @@ CheckBuffer(
     IN const VOID *Buffer,
     ...)
 {
-    PCUCHAR OutBuffer = Buffer;
+    CONST UCHAR *OutBuffer = Buffer;
     INT Count;
     INT Value;
     va_list Arguments;
@@ -69,7 +69,7 @@ CheckBuffer(
             if (*OutBuffer++ != Value)
             {
                 --OutBuffer;
-                trace("CheckBuffer failed at offset %d, value %x, expected %x\n", OutBuffer - (PCUCHAR)Buffer, *OutBuffer, Value);
+                trace("CheckBuffer failed at offset %d, value %x, expected %x\n", OutBuffer - (CONST UCHAR*)Buffer, *OutBuffer, Value);
                 return FALSE;
             }
     }
@@ -118,7 +118,7 @@ CheckPattern(
     IN const VOID *Buffer,
     ...)
 {
-    PCUCHAR OutBuffer = Buffer;
+    CONST UCHAR *OutBuffer = Buffer;
     INT Count, Repeat, i;
     INT Values[16];
     va_list Arguments;
@@ -143,7 +143,7 @@ CheckPattern(
                 if (*OutBuffer++ != Values[i])
                 {
                     --OutBuffer;
-                    trace("CheckPattern failed at offset %d, value %x, expected %x\n", OutBuffer - (PCUCHAR)Buffer, *OutBuffer, Values[i]);
+                    trace("CheckPattern failed at offset %d, value %x, expected %x\n", OutBuffer - (CONST UCHAR*)Buffer, *OutBuffer, Values[i]);
                     return FALSE;
                 }
     }
