@@ -2054,7 +2054,8 @@ ScrollDownPartitionList(
         {
             /* Primary or extended partition */
 
-            if (IsContainerPartition(List->CurrentPartition->PartitionType))
+            if (List->CurrentPartition->IsPartitioned == TRUE &&
+                IsContainerPartition(List->CurrentPartition->PartitionType))
             {
                 /* First logical partition */
                 PartListEntry = List->CurrentDisk->LogicalPartListHead.Flink;
@@ -2147,7 +2148,8 @@ ScrollUpPartitionList(
             {
                 PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-                if (IsContainerPartition(PartEntry->PartitionType))
+                if (PartEntry->IsPartitioned == TRUE &&
+                    IsContainerPartition(PartEntry->PartitionType))
                 {
                     PartListEntry = List->CurrentDisk->LogicalPartListHead.Blink;
                     PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
@@ -2171,7 +2173,8 @@ ScrollUpPartitionList(
         {
             PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-            if (IsContainerPartition(PartEntry->PartitionType))
+            if (PartEntry->IsPartitioned == TRUE &&
+                IsContainerPartition(PartEntry->PartitionType))
             {
                 PartListEntry = DiskEntry->LogicalPartListHead.Blink;
                 if (PartListEntry != &DiskEntry->LogicalPartListHead)
@@ -2697,6 +2700,7 @@ DeleteCurrentPartition(
     {
         /* Nothing to merge but change current entry */
         PartEntry->IsPartitioned = FALSE;
+        PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
         PartEntry->FormatState = Unformatted;
         PartEntry->DriveLetter = 0;
     }
