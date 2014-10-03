@@ -1522,19 +1522,6 @@ MUI_ERROR plPLErrorEntries[] =
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Nie mo¾esz utworzy† partycji za partycj¥ rozszerzon¥.\n"
-        "\n"
-        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "Partycja rozszerzona musi by† zawsze ostatni¥\n"
-        "partycj¥ w tabeli partycji.\n"
-        "\n"
-        "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
-    },
-    {
         NULL,
         NULL
     }

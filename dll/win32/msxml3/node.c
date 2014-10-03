@@ -52,6 +52,8 @@ MAKE_FUNCPTR(xsltParseStylesheetDoc);
 MAKE_FUNCPTR(xsltQuoteUserParams);
 MAKE_FUNCPTR(xsltSaveResultTo);
 # undef MAKE_FUNCPTR
+#else
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 #endif
 
 static const IID IID_xmlnode = {0x4f2f4ba2,0xb822,0x11df,{0x8b,0x8a,0x68,0x50,0xdf,0xd7,0x20,0x85}};
@@ -1289,7 +1291,8 @@ HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet,
 
     return hr;
 #else
-    FIXME("libxslt headers were not found at compile time\n");
+    ERR_(winediag)("libxslt headers were not found at compile time. Expect problems.\n");
+
     return E_NOTIMPL;
 #endif
 }

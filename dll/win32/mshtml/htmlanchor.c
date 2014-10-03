@@ -81,8 +81,9 @@ HTMLOuterWindow *get_target_window(HTMLOuterWindow *window, nsAString *target_st
 
     if(!strcmpiW(target, _parentW)) {
         if(!window->parent) {
-            WARN("Window has no parent\n");
-            return NULL;
+            WARN("Window has no parent, treat as self\n");
+            IHTMLWindow2_AddRef(&window->base.IHTMLWindow2_iface);
+            return window;
         }
 
         IHTMLWindow2_AddRef(&window->parent->base.IHTMLWindow2_iface);

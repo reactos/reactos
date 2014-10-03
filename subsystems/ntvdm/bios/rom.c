@@ -11,7 +11,7 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "utils.h"
 
 #include "rom.h"

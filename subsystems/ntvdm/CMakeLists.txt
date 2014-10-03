@@ -14,6 +14,9 @@ list(APPEND SOURCE
     bios/kbdbios.c
     bios/rom.c
     bios/vidbios.c
+    cpu/bop.c
+    cpu/callback.c
+    cpu/cpu.c
     hardware/cmos.c
     hardware/keyboard.c
     hardware/mouse.c
@@ -27,10 +30,9 @@ list(APPEND SOURCE
     dos/dos32krnl/dosfiles.c
     dos/mouse32.c
     dos/dem.c
-    bop.c
-    callback.c
     clock.c
     emulator.c
+    int32.c
     io.c
     registers.c
     utils.c

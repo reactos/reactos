@@ -18,22 +18,119 @@
 
 #include "mshtml_private.h"
 
-static const char *debugstr_cp_guid(REFIID riid)
+typedef struct {
+    IEnumConnections IEnumConnections_iface;
+
+    LONG ref;
+
+    unsigned iter;
+    ConnectionPoint *cp;
+} EnumConnections;
+
+static inline EnumConnections *impl_from_IEnumConnections(IEnumConnections *iface)
 {
-#define X(x) \
-    if(IsEqualGUID(riid, &x)) \
-        return #x
-
-    X(IID_IPropertyNotifySink);
-    X(DIID_HTMLDocumentEvents);
-    X(DIID_HTMLDocumentEvents2);
-    X(DIID_HTMLTableEvents);
-    X(DIID_HTMLTextContainerEvents);
-
-#undef X
-
-    return debugstr_guid(riid);
+    return CONTAINING_RECORD(iface, EnumConnections, IEnumConnections_iface);
 }
+
+static HRESULT WINAPI EnumConnections_QueryInterface(IEnumConnections *iface, REFIID riid, void **ppv)
+{
+    EnumConnections *This = impl_from_IEnumConnections(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
+    if(IsEqualGUID(riid, &IID_IUnknown)) {
+        *ppv = &This->IEnumConnections_iface;
+    }else if(IsEqualGUID(riid, &IID_IEnumConnections)) {
+        *ppv = &This->IEnumConnections_iface;
+    }else {
+        WARN("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI EnumConnections_AddRef(IEnumConnections *iface)
+{
+    EnumConnections *This = impl_from_IEnumConnections(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI EnumConnections_Release(IEnumConnections *iface)
+{
+    EnumConnections *This = impl_from_IEnumConnections(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref) {
+        IConnectionPoint_Release(&This->cp->IConnectionPoint_iface);
+        heap_free(This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI EnumConnections_Next(IEnumConnections *iface, ULONG cConnections, CONNECTDATA *rgcd, ULONG *pcFetched)
+{
+    EnumConnections *This = impl_from_IEnumConnections(iface);
+    ULONG fetched = 0;
+
+    TRACE("(%p)->(%d %p %p)\n", This, cConnections, rgcd, pcFetched);
+
+    while(fetched < cConnections && This->iter < This->cp->sinks_size) {
+        if(!This->cp->sinks[This->iter].unk) {
+            This->iter++;
+            continue;
+        }
+
+        rgcd[fetched].pUnk = This->cp->sinks[This->iter].unk;
+        rgcd[fetched].dwCookie = ++This->iter;
+        IUnknown_AddRef(rgcd[fetched].pUnk);
+        fetched++;
+    }
+
+    if(pcFetched)
+        *pcFetched = fetched;
+    return fetched == cConnections ? S_OK : S_FALSE;
+}
+
+static HRESULT WINAPI EnumConnections_Skip(IEnumConnections *iface, ULONG cConnections)
+{
+    EnumConnections *This = impl_from_IEnumConnections(iface);
+    FIXME("(%p)->(%d)\n", This, cConnections);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumConnections_Reset(IEnumConnections *iface)
+{
+    EnumConnections *This = impl_from_IEnumConnections(iface);
+    FIXME("(%p)\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI EnumConnections_Clone(IEnumConnections *iface, IEnumConnections **ppEnum)
+{
+    EnumConnections *This = impl_from_IEnumConnections(iface);
+    FIXME("(%p)->(%p)\n", This, ppEnum);
+    return E_NOTIMPL;
+}
+
+static const IEnumConnectionsVtbl EnumConnectionsVtbl = {
+    EnumConnections_QueryInterface,
+    EnumConnections_AddRef,
+    EnumConnections_Release,
+    EnumConnections_Next,
+    EnumConnections_Skip,
+    EnumConnections_Reset,
+    EnumConnections_Clone
+};
 
 static inline ConnectionPoint *impl_from_IConnectionPoint(IConnectionPoint *iface)
 {
@@ -45,23 +142,20 @@ static HRESULT WINAPI ConnectionPoint_QueryInterface(IConnectionPoint *iface,
 {
     ConnectionPoint *This = impl_from_IConnectionPoint(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IConnectionPoint_iface;
     }else if(IsEqualGUID(&IID_IConnectionPoint, riid)) {
-        TRACE("(%p)->(IID_IConnectionPoint %p)\n", This, ppv);
         *ppv = &This->IConnectionPoint_iface;
+    }else {
+        *ppv = NULL;
+        WARN("Unsupported interface %s\n", debugstr_mshtml_guid(riid));
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("Unsupported interface %s\n", debugstr_guid(riid));
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI ConnectionPoint_AddRef(IConnectionPoint *iface)
@@ -162,8 +256,23 @@ static HRESULT WINAPI ConnectionPoint_EnumConnections(IConnectionPoint *iface,
                                                       IEnumConnections **ppEnum)
 {
     ConnectionPoint *This = impl_from_IConnectionPoint(iface);
-    FIXME("(%p)->(%p)\n", This, ppEnum);
-    return E_NOTIMPL;
+    EnumConnections *ret;
+
+    TRACE("(%p)->(%p)\n", This, ppEnum);
+
+    ret = heap_alloc(sizeof(*ret));
+    if(!ret)
+        return E_OUTOFMEMORY;
+
+    ret->IEnumConnections_iface.lpVtbl = &EnumConnectionsVtbl;
+    ret->ref = 1;
+    ret->iter = 0;
+
+    IConnectionPoint_AddRef(&This->IConnectionPoint_iface);
+    ret->cp = This;
+
+    *ppEnum = &ret->IEnumConnections_iface;
+    return S_OK;
 }
 
 static const IConnectionPointVtbl ConnectionPointVtbl =
@@ -283,7 +392,7 @@ static HRESULT WINAPI ConnectionPointContainer_FindConnectionPoint(IConnectionPo
     ConnectionPointContainer *This = impl_from_IConnectionPointContainer(iface);
     ConnectionPoint *cp;
 
-    TRACE("(%p)->(%s %p)\n", This, debugstr_cp_guid(riid), ppCP);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppCP);
 
     if(This->forward_container)
         return IConnectionPointContainer_FindConnectionPoint(&This->forward_container->IConnectionPointContainer_iface,
@@ -291,7 +400,7 @@ static HRESULT WINAPI ConnectionPointContainer_FindConnectionPoint(IConnectionPo
 
     cp = get_cp(This, riid, TRUE);
     if(!cp) {
-        FIXME("unsupported riid %s\n", debugstr_cp_guid(riid));
+        FIXME("unsupported riid %s\n", debugstr_mshtml_guid(riid));
         *ppCP = NULL;
         return CONNECT_E_NOCONNECTION;
     }

@@ -28,8 +28,8 @@ BEGIN
     IDS_SEARCH       "&Ara"
     IDS_FAVORITES    "&Yer İmleri"
 
-    IDS_HIDETABS     "Hide &Tabs"
-    IDS_SHOWTABS     "Show &Tabs"
+    IDS_HIDETABS     "&Sekmeleri Gizle"
+    IDS_SHOWTABS     "&Sekmeleri Göster"
 END
 
 STRINGTABLE
@@ -51,12 +51,12 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "S&ync", IDTB_SYNC
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
-        MENUITEM "&Home", IDTB_HOME
-        MENUITEM "&Stop", IDTB_STOP
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "&Eşitle", IDTB_SYNC
+        MENUITEM "&Geri", IDTB_BACK
+        MENUITEM "&İleri", IDTB_FORWARD
+        MENUITEM "E&v", IDTB_HOME
+        MENUITEM "&Dur", IDTB_STOP
+        MENUITEM "&Yenile", IDTB_REFRESH
+        MENUITEM "Y&azdır...", IDTB_PRINT
     }
 }

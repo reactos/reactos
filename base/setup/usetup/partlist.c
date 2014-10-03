@@ -2054,7 +2054,8 @@ ScrollDownPartitionList(
         {
             /* Primary or extended partition */
 
-            if (IsContainerPartition(List->CurrentPartition->PartitionType))
+            if (List->CurrentPartition->IsPartitioned == TRUE &&
+                IsContainerPartition(List->CurrentPartition->PartitionType))
             {
                 /* First logical partition */
                 PartListEntry = List->CurrentDisk->LogicalPartListHead.Flink;
@@ -2147,7 +2148,8 @@ ScrollUpPartitionList(
             {
                 PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-                if (IsContainerPartition(PartEntry->PartitionType))
+                if (PartEntry->IsPartitioned == TRUE &&
+                    IsContainerPartition(PartEntry->PartitionType))
                 {
                     PartListEntry = List->CurrentDisk->LogicalPartListHead.Blink;
                     PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
@@ -2171,7 +2173,8 @@ ScrollUpPartitionList(
         {
             PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-            if (IsContainerPartition(PartEntry->PartitionType))
+            if (PartEntry->IsPartitioned == TRUE &&
+                IsContainerPartition(PartEntry->PartitionType))
             {
                 PartListEntry = DiskEntry->LogicalPartListHead.Blink;
                 if (PartListEntry != &DiskEntry->LogicalPartListHead)
@@ -2697,6 +2700,7 @@ DeleteCurrentPartition(
     {
         /* Nothing to merge but change current entry */
         PartEntry->IsPartitioned = FALSE;
+        PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
         PartEntry->FormatState = Unformatted;
         PartEntry->DriveLetter = 0;
     }
@@ -3000,41 +3004,6 @@ SetMountedDeviceValues(
 
 
 static
-BOOLEAN
-IsLastPrimaryPartiton(
-    IN PPARTENTRY PartEntry)
-{
-    return (PartEntry->ListEntry.Flink == &PartEntry->DiskEntry->PrimaryPartListHead);
-}
-
-
-static
-BOOLEAN
-IsPreviousPartitionExtended(
-    IN PPARTENTRY PartEntry,
-    IN PDISKENTRY DiskEntry)
-{
-    PPARTENTRY PrevPartEntry;
-    PLIST_ENTRY Entry;
-
-    Entry = PartEntry->ListEntry.Blink;
-
-    while (Entry != &DiskEntry->PrimaryPartListHead)
-    {
-        PrevPartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-
-        if (IsContainerPartition(PrevPartEntry->PartitionType))
-            return TRUE;
-
-        Entry = Entry->Blink;
-    }
-
-    return FALSE;
-
-}
-
-
-static
 ULONG
 GetPrimaryPartitionCount(
     IN PDISKENTRY DiskEntry)
@@ -3075,10 +3044,6 @@ PrimaryPartitionCreationChecks(
     if (GetPrimaryPartitionCount(DiskEntry) > 4)
         return ERROR_PARTITION_TABLE_FULL;
 
-    /* Fail if this partiton is located behind an extended partition */
-    if (IsPreviousPartitionExtended(PartEntry, DiskEntry))
-        return ERROR_NOT_BEHIND_EXTENDED;
-
     return ERROR_SUCCESS;
 }
 
@@ -3104,10 +3069,6 @@ ExtendedPartitionCreationChecks(
     /* Fail if there is another extended partition in the list */
     if (DiskEntry->ExtendedPartition != NULL)
         return ERROR_ONLY_ONE_EXTENDED;
-
-    /* Fail if the partition is not the last list entry */
-    if (!IsLastPrimaryPartiton(PartEntry))
-        return ERROR_EXTENDED_NOT_LAST;
 
     return ERROR_SUCCESS;
 }

@@ -129,7 +129,7 @@ static HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo)
 
         hres = ITypeLib_GetTypeInfoOfGuid(typelib, tid_ids[tid], &ti);
         if(FAILED(hres)) {
-            ERR("GetTypeInfoOfGuid(%s) failed: %08x\n", debugstr_guid(tid_ids[tid]), hres);
+            ERR("GetTypeInfoOfGuid(%s) failed: %08x\n", debugstr_mshtml_guid(tid_ids[tid]), hres);
             return hres;
         }
 
@@ -616,7 +616,7 @@ static HRESULT typeinfo_invoke(DispatchEx *This, func_info_t *func, WORD flags, 
 
     hres = IUnknown_QueryInterface(This->outer, tid_ids[func->tid], (void**)&unk);
     if(FAILED(hres)) {
-        ERR("Could not get iface %s: %08x\n", debugstr_guid(tid_ids[func->tid]), hres);
+        ERR("Could not get iface %s: %08x\n", debugstr_mshtml_guid(tid_ids[func->tid]), hres);
         return E_FAIL;
     }
 
@@ -702,6 +702,37 @@ static HRESULT function_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
             return E_UNEXPECTED;
         hres = typeinfo_invoke(This->obj, This->info, flags, params, res, ei);
         break;
+    case DISPATCH_PROPERTYGET: {
+        unsigned name_len;
+        WCHAR *ptr;
+        BSTR str;
+
+        static const WCHAR func_prefixW[] =
+            {'\n','f','u','n','c','t','i','o','n',' '};
+        static const WCHAR func_suffixW[] =
+            {'(',')',' ','{','\n',' ',' ',' ',' ','[','n','a','t','i','v','e',' ','c','o','d','e',']','\n','}','\n'};
+
+        /* FIXME: This probably should be more generic. Also we should try to get IID_IActiveScriptSite and SID_GetCaller. */
+        if(!caller)
+            return E_ACCESSDENIED;
+
+        name_len = SysStringLen(This->info->name);
+        ptr = str = SysAllocStringLen(NULL, name_len + (sizeof(func_prefixW)+sizeof(func_suffixW))/sizeof(WCHAR));
+        if(!str)
+            return E_OUTOFMEMORY;
+
+        memcpy(ptr, func_prefixW, sizeof(func_prefixW));
+        ptr += sizeof(func_prefixW)/sizeof(WCHAR);
+
+        memcpy(ptr, This->info->name, name_len*sizeof(WCHAR));
+        ptr += name_len;
+
+        memcpy(ptr, func_suffixW, sizeof(func_suffixW));
+
+        V_VT(res) = VT_BSTR;
+        V_BSTR(res) = str;
+        return S_OK;
+    }
     default:
         FIXME("Unimplemented flags %x\n", flags);
         hres = E_NOTIMPL;
@@ -1184,6 +1215,7 @@ static HRESULT invoke_builtin_prop(DispatchEx *This, DISPID id, LCID lcid, WORD 
 
     switch(flags) {
     case DISPATCH_PROPERTYPUT:
+    case DISPATCH_PROPERTYPUT | DISPATCH_PROPERTYPUTREF:
         if(res)
             V_VT(res) = VT_EMPTY;
         hres = builtin_propput(This, func, dp, caller);
@@ -1203,7 +1235,7 @@ static HRESULT invoke_builtin_prop(DispatchEx *This, DISPID id, LCID lcid, WORD 
 
             if(flags != (DISPATCH_PROPERTYGET|DISPATCH_METHOD) || dp->cArgs) {
                 if(V_VT(&v) != VT_DISPATCH) {
-                    FIXME("Not a function %s\n", debugstr_variant(&v));
+                    FIXME("Not a function %s flags %08x\n", debugstr_variant(&v), flags);
                     VariantClear(&v);
                     return E_FAIL;
                 }

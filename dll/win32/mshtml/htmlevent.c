@@ -94,6 +94,9 @@ static const WCHAR onmouseoverW[] = {'o','n','m','o','u','s','e','o','v','e','r'
 static const WCHAR mouseupW[] = {'m','o','u','s','e','u','p',0};
 static const WCHAR onmouseupW[] = {'o','n','m','o','u','s','e','u','p',0};
 
+static const WCHAR mousewheelW[] = {'m','o','u','s','e','w','h','e','e','l',0};
+static const WCHAR onmousewheelW[] = {'o','n','m','o','u','s','e','w','h','e','e','l',0};
+
 static const WCHAR pasteW[] = {'p','a','s','t','e',0};
 static const WCHAR onpasteW[] = {'o','n','p','a','s','t','e',0};
 
@@ -190,6 +193,8 @@ static const event_info_t event_info[] = {
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
     {mouseupW,           onmouseupW,           EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEUP,
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {mousewheelW,        onmousewheelW,        EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEWHEEL,
+        0},
     {pasteW,             onpasteW,             EVENTT_NONE,   DISPID_EVMETH_ONPASTE,
         EVENT_CANCELABLE},
     {readystatechangeW,  onreadystatechangeW,  EVENTT_NONE,   DISPID_EVMETH_ONREADYSTATECHANGE,
@@ -201,7 +206,7 @@ static const event_info_t event_info[] = {
     {selectstartW,       onselectstartW,       EVENTT_MOUSE,  DISPID_EVMETH_ONSELECTSTART,
         EVENT_CANCELABLE},
     {submitW,            onsubmitW,            EVENTT_HTML,   DISPID_EVMETH_ONSUBMIT,
-        EVENT_DEFAULTLISTENER|EVENT_BUBBLE|EVENT_CANCELABLE}
+        EVENT_DEFAULTLISTENER|EVENT_BUBBLE|EVENT_CANCELABLE|EVENT_HASDEFAULTHANDLERS}
 };
 
 eventid_t str_to_eid(LPCWSTR str)
@@ -251,25 +256,22 @@ static HRESULT WINAPI HTMLEventObj_QueryInterface(IHTMLEventObj *iface, REFIID r
 {
     HTMLEventObj *This = impl_from_IHTMLEventObj(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLEventObj_iface;
     }else if(IsEqualGUID(&IID_IHTMLEventObj, riid)) {
-        TRACE("(%p)->(IID_IHTMLEventObj %p)\n", This, ppv);
         *ppv = &This->IHTMLEventObj_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        WARN("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLEventObj_AddRef(IHTMLEventObj *iface)
@@ -1314,16 +1316,8 @@ static HRESULT ensure_nsevent_handler(HTMLDocumentNode *doc, event_target_t *eve
         return S_OK;
 
     if(event_info[eid].flags & EVENT_BIND_TO_BODY) {
-        nsIDOMHTMLElement *nsbody;
-        nsresult nsres;
-
-        nsres = nsIDOMHTMLDocument_GetBody(doc->nsdoc, &nsbody);
-        if(NS_SUCCEEDED(nsres) && nsbody) {
-            nsnode = (nsIDOMNode*)nsbody;
-        }else {
-            ERR("GetBody failed: %08x\n", nsres);
-            return E_UNEXPECTED;
-        }
+        nsnode = doc->node.nsnode;
+        nsIDOMNode_AddRef(nsnode);
     }
 
     doc->event_vector[eid] = TRUE;
@@ -1509,24 +1503,19 @@ void update_cp_events(HTMLInnerWindow *window, event_target_t **event_target_ptr
     }
 }
 
-void check_event_attr(HTMLDocumentNode *doc, nsIDOMElement *nselem)
+void check_event_attr(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     const PRUnichar *attr_value;
-    nsAString attr_name_str, attr_value_str;
+    nsAString attr_value_str;
     IDispatch *disp;
     HTMLDOMNode *node;
     int i;
     nsresult nsres;
     HRESULT hres;
 
-    nsAString_Init(&attr_value_str, NULL);
-    nsAString_Init(&attr_name_str, NULL);
-
     for(i=0; i < EVENTID_LAST; i++) {
-        nsAString_SetData(&attr_name_str, event_info[i].attr_name);
-        nsres = nsIDOMElement_GetAttribute(nselem, &attr_name_str, &attr_value_str);
+        nsres = get_elem_attr_value(nselem, event_info[i].attr_name, &attr_value_str, &attr_value);
         if(NS_SUCCEEDED(nsres)) {
-            nsAString_GetData(&attr_value_str, &attr_value);
             if(!*attr_value)
                 continue;
 
@@ -1541,11 +1530,9 @@ void check_event_attr(HTMLDocumentNode *doc, nsIDOMElement *nselem)
                 }
                 IDispatch_Release(disp);
             }
+            nsAString_Finish(&attr_value_str);
         }
     }
-
-    nsAString_Finish(&attr_value_str);
-    nsAString_Finish(&attr_name_str);
 }
 
 HRESULT doc_init_events(HTMLDocumentNode *doc)

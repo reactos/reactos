@@ -186,7 +186,7 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFGUID 
         return S_OK;
     }
 
-    WARN("not supported iid %s\n", debugstr_guid(riid));
+    WARN("not supported iid %s\n", debugstr_mshtml_guid(riid));
     *ppvObject = NULL;
     return E_NOINTERFACE;
 }
@@ -259,25 +259,25 @@ static HRESULT ClassFactory_Create(REFIID riid, void **ppv, CreateInstanceFunc f
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     if(IsEqualGUID(&CLSID_HTMLDocument, rclsid)) {
-        TRACE("(CLSID_HTMLDocument %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_HTMLDocument %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ClassFactory_Create(riid, ppv, HTMLDocument_Create);
     }else if(IsEqualGUID(&CLSID_AboutProtocol, rclsid)) {
-        TRACE("(CLSID_AboutProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_AboutProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_JSProtocol, rclsid)) {
-        TRACE("(CLSID_JSProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_JSProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_MailtoProtocol, rclsid)) {
-        TRACE("(CLSID_MailtoProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_MailtoProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_ResProtocol, rclsid)) {
-        TRACE("(CLSID_ResProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_ResProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_SysimageProtocol, rclsid)) {
-        TRACE("(CLSID_SysimageProtocol %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_SysimageProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
     }else if(IsEqualGUID(&CLSID_HTMLLoadOptions, rclsid)) {
-        TRACE("(CLSID_HTMLLoadOptions %s %p)\n", debugstr_guid(riid), ppv);
+        TRACE("(CLSID_HTMLLoadOptions %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ClassFactory_Create(riid, ppv, HTMLLoadOptions_Create);
     }
 
@@ -498,4 +498,69 @@ HRESULT WINAPI DllUnregisterServer(void)
     HRESULT hres = __wine_unregister_resources( hInst );
     if(SUCCEEDED(hres)) hres = register_server(FALSE);
     return hres;
+}
+
+const char *debugstr_mshtml_guid(const GUID *iid)
+{
+#define X(x) if(IsEqualGUID(iid, &x)) return #x
+    X(DIID_HTMLDocumentEvents);
+    X(DIID_HTMLDocumentEvents2);
+    X(DIID_HTMLTableEvents);
+    X(DIID_HTMLTextContainerEvents);
+    X(IID_IConnectionPoint);
+    X(IID_IConnectionPointContainer);
+    X(IID_ICustomDoc);
+    X(IID_IDispatch);
+    X(IID_IDispatchEx);
+    X(IID_IEnumConnections);
+    X(IID_IEnumVARIANT);
+    X(IID_IHlinkTarget);
+    X(IID_IHTMLDocument6);
+    X(IID_IHTMLDocument7);
+    X(IID_IHTMLFramesCollection2);
+    X(IID_IHTMLPrivateWindow);
+    X(IID_IHtmlLoadOptions);
+    X(IID_IInternetHostSecurityManager);
+    X(IID_IMonikerProp);
+    X(IID_IObjectIdentity);
+    X(IID_IObjectSafety);
+    X(IID_IObjectWithSite);
+    X(IID_IOleContainer);
+    X(IID_IOleCommandTarget);
+    X(IID_IOleControl);
+    X(IID_IOleDocument);
+    X(IID_IOleDocumentView);
+    X(IID_IOleInPlaceActiveObject);
+    X(IID_IOleInPlaceFrame);
+    X(IID_IOleInPlaceObject);
+    X(IID_IOleInPlaceObjectWindowless);
+    X(IID_IOleInPlaceUIWindow);
+    X(IID_IOleObject);
+    X(IID_IOleWindow);
+    X(IID_IOptionArray);
+    X(IID_IPersist);
+    X(IID_IPersistFile);
+    X(IID_IPersistHistory);
+    X(IID_IPersistMoniker);
+    X(IID_IPersistStreamInit);
+    X(IID_IPropertyNotifySink);
+    X(IID_IProvideClassInfo);
+    X(IID_IServiceProvider);
+    X(IID_ISupportErrorInfo);
+    X(IID_ITargetContainer);
+    X(IID_ITravelLogClient);
+    X(IID_IUnknown);
+    X(IID_IViewObject);
+    X(IID_IViewObject2);
+    X(IID_IViewObjectEx);
+    X(IID_nsCycleCollectionISupports);
+    X(IID_nsXPCOMCycleCollectionParticipant);
+#define XIID(x) X(IID_##x);
+#define XDIID(x) X(DIID_##x);
+    TID_LIST
+#undef XIID
+#undef XDIID
+#undef X
+
+    return debugstr_guid(iid);
 }

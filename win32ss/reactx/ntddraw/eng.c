@@ -122,7 +122,7 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
 * This function is no longer used in Windows NT 2000/XP/2003
 *
 *--*/
-DWORD
+HRESULT
 APIENTRY
 EngDxIoctl(ULONG ulIoctl,
            PVOID pBuffer,

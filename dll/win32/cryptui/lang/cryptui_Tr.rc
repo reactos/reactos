@@ -136,7 +136,7 @@ STRINGTABLE
     IDS_PURPOSE_KEY_RECOVERY "Anahtar Kurtarma"
     IDS_PURPOSE_DOCUMENT_SIGNING "Belge İmzâlama"
     IDS_PURPOSE_LIFETIME_SIGNING "Yaşam Boyu İmzâlama"
-    IDS_PURPOSE_DRM "Sayılık Hakları"
+    IDS_PURPOSE_DRM "Sayılık Yetkileri"
     IDS_PURPOSE_LICENSES "Anahtar Paketi Ruhsatları"
     IDS_PURPOSE_LICENSE_SERVER "Ruhsat Sunucusu Doğrulaması"
     IDS_PURPOSE_ENROLLMENT_AGENT "Onay Belgesi İstek Yardımcısı"

@@ -12,6 +12,7 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "cpu/cpu.h"
 
 // #include "clock.h"
 
@@ -62,7 +63,7 @@ UINT Irq12Counter = 0;
 
 VOID ClockUpdate(VOID)
 {
-    extern BOOLEAN CpuSimulate;
+    extern BOOLEAN CpuRunning;
     UINT i;
 
 #ifdef WORKING_TIMER
@@ -137,9 +138,9 @@ VOID ClockUpdate(VOID)
     VgaHorizontalRetrace();
 
     /* Continue CPU emulation */
-    for (i = 0; VdmRunning && CpuSimulate && (i < STEPS_PER_CYCLE); i++)
+    for (i = 0; VdmRunning && CpuRunning && (i < STEPS_PER_CYCLE); i++)
     {
-        EmulatorStep();
+        CpuStep();
 #ifdef IPS_DISPLAY
         Cycles++;
 #endif

@@ -588,22 +588,11 @@ FileMonikerImpl_BindToStorage(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLef
             /* get the file name */
             IMoniker_GetDisplayName(iface,pbc,pmkToLeft,&filePath);
 
-            /* verify if the file contains a storage object */
-            res=StgIsStorageFile(filePath);
+            res=StgOpenStorage(filePath,NULL,STGM_READWRITE|STGM_SHARE_DENY_WRITE,NULL,0,&pstg);
 
-            if(res==S_OK){
+            if (SUCCEEDED(res))
+                *ppvObject=pstg;
 
-                res=StgOpenStorage(filePath,NULL,STGM_READWRITE|STGM_SHARE_DENY_WRITE,NULL,0,&pstg);
-
-                if (SUCCEEDED(res)){
-
-                    *ppvObject=pstg;
-
-                    IStorage_AddRef(pstg);
-
-                    return res;
-                }
-            }
             CoTaskMemFree(filePath);
         }
         else

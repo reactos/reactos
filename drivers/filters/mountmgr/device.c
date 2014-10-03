@@ -653,7 +653,7 @@ MountMgrNextDriveLetter(IN PDEVICE_EXTENSION DeviceExtension,
     PMOUNTMGR_DRIVE_LETTER_TARGET DriveLetterTarget;
     MOUNTMGR_DRIVE_LETTER_INFORMATION DriveLetterInformation;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Validate input */
     if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MOUNTMGR_DRIVE_LETTER_TARGET) ||
@@ -845,7 +845,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     PSYMLINK_INFORMATION SymlinkInformation;
     PASSOCIATED_DEVICE_ENTRY AssociatedDevice;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Validate input size */
     if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MOUNTMGR_TARGET_NAME))
@@ -1075,7 +1075,7 @@ MountMgrKeepLinksWhenOffline(IN PDEVICE_EXTENSION DeviceExtension,
     PMOUNTMGR_TARGET_NAME Target;
     PDEVICE_INFORMATION DeviceInformation;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Validate input */
     if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MOUNTMGR_TARGET_NAME))
@@ -1119,7 +1119,7 @@ MountMgrVolumeArrivalNotification(IN PDEVICE_EXTENSION DeviceExtension,
     UNICODE_STRING SymbolicName;
     PMOUNTMGR_TARGET_NAME Target;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Validate input */
     if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MOUNTMGR_TARGET_NAME))
@@ -1162,7 +1162,7 @@ MountMgrQueryPoints(IN PDEVICE_EXTENSION DeviceExtension,
     PMOUNTMGR_MOUNT_POINT MountPoint;
     UNICODE_STRING SymbolicName, DeviceName;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Validate input... */
     if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MOUNTMGR_MOUNT_POINT))
@@ -1310,7 +1310,7 @@ MountMgrDeletePoints(IN PDEVICE_EXTENSION DeviceExtension,
     PMOUNTMGR_MOUNT_POINTS MountPoints;
     UNICODE_STRING SymbolicName, DeviceName;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Validate input */
     if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MOUNTMGR_MOUNT_POINT))
@@ -1489,7 +1489,7 @@ MountMgrVolumeMountPointChanged(IN PDEVICE_EXTENSION DeviceExtension,
     POBJECT_NAME_INFORMATION ObjectNameInfoPtr = NULL;
     UNICODE_STRING SourceVolumeName, TargetDeviceName;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Validate input */
     if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(MOUNTMGR_VOLUME_MOUNT_POINT))
@@ -1722,7 +1722,7 @@ MountMgrDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status, LockStatus;
     PDEVICE_EXTENSION DeviceExtension;
 
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     DeviceExtension = DeviceObject->DeviceExtension;
 
     KeWaitForSingleObject(&(DeviceExtension->DeviceLock), Executive, KernelMode, FALSE, NULL);

@@ -14,8 +14,9 @@
 #include <reactos/buildno.h>
 
 #include "emulator.h"
-#include "callback.h"
-#include "bop.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_CF
+#include "int32.h"
+// #include "bop.h"
 
 #include "../bios.h"
 #include "../rom.h"

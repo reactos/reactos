@@ -5469,7 +5469,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
         Segment = State->SegmentOverride;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         if ((AddressSize && (State->GeneralRegs[FAST486_REG_ECX].Long == 0))
             || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
@@ -5537,7 +5537,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
     }
 
     // FIXME: This method is slow!
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         if (AddressSize)
         {
@@ -5727,7 +5727,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
     if (Opcode == 0xAA) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         UCHAR Block[STRING_BLOCK_SIZE];
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
@@ -5870,7 +5870,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLods)
     if (Opcode == 0xAC) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
                                   : State->GeneralRegs[FAST486_REG_ECX].LowWord;
@@ -6056,7 +6056,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
     if (Opcode == 0x6C) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         UCHAR Block[STRING_BLOCK_SIZE];
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
@@ -6197,7 +6197,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
     if (Opcode == 0x6E) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         UCHAR Block[STRING_BLOCK_SIZE];
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long

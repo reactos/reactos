@@ -14,7 +14,7 @@
 #include "ntvdm.h"
 #include "../bios.h"
 
-/**/ #include "callback.h" /**/
+/**/ #include "int32.h" /**/
 
 /* DEFINES ********************************************************************/
 

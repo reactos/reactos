@@ -1914,8 +1914,28 @@ VOID VgaResetPalette(VOID)
     PaletteChanged = TRUE;
 }
 
+VOID VgaWriteFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height)
+{
+    UINT i, j;
+    PUCHAR FontMemory = (PUCHAR)&VgaMemory[VGA_BANK_SIZE * VGA_FONT_BANK + (FontNumber * VGA_FONT_SIZE)];
 
+    ASSERT(Height <= VGA_MAX_FONT_HEIGHT);
 
+    for (i = 0 ; i < VGA_FONT_CHARACTERS; i++)
+    {
+        /* Write the character */
+        for (j = 0; j < Height; j++)
+        {
+            FontMemory[i * VGA_MAX_FONT_HEIGHT + j] = FontData[i * Height + j];
+        }
+
+        /* Clear the unused part */
+        for (j = Height; j < VGA_MAX_FONT_HEIGHT; j++)
+        {
+            FontMemory[i * VGA_MAX_FONT_HEIGHT + j] = 0;
+        }
+    }
+}
 
 VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent)
 {

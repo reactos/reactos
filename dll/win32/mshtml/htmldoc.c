@@ -1555,8 +1555,17 @@ static HRESULT WINAPI HTMLDocument_get_onerrorupdate(IHTMLDocument2 *iface, VARI
 static HRESULT WINAPI HTMLDocument_toString(IHTMLDocument2 *iface, BSTR *String)
 {
     HTMLDocument *This = impl_from_IHTMLDocument2(iface);
-    FIXME("(%p)->(%p)\n", This, String);
-    return E_NOTIMPL;
+
+    static const WCHAR objectW[] = {'[','o','b','j','e','c','t',']',0};
+
+    TRACE("(%p)->(%p)\n", This, String);
+
+    if(!String)
+        return E_INVALIDARG;
+
+    *String = SysAllocString(objectW);
+    return *String ? S_OK : E_OUTOFMEMORY;
+
 }
 
 static HRESULT WINAPI HTMLDocument_createStyleSheet(IHTMLDocument2 *iface, BSTR bstrHref,
@@ -2585,8 +2594,21 @@ static HRESULT WINAPI HTMLDocument5_get_doctype(IHTMLDocument5 *iface, IHTMLDOMN
 static HRESULT WINAPI HTMLDocument5_get_implementation(IHTMLDocument5 *iface, IHTMLDOMImplementation **p)
 {
     HTMLDocument *This = impl_from_IHTMLDocument5(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    HTMLDocumentNode *doc_node = This->doc_node;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!doc_node->dom_implementation) {
+        HRESULT hres;
+
+        hres = create_dom_implementation(&doc_node->dom_implementation);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    IHTMLDOMImplementation_AddRef(doc_node->dom_implementation);
+    *p = doc_node->dom_implementation;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument5_createAttribute(IHTMLDocument5 *iface, BSTR bstrattrName,
@@ -3841,7 +3863,7 @@ static ULONG WINAPI SupportErrorInfo_Release(ISupportErrorInfo *iface)
 
 static HRESULT WINAPI SupportErrorInfo_InterfaceSupportsErrorInfo(ISupportErrorInfo *iface, REFIID riid)
 {
-    FIXME("(%p)->(%s)\n", iface, debugstr_guid(riid));
+    FIXME("(%p)->(%s)\n", iface, debugstr_mshtml_guid(riid));
     return S_FALSE;
 }
 
@@ -4113,106 +4135,81 @@ static BOOL htmldoc_qi(HTMLDocument *This, REFIID riid, void **ppv)
 {
     *ppv = NULL;
 
-    if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown, %p)\n", This, ppv);
+    if(IsEqualGUID(&IID_IUnknown, riid))
         *ppv = &This->IHTMLDocument2_iface;
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IDispatch, riid))
         *ppv = &This->IDispatchEx_iface;
-    }else if(IsEqualGUID(&IID_IDispatchEx, riid)) {
-        TRACE("(%p)->(IID_IDispatchEx, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IDispatchEx, riid))
         *ppv = &This->IDispatchEx_iface;
-    }else if(IsEqualGUID(&IID_IHTMLDocument, riid)) {
-        TRACE("(%p)->(IID_IHTMLDocument, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHTMLDocument, riid))
         *ppv = &This->IHTMLDocument2_iface;
-    }else if(IsEqualGUID(&IID_IHTMLDocument2, riid)) {
-        TRACE("(%p)->(IID_IHTMLDocument2, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHTMLDocument2, riid))
         *ppv = &This->IHTMLDocument2_iface;
-    }else if(IsEqualGUID(&IID_IHTMLDocument3, riid)) {
-        TRACE("(%p)->(IID_IHTMLDocument3, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHTMLDocument3, riid))
         *ppv = &This->IHTMLDocument3_iface;
-    }else if(IsEqualGUID(&IID_IHTMLDocument4, riid)) {
-        TRACE("(%p)->(IID_IHTMLDocument4, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHTMLDocument4, riid))
         *ppv = &This->IHTMLDocument4_iface;
-    }else if(IsEqualGUID(&IID_IHTMLDocument5, riid)) {
-        TRACE("(%p)->(IID_IHTMLDocument5, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHTMLDocument5, riid))
         *ppv = &This->IHTMLDocument5_iface;
-    }else if(IsEqualGUID(&IID_IHTMLDocument6, riid)) {
-        TRACE("(%p)->(IID_IHTMLDocument6, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHTMLDocument6, riid))
         *ppv = &This->IHTMLDocument6_iface;
-    }else if(IsEqualGUID(&IID_IHTMLDocument7, riid)) {
-        TRACE("(%p)->(IID_IHTMLDocument7, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHTMLDocument7, riid))
         *ppv = &This->IHTMLDocument7_iface;
-    }else if(IsEqualGUID(&IID_IPersist, riid)) {
-        TRACE("(%p)->(IID_IPersist, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IPersist, riid))
         *ppv = &This->IPersistFile_iface;
-    }else if(IsEqualGUID(&IID_IPersistMoniker, riid)) {
-        TRACE("(%p)->(IID_IPersistMoniker, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IPersistMoniker, riid))
         *ppv = &This->IPersistMoniker_iface;
-    }else if(IsEqualGUID(&IID_IPersistFile, riid)) {
-        TRACE("(%p)->(IID_IPersistFile, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IPersistFile, riid))
         *ppv = &This->IPersistFile_iface;
-    }else if(IsEqualGUID(&IID_IMonikerProp, riid)) {
-        TRACE("(%p)->(IID_IMonikerProp, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IMonikerProp, riid))
         *ppv = &This->IMonikerProp_iface;
-    }else if(IsEqualGUID(&IID_IOleObject, riid)) {
-        TRACE("(%p)->(IID_IOleObject, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleObject, riid))
         *ppv = &This->IOleObject_iface;
-    }else if(IsEqualGUID(&IID_IOleDocument, riid)) {
-        TRACE("(%p)->(IID_IOleDocument, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleDocument, riid))
         *ppv = &This->IOleDocument_iface;
-    }else if(IsEqualGUID(&IID_IOleDocumentView, riid)) {
-        TRACE("(%p)->(IID_IOleDocumentView, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleDocumentView, riid))
         *ppv = &This->IOleDocumentView_iface;
-    }else if(IsEqualGUID(&IID_IOleInPlaceActiveObject, riid)) {
-        TRACE("(%p)->(IID_IOleInPlaceActiveObject, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleInPlaceActiveObject, riid))
         *ppv = &This->IOleInPlaceActiveObject_iface;
-    }else if(IsEqualGUID(&IID_IViewObject, riid)) {
-        TRACE("(%p)->(IID_IViewObject, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IViewObject, riid))
         *ppv = &This->IViewObjectEx_iface;
-    }else if(IsEqualGUID(&IID_IViewObject2, riid)) {
-        TRACE("(%p)->(IID_IViewObject2, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IViewObject2, riid))
         *ppv = &This->IViewObjectEx_iface;
-    }else if(IsEqualGUID(&IID_IViewObjectEx, riid)) {
-        TRACE("(%p)->(IID_IViewObjectEx, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IViewObjectEx, riid))
         *ppv = &This->IViewObjectEx_iface;
-    }else if(IsEqualGUID(&IID_IOleWindow, riid)) {
-        TRACE("(%p)->(IID_IOleWindow, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleWindow, riid))
         *ppv = &This->IOleInPlaceActiveObject_iface;
-    }else if(IsEqualGUID(&IID_IOleInPlaceObject, riid)) {
-        TRACE("(%p)->(IID_IOleInPlaceObject, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleInPlaceObject, riid))
         *ppv = &This->IOleInPlaceObjectWindowless_iface;
-    }else if(IsEqualGUID(&IID_IOleInPlaceObjectWindowless, riid)) {
-        TRACE("(%p)->(IID_IOleInPlaceObjectWindowless, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleInPlaceObjectWindowless, riid))
         *ppv = &This->IOleInPlaceObjectWindowless_iface;
-    }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
-        TRACE("(%p)->(IID_IServiceProvider, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IServiceProvider, riid))
         *ppv = &This->IServiceProvider_iface;
-    }else if(IsEqualGUID(&IID_IOleCommandTarget, riid)) {
-        TRACE("(%p)->(IID_IOleCommandTarget, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleCommandTarget, riid))
         *ppv = &This->IOleCommandTarget_iface;
-    }else if(IsEqualGUID(&IID_IOleControl, riid)) {
-        TRACE("(%p)->(IID_IOleControl, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IOleControl, riid))
         *ppv = &This->IOleControl_iface;
-    }else if(IsEqualGUID(&IID_IHlinkTarget, riid)) {
-        TRACE("(%p)->(IID_IHlinkTarget, %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IHlinkTarget, riid))
         *ppv = &This->IHlinkTarget_iface;
-    }else if(IsEqualGUID(&IID_IConnectionPointContainer, riid)) {
-        TRACE("(%p)->(IID_IConnectionPointContainer %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IConnectionPointContainer, riid))
         *ppv = &This->cp_container.IConnectionPointContainer_iface;
-    }else if(IsEqualGUID(&IID_IPersistStreamInit, riid)) {
-        TRACE("(%p)->(IID_IPersistStreamInit %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IPersistStreamInit, riid))
         *ppv = &This->IPersistStreamInit_iface;
-    }else if(IsEqualGUID(&DIID_DispHTMLDocument, riid)) {
-        TRACE("(%p)->(DIID_DispHTMLDocument %p)\n", This, ppv);
+    else if(IsEqualGUID(&DIID_DispHTMLDocument, riid))
         *ppv = &This->IHTMLDocument2_iface;
-    }else if(IsEqualGUID(&IID_ISupportErrorInfo, riid)) {
-        TRACE("(%p)->(IID_ISupportErrorInfo %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_ISupportErrorInfo, riid))
         *ppv = &This->ISupportErrorInfo_iface;
-    }else if(IsEqualGUID(&IID_IPersistHistory, riid)) {
-        TRACE("(%p)->(IID_IPersistHistory %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IPersistHistory, riid))
         *ppv = &This->IPersistHistory_iface;
-    }else if(IsEqualGUID(&CLSID_CMarkup, riid)) {
+    else if(IsEqualGUID(&IID_IObjectWithSite, riid))
+        *ppv = &This->IObjectWithSite_iface;
+    else if(IsEqualGUID(&IID_IOleContainer, riid))
+        *ppv = &This->IOleContainer_iface;
+    else if(IsEqualGUID(&IID_IObjectSafety, riid))
+        *ppv = &This->IObjectSafety_iface;
+    else if(IsEqualGUID(&IID_IProvideClassInfo, riid))
+        *ppv = &This->IProvideClassInfo_iface;
+    else if(IsEqualGUID(&CLSID_CMarkup, riid)) {
         FIXME("(%p)->(CLSID_CMarkup %p)\n", This, ppv);
         *ppv = NULL;
     }else if(IsEqualGUID(&IID_IRunnableObject, riid)) {
@@ -4230,18 +4227,6 @@ static BOOL htmldoc_qi(HTMLDocument *This, REFIID riid, void **ppv)
     }else if(IsEqualGUID(&IID_IStdMarshalInfo, riid)) {
         TRACE("(%p)->(IID_IStdMarshalInfo %p) returning NULL\n", This, ppv);
         *ppv = NULL;
-    }else if(IsEqualGUID(&IID_IObjectWithSite, riid)) {
-        TRACE("(%p)->(IID_IObjectWithSite %p)\n", This, ppv);
-        *ppv = &This->IObjectWithSite_iface;
-    }else if(IsEqualGUID(&IID_IOleContainer, riid)) {
-        TRACE("(%p)->(IID_IOleContainer %p)\n", This, ppv);
-        *ppv = &This->IOleContainer_iface;
-    }else if(IsEqualGUID(&IID_IObjectSafety, riid)) {
-        TRACE("(%p)->(IID_IObjectSafety %p)\n", This, ppv);
-        *ppv = &This->IObjectSafety_iface;
-    }else if(IsEqualGUID(&IID_IProvideClassInfo, riid)) {
-        TRACE("(%p)->(IID_IProvideClassInfo, %p)\n", This, ppv);
-        *ppv = &This->IProvideClassInfo_iface;
     }else {
         return FALSE;
     }
@@ -4304,15 +4289,15 @@ static HRESULT HTMLDocumentNode_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
 {
     HTMLDocumentNode *This = impl_from_HTMLDOMNode(iface);
 
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
     if(htmldoc_qi(&This->basedoc, riid, ppv))
         return *ppv ? S_OK : E_NOINTERFACE;
 
-    if(IsEqualGUID(&IID_IInternetHostSecurityManager, riid)) {
-        TRACE("(%p)->(IID_IInternetHostSecurityManager %p)\n", This, ppv);
+    if(IsEqualGUID(&IID_IInternetHostSecurityManager, riid))
         *ppv = &This->IInternetHostSecurityManager_iface;
-    }else {
+    else
         return HTMLDOMNode_QI(&This->node, riid, ppv);
-    }
 
     IUnknown_AddRef((IUnknown*)*ppv);
     return S_OK;
@@ -4344,11 +4329,7 @@ static void HTMLDocumentNode_destructor(HTMLDOMNode *iface)
         This->nsnode_selector = NULL;
     }
 
-    if(This->nsdoc) {
-        assert(!This->window);
-        release_document_mutation(This);
-        nsIDOMHTMLDocument_Release(This->nsdoc);
-    }else if(This->window) {
+    if(!This->nsdoc && This->window) {
         /* document fragments own reference to inner window */
         IHTMLWindow2_Release(&This->window->base.IHTMLWindow2_iface);
         This->window = NULL;
@@ -4595,19 +4576,19 @@ static HRESULT WINAPI CustomDoc_QueryInterface(ICustomDoc *iface, REFIID riid, v
 {
     HTMLDocumentObj *This = impl_from_ICustomDoc(iface);
 
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
     if(htmldoc_qi(&This->basedoc, riid, ppv))
         return *ppv ? S_OK : E_NOINTERFACE;
 
     if(IsEqualGUID(&IID_ICustomDoc, riid)) {
-        TRACE("(%p)->(IID_ICustomDoc %p)\n", This, ppv);
         *ppv = &This->ICustomDoc_iface;
     }else if(IsEqualGUID(&IID_ITargetContainer, riid)) {
-        TRACE("(%p)->(IID_ITargetContainer %p)\n", This, ppv);
         *ppv = &This->ITargetContainer_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }else {
-        FIXME("Unimplemented interface %s\n", debugstr_guid(riid));
+        FIXME("Unimplemented interface %s\n", debugstr_mshtml_guid(riid));
         *ppv = NULL;
         return E_NOINTERFACE;
     }
@@ -4744,7 +4725,7 @@ HRESULT HTMLDocument_Create(IUnknown *pUnkOuter, REFIID riid, void** ppvObject)
     nsresult nsres;
     HRESULT hres;
 
-    TRACE("(%p %s %p)\n", pUnkOuter, debugstr_guid(riid), ppvObject);
+    TRACE("(%p %s %p)\n", pUnkOuter, debugstr_mshtml_guid(riid), ppvObject);
 
     doc = heap_alloc_zero(sizeof(HTMLDocumentObj));
     if(!doc)

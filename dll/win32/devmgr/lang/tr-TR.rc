@@ -40,7 +40,7 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Bu aygıt düzgün çalışıyor."
     IDS_DEV_NOT_CONFIGURED "Bu aygıt doğru yapılandırılmamış."
-    IDS_DEV_DEVLOADER_FAILED "Bilgisayar, iki %1 veri yolu türü bildirdiğinden dolayı ReactOS bu aygıt için sürücüyü yükleyemedi."
+    IDS_DEV_DEVLOADER_FAILED "Bilgisayar, iki %1 veriyolu türü bildirdiğinden dolayı ReactOS bu aygıt için sürücüyü yükleyemedi."
     IDS_DEV_DEVLOADER_FAILED2 "Bu aygıt için %1 aygıt yükleyicisi/yükleyicileri aygıt sürücüsünü yükleyemedi."
     IDS_DEV_OUT_OF_MEMORY "Bu aygıt için sürücü kötü olabilir veyâ dizgeniz, bellekte veyâ başka kaynaklarda yavaş çalışıyor olabilir."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Sürücülerinin kötü olabilmesinden veyâ değer defterinizin bozuk olabilmesinden dolayı bu aygıt düzgün çalışmıyor."
@@ -111,7 +111,7 @@ BEGIN
     IDS_PROP_CSCONFIGFLAGS "CSConfig İmleri"
     IDS_PROP_EJECTIONRELATIONS "Çıkarma İlişkileri"
     IDS_PROP_REMOVALRELATIONS "Kaldırma İlişkileri"
-    IDS_PROP_BUSRELATIONS "Veri Yolu İlişkileri"
+    IDS_PROP_BUSRELATIONS "Veriyolu İlişkileri"
     IDS_PROP_DEVUPPERFILTERS "Üst Aygıt Süzgeçleri"
     IDS_PROP_DEVLOWERFILTERS "Alt Aygıt Süzgeçleri"
     IDS_PROP_CLASSUPPERFILTERS "Üst Sınıf Süzgeçleri"

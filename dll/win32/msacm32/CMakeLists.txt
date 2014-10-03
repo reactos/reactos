@@ -15,6 +15,7 @@ list(APPEND SOURCE
 
 add_library(msacm32 SHARED
     ${SOURCE}
+    msacm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msacm32.def)
 
 set_module_type(msacm32 win32dll ENTRYPOINT DllMain 12 UNICODE)

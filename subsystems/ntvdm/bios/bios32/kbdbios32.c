@@ -11,7 +11,8 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_ZF
+#include "int32.h"
 
 #include "kbdbios32.h"
 #include "../kbdbios.h"
@@ -205,7 +206,8 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
      * In return, if CF is set we continue processing the scan code
      * stored in AL, and if not, we skip it.
      */
-    BYTE CF, AX;
+    BYTE CF;
+    WORD AX;
     CF = getCF();
     AX = getAX();
 

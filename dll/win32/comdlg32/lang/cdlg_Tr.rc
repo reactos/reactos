@@ -33,7 +33,7 @@ Onu değiştirmek ister misiniz?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Kütük yolu yok."
     IDS_FILENOTEXISTING     "Kütük yok."
-    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "Seçim dizin olmayan bir nesne içeriyor."
 }
 
 STRINGTABLE
@@ -136,7 +136,7 @@ STRINGTABLE
     IDS_SAVE        "Sakla"
     IDS_SAVE_AS     "Ayrı Sakla"
     IDS_OPEN_FILE   "Kütük Aç"
-    IDS_SELECT_FOLDER "Select Folder"
+    IDS_SELECT_FOLDER "Dizin Seç"
 }
 
 /*

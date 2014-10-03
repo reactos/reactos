@@ -1517,19 +1517,6 @@ MUI_ERROR deDEErrorEntries[] =
         "  * Eine beliebige Taste zum Fortsetzen dr…ken."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Sie k馬nen hinter einer erweiterten Partition keine weitere Partition anlegen.\n"
-        "\n"
-        "  * Eine beliebige Taste zum Fortsetzen dr…ken."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "Eine erweiterte Partition muss immer die letzte Partition in \n"
-        "einer Partitionstabelle sein.\n"
-        "\n"
-        "  * Eine beliebige Taste zum Fortsetzen dr…ken."
-    },
-    {
         NULL,
         NULL
     }

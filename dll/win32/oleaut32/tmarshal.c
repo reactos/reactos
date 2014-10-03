@@ -248,11 +248,13 @@ static HRESULT
 _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
     HRESULT	hres;
     HKEY	ikey;
+    REGSAM	opposite = (sizeof(void*) == 8) ? KEY_WOW64_32KEY : KEY_WOW64_64KEY;
+    BOOL	is_wow64;
     char	tlguid[200],typelibkey[300],interfacekey[300],ver[100];
     char	tlfn[260];
     OLECHAR	tlfnW[260];
     DWORD	tlguidlen, verlen, type;
-    LONG	tlfnlen;
+    LONG	tlfnlen, err;
     ITypeLib	*tl;
 
     sprintf( interfacekey, "Interface\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\Typelib",
@@ -261,9 +263,14 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
 	riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]
     );
 
-    if (RegOpenKeyA(HKEY_CLASSES_ROOT,interfacekey,&ikey)) {
-	ERR("No %s key found.\n",interfacekey);
-       	return E_FAIL;
+    err = RegOpenKeyExA(HKEY_CLASSES_ROOT,interfacekey,0,KEY_READ,&ikey);
+    if (err && (opposite == KEY_WOW64_32KEY || (IsWow64Process(GetCurrentProcess(), &is_wow64)
+                                                && is_wow64))) {
+        err = RegOpenKeyExA(HKEY_CLASSES_ROOT,interfacekey,0,KEY_READ|opposite,&ikey);
+    }
+    if (err) {
+        ERR("No %s key found.\n",interfacekey);
+        return E_FAIL;
     }
     tlguidlen = sizeof(tlguid);
     if (RegQueryValueExA(ikey,NULL,NULL,&type,(LPBYTE)tlguid,&tlguidlen)) {
@@ -694,7 +701,7 @@ serialize_param(
 	    hres = xbuf_add(buf,(LPBYTE)arg,sizeof(DWORD));
 	return hres;
     case VT_VARIANT: {
-        if (debugout) TRACE_(olerelay)("Vt(%s%s)(",debugstr_vt(V_VT((VARIANT *)arg)),debugstr_vf(V_VT((VARIANT *)arg)));
+        if (debugout) TRACE_(olerelay)("%s", debugstr_variant((VARIANT *)arg));
         if (writeit)
         {
             ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);

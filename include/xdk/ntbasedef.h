@@ -352,10 +352,6 @@ typedef unsigned char UCHAR, *PUCHAR;
 typedef unsigned short USHORT, *PUSHORT;
 typedef unsigned long ULONG, *PULONG;
 
-typedef CONST UCHAR *PCUCHAR;
-typedef CONST USHORT *PCUSHORT;
-typedef CONST ULONG *PCULONG;
-
 typedef double DOUBLE;
 $endif(_NTDEF_)
 
@@ -711,6 +707,26 @@ typedef struct _GROUP_AFFINITY {
 #else
  #define RTL_CONST_CAST(type) (type)
 #endif
+
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE) \
+extern "C++" { \
+  inline _ENUMTYPE operator|(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) | ((int)b)); } \
+  inline _ENUMTYPE &operator|=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+  inline _ENUMTYPE operator&(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) & ((int)b)); } \
+  inline _ENUMTYPE &operator&=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+  inline _ENUMTYPE operator~(_ENUMTYPE a) { return _ENUMTYPE(~((int)a)); } \
+  inline _ENUMTYPE operator^(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) ^ ((int)b)); } \
+  inline _ENUMTYPE &operator^=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE)
+#endif
+
+#define COMPILETIME_OR_2FLAGS(a,b)          ((UINT)(a)|(UINT)(b))
+#define COMPILETIME_OR_3FLAGS(a,b,c)        ((UINT)(a)|(UINT)(b)|(UINT)(c))
+#define COMPILETIME_OR_4FLAGS(a,b,c,d)      ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d))
+#define COMPILETIME_OR_5FLAGS(a,b,c,d,e)    ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d)|(UINT)(e))
 
 /* Type Limits */
 #define MINCHAR   0x80

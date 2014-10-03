@@ -194,10 +194,11 @@ typedef struct _NPPluginFuncs {
     NPP_LostFocusPtr lostfocus;
 } NPPluginFuncs;
 
-static nsIDOMElement *get_dom_element(NPP instance)
+static nsIDOMHTMLElement *get_dom_element(NPP instance)
 {
     nsISupports *instance_unk = (nsISupports*)instance->ndata;
     nsIPluginInstance *plugin_instance;
+    nsIDOMHTMLElement *html_elem;
     nsIDOMElement *elem;
     nsresult nsres;
 
@@ -214,17 +215,24 @@ static nsIDOMElement *get_dom_element(NPP instance)
         return NULL;
     }
 
-    return elem;
+    nsres = nsIDOMElement_QueryInterface(elem, &IID_nsIDOMHTMLElement, (void**)&html_elem);
+    nsIDOMElement_Release(elem);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMHTMLElement iface: %08x\n", nsres);
+        return NULL;
+    }
+
+    return html_elem;
 }
 
-static HTMLInnerWindow *get_elem_window(nsIDOMElement *elem)
+static HTMLInnerWindow *get_elem_window(nsIDOMHTMLElement *elem)
 {
     nsIDOMWindow *nswindow;
     nsIDOMDocument *nsdoc;
     HTMLOuterWindow *window;
     nsresult nsres;
 
-    nsres = nsIDOMElement_GetOwnerDocument(elem, &nsdoc);
+    nsres = nsIDOMHTMLElement_GetOwnerDocument(elem, &nsdoc);
     if(NS_FAILED(nsres))
         return NULL;
 
@@ -270,29 +278,22 @@ static BOOL parse_classid(const PRUnichar *classid, CLSID *clsid)
     return SUCCEEDED(hres);
 }
 
-static BOOL get_elem_clsid(nsIDOMElement *elem, CLSID *clsid)
+static BOOL get_elem_clsid(nsIDOMHTMLElement *elem, CLSID *clsid)
 {
-    nsAString attr_str, val_str;
+    const PRUnichar *val;
+    nsAString val_str;
     nsresult nsres;
     BOOL ret = FALSE;
 
     static const PRUnichar classidW[] = {'c','l','a','s','s','i','d',0};
 
-    nsAString_InitDepend(&attr_str, classidW);
-    nsAString_Init(&val_str, NULL);
-    nsres = nsIDOMElement_GetAttribute(elem, &attr_str, &val_str);
-    nsAString_Finish(&attr_str);
+    nsres = get_elem_attr_value(elem, classidW, &val_str, &val);
     if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *val;
-
-        nsAString_GetData(&val_str, &val);
         if(*val)
             ret = parse_classid(val, clsid);
-    }else {
-        ERR("GetAttribute failed: %08x\n", nsres);
+        nsAString_Finish(&val_str);
     }
 
-    nsAString_Finish(&val_str);
     return ret;
 }
 
@@ -512,35 +513,28 @@ static void install_codebase(const WCHAR *url)
         WARN("FAILED: %08x\n", hres);
 }
 
-static void check_codebase(HTMLInnerWindow *window, nsIDOMElement *nselem)
+static void check_codebase(HTMLInnerWindow *window, nsIDOMHTMLElement *nselem)
 {
-    nsAString attr_str, val_str;
     BOOL is_on_list = FALSE;
     install_entry_t *iter;
+    const PRUnichar *val;
+    nsAString val_str;
     IUri *uri = NULL;
     nsresult nsres;
     HRESULT hres;
 
     static const PRUnichar codebaseW[] = {'c','o','d','e','b','a','s','e',0};
 
-    nsAString_InitDepend(&attr_str, codebaseW);
-    nsAString_Init(&val_str, NULL);
-    nsres = nsIDOMElement_GetAttribute(nselem, &attr_str, &val_str);
-    nsAString_Finish(&attr_str);
+    nsres = get_elem_attr_value(nselem, codebaseW, &val_str, &val);
     if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *val;
-
-        nsAString_GetData(&val_str, &val);
         if(*val) {
             hres = CoInternetCombineUrlEx(window->base.outer_window->uri, val, 0, &uri, 0);
             if(FAILED(hres))
                 uri = NULL;
         }
-    }else {
-        ERR("GetAttribute failed: %08x\n", nsres);
+        nsAString_Finish(&val_str);
     }
 
-    nsAString_Finish(&val_str);
     if(!uri)
         return;
 
@@ -582,7 +576,7 @@ static void check_codebase(HTMLInnerWindow *window, nsIDOMElement *nselem)
     IUri_Release(uri);
 }
 
-static IUnknown *create_activex_object(HTMLInnerWindow *window, nsIDOMElement *nselem, CLSID *clsid)
+static IUnknown *create_activex_object(HTMLInnerWindow *window, nsIDOMHTMLElement *nselem, CLSID *clsid)
 {
     IClassFactoryEx *cfex;
     IClassFactory *cf;
@@ -628,7 +622,7 @@ static IUnknown *create_activex_object(HTMLInnerWindow *window, nsIDOMElement *n
 static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, INT16 argc, char **argn,
         char **argv, NPSavedData *saved)
 {
-    nsIDOMElement *nselem;
+    nsIDOMHTMLElement *nselem;
     HTMLInnerWindow *window;
     IUnknown *obj;
     CLSID clsid;
@@ -645,7 +639,7 @@ static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, I
     window = get_elem_window(nselem);
     if(!window) {
         ERR("Could not get element's window object\n");
-        nsIDOMElement_Release(nselem);
+        nsIDOMHTMLElement_Release(nselem);
         return NPERR_GENERIC_ERROR;
     }
 
@@ -654,7 +648,7 @@ static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, I
         PluginHost *host;
         HRESULT hres;
 
-        hres = create_plugin_host(window->doc, nselem, obj, &clsid, &host);
+        hres = create_plugin_host(window->doc, (nsIDOMElement*)nselem, obj, &clsid, &host);
         IUnknown_Release(obj);
         if(SUCCEEDED(hres))
             instance->pdata = host;
@@ -664,7 +658,7 @@ static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, I
         err = NPERR_GENERIC_ERROR;
     }
 
-    nsIDOMElement_Release(nselem);
+    nsIDOMHTMLElement_Release(nselem);
     return err;
 }
 

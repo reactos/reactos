@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 typedef enum {
     EVENTID_ABORT,
     EVENTID_BEFOREUNLOAD,
@@ -39,6 +41,7 @@ typedef enum {
     EVENTID_MOUSEOUT,
     EVENTID_MOUSEOVER,
     EVENTID_MOUSEUP,
+    EVENTID_MOUSEWHEEL,
     EVENTID_PASTE,
     EVENTID_READYSTATECHANGE,
     EVENTID_RESIZE,
@@ -49,7 +52,7 @@ typedef enum {
 } eventid_t;
 
 eventid_t str_to_eid(LPCWSTR) DECLSPEC_HIDDEN;
-void check_event_attr(HTMLDocumentNode*,nsIDOMElement*) DECLSPEC_HIDDEN;
+void check_event_attr(HTMLDocumentNode*,nsIDOMHTMLElement*) DECLSPEC_HIDDEN;
 void release_event_target(event_target_t*) DECLSPEC_HIDDEN;
 void fire_event(HTMLDocumentNode*,eventid_t,BOOL,nsIDOMNode*,nsIDOMEvent*,IDispatch*) DECLSPEC_HIDDEN;
 HRESULT set_event_handler(event_target_t**,HTMLDocumentNode*,eventid_t,VARIANT*) DECLSPEC_HIDDEN;

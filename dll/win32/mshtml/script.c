@@ -764,7 +764,7 @@ static void parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script
             return;
         }
     }else {
-        ERR("GetAttribute(event) failed: %08x\n", nsres);
+        ERR("GetEvent failed: %08x\n", nsres);
     }
     nsAString_Finish(&event_str);
 
@@ -829,7 +829,8 @@ static BOOL get_guid_from_language(LPCWSTR type, GUID *guid)
 
 static BOOL get_script_guid(HTMLInnerWindow *window, nsIDOMHTMLScriptElement *nsscript, GUID *guid)
 {
-    nsAString attr_str, val_str;
+    const PRUnichar *language;
+    nsAString val_str;
     BOOL ret = FALSE;
     nsresult nsres;
 
@@ -851,25 +852,16 @@ static BOOL get_script_guid(HTMLInnerWindow *window, nsIDOMHTMLScriptElement *ns
         ERR("GetType failed: %08x\n", nsres);
     }
 
-    nsAString_InitDepend(&attr_str, languageW);
-    nsres = nsIDOMHTMLScriptElement_GetAttribute(nsscript, &attr_str, &val_str);
-    nsAString_Finish(&attr_str);
+    nsres = get_elem_attr_value((nsIDOMHTMLElement*)nsscript, languageW, &val_str, &language);
     if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *language;
-
-        nsAString_GetData(&val_str, &language);
-
         if(*language) {
             ret = get_guid_from_language(language, guid);
         }else {
             *guid = get_default_script_guid(window);
             ret = TRUE;
         }
-    }else {
-        ERR("GetAttribute(language) failed: %08x\n", nsres);
+        nsAString_Finish(&val_str);
     }
-
-    nsAString_Finish(&val_str);
 
     return ret;
 }

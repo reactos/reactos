@@ -1525,19 +1525,6 @@ MUI_ERROR frFRErrorEntries[] =
         "  * Appuyer sur une touche pour continuer."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Impossible de cr‚er une partition pr‚c‚dant une partition ‚tendue.\n"
-        "\n"
-        "  * Appuyer sur une touche pour continuer."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "Une partition ‚tendue doit toujours ˆtre plac‚e en dernier\n"
-        "dans la table de partition.\n"
-        "\n"
-        "  * Appuyer sur une touche pour continuer."
-    },
-    {
         NULL,
         NULL
     }
