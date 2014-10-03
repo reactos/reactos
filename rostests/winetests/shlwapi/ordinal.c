@@ -295,14 +295,15 @@ static void test_GetAcceptLanguagesA(void)
            When the buffer is large enough, the default language is returned
 
            When the buffer is too small for that fallback, win7_32 and w2k8_64
-           and above fail with HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), but
-           recent os succeed and return a partial result while
-           older os succeed and overflow the buffer */
+           fail with HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), win8 fails
+           with HRESULT_FROM_WIN32(ERROR_MORE_DATA), other versions succeed and
+           return a partial result while older os succeed and overflow the buffer */
 
         ok(((hr == E_INVALIDARG) && (len == 0)) ||
             (((hr == S_OK) && !lstrcmpA(buffer, language)  && (len == lstrlenA(language))) ||
             ((hr == S_OK) && !memcmp(buffer, language, len)) ||
-            ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len)),
+            ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len) ||
+            ((hr == __HRESULT_FROM_WIN32(ERROR_MORE_DATA)) && len == exactsize)),
             "==_#%d: got 0x%x with %d and %s\n", i, hr, len, buffer);
 
         if (exactsize > 1) {
@@ -313,7 +314,8 @@ static void test_GetAcceptLanguagesA(void)
             ok(((hr == E_INVALIDARG) && (len == 0)) ||
                 (((hr == S_OK) && !lstrcmpA(buffer, language)  && (len == lstrlenA(language))) ||
                 ((hr == S_OK) && !memcmp(buffer, language, len)) ||
-                ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len)),
+                ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len) ||
+                ((hr == __HRESULT_FROM_WIN32(ERROR_MORE_DATA)) && len == exactsize - 1)),
                 "-1_#%d: got 0x%x with %d and %s\n", i, hr, len, buffer);
         }
 
@@ -324,15 +326,16 @@ static void test_GetAcceptLanguagesA(void)
         ok(((hr == E_INVALIDARG) && (len == 0)) ||
             (((hr == S_OK) && !lstrcmpA(buffer, language)  && (len == lstrlenA(language))) ||
             ((hr == S_OK) && !memcmp(buffer, language, len)) ||
-            ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len)),
+            ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len) ||
+            ((hr == __HRESULT_FROM_WIN32(ERROR_MORE_DATA)) && len == 1)),
             "=1_#%d: got 0x%x with %d and %s\n", i, hr, len, buffer);
 
         len = maxlen;
         hr = pGetAcceptLanguagesA( NULL, &len);
 
         /* w2k3 and below: E_FAIL and untouched len,
-           since w2k8: S_OK and needed size (excluding 0) */
-        ok( ((hr == S_OK) && (len == exactsize)) ||
+           since w2k8: S_OK and needed size (excluding 0), win8 S_OK and size including 0. */
+        ok( ((hr == S_OK) && ((len == exactsize) || (len == exactsize + 1))) ||
             ((hr == E_FAIL) && (len == maxlen)),
             "NULL,max #%d: got 0x%x with %d and %s\n", i, hr, len, buffer);
 
@@ -355,7 +358,8 @@ static void test_GetAcceptLanguagesA(void)
     buffer[maxlen] = 0;
     hr = pGetAcceptLanguagesA( buffer, &len);
     ok( (((hr == S_OK) || (hr == E_INVALIDARG)) && !memcmp(buffer, language, len)) ||
-        ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len),
+        ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len) ||
+        ((hr == __HRESULT_FROM_WIN32(ERROR_CANNOT_COPY)) && !len),
         "=2: got 0x%x with %d and %s\n", hr, len, buffer);
 
     len = 1;
@@ -363,20 +367,21 @@ static void test_GetAcceptLanguagesA(void)
     buffer[maxlen] = 0;
     hr = pGetAcceptLanguagesA( buffer, &len);
     /* When the buffer is too small, win7_32 and w2k8_64 and above fail with
-       HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), other versions succeed
-       and return a partial 0 terminated result while other versions
+       HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), win8 ERROR_CANNOT_COPY,
+       other versions succeed and return a partial 0 terminated result while other versions
        fail with E_INVALIDARG and return a partial unterminated result */
     ok( (((hr == S_OK) || (hr == E_INVALIDARG)) && !memcmp(buffer, language, len)) ||
-        ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len),
+        ((hr == __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) && !len) ||
+        ((hr == __HRESULT_FROM_WIN32(ERROR_CANNOT_COPY)) && !len),
         "=1: got 0x%x with %d and %s\n", hr, len, buffer);
 
     len = 0;
     memset(buffer, '#', maxlen);
     buffer[maxlen] = 0;
     hr = pGetAcceptLanguagesA( buffer, &len);
-    /* w2k3 and below: E_FAIL, since w2k8: E_INVALIDARG */
-    ok((hr == E_FAIL) || (hr == E_INVALIDARG),
-        "got 0x%x (expected E_FAIL or E_INVALIDARG)\n", hr);
+    /* w2k3 and below: E_FAIL, since w2k8: E_INVALIDARG, win8 ERROR_CANNOT_COPY */
+    ok((hr == E_FAIL) || (hr == E_INVALIDARG) || (hr == __HRESULT_FROM_WIN32(ERROR_CANNOT_COPY)),
+        "got 0x%x\n", hr);
 
     memset(buffer, '#', maxlen);
     buffer[maxlen] = 0;
@@ -1795,6 +1800,7 @@ static void test_SHFormatDateTimeW(void)
     INT ret;
     static const WCHAR spaceW[] = {' ',0};
 #define UNICODE_LTR_MARK 0x200e
+#define UNICODE_RTL_MARK 0x200f
 
     if(!pSHFormatDateTimeW)
     {
@@ -1924,9 +1930,9 @@ if (0)
     p2 = buff2;
     while (*p2 != '\0')
     {
-        while (*p1 == UNICODE_LTR_MARK)
+        while (*p1 == UNICODE_LTR_MARK || *p1 == UNICODE_RTL_MARK)
             p1++;
-        while (*p2 == UNICODE_LTR_MARK)
+        while (*p2 == UNICODE_LTR_MARK || *p2 == UNICODE_RTL_MARK)
             p2++;
         p1++;
         p2++;
@@ -1950,9 +1956,9 @@ if (0)
     p2 = buff2;
     while (*p2 != '\0')
     {
-        while (*p1 == UNICODE_LTR_MARK)
+        while (*p1 == UNICODE_LTR_MARK || *p1 == UNICODE_RTL_MARK)
             p1++;
-        while (*p2 == UNICODE_LTR_MARK)
+        while (*p2 == UNICODE_LTR_MARK || *p2 == UNICODE_RTL_MARK)
             p2++;
         p1++;
         p2++;
@@ -2296,7 +2302,9 @@ static void test_IUnknown_QueryServiceExec(void)
 
     /* null source pointer */
     hr = pIUnknown_QueryServiceExec(NULL, &dummy_serviceid, &dummy_groupid, 0, 0, 0, 0);
-    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL ||
+       hr == E_NOTIMPL, /* win 8 */
+       "got 0x%08x\n", hr);
 
     /* expected trace:
        IUnknown_QueryServiceExec( ptr1, serviceid, groupid, arg1, arg2, arg3, arg4);
@@ -2412,7 +2420,9 @@ static void test_IUnknown_ProfferService(void)
 
     /* null source pointer */
     hr = pIUnknown_ProfferService(NULL, &dummy_serviceid, 0, 0);
-    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL ||
+       hr == E_NOTIMPL, /* win 8 */
+       "got 0x%08x\n", hr);
 
     /* expected trace:
        IUnknown_ProfferService( ptr1, serviceid, arg1, arg2);
@@ -2664,7 +2674,7 @@ static void test_SHIShellFolder_EnumObjects(void)
     IShellFolder_Release(folder);
 }
 
-static void write_inifile(LPCWSTR filename)
+static BOOL write_inifile(LPCWSTR filename)
 {
     DWORD written;
     HANDLE file;
@@ -2675,12 +2685,16 @@ static void write_inifile(LPCWSTR filename)
         "AnotherKey=asdf\r\n";
 
     file = CreateFileW(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    if(file == INVALID_HANDLE_VALUE)
-        return;
+    if(file == INVALID_HANDLE_VALUE) {
+        win_skip("failed to create ini file at %s\n", wine_dbgstr_w(filename));
+        return FALSE;
+    }
 
     WriteFile(file, data, sizeof(data), &written, NULL);
 
     CloseHandle(file);
+
+    return TRUE;
 }
 
 #define verify_inifile(f, e) r_verify_inifile(__LINE__, f, e)
@@ -2691,6 +2705,7 @@ static void r_verify_inifile(unsigned l, LPCWSTR filename, LPCSTR exp)
     DWORD read;
 
     file = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+
     if(file == INVALID_HANDLE_VALUE)
         return;
 
@@ -2709,52 +2724,54 @@ static void test_SHGetIniString(void)
     WCHAR out[64] = {0};
 
     static const WCHAR TestAppW[] = {'T','e','s','t','A','p','p',0};
-    static const WCHAR TestIniW[] = {'C',':','\\','t','e','s','t','.','i','n','i',0};
     static const WCHAR AKeyW[] = {'A','K','e','y',0};
     static const WCHAR AnotherKeyW[] = {'A','n','o','t','h','e','r','K','e','y',0};
     static const WCHAR JunkKeyW[] = {'J','u','n','k','K','e','y',0};
+    static const WCHAR testpathW[] = {'C',':','\\','t','e','s','t','.','i','n','i',0};
+    WCHAR pathW[MAX_PATH];
 
     if(!pSHGetIniStringW || is_win2k_and_lower){
         win_skip("SHGetIniStringW is not available\n");
         return;
     }
 
-    write_inifile(TestIniW);
+    lstrcpyW(pathW, testpathW);
+
+    if (!write_inifile(pathW))
+        return;
 
     if(0){
         /* these crash on Windows */
         pSHGetIniStringW(NULL, NULL, NULL, 0, NULL);
-        pSHGetIniStringW(NULL, AKeyW, out, sizeof(out), TestIniW);
-        pSHGetIniStringW(TestAppW, AKeyW, NULL, sizeof(out), TestIniW);
+        pSHGetIniStringW(NULL, AKeyW, out, sizeof(out), pathW);
+        pSHGetIniStringW(TestAppW, AKeyW, NULL, sizeof(out), pathW);
     }
 
-    ret = pSHGetIniStringW(TestAppW, AKeyW, out, 0, TestIniW);
+    ret = pSHGetIniStringW(TestAppW, AKeyW, out, 0, pathW);
     ok(ret == 0, "SHGetIniStringW should have given 0, instead: %d\n", ret);
 
     /* valid arguments */
-    ret = pSHGetIniStringW(TestAppW, NULL, out, sizeof(out), TestIniW);
-    ok(broken(ret == 0) || /* win 98 */
-            ret == 4, "SHGetIniStringW should have given 4, instead: %d\n", ret);
-    ok(!lstrcmpW(out, AKeyW), "Expected %s, got: %s\n",
-                wine_dbgstr_w(AKeyW), wine_dbgstr_w(out));
+    out[0] = 0;
+    SetLastError(0xdeadbeef);
+    ret = pSHGetIniStringW(TestAppW, NULL, out, sizeof(out), pathW);
+    ok(ret == 4, "SHGetIniStringW should have given 4, instead: %d\n", ret);
+    ok(!lstrcmpW(out, AKeyW), "Expected %s, got: %s, %d\n",
+                wine_dbgstr_w(AKeyW), wine_dbgstr_w(out), GetLastError());
 
-    ret = pSHGetIniStringW(TestAppW, AKeyW, out, sizeof(out), TestIniW);
-    ok(broken(ret == 0) || /* win 98 */
-                ret == 1, "SHGetIniStringW should have given 1, instead: %d\n", ret);
-    ok(broken(*out == 0) || /*win 98 */
-        !strcmp_wa(out, "1"), "Expected L\"1\", got: %s\n", wine_dbgstr_w(out));
+    ret = pSHGetIniStringW(TestAppW, AKeyW, out, sizeof(out), pathW);
+    ok(ret == 1, "SHGetIniStringW should have given 1, instead: %d\n", ret);
+    ok(!strcmp_wa(out, "1"), "Expected L\"1\", got: %s\n", wine_dbgstr_w(out));
 
-    ret = pSHGetIniStringW(TestAppW, AnotherKeyW, out, sizeof(out), TestIniW);
-    ok(broken(ret == 0) || /* win 98 */
-            ret == 4, "SHGetIniStringW should have given 4, instead: %d\n", ret);
-    ok(broken(*out == 0) || /* win 98 */
-            !strcmp_wa(out, "asdf"), "Expected L\"asdf\", got: %s\n", wine_dbgstr_w(out));
+    ret = pSHGetIniStringW(TestAppW, AnotherKeyW, out, sizeof(out), pathW);
+    ok(ret == 4, "SHGetIniStringW should have given 4, instead: %d\n", ret);
+    ok(!strcmp_wa(out, "asdf"), "Expected L\"asdf\", got: %s\n", wine_dbgstr_w(out));
 
-    ret = pSHGetIniStringW(TestAppW, JunkKeyW, out, sizeof(out), TestIniW);
+    out[0] = 1;
+    ret = pSHGetIniStringW(TestAppW, JunkKeyW, out, sizeof(out), pathW);
     ok(ret == 0, "SHGetIniStringW should have given 0, instead: %d\n", ret);
     ok(*out == 0, "Expected L\"\", got: %s\n", wine_dbgstr_w(out));
 
-    DeleteFileW(TestIniW);
+    DeleteFileW(pathW);
 }
 
 static void test_SHSetIniString(void)
@@ -2773,7 +2790,8 @@ static void test_SHSetIniString(void)
         return;
     }
 
-    write_inifile(TestIniW);
+    if (!write_inifile(TestIniW))
+        return;
 
     ret = pSHSetIniStringW(TestAppW, AKeyW, AValueW, TestIniW);
     ok(ret == TRUE, "SHSetIniStringW should not have failed\n");

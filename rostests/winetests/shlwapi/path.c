@@ -41,6 +41,8 @@ static HRESULT (WINAPI *pPathCreateFromUrlAlloc)(LPCWSTR, LPWSTR*, DWORD);
 static BOOL    (WINAPI *pPathAppendA)(LPSTR, LPCSTR);
 static BOOL    (WINAPI *pPathUnExpandEnvStringsA)(LPCSTR, LPSTR, UINT);
 static BOOL    (WINAPI *pPathUnExpandEnvStringsW)(LPCWSTR, LPWSTR, UINT);
+static BOOL    (WINAPI *pPathIsRelativeA)(LPCSTR);
+static BOOL    (WINAPI *pPathIsRelativeW)(LPCWSTR);
 
 /* ################ */
 
@@ -1590,6 +1592,62 @@ static void test_PathUnExpandEnvStrings(void)
     ok(!lstrcmpW(buffW, pathW), "wrong unexpanded string %s, expected %s\n", wine_dbgstr_w(buffW), wine_dbgstr_w(pathW));
 }
 
+static const struct {
+    const char *path;
+    BOOL expect;
+} test_path_is_relative[] = {
+    {NULL, TRUE},
+    {"\0", TRUE},
+    {"test.txt", TRUE},
+    {"\\\\folder\\test.txt", FALSE},
+    {"file://folder/test.txt", TRUE},
+    {"C:\\test.txt", FALSE},
+    {"file:///C:/test.txt", TRUE}
+};
+
+static void test_PathIsRelativeA(void)
+{
+    BOOL ret;
+    int i, num;
+
+    if (!pPathIsRelativeA) {
+        win_skip("PathIsRelativeA not available\n");
+        return;
+    }
+
+    num = sizeof(test_path_is_relative) / sizeof(test_path_is_relative[0]);
+    for (i = 0; i < num; i++) {
+        ret = pPathIsRelativeA(test_path_is_relative[i].path);
+        ok(ret == test_path_is_relative[i].expect,
+          "PathIsRelativeA(\"%s\") expects %d, got %d.\n",
+          test_path_is_relative[i].path, test_path_is_relative[i].expect, ret);
+    }
+}
+
+static void test_PathIsRelativeW(void)
+{
+    BOOL ret;
+    int i, num;
+    LPWSTR path;
+
+    if (!pPathIsRelativeW) {
+        win_skip("PathIsRelativeA not available\n");
+        return;
+    }
+
+    num = sizeof(test_path_is_relative) / sizeof(test_path_is_relative[0]);
+    for (i = 0; i < num; i++) {
+        path = GetWideString(test_path_is_relative[i].path);
+
+        ret = pPathIsRelativeW(path);
+        ok(ret == test_path_is_relative[i].expect,
+          "PathIsRelativeW(\"%s\") expects %d, got %d.\n",
+          test_path_is_relative[i].path, test_path_is_relative[i].expect, ret);
+
+        FreeWideString(path);
+    }
+}
+
 START_TEST(path)
 {
     HMODULE hShlwapi = GetModuleHandleA("shlwapi.dll");
@@ -1609,6 +1667,8 @@ START_TEST(path)
     pPathAppendA = (void*)GetProcAddress(hShlwapi, "PathAppendA");
     pPathUnExpandEnvStringsA = (void*)GetProcAddress(hShlwapi, "PathUnExpandEnvStringsA");
     pPathUnExpandEnvStringsW = (void*)GetProcAddress(hShlwapi, "PathUnExpandEnvStringsW");
+    pPathIsRelativeA = (void*)GetProcAddress(hShlwapi, "PathIsRelativeA");
+    pPathIsRelativeW = (void*)GetProcAddress(hShlwapi, "PathIsRelativeW");
 
     test_PathSearchAndQualify();
     test_PathCreateFromUrl();
@@ -1631,4 +1691,6 @@ START_TEST(path)
     test_PathUnquoteSpaces();
     test_PathGetDriveNumber();
     test_PathUnExpandEnvStrings();
+    test_PathIsRelativeA();
+    test_PathIsRelativeW();
 }
