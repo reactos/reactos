@@ -21,7 +21,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-//#include <stdio.h>
+#include <stdio.h>
 
 #define COBJMACROS
 #define CONST_VTABLE
@@ -52,6 +52,7 @@ static HANDLE (WINAPI *pSHAllocShared)(LPCVOID,DWORD,DWORD);
 static LPVOID (WINAPI *pSHLockShared)(HANDLE,DWORD);
 static BOOL   (WINAPI *pSHUnlockShared)(LPVOID);
 static BOOL   (WINAPI *pSHFreeShared)(HANDLE,DWORD);
+static HANDLE (WINAPI *pSHMapHandle)(HANDLE,DWORD,DWORD,DWORD,DWORD);
 static HRESULT(WINAPIV *pSHPackDispParams)(DISPPARAMS*,VARIANTARG*,UINT,...);
 static HRESULT(WINAPI *pIConnectionPoint_SimpleInvoke)(IConnectionPoint*,DISPID,DISPPARAMS*);
 static HRESULT(WINAPI *pIConnectionPoint_InvokeWithCancel)(IConnectionPoint*,DISPID,DISPPARAMS*,DWORD,DWORD);
@@ -450,12 +451,20 @@ static void test_SHSearchMapInt(void)
   ok(i == values[0], "Len 3, expected %d, got %d\n", values[0], i);
 }
 
-static void test_alloc_shared(void)
+struct shared_struct
 {
+    DWORD value;
+    HANDLE handle;
+};
+
+static void test_alloc_shared(int argc, char **argv)
+{
+    char cmdline[MAX_PATH];
+    PROCESS_INFORMATION pi;
+    STARTUPINFOA si = { 0 };
     DWORD procid;
-    HANDLE hmem;
-    int val;
-    int* p;
+    HANDLE hmem, hmem2 = 0;
+    struct shared_struct val, *p;
     BOOL ret;
 
     procid=GetCurrentProcessId();
@@ -464,19 +473,106 @@ static void test_alloc_shared(void)
     ret = pSHFreeShared(hmem, procid);
     ok( ret, "SHFreeShared failed: %u\n", GetLastError());
 
-    val=0x12345678;
-    hmem=pSHAllocShared(&val,4,procid);
+    val.value = 0x12345678;
+    val.handle = 0;
+    hmem = pSHAllocShared(&val, sizeof(val), procid);
     ok(hmem!=NULL,"SHAllocShared(NULL...) failed: %u\n", GetLastError());
 
     p=pSHLockShared(hmem,procid);
     ok(p!=NULL,"SHLockShared failed: %u\n", GetLastError());
     if (p!=NULL)
-        ok(*p==val,"Wrong value in shared memory: %d instead of %d\n",*p,val);
+        ok(p->value == 0x12345678, "Wrong value in shared memory: %d instead of %d\n", p->value, 0x12345678);
     ret = pSHUnlockShared(p);
     ok( ret, "SHUnlockShared failed: %u\n", GetLastError());
 
+    sprintf(cmdline, "%s %s %d %p", argv[0], argv[1], procid, hmem);
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    ok(ret, "could not create child process error: %u\n", GetLastError());
+    if (ret)
+    {
+        winetest_wait_child_process(pi.hProcess);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+
+        p = pSHLockShared(hmem, procid);
+        ok(p != NULL,"SHLockShared failed: %u\n", GetLastError());
+        if (p != NULL && p->value != 0x12345678)
+        {
+            ok(p->value == 0x12345679, "Wrong value in shared memory: %d instead of %d\n", p->value, 0x12345679);
+            hmem2 = p->handle;
+            ok(hmem2 != NULL, "Expected handle in shared memory\n");
+        }
+        ret = pSHUnlockShared(p);
+        ok(ret, "SHUnlockShared failed: %u\n", GetLastError());
+    }
+
     ret = pSHFreeShared(hmem, procid);
     ok( ret, "SHFreeShared failed: %u\n", GetLastError());
+
+    if (hmem2)
+    {
+        p = pSHLockShared(hmem2, procid);
+        ok(p != NULL,"SHLockShared failed: %u\n", GetLastError());
+        if (p != NULL)
+            ok(p->value == 0xDEADBEEF, "Wrong value in shared memory: %d instead of %d\n", p->value, 0xDEADBEEF);
+        ret = pSHUnlockShared(p);
+        ok(ret, "SHUnlockShared failed: %u\n", GetLastError());
+
+        ret = pSHFreeShared(hmem2, procid);
+        ok(ret, "SHFreeShared failed: %u\n", GetLastError());
+    }
+}
+
+static void test_alloc_shared_remote(DWORD procid, HANDLE hmem)
+{
+    struct shared_struct val, *p;
+    HANDLE hmem2;
+    BOOL ret;
+
+    /* test directly accessing shared memory of a remote process */
+    p = pSHLockShared(hmem, procid);
+    ok(p != NULL || broken(p == NULL) /* Windows 7/8 */, "SHLockShared failed: %u\n", GetLastError());
+    if (p == NULL)
+    {
+        win_skip("Subprocess failed to modify shared memory, skipping test\n");
+        return;
+    }
+
+    ok(p->value == 0x12345678, "Wrong value in shared memory: %d instead of %d\n", p->value, 0x12345678);
+    p->value++;
+
+    val.value = 0xDEADBEEF;
+    val.handle = 0;
+    p->handle = pSHAllocShared(&val, sizeof(val), procid);
+    ok(p->handle != NULL, "SHAllocShared failed: %u\n", GetLastError());
+
+    ret = pSHUnlockShared(p);
+    ok(ret, "SHUnlockShared failed: %u\n", GetLastError());
+
+    /* test SHMapHandle */
+    hmem2 = pSHMapHandle(hmem, procid, GetCurrentProcessId(), 0, 0);
+
+    /* It seems like Windows Vista/2008 uses a different internal implementation
+     * for shared memory, and calling SHMapHandle fails with ERROR_INVALID_HANDLE. */
+    ok(hmem2 != NULL || broken(hmem2 == NULL && GetLastError() == ERROR_INVALID_HANDLE),
+       "SHMapHandle failed: %u\n", GetLastError());
+    if (hmem2 == NULL && GetLastError() == ERROR_INVALID_HANDLE)
+    {
+        win_skip("Subprocess failed to map shared memory, skipping test\n");
+        return;
+    }
+
+    p = pSHLockShared(hmem2, GetCurrentProcessId());
+    ok(p != NULL, "SHLockShared failed: %u\n", GetLastError());
+
+    if (p != NULL)
+        ok(p->value == 0x12345679, "Wrong value in shared memory: %d instead of %d\n", p->value, 0x12345679);
+
+    ret = pSHUnlockShared(p);
+    ok(ret, "SHUnlockShared failed: %u\n", GetLastError());
+
+    ret = pSHFreeShared(hmem2, GetCurrentProcessId());
+    ok(ret, "SHFreeShared failed: %u\n", GetLastError());
 }
 
 static void test_fdsa(void)
@@ -2952,6 +3048,7 @@ static void init_pointers(void)
     MAKEFUNC(SHLockShared, 8);
     MAKEFUNC(SHUnlockShared, 9);
     MAKEFUNC(SHFreeShared, 10);
+    MAKEFUNC(SHMapHandle, 11);
     MAKEFUNC(GetAcceptLanguagesA, 14);
     MAKEFUNC(SHSetWindowBits, 165);
     MAKEFUNC(SHSetParentHwnd, 167);
@@ -3063,6 +3160,9 @@ static void test_SHSetParentHwnd(void)
 
 START_TEST(ordinal)
 {
+    char **argv;
+    int argc;
+
     hShlwapi = GetModuleHandleA("shlwapi.dll");
     is_win2k_and_lower = GetProcAddress(hShlwapi, "StrChrNW") == 0;
     is_win9x = GetProcAddress(hShlwapi, (LPSTR)99) == 0; /* StrCpyNXA */
@@ -3075,6 +3175,17 @@ START_TEST(ordinal)
 
     init_pointers();
 
+    argc = winetest_get_mainargs(&argv);
+    if (argc >= 4)
+    {
+        DWORD procid;
+        HANDLE hmem;
+        sscanf(argv[2], "%d", &procid);
+        sscanf(argv[3], "%p", &hmem);
+        test_alloc_shared_remote(procid, hmem);
+        return;
+    }
+
     hmlang = LoadLibraryA("mlang.dll");
     pLcidToRfc1766A = (void *)GetProcAddress(hmlang, "LcidToRfc1766A");
 
@@ -3083,7 +3194,7 @@ START_TEST(ordinal)
 
     test_GetAcceptLanguagesA();
     test_SHSearchMapInt();
-    test_alloc_shared();
+    test_alloc_shared(argc, argv);
     test_fdsa();
     test_GetShellSecurityDescriptor();
     test_SHPackDispParams();
