@@ -88,6 +88,8 @@ CreateInMemoryStructure(
 		free(Key);
 		return NULL;
 	}
+	Key->KeyCell->SubKeyLists[Stable] = HCELL_NIL;
+	Key->KeyCell->SubKeyLists[Volatile] = HCELL_NIL;
 	Key->LinkedKey = NULL;
 	return Key;
 }
@@ -136,7 +138,14 @@ RegpOpenOrCreateKey(
 				(USHORT)((ULONG_PTR)End - (ULONG_PTR)LocalKeyName);
 		}
 		else
+		{
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
+			if (KeyString.Length == 0)
+			{
+				/* Trailing backslash char; we're done */
+				break;
+			}
+		}
 
 		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
 		if (!strncmpW(LocalKeyName, L"CurrentControlSet", 17) &&
