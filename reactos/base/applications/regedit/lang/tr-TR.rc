@@ -242,7 +242,7 @@ BEGIN
     LTEXT "Husûsî Sürücü", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "Arayüz Türü:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Veri Yolu Numarası:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Veriyolu Numarası:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
     RTEXT "Sürüm:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
@@ -404,7 +404,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Veri Yolu Numarası"
+    IDS_BUSNUMBER "Veriyolu Numarası"
     IDS_INTERFACE "Arayüz"
     IDS_DMA_CHANNEL "Yol"
     IDS_DMA_PORT "Giriş"
@@ -444,15 +444,15 @@ BEGIN
     IDS_BUS_TURBOCHANNEL "TURBOChannel"
     IDS_BUS_PCIBUS "PCI"
     IDS_BUS_VMEBUS "VME"
-    IDS_BUS_NUBUS "Nu Veri Yolu"
+    IDS_BUS_NUBUS "Nu Veriyolu"
     IDS_BUS_PCMCIABUS "PCMCIA"
-    IDS_BUS_CBUS "C Veri Yolu"
-    IDS_BUS_MPIBUS "MPI Veri Yolu"
-    IDS_BUS_MPSABUS "MPSA Veri Yolu"
+    IDS_BUS_CBUS "C Veriyolu"
+    IDS_BUS_MPIBUS "MPI Veriyolu"
+    IDS_BUS_MPSABUS "MPSA Veriyolu"
     IDS_BUS_PROCESSORINTERNAL "İç İşlemci"
-    IDS_BUS_INTERNALPOWERBUS "İç Güç Veri Yolu"
-    IDS_BUS_PNPISABUS "PnP-ISA Veri Yolu"
-    IDS_BUS_PNPBUS "PnP Veri Yolu"
+    IDS_BUS_INTERNALPOWERBUS "İç Güç Veriyolu"
+    IDS_BUS_PNPISABUS "PnP-ISA Veriyolu"
+    IDS_BUS_PNPBUS "PnP Veriyolu"
     IDS_BUS_UNKNOWNTYPE "Bilinmeyen Arayüz Türü"
 END
 

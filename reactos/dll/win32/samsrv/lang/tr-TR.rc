@@ -10,9 +10,9 @@ BEGIN
     IDS_ALIAS_ADMINISTRATORS_NAME "Yöneticiler"
     IDS_ALIAS_ADMINISTRATORS_COMMENT "Yöneticiler, bilgisayara veyâ etki alanına kısıtlı olmayan erişime iyedir."
     IDS_ALIAS_GUESTS_NAME "Konuklar"
-    IDS_ALIAS_GUESTS_COMMENT "Konuklar, ön tanımlı olarak Kullanıcılar takımının üyeleriyle eşit haklara iyedir."
+    IDS_ALIAS_GUESTS_COMMENT "Konuklar, ön tanımlı olarak Kullanıcılar takımının üyeleriyle eşit yetkilere iyedir."
     IDS_ALIAS_POWER_USERS_NAME "Güçlü Kullanıcılar"
-    IDS_ALIAS_POWER_USERS_COMMENT "Güçlü Kullanıcılar, birtakım kısıtlamalarla çoğu yönetim haklarına iyedir."
+    IDS_ALIAS_POWER_USERS_COMMENT "Güçlü Kullanıcılar, birtakım kısıtlamalarla çoğu yönetim yetkilerine iyedir."
     IDS_ALIAS_USERS_NAME "Kullanıcılar"
     IDS_ALIAS_USERS_COMMENT "Kullanıcılar, dizge değişiklikleri yapmaktan alıkonulmuştur."
     /*
