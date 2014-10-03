@@ -1645,7 +1645,7 @@ HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,
 
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",,0x00000012
-HKCU,"Software\Microsoft\Windows\CurrentVersion\Telephony",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
 
 HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012
@@ -1711,8 +1711,8 @@ HKCU,"SOFTWARE\ReactOS\Debug","SpyInclude",0x00020000,"INCLUDEALL"
 ;HKCU,"SOFTWARE\ReactOS\Debug","SpyExcludeDWP",0x00020000,""
 
 ; Internet Explorer
-HKCU,Software\Wine\MSHTML,"GeckoUrl",,"http://source.winehq.org/winegecko.php"
-HKCU,Software\Wine\MSHTML,"GeckoCabDir",0x00020000,"%SystemRoot%\"
+HKCU,"SOFTWARE\Wine\MSHTML","GeckoUrl",,"http://source.winehq.org/winegecko.php"
+HKCU,"SOFTWARE\Wine\MSHTML","GeckoCabDir",0x00020000,"%SystemRoot%\"
 
 HKCU,"SOFTWARE\Microsoft\Internet Explorer\Main","Start Page",0x00000000,"http://www.reactos.org"
 
