@@ -1500,19 +1500,6 @@ MUI_ERROR trTRErrorEntries[] =
         "  * Srdrmek i‡in bir d§meye basnz."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Bir geniŸletilmiŸ b”lm arkasnda bir b”lm oluŸturamazsnz.\n"
-        "\n"
-        "  * Srdrmek i‡in bir d§meye basnz."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "Bir geniŸletilmiŸ b”lm, her zaman bir b”lm\n"
-        "tablosunda son b”lm olmaldr.\n"
-        "\n"
-        "  * Srdrmek i‡in bir d§meye basnz."
-    },
-    {
         NULL,
         NULL
     }

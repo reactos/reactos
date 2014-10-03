@@ -1529,7 +1529,7 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_CABINET_SECTION,
         "Nu se poate gÇsi secîiunea de directoare\n"
-		"Œn fi­ierul cabinet.",
+        "Œn fi­ierul cabinet.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1540,7 +1540,7 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Nu se poate gÇsi secîiunea pentru date de\n"
-		"instalare din fi­ierul TXTSETUP.SIF.",
+        "instalare din fi­ierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1561,7 +1561,7 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_ADDING_KBLAYOUTS,
         "A e­uat includerea Œn registre a configuraîiei\n"
-		"de tastaturÇ.",
+        "de tastaturÇ.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1572,7 +1572,7 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Pe partiîia selectatÇ nu existÇ suficient\n"
-		"spaîiu liber."
+        "spaîiu liber."
         "  * Tastaîi pentru a continua.",
         NULL
     },
@@ -1586,19 +1586,6 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_ONLY_ONE_EXTENDED,
         "Nu se poate crea mai mult de o partiîie extinsÇ pe un disc.\n"
-        "\n"
-        "  * Tastaîi pentru a continua."
-    },
-    {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Nu se poate crea o partiîie dupÇ o partiîie extinsÇ.\n"
-        "\n"
-        "  * Tastaîi pentru a continua."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "O partiîie extinsÇ trebuie sÇ fie Œntotdeauna\n"
-        "ultima partiîie din tabela de partiîii.\n"
         "\n"
         "  * Tastaîi pentru a continua."
     },
