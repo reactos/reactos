@@ -3,6 +3,7 @@ list(APPEND SOURCE
     getaddrinfo.c
     helpers.c
     ioctlsocket.c
+    nostartup.c
     recv.c
     WSAStartup.c
     testlist.c)
