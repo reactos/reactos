@@ -2974,7 +2974,7 @@ typedef struct _FLOATING_SAVE_AREA {
   DWORD ErrorSelector;
   DWORD DataOffset;
   DWORD DataSelector;
-  BYTE RegisterArea[80];
+  BYTE RegisterArea[SIZE_OF_80387_REGISTERS];
   DWORD Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 
