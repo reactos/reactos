@@ -124,10 +124,12 @@ VOID CpuSimulate(VOID)
         return;
     }
     CpuCallLevel++;
+    DPRINT1("CpuSimulate --> Level %d\n", CpuCallLevel);
 
     CpuRunning = TRUE;
     while (VdmRunning && CpuRunning) ClockUpdate();
 
+    DPRINT1("CpuSimulate <-- Level %d\n", CpuCallLevel);
     CpuCallLevel--;
     if (CpuCallLevel < 0) CpuCallLevel = 0;
 
