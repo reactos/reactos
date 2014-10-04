@@ -1973,13 +1973,6 @@ MiUnlinkPageFromList(
     IN PMMPFN Pfn
 );
 
-PFN_NUMBER
-NTAPI
-MiAllocatePfn(
-    IN PMMPTE PointerPte,
-    IN ULONG Protection
-);
-
 VOID
 NTAPI
 MiInitializePfn(
