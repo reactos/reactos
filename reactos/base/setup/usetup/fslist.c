@@ -166,12 +166,12 @@ DrawFileSystemList(
         if (Item->FileSystem)
         {
             if (Item->QuickFormat)
-                sprintf(Buffer, MUIGetString(STRING_FORMATDISK1), Item->FileSystem);
+                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK1), Item->FileSystem);
             else
-                sprintf(Buffer, MUIGetString(STRING_FORMATDISK2), Item->FileSystem);
+                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK2), Item->FileSystem);
         }
         else
-            sprintf(Buffer, MUIGetString(STRING_KEEPFORMAT));
+            snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_KEEPFORMAT));
 
         if (ListEntry == &List->Selected->ListEntry)
             CONSOLE_SetInvertedTextXY(List->Left,
