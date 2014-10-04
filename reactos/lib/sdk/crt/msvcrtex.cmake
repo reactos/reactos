@@ -85,4 +85,8 @@ if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
 endif()
 
+if(STACK_PROTECTOR)
+    target_link_libraries(msvcrtex gcc_ssp)
+endif()
+
 add_dependencies(msvcrtex psdk asm)

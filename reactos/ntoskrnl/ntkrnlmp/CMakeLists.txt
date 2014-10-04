@@ -30,6 +30,10 @@ else()
     set_image_base(ntkrnlmp 0x80800000)
 endif()
 
+if(STACK_PROTECTOR)
+    target_link_libraries(ntkrnlmp gcc_ssp)
+endif()
+
 target_link_libraries(ntkrnlmp
     cportlib
     csq

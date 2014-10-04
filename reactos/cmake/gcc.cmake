@@ -30,6 +30,10 @@ if(USE_DUMMY_PSEH)
     add_definitions(-D_USE_DUMMY_PSEH=1)
 endif()
 
+if(STACK_PROTECTOR)
+    add_compile_flags(${MODULE} "-fstack-protector-all")
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 if(GCC_VERSION VERSION_GREATER 4.7)
@@ -280,6 +284,10 @@ function(set_module_type_toolchain MODULE TYPE)
         if(${TYPE} STREQUAL "wdmdriver")
             add_target_link_flags(${MODULE} "-Wl,--wdmdriver")
         endif()
+    endif()
+    
+    if(STACK_PROTECTOR)
+        target_link_libraries(${MODULE} gcc_ssp)
     endif()
 endfunction()
 

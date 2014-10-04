@@ -44,6 +44,10 @@ target_link_libraries(ntoskrnl
     wdmguid
     ioevent)
 
+if(STACK_PROTECTOR)
+    target_link_libraries(ntoskrnl gcc_ssp)
+endif()
+
 add_importlibs(ntoskrnl hal kdcom bootvid)
 add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h NTOSKRNL_SOURCE)
 add_dependencies(ntoskrnl psdk bugcodes asm)
