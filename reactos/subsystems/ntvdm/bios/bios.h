@@ -17,6 +17,16 @@
 
 /* DEFINES ********************************************************************/
 
+/* BOP Identifiers */
+#define BOP_RESET       0x00    // Windows NTVDM (SoftPC) BIOS calls BOP 0x00
+                                // to let the virtual machine initialize itself
+                                // the IVT and its hardware.
+#define BOP_EQUIPLIST   0x11
+#define BOP_GETMEMSIZE  0x12
+
+
+
+
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 

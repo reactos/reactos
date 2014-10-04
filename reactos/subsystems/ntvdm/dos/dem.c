@@ -33,8 +33,10 @@
 /* DEFINES ********************************************************************/
 
 /* BOP Identifiers */
-#define BOP_DOS 0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
-#define BOP_CMD 0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
+#define BOP_LOAD_DOS    0x2B    // DOS Loading and Initializing BOP. In parameter (following bytes) we take a NULL-terminated string indicating the name of the DOS kernel file.
+#define BOP_START_DOS   0x2C    // DOS Starting BOP. In parameter (following bytes) we take a NULL-terminated string indicating the name of the DOS kernel file.
+#define BOP_DOS         0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
+#define BOP_CMD         0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -185,17 +187,157 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
     }
 }
 
+#ifndef STANDALONE
+static DWORD
+WINAPI
+CommandThreadProc(LPVOID Parameter)
+{
+    BOOLEAN First = TRUE;
+    DWORD Result;
+    VDM_COMMAND_INFO CommandInfo;
+    CHAR CmdLine[MAX_PATH];
+    CHAR AppName[MAX_PATH];
+    CHAR PifFile[MAX_PATH];
+    CHAR Desktop[MAX_PATH];
+    CHAR Title[MAX_PATH];
+    ULONG EnvSize = 256;
+    PVOID Env = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
+
+    UNREFERENCED_PARAMETER(Parameter);
+    ASSERT(Env != NULL);
+
+    do
+    {
+        /* Clear the structure */
+        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+
+        /* Initialize the structure members */
+        CommandInfo.TaskId = SessionId;
+        CommandInfo.VDMState = VDM_FLAG_DOS;
+        CommandInfo.CmdLine = CmdLine;
+        CommandInfo.CmdLen = sizeof(CmdLine);
+        CommandInfo.AppName = AppName;
+        CommandInfo.AppLen = sizeof(AppName);
+        CommandInfo.PifFile = PifFile;
+        CommandInfo.PifLen = sizeof(PifFile);
+        CommandInfo.Desktop = Desktop;
+        CommandInfo.DesktopLen = sizeof(Desktop);
+        CommandInfo.Title = Title;
+        CommandInfo.TitleLen = sizeof(Title);
+        CommandInfo.Env = Env;
+        CommandInfo.EnvLen = EnvSize;
+
+        if (First) CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
+
+Command:
+        if (!GetNextVDMCommand(&CommandInfo))
+        {
+            if (CommandInfo.EnvLen > EnvSize)
+            {
+                /* Expand the environment size */
+                EnvSize = CommandInfo.EnvLen;
+                Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
+
+                /* Repeat the request */
+                goto Command;
+            }
+
+            break;
+        }
+
+        /* Start the process from the command line */
+        DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
+        Result = DosStartProcess(AppName, CmdLine, Env);
+        if (Result != ERROR_SUCCESS)
+        {
+            DisplayMessage(L"Could not start '%S'. Error: %u", AppName, Result);
+            // break;
+            continue;
+        }
+
+        First = FALSE;
+    }
+    while (AcceptCommands);
+
+    HeapFree(GetProcessHeap(), 0, Env);
+    return 0;
+}
+#endif
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BOOLEAN DosInitialize(IN LPCSTR DosKernelFileName)
+//
+// This function (equivalent of the DOS bootsector) is called by the bootstrap
+// loader *BEFORE* jumping at 0000:7C00. What we should do is to write at 0000:7C00
+// a BOP call that calls DosInitialize back. Then the bootstrap loader jumps at
+// 0000:7C00, our BOP gets called and then we can initialize the 32-bit part of the DOS.
+//
+
+/* 16-bit bootstrap code at 0000:7C00 */
+/* Of course, this is not in real bootsector format, because we don't care */
+static BYTE Bootsector1[] =
 {
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_LOAD_DOS,  // Call DOS Loading
+};
+/* This portion of code is run if we failed to load the DOS */
+static BYTE Bootsector2[] =
+{
+    0xEA,                   // jmp far ptr
+    0x5B, 0xE0, 0x00, 0xF0, // F000:E05B /** HACK! What to do instead?? **/
+};
+
+static VOID WINAPI DosInitialize(LPWORD Stack);
+
+VOID DosBootsectorInitialize(VOID)
+{
+    /* We write the bootsector at 0000:7C00 */
+    ULONG_PTR Address = (ULONG_PTR)SEG_OFF_TO_PTR(0x0000, 0x7C00);
+    CHAR DosKernelFileName[] = ""; // No DOS file name, therefore we'll load DOS32
+
+    DPRINT1("DosBootsectorInitialize\n");
+
+    /* Write the "bootsector" */
+    RtlCopyMemory((PVOID)Address, Bootsector1, sizeof(Bootsector1));
+    Address += sizeof(Bootsector1);
+    RtlCopyMemory((PVOID)Address, DosKernelFileName, sizeof(DosKernelFileName));
+    Address += sizeof(DosKernelFileName);
+    RtlCopyMemory((PVOID)Address, Bootsector2, sizeof(Bootsector2));
+
+    /* Register the DOS Loading BOP */
+    RegisterBop(BOP_LOAD_DOS, DosInitialize);
+}
+
+
+//
+// This function is called by the DOS bootsector. We finish to load
+// the DOS, then we jump to 0070:0000.
+//
+
+/* 16-bit startup code at 0070:0000 */
+static BYTE Startup[] =
+{
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_START_DOS,  // Call DOS Start
+};
+
+static VOID WINAPI DosStart(LPWORD Stack);
+
+static VOID WINAPI DosInitialize(LPWORD Stack)
+{
+    BOOLEAN Success = FALSE;
+
+    /* Get the DOS kernel file name (NULL-terminated) */
+    // FIXME: Isn't it possible to use some DS:SI instead??
+    LPCSTR DosKernelFileName = (LPCSTR)SEG_OFF_TO_PTR(getCS(), getIP());
+    setIP(getIP() + strlen(DosKernelFileName) + 1); // Skip it
+
+    DPRINT1("DosInitialize('%s')\n", DosKernelFileName);
+
     /* Register the DOS BOPs */
     RegisterBop(BOP_DOS, DosSystemBop        );
     RegisterBop(BOP_CMD, DosCmdInterpreterBop);
 
-    if (DosKernelFileName)
+    if (DosKernelFileName && DosKernelFileName[0] != '\0')
     {
-        BOOLEAN Success;
         HANDLE  hDosBios;
         ULONG   ulDosBiosSize = 0;
 
@@ -203,7 +345,7 @@ BOOLEAN DosInitialize(IN LPCSTR DosKernelFileName)
         hDosBios = FileOpen(DosKernelFileName, &ulDosBiosSize);
 
         /* If we failed, bail out */
-        if (hDosBios == NULL) return FALSE;
+        if (hDosBios == NULL) goto QuitCustom;
 
         /* Attempt to load the DOS BIOS into memory */
         Success = FileLoadByHandle(hDosBios,
@@ -220,26 +362,121 @@ BOOLEAN DosInitialize(IN LPCSTR DosKernelFileName)
         /* Close the DOS BIOS file */
         FileClose(hDosBios);
 
-        if (Success)
-        {
-            /* Position execution pointers and return */
-            setCS(0x0070);
-            setIP(0x0000);
-        }
+        if (!Success) goto QuitCustom;
 
-        return Success;
+        /* Position execution pointers and return */
+        setCS(0x0070);
+        setIP(0x0000);
+
+        /* Return control */
+QuitCustom:
+        if (!Success)
+            DisplayMessage(L"Custom DOS '%S' loading failed, what to do??", DosKernelFileName);
     }
     else
     {
-        BOOLEAN Result;
+        Success = DosBIOSInitialize();
+        // Success &= DosKRNLInitialize();
 
-        Result  = DosBIOSInitialize();
-        DosMouseInitialize(); // FIXME: Should be done by the DOS BIOS
-        // Result &= DosKRNLInitialize();
+        if (!Success) goto Quit32;
 
-        return Result;
+        /* Write the "bootsector" */
+        RtlCopyMemory(SEG_OFF_TO_PTR(0x0070, 0x0000), Startup, sizeof(Startup));
+
+        /* Register the DOS Starting BOP */
+        RegisterBop(BOP_START_DOS, DosStart);
+
+        /* Position execution pointers and return */
+        setCS(0x0070);
+        setIP(0x0000);
+
+        /* Return control */
+Quit32:
+        if (!Success)
+            DisplayMessage(L"DOS32 loading failed, what to do??");
+    }
+
+    if (Success)
+    {
+        /*
+         * We succeeded, deregister the DOS Loading BOP
+         * so that no app will be able to call us back.
+         */
+        RegisterBop(BOP_LOAD_DOS, NULL);
     }
 }
+
+static VOID WINAPI DosStart(LPWORD Stack)
+{
+#ifdef STANDALONE
+    DWORD Result;
+    CHAR ApplicationName[MAX_PATH];
+    CHAR CommandLine[DOS_CMDLINE_LENGTH];
+#endif
+
+    DPRINT1("DosStart\n");
+
+    /*
+     * We succeeded, deregister the DOS Starting BOP
+     * so that no app will be able to call us back.
+     */
+    RegisterBop(BOP_START_DOS, NULL);
+
+    /* Load the mouse driver */
+    DosMouseInitialize();
+
+#ifndef STANDALONE
+
+    /* Create the GetNextVDMCommand thread */
+    CommandThread = CreateThread(NULL, 0, &CommandThreadProc, NULL, 0, NULL);
+    if (CommandThread == NULL)
+    {
+        wprintf(L"FATAL: Failed to create the command processing thread: %d\n", GetLastError());
+        goto Quit;
+    }
+
+    /* Wait for the command thread to exit */
+    WaitForSingleObject(CommandThread, INFINITE);
+
+    /* Close the thread handle */
+    CloseHandle(CommandThread);
+
+#else
+
+    if (NtVdmArgc >= 2)
+    {
+        WideCharToMultiByte(CP_ACP, 0, NtVdmArgv[1], -1, ApplicationName, sizeof(ApplicationName), NULL, NULL);
+
+        if (NtVdmArgc >= 3)
+            WideCharToMultiByte(CP_ACP, 0, NtVdmArgv[2], -1, CommandLine, sizeof(CommandLine), NULL, NULL);
+        else
+            strcpy(CommandLine, "");
+    }
+    else
+    {
+        DisplayMessage(L"Invalid DOS command line\n");
+        goto Quit;
+    }
+
+    /* Start the process from the command line */
+    DPRINT1("Starting '%s' ('%s')...\n", ApplicationName, CommandLine);
+    Result = DosStartProcess(ApplicationName,
+                             CommandLine,
+                             GetEnvironmentStrings());
+    if (Result != ERROR_SUCCESS)
+    {
+        DisplayMessage(L"Could not start '%S'. Error: %u", ApplicationName, Result);
+        goto Quit;
+    }
+
+#endif
+
+Quit:
+    /* Stop the VDM */
+    EmulatorTerminate();
+}
+
+
 
 /* PUBLIC EXPORTED APIS *******************************************************/
 

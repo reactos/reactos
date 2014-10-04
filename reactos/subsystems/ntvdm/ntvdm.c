@@ -12,6 +12,7 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
+#include "cpu/cpu.h"
 
 #include "clock.h"
 #include "hardware/ps2.h"
@@ -26,18 +27,24 @@
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
-static BOOLEAN AcceptCommands = TRUE;
-static HANDLE CommandThread = NULL;
 
-static HMENU hConsoleMenu  = NULL;
-static INT   VdmMenuPos    = -1;
-static BOOLEAN ShowPointer = FALSE;
-
+// For DOS
 #ifndef STANDALONE
+BOOLEAN AcceptCommands = TRUE;
+HANDLE CommandThread = NULL;
 ULONG SessionId = 0;
 #endif
 
 HANDLE VdmTaskEvent = NULL;
+
+// Command line of NTVDM
+INT     NtVdmArgc;
+WCHAR** NtVdmArgv;
+
+
+static HMENU hConsoleMenu  = NULL;
+static INT   VdmMenuPos    = -1;
+static BOOLEAN ShowPointer = FALSE;
 
 /*
  * Those menu helpers were taken from the GUI frontend in winsrv.dll
@@ -198,6 +205,7 @@ ConsoleCtrlHandler(DWORD ControlType)
         case CTRL_BREAK_EVENT:
         {
             /* Call INT 23h */
+            DPRINT1("Ctrl-C/Break: Call INT 23h\n");
             EmulatorInterrupt(0x23);
             break;
         }
@@ -206,14 +214,18 @@ ConsoleCtrlHandler(DWORD ControlType)
             if (WaitForSingleObject(VdmTaskEvent, 0) == WAIT_TIMEOUT)
             {
                 /* Exit immediately */
+#ifndef STANDALONE
                 if (CommandThread) TerminateThread(CommandThread, 0);
+#endif
                 EmulatorTerminate();
             }
+#ifndef STANDALONE
             else
             {
                 /* Stop accepting new commands */
                 AcceptCommands = FALSE;
             }
+#endif
 
             break;
         }
@@ -361,100 +373,12 @@ VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent)
     DPRINT1("Focus events not handled\n");
 }
 
-#ifndef STANDALONE
-static DWORD
-WINAPI
-CommandThreadProc(LPVOID Parameter)
-{
-    BOOLEAN First = TRUE;
-    DWORD Result;
-    VDM_COMMAND_INFO CommandInfo;
-    CHAR CmdLine[MAX_PATH];
-    CHAR AppName[MAX_PATH];
-    CHAR PifFile[MAX_PATH];
-    CHAR Desktop[MAX_PATH];
-    CHAR Title[MAX_PATH];
-    ULONG EnvSize = 256;
-    PVOID Env = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
-
-    UNREFERENCED_PARAMETER(Parameter);
-    ASSERT(Env != NULL);
-
-    do
-    {
-        /* Clear the structure */
-        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
-
-        /* Initialize the structure members */
-        CommandInfo.TaskId = SessionId;
-        CommandInfo.VDMState = VDM_FLAG_DOS;
-        CommandInfo.CmdLine = CmdLine;
-        CommandInfo.CmdLen = sizeof(CmdLine);
-        CommandInfo.AppName = AppName;
-        CommandInfo.AppLen = sizeof(AppName);
-        CommandInfo.PifFile = PifFile;
-        CommandInfo.PifLen = sizeof(PifFile);
-        CommandInfo.Desktop = Desktop;
-        CommandInfo.DesktopLen = sizeof(Desktop);
-        CommandInfo.Title = Title;
-        CommandInfo.TitleLen = sizeof(Title);
-        CommandInfo.Env = Env;
-        CommandInfo.EnvLen = EnvSize;
-
-        if (First) CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
-
-Command:
-        if (!GetNextVDMCommand(&CommandInfo))
-        {
-            if (CommandInfo.EnvLen > EnvSize)
-            {
-                /* Expand the environment size */
-                EnvSize = CommandInfo.EnvLen;
-                Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
-
-                /* Repeat the request */
-                goto Command;
-            }
-
-            break;
-        }
-
-        /* Start the process from the command line */
-        DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
-        Result = DosStartProcess(AppName, CmdLine, Env);
-        if (Result != ERROR_SUCCESS)
-        {
-            DisplayMessage(L"Could not start '%S'. Error: %u", AppName, Result);
-            // break;
-            continue;
-        }
-
-        First = FALSE;
-    }
-    while (AcceptCommands);
-
-    HeapFree(GetProcessHeap(), 0, Env);
-    return 0;
-}
-#endif
-
 INT
 wmain(INT argc, WCHAR *argv[])
 {
 #ifdef STANDALONE
 
-    DWORD Result;
-    CHAR ApplicationName[MAX_PATH];
-    CHAR CommandLine[DOS_CMDLINE_LENGTH];
-
-    if (argc >= 2)
-    {
-        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, ApplicationName, sizeof(ApplicationName), NULL, NULL);
-
-        if (argc >= 3) WideCharToMultiByte(CP_ACP, 0, argv[2], -1, CommandLine, sizeof(CommandLine), NULL, NULL);
-        else strcpy(CommandLine, "");
-    }
-    else
+    if (argc < 2)
     {
         wprintf(L"\nReactOS Virtual DOS Machine\n\n"
                 L"Usage: NTVDM <executable> [<parameters>]\n");
@@ -480,6 +404,9 @@ wmain(INT argc, WCHAR *argv[])
     }
 
 #endif
+
+    NtVdmArgc = argc;
+    NtVdmArgv = argv;
 
     DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 
@@ -508,43 +435,8 @@ wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
-    /* Initialize the VDM DOS kernel */
-    if (!DosInitialize(NULL))
-    {
-        wprintf(L"FATAL: Failed to initialize the VDM DOS kernel.\n");
-        goto Cleanup;
-    }
-
-#ifndef STANDALONE
-
-    /* Create the GetNextVDMCommand thread */
-    CommandThread = CreateThread(NULL, 0, &CommandThreadProc, NULL, 0, NULL);
-    if (CommandThread == NULL)
-    {
-        wprintf(L"FATAL: Failed to create the command processing thread: %d\n", GetLastError());
-        goto Cleanup;
-    }
-
-    /* Wait for the command thread to exit */
-    WaitForSingleObject(CommandThread, INFINITE);
-
-    /* Close the thread handle */
-    CloseHandle(CommandThread);
-
-#else
-
-    /* Start the process from the command line */
-    DPRINT1("Starting '%s' ('%s')...\n", ApplicationName, CommandLine);
-    Result = DosStartProcess(ApplicationName,
-                             CommandLine,
-                             GetEnvironmentStrings());
-    if (Result != ERROR_SUCCESS)
-    {
-        DisplayMessage(L"Could not start '%S'. Error: %u", ApplicationName, Result);
-        goto Cleanup;
-    }
-
-#endif
+    /* Let's go! Start simulation */
+    CpuSimulate();
 
 Cleanup:
     BiosCleanup();

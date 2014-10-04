@@ -15,8 +15,8 @@
 
 #include "emulator.h"
 #include "cpu/cpu.h" // for EMULATOR_FLAG_CF
+#include "cpu/bop.h"
 #include "int32.h"
-// #include "bop.h"
 
 #include "../bios.h"
 #include "../rom.h"
@@ -129,7 +129,8 @@ static BYTE Bootstrap[] =
  */
 static BYTE PostCode[] =
 {
-    0xCD, 0x19, // int 0x19, the bootstrap loader interrupt
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_RESET,  // Call BIOS POST
+    0xCD, 0x19,                                             // INT 0x19, the bootstrap loader interrupt
 //  LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
 };
 
@@ -278,16 +279,25 @@ static VOID WINAPI BiosRomBasic(LPWORD Stack)
     return;
 }
 
+
+VOID DosBootsectorInitialize(VOID);
+
 static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
 {
     /*
-     * In real bioses one loads the bootsector read from a diskette
-     * or from a disk, to 0000:7C00 and then one runs it.
+     * In real BIOSes one loads the bootsector read from a diskette
+     * or from a disk, copy it to 0000:7C00 and then boot it.
      * Since we are 32-bit VM and we hardcode our DOS at the moment,
      * just call the DOS 32-bit initialization code.
      */
 
     DPRINT1("BiosBootstrapLoader -->\n");
+
+    /* Load DOS */
+    DosBootsectorInitialize();
+    /* Position CPU to 0000:7C00 to boot the OS */
+    setCS(0x0000);
+    setIP(0x7C00);
 
     DPRINT1("<-- BiosBootstrapLoader\n");
 }
@@ -510,36 +520,9 @@ static VOID InitializeBiosInt32(VOID)
     ((PULONG)BaseAddress)[0x49] = (ULONG)NULL;
 }
 
-static VOID InitializeBiosInfo(VOID)
-{
-    RtlZeroMemory(Bct, sizeof(*Bct));
-
-    Bct->Length     = sizeof(*Bct);
-    Bct->Model      = BIOS_MODEL;
-    Bct->SubModel   = BIOS_SUBMODEL;
-    Bct->Revision   = BIOS_REVISION;
-    Bct->Feature[0] = 0x70; // At the moment we don't support "wait for external event (INT 15/AH=41h)", we also don't have any "extended BIOS area allocated (usually at top of RAM)"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
-    Bct->Feature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
-    Bct->Feature[2] = 0x00;
-    Bct->Feature[3] = 0x00;
-    Bct->Feature[4] = 0x00;
-}
-
 static VOID InitializeBiosData(VOID)
 {
     UCHAR Low, High;
-
-    /* System BIOS Copyright */
-    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE000), BiosCopyright, sizeof(BiosCopyright)-1);
-
-    /* System BIOS Version */
-    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE080), BiosVersion, sizeof(BiosVersion)-1); // FIXME: or E061, or E100 ??
-
-    /* System BIOS Date */
-    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xFFF5), BiosDate, sizeof(BiosDate)-1);
-
-    /* System BIOS Model (same as Bct->Model) */
-    *(PBYTE)(SEG_OFF_TO_PTR(0xF000, 0xFFFE)) = BIOS_MODEL;
 
     /* Initialize the BDA contents */
     RtlZeroMemory(Bda, sizeof(*Bda));
@@ -556,14 +539,32 @@ static VOID InitializeBiosData(VOID)
     Bda->MemorySize = MAKEWORD(Low, High);
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+static VOID InitializeBiosInfo(VOID)
+{
+    RtlZeroMemory(Bct, sizeof(*Bct));
+
+    Bct->Length     = sizeof(*Bct);
+    Bct->Model      = BIOS_MODEL;
+    Bct->SubModel   = BIOS_SUBMODEL;
+    Bct->Revision   = BIOS_REVISION;
+    Bct->Feature[0] = 0x70; // At the moment we don't support "wait for external event (INT 15/AH=41h)", we also don't have any "extended BIOS area allocated (usually at top of RAM)"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
+    Bct->Feature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
+    Bct->Feature[2] = 0x00;
+    Bct->Feature[3] = 0x00;
+    Bct->Feature[4] = 0x00;
+}
+
+
 
 /*
  * The BIOS POST (Power On-Self Test)
  */
-BOOLEAN Bios32Initialize(VOID)
+VOID
+Bios32Post(VOID)
 {
     BOOLEAN Success;
+
+    DPRINT1("Bios32Post\n");
 
     /* Initialize the stack */
     // That's what says IBM... (stack at 30:00FF going downwards)
@@ -587,7 +588,13 @@ BOOLEAN Bios32Initialize(VOID)
 
     /* Initialize the Keyboard, Video and Mouse BIOS */
     if (!KbdBios32Initialize() || !VidBios32Initialize() || !MouseBios32Initialize())
-        return FALSE;
+    {
+        // return FALSE;
+
+        /* Stop the VDM */
+        EmulatorTerminate();
+        return;
+    }
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
@@ -597,9 +604,69 @@ BOOLEAN Bios32Initialize(VOID)
 
     SearchAndInitRoms(&BiosContext);
 
+    /*
+     * End of the 32-bit POST portion. We then fall back into 16-bit where
+     * the rest of the POST code is executed, typically calling INT 19h
+     * to boot up the OS.
+     */
+}
+
+static VOID WINAPI Bios32ResetBop(LPWORD Stack)
+{
+    DPRINT1("Bios32ResetBop\n");
+
+    /* Disable interrupts */
+    setIF(0);
+
+    // FIXME: Check the word at 0040h:0072h and do one of the following actions:
+    // - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del);
+    // - if the word is 0000h, perform a cold reboot (aka. Reset).
+
+    /* Initialize IVT and hardware */
+
+    /* Initialize the Keyboard and Video BIOS */
+    if (!KbdBiosInitialize() || !VidBiosInitialize())
+    {
+        /* Stop the VDM */
+        EmulatorTerminate();
+        return;
+    }
+
+    /* Do the POST */
+    Bios32Post();
+
+    /* Enable interrupts */
+    setIF(1);
+}
+
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+BOOLEAN Bios32Initialize(VOID)
+{
+    /*
+     * Initialize BIOS32 static data
+     */
+
     /* Bootstrap code */
     RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE05B), PostCode , sizeof(PostCode ));
     RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xFFF0), Bootstrap, sizeof(Bootstrap));
+
+    /* System BIOS Copyright */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE000), BiosCopyright, sizeof(BiosCopyright)-1);
+
+    /* System BIOS Version */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE080), BiosVersion, sizeof(BiosVersion)-1);
+    // FIXME: or E061, or E100 ??
+
+    /* System BIOS Date */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xFFF5), BiosDate, sizeof(BiosDate)-1);
+
+    /* System BIOS Model (same as Bct->Model) */
+    *(PBYTE)(SEG_OFF_TO_PTR(0xF000, 0xFFFE)) = BIOS_MODEL;
+
+    /* Redefine our POST function */
+    RegisterBop(BOP_RESET, Bios32ResetBop);
 
     /* We are done */
     return TRUE;
