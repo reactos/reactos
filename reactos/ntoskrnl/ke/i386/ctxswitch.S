@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/ctxswitch.S
  * PURPOSE:         Thread Context Switching
- * 
+ *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Gregor Anich (FPU Code)
  */
@@ -63,7 +63,7 @@ PUBLIC @KiSwitchThreads@8
     /* Load the new kernel stack and switch OS to new thread */
     mov esp, edx
     call @KiSwapContextExit@8
-    
+
     /* Now we're on the new thread. Return to the caller to restore registers */
     add esp, 2 * 4
     ret
