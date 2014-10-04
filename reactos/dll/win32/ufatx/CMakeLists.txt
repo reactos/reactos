@@ -7,9 +7,9 @@ list(APPEND SOURCE
 
 add_library(ufatx SHARED ${SOURCE})
 
-set_module_type(ufatx win32dll ENTRYPOINT 0 )
-
 target_link_libraries(ufatx vfatxlib)
+set_module_type(ufatx nativedll ENTRYPOINT 0 )
+
 add_importlibs(ufatx ntdll)
 
 add_dependencies(ufatx psdk)

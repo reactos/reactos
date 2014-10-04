@@ -518,7 +518,8 @@ function(set_module_type MODULE TYPE)
 
     # Set subsystem. Also take this as an occasion
     # to error out if someone gave a non existing type
-    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll) OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll) 
+            OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
         set(__subsystem native)
     elseif(${TYPE} STREQUAL win32cui)
         set(__subsystem console)
@@ -617,14 +618,16 @@ function(set_module_type MODULE TYPE)
         else()
             message(STATUS "${MODULE} has no base address")
         endif()
-    elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+    elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kernelmodedll))
         set_image_base(${MODULE} 0x00010000)
     endif()
 
     # Now do some stuff which is specific to each type
-    if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+    if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kernelmodedll))
         add_dependencies(${MODULE} bugcodes)
-        set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+        if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+            set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+        endif()
     endif()
 
     if(${TYPE} STREQUAL win32ocx)
