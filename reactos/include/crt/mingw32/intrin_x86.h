@@ -1504,6 +1504,7 @@ __INTRIN_INLINE void __int2c(void);
 __INTRIN_INLINE void _disable(void);
 __INTRIN_INLINE void _enable(void);
 __INTRIN_INLINE void __halt(void);
+__declspec(noreturn) __INTRIN_INLINE void __fastfail(unsigned int Code);
 
 #ifdef __clang__
 #define __debugbreak() __asm__("int $3")
@@ -1532,7 +1533,13 @@ __INTRIN_INLINE void _enable(void)
 
 __INTRIN_INLINE void __halt(void)
 {
-	__asm__("hlt\n\t" : : : "memory");
+	__asm__("hlt" : : : "memory");
+}
+
+__declspec(noreturn)
+__INTRIN_INLINE void __fastfail(unsigned int Code)
+{
+	__asm__("int $0x29" : : "c"(Code) : "memory");
 }
 
 /*** Protected memory management ***/
