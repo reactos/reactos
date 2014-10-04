@@ -709,10 +709,10 @@ CcRosCreateVacb (
     /* Create a virtual mapping for this memory area */
     MI_SET_USAGE(MI_USAGE_CACHE);
 #if MI_TRACE_PFNS
-    PWCHAR pos = NULL;
-    ULONG len = 0;
     if ((SharedCacheMap->FileObject) && (SharedCacheMap->FileObject->FileName.Buffer))
     {
+        PWCHAR pos = NULL;
+        ULONG len = 0;
         pos = wcsrchr(SharedCacheMap->FileObject->FileName.Buffer, '\\');
         len = wcslen(pos) * sizeof(WCHAR);
         if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);

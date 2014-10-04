@@ -181,10 +181,10 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     /* Some debug stuff */
     MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
 #if MI_TRACE_PFNS
-    PWCHAR pos = NULL;
-    ULONG len = 0;
     if (FileName->Buffer)
     {
+        PWCHAR pos = NULL;
+        ULONG len = 0;
         pos = wcsrchr(FileName->Buffer, '\\');
         len = wcslen(pos) * sizeof(WCHAR);
         if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
