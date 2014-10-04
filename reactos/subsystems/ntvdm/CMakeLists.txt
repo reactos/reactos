@@ -17,6 +17,7 @@ list(APPEND SOURCE
     cpu/bop.c
     cpu/callback.c
     cpu/cpu.c
+    cpu/registers.c
     hardware/cmos.c
     hardware/keyboard.c
     hardware/mouse.c
@@ -34,7 +35,6 @@ list(APPEND SOURCE
     emulator.c
     int32.c
     io.c
-    registers.c
     utils.c
     vddsup.c
     ntvdm.c

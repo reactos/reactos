@@ -11,23 +11,83 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "cpu/cpu.h"
+#include "cpu.h"
+#include "x86context.h"
+
+/* PRIVATE VARIABLES **********************************************************/
+
+// This structure must by synced with our CPU context
+X86CONTEXT IntelRegPtr;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID EmulatorSetStack(WORD Segment, DWORD Offset)
-{
-    Fast486SetStack(&EmulatorContext, Segment, Offset);
-}
-
-
 
 PVOID
 WINAPI
 getIntelRegistersPointer(VOID)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    /*
+     * Sync the Intel Registers x86 Context with our CPU context
+     */
+
+    if (IntelRegPtr.ContextFlags & CONTEXT_DEBUG_REGISTERS)
+    {
+        IntelRegPtr.Dr0 = EmulatorContext.DebugRegisters[FAST486_REG_DR0];
+        IntelRegPtr.Dr1 = EmulatorContext.DebugRegisters[FAST486_REG_DR1];
+        IntelRegPtr.Dr2 = EmulatorContext.DebugRegisters[FAST486_REG_DR2];
+        IntelRegPtr.Dr3 = EmulatorContext.DebugRegisters[FAST486_REG_DR3];
+        IntelRegPtr.Dr6 = EmulatorContext.DebugRegisters[FAST486_REG_DR6];
+        IntelRegPtr.Dr7 = EmulatorContext.DebugRegisters[FAST486_REG_DR7];
+    }
+
+    if (IntelRegPtr.ContextFlags & CONTEXT_FLOATING_POINT)
+    {
+        // IntelRegPtr.FloatSave = ;
+        IntelRegPtr.FloatSave.ControlWord   = EmulatorContext.FpuControl.Value;
+        IntelRegPtr.FloatSave.StatusWord    = EmulatorContext.FpuStatus.Value;
+        // IntelRegPtr.FloatSave.TagWord       = ;
+        // IntelRegPtr.FloatSave.ErrorOffset   = ;
+        // IntelRegPtr.FloatSave.ErrorSelector = ;
+        // IntelRegPtr.FloatSave.DataOffset    = ;
+        // IntelRegPtr.FloatSave.DataSelector  = ;
+        // IntelRegPtr.FloatSave.RegisterArea  = ; // This is a region of size SIZE_OF_80387_REGISTERS == 80 bytes
+        // IntelRegPtr.FloatSave.Cr0NpxState   = ;
+    }
+
+    if (IntelRegPtr.ContextFlags & CONTEXT_SEGMENTS)
+    {
+        IntelRegPtr.SegGs = EmulatorContext.SegmentRegs[FAST486_REG_GS].Selector;
+        IntelRegPtr.SegFs = EmulatorContext.SegmentRegs[FAST486_REG_FS].Selector;
+        IntelRegPtr.SegEs = EmulatorContext.SegmentRegs[FAST486_REG_ES].Selector;
+        IntelRegPtr.SegDs = EmulatorContext.SegmentRegs[FAST486_REG_DS].Selector;
+    }
+
+    if (IntelRegPtr.ContextFlags & CONTEXT_INTEGER)
+    {
+        IntelRegPtr.Edi = EmulatorContext.GeneralRegs[FAST486_REG_EDI].Long;
+        IntelRegPtr.Esi = EmulatorContext.GeneralRegs[FAST486_REG_ESI].Long;
+        IntelRegPtr.Ebx = EmulatorContext.GeneralRegs[FAST486_REG_EBX].Long;
+        IntelRegPtr.Edx = EmulatorContext.GeneralRegs[FAST486_REG_EDX].Long;
+        IntelRegPtr.Ecx = EmulatorContext.GeneralRegs[FAST486_REG_ECX].Long;
+        IntelRegPtr.Eax = EmulatorContext.GeneralRegs[FAST486_REG_EAX].Long;
+    }
+
+    if (IntelRegPtr.ContextFlags & CONTEXT_CONTROL)
+    {
+        IntelRegPtr.Ebp     = EmulatorContext.GeneralRegs[FAST486_REG_EBP].Long;
+        IntelRegPtr.Eip     = EmulatorContext.InstPtr.Long;
+        IntelRegPtr.SegCs   = EmulatorContext.SegmentRegs[FAST486_REG_CS].Selector;
+        IntelRegPtr.EFlags  = EmulatorContext.Flags.Long;
+        IntelRegPtr.Esp     = EmulatorContext.GeneralRegs[FAST486_REG_ESP].Long;
+        IntelRegPtr.SegSs   = EmulatorContext.SegmentRegs[FAST486_REG_SS].Selector;
+    }
+
+    if (IntelRegPtr.ContextFlags & CONTEXT_EXTENDED_REGISTERS)
+    {
+        // IntelRegPtr.ExtendedRegisters = ;
+    }
+
+    /* Return the address of the Intel Registers x86 Context */
+    return &IntelRegPtr;
 }
 
 ULONG
@@ -271,7 +331,7 @@ VOID
 WINAPI
 setESP(ULONG Value)
 {
-    EmulatorSetStack(getSS(), Value);
+    Fast486SetStack(&EmulatorContext, getSS(), Value);
 }
 
 USHORT
@@ -285,7 +345,7 @@ VOID
 WINAPI
 setSP(USHORT Value)
 {
-    EmulatorSetStack(getSS(), Value);
+    Fast486SetStack(&EmulatorContext, getSS(), Value);
 }
 
 

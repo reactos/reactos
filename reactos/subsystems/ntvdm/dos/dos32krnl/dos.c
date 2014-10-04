@@ -19,7 +19,6 @@
 #include "dos/dem.h"
 
 #include "bios/bios.h"
-#include "registers.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -1057,8 +1056,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             setES(Segment);
 
             /* Set the stack to the location from the header */
-            EmulatorSetStack(Segment + (sizeof(DOS_PSP) >> 4) + Header->e_ss,
-                             Header->e_sp);
+            setSS(Segment + (sizeof(DOS_PSP) >> 4) + Header->e_ss);
+            setSP(Header->e_sp);
 
             /* Execute */
             CurrentPsp = Segment;
@@ -1111,7 +1110,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             setES(Segment);
 
             /* Set the stack to the last word of the segment */
-            EmulatorSetStack(Segment, 0xFFFE);
+            setSS(Segment);
+            setSP(0xFFFE);
 
             /*
              * Set the value on the stack to 0, so that a near return
