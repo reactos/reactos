@@ -51,7 +51,7 @@ DeviceManager_ExecuteA(HWND hWndParent,
                        LPCSTR lpMachineName,
                        int nCmdShow)
 {
-  UNIMPLEMENTED;
+  FIXME("unimplemented\n");
   return FALSE;
 }
 
@@ -88,7 +88,7 @@ DeviceManager_ExecuteW(HWND hWndParent,
                        LPCWSTR lpMachineName,
                        int nCmdShow)
 {
-  UNIMPLEMENTED;
+  FIXME("unimplemented\n");
   return FALSE;
 }
 
@@ -127,7 +127,7 @@ DeviceProblemWizard_RunDLLA(HWND hWndParent,
                             LPCSTR lpDeviceCmd,
                             int nCmdShow)
 {
-  UNIMPLEMENTED;
+  FIXME("unimplemented\n");
 }
 
 
@@ -165,7 +165,7 @@ DeviceProblemWizard_RunDLLW(HWND hWndParent,
                             LPCWSTR lpDeviceCmd,
                             int nCmdShow)
 {
-  UNIMPLEMENTED;
+  FIXME("unimplemented\n");
 }
 
 
@@ -208,7 +208,7 @@ DeviceManagerPrintA(LPCSTR lpMachineName,
                     UINT uNumberOfGuids,
                     LPGUID lpGuids)
 {
-  UNIMPLEMENTED;
+  FIXME("unimplemented\n");
   return FALSE;
 }
 
@@ -252,6 +252,6 @@ DeviceManagerPrintW(LPCWSTR lpMachineName,
                     UINT uNumberOfGuids,
                     LPGUID lpGuids)
 {
-  UNIMPLEMENTED;
+  FIXME("unimplemented\n");
   return FALSE;
 }
