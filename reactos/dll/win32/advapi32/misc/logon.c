@@ -143,7 +143,6 @@ CreateProcessAsUserA(HANDLE hToken,
     /* Resume the main thread */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
     {
-        ERR("Resuming thread!\n");
         ResumeThread(lpProcessInformation->hThread);
     }
 
