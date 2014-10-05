@@ -1090,7 +1090,7 @@ pSetupCenterWindowRelativeToParent(HWND hwnd)
     posX = ((nOwnerWidth - nWindowWidth) / 2) + ptOrigin.x;
     posY = ((nOwnerHeight - nWindowHeight) / 2) + ptOrigin.y;
 
-    MoveWindow(hwnd, posX, posY, nWindowHeight, nWindowWidth, 0);
+    MoveWindow(hwnd, posX, posY, nWindowWidth, nWindowHeight, 0);
 }
 
 
