@@ -486,6 +486,7 @@ SetupDiGetClassImageListExW(
         HICON hIcon;
         DWORD size;
         INT i, bpp;
+        UINT idx;
 
         /* Get list of all class GUIDs in given computer */
         ret = SetupDiBuildClassInfoListExW(
@@ -587,6 +588,19 @@ SetupDiGetClassImageListExW(
             }
             else
                 list->IconIndexes[i] = -1; /* Special value to indicate that the icon is unavailable */
+        }
+
+        /* Finally, add the overlay icons to the image list */
+        for (i = 0; i < 2; i++)
+        {
+            hIcon = LoadImage(hInstance, MAKEINTRESOURCE(500 + i), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+            if (hIcon)
+            {
+                idx = ImageList_AddIcon(ClassImageListData->ImageList, hIcon);
+                if (idx != -1)
+                    ImageList_SetOverlayImage(ClassImageListData->ImageList, idx, i);
+                DestroyIcon(hIcon);
+            }
         }
 
         ret = TRUE;
