@@ -95,7 +95,7 @@ typedef struct
     BYTE Reserved5[2];                          // 0x90
     BYTE Reserved6[2];                          // 0x92
     BYTE Reserved7[2];                          // 0x94
-    WORD Reserved8;                             // 0x96
+    WORD KeybdStatusFlags;                      // 0x96
     DWORD Reserved9;                            // 0x98
     DWORD Reserved10;                           // 0x9c
     DWORD Reserved11[2];                        // 0xa0
