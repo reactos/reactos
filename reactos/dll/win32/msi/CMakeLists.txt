@@ -5,7 +5,7 @@ add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(msi.dll msi.spec ADD_IMPORTLIB WITH_RELAY)
+spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 
 generate_idl_iids(msiserver.idl)
 
