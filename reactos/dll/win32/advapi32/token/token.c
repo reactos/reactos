@@ -218,14 +218,19 @@ OpenProcessToken(HANDLE ProcessHandle,
 {
     NTSTATUS Status;
 
+    TRACE("%p, %x, %p.\n", ProcessHandle, DesiredAccess, TokenHandle);
+
     Status = NtOpenProcessToken(ProcessHandle,
                                 DesiredAccess,
                                 TokenHandle);
     if (!NT_SUCCESS(Status))
     {
+        ERR("NtOpenProcessToken failed! Status %08x.\n", Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
+
+    TRACE("Returning token %p.\n", *TokenHandle);
 
     return TRUE;
 }
@@ -297,6 +302,9 @@ DuplicateTokenEx(IN HANDLE ExistingTokenHandle,
     NTSTATUS Status;
     SECURITY_QUALITY_OF_SERVICE Sqos;
 
+    TRACE("%p 0x%08x 0x%08x 0x%08x %p\n", ExistingTokenHandle, dwDesiredAccess,
+        ImpersonationLevel, TokenType, DuplicateTokenHandle);
+
     Sqos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
     Sqos.ImpersonationLevel = ImpersonationLevel;
     Sqos.ContextTrackingMode = 0;
@@ -329,9 +337,12 @@ DuplicateTokenEx(IN HANDLE ExistingTokenHandle,
                               DuplicateTokenHandle);
     if (!NT_SUCCESS(Status))
     {
+        ERR("NtDuplicateToken failed: Status %08x\n", Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
+
+    TRACE("Returning token %p.\n", *DuplicateTokenHandle);
 
     return TRUE;
 }
