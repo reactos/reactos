@@ -5,7 +5,7 @@ add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(msi.dll msi.spec ADD_IMPORTLIB)
+spec2def(msi.dll msi.spec ADD_IMPORTLIB WITH_RELAY)
 
 generate_idl_iids(msiserver.idl)
 
@@ -51,12 +51,12 @@ list(APPEND SOURCE
     update.c
     upgrade.c
     where.c
-    msipriv.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
+    msipriv.h)
 
 add_library(msi SHARED
     ${SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c
     msi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
 
