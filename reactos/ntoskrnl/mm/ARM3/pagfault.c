@@ -906,7 +906,7 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     PMMPFN Pfn1;
     MMPTE TempPte;
     PMMPTE PointerToPteForProtoPage;
-    DPRINT1("Transition fault on 0x%p with PTE 0x%p in process %s\n",
+    DPRINT("Transition fault on 0x%p with PTE 0x%p in process %s\n",
             FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
 
     /* Windowss does this check */
@@ -923,7 +923,7 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
 
     /* Get the PFN and the PFN entry */
     PageFrameIndex = TempPte.u.Trans.PageFrameNumber;
-    DPRINT1("Transition PFN: %lx\n", PageFrameIndex);
+    DPRINT("Transition PFN: %lx\n", PageFrameIndex);
     Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
     /* One more transition fault! */
@@ -957,7 +957,7 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     if (Pfn1->u3.e1.PageLocation == ActiveAndValid)
     {
         /* All Windows does here is a bunch of sanity checks */
-        DPRINT1("Transition in active list\n");
+        DPRINT("Transition in active list\n");
         ASSERT((Pfn1->PteAddress >= MiAddressToPte(MmPagedPoolStart)) &&
                (Pfn1->PteAddress <= MiAddressToPte(MmPagedPoolEnd)));
         ASSERT(Pfn1->u2.ShareCount != 0);
@@ -966,7 +966,7 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     else
     {
         /* Otherwise, the page is removed from its list */
-        DPRINT1("Transition page in free/zero list\n");
+        DPRINT("Transition page in free/zero list\n");
         MiUnlinkPageFromList(Pfn1);
         MiReferenceUnusedPageAndBumpLockCount(Pfn1);
     }
