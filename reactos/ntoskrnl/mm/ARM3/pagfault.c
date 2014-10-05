@@ -82,7 +82,6 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     {
         /* We don't -- Windows would try to make this guard page valid now */
         DPRINT1("Close to our death...\n");
-        ASSERT(FALSE);
         return STATUS_STACK_OVERFLOW;
     }
 
