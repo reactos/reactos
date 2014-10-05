@@ -618,7 +618,8 @@ static VOID WINAPI Bios32ResetBop(LPWORD Stack)
     /* Disable interrupts */
     setIF(0);
 
-    // FIXME: Check the word at 0040h:0072h and do one of the following actions:
+    // FIXME: Check the word at 0040h:0072h (Bda->SoftReset) and do one of the
+    // following actions:
     // - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del);
     // - if the word is 0000h, perform a cold reboot (aka. Reset).
 
