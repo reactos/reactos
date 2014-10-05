@@ -6,45 +6,19 @@
 
 #pragma once
 
-typedef struct _REG_VALUE
-{
-  LIST_ENTRY ValueList;
-
-  /* value name */
-  ULONG NameSize;
-  PCHAR Name;
-
-  /* value data */
-  ULONG DataType;
-  ULONG DataSize;
-  PCHAR Data;
-} VALUE, *PVALUE;
-
-typedef struct _REG_KEY
+typedef struct _MEMKEY
 {
   LIST_ENTRY KeyList;
   LIST_ENTRY SubKeyList;
-  LIST_ENTRY ValueList;
-
-  ULONG SubKeyCount;
-  ULONG ValueCount;
-
-  /* default data */
-  ULONG DataType;
-  ULONG DataSize;
-  PCHAR Data;
 
   /* Information on hard disk structure */
   HCELL_INDEX KeyCellOffsetInParentHive;
   HCELL_INDEX KeyCellOffset;
   PCM_KEY_NODE KeyCell;
   PCMHIVE RegistryHive;
+} MEMKEY, *PMEMKEY;
 
-  /* Used when linking to another key */
-  struct _REG_KEY* LinkedKey;
-} KEY, *FRLDRHKEY, **PFRLDRHKEY, *MEMKEY, **PMEMKEY;
-
-#define HKEY_TO_MEMKEY(hKey) ((MEMKEY)(hKey))
+#define HKEY_TO_MEMKEY(hKey) ((PMEMKEY)(hKey))
 #define MEMKEY_TO_HKEY(memKey) ((HKEY)(memKey))
 
 extern CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
@@ -72,49 +46,6 @@ extern CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 #define REG_RESOURCE_LIST 8
 #define REG_FULL_RESOURCE_DESCRIPTOR 9
 #define REG_RESOURCE_REQUIREMENTS_LIST 10
-
-LONG WINAPI
-RegCreateKeyA(
-	IN HKEY hKey,
-	IN LPCSTR lpSubKey,
-	OUT PHKEY phkResult);
-
-LONG WINAPI
-RegOpenKeyA(
-	IN HKEY hKey,
-	IN LPCSTR lpSubKey,
-	OUT PHKEY phkResult);
-
-LONG WINAPI
-RegQueryValueExA(HKEY Key,
-	      LPCSTR ValueName,
-	      PULONG Reserved,
-	      PULONG Type,
-	      PUCHAR Data,
-	      PSIZE_T DataSize);
-
-LONG WINAPI
-RegSetValueExA(
-	IN HKEY hKey,
-	IN LPCSTR lpValueName OPTIONAL,
-	ULONG Reserved,
-	IN ULONG dwType,
-	IN const UCHAR* lpData,
-	IN ULONG cbData);
-
-LONG WINAPI
-RegDeleteValueA(HKEY Key,
-	       LPCSTR ValueName);
-
-LONG WINAPI
-RegDeleteKeyA(HKEY Key,
-	     LPCSTR Name);
-
-USHORT
-RegGetSubKeyCount (HKEY Key);
-
-ULONG
-RegGetValueCount (HKEY Key);
 
 VOID
 RegInitializeRegistry(VOID);

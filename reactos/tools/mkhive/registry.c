@@ -41,35 +41,27 @@
 #define REG_DATA_IN_OFFSET                 0x80000000
 
 static CMHIVE RootHive;
-static MEMKEY RootKey;
+static PMEMKEY RootKey;
 CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
 CMHIVE SamHive;      /* \Registry\Machine\SAM */
 CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
 CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
 CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 
-static MEMKEY
+static PMEMKEY
 CreateInMemoryStructure(
 	IN PCMHIVE RegistryHive,
 	IN HCELL_INDEX KeyCellOffset,
 	IN PCUNICODE_STRING KeyName)
 {
-	MEMKEY Key;
+	PMEMKEY Key;
 
-	Key = (MEMKEY) malloc (sizeof(KEY));
+	Key = (PMEMKEY) malloc (sizeof(MEMKEY));
 	if (!Key)
 		return NULL;
 
 	InitializeListHead (&Key->SubKeyList);
-	InitializeListHead (&Key->ValueList);
 	InitializeListHead (&Key->KeyList);
-
-	Key->SubKeyCount = 0;
-	Key->ValueCount = 0;
-
-	Key->DataType = 0;
-	Key->DataSize = 0;
-	Key->Data = NULL;
 
 	Key->RegistryHive = RegistryHive;
 	Key->KeyCellOffset = Key->KeyCellOffsetInParentHive = KeyCellOffset;
@@ -81,7 +73,6 @@ CreateInMemoryStructure(
 	}
 	Key->KeyCell->SubKeyLists[Stable] = HCELL_NIL;
 	Key->KeyCell->SubKeyLists[Volatile] = HCELL_NIL;
-	Key->LinkedKey = NULL;
 	return Key;
 }
 
@@ -96,8 +87,8 @@ RegpOpenOrCreateKey(
 	PWSTR End;
 	UNICODE_STRING KeyString;
 	NTSTATUS Status;
-	MEMKEY ParentKey;
-	MEMKEY CurrentKey;
+	PMEMKEY ParentKey;
+	PMEMKEY CurrentKey;
 	PLIST_ENTRY Ptr;
 	PCM_KEY_NODE SubKeyCell;
 	HCELL_INDEX BlockOffset;
@@ -163,7 +154,7 @@ RegpOpenOrCreateKey(
 			Ptr = ParentKey->SubKeyList.Flink;
 			while (Ptr != &ParentKey->SubKeyList)
 			{
-				CurrentKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
+				CurrentKey = CONTAINING_RECORD(Ptr, MEMKEY, KeyList);
 				if (CurrentKey->KeyCellOffsetInParentHive == BlockOffset)
 				{
 					goto nextsubkey;
@@ -196,7 +187,6 @@ RegpOpenOrCreateKey(
 					return ERROR_OUTOFMEMORY;
 				/* Add CurrentKey in ParentKey */
 				InsertTailList(&ParentKey->SubKeyList, &CurrentKey->KeyList);
-				ParentKey->SubKeyCount++;
 			}
 		}
 		if (!NT_SUCCESS(Status))
@@ -237,24 +227,6 @@ MultiByteToWideChar(
 	if (!NT_SUCCESS(Status))
 		return NULL;
 	return Destination.Buffer;
-}
-
-LONG WINAPI
-RegCreateKeyA(
-	IN HKEY hKey,
-	IN LPCSTR lpSubKey,
-	OUT PHKEY phkResult)
-{
-	PWSTR lpSubKeyW;
-	LONG rc;
-
-	lpSubKeyW = MultiByteToWideChar(lpSubKey);
-	if (!lpSubKeyW)
-		return ERROR_OUTOFMEMORY;
-
-	rc = RegCreateKeyW(hKey, lpSubKeyW, phkResult);
-	free(lpSubKeyW);
-	return rc;
 }
 
 LONG WINAPI
@@ -327,7 +299,7 @@ RegpOpenOrCreateValue(
 	OUT PCM_KEY_VALUE *ValueCell,
 	OUT PHCELL_INDEX ValueCellOffset)
 {
-	MEMKEY ParentKey;
+	PMEMKEY ParentKey;
 	UNICODE_STRING ValueString;
 	NTSTATUS Status;
 
@@ -364,7 +336,7 @@ RegSetValueExW(
 	IN const UCHAR* lpData,
 	IN USHORT cbData)
 {
-	MEMKEY Key, DestKey;
+	PMEMKEY Key, DestKey;
 	PHKEY phKey;
 	PCM_KEY_VALUE ValueCell;
 	HCELL_INDEX ValueCellOffset;
@@ -380,10 +352,6 @@ RegSetValueExW(
 		phKey = (PHKEY)lpData;
 		Key = HKEY_TO_MEMKEY(hKey);
 		DestKey = HKEY_TO_MEMKEY(*phKey);
-
-		/* Create the link in memory */
-		Key->DataType = REG_LINK;
-		Key->LinkedKey = DestKey;
 
 		/* Create the link in registry hive (if applicable) */
 		if (Key->RegistryHive != DestKey->RegistryHive)
@@ -470,59 +438,6 @@ RegSetValueExW(
 }
 
 LONG WINAPI
-RegSetValueExA(
-	IN HKEY hKey,
-	IN LPCSTR lpValueName OPTIONAL,
-	IN ULONG Reserved,
-	IN ULONG dwType,
-	IN const UCHAR* lpData,
-	IN ULONG cbData)
-{
-	LPWSTR lpValueNameW = NULL;
-	const UCHAR* lpDataW;
-	USHORT cbDataW;
-	LONG rc = ERROR_SUCCESS;
-
-	DPRINT("RegSetValueA(%s)\n", lpValueName);
-	if (lpValueName)
-	{
-		lpValueNameW = MultiByteToWideChar(lpValueName);
-		if (!lpValueNameW)
-			return ERROR_OUTOFMEMORY;
-	}
-
-	if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
-	 && cbData != 0)
-	{
-		ANSI_STRING AnsiString;
-		UNICODE_STRING Data;
-
-		if (lpData[cbData - 1] != '\0')
-			cbData++;
-		RtlInitAnsiString(&AnsiString, NULL);
-		AnsiString.Buffer = (PSTR)lpData;
-		AnsiString.Length = (USHORT)cbData - 1;
-		AnsiString.MaximumLength = (USHORT)cbData;
-		RtlAnsiStringToUnicodeString (&Data, &AnsiString, TRUE);
-		lpDataW = (const UCHAR*)Data.Buffer;
-		cbDataW = Data.MaximumLength;
-	}
-	else
-	{
-		lpDataW = lpData;
-		cbDataW = (USHORT)cbData;
-	}
-
-	if (rc == ERROR_SUCCESS)
-		rc = RegSetValueExW(hKey, lpValueNameW, 0, dwType, lpDataW, cbDataW);
-	if (lpValueNameW)
-		free(lpValueNameW);
-	if (lpData != lpDataW)
-		free((PVOID)lpDataW);
-	return rc;
-}
-
-LONG WINAPI
 RegQueryValueExW(
 	IN HKEY hKey,
 	IN LPCWSTR lpValueName,
@@ -552,58 +467,12 @@ RegQueryValueExW(
 }
 
 LONG WINAPI
-RegQueryValueExA(
-	IN HKEY hKey,
-	IN LPCSTR lpValueName,
-	IN PULONG lpReserved,
-	OUT PULONG lpType,
-	OUT PUCHAR lpData,
-	OUT PSIZE_T lpcbData)
-{
-	LPWSTR lpValueNameW = NULL;
-	LONG rc;
-
-	if (lpValueName)
-	{
-		lpValueNameW = MultiByteToWideChar(lpValueName);
-		if (!lpValueNameW)
-			return ERROR_OUTOFMEMORY;
-	}
-
-	rc = RegQueryValueExW(hKey, lpValueNameW, lpReserved, lpType, lpData, lpcbData);
-	if (lpValueNameW)
-		free(lpValueNameW);
-	return rc;
-}
-
-LONG WINAPI
 RegDeleteValueW(
 	IN HKEY hKey,
 	IN LPCWSTR lpValueName OPTIONAL)
 {
 	DPRINT1("RegDeleteValueW() unimplemented\n");
 	return ERROR_UNSUCCESSFUL;
-}
-
-LONG WINAPI
-RegDeleteValueA(
-	IN HKEY hKey,
-	IN LPCSTR lpValueName OPTIONAL)
-{
-	LPWSTR lpValueNameW;
-	LONG rc;
-
-	if (lpValueName)
-	{
-		lpValueNameW = MultiByteToWideChar(lpValueName);
-		if (!lpValueNameW)
-			return ERROR_OUTOFMEMORY;
-		rc = RegDeleteValueW(hKey, lpValueNameW);
-		free(lpValueNameW);
-	}
-	else
-		rc = RegDeleteValueW(hKey, NULL);
-	return rc;
 }
 
 static BOOL
@@ -613,7 +482,7 @@ ConnectRegistry(
 	IN LPCWSTR Path)
 {
 	NTSTATUS Status;
-	MEMKEY NewKey;
+	PMEMKEY NewKey;
 	LONG rc;
 
 	Status = CmiInitializeTempHive(HiveToConnect);
