@@ -46,6 +46,15 @@ typedef struct _MAIN_WND_INFO
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
 
+typedef struct _DEVCLASS_ENTRY
+{
+    GUID ClassGuid;
+    INT ClassImage;
+    BOOL bUsed;
+    HTREEITEM hItem;
+} DEVCLASS_ENTRY, *PDEVCLASS_ENTRY;
+
+
 INT_PTR CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 
