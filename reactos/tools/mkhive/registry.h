@@ -6,15 +6,19 @@
 
 #pragma once
 
+typedef struct _REPARSE_POINT
+{
+    LIST_ENTRY ListEntry;
+    PCMHIVE SourceHive;
+    HCELL_INDEX SourceKeyCellOffset;
+    PCMHIVE DestinationHive;
+    HCELL_INDEX DestinationKeyCellOffset;
+} REPARSE_POINT, *PREPARSE_POINT;
+
 typedef struct _MEMKEY
 {
-  LIST_ENTRY KeyList;
-  LIST_ENTRY SubKeyList;
-
   /* Information on hard disk structure */
-  HCELL_INDEX KeyCellOffsetInParentHive;
   HCELL_INDEX KeyCellOffset;
-  PCM_KEY_NODE KeyCell;
   PCMHIVE RegistryHive;
 } MEMKEY, *PMEMKEY;
 

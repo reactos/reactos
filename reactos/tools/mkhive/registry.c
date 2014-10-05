@@ -51,8 +51,7 @@ CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 static PMEMKEY
 CreateInMemoryStructure(
 	IN PCMHIVE RegistryHive,
-	IN HCELL_INDEX KeyCellOffset,
-	IN PCUNICODE_STRING KeyName)
+	IN HCELL_INDEX KeyCellOffset)
 {
 	PMEMKEY Key;
 
@@ -60,54 +59,50 @@ CreateInMemoryStructure(
 	if (!Key)
 		return NULL;
 
-	InitializeListHead (&Key->SubKeyList);
-	InitializeListHead (&Key->KeyList);
-
 	Key->RegistryHive = RegistryHive;
-	Key->KeyCellOffset = Key->KeyCellOffsetInParentHive = KeyCellOffset;
-	Key->KeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
-	if (!Key->KeyCell)
-	{
-		free(Key);
-		return NULL;
-	}
-	Key->KeyCell->SubKeyLists[Stable] = HCELL_NIL;
-	Key->KeyCell->SubKeyLists[Volatile] = HCELL_NIL;
+	Key->KeyCellOffset = KeyCellOffset;
 	return Key;
 }
+
+LIST_ENTRY CmiReparsePointsHead;
 
 static LONG
 RegpOpenOrCreateKey(
 	IN HKEY hParentKey,
 	IN PCWSTR KeyName,
 	IN BOOL AllowCreation,
+	IN BOOL Volatile,
 	OUT PHKEY Key)
 {
 	PWSTR LocalKeyName;
 	PWSTR End;
 	UNICODE_STRING KeyString;
 	NTSTATUS Status;
-	PMEMKEY ParentKey;
+	PREPARSE_POINT CurrentReparsePoint;
 	PMEMKEY CurrentKey;
+	PCMHIVE ParentRegistryHive;
+	HCELL_INDEX ParentCellOffset;
 	PLIST_ENTRY Ptr;
 	PCM_KEY_NODE SubKeyCell;
 	HCELL_INDEX BlockOffset;
-	BOOLEAN ParentIsSystem = FALSE;
 
 	DPRINT("RegpCreateOpenKey('%S')\n", KeyName);
 
 	if (*KeyName == L'\\')
 	{
 		KeyName++;
-		ParentKey = RootKey;
+		ParentRegistryHive = RootKey->RegistryHive;
+		ParentCellOffset = RootKey->KeyCellOffset;
 	}
 	else if (hParentKey == NULL)
 	{
-		ParentKey = RootKey;
+		ParentRegistryHive = RootKey->RegistryHive;
+		ParentCellOffset = RootKey->KeyCellOffset;
 	}
 	else
 	{
-		ParentKey = HKEY_TO_MEMKEY(RootKey);
+		ParentRegistryHive = HKEY_TO_MEMKEY(RootKey)->RegistryHive;
+		ParentCellOffset = HKEY_TO_MEMKEY(RootKey)->KeyCellOffset;
 	}
 
 	LocalKeyName = (PWSTR)KeyName;
@@ -130,77 +125,55 @@ RegpOpenOrCreateKey(
 			}
 		}
 
-		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!strncmpiW(LocalKeyName, L"CurrentControlSet", 17) && ParentIsSystem)
-		{
-			RtlInitUnicodeString(&KeyString, L"ControlSet001");
-			ParentIsSystem = FALSE;
-		}
-		else
-		{
-			ParentIsSystem = (strncmpiW(LocalKeyName, L"SYSTEM", 6) == 0);
-		}
-
 		Status = CmiScanForSubKey(
-			ParentKey->RegistryHive,
-			ParentKey->KeyCell,
+			ParentRegistryHive,
+			ParentCellOffset,
 			&KeyString,
 			OBJ_CASE_INSENSITIVE,
 			&SubKeyCell,
 			&BlockOffset);
 		if (NT_SUCCESS(Status))
 		{
-			/* Check subkey in memory structure */
-			Ptr = ParentKey->SubKeyList.Flink;
-			while (Ptr != &ParentKey->SubKeyList)
+			/* Search for a possible reparse point */
+			Ptr = CmiReparsePointsHead.Flink;
+			while (Ptr != &CmiReparsePointsHead)
 			{
-				CurrentKey = CONTAINING_RECORD(Ptr, MEMKEY, KeyList);
-				if (CurrentKey->KeyCellOffsetInParentHive == BlockOffset)
+				CurrentReparsePoint = CONTAINING_RECORD(Ptr, REPARSE_POINT, ListEntry);
+				if (CurrentReparsePoint->SourceHive == ParentRegistryHive &&
+				    CurrentReparsePoint->SourceKeyCellOffset == BlockOffset)
 				{
-					goto nextsubkey;
+					ParentRegistryHive = CurrentReparsePoint->DestinationHive;
+					BlockOffset = CurrentReparsePoint->DestinationKeyCellOffset;
+					break;
 				}
-
 				Ptr = Ptr->Flink;
 			}
-			/* If we go there, this means that key exists, but we don't know it */
-			ASSERT(FALSE);
 		}
-
-		if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)
+		else if (Status == STATUS_OBJECT_NAME_NOT_FOUND && AllowCreation)
 		{
 			Status = CmiAddSubKey(
-				ParentKey->RegistryHive,
-				ParentKey->KeyCell,
-				ParentKey->KeyCellOffset,
+				ParentRegistryHive,
+				ParentCellOffset,
 				&KeyString,
-				0,
+				Volatile ? REG_OPTION_VOLATILE : 0,
 				&SubKeyCell,
 				&BlockOffset);
-			if (NT_SUCCESS(Status))
-			{
-				/* Now, SubKeyCell/BlockOffset are valid */
-				CurrentKey = CreateInMemoryStructure(
-					ParentKey->RegistryHive,
-					BlockOffset,
-					&KeyString);
-				if (!CurrentKey)
-					return ERROR_OUTOFMEMORY;
-				/* Add CurrentKey in ParentKey */
-				InsertTailList(&ParentKey->SubKeyList, &CurrentKey->KeyList);
-			}
 		}
 		if (!NT_SUCCESS(Status))
 			return ERROR_UNSUCCESSFUL;
 
 nextsubkey:
-		ParentKey = CurrentKey;
+		ParentCellOffset = BlockOffset;
 		if (End)
 			LocalKeyName = End + 1;
 		else
 			break;
 	}
 
-	*Key = MEMKEY_TO_HKEY(ParentKey);
+	CurrentKey = CreateInMemoryStructure(ParentRegistryHive, ParentCellOffset);
+	if (!CurrentKey)
+		return ERROR_OUTOFMEMORY;
+	*Key = MEMKEY_TO_HKEY(CurrentKey);
 
 	return ERROR_SUCCESS;
 }
@@ -211,7 +184,7 @@ RegCreateKeyW(
 	IN LPCWSTR lpSubKey,
 	OUT PHKEY phkResult)
 {
-	return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, phkResult);
+	return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, FALSE, phkResult);
 }
 
 static PWSTR
@@ -270,7 +243,26 @@ RegOpenKeyW(
 	IN LPCWSTR lpSubKey,
 	OUT PHKEY phkResult)
 {
-	return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, phkResult);
+	return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
+}
+
+LONG WINAPI
+RegCreateKeyExW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    IN DWORD Reserved,
+    IN LPWSTR lpClass OPTIONAL,
+    IN DWORD dwOptions,
+    IN REGSAM samDesired,
+    IN LPSECURITY_ATTRIBUTES lpSecurityAttributes OPTIONAL,
+    OUT PHKEY phkResult,
+    OUT LPDWORD lpdwDisposition OPTIONAL)
+{
+    return RegpOpenOrCreateKey(hKey,
+                               lpSubKey,
+                               TRUE,
+                               (dwOptions & REG_OPTION_VOLATILE) != 0,
+                               phkResult);
 }
 
 LONG WINAPI
@@ -308,7 +300,7 @@ RegpOpenOrCreateValue(
 
 	Status = CmiScanForValueKey(
 		ParentKey->RegistryHive,
-		ParentKey->KeyCell,
+		ParentKey->KeyCellOffset,
 		&ValueString,
 		ValueCell,
 		ValueCellOffset);
@@ -316,7 +308,6 @@ RegpOpenOrCreateValue(
 	{
 		Status = CmiAddValueKey(
 			ParentKey->RegistryHive,
-			ParentKey->KeyCell,
 			ParentKey->KeyCellOffset,
 			&ValueString,
 			ValueCell,
@@ -428,9 +419,6 @@ RegSetValueExW(
 		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
 	}
 
-    if (cbData > Key->KeyCell->MaxValueDataLen)
-        Key->KeyCell->MaxValueDataLen = cbData;
-
 	HvMarkCellDirty(&Key->RegistryHive->Hive, Key->KeyCellOffset, FALSE);
 
 	DPRINT("Return status 0x%08x\n", Status);
@@ -482,27 +470,46 @@ ConnectRegistry(
 	IN LPCWSTR Path)
 {
 	NTSTATUS Status;
+	PREPARSE_POINT ReparsePoint;
 	PMEMKEY NewKey;
 	LONG rc;
+
+	ReparsePoint = (PREPARSE_POINT)malloc(sizeof(REPARSE_POINT));
+	if (!ReparsePoint)
+		return FALSE;
 
 	Status = CmiInitializeTempHive(HiveToConnect);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT1("CmiInitializeTempHive() failed with status 0x%08x\n", Status);
+		free(ReparsePoint);
 		return FALSE;
 	}
 
 	/* Create key */
-	rc = RegCreateKeyW(
+	rc = RegCreateKeyExW(
 		RootKey,
 		Path,
-		(PHKEY)&NewKey);
+                0,
+                NULL,
+                REG_OPTION_VOLATILE,
+                0,
+                NULL,
+		(PHKEY)&NewKey,
+                NULL);
 	if (rc != ERROR_SUCCESS)
+	{
+		free(ReparsePoint);
 		return FALSE;
+	}
 
+	ReparsePoint->SourceHive = NewKey->RegistryHive;
+	ReparsePoint->SourceKeyCellOffset = NewKey->KeyCellOffset;
 	NewKey->RegistryHive = HiveToConnect;
 	NewKey->KeyCellOffset = HiveToConnect->Hive.BaseBlock->RootCell;
-	NewKey->KeyCell = (PCM_KEY_NODE)HvGetCell (&HiveToConnect->Hive, NewKey->KeyCellOffset);
+	ReparsePoint->DestinationHive = NewKey->RegistryHive;
+	ReparsePoint->DestinationKeyCellOffset = NewKey->KeyCellOffset;
+	InsertTailList(&CmiReparsePointsHead, &ReparsePoint->ListEntry);
 	return TRUE;
 }
 
@@ -513,9 +520,11 @@ RegInitializeRegistry(VOID)
 {
 	UNICODE_STRING RootKeyName = RTL_CONSTANT_STRING(L"\\");
 	NTSTATUS Status;
-	HKEY ControlSetKey;
+	PMEMKEY ControlSetKey, CurrentControlSetKey;
+	PREPARSE_POINT ReparsePoint;
 
 	InitializeListHead(&CmiHiveListHead);
+	InitializeListHead(&CmiReparsePointsHead);
 
 	Status = CmiInitializeTempHive(&RootHive);
 	if (!NT_SUCCESS(Status))
@@ -526,8 +535,7 @@ RegInitializeRegistry(VOID)
 
 	RootKey = CreateInMemoryStructure(
 		&RootHive,
-		RootHive.Hive.BaseBlock->RootCell,
-		&RootKeyName);
+		RootHive.Hive.BaseBlock->RootCell);
 
 	/* Create DEFAULT key */
 	ConnectRegistry(
@@ -563,7 +571,27 @@ RegInitializeRegistry(VOID)
 	RegCreateKeyW(
 		NULL,
 		L"Registry\\Machine\\SYSTEM\\ControlSet001",
-		&ControlSetKey);
+		(HKEY*)&ControlSetKey);
+
+	/* Create 'CurrentControlSet' key */
+	RegCreateKeyExW(
+		NULL,
+		L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
+		0,
+		NULL,
+		REG_OPTION_VOLATILE,
+		0,
+		NULL,
+		(HKEY*)&CurrentControlSetKey,
+		NULL);
+
+	/* Connect 'CurrentControlSet' to 'ControlSet001' */
+	ReparsePoint = (PREPARSE_POINT)malloc(sizeof(REPARSE_POINT));
+	ReparsePoint->SourceHive = CurrentControlSetKey->RegistryHive;
+	ReparsePoint->SourceKeyCellOffset = CurrentControlSetKey->KeyCellOffset;
+	ReparsePoint->DestinationHive = ControlSetKey->RegistryHive;
+	ReparsePoint->DestinationKeyCellOffset = ControlSetKey->KeyCellOffset;
+	InsertTailList(&CmiReparsePointsHead, &ReparsePoint->ListEntry);
 }
 
 VOID

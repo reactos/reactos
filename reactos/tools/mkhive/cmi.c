@@ -330,16 +330,19 @@ CmiCreateSubKey(
 NTSTATUS
 CmiAddSubKey(
 	IN PCMHIVE RegistryHive,
-	IN PCM_KEY_NODE ParentKeyCell,
 	IN HCELL_INDEX ParentKeyCellOffset,
 	IN PCUNICODE_STRING SubKeyName,
 	IN ULONG CreateOptions,
 	OUT PCM_KEY_NODE *pSubKeyCell,
 	OUT HCELL_INDEX *pBlockOffset)
 {
+	PCM_KEY_NODE ParentKeyCell;
 	HCELL_INDEX NKBOffset;
 	NTSTATUS Status;
 
+	ParentKeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, ParentKeyCellOffset);
+	if (!ParentKeyCell)
+		return STATUS_UNSUCCESSFUL;
 	VERIFY_KEY_CELL(ParentKeyCell);
 
 	/* Create the new key */
@@ -396,18 +399,22 @@ CmiCompareHashI(
 NTSTATUS
 CmiScanForSubKey(
 	IN PCMHIVE RegistryHive,
-	IN PCM_KEY_NODE KeyCell,
+	IN HCELL_INDEX ParentKeyCellOffset,
 	IN PCUNICODE_STRING SubKeyName,
 	IN ULONG Attributes,
 	OUT PCM_KEY_NODE *pSubKeyCell,
 	OUT HCELL_INDEX *pBlockOffset)
 {
+	PCM_KEY_NODE KeyCell;
 	PCM_KEY_FAST_INDEX HashBlock;
 	PCM_KEY_NODE CurSubKeyCell;
 	BOOLEAN CaseInsensitive;
 	ULONG Storage;
 	ULONG i;
 
+	KeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, ParentKeyCellOffset);
+	if (!KeyCell)
+		return STATUS_UNSUCCESSFUL;
 	VERIFY_KEY_CELL(KeyCell);
 
 	ASSERT(RegistryHive);
@@ -528,13 +535,13 @@ CmiAllocateValueCell(
 NTSTATUS
 CmiAddValueKey(
 	IN PCMHIVE RegistryHive,
-	IN PCM_KEY_NODE KeyCell,
 	IN HCELL_INDEX KeyCellOffset,
 	IN PCUNICODE_STRING ValueName,
 	OUT PCM_KEY_VALUE *pValueCell,
 	OUT HCELL_INDEX *pValueCellOffset)
 {
 	PVALUE_LIST_CELL ValueListCell;
+	PCM_KEY_NODE KeyCell;
 	PCM_KEY_VALUE NewValueCell;
 	HCELL_INDEX ValueListCellOffset;
 	HCELL_INDEX NewValueCellOffset;
@@ -542,6 +549,9 @@ CmiAddValueKey(
 	HSTORAGE_TYPE Storage;
 	NTSTATUS Status;
 
+	KeyCell = HvGetCell(&RegistryHive->Hive, KeyCellOffset);
+	if (!KeyCell)
+		return STATUS_UNSUCCESSFUL;
 	Storage = (KeyCell->Flags & KEY_IS_VOLATILE) ? Volatile : Stable;
 	if (KeyCell->ValueList.List == HCELL_NIL)
 	{
@@ -614,15 +624,19 @@ CmiAddValueKey(
 NTSTATUS
 CmiScanForValueKey(
 	IN PCMHIVE RegistryHive,
-	IN PCM_KEY_NODE KeyCell,
+	IN HCELL_INDEX KeyCellOffset,
 	IN PCUNICODE_STRING ValueName,
 	OUT PCM_KEY_VALUE *pValueCell,
 	OUT HCELL_INDEX *pValueCellOffset)
 {
+	PCM_KEY_NODE KeyCell;
 	PVALUE_LIST_CELL ValueListCell;
 	PCM_KEY_VALUE CurValueCell;
 	ULONG i;
 
+	KeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, KeyCellOffset);
+	if (!KeyCell)
+		return STATUS_UNSUCCESSFUL;
 	*pValueCell = NULL;
 	*pValueCellOffset = HCELL_NIL;
 

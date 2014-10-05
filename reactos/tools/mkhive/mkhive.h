@@ -52,6 +52,9 @@ unsigned char BitScanReverse(ULONG * const Index, unsigned long Mask);
 #define BitScanReverse64 _BitScanReverse64
 #endif
 
+typedef DWORD REGSAM;
+typedef LPVOID LPSECURITY_ATTRIBUTES;
+
 NTSTATUS NTAPI
 RtlAnsiStringToUnicodeString(
     IN OUT PUNICODE_STRING UniDest,
