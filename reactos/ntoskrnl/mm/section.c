@@ -1763,7 +1763,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     }
 
     MmDeleteRmap(OldPage, Process, PAddress);
-    MmDeleteVirtualMapping(Process, PAddress, FALSE, NULL, NULL);
+    MmDeleteVirtualMapping(Process, PAddress, NULL, NULL);
     MmCreatePageFileMapping(Process, PAddress, MM_WAIT_ENTRY);
 
     /*
@@ -1836,7 +1836,6 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 
     MmDeleteVirtualMapping(Process,
                            Address,
-                           FALSE,
                            &WasDirty,
                            &Page);
     if (WasDirty)

@@ -771,7 +771,7 @@ MmFreeCacheSectionPage(PVOID Context,
         DPRINT("Removing page %p:%I64x -> %x\n", Segment, Offset.QuadPart, Entry);
         MmSetSavedSwapEntryPage(Page, 0);
         MmDeleteRmap(Page, Process, Address);
-        MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
+        MmDeleteVirtualMapping(Process, Address, NULL, NULL);
         MmReleasePageMemoryConsumer(MC_CACHE, Page);
     }
     if (SwapEntry != 0)

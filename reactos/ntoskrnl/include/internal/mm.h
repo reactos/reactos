@@ -1158,7 +1158,6 @@ NTAPI
 MmDeleteVirtualMapping(
     struct _EPROCESS *Process,
     PVOID Address,
-    BOOLEAN FreePage,
     BOOLEAN* WasDirty,
     PPFN_NUMBER Page
 );

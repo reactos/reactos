@@ -451,7 +451,6 @@ NTAPI
 MmDeleteVirtualMapping(
     PEPROCESS Process,
     PVOID Address,
-    BOOLEAN FreePage,
     BOOLEAN* WasDirty,
     PPFN_NUMBER Page)
 {
@@ -469,9 +468,6 @@ MmDeleteVirtualMapping(
         if (OldPte.u.Hard.Valid)
         {
             Pfn = OldPte.u.Hard.PageFrameNumber;
-
-            //if (FreePage)
-                //MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
         }
         else
             Pfn = 0;
