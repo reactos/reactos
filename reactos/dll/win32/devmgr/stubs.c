@@ -18,8 +18,6 @@
 
 #include <windef.h>
 
-#define NDEBUG
-#include <debug.h>
 
 /***************************************************************************
  * NAME                                                         EXPORTED

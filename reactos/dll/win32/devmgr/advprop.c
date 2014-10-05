@@ -31,8 +31,6 @@
 
 #include <winver.h>
 
-#define NDEBUG
-#include <debug.h>
 
 static UINT WINAPI
 EnumDeviceDriverFilesCallback(IN PVOID Context,
@@ -440,14 +438,14 @@ UpdateDriver(
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
     {
-        DPRINT("OpenProcessToken failed\n");
+        ERR("OpenProcessToken failed\n");
         return;
     }
 
     /* Get the LUID for the Shutdown privilege */
     if (!LookupPrivilegeValueW(NULL, SE_SHUTDOWN_NAME, &Privileges.Privileges[0].Luid))
     {
-        DPRINT("LookupPrivilegeValue failed\n");
+        ERR("LookupPrivilegeValue failed\n");
         CloseHandle(hToken);
         return;
     }
@@ -458,7 +456,7 @@ UpdateDriver(
 
     if (!AdjustTokenPrivileges(hToken, FALSE, &Privileges, 0, NULL, NULL))
     {
-        DPRINT("AdjustTokenPrivileges failed\n");
+        ERR("AdjustTokenPrivileges failed\n");
         CloseHandle(hToken);
         return;
     }
@@ -466,7 +464,7 @@ UpdateDriver(
     /* Finally shut down the system */
     if (!ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED))
     {
-        DPRINT("ExitWindowsEx failed\n");
+        ERR("ExitWindowsEx failed\n");
         CloseHandle(hToken);
     }
 }
@@ -1587,8 +1585,8 @@ ApplyGeneralSettings(IN HWND hwndDlg,
         else
         {
             /* FIXME - display an error message */
-            DPRINT1("Failed to enable/disable device! LastError: %d\n",
-                    GetLastError());
+            FIXME("Failed to enable/disable device! LastError: %d\n",
+                  GetLastError());
         }
     }
     else
@@ -2411,7 +2409,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                        0,
                                        &DevIdSize))
         {
-            DPRINT1("SetupDiGetDeviceInstanceId unexpectedly returned TRUE!\n");
+            ERR("SetupDiGetDeviceInstanceId unexpectedly returned TRUE!\n");
             return -1;
         }
 
@@ -2903,7 +2901,7 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 
     if (dwFlags & ~(DPF_EXTENDED | DPF_DEVICE_STATUS_ACTION))
     {
-        DPRINT1("DevPropertiesExW: Invalid flags: 0x%x\n",
+        FIXME("DevPropertiesExW: Invalid flags: 0x%x\n",
                 dwFlags & ~(DPF_EXTENDED | DPF_DEVICE_STATUS_ACTION));
         SetLastError(ERROR_INVALID_FLAGS);
         return -1;
@@ -2911,7 +2909,7 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 
     if (bShowDevMgr)
     {
-        DPRINT("DevPropertiesExW doesn't support bShowDevMgr!\n");
+        FIXME("DevPropertiesExW doesn't support bShowDevMgr!\n");
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     }
     else
@@ -3132,7 +3130,7 @@ DeviceProperties_RunDLLW(HWND hWndParent,
                                   szDeviceID,
                                   szMachineName))
     {
-        DPRINT1("DeviceProperties_RunDLLW DeviceID: %S, MachineName: %S\n", szDeviceID, szMachineName);
+        ERR("DeviceProperties_RunDLLW DeviceID: %S, MachineName: %S\n", szDeviceID, szMachineName);
         return;
     }
 

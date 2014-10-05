@@ -27,8 +27,6 @@
 
 #include "precomp.h"
 
-#define NDEBUG
-#include <debug.h>
 
 HINSTANCE hDllInstance = NULL;
 
@@ -954,7 +952,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                                        DeviceInfoData,
                                        &InstallParams))
     {
-        DPRINT1("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        ERR("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
         goto Cleanup;
     }
 
@@ -990,7 +988,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                                 KEY_QUERY_VALUE);
     if (hKey == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("SetupDiOpenDevRegKey() failed with error 0x%lx\n", GetLastError());
+        ERR("SetupDiOpenDevRegKey() failed with error 0x%lx\n", GetLastError());
         goto Cleanup;
     }
 
@@ -1004,14 +1002,14 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                          &dwLength);
     if (rc != ERROR_SUCCESS)
     {
+        ERR("RegQueryValueEx() failed with error 0x%lx\n", GetLastError());
         SetLastError(rc);
-        DPRINT1("RegQueryValueEx() failed with error 0x%lx\n", GetLastError());
         goto Cleanup;
     }
     else if (dwType != REG_SZ)
     {
+        ERR("Expected registry type REG_SZ (%lu), got %lu\n", REG_SZ, dwType);
         SetLastError(ERROR_GEN_FAILURE);
-        DPRINT1("Expected registry type REG_SZ (%lu), got %lu\n", REG_SZ, dwType);
         goto Cleanup;
     }
     InfPath[(dwLength / sizeof(WCHAR)) - 1] = L'\0';
@@ -1024,7 +1022,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                                        DeviceInfoData,
                                        &InstallParams))
     {
-        DPRINT1("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        ERR("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
         goto Cleanup;
     }
 
@@ -1033,7 +1031,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                                     DeviceInfoData,
                                     SPDIT_CLASSDRIVER))
     {
-        DPRINT1("SetupDiBuildDriverInfoList() failed with error 0x%lx\n", GetLastError());
+        ERR("SetupDiBuildDriverInfoList() failed with error 0x%lx\n", GetLastError());
         goto Cleanup;
     }
 
@@ -1047,14 +1045,14 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                          &dwLength);
     if (rc != ERROR_SUCCESS)
     {
+        ERR("RegQueryValueEx() failed with error 0x%lx\n", GetLastError());
         SetLastError(rc);
-        DPRINT1("RegQueryValueEx() failed with error 0x%lx\n", GetLastError());
         goto Cleanup;
     }
     else if (dwType != REG_SZ)
     {
+        ERR("Expected registry type REG_SZ (%lu), got %lu\n", REG_SZ, dwType);
         SetLastError(ERROR_GEN_FAILURE);
-        DPRINT1("Expected registry type REG_SZ (%lu), got %lu\n", REG_SZ, dwType);
         goto Cleanup;
     }
     InfPath[(dwLength / sizeof(WCHAR)) - 1] = L'\0';
@@ -1077,7 +1075,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
                                         NULL) &&
             GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         {
-            DPRINT1("SetupDiGetDriverInfoDetail() failed with error 0x%lx\n", GetLastError());
+            ERR("SetupDiGetDriverInfoDetail() failed with error 0x%lx\n", GetLastError());
             goto Cleanup;
         }
         if (!wcsicmp(DriverInfoDetailData.SectionName,
@@ -1092,7 +1090,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
     }
     if (GetLastError() != ERROR_NO_MORE_ITEMS)
     {
-        DPRINT1("SetupDiEnumDriverInfo() failed with error 0x%lx\n", GetLastError());
+        ERR("SetupDiEnumDriverInfo() failed with error 0x%lx\n", GetLastError());
         goto Cleanup;
     }
 

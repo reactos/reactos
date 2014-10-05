@@ -27,8 +27,6 @@
 
 #include "precomp.h"
 
-#define NDEBUG
-#include <debug.h>
 
 BOOL
 ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
