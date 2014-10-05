@@ -67,24 +67,15 @@ CreateInMemoryStructure(
 	Key->SubKeyCount = 0;
 	Key->ValueCount = 0;
 
-	Key->NameSize = KeyName->Length;
-	/* FIXME: It's not enough to allocate this way, because later
-	          this memory gets overwritten with bigger names */
-	Key->Name = malloc (Key->NameSize);
-	if (!Key->Name)
-		return NULL;
-	memcpy(Key->Name, KeyName->Buffer, KeyName->Length);
-
 	Key->DataType = 0;
 	Key->DataSize = 0;
 	Key->Data = NULL;
 
 	Key->RegistryHive = RegistryHive;
-	Key->KeyCellOffset = KeyCellOffset;
+	Key->KeyCellOffset = Key->KeyCellOffsetInParentHive = KeyCellOffset;
 	Key->KeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
 	if (!Key->KeyCell)
 	{
-        free(Key->Name);
 		free(Key);
 		return NULL;
 	}
@@ -110,6 +101,7 @@ RegpOpenOrCreateKey(
 	PLIST_ENTRY Ptr;
 	PCM_KEY_NODE SubKeyCell;
 	HCELL_INDEX BlockOffset;
+	BOOLEAN ParentIsSystem = FALSE;
 
 	DPRINT("RegpCreateOpenKey('%S')\n", KeyName);
 
@@ -148,23 +140,14 @@ RegpOpenOrCreateKey(
 		}
 
 		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!strncmpW(LocalKeyName, L"CurrentControlSet", 17) &&
-		    ParentKey->NameSize == 12 &&
-		    !memcmp(ParentKey->Name, L"SYSTEM", 12))
-			RtlInitUnicodeString(&KeyString, L"ControlSet001");
-
-		/* Check subkey in memory structure */
-		Ptr = ParentKey->SubKeyList.Flink;
-		while (Ptr != &ParentKey->SubKeyList)
+		if (!strncmpiW(LocalKeyName, L"CurrentControlSet", 17) && ParentIsSystem)
 		{
-			CurrentKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
-			if (CurrentKey->NameSize == KeyString.Length
-			 && strncmpiW(CurrentKey->Name, KeyString.Buffer, KeyString.Length / sizeof(WCHAR)) == 0)
-			{
-				goto nextsubkey;
-			}
-
-			Ptr = Ptr->Flink;
+			RtlInitUnicodeString(&KeyString, L"ControlSet001");
+			ParentIsSystem = FALSE;
+		}
+		else
+		{
+			ParentIsSystem = (strncmpiW(LocalKeyName, L"SYSTEM", 6) == 0);
 		}
 
 		Status = CmiScanForSubKey(
@@ -174,6 +157,24 @@ RegpOpenOrCreateKey(
 			OBJ_CASE_INSENSITIVE,
 			&SubKeyCell,
 			&BlockOffset);
+		if (NT_SUCCESS(Status))
+		{
+			/* Check subkey in memory structure */
+			Ptr = ParentKey->SubKeyList.Flink;
+			while (Ptr != &ParentKey->SubKeyList)
+			{
+				CurrentKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
+				if (CurrentKey->KeyCellOffsetInParentHive == BlockOffset)
+				{
+					goto nextsubkey;
+				}
+
+				Ptr = Ptr->Flink;
+			}
+			/* If we go there, this means that key exists, but we don't know it */
+			ASSERT(FALSE);
+		}
+
 		if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)
 		{
 			Status = CmiAddSubKey(
@@ -184,21 +185,22 @@ RegpOpenOrCreateKey(
 				0,
 				&SubKeyCell,
 				&BlockOffset);
+			if (NT_SUCCESS(Status))
+			{
+				/* Now, SubKeyCell/BlockOffset are valid */
+				CurrentKey = CreateInMemoryStructure(
+					ParentKey->RegistryHive,
+					BlockOffset,
+					&KeyString);
+				if (!CurrentKey)
+					return ERROR_OUTOFMEMORY;
+				/* Add CurrentKey in ParentKey */
+				InsertTailList(&ParentKey->SubKeyList, &CurrentKey->KeyList);
+				ParentKey->SubKeyCount++;
+			}
 		}
 		if (!NT_SUCCESS(Status))
 			return ERROR_UNSUCCESSFUL;
-
-		/* Now, SubKeyCell/BlockOffset are valid */
-		CurrentKey = CreateInMemoryStructure(
-			ParentKey->RegistryHive,
-			BlockOffset,
-			&KeyString);
-		if (!CurrentKey)
-			return ERROR_OUTOFMEMORY;
-
-		/* Add CurrentKey in ParentKey */
-		InsertTailList(&ParentKey->SubKeyList, &CurrentKey->KeyList);
-		ParentKey->SubKeyCount++;
 
 nextsubkey:
 		ParentKey = CurrentKey;
@@ -700,7 +702,6 @@ RegShutdownRegistry(VOID)
 {
 	/* FIXME: clean up the complete hive */
 
-	free(RootKey->Name);
 	free(RootKey);
 }
 

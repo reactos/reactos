@@ -29,15 +29,13 @@ typedef struct _REG_KEY
   ULONG SubKeyCount;
   ULONG ValueCount;
 
-  ULONG NameSize;
-  PWCHAR Name;
-
   /* default data */
   ULONG DataType;
   ULONG DataSize;
   PCHAR Data;
 
   /* Information on hard disk structure */
+  HCELL_INDEX KeyCellOffsetInParentHive;
   HCELL_INDEX KeyCellOffset;
   PCM_KEY_NODE KeyCell;
   PCMHIVE RegistryHive;
