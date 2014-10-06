@@ -35,5 +35,5 @@ add_importlibs(oleaut32_winetest oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 msv
 if(MSVC)
     add_importlibs(oleaut32_winetest ntdll)
 endif()
-add_dependencies(oleaut32_winetest stdole2 oleaut32_typelibs oleaut32_idlheaders)
+add_dependencies(oleaut32_winetest stdole2 oleaut32_idlheaders)
 add_cd_file(TARGET oleaut32_winetest DESTINATION reactos/bin FOR all)
