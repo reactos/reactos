@@ -535,7 +535,6 @@ function(set_module_type MODULE TYPE)
         else()
             # Use a custom linker script
             add_target_link_flags(${MODULE} "-Wl,-T,${CMAKE_SOURCE_DIR}/kbdlayout.lds")
-            add_dependencies(${MODULE} "${CMAKE_SOURCE_DIR}/kbdlayout.lds")
         endif()
     elseif(NOT ((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
