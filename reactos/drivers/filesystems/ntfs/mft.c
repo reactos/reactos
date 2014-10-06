@@ -682,6 +682,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsLookupFile: Can't read MFT record\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
 
@@ -689,6 +690,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsLookupFile: Can't find data attribute\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
 
