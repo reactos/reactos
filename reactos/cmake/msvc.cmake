@@ -283,7 +283,6 @@ function(generate_import_lib _libname _dllname _spec_file)
     else()
         # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
         add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file})
-        add_dependencies(${_libname} ${_def_file})
         # set correct "link rule"
         set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB")
     endif()
