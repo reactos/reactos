@@ -520,7 +520,7 @@ BOOL
 QueryEventMessages(LPWSTR lpMachineName,
                    LPWSTR lpLogName)
 {
-    HWND hwndDlg=0;
+    HWND hwndDlg = NULL;
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 0, dwRecordsToRead = 0, dwFlags, dwMaxLength;
