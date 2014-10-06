@@ -34,9 +34,19 @@ ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
                         IN PSP_DEVINFO_DATA DevInfoData,
                         IN HMACHINE hMachine  OPTIONAL)
 {
+    WCHAR szDeviceInstanceId[256];
     CONFIGRET cr;
     ULONG Status, ProblemNumber;
+    DWORD dwReboot;
     BOOL Ret = FALSE;
+
+    /* Get the device instance id */
+    if (!SetupDiGetDeviceInstanceId(hDevInfo,
+                                    DevInfoData,
+                                    szDeviceInstanceId,
+                                    256,
+                                    NULL))
+        return FALSE;
 
     cr = CM_Get_DevNode_Status_Ex(&Status,
                                   &ProblemNumber,
@@ -62,6 +72,7 @@ ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
             case CM_PROB_UNKNOWN_RESOURCE:
             {
                 /* FIXME - display the update driver wizard */
+                InstallDevInst(hWndParent, szDeviceInstanceId, TRUE, &dwReboot);
                 break;
             }
 
@@ -78,6 +89,7 @@ ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
             case CM_PROB_FAILED_INSTALL:
             {
                 /* FIXME - display the driver (re)installation wizard */
+                InstallDevInst(hWndParent, szDeviceInstanceId, TRUE, &dwReboot);
                 break;
             }
 

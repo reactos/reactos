@@ -13,6 +13,7 @@
 #include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
+#include <dll/newdevp.h>
 #include <dll/devmgr/devmgr.h>
 #include <wine/debug.h>
 

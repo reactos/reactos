@@ -399,13 +399,6 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
     return Ret;
 }
 
-BOOL
-WINAPI
-DevInstallW(
-    IN HWND hWndParent,
-    IN HINSTANCE hInstance,
-    IN LPCWSTR InstanceId,
-    IN INT Show);
 
 static
 VOID
@@ -415,6 +408,7 @@ UpdateDriver(
 {
     TOKEN_PRIVILEGES Privileges;
     HANDLE hToken;
+    DWORD dwReboot;
     BOOL NeedReboot = FALSE;
 
     // Better use InstallDevInst:
@@ -426,7 +420,8 @@ UpdateDriver(
     //         BOOL bUpdate,
     //         DWORD *dwReboot);
     // See: http://comp.os.ms-windows.programmer.win32.narkive.com/J8FTd4KK/signature-of-undocumented-installdevinstex
-    if (!DevInstallW(hwndDlg, NULL, dap->szDeviceID, SW_SHOWNOACTIVATE))
+
+    if (!InstallDevInst(hwndDlg, dap->szDeviceID, TRUE, &dwReboot))
         return;
 
     if (NeedReboot == FALSE)
@@ -1619,6 +1614,8 @@ UpdateDevInfo(IN HWND hwndDlg,
     DWORD nDriverPages = 0;
     BOOL RecalcPages = FALSE;
 
+    TRACE("UpdateDevInfo()\n");
+
     hPropSheetDlg = GetParent(hwndDlg);
 
     if (dap->PageInitialized)
@@ -2014,6 +2011,7 @@ GetParentNode:
                                           dap->PropertySheetType) &&
         nDriverPages != 0 && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
+TRACE("Count %d additional pages!\n", nDriverPages);
         dap->nDevPropSheets += nDriverPages;
     }
     else
@@ -2035,6 +2033,7 @@ GetParentNode:
     /* add the device property sheets */
     if (dap->nDevPropSheets != 0)
     {
+TRACE("Show %d pages!\n", dap->nDevPropSheets);
         dap->DevPropSheets = HeapAlloc(GetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
                                        dap->nDevPropSheets * sizeof(HPROPSHEETPAGE));
@@ -2054,13 +2053,20 @@ GetParentNode:
                 {
                     /* add the property sheets */
                     for (iPage = 0;
-                         iPage != nDriverPages;
+                         iPage < nDriverPages;
                          iPage++)
                     {
+TRACE("Add page %d\n", iPage);
+TRACE("Sheet %p\n", dap->DevPropSheets[iPage]);
+
                         if (PropSheet_AddPage(hPropSheetDlg,
                                               dap->DevPropSheets[iPage]))
                         {
                             RecalcPages = TRUE;
+                        }
+                        else
+                        {
+TRACE("PropSheet_AddPage() failed\n");
                         }
                     }
 
@@ -2068,6 +2074,7 @@ GetParentNode:
                 }
                 else
                 {
+TRACE("SetupDiGetClassDevPropertySheets() failed\n");
                     /* cleanup, we were unable to get the device property sheets */
                     iPage = nDriverPages;
                     dap->nDevPropSheets -= nDriverPages;
