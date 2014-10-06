@@ -348,15 +348,17 @@ NtfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 
   DPRINT("Name '%S'\n", Name);
 }
+#endif
 
 
 NTSTATUS
-NtfsMakeFCBFromDirEntry(PVCB Vcb,
-			PFCB DirectoryFCB,
+NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
+			PNTFS_FCB DirectoryFCB,
 			PWSTR Name,
-			PDIR_RECORD Record,
-			PFCB * fileFCB)
+			PFILE_RECORD_HEADER Record,
+			PNTFS_FCB * fileFCB)
 {
+#if 0
   WCHAR pathName[MAX_PATH];
   PFCB rcFCB;
   ULONG Size;
@@ -400,8 +402,10 @@ NtfsMakeFCBFromDirEntry(PVCB Vcb,
   *fileFCB = rcFCB;
 
   return(STATUS_SUCCESS);
-}
+#else
+  return STATUS_NOT_IMPLEMENTED;
 #endif
+}
 
 
 NTSTATUS
@@ -451,113 +455,26 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
                 PWSTR FileToFind,
                 PNTFS_FCB *FoundFCB)
 {
-#if 0
-  WCHAR TempName[2];
-  WCHAR Name[256];
-  PVOID Block;
-  ULONG FirstSector;
-  ULONG DirSize;
-  PDIR_RECORD Record;
-  ULONG Offset;
-  ULONG BlockOffset;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    ULONGLONG CurrentDir;
+    UNICODE_STRING File;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
 
-  LARGE_INTEGER StreamOffset;
-  PVOID Context;
+    *FoundFCB = NULL;
+    RtlInitUnicodeString(&File, FileToFind);
+    CurrentDir = DirectoryFcb->MFTIndex;
 
-  ASSERT(DeviceExt);
-  ASSERT(DirectoryFcb);
-  ASSERT(FileToFind);
-
-  DPRINT("NtfsDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
-	 DeviceExt,
-	 DirectoryFcb,
-	 FileToFind);
-  DPRINT("Dir Path:%S\n", DirectoryFcb->PathName);
-
-  /*  default to '.' if no filename specified */
-  if (wcslen(FileToFind) == 0)
+    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &DataContext, CurrentDir);
+    if (!NT_SUCCESS(Status))
     {
-      TempName[0] = L'.';
-      TempName[1] = 0;
-      FileToFind = TempName;
+        return Status;
     }
 
-  DirSize = DirectoryFcb->Entry.DataLengthL;
-  StreamOffset.QuadPart = (LONGLONG)DirectoryFcb->Entry.ExtentLocationL * (LONGLONG)BLOCKSIZE;
+    Status = NtfsMakeFCBFromDirEntry(Vcb, DirectoryFcb, FileToFind, FileRecord, FoundFCB);
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
-  if(!CcMapData(DeviceExt->StreamFileObject, &StreamOffset,
-		BLOCKSIZE, TRUE, &Context, &Block))
-  {
-    DPRINT("CcMapData() failed\n");
-    return(STATUS_UNSUCCESSFUL);
-  }
-
-  Offset = 0;
-  BlockOffset = 0;
-  Record = (PDIR_RECORD)Block;
-  while(TRUE)
-    {
-      if (Record->RecordLength == 0)
-	{
-	  DPRINT("RecordLength == 0  Stopped!\n");
-	  break;
-	}
-
-      DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
-	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
-
-      NtfsGetDirEntryName(DeviceExt, Record, Name);
-      DPRINT("Name '%S'\n", Name);
-
-      if (wstrcmpjoki(Name, FileToFind))
-	{
-	  DPRINT("Match found, %S\n", Name);
-	  Status = NtfsMakeFCBFromDirEntry(DeviceExt,
-					   DirectoryFcb,
-					   Name,
-					   Record,
-					   FoundFCB);
-
-	  CcUnpinData(Context);
-
-	  return(Status);
-	}
-
-      Offset += Record->RecordLength;
-      BlockOffset += Record->RecordLength;
-      Record = (PDIR_RECORD)(Block + BlockOffset);
-      if (BlockOffset >= BLOCKSIZE || Record->RecordLength == 0)
-	{
-	  DPRINT("Map next sector\n");
-	  CcUnpinData(Context);
-	  StreamOffset.QuadPart += BLOCKSIZE;
-	  Offset = ROUND_UP(Offset, BLOCKSIZE);
-	  BlockOffset = 0;
-
-	  if (!CcMapData(DeviceExt->StreamFileObject,
-			 &StreamOffset,
-			 BLOCKSIZE, TRUE,
-			 &Context, &Block))
-	    {
-	      DPRINT("CcMapData() failed\n");
-	      return(STATUS_UNSUCCESSFUL);
-	    }
-	  Record = (PDIR_RECORD)(Block + BlockOffset);
-	}
-
-      if (Offset >= DirSize)
-	break;
-    }
-
-  CcUnpinData(Context);
-#else
-    UNREFERENCED_PARAMETER(Vcb);
-    UNREFERENCED_PARAMETER(DirectoryFcb);
-    UNREFERENCED_PARAMETER(FileToFind);
-    UNREFERENCED_PARAMETER(FoundFCB);
-#endif
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    return Status;
 }
 
 
