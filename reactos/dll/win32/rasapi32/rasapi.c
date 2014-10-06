@@ -243,7 +243,7 @@ DWORD WINAPI RasEnumAutodialAddressesW(LPWSTR *a, LPDWORD b, LPDWORD c)
 /**************************************************************************
  *                 RasEnumDevicesA		[RASAPI32.19]
  *
- * Just return a virtual modem too see what other APIs programs will
+ * Just return a virtual modem to see what other APIs programs will
  * call with it.
  */
 DWORD WINAPI RasEnumDevicesA(LPRASDEVINFOA lpRasDevinfo, LPDWORD lpcb, LPDWORD lpcDevices)
