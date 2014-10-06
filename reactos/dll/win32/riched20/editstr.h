@@ -357,6 +357,7 @@ typedef struct tagME_TextEditor
 {
   HWND hWnd, hwndParent;
   ITextHost *texthost;
+  IRichEditOle *reOle;
   BOOL bEmulateVersion10;
   ME_TextBuffer *pBuffer;
   ME_Cursor *pCursors;

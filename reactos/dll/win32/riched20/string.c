@@ -125,8 +125,7 @@ ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
   /* FIXME: Native also knows about punctuation */
   TRACE("s==%s, start==%d, len==%d, code==%d\n",
         debugstr_wn(s, len), start, len, code);
-  /* convert number of bytes to number of characters. */
-  len /= sizeof(WCHAR);
+
   switch (code)
   {
     case WB_ISDELIMITER:
@@ -154,7 +153,7 @@ int
 ME_CallWordBreakProc(ME_TextEditor *editor, WCHAR *str, INT len, INT start, INT code)
 {
   if (!editor->pfnWordBreak) {
-    return ME_WordBreakProc(str, start, len * sizeof(WCHAR), code);
+    return ME_WordBreakProc(str, start, len, code);
   } else if (!editor->bEmulateVersion10) {
     /* MSDN lied about the third parameter for EditWordBreakProc being the number
      * of characters, it is actually the number of bytes of the string. */
