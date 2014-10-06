@@ -78,7 +78,7 @@ static BOOL InitFunctionPtrs(HMODULE hpsapi)
       (void *)GetProcAddress(hpsapi, "GetProcessImageFileNameA");
     pGetProcessImageFileNameW =
       (void *)GetProcAddress(hpsapi, "GetProcessImageFileNameW");
-    pNtQueryVirtualMemory = (void *)GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryVirtualMemory");
+    pNtQueryVirtualMemory = (void *)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryVirtualMemory");
     return TRUE;
 }
 
@@ -102,7 +102,7 @@ static void test_EnumProcesses(void)
 
 static void test_EnumProcessModules(void)
 {
-    HMODULE hMod = GetModuleHandle(NULL);
+    HMODULE hMod = GetModuleHandleA(NULL);
     DWORD ret, cbNeeded = 0xdeadbeef;
 
     SetLastError(0xdeadbeef);
@@ -131,8 +131,8 @@ static void test_EnumProcessModules(void)
     ret = pEnumProcessModules(hpQV, &hMod, sizeof(HMODULE), &cbNeeded);
     if(ret != 1)
         return;
-    ok(hMod == GetModuleHandle(NULL),
-       "hMod=%p GetModuleHandle(NULL)=%p\n", hMod, GetModuleHandle(NULL));
+    ok(hMod == GetModuleHandleA(NULL),
+       "hMod=%p GetModuleHandleA(NULL)=%p\n", hMod, GetModuleHandleA(NULL));
     ok(cbNeeded % sizeof(hMod) == 0, "not a multiple of sizeof(HMODULE) cbNeeded=%d\n", cbNeeded);
     /* Windows sometimes has a bunch of extra dlls, presumably brought in by
      * aclayers.dll.
@@ -155,7 +155,7 @@ static void test_EnumProcessModules(void)
 
 static void test_GetModuleInformation(void)
 {
-    HMODULE hMod = GetModuleHandle(NULL);
+    HMODULE hMod = GetModuleHandleA(NULL);
     MODULEINFO info;
     DWORD ret;
 
@@ -225,7 +225,11 @@ static BOOL nt_get_mapped_file_name(HANDLE process, LPVOID addr, LPWSTR name, DW
 todo_wine
     ok(!status, "NtQueryVirtualMemory error %x\n", status);
     /* FIXME: remove once Wine is fixed */
-    if (status) return FALSE;
+    if (status)
+    {
+        HeapFree(GetProcessHeap(), 0, buf);
+        return FALSE;
+    }
 
     section_name = (MEMORY_SECTION_NAME *)buf;
     ok(ret_len == section_name->SectionFileName.MaximumLength + sizeof(*section_name), "got %lu, %u\n",
@@ -244,7 +248,7 @@ todo_wine
 
 static void test_GetMappedFileName(void)
 {
-    HMODULE hMod = GetModuleHandle(NULL);
+    HMODULE hMod = GetModuleHandleA(NULL);
     char szMapPath[MAX_PATH], szModPath[MAX_PATH], *szMapBaseName;
     DWORD ret;
     char *base;
@@ -285,26 +289,26 @@ todo_wine
         }
     }
 
-    GetTempPath(MAX_PATH, temp_path);
-    GetTempFileName(temp_path, "map", 0, file_name);
+    GetTempPathA(MAX_PATH, temp_path);
+    GetTempFileNameA(temp_path, "map", 0, file_name);
 
     drive[0] = file_name[0];
     drive[1] = ':';
     drive[2] = 0;
     SetLastError(0xdeadbeef);
-    ret = QueryDosDevice(drive, device_name, sizeof(device_name));
-    ok(ret, "QueryDosDevice error %d\n", GetLastError());
+    ret = QueryDosDeviceA(drive, device_name, sizeof(device_name));
+    ok(ret, "QueryDosDeviceA error %d\n", GetLastError());
     trace("%s -> %s\n", drive, device_name);
 
     SetLastError(0xdeadbeef);
-    hfile = CreateFile(file_name, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
-    ok(hfile != INVALID_HANDLE_VALUE, "CreateFile(%s) error %d\n", file_name, GetLastError());
+    hfile = CreateFileA(file_name, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "CreateFileA(%s) error %d\n", file_name, GetLastError());
     SetFilePointer(hfile, 0x4000, NULL, FILE_BEGIN);
     SetEndOfFile(hfile);
 
     SetLastError(0xdeadbeef);
-    hmap = CreateFileMapping(hfile, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
-    ok(hmap != 0, "CreateFileMapping error %d\n", GetLastError());
+    hmap = CreateFileMappingA(hfile, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
+    ok(hmap != 0, "CreateFileMappingA error %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     base = MapViewOfFile(hmap, FILE_MAP_READ, 0, 0, 0);
@@ -379,11 +383,11 @@ todo_wine
     UnmapViewOfFile(base);
     CloseHandle(hmap);
     CloseHandle(hfile);
-    DeleteFile(file_name);
+    DeleteFileA(file_name);
 
     SetLastError(0xdeadbeef);
-    hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READONLY | SEC_COMMIT, 0, 4096, NULL);
-    ok(hmap != 0, "CreateFileMapping error %d\n", GetLastError());
+    hmap = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READONLY | SEC_COMMIT, 0, 4096, NULL);
+    ok(hmap != 0, "CreateFileMappingA error %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     base = MapViewOfFile(hmap, FILE_MAP_READ, 0, 0, 0);
@@ -401,7 +405,7 @@ todo_wine
 
 static void test_GetProcessImageFileName(void)
 {
-    HMODULE hMod = GetModuleHandle(NULL);
+    HMODULE hMod = GetModuleHandleA(NULL);
     char szImgPath[MAX_PATH], szMapPath[MAX_PATH];
     WCHAR szImgPathW[MAX_PATH];
     DWORD ret, ret1;
@@ -479,7 +483,7 @@ static void test_GetProcessImageFileName(void)
 
 static void test_GetModuleFileNameEx(void)
 {
-    HMODULE hMod = GetModuleHandle(NULL);
+    HMODULE hMod = GetModuleHandleA(NULL);
     char szModExPath[MAX_PATH+1], szModPath[MAX_PATH+1];
     WCHAR buffer[MAX_PATH];
     DWORD ret;
@@ -538,7 +542,7 @@ static void test_GetModuleFileNameEx(void)
 
 static void test_GetModuleBaseName(void)
 {
-    HMODULE hMod = GetModuleHandle(NULL);
+    HMODULE hMod = GetModuleHandleA(NULL);
     char szModPath[MAX_PATH], szModBaseName[MAX_PATH];
     DWORD ret;
 
