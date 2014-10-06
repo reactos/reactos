@@ -93,3 +93,12 @@ BEGIN
     LTEXT "Naciśnij Zakończ, aby zamknąć kreator.", IDC_STATIC, 120, 174, 179, 11
     LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 12
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLWIZARDTITLE "New hardware wizard"
+    IDS_UPDATEWIZARDTITLE "Update driver wizard"
+    IDS_CHSOURCE_TITLE "Choose search and install options"
+    IDS_SEARCHDRV_TITLE "Searching..."
+    IDS_INSTALLDRV_TITLE "Installing..."
+END
