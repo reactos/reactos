@@ -4362,7 +4362,9 @@ const struct exsetsel_s exsetsel_tests[] = {
   {5, 10, 10, 5, 10, 0},
   {15, 17, 17, 15, 17, 0},
   /* test cpMax > strlen() */
-  {0, 100, 18, 0, 18, 1},
+  {0, 100, 18, 0, 18, 0},
+  /* test cpMin < 0 && cpMax >= 0 after cpMax > strlen() */
+  {-1, 1, 17, 17, 17, 0},
   /* test cpMin == cpMax */
   {5, 5, 5, 5, 5, 0},
   /* test cpMin < 0 && cpMax >= 0 (bug 4462) */
@@ -4372,13 +4374,13 @@ const struct exsetsel_s exsetsel_tests[] = {
   /* test cpMin < 0 && cpMax < 0 */
   {-1, -1, 17, 17, 17, 0},
   {-4, -5, 17, 17, 17, 0},
-  /* test cMin >=0 && cpMax < 0 (bug 6814) */
-  {0, -1, 18, 0, 18, 1},
-  {17, -5, 18, 17, 18, 1},
+  /* test cpMin >=0 && cpMax < 0 (bug 6814) */
+  {0, -1, 18, 0, 18, 0},
+  {17, -5, 18, 17, 18, 0},
   {18, -3, 17, 17, 17, 0},
   /* test if cpMin > cpMax */
-  {15, 19, 18, 15, 18, 1},
-  {19, 15, 18, 15, 18, 1}
+  {15, 19, 18, 15, 18, 0},
+  {19, 15, 18, 15, 18, 0},
 };
 
 static void check_EM_EXSETSEL(HWND hwnd, const struct exsetsel_s *setsel, int id) {
@@ -5070,11 +5072,13 @@ static void test_EM_STREAMIN(void)
   DWORD phase;
   LRESULT result;
   EDITSTREAM es;
-  char buffer[1024] = {0};
+  char buffer[1024] = {0}, tmp[16];
+  CHARRANGE range;
 
   const char * streamText0 = "{\\rtf1 TestSomeText}";
   const char * streamText0a = "{\\rtf1 TestSomeText\\par}";
   const char * streamText0b = "{\\rtf1 TestSomeText\\par\\par}";
+  const char * ptr;
 
   const char * streamText1 =
   "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang12298{\\fonttbl{\\f0\\fswiss\\fprq2\\fcharset0 System;}}\r\n"
@@ -5099,6 +5103,9 @@ static void test_EM_STREAMIN(void)
       "This text just needs to be long enough to cause run to be split onto "
       "two separate lines and make sure the null terminating character is "
       "handled properly.\0";
+
+  const WCHAR UTF8Split_exp[4] = {0xd6, 0xcf, 0xcb, 0};
+
   int length4 = strlen(streamText4) + 1;
   struct StringWithLength cookieForStream4 = {
       length4,
@@ -5128,7 +5135,8 @@ static void test_EM_STREAMIN(void)
   ok(es.dwError == 0, "EM_STREAMIN: Test 0 set error %d, expected %d\n", es.dwError, 0);
 
   /* Native richedit 2.0 ignores last \par */
-  es.dwCookie = (DWORD_PTR)&streamText0a;
+  ptr = streamText0a;
+  es.dwCookie = (DWORD_PTR)&ptr;
   es.dwError = 0;
   es.pfnCallback = test_EM_STREAMIN_esCallback;
   result = SendMessageA(hwndRichEdit, EM_STREAMIN, SF_RTF, (LPARAM)&es);
@@ -5156,6 +5164,43 @@ static void test_EM_STREAMIN(void)
   ok (result  == 0,
       "EM_STREAMIN: Test 0-b set wrong text: Result: %s\n",buffer);
   ok(es.dwError == 0, "EM_STREAMIN: Test 0-b set error %d, expected %d\n", es.dwError, 0);
+
+  /* Show that when using SFF_SELECTION the last \par is not ignored. */
+  ptr = streamText0a;
+  es.dwCookie = (DWORD_PTR)&ptr;
+  es.dwError = 0;
+  es.pfnCallback = test_EM_STREAMIN_esCallback;
+  result = SendMessageA(hwndRichEdit, EM_STREAMIN, SF_RTF, (LPARAM)&es);
+  ok(result == 12, "got %ld, expected %d\n", result, 12);
+
+  result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
+  ok (result  == 12,
+      "EM_STREAMIN: Test 0-a returned %ld, expected 12\n", result);
+  result = strcmp (buffer,"TestSomeText");
+  ok (result  == 0,
+      "EM_STREAMIN: Test 0-a set wrong text: Result: %s\n",buffer);
+  ok(es.dwError == 0, "EM_STREAMIN: Test 0-a set error %d, expected %d\n", es.dwError, 0);
+
+  range.cpMin = 0;
+  range.cpMax = -1;
+  result = SendMessageA(hwndRichEdit, EM_EXSETSEL, 0, (LPARAM)&range);
+  ok (result == 13, "got %ld\n", result);
+
+  ptr = streamText0a;
+  es.dwCookie = (DWORD_PTR)&ptr;
+  es.dwError = 0;
+  es.pfnCallback = test_EM_STREAMIN_esCallback;
+
+  result = SendMessageA(hwndRichEdit, EM_STREAMIN, SFF_SELECTION | SF_RTF, (LPARAM)&es);
+  ok(result == 13, "got %ld, expected 13\n", result);
+
+  result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
+  ok (result  == 14,
+      "EM_STREAMIN: Test SFF_SELECTION 0-a returned %ld, expected 14\n", result);
+  result = strcmp (buffer,"TestSomeText\r\n");
+  ok (result  == 0,
+      "EM_STREAMIN: Test SFF_SELECTION 0-a set wrong text: Result: %s\n",buffer);
+  ok(es.dwError == 0, "EM_STREAMIN: Test SFF_SELECTION 0-a set error %d, expected %d\n", es.dwError, 0);
 
   es.dwCookie = (DWORD_PTR)&streamText1;
   es.dwError = 0;
@@ -5216,10 +5261,12 @@ static void test_EM_STREAMIN(void)
   result = SendMessageA(hwndRichEdit, EM_STREAMIN, SF_TEXT, (LPARAM)&es);
   ok(result == 8, "got %ld\n", result);
 
+  WideCharToMultiByte(CP_ACP, 0, UTF8Split_exp, -1, tmp, sizeof(tmp), NULL, NULL);
+
   result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
   ok(result  == 3,
       "EM_STREAMIN: Test UTF8Split returned %ld\n", result);
-  result = memcmp (buffer,"\xd6\xcf\xcb", 3);
+  result = memcmp (buffer, tmp, 3);
   ok(result  == 0,
       "EM_STREAMIN: Test UTF8Split set wrong text: Result: %s\n",buffer);
   ok(es.dwError == 0, "EM_STREAMIN: Test UTF8Split set error %d, expected %d\n", es.dwError, 0);
@@ -5888,6 +5935,62 @@ static void test_WM_NOTIFY(void)
        "selections is incorrectly at (%d,%d)\n", sel_start, sel_end);
 
     DestroyWindow(hwndRichedit_WM_NOTIFY);
+    DestroyWindow(parent);
+}
+
+static int cpMin_EN_LINK = -1;
+static int cpMax_EN_LINK = -1;
+
+static LRESULT WINAPI EN_LINK_ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    ENLINK* enlink = (ENLINK*)lParam;
+    if(message == WM_NOTIFY && enlink->nmhdr.code == EN_LINK)
+    {
+        cpMin_EN_LINK = enlink->chrg.cpMin;
+        cpMax_EN_LINK = enlink->chrg.cpMax;
+    }
+    return DefWindowProcA(hwnd, message, wParam, lParam);
+}
+
+static void test_EN_LINK(void)
+{
+    HWND parent;
+    WNDCLASSA cls;
+    HWND hwndRichedit_EN_LINK;
+    CHARFORMAT2A cf2;
+
+    /* register class to capture WM_NOTIFY */
+    cls.style = 0;
+    cls.lpfnWndProc = EN_LINK_ParentMsgCheckProcA;
+    cls.cbClsExtra = 0;
+    cls.cbWndExtra = 0;
+    cls.hInstance = GetModuleHandleA(0);
+    cls.hIcon = 0;
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
+    cls.hbrBackground = GetStockObject(WHITE_BRUSH);
+    cls.lpszMenuName = NULL;
+    cls.lpszClassName = "EN_LINK_ParentClass";
+    if(!RegisterClassA(&cls)) assert(0);
+
+    parent = CreateWindowA(cls.lpszClassName, NULL, WS_POPUP|WS_VISIBLE,
+                           0, 0, 200, 60, NULL, NULL, NULL, NULL);
+    ok(parent != 0, "Failed to create parent window\n");
+
+    hwndRichedit_EN_LINK = new_richedit(parent);
+    ok(hwndRichedit_EN_LINK != 0, "Failed to create edit window\n");
+
+    SendMessageA(hwndRichedit_EN_LINK, EM_SETEVENTMASK, 0, ENM_LINK);
+
+    cf2.cbSize = sizeof(CHARFORMAT2A);
+    cf2.dwMask = CFM_LINK;
+    cf2.dwEffects = CFE_LINK;
+    SendMessageA(hwndRichedit_EN_LINK, EM_SETCHARFORMAT, 0, (LPARAM)&cf2);
+    /* mixing letters and numbers causes runs to be split */
+    SendMessageA(hwndRichedit_EN_LINK, WM_SETTEXT, 0, (LPARAM)"link text with at least 2 runs");
+    SendMessageA(hwndRichedit_EN_LINK, WM_LBUTTONDOWN, 0, MAKELPARAM(5, 5));
+    ok(cpMin_EN_LINK == 0 && cpMax_EN_LINK == 31, "Expected link range [0,31) got [%i,%i)\n", cpMin_EN_LINK, cpMax_EN_LINK);
+
+    DestroyWindow(hwndRichedit_EN_LINK);
     DestroyWindow(parent);
 }
 
@@ -7474,6 +7577,25 @@ static void test_reset_default_para_fmt( void )
     DestroyWindow( richedit );
 }
 
+static void test_EM_SETREADONLY(void)
+{
+    HWND richedit = new_richeditW(NULL);
+    DWORD dwStyle;
+    LRESULT res;
+
+    res = SendMessageA(richedit, EM_SETREADONLY, TRUE, 0);
+    ok(res == 1, "EM_SETREADONLY\n");
+    dwStyle = GetWindowLongA(richedit, GWL_STYLE);
+    ok(dwStyle & ES_READONLY, "got wrong value: 0x%x\n", dwStyle & ES_READONLY);
+
+    res = SendMessageA(richedit, EM_SETREADONLY, FALSE, 0);
+    ok(res == 1, "EM_SETREADONLY\n");
+    dwStyle = GetWindowLongA(richedit, GWL_STYLE);
+    ok(!(dwStyle & ES_READONLY), "got wrong value: 0x%x\n", dwStyle & ES_READONLY);
+
+    DestroyWindow(richedit);
+}
+
 START_TEST( editor )
 {
   BOOL ret;
@@ -7519,6 +7641,7 @@ START_TEST( editor )
   test_EM_REPLACESEL(1);
   test_EM_REPLACESEL(0);
   test_WM_NOTIFY();
+  test_EN_LINK();
   test_EM_AUTOURLDETECT();
   test_eventMask();
   test_undo_coalescing();
@@ -7536,6 +7659,7 @@ START_TEST( editor )
   test_enter();
   test_WM_CREATE();
   test_reset_default_para_fmt();
+  test_EM_SETREADONLY();
 
   /* Set the environment variable WINETEST_RICHED20 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.
