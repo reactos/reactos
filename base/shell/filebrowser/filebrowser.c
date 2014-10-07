@@ -27,14 +27,15 @@
 #include <shlwapi_undoc.h>
 #include <stdio.h>
 
-typedef HRESULT (WINAPI *SH_OPEN_NEW_FRAME)(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14);
-
 int _tmain(int argc, _TCHAR* argv[])
 {
     EXPLORER_CMDLINE_PARSE_RESULTS parseResults = { 0 };
 
     if (SHExplorerParseCmdLine(&parseResults))
+    {
+        parseResults.dwFlags |= SH_EXPLORER_CMDLINE_FLAG_SEPARATE;
         return SHCreateFromDesktop(&parseResults);
+    }
 
     return 0;
 }

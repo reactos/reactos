@@ -450,15 +450,21 @@ extern "C" HRESULT WINAPI SHOpenFolderWindow(PIE_THREAD_PARAM_BLOCK parameters)
     HANDLE                                  threadHandle;
     DWORD                                   threadID;
 
-    DbgPrint("SHOpenFolderWindow\n");
+    WCHAR debugStr[MAX_PATH + 1];
+    SHGetPathFromIDListW(parameters->directoryPIDL, debugStr);
 
-    threadHandle = CreateThread(NULL, 0x10000, BrowserThreadProc, parameters, 0, &threadID);
+    DbgPrint("SHOpenFolderWindow %p(%S)\n", parameters->directoryPIDL, debugStr);
+
+    PIE_THREAD_PARAM_BLOCK paramsCopy = SHCloneIETHREADPARAM(parameters);
+
+    SHGetInstanceExplorer(&(paramsCopy->offsetF8));
+    threadHandle = CreateThread(NULL, 0x10000, BrowserThreadProc, paramsCopy, 0, &threadID);
     if (threadHandle != NULL)
     {
         CloseHandle(threadHandle);
         return S_OK;
     }
-    SHDestroyIETHREADPARAM(parameters);
+    SHDestroyIETHREADPARAM(paramsCopy);
     return E_FAIL;
 }
 
@@ -485,8 +491,12 @@ extern "C" HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, lo
         parameters->offset10 = param10;
     parameters->directoryPIDL = pidl;
     parameters->dwFlags = dwFlags;
-
-    return SHOpenFolderWindow(parameters);
+    
+    HRESULT hr = SHOpenFolderWindow(parameters);
+    
+    SHDestroyIETHREADPARAM(parameters);
+    
+    return hr;
 }
 
 /*************************************************************************

@@ -3399,6 +3399,9 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     HRESULT                   hResult;
     MSG Msg;
     BOOL Ret;
+
+    // Tell the thread ref we are using it.
+    parameters->offsetF8->AddRef();
     
     ATLTRY(theCabinet = new CComObject<CShellBrowser>);
     if (theCabinet == NULL)
@@ -3440,6 +3443,9 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 
     theCabinet.Detach();
 
+    // Tell the thread ref we are not using it anymore.
+    parameters->offsetF8->Release();
+
     return hResult;
 }
 
@@ -3453,6 +3459,8 @@ DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
     ATLTRY(hr = ExplorerMessageLoop(parameters));
 
     OleUninitialize();
+
+    SHDestroyIETHREADPARAM(parameters);
 
     return hr;
 }
