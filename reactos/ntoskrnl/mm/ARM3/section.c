@@ -676,7 +676,7 @@ MiSegmentDelete(IN PSEGMENT Segment)
             if (TempPte.u.Soft.Transition == 1)
             {
                 /* We can give the page back for other use */
-                DPRINT1("Releasing page for transition PTE %p\n", PointerPte);
+                DPRINT("Releasing page for transition PTE %p\n", PointerPte);
                 PageFrameIndex = PFN_FROM_PTE(&TempPte);
                 Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
 
@@ -1675,7 +1675,6 @@ MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
     ASSERT(MiIsRosSectionObject(SectionObject) == TRUE);
 
     /* Return the image information */
-    DPRINT1("HERE!\n");
     *ImageInformation = ((PROS_SECTION_OBJECT)SectionObject)->ImageSection->ImageInformation;
 }
 

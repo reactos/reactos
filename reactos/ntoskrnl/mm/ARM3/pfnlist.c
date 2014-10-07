@@ -714,7 +714,7 @@ MiInsertStandbyListAtFront(IN PFN_NUMBER PageFrameIndex)
     PMMPFN Pfn1, Pfn2;
 
     /* Make sure the lock is held */
-    DPRINT1("Inserting page: %lx into standby list !\n", PageFrameIndex);
+    DPRINT("Inserting page: %lx into standby list !\n", PageFrameIndex);
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* Make sure the PFN is valid */
@@ -1171,7 +1171,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
             TempPte.u.Soft.Prototype = 0;
             TempPte.u.Soft.Protection = Pfn1->OriginalPte.u.Soft.Protection;
             MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-            DPRINT1("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
+            DPRINT("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
         }
 
         /* Put the page in transition */
