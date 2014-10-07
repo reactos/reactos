@@ -3401,7 +3401,8 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     BOOL Ret;
 
     // Tell the thread ref we are using it.
-    parameters->offsetF8->AddRef();
+    if (parameters && parameters->offsetF8)
+        parameters->offsetF8->AddRef();
     
     ATLTRY(theCabinet = new CComObject<CShellBrowser>);
     if (theCabinet == NULL)
@@ -3444,7 +3445,8 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     theCabinet.Detach();
 
     // Tell the thread ref we are not using it anymore.
-    parameters->offsetF8->Release();
+    if (parameters && parameters->offsetF8)
+        parameters->offsetF8->Release();
 
     return hResult;
 }
