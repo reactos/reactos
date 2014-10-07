@@ -711,7 +711,7 @@ EnumHKCRKey(
         goto Exit;
     }
 
-    ERR("Maxfallbacksubkeylen: %d\n", MaxFallbackSubKeyLen);
+    TRACE("Maxfallbacksubkeylen: %d\n", MaxFallbackSubKeyLen);
 
     /* Allocate our buffer */
     FallbackSubKeyName = RtlAllocateHeap(
@@ -925,7 +925,7 @@ EnumHKCRValue(
         goto Exit;
     }
 
-    ERR("Maxfallbacksubkeylen: %d\n", MaxFallbackValueNameLen);
+    TRACE("Maxfallbacksubkeylen: %d\n", MaxFallbackValueNameLen);
 
     /* Allocate our buffer */
     FallbackValueName = RtlAllocateHeap(
