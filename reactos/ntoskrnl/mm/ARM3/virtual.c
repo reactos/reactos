@@ -4304,12 +4304,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     PMEMORY_AREA MemoryArea;
-    PFN_NUMBER PageCount;
     PMMVAD Vad = NULL, FoundVad;
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
     PVOID PBaseAddress;
-    ULONG_PTR PRegionSize, StartingAddress, EndingAddress, HighestAddress;
+    ULONG_PTR PRegionSize, StartingAddress, EndingAddress;
+    ULONG_PTR HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD CurrentThread = PsGetCurrentThread();
@@ -4319,7 +4319,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     MMPTE TempPte;
     PMMPTE PointerPte, PointerPde, LastPte;
     TABLE_SEARCH_RESULT Result;
-    PMMADDRESS_NODE Parent;
     PAGED_CODE();
 
     /* Check for valid Zero bits */
@@ -4544,7 +4543,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             // This is a blind commit, all we need is the region size
             //
             PRegionSize = ROUND_TO_PAGES(PRegionSize);
-            PageCount = BYTES_TO_PAGES(PRegionSize);
             EndingAddress = 0;
             StartingAddress = 0;
 
@@ -4563,13 +4561,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                     goto FailPathNoLock;
                 }
             }
-            else
-            {
-                //
-                // Use the highest VAD address as maximum
-                //
-                HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
-            }
         }
         else
         {
@@ -4579,8 +4570,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             // fall based on the aligned address and the passed in region size
             //
             EndingAddress = ((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
-            StartingAddress = ROUND_DOWN((ULONG_PTR)PBaseAddress, _64K);
-            PageCount = BYTES_TO_PAGES(EndingAddress - StartingAddress);
+            PRegionSize = EndingAddress + 1 - ROUND_DOWN((ULONG_PTR)PBaseAddress, _64K);
+            StartingAddress = (ULONG_PTR)PBaseAddress;
         }
 
         //
@@ -4594,7 +4585,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             goto FailPathNoLock;
         }
 
-        Vad->u.LongFlags = 0;
+        RtlZeroMemory(Vad, sizeof(MMVAD_LONG));
         if (AllocationType & MEM_COMMIT) Vad->u.VadFlags.MemCommit = 1;
         Vad->u.VadFlags.Protection = ProtectionMask;
         Vad->u.VadFlags.PrivateMemory = 1;
@@ -4602,124 +4593,24 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         Vad->ControlArea = NULL; // For Memory-Area hack
 
         //
-        // Lock the address space and make sure the process isn't already dead
+        // Insert the VAD
         //
-        AddressSpace = MmGetCurrentAddressSpace();
-        MmLockAddressSpace(AddressSpace);
-        if (Process->VmDeleted)
+        Status = MiInsertVadEx(Vad,
+                               &StartingAddress,
+                               PRegionSize,
+                               HighestAddress,
+                               MM_VIRTMEM_GRANULARITY,
+                               AllocationType);
+        if (!NT_SUCCESS(Status))
         {
-            Status = STATUS_PROCESS_IS_TERMINATING;
-            goto FailPath;
+            DPRINT1("Failed to insert the VAD!\n");
+            goto FailPathNoLock;
         }
 
         //
-        // Did we have a base address? If no, find a valid address that is 64KB
-        // aligned in the VAD tree. Otherwise, make sure that the address range
-        // which was passed in isn't already conflicting with an existing address
-        // range.
-        //
-        if (!PBaseAddress)
-        {
-            /* Which way should we search? */
-            if ((AllocationType & MEM_TOP_DOWN) || Process->VmTopDown)
-            {
-                /* Find an address top-down */
-                Result = MiFindEmptyAddressRangeDownTree(PRegionSize,
-                                                         HighestAddress,
-                                                         _64K,
-                                                         &Process->VadRoot,
-                                                         &StartingAddress,
-                                                         &Parent);
-            }
-            else
-            {
-                /* Find an address bottom-up */
-                Result = MiFindEmptyAddressRangeInTree(PRegionSize,
-                                                       _64K,
-                                                       &Process->VadRoot,
-                                                       &Parent,
-                                                       &StartingAddress);
-            }
-
-            if (Result == TableFoundNode)
-            {
-                Status = STATUS_NO_MEMORY;
-                goto FailPath;
-            }
-
-            //
-            // Now we know where the allocation ends. Make sure it doesn't end up
-            // somewhere in kernel mode.
-            //
-            ASSERT(StartingAddress != 0);
-            ASSERT(StartingAddress < (ULONG_PTR)MM_HIGHEST_USER_ADDRESS);
-            EndingAddress = (StartingAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
-            ASSERT(EndingAddress > StartingAddress);
-            if (EndingAddress > HighestAddress)
-            {
-                Status = STATUS_NO_MEMORY;
-                goto FailPath;
-            }
-        }
-        else
-        {
-            /* Make sure it doesn't conflict with an existing allocation */
-            Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
-                                               EndingAddress >> PAGE_SHIFT,
-                                               &Process->VadRoot,
-                                               &Parent);
-            if (Result == TableFoundNode)
-            {
-                //
-                // The address specified is in conflict!
-                //
-                Status = STATUS_CONFLICTING_ADDRESSES;
-                goto FailPath;
-            }
-        }
-
-        //
-        // Write out the VAD fields for this allocation
-        //
-        Vad->StartingVpn = StartingAddress >> PAGE_SHIFT;
-        Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
-
-        //
-        // FIXME: Should setup VAD bitmap
-        //
-        Status = STATUS_SUCCESS;
-
-        //
-        // Lock the working set and insert the VAD into the process VAD tree
-        //
-        MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
-        Process->VadRoot.NodeHint = Vad;
-        MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
-        MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
-
-        //
-        // Make sure the actual region size is at least as big as the
-        // requested region size and update the value
-        //
-        ASSERT(PRegionSize <= (EndingAddress + 1 - StartingAddress));
-        PRegionSize = (EndingAddress + 1 - StartingAddress);
-
-        //
-        // Update the virtual size of the process, and if this is now the highest
-        // virtual size we have ever seen, update the peak virtual size to reflect
-        // this.
-        //
-        Process->VirtualSize += PRegionSize;
-        if (Process->VirtualSize > Process->PeakVirtualSize)
-        {
-            Process->PeakVirtualSize = Process->VirtualSize;
-        }
-
-        //
-        // Release address space and detach and dereference the target process if
+        // Detach and dereference the target process if
         // it was different from the current process
         //
-        MmUnlockAddressSpace(AddressSpace);
         if (Attached) KeUnstackDetachProcess(&ApcState);
         if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 

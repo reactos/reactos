@@ -1252,9 +1252,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                        IN ULONG AllocationType)
 {
     PMMVAD_LONG Vad;
-    PETHREAD Thread = PsGetCurrentThread();
-    PMMSUPPORT AddressSpace;
-    ULONG_PTR StartAddress, EndingAddress;
+    ULONG_PTR StartAddress;
     ULONG_PTR ViewSizeInPages;
     PSUBSECTION Subsection;
     PSEGMENT Segment;
@@ -1263,8 +1261,6 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     ULONG QuotaCharge = 0, QuotaExcess = 0;
     PMMPTE PointerPte, LastPte;
     MMPTE TempPte;
-    PMMADDRESS_NODE Parent;
-    TABLE_SEARCH_RESULT Result;
     DPRINT("Mapping ARM3 data section\n");
 
     /* Get the segment for this section */
@@ -1361,6 +1357,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
 
     /* Write all the data required in the VAD for handling a fault */
     Vad->ControlArea = ControlArea;
+    Vad->u.VadFlags.CommitCharge = 0;
     Vad->u.VadFlags.Protection = ProtectionMask;
     Vad->u2.VadFlags2.FileOffset = (ULONG)(SectionOffset->QuadPart >> 16);
     Vad->u2.VadFlags2.Inherit = (InheritDisposition == ViewShare);
@@ -1437,100 +1434,23 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
         StartAddress = 0;
     }
 
-    /* Lock the address space and make sure the process is alive */
-    AddressSpace = MmGetCurrentAddressSpace();
-    MmLockAddressSpace(AddressSpace);
-    if (Process->VmDeleted)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        ExFreePoolWithTag(Vad, 'ldaV');
-        DPRINT1("The process is dying\n");
-        return STATUS_PROCESS_IS_TERMINATING;
-    }
-
-    /* Did the caller specify an address? */
-    if (StartAddress == 0)
-    {
-        /* ARM3 does not support these flags yet */
-        ASSERT(Process->VmTopDown == 0);
-        ASSERT(ZeroBits == 0);
-
-        /* Which way should we search? */
-        if (AllocationType & MEM_TOP_DOWN)
-        {
-            /* No, find an address top-down */
-            Result = MiFindEmptyAddressRangeDownTree(*ViewSize,
-                                                     (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
-                                                     _64K,
-                                                     &Process->VadRoot,
-                                                     &StartAddress,
-                                                     &Parent);
-        }
-        else
-        {
-            /* No, find an address bottom-up */
-            Result = MiFindEmptyAddressRangeInTree(*ViewSize,
-                                                   _64K,
-                                                   &Process->VadRoot,
-                                                   &Parent,
-                                                   &StartAddress);
-        }
-
-        /* Check if we found a suitable location */
-        if (Result == TableFoundNode)
-        {
-            DPRINT1("Not enough free space to insert this section!\n");
-            MmUnlockAddressSpace(AddressSpace);
-            MiDereferenceControlArea(ControlArea);
-            ExFreePoolWithTag(Vad, 'ldaV');
-            return STATUS_CONFLICTING_ADDRESSES;
-        }
-
-        /* Get the ending address, which is the last piece we need for the VAD */
-        EndingAddress = StartAddress + (ViewSizeInPages * PAGE_SIZE) - 1;
-    }
-    else
-    {
-        /* Get the ending address, which is the last piece we need for the VAD */
-        EndingAddress = StartAddress + (ViewSizeInPages * PAGE_SIZE)  - 1;
-
-        /* Make sure it doesn't conflict with an existing allocation */
-        Result = MiCheckForConflictingNode(StartAddress >> PAGE_SHIFT,
-                                           EndingAddress >> PAGE_SHIFT,
-                                           &Process->VadRoot,
-                                           &Parent);
-        if (Result == TableFoundNode)
-        {
-            DPRINT1("Conflict with SEC_BASED or manually based section!\n");
-            MmUnlockAddressSpace(AddressSpace);
-            MiDereferenceControlArea(ControlArea);
-            ExFreePoolWithTag(Vad, 'ldaV');
-            return STATUS_CONFLICTING_ADDRESSES;
-        }
-    }
-
-    /* Now set the VAD address */
-    Vad->StartingVpn = StartAddress >> PAGE_SHIFT;
-    Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
-
-    /* Pretend as if we own the working set */
-    MiLockProcessWorkingSetUnsafe(Process, Thread);
-
     /* Insert the VAD */
-    Process->VadRoot.NodeHint = Vad;
-    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
-
-    /* Release the working set */
-    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
-
-    /* Unlock the address space */
-    MmUnlockAddressSpace(AddressSpace);
+    Status = MiInsertVadEx((PMMVAD)Vad,
+                           &StartAddress,
+                           ViewSizeInPages * PAGE_SIZE,
+                           MAXULONG_PTR >> ZeroBits,
+                           MM_VIRTMEM_GRANULARITY,
+                           AllocationType);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     /* Windows stores this for accounting purposes, do so as well */
     if (!Segment->u2.FirstMappedVa) Segment->u2.FirstMappedVa = (PVOID)StartAddress;
 
     /* Finally, let the caller know where, and for what size, the view was mapped */
-    *ViewSize = (ULONG_PTR)EndingAddress - (ULONG_PTR)StartAddress + 1;
+    *ViewSize = ViewSizeInPages * PAGE_SIZE;
     *BaseAddress = (PVOID)StartAddress;
     DPRINT("Start and region: 0x%p, 0x%p\n", *BaseAddress, *ViewSize);
     return STATUS_SUCCESS;
