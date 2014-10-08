@@ -40,6 +40,12 @@ Call ok(010 = 10, "010 <> 10")
 Call ok(10. = 10, "10. <> 10")
 Call ok(&hffFFffFF& = -1, "&hffFFffFF& <> -1")
 Call ok(&hffFFffFF& = -1, "&hffFFffFF& <> -1")
+Call ok(34e5 = 3400000, "34e5 <> 3400000")
+Call ok(56.789e5 = 5678900, "56.789e5 = 5678900")
+Call ok(56.789e-2 = 0.56789, "56.789e-2 <> 0.56789")
+Call ok(1e-94938484 = 0, "1e-... <> 0")
+Call ok(34e0 = 34, "34e0 <> 34")
+Call ok(34E1 = 340, "34E0 <> 340")
 Call ok(--1 = 1, "--1 = " & --1)
 Call ok(-empty = 0, "-empty = " & (-empty))
 Call ok(true = -1, "! true = -1")
@@ -78,6 +84,9 @@ Call ok(getVT(&h10&) = "VT_I2", "getVT(&h10&) is not VT_I2")
 Call ok(getVT(&h10000&) = "VT_I4", "getVT(&h10000&) is not VT_I4")
 Call ok(getVT(&H10000&) = "VT_I4", "getVT(&H10000&) is not VT_I4")
 Call ok(getVT(&hffFFffFF&) = "VT_I2", "getVT(&hffFFffFF&) is not VT_I2")
+Call ok(getVT(1e2) = "VT_R8", "getVT(1e2) is not VT_R8")
+Call ok(getVT(1e0) = "VT_R8", "getVT(1e0) is not VT_R8")
+Call ok(getVT(0.1e2) = "VT_R8", "getVT(0.1e2) is not VT_R8")
 Call ok(getVT(1 & 100000) = "VT_BSTR", "getVT(1 & 100000) is not VT_BSTR")
 Call ok(getVT(-empty) = "VT_I2", "getVT(-empty) = " & getVT(-empty))
 Call ok(getVT(-null) = "VT_NULL", "getVT(-null) = " & getVT(-null))
@@ -187,6 +196,7 @@ Call ok(2*3 = 6, "2*3 = " & (2*3))
 Call ok(3/2 = 1.5, "3/2 = " & (3/2))
 Call ok(5\4/2 = 2, "5\4/2 = " & (5\2/1))
 Call ok(12/3\2 = 2, "12/3\2 = " & (12/3\2))
+Call ok(5/1000000 = 0.000005, "5/1000000 = " & (5/1000000))
 
 Call ok(2^3 = 8, "2^3 = " & (2^3))
 Call ok(2^3^2 = 64, "2^3^2 = " & (2^3^2))
@@ -849,6 +859,10 @@ Class TestClass
         Call ok(getVT(publicProp2) = "VT_I2*", "getVT(publicProp2) = " & getVT(publicProp2))
         Call ok(getVT(Me.publicProp2) = "VT_I2", "getVT(Me.publicProp2) = " & getVT(Me.publicProp2))
     End Sub
+
+    Property Get gsGetProp(x)
+        gsGetProp = x
+    End Property
 End Class
 
 Call testDisp(new testClass)
@@ -915,6 +929,29 @@ Call ok(funcCalled = "terminate", "funcCalled = " & funcCalled)
 
 Call (New testclass).publicSub()
 Call (New testclass).publicSub
+
+class PropTest
+    property get prop0()
+        prop0 = 1
+    end property
+
+    property get prop1(x)
+        prop1 = x+1
+    end property
+
+    property get prop2(x, y)
+        prop2 = x+y
+    end property
+end class
+
+set obj = new PropTest
+
+call ok(obj.prop0 = 1, "obj.prop0 = " & obj.prop0)
+call ok(obj.prop1(3) = 4, "obj.prop1(3) = " & obj.prop1(3))
+call ok(obj.prop2(3,4) = 7, "obj.prop2(3,4) = " & obj.prop2(3,4))
+call obj.prop0()
+call obj.prop1(2)
+call obj.prop2(3,4)
 
 x = "following ':' is correct syntax" :
 x = "following ':' is correct syntax" :: :
