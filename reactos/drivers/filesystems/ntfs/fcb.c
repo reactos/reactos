@@ -118,10 +118,7 @@ NtfsDestroyFCB(PNTFS_FCB Fcb)
 BOOLEAN
 NtfsFCBIsDirectory(PNTFS_FCB Fcb)
 {
-    UNREFERENCED_PARAMETER(Fcb);
-//  return(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY);
-//  return(Fcb->Entry.FileFlags & 0x02);
-    return TRUE;
+    return ((Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_DIRECTORY) == NTFS_FILE_TYPE_DIRECTORY);
 }
 
 

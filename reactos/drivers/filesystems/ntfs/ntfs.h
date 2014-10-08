@@ -188,6 +188,13 @@ typedef enum
 #define NTFS_FILE_NAME_DOS            2
 #define NTFS_FILE_NAME_WIN32_AND_DOS        3
 
+#define NTFS_FILE_TYPE_READ_ONLY  0x1
+#define NTFS_FILE_TYPE_HIDDEN     0x2
+#define NTFS_FILE_TYPE_SYSTEM     0x4
+#define NTFS_FILE_TYPE_ARCHIVE    0x20
+#define NTFS_FILE_TYPE_COMPRESSED 0x800
+#define NTFS_FILE_TYPE_DIRECTORY  0x10000000
+
 typedef struct
 {
     ULONG Type;             /* Magic number 'FILE' */
