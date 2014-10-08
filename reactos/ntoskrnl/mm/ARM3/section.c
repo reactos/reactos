@@ -1298,9 +1298,12 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* We must be dealing with a 64KB aligned offset. This is a Windows ASSERT */
     ASSERT((SectionOffset->LowPart & ((ULONG)_64K - 1)) == 0);
 
-    /* It's illegal to try to map more than 2GB */
-    /* FIXME: Should dereference the control area */
-    if (*ViewSize >= 0x80000000) return STATUS_INVALID_VIEW_SIZE;
+    /* It's illegal to try to map more than overflows a LONG_PTR */
+    if (*ViewSize >= MAXLONG_PTR)
+    {
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INVALID_VIEW_SIZE;
+    }
 
     /* Windows ASSERTs for this flag */
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
@@ -1331,9 +1334,8 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* Compute how much commit space the segment will take */
     if ((CommitSize) && (Segment->NumberOfCommittedPages < Segment->TotalNumberOfPtes))
     {
-        PointerPte = &Subsection->SubsectionBase[PteOffset];
-        LastPte = PointerPte + BYTES_TO_PAGES(CommitSize);
-        QuotaCharge = (ULONG)(LastPte - PointerPte);
+        /* Charge for the maximum pages */
+        QuotaCharge = BYTES_TO_PAGES(CommitSize);
     }
 
     /* ARM3 does not currently support large pages */
