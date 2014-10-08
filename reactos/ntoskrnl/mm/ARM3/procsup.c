@@ -48,13 +48,13 @@ NTSTATUS
 NTAPI
 MiCreatePebOrTeb(IN PEPROCESS Process,
                  IN ULONG Size,
-                 OUT PULONG_PTR Base)
+                 OUT PULONG_PTR BaseAddress)
 {
     PETHREAD Thread = PsGetCurrentThread();
     PMMVAD_LONG Vad;
     NTSTATUS Status;
-    ULONG RandomCoeff;
-    ULONG_PTR StartAddress, EndAddress;
+    ULONG_PTR HighestAddress, RandomBase;
+    ULONG AlignedSize;
     LARGE_INTEGER CurrentTime;
     TABLE_SEARCH_RESULT Result = TableFoundNode;
     PMMADDRESS_NODE Parent;
@@ -83,25 +83,30 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     /* Check if this is a PEB creation */
     if (Size == sizeof(PEB))
     {
-        /* Start at the highest valid address */
-        StartAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1;
-
-        /* Select the random coefficient */
+        /* Create a random value to select one page in a 64k region */
         KeQueryTickCount(&CurrentTime);
-        CurrentTime.LowPart &= ((64 * _1KB) >> PAGE_SHIFT) - 1;
-        if (CurrentTime.LowPart <= 1) CurrentTime.LowPart = 2;
-        RandomCoeff = CurrentTime.LowPart << PAGE_SHIFT;
+        CurrentTime.LowPart &= (_64K / PAGE_SIZE) - 1;
 
-        /* Select the highest valid address minus the random coefficient */
-        StartAddress -= RandomCoeff;
-        EndAddress = StartAddress + ROUND_TO_PAGES(Size) - 1;
+        /* Calculate a random base address */
+        RandomBase = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1;
+        RandomBase -= CurrentTime.LowPart << PAGE_SHIFT;
+
+        /* Make sure the base address is not too high */
+        AlignedSize = ROUND_TO_PAGES(Size);
+        if ((RandomBase + AlignedSize) > (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1)
+        {
+            RandomBase = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1 - AlignedSize;
+        }
+
+        /* Calculate the highest allowed address */
+        HighestAddress = RandomBase + AlignedSize - 1;
 
         /* Try to find something below the random upper margin */
         Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 EndAddress,
+                                                 HighestAddress,
                                                  PAGE_SIZE,
                                                  &Process->VadRoot,
-                                                 Base,
+                                                 BaseAddress,
                                                  &Parent);
     }
 
@@ -113,7 +118,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
                                                  (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
                                                  PAGE_SIZE,
                                                  &Process->VadRoot,
-                                                 Base,
+                                                 BaseAddress,
                                                  &Parent);
         /* Bail out, if still nothing free was found */
         if (Result == TableFoundNode)
@@ -125,12 +130,12 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     }
 
     /* Validate that it came from the VAD ranges */
-    ASSERT(*Base >= (ULONG_PTR)MI_LOWEST_VAD_ADDRESS);
+    ASSERT(*BaseAddress >= (ULONG_PTR)MI_LOWEST_VAD_ADDRESS);
 
     /* Build the rest of the VAD now */
-    Vad->StartingVpn = (*Base) >> PAGE_SHIFT;
-    Vad->EndingVpn = ((*Base) + Size - 1) >> PAGE_SHIFT;
-    Vad->u3.Secured.StartVpn = *Base;
+    Vad->StartingVpn = (*BaseAddress) >> PAGE_SHIFT;
+    Vad->EndingVpn = ((*BaseAddress) + Size - 1) >> PAGE_SHIFT;
+    Vad->u3.Secured.StartVpn = *BaseAddress;
     Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
     Vad->u1.Parent = NULL;
 
@@ -146,7 +151,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Vad->ControlArea = NULL; // For Memory-Area hack
     Vad->FirstPrototypePte = NULL;
     DPRINT("VAD: %p\n", Vad);
-    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *Base, Process->ImageFileName);
+    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *BaseAddress, Process->ImageFileName);
     MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
 
     /* Release the working set */
