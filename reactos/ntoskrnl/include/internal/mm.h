@@ -540,13 +540,6 @@ MmFindGap(
 
 VOID
 NTAPI
-MmMapMemoryArea(PVOID BaseAddress,
-                SIZE_T Length,
-                ULONG Consumer,
-                ULONG Protection);
-
-VOID
-NTAPI
 MiRosCheckMemoryAreas(
    PMMSUPPORT AddressSpace);
 

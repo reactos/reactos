@@ -1081,39 +1081,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
     return STATUS_SUCCESS;
 }
 
-VOID NTAPI
-MmMapMemoryArea(PVOID BaseAddress,
-                SIZE_T Length,
-                ULONG Consumer,
-                ULONG Protection)
-{
-    ULONG i;
-    NTSTATUS Status;
-
-    ASSERT(((ULONG_PTR)BaseAddress % PAGE_SIZE) == 0);
-
-    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
-    {
-        PFN_NUMBER Page;
-
-        Status = MmRequestPageMemoryConsumer(Consumer, TRUE, &Page);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Unable to allocate page\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        Status = MmCreateVirtualMapping (NULL,
-                                         (PVOID)((ULONG_PTR)BaseAddress + (i * PAGE_SIZE)),
-                                         Protection,
-                                         &Page,
-                                         1);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Unable to create virtual mapping\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-    }
-}
 
 VOID
 NTAPI
