@@ -98,7 +98,6 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
 {
     PMM_ALLOCATION_REQUEST Request;
     PLIST_ENTRY Entry;
-    KIRQL OldIrql;
 
     if (Page == 0)
     {
@@ -112,9 +111,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
         (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
         if ((Entry = ExInterlockedRemoveHeadList(&AllocationListHead, &AllocationListLock)) == NULL)
         {
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
             MmDereferencePage(Page);
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
         }
         else
         {
@@ -126,9 +123,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
     }
     else
     {
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         MmDereferencePage(Page);
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     }
 
     return(STATUS_SUCCESS);
@@ -259,7 +254,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 {
     ULONG PagesUsed;
     PFN_NUMBER Page;
-    KIRQL OldIrql;
 
     /*
      * Make sure we don't exceed our individual target.
@@ -276,9 +270,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
      */
     if ((Consumer == MC_SYSTEM) || MiIsBalancerThread())
     {
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         Page = MmAllocPage(Consumer);
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
         if (Page == 0)
         {
             KeBugCheck(NO_PAGES_AVAILABLE);
@@ -337,9 +329,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
     /*
      * Actually allocate the page.
      */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     Page = MmAllocPage(Consumer);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     if (Page == 0)
     {
         KeBugCheck(NO_PAGES_AVAILABLE);
