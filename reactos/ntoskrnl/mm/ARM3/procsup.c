@@ -50,14 +50,11 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
                  IN ULONG Size,
                  OUT PULONG_PTR BaseAddress)
 {
-    PETHREAD Thread = PsGetCurrentThread();
     PMMVAD_LONG Vad;
     NTSTATUS Status;
     ULONG_PTR HighestAddress, RandomBase;
     ULONG AlignedSize;
     LARGE_INTEGER CurrentTime;
-    TABLE_SEARCH_RESULT Result = TableFoundNode;
-    PMMADDRESS_NODE Parent;
 
     /* Allocate a VAD */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
@@ -70,6 +67,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Vad->u.VadFlags.PrivateMemory = TRUE;
     Vad->u.VadFlags.Protection = MM_READWRITE;
     Vad->u.VadFlags.NoChange = TRUE;
+    Vad->u1.Parent = NULL;
 
     /* Setup the secondary flags to make it a secured, writable, long VAD */
     Vad->u2.LongFlags2 = 0;
@@ -77,10 +75,11 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Vad->u2.VadFlags2.LongVad = TRUE;
     Vad->u2.VadFlags2.ReadOnly = FALSE;
 
-    /* Lock the process address space */
-    KeAcquireGuardedMutex(&Process->AddressCreationLock);
+    Vad->ControlArea = NULL; // For Memory-Area hack
+    Vad->FirstPrototypePte = NULL;
 
     /* Check if this is a PEB creation */
+    ASSERT(sizeof(TEB) != sizeof(PEB));
     if (Size == sizeof(PEB))
     {
         /* Create a random value to select one page in a 64k region */
@@ -100,68 +99,27 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
 
         /* Calculate the highest allowed address */
         HighestAddress = RandomBase + AlignedSize - 1;
-
-        /* Try to find something below the random upper margin */
-        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 HighestAddress,
-                                                 PAGE_SIZE,
-                                                 &Process->VadRoot,
-                                                 BaseAddress,
-                                                 &Parent);
     }
-
-    /* Check for success. TableFoundNode means nothing free. */
-    if (Result == TableFoundNode)
+    else
     {
-        /* For TEBs, or if a PEB location couldn't be found, scan the VAD root */
-        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
-                                                 PAGE_SIZE,
-                                                 &Process->VadRoot,
-                                                 BaseAddress,
-                                                 &Parent);
-        /* Bail out, if still nothing free was found */
-        if (Result == TableFoundNode)
-        {
-            KeReleaseGuardedMutex(&Process->AddressCreationLock);
-            ExFreePoolWithTag(Vad, 'ldaV');
-            return STATUS_NO_MEMORY;
-        }
+        HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
     }
 
-    /* Validate that it came from the VAD ranges */
-    ASSERT(*BaseAddress >= (ULONG_PTR)MI_LOWEST_VAD_ADDRESS);
+    *BaseAddress = 0;
+    Status = MiInsertVadEx((PMMVAD)Vad,
+                           BaseAddress,
+                           BYTES_TO_PAGES(Size),
+                           HighestAddress,
+                           PAGE_SIZE,
+                           MEM_TOP_DOWN);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Vad, 'ldaV');
+        return STATUS_NO_MEMORY;
+    }
 
-    /* Build the rest of the VAD now */
-    Vad->StartingVpn = (*BaseAddress) >> PAGE_SHIFT;
-    Vad->EndingVpn = ((*BaseAddress) + Size - 1) >> PAGE_SHIFT;
-    Vad->u3.Secured.StartVpn = *BaseAddress;
-    Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
-    Vad->u1.Parent = NULL;
-
-    /* FIXME: Should setup VAD bitmap */
-    Status = STATUS_SUCCESS;
-
-    /* Pretend as if we own the working set */
-    MiLockProcessWorkingSetUnsafe(Process, Thread);
-
-    /* Insert the VAD */
-    ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
-    Process->VadRoot.NodeHint = Vad;
-    Vad->ControlArea = NULL; // For Memory-Area hack
-    Vad->FirstPrototypePte = NULL;
-    DPRINT("VAD: %p\n", Vad);
-    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *BaseAddress, Process->ImageFileName);
-    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
-
-    /* Release the working set */
-    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
-
-    /* Release the address space lock */
-    KeReleaseGuardedMutex(&Process->AddressCreationLock);
-
-    /* Return the status */
-    return Status;
+    /* Success */
+    return STATUS_SUCCESS;
 }
 
 VOID
