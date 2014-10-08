@@ -243,19 +243,28 @@ SeExchangePrimaryToken(PEPROCESS Process,
         if (OldToken == NewToken)
         {
             /* So it's a nop. */
-            PsDereferencePrimaryToken(OldToken);
+            *OldTokenP = OldToken;
             return STATUS_SUCCESS;
         }
 
         Status = SepCompareTokens(OldToken, NewToken, &IsEqual);
         if (!NT_SUCCESS(Status))
         {
+            *OldTokenP = NULL;
             PsDereferencePrimaryToken(OldToken);
             return Status;
         }
 
-        PsDereferencePrimaryToken(OldToken);
-        return IsEqual ? STATUS_SUCCESS : STATUS_TOKEN_ALREADY_IN_USE;
+        if (!IsEqual)
+        {
+            *OldTokenP = NULL;
+            PsDereferencePrimaryToken(OldToken);
+            return STATUS_TOKEN_ALREADY_IN_USE;
+        }
+        /* Silently return STATUS_SUCCESS but do not set the new token,
+         * as it's already in use elsewhere. */
+        *OldTokenP = OldToken;
+        return STATUS_SUCCESS;
     }
 
     /* Mark new token in use */
