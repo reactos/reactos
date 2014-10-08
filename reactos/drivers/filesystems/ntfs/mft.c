@@ -500,7 +500,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb, ULONGLONG MFTIndex, PUNICODE_STRING Fil
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (ReadFileRecord(Vcb, MFTIndex, MftRecord))
+    if (NT_SUCCESS(ReadFileRecord(Vcb, MFTIndex, MftRecord)))
     {
         //Magic = MftRecord->Magic;
 
