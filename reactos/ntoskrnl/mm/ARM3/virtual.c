@@ -5134,7 +5134,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     PMEMORY_AREA MemoryArea;
     SIZE_T PRegionSize;
     PVOID PBaseAddress;
-    LONG_PTR CommitReduction = 0;
+    LONG_PTR AlreadyDecommitted, CommitReduction = 0;
     ULONG_PTR StartingAddress, EndingAddress;
     PMMVAD Vad;
     NTSTATUS Status;
@@ -5530,13 +5530,15 @@ FinalPath:
     // Decommit the PTEs for the range plus the actual backing pages for the
     // range, then reduce that amount from the commit charge in the VAD
     //
+    AlreadyDecommitted = MiDecommitPages((PVOID)StartingAddress,
+                                         MiAddressToPte(EndingAddress),
+                                         Process,
+                                         Vad);
     CommitReduction = MiAddressToPte(EndingAddress) -
                       MiAddressToPte(StartingAddress) +
                       1 -
-                      MiDecommitPages((PVOID)StartingAddress,
-                                      MiAddressToPte(EndingAddress),
-                                      Process,
-                                      Vad);
+                      AlreadyDecommitted;
+
     ASSERT(CommitReduction >= 0);
     Vad->u.VadFlags.CommitCharge -= CommitReduction;
     ASSERT(Vad->u.VadFlags.CommitCharge >= 0);
