@@ -241,6 +241,9 @@ static void test_QueryCapability(void)
 todo_wine
     ok(hr == WINCODEC_ERR_COMPONENTNOTFOUND, "expected WINCODEC_ERR_COMPONENTNOTFOUND, got %#x\n", hr);
 
+    if (SUCCEEDED(hr))
+        IWICBitmapDecoder_Release(decoder);
+
     pos.QuadPart = 0;
     hr = IStream_Seek(stream, pos, SEEK_SET, NULL);
     ok(hr == S_OK, "IStream_Seek error %#x\n", hr);

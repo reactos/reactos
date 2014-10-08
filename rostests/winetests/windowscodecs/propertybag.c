@@ -72,10 +72,12 @@ static void test_propertybag_getpropertyinfo(IPropertyBag2 *property, ULONG expe
     ok(pb[0].vt == VT_UI1, "Invalid variant type, pb[0].vt=%x\n", pb[0].vt);
     ok(pb[0].dwType == PROPBAG2_TYPE_DATA, "Invalid variant type, pb[0].dwType=%x\n", pb[0].dwType);
     ok(lstrcmpW(pb[0].pstrName, wszTestProperty1) == 0, "Invalid property name, pb[0].pstrName=%s\n", wine_dbgstr_w(pb[0].pstrName));
+    CoTaskMemFree(pb[0].pstrName);
 
     ok(pb[1].vt == VT_R4, "Invalid variant type, pb[1].vt=%x\n", pb[1].vt);
     ok(pb[1].dwType == PROPBAG2_TYPE_DATA, "Invalid variant type, pb[1].dwType=%x\n", pb[1].dwType);
     ok(lstrcmpW(pb[1].pstrName, wszTestProperty2) == 0, "Invalid property name, pb[1].pstrName=%s\n", wine_dbgstr_w(pb[1].pstrName));
+    CoTaskMemFree(pb[1].pstrName);
 }
 
 static void test_propertybag_countproperties(IPropertyBag2 *property, ULONG expected_count)

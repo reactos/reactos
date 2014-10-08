@@ -850,7 +850,13 @@ static void test_create_reader(void)
         stream, &reader);
 todo_wine
     ok(hr == S_OK, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
-    if (FAILED(hr)) return;
+    /* NOTE: removed once Wine is fixed */
+    if (FAILED(hr))
+    {
+        IStream_Release(stream);
+        IWICComponentFactory_Release(factory);
+        return;
+    }
 
     if (SUCCEEDED(hr))
     {
