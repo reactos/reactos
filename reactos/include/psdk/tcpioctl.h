@@ -90,6 +90,9 @@
 #define AO_OPTION_UNBIND            37
 #define AO_OPTION_PROTECT           38
 
+/* TCP connection options */
+#define TCP_SOCKET_NODELAY 1
+
 typedef struct IFEntry
 {
     ULONG if_index;
