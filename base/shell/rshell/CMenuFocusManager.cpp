@@ -378,6 +378,8 @@ LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
     HWND child;
     int iHitTestResult = -1;
 
+    TRACE("ProcessMouseDown %d %d %d\n", msg->message, msg->wParam, msg->lParam);
+
     // Don't do anything if another window is capturing the mouse.
     HWND cCapture = ::GetCapture();
     if (cCapture && cCapture != m_captureHwnd && m_current->type != TrackedMenuEntry)
@@ -423,6 +425,8 @@ LRESULT CMenuFocusManager::ProcessMouseUp(MSG* msg)
 {
     HWND child;
     int iHitTestResult = -1;
+
+    TRACE("ProcessMouseUp %d %d %d\n", msg->message, msg->wParam, msg->lParam);
 
     // Don't do anything if another window is capturing the mouse.
     HWND cCapture = ::GetCapture();
@@ -667,6 +671,8 @@ HRESULT CMenuFocusManager::UpdateFocus()
     HRESULT hr;
     StackEntry * old = m_current;
 
+    TRACE("UpdateFocus\n");
+
     if (old)
         SetCapture(NULL);
 
@@ -753,6 +759,8 @@ HRESULT CMenuFocusManager::UpdateFocus()
 
 HRESULT CMenuFocusManager::PushMenuBar(CMenuBand * mb)
 {
+    TRACE("PushTrackedPopup %p\n", mb);
+
     _ASSERT(m_bandCount == 0);
 
     HRESULT hr = PushToArray(MenuBarEntry, mb, NULL);
@@ -764,6 +772,8 @@ HRESULT CMenuFocusManager::PushMenuBar(CMenuBand * mb)
 
 HRESULT CMenuFocusManager::PushMenuPopup(CMenuBand * mb)
 {
+    TRACE("PushTrackedPopup %p\n", mb);
+
     _ASSERT(!m_current || m_current->type != TrackedMenuEntry);
 
     HRESULT hr = PushToArray(MenuPopupEntry, mb, NULL);
@@ -783,6 +793,8 @@ HRESULT CMenuFocusManager::PushMenuPopup(CMenuBand * mb)
 
 HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
 {
+    TRACE("PushTrackedPopup %p\n", popup);
+
     _ASSERT(m_bandCount > 0);
     _ASSERT(!m_current || m_current->type != TrackedMenuEntry);
 
@@ -803,6 +815,8 @@ HRESULT CMenuFocusManager::PopMenuBar(CMenuBand * mb)
     StackEntryType type;
     CMenuBand * mbc;
     HRESULT hr;
+
+    TRACE("PopMenuBar %p\n", mb);
 
     hr = PopFromArray(&type, &mbc, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -839,6 +853,8 @@ HRESULT CMenuFocusManager::PopMenuPopup(CMenuBand * mb)
     CMenuBand * mbc;
     HRESULT hr;
 
+    TRACE("PopMenuPopup %p\n", mb);
+
     hr = PopFromArray(&type, &mbc, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
     {
@@ -873,6 +889,8 @@ HRESULT CMenuFocusManager::PopTrackedPopup(HMENU popup)
     StackEntryType type;
     HMENU hmenu;
     HRESULT hr;
+
+    TRACE("PopTrackedPopup %p\n", popup);
 
     hr = PopFromArray(&type, NULL, &hmenu);
     if (FAILED_UNEXPECTEDLY(hr))

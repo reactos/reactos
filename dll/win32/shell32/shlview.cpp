@@ -107,6 +107,13 @@ class CDefView :
         CComPtr<IContextMenu>     m_pCM;
 
         BOOL                      m_isEditing;
+
+        CLSID m_Category;
+        HMENU m_hView;
+    private:
+
+        HRESULT _MergeToolbar();
+
     public:
         CDefView();
         ~CDefView();
@@ -332,27 +339,6 @@ class CDefView :
 #define GET_WM_COMMAND_HWND(wp, lp)             (HWND)(lp)
 #define GET_WM_COMMAND_CMD(wp, lp)              HIWORD(wp)
 
-/*
-  Items merged into the toolbar and the filemenu
-*/
-typedef struct
-{   int   idCommand;
-    int   iImage;
-    int   idButtonString;
-    int   idMenuString;
-    BYTE  bState;
-    BYTE  bStyle;
-} MYTOOLINFO, *LPMYTOOLINFO;
-
-static const MYTOOLINFO Tools[] =
-{
-    { FCIDM_SHVIEW_BIGICON,    0, 0, IDS_VIEW_LARGE,   TBSTATE_ENABLED, BTNS_BUTTON },
-    { FCIDM_SHVIEW_SMALLICON,  0, 0, IDS_VIEW_SMALL,   TBSTATE_ENABLED, BTNS_BUTTON },
-    { FCIDM_SHVIEW_LISTVIEW,   0, 0, IDS_VIEW_LIST,    TBSTATE_ENABLED, BTNS_BUTTON },
-    { FCIDM_SHVIEW_REPORTVIEW, 0, 0, IDS_VIEW_DETAILS, TBSTATE_ENABLED, BTNS_BUTTON },
-    { -1, 0, 0, 0, 0, 0}
-};
-
 typedef void (CALLBACK *PFNSHGETSETTINGSPROC)(LPSHELLFLAGSTATE lpsfs, DWORD dwMask);
 
 CDefView::CDefView()
@@ -378,6 +364,8 @@ CDefView::CDefView()
     m_ptLastMousePos.x = 0;
     m_ptLastMousePos.y = 0;
     m_isEditing = FALSE;
+    ZeroMemory(&m_Category, sizeof(m_Category));
+    m_hView = NULL;
 }
 
 CDefView::~CDefView()
@@ -1430,6 +1418,7 @@ void CDefView::DoActivate(UINT uState)
                 }
 
                 /* initialize VIEW menu */
+
                 mii.cbSize = sizeof(mii);
                 mii.fMask = MIIM_SUBMENU;
                 if (::GetMenuItemInfoW(m_hMenu, FCIDM_MENU_VIEW, FALSE, &mii))
@@ -1437,6 +1426,8 @@ void CDefView::DoActivate(UINT uState)
                     HMENU menubase = ::LoadMenuW(shell32_hInstance, L"MENU_001");
 
                     HMENU hSubMenu = mii.hSubMenu;
+
+                    m_hView = CreatePopupMenu();
 
                     _InsertMenuItemW(hSubMenu, FCIDM_MENU_VIEW_SEP_OPTIONS, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
 
@@ -1451,6 +1442,8 @@ void CDefView::DoActivate(UINT uState)
                         mii.dwTypeData = label;
                         mii.cch = _countof(label);
                         ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
+
+                        ::AppendMenuW(m_hView, mii.fType, mii.wID, mii.dwTypeData);
 
                         TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
 
@@ -2117,6 +2110,8 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
         TRACE("-- after fnInsertMenusSB\n");
     }
 
+    _MergeToolbar();
+
     return S_OK;
 }
 
@@ -2661,6 +2656,40 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
     if (!pguidCmdGroup)
         return OLECMDERR_E_UNKNOWNGROUP;
 
+    if (IsEqualCLSID(*pguidCmdGroup, m_Category))
+    {
+        if (nCmdID == FCIDM_SHVIEW_AUTOARRANGE)
+        {
+            if (V_VT(pvaIn) != VT_INT_PTR)
+                return OLECMDERR_E_NOTSUPPORTED;
+
+
+            TPMPARAMS params;
+            params.cbSize = sizeof(params);
+            params.rcExclude = *(RECT*) V_INTREF(pvaIn);
+
+            HMENU hView = m_hView;
+#if 0
+            hView = CreatePopupMenu();
+            AppendMenuW(hView, MF_STRING, FCIDM_SHVIEW_BIGICON, L"Big!");
+            AppendMenuW(hView, MF_STRING, FCIDM_SHVIEW_SMALLICON, L"Small!");
+            AppendMenuW(hView, MF_STRING, FCIDM_SHVIEW_LISTVIEW, L"List!");
+            AppendMenuW(hView, MF_STRING, FCIDM_SHVIEW_REPORTVIEW, L"Report!");
+#endif
+
+            if (hView)
+            {
+                PrepareShowViewMenu(hView);
+
+                TrackPopupMenuEx(hView, TPM_LEFTALIGN | TPM_TOPALIGN, params.rcExclude.left, params.rcExclude.bottom, m_hWndParent, &params);
+            }
+
+            // pvaOut is VT_I4 with value 0x403 (cmd id of the new mode maybe?)
+            V_VT(pvaOut) = VT_I4;
+            V_I4(pvaOut) = 0x403;
+        }
+    }
+
     if (IsEqualIID(*pguidCmdGroup, CGID_Explorer) &&
             (nCmdID == 0x29) &&
             (nCmdexecopt == 4) && pvaOut)
@@ -2913,6 +2942,33 @@ HRESULT STDMETHODCALLTYPE CDefView::QueryService(REFGUID guidService, REFIID rii
     return E_NOINTERFACE;
 }
 
+HRESULT CDefView::_MergeToolbar()
+{
+    CComPtr<IExplorerToolbar> ptb; // [sp+8h] [bp-4h]@1
+
+    HRESULT hr = S_OK;
+
+    hr = IUnknown_QueryService(m_pShellBrowser, IID_IExplorerToolbar, IID_PPV_ARG(IExplorerToolbar, &ptb));
+    if (FAILED(hr))
+        return hr;
+
+    m_Category = CGID_DefViewFrame;
+
+    hr = ptb->SetCommandTarget(static_cast<IOleCommandTarget*>(this), &m_Category, 0);
+    if (FAILED(hr))
+        return hr;
+
+    if (hr == S_FALSE)
+        return S_OK;
+
+#if 0
+    hr = ptb->AddButtons(&m_Category, buttonsCount, buttons);
+    if (FAILED(hr))
+        return hr;
+#endif
+
+    return S_OK;
+}
 /**********************************************************
  *    IShellView_Constructor
  */

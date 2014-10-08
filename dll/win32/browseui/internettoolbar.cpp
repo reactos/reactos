@@ -1287,6 +1287,8 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetCommandTarget(IUnknown *theTarget
 {
     HRESULT                                 hResult;
 
+    TRACE("SetCommandTarget %p category %s param %d\n", theTarget, wine_dbgstr_guid(category), param14);
+
     fCommandTarget.Release();
     hResult = theTarget->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &fCommandTarget));
     if (FAILED_UNEXPECTEDLY(hResult))
