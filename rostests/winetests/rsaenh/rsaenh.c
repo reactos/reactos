@@ -30,8 +30,14 @@
 #include "winreg.h"
 
 static HCRYPTPROV hProv;
+static const char *szProviders[] = {MS_ENHANCED_PROV_A, MS_DEF_PROV_A, MS_STRONG_PROV_A};
+static int iProv;
 static const char szContainer[] = "winetest";
-static const char szProvider[] = MS_ENHANCED_PROV_A;
+static const char *szProvider;
+
+#define ENHANCED_PROV (iProv == 0)
+#define BASE_PROV (iProv == 1)
+#define STRONG_PROV (iProv == 2)
 
 typedef struct _ctdatatype {
        unsigned char origstr[32];
@@ -55,6 +61,8 @@ static const cryptdata cTestData[4] = {
        {'a','b','c','d','e','f','g','h','i','j','k','l',0},
        12,12,16}
 };
+
+static int win2k;
 
 /*
  * 1. Take the MD5 Hash of the container name (with an extra null byte)
@@ -80,10 +88,12 @@ static void uniquecontainer(char *unique)
     {
         /* Windows 2000 can't handle KEY_WOW64_64KEY */
         RegOpenKeyA(HKEY_LOCAL_MACHINE, szCryptography, &hkey);
+        win2k++;
     }
     RegQueryValueExA(hkey, szMachineGuid, NULL, NULL, (LPBYTE)guid, &size);
     RegCloseKey(hkey);
 
+    if (!unique) return;
     lstrcpyA(unique, szContainer_md5);
     lstrcatA(unique, "_");
     lstrcatA(unique, guid);
@@ -118,10 +128,12 @@ static void trace_hex(BYTE *pbData, DWORD dwLen) {
 }
 */
 
-static BOOL init_base_environment(DWORD dwKeyFlags)
+static BOOL init_base_environment(const char *provider, DWORD dwKeyFlags)
 {
     HCRYPTKEY hKey;
     BOOL result;
+
+    if (provider) szProvider = provider;
         
     pCryptDuplicateHash = (void *)GetProcAddress(GetModuleHandleA("advapi32.dll"), "CryptDuplicateHash");
         
@@ -414,7 +426,7 @@ static void test_hashes(void)
     BYTE pbHashValue[36];
     BYTE pbSigValue[128];
     HCRYPTKEY hKeyExchangeKey;
-    DWORD hashlen, len, error;
+    DWORD hashlen, len, error, cryptflags;
     int i;
 
     for (i=0; i<2048; i++) pbData[i] = (unsigned char)i;
@@ -449,7 +461,14 @@ static void test_hashes(void)
     result = CryptHashData(hHash, pbData, sizeof(pbData), ~0);
     ok(!result && GetLastError() == NTE_BAD_FLAGS, "%08x\n", GetLastError());
 
-    result = CryptHashData(hHash, pbData, sizeof(pbData), CRYPT_USERDATA);
+    cryptflags = CRYPT_USERDATA;
+    result = CryptHashData(hHash, pbData, sizeof(pbData), cryptflags);
+    if (!result && GetLastError() == NTE_BAD_FLAGS) /* <= NT4 */
+    {
+        cryptflags &= ~CRYPT_USERDATA;
+        ok(broken(1), "Failed to support CRYPT_USERDATA flag\n");
+        result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+    }
     ok(result, "%08x\n", GetLastError());
 
     len = sizeof(DWORD);
@@ -476,7 +495,7 @@ static void test_hashes(void)
     result = CryptHashData(hHash, pbData, sizeof(pbData), ~0);
     ok(!result && GetLastError() == NTE_BAD_FLAGS, "%08x\n", GetLastError());
 
-    result = CryptHashData(hHash, pbData, sizeof(pbData), CRYPT_USERDATA);
+    result = CryptHashData(hHash, pbData, sizeof(pbData), cryptflags);
     ok(result, "%08x\n", GetLastError());
 
     len = 16;
@@ -525,7 +544,7 @@ static void test_hashes(void)
     result = CryptCreateHash(hProv, CALG_SHA, 0, 0, &hHash);
     ok(result, "%08x\n", GetLastError());
 
-    result = CryptHashData(hHash, pbData, 5, CRYPT_USERDATA);
+    result = CryptHashData(hHash, pbData, 5, cryptflags);
     ok(result, "%08x\n", GetLastError());
 
     if(pCryptDuplicateHash) {
@@ -649,7 +668,8 @@ static void test_hashes(void)
     ok(result, "CryptCreateHash failed 0x%08x\n", GetLastError());
     /* Test that CryptHashData fails on this hash */
     result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
-    ok(!result && GetLastError() == NTE_BAD_ALGID, "%08x\n", GetLastError());
+    ok(!result && (GetLastError() == NTE_BAD_ALGID || broken(GetLastError() == ERROR_INVALID_HANDLE)) /* Win 8 */,
+       "%08x\n", GetLastError());
     result = CryptSetHashParam(hHash, HP_HASHVAL, pbHashValue, 0);
     ok(result, "%08x\n", GetLastError());
     len = (DWORD)sizeof(abPlainPrivateKey);
@@ -699,6 +719,13 @@ static void test_block_cipher_modes(void)
     if (!result) return;
 
     memcpy(abData, plain, sizeof(plain));
+
+    /* test default chaining mode */
+    dwMode = 0xdeadbeef;
+    dwLen = sizeof(dwMode);
+    result = CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
+    ok(result, "%08x\n", GetLastError());
+    ok(dwMode == CRYPT_MODE_CBC, "Wrong default chaining mode\n");
 
     dwMode = CRYPT_MODE_ECB;
     result = CryptSetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, 0);
@@ -765,11 +792,18 @@ static void test_block_cipher_modes(void)
 
     dwMode = CRYPT_MODE_OFB;
     result = CryptSetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, 0);
-    ok(result, "%08x\n", GetLastError());
-    
-    dwLen = 23;
-    result = CryptEncrypt(hKey, 0, TRUE, 0, abData, &dwLen, 24);
-    ok(!result && GetLastError() == NTE_BAD_ALGID, "%08x\n", GetLastError());
+    if(!result && GetLastError() == ERROR_INTERNAL_ERROR)
+    {
+        ok(broken(1), "OFB mode not supported\n"); /* Windows 8 */
+    }
+    else
+    {
+        ok(result, "%08x\n", GetLastError());
+
+        dwLen = 23;
+        result = CryptEncrypt(hKey, 0, TRUE, 0, abData, &dwLen, 24);
+        ok(!result && GetLastError() == NTE_BAD_ALGID, "%08x\n", GetLastError());
+    }
 
     CryptDestroyKey(hKey);
 }
@@ -780,6 +814,9 @@ static void test_3des112(void)
     BOOL result;
     DWORD dwLen;
     unsigned char pbData[16], enc_data[16], bad_data[16];
+    static const BYTE des112[16] = {
+        0x8e, 0x0c, 0x3c, 0xa3, 0x05, 0x88, 0x5f, 0x7a,
+        0x32, 0xa1, 0x06, 0x52, 0x64, 0xd2, 0x44, 0x1c };
     int i;
 
     result = derive_key(CALG_3DES_112, &hKey, 0);
@@ -795,6 +832,8 @@ static void test_3des112(void)
     result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, 16);
     ok(result, "%08x\n", GetLastError());
     
+    ok(!memcmp(pbData, des112, sizeof(des112)), "3DES_112 encryption failed!\n");
+
     result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
     ok(result, "%08x\n", GetLastError());
 
@@ -864,9 +903,18 @@ static void test_des(void)
     BOOL result;
     DWORD dwLen, dwMode;
     unsigned char pbData[16], enc_data[16], bad_data[16];
+    static const BYTE des[16] = {
+        0x58, 0x86, 0x42, 0x46, 0x65, 0x4b, 0x92, 0x62,
+        0xcf, 0x0f, 0x65, 0x37, 0x43, 0x7a, 0x82, 0xb9 };
+    static const BYTE des_old_behavior[16] = {
+        0xb0, 0xfd, 0x11, 0x69, 0x76, 0xb1, 0xa1, 0x03,
+        0xf7, 0xbc, 0x23, 0xaa, 0xd4, 0xc1, 0xc9, 0x55 };
+    static const BYTE des_old_strong[16] = {
+        0x9b, 0xc1, 0x2a, 0xec, 0x4a, 0xf9, 0x0f, 0x14,
+        0x0a, 0xed, 0xf6, 0xd3, 0xdc, 0xad, 0xf7, 0x0c };
     int i;
 
-    result = derive_key(CALG_DES, &hKey, 56);
+    result = derive_key(CALG_DES, &hKey, 0);
     if (!result) {
         /* rsaenh compiled without OpenSSL */
         ok(GetLastError()==NTE_BAD_ALGID, "%08x\n", GetLastError());
@@ -880,6 +928,7 @@ static void test_des(void)
     dwLen = sizeof(DWORD);
     result = CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
     ok(result, "%08x\n", GetLastError());
+    ok(dwMode == CRYPT_MODE_ECB, "Expected CRYPT_MODE_ECB, got %d\n", dwMode);
     
     for (i=0; i<sizeof(pbData); i++) pbData[i] = (unsigned char)i;
     
@@ -887,6 +936,8 @@ static void test_des(void)
     result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, 16);
     ok(result, "%08x\n", GetLastError());
     
+    ok(!memcmp(pbData, des, sizeof(des)), "DES encryption failed!\n");
+
     result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
     ok(result, "%08x\n", GetLastError());
 
@@ -946,6 +997,26 @@ static void test_des(void)
           printBytes("got",pbData,dwLen);
       }
     }
+
+    result = CryptDestroyKey(hKey);
+    ok(result, "%08x\n", GetLastError());
+
+    /* Windows >= XP changed the way DES keys are derived, this test ensures we don't break that */
+    derive_key(CALG_DES, &hKey, 56);
+
+    dwMode = CRYPT_MODE_ECB;
+    result = CryptSetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, 0);
+    ok(result, "%08x\n", GetLastError());
+
+    for (i=0; i<sizeof(pbData); i++) pbData[i] = (unsigned char)i;
+
+    dwLen = 13;
+    result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, 16);
+    ok(result, "%08x\n", GetLastError());
+    ok(!memcmp(pbData, des, sizeof(des)) || broken(
+    !memcmp(pbData, des_old_behavior, sizeof(des)) ||
+    (STRONG_PROV && !memcmp(pbData, des_old_strong, sizeof(des)))) /* <= 2000 */,
+       "DES encryption failed!\n");
 
     result = CryptDestroyKey(hKey);
     ok(result, "%08x\n", GetLastError());
@@ -1040,24 +1111,53 @@ static void test_aes(int keylen)
 {
     HCRYPTKEY hKey;
     BOOL result;
-    DWORD dwLen;
-    unsigned char pbData[16], enc_data[16], bad_data[16];
+    DWORD dwLen, dwMode;
+    unsigned char pbData[48], enc_data[16], bad_data[16];
     int i;
-
+    static const BYTE aes_plain[32] = {
+        "AES Test With 2 Blocks Of Data." };
+    static const BYTE aes_cbc_enc[3][48] = {
+    /* 128 bit key encrypted text */
+    { 0xfe, 0x85, 0x3b, 0xe1, 0xf5, 0xe1, 0x58, 0x75, 0xd5, 0xa9, 0x74, 0xe3, 0x09, 0xea, 0xa5, 0x04,
+      0x23, 0x35, 0xa2, 0x3b, 0x5c, 0xf1, 0x6c, 0x6f, 0xb9, 0xcd, 0x64, 0x06, 0x3e, 0x41, 0x83, 0xef,
+      0x2a, 0xfe, 0xea, 0xb5, 0x6c, 0x17, 0x20, 0x79, 0x8c, 0x51, 0x3e, 0x56, 0xed, 0xe1, 0x47, 0x68 },
+    /* 192 bit key encrypted text */
+    { 0x6b, 0xf0, 0xfd, 0x32, 0xee, 0xc6, 0x06, 0x13, 0xa8, 0xe6, 0x3c, 0x81, 0x85, 0xb8, 0x2e, 0xa1,
+      0xd4, 0x3b, 0xe8, 0x22, 0xa5, 0x74, 0x4a, 0xbe, 0x9d, 0xcf, 0xcc, 0x37, 0x26, 0x19, 0x5a, 0xd1,
+      0x7f, 0x76, 0xbf, 0x94, 0x28, 0xce, 0x27, 0x21, 0x61, 0x87, 0xeb, 0xb9, 0x8b, 0xa8, 0xb4, 0x57 },
+    /* 256 bit key encrypted text */
+    { 0x20, 0x57, 0x17, 0x0b, 0x17, 0x76, 0xd8, 0x3b, 0x26, 0x90, 0x8b, 0x4c, 0xf2, 0x00, 0x79, 0x33,
+      0x29, 0x2b, 0x13, 0x9c, 0xe2, 0x95, 0x09, 0xc1, 0xcd, 0x20, 0x87, 0x22, 0x32, 0x70, 0x9d, 0x75,
+      0x9a, 0x94, 0xf5, 0x76, 0x5c, 0xb1, 0x62, 0x2c, 0xe1, 0x76, 0x7c, 0x86, 0x73, 0xe6, 0x7a, 0x23 }
+    };
     switch (keylen)
     {
         case 256:
             result = derive_key(CALG_AES_256, &hKey, 0);
+            i = 2;
             break;
         case 192:
             result = derive_key(CALG_AES_192, &hKey, 0);
+            i = 1;
             break;
         default:
         case 128:
             result = derive_key(CALG_AES_128, &hKey, 0);
+            i = 0;
             break;
     }
     if (!result) return;
+
+    dwLen = sizeof(aes_plain);
+    memcpy(pbData, aes_plain, dwLen);
+    result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, sizeof(pbData));
+    ok(result, "Expected OK, got last error %d\n", GetLastError());
+    ok(dwLen == 48, "Expected dwLen 48, got %d\n", dwLen);
+    ok(!memcmp(aes_cbc_enc[i], pbData, dwLen), "Expected equal data sequences\n");
+
+    result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
+    ok(result && dwLen == 32 && !memcmp(aes_plain, pbData, dwLen),
+       "%08x, dwLen: %d\n", GetLastError(), dwLen);
 
     for (i=0; i<sizeof(pbData); i++) pbData[i] = (unsigned char)i;
 
@@ -1067,6 +1167,13 @@ static void test_aes(int keylen)
        "expected NTE_BAD_KEY, got %08x\n", GetLastError());
     if (result)
         ok(!dwLen, "unexpected salt length %d\n", dwLen);
+
+    /* test default chaining mode */
+    dwMode = 0xdeadbeef;
+    dwLen = sizeof(dwMode);
+    result = CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
+    ok(result, "%08x\n", GetLastError());
+    ok(dwMode == CRYPT_MODE_CBC, "Wrong default chaining\n");
 
     dwLen = 13;
     result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, 16);
@@ -1243,14 +1350,28 @@ static void test_rc2(void)
         0xc0, 0x9a, 0xe4, 0x2f, 0x0a, 0x47, 0x67, 0x11,
         0xfb, 0x18, 0x87, 0xce, 0x0c, 0x75, 0x07, 0xb1 };
     static const BYTE rc2_128_encrypted[] = {
-        0x82,0x81,0xf7,0xff,0xdd,0xd7,0x88,0x8c,0x2a,0x2a,0xc0,0xce,0x4c,0x89,
-        0xb6,0x66 };
+        0x82,0x81,0xf7,0xff,0xdd,0xd7,0x88,0x8c,
+        0x2a,0x2a,0xc0,0xce,0x4c,0x89,0xb6,0x66 };
+    static const BYTE rc2_40def_encrypted[] = {
+        0x23,0xc8,0x70,0x13,0x42,0x2e,0xa8,0x98,
+        0x5c,0xdf,0x7a,0x9b,0xea,0xdb,0x96,0x1b };
+    static const BYTE rc2_40_salt_enh[24] = {
+        0xA3, 0xD7, 0x41, 0x87, 0x7A, 0xD0, 0x18, 0xDB,
+        0xD4, 0x6A, 0x4F, 0xEE, 0xF3, 0xCA, 0xCD, 0x34,
+        0xB3, 0x15, 0x9A, 0x2A, 0x88, 0x5F, 0x43, 0xA5 };
+    static const BYTE rc2_40_salt_base[24] = {
+        0x8C, 0x4E, 0xA6, 0x00, 0x9B, 0x15, 0xEF, 0x9E,
+        0x88, 0x81, 0xD0, 0x65, 0xD6, 0x53, 0x57, 0x08,
+        0x0A, 0x77, 0x80, 0xFA, 0x7E, 0x89, 0x14, 0x55 };
+    static const BYTE rc2_40_salt_strong[24] = {
+        0xB9, 0x33, 0xB6, 0x7A, 0x35, 0xC3, 0x06, 0x88,
+        0xBF, 0xD5, 0xCC, 0xAF, 0x14, 0xAE, 0xE2, 0x31,
+        0xC6, 0x9A, 0xAA, 0x3F, 0x05, 0x2F, 0x22, 0xDA };
     HCRYPTHASH hHash;
     HCRYPTKEY hKey;
     BOOL result;
-    DWORD dwLen, dwKeyLen, dwDataLen, dwMode, dwModeBits;
-    BYTE *pbTemp;
-    unsigned char pbData[2000], pbHashValue[16];
+    DWORD dwLen, dwKeyLen, dwDataLen, dwMode, dwModeBits, error;
+    unsigned char pbData[2000], pbHashValue[16], pszBuffer[256];
     int i;
     
     for (i=0; i<2000; i++) pbData[i] = (unsigned char)i;
@@ -1275,6 +1396,13 @@ static void test_rc2(void)
         dwLen = sizeof(DWORD);
         result = CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE*)&dwKeyLen, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
+
+        /* test default chaining mode */
+        dwMode = 0xdeadbeef;
+        dwLen = sizeof(dwMode);
+        result = CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwMode == CRYPT_MODE_CBC, "Wrong default chaining mode\n");
 
         dwMode = CRYPT_MODE_CBC;
         result = CryptSetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, 0);
@@ -1301,26 +1429,30 @@ static void test_rc2(void)
         dwLen = sizeof(DWORD);
         result = CryptGetKeyParam(hKey, KP_BLOCKLEN, (BYTE*)&dwModeBits, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
+        ok(dwLen == 4, "Expected 4, got %d\n", dwLen);
 
+        dwLen = 0;
         result = CryptGetKeyParam(hKey, KP_IV, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
-        pbTemp = HeapAlloc(GetProcessHeap(), 0, dwLen);
-        CryptGetKeyParam(hKey, KP_IV, pbTemp, &dwLen, 0);
-        HeapFree(GetProcessHeap(), 0, pbTemp);
+        result = CryptGetKeyParam(hKey, KP_IV, pszBuffer, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwLen == 8, "Expected 8, got %d\n", dwLen);
 
+        dwLen = 0;
         result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
         /* The default salt length is always 11... */
         ok(dwLen == 11, "unexpected salt length %d\n", dwLen);
         /* and the default salt is always empty. */
-        pbTemp = HeapAlloc(GetProcessHeap(), 0, dwLen);
-        CryptGetKeyParam(hKey, KP_SALT, pbTemp, &dwLen, 0);
+        result = CryptGetKeyParam(hKey, KP_SALT, pszBuffer, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
         for (i=0; i<dwLen; i++)
-            ok(!pbTemp[i], "unexpected salt value %02x @ %d\n", pbTemp[i], i);
-        HeapFree(GetProcessHeap(), 0, pbTemp);
+            ok(!pszBuffer[i], "unexpected salt value %02x @ %d\n", pszBuffer[i], i);
 
         dwLen = sizeof(DWORD);
-        CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
+        result = CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwMode == CRYPT_MODE_CBC, "Expected CRYPT_MODE_CBC, got %d\n", dwMode);
 
         result = CryptDestroyHash(hHash);
         ok(result, "%08x\n", GetLastError());
@@ -1331,11 +1463,11 @@ static void test_rc2(void)
 
         ok(!memcmp(pbData, rc2_40_encrypted, 16), "RC2 encryption failed!\n");
 
+        dwLen = 0;
         result = CryptGetKeyParam(hKey, KP_IV, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
-        pbTemp = HeapAlloc(GetProcessHeap(), 0, dwLen);
-        CryptGetKeyParam(hKey, KP_IV, pbTemp, &dwLen, 0);
-        HeapFree(GetProcessHeap(), 0, pbTemp);
+        result = CryptGetKeyParam(hKey, KP_IV, pszBuffer, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
 
         result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen);
         ok(result, "%08x\n", GetLastError());
@@ -1403,20 +1535,41 @@ static void test_rc2(void)
         ok(!result, "CryptSetKeyParam failed: %08x\n", GetLastError());
 
         dwLen = sizeof(dwKeyLen);
-        CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+        result = CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
         ok(dwKeyLen == 56, "%d (%08x)\n", dwKeyLen, GetLastError());
-        CryptGetKeyParam(hKey, KP_EFFECTIVE_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+        result = CryptGetKeyParam(hKey, KP_EFFECTIVE_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
         ok(dwKeyLen == 56 || broken(dwKeyLen == 40), "%d (%08x)\n", dwKeyLen, GetLastError());
 
         dwKeyLen = 128;
+        SetLastError(0xdeadbeef);
         result = CryptSetKeyParam(hKey, KP_EFFECTIVE_KEYLEN, (LPBYTE)&dwKeyLen, 0);
-        ok(result, "%d\n", GetLastError());
+        if (!BASE_PROV)
+        {
+            dwKeyLen = 12345;
+            ok(result, "expected success, got error 0x%08X\n", GetLastError());
+            result = CryptGetKeyParam(hKey, KP_EFFECTIVE_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+            ok(result, "%08x\n", GetLastError());
+            ok(dwKeyLen == 128, "Expected 128, got %d\n", dwKeyLen);
+        }
+        else
+        {
+            ok(!result, "expected error\n");
+            ok(GetLastError() == NTE_BAD_DATA, "Expected 0x80009005, got 0x%08X\n", GetLastError());
+            result = CryptGetKeyParam(hKey, KP_EFFECTIVE_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+            ok(result, "%08x\n", GetLastError());
+            ok(dwKeyLen == 40, "Expected 40, got %d\n", dwKeyLen);
+        }
 
         dwLen = sizeof(dwKeyLen);
-        CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+        result = CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
         ok(dwKeyLen == 56, "%d (%08x)\n", dwKeyLen, GetLastError());
-        CryptGetKeyParam(hKey, KP_EFFECTIVE_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
-        ok(dwKeyLen == 128, "%d (%08x)\n", dwKeyLen, GetLastError());
+        result = CryptGetKeyParam(hKey, KP_EFFECTIVE_KEYLEN, (BYTE *)&dwKeyLen, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok((!BASE_PROV && dwKeyLen == 128) || (BASE_PROV && dwKeyLen == 40),
+           "%d (%08x)\n", dwKeyLen, GetLastError());
 
         result = CryptDestroyHash(hHash);
         ok(result, "%08x\n", GetLastError());
@@ -1424,9 +1577,8 @@ static void test_rc2(void)
         dwDataLen = 13;
         result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen, 24);
         ok(result, "%08x\n", GetLastError());
-
-        ok(!memcmp(pbData, rc2_128_encrypted, sizeof(rc2_128_encrypted)),
-                "RC2 encryption failed!\n");
+        ok(!memcmp(pbData, !BASE_PROV ? rc2_128_encrypted : rc2_40def_encrypted,
+           sizeof(rc2_128_encrypted)), "RC2 encryption failed!\n");
 
         /* Oddly enough this succeeds, though it should have no effect */
         dwKeyLen = 40;
@@ -1434,6 +1586,54 @@ static void test_rc2(void)
         ok(result, "%d\n", GetLastError());
 
         result = CryptDestroyKey(hKey);
+        ok(result, "%08x\n", GetLastError());
+
+        /* Test a 40 bit key with salt */
+        result = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
+        ok(result, "%08x\n", GetLastError());
+
+        result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+        ok(result, "%08x\n", GetLastError());
+
+        result = CryptDeriveKey(hProv, CALG_RC2, hHash, (40<<16)|CRYPT_CREATE_SALT, &hKey);
+        ok(result, "%08x\n", GetLastError());
+
+        dwDataLen = 16;
+        memset(pbData, 0xAF, dwDataLen);
+        SetLastError(0xdeadbeef);
+        result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen, 24);
+        if(result)
+        {
+            ok((ENHANCED_PROV && !memcmp(pbData, rc2_40_salt_enh, dwDataLen)) ||
+               (STRONG_PROV && !memcmp(pbData, rc2_40_salt_strong, dwDataLen)) ||
+               (BASE_PROV && !memcmp(pbData, rc2_40_salt_base, dwDataLen)),
+               "RC2 encryption failed!\n");
+        }
+        else /* <= XP */
+        {
+            error = GetLastError();
+            ok(error == NTE_BAD_DATA || broken(error == NTE_DOUBLE_ENCRYPT),
+               "Expected 0x80009005, got 0x%08X\n", error);
+        }
+        dwLen = sizeof(DWORD);
+        dwKeyLen = 12345;
+        result = CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE*)&dwKeyLen, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwKeyLen == 40, "Expected 40, got %d\n", dwKeyLen);
+
+        dwLen = sizeof(pszBuffer);
+        memset(pszBuffer, 0xAF, dwLen);
+        result = CryptGetKeyParam(hKey, KP_SALT, pszBuffer, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        if (!ENHANCED_PROV)
+            ok(dwLen == 11, "Expected 11, got %d\n", dwLen);
+        else
+            ok(dwLen == 0, "Expected 0, got %d\n", dwLen);
+
+        result = CryptDestroyKey(hKey);
+        ok(result, "%08x\n", GetLastError());
+
+        result = CryptDestroyHash(hHash);
         ok(result, "%08x\n", GetLastError());
     }
 }
@@ -1443,11 +1643,17 @@ static void test_rc4(void)
     static const BYTE rc4[16] = { 
         0x17, 0x0c, 0x44, 0x8e, 0xae, 0x90, 0xcd, 0xb0, 
         0x7f, 0x87, 0xf5, 0x7a, 0xec, 0xb2, 0x2e, 0x35 };    
+    static const BYTE rc4_40_salt[16] = {
+        0x41, 0xE6, 0x33, 0xC9, 0x50, 0xA1, 0xBF, 0x88,
+        0x12, 0x4D, 0xD3, 0xE3, 0x47, 0x88, 0x6D, 0xA5 };
+    static const BYTE rc4_40_salt_base[16] = {
+        0x2F, 0xAC, 0xEA, 0xEA, 0xFF, 0x68, 0x7E, 0x77,
+        0xF4, 0xB9, 0x48, 0x7C, 0x4E, 0x79, 0xA6, 0xB5 };
     BOOL result;
     HCRYPTHASH hHash;
     HCRYPTKEY hKey;
     DWORD dwDataLen = 5, dwKeyLen, dwLen = sizeof(DWORD), dwMode;
-    unsigned char pbData[2000], *pbTemp;
+    unsigned char pbData[2000];
     unsigned char pszBuffer[256];
     int i;
 
@@ -1474,25 +1680,29 @@ static void test_rc4(void)
         dwLen = sizeof(DWORD);
         result = CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE*)&dwKeyLen, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
+        ok(dwKeyLen == 56, "Expected 56, got %d\n", dwKeyLen);
 
         dwLen = sizeof(DWORD);
         result = CryptGetKeyParam(hKey, KP_BLOCKLEN, (BYTE*)&dwKeyLen, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
+        ok(dwKeyLen == 0, "Expected 0, got %d\n", dwKeyLen);
 
+        dwLen = 0;
         result = CryptGetKeyParam(hKey, KP_IV, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
-        pbTemp = HeapAlloc(GetProcessHeap(), 0, dwLen);
-        CryptGetKeyParam(hKey, KP_IV, pbTemp, &dwLen, 0);
-        HeapFree(GetProcessHeap(), 0, pbTemp);
+        result = CryptGetKeyParam(hKey, KP_IV, pszBuffer, &dwLen, 0);
 
+        dwLen = 0;
         result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
-        pbTemp = HeapAlloc(GetProcessHeap(), 0, dwLen);
-        CryptGetKeyParam(hKey, KP_SALT, pbTemp, &dwLen, 0);
-        HeapFree(GetProcessHeap(), 0, pbTemp);
+        result = CryptGetKeyParam(hKey, KP_SALT, pszBuffer, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
 
         dwLen = sizeof(DWORD);
-        CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
+        result = CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwMode == 0 || broken(dwMode == CRYPT_MODE_CBC) /* <= 2000 */,
+           "Expected 0, got %d\n", dwMode);
 
         result = CryptDestroyHash(hHash);
         ok(result, "%08x\n", GetLastError());
@@ -1539,6 +1749,45 @@ static void test_rc4(void)
            "%08x\n", GetLastError());
 
         result = CryptDestroyKey(hKey);
+        ok(result, "%08x\n", GetLastError());
+
+        /* Test a 40 bit key with salt */
+        result = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
+        ok(result, "%08x\n", GetLastError());
+
+        result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+        ok(result, "%08x\n", GetLastError());
+
+        result = CryptDeriveKey(hProv, CALG_RC4, hHash, (40<<16)|CRYPT_CREATE_SALT, &hKey);
+        ok(result, "%08x\n", GetLastError());
+        dwDataLen = 16;
+        memset(pbData, 0xAF, dwDataLen);
+        SetLastError(0xdeadbeef);
+        result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen, 24);
+        ok(result, "%08x\n", GetLastError());
+        ok((ENHANCED_PROV && !memcmp(pbData, rc4_40_salt, dwDataLen)) ||
+           (!ENHANCED_PROV && !memcmp(pbData, rc4_40_salt_base, dwDataLen)),
+           "RC4 encryption failed!\n");
+
+        dwLen = sizeof(DWORD);
+        dwKeyLen = 12345;
+        result = CryptGetKeyParam(hKey, KP_KEYLEN, (BYTE*)&dwKeyLen, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwKeyLen == 40, "Expected 40, got %d\n", dwKeyLen);
+
+        dwLen = sizeof(pszBuffer);
+        memset(pszBuffer, 0xAF, dwLen);
+        result = CryptGetKeyParam(hKey, KP_SALT, pszBuffer, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        if (!ENHANCED_PROV)
+            ok(dwLen == 11, "Expected 11, got %d\n", dwLen);
+        else
+            ok(dwLen == 0, "Expected 0, got %d\n", dwLen);
+
+        result = CryptDestroyKey(hKey);
+        ok(result, "%08x\n", GetLastError());
+
+        result = CryptDestroyHash(hHash);
         ok(result, "%08x\n", GetLastError());
     }
 }
@@ -1694,8 +1943,9 @@ static void test_import_private(void)
 
     dwLen = (DWORD)sizeof(abEncryptedMessage);
     result = CryptDecrypt(hSessionKey, 0, TRUE, 0, abEncryptedMessage, &dwLen);
-    ok(result && dwLen == 12 && !memcmp(abEncryptedMessage, "Wine rocks!",12), 
-       "%08x, len: %d\n", GetLastError(), dwLen);
+    ok(result, "%08x\n", GetLastError());
+    ok(dwLen == 12, "expected 12, got %d\n", dwLen);
+    ok(!memcmp(abEncryptedMessage, "Wine rocks!", 12), "decrypt failed\n");
     CryptDestroyKey(hSessionKey);
     
     if (!derive_key(CALG_RC4, &hSessionKey, 56)) return;
@@ -2031,6 +2281,11 @@ static void test_rsa_encrypt(void)
 
     dwLen = 12;
     result = CryptEncrypt(hRSAKey, 0, TRUE, 0, NULL, &dwLen, (DWORD)sizeof(abData));
+    if(!ENHANCED_PROV && !result && GetLastError() == NTE_BAD_KEY)
+    {
+        CryptDestroyKey(hRSAKey);
+        return;
+    }
     ok(result, "CryptEncrypt failed: %08x\n", GetLastError());
     ok(dwLen == 128, "Unexpected length %d\n", dwLen);
     dwLen = 12;
@@ -3022,7 +3277,7 @@ static void test_key_permissions(void)
     BOOL result;
 
     /* Create keys that are exportable */
-    if (!init_base_environment(CRYPT_EXPORTABLE))
+    if (!init_base_environment(NULL, CRYPT_EXPORTABLE))
         return;
 
     result = CryptGetUserKey(hProv, AT_KEYEXCHANGE, &hKey1);
@@ -3151,28 +3406,435 @@ static void test_key_initialization(void)
      CRYPT_DELETEKEYSET);
 }
 
+static void test_key_derivation(const char *prov)
+{
+    HCRYPTKEY hKey;
+    HCRYPTHASH hHash;
+    BOOL result;
+    unsigned char pbData[128], dvData[512];
+    DWORD i, j, len, mode;
+    struct _test
+    {
+        ALG_ID crypt_algo, hash_algo;
+        int blocklen, hashlen, chain_mode;
+        DWORD errorkey;
+        const char *expected_hash, *expected_enc;
+    } tests[] = {
+        /* ================================================================== */
+        { CALG_DES, CALG_MD2, 8, 16, CRYPT_MODE_CBC, 0,
+          "\xBA\xBF\x93\xAE\xBC\x77\x45\xAA\x7E\x45\x69\xE5\x90\xE6\x04\x7F",
+          "\x5D\xDA\x25\xA6\xB5\xC4\x43\xFB",
+          /* 0 */
+        },
+        { CALG_3DES_112, CALG_MD2, 8, 16, CRYPT_MODE_CBC, 0,
+          "\xDA\x4A\x9F\x5D\x2E\x7A\x3A\x4B\xBF\xDE\x47\x5B\x06\x84\x48\xA7",
+          "\x6B\x18\x3B\xA1\x89\x27\xBF\xD4",
+          /* 1 */
+        },
+        { CALG_3DES, CALG_MD2, 8, 16, CRYPT_MODE_CBC, 0,
+          "\x38\xE5\x2E\x95\xA4\xA3\x73\x88\xF8\x1F\x87\xB7\x74\xB1\xA1\x56",
+          "\x91\xAB\x17\xE5\xDA\x27\x11\x7D",
+          /* 2 */
+        },
+        { CALG_RC2, CALG_MD2, 8, 16, CRYPT_MODE_CBC, 0,
+          "\x7D\xA4\xB1\x10\x43\x26\x76\xB1\x0D\xB6\xE6\x9C\xA5\x8B\xCB\xE6",
+          "\x7D\x45\x3D\x56\x00\xD7\xD1\x54",
+          /* 3 */
+        },
+        { CALG_RC4, CALG_MD2, 4, 16, 0, 0,
+          "\xFF\x32\xF1\x69\x62\xDE\xEB\x53\x8C\xFF\xA6\x92\x58\xA8\x22\xEA",
+          "\xA9\x83\x73\xA9",
+          /* 4 */
+        },
+        { CALG_RC5, CALG_MD2, 0, 16, 0, NTE_BAD_ALGID,
+          "\x8A\xF2\xA3\xDA\xA5\x9A\x8B\x42\x4C\xE0\x2E\x00\xE5\x1E\x98\xE4",
+          NULL,
+          /* 5 */
+        },
+        { CALG_RSA_SIGN, CALG_MD2, 0, 16, 0, NTE_BAD_ALGID,
+          "\xAE\xFE\xD6\xA5\x3E\x4B\xAC\xFA\x0E\x92\xC4\xC0\x06\xC9\x2B\xFD",
+          NULL,
+          /* 6 */
+        },
+        { CALG_RSA_KEYX, CALG_MD2, 0, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x30\xF4\xBC\x33\x93\xF3\x58\x19\xD1\x2B\x73\x4A\x92\xC7\xFC\xD7",
+          NULL,
+          /* 7 */
+        },
+        { CALG_AES, CALG_MD2, 0, 16, 0, NTE_BAD_ALGID,
+          "\x07\x3B\x12\xE9\x96\x93\x85\xD7\xEC\xF4\xB1\xAC\x89\x2D\xC6\x9A",
+          NULL,
+          /* 8 */
+        },
+        { CALG_AES_128, CALG_MD2, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\xD2\x37\xE2\x49\xEB\x99\x23\xDA\x3E\x88\x55\x7E\x04\x5E\x15\x5D",
+          "\xA1\x64\x3F\xFE\x99\x7F\x24\x13\x0C\xA9\x03\xEF\x9B\xC8\x1F\x2A",
+          /* 9 */
+        },
+        { CALG_AES_192, CALG_MD2, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x3E\x74\xED\xBF\x23\xAB\x03\x09\xBB\xD3\xE3\xAB\xCA\x12\x72\x7F",
+          "\x5D\xEC\xF8\x72\xB2\xA6\x4D\x5C\xEA\x38\x9E\xF0\x86\xB6\x79\x34",
+          /* 10 */
+        },
+        { CALG_AES_256, CALG_MD2, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\xBE\x9A\xE8\xF6\xCE\x79\x86\x5C\x1B\x01\x96\x4E\x5A\x8D\x09\x33",
+          "\xD9\x4B\xC2\xE3\xCA\x89\x8B\x94\x0D\x87\xBB\xA2\xE8\x3D\x5C\x62",
+          /* 11 */
+        },
+        /* ================================================================== */
+        { CALG_DES, CALG_MD4, 8, 16, CRYPT_MODE_CBC, 0,
+          "\xE8\x2F\x96\xC4\x6C\xC1\x91\xB4\x78\x40\x56\xD8\xA0\x25\xF5\x71",
+          "\x21\x5A\xBD\x26\xB4\x3E\x86\x04",
+          /* 12 */
+        },
+        { CALG_3DES_112, CALG_MD4, 8, 16, CRYPT_MODE_CBC, 0,
+          "\x23\xBB\x6F\xE4\xB0\xF6\x35\xB6\x89\x2F\xEC\xDC\x06\xA9\xDF\x35",
+          "\x9B\xE5\xD1\xEB\x8F\x13\x0B\xB3",
+          /* 13 */
+        },
+        { CALG_3DES, CALG_MD4, 8, 16, CRYPT_MODE_CBC, 0,
+          "\xE4\x72\x48\xC6\x6E\x38\x2F\x00\xC9\x2D\x01\x12\xB7\x8B\x64\x09",
+          "\x7D\x5E\xAA\xEA\x10\xA4\xA4\x44",
+          /* 14 */
+        },
+        { CALG_RC2, CALG_MD4, 8, 16, CRYPT_MODE_CBC, 0,
+          "\xBF\x54\xDA\x3A\x56\x72\x0D\x9F\x30\x7D\x2F\x54\x13\xB2\xD7\xC6",
+          "\x77\x42\x0E\xD2\x60\x29\x6F\x68",
+          /* 15 */
+        },
+        { CALG_RC4, CALG_MD4, 4, 16, 0, 0,
+          "\x9B\x74\x6D\x22\x11\x16\x05\x50\xA3\x75\x6B\xB2\x38\x8C\x2B\xC6",
+          "\x5C\x7E\x99\x84",
+          /* 16 */
+        },
+        { CALG_RC5, CALG_MD4, 0, 16, 0, NTE_BAD_ALGID,
+          "\x51\xA8\x29\x8D\xE0\x36\xC1\xD3\x5E\x6A\x51\x4F\xE1\x65\xEE\xF1",
+          NULL,
+          /* 17 */
+        },
+        { CALG_RSA_SIGN, CALG_MD4, 0, 16, 0, NTE_BAD_ALGID,
+          "\xA6\x83\x13\x4C\xB1\xAA\x06\x16\xE6\x4E\x7F\x0B\x8D\x19\xF5\x45",
+          NULL,
+          /* 18 */
+        },
+        { CALG_RSA_KEYX, CALG_MD4, 0, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x04\x24\xC8\x64\x98\x84\xE3\x3A\x7B\x9C\x50\x3E\xE7\xC4\x89\x82",
+          NULL,
+          /* 19 */
+        },
+        { CALG_AES, CALG_MD4, 0, 16, 0, NTE_BAD_ALGID,
+          "\xF6\xEF\x81\xF8\xF2\xA3\xF6\x11\xFE\xA4\x7D\xC1\xD2\xF7\x7C\xDC",
+          NULL,
+          /* 20 */
+        },
+        { CALG_AES_128, CALG_MD4, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\xFF\xE9\x69\xFF\xC1\xDB\x08\xD4\x5B\xC8\x51\x71\x38\xEF\x8A\x5B",
+          "\x8A\x24\xD0\x7A\x03\xE7\xA7\x02\xF2\x17\x4C\x01\xD5\x0E\x7F\x12",
+          /* 21 */
+        },
+        { CALG_AES_192, CALG_MD4, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x12\x01\xDD\x25\xBA\x8F\x1B\xCB\x7B\xAD\x3F\xDF\xB2\x68\x4F\x6A",
+          "\xA9\x56\xBC\xA7\x97\x4E\x28\xAA\x4B\xE1\xA0\x6C\xE2\x43\x2C\x61",
+          /* 22 */
+        },
+        { CALG_AES_256, CALG_MD4, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x69\x08\x9F\x76\xD7\x9A\x93\x6F\xC7\x51\xA4\x00\xCF\x5A\xBB\x3D",
+          "\x04\x07\xEA\xD9\x89\x0A\xD2\x65\x12\x13\x68\x9A\xD0\x86\x15\xED",
+          /* 23 */
+        },
+        /* ================================================================== */
+        { CALG_DES, CALG_MD5, 8, 16, CRYPT_MODE_CBC, 0,
+          "\xEA\x01\x47\xA0\x7F\x96\x44\x6B\x0D\x95\x2C\x97\x4B\x28\x1C\x86",
+          "\xF3\x75\xCC\x7C\x6C\x0B\xCF\x93",
+          /* 24 */
+        },
+        { CALG_3DES_112, CALG_MD5, 8, 16, CRYPT_MODE_CBC, 0,
+          "\xD2\xA2\xD7\x87\x32\x29\xF9\xE0\x45\x0D\xEC\x8D\xB5\xBC\x8A\xD9",
+          "\x51\x70\xE0\xB7\x00\x0D\x3E\x21",
+          /* 25 */
+        },
+        { CALG_3DES, CALG_MD5, 8, 16, CRYPT_MODE_CBC, 0,
+          "\x2B\x36\xA2\x85\x85\xC0\xEC\xBE\x04\x56\x1D\x97\x8E\x82\xDB\xD8",
+          "\x58\x23\x75\x25\x3F\x88\x25\xEB",
+          /* 26 */
+        },
+        { CALG_RC2, CALG_MD5, 8, 16, CRYPT_MODE_CBC, 0,
+          "\x3B\x89\x72\x3B\x8A\xD1\x2E\x13\x44\xD6\xD0\x97\xE6\xB8\x46\xCD",
+          "\x90\x1C\x77\x45\x87\xDD\x1C\x2E",
+          /* 27 */
+        },
+        { CALG_RC4, CALG_MD5, 4, 16, 0, 0,
+          "\x00\x6D\xEF\xB1\xC8\xC6\x25\x5E\x45\x4F\x4E\x3D\xAF\x9C\x53\xD2",
+          "\xC4\x4C\xD2\xF1",
+          /* 28 */
+        },
+        { CALG_RC5, CALG_MD5, 0, 16, 0, NTE_BAD_ALGID,
+          "\x56\x49\xDC\xBA\x32\xC6\x0D\x84\xE9\x2D\x42\x8C\xD6\x7C\x4A\x7A",
+          NULL,
+          /* 29 */
+        },
+        { CALG_RSA_SIGN, CALG_MD5, 0, 16, 0, NTE_BAD_ALGID,
+          "\xDF\xD6\x3A\xE6\x3E\x8D\xB4\x17\x9F\x29\xF0\xFD\x6D\x98\x98\xAD",
+          NULL,
+          /* 30 */
+        },
+        { CALG_RSA_KEYX, CALG_MD5, 0, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\xD4\x4D\x60\x9A\x39\x27\x88\xB7\xD7\xB4\x34\x2F\x92\x61\x3C\xA8",
+          NULL,
+          /* 31 */
+        },
+        { CALG_AES, CALG_MD5, 0, 16, 0, NTE_BAD_ALGID,
+          "\xF4\x83\x2E\x02\xDE\xAE\x46\x1F\xE1\x31\x65\x03\x08\x58\xE0\x7D",
+          NULL,
+          /* 32 */
+        },
+        { CALG_AES_128, CALG_MD5, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x0E\xA0\x40\x72\x55\xE5\x4C\xEB\x79\xCB\x48\xC3\xD1\xB1\xD0\xF4",
+          "\x97\x66\x92\x02\x6D\xEC\x33\xF8\x4E\x82\x11\x20\xC7\xE2\xE6\xE8",
+          /* 33 */
+        },
+        { CALG_AES_192, CALG_MD5, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x3F\x91\x5E\x09\x19\x11\x14\x27\xCA\x6A\x20\x24\x3E\xF0\x02\x3E",
+          "\x9B\xDA\x73\xF4\xF3\x06\x93\x07\xC9\x32\xF1\xD8\xD4\x96\xD1\x7D",
+          /* 34 */
+        },
+        { CALG_AES_256, CALG_MD5, 16, 16, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x27\x51\xD8\xB3\xC7\x14\x66\xE1\x99\xC3\x5C\x9C\x90\xF5\xE5\x94",
+          "\x2A\x0F\xE9\xA9\x6F\x53\x7C\x9E\x07\xE6\xC3\xC9\x15\x99\x7C\xA8",
+          /* 35 */
+        },
+        /* ================================================================== */
+        { CALG_DES, CALG_SHA1, 8, 20, CRYPT_MODE_CBC, 0,
+          "\xC1\x91\xF6\x5A\x81\x87\xAC\x6D\x48\x7C\x78\xF7\xEC\x37\xE2\x0C\xEC\xF7\xC0\xB8",
+          "\xD4\xD8\xAA\x44\xAC\x5E\x0B\x8D",
+          /* 36 */
+        },
+        { CALG_3DES_112, CALG_SHA1, 8, 20, CRYPT_MODE_CBC, 0,
+          "\x5D\x9B\xC3\x99\xC4\x73\x90\x78\xCB\x51\x6B\x61\x8A\xBE\x1A\xF3\x7A\x90\xF3\x34",
+          "\xD8\x1C\xBC\x6C\x92\xD3\x09\xBF",
+          /* 37 */
+        },
+        { CALG_3DES, CALG_SHA1, 8, 20, CRYPT_MODE_CBC, 0,
+          "\x90\xB8\x01\x89\xEC\x9A\x6C\xAD\x1E\xAC\xB3\x17\x0A\x44\xA2\x4D\x80\xA5\x25\x97",
+          "\xBD\x58\x5A\x88\x98\xF8\x69\x9A",
+          /* 38 */
+        },
+        { CALG_RC2, CALG_SHA1, 8, 20, CRYPT_MODE_CBC, 0,
+          "\x42\xBD\xB8\xF2\xB5\xC2\x28\x64\x85\x98\x8E\x49\xE6\xDC\x92\x80\xCD\xC1\x63\x00",
+          "\xCC\xFB\x1A\x4D\x29\xAD\x3E\x65",
+          /* 39 */
+        },
+        { CALG_RC4, CALG_SHA1, 4, 20, 0, 0,
+          "\x67\x36\xE9\x57\x5E\xCD\x56\x5E\x8B\x25\x35\x23\x74\xBA\x20\x46\xD0\x21\xDE\x0A",
+          "\x7A\x34\x3D\x3C",
+          /* 40 */
+        },
+        { CALG_RC5, CALG_SHA1, 0, 20, 0, NTE_BAD_ALGID,
+          "\x5F\x29\xA5\xA4\x10\x08\x56\x15\x92\xF9\x55\x3B\x4B\xF5\xAB\xBD\xE7\x4D\x47\x28",
+          NULL,
+          /* 41 */
+        },
+        { CALG_RSA_SIGN, CALG_SHA1, 0, 20, 0, NTE_BAD_ALGID,
+          "\xD3\xB7\xF8\xB9\xBE\x67\xD1\xFE\x10\x51\x23\x3B\x7D\xB7\x61\xF5\xA7\x1A\x02\x5E",
+          NULL,
+          /* 42 */
+        },
+        { CALG_RSA_KEYX, CALG_SHA1, 0, 20, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x09\x68\x97\x23\x11\x2B\x6A\x71\xBA\x33\x60\x43\xEE\xC9\x9B\xB7\x8F\x8A\x2E\x33",
+          NULL,
+          /* 43 */
+        },
+        { CALG_AES, CALG_SHA1, 0, 20, 0, NTE_BAD_ALGID,
+          "\xCF\x28\x23\x83\x62\x87\x43\xF6\x50\x57\xED\x54\xEC\x93\x5E\xEC\x0E\xD3\x23\x9A",
+          NULL,
+          /* 44 */
+        },
+        { CALG_AES_128, CALG_SHA1, 16, 20, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x81\xC1\x7E\x42\xC3\x07\x1F\x5E\xF8\x75\xA3\x5A\xFC\x0B\x61\xBA\x0B\xD8\x53\x0D",
+          "\x39\xCB\xAF\xD7\x8B\x75\x4A\x3B\xD2\x0E\x0D\xB1\x64\x57\x88\x58",
+          /* 45 */
+        },
+        { CALG_AES_192, CALG_SHA1, 16, 20, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x93\xA7\xE8\x9E\x96\xB5\x97\x23\xD0\x58\x44\x8C\x4D\xBB\xAB\xB6\x3E\x1F\x2C\x1D",
+          "\xA9\x13\x83\xCA\x21\xA2\xF0\xBE\x13\xBC\x55\x04\x38\x08\xA9\xC4",
+          /* 46 */
+        },
+        { CALG_AES_256, CALG_SHA1, 16, 20, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x15\x6A\xB2\xDF\x32\x57\x14\x69\x09\x07\xAD\x24\x83\xA1\x74\x47\x41\x72\x69\xBC",
+          "\xE1\x6C\xA8\x54\x0E\x24\x67\x6D\xCA\xA2\xFE\x84\xF0\x9B\x78\x66",
+          /* 47 */
+        },
+        /* ================================================================== */
+        { CALG_DES, CALG_SHA_256, 8, 32, CRYPT_MODE_CBC, 0,
+          "\x20\x34\xf7\xbb\x7a\x3a\x79\xf0\xb9\x65\x18\x11\xaa\xfd\x26\x6b"
+          "\x60\x5c\x6d\x4c\x81\x7c\x3f\xc4\xce\x94\xe3\x67\xdf\xf2\x16\xd8",
+          "\x86\x0d\x8c\xf4\xc0\x22\x4a\xdd",
+          /* 48 */
+        },
+        { CALG_3DES_112, CALG_SHA_256, 8, 32, CRYPT_MODE_CBC, 0,
+          "\x09\x6e\x7f\xd5\xf2\x72\x4e\x18\x70\x09\xc1\x35\xf4\xd1\x3a\xe8"
+          "\xe6\x1f\x91\xae\x2f\xfd\xa8\x8c\xce\x47\x0f\x7a\xf5\xef\xfd\xbe",
+          "\x2d\xe7\x63\xf6\x58\x4d\x9a\xa6",
+          /* 49 */
+        },
+        { CALG_3DES, CALG_SHA_256, 8, 32, CRYPT_MODE_CBC, 0,
+          "\x54\x7f\x84\x7f\xfe\x83\xc6\x50\xbc\xd9\x92\x78\x32\x67\x50\x7d"
+          "\xdf\x44\x55\x7d\x87\x74\xd2\x56\xff\xd9\x74\x44\xd5\x07\x9e\xdc",
+          "\x20\xaa\x66\xd0\xac\x83\x9d\x99",
+          /* 50 */
+        },
+        { CALG_RC2, CALG_SHA_256, 8, 32, CRYPT_MODE_CBC, 0,
+          "\xc6\x22\x46\x15\xa1\x27\x38\x23\x91\xf2\x29\xda\x15\xc9\x5d\x92"
+          "\x7c\x34\x4a\x1f\xb0\x8a\x81\xd6\x17\x09\xda\x52\x1f\xb9\x64\x60",
+          "\x8c\x01\x19\x47\x7e\xd2\x10\x2c",
+          /* 51 */
+        },
+        { CALG_RC4, CALG_SHA_256, 4, 32, 0, 0,
+          "\xcd\x53\x95\xa6\xb6\x6e\x25\x92\x78\xac\xe6\x7e\xfc\xd3\x8d\xaa"
+          "\xc3\x15\x83\xb5\xe6\xaf\xf9\x32\x4c\x17\xb8\x82\xdf\xc0\x45\x9e",
+          "\xfa\x54\x13\x9c",
+          /* 52 */
+        },
+        { CALG_RC5, CALG_SHA_256, 0, 32, 0, NTE_BAD_ALGID,
+          "\x2a\x3b\x08\xe1\xec\xa7\x04\xf9\xc9\x42\x74\x9a\x82\xad\x99\xd2"
+          "\x10\x51\xe3\x51\x6c\x67\xa4\xf2\xca\x99\x21\x43\xdf\xa0\xfc\xa1",
+          NULL,
+          /* 53 */
+        },
+        { CALG_RSA_SIGN, CALG_SHA_256, 0, 32, 0, NTE_BAD_ALGID,
+          "\x10\x1d\x36\xc7\x38\x73\xc3\x80\xf0\x7a\x4e\x25\x52\x8a\x5c\x3f"
+          "\xfc\x41\xa7\xe5\x20\xed\xd5\x1d\x00\x6e\x77\xf4\xa7\x71\x81\x6b",
+          NULL,
+          /* 54 */
+        },
+        { CALG_RSA_KEYX, CALG_SHA_256, 0, 32, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\x0a\x74\xde\x4f\x07\xce\x73\xd6\xd9\xa3\xba\xbb\x7c\x98\xe1\x94"
+          "\x13\x93\xb1\xfd\x26\x31\x4b\xfc\x61\x27\xef\x4d\xd0\x48\x76\x67",
+          NULL,
+          /* 55 */
+        },
+        { CALG_AES, CALG_SHA_256, 0, 32, 0, NTE_BAD_ALGID,
+          "\xf0\x13\xbc\x25\x2a\x2f\xba\xf1\x39\xe5\x7d\xb8\x5f\xaa\xd0\x19"
+          "\xbd\x1c\xd8\x7b\x39\x5a\xb3\x85\x84\x80\xbd\xe0\x4a\x65\x03\xdd",
+          NULL,
+          /* 56 */
+        },
+        { CALG_AES_128, CALG_SHA_256, 16, 32, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\xc8\xc2\x6f\xe2\xbe\xa7\x38\x87\x04\xc7\x39\xcb\x9f\x57\xfc\xde"
+          "\x14\x81\x46\xa4\xbb\xa7\x0f\x01\x1d\xc2\x6d\x7a\x43\x5f\x38\xc3",
+          "\xf8\x75\xc6\x71\x8b\xb6\x54\xd3\xdc\xff\x0e\x84\x8a\x3f\x19\x46",
+          /* 57 */
+        },
+        { CALG_AES_192, CALG_SHA_256, 16, 32, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\xb7\x3a\x43\x0f\xea\x90\x4f\x0f\xb9\x82\xf6\x1e\x07\xc4\x25\x4e"
+          "\xdb\xe7\xf7\x1d\x7c\xd0\xe5\x51\xd8\x1b\x97\xc8\xc2\x46\xb9\xfe",
+          "\x35\xf2\x20\xc7\x6c\xb2\x8e\x51\x3e\xc7\x6b\x3e\x64\xa5\x05\xdf",
+          /* 58 */
+        },
+        { CALG_AES_256, CALG_SHA_256, 16, 32, CRYPT_MODE_CBC, NTE_BAD_ALGID,
+          "\xbd\xcc\x0c\x59\x99\x29\xa7\x24\xf3\xdc\x20\x40\x4e\xe8\xe5\x48"
+          "\xdd\x27\x0e\xdf\x7e\x50\x65\x17\x34\x50\x47\x78\x9a\x23\x1b\x40",
+          "\x8c\xeb\x1f\xd3\x78\x77\xf5\xbf\x7a\xde\x8d\x2c\xa5\x16\xcc\xe9",
+          /* 59 */
+        },
+    };
+    /* Due to differences between encryption from <= 2000 and >= XP some tests need to be skipped */
+    int old_broken[sizeof(tests)/sizeof(tests[0])];
+    memset(old_broken, 0, sizeof(old_broken));
+    old_broken[3] = old_broken[4] = old_broken[15] = old_broken[16] = 1;
+    old_broken[27] = old_broken[28] = old_broken[39] = old_broken[40] = 1;
+    uniquecontainer(NULL);
+
+    for (i=0; i<sizeof(tests)/sizeof(tests[0]); i++)
+    {
+        if (win2k && old_broken[i]) continue;
+
+        for (j=0; j<sizeof(dvData); j++) dvData[j] = (unsigned char)j+i;
+        SetLastError(0xdeadbeef);
+        result = CryptCreateHash(hProv, tests[i].hash_algo, 0, 0, &hHash);
+        if (!result)
+        {
+            /* rsaenh compiled without OpenSSL or not supported by provider */
+            ok(GetLastError() == NTE_BAD_ALGID, "Test [%s %d]: Expected NTE_BAD_ALGID, got 0x%08x\n",
+               prov, i, GetLastError());
+            continue;
+        }
+        ok(result, "Test [%s %d]: CryptCreateHash failed with error 0x%08x\n", prov, i, GetLastError());
+        result = CryptHashData(hHash, dvData, sizeof(dvData), 0);
+        ok(result, "Test [%s %d]: CryptHashData failed with error 0x%08x\n", prov, i, GetLastError());
+
+        len = sizeof(pbData);
+        result = CryptGetHashParam(hHash, HP_HASHVAL, pbData, &len, 0);
+        ok(result, "Test [%s %d]: CryptGetHashParam failed with error 0x%08x\n", prov, i, GetLastError());
+        ok(len == tests[i].hashlen, "Test [%s %d]: Expected hash len %d, got %d\n",
+           prov, i, tests[i].hashlen, len);
+        ok(!tests[i].hashlen || !memcmp(pbData, tests[i].expected_hash, tests[i].hashlen),
+           "Test [%s %d]: Hash comparison failed\n", prov, i);
+
+        SetLastError(0xdeadbeef);
+        result = CryptDeriveKey(hProv, tests[i].crypt_algo, hHash, 0, &hKey);
+        /* the provider may not support the algorithm */
+        if(!result && (GetLastError() == tests[i].errorkey
+           || GetLastError() == ERROR_INVALID_PARAMETER /* <= NT4*/))
+            goto err;
+        ok(result, "Test [%s %d]: CryptDeriveKey failed with error 0x%08x\n", prov, i, GetLastError());
+
+        len = sizeof(mode);
+        mode = 0xdeadbeef;
+        result = CryptGetKeyParam(hKey, KP_MODE, (BYTE*)&mode, &len, 0);
+        ok(result, "Test [%s %d]: CryptGetKeyParam failed with error %08x\n", prov, i, GetLastError());
+        ok(mode == tests[i].chain_mode, "Test [%s %d]: Expected chaining mode %d, got %d\n",
+           prov, i, tests[i].chain_mode, mode);
+
+        SetLastError(0xdeadbeef);
+        len = 4;
+        result = CryptEncrypt(hKey, 0, TRUE, 0, dvData, &len, sizeof(dvData));
+        ok(result, "Test [%s %d]: CryptEncrypt failed with error 0x%08x\n", prov, i, GetLastError());
+        ok(len == tests[i].blocklen, "Test [%s %d]: Expected block len %d, got %d\n",
+           prov, i, tests[i].blocklen, len);
+        ok(!memcmp(dvData, tests[i].expected_enc, tests[i].blocklen),
+           "Test [%s %d]: Encrypted data comparison failed\n", prov, i);
+
+        CryptDestroyKey(hKey);
+err:
+        CryptDestroyHash(hHash);
+    }
+}
+
 START_TEST(rsaenh)
 {
-    if (!init_base_environment(0))
-        return;
-    test_prov();
-    test_gen_random();
-    test_hashes();
-    test_rc4();
-    test_rc2();
-    test_des();
-    test_3des112();
-    test_3des();
-    test_hmac();
-    test_mac();
-    test_block_cipher_modes();
-    test_import_private();
-    test_verify_signature();
-    test_rsa_encrypt();
-    test_import_export();
-    test_import_hmac();
-    test_enum_container();
-    clean_up_base_environment();
+    for (iProv = 0; iProv < sizeof(szProviders) / sizeof(szProviders[0]); iProv++)
+    {
+        if (!init_base_environment(szProviders[iProv], 0))
+            continue;
+        trace("Testing '%s'\n", szProviders[iProv]);
+        test_prov();
+        test_gen_random();
+        test_hashes();
+        test_rc4();
+        test_rc2();
+        test_des();
+        if(!BASE_PROV)
+        {
+            test_3des112();
+            test_3des();
+        }
+        if(ENHANCED_PROV)
+        {
+            test_import_private();
+        }
+        test_hmac();
+        test_mac();
+        test_block_cipher_modes();
+        test_verify_signature();
+        test_rsa_encrypt();
+        test_import_export();
+        test_import_hmac();
+        test_enum_container();
+        if(!BASE_PROV) test_key_derivation(STRONG_PROV ? "STRONG" : "ENH");
+        clean_up_base_environment();
+    }
+    if (!init_base_environment(MS_ENHANCED_PROV_A, 0))
     test_key_permissions();
     test_key_initialization();
     test_schannel_provider();
@@ -3184,5 +3846,6 @@ START_TEST(rsaenh)
     test_aes(192);
     test_aes(256);
     test_sha2();
+    test_key_derivation("AES");
     clean_up_aes_environment();
 }
