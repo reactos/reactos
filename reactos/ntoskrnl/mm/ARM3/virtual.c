@@ -4599,6 +4599,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         Vad->u.VadFlags.Protection = ProtectionMask;
         Vad->u.VadFlags.PrivateMemory = 1;
         Vad->u.VadFlags.CommitCharge = AllocationType & MEM_COMMIT ? PageCount : 0;
+        Vad->ControlArea = NULL; // For Memory-Area hack
 
         //
         // Lock the address space and make sure the process isn't already dead
@@ -4692,7 +4693,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         // Lock the working set and insert the VAD into the process VAD tree
         //
         MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
-        Vad->ControlArea = NULL; // For Memory-Area hack
         Process->VadRoot.NodeHint = Vad;
         MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
         MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
