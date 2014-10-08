@@ -108,43 +108,6 @@ typedef struct
 
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, NTFS_VCB, *PNTFS_VCB;
 
-
-#define FCB_CACHE_INITIALIZED   0x0001
-#define FCB_IS_VOLUME_STREAM    0x0002
-#define FCB_IS_VOLUME           0x0004
-#define MAX_PATH                260
-
-typedef struct _FCB
-{
-    NTFSIDENTIFIER Identifier;
-
-    FSRTL_COMMON_FCB_HEADER RFCB;
-    SECTION_OBJECT_POINTERS SectionObjectPointers;
-
-    PFILE_OBJECT FileObject;
-    PNTFS_VCB Vcb;
-
-    WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
-    WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
-
-    ERESOURCE PagingIoResource;
-    ERESOURCE MainResource;
-
-    LIST_ENTRY FcbListEntry;
-    struct _FCB* ParentFcb;
-
-    ULONG DirIndex;
-
-    LONG RefCount;
-    ULONG Flags;
-
-    ULONGLONG MFTIndex;
-
-//  DIR_RECORD Entry;
-
-} NTFS_FCB, *PNTFS_FCB;
-
-
 typedef struct
 {
     NTFSIDENTIFIER Identifier;
@@ -413,6 +376,41 @@ typedef struct _NTFS_ATTR_CONTEXT
     ULONGLONG            CacheRunCurrentOffset;
     NTFS_ATTR_RECORD    Record;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
+
+#define FCB_CACHE_INITIALIZED   0x0001
+#define FCB_IS_VOLUME_STREAM    0x0002
+#define FCB_IS_VOLUME           0x0004
+#define MAX_PATH                260
+
+typedef struct _FCB
+{
+    NTFSIDENTIFIER Identifier;
+
+    FSRTL_COMMON_FCB_HEADER RFCB;
+    SECTION_OBJECT_POINTERS SectionObjectPointers;
+
+    PFILE_OBJECT FileObject;
+    PNTFS_VCB Vcb;
+
+    WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
+    WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
+
+    ERESOURCE PagingIoResource;
+    ERESOURCE MainResource;
+
+    LIST_ENTRY FcbListEntry;
+    struct _FCB* ParentFcb;
+
+    ULONG DirIndex;
+
+    LONG RefCount;
+    ULONG Flags;
+
+    ULONGLONG MFTIndex;
+
+    FILENAME_ATTRIBUTE Entry;
+
+} NTFS_FCB, *PNTFS_FCB;
 
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 

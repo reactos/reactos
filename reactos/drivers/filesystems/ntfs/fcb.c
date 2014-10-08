@@ -275,19 +275,43 @@ PNTFS_FCB
 NtfsMakeRootFCB(PNTFS_VCB Vcb)
 {
     PNTFS_FCB Fcb;
+    PFILE_RECORD_HEADER MftRecord;
+    PFILENAME_ATTRIBUTE FileName;
+
+    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                      Vcb->NtfsInfo.BytesPerFileRecord,
+                                      TAG_NTFS);
+    if (MftRecord == NULL)
+    {
+        return NULL;
+    }
+
+    if (!NT_SUCCESS(ReadFileRecord(Vcb, NTFS_FILE_ROOT, MftRecord)))
+    {
+        return NULL;
+    }
+
+    FileName = GetFileNameFromRecord(MftRecord);
+    if (!FileName)
+    {
+        return NULL;
+    }
 
     Fcb = NtfsCreateFCB(L"\\", Vcb);
+    if (!Fcb)
+    {
+        return NULL;
+    }
 
-//    memset(Fcb->entry.Filename, ' ', 11);
-
-//    Fcb->Entry.DataLengthL = Vcb->CdInfo.RootSize;
-//    Fcb->Entry.ExtentLocationL = Vcb->CdInfo.RootStart;
-//    Fcb->Entry.FileFlags = 0x02; // FILE_ATTRIBUTE_DIRECTORY;
+    memcpy(&Fcb->Entry, FileName, FIELD_OFFSET(FILENAME_ATTRIBUTE, NameLength));
+    Fcb->Entry.NameType = FileName->NameType;
+    Fcb->Entry.NameLength = 0;
+    Fcb->Entry.Name[0] = UNICODE_NULL;
     Fcb->RefCount = 1;
     Fcb->DirIndex = 0;
-    Fcb->RFCB.FileSize.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
-    Fcb->RFCB.ValidDataLength.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
-    Fcb->RFCB.AllocationSize.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
+    Fcb->RFCB.FileSize.QuadPart = FileName->DataSize;
+    Fcb->RFCB.ValidDataLength.QuadPart = FileName->DataSize;
+    Fcb->RFCB.AllocationSize.QuadPart = FileName->AllocatedSize;
     Fcb->MFTIndex = NTFS_FILE_ROOT;
 
     NtfsFCBInitializeCache(Vcb, Fcb);
@@ -390,6 +414,8 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    memcpy(&rcFCB->Entry, FileName, FIELD_OFFSET(FILENAME_ATTRIBUTE, NameLength));
+    rcFCB->Entry.NameType = FileName->NameType;
     rcFCB->RFCB.FileSize.QuadPart = FileName->DataSize;
     rcFCB->RFCB.ValidDataLength.QuadPart = FileName->DataSize;
     rcFCB->RFCB.AllocationSize.QuadPart = FileName->AllocatedSize;
