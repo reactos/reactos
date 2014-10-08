@@ -118,6 +118,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
         /* Bail out, if still nothing free was found */
         if (Result == TableFoundNode)
         {
+            KeReleaseGuardedMutex(&Process->AddressCreationLock);
             ExFreePoolWithTag(Vad, 'ldaV');
             return STATUS_NO_MEMORY;
         }
@@ -333,7 +334,6 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         StackPtes = BYTES_TO_PAGES(KERNEL_LARGE_STACK_SIZE);
         StackPages = BYTES_TO_PAGES(KERNEL_LARGE_STACK_COMMIT);
-
     }
     else
     {
