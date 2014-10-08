@@ -36,13 +36,13 @@ static HRESULT (WINAPI *pURLSubRegQueryA)(LPCSTR, LPCSTR, DWORD, LPVOID, DWORD, 
 static DWORD (WINAPI *pParseURLFromOutsideSourceA)(LPCSTR, LPSTR, LPDWORD, LPDWORD);
 static DWORD (WINAPI *pParseURLFromOutsideSourceW)(LPCWSTR, LPWSTR, LPDWORD, LPDWORD);
 
-static CHAR appdata[] = "AppData";
-static CHAR common_appdata[] = "Common AppData";
-static CHAR default_page_url[] = "Default_Page_URL";
-static CHAR does_not_exist[] = "does_not_exist";
-static CHAR regpath_iemain[] = "Software\\Microsoft\\Internet Explorer\\Main";
-static CHAR regpath_shellfolders[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-static CHAR start_page[] = "Start Page";
+static const char appdata[] = "AppData";
+static const char common_appdata[] = "Common AppData";
+static const char default_page_url[] = "Default_Page_URL";
+static const char does_not_exist[] = "does_not_exist";
+static const char regpath_iemain[] = "Software\\Microsoft\\Internet Explorer\\Main";
+static const char regpath_shellfolders[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+static const char start_page[] = "Start Page";
 
 /* ################ */
 

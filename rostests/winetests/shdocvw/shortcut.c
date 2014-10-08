@@ -210,7 +210,7 @@ static void test_ShortcutFolder(void) {
     IShellFolder_Release(pWineTestFolder);
     if (FAILED(hr)) goto cleanup;
 
-    /* The resulting folder object has the FolderShortcut CLSID, instead of it's own. */
+    /* The resulting folder object has the FolderShortcut CLSID, instead of its own. */
     hr = IPersistFolder3_GetClassID(pWineTestPersistFolder, &clsid);
     ok (SUCCEEDED(hr), "IPersist::GetClassID failed! hr = %08x\n", hr);
     ok (IsEqualCLSID(&CLSID_FolderShortcut, &clsid), "GetClassId returned wrong CLSID!\n"); 
