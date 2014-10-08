@@ -579,38 +579,60 @@ CcRosUnmapVacb (
 }
 
 static
-VOID
-CcRosMapVacb(PVOID BaseAddress,
-                SIZE_T Length,
-                ULONG Consumer,
-                ULONG Protection)
+NTSTATUS
+CcRosMapVacb(
+    PROS_VACB Vacb)
 {
     ULONG i;
     NTSTATUS Status;
+    ULONG_PTR NumberOfPages;
 
-    ASSERT(((ULONG_PTR)BaseAddress % PAGE_SIZE) == 0);
-
-    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
+    /* Create a memory area. */
+    MmLockAddressSpace(MmGetKernelAddressSpace());
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                0, // nothing checks for VACB mareas, so set to 0
+                                &Vacb->BaseAddress,
+                                VACB_MAPPING_GRANULARITY,
+                                PAGE_READWRITE,
+                                (PMEMORY_AREA*)&Vacb->MemoryArea,
+                                FALSE,
+                                0,
+                                PAGE_SIZE);
+    MmUnlockAddressSpace(MmGetKernelAddressSpace());
+    if (!NT_SUCCESS(Status))
     {
-        PFN_NUMBER Page;
+        KeBugCheck(CACHE_MANAGER);
+    }
 
-        Status = MmRequestPageMemoryConsumer(Consumer, TRUE, &Page);
-        if (!NT_SUCCESS(Status))
+    ASSERT(((ULONG_PTR)Vacb->BaseAddress % PAGE_SIZE) == 0);
+    ASSERT((ULONG_PTR)Vacb->BaseAddress > (ULONG_PTR)MmSystemRangeStart);
+
+    /* Create a virtual mapping for this memory area */
+    NumberOfPages = BYTES_TO_PAGES(VACB_MAPPING_GRANULARITY);
+    for (i = 0; i < NumberOfPages; i++)
+    {
+        PFN_NUMBER PageFrameNumber;
+
+        Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &PageFrameNumber);
+        if (PageFrameNumber == 0)
         {
             DPRINT1("Unable to allocate page\n");
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-        Status = MmCreateVirtualMapping (NULL,
-                                         (PVOID)((ULONG_PTR)BaseAddress + (i * PAGE_SIZE)),
-                                         Protection,
-                                         &Page,
-                                         1);
+
+        Status = MmCreateVirtualMapping(NULL,
+                                        (PVOID)((ULONG_PTR)Vacb->BaseAddress + (i * PAGE_SIZE)),
+                                        PAGE_READWRITE,
+                                        &PageFrameNumber,
+                                        1);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Unable to create virtual mapping\n");
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }
+
+    return STATUS_SUCCESS;
 }
 
 static
@@ -637,6 +659,7 @@ CcRosCreateVacb (
     }
 
     current = ExAllocateFromNPagedLookasideList(&VacbLookasideList);
+    current->BaseAddress = NULL;
     current->Valid = FALSE;
     current->Dirty = FALSE;
     current->PageOut = FALSE;
@@ -724,24 +747,6 @@ CcRosCreateVacb (
     InsertTailList(&VacbLruListHead, &current->VacbLruListEntry);
     KeReleaseGuardedMutex(&ViewLock);
 
-    MmLockAddressSpace(MmGetKernelAddressSpace());
-    current->BaseAddress = NULL;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                0, // nothing checks for VACB mareas, so set to 0
-                                &current->BaseAddress,
-                                VACB_MAPPING_GRANULARITY,
-                                PAGE_READWRITE,
-                                (PMEMORY_AREA*)&current->MemoryArea,
-                                FALSE,
-                                0,
-                                PAGE_SIZE);
-    MmUnlockAddressSpace(MmGetKernelAddressSpace());
-    if (!NT_SUCCESS(Status))
-    {
-        KeBugCheck(CACHE_MANAGER);
-    }
-
-    /* Create a virtual mapping for this memory area */
     MI_SET_USAGE(MI_USAGE_CACHE);
 #if MI_TRACE_PFNS
     if ((SharedCacheMap->FileObject) && (SharedCacheMap->FileObject->FileName.Buffer))
@@ -754,10 +759,9 @@ CcRosCreateVacb (
     }
 #endif
 
-    CcRosMapVacb(current->BaseAddress, VACB_MAPPING_GRANULARITY,
-                    MC_CACHE, PAGE_READWRITE);
+    Status = CcRosMapVacb(current);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
