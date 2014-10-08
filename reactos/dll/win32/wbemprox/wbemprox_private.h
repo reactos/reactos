@@ -217,6 +217,7 @@ HRESULT get_column_index( const struct table *, const WCHAR *, UINT * ) DECLSPEC
 HRESULT get_value( const struct table *, UINT, UINT, LONGLONG * ) DECLSPEC_HIDDEN;
 BSTR get_value_bstr( const struct table *, UINT, UINT ) DECLSPEC_HIDDEN;
 HRESULT set_value( const struct table *, UINT, UINT, LONGLONG, CIMTYPE ) DECLSPEC_HIDDEN;
+BOOL is_method( const struct table *, UINT ) DECLSPEC_HIDDEN;
 HRESULT get_method( const struct table *, const WCHAR *, class_method ** ) DECLSPEC_HIDDEN;
 HRESULT get_propval( const struct view *, UINT, const WCHAR *, VARIANT *,
                      CIMTYPE *, LONG * ) DECLSPEC_HIDDEN;
@@ -225,10 +226,10 @@ HRESULT to_longlong( VARIANT *, LONGLONG *, CIMTYPE * ) DECLSPEC_HIDDEN;
 SAFEARRAY *to_safearray( const struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
 VARTYPE to_vartype( CIMTYPE ) DECLSPEC_HIDDEN;
 void destroy_array( struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
+BOOL is_selected_prop( const struct view *, const WCHAR * ) DECLSPEC_HIDDEN;
 HRESULT get_properties( const struct view *, LONG, SAFEARRAY ** ) DECLSPEC_HIDDEN;
 HRESULT get_object( const WCHAR *, IWbemClassObject ** ) DECLSPEC_HIDDEN;
 BSTR get_method_name( const WCHAR *, UINT ) DECLSPEC_HIDDEN;
-BSTR get_property_name( const WCHAR *, UINT ) DECLSPEC_HIDDEN;
 void set_variant( VARTYPE, LONGLONG, void *, VARIANT * ) DECLSPEC_HIDDEN;
 HRESULT create_signature( const WCHAR *, const WCHAR *, enum param_direction,
                           IWbemClassObject ** ) DECLSPEC_HIDDEN;
@@ -248,6 +249,8 @@ HRESULT service_pause_service(IWbemClassObject *, IWbemClassObject *, IWbemClass
 HRESULT service_resume_service(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 HRESULT service_start_service(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 HRESULT service_stop_service(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
+HRESULT security_get_sd(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
+HRESULT security_set_sd(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 
 static void *heap_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
 static inline void *heap_alloc( size_t len )
@@ -283,15 +286,18 @@ static inline WCHAR *heap_strdupW( const WCHAR *src )
 static const WCHAR class_processW[] = {'W','i','n','3','2','_','P','r','o','c','e','s','s',0};
 static const WCHAR class_serviceW[] = {'W','i','n','3','2','_','S','e','r','v','i','c','e',0};
 static const WCHAR class_stdregprovW[] = {'S','t','d','R','e','g','P','r','o','v',0};
+static const WCHAR class_systemsecurityW[] = {'_','_','S','y','s','t','e','m','S','e','c','u','r','i','t','y',0};
 
 static const WCHAR prop_nameW[] = {'N','a','m','e',0};
 
 static const WCHAR method_enumkeyW[] = {'E','n','u','m','K','e','y',0};
 static const WCHAR method_enumvaluesW[] = {'E','n','u','m','V','a','l','u','e','s',0};
 static const WCHAR method_getownerW[] = {'G','e','t','O','w','n','e','r',0};
+static const WCHAR method_getsdW[] = {'G','e','t','S','D',0};
 static const WCHAR method_getstringvalueW[] = {'G','e','t','S','t','r','i','n','g','V','a','l','u','e',0};
 static const WCHAR method_pauseserviceW[] = {'P','a','u','s','e','S','e','r','v','i','c','e',0};
 static const WCHAR method_resumeserviceW[] = {'R','e','s','u','m','e','S','e','r','v','i','c','e',0};
+static const WCHAR method_setsdW[] = {'S','e','t','S','D',0};
 static const WCHAR method_startserviceW[] = {'S','t','a','r','t','S','e','r','v','i','c','e',0};
 static const WCHAR method_stopserviceW[] = {'S','t','o','p','S','e','r','v','i','c','e',0};
 
@@ -299,6 +305,7 @@ static const WCHAR param_defkeyW[] = {'h','D','e','f','K','e','y',0};
 static const WCHAR param_domainW[] = {'D','o','m','a','i','n',0};
 static const WCHAR param_namesW[] = {'s','N','a','m','e','s',0};
 static const WCHAR param_returnvalueW[] = {'R','e','t','u','r','n','V','a','l','u','e',0};
+static const WCHAR param_sdW[] = {'S','D',0};
 static const WCHAR param_subkeynameW[] = {'s','S','u','b','K','e','y','N','a','m','e',0};
 static const WCHAR param_typesW[] = {'T','y','p','e','s',0};
 static const WCHAR param_userW[] = {'U','s','e','r',0};
