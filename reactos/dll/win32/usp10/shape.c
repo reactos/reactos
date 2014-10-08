@@ -2172,7 +2172,8 @@ static inline int unicode_lex(WCHAR c)
         case 0x0407: return lex_Composed_Vowel;
         case 0x0507: return lex_Matra_above;
         case 0x0607: return lex_Matra_below;
-        case 0x000c: return lex_Ra;
+        case 0x000c:
+        case 0x0015: return lex_Ra;
     };
 }
 

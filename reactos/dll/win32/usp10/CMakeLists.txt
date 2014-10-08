@@ -5,6 +5,7 @@ spec2def(usp10.dll usp10.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bidi.c
+    bracket.c
     breaking.c
     indic.c
     indicsyllable.c

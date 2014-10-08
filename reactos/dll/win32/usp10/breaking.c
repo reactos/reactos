@@ -265,6 +265,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                 else_break(&break_before[i],b_s);
                 if (i < count-1)
                     else_break(&break_before[i+1],b_s);
+                break;
             /* LB21 */
             case b_BA:
             case b_HY:
