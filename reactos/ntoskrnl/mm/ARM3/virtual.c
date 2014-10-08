@@ -4589,7 +4589,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         if (AllocationType & MEM_COMMIT) Vad->u.VadFlags.MemCommit = 1;
         Vad->u.VadFlags.Protection = ProtectionMask;
         Vad->u.VadFlags.PrivateMemory = 1;
-        Vad->u.VadFlags.CommitCharge = AllocationType & MEM_COMMIT ? PageCount : 0;
         Vad->ControlArea = NULL; // For Memory-Area hack
 
         //

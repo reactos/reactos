@@ -291,6 +291,15 @@ MiInsertVadEx(
     Vad->StartingVpn = StartingAddress >> PAGE_SHIFT;
     Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
 
+    /* Check if we already need to charge for the pages */
+    if ((Vad->u.VadFlags.PrivateMemory && Vad->u.VadFlags.MemCommit) ||
+        (!Vad->u.VadFlags.PrivateMemory &&
+         (Vad->u.VadFlags.Protection & PAGE_WRITECOPY)))
+    {
+        /* Set the commit charge */
+        Vad->u.VadFlags.CommitCharge = ViewSize / PAGE_SIZE;
+    }
+
     /* Check if the VAD is to be secured */
     if (Vad->u2.VadFlags2.OneSecured)
     {
