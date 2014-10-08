@@ -261,7 +261,7 @@ MiInsertVadEx(
         {
             DPRINT1("Not enough free space to insert this VAD node!\n");
             KeReleaseGuardedMutex(&CurrentProcess->AddressCreationLock);
-            return STATUS_CONFLICTING_ADDRESSES;
+            return STATUS_NO_MEMORY;
         }
 
         ASSERT(StartingAddress != 0);
