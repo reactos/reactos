@@ -896,6 +896,7 @@ static BOOL WINTRUST_SIPPAddProvider(GUID* Subject, WCHAR* MagicNumber)
     NewProv.pwszVerifyFuncName     = CryptSIPVerifyIndirectData;
     NewProv.pwszRemoveFuncName     = CryptSIPRemoveSignedDataMsg;
     NewProv.pwszIsFunctionNameFmt2 = NULL;
+    NewProv.pwszGetCapFuncName     = NULL;
 
     Ret = CryptSIPAddProvider(&NewProv);
 
