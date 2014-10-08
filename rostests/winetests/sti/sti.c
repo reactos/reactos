@@ -63,7 +63,7 @@ static struct IUnknownVtbl aggregator_vtbl =
 
 static BOOL init_function_pointers(void)
 {
-    sti_dll = LoadLibrary("sti.dll");
+    sti_dll = LoadLibraryA("sti.dll");
     if (sti_dll)
     {
         pStiCreateInstance = (void*)
@@ -86,7 +86,7 @@ static void test_version_flag_versus_aw(void)
     if (pStiCreateInstance)
     {
         PSTIW pStiW;
-        hr = pStiCreateInstance(GetModuleHandle(NULL), STI_VERSION_REAL, &pStiW, NULL);
+        hr = pStiCreateInstance(GetModuleHandleA(NULL), STI_VERSION_REAL, &pStiW, NULL);
         if (SUCCEEDED(hr))
         {
             IUnknown *pUnknown;
@@ -100,7 +100,7 @@ static void test_version_flag_versus_aw(void)
         }
         else
             ok(0, "could not create StillImageA, hr = 0x%X\n", hr);
-        hr = pStiCreateInstance(GetModuleHandle(NULL), STI_VERSION_REAL | STI_VERSION_FLAG_UNICODE, &pStiW, NULL);
+        hr = pStiCreateInstance(GetModuleHandleA(NULL), STI_VERSION_REAL | STI_VERSION_FLAG_UNICODE, &pStiW, NULL);
         if (SUCCEEDED(hr))
         {
             IUnknown *pUnknown;
@@ -121,7 +121,7 @@ static void test_version_flag_versus_aw(void)
     if (pStiCreateInstanceA)
     {
         PSTIA pStiA;
-        hr = pStiCreateInstanceA(GetModuleHandle(NULL), STI_VERSION_REAL | STI_VERSION_FLAG_UNICODE, &pStiA, NULL);
+        hr = pStiCreateInstanceA(GetModuleHandleA(NULL), STI_VERSION_REAL | STI_VERSION_FLAG_UNICODE, &pStiA, NULL);
         if (SUCCEEDED(hr))
         {
             IUnknown *pUnknown;
@@ -142,7 +142,7 @@ static void test_version_flag_versus_aw(void)
     if (pStiCreateInstanceW)
     {
         PSTIW pStiW;
-        hr = pStiCreateInstanceW(GetModuleHandle(NULL), STI_VERSION_REAL, &pStiW, NULL);
+        hr = pStiCreateInstanceW(GetModuleHandleA(NULL), STI_VERSION_REAL, &pStiW, NULL);
         if (SUCCEEDED(hr))
         {
             IUnknown *pUnknown;
@@ -175,7 +175,7 @@ static void test_stillimage_aggregation(void)
            But StiCreateInstance* only take PSTI. So how does the non-delegating IUnknown
            come back to the outer object calling this function? */
 
-        hr = pStiCreateInstanceW(GetModuleHandle(NULL), STI_VERSION_REAL, &pStiW, &aggregator);
+        hr = pStiCreateInstanceW(GetModuleHandleA(NULL), STI_VERSION_REAL, &pStiW, &aggregator);
         if (SUCCEEDED(hr))
         {
             IStillImageW *pStiW2 = NULL;
@@ -240,7 +240,7 @@ static void test_launch_app_registry(void)
         return;
     }
 
-    hr = pStiCreateInstance(GetModuleHandle(NULL), STI_VERSION_REAL | STI_VERSION_FLAG_UNICODE, &pStiW, NULL);
+    hr = pStiCreateInstance(GetModuleHandleA(NULL), STI_VERSION_REAL | STI_VERSION_FLAG_UNICODE, &pStiW, NULL);
     if (SUCCEEDED(hr))
     {
         hr = IStillImage_RegisterLaunchApplication(pStiW, appName, appName);
