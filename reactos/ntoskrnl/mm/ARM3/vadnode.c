@@ -190,7 +190,9 @@ MiInsertVad(IN PMMVAD Vad,
     ASSERT((Parent != NULL) || (Result == TableEmptyTree));
 
     /* Do the actual insert operation */
+    MiLockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
     MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
+    MiUnlockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
 }
 
 NTSTATUS
