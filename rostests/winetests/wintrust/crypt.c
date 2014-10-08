@@ -239,7 +239,7 @@ static void test_context(void)
      * FIXME:
      * We don't want to mess too much with these for now so we should delete only the ones
      * that shouldn't be there like the deadbeef ones. We first have to figure out if it's
-     * save to remove files and directories from CatRoot/CatRoot2.
+     * safe to remove files and directories from CatRoot/CatRoot2.
      */
 
     ret = pCryptCATAdminAcquireContext(&hca, &dummy, 0);
@@ -550,7 +550,9 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, basenameW, 1);
     error = GetLastError();
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
-    ok(error == ERROR_INVALID_PARAMETER, "got %u expected ERROR_INVALID_PARAMETER\n", GetLastError());
+    ok(error == ERROR_INVALID_PARAMETER ||
+       error == ERROR_BAD_FORMAT, /* win 8 */
+       "got %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, NULL, 0);

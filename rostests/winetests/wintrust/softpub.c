@@ -222,6 +222,7 @@ static void test_utils(SAFE_PROVIDER_FUNCTIONS *funcs)
         }
         else
             skip("CertCreateCertificateContext failed: %08x\n", GetLastError());
+        funcs->pfnFree(data.pasSigners);
     }
 }
 
