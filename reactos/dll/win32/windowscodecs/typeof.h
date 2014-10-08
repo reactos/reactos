@@ -60,6 +60,7 @@ typedef void (__cdecl typeof(png_set_bgr))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_error_fn))(struct png_struct_def *, void *, png_error_ptr_1, png_error_ptr_1);
 typedef void (__cdecl typeof(png_set_expand_gray_1_2_4_to_8))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_filler))(struct png_struct_def *, unsigned int, int);
+typedef int (__cdecl typeof(png_set_interlace_handling))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_gray_to_rgb))(struct png_struct_def *);
 typedef void (__cdecl typeof(png_set_IHDR))(struct png_struct_def *, struct png_info_def *, unsigned int, unsigned int, int, int, int, int, int);
 typedef void (__cdecl typeof(png_set_pHYs))(struct png_struct_def *, struct png_info_def *, unsigned int, unsigned int, int);

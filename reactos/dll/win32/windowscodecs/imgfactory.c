@@ -529,20 +529,22 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFacto
             IWICBitmapLock_Release(lock);
         }
 
-        if (SUCCEEDED(hr))
-            hr = PaletteImpl_Create(&palette);
-
         if (SUCCEEDED(hr) && (format_type == WICPixelFormatNumericRepresentationUnspecified ||
                               format_type == WICPixelFormatNumericRepresentationIndexed))
         {
-            hr = IWICBitmapSource_CopyPalette(piBitmapSource, palette);
+            hr = PaletteImpl_Create(&palette);
 
             if (SUCCEEDED(hr))
-                hr = IWICBitmap_SetPalette(result, palette);
-            else
-                hr = S_OK;
+            {
+                hr = IWICBitmapSource_CopyPalette(piBitmapSource, palette);
 
-            IWICPalette_Release(palette);
+                if (SUCCEEDED(hr))
+                    hr = IWICBitmap_SetPalette(result, palette);
+                else
+                    hr = S_OK;
+
+                IWICPalette_Release(palette);
+            }
         }
 
         if (SUCCEEDED(hr))

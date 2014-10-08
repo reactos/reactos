@@ -374,66 +374,22 @@ static HRESULT WINAPI IcnsFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
 {
     IcnsFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
-    WICRect rc;
-    WICPixelFormatGUID guid;
-    UINT stride;
-    BYTE *pixeldata = NULL;
 
     TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
 
-    if (!This->initialized || !This->size)
-    {
-        hr = WINCODEC_ERR_WRONGSTATE;
-        goto end;
-    }
+    if (!This->initialized)
+        return WINCODEC_ERR_WRONGSTATE;
 
-    hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
-    if (FAILED(hr))
-        goto end;
-    if (!IsEqualGUID(&guid, &GUID_WICPixelFormat32bppBGRA))
-    {
-        FIXME("format %s unsupported, could use WICConvertBitmapSource to convert\n", debugstr_guid(&guid));
-        hr = E_FAIL;
-        goto end;
-    }
+    hr = configure_write_source(iface, pIBitmapSource, &prc,
+        &GUID_WICPixelFormat32bppBGRA, This->size, This->size,
+        1.0, 1.0);
 
-    if (!prc)
-    {
-        UINT width, height;
-        hr = IWICBitmapSource_GetSize(pIBitmapSource, &width, &height);
-        if (FAILED(hr))
-            goto end;
-        rc.X = 0;
-        rc.Y = 0;
-        rc.Width = width;
-        rc.Height = height;
-        prc = &rc;
-    }
-
-    if (prc->Width != This->size)
-    {
-        hr = E_INVALIDARG;
-        goto end;
-    }
-
-    stride = (32 * This->size + 7)/8;
-    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
-    if (!pixeldata)
-    {
-        hr = E_OUTOFMEMORY;
-        goto end;
-    }
-
-    hr = IWICBitmapSource_CopyPixels(pIBitmapSource, prc, stride,
-        stride*prc->Height, pixeldata);
     if (SUCCEEDED(hr))
     {
-        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
-            stride*prc->Height, pixeldata);
+        hr = write_source(iface, pIBitmapSource, prc,
+            &GUID_WICPixelFormat32bppBGRA, 32, This->size, This->size);
     }
 
-end:
-    HeapFree(GetProcessHeap(), 0, pixeldata);
     return hr;
 }
 

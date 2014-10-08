@@ -208,6 +208,9 @@ HRESULT WINAPI IWICBitmapFrameEncode_SetThumbnail_Proxy_W(IWICBitmapFrameEncode 
 HRESULT WINAPI IWICBitmapFrameEncode_WriteSource_Proxy_W(IWICBitmapFrameEncode *iface,
     IWICBitmapSource *pIBitmapSource, WICRect *prc)
 {
+    if (prc && (prc->Width <= 0 || prc->Height <= 0))
+        prc = NULL;
+
     return IWICBitmapFrameEncode_WriteSource(iface, pIBitmapSource, prc);
 }
 
