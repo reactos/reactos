@@ -278,12 +278,30 @@ NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord)
 
     Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
     while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
-           Attribute->Type != (ATTRIBUTE_TYPE)-1)
+           Attribute->Type != AttributeEnd)
     {
         NtfsDumpAttribute(Attribute);
 
         Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
     }
+}
+
+PFILENAME_ATTRIBUTE
+GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord)
+{
+    PNTFS_ATTR_RECORD Attribute;
+
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->Type == AttributeFileName)
+            return (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+    }
+
+    return NULL;
 }
 
 /* EOF */

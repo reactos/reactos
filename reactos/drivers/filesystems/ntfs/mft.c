@@ -649,6 +649,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
                  PFILE_RECORD_HEADER *FileRecord,
                  PNTFS_ATTR_CONTEXT *DataContext,
+                 PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex)
 {
     UNICODE_STRING Current, Remaining;
@@ -694,6 +695,8 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
         return Status;
     }
 
+    *MFTIndex = CurrentMFTIndex;
+
     return STATUS_SUCCESS;
 }
 
@@ -701,8 +704,9 @@ NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
                PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext)
+               PNTFS_ATTR_CONTEXT *DataContext,
+               PULONGLONG MFTIndex)
 {
-    return NtfsLookupFileAt(Vcb, PathName, FileRecord, DataContext, NTFS_FILE_ROOT);
+    return NtfsLookupFileAt(Vcb, PathName, FileRecord, DataContext, MFTIndex, NTFS_FILE_ROOT);
 }
 /* EOF */

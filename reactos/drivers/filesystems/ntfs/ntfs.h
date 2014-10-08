@@ -433,6 +433,8 @@ DecodeRun(PUCHAR DataRun,
 VOID
 NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 
+PFILENAME_ATTRIBUTE
+GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord);
 
 /* blockdev.c */
 
@@ -632,13 +634,15 @@ NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
                PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext);
+               PNTFS_ATTR_CONTEXT *DataContext,
+               PULONGLONG MFTIndex);
 
 NTSTATUS
 NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
                  PFILE_RECORD_HEADER *FileRecord,
                  PNTFS_ATTR_CONTEXT *DataContext,
+                 PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex);
 
 /* misc.c */

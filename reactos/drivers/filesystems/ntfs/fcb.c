@@ -354,57 +354,53 @@ NtfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 NTSTATUS
 NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
 			PNTFS_FCB DirectoryFCB,
-			PWSTR Name,
+			PUNICODE_STRING Name,
 			PFILE_RECORD_HEADER Record,
+                        ULONGLONG MFTIndex,
 			PNTFS_FCB * fileFCB)
 {
-#if 0
-  WCHAR pathName[MAX_PATH];
-  PFCB rcFCB;
-  ULONG Size;
+    WCHAR pathName[MAX_PATH];
+    PFILENAME_ATTRIBUTE FileName;
+    PNTFS_FCB rcFCB;
 
-  if (Name [0] != 0 && wcslen (DirectoryFCB->PathName) +
-        sizeof(WCHAR) + wcslen (Name) > MAX_PATH)
+    DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p)\n", Vcb, DirectoryFCB, Name, Record, fileFCB);
+
+    FileName = GetFileNameFromRecord(Record);
+    if (!FileName)
     {
-      return(STATUS_OBJECT_NAME_INVALID);
+        return STATUS_OBJECT_NAME_NOT_FOUND; // Not sure that's the best here
     }
 
-  wcscpy(pathName, DirectoryFCB->PathName);
-  if (!NtfsFCBIsRoot(DirectoryFCB))
+    if (Name->Buffer[0] != 0 && wcslen(DirectoryFCB->PathName) +
+        sizeof(WCHAR) + Name->Length / sizeof(WCHAR) > MAX_PATH)
     {
-      wcscat(pathName, L"\\");
+        return STATUS_OBJECT_NAME_INVALID;
     }
 
-  if (Name[0] != 0)
+    wcscpy(pathName, DirectoryFCB->PathName);
+    if (!NtfsFCBIsRoot(DirectoryFCB))
     {
-      wcscat(pathName, Name);
+        wcscat(pathName, L"\\");
     }
-  else
+    wcscat(pathName, Name->Buffer);
+
+    rcFCB = NtfsCreateFCB(pathName, Vcb);
+    if (!rcFCB)
     {
-      WCHAR entryName[MAX_PATH];
-
-      NtfsGetDirEntryName(Vcb, Record, entryName);
-      wcscat(pathName, entryName);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  rcFCB = NtfsCreateFCB(pathName, Vcb);
-  memcpy(&rcFCB->Entry, Record, sizeof(DIR_RECORD));
+    rcFCB->RFCB.FileSize.QuadPart = FileName->DataSize;
+    rcFCB->RFCB.ValidDataLength.QuadPart = FileName->DataSize;
+    rcFCB->RFCB.AllocationSize.QuadPart = FileName->AllocatedSize;
 
-  Size = rcFCB->Entry.DataLengthL;
+    NtfsFCBInitializeCache(Vcb, rcFCB);
+    rcFCB->RefCount = 1;
+    rcFCB->MFTIndex = MFTIndex;
+    NtfsAddFCBToTable(Vcb, rcFCB);
+    *fileFCB = rcFCB;
 
-  rcFCB->RFCB.FileSize.QuadPart = Size;
-  rcFCB->RFCB.ValidDataLength.QuadPart = Size;
-  rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, BLOCKSIZE);
-//  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
-  NtfsFCBInitializeCache(Vcb, rcFCB);
-  rcFCB->RefCount++;
-  NtfsAddFCBToTable(Vcb, rcFCB);
-  *fileFCB = rcFCB;
-
-  return(STATUS_SUCCESS);
-#else
-  return STATUS_NOT_IMPLEMENTED;
-#endif
+    return STATUS_SUCCESS;
 }
 
 
@@ -460,18 +456,21 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     UNICODE_STRING File;
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_CONTEXT DataContext;
+    ULONGLONG MFTIndex;
+
+    DPRINT1("NtfsDirFindFile(%p, %p, %S, %p)\n", Vcb, DirectoryFcb, FileToFind, FoundFCB);
 
     *FoundFCB = NULL;
     RtlInitUnicodeString(&File, FileToFind);
     CurrentDir = DirectoryFcb->MFTIndex;
 
-    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &DataContext, CurrentDir);
+    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &DataContext, &MFTIndex, CurrentDir);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    Status = NtfsMakeFCBFromDirEntry(Vcb, DirectoryFcb, FileToFind, FileRecord, FoundFCB);
+    Status = NtfsMakeFCBFromDirEntry(Vcb, DirectoryFcb, &File, FileRecord, MFTIndex, FoundFCB);
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
     return Status;
