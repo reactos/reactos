@@ -326,25 +326,12 @@ TDI_STATUS InfoTdiSetInformationEx
     switch (ID->toi_class)
     {
        case INFO_CLASS_PROTOCOL:
-          switch (ID->toi_type)
+          if (ID->toi_type == INFO_TYPE_ADDRESS_OBJECT)
           {
-              case INFO_TYPE_ADDRESS_OBJECT:
-              {
-                  if ((EntityListContext = GetContext(ID->toi_entity)))
-                       return SetAddressFileInfo(ID, EntityListContext, Buffer, BufferSize);
-                  else
-                       return TDI_INVALID_PARAMETER;
-              }
-              case INFO_TYPE_CONNECTION:
-              {
-                  PADDRESS_FILE AddressFile = GetContext(ID->toi_entity);
-                  if (AddressFile == NULL)
-                       return TDI_INVALID_PARAMETER;
-                   return SetConnectionInfo(ID, AddressFile->Connection, Buffer, BufferSize);
-              }
-              default:
-                  DbgPrint("TCPIP: IOCTL_TCP_SET_INFORMATION_EX - Unrecognized information type for INFO_CLASS_PROTOCOL: 0x%#x.\n", ID->toi_type);
-                  return TDI_INVALID_PARAMETER;
+              if ((EntityListContext = GetContext(ID->toi_entity)))
+                   return SetAddressFileInfo(ID, EntityListContext, Buffer, BufferSize);
+              else
+                   return TDI_INVALID_PARAMETER;
           }
 
 	  switch (ID->toi_id)

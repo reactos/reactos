@@ -183,11 +183,6 @@ TDI_STATUS GetAddressFileInfo(TDIObjectID *ID,
                               PVOID Buffer,
                               PUINT BufferSize);
 
-TDI_STATUS SetConnectionInfo(TDIObjectID *ID,
-                             PCONNECTION_ENDPOINT Connection,
-                             PVOID Buffer,
-                             UINT BufferSize);
-
 /* Insert and remove entities */
 VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface );
 

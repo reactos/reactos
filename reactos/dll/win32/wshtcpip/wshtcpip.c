@@ -156,18 +156,12 @@ WSHGetSockaddrType(
     return NO_ERROR;
 }
 
-static
-void
-GetTdiTypeId(
-    _In_ INT Level,
-    _In_ INT OptionName,
-    _Out_ PULONG TdiType,
-    _Out_ PULONG TdiId)
+UINT
+GetAddressOption(INT Level, INT OptionName)
 {
     switch (Level)
     {
        case SOL_SOCKET:
-          *TdiType = INFO_TYPE_ADDRESS_OBJECT;
           switch (OptionName)
           {
              case SO_KEEPALIVE:
@@ -180,26 +174,21 @@ GetTdiTypeId(
           break;
 
        case IPPROTO_IP:
-          *TdiType = INFO_TYPE_ADDRESS_OBJECT;
           switch (OptionName)
           {
              case IP_TTL:
-                *TdiId = AO_OPTION_TTL;
-                return;
+                return AO_OPTION_TTL;
 
              case IP_DONTFRAGMENT:
-                 *TdiId = AO_OPTION_IP_DONTFRAGMENT;
-                 return;
+                return AO_OPTION_IP_DONTFRAGMENT;
 
 #if 0
              case IP_RECEIVE_BROADCAST:
-                 *TdiId = AO_OPTION_BROADCAST;
-                 return;
+                return AO_OPTION_BROADCAST;
 #endif
 
              case IP_HDRINCL:
-                 *TdiId = AO_OPTION_IP_HDRINCL;
-                 return;
+                return AO_OPTION_IP_HDRINCL;
 
              default:
                 break;
@@ -209,10 +198,10 @@ GetTdiTypeId(
        case IPPROTO_TCP:
           switch (OptionName)
           {
-              *TdiType = INFO_TYPE_CONNECTION;
              case TCP_NODELAY:
-                 *TdiId = TCP_SOCKET_NODELAY;
-                 return;
+                 /* FIXME: Return proper option */
+                 ASSERT(FALSE);
+                 break;
              default:
                  break;
           }
@@ -222,8 +211,7 @@ GetTdiTypeId(
     }
 
     DPRINT1("Unknown level/option name: %d %d\n", Level, OptionName);
-    *TdiType = 0;
-    *TdiId = 0;
+    return 0;
 }
 
 INT
@@ -654,7 +642,7 @@ WSHSetSocketInformation(
     IN  INT OptionLength)
 {
     PSOCKET_CONTEXT Context = HelperDllSocketContext;
-    ULONG TdiType, TdiId;
+    UINT RealOptionName;
     INT Status;
     PTCP_REQUEST_SET_INFORMATION_EX Info;
     PQUEUED_REQUEST Queued, NextQueued;
@@ -709,11 +697,9 @@ WSHSetSocketInformation(
             switch (OptionName)
             {
                 case TCP_NODELAY:
-                    if (OptionLength < sizeof(CHAR))
-                    {
-                        return WSAEFAULT;
-                    }
-                    break;
+                    /* FIXME -- Send this to TCPIP */
+                    DPRINT1("Set: TCP_NODELAY not yet supported\n");
+                    return 0;
 
                 default:
                     /* Invalid option */
@@ -728,8 +714,8 @@ WSHSetSocketInformation(
     }
 
     /* If we get here, GetAddressOption must return something valid */
-    GetTdiTypeId(Level, OptionName, &TdiId, &TdiType);
-    ASSERT((TdiId != 0) && (TdiType != 0));
+    RealOptionName = GetAddressOption(Level, OptionName);
+    ASSERT(RealOptionName != 0);
 
     Info = HeapAlloc(GetProcessHeap(), 0, sizeof(*Info) + OptionLength);
     if (!Info)
@@ -738,8 +724,8 @@ WSHSetSocketInformation(
     Info->ID.toi_entity.tei_entity = Context->AddrFileEntityType;
     Info->ID.toi_entity.tei_instance = Context->AddrFileInstance;
     Info->ID.toi_class = INFO_CLASS_PROTOCOL;
-    Info->ID.toi_type = TdiType;
-    Info->ID.toi_id = TdiId;
+    Info->ID.toi_type = INFO_TYPE_ADDRESS_OBJECT;
+    Info->ID.toi_id = RealOptionName;
     Info->BufferSize = OptionLength;
     memcpy(Info->Buffer, OptionValue, OptionLength);
 

@@ -674,16 +674,4 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp )
     return Found;
 }
 
-NTSTATUS
-TCPSetNoDelay(
-    PCONNECTION_ENDPOINT Connection,
-    BOOLEAN Set)
-{
-    if (Connection->SocketContext == NULL)
-        return STATUS_UNSUCCESSFUL;
-    LibTCPSetNoDelay(Connection->SocketContext, Set);
-    return STATUS_SUCCESS;
-}
-
-
 /* EOF */
