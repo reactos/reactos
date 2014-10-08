@@ -285,18 +285,21 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
 
     if (!NT_SUCCESS(ReadFileRecord(Vcb, NTFS_FILE_ROOT, MftRecord)))
     {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
         return NULL;
     }
 
     FileName = GetFileNameFromRecord(MftRecord);
     if (!FileName)
     {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
         return NULL;
     }
 
     Fcb = NtfsCreateFCB(L"\\", Vcb);
     if (!Fcb)
     {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
         return NULL;
     }
 
@@ -314,6 +317,8 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
     NtfsFCBInitializeCache(Vcb, Fcb);
     NtfsAddFCBToTable(Vcb, Fcb);
     NtfsGrabFCB(Vcb, Fcb);
+
+    ExFreePoolWithTag(MftRecord, TAG_NTFS);
 
     return Fcb;
 }
