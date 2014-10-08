@@ -100,7 +100,7 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
     case_clausule_t *case_clausule;
     unsigned uint;
     LONG lng;
-    BOOL bool;
+    BOOL boolean;
     double dbl;
 }
 
@@ -129,7 +129,7 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
 %type <expression> ConstExpression NumericLiteralExpression
 %type <member> MemberExpression
 %type <expression> Arguments_opt ArgumentList_opt Step_opt ExpressionList
-%type <bool> OptionExplicit_opt DoType
+%type <boolean> OptionExplicit_opt DoType
 %type <arg_decl> ArgumentsDecl_opt ArgumentDeclList ArgumentDecl
 %type <func_decl> FunctionDecl PropertyDecl
 %type <elseif> ElseIfs_opt ElseIfs ElseIf
@@ -403,8 +403,8 @@ ClassBody
     | PropertyDecl tNL ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
 
 PropertyDecl
-    : Storage_opt tPROPERTY tGET tIdentifier EmptyBrackets_opt tNL StatementsNl_opt tEND tPROPERTY
-                                    { $$ = new_function_decl(ctx, $4, FUNC_PROPGET, $1, NULL, $7); CHECK_ERROR; }
+    : Storage_opt tPROPERTY tGET tIdentifier ArgumentsDecl_opt tNL StatementsNl_opt tEND tPROPERTY
+                                    { $$ = new_function_decl(ctx, $4, FUNC_PROPGET, $1, $5, $7); CHECK_ERROR; }
     | Storage_opt tPROPERTY tLET tIdentifier '(' ArgumentDecl ')' tNL StatementsNl_opt tEND tPROPERTY
                                     { $$ = new_function_decl(ctx, $4, FUNC_PROPLET, $1, $6, $9); CHECK_ERROR; }
     | Storage_opt tPROPERTY tSET tIdentifier '(' ArgumentDecl ')' tNL StatementsNl_opt tEND tPROPERTY
