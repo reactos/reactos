@@ -1,14 +1,14 @@
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Синтаксис цієї команди наступний:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
-    STRING_ADD_USAGE "REG ADD <ключ> [/v <параметр> | /ve] [/t <тип>] [/s <розділювач>] [/d дані] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE <ключ> [/v <параметр> | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY <ключ> [/v <параметр> | /ve] [/s]\n"
-    STRING_SUCCESS "Операція успішно завершена\n"
-    STRING_INVALID_KEY "Помилка: неправильне ім'я ключа\n"
-    STRING_INVALID_CMDLINE "Помилка: неправильні параметри командного рядка\n"
-    STRING_NO_REMOTE "Помилка: неможливо додати ключі на віддаленій машині\n"
-    STRING_CANNOT_FIND "Помилка: не вдалось знайти вказаний ключ реєстру чи значення\n"
-END
+{
+    STRING_USAGE, "Синтаксис цієї команди наступний:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
+    STRING_ADD_USAGE, "REG ADD <ключ> [/v <параметр> | /ve] [/t <тип>] [/s <розділювач>] [/d дані] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE <ключ> [/v <параметр> | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY <ключ> [/v <параметр> | /ve] [/s]\n"
+    STRING_SUCCESS, "Операція успішно завершена\n"
+    STRING_INVALID_KEY, "Помилка: неправильне ім'я ключа\n"
+    STRING_INVALID_CMDLINE, "Помилка: неправильні параметри командного рядка\n"
+    STRING_NO_REMOTE, "Помилка: неможливо додати ключі на віддаленій машині\n"
+    STRING_CANNOT_FIND, "Помилка: не вдалось знайти вказаний ключ реєстру чи значення\n"
+}

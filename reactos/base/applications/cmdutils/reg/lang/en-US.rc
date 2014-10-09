@@ -1,14 +1,14 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "The syntax of this command is:\n\nREG [ ADD | DELETE | QUERY ]\nREG command /?\n"
-    STRING_ADD_USAGE "REG ADD key_name [/v value_name | /ve] [/t type] [/s separator] [/d data] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE key_name [/v value_name | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY key_name [/v value_name | /ve] [/s]\n"
-    STRING_SUCCESS "The operation completed successfully\n"
-    STRING_INVALID_KEY "Error: Invalid key name\n"
-    STRING_INVALID_CMDLINE "Error: Invalid command line parameters\n"
-    STRING_NO_REMOTE "Error: Unable to add keys to remote machine\n"
-    STRING_CANNOT_FIND "Error: The system was unable to find the specified registry key or value\n"
-END
+{
+    STRING_USAGE, "The syntax of this command is:\n\nREG [ ADD | DELETE | QUERY ]\nREG command /?\n"
+    STRING_ADD_USAGE, "REG ADD key_name [/v value_name | /ve] [/t type] [/s separator] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE key_name [/v value_name | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY key_name [/v value_name | /ve] [/s]\n"
+    STRING_SUCCESS, "The operation completed successfully\n"
+    STRING_INVALID_KEY, "Error: Invalid key name\n"
+    STRING_INVALID_CMDLINE, "Error: Invalid command line parameters\n"
+    STRING_NO_REMOTE, "Error: Unable to add keys to remote machine\n"
+    STRING_CANNOT_FIND, "Error: The system was unable to find the specified registry key or value\n"
+}

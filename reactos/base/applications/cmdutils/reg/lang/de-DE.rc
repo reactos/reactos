@@ -1,14 +1,14 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Syntax:\n\nREG [ ADD | DELETE | QUERY ]\nREG Befehl /?\n"
-    STRING_ADD_USAGE "REG ADD Schlüssel [/v Wert | /ve] [/t Typ] [/s Trenner] [/d Daten] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE Schlüssel [/v Wert | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY Schlüssel [/v Wert | /ve] [/s]\n"
-    STRING_SUCCESS "Der Vorgang wurde erfolgreich abgeschlossen\n"
-    STRING_INVALID_KEY "Fehler: Ungültiger Schlüssel\n"
-    STRING_INVALID_CMDLINE "Fehler: Ungültige Befehlszeilenargumente\n"
-    STRING_NO_REMOTE "Fehler: Konnte Schlüssel nicht zum entfernten Rechner hinzufügen\n"
-    STRING_CANNOT_FIND "Fehler: Der angegebene Schlüssel oder Wert konnte nicht gefunden werden\n"
-END
+{
+    STRING_USAGE, "Syntax:\n\nREG [ ADD | DELETE | QUERY ]\nREG Befehl /?\n"
+    STRING_ADD_USAGE, "REG ADD Schlüssel [/v Wert | /ve] [/t Typ] [/s Trenner] [/d Daten] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE Schlüssel [/v Wert | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY Schlüssel [/v Wert | /ve] [/s]\n"
+    STRING_SUCCESS, "Der Vorgang wurde erfolgreich abgeschlossen\n"
+    STRING_INVALID_KEY, "Fehler: Ungültiger Schlüssel\n"
+    STRING_INVALID_CMDLINE, "Fehler: Ungültige Befehlszeilenargumente\n"
+    STRING_NO_REMOTE, "Fehler: Konnte Schlüssel nicht zum entfernten Rechner hinzufügen\n"
+    STRING_CANNOT_FIND, "Fehler: Der angegebene Schlüssel oder Wert konnte nicht gefunden werden\n"
+}

@@ -1,14 +1,14 @@
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Syntax för detta kommando är:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
-    STRING_ADD_USAGE "REG ADD nyckelnamn [/v värdenamn | /ve] [/t typ] [/s separator] [/d data] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE nyckelnamn [/v värdenamn | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY nyckelnamn [/v värdenamn | /ve] [/s]\n"
-    STRING_SUCCESS "Operation slutfördes utan problem\n"
-    STRING_INVALID_KEY "Fel: ogiltigt nyckelnamn\n"
-    STRING_INVALID_CMDLINE "Fel: ogiltiga kommandoradsparametrar\n"
-    STRING_NO_REMOTE "Fel: Kan inte lägga till nycklar till fjärrmaskin\n"
-    STRING_CANNOT_FIND "Fel: Systemet kunde inte hitta angiven nyckel eller värde i registret\n"
-END
+{
+    STRING_USAGE, "Syntax för detta kommando är:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
+    STRING_ADD_USAGE, "REG ADD nyckelnamn [/v värdenamn | /ve] [/t typ] [/s separator] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nyckelnamn [/v värdenamn | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nyckelnamn [/v värdenamn | /ve] [/s]\n"
+    STRING_SUCCESS, "Operation slutfördes utan problem\n"
+    STRING_INVALID_KEY, "Fel: ogiltigt nyckelnamn\n"
+    STRING_INVALID_CMDLINE, "Fel: ogiltiga kommandoradsparametrar\n"
+    STRING_NO_REMOTE, "Fel: Kan inte lägga till nycklar till fjärrmaskin\n"
+    STRING_CANNOT_FIND, "Fel: Systemet kunde inte hitta angiven nyckel eller värde i registret\n"
+}
