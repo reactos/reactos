@@ -1540,6 +1540,7 @@ __declspec(noreturn)
 __INTRIN_INLINE void __fastfail(unsigned int Code)
 {
 	__asm__("int $0x29" : : "c"(Code) : "memory");
+	__builtin_unreachable();
 }
 
 /*** Protected memory management ***/
