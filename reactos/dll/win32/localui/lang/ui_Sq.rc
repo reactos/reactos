@@ -20,8 +20,6 @@
  *
  */
 
-#include "localui.h"
-
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
