@@ -1054,7 +1054,7 @@ cleanup:
         return errCode;
     }
 
-    // Thankfully, the
+    // Thankfully, starting with NT4 the name mappings are always unicode, so no need to convert.
     lpFileOp->hNameMappings = nFileOp.hNameMappings;
     lpFileOp->fAnyOperationsAborted = nFileOp.fAnyOperationsAborted;
     return retCode;
