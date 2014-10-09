@@ -940,38 +940,56 @@ static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly)
 
 /*************************************************************************
  *
- * SHNameTranslate HelperFunction for SHFileOperationA
+ * _ConvertAtoW  helper function for SHFileOperationA
  *
- * Translates a list of 0 terminated ASCII strings into Unicode. If *wString
- * is NULL, only the necessary size of the string is determined and returned,
- * otherwise the ASCII strings are copied into it and the buffer is increased
- * to point to the location after the final 0 termination char.
+ * Converts a string or string-list to unicode.
  */
-static DWORD SHNameTranslate(LPWSTR* wString, LPCWSTR* pWToFrom, BOOL more)
+static DWORD _ConvertAtoW(PCSTR strSrc, PCWSTR* pStrDest, BOOL isList)
 {
-    DWORD size = 0, aSize = 0;
-    LPCSTR aString = (LPCSTR)*pWToFrom;
+    *pStrDest = NULL;
 
-    if (aString)
+    // If the input is null, nothing to convert.
+    if (!strSrc)
+        return 0;
+
+    // Measure the total size, depending on if it's a zero-terminated list.
+    int sizeA = 0;
+    if (isList)
     {
+        PCSTR tmpSrc = strSrc;
+        int size;
         do
         {
-            size = lstrlenA(aString) + 1;
-            aSize += size;
-            aString += size;
-        } while ((size != 1) && more);
-
-        /* The two sizes might be different in the case of multibyte chars */
-        size = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*pWToFrom, aSize, *wString, 0);
-        if (*wString) /* only in the second loop */
-        {
-            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*pWToFrom, aSize, *wString, size);
-            *pWToFrom = *wString;
-            *wString += size;
-        }
+            size = lstrlenA(tmpSrc) + 1;
+            sizeA += size;
+            tmpSrc += size;
+        } while (size != 1);
     }
-    return size;
+    else
+    {
+        sizeA = lstrlenA(strSrc) + 1;
+    }
+
+    // Measure the
+    int sizeW = MultiByteToWideChar(CP_ACP, 0, strSrc, sizeA, NULL, 0);
+    if (!sizeW)
+        return GetLastError();
+
+    PWSTR strDest = (PWSTR) HeapAlloc(GetProcessHeap(), 0, sizeW);
+    if (!strDest)
+        return ERROR_OUTOFMEMORY;
+
+    int err = MultiByteToWideChar(CP_ACP, 0, strSrc, sizeA, strDest, sizeW);
+    if (!err)
+    {
+        HeapFree(GetProcessHeap(), 0, strDest);
+        return GetLastError();
+    }
+
+    *pStrDest = strDest;
+    return 0;
 }
+
 /*************************************************************************
  * SHFileOperationA          [SHELL32.@]
  *
@@ -990,40 +1008,53 @@ static DWORD SHNameTranslate(LPWSTR* wString, LPCWSTR* pWToFrom, BOOL more)
  */
 int WINAPI SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp)
 {
-    SHFILEOPSTRUCTW nFileOp = *((LPSHFILEOPSTRUCTW)lpFileOp);
-    int retCode = 0;
-    DWORD size;
-    LPWSTR ForFree = NULL, /* we change wString in SHNameTranslate and can't use it for freeing */
-           wString = NULL; /* we change this in SHNameTranslate */
+    int errCode, retCode;
+    SHFILEOPSTRUCTW nFileOp = { 0 };
 
-    TRACE("\n");
-    if (FO_DELETE == (nFileOp.wFunc & FO_MASK))
-        nFileOp.pTo = NULL; /* we need a NULL or a valid pointer for translation */
-    if (!(nFileOp.fFlags & FOF_SIMPLEPROGRESS))
-        nFileOp.lpszProgressTitle = NULL; /* we need a NULL or a valid pointer for translation */
-    while (1) /* every loop calculate size, second translate also, if we have storage for this */
+    // Convert A information to W
+    nFileOp.hwnd = lpFileOp->hwnd;
+    nFileOp.wFunc = lpFileOp->wFunc;
+    nFileOp.fFlags = lpFileOp->fFlags;
+
+    errCode = _ConvertAtoW(lpFileOp->pFrom, &nFileOp.pFrom, TRUE);
+    if (errCode != 0)
+        goto cleanup;
+
+    if (FO_DELETE != (nFileOp.wFunc & FO_MASK))
     {
-        size = SHNameTranslate(&wString, &nFileOp.lpszProgressTitle, FALSE); /* no loop */
-        size += SHNameTranslate(&wString, &nFileOp.pFrom, TRUE); /* internal loop */
-        size += SHNameTranslate(&wString, &nFileOp.pTo, TRUE); /* internal loop */
-
-        if (ForFree)
-        {
-            retCode = SHFileOperationW(&nFileOp);
-            HeapFree(GetProcessHeap(), 0, ForFree); /* we cannot use wString, it was changed */
-            break;
-        }
-        else
-        {
-            wString = ForFree = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
-            if (ForFree) continue;
-            retCode = ERROR_OUTOFMEMORY;
-            nFileOp.fAnyOperationsAborted = TRUE;
-            SetLastError(retCode);
-            return retCode;
-        }
+        errCode = _ConvertAtoW(lpFileOp->pTo, &nFileOp.pTo, TRUE);
+        if (errCode != 0)
+            goto cleanup;
     }
 
+    if (nFileOp.fFlags & FOF_SIMPLEPROGRESS)
+    {
+        errCode = _ConvertAtoW(lpFileOp->lpszProgressTitle, &nFileOp.lpszProgressTitle, FALSE);
+        if (errCode != 0)
+            goto cleanup;
+    }
+
+    // Call the actual function
+    retCode = SHFileOperationW(&nFileOp);
+
+    // Cleanup
+cleanup:
+    if (nFileOp.pFrom)
+        HeapFree(GetProcessHeap(), 0, (PVOID) nFileOp.pFrom);
+    if (nFileOp.pTo)
+        HeapFree(GetProcessHeap(), 0, (PVOID) nFileOp.pTo);
+    if (nFileOp.lpszProgressTitle)
+        HeapFree(GetProcessHeap(), 0, (PVOID) nFileOp.lpszProgressTitle);
+
+    if (errCode != 0)
+    {
+        lpFileOp->fAnyOperationsAborted = TRUE;
+        SetLastError(errCode);
+
+        return errCode;
+    }
+
+    // Thankfully, the
     lpFileOp->hNameMappings = nFileOp.hNameMappings;
     lpFileOp->fAnyOperationsAborted = nFileOp.fAnyOperationsAborted;
     return retCode;
