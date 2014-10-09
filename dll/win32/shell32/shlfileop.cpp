@@ -970,12 +970,12 @@ static DWORD _ConvertAtoW(PCSTR strSrc, PCWSTR* pStrDest, BOOL isList)
         sizeA = lstrlenA(strSrc) + 1;
     }
 
-    // Measure the
+    // Measure the needed allocation size.
     int sizeW = MultiByteToWideChar(CP_ACP, 0, strSrc, sizeA, NULL, 0);
     if (!sizeW)
         return GetLastError();
 
-    PWSTR strDest = (PWSTR) HeapAlloc(GetProcessHeap(), 0, sizeW);
+    PWSTR strDest = (PWSTR) HeapAlloc(GetProcessHeap(), 0, sizeW * sizeof(WCHAR));
     if (!strDest)
         return ERROR_OUTOFMEMORY;
 
@@ -1739,7 +1739,16 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
     return ret;
 }
 
-#define SHDSA_GetItemCount(hdsa) (*(int*)(hdsa))
+// Used by SHFreeNameMappings
+static int CALLBACK _DestroyCallback(void *p, void *pData)
+{
+    LPSHNAMEMAPPINGW lp = (SHNAMEMAPPINGW *)p;
+
+    SHFree(lp->pszOldPath);
+    SHFree(lp->pszNewPath);
+
+    return TRUE;
+}
 
 /*************************************************************************
  * SHFreeNameMappings      [shell32.246]
@@ -1757,16 +1766,7 @@ void WINAPI SHFreeNameMappings(HANDLE hNameMapping)
 {
     if (hNameMapping)
     {
-        int i = SHDSA_GetItemCount((HDSA)hNameMapping) - 1;
-
-        for (; i>= 0; i--)
-        {
-            LPSHNAMEMAPPINGW lp = (SHNAMEMAPPINGW *)DSA_GetItemPtr((HDSA)hNameMapping, i);
-
-            SHFree(lp->pszOldPath);
-            SHFree(lp->pszNewPath);
-        }
-        DSA_Destroy((HDSA)hNameMapping);
+        DSA_DestroyCallback((HDSA) hNameMapping, _DestroyCallback, NULL);
     }
 }
 
