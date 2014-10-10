@@ -20,8 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Menu */
-
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 MAIN_MENU MENU
@@ -43,12 +41,6 @@ MAIN_MENU MENU
    MENUITEM "Percakto...", MNID_BKMK_DEFINE
  }
  POPUP "&Opsione" {
-   POPUP	"Ndihma perhere e dukshme"
-   BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Dukshem",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Nuk duket",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Histori",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -56,33 +48,30 @@ MAIN_MENU MENU
     MENUITEM "Normale",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Madhe",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Perdor ngjyrat e sistemit",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "Ndihmë" {
    MENUITEM "Ndihmë &per ndihmen", MNID_HELP_HELPON
    MENUITEM "Perhere lart", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "Rreth ndihmes Wine", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Index"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Shenime...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopjo",                MNID_CTXT_COPY
+		MENUITEM "Printo...",            MNID_CTXT_PRINT
+		POPUP    "Fonts"
+		BEGIN
+			MENUITEM "Vogel",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normale",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Madhe",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Kerko"
-{
-    LTEXT  "Jo e implementuar", -1, 10, 10, 180, 150
-}
-
-/* Strings */
 STRINGTABLE
 {
 STID_WINE_HELP, 	"Wine ndihme"
@@ -101,25 +90,18 @@ STID_NO_RICHEDIT	"Nuk gjendet nje implementim richedit... Nderprej"
 STID_PSH_INDEX,		"Ndihme me teme: "
 }
 
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Shenime...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Kopjo",                MNID_CTXT_COPY
-		MENUITEM "Printo...",            MNID_CTXT_PRINT
-		POPUP    "Fonts"
-		BEGIN
-			MENUITEM "Vogel",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normale",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Madhe",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Ndihma perhere e dukshme"
-		BEGIN
-			MENUITEM "Default",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Dukshem",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Nuk duket", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Perdor ngjyrat e sistemit",   MNID_CTXT_SYSTEM_COLORS
-	END
-END
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Kerko"
+{
+    LTEXT  "Jo e implementuar", -1, 10, 10, 180, 150
+}

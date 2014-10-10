@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
-
 #pragma code_page(65001)
 
-/* Menu */
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
@@ -43,27 +41,53 @@ MAIN_MENU MENU
    MENUITEM "Do&loči ...", MNID_BKMK_DEFINE
  }
  POPUP "&Možnosti" {
-   POPUP	"Pomoč vedno vidna"
-   BEGIN
-     MENUITEM "Privzeto",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Vidna",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Skrita",	MNID_OPTS_HELP_NONVISIBLE
-   END
    MENUITEM "Zgodovina",		MNID_OPTS_HISTORY
    POPUP    "Pisava"
-   BEGIN
+  BEGIN
     MENUITEM "Majhna",		MNID_OPTS_FONTS_SMALL
     MENUITEM "Običajna",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Velika",     	MNID_OPTS_FONTS_LARGE
-   END
-   MENUITEM "Uporabi sistemske barve",	MNID_OPTS_SYSTEM_COLORS
-  }
+  END
+ }
   POPUP "&Pomoč" {
    MENUITEM "&O pomoči", MNID_HELP_HELPON
    MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Informacije ...", MNID_HELP_ABOUT
  }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Opomba ...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiraj",                MNID_CTXT_COPY
+		MENUITEM "Natisni ...",            MNID_CTXT_PRINT
+		POPUP    "Pisava"
+		BEGIN
+			MENUITEM "Majnha",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Običajna",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Velika",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Wine Pomoč"
+STID_WHERROR, 		"NAPAKA"
+STID_WARNING,  		"OPOZORILO"
+STID_INFO,  		"Informacija"
+STID_NOT_IMPLEMENTED, 	"Ni (še) na voljo"
+STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke s pomočjo '%s'"
+STID_INDEX, 		"&Indeks"
+STID_CONTENTS,		"Vsebina"
+STID_BACK, 		"&Nazaj"
+STID_ALL_FILES, 	"Vse datoteke (*.*)"
+STID_HELP_FILES_HLP, 	"Datoteke s pomočjo (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Ne najdem datoteke '%s'. Ali jo želite poiskati sami?"
+STID_NO_RICHEDIT	"Ne morem najti knjižnice richedit ... Prekinjam"
+STID_PSH_INDEX,		"Teme pomoči: "
 }
 
 IDD_INDEX DIALOG 0, 0, 200, 190
@@ -81,45 +105,3 @@ CAPTION "Iskanje"
 {
     LTEXT  "Ni (še) na voljo", -1, 10, 10, 180, 150
 }
-
-/* Strings */
-STRINGTABLE
-{
-STID_WINE_HELP, 	"Wine Pomoč"
-STID_WHERROR, 		"NAPAKA"
-STID_WARNING,  		"OPOZORILO"
-STID_INFO,  		"Informacija"
-STID_NOT_IMPLEMENTED, 	"Ni (še) na voljo"
-STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke s pomočjo '%s'"
-STID_INDEX, 		"&Indeks"
-STID_CONTENTS, 		"Vsebina"
-STID_BACK, 		"&Nazaj"
-STID_ALL_FILES, 	"Vse datoteke (*.*)"
-STID_HELP_FILES_HLP, 	"Datoteke s pomočjo (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Ne najdem datoteke '%s'. Ali jo želite poiskati sami?"
-STID_NO_RICHEDIT	"Ne morem najti knjižnice richedit ... Prekinjam"
-STID_PSH_INDEX,		"Teme pomoči: "
-}
-
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Opomba ...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Kopiraj",                MNID_CTXT_COPY
-		MENUITEM "Natisni ...",            MNID_CTXT_PRINT
-		POPUP    "Pisava"
-		BEGIN
-			MENUITEM "Majnha",       MNID_CTXT_FONTS_SMALL
-            MENUITEM "Običajna",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Velika",       MNID_CTXT_FONTS_LARGE
-		END
-        POPUP   "Pomoč vedno vidna"
-		BEGIN
-			MENUITEM "Privzeto",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Vidna",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Nevidna", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Uporabi sistemske barve",   MNID_CTXT_SYSTEM_COLORS
-	END
-END

@@ -23,8 +23,6 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Plik" {
@@ -44,12 +42,6 @@ MAIN_MENU MENU
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
-   POPUP	"Pomoc zawsze widoczna"
-   BEGIN
-     MENUITEM "Domyœlnie",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Widoczna",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Niewidoczna",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Historia",		MNID_OPTS_HISTORY
   POPUP    "Czcionki"
   BEGIN
@@ -57,14 +49,46 @@ MAIN_MENU MENU
     MENUITEM "Normalne",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Du¿e",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "U¿yj kolorów systemowych",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "Pomo&c" {
    MENUITEM "&Pomoc", MNID_HELP_HELPON
    MENUITEM "&Zawsze na wierzchu", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&O programie...", MNID_HELP_ABOUT
  }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Adnotacja...",          MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiuj",                MNID_CTXT_COPY
+		MENUITEM "Drukuj...",             MNID_CTXT_PRINT
+		POPUP    "Czcionka"
+		BEGIN
+			MENUITEM "Ma³a",          MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normalna",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Du¿a",          MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Wine - Pomoc"
+STID_WHERROR, 		"B£¥D"
+STID_WARNING,  		"OSTRZE¯ENIE"
+STID_INFO,  		"Informacja"
+STID_NOT_IMPLEMENTED, 	"Nie zaimplementowane"
+STID_HLPFILE_ERROR_s, 	"B³¹d w trakcie odczytu pliku pomocy `%s'"
+STID_INDEX, 		"&Zawartoœæ"
+STID_CONTENTS,		"&Szukaj"
+STID_BACK, 		"&Wstecz"
+STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
+STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaæ tego pliku samodzielnie?"
+STID_NO_RICHEDIT	"Nie znaleziono implementacji richedit... Wyœwietlenie pomocy nie jest mo¿liwe"
+STID_PSH_INDEX,		"Tematy pomocy: "
 }
 
 IDD_INDEX DIALOG 0, 0, 200, 190
@@ -82,46 +106,3 @@ CAPTION "Szukaj"
 {
     LTEXT  "Nie zaimplementowane", -1, 10, 10, 180, 150
 }
-
-/* Strings */
-STRINGTABLE
-{
-STID_WINE_HELP, 	"Wine - Pomoc"
-STID_WHERROR, 		"B£¥D"
-STID_WARNING,  		"OSTRZE¯ENIE"
-STID_INFO,  		"Informacja"
-STID_NOT_IMPLEMENTED, 	"Nie zaimplementowane"
-STID_HLPFILE_ERROR_s, 	"B³¹d w trakcie odczytu pliku pomocy `%s'"
-STID_INDEX, 		"&Zawartoœæ"
-STID_CONTENTS, 		"&Szukaj"
-STID_BACK, 		"&Wstecz"
-STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
-STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaæ tego pliku samodzielnie?"
-STID_NO_RICHEDIT	"Nie znaleziono implementacji richedit... Wyœwietlenie pomocy nie jest mo¿liwe"
-STID_PSH_INDEX,		"Tematy pomocy: "
-}
-
-
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Adnotacja...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Kopiuj",                MNID_CTXT_COPY
-		MENUITEM "Drukuj...",            MNID_CTXT_PRINT
-		POPUP    "Czcionka"
-		BEGIN
-			MENUITEM "Ma³a",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normalna",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Du¿a",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Pomoc zawsze widoczna"
-		BEGIN
-			MENUITEM "Domyœlnie",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Widoczna",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Niewidoczna", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "U¿yj kolorów systemowych",   MNID_CTXT_SYSTEM_COLORS
-	END
-END

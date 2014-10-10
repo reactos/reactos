@@ -20,12 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
-
 /* UTF-8 */
 #pragma code_page(65001)
-
-/* Menu */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -48,12 +44,6 @@ MAIN_MENU MENU
    MENUITEM "&Définir...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
-   POPUP	"Aide toujours visible"
-   BEGIN
-     MENUITEM "Par défaut",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Historique",	MNID_OPTS_HISTORY
   POPUP    "Polices"
   BEGIN
@@ -61,33 +51,30 @@ MAIN_MENU MENU
     MENUITEM "Normale",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Utiliser les couleurs système", MNID_OPTS_SYSTEM_COLORS
-}
+ }
  POPUP "Aid&e" {
    MENUITEM "&Utiliser l'aide", MNID_HELP_HELPON
    MENUITEM "&Toujours visible", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&A propos de l'Aide de Wine", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Index"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotation...",           MNID_CTXT_ANNOTATE
+		MENUITEM "Copier",                  MNID_CTXT_COPY
+		MENUITEM "Imprimer la rubrique...", MNID_CTXT_PRINT
+		POPUP    "Polices"
+		BEGIN
+			MENUITEM "Petite",          MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normale",         MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Grande",          MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Recherche"
-{
-    LTEXT  "Pas encore implémenté", -1, 10, 10, 180, 150
-}
-
-/* Strings */
 STRINGTABLE
 {
 STID_WINE_HELP, 	"Aide de Wine"
@@ -106,25 +93,18 @@ STID_NO_RICHEDIT	"La bibliothèque RichEdit n'a pu être localisée... Abandon"
 STID_PSH_INDEX,		"Rubriques d'aide : "
 }
 
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Annotation...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Copier",              MNID_CTXT_COPY
-		MENUITEM "Imprimer la rubrique...", MNID_CTXT_PRINT
-		POPUP    "Polices"
-		BEGIN
-			MENUITEM "Petite",      MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normale",     MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Grande",      MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Aide toujours visible"
-		BEGIN
-			MENUITEM "Par défaut",  MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Visible",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Non visible", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Utiliser les couleurs système", MNID_CTXT_SYSTEM_COLORS
-	END
-END
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Recherche"
+{
+    LTEXT  "Pas encore implémenté", -1, 10, 10, 180, 150
+}

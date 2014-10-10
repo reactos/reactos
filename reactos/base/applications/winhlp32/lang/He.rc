@@ -22,8 +22,6 @@
 
 #pragma code_page(65001)
 
-/* Menu */
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
@@ -45,12 +43,6 @@ MAIN_MENU MENU
    MENUITEM "ה&גדרה...", MNID_BKMK_DEFINE
  }
  POPUP "&אפשרויות" {
-   POPUP	"העזרה גלויה תמיד"
-   BEGIN
-     MENUITEM "בררת מחדל",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "גלויה",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "מוסתרת",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "היסטוריה",		MNID_OPTS_HISTORY
   POPUP    "גופנים"
   BEGIN
@@ -58,14 +50,46 @@ MAIN_MENU MENU
     MENUITEM "רגילים",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "גדולים",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "שימוש בצבעי המערכת",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "ע&זרה" {
    MENUITEM "עזרה ע&ל העזרה", MNID_HELP_HELPON
    MENUITEM "תמיד &עליון", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&מידע...", MNID_HELP_ABOUT
  }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "הערות...",           MNID_CTXT_ANNOTATE
+		MENUITEM "העתקה",             MNID_CTXT_COPY
+		MENUITEM "הדפסה...",          MNID_CTXT_PRINT
+		POPUP    "גופנים"
+		BEGIN
+			MENUITEM "קטנים",      MNID_CTXT_FONTS_SMALL
+			MENUITEM "רגילים",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "גדולים",      MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"העזרה של Wine"
+STID_WHERROR, 		"שגיאה"
+STID_WARNING,  		"אזהרה"
+STID_INFO,  		"מידע"
+STID_NOT_IMPLEMENTED, 	"לא מוטמע"
+STID_HLPFILE_ERROR_s, 	"אירעה שגיאה בעת קריאת קובץ העזרה `%s'"
+STID_INDEX, 		"מ&פתח"
+STID_CONTENTS,		"תקציר"
+STID_BACK, 		"&חזרה"
+STID_ALL_FILES, 	"כל הקבצים (*.*)"
+STID_HELP_FILES_HLP, 	"קובצי עזרה (*.hlp)"
+STID_FILE_NOT_FOUND_s	"לא ניתן למצוא את '%s'. האם ברצונך למצוא קובץ זה בעצמך?"
+STID_NO_RICHEDIT	"לא ניתן למצוא יישום של richedit... התכנית תצא"
+STID_PSH_INDEX,		"נושאי העזרה: "
 }
 
 IDD_INDEX DIALOG 0, 0, 200, 190
@@ -85,45 +109,3 @@ CAPTION "חיפוש"
 {
     LTEXT  "לא מוטמע עדיין", -1, 10, 10, 180, 150
 }
-
-/* Strings */
-STRINGTABLE
-{
-STID_WINE_HELP, 	"העזרה של Wine"
-STID_WHERROR, 		"שגיאה"
-STID_WARNING,  		"אזהרה"
-STID_INFO,  		"מידע"
-STID_NOT_IMPLEMENTED, 	"לא מוטמע"
-STID_HLPFILE_ERROR_s, 	"אירעה שגיאה בעת קריאת קובץ העזרה `%s'"
-STID_INDEX, 		"מ&פתח"
-STID_CONTENTS,		"תקציר"
-STID_BACK, 		"&חזרה"
-STID_ALL_FILES, 	"כל הקבצים (*.*)"
-STID_HELP_FILES_HLP, 	"קובצי עזרה (*.hlp)"
-STID_FILE_NOT_FOUND_s	"לא ניתן למצוא את '%s'. האם ברצונך למצוא קובץ זה בעצמך?"
-STID_NO_RICHEDIT	"לא ניתן למצוא יישום של richedit... התכנית תצא"
-STID_PSH_INDEX,		"נושאי העזרה: "
-}
-
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "הערות...",       MNID_CTXT_ANNOTATE
-		MENUITEM "העתקה",                MNID_CTXT_COPY
-		MENUITEM "הדפסה...",            MNID_CTXT_PRINT
-		POPUP    "גופנים"
-		BEGIN
-			MENUITEM "קטנים",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "רגילים",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "גדולים",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "העזרה תמיד זמינה"
-		BEGIN
-			MENUITEM "בררת מחדל",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "גלויה",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "מוסתרת", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "שימוש בצבעי המערכת",   MNID_CTXT_SYSTEM_COLORS
-	END
-END
