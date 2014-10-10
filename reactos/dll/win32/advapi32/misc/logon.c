@@ -136,6 +136,7 @@ CreateProcessAsUserA(HANDLE hToken,
     if (!NT_SUCCESS (Status))
     {
         ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+        TerminateProcess(lpProcessInformation->hProcess, Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
@@ -200,6 +201,7 @@ CreateProcessAsUserW(HANDLE hToken,
     if (!NT_SUCCESS (Status))
     {
         ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+        TerminateProcess(lpProcessInformation->hProcess, Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
