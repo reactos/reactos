@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * fast486.c
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -282,6 +282,11 @@ Fast486Reset(PFAST486_STATE State)
 #ifndef FAST486_NO_FPU
     /* Initialize CR0 */
     State->ControlRegisters[FAST486_REG_CR0] |= FAST486_CR0_ET;
+
+    /* Initialize the FPU control and tag registers */
+    State->FpuControl.Value = FAST486_FPU_DEFAULT_CONTROL;
+    State->FpuStatus.Value = 0;
+    State->FpuTag = 0xFFFF;
 #endif
 
     /* Restore the callbacks and TLB */

@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * common.inl
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,6 +20,7 @@
  */
 
 #include "common.h"
+#include "fpu.h"
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -1329,5 +1330,77 @@ Fast486WriteModrmDwordOperands(PFAST486_STATE State,
 
     return TRUE;
 }
+
+#ifndef FAST486_NO_FPU
+
+FORCEINLINE
+VOID
+Fast486FpuNormalize(PFAST486_STATE State, PFAST486_FPU_DATA_REG Data)
+{
+    UINT LeadingZeros = 0;
+
+    if (FPU_IS_NORMALIZED(Data)) return;
+    if (FPU_IS_ZERO(Data))
+    {
+        Data->Exponent = 0;
+        return;
+    }
+
+    /* Count the leading zeros */
+    while (!(Data->Mantissa & (1 << (63 - LeadingZeros)))) LeadingZeros++;
+
+    if (LeadingZeros < Data->Exponent)
+    {
+        Data->Mantissa <<= LeadingZeros;
+        Data->Exponent -= LeadingZeros;
+    }
+    else
+    {
+        /* Make it denormalized */
+        Data->Mantissa <<= Data->Exponent - 1;
+        Data->Exponent = 1;
+
+        /* Underflow */
+        State->FpuStatus.Ue = TRUE;
+    }
+}
+
+FORCEINLINE
+USHORT
+Fast486GetValueTag(PFAST486_FPU_DATA_REG Data)
+{
+    if (FPU_IS_ZERO(Data)) return FPU_TAG_ZERO;
+    else if (FPU_IS_NAN(Data)) return FPU_TAG_SPECIAL;
+    else return FPU_TAG_VALID;
+}
+
+FORCEINLINE
+VOID
+Fast486FpuPush(PFAST486_STATE State,
+               PFAST486_FPU_DATA_REG Data)
+{
+    State->FpuStatus.Top--;
+
+    if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+    {
+        FPU_ST(0) = *Data;
+        FPU_SET_TAG(0, Fast486GetValueTag(Data));
+    }
+    else State->FpuStatus.Ie = TRUE;
+}
+
+FORCEINLINE
+VOID
+Fast486FpuPop(PFAST486_STATE State)
+{
+    if (FPU_GET_TAG(0) != FPU_TAG_EMPTY)
+    {
+        FPU_SET_TAG(0, FPU_TAG_EMPTY);
+        State->FpuStatus.Top++;
+    }
+    else State->FpuStatus.Ie = TRUE;
+}
+
+#endif
 
 /* EOF */

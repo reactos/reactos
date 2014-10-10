@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * opcodes.c
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -254,11 +254,11 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeAad,
     Fast486OpcodeSalc,
     Fast486OpcodeXlat,
-    Fast486FpuOpcodeD8,
+    Fast486FpuOpcodeD8DC,
     Fast486FpuOpcodeD9,
     Fast486FpuOpcodeDA,
     Fast486FpuOpcodeDB,
-    Fast486FpuOpcodeDC,
+    Fast486FpuOpcodeD8DC,
     Fast486FpuOpcodeDD,
     Fast486FpuOpcodeDE,
     Fast486FpuOpcodeDF,
