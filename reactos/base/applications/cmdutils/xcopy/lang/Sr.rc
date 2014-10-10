@@ -1,26 +1,27 @@
 LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC
 
 STRINGTABLE
-BEGIN
-    STRING_INVPARMS "Неисправан број параметара. Користите xcopy /? за помоћ\n"
-    STRING_INVPARM "Неисправан параметар „%1“. Користите xcopy /? за помоћ\n"
-    STRING_PAUSE "Притисните <enter> да започнете умножавање\n"
-    STRING_SIMCOPY "%1!d! датотека/е ће бити уможено\n"
-    STRING_COPY "%1!d! датотека/е је умножено\n"
-    STRING_QISDIR "Да ли је „%1“ назив датотеке или фасцикла\n\
+{
+    STRING_INVPARMS, "Неисправан број параметара. Користите xcopy /? за помоћ\n"
+    STRING_INVPARM,  "Неисправан параметар „%1“. Користите xcopy /? за помоћ\n"
+    STRING_PAUSE,    "Притисните <enter> да започнете умножавање\n"
+    STRING_SIMCOPY,  "%1!d! датотека/е ће бити уможено\n"
+    STRING_COPY,     "%1!d! датотека/е је умножено\n"
+    STRING_QISDIR,   "Да ли је „%1“ назив датотеке или фасцикла\n\
                      на одредишту?\n\
                      (Д - датотека, Ф - фасцикла)\n"
-    STRING_SRCPROMPT "%1? (Да|Не)\n"
-    STRING_OVERWRITE "Заменити %1? (Да|Не|Све)\n"
-    STRING_COPYFAIL "Умножавање „%1“ у „%2“ није успело са r/c %3!d!\n"
-    STRING_OPENFAIL "Отварање „%1“ датотеке није успело\n"
-    STRING_READFAIL "Читање „%1“ датотеке није успело\n"
-    STRING_YES_CHAR "Д"
-    STRING_NO_CHAR "Н"
-    STRING_ALL_CHAR "С"
-    STRING_FILE_CHAR "Д"
-    STRING_DIR_CHAR "Ф"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (Да|Не)\n"
+    STRING_OVERWRITE,"Заменити %1? (Да|Не|Све)\n"
+    STRING_COPYFAIL, "Умножавање „%1“ у „%2“ није успело са r/c %3!d!\n"
+    STRING_OPENFAIL, "Отварање „%1“ датотеке није успело\n"
+    STRING_READFAIL, "Читање „%1“ датотеке није успело\n"
+    STRING_YES_CHAR, "Д"
+    STRING_NO_CHAR,  "Н"
+    STRING_ALL_CHAR, "С"
+    STRING_FILE_CHAR,"Д"
+    STRING_DIR_CHAR, "Ф"
+
+    STRING_HELP,
 "XCOPY — умножава изворне датотеке или гране фасцикли у одредиште\n\
 \n\
 Синтакса:\n\
@@ -52,31 +53,33 @@ XCOPY извор [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 [/D | /D:m-d-y] Умножи нове или измењене датотеке након одређеног датума.\n\
 \t\tАко датум није унесен, умножи само ако је одредиште старије\n\
 \t\tод извора\n\n"
-END
+
+}
 
 LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_LATIN
 
 STRINGTABLE
-BEGIN
-    STRING_INVPARMS "Neispravan broj parametara. Koristite xcopy /? za pomoć\n"
-    STRING_INVPARM "Neispravan parametar „%1“. Koristite xcopy /? za pomoć\n"
-    STRING_PAUSE "Pritisnite <enter> da započnete umnožavanje\n"
-    STRING_SIMCOPY "%1!d! datoteka/e će biti umoženo\n"
-    STRING_COPY "%1!d! datoteka/e je umnoženo\n"
-    STRING_QISDIR "Da li je „%1“ naziv datoteke ili fascikla\n\
+{
+    STRING_INVPARMS, "Neispravan broj parametara. Koristite xcopy /? za pomoć\n"
+    STRING_INVPARM,  "Neispravan parametar „%1“. Koristite xcopy /? za pomoć\n"
+    STRING_PAUSE,    "Pritisnite <enter> da započnete umnožavanje\n"
+    STRING_SIMCOPY,  "%1!d! datoteka/e će biti umoženo\n"
+    STRING_COPY,     "%1!d! datoteka/e je umnoženo\n"
+    STRING_QISDIR,   "Da li je „%1“ naziv datoteke ili fascikla\n\
                      na odredištu?\n\
                      (D - datoteka, F - fascikla)\n"
-    STRING_SRCPROMPT "%1? (Da|Ne)\n"
-    STRING_OVERWRITE "Zameniti %1? (Da|Ne|Sve)\n"
-    STRING_COPYFAIL "Umnožavanje „%1“ u „%2“ nije uspelo sa r/c %3!d!\n"
-    STRING_OPENFAIL "Otvaranje „%1“ datoteke nije uspelo\n"
-    STRING_READFAIL "Čitanje „%1“ datoteke nije uspelo\n"
-    STRING_YES_CHAR "D"
-    STRING_NO_CHAR "N"
-    STRING_ALL_CHAR "S"
-    STRING_FILE_CHAR "D"
-    STRING_DIR_CHAR "F"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (Da|Ne)\n"
+    STRING_OVERWRITE,"Zameniti %1? (Da|Ne|Sve)\n"
+    STRING_COPYFAIL, "Umnožavanje „%1“ u „%2“ nije uspelo sa r/c %3!d!\n"
+    STRING_OPENFAIL, "Otvaranje „%1“ datoteke nije uspelo\n"
+    STRING_READFAIL, "Čitanje „%1“ datoteke nije uspelo\n"
+    STRING_YES_CHAR, "D"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "S"
+    STRING_FILE_CHAR,"D"
+    STRING_DIR_CHAR, "F"
+
+    STRING_HELP,
 "XCOPY — umnožava izvorne datoteke ili grane fascikli u odredište\n\
 \n\
 Sintaksa:\n\
@@ -108,4 +111,5 @@ Gde:\n\
 [/D | /D:m-d-y] Umnoži nove ili izmenjene datoteke nakon određenog datuma.\n\
 \t\tAko datum nije unesen, umnoži samo ako je odredište starije\n\
 \t\tod izvora\n\n"
-END
+
+}
