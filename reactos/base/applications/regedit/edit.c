@@ -233,7 +233,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 {
     WNDPROC oldwndproc;
 
-    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    oldwndproc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -288,7 +288,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
         /* subclass the edit control */
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
-        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwndValue, GWLP_WNDPROC);
+        oldproc = (WNDPROC)GetWindowLongPtr(hwndValue, GWLP_WNDPROC);
         SetWindowLongPtr(hwndValue, GWLP_USERDATA, (DWORD_PTR)oldproc);
         SetWindowLongPtr(hwndValue, GWLP_WNDPROC, (DWORD_PTR)DwordEditSubclassProc);
 

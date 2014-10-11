@@ -286,7 +286,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 {
     WNDPROC oldwndproc;
     static WCHAR s_szNode[256];
-    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    oldwndproc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -406,7 +406,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                          0);
         }
         /* Subclass the AddressBar */
-        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC);
+        oldproc = (WNDPROC)GetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC);
         SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_USERDATA, (DWORD_PTR)oldproc);
         SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC, (DWORD_PTR)AddressBarProc);
         break;
