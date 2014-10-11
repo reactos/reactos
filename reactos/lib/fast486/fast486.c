@@ -103,9 +103,6 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
                                          IdtEntry.Selector,
                                          MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
                                          IdtEntry.Type);
-
-                /* Restore the prefix flags, which would be set to OPSIZE for 32-bit real mode */
-                State->PrefixFlags = 0;
             }
 
             /* Clear the interrupt status */
