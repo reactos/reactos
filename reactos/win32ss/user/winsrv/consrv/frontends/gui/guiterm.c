@@ -341,8 +341,6 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     PGUI_CONSOLE_DATA GuiData;
     GUI_CONSOLE_INFO  TermInfo;
 
-    SIZE_T Length = 0;
-
     if (This == NULL || Console == NULL || This->OldData == NULL)
         return STATUS_INVALID_PARAMETER;
 
@@ -417,9 +415,8 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
      */
 
     // Font data
-    Length = min(wcslen(TermInfo.FaceName) + 1, LF_FACESIZE); // wcsnlen
     wcsncpy(GuiData->GuiInfo.FaceName, TermInfo.FaceName, LF_FACESIZE);
-    GuiData->GuiInfo.FaceName[Length] = L'\0';
+    GuiData->GuiInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
     GuiData->GuiInfo.FontFamily     = TermInfo.FontFamily;
     GuiData->GuiInfo.FontSize       = TermInfo.FontSize;
     GuiData->GuiInfo.FontWeight     = TermInfo.FontWeight;
