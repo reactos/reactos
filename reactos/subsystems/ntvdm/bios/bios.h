@@ -30,8 +30,7 @@
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 
-// HACK: Disable FPU for now
-#define BIOS_EQUIPMENT_LIST     0x2C // Bit 2 set: Mouse present
+#define BIOS_EQUIPMENT_LIST 0x2E    // Bit1: FPU, Bit 2: Mouse
 
 #pragma pack(push, 1)
 
