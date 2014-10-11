@@ -115,8 +115,8 @@ const struct builtin_class_descr DIALOG_builtin_class =
 {
     WC_DIALOG,       /* name */
     CS_SAVEBITS | CS_DBLCLKS, /* style  */
-    (WNDPROC) DefDlgProcA,    /* procA */
-    (WNDPROC) DefDlgProcW,    /* procW */
+    DefDlgProcA,              /* procA */
+    DefDlgProcW,              /* procW */
     DLGWINDOWEXTRA,           /* extra */
     (LPCWSTR) IDC_ARROW,      /* cursor */
     0                         /* brush */

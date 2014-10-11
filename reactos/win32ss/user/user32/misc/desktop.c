@@ -22,7 +22,7 @@ const struct builtin_class_descr DESKTOP_builtin_class =
   WC_DESKTOP,           /* name */
   CS_DBLCLKS,           /* style */
   NULL,                 /* procA (winproc is Unicode only) */
-  (WNDPROC) DesktopWndProc,       /* procW */
+  DesktopWndProc,       /* procW */
   0,                    /* extra */
   IDC_ARROW,            /* cursor */
   (HBRUSH)(COLOR_BACKGROUND+1)    /* brush */
