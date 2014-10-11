@@ -26,24 +26,27 @@
 
 #if defined (__GNUC__)
     #define CountLeadingZeros64(x) __builtin_clzll(x)
+
+#if 0
 #elif (_MSC_VER >= 1500) && defined(_WIN64)
     #define CountLeadingZeros64(x) __lzcnt64(x)
 #elif (_MSC_VER >= 1500)
     #define CountLeadingZeros64(x) ((x) > 0xFFFFFFFFULL) ? __lzcnt((x) >> 32) \
                                                          : (__lzcnt(x) + 32)
+#endif
+
 #else
-    static FORCEINLINE
-    ULONG CountLeadingZeros64(ULONGLONG Value)
+    FORCEINLINE
+    ULONG
+    CountLeadingZeros64(ULONGLONG Value)
     {
         ULONG Count = 0;
-        ULONGLONG Mask = 1ULL << 63;
-
-        while (!(Value & Mask) && Mask)
+        Value = ~Value;
+        while ((LONGLONG)Value < 0)
         {
             Count++;
-            Mask >>= 1;
+            Value <<= 1;
         }
-
         return Count;
     }
 #endif
