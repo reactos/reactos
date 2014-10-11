@@ -54,10 +54,10 @@ void EnableMenuItems(HWND hwnd)
 
     mciVideoWindow.hWnd = hwnd;
 
-    dwError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD)(LPSTR)&mciVideoWindow); 
+    dwError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow); 
     if (!dwError)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD)(LPSTR)&mciVideoRect);
+        dwError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD_PTR)&mciVideoRect);
         if (!dwError)
         {
             EnableMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_ENABLED);
@@ -260,13 +260,13 @@ SwitchViewMode(HWND hwnd)
 
     mciVideoWindow.hWnd = hwnd;
 
-    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD)(LPSTR)&mciVideoWindow); 
+    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow); 
     if (mciError)
     {
         return;
     }
 
-    mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD)(LPSTR)&mciVideoRect);
+    mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD_PTR)&mciVideoRect);
     if (mciError)
     {
         return;
@@ -278,7 +278,7 @@ SwitchViewMode(HWND hwnd)
 
         SetParent(hTrackBar, hToolBar);
 
-        mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE, (DWORD)(LPSTR)&mciVideoRect);
+        mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE, (DWORD_PTR)&mciVideoRect);
         if (mciError)
         {
             ShowMCIError(hwnd, mciError);
@@ -288,7 +288,7 @@ SwitchViewMode(HWND hwnd)
         GetWindowRect(hToolBar, &rcToolbarRect);         
         ResizeClientArea(hwnd, mciVideoRect.rc.right, mciVideoRect.rc.bottom + (rcToolbarRect.bottom - rcToolbarRect.top));
 
-        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD)(LPSTR)&mciVideoWindow); 
+        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD_PTR)&mciVideoWindow); 
         if (mciError)
         {
             ShowMCIError(hwnd, mciError);
@@ -307,7 +307,7 @@ SwitchViewMode(HWND hwnd)
         CheckMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_UNCHECKED);
 
         mciVideoWindow.hWnd = MCI_DGV_WINDOW_DEFAULT;
-        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD)(LPSTR)&mciVideoWindow);
+        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD_PTR)&mciVideoWindow);
         if (mciError)
         {
             ShowMCIError(hwnd, mciError);
@@ -780,7 +780,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     mciPut.rc.right = Rect.right;
                     mciPut.rc.bottom = Rect.bottom - (ToolbarRect.bottom - ToolbarRect.top) - 2;
 
-                    mciSendCommand(wDeviceId, MCI_PUT, MCI_DGV_PUT_DESTINATION | MCI_DGV_RECT | MCI_WAIT, (DWORD)&mciPut);
+                    mciSendCommand(wDeviceId, MCI_PUT, MCI_DGV_PUT_DESTINATION | MCI_DGV_RECT | MCI_WAIT, (DWORD_PTR)&mciPut);
                 }
             }
             return 0L;
