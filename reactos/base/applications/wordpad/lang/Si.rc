@@ -89,7 +89,7 @@ BEGIN
     END
     POPUP "&Pomoč"
     BEGIN
-        MENUITEM "&O Wine Wordpadu"          ID_ABOUT
+        MENUITEM "&O Wine Wordpadu",         ID_ABOUT
     END
 END
 
@@ -101,8 +101,8 @@ BEGIN
         MENUITEM "&Kopiraj",            ID_EDIT_COPY
         MENUITEM "&Prilepi",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Vrstične oznake"     ID_BULLET
-        MENUITEM "O&dstavek ..."        ID_PARAFORMAT
+        MENUITEM "&Vrstične oznake",    ID_BULLET
+        MENUITEM "O&dstavek ...",       ID_PARAFORMAT
     END
 END
 
@@ -113,20 +113,20 @@ BEGIN
         MENUITEM "Črna",       ID_COLOR_BLACK
         MENUITEM "Kostanjeva", ID_COLOR_MAROON
         MENUITEM "Zelena",     ID_COLOR_GREEN
-        MENUITEM "Olivna"      ID_COLOR_OLIVE
-        MENUITEM "Mornariška"  ID_COLOR_NAVY
-        MENUITEM "Vijolična"   ID_COLOR_PURPLE
-        MENUITEM "Zelenomodra" ID_COLOR_TEAL
-        MENUITEM "Siva"        ID_COLOR_GRAY
-        MENUITEM "Srebrna"     ID_COLOR_SILVER
-        MENUITEM "Rdeča"       ID_COLOR_RED
-        MENUITEM "Citronska"   ID_COLOR_LIME
-        MENUITEM "Rumena"      ID_COLOR_YELLOW
-        MENUITEM "Modra"       ID_COLOR_BLUE
-        MENUITEM "Roza"        ID_COLOR_FUCHSIA
-        MENUITEM "Akvamarin"   ID_COLOR_AQUA
-        MENUITEM "Bela"        ID_COLOR_WHITE
-        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
+        MENUITEM "Olivna",     ID_COLOR_OLIVE
+        MENUITEM "Mornariška", ID_COLOR_NAVY
+        MENUITEM "Vijolična",  ID_COLOR_PURPLE
+        MENUITEM "Zelenomodra",ID_COLOR_TEAL
+        MENUITEM "Siva",       ID_COLOR_GRAY
+        MENUITEM "Srebrna",    ID_COLOR_SILVER
+        MENUITEM "Rdeča",      ID_COLOR_RED
+        MENUITEM "Citronska",  ID_COLOR_LIME
+        MENUITEM "Rumena",     ID_COLOR_YELLOW
+        MENUITEM "Modra",      ID_COLOR_BLUE
+        MENUITEM "Roza",       ID_COLOR_FUCHSIA
+        MENUITEM "Akvamarin",  ID_COLOR_AQUA
+        MENUITEM "Bela",       ID_COLOR_WHITE
+        MENUITEM "Automatic",  ID_COLOR_AUTOMATIC
     END
 END
 

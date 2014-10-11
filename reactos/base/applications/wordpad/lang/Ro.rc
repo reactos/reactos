@@ -92,7 +92,7 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Despre Wine Wordpad…"     ID_ABOUT
+        MENUITEM "&Despre Wine Wordpad…",    ID_ABOUT
     END
 END
 
@@ -104,8 +104,8 @@ BEGIN
         MENUITEM "&Copiază",            ID_EDIT_COPY
         MENUITEM "&Lipește",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Punct &bulină"        ID_BULLET
-        MENUITEM "&Paragraf…"           ID_PARAFORMAT
+        MENUITEM "Punct &bulină",       ID_BULLET
+        MENUITEM "&Paragraf…",          ID_PARAFORMAT
     END
 END
 
@@ -116,20 +116,20 @@ BEGIN
         MENUITEM "Negru",          ID_COLOR_BLACK
         MENUITEM "Maro",           ID_COLOR_MAROON
         MENUITEM "Verde",          ID_COLOR_GREEN
-        MENUITEM "Oliv"            ID_COLOR_OLIVE
-        MENUITEM "Bleumarin"       ID_COLOR_NAVY
-        MENUITEM "Violet"          ID_COLOR_PURPLE
-        MENUITEM "Verde-albăstrui" ID_COLOR_TEAL
-        MENUITEM "Gri"             ID_COLOR_GRAY
-        MENUITEM "Argintiu"        ID_COLOR_SILVER
-        MENUITEM "Roșu"            ID_COLOR_RED
-        MENUITEM "Lămâie verde"    ID_COLOR_LIME
-        MENUITEM "Galben"          ID_COLOR_YELLOW
-        MENUITEM "Albastru"        ID_COLOR_BLUE
-        MENUITEM "Fuchsia"         ID_COLOR_FUCHSIA
-        MENUITEM "Culoarea apei"   ID_COLOR_AQUA
-        MENUITEM "Alb"             ID_COLOR_WHITE
-        MENUITEM "Automată"        ID_COLOR_AUTOMATIC
+        MENUITEM "Oliv",           ID_COLOR_OLIVE
+        MENUITEM "Bleumarin",      ID_COLOR_NAVY
+        MENUITEM "Violet",         ID_COLOR_PURPLE
+        MENUITEM "Verde-albăstrui",ID_COLOR_TEAL
+        MENUITEM "Gri",            ID_COLOR_GRAY
+        MENUITEM "Argintiu",       ID_COLOR_SILVER
+        MENUITEM "Roșu",           ID_COLOR_RED
+        MENUITEM "Lămâie verde",   ID_COLOR_LIME
+        MENUITEM "Galben",         ID_COLOR_YELLOW
+        MENUITEM "Albastru",       ID_COLOR_BLUE
+        MENUITEM "Fuchsia",        ID_COLOR_FUCHSIA
+        MENUITEM "Culoarea apei",  ID_COLOR_AQUA
+        MENUITEM "Alb",            ID_COLOR_WHITE
+        MENUITEM "Automată",       ID_COLOR_AUTOMATIC
     END
 END
 

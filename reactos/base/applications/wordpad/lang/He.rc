@@ -81,9 +81,9 @@ BEGIN
     POPUP "עיצוב"
     BEGIN
         MENUITEM "גופן...",                     ID_FONTSETTINGS
-        MENUITEM "&Bullet points"               ID_BULLET
-        MENUITEM "פסקה..."                ID_PARAFORMAT
-        MENUITEM "&Tabs..."                     ID_TABSTOPS
+        MENUITEM "&Bullet points",              ID_BULLET
+        MENUITEM "פסקה...",               ID_PARAFORMAT
+        MENUITEM "&Tabs...",                    ID_TABSTOPS
         POPUP "רקע"
         BEGIN
             MENUITEM "מערכת\tCtrl+1",         ID_BACK_1
@@ -104,8 +104,8 @@ BEGIN
         MENUITEM "העתק",                ID_EDIT_COPY
         MENUITEM "הדבק",                ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bullet points"       ID_BULLET
-        MENUITEM "פיסקה..."             ID_PARAFORMAT
+        MENUITEM "&Bullet points",      ID_BULLET
+        MENUITEM "פיסקה...",            ID_PARAFORMAT
     END
 END
 
@@ -116,20 +116,20 @@ BEGIN
         MENUITEM "שחור",       ID_COLOR_BLACK
         MENUITEM "Maroon",     ID_COLOR_MAROON
         MENUITEM "ירוק",       ID_COLOR_GREEN
-        MENUITEM "ירוק זית"      ID_COLOR_OLIVE
-        MENUITEM "Navy"        ID_COLOR_NAVY
-        MENUITEM "סגול"     ID_COLOR_PURPLE
-        MENUITEM "Teal"        ID_COLOR_TEAL
-        MENUITEM "אפור"       ID_COLOR_GRAY
-        MENUITEM "כסוף"     ID_COLOR_SILVER
-        MENUITEM "אדום"        ID_COLOR_RED
-        MENUITEM "ירוק ליים"       ID_COLOR_LIME
-        MENUITEM "צהוב"     ID_COLOR_YELLOW
-        MENUITEM "כחול"       ID_COLOR_BLUE
-        MENUITEM "פוקסיה"    ID_COLOR_FUCHSIA
-        MENUITEM "Aqua"        ID_COLOR_AQUA
-        MENUITEM "לבן"      ID_COLOR_WHITE
-        MENUITEM "אוטומטי"  ID_COLOR_AUTOMATIC
+        MENUITEM "ירוק זית",     ID_COLOR_OLIVE
+        MENUITEM "Navy",       ID_COLOR_NAVY
+        MENUITEM "סגול",    ID_COLOR_PURPLE
+        MENUITEM "Teal",       ID_COLOR_TEAL
+        MENUITEM "אפור",      ID_COLOR_GRAY
+        MENUITEM "כסוף",    ID_COLOR_SILVER
+        MENUITEM "אדום",       ID_COLOR_RED
+        MENUITEM "ירוק ליים",      ID_COLOR_LIME
+        MENUITEM "צהוב",    ID_COLOR_YELLOW
+        MENUITEM "כחול",      ID_COLOR_BLUE
+        MENUITEM "פוקסיה",   ID_COLOR_FUCHSIA
+        MENUITEM "Aqua",       ID_COLOR_AQUA
+        MENUITEM "לבן",     ID_COLOR_WHITE
+        MENUITEM "אוטומטי", ID_COLOR_AUTOMATIC
     END
 END
 

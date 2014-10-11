@@ -76,9 +76,9 @@ BEGIN
     POPUP "F&ormat"
     BEGIN
         MENUITEM "&Font...",                     ID_FONTSETTINGS
-        MENUITEM "&Bullet points"                ID_BULLET
-        MENUITEM "&Paragraph..."                 ID_PARAFORMAT
-        MENUITEM "&Tabs..."                      ID_TABSTOPS
+        MENUITEM "&Bullet points",               ID_BULLET
+        MENUITEM "&Paragraph...",                ID_PARAFORMAT
+        MENUITEM "&Tabs...",                     ID_TABSTOPS
         POPUP "Backgroun&d"
         BEGIN
             MENUITEM "&System\tCtrl+1",         ID_BACK_1
@@ -87,7 +87,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About Wine Wordpad"       ID_ABOUT
+        MENUITEM "&About Wine Wordpad",      ID_ABOUT
     END
 END
 
@@ -99,8 +99,8 @@ BEGIN
         MENUITEM "&Copy",               ID_EDIT_COPY
         MENUITEM "&Paste",              ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bullet points"       ID_BULLET
-        MENUITEM "&Paragraph..."        ID_PARAFORMAT
+        MENUITEM "&Bullet points",      ID_BULLET
+        MENUITEM "&Paragraph...",       ID_PARAFORMAT
     END
 END
 
@@ -111,20 +111,20 @@ BEGIN
         MENUITEM "Black",      ID_COLOR_BLACK
         MENUITEM "Maroon",     ID_COLOR_MAROON
         MENUITEM "Green",      ID_COLOR_GREEN
-        MENUITEM "Olive"       ID_COLOR_OLIVE
-        MENUITEM "Navy"        ID_COLOR_NAVY
-        MENUITEM "Purple"      ID_COLOR_PURPLE
-        MENUITEM "Teal"        ID_COLOR_TEAL
-        MENUITEM "Gray"        ID_COLOR_GRAY
-        MENUITEM "Silver"      ID_COLOR_SILVER
-        MENUITEM "Red"         ID_COLOR_RED
-        MENUITEM "Lime"        ID_COLOR_LIME
-        MENUITEM "Yellow"      ID_COLOR_YELLOW
-        MENUITEM "Blue"        ID_COLOR_BLUE
-        MENUITEM "Fuchsia"     ID_COLOR_FUCHSIA
-        MENUITEM "Aqua"        ID_COLOR_AQUA
-        MENUITEM "White"       ID_COLOR_WHITE
-        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
+        MENUITEM "Olive",      ID_COLOR_OLIVE
+        MENUITEM "Navy",       ID_COLOR_NAVY
+        MENUITEM "Purple",     ID_COLOR_PURPLE
+        MENUITEM "Teal",       ID_COLOR_TEAL
+        MENUITEM "Gray",       ID_COLOR_GRAY
+        MENUITEM "Silver",     ID_COLOR_SILVER
+        MENUITEM "Red",        ID_COLOR_RED
+        MENUITEM "Lime",       ID_COLOR_LIME
+        MENUITEM "Yellow",     ID_COLOR_YELLOW
+        MENUITEM "Blue",       ID_COLOR_BLUE
+        MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
+        MENUITEM "Aqua",       ID_COLOR_AQUA
+        MENUITEM "White",      ID_COLOR_WHITE
+        MENUITEM "Automatic",  ID_COLOR_AUTOMATIC
     END
 END
 

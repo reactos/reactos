@@ -78,9 +78,9 @@ BEGIN
     POPUP "Forma&t"
     BEGIN
         MENUITEM "Sch&riftart...",               ID_FONTSETTINGS
-        MENUITEM "Auf&zählungszeichen"           ID_BULLET
-        MENUITEM "&Absatz..."                    ID_PARAFORMAT
-        MENUITEM "&Tabstopps..."                 ID_TABSTOPS
+        MENUITEM "Auf&zählungszeichen",          ID_BULLET
+        MENUITEM "&Absatz...",                   ID_PARAFORMAT
+        MENUITEM "&Tabstopps...",                ID_TABSTOPS
         POPUP "&Hintergrund"
         BEGIN
             MENUITEM "&System\tStrg+1",         ID_BACK_1
@@ -89,7 +89,7 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "Ü&ber Wine Wordpad"        ID_ABOUT
+        MENUITEM "Ü&ber Wine Wordpad",       ID_ABOUT
     END
 END
 
@@ -101,8 +101,8 @@ BEGIN
         MENUITEM "&Kopieren",           ID_EDIT_COPY
         MENUITEM "&Einfügen",           ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Auf&zählungszeichen" ID_BULLET
-        MENUITEM "&Absatz..."          ID_PARAFORMAT
+        MENUITEM "Auf&zählungszeichen", ID_BULLET
+        MENUITEM "&Absatz...",          ID_PARAFORMAT
     END
 END
 
@@ -113,20 +113,20 @@ BEGIN
         MENUITEM "Schwarz",        ID_COLOR_BLACK
         MENUITEM "Kastanienbraun", ID_COLOR_MAROON
         MENUITEM "Grün",           ID_COLOR_GREEN
-        MENUITEM "Olivgrün"        ID_COLOR_OLIVE
-        MENUITEM "Dunkelblau"      ID_COLOR_NAVY
-        MENUITEM "Lila"            ID_COLOR_PURPLE
-        MENUITEM "Blaugrün"        ID_COLOR_TEAL
-        MENUITEM "Grau"            ID_COLOR_GRAY
-        MENUITEM "Silber"          ID_COLOR_SILVER
-        MENUITEM "Rot"             ID_COLOR_RED
-        MENUITEM "Hellgrün"        ID_COLOR_LIME
-        MENUITEM "Gelb"            ID_COLOR_YELLOW
-        MENUITEM "Blau"            ID_COLOR_BLUE
-        MENUITEM "Pink"            ID_COLOR_FUCHSIA
-        MENUITEM "Aquamarin"       ID_COLOR_AQUA
-        MENUITEM "Weiß"            ID_COLOR_WHITE
-        MENUITEM "Automatisch"     ID_COLOR_AUTOMATIC
+        MENUITEM "Olivgrün",       ID_COLOR_OLIVE
+        MENUITEM "Dunkelblau",     ID_COLOR_NAVY
+        MENUITEM "Lila",           ID_COLOR_PURPLE
+        MENUITEM "Blaugrün",       ID_COLOR_TEAL
+        MENUITEM "Grau",           ID_COLOR_GRAY
+        MENUITEM "Silber",         ID_COLOR_SILVER
+        MENUITEM "Rot",            ID_COLOR_RED
+        MENUITEM "Hellgrün",       ID_COLOR_LIME
+        MENUITEM "Gelb",           ID_COLOR_YELLOW
+        MENUITEM "Blau",           ID_COLOR_BLUE
+        MENUITEM "Pink",           ID_COLOR_FUCHSIA
+        MENUITEM "Aquamarin",      ID_COLOR_AQUA
+        MENUITEM "Weiß",           ID_COLOR_WHITE
+        MENUITEM "Automatisch",    ID_COLOR_AUTOMATIC
     END
 END
 

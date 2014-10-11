@@ -82,9 +82,9 @@ BEGIN
     POPUP "格式(&O)"
     BEGIN
         MENUITEM "字体(&F)..", ID_FONTSETTINGS
-        MENUITEM "项目符号(&B)"  ID_BULLET
-        MENUITEM "段落(&P)..."  ID_PARAFORMAT
-        MENUITEM "制表位(&T)..."  ID_TABSTOPS
+        MENUITEM "项目符号(&B)", ID_BULLET
+        MENUITEM "段落(&P)...", ID_PARAFORMAT
+        MENUITEM "制表位(&T)...", ID_TABSTOPS
         POPUP "背景(&D)"
         BEGIN
             MENUITEM "系统(&S)\tCtrl+1", ID_BACK_1
@@ -105,8 +105,8 @@ BEGIN
         MENUITEM "复制(&C)", ID_EDIT_COPY
         MENUITEM "粘贴(&P)", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "项目符号(&B)"        ID_BULLET
-        MENUITEM "段落(&P)..."         ID_PARAFORMAT
+        MENUITEM "项目符号(&B)",       ID_BULLET
+        MENUITEM "段落(&P)...",        ID_PARAFORMAT
     END
 END
 
@@ -117,20 +117,20 @@ BEGIN
         MENUITEM "黑色",      ID_COLOR_BLACK /* 未找到“标准译名表” */
         MENUITEM "栗色",     ID_COLOR_MAROON
         MENUITEM "绿色",      ID_COLOR_GREEN
-        MENUITEM "橄榄色"        ID_COLOR_OLIVE
-        MENUITEM "藏青"         ID_COLOR_NAVY
-        MENUITEM "紫色"       ID_COLOR_PURPLE
-        MENUITEM "鸭翅绿"         ID_COLOR_TEAL
-        MENUITEM "灰色"         ID_COLOR_GRAY
-        MENUITEM "银色"       ID_COLOR_SILVER
-        MENUITEM "红色"          ID_COLOR_RED
-        MENUITEM "青柠色"         ID_COLOR_LIME
-        MENUITEM "黄色"       ID_COLOR_YELLOW
-        MENUITEM "蓝色"         ID_COLOR_BLUE
-        MENUITEM "洋红"      ID_COLOR_FUCHSIA /* =magenta? */
-        MENUITEM "水绿"         ID_COLOR_AQUA
-        MENUITEM "白色"        ID_COLOR_WHITE
-        MENUITEM "自动"    ID_COLOR_AUTOMATIC
+        MENUITEM "橄榄色",       ID_COLOR_OLIVE
+        MENUITEM "藏青",        ID_COLOR_NAVY
+        MENUITEM "紫色",      ID_COLOR_PURPLE
+        MENUITEM "鸭翅绿",        ID_COLOR_TEAL
+        MENUITEM "灰色",        ID_COLOR_GRAY
+        MENUITEM "银色",      ID_COLOR_SILVER
+        MENUITEM "红色",         ID_COLOR_RED
+        MENUITEM "青柠色",        ID_COLOR_LIME
+        MENUITEM "黄色",      ID_COLOR_YELLOW
+        MENUITEM "蓝色",        ID_COLOR_BLUE
+        MENUITEM "洋红",     ID_COLOR_FUCHSIA /* =magenta? */
+        MENUITEM "水绿",        ID_COLOR_AQUA
+        MENUITEM "白色",       ID_COLOR_WHITE
+        MENUITEM "自动",   ID_COLOR_AUTOMATIC
     END
 END
 
@@ -326,9 +326,9 @@ BEGIN
     POPUP "格式(&O)"
     BEGIN
         MENUITEM "字型(&F)..", ID_FONTSETTINGS
-        MENUITEM "子彈點(&B)"  ID_BULLET
-        MENUITEM "段落(&P)..."  ID_PARAFORMAT
-        MENUITEM "標籤(&T)..."  ID_TABSTOPS
+        MENUITEM "子彈點(&B)", ID_BULLET
+        MENUITEM "段落(&P)...", ID_PARAFORMAT
+        MENUITEM "標籤(&T)...", ID_TABSTOPS
         POPUP "背景(&D)"
         BEGIN
             MENUITEM "系統(&S)\tCtrl+1", ID_BACK_1
@@ -337,7 +337,7 @@ BEGIN
     END
     POPUP "幫助(&H)"
     BEGIN
-        MENUITEM "關於 &Wine 寫字板"  ID_ABOUT
+        MENUITEM "關於 &Wine 寫字板", ID_ABOUT
     END
 END
 
@@ -349,8 +349,8 @@ BEGIN
         MENUITEM "複製(&C)", ID_EDIT_COPY
         MENUITEM "貼上(&P)", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "子彈點(&B)"        ID_BULLET
-        MENUITEM "段落(&P)..."         ID_PARAFORMAT
+        MENUITEM "子彈點(&B)",       ID_BULLET
+        MENUITEM "段落(&P)...",        ID_PARAFORMAT
     END
 END
 
@@ -361,20 +361,20 @@ BEGIN
         MENUITEM "Black",      ID_COLOR_BLACK
         MENUITEM "Maroon",     ID_COLOR_MAROON
         MENUITEM "Green",      ID_COLOR_GREEN
-        MENUITEM "Olive"       ID_COLOR_OLIVE
-        MENUITEM "Navy"        ID_COLOR_NAVY
-        MENUITEM "Purple"      ID_COLOR_PURPLE
-        MENUITEM "Teal"        ID_COLOR_TEAL
-        MENUITEM "Gray"        ID_COLOR_GRAY
-        MENUITEM "Silver"      ID_COLOR_SILVER
-        MENUITEM "Red"         ID_COLOR_RED
-        MENUITEM "Lime"        ID_COLOR_LIME
-        MENUITEM "Yellow"      ID_COLOR_YELLOW
-        MENUITEM "Blue"        ID_COLOR_BLUE
-        MENUITEM "Fuchsia"     ID_COLOR_FUCHSIA
-        MENUITEM "Aqua"        ID_COLOR_AQUA
-        MENUITEM "White"       ID_COLOR_WHITE
-        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
+        MENUITEM "Olive",      ID_COLOR_OLIVE
+        MENUITEM "Navy",       ID_COLOR_NAVY
+        MENUITEM "Purple",     ID_COLOR_PURPLE
+        MENUITEM "Teal",       ID_COLOR_TEAL
+        MENUITEM "Gray",       ID_COLOR_GRAY
+        MENUITEM "Silver",     ID_COLOR_SILVER
+        MENUITEM "Red",        ID_COLOR_RED
+        MENUITEM "Lime",       ID_COLOR_LIME
+        MENUITEM "Yellow",     ID_COLOR_YELLOW
+        MENUITEM "Blue",       ID_COLOR_BLUE
+        MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
+        MENUITEM "Aqua",       ID_COLOR_AQUA
+        MENUITEM "White",      ID_COLOR_WHITE
+        MENUITEM "Automatic",  ID_COLOR_AUTOMATIC
     END
 END
 

@@ -102,8 +102,8 @@ BEGIN
         MENUITEM "コピー(&C)",          ID_EDIT_COPY
         MENUITEM "貼り付け(&P)",        ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "箇条書き(&B)"        ID_BULLET
-        MENUITEM "段落(&P)..."         ID_PARAFORMAT
+        MENUITEM "箇条書き(&B)",       ID_BULLET
+        MENUITEM "段落(&P)...",        ID_PARAFORMAT
     END
 END
 
@@ -114,20 +114,20 @@ BEGIN
         MENUITEM "黒",      ID_COLOR_BLACK
         MENUITEM "茶色",    ID_COLOR_MAROON
         MENUITEM "緑",      ID_COLOR_GREEN
-        MENUITEM "オリーブ"  ID_COLOR_OLIVE
-        MENUITEM "紺"       ID_COLOR_NAVY
-        MENUITEM "紫"       ID_COLOR_PURPLE
-        MENUITEM "青緑"     ID_COLOR_TEAL
-        MENUITEM "灰色"     ID_COLOR_GRAY
-        MENUITEM "銀色"     ID_COLOR_SILVER
-        MENUITEM "赤"       ID_COLOR_RED
-        MENUITEM "黄緑"     ID_COLOR_LIME
-        MENUITEM "黄"       ID_COLOR_YELLOW
-        MENUITEM "青"       ID_COLOR_BLUE
-        MENUITEM "赤紫"     ID_COLOR_FUCHSIA
-        MENUITEM "水色"     ID_COLOR_AQUA
-        MENUITEM "白"       ID_COLOR_WHITE
-        MENUITEM "自動"     ID_COLOR_AUTOMATIC
+        MENUITEM "オリーブ", ID_COLOR_OLIVE
+        MENUITEM "紺",      ID_COLOR_NAVY
+        MENUITEM "紫",      ID_COLOR_PURPLE
+        MENUITEM "青緑",    ID_COLOR_TEAL
+        MENUITEM "灰色",    ID_COLOR_GRAY
+        MENUITEM "銀色",    ID_COLOR_SILVER
+        MENUITEM "赤",      ID_COLOR_RED
+        MENUITEM "黄緑",    ID_COLOR_LIME
+        MENUITEM "黄",      ID_COLOR_YELLOW
+        MENUITEM "青",      ID_COLOR_BLUE
+        MENUITEM "赤紫",    ID_COLOR_FUCHSIA
+        MENUITEM "水色",    ID_COLOR_AQUA
+        MENUITEM "白",      ID_COLOR_WHITE
+        MENUITEM "自動",    ID_COLOR_AUTOMATIC
     END
 END
 
