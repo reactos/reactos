@@ -143,14 +143,14 @@ StringOut(const string& String, bool forcePrint)
         }
     }
 
-    /* Output the string */
-    cout << NewString;
-
     size = curr_pos - start;
 
     /* Only print if forced to or if the rest is a whole line */
     if(forcePrint == true || NewString[curr_pos - 1] == '\n')
     {
+        /* Output the whole string */
+        cout << NewString;
+
         memcpy(DbgString, NewString.c_str() + start, size);
         DbgString[size] = 0;
         DbgPrint(DbgString);
@@ -158,6 +158,9 @@ StringOut(const string& String, bool forcePrint)
         NewString.clear();
         return NewString;
     }
+
+    /* Output full lines only */
+    cout << NewString.substr(0, start);
 
     /* Return the remaining chunk */
     return NewString.substr(start, size);
