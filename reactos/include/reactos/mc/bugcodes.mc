@@ -1128,7 +1128,7 @@ Language=English
 Run a system diagnostic utility supplied by your hardware manufacturer.
 In particular, run a memory check, and check for faulty or mismatched
 memory. Try changing video adapters.
- 
+
 Disable or remove any newly installed hardware and drivers. Disable or
 remove any newly installed software. If you need to use Safe Mode to
 remove or disable components, restart your computer, press F8 to select
@@ -1322,7 +1322,7 @@ Facility=System
 SymbolicName=DRIVER_CORRUPTED_EXPOOL
 Language=English
 A device driver has pool.
- 
+
 Check to make sure any new hardware or software is properly installed.
 If this is a new installation, ask your hardware or software manufacturer
 for any ReactOS updates you might need.
@@ -1478,7 +1478,7 @@ If Parameter1 == 0, an executive worker item was found in memory which
 must not contain such items.  Usually this is memory being freed.  This
 is usually caused by a device driver that has not cleaned up properly
 before freeing memory.
-  
+
 If Parameter1 == 1, an attempt was made to queue an executive worker item
 with a usermode execution routine.
 .
@@ -1569,4 +1569,12 @@ Facility=System
 SymbolicName=ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
 Language=English
 An attempt was made to execute to non-executable memory.
+.
+
+MessageId=0x139
+Severity=Success
+Facility=System
+SymbolicName=KERNEL_SECURITY_CHECK_FAILURE
+Language=English
+A critical kernel security check failed.
 .

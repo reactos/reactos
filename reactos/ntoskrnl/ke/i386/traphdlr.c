@@ -1462,6 +1462,46 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
+KiRaiseSecurityCheckFailureHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Save trap frame */
+    KiEnterTrap(TrapFrame);
+
+    /* Decrement EIP to point to the INT29 instruction (2 bytes, not 1 like INT3) */
+    TrapFrame->Eip -= 2;
+
+    /* Check if this is a user trap */
+    if (KiUserTrap(TrapFrame))
+    {
+        /* Dispatch exception to user mode */
+        KiDispatchException1Args(STATUS_STACK_BUFFER_OVERRUN,
+                                 TrapFrame->Eip,
+                                 TrapFrame->Ecx,
+                                 TrapFrame);
+    }
+    else
+    {
+        EXCEPTION_RECORD ExceptionRecord;
+
+        /* Bugcheck the system */
+        ExceptionRecord.ExceptionCode = STATUS_STACK_BUFFER_OVERRUN;
+        ExceptionRecord.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+        ExceptionRecord.ExceptionRecord = NULL;
+        ExceptionRecord.ExceptionAddress = (PVOID)TrapFrame->Eip;
+        ExceptionRecord.NumberParameters = 1;
+        ExceptionRecord.ExceptionInformation[0] = TrapFrame->Ecx;
+
+        KeBugCheckWithTf(KERNEL_SECURITY_CHECK_FAILURE,
+                         TrapFrame->Ecx,
+                         (ULONG_PTR)TrapFrame,
+                         (ULONG_PTR)&ExceptionRecord,
+                         0,
+                         TrapFrame);
+    }
+}
+
+VOID
+FASTCALL
 KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
 {
     UNIMPLEMENTED_DBGBREAK();
