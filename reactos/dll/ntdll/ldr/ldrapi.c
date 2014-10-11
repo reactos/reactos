@@ -210,9 +210,6 @@ LdrLockLoaderLock(IN ULONG Flags,
         return STATUS_INVALID_PARAMETER_3;
     }
 
-    /* Do or Do Not. There is no Try */
-    ASSERT((Disposition != NULL) || !(Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY));
-
     /* If the flag is set, make sure we have a valid pointer to use */
     if ((Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY) && !(Disposition))
     {
