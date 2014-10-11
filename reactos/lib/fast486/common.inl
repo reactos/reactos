@@ -25,21 +25,26 @@
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 #if defined (__GNUC__)
-    #define CountLeadingZeros64(x) __builtin_clzll(x);
+    #define CountLeadingZeros64(x) __builtin_clzll(x)
 #elif (_MSC_VER >= 1500) && defined(_WIN64)
     #define CountLeadingZeros64(x) __lzcnt64(x)
 #elif (_MSC_VER >= 1500)
-    #define CountLeadingZeros64(x) ((x) >= 0xFFFFFFFFULL) \
-                                   ? __lzcnt((x) >> 32) : (__lzcnt(x) + 32)
+    #define CountLeadingZeros64(x) ((x) > 0xFFFFFFFFULL) ? __lzcnt((x) >> 32) \
+                                                         : (__lzcnt(x) + 32)
 #else
-    static
-    FORCEINLINE
+    static FORCEINLINE
     ULONG CountLeadingZeros64(ULONGLONG Value)
     {
-        ULONG LeadingZeros = 0;
+        ULONG Count = 0;
+        ULONGLONG Mask = 1ULL << 63;
 
-        while (!(Value & (1 << (63 - LeadingZeros)))) LeadingZeros++;
-        return LeadingZeros;
+        while (!(Value & Mask))
+        {
+            Count++;
+            Mask >>= 1;
+        }
+
+        return Count;
     }
 #endif
 
