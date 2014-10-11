@@ -50,6 +50,7 @@ NTAPI
 Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 {
     UCHAR Opcode;
+    FAST486_OPCODE_HANDLER_PROC CurrentHandler;
     INT ProcedureCallCount = 0;
 
     /* Main execution loop */
@@ -68,22 +69,12 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 
         // TODO: Check for CALL/RET to update ProcedureCallCount.
 
-        if (Fast486OpcodeHandlers[Opcode] != NULL)
-        {
-            /* Call the opcode handler */
-            Fast486OpcodeHandlers[Opcode](State, Opcode);
-        }
-        else
-        {
-            /* This is not a valid opcode */
-            Fast486Exception(State, FAST486_EXCEPTION_UD);
-        }
+        /* Call the opcode handler */
+        CurrentHandler = Fast486OpcodeHandlers[Opcode];
+        CurrentHandler(State, Opcode);
 
-        if (Fast486OpcodeHandlers[Opcode] == Fast486OpcodePrefix)
-        {
-            /* This is a prefix, go to the next instruction immediately */
-            continue;
-        }
+        /* If this is a prefix, go to the next instruction immediately */
+        if (CurrentHandler == Fast486OpcodePrefix) continue;
 
         /* A non-prefix opcode has been executed, reset the prefix flags */
         State->PrefixFlags = 0;
@@ -100,9 +91,8 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
             /* Clear the interrupt status */
             State->IntStatus = FAST486_INT_NONE;
         }
-        else if (State->Flags.If
-                 && (State->IntAckCallback != NULL)
-                 && (State->IntStatus == FAST486_INT_SIGNAL))
+        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL)
+                                 && (State->IntAckCallback != NULL))
         {
             /* Acknowledge the interrupt to get the number */
             State->PendingIntNum = State->IntAckCallback(State);
@@ -116,10 +106,10 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
             State->IntStatus = FAST486_INT_EXECUTE;
         }
     }
-    while ((Command == FAST486_CONTINUE)
-           || (Command == FAST486_STEP_OVER && ProcedureCallCount > 0)
-           || (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0)
-           || (Fast486OpcodeHandlers[Opcode] == Fast486OpcodePrefix));
+    while ((CurrentHandler == Fast486OpcodePrefix) ||
+           (Command == FAST486_CONTINUE) ||
+           (Command == FAST486_STEP_OVER && ProcedureCallCount > 0) ||
+           (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0));
 }
 
 /* DEFAULT CALLBACKS **********************************************************/

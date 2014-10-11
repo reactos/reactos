@@ -38,118 +38,119 @@
 FAST486_OPCODE_HANDLER_PROC
 Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 {
-    Fast486OpcodeAddByteModrm,
+    Fast486OpcodeAddByteModrm,          /* 0x00 - 0x03 */
     Fast486OpcodeAddModrm,
     Fast486OpcodeAddByteModrm,
     Fast486OpcodeAddModrm,
-    Fast486OpcodeAddAl,
-    Fast486OpcodeAddEax,
-    Fast486OpcodePushEs,
-    Fast486OpcodePopEs,
-    Fast486OpcodeOrByteModrm,
+    Fast486OpcodeAddAl,                 /* 0x04 */
+    Fast486OpcodeAddEax,                /* 0x05 */
+    Fast486OpcodePushEs,                /* 0x06 */
+    Fast486OpcodePopEs,                 /* 0x07 */
+    Fast486OpcodeOrByteModrm,           /* 0x08 - 0x0B */
     Fast486OpcodeOrModrm,
     Fast486OpcodeOrByteModrm,
     Fast486OpcodeOrModrm,
-    Fast486OpcodeOrAl,
-    Fast486OpcodeOrEax,
-    Fast486OpcodePushCs,
-    Fast486OpcodeExtended,
-    Fast486OpcodeAdcByteModrm,
+    Fast486OpcodeOrAl,                  /* 0x0C */
+    Fast486OpcodeOrEax,                 /* 0x0D */
+    Fast486OpcodePushCs,                /* 0x0E */
+    Fast486OpcodeExtended,              /* 0x0F */
+    Fast486OpcodeAdcByteModrm,          /* 0x10 - 0x13 */
     Fast486OpcodeAdcModrm,
     Fast486OpcodeAdcByteModrm,
     Fast486OpcodeAdcModrm,
-    Fast486OpcodeAdcAl,
-    Fast486OpcodeAdcEax,
-    Fast486OpcodePushSs,
-    Fast486OpcodePopSs,
-    Fast486OpcodeSbbByteModrm,
+    Fast486OpcodeAdcAl,                 /* 0x14 */
+    Fast486OpcodeAdcEax,                /* 0x15 */
+    Fast486OpcodePushSs,                /* 0x16 */
+    Fast486OpcodePopSs,                 /* 0x17 */
+    Fast486OpcodeSbbByteModrm,          /* 0x18 - 0x1B */
     Fast486OpcodeSbbModrm,
     Fast486OpcodeSbbByteModrm,
     Fast486OpcodeSbbModrm,
-    Fast486OpcodeSbbAl,
-    Fast486OpcodeSbbEax,
-    Fast486OpcodePushDs,
-    Fast486OpcodePopDs,
-    Fast486OpcodeAndByteModrm,
+    Fast486OpcodeSbbAl,                 /* 0x1C */
+    Fast486OpcodeSbbEax,                /* 0x1D */
+    Fast486OpcodePushDs,                /* 0x1E */
+    Fast486OpcodePopDs,                 /* 0x1F */
+    Fast486OpcodeAndByteModrm,          /* 0x20 - 0x23 */
     Fast486OpcodeAndModrm,
     Fast486OpcodeAndByteModrm,
     Fast486OpcodeAndModrm,
-    Fast486OpcodeAndAl,
-    Fast486OpcodeAndEax,
-    Fast486OpcodePrefix,
-    Fast486OpcodeDaa,
-    Fast486OpcodeCmpSubByteModrm,
+    Fast486OpcodeAndAl,                 /* 0x24 */
+    Fast486OpcodeAndEax,                /* 0x25 */
+    Fast486OpcodePrefix,                /* 0x26 */
+    Fast486OpcodeDaa,                   /* 0x27 */
+    Fast486OpcodeCmpSubByteModrm,       /* 0x28 - 0x2B */
     Fast486OpcodeCmpSubModrm,
     Fast486OpcodeCmpSubByteModrm,
     Fast486OpcodeCmpSubModrm,
-    Fast486OpcodeCmpSubAl,
-    Fast486OpcodeCmpSubEax,
-    Fast486OpcodePrefix,
-    Fast486OpcodeDas,
-    Fast486OpcodeXorByteModrm,
+    Fast486OpcodeCmpSubAl,              /* 0x2C */
+    Fast486OpcodeCmpSubEax,             /* 0x2D */
+    Fast486OpcodePrefix,                /* 0x2E */
+    Fast486OpcodeDas,                   /* 0x2F */
+    Fast486OpcodeXorByteModrm,          /* 0x30 - 0x33 */
     Fast486OpcodeXorModrm,
     Fast486OpcodeXorByteModrm,
     Fast486OpcodeXorModrm,
-    Fast486OpcodeXorAl,
-    Fast486OpcodeXorEax,
-    Fast486OpcodePrefix,
-    Fast486OpcodeAaa,
-    Fast486OpcodeCmpSubByteModrm,
+    Fast486OpcodeXorAl,                 /* 0x34 */
+    Fast486OpcodeXorEax,                /* 0x35 */
+    Fast486OpcodePrefix,                /* 0x36 */
+    Fast486OpcodeAaa,                   /* 0x37 */
+    Fast486OpcodeCmpSubByteModrm,       /* 0x38 - 0x3B */
     Fast486OpcodeCmpSubModrm,
     Fast486OpcodeCmpSubByteModrm,
     Fast486OpcodeCmpSubModrm,
-    Fast486OpcodeCmpSubAl,
-    Fast486OpcodeCmpSubEax,
+    Fast486OpcodeCmpSubAl,              /* 0x3C */
+    Fast486OpcodeCmpSubEax,             /* 0x3D */
+    Fast486OpcodePrefix,                /* 0x3E */
+    Fast486OpcodeAas,                   /* 0x3F */
+    Fast486OpcodeIncrement,             /* 0x40 - 0x47 */
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeDecrement,             /* 0x48 - 0x4F */
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodePushReg,               /* 0x50 - 0x57 */
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePopReg,                /* 0x58 - 0x5F */
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePushAll,               /* 0x60 */
+    Fast486OpcodePopAll,                /* 0x61 */
+    Fast486OpcodeBound,                 /* 0x62 */
+    Fast486OpcodeArpl,                  /* 0x63 */
+    Fast486OpcodePrefix,                /* 0x64 - 0x67 */
     Fast486OpcodePrefix,
-    Fast486OpcodeAas,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePushAll,
-    Fast486OpcodePopAll,
-    Fast486OpcodeBound,
-    Fast486OpcodeArpl,
     Fast486OpcodePrefix,
     Fast486OpcodePrefix,
-    Fast486OpcodePrefix,
-    Fast486OpcodePrefix,
-    Fast486OpcodePushImm,
-    Fast486OpcodeImulModrmImm,
-    Fast486OpcodePushByteImm,
-    Fast486OpcodeImulModrmImm,
-    Fast486OpcodeIns,
-    Fast486OpcodeIns,
-    Fast486OpcodeOuts,
-    Fast486OpcodeOuts,
+    Fast486OpcodePushImm,               /* 0x68 */
+    Fast486OpcodeImulModrmImm,          /* 0x69 */
+    Fast486OpcodePushByteImm,           /* 0x6A */
+    Fast486OpcodeImulModrmImm,          /* 0x6B */
+    Fast486OpcodeIns,                   /* 0x6C */
+    Fast486OpcodeIns,                   /* 0x6D */
+    Fast486OpcodeOuts,                  /* 0x6E */
+    Fast486OpcodeOuts,                  /* 0x6F */
+    Fast486OpcodeShortConditionalJmp,   /* 0x70 - 0x7F */
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
@@ -165,55 +166,55 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
-    Fast486OpcodeShortConditionalJmp,
-    Fast486OpcodeGroup8082,
-    Fast486OpcodeGroup81,
-    Fast486OpcodeGroup8082,
-    Fast486OpcodeGroup83,
-    Fast486OpcodeTestByteModrm,
-    Fast486OpcodeTestModrm,
-    Fast486OpcodeXchgByteModrm,
-    Fast486OpcodeXchgModrm,
-    Fast486OpcodeMovByteModrm,
-    Fast486OpcodeMovModrm,
-    Fast486OpcodeMovByteModrm,
-    Fast486OpcodeMovModrm,
-    Fast486OpcodeMovStoreSeg,
-    Fast486OpcodeLea,
-    Fast486OpcodeMovLoadSeg,
-    Fast486OpcodeGroup8F,
-    Fast486OpcodeNop,
+    Fast486OpcodeGroup8082,             /* 0x80 */
+    Fast486OpcodeGroup81,               /* 0x81 */
+    Fast486OpcodeGroup8082,             /* 0x82 */
+    Fast486OpcodeGroup83,               /* 0x83 */
+    Fast486OpcodeTestByteModrm,         /* 0x84 */
+    Fast486OpcodeTestModrm,             /* 0x85 */
+    Fast486OpcodeXchgByteModrm,         /* 0x86 */
+    Fast486OpcodeXchgModrm,             /* 0x87 */
+    Fast486OpcodeMovByteModrm,          /* 0x88 */
+    Fast486OpcodeMovModrm,              /* 0x89 */
+    Fast486OpcodeMovByteModrm,          /* 0x8A */
+    Fast486OpcodeMovModrm,              /* 0x8B */
+    Fast486OpcodeMovStoreSeg,           /* 0x8C */
+    Fast486OpcodeLea,                   /* 0x8D */
+    Fast486OpcodeMovLoadSeg,            /* 0x8E */
+    Fast486OpcodeGroup8F,               /* 0x8F */
+    Fast486OpcodeNop,                   /* 0x90 */
+    Fast486OpcodeExchangeEax,           /* 0x91 - 0x97 */
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
-    Fast486OpcodeExchangeEax,
-    Fast486OpcodeCwde,
-    Fast486OpcodeCdq,
-    Fast486OpcodeCallAbs,
-    Fast486OpcodeWait,
-    Fast486OpcodePushFlags,
-    Fast486OpcodePopFlags,
-    Fast486OpcodeSahf,
-    Fast486OpcodeLahf,
-    Fast486OpcodeMovAlOffset,
-    Fast486OpcodeMovEaxOffset,
-    Fast486OpcodeMovOffsetAl,
-    Fast486OpcodeMovOffsetEax,
-    Fast486OpcodeMovs,
-    Fast486OpcodeMovs,
-    Fast486OpcodeCmps,
-    Fast486OpcodeCmps,
-    Fast486OpcodeTestAl,
-    Fast486OpcodeTestEax,
-    Fast486OpcodeStos,
-    Fast486OpcodeStos,
-    Fast486OpcodeLods,
-    Fast486OpcodeLods,
-    Fast486OpcodeScas,
-    Fast486OpcodeScas,
+    Fast486OpcodeCwde,                  /* 0x98 */
+    Fast486OpcodeCdq,                   /* 0x99 */
+    Fast486OpcodeCallAbs,               /* 0x9A */
+    Fast486OpcodeWait,                  /* 0x9B */
+    Fast486OpcodePushFlags,             /* 0x9C */
+    Fast486OpcodePopFlags,              /* 0x9D */
+    Fast486OpcodeSahf,                  /* 0x9E */
+    Fast486OpcodeLahf,                  /* 0x9F */
+    Fast486OpcodeMovAlOffset,           /* 0xA0 */
+    Fast486OpcodeMovEaxOffset,          /* 0xA1 */
+    Fast486OpcodeMovOffsetAl,           /* 0xA2 */
+    Fast486OpcodeMovOffsetEax,          /* 0xA3 */
+    Fast486OpcodeMovs,                  /* 0xA4 */
+    Fast486OpcodeMovs,                  /* 0xA5 */
+    Fast486OpcodeCmps,                  /* 0xA6 */
+    Fast486OpcodeCmps,                  /* 0xA7 */
+    Fast486OpcodeTestAl,                /* 0xA8 */
+    Fast486OpcodeTestEax,               /* 0xA9 */
+    Fast486OpcodeStos,                  /* 0xAA */
+    Fast486OpcodeStos,                  /* 0xAB */
+    Fast486OpcodeLods,                  /* 0xAC */
+    Fast486OpcodeLods,                  /* 0xAD */
+    Fast486OpcodeScas,                  /* 0xAE */
+    Fast486OpcodeScas,                  /* 0xAF */
+    Fast486OpcodeMovByteRegImm,         /* 0xB0 - 0xB7 */
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
@@ -221,7 +222,7 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
-    Fast486OpcodeMovByteRegImm,
+    Fast486OpcodeMovRegImm,             /* 0xB8 - 0xBF */
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
@@ -229,32 +230,31 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
-    Fast486OpcodeMovRegImm,
-    Fast486OpcodeGroupC0,
-    Fast486OpcodeGroupC1,
-    Fast486OpcodeRet,
-    Fast486OpcodeRet,
-    Fast486OpcodeLdsLes,
-    Fast486OpcodeLdsLes,
-    Fast486OpcodeGroupC6,
-    Fast486OpcodeGroupC7,
-    Fast486OpcodeEnter,
-    Fast486OpcodeLeave,
-    Fast486OpcodeRetFar,
-    Fast486OpcodeRetFar,
-    Fast486OpcodeInt,
-    Fast486OpcodeInt,
-    Fast486OpcodeInt,
-    Fast486OpcodeIret,
-    Fast486OpcodeGroupD0,
+    Fast486OpcodeGroupC0,               /* 0xC0 */
+    Fast486OpcodeGroupC1,               /* 0xC1 */
+    Fast486OpcodeRet,                   /* 0xC2 */
+    Fast486OpcodeRet,                   /* 0xC3 */
+    Fast486OpcodeLdsLes,                /* 0xC4 */
+    Fast486OpcodeLdsLes,                /* 0xC5 */
+    Fast486OpcodeGroupC6,               /* 0xC6 */
+    Fast486OpcodeGroupC7,               /* 0xC7 */
+    Fast486OpcodeEnter,                 /* 0xC8 */
+    Fast486OpcodeLeave,                 /* 0xC9 */
+    Fast486OpcodeRetFar,                /* 0xCA */
+    Fast486OpcodeRetFar,                /* 0xCB */
+    Fast486OpcodeInt,                   /* 0xCC */
+    Fast486OpcodeInt,                   /* 0xCD */
+    Fast486OpcodeInt,                   /* 0xCE */
+    Fast486OpcodeIret,                  /* 0xCF */
+    Fast486OpcodeGroupD0,               /* 0xD0 - 0xD3 */
     Fast486OpcodeGroupD1,
     Fast486OpcodeGroupD2,
     Fast486OpcodeGroupD3,
-    Fast486OpcodeAam,
-    Fast486OpcodeAad,
-    Fast486OpcodeSalc,
-    Fast486OpcodeXlat,
-    Fast486FpuOpcodeD8DC,
+    Fast486OpcodeAam,                   /* 0xD4 */
+    Fast486OpcodeAad,                   /* 0xD5 */
+    Fast486OpcodeSalc,                  /* 0xD6 */
+    Fast486OpcodeXlat,                  /* 0xD7 */
+    Fast486FpuOpcodeD8DC,               /* 0xD8 - 0xDF */
     Fast486FpuOpcodeD9,
     Fast486FpuOpcodeDA,
     Fast486FpuOpcodeDB,
@@ -262,41 +262,48 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486FpuOpcodeDD,
     Fast486FpuOpcodeDE,
     Fast486FpuOpcodeDF,
+    Fast486OpcodeLoop,                  /* 0xE0 - 0xE2 */
     Fast486OpcodeLoop,
     Fast486OpcodeLoop,
-    Fast486OpcodeLoop,
-    Fast486OpcodeJecxz,
-    Fast486OpcodeInByte,
-    Fast486OpcodeIn,
-    Fast486OpcodeOutByte,
-    Fast486OpcodeOut,
-    Fast486OpcodeCall,
-    Fast486OpcodeJmp,
-    Fast486OpcodeJmpAbs,
-    Fast486OpcodeShortJump,
-    Fast486OpcodeInByte,
-    Fast486OpcodeIn,
-    Fast486OpcodeOutByte,
-    Fast486OpcodeOut,
-    Fast486OpcodePrefix,
-    NULL, // Invalid
-    Fast486OpcodePrefix,
-    Fast486OpcodePrefix,
-    Fast486OpcodeHalt,
-    Fast486OpcodeComplCarry,
-    Fast486OpcodeGroupF6,
-    Fast486OpcodeGroupF7,
-    Fast486OpcodeClearCarry,
-    Fast486OpcodeSetCarry,
-    Fast486OpcodeClearInt,
-    Fast486OpcodeSetInt,
-    Fast486OpcodeClearDir,
-    Fast486OpcodeSetDir,
-    Fast486OpcodeGroupFE,
-    Fast486OpcodeGroupFF,
+    Fast486OpcodeJecxz,                 /* 0xE3 */
+    Fast486OpcodeInByte,                /* 0xE4 */
+    Fast486OpcodeIn,                    /* 0xE5 */
+    Fast486OpcodeOutByte,               /* 0xE6 */
+    Fast486OpcodeOut,                   /* 0xE7 */
+    Fast486OpcodeCall,                  /* 0xE8 */
+    Fast486OpcodeJmp,                   /* 0xE9 */
+    Fast486OpcodeJmpAbs,                /* 0xEA */
+    Fast486OpcodeShortJump,             /* 0xEB */
+    Fast486OpcodeInByte,                /* 0xEC */
+    Fast486OpcodeIn,                    /* 0xED */
+    Fast486OpcodeOutByte,               /* 0xEE */
+    Fast486OpcodeOut,                   /* 0xEF */
+    Fast486OpcodePrefix,                /* 0xF0 */
+    Fast486OpcodeInvalid,               /* 0xF1 */  // Invalid opcode
+    Fast486OpcodePrefix,                /* 0xF2 */
+    Fast486OpcodePrefix,                /* 0xF3 */
+    Fast486OpcodeHalt,                  /* 0xF4 */
+    Fast486OpcodeComplCarry,            /* 0xF5 */
+    Fast486OpcodeGroupF6,               /* 0xF6 */
+    Fast486OpcodeGroupF7,               /* 0xF7 */
+    Fast486OpcodeClearCarry,            /* 0xF8 */
+    Fast486OpcodeSetCarry,              /* 0xF9 */
+    Fast486OpcodeClearInt,              /* 0xFA */
+    Fast486OpcodeSetInt,                /* 0xFB */
+    Fast486OpcodeClearDir,              /* 0xFC */
+    Fast486OpcodeSetDir,                /* 0xFD */
+    Fast486OpcodeGroupFE,               /* 0xFE */
+    Fast486OpcodeGroupFF,               /* 0xFF */
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486OpcodeInvalid)
+{
+    /* This is not a valid opcode */
+    Fast486Exception(State, FAST486_EXCEPTION_UD);
+    return FALSE;
+}
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePrefix)
 {
