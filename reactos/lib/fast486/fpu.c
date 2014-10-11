@@ -514,7 +514,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
         switch ((ModRegRm.SecondRegister << 3) | ModRegRm.Register)
         {
             /* FCLEX */
-            case 0x22:
+            case 0x42:
             {
                 /* Clear exception data */
                 State->FpuStatus.Ie =
@@ -531,7 +531,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
             }
 
             /* FINIT */
-            case 0x23:
+            case 0x43:
             {
                 /* Restore the state */
                 State->FpuControl.Value = FAST486_FPU_DEFAULT_CONTROL;
@@ -542,9 +542,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
             }
 
             /* FENI */
-            case 0x20:
+            case 0x40:
             /* FDISI */
-            case 0x21:
+            case 0x41:
             {
                 /* These do nothing */
                 break;
