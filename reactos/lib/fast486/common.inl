@@ -38,7 +38,7 @@
         ULONG Count = 0;
         ULONGLONG Mask = 1ULL << 63;
 
-        while (!(Value & Mask))
+        while (!(Value & Mask) && Mask)
         {
             Count++;
             Mask >>= 1;
