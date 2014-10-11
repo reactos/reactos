@@ -93,17 +93,8 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
          */
         if (State->IntStatus == FAST486_INT_EXECUTE)
         {
-            FAST486_IDT_ENTRY IdtEntry;
-
-            /* Get the interrupt vector */
-            if (Fast486GetIntVector(State, State->PendingIntNum, &IdtEntry))
-            {
-                /* Perform the interrupt */
-                Fast486InterruptInternal(State,
-                                         IdtEntry.Selector,
-                                         MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                         IdtEntry.Type);
-            }
+            /* Perform the interrupt */
+            Fast486PerformInterrupt(State, State->PendingIntNum);
 
             /* Clear the interrupt status */
             State->IntStatus = FAST486_INT_NONE;

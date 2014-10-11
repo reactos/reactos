@@ -154,12 +154,10 @@ Fast486WriteMemory
 );
 
 BOOLEAN
-Fast486InterruptInternal
+Fast486PerformInterrupt
 (
     PFAST486_STATE State,
-    USHORT SegmentSelector,
-    ULONG Offset,
-    ULONG GateType
+    UCHAR Number
 );
 
 VOID

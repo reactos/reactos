@@ -693,53 +693,6 @@ Fast486FetchDword(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Fast486GetIntVector(PFAST486_STATE State,
-                    UCHAR Number,
-                    PFAST486_IDT_ENTRY IdtEntry)
-{
-    ULONG FarPointer;
-
-    /* Check for protected mode */
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
-    {
-        /* Read from the IDT */
-        if (!Fast486ReadLinearMemory(State,
-                                     State->Idtr.Address
-                                     + Number * sizeof(*IdtEntry),
-                                     IdtEntry,
-                                     sizeof(*IdtEntry)))
-        {
-            /* Exception occurred */
-            return FALSE;
-        }
-    }
-    else
-    {
-        /* Read from the real-mode IVT */
-
-        /* Paging is always disabled in real mode */
-        State->MemReadCallback(State,
-                               State->Idtr.Address
-                               + Number * sizeof(FarPointer),
-                               &FarPointer,
-                               sizeof(FarPointer));
-
-        /* Fill a fake IDT entry */
-        IdtEntry->Offset = LOWORD(FarPointer);
-        IdtEntry->Selector = HIWORD(FarPointer);
-        IdtEntry->Zero = 0;
-        IdtEntry->Type = FAST486_IDT_INT_GATE;
-        IdtEntry->Storage = FALSE;
-        IdtEntry->Dpl = 0;
-        IdtEntry->Present = TRUE;
-        IdtEntry->OffsetHigh = 0;
-    }
-
-    return TRUE;
-}
-
-FORCEINLINE
-BOOLEAN
 Fast486CalculateParity(UCHAR Number)
 {
     // See http://graphics.stanford.edu/~seander/bithacks.html#ParityLookupTable too...

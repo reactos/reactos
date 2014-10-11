@@ -4615,7 +4615,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
 FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
 {
     UCHAR IntNum;
-    FAST486_IDT_ENTRY IdtEntry;
 
     switch (Opcode)
     {
@@ -4656,24 +4655,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
         }
     }
 
-    /* Get the interrupt vector */
-    if (!Fast486GetIntVector(State, IntNum, &IdtEntry))
-    {
-        /* Exception occurred */
-        return FALSE;
-    }
-
     /* Perform the interrupt */
-    if (!Fast486InterruptInternal(State,
-                                  IdtEntry.Selector,
-                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                  IdtEntry.Type))
-    {
-        /* Exception occurred */
-        return FALSE;
-    }
-
-    return TRUE;
+    return Fast486PerformInterrupt(State, IntNum);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeIret)

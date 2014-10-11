@@ -160,6 +160,56 @@ Fast486WriteMemory(PFAST486_STATE State,
     return Fast486WriteLinearMemory(State, LinearAddress, Buffer, Size);
 }
 
+static
+inline
+BOOLEAN
+Fast486GetIntVector(PFAST486_STATE State,
+                    UCHAR Number,
+                    PFAST486_IDT_ENTRY IdtEntry)
+{
+    ULONG FarPointer;
+
+    /* Check for protected mode */
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    {
+        /* Read from the IDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Idtr.Address
+                                     + Number * sizeof(*IdtEntry),
+                                     IdtEntry,
+                                     sizeof(*IdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Read from the real-mode IVT */
+
+        /* Paging is always disabled in real mode */
+        State->MemReadCallback(State,
+                               State->Idtr.Address
+                               + Number * sizeof(FarPointer),
+                               &FarPointer,
+                               sizeof(FarPointer));
+
+        /* Fill a fake IDT entry */
+        IdtEntry->Offset = LOWORD(FarPointer);
+        IdtEntry->Selector = HIWORD(FarPointer);
+        IdtEntry->Zero = 0;
+        IdtEntry->Type = FAST486_IDT_INT_GATE;
+        IdtEntry->Storage = FALSE;
+        IdtEntry->Dpl = 0;
+        IdtEntry->Present = TRUE;
+        IdtEntry->OffsetHigh = 0;
+    }
+
+    return TRUE;
+}
+
+static
+inline
 BOOLEAN
 Fast486InterruptInternal(PFAST486_STATE State,
                          USHORT SegmentSelector,
@@ -304,14 +354,38 @@ Cleanup:
     return Success;
 }
 
+BOOLEAN
+Fast486PerformInterrupt(PFAST486_STATE State,
+                        UCHAR Number)
+{
+    FAST486_IDT_ENTRY IdtEntry;
+
+    /* Get the interrupt vector */
+    if (!Fast486GetIntVector(State, Number, &IdtEntry))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Perform the interrupt */
+    if (!Fast486InterruptInternal(State,
+                                  IdtEntry.Selector,
+                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
+                                  IdtEntry.Type))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 VOID
 FASTCALL
 Fast486ExceptionWithErrorCode(PFAST486_STATE State,
                               FAST486_EXCEPTIONS ExceptionCode,
                               ULONG ErrorCode)
 {
-    FAST486_IDT_ENTRY IdtEntry;
-
     /* Increment the exception count */
     State->ExceptionCount++;
 
@@ -337,20 +411,8 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
     /* Restore the IP to the saved IP */
     State->InstPtr = State->SavedInstPtr;
 
-    if (!Fast486GetIntVector(State, ExceptionCode, &IdtEntry))
-    {
-        /*
-         * If this function failed, that means Fast486Exception
-         * was called again, so just return in this case.
-         */
-        return;
-    }
-
     /* Perform the interrupt */
-    if (!Fast486InterruptInternal(State,
-                                  IdtEntry.Selector,
-                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                  IdtEntry.Type))
+    if (!Fast486PerformInterrupt(State, ExceptionCode))
     {
         /*
          * If this function failed, that means Fast486Exception
