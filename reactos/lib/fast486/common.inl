@@ -27,13 +27,13 @@
 #if defined (__GNUC__)
     #define CountLeadingZeros64(x) __builtin_clzll(x)
 
-#if 0
+/*
 #elif (_MSC_VER >= 1500) && defined(_WIN64)
     #define CountLeadingZeros64(x) __lzcnt64(x)
 #elif (_MSC_VER >= 1500)
     #define CountLeadingZeros64(x) ((x) > 0xFFFFFFFFULL) ? __lzcnt((x) >> 32) \
                                                          : (__lzcnt(x) + 32)
-#endif
+*/
 
 #else
     FORCEINLINE
