@@ -223,6 +223,7 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
 
     /* Dispatch the exception  */
     KiDispatchExceptionFromTrapFrame(STATUS_BREAKPOINT,
+                                     0,
                                      TrapFrame->Eip - 1,
                                      3,
                                      Parameter1,
@@ -1311,6 +1312,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Only other choice is an in-page error, with 3 parameters */
     KiDispatchExceptionFromTrapFrame(STATUS_IN_PAGE_ERROR,
+                                     0,
                                      TrapFrame->Eip,
                                      3,
                                      TrapFrame->ErrCode & 2 ? TRUE : FALSE,
@@ -1474,10 +1476,14 @@ KiRaiseSecurityCheckFailureHandler(IN PKTRAP_FRAME TrapFrame)
     if (KiUserTrap(TrapFrame))
     {
         /* Dispatch exception to user mode */
-        KiDispatchException1Args(STATUS_STACK_BUFFER_OVERRUN,
-                                 TrapFrame->Eip,
-                                 TrapFrame->Ecx,
-                                 TrapFrame);
+        KiDispatchExceptionFromTrapFrame(STATUS_STACK_BUFFER_OVERRUN,
+                                         EXCEPTION_NONCONTINUABLE,
+                                         TrapFrame->Eip,
+                                         1,
+                                         TrapFrame->Ecx,
+                                         0,
+                                         0,
+                                         TrapFrame);
     }
     else
     {
