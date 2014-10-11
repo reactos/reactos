@@ -207,9 +207,9 @@ GetTdiTypeId(
           break;
 
        case IPPROTO_TCP:
+          *TdiType = INFO_TYPE_CONNECTION;
           switch (OptionName)
           {
-              *TdiType = INFO_TYPE_CONNECTION;
              case TCP_NODELAY:
                  *TdiId = TCP_SOCKET_NODELAY;
                  return;
