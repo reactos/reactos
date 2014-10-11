@@ -30,7 +30,11 @@
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 
-#define BIOS_EQUIPMENT_LIST 0x2E    // Bit1: FPU, Bit 2: Mouse
+// HACK: Disable FPU for now because it is not fully ready yet for being used
+// by all applications (e.g. QBasic runtime would use the native FPU if the bit
+// is set, but then subsequently fails, unless the FPU bit is unset in that case
+// QBasic uses its emulated FPU).
+#define BIOS_EQUIPMENT_LIST 0x2C    // Bit1: FPU, Bit 2: Mouse
 
 #pragma pack(push, 1)
 
