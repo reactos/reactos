@@ -29,6 +29,7 @@
 #include <fast486.h>
 #include "common.h"
 #include "opcodes.h"
+#include "fpu.h"
 
 /* DEFINES ********************************************************************/
 
@@ -369,6 +370,35 @@ Fast486DumpState(PFAST486_STATE State)
              State->DebugRegisters[FAST486_REG_DR3],
              State->DebugRegisters[FAST486_REG_DR4],
              State->DebugRegisters[FAST486_REG_DR5]);
+
+#ifndef FAST486_NO_FPU
+    DbgPrint("\nFPU Registers:\n"
+             "ST0 = %04X%016llX\tST1 = %04X%016llX\n"
+             "ST2 = %04X%016llX\tST3 = %04X%016llX\n"
+             "ST4 = %04X%016llX\tST5 = %04X%016llX\n"
+             "ST6 = %04X%016llX\tST7 = %04X%016llX\n"
+             "Status: %04X\tControl: %04X\tTag: %04X\n",
+             FPU_ST(0).Exponent | ((USHORT)FPU_ST(0).Sign << 15),
+             FPU_ST(0).Mantissa,
+             FPU_ST(1).Exponent | ((USHORT)FPU_ST(1).Sign << 15),
+             FPU_ST(1).Mantissa,
+             FPU_ST(2).Exponent | ((USHORT)FPU_ST(2).Sign << 15),
+             FPU_ST(2).Mantissa,
+             FPU_ST(3).Exponent | ((USHORT)FPU_ST(3).Sign << 15),
+             FPU_ST(3).Mantissa,
+             FPU_ST(4).Exponent | ((USHORT)FPU_ST(4).Sign << 15),
+             FPU_ST(4).Mantissa,
+             FPU_ST(5).Exponent | ((USHORT)FPU_ST(5).Sign << 15),
+             FPU_ST(5).Mantissa,
+             FPU_ST(6).Exponent | ((USHORT)FPU_ST(6).Sign << 15),
+             FPU_ST(6).Mantissa,
+             FPU_ST(7).Exponent | ((USHORT)FPU_ST(7).Sign << 15),
+             FPU_ST(7).Mantissa,
+             State->FpuStatus,
+             State->FpuControl,
+             State->FpuTag);
+#endif
+
     DbgPrint("\n<-- Fast486DumpState\n\n");
 }
 

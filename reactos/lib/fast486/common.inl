@@ -24,6 +24,25 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+#if defined (__GNUC__)
+    #define CountLeadingZeros64(x) __builtin_clzll(x);
+#elif (_MSC_VER >= 1500) && defined(_WIN64)
+    #define CountLeadingZeros64(x) __lzcnt64(x)
+#elif (_MSC_VER >= 1500)
+    #define CountLeadingZeros64(x) ((x) >= 0xFFFFFFFFULL) \
+                                   ? __lzcnt((x) >> 32) : (__lzcnt(x) + 32)
+#else
+    static
+    FORCEINLINE
+    ULONG CountLeadingZeros64(ULONGLONG Value)
+    {
+        ULONG LeadingZeros = 0;
+
+        while (!(Value & (1 << (63 - LeadingZeros)))) LeadingZeros++;
+        return LeadingZeros;
+    }
+#endif
+
 FORCEINLINE
 INT
 Fast486GetCurrentPrivLevel(PFAST486_STATE State)
@@ -1290,7 +1309,7 @@ FORCEINLINE
 VOID
 Fast486FpuNormalize(PFAST486_STATE State, PFAST486_FPU_DATA_REG Data)
 {
-    UINT LeadingZeros = 0;
+    UINT LeadingZeros;
 
     if (FPU_IS_NORMALIZED(Data)) return;
     if (FPU_IS_ZERO(Data))
@@ -1299,8 +1318,7 @@ Fast486FpuNormalize(PFAST486_STATE State, PFAST486_FPU_DATA_REG Data)
         return;
     }
 
-    /* Count the leading zeros */
-    while (!(Data->Mantissa & (1 << (63 - LeadingZeros)))) LeadingZeros++;
+    LeadingZeros = CountLeadingZeros64(Data->Mantissa);
 
     if (LeadingZeros < Data->Exponent)
     {
