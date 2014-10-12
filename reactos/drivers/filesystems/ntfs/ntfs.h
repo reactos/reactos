@@ -470,6 +470,10 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 
 /* close.c */
 
+NTSTATUS
+NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
+              PFILE_OBJECT FileObject);
+
 DRIVER_DISPATCH NtfsFsdClose;
 NTSTATUS NTAPI
 NtfsFsdClose(PDEVICE_OBJECT DeviceObject,
