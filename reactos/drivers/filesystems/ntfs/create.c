@@ -221,6 +221,30 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
                           FileObject->FileName.Buffer,
                           &Fcb);
 
+    if (NT_SUCCESS(Status))
+    {
+        if (RequestedDisposition == FILE_CREATE)
+        {
+            Irp->IoStatus.Information = FILE_EXISTS;
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+
+        if (RequestedOptions & FILE_NON_DIRECTORY_FILE &&
+            NtfsFCBIsDirectory(Fcb))
+        {
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_FILE_IS_A_DIRECTORY;
+        }
+
+        if (RequestedOptions & FILE_DIRECTORY_FILE &&
+            !NtfsFCBIsDirectory(Fcb))
+        {
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_NOT_A_DIRECTORY;
+        }
+    }
+
     /*
      * If the directory containing the file to open doesn't exist then
      * fail immediately
