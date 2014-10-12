@@ -43,9 +43,7 @@ typedef enum
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static
-inline
-VOID
+static inline VOID
 NTAPI
 Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 {

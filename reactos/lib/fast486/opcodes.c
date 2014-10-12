@@ -6314,3 +6314,5 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
     /* Return success */
     return TRUE;
 }
+
+/* EOF */

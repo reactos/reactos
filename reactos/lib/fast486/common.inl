@@ -53,6 +53,7 @@
 
 FORCEINLINE
 INT
+FASTCALL
 Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 {
     /* Return the CPL, or 3 if we're in virtual 8086 mode */
@@ -61,6 +62,7 @@ Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 
 FORCEINLINE
 ULONG
+FASTCALL
 Fast486GetPageTableEntry(PFAST486_STATE State,
                          ULONG VirtualAddress,
                          BOOLEAN MarkAsDirty)
@@ -145,6 +147,7 @@ Fast486GetPageTableEntry(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadLinearMemory(PFAST486_STATE State,
                         ULONG LinearAddress,
                         PVOID Buffer,
@@ -211,6 +214,7 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteLinearMemory(PFAST486_STATE State,
                          ULONG LinearAddress,
                          PVOID Buffer,
@@ -279,6 +283,7 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
 
 FORCEINLINE
 VOID
+FASTCALL
 Fast486Exception(PFAST486_STATE State,
                  FAST486_EXCEPTIONS ExceptionCode)
 {
@@ -288,6 +293,7 @@ Fast486Exception(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486StackPush(PFAST486_STATE State,
                  ULONG Value)
 {
@@ -344,6 +350,7 @@ Fast486StackPush(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486StackPop(PFAST486_STATE State,
                 PULONG Value)
 {
@@ -418,6 +425,7 @@ Fast486StackPop(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486LoadSegment(PFAST486_STATE State,
                    FAST486_SEG_REGS Segment,
                    USHORT Selector)
@@ -628,6 +636,7 @@ Fast486LoadSegment(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486FetchByte(PFAST486_STATE State,
                  PUCHAR Data)
 {
@@ -658,6 +667,7 @@ Fast486FetchByte(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486FetchWord(PFAST486_STATE State,
                  PUSHORT Data)
 {
@@ -689,6 +699,7 @@ Fast486FetchWord(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486FetchDword(PFAST486_STATE State,
                   PULONG Data)
 {
@@ -720,6 +731,7 @@ Fast486FetchDword(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486CalculateParity(UCHAR Number)
 {
     // See http://graphics.stanford.edu/~seander/bithacks.html#ParityLookupTable too...
@@ -728,6 +740,7 @@ Fast486CalculateParity(UCHAR Number)
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ParseModRegRm(PFAST486_STATE State,
                      BOOLEAN AddressSize,
                      PFAST486_MOD_REG_RM ModRegRm)
@@ -995,6 +1008,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadModrmByteOperands(PFAST486_STATE State,
                              PFAST486_MOD_REG_RM ModRegRm,
                              PUCHAR RegValue,
@@ -1061,6 +1075,7 @@ Fast486ReadModrmByteOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadModrmWordOperands(PFAST486_STATE State,
                              PFAST486_MOD_REG_RM ModRegRm,
                              PUSHORT RegValue,
@@ -1109,6 +1124,7 @@ Fast486ReadModrmWordOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadModrmDwordOperands(PFAST486_STATE State,
                               PFAST486_MOD_REG_RM ModRegRm,
                               PULONG RegValue,
@@ -1157,6 +1173,7 @@ Fast486ReadModrmDwordOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteModrmByteOperands(PFAST486_STATE State,
                               PFAST486_MOD_REG_RM ModRegRm,
                               BOOLEAN WriteRegister,
@@ -1221,6 +1238,7 @@ Fast486WriteModrmByteOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteModrmWordOperands(PFAST486_STATE State,
                               PFAST486_MOD_REG_RM ModRegRm,
                               BOOLEAN WriteRegister,
@@ -1267,6 +1285,7 @@ Fast486WriteModrmWordOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteModrmDwordOperands(PFAST486_STATE State,
                                PFAST486_MOD_REG_RM ModRegRm,
                                BOOLEAN WriteRegister,
@@ -1315,7 +1334,9 @@ Fast486WriteModrmDwordOperands(PFAST486_STATE State,
 
 FORCEINLINE
 VOID
-Fast486FpuNormalize(PFAST486_STATE State, PFAST486_FPU_DATA_REG Data)
+FASTCALL
+Fast486FpuNormalize(PFAST486_STATE State,
+                    PFAST486_FPU_DATA_REG Data)
 {
     UINT LeadingZeros;
 
@@ -1346,6 +1367,7 @@ Fast486FpuNormalize(PFAST486_STATE State, PFAST486_FPU_DATA_REG Data)
 
 FORCEINLINE
 USHORT
+FASTCALL
 Fast486GetValueTag(PFAST486_FPU_DATA_REG Data)
 {
     if (FPU_IS_ZERO(Data)) return FPU_TAG_ZERO;
@@ -1355,6 +1377,7 @@ Fast486GetValueTag(PFAST486_FPU_DATA_REG Data)
 
 FORCEINLINE
 VOID
+FASTCALL
 Fast486FpuPush(PFAST486_STATE State,
                PFAST486_FPU_DATA_REG Data)
 {
@@ -1370,6 +1393,7 @@ Fast486FpuPush(PFAST486_STATE State,
 
 FORCEINLINE
 VOID
+FASTCALL
 Fast486FpuPop(PFAST486_STATE State)
 {
     if (FPU_GET_TAG(0) != FPU_TAG_EMPTY)

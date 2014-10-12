@@ -154,6 +154,7 @@ Fast486WriteMemory
 );
 
 BOOLEAN
+FASTCALL
 Fast486PerformInterrupt
 (
     PFAST486_STATE State,

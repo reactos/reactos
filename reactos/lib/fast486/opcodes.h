@@ -157,3 +157,5 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns);
 FAST486_OPCODE_HANDLER(Fast486OpcodeOuts);
 
 #endif // _OPCODES_H_
+
+/* EOF */

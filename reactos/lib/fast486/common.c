@@ -160,9 +160,8 @@ Fast486WriteMemory(PFAST486_STATE State,
     return Fast486WriteLinearMemory(State, LinearAddress, Buffer, Size);
 }
 
-static
-inline
-BOOLEAN
+static inline BOOLEAN
+FASTCALL
 Fast486GetIntVector(PFAST486_STATE State,
                     UCHAR Number,
                     PFAST486_IDT_ENTRY IdtEntry)
@@ -208,14 +207,15 @@ Fast486GetIntVector(PFAST486_STATE State,
     return TRUE;
 }
 
-static
-inline
-BOOLEAN
+static inline BOOLEAN
+FASTCALL
 Fast486InterruptInternal(PFAST486_STATE State,
-                         USHORT SegmentSelector,
-                         ULONG Offset,
-                         ULONG GateType)
+                         PFAST486_IDT_ENTRY IdtEntry)
 {
+    USHORT SegmentSelector = IdtEntry->Selector;
+    ULONG  Offset          = MAKELONG(IdtEntry->Offset, IdtEntry->OffsetHigh);
+    ULONG  GateType        = IdtEntry->Type;
+
     BOOLEAN GateSize = (GateType == FAST486_IDT_INT_GATE_32)
                        || (GateType == FAST486_IDT_TRAP_GATE_32);
     BOOLEAN Success = FALSE;
@@ -355,6 +355,7 @@ Cleanup:
 }
 
 BOOLEAN
+FASTCALL
 Fast486PerformInterrupt(PFAST486_STATE State,
                         UCHAR Number)
 {
@@ -368,10 +369,7 @@ Fast486PerformInterrupt(PFAST486_STATE State,
     }
 
     /* Perform the interrupt */
-    if (!Fast486InterruptInternal(State,
-                                  IdtEntry.Selector,
-                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                  IdtEntry.Type))
+    if (!Fast486InterruptInternal(State, &IdtEntry))
     {
         /* Exception occurred */
         return FALSE;

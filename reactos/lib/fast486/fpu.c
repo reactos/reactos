@@ -32,9 +32,10 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static ULONGLONG UnsignedMult128(ULONGLONG Multiplicand,
-                                 ULONGLONG Multiplier,
-                                 ULONGLONG *HighProduct)
+static ULONGLONG
+UnsignedMult128(ULONGLONG Multiplicand,
+                ULONGLONG Multiplier,
+                ULONGLONG *HighProduct)
 {
     ULONG MultiplicandLow, MultiplicandHigh, MultiplierLow, MultiplierHigh;
     ULONG IntermediateLow, IntermediateHigh;
@@ -63,9 +64,10 @@ static ULONGLONG UnsignedMult128(ULONGLONG Multiplicand,
     return LowProduct;
 }
 
-static VOID Fast486FpuGetSingleReal(PFAST486_STATE State,
-                                    ULONG Value,
-                                    PFAST486_FPU_DATA_REG Result)
+static VOID
+Fast486FpuGetSingleReal(PFAST486_STATE State,
+                        ULONG Value,
+                        PFAST486_FPU_DATA_REG Result)
 {
     /* Extract the sign, exponent and mantissa */
     Result->Sign = (UCHAR)(Value >> 31);
@@ -83,9 +85,10 @@ static VOID Fast486FpuGetSingleReal(PFAST486_STATE State,
     }
 }
 
-static VOID Fast486FpuGetDoubleReal(PFAST486_STATE State,
-                                    ULONGLONG Value,
-                                    PFAST486_FPU_DATA_REG Result)
+static VOID
+Fast486FpuGetDoubleReal(PFAST486_STATE State,
+                        ULONGLONG Value,
+                        PFAST486_FPU_DATA_REG Result)
 {
     /* Extract the sign, exponent and mantissa */
     Result->Sign = (UCHAR)(Value >> 63);
@@ -103,10 +106,11 @@ static VOID Fast486FpuGetDoubleReal(PFAST486_STATE State,
     }
 }
 
-static VOID Fast486FpuAdd(PFAST486_STATE State,
-                          PFAST486_FPU_DATA_REG FirstOperand,
-                          PFAST486_FPU_DATA_REG SecondOperand,
-                          PFAST486_FPU_DATA_REG Result)
+static VOID
+Fast486FpuAdd(PFAST486_STATE State,
+              PFAST486_FPU_DATA_REG FirstOperand,
+              PFAST486_FPU_DATA_REG SecondOperand,
+              PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG FirstAdjusted = *FirstOperand;
     FAST486_FPU_DATA_REG SecondAdjusted = *SecondOperand;
@@ -182,10 +186,11 @@ static VOID Fast486FpuAdd(PFAST486_STATE State,
     *Result = TempResult;
 }
 
-static VOID Fast486FpuSubtract(PFAST486_STATE State,
-                               PFAST486_FPU_DATA_REG FirstOperand,
-                               PFAST486_FPU_DATA_REG SecondOperand,
-                               PFAST486_FPU_DATA_REG Result)
+static VOID
+Fast486FpuSubtract(PFAST486_STATE State,
+                   PFAST486_FPU_DATA_REG FirstOperand,
+                   PFAST486_FPU_DATA_REG SecondOperand,
+                   PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG NegativeSecondOperand = *SecondOperand;
 
@@ -196,9 +201,10 @@ static VOID Fast486FpuSubtract(PFAST486_STATE State,
     Fast486FpuAdd(State, Result, FirstOperand, &NegativeSecondOperand);
 }
 
-static VOID Fast486FpuCompare(PFAST486_STATE State,
-                              PFAST486_FPU_DATA_REG FirstOperand,
-                              PFAST486_FPU_DATA_REG SecondOperand)
+static VOID
+Fast486FpuCompare(PFAST486_STATE State,
+                  PFAST486_FPU_DATA_REG FirstOperand,
+                  PFAST486_FPU_DATA_REG SecondOperand)
 {
     if (FPU_IS_NAN(FirstOperand) || FPU_IS_NAN(SecondOperand))
     {
@@ -248,10 +254,11 @@ static VOID Fast486FpuCompare(PFAST486_STATE State,
     }
 }
 
-static VOID Fast486FpuMultiply(PFAST486_STATE State,
-                               PFAST486_FPU_DATA_REG FirstOperand,
-                               PFAST486_FPU_DATA_REG SecondOperand,
-                               PFAST486_FPU_DATA_REG Result)
+static VOID
+Fast486FpuMultiply(PFAST486_STATE State,
+                   PFAST486_FPU_DATA_REG FirstOperand,
+                   PFAST486_FPU_DATA_REG SecondOperand,
+                   PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG TempResult;
 
@@ -273,10 +280,11 @@ static VOID Fast486FpuMultiply(PFAST486_STATE State,
     *Result = TempResult;
 }
 
-static VOID Fast486FpuDivide(PFAST486_STATE State,
-                             PFAST486_FPU_DATA_REG FirstOperand,
-                             PFAST486_FPU_DATA_REG SecondOperand,
-                             PFAST486_FPU_DATA_REG Result)
+static VOID
+Fast486FpuDivide(PFAST486_STATE State,
+                 PFAST486_FPU_DATA_REG FirstOperand,
+                 PFAST486_FPU_DATA_REG SecondOperand,
+                 PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG TempResult;
 

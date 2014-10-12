@@ -32,8 +32,8 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-inline
 static
+inline
 ULONG
 Fast486ArithmeticOperation(PFAST486_STATE State,
                            INT Operation,

@@ -50,4 +50,3 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0FBA);
 #endif // _OPGROUPS_H_
 
 /* EOF */
-
