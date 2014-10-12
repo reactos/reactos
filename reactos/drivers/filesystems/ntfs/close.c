@@ -36,7 +36,6 @@
 /*
  * FUNCTION: Closes a file
  */
-static
 NTSTATUS
 NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
               PFILE_OBJECT FileObject)
