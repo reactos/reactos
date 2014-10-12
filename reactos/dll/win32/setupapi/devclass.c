@@ -1269,6 +1269,19 @@ SetupDiGetClassDevPropertySheetsW(
             goto cleanup;
         }
 
+        if (DeviceInfoData)
+        {
+            struct DeviceInfo *devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+            devInfo->hmodDevicePropPageProvider = hModule;
+            devInfo->pDevicePropPageProvider = pPropPageProvider;
+        }
+        else
+        {
+            struct DeviceInfoSet *devInfoSet = (struct DeviceInfoSet *)DeviceInfoSet;
+            devInfoSet->hmodClassPropPageProvider = hModule;
+            devInfoSet->pClassPropPageProvider = pPropPageProvider;
+        }
+
         InitialNumberOfPages = PropertySheetHeader->nPages;
 
         Request.cbSize = sizeof(SP_PROPSHEETPAGE_REQUEST);
@@ -1299,7 +1312,6 @@ cleanup:
         if (hKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hKey);
         HeapFree(GetProcessHeap(), 0, PropPageProvider);
-        FreeFunctionPointer(hModule, pPropPageProvider);
     }
 
     TRACE("Returning %d\n", ret);
