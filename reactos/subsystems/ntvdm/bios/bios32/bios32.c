@@ -295,9 +295,18 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
 
     /* Load DOS */
     DosBootsectorInitialize();
-    /* Position CPU to 0000:7C00 to boot the OS */
-    setCS(0x0000);
-    setIP(0x7C00);
+
+    /*
+     * Position CPU to 0000:7C00 to boot the OS.
+     *
+     * Since we are called via the INT32 mechanism, we need to correctly set
+     * CS:IP, not by changing the current one (otherwise the interrupt could
+     * not be clean up and return properly), but by changing the CS:IP in the
+     * stack, so that when the interrupt returns, the modified CS:IP is popped
+     * off the stack and the CPU is correctly repositioned.
+     */
+    Stack[STACK_CS] = 0x0000;
+    Stack[STACK_IP] = 0x7C00;
 
     DPRINT1("<-- BiosBootstrapLoader\n");
 }

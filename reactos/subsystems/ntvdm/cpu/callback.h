@@ -29,16 +29,6 @@ typedef struct _CALLBACK16
     USHORT NextOffset;
 } CALLBACK16, *PCALLBACK16;
 
-//
-// WARNING WARNING!!
-// If you're changing the indices here, you then need to
-// also fix the BOP code in callback.c !!!!!!!!!!!!!!!!!
-//
-#define STACK_INT_NUM   0
-#define STACK_IP        1
-#define STACK_CS        2
-#define STACK_FLAGS     3
-
 /* FUNCTIONS ******************************************************************/
 
 VOID
