@@ -136,7 +136,7 @@ StringOut(const string& String, bool forcePrint)
                 }
 
                 DbgString[size] = 0;
-                DbgPrint(DbgString);
+                OutputDebugStringA(DbgString);
             }
 
             last_newline = curr_pos;
@@ -153,7 +153,7 @@ StringOut(const string& String, bool forcePrint)
 
         memcpy(DbgString, NewString.c_str() + start, size);
         DbgString[size] = 0;
-        DbgPrint(DbgString);
+        OutputDebugStringA(DbgString);
 
         NewString.clear();
         return NewString;
