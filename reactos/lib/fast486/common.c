@@ -166,8 +166,6 @@ Fast486GetIntVector(PFAST486_STATE State,
                     UCHAR Number,
                     PFAST486_IDT_ENTRY IdtEntry)
 {
-    ULONG FarPointer;
-
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
@@ -185,6 +183,7 @@ Fast486GetIntVector(PFAST486_STATE State,
     else
     {
         /* Read from the real-mode IVT */
+        ULONG FarPointer;
 
         /* Paging is always disabled in real mode */
         State->MemReadCallback(State,
@@ -215,9 +214,9 @@ Fast486InterruptInternal(PFAST486_STATE State,
     USHORT SegmentSelector = IdtEntry->Selector;
     ULONG  Offset          = MAKELONG(IdtEntry->Offset, IdtEntry->OffsetHigh);
     ULONG  GateType        = IdtEntry->Type;
+    BOOLEAN GateSize = (GateType == FAST486_IDT_INT_GATE_32) ||
+                       (GateType == FAST486_IDT_TRAP_GATE_32);
 
-    BOOLEAN GateSize = (GateType == FAST486_IDT_INT_GATE_32)
-                       || (GateType == FAST486_IDT_TRAP_GATE_32);
     BOOLEAN Success = FALSE;
     ULONG OldPrefixFlags = State->PrefixFlags;
 

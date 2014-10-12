@@ -279,7 +279,7 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeOutByte,               /* 0xEE */
     Fast486OpcodeOut,                   /* 0xEF */
     Fast486OpcodePrefix,                /* 0xF0 */
-    Fast486OpcodeInvalid,               /* 0xF1 */  // Invalid opcode
+    Fast486OpcodeInvalid,               /* 0xF1 */  // Invalid opcode -- ICEBP/INT01 opcode
     Fast486OpcodePrefix,                /* 0xF2 */
     Fast486OpcodePrefix,                /* 0xF3 */
     Fast486OpcodeHalt,                  /* 0xF4 */
@@ -300,7 +300,12 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeInvalid)
 {
-    /* This is not a valid opcode */
+    /*
+     * This is not a valid opcode.
+     * Well, not totally: see http://www.rcollins.org/secrets/opcodes/ICEBP.html
+     * for more details.
+     */
+    DPRINT1("FAST486 -- Calling ICEBP opcode\n");
     Fast486Exception(State, FAST486_EXCEPTION_UD);
     return FALSE;
 }
@@ -5428,6 +5433,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetEax)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSalc)
 {
+    /*
+     * See: http://www.rcollins.org/secrets/opcodes/SALC.html
+     * for more information.
+     */
+
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xD6);
 

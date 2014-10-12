@@ -125,7 +125,7 @@ Fast486FpuAdd(PFAST486_STATE State,
     /* Find the largest exponent */
     TempResult.Exponent = max(FirstOperand->Exponent, SecondOperand->Exponent);
 
-    /* Adjust the first operand to it */
+    /* Adjust the first operand to it... */
     if (FirstAdjusted.Exponent < TempResult.Exponent)
     {
         FirstAdjusted.Mantissa >>= (TempResult.Exponent - FirstAdjusted.Exponent);

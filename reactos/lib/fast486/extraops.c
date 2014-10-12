@@ -2267,9 +2267,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
         ULONG Source, Destination, Result;
 
         if (!Fast486ReadModrmDwordOperands(State,
-                                          &ModRegRm,
-                                          &Source,
-                                          &Destination))
+                                           &ModRegRm,
+                                           &Source,
+                                           &Destination))
         {
             /* Exception occurred */
             return FALSE;
