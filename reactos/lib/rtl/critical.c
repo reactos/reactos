@@ -23,6 +23,9 @@ static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[MAX_STATIC_CS_DEBUG_OBJECT
 static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
 LARGE_INTEGER RtlpTimeout;
 
+extern BOOLEAN LdrpShutdownInProgress;
+extern HANDLE LdrpShutdownThreadId;
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -124,6 +127,18 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 
     if (CriticalSection->DebugInfo)
         CriticalSection->DebugInfo->EntryCount++;
+
+    /*
+     * If we're shutting down the process, we're allowed to acquire any
+     * critical sections by force (the loader lock in particular)
+     */
+    if (LdrpShutdownInProgress &&
+        LdrpShutdownThreadId == NtCurrentTeb()->RealClientId.UniqueThread)
+    {
+        DPRINT("Forcing ownership of critical section %p\n", CriticalSection);
+        CriticalSection->LockCount = 0;
+        return STATUS_SUCCESS;
+    }
 
     for (;;)
     {
