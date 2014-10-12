@@ -99,7 +99,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbSize = sizeof(WNDCLASSEX);
 
     wcex.style            = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = (WNDPROC)WndProc;
+    wcex.lpfnWndProc    = WndProc;
     wcex.cbClsExtra        = 0;
     wcex.cbWndExtra        = 0;
     wcex.hInstance        = hInstance;
@@ -283,6 +283,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_PAINT:
         hdc = BeginPaint(hWnd, &ps);
+        (void)hdc; // FIXME
         EndPaint(hWnd, &ps);
         break;
     case WM_SIZE:
