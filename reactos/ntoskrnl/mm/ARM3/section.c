@@ -1391,7 +1391,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
         TempPte = Segment->SegmentPteTemplate;
 
         /* Acquire the commit lock and loop all prototype PTEs to be committed */
-        KeAcquireGuardedMutexUnsafe(&MmSectionCommitMutex);
+        KeAcquireGuardedMutex(&MmSectionCommitMutex);
         while (PointerPte < LastPte)
         {
             /* Make sure the PTE is already invalid */
@@ -1417,7 +1417,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
         ASSERT(Segment->NumberOfCommittedPages <= Segment->TotalNumberOfPtes);
 
         /* Now that we're done, release the lock */
-        KeReleaseGuardedMutexUnsafe(&MmSectionCommitMutex);
+        KeReleaseGuardedMutex(&MmSectionCommitMutex);
     }
 
     /* Is it SEC_BASED, or did the caller manually specify an address? */
