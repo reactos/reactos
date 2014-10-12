@@ -38,6 +38,8 @@ typedef struct _SecureProviderTable
     struct list table;
 } SecureProviderTable;
 
+static void SECUR32_initializeProviders(void);
+
 static CRITICAL_SECTION cs;
 static CRITICAL_SECTION_DEBUG cs_debug =
 {
@@ -122,6 +124,11 @@ SECURITY_STATUS WINAPI EnumerateSecurityPackagesW(PULONG pcPackages,
     SECURITY_STATUS ret = SEC_E_OK;
 
     TRACE("(%p, %p)\n", pcPackages, ppPackageInfo);
+
+#ifdef __REACTOS__
+    if (!packageTable)
+        SECUR32_initializeProviders();
+#endif
 
     /* windows just crashes if pcPackages or ppPackageInfo is NULL, so will I */
     *pcPackages = 0;
@@ -718,6 +725,7 @@ static const WCHAR securityProvidersW[] = {
  'S','e','c','u','r','i','t','y','P','r','o','v','i','d','e','r','s',0
  };
 
+ /* FIXME: we're missing SECUR32_freeProviders, so all of this gets leaked */
 static void SECUR32_initializeProviders(void)
 {
     HKEY key;
@@ -764,8 +772,10 @@ SecurePackage *SECUR32_findPackageW(PCWSTR packageName)
     SecurePackage *ret = NULL;
     BOOL matched = FALSE;
 
+#ifdef __REACTOS__
     if (!packageTable)
         SECUR32_initializeProviders();
+#endif
 
     if (packageTable && packageName)
     {
