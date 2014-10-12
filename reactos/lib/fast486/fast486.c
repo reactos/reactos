@@ -54,6 +54,7 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
     /* Main execution loop */
     do
     {
+NextInst:
         /* Check if this is a new instruction */
         if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
 
@@ -72,7 +73,7 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
         CurrentHandler(State, Opcode);
 
         /* If this is a prefix, go to the next instruction immediately */
-        if (CurrentHandler == Fast486OpcodePrefix) continue;
+        if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
 
         /* A non-prefix opcode has been executed, reset the prefix flags */
         State->PrefixFlags = 0;
@@ -104,8 +105,7 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
             State->IntStatus = FAST486_INT_EXECUTE;
         }
     }
-    while ((CurrentHandler == Fast486OpcodePrefix) ||
-           (Command == FAST486_CONTINUE) ||
+    while ((Command == FAST486_CONTINUE) ||
            (Command == FAST486_STEP_OVER && ProcedureCallCount > 0) ||
            (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0));
 }
