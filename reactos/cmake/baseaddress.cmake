@@ -1,4 +1,4 @@
-set(baseaddress_ntdll                a 0x7c920000) # should be above 0x7c920000
+set(baseaddress_ntdll                0x7c920000) # should be above 0x7c920000
 set(baseaddress_kernel32             0x77d80000)
 set(baseaddress_msvcrt               0x77cd0000)
 set(baseaddress_advapi32             0x77c20000)
