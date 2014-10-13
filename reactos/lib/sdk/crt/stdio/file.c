@@ -2972,28 +2972,46 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
     _lock_file(file);
 
     while(wrcnt) {
+#ifndef __REACTOS__
+        if(file->_cnt < 0) {
+            WARN("negative file->_cnt value in %p\n", file);
+            file->_flag |= MSVCRT__IOERR;
+            break;
+        } else
+#endif
         if(file->_cnt) {
-            int pcnt=((unsigned)file->_cnt>wrcnt)? wrcnt: file->_cnt;
+            int pcnt=(file->_cnt>wrcnt)? wrcnt: file->_cnt;
             memcpy(file->_ptr, ptr, pcnt);
             file->_cnt -= pcnt;
             file->_ptr += pcnt;
             written += pcnt;
             wrcnt -= pcnt;
             ptr = (const char*)ptr + pcnt;
-        } else if(!file->_bufsiz && (file->_flag & _IONBF)) {
-            if(!(file->_flag & _IOWRT)) {
-                if(file->_flag & _IORW)
-                    file->_flag |= _IOWRT;
-                else
-                    break;
-            }
+        } else if((file->_flag & _IONBF)
+                || ((file->_flag & (_IOMYBUF | _USERBUF)) && wrcnt >= file->_bufsiz)
+                || (!(file->_flag & (_IOMYBUF | _USERBUF)) && wrcnt >= MSVCRT_INTERNAL_BUFSIZ)) {
+            size_t pcnt;
+            int bufsiz;
 
-            if(_write(file->_file, ptr, wrcnt) <= 0) {
+            if(file->_flag & _IONBF)
+                bufsiz = 1;
+            else if(!(file->_flag & (_IOMYBUF | _USERBUF)))
+                bufsiz = MSVCRT_INTERNAL_BUFSIZ;
+            else
+                bufsiz = file->_bufsiz;
+
+            pcnt = (wrcnt / bufsiz) * bufsiz;
+
+            if(flush_buffer(file) == EOF)
+                break;
+
+            if(_write(file->_file, ptr, pcnt) <= 0) {
                 file->_flag |= _IOERR;
                 break;
             }
-            written += wrcnt;
-            wrcnt = 0;
+            written += pcnt;
+            wrcnt -= pcnt;
+            ptr = (const char*)ptr + pcnt;
         } else {
             if(_flsbuf(*(const char*)ptr, file) == EOF)
                 break;
