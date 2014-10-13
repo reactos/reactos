@@ -204,7 +204,7 @@
 @ stdcall EndDialog(long long)
 @ stdcall EndMenu()
 @ stdcall EndPaint(long ptr)
-@ stub EndTask
+@ stdcall EndTask(ptr long long)
 @ stub EnterReaderModeHelper
 @ stdcall EnumChildWindows(long ptr long)
 @ stdcall EnumClipboardFormats(long)

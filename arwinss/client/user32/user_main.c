@@ -379,3 +379,26 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah)
     TRACE(": stub\n");
     return TRUE;
 }
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+EndTask(
+	HWND    hWnd,
+	BOOL fShutDown,
+	BOOL fForce)
+{
+    SendMessageW(hWnd, WM_CLOSE, 0, 0);
+
+    if (IsWindow(hWnd))
+    {
+        if (fForce)
+            return DestroyWindow(hWnd);
+        else
+            return FALSE;
+    }
+
+    return TRUE;
+}
