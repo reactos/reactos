@@ -1,4 +1,4 @@
-set(baseaddress_ntdll                0x7c920000) # should be above 0x7c920000
+set(baseaddress_ntdll                a 0x7c920000) # should be above 0x7c920000
 set(baseaddress_kernel32             0x77d80000)
 set(baseaddress_msvcrt               0x77cd0000)
 set(baseaddress_advapi32             0x77c20000)
@@ -272,7 +272,7 @@ set(baseaddress_wbemdisp             0x70cd0000)
 set(baseaddress_wbemprox             0x70c70000)
 set(baseaddress_windowscodecs        0x70b60000)
 set(baseaddress_windowscodecsext     0x70b30000)
-set(baseaddress_wined3d              0x70960000)
+set(baseaddress_d3dwine              0x70960000)
 set(baseaddress_winfax               0x70930000)
 set(baseaddress_wing32               0x70900000)
 set(baseaddress_winhttp              0x708a0000)
