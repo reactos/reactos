@@ -115,6 +115,11 @@ BOOL CALLBACK ExitWindowsDialogShellProc(HWND hwnd, UINT Message, WPARAM wParam,
             WCHAR tmpBuffer2[512];
 
             pgContext = (PGINA_CONTEXT)lParam;
+            if (!pgContext)
+            {
+                WARN("pgContext is NULL, branding bitmaps will not be displayed.\n");
+            }
+            
             SetWindowLongPtr(hwnd, GWL_USERDATA, (DWORD_PTR)pgContext);
 
             /* Clears the content before it's used */
@@ -158,7 +163,8 @@ BOOL CALLBACK ExitWindowsDialogShellProc(HWND hwnd, UINT Message, WPARAM wParam,
             UpdateShutdownShellDesc(hwnd);
             
             /* Draw the logo graphic */
-            pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            if (pgContext)
+                pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
             return TRUE;
         }
@@ -166,17 +172,19 @@ BOOL CALLBACK ExitWindowsDialogShellProc(HWND hwnd, UINT Message, WPARAM wParam,
         {
             PAINTSTRUCT ps;
             HDC hdc;
-            if (pgContext->hBitmap)
+            if (pgContext && pgContext->hBitmap)
             {
                 hdc = BeginPaint(hwnd, &ps);
                 DrawStateW(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwnd, &ps);
+                return TRUE;
             }
-            return TRUE;
+            return FALSE;
         }
         case WM_DESTROY:
         {
-            DeleteObject(pgContext->hBitmap);
+            if (pgContext)
+                DeleteObject(pgContext->hBitmap);
             return TRUE;
         }
         case WM_COMMAND:
@@ -226,6 +234,7 @@ ShellShutdownDialog(
     LPWSTR lpUsername,
     BOOL   bHideLogoff)
 {
+    GINA_CONTEXT pgContext = { 0 };
     int dlgValue = 0;
     
     g_logoffHideState = bHideLogoff;
@@ -233,10 +242,11 @@ ShellShutdownDialog(
     UNREFERENCED_PARAMETER(lpUsername);
 
     // Loads the shut down dialog box
-    dlgValue = DialogBox(hDllInstance,
-                         MAKEINTRESOURCE(IDD_SHUTDOWN_SHELL),
-                         hParent,
-                         ExitWindowsDialogShellProc);
+    dlgValue = DialogBoxParam(hDllInstance,
+                              MAKEINTRESOURCE(IDD_SHUTDOWN_SHELL),
+                              hParent,
+                              ExitWindowsDialogShellProc,
+                              (LPARAM)&pgContext);
 
     // Determines what to do based on user selection
     if (dlgValue == IDOK)
