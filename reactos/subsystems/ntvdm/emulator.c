@@ -167,6 +167,8 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
                    Opcode[8],
                    Opcode[9]);
 
+    Fast486DumpState(&EmulatorContext);
+
     /* Stop the VDM */
     EmulatorTerminate();
     return;
