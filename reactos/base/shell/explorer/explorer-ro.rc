@@ -31,7 +31,7 @@ BEGIN
         MENUITEM "Aranjare &automată", ID_WINDOW_AUTOSORT
         MENUITEM "Aranjare s&imboluri", ID_WINDOW_ARRANGE
     END
-    POPUP "&Instrumente"
+    POPUP "I&nstrumente"
     BEGIN
         MENUITEM "&Opțiuni", ID_TOOLS_OPTIONS
     END
@@ -94,7 +94,7 @@ BEGIN
         MENUITEM "Pe &tot ecranul\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&MDI", ID_VIEW_MDI
     END
-    POPUP "&Instrumente"
+    POPUP "I&nstrumente"
     BEGIN
         MENUITEM "&Opțiuni", ID_TOOLS_OPTIONS
     END

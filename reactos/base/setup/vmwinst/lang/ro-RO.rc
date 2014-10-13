@@ -11,7 +11,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Asistent de instalare module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Instalatorul ReactOS a descoperit faptul că ReactOS este executat în VMware(r).", -1, 117, 8, 140, 24
+    LTEXT "Asistentul de instalare a descoperit faptul că ReactOS este executat în VMware(r).", -1, 117, 8, 140, 24
     LTEXT "Dacă doriți instalarea modulelor pilot VMware(r) SVGA, apăsați pe „Înainte”, altfel omiteți această instalare apăsând „Anulează”.", -1, 117, 130, 140, 34
 END
 
@@ -20,7 +20,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Asistent de instalare module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Instalatorul ReactOS nu are inclus modulul pilot VMware(r) SVGA.\n\nDe aceea, mergeți la „VM” din meniul stației de lucru VMware(r) și alegeți instalarea instrumentelor VMware\n\n\nApăsați „Înainte” pentru a continua sau „Anulează” pentru a omite instalarea modulului pilot video SVGA.", -1, 25, 25, 225, 85
+    LTEXT "Asistentul de instalare nu are inclus modulul pilot VMware(r) SVGA.\n\nDe aceea, mergeți la „VM” din meniul stației de lucru VMware(r) și alegeți instalarea instrumentelor VMware\n\n\nApăsați „Înainte” pentru a continua sau „Anulează” pentru a omite instalarea modulului pilot video SVGA.", -1, 25, 25, 225, 85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -58,7 +58,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Asistent de instalare module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Instalatorul ReactOS nu a reușit instalarea modulului pilot VMware(r) SVGA.\n\n\nAlegeți „Sfârșit” pentru a reveni la instalarea ReactOS.", -1, 25, 25, 225, 85
+    LTEXT "Asistentul de instalare nu a reușit instalarea modulului pilot VMware(r) SVGA.\n\n\nAlegeți „Sfârșit” pentru a reveni la instalarea ReactOS.", -1, 25, 25, 225, 85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -67,9 +67,9 @@ CAPTION "Asistent de instalare module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Modulul pilot video VMware(r) SVGA este deja instalat.\n\nPuteți în continuare să:", -1, 25, 5, 225, 30
-    PUSHBUTTON "Configurați preferințele ecranului", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-    PUSHBUTTON "Utilizați un alt modul pilot video", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-    PUSHBUTTON "Dezinstalați modulul pilot VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "&Configurați preferințele ecranului", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "&Utilizați un alt modul pilot video", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "&Dezinstalați modulul pilot VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
     LTEXT "Alegeți „Înainte” pentru a continua sau „Anulează” pentru a părăsi acest asistent.", -1, 25, 93, 225, 19
 END
 
@@ -89,14 +89,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Asistent de instalare module video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Instalatorul ReactOS e pe cale de a vă dezinstala modulul pilot VMware(r) SVGA!!!\n\n\nApăsați „Sfârșit” pentru a dezinstala modulul pilot sau „Anulează” pentru a-l lăsa așa cum este.", -1, 25, 25, 225, 85
+    LTEXT "Asistentul de instalare e pe cale de a vă dezinstala modulul pilot VMware(r) SVGA!!!\n\n\nApăsați „Sfârșit” pentru a dezinstala modulul pilot sau „Anulează” pentru a-l lăsa așa cum este.", -1, 25, 25, 225, 85
 END
 
 STRINGTABLE
 BEGIN
     IDS_WIZARD_NAME "VMware(r) depistat"
-    IDS_FAILEDTOLOCATEDRIVERS "Instalatorul ReactOS Setup nu a reușit găsirea fișierelor necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r)."
-    IDS_FAILEDTOCOPYFILES "Instalatorul ReactOS nu a reușit să copieze fișierele necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r).\n"
+    IDS_FAILEDTOLOCATEDRIVERS "Asistentul de instalare nu a reușit găsirea fișierelor necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r)."
+    IDS_FAILEDTOCOPYFILES "Asistentul de instalare nu a reușit să copieze fișierele necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r).\n"
     IDS_FAILEDTOACTIVATEDRIVER "Activarea modulului pilot VMware(r) SVGA a eșuat!"
     IDS_FAILEDTOSELVGADRIVER "Activarea modulului pilot VMware(r) VGA a eșuat!"
     IDS_FAILEDTOSELVBEDRIVER "Activarea modulului pilot VMware(r) VBE a eșuat!"
@@ -113,9 +113,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCHINGFORCDROM "Accesarea suportului CD-ROM cu instrumentele VMware(r)…"
+    IDS_SEARCHINGFORCDROM "Se accesează suportul CD-ROM cu instrumentele VMware(r)…"
     IDS_COPYINGFILES "Se copie fișierele…"
-    IDS_ENABLINGDRIVER "Activarea modulului pilot VMware(r) SVGA…"
+    IDS_ENABLINGDRIVER "Se activează modulul pilot VMware(r) SVGA…"
 END
 
 STRINGTABLE

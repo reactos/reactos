@@ -4,7 +4,7 @@
  * Copyright 2005 James Hawkins
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
- *                Fulea Ștefan
+ *                Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,13 +27,13 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Cuprins"
-    IDS_INDEX        "&Index"
+    IDS_CONTENTS     "C&uprins"
+    IDS_INDEX        "In&dex"
     IDS_SEARCH       "&Caută"
     IDS_FAVORITES    "F&avorite"
 
-    IDS_HIDETABS     "Hide &Tabs"
-    IDS_SHOWTABS     "Show &Tabs"
+    IDS_HIDETABS     "Ascunde ta&buri"
+    IDS_SHOWTABS     "Afișează ta&buri"
 END
 
 STRINGTABLE
@@ -55,12 +55,12 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "S&ync", IDTB_SYNC
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
-        MENUITEM "&Home", IDTB_HOME
-        MENUITEM "&Stop", IDTB_STOP
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "Sinc&r", IDTB_SYNC
+        MENUITEM "Înap&oi", IDTB_BACK
+        MENUITEM "În&ainte", IDTB_FORWARD
+        MENUITEM "A&casă", IDTB_HOME
+        MENUITEM "Opr&ește", IDTB_STOP
+        MENUITEM "Împrospătea&ză", IDTB_REFRESH
+        MENUITEM "I&mprimă…", IDTB_PRINT
     }
 }

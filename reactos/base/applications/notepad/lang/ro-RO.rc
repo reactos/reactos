@@ -1,3 +1,8 @@
+/*
+Translators: Petru Dumitriu (petrimetri at gmail dot com)
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
@@ -8,7 +13,7 @@ BEGIN
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
-    "^D", CMD_OPEN
+    "^O", CMD_OPEN
     "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -23,13 +28,13 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Nou\tCtrl+N", CMD_NEW
-        MENUITEM "&Deschidere…\tCtrl+D", CMD_OPEN
-        MENUITEM "Pă&strează\tCtrl+S", CMD_SAVE
-        MENUITEM "&Păstrare în…", CMD_SAVE_AS
+        MENUITEM "&Deschidere…\tCtrl+O", CMD_OPEN
+        MENUITEM "&Păstrează\tCtrl+S", CMD_SAVE
+        MENUITEM "Păst&rare în…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Configurare pagină…", CMD_PAGE_SETUP
-        MENUITEM "&Imprimă\tCtrl+P", CMD_PRINT
-        MENUITEM "Configurare i&mprimantă…", CMD_PRINTER_SETUP
+        MENUITEM "I&mprimă\tCtrl+P", CMD_PRINT
+        MENUITEM "C&onfigurare imprimantă…", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", CMD_EXIT
     END
@@ -45,9 +50,9 @@ BEGIN
         MENUITEM "&Găsire…\tCtrl+F", CMD_SEARCH
         MENUITEM "Găsește &următoarea\tF3", CMD_SEARCH_NEXT
         MENUITEM "Î&nlocuiește\tCtrl+H", CMD_REPLACE
-        MENUITEM "&Salt la…\tCtrl+G", CMD_GOTO
+        MENUITEM "S&alt la…\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Selecte&ază tot\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Selectea&ză tot\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Inserează &oră și dată\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormatare"
@@ -76,12 +81,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Configurare pagină"
 BEGIN
-    LTEXT "&Antet:", 0x140, 10, 07, 40, 15
+    LTEXT "Ant&et:", 0x140, 10, 07, 40, 15
     EDITTEXT 0x141, 60, 05, 110, 12, WS_BORDER | WS_TABSTOP
-    LTEXT "&Subsol:", 0x142, 10, 24, 40, 15
+    LTEXT "Su&bsol:", 0x142, 10, 24, 40, 15
     EDITTEXT 0x143, 60, 22, 110, 12, WS_BORDER | WS_TABSTOP
-    GROUPBOX "&Margini:", 0x144, 10, 43, 160, 45
-    LTEXT "S&tânga:", 0x145, 20, 55, 30, 10, WS_CHILD
+    GROUPBOX "Margini:", 0x144, 10, 43, 160, 45
+    LTEXT "Stâng&a:", 0x145, 20, 55, 30, 10, WS_CHILD
     EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/ 0x147, 50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
     LTEXT "S&us:", 0x148, 20, 73, 30, 10, WS_CHILD
     EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/ 0x14A, 50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP

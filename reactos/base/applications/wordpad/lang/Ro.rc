@@ -2,7 +2,7 @@
  * Copyright 2004 Krzysztof Foltman
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
- *           2011 Fulea Ștefan
+ *           2011 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,34 +29,34 @@ BEGIN
     BEGIN
         MENUITEM "&Nou…\tCtrl+N",            ID_FILE_NEW
         MENUITEM "&Deschidere…\tCtrl+O",     ID_FILE_OPEN
-        MENUITEM "Pă&strează\tCtrl+S",       ID_FILE_SAVE
-        MENUITEM "&Păstrare în…",            ID_FILE_SAVEAS
+        MENUITEM "&Pă&trează\tCtrl+S",       ID_FILE_SAVE
+        MENUITEM "Păst&rare în…",            ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Imprimare…\tCtrl+P",      ID_PRINT
+        MENUITEM "I&mprimare…\tCtrl+P",      ID_PRINT
         MENUITEM "Pre&vizionare imprimare…", ID_PREVIEW
-        MENUITEM "&Opțiuni pagină…",         ID_PRINTSETUP
+        MENUITEM "&Configurare pagină…",     ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "I&eșire",                  ID_FILE_EXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "Des&face\tCtrl+Z",            ID_EDIT_UNDO
-        MENUITEM "&Reface\tCtrl+Y",             ID_EDIT_REDO
+        MENUITEM "Desface\tCtrl+&Z",            ID_EDIT_UNDO
+        MENUITEM "Reface\tCtrl+&Y",             ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează\tCtrl+X",          ID_EDIT_CUT
-        MENUITEM "&Copiază\tCtrl+C",            ID_EDIT_COPY
-        MENUITEM "&Lipește\tCtrl+V",            ID_EDIT_PASTE
-        MENUITEM "Șt&erge\tDEL",                ID_EDIT_CLEAR
-        MENUITEM "Selecte&ază tot\tCtrl+A",     ID_EDIT_SELECTALL
+        MENUITEM "Decupează\tCtrl+&X",          ID_EDIT_CUT
+        MENUITEM "Copiază\tCtrl+&C",            ID_EDIT_COPY
+        MENUITEM "Lipește\tCtrl+&V",            ID_EDIT_PASTE
+        MENUITEM "Șterge\tD&EL",                ID_EDIT_CLEAR
+        MENUITEM "Selectează tot\tCtrl+&A",     ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Că&utare…\tCrtl+F",           ID_FIND
+        MENUITEM "Căutare…\tCrtl+&F",           ID_FIND
         MENUITEM "Caută u&rmătorul\tF3",        ID_FIND_NEXT
-        MENUITEM "Î&nlocuire…\tCtrl+H",         ID_REPLACE
+        MENUITEM "Înlocuire…\tCtrl+&H",         ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Nem&odificabil",              ID_EDIT_READONLY
+        MENUITEM "&Nemodificabil",              ID_EDIT_READONLY
         MENUITEM "&Modificat",                  ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
-        POPUP "&Suplimente"
+        POPUP "S&uplimente"
         BEGIN
             MENUITEM "&Detalii pentru selecție",    ID_EDIT_SELECTIONINFO
             MENUITEM "Format &caracter",            ID_EDIT_CHARFORMAT
@@ -74,7 +74,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Opțiuni…",                 ID_VIEWPROPERTIES
     END
-    POPUP "&Inserare"
+    POPUP "I&nserare"
     BEGIN
         MENUITEM "&Data și ora…",  ID_DATETIME
     END

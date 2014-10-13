@@ -201,7 +201,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
     LTEXT "Încercarea de apelare automată a eșuat.  Doriți dezactivarea apelării automate de la această locație?", 1099, 40, 6, 181, 34, NOT WS_GROUP
-    PUSHBUTTON "&Da", 1, 60, 42, 50, 14
+    PUSHBUTTON "D&a", 1, 60, 42, 50, 14
     DEFPUSHBUTTON "&Nu", 2, 115, 42, 50, 14
 END
 
@@ -1266,7 +1266,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Conectare inițială"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Da", 6, 68, 68, 50, 14
+    DEFPUSHBUTTON "D&a", 6, 68, 68, 50, 14
     PUSHBUTTON "N&u", 7, 125, 68, 50, 14
     ICON 32516, 1575, 7, 7, 20, 20
     LTEXT "", 1576, 40, 7, 190, 33
@@ -1634,7 +1634,7 @@ BEGIN
     ICON 32515, -1, 7, 7, 20, 20
     LTEXT "Dezactivarea paravanului conexiunii la Internet poate expune calculatorul unui risc de acces neautorizat (din Inernet). Sigur doriți dezactivarrea lui?", -1, 44, 5, 212, 24
     AUTOCHECKBOX "Nu dor&esc recurența acestui mesaj", 1662, 42, 40, 210, 10
-    DEFPUSHBUTTON "&Da", 6, 74, 60, 50, 14
+    DEFPUSHBUTTON "D&a", 6, 74, 60, 50, 14
     PUSHBUTTON "N&u", 7, 128, 60, 50, 14
 END
 
