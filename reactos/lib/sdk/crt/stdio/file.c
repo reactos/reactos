@@ -110,6 +110,8 @@ static char utf16_bom[2] = { 0xff, 0xfe };
 #define MAX_FILES 2048
 #define FD_BLOCK_SIZE 64
 
+#define MSVCRT_INTERNAL_BUFSIZ 4096
+
 /* ioinfo structure size is different in msvcrXX.dll's */
 typedef struct {
     HANDLE              handle;
@@ -373,9 +375,11 @@ static int init_fp(FILE* file, int fd, unsigned stream_flags)
     *_errno() = EBADF;
     return -1;
   }
-  memset(file, 0, sizeof(*file));
+  file->_ptr = file->_base = NULL;
+  file->_cnt = 0;
   file->_file = fd;
   file->_flag = stream_flags;
+  file->_tmpfname = NULL;
 
   if(file<_iob || file>=_iob+_IOB_ENTRIES)
       InitializeCriticalSection(&((file_crit*)file)->crit);
@@ -506,14 +510,14 @@ void msvcrt_init_io(void)
 /* INTERNAL: Flush stdio file buffer */
 static int flush_buffer(FILE* file)
 {
-  if(file->_bufsiz) {
+  if(file->_flag & (_IOMYBUF | _USERBUF)) {
         int cnt=file->_ptr-file->_base;
         if(cnt>0 && _write(file->_file, file->_base, cnt) != cnt) {
             file->_flag |= _IOERR;
             return EOF;
         }
         file->_ptr=file->_base;
-        file->_cnt=file->_bufsiz;
+        file->_cnt=0;
   }
   return 0;
 }
@@ -539,14 +543,14 @@ int CDECL _isatty(int fd)
             && _isatty(file->_file))
         return FALSE;
 
-    file->_base = calloc(BUFSIZ,1);
+    file->_base = calloc(MSVCRT_INTERNAL_BUFSIZ,1);
     if(file->_base) {
-        file->_bufsiz = BUFSIZ;
+        file->_bufsiz = MSVCRT_INTERNAL_BUFSIZ;
         file->_flag |= _IOMYBUF;
     } else {
         file->_base = (char*)(&file->_charbuf);
-        /* put here 2 ??? */
-        file->_bufsiz = sizeof(file->_charbuf);
+        file->_bufsiz = 2;
+        file->_flag |= _IONBF;
     }
     file->_ptr = file->_base;
     file->_cnt = 0;
@@ -793,13 +797,13 @@ static int flush_all_buffers(int mask)
   FILE *file;
 
   LOCK_FILES();
-  for (i = 3; i < stream_idx; i++) {
+  for (i = 0; i < stream_idx; i++) {
     file = get_file(i);
 
     if (file->_flag)
     {
       if(file->_flag & mask) {
-        fflush(file);
+	fflush(file);
         num_flushed++;
       }
     }
@@ -2730,7 +2734,7 @@ int CDECL _filbuf(FILE* file)
     }
 
     /* Allocate buffer if needed */
-    if(file->_bufsiz == 0 && !(file->_flag & _IONBF))
+    if(!(file->_flag & (_IONBF | _IOMYBUF | _USERBUF)))
         alloc_buffer(file);
 
     if(!(file->_flag & _IOREAD)) {
@@ -2742,7 +2746,7 @@ int CDECL _filbuf(FILE* file)
         }
     }
 
-    if(file->_flag & _IONBF) {
+    if(!(file->_flag & (_IOMYBUF | _USERBUF))) {
         int r;
         if ((r = read_i(file->_file,&c,1)) != 1) {
             file->_flag |= (r == 0) ? _IOEOF : _IOERR;
@@ -3210,7 +3214,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
 {
   size_t rcnt=size * nmemb;
   size_t read=0;
-  int pread=0;
+  size_t pread=0;
 
   if(!rcnt)
 	return 0;
@@ -3219,7 +3223,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
 
   /* first buffered data */
   if(file->_cnt>0) {
-	int pcnt= (rcnt>(unsigned int)file->_cnt)? file->_cnt:rcnt;
+	int pcnt= (rcnt>file->_cnt)? file->_cnt:rcnt;
 	memcpy(ptr, file->_ptr, pcnt);
 	file->_cnt -= pcnt;
 	file->_ptr += pcnt;
@@ -3234,14 +3238,17 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
         return 0;
     }
   }
+
+  if(rcnt>0 && !(file->_flag & (_IONBF | _IOMYBUF | _USERBUF)))
+      alloc_buffer(file);
+
   while(rcnt>0)
   {
     int i;
-    if (!file->_cnt && rcnt<BUFSIZ && !(file->_flag & _IONBF)
-            && (file->_bufsiz != 0 || alloc_buffer(file))) {
+    if (!file->_cnt && rcnt<BUFSIZ && (file->_flag & (_IOMYBUF | _USERBUF))) {
       file->_cnt = _read(file->_file, file->_base, file->_bufsiz);
       file->_ptr = file->_base;
-      i = ((unsigned int)file->_cnt<rcnt) ? file->_cnt : rcnt;
+      i = (file->_cnt<rcnt) ? file->_cnt : rcnt;
       /* If the buffer fill reaches eof but fread wouldn't, clear eof. */
       if (i > 0 && i < file->_cnt) {
         get_ioinfo(file->_file)->wxflag &= ~WX_ATEOF;
@@ -3252,8 +3259,8 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
         file->_cnt -= i;
         file->_ptr += i;
       }
-    } else if (rcnt > UINT_MAX) {
-      i = _read(file->_file, ptr, UINT_MAX);
+    } else if (rcnt > INT_MAX) {
+      i = _read(file->_file, ptr, INT_MAX);
     } else if (rcnt < BUFSIZ) {
       i = _read(file->_file, ptr, rcnt);
     } else {
@@ -3379,7 +3386,7 @@ __int64 CDECL _ftelli64(FILE* file)
         _unlock_file(file);
         return -1;
     }
-    if(file->_bufsiz)  {
+    if(file->_flag & (_IOMYBUF | _USERBUF))  {
         if(file->_flag & _IOWRT) {
             pos += file->_ptr - file->_base;
 
