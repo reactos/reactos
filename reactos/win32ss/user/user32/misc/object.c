@@ -73,7 +73,8 @@ GetUserObjectInformationA(
 
     if (LengthNeeded != 0)
     {
-        *lpnLengthNeeded = LengthNeeded;
+        if (lpnLengthNeeded)
+            *lpnLengthNeeded = LengthNeeded;
         ret = TRUE;
     }
   }
