@@ -144,6 +144,9 @@ static void test_fileops( void )
         fd = open ("fdopen.tst", O_RDONLY | O_BINARY);
         file = fdopen (fd, "rb");
         setvbuf(file,NULL,bufmodes[bufmode],2048);
+        if(bufmodes[bufmode] == _IOFBF)
+            ok(file->_bufsiz == 2048, "file->_bufsiz = %d\n", file->_bufsiz);
+        ok(file->_base != NULL, "file->_base = NULL\n");
         ok(strlen(outbuffer) == (sizeof(outbuffer)-1),"strlen/sizeof error for bufmode=%x\n", bufmodes[bufmode]);
         ok(fgets(buffer,sizeof(buffer),file) !=0,"fgets failed unexpected for bufmode=%x\n", bufmodes[bufmode]);
         ok(fgets(buffer,sizeof(buffer),file) ==0,"fgets didn't signal EOF for bufmode=%x\n", bufmodes[bufmode]);
@@ -629,6 +632,7 @@ static void test_flsbuf( void )
   ok(tempfh->_cnt == 0, "_cnt on freshly opened file was %d\n", tempfh->_cnt);
   setbuf(tempfh, NULL);
   ok(tempfh->_cnt == 0, "_cnt on unbuffered file was %d\n", tempfh->_cnt);
+  ok(tempfh->_bufsiz == 2, "_bufsiz = %d\n", tempfh->_bufsiz);
   /* Inlined putchar sets _cnt to -1.  Native seems to ignore the value... */
   tempfh->_cnt = 1234;
   ret = _flsbuf('Q',tempfh);
@@ -1624,7 +1628,7 @@ static void test_fopen_s( void )
     const char name[] = "empty1";
     char buff[16];
     unsigned char *ubuff = (unsigned char*)buff;
-    FILE *file;
+    FILE *file, *file2;
     int ret;
     int len;
 
@@ -1714,6 +1718,22 @@ static void test_fopen_s( void )
             "buff[0]=%02x, buff[1]=%02x, buff[2]=%02x\n",
             ubuff[0], ubuff[1], ubuff[2]);
     fclose(file);
+
+    /* test initial FILE values */
+    memset(file, 0xfe, sizeof(*file));
+    file->_flag = 0;
+    ret = p_fopen_s(&file2, name, "r");
+    ok(!ret, "fopen_s failed with %d\n", ret);
+    ok(file == file2, "file != file2 %p %p\n", file, file2);
+    ok(!file->_ptr, "file->_ptr != NULL\n");
+    ok(!file->_cnt, "file->_cnt != 0\n");
+    ok(!file->_base, "file->_base != NULL\n");
+    ok(file->_flag == 1, "file->_flag = %x\n", file->_flag);
+    ok(file->_file, "file->_file == 0\n");
+    ok(file->_charbuf == 0xfefefefe, "file->_charbuf = %x\n", file->_charbuf);
+    ok(file->_bufsiz == 0xfefefefe, "file->_bufsiz = %x\n", file->_bufsiz);
+    ok(!file->_tmpfname, "file->_tmpfname != NULL\n");
+    fclose(file2);
 
     ok(_unlink(name) == 0, "Couldn't unlink file named '%s'\n", name);
 }
@@ -2219,6 +2239,65 @@ static void test__open_osfhandle(void)
     CloseHandle(tmp);
 }
 
+static void test_write_flush_size(FILE *file, int bufsize)
+{
+    char *inbuffer;
+    char *outbuffer;
+    int size, fd;
+
+    fd = fileno(file);
+    inbuffer = calloc(bufsize + 1, 1);
+    outbuffer = calloc(bufsize + 1, 1);
+    _snprintf(outbuffer, bufsize + 1, "0,1,2,3,4,5,6,7,8,9");
+
+    for (size = bufsize + 1; size >= bufsize - 1; size--) {
+        rewind(file);
+        ok(file->_cnt == 0, "_cnt should be 0 after rewind, but is %d\n", file->_cnt);
+        fwrite(outbuffer, 1, size, file);
+        /* lseek() below intentionally redirects the write in fflush() to detect
+         * if fwrite() has already flushed the whole buffer or not.
+         */
+        lseek(fd, 1, SEEK_SET);
+        fflush(file);
+        ok(file->_cnt == 0, "_cnt should be 0 after fflush, but is %d\n", file->_cnt);
+        fseek(file, 0, SEEK_SET);
+        ok(fread(inbuffer, 1, bufsize, file) == bufsize, "read failed\n");
+        if (size == bufsize)
+            ok(memcmp(outbuffer, inbuffer, bufsize) == 0, "missing flush by %d byte write\n", size);
+        else
+            ok(memcmp(outbuffer, inbuffer, bufsize) != 0, "unexpected flush by %d byte write\n", size);
+    }
+    rewind(file);
+    fwrite(outbuffer, 1, bufsize / 2, file);
+    fwrite(outbuffer + bufsize / 2, 1, bufsize / 2, file);
+    lseek(fd, 1, SEEK_SET);
+    fflush(file);
+    fseek(file, 0, SEEK_SET);
+    ok(fread(inbuffer, 1, bufsize, file) == bufsize, "read failed\n");
+    ok(memcmp(outbuffer, inbuffer, bufsize) != 0, "unexpected flush by %d/2 byte double write\n", bufsize);
+    free(inbuffer);
+    free(outbuffer);
+}
+
+static void test_write_flush(void)
+{
+    char iobuf[1024];
+    char *tempf;
+    FILE *file;
+
+    tempf = _tempnam(".","wne");
+    file = fopen(tempf, "wb+");
+    ok(file != NULL, "unable to create test file\n");
+    iobuf[0] = 0;
+    ok(file->_bufsiz == 4096, "incorrect default buffer size: %d\n", file->_bufsiz);
+    test_write_flush_size(file, file->_bufsiz);
+    setvbuf(file, iobuf, _IOFBF, sizeof(iobuf));
+    test_write_flush_size(file, sizeof(iobuf));
+    fclose(file);
+    unlink(tempf);
+    free(tempf);
+}
+
 START_TEST(file)
 {
     int arg_c;
@@ -2284,6 +2363,7 @@ START_TEST(file)
     test_stdin();
     test_mktemp();
     test__open_osfhandle();
+    test_write_flush();
 
     /* Wait for the (_P_NOWAIT) spawned processes to finish to make sure the report
      * file contains lines in the correct order

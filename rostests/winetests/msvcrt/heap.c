@@ -413,6 +413,49 @@ static void test_aligned(void)
     test_aligned_offset_realloc(256, 128, 64, 112);
 }
 
+static void test_sbheap(void)
+{
+    void *mem;
+    int threshold;
+
+    if(sizeof(void*) == 8) {
+        ok(!_set_sbh_threshold(0), "_set_sbh_threshold succeeded\n");
+        ok(!_set_sbh_threshold(1000), "_set_sbh_threshold succeeded\n");
+        return;
+    }
+
+    mem = malloc(1);
+    ok(mem != NULL, "malloc failed\n");
+
+    ok(_set_sbh_threshold(1), "_set_sbh_threshold failed\n");
+    threshold = _get_sbh_threshold();
+    ok(threshold == 16, "threshold = %d\n", threshold);
+
+    ok(_set_sbh_threshold(8), "_set_sbh_threshold failed\n");
+    threshold = _get_sbh_threshold();
+    ok(threshold == 16, "threshold = %d\n", threshold);
+
+    ok(_set_sbh_threshold(1000), "_set_sbh_threshold failed\n");
+    threshold = _get_sbh_threshold();
+    ok(threshold == 1008, "threshold = %d\n", threshold);
+
+    free(mem);
+
+    mem = malloc(1);
+    ok(mem != NULL, "malloc failed\n");
+    ok(!((UINT_PTR)mem & 0xf), "incorrect alignement (%p)\n", mem);
+
+    mem = realloc(mem, 10);
+    ok(mem != NULL, "realloc failed\n");
+    ok(!((UINT_PTR)mem & 0xf), "incorrect alignement (%p)\n", mem);
+
+    ok(_set_sbh_threshold(0), "_set_sbh_threshold failed\n");
+    threshold = _get_sbh_threshold();
+    ok(threshold == 0, "threshold = %d\n", threshold);
+
+    free(mem);
+}
+
 START_TEST(heap)
 {
     void *mem;
@@ -436,4 +479,5 @@ START_TEST(heap)
     free(mem);
 
     test_aligned();
+    test_sbheap();
 }

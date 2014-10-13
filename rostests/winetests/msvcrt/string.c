@@ -49,13 +49,6 @@ static char *buf_to_string(const unsigned char *bin, int len, int nr)
     return buf[nr];
 }
 
-static void __cdecl test_invalid_parameter_handler(const wchar_t *expression,
-        const wchar_t *function, const wchar_t *file,
-        unsigned line, uintptr_t arg)
-{
-    /* we just ignore handler calls */
-}
-
 #define expect_eq(expr, value, type, format) { type ret = (expr); ok((value) == ret, #expr " expected " format " got " format "\n", value, ret); }
 #define expect_bin(buf, value, len) { ok(memcmp((buf), value, len) == 0, "Binary buffer mismatch - expected %s, got %s\n", buf_to_string((unsigned char *)value, len, 1), buf_to_string((buf), len, 0)); }
 
@@ -67,6 +60,7 @@ static int (__cdecl *pstrcpy_s)(char *dst, size_t len, const char *src);
 static int (__cdecl *pstrcat_s)(char *dst, size_t len, const char *src);
 static int (__cdecl *p_mbsnbcat_s)(unsigned char *dst, size_t size, const unsigned char *src, size_t count);
 static int (__cdecl *p_mbsnbcpy_s)(unsigned char * dst, size_t size, const unsigned char * src, size_t count);
+static int (__cdecl *p__mbscpy_s)(unsigned char*, size_t, const unsigned char*);
 static int (__cdecl *p_wcscpy_s)(wchar_t *wcDest, size_t size, const wchar_t *wcSrc);
 static int (__cdecl *p_wcsncpy_s)(wchar_t *wcDest, size_t size, const wchar_t *wcSrc, size_t count);
 static int (__cdecl *p_wcsncat_s)(wchar_t *dst, size_t elem, const wchar_t *src, size_t count);
@@ -86,7 +80,6 @@ static errno_t (__cdecl *p_strlwr_s)(char*,size_t);
 static errno_t (__cdecl *p_ultoa_s)(__msvcrt_ulong,char*,size_t,int);
 static int *p__mb_cur_max;
 static unsigned char *p_mbctype;
-static _invalid_parameter_handler (__cdecl *p_set_invalid_parameter_handler)(_invalid_parameter_handler);
 static int (__cdecl *p_wcslwr_s)(wchar_t*,size_t);
 static errno_t (__cdecl *p_mbsupr_s)(unsigned char *str, size_t numberOfElements);
 static errno_t (__cdecl *p_mbslwr_s)(unsigned char *str, size_t numberOfElements);
@@ -96,6 +89,7 @@ static int (__cdecl *p_tolower)(int);
 static size_t (__cdecl *p_mbrlen)(const char*, size_t, mbstate_t*);
 static size_t (__cdecl *p_mbrtowc)(wchar_t*, const char*, size_t, mbstate_t*);
 static int (__cdecl *p__atodbl_l)(_CRT_DOUBLE*,char*,_locale_t);
+static int (__cdecl *p__strnset_s)(char*,size_t,int,size_t);
 
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hMsvcrt,y)
 #define SET(x,y) SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y)
@@ -500,7 +494,7 @@ static void test_strcpy_s(void)
 
     if(!pstrcpy_s)
     {
-        skip("strcpy_s not found\n");
+        win_skip("strcpy_s not found\n");
         return;
     }
 
@@ -561,13 +555,9 @@ static void test_memcpy_s(void)
     static const char big[] = {'a','t','o','o','l','o','n','g','s','t','r','i','n','g',0};
     int ret;
     if (!p_memcpy_s) {
-        skip("memcpy_s not found\n");
+        win_skip("memcpy_s not found\n");
         return;
     }
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(test_invalid_parameter_handler) == NULL,
-            "Invalid parameter handler was already set\n");
 
     /* Normal */
     memset(dest, 'X', sizeof(dest));
@@ -612,10 +602,6 @@ static void test_memcpy_s(void)
     ok(ret == EINVAL, "Copying a NULL buffer into a destination of size 0 returned %d, expected EINVAL\n", ret);
     ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
     okchars(dest, 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X');
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
-            "Cannot reset invalid parameter handler\n");
 }
 
 static void test_memmove_s(void)
@@ -625,13 +611,9 @@ static void test_memmove_s(void)
     static const char big[] = {'a','t','o','o','l','o','n','g','s','t','r','i','n','g',0};
     int ret;
     if (!p_memmove_s) {
-        skip("memmove_s not found\n");
+        win_skip("memmove_s not found\n");
         return;
     }
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(test_invalid_parameter_handler) == NULL,
-            "Invalid parameter handler was already set\n");
 
     /* Normal */
     memset(dest, 'X', sizeof(dest));
@@ -682,10 +664,6 @@ static void test_memmove_s(void)
     ok(ret == EINVAL, "Moving a NULL buffer into a destination of size 0 returned %d, expected EINVAL\n", ret);
     ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
     okchars(dest, 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X');
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
-            "Cannot reset invalid parameter handler\n");
 }
 
 static void test_strcat_s(void)
@@ -696,7 +674,7 @@ static void test_strcat_s(void)
 
     if(!pstrcat_s)
     {
-        skip("strcat_s not found\n");
+        win_skip("strcat_s not found\n");
         return;
     }
 
@@ -760,7 +738,7 @@ static void test__mbsnbcpy_s(void)
 
     if(!p_mbsnbcpy_s)
     {
-        skip("_mbsnbcpy_s not found\n");
+        win_skip("_mbsnbcpy_s not found\n");
         return;
     }
 
@@ -798,6 +776,42 @@ static void test__mbsnbcpy_s(void)
        dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
 }
 
+static void test__mbscpy_s(void)
+{
+    const unsigned char src[] = "source string";
+    unsigned char dest[16];
+    int ret;
+
+    if(!p__mbscpy_s)
+    {
+        win_skip("_mbscpy_s not found\n");
+        return;
+    }
+
+    ret = p__mbscpy_s(NULL, 0, src);
+    ok(ret == EINVAL, "got %d\n", ret);
+    ret = p__mbscpy_s(NULL, sizeof(dest), src);
+    ok(ret == EINVAL, "got %d\n", ret);
+    ret = p__mbscpy_s(dest, 0, src);
+    ok(ret == EINVAL, "got %d\n", ret);
+    dest[0] = 'x';
+    ret = p__mbscpy_s(dest, sizeof(dest), NULL);
+    ok(ret == EINVAL, "got %d\n", ret);
+    ok(!dest[0], "dest buffer was not modified on invalid argument\n");
+
+    memset(dest, 'X', sizeof(dest));
+    ret = p__mbscpy_s(dest, sizeof(dest), src);
+    ok(!ret, "got %d\n", ret);
+    ok(!memcmp(dest, src, sizeof(src)), "dest = %s\n", dest);
+    ok(dest[sizeof(src)] == 'X', "unused part of buffer was modified\n");
+
+    memset(dest, 'X', sizeof(dest));
+    ret = p__mbscpy_s(dest, 4, src);
+    ok(ret == ERANGE, "got %d\n", ret);
+    ok(!dest[0], "incorrect dest buffer (%d)\n", dest[0]);
+    ok(dest[1] == src[1], "incorrect dest buffer (%d)\n", dest[1]);
+}
+
 static void test_wcscpy_s(void)
 {
     static const WCHAR szLongText[] = { 'T','h','i','s','A','L','o','n','g','s','t','r','i','n','g',0 };
@@ -810,10 +824,6 @@ static void test_wcscpy_s(void)
         win_skip("wcscpy_s not found\n");
         return;
     }
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(test_invalid_parameter_handler) == NULL,
-            "Invalid parameter handler was already set\n");
 
     /* Test NULL Dest */
     errno = EBADF;
@@ -856,10 +866,6 @@ static void test_wcscpy_s(void)
     if(!p_wcsncpy_s)
     {
         win_skip("wcsncpy_s not found\n");
-
-        if (p_set_invalid_parameter_handler)
-            ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
-                    "Cannot reset invalid parameter handler\n");
         return;
     }
 
@@ -905,10 +911,6 @@ static void test_wcscpy_s(void)
     ok(ret == STRUNCATE, "expected ERROR_SUCCESS got %d\n", ret);
     ok(szDestShort[0]=='1' && szDestShort[1]=='1' && szDestShort[2]=='1' && szDestShort[3]=='1',
             "szDestShort = %s\n", wine_dbgstr_w(szDestShort));
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
-                "Cannot reset invalid parameter handler\n");
 }
 
 static void test__wcsupr_s(void)
@@ -1750,16 +1752,10 @@ static void test_mbstowcs(void)
     ok(wOut[2] == 0, "wOut[2] = %x\n", wOut[2]);
     ok(!pmbstr, "pmbstr != NULL\n");
 
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(test_invalid_parameter_handler) == NULL,
-                "Invalid parameter handler was already set\n");
     errno = EBADF;
     ret = p_mbsrtowcs(wOut, NULL, 6, &state);
     ok(ret == -1, "mbsrtowcs did not return -1\n");
     ok(errno == EINVAL, "Expected errno to be EINVAL, got %d\n", errno);
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
-                "Cannot reset invalid parameter handler\n");
 
     setlocale(LC_ALL, "C");
 }
@@ -1809,10 +1805,6 @@ static void test__itoa_s(void)
         win_skip("Skipping _itoa_s tests\n");
         return;
     }
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(test_invalid_parameter_handler) == NULL,
-                "Invalid parameter handler was already set\n");
 
     errno = EBADF;
     ret = p_itoa_s(0, NULL, 0, 0);
@@ -1897,10 +1889,6 @@ static void test__itoa_s(void)
     itoa(100, buffer, 100);
     ok(!strcmp(buffer, "10"),
             "Expected output buffer string to be \"10\", got \"%s\"\n", buffer);
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
-                "Cannot reset invalid parameter handler\n");
 }
 
 static void test__strlwr_s(void)
@@ -1973,10 +1961,6 @@ static void test_wcsncat_s(void)
         return;
     }
 
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(test_invalid_parameter_handler) == NULL,
-                "Invalid parameter handler was already set\n");
-
     memcpy(src, abcW, sizeof(abcW));
     dst[0] = 0;
     ret = p_wcsncat_s(NULL, 4, src, 4);
@@ -2001,10 +1985,6 @@ static void test_wcsncat_s(void)
     dst[3] = 'd';
     ret = p_wcsncat_s(dst, 4, src, 4);
     ok(ret == EINVAL, "err = %d\n", ret);
-
-    if (p_set_invalid_parameter_handler)
-        ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
-                "Cannot reset invalid parameter handler\n");
 }
 
 static void test__mbsnbcat_s(void)
@@ -2568,6 +2548,8 @@ static void test__stricmp(void)
     ok(ret > 0, "_stricmp returned %d\n", ret);
     ret = _stricmp("\xa5", "\xb9");
     ok(ret == 0, "_stricmp returned %d\n", ret);
+    ret = _stricmp("a", "\xb9");
+    ok(ret < 0, "_stricmp returned %d\n", ret);
 
     setlocale(LC_ALL, "C");
 }
@@ -2670,6 +2652,103 @@ static void test_strncpy(void)
     ok(!strncmp(dst, "0123456789", TEST_STRNCPY_LEN), "dst != 0123456789\n");
 }
 
+static void test_strxfrm(void)
+{
+    char dest[256];
+    size_t ret;
+
+    /* crashes on old version of msvcrt */
+    if(p__atodbl_l) {
+        errno = 0xdeadbeef;
+        ret = strxfrm(NULL, "src", 1);
+        ok(ret == INT_MAX, "ret = %d\n", (int)ret);
+        ok(errno == EINVAL, "errno = %d\n", errno);
+
+        errno = 0xdeadbeef;
+        ret = strxfrm(dest, NULL, 100);
+        ok(ret == INT_MAX, "ret = %d\n", (int)ret);
+        ok(errno == EINVAL, "errno = %d\n", errno);
+    }
+
+    ret = strxfrm(NULL, "src", 0);
+    ok(ret == 3, "ret = %d\n", (int)ret);
+    dest[0] = 'a';
+    ret = strxfrm(dest, "src", 0);
+    ok(ret == 3, "ret = %d\n", (int)ret);
+    ok(dest[0] == 'a', "dest[0] = %d\n", dest[0]);
+
+    dest[3] = 'a';
+    ret = strxfrm(dest, "src", 5);
+    ok(ret == 3, "ret = %d\n", (int)ret);
+    ok(!strcmp(dest, "src"), "dest = %s\n", dest);
+
+    errno = 0xdeadbeef;
+    dest[1] = 'a';
+    ret = strxfrm(dest, "src", 1);
+    ok(ret == 3, "ret = %d\n", (int)ret);
+    ok(dest[0] == 's', "dest[0] = %d\n", dest[0]);
+    ok(dest[1] == 'a', "dest[1] = %d\n", dest[1]);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+
+    ret = strxfrm(dest, "", 5);
+    ok(ret == 0, "ret = %d\n", (int)ret);
+    ok(!dest[0], "dest[0] = %d\n", dest[0]);
+
+    if(!setlocale(LC_ALL, "polish")) {
+        win_skip("stxfrm tests\n");
+        return;
+    }
+
+    ret = strxfrm(NULL, "src", 0);
+    ok(ret < sizeof(dest)-1, "ret = %d\n", (int)ret);
+    dest[0] = 'a';
+    ret = strxfrm(dest, "src", 0);
+    ok(ret < sizeof(dest)-1, "ret = %d\n", (int)ret);
+    ok(dest[0] == 'a', "dest[0] = %d\n", dest[0]);
+
+    ret = strxfrm(dest, "src", ret+1);
+    ok(ret < sizeof(dest)-1, "ret = %d\n", (int)ret);
+    ok(dest[0], "dest[0] = 0\n");
+
+    errno = 0xdeadbeef;
+    dest[0] = 'a';
+    ret = strxfrm(dest, "src", 5);
+    ok(ret>5 && ret<sizeof(dest)-1, "ret = %d\n", (int)ret);
+    ok(!dest[0] || broken(!p__atodbl_l && dest[0]=='a'), "dest[0] = %d\n", dest[0]);
+
+    setlocale(LC_ALL, "C");
+}
+
+static void test__strnset_s(void)
+{
+    char buf[5] = {0};
+    int r;
+
+    if(!p__strnset_s) {
+        win_skip("_strnset_s not available\n");
+        return;
+    }
+
+    r = p__strnset_s(NULL, 0, 'a', 0);
+    ok(r == 0, "r = %d\n", r);
+
+    buf[0] = buf[1] = buf[2] = 'b';
+    r = p__strnset_s(buf, sizeof(buf), 'a', 2);
+    ok(r == 0, "r = %d\n", r);
+    ok(!strcmp(buf, "aab"), "buf = %s\n", buf);
+
+    r = p__strnset_s(buf, 0, 'a', 0);
+    ok(r == EINVAL, "r = %d\n", r);
+
+    r = p__strnset_s(NULL, 0, 'a', 1);
+    ok(r == EINVAL, "r = %d\n", r);
+
+    buf[3] = 'b';
+    r = p__strnset_s(buf, sizeof(buf)-1, 'c', 2);
+    ok(r == EINVAL, "r = %d\n", r);
+    ok(!buf[0] && buf[1]=='c' && buf[2]=='b', "buf = %s\n", buf);
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -2690,6 +2769,7 @@ START_TEST(string)
     pstrcat_s = (void *)GetProcAddress( hMsvcrt,"strcat_s" );
     p_mbsnbcat_s = (void *)GetProcAddress( hMsvcrt,"_mbsnbcat_s" );
     p_mbsnbcpy_s = (void *)GetProcAddress( hMsvcrt,"_mbsnbcpy_s" );
+    p__mbscpy_s = (void *)GetProcAddress( hMsvcrt,"_mbscpy_s" );
     p_wcscpy_s = (void *)GetProcAddress( hMsvcrt,"wcscpy_s" );
     p_wcsncpy_s = (void *)GetProcAddress( hMsvcrt,"wcsncpy_s" );
     p_wcsncat_s = (void *)GetProcAddress( hMsvcrt,"wcsncat_s" );
@@ -2706,7 +2786,6 @@ START_TEST(string)
     p_itoa_s = (void *)GetProcAddress(hMsvcrt, "_itoa_s");
     p_strlwr_s = (void *)GetProcAddress(hMsvcrt, "_strlwr_s");
     p_ultoa_s = (void *)GetProcAddress(hMsvcrt, "_ultoa_s");
-    p_set_invalid_parameter_handler = (void *) GetProcAddress(hMsvcrt, "_set_invalid_parameter_handler");
     p_wcslwr_s = (void*)GetProcAddress(hMsvcrt, "_wcslwr_s");
     p_mbsupr_s = (void*)GetProcAddress(hMsvcrt, "_mbsupr_s");
     p_mbslwr_s = (void*)GetProcAddress(hMsvcrt, "_mbslwr_s");
@@ -2717,6 +2796,7 @@ START_TEST(string)
     p_mbrtowc = (void*)GetProcAddress(hMsvcrt, "mbrtowc");
     p_mbsrtowcs = (void*)GetProcAddress(hMsvcrt, "mbsrtowcs");
     p__atodbl_l = (void*)GetProcAddress(hMsvcrt, "_atodbl_l");
+    p__strnset_s = (void*)GetProcAddress(hMsvcrt, "_strnset_s");
 
     /* MSVCRT memcpy behaves like memmove for overlapping moves,
        MFC42 CString::Insert seems to rely on that behaviour */
@@ -2738,6 +2818,7 @@ START_TEST(string)
     test_memmove_s();
     test_strcat_s();
     test__mbsnbcpy_s();
+    test__mbscpy_s();
     test_mbcjisjms();
     test_mbcjmsjis();
     test_mbbtombc();
@@ -2768,4 +2849,6 @@ START_TEST(string)
     test__wcstoi64();
     test_atoi();
     test_strncpy();
+    test_strxfrm();
+    test__strnset_s();
 }

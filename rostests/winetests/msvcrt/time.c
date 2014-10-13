@@ -47,6 +47,7 @@ static errno_t    (__cdecl *p_localtime64_s)(struct tm*, __time64_t*);
 static int*       (__cdecl *p__daylight)(void);
 static int*       (__cdecl *p___p__daylight)(void);
 static long*      (__cdecl *p___p__dstbias)(void);
+static long*      (__cdecl *p__dstbias)(void);
 static long*      (__cdecl *p___p__timezone)(void);
 static size_t     (__cdecl *p_strftime)(char *, size_t, const char *, const struct tm *);
 static size_t     (__cdecl *p_wcsftime)(wchar_t *, size_t, const wchar_t *, const struct tm *);
@@ -67,6 +68,7 @@ static void init(void)
     p__daylight = (void*)GetProcAddress(hmod, "__daylight");
     p___p__daylight = (void*)GetProcAddress(hmod, "__p__daylight");
     p___p__dstbias = (void*)GetProcAddress(hmod, "__p__dstbias");
+    p__dstbias = (void*)GetProcAddress(hmod, "__dstbias");
     p___p__timezone = (void*)GetProcAddress(hmod, "__p__timezone");
     p_strftime = (void*)GetProcAddress(hmod, "strftime");
     p_wcsftime = (void*)GetProcAddress(hmod, "wcsftime");
@@ -820,6 +822,15 @@ static void test__tzset(void)
         win_skip("__p__daylight, __p__timezone or __p__dstbias is not available\n");
         return;
     }
+
+    if (p__dstbias) {
+        ret = *p__dstbias();
+        ok(ret == -3600, "*__dstbias() = %d\n", ret);
+        ret = *p___p__dstbias();
+        ok(ret == -3600, "*__p__dstbias() = %d\n", ret);
+    }
+    else
+        win_skip("__dstbias() is not available.\n");
 
     _snprintf(TZ_env,255,"TZ=%s",(getenv("TZ")?getenv("TZ"):""));
 
