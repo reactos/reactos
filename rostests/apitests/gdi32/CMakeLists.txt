@@ -22,6 +22,7 @@ list(APPEND SOURCE
     EngCreateSemaphore.c
     EngDeleteSemaphore.c
     EngReleaseSemaphore.c
+    EnumFontFamilies.c
     ExcludeClipRect.c
     ExtCreatePen.c
     GdiConvertBitmap.c

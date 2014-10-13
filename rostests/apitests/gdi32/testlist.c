@@ -23,6 +23,7 @@ extern void func_EngAcquireSemaphore(void);
 extern void func_EngCreateSemaphore(void);
 extern void func_EngDeleteSemaphore(void);
 extern void func_EngReleaseSemaphore(void);
+extern void func_EnumFontFamilies(void);
 extern void func_ExcludeClipRect(void);
 extern void func_ExtCreatePen(void);
 extern void func_GdiConvertBitmap(void);
@@ -85,6 +86,7 @@ const struct test winetest_testlist[] =
     { "EngCreateSemaphore", func_EngCreateSemaphore },
     { "EngDeleteSemaphore", func_EngDeleteSemaphore },
     { "EngReleaseSemaphore", func_EngReleaseSemaphore },
+    { "EnumFontFamilies", func_EnumFontFamilies },
     { "ExcludeClipRect", func_ExcludeClipRect },
     { "ExtCreatePen", func_ExtCreatePen },
     { "GdiConvertBitmap", func_GdiConvertBitmap },
