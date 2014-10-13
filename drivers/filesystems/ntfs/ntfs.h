@@ -108,43 +108,6 @@ typedef struct
 
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, NTFS_VCB, *PNTFS_VCB;
 
-
-#define FCB_CACHE_INITIALIZED   0x0001
-#define FCB_IS_VOLUME_STREAM    0x0002
-#define FCB_IS_VOLUME           0x0004
-#define MAX_PATH                260
-
-typedef struct _FCB
-{
-    NTFSIDENTIFIER Identifier;
-
-    FSRTL_COMMON_FCB_HEADER RFCB;
-    SECTION_OBJECT_POINTERS SectionObjectPointers;
-
-    PFILE_OBJECT FileObject;
-    PNTFS_VCB Vcb;
-
-    WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
-    WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
-
-    ERESOURCE PagingIoResource;
-    ERESOURCE MainResource;
-
-    LIST_ENTRY FcbListEntry;
-    struct _FCB* ParentFcb;
-
-    ULONG DirIndex;
-
-    LONG RefCount;
-    ULONG Flags;
-
-    ULONGLONG MFTIndex;
-
-//  DIR_RECORD Entry;
-
-} NTFS_FCB, *PNTFS_FCB;
-
-
 typedef struct
 {
     NTFSIDENTIFIER Identifier;
@@ -224,6 +187,13 @@ typedef enum
 #define NTFS_FILE_NAME_WIN32            1
 #define NTFS_FILE_NAME_DOS            2
 #define NTFS_FILE_NAME_WIN32_AND_DOS        3
+
+#define NTFS_FILE_TYPE_READ_ONLY  0x1
+#define NTFS_FILE_TYPE_HIDDEN     0x2
+#define NTFS_FILE_TYPE_SYSTEM     0x4
+#define NTFS_FILE_TYPE_ARCHIVE    0x20
+#define NTFS_FILE_TYPE_COMPRESSED 0x800
+#define NTFS_FILE_TYPE_DIRECTORY  0x10000000
 
 typedef struct
 {
@@ -414,6 +384,41 @@ typedef struct _NTFS_ATTR_CONTEXT
     NTFS_ATTR_RECORD    Record;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
+#define FCB_CACHE_INITIALIZED   0x0001
+#define FCB_IS_VOLUME_STREAM    0x0002
+#define FCB_IS_VOLUME           0x0004
+#define MAX_PATH                260
+
+typedef struct _FCB
+{
+    NTFSIDENTIFIER Identifier;
+
+    FSRTL_COMMON_FCB_HEADER RFCB;
+    SECTION_OBJECT_POINTERS SectionObjectPointers;
+
+    PFILE_OBJECT FileObject;
+    PNTFS_VCB Vcb;
+
+    WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
+    WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
+
+    ERESOURCE PagingIoResource;
+    ERESOURCE MainResource;
+
+    LIST_ENTRY FcbListEntry;
+    struct _FCB* ParentFcb;
+
+    ULONG DirIndex;
+
+    LONG RefCount;
+    ULONG Flags;
+
+    ULONGLONG MFTIndex;
+
+    FILENAME_ATTRIBUTE Entry;
+
+} NTFS_FCB, *PNTFS_FCB;
+
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
 //int CdfsStrcmpi( wchar_t *str1, wchar_t *str2 );
@@ -433,6 +438,8 @@ DecodeRun(PUCHAR DataRun,
 VOID
 NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 
+PFILENAME_ATTRIBUTE
+GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord);
 
 /* blockdev.c */
 
@@ -462,6 +469,10 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 
 
 /* close.c */
+
+NTSTATUS
+NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
+              PFILE_OBJECT FileObject);
 
 DRIVER_DISPATCH NtfsFsdClose;
 NTSTATUS NTAPI
@@ -632,13 +643,15 @@ NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
                PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext);
+               PNTFS_ATTR_CONTEXT *DataContext,
+               PULONGLONG MFTIndex);
 
 NTSTATUS
 NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
                  PFILE_RECORD_HEADER *FileRecord,
                  PNTFS_ATTR_CONTEXT *DataContext,
+                 PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex);
 
 /* misc.c */

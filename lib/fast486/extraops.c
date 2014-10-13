@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * extraops.c
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -2267,9 +2267,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeXadd)
         ULONG Source, Destination, Result;
 
         if (!Fast486ReadModrmDwordOperands(State,
-                                          &ModRegRm,
-                                          &Source,
-                                          &Destination))
+                                           &ModRegRm,
+                                           &Source,
+                                           &Destination))
         {
             /* Exception occurred */
             return FALSE;
@@ -2385,3 +2385,4 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeExtended)
     }
 }
 
+/* EOF */

@@ -14,6 +14,7 @@ list(APPEND SOURCE
     datalink/lan.c
     tcpip/ainfo.c
     tcpip/buffer.c
+    tcpip/cinfo.c
     tcpip/dispatch.c
     tcpip/fileobjs.c
     tcpip/iinfo.c

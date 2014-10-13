@@ -587,6 +587,16 @@ void __ud2(void);
 #if (_MSC_VER >= 1700)
 __declspec(noreturn) void __fastfail(unsigned int Code);
 #pragma intrinsic(__fastfail)
+#else
+__declspec(noreturn) __forceinline
+void __fastfail(unsigned int Code)
+{
+    __asm
+    {
+        mov ecx, Code
+        int 29h
+    }
+}
 #endif
 #endif
 #if defined(_M_ARM)

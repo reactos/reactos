@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * opgroups.c
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,8 +32,8 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-inline
 static
+inline
 ULONG
 Fast486ArithmeticOperation(PFAST486_STATE State,
                            INT Operation,

@@ -30,7 +30,11 @@ set_subsystem(ntoskrnl native)
 if(MSVC)
     set_image_base(ntoskrnl 0x00400000)
 else()
-    set_image_base(ntoskrnl 0x00800000)
+    if(GDB)
+        set_image_base(ntoskrnl 0x00800000)
+    else()
+        set_image_base(ntoskrnl 0x80800000)
+    endif()
 endif()
 
 target_link_libraries(ntoskrnl
@@ -43,6 +47,10 @@ target_link_libraries(ntoskrnl
     libcntpr
     wdmguid
     ioevent)
+
+if(STACK_PROTECTOR)
+    target_link_libraries(ntoskrnl gcc_ssp)
+endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
 add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h NTOSKRNL_SOURCE)

@@ -19,11 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-
 #pragma code_page(65001)
 
-/* Menu */
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 MAIN_MENU MENU
 {
@@ -44,12 +42,6 @@ MAIN_MENU MENU
    MENUITEM "&Definieren...", MNID_BKMK_DEFINE
  }
  POPUP "&Optionen" {
-   POPUP	"Hilfe ist immmer sichtbar"
-   BEGIN
-     MENUITEM "Standart",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Sichtbar",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Nicht sichtbar",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Verlauf",		MNID_OPTS_HISTORY
   POPUP    "Textgröße"
   BEGIN
@@ -57,33 +49,29 @@ MAIN_MENU MENU
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Groß",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Systemfarben verwenden",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Hilfe" {
    MENUITEM "&Hilfe benutzen", MNID_HELP_HELPON
    MENUITEM "Immer im &Vordergrund", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Index"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
-
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Suche"
-{
-    LTEXT  "Noch nicht implementiert", -1, 10, 10, 180, 150
-}
-
-/* Strings */
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Anmerken...",         MNID_CTXT_ANNOTATE
+		MENUITEM "Kopieren",            MNID_CTXT_COPY
+		MENUITEM "Drucken...",          MNID_CTXT_PRINT
+		POPUP    "Schriftgröße"
+		BEGIN
+			MENUITEM "Klein",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Groß",        MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
 STRINGTABLE
 {
@@ -103,25 +91,18 @@ STID_NO_RICHEDIT	"Die Richedit Implementation konnte nicht gefunden werden... Br
 STID_PSH_INDEX,		"Hilfethemen: "
 }
 
-CONTEXT_MENU MENU
-BEGIN
-POPUP ""
-BEGIN
-MENUITEM "Anmerken...",       MNID_CTXT_ANNOTATE
-MENUITEM "Kopieren",                MNID_CTXT_COPY
-MENUITEM "Drucken...",            MNID_CTXT_PRINT
-POPUP    "Schriftgröße"
-BEGIN
-MENUITEM "Klein",       MNID_CTXT_FONTS_SMALL
-MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
-MENUITEM "Groß",       MNID_CTXT_FONTS_LARGE
-END
-POPUP   "Hilfe immer sichtbar"
-BEGIN
-MENUITEM "Standard",     MNID_CTXT_HELP_DEFAULT
-MENUITEM "Sichtbar",     MNID_CTXT_HELP_VISIBLE
-MENUITEM "Nicht sichtbar", MNID_CTXT_HELP_NONVISIBLE
-END
-MENUITEM "Systemfarben verwenden",   MNID_CTXT_SYSTEM_COLORS
-END
-END
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Suche"
+{
+    LTEXT  "Noch nicht implementiert", -1, 10, 10, 180, 150
+}

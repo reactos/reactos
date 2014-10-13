@@ -520,7 +520,7 @@ BOOL
 QueryEventMessages(LPWSTR lpMachineName,
                    LPWSTR lpLogName)
 {
-    HWND hwndDlg;
+    HWND hwndDlg = NULL;
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 0, dwRecordsToRead = 0, dwFlags, dwMaxLength;
@@ -599,7 +599,7 @@ QueryEventMessages(LPWSTR lpMachineName,
 
     while (dwCurrentRecord < dwTotalRecords)
     {
-        pevlr = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTLOGRECORD) * dwTotalRecords);
+        pevlr = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTLOGRECORD));
         g_RecordPtrs[dwCurrentRecord] = pevlr;
 
         bResult = ReadEventLog(hEventLog,  // Event log handle
@@ -713,7 +713,8 @@ QueryEventMessages(LPWSTR lpMachineName,
     }
 
     // All events loaded
-    EndDialog(hwndDlg, 0);
+    if(hwndDlg)
+        EndDialog(hwndDlg, 0);
 
     StringCchPrintfExW(szWindowTitle,
                        sizeof(szWindowTitle) / sizeof(WCHAR),

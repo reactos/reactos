@@ -5,14 +5,14 @@
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Sintaksa e kësaj komande është:\n\nREG [ ADD | DELETE | QUERY ]\nREG Komandë /?\n"
-    STRING_ADD_USAGE "REG ADD emri_çelsit [/v value_name | /ve] [/t tipi] [/s ndares] [/d data] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE emri_çelsit [/v value_name | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY emri_çelsit [/v value_name | /ve] [/s]\n"
-    STRING_SUCCESS "Operacioni përfundoi me sukses\n"
-    STRING_INVALID_KEY "Error: Çelsi i pavlerfshem i emrit\n"
-    STRING_INVALID_CMDLINE "Error: Parametrat e pavlefshme ne vijën komanduse\n"
-    STRING_NO_REMOTE "Error: Në pamundësi për të shtuar çelësat në makinë në distancë\n"
-    STRING_CANNOT_FIND "Error: Sistemi nuk ishte në gjendje për të gjetur çelësat të caktuar të regjistrit ose vlerës\n"
-END
+{
+    STRING_USAGE, "Sintaksa e kësaj komande është:\n\nREG [ ADD | DELETE | QUERY ]\nREG Komandë /?\n"
+    STRING_ADD_USAGE, "REG ADD emri_çelsit [/v value_name | /ve] [/t tipi] [/s ndares] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE emri_çelsit [/v value_name | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY emri_çelsit [/v value_name | /ve] [/s]\n"
+    STRING_SUCCESS, "Operacioni përfundoi me sukses\n"
+    STRING_INVALID_KEY, "Error: Çelsi i pavlerfshem i emrit\n"
+    STRING_INVALID_CMDLINE, "Error: Parametrat e pavlefshme ne vijën komanduse\n"
+    STRING_NO_REMOTE, "Error: Në pamundësi për të shtuar çelësat në makinë në distancë\n"
+    STRING_CANNOT_FIND, "Error: Sistemi nuk ishte në gjendje për të gjetur çelësat të caktuar të regjistrit ose vlerës\n"
+}

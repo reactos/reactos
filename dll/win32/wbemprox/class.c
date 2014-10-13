@@ -498,23 +498,30 @@ static HRESULT WINAPI class_object_Next(
     CIMTYPE *pType,
     LONG *plFlavor )
 {
-    struct class_object *co = impl_from_IWbemClassObject( iface );
-    struct enum_class_object *ec = impl_from_IEnumWbemClassObject( co->iter );
-    struct view *view = ec->query->view;
-    BSTR property;
+    struct class_object *obj = impl_from_IWbemClassObject( iface );
+    struct enum_class_object *iter = impl_from_IEnumWbemClassObject( obj->iter );
+    struct view *view = iter->query->view;
+    BSTR prop;
     HRESULT hr;
+    UINT i;
 
     TRACE("%p, %08x, %p, %p, %p, %p\n", iface, lFlags, strName, pVal, pType, plFlavor);
 
-    if (!(property = get_property_name( co->name, co->index_property ))) return WBEM_S_NO_MORE_DATA;
-    if ((hr = get_propval( view, co->index, property, pVal, pType, plFlavor )) != S_OK)
+    for (i = obj->index_property; i < view->table->num_cols; i++)
     {
-        SysFreeString( property );
-        return hr;
+        if (is_method( view->table, i )) continue;
+        if (!is_selected_prop( view, view->table->columns[i].name )) continue;
+        if (!(prop = SysAllocString( view->table->columns[i].name ))) return E_OUTOFMEMORY;
+        if ((hr = get_propval( view, obj->index, prop, pVal, pType, plFlavor )) != S_OK)
+        {
+            SysFreeString( prop );
+            return hr;
+        }
+        obj->index_property = i + 1;
+        *strName = prop;
+        return S_OK;
     }
-    *strName = property;
-    co->index_property++;
-    return S_OK;
+    return WBEM_S_NO_MORE_DATA;
 }
 
 static HRESULT WINAPI class_object_EndEnumeration(

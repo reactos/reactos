@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2004 by Krzysztof Foltman
  * Copyright 2006,2007 by YunSong Hwang
  *
@@ -16,8 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#include "wordpad.h"
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
@@ -49,7 +47,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "찾기(&F)...\tCtrl+F",         ID_FIND
         MENUITEM "다음 찾기(&N)\tF3",              ID_FIND_NEXT
-	MENUITEM " 바꾸기(&R)...\tCtrl+H",      ID_REPLACE
+        MENUITEM " 바꾸기(&R)...\tCtrl+H",      ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "읽기 전용(&O)",                  ID_EDIT_READONLY
         MENUITEM "수정 가능(&M)",                   ID_EDIT_MODIFIED
@@ -78,7 +76,7 @@ BEGIN
     END
     POPUP "형식(&O)"
     BEGIN
-	MENUITEM "글꼴(&F)...",                  ID_FONTSETTINGS
+        MENUITEM "글꼴(&F)...",                  ID_FONTSETTINGS
         MENUITEM "강조 점(&U)",               ID_BULLET
         MENUITEM "단락(&P)...",             ID_PARAFORMAT
         MENUITEM "탭(&T)...",                  ID_TABSTOPS
@@ -131,89 +129,17 @@ BEGIN
     END
 END
 
-IDD_DATETIME DIALOG 30, 20, 130, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "날짜와 시간"
-FONT 10, "MS Shell Dlg"
-BEGIN
-    LTEXT        "가능한 형식",-1,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
-    PUSHBUTTON   "확인(&O)",IDOK,87,12,40,12
-    PUSHBUTTON   "취소(&C)",IDCANCEL,87,26,40,12
-END
-
-IDD_NEWFILE DIALOG 30, 20, 140, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "새 문서"
-FONT 10, "MS Shell Dlg"
-BEGIN
-    LTEXT        "새 문서 형식",-1,3,2,100,15
-    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
-    PUSHBUTTON   "확인(&O)",IDOK,97,12,40,12
-    PUSHBUTTON   "취소(&C)",IDCANCEL,97,26,40,12
-END
-
-IDD_PARAFORMAT DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "단락 형식"
-FONT 9, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "들여쓰기", -1, 10, 10, 120, 68
-    LTEXT "왼쪽", -1, 15, 22, 40, 13
-    EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "오른쪽", -1, 15, 40, 40, 13
-    EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "첫째 줄", -1, 15, 58, 40, 13
-    EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "정렬", -1, 15, 87, 40, 13
-    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
-    PUSHBUTTON "확인(&O)", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "취소(&C)", IDCANCEL, 137, 33, 50, 15
-END
-
-IDD_TABSTOPS DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "탭"
-FONT 9, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "탭 정지", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
-    DEFPUSHBUTTON "더하기(&A)", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "지우기(&R)", ID_TAB_DEL, 72, 80, 45, 15
-    PUSHBUTTON "확인(&O)", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "취소(&C)", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "모두 지우기(&L)", ID_TAB_EMPTY, 137, 51, 50, 15
-END
-
-IDD_FORMATOPTS DIALOG 0, 0, 280, 110
-STYLE DS_SYSMODAL
-CAPTION ""
-FONT 9, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "줄 넘기기", -1, 10, 10, 130, 85
-    RADIOBUTTON "줄넘기지 않음", IDC_PAGEFMT_WN, 18, 25, 117, 15
-    RADIOBUTTON "창 가장자리서  글 넘기기(&W)", IDC_PAGEFMT_WW, 18, 45, 117, 15
-    RADIOBUTTON "가장자리에서 줄 넘기기(&M)", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX " 도구바", -1, 150, 10, 120, 85
-    CHECKBOX "도구바(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
-    CHECKBOX "형식바(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "길이바(&R)", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "상태바(&S)", IDC_PAGEFMT_SB, 160, 74, 80, 15
-    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
-END
-
 STRINGTABLE
 BEGIN
-	STRING_ALL_FILES,              "모든 문서 (*.*)"
-	STRING_TEXT_FILES_TXT,         "텍스트 파일 (*.txt)"
-	STRING_TEXT_FILES_UNICODE_TXT, "유니코드 텍스트 문서 (*.txt)"
-	STRING_RICHTEXT_FILES_RTF,     "리치 텍스트 파일형식 (*.rtf)"
-	STRING_NEWFILE_RICHTEXT,       "리치 텍스트 문서"
-	STRING_NEWFILE_TXT,            "텍스트 문서"
-	STRING_NEWFILE_TXT_UNICODE,    "유니코드 텍스트 문서"
-	STRING_PRINTER_FILES_PRN,      "프린터 파일 (*.PRN)"
+    STRING_ALL_FILES,              "모든 문서 (*.*)"
+    STRING_TEXT_FILES_TXT,         "텍스트 파일 (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "유니코드 텍스트 문서 (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "리치 텍스트 파일형식 (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "리치 텍스트 문서"
+    STRING_NEWFILE_TXT,            "텍스트 문서"
+    STRING_NEWFILE_TXT_UNICODE,    "유니코드 텍스트 문서"
+    STRING_PRINTER_FILES_PRN,      "프린터 파일 (*.PRN)"
 END
-
 
 STRINGTABLE
 BEGIN
@@ -260,6 +186,77 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,       "파일을 저장할 권한이 없습니다."
     STRING_OPEN_FAILED,               "파일을 열 수 없습니다."
     STRING_OPEN_ACCESS_DENIED,        "파일을 열 권한이 없습니다."
-    STRING_PRINTING_NOT_IMPLEMENTED, "인쇄는 지원되지 않습니다"
+    STRING_PRINTING_NOT_IMPLEMENTED,  "인쇄는 지원되지 않습니다"
     STRING_MAX_TAB_STOPS,             " 탭중지는 32개 이상 추가 할 수 없습니다."
+END
+
+IDD_DATETIME DIALOG 30, 20, 130, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "날짜와 시간"
+FONT 10, "MS Shell Dlg"
+BEGIN
+    LTEXT        "가능한 형식",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "확인(&O)",IDOK,87,12,40,12
+    PUSHBUTTON   "취소(&C)",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOG 30, 20, 140, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "새 문서"
+FONT 10, "MS Shell Dlg"
+BEGIN
+    LTEXT        "새 문서 형식",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "확인(&O)",IDOK,97,12,40,12
+    PUSHBUTTON   "취소(&C)",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOG 30, 20, 220, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "단락 형식"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "들여쓰기", -1, 10, 10, 140, 68
+    LTEXT "왼쪽", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "오른쪽", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "첫째 줄", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "정렬", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "확인(&O)", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "취소(&C)", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOG 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "탭"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "탭 정지", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "더하기(&A)", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "지우기(&R)", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "확인(&O)", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "취소(&C)", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "모두 지우기(&L)", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOG 0, 0, 280, 110
+STYLE DS_SYSMODAL
+CAPTION ""
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "줄 넘기기", -1, 5, 10, 145, 85
+    RADIOBUTTON "줄넘기지 않음", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "창 가장자리서  글 넘기기(&W)", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "가장자리에서 줄 넘기기(&M)", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "도구바", -1, 155, 10, 115, 85
+    CHECKBOX "도구바(&T)", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "형식바(&F)", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "길이바(&R)", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "상태바(&S)", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END

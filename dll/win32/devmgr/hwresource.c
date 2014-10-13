@@ -9,8 +9,6 @@
 
 #include "precomp.h"
 
-#define NDEBUG
-#include <debug.h>
 
 typedef struct
 {
@@ -280,7 +278,7 @@ AddResourceItems(
          {
              if (LoadString(hDllInstance, IDS_RESOURCE_INTERRUPT, szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])))
              {
-                 wsprintf(szDetail, L"0x%08x(%d)", Descriptor->u.Interrupt.Level, Descriptor->u.Interrupt.Vector);
+                 wsprintf(szDetail, L"0x%08x (%d)", Descriptor->u.Interrupt.Level, Descriptor->u.Interrupt.Vector);
                  InsertListItem(hWndDevList, ItemCount, szBuffer, szDetail);
                  ItemCount++;
              }

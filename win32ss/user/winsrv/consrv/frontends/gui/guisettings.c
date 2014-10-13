@@ -83,9 +83,8 @@ GuiConsoleReadUserSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
 
         if (!wcscmp(szValueName, L"FaceName"))
         {
-            SIZE_T Length = min(wcslen(szValue) + 1, LF_FACESIZE); // wcsnlen
             wcsncpy(TermInfo->FaceName, szValue, LF_FACESIZE);
-            TermInfo->FaceName[Length] = L'\0';
+            TermInfo->FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"FontFamily"))
@@ -323,9 +322,8 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         /* GUI Information */
         pSharedInfo->TerminalInfo.Size = sizeof(GUI_CONSOLE_INFO);
         GuiInfo = pSharedInfo->TerminalInfo.TermInfo = (PGUI_CONSOLE_INFO)(pSharedInfo + 1);
-        Length = min(wcslen(GuiData->GuiInfo.FaceName) + 1, LF_FACESIZE); // wcsnlen
         wcsncpy(GuiInfo->FaceName, GuiData->GuiInfo.FaceName, LF_FACESIZE);
-        GuiInfo->FaceName[Length] = L'\0';
+        GuiInfo->FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
         GuiInfo->FontFamily = GuiData->GuiInfo.FontFamily;
         GuiInfo->FontSize   = GuiData->GuiInfo.FontSize;
         GuiInfo->FontWeight = GuiData->GuiInfo.FontWeight;
@@ -573,7 +571,9 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
     PCONSOLE_STATE_INFO pConInfo = NULL;
     CONSOLE_INFO     ConInfo;
     GUI_CONSOLE_INFO GuiInfo;
+#if 0
     SIZE_T Length;
+#endif
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -649,9 +649,8 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
 
 
         // Terminal information
-        Length = min(wcslen(pConInfo->FaceName) + 1, LF_FACESIZE); // wcsnlen
         wcsncpy(GuiInfo.FaceName, pConInfo->FaceName, LF_FACESIZE);
-        GuiInfo.FaceName[Length] = L'\0';
+        GuiInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
 
         GuiInfo.FontFamily = pConInfo->FontFamily;
         GuiInfo.FontSize = pConInfo->FontSize;

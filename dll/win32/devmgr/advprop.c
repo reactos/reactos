@@ -31,8 +31,6 @@
 
 #include <winver.h>
 
-#define NDEBUG
-#include <debug.h>
 
 static UINT WINAPI
 EnumDeviceDriverFilesCallback(IN PVOID Context,
@@ -401,13 +399,6 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
     return Ret;
 }
 
-BOOL
-WINAPI
-DevInstallW(
-    IN HWND hWndParent,
-    IN HINSTANCE hInstance,
-    IN LPCWSTR InstanceId,
-    IN INT Show);
 
 static
 VOID
@@ -417,6 +408,7 @@ UpdateDriver(
 {
     TOKEN_PRIVILEGES Privileges;
     HANDLE hToken;
+    DWORD dwReboot;
     BOOL NeedReboot = FALSE;
 
     // Better use InstallDevInst:
@@ -428,7 +420,8 @@ UpdateDriver(
     //         BOOL bUpdate,
     //         DWORD *dwReboot);
     // See: http://comp.os.ms-windows.programmer.win32.narkive.com/J8FTd4KK/signature-of-undocumented-installdevinstex
-    if (!DevInstallW(hwndDlg, NULL, dap->szDeviceID, SW_SHOWNOACTIVATE))
+
+    if (!InstallDevInst(hwndDlg, dap->szDeviceID, TRUE, &dwReboot))
         return;
 
     if (NeedReboot == FALSE)
@@ -440,14 +433,14 @@ UpdateDriver(
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
     {
-        DPRINT("OpenProcessToken failed\n");
+        ERR("OpenProcessToken failed\n");
         return;
     }
 
     /* Get the LUID for the Shutdown privilege */
     if (!LookupPrivilegeValueW(NULL, SE_SHUTDOWN_NAME, &Privileges.Privileges[0].Luid))
     {
-        DPRINT("LookupPrivilegeValue failed\n");
+        ERR("LookupPrivilegeValue failed\n");
         CloseHandle(hToken);
         return;
     }
@@ -458,7 +451,7 @@ UpdateDriver(
 
     if (!AdjustTokenPrivileges(hToken, FALSE, &Privileges, 0, NULL, NULL))
     {
-        DPRINT("AdjustTokenPrivileges failed\n");
+        ERR("AdjustTokenPrivileges failed\n");
         CloseHandle(hToken);
         return;
     }
@@ -466,7 +459,7 @@ UpdateDriver(
     /* Finally shut down the system */
     if (!ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED))
     {
-        DPRINT("ExitWindowsEx failed\n");
+        ERR("ExitWindowsEx failed\n");
         CloseHandle(hToken);
     }
 }
@@ -1587,8 +1580,8 @@ ApplyGeneralSettings(IN HWND hwndDlg,
         else
         {
             /* FIXME - display an error message */
-            DPRINT1("Failed to enable/disable device! LastError: %d\n",
-                    GetLastError());
+            FIXME("Failed to enable/disable device! LastError: %d\n",
+                  GetLastError());
         }
     }
     else
@@ -1620,6 +1613,8 @@ UpdateDevInfo(IN HWND hwndDlg,
     PROPSHEETHEADER psh;
     DWORD nDriverPages = 0;
     BOOL RecalcPages = FALSE;
+
+    TRACE("UpdateDevInfo()\n");
 
     hPropSheetDlg = GetParent(hwndDlg);
 
@@ -2016,6 +2011,7 @@ GetParentNode:
                                           dap->PropertySheetType) &&
         nDriverPages != 0 && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
+TRACE("Count %d additional pages!\n", nDriverPages);
         dap->nDevPropSheets += nDriverPages;
     }
     else
@@ -2037,6 +2033,7 @@ GetParentNode:
     /* add the device property sheets */
     if (dap->nDevPropSheets != 0)
     {
+TRACE("Show %d pages!\n", dap->nDevPropSheets);
         dap->DevPropSheets = HeapAlloc(GetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
                                        dap->nDevPropSheets * sizeof(HPROPSHEETPAGE));
@@ -2056,13 +2053,20 @@ GetParentNode:
                 {
                     /* add the property sheets */
                     for (iPage = 0;
-                         iPage != nDriverPages;
+                         iPage < nDriverPages;
                          iPage++)
                     {
+TRACE("Add page %d\n", iPage);
+TRACE("Sheet %p\n", dap->DevPropSheets[iPage]);
+
                         if (PropSheet_AddPage(hPropSheetDlg,
                                               dap->DevPropSheets[iPage]))
                         {
                             RecalcPages = TRUE;
+                        }
+                        else
+                        {
+TRACE("PropSheet_AddPage() failed\n");
                         }
                     }
 
@@ -2070,6 +2074,7 @@ GetParentNode:
                 }
                 else
                 {
+TRACE("SetupDiGetClassDevPropertySheets() failed\n");
                     /* cleanup, we were unable to get the device property sheets */
                     iPage = nDriverPages;
                     dap->nDevPropSheets -= nDriverPages;
@@ -2411,7 +2416,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                        0,
                                        &DevIdSize))
         {
-            DPRINT1("SetupDiGetDeviceInstanceId unexpectedly returned TRUE!\n");
+            ERR("SetupDiGetDeviceInstanceId unexpectedly returned TRUE!\n");
             return -1;
         }
 
@@ -2903,7 +2908,7 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 
     if (dwFlags & ~(DPF_EXTENDED | DPF_DEVICE_STATUS_ACTION))
     {
-        DPRINT1("DevPropertiesExW: Invalid flags: 0x%x\n",
+        FIXME("DevPropertiesExW: Invalid flags: 0x%x\n",
                 dwFlags & ~(DPF_EXTENDED | DPF_DEVICE_STATUS_ACTION));
         SetLastError(ERROR_INVALID_FLAGS);
         return -1;
@@ -2911,7 +2916,7 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 
     if (bShowDevMgr)
     {
-        DPRINT("DevPropertiesExW doesn't support bShowDevMgr!\n");
+        FIXME("DevPropertiesExW doesn't support bShowDevMgr!\n");
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     }
     else
@@ -3132,7 +3137,7 @@ DeviceProperties_RunDLLW(HWND hWndParent,
                                   szDeviceID,
                                   szMachineName))
     {
-        DPRINT1("DeviceProperties_RunDLLW DeviceID: %S, MachineName: %S\n", szDeviceID, szMachineName);
+        ERR("DeviceProperties_RunDLLW DeviceID: %S, MachineName: %S\n", szDeviceID, szMachineName);
         return;
     }
 

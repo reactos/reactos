@@ -156,7 +156,7 @@ typedef enum
 } CAPTIONBUTTON;
 
 /*
-The following values specify all possible vutton states
+The following values specify all possible button states
 Note that not all of them are documented but it is easy to 
 find them by opening a theme file
 */

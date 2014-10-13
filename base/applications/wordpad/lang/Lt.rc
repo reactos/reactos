@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wordpad.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -133,83 +131,16 @@ BEGIN
     END
 END
 
-IDD_DATETIME DIALOG 30, 20, 130, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Data ir laikas"
-FONT 10, "MS Sans Serif"
-BEGIN
-    LTEXT        "Galimi formatai",-1,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
-    PUSHBUTTON   "&Gerai",IDOK,87,12,40,12
-    PUSHBUTTON   "&Atsisakyti",IDCANCEL,87,26,40,12
-END
-
-IDD_NEWFILE DIALOG 30, 20, 140, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Naujas"
-FONT 10, "MS Sans Serif"
-BEGIN
-    LTEXT        "Naujo dokumento tipas",-1,3,2,100,15
-    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
-    PUSHBUTTON   "&Gerai",IDOK,97,12,40,12
-    PUSHBUTTON   "&Atsisakyti",IDCANCEL,97,26,40,12
-END
-
-IDD_PARAFORMAT DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Pastraipos formatas"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "Įtrauka", -1, 10, 10, 120, 68
-    LTEXT "Iš kairės", -1, 15, 22, 45, 13
-    EDITTEXT IDC_PARA_LEFT, 60, 20, 55, 13
-    LTEXT "Iš dešinės", -1, 15, 40, 45, 13
-    EDITTEXT IDC_PARA_RIGHT, 60, 38, 55, 13
-    LTEXT "Pirmoji eilutė", -1, 15, 58, 45, 13
-    EDITTEXT IDC_PARA_FIRST, 60, 56, 55, 13
-    LTEXT "Lygiuotė", -1, 15, 87, 40, 13
-    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Gerai", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Atsisakyti", IDCANCEL, 137, 33, 50, 15
-END
-
-IDD_TABSTOPS DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Tabuliavimo žymės"
-FONT 8, "MS SHell DLg"
-BEGIN
-    GROUPBOX "Tabuliavimo pozicija", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
-    DEFPUSHBUTTON "&Pridėti", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "Pa&šalinti", ID_TAB_DEL, 72, 80, 45, 15
-    PUSHBUTTON "&Gerai", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Atsisakyti", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "Pašalinti &visas", ID_TAB_EMPTY, 137, 51, 50, 15
-END
-
-IDD_FORMATOPTS DIALOG 0, 0, 280, 110
-STYLE DS_SYSMODAL
-CAPTION ""
-FONT 8, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "Eilutės skaidymas", -1, 10, 10, 130, 85
-    RADIOBUTTON "&Eilutės neskaidomos", IDC_PAGEFMT_WN, 18, 25, 117, 15
-    RADIOBUTTON "Skaidyti tekstą prie lango &rėmelio", IDC_PAGEFMT_WW, 18, 45, 117, 15
-    RADIOBUTTON "Skaidyti tekstą prie &paraštės", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "Įrankių juostos", -1, 150, 10, 120, 85
-    CHECKBOX "Įran&kių juosta", IDC_PAGEFMT_TB, 160, 20, 80, 15
-    CHECKBOX "&Formatų juosta", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Liniuotė", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "&Būsenos juosta", IDC_PAGEFMT_SB, 160, 74, 80, 15
-    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
-END
-
 STRINGTABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "Raiškiojo teksto dokumentai (*.rtf)"
+    STRING_ALL_FILES,              "Visi dokumentai (*.*)"
     STRING_TEXT_FILES_TXT,         "Tekstiniai dokumentai (*.txt)"
     STRING_TEXT_FILES_UNICODE_TXT, "Teksto unikodu dokumentai (*.txt)"
-    STRING_ALL_FILES,              "Visi dokumentai (*.*)"
+    STRING_RICHTEXT_FILES_RTF,     "Raiškiojo teksto dokumentai (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "Raiškiojo teksto dokumentas"
+    STRING_NEWFILE_TXT,            "Tekstinis dokumentas"
+    STRING_NEWFILE_TXT_UNICODE,    "Teksto unikodu dokumentas"
+    STRING_PRINTER_FILES_PRN,      "Spausdintuvo failai (*.PRN)"
 END
 
 STRINGTABLE
@@ -217,18 +148,6 @@ BEGIN
     STRING_ALIGN_LEFT,            "Kairinė"
     STRING_ALIGN_RIGHT,           "Dešininė"
     STRING_ALIGN_CENTER,          "Centrinė"
-END
-
-STRINGTABLE
-BEGIN
-    STRING_NEWFILE_RICHTEXT,     "Raiškiojo teksto dokumentas"
-    STRING_NEWFILE_TXT,          "Tekstinis dokumentas"
-    STRING_NEWFILE_TXT_UNICODE,  "Teksto unikodu dokumentas"
-END
-
-STRINGTABLE
-BEGIN
-    STRING_PRINTER_FILES_PRN,        "Spausdintuvo failai (*.PRN)"
 END
 
 STRINGTABLE
@@ -271,4 +190,75 @@ BEGIN
     STRING_OPEN_ACCESS_DENIED,        "Jūs neturite prieigos failui atverti."
     STRING_PRINTING_NOT_IMPLEMENTED,  "Spausdinimas nerealizuotas"
     STRING_MAX_TAB_STOPS,             "Negalima pridėti daugiau negu 32-jų tabuliavimo pozicijų."
+END
+
+IDD_DATETIME DIALOG 30, 20, 130, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Data ir laikas"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Galimi formatai",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "&Gerai",IDOK,87,12,40,12
+    PUSHBUTTON   "&Atsisakyti",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOG 30, 20, 140, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Naujas"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Naujo dokumento tipas",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "&Gerai",IDOK,97,12,40,12
+    PUSHBUTTON   "&Atsisakyti",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOG 30, 20, 220, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Pastraipos formatas"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Įtrauka", -1, 10, 10, 140, 68
+    LTEXT "Iš kairės", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "Iš dešinės", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "Pirmoji eilutė", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "Lygiuotė", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "&Gerai", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "&Atsisakyti", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOG 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Tabuliavimo žymės"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Tabuliavimo pozicija", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "&Pridėti", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "Pa&šalinti", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "&Gerai", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "&Atsisakyti", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "Pašalinti &visas", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOG 0, 0, 280, 110
+STYLE DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Eilutės skaidymas", -1, 5, 10, 145, 85
+    RADIOBUTTON "&Eilutės neskaidomos", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "Skaidyti tekstą prie lango &rėmelio", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "Skaidyti tekstą prie &paraštės", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "Įrankių juostos", -1, 155, 10, 115, 85
+    CHECKBOX "Įran&kių juosta", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "&Formatų juosta", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "&Liniuotė", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "&Būsenos juosta", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END

@@ -108,6 +108,8 @@ SepCompareTokens(IN PTOKEN FirstToken,
         }
 
         /* FIXME: Check if every privilege that is present in either token is also present in the other one */
+        DPRINT1("FIXME: Pretending tokens are equal!\n");
+        IsEqual = TRUE;
     }
 
     *Equal = IsEqual;
@@ -231,7 +233,39 @@ SeExchangePrimaryToken(PEPROCESS Process,
     PAGED_CODE();
 
     if (NewToken->TokenType != TokenPrimary) return(STATUS_BAD_TOKEN_TYPE);
-    if (NewToken->TokenInUse) return(STATUS_TOKEN_ALREADY_IN_USE);
+    if (NewToken->TokenInUse)
+    {
+        BOOLEAN IsEqual;
+        NTSTATUS Status;
+
+        /* Maybe we're trying to set the same token */
+        OldToken = PsReferencePrimaryToken(Process);
+        if (OldToken == NewToken)
+        {
+            /* So it's a nop. */
+            *OldTokenP = OldToken;
+            return STATUS_SUCCESS;
+        }
+
+        Status = SepCompareTokens(OldToken, NewToken, &IsEqual);
+        if (!NT_SUCCESS(Status))
+        {
+            *OldTokenP = NULL;
+            PsDereferencePrimaryToken(OldToken);
+            return Status;
+        }
+
+        if (!IsEqual)
+        {
+            *OldTokenP = NULL;
+            PsDereferencePrimaryToken(OldToken);
+            return STATUS_TOKEN_ALREADY_IN_USE;
+        }
+        /* Silently return STATUS_SUCCESS but do not set the new token,
+         * as it's already in use elsewhere. */
+        *OldTokenP = OldToken;
+        return STATUS_SUCCESS;
+    }
 
     /* Mark new token in use */
     NewToken->TokenInUse = 1;

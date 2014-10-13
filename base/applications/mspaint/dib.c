@@ -72,11 +72,17 @@ SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int 
     bi.biYPelsPerMeter = vRes;
 
     buffer = HeapAlloc(GetProcessHeap(), 0, imgDataSize);
+    if (!buffer)
+        return;
+
     GetDIBits(hDC, hBitmap, 0, bm.bmHeight, buffer, (LPBITMAPINFO) & bi, DIB_RGB_COLORS);
 
     hFile = CreateFile(FileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
+    {
+        HeapFree(GetProcessHeap(), 0, buffer);
         return;
+    }
 
     WriteFile(hFile, &bf, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
     WriteFile(hFile, &bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);

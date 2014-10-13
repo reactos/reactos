@@ -1,14 +1,14 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Синтаксисът на командата е:\n\nREG [ ADD | DELETE | QUERY ]\nREG команда /?\n"
-    STRING_ADD_USAGE "REG ADD ключ_име [/v стойност_име | /ve] [/t вид] [/s разделител] [/d данни] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE ключ_име [/v стойност_име | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY ключ_име [/v стойност_име | /ve] [/s]\n"
-    STRING_SUCCESS "Десйствието е приключено успешно\n"
-    STRING_INVALID_KEY "Грешка: Недопустимо име за ключ\n"
-    STRING_INVALID_CMDLINE "Грешка: Неправилни параметри на командия ред\n"
-    STRING_NO_REMOTE "Грешка: Неуспешно добавяне на ключове в отдалечената машина\n"
-    STRING_CANNOT_FIND "Грешка: Уредбата не откри указания регистърен ключ или стойност\n"
-END
+{
+    STRING_USAGE, "Синтаксисът на командата е:\n\nREG [ ADD | DELETE | QUERY ]\nREG команда /?\n"
+    STRING_ADD_USAGE, "REG ADD ключ_име [/v стойност_име | /ve] [/t вид] [/s разделител] [/d данни] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE ключ_име [/v стойност_име | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY ключ_име [/v стойност_име | /ve] [/s]\n"
+    STRING_SUCCESS, "Десйствието е приключено успешно\n"
+    STRING_INVALID_KEY, "Грешка: Недопустимо име за ключ\n"
+    STRING_INVALID_CMDLINE, "Грешка: Неправилни параметри на командия ред\n"
+    STRING_NO_REMOTE, "Грешка: Неуспешно добавяне на ключове в отдалечената машина\n"
+    STRING_CANNOT_FIND, "Грешка: Уредбата не откри указания регистърен ключ или стойност\n"
+}

@@ -622,7 +622,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
+MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
                        BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
@@ -632,7 +632,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
    PFN_NUMBER Pfn;
 
    DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
-          Process, Address, FreePage, WasDirty, Page);
+          Process, Address, WasDirty, Page);
    if (Ke386Pae)
    {
       ULONGLONG Pte;
@@ -669,11 +669,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
       else
       {
          Pfn = 0;
-      }
-
-      if (FreePage && WasValid)
-      {
-         MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
       }
 
       /*
@@ -724,11 +719,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
       else
       {
          Pfn = 0;
-      }
-
-      if (FreePage && WasValid)
-      {
-         MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
       }
 
       /*

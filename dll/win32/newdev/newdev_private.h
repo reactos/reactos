@@ -17,6 +17,7 @@
 #include <windowsx.h>
 #include <newdev.h>
 #include <regstr.h>
+#include <dll/newdevp.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(newdev);
@@ -28,6 +29,7 @@ extern HINSTANCE hDllInstance;
 typedef struct _DEVINSTDATA
 {
 	HFONT hTitleFont;
+	BOOL bUpdate;
 	PBYTE buffer;
 	DWORD requiredSize;
 	DWORD regDataType;

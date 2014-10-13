@@ -309,7 +309,7 @@ MmPageOutCacheSection(PMMSUPPORT AddressSpace,
     }
 
     MmDeleteRmap(Required->Page[0], Process, Address);
-    MmDeleteVirtualMapping(Process, Address, FALSE, Dirty, &OurPage);
+    MmDeleteVirtualMapping(Process, Address, Dirty, &OurPage);
     ASSERT(OurPage == Required->Page[0]);
 
     /* Note: this releases the reference held by this address space only. */

@@ -13,13 +13,15 @@
 #include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
+#include <dll/newdevp.h>
 #include <dll/devmgr/devmgr.h>
+#include <wine/debug.h>
 
 #include "resource.h"
 
-extern HINSTANCE hDllInstance;
+WINE_DEFAULT_DEBUG_CHANNEL(devmgr);
 
-ULONG DbgPrint(PCCH Format,...);
+extern HINSTANCE hDllInstance;
 
 typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
 typedef HPROPSHEETPAGE (WINAPI *PCREATEPROPERTYSHEETPAGEW)(LPCPROPSHEETPAGEW);

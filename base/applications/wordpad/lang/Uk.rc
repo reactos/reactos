@@ -20,8 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wordpad.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -62,32 +60,32 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Д&одатково"
         BEGIN
-            MENUITEM "&Інформація про виділення",         ID_EDIT_SELECTIONINFO
-            MENUITEM "&Формат символів",                  ID_EDIT_CHARFORMAT
-            MENUITEM "Формат символів &по замовчуванні",  ID_EDIT_DEFCHARFORMAT
-            MENUITEM "Абза&ц",                            ID_EDIT_PARAFORMAT
-            MENUITEM "&Взяти текст",                      ID_EDIT_GETTEXT
+            MENUITEM "&Інформація про виділення",        ID_EDIT_SELECTIONINFO
+            MENUITEM "&Формат символів",                 ID_EDIT_CHARFORMAT
+            MENUITEM "Формат символів &по замовчуванні", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "Абза&ц",                           ID_EDIT_PARAFORMAT
+            MENUITEM "&Взяти текст",                     ID_EDIT_GETTEXT
         END
     END
     POPUP "&Вигляд"
     BEGIN
-        MENUITEM "Панель інс&трументів",      ID_TOGGLE_TOOLBAR
-        MENUITEM "Панель &форматування",      ID_TOGGLE_FORMATBAR
-        MENUITEM "&Лінійка",                  ID_TOGGLE_RULER
-        MENUITEM "&Рядок стану",              ID_TOGGLE_STATUSBAR
+        MENUITEM "Панель інс&трументів", ID_TOGGLE_TOOLBAR
+        MENUITEM "Панель &форматування", ID_TOGGLE_FORMATBAR
+        MENUITEM "&Лінійка",             ID_TOGGLE_RULER
+        MENUITEM "&Рядок стану",         ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Параметри...",             ID_VIEWPROPERTIES
+        MENUITEM "&Параметри...",        ID_VIEWPROPERTIES
     END
     POPUP "&Вставка"
     BEGIN
-        MENUITEM "&Дата та час...",           ID_DATETIME
+        MENUITEM "&Дата та час...",    ID_DATETIME
     END
     POPUP "Ф&ормат"
     BEGIN
-        MENUITEM "&Шрифт...",                 ID_FONTSETTINGS
-        MENUITEM "&Маркери",                  ID_BULLET
-        MENUITEM "&Абзац...",                 ID_PARAFORMAT
-        MENUITEM "&Табуляція...",             ID_TABSTOPS
+        MENUITEM "&Шрифт...",                    ID_FONTSETTINGS
+        MENUITEM "&Маркери",                     ID_BULLET
+        MENUITEM "&Абзац...",                    ID_PARAFORMAT
+        MENUITEM "&Табуляція...",                ID_TABSTOPS
         POPUP "&Фон"
         BEGIN
             MENUITEM "&Системний\tCtrl+1",             ID_BACK_1
@@ -96,7 +94,7 @@ BEGIN
     END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Про Wine Wordpad",      ID_ABOUT
+        MENUITEM "&Про Wine Wordpad",        ID_ABOUT
     END
 END
 
@@ -104,12 +102,12 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Вир&ізати",      ID_EDIT_CUT
-        MENUITEM "&Копіювати",     ID_EDIT_COPY
-        MENUITEM "&Вставити",      ID_EDIT_PASTE
+        MENUITEM "Вир&ізати",           ID_EDIT_CUT
+        MENUITEM "&Копіювати",          ID_EDIT_COPY
+        MENUITEM "&Вставити",           ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Маркери",       ID_BULLET
-        MENUITEM "&Абзац...",      ID_PARAFORMAT
+        MENUITEM "&Маркери",            ID_BULLET
+        MENUITEM "&Абзац...",           ID_PARAFORMAT
     END
 END
 
@@ -117,95 +115,24 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Чорний",        ID_COLOR_BLACK
-        MENUITEM "Коричневий",    ID_COLOR_MAROON
-        MENUITEM "Зелений",       ID_COLOR_GREEN
-        MENUITEM "Оливковий",     ID_COLOR_OLIVE
-        MENUITEM "Темно-синій",   ID_COLOR_NAVY
-        MENUITEM "Пурпуровий",    ID_COLOR_PURPLE
-        MENUITEM "Синьо-зелений", ID_COLOR_TEAL
-        MENUITEM "Сірий",         ID_COLOR_GRAY
-        MENUITEM "Сріблястий",    ID_COLOR_SILVER
-        MENUITEM "Червоний",      ID_COLOR_RED
-        MENUITEM "Салатовий",     ID_COLOR_LIME
-        MENUITEM "Жовтий",        ID_COLOR_YELLOW
-        MENUITEM "Синій",         ID_COLOR_BLUE
-        MENUITEM "Малиновий",     ID_COLOR_FUCHSIA
-        MENUITEM "Блакитний",     ID_COLOR_AQUA
-        MENUITEM "Білий",         ID_COLOR_WHITE
-        MENUITEM "Автоматично",   ID_COLOR_AUTOMATIC
+        MENUITEM "Чорний",       ID_COLOR_BLACK
+        MENUITEM "Коричневий",   ID_COLOR_MAROON
+        MENUITEM "Зелений",      ID_COLOR_GREEN
+        MENUITEM "Оливковий",    ID_COLOR_OLIVE
+        MENUITEM "Темно-синій",  ID_COLOR_NAVY
+        MENUITEM "Пурпуровий",   ID_COLOR_PURPLE
+        MENUITEM "Синьо-зелений",ID_COLOR_TEAL
+        MENUITEM "Сірий",        ID_COLOR_GRAY
+        MENUITEM "Сріблястий",   ID_COLOR_SILVER
+        MENUITEM "Червоний",     ID_COLOR_RED
+        MENUITEM "Салатовий",    ID_COLOR_LIME
+        MENUITEM "Жовтий",       ID_COLOR_YELLOW
+        MENUITEM "Синій",        ID_COLOR_BLUE
+        MENUITEM "Малиновий",    ID_COLOR_FUCHSIA
+        MENUITEM "Блакитний",    ID_COLOR_AQUA
+        MENUITEM "Білий",        ID_COLOR_WHITE
+        MENUITEM "Автоматично",  ID_COLOR_AUTOMATIC
     END
-END
-
-IDD_DATETIME DIALOG 30, 20, 130, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Дата та час"
-FONT 10, "MS Sans Serif"
-BEGIN
-    LTEXT        "Доступні формати",-1,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
-    PUSHBUTTON   "&OK",IDOK,87,12,40,12
-    PUSHBUTTON   "&Скасувати",IDCANCEL,87,26,40,12
-END
-
-IDD_NEWFILE DIALOG 30, 20, 140, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Новий"
-FONT 10, "MS Sans Serif"
-BEGIN
-    LTEXT        "Тип нового документу",-1,3,2,100,15
-    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
-    PUSHBUTTON   "&OK",IDOK,97,12,40,12
-    PUSHBUTTON   "&Скасувати",IDCANCEL,97,26,40,12
-END
-
-IDD_PARAFORMAT DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Абзац"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "Відступ", -1, 10, 10, 120, 68
-    LTEXT "Зліва", -1, 15, 22, 40, 13
-    EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Справа", -1, 15, 40, 40, 13
-    EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Перший рядок", -1, 15, 58, 40, 18
-    EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Вирівнювання", -1, 13, 87, 50, 13
-    COMBOBOX IDC_PARA_ALIGN, 63, 85, 75, 60, CBS_DROPDOWNLIST
-    PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Скасувати", IDCANCEL, 137, 33, 50, 15
-END
-
-IDD_TABSTOPS DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Табуляція"
-FONT 8, "MS SHell DLg"
-BEGIN
-    GROUPBOX "Позиції табуляції", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
-    DEFPUSHBUTTON "&Додати", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "&Видалити", ID_TAB_DEL, 72, 80, 45, 15
-    PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Скасувати", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "Видалити в&се", ID_TAB_EMPTY, 137, 51, 50, 15
-END
-
-IDD_FORMATOPTS DIALOG 0, 0, 280, 110
-STYLE DS_SYSMODAL
-CAPTION ""
-FONT 8, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "Перенос рядка", -1, 10, 10, 130, 85
-    RADIOBUTTON "&Без переносу", IDC_PAGEFMT_WN, 18, 25, 117, 15
-    RADIOBUTTON "По &межі вікна", IDC_PAGEFMT_WW, 18, 45, 117, 15
-    RADIOBUTTON "По м&ежі поля", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "Панелі", -1, 150, 10, 120, 85
-    CHECKBOX "Панель інс&трументів", IDC_PAGEFMT_TB, 160, 20, 88, 15
-    CHECKBOX "Панель &форматування", IDC_PAGEFMT_FB, 160, 38, 88, 15
-    CHECKBOX "&Лінійка", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "&Рядок стану", IDC_PAGEFMT_SB, 160, 74, 80, 15
-    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
 STRINGTABLE
@@ -217,7 +144,7 @@ BEGIN
     STRING_NEWFILE_RICHTEXT,       "Rich text документ"
     STRING_NEWFILE_TXT,            "Текстовий документ"
     STRING_NEWFILE_TXT_UNICODE,    "Текстовий документ Unicode"
-    STRING_PRINTER_FILES_PRN,      "Файли принтера (*.PRN)"
+    STRING_PRINTER_FILES_PRN,      "Файли принтера (*.prn)"
 END
 
 STRINGTABLE
@@ -269,11 +196,73 @@ BEGIN
     STRING_MAX_TAB_STOPS,             "Неможливо додати більше 32 позицій табуляції."
 END
 
-LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE
+IDD_DATETIME DIALOG 30, 20, 130, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Дата та час"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    STRING_ALIGN_LEFT,            "По Лівому Краю"
-    STRING_ALIGN_RIGHT,           "По правому Краю"
-    STRING_ALIGN_CENTER,          "По Центру"
+    LTEXT        "Доступні формати",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "OK",IDOK,87,12,40,12
+    PUSHBUTTON   "&Скасувати",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOG 30, 20, 140, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Новий"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Тип нового документу",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "OK",IDOK,97,12,40,12
+    PUSHBUTTON   "&Скасувати",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOG 30, 20, 220, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Абзац"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Відступ", -1, 10, 10, 140, 68
+    LTEXT "Зліва", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "Справа", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "Перший рядок", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "Вирівнювання", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "OK", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "&Скасувати", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOG 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Табуляція"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Позиції табуляції", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "&Додати", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "&Видалити", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "OK", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "&Скасувати", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "Видалити в&се", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOG 0, 0, 280, 110
+STYLE DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Перенос рядка", -1, 5, 10, 145, 85
+    RADIOBUTTON "&Без переносу", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "По &межі вікна", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "По м&ежі поля", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "Панелі", -1, 155, 10, 115, 85
+    CHECKBOX "Панель інс&трументів", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "Панель &форматування", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "&Лінійка", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "&Рядок стану", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END

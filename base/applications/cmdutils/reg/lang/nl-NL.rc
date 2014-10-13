@@ -1,14 +1,14 @@
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Gebruik van dit commando is:\n\nREG [ ADD | DELETE | QUERY ]\nREG commando /?\n"
-    STRING_ADD_USAGE "REG ADD sleutel_naam [/v waarde_naam | /ve] [/t type] [/s scheidingsteken] [/d data] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE sleutel_naam [/v waarde_naam | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY sleutel_naam [/v waarde_naam | /ve] [/s]\n"
-    STRING_SUCCESS "De bewerking is succesvol voltooid\n"
-    STRING_INVALID_KEY "Fout: Foutieve sleutelnaam\n"
-    STRING_INVALID_CMDLINE "Fout: Foutieve commandoregel-parameters\n"
-    STRING_NO_REMOTE "Fout: Sleutels konden niet toegevoegd worden aan de remote machine\n"
-    STRING_CANNOT_FIND "Fout: Het systeem kon de gespecificeerde registersleutel of waarde niet vinden\n"
-END
+{
+    STRING_USAGE, "Gebruik van dit commando is:\n\nREG [ ADD | DELETE | QUERY ]\nREG commando /?\n"
+    STRING_ADD_USAGE, "REG ADD sleutel_naam [/v waarde_naam | /ve] [/t type] [/s scheidingsteken] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE sleutel_naam [/v waarde_naam | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY sleutel_naam [/v waarde_naam | /ve] [/s]\n"
+    STRING_SUCCESS, "De bewerking is succesvol voltooid\n"
+    STRING_INVALID_KEY, "Fout: Foutieve sleutelnaam\n"
+    STRING_INVALID_CMDLINE, "Fout: Foutieve commandoregel-parameters\n"
+    STRING_NO_REMOTE, "Fout: Sleutels konden niet toegevoegd worden aan de remote machine\n"
+    STRING_CANNOT_FIND, "Fout: Het systeem kon de gespecificeerde registersleutel of waarde niet vinden\n"
+}

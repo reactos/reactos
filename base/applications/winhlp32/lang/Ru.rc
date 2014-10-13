@@ -23,8 +23,6 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Файл" {
@@ -44,12 +42,6 @@ MAIN_MENU MENU
    MENUITEM "&Определить...", MNID_BKMK_DEFINE
  }
  POPUP "&Настройки" {
-   POPUP	"Видимость окна справки"
-   BEGIN
-     MENUITEM "По умолчанию",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Наверху",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Не наверху",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "История",		MNID_OPTS_HISTORY
   POPUP    "Шрифт"
   BEGIN
@@ -57,33 +49,30 @@ MAIN_MENU MENU
     MENUITEM "Обычный",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Крупный",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Использовать системные цвета",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Справка" {
    MENUITEM "Помощь &по помощи", MNID_HELP_HELPON
    MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Информация...", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Указатель"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Заметки...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Копировать",                MNID_CTXT_COPY
+		MENUITEM "Печать...",            MNID_CTXT_PRINT
+		POPUP    "Шрифт"
+		BEGIN
+			MENUITEM "Мелкий",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Обычный",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Крупный",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Поиск"
-{
-    LTEXT  "Не реализовано", -1, 10, 10, 180, 150
-}
-
-/* Strings */
 STRINGTABLE
 {
 STID_WINE_HELP, 	"Справка Wine"
@@ -102,25 +91,18 @@ STID_NO_RICHEDIT	"Не могу найти richedit"
 STID_PSH_INDEX,		"Содержание: "
 }
 
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Заметки...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Копировать",                MNID_CTXT_COPY
-		MENUITEM "Печать...",            MNID_CTXT_PRINT
-		POPUP    "Шрифт"
-		BEGIN
-			MENUITEM "Мелкий",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Обычный",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Крупный",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Видимость окна справки"
-		BEGIN
-			MENUITEM "По умолчанию",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Наверху",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Не наверху", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Использовать системные цвета",   MNID_CTXT_SYSTEM_COLORS
-	END
-END
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Указатель"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Поиск"
+{
+    LTEXT  "Не реализовано", -1, 10, 10, 180, 150
+}

@@ -210,6 +210,11 @@ endif()
 target_link_libraries(freeldr_pe freeldr_common cportlib cmlib rtl libcntpr)
 target_link_libraries(freeldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
+if (STACK_PROTECTOR)
+    target_link_libraries(freeldr_pe gcc_ssp)
+    target_link_libraries(freeldr_pe_dbg gcc_ssp)
+endif()
+
 add_dependencies(freeldr_pe asm)
 add_dependencies(freeldr_pe_dbg asm)
 
@@ -265,6 +270,11 @@ endif()
 
 target_link_libraries(setupldr_pe freeldr_common cportlib cmlib rtl libcntpr)
 target_link_libraries(setupldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
+
+if (STACK_PROTECTOR)
+    target_link_libraries(setupldr_pe gcc_ssp)
+    target_link_libraries(setupldr_pe_dbg gcc_ssp)
+endif()
 
 add_dependencies(setupldr_pe asm)
 add_dependencies(setupldr_pe_dbg asm)

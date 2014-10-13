@@ -1,26 +1,27 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE
-BEGIN
-    STRING_INVPARMS "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
-    STRING_INVPARM "Parâmetro inválido '%1' -  Use xcopy /? para ajuda\n"
-    STRING_PAUSE "Pressione <Enter> para iniciar a cópia\n"
-    STRING_SIMCOPY "%1!d! arquivo(s) seriam copiado(s)\n"
-    STRING_COPY "%1!d! arquivo(s) copiado(s)\n"
-    STRING_QISDIR "'%1' é um arquivo ou diretório\n\
+{
+    STRING_INVPARMS, "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
+    STRING_INVPARM,  "Parâmetro inválido '%1' -  Use xcopy /? para ajuda\n"
+    STRING_PAUSE,    "Pressione <Enter> para iniciar a cópia\n"
+    STRING_SIMCOPY,  "%1!d! arquivo(s) seriam copiado(s)\n"
+    STRING_COPY,     "%1!d! arquivo(s) copiado(s)\n"
+    STRING_QISDIR,   "'%1' é um arquivo ou diretório\n\
                      no alvo?\n\
                      (A - Arquivo, D - Directório)\n"
-    STRING_SRCPROMPT "%1? (Sim|Não)\n"
-    STRING_OVERWRITE "Reescrever %1? (Sim|Não|Tudo)\n"
-    STRING_COPYFAIL "Falha ao copiar '%1' para '%2' com r/c %3!d!\n"
-    STRING_OPENFAIL "Falha ao abrir '%1'\n"
-    STRING_READFAIL "Falha a ler '%1'\n"
-    STRING_YES_CHAR "S"
-    STRING_NO_CHAR "N"
-    STRING_ALL_CHAR "T"
-    STRING_FILE_CHAR "A"
-    STRING_DIR_CHAR "D"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (Sim|Não)\n"
+    STRING_OVERWRITE,"Reescrever %1? (Sim|Não|Tudo)\n"
+    STRING_COPYFAIL, "Falha ao copiar '%1' para '%2' com r/c %3!d!\n"
+    STRING_OPENFAIL, "Falha ao abrir '%1'\n"
+    STRING_READFAIL, "Falha a ler '%1'\n"
+    STRING_YES_CHAR, "S"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "T"
+    STRING_FILE_CHAR,"A"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
 "XCOPY - Copia arquivos ou diretórios para um destino\n\
 \n\
 Sintaxe:\n\
@@ -59,25 +60,26 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE
 {
-    STRING_INVPARMS "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
-    STRING_INVPARM "Parâmetro inválido '%1' -  Use xcopy /? para ajuda\n"
-    STRING_PAUSE "Carregue <Enter> para iniciar cópia\n"
-    STRING_SIMCOPY "%1!d! ficheiro(s) seriam copiado(s)\n"
-    STRING_COPY "%1!d! ficheiro(s) copiado(s)\n"
-    STRING_QISDIR "'%1' é um ficheiro ou directório\n\
+    STRING_INVPARMS, "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
+    STRING_INVPARM,  "Parâmetro inválido '%1' -  Use xcopy /? para ajuda\n"
+    STRING_PAUSE,    "Carregue <Enter> para iniciar cópia\n"
+    STRING_SIMCOPY,  "%1!d! ficheiro(s) seriam copiado(s)\n"
+    STRING_COPY,     "%1!d! ficheiro(s) copiado(s)\n"
+    STRING_QISDIR,   "'%1' é um ficheiro ou directório\n\
                      no alvo?\n\
                      (F - Ficheiro, D - Directório)\n"
-    STRING_SRCPROMPT "%1? (Yes|No)\n"
-    STRING_OVERWRITE "Reescrever %1? (Yes|No|All)\n"
-    STRING_COPYFAIL "Cópia de '%1' para '%2' falhou com r/c %3!d!\n"
-    STRING_OPENFAIL "Falhou ao abrir '%1'\n"
-    STRING_READFAIL "Falhou a ler '%1'\n"
-    STRING_YES_CHAR "Y"
-    STRING_NO_CHAR "N"
-    STRING_ALL_CHAR "A"
-    STRING_FILE_CHAR "F"
-    STRING_DIR_CHAR "D"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (Yes|No)\n"
+    STRING_OVERWRITE,"Reescrever %1? (Yes|No|All)\n"
+    STRING_COPYFAIL, "Cópia de '%1' para '%2' falhou com r/c %3!d!\n"
+    STRING_OPENFAIL, "Falhou ao abrir '%1'\n"
+    STRING_READFAIL, "Falhou a ler '%1'\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
 "XCOPY - Copia ficheiros ou directórios para um destino\n\
 \n\
 Sintaxe:\n\
@@ -109,4 +111,5 @@ Onde:\n\
 [/D | /D:m-d-y] Copiar novos ficheiros ou os alterados após a data fornecida\n\
 \t\tSe nenhuma data for fornecida, apenas copiar se o destino\n\
 \t\tfor mais antigo que a fonte\n\n"
-END
+
+}

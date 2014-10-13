@@ -559,11 +559,11 @@ typedef VOID
 (NTAPI *PRTL_FREE_STRING_ROUTINE)(
   _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer);
 
-extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
-extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
+extern NTKERNELAPI const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
+extern NTKERNELAPI const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
 
 #if _WIN32_WINNT >= 0x0600
-extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
+extern NTKERNELAPI const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 #endif
 
 _Function_class_(RTL_HEAP_COMMIT_ROUTINE)

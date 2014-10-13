@@ -602,6 +602,8 @@ DestroyDeviceInfo(struct DeviceInfo *deviceInfo)
             return FALSE;
     }
     DestroyClassInstallParams(&deviceInfo->ClassInstallParams);
+    if (deviceInfo->hmodDevicePropPageProvider)
+        FreeLibrary(deviceInfo->hmodDevicePropPageProvider);
     return HeapFree(GetProcessHeap(), 0, deviceInfo);
 }
 
@@ -622,6 +624,8 @@ DestroyDeviceInfoSet(struct DeviceInfoSet* list)
         RegCloseKey(list->HKLM);
     CM_Disconnect_Machine(list->hMachine);
     DestroyClassInstallParams(&list->ClassInstallParams);
+    if (list->hmodClassPropPageProvider)
+        FreeLibrary(list->hmodClassPropPageProvider);
     return HeapFree(GetProcessHeap(), 0, list);
 }
 

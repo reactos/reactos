@@ -19,8 +19,6 @@
  *
  */
 
-#include "localui.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 

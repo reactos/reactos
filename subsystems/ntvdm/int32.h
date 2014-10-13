@@ -19,6 +19,21 @@
 /* 32-bit Interrupt Identifiers */
 #define EMULATOR_MAX_INT32_NUM  0xFF + 1
 
+
+//
+// WARNING WARNING!!
+// If you're changing the stack indices here, you then need
+// to also fix the Int16To32 handler code in int32.c !!
+//
+
+// Custom variable pushed onto the stack for INT32 interrupts
+#define STACK_INT_NUM   0
+
+// This is the standard stack layout for an interrupt
+#define STACK_IP        1
+#define STACK_CS        2
+#define STACK_FLAGS     3
+
 extern const ULONG Int16To32StubSize;
 
 /* FUNCTIONS ******************************************************************/

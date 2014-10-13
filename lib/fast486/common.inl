@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * common.inl
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,11 +20,40 @@
  */
 
 #include "common.h"
+#include "fpu.h"
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+#if defined (__GNUC__)
+    #define CountLeadingZeros64(x) __builtin_clzll(x)
+
+/*
+#elif (_MSC_VER >= 1500) && defined(_WIN64)
+    #define CountLeadingZeros64(x) __lzcnt64(x)
+#elif (_MSC_VER >= 1500)
+    #define CountLeadingZeros64(x) ((x) > 0xFFFFFFFFULL) ? __lzcnt((x) >> 32) \
+                                                         : (__lzcnt(x) + 32)
+*/
+
+#else
+    FORCEINLINE
+    ULONG
+    CountLeadingZeros64(ULONGLONG Value)
+    {
+        ULONG Count = 0;
+        Value = ~Value;
+        while ((LONGLONG)Value < 0)
+        {
+            Count++;
+            Value <<= 1;
+        }
+        return Count;
+    }
+#endif
+
 FORCEINLINE
 INT
+FASTCALL
 Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 {
     /* Return the CPL, or 3 if we're in virtual 8086 mode */
@@ -33,6 +62,7 @@ Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 
 FORCEINLINE
 ULONG
+FASTCALL
 Fast486GetPageTableEntry(PFAST486_STATE State,
                          ULONG VirtualAddress,
                          BOOLEAN MarkAsDirty)
@@ -117,6 +147,7 @@ Fast486GetPageTableEntry(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadLinearMemory(PFAST486_STATE State,
                         ULONG LinearAddress,
                         PVOID Buffer,
@@ -183,6 +214,7 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteLinearMemory(PFAST486_STATE State,
                          ULONG LinearAddress,
                          PVOID Buffer,
@@ -251,6 +283,7 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
 
 FORCEINLINE
 VOID
+FASTCALL
 Fast486Exception(PFAST486_STATE State,
                  FAST486_EXCEPTIONS ExceptionCode)
 {
@@ -260,6 +293,7 @@ Fast486Exception(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486StackPush(PFAST486_STATE State,
                  ULONG Value)
 {
@@ -316,6 +350,7 @@ Fast486StackPush(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486StackPop(PFAST486_STATE State,
                 PULONG Value)
 {
@@ -390,6 +425,7 @@ Fast486StackPop(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486LoadSegment(PFAST486_STATE State,
                    FAST486_SEG_REGS Segment,
                    USHORT Selector)
@@ -600,6 +636,7 @@ Fast486LoadSegment(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486FetchByte(PFAST486_STATE State,
                  PUCHAR Data)
 {
@@ -630,6 +667,7 @@ Fast486FetchByte(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486FetchWord(PFAST486_STATE State,
                  PUSHORT Data)
 {
@@ -661,6 +699,7 @@ Fast486FetchWord(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486FetchDword(PFAST486_STATE State,
                   PULONG Data)
 {
@@ -692,53 +731,7 @@ Fast486FetchDword(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
-Fast486GetIntVector(PFAST486_STATE State,
-                    UCHAR Number,
-                    PFAST486_IDT_ENTRY IdtEntry)
-{
-    ULONG FarPointer;
-
-    /* Check for protected mode */
-    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
-    {
-        /* Read from the IDT */
-        if (!Fast486ReadLinearMemory(State,
-                                     State->Idtr.Address
-                                     + Number * sizeof(*IdtEntry),
-                                     IdtEntry,
-                                     sizeof(*IdtEntry)))
-        {
-            /* Exception occurred */
-            return FALSE;
-        }
-    }
-    else
-    {
-        /* Read from the real-mode IVT */
-
-        /* Paging is always disabled in real mode */
-        State->MemReadCallback(State,
-                               State->Idtr.Address
-                               + Number * sizeof(FarPointer),
-                               &FarPointer,
-                               sizeof(FarPointer));
-
-        /* Fill a fake IDT entry */
-        IdtEntry->Offset = LOWORD(FarPointer);
-        IdtEntry->Selector = HIWORD(FarPointer);
-        IdtEntry->Zero = 0;
-        IdtEntry->Type = FAST486_IDT_INT_GATE;
-        IdtEntry->Storage = FALSE;
-        IdtEntry->Dpl = 0;
-        IdtEntry->Present = TRUE;
-        IdtEntry->OffsetHigh = 0;
-    }
-
-    return TRUE;
-}
-
-FORCEINLINE
-BOOLEAN
+FASTCALL
 Fast486CalculateParity(UCHAR Number)
 {
     // See http://graphics.stanford.edu/~seander/bithacks.html#ParityLookupTable too...
@@ -747,6 +740,7 @@ Fast486CalculateParity(UCHAR Number)
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ParseModRegRm(PFAST486_STATE State,
                      BOOLEAN AddressSize,
                      PFAST486_MOD_REG_RM ModRegRm)
@@ -1014,6 +1008,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadModrmByteOperands(PFAST486_STATE State,
                              PFAST486_MOD_REG_RM ModRegRm,
                              PUCHAR RegValue,
@@ -1080,6 +1075,7 @@ Fast486ReadModrmByteOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadModrmWordOperands(PFAST486_STATE State,
                              PFAST486_MOD_REG_RM ModRegRm,
                              PUSHORT RegValue,
@@ -1128,6 +1124,7 @@ Fast486ReadModrmWordOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486ReadModrmDwordOperands(PFAST486_STATE State,
                               PFAST486_MOD_REG_RM ModRegRm,
                               PULONG RegValue,
@@ -1176,6 +1173,7 @@ Fast486ReadModrmDwordOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteModrmByteOperands(PFAST486_STATE State,
                               PFAST486_MOD_REG_RM ModRegRm,
                               BOOLEAN WriteRegister,
@@ -1240,6 +1238,7 @@ Fast486WriteModrmByteOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteModrmWordOperands(PFAST486_STATE State,
                               PFAST486_MOD_REG_RM ModRegRm,
                               BOOLEAN WriteRegister,
@@ -1286,6 +1285,7 @@ Fast486WriteModrmWordOperands(PFAST486_STATE State,
 
 FORCEINLINE
 BOOLEAN
+FASTCALL
 Fast486WriteModrmDwordOperands(PFAST486_STATE State,
                                PFAST486_MOD_REG_RM ModRegRm,
                                BOOLEAN WriteRegister,
@@ -1329,5 +1329,81 @@ Fast486WriteModrmDwordOperands(PFAST486_STATE State,
 
     return TRUE;
 }
+
+#ifndef FAST486_NO_FPU
+
+FORCEINLINE
+VOID
+FASTCALL
+Fast486FpuNormalize(PFAST486_STATE State,
+                    PFAST486_FPU_DATA_REG Data)
+{
+    UINT LeadingZeros;
+
+    if (FPU_IS_NORMALIZED(Data)) return;
+    if (FPU_IS_ZERO(Data))
+    {
+        Data->Exponent = 0;
+        return;
+    }
+
+    LeadingZeros = CountLeadingZeros64(Data->Mantissa);
+
+    if (LeadingZeros < Data->Exponent)
+    {
+        Data->Mantissa <<= LeadingZeros;
+        Data->Exponent -= LeadingZeros;
+    }
+    else
+    {
+        /* Make it denormalized */
+        Data->Mantissa <<= Data->Exponent - 1;
+        Data->Exponent = 1;
+
+        /* Underflow */
+        State->FpuStatus.Ue = TRUE;
+    }
+}
+
+FORCEINLINE
+USHORT
+FASTCALL
+Fast486GetValueTag(PFAST486_FPU_DATA_REG Data)
+{
+    if (FPU_IS_ZERO(Data)) return FPU_TAG_ZERO;
+    else if (FPU_IS_NAN(Data)) return FPU_TAG_SPECIAL;
+    else return FPU_TAG_VALID;
+}
+
+FORCEINLINE
+VOID
+FASTCALL
+Fast486FpuPush(PFAST486_STATE State,
+               PFAST486_FPU_DATA_REG Data)
+{
+    State->FpuStatus.Top--;
+
+    if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+    {
+        FPU_ST(0) = *Data;
+        FPU_SET_TAG(0, Fast486GetValueTag(Data));
+    }
+    else State->FpuStatus.Ie = TRUE;
+}
+
+FORCEINLINE
+VOID
+FASTCALL
+Fast486FpuPop(PFAST486_STATE State)
+{
+    if (FPU_GET_TAG(0) != FPU_TAG_EMPTY)
+    {
+        FPU_SET_TAG(0, FPU_TAG_EMPTY);
+        State->FpuStatus.Top++;
+    }
+    else State->FpuStatus.Ie = TRUE;
+}
+
+#endif
 
 /* EOF */

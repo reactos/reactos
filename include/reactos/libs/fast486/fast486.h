@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * fast486.h
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -90,6 +90,8 @@
 #define FAST486_PREFIX_LOCK     (1 << 3)
 #define FAST486_PREFIX_REPNZ    (1 << 4)
 #define FAST486_PREFIX_REP      (1 << 5)
+
+#define FAST486_FPU_DEFAULT_CONTROL 0x037F
 
 struct _FAST486_STATE;
 typedef struct _FAST486_STATE FAST486_STATE, *PFAST486_STATE;
@@ -420,6 +422,7 @@ typedef struct _FAST486_FPU_DATA_REG
 {
     ULONGLONG Mantissa;
     USHORT Exponent;
+    UCHAR Sign;
 } FAST486_FPU_DATA_REG, *PFAST486_FPU_DATA_REG;
 
 typedef union _FAST486_FPU_STATUS_REG
@@ -490,10 +493,12 @@ struct _FAST486_STATE
     FAST486_INT_STATUS IntStatus;
     UCHAR PendingIntNum;
     PULONG Tlb;
+#ifndef FAST486_NO_FPU
     FAST486_FPU_DATA_REG FpuRegisters[FAST486_NUM_FPU_REGS];
     FAST486_FPU_STATUS_REG FpuStatus;
     FAST486_FPU_CONTROL_REG FpuControl;
     USHORT FpuTag;
+#endif
 };
 
 /* FUNCTIONS ******************************************************************/

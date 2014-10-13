@@ -196,31 +196,40 @@ Done:
 
 PLOGHANDLE ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
 {
+    PLIST_ENTRY CurrentEntry;
     PLOGHANDLE lpLogHandle;
 
-    if (IsListEmpty(&LogHandleListHead))
+    CurrentEntry = LogHandleListHead.Flink;
+    while (CurrentEntry != &LogHandleListHead)
     {
-        return NULL;
+        lpLogHandle = CONTAINING_RECORD(CurrentEntry,
+                                        LOGHANDLE,
+                                        LogHandleListEntry);
+        CurrentEntry = CurrentEntry->Flink;
+
+        if (lpLogHandle == EventLogHandle)
+            return lpLogHandle;
     }
 
-    lpLogHandle = CONTAINING_RECORD((PLOGHANDLE)EventLogHandle, LOGHANDLE, LogHandleListEntry);
-
-    return lpLogHandle;
+    return NULL;
 }
 
 
 static NTSTATUS
-ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
+ElfDeleteEventLogHandle(IELF_HANDLE LogHandle)
 {
-    PLOGHANDLE lpLogHandle = (PLOGHANDLE)EventLogHandle;
+    PLOGHANDLE lpLogHandle;
 
-    if (!ElfGetLogHandleEntryByHandle(lpLogHandle))
+    lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
+    if (!lpLogHandle)
+    {
         return STATUS_INVALID_HANDLE;
+    }
 
     RemoveEntryList(&lpLogHandle->LogHandleListEntry);
     LogfClose(lpLogHandle->LogFile, FALSE);
 
-    HeapFree(GetProcessHeap(),0,lpLogHandle);
+    HeapFree(GetProcessHeap(), 0, lpLogHandle);
 
     return STATUS_SUCCESS;
 }

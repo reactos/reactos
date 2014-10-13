@@ -19,8 +19,6 @@
  *
  */
 
-#include "localui.h"
-
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE

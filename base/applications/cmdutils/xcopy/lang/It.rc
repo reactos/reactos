@@ -1,26 +1,27 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_INVPARMS "Numero non valido di parametri - Digita xcopy /? per l'aiuto\n"
-    STRING_INVPARM "Parametro '%1' non valido -  Digita xcopy /? per l'aiuto\n"
-    STRING_PAUSE "Premi Invio per iniziare a copiare\n"
-    STRING_SIMCOPY "%1!d! file saranno copiati\n"
-    STRING_COPY "%1!d! file copiato/i\n"
-    STRING_QISDIR "'%1' è il nome di un file o una cartella\n\
+{
+    STRING_INVPARMS, "Numero non valido di parametri - Digita xcopy /? per l'aiuto\n"
+    STRING_INVPARM,  "Parametro '%1' non valido -  Digita xcopy /? per l'aiuto\n"
+    STRING_PAUSE,    "Premi Invio per iniziare a copiare\n"
+    STRING_SIMCOPY,  "%1!d! file saranno copiati\n"
+    STRING_COPY,     "%1!d! file copiato/i\n"
+    STRING_QISDIR,   "'%1' è il nome di un file o una cartella\n\
                      nella destinazione?\n\
                      (F - File, C - Cartella)\n"
-    STRING_SRCPROMPT "%1? (Sì|No)\n"
-    STRING_OVERWRITE "Sovrascrivere %1? (Sì|No|Tutti)\n"
-    STRING_COPYFAIL "La copia di '%1' in '%2' è fallita con r/c %3!d!\n"
-    STRING_OPENFAIL "Impossibile aprire '%1'\n"
-    STRING_READFAIL "Errore durante la lettura di '%1'\n"
-    STRING_YES_CHAR "S"
-    STRING_NO_CHAR "N"
-    STRING_ALL_CHAR "T"
-    STRING_FILE_CHAR "F"
-    STRING_DIR_CHAR "C"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (Sì|No)\n"
+    STRING_OVERWRITE,"Sovrascrivere %1? (Sì|No|Tutti)\n"
+    STRING_COPYFAIL, "La copia di '%1' in '%2' è fallita con r/c %3!d!\n"
+    STRING_OPENFAIL, "Impossibile aprire '%1'\n"
+    STRING_READFAIL, "Errore durante la lettura di '%1'\n"
+    STRING_YES_CHAR, "S"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "T"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "C"
+
+    STRING_HELP,
 "XCOPY - Copia file e alberi di cartelle sorgenti in una destinazione\n\
 \n\
 Sintassi:\n\
@@ -52,4 +53,5 @@ Dove:\n\
 [/D | /D:m-g-a] Copia i nuovi file o quelli modificati dopo la data fornita.\n\
 \t\tSe nessuna data è stata fornita, copia solo se la destinazione è più vecchia\n\
 \t\tdella sorgente\n\n"
-END
+
+}

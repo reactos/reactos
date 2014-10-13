@@ -144,7 +144,7 @@ static BOOL RegisterScreenSaverClass(void)
     cls.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     cls.hInstance = hMainInstance;
     cls.style = CS_VREDRAW | CS_HREDRAW | CS_SAVEBITS | CS_PARENTDC;
-    cls.lpfnWndProc = (WNDPROC)SysScreenSaverProc;
+    cls.lpfnWndProc = SysScreenSaverProc;
 
     return RegisterClass(&cls) != 0;
 }

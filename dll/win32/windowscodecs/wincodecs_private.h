@@ -126,6 +126,16 @@ extern HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
     UINT srcwidth, UINT srcheight, INT srcstride,
     const WICRect *rc, UINT dststride, UINT dstbuffersize, BYTE *dstbuffer) DECLSPEC_HIDDEN;
 
+extern HRESULT configure_write_source(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *source, const WICRect *prc,
+    const WICPixelFormatGUID *format,
+    INT width, INT height, double xres, double yres) DECLSPEC_HIDDEN;
+
+extern HRESULT write_source(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *source, const WICRect *prc,
+    const WICPixelFormatGUID *format, UINT bpp,
+    INT width, INT height) DECLSPEC_HIDDEN;
+
 extern void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT stride) DECLSPEC_HIDDEN;
 
 extern HRESULT get_pixelformat_bpp(const GUID *pixelformat, UINT *bpp) DECLSPEC_HIDDEN;

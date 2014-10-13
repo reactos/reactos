@@ -500,7 +500,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb, ULONGLONG MFTIndex, PUNICODE_STRING Fil
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (ReadFileRecord(Vcb, MFTIndex, MftRecord))
+    if (NT_SUCCESS(ReadFileRecord(Vcb, MFTIndex, MftRecord)))
     {
         //Magic = MftRecord->Magic;
 
@@ -649,6 +649,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
                  PFILE_RECORD_HEADER *FileRecord,
                  PNTFS_ATTR_CONTEXT *DataContext,
+                 PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex)
 {
     UNICODE_STRING Current, Remaining;
@@ -682,6 +683,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsLookupFile: Can't read MFT record\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
 
@@ -689,8 +691,11 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsLookupFile: Can't find data attribute\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
+
+    *MFTIndex = CurrentMFTIndex;
 
     return STATUS_SUCCESS;
 }
@@ -699,8 +704,9 @@ NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
                PFILE_RECORD_HEADER *FileRecord,
-               PNTFS_ATTR_CONTEXT *DataContext)
+               PNTFS_ATTR_CONTEXT *DataContext,
+               PULONGLONG MFTIndex)
 {
-    return NtfsLookupFileAt(Vcb, PathName, FileRecord, DataContext, NTFS_FILE_ROOT);
+    return NtfsLookupFileAt(Vcb, PathName, FileRecord, DataContext, MFTIndex, NTFS_FILE_ROOT);
 }
 /* EOF */

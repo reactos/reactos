@@ -24,8 +24,6 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Arkiv" {
@@ -45,12 +43,6 @@ MAIN_MENU MENU
    MENUITEM "&Definiera...", MNID_BKMK_DEFINE
  }
  POPUP "A&lternativ" {
-   POPUP	"Hjälpen alltid synlig"
-   BEGIN
-     MENUITEM "Standard",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Synlig",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Inte synlig",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Historik",		MNID_OPTS_HISTORY
   POPUP    "Typsnitt"
   BEGIN
@@ -58,33 +50,30 @@ MAIN_MENU MENU
     MENUITEM "Normalt",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Stort",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Använd systemfärger",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Hjälp" {
    MENUITEM "Hjälp &för hjälp", MNID_HELP_HELPON
    MENUITEM "Alltid &överst", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Index"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Kommentar...",        MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiera",             MNID_CTXT_COPY
+		MENUITEM "Skriv ut...",         MNID_CTXT_PRINT
+		POPUP    "Typsnitt"
+		BEGIN
+			MENUITEM "Litet",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normalt",     MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Stort",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Sök"
-{
-    LTEXT  "Inte implementerat ännu", -1, 10, 10, 180, 150
-}
-
-/* Strings */
 STRINGTABLE
 {
 STID_WINE_HELP, 	"Wine Hjälp"
@@ -103,25 +92,18 @@ STID_NO_RICHEDIT	"Kan inte hitta en implementation av richedit... Avslutar"
 STID_PSH_INDEX,		"Hjälprubriker: "
 }
 
-CONTEXT_MENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "Kommentar...",        MNID_CTXT_ANNOTATE
-        MENUITEM "Kopiera",              MNID_CTXT_COPY
-        MENUITEM "Skriv ut...",         MNID_CTXT_PRINT
-        POPUP    "Typsnitt"
-        BEGIN
-            MENUITEM "Litet",       MNID_CTXT_FONTS_SMALL
-            MENUITEM "Normalt",      MNID_CTXT_FONTS_NORMAL
-            MENUITEM "Stort",        MNID_CTXT_FONTS_LARGE
-        END
-        POPUP   "Hjälp alltid synlig"
-        BEGIN
-            MENUITEM "Standard",     MNID_CTXT_HELP_DEFAULT
-            MENUITEM "Synlig",       MNID_CTXT_HELP_VISIBLE
-            MENUITEM "Ej synlig",  MNID_CTXT_HELP_NONVISIBLE
-        END
-        MENUITEM "Använd systemfärger",   MNID_CTXT_SYSTEM_COLORS
-    END
-END
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Sök"
+{
+    LTEXT  "Inte implementerat ännu", -1, 10, 10, 180, 150
+}

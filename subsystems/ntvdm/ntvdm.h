@@ -41,10 +41,17 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 /* FUNCTIONS ******************************************************************/
 
 #ifndef STANDALONE
+extern BOOLEAN AcceptCommands;
+extern HANDLE CommandThread;
 extern ULONG SessionId;
 #endif
 
 extern HANDLE VdmTaskEvent;
+
+// Command line of NTVDM
+extern INT     NtVdmArgc;
+extern WCHAR** NtVdmArgv;
+
 
 /*
  * Interface functions

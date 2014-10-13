@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * fast486.c
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,6 +29,7 @@
 #include <fast486.h>
 #include "common.h"
 #include "opcodes.h"
+#include "fpu.h"
 
 /* DEFINES ********************************************************************/
 
@@ -42,18 +43,18 @@ typedef enum
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static
-inline
-VOID
+static inline VOID
 NTAPI
 Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 {
     UCHAR Opcode;
+    FAST486_OPCODE_HANDLER_PROC CurrentHandler;
     INT ProcedureCallCount = 0;
 
     /* Main execution loop */
     do
     {
+NextInst:
         /* Check if this is a new instruction */
         if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
 
@@ -67,22 +68,12 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 
         // TODO: Check for CALL/RET to update ProcedureCallCount.
 
-        if (Fast486OpcodeHandlers[Opcode] != NULL)
-        {
-            /* Call the opcode handler */
-            Fast486OpcodeHandlers[Opcode](State, Opcode);
-        }
-        else
-        {
-            /* This is not a valid opcode */
-            Fast486Exception(State, FAST486_EXCEPTION_UD);
-        }
+        /* Call the opcode handler */
+        CurrentHandler = Fast486OpcodeHandlers[Opcode];
+        CurrentHandler(State, Opcode);
 
-        if (Fast486OpcodeHandlers[Opcode] == Fast486OpcodePrefix)
-        {
-            /* This is a prefix, go to the next instruction immediately */
-            continue;
-        }
+        /* If this is a prefix, go to the next instruction immediately */
+        if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
 
         /* A non-prefix opcode has been executed, reset the prefix flags */
         State->PrefixFlags = 0;
@@ -93,27 +84,14 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
          */
         if (State->IntStatus == FAST486_INT_EXECUTE)
         {
-            FAST486_IDT_ENTRY IdtEntry;
-
-            /* Get the interrupt vector */
-            if (Fast486GetIntVector(State, State->PendingIntNum, &IdtEntry))
-            {
-                /* Perform the interrupt */
-                Fast486InterruptInternal(State,
-                                         IdtEntry.Selector,
-                                         MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                         IdtEntry.Type);
-
-                /* Restore the prefix flags, which would be set to OPSIZE for 32-bit real mode */
-                State->PrefixFlags = 0;
-            }
+            /* Perform the interrupt */
+            Fast486PerformInterrupt(State, State->PendingIntNum);
 
             /* Clear the interrupt status */
             State->IntStatus = FAST486_INT_NONE;
         }
-        else if (State->Flags.If
-                 && (State->IntAckCallback != NULL)
-                 && (State->IntStatus == FAST486_INT_SIGNAL))
+        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL)
+                                 && (State->IntAckCallback != NULL))
         {
             /* Acknowledge the interrupt to get the number */
             State->PendingIntNum = State->IntAckCallback(State);
@@ -127,10 +105,9 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
             State->IntStatus = FAST486_INT_EXECUTE;
         }
     }
-    while ((Command == FAST486_CONTINUE)
-           || (Command == FAST486_STEP_OVER && ProcedureCallCount > 0)
-           || (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0)
-           || (Fast486OpcodeHandlers[Opcode] == Fast486OpcodePrefix));
+    while ((Command == FAST486_CONTINUE) ||
+           (Command == FAST486_STEP_OVER && ProcedureCallCount > 0) ||
+           (Command == FAST486_STEP_OUT && ProcedureCallCount >= 0));
 }
 
 /* DEFAULT CALLBACKS **********************************************************/
@@ -282,6 +259,11 @@ Fast486Reset(PFAST486_STATE State)
 #ifndef FAST486_NO_FPU
     /* Initialize CR0 */
     State->ControlRegisters[FAST486_REG_CR0] |= FAST486_CR0_ET;
+
+    /* Initialize the FPU control and tag registers */
+    State->FpuControl.Value = FAST486_FPU_DEFAULT_CONTROL;
+    State->FpuStatus.Value = 0;
+    State->FpuTag = 0xFFFF;
 #endif
 
     /* Restore the callbacks and TLB */
@@ -376,6 +358,35 @@ Fast486DumpState(PFAST486_STATE State)
              State->DebugRegisters[FAST486_REG_DR3],
              State->DebugRegisters[FAST486_REG_DR4],
              State->DebugRegisters[FAST486_REG_DR5]);
+
+#ifndef FAST486_NO_FPU
+    DbgPrint("\nFPU Registers:\n"
+             "ST0 = %04X%016llX\tST1 = %04X%016llX\n"
+             "ST2 = %04X%016llX\tST3 = %04X%016llX\n"
+             "ST4 = %04X%016llX\tST5 = %04X%016llX\n"
+             "ST6 = %04X%016llX\tST7 = %04X%016llX\n"
+             "Status: %04X\tControl: %04X\tTag: %04X\n",
+             FPU_ST(0).Exponent | ((USHORT)FPU_ST(0).Sign << 15),
+             FPU_ST(0).Mantissa,
+             FPU_ST(1).Exponent | ((USHORT)FPU_ST(1).Sign << 15),
+             FPU_ST(1).Mantissa,
+             FPU_ST(2).Exponent | ((USHORT)FPU_ST(2).Sign << 15),
+             FPU_ST(2).Mantissa,
+             FPU_ST(3).Exponent | ((USHORT)FPU_ST(3).Sign << 15),
+             FPU_ST(3).Mantissa,
+             FPU_ST(4).Exponent | ((USHORT)FPU_ST(4).Sign << 15),
+             FPU_ST(4).Mantissa,
+             FPU_ST(5).Exponent | ((USHORT)FPU_ST(5).Sign << 15),
+             FPU_ST(5).Mantissa,
+             FPU_ST(6).Exponent | ((USHORT)FPU_ST(6).Sign << 15),
+             FPU_ST(6).Mantissa,
+             FPU_ST(7).Exponent | ((USHORT)FPU_ST(7).Sign << 15),
+             FPU_ST(7).Mantissa,
+             State->FpuStatus,
+             State->FpuControl,
+             State->FpuTag);
+#endif
+
     DbgPrint("\n<-- Fast486DumpState\n\n");
 }
 

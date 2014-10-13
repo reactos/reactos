@@ -638,6 +638,24 @@ PDH_STATUS WINAPI PdhExpandWildCardPathW( LPCWSTR szDataSource, LPCWSTR szWildCa
 }
 
 /***********************************************************************
+ *              PdhExpandCounterPathA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandCounterPathA( LPCSTR szWildCardPath, LPSTR mszExpandedPathList, LPDWORD pcchPathListLength )
+{
+    FIXME("%s, %p, %p: stub\n", debugstr_a(szWildCardPath), mszExpandedPathList, pcchPathListLength);
+    return PdhExpandWildCardPathA(NULL, szWildCardPath, mszExpandedPathList, pcchPathListLength, 0);
+}
+
+/***********************************************************************
+ *              PdhExpandCounterPathW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandCounterPathW( LPCWSTR szWildCardPath, LPWSTR mszExpandedPathList, LPDWORD pcchPathListLength )
+{
+    FIXME("%s, %p, %p: stub\n", debugstr_w(szWildCardPath), mszExpandedPathList, pcchPathListLength);
+    return PdhExpandWildCardPathW(NULL, szWildCardPath, mszExpandedPathList, pcchPathListLength, 0);
+}
+
+/***********************************************************************
  *              PdhGetCounterInfoA   (PDH.@)
  */
 PDH_STATUS WINAPI PdhGetCounterInfoA( PDH_HCOUNTER handle, BOOLEAN text, LPDWORD size, PPDH_COUNTER_INFO_A info )

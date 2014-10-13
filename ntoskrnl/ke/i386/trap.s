@@ -59,9 +59,11 @@ idt _KiTrap10,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
 idt _KiTrap11,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
 idt _KiTrap0F,         INT_32_DPL0  /* INT 13: SIMD FPU Exception (#XF)     */
-REPEAT 22
-idt _KiTrap0F,         INT_32_DPL0  /* INT 14-29: UNDEFINED INTERRUPTS      */
+REPEAT 21
+idt _KiTrap0F,         INT_32_DPL0  /* INT 14-28: UNDEFINED INTERRUPTS      */
 ENDR
+idt _KiRaiseSecurityCheckFailure, INT_32_DPL3
+                                    /* INT 29: Handler for __fastfail       */
 idt _KiGetTickCount,   INT_32_DPL3  /* INT 2A: Get Tick Count Handler       */
 idt _KiCallbackReturn, INT_32_DPL3  /* INT 2B: User-Mode Callback Return    */
 idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
@@ -113,6 +115,7 @@ TRAP_ENTRY KiTrap0F, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap10, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap11, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap13, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiRaiseSecurityCheckFailure, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiGetTickCount, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiCallbackReturn, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE

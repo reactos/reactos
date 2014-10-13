@@ -16091,7 +16091,6 @@ typedef struct _TRANSACTIONMANAGER_RECOVERY_INFORMATION {
   ULONGLONG LastRecoveredLsn;
 } TRANSACTIONMANAGER_RECOVERY_INFORMATION, *PTRANSACTIONMANAGER_RECOVERY_INFORMATION;
 
-
 typedef struct _TRANSACTION_PROPERTIES_INFORMATION {
   ULONG IsolationLevel;
   ULONG IsolationFlags;
@@ -16140,7 +16139,7 @@ typedef enum _KTMOBJECT_TYPE {
 
 typedef struct _KTMOBJECT_CURSOR {
   GUID LastQuery;
-  unsigned long ObjectIdCount;
+  ULONG ObjectIdCount;
   GUID ObjectIds[1];
 } KTMOBJECT_CURSOR, *PKTMOBJECT_CURSOR;
 
@@ -16148,14 +16147,14 @@ typedef enum _TRANSACTION_INFORMATION_CLASS {
   TransactionBasicInformation,
   TransactionPropertiesInformation,
   TransactionEnlistmentInformation,
-  TransactionSuperiorEnlistmentInformation,
+  TransactionSuperiorEnlistmentInformation
 } TRANSACTION_INFORMATION_CLASS;
 
 typedef enum _TRANSACTIONMANAGER_INFORMATION_CLASS {
   TransactionManagerBasicInformation,
   TransactionManagerLogInformation,
   TransactionManagerLogPathInformation,
-  TransactionManagerRecoveryInformation = 4,
+  TransactionManagerRecoveryInformation = 4
 } TRANSACTIONMANAGER_INFORMATION_CLASS;
 
 typedef enum _RESOURCEMANAGER_INFORMATION_CLASS {

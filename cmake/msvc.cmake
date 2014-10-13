@@ -82,6 +82,14 @@ if(MSVC_IDE)
     endif()
 endif()
 
+if(NOT DEFINED RUNTIME_CHECKS)
+    set(RUNTIME_CHECKS FALSE)
+endif()
+
+if(RUNTIME_CHECKS)
+    add_definitions(-D__RUNTIME_CHECKS__)
+endif()
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
@@ -283,7 +291,6 @@ function(generate_import_lib _libname _dllname _spec_file)
     else()
         # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
         add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file})
-        add_dependencies(${_libname} ${_def_file})
         # set correct "link rule"
         set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB")
     endif()

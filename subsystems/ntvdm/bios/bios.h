@@ -17,11 +17,24 @@
 
 /* DEFINES ********************************************************************/
 
+/* BOP Identifiers */
+#define BOP_RESET       0x00    // Windows NTVDM (SoftPC) BIOS calls BOP 0x00
+                                // to let the virtual machine initialize itself
+                                // the IVT and its hardware.
+#define BOP_EQUIPLIST   0x11
+#define BOP_GETMEMSIZE  0x12
+
+
+
+
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 
-// HACK: Disable FPU for now
-#define BIOS_EQUIPMENT_LIST     0x2C // Bit 2 set: Mouse present
+// HACK: Disable FPU for now because it is not fully ready yet for being used
+// by all applications (e.g. QBasic runtime would use the native FPU if the bit
+// is set, but then subsequently fails, unless the FPU bit is unset in that case
+// QBasic uses its emulated FPU).
+#define BIOS_EQUIPMENT_LIST 0x2C    // Bit1: FPU, Bit 2: Mouse
 
 #pragma pack(push, 1)
 
@@ -85,7 +98,7 @@ typedef struct
     BYTE Reserved5[2];                          // 0x90
     BYTE Reserved6[2];                          // 0x92
     BYTE Reserved7[2];                          // 0x94
-    WORD Reserved8;                             // 0x96
+    WORD KeybdStatusFlags;                      // 0x96
     DWORD Reserved9;                            // 0x98
     DWORD Reserved10;                           // 0x9c
     DWORD Reserved11[2];                        // 0xa0

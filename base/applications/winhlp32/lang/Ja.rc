@@ -19,12 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-
 /* UTF-8 */
 #pragma code_page(65001)
 
-/* Menu */
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
@@ -45,12 +43,6 @@ MAIN_MENU MENU
    MENUITEM "定義(&D)...", MNID_BKMK_DEFINE
  }
  POPUP "オプション(&O)" {
-   POPUP	"Help always visible"
-   BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "履歴",		MNID_OPTS_HISTORY
   POPUP    "フォント"
   BEGIN
@@ -58,33 +50,30 @@ MAIN_MENU MENU
     MENUITEM "標準",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "大",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "システム カラーを使う",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "ヘルプ(&H)" {
    MENUITEM "ヘルプについてのヘルプ(&O)", MNID_HELP_HELPON
    MENUITEM "常に手前に表示(&T)", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "情報(&I)...", MNID_HELP_ABOUT
  }
 }
 
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 9, "MS Shell Dlg"
-CAPTION "索引"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "コメント...",       MNID_CTXT_ANNOTATE
+		MENUITEM "コピー",                MNID_CTXT_COPY
+		MENUITEM "印刷...",            MNID_CTXT_PRINT
+		POPUP    "フォント"
+		BEGIN
+			MENUITEM "小",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "標準",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "大",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 9, "MS Shell Dlg"
-CAPTION "検索"
-{
-    LTEXT  "未実装", -1, 10, 10, 180, 150
-}
-
-/* Strings */
 STRINGTABLE
 {
 STID_WINE_HELP, 	"Wine ヘルプ"
@@ -103,25 +92,18 @@ STID_NO_RICHEDIT	"リッチエディット実装が見つかりません... 終�
 STID_PSH_INDEX,		"ヘルプ トピック: "
 }
 
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "コメント...",       MNID_CTXT_ANNOTATE
-		MENUITEM "コピー",                MNID_CTXT_COPY
-		MENUITEM "印刷...",            MNID_CTXT_PRINT
-		POPUP    "フォント"
-		BEGIN
-			MENUITEM "小",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "標準",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "大",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Help always visible"
-		BEGIN
-			MENUITEM "Default",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Visible",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Non visible", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "システム カラーを使う",   MNID_CTXT_SYSTEM_COLORS
-	END
-END
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 9, "MS Shell Dlg"
+CAPTION "索引"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 9, "MS Shell Dlg"
+CAPTION "検索"
+{
+    LTEXT  "未実装", -1, 10, 10, 180, 150
+}

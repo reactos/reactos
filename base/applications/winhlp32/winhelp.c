@@ -51,7 +51,7 @@ static void WINHELP_InitFonts(HWND hWnd)
 #define FONTS_LEN (sizeof(logfontlist)/sizeof(*logfontlist))
 
     static HFONT fonts[FONTS_LEN];
-    static BOOL init = 0;
+    static BOOL init = FALSE;
 
     win->fonts_len = FONTS_LEN;
     win->fonts = fonts;
@@ -65,7 +65,7 @@ static void WINHELP_InitFonts(HWND hWnd)
             fonts[i] = CreateFontIndirectW(&logfontlist[i]);
 	}
 
-        init = 1;
+        init = TRUE;
     }
 }
 
@@ -161,7 +161,7 @@ BOOL WINHELP_GetOpenFileName(LPSTR lpszFile, int len)
     openfilename.nMaxFileTitle     = 0;
     openfilename.lpstrInitialDir   = szDir;
     openfilename.lpstrTitle        = 0;
-    openfilename.Flags             = OFN_ENABLESIZING;
+    openfilename.Flags             = OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_READONLY;
     openfilename.nFileOffset       = 0;
     openfilename.nFileExtension    = 0;
     openfilename.lpstrDefExt       = 0;
@@ -1112,7 +1112,6 @@ static LRESULT CALLBACK WINHELP_HistoryWndProc(HWND hWnd, UINT msg, WPARAM wPara
         win->hHistoryWnd = hWnd;
         break;
     case WM_CREATE:
-        win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         hDc = GetDC(hWnd);
         GetTextMetricsW(hDc, &tm);
         GetWindowRect(hWnd, &r);
@@ -1127,7 +1126,6 @@ static LRESULT CALLBACK WINHELP_HistoryWndProc(HWND hWnd, UINT msg, WPARAM wPara
         ReleaseDC(hWnd, hDc);
         break;
     case WM_LBUTTONDOWN:
-        win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         hDc = GetDC(hWnd);
         GetTextMetricsW(hDc, &tm);
         i = HIWORD(lParam) / tm.tmHeight;
@@ -1137,7 +1135,6 @@ static LRESULT CALLBACK WINHELP_HistoryWndProc(HWND hWnd, UINT msg, WPARAM wPara
         break;
     case WM_PAINT:
         hDc = BeginPaint(hWnd, &ps);
-        win = (WINHELP_WINDOW*) GetWindowLongPtrW(hWnd, 0);
         GetTextMetricsW(hDc, &tm);
 
         for (i = 0; i < Globals.history.index; i++)

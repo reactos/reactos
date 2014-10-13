@@ -221,7 +221,11 @@ else()
     add_subdirectory(include/reactos/mc)
     add_subdirectory(include/asm)
 
-    include(cmake/baseaddress.cmake)
+    if(NO_ROSSYM)
+        include(cmake/baseaddress_dwarf.cmake)
+    else()
+        include(cmake/baseaddress.cmake)
+    endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
     set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")

@@ -1,26 +1,27 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_INVPARMS "Niew³aœciwa liczba parametrów - uruchom xcopy /? aby wyœwietliæ pomoc\n"
-    STRING_INVPARM "Nieznany parameter '%1' -  uruchom xcopy /? aby wyœwietliæ pomoc\n"
-    STRING_PAUSE "Naciœnij <enter> aby rozpocz¹æ kopiowanie\n"
-    STRING_SIMCOPY "%1!d! plik(ów) zosta³oby skopiowanych\n"
-    STRING_COPY "%1!d! plik(ów) skopiowanych\n"
-    STRING_QISDIR "Czy '%1' jest nazw¹ pliku czy katalogu\n\
+{
+    STRING_INVPARMS, "Niew³aœciwa liczba parametrów - uruchom xcopy /? aby wyœwietliæ pomoc\n"
+    STRING_INVPARM,  "Nieznany parameter '%1' -  uruchom xcopy /? aby wyœwietliæ pomoc\n"
+    STRING_PAUSE,    "Naciœnij <enter> aby rozpocz¹æ kopiowanie\n"
+    STRING_SIMCOPY,  "%1!d! plik(ów) zosta³oby skopiowanych\n"
+    STRING_COPY,     "%1!d! plik(ów) skopiowanych\n"
+    STRING_QISDIR,   "Czy '%1' jest nazw¹ pliku czy katalogu\n\
                      docelowego?\n\
                      (P - plik, K - katalog)\n"
-    STRING_SRCPROMPT "%1? (Tak|Nie)\n"
-    STRING_OVERWRITE "Zast¹piæ %1? (Tak|Nie|Wszystkie)\n"
-    STRING_COPYFAIL "Kopiowanie '%1' do '%2' nie powiod³o siê - kod b³êdu %3!d!\n"
-    STRING_OPENFAIL "Nie uda³o siê otworzyæ '%1'\n"
-    STRING_READFAIL "B³¹d podczas czytania '%1'\n"
-    STRING_YES_CHAR "T"
-    STRING_NO_CHAR "N"
-    STRING_ALL_CHAR "W"
-    STRING_FILE_CHAR "P"
-    STRING_DIR_CHAR "K"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (Tak|Nie)\n"
+    STRING_OVERWRITE,"Zast¹piæ %1? (Tak|Nie|Wszystkie)\n"
+    STRING_COPYFAIL, "Kopiowanie '%1' do '%2' nie powiod³o siê - kod b³êdu %3!d!\n"
+    STRING_OPENFAIL, "Nie uda³o siê otworzyæ '%1'\n"
+    STRING_READFAIL, "B³¹d podczas czytania '%1'\n"
+    STRING_YES_CHAR, "T"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "W"
+    STRING_FILE_CHAR,"P"
+    STRING_DIR_CHAR, "K"
+
+    STRING_HELP,
 "XCOPY - kopiuje pliki lub drzewa katalogów\n\
 \n\
 Sk³adnia:\n\
@@ -51,4 +52,5 @@ Gdzie:\n\
 [/D | /D:m-d-y] Kopiuje tylko nowe pliki lub te zmodifikowane po podanej dacie.\n\
 \t\tJe¿eli nie podano ¿adnej daty, to kopiowane s¹ pliki, które s¹\n\
 \t\tnowsze ni¿ w katalogu docelowym\n\n"
-END
+
+}

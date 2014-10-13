@@ -627,9 +627,8 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
      */
     if (FaceName != GuiData->GuiInfo.FaceName)
     {
-        SIZE_T Length = min(wcslen(FaceName) + 1, LF_FACESIZE); // wcsnlen
         wcsncpy(GuiData->GuiInfo.FaceName, FaceName, LF_FACESIZE);
-        GuiData->GuiInfo.FaceName[Length] = L'\0'; // NULL-terminate
+        GuiData->GuiInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
     }
     GuiData->GuiInfo.FontFamily = FontFamily;
     GuiData->GuiInfo.FontSize   = FontSize;

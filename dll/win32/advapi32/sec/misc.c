@@ -526,6 +526,7 @@ ImpersonateLoggedOnUser(HANDLE hToken)
                                   &NewToken);
         if (!NT_SUCCESS(Status))
         {
+            ERR("NtDuplicateToken failed: Status %08x\n", Status);
             SetLastError(RtlNtStatusToDosError(Status));
             return FALSE;
         }
@@ -552,6 +553,7 @@ ImpersonateLoggedOnUser(HANDLE hToken)
 
     if (!NT_SUCCESS(Status))
     {
+        ERR("NtSetInformationThread failed: Status %08x\n", Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }

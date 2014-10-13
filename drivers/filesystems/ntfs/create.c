@@ -78,14 +78,17 @@ static
 NTSTATUS
 NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
              PFILE_OBJECT FileObject,
-             PWSTR FileName)
+             PWSTR FileName,
+             PNTFS_FCB * FoundFCB)
 {
     PNTFS_FCB ParentFcb;
     PNTFS_FCB Fcb;
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT("NtfsOpenFile(%p, %p, %S)\n", DeviceExt, FileObject, FileName);
+    DPRINT1("NtfsOpenFile(%p, %p, %S, %p)\n", DeviceExt, FileObject, FileName, FoundFCB);
+
+    *FoundFCB = NULL;
 
     if (FileObject->RelatedFileObject)
     {
@@ -143,6 +146,8 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     if (AbsFileName)
         ExFreePool(AbsFileName);
 
+    *FoundFCB = Fcb;
+
     return Status;
 }
 
@@ -160,11 +165,11 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT FileObject;
     ULONG RequestedDisposition;
     ULONG RequestedOptions;
-//    PFCB Fcb;
+    PNTFS_FCB Fcb;
 //    PWSTR FileName;
     NTSTATUS Status;
 
-    DPRINT("NtfsCreateFile() called\n");
+    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, Irp);
 
     DeviceExt = DeviceObject->DeviceExtension;
     ASSERT(DeviceExt);
@@ -213,7 +218,32 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     Status = NtfsOpenFile(DeviceExt,
                           FileObject,
-                          FileObject->FileName.Buffer);
+                          FileObject->FileName.Buffer,
+                          &Fcb);
+
+    if (NT_SUCCESS(Status))
+    {
+        if (RequestedDisposition == FILE_CREATE)
+        {
+            Irp->IoStatus.Information = FILE_EXISTS;
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+
+        if (RequestedOptions & FILE_NON_DIRECTORY_FILE &&
+            NtfsFCBIsDirectory(Fcb))
+        {
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_FILE_IS_A_DIRECTORY;
+        }
+
+        if (RequestedOptions & FILE_DIRECTORY_FILE &&
+            !NtfsFCBIsDirectory(Fcb))
+        {
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_NOT_A_DIRECTORY;
+        }
+    }
 
     /*
      * If the directory containing the file to open doesn't exist then

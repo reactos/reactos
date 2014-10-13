@@ -94,8 +94,11 @@ BOOL RPCSS_Initialize(void)
   if (status != RPC_S_OK)
     goto fail;
 
-  //exit_event = __wine_make_process_system();
+#ifndef __REACTOS__
+  exit_event = __wine_make_process_system();
+#else
   exit_event = CreateEventW(NULL, FALSE, FALSE, NULL); // never fires
+#endif
 
   return TRUE;
 

@@ -6,14 +6,14 @@
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Syntaxe tohoto příkazu:\n\nREG [ ADD | DELETE | QUERY ]\nREG operace /?\n"
-    STRING_ADD_USAGE "REG ADD název_klíče [/v název_hodnoty | /ve] [/t type] [/s oddělovač] [/d data] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE název_klíče [/v název_hodnoty | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY název_klíče [/v název_hodnoty | /ve] [/s]\n"
-    STRING_SUCCESS "Operace byla úspěšně dokončena\n"
-    STRING_INVALID_KEY "Chyba: Neplatný název klíče\n"
-    STRING_INVALID_CMDLINE "Chyba: Neplatné parametry příkazové řádky\n"
-    STRING_NO_REMOTE "Chyba: Nelze přidat klíče na vzdálený stroj\n"
-    STRING_CANNOT_FIND "Chyba: Systém nenalezl zadaný klíč nebo hodnotu registru\n"
-END
+{
+    STRING_USAGE, "Syntaxe tohoto příkazu:\n\nREG [ ADD | DELETE | QUERY ]\nREG operace /?\n"
+    STRING_ADD_USAGE, "REG ADD název_klíče [/v název_hodnoty | /ve] [/t type] [/s oddělovač] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE název_klíče [/v název_hodnoty | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY název_klíče [/v název_hodnoty | /ve] [/s]\n"
+    STRING_SUCCESS, "Operace byla úspěšně dokončena\n"
+    STRING_INVALID_KEY, "Chyba: Neplatný název klíče\n"
+    STRING_INVALID_CMDLINE, "Chyba: Neplatné parametry příkazové řádky\n"
+    STRING_NO_REMOTE, "Chyba: Nelze přidat klíče na vzdálený stroj\n"
+    STRING_CANNOT_FIND, "Chyba: Systém nenalezl zadaný klíč nebo hodnotu registru\n"
+}

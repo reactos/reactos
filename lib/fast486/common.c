@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * common.c
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -160,14 +160,65 @@ Fast486WriteMemory(PFAST486_STATE State,
     return Fast486WriteLinearMemory(State, LinearAddress, Buffer, Size);
 }
 
-BOOLEAN
-Fast486InterruptInternal(PFAST486_STATE State,
-                         USHORT SegmentSelector,
-                         ULONG Offset,
-                         ULONG GateType)
+static inline BOOLEAN
+FASTCALL
+Fast486GetIntVector(PFAST486_STATE State,
+                    UCHAR Number,
+                    PFAST486_IDT_ENTRY IdtEntry)
 {
-    BOOLEAN GateSize = (GateType == FAST486_IDT_INT_GATE_32)
-                       || (GateType == FAST486_IDT_TRAP_GATE_32);
+    /* Check for protected mode */
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    {
+        /* Read from the IDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Idtr.Address
+                                     + Number * sizeof(*IdtEntry),
+                                     IdtEntry,
+                                     sizeof(*IdtEntry)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Read from the real-mode IVT */
+        ULONG FarPointer;
+
+        /* Paging is always disabled in real mode */
+        State->MemReadCallback(State,
+                               State->Idtr.Address
+                               + Number * sizeof(FarPointer),
+                               &FarPointer,
+                               sizeof(FarPointer));
+
+        /* Fill a fake IDT entry */
+        IdtEntry->Offset = LOWORD(FarPointer);
+        IdtEntry->Selector = HIWORD(FarPointer);
+        IdtEntry->Zero = 0;
+        IdtEntry->Type = FAST486_IDT_INT_GATE;
+        IdtEntry->Storage = FALSE;
+        IdtEntry->Dpl = 0;
+        IdtEntry->Present = TRUE;
+        IdtEntry->OffsetHigh = 0;
+    }
+
+    return TRUE;
+}
+
+static inline BOOLEAN
+FASTCALL
+Fast486InterruptInternal(PFAST486_STATE State,
+                         PFAST486_IDT_ENTRY IdtEntry)
+{
+    USHORT SegmentSelector = IdtEntry->Selector;
+    ULONG  Offset          = MAKELONG(IdtEntry->Offset, IdtEntry->OffsetHigh);
+    ULONG  GateType        = IdtEntry->Type;
+    BOOLEAN GateSize = (GateType == FAST486_IDT_INT_GATE_32) ||
+                       (GateType == FAST486_IDT_TRAP_GATE_32);
+
+    BOOLEAN Success = FALSE;
+    ULONG OldPrefixFlags = State->PrefixFlags;
 
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
@@ -195,7 +246,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
                                          sizeof(Tss)))
             {
                 /* Exception occurred */
-                return FALSE;
+                goto Cleanup;
             }
 
             /* Check the new (higher) privilege level */
@@ -206,7 +257,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss0))
                     {
                         /* Exception occurred */
-                        return FALSE;
+                        goto Cleanup;
                     }
                     State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp0;
 
@@ -218,7 +269,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss1))
                     {
                         /* Exception occurred */
-                        return FALSE;
+                        goto Cleanup;
                     }
                     State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp1;
 
@@ -230,7 +281,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
                     if (!Fast486LoadSegment(State, FAST486_REG_SS, Tss.Ss2))
                     {
                         /* Exception occurred */
-                        return FALSE;
+                        goto Cleanup;
                     }
                     State->GeneralRegs[FAST486_REG_ESP].Long = Tss.Esp2;
 
@@ -245,10 +296,10 @@ Fast486InterruptInternal(PFAST486_STATE State,
             }
 
             /* Push SS selector */
-            if (!Fast486StackPush(State, OldSs)) return FALSE;
+            if (!Fast486StackPush(State, OldSs)) goto Cleanup;
 
             /* Push stack pointer */
-            if (!Fast486StackPush(State, OldEsp)) return FALSE;
+            if (!Fast486StackPush(State, OldEsp)) goto Cleanup;
         }
     }
     else
@@ -261,13 +312,13 @@ Fast486InterruptInternal(PFAST486_STATE State,
     }
 
     /* Push EFLAGS */
-    if (!Fast486StackPush(State, State->Flags.Long)) return FALSE;
+    if (!Fast486StackPush(State, State->Flags.Long)) goto Cleanup;
 
     /* Push CS selector */
-    if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector)) return FALSE;
+    if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector)) goto Cleanup;
 
     /* Push the instruction pointer */
-    if (!Fast486StackPush(State, State->InstPtr.Long)) return FALSE;
+    if (!Fast486StackPush(State, State->InstPtr.Long)) goto Cleanup;
 
     if ((GateType == FAST486_IDT_INT_GATE) || (GateType == FAST486_IDT_INT_GATE_32))
     {
@@ -279,7 +330,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
     if (!Fast486LoadSegment(State, FAST486_REG_CS, SegmentSelector))
     {
         /* An exception occurred during the jump */
-        return FALSE;
+        goto Cleanup;
     }
 
     if (GateSize)
@@ -293,6 +344,36 @@ Fast486InterruptInternal(PFAST486_STATE State,
         State->InstPtr.LowWord = LOWORD(Offset);
     }
 
+    Success = TRUE;
+
+Cleanup:
+    /* Restore the prefix flags */
+    State->PrefixFlags = OldPrefixFlags;
+
+    return Success;
+}
+
+BOOLEAN
+FASTCALL
+Fast486PerformInterrupt(PFAST486_STATE State,
+                        UCHAR Number)
+{
+    FAST486_IDT_ENTRY IdtEntry;
+
+    /* Get the interrupt vector */
+    if (!Fast486GetIntVector(State, Number, &IdtEntry))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Perform the interrupt */
+    if (!Fast486InterruptInternal(State, &IdtEntry))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -302,8 +383,6 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
                               FAST486_EXCEPTIONS ExceptionCode,
                               ULONG ErrorCode)
 {
-    FAST486_IDT_ENTRY IdtEntry;
-
     /* Increment the exception count */
     State->ExceptionCount++;
 
@@ -329,20 +408,8 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
     /* Restore the IP to the saved IP */
     State->InstPtr = State->SavedInstPtr;
 
-    if (!Fast486GetIntVector(State, ExceptionCode, &IdtEntry))
-    {
-        /*
-         * If this function failed, that means Fast486Exception
-         * was called again, so just return in this case.
-         */
-        return;
-    }
-
     /* Perform the interrupt */
-    if (!Fast486InterruptInternal(State,
-                                  IdtEntry.Selector,
-                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                  IdtEntry.Type))
+    if (!Fast486PerformInterrupt(State, ExceptionCode))
     {
         /*
          * If this function failed, that means Fast486Exception

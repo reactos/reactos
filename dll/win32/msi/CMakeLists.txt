@@ -51,12 +51,12 @@ list(APPEND SOURCE
     update.c
     upgrade.c
     where.c
-    msipriv.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
+    msipriv.h)
 
 add_library(msi SHARED
     ${SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c
     msi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
 

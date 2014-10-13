@@ -16,10 +16,8 @@
  *      04-04-2004  Created
  */
 
-#include <windef.h>
+#include "precomp.h"
 
-#define NDEBUG
-#include <debug.h>
 
 /***************************************************************************
  * NAME                                                         EXPORTED
@@ -53,8 +51,8 @@ DeviceManager_ExecuteA(HWND hWndParent,
                        LPCSTR lpMachineName,
                        int nCmdShow)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -90,8 +88,8 @@ DeviceManager_ExecuteW(HWND hWndParent,
                        LPCWSTR lpMachineName,
                        int nCmdShow)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -129,7 +127,7 @@ DeviceProblemWizard_RunDLLA(HWND hWndParent,
                             LPCSTR lpDeviceCmd,
                             int nCmdShow)
 {
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 
@@ -167,7 +165,7 @@ DeviceProblemWizard_RunDLLW(HWND hWndParent,
                             LPCWSTR lpDeviceCmd,
                             int nCmdShow)
 {
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 
@@ -210,8 +208,8 @@ DeviceManagerPrintA(LPCSTR lpMachineName,
                     UINT uNumberOfGuids,
                     LPGUID lpGuids)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -254,6 +252,6 @@ DeviceManagerPrintW(LPCWSTR lpMachineName,
                     UINT uNumberOfGuids,
                     LPGUID lpGuids)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }

@@ -3,19 +3,19 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "taskkill [/?] [/f] [/im NumeProces | /pid IdProces]\n"
-    STRING_INVALID_OPTION "Eroare: Opțiune specificată nevalidă sau necunoscută.\n"
-    STRING_INVALID_PARAM "Eroare: Parametrul de comandă specificat este nevalid.\n"
-    STRING_MISSING_OPTION "Eroare: Trebuie specificată una dintre opțiunile /im sau /pid.\n"
-    STRING_MISSING_PARAM "Eroare: Opțiunea %1 necesită un parametru.\n"
-    STRING_MUTUAL_EXCLUSIVE "Eroare: Opțiunile /im și /pid sunt reciproc exclusive.\n"
-    STRING_CLOSE_PID_SEARCH "Către fereastra procesului cu PID %1!u! a fost emis un mesaj de închidere.\n"
-    STRING_CLOSE_PROC_SRCH "Către fereastra procesului «%1» cu PID %2!u! a fost emis un mesaj de închidere.\n"
-    STRING_TERM_PID_SEARCH "Procesul cu PID %1!u! a fost oprit în mod forțat.\n"
-    STRING_TERM_PROC_SEARCH "Procesul «%1» cu PID %2!u! a fost oprit în mod forțat.\n"
-    STRING_SEARCH_FAILED "Eroare: Nu se poate găsi procesul «%1».\n"
-    STRING_ENUM_FAILED "Eroare: Nu se poate enumera lista de procese.\n"
-    STRING_TERMINATE_FAILED "Eroare: Procesul «%1» nu poate fi oprit.\n"
-    STRING_SELF_TERMINATION "Eroare: Auto-terminarea nu este permisă.\n"
-END
+{
+    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im NumeProces | /pid IdProces]\n"
+    STRING_INVALID_OPTION, "Eroare: Opțiune specificată nevalidă sau necunoscută.\n"
+    STRING_INVALID_PARAM, "Eroare: Parametrul de comandă specificat este nevalid.\n"
+    STRING_MISSING_OPTION, "Eroare: Trebuie specificată una dintre opțiunile /im sau /pid.\n"
+    STRING_MISSING_PARAM, "Eroare: Opțiunea %1 necesită un parametru.\n"
+    STRING_MUTUAL_EXCLUSIVE, "Eroare: Opțiunile /im și /pid sunt reciproc exclusive.\n"
+    STRING_CLOSE_PID_SEARCH, "Către fereastra procesului cu PID %1!u! a fost emis un mesaj de închidere.\n"
+    STRING_CLOSE_PROC_SRCH, "Către fereastra procesului «%1» cu PID %2!u! a fost emis un mesaj de închidere.\n"
+    STRING_TERM_PID_SEARCH, "Procesul cu PID %1!u! a fost oprit în mod forțat.\n"
+    STRING_TERM_PROC_SEARCH, "Procesul «%1» cu PID %2!u! a fost oprit în mod forțat.\n"
+    STRING_SEARCH_FAILED, "Eroare: Nu se poate găsi procesul «%1».\n"
+    STRING_ENUM_FAILED, "Eroare: Nu se poate enumera lista de procese.\n"
+    STRING_TERMINATE_FAILED, "Eroare: Procesul «%1» nu poate fi oprit.\n"
+    STRING_SELF_TERMINATION, "Eroare: Auto-terminarea nu este permisă.\n"
+}

@@ -541,7 +541,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     hProcessHeap = GetProcessHeap();
 
     WndClass.style = 0;
-    WndClass.lpfnWndProc   = (WNDPROC)WndProc;
+    WndClass.lpfnWndProc   = WndProc;
     WndClass.cbClsExtra    = 0;
     WndClass.cbWndExtra    = 0;
     WndClass.hInstance     = hInstance;

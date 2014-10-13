@@ -519,3 +519,20 @@ BOOL WINAPI ImportPrivacySettings(LPCWSTR filename, BOOL *pGlobalPrefs, BOOL * p
 
     return TRUE;
 }
+
+/******************************************************************
+ * ResetProfileSharing (SHDOCVW.164)
+ */
+HRESULT WINAPI ResetProfileSharing(HWND hwnd)
+{
+    FIXME("(%p) stub\n", hwnd);
+    return E_NOTIMPL;
+}
+
+/******************************************************************
+ * InstallReg_RunDLL (SHDOCVW.@)
+ */
+void WINAPI InstallReg_RunDLL(HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show)
+{
+    FIXME("(%p %p %s %x)\n", hwnd, handle, debugstr_a(cmdline), show);
+}

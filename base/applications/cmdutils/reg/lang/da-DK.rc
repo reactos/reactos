@@ -1,14 +1,14 @@
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Syntaksen for dette kommando er:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
-    STRING_ADD_USAGE "REG ADD nøgle_navn [/v værdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE nøgle_navn [/v værdi | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY nøgle_navn [/v værdi | /ve] [/s]\n"
-    STRING_SUCCESS "Operationen blev afsluttet med succes\n"
-    STRING_INVALID_KEY "Fejl: Ugyldigt nøgle navn\n"
-    STRING_INVALID_CMDLINE "Fejl: Ugyldige kommando linje parametre\n"
-    STRING_NO_REMOTE "Fejl: Kunne ikke tilføje nøgler til fjern maskinen\n"
-    STRING_CANNOT_FIND "Fejl: Systemet kunne ikke finde, den angivet registrerings nøgle eller værdi\n"
-END
+{
+    STRING_USAGE, "Syntaksen for dette kommando er:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
+    STRING_ADD_USAGE, "REG ADD nøgle_navn [/v værdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nøgle_navn [/v værdi | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nøgle_navn [/v værdi | /ve] [/s]\n"
+    STRING_SUCCESS, "Operationen blev afsluttet med succes\n"
+    STRING_INVALID_KEY, "Fejl: Ugyldigt nøgle navn\n"
+    STRING_INVALID_CMDLINE, "Fejl: Ugyldige kommando linje parametre\n"
+    STRING_NO_REMOTE, "Fejl: Kunne ikke tilføje nøgler til fjern maskinen\n"
+    STRING_CANNOT_FIND, "Fejl: Systemet kunne ikke finde, den angivet registrerings nøgle eller værdi\n"
+}

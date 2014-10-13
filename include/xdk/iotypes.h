@@ -7017,26 +7017,6 @@ typedef struct _FS_FILTER_CALLBACKS {
   PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
 } FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
 
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlRegisterFileSystemFilterCallbacks(
-  _In_ struct _DRIVER_OBJECT *FilterDriverObject,
-  _In_ PFS_FILTER_CALLBACKS Callbacks);
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlNotifyStreamFileObject(
-  _In_ struct _FILE_OBJECT * StreamFileObject,
-  _In_opt_ struct _DEVICE_OBJECT *DeviceObjectHint,
-  _In_ FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
-  _In_ BOOLEAN SafeToRecurse);
-#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
 extern NTKERNELAPI KSPIN_LOCK    IoStatisticsLock;
 extern NTKERNELAPI ULONG         IoReadOperationCount;
 extern NTKERNELAPI ULONG         IoWriteOperationCount;

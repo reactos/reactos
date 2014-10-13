@@ -334,12 +334,14 @@ static HRESULT WINAPI DispatchEx_GetIDsOfNames(IDispatchEx *iface, REFIID riid,
 
 static HRESULT WINAPI DispatchEx_Invoke(IDispatchEx *iface, DISPID dispIdMember,
                                         REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-                            VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+                                        VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     vbdisp_t *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+
+    return IDispatchEx_InvokeEx(&This->IDispatchEx_iface, dispIdMember, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, NULL);
 }
 
 static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD grfdex, DISPID *pid)
@@ -383,6 +385,15 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
         function_t *func;
 
         switch(wFlags) {
+        case DISPATCH_PROPERTYGET:
+            func = This->desc->funcs[id].entries[VBDISP_CALLGET];
+            if(!func || (func->type != FUNC_PROPGET && func->type != FUNC_DEFGET)) {
+                WARN("no getter\n");
+                return DISP_E_MEMBERNOTFOUND;
+            }
+
+            return exec_script(This->desc->ctx, func, This, pdp, pvarRes);
+
         case DISPATCH_METHOD:
         case DISPATCH_METHOD|DISPATCH_PROPERTYGET:
             func = This->desc->funcs[id].entries[VBDISP_CALLGET];
