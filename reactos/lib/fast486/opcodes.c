@@ -4630,14 +4630,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
 
     switch (Opcode)
     {
-        case 0xCC:
+        case 0xCC:  // INT 3
         {
             /* This is the INT3 instruction */
             IntNum = 3;
             break;
         }
 
-        case 0xCD:
+        case 0xCD:  // INT xx
         {
             /* Fetch the interrupt number */
             if (!Fast486FetchByte(State, &IntNum))
@@ -4649,7 +4649,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
             break;
         }
 
-        case 0xCE:
+        case 0xCE:  // INTO
         {
             /* Don't do anything if OF is cleared */
             if (!State->Flags.Of) return TRUE;
