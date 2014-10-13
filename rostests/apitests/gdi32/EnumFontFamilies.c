@@ -74,7 +74,7 @@ TestEnumFontFamiliesA(
                             EnumProcA,
                             (LPARAM)&ContextContinue);
     error = GetLastError();
-    ok(ret == 1, "ret is %d, expected 0\n", ret);
+    ok(ret == 1, "ret is %d, expected 1\n", ret);
     ok(error == 0xdeadbeef, "error is %lu\n", error);
     ok(EnumProcCalls == 0, "EnumProcCalls is %d\n", EnumProcCalls);
 }
@@ -95,7 +95,7 @@ TestEnumFontFamiliesW(
                             EnumProcW,
                             (LPARAM)&ContextContinue);
     error = GetLastError();
-    ok(ret == 1, "ret is %d, expected 0\n", ret);
+    ok(ret == 1, "ret is %d, expected 1\n", ret);
     ok(error == 0xdeadbeef, "error is %lu\n", error);
     ok(EnumProcCalls == 0, "EnumProcCalls is %d\n", EnumProcCalls);
 }
@@ -122,7 +122,7 @@ TestEnumFontFamiliesExA(
                               (LPARAM)&ContextContinue,
                               0);
     error = GetLastError();
-    ok(ret == 1, "ret is %d, expected 0\n", ret);
+    ok(ret == 1, "ret is %d, expected 1\n", ret);
     ok(error == 0xdeadbeef, "error is %lu\n", error);
     ok(EnumProcCalls == 0, "EnumProcCalls is %d\n", EnumProcCalls);
 }
@@ -149,7 +149,7 @@ TestEnumFontFamiliesExW(
                               (LPARAM)&ContextContinue,
                               0);
     error = GetLastError();
-    ok(ret == 1, "ret is %d, expected 0\n", ret);
+    ok(ret == 1, "ret is %d, expected 1\n", ret);
     ok(error == 0xdeadbeef, "error is %lu\n", error);
     ok(EnumProcCalls == 0, "EnumProcCalls is %d\n", EnumProcCalls);
 }
