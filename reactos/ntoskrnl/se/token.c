@@ -571,13 +571,13 @@ SeIsTokenChild(IN PTOKEN Token,
     ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
 
     /* Get the ID */
-    ProcessLuid = ProcessToken->TokenId;
+    ProcessLuid = ProcessToken->AuthenticationId;
 
     /* Dereference the token */
     ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
 
     /* Get our LUID */
-    CallerLuid = Token->TokenId;
+    CallerLuid = Token->AuthenticationId;
 
     /* Compare the LUIDs */
     if (RtlEqualLuid(&CallerLuid, &ProcessLuid)) *IsChild = TRUE;
