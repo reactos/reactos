@@ -2,8 +2,8 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
 
 list(APPEND SOURCE
+    debug.c
     fast486.c
-    fast486dbg.c
     opcodes.c
     opgroups.c
     extraops.c
