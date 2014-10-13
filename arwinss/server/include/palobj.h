@@ -87,8 +87,8 @@ VOID NTAPI PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors);
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
 HPALETTE FASTCALL GdiSelectPalette(HDC, HPALETTE, BOOL);
 
-ULONG
 FORCEINLINE
+ULONG
 CalculateShift(ULONG ulMask1, ULONG ulMask2)
 {
     ULONG ulShift1, ulShift2;

@@ -72,8 +72,8 @@ PVOID       APIENTRY GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
 VOID        FASTCALL GreDeleteObject(HGDIOBJ hBitmap);
 
 /* Inlines */
-ULONG
 FORCEINLINE
+ULONG
 GDIOBJ_ShareUnlockObjByPtr(PBASEOBJECT Object)
 {
     HGDIOBJ hobj = Object->hHmgr;

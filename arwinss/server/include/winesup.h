@@ -133,7 +133,8 @@ typedef void (*timeout_callback)( void *private );
 void remove_timeout_user( struct timeout_user *user );
 struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, void *private );
 
-VOID FORCEINLINE
+FORCEINLINE
+VOID
 get_current_time(timeout_t *value)
 {
     LARGE_INTEGER time;
