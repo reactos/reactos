@@ -457,7 +457,7 @@ PrepareVideoPrt()
 
     KeClearEvent(&PrimarySurface.VideoFileObject->Event);
 
-    ObReferenceObjectByPointer(FileObject, 0, IoFileObjectType, KernelMode);
+    ObReferenceObjectByPointer(FileObject, 0, *IoFileObjectType, KernelMode);
 
     StartOffset.QuadPart = 0;
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,

@@ -448,7 +448,7 @@ EngAlphaBlend(IN SURFOBJ* psoDest,
 {
     RECTL              SourceStretchedRect;
     SIZEL              SourceStretchedSize;
-    HBITMAP            SourceStretchedBitmap = 0;
+    HSURF              SourceStretchedBitmap = 0;
     SURFOBJ*           SourceStretchedObj = NULL;
     RECTL              InputRect;
     RECTL              OutputRect;
@@ -544,7 +544,7 @@ EngAlphaBlend(IN SURFOBJ* psoDest,
         Width = DIB_GetDIBWidthBytes(SourceStretchedSize.cx, BitsPerFormat(psoSource->iBitmapFormat));
         /* FIXME: Maybe it is a good idea to use EngCreateDeviceBitmap and IntEngStretchBlt
                   if possible to get a HW accelerated stretch. */
-        SourceStretchedBitmap = EngCreateBitmap(SourceStretchedSize, Width, psoSource->iBitmapFormat,
+        SourceStretchedBitmap = (HSURF)EngCreateBitmap(SourceStretchedSize, Width, psoSource->iBitmapFormat,
                                                 BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
 
         if (SourceStretchedBitmap == 0)

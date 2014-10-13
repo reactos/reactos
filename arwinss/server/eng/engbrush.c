@@ -143,7 +143,7 @@ EngRealizeBrush(
     ULONG    iHatch)
 {
     EBRUSHOBJ *pebo;
-    HBITMAP hbmpRealize;
+    HSURF hbmpRealize;
     SURFOBJ *psoRealize;
     POINTL ptlSrc = {0, 0};
     RECTL rclDest;
@@ -154,7 +154,7 @@ EngRealizeBrush(
                                   BitsPerFormat(psoDst->iBitmapFormat));
 
     /* Allocate a bitmap */
-    hbmpRealize = EngCreateBitmap(psoPattern->sizlBitmap,
+    hbmpRealize = (HSURF)EngCreateBitmap(psoPattern->sizlBitmap,
                                   lWidth,
                                   psoDst->iBitmapFormat,
                                   BMF_NOZEROINIT,

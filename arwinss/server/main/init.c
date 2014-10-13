@@ -333,16 +333,6 @@ Win32kWindowStationOpenProcedure(PWIN32_OPENMETHOD_PARAMETERS Parameters)
 
 NTSTATUS
 APIENTRY
-Win32kWin32DataCollectionProcedure(PEPROCESS Process,
-                                   PVOID Callback,
-                                   PVOID Context)
-{
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-APIENTRY
 NtGdiFlushUserBatch(VOID)
 {
     UNIMPLEMENTED;
@@ -428,7 +418,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     CalloutData.WindowStationDeleteProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationDeleteProcedure;
     CalloutData.WindowStationParseProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationParseProcedure;
     CalloutData.WindowStationOpenProcedure = (PKWIN32_SESSION_CALLOUT)Win32kWindowStationOpenProcedure;
-    CalloutData.Win32DataCollectionProcedure = Win32kWin32DataCollectionProcedure;
 
     /* Register them */
     PsEstablishWin32Callouts(&CalloutData);

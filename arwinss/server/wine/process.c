@@ -41,7 +41,7 @@ DECL_HANDLER(get_process_idle_event)
     /* Reference the process */
     Status = ObReferenceObjectByHandle((HANDLE)req->handle,
                                        PROCESS_QUERY_INFORMATION,
-                                       PsProcessType,
+                                       *PsProcessType,
                                        KernelMode,
                                        (PVOID*)&ProcessObject,
                                        NULL);

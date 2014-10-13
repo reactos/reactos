@@ -65,7 +65,7 @@ VidMemFree(LPVMEMHEAP pvmh,
     return;
 }
 
-DWORD
+HRESULT
 APIENTRY
 EngDxIoctl(ULONG ulIoctl,
            PVOID pBuffer,

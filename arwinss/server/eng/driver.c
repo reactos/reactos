@@ -521,7 +521,7 @@ PFILE_OBJECT DRIVER_FindMPDriver(ULONG DisplayNumber)
     {
       Status = ObReferenceObjectByHandle(DisplayHandle,
                                          FILE_READ_DATA | FILE_WRITE_DATA,
-                                         IoFileObjectType,
+                                         *IoFileObjectType,
                                          KernelMode,
                                          (PVOID *)&VideoFileObject,
                                          NULL);
