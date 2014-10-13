@@ -134,6 +134,7 @@ extern "C" {
 #define _IOERR 0x0020
 #define _IOSTRG 0x0040
 #define _IORW 0x0080
+#define _USERBUF 0x0100
 
 #define _TWO_DIGIT_EXPONENT 0x1
 
