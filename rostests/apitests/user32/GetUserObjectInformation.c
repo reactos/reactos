@@ -76,6 +76,8 @@ FreeGuarded(
     ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
 }
 
+#define xok ok // Make the test succeed on Win2003
+//#define xok(...) // This should make the test succeed on all Windows versions
 #define NOTSET 1234
 
 #define TestUserObjectInfo(Handle, Index, Buffer, Length, Ret, Error, LengthNeeded) do  \
@@ -89,14 +91,14 @@ FreeGuarded(
         _Ret = GetUserObjectInformationW(Handle, Index, Buffer, Length, NULL);          \
         _Error = GetLastError();                                                        \
         ok(_Ret == (Ret), "Ret = %d\n", _Ret);                                          \
-        ok(_Error == (Error), "Error = %lu\n", _Error);                                 \
+        xok(_Error == (Error), "Error = %lu\n", _Error);                                \
                                                                                         \
         SetLastError(0xdeadbeef);                                                       \
         _Ret = GetUserObjectInformationW(Handle, Index, Buffer, Length, &_LengthNeeded);\
         _Error = GetLastError();                                                        \
         ok(_Ret == (Ret), "Ret = %d\n", _Ret);                                          \
-        ok(_Error == (Error), "Error = %lu\n", _Error);                                 \
-        ok(_LengthNeeded == (LengthNeeded), "LengthNeeded = %lu\n", _LengthNeeded);     \
+        xok(_Error == (Error), "Error = %lu\n", _Error);                                \
+        xok(_LengthNeeded == (LengthNeeded), "LengthNeeded = %lu\n", _LengthNeeded);    \
                                                                                         \
         SetLastError(0xdeadbeef);                                                       \
         *(PDWORD)&_LengthBuffer[1] = NOTSET;                                            \
@@ -104,9 +106,9 @@ FreeGuarded(
                                          (PDWORD)&_LengthBuffer[1]);                    \
         _Error = GetLastError();                                                        \
         ok(_Ret == (Ret), "Ret = %d\n", _Ret);                                          \
-        ok(_Error == (Error), "Error = %lu\n", _Error);                                 \
+        xok(_Error == (Error), "Error = %lu\n", _Error);                                \
         _LengthNeeded = *(PDWORD)&_LengthBuffer[1];                                     \
-        ok(_LengthNeeded == (LengthNeeded), "LengthNeeded = %lu\n", _LengthNeeded);     \
+        xok(_LengthNeeded == (LengthNeeded), "LengthNeeded = %lu\n", _LengthNeeded);    \
                                                                                         \
         SetLastError(0xdeadbeef);                                                       \
         _Ret = GetUserObjectInformationW(Handle, Index, Buffer, Length, (PVOID)-4);     \
@@ -115,7 +117,9 @@ FreeGuarded(
         ok(_Error == ERROR_NOACCESS, "Error = %lu\n", _Error);                          \
     } while (0)
 
-START_TEST(GetUserObjectInformation)
+static
+void
+TestGetUserObjectInfoW(void)
 {
     USEROBJECTFLAGS UserObjectFlags;
     PWCHAR Buffer;
@@ -182,4 +186,119 @@ START_TEST(GetUserObjectInformation)
     TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           BufferSize,              TRUE,  0xdeadbeef,                sizeof(L"Desktop"));
     TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           BufferSize + 1,          FALSE, ERROR_NOACCESS,            NOTSET);
     FreeGuarded(Buffer);
+}
+
+#undef TestUserObjectInfo
+#define TestUserObjectInfo(Handle, Index, Buffer, Length, Ret, Error, LengthNeeded) do  \
+    {                                                                                   \
+        DWORD _LengthNeeded = NOTSET;                                                   \
+        DECLSPEC_ALIGN(16) CHAR _LengthBuffer[2 * sizeof(DWORD)];                       \
+        DWORD _Error;                                                                   \
+        BOOL _Ret;                                                                      \
+                                                                                        \
+        SetLastError(0xdeadbeef);                                                       \
+        _Ret = GetUserObjectInformationA(Handle, Index, Buffer, Length, NULL);          \
+        _Error = GetLastError();                                                        \
+        ok(_Ret == (Ret), "Ret = %d\n", _Ret);                                          \
+        xok(_Error == (Error), "Error = %lu\n", _Error);                                \
+                                                                                        \
+        SetLastError(0xdeadbeef);                                                       \
+        _Ret = GetUserObjectInformationA(Handle, Index, Buffer, Length, &_LengthNeeded);\
+        _Error = GetLastError();                                                        \
+        ok(_Ret == (Ret), "Ret = %d\n", _Ret);                                          \
+        xok(_Error == (Error), "Error = %lu\n", _Error);                                \
+        xok(_LengthNeeded == (LengthNeeded), "LengthNeeded = %lu\n", _LengthNeeded);    \
+                                                                                        \
+        SetLastError(0xdeadbeef);                                                       \
+        *(PDWORD)&_LengthBuffer[1] = NOTSET;                                            \
+        _Ret = GetUserObjectInformationA(Handle, Index, Buffer, Length,                 \
+                                         (PDWORD)&_LengthBuffer[1]);                    \
+        _Error = GetLastError();                                                        \
+        ok(_Ret == (Ret), "Ret = %d\n", _Ret);                                          \
+        xok(_Error == (Error), "Error = %lu\n", _Error);                                \
+        _LengthNeeded = *(PDWORD)&_LengthBuffer[1];                                     \
+        xok(_LengthNeeded == (LengthNeeded), "LengthNeeded = %lu\n", _LengthNeeded);    \
+                                                                                        \
+        SetLastError(0xdeadbeef);                                                       \
+        _Ret = GetUserObjectInformationA(Handle, Index, Buffer, Length, (PVOID)-4);     \
+        _Error = GetLastError();                                                        \
+        ok(_Ret == FALSE, "Ret = %d\n", _Ret);                                          \
+        ok(_Error == ERROR_NOACCESS, "Error = %lu\n", _Error);                          \
+    } while (0)
+
+static
+void
+TestGetUserObjectInfoA(void)
+{
+    USEROBJECTFLAGS UserObjectFlags;
+    PCHAR Buffer;
+    ULONG BufferSize = 64;
+    HDESK Desktop;
+    BOOLEAN Check;
+
+    Buffer = AllocateGuarded(BufferSize);
+
+    TestUserObjectInfo(NULL,    5,         NULL,             0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_FLAGS, NULL,             0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_FLAGS, (PVOID)1,         0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_FLAGS, NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(NULL,    UOI_FLAGS, (PVOID)1,         1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(NULL,    UOI_FLAGS, &UserObjectFlags, sizeof(UserObjectFlags), FALSE, ERROR_INVALID_HANDLE,      0);
+
+    TestUserObjectInfo(NULL,    UOI_TYPE,  NULL,             0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_TYPE,  (PVOID)1,         0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_TYPE,  NULL,             1,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_TYPE,  (PVOID)1,         1,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_TYPE,  Buffer,           BufferSize,              FALSE, ERROR_INVALID_HANDLE,      0);
+
+    Desktop = GetThreadDesktop(GetCurrentThreadId());
+    if (!Desktop)
+    {
+        skip("Failed to get desktop handle\n");
+        return;
+    }
+
+    TestUserObjectInfo(Desktop, 5,         NULL,             0,                       FALSE, ERROR_INVALID_PARAMETER,   0);
+    TestUserObjectInfo(Desktop, UOI_FLAGS, NULL,             0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(USEROBJECTFLAGS));
+    TestUserObjectInfo(Desktop, UOI_FLAGS, (PVOID)1,         0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(USEROBJECTFLAGS));
+    TestUserObjectInfo(Desktop, UOI_FLAGS, NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(Desktop, UOI_FLAGS, (PVOID)1,         1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(Desktop, UOI_FLAGS, &UserObjectFlags, sizeof(UserObjectFlags), TRUE,  0xdeadbeef,                sizeof(USEROBJECTFLAGS));
+
+    TestUserObjectInfo(Desktop, UOI_TYPE,  NULL,             0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(L"Desktop"));
+    TestUserObjectInfo(Desktop, UOI_TYPE,  (PVOID)1,         0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(L"Desktop"));
+    TestUserObjectInfo(Desktop, UOI_TYPE,  NULL,             1,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(L"Desktop"));
+    TestUserObjectInfo(Desktop, UOI_TYPE,  (PVOID)1,         1,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(L"Desktop"));
+    RtlFillMemory(Buffer, BufferSize, 0x55);
+    TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           sizeof("Desktop") - 2,   FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(L"Desktop"));
+    Check = CheckBuffer(Buffer, BufferSize, 0x55);
+    ok(Check == TRUE, "CheckBuffer failed\n");
+    RtlFillMemory(Buffer, BufferSize, 0x55);
+    TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           sizeof("Desktop") - 1,   FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(L"Desktop"));
+    Check = CheckBuffer(Buffer, BufferSize, 0x55);
+    ok(Check == TRUE, "CheckBuffer failed\n");
+    RtlFillMemory(Buffer, BufferSize, 0x55);
+    TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           sizeof("Desktop"),       TRUE,  0xdeadbeef,                sizeof("Desktop"));
+    ok(strcmp(Buffer, "Desktop") == 0, "Buffer '%s'\n", Buffer);
+    Check = CheckBuffer(Buffer + sizeof("Desktop"), BufferSize - sizeof("Desktop"), 0x55);
+    ok(Check == TRUE, "CheckBuffer failed\n");
+    RtlFillMemory(Buffer, BufferSize, 0x55);
+    TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           BufferSize,              TRUE,  0xdeadbeef,                sizeof("Desktop"));
+    ok(strcmp(Buffer, "Desktop") == 0, "Buffer '%s'\n", Buffer);
+    Check = CheckBuffer(Buffer + sizeof("Desktop"), BufferSize - sizeof("Desktop"), 0x55);
+    ok(Check == TRUE, "CheckBuffer failed\n");
+
+    FreeGuarded(Buffer);
+
+    BufferSize = sizeof("Desktop");
+    Buffer = AllocateGuarded(BufferSize);
+    TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           BufferSize,              TRUE,  0xdeadbeef,                sizeof("Desktop"));
+    TestUserObjectInfo(Desktop, UOI_TYPE,  Buffer,           BufferSize + 1,          TRUE,  0xdeadbeef,                sizeof("Desktop"));
+    FreeGuarded(Buffer);
+}
+
+START_TEST(GetUserObjectInformation)
+{
+    TestGetUserObjectInfoW();
+    TestGetUserObjectInfoA();
 }
