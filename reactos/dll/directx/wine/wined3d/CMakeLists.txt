@@ -44,7 +44,7 @@ list(APPEND SOURCE
 add_library(d3dwine SHARED
     ${SOURCE}
     version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/d3dwine.def)
 
 set_module_type(d3dwine win32dll)
 target_link_libraries(d3dwine wine)
