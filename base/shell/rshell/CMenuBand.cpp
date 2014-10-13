@@ -934,6 +934,10 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     switch (changeType)
     {
     case MPOS_EXECUTE:
+        if (m_subMenuParent)
+        {
+            m_subMenuParent->OnSelect(changeType);
+        }
         m_hotBar->ExecuteItem(m_hotItem);
         break;
 
