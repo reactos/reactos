@@ -395,3 +395,34 @@ PROC WINAPI wglGetProcAddress(LPCSTR func)
 
     return ret;
 }
+
+INT
+WINAPI
+GdiDescribePixelFormat(
+    HDC hdc,
+    INT ipfd,
+    UINT cjpfd,
+    PPIXELFORMATDESCRIPTOR ppfd)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+BOOL
+WINAPI
+GdiSetPixelFormat(
+    HDC hdc,
+    INT ipfd)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GdiSwapBuffers(
+    HDC hdc)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}

@@ -32,7 +32,7 @@
 # include <unistd.h>
 #endif
 
-#define NONAMELESSUNION
+//#define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
@@ -119,9 +119,9 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( const IMAGE_RESOURCE_DI
     while (min <= max)
     {
         pos = (min + max) / 2;
-        if (entry[pos].u1.Id == id)
-            return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].u2.s2.OffsetToDirectory);
-        if (entry[pos].u1.Id > id) max = pos - 1;
+        if (entry[pos].Id == id)
+            return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].OffsetToDirectory);
+        if (entry[pos].Id > id) max = pos - 1;
         else min = pos + 1;
     }
     return NULL;
@@ -138,7 +138,7 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_default( const IMAGE_RESOURCE_
 {
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry;
     entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);
-    return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry->u2.s2.OffsetToDirectory);
+    return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry->OffsetToDirectory);
 }
 
 /*************************************************************************
@@ -488,7 +488,7 @@ static UINT ICO_ExtractIconExW(
 
 	    while(n<iconDirCount && xprdeTmp)
 	    {
-              if(xprdeTmp->u1.Id ==  iId)
+              if(xprdeTmp->Id ==  iId)
               {
                   nIconIndex = n;
                   break;
@@ -524,7 +524,7 @@ static UINT ICO_ExtractIconExW(
 	    const IMAGE_RESOURCE_DIRECTORY *resdir;
 
 	    /* go down this resource entry, name */
-            resdir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)rootresdir + xresent->u2.s2.OffsetToDirectory);
+            resdir = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)rootresdir + xresent->OffsetToDirectory);
 
 	    /* default language (0) */
 	    resdir = find_entry_default(resdir,rootresdir);
