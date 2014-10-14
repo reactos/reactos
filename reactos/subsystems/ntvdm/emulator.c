@@ -177,6 +177,7 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
 VOID EmulatorTerminate(VOID)
 {
     /* Stop the VDM */
+    CpuUnsimulate(); // Halt the CPU
     VdmRunning = FALSE;
 }
 

@@ -55,7 +55,6 @@ enum
 };
 #endif
 extern FAST486_STATE EmulatorContext;
-// extern BOOLEAN VdmRunning;
 
 /* FUNCTIONS ******************************************************************/
 

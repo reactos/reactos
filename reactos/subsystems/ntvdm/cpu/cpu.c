@@ -37,9 +37,7 @@ BOOLEAN CpuRunning = FALSE;
 
 /* No more than 'MaxCpuCallLevel' recursive CPU calls are allowed */
 static const INT MaxCpuCallLevel = 32;
-static INT CpuCallLevel = 0;
-
-// BOOLEAN VdmRunning  = TRUE;
+static INT CpuCallLevel = 0; // == 0: CPU stopped; >= 1: CPU running or halted
 
 #if 0
 LPCWSTR ExceptionName[] =
@@ -131,10 +129,10 @@ VOID CpuSimulate(VOID)
 
     DPRINT("CpuSimulate <-- Level %d\n", CpuCallLevel);
     CpuCallLevel--;
-    if (CpuCallLevel < 0) CpuCallLevel = 0;
+    if (!VdmRunning || CpuCallLevel < 0) CpuCallLevel = 0;
 
     /* This takes into account for reentrance */
-    CpuRunning = TRUE;
+    if (VdmRunning && (CpuCallLevel > 0)) CpuRunning = TRUE;
 }
 
 VOID CpuUnsimulate(VOID)
@@ -147,14 +145,6 @@ static VOID WINAPI CpuUnsimulateBop(LPWORD Stack)
 {
     CpuUnsimulate();
 }
-
-#if 0
-VOID EmulatorTerminate(VOID)
-{
-    /* Stop the VDM */
-    VdmRunning = FALSE;
-}
-#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
