@@ -486,7 +486,7 @@ NTSTATUS
 NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   ULONGLONG MFTIndex,
                   PUNICODE_STRING FileName,
-                  ULONG FirstEntry,
+                  PULONG FirstEntry,
                   BOOLEAN DirSearch,
                   ULONGLONG *OutMFTIndex,
                   PWSTR OutName)
@@ -545,9 +545,10 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
         while (IndexEntry < IndexEntryEnd &&
                !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
         {
-            if (CurrentEntry >= FirstEntry && CompareFileName(FileName, IndexEntry, DirSearch))
+            if (CurrentEntry >= *FirstEntry && CompareFileName(FileName, IndexEntry, DirSearch))
             {
                 *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
+                *FirstEntry = CurrentEntry;
                 RtlCopyMemory(OutName, IndexEntry->FileName.Name, IndexEntry->FileName.NameLength);
                 OutName[IndexEntry->FileName.NameLength / sizeof(WCHAR)] = UNICODE_NULL;
                 ExFreePoolWithTag(IndexRecord, TAG_NTFS);
@@ -632,10 +633,11 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
                 {
-                    if (CurrentEntry >= FirstEntry && CompareFileName(FileName, IndexEntry, DirSearch))
+                    if (CurrentEntry >= *FirstEntry && CompareFileName(FileName, IndexEntry, DirSearch))
                     {
                         DPRINT("File found\n");
                         *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
+                        *FirstEntry = CurrentEntry;
                         RtlCopyMemory(OutName, IndexEntry->FileName.Name, IndexEntry->FileName.NameLength);
                         OutName[IndexEntry->FileName.NameLength / sizeof(WCHAR)] = UNICODE_NULL;
                         ExFreePoolWithTag(BitmapData, TAG_NTFS);
@@ -678,6 +680,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     UNICODE_STRING Current, Remaining, Found;
     NTSTATUS Status;
     WCHAR FoundName[MAX_PATH + 1];
+    ULONG FirstEntry = 0;
 
     DPRINT1("NtfsLookupFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, PathName, FileRecord, DataContext, CurrentMFTIndex);
 
@@ -687,7 +690,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     {
         DPRINT1("Lookup: %wZ\n", &Current);
 
-        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, 0, FALSE, &CurrentMFTIndex, FoundName);
+        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex, FoundName);
         if (!NT_SUCCESS(Status))
         {
             return Status;
@@ -739,7 +742,7 @@ NtfsLookupFile(PDEVICE_EXTENSION Vcb,
 NTSTATUS
 NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING SearchPattern,
-               ULONG FirstEntry,
+               PULONG FirstEntry,
                PFILE_RECORD_HEADER *FileRecord,
                PNTFS_ATTR_CONTEXT *DataContext,
                PULONGLONG MFTIndex,
@@ -749,7 +752,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     WCHAR FoundName[MAX_PATH + 1];
 
-    DPRINT1("NtfsFindFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, SearchPattern, FileRecord, DataContext, CurrentMFTIndex);
+    DPRINT1("NtfsFindFileAt(%p, %wZ, %p, %p, %p, %p, %I64x)\n", Vcb, SearchPattern, FirstEntry, FileRecord, DataContext, MFTIndex, CurrentMFTIndex);
 
     Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex, FoundName);
     if (!NT_SUCCESS(Status))

@@ -657,7 +657,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
 NTSTATUS
 NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING SearchPattern,
-               ULONG FirstEntry,
+               PULONG FirstEntry,
                PFILE_RECORD_HEADER *FileRecord,
                PNTFS_ATTR_CONTEXT *DataContext,
                PULONGLONG MFTIndex,
