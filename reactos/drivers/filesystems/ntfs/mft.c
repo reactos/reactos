@@ -462,7 +462,8 @@ ReadLCN(PDEVICE_EXTENSION Vcb,
 
 BOOLEAN
 CompareFileName(PUNICODE_STRING FileName,
-                PINDEX_ENTRY_ATTRIBUTE IndexEntry)
+                PINDEX_ENTRY_ATTRIBUTE IndexEntry,
+                BOOLEAN DirSearch)
 {
     UNICODE_STRING EntryName;
 
@@ -470,12 +471,24 @@ CompareFileName(PUNICODE_STRING FileName,
     EntryName.Length = 
     EntryName.MaximumLength = IndexEntry->FileName.NameLength;
 
-    return (RtlCompareUnicodeString(FileName, &EntryName, !!(IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)) == TRUE);
+    if (DirSearch)
+    {
+        return FsRtlIsNameInExpression(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX), NULL);
+    }
+    else
+    {
+        return (RtlCompareUnicodeString(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)) == TRUE);
+    }
 }
 
 
 NTSTATUS
-NtfsFindMftRecord(PDEVICE_EXTENSION Vcb, ULONGLONG MFTIndex, PUNICODE_STRING FileName, ULONGLONG *OutMFTIndex)
+NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
+                  ULONGLONG MFTIndex,
+                  PUNICODE_STRING FileName,
+                  ULONG FirstEntry,
+                  BOOLEAN DirSearch,
+                  ULONGLONG *OutMFTIndex)
 {
     PFILE_RECORD_HEADER MftRecord;
     //ULONG Magic;
@@ -530,7 +543,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb, ULONGLONG MFTIndex, PUNICODE_STRING Fil
         while (IndexEntry < IndexEntryEnd &&
                !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
         {
-            if (CompareFileName(FileName, IndexEntry))
+            if (CompareFileName(FileName, IndexEntry, DirSearch))
             {
                 *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
                 ExFreePoolWithTag(IndexRecord, TAG_NTFS);
@@ -613,7 +626,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb, ULONGLONG MFTIndex, PUNICODE_STRING Fil
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
                 {
-                    if (CompareFileName(FileName, IndexEntry))
+                    if (CompareFileName(FileName, IndexEntry, DirSearch))
                     {
                         DPRINT("File found\n");
                         *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
@@ -663,7 +676,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     {
         DPRINT1("Lookup: %wZ\n", &Current);
 
-        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, &CurrentMFTIndex);
+        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, 0, FALSE, &CurrentMFTIndex);
         if (!NT_SUCCESS(Status))
         {
             return Status;
