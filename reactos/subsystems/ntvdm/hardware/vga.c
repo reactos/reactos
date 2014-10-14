@@ -976,8 +976,8 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     }
 
     /* Fill the bitmap info header */
-    ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
-    BitmapInfo->bmiHeader.biSize   = sizeof(BITMAPINFOHEADER);
+    RtlZeroMemory(&BitmapInfo->bmiHeader, sizeof(BitmapInfo->bmiHeader));
+    BitmapInfo->bmiHeader.biSize   = sizeof(BitmapInfo->bmiHeader);
     BitmapInfo->bmiHeader.biWidth  = Width;
     BitmapInfo->bmiHeader.biHeight = Height;
     BitmapInfo->bmiHeader.biBitCount = 8;
@@ -1006,7 +1006,7 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     ConsoleMutex = GraphicsBufferInfo.hMutex;
 
     /* Clear the framebuffer */
-    ZeroMemory(ConsoleFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
+    RtlZeroMemory(ConsoleFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
 
     /* Set the active buffer */
     VgaSetActiveScreenBuffer(GraphicsConsoleBuffer);
@@ -1901,7 +1901,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 
 VOID VgaClearMemory(VOID)
 {
-    ZeroMemory(VgaMemory, sizeof(VgaMemory));
+    RtlZeroMemory(VgaMemory, sizeof(VgaMemory));
 }
 
 VOID VgaResetPalette(VOID)

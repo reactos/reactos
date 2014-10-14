@@ -665,7 +665,7 @@ VOID MouseBiosUpdateButtons(WORD ButtonState)
 BOOLEAN DosMouseInitialize(VOID)
 {
     /* Clear the state */
-    ZeroMemory(&DriverState, sizeof(DriverState));
+    RtlZeroMemory(&DriverState, sizeof(DriverState));
 
     /* Initialize the interrupt handler */
     RegisterDosInt32(BIOS_MOUSE_INTERRUPT, BiosMouseService);

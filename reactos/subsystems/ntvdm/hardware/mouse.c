@@ -12,6 +12,7 @@
 
 #include "mouse.h"
 #include "ps2.h"
+// #include "pic.h"
 
 // HACK: For the PS/2 bypass and MOUSE.COM driver direct call
 #include "dos/mouse32.h"
@@ -69,7 +70,7 @@ static VOID MouseReset(VOID)
 static VOID MouseGetPacket(PMOUSE_PACKET Packet)
 {
     /* Clear the packet */
-    ZeroMemory(Packet, sizeof(MOUSE_PACKET));
+    RtlZeroMemory(Packet, sizeof(*Packet));
 
     Packet->Flags |= MOUSE_ALWAYS_SET;
 

@@ -342,7 +342,7 @@ VOID UnregisterIoPort(ULONG Port)
      * the hVdd gets unregistered as well as all the handlers.
      */
     // IoPortProc[Port] = {NULL};
-    ZeroMemory(&IoPortProc[Port], sizeof(IoPortProc[Port]));
+    RtlZeroMemory(&IoPortProc[Port], sizeof(IoPortProc[Port]));
 }
 
 VOID WINAPI
@@ -594,7 +594,7 @@ VDDDeInstallIOHook(HANDLE            hVdd,
              * the hVdd gets unregistered as well as all the handlers.
              */
             // IoPortProc[i] = {NULL};
-            ZeroMemory(&IoPortProc[i], sizeof(IoPortProc[i]));
+            RtlZeroMemory(&IoPortProc[i], sizeof(IoPortProc[i]));
         }
 
         /* Go to the next range */

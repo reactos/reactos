@@ -134,8 +134,8 @@ static VOID WINAPI DosCmdInterpreterBop(LPWORD Stack)
             strcpy(CommandLine, "cmd.exe /c ");
             strcat(CommandLine, Command);
 
-            ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-            ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
+            RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
+            RtlZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
             StartupInfo.cb = sizeof(StartupInfo);
 
@@ -209,7 +209,7 @@ CommandThreadProc(LPVOID Parameter)
     do
     {
         /* Clear the structure */
-        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+        RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
         /* Initialize the structure members */
         CommandInfo.TaskId = SessionId;
