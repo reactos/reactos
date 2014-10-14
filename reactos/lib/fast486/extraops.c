@@ -37,134 +37,135 @@
 FAST486_OPCODE_HANDLER_PROC
 Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 {
-    Fast486OpcodeGroup0F00,
+    Fast486OpcodeGroup0F00,             /* 0x00 - 0x01 */
     Fast486OpcodeGroup0F01,
-    Fast486ExtOpcodeLar,
-    Fast486ExtOpcodeLsl,
-    NULL, // Invalid
-    NULL, // Invalid
-    Fast486ExtOpcodeClts,
-    NULL, // Invalid
-    NULL, // TODO: OPCODE 0x08 NOT IMPLEMENTED
-    NULL, // TODO: OPCODE 0x09 NOT IMPLEMENTED
-    NULL, // Invalid
-    NULL, // Reserved (UD1)
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    Fast486ExtOpcodeStoreControlReg,
-    Fast486ExtOpcodeStoreDebugReg,
-    Fast486ExtOpcodeLoadControlReg,
-    Fast486ExtOpcodeLoadDebugReg,
-    NULL, // TODO: OPCODE 0x24 NOT IMPLEMENTED
-    NULL, // Invalid
-    NULL, // TODO: OPCODE 0x26 NOT IMPLEMENTED
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
+    Fast486ExtOpcodeLar,                /* 0x02 */
+    Fast486ExtOpcodeLsl,                /* 0x03 */
+    Fast486ExtOpcodeInvalid,            /* 0x04 - 0x05 */   // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeClts,               /* 0x06 */
+    Fast486ExtOpcodeInvalid,            /* 0x07 */          // Invalid
+    Fast486ExtOpcodeUnimplemented, // TODO: OPCODE 0x08 NOT IMPLEMENTED
+    Fast486ExtOpcodeUnimplemented, // TODO: OPCODE 0x09 NOT IMPLEMENTED
+    Fast486ExtOpcodeInvalid,            /* 0x0A */          // Invalid
+    Fast486ExtOpcode0F0B,               /* 0x0B */          // Reserved (UD2)
+    Fast486ExtOpcodeInvalid,            /* 0x0C - 0x1F */   // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeStoreControlReg,    /* 0x20 */
+    Fast486ExtOpcodeStoreDebugReg,      /* 0x21 */
+    Fast486ExtOpcodeLoadControlReg,     /* 0x22 */
+    Fast486ExtOpcodeLoadDebugReg,       /* 0x23 */
+    Fast486ExtOpcodeUnimplemented, // TODO: OPCODE 0x24 NOT IMPLEMENTED
+    Fast486ExtOpcodeInvalid,            /* 0x25 */          // Invalid
+    Fast486ExtOpcodeUnimplemented, // TODO: OPCODE 0x26 NOT IMPLEMENTED
+    Fast486ExtOpcodeInvalid,            /* 0x27 - 0x7F */   // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeConditionalJmp,     /* 0x80 - 0x8F */
     Fast486ExtOpcodeConditionalJmp,
     Fast486ExtOpcodeConditionalJmp,
     Fast486ExtOpcodeConditionalJmp,
@@ -180,7 +181,7 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeConditionalJmp,
     Fast486ExtOpcodeConditionalJmp,
     Fast486ExtOpcodeConditionalJmp,
-    Fast486ExtOpcodeConditionalJmp,
+    Fast486ExtOpcodeConditionalSet,     /* 0x90 - 0x9F */
     Fast486ExtOpcodeConditionalSet,
     Fast486ExtOpcodeConditionalSet,
     Fast486ExtOpcodeConditionalSet,
@@ -196,47 +197,47 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeConditionalSet,
     Fast486ExtOpcodeConditionalSet,
     Fast486ExtOpcodeConditionalSet,
-    Fast486ExtOpcodeConditionalSet,
-    Fast486ExtOpcodePushFs,
-    Fast486ExtOpcodePopFs,
-    NULL, // Invalid
-    Fast486ExtOpcodeBitTest,
+    Fast486ExtOpcodePushFs,             /* 0xA0 */
+    Fast486ExtOpcodePopFs,              /* 0xA1 */
+    Fast486ExtOpcodeInvalid,            /* 0xA2 */          // Invalid
+    Fast486ExtOpcodeBitTest,            /* 0xA3 */
+    Fast486ExtOpcodeShld,               /* 0xA4 - 0xA5 */
     Fast486ExtOpcodeShld,
-    Fast486ExtOpcodeShld,
-    NULL, // Invalid
-    NULL, // Invalid
-    Fast486ExtOpcodePushGs,
+    Fast486ExtOpcodeInvalid,            /* 0xA6 - 0xA7 */   // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodePushGs,             /* 0xA8 - 0xA9 */
     Fast486ExtOpcodePopGs,
-    NULL, // Invalid
-    Fast486ExtOpcodeBts,
+    Fast486ExtOpcodeInvalid,            /* 0xAA */          // Invalid
+    Fast486ExtOpcodeBts,                /* 0xAB */
+    Fast486ExtOpcodeShrd,               /* 0xAC - 0xAD */
     Fast486ExtOpcodeShrd,
-    Fast486ExtOpcodeShrd,
-    NULL, // Invalid
-    Fast486ExtOpcodeImul,
-    Fast486ExtOpcodeCmpXchgByte,
-    Fast486ExtOpcodeCmpXchg,
-    Fast486ExtOpcodeLss,
-    Fast486ExtOpcodeBtr,
+    Fast486ExtOpcodeInvalid,            /* 0xAE */          // Invalid
+    Fast486ExtOpcodeImul,               /* 0xAF */
+    Fast486ExtOpcodeCmpXchgByte,        /* 0xB0 */
+    Fast486ExtOpcodeCmpXchg,            /* 0xB1 */
+    Fast486ExtOpcodeLss,                /* 0xB2 */
+    Fast486ExtOpcodeBtr,                /* 0xB3 */
+    Fast486ExtOpcodeLfsLgs,             /* 0xB4 - 0xB5 */
     Fast486ExtOpcodeLfsLgs,
-    Fast486ExtOpcodeLfsLgs,
-    Fast486ExtOpcodeMovzxByte,
+    Fast486ExtOpcodeMovzxByte,          /* 0xB6 - 0xB7 */
     Fast486ExtOpcodeMovzxWord,
-    NULL, // Invalid
-    Fast486OpcodeGroup0FB9,
-    Fast486OpcodeGroup0FBA,
-    Fast486ExtOpcodeBtc,
-    Fast486ExtOpcodeBsf,
-    Fast486ExtOpcodeBsr,
-    Fast486ExtOpcodeMovsxByte,
+    Fast486ExtOpcodeInvalid,            /* 0xB8 */          // Invalid
+    Fast486OpcodeGroup0FB9,             /* 0xB9 */
+    Fast486OpcodeGroup0FBA,             /* 0xBA */
+    Fast486ExtOpcodeBtc,                /* 0xBB */
+    Fast486ExtOpcodeBsf,                /* 0xBC */
+    Fast486ExtOpcodeBsr,                /* 0xBD */
+    Fast486ExtOpcodeMovsxByte,          /* 0xBE - 0xBF */
     Fast486ExtOpcodeMovsxWord,
-    Fast486ExtOpcodeXaddByte,
+    Fast486ExtOpcodeXaddByte,           /* 0xC0 - 0xC1 */
     Fast486ExtOpcodeXadd,
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
+    Fast486ExtOpcodeInvalid,            /* 0xC2 - 0xC7 */   // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeBswap,              /* 0xC8 - 0xCF */
     Fast486ExtOpcodeBswap,
     Fast486ExtOpcodeBswap,
     Fast486ExtOpcodeBswap,
@@ -244,58 +245,78 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeBswap,
     Fast486ExtOpcodeBswap,
     Fast486ExtOpcodeBswap,
-    Fast486ExtOpcodeBswap,
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
-    NULL, // Invalid
+    Fast486ExtOpcodeInvalid,            /* 0xD0 - 0xFF */   // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
+    Fast486ExtOpcodeInvalid,                                // Invalid
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeInvalid)
+{
+    DPRINT1("FAST486 -- Extended opcode 0x%02X is INVALID!\n", Opcode);
+    Fast486Exception(State, FAST486_EXCEPTION_UD);
+    return FALSE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeUnimplemented)
+{
+    DPRINT1("FAST486 -- Extended opcode 0x%02X is UNIMPLEMENTED\n", Opcode);
+    // Fast486Exception(State, FAST486_EXCEPTION_UD);
+    return FALSE;
+}
+
+FAST486_OPCODE_HANDLER(Fast486ExtOpcode0F0B)
+{
+    /* Reserved opcode (UD2) */
+    Fast486Exception(State, FAST486_EXCEPTION_UD);
+    return FALSE;
+}
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLar)
 {
@@ -2372,17 +2393,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeExtended)
         return FALSE;
     }
 
-    if (Fast486ExtendedHandlers[SecondOpcode] != NULL)
-    {
-        /* Call the extended opcode handler */
-        return Fast486ExtendedHandlers[SecondOpcode](State, SecondOpcode);
-    }
-    else
-    {
-        /* This is not a valid opcode */
-        Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
-    }
+    /* Call the extended opcode handler */
+    return Fast486ExtendedHandlers[SecondOpcode](State, SecondOpcode);
 }
 
 /* EOF */
