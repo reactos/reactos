@@ -26,6 +26,10 @@
 
 /* DEFINES ********************************************************************/
 
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeInvalid);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcodeUnimplemented);
+FAST486_OPCODE_HANDLER(Fast486ExtOpcode0F0B);
+
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLar);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl);
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeClts);
