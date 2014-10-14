@@ -488,7 +488,8 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   PUNICODE_STRING FileName,
                   ULONG FirstEntry,
                   BOOLEAN DirSearch,
-                  ULONGLONG *OutMFTIndex)
+                  ULONGLONG *OutMFTIndex,
+                  PWSTR OutName)
 {
     PFILE_RECORD_HEADER MftRecord;
     //ULONG Magic;
@@ -504,6 +505,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     ULONG RecordOffset;
     ULONG IndexBlockSize;
     NTSTATUS Status;
+    ULONG CurrentEntry = 0;
 
     MftRecord = ExAllocatePoolWithTag(NonPagedPool,
                                       Vcb->NtfsInfo.BytesPerFileRecord,
@@ -543,14 +545,18 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
         while (IndexEntry < IndexEntryEnd &&
                !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
         {
-            if (CompareFileName(FileName, IndexEntry, DirSearch))
+            if (CurrentEntry >= FirstEntry && CompareFileName(FileName, IndexEntry, DirSearch))
             {
                 *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
+                RtlCopyMemory(OutName, IndexEntry->FileName.Name, IndexEntry->FileName.NameLength);
+                OutName[IndexEntry->FileName.NameLength / sizeof(WCHAR)] = UNICODE_NULL;
                 ExFreePoolWithTag(IndexRecord, TAG_NTFS);
                 ExFreePoolWithTag(MftRecord, TAG_NTFS);
                 return STATUS_SUCCESS;
             }
-        IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
+
+            ++CurrentEntry;
+            IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
         }
 
         if (IndexRoot->Header.Flags & INDEX_ROOT_LARGE)
@@ -626,16 +632,20 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
                 {
-                    if (CompareFileName(FileName, IndexEntry, DirSearch))
+                    if (CurrentEntry >= FirstEntry && CompareFileName(FileName, IndexEntry, DirSearch))
                     {
                         DPRINT("File found\n");
                         *OutMFTIndex = IndexEntry->Data.Directory.IndexedFile;
+                        RtlCopyMemory(OutName, IndexEntry->FileName.Name, IndexEntry->FileName.NameLength);
+                        OutName[IndexEntry->FileName.NameLength / sizeof(WCHAR)] = UNICODE_NULL;
                         ExFreePoolWithTag(BitmapData, TAG_NTFS);
                         ExFreePoolWithTag(IndexRecord, TAG_NTFS);
                         ExFreePoolWithTag(MftRecord, TAG_NTFS);
                         ReleaseAttributeContext(IndexAllocationCtx);
                         return STATUS_SUCCESS;
                     }
+
+                    ++CurrentEntry;
                     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
                 }
 
@@ -665,8 +675,9 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex)
 {
-    UNICODE_STRING Current, Remaining;
+    UNICODE_STRING Current, Remaining, Found;
     NTSTATUS Status;
+    WCHAR FoundName[MAX_PATH + 1];
 
     DPRINT1("NtfsLookupFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, PathName, FileRecord, DataContext, CurrentMFTIndex);
 
@@ -676,7 +687,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     {
         DPRINT1("Lookup: %wZ\n", &Current);
 
-        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, 0, FALSE, &CurrentMFTIndex);
+        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, 0, FALSE, &CurrentMFTIndex, FoundName);
         if (!NT_SUCCESS(Status))
         {
             return Status;
@@ -688,22 +699,24 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     *FileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
     if (*FileRecord == NULL)
     {
-        DPRINT("NtfsLookupFile: Can't allocate MFT record\n");
+        DPRINT("NtfsLookupFileAt: Can't allocate MFT record\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     Status = ReadFileRecord(Vcb, CurrentMFTIndex, *FileRecord);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtfsLookupFile: Can't read MFT record\n");
+        DPRINT("NtfsLookupFileAt: Can't read MFT record\n");
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
 
-    Status = FindAttribute(Vcb, *FileRecord, AttributeData, PathName, DataContext);
+    RtlInitUnicodeString(&Found, FoundName);
+
+    Status = FindAttribute(Vcb, *FileRecord, AttributeData, &Found, DataContext);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtfsLookupFile: Can't find data attribute\n");
+        DPRINT("NtfsLookupFileAt: Can't find data attribute\n");
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
@@ -722,4 +735,56 @@ NtfsLookupFile(PDEVICE_EXTENSION Vcb,
 {
     return NtfsLookupFileAt(Vcb, PathName, FileRecord, DataContext, MFTIndex, NTFS_FILE_ROOT);
 }
+
+NTSTATUS
+NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
+               PUNICODE_STRING SearchPattern,
+               ULONG FirstEntry,
+               PFILE_RECORD_HEADER *FileRecord,
+               PNTFS_ATTR_CONTEXT *DataContext,
+               PULONGLONG MFTIndex,
+               ULONGLONG CurrentMFTIndex)
+{
+    UNICODE_STRING Found;
+    NTSTATUS Status;
+    WCHAR FoundName[MAX_PATH + 1];
+
+    DPRINT1("NtfsFindFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, SearchPattern, FileRecord, DataContext, CurrentMFTIndex);
+
+    Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex, FoundName);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    *FileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (*FileRecord == NULL)
+    {
+        DPRINT("NtfsFindFileAt: Can't allocate MFT record\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(Vcb, CurrentMFTIndex, *FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtfsFindFileAt: Can't read MFT record\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    RtlInitUnicodeString(&Found, FoundName);
+
+    Status = FindAttribute(Vcb, *FileRecord, AttributeData, &Found, DataContext);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtfsFindFileAt: Can't find data attribute\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    *MFTIndex = CurrentMFTIndex;
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

@@ -654,6 +654,15 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex);
 
+NTSTATUS
+NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
+               PUNICODE_STRING SearchPattern,
+               ULONG FirstEntry,
+               PFILE_RECORD_HEADER *FileRecord,
+               PNTFS_ATTR_CONTEXT *DataContext,
+               PULONGLONG MFTIndex,
+               ULONGLONG CurrentMFTIndex);
+
 /* misc.c */
 
 BOOLEAN
