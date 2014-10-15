@@ -476,8 +476,6 @@ Quit:
     EmulatorTerminate();
 }
 
-
-
 /* PUBLIC EXPORTED APIS *******************************************************/
 
 // demLFNCleanup
