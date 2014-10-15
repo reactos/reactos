@@ -680,11 +680,13 @@ VOID
 CdfsSwapString(PWCHAR Out,
 	       PUCHAR In,
 	       ULONG Count);
+#endif
 
 VOID
-CdfsDateTimeToFileTime(PFCB Fcb,
-		       TIME *FileTime);
+NtfsDateTimeToFileTime(ULONGLONG NtfsTime,
+                       PLARGE_INTEGER SystemTime);
 
+#if 0
 VOID
 CdfsFileFlagsToAttributes(PFCB Fcb,
 			  PULONG FileAttributes);
