@@ -1,3 +1,9 @@
+/*
+ * PROJECT:         MSVC runtime check support library
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:         Provides support functions for MSVC runtime checks
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
 
 #include <rtcapi.h>
 
@@ -53,7 +59,7 @@ _RTC_CheckStackVars(
         guard2 = (int*)((char*)_Esp + _Fd->variables[i].addr +_Fd->variables[i].size);
 
         /* Check if they contain the guard bytes */
-        if ((*guard1 != 0xCCCCCCCC) || (*guard1 != 0xCCCCCCCC))
+        if ((*guard1 != 0xCCCCCCCC) || (*guard2 != 0xCCCCCCCC))
         {
             DbgPrint("Stack corruption near '%s'\n", _Fd->variables[i].name);
             __debugbreak();

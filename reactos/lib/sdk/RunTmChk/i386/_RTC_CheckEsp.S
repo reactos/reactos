@@ -1,4 +1,9 @@
-
+/*
+ * PROJECT:         MSVC runtime check support library
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:         Provides support functions for MSVC runtime checks
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
 
 #include <asm.inc>
 .code
@@ -32,7 +37,6 @@ __RTC_CheckEsp:
     push dword ptr [esp + 4] // retaddr
     call __RTC_Failure
     add esp, 8
-    int 3
 
     popa
     pop ebp
