@@ -109,4 +109,19 @@ NtfsDateTimeToFileTime(ULONGLONG NtfsTime,
     SystemTime->QuadPart = NtfsTime + 116444736000000000;
 }
 
+VOID
+NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
+                          PULONG FileAttributes)
+{
+    *FileAttributes = NtfsAttributes;
+    if ((NtfsAttributes & NTFS_FILE_TYPE_DIRECTORY) == NTFS_FILE_TYPE_DIRECTORY)
+    {
+        *FileAttributes = NtfsAttributes & ~NTFS_FILE_TYPE_DIRECTORY;
+        *FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+    }
+
+    if (NtfsAttributes == 0)
+        *FileAttributes = FILE_ATTRIBUTE_NORMAL;
+}
+
 /* EOF */

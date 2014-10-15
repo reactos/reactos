@@ -686,11 +686,9 @@ VOID
 NtfsDateTimeToFileTime(ULONGLONG NtfsTime,
                        PLARGE_INTEGER SystemTime);
 
-#if 0
 VOID
-CdfsFileFlagsToAttributes(PFCB Fcb,
-			  PULONG FileAttributes);
-#endif
+NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
+                          PULONG FileAttributes);
 
 
 /* rw.c */
