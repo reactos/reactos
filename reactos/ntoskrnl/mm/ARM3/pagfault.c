@@ -1511,7 +1511,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     NTSTATUS Status;
     PMMSUPPORT WorkingSet;
     ULONG ProtectionCode;
-    PMMVAD Vad;
+    PMMVAD Vad = NULL;
     PFN_NUMBER PageFrameIndex;
     ULONG Color;
     BOOLEAN IsSessionAddress;
