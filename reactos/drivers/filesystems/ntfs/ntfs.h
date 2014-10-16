@@ -613,7 +613,8 @@ NTSTATUS
 FindAttribute(PDEVICE_EXTENSION Vcb,
               PFILE_RECORD_HEADER MftRecord,
               ULONG Type,
-              PUNICODE_STRING Name,
+              PCWSTR Name,
+              ULONG NameLength,
               PNTFS_ATTR_CONTEXT * AttrCtx);
 
 VOID
