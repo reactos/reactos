@@ -43,6 +43,48 @@ typedef struct _PROFILEINFOW
   HANDLE hProfile;
 } PROFILEINFOW, *LPPROFILEINFOW;
 
+#if (WINVER >= 0x0502)
+typedef enum _GPO_LINK {
+    GPLinkUnknown = 0,
+    GPLinkMachine,
+    GPLinkSite,
+    GPLinkDomain,
+    GPLinkOrganizationalUnit
+} GPO_LINK, *PGPO_LINK;
+
+typedef struct _GROUP_POLICY_OBJECTA {
+    DWORD dwOptions;
+    DWORD dwVersion;
+    LPSTR lpDSPath;
+    LPSTR lpFileSysPath;
+    LPSTR lpDisplayName;
+    CHAR szGPOName[50];
+    GPO_LINK GPOLink;
+    LPARAM lParam;
+    struct _GROUP_POLICY_OBJECTA *pNext;
+    struct _GROUP_POLICY_OBJECTA *pPrev;
+    LPSTR lpExtensions;
+    LPARAM lParam2;
+    LPSTR lpLink;
+} GROUP_POLICY_OBJECTA, *PGROUP_POLICY_OBJECTA;
+
+typedef struct _GROUP_POLICY_OBJECTW {
+    DWORD dwOptions;
+    DWORD dwVersion;
+    LPWSTR lpDSPath;
+    LPWSTR lpFileSysPath;
+    LPWSTR lpDisplayName;
+    WCHAR szGPOName[50];
+    GPO_LINK GPOLink;
+    LPARAM lParam;
+    struct _GROUP_POLICY_OBJECTW *pNext;
+    struct _GROUP_POLICY_OBJECTW *pPrev;
+    LPWSTR lpExtensions;
+    LPARAM lParam2;
+    LPWSTR lpLink;
+} GROUP_POLICY_OBJECTW, *PGROUP_POLICY_OBJECTW;
+#endif
+
 /* begin private */
 BOOL WINAPI InitializeProfiles (VOID);
 BOOL WINAPI CreateUserProfileA (PSID, LPCSTR);
@@ -85,6 +127,27 @@ BOOL WINAPI ExpandEnvironmentStringsForUserA (HANDLE, LPCSTR, LPSTR, DWORD);
 BOOL WINAPI ExpandEnvironmentStringsForUserW (HANDLE, LPCWSTR, LPWSTR, DWORD);
 #endif
 
+#if (WINVER >= 0x0502)
+DWORD
+WINAPI
+GetAppliedGPOListA(
+    _In_   DWORD dwFlags,
+    _In_   LPCSTR pMachineName,
+    _In_   PSID pSidUser,
+    _In_   GUID *pGuidExtension,
+    _Out_  PGROUP_POLICY_OBJECTA *ppGPOList
+);
+DWORD
+WINAPI
+GetAppliedGPOListW(
+    _In_   DWORD dwFlags,
+    _In_   LPCWSTR pMachineName,
+    _In_   PSID pSidUser,
+    _In_   GUID *pGuidExtension,
+    _Out_  PGROUP_POLICY_OBJECTW *ppGPOList
+);
+#endif
+
 HANDLE WINAPI EnterCriticalPolicySection (BOOL);
 BOOL WINAPI LeaveCriticalPolicySection (HANDLE);
 BOOL WINAPI RefreshPolicy (BOOL);
@@ -115,6 +178,11 @@ typedef LPPROFILEINFOW LPPROFILEINFO;
 #if (WINVER >= 0x0500)
 #define ExpandEnvironmentStringsForUser ExpandEnvironmentStringsForUserW
 #endif
+#if (WINVER >= 0x0502)
+typedef GROUP_POLICY_OBJECTW GROUP_POLICY_OBJECT;
+typedef PGROUP_POLICY_OBJECTW PGROUP_POLICY_OBJECT;
+#define GetAppliedGPOList GetAppliedGPOListW
+#endif
 #else
 typedef PROFILEINFOA PROFILEINFO;
 typedef LPPROFILEINFOA LPPROFILEINFO;
@@ -135,6 +203,11 @@ typedef LPPROFILEINFOA LPPROFILEINFO;
 #define GetUserProfileDirectory  GetUserProfileDirectoryA
 #if (WINVER >= 0x0500)
 #define ExpandEnvironmentStringsForUser ExpandEnvironmentStringsForUserA
+#endif
+#if (WINVER >= 0x0502)
+typedef GROUP_POLICY_OBJECTA GROUP_POLICY_OBJECT;
+typedef PGROUP_POLICY_OBJECTA PGROUP_POLICY_OBJECT;
+#define GetAppliedGPOList GetAppliedGPOListA
 #endif
 #endif
 
