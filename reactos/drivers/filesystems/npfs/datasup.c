@@ -146,9 +146,10 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
         Irp = QueueEntry->Irp;
         NpFreeClientSecurityContext(QueueEntry->ClientSecurityContext);
 
-        if (Irp && IoSetCancelRoutine(Irp, NULL))
+        if (Irp && !IoSetCancelRoutine(Irp, NULL))
         {
             Irp->Tail.Overlay.DriverContext[3] = NULL;
+            Irp = NULL;
         }
 
         ExFreePool(QueueEntry);
