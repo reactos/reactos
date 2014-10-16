@@ -384,7 +384,7 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
     IoStatus.Information = 0;
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+    NpAcquireExclusiveVcb();
 
     if (RelatedFileObject)
     {
@@ -462,7 +462,7 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
             goto Quickie;
         }
 
-        Fcb = NpFindPrefix(&FileName, TRUE, &Prefix);
+        Fcb = NpFindPrefix(&FileName, 1, &Prefix);
     }
 
     if (Prefix.Length)
@@ -499,7 +499,7 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
                                  &DeferredList);
 
 Quickie:
-    ExReleaseResourceLite(&NpVcb->Lock);
+    NpReleaseVcb();
     NpCompleteDeferredIrps(&DeferredList);
     FsRtlExitFileSystem();
 
@@ -852,7 +852,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
             goto Quickie;
         }
 
-        Fcb = NpFindPrefix(&FileName, TRUE, &Prefix);
+        Fcb = NpFindPrefix(&FileName, 1, &Prefix);
     }
 
     if (Prefix.Length)
