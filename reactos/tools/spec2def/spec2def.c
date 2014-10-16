@@ -250,7 +250,8 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
                 case ARG_WSTR: fprintf(file, "wchar_t*"); break;
                 case ARG_DBL:  fprintf(file, "double"); break;
                 case ARG_INT64 :  fprintf(file, "__int64"); break;
-                case ARG_INT128 :  fprintf(file, "__int128"); break;
+                /* __int128 is not supported on x86, and int128 in spec files most often represents a GUID */
+                case ARG_INT128 :  fprintf(file, "GUID"); break;
                 case ARG_FLOAT: fprintf(file, "float"); break;
             }
             fprintf(file, " a%d", i);
@@ -296,8 +297,8 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_STR:  fprintf(file, "'%%s'"); break;
             case ARG_WSTR: fprintf(file, "'%%ws'"); break;
             case ARG_DBL:  fprintf(file, "%%f"); break;
-            case ARG_INT64: fprintf(file, "%%\"PRix64\""); break;
-            case ARG_INT128: fprintf(file, "%%\"PRix128\""); break;
+            case ARG_INT64: fprintf(file, "%%\"PRIx64\""); break;
+            case ARG_INT128: fprintf(file, "'%%s'"); break;
             case ARG_FLOAT: fprintf(file, "%%f"); break;
         }
     }
@@ -314,7 +315,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             case ARG_WSTR: fprintf(file, "(wchar_t*)a%d", i); break;
             case ARG_DBL:  fprintf(file, "(double)a%d", i); break;
             case ARG_INT64: fprintf(file, "(__int64)a%d", i); break;
-            case ARG_INT128: fprintf(file, "(__int128)a%d", i); break;
+            case ARG_INT128: fprintf(file, "wine_dbgstr_guid(&a%d)", i); break;
             case ARG_FLOAT: fprintf(file, "(float)a%d", i); break;
         }
     }
