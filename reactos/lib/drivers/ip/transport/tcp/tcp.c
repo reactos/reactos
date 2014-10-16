@@ -679,8 +679,12 @@ TCPSetNoDelay(
     PCONNECTION_ENDPOINT Connection,
     BOOLEAN Set)
 {
+    if (!Connection)
+        return STATUS_UNSUCCESSFUL;
+
     if (Connection->SocketContext == NULL)
         return STATUS_UNSUCCESSFUL;
+
     LibTCPSetNoDelay(Connection->SocketContext, Set);
     return STATUS_SUCCESS;
 }
