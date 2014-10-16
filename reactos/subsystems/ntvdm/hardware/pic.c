@@ -250,31 +250,11 @@ VOID PicInterruptRequest(BYTE Number)
 
 BYTE PicGetInterrupt(VOID)
 {
-    INT i, j;
+    INT i;
 
-    /* Search interrupts by priority */
+    /* Search the master PIC interrupts by priority */
     for (i = 0; i < 8; i++)
     {
-        /* Check if this line is cascaded to the slave PIC */
-        if ((i == 2)
-            && MasterPic.CascadeRegister & (1 << 2)
-            && SlavePic.Slave
-            && (SlavePic.CascadeRegister == 2))
-        {
-            /* Search the slave PIC interrupts by priority */
-            for (j = 0; j < 8; j++) if ((j != 1) && SlavePic.IntRequestRegister & (1 << j))
-            {
-                /* Clear the IRR flag */
-                SlavePic.IntRequestRegister &= ~(1 << j);
-
-                /* Set the ISR flag, unless AEOI is enabled */
-                if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= (1 << j);
-    
-                /* Return the interrupt number */
-                return SlavePic.IntOffset + j;
-            }
-        }
-
         if (MasterPic.IntRequestRegister & (1 << i))
         {
             /* Clear the IRR flag */
@@ -285,6 +265,30 @@ BYTE PicGetInterrupt(VOID)
 
             /* Return the interrupt number */
             return MasterPic.IntOffset + i;
+        }
+    }
+
+    /* Search the slave PIC interrupts by priority */
+    for (i = 0; i < 8; i++)
+    {
+        if (SlavePic.IntRequestRegister & (1 << i))
+        {
+            /* Clear the IRR flag */
+            SlavePic.IntRequestRegister &= ~(1 << i);
+
+            if ((i == 1) && SlavePic.CascadeRegisterSet)
+            {
+                /* This interrupt is routed to the master PIC */
+                return MasterPic.IntOffset + SlavePic.CascadeRegister;
+            }
+            else
+            {
+                /* Set the ISR flag, unless AEOI is enabled */
+                if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= (1 << i);
+
+                /* Return the interrupt number */
+                return SlavePic.IntOffset + i;
+            }
         }
     }
     
