@@ -331,6 +331,13 @@ typedef struct
 
 typedef struct
 {
+    NTFS_RECORD_HEADER Ntfs;
+    ULONGLONG VCN;
+    INDEX_HEADER_ATTRIBUTE Header;
+} INDEX_BUFFER, *PINDEX_BUFFER;
+
+typedef struct
+{
     union
     {
         struct

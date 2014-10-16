@@ -495,6 +495,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     PNTFS_ATTR_CONTEXT IndexBitmapCtx;
     PNTFS_ATTR_CONTEXT IndexAllocationCtx;
     PINDEX_ROOT_ATTRIBUTE IndexRoot;
+    PINDEX_BUFFER IndexBuffer;
     ULONGLONG BitmapDataSize;
     ULONGLONG IndexAllocationSize;
     PCHAR BitmapData;
@@ -626,9 +627,12 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                     break;
                 }
 
-                /* FIXME */
-                IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + 0x18 + *(USHORT *)(IndexRecord + 0x18));
-                IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexBlockSize);
+                IndexBuffer = (PINDEX_BUFFER)IndexRecord;
+                ASSERT(IndexBuffer->Ntfs.Type == 'XDNI');
+                ASSERT(IndexBuffer->Header.AllocatedSize + 0x18 == IndexBlockSize);
+                IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)(&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
+                IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
+                //ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize)); FIXME: Why doesn't it work?
 
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
