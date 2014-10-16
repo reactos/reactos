@@ -117,7 +117,6 @@ NTAPI
 Fast486MemReadCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
-
     RtlMoveMemory(Buffer, (PVOID)Address, Size);
 }
 
@@ -126,7 +125,6 @@ NTAPI
 Fast486MemWriteCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
-
     RtlMoveMemory((PVOID)Address, Buffer, Size);
 }
 

@@ -2016,6 +2016,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F00)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
 {
+    // FAST486_TABLE_REG TableReg;
     UCHAR TableReg[6];
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
@@ -2054,8 +2055,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
             }
 
             /* Fill the 6-byte table register */
-            RtlCopyMemory(TableReg, &State->Gdtr.Size, sizeof(USHORT));
-            RtlCopyMemory(&TableReg[sizeof(USHORT)], &State->Gdtr.Address, sizeof(ULONG));
+            // TableReg = State->Gdtr;
+            *((PUSHORT)&TableReg) = State->Gdtr.Size;
+            *((PULONG)&TableReg[sizeof(USHORT)]) = State->Gdtr.Address;
 
             /* Store the GDTR */
             return Fast486WriteMemory(State,
@@ -2076,8 +2078,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
             }
 
             /* Fill the 6-byte table register */
-            RtlCopyMemory(TableReg, &State->Idtr.Size, sizeof(USHORT));
-            RtlCopyMemory(&TableReg[sizeof(USHORT)], &State->Idtr.Address, sizeof(ULONG));
+            // TableReg = State->Idtr;
+            *((PUSHORT)&TableReg) = State->Idtr.Size;
+            *((PULONG)&TableReg[sizeof(USHORT)]) = State->Idtr.Address;
 
             /* Store the IDTR */
             return Fast486WriteMemory(State,
@@ -2117,7 +2120,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
             }
 
             /* Load the new GDT */
-            State->Gdtr.Size = *((PUSHORT)TableReg);
+            // State->Gdtr = TableReg;
+            State->Gdtr.Size = *((PUSHORT)&TableReg);
             State->Gdtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
 
             /* In 16-bit mode the highest byte is masked out */
@@ -2156,7 +2160,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroup0F01)
             }
 
             /* Load the new IDT */
-            State->Idtr.Size = *((PUSHORT)TableReg);
+            // State->Idtr = TableReg;
+            State->Idtr.Size = *((PUSHORT)&TableReg);
             State->Idtr.Address = *((PULONG)&TableReg[sizeof(USHORT)]);
 
             /* In 16-bit mode the highest byte is masked out */
