@@ -261,14 +261,14 @@ typedef struct _FAST486_SEG_REG
     ULONG Base;
 } FAST486_SEG_REG, *PFAST486_SEG_REG;
 
-typedef struct
+typedef struct _FAST486_LDT_REG
 {
     USHORT Selector;
     ULONG Base;
     ULONG Limit;
-} FAST486_LDT_REG;
+} FAST486_LDT_REG, *PFAST486_LDT_REG;
 
-typedef struct
+typedef struct _FAST486_TASK_REG
 {
     USHORT Selector;
     ULONG Base;
@@ -276,7 +276,7 @@ typedef struct
     BOOLEAN Busy;
 } FAST486_TASK_REG, *PFAST486_TASK_REG;
 
-#pragma pack(push, 1)
+#include <pshpack1.h>
 
 typedef struct
 {
@@ -350,7 +350,7 @@ typedef struct
 /* Verify the structure size */
 C_ASSERT(sizeof(FAST486_IDT_ENTRY) == sizeof(ULONGLONG));
 
-#pragma pack(pop)
+#include <poppack.h>
 
 typedef struct _FAST486_TABLE_REG
 {
