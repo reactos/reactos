@@ -100,8 +100,7 @@ IOReadStrB(ULONG  Port,
     }
     else
     {
-        while (Count--)
-            *Buffer++ = IOReadB(Port);
+        while (Count--) *Buffer++ = IOReadB(Port);
     }
 }
 
@@ -196,8 +195,7 @@ IOReadStrW(ULONG   Port,
     }
     else
     {
-        while (Count--)
-            *Buffer++ = IOReadW(Port);
+        while (Count--) *Buffer++ = IOReadW(Port);
     }
 }
 
@@ -278,8 +276,7 @@ IOReadStrD(ULONG  Port,
     }
     else
     {
-        while (Count--)
-            *Buffer++ = IOReadD(Port);
+        while (Count--) *Buffer++ = IOReadD(Port);
     }
 }
 
@@ -379,7 +376,7 @@ EmulatorReadIo(PFAST486_STATE State,
     }
     else
     {
-        PBYTE Address = (PBYTE)Buffer;
+        PUCHAR Address = (PUCHAR)Buffer;
 
         while (DataCount--)
         {
@@ -388,8 +385,8 @@ EmulatorReadIo(PFAST486_STATE State,
             UCHAR NewDataSize = DataSize;
 
             /* Read dword */
-            Count       = NewDataSize / sizeof(ULONG);
-            NewDataSize = NewDataSize % sizeof(ULONG);
+            Count       = NewDataSize >> 2; // NewDataSize / sizeof(ULONG);
+            NewDataSize = NewDataSize  & 3; // NewDataSize % sizeof(ULONG);
             while (Count--)
             {
                 *(PULONG)Address = IOReadD(CurrentPort);
@@ -398,8 +395,8 @@ EmulatorReadIo(PFAST486_STATE State,
             }
 
             /* Read word */
-            Count       = NewDataSize / sizeof(USHORT);
-            NewDataSize = NewDataSize % sizeof(USHORT);
+            Count       = NewDataSize >> 1; // NewDataSize / sizeof(USHORT);
+            NewDataSize = NewDataSize  & 1; // NewDataSize % sizeof(USHORT);
             while (Count--)
             {
                 *(PUSHORT)Address = IOReadW(CurrentPort);
@@ -408,17 +405,14 @@ EmulatorReadIo(PFAST486_STATE State,
             }
 
             /* Read byte */
-            Count       = NewDataSize / sizeof(UCHAR);
-            NewDataSize = NewDataSize % sizeof(UCHAR);
+            Count       = NewDataSize; // NewDataSize / sizeof(UCHAR);
+            // NewDataSize = NewDataSize % sizeof(UCHAR);
             while (Count--)
             {
                 *(PUCHAR)Address = IOReadB(CurrentPort);
                 CurrentPort += sizeof(UCHAR);
                 Address     += sizeof(UCHAR);
             }
-
-            ASSERT(Count == 0);
-            ASSERT(NewDataSize == 0);
         }
     }
 }
@@ -457,7 +451,7 @@ EmulatorWriteIo(PFAST486_STATE State,
     }
     else
     {
-        PBYTE Address = (PBYTE)Buffer;
+        PUCHAR Address = (PUCHAR)Buffer;
 
         while (DataCount--)
         {
@@ -466,8 +460,8 @@ EmulatorWriteIo(PFAST486_STATE State,
             UCHAR NewDataSize = DataSize;
 
             /* Write dword */
-            Count       = NewDataSize / sizeof(ULONG);
-            NewDataSize = NewDataSize % sizeof(ULONG);
+            Count       = NewDataSize >> 2; // NewDataSize / sizeof(ULONG);
+            NewDataSize = NewDataSize  & 3; // NewDataSize % sizeof(ULONG);
             while (Count--)
             {
                 IOWriteD(CurrentPort, *(PULONG)Address);
@@ -476,8 +470,8 @@ EmulatorWriteIo(PFAST486_STATE State,
             }
 
             /* Write word */
-            Count       = NewDataSize / sizeof(USHORT);
-            NewDataSize = NewDataSize % sizeof(USHORT);
+            Count       = NewDataSize >> 1; // NewDataSize / sizeof(USHORT);
+            NewDataSize = NewDataSize  & 1; // NewDataSize % sizeof(USHORT);
             while (Count--)
             {
                 IOWriteW(CurrentPort, *(PUSHORT)Address);
@@ -486,17 +480,14 @@ EmulatorWriteIo(PFAST486_STATE State,
             }
 
             /* Write byte */
-            Count       = NewDataSize / sizeof(UCHAR);
-            NewDataSize = NewDataSize % sizeof(UCHAR);
+            Count       = NewDataSize; // NewDataSize / sizeof(UCHAR);
+            // NewDataSize = NewDataSize % sizeof(UCHAR);
             while (Count--)
             {
                 IOWriteB(CurrentPort, *(PUCHAR)Address);
                 CurrentPort += sizeof(UCHAR);
                 Address     += sizeof(UCHAR);
             }
-
-            ASSERT(Count == 0);
-            ASSERT(NewDataSize == 0);
         }
     }
 }

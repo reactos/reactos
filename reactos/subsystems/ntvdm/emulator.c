@@ -60,6 +60,75 @@ LPCWSTR ExceptionName[] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static inline VOID
+EmulatorMoveMemory(OUT VOID UNALIGNED *Destination,
+                   IN const VOID UNALIGNED *Source,
+                   IN SIZE_T Length)
+{
+#if 1
+    /*
+     * We use a switch here to detect small moves of memory, as these
+     * constitute the bulk of our moves.
+     * Using RtlMoveMemory for all these small moves would be slow otherwise.
+     */
+    switch (Length)
+    {
+        case 0:
+            return;
+
+        case sizeof(UCHAR):
+            *(PUCHAR)Destination = *(PUCHAR)Source;
+            return;
+
+        case sizeof(USHORT):
+            *(PUSHORT)Destination = *(PUSHORT)Source;
+            return;
+
+        case sizeof(ULONG):
+            *(PULONG)Destination = *(PULONG)Source;
+            return;
+
+        case sizeof(ULONGLONG):
+            *(PULONGLONG)Destination = *(PULONGLONG)Source;
+            return;
+
+        default:
+#if defined(__GNUC__)
+            __builtin_memmove(Destination, Source, Length);
+#else
+            RtlMoveMemory(Destination, Source, Length);
+#endif
+    }
+
+#else // defined(_MSC_VER)
+
+    PUCHAR Dest = (PUCHAR)Destination;
+    PUCHAR Src  = (PUCHAR)Source;
+
+    SIZE_T Count, NewSize = Length;
+
+    /* Move dword */
+    Count   = NewSize >> 2; // NewSize / sizeof(ULONG);
+    NewSize = NewSize  & 3; // NewSize % sizeof(ULONG);
+    __movsd(Dest, Src, Count);
+    Dest += Count << 2; // Count * sizeof(ULONG);
+    Src  += Count << 2;
+
+    /* Move word */
+    Count   = NewSize >> 1; // NewSize / sizeof(USHORT);
+    NewSize = NewSize  & 1; // NewSize % sizeof(USHORT);
+    __movsw(Dest, Src, Count);
+    Dest += Count << 1; // Count * sizeof(USHORT);
+    Src  += Count << 1;
+
+    /* Move byte */
+    Count   = NewSize; // NewSize / sizeof(UCHAR);
+    // NewSize = NewSize; // NewSize % sizeof(UCHAR);
+    __movsb(Dest, Src, Count);
+
+#endif
+}
+
 VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
@@ -91,7 +160,7 @@ VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer
     }
 
     /* Read the data from the virtual address space and store it in the buffer */
-    RtlCopyMemory(Buffer, REAL_TO_PHYS(Address), Size);
+    EmulatorMoveMemory(Buffer, REAL_TO_PHYS(Address), Size);
 }
 
 VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
@@ -112,7 +181,7 @@ VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffe
     if ((Address + Size) >= ROM_AREA_START && (Address < ROM_AREA_END)) return;
 
     /* Read the data from the buffer and store it in the virtual address space */
-    RtlCopyMemory(REAL_TO_PHYS(Address), Buffer, Size);
+    EmulatorMoveMemory(REAL_TO_PHYS(Address), Buffer, Size);
 
     /*
      * Check if we modified the VGA memory.
