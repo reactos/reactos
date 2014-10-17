@@ -54,7 +54,6 @@ add_executable(explorer
 
 target_link_libraries(explorer comsupp wine uuid)
 set_module_type(explorer win32gui UNICODE)
-
 add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
 add_pch(explorer precomp.h SOURCE)
 add_dependencies(explorer psdk)

@@ -15,21 +15,6 @@ add_library(mmsys SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/mmsys.def)
 
 set_module_type(mmsys cpl UNICODE)
-
-add_importlibs(mmsys
-    msvcrt
-    user32
-    comctl32
-    devmgr
-    gdi32
-    winmm
-    advapi32
-    shell32
-    setupapi
-    shlwapi
-    ntdll
-    kernel32
-    comdlg32)
-
+add_importlibs(mmsys user32 comctl32 devmgr gdi32 winmm advapi32 shell32 setupapi shlwapi comdlg32 msvcrt kernel32 ntdll)
 add_pch(mmsys mmsys.h SOURCE)
 add_cd_file(TARGET mmsys DESTINATION reactos/system32 FOR all)

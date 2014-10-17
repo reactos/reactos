@@ -1,3 +1,4 @@
+
 list(APPEND INF_FILES
     acpi.inf
     audio.inf
@@ -38,8 +39,7 @@ list(APPEND INF_FILES
     usb.inf
     usbport.inf
     usbstor.inf
-    xboxdisp.inf
-)
+    xboxdisp.inf)
 
 foreach(item ${INF_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/inf FOR all)

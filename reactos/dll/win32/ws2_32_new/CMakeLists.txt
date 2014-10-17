@@ -1,11 +1,10 @@
 
 add_definitions(-DLE)
+spec2def(ws2_32_new.dll ws2_32.spec)
 
 include_directories(
     inc
     ${REACTOS_SOURCE_DIR}/include/reactos/winsock)
-
-spec2def(ws2_32_new.dll ws2_32.spec)
 
 list(APPEND SOURCE
     src/addrconv.c

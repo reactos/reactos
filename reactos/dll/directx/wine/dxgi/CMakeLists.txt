@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(dxgi.dll dxgi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

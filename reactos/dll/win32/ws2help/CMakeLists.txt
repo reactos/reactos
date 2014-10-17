@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/winsock)
-
 spec2def(ws2help.dll ws2help.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

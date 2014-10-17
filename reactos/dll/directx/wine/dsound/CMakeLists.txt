@@ -5,7 +5,6 @@ add_definitions(
     -D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(dsound.dll dsound.spec ADD_IMPORTLIB)
 
 add_library(dsound SHARED

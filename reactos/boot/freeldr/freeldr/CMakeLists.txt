@@ -210,7 +210,7 @@ endif()
 target_link_libraries(freeldr_pe freeldr_common cportlib cmlib rtl libcntpr)
 target_link_libraries(freeldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
-if (STACK_PROTECTOR)
+if(STACK_PROTECTOR)
     target_link_libraries(freeldr_pe gcc_ssp)
     target_link_libraries(freeldr_pe_dbg gcc_ssp)
 endif()
@@ -229,8 +229,7 @@ add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR livecd NAME_ON_CD setupldr.sys)
 
-list(APPEND SETUPLDR_SOURCE
-    inffile/inffile.c)
+list(APPEND SETUPLDR_SOURCE inffile/inffile.c)
 
 if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
@@ -271,7 +270,7 @@ endif()
 target_link_libraries(setupldr_pe freeldr_common cportlib cmlib rtl libcntpr)
 target_link_libraries(setupldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
-if (STACK_PROTECTOR)
+if(STACK_PROTECTOR)
     target_link_libraries(setupldr_pe gcc_ssp)
     target_link_libraries(setupldr_pe_dbg gcc_ssp)
 endif()

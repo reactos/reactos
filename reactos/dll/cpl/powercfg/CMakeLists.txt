@@ -15,16 +15,6 @@ add_library(powercfg SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/powercfg.def)
 
 set_module_type(powercfg cpl UNICODE)
-
-add_importlibs(powercfg
-    msvcrt
-    user32
-    powrprof
-    comctl32
-    shell32
-    advapi32
-    kernel32
-    ntdll)
-
+add_importlibs(powercfg user32 powrprof comctl32 shell32 advapi32 msvcrt kernel32 ntdll)
 add_pch(powercfg powercfg.h SOURCE)
 add_cd_file(TARGET powercfg DESTINATION reactos/system32 FOR all)

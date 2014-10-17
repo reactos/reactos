@@ -4,7 +4,6 @@ add_definitions(
     -DUSE_WIN32_OPENGL)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(d3d8.dll d3d8.spec)
 
 list(APPEND SOURCE

@@ -6,9 +6,8 @@ if(MSVC)
         -Dstrtoll=_strtoi64)
 
     # Add this definition for WDK only, VS 9 doesn't like that
-    if (DEFINED ENV{DDKBUILDENV})
-        add_definitions(
-            -Dvsnprintf=_vsnprintf)
+    if(DEFINED ENV{DDKBUILDENV})
+        add_definitions(-Dvsnprintf=_vsnprintf)
     endif()
 endif()
 

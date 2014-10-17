@@ -55,10 +55,7 @@ add_library(portcls SHARED
     portcls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
 
-target_link_libraries(portcls
-    libcntpr
-    ${PSEH_LIB})
-
+target_link_libraries(portcls libcntpr ${PSEH_LIB})
 set_module_type(portcls kernelmodedriver ENTRYPOINT 0 )
 add_pch(portcls private.hpp SOURCE)
 add_importlibs(portcls ntoskrnl ks drmk hal)

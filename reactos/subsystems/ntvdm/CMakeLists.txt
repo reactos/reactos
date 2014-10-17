@@ -42,8 +42,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)
 
 add_executable(ntvdm ${SOURCE})
-set_module_type(ntvdm win32cui UNICODE)
-set_image_base(ntvdm 0x0F000000)
+set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
 target_link_libraries(ntvdm fast486)
 add_importlibs(ntvdm user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET ntvdm DESTINATION reactos/system32 FOR all)

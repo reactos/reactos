@@ -10,4 +10,3 @@ list(APPEND SOURCE
 
 add_library(libusbaudio ${SOURCE})
 add_dependencies(libusbaudio bugcodes)
-
