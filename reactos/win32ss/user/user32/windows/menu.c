@@ -295,12 +295,12 @@ static BOOL GetMenuItemInfo_common ( HMENU hmenu,
          {                                         // Very strange this fixes a wine test with a crash.
                 if(lpmii->dwTypeData && lpmii->cch && !(GdiValidateHandle((HGDIOBJ)lpmii->dwTypeData)) )
                 {
-                    lpmii->cch = 0;
                     if( unicode)
                         *((WCHAR *)lpmii->dwTypeData) = 0;
                     else
                         *((CHAR *)lpmii->dwTypeData) = 0;
                 }
+                lpmii->cch = 0;
          }
          else
          {
