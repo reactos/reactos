@@ -130,7 +130,8 @@ static void test_info(void)
     HANDLE handle;
     BOOL ret;
     DWORD needed;
-    EVENTLOG_FULL_INFORMATION efi;
+    BYTE buffer[2 * sizeof(EVENTLOG_FULL_INFORMATION)];
+    EVENTLOG_FULL_INFORMATION *efi = (void *)buffer;
 
     if (!pGetEventLogInformation)
     {
@@ -161,26 +162,26 @@ static void test_info(void)
     ok(GetLastError() == RPC_X_NULL_REF_POINTER, "Expected RPC_X_NULL_REF_POINTER, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, (LPVOID)&efi, 0, NULL);
+    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, efi, 0, NULL);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == RPC_X_NULL_REF_POINTER, "Expected RPC_X_NULL_REF_POINTER, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     needed = 0xdeadbeef;
-    efi.dwFull = 0xdeadbeef;
-    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, (LPVOID)&efi, 0, &needed);
+    efi->dwFull = 0xdeadbeef;
+    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, efi, 0, &needed);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
     ok(needed == sizeof(EVENTLOG_FULL_INFORMATION), "Expected sizeof(EVENTLOG_FULL_INFORMATION), got %d\n", needed);
-    ok(efi.dwFull == 0xdeadbeef, "Expected no change to the dwFull member\n");
+    ok(efi->dwFull == 0xdeadbeef, "Expected no change to the dwFull member\n");
 
     /* Not that we care, but on success last error is set to ERROR_IO_PENDING */
-    efi.dwFull = 0xdeadbeef;
-    needed *= 2;
-    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, (LPVOID)&efi, needed, &needed);
+    efi->dwFull = 0xdeadbeef;
+    needed = sizeof(buffer);
+    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, efi, needed, &needed);
     ok(ret, "Expected success\n");
     ok(needed == sizeof(EVENTLOG_FULL_INFORMATION), "Expected sizeof(EVENTLOG_FULL_INFORMATION), got %d\n", needed);
-    ok(efi.dwFull == 0 || efi.dwFull == 1, "Expected 0 (not full) or 1 (full), got %d\n", efi.dwFull);
+    ok(efi->dwFull == 0 || efi->dwFull == 1, "Expected 0 (not full) or 1 (full), got %d\n", efi->dwFull);
 
     CloseEventLog(handle);
 }

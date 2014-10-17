@@ -211,6 +211,68 @@ static void init(void)
     myARGC = winetest_get_mainargs( &myARGV );
 }
 
+static SECURITY_DESCRIPTOR* test_get_security_descriptor(HANDLE handle, int line)
+{
+    /* use HeapFree(GetProcessHeap(), 0, sd); when done */
+    DWORD ret, length, needed;
+    SECURITY_DESCRIPTOR *sd;
+
+    needed = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetKernelObjectSecurity(handle, OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                  NULL, 0, &needed);
+    ok_(__FILE__, line)(!ret, "GetKernelObjectSecurity should fail\n");
+    ok_(__FILE__, line)(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+    ok_(__FILE__, line)(needed != 0xdeadbeef, "GetKernelObjectSecurity should return required buffer length\n");
+
+    length = needed;
+    sd = HeapAlloc(GetProcessHeap(), 0, length);
+
+    needed = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetKernelObjectSecurity(handle, OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                  sd, length, &needed);
+    ok_(__FILE__, line)(ret, "GetKernelObjectSecurity error %d\n", GetLastError());
+    ok_(__FILE__, line)(needed == length || needed == 0 /* file, pipe */, "GetKernelObjectSecurity should return %u instead of %u\n", length, needed);
+    return sd;
+}
+
+static void test_owner_equal(HANDLE Handle, PSID expected, int line)
+{
+    BOOL res;
+    SECURITY_DESCRIPTOR *queriedSD = NULL;
+    PSID owner;
+    BOOL owner_defaulted;
+
+    queriedSD = test_get_security_descriptor( Handle, line );
+
+    res = GetSecurityDescriptorOwner(queriedSD, &owner, &owner_defaulted);
+    ok_(__FILE__, line)(res, "GetSecurityDescriptorOwner failed with error %d\n", GetLastError());
+
+    ok_(__FILE__, line)(EqualSid(owner, expected), "Owner SIDs are not equal\n");
+    ok_(__FILE__, line)(!owner_defaulted, "Defaulted is true\n");
+
+    HeapFree(GetProcessHeap(), 0, queriedSD);
+}
+
+static void test_group_equal(HANDLE Handle, PSID expected, int line)
+{
+    BOOL res;
+    SECURITY_DESCRIPTOR *queriedSD = NULL;
+    PSID group;
+    BOOL group_defaulted;
+
+    queriedSD = test_get_security_descriptor( Handle, line );
+
+    res = GetSecurityDescriptorGroup(queriedSD, &group, &group_defaulted);
+    ok_(__FILE__, line)(res, "GetSecurityDescriptorGroup failed with error %d\n", GetLastError());
+
+    ok_(__FILE__, line)(EqualSid(group, expected), "Group SIDs are not equal\n");
+    ok_(__FILE__, line)(!group_defaulted, "Defaulted is true\n");
+
+    HeapFree(GetProcessHeap(), 0, queriedSD);
+}
+
 static void test_sid(void)
 {
     struct sidRef refs[] = {
@@ -2481,6 +2543,8 @@ static void test_process_security(void)
     SECURITY_ATTRIBUTES psa;
     HANDLE token, event;
     DWORD size;
+    SID_IDENTIFIER_AUTHORITY SIDAuthWorld = { SECURITY_WORLD_SID_AUTHORITY };
+    PSID EveryoneSid = NULL;
 
     Acl = HeapAlloc(GetProcessHeap(), 0, 256);
     res = InitializeAcl(Acl, 256, ACL_REVISION);
@@ -2491,6 +2555,9 @@ static void test_process_security(void)
         return;
     }
     ok(res, "InitializeAcl failed with error %d\n", GetLastError());
+
+    res = AllocateAndInitializeSid( &SIDAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &EveryoneSid);
+    ok(res, "AllocateAndInitializeSid failed with error %d\n", GetLastError());
 
     /* get owner from the token we might be running as a user not admin */
     res = OpenProcessToken( GetCurrentProcess(), MAXIMUM_ALLOWED, &token );
@@ -2550,7 +2617,7 @@ static void test_process_security(void)
     CHECK_SET_SECURITY( event, GROUP_SECURITY_INFORMATION, ERROR_INVALID_SECURITY_DESCR );
     CHECK_SET_SECURITY( event, SACL_SECURITY_INFORMATION, ERROR_ACCESS_DENIED );
     CHECK_SET_SECURITY( event, DACL_SECURITY_INFORMATION, ERROR_SUCCESS );
-    /* NULL DACL is valid and means default DACL from token */
+    /* NULL DACL is valid and means that everyone has access */
     SecurityDescriptor->Control |= SE_DACL_PRESENT;
     CHECK_SET_SECURITY( event, DACL_SECURITY_INFORMATION, ERROR_SUCCESS );
 
@@ -2558,12 +2625,31 @@ static void test_process_security(void)
     res = SetSecurityDescriptorOwner(SecurityDescriptor, AdminSid, FALSE);
     ok(res, "SetSecurityDescriptorOwner failed with error %d\n", GetLastError());
     CHECK_SET_SECURITY( event, OWNER_SECURITY_INFORMATION, ERROR_SUCCESS );
-    res = SetSecurityDescriptorGroup(SecurityDescriptor, UsersSid, FALSE);
+    test_owner_equal( event, AdminSid, __LINE__ );
+
+    res = SetSecurityDescriptorGroup(SecurityDescriptor, EveryoneSid, FALSE);
     ok(res, "SetSecurityDescriptorGroup failed with error %d\n", GetLastError());
     CHECK_SET_SECURITY( event, GROUP_SECURITY_INFORMATION, ERROR_SUCCESS );
+    test_group_equal( event, EveryoneSid, __LINE__ );
+
     res = SetSecurityDescriptorDacl(SecurityDescriptor, TRUE, Acl, FALSE);
     ok(res, "SetSecurityDescriptorDacl failed with error %d\n", GetLastError());
     CHECK_SET_SECURITY( event, DACL_SECURITY_INFORMATION, ERROR_SUCCESS );
+    /* setting a dacl should not change the owner or group */
+    test_owner_equal( event, AdminSid, __LINE__ );
+    test_group_equal( event, EveryoneSid, __LINE__ );
+
+    /* Test again with a different SID in case the previous SID also happens to
+     * be the one that is incorrectly replacing the group. */
+    res = SetSecurityDescriptorGroup(SecurityDescriptor, UsersSid, FALSE);
+    ok(res, "SetSecurityDescriptorGroup failed with error %d\n", GetLastError());
+    CHECK_SET_SECURITY( event, GROUP_SECURITY_INFORMATION, ERROR_SUCCESS );
+    test_group_equal( event, UsersSid, __LINE__ );
+
+    res = SetSecurityDescriptorDacl(SecurityDescriptor, TRUE, Acl, FALSE);
+    ok(res, "SetSecurityDescriptorDacl failed with error %d\n", GetLastError());
+    CHECK_SET_SECURITY( event, DACL_SECURITY_INFORMATION, ERROR_SUCCESS );
+    test_group_equal( event, UsersSid, __LINE__ );
 
     sprintf(buffer, "%s tests/security.c test", myARGV[0]);
     memset(&startup, 0, sizeof(startup));
@@ -2582,6 +2668,7 @@ static void test_process_security(void)
                           STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL );
     winetest_wait_child_process( info.hProcess );
 
+    FreeSid(EveryoneSid);
     CloseHandle( info.hProcess );
     CloseHandle( info.hThread );
     CloseHandle( event );
@@ -3127,6 +3214,7 @@ static void test_CreateDirectoryA(void)
         ok(ace->Mask == 0x1f01ff, "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n",
                                   ace->Mask);
     }
+    LocalFree(pSD);
 
 done:
     HeapFree(GetProcessHeap(), 0, user);
@@ -3234,10 +3322,12 @@ static void test_GetNamedSecurityInfoA(void)
         NULL, NULL, NULL, NULL, NULL);
     ok(error==ERROR_INVALID_PARAMETER, "GetNamedSecurityInfo failed with error %d\n", error);
 
+    pDacl = NULL;
     error = pGetNamedSecurityInfoA(windows_dir, SE_FILE_OBJECT,DACL_SECURITY_INFORMATION,
-        NULL, NULL, &pDacl, NULL, NULL);
+        NULL, NULL, &pDacl, NULL, &pSD);
     ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
     ok(pDacl != NULL, "DACL should not be NULL\n");
+    LocalFree(pSD);
 
     error = pGetNamedSecurityInfoA(windows_dir, SE_FILE_OBJECT,OWNER_SECURITY_INFORMATION,
         NULL, NULL, &pDacl, NULL, NULL);
@@ -3953,7 +4043,7 @@ static void test_GetSecurityInfo(void)
                           NULL, NULL, pDacl, NULL);
     ok(ret == ERROR_SUCCESS, "SetSecurityInfo returned %d\n", ret);
     ret = pGetSecurityInfo(obj, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
-                          NULL, NULL, &pDacl, NULL, NULL);
+                          NULL, NULL, &pDacl, NULL, &pSD);
     ok(ret == ERROR_SUCCESS, "GetSecurityInfo returned %d\n", ret);
     ok(pDacl && IsValidAcl(pDacl), "GetSecurityInfo returned invalid DACL.\n");
     bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
@@ -3980,6 +4070,7 @@ static void test_GetSecurityInfo(void)
         ok(ace->Mask == 0x1f01ff, "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n",
                                   ace->Mask);
     }
+    LocalFree(pSD);
     CloseHandle(obj);
 }
 
@@ -4431,29 +4522,12 @@ todo_wine
 
 static void test_default_handle_security(HANDLE token, HANDLE handle, GENERIC_MAPPING *mapping)
 {
-    DWORD ret, length, needed, granted, priv_set_len;
+    DWORD ret, granted, priv_set_len;
     BOOL status;
     PRIVILEGE_SET priv_set;
     SECURITY_DESCRIPTOR *sd;
 
-    needed = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = GetKernelObjectSecurity(handle, OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
-                                  NULL, 0, &needed);
-    ok(!ret, "GetKernelObjectSecurity should fail\n");
-    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
-    ok(needed != 0xdeadbeef, "GetKernelObjectSecurity should return required buffer length\n");
-
-    length = needed;
-    sd = HeapAlloc(GetProcessHeap(), 0, length);
-
-    needed = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = GetKernelObjectSecurity(handle, OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
-                                  sd, length, &needed);
-    ok(ret, "GetKernelObjectSecurity error %d\n", GetLastError());
-    ok(needed == length || needed == 0 /* file, pipe */, "GetKernelObjectSecurity should return %u instead of %u\n", length, needed);
-
+    sd = test_get_security_descriptor(handle, __LINE__);
     validate_default_security_descriptor(sd);
 
     priv_set_len = sizeof(priv_set);
@@ -5072,12 +5146,16 @@ static void test_thread_security(void)
         {
         case GENERIC_READ:
         case GENERIC_EXECUTE:
-            ok(access == map[i].mapped || access == (map[i].mapped | THREAD_QUERY_LIMITED_INFORMATION) /* Vista+ */,
+            ok(access == map[i].mapped ||
+               access == (map[i].mapped | THREAD_QUERY_LIMITED_INFORMATION) /* Vista+ */ ||
+               access == (map[i].mapped | THREAD_QUERY_LIMITED_INFORMATION | THREAD_RESUME) /* win8 */,
                "%d: expected %#x, got %#x\n", i, map[i].mapped, access);
             break;
         case GENERIC_WRITE:
 todo_wine
-            ok(access == map[i].mapped || access == (map[i].mapped | THREAD_SET_LIMITED_INFORMATION) /* Vista+ */,
+            ok(access == map[i].mapped ||
+               access == (map[i].mapped | THREAD_SET_LIMITED_INFORMATION) /* Vista+ */ ||
+               access == (map[i].mapped | THREAD_SET_LIMITED_INFORMATION | THREAD_RESUME) /* win8 */,
                "%d: expected %#x, got %#x\n", i, map[i].mapped, access);
             break;
         case GENERIC_ALL:
@@ -5143,7 +5221,9 @@ static void test_process_access(void)
                "%d: expected %#x, got %#x\n", i, map[i].mapped, access);
             break;
         case GENERIC_WRITE:
-            ok(access == map[i].mapped || access == (map[i].mapped | PROCESS_TERMINATE) /* before Vista */,
+            ok(access == map[i].mapped ||
+               access == (map[i].mapped | PROCESS_TERMINATE) /* before Vista */ ||
+               access == (map[i].mapped | PROCESS_SET_LIMITED_INFORMATION) /* win8 */,
                "%d: expected %#x, got %#x\n", i, map[i].mapped, access);
             break;
         case GENERIC_EXECUTE:
@@ -5334,7 +5414,7 @@ static void test_default_dacl_owner_sid(void)
     ret = GetSecurityDescriptorOwner( sd, &owner, &defaulted );
     ok( ret, "error %u\n", GetLastError() );
     ok( owner != (void *)0xdeadbeef, "owner not set\n" );
-    todo_wine ok( !defaulted, "owner defaulted\n" );
+    ok( !defaulted, "owner defaulted\n" );
 
     dacl = (void *)0xdeadbeef;
     present = FALSE;
@@ -5343,7 +5423,7 @@ static void test_default_dacl_owner_sid(void)
     ok( ret, "error %u\n", GetLastError() );
     ok( present, "dacl not present\n" );
     ok( dacl != (void *)0xdeadbeef, "dacl not set\n" );
-    todo_wine ok( !defaulted, "dacl defaulted\n" );
+    ok( !defaulted, "dacl defaulted\n" );
 
     index = 0;
     found = FALSE;

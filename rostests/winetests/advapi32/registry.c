@@ -50,6 +50,10 @@ static BOOL (WINAPI *pIsWow64Process)(HANDLE,PBOOL);
 static NTSTATUS (WINAPI * pNtDeleteKey)(HANDLE);
 static NTSTATUS (WINAPI * pRtlFormatCurrentUserKeyPath)(UNICODE_STRING*);
 static NTSTATUS (WINAPI * pRtlFreeUnicodeString)(PUNICODE_STRING);
+static LONG (WINAPI *pRegDeleteKeyValueA)(HKEY,LPCSTR,LPCSTR);
+static LONG (WINAPI *pRegSetKeyValueW)(HKEY,LPCWSTR,LPCWSTR,DWORD,const void*,DWORD);
+
+static BOOL limited_user;
 
 
 /* Debugging functions from wine/libs/wine/debug.c */
@@ -136,6 +140,8 @@ static void InitFunctionPtrs(void)
     ADVAPI32_GET_PROC(RegGetValueA);
     ADVAPI32_GET_PROC(RegDeleteTreeA);
     ADVAPI32_GET_PROC(RegDeleteKeyExA);
+    ADVAPI32_GET_PROC(RegDeleteKeyValueA);
+    ADVAPI32_GET_PROC(RegSetKeyValueW);
 
     pIsWow64Process = (void *)GetProcAddress( hkernel32, "IsWow64Process" );
     pRtlFormatCurrentUserKeyPath = (void *)GetProcAddress( hntdll, "RtlFormatCurrentUserKeyPath" );
@@ -171,6 +177,26 @@ static void setup_main_key(void)
     if (!RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Test", &hkey_main )) delete_key( hkey_main );
 
     assert (!RegCreateKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Test", &hkey_main ));
+}
+
+static void check_user_privs(void)
+{
+    DWORD ret;
+    HKEY hkey = (HKEY)0xdeadbeef;
+
+    ret = RegOpenKeyExA( HKEY_LOCAL_MACHINE, "Software", 0, KEY_READ|KEY_WRITE, &hkey);
+    ok(ret == ERROR_SUCCESS || ret == ERROR_ACCESS_DENIED, "expected success or access denied, got %i\n", ret);
+    if (ret == ERROR_SUCCESS)
+    {
+        ok(hkey != NULL, "RegOpenKeyExA succeeded but returned NULL hkey\n");
+        RegCloseKey(hkey);
+    }
+    else
+    {
+        ok(hkey == NULL, "RegOpenKeyExA failed but returned hkey %p\n", hkey);
+        limited_user = TRUE;
+        trace("running as limited user\n");
+    }
 }
 
 #define lok ok_(__FILE__, line)
@@ -412,6 +438,37 @@ static void test_set_value(void)
     ok(ret == ERROR_NOACCESS, "RegSetValueExW should have failed with ERROR_NOACCESS: %d, GLE=%d\n", ret, GetLastError());
     ret = RegSetValueExW(hkey_main, name2W, 0, REG_DWORD, (const BYTE *)1, 1);
     ok(ret == ERROR_NOACCESS, "RegSetValueExW should have failed with ERROR_NOACCESS: %d, GLE=%d\n", ret, GetLastError());
+
+    /* RegSetKeyValue */
+    if (!pRegSetKeyValueW)
+        win_skip("RegSetKeyValue() is not supported.\n");
+    else
+    {
+        static const WCHAR subkeyW[] = {'s','u','b','k','e','y',0};
+        DWORD len, type;
+        HKEY subkey;
+
+        ret = pRegSetKeyValueW(hkey_main, NULL, name1W, REG_SZ, (const BYTE*)string2W, sizeof(string2W));
+        ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+        test_hkey_main_Value_A(name1A, string2A, sizeof(string2A));
+        test_hkey_main_Value_W(name1W, string2W, sizeof(string2W));
+
+        ret = pRegSetKeyValueW(hkey_main, subkeyW, name1W, REG_SZ, string1W, sizeof(string1W));
+        ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+        ret = RegOpenKeyExW(hkey_main, subkeyW, 0, KEY_QUERY_VALUE, &subkey);
+        ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+        type = len = 0;
+        ret = RegQueryValueExW(subkey, name1W, 0, &type, NULL, &len);
+        ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+        ok(len == sizeof(string1W), "got %d\n", len);
+        ok(type == REG_SZ, "got type %d\n", type);
+
+        ret = pRegSetKeyValueW(hkey_main, subkeyW, name1W, REG_SZ, NULL, 0);
+        ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+        RegCloseKey(subkey);
+    }
 }
 
 static void create_test_entries(void)
@@ -1000,13 +1057,21 @@ static void test_reg_open_key(void)
 
     ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
                           KEY_WOW64_32KEY | KEY_ALL_ACCESS, NULL, &hkRoot32, NULL);
-    ok(ret == ERROR_SUCCESS && hkRoot32 != NULL,
-       "RegCreateKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
+    if (limited_user)
+        ok(ret == ERROR_ACCESS_DENIED && hkRoot32 == NULL,
+           "RegCreateKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
+    else
+        ok(ret == ERROR_SUCCESS && hkRoot32 != NULL,
+           "RegCreateKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
 
     ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
                           KEY_WOW64_64KEY | KEY_ALL_ACCESS, NULL, &hkRoot64, NULL);
-    ok(ret == ERROR_SUCCESS && hkRoot64 != NULL,
-       "RegCreateKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
+    if (limited_user)
+        ok(ret == ERROR_ACCESS_DENIED && hkRoot64 == NULL,
+           "RegCreateKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
+    else
+        ok(ret == ERROR_SUCCESS && hkRoot64 != NULL,
+           "RegCreateKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
 
     bRet = AllocateAndInitializeSid(&sid_authority, 1, SECURITY_WORLD_RID,
                                     0, 0, 0, 0, 0, 0, 0, &world_sid);
@@ -1035,26 +1100,34 @@ static void test_reg_open_key(void)
     ok(bRet == TRUE,
        "Expected SetSecurityDescriptorDacl to return TRUE, got %d, last error %u\n", bRet, GetLastError());
 
-    /* The "sanctioned" methods of setting a registry ACL aren't implemented in Wine. */
-    bRet = SetKernelObjectSecurity(hkRoot64, DACL_SECURITY_INFORMATION, sd);
-    ok(bRet == TRUE,
-       "Expected SetKernelObjectSecurity to return TRUE, got %d, last error %u\n", bRet, GetLastError());
+    if (limited_user)
+    {
+        skip("not enough privileges to modify HKLM\n");
+    }
+    else
+    {
+        LONG error;
 
-    bRet = SetKernelObjectSecurity(hkRoot32, DACL_SECURITY_INFORMATION, sd);
-    ok(bRet == TRUE,
-       "Expected SetKernelObjectSecurity to return TRUE, got %d, last error %u\n", bRet, GetLastError());
+        error = RegSetKeySecurity(hkRoot64, DACL_SECURITY_INFORMATION, sd);
+        ok(error == ERROR_SUCCESS,
+           "Expected RegSetKeySecurity to return success, got error %u\n", error);
 
-    hkResult = NULL;
-    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, KEY_WOW64_64KEY | KEY_READ, &hkResult);
-    ok(ret == ERROR_SUCCESS && hkResult != NULL,
-       "RegOpenKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
-    RegCloseKey(hkResult);
+        bRet = RegSetKeySecurity(hkRoot32, DACL_SECURITY_INFORMATION, sd);
+        ok(error == ERROR_SUCCESS,
+           "Expected RegSetKeySecurity to return success, got error %u\n", error);
 
-    hkResult = NULL;
-    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, KEY_WOW64_32KEY | KEY_READ, &hkResult);
-    ok(ret == ERROR_SUCCESS && hkResult != NULL,
-       "RegOpenKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
-    RegCloseKey(hkResult);
+        hkResult = NULL;
+        ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, KEY_WOW64_64KEY | KEY_READ, &hkResult);
+        ok(ret == ERROR_SUCCESS && hkResult != NULL,
+           "RegOpenKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
+        RegCloseKey(hkResult);
+
+        hkResult = NULL;
+        ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, KEY_WOW64_32KEY | KEY_READ, &hkResult);
+        ok(ret == ERROR_SUCCESS && hkResult != NULL,
+           "RegOpenKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
+        RegCloseKey(hkResult);
+    }
 
     HeapFree(GetProcessHeap(), 0, sd);
     LocalFree(key_acl);
@@ -1146,13 +1219,21 @@ static void test_reg_create_key(void)
 
     ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
                           KEY_WOW64_32KEY | KEY_ALL_ACCESS, NULL, &hkRoot32, NULL);
-    ok(ret == ERROR_SUCCESS && hkRoot32 != NULL,
-       "RegCreateKeyEx with KEY_WOW64_32KEY failed (err=%d)\n", ret);
+    if (limited_user)
+        ok(ret == ERROR_ACCESS_DENIED && hkRoot32 == NULL,
+           "RegCreateKeyEx with KEY_WOW64_32KEY failed (err=%d)\n", ret);
+    else
+        ok(ret == ERROR_SUCCESS && hkRoot32 != NULL,
+           "RegCreateKeyEx with KEY_WOW64_32KEY failed (err=%d)\n", ret);
 
     ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
                           KEY_WOW64_64KEY | KEY_ALL_ACCESS, NULL, &hkRoot64, NULL);
-    ok(ret == ERROR_SUCCESS && hkRoot64 != NULL,
-       "RegCreateKeyEx with KEY_WOW64_64KEY failed (err=%d)\n", ret);
+    if (limited_user)
+        ok(ret == ERROR_ACCESS_DENIED && hkRoot64 == NULL,
+           "RegCreateKeyEx with KEY_WOW64_64KEY failed (err=%d)\n", ret);
+    else
+        ok(ret == ERROR_SUCCESS && hkRoot64 != NULL,
+           "RegCreateKeyEx with KEY_WOW64_64KEY failed (err=%d)\n", ret);
 
     bRet = AllocateAndInitializeSid(&sid_authority, 1, SECURITY_WORLD_RID,
                                     0, 0, 0, 0, 0, 0, 0, &world_sid);
@@ -1169,7 +1250,7 @@ static void test_reg_create_key(void)
     access.Trustee.ptstrName = (char *)world_sid;
 
     dwRet = SetEntriesInAclA(1, &access, NULL, &key_acl);
-    ok(ret == ERROR_SUCCESS,
+    ok(dwRet == ERROR_SUCCESS,
        "Expected SetEntriesInAclA to return ERROR_SUCCESS, got %u, last error %u\n", dwRet, GetLastError());
 
     sd = HeapAlloc(GetProcessHeap(), 0, SECURITY_DESCRIPTOR_MIN_LENGTH);
@@ -1181,28 +1262,34 @@ static void test_reg_create_key(void)
     ok(bRet == TRUE,
        "Expected SetSecurityDescriptorDacl to return TRUE, got %d, last error %u\n", bRet, GetLastError());
 
-    /* The "sanctioned" methods of setting a registry ACL aren't implemented in Wine. */
-    bRet = SetKernelObjectSecurity(hkRoot64, DACL_SECURITY_INFORMATION, sd);
-    ok(bRet == TRUE,
-       "Expected SetKernelObjectSecurity to return TRUE, got %d, last error %u\n", bRet, GetLastError());
+    if (limited_user)
+    {
+        skip("not enough privileges to modify HKLM\n");
+    }
+    else
+    {
+        ret = RegSetKeySecurity(hkRoot64, DACL_SECURITY_INFORMATION, sd);
+        ok(ret == ERROR_SUCCESS,
+           "Expected RegSetKeySecurity to return success, got error %u\n", ret);
 
-    bRet = SetKernelObjectSecurity(hkRoot32, DACL_SECURITY_INFORMATION, sd);
-    ok(bRet == TRUE,
-       "Expected SetKernelObjectSecurity to return TRUE, got %d, last error %u\n", bRet, GetLastError());
+        ret = RegSetKeySecurity(hkRoot32, DACL_SECURITY_INFORMATION, sd);
+        ok(ret == ERROR_SUCCESS,
+           "Expected RegSetKeySecurity to return success, got error %u\n", ret);
 
-    hkey1 = NULL;
-    ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
-                          KEY_WOW64_64KEY | KEY_READ, NULL, &hkey1, NULL);
-    ok(ret == ERROR_SUCCESS && hkey1 != NULL,
-       "RegOpenKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
-    RegCloseKey(hkey1);
+        hkey1 = NULL;
+        ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
+                              KEY_WOW64_64KEY | KEY_READ, NULL, &hkey1, NULL);
+        ok(ret == ERROR_SUCCESS && hkey1 != NULL,
+           "RegOpenKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
+        RegCloseKey(hkey1);
 
-    hkey1 = NULL;
-    ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
-                          KEY_WOW64_32KEY | KEY_READ, NULL, &hkey1, NULL);
-    ok(ret == ERROR_SUCCESS && hkey1 != NULL,
-       "RegOpenKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
-    RegCloseKey(hkey1);
+        hkey1 = NULL;
+        ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,
+                              KEY_WOW64_32KEY | KEY_READ, NULL, &hkey1, NULL);
+        ok(ret == ERROR_SUCCESS && hkey1 != NULL,
+           "RegOpenKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
+        RegCloseKey(hkey1);
+    }
 
     HeapFree(GetProcessHeap(), 0, sd);
     LocalFree(key_acl);
@@ -2719,12 +2806,63 @@ static void test_delete_value(void)
        "expect ERROR_FILE_NOT_FOUND, got %i\n", res);
 }
 
+static void test_delete_key_value(void)
+{
+    HKEY subkey;
+    LONG ret;
+
+    if (!pRegDeleteKeyValueA)
+    {
+        win_skip("RegDeleteKeyValue is not available.\n");
+        return;
+    }
+
+    ret = pRegDeleteKeyValueA(NULL, NULL, NULL);
+    ok(ret == ERROR_INVALID_HANDLE, "got %d\n", ret);
+
+    ret = pRegDeleteKeyValueA(hkey_main, NULL, NULL);
+    ok(ret == ERROR_FILE_NOT_FOUND, "got %d\n", ret);
+
+    ret = RegSetValueExA(hkey_main, "test", 0, REG_SZ, (const BYTE*)"value", 6);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = RegQueryValueExA(hkey_main, "test", NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    /* NULL subkey name means delete from open key */
+    ret = pRegDeleteKeyValueA(hkey_main, NULL, "test");
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = RegQueryValueExA(hkey_main, "test", NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_FILE_NOT_FOUND, "got %d\n", ret);
+
+    /* now with real subkey */
+    ret = RegCreateKeyExA(hkey_main, "Subkey1", 0, NULL, 0, KEY_WRITE|KEY_READ, NULL, &subkey, NULL);
+    ok(!ret, "failed with error %d\n", ret);
+
+    ret = RegSetValueExA(subkey, "test", 0, REG_SZ, (const BYTE*)"value", 6);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = RegQueryValueExA(subkey, "test", NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = pRegDeleteKeyValueA(hkey_main, "Subkey1", "test");
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = RegQueryValueExA(subkey, "test", NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_FILE_NOT_FOUND, "got %d\n", ret);
+
+    RegDeleteKeyA(subkey, "");
+    RegCloseKey(subkey);
+}
+
 START_TEST(registry)
 {
     /* Load pointers for functions that are not available in all Windows versions */
     InitFunctionPtrs();
 
     setup_main_key();
+    check_user_privs();
     test_set_value();
     create_test_entries();
     test_enum_value();
@@ -2758,6 +2896,7 @@ START_TEST(registry)
     test_rw_order();
     test_deleted_key();
     test_delete_value();
+    test_delete_key_value();
 
     /* cleanup */
     delete_key( hkey_main );
