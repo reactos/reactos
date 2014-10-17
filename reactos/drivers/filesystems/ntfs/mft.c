@@ -397,6 +397,8 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
 {
     ULONGLONG BytesRead;
 
+    DPRINT1("ReadFileRecord(%p, %I64x, %p)\n", Vcb, index, file);
+
     BytesRead = ReadAttribute(Vcb, Vcb->MFTContext, index * Vcb->NtfsInfo.BytesPerFileRecord, (PCHAR)file, Vcb->NtfsInfo.BytesPerFileRecord);
     if (BytesRead != Vcb->NtfsInfo.BytesPerFileRecord)
     {
@@ -714,7 +716,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsLookupFileAt: Can't read MFT record\n");
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreePoolWithTag(*FileRecord, TAG_NTFS);
         return Status;
     }
 
@@ -724,7 +726,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsLookupFileAt: Can't find data attribute\n");
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreePoolWithTag(*FileRecord, TAG_NTFS);
         return Status;
     }
 
@@ -775,7 +777,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsFindFileAt: Can't read MFT record\n");
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreePoolWithTag(*FileRecord, TAG_NTFS);
         return Status;
     }
 
@@ -785,7 +787,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsFindFileAt: Can't find data attribute\n");
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreePoolWithTag(*FileRecord, TAG_NTFS);
         return Status;
     }
 
