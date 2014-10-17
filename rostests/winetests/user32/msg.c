@@ -14598,8 +14598,13 @@ START_TEST(msg)
     test_keyflags();
     test_hotkey();
     test_layered_window();
+    if(!winetest_interactive)
+       skip("CORE-8299 : Skip Tracking popup menu tests.\n");
+    else
+    {
     test_TrackPopupMenu();
     test_TrackPopupMenuEmpty();
+    }
     /* keep it the last test, under Windows it tends to break the tests
      * which rely on active/foreground windows being correct.
      */
