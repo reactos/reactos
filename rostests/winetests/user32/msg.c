@@ -1747,6 +1747,24 @@ static const struct message WmTrackPopupMenu[] = {
     { 0 }
 };
 
+static const struct message WmTrackPopupMenuCapture[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_ENTERMENULOOP, sent|wparam|lparam, TRUE, 0 },
+    { WM_CAPTURECHANGED, sent },
+    { WM_INITMENU, sent|lparam, 0, 0 },
+    { WM_INITMENUPOPUP, sent|lparam, 0, 0 },
+    { 0x0093, sent|optional },
+    { 0x0094, sent|optional },
+    { 0x0094, sent|optional },
+    { WM_ENTERIDLE, sent|wparam, 2 },
+    { WM_CAPTURECHANGED, sent },
+    { HCBT_DESTROYWND, hook },
+    { WM_UNINITMENUPOPUP, sent|lparam, 0, 0 },
+    { WM_MENUSELECT, sent|wparam|lparam, 0xffff0000, 0 },
+    { WM_EXITMENULOOP, sent|wparam|lparam, 1, 0 },
+    { 0 }
+};
+
 static const struct message WmTrackPopupMenuEmpty[] = {
     { HCBT_CREATEWND, hook },
     { WM_ENTERMENULOOP, sent|wparam|lparam, TRUE, 0 },
@@ -1759,6 +1777,22 @@ static const struct message WmTrackPopupMenuEmpty[] = {
     { WM_EXITMENULOOP, sent|wparam|lparam, 1, 0 },
     { HCBT_DESTROYWND, hook },
     { WM_UNINITMENUPOPUP, sent|lparam, 0, 0 },
+    { 0 }
+};
+
+static const struct message WmTrackPopupMenuAbort[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_ENTERMENULOOP, sent|wparam|lparam, TRUE, 0 },
+    { WM_INITMENU, sent|lparam, 0, 0 },
+    { WM_INITMENUPOPUP, sent|lparam, 0, 0 },
+    { 0x0093, sent|optional },
+    { 0x0094, sent|optional },
+    { 0x0094, sent|optional },
+    { WM_CAPTURECHANGED, sent },
+    { HCBT_DESTROYWND, hook },
+    { WM_UNINITMENUPOPUP, sent|lparam, 0, 0 },
+    { WM_MENUSELECT, sent|wparam|lparam, 0xffff0000, 0 },
+    { WM_EXITMENULOOP, sent|wparam|lparam, 1, 0 },
     { 0 }
 };
 
@@ -6990,6 +7024,7 @@ static void test_interthread_messages(void)
     ret = pGetCurrentActCtx(&handle);
     ok(ret, "GetCurentActCtx failed: %u\n", GetLastError());
     ok(handle != 0, "active context %p\n", handle);
+    pReleaseActCtx(handle);
 
     /* destination window will test for active context */
     ret = SendMessageA(wnd_event.hwnd, WM_USER+10, 0, 0);
@@ -8356,8 +8391,8 @@ static VOID CALLBACK tfunc(HWND hwnd, UINT uMsg, UINT_PTR id, DWORD dwTime)
 }
 
 #define TIMER_ID               0x19
-#define TIMER_COUNT_EXPECTED   64
-#define TIMER_COUNT_TOLERANCE  9
+#define TIMER_COUNT_EXPECTED   100
+#define TIMER_COUNT_TOLERANCE  10
 
 static int count = 0;
 static void CALLBACK callback_count(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
@@ -8408,8 +8443,9 @@ static void test_timers(void)
     ok( KillTimer(info.hWnd, TIMER_ID), "KillTimer failed\n");
 
     /* Check the minimum allowed timeout for a timer.  MSDN indicates that it should be 10.0 ms,
-     * but testing indicates that the minimum timeout is actually about 15.6 ms.  Since there is
-     * some measurement error between test runs we're allowing for ±8 counts (~2 ms).
+     * which occurs sometimes, but most testing on the VMs indicates a minimum timeout closer to
+     * 15.6 ms.  Since there is some measurement error between test runs we are allowing for
+     * ±9 counts (~4 ms) around the expected value.
      */
     count = 0;
     id = SetTimer(info.hWnd, TIMER_ID, 0, callback_count);
@@ -8418,8 +8454,9 @@ static void test_timers(void)
     start = GetTickCount();
     while (GetTickCount()-start < 1001 && GetMessageA(&msg, info.hWnd, 0, 0))
         DispatchMessageA(&msg);
-    ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE
-       || broken(abs(count-43) < TIMER_COUNT_TOLERANCE) /* w2k3 */,
+    ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE /* xp */
+       || broken(abs(count-64) < TIMER_COUNT_TOLERANCE) /* most common */
+       || broken(abs(count-43) < TIMER_COUNT_TOLERANCE) /* w2k3, win8 */,
        "did not get expected count for minimum timeout (%d != ~%d).\n",
        count, TIMER_COUNT_EXPECTED);
     ok(KillTimer(info.hWnd, id), "KillTimer failed\n");
@@ -8439,7 +8476,9 @@ static void test_timers(void)
                 syscount++;
             DispatchMessageA(&msg);
         }
-        ok(abs(syscount-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE,
+        ok(abs(syscount-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE
+           || broken(abs(syscount-64) < TIMER_COUNT_TOLERANCE) /* most common */
+           || broken(syscount > 4000 && syscount < 12000) /* win2k3sp0 */,
            "did not get expected count for minimum timeout (%d != ~%d).\n",
            syscount, TIMER_COUNT_EXPECTED);
         todo_wine ok(count == 0, "did not get expected count for callback timeout (%d != 0).\n",
@@ -8473,8 +8512,9 @@ static void test_timers_no_wnd(void)
     ok(count == 1, "killing replaced timer did not work (%i).\n", count);
 
     /* Check the minimum allowed timeout for a timer.  MSDN indicates that it should be 10.0 ms,
-     * but testing indicates that the minimum timeout is actually about 15.6 ms.  Since there is
-     * some measurement error between test runs we're allowing for ±8 counts (~2 ms).
+     * which occurs sometimes, but most testing on the VMs indicates a minimum timeout closer to
+     * 15.6 ms.  Since there is some measurement error between test runs we are allowing for
+     * ±9 counts (~4 ms) around the expected value.
      */
     count = 0;
     id = SetTimer(NULL, 0, 0, callback_count);
@@ -8482,7 +8522,8 @@ static void test_timers_no_wnd(void)
     start = GetTickCount();
     while (GetTickCount()-start < 1001 && GetMessageA(&msg, NULL, 0, 0))
         DispatchMessageA(&msg);
-    ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE,
+    ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE /* xp */
+       || broken(abs(count-64) < TIMER_COUNT_TOLERANCE) /* most common */,
        "did not get expected count for minimum timeout (%d != ~%d).\n",
        count, TIMER_COUNT_EXPECTED);
     KillTimer(NULL, id);
@@ -14337,6 +14378,22 @@ static LRESULT WINAPI cancel_popup_proc(HWND hwnd, UINT message, WPARAM wParam, 
     case WM_UNINITMENUPOPUP:
         ok((HMENU)wParam == hpopupmenu, "expected %p, got %lx\n", hpopupmenu, wParam);
         break;
+    case WM_CAPTURECHANGED:
+        todo_wine ok(!lParam || (HWND)lParam == hwnd, "lost capture to %lx\n", lParam);
+        break;
+    }
+
+    return MsgCheckProc (FALSE, hwnd, message, wParam, lParam);
+}
+
+static LRESULT WINAPI cancel_init_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (ignore_message( message )) return 0;
+
+    switch (message) {
+    case WM_ENTERMENULOOP:
+        ok(EndMenu() == TRUE, "EndMenu() failed\n");
+        break;
     }
 
     return MsgCheckProc (FALSE, hwnd, message, wParam, lParam);
@@ -14365,6 +14422,24 @@ static void test_TrackPopupMenu(void)
     ret = TrackPopupMenu(hpopupmenu, 0, 100,100, 0, hwnd, NULL);
     ok_sequence(WmTrackPopupMenu, "TrackPopupMenu", TRUE);
     ok(ret == 1, "TrackPopupMenu failed with error %i\n", GetLastError());
+
+    SetWindowLongPtrA( hwnd, GWLP_WNDPROC, (LONG_PTR)cancel_init_proc);
+
+    flush_events();
+    flush_sequence();
+    ret = TrackPopupMenu(hpopupmenu, 0, 100,100, 0, hwnd, NULL);
+    ok_sequence(WmTrackPopupMenuAbort, "WmTrackPopupMenuAbort", TRUE);
+    ok(ret == TRUE, "TrackPopupMenu failed\n");
+
+    SetWindowLongPtrA( hwnd, GWLP_WNDPROC, (LONG_PTR)cancel_popup_proc);
+
+    SetCapture(hwnd);
+
+    flush_events();
+    flush_sequence();
+    ret = TrackPopupMenu(hpopupmenu, 0, 100,100, 0, hwnd, NULL);
+    ok_sequence(WmTrackPopupMenuCapture, "TrackPopupMenuCapture", TRUE);
+    ok(ret == 1, "TrackPopupMenuCapture failed with error %i\n", GetLastError());
 
     DestroyMenu(hpopupmenu);
     DestroyWindow(hwnd);

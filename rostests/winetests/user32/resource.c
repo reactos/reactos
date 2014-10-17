@@ -126,6 +126,13 @@ static void test_LoadStringA (void)
     ok( ret == -1 || broken(ret == 0),
         "LoadStringA did not return -1 when called with buflen = 0, got %d, err %d\n",
         ret, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    buf[0] = 'a';
+    ret = LoadStringA(hInst, 1, buf, 1);
+    ok( !ret, "LoadString returned %d\n", ret);
+    ok( buf[0] == 0, "buf[0] = %c (%x)\n", buf[0], buf[0]);
+    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %d\n", GetLastError());
 }
 
 static void test_accel1(void)

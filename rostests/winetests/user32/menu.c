@@ -172,7 +172,7 @@ static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
         case WM_MEASUREITEM:
             {
                 MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lparam;
-                if( winetest_debug)
+                if (winetest_debug > 1)
                     trace("WM_MEASUREITEM received data %lx size %dx%d\n",
                             pmis->itemData, pmis->itemWidth, pmis->itemHeight);
                 ok( !wparam, "wrong wparam %lx\n", wparam );
@@ -191,7 +191,7 @@ static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
                 SIZE sz;
                 int i;
                 pdis = (DRAWITEMSTRUCT *) lparam;
-                if( winetest_debug) {
+                if (winetest_debug > 1) {
                     RECT rc;
                     GetMenuItemRect( hwnd, (HMENU)pdis->hwndItem, pdis->itemData ,&rc);
                     trace("WM_DRAWITEM received hwnd %p hmenu %p itemdata %ld item %d rc %d,%d-%d,%d itemrc:  %d,%d-%d,%d\n",
@@ -1369,6 +1369,11 @@ static void test_menu_iteminfo( void )
         MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, string, 0, 0,
         empty, OK, ER );
     TMII_DONE
+    TMII_INSMI( MIIM_STRING|MIIM_FTYPE, MFT_STRING, -1, -1, 0, 0, 0, -1, NULL, 0, 0, OK );
+    TMII_GMII ( MIIM_STRING|MIIM_FTYPE, 80,
+        MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, NULL, 0, 0,
+        NULL, OK, ER );
+    TMII_DONE
 
     /* How is that with bitmaps? */ 
     TMII_INSMI( MIIM_BITMAP, -1, -1, -1, 0, 0, 0, -1, 0, -1, hbm, OK );
@@ -2510,6 +2515,11 @@ if (0)
         if (mii.hSubMenu)
         {
             ok(mii.wID == (UINT_PTR)mii.hSubMenu, "id %u: wID should be equal to hSubMenu\n", checked_cmd);
+            if (!GetMenuItemCount(mii.hSubMenu))
+            {
+                ok(mii.fType == checked_type, "id %u: expected fType %04x, got %04x\n", checked_cmd, checked_type, mii.fType);
+                ok(mii.fState == checked_state, "id %u: expected fState %04x, got %04x\n", checked_cmd, checked_state, mii.fState);
+            }
             check_menu_items(mii.hSubMenu, checked_cmd, checked_type, checked_state);
         }
         else
@@ -3618,6 +3628,123 @@ static void test_emptypopup(void)
     ok(ret, "DestroyMenu failed with error %d\n", GetLastError());
 }
 
+static void test_AppendMenu(void)
+{
+    MENUITEMINFOA mii;
+    HMENU hmenu, hsubmenu;
+    BOOL ret;
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_OWNERDRAW, 201, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, 201, MF_OWNERDRAW, 0);
+    DestroyMenu(hmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_POPUP, 202, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, 202, MF_STRING, 0);
+    DestroyMenu(hmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_OWNERDRAW | MF_POPUP, 203, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, 203, MF_OWNERDRAW, 0);
+    DestroyMenu(hmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    hsubmenu = CreateMenu();
+    ok(hsubmenu != 0, "CreateMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_OWNERDRAW, (UINT_PTR)hsubmenu, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, (UINT_PTR)hsubmenu, MF_OWNERDRAW, 0);
+    DestroyMenu(hmenu);
+    DestroyMenu(hsubmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    hsubmenu = CreateMenu();
+    ok(hsubmenu != 0, "CreateMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_POPUP, (UINT_PTR)hsubmenu, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, (UINT_PTR)hsubmenu, MF_STRING, 0);
+    DestroyMenu(hmenu);
+    DestroyMenu(hsubmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    hsubmenu = CreateMenu();
+    ok(hsubmenu != 0, "CreateMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_OWNERDRAW | MF_POPUP, (UINT_PTR)hsubmenu, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, (UINT_PTR)hsubmenu, MF_OWNERDRAW, 0);
+    DestroyMenu(hmenu);
+    DestroyMenu(hsubmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    hsubmenu = CreatePopupMenu();
+    ok(hsubmenu != 0, "CreatePopupMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_OWNERDRAW, (UINT_PTR)hsubmenu, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, (UINT_PTR)hsubmenu, MF_OWNERDRAW, 0);
+    DestroyMenu(hmenu);
+    DestroyMenu(hsubmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    hsubmenu = CreatePopupMenu();
+    ok(hsubmenu != 0, "CreatePopupMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_POPUP, (UINT_PTR)hsubmenu, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, (UINT_PTR)hsubmenu, MF_STRING, 0);
+    DestroyMenu(hmenu);
+    DestroyMenu(hsubmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    hsubmenu = CreatePopupMenu();
+    ok(hsubmenu != 0, "CreatePopupMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_OWNERDRAW | MF_POPUP, (UINT_PTR)hsubmenu, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, (UINT_PTR)hsubmenu, MF_OWNERDRAW, 0);
+    DestroyMenu(hmenu);
+    DestroyMenu(hsubmenu);
+
+    hmenu = CreateMenu();
+    ok(hmenu != 0, "CreateMenu failed\n");
+    ret = AppendMenuA(hmenu, MF_STRING, 204, "item 1");
+    ok(ret, "AppendMenu failed\n");
+    check_menu_items(hmenu, 204, MF_STRING, 0);
+    ret = ModifyMenuA(hmenu, 0, MF_POPUP | MF_BYPOSITION, 205, "item 2");
+    ok(ret, "ModifyMenu failed\n");
+    check_menu_items(hmenu, 205, MF_STRING, 0);
+    memset(&mii, 0, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_SUBMENU;
+    mii.hSubMenu = (HMENU)204;
+    ret = InsertMenuItemA(hmenu, 0, TRUE, &mii);
+    ok(!ret, "InsertMenuItem should fail\n");
+    ret = SetMenuItemInfoA(hmenu, 0, TRUE, &mii);
+    ok(!ret, "SetMenuItemInfo should fail\n");
+    mii.fMask = MIIM_ID;
+    mii.wID = 206;
+    ret = InsertMenuItemA(hmenu, 0, TRUE, &mii);
+    ok(ret, "InsertMenuItem failed\n");
+if (0) /* FIXME: uncomment once Wine is fixed */
+    check_menu_items(hmenu, 206, MF_SEPARATOR, MFS_GRAYED);
+    mii.wID = 207;
+    ret = SetMenuItemInfoA(hmenu, 0, TRUE, &mii);
+    ok(ret, "SetMenuItemInfo failed\n");
+if (0) /* FIXME: uncomment once Wine is fixed */
+    check_menu_items(hmenu, 207, MF_SEPARATOR, MFS_GRAYED);
+    DestroyMenu(hmenu);
+}
+
 START_TEST(menu)
 {
     init_function_pointers();
@@ -3655,4 +3782,5 @@ START_TEST(menu)
     test_menu_maxdepth();
     test_menu_circref();
     test_emptypopup();
+    test_AppendMenu();
 }
