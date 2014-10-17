@@ -2652,9 +2652,9 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 {
 #ifdef DOSBOX
                     BYTE Index = getBL();
-                    BYTE CrtColorPaletteMask = Bda->CrtColorPaletteMask;
-                    CrtColorPaletteMask = (CrtColorPaletteMask & 0xE0) | (Index & 0x1F);
-                    Bda->CrtColorPaletteMask = CrtColorPaletteMask;
+
+                    /* See: http://www.bioscentral.com/misc/bda.htm */
+                    Bda->CrtColorPaletteMask = (Bda->CrtColorPaletteMask & 0xE0) | (Index & 0x1F);
 
                     Index = ((Index << 1) & 0x10) | (Index & 0x7);
 
@@ -2666,7 +2666,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
                     VgaSetSinglePaletteRegister(0x00, Index);
 
-                    Index = (CrtColorPaletteMask & 0x10) | 0x02 | ((CrtColorPaletteMask & 0x20) >> 5);
+                    Index = (Bda->CrtColorPaletteMask & 0x10) | 0x02 | ((Bda->CrtColorPaletteMask & 0x20) >> 5);
 
                     VgaSetSinglePaletteRegister(0x01, Index);
                     Index += 2;
@@ -2687,14 +2687,15 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 case 0x01: /* Set Palette */
                 {
                     BYTE Index = getBL();
-                    BYTE CrtColorPaletteMask = Bda->CrtColorPaletteMask;
-                    CrtColorPaletteMask = (CrtColorPaletteMask & 0xDF) | ((Index & 1) ? 0x20 : 0x0);
-                    Bda->CrtColorPaletteMask = CrtColorPaletteMask;
+
+                    /* See: http://www.bioscentral.com/misc/bda.htm */
+                    /* Reset bit 5: foreground colors index (0: green/red/yellow; 1: cyan/magenta/white) */
+                    Bda->CrtColorPaletteMask = (Bda->CrtColorPaletteMask & 0xDF) | ((Index & 1) ? 0x20 : 0x00);
 
                     /* Don't set any extra colors when in text mode */
                     if (Bda->VideoMode <= 3) break;
 
-                    Index = (CrtColorPaletteMask & 0x10) | 0x02 | Index;
+                    Index = (Bda->CrtColorPaletteMask & 0x10) | 0x02 | Index;
 
                     VgaSetSinglePaletteRegister(0x01, Index);
                     Index += 2;
