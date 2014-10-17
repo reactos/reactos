@@ -1,3 +1,4 @@
+
 add_definitions(-D_ATL_VER=_ATL_VER_30)
 
 list(APPEND SOURCE

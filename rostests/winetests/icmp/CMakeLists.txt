@@ -1,8 +1,4 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
-
 add_executable(icmp_winetest icmp.c testlist.c)
 target_link_libraries(icmp_winetest wine uuid)
 set_module_type(icmp_winetest win32cui)

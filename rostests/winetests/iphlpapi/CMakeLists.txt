@@ -1,8 +1,4 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
-
 add_executable(iphlpapi_winetest iphlpapi.c testlist.c)
 target_link_libraries(iphlpapi_winetest wine)
 set_module_type(iphlpapi_winetest win32cui)

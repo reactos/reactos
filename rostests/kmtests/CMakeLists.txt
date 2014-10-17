@@ -1,5 +1,5 @@
-include_directories(
-    include)
+
+include_directories(include)
 
 #
 # subdirectories containing special-purpose drivers
@@ -77,14 +77,12 @@ list(APPEND KMTEST_DRV_SOURCE
     kmtest_drv/kmtest_drv.rc)
 
 add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
-
 set_module_type(kmtest_drv kernelmodedriver)
 target_link_libraries(kmtest_drv kmtest_printf chkstk ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)
 add_dependencies(kmtest_drv bugcodes)
 add_target_compile_definitions(kmtest_drv KMT_KERNEL_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 #add_pch(kmtest_drv include/kmt_test.h)
-
 add_cd_file(TARGET kmtest_drv DESTINATION reactos/bin FOR all)
 
 add_library(kmtest_printf
@@ -118,7 +116,6 @@ target_link_libraries(kmtest ${PSEH_LIB})
 add_importlibs(kmtest advapi32 msvcrt kernel32 ntdll)
 add_target_compile_definitions(kmtest KMT_USER_MODE)
 #add_pch(kmtest include/kmt_test.h)
-
 set_target_properties(kmtest PROPERTIES OUTPUT_NAME "kmtest_")
 add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
 

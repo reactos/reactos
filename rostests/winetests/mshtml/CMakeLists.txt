@@ -1,6 +1,5 @@
 
 add_definitions(-DUSE_WINE_TODOS)
-
 add_idl_Headers(test_tlb_header test_tlb.idl)
 add_typelib(test_tlb.idl)
 
@@ -29,7 +28,6 @@ list(APPEND mshtml_winetest_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/externscr.js)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_winetest_rc_deps}")
-
 target_link_libraries(mshtml_winetest uuid strmiids)
 set_module_type(mshtml_winetest win32cui)
 add_importlibs(mshtml_winetest wininet ole32 oleaut32 user32 gdi32 urlmon advapi32 msvcrt kernel32)

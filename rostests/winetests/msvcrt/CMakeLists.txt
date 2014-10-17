@@ -21,7 +21,6 @@ list(APPEND SOURCE
     time.c)
 
 add_executable(msvcrt_winetest ${SOURCE})
-
 set_module_type(msvcrt_winetest win32cui)
 add_importlibs(msvcrt_winetest msvcrt kernel32)
 

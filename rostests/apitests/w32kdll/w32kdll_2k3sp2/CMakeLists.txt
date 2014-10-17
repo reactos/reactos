@@ -7,5 +7,4 @@ add_library(w32kdll_2k3sp2 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/w32kdll_2k3sp2.def)
 
 set_entrypoint(w32kdll_2k3sp2 0)
-
 add_dependencies(w32kdll_2k3sp2 psdk)

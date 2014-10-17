@@ -1,5 +1,4 @@
-include_directories(
-    include)
+include_directories(include)
 
 add_library(apitest apitest.c)
 
@@ -10,7 +9,7 @@ add_subdirectory(crt)
 add_subdirectory(dciman32)
 add_subdirectory(gdi32)
 if(NOT ARCH STREQUAL "amd64")
-add_subdirectory(kernel32)
+    add_subdirectory(kernel32)
 endif()
 add_subdirectory(msvcrt)
 add_subdirectory(ntdll)

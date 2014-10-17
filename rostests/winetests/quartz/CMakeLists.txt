@@ -16,7 +16,9 @@ target_link_libraries(quartz_winetest uuid)
 add_dependencies(quartz_winetest quartz_test_idlheader)
 set_module_type(quartz_winetest win32cui)
 add_importlibs(quartz_winetest ole32 oleaut32 advapi32 msvcrt kernel32)
+
 if(MSVC)
     add_importlibs(quartz_winetest ntdll)
 endif()
+
 add_cd_file(TARGET quartz_winetest DESTINATION reactos/bin FOR all)
