@@ -565,7 +565,7 @@ xmlBufDump(FILE *file, xmlBufPtr buf) {
  */
 
 xmlChar *
-xmlBufContent(const xmlBufPtr buf)
+xmlBufContent(const xmlBuf *buf)
 {
     if ((!buf) || (buf->error))
         return NULL;
@@ -583,7 +583,7 @@ xmlBufContent(const xmlBufPtr buf)
  */
 
 xmlChar *
-xmlBufEnd(const xmlBufPtr buf)
+xmlBufEnd(xmlBufPtr buf)
 {
     if ((!buf) || (buf->error))
         return NULL;

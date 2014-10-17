@@ -1177,7 +1177,7 @@ static const char *const htmlScriptAttributes[] = {
     "onfocus",
     "onblur",
     "onsubmit",
-    "onrest",
+    "onreset",
     "onchange",
     "onselect"
 };
@@ -3671,13 +3671,13 @@ htmlParseStartTag(htmlParserCtxtPtr ctxt) {
     int i;
     int discardtag = 0;
 
-    if (ctxt->instate == XML_PARSER_EOF)
-        return(-1);
     if ((ctxt == NULL) || (ctxt->input == NULL)) {
 	htmlParseErr(ctxt, XML_ERR_INTERNAL_ERROR,
 		     "htmlParseStartTag: context error\n", NULL, NULL);
 	return -1;
     }
+    if (ctxt->instate == XML_PARSER_EOF)
+        return(-1);
     if (CUR != '<') return -1;
     NEXT;
 
@@ -4366,7 +4366,7 @@ static void
 htmlParseElementInternal(htmlParserCtxtPtr ctxt) {
     const xmlChar *name;
     const htmlElemDesc * info;
-    htmlParserNodeInfo node_info;
+    htmlParserNodeInfo node_info = { 0, };
     int failed;
 
     if ((ctxt == NULL) || (ctxt->input == NULL)) {
@@ -5991,7 +5991,7 @@ done:
 		ctxt->sax->endDocument(ctxt->userData);
 	}
     }
-    if ((ctxt->myDoc != NULL) &&
+    if ((!(ctxt->options & HTML_PARSE_NODEFDTD)) && (ctxt->myDoc != NULL) &&
 	((terminate) || (ctxt->instate == XML_PARSER_EOF) ||
 	 (ctxt->instate == XML_PARSER_EPILOG))) {
 	xmlDtdPtr dtd;
@@ -6288,12 +6288,16 @@ htmlCreateFileParserCtxt(const char *filename, const char *encoding)
 
     /* set encoding */
     if (encoding) {
-        content = xmlMallocAtomic (xmlStrlen(content_line) + strlen(encoding) + 1);
-	if (content) {
-	    strcpy ((char *)content, (char *)content_line);
-            strcat ((char *)content, (char *)encoding);
-            htmlCheckEncoding (ctxt, content);
-	    xmlFree (content);
+        size_t l = strlen(encoding);
+
+	if (l < 1000) {
+	    content = xmlMallocAtomic (xmlStrlen(content_line) + l + 1);
+	    if (content) {
+		strcpy ((char *)content, (char *)content_line);
+		strcat ((char *)content, (char *)encoding);
+		htmlCheckEncoding (ctxt, content);
+		xmlFree (content);
+	    }
 	}
     }
 
@@ -6808,6 +6812,7 @@ htmlReadFd(int fd, const char *URL, const char *encoding, int options)
 
     if (fd < 0)
         return (NULL);
+    xmlInitParser();
 
     xmlInitParser();
     input = xmlParserInputBufferCreateFd(fd, XML_CHAR_ENCODING_NONE);
@@ -6898,6 +6903,7 @@ htmlCtxtReadDoc(htmlParserCtxtPtr ctxt, const xmlChar * cur,
         return (NULL);
     if (ctxt == NULL)
         return (NULL);
+    xmlInitParser();
 
     htmlCtxtReset(ctxt);
 
@@ -6931,6 +6937,7 @@ htmlCtxtReadFile(htmlParserCtxtPtr ctxt, const char *filename,
         return (NULL);
     if (ctxt == NULL)
         return (NULL);
+    xmlInitParser();
 
     htmlCtxtReset(ctxt);
 
@@ -6967,6 +6974,7 @@ htmlCtxtReadMemory(htmlParserCtxtPtr ctxt, const char *buffer, int size,
         return (NULL);
     if (buffer == NULL)
         return (NULL);
+    xmlInitParser();
 
     htmlCtxtReset(ctxt);
 
@@ -7009,6 +7017,7 @@ htmlCtxtReadFd(htmlParserCtxtPtr ctxt, int fd,
         return (NULL);
     if (ctxt == NULL)
         return (NULL);
+    xmlInitParser();
 
     htmlCtxtReset(ctxt);
 
@@ -7053,6 +7062,7 @@ htmlCtxtReadIO(htmlParserCtxtPtr ctxt, xmlInputReadCallback ioread,
         return (NULL);
     if (ctxt == NULL)
         return (NULL);
+    xmlInitParser();
 
     htmlCtxtReset(ctxt);
 

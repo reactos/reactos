@@ -716,22 +716,49 @@ htmlAttrDumpOutput(xmlOutputBufferPtr buf, xmlDocPtr doc, xmlAttrPtr cur,
 		 (!xmlStrcasecmp(cur->name, BAD_CAST "src")) ||
 		 ((!xmlStrcasecmp(cur->name, BAD_CAST "name")) &&
 		  (!xmlStrcasecmp(cur->parent->name, BAD_CAST "a"))))) {
-		xmlChar *escaped;
 		xmlChar *tmp = value;
+		/* xmlURIEscapeStr() escapes '"' so it can be safely used. */
+		xmlBufCCat(buf->buffer, "\"");
 
 		while (IS_BLANK_CH(*tmp)) tmp++;
 
-		/*
-		 * the < and > have already been escaped at the entity level
-		 * And doing so here breaks server side includes
-		 */
-		escaped = xmlURIEscapeStr(tmp, BAD_CAST"@/:=?;#%&,+<>");
-		if (escaped != NULL) {
-		    xmlBufWriteQuotedString(buf->buffer, escaped);
-		    xmlFree(escaped);
-		} else {
-		    xmlBufWriteQuotedString(buf->buffer, value);
+		/* URI Escape everything, except server side includes. */
+		for ( ; ; ) {
+		    xmlChar *escaped;
+		    xmlChar endChar;
+		    xmlChar *end = NULL;
+		    xmlChar *start = (xmlChar *)xmlStrstr(tmp, BAD_CAST "<!--");
+		    if (start != NULL) {
+			end = (xmlChar *)xmlStrstr(tmp, BAD_CAST "-->");
+			if (end != NULL) {
+			    *start = '\0';
+			}
+		    }
+
+		    /* Escape the whole string, or until start (set to '\0'). */
+		    escaped = xmlURIEscapeStr(tmp, BAD_CAST"@/:=?;#%&,+");
+		    if (escaped != NULL) {
+		        xmlBufCat(buf->buffer, escaped);
+		        xmlFree(escaped);
+		    } else {
+		        xmlBufCat(buf->buffer, tmp);
+		    }
+
+		    if (end == NULL) { /* Everything has been written. */
+			break;
+		    }
+
+		    /* Do not escape anything within server side includes. */
+		    *start = '<'; /* Restore the first character of "<!--". */
+		    end += 3; /* strlen("-->") */
+		    endChar = *end;
+		    *end = '\0';
+		    xmlBufCat(buf->buffer, start);
+		    *end = endChar;
+		    tmp = end;
 		}
+
+		xmlBufCCat(buf->buffer, "\"");
 	    } else {
 		xmlBufWriteQuotedString(buf->buffer, value);
 	    }

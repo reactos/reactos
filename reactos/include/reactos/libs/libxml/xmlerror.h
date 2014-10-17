@@ -86,7 +86,7 @@ struct _xmlError {
     char       *str2;	/* extra string information */
     char       *str3;	/* extra string information */
     int		int1;	/* extra number information */
-    int		int2;	/* column number of the error or 0 if N/A (todo: rename this field when we would break ABI) */
+    int		int2;	/* error column # or 0 if N/A (todo: rename field when we would brk ABI) */
     void       *ctxt;   /* the parser context if available */
     void       *node;   /* the node in the tree */
 };
