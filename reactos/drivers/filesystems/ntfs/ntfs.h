@@ -169,6 +169,8 @@ typedef enum
 #define NTFS_FILE_UPCASE            10
 #define NTFS_FILE_EXTEND            11
 
+#define NTFS_MFT_MASK 0x0000FFFFFFFFFFFFULL
+
 #define COLLATION_BINARY              0x00
 #define COLLATION_FILE_NAME           0x01
 #define COLLATION_UNICODE_STRING      0x02
