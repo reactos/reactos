@@ -2664,15 +2664,42 @@ GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
     Status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
     if (NT_SUCCESS(Status))
     {
+        static const UNICODE_STRING MarlettFaceNameW = RTL_CONSTANT_STRING(L"Marlett");
+        static const UNICODE_STRING SymbolFaceNameW = RTL_CONSTANT_STRING(L"Symbol");
+        static const UNICODE_STRING VGAFaceNameW = RTL_CONSTANT_STRING(L"VGA");
+
         if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
         {
             EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
             EntryFaceNameW.Buffer[LF_FACESIZE - 1] = L'\0';
         }
-        if (0 == RtlCompareUnicodeString(FaceName, &EntryFaceNameW, TRUE))
+
+        if (!RtlCompareUnicodeString(FaceName, &EntryFaceNameW, TRUE))
         {
             Score += 49;
         }
+
+        /* FIXME: this is a work around to counter weird fonts on weird places.
+           A proper fix would be to score fonts on more attributes than
+           the ones in this function */
+        if (!RtlCompareUnicodeString(&MarlettFaceNameW, &EntryFaceNameW, TRUE) &&
+            RtlCompareUnicodeString(&MarlettFaceNameW, FaceName, TRUE))
+        {
+            Score = 0;
+        }
+
+        if (!RtlCompareUnicodeString(&SymbolFaceNameW, &EntryFaceNameW, TRUE) &&
+            RtlCompareUnicodeString(&SymbolFaceNameW, FaceName, TRUE))
+        {
+            Score = 0;
+        }
+
+        if (!RtlCompareUnicodeString(&VGAFaceNameW, &EntryFaceNameW, TRUE) &&
+            RtlCompareUnicodeString(&VGAFaceNameW, FaceName, TRUE))
+        {
+            Score = 0;
+        }
+
         RtlFreeUnicodeString(&EntryFaceNameW);
     }
 
