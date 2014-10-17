@@ -85,7 +85,7 @@ typedef struct _FAST486_MOD_REG_RM
     };
 } FAST486_MOD_REG_RM, *PFAST486_MOD_REG_RM;
 
-#pragma pack(push, 1)
+#include <pshpack1.h>
 
 typedef union _FAST486_PAGE_DIR
 {
@@ -128,7 +128,7 @@ typedef union _FAST486_PAGE_TABLE
 
 C_ASSERT(sizeof(FAST486_PAGE_DIR) == sizeof(ULONG));
 
-#pragma pack(pop)
+#include <poppack.h>
 
 /* FUNCTIONS ******************************************************************/
 
