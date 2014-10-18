@@ -7,21 +7,76 @@
 
 #include <rtcapi.h>
 
-unsigned long
+#if defined(_M_IX86)
+#pragma comment(linker, "/alternatename:__CRT_RTC_INITW=__CRT_RTC_INITW0")
+#elif defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM)
+#pragma comment(linker, "/alternatename:_CRT_RTC_INITW=_CRT_RTC_INITW0")
+#else
+#error Unsupported platform
+#endif
+
+int
 __cdecl
-DbgPrint(
-    const char *fmt, ...);
+_RTC_DefaultErrorFuncW(
+    int errType,
+    const wchar_t *file,
+    int line,
+    const wchar_t *module,
+    const wchar_t *format,
+    ...)
+{
+    /* Simple fallback function */
+    __debugbreak();
+    return 0;
+}
+
+_RTC_error_fnW _RTC_pErrorFuncW = _RTC_DefaultErrorFuncW;
+
+/*
+    Default CRT RTC init, if we don't link to CRT
+*/
+_RTC_error_fnW
+__cdecl
+_CRT_RTC_INITW0(
+    void *_Res0,
+    void **_Res1,
+    int _Res2,
+    int _Res3,
+    int _Res4)
+{
+    return &_RTC_DefaultErrorFuncW;
+}
 
 void
+__cdecl
 _RTC_InitBase(void)
+{
+    static char initialized = 0;
+    _RTC_error_fnW errorFunc;
+
+    if (!initialized)
+    {
+        errorFunc = _CRT_RTC_INITW(0, 0, 0, 1, 0);
+        _RTC_SetErrorFuncW(errorFunc);
+        initialized = 1;
+    }
+}
+
+void
+__cdecl
+_RTC_Shutdown(void)
 {
     __debugbreak();
 }
 
 void
-_RTC_Shutdown(void)
+__cdecl
+_RTC_Initialize(void)
 {
-    __debugbreak();
+    /* Usually this function would walk an array of function pointers and call
+       each of these, like done with global ctors, but since these are currently
+       only _RTC_InitBase, we simply call that function once. */
+    _RTC_InitBase();
 }
 
 void
@@ -30,7 +85,13 @@ _RTC_Failure(
     void* retaddr,
     int errnum)
 {
-    __debugbreak();
+    _RTC_pErrorFuncW(errnum,
+                     L"unknown file",
+                     -1,
+                     L"unknown module",
+                     L"Invalid stack pointer value caught at %p, error %d\n",
+                     retaddr,
+                     errnum);
 }
 
 void
@@ -38,7 +99,12 @@ __cdecl
 _RTC_UninitUse(
     const char *_Varname)
 {
-    __debugbreak();
+    _RTC_pErrorFuncW(_RTC_UNINIT_LOCAL_USE,
+                     L"unknown file",
+                     -1,
+                     L"unknown module",
+                     L"Use of uninitialized variable %S!\n",
+                     _Varname);
 }
 
 void
@@ -59,7 +125,12 @@ _RTC_CheckStackVars(
         /* Check if they contain the guard bytes */
         if ((*guard1 != 0xCCCCCCCC) || (*guard2 != 0xCCCCCCCC))
         {
-            __debugbreak();
+            _RTC_pErrorFuncW(_RTC_CORRUPT_STACK,
+                             L"unknown file",
+                             -1,
+                             L"unknown module",
+                             L"Stack corruption near '%s'\n",
+                             _Fd->variables[i].name);
         }
     }
 }
@@ -90,7 +161,11 @@ _RTC_CheckStackVars2(
             (current->guard2[2] != 0xCCCCCCCC) ||
             (*guard != 0xCCCCCCCC))
         {
-            __debugbreak();
+            _RTC_pErrorFuncW(_RTC_CORRUPTED_ALLOCA,
+                             L"unknown file",
+                             -1,
+                             L"unknown module",
+                             L"Stack corruption in alloca frame\n");
         }
     }
 }
@@ -124,3 +199,4 @@ _RTC_AllocaHelper(
         *_PAllocaInfoList = _PAllocaBase;
     }
 }
+

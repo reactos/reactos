@@ -1,5 +1,8 @@
 
-list(APPEND SOURCE rtcapi.c)
+list(APPEND SOURCE
+    rtcapi.c
+    rtcuserapi.c
+)
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE i386/_RTC_CheckEsp.S)
