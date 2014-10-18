@@ -1122,6 +1122,8 @@ static const char * const CCMMessageTypeNames[SPY_MAX_CCMMSGNUM + 1] =
 };
 
 #define SPY_MAX_WINEMSGNUM   9
+
+#ifndef __REACTOS__
 static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
 {
     "WM_WINE_DESTROYWINDOW",
@@ -1134,6 +1136,7 @@ static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
     "WM_WINE_KEYBOARD_LL_HOOK",
     "WM_WINE_MOUSE_LL_HOOK",
 };
+#endif
 
 /* Virtual key names */
 #define SPY_MAX_VKKEYSNUM 255
