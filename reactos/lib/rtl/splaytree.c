@@ -154,17 +154,17 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
     N = Links;
 
     /* Check if we have two children */
-    if ((RtlLeftChild(N)) && (RtlRightChild(N)))
+    if (RtlLeftChild(N) && RtlRightChild(N))
     {
         /* Get the predecessor */
         SP = RtlSubtreePredecessor(N);
 
-        /* Swap it with N, this will guarantee that N will have only a child */
+        /* Swap it with N, this will guarantee that N will only have a child */
         SwapSplayLinks(SP, N);
     }
 
     /* Check if we have no children */
-    if (!(RtlLeftChild(N)) && !(RtlRightChild(N)))
+    if (!RtlLeftChild(N) && !RtlRightChild(N))
     {
         /* If we are also the root, then the tree is gone */
         if (RtlIsRoot(N)) return NULL;
@@ -176,12 +176,12 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
         if (RtlIsLeftChild(N))
         {
             /* N was a left child, so erase its parent's left child link */
-            RtlLeftChild(RtlParent(N)) = NULL;
+            RtlLeftChild(P) = NULL;
         }
         else
         {
             /* N was a right child, so erase its parent's right child link */
-            RtlRightChild(RtlParent(N)) = NULL;
+            RtlRightChild(P) = NULL;
         }
 
         /* And finally splay the parent */
@@ -196,44 +196,130 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
     }
     else
     {
-        /* We have a right child, get him instead */
+        /* We have a right child, get it instead */
         C = RtlRightChild(N);
     }
 
     /* Check if we are the root entry */
     if (RtlIsRoot(N))
     {
-        /* Our child is now root, return him */
-        C->Parent = C;
+        /* Our child is now root, return it */
+        RtlParent(C) = C;
         return C;
     }
+
+    /* Get our parent */
+    P = RtlParent(N);
 
     /* Find out who is referencing us and link to our child instead */
     if (RtlIsLeftChild(N))
     {
         /* N was a left child, so set its parent's left child as our child */
-        RtlLeftChild(RtlParent(N)) = C;
+        RtlLeftChild(P) = C;
     }
     else
     {
         /* N was a right child, so set its parent's right child as our child */
-        RtlRightChild(RtlParent(N)) = C;
+        RtlRightChild(P) = C;
     }
 
     /* Finally, inherit our parent and splay the parent */
-    C->Parent = N->Parent;
-    return RtlSplay(RtlParent(C));
+    RtlParent(C) = P;
+    return RtlSplay(P);
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 VOID
 NTAPI
 RtlDeleteNoSplay(PRTL_SPLAY_LINKS Links,
                  PRTL_SPLAY_LINKS *Root)
 {
-    UNIMPLEMENTED;
+    PRTL_SPLAY_LINKS N, P, C, SP;
+    N = Links;
+
+    /* Check if we have two children */
+    if (RtlLeftChild(N) && RtlRightChild(N))
+    {
+        /* Get the predecessor */
+        SP = RtlSubtreePredecessor(N);
+
+        /* If we are the root, the new root will be our predecessor after swapping */
+        if (RtlIsRoot(N)) *Root = SP;
+
+        /* Swap the predecessor with N, this will guarantee that N will only have a child */
+        SwapSplayLinks(SP, N);
+    }
+
+    /* Check if we have no children */
+    if (!RtlLeftChild(N) && !RtlRightChild(N))
+    {
+        /* If we are also the root, then the tree is gone */
+        if (RtlIsRoot(N))
+        {
+            *Root = NULL;
+            return;
+        }
+
+        /* Get our parent */
+        P = RtlParent(N);
+
+        /* Find out who is referencing us and delete the reference */
+        if (RtlIsLeftChild(N))
+        {
+            /* N was a left child, so erase its parent's left child link */
+            RtlLeftChild(P) = NULL;
+        }
+        else
+        {
+            /* N was a right child, so erase its parent's right child link */
+            RtlRightChild(P) = NULL;
+        }
+
+        /* We are done */
+        return;
+    }
+
+    /* If we got here, we have a child (not two: we swapped above!) */
+    if (RtlLeftChild(N))
+    {
+        /* We have a left child, so get it */
+        C = RtlLeftChild(N);
+    }
+    else
+    {
+        /* We have a right child, get it instead */
+        C = RtlRightChild(N);
+    }
+
+    /* Check if we are the root entry */
+    if (RtlIsRoot(N))
+    {
+        /* Our child is now root, return it */
+        RtlParent(C) = C;
+        *Root = C;
+        return;
+    }
+
+    /* Get our parent */
+    P = RtlParent(N);
+
+    /* Find out who is referencing us and link to our child instead */
+    if (RtlIsLeftChild(N))
+    {
+        /* N was a left child, so set its parent's left child as our child */
+        RtlLeftChild(P) = C;
+    }
+    else
+    {
+        /* N was a right child, so set its parent's right child as our child */
+        RtlRightChild(P) = C;
+    }
+
+    /* Finally, inherit our parent and we are done */
+    RtlParent(C) = P;
+    return;
 }
 
 /*
