@@ -88,6 +88,7 @@ endif()
 
 if(RUNTIME_CHECKS)
     add_definitions(-D__RUNTIME_CHECKS__)
+    add_compile_flags("/RTC1")
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
@@ -232,6 +233,11 @@ function(set_module_type_toolchain MODULE TYPE)
     elseif(${TYPE} STREQUAL "wdmdriver")
         add_target_link_flags(${MODULE} "/DRIVER:WDM")
     endif()
+
+    if(RUNTIME_CHECKS)
+        target_link_libraries(${MODULE} runtmchk)
+    endif()
+
 endfunction()
 
 # Define those for having real libraries

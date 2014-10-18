@@ -25,11 +25,8 @@ EXTERN _RtlUnwind@16:PROC
 PUBLIC __global_unwind2
 PUBLIC __local_unwind2
 PUBLIC __abnormal_termination
-
-#if !defined(__RUNTIME_CHECKS__) || (defined(__RUNTIME_CHECKS__) && !defined(_LIBCNT_))
 PUBLIC __except_handler2
 PUBLIC __except_handler3
-#endif
 
 /* FUNCTIONS *****************************************************************/
 

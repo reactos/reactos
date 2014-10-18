@@ -22,12 +22,9 @@ EXTERN _RtlUnwind@16:PROC
 
 /* GLOBALS *******************************************************************/
 
-#ifndef __RUNTIME_CHECKS__
 PUBLIC __global_unwind2
 PUBLIC __local_unwind2
 PUBLIC __abnormal_termination
-#endif
-
 PUBLIC __except_handler2
 PUBLIC __except_handler3
 
