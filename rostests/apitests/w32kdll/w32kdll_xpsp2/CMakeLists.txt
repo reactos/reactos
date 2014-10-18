@@ -6,5 +6,5 @@ add_library(w32kdll_xpsp2 SHARED
     sys-stubs.S
     ${CMAKE_CURRENT_BINARY_DIR}/w32kdll_xpsp2.def)
 
-set_entrypoint(w32kdll_xpsp2 0)
+set_module_type(w32kdll_xpsp2 module)
 add_dependencies(w32kdll_xpsp2 psdk)
