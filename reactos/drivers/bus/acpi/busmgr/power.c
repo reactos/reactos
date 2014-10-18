@@ -659,7 +659,7 @@ acpi_power_init (void)
 {
 	int			result = 0;
 
-	DPRINT("acpi_power_init");
+	DPRINT("acpi_power_init\n");
 
 	INIT_LIST_HEAD(&acpi_power_resource_list);
 

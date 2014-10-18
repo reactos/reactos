@@ -96,7 +96,7 @@ acpi_bus_data_handler (
 	ACPI_HANDLE		handle,
 	void			*context)
 {
-	DPRINT1("acpi_bus_data_handler not implemented");
+	DPRINT1("acpi_bus_data_handler not implemented\n");
 
 	/* TBD */
 
@@ -489,7 +489,7 @@ acpi_bus_generate_event (
 {
     ULONG_PTR TypeData = 0;
 
-	DPRINT("acpi_bus_generate_event");
+	DPRINT("acpi_bus_generate_event\n");
 
 	if (!device)
 		return_VALUE(AE_BAD_PARAMETER);
@@ -519,7 +519,7 @@ acpi_bus_receive_event (
 
 	//DECLARE_WAITQUEUE(wait, current);
 
-	DPRINT("acpi_bus_receive_event");
+	DPRINT("acpi_bus_receive_event\n");
 
 	if (!event)
 		return AE_BAD_PARAMETER;
@@ -1635,7 +1635,7 @@ acpi_bus_init (void)
 	int			result = 0;
 	ACPI_STATUS		status = AE_OK;
 
-	DPRINT("acpi_bus_init");
+	DPRINT1("acpi_bus_init\n");
 
         KeInitializeDpc(&event_dpc, acpi_bus_generate_event_dpc, NULL);
 
@@ -1714,7 +1714,7 @@ acpi_bus_exit (void)
 {
 	ACPI_STATUS		status = AE_OK;
 
-	DPRINT("acpi_bus_exit");
+	DPRINT1("acpi_bus_exit\n");
 
 	status = AcpiRemoveNotifyHandler(ACPI_ROOT_OBJECT,
 		ACPI_SYSTEM_NOTIFY, acpi_bus_notify);
@@ -1748,7 +1748,7 @@ acpi_init (void)
 {
 	int			result = 0;
 
-	DPRINT("acpi_init");
+	DPRINT("acpi_init\n");
 
 	DPRINT("Subsystem revision %08x\n",ACPI_CA_VERSION);
 
@@ -1806,7 +1806,7 @@ acpi_init (void)
 void
 acpi_exit (void)
 {
-	DPRINT("acpi_exit");
+	DPRINT("acpi_exit\n");
 
 #ifdef CONFIG_PM
 	pm_active = 0;
