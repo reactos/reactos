@@ -308,7 +308,7 @@ fail:
     if (NULL != TargetIconInfo.hbmColor) DeleteObject(TargetIconInfo.hbmColor);
     if (NULL != TargetIconInfo.hbmMask) DeleteObject(TargetIconInfo.hbmMask);
     if (NULL != ShortcutIconInfo.hbmColor) DeleteObject(ShortcutIconInfo.hbmColor);
-    if (NULL != ShortcutIconInfo.hbmMask) DeleteObject(ShortcutIconInfo.hbmColor);
+    if (NULL != ShortcutIconInfo.hbmMask) DeleteObject(ShortcutIconInfo.hbmMask);
     if (NULL != ShortcutIcon) DestroyIcon(ShortcutIcon);
 
     return NULL;
