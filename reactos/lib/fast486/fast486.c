@@ -82,7 +82,21 @@ NextInst:
          * Check if there is an interrupt to execute, or a hardware interrupt signal
          * while interrupts are enabled.
          */
-        if (State->IntStatus == FAST486_INT_EXECUTE)
+        if (State->Flags.Tf)
+        {
+            /* Perform the interrupt */
+            Fast486PerformInterrupt(State, 0x01);
+
+            /*
+             * Flags and TF are pushed on stack so we can reset TF now,
+             * to not break into the INT 0x01 handler.
+             * After the INT 0x01 handler returns, the flags and therefore
+             * TF are popped back off the stack and restored, so TF will be
+             * automatically reset to its previous state.
+             */
+            State->Flags.Tf = FALSE;
+        }
+        else if (State->IntStatus == FAST486_INT_EXECUTE)
         {
             /* Perform the interrupt */
             Fast486PerformInterrupt(State, State->PendingIntNum);
@@ -90,8 +104,7 @@ NextInst:
             /* Clear the interrupt status */
             State->IntStatus = FAST486_INT_NONE;
         }
-        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL)
-                                 && (State->IntAckCallback != NULL))
+        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL))
         {
             /* Acknowledge the interrupt to get the number */
             State->PendingIntNum = State->IntAckCallback(State);
@@ -171,8 +184,8 @@ Fast486IntAckCallback(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);
 
-    /* Return something... */
-    return 0;
+    /* Return something... defaulted to single-step interrupt */
+    return 0x01;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -211,6 +224,7 @@ Fast486Reset(PFAST486_STATE State)
 {
     FAST486_SEG_REGS i;
 
+    /* Save the callbacks and TLB */
     FAST486_MEM_READ_PROC  MemReadCallback  = State->MemReadCallback;
     FAST486_MEM_WRITE_PROC MemWriteCallback = State->MemWriteCallback;
     FAST486_IO_READ_PROC   IoReadCallback   = State->IoReadCallback;
