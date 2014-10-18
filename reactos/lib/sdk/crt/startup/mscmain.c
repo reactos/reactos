@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <rtcapi.h>
 #include <assert.h>
+#include <internal.h>
 
 #if defined(_M_IX86)
 #pragma comment(linker, "/alternatename:__RTC_Initialize=__RTC_NoInitialize")
@@ -18,6 +19,25 @@
 #else
 #error Unsupported platform
 #endif
+
+extern _PVFV __xi_a[];
+extern _PVFV __xi_z[];
+extern _PVFV __xc_a[];
+extern _PVFV __xc_z[];
+
+static
+void
+__do_xtors(
+    _PVFV *start,
+    _PVFV *end)
+{
+    _PVFV *current;
+    for (current = start; current < end; current++)
+    {
+        if (*current != NULL);
+            (*current)();
+    }
+}
 
 void _pei386_runtime_relocator(void)
 {
@@ -38,7 +58,8 @@ __do_global_dtors(void)
 void
 __do_global_ctors(void)
 {
-
+    __do_xtors(__xi_a, __xi_z);
+    __do_xtors(__xc_a, __xc_z);
 }
 
 BOOL
