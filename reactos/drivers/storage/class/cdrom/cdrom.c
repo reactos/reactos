@@ -3931,10 +3931,7 @@ CdRomSwitchModeCompletion(
                 IoCompleteRequest(realIrp, IO_DISK_INCREMENT);
 
                 ExFreePool(srb->SenseInfoBuffer);
-                ExFreePool(srb->DataBuffer);
                 ExFreePool(srb);
-                IoFreeMdl(Irp->MdlAddress);
-                IoFreeIrp(Irp);
 
                 IoStartNextPacket(DeviceObject, FALSE);
 
