@@ -28,15 +28,15 @@
 DBG_DEFAULT_CHANNEL(MEMORY);
 
 #define MAX_BIOS_DESCRIPTORS 32
+
+#define STACK_BASE_PAGE    (STACKLOW / PAGE_SIZE)
 #define FREELDR_BASE_PAGE  (FREELDR_BASE / PAGE_SIZE)
 #define DISKBUF_BASE_PAGE  (DISKREADBUFFER / PAGE_SIZE)
-#define STACK_BASE_PAGE    (STACKLOWLIMIT / PAGE_SIZE)
-#define STACK_END_PAGE     (STACK32ADDR / PAGE_SIZE)
 #define BIOSBUF_BASE_PAGE  (BIOSCALLBUFFER / PAGE_SIZE)
 
+#define STACK_PAGE_COUNT   (FREELDR_BASE_PAGE - STACK_BASE_PAGE)
 #define FREELDR_PAGE_COUNT (DISKBUF_BASE_PAGE - FREELDR_BASE_PAGE)
-#define DISKBUF_PAGE_COUNT (STACK_BASE_PAGE - DISKBUF_BASE_PAGE)
-#define STACK_PAGE_COUNT   (STACK_END_PAGE - STACK_BASE_PAGE)
+#define DISKBUF_PAGE_COUNT (0x10)
 #define BIOSBUF_PAGE_COUNT (1)
 
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
@@ -45,11 +45,12 @@ ULONG PcBiosMapCount;
 FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
 {
     { LoaderFirmwarePermanent, 0x00,               1 }, // realmode int vectors
-    { LoaderFirmwareTemporary, 0x01,               FREELDR_BASE_PAGE - 1 }, // freeldr stack + cmdline
+    { LoaderFirmwareTemporary, 0x01,               STACK_BASE_PAGE - 1 }, // freeldr stack + cmdline
+    { LoaderOsloaderStack,     STACK_BASE_PAGE,    FREELDR_BASE_PAGE - STACK_BASE_PAGE }, // prot mode stack.
     { LoaderLoadedProgram,     FREELDR_BASE_PAGE,  FREELDR_PAGE_COUNT }, // freeldr image
     { LoaderFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
-    { LoaderOsloaderStack,     STACK_BASE_PAGE,    STACK_PAGE_COUNT }, // prot mode stack.
     { LoaderFirmwareTemporary, BIOSBUF_BASE_PAGE,  BIOSBUF_PAGE_COUNT }, // BIOSCALLBUFFER
+    { LoaderFirmwarePermanent, 0x9F,               0x1 },  // EBDA
     { LoaderFirmwarePermanent, 0xA0,               0x50 }, // ROM / Video
     { LoaderSpecialMemory,     0xF0,               0x10 }, // ROM / Video
     { LoaderSpecialMemory,     0xFFF,              1 }, // unusable memory
@@ -193,9 +194,63 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
     ULONG MapCount = 0;
     ULONGLONG RealBaseAddress, RealSize;
     TYPE_OF_MEMORY MemoryType;
+    ULONG Size;
     ASSERT(PcBiosMapCount == 0);
 
     TRACE("GetBiosMemoryMap()\n");
+
+    /* Make sure the usable memory is large enough. To do this we check the 16
+       bit value at address 0x413 inside the BDA, which gives us the usable size
+       in KB */
+    Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
+    if (Size < 0x9F000)
+    {
+        FrLdrBugCheckWithMessage(
+            MEMORY_INIT_FAILURE,
+            __FILE__,
+            __LINE__,
+            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n",
+            Size);
+    }
+
+    /* Get the address of the Extended BIOS Data Area (EBDA).
+     * Int 15h, AH=C1h
+     * SYSTEM - RETURN EXTENDED-BIOS DATA-AREA SEGMENT ADDRESS (PS)
+     *
+     * Return:
+     * CF set on error
+     * CF clear if successful
+     * ES = segment of data area
+     */
+    Regs.x.eax = 0x0000C100;
+    Int386(0x15, &Regs, &Regs);
+
+    /* If the function fails, there is no EBDA */
+    if (INT386_SUCCESS(Regs))
+    {
+        /* Check if this is high enough */
+        ULONG EbdaBase = (ULONG)Regs.w.es << 4;
+        if (EbdaBase < 0x9F000)
+        {
+            FrLdrBugCheckWithMessage(
+                MEMORY_INIT_FAILURE,
+                __FILE__,
+                __LINE__,
+                "The location of your EBDA is 0x%lx, which is too low!\n"
+                "If you see this, please report to the ReactOS team!",
+                EbdaBase);
+        }
+
+        /* Calculate the (max) size of the EBDA */
+        Size = 0xA0000 - EbdaBase;
+
+        /* Add the descriptor */
+        MapCount = AddMemoryDescriptor(PcMemoryMap,
+                                       MAX_BIOS_DESCRIPTORS,
+                                       (EbdaBase / MM_PAGE_SIZE),
+                                       (Size / MM_PAGE_SIZE),
+                                       LoaderFirmwarePermanent);
+    }
 
     /* Int 15h AX=E820h
      * Newer BIOSes - GET SYSTEM MEMORY MAP
