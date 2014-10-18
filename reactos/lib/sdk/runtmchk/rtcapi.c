@@ -30,7 +30,6 @@ _RTC_Failure(
     void* retaddr,
     int errnum)
 {
-    DbgPrint("Invalid stack pointer value caught at %p, error %d\n", retaddr, errnum);
     __debugbreak();
 }
 
@@ -39,7 +38,6 @@ __cdecl
 _RTC_UninitUse(
     const char *_Varname)
 {
-    DbgPrint("Use of uninitialized variable %s!\n", _Varname);
     __debugbreak();
 }
 
@@ -61,7 +59,6 @@ _RTC_CheckStackVars(
         /* Check if they contain the guard bytes */
         if ((*guard1 != 0xCCCCCCCC) || (*guard2 != 0xCCCCCCCC))
         {
-            DbgPrint("Stack corruption near '%s'\n", _Fd->variables[i].name);
             __debugbreak();
         }
     }
@@ -127,4 +124,3 @@ _RTC_AllocaHelper(
         *_PAllocaInfoList = _PAllocaBase;
     }
 }
-
