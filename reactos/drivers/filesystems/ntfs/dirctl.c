@@ -138,7 +138,7 @@ NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
     FileName = GetFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
 
-    Length = FileName->NameLength;
+    Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_NAMES_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
 
@@ -166,7 +166,7 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     FileName = GetFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
 
-    Length = FileName->NameLength;
+    Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
 
@@ -208,7 +208,7 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     FileName = GetFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
 
-    Length = FileName->NameLength;
+    Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_FULL_DIRECTORY_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
 
@@ -251,7 +251,7 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     FileName = GetFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
 
-    Length = FileName->NameLength;
+    Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
 
