@@ -4,11 +4,12 @@ add_definitions(-D__USE_W32_SOCKETS)
 list(APPEND SOURCE
     main.c
     cmdAccounts.c
+    cmdContinue.c
+    cmdHelpMsg.c
+    cmdLocalGroup.c
+    cmdPause.c
     cmdStart.c
     cmdStop.c
-    cmdHelpMsg.c
-    cmdPause.c
-    cmdContinue.c
     help.c
     net.h)
 

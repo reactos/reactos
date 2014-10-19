@@ -28,7 +28,7 @@ COMMAND cmds[] =
     {L"group",      unimplemented},
     {L"help",       cmdHelp},
     {L"helpmsg",    cmdHelpMsg},
-    {L"localgroup", unimplemented},
+    {L"localgroup", cmdLocalGroup},
     {L"name",       unimplemented},
     {L"pause",      cmdPause},
     {L"print",      unimplemented},
