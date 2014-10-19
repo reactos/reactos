@@ -29,10 +29,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
 #define ATOM_BUFFER_SIZE 256
 
 /* INTERNAL FUNCTIONS ********************************************************/
