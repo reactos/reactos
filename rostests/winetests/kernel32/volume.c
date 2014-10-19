@@ -765,6 +765,12 @@ static void test_GetVolumePathNamesForVolumeNameW(void)
     WCHAR volume[MAX_PATH], buffer[MAX_PATH];
     DWORD len, error;
 
+#ifdef __REACTOS__
+    /* due to failing all calls to GetVolumeNameForVolumeMountPointW, this
+     * buffer never gets initialized and could cause a buffer overflow later */
+    volume[0] = 0;
+#endif /* __REACTOS__ */
+
     if (!pGetVolumePathNamesForVolumeNameW || !pGetVolumeNameForVolumeMountPointW)
     {
         win_skip("required functions not found\n");

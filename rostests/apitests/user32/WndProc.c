@@ -99,5 +99,9 @@ static void test_wndproc(void)
 
 START_TEST(WndProc)
 {
+#ifdef __RUNTIME_CHECKS__
+    skip("This test breaks MSVC runtime checks!");
+    return;
+#endif /* __RUNTIME_CHECKS__ */
    test_wndproc();
 }
