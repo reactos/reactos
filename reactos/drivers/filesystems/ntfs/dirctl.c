@@ -175,11 +175,10 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
         ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION) + Length, sizeof(ULONG));
     RtlCopyMemory(Info->FileName, FileName->Name, Length);
 
-    /* Convert file times */
-    NtfsDateTimeToFileTime(FileName->CreationTime, &Info->CreationTime);
-    NtfsDateTimeToFileTime(FileName->LastAccessTime, &Info->LastAccessTime);
-    NtfsDateTimeToFileTime(FileName->LastWriteTime, &Info->LastWriteTime);
-    NtfsDateTimeToFileTime(FileName->ChangeTime, &Info->ChangeTime);
+    Info->CreationTime.QuadPart = FileName->CreationTime;
+    Info->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    Info->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    Info->ChangeTime.QuadPart = FileName->ChangeTime;
 
     /* Convert file flags */
     NtfsFileFlagsToAttributes(FileName->FileAttributes, &Info->FileAttributes);
@@ -217,11 +216,10 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
         ROUND_UP(sizeof(FILE_FULL_DIRECTORY_INFORMATION) + Length, sizeof(ULONG));
     RtlCopyMemory(Info->FileName, FileName->Name, Length);
 
-    /* Convert file times */
-    NtfsDateTimeToFileTime(FileName->CreationTime, &Info->CreationTime);
-    NtfsDateTimeToFileTime(FileName->LastAccessTime, &Info->LastAccessTime);
-    NtfsDateTimeToFileTime(FileName->LastWriteTime, &Info->LastWriteTime);
-    NtfsDateTimeToFileTime(FileName->ChangeTime, &Info->ChangeTime);
+    Info->CreationTime.QuadPart = FileName->CreationTime;
+    Info->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    Info->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    Info->ChangeTime.QuadPart = FileName->ChangeTime;
 
     /* Convert file flags */
     NtfsFileFlagsToAttributes(FileName->FileAttributes, &Info->FileAttributes);
@@ -260,11 +258,10 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
         ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, sizeof(ULONG));
     RtlCopyMemory(Info->FileName, FileName->Name, Length);
 
-    /* Convert file times */
-    NtfsDateTimeToFileTime(FileName->CreationTime, &Info->CreationTime);
-    NtfsDateTimeToFileTime(FileName->LastAccessTime, &Info->LastAccessTime);
-    NtfsDateTimeToFileTime(FileName->LastWriteTime, &Info->LastWriteTime);
-    NtfsDateTimeToFileTime(FileName->ChangeTime, &Info->ChangeTime);
+    Info->CreationTime.QuadPart = FileName->CreationTime;
+    Info->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    Info->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    Info->ChangeTime.QuadPart = FileName->ChangeTime;
 
     /* Convert file flags */
     NtfsFileFlagsToAttributes(FileName->FileAttributes, &Info->FileAttributes);
