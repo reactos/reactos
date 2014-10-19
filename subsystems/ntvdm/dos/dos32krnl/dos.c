@@ -860,7 +860,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(PspSegment);
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
-    ZeroMemory(PspBlock, sizeof(DOS_PSP));
+    RtlZeroMemory(PspBlock, sizeof(*PspBlock));
 
     /* Set the exit interrupt */
     PspBlock->Exit[0] = 0xCD; // int 0x20
@@ -1204,8 +1204,8 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
     }
 
     /* Set up the startup info structure */
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOA));
-    StartupInfo.cb = sizeof(STARTUPINFOA);
+    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
 
     /* Create the process */
     if (!CreateProcessA(ProgramName,
@@ -1230,7 +1230,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
         case SCS_WOW_BINARY:
         {
             /* Clear the structure */
-            ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+            RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
             /* Initialize the structure members */
             CommandInfo.TaskId = SessionId;
@@ -1362,7 +1362,7 @@ Done:
         GetNextVDMCommand(&CommandInfo);
 
         /* Clear the structure */
-        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+        RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
         /* Update the VDM state of the task */
         CommandInfo.TaskId = SessionId;
@@ -2901,7 +2901,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     WCHAR Buffer[256];
 
     /* Clear the current directory buffer */
-    ZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
+    RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
 
     /* Get the current directory */
     if (!GetCurrentDirectoryA(MAX_PATH, CurrentDirectory))

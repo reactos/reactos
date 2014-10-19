@@ -1,3 +1,9 @@
+/*
+Translators: Claudia Cotună
+             Michael Stefaniuc
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -6,7 +12,7 @@ STRINGTABLE
     STRING_ADD_USAGE, "REG ADD nume_cheie [/v nume_valoare | /ve] [/t tip] [/s separator] [/d date] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nume_cheie [/v nume_valoare | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nume_cheie [/v nume_valoare | /ve] [/s]\n"
-    STRING_SUCCESS, "Operațiunea a fost finalizată cu succes\n"
+    STRING_SUCCESS, "Operația a fost îndeplinită cu succes\n"
     STRING_INVALID_KEY, "Eroare: Nume de cheie nevalid\n"
     STRING_INVALID_CMDLINE, "Eroare: Parametri nevalizi pentru linia de comandă\n"
     STRING_NO_REMOTE, "Eroare: Nu se pot adăuga chei pe calculatorul de la distanță\n"

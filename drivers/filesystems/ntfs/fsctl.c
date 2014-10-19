@@ -34,8 +34,6 @@
 #define NDEBUG
 #include <debug.h>
 
-UNICODE_STRING EmptyName = RTL_CONSTANT_STRING(L"");
-
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -274,7 +272,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
-    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeData, &EmptyName, &DeviceExt->MFTContext);
+    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeData, L"", 0, &DeviceExt->MFTContext);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't find data attribute for Master File Table.\n");
@@ -312,7 +310,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     NtfsDumpFileAttributes(VolumeRecord);
 
     /* Get volume name */
-    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, &EmptyName, &AttrCtxt);
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, L"", 0, &AttrCtxt);
 
     if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
     {
@@ -348,7 +346,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     DeviceExt->VolumeFcb = VolumeFcb;
 
     /* Get volume information */
-    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, &EmptyName, &AttrCtxt);
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, L"", 0, &AttrCtxt);
 
     if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
     {

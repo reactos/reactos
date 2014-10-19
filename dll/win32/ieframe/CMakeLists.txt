@@ -1,7 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-
 spec2def(ieframe.dll ieframe.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -39,10 +38,7 @@ list(APPEND ieframe_rc_deps
     ${CMAKE_CURRENT_BINARY_DIR}/ieframe_v1.tlb)
 
 set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS "${ieframe_rc_deps}")
-
-# ieframe_v1.tlb needs stdole2.tlb
 add_dependencies(ieframe stdole2)
-
 set_module_type(ieframe win32dll)
 target_link_libraries(ieframe uuid wine)
 add_importlibs(ieframe urlmon shell32 comctl32 shlwapi oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)

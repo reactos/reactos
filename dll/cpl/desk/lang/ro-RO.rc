@@ -1,4 +1,7 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+Translators: Petru Dumitriu (petrimetri at gmail dot com)
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -32,7 +35,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minute", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "&Solicită parolă la revenire", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL "Solicită pa&rolă la revenire", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "Me&canisme de gestiune a consumului", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT "Aici veți putea ajusta parametrii actuali pentru gestiunea consumului de energie.", IDC_STATIC, 14, 166, 146, 27
@@ -79,7 +82,7 @@ BEGIN
     LTEXT "F&ont", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Măr&ime", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Mă&rime", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
     LTEXT "&Culoare", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP

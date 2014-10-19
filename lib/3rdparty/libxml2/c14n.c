@@ -547,14 +547,15 @@ xmlC14NPrintNamespaces(const xmlNsPtr ns, xmlC14NCtxPtr ctx)
     if (ns->prefix != NULL) {
         xmlOutputBufferWriteString(ctx->buf, " xmlns:");
         xmlOutputBufferWriteString(ctx->buf, (const char *) ns->prefix);
-        xmlOutputBufferWriteString(ctx->buf, "=\"");
+        xmlOutputBufferWriteString(ctx->buf, "=");
     } else {
-        xmlOutputBufferWriteString(ctx->buf, " xmlns=\"");
+        xmlOutputBufferWriteString(ctx->buf, " xmlns=");
     }
     if(ns->href != NULL) {
-	xmlOutputBufferWriteString(ctx->buf, (const char *) ns->href);
+	xmlBufWriteQuotedString(ctx->buf->buffer, ns->href);
+    } else {
+    	xmlOutputBufferWriteString(ctx->buf, "\"\"");
     }
-    xmlOutputBufferWriteString(ctx->buf, "\"");
     return (1);
 }
 

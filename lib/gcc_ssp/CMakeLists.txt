@@ -1,2 +1,2 @@
 
-add_library(gcc_ssp STATIC gcc_ssp.c)
+add_library(gcc_ssp gcc_ssp.c)

@@ -1,6 +1,6 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)
-
 add_rpc_files(client epm.idl)
 
 list(APPEND SOURCE
@@ -35,8 +35,6 @@ add_definitions(
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 if(MSVC)
     add_asm_files(rpcrt4_asm msvc.S)
 endif()
@@ -50,7 +48,6 @@ add_library(rpcrt4 SHARED
 
 set_module_type(rpcrt4 win32dll)
 target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
-
 add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
 add_importlibs(rpcrt4 advapi32 ws2_32 shlwapi msvcrt kernel32 ntdll)
 add_pch(rpcrt4 precomp.h SOURCE)

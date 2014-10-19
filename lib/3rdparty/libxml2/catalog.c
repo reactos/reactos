@@ -994,6 +994,11 @@ xmlLoadFileContent(const char *filename)
     content = (xmlChar*)xmlMallocAtomic(size + 10);
     if (content == NULL) {
         xmlCatalogErrMemory("allocating catalog data");
+#ifdef HAVE_STAT
+	close(fd);
+#else
+	fclose(fd);
+#endif
         return (NULL);
     }
 #ifdef HAVE_STAT
@@ -3550,8 +3555,8 @@ xmlCatalogSetDefaultPrefer(xmlCatalogPrefer prefer) {
 		xmlGenericError(xmlGenericErrorContext,
 			"Setting catalog preference to SYSTEM\n");
 		break;
-	    case XML_CATA_PREFER_NONE:
-		break;
+	    default:
+		return(ret);
 	}
     }
     xmlCatalogDefaultPrefer = prefer;

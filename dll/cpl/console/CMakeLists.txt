@@ -20,14 +20,6 @@ add_library(console SHARED
 
 set_module_type(console cpl UNICODE)
 set_target_properties(console PROPERTIES SUFFIX ".dll")
-
-add_importlibs(console
-    msvcrt
-    user32
-    gdi32
-    comctl32
-    kernel32
-    ntdll)
-
+add_importlibs(console user32 gdi32 comctl32 msvcrt kernel32 ntdll)
 add_pch(console console.h SOURCE)
 add_cd_file(TARGET console DESTINATION reactos/system32 FOR all)

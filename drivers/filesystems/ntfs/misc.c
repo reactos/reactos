@@ -97,4 +97,31 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
     return IrpContext;
 }
 
+/* See:
+ -> http://msdn.microsoft.com/en-us/library/ms724228
+ -> http://bos.asmhackers.net/docs/filesystems/ntfs/standard.html#layout
+ */
+VOID
+NtfsDateTimeToFileTime(ULONGLONG NtfsTime,
+                       PLARGE_INTEGER SystemTime)
+{
+
+    SystemTime->QuadPart = NtfsTime + 116444736000000000;
+}
+
+VOID
+NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
+                          PULONG FileAttributes)
+{
+    *FileAttributes = NtfsAttributes;
+    if ((NtfsAttributes & NTFS_FILE_TYPE_DIRECTORY) == NTFS_FILE_TYPE_DIRECTORY)
+    {
+        *FileAttributes = NtfsAttributes & ~NTFS_FILE_TYPE_DIRECTORY;
+        *FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+    }
+
+    if (NtfsAttributes == 0)
+        *FileAttributes = FILE_ATTRIBUTE_NORMAL;
+}
+
 /* EOF */

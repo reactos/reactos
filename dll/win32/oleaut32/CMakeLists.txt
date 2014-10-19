@@ -12,9 +12,7 @@ add_definitions(
     -DPROXY_CLSID=CLSID_PSFactoryBuffer)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
-
 add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
 list(APPEND SOURCE

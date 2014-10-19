@@ -209,13 +209,6 @@ VOID
 
 typedef
 VOID
-(NTAPI *FAST486_IDLE_PROC)
-(
-    PFAST486_STATE State
-);
-
-typedef
-VOID
 (NTAPI *FAST486_BOP_PROC)
 (
     PFAST486_STATE State,
@@ -261,14 +254,14 @@ typedef struct _FAST486_SEG_REG
     ULONG Base;
 } FAST486_SEG_REG, *PFAST486_SEG_REG;
 
-typedef struct
+typedef struct _FAST486_LDT_REG
 {
     USHORT Selector;
     ULONG Base;
     ULONG Limit;
-} FAST486_LDT_REG;
+} FAST486_LDT_REG, *PFAST486_LDT_REG;
 
-typedef struct
+typedef struct _FAST486_TASK_REG
 {
     USHORT Selector;
     ULONG Base;
@@ -276,7 +269,7 @@ typedef struct
     BOOLEAN Busy;
 } FAST486_TASK_REG, *PFAST486_TASK_REG;
 
-#pragma pack(push, 1)
+#include <pshpack1.h>
 
 typedef struct
 {
@@ -350,7 +343,7 @@ typedef struct
 /* Verify the structure size */
 C_ASSERT(sizeof(FAST486_IDT_ENTRY) == sizeof(ULONGLONG));
 
-#pragma pack(pop)
+#include <poppack.h>
 
 typedef struct _FAST486_TABLE_REG
 {
@@ -474,7 +467,6 @@ struct _FAST486_STATE
     FAST486_MEM_WRITE_PROC MemWriteCallback;
     FAST486_IO_READ_PROC IoReadCallback;
     FAST486_IO_WRITE_PROC IoWriteCallback;
-    FAST486_IDLE_PROC IdleCallback;
     FAST486_BOP_PROC BopCallback;
     FAST486_INT_ACK_PROC IntAckCallback;
     FAST486_REG GeneralRegs[FAST486_NUM_GEN_REGS];
@@ -490,6 +482,7 @@ struct _FAST486_STATE
     ULONG ExceptionCount;
     ULONG PrefixFlags;
     FAST486_SEG_REGS SegmentOverride;
+    BOOLEAN Halted;
     FAST486_INT_STATUS IntStatus;
     UCHAR PendingIntNum;
     PULONG Tlb;
@@ -510,7 +503,6 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_MEM_WRITE_PROC MemWriteCallback,
                   FAST486_IO_READ_PROC   IoReadCallback,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
-                  FAST486_IDLE_PROC      IdleCallback,
                   FAST486_BOP_PROC       BopCallback,
                   FAST486_INT_ACK_PROC   IntAckCallback,
                   PULONG                 Tlb);

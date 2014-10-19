@@ -14,7 +14,6 @@ add_library(hidclass SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/hidclass.def)
 
 set_module_type(hidclass kernelmodedriver ENTRYPOINT 0)
-
 add_importlibs(hidclass ntoskrnl hidparse hal)
 add_pch(hidclass precomp.h SOURCE)
 add_cd_file(TARGET hidclass DESTINATION reactos/system32/drivers NO_CAB FOR all)

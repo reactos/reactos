@@ -1,16 +1,13 @@
 
-
-add_definitions(-DLANGPACK)
-
 include_directories(
     include
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
+add_definitions(-DLANGPACK)
 spec2def(gdi32.dll gdi32.spec ADD_IMPORTLIB)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE
-        objects/efloat.c)
+    list(APPEND SOURCE objects/efloat.c)
 endif()
 
 list(APPEND SOURCE
@@ -50,18 +47,8 @@ add_library(gdi32 SHARED
     gdi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)
 
-set_module_type(gdi32
-    win32dll
-    ENTRYPOINT DllMain 12
-    UNICODE)
-
-target_link_libraries(gdi32
-    win32ksys
-    dxguid
-    msvcrtex
-    ${PSEH_LIB})
-
+set_module_type(gdi32 win32dll ENTRYPOINT DllMain 12 UNICODE)
+target_link_libraries(gdi32 win32ksys dxguid msvcrtex ${PSEH_LIB})
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
 add_pch(gdi32 include/precomp.h SOURCE)
 add_cd_file(TARGET gdi32 DESTINATION reactos/system32 FOR all)
-

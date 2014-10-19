@@ -168,7 +168,7 @@ BOOLEAN DosBIOSInitialize(VOID)
 #if 0
 
     /* Clear the current directory buffer */
-    ZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
+    RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
 
     /* Get the current directory */
     if (!GetCurrentDirectoryA(MAX_PATH, CurrentDirectory))

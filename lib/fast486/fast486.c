@@ -43,7 +43,7 @@ typedef enum
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static inline VOID
+VOID
 NTAPI
 Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
 {
@@ -55,43 +55,62 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
     do
     {
 NextInst:
-        /* Check if this is a new instruction */
-        if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
-
-        /* Perform an instruction fetch */
-        if (!Fast486FetchByte(State, &Opcode))
+        if (!State->Halted)
         {
-            /* Exception occurred */
+            /* Check if this is a new instruction */
+            if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
+
+            /* Perform an instruction fetch */
+            if (!Fast486FetchByte(State, &Opcode))
+            {
+                /* Exception occurred */
+                State->PrefixFlags = 0;
+                continue;
+            }
+
+            // TODO: Check for CALL/RET to update ProcedureCallCount.
+
+            /* Call the opcode handler */
+            CurrentHandler = Fast486OpcodeHandlers[Opcode];
+            CurrentHandler(State, Opcode);
+
+            /* If this is a prefix, go to the next instruction immediately */
+            if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
+
+            /* A non-prefix opcode has been executed, reset the prefix flags */
             State->PrefixFlags = 0;
-            continue;
         }
-
-        // TODO: Check for CALL/RET to update ProcedureCallCount.
-
-        /* Call the opcode handler */
-        CurrentHandler = Fast486OpcodeHandlers[Opcode];
-        CurrentHandler(State, Opcode);
-
-        /* If this is a prefix, go to the next instruction immediately */
-        if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
-
-        /* A non-prefix opcode has been executed, reset the prefix flags */
-        State->PrefixFlags = 0;
 
         /*
          * Check if there is an interrupt to execute, or a hardware interrupt signal
          * while interrupts are enabled.
          */
-        if (State->IntStatus == FAST486_INT_EXECUTE)
+        if (State->Flags.Tf && !State->Halted)
         {
+            /* Perform the interrupt */
+            Fast486PerformInterrupt(State, 0x01);
+
+            /*
+             * Flags and TF are pushed on stack so we can reset TF now,
+             * to not break into the INT 0x01 handler.
+             * After the INT 0x01 handler returns, the flags and therefore
+             * TF are popped back off the stack and restored, so TF will be
+             * automatically reset to its previous state.
+             */
+            State->Flags.Tf = FALSE;
+        }
+        else if (State->IntStatus == FAST486_INT_EXECUTE)
+        {
+            /* No longer halted */
+            State->Halted = FALSE;
+
             /* Perform the interrupt */
             Fast486PerformInterrupt(State, State->PendingIntNum);
 
             /* Clear the interrupt status */
             State->IntStatus = FAST486_INT_NONE;
         }
-        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL)
-                                 && (State->IntAckCallback != NULL))
+        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL))
         {
             /* Acknowledge the interrupt to get the number */
             State->PendingIntNum = State->IntAckCallback(State);
@@ -117,7 +136,6 @@ NTAPI
 Fast486MemReadCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
-
     RtlMoveMemory(Buffer, (PVOID)Address, Size);
 }
 
@@ -126,7 +144,6 @@ NTAPI
 Fast486MemWriteCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
-
     RtlMoveMemory((PVOID)Address, Buffer, Size);
 }
 
@@ -154,13 +171,6 @@ Fast486IoWriteCallback(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Dat
 
 static VOID
 NTAPI
-Fast486IdleCallback(PFAST486_STATE State)
-{
-    UNREFERENCED_PARAMETER(State);
-}
-
-static VOID
-NTAPI
 Fast486BopCallback(PFAST486_STATE State, UCHAR BopCode)
 {
     UNREFERENCED_PARAMETER(State);
@@ -173,8 +183,8 @@ Fast486IntAckCallback(PFAST486_STATE State)
 {
     UNREFERENCED_PARAMETER(State);
 
-    /* Return something... */
-    return 0;
+    /* Return something... defaulted to single-step interrupt */
+    return 0x01;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -186,7 +196,6 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_MEM_WRITE_PROC MemWriteCallback,
                   FAST486_IO_READ_PROC   IoReadCallback,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
-                  FAST486_IDLE_PROC      IdleCallback,
                   FAST486_BOP_PROC       BopCallback,
                   FAST486_INT_ACK_PROC   IntAckCallback,
                   PULONG                 Tlb)
@@ -196,7 +205,6 @@ Fast486Initialize(PFAST486_STATE         State,
     State->MemWriteCallback = (MemWriteCallback ? MemWriteCallback : Fast486MemWriteCallback);
     State->IoReadCallback   = (IoReadCallback   ? IoReadCallback   : Fast486IoReadCallback  );
     State->IoWriteCallback  = (IoWriteCallback  ? IoWriteCallback  : Fast486IoWriteCallback );
-    State->IdleCallback     = (IdleCallback     ? IdleCallback     : Fast486IdleCallback    );
     State->BopCallback      = (BopCallback      ? BopCallback      : Fast486BopCallback     );
     State->IntAckCallback   = (IntAckCallback   ? IntAckCallback   : Fast486IntAckCallback  );
 
@@ -213,11 +221,11 @@ Fast486Reset(PFAST486_STATE State)
 {
     FAST486_SEG_REGS i;
 
+    /* Save the callbacks and TLB */
     FAST486_MEM_READ_PROC  MemReadCallback  = State->MemReadCallback;
     FAST486_MEM_WRITE_PROC MemWriteCallback = State->MemWriteCallback;
     FAST486_IO_READ_PROC   IoReadCallback   = State->IoReadCallback;
     FAST486_IO_WRITE_PROC  IoWriteCallback  = State->IoWriteCallback;
-    FAST486_IDLE_PROC      IdleCallback     = State->IdleCallback;
     FAST486_BOP_PROC       BopCallback      = State->BopCallback;
     FAST486_INT_ACK_PROC   IntAckCallback   = State->IntAckCallback;
     PULONG                 Tlb              = State->Tlb;
@@ -271,155 +279,9 @@ Fast486Reset(PFAST486_STATE State)
     State->MemWriteCallback = MemWriteCallback;
     State->IoReadCallback   = IoReadCallback;
     State->IoWriteCallback  = IoWriteCallback;
-    State->IdleCallback     = IdleCallback;
     State->BopCallback      = BopCallback;
     State->IntAckCallback   = IntAckCallback;
     State->Tlb              = Tlb;
-}
-
-VOID
-NTAPI
-Fast486DumpState(PFAST486_STATE State)
-{
-    DbgPrint("\nFast486DumpState -->\n");
-    DbgPrint("\nCPU currently executing in %s mode at %04X:%08X\n",
-            (State->ControlRegisters[0] & FAST486_CR0_PE) ? "protected" : "real",
-             State->SegmentRegs[FAST486_REG_CS].Selector,
-             State->InstPtr.Long);
-    DbgPrint("\nGeneral purpose registers:\n"
-             "EAX = %08X\tECX = %08X\tEDX = %08X\tEBX = %08X\n"
-             "ESP = %08X\tEBP = %08X\tESI = %08X\tEDI = %08X\n",
-             State->GeneralRegs[FAST486_REG_EAX].Long,
-             State->GeneralRegs[FAST486_REG_ECX].Long,
-             State->GeneralRegs[FAST486_REG_EDX].Long,
-             State->GeneralRegs[FAST486_REG_EBX].Long,
-             State->GeneralRegs[FAST486_REG_ESP].Long,
-             State->GeneralRegs[FAST486_REG_EBP].Long,
-             State->GeneralRegs[FAST486_REG_ESI].Long,
-             State->GeneralRegs[FAST486_REG_EDI].Long);
-    DbgPrint("\nSegment registers:\n"
-             "ES = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-             "CS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-             "SS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-             "DS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-             "FS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n"
-             "GS = %04X (Base: %08X, Limit: %08X, Dpl: %u)\n",
-             State->SegmentRegs[FAST486_REG_ES].Selector,
-             State->SegmentRegs[FAST486_REG_ES].Base,
-             State->SegmentRegs[FAST486_REG_ES].Limit,
-             State->SegmentRegs[FAST486_REG_ES].Dpl,
-             State->SegmentRegs[FAST486_REG_CS].Selector,
-             State->SegmentRegs[FAST486_REG_CS].Base,
-             State->SegmentRegs[FAST486_REG_CS].Limit,
-             State->SegmentRegs[FAST486_REG_CS].Dpl,
-             State->SegmentRegs[FAST486_REG_SS].Selector,
-             State->SegmentRegs[FAST486_REG_SS].Base,
-             State->SegmentRegs[FAST486_REG_SS].Limit,
-             State->SegmentRegs[FAST486_REG_SS].Dpl,
-             State->SegmentRegs[FAST486_REG_DS].Selector,
-             State->SegmentRegs[FAST486_REG_DS].Base,
-             State->SegmentRegs[FAST486_REG_DS].Limit,
-             State->SegmentRegs[FAST486_REG_DS].Dpl,
-             State->SegmentRegs[FAST486_REG_FS].Selector,
-             State->SegmentRegs[FAST486_REG_FS].Base,
-             State->SegmentRegs[FAST486_REG_FS].Limit,
-             State->SegmentRegs[FAST486_REG_FS].Dpl,
-             State->SegmentRegs[FAST486_REG_GS].Selector,
-             State->SegmentRegs[FAST486_REG_GS].Base,
-             State->SegmentRegs[FAST486_REG_GS].Limit,
-             State->SegmentRegs[FAST486_REG_GS].Dpl);
-    DbgPrint("\nFlags: %08X (%s %s %s %s %s %s %s %s %s %s %s %s %s) Iopl: %u\n",
-             State->Flags.Long,
-             State->Flags.Cf ? "CF" : "cf",
-             State->Flags.Pf ? "PF" : "pf",
-             State->Flags.Af ? "AF" : "af",
-             State->Flags.Zf ? "ZF" : "zf",
-             State->Flags.Sf ? "SF" : "sf",
-             State->Flags.Tf ? "TF" : "tf",
-             State->Flags.If ? "IF" : "if",
-             State->Flags.Df ? "DF" : "df",
-             State->Flags.Of ? "OF" : "of",
-             State->Flags.Nt ? "NT" : "nt",
-             State->Flags.Rf ? "RF" : "rf",
-             State->Flags.Vm ? "VM" : "vm",
-             State->Flags.Ac ? "AC" : "ac",
-             State->Flags.Iopl);
-    DbgPrint("\nControl Registers:\n"
-             "CR0 = %08X\tCR2 = %08X\tCR3 = %08X\n",
-             State->ControlRegisters[FAST486_REG_CR0],
-             State->ControlRegisters[FAST486_REG_CR2],
-             State->ControlRegisters[FAST486_REG_CR3]);
-    DbgPrint("\nDebug Registers:\n"
-             "DR0 = %08X\tDR1 = %08X\tDR2 = %08X\n"
-             "DR3 = %08X\tDR4 = %08X\tDR5 = %08X\n",
-             State->DebugRegisters[FAST486_REG_DR0],
-             State->DebugRegisters[FAST486_REG_DR1],
-             State->DebugRegisters[FAST486_REG_DR2],
-             State->DebugRegisters[FAST486_REG_DR3],
-             State->DebugRegisters[FAST486_REG_DR4],
-             State->DebugRegisters[FAST486_REG_DR5]);
-
-#ifndef FAST486_NO_FPU
-    DbgPrint("\nFPU Registers:\n"
-             "ST0 = %04X%016llX\tST1 = %04X%016llX\n"
-             "ST2 = %04X%016llX\tST3 = %04X%016llX\n"
-             "ST4 = %04X%016llX\tST5 = %04X%016llX\n"
-             "ST6 = %04X%016llX\tST7 = %04X%016llX\n"
-             "Status: %04X\tControl: %04X\tTag: %04X\n",
-             FPU_ST(0).Exponent | ((USHORT)FPU_ST(0).Sign << 15),
-             FPU_ST(0).Mantissa,
-             FPU_ST(1).Exponent | ((USHORT)FPU_ST(1).Sign << 15),
-             FPU_ST(1).Mantissa,
-             FPU_ST(2).Exponent | ((USHORT)FPU_ST(2).Sign << 15),
-             FPU_ST(2).Mantissa,
-             FPU_ST(3).Exponent | ((USHORT)FPU_ST(3).Sign << 15),
-             FPU_ST(3).Mantissa,
-             FPU_ST(4).Exponent | ((USHORT)FPU_ST(4).Sign << 15),
-             FPU_ST(4).Mantissa,
-             FPU_ST(5).Exponent | ((USHORT)FPU_ST(5).Sign << 15),
-             FPU_ST(5).Mantissa,
-             FPU_ST(6).Exponent | ((USHORT)FPU_ST(6).Sign << 15),
-             FPU_ST(6).Mantissa,
-             FPU_ST(7).Exponent | ((USHORT)FPU_ST(7).Sign << 15),
-             FPU_ST(7).Mantissa,
-             State->FpuStatus,
-             State->FpuControl,
-             State->FpuTag);
-#endif
-
-    DbgPrint("\n<-- Fast486DumpState\n\n");
-}
-
-VOID
-NTAPI
-Fast486Continue(PFAST486_STATE State)
-{
-    /* Call the internal function */
-    Fast486ExecutionControl(State, FAST486_CONTINUE);
-}
-
-VOID
-NTAPI
-Fast486StepInto(PFAST486_STATE State)
-{
-    /* Call the internal function */
-    Fast486ExecutionControl(State, FAST486_STEP_INTO);
-}
-
-VOID
-NTAPI
-Fast486StepOver(PFAST486_STATE State)
-{
-    /* Call the internal function */
-    Fast486ExecutionControl(State, FAST486_STEP_OVER);
-}
-
-VOID
-NTAPI
-Fast486StepOut(PFAST486_STATE State)
-{
-    /* Call the internal function */
-    Fast486ExecutionControl(State, FAST486_STEP_OUT);
 }
 
 VOID

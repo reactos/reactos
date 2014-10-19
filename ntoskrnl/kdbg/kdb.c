@@ -57,26 +57,27 @@ extern BOOLEAN KdbpBugCheckRequested;
 static KDB_ENTER_CONDITION KdbEnterConditions[][2] =
 {
     /* First chance       Last chance */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Zero devide */
-    { KdbEnterFromKmode,  KdbDoNotEnter },       /* Debug trap */
-    { KdbDoNotEnter,      KdbEnterAlways },      /* NMI */
-    { KdbEnterFromKmode,  KdbDoNotEnter },       /* INT3 */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Overflow */
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Invalid opcode */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* No math coprocessor fault */
-    { KdbEnterAlways,     KdbEnterAlways },
-    { KdbEnterAlways,     KdbEnterAlways },
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Stack fault */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* General protection fault */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Page fault */
-    { KdbEnterAlways,     KdbEnterAlways },      /* Reserved (15) */
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* FPU fault */
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },
-    { KdbDoNotEnter,      KdbEnterFromKmode },   /* SIMD fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 0: Zero divide */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* 1: Debug trap */
+    { KdbDoNotEnter,      KdbEnterAlways },      /* 2: NMI */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* 3: INT3 */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 4: Overflow */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 5: BOUND range exceeded */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 6: Invalid opcode */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 7: No math coprocessor fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* 8: Double Fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* 9: Unknown(9) */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 10: Invalid TSS */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 11: Segment Not Present */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 12: Stack fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 13: General protection fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 14: Page fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* 15: Reserved (15) */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 16: FPU fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 17: Alignment Check */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 18: Machine Check */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* 19: SIMD fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* 20: Assertion failure */
     { KdbDoNotEnter,      KdbEnterFromKmode }    /* Last entry: used for unknown exceptions */
 };
 
@@ -102,7 +103,8 @@ static const CHAR *ExceptionNrToString[] =
     "Math Fault",
     "Alignment Check",
     "Machine Check",
-    "SIMD Fault"
+    "SIMD Fault",
+    "Assertion Failure"
 };
 
 ULONG
@@ -1319,6 +1321,9 @@ KdbpGetExceptionNumberFromStatus(
             break;
         case STATUS_FLOAT_MULTIPLE_TRAPS:
             Ret = 18;
+            break;
+        case STATUS_ASSERTION_FAILURE:
+            Ret = 20;
             break;
 
         default:

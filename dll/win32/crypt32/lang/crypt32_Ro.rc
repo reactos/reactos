@@ -2,6 +2,7 @@
  * crypt32 dll Romanian resources
  *
  * Copyright (C) 2009 Paul Chitescu
+ *               2014 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -177,7 +178,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_KEY_ID "KeyID="
+    IDS_KEY_ID "ID cheie="
     IDS_CERT_ISSUER "Emitentul certificatului"
     IDS_CERT_SERIAL_NUMBER "Numărul de serie al certificatului="
     IDS_ALT_NAME_OTHER_NAME "Nume alternativ="

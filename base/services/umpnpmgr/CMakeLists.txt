@@ -1,8 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/idl)
-
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/pnp.idl)
-
 spec2def(umpnpmgr.dll umpnpmgr.spec ADD_IMPORTLIB)
 
 add_library(umpnpmgr SHARED
@@ -12,10 +10,7 @@ add_library(umpnpmgr SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/umpnpmgr_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/umpnpmgr.def)
 
-target_link_libraries(umpnpmgr
-    wdmguid
-    ${PSEH_LIB})
-
+target_link_libraries(umpnpmgr wdmguid ${PSEH_LIB})
 set_module_type(umpnpmgr win32dll UNICODE)
 add_importlibs(umpnpmgr advapi32 rpcrt4 userenv shlwapi msvcrt kernel32 ntdll)
 add_cd_file(TARGET umpnpmgr DESTINATION reactos/system32 FOR all)

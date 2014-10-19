@@ -1272,14 +1272,22 @@ SetupDiGetClassDevPropertySheetsW(
         if (DeviceInfoData)
         {
             struct DeviceInfo *devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
-            devInfo->hmodDevicePropPageProvider = hModule;
-            devInfo->pDevicePropPageProvider = pPropPageProvider;
+
+            if (devInfo->hmodDevicePropPageProvider == NULL)
+            {
+                devInfo->hmodDevicePropPageProvider = hModule;
+                devInfo->pDevicePropPageProvider = pPropPageProvider;
+            }
         }
         else
         {
             struct DeviceInfoSet *devInfoSet = (struct DeviceInfoSet *)DeviceInfoSet;
-            devInfoSet->hmodClassPropPageProvider = hModule;
-            devInfoSet->pClassPropPageProvider = pPropPageProvider;
+
+            if (devInfoSet->hmodClassPropPageProvider == NULL)
+            {
+                devInfoSet->hmodClassPropPageProvider = hModule;
+                devInfoSet->pClassPropPageProvider = pPropPageProvider;
+            }
         }
 
         InitialNumberOfPages = PropertySheetHeader->nPages;

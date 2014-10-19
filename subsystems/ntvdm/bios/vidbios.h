@@ -31,6 +31,7 @@
 #define FONT_8x8_OFFSET         0x0000
 #define FONT_8x8_HIGH_OFFSET    0x0400
 #define FONT_8x16_OFFSET        0x0800
+#define FONT_8x14_OFFSET        0x1800
 
 enum
 {

@@ -1798,6 +1798,7 @@ xmlCopyEnumeration(xmlEnumerationPtr cur) {
 
     if (cur == NULL) return(NULL);
     ret = xmlCreateEnumeration((xmlChar *) cur->name);
+    if (ret == NULL) return(NULL);
 
     if (cur->next != NULL) ret->next = xmlCopyEnumeration(cur->next);
     else ret->next = NULL;
@@ -2633,11 +2634,8 @@ xmlAddID(xmlValidCtxtPtr ctxt, xmlDocPtr doc, const xmlChar *value,
 	/*
 	 * The id is already defined in this DTD.
 	 */
-	if ((ctxt != NULL) && (ctxt->error != NULL)) {
-	    xmlErrValidNode(ctxt, attr->parent, XML_DTD_ID_REDEFINED,
-	                    "ID %s already defined\n",
-			    value, NULL, NULL);
-	}
+	xmlErrValidNode(ctxt, attr->parent, XML_DTD_ID_REDEFINED,
+			"ID %s already defined\n", value, NULL, NULL);
 #endif /* LIBXML_VALID_ENABLED */
 	xmlFreeID(ret);
 	return(NULL);
@@ -2740,23 +2738,24 @@ xmlRemoveID(xmlDocPtr doc, xmlAttrPtr attr) {
 
     if (doc == NULL) return(-1);
     if (attr == NULL) return(-1);
+
     table = (xmlIDTablePtr) doc->ids;
     if (table == NULL)
         return(-1);
 
-    if (attr == NULL)
-	return(-1);
     ID = xmlNodeListGetString(doc, attr->children, 1);
     if (ID == NULL)
-	return(-1);
+        return(-1);
+
     id = xmlHashLookup(table, ID);
     if (id == NULL || id->attr != attr) {
-	xmlFree(ID);
-	return(-1);
+        xmlFree(ID);
+        return(-1);
     }
+
     xmlHashRemoveEntry(table, ID, (xmlHashDeallocator) xmlFreeID);
     xmlFree(ID);
-	attr->atype = 0;
+    attr->atype = 0;
     return(0);
 }
 
@@ -3059,21 +3058,21 @@ xmlRemoveRef(xmlDocPtr doc, xmlAttrPtr attr) {
 
     if (doc == NULL) return(-1);
     if (attr == NULL) return(-1);
+
     table = (xmlRefTablePtr) doc->refs;
     if (table == NULL)
         return(-1);
 
-    if (attr == NULL)
-        return(-1);
     ID = xmlNodeListGetString(doc, attr->children, 1);
     if (ID == NULL)
         return(-1);
-    ref_list = xmlHashLookup(table, ID);
 
+    ref_list = xmlHashLookup(table, ID);
     if(ref_list == NULL) {
         xmlFree(ID);
         return (-1);
     }
+
     /* At this point, ref_list refers to a list of references which
      * have the same key as the supplied attr. Our list of references
      * is ordered by reference address and we don't have that information
@@ -5236,7 +5235,7 @@ xmlValidateElementContent(xmlValidCtxtPtr ctxt, xmlNodePtr child,
     xmlElementContentPtr cont;
     const xmlChar *name;
 
-    if ((elemDecl == NULL) || (parent == NULL))
+    if ((elemDecl == NULL) || (parent == NULL) || (ctxt == NULL))
 	return(-1);
     cont = elemDecl->content;
     name = elemDecl->name;
@@ -6948,7 +6947,7 @@ xmlValidGetValidElements(xmlNode *prev, xmlNode *next, const xmlChar **names,
                          int max) {
     xmlValidCtxt vctxt;
     int nb_valid_elements = 0;
-    const xmlChar *elements[256];
+    const xmlChar *elements[256]={0};
     int nb_elements = 0, i;
     const xmlChar *name;
 
@@ -6998,6 +6997,9 @@ xmlValidGetValidElements(xmlNode *prev, xmlNode *next, const xmlChar **names,
      * Creates a dummy node and insert it into the tree
      */
     test_node = xmlNewDocNode (ref_node->doc, NULL, BAD_CAST "<!dummy?>", NULL);
+    if (test_node == NULL)
+        return(-1);
+
     test_node->parent = parent;
     test_node->prev = prev;
     test_node->next = next;

@@ -428,7 +428,7 @@ VOID CmosInitialize(VOID)
     ASSERT(hCmosRam == INVALID_HANDLE_VALUE);
 
     /* Clear the CMOS memory */
-    ZeroMemory(&CmosMemory, sizeof(CmosMemory));
+    RtlZeroMemory(&CmosMemory, sizeof(CmosMemory));
 
     /* Always open (and if needed, create) a RAM file with shared access */
     SetLastError(0); // For debugging purposes
@@ -452,7 +452,7 @@ VOID CmosInitialize(VOID)
         {
             /* Bad CMOS Ram file. Reinitialize the CMOS memory. */
             DPRINT1("Invalid CMOS file, read bytes %u, expected bytes %u\n", CmosSize, sizeof(CmosMemory));
-            ZeroMemory(&CmosMemory, sizeof(CmosMemory));
+            RtlZeroMemory(&CmosMemory, sizeof(CmosMemory));
         }
         DPRINT1("CMOS loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
         SetFilePointer(hCmosRam, 0, NULL, FILE_BEGIN);

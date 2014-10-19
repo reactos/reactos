@@ -67,7 +67,7 @@ ClassNameToVersion(
                                                    ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION,
                                                   &SectionName,
                                                   &KeyedData );
- 
+
    if (NT_SUCCESS(Status) && KeyedData.ulDataFormatVersion == 1)
    {
       struct dll_redirect *dll = KeyedData.lpSectionBase;
@@ -165,7 +165,7 @@ Real_VersionRegisterClass(
 Error_Exit:
    if ( Ret || !hLibModule )
    {
-      if ( phLibModule ) *phLibModule = hLibModule;  
+      if ( phLibModule ) *phLibModule = hLibModule;
    }
    else
    {
@@ -173,7 +173,7 @@ Error_Exit:
       FreeLibrary(hLibModule);
       SetLastError(save_error);
    }
-                                  
+
    return Ret;
 }
 
@@ -269,7 +269,7 @@ VersionRegisterClass(
 Error_Exit:
    if ( Ret || !hLibModule )
    {
-      if ( phLibModule ) *phLibModule = hLibModule;  
+      if ( phLibModule ) *phLibModule = hLibModule;
    }
    else
    {
@@ -1022,7 +1022,7 @@ GetClassNameA(
 {
     WCHAR tmpbuf[MAX_ATOM_LEN + 1];
     int len;
-  
+
     if (nMaxCount <= 0) return 0;
     if (!GetClassNameW( hWnd, tmpbuf, sizeof(tmpbuf)/sizeof(WCHAR) )) return 0;
     RtlUnicodeToMultiByteN( lpClassName, nMaxCount - 1, (PULONG)&len, tmpbuf, strlenW(tmpbuf) * sizeof(WCHAR) );
@@ -1256,7 +1256,7 @@ RealGetWindowClassA(
 {
     WCHAR tmpbuf[MAX_ATOM_LEN + 1];
     UINT len;
-  
+
     if ((INT)cchType <= 0) return 0;
     if (!RealGetWindowClassW( hwnd, tmpbuf, sizeof(tmpbuf)/sizeof(WCHAR) )) return 0;
     RtlUnicodeToMultiByteN( pszType, cchType - 1, (PULONG)&len, tmpbuf, strlenW(tmpbuf) * sizeof(WCHAR) );
@@ -1472,6 +1472,7 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
 */
+   RtlInitEmptyAnsiString(&AnsiMenuName, NULL, 0);
    if (WndClass.lpszMenuName != NULL)
    {
       if (!IS_INTRESOURCE(WndClass.lpszMenuName))

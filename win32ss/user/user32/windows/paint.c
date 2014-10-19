@@ -29,10 +29,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
 static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
 const DWORD HatchBitmap[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};

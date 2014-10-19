@@ -589,6 +589,10 @@ Bios32Post(VOID)
     InitializeBiosData();
     InitializeBiosInfo();
 
+    /*
+     * Initialize IVT and hardware
+     */
+
     /* Register the BIOS 32-bit Interrupts */
     InitializeBiosInt32();
 
@@ -604,6 +608,16 @@ Bios32Post(VOID)
         EmulatorTerminate();
         return;
     }
+
+#if 0
+    /* Initialize the Keyboard and Video BIOS */
+    if (!KbdBiosInitialize() || !VidBiosInitialize())
+    {
+        /* Stop the VDM */
+        EmulatorTerminate();
+        return;
+    }
+#endif
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
@@ -631,16 +645,6 @@ static VOID WINAPI Bios32ResetBop(LPWORD Stack)
     // following actions:
     // - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del);
     // - if the word is 0000h, perform a cold reboot (aka. Reset).
-
-    /* Initialize IVT and hardware */
-
-    /* Initialize the Keyboard and Video BIOS */
-    if (!KbdBiosInitialize() || !VidBiosInitialize())
-    {
-        /* Stop the VDM */
-        EmulatorTerminate();
-        return;
-    }
 
     /* Do the POST */
     Bios32Post();

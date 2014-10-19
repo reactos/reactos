@@ -378,7 +378,7 @@ xmlRMutexLock(xmlRMutexPtr tok)
     pthread_mutex_unlock(&tok->lock);
 #elif defined HAVE_WIN32_THREADS
     EnterCriticalSection(&tok->cs);
-    ++tok->count;
+    tok->count++;
 #elif defined HAVE_BEOS_THREADS
     if (tok->lock->tid == find_thread(NULL)) {
         tok->count++;
@@ -414,8 +414,10 @@ xmlRMutexUnlock(xmlRMutexPtr tok ATTRIBUTE_UNUSED)
     }
     pthread_mutex_unlock(&tok->lock);
 #elif defined HAVE_WIN32_THREADS
-    if (!--tok->count)
+    if (tok->count > 0) {
         LeaveCriticalSection(&tok->cs);
+	tok->count--;
+    }
 #elif defined HAVE_BEOS_THREADS
     if (tok->lock->tid == find_thread(NULL)) {
         tok->count--;

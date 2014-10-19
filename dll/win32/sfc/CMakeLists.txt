@@ -7,9 +7,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/sfc.def)
 
 add_library(sfc SHARED ${SOURCE})
-
 set_module_type(sfc win32dll)
-
 add_importlibs(sfc sfc_os msvcrt kernel32 ntdll)
-
 add_cd_file(TARGET sfc DESTINATION reactos/system32 FOR all)

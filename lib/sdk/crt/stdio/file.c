@@ -233,40 +233,37 @@ static inline BOOL is_valid_fd(int fd)
 /* INTERNAL: free a file entry fd */
 static void free_fd(int fd)
 {
-  HANDLE old_handle;
   ioinfo *fdinfo;
 
   LOCK_FILES();
   fdinfo = get_ioinfo(fd);
-  old_handle = fdinfo->handle;
   if(fdinfo != &__badioinfo)
   {
     fdinfo->handle = INVALID_HANDLE_VALUE;
     fdinfo->wxflag = 0;
   }
   TRACE(":fd (%d) freed\n",fd);
-  if (fd < 3) /* don't use 0,1,2 for user files */
+
+  if (fd < 3)
   {
     switch (fd)
     {
     case 0:
-        if (GetStdHandle(STD_INPUT_HANDLE) == old_handle) SetStdHandle(STD_INPUT_HANDLE, 0);
+        SetStdHandle(STD_INPUT_HANDLE, 0);
         break;
     case 1:
-        if (GetStdHandle(STD_OUTPUT_HANDLE) == old_handle) SetStdHandle(STD_OUTPUT_HANDLE, 0);
+        SetStdHandle(STD_OUTPUT_HANDLE, 0);
         break;
     case 2:
-        if (GetStdHandle(STD_ERROR_HANDLE) == old_handle) SetStdHandle(STD_ERROR_HANDLE, 0);
+        SetStdHandle(STD_ERROR_HANDLE, 0);
         break;
     }
   }
-  else
-  {
-    if (fd == fdend - 1)
-      fdend--;
-    if (fd < fdstart)
-      fdstart = fd;
-  }
+
+  if (fd == fdend - 1)
+    fdend--;
+  if (fd < fdstart)
+    fdstart = fd;
   UNLOCK_FILES();
 }
 
@@ -2975,28 +2972,46 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
     _lock_file(file);
 
     while(wrcnt) {
+#ifndef __REACTOS__
+        if(file->_cnt < 0) {
+            WARN("negative file->_cnt value in %p\n", file);
+            file->_flag |= MSVCRT__IOERR;
+            break;
+        } else
+#endif
         if(file->_cnt) {
-            int pcnt=((unsigned)file->_cnt>wrcnt)? wrcnt: file->_cnt;
+            int pcnt=(file->_cnt>wrcnt)? wrcnt: file->_cnt;
             memcpy(file->_ptr, ptr, pcnt);
             file->_cnt -= pcnt;
             file->_ptr += pcnt;
             written += pcnt;
             wrcnt -= pcnt;
             ptr = (const char*)ptr + pcnt;
-        } else if(!file->_bufsiz && (file->_flag & _IONBF)) {
-            if(!(file->_flag & _IOWRT)) {
-                if(file->_flag & _IORW)
-                    file->_flag |= _IOWRT;
-                else
-                    break;
-            }
+        } else if((file->_flag & _IONBF)
+                || ((file->_flag & (_IOMYBUF | _USERBUF)) && wrcnt >= file->_bufsiz)
+                || (!(file->_flag & (_IOMYBUF | _USERBUF)) && wrcnt >= MSVCRT_INTERNAL_BUFSIZ)) {
+            size_t pcnt;
+            int bufsiz;
 
-            if(_write(file->_file, ptr, wrcnt) <= 0) {
+            if(file->_flag & _IONBF)
+                bufsiz = 1;
+            else if(!(file->_flag & (_IOMYBUF | _USERBUF)))
+                bufsiz = MSVCRT_INTERNAL_BUFSIZ;
+            else
+                bufsiz = file->_bufsiz;
+
+            pcnt = (wrcnt / bufsiz) * bufsiz;
+
+            if(flush_buffer(file) == EOF)
+                break;
+
+            if(_write(file->_file, ptr, pcnt) <= 0) {
                 file->_flag |= _IOERR;
                 break;
             }
-            written += wrcnt;
-            wrcnt = 0;
+            written += pcnt;
+            wrcnt -= pcnt;
+            ptr = (const char*)ptr + pcnt;
         } else {
             if(_flsbuf(*(const char*)ptr, file) == EOF)
                 break;
@@ -3674,23 +3689,39 @@ int CDECL _wrename(const wchar_t *oldpath,const wchar_t *newpath)
  */
 int CDECL setvbuf(FILE* file, char *buf, int mode, size_t size)
 {
-  _lock_file(file);
-  if(file->_bufsiz) {
-	free(file->_base);
-	file->_bufsiz = 0;
-	file->_cnt = 0;
-  }
-  if(mode == _IOFBF) {
-	file->_flag &= ~_IONBF;
-  	file->_base = file->_ptr = buf;
-  	if(buf) {
-		file->_bufsiz = size;
-	}
-  } else {
-	file->_flag |= _IONBF;
-  }
-  _unlock_file(file);
-  return 0;
+    if(!MSVCRT_CHECK_PMT(file != NULL)) return -1;
+    if(!MSVCRT_CHECK_PMT(mode==_IONBF || mode==_IOFBF || mode==_IOLBF)) return -1;
+    if(!MSVCRT_CHECK_PMT(mode==_IONBF || (size>=2 && size<=INT_MAX))) return -1;
+
+    _lock_file(file);
+
+    fflush(file);
+    if(file->_flag & _IOMYBUF)
+        free(file->_base);
+    file->_flag &= ~(_IONBF | _IOMYBUF | _USERBUF);
+    file->_cnt = 0;
+
+    if(mode == _IONBF) {
+        file->_flag |= _IONBF;
+        file->_base = file->_ptr = (char*)&file->_charbuf;
+        file->_bufsiz = 2;
+    }else if(buf) {
+        file->_base = file->_ptr = buf;
+        file->_flag |= _USERBUF;
+        file->_bufsiz = size;
+    }else {
+        file->_base = file->_ptr = malloc(size);
+        if(!file->_base) {
+            file->_bufsiz = 0;
+            _unlock_file(file);
+            return -1;
+        }
+
+        file->_flag |= _IOMYBUF;
+        file->_bufsiz = size;
+    }
+    _unlock_file(file);
+    return 0;
 }
 
 /*********************************************************************
@@ -3798,12 +3829,18 @@ FILE* CDECL tmpfile(void)
  */
 int CDECL ungetc(int c, FILE * file)
 {
-    if (c == EOF)
+    if(!MSVCRT_CHECK_PMT(file != NULL)) return EOF;
+
+    if (c == EOF || !(file->_flag&_IOREAD ||
+                (file->_flag&_IORW && !(file->_flag&_IOWRT))))
         return EOF;
 
     _lock_file(file);
-    if(file->_bufsiz == 0 && alloc_buffer(file))
+    if((!(file->_flag & (_IONBF | _IOMYBUF | _USERBUF))
+                && alloc_buffer(file))
+            || (!file->_cnt && file->_ptr==file->_base))
         file->_ptr++;
+
     if(file->_ptr>file->_base) {
         file->_ptr--;
         if(file->_flag & _IOSTRG) {
@@ -3817,6 +3854,7 @@ int CDECL ungetc(int c, FILE * file)
         }
         file->_cnt++;
         clearerr(file);
+        file->_flag |= _IOREAD;
         _unlock_file(file);
         return c;
     }

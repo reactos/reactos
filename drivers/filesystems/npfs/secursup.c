@@ -127,7 +127,6 @@ NpGetClientSecurityContext(IN ULONG NamedPipeEnd,
                            IN PETHREAD Thread,
                            IN PSECURITY_CLIENT_CONTEXT *Context)
 {
-   
     PSECURITY_CLIENT_CONTEXT NewContext;
     NTSTATUS Status;
     PAGED_CODE();

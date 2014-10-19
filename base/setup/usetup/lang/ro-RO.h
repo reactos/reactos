@@ -107,7 +107,7 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         8,
         21,
-        "\x07  Tastaîi L pentru Termenii ­i Condiîiile de Licenîiere",
+        "\x07  Tastaîi L pentru Termenii ­i Condiîiile de Licenîiere.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -325,13 +325,13 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         8,
         18,
-        "cƒt ­i internaîional. Licenîierea se referÇ doar la",
+        "cƒt ­i internaîional. Licenîierea se referÇ doar la distri-",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "distribuirea sistemului ReactOS cÇtre pÇrîi terîe.",
+        "buirea sistemului ReactOS cÇtre pÇrîi terîe.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -413,7 +413,7 @@ static MUI_ENTRY roRODevicePageEntries[] =
     {
         6,
         8,
-        "Configurarea dispozitivelor de bazÇ.",
+        "Configurare dispozitive de bazÇ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -478,13 +478,13 @@ static MUI_ENTRY roRODevicePageEntries[] =
     {
         6,
         24,
-        "selectaîi \"Accept configuraîia dispozitivelor\", apoi",
+        "selectaîi \"Accept configuraîia dispozitivelor\", apoi confirmaîi",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         25,
-        "confirmaîi-o apÇsƒnd ENTER.",
+        "apÇsƒnd ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -575,7 +575,7 @@ static MUI_ENTRY roROComputerPageEntries[] =
     {
         6,
         8,
-        "Doriîi specificarea arhitecturii de calcul?",
+        "Doriîi specificarea unei alte arhitecturi de calcul?",
         TEXT_STYLE_NORMAL
     },
     {
@@ -627,19 +627,19 @@ static MUI_ENTRY roROFlushPageEntries[] =
     {
         10,
         6,
-        "Verificarea stocÇrii datelor necesare.",
+        "Se verificÇ stocarea datelor necesare.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "La final, calculatorul va fi repornit automat.",
+        "Aceasta poate dura cƒteva momente.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "A­teptaîi...",
+        "La final, calculatorul va fi repornit automat.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -679,7 +679,7 @@ static MUI_ENTRY roROQuitPageEntries[] =
     {
         10,
         9,
-        "­i toate CD-ROM din unitÇîile CD.",
+        "­i toate mediile CD-ROM din unitÇîile CD.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -770,13 +770,13 @@ static MUI_ENTRY roROSuccessPageEntries[] =
     {
         10,
         8,
-        "Scoateîi discul flexibil din unitatea A: ­i toate CD-ROM",
+        "Scoateîi discul flexibil din unitatea A: ­i toate mediile",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "din unitÇîile CD.",
+        "CD-ROM din unitÇîile CD.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -857,13 +857,13 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         6,
         8,
-        "UrmÇtoarea listÇ cuprinde partiîiile existente precum",
+        "UrmÇtoarea listÇ cuprinde partiîiile existente, precum ­i",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "­i spaîiul nefolosit pentru crearea de noi partiîii.",
+        "spaîiul liber disponibil pentru crearea de noi partiîii.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1041,7 +1041,7 @@ static MUI_ENTRY roROBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalarea aplicaîiei de iniîializare a calculatorului",
+        "Instalare aplicaîie de iniîializare a calculatorului",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1198,7 +1198,7 @@ static MUI_ENTRY roROPrepareCopyEntries[] =
     {
         6,
         8,
-        "Se fac pregÇtirile necesare pentru copierea de fi­iere.",
+        "Se fac pregÇtirile necesare pentru copierea de fi­iere...",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1702,7 +1702,7 @@ MUI_STRING roROStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Instalare   P/E = Creare partiîie PrimarÇ/ExtinsÇ   F3 = Ie­ire"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Instalare   L = Creare partiîie LogicÇ   F3 = Ie­ire"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalare   D = ¸tergere partiîie   F3 = Ie­ire"},
     {STRING_DELETEPARTITION,
@@ -1720,7 +1720,7 @@ MUI_STRING roROStrings[] =
     {STRING_CREATEPARTITION,
      "   ENTER = Creare partiîie   ESC = Anulare   F3 = Ie­ire"},
     {STRING_PARTFORMAT,
-    "AceastÇ Partiîie urmeazÇ sÇ fie formatatÇ."},
+    "AceastÇ partiîie urmeazÇ sÇ fie formatatÇ."},
     {STRING_NONFORMATTEDPART,
     "Alegeîi sÇ instalaîi ReactOS pe partiîie nouÇ sau neformatatÇ."},
     {STRING_INSTALLONPART,

@@ -159,8 +159,8 @@ ArcGetMemoryDescriptor(const FREELDR_MEMORY_DESCRIPTOR* Current)
     }
 }
 
-
-BOOLEAN
+static
+VOID
 MmCheckFreeldrImageFile()
 {
     PIMAGE_NT_HEADERS NtHeaders;
@@ -172,7 +172,11 @@ MmCheckFreeldrImageFile()
     if (!NtHeaders)
     {
         ERR("Could not get NtHeaders!\n");
-        return FALSE;
+        FrLdrBugCheckWithMessage(
+            FREELDR_IMAGE_CORRUPTION,
+            __FILE__,
+            __LINE__,
+            "Could not get NtHeaders!\n");
     }
 
     /* Check the file header */
@@ -184,12 +188,21 @@ MmCheckFreeldrImageFile()
         (FileHeader->SizeOfOptionalHeader != sizeof(IMAGE_OPTIONAL_HEADER)))
     {
         ERR("FreeLdr FileHeader is invalid.\n");
-        BugCheckInfo[0] = FileHeader->Machine;
-        BugCheckInfo[1] = FileHeader->NumberOfSections;
-        BugCheckInfo[2] = FileHeader->PointerToSymbolTable;
-        BugCheckInfo[3] = FileHeader->NumberOfSymbols;
-        BugCheckInfo[4] = FileHeader->SizeOfOptionalHeader;
-        return FALSE;
+        FrLdrBugCheckWithMessage(
+            FREELDR_IMAGE_CORRUPTION,
+            __FILE__,
+            __LINE__,
+            "FreeLdr FileHeader is invalid.\n"
+            "Machine == 0x%lx, expected 0x%lx\n"
+            "NumberOfSections == 0x%lx, expected 0x%lx\n"
+            "PointerToSymbolTable == 0x%lx, expected 0\n"
+            "NumberOfSymbols == 0x%lx, expected 0\n"
+            "SizeOfOptionalHeader == 0x%lx, expected 0x%lx\n",
+            FileHeader->Machine, IMAGE_FILE_MACHINE_NATIVE,
+            FileHeader->NumberOfSections, FREELDR_SECTION_COUNT,
+            FileHeader->PointerToSymbolTable,
+            FileHeader->NumberOfSymbols,
+            FileHeader->SizeOfOptionalHeader, sizeof(IMAGE_OPTIONAL_HEADER));
     }
 
     /* Check the optional header */
@@ -201,15 +214,22 @@ MmCheckFreeldrImageFile()
         (OptionalHeader->SectionAlignment != OptionalHeader->FileAlignment))
     {
         ERR("FreeLdr OptionalHeader is invalid.\n");
-        BugCheckInfo[0] = 0x80000000 | (OptionalHeader->Subsystem << 16) | OptionalHeader->Magic;
-        BugCheckInfo[1] = OptionalHeader->ImageBase;
-        BugCheckInfo[2] = OptionalHeader->SizeOfImage;
-        BugCheckInfo[3] = OptionalHeader->SectionAlignment;
-        BugCheckInfo[4] = OptionalHeader->FileAlignment;
-        return FALSE;
+        FrLdrBugCheckWithMessage(
+            FREELDR_IMAGE_CORRUPTION,
+            __FILE__,
+            __LINE__,
+            "FreeLdr OptionalHeader is invalid.\n"
+            "Magic == 0x%lx, expected 0x%lx\n"
+            "Subsystem == 0x%lx, expected 1 (native)\n"
+            "ImageBase == 0x%lx, expected 0x%lx\n"
+            "SizeOfImage == 0x%lx, maximum 0x%lx\n"
+            "SectionAlignment 0x%lx doesn't match FileAlignment 0x%lx\n",
+            OptionalHeader->Magic, IMAGE_NT_OPTIONAL_HDR_MAGIC,
+            OptionalHeader->Subsystem,
+            OptionalHeader->ImageBase, FREELDR_PE_BASE,
+            OptionalHeader->SizeOfImage, MAX_FREELDR_PE_SIZE,
+            OptionalHeader->SectionAlignment, OptionalHeader->FileAlignment);
     }
-
-    return TRUE;
 }
 
 BOOLEAN MmInitializeMemoryManager(VOID)
@@ -221,10 +241,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
     TRACE("Initializing Memory Manager.\n");
 
     /* Check the freeldr binary */
-    if (!MmCheckFreeldrImageFile())
-    {
-        FrLdrBugCheck(FREELDR_IMAGE_CORRUPTION);
-    }
+    MmCheckFreeldrImageFile();
 
     BiosMemoryMap = MachVtbl.GetMemoryMap(&BiosMemoryMapEntryCount);
 

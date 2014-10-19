@@ -240,7 +240,9 @@ static HANDLE TextConsoleBuffer = NULL;
 /* Graphics mode */
 static HANDLE GraphicsConsoleBuffer = NULL;
 static HANDLE ConsoleMutex = NULL;
-static BOOLEAN DoubleVision = FALSE;
+/* DoubleVision support */
+static BOOLEAN DoubleWidth  = FALSE;
+static BOOLEAN DoubleHeight = FALSE;
 
 /*
  * VGA Hardware
@@ -964,20 +966,14 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     LONG Height = Resolution->Y;
 
     /* Use DoubleVision mode if the resolution is too small */
-    if (Width < VGA_MINIMUM_WIDTH && Height < VGA_MINIMUM_HEIGHT)
-    {
-        DoubleVision = TRUE;
-        Width  *= 2;
-        Height *= 2;
-    }
-    else
-    {
-        DoubleVision = FALSE;
-    }
+    DoubleWidth = (Width < VGA_MINIMUM_WIDTH);
+    if (DoubleWidth) Width *= 2;
+    DoubleHeight = (Height < VGA_MINIMUM_HEIGHT);
+    if (DoubleHeight) Height *= 2;
 
     /* Fill the bitmap info header */
-    ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
-    BitmapInfo->bmiHeader.biSize   = sizeof(BITMAPINFOHEADER);
+    RtlZeroMemory(&BitmapInfo->bmiHeader, sizeof(BitmapInfo->bmiHeader));
+    BitmapInfo->bmiHeader.biSize   = sizeof(BitmapInfo->bmiHeader);
     BitmapInfo->bmiHeader.biWidth  = Width;
     BitmapInfo->bmiHeader.biHeight = Height;
     BitmapInfo->bmiHeader.biBitCount = 8;
@@ -1006,7 +1002,7 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     ConsoleMutex = GraphicsBufferInfo.hMutex;
 
     /* Clear the framebuffer */
-    ZeroMemory(ConsoleFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
+    RtlZeroMemory(ConsoleFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
 
     /* Set the active buffer */
     VgaSetActiveScreenBuffer(GraphicsConsoleBuffer);
@@ -1036,7 +1032,9 @@ static VOID VgaLeaveGraphicsMode(VOID)
     ConsoleFramebuffer = NULL;
     CloseHandle(GraphicsConsoleBuffer);
     GraphicsConsoleBuffer = NULL;
-    DoubleVision = FALSE;
+
+    DoubleWidth  = FALSE;
+    DoubleHeight = FALSE;
 }
 
 static BOOL VgaEnterTextMode(PCOORD Resolution)
@@ -1307,14 +1305,14 @@ static VOID VgaUpdateFramebuffer(VOID)
                 }
 
                 /* Take into account DoubleVision mode when checking for pixel updates */
-                if (DoubleVision)
+                if (DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * Resolution.X * 4) + (j * 2)] != PixelData)
+                    if (GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * Resolution.X * 4) + (j * 2)] = PixelData;
-                        GraphicsBuffer[(i * Resolution.X * 4) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
                         GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2)] = PixelData;
                         GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
 
@@ -1322,7 +1320,33 @@ static VOID VgaUpdateFramebuffer(VOID)
                         VgaMarkForUpdate(i, j);
                     }
                 }
-                else
+                else if (DoubleWidth && !DoubleHeight)
+                {
+                    /* Now check if the resulting pixel data has changed */
+                    if (GraphicsBuffer[(i * Resolution.X * 2) + (j * 2)] != PixelData)
+                    {
+                        /* Yes, write the new value */
+                        GraphicsBuffer[(i * Resolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
+
+                        /* Mark the specified pixel as changed */
+                        VgaMarkForUpdate(i, j);
+                    }
+                }
+                else if (!DoubleWidth && DoubleHeight)
+                {
+                    /* Now check if the resulting pixel data has changed */
+                    if (GraphicsBuffer[(i * 2 * Resolution.X) + j] != PixelData)
+                    {
+                        /* Yes, write the new value */
+                        GraphicsBuffer[(i * 2 * Resolution.X) + j] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * Resolution.X) + j] = PixelData;
+
+                        /* Mark the specified pixel as changed */
+                        VgaMarkForUpdate(i, j);
+                    }
+                }
+                else // if (!DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
                     if (GraphicsBuffer[i * Resolution.X + j] != PixelData)
@@ -1797,11 +1821,14 @@ VOID VgaRefreshDisplay(VOID)
         ConsoleBufferHandle = GraphicsConsoleBuffer;
 
         /* In DoubleVision mode, scale the update rectangle */
-        if (DoubleVision)
+        if (DoubleWidth)
         {
             UpdateRectangle.Left *= 2;
-            UpdateRectangle.Top  *= 2;
-            UpdateRectangle.Right  = UpdateRectangle.Right  * 2 + 1;
+            UpdateRectangle.Right = UpdateRectangle.Right * 2 + 1;
+        }
+        if (DoubleHeight)
+        {
+            UpdateRectangle.Top *= 2;
             UpdateRectangle.Bottom = UpdateRectangle.Bottom * 2 + 1;
         }
     }
@@ -1901,7 +1928,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 
 VOID VgaClearMemory(VOID)
 {
-    ZeroMemory(VgaMemory, sizeof(VgaMemory));
+    RtlZeroMemory(VgaMemory, sizeof(VgaMemory));
 }
 
 VOID VgaResetPalette(VOID)

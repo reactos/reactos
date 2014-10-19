@@ -984,6 +984,9 @@ xmlHashCopy(xmlHashTablePtr table, xmlHashCopier f) {
 	return(NULL);
 
     ret = xmlHashCreate(table->size);
+    if (ret == NULL)
+        return(NULL);
+
     if (table->table) {
 	for(i = 0; i < table->size; i++) {
 	    if (table->table[i].valid == 0)

@@ -4,7 +4,6 @@ add_definitions(
     -D_ATL_VER=_ATL_VER_30)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(atl.dll atl.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -23,7 +22,6 @@ list(APPEND atl_rc_deps
     ${CMAKE_CURRENT_BINARY_DIR}/atl_lib.tlb)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${atl_rc_deps}")
-
 add_library(atl SHARED ${SOURCE} rsrc.rc)
 add_typelib(atl_lib.idl)
 add_dependencies(atl stdole2)

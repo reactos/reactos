@@ -15,16 +15,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "&Lectură"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "Lecturează/&Pauză\tCtrl+P", IDC_PLAY
+        MENUITEM "&Oprește\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "&Repetă\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Afișare"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "&Mod fereastră-solitară", IDM_SWITCHVIEW
     END
     POPUP "&Dispozitiv"
     BEGIN

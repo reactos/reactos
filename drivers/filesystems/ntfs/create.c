@@ -243,6 +243,28 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             NtfsCloseFile(DeviceExt, FileObject);
             return STATUS_NOT_A_DIRECTORY;
         }
+
+        /* HUGLY HACK: remain RO so far... */
+        if (RequestedDisposition == FILE_OVERWRITE ||
+            RequestedDisposition == FILE_OVERWRITE_IF ||
+            RequestedDisposition == FILE_SUPERSEDE)
+        {
+            DPRINT1("Denying write request on NTFS volume\n");
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_ACCESS_DENIED;
+        }
+    }
+    else
+    {
+        /* HUGLY HACK: remain RO so far... */
+        if (RequestedDisposition == FILE_CREATE ||
+            RequestedDisposition == FILE_OPEN_IF ||
+            RequestedDisposition == FILE_OVERWRITE_IF ||
+            RequestedDisposition == FILE_SUPERSEDE)
+        {
+            DPRINT1("Denying write request on NTFS volume\n");
+            return STATUS_ACCESS_DENIED;
+        }
     }
 
     /*

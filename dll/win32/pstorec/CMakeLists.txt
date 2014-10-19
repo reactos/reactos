@@ -13,6 +13,5 @@ add_library(pstorec SHARED ${SOURCE} rsrc.rc)
 set_module_type(pstorec win32dll)
 target_link_libraries(pstorec uuid wine)
 add_importlibs(pstorec msvcrt kernel32 ntdll)
-# pstorec_tlb.tlb needs stdole2.tlb
 add_dependencies(pstorec stdole2)
 add_cd_file(TARGET pstorec DESTINATION reactos/system32 FOR all)

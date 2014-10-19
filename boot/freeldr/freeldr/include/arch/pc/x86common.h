@@ -11,13 +11,13 @@
 //#endif
 #define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
 #define BSS_START           HEX(6F00)
+#define STACKLOW            HEX(7000)
+#define STACKADDR           HEX(F000) /* The 32/64-bit stack top will be at 0000:F000, or 0xF000 */
 #define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
-#define DISKREADBUFFER     HEX(80000) /* Buffer to store data read in from the disk via the BIOS */
-#define STACKLOWLIMIT      HEX(90000)
-#define STACK32ADDR        HEX(98000) /* The 32-bit stack top will be at 9000:8000, or 0xA8000 */
-#define STACK64ADDR           HEX(98000) /* The 64-bit stack top will be at 98000 */
-#define BIOSCALLBUFFER     HEX(98000) /* Buffer to store temporary data for any Int386() call */
+#define DISKREADBUFFER     HEX(8E000) /* Buffer to store data read in from the disk via the BIOS */
+#define BIOSCALLBUFFER     HEX(9E000) /* Buffer to store temporary data for any Int386() call */
+/* 9F000- 9FFFF is reserved for the EBDA */
 #define DISKREADBUFFER_SIZE HEX(10000)
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */

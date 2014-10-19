@@ -22,11 +22,11 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-  IDS_LANCONNECTION "LAN Connection"
-  IDS_CERT_CA_INVALID   "The certificate is issued by an unknown or untrusted publisher."
-  IDS_CERT_DATE_INVALID "The date on the certificate is invalid."
-  IDS_CERT_CN_INVALID   "The name on the certificate does not match the site."
-  IDS_CERT_ERRORS       "There is at least one unspecified security problem with this certificate."
+  IDS_LANCONNECTION "LAN Bağlantısı"
+  IDS_CERT_CA_INVALID   "Onay belgesi, bilinmeyen ya da güvenilmeyen bir yayımcı eliyle yayımlandı."
+  IDS_CERT_DATE_INVALID "Onay belgesindeki zaman geçersiz."
+  IDS_CERT_CN_INVALID   "Onay belgesindeki ad siteyle uyuşmuyor."
+  IDS_CERT_ERRORS       "Bu onay belgesiyle en az bir belirtilmemiş güvenlik sorunu var."
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 220, 146

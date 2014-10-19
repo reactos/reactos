@@ -124,12 +124,22 @@ void
 NTAPI
 FrLdrBugCheck(ULONG BugCode);
 
+VOID
+NTAPI
+FrLdrBugCheckWithMessage(
+    ULONG BugCode,
+    PCHAR File,
+    ULONG Line,
+    PSTR Format,
+    ...);
+
 /* Bugcheck codes */
 enum _FRLDR_BUGCHECK_CODES
 {
     TEST_BUGCHECK,
     MISSING_HARDWARE_REQUIREMENTS,
     FREELDR_IMAGE_CORRUPTION,
+    MEMORY_INIT_FAILURE,
 };
 
 extern char *BugCodeStrings[];

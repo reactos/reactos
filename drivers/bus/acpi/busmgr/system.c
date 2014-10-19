@@ -94,7 +94,7 @@ acpi_system_add (
 		case ACPI_STATE_S4:
 			if (/*AcpiGbl_FACS->S4bios_f &&*/
 			    0 != AcpiGbl_FADT.SmiCommand) {
-				DPRINT(" S4bios");
+				DPRINT(" S4bios\n");
 				system->states[i] = 1;
 			}
 			/* no break */

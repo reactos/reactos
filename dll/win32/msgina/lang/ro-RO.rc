@@ -3,7 +3,7 @@
  * FILE:    dll/win32/msgina/lang/ro-RO.rc
  * PURPOSE: Romanian Language File for ReactOS Logon GINA DLL
  * TRANSLATORS:
- *          Petre Dumitriu
+ *          Petru Dumitriu (petrimetri at gmail dot com)
  *          Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
@@ -119,7 +119,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
     LTEXT "Sigur doriți să vă deautentificați?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "&Da", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "D&a", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "N&u", IDNO, 95, 39, 50, 14
 END
 

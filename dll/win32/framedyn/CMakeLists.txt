@@ -1,6 +1,5 @@
 
 set_cpp(WITH_RUNTIME WITH_EXCEPTIONS)
-
 spec2def(framedyn.dll framedyn.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -15,7 +14,6 @@ endif()
 add_library(framedyn SHARED ${SOURCE})
 set_module_type(framedyn win32dll UNICODE)
 add_importlibs(framedyn oleaut32 msvcrt kernel32 ntdll)
-
 add_cd_file(TARGET framedyn DESTINATION reactos/system32/wbem FOR all)
 
 if(NOT MSVC)

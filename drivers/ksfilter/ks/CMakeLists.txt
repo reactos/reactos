@@ -47,4 +47,3 @@ add_pch(ks precomp.h SOURCE)
 add_importlibs(ks ntoskrnl hal)
 add_dependencies(ks psdk)
 add_cd_file(TARGET ks DESTINATION reactos/system32/drivers FOR all)
-

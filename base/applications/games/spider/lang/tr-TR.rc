@@ -3,7 +3,7 @@
  * LICENSE:    See COPYING in top level directory
  * FILE:       base/applications/games/spider/lang/tr-TR.rc
  * PURPOSE:    Turkish Resource File for ReactOS Spider Solitaire
- * TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

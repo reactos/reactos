@@ -20,7 +20,6 @@ add_library(vgaddi SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/vgaddi.def)
 
 set_module_type(vgaddi kerneldll ENTRYPOINT DrvEnableDriver 12)
-
 add_pch(vgaddi vgaddi.h SOURCE)
 add_importlibs(vgaddi win32k)
 target_link_libraries(vgaddi libcntpr)

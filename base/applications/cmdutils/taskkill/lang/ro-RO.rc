@@ -4,7 +4,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im NumeProces | /pid IdProces]\n"
+    STRING_USAGE, "Utilizare: taskkill [/?] [/f] [/im NumeProces | /pid IdProces]\n"
     STRING_INVALID_OPTION, "Eroare: Opțiune specificată nevalidă sau necunoscută.\n"
     STRING_INVALID_PARAM, "Eroare: Parametrul de comandă specificat este nevalid.\n"
     STRING_MISSING_OPTION, "Eroare: Trebuie specificată una dintre opțiunile /im sau /pid.\n"

@@ -1544,22 +1544,17 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWND Wnd)
       WinPos->flags |= SWP_NOMOVE;
    }
 
-   if (WinPos->hwnd == UserGetForegroundWindow())
+   if (WinPos->hwnd != UserGetForegroundWindow() && (Wnd->style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
    {
-      WinPos->flags |= SWP_NOACTIVATE;   /* Already active */
-   }
-   else
-      if ((Wnd->style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      /* Bring to the top when activating */
+      if (!(WinPos->flags & (SWP_NOACTIVATE|SWP_HIDEWINDOW)) &&
+           (WinPos->flags & SWP_NOZORDER ||
+           (WinPos->hwndInsertAfter != HWND_TOPMOST && WinPos->hwndInsertAfter != HWND_NOTOPMOST)))
       {
-         /* Bring to the top when activating */
-         if (!(WinPos->flags & (SWP_NOACTIVATE|SWP_HIDEWINDOW)) &&
-              (WinPos->flags & SWP_NOZORDER ||
-              (WinPos->hwndInsertAfter != HWND_TOPMOST && WinPos->hwndInsertAfter != HWND_NOTOPMOST)))
-         {
-            WinPos->flags &= ~SWP_NOZORDER;
-            WinPos->hwndInsertAfter = (0 != (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOPMOST : HWND_TOP);
-         }
+         WinPos->flags &= ~SWP_NOZORDER;
+         WinPos->hwndInsertAfter = (0 != (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOPMOST : HWND_TOP);
       }
+   }
 
    /* Check hwndInsertAfter */
    if (!(WinPos->flags & SWP_NOZORDER))

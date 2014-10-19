@@ -1,4 +1,7 @@
-/* 2011.11.26 - Fulea Ștefan: minor changes */
+/*
+Translators: Petru Dumitriu (petrimetri at gmail dot com)
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -92,7 +95,7 @@ CAPTION "Hibernare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "Intrarea în starea de hibernare presupune stocarea pe disc a întregului conținut de memorie apoi închiderea completă. La revenirea din hibernare, calculatorul revine exact la starea anterioară hibernării.", -1, 37, 6, 210, 35
+    LTEXT "Intrarea în starea de hibernare presupune stocarea pe disc a întregului conținut de memorie operativă, urmată de închiderea completă a calculatorului. La revenirea din hibernare, calculatorul revine exact la starea anterioară hibernării.", -1, 37, 6, 210, 35
     GROUPBOX "Hibernare", -1, 6, 41, 240, 32
     CONTROL "Doresc folosirea funcționalității &Hibernare", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
     GROUPBOX "Spațiul necesar pentru hibernare", -1, 6, 80, 240, 76

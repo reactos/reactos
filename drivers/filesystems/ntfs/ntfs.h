@@ -169,6 +169,8 @@ typedef enum
 #define NTFS_FILE_UPCASE            10
 #define NTFS_FILE_EXTEND            11
 
+#define NTFS_MFT_MASK 0x0000FFFFFFFFFFFFULL
+
 #define COLLATION_BINARY              0x00
 #define COLLATION_FILE_NAME           0x01
 #define COLLATION_UNICODE_STRING      0x02
@@ -328,6 +330,13 @@ typedef struct
     UCHAR Padding[3];
     INDEX_HEADER_ATTRIBUTE Header;
 } INDEX_ROOT_ATTRIBUTE, *PINDEX_ROOT_ATTRIBUTE;
+
+typedef struct
+{
+    NTFS_RECORD_HEADER Ntfs;
+    ULONGLONG VCN;
+    INDEX_HEADER_ATTRIBUTE Header;
+} INDEX_BUFFER, *PINDEX_BUFFER;
 
 typedef struct
 {
@@ -613,7 +622,8 @@ NTSTATUS
 FindAttribute(PDEVICE_EXTENSION Vcb,
               PFILE_RECORD_HEADER MftRecord,
               ULONG Type,
-              PUNICODE_STRING Name,
+              PCWSTR Name,
+              ULONG NameLength,
               PNTFS_ATTR_CONTEXT * AttrCtx);
 
 VOID
@@ -654,6 +664,15 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex);
 
+NTSTATUS
+NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
+               PUNICODE_STRING SearchPattern,
+               PULONG FirstEntry,
+               PFILE_RECORD_HEADER *FileRecord,
+               PNTFS_ATTR_CONTEXT *DataContext,
+               PULONGLONG MFTIndex,
+               ULONGLONG CurrentMFTIndex);
+
 /* misc.c */
 
 BOOLEAN
@@ -671,15 +690,15 @@ VOID
 CdfsSwapString(PWCHAR Out,
 	       PUCHAR In,
 	       ULONG Count);
-
-VOID
-CdfsDateTimeToFileTime(PFCB Fcb,
-		       TIME *FileTime);
-
-VOID
-CdfsFileFlagsToAttributes(PFCB Fcb,
-			  PULONG FileAttributes);
 #endif
+
+VOID
+NtfsDateTimeToFileTime(ULONGLONG NtfsTime,
+                       PLARGE_INTEGER SystemTime);
+
+VOID
+NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
+                          PULONG FileAttributes);
 
 
 /* rw.c */

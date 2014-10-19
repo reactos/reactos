@@ -1,7 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-
 spec2def(mssip32.dll mssip32.spec)
 
 list(APPEND SOURCE
