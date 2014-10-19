@@ -33,6 +33,14 @@
 /* FUNCTIONS ****************************************************************/
 
 static
+ULONGLONG
+NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+static
 NTSTATUS
 NtfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
                            PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
@@ -130,8 +138,8 @@ NtfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 
     DeviceExt = DeviceObject->DeviceExtension;
 
-    FsSizeInfo->AvailableAllocationUnits.QuadPart = 0;
-    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->NtfsInfo.SectorCount; /* ?? */
+    FsSizeInfo->AvailableAllocationUnits.QuadPart = NtfsGetFreeClusters(DeviceExt);
+    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster;
     FsSizeInfo->SectorsPerAllocationUnit = DeviceExt->NtfsInfo.SectorsPerCluster;
     FsSizeInfo->BytesPerSector = DeviceExt->NtfsInfo.BytesPerSector;
 
@@ -145,7 +153,8 @@ NtfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 
 static
 NTSTATUS
-NtfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
+NtfsGetFsDeviceInformation(PDEVICE_OBJECT DeviceObject,
+                           PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
                            PULONG BufferLength)
 {
     DPRINT("NtfsGetFsDeviceInformation()\n");
@@ -157,7 +166,7 @@ NtfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
         return STATUS_BUFFER_OVERFLOW;
 
     FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
-    FsDeviceInfo->Characteristics = 0; /* FIXME: fix this !! */
+    FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
 
     DPRINT("NtfsGetFsDeviceInformation() finished.\n");
 
@@ -215,7 +224,8 @@ NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext)
             break;
 
         case FileFsDeviceInformation:
-            Status = NtfsGetFsDeviceInformation(SystemBuffer,
+            Status = NtfsGetFsDeviceInformation(DeviceObject,
+                                                SystemBuffer,
                                                 &BufferLength);
             break;
 
