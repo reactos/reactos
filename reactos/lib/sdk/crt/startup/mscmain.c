@@ -20,6 +20,12 @@
 #error Unsupported platform
 #endif
 
+/*
+ * Initializer / constructor handling
+ * see http://msdn.microsoft.com/en-us/library/bb918180.aspx
+ * Destructors are registered from the initializers using atexit()
+ */
+
 extern _PVFV __xi_a[];
 extern _PVFV __xi_z[];
 extern _PVFV __xc_a[];
@@ -34,7 +40,7 @@ __do_xtors(
     _PVFV *current;
     for (current = start; current < end; current++)
     {
-        if (*current != NULL);
+        if (*current != NULL)
             (*current)();
     }
 }
@@ -47,12 +53,6 @@ int __mingw_init_ehandler(void)
 {
     /* Nothing to do */
     return 1;
-}
-
-void
-__do_global_dtors(void)
-{
-
 }
 
 void
