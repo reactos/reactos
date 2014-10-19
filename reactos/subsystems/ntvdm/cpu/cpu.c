@@ -163,7 +163,6 @@ BOOLEAN CpuInitialize(VOID)
                       EmulatorWriteMemory,
                       EmulatorReadIo,
                       EmulatorWriteIo,
-                      NULL,
                       EmulatorBiosOperation,
                       EmulatorIntAcknowledge,
                       NULL /* TODO: Use a TLB */);

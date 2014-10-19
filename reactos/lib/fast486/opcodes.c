@@ -574,12 +574,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopReg)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeNop)
 {
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
-    {
-        /* Idle cycle */
-        State->IdleCallback(State);
-    }
-
     return TRUE;
 }
 
@@ -895,7 +889,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeHalt)
     }
 
     /* Halt */
-    // TODO: Halt the CPU until an interrupt occurs, using IdleCallback if needed.
+    State->Halted = TRUE;
 
     /* Return success */
     return TRUE;

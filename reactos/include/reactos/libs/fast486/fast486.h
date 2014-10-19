@@ -209,13 +209,6 @@ VOID
 
 typedef
 VOID
-(NTAPI *FAST486_IDLE_PROC)
-(
-    PFAST486_STATE State
-);
-
-typedef
-VOID
 (NTAPI *FAST486_BOP_PROC)
 (
     PFAST486_STATE State,
@@ -474,7 +467,6 @@ struct _FAST486_STATE
     FAST486_MEM_WRITE_PROC MemWriteCallback;
     FAST486_IO_READ_PROC IoReadCallback;
     FAST486_IO_WRITE_PROC IoWriteCallback;
-    FAST486_IDLE_PROC IdleCallback;
     FAST486_BOP_PROC BopCallback;
     FAST486_INT_ACK_PROC IntAckCallback;
     FAST486_REG GeneralRegs[FAST486_NUM_GEN_REGS];
@@ -490,6 +482,7 @@ struct _FAST486_STATE
     ULONG ExceptionCount;
     ULONG PrefixFlags;
     FAST486_SEG_REGS SegmentOverride;
+    BOOLEAN Halted;
     FAST486_INT_STATUS IntStatus;
     UCHAR PendingIntNum;
     PULONG Tlb;
@@ -510,7 +503,6 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_MEM_WRITE_PROC MemWriteCallback,
                   FAST486_IO_READ_PROC   IoReadCallback,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
-                  FAST486_IDLE_PROC      IdleCallback,
                   FAST486_BOP_PROC       BopCallback,
                   FAST486_INT_ACK_PROC   IntAckCallback,
                   PULONG                 Tlb);

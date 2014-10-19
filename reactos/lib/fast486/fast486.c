@@ -55,28 +55,31 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
     do
     {
 NextInst:
-        /* Check if this is a new instruction */
-        if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
-
-        /* Perform an instruction fetch */
-        if (!Fast486FetchByte(State, &Opcode))
+        if (!State->Halted)
         {
-            /* Exception occurred */
+            /* Check if this is a new instruction */
+            if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
+
+            /* Perform an instruction fetch */
+            if (!Fast486FetchByte(State, &Opcode))
+            {
+                /* Exception occurred */
+                State->PrefixFlags = 0;
+                continue;
+            }
+
+            // TODO: Check for CALL/RET to update ProcedureCallCount.
+
+            /* Call the opcode handler */
+            CurrentHandler = Fast486OpcodeHandlers[Opcode];
+            CurrentHandler(State, Opcode);
+
+            /* If this is a prefix, go to the next instruction immediately */
+            if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
+
+            /* A non-prefix opcode has been executed, reset the prefix flags */
             State->PrefixFlags = 0;
-            continue;
         }
-
-        // TODO: Check for CALL/RET to update ProcedureCallCount.
-
-        /* Call the opcode handler */
-        CurrentHandler = Fast486OpcodeHandlers[Opcode];
-        CurrentHandler(State, Opcode);
-
-        /* If this is a prefix, go to the next instruction immediately */
-        if (CurrentHandler == Fast486OpcodePrefix) goto NextInst;
-
-        /* A non-prefix opcode has been executed, reset the prefix flags */
-        State->PrefixFlags = 0;
 
         /*
          * Check if there is an interrupt to execute, or a hardware interrupt signal
@@ -84,6 +87,9 @@ NextInst:
          */
         if (State->Flags.Tf)
         {
+            /* No longer halted */
+            State->Halted = FALSE;
+
             /* Perform the interrupt */
             Fast486PerformInterrupt(State, 0x01);
 
@@ -165,13 +171,6 @@ Fast486IoWriteCallback(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Dat
 
 static VOID
 NTAPI
-Fast486IdleCallback(PFAST486_STATE State)
-{
-    UNREFERENCED_PARAMETER(State);
-}
-
-static VOID
-NTAPI
 Fast486BopCallback(PFAST486_STATE State, UCHAR BopCode)
 {
     UNREFERENCED_PARAMETER(State);
@@ -197,7 +196,6 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_MEM_WRITE_PROC MemWriteCallback,
                   FAST486_IO_READ_PROC   IoReadCallback,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
-                  FAST486_IDLE_PROC      IdleCallback,
                   FAST486_BOP_PROC       BopCallback,
                   FAST486_INT_ACK_PROC   IntAckCallback,
                   PULONG                 Tlb)
@@ -207,7 +205,6 @@ Fast486Initialize(PFAST486_STATE         State,
     State->MemWriteCallback = (MemWriteCallback ? MemWriteCallback : Fast486MemWriteCallback);
     State->IoReadCallback   = (IoReadCallback   ? IoReadCallback   : Fast486IoReadCallback  );
     State->IoWriteCallback  = (IoWriteCallback  ? IoWriteCallback  : Fast486IoWriteCallback );
-    State->IdleCallback     = (IdleCallback     ? IdleCallback     : Fast486IdleCallback    );
     State->BopCallback      = (BopCallback      ? BopCallback      : Fast486BopCallback     );
     State->IntAckCallback   = (IntAckCallback   ? IntAckCallback   : Fast486IntAckCallback  );
 
@@ -229,7 +226,6 @@ Fast486Reset(PFAST486_STATE State)
     FAST486_MEM_WRITE_PROC MemWriteCallback = State->MemWriteCallback;
     FAST486_IO_READ_PROC   IoReadCallback   = State->IoReadCallback;
     FAST486_IO_WRITE_PROC  IoWriteCallback  = State->IoWriteCallback;
-    FAST486_IDLE_PROC      IdleCallback     = State->IdleCallback;
     FAST486_BOP_PROC       BopCallback      = State->BopCallback;
     FAST486_INT_ACK_PROC   IntAckCallback   = State->IntAckCallback;
     PULONG                 Tlb              = State->Tlb;
@@ -283,7 +279,6 @@ Fast486Reset(PFAST486_STATE State)
     State->MemWriteCallback = MemWriteCallback;
     State->IoReadCallback   = IoReadCallback;
     State->IoWriteCallback  = IoWriteCallback;
-    State->IdleCallback     = IdleCallback;
     State->BopCallback      = BopCallback;
     State->IntAckCallback   = IntAckCallback;
     State->Tlb              = Tlb;
