@@ -2019,7 +2019,7 @@ NtUserPostThreadMessage(DWORD idThread,
                         WPARAM wParam,
                         LPARAM lParam)
 {
-    BOOL ret;
+    BOOL ret = FALSE;
     PETHREAD peThread;
     PTHREADINFO pThread;
     NTSTATUS Status;
