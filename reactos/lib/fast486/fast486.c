@@ -85,11 +85,8 @@ NextInst:
          * Check if there is an interrupt to execute, or a hardware interrupt signal
          * while interrupts are enabled.
          */
-        if (State->Flags.Tf)
+        if (State->Flags.Tf && !State->Halted)
         {
-            /* No longer halted */
-            State->Halted = FALSE;
-
             /* Perform the interrupt */
             Fast486PerformInterrupt(State, 0x01);
 
@@ -104,6 +101,9 @@ NextInst:
         }
         else if (State->IntStatus == FAST486_INT_EXECUTE)
         {
+            /* No longer halted */
+            State->Halted = FALSE;
+
             /* Perform the interrupt */
             Fast486PerformInterrupt(State, State->PendingIntNum);
 
