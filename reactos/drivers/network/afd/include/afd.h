@@ -152,7 +152,6 @@ typedef struct _AFD_TDI_OBJECT_QELT {
 
 typedef struct _AFD_IN_FLIGHT_REQUEST {
     PIRP InFlightRequest;
-    IO_STATUS_BLOCK Iosb;
     PTDI_CONNECTION_INFORMATION ConnectionCallInfo;
     PTDI_CONNECTION_INFORMATION ConnectionReturnInfo;
 } AFD_IN_FLIGHT_REQUEST, *PAFD_IN_FLIGHT_REQUEST;
@@ -369,7 +368,6 @@ NTSTATUS TdiListen
   PFILE_OBJECT ConnectionObject,
   PTDI_CONNECTION_INFORMATION *RequestConnectionInfo,
   PTDI_CONNECTION_INFORMATION *ReturnConnectionInfo,
-  PIO_STATUS_BLOCK Iosb,
   PIO_COMPLETION_ROUTINE  CompletionRoutine,
   PVOID CompletionContext);
 
@@ -379,7 +377,6 @@ NTSTATUS TdiReceive
   USHORT Flags,
   PCHAR Buffer,
   UINT BufferLength,
-  PIO_STATUS_BLOCK Iosb,
   PIO_COMPLETION_ROUTINE  CompletionRoutine,
   PVOID CompletionContext);
 
@@ -389,7 +386,6 @@ NTSTATUS TdiSend
   USHORT Flags,
   PCHAR Buffer,
   UINT BufferLength,
-  PIO_STATUS_BLOCK Iosb,
   PIO_COMPLETION_ROUTINE  CompletionRoutine,
   PVOID CompletionContext);
 
@@ -400,7 +396,6 @@ NTSTATUS TdiReceiveDatagram(
     PCHAR Buffer,
     UINT BufferLength,
     PTDI_CONNECTION_INFORMATION From,
-    PIO_STATUS_BLOCK Iosb,
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext);
 
@@ -410,7 +405,6 @@ NTSTATUS TdiSendDatagram(
     PCHAR Buffer,
     UINT BufferLength,
     PTDI_CONNECTION_INFORMATION To,
-    PIO_STATUS_BLOCK Iosb,
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext);
 

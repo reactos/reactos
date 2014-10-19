@@ -243,7 +243,6 @@ static NTSTATUS NTAPI SendComplete
                           0,
                           FCB->Send.Window,
                           FCB->Send.BytesUsed,
-                          &FCB->SendIrp.Iosb,
                           SendComplete,
                           FCB );
     }
@@ -385,7 +384,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                 SendReq->BufferArray[0].buf,
                                 SendReq->BufferArray[0].len,
                                 TargetAddress,
-                                &FCB->SendIrp.Iosb,
                                 PacketSocketSendComplete,
                                 FCB);
             }
@@ -549,7 +547,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 0,
                 FCB->Send.Window,
                 FCB->Send.BytesUsed,
-                &FCB->SendIrp.Iosb,
                 SendComplete,
                 FCB);
     }
@@ -645,7 +642,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                             SendReq->BufferArray[0].buf,
                             SendReq->BufferArray[0].len,
                             TargetAddress,
-                            &FCB->SendIrp.Iosb,
                             PacketSocketSendComplete,
                             FCB);
         }
