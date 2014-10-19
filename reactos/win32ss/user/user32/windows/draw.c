@@ -1272,6 +1272,10 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
 
             case DST_COMPLEX: /* cx and cy must be set in this mode */
                 return FALSE;
+
+            default:
+                ERR("Invalid opcode: %u\n", opcode);
+                return FALSE;
         }
 
         if(!cx)
@@ -1552,7 +1556,7 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
         /* Handle system colors */
         if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
             hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
-        
+
         prevhbr = SelectObject(hDC, hbr);
         if (prevhbr == NULL)
             return (INT)FALSE;
