@@ -268,13 +268,13 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
     NewPathU.Buffer = NULL;
     ExistingPathU.Buffer = NULL;
 
-    _SEH3_TRY
+    _SEH2_TRY
     {
         /* Don't allow renaming to a disk */
         if (lpNewFileName && RtlIsDosDeviceName_U(lpNewFileName))
         {
             BaseSetLastNTError(STATUS_OBJECT_NAME_COLLISION);
-            _SEH3_LEAVE;
+            _SEH2_LEAVE;
         }
 
         ReplaceIfExists = !!(dwFlags & MOVEFILE_REPLACE_EXISTING);
@@ -283,7 +283,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         if (!RtlDosPathNameToNtPathName_U(lpExistingFileName, &ExistingPathU, NULL, NULL))
         {
             BaseSetLastNTError(STATUS_OBJECT_PATH_NOT_FOUND);
-            _SEH3_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Sanitize input */
@@ -291,7 +291,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         if (DelayUntilReboot && (dwFlags & MOVEFILE_CREATE_HARDLINK))
         {
             BaseSetLastNTError(STATUS_INVALID_PARAMETER);
-            _SEH3_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Unless we manage a proper opening, we'll attempt to reopen without reparse support */
@@ -324,7 +324,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             else if (Status != STATUS_INVALID_PARAMETER)
             {
                 BaseSetLastNTError(Status);
-                _SEH3_LEAVE;
+                _SEH2_LEAVE;
             }
         }
         else
@@ -341,7 +341,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                 if (Status != STATUS_NOT_IMPLEMENTED && Status != STATUS_INVALID_PARAMETER)
                 {
                     BaseSetLastNTError(Status);
-                    _SEH3_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 /* Not a reparse point, no need to reopen, it's fine */
@@ -368,7 +368,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             if (!NT_SUCCESS(Status))
             {
                 BaseSetLastNTError(Status);
-                _SEH3_LEAVE;
+                _SEH2_LEAVE;
             }
         }
 
@@ -381,7 +381,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         else if (!RtlDosPathNameToNtPathName_U(lpNewFileName, &NewPathU, 0, 0))
         {
             BaseSetLastNTError(STATUS_OBJECT_PATH_NOT_FOUND);
-            _SEH3_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Handle postponed renaming */
@@ -394,7 +394,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                 if (NewBuffer == NULL)
                 {
                     BaseSetLastNTError(STATUS_NO_MEMORY);
-                    _SEH3_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 NewBuffer[0] = L'!';
@@ -431,11 +431,11 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             if (!NT_SUCCESS(Status))
             {
                 BaseSetLastNTError(Status);
-                _SEH3_LEAVE;
+                _SEH2_LEAVE;
             }
 
             Ret = TRUE;
-            _SEH3_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* At that point, we MUST have a source handle */
@@ -446,7 +446,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         if (RenameInfo == NULL)
         {
             BaseSetLastNTError(STATUS_NO_MEMORY);
-            _SEH3_LEAVE;
+            _SEH2_LEAVE;
         }
 
         RtlCopyMemory(&RenameInfo->FileName, NewPathU.Buffer, NewPathU.Length);
@@ -465,7 +465,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         {
             /* If it succeed, all fine, quit */
             Ret = TRUE;
-            _SEH3_LEAVE;
+            _SEH2_LEAVE;
         }
         /* If we failed for any other reason than not the same device, fail
          * If we failed because of different devices, only allow renaming if user allowed copy
@@ -482,7 +482,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             else
             {
                 BaseSetLastNTError(Status);
-                _SEH3_LEAVE;
+                _SEH2_LEAVE;
             }
         }
 
@@ -558,7 +558,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
             }
         }
     }
-    _SEH3_FINALLY
+    _SEH2_FINALLY
     {
         if (SourceHandle != INVALID_HANDLE_VALUE)
             NtClose(SourceHandle);
@@ -566,7 +566,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         RtlFreeHeap(RtlGetProcessHeap(), 0, ExistingPathU.Buffer);
         RtlFreeHeap(RtlGetProcessHeap(), 0, NewPathU.Buffer);
     }
-    _SEH3_END;
+    _SEH2_END;
 
     return Ret;
 }
