@@ -63,8 +63,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     }
     else
     {
-        HRESULT hr = StringCbPrintfW(PendingOperationsBuffer, sizeof(PendingOperationsBuffer), L"PendingFileRenameOperations%d", KeyId);
-        ASSERT(SUCCEEDED(hr));
+        StringCbPrintfW(PendingOperationsBuffer, sizeof(PendingOperationsBuffer), L"PendingFileRenameOperations%d", KeyId);
         PendingOperations = PendingOperationsBuffer;
     }
     RtlInitUnicodeString(&PendingOperationsString, PendingOperations);
