@@ -53,6 +53,8 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <undocshell.h>
+
 #include <wine/debug.h>
 
 #if _MSC_VER
@@ -73,115 +75,3 @@ extern "C" HRESULT WINAPI CMenuSite_Wrapper(IBandSite * bs, REFIID riid, LPVOID 
 extern "C" HRESULT WINAPI CMenuBand_Wrapper(IShellMenu * sm, REFIID riid, LPVOID *ppv);
 extern "C" HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv);
 extern "C" HRESULT WINAPI CStartMenuSite_Wrapper(ITrayPriv * trayPriv, REFIID riid, LPVOID *ppv);
-
-static __inline ULONG
-Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
-{
-    char szMsg[512];
-    char *szMsgStart;
-    const char *fname;
-    va_list vl;
-    ULONG uRet;
-
-    fname = strrchr(filename, '\\');
-    if (fname == NULL)
-    {
-        fname = strrchr(filename, '/');
-    }
-
-    if (fname == NULL)
-        fname = filename;
-    else
-        fname++;
-
-    szMsgStart = szMsg + sprintf(szMsg, "[%10lu] %s:%d: ", GetTickCount(), fname, line);
-
-    va_start(vl, lpFormat);
-    uRet = (ULONG) vsprintf(szMsgStart, lpFormat, vl);
-    va_end(vl);
-
-    OutputDebugStringA(szMsg);
-
-    return uRet;
-}
-
-#define DbgPrint(fmt, ...) \
-    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-
-#if 1
-#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (DbgPrint("Unexpected failure %08x.\n", hr), TRUE))
-#else
-#define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
-#endif
-
-
-template <class Base>
-class CComDebugObject : public Base
-{
-public:
-    CComDebugObject(void * = NULL)
-    {
-        _pAtlModule->Lock();
-    }
-
-    virtual ~CComDebugObject()
-    {
-        this->FinalRelease();
-        _pAtlModule->Unlock();
-    }
-
-    STDMETHOD_(ULONG, AddRef)()
-    {
-        int rc = this->InternalAddRef();
-        DbgPrint("RefCount is now %d(++)!\n", rc);
-        return rc;
-    }
-
-    STDMETHOD_(ULONG, Release)()
-    {
-        ULONG								newRefCount;
-
-        newRefCount = this->InternalRelease();
-        DbgPrint("RefCount is now %d(--)!\n", newRefCount);
-        if (newRefCount == 0)
-            delete this;
-        return newRefCount;
-    }
-
-    STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
-    {
-        return this->_InternalQueryInterface(iid, ppvObject);
-    }
-
-    static HRESULT WINAPI CreateInstance(CComDebugObject<Base> **pp)
-    {
-        CComDebugObject<Base>				*newInstance;
-        HRESULT								hResult;
-
-        ATLASSERT(pp != NULL);
-        if (pp == NULL)
-            return E_POINTER;
-
-        hResult = E_OUTOFMEMORY;
-        newInstance = NULL;
-        ATLTRY(newInstance = new CComDebugObject<Base>())
-            if (newInstance != NULL)
-            {
-            newInstance->SetVoid(NULL);
-            newInstance->InternalFinalConstructAddRef();
-            hResult = newInstance->_AtlInitialConstruct();
-            if (SUCCEEDED(hResult))
-                hResult = newInstance->FinalConstruct();
-            if (SUCCEEDED(hResult))
-                hResult = newInstance->_AtlFinalConstruct();
-            newInstance->InternalFinalConstructRelease();
-            if (hResult != S_OK)
-            {
-                delete newInstance;
-                newInstance = NULL;
-            }
-            }
-        *pp = newInstance;
-        return hResult;
-    }
-};

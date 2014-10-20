@@ -477,20 +477,5 @@ LRESULT CBaseBarSite::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 HRESULT CreateBaseBarSite(REFIID riid, void **ppv)
 {
-    CComObject<CBaseBarSite>                *theBaseBarSite;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theBaseBarSite = new CComObject<CBaseBarSite>);
-    if (theBaseBarSite == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theBaseBarSite->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theBaseBarSite;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CBaseBarSite>(riid, ppv);
 }

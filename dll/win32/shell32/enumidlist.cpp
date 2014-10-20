@@ -281,22 +281,5 @@ HRESULT WINAPI IEnumIDListImpl::Clone(LPENUMIDLIST *ppenum)
  */
 HRESULT IEnumIDList_Constructor(IEnumIDList **enumerator)
 {
-    CComObject<IEnumIDListImpl>                *theEnumerator;
-    CComPtr<IEnumIDList>                    result;
-    HRESULT                                    hResult;
-
-    if (enumerator == NULL)
-        return E_POINTER;
-    *enumerator = NULL;
-    ATLTRY (theEnumerator = new CComObject<IEnumIDListImpl>);
-    if (theEnumerator == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
-    if (FAILED (hResult))
-    {
-        delete theEnumerator;
-        return hResult;
-    }
-    *enumerator = result.Detach ();
-    return S_OK;
+    return ShellObjectCreator<IEnumIDListImpl>(IID_IEnumIDList, enumerator);
 }

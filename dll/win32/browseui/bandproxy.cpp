@@ -133,20 +133,5 @@ HRESULT STDMETHODCALLTYPE CBandProxy::NavigateToURL(long paramC, long param10)
 
 HRESULT CreateBandProxy(REFIID riid, void **ppv)
 {
-    CComObject<CBandProxy>                  *theBandProxy;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theBandProxy = new CComObject<CBandProxy>);
-    if (theBandProxy == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theBandProxy->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theBandProxy;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CBandProxy>(riid, ppv);
 }

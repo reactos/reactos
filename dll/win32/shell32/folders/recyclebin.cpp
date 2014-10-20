@@ -403,34 +403,6 @@ HRESULT WINAPI CRecycleBinItemContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wPara
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI CRecycleBinItemContextMenuConstructor(REFIID riid, LPCITEMIDLIST pidl, LPVOID *ppv)
-{
-    CComObject<CRecycleBinItemContextMenu>    *theMenu;
-    CComPtr<IUnknown>                        result;
-    HRESULT                                    hResult;
-
-    TRACE("%s\n", shdebugstr_guid(&riid));
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(theMenu = new CComObject<CRecycleBinItemContextMenu>);
-    if (theMenu == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theMenu->QueryInterface(riid, (void **)&result);
-    if (FAILED(hResult))
-    {
-        delete theMenu;
-        return hResult;
-    }
-    hResult = theMenu->Initialize(pidl);
-    if (FAILED(hResult))
-        return hResult;
-    *ppv = result.Detach();
-    TRACE ("--(%p)\n", *ppv);
-    return S_OK;
-}
-
 /**************************************************************************
 * registers clipboardformat once
 */
@@ -509,32 +481,7 @@ UnpackDetailsFromPidl(LPCITEMIDLIST pidl)
 
 HRESULT WINAPI CRecycleBin::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    CComObject<CRecycleBinEnum>                *theEnumerator;
-    CComPtr<IEnumIDList>                    result;
-    HRESULT                                    hResult;
-
-    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
-
-    if (ppEnumIDList == NULL)
-        return E_POINTER;
-    *ppEnumIDList = NULL;
-    ATLTRY (theEnumerator = new CComObject<CRecycleBinEnum>);
-    if (theEnumerator == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
-    if (FAILED (hResult))
-    {
-        delete theEnumerator;
-        return hResult;
-    }
-    hResult = theEnumerator->Initialize(dwFlags);
-    if (FAILED (hResult))
-        return hResult;
-    *ppEnumIDList = result.Detach();
-
-    TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
-
-    return S_OK;
+    return ShellObjectCreatorInit<CRecycleBinEnum>(dwFlags, IID_IEnumIDList, ppEnumIDList);
 }
 
 HRESULT WINAPI CRecycleBin::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbc, REFIID riid, void **ppv)
@@ -617,12 +564,12 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_C
 
     if ((IsEqualIID (riid, IID_IContextMenu) || IsEqualIID(riid, IID_IContextMenu2)) && (cidl >= 1))
     {
-        hr = CRecycleBinItemContextMenuConstructor(riid, apidl[0], (void **)&pObj);
+        hr = ShellObjectCreatorInit<CRecycleBinItemContextMenu>(apidl[0], riid, &pObj);
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl == 1))
     {
         IDropTarget * pDt = NULL;
-        hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
+        hr = QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
         pObj = pDt;
     }
     else

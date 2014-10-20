@@ -30,6 +30,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <powrprof.h>
+#include <undocshell.h>
 
 //#include "base/shell/explorer-new/todo.h"
 //#include "dlgs.h"

@@ -1376,7 +1376,6 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 {
     MSG msg;
     HWND hwnd;
-    COpenWithDialog *pDialog;
 
     TRACE("SHOpenWithDialog hwndParent %p poainfo %p\n", hwndParent, poainfo);
 
@@ -1385,11 +1384,9 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
     if (poainfo->pcszClass == NULL && poainfo->pcszFile == NULL)
         return E_FAIL;
 
-    pDialog = new COpenWithDialog(poainfo);
-    if (!pDialog)
-        return E_OUTOFMEMORY;
+    COpenWithDialog pDialog(poainfo);
 
-    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent, COpenWithDialog::DialogProc, (LPARAM)pDialog);
+    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent, COpenWithDialog::DialogProc, (LPARAM)&pDialog);
     if (hwnd == NULL)
     {
         ERR("Failed to create dialog\n");
@@ -1406,8 +1403,6 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
             DispatchMessage(&msg);
         }
     }
-
-    delete pDialog;
 
     return S_OK;
 }

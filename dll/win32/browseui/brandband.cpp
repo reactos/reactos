@@ -470,20 +470,5 @@ LRESULT CBrandBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
 HRESULT CreateBrandBand(REFIID riid, void **ppv)
 {
-    CComObject<CBrandBand>                  *theMenuBar;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theMenuBar = new CComObject<CBrandBand>);
-    if (theMenuBar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theMenuBar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CBrandBand>(riid, ppv);
 }

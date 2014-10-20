@@ -514,20 +514,5 @@ LRESULT CBaseBar::OnCaptureChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 HRESULT CreateBaseBar(REFIID riid, void **ppv)
 {
-    CComObject<CBaseBar>                    *theBaseBar;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theBaseBar = new CComObject<CBaseBar>);
-    if (theBaseBar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theBaseBar->QueryInterface (riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theBaseBar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CBaseBar>(riid, ppv);
 }

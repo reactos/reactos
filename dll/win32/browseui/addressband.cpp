@@ -668,20 +668,5 @@ LRESULT CAddressBand::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPara
 
 HRESULT CreateAddressBand(REFIID riid, void **ppv)
 {
-    CAddressBand                *theMenuBar;
-    HRESULT                     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theMenuBar = new CComObject<CAddressBand>);
-    if (theMenuBar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theMenuBar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CAddressBand>(riid, ppv);
 }

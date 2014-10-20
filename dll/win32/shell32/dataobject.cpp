@@ -127,30 +127,9 @@ HRESULT WINAPI IEnumFORMATETCImpl::Clone(LPENUMFORMATETC* ppenum)
     return (*ppenum)->Skip(posFmt);
 }
 
-HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMATETC **enumerator)
+HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMATETC **ppFormat)
 {
-    CComObject<IEnumFORMATETCImpl>            *theEnumerator;
-    CComPtr<IEnumFORMATETC>                    result;
-    HRESULT                                    hResult;
-
-    if (enumerator == NULL)
-        return E_POINTER;
-    *enumerator = NULL;
-    ATLTRY (theEnumerator = new CComObject<IEnumFORMATETCImpl>);
-    if (theEnumerator == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface (IID_PPV_ARG(IEnumFORMATETC, &result));
-    if (FAILED (hResult))
-    {
-        delete theEnumerator;
-        return hResult;
-    }
-    hResult = theEnumerator->Initialize (cfmt, afmt);
-    if (FAILED (hResult))
-        return hResult;
-    *enumerator = result.Detach ();
-    TRACE("(%p)->(%u,%p)\n", *enumerator, cfmt, afmt);
-    return S_OK;
+    return ShellObjectCreatorInit<IEnumFORMATETCImpl>(cfmt, afmt, IID_IEnumFORMATETC, ppFormat);
 }
 
 
@@ -416,28 +395,7 @@ HRESULT WINAPI IDataObjectImpl::EndOperation(HRESULT hResult, IBindCtx *pbcReser
 */
 HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidl, UINT cidl, IDataObject **dataObject)
 {
-    CComObject<IDataObjectImpl>                *theDataObject;
-    CComPtr<IDataObject>                    result;
-    HRESULT                                    hResult;
-
-    if (dataObject == NULL)
-        return E_POINTER;
-    *dataObject = NULL;
-    ATLTRY (theDataObject = new CComObject<IDataObjectImpl>);
-    if (theDataObject == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theDataObject->QueryInterface(IID_PPV_ARG(IDataObject, &result));
-    if (FAILED (hResult))
-    {
-        delete theDataObject;
-        return hResult;
-    }
-    hResult = theDataObject->Initialize (hwndOwner, pMyPidl, apidl, cidl);
-    if (FAILED (hResult))
-        return hResult;
-    *dataObject = result.Detach ();
-    TRACE("(%p)->(apidl=%p cidl=%u)\n", *dataObject,  apidl, cidl);
-    return S_OK;
+    return ShellObjectCreatorInit<IDataObjectImpl>(hwndOwner, pMyPidl, apidl, cidl, IID_IDataObject, dataObject);
 }
 
 /*************************************************************************

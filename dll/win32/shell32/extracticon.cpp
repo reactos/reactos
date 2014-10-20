@@ -337,22 +337,5 @@ HRESULT STDMETHODCALLTYPE IconExtraction::GetCurFile(
 
 HRESULT WINAPI SHCreateDefaultExtractIcon(REFIID riid, void **ppv)
 {
-    CComObject<IconExtraction>                *theExtractor;
-    CComPtr<IUnknown>                        result;
-    HRESULT                                    hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theExtractor = new CComObject<IconExtraction>);
-    if (theExtractor == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theExtractor->QueryInterface (riid, (void **)&result);
-    if (FAILED (hResult))
-    {
-        delete theExtractor;
-        return hResult;
-    }
-    *ppv = result.Detach ();
-    return S_OK;
+    return ShellObjectCreator<IconExtraction>(riid, ppv);
 }

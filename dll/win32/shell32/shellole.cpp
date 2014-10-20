@@ -376,27 +376,7 @@ HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 
 HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInst, IClassFactory **theFactory)
 {
-    CComObject<IDefClFImpl>                    *theClassObject;
-    CComPtr<IClassFactory>                    result;
-    HRESULT                                    hResult;
-
-    if (theFactory == NULL)
-        return E_POINTER;
-    *theFactory = NULL;
-    ATLTRY (theClassObject = new CComObject<IDefClFImpl>);
-    if (theClassObject == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theClassObject->QueryInterface (IID_PPV_ARG(IClassFactory, &result));
-    if (FAILED (hResult))
-    {
-        delete theClassObject;
-        return hResult;
-    }
-    hResult = theClassObject->Initialize (lpfnCI, pcRefDll, riidInst);
-    if (FAILED (hResult))
-        return hResult;
-    *theFactory = result.Detach ();
-    return S_OK;
+    return ShellObjectCreatorInit<IDefClFImpl>(lpfnCI, pcRefDll, riidInst, IID_IClassFactory, theFactory);
 }
 
 /******************************************************************************

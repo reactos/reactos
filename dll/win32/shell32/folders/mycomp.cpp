@@ -252,36 +252,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 */
 HRESULT WINAPI CDrivesFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    CComObject<CDrivesFolderEnum> *theEnumerator;
-    CComPtr<IEnumIDList>          result;
-    HRESULT                       hResult;
-
-    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
-
-    if (ppEnumIDList == NULL)
-        return E_POINTER;
-
-    *ppEnumIDList = NULL;
-    ATLTRY(theEnumerator = new CComObject<CDrivesFolderEnum>);
-
-    if (theEnumerator == NULL)
-        return E_OUTOFMEMORY;
-
-    hResult = theEnumerator->QueryInterface(IID_IEnumIDList, (void **)&result);
-    if (FAILED(hResult))
-    {
-        delete theEnumerator;
-        return hResult;
-    }
-
-    hResult = theEnumerator->Initialize(hwndOwner, dwFlags);
-    if (FAILED(hResult))
-        return hResult;
-    *ppEnumIDList = result.Detach();
-
-    TRACE("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
-
-    return S_OK;
+    return ShellObjectCreatorInit<CDrivesFolderEnum>(hwndOwner, dwFlags, IID_IEnumIDList, ppEnumIDList);
 }
 
 /**************************************************************************

@@ -437,7 +437,11 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
     CComPtr<IShellFolder> psfCommonFavorites;
     CComPtr<IAugmentedShellFolder> pasf;
 
-    *ppsfFavorites = NULL;
+    if (ppsfFavorites)
+        *ppsfFavorites = NULL;
+    
+    if (ppidl)
+        *ppidl = NULL;
 
     hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidlUserFavorites);
     if (FAILED(hr))
@@ -498,6 +502,8 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
 
     hr = pasf->QueryInterface(IID_PPV_ARG(IShellFolder, ppsfFavorites));
     pasf.Release();
+
+    // TODO: obtain the folder's PIDL
 
     ILFree(pidlCommonFavorites);
     ILFree(pidlUserFavorites);
@@ -578,7 +584,8 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
             return hResult;
 
         hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
-        ILFree(favoritesPIDL);
+        if (favoritesPIDL)
+            ILFree(favoritesPIDL);
         if (SUCCEEDED(hResult))
             fFavoritesMenu.Attach(newMenu.Detach());
     }
@@ -1989,20 +1996,5 @@ LRESULT CInternetToolbar::OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
 HRESULT CreateInternetToolbar(REFIID riid, void **ppv)
 {
-    CInternetToolbar            *theToolbar;
-    HRESULT                     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theToolbar = new CComObject<CInternetToolbar>);
-    if (theToolbar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theToolbar->QueryInterface (riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theToolbar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CInternetToolbar>(riid, ppv);
 }

@@ -185,27 +185,7 @@ HRESULT WINAPI CPrintersExtractIconW::Extract(LPCSTR pszFile,
  */
 static HRESULT WINAPI IEI_Printers_Constructor(LPCITEMIDLIST pidl, REFIID riid, IUnknown **ppv)
 {
-    CComObject<CPrintersExtractIconW> *theExtractor;
-    CComPtr<IUnknown>                 result;
-    HRESULT                           hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theExtractor = new CComObject<CPrintersExtractIconW>);
-    if (theExtractor == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theExtractor->QueryInterface(riid, (void **)&result);
-    if (FAILED (hResult))
-    {
-        delete theExtractor;
-        return hResult;
-    }
-    hResult = theExtractor->Initialize(pidl);
-    if (FAILED (hResult))
-        return hResult;
-    *ppv = result.Detach();
-    return S_OK;
+    return ShellObjectCreatorInit<CPrintersExtractIconW>(pidl, riid, ppv);
 }
 
 /***********************************************************************
@@ -379,32 +359,7 @@ static PIDLPrinterStruct * _ILGetPrinterStruct(LPCITEMIDLIST pidl)
  */
 HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
 {
-    CComObject<CPrintersEnum> *theEnumerator;
-    CComPtr<IEnumIDList>      result;
-    HRESULT                   hResult;
-
-    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
-
-    if (ppEnumIDList == NULL)
-        return E_POINTER;
-    *ppEnumIDList = NULL;
-    ATLTRY (theEnumerator = new CComObject<CPrintersEnum>);
-    if (theEnumerator == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
-    if (FAILED (hResult))
-    {
-        delete theEnumerator;
-        return hResult;
-    }
-    hResult = theEnumerator->Initialize(hwndOwner, dwFlags);
-    if (FAILED (hResult))
-        return hResult;
-    *ppEnumIDList = result.Detach();
-
-    TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
-
-    return S_OK;
+    return ShellObjectCreatorInit<CPrintersEnum>(hwndOwner, dwFlags, IID_IEnumIDList, ppEnumIDList);
 }
 
 /**************************************************************************

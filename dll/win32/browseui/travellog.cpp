@@ -621,23 +621,5 @@ HRESULT STDMETHODCALLTYPE CTravelLog::Revert()
 
 HRESULT CreateTravelLog(REFIID riid, void **ppv)
 {
-    CComObject<CTravelLog>                  *theTravelLog;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theTravelLog = new CComObject<CTravelLog>);
-    if (theTravelLog == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theTravelLog->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theTravelLog;
-        return hResult;
-    }
-    hResult = theTravelLog->Initialize();
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    return S_OK;
+    return ShellObjectCreatorInit<CTravelLog>(riid, ppv);
 }

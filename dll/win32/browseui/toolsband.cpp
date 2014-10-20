@@ -313,15 +313,11 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
         BITMAP bitmapInfo;
         GetObjectW(imgNormal, sizeof(bitmapInfo), &bitmapInfo);
         HIMAGELIST himlNormal = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
-
         ImageList_Add(himlNormal, imgNormal, NULL);
-        DeleteObject(imgNormal);
 
         GetObjectW(imgHot, sizeof(bitmapInfo), &bitmapInfo);
         HIMAGELIST himlHot = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
-
         ImageList_Add(himlHot, imgHot, NULL);
-        DeleteObject(imgHot);
 
         SendMessage(TB_SETIMAGELIST, 0, (LPARAM) himlNormal);
         SendMessage(TB_SETHOTIMAGELIST, 0, (LPARAM) himlHot);
@@ -329,6 +325,11 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
 
     SendMessage(TB_ADDBUTTONSW, numShownButtons, (LPARAM)&tbButtonsAdd);
 
+    if (imgNormal)
+        DeleteObject(imgNormal);
+    if (imgHot)
+        DeleteObject(imgHot);
+    
     return hResult;
 }
 
@@ -440,21 +441,6 @@ LRESULT CToolsBand::OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
 
 HRESULT CreateToolsBar(REFIID riid, void **ppv)
 {
-    CToolsBand                  *theToolbar;
-    HRESULT                     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(theToolbar = new CComObject<CToolsBand>);
-    if (theToolbar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theToolbar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        delete theToolbar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CToolsBand>(riid, ppv);
 }
 

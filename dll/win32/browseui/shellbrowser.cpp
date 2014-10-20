@@ -3431,15 +3431,11 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
             DispatchMessage(&Msg);
         }
     }
-    
-    //TerminateProcess(GetCurrentProcess(), hResult);
 
     int nrc = theCabinet->Release();
     if (nrc > 0)
     {
-        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked, process will never terminate. Terminating forcefully.\n", nrc);
-
-        //TerminateProcess(GetCurrentProcess(), 1);
+        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked.\n", nrc);
     }
 
     theCabinet.Detach();

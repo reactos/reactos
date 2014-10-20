@@ -136,32 +136,7 @@ HRESULT WINAPI CAdminToolsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPO
  */
 HRESULT WINAPI CAdminToolsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    CComObject<CDesktopFolderEnumY>        *theEnumerator;
-    CComPtr<IEnumIDList>                    result;
-    HRESULT                                 hResult;
-
-    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
-
-    if (ppEnumIDList == NULL)
-        return E_POINTER;
-    *ppEnumIDList = NULL;
-    ATLTRY (theEnumerator = new CComObject<CDesktopFolderEnumY>);
-    if (theEnumerator == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
-    if (FAILED (hResult))
-    {
-        delete theEnumerator;
-        return hResult;
-    }
-    hResult = theEnumerator->Initialize (szTarget, dwFlags);
-    if (FAILED (hResult))
-        return hResult;
-    *ppEnumIDList = result.Detach ();
-
-    TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
-
-    return S_OK;
+    return ShellObjectCreatorInit<CDesktopFolderEnumY>(szTarget, dwFlags, IID_IEnumIDList, ppEnumIDList);
 }
 
 /**************************************************************************

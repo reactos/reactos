@@ -2974,30 +2974,5 @@ HRESULT CDefView::_MergeToolbar()
  */
 HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newView)
 {
-    CComObject<CDefView>                    *theView;
-    CComPtr<IShellView>                        result;
-    HRESULT                                    hResult;
-
-    if (newView == NULL)
-        return E_POINTER;
-
-    *newView = NULL;
-    ATLTRY (theView = new CComObject<CDefView>);
-
-    if (theView == NULL)
-        return E_OUTOFMEMORY;
-
-    hResult = theView->QueryInterface(IID_PPV_ARG(IShellView, &result));
-    if (FAILED (hResult))
-    {
-        delete theView;
-        return hResult;
-    }
-
-    hResult = theView->Initialize (pFolder);
-    if (FAILED (hResult))
-        return hResult;
-    *newView = result.Detach ();
-
-    return S_OK;
+    return ShellObjectCreatorInit<CDefView>(pFolder, IID_IShellView, newView);
 }

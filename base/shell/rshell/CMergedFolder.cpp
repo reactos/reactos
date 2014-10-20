@@ -356,20 +356,7 @@ HRESULT STDMETHODCALLTYPE CEnumMergedFolder::Clone(
 extern "C"
 HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv)
 {
-    *ppv = NULL;
-
-    CMergedFolder * fld = new CComObject<CMergedFolder>();
-
-    if (!fld)
-        return E_OUTOFMEMORY;
-
-    HRESULT hr;
-
-    hr = fld->QueryInterface(riid, ppv);
-    if (FAILED_UNEXPECTEDLY(hr))
-        delete fld;
-
-    return hr;
+    return ShellObjectCreator<CMergedFolder>(riid, ppv);
 }
 
 CMergedFolder::CMergedFolder() :

@@ -371,37 +371,9 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
 /**************************************************************************
 *        CControlPanelFolder::EnumObjects
 */
-HRESULT WINAPI CControlPanelFolder::EnumObjects(
-    HWND hwndOwner,
-    DWORD dwFlags,
-    LPENUMIDLIST *ppEnumIDList)
+HRESULT WINAPI CControlPanelFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    CComObject<CControlPanelEnum>            *theEnumerator;
-    CComPtr<IEnumIDList>                    result;
-    HRESULT                                    hResult;
-
-    TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", this, hwndOwner, dwFlags, ppEnumIDList);
-
-    if (ppEnumIDList == NULL)
-        return E_POINTER;
-    *ppEnumIDList = NULL;
-    ATLTRY (theEnumerator = new CComObject<CControlPanelEnum>);
-    if (theEnumerator == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theEnumerator->QueryInterface(IID_PPV_ARG(IEnumIDList, &result));
-    if (FAILED (hResult))
-    {
-        delete theEnumerator;
-        return hResult;
-    }
-    hResult = theEnumerator->Initialize (dwFlags);
-    if (FAILED (hResult))
-        return hResult;
-    *ppEnumIDList = result.Detach ();
-
-    TRACE ("-- (%p)->(new ID List: %p)\n", this, *ppEnumIDList);
-
-    return S_OK;
+    return ShellObjectCreatorInit<CControlPanelEnum>(dwFlags, IID_IEnumIDList, ppEnumIDList);
 }
 
 /**************************************************************************
