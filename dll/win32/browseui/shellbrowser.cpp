@@ -2563,6 +2563,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::v_MayTranslateAccelerator(MSG *pmsg)
             return S_OK;
     }
 
+    if (!fCurrentShellView)
+        return S_FALSE;
+
     return fCurrentShellView->TranslateAcceleratorW(pmsg);
 }
 
@@ -3068,27 +3071,6 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 {
     OnCreate(reinterpret_cast<LPCREATESTRUCT> (lParam));
     return 0;
-}
-
-template<class T>
-void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
-{
-    if (cptr.p != NULL)
-    {
-        int nrc = cptr->Release();
-        if (nrc > 0)
-        {
-            DbgPrint("WARNING: Unexpected RefCount > 0!\n");
-            if (forceRelease)
-            {
-                while (nrc > 0)
-                {
-                    nrc = cptr->Release();
-                }
-            }
-        }
-        cptr.Detach();
-    }
 }
 
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

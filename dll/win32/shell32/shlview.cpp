@@ -341,36 +341,37 @@ class CDefView :
 
 typedef void (CALLBACK *PFNSHGETSETTINGSPROC)(LPSHELLFLAGSTATE lpsfs, DWORD dwMask);
 
-CDefView::CDefView()
+CDefView::CDefView() :
+    m_hWndList(NULL),
+    m_hWndParent(NULL),
+    m_hMenu(NULL),
+    m_menusLoaded(FALSE),
+    m_uState(0),
+    m_cidl(0),
+    m_apidl(NULL),
+    m_hNotify(0),
+    m_hAccel(NULL),
+    m_dwAspects(0),
+    m_dwAdvf(0),
+    m_iDragOverItem(0),
+    m_cScrollDelay(0),
+    m_isEditing(FALSE),
+    m_hView(NULL)
 {
-    m_hWndList = NULL;
-    m_hWndParent = NULL;
-    m_FolderSettings.fFlags = 0;
-    m_FolderSettings.ViewMode = 0;
-    m_hMenu = NULL;
-    m_menusLoaded = FALSE;
-    m_uState = 0;
-    m_cidl = 0;
-    m_apidl = NULL;
-    m_sortInfo.bIsAscending = FALSE;
-    m_sortInfo.nHeaderID = 0;
-    m_sortInfo.nLastHeaderID = 0;
-    m_hNotify = 0;
-    m_hAccel = NULL;
-    m_dwAspects = 0;
-    m_dwAdvf = 0;
-    m_iDragOverItem = 0;
-    m_cScrollDelay = 0;
-    m_ptLastMousePos.x = 0;
-    m_ptLastMousePos.y = 0;
-    m_isEditing = FALSE;
-    ZeroMemory(&m_Category, sizeof(m_Category));
-    m_hView = NULL;
+    m_FolderSettings = { 0 };
+    m_sortInfo = { 0 };
+    m_ptLastMousePos = { 0 };
+    m_Category = { 0 };
 }
 
 CDefView::~CDefView()
 {
     TRACE(" destroying IShellView(%p)\n", this);
+
+    if (m_hWnd)
+    {
+        DestroyViewWindow();
+    }
 
     SHFree(m_apidl);
 }
@@ -2122,12 +2123,35 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
     /*Make absolutely sure all our UI is cleaned up.*/
     UIActivate(SVUIA_DEACTIVATE);
 
+    if (m_hAccel)
+    {
+        // "Accelerator tables loaded from resources are freed automatically when the application terminates." -- MSDN
+        m_hAccel = NULL;
+    }
+
+    if (m_hView)
+    {
+        DestroyMenu(m_hView);
+        m_hView = NULL;
+    }
+
     if (m_hMenu)
     {
         DestroyMenu(m_hMenu);
+        m_hView = NULL;
     }
 
-    DestroyWindow();
+    if (m_hWndList)
+    {
+        ::DestroyWindow(m_hWndList);
+        m_hWndList = NULL;
+    }
+
+    if (m_hWnd)
+    {
+        DestroyWindow();
+    }
+
     m_pShellBrowser.Release();
     m_pCommDlgBrowser.Release();
 

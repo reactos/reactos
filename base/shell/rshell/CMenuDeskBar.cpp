@@ -171,7 +171,17 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
     CComPtr<IDeskBarClient> pDeskBandClient;
     HRESULT hr;
 
-    m_Client.Release();
+    if (m_Client)
+    {
+        hr = m_Client->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDeskBandClient));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        pDeskBandClient->SetDeskBarSite(NULL);
+        
+        pDeskBandClient = NULL;
+        m_Client = NULL;
+    }
 
     if (punkClient == NULL)
         return S_OK;
@@ -222,9 +232,19 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
     if (m_Shown)
         _CloseBar();
 
+    m_SubMenuParent = NULL;
+
     m_Site = pUnkSite;
 
-    IUnknown_QueryService(m_Site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &m_SubMenuParent));
+    if (m_Site)
+    {
+        IUnknown_QueryService(m_Site, SID_SMenuPopup, IID_PPV_ARG(IMenuPopup, &m_SubMenuParent));
+    }
+    else
+    {
+        DestroyWindow();
+        SetClient(NULL);
+    }
 
     return S_OK;
 }

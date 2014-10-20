@@ -691,6 +691,27 @@ public:
     }
 };
 
+template<class T>
+void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
+{
+    if (cptr.p != NULL)
+    {
+        int nrc = cptr->Release();
+        if (nrc > 0)
+        {
+            DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", nrc);
+            if (forceRelease)
+            {
+                while (nrc > 0)
+                {
+                    nrc = cptr->Release();
+                }
+            }
+        }
+        cptr.Detach();
+    }
+}
+
 template<class T, class R>
 HRESULT inline ShellObjectCreator(REFIID riid, R ** ppv)
 {

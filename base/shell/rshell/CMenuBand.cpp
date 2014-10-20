@@ -56,7 +56,9 @@ CMenuBand::CMenuBand() :
     m_popupBar(NULL),
     m_popupItem(-1),
     m_Show(FALSE),
-    m_shellBottom(FALSE)
+    m_shellBottom(FALSE),
+    m_trackedPopup(NULL),
+    m_trackedHwnd(NULL)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -418,6 +420,16 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::CloseDW(DWORD dwReserved)
 {
+    if (m_subMenuChild)
+    {
+        m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
+    }
+
+    if (m_subMenuChild)
+    {
+        DbgPrint("Child object should have removed itself.\n");
+    }
+
     ShowDW(FALSE);
 
     if (m_staticToolbar != NULL)
@@ -594,7 +606,10 @@ HRESULT CMenuBand::_IsTracking()
 
 HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 {
-    m_subMenuChild = NULL;
+    if (m_subMenuChild)
+    {
+        ReleaseCComPtrExpectZero(m_subMenuChild);
+    }
 
     if (!punkClient)
     {
@@ -738,9 +753,15 @@ HRESULT CMenuBand::_TrackSubMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
     UINT      flags  = TPM_VERPOSANIMATION | TPM_VERTICAL | TPM_LEFTALIGN;
     HWND      hwnd   = m_menuOwner ? m_menuOwner : m_topLevelWindow;
 
+    m_trackedPopup = popup;
+    m_trackedHwnd = hwnd;
+
     m_focusManager->PushTrackedPopup(popup);
     ::TrackPopupMenuEx(popup, flags, x, y, hwnd, &params);
     m_focusManager->PopTrackedPopup(popup);
+
+    m_trackedPopup = NULL;
+    m_trackedHwnd = NULL;
 
     _DisableMouseTrack(FALSE);
 
@@ -950,11 +971,19 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
 
 HRESULT CMenuBand::_CancelCurrentPopup()
 {
-    if (!m_subMenuChild)
-        return S_FALSE;
+    if (m_subMenuChild)
+    {
+        HRESULT hr = m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
+        return hr;
+    }
 
-    HRESULT hr = m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
-    return hr;
+    if (m_trackedPopup)
+    {
+        ::SendMessage(m_trackedHwnd, WM_CANCELMODE, 0, 0);
+        return S_OK;
+    }
+
+    return S_FALSE;
 }
 
 HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude, BOOL keyInitiated)
@@ -1042,6 +1071,11 @@ HRESULT CMenuBand::_MenuBarMouseUp(HWND hwnd, INT item)
     if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hwnd) == S_OK)
         m_SFToolbar->MenuBarMouseUp(item);
     return S_OK;
+}
+
+HRESULT CMenuBand::_HasSubMenu()
+{
+    return m_popupBar ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)

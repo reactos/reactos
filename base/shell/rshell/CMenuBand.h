@@ -68,6 +68,9 @@ private:
     BOOL m_Show;
     BOOL m_shellBottom;
 
+    HMENU m_trackedPopup;
+    HWND m_trackedHwnd;
+
 public:
     CMenuBand();
     virtual ~CMenuBand();
@@ -194,6 +197,7 @@ public:
     HRESULT _KillPopupTimers();
     HRESULT _MenuBarMouseDown(HWND hwnd, INT item);
     HRESULT _MenuBarMouseUp(HWND hwnd, INT item);
+    HRESULT _HasSubMenu();
 
     BOOL UseBigIcons()
     {

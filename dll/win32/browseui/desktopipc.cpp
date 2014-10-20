@@ -345,22 +345,6 @@ cleanup0:
     return params;
 }
 
-
-/*************************************************************************
-* SHOnCWMCommandLine			[BROWSEUI.127]
-*/
-extern "C" BOOL WINAPI SHOnCWMCommandLine(HANDLE hSharedInfo)
-{
-    DbgPrint("SHOnCWMCommandLine\n");
-
-    PIE_THREAD_PARAM_BLOCK params = ParseSharedPacket(hSharedInfo);
-
-    if (params)
-        return SHOpenFolderWindow(params);
-
-    return FALSE;
-}
-
 /*************************************************************************
 * SHCreateIETHREADPARAM		[BROWSEUI.123]
 */
@@ -439,6 +423,23 @@ extern "C" void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param)
     if (param->offsetF8 != NULL)
         param->offsetF8->Release();
     LocalFree(param);
+}
+
+/*************************************************************************
+* SHOnCWMCommandLine			[BROWSEUI.127]
+*/
+extern "C" BOOL WINAPI SHOnCWMCommandLine(HANDLE hSharedInfo)
+{
+    DbgPrint("SHOnCWMCommandLine\n");
+
+    PIE_THREAD_PARAM_BLOCK params = ParseSharedPacket(hSharedInfo);
+
+    if (params)
+        return SHOpenFolderWindow(params);
+
+    SHDestroyIETHREADPARAM(params);
+
+    return FALSE;
 }
 
 /*************************************************************************
