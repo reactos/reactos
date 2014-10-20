@@ -77,6 +77,7 @@ if defined ROS_ARCH (
                 set CMAKE_GENERATOR="Visual Studio 11 Win64"
             ) else if "!ARCH!" == "arm" (
                 set CMAKE_GENERATOR="Visual Studio 11 ARM"
+                set CMAKE_GENERATOR_HOST="Visual Studio 11"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 11"
             )
@@ -85,6 +86,7 @@ if defined ROS_ARCH (
                 set CMAKE_GENERATOR="Visual Studio 12 Win64"
             ) else if "!ARCH!" == "arm" (
                 set CMAKE_GENERATOR="Visual Studio 12 ARM"
+                set CMAKE_GENERATOR_HOST="Visual Studio 12"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 12"
             )
@@ -116,6 +118,9 @@ if %USE_VSCMD% == 1 (
     ) else (
         set CMAKE_GENERATOR="Ninja"
     )
+    if "!ARCH!" == "arm" (
+        set CMAKE_GENERATOR_HOST=!CMAKE_GENERATOR!
+    )
 )
 
 :: Create directories
@@ -146,7 +151,7 @@ set REACTOS_BUILD_TOOLS_DIR=%CD%
 :: Use x86 for ARM host tools
 if "%ARCH%" == "arm" (
     :: Launch new script instance for x86 host tools configuration
-    start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
+    start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR_HOST%
 ) else (
     cmake -G %CMAKE_GENERATOR% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
 )
