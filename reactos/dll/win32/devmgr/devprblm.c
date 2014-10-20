@@ -586,7 +586,6 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
                                             &szProblem,
                                             szInfo,
                                             uProblemId);
-            LocalFree((HLOCAL)szInfo);
         }
         else
         {
