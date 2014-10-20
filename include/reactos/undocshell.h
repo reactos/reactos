@@ -735,6 +735,32 @@ HRESULT inline ShellObjectCreatorInit(REFIID riid, R ** ppv)
     return S_OK;
 }
 
+template<class T>
+HRESULT inline ShellObjectCreatorInit(REFIID riid, void ** ppv)
+{
+    CComPtr<T>  obj;
+    CComPtr<IUnknown>  result;
+    HRESULT     hResult;
+
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY(obj = new CComObject<T>);
+    if (obj.p == NULL)
+        return E_OUTOFMEMORY;
+    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
+    if (FAILED(hResult))
+        return hResult;
+
+    hResult = obj->Initialize();
+    if (FAILED(hResult))
+        return hResult;
+
+    *ppv = result.Detach();
+
+    return S_OK;
+}
+
 template<class T, class T1, class R>
 HRESULT inline ShellObjectCreatorInit(T1 initArg1, REFIID riid, R ** ppv)
 {

@@ -117,7 +117,7 @@ static VOID
 SysPagerWnd_UpdateButton(IN OUT PSYS_PAGER_WND_DATA This,
                          IN CONST NOTIFYICONDATA *iconData)
 {
-    TBBUTTONINFO tbbi;
+    TBBUTTONINFO tbbi = {0};
     PNOTIFY_ITEM notifyItem;
     PPNOTIFY_ITEM NotifyPointer;
 
