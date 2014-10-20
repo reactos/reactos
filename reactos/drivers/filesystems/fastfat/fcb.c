@@ -199,6 +199,8 @@ vfatDelFCBFromTable(
         }
         entry->next = pFCB->Hash.next;
     }
+
+    RemoveEntryList(&pFCB->FcbListEntry);
 }
 
 static
@@ -302,7 +304,6 @@ vfatReleaseFCB(
         {
             ASSERT(pFCB->OpenHandleCount == 0);
             tmpFcb = pFCB->parentFcb;
-            RemoveEntryList (&pFCB->FcbListEntry);
             vfatDelFCBFromTable(pVCB, pFCB);
             vfatDestroyFCB(pFCB);
         }
