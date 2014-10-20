@@ -4985,8 +4985,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
         /* Additional rule for LOOPNZ */
         if (State->Flags.Zf) Condition = FALSE;
     }
-
-    if (Opcode == 0xE1)
+    else if (Opcode == 0xE1)
     {
         /* Additional rule for LOOPZ */
         if (!State->Flags.Zf) Condition = FALSE;

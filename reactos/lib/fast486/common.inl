@@ -762,7 +762,7 @@ Fast486ParseModRegRm(PFAST486_STATE State,
     ModRegRm->Register = (ModRmByte >> 3) & 0x07;
 
     /* Check the mode */
-    if ((ModRmByte >> 6) == 3)
+    if (Mode == 3)
     {
         /* The second operand is also a register */
         ModRegRm->Memory = FALSE;
@@ -886,7 +886,6 @@ Fast486ParseModRegRm(PFAST486_STATE State,
                 /* [BX + SI] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord
                                            + State->GeneralRegs[FAST486_REG_ESI].LowWord;
-
                 break;
             }
 
@@ -895,7 +894,6 @@ Fast486ParseModRegRm(PFAST486_STATE State,
                 /* [BX + DI] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord
                                            + State->GeneralRegs[FAST486_REG_EDI].LowWord;
-
                 break;
             }
 
@@ -904,7 +902,6 @@ Fast486ParseModRegRm(PFAST486_STATE State,
                 /* SS:[BP + SI] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBP].LowWord
                                            + State->GeneralRegs[FAST486_REG_ESI].LowWord;
-
                 break;
             }
 
@@ -913,7 +910,6 @@ Fast486ParseModRegRm(PFAST486_STATE State,
                 /* SS:[BP + DI] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBP].LowWord
                                            + State->GeneralRegs[FAST486_REG_EDI].LowWord;
-
                 break;
             }
 
@@ -921,7 +917,6 @@ Fast486ParseModRegRm(PFAST486_STATE State,
             {
                 /* [SI] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_ESI].LowWord;
-
                 break;
             }
 
@@ -929,7 +924,6 @@ Fast486ParseModRegRm(PFAST486_STATE State,
             {
                 /* [DI] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EDI].LowWord;
-
                 break;
             }
 
@@ -953,7 +947,6 @@ Fast486ParseModRegRm(PFAST486_STATE State,
             {
                 /* [BX] */
                 ModRegRm->MemoryAddress = State->GeneralRegs[FAST486_REG_EBX].LowWord;
-
                 break;
             }
         }

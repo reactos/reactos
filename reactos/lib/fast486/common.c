@@ -55,7 +55,7 @@ Fast486ReadMemory(PFAST486_STATE State,
     }
 
     /* Check for protected mode */
-    if (State->ControlRegisters[0] & FAST486_CR0_PE)
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Privilege checks */
 
@@ -122,7 +122,7 @@ Fast486WriteMemory(PFAST486_STATE State,
     }
 
     /* Check for protected mode */
-    if (State->ControlRegisters[0] & FAST486_CR0_PE)
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Privilege checks */
 
