@@ -102,6 +102,10 @@ foreach(_keyboard_layout ${_keyboard_layouts})
         add_target_link_flags(${_keyboard_layout} "-Wl,-T,${CMAKE_SOURCE_DIR}/kbdlayout.lds")
     endif()
 
+    if (STACK_PROTECTOR)
+        target_link_libraries(${_keyboard_layout} gcc_ssp)
+    endif()
+
     if(RUNTIME_CHECKS)
         target_link_libraries(${_keyboard_layout} runtmchk)
     endif()
