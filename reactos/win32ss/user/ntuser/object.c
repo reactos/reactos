@@ -168,7 +168,7 @@ static PVOID AllocProcMarkObject(
     return ObjHead;
 }
 
-static void FreeProcMarkObject(
+void FreeProcMarkObject(
     _In_ PVOID Object)
 {
     PPROCESSINFO ppi = ((PPROCMARKHEAD)Object)->ppi;
@@ -221,7 +221,7 @@ static const struct
 #ifndef NEW_CURSORICON
     { AllocProcMarkObject,      /*UserCursorCleanup*/NULL,  FreeProcMarkObject },   /* TYPE_CURSOR */
 #else
-    { AllocProcMarkObject,      IntDestroyCurIconObject,    FreeProcMarkObject },   /* TYPE_CURSOR */
+    { AllocProcMarkObject,      IntDestroyCurIconObject,    FreeCurIconObject },    /* TYPE_CURSOR */
 #endif
     { AllocSysObject,           /*UserSetWindowPosCleanup*/NULL, FreeSysObject },   /* TYPE_SETWINDOWPOS */
     { AllocDeskThreadObject,    IntRemoveHook,              FreeDeskThreadObject }, /* TYPE_HOOK */

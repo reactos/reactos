@@ -150,7 +150,19 @@ IntCreateCurIconHandle(BOOLEAN Animated)
 }
 
 BOOLEAN
-IntDestroyCurIconObject(PVOID Object)
+IntDestroyCurIconObject(
+    _In_ PVOID Object)
+{
+    PCURICON_OBJECT CurIcon = Object;
+
+    /* We just mark the handle as being destroyed.
+     * Deleting all the stuff will be deferred to the actual struct free. */
+    return UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
+}
+
+void
+FreeCurIconObject(
+    _In_ PVOID Object)
 {
     PCURICON_OBJECT CurIcon = Object;
     
@@ -220,7 +232,8 @@ IntDestroyCurIconObject(PVOID Object)
         }
     }
 
-    return TRUE;
+    /* Finally free the thing */
+    FreeProcMarkObject(CurIcon);
 }
 
 VOID FASTCALL

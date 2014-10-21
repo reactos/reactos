@@ -47,6 +47,8 @@ IntDestroyCurIconObject(PVOID Object);
 VOID FASTCALL
 IntCleanupCurIconCache(PPROCESSINFO Win32Process);
 
+void FreeCurIconObject(PVOID Object);
+
 #else
 
 typedef struct tagCURICON_PROCESS

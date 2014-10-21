@@ -56,4 +56,6 @@ UserDerefObjectCo(PVOID obj)
     UserDereferenceObject(obj);
 }
 
+void FreeProcMarkObject(_In_ PVOID Object);
+
 /* EOF */

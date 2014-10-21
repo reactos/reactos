@@ -761,7 +761,8 @@ UserChangeDisplaySettings(
         ulResult = PDEVOBJ_bSwitchMode(ppdev, pdm);
 
         /* Restore mouse pointer, no hooks called */
-        UserSetCursor(pvOldCursor, TRUE);
+        pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
+        ASSERT(pvOldCursor == NULL);
 
         /* Check for failure */
         if (!ulResult)
