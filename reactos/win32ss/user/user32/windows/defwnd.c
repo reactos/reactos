@@ -622,10 +622,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_RBUTTONUP:
         {
             POINT Pt;
-            if (hWnd == GetCapture())
-            {
-                ReleaseCapture();
-            }
+
             Pt.x = GET_X_LPARAM(lParam);
             Pt.y = GET_Y_LPARAM(lParam);
             ClientToScreen(hWnd, &Pt);
