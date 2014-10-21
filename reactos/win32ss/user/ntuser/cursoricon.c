@@ -169,6 +169,7 @@ ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
     }
     InsertHeadList(&CurIcon->ProcessList, &Current->ListEntry);
     Current->Process = Win32Process;
+    IntReferenceProcessInfo(Win32Process);
 
     return TRUE;
 }
@@ -273,6 +274,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
         {
             bFound = TRUE;
             bListEmpty = RemoveEntryList(&Current->ListEntry);
+            IntDereferenceProcessInfo(ppi);
             break;
         }
     }
