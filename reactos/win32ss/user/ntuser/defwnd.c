@@ -1052,7 +1052,7 @@ IntDefWindowProc(
                  x = (ClientRect.right - ClientRect.left - UserGetSystemMetrics(SM_CXICON)) / 2;
                  y = (ClientRect.bottom - ClientRect.top - UserGetSystemMetrics(SM_CYICON)) / 2;
                  UserDrawIconEx( hDC, x, y, pIcon, 0, 0, 0, 0, DI_NORMAL | DI_COMPAT | DI_DEFAULTSIZE );
-                 UserDereferenceObject(pIcon)
+                 UserDereferenceObject(pIcon);
              }
 #endif
              IntEndPaint(Wnd, &Ps);
@@ -1161,10 +1161,15 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
 
    hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp);
    if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp);
+#ifdef NEW_CURSORICON
    if (!hIcon && pWnd->pcls->spicnSm)
        return pWnd->pcls->spicnSm;
    if (!hIcon && pWnd->pcls->spicn)
        return pWnd->pcls->spicn;
+#else
+   if (!hIcon) hIcon = pWnd->pcls->hIconSm;
+   if (!hIcon) hIcon = pWnd->pcls->hIcon;
+#endif
 
    if (!hIcon && (pWnd->style & DS_MODALFRAME))
    {

@@ -1765,7 +1765,7 @@ IntClassDestroyIcon(HANDLE hCurIcon)
         return FALSE;
     }
     /* Note: IntDestroyCurIconObject will remove our reference for us! */
-    Ret = IntDestroyCurIconObject(CurIcon, TRUE);
+    Ret = IntDestroyCurIconObject(CurIcon, GetW32ProcessInfo());
     if (!Ret)
     {
        ERR("hCurIcon was not Destroyed!\n");
