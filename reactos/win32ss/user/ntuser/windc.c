@@ -403,8 +403,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
             Flags |= DCX_CLIPCHILDREN;
          }
          /* If minized with icon in the set, we are forced to be cheap! */
-         if (Wnd->style & WS_MINIMIZE &&
-             Wnd->pcls->hIcon)
+         if (Wnd->style & WS_MINIMIZE && Wnd->pcls->spicn)
          {
             Flags |= DCX_CACHE;
          }

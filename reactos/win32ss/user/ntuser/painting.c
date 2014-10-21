@@ -2122,13 +2122,17 @@ BOOL UserDrawCaption(
    {
       PCURICON_OBJECT pIcon = NULL;
 
-      if (!hIcon && pWnd)
-      {
-          hIcon = NC_IconForWindow( pWnd );
-      }
-
       if (hIcon)
-         pIcon = UserGetCurIconObject(hIcon);
+      {
+          pIcon = UserGetCurIconObject(hIcon);
+      }
+      else if (pWnd)
+      {
+          pIcon = NC_IconForWindow(pWnd);
+          // FIXME: NC_IconForWindow should reference it for us */
+          if (pIcon)
+              UserReferenceObject(pIcon);
+      }
 
       if (pIcon)
       {

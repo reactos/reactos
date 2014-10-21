@@ -218,7 +218,11 @@ static const struct
     { NULL,                     NULL,                       NULL },                 /* TYPE_FREE */
     { AllocDeskThreadObject,    co_UserDestroyWindow,       FreeDeskThreadObject }, /* TYPE_WINDOW */
     { AllocDeskProcObject,      UserDestroyMenuObject,      FreeDeskProcObject },   /* TYPE_MENU */
+#ifndef NEW_CURSORICON
     { AllocProcMarkObject,      /*UserCursorCleanup*/NULL,  FreeProcMarkObject },   /* TYPE_CURSOR */
+#else
+    { AllocProcMarkObject,      IntDestroyCurIconObject,    FreeProcMarkObject },   /* TYPE_CURSOR */
+#endif
     { AllocSysObject,           /*UserSetWindowPosCleanup*/NULL, FreeSysObject },   /* TYPE_SETWINDOWPOS */
     { AllocDeskThreadObject,    IntRemoveHook,              FreeDeskThreadObject }, /* TYPE_HOOK */
     { AllocSysObject,           /*UserClipDataCleanup*/NULL,FreeSysObject },        /* TYPE_CLIPDATA */
@@ -686,6 +690,7 @@ UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type)
     return object;
 }
 
+#ifndef NEW_CURSORICON
 VOID
 FASTCALL
 UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
@@ -720,6 +725,7 @@ UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
     ppi->UserHandleCount++;
     IntReferenceProcessInfo(ppi);
 }
+#endif
 
 BOOLEAN
 UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
@@ -740,6 +746,7 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
         if (Entry->flags & HANDLEENTRY_INDESTROY)
             continue;
 
+#ifndef NEW_CURSORICON
         /* Spcial case for cursors until cursoricon_new is there */
         if (Entry->type == TYPE_CURSOR)
         {
@@ -750,6 +757,7 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
             }
             continue;
         }
+#endif
 
         /* Call destructor */
         if (!ObjectCallbacks[Entry->type].ObjectDestroy(Entry->ptr))

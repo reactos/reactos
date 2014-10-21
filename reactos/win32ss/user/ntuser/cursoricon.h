@@ -41,6 +41,12 @@ typedef struct tagACON
 
 C_ASSERT(FIELD_OFFSET(ACON, cpcur) == FIELD_OFFSET(CURICON_OBJECT, xHotspot));
 
+BOOLEAN
+IntDestroyCurIconObject(PVOID Object);
+
+VOID FASTCALL
+IntCleanupCurIconCache(PPROCESSINFO Win32Process);
+
 #else
 
 typedef struct tagCURICON_PROCESS
@@ -62,6 +68,9 @@ typedef struct _CURICON_OBJECT
   BYTE Shadow;
   ICONINFO IconInfo;
 } CURICON_OBJECT, *PCURICON_OBJECT;
+BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi);
+BOOL FASTCALL IntDestroyCursor(HANDLE hCurIcon, BOOL bForce);
+HCURSOR FASTCALL IntSetCursor(HCURSOR hCursor);
 #endif
 
 typedef struct _CURSORACCELERATION_INFO
@@ -112,9 +121,6 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
 BOOL APIENTRY UserClipCursor(RECTL *prcl);
 PSYSTEM_CURSORINFO IntGetSysCursorInfo(VOID);
-HCURSOR FASTCALL IntSetCursor(HCURSOR hCursor);
-BOOL FASTCALL IntDestroyCursor(HANDLE hCurIcon, BOOL bForce);
-BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi);
 
 #define IntReleaseCurIconObject(CurIconObj) \
   UserDereferenceObject(CurIconObj)
