@@ -35,8 +35,11 @@ HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
 
 CMenuDeskBar::CMenuDeskBar() :
     m_Client(NULL),
+    m_ClientWindow(NULL),
+    m_IconSize(0),
     m_Banner(NULL),
-    m_Shown(FALSE)
+    m_Shown(FALSE),
+    m_ShowFlags(0)
 {
 }
 

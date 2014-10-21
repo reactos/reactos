@@ -1191,7 +1191,10 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
 
             HRESULT hr = m_menuBand->_CallCBWithItemId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo));
             if (FAILED_UNEXPECTEDLY(hr))
+            {
+                delete sminfo;
                 return hr;
+            }
 
             AddButton(info.wID, info.dwTypeData, info.hSubMenu != NULL, sminfo->iIcon, reinterpret_cast<DWORD_PTR>(sminfo), last);
 

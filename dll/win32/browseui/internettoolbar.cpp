@@ -30,6 +30,7 @@ toolbar, and address band for an explorer window
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 #define USE_CUSTOM_MENUBAND 1
+HMODULE g_hRShell = NULL;
 
 #if 1
 // TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
@@ -729,13 +730,13 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
     hResult = E_FAIL;
 #if USE_CUSTOM_MENUBAND
-    HMODULE hrs = GetModuleHandleW(L"rshell.dll");
+    if (!g_hRShell) g_hRShell = GetModuleHandleW(L"rshell.dll");
     
-    if (!hrs) hrs = LoadLibraryW(L"rshell.dll");
+    if (!g_hRShell) g_hRShell = LoadLibraryW(L"rshell.dll");
 
-    if (hrs)
+    if (g_hRShell)
     {
-        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hrs, "CMenuBand_Constructor");
+        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(g_hRShell, "CMenuBand_Constructor");
         if (func)
         {
             hResult = func(IID_PPV_ARG(IShellMenu, &menubar));

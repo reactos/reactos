@@ -897,28 +897,32 @@ HRESULT IEGetNameAndFlagsEx(LPITEMIDLIST pidl, SHGDNF uFlags, long param10,
     LPWSTR pszBuf, UINT cchBuf, SFGAOF *rgfInOut)
 {
     CComPtr<IShellFolder>                   parentFolder;
-    LPITEMIDLIST                            childPIDL;
+    LPITEMIDLIST                            childPIDL = NULL;
     STRRET                                  L108;
     HRESULT                                 hResult;
 
     hResult = SHBindToFolderIDListParent(NULL, pidl, &IID_PPV_ARG(IShellFolder, &parentFolder), &childPIDL);
     if (FAILED(hResult))
-        return hResult;
+        goto cleanup;
 
     hResult = parentFolder->GetDisplayNameOf(childPIDL, uFlags, &L108);
     if (FAILED(hResult))
-        return hResult;
+        goto cleanup;
 
     StrRetToBufW(&L108, childPIDL, pszBuf, cchBuf);
     if (rgfInOut)
     {
         hResult = parentFolder->GetAttributesOf(1, const_cast<LPCITEMIDLIST *>(&childPIDL), rgfInOut);
         if (FAILED(hResult))
-            return hResult;
+            goto cleanup;
     }
 
-    ILFree(childPIDL);
-    return S_OK;
+    hResult = S_OK;
+
+cleanup:
+    if (childPIDL)
+        ILFree(childPIDL);
+    return hResult;
 }
 
 long IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cchBuf, SFGAOF *rgfInOut)

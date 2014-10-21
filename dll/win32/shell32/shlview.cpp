@@ -59,7 +59,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static const WCHAR SV_CLASS_NAME[] = {'S', 'H', 'E', 'L', 'L', 'D', 'L', 'L', '_', 'D', 'e', 'f', 'V', 'i', 'e', 'w', 0};
 
 typedef struct
-{   BOOL    bIsAscending;
+{
+    BOOL    bIsAscending;
     INT     nHeaderID;
     INT     nLastHeaderID;
 } LISTVIEW_SORT_INFO, *LPLISTVIEW_SORT_INFO;
@@ -358,10 +359,10 @@ CDefView::CDefView() :
     m_isEditing(FALSE),
     m_hView(NULL)
 {
-    m_FolderSettings = { 0 };
-    m_sortInfo = { 0 };
-    m_ptLastMousePos = { 0 };
-    m_Category = { 0 };
+    ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
+    ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
+    ZeroMemory(&m_ptLastMousePos, sizeof(m_ptLastMousePos));
+    ZeroMemory(&m_Category, sizeof(m_Category));
 }
 
 CDefView::~CDefView()

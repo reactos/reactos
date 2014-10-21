@@ -337,7 +337,6 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         /* Initialize the added bands */
         memset(&NewBand[fBandsAllocated], 0, (NewAllocated - fBandsAllocated) * sizeof(struct BandObject));
 
-        NewBand = &fBands[fBandsAllocated];
         fBandsAllocated = NewAllocated;
         CoTaskMemFree(fBands);
         fBands = NewBand;

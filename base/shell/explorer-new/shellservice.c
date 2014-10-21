@@ -61,7 +61,7 @@ HRESULT InitShellServices(HDPA * phdpa)
     HRESULT hr = S_OK;
     int     count = 0;
 
-    hdpa = DPA_Create(5);
+    *phdpa = NULL;
 
     TRACE("Enumerating Shell Service Ojbect GUIDs...\n");
 
@@ -72,6 +72,8 @@ HRESULT InitShellServices(HDPA * phdpa)
         ERR("RegOpenKey failed.\n");
         return HRESULT_FROM_WIN32(GetLastError());
     }
+
+    hdpa = DPA_Create(5);
 
     /* Enumerate */
     do
