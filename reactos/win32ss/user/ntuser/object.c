@@ -710,14 +710,15 @@ UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
             return;
     }
 
-    oldppi->UserHandleCount--;
-    IntDereferenceProcessInfo(oldppi);
-    ppi->UserHandleCount++;
-    IntReferenceProcessInfo(ppi);
 #if DBG
     oldppi->DbgHandleCount[type]--;
     ppi->DbgHandleCount[type]++;
 #endif
+
+    oldppi->UserHandleCount--;
+    IntDereferenceProcessInfo(oldppi);
+    ppi->UserHandleCount++;
+    IntReferenceProcessInfo(ppi);
 }
 
 BOOLEAN
