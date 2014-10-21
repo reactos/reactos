@@ -21,8 +21,6 @@
 
 #include "strmbase_private.h"
 
-static const IPinVtbl InputPin_Vtbl;
-static const IPinVtbl OutputPin_Vtbl;
 static const IMemInputPinVtbl MemInputPin_Vtbl;
 
 typedef HRESULT (*SendPinFunc)( IPin *to, LPVOID arg );
@@ -545,28 +543,6 @@ HRESULT WINAPI BaseOutputPinImpl_EndFlush(IPin * iface)
     return E_UNEXPECTED;
 }
 
-static const IPinVtbl OutputPin_Vtbl =
-{
-    BaseOutputPinImpl_QueryInterface,
-    BasePinImpl_AddRef,
-    BaseOutputPinImpl_Release,
-    BaseOutputPinImpl_Connect,
-    BaseOutputPinImpl_ReceiveConnection,
-    BaseOutputPinImpl_Disconnect,
-    BasePinImpl_ConnectedTo,
-    BasePinImpl_ConnectionMediaType,
-    BasePinImpl_QueryPinInfo,
-    BasePinImpl_QueryDirection,
-    BasePinImpl_QueryId,
-    BasePinImpl_QueryAccept,
-    BasePinImpl_EnumMediaTypes,
-    BasePinImpl_QueryInternalConnections,
-    BaseOutputPinImpl_EndOfStream,
-    BaseOutputPinImpl_BeginFlush,
-    BaseOutputPinImpl_EndFlush,
-    BasePinImpl_NewSegment
-};
-
 HRESULT WINAPI BaseOutputPinImpl_GetDeliveryBuffer(BaseOutputPin *This, IMediaSample ** ppSample, REFERENCE_TIME * tStart, REFERENCE_TIME * tStop, DWORD dwFlags)
 {
     HRESULT hr;
@@ -851,11 +827,6 @@ static inline BaseInputPin *impl_BaseInputPin_from_IPin( IPin *iface )
     return CONTAINING_RECORD(iface, BaseInputPin, pin.IPin_iface);
 }
 
-static inline BaseInputPin *impl_BaseInputPin_from_BasePin( BasePin *iface )
-{
-    return CONTAINING_RECORD(iface, BaseInputPin, pin);
-}
-
 HRESULT WINAPI BaseInputPinImpl_QueryInterface(IPin * iface, REFIID riid, LPVOID * ppv)
 {
     BaseInputPin *This = impl_BaseInputPin_from_IPin(iface);
@@ -1049,28 +1020,6 @@ HRESULT WINAPI BaseInputPinImpl_NewSegment(IPin * iface, REFERENCE_TIME tStart, 
 
     return SendFurther( iface, deliver_newsegment, &args, NULL );
 }
-
-static const IPinVtbl InputPin_Vtbl =
-{
-    BaseInputPinImpl_QueryInterface,
-    BasePinImpl_AddRef,
-    BaseInputPinImpl_Release,
-    BaseInputPinImpl_Connect,
-    BaseInputPinImpl_ReceiveConnection,
-    BasePinImpl_Disconnect,
-    BasePinImpl_ConnectedTo,
-    BasePinImpl_ConnectionMediaType,
-    BasePinImpl_QueryPinInfo,
-    BasePinImpl_QueryDirection,
-    BasePinImpl_QueryId,
-    BaseInputPinImpl_QueryAccept,
-    BasePinImpl_EnumMediaTypes,
-    BasePinImpl_QueryInternalConnections,
-    BaseInputPinImpl_EndOfStream,
-    BaseInputPinImpl_BeginFlush,
-    BaseInputPinImpl_EndFlush,
-    BaseInputPinImpl_NewSegment
-};
 
 /*** IMemInputPin implementation ***/
 
