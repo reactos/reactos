@@ -200,6 +200,11 @@ Test_RtlClearBits(void)
     ok_hex(Buffer[0], 0x00001fff);
     ok_hex(Buffer[1], 0xfffffff8);
 
+    memset(Buffer, 0xff, BufferSize);
+    RtlClearBits(&BitMapHeader, 63, 1);
+    ok_hex(Buffer[0], 0xffffffff);
+    ok_hex(Buffer[1], 0x7fffffff);
+
     memset(Buffer, 0xcc, BufferSize);
     RtlClearBits(&BitMapHeader, 3, 6);
     RtlClearBits(&BitMapHeader, 11, 5);
@@ -244,6 +249,11 @@ Test_RtlSetBits(void)
     RtlSetBits(&BitMapHeader, 13, 22);
     ok_hex(Buffer[0], 0xffffe000);
     ok_hex(Buffer[1], 0x00000007);
+
+    memset(Buffer, 0x00, BufferSize);
+    RtlSetBits(&BitMapHeader, 63, 1);
+    ok_hex(Buffer[0], 0x00000000);
+    ok_hex(Buffer[1], 0x80000000);
 
     memset(Buffer, 0xcc, BufferSize);
     RtlSetBits(&BitMapHeader, 3, 6);
