@@ -272,7 +272,7 @@ kernel32 -
   reactos/dll/win32/kernel32/winnls/string/casemap.c     # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/chartype.c    # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/collation.c   # Synced in r52754
-  reactos/dll/win32/kernel32/winnls/string/format_msg.c  # Synced to Wine-1.5.4
+  reactos/dll/win32/kernel32/winnls/string/format_msg.c  # Synced to Wine-1.7.27
   reactos/dll/win32/kernel32/winnls/string/lang.c        # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/lcformat.c    # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/nls.c         # Synced in r52754
