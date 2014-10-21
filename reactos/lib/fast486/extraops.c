@@ -37,8 +37,8 @@
 FAST486_OPCODE_HANDLER_PROC
 Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 {
-    Fast486OpcodeGroup0F00,             /* 0x00 - 0x01 */
-    Fast486OpcodeGroup0F01,
+    Fast486ExtOpcodeGroup0F00,          /* 0x00 - 0x01 */
+    Fast486ExtOpcodeGroup0F01,
     Fast486ExtOpcodeLar,                /* 0x02 */
     Fast486ExtOpcodeLsl,                /* 0x03 */
     Fast486ExtOpcodeInvalid,            /* 0x04 - 0x05 */   // Invalid
@@ -222,8 +222,8 @@ Fast486ExtendedHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486ExtOpcodeMovzxByte,          /* 0xB6 - 0xB7 */
     Fast486ExtOpcodeMovzxWord,
     Fast486ExtOpcodeInvalid,            /* 0xB8 */          // Invalid
-    Fast486OpcodeGroup0FB9,             /* 0xB9 */
-    Fast486OpcodeGroup0FBA,             /* 0xBA */
+    Fast486ExtOpcodeGroup0FB9,          /* 0xB9 */
+    Fast486ExtOpcodeGroup0FBA,          /* 0xBA */
     Fast486ExtOpcodeBtc,                /* 0xBB */
     Fast486ExtOpcodeBsf,                /* 0xBC */
     Fast486ExtOpcodeBsr,                /* 0xBD */
