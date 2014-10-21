@@ -146,14 +146,20 @@ UserSetCursor(
         {
             /* Call GDI to set the new screen cursor */
 #ifdef NEW_CURSORICON
+            PCURICON_OBJECT CursorFrame = NewCursor;
+            if(NewCursor->CURSORF_flags & CURSORF_ACON)
+            {
+                FIXME("Should animate the cursor, using only the first frame now.\n");
+                CursorFrame = ((PACON)NewCursor)->aspcur[0];
+            }
             GreSetPointerShape(hdcScreen,
-                               NewCursor->hbmAlpha ? NULL : NewCursor->hbmMask,
-                               NewCursor->hbmAlpha ? NewCursor->hbmAlpha : NewCursor->hbmColor,
-                               NewCursor->xHotspot,
-                               NewCursor->yHotspot,
+                               CursorFrame->hbmAlpha ? NULL : NewCursor->hbmMask,
+                               CursorFrame->hbmAlpha ? NewCursor->hbmAlpha : NewCursor->hbmColor,
+                               CursorFrame->xHotspot,
+                               CursorFrame->yHotspot,
                                gpsi->ptCursor.x,
                                gpsi->ptCursor.y,
-                               NewCursor->hbmAlpha ? SPS_ALPHA : 0);
+                               CursorFrame->hbmAlpha ? SPS_ALPHA : 0);
 #else
             GreSetPointerShape(hdcScreen,
                                NewCursor->IconInfo.hbmMask,
