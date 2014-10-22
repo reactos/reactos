@@ -54,6 +54,7 @@ static const WCHAR szLangGroupsKeyName[] = {
     'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
 };
 
+#ifndef __REACTOS__
 /* Charset to codepage map, sorted by name. */
 static const struct charset_entry
 {
@@ -114,7 +115,7 @@ static const struct charset_entry
     { "KOI8U", 21866 },
     { "UTF8", CP_UTF8 }
 };
-
+#endif
 
 struct locale_name
 {
@@ -139,6 +140,7 @@ static LCID lcid_LC_PAPER;
 static LCID lcid_LC_MEASUREMENT;
 static LCID lcid_LC_TELEPHONE;
 
+#ifndef __REACTOS__
 /* Copy Ascii string to Unicode without using codepages */
 static inline void strcpynAtoW( WCHAR *dst, const char *src, size_t n )
 {
@@ -149,7 +151,7 @@ static inline void strcpynAtoW( WCHAR *dst, const char *src, size_t n )
     }
     if (n) *dst = 0;
 }
-
+#endif
 
 /***********************************************************************
  *		get_lcid_codepage
@@ -1976,18 +1978,6 @@ static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSiz
     }
     return bRet;
 }
-
-/* Registry keys for NLS related information */
-
-static const WCHAR szCountryListName[] = {
-	'\\','R','e','g','i','s','t','r','y','\\',
-    'M','a','c','h','i','n','e','\\','S','o','f','t','w','a','r','e','\\',
-    'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-    'T','e','l','e','p','h','o','n','y','\\',
-    'C','o','u','n','t','r','y',' ','L','i','s','t','\0'
-};
-
 
 /* Callback function ptrs for EnumSystemLanguageGroupsA/W */
 typedef struct
