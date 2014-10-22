@@ -1278,6 +1278,9 @@ BOOL WINAPI GetStringTypeW( DWORD type, LPCWSTR src, INT count, LPWORD chartype 
             if ((c>=0x0600)&&(c<=0x06FF)) type3 |= C3_KASHIDA;
             if ((c>=0x3000)&&(c<=0x303F)) type3 |= C3_SYMBOL;
 
+            if ((c>=0xD800)&&(c<=0xDBFF)) type3 |= C3_HIGHSURROGATE;
+            if ((c>=0xDC00)&&(c<=0xDFFF)) type3 |= C3_LOWSURROGATE;
+
             if ((c>=0xFF00)&&(c<=0xFF60)) type3 |= C3_FULLWIDTH;
             if ((c>=0xFF00)&&(c<=0xFF20)) type3 |= C3_SYMBOL;
             if ((c>=0xFF3B)&&(c<=0xFF40)) type3 |= C3_SYMBOL;
