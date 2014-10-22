@@ -178,4 +178,16 @@ extern NTMARTA NtMartaStatic;
 
 DWORD CheckNtMartaPresent(VOID);
 
+/* heap allocation helpers */
+static void *heap_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
+static inline void *heap_alloc( size_t len )
+{
+    return HeapAlloc( GetProcessHeap(), 0, len );
+}
+
+static inline BOOL heap_free( void *mem )
+{
+    return HeapFree( GetProcessHeap(), 0, mem );
+}
+
 #endif /* __ADVAPI32_H */
