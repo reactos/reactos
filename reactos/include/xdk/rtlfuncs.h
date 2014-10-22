@@ -3113,9 +3113,9 @@ RtlCheckBit(
 # define __assert_annotationW(msg) __annotation(L"Debug", L"AssertFail", msg)
 #else
 # define __assert_annotationA(msg) \
-    DbgPrint("Assertion %s(%d): %s", __FILE__, __LINE__, msg)
+    DbgPrint("Assertion failed at %s(%d): %s\n", __FILE__, __LINE__, msg)
 # define __assert_annotationW(msg) \
-    DbgPrint("Assertion %s(%d): %S", __FILE__, __LINE__, msg)
+    DbgPrint("Assertion failed at %s(%d): %S\n", __FILE__, __LINE__, msg)
 #endif
 
 #define NT_VERIFY(exp) \
