@@ -68,7 +68,7 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                                                    LVText,
                                                    i,
                                                    k);
-                if (_tcslen(LVText))
+                if (dwTextLength != 0)
                 {
                     WriteFile(hFile,
                               LVText,
