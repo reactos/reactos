@@ -719,7 +719,7 @@ MmPageFault(
 
 VOID
 NTAPI
-MiInitializeSpecialPool();
+MiInitializeSpecialPool(VOID);
 
 BOOLEAN
 NTAPI
