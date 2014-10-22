@@ -521,18 +521,24 @@ typedef struct _CLS
     INT cbclsExtra;
     INT cbwndExtra;
     HINSTANCE hModule;
+#ifdef NEW_CURSORICON
+    struct _CURICON_OBJECT* spicn;
+    struct _CURICON_OBJECT* spcur;
+#else
     HANDLE hIcon; /* FIXME - Use pointer! */
-    //PCURSOR spicn;
     HANDLE hCursor; /* FIXME - Use pointer! */
-    //PCURSOR spcur;
+#endif
     HBRUSH hbrBackground;
     PWSTR lpszMenuName;     // kernel use
     PSTR lpszAnsiClassName; // "
+#ifdef NEW_CURSORICON
+    struct _CURICON_OBJECT* spicnSm;
+#else
     HANDLE hIconSm; /* FIXME - Use pointer! */
-    //PCURSOR spicnSm;
 
     //// ReactOS dosn't suppot cache icons.
     HICON hIconSmIntern; /* Internal small icon, derived from hIcon */
+#endif
     ////
     UINT Unicode : 1; // !CSF_ANSIPROC
     UINT Global : 1;  // CS_GLOBALCLASS or CSF_SERVERSIDEPROC

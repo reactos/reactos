@@ -935,15 +935,15 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     /* See if we should wait before terminating the fault */
     if (Pfn1->u3.e1.ReadInProgress == 1)
     {
-    	DPRINT1("The page is currently being read!\n");
-    	ASSERT(Pfn1->u1.Event != NULL);
-    	*InPageBlock = Pfn1->u1.Event;
-    	if (PointerPte == Pfn1->PteAddress)
-    	{
-    	    DPRINT1("And this if for this particular PTE.\n");
-    	    /* The PTE will be made valid by the thread serving the fault */
-    	    return STATUS_SUCCESS; // FIXME: Maybe something more descriptive
-    	}
+        DPRINT1("The page is currently being read!\n");
+        ASSERT(Pfn1->u1.Event != NULL);
+        *InPageBlock = Pfn1->u1.Event;
+        if (PointerPte == Pfn1->PteAddress)
+        {
+            DPRINT1("And this if for this particular PTE.\n");
+            /* The PTE will be made valid by the thread serving the fault */
+            return STATUS_SUCCESS; // FIXME: Maybe something more descriptive
+        }
     }
 
     /* Windows checks there's some free pages and this isn't an in-page error */
@@ -1424,8 +1424,8 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
 
         if (InPageBlock != NULL)
         {
-        	/* The page is being paged in by another process */
-        	KeWaitForSingleObject(InPageBlock, WrPageIn, KernelMode, FALSE, NULL);
+            /* The page is being paged in by another process */
+            KeWaitForSingleObject(InPageBlock, WrPageIn, KernelMode, FALSE, NULL);
         }
 
         ASSERT(OldIrql == KeGetCurrentIrql());
@@ -1832,6 +1832,17 @@ _WARN("Session space stuff is not implemented yet!")
                              StoreInstruction,
                              (ULONG_PTR)TrapInformation,
                              1);
+            }
+
+            /* Check for no protecton at all */
+            if (TempPte.u.Soft.Protection == MM_ZERO_ACCESS)
+            {
+                /* Bugcheck the system! */
+                KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                             (ULONG_PTR)Address,
+                             StoreInstruction,
+                             (ULONG_PTR)TrapInformation,
+                             0);
             }
         }
 

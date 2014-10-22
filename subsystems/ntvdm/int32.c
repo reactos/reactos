@@ -49,8 +49,7 @@ static BYTE Int16To32[] =
 
     0xFB,               // sti
 
-    // HACK: The following instruction should be HLT!
-    0x90,               // nop
+    0xF4,               // hlt
 
     0xEB, 0xF5,         // jmp BOP_SEQ (offset -11)
 

@@ -285,7 +285,7 @@ static void format_add_char(struct _format_message_data *fmd, WCHAR c)
             LPWSTR notspace;
             if (fmd->space) {
                 notspace = fmd->space;
-                while (*notspace == ' ' && notspace != fmd->t)
+                while (notspace != fmd->t && *notspace == ' ')
                     notspace++;
             } else
                 notspace = fmd->space = fmd->t;

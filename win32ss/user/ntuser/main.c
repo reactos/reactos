@@ -238,6 +238,11 @@ DestroyProcessInfo(PEPROCESS Process)
         ppiCurrent->hdeskStartup = NULL;
     }
 
+#ifdef NEW_CURSORICON
+    /* Clean up the process icon cache */
+    IntCleanupCurIconCache(ppiCurrent);
+#endif
+
     /* The process is dying */
     PsSetProcessWin32Process(Process, NULL, ppiCurrent);
     ppiCurrent->peProcess = NULL;

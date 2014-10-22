@@ -110,7 +110,7 @@ public:
 				UINT cFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
 
 				for(UINT i=0; i<cFiles; ++i) {
-					DragQueryFile(hDrop, i, szFileName, sizeof(szFileName));
+					DragQueryFile(hDrop, i, szFileName, sizeof(szFileName) / sizeof(szFileName[0]));
 
 					if (DROPEFFECT_COPY & *pdwEffect) {
 						 // copy the file or dir

@@ -1374,6 +1374,22 @@ Language=English
 DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS
 .
 
+MessageId=0xCC
+Severity=Success
+Facility=System
+SymbolicName=PAGE_FAULT_IN_FREED_SPECIAL_POOL
+Language=English
+PAGE_FAULT_IN_FREED_SPECIAL_POOL
+.
+
+MessageId=0xCD
+Severity=Success
+Facility=System
+SymbolicName=PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+Language=English
+PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+.
+
 MessageId=0xCE
 Severity=Success
 Facility=System
@@ -1404,6 +1420,22 @@ Facility=System
 SymbolicName=DRIVER_PORTION_MUST_BE_NONPAGED
 Language=English
 The driver mistakenly marked a part of its image pageable instead of non-pageable.
+.
+
+MessageId=0xD5
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL
+Language=English
+DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL
+.
+
+MessageId=0xD6
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION
+Language=English
+DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION
 .
 
 MessageId=0xD7

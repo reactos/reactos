@@ -693,10 +693,6 @@ CdfsSwapString(PWCHAR Out,
 #endif
 
 VOID
-NtfsDateTimeToFileTime(ULONGLONG NtfsTime,
-                       PLARGE_INTEGER SystemTime);
-
-VOID
 NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
                           PULONG FileAttributes);
 

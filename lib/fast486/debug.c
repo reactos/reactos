@@ -137,7 +137,7 @@ Fast486DumpState(PFAST486_STATE State)
 {
     DbgPrint("\nFast486DumpState -->\n");
     DbgPrint("\nCPU currently executing in %s mode at %04X:%08X\n",
-            (State->ControlRegisters[0] & FAST486_CR0_PE) ? "protected" : "real",
+            (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) ? "protected" : "real",
              State->SegmentRegs[FAST486_REG_CS].Selector,
              State->InstPtr.Long);
     DbgPrint("\nGeneral purpose registers:\n"

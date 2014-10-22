@@ -187,19 +187,16 @@ GetServices ( void )
                             return;
                         }
                     }
-                    if (pServiceFailureActions->cActions)
-                    {
-                        if (pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
-                        {
-                            LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
-                            item.pszText = szStatus;
-                            item.iSubItem = 1;
-                            SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                        }
-                    }
 
                     if (pServiceFailureActions != NULL)
                     {
+                        if (pServiceFailureActions->cActions && pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
+                        {
+                                LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
+                                item.pszText = szStatus;
+                                item.iSubItem = 1;
+                                SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                        }
                         HeapFree(GetProcessHeap(), 0, pServiceFailureActions);
                         pServiceFailureActions = NULL;
                     }

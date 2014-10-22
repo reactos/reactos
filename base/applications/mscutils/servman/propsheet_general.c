@@ -33,7 +33,6 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
     {
         hButton = GetDlgItem(hwndDlg, IDC_START);
         EnableWindow (hButton, TRUE);
-        HeapFree(GetProcessHeap(), 0, lpServiceConfig);
     }
     else if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
     {
@@ -45,6 +44,9 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
     }
+
+    if(lpServiceConfig)
+        HeapFree(GetProcessHeap(), 0, lpServiceConfig);
 
     hButton = GetDlgItem(hwndDlg, IDC_START_PARAM);
     EnableWindow(hButton, (State == SERVICE_STOPPED));

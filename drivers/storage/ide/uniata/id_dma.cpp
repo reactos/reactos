@@ -587,10 +587,8 @@ AtapiDmaStart(
     case ATA_PROMISE_ID:
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
+
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) |
-                          (Channel ? 0x08 : 0x02));
                 AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       ((Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? 0x05000000 : 0x06000000) | (Srb->DataTransferLength >> 1)
                       );
@@ -659,10 +657,12 @@ AtapiDmaDone(
     case ATA_PROMISE_ID:
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
+/*
+            AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                  AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                      ~(Channel ? 0x08 : 0x02));
+*/
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
-                          ~(Channel ? 0x08 : 0x02));
                 AtapiWritePortEx4(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       0
                       );
@@ -1555,10 +1555,13 @@ set_new_acard:
 
         return;
         break; }
-    case ATA_PROMISE_ID:
+    case ATA_PROMISE_ID: {
         /***********/
         /* Promise */
         /***********/
+
+	UCHAR sel66 = Channel ? 0x08: 0x02;
+
         if(ChipType < PRTX) {
             if (isAtapi) {
                 udmamode =
@@ -1566,12 +1569,29 @@ set_new_acard:
             }
         }
         for(i=udmamode; i>=0; i--) {
+
+            if(ChipType == PRNEW) {
+              if(i>2) {
+                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) |
+                          sel66);
+              } else {
+                AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                          ~sel66);
+              }
+            }
+
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
                 promise_timing(deviceExtension, dev, (UCHAR)(ATA_UDMA + i));       // ???
                 return;
             }
         }
-
+        if(ChipType == PRNEW) {
+          AtapiWritePortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+              AtapiReadPortEx1(chan, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                  ~sel66);
+        }
         for(i=wdmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
                 promise_timing(deviceExtension, dev, (UCHAR)(ATA_WDMA0+i));
@@ -1587,7 +1607,7 @@ set_new_acard:
         AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
         promise_timing(deviceExtension, dev, ATA_PIO0 + apiomode);
         return;
-        break;
+        break; }
     case ATA_ATI_ID:
 
         KdPrint2((PRINT_PREFIX "ATI\n"));

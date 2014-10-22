@@ -24,7 +24,9 @@ cmdAccounts(
     ULONG value;
     INT i;
     BOOL Modified = FALSE;
-//    BOOL Domain = FALSE;
+#if 0
+    BOOL Domain = FALSE;
+#endif
     NET_API_STATUS Status;
     INT result = 0;
 
@@ -44,12 +46,13 @@ cmdAccounts(
             return 0;
         }
 
-/*
         if (_wcsicmp(argv[i], L"/domain") == 0)
         {
+            printf("The /DOMAIN option is not supported yet!\n");
+#if 0
             Domain = TRUE;
+#endif
         }
-*/
     }
 
     Status = NetUserModalsGet(NULL, 0, (LPBYTE*)&Info0);

@@ -18,7 +18,9 @@ BEGIN
     IDS_GROUP_HELP "GROUP\n..."
     IDS_HELPMSG_SYNTAX "Usage:\nNET HELPMSG <Error Code>"
     IDS_HELPMSG_HELP "HELPMSG\n..."
-    IDS_LOCALGROUP_SYNTAX "Usage:\nNET LOCALGROUP ..."
+    IDS_LOCALGROUP_SYNTAX "Usage:\nNET LOCALGROUP [groupname [/COMMENT:""text""]] [/DOMAIN]\n\
+               groupname {/ADD [/COMMENT:""text""] | /DELETE} [/DOMAIN]\n\
+               groupname name [...] {/ADD | /DELETE} [/DOMAIN]"
     IDS_LOCALGROUP_HELP "LOCALGROUP\n..."
     IDS_NAME_SYNTAX "Usage:\nNET NAME ..."
     IDS_NAME_HELP "NAME\n..."

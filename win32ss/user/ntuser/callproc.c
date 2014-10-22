@@ -7,6 +7,7 @@
  */
 
 #include <win32k.h>
+DBG_DEFAULT_CHANNEL(UserClass);
 
 /* CALLPROC ******************************************************************/
 
@@ -110,6 +111,7 @@ UserGetCPD(
 {
    PCLS pCls;
    PWND pWnd;
+   PDESKTOP pDesk;
    PCALLPROCDATA CallProc = NULL;
    PTHREADINFO pti;
 
@@ -131,7 +133,14 @@ UserGetCPD(
    // No luck, create a new one for the requested proc.
    if (!CallProc)
    {
-      CallProc = CreateCallProc( pCls->rpdeskParent,
+      if (!pCls->rpdeskParent)
+      {
+         TRACE("Null DESKTOP Atom %d\n",pCls->atomClassName);
+         pDesk = pti->rpdesk;
+      }
+      else
+         pDesk = pCls->rpdeskParent;
+      CallProc = CreateCallProc( pDesk,
                                  (WNDPROC)ProcIn,
                                  !!(Flags & UserGetCPDA2U),
                                  pti->ppi);

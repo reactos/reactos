@@ -2083,7 +2083,7 @@ ftGdiGetGlyphOutline(
                 src += ft_face->glyph->bitmap.pitch;
                 dst += pitch;
             }
-            return needed;
+            break;
         }
         case ft_glyph_format_outline:
         {
@@ -2113,22 +2113,24 @@ ftGdiGetGlyphOutline(
             {
                 return GDI_ERROR;
             }
+
+            start = pvBuf;
+            for (row = 0; row < height; row++)
+            {
+                ptr = start;
+                for (col = 0; col < width; col++, ptr++)
+                {
+                    *ptr = (((int)*ptr) * mult + 128) / 256;
+                }
+                start += pitch;
+            }
+
+            break;
         }
         default:
             DPRINT1("Loaded glyph format %x\n", ft_face->glyph->format);
             return GDI_ERROR;
         }
-        start = pvBuf;
-        for (row = 0; row < height; row++)
-        {
-            ptr = start;
-            for (col = 0; col < width; col++, ptr++)
-            {
-                *ptr = (((int)*ptr) * mult + 128) / 256;
-            }
-            start += pitch;
-        }
-        break;
     }
 
     case GGO_NATIVE:

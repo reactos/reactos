@@ -204,10 +204,13 @@ void UpdateColumnDataHints(void)
     HDITEM        hditem;
     WCHAR         text[260];
     ULONG         Index;
+    ULONG         uItems;
     WCHAR         szTemp[256];
-    unsigned int  i;
+    UINT          i;
 
-    for (Index=0; Index<(ULONG)SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0); Index++)
+    uItems = min(SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0), COLUMN_NMAX);
+
+    for (Index=0; Index<uItems; Index++)
     {
         memset(&hditem, 0, sizeof(HDITEM));
 

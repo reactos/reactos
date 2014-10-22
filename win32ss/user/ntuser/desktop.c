@@ -662,9 +662,15 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
           {
               return TRUE;
           }
+#ifdef NEW_CURSORICON
+          pcurNew->CURSORF_flags |= CURSORF_CURRENT;
+#endif
           pcurOld = UserSetCursor(pcurNew, FALSE);
           if (pcurOld)
           {
+#ifdef NEW_CURSORICON
+               pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
+#endif
                UserDereferenceObject(pcurOld);
           }
           return TRUE;
@@ -806,12 +812,17 @@ HWND* FASTCALL
 UserBuildShellHookHwndList(PDESKTOP Desktop)
 {
    ULONG entries=0;
+   PLIST_ENTRY ListEntry;
    PSHELL_HOOK_WINDOW Current;
    HWND* list;
 
    /* FIXME: If we save nb elements in desktop, we dont have to loop to find nb entries */
-   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+   ListEntry = Desktop->ShellHookWindows.Flink;
+   while (ListEntry != &Desktop->ShellHookWindows)
+   {
+      ListEntry = ListEntry->Flink;
       entries++;
+   }
 
    if (!entries) return NULL;
 
@@ -820,8 +831,13 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
    {
       HWND* cursor = list;
 
-      LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+      ListEntry = Desktop->ShellHookWindows.Flink;
+      while (ListEntry != &Desktop->ShellHookWindows)
+      {
+         Current = CONTAINING_RECORD(ListEntry, SHELL_HOOK_WINDOW, ListEntry);
+         ListEntry = ListEntry->Flink;
          *cursor++ = Current->hWnd;
+      }
 
       *cursor = NULL; /* Nullterm list */
    }
@@ -930,10 +946,14 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    PDESKTOP Desktop = pti->rpdesk;
+   PLIST_ENTRY ListEntry;
    PSHELL_HOOK_WINDOW Current;
 
-   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+   ListEntry = Desktop->ShellHookWindows.Flink;
+   while (ListEntry != &Desktop->ShellHookWindows)
    {
+      Current = CONTAINING_RECORD(ListEntry, SHELL_HOOK_WINDOW, ListEntry);
+      ListEntry = ListEntry->Flink;
       if (Current->hWnd == hWnd)
       {
          RemoveEntryList(&Current->ListEntry);

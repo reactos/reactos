@@ -59,7 +59,7 @@ IntCopyRegistryKey(
             if (InfoBuffer == NULL)
             {
                 ERR_(VIDEOPRT, "Could not allocate buffer for key info\n");
-                return Status;
+                return STATUS_INSUFFICIENT_RESOURCES;
             }
         }
 

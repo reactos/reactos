@@ -719,7 +719,7 @@ MmPageFault(
 
 VOID
 NTAPI
-MiInitializeSpecialPool();
+MiInitializeSpecialPool(VOID);
 
 BOOLEAN
 NTAPI
@@ -730,6 +730,11 @@ MmUseSpecialPool(
 BOOLEAN
 NTAPI
 MmIsSpecialPoolAddress(
+    IN PVOID P);
+
+BOOLEAN
+NTAPI
+MmIsSpecialPoolAddressFree(
     IN PVOID P);
 
 PVOID

@@ -736,12 +736,12 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
     }
 
     SecurityContext = &AccessState->SubjectSecurityContext;
-    SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+    SeLockSubjectContext(SecurityContext);
 
-    Status = SeAssignSecurity(0,
+    Status = SeAssignSecurity(NULL,
                               AccessState->SecurityDescriptor,
                               &SecurityDescriptor,
-                              0,
+                              FALSE,
                               SecurityContext,
                               IoGetFileObjectGenericMapping(),
                               PagedPool);
@@ -756,7 +756,7 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
     Status = ObLogSecurityDescriptor(SecurityDescriptor,
                                      &CachedSecurityDescriptor,
                                      1);
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, 0);
 
     if (!NT_SUCCESS(Status))
     {

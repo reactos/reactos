@@ -54,9 +54,9 @@ Fast486ExecutionControl(PFAST486_STATE State, FAST486_EXEC_CMD Command)
     /* Main execution loop */
     do
     {
-NextInst:
         if (!State->Halted)
         {
+NextInst:
             /* Check if this is a new instruction */
             if (State->PrefixFlags == 0) State->SavedInstPtr = State->InstPtr;
 

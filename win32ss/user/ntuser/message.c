@@ -2882,6 +2882,13 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
 
     TRACE("WFII: ppi %p\n", W32Process);
     TRACE("WFII: waiting for %p\n", Handles[1] );
+
+    /*
+     * We must add a refcount to our current PROCESSINFO,
+     * because anything could happen (including process death) we're leaving win32k
+     */
+    IntReferenceProcessInfo(W32Process);
+
     do
     {
         UserLeave();
@@ -2935,6 +2942,7 @@ WaitExit:
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
     W32Process->W32PF_flags &= ~W32PF_WAITFORINPUTIDLE;
+    IntDereferenceProcessInfo(W32Process);
     ObDereferenceObject(Process);
     UserLeave();
     return Status;
