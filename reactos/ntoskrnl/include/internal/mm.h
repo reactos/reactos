@@ -732,6 +732,11 @@ NTAPI
 MmIsSpecialPoolAddress(
     IN PVOID P);
 
+BOOLEAN
+NTAPI
+MmIsSpecialPoolAddressFree(
+    IN PVOID P);
+
 PVOID
 NTAPI
 MmAllocateSpecialPool(

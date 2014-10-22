@@ -85,6 +85,26 @@ MmIsSpecialPoolAddress(PVOID P)
             (P <= MmSpecialPoolEnd));
 }
 
+BOOLEAN
+NTAPI
+MmIsSpecialPoolAddressFree(PVOID P)
+{
+    PMMPTE PointerPte;
+
+    ASSERT(MmIsSpecialPoolAddress(P));
+    PointerPte = MiAddressToPte(P);
+
+    if (PointerPte->u.Soft.PageFileHigh == SPECIAL_POOL_PAGED_PTE ||
+        PointerPte->u.Soft.PageFileHigh == SPECIAL_POOL_NONPAGED_PTE)
+    {
+        /* Guard page PTE */
+        return FALSE;
+    }
+
+    /* Free PTE */
+    return TRUE;
+}
+
 VOID
 NTAPI
 MiInitializeSpecialPool(VOID)
