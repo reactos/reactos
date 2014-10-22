@@ -97,7 +97,11 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                 if (Data == NULL)
                     break;
 
-                RegEnumKeyEx(hKey, Index, szValueName, &dwValueLength, NULL, NULL, NULL, NULL);
+                if(RegEnumKeyEx(hKey, Index, szValueName, &dwValueLength, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+                {
+                    HeapFree(GetProcessHeap(), 0, Data);
+                    continue;
+                }
                 _stprintf(szSubPath, _T("%s\\%s"), szBasePath, szValueName);
                 memset(&item, 0, sizeof(LV_ITEM));
                 item.mask = LVIF_TEXT;
