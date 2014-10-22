@@ -932,13 +932,18 @@ InitializePool(IN POOL_TYPE PoolType,
         }
 
         //
-        // Finally, add one entry, compute the hash, and zero the table
+        // Add one entry, compute the hash, and zero the table
         //
         PoolTrackTableSize++;
         PoolTrackTableMask = PoolTrackTableSize - 2;
 
         RtlZeroMemory(PoolTrackTable,
                       PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
+
+        //
+        // Finally, add the most used tags to speed up those allocations
+        //
+        ExpSeedHotTags();
 
         //
         // We now do the exact same thing with the tracker table for big pages
