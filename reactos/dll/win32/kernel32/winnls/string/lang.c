@@ -2272,420 +2272,6 @@ static BOOL NLS_EnumLanguageGroupLocales(ENUMLANGUAGEGROUPLOCALE_CALLBACKS *lpPr
     return TRUE;
 }
 
-/******************************************************************************
- *           EnumLanguageGroupLocalesA    (KERNEL32.@)
- *
- * Call a users function for every locale in a language group available on the system.
- *
- * PARAMS
- *  pLangGrpLcEnumProc [I] Callback function to call for each locale
- *  lgrpid             [I] Language group (LGRPID_ values from "winnls.h")
- *  dwFlags            [I] Reserved, set to 0
- *  lParam             [I] User parameter to pass to pLangGrpLcEnumProc
- *
- * RETURNS
- *  Success: TRUE.
- *  Failure: FALSE. Use GetLastError() to determine the cause.
- */
-BOOL WINAPI EnumLanguageGroupLocalesA(LANGGROUPLOCALE_ENUMPROCA pLangGrpLcEnumProc,
-                                      LGRPID lgrpid, DWORD dwFlags, LONG_PTR lParam)
-{
-    ENUMLANGUAGEGROUPLOCALE_CALLBACKS callbacks;
-
-    TRACE("(%p,0x%08X,0x%08X,0x%08lX)\n", pLangGrpLcEnumProc, lgrpid, dwFlags, lParam);
-
-    callbacks.procA   = pLangGrpLcEnumProc;
-    callbacks.procW   = NULL;
-    callbacks.dwFlags = dwFlags;
-    callbacks.lgrpid  = lgrpid;
-    callbacks.lParam  = lParam;
-
-    return NLS_EnumLanguageGroupLocales( pLangGrpLcEnumProc ? &callbacks : NULL );
-}
-
-/******************************************************************************
- *           EnumLanguageGroupLocalesW    (KERNEL32.@)
- *
- * See EnumLanguageGroupLocalesA.
- */
-BOOL WINAPI EnumLanguageGroupLocalesW(LANGGROUPLOCALE_ENUMPROCW pLangGrpLcEnumProc,
-                                      LGRPID lgrpid, DWORD dwFlags, LONG_PTR lParam)
-{
-    ENUMLANGUAGEGROUPLOCALE_CALLBACKS callbacks;
-
-    TRACE("(%p,0x%08X,0x%08X,0x%08lX)\n", pLangGrpLcEnumProc, lgrpid, dwFlags, lParam);
-
-    callbacks.procA   = NULL;
-    callbacks.procW   = pLangGrpLcEnumProc;
-    callbacks.dwFlags = dwFlags;
-    callbacks.lgrpid  = lgrpid;
-    callbacks.lParam  = lParam;
-
-    return NLS_EnumLanguageGroupLocales( pLangGrpLcEnumProc ? &callbacks : NULL );
-}
-
-/* Callback function ptrs for EnumSystemCodePagesA/W */
-typedef struct
-{
-  CODEPAGE_ENUMPROCA procA;
-  CODEPAGE_ENUMPROCW procW;
-  DWORD    dwFlags;
-} ENUMSYSTEMCODEPAGES_CALLBACKS;
-
-/* Internal implementation of EnumSystemCodePagesA/W */
-static BOOL NLS_EnumSystemCodePages(ENUMSYSTEMCODEPAGES_CALLBACKS *lpProcs)
-{
-    WCHAR szNumber[5 + 1], szValue[MAX_PATH];
-    HANDLE hKey;
-    BOOL bContinue = TRUE;
-    ULONG ulIndex = 0;
-
-    if (!lpProcs)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    switch (lpProcs->dwFlags)
-    {
-        case CP_INSTALLED:
-        case CP_SUPPORTED:
-            break;
-        default:
-            SetLastError(ERROR_INVALID_FLAGS);
-            return FALSE;
-    }
-
-    hKey = NLS_RegOpenKey(0, L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
-    if (!hKey)
-    {
-        WARN("NLS_RegOpenKey() failed\n");
-        return FALSE;
-    }
-
-    while (bContinue)
-    {
-        if (NLS_RegEnumValue(hKey, ulIndex, szNumber, sizeof(szNumber),
-                             szValue, sizeof(szValue)))
-        {
-            if ((lpProcs->dwFlags == CP_SUPPORTED)||
-                ((lpProcs->dwFlags == CP_INSTALLED)&&(wcslen(szValue) > 2)))
-            {
-                if (lpProcs->procW)
-                {
-                    bContinue = lpProcs->procW(szNumber);
-                }
-                else
-                {
-                    char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
-
-                    WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
-                    bContinue = lpProcs->procA(szNumberA);
-                }
-            }
-
-            ulIndex++;
-
-        } else bContinue = FALSE;
-
-        if (!bContinue)
-            break;
-    }
-
-    if (hKey)
-        NtClose(hKey);
-
-    return TRUE;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-EnumSystemCodePagesW (
-    CODEPAGE_ENUMPROCW  lpCodePageEnumProc,
-    DWORD               dwFlags
-    )
-{
-    ENUMSYSTEMCODEPAGES_CALLBACKS procs;
-
-    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
-
-    procs.procA = NULL;
-    procs.procW = lpCodePageEnumProc;
-    procs.dwFlags = dwFlags;
-
-    return NLS_EnumSystemCodePages(lpCodePageEnumProc ? &procs : NULL);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-EnumSystemCodePagesA (
-    CODEPAGE_ENUMPROCA lpCodePageEnumProc,
-    DWORD              dwFlags
-    )
-{
-    ENUMSYSTEMCODEPAGES_CALLBACKS procs;
-
-    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
-
-    procs.procA = lpCodePageEnumProc;
-    procs.procW = NULL;
-    procs.dwFlags = dwFlags;
-
-    return NLS_EnumSystemCodePages(lpCodePageEnumProc ? &procs : NULL);
-}
-/******************************************************************************
- *           EnumSystemGeoID    (KERNEL32.@)
- *
- * Call a users function for every location available on the system.
- *
- * PARAMS
- *  geoclass     [I] Type of information desired (SYSGEOTYPE enum from "winnls.h")
- *  reserved     [I] Reserved, set to 0
- *  pGeoEnumProc [I] Callback function to call for each location
- *
- * RETURNS
- *  Success: TRUE.
- *  Failure: FALSE. Use GetLastError() to determine the cause.
- */
-BOOL WINAPI EnumSystemGeoID(GEOCLASS geoclass, GEOID reserved, GEO_ENUMPROC pGeoEnumProc)
-{
-    static const WCHAR szCountryCodeValueName[] = {
-      'C','o','u','n','t','r','y','C','o','d','e','\0'
-    };
-    WCHAR szNumber[10];
-    HANDLE hKey;
-    ULONG ulIndex = 0;
-
-    TRACE("(0x%08X,0x%08X,%p)\n", geoclass, reserved, pGeoEnumProc);
-
-    if (geoclass != GEOCLASS_NATION || reserved || !pGeoEnumProc)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    hKey = NLS_RegOpenKey( 0, szCountryListName );
-
-    while (NLS_RegEnumSubKey( hKey, ulIndex, szNumber, sizeof(szNumber) ))
-    {
-        BOOL bContinue = TRUE;
-        DWORD dwGeoId;
-        HANDLE hSubKey = NLS_RegOpenKey( hKey, szNumber );
-
-        if (hSubKey)
-        {
-            if (NLS_RegGetDword( hSubKey, szCountryCodeValueName, &dwGeoId ))
-            {
-                TRACE("Got geoid %d\n", dwGeoId);
-
-                if (!pGeoEnumProc( dwGeoId ))
-                    bContinue = FALSE;
-            }
-
-            NtClose( hSubKey );
-        }
-
-        if (!bContinue)
-            break;
-
-        ulIndex++;
-    }
-
-    if (hKey)
-        NtClose( hKey );
-
-    return TRUE;
-}
-
-/******************************************************************************
- *           InvalidateNLSCache           (KERNEL32.@)
- *
- * Invalidate the cache of NLS values.
- *
- * PARAMS
- *  None.
- *
- * RETURNS
- *  Success: TRUE.
- *  Failure: FALSE.
- */
-BOOL WINAPI InvalidateNLSCache(void)
-{
-  FIXME("() stub\n");
-  return FALSE;
-}
-
-/******************************************************************************
- *           GetUserGeoID (KERNEL32.@)
- */
-GEOID WINAPI GetUserGeoID( GEOCLASS GeoClass )
-{
-    GEOID ret = GEOID_NOT_AVAILABLE;
-    static const WCHAR geoW[] = {'G','e','o',0};
-    static const WCHAR nationW[] = {'N','a','t','i','o','n',0};
-    WCHAR bufferW[40], *end;
-    DWORD count;
-    HANDLE hkey, hSubkey = 0;
-    UNICODE_STRING keyW;
-    const KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)bufferW;
-    RtlInitUnicodeString( &keyW, nationW );
-    count = sizeof(bufferW);
-
-    if(!(hkey = create_registry_key())) return ret;
-
-    switch( GeoClass ){
-    case GEOCLASS_NATION:
-        if ((hSubkey = NLS_RegOpenKey(hkey, geoW)))
-        {
-            if((NtQueryValueKey(hSubkey, &keyW, KeyValuePartialInformation,
-                                bufferW, count, &count) == STATUS_SUCCESS ) && info->DataLength)
-                ret = strtolW((LPCWSTR)info->Data, &end, 10);
-        }
-        break;
-    case GEOCLASS_REGION:
-        FIXME("GEOCLASS_REGION not handled yet\n");
-        break;
-    }
-
-    NtClose(hkey);
-    if (hSubkey) NtClose(hSubkey);
-    return ret;
-}
-
-/******************************************************************************
- *           SetUserGeoID (KERNEL32.@)
- */
-BOOL WINAPI SetUserGeoID( GEOID GeoID )
-{
-    static const WCHAR geoW[] = {'G','e','o',0};
-    static const WCHAR nationW[] = {'N','a','t','i','o','n',0};
-    static const WCHAR formatW[] = {'%','i',0};
-    UNICODE_STRING nameW,keyW;
-    WCHAR bufferW[10];
-    OBJECT_ATTRIBUTES attr;
-    HANDLE hkey;
-
-    if(!(hkey = create_registry_key())) return FALSE;
-
-    attr.Length = sizeof(attr);
-    attr.RootDirectory = hkey;
-    attr.ObjectName = &nameW;
-    attr.Attributes = 0;
-    attr.SecurityDescriptor = NULL;
-    attr.SecurityQualityOfService = NULL;
-    RtlInitUnicodeString( &nameW, geoW );
-    RtlInitUnicodeString( &keyW, nationW );
-
-    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS)
-
-    {
-        NtClose(attr.RootDirectory);
-        return FALSE;
-    }
-
-    sprintfW(bufferW, formatW, GeoID);
-    NtSetValueKey(hkey, &keyW, 0, REG_SZ, bufferW, (strlenW(bufferW) + 1) * sizeof(WCHAR));
-    NtClose(attr.RootDirectory);
-    NtClose(hkey);
-    return TRUE;
-}
-
-typedef struct
-{
-    union
-    {
-        UILANGUAGE_ENUMPROCA procA;
-        UILANGUAGE_ENUMPROCW procW;
-    } u;
-    DWORD flags;
-    LONG_PTR param;
-} ENUM_UILANG_CALLBACK;
-
-static BOOL CALLBACK enum_uilang_proc_a( HMODULE hModule, LPCSTR type,
-                                         LPCSTR name, WORD LangID, LONG_PTR lParam )
-{
-    ENUM_UILANG_CALLBACK *enum_uilang = (ENUM_UILANG_CALLBACK *)lParam;
-    char buf[20];
-
-    sprintf(buf, "%08x", (UINT)LangID);
-    return enum_uilang->u.procA( buf, enum_uilang->param );
-}
-
-static BOOL CALLBACK enum_uilang_proc_w( HMODULE hModule, LPCWSTR type,
-                                         LPCWSTR name, WORD LangID, LONG_PTR lParam )
-{
-    static const WCHAR formatW[] = {'%','0','8','x',0};
-    ENUM_UILANG_CALLBACK *enum_uilang = (ENUM_UILANG_CALLBACK *)lParam;
-    WCHAR buf[20];
-
-    sprintfW( buf, formatW, (UINT)LangID );
-    return enum_uilang->u.procW( buf, enum_uilang->param );
-}
-
-/******************************************************************************
- *           EnumUILanguagesA (KERNEL32.@)
- */
-BOOL WINAPI EnumUILanguagesA(UILANGUAGE_ENUMPROCA pUILangEnumProc, DWORD dwFlags, LONG_PTR lParam)
-{
-    ENUM_UILANG_CALLBACK enum_uilang;
-
-    TRACE("%p, %x, %lx\n", pUILangEnumProc, dwFlags, lParam);
-
-    if(!pUILangEnumProc) {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
-    }
-    if(dwFlags) {
-	SetLastError(ERROR_INVALID_FLAGS);
-	return FALSE;
-    }
-
-    enum_uilang.u.procA = pUILangEnumProc;
-    enum_uilang.flags = dwFlags;
-    enum_uilang.param = lParam;
-
-    EnumResourceLanguagesA( kernel32_handle, (LPCSTR)RT_STRING,
-                            (LPCSTR)LOCALE_ILANGUAGE, enum_uilang_proc_a,
-                            (LONG_PTR)&enum_uilang);
-    return TRUE;
-}
-
-/******************************************************************************
- *           EnumUILanguagesW (KERNEL32.@)
- */
-BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags, LONG_PTR lParam)
-{
-    ENUM_UILANG_CALLBACK enum_uilang;
-
-    TRACE("%p, %x, %lx\n", pUILangEnumProc, dwFlags, lParam);
-
-
-    if(!pUILangEnumProc) {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
-    }
-    if(dwFlags) {
-	SetLastError(ERROR_INVALID_FLAGS);
-	return FALSE;
-    }
-
-    enum_uilang.u.procW = pUILangEnumProc;
-    enum_uilang.flags = dwFlags;
-    enum_uilang.param = lParam;
-
-    EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING,
-                            (LPCWSTR)LOCALE_ILANGUAGE, enum_uilang_proc_w,
-                            (LONG_PTR)&enum_uilang);
-    return TRUE;
-}
-
 enum locationkind {
     LOCATION_NATION = 0,
     LOCATION_REGION,
@@ -2700,82 +2286,6 @@ struct geoinfo_t {
     INT   uncode;
     enum locationkind kind;
 };
-
-static int
-NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
-{
-    HANDLE hKey;
-    WCHAR szPath[MAX_PATH];
-    UNICODE_STRING ValueName;
-    KEY_VALUE_PARTIAL_INFORMATION *info;
-    const int info_size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
-    DWORD dwSize;
-    NTSTATUS Status;
-    int Ret;
-
-    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%lu", Location);
-
-    hKey = NLS_RegOpenKey(0, szPath);
-    if (!hKey)
-    {
-        WARN("NLS_RegOpenKey() failed\n");
-        return 0;
-    }
-
-    dwSize = info_size + cchData * sizeof(WCHAR);
-
-    if (!(info = HeapAlloc(GetProcessHeap(), 0, dwSize)))
-    {
-        NtClose(hKey);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
-    }
-
-    RtlInitUnicodeString(&ValueName, L"Name");
-
-    Status = NtQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
-                             (LPBYTE)info, dwSize, &dwSize);
-
-    if (!Status)
-    {
-        Ret = (dwSize - info_size) / sizeof(WCHAR);
-
-        if (!Ret || ((WCHAR *)info->Data)[Ret-1])
-        {
-            if (Ret < cchData || !szFriendlyName) Ret++;
-            else
-            {
-                WARN("ERROR_INSUFFICIENT_BUFFER\n");
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                Ret = 0;
-            }
-        }
-
-        if (Ret && szFriendlyName)
-        {
-            memcpy(szFriendlyName, info->Data, (Ret-1) * sizeof(WCHAR));
-            szFriendlyName[Ret-1] = 0;
-        }
-    }
-    else if (Status == STATUS_BUFFER_OVERFLOW && !szFriendlyName)
-    {
-        Ret = (dwSize - info_size) / sizeof(WCHAR) + 1;
-    }
-    else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-        Ret = -1;
-    }
-    else
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        Ret = 0;
-    }
-
-    NtClose(hKey);
-    HeapFree(GetProcessHeap(), 0, info);
-
-    return Ret;
-}
 
 static const struct geoinfo_t geoinfodata[] = {
     { 2, {'A','G',0}, {'A','T','G',0}, 10039880,  28 }, /* Antigua and Barbuda */
@@ -3078,6 +2588,482 @@ static const struct geoinfo_t geoinfodata[] = {
     { 161832256, {'U','M',0}, {'U','M','I',0}, 27114, 581 }, /* U.S. Minor Outlying Islands */
     { 161832257, {'X','X',0}, {'X','X',0}, 10026358, 0, LOCATION_REGION }, /* Latin America and the Caribbean */
 };
+
+/******************************************************************************
+ *           EnumLanguageGroupLocalesA    (KERNEL32.@)
+ *
+ * Call a users function for every locale in a language group available on the system.
+ *
+ * PARAMS
+ *  pLangGrpLcEnumProc [I] Callback function to call for each locale
+ *  lgrpid             [I] Language group (LGRPID_ values from "winnls.h")
+ *  dwFlags            [I] Reserved, set to 0
+ *  lParam             [I] User parameter to pass to pLangGrpLcEnumProc
+ *
+ * RETURNS
+ *  Success: TRUE.
+ *  Failure: FALSE. Use GetLastError() to determine the cause.
+ */
+BOOL WINAPI EnumLanguageGroupLocalesA(LANGGROUPLOCALE_ENUMPROCA pLangGrpLcEnumProc,
+                                      LGRPID lgrpid, DWORD dwFlags, LONG_PTR lParam)
+{
+    ENUMLANGUAGEGROUPLOCALE_CALLBACKS callbacks;
+
+    TRACE("(%p,0x%08X,0x%08X,0x%08lX)\n", pLangGrpLcEnumProc, lgrpid, dwFlags, lParam);
+
+    callbacks.procA   = pLangGrpLcEnumProc;
+    callbacks.procW   = NULL;
+    callbacks.dwFlags = dwFlags;
+    callbacks.lgrpid  = lgrpid;
+    callbacks.lParam  = lParam;
+
+    return NLS_EnumLanguageGroupLocales( pLangGrpLcEnumProc ? &callbacks : NULL );
+}
+
+/******************************************************************************
+ *           EnumLanguageGroupLocalesW    (KERNEL32.@)
+ *
+ * See EnumLanguageGroupLocalesA.
+ */
+BOOL WINAPI EnumLanguageGroupLocalesW(LANGGROUPLOCALE_ENUMPROCW pLangGrpLcEnumProc,
+                                      LGRPID lgrpid, DWORD dwFlags, LONG_PTR lParam)
+{
+    ENUMLANGUAGEGROUPLOCALE_CALLBACKS callbacks;
+
+    TRACE("(%p,0x%08X,0x%08X,0x%08lX)\n", pLangGrpLcEnumProc, lgrpid, dwFlags, lParam);
+
+    callbacks.procA   = NULL;
+    callbacks.procW   = pLangGrpLcEnumProc;
+    callbacks.dwFlags = dwFlags;
+    callbacks.lgrpid  = lgrpid;
+    callbacks.lParam  = lParam;
+
+    return NLS_EnumLanguageGroupLocales( pLangGrpLcEnumProc ? &callbacks : NULL );
+}
+
+/* Callback function ptrs for EnumSystemCodePagesA/W */
+typedef struct
+{
+  CODEPAGE_ENUMPROCA procA;
+  CODEPAGE_ENUMPROCW procW;
+  DWORD    dwFlags;
+} ENUMSYSTEMCODEPAGES_CALLBACKS;
+
+/* Internal implementation of EnumSystemCodePagesA/W */
+static BOOL NLS_EnumSystemCodePages(ENUMSYSTEMCODEPAGES_CALLBACKS *lpProcs)
+{
+    WCHAR szNumber[5 + 1], szValue[MAX_PATH];
+    HANDLE hKey;
+    BOOL bContinue = TRUE;
+    ULONG ulIndex = 0;
+
+    if (!lpProcs)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (lpProcs->dwFlags)
+    {
+        case CP_INSTALLED:
+        case CP_SUPPORTED:
+            break;
+        default:
+            SetLastError(ERROR_INVALID_FLAGS);
+            return FALSE;
+    }
+
+    hKey = NLS_RegOpenKey(0, L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
+    if (!hKey)
+    {
+        WARN("NLS_RegOpenKey() failed\n");
+        return FALSE;
+    }
+
+    while (bContinue)
+    {
+        if (NLS_RegEnumValue(hKey, ulIndex, szNumber, sizeof(szNumber),
+                             szValue, sizeof(szValue)))
+        {
+            if ((lpProcs->dwFlags == CP_SUPPORTED)||
+                ((lpProcs->dwFlags == CP_INSTALLED)&&(wcslen(szValue) > 2)))
+            {
+                if (lpProcs->procW)
+                {
+                    bContinue = lpProcs->procW(szNumber);
+                }
+                else
+                {
+                    char szNumberA[sizeof(szNumber)/sizeof(WCHAR)];
+
+                    WideCharToMultiByte(CP_ACP, 0, szNumber, -1, szNumberA, sizeof(szNumberA), 0, 0);
+                    bContinue = lpProcs->procA(szNumberA);
+                }
+            }
+
+            ulIndex++;
+
+        } else bContinue = FALSE;
+
+        if (!bContinue)
+            break;
+    }
+
+    if (hKey)
+        NtClose(hKey);
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+EnumSystemCodePagesW (
+    CODEPAGE_ENUMPROCW  lpCodePageEnumProc,
+    DWORD               dwFlags
+    )
+{
+    ENUMSYSTEMCODEPAGES_CALLBACKS procs;
+
+    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
+
+    procs.procA = NULL;
+    procs.procW = lpCodePageEnumProc;
+    procs.dwFlags = dwFlags;
+
+    return NLS_EnumSystemCodePages(lpCodePageEnumProc ? &procs : NULL);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+EnumSystemCodePagesA (
+    CODEPAGE_ENUMPROCA lpCodePageEnumProc,
+    DWORD              dwFlags
+    )
+{
+    ENUMSYSTEMCODEPAGES_CALLBACKS procs;
+
+    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
+
+    procs.procA = lpCodePageEnumProc;
+    procs.procW = NULL;
+    procs.dwFlags = dwFlags;
+
+    return NLS_EnumSystemCodePages(lpCodePageEnumProc ? &procs : NULL);
+}
+
+/******************************************************************************
+ *           EnumSystemGeoID    (KERNEL32.@)
+ *
+ * Call a users function for every location available on the system.
+ *
+ * PARAMS
+ *  geoclass   [I] Type of information desired (SYSGEOTYPE enum from "winnls.h")
+ *  parent     [I] GEOID for the parent
+ *  enumproc   [I] Callback function to call for each location
+ *
+ * RETURNS
+ *  Success: TRUE.
+ *  Failure: FALSE. Use GetLastError() to determine the cause.
+ */
+BOOL WINAPI EnumSystemGeoID(GEOCLASS geoclass, GEOID parent, GEO_ENUMPROC enumproc)
+{
+    INT i;
+
+    TRACE("(%d, %d, %p)\n", geoclass, parent, enumproc);
+
+    if (!enumproc) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (geoclass != GEOCLASS_NATION && geoclass != GEOCLASS_REGION) {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    for (i = 0; i < sizeof(geoinfodata)/sizeof(struct geoinfo_t); i++) {
+        const struct geoinfo_t *ptr = &geoinfodata[i];
+
+        if (geoclass == GEOCLASS_NATION && (ptr->kind == LOCATION_REGION))
+            continue;
+
+        if (geoclass == GEOCLASS_REGION && (ptr->kind == LOCATION_NATION))
+            continue;
+
+        if (parent && ptr->parent != parent)
+            continue;
+
+        if (!enumproc(ptr->id))
+            return TRUE;
+    }
+
+    return TRUE;
+}
+
+/******************************************************************************
+ *           InvalidateNLSCache           (KERNEL32.@)
+ *
+ * Invalidate the cache of NLS values.
+ *
+ * PARAMS
+ *  None.
+ *
+ * RETURNS
+ *  Success: TRUE.
+ *  Failure: FALSE.
+ */
+BOOL WINAPI InvalidateNLSCache(void)
+{
+  FIXME("() stub\n");
+  return FALSE;
+}
+
+/******************************************************************************
+ *           GetUserGeoID (KERNEL32.@)
+ */
+GEOID WINAPI GetUserGeoID( GEOCLASS GeoClass )
+{
+    GEOID ret = GEOID_NOT_AVAILABLE;
+    static const WCHAR geoW[] = {'G','e','o',0};
+    static const WCHAR nationW[] = {'N','a','t','i','o','n',0};
+    WCHAR bufferW[40], *end;
+    DWORD count;
+    HANDLE hkey, hSubkey = 0;
+    UNICODE_STRING keyW;
+    const KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)bufferW;
+    RtlInitUnicodeString( &keyW, nationW );
+    count = sizeof(bufferW);
+
+    if(!(hkey = create_registry_key())) return ret;
+
+    switch( GeoClass ){
+    case GEOCLASS_NATION:
+        if ((hSubkey = NLS_RegOpenKey(hkey, geoW)))
+        {
+            if((NtQueryValueKey(hSubkey, &keyW, KeyValuePartialInformation,
+                                bufferW, count, &count) == STATUS_SUCCESS ) && info->DataLength)
+                ret = strtolW((LPCWSTR)info->Data, &end, 10);
+        }
+        break;
+    case GEOCLASS_REGION:
+        FIXME("GEOCLASS_REGION not handled yet\n");
+        break;
+    }
+
+    NtClose(hkey);
+    if (hSubkey) NtClose(hSubkey);
+    return ret;
+}
+
+/******************************************************************************
+ *           SetUserGeoID (KERNEL32.@)
+ */
+BOOL WINAPI SetUserGeoID( GEOID GeoID )
+{
+    static const WCHAR geoW[] = {'G','e','o',0};
+    static const WCHAR nationW[] = {'N','a','t','i','o','n',0};
+    static const WCHAR formatW[] = {'%','i',0};
+    UNICODE_STRING nameW,keyW;
+    WCHAR bufferW[10];
+    OBJECT_ATTRIBUTES attr;
+    HANDLE hkey;
+
+    if(!(hkey = create_registry_key())) return FALSE;
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = hkey;
+    attr.ObjectName = &nameW;
+    attr.Attributes = 0;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &nameW, geoW );
+    RtlInitUnicodeString( &keyW, nationW );
+
+    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS)
+
+    {
+        NtClose(attr.RootDirectory);
+        return FALSE;
+    }
+
+    sprintfW(bufferW, formatW, GeoID);
+    NtSetValueKey(hkey, &keyW, 0, REG_SZ, bufferW, (strlenW(bufferW) + 1) * sizeof(WCHAR));
+    NtClose(attr.RootDirectory);
+    NtClose(hkey);
+    return TRUE;
+}
+
+typedef struct
+{
+    union
+    {
+        UILANGUAGE_ENUMPROCA procA;
+        UILANGUAGE_ENUMPROCW procW;
+    } u;
+    DWORD flags;
+    LONG_PTR param;
+} ENUM_UILANG_CALLBACK;
+
+static BOOL CALLBACK enum_uilang_proc_a( HMODULE hModule, LPCSTR type,
+                                         LPCSTR name, WORD LangID, LONG_PTR lParam )
+{
+    ENUM_UILANG_CALLBACK *enum_uilang = (ENUM_UILANG_CALLBACK *)lParam;
+    char buf[20];
+
+    sprintf(buf, "%08x", (UINT)LangID);
+    return enum_uilang->u.procA( buf, enum_uilang->param );
+}
+
+static BOOL CALLBACK enum_uilang_proc_w( HMODULE hModule, LPCWSTR type,
+                                         LPCWSTR name, WORD LangID, LONG_PTR lParam )
+{
+    static const WCHAR formatW[] = {'%','0','8','x',0};
+    ENUM_UILANG_CALLBACK *enum_uilang = (ENUM_UILANG_CALLBACK *)lParam;
+    WCHAR buf[20];
+
+    sprintfW( buf, formatW, (UINT)LangID );
+    return enum_uilang->u.procW( buf, enum_uilang->param );
+}
+
+/******************************************************************************
+ *           EnumUILanguagesA (KERNEL32.@)
+ */
+BOOL WINAPI EnumUILanguagesA(UILANGUAGE_ENUMPROCA pUILangEnumProc, DWORD dwFlags, LONG_PTR lParam)
+{
+    ENUM_UILANG_CALLBACK enum_uilang;
+
+    TRACE("%p, %x, %lx\n", pUILangEnumProc, dwFlags, lParam);
+
+    if(!pUILangEnumProc) {
+	SetLastError(ERROR_INVALID_PARAMETER);
+	return FALSE;
+    }
+    if(dwFlags) {
+	SetLastError(ERROR_INVALID_FLAGS);
+	return FALSE;
+    }
+
+    enum_uilang.u.procA = pUILangEnumProc;
+    enum_uilang.flags = dwFlags;
+    enum_uilang.param = lParam;
+
+    EnumResourceLanguagesA( kernel32_handle, (LPCSTR)RT_STRING,
+                            (LPCSTR)LOCALE_ILANGUAGE, enum_uilang_proc_a,
+                            (LONG_PTR)&enum_uilang);
+    return TRUE;
+}
+
+/******************************************************************************
+ *           EnumUILanguagesW (KERNEL32.@)
+ */
+BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags, LONG_PTR lParam)
+{
+    ENUM_UILANG_CALLBACK enum_uilang;
+
+    TRACE("%p, %x, %lx\n", pUILangEnumProc, dwFlags, lParam);
+
+
+    if(!pUILangEnumProc) {
+	SetLastError(ERROR_INVALID_PARAMETER);
+	return FALSE;
+    }
+    if(dwFlags) {
+	SetLastError(ERROR_INVALID_FLAGS);
+	return FALSE;
+    }
+
+    enum_uilang.u.procW = pUILangEnumProc;
+    enum_uilang.flags = dwFlags;
+    enum_uilang.param = lParam;
+
+    EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING,
+                            (LPCWSTR)LOCALE_ILANGUAGE, enum_uilang_proc_w,
+                            (LONG_PTR)&enum_uilang);
+    return TRUE;
+}
+
+static int
+NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
+{
+    HANDLE hKey;
+    WCHAR szPath[MAX_PATH];
+    UNICODE_STRING ValueName;
+    KEY_VALUE_PARTIAL_INFORMATION *info;
+    const int info_size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    DWORD dwSize;
+    NTSTATUS Status;
+    int Ret;
+
+    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%lu", Location);
+
+    hKey = NLS_RegOpenKey(0, szPath);
+    if (!hKey)
+    {
+        WARN("NLS_RegOpenKey() failed\n");
+        return 0;
+    }
+
+    dwSize = info_size + cchData * sizeof(WCHAR);
+
+    if (!(info = HeapAlloc(GetProcessHeap(), 0, dwSize)))
+    {
+        NtClose(hKey);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    RtlInitUnicodeString(&ValueName, L"Name");
+
+    Status = NtQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
+                             (LPBYTE)info, dwSize, &dwSize);
+
+    if (!Status)
+    {
+        Ret = (dwSize - info_size) / sizeof(WCHAR);
+
+        if (!Ret || ((WCHAR *)info->Data)[Ret-1])
+        {
+            if (Ret < cchData || !szFriendlyName) Ret++;
+            else
+            {
+                WARN("ERROR_INSUFFICIENT_BUFFER\n");
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                Ret = 0;
+            }
+        }
+
+        if (Ret && szFriendlyName)
+        {
+            memcpy(szFriendlyName, info->Data, (Ret-1) * sizeof(WCHAR));
+            szFriendlyName[Ret-1] = 0;
+        }
+    }
+    else if (Status == STATUS_BUFFER_OVERFLOW && !szFriendlyName)
+    {
+        Ret = (dwSize - info_size) / sizeof(WCHAR) + 1;
+    }
+    else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        Ret = -1;
+    }
+    else
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        Ret = 0;
+    }
+
+    NtClose(hKey);
+    HeapFree(GetProcessHeap(), 0, info);
+
+    return Ret;
+}
 
 static const struct geoinfo_t *get_geoinfo_dataptr(GEOID geoid)
 {
