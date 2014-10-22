@@ -1855,29 +1855,6 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     return hkey;
 }
 
-static BOOL NLS_RegEnumSubKey(HANDLE hKey, UINT ulIndex, LPWSTR szKeyName,
-                              ULONG keyNameSize)
-{
-    BYTE buffer[80];
-    KEY_BASIC_INFORMATION *info = (KEY_BASIC_INFORMATION *)buffer;
-    DWORD dwLen;
-
-    if (NtEnumerateKey( hKey, ulIndex, KeyBasicInformation, buffer,
-                        sizeof(buffer), &dwLen) != STATUS_SUCCESS ||
-        info->NameLength > keyNameSize)
-    {
-        return FALSE;
-    }
-
-    TRACE("info->Name %s info->NameLength %d\n", debugstr_w(info->Name), info->NameLength);
-
-    memcpy( szKeyName, info->Name, info->NameLength);
-    szKeyName[info->NameLength / sizeof(WCHAR)] = '\0';
-
-    TRACE("returning %s\n", debugstr_w(szKeyName));
-    return TRUE;
-}
-
 static BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
                              LPWSTR szValueName, ULONG valueNameSize,
                              LPWSTR szValueData, ULONG valueDataSize)
