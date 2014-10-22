@@ -310,14 +310,8 @@ IopLoadServiceModule(
    HANDLE CCSKey, ServiceKey;
    PVOID BaseAddress;
 
-   DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
-
-   /* FIXME: This check may be removed once the bug is fixed */
-   if (ServiceName->Buffer == NULL)
-   {
-       DPRINT1("If you see this, please report to Fireball or hpoussin!\n");
-      return STATUS_UNSUCCESSFUL;
-   }
+    ASSERT(ServiceName->Length);
+    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
    if (ExpInTextModeSetup)
    {
