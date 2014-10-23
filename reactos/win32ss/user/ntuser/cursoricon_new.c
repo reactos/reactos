@@ -644,40 +644,36 @@ NtUserDestroyCursor(
   _In_   BOOL bForce)
 {
     BOOL ret;
+    PCURICON_OBJECT CurIcon = NULL;
 
     TRACE("Enter NtUserDestroyCursorIcon (%p, %u)\n", hCurIcon, bForce);
     UserEnterExclusive();
 
+    CurIcon = UserGetCurIconObject(hCurIcon);
+    if (!CurIcon)
+    {
+        ret = FALSE;
+        goto leave;
+    }
+
     if (!bForce)
     {
         /* Maybe we have good reasons not to destroy this object */
-        PCURICON_OBJECT CurIcon = UserGetCurIconObject(hCurIcon);
-        ULONG Flags;
-        if (!CurIcon)
-        {
-            ret = FALSE;
-            goto leave;
-        }
-
         if (CurIcon->head.ppi != PsGetCurrentProcessWin32Process())
         {
             /* No way, you're not touching my cursor */
             ret = FALSE;
-            UserDereferenceObject(CurIcon);
             goto leave;
         }
 
-        Flags = CurIcon->CURSORF_flags;
-        UserDereferenceObject(CurIcon);
-
-        if (Flags & CURSORF_CURRENT)
+        if (CurIcon->CURSORF_flags & CURSORF_CURRENT)
         {
             WARN("Trying to delete current cursor!\n");
             ret = FALSE;
             goto leave;
         }
 
-        if (Flags & CURSORF_LRSHARED)
+        if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
         {
             WARN("Trying to delete shared cursor.\n");
             /* This one is not an error */
@@ -687,9 +683,11 @@ NtUserDestroyCursor(
     }
 
     /* Destroy the handle */
-    ret = UserDeleteObject(hCurIcon, TYPE_CURSOR);
+    ret = IntDestroyCurIconObject(CurIcon);
 
 leave:
+    if (CurIcon)
+        UserDereferenceObject(CurIcon);
     TRACE("Leave NtUserDestroyCursorIcon, ret=%i\n", ret);
     UserLeave();
     return ret;
