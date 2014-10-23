@@ -248,10 +248,10 @@ IntDestroyClass(IN OUT PCLS Class)
 #ifdef NEW_CURSORICON
     if (Class->spicn)
         UserDereferenceObject(Class->spicn);
-    if (Class->spicnSm)
-        UserDereferenceObject(Class->spicnSm);
     if (Class->spcur)
         UserDereferenceObject(Class->spcur);
+    if (Class->spicnSm)
+        UserDereferenceObject(Class->spicnSm);
 #else
     if (Class->hIconSmIntern)
         IntClassDestroyIcon(Class->hIconSmIntern);
@@ -1976,18 +1976,31 @@ UserSetClassLongPtr(IN PCLS Class,
             if (NewLong && !Class->spicnSm)
             {
                 /* Create the new small icon from the new large(?) one */
-                HICON SmallIconHandle = co_IntCopyImage(
-                    (HICON)NewLong,
-                    IMAGE_ICON,
-                    UserGetSystemMetrics( SM_CXSMICON ),
-                    UserGetSystemMetrics( SM_CYSMICON ),
-                    0);
+                HICON SmallIconHandle = NULL;
+                if((NewIcon->CURSORF_flags & (CURSORF_LRSHARED | CURSORF_FROMRESOURCE))
+                        == (CURSORF_LRSHARED | CURSORF_FROMRESOURCE))
+                {
+                    SmallIconHandle = co_IntCopyImage(
+                        (HICON)NewLong,
+                        IMAGE_ICON,
+                        UserGetSystemMetrics( SM_CXSMICON ),
+                        UserGetSystemMetrics( SM_CYSMICON ),
+                        LR_COPYFROMRESOURCE | LR_SHARED);
+                }
+                if (!SmallIconHandle)
+                {
+                    /* Retry without copying from resource */
+                    SmallIconHandle = co_IntCopyImage(
+                        (HICON)NewLong,
+                        IMAGE_ICON,
+                        UserGetSystemMetrics( SM_CXSMICON ),
+                        UserGetSystemMetrics( SM_CYSMICON ),
+                        LR_SHARED);
+                }
                 if (SmallIconHandle)
                 {
                     /* So use it */
                     NewSmallIcon = Class->spicnSm = UserGetCurIconObject(SmallIconHandle);
-                    /* Let the handle go, we have the reference on the object */
-                    NtUserDestroyCursor(SmallIconHandle, FALSE);
                     Class->CSF_flags |= CSF_CACHEDSMICON;
                 }
             }
