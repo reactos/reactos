@@ -121,6 +121,7 @@ static inline D3DVECTOR VectorBetweenTwoPoints (const D3DVECTOR *a, const D3DVEC
 	return c;
 }
 
+#ifndef __REACTOS__
 /* calculates the length of vector's projection on another vector */
 static inline D3DVALUE ProjectVector (const D3DVECTOR *a, const D3DVECTOR *p)
 {
@@ -131,6 +132,7 @@ static inline D3DVALUE ProjectVector (const D3DVECTOR *a, const D3DVECTOR *p)
               p->y, p->z, result);
 	return result;
 }
+#endif
 
 /*******************************************************************************
  *              3D Buffer and Listener mixing
