@@ -1,6 +1,6 @@
 
 set(USE_DIBLIB FALSE)
-set(USE_NEW_CURSORICON FALSE)
+set(USE_NEW_CURSORICON TRUE)
 
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
