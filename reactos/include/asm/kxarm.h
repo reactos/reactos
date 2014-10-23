@@ -67,6 +67,16 @@ $FuncEndName
     TRAP_EPILOG $SystemCall
         fixme
     MEND
+    
+    #define CR 13
+    #define LF 10
+    #define NUL 0
+    
+    #define ASCII dcb
+    
+    MACRO
+    UNIMPLEMENTED $Name
+    MEND    
 
 #else
 
