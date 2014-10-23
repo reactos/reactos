@@ -1342,27 +1342,37 @@ CURSORICON_LoadImageW(
         }
         else
             RtlInitUnicodeString(&ustrRsrc, lpszName);
-        
-        /* Prepare the module name string */
-        ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, size*sizeof(WCHAR));
-        /* Get it */
-        do
+
+        /* Get the module name string */
+        while (TRUE)
         {
-            DWORD ret = GetModuleFileNameW(hinst, ustrModule.Buffer, size);
+            DWORD ret;
+            ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, size*sizeof(WCHAR));
+            if (!ustrModule.Buffer)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return NULL;
+            }
+            ret = GetModuleFileNameW(hinst, ustrModule.Buffer, size);
             if(ret == 0)
             {
                 HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
                 return NULL;
             }
-            if(ret < size)
+
+            /* This API is completely broken... */
+            if (ret == size)
             {
-                ustrModule.Length = ret*sizeof(WCHAR);
-                ustrModule.MaximumLength = size*sizeof(WCHAR);
-                break;
+                HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
+                size *= 2;
+                continue;
             }
-            size *= 2;
-            ustrModule.Buffer = HeapReAlloc(GetProcessHeap(), 0, ustrModule.Buffer, size*sizeof(WCHAR));
-        } while(TRUE);
+
+            ustrModule.Buffer[ret] = UNICODE_NULL;
+            ustrModule.Length = ret * sizeof(WCHAR);
+            ustrModule.MaximumLength = size * sizeof(WCHAR);
+            break;
+        }
         
         /* Ask win32k */
         param.bIcon = bIcon;
@@ -1691,75 +1701,51 @@ CURSORICON_CopyImage(
         /* Get the icon module/resource names */
         UNICODE_STRING ustrModule;
         UNICODE_STRING ustrRsrc;
-        PVOID pvBuf;
         HMODULE hModule;
         
-        ustrModule.MaximumLength = MAX_PATH * sizeof(WCHAR);
-        ustrRsrc.MaximumLength = 256;
+        ustrModule.MaximumLength = 0;
+        ustrRsrc.MaximumLength = 0;
         
+        /* Get the buffer size */
+        if (!NtUserGetIconInfo(hicon, NULL, &ustrModule, &ustrRsrc, NULL, FALSE))
+        {
+            return NULL;
+        }
+
         ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrModule.MaximumLength);
         if (!ustrModule.Buffer)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return NULL;
         }
-        /* Keep track of the buffer for the resource, NtUserGetIconInfo might overwrite it */
-        pvBuf = HeapAlloc(GetProcessHeap(), 0, ustrRsrc.MaximumLength);
-        if (!pvBuf)
-        {
-            HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return NULL;
-        }
-        ustrRsrc.Buffer = pvBuf;
         
-        do
+        if (ustrRsrc.MaximumLength)
         {
-            if (!NtUserGetIconInfo(hicon, NULL, &ustrModule, &ustrRsrc, NULL, FALSE))
+            ustrRsrc.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrRsrc.MaximumLength);
+            if (!ustrRsrc.Buffer)
             {
                 HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-                HeapFree(GetProcessHeap(), 0, pvBuf);
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return NULL;
             }
-            
-            if (ustrModule.Length && (ustrRsrc.Length || IS_INTRESOURCE(ustrRsrc.Buffer)))
-            {
-                /* Buffers were big enough */
-                break;
-            }
-            
-            /* Find which buffer were too small */
-            if (!ustrModule.Length)
-            {
-                PWSTR newBuffer;
-                ustrModule.MaximumLength *= 2;
-                newBuffer = HeapReAlloc(GetProcessHeap(), 0, ustrModule.Buffer, ustrModule.MaximumLength);
-                if(!ustrModule.Buffer)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto leave;
-                }
-                ustrModule.Buffer = newBuffer;
-            }
-            
-            if (!ustrRsrc.Length)
-            {
-                ustrRsrc.MaximumLength *= 2;
-                pvBuf = HeapReAlloc(GetProcessHeap(), 0, ustrRsrc.Buffer, ustrRsrc.MaximumLength);
-                if (!pvBuf)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto leave;
-                }
-                ustrRsrc.Buffer = pvBuf;
-            }
-        } while(TRUE);
+        }
+
+        if (!NtUserGetIconInfo(hicon, NULL, &ustrModule, &ustrRsrc, NULL, FALSE))
+        {
+            HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
+            if (!IS_INTRESOURCE(ustrRsrc.Buffer))
+                HeapFree(GetProcessHeap(), 0, ustrRsrc.Buffer);
+            return NULL;
+        }
         
         /* NULL-terminate our strings */
-        ustrModule.Buffer[ustrModule.Length/sizeof(WCHAR)] = 0;
+        ustrModule.Buffer[ustrModule.Length/sizeof(WCHAR)] = UNICODE_NULL;
         if (!IS_INTRESOURCE(ustrRsrc.Buffer))
-            ustrRsrc.Buffer[ustrRsrc.Length/sizeof(WCHAR)] = 0;
+            ustrRsrc.Buffer[ustrRsrc.Length/sizeof(WCHAR)] = UNICODE_NULL;
         
+        TRACE("Got module %S, resource %p (%S).\n", ustrModule.Buffer,
+            ustrRsrc.Buffer, IS_INTRESOURCE(ustrRsrc.Buffer) ? L"" : ustrRsrc.Buffer);
+
         /* Get the module handle */
         if (!GetModuleHandleExW(0, ustrModule.Buffer, &hModule))
         {
@@ -1783,7 +1769,8 @@ CURSORICON_CopyImage(
         /* If we're here, that means that the passed icon is shared. Don't destroy it, even if LR_COPYDELETEORG is specified */
     leave:
         HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-        HeapFree(GetProcessHeap(), 0, pvBuf);
+        if (!IS_INTRESOURCE(ustrRsrc.Buffer))
+            HeapFree(GetProcessHeap(), 0, ustrRsrc.Buffer);
         
         TRACE("Returning 0x%08x.\n", ret);
         
