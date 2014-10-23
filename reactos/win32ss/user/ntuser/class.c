@@ -838,6 +838,16 @@ IntMoveClassToSharedHeap(IN OUT PCLS Class,
         NewClass->rpdeskParent = NULL;
         NewClass->pclsBase = NewClass;
 
+#ifdef NEW_CURSORICON
+        if (NewClass->spcur)
+            UserReferenceObject(NewClass->spcur);
+        if (NewClass->spicn)
+            UserReferenceObject(NewClass->spicn);
+        if (NewClass->spicnSm)
+            UserReferenceObject(NewClass->spicnSm);
+#endif
+
+
         /* Replace the class in the list */
         (void)InterlockedExchangePointer((PVOID*)*ClassLinkPtr,
                                          NewClass);
