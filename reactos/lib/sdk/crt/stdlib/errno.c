@@ -141,7 +141,9 @@ void __cdecl _invalid_parameter(const wchar_t *expr, const wchar_t *func,
     else
     {
         ERR( "%s:%u %s: %s %lx\n", debugstr_w(file), line, debugstr_w(func), debugstr_w(expr), arg );
+#if _MSVCR_VER > 0 // FIXME: possible improvement: use a global variable in the DLL
         RaiseException( STATUS_INVALID_CRUNTIME_PARAMETER, EXCEPTION_NONCONTINUABLE, 0, NULL );
+#endif
     }
 }
 
