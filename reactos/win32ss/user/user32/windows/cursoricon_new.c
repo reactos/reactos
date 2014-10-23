@@ -393,10 +393,11 @@ get_best_icon_file_entry(
     WORD i;
     const CURSORICONFILEDIRENTRY* entry;
 
+    /* Check our file is what it claims to be */
     if ( dwFileSize < sizeof(*dir) )
         return NULL;
 
-    if ( dwFileSize < (sizeof(*dir) + sizeof(dir->idEntries[0])*(dir->idCount-1)) )
+    if (dwFileSize < (sizeof(*dir) + FIELD_OFFSET(CURSORICONFILEDIR, idEntries[dir->idCount])))
         return NULL;
 
     /* 
@@ -418,7 +419,8 @@ get_best_icon_file_entry(
         fakeEntry = &fakeDir->idEntries[i];
         entry = &dir->idEntries[i];
         /* Take this as an occasion to perform a size check */
-        if((entry->dwDIBOffset + entry->dwDIBSize) > dwFileSize)
+        if ((entry->dwDIBOffset > dwFileSize)
+                || ((entry->dwDIBOffset + entry->dwDIBSize) > dwFileSize))
         {
             ERR("Corrupted icon file?.\n");
             HeapFree(GetProcessHeap(), 0, fakeDir);
@@ -1260,12 +1262,12 @@ CURSORICON_LoadFromFileW(
     cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
     
     /* Do the dance */
-    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)&bits[entry->dwDIBOffset]))
+    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
         goto end;
     
     hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
     if(!hCurIcon)
-        goto end_error;
+        goto end;
     
     /* Tell win32k */
     if(!NtUserSetCursorIconData(hCurIcon, NULL, NULL, &cursorData))
@@ -1283,6 +1285,7 @@ end_error:
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
+    UnmapViewOfFile(bits);
     
     return NULL;
 }
@@ -2196,7 +2199,7 @@ int WINAPI LookupIconIdFromDirectoryEx(
     
     /* No inferior or equal depth available. Get the smallest bigger one */
     BitCount = 0xFFFF;
-    iIndex = 0;
+    iIndex = -1;
     for(i = 0; i < dir->idCount; i++)
     {
         entry = &dir->idEntries[i];
@@ -2222,8 +2225,10 @@ int WINAPI LookupIconIdFromDirectoryEx(
             BitCount = entry->wBitCount;
         }
     }
+    if (iIndex >= 0)
+        return dir->idEntries[iIndex].wResId;
     
-    return dir->idEntries[iIndex].wResId;
+    return 0;
 }
 
 HICON WINAPI CreateIcon(
