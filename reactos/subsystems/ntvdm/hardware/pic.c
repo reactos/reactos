@@ -154,7 +154,7 @@ static VOID PicWriteData(BYTE Port, BYTE Value)
     Pic->Initialization = FALSE;
 }
 
-static BYTE WINAPI PicReadPort(ULONG Port)
+static BYTE WINAPI PicReadPort(USHORT Port)
 {
     switch (Port)
     {
@@ -174,7 +174,7 @@ static BYTE WINAPI PicReadPort(ULONG Port)
     return 0;
 }
 
-static VOID WINAPI PicWritePort(ULONG Port, BYTE Data)
+static VOID WINAPI PicWritePort(USHORT Port, BYTE Data)
 {
     switch (Port)
     {

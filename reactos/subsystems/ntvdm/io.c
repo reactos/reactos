@@ -58,7 +58,7 @@ EMULATOR_IOPORT_HANDLERS IoPortProc[EMULATOR_MAX_IOPORTS_NUM] = {{NULL}};
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 UCHAR
-IOReadB(ULONG Port)
+IOReadB(USHORT Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InB)
@@ -82,7 +82,7 @@ IOReadB(ULONG Port)
 }
 
 VOID
-IOReadStrB(ULONG  Port,
+IOReadStrB(USHORT  Port,
            PUCHAR Buffer,
            ULONG  Count)
 {
@@ -105,7 +105,7 @@ IOReadStrB(ULONG  Port,
 }
 
 VOID
-IOWriteB(ULONG Port,
+IOWriteB(USHORT Port,
          UCHAR Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
@@ -127,7 +127,7 @@ IOWriteB(ULONG Port,
 }
 
 VOID
-IOWriteStrB(ULONG  Port,
+IOWriteStrB(USHORT  Port,
             PUCHAR Buffer,
             ULONG  Count)
 {
@@ -150,7 +150,7 @@ IOWriteStrB(ULONG  Port,
 }
 
 USHORT
-IOReadW(ULONG Port)
+IOReadW(USHORT Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InW)
@@ -177,7 +177,7 @@ IOReadW(ULONG Port)
 }
 
 VOID
-IOReadStrW(ULONG   Port,
+IOReadStrW(USHORT   Port,
            PUSHORT Buffer,
            ULONG   Count)
 {
@@ -200,7 +200,7 @@ IOReadStrW(ULONG   Port,
 }
 
 VOID
-IOWriteW(ULONG  Port,
+IOWriteW(USHORT  Port,
          USHORT Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
@@ -223,7 +223,7 @@ IOWriteW(ULONG  Port,
 }
 
 VOID
-IOWriteStrW(ULONG   Port,
+IOWriteStrW(USHORT   Port,
             PUSHORT Buffer,
             ULONG   Count)
 {
@@ -246,7 +246,7 @@ IOWriteStrW(ULONG   Port,
 }
 
 ULONG
-IOReadD(ULONG Port)
+IOReadD(USHORT Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InD)
@@ -265,7 +265,7 @@ IOReadD(ULONG Port)
 }
 
 VOID
-IOReadStrD(ULONG  Port,
+IOReadStrD(USHORT  Port,
            PULONG Buffer,
            ULONG  Count)
 {
@@ -281,7 +281,7 @@ IOReadStrD(ULONG  Port,
 }
 
 VOID
-IOWriteD(ULONG Port,
+IOWriteD(USHORT Port,
          ULONG Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
@@ -298,7 +298,7 @@ IOWriteD(ULONG Port,
 }
 
 VOID
-IOWriteStrD(ULONG  Port,
+IOWriteStrD(USHORT  Port,
             PULONG Buffer,
             ULONG  Count)
 {
@@ -314,7 +314,7 @@ IOWriteStrD(ULONG  Port,
 }
 
 
-VOID RegisterIoPort(ULONG Port,
+VOID RegisterIoPort(USHORT Port,
                     EMULATOR_INB_PROC  InHandler,
                     EMULATOR_OUTB_PROC OutHandler)
 {
@@ -332,7 +332,7 @@ VOID RegisterIoPort(ULONG Port,
     IoPortProc[Port].hVdd = INVALID_HANDLE_VALUE;
 }
 
-VOID UnregisterIoPort(ULONG Port)
+VOID UnregisterIoPort(USHORT Port)
 {
     /*
      * Put automagically all the fields to zero:
@@ -344,7 +344,7 @@ VOID UnregisterIoPort(ULONG Port)
 
 VOID WINAPI
 EmulatorReadIo(PFAST486_STATE State,
-               ULONG Port,
+               USHORT Port,
                PVOID Buffer,
                ULONG DataCount,
                UCHAR DataSize)
@@ -419,7 +419,7 @@ EmulatorReadIo(PFAST486_STATE State,
 
 VOID WINAPI
 EmulatorWriteIo(PFAST486_STATE State,
-                ULONG Port,
+                USHORT Port,
                 PVOID Buffer,
                 ULONG DataCount,
                 UCHAR DataSize)

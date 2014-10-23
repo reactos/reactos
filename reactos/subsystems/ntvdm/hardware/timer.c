@@ -275,7 +275,7 @@ static VOID PitWriteData(BYTE Channel, BYTE Value)
     }
 }
 
-static BYTE WINAPI PitReadPort(ULONG Port)
+static BYTE WINAPI PitReadPort(USHORT Port)
 {
     switch (Port)
     {
@@ -290,7 +290,7 @@ static BYTE WINAPI PitReadPort(ULONG Port)
     return 0;
 }
 
-static VOID WINAPI PitWritePort(ULONG Port, BYTE Data)
+static VOID WINAPI PitWritePort(USHORT Port, BYTE Data)
 {
     switch (Port)
     {

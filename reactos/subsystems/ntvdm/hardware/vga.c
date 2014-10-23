@@ -1462,7 +1462,7 @@ static VOID VgaUpdateTextCursor(VOID)
     CursorMoved = FALSE;
 }
 
-static BYTE WINAPI VgaReadPort(ULONG Port)
+static BYTE WINAPI VgaReadPort(USHORT Port)
 {
     DPRINT("VgaReadPort: Port 0x%X\n", Port);
 
@@ -1554,7 +1554,7 @@ static BYTE WINAPI VgaReadPort(ULONG Port)
     return 0;
 }
 
-static VOID WINAPI VgaWritePort(ULONG Port, BYTE Data)
+static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
 {
     DPRINT("VgaWritePort: Port 0x%X, Data 0x%02X\n", Port, Data);
 

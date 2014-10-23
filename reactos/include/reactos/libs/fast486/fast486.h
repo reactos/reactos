@@ -190,7 +190,7 @@ VOID
 (NTAPI *FAST486_IO_READ_PROC)
 (
     PFAST486_STATE State,
-    ULONG Port,
+    USHORT Port,
     PVOID Buffer,
     ULONG DataCount,
     UCHAR DataSize
@@ -201,7 +201,7 @@ VOID
 (NTAPI *FAST486_IO_WRITE_PROC)
 (
     PFAST486_STATE State,
-    ULONG Port,
+    USHORT Port,
     PVOID Buffer,
     ULONG DataCount,
     UCHAR DataSize

@@ -59,7 +59,7 @@ static VOID PS2SendCommand(PPS2_PORT Port, BYTE Command)
     if (Port->DeviceCommand) Port->DeviceCommand(Port->Param, Command);
 }
 
-static BYTE WINAPI PS2ReadPort(ULONG Port)
+static BYTE WINAPI PS2ReadPort(USHORT Port)
 {
     if (Port == PS2_CONTROL_PORT)
     {
@@ -87,7 +87,7 @@ static BYTE WINAPI PS2ReadPort(ULONG Port)
     return 0;
 }
 
-static VOID WINAPI PS2WritePort(ULONG Port, BYTE Data)
+static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
 {
     if (Port == PS2_CONTROL_PORT)
     {
