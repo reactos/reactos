@@ -61,7 +61,7 @@ IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
 
     while (pRet)
     {
-        Status = NtDeviceIoControlFile(hKeyboardDevice,
+        Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                        NULL,
                                        NULL,
                                        NULL,
@@ -104,8 +104,7 @@ static
 NTSTATUS APIENTRY
 IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
                       WORD wVk,
-                      WORD wScanCode,
-                      BOOL bEnabled)
+                      WORD wScanCode)
 {
     NTSTATUS Status;
     UINT i;
@@ -133,13 +132,10 @@ IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
 
     if (LedFlag)
     {
-        if (bEnabled)
-            gIndicators.LedFlags |= LedFlag;
-        else
-            gIndicators.LedFlags = ~LedFlag;
+        gIndicators.LedFlags ^= LedFlag;
 
         /* Update the lights on the hardware */
-        Status = NtDeviceIoControlFile(hKeyboardDevice,
+        Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                        NULL,
                                        NULL,
                                        NULL,
@@ -164,10 +160,10 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK Block;
-/*
+
     IntKeyboardGetIndicatorTrans(hKeyboardDevice, &gpKeyboardIndicatorTrans);
 
-    Status = NtDeviceIoControlFile(hKeyboardDevice,
+    Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                    NULL,
                                    NULL,
                                    NULL,
@@ -186,9 +182,9 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
                    gIndicators.LedFlags & KEYBOARD_NUM_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_SCROLL,
                    gIndicators.LedFlags & KEYBOARD_SCROLL_LOCK_ON);
-*/
+
     // FIXME: Need device driver to work! HID support more than one!!!!
-    Status = NtDeviceIoControlFile(hKeyboardDevice,
+    Status = ZwDeviceIoControlFile(hKeyboardDevice,
                                    NULL,
                                    NULL,
                                    NULL,
@@ -808,8 +804,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         /* Update keyboard LEDs */
         IntKeyboardUpdateLeds(ghKeyboardDevice,
                               wSimpleVk,
-                              wScanCode,
-                              IS_KEY_LOCKED(gafAsyncKeyState, wSimpleVk));
+                              wScanCode);
     }
 
     /* Call WH_KEYBOARD_LL hook */

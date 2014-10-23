@@ -681,4 +681,4 @@
 @ stub WmiSetSingleItemA
 @ stub WmiSetSingleItemW
 @ stub Wow64Win32ApiEntry
-@ stub WriteEncryptedFileRaw
+@ stdcall WriteEncryptedFileRaw(ptr ptr ptr)

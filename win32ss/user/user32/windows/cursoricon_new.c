@@ -393,10 +393,11 @@ get_best_icon_file_entry(
     WORD i;
     const CURSORICONFILEDIRENTRY* entry;
 
+    /* Check our file is what it claims to be */
     if ( dwFileSize < sizeof(*dir) )
         return NULL;
 
-    if ( dwFileSize < (sizeof(*dir) + sizeof(dir->idEntries[0])*(dir->idCount-1)) )
+    if (dwFileSize < (sizeof(*dir) + FIELD_OFFSET(CURSORICONFILEDIR, idEntries[dir->idCount])))
         return NULL;
 
     /* 
@@ -418,7 +419,8 @@ get_best_icon_file_entry(
         fakeEntry = &fakeDir->idEntries[i];
         entry = &dir->idEntries[i];
         /* Take this as an occasion to perform a size check */
-        if((entry->dwDIBOffset + entry->dwDIBSize) > dwFileSize)
+        if ((entry->dwDIBOffset > dwFileSize)
+                || ((entry->dwDIBOffset + entry->dwDIBSize) > dwFileSize))
         {
             ERR("Corrupted icon file?.\n");
             HeapFree(GetProcessHeap(), 0, fakeDir);
@@ -1260,12 +1262,12 @@ CURSORICON_LoadFromFileW(
     cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
     
     /* Do the dance */
-    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)&bits[entry->dwDIBOffset]))
+    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
         goto end;
     
     hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
     if(!hCurIcon)
-        goto end_error;
+        goto end;
     
     /* Tell win32k */
     if(!NtUserSetCursorIconData(hCurIcon, NULL, NULL, &cursorData))
@@ -1283,6 +1285,7 @@ end_error:
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
+    UnmapViewOfFile(bits);
     
     return NULL;
 }
@@ -1681,8 +1684,9 @@ CURSORICON_CopyImage(
 {
     HICON ret = NULL;
     ICONINFO ii;
+    CURSORDATA CursorData;
     
-    if(fuFlags & LR_COPYFROMRESOURCE)
+    if (fuFlags & LR_COPYFROMRESOURCE)
     {
         /* Get the icon module/resource names */
         UNICODE_STRING ustrModule;
@@ -1694,14 +1698,14 @@ CURSORICON_CopyImage(
         ustrRsrc.MaximumLength = 256;
         
         ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrModule.MaximumLength);
-        if(!ustrModule.Buffer)
+        if (!ustrModule.Buffer)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return NULL;
         }
         /* Keep track of the buffer for the resource, NtUserGetIconInfo might overwrite it */
         pvBuf = HeapAlloc(GetProcessHeap(), 0, ustrRsrc.MaximumLength);
-        if(!pvBuf)
+        if (!pvBuf)
         {
             HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1742,7 +1746,7 @@ CURSORICON_CopyImage(
             {
                 ustrRsrc.MaximumLength *= 2;
                 pvBuf = HeapReAlloc(GetProcessHeap(), 0, ustrRsrc.Buffer, ustrRsrc.MaximumLength);
-                if(!pvBuf)
+                if (!pvBuf)
                 {
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                     goto leave;
@@ -1753,11 +1757,11 @@ CURSORICON_CopyImage(
         
         /* NULL-terminate our strings */
         ustrModule.Buffer[ustrModule.Length/sizeof(WCHAR)] = 0;
-        if(!IS_INTRESOURCE(ustrRsrc.Buffer))
+        if (!IS_INTRESOURCE(ustrRsrc.Buffer))
             ustrRsrc.Buffer[ustrRsrc.Length/sizeof(WCHAR)] = 0;
         
         /* Get the module handle */
-        if(!GetModuleHandleExW(0, ustrModule.Buffer, &hModule))
+        if (!GetModuleHandleExW(0, ustrModule.Buffer, &hModule))
         {
             /* This should never happen */
             ERR("Invalid handle?.\n");
@@ -1766,7 +1770,13 @@ CURSORICON_CopyImage(
         }
         
         /* Call the relevant function */
-        ret = CURSORICON_LoadImageW(hModule, ustrRsrc.Buffer, cxDesired, cyDesired, fuFlags & LR_DEFAULTSIZE, bIcon);
+        ret = CURSORICON_LoadImageW(
+            hModule,
+            ustrRsrc.Buffer,
+            cxDesired,
+            cyDesired,
+            fuFlags & (LR_DEFAULTSIZE | LR_SHARED),
+            bIcon);
         
         FreeLibrary(hModule);
         
@@ -1781,24 +1791,40 @@ CURSORICON_CopyImage(
     }
     
     /* This is a regular copy */
-    if(fuFlags & ~LR_COPYDELETEORG)
+    if (fuFlags & ~(LR_COPYDELETEORG | LR_SHARED))
         FIXME("Unimplemented flags: 0x%08x\n", fuFlags);
     
-    if(!GetIconInfo(hicon, &ii))
+    if (!GetIconInfo(hicon, &ii))
     {
         ERR("GetIconInfo failed.\n");
         return NULL;
     }
+
+    /* This is CreateIconIndirect with the LR_SHARED coat added */
+    if  (!CURSORICON_GetCursorDataFromIconInfo(&CursorData, &ii))
+        goto Leave;
+
+    if (fuFlags & LR_SHARED)
+        CursorData.CURSORF_flags |= CURSORF_LRSHARED;
+
+    ret = NtUserxCreateEmptyCurObject(FALSE);
+    if (!ret)
+        goto Leave;
+
+    if (!NtUserSetCursorIconData(ret, NULL, NULL, &CursorData))
+    {
+        NtUserDestroyCursor(ret, TRUE);
+        goto Leave;
+    }
     
-    ret = CreateIconIndirect(&ii);
-    
+Leave:
     DeleteObject(ii.hbmMask);
-    if(ii.hbmColor) DeleteObject(ii.hbmColor);
+    if (ii.hbmColor) DeleteObject(ii.hbmColor);
     
-    if(ret && (fuFlags & LR_COPYDELETEORG))
+    if (ret && (fuFlags & LR_COPYDELETEORG))
         DestroyIcon(hicon);
     
-    return hicon;
+    return ret;
 }
 
 NTSTATUS WINAPI
@@ -2196,7 +2222,7 @@ int WINAPI LookupIconIdFromDirectoryEx(
     
     /* No inferior or equal depth available. Get the smallest bigger one */
     BitCount = 0xFFFF;
-    iIndex = 0;
+    iIndex = -1;
     for(i = 0; i < dir->idCount; i++)
     {
         entry = &dir->idEntries[i];
@@ -2222,8 +2248,10 @@ int WINAPI LookupIconIdFromDirectoryEx(
             BitCount = entry->wBitCount;
         }
     }
+    if (iIndex >= 0)
+        return dir->idEntries[iIndex].wResId;
     
-    return dir->idEntries[iIndex].wResId;
+    return 0;
 }
 
 HICON WINAPI CreateIcon(

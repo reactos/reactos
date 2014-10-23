@@ -54,6 +54,7 @@ static const WCHAR szLangGroupsKeyName[] = {
     'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
 };
 
+#ifndef __REACTOS__
 /* Charset to codepage map, sorted by name. */
 static const struct charset_entry
 {
@@ -114,7 +115,7 @@ static const struct charset_entry
     { "KOI8U", 21866 },
     { "UTF8", CP_UTF8 }
 };
-
+#endif
 
 struct locale_name
 {
@@ -139,6 +140,7 @@ static LCID lcid_LC_PAPER;
 static LCID lcid_LC_MEASUREMENT;
 static LCID lcid_LC_TELEPHONE;
 
+#ifndef __REACTOS__
 /* Copy Ascii string to Unicode without using codepages */
 static inline void strcpynAtoW( WCHAR *dst, const char *src, size_t n )
 {
@@ -149,7 +151,7 @@ static inline void strcpynAtoW( WCHAR *dst, const char *src, size_t n )
     }
     if (n) *dst = 0;
 }
-
+#endif
 
 /***********************************************************************
  *		get_lcid_codepage
@@ -1278,6 +1280,9 @@ BOOL WINAPI GetStringTypeW( DWORD type, LPCWSTR src, INT count, LPWORD chartype 
             if ((c>=0x0600)&&(c<=0x06FF)) type3 |= C3_KASHIDA;
             if ((c>=0x3000)&&(c<=0x303F)) type3 |= C3_SYMBOL;
 
+            if ((c>=0xD800)&&(c<=0xDBFF)) type3 |= C3_HIGHSURROGATE;
+            if ((c>=0xDC00)&&(c<=0xDFFF)) type3 |= C3_LOWSURROGATE;
+
             if ((c>=0xFF00)&&(c<=0xFF60)) type3 |= C3_FULLWIDTH;
             if ((c>=0xFF00)&&(c<=0xFF20)) type3 |= C3_SYMBOL;
             if ((c>=0xFF3B)&&(c<=0xFF40)) type3 |= C3_SYMBOL;
@@ -1386,16 +1391,34 @@ BOOL WINAPI GetStringTypeExA( LCID locale, DWORD type, LPCSTR src, INT count, LP
     return GetStringTypeA(locale, type, src, count, chartype);
 }
 
-
 /*************************************************************************
- *           LCMapStringW    (KERNEL32.@)
+ *           LCMapStringEx   (KERNEL32.@)
  *
- * See LCMapStringA.
+ * Map characters in a locale sensitive string.
+ *
+ * PARAMS
+ *  name     [I] Locale name for the conversion.
+ *  flags    [I] Flags controlling the mapping (LCMAP_ constants from "winnls.h")
+ *  src      [I] String to map
+ *  srclen   [I] Length of src in chars, or -1 if src is NUL terminated
+ *  dst      [O] Destination for mapped string
+ *  dstlen   [I] Length of dst in characters
+ *  version  [I] reserved, must be NULL
+ *  reserved [I] reserved, must be NULL
+ *  lparam   [I] reserved, must be 0
+ *
+ * RETURNS
+ *  Success: The length of the mapped string in dst, including the NUL terminator.
+ *  Failure: 0. Use GetLastError() to determine the cause.
  */
-INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
-                        LPWSTR dst, INT dstlen)
+INT WINAPI LCMapStringEx(LPCWSTR name, DWORD flags, LPCWSTR src, INT srclen, LPWSTR dst, INT dstlen,
+                         LPNLSVERSIONINFO version, LPVOID reserved, LPARAM lparam)
 {
     LPWSTR dst_ptr;
+
+    if (version) FIXME("unsupported version structure %p\n", version);
+    if (reserved) FIXME("unsupported reserved pointer %p\n", reserved);
+    if (lparam) FIXME("unsupported lparam %lx\n", lparam);
 
     if (!src || !srclen || dstlen < 0)
     {
@@ -1415,8 +1438,6 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
 
     if (!dstlen) dst = NULL;
 
-    lcid = ConvertDefaultLocale(lcid);
-
     if (flags & LCMAP_SORTKEY)
     {
         INT ret;
@@ -1428,8 +1449,8 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
 
         if (srclen < 0) srclen = strlenW(src);
 
-        TRACE("(0x%04x,0x%08x,%s,%d,%p,%d)\n",
-              lcid, flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
+        TRACE("(%s,0x%08x,%s,%d,%p,%d)\n",
+              debugstr_w(name), flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
 
         ret = wine_get_sortkey(flags, src, srclen, (char *)dst, dstlen);
         if (ret == 0)
@@ -1448,8 +1469,8 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
 
     if (srclen < 0) srclen = strlenW(src) + 1;
 
-    TRACE("(0x%04x,0x%08x,%s,%d,%p,%d)\n",
-          lcid, flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
+    TRACE("(%s,0x%08x,%s,%d,%p,%d)\n",
+          debugstr_w(name), flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
 
     if (!dst) /* return required string length */
     {
@@ -1515,6 +1536,20 @@ INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
     }
 
     return dst_ptr - dst;
+}
+
+/*************************************************************************
+ *           LCMapStringW    (KERNEL32.@)
+ *
+ * See LCMapStringA.
+ */
+INT WINAPI LCMapStringW(LCID lcid, DWORD flags, LPCWSTR src, INT srclen,
+                        LPWSTR dst, INT dstlen)
+{
+    TRACE("(0x%04x,0x%08x,%s,%d,%p,%d)\n",
+          lcid, flags, debugstr_wn(src, srclen), srclen, dst, dstlen);
+
+    return LCMapStringEx(NULL, flags, src, srclen, dst, dstlen, NULL, NULL, 0);
 }
 
 /*************************************************************************
@@ -1586,7 +1621,7 @@ INT WINAPI LCMapStringA(LCID lcid, DWORD flags, LPCSTR src, INT srclen,
         goto map_string_exit;
     }
 
-    dstlenW = LCMapStringW(lcid, flags, srcW, srclenW, NULL, 0);
+    dstlenW = LCMapStringEx(NULL, flags, srcW, srclenW, NULL, 0, NULL, NULL, 0);
     if (!dstlenW)
         goto map_string_exit;
 
@@ -1597,7 +1632,7 @@ INT WINAPI LCMapStringA(LCID lcid, DWORD flags, LPCSTR src, INT srclen,
         goto map_string_exit;
     }
 
-    LCMapStringW(lcid, flags, srcW, srclenW, dstW, dstlenW);
+    LCMapStringEx(NULL, flags, srcW, srclenW, dstW, dstlenW, NULL, NULL, 0);
     ret = WideCharToMultiByte(locale_cp, 0, dstW, dstlenW, dst, dstlen, NULL, NULL);
     HeapFree(GetProcessHeap(), 0, dstW);
 
@@ -1943,18 +1978,6 @@ static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSiz
     }
     return bRet;
 }
-
-/* Registry keys for NLS related information */
-
-static const WCHAR szCountryListName[] = {
-	'\\','R','e','g','i','s','t','r','y','\\',
-    'M','a','c','h','i','n','e','\\','S','o','f','t','w','a','r','e','\\',
-    'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-    'T','e','l','e','p','h','o','n','y','\\',
-    'C','o','u','n','t','r','y',' ','L','i','s','t','\0'
-};
-
 
 /* Callback function ptrs for EnumSystemLanguageGroupsA/W */
 typedef struct

@@ -1677,17 +1677,31 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 #ifdef NEW_CURSORICON
    if (Class->spicn && !Class->spicnSm)
    {
-       HICON IconSmHandle = co_IntCopyImage(
-           UserHMGetHandle(Class->spicn),
-           IMAGE_ICON,
-           UserGetSystemMetrics( SM_CXSMICON ),
-           UserGetSystemMetrics( SM_CYSMICON ),
-           0);
+       HICON IconSmHandle = NULL;
+       if((Class->spicn->CURSORF_flags & (CURSORF_LRSHARED | CURSORF_FROMRESOURCE))
+               == (CURSORF_LRSHARED | CURSORF_FROMRESOURCE))
+       {
+           IconSmHandle = co_IntCopyImage(
+               UserHMGetHandle(Class->spicn),
+               IMAGE_ICON,
+               UserGetSystemMetrics( SM_CXSMICON ),
+               UserGetSystemMetrics( SM_CYSMICON ),
+               LR_COPYFROMRESOURCE | LR_SHARED);
+       }
+       if (!IconSmHandle)
+       {
+           /* Retry without copying from resource */
+           IconSmHandle = co_IntCopyImage(
+               UserHMGetHandle(Class->spicn),
+               IMAGE_ICON,
+               UserGetSystemMetrics( SM_CXSMICON ),
+               UserGetSystemMetrics( SM_CYSMICON ),
+               LR_SHARED);
+       }
+
        if (IconSmHandle)
        {
            Class->spicnSm = UserGetCurIconObject(IconSmHandle);
-           /* We can delete the handle, only the pointer is of interest */
-           NtUserDestroyCursor(IconSmHandle, FALSE);
            Class->CSF_flags |= CSF_CACHEDSMICON;
        }
    }

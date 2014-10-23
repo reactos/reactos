@@ -714,15 +714,15 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
                 break;
 #ifdef NEW_CURSORICON
             case GCLP_HCURSOR:
-                Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)DesktopPtrToUser(Class->spcur))->h : 0;
+                Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spcur))->h : 0;
                 break;
 
             case GCLP_HICON:
-                Ret = Class->spicn ? (ULONG_PTR)((PPROCMARKHEAD)DesktopPtrToUser(Class->spicn))->h : 0;
+                Ret = Class->spicn ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicn))->h : 0;
                 break;
 
             case GCLP_HICONSM:
-                Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)DesktopPtrToUser(Class->spicnSm))->h : 0;
+                Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicnSm))->h : 0;
                 break;
 #else
             case GCLP_HCURSOR:
@@ -805,15 +805,15 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
 
 #ifdef NEW_CURSORICON
             case GCLP_HCURSOR:
-                Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)DesktopPtrToUser(Class->spcur))->h : 0;
+                Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spcur))->h : 0;
                 break;
 
             case GCLP_HICON:
-                Ret = Class->spicn ? (ULONG_PTR)((PPROCMARKHEAD)DesktopPtrToUser(Class->spicn))->h : 0;
+                Ret = Class->spicn ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicn))->h : 0;
                 break;
 
             case GCLP_HICONSM:
-                Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)DesktopPtrToUser(Class->spicnSm))->h : 0;
+                Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicnSm))->h : 0;
                 break;
 #else
             case GCLP_HCURSOR:

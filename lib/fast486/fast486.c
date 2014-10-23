@@ -149,7 +149,7 @@ Fast486MemWriteCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG
 
 static VOID
 NTAPI
-Fast486IoReadCallback(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
+Fast486IoReadCallback(PFAST486_STATE State, USHORT Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     UNREFERENCED_PARAMETER(State);
     UNREFERENCED_PARAMETER(Port);
@@ -160,7 +160,7 @@ Fast486IoReadCallback(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG Data
 
 static VOID
 NTAPI
-Fast486IoWriteCallback(PFAST486_STATE State, ULONG Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
+Fast486IoWriteCallback(PFAST486_STATE State, USHORT Port, PVOID Buffer, ULONG DataCount, UCHAR DataSize)
 {
     UNREFERENCED_PARAMETER(State);
     UNREFERENCED_PARAMETER(Port);

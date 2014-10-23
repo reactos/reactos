@@ -273,12 +273,12 @@ static VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
     DebugBreak();
 }
 
-static BYTE WINAPI Port61hRead(ULONG Port)
+static BYTE WINAPI Port61hRead(USHORT Port)
 {
     return Port61hState;
 }
 
-static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
+static VOID WINAPI Port61hWrite(USHORT Port, BYTE Data)
 {
     // BOOLEAN SpeakerStateChange = FALSE;
     BYTE OldPort61hState = Port61hState;
