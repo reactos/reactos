@@ -9,7 +9,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserClass);
 
-BOOL FASTCALL IntClassDestroyIcon(HANDLE hCurIcon);
 static NTSTATUS IntDeregisterClassAtom(IN RTL_ATOM Atom);
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
@@ -251,7 +250,13 @@ IntDestroyClass(IN OUT PCLS Class)
     if (Class->spcur)
         UserDereferenceObject(Class->spcur);
     if (Class->spicnSm)
+    {
         UserDereferenceObject(Class->spicnSm);
+        /* Destroy the icon if we own it */
+        if ((Class->CSF_flags & CSF_CACHEDSMICON)
+                && !(UserObjectInDestroy(UserHMGetHandle(Class->spicnSm))))
+            IntDestroyCurIconObject(Class->spicnSm);
+    }
 #else
     if (Class->hIconSmIntern)
         IntClassDestroyIcon(Class->hIconSmIntern);
@@ -1969,6 +1974,7 @@ UserSetClassLongPtr(IN PCLS Class,
             {
                 /* We will change the small icon */
                 UserDereferenceObject(Class->spicnSm);
+                IntDestroyCurIconObject(Class->spicnSm);
                 Class->spicnSm = NULL;
                 Class->CSF_flags &= ~CSF_CACHEDSMICON;
             }
@@ -1985,7 +1991,7 @@ UserSetClassLongPtr(IN PCLS Class,
                         IMAGE_ICON,
                         UserGetSystemMetrics( SM_CXSMICON ),
                         UserGetSystemMetrics( SM_CYSMICON ),
-                        LR_COPYFROMRESOURCE | LR_SHARED);
+                        LR_COPYFROMRESOURCE);
                 }
                 if (!SmallIconHandle)
                 {
@@ -1995,7 +2001,7 @@ UserSetClassLongPtr(IN PCLS Class,
                         IMAGE_ICON,
                         UserGetSystemMetrics( SM_CXSMICON ),
                         UserGetSystemMetrics( SM_CYSMICON ),
-                        LR_SHARED);
+                        0);
                 }
                 if (SmallIconHandle)
                 {
@@ -2062,6 +2068,7 @@ UserSetClassLongPtr(IN PCLS Class,
 #ifdef NEW_CURSORICON
         {
             PCURICON_OBJECT NewSmallIcon = NULL;
+            BOOLEAN NewIconFromCache = FALSE;
 
             if (NewLong)
             {
@@ -2072,10 +2079,54 @@ UserSetClassLongPtr(IN PCLS Class,
                     return 0;
                 }
             }
+            else
+            {
+                /* Create the new small icon from the large one */
+                HICON SmallIconHandle = NULL;
+                if((Class->spicn->CURSORF_flags & (CURSORF_LRSHARED | CURSORF_FROMRESOURCE))
+                        == (CURSORF_LRSHARED | CURSORF_FROMRESOURCE))
+                {
+                    SmallIconHandle = co_IntCopyImage(
+                        UserHMGetHandle(Class->spicn),
+                        IMAGE_ICON,
+                        UserGetSystemMetrics( SM_CXSMICON ),
+                        UserGetSystemMetrics( SM_CYSMICON ),
+                        LR_COPYFROMRESOURCE);
+                }
+                if (!SmallIconHandle)
+                {
+                    /* Retry without copying from resource */
+                    SmallIconHandle = co_IntCopyImage(
+                        UserHMGetHandle(Class->spicn),
+                        IMAGE_ICON,
+                        UserGetSystemMetrics( SM_CXSMICON ),
+                        UserGetSystemMetrics( SM_CYSMICON ),
+                        0);
+                }
+                if (SmallIconHandle)
+                {
+                    /* So use it */
+                    NewSmallIcon = UserGetCurIconObject(SmallIconHandle);
+                    NewIconFromCache = TRUE;
+                }
+                else
+                {
+                    ERR("Failed getting a small icon for the class.\n");
+                }
+            }
 
             if (Class->spicnSm)
             {
-                Ret = (ULONG_PTR)UserHMGetHandle(Class->spicnSm);
+                if (Class->CSF_flags & CSF_CACHEDSMICON)
+                {
+                    /* We must destroy the icon if we own it */
+                    IntDestroyCurIconObject(Class->spicnSm);
+                    Ret = 0;
+                }
+                else
+                {
+                    Ret = (ULONG_PTR)UserHMGetHandle(Class->spicnSm);
+                }
                 UserDereferenceObject(Class->spicnSm);
             }
             else
@@ -2083,7 +2134,10 @@ UserSetClassLongPtr(IN PCLS Class,
                 Ret = 0;
             }
 
-            Class->CSF_flags &= ~CSF_CACHEDSMICON;
+            if (NewIconFromCache)
+                Class->CSF_flags |= CSF_CACHEDSMICON;
+            else
+                Class->CSF_flags &= ~CSF_CACHEDSMICON;
             Class->spicnSm = NewSmallIcon;
 
             /* Update the clones */
@@ -2094,7 +2148,10 @@ UserSetClassLongPtr(IN PCLS Class,
                     UserDereferenceObject(Class->spicnSm);
                 if (NewSmallIcon)
                     UserReferenceObject(NewSmallIcon);
-                Class->CSF_flags &= ~CSF_CACHEDSMICON;
+                if (NewIconFromCache)
+                    Class->CSF_flags |= CSF_CACHEDSMICON;
+                else
+                    Class->CSF_flags &= ~CSF_CACHEDSMICON;
                 Class->spicnSm = NewSmallIcon;
                 Class = Class->pclsNext;
             }

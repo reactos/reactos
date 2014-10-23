@@ -1686,7 +1686,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                IMAGE_ICON,
                UserGetSystemMetrics( SM_CXSMICON ),
                UserGetSystemMetrics( SM_CYSMICON ),
-               LR_COPYFROMRESOURCE | LR_SHARED);
+               LR_COPYFROMRESOURCE);
        }
        if (!IconSmHandle)
        {
@@ -1696,7 +1696,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                IMAGE_ICON,
                UserGetSystemMetrics( SM_CXSMICON ),
                UserGetSystemMetrics( SM_CYSMICON ),
-               LR_SHARED);
+               0);
        }
 
        if (IconSmHandle)
