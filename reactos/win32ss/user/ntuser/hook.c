@@ -1402,7 +1402,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                         BOOL Ansi)
 {
     PWINSTATION_OBJECT WinStaObj;
-    PHOOK Hook;
+    PHOOK Hook = NULL;
     UNICODE_STRING ModuleName;
     NTSTATUS Status;
     HHOOK Handle;
@@ -1634,6 +1634,8 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     RETURN( Handle);
 
 CLEANUP:
+    if (Hook)
+        UserDereferenceObject(Hook);
     TRACE("Leave NtUserSetWindowsHookEx, ret=%p\n", _ret_);
     UserLeave();
     END_CLEANUP;
