@@ -32,7 +32,6 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 #define STACK_BASE_PAGE    (STACKLOW / PAGE_SIZE)
 #define FREELDR_BASE_PAGE  (FREELDR_BASE / PAGE_SIZE)
 #define DISKBUF_BASE_PAGE  (DISKREADBUFFER / PAGE_SIZE)
-#define BIOSBUF_BASE_PAGE  (BIOSCALLBUFFER / PAGE_SIZE)
 
 #define STACK_PAGE_COUNT   (FREELDR_BASE_PAGE - STACK_BASE_PAGE)
 #define FREELDR_PAGE_COUNT (DISKBUF_BASE_PAGE - FREELDR_BASE_PAGE)
@@ -45,11 +44,10 @@ ULONG PcBiosMapCount;
 FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
 {
     { LoaderFirmwarePermanent, 0x00,               1 }, // realmode int vectors
-    { LoaderFirmwareTemporary, 0x01,               STACK_BASE_PAGE - 1 }, // freeldr stack + cmdline
+    { LoaderFirmwareTemporary, 0x01,               STACK_BASE_PAGE - 1 }, // freeldr stack, cmdline, BIOS call buffer
     { LoaderOsloaderStack,     STACK_BASE_PAGE,    FREELDR_BASE_PAGE - STACK_BASE_PAGE }, // prot mode stack.
     { LoaderLoadedProgram,     FREELDR_BASE_PAGE,  FREELDR_PAGE_COUNT }, // freeldr image
     { LoaderFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
-    { LoaderFirmwareTemporary, BIOSBUF_BASE_PAGE,  BIOSBUF_PAGE_COUNT }, // BIOSCALLBUFFER
     { LoaderFirmwarePermanent, 0x9F,               0x1 },  // EBDA
     { LoaderFirmwarePermanent, 0xA0,               0x50 }, // ROM / Video
     { LoaderSpecialMemory,     0xF0,               0x10 }, // ROM / Video
@@ -203,13 +201,14 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
        bit value at address 0x413 inside the BDA, which gives us the usable size
        in KB */
     Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
-    if (Size < 0x9F000)
+    if (Size < MEMORY_MARGIN)
     {
         FrLdrBugCheckWithMessage(
             MEMORY_INIT_FAILURE,
             __FILE__,
             __LINE__,
-            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n",
+            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n\n"
+            "If you see this, please report to the ReactOS team!",
             Size);
     }
 
@@ -230,13 +229,13 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
     {
         /* Check if this is high enough */
         ULONG EbdaBase = (ULONG)Regs.w.es << 4;
-        if (EbdaBase < 0x9F000)
+        if (EbdaBase < MEMORY_MARGIN)
         {
             FrLdrBugCheckWithMessage(
                 MEMORY_INIT_FAILURE,
                 __FILE__,
                 __LINE__,
-                "The location of your EBDA is 0x%lx, which is too low!\n"
+                "The location of your EBDA is 0x%lx, which is too low!\n\n"
                 "If you see this, please report to the ReactOS team!",
                 EbdaBase);
         }

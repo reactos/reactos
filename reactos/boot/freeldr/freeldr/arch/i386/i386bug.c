@@ -108,8 +108,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
     i386_ScreenPosX = 0;
     i386_ScreenPosY = 0;
 
-    PrintText("An error occured in FreeLoader\n"
-              VERSION"\n"
+    PrintText("An error occured in " VERSION "\n"
               "Report this error to the ReactOS Development mailing list <ros-dev@reactos.org>\n\n"
               "0x%02lx: %s\n", TrapIndex, i386ExceptionDescriptionText[TrapIndex]);
 #ifdef _M_IX86
