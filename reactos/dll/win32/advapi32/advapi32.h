@@ -39,7 +39,7 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
-#include "crypt/crypt.h"
+#include "wine/crypt.h"
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS
