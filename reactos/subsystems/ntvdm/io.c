@@ -70,7 +70,7 @@ IOReadB(USHORT Port)
     {
         UCHAR Data;
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.inb_handler((WORD)Port, &Data);
+        IoPortProc[Port].VddIoHandlers.inb_handler(Port, &Data);
         return Data;
     }
     else
@@ -82,7 +82,7 @@ IOReadB(USHORT Port)
 }
 
 VOID
-IOReadStrB(USHORT  Port,
+IOReadStrB(USHORT Port,
            PUCHAR Buffer,
            ULONG  Count)
 {
@@ -96,7 +96,7 @@ IOReadStrB(USHORT  Port,
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.insb_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.insb_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
@@ -106,7 +106,7 @@ IOReadStrB(USHORT  Port,
 
 VOID
 IOWriteB(USHORT Port,
-         UCHAR Buffer)
+         UCHAR  Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.OutB)
@@ -117,7 +117,7 @@ IOWriteB(USHORT Port,
              IoPortProc[Port].VddIoHandlers.outb_handler)
     {
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outb_handler((WORD)Port, Buffer);
+        IoPortProc[Port].VddIoHandlers.outb_handler(Port, Buffer);
     }
     else
     {
@@ -127,7 +127,7 @@ IOWriteB(USHORT Port,
 }
 
 VOID
-IOWriteStrB(USHORT  Port,
+IOWriteStrB(USHORT Port,
             PUCHAR Buffer,
             ULONG  Count)
 {
@@ -141,7 +141,7 @@ IOWriteStrB(USHORT  Port,
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outsb_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.outsb_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
@@ -162,7 +162,7 @@ IOReadW(USHORT Port)
     {
         USHORT Data;
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.inw_handler((WORD)Port, &Data);
+        IoPortProc[Port].VddIoHandlers.inw_handler(Port, &Data);
         return Data;
     }
     else
@@ -177,7 +177,7 @@ IOReadW(USHORT Port)
 }
 
 VOID
-IOReadStrW(USHORT   Port,
+IOReadStrW(USHORT  Port,
            PUSHORT Buffer,
            ULONG   Count)
 {
@@ -191,7 +191,7 @@ IOReadStrW(USHORT   Port,
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.insw_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.insw_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
@@ -200,7 +200,7 @@ IOReadStrW(USHORT   Port,
 }
 
 VOID
-IOWriteW(USHORT  Port,
+IOWriteW(USHORT Port,
          USHORT Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
@@ -212,7 +212,7 @@ IOWriteW(USHORT  Port,
              IoPortProc[Port].VddIoHandlers.outw_handler)
     {
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outw_handler((WORD)Port, Buffer);
+        IoPortProc[Port].VddIoHandlers.outw_handler(Port, Buffer);
     }
     else
     {
@@ -223,7 +223,7 @@ IOWriteW(USHORT  Port,
 }
 
 VOID
-IOWriteStrW(USHORT   Port,
+IOWriteStrW(USHORT  Port,
             PUSHORT Buffer,
             ULONG   Count)
 {
@@ -237,7 +237,7 @@ IOWriteStrW(USHORT   Port,
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outsw_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.outsw_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
@@ -265,7 +265,7 @@ IOReadD(USHORT Port)
 }
 
 VOID
-IOReadStrD(USHORT  Port,
+IOReadStrD(USHORT Port,
            PULONG Buffer,
            ULONG  Count)
 {
@@ -282,7 +282,7 @@ IOReadStrD(USHORT  Port,
 
 VOID
 IOWriteD(USHORT Port,
-         ULONG Buffer)
+         ULONG  Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.OutD)
@@ -298,7 +298,7 @@ IOWriteD(USHORT Port,
 }
 
 VOID
-IOWriteStrD(USHORT  Port,
+IOWriteStrD(USHORT Port,
             PULONG Buffer,
             ULONG  Count)
 {
