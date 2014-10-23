@@ -40,7 +40,7 @@ COMMAND cmds[] =
     {L"stop",       cmdStop},
     {L"time",       unimplemented},
     {L"use",        unimplemented},
-    {L"user",       unimplemented},
+    {L"user",       cmdUser},
     {L"view",       unimplemented},
     {NULL,          NULL}
 };
