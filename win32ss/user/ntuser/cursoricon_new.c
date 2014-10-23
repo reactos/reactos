@@ -187,7 +187,8 @@ IntDestroyCurIconObject(
 
     /* We just mark the handle as being destroyed.
      * Deleting all the stuff will be deferred to the actual struct free. */
-    return UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
+    UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
+    return TRUE;
 }
 
 void
@@ -357,16 +358,18 @@ NtUserGetIconInfo(
         /* Get the module name from the atom table */
         _SEH2_TRY
         {
-            if (BufLen > (lpModule->MaximumLength * sizeof(WCHAR)))
+            BufLen += sizeof(WCHAR);
+            if (BufLen > (lpModule->MaximumLength))
             {
                 lpModule->Length = 0;
+                lpModule->MaximumLength = BufLen;
             }
             else
             {
                 ProbeForWrite(lpModule->Buffer, lpModule->MaximumLength, 1);
-                BufLen = lpModule->MaximumLength * sizeof(WCHAR);
+                BufLen = lpModule->MaximumLength;
                 RtlQueryAtomInAtomTable(gAtomTable, CurIcon->atomModName, NULL, NULL, lpModule->Buffer, &BufLen);
-                lpModule->Length = BufLen/sizeof(WCHAR);
+                lpModule->Length = BufLen;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -395,15 +398,18 @@ NtUserGetIconInfo(
             {
                 lpResName->Buffer = CurIcon->strName.Buffer;
                 lpResName->Length = 0;
+                lpResName->MaximumLength = 0;
             }
-            else if (lpResName->MaximumLength < CurIcon->strName.Length)
+            else if (lpResName->MaximumLength < CurIcon->strName.MaximumLength)
             {
                 lpResName->Length = 0;
+                lpResName->MaximumLength = CurIcon->strName.MaximumLength;
             }
             else
             {
-                ProbeForWrite(lpResName->Buffer, lpResName->MaximumLength * sizeof(WCHAR), 1);
-                RtlCopyMemory(lpResName->Buffer, CurIcon->strName.Buffer, lpResName->Length);
+                ProbeForWrite(lpResName->Buffer, lpResName->MaximumLength, 1);
+                RtlCopyMemory(lpResName->Buffer, CurIcon->strName.Buffer, CurIcon->strName.Length);
+                lpResName->Length = CurIcon->strName.Length;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

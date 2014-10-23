@@ -17,9 +17,6 @@ add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
 
 list(APPEND SOURCE
-    crypt/crypt.c
-    crypt/crypt_des.c
-    crypt/crypt_lmhash.c
     misc/dllmain.c
     misc/efs.c
     misc/hwprofiles.c
@@ -44,6 +41,9 @@ list(APPEND SOURCE
     service/sctrl.c
     token/privilege.c
     token/token.c
+    wine/crypt.c
+    wine/crypt_des.c
+    wine/crypt_lmhash.c
     advapi32.h)
 
 add_library(advapi32 SHARED

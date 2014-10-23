@@ -10,6 +10,7 @@ list(APPEND SOURCE
     cmdPause.c
     cmdStart.c
     cmdStop.c
+    cmdUser.c
     help.c
     net.h)
 

@@ -44,7 +44,9 @@ BEGIN
     IDS_TIME_HELP "TIME\n..."
     IDS_USE_SYNTAX "Usage:\nNET USE ..."
     IDS_USE_HELP "USE\n..."
-    IDS_USER_SYNTAX "Usage:\nNET USER ..."
+    IDS_USER_SYNTAX "Usage:\nNET USER [username [password | *] [options]] [/DOMAIN]\n\
+         username {password | *} /ADD [options] [/DOMAIN]\n\
+         username [/DELETE] [/DOMAIN]"
     IDS_USER_HELP "USER\n..."
     IDS_VIEW_SYNTAX "Usage:\nNET VIEW ..."
     IDS_VIEW_HELP "VIEW\n..."

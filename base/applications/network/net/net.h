@@ -13,6 +13,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winuser.h>
 #include <winsvc.h>
 #include <stdio.h>
@@ -39,5 +40,6 @@ INT cmdLocalGroup(INT argc, WCHAR **argv);
 INT cmdPause(INT argc, WCHAR **argv);
 INT cmdStart(INT argc, WCHAR **argv);
 INT cmdStop(INT argc, WCHAR **argv);
+INT cmdUser(INT argc, WCHAR **argv);
 
 #endif /* _NET_PCH_ */
