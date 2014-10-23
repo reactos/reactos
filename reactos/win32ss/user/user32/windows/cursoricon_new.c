@@ -1801,7 +1801,7 @@ CURSORICON_CopyImage(
     if(ret && (fuFlags & LR_COPYDELETEORG))
         DestroyIcon(hicon);
     
-    return hicon;
+    return ret;
 }
 
 NTSTATUS WINAPI
