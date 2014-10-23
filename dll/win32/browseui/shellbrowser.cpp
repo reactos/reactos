@@ -1078,8 +1078,11 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
         HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
 
-        SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
-        SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
+        HICON oldSmall = (HICON)SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
+        HICON oldLarge = (HICON)SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
+
+        DestroyIcon(oldSmall);
+        DestroyIcon(oldLarge);
     }
 
     // TODO: Update the window icon

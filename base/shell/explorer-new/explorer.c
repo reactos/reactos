@@ -392,14 +392,22 @@ _tWinMain(IN HINSTANCE hInstance,
     if (GetShellWindow() == NULL)
         CreateShellDesktop = TRUE;
 
-    /* FIXME - initialize SSO Thread */
-
     if (!CreateShellDesktop)
     {
         EXPLORER_CMDLINE_PARSE_RESULTS parseResults = { 0 };
 
         if (SHExplorerParseCmdLine(&parseResults))
             return SHCreateFromDesktop(&parseResults);
+
+        if (parseResults.strPath)
+            SHFree(parseResults.strPath);
+
+        if (parseResults.pidlPath)
+            ILFree(parseResults.pidlPath);
+
+        if (parseResults.pidlRoot)
+            ILFree(parseResults.pidlRoot);
+
     }
 
     if (RegOpenKey(HKEY_CURRENT_USER,

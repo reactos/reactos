@@ -37,5 +37,14 @@ int _tmain(int argc, _TCHAR* argv[])
         return SHCreateFromDesktop(&parseResults);
     }
 
+    if (parseResults.strPath)
+        SHFree(parseResults.strPath);
+
+    if (parseResults.pidlPath)
+        ILFree(parseResults.pidlPath);
+
+    if (parseResults.pidlRoot)
+        ILFree(parseResults.pidlRoot);
+
     return 0;
 }

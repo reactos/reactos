@@ -641,6 +641,16 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
 
 HRESULT CMenuFocusManager::PlaceHooks()
 {
+    if (m_hMsgFilterHook)
+    {
+        WARN("GETMESSAGE hook already placed!\n");
+        return S_OK;
+    }
+    if (m_hMsgFilterHook)
+    {
+        WARN("MSGFILTER hook already placed!\n");
+        return S_OK;
+    }
     if (m_current->type == TrackedMenuEntry)
     {
         TRACE("Entering MSGFILTER hook...\n");
