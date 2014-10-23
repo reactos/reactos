@@ -397,7 +397,7 @@ get_best_icon_file_entry(
     if ( dwFileSize < sizeof(*dir) )
         return NULL;
 
-    if (dwFileSize < (sizeof(*dir) + FIELD_OFFSET(CURSORICONFILEDIR, idEntries[dir->idCount])))
+    if (dwFileSize < FIELD_OFFSET(CURSORICONFILEDIR, idEntries[dir->idCount]))
         return NULL;
 
     /* 
