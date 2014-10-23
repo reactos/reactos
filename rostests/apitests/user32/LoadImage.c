@@ -39,11 +39,27 @@ START_TEST(LoadImage)
         hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, 0);
         ok(hCopy != NULL, "\n");
         ok(DestroyIcon(hCopy), "\n");
+        /* Unlike the original, this one is not shared */
+        ok(!DestroyIcon(hCopy), "\n");
         
         hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, LR_COPYFROMRESOURCE);
         ok(hCopy != NULL, "\n");
         ok(DestroyIcon(hCopy), "\n");
+        /* Unlike the original, this one is not shared */
+        ok(!DestroyIcon(hCopy), "\n");
+
+        hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, LR_COPYFROMRESOURCE | LR_SHARED);
+        ok(hCopy != NULL, "\n");
+        ok(DestroyIcon(hCopy), "\n");
+        /* This one is shared */
+        ok(DestroyIcon(hCopy), "\n");
         
+        hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, LR_SHARED);
+        ok(hCopy != NULL, "\n");
+        ok(DestroyIcon(hCopy), "\n");
+        /* This one is shared */
+        ok(DestroyIcon(hCopy), "\n");
+
         /* Try various usual functions */
         hdcScreen = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
         ok(hdcScreen != NULL, "\n");
