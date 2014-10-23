@@ -104,7 +104,10 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::GetMenuInfo(
         return E_INVALIDARG;
 
     if (ppsmc)
+    {
+        m_psmc->AddRef();
         *ppsmc = m_psmc;
+    }
 
     if (puId)
         *puId = m_uId;
@@ -373,6 +376,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
     if (m_Show == fShow)
         return S_OK;
 
+    m_Show = fShow;
+
     if (m_staticToolbar != NULL)
     {
         hr = m_staticToolbar->ShowWindow(fShow);
@@ -413,8 +418,6 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
             hr = m_focusManager->PopMenuBar(this);
     }
 
-    m_Show = fShow;
-
     return S_OK;
 }
 
@@ -435,19 +438,14 @@ HRESULT STDMETHODCALLTYPE CMenuBand::CloseDW(DWORD dwReserved)
     if (m_staticToolbar != NULL)
     {
         m_staticToolbar->Close();
-        delete m_staticToolbar;
-        m_staticToolbar = NULL;
     }
 
     if (m_SFToolbar != NULL)
     {
         m_SFToolbar->Close();
-        delete m_staticToolbar;
-        m_staticToolbar = NULL;
     }
 
     if (m_site) m_site.Release();
-    if (m_psmc) m_psmc.Release();
     if (m_subMenuChild) m_subMenuChild.Release();
     if (m_subMenuParent) m_subMenuParent.Release();
     if (m_childBand) m_childBand.Release();
@@ -596,7 +594,7 @@ HRESULT CMenuBand::_SetParentBand(CMenuBand * parent)
 
 HRESULT CMenuBand::_IsPopup()
 {
-    return m_subMenuParent ? S_OK : S_FALSE;
+    return !(m_dwFlags & SMINIT_VERTICAL);
 }
 
 HRESULT CMenuBand::_IsTracking()
@@ -606,9 +604,14 @@ HRESULT CMenuBand::_IsTracking()
 
 HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 {
-    if (m_subMenuChild)
+    CComPtr<IMenuPopup> child = m_subMenuChild;
+
+    m_subMenuChild = NULL;
+        
+    if (child)
     {
-        ReleaseCComPtrExpectZero(m_subMenuChild);
+        IUnknown_SetSite(child, NULL);
+        child.Release();
     }
 
     if (!punkClient)
@@ -989,15 +992,29 @@ HRESULT CMenuBand::_CancelCurrentPopup()
 HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RECTL * pExclude, BOOL keyInitiated)
 {
     HRESULT hr = 0;
-    IBandSite* pBandSite;
-    IDeskBar* pDeskBar;
+    CComPtr<IBandSite> pBandSite;
+    CComPtr<IDeskBar> pDeskBar;
 
     // Create the necessary objects
+#if USE_SYSTEM_MENUSITE
+    hr = CoCreateInstance(CLSID_MenuBandSite,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IBandSite, &pBandSite));
+#else
     hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
+#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+#if USE_SYSTEM_MENUDESKBAR
+    hr = CoCreateInstance(CLSID_MenuDeskBar,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARG(IDeskBar, &pDeskBar));
+#else
     hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
+#endif
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

@@ -50,6 +50,7 @@ private:
     BOOL  m_Shown;
     DWORD m_ShowFlags;
 
+    virtual void OnFinalMessage(HWND hWnd);
 public:
     CMenuDeskBar();
     virtual ~CMenuDeskBar();
@@ -60,6 +61,7 @@ public:
     DECLARE_WND_CLASS_EX(_T("BaseBar"), CS_SAVEBITS | CS_DROPSHADOW, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CMenuDeskBar)
+        MESSAGE_HANDLER(WM_CREATE, _OnCreate)
         MESSAGE_HANDLER(WM_SIZE, _OnSize)
         MESSAGE_HANDLER(WM_NOTIFY, _OnNotify)
         MESSAGE_HANDLER(WM_PAINT, _OnPaint)
@@ -125,6 +127,7 @@ public:
 
 private:
     // message handlers
+    LRESULT _OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);

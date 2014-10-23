@@ -587,11 +587,13 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
         if (favoritesPIDL)
             ILFree(favoritesPIDL);
-        if (SUCCEEDED(hResult))
-            fFavoritesMenu.Attach(newMenu.Detach());
+
+        if (FAILED(hResult))
+            return hResult;
+            
+        fFavoritesMenu = newMenu;
     }
-    if (fFavoritesMenu.p == NULL)
-        return E_FAIL;
+
     return fFavoritesMenu->QueryInterface(riid, ppvObject);
 }
 
@@ -665,7 +667,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
         case 49:
             break;
         case 0x10000000:
-            break;
+            return S_OK;
     }
     return S_FALSE;
 }
@@ -743,8 +745,6 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
         }
     }
 #endif
-
-    menubar->AddRef();
 
     if (FAILED_UNEXPECTEDLY(hResult))
     {

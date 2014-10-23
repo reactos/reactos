@@ -254,6 +254,8 @@ HRESULT STDMETHODCALLTYPE CAddressBand::CloseDW(DWORD dwReserved)
 
     m_hWnd = NULL;
 
+    IUnknown_SetSite(fAddressEditBox, NULL);
+
     if (fAddressEditBox) fAddressEditBox.Release();
     if (fSite) fSite.Release();
 

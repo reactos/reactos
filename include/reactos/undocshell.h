@@ -638,7 +638,7 @@ public:
     STDMETHOD_(ULONG, AddRef)()
     {
         int rc = this->InternalAddRef();
-        DbgPrint("RefCount is now %d(++)!\n", rc);
+        DbgPrint("RefCount is now %d(++)! %s\n", rc, __FUNCTION__);
         return rc;
     }
 
@@ -647,9 +647,15 @@ public:
         ULONG								newRefCount;
 
         newRefCount = this->InternalRelease();
-        DbgPrint("RefCount is now %d(--)!\n", newRefCount);
         if (newRefCount == 0)
+        {
+            DbgPrint("RefCount is now 0! Deleting! %s\n", newRefCount, __FUNCTION__);
             delete this;
+        }
+        else
+        {
+            DbgPrint("RefCount is now %d(--)! %s\n", newRefCount, __FUNCTION__);
+        }
         return newRefCount;
     }
 
@@ -691,6 +697,12 @@ public:
     }
 };
 
+#ifdef DEBUG_CCOMOBJECT
+#   define _CComObject CComDebugObject
+#else
+#   define _CComObject CComObject
+#endif
+
 template<class T>
 void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
 {
@@ -721,7 +733,7 @@ HRESULT inline ShellObjectCreator(REFIID riid, R ** ppv)
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(obj = new CComObject<T>);
+ATLTRY(obj = new _CComObject<T>);
     if (obj.p == NULL)
         return E_OUTOFMEMORY;
     hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
@@ -740,7 +752,7 @@ HRESULT inline ShellObjectCreatorInit(REFIID riid, R ** ppv)
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(obj = new CComObject<T>);
+    ATLTRY(obj = new _CComObject<T>);
     if (obj.p == NULL)
         return E_OUTOFMEMORY;
     hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
@@ -766,7 +778,7 @@ HRESULT inline ShellObjectCreatorInit(REFIID riid, void ** ppv)
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(obj = new CComObject<T>);
+    ATLTRY(obj = new _CComObject<T>);
     if (obj.p == NULL)
         return E_OUTOFMEMORY;
     hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
@@ -792,7 +804,7 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, REFIID riid, R ** ppv)
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(obj = new CComObject<T>);
+    ATLTRY(obj = new _CComObject<T>);
     if (obj.p == NULL)
         return E_OUTOFMEMORY;
     hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
@@ -818,7 +830,7 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, REFIID riid, R *
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(obj = new CComObject<T>);
+    ATLTRY(obj = new _CComObject<T>);
     if (obj.p == NULL)
         return E_OUTOFMEMORY;
     hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
@@ -844,7 +856,7 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, REF
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(obj = new CComObject<T>);
+    ATLTRY(obj = new _CComObject<T>);
     if (obj.p == NULL)
         return E_OUTOFMEMORY;
     hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
@@ -870,7 +882,7 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
     if (ppv == NULL)
         return E_POINTER;
     *ppv = NULL;
-    ATLTRY(obj = new CComObject<T>);
+    ATLTRY(obj = new _CComObject<T>);
     if (obj.p == NULL)
         return E_OUTOFMEMORY;
     hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));

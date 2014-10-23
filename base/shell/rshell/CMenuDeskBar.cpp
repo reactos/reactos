@@ -47,6 +47,19 @@ CMenuDeskBar::~CMenuDeskBar()
 {
 }
 
+LRESULT CMenuDeskBar::_OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    this->AddRef();
+
+    bHandled = FALSE;
+    return 0;
+}
+
+void CMenuDeskBar::OnFinalMessage(HWND /* hWnd */)
+{
+    this->Release();
+}
+
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)
 {
     return S_OK;
@@ -245,8 +258,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSite(IUnknown *pUnkSite)
     }
     else
     {
-        DestroyWindow();
         SetClient(NULL);
+        DestroyWindow();
     }
 
     return S_OK;
@@ -450,6 +463,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 {
+    CComPtr<IDeskBar> safeThis = this;
+
     /* As far as I can tell, the submenu hierarchy looks like this:
      *
      * The DeskBar's Child is the Band it contains.
@@ -493,6 +508,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 
 HRESULT CMenuDeskBar::_CloseBar()
 {
+    CComPtr<IDeskBar> safeThis = this;
     CComPtr<IDeskBarClient> dbc;
     HRESULT hr;
 

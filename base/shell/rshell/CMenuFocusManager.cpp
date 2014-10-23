@@ -759,7 +759,9 @@ HRESULT CMenuFocusManager::UpdateFocus()
 
 HRESULT CMenuFocusManager::PushMenuBar(CMenuBand * mb)
 {
-    TRACE("PushTrackedPopup %p\n", mb);
+    DbgPrint("PushMenuBar %p\n", mb);
+
+    mb->AddRef();
 
     _ASSERT(m_bandCount == 0);
 
@@ -772,7 +774,9 @@ HRESULT CMenuFocusManager::PushMenuBar(CMenuBand * mb)
 
 HRESULT CMenuFocusManager::PushMenuPopup(CMenuBand * mb)
 {
-    TRACE("PushTrackedPopup %p\n", mb);
+    DbgPrint("PushTrackedPopup %p\n", mb);
+
+    mb->AddRef();
 
     _ASSERT(!m_current || m_current->type != TrackedMenuEntry);
 
@@ -793,7 +797,7 @@ HRESULT CMenuFocusManager::PushMenuPopup(CMenuBand * mb)
 
 HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
 {
-    TRACE("PushTrackedPopup %p\n", popup);
+    DbgPrint("PushTrackedPopup %p\n", popup);
 
     _ASSERT(m_bandCount > 0);
     _ASSERT(!m_current || m_current->type != TrackedMenuEntry);
@@ -802,7 +806,7 @@ HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    TRACE("PushTrackedPopup %p\n", popup);
+    DbgPrint("PushTrackedPopup %p\n", popup);
     m_selectedMenu = popup;
     m_selectedItem = -1;
     m_selectedItemFlags = 0;
@@ -816,7 +820,7 @@ HRESULT CMenuFocusManager::PopMenuBar(CMenuBand * mb)
     CMenuBand * mbc;
     HRESULT hr;
 
-    TRACE("PopMenuBar %p\n", mb);
+    DbgPrint("PopMenuBar %p\n", mb);
 
     hr = PopFromArray(&type, &mbc, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -833,6 +837,8 @@ HRESULT CMenuFocusManager::PopMenuBar(CMenuBand * mb)
         return E_FAIL;
 
     mbc->_SetParentBand(NULL);
+
+    mbc->Release();
 
     hr = UpdateFocus();
     if (FAILED_UNEXPECTEDLY(hr))
@@ -853,7 +859,7 @@ HRESULT CMenuFocusManager::PopMenuPopup(CMenuBand * mb)
     CMenuBand * mbc;
     HRESULT hr;
 
-    TRACE("PopMenuPopup %p\n", mb);
+    DbgPrint("PopMenuPopup %p\n", mb);
 
     hr = PopFromArray(&type, &mbc, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -870,6 +876,8 @@ HRESULT CMenuFocusManager::PopMenuPopup(CMenuBand * mb)
         return E_FAIL;
 
     mbc->_SetParentBand(NULL);
+
+    mbc->Release();
 
     hr = UpdateFocus();
     if (FAILED_UNEXPECTEDLY(hr))
@@ -890,7 +898,7 @@ HRESULT CMenuFocusManager::PopTrackedPopup(HMENU popup)
     HMENU hmenu;
     HRESULT hr;
 
-    TRACE("PopTrackedPopup %p\n", popup);
+    DbgPrint("PopTrackedPopup %p\n", popup);
 
     hr = PopFromArray(&type, NULL, &hmenu);
     if (FAILED_UNEXPECTEDLY(hr))

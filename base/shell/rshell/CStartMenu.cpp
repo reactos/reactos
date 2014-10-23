@@ -390,9 +390,9 @@ extern "C"
 HRESULT WINAPI
 CStartMenu_Constructor(REFIID riid, void **ppv)
 {
-    IShellMenu* pShellMenu;
-    IBandSite* pBandSite;
-    IDeskBar* pDeskBar;
+    CComPtr<IShellMenu> pShellMenu;
+    CComPtr<IBandSite> pBandSite;
+    CComPtr<IDeskBar> pDeskBar;
 
     HRESULT hr;
     IShellFolder * psf;
