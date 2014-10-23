@@ -63,9 +63,9 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
         return NULL;
     }
 
-    if(UserObjectInDestroy(hCurIcon))
+    if (UserObjectInDestroy(hCurIcon))
     {
-        ERR("Requesting destroyed cursor.\n");
+        WARN("Requesting invalid/destroyed cursor.\n");
         EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
         return NULL;
     }
@@ -155,6 +155,36 @@ IntDestroyCurIconObject(
 {
     PCURICON_OBJECT CurIcon = Object;
 
+    /* Try finding it in its process cache */
+    if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
+    {
+        PPROCESSINFO ppi;
+
+        ppi = CurIcon->head.ppi;
+        if (ppi->pCursorCache == CurIcon)
+        {
+            ppi->pCursorCache = CurIcon->pcurNext;
+            UserDereferenceObject(CurIcon);
+        }
+        else
+        {
+            PCURICON_OBJECT CacheCurIcon = ppi->pCursorCache;
+            while (CacheCurIcon)
+            {
+                if (CacheCurIcon->pcurNext == CurIcon)
+                {
+                    CacheCurIcon->pcurNext = CurIcon->pcurNext;
+                    break;
+                }
+                CacheCurIcon = CacheCurIcon->pcurNext;
+            }
+
+            /* We must have found it! */
+            ASSERT(CacheCurIcon != NULL);
+            UserDereferenceObject(CurIcon);
+        }
+    }
+
     /* We just mark the handle as being destroyed.
      * Deleting all the stuff will be deferred to the actual struct free. */
     return UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
@@ -204,32 +234,12 @@ FreeCurIconObject(
 
     if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
     {
-        PPROCESSINFO ppi;
-
         if (!IS_INTRESOURCE(CurIcon->strName.Buffer))
             ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
         if (CurIcon->atomModName)
             RtlDeleteAtomFromAtomTable(gAtomTable, CurIcon->atomModName);
         CurIcon->strName.Buffer = NULL;
         CurIcon->atomModName = 0;
-
-        /* Try finding it in its process cache */
-        ppi = CurIcon->head.ppi;
-        if (ppi->pCursorCache == CurIcon)
-            ppi->pCursorCache = CurIcon->pcurNext;
-        else
-        {
-            PCURICON_OBJECT CacheCurIcon= ppi->pCursorCache;
-            while (CacheCurIcon)
-            {
-                if (CacheCurIcon->pcurNext == CurIcon)
-                {
-                    CacheCurIcon->pcurNext = CurIcon->pcurNext;
-                    break;
-                }
-                CacheCurIcon = CacheCurIcon->pcurNext;
-            }
-        }
     }
 
     /* Finally free the thing */
@@ -635,7 +645,7 @@ NtUserDestroyCursor(
 {
     BOOL ret;
 
-    TRACE("Enter NtUserDestroyCursorIcon\n");
+    TRACE("Enter NtUserDestroyCursorIcon (%p, %u)\n", hCurIcon, bForce);
     UserEnterExclusive();
 
     if (!bForce)
@@ -842,7 +852,7 @@ NtUserSetCursor(
     PCURICON_OBJECT pcurOld, pcurNew;
     HCURSOR hOldCursor = NULL;
 
-    TRACE("Enter NtUserSetCursor\n");
+    TRACE("Enter NtUserSetCursor: %p\n", hCursor);
     UserEnterExclusive();
 
     if (hCursor)
@@ -863,6 +873,10 @@ NtUserSetCursor(
     pcurOld = UserSetCursor(pcurNew, FALSE);
     if (pcurOld)
     {
+        hOldCursor = pcurOld->head.h;
+        /* See if it was destroyed in the meantime */
+        if (UserObjectInDestroy(hOldCursor))
+            hOldCursor = NULL;
         pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
         UserDereferenceObject(pcurOld);
     }
