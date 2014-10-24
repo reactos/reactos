@@ -249,6 +249,7 @@ IntCreateCompatibleBitmap(
         /* Set flags */
         psurf->flags = API_BITMAP;
         psurf->hdc = NULL; // FIXME:
+        psurf->SurfObj.hdev = (HDEV)Dc->ppdev;
         SURFACE_ShareUnlockSurface(psurf);
     }
     else
@@ -277,6 +278,7 @@ IntCreateCompatibleBitmap(
             /* Set flags */
             psurfBmp->flags = API_BITMAP;
             psurfBmp->hdc = NULL; // FIXME:
+            psurf->SurfObj.hdev = (HDEV)Dc->ppdev;
             SURFACE_ShareUnlockSurface(psurfBmp);
         }
         else if (Count == sizeof(DIBSECTION))

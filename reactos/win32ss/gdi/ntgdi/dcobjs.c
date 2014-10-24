@@ -330,6 +330,10 @@ DC_bIsBitmapCompatible(PDC pdc, PSURFACE psurf)
     /* DIB sections are always compatible */
     if (psurf->hSecure != NULL) return TRUE;
 
+    /* See if this is the same PDEV */
+    if (psurf->SurfObj.hdev == (HDEV)pdc->ppdev)
+        return TRUE;
+
     /* Get the bit depth of the bitmap */
     cBitsPixel = gajBitsPerFormat[psurf->SurfObj.iBitmapFormat];
 
