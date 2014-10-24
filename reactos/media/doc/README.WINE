@@ -256,11 +256,11 @@ check Wine current souces first as it may already be fixed.
 reactos/lib/3rdparty/strmbase               # Synced to Wine-1.7.27
 
 advapi32 -
+  reactos/dll/win32/advapi32/sec/sid.c           # Out of Sync
+  reactos/dll/win32/advapi32/wine/cred.c         # Synced to Wine-1.7.27
   reactos/dll/win32/advapi32/wine/crypt.c        # Synced to Wine-1.7.27
   reactos/dll/win32/advapi32/wine/crypt_des.c    # Synced to Wine-1.7.27
   reactos/dll/win32/advapi32/wine/crypt_lmhash.c # Synced to Wine-1.7.27
-  reactos/dll/win32/advapi32/sec/cred.c          # Synced to Wine-1.7.27
-  reactos/dll/win32/advapi32/sec/sid.c           # Out of Sync
 
 gdi32 -
   reactos/dll/win32/gdi32/objects/linedda.c     # Synced at 20090410
