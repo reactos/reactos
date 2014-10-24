@@ -1277,6 +1277,8 @@ extern ULONG IopNumTriageDumpDataBlocks;
 extern PVOID IopTriageDumpDataBlocks[64];
 extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
 extern PDRIVER_OBJECT IopRootDriverObject;
+extern KSPIN_LOCK IopDeviceRelationsSpinLock;
+extern LIST_ENTRY IopDeviceRelationsRequestList;
 
 //
 // Inlined Functions

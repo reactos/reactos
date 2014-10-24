@@ -30,12 +30,16 @@ extern BOOLEAN PnpSystemInit;
 
 PDRIVER_OBJECT IopRootDriverObject;
 PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList = NULL;
+LIST_ENTRY IopDeviceRelationsRequestList;
+WORK_QUEUE_ITEM IopDeviceRelationsWorkItem;
+BOOLEAN IopDeviceRelationsRequestInProgress;
+KSPIN_LOCK IopDeviceRelationsSpinLock;
 
 typedef struct _INVALIDATE_DEVICE_RELATION_DATA
 {
+    LIST_ENTRY RequestListEntry;
     PDEVICE_OBJECT DeviceObject;
     DEVICE_RELATION_TYPE Type;
-    PIO_WORKITEM WorkItem;
 } INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
 
 /* FUNCTIONS *****************************************************************/
@@ -890,20 +894,34 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
    return Status;
 }
 
-static VOID NTAPI
-IopAsynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID InvalidateContext)
+static
+VOID
+NTAPI
+IopDeviceRelationsWorker(
+    _In_ PVOID Context)
 {
-    PINVALIDATE_DEVICE_RELATION_DATA Data = InvalidateContext;
+    PLIST_ENTRY ListEntry;
+    PINVALIDATE_DEVICE_RELATION_DATA Data;
+    KIRQL OldIrql;
 
-    IoSynchronousInvalidateDeviceRelations(
-        Data->DeviceObject,
-        Data->Type);
+    KeAcquireSpinLock(&IopDeviceRelationsSpinLock, &OldIrql);
+    while (!IsListEmpty(&IopDeviceRelationsRequestList))
+    {
+        ListEntry = RemoveHeadList(&IopDeviceRelationsRequestList);
+        KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
+        Data = CONTAINING_RECORD(ListEntry,
+                                 INVALIDATE_DEVICE_RELATION_DATA,
+                                 RequestListEntry);
 
-    ObDereferenceObject(Data->DeviceObject);
-    IoFreeWorkItem(Data->WorkItem);
-    ExFreePool(Data);
+        IoSynchronousInvalidateDeviceRelations(Data->DeviceObject,
+                                               Data->Type);
+
+        ObDereferenceObject(Data->DeviceObject);
+        ExFreePool(Data);
+        KeAcquireSpinLock(&IopDeviceRelationsSpinLock, &OldIrql);
+    }
+    IopDeviceRelationsRequestInProgress = FALSE;
+    KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
 }
 
 NTSTATUS
@@ -4670,29 +4688,32 @@ IoInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN DEVICE_RELATION_TYPE Type)
 {
-    PIO_WORKITEM WorkItem;
     PINVALIDATE_DEVICE_RELATION_DATA Data;
+    KIRQL OldIrql;
 
     Data = ExAllocatePool(NonPagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
     if (!Data)
         return;
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!WorkItem)
-    {
-        ExFreePool(Data);
-        return;
-    }
 
     ObReferenceObject(DeviceObject);
     Data->DeviceObject = DeviceObject;
     Data->Type = Type;
-    Data->WorkItem = WorkItem;
 
-    IoQueueWorkItem(
-        WorkItem,
-        IopAsynchronousInvalidateDeviceRelations,
-        DelayedWorkQueue,
-        Data);
+    KeAcquireSpinLock(&IopDeviceRelationsSpinLock, &OldIrql);
+    InsertTailList(&IopDeviceRelationsRequestList, &Data->RequestListEntry);
+    if (IopDeviceRelationsRequestInProgress)
+    {
+        KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
+        return;
+    }
+    IopDeviceRelationsRequestInProgress = TRUE;
+    KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
+
+    ExInitializeWorkItem(&IopDeviceRelationsWorkItem,
+                         IopDeviceRelationsWorker,
+                         NULL);
+    ExQueueWorkItem(&IopDeviceRelationsWorkItem,
+                    DelayedWorkQueue);
 }
 
 /*
