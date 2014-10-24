@@ -802,6 +802,24 @@ GetLengthSid(PSID pSid)
 /*
  * @implemented
  */
+BOOL WINAPI
+AllocateLocallyUniqueId(PLUID Luid)
+{
+    NTSTATUS Status;
+
+    Status = NtAllocateLocallyUniqueId (Luid);
+    if (!NT_SUCCESS (Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
 BOOL
 WINAPI
 AccessCheck(IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -2172,24 +2190,6 @@ DuplicateToken(IN HANDLE ExistingTokenHandle,
                             ImpersonationLevel,
                             TokenImpersonation,
                             DuplicateTokenHandle);
-}
-
-/*
- * @implemented
- */
-BOOL WINAPI
-AllocateLocallyUniqueId(PLUID Luid)
-{
-    NTSTATUS Status;
-
-    Status = NtAllocateLocallyUniqueId (Luid);
-    if (!NT_SUCCESS (Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 /******************************************************************************
