@@ -1336,7 +1336,7 @@ IntCreateDIBitmap(
     // colors, which are black followed by white, nothing else. In all other cases, we create a color bitmap.
 
     if (BmpFormat != BMF_1BPP) fColor = TRUE;
-    else if ((coloruse > DIB_RGB_COLORS) || (init != CBM_INIT) || !data) fColor = FALSE;
+    else if ((coloruse > DIB_RGB_COLORS) || ((init & CBM_INIT) == 0) || !data) fColor = FALSE;
     else
     {
         const RGBQUAD *rgb = (RGBQUAD*)((PBYTE)data + data->bmiHeader.biSize);
@@ -1448,7 +1448,7 @@ NtGdiCreateDIBitmapInternal(
     PBYTE safeBits = NULL;
     HBITMAP hbmResult = NULL;
 
-    if(pjInit && (fInit == CBM_INIT))
+    if(pjInit && (fInit & CBM_INIT))
     {
         if (cjMaxBits == 0) return NULL;
         safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
@@ -1462,7 +1462,7 @@ NtGdiCreateDIBitmapInternal(
     _SEH2_TRY
     {
         if(pbmi) ProbeForRead(pbmi, cjMaxInitInfo, 1);
-        if(pjInit && (fInit == CBM_INIT))
+        if(pjInit && (fInit & CBM_INIT))
         {
             ProbeForRead(pjInit, cjMaxBits, 1);
             RtlCopyMemory(safeBits, pjInit, cjMaxBits);
@@ -1540,9 +1540,19 @@ GreCreateDIBitmapInternal(
      * if bpp != 1 and ignore the real value that was passed */
     if (pbmi)
     {
-        bpp = pbmi->bmiHeader.biBitCount;
-        planes = pbmi->bmiHeader.biPlanes;
-        compression = pbmi->bmiHeader.biCompression;
+        if (pbmi->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+        {
+            BITMAPCOREHEADER* CoreHeader = (BITMAPCOREHEADER*)&pbmi->bmiHeader;
+            bpp = CoreHeader->bcBitCount;
+            planes = CoreHeader->bcPlanes;
+            compression = BI_RGB;
+        }
+        else
+        {
+            bpp = pbmi->bmiHeader.biBitCount;
+            planes = pbmi->bmiHeader.biPlanes;
+            compression = pbmi->bmiHeader.biCompression;
+        }
     }
     else
     {
