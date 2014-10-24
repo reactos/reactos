@@ -930,7 +930,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 
     if (!NT_SUCCESS(Status))
     {
-        IopFreeDeviceNode(DeviceNode);
         return Status;
     }
 
@@ -994,7 +993,6 @@ IopInitializeBootDrivers(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        IopFreeDeviceNode(DeviceNode);
         return;
     }
 
@@ -1003,7 +1001,6 @@ IopInitializeBootDrivers(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        IopFreeDeviceNode(DeviceNode);
         ObDereferenceObject(DriverObject);
         return;
     }
@@ -1013,7 +1010,6 @@ IopInitializeBootDrivers(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        IopFreeDeviceNode(DeviceNode);
         ObDereferenceObject(DriverObject);
         return;
     }
@@ -2020,7 +2016,6 @@ IopLoadUnloadDriver(
         {
             DPRINT1("IopInitializeDriverModule() failed (Status %lx)\n", Status);
             MmUnloadSystemImage(ModuleObject);
-            IopFreeDeviceNode(DeviceNode);
             return Status;
         }
 

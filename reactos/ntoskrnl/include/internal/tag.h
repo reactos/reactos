@@ -81,6 +81,9 @@
 /* formerly located in io/mdl.c */
 #define TAG_MDL    ' LDM'
 
+/* formerly located in io/pnpmgr.c */
+#define TAG_IO_DEVNODE 'donD'
+
 /* formerly located in io/pnpnotify.c */
 #define TAG_PNP_NOTIFY  'NPnP'
 

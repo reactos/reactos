@@ -1024,7 +1024,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
       ParentNode, PhysicalDeviceObject, ServiceName);
 
-   Node = (PDEVICE_NODE)ExAllocatePool(NonPagedPool, sizeof(DEVICE_NODE));
+   Node = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
    if (!Node)
    {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -1044,7 +1044,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
       if (!FullServiceName.Buffer)
       {
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return STATUS_INSUFFICIENT_RESOURCES;
       }
 
@@ -1055,7 +1055,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);
-         ExFreePool(Node);
+         ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
          return Status;
       }
 
@@ -1064,7 +1064,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!NT_SUCCESS(Status))
       {
           ZwClose(InstanceHandle);
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           ExFreePool(FullServiceName.Buffer);
           return Status;
       }
@@ -1073,7 +1073,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!Node->ServiceName.Buffer)
       {
           ZwClose(InstanceHandle);
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           ExFreePool(FullServiceName.Buffer);
           return Status;
       }
@@ -1122,7 +1122,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
       if (!NT_SUCCESS(Status))
       {
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return Status;
       }
 
@@ -1225,7 +1225,8 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
       ExFreePool(DeviceNode->BootResources);
    }
 
-   ExFreePool(DeviceNode);
+   ((PEXTENDED_DEVOBJ_EXTENSION)DeviceNode->PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = NULL;
+   ExFreePoolWithTag(DeviceNode, TAG_IO_DEVNODE);
 
    return STATUS_SUCCESS;
 }
@@ -2560,7 +2561,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
 
    DPRINT("IopActionInitChildServices(%p, %p)\n", DeviceNode, Context);
 
-   ParentDeviceNode = (PDEVICE_NODE)Context;
+   ParentDeviceNode = Context;
 
    /*
     * We are called for the parent too, but we don't need to do special
@@ -3545,7 +3546,7 @@ PipAllocateDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject)
     PAGED_CODE();
 
     /* Allocate it */
-    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), 'donD');
+    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
     if (!DeviceNode) return DeviceNode;
 
     /* Statistics */
