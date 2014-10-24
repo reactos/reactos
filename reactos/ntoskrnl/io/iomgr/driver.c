@@ -16,6 +16,8 @@
 
 /* GLOBALS ********************************************************************/
 
+ERESOURCE IopDriverLoadResource;
+
 LIST_ENTRY DriverReinitListHead;
 KSPIN_LOCK DriverReinitListLock;
 PLIST_ENTRY DriverReinitTailEntry;
@@ -113,6 +115,7 @@ IopGetDriverObject(
     DPRINT("IopGetDriverObject(%p '%wZ' %x)\n",
            DriverObject, ServiceName, FileSystem);
 
+    ASSERT(ExIsResourceAcquiredExclusiveLite(&IopDriverLoadResource));
     *DriverObject = NULL;
 
     /* Create ModuleName string */
@@ -313,6 +316,7 @@ IopLoadServiceModule(
     HANDLE CCSKey, ServiceKey;
     PVOID BaseAddress;
 
+    ASSERT(ExIsResourceAcquiredExclusiveLite(&IopDriverLoadResource));
     ASSERT(ServiceName->Length);
     DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
@@ -567,6 +571,8 @@ IopAttachFilterDriversCallback(
         ServiceName.MaximumLength =
         ServiceName.Length = (USHORT)wcslen(Filters) * sizeof(WCHAR);
 
+        KeEnterCriticalRegion();
+        ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
         Status = IopGetDriverObject(&DriverObject,
                                     &ServiceName,
                                     FALSE);
@@ -575,7 +581,11 @@ IopAttachFilterDriversCallback(
             /* Load and initialize the filter driver */
             Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
             if (!NT_SUCCESS(Status))
+            {
+                ExReleaseResourceLite(&IopDriverLoadResource);
+                KeLeaveCriticalRegion();
                 return Status;
+            }
 
             Status = IopInitializeDriverModule(DeviceNode,
                                                ModuleObject,
@@ -583,8 +593,15 @@ IopAttachFilterDriversCallback(
                                                FALSE,
                                                &DriverObject);
             if (!NT_SUCCESS(Status))
+            {
+                ExReleaseResourceLite(&IopDriverLoadResource);
+                KeLeaveCriticalRegion();
                 return Status;
+            }
         }
+
+        ExReleaseResourceLite(&IopDriverLoadResource);
+        KeLeaveCriticalRegion();
 
         Status = IopInitializeDevice(DeviceNode, DriverObject);
 
@@ -1971,6 +1988,8 @@ IopLoadUnloadDriver(
     DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
     DPRINT("Type: %lx\n", Type);
 
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
     /*
      * Get existing DriverObject pointer (in case the driver
      * has already been loaded and initialized).
@@ -1990,6 +2009,8 @@ IopLoadUnloadDriver(
         if (!NT_SUCCESS(Status))
         {
             DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
+            ExReleaseResourceLite(&IopDriverLoadResource);
+            KeLeaveCriticalRegion();
             return Status;
         }
 
@@ -2000,6 +2021,8 @@ IopLoadUnloadDriver(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
+            ExReleaseResourceLite(&IopDriverLoadResource);
+            KeLeaveCriticalRegion();
             MmUnloadSystemImage(ModuleObject);
             return Status;
         }
@@ -2015,9 +2038,14 @@ IopLoadUnloadDriver(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("IopInitializeDriverModule() failed (Status %lx)\n", Status);
+            ExReleaseResourceLite(&IopDriverLoadResource);
+            KeLeaveCriticalRegion();
             MmUnloadSystemImage(ModuleObject);
             return Status;
         }
+
+        ExReleaseResourceLite(&IopDriverLoadResource);
+        KeLeaveCriticalRegion();
 
         /* Initialize and start device */
         IopInitializeDevice(DeviceNode, *DriverObject);
@@ -2025,6 +2053,9 @@ IopLoadUnloadDriver(
     }
     else
     {
+        ExReleaseResourceLite(&IopDriverLoadResource);
+        KeLeaveCriticalRegion();
+
         DPRINT("DriverObject already exist in ObjectManager\n");
         Status = STATUS_IMAGE_ALREADY_LOADED;
 

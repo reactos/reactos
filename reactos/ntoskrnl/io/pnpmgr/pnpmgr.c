@@ -21,6 +21,7 @@ ERESOURCE PpRegistryDeviceResource;
 KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
 
+extern ERESOURCE IopDriverLoadResource;
 extern ULONG ExpInitializationPhase;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
@@ -2611,6 +2612,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       PLDR_DATA_TABLE_ENTRY ModuleObject;
       PDRIVER_OBJECT DriverObject;
 
+      KeEnterCriticalRegion();
+      ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
       /* Get existing DriverObject pointer (in case the driver has
          already been loaded and initialized) */
       Status = IopGetDriverObject(
@@ -2642,6 +2645,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
             if (!BootDrivers) DeviceNode->Problem = CM_PROB_DRIVER_FAILED_LOAD;
          }
       }
+      ExReleaseResourceLite(&IopDriverLoadResource);
+      KeLeaveCriticalRegion();
 
       /* Driver is loaded and initialized at this point */
       if (NT_SUCCESS(Status))
