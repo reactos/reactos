@@ -385,6 +385,8 @@ IopInitializePlugPlayServices(VOID)
 
     /* Initialize locks and such */
     KeInitializeSpinLock(&IopDeviceTreeLock);
+    KeInitializeSpinLock(&IopDeviceRelationsSpinLock);
+    InitializeListHead(&IopDeviceRelationsRequestList);
 
     /* Get the default interface */
     PnpDefaultInterfaceType = IopDetermineDefaultInterfaceType();

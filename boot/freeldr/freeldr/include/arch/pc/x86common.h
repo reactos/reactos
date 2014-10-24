@@ -9,6 +9,7 @@
 #define PDP_ADDRESS         HEX(2000) /* One page PDP page table */
 #define PD_ADDRESS          HEX(3000) /* One page PD page table */
 //#endif
+#define BIOSCALLBUFFER      HEX(4000) /* Buffer to store temporary data for any Int386() call */
 #define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
 #define BSS_START           HEX(6F00)
 #define STACKLOW            HEX(7000)
@@ -16,7 +17,7 @@
 #define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
 #define DISKREADBUFFER     HEX(8E000) /* Buffer to store data read in from the disk via the BIOS */
-#define BIOSCALLBUFFER     HEX(9E000) /* Buffer to store temporary data for any Int386() call */
+#define MEMORY_MARGIN      HEX(9E000) /* Highest usable address */
 /* 9F000- 9FFFF is reserved for the EBDA */
 #define DISKREADBUFFER_SIZE HEX(10000)
 

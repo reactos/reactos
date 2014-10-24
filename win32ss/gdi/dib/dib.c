@@ -47,7 +47,7 @@ DIB_FUNCTIONS DibFunctionsForBitmapFormat[] =
   {
     DIB_16BPP_PutPixel, DIB_16BPP_GetPixel, DIB_16BPP_HLine, DIB_16BPP_VLine,
     DIB_16BPP_BitBlt, DIB_16BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
-    DIB_16BPP_TransparentBlt, DIB_16BPP_ColorFill, DIB_XXBPP_AlphaBlend
+    DIB_16BPP_TransparentBlt, DIB_16BPP_ColorFill, DIB_16BPP_AlphaBlend
   },
   /* BMF_24BPP */
   {

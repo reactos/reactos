@@ -2648,6 +2648,7 @@ SendMessageTimeoutA(
 
   dsm.uFlags = fuFlags;
   dsm.uTimeout = uTimeout;
+  dsm.Result = 0;
 
   AnsiMsg.hwnd = hWnd;
   AnsiMsg.message = Msg;
@@ -2709,6 +2710,7 @@ SendMessageTimeoutW(
 
   dsm.uFlags = fuFlags;
   dsm.uTimeout = uTimeout;
+  dsm.Result = 0;
 
   Result = NtUserMessageCall( hWnd,
                               Msg,

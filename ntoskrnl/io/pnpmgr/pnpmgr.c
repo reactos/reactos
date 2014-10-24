@@ -21,6 +21,7 @@ ERESOURCE PpRegistryDeviceResource;
 KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
 
+extern ERESOURCE IopDriverLoadResource;
 extern ULONG ExpInitializationPhase;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
@@ -29,12 +30,16 @@ extern BOOLEAN PnpSystemInit;
 
 PDRIVER_OBJECT IopRootDriverObject;
 PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList = NULL;
+LIST_ENTRY IopDeviceRelationsRequestList;
+WORK_QUEUE_ITEM IopDeviceRelationsWorkItem;
+BOOLEAN IopDeviceRelationsRequestInProgress;
+KSPIN_LOCK IopDeviceRelationsSpinLock;
 
 typedef struct _INVALIDATE_DEVICE_RELATION_DATA
 {
+    LIST_ENTRY RequestListEntry;
     PDEVICE_OBJECT DeviceObject;
     DEVICE_RELATION_TYPE Type;
-    PIO_WORKITEM WorkItem;
 } INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
 
 /* FUNCTIONS *****************************************************************/
@@ -889,20 +894,34 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
    return Status;
 }
 
-static VOID NTAPI
-IopAsynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID InvalidateContext)
+static
+VOID
+NTAPI
+IopDeviceRelationsWorker(
+    _In_ PVOID Context)
 {
-    PINVALIDATE_DEVICE_RELATION_DATA Data = InvalidateContext;
+    PLIST_ENTRY ListEntry;
+    PINVALIDATE_DEVICE_RELATION_DATA Data;
+    KIRQL OldIrql;
 
-    IoSynchronousInvalidateDeviceRelations(
-        Data->DeviceObject,
-        Data->Type);
+    KeAcquireSpinLock(&IopDeviceRelationsSpinLock, &OldIrql);
+    while (!IsListEmpty(&IopDeviceRelationsRequestList))
+    {
+        ListEntry = RemoveHeadList(&IopDeviceRelationsRequestList);
+        KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
+        Data = CONTAINING_RECORD(ListEntry,
+                                 INVALIDATE_DEVICE_RELATION_DATA,
+                                 RequestListEntry);
 
-    ObDereferenceObject(Data->DeviceObject);
-    IoFreeWorkItem(Data->WorkItem);
-    ExFreePool(Data);
+        IoSynchronousInvalidateDeviceRelations(Data->DeviceObject,
+                                               Data->Type);
+
+        ObDereferenceObject(Data->DeviceObject);
+        ExFreePool(Data);
+        KeAcquireSpinLock(&IopDeviceRelationsSpinLock, &OldIrql);
+    }
+    IopDeviceRelationsRequestInProgress = FALSE;
+    KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
 }
 
 NTSTATUS
@@ -1024,7 +1043,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
       ParentNode, PhysicalDeviceObject, ServiceName);
 
-   Node = (PDEVICE_NODE)ExAllocatePool(NonPagedPool, sizeof(DEVICE_NODE));
+   Node = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
    if (!Node)
    {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -1044,7 +1063,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
       if (!FullServiceName.Buffer)
       {
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return STATUS_INSUFFICIENT_RESOURCES;
       }
 
@@ -1055,7 +1074,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);
-         ExFreePool(Node);
+         ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
          return Status;
       }
 
@@ -1064,7 +1083,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!NT_SUCCESS(Status))
       {
           ZwClose(InstanceHandle);
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           ExFreePool(FullServiceName.Buffer);
           return Status;
       }
@@ -1073,7 +1092,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!Node->ServiceName.Buffer)
       {
           ZwClose(InstanceHandle);
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           ExFreePool(FullServiceName.Buffer);
           return Status;
       }
@@ -1122,7 +1141,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
       if (!NT_SUCCESS(Status))
       {
-          ExFreePool(Node);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return Status;
       }
 
@@ -1225,7 +1244,8 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
       ExFreePool(DeviceNode->BootResources);
    }
 
-   ExFreePool(DeviceNode);
+   ((PEXTENDED_DEVOBJ_EXTENSION)DeviceNode->PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = NULL;
+   ExFreePoolWithTag(DeviceNode, TAG_IO_DEVNODE);
 
    return STATUS_SUCCESS;
 }
@@ -2560,7 +2580,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
 
    DPRINT("IopActionInitChildServices(%p, %p)\n", DeviceNode, Context);
 
-   ParentDeviceNode = (PDEVICE_NODE)Context;
+   ParentDeviceNode = Context;
 
    /*
     * We are called for the parent too, but we don't need to do special
@@ -2610,6 +2630,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       PLDR_DATA_TABLE_ENTRY ModuleObject;
       PDRIVER_OBJECT DriverObject;
 
+      KeEnterCriticalRegion();
+      ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
       /* Get existing DriverObject pointer (in case the driver has
          already been loaded and initialized) */
       Status = IopGetDriverObject(
@@ -2641,6 +2663,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
             if (!BootDrivers) DeviceNode->Problem = CM_PROB_DRIVER_FAILED_LOAD;
          }
       }
+      ExReleaseResourceLite(&IopDriverLoadResource);
+      KeLeaveCriticalRegion();
 
       /* Driver is loaded and initialized at this point */
       if (NT_SUCCESS(Status))
@@ -3545,7 +3569,7 @@ PipAllocateDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject)
     PAGED_CODE();
 
     /* Allocate it */
-    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), 'donD');
+    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
     if (!DeviceNode) return DeviceNode;
 
     /* Statistics */
@@ -4664,29 +4688,32 @@ IoInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN DEVICE_RELATION_TYPE Type)
 {
-    PIO_WORKITEM WorkItem;
     PINVALIDATE_DEVICE_RELATION_DATA Data;
+    KIRQL OldIrql;
 
     Data = ExAllocatePool(NonPagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
     if (!Data)
         return;
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!WorkItem)
-    {
-        ExFreePool(Data);
-        return;
-    }
 
     ObReferenceObject(DeviceObject);
     Data->DeviceObject = DeviceObject;
     Data->Type = Type;
-    Data->WorkItem = WorkItem;
 
-    IoQueueWorkItem(
-        WorkItem,
-        IopAsynchronousInvalidateDeviceRelations,
-        DelayedWorkQueue,
-        Data);
+    KeAcquireSpinLock(&IopDeviceRelationsSpinLock, &OldIrql);
+    InsertTailList(&IopDeviceRelationsRequestList, &Data->RequestListEntry);
+    if (IopDeviceRelationsRequestInProgress)
+    {
+        KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
+        return;
+    }
+    IopDeviceRelationsRequestInProgress = TRUE;
+    KeReleaseSpinLock(&IopDeviceRelationsSpinLock, OldIrql);
+
+    ExInitializeWorkItem(&IopDeviceRelationsWorkItem,
+                         IopDeviceRelationsWorker,
+                         NULL);
+    ExQueueWorkItem(&IopDeviceRelationsWorkItem,
+                    DelayedWorkQueue);
 }
 
 /*

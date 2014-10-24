@@ -16,6 +16,8 @@
 
 /* GLOBALS ********************************************************************/
 
+ERESOURCE IopDriverLoadResource;
+
 LIST_ENTRY DriverReinitListHead;
 KSPIN_LOCK DriverReinitListLock;
 PLIST_ENTRY DriverReinitTailEntry;
@@ -113,6 +115,7 @@ IopGetDriverObject(
     DPRINT("IopGetDriverObject(%p '%wZ' %x)\n",
            DriverObject, ServiceName, FileSystem);
 
+    ASSERT(ExIsResourceAcquiredExclusiveLite(&IopDriverLoadResource));
     *DriverObject = NULL;
 
     /* Create ModuleName string */
@@ -239,39 +242,44 @@ IopNormalizeImagePath(
          PUNICODE_STRING ImagePath,
     _In_ PUNICODE_STRING ServiceName)
 {
+    UNICODE_STRING SystemRootString = RTL_CONSTANT_STRING(L"\\SystemRoot\\");
+    UNICODE_STRING DriversPathString = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\drivers\\");
+    UNICODE_STRING DotSysString = RTL_CONSTANT_STRING(L".sys");
     UNICODE_STRING InputImagePath;
 
     DPRINT("Normalizing image path '%wZ' for service '%wZ'\n", ImagePath, ServiceName);
 
-    RtlCopyMemory(&InputImagePath,
-                  ImagePath,
-                  sizeof(UNICODE_STRING));
-
+    InputImagePath = *ImagePath;
     if (InputImagePath.Length == 0)
     {
         ImagePath->Length = 0;
-        ImagePath->MaximumLength =
-            (33 * sizeof(WCHAR)) + ServiceName->Length + sizeof(UNICODE_NULL);
-        ImagePath->Buffer = ExAllocatePool(NonPagedPool,
-                                           ImagePath->MaximumLength);
+        ImagePath->MaximumLength = DriversPathString.Length +
+                                   ServiceName->Length +
+                                   DotSysString.Length +
+                                   sizeof(UNICODE_NULL);
+        ImagePath->Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                  ImagePath->MaximumLength,
+                                                  TAG_IO);
         if (ImagePath->Buffer == NULL)
             return STATUS_NO_MEMORY;
 
-        RtlAppendUnicodeToString(ImagePath, L"\\SystemRoot\\system32\\drivers\\");
+        RtlCopyUnicodeString(ImagePath, &DriversPathString);
         RtlAppendUnicodeStringToString(ImagePath, ServiceName);
-        RtlAppendUnicodeToString(ImagePath, L".sys");
+        RtlAppendUnicodeStringToString(ImagePath, &DotSysString);
     }
     else if (InputImagePath.Buffer[0] != L'\\')
     {
         ImagePath->Length = 0;
-        ImagePath->MaximumLength =
-            12 * sizeof(WCHAR) + InputImagePath.Length + sizeof(UNICODE_NULL);
-        ImagePath->Buffer = ExAllocatePool(NonPagedPool,
-                                           ImagePath->MaximumLength);
+        ImagePath->MaximumLength = SystemRootString.Length +
+                                   InputImagePath.Length +
+                                   sizeof(UNICODE_NULL);
+        ImagePath->Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                  ImagePath->MaximumLength,
+                                                  TAG_IO);
         if (ImagePath->Buffer == NULL)
             return STATUS_NO_MEMORY;
 
-        RtlAppendUnicodeToString(ImagePath, L"\\SystemRoot\\");
+        RtlCopyUnicodeString(ImagePath, &SystemRootString);
         RtlAppendUnicodeStringToString(ImagePath, &InputImagePath);
 
         /* Free caller's string */
@@ -308,6 +316,7 @@ IopLoadServiceModule(
     HANDLE CCSKey, ServiceKey;
     PVOID BaseAddress;
 
+    ASSERT(ExIsResourceAcquiredExclusiveLite(&IopDriverLoadResource));
     ASSERT(ServiceName->Length);
     DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
@@ -319,8 +328,7 @@ IopLoadServiceModule(
         ServiceStart = 0;
 
         /* IopNormalizeImagePath will do all of the work for us if we give it an empty string */
-        ServiceImagePath.Length = ServiceImagePath.MaximumLength = 0;
-        ServiceImagePath.Buffer = NULL;
+        RtlInitEmptyUnicodeString(&ServiceImagePath, NULL, 0);
     }
     else
     {
@@ -563,6 +571,8 @@ IopAttachFilterDriversCallback(
         ServiceName.MaximumLength =
         ServiceName.Length = (USHORT)wcslen(Filters) * sizeof(WCHAR);
 
+        KeEnterCriticalRegion();
+        ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
         Status = IopGetDriverObject(&DriverObject,
                                     &ServiceName,
                                     FALSE);
@@ -571,7 +581,11 @@ IopAttachFilterDriversCallback(
             /* Load and initialize the filter driver */
             Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
             if (!NT_SUCCESS(Status))
+            {
+                ExReleaseResourceLite(&IopDriverLoadResource);
+                KeLeaveCriticalRegion();
                 return Status;
+            }
 
             Status = IopInitializeDriverModule(DeviceNode,
                                                ModuleObject,
@@ -579,8 +593,15 @@ IopAttachFilterDriversCallback(
                                                FALSE,
                                                &DriverObject);
             if (!NT_SUCCESS(Status))
+            {
+                ExReleaseResourceLite(&IopDriverLoadResource);
+                KeLeaveCriticalRegion();
                 return Status;
+            }
         }
+
+        ExReleaseResourceLite(&IopDriverLoadResource);
+        KeLeaveCriticalRegion();
 
         Status = IopInitializeDevice(DeviceNode, DriverObject);
 
@@ -926,7 +947,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 
     if (!NT_SUCCESS(Status))
     {
-        IopFreeDeviceNode(DeviceNode);
         return Status;
     }
 
@@ -990,7 +1010,6 @@ IopInitializeBootDrivers(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        IopFreeDeviceNode(DeviceNode);
         return;
     }
 
@@ -999,7 +1018,6 @@ IopInitializeBootDrivers(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        IopFreeDeviceNode(DeviceNode);
         ObDereferenceObject(DriverObject);
         return;
     }
@@ -1009,7 +1027,6 @@ IopInitializeBootDrivers(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        IopFreeDeviceNode(DeviceNode);
         ObDereferenceObject(DriverObject);
         return;
     }
@@ -1971,6 +1988,8 @@ IopLoadUnloadDriver(
     DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
     DPRINT("Type: %lx\n", Type);
 
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
     /*
      * Get existing DriverObject pointer (in case the driver
      * has already been loaded and initialized).
@@ -1990,6 +2009,8 @@ IopLoadUnloadDriver(
         if (!NT_SUCCESS(Status))
         {
             DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
+            ExReleaseResourceLite(&IopDriverLoadResource);
+            KeLeaveCriticalRegion();
             return Status;
         }
 
@@ -2000,6 +2021,8 @@ IopLoadUnloadDriver(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
+            ExReleaseResourceLite(&IopDriverLoadResource);
+            KeLeaveCriticalRegion();
             MmUnloadSystemImage(ModuleObject);
             return Status;
         }
@@ -2015,10 +2038,14 @@ IopLoadUnloadDriver(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("IopInitializeDriverModule() failed (Status %lx)\n", Status);
+            ExReleaseResourceLite(&IopDriverLoadResource);
+            KeLeaveCriticalRegion();
             MmUnloadSystemImage(ModuleObject);
-            IopFreeDeviceNode(DeviceNode);
             return Status;
         }
+
+        ExReleaseResourceLite(&IopDriverLoadResource);
+        KeLeaveCriticalRegion();
 
         /* Initialize and start device */
         IopInitializeDevice(DeviceNode, *DriverObject);
@@ -2026,6 +2053,9 @@ IopLoadUnloadDriver(
     }
     else
     {
+        ExReleaseResourceLite(&IopDriverLoadResource);
+        KeLeaveCriticalRegion();
+
         DPRINT("DriverObject already exist in ObjectManager\n");
         Status = STATUS_IMAGE_ALREADY_LOADED;
 

@@ -28,22 +28,21 @@ list(APPEND SOURCE
     reg/reg.c
     sec/ac.c
     sec/audit.c
-    sec/cred.c
     sec/lsa.c
     sec/misc.c
     sec/safer.c
     sec/sec.c
-    sec/sid.c
     sec/trustee.c
     service/eventlog.c
     service/rpc.c
     service/scm.c
     service/sctrl.c
-    token/privilege.c
     token/token.c
+    wine/cred.c
     wine/crypt.c
     wine/crypt_des.c
     wine/crypt_lmhash.c
+    wine/security.c
     advapi32.h)
 
 add_library(advapi32 SHARED
