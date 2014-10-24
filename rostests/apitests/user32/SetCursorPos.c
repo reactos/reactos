@@ -95,8 +95,6 @@ void Test_SetCursorPos()
     MSG msg;
     int i;
 
-    memset(results, sizeof(results), 0);
-
     hMouseHookLL = SetWindowsHookEx(WH_MOUSE_LL, MouseLLHookProc, GetModuleHandleA( NULL ), 0);
     hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");

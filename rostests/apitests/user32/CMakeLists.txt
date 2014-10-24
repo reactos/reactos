@@ -19,6 +19,7 @@ list(APPEND SOURCE
     RealGetWindowClass.c
     ScrollDC.c
     ScrollWindowEx.c
+    SendMessageTimeout.c
     SetActiveWindow.c
     SetCursorPos.c
     SystemParametersInfo.c
