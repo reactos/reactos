@@ -127,6 +127,15 @@ RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
     return RtlEnterCriticalSection(&Lock->CriticalSection);
 }
 
+BOOLEAN
+NTAPI
+RtlTryEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
+{
+    UNREFERENCED_PARAMETER(Exclusive);
+
+    return RtlTryEnterCriticalSection(&Lock->CriticalSection);
+}
+
 NTSTATUS
 NTAPI
 RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)

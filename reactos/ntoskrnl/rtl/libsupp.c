@@ -178,6 +178,24 @@ RtlEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
     return STATUS_SUCCESS;
 }
 
+BOOLEAN
+NTAPI
+RtlTryEnterHeapLock(IN OUT PHEAP_LOCK Lock, IN BOOLEAN Exclusive)
+{
+    BOOLEAN Success;
+    KeEnterCriticalRegion();
+
+    if (Exclusive)
+        Success = ExAcquireResourceExclusiveLite(&Lock->Resource, FALSE);
+    else
+        Success = ExAcquireResourceSharedLite(&Lock->Resource, FALSE);
+
+    if (!Success)
+        KeLeaveCriticalRegion();
+
+    return Success;
+}
+
 NTSTATUS
 NTAPI
 RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
