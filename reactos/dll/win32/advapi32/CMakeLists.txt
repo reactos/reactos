@@ -32,7 +32,6 @@ list(APPEND SOURCE
     sec/misc.c
     sec/safer.c
     sec/sec.c
-    sec/sid.c
     sec/trustee.c
     service/eventlog.c
     service/rpc.c
@@ -44,6 +43,7 @@ list(APPEND SOURCE
     wine/crypt.c
     wine/crypt_des.c
     wine/crypt_lmhash.c
+    wine/security.c
     advapi32.h)
 
 add_library(advapi32 SHARED
