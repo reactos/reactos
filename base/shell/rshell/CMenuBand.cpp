@@ -72,6 +72,9 @@ CMenuBand::~CMenuBand()
 
     if (m_SFToolbar)
         delete m_SFToolbar;
+
+    if (m_hmenu)
+        DestroyMenu(m_hmenu);
 }
 
 HRESULT STDMETHODCALLTYPE  CMenuBand::Initialize(
@@ -128,6 +131,12 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
     TRACE("CMenuBand::SetMenu called, hmenu=%p; hwnd=%p, flags=%x\n", hmenu, hwnd, dwFlags);
 
     BOOL created = FALSE;
+
+    if (m_hmenu)
+    {
+        DestroyMenu(m_hmenu);
+        m_hmenu = NULL;
+    }
 
     if (m_staticToolbar == NULL)
     {
