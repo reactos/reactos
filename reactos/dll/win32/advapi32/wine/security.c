@@ -7,8 +7,7 @@
  * Copyright 2006 Hervé Poussineau
  *
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/advapi32/sec/sid.c
- * PURPOSE:         Security ID functions
+ * FILE:            dll/win32/advapi32/wine/security.c
  */
 
 #include <advapi32.h>
@@ -592,6 +591,33 @@ WINAPI
 GetLengthSid(PSID pSid)
 {
     return (DWORD)RtlLengthSid(pSid);
+}
+
+/**********************************************************************
+ *	PrivilegeCheck					EXPORTED
+ *
+ * @implemented
+ */
+BOOL WINAPI
+PrivilegeCheck(HANDLE ClientToken,
+               PPRIVILEGE_SET RequiredPrivileges,
+               LPBOOL pfResult)
+{
+    BOOLEAN Result;
+    NTSTATUS Status;
+
+    Status = NtPrivilegeCheck(ClientToken,
+                              RequiredPrivileges,
+                              &Result);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    *pfResult = (BOOL)Result;
+
+    return TRUE;
 }
 
 /******************************************************************************

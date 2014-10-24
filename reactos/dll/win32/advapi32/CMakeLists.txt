@@ -37,7 +37,6 @@ list(APPEND SOURCE
     service/rpc.c
     service/scm.c
     service/sctrl.c
-    token/privilege.c
     token/token.c
     wine/cred.c
     wine/crypt.c
