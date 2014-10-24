@@ -324,17 +324,21 @@ IopCompleteRequest(IN PKAPC Apc,
             Key = FileObject->CompletionContext->Key;
         }
 
-        /* Use SEH to make sure we don't write somewhere invalid */
-        _SEH2_TRY
+        /* Check for UserIos */
+        if (Irp->UserIosb != NULL)
         {
-            /*  Save the IOSB Information */
-            *Irp->UserIosb = Irp->IoStatus;
+            /* Use SEH to make sure we don't write somewhere invalid */
+            _SEH2_TRY
+            {
+                /*  Save the IOSB Information */
+                *Irp->UserIosb = Irp->IoStatus;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Ignore any error */
+            }
+            _SEH2_END;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Ignore any error */
-        }
-        _SEH2_END;
 
         /* Check if we have an event or a file object */
         if (Irp->UserEvent)
