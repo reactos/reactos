@@ -802,6 +802,250 @@ GetLengthSid(PSID pSid)
 /*
  * @implemented
  */
+BOOL
+WINAPI
+InitializeAcl(PACL pAcl,
+              DWORD nAclLength,
+              DWORD dwAclRevision)
+{
+    NTSTATUS Status;
+
+    Status = RtlCreateAcl(pAcl,
+                          nAclLength,
+                          dwAclRevision);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+AddAccessAllowedAce(PACL pAcl,
+                    DWORD dwAceRevision,
+                    DWORD AccessMask,
+                    PSID pSid)
+{
+    NTSTATUS Status;
+
+    Status = RtlAddAccessAllowedAce(pAcl,
+                                    dwAceRevision,
+                                    AccessMask,
+                                    pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+AddAccessAllowedAceEx(PACL pAcl,
+                      DWORD dwAceRevision,
+                      DWORD AceFlags,
+                      DWORD AccessMask,
+                      PSID pSid)
+{
+    NTSTATUS Status;
+
+    Status = RtlAddAccessAllowedAceEx(pAcl,
+                                      dwAceRevision,
+                                      AceFlags,
+                                      AccessMask,
+                                      pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+AddAccessDeniedAce(PACL pAcl,
+                   DWORD dwAceRevision,
+                   DWORD AccessMask,
+                   PSID pSid)
+{
+    NTSTATUS Status;
+
+    Status = RtlAddAccessDeniedAce(pAcl,
+                                   dwAceRevision,
+                                   AccessMask,
+                                   pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+AddAccessDeniedAceEx(PACL pAcl,
+                     DWORD dwAceRevision,
+                     DWORD AceFlags,
+                     DWORD AccessMask,
+                     PSID pSid)
+{
+    NTSTATUS Status;
+
+    Status = RtlAddAccessDeniedAceEx(pAcl,
+                                     dwAceRevision,
+                                     AceFlags,
+                                     AccessMask,
+                                     pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+AddAce(PACL pAcl,
+       DWORD dwAceRevision,
+       DWORD dwStartingAceIndex,
+       LPVOID pAceList,
+       DWORD nAceListLength)
+{
+    NTSTATUS Status;
+
+    Status = RtlAddAce(pAcl,
+                       dwAceRevision,
+                       dwStartingAceIndex,
+                       pAceList,
+                       nAceListLength);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+DeleteAce(PACL pAcl,
+          DWORD dwAceIndex)
+{
+    NTSTATUS Status;
+
+    Status = RtlDeleteAce(pAcl,
+                          dwAceIndex);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+FindFirstFreeAce(PACL pAcl,
+                 LPVOID *pAce)
+{
+    return RtlFirstFreeAce(pAcl,
+                           (PACE*)pAce);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetAce(PACL pAcl,
+       DWORD dwAceIndex,
+       LPVOID *pAce)
+{
+    NTSTATUS Status;
+
+    Status = RtlGetAce(pAcl,
+                       dwAceIndex,
+                       pAce);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetAclInformation(PACL pAcl,
+                  LPVOID pAclInformation,
+                  DWORD nAclInformationLength,
+                  ACL_INFORMATION_CLASS dwAclInformationClass)
+{
+    NTSTATUS Status;
+
+    Status = RtlQueryInformationAcl(pAcl,
+                                    pAclInformation,
+                                    nAclInformationLength,
+                                    dwAclInformationClass);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+IsValidAcl(PACL pAcl)
+{
+    return RtlValidAcl (pAcl);
+}
+
+/*
+ * @implemented
+ */
 BOOL WINAPI
 AllocateLocallyUniqueId(PLUID Luid)
 {
@@ -892,6 +1136,65 @@ BOOL WINAPI AccessCheckByType(
 	return !*AccessStatus;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+AddAuditAccessAce(PACL pAcl,
+                  DWORD dwAceRevision,
+                  DWORD dwAccessMask,
+                  PSID pSid,
+                  BOOL bAuditSuccess,
+                  BOOL bAuditFailure)
+{
+    NTSTATUS Status;
+
+    Status = RtlAddAuditAccessAce(pAcl,
+                                  dwAceRevision,
+                                  dwAccessMask,
+                                  pSid,
+                                  bAuditSuccess,
+                                  bAuditFailure);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+AddAuditAccessAceEx(PACL pAcl,
+                    DWORD dwAceRevision,
+                    DWORD AceFlags,
+                    DWORD dwAccessMask,
+                    PSID pSid,
+                    BOOL bAuditSuccess,
+                    BOOL bAuditFailure)
+{
+    NTSTATUS Status;
+
+    Status = RtlAddAuditAccessAceEx(pAcl,
+                                    dwAceRevision,
+                                    AceFlags,
+                                    dwAccessMask,
+                                    pSid,
+                                    bAuditSuccess,
+                                    bAuditFailure);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /**********************************************************************
  *	PrivilegeCheck					EXPORTED
  *
@@ -915,6 +1218,31 @@ PrivilegeCheck(HANDLE ClientToken,
     }
 
     *pfResult = (BOOL)Result;
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetAclInformation(PACL pAcl,
+                  LPVOID pAclInformation,
+                  DWORD nAclInformationLength,
+                  ACL_INFORMATION_CLASS dwAclInformationClass)
+{
+    NTSTATUS Status;
+
+    Status = RtlSetInformationAcl(pAcl,
+                                  pAclInformation,
+                                  nAclInformationLength,
+                                  dwAclInformationClass);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
     return TRUE;
 }
