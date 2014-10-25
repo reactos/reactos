@@ -31,7 +31,7 @@
 #define FPU_CHECK() if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_EM) \
                     { \
                         Fast486Exception(State, FAST486_EXCEPTION_NM); \
-                        return FALSE; \
+                        return; \
                     }
 #define FPU_ST(i) State->FpuRegisters[(State->FpuStatus.Top + (i)) % FAST486_NUM_FPU_REGS]
 #define FPU_GET_TAG(i)  ((State->FpuTag >> ((i) * 2)) & 3)
