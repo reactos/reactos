@@ -1023,6 +1023,8 @@ ITrayWindowImpl_TrackCtxMenu(IN OUT ITrayWindowImpl *This,
                               cmdId,
                               pcmContext,
                               Context);
+
+        DestroyMenu(hPopup);
     }
 
     return cmdId;

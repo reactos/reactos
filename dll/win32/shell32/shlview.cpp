@@ -984,7 +984,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         SHFree((LPITEMIDLIST)ntreg.pidl);
     }
 
-    m_hAccel = LoadAcceleratorsA(shell32_hInstance, MAKEINTRESOURCEA( IDA_SHELLVIEW));
+    m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
     return S_OK;
 }

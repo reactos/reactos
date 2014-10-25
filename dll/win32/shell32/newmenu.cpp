@@ -179,7 +179,10 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
     pNewItem->pwszExt = _wcsdup(pwszExt);
     pNewItem->pwszDesc = _wcsdup(fi.szTypeName);
     if (fi.hIcon)
+    {
         pNewItem->hBitmap = IconToBitmap(fi.hIcon);
+        DestroyIcon(fi.hIcon);
+    }
 
     return pNewItem;
 }

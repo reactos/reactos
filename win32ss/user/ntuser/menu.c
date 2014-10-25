@@ -1653,7 +1653,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
    {
       return NULL;
    }
-   SysMenu = IntGetMenuObject(hSysMenu);
+   SysMenu = UserGetMenuObject(hSysMenu);
    if (NULL == SysMenu)
    {
        UserDestroyMenu(hSysMenu);
@@ -1684,7 +1684,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
          UserDestroyMenu(hSysMenu);
          return NULL;
       }
-      Menu = IntGetMenuObject(hNewMenu);
+      Menu = UserGetMenuObject(hNewMenu);
       if (!Menu)
       {
          IntReleaseMenuObject(SysMenu);

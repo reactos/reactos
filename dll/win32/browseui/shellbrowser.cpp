@@ -1078,14 +1078,17 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
         HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
 
-        HICON oldSmall = (HICON)SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
-        HICON oldLarge = (HICON)SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
+        /* Hack to make it possible to release the old icons */
+        /* Something seems to go wrong with WM_SETICON */
+        HICON oldSmall = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
+        HICON oldLarge = (HICON)SendMessage(WM_GETICON, ICON_BIG,   0);
+
+        SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
+        SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
 
         DestroyIcon(oldSmall);
         DestroyIcon(oldLarge);
     }
-
-    // TODO: Update the window icon
 
     FireCommandStateChangeAll();
     hResult = UpdateForwardBackState();
