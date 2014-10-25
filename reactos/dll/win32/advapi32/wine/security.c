@@ -954,37 +954,14 @@ InitializeAcl(PACL pAcl,
     return TRUE;
 }
 
-/**********************************************************************
- * ImpersonateNamedPipeClient			EXPORTED
- *
- * @implemented
- */
-BOOL
-WINAPI
-ImpersonateNamedPipeClient(HANDLE hNamedPipe)
+BOOL WINAPI ImpersonateNamedPipeClient( HANDLE hNamedPipe )
 {
-    IO_STATUS_BLOCK StatusBlock;
-    NTSTATUS Status;
+    IO_STATUS_BLOCK io_block;
 
-    TRACE("ImpersonateNamedPipeClient() called\n");
+    TRACE("(%p)\n", hNamedPipe);
 
-    Status = NtFsControlFile(hNamedPipe,
-                             NULL,
-                             NULL,
-                             NULL,
-                             &StatusBlock,
-                             FSCTL_PIPE_IMPERSONATE,
-                             NULL,
-                             0,
-                             NULL,
-                             0);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+    return set_ntstatus( NtFsControlFile(hNamedPipe, NULL, NULL, NULL,
+                         &io_block, FSCTL_PIPE_IMPERSONATE, NULL, 0, NULL, 0) );
 }
 
 /*
