@@ -5,7 +5,8 @@
 PUBLIC _tcscmp
 .code
 
-_tcscmp:
+FUNC _tcscmp
+    FPO 0, 2, 2, 2, 0, FRAME_FPO
     push esi
     push edi
     mov esi, [esp + 12]
@@ -30,6 +31,7 @@ _tcscmp:
     pop edi
     pop esi
     ret
+ENDFUNC
 
 END
 /* EOF */
