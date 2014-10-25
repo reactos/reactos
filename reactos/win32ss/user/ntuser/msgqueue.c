@@ -973,8 +973,15 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    /* Don't send from or to a dying thread */
     if (pti->TIF_flags & TIF_INCLEANUP || ptirec->TIF_flags & TIF_INCLEANUP)
     {
+        // Unless we are dying and need to tell our parents.
+        if (pti->TIF_flags & TIF_INCLEANUP && !(ptirec->TIF_flags & TIF_INCLEANUP))
+        {
+           // Parent notify is the big one. Fire and forget!
+           TRACE("Send message from dying thread %d\n",Msg);
+           co_MsqSendMessageAsync(ptirec, Wnd, Msg, wParam, lParam, NULL, 0, FALSE, HookMessage);
+        }
         if (uResult) *uResult = -1;
-        ERR("MsqSM: Current pti %lu or Rec pti %lu\n", pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
+        TRACE("MsqSM: Msg %d Current pti %lu or Rec pti %lu\n", Msg, pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
         return STATUS_UNSUCCESSFUL;
     }
 
