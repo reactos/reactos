@@ -254,7 +254,7 @@ create_alpha_bitmap(
     HDC hdc = NULL, hdcScreen;
     unsigned char *ptr;
     void *bits = NULL;
-    int i;
+    size_t size;
 
     hdcScreen = CreateDCW(DISPLAYW, NULL, NULL, NULL);
     if (!hdcScreen)
@@ -270,12 +270,16 @@ create_alpha_bitmap(
     {
         BITMAP bm;
         BITMAPINFO *info = NULL;
+
+        TRACE("Creating alpha bitmap from existing bitmap.\n");
     
         if (!GetObjectW( color, sizeof(bm), &bm ))
             goto done;
         if (bm.bmBitsPixel != 32)
             goto done;
         
+        size = get_dib_image_size(bm.bmWidth, bm.bmHeight, 32);
+
         info = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(BITMAPINFO, bmiColors[256]));
         if(!info)
             goto done;
@@ -285,13 +289,13 @@ create_alpha_bitmap(
         info->bmiHeader.biPlanes = 1;
         info->bmiHeader.biBitCount = 32;
         info->bmiHeader.biCompression = BI_RGB;
-        info->bmiHeader.biSizeImage = bm.bmWidth * bm.bmHeight * 4;
+        info->bmiHeader.biSizeImage = size;
         info->bmiHeader.biXPelsPerMeter = 0;
         info->bmiHeader.biYPelsPerMeter = 0;
         info->bmiHeader.biClrUsed = 0;
         info->bmiHeader.biClrImportant = 0;
         
-        bits = HeapAlloc(GetProcessHeap(), 0, info->bmiHeader.biSizeImage);
+        bits = HeapAlloc(GetProcessHeap(), 0, size);
         if(!bits)
         {
             HeapFree(GetProcessHeap(), 0, info);
@@ -309,7 +313,7 @@ create_alpha_bitmap(
         }
 
         /* pre-multiply by alpha */
-        for (i = 0, ptr = bits; i < width * height; i++, ptr += 4)
+        for (ptr = bits; ptr < ((BYTE*)bits + size); ptr += 4)
         {
             unsigned int alpha = ptr[3];
             ptr[0] = (ptr[0] * alpha) / 255;
@@ -321,14 +325,14 @@ create_alpha_bitmap(
         alpha = CreateDIBitmap(hdc, NULL, CBM_INIT | 2, bits, info, DIB_RGB_COLORS);
 
         HeapFree(GetProcessHeap(), 0, info);
-        HeapFree(GetProcessHeap(), 0, bits);
     }
     else
     {
         WORD bpp;
         DWORD compr;
-        int size;
         LONG orig_width, orig_height;
+
+        TRACE("Creating alpha bitmap from bitmap info.\n");
 
         if(!bmi_has_alpha(src_info, color_bits))
             goto done;
@@ -344,7 +348,7 @@ create_alpha_bitmap(
             goto done;
         CopyMemory(bits, color_bits, size);
         /* pre-multiply by alpha */
-        for (i = 0, ptr = bits; i < width * height; i++, ptr += 4)
+        for (ptr = bits; ptr < ((BYTE*)bits + size); ptr += 4)
         {
             unsigned int alpha = ptr[3];
             ptr[0] = (ptr[0] * alpha) / 255;
@@ -497,7 +501,10 @@ get_best_icon_file_entry(
         /* Let's assume there's always one plane */
         fakeEntry->wPlanes = 1;
         /* We must get the bitcount from the BITMAPINFOHEADER itself */
-        fakeEntry->wBitCount = ((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biBitCount;
+        if (((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biSize == sizeof(BITMAPCOREHEADER))
+            fakeEntry->wBitCount = ((BITMAPCOREHEADER *)((char *)dir + entry->dwDIBOffset))->bcBitCount;
+        else
+            fakeEntry->wBitCount = ((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biBitCount;
         fakeEntry->dwBytesInRes = entry->dwDIBSize;
         fakeEntry->wResId = i + 1;
     }
