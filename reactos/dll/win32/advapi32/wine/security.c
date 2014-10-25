@@ -528,19 +528,56 @@ SetThreadToken(IN PHANDLE ThreadHandle  OPTIONAL,
     return TRUE;
 }
 
-BOOL WINAPI
-CreateRestrictedToken(HANDLE TokenHandle,
-                      DWORD Flags,
-                      DWORD DisableSidCount,
-                      PSID_AND_ATTRIBUTES pSidAndAttributes,
-                      DWORD DeletePrivilegeCount,
-                      PLUID_AND_ATTRIBUTES pLUIDAndAttributes,
-                      DWORD RestrictedSidCount,
-                      PSID_AND_ATTRIBUTES pSIDAndAttributes,
-                      PHANDLE NewTokenHandle)
+/*************************************************************************
+ * CreateRestrictedToken [ADVAPI32.@]
+ *
+ * Create a new more restricted token from an existing token.
+ *
+ * PARAMS
+ *   baseToken       [I] Token to base the new restricted token on
+ *   flags           [I] Options
+ *   nDisableSids    [I] Length of disableSids array
+ *   disableSids     [I] Array of SIDs to disable in the new token
+ *   nDeletePrivs    [I] Length of deletePrivs array
+ *   deletePrivs     [I] Array of privileges to delete in the new token
+ *   nRestrictSids   [I] Length of restrictSids array
+ *   restrictSids    [I] Array of SIDs to restrict in the new token
+ *   newToken        [O] Address where the new token is stored
+ *
+ * RETURNS
+ *  Success: TRUE
+ *  Failure: FALSE
+ */
+BOOL WINAPI CreateRestrictedToken(
+    HANDLE baseToken,
+    DWORD flags,
+    DWORD nDisableSids,
+    PSID_AND_ATTRIBUTES disableSids,
+    DWORD nDeletePrivs,
+    PLUID_AND_ATTRIBUTES deletePrivs,
+    DWORD nRestrictSids,
+    PSID_AND_ATTRIBUTES restrictSids,
+    PHANDLE newToken)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    TOKEN_TYPE type;
+    SECURITY_IMPERSONATION_LEVEL level = TokenImpersonationLevel;
+    DWORD size;
+
+    FIXME("(%p, 0x%x, %u, %p, %u, %p, %u, %p, %p): stub\n",
+          baseToken, flags, nDisableSids, disableSids,
+          nDeletePrivs, deletePrivs,
+          nRestrictSids, restrictSids,
+          newToken);
+
+    size = sizeof(type);
+    if (!GetTokenInformation( baseToken, TokenType, &type, size, &size )) return FALSE;
+    if (type == TokenImpersonation)
+    {
+        size = sizeof(level);
+        if (!GetTokenInformation( baseToken, TokenImpersonationLevel, &level, size, &size ))
+            return FALSE;
+    }
+    return DuplicateTokenEx( baseToken, MAXIMUM_ALLOWED, NULL, level, type, newToken );
 }
 
 /*
