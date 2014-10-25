@@ -854,31 +854,21 @@ GetLengthSid(PSID pSid)
     return (DWORD)RtlLengthSid(pSid);
 }
 
-/*
- * @implemented
+/******************************************************************************
+ * GetKernelObjectSecurity [ADVAPI32.@]
  */
-BOOL
-WINAPI
-GetKernelObjectSecurity(HANDLE Handle,
-                        SECURITY_INFORMATION RequestedInformation,
-                        PSECURITY_DESCRIPTOR pSecurityDescriptor,
-                        DWORD nLength,
-                        LPDWORD lpnLengthNeeded)
+BOOL WINAPI GetKernelObjectSecurity(
+        HANDLE Handle,
+        SECURITY_INFORMATION RequestedInformation,
+        PSECURITY_DESCRIPTOR pSecurityDescriptor,
+        DWORD nLength,
+        LPDWORD lpnLengthNeeded )
 {
-    NTSTATUS Status;
+    TRACE("(%p,0x%08x,%p,0x%08x,%p)\n", Handle, RequestedInformation,
+          pSecurityDescriptor, nLength, lpnLengthNeeded);
 
-    Status = NtQuerySecurityObject(Handle,
-                                   RequestedInformation,
-                                   pSecurityDescriptor,
-                                   nLength,
-                                   lpnLengthNeeded);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+    return set_ntstatus( NtQuerySecurityObject(Handle, RequestedInformation, pSecurityDescriptor,
+                                               nLength, lpnLengthNeeded ));
 }
 
 /*
