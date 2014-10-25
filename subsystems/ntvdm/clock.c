@@ -56,7 +56,7 @@ UINT Irq12Counter = 0;
 
 #ifdef IPS_DISPLAY
     DWORD LastCyclePrintout;
-    DWORD Cycles = 0;
+    ULONGLONG Cycles = 0;
 #endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -142,7 +142,7 @@ VOID ClockUpdate(VOID)
     {
         CpuStep();
 #ifdef IPS_DISPLAY
-        Cycles++;
+        ++Cycles;
 #endif
     }
 

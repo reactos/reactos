@@ -30,7 +30,6 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ ak
   BOOL     Enabled;
   SIZEL    Size;
   POINTL   HotSpot;
-  XLATEOBJ *XlateObject;
   SURFACE  *psurfColor;
   SURFACE  *psurfMask;
   SURFACE  *psurfSave;

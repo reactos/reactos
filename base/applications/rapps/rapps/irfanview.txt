@@ -9,7 +9,7 @@ Description = Viewer for all kinds of graphics/audio files/video files.
 Size = 1.81 MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://www.irfanview.info/files/iview438_setup.exe
+URLDownload = http://img.cs.montana.edu/windows/iview438_setup.exe
 CDPath = none
 
 [Section.0407]

@@ -480,6 +480,9 @@ CreateDIBitmap(
             GdiSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
         }
+
+        /* Use the header from the data */
+        Header = &Data->bmiHeader;
     }
 
     /* Header is required */
@@ -502,6 +505,13 @@ CreateDIBitmap(
 
     /* Only DIB_RGB_COLORS (0), DIB_PAL_COLORS (1) and 2 are valid. */
     if (ColorUse > DIB_PAL_COLORS + 1)
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* If some Bits are given, only DIB_PAL_COLORS and DIB_RGB_COLORS are valid */
+    if (Bits && (ColorUse > DIB_PAL_COLORS))
     {
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         return 0;

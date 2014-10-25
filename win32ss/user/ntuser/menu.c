@@ -649,7 +649,7 @@ IntGetMenuInfo(PMENU Menu, PROSMENUINFO lpmi)
      lpmi->cyMenu = Menu->cyMenu;
      lpmi->spwndNotify = Menu->spwndNotify;
      lpmi->cxTextAlign = Menu->cxTextAlign;
-     lpmi->iTop = Menu->iMaxTop;
+     lpmi->iTop = Menu->iTop;
      lpmi->iMaxTop = Menu->iMaxTop;
      lpmi->dwArrowsOn = Menu->dwArrowsOn;
 

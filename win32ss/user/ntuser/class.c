@@ -230,7 +230,7 @@ IntDestroyClass(IN OUT PCLS Class)
 
         // Fixes running the static test then run class test issue.
         // Some applications do not use UnregisterClass before exiting.
-        // Keep from reusing the same atom with case insensitive 
+        // Keep from reusing the same atom with case insensitive
         // comparisons, remove registration of the atom if not zeroed.
         if (Class->atomClassName)
             IntDeregisterClassAtom(Class->atomClassName);
@@ -1937,7 +1937,7 @@ UserSetClassLongPtr(IN PCLS Class,
         // hIconSm, A handle to a small icon that is associated with the window class.
         // If this member is NULL, the system searches the icon resource specified by
         // the hIcon member for an icon of the appropriate size to use as the small icon.
-        //       
+        //
         case GCLP_HICON:
 #ifdef NEW_CURSORICON
         {
@@ -2445,6 +2445,7 @@ NtUserRegisterClassExWOW(
     UNICODE_STRING CapturedName = {0}, CapturedMenuName = {0};
     RTL_ATOM Ret = (RTL_ATOM)0;
     PPROCESSINFO ppi = GetW32ProcessInfo();
+    BOOL Exception = FALSE;
 
     if (Flags & ~(CSF_ANSIPROC))
     {
@@ -2536,7 +2537,17 @@ InvalidParameter:
         }
 
         TRACE("NtUserRegisterClassExWOW MnuN %wZ\n",&CapturedMenuName);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("NtUserRegisterClassExWOW Exception Error!\n");
+        SetLastNtError(_SEH2_GetExceptionCode());
+        Exception = TRUE;
+    }
+    _SEH2_END;
 
+    if (!Exception)
+    {
         /* Register the class */
         Ret = UserRegisterClass(&CapturedClassInfo,
                                 &CapturedName,
@@ -2544,18 +2555,12 @@ InvalidParameter:
                                 fnID,
                                 Flags);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ERR("NtUserRegisterClassExWOW Exception Error!\n");
-        SetLastNtError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-/*
+
     if (!Ret)
     {
-       ERR("NtUserRegisterClassExWOW Null Return!\n");
+       TRACE("NtUserRegisterClassExWOW Null Return!\n");
     }
- */
+
     UserLeave();
 
     return Ret;

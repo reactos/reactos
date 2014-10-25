@@ -229,7 +229,10 @@ FreeCurIconObject(
         UINT i;
 
         for(i = 0; i < AniCurIcon->cpcur; i++)
+        {
+            UserDereferenceObject(AniCurIcon->aspcur[i]);
             IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
+        }
         ExFreePoolWithTag(AniCurIcon->aspcur, USERTAG_CURSOR);
     }
 
@@ -1068,7 +1071,10 @@ done:
         for(i = 0; i < numFrames; i++)
         {
             if(AniCurIcon->aspcur[i])
+            {
+                UserDereferenceObject(AniCurIcon->aspcur[i]);
                 IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
+            }
         }
         AniCurIcon->cicur = 0;
         AniCurIcon->cpcur = 0;

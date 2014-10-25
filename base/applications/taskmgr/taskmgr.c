@@ -38,6 +38,8 @@ HWND hMainWnd;                   /* Main Window */
 HWND hStatusWnd;                 /* Status Bar Window */
 HWND hTabWnd;                    /* Tab Control Window */
 
+HMENU hWindowMenu = NULL;
+
 int  nMinimumWidth;              /* Minimum width of the dialog (OnSize()'s cx) */
 int  nMinimumHeight;             /* Minimum height of the dialog (OnSize()'s cy) */
 
@@ -187,6 +189,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     SaveSettings();
     PerfDataUninitialize();
     CloseHandle(hMutex);
+    if (hWindowMenu)
+        DestroyMenu(hWindowMenu);
     return 0;
 }
 
@@ -974,6 +978,8 @@ void TaskManager_OnTabWndSelChange(void)
         RemoveMenu(hViewMenu, i, MF_BYPOSITION);
     }
     RemoveMenu(hOptionsMenu, 3, MF_BYPOSITION);
+    if (hWindowMenu)
+        DestroyMenu(hWindowMenu);
     switch (TaskManagerSettings.ActiveTabPage) {
     case 0:
         ShowWindow(hApplicationPage, SW_SHOW);
@@ -991,10 +997,10 @@ void TaskManager_OnTabWndSelChange(void)
         AppendMenuW(hViewMenu, MF_STRING, ID_VIEW_DETAILS, szTemp);
 
         if (GetMenuItemCount(hMenu) <= 5) {
-            hSubMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_WINDOWSMENU));
+            hWindowMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_WINDOWSMENU));
 
             LoadStringW(hInst, IDS_MENU_WINDOWS, szTemp, 256);
-            InsertMenuW(hMenu, 3, MF_BYPOSITION|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
+            InsertMenuW(hMenu, 3, MF_BYPOSITION|MF_POPUP, (UINT_PTR) hWindowMenu, szTemp);
 
             DrawMenuBar(hMainWnd);
         }

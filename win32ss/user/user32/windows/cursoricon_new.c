@@ -241,56 +241,45 @@ static BOOL bmi_has_alpha( const BITMAPINFO *info, const void *bits )
  *
  * Create the alpha bitmap for a 32-bpp icon that has an alpha channel.
  */
-static HBITMAP create_alpha_bitmap(
- _In_      HBITMAP color,
- _In_opt_  const BITMAPINFO *src_info,
- _In_opt_  const void *color_bits )
+static
+HBITMAP
+create_alpha_bitmap(
+    _In_opt_  HBITMAP color,
+    _In_opt_  BITMAPINFO *src_info,
+    _In_opt_  const void *color_bits,
+    _In_ LONG width,
+    _In_ LONG height)
 {
     HBITMAP alpha = NULL, hbmpOld;
-    BITMAPINFO *info = NULL;
     HDC hdc = NULL, hdcScreen;
-    void *bits = NULL;
     unsigned char *ptr;
-    int i;
-    LONG width, height;
-    BITMAP bm;
-
-    if (!GetObjectW( color, sizeof(bm), &bm ))
-        return NULL;
-    if (bm.bmBitsPixel != 32)
-        return NULL;
+    void *bits = NULL;
+    size_t size;
 
     hdcScreen = CreateDCW(DISPLAYW, NULL, NULL, NULL);
-    if(!hdcScreen)
+    if (!hdcScreen)
         return NULL;
-    if(GetDeviceCaps(hdcScreen, BITSPIXEL) != 32)
-        goto done;
     hdc = CreateCompatibleDC(hdcScreen);
-    if(!hdc)
-        goto done;
-    
-    if(src_info)
+    if (!hdc)
     {
-        WORD bpp;
-        DWORD compr;
-        int size;
-        
-        if(!bmi_has_alpha(src_info, color_bits))
-            goto done;
-        
-        if(!DIB_GetBitmapInfo(&src_info->bmiHeader, &width, &height, &bpp, &compr))
-            goto done;
-        if(bpp != 32)
-            goto done;
-        
-        size = get_dib_image_size(width, height, bpp);
-        bits = HeapAlloc(GetProcessHeap(), 0, size);
-        if(!bits)
-            goto done;
-        CopyMemory(bits, color_bits, size);
+        DeleteDC(hdcScreen);
+        return NULL;
     }
-    else
+
+    if (color)
     {
+        BITMAP bm;
+        BITMAPINFO *info = NULL;
+
+        TRACE("Creating alpha bitmap from existing bitmap.\n");
+    
+        if (!GetObjectW( color, sizeof(bm), &bm ))
+            goto done;
+        if (bm.bmBitsPixel != 32)
+            goto done;
+        
+        size = get_dib_image_size(bm.bmWidth, bm.bmHeight, 32);
+
         info = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(BITMAPINFO, bmiColors[256]));
         if(!info)
             goto done;
@@ -300,54 +289,124 @@ static HBITMAP create_alpha_bitmap(
         info->bmiHeader.biPlanes = 1;
         info->bmiHeader.biBitCount = 32;
         info->bmiHeader.biCompression = BI_RGB;
-        info->bmiHeader.biSizeImage = bm.bmWidth * bm.bmHeight * 4;
+        info->bmiHeader.biSizeImage = size;
         info->bmiHeader.biXPelsPerMeter = 0;
         info->bmiHeader.biYPelsPerMeter = 0;
         info->bmiHeader.biClrUsed = 0;
         info->bmiHeader.biClrImportant = 0;
         
-        bits = HeapAlloc(GetProcessHeap(), 0, info->bmiHeader.biSizeImage);
+        bits = HeapAlloc(GetProcessHeap(), 0, size);
+        if(!bits)
+        {
+            HeapFree(GetProcessHeap(), 0, info);
+            goto done;
+        }
+        if(!GetDIBits( hdc, color, 0, bm.bmHeight, bits, info, DIB_RGB_COLORS ))
+        {
+            HeapFree(GetProcessHeap(), 0, info);
+            goto done;
+        }
+        if (!bmi_has_alpha( info, bits ))
+        {
+            HeapFree(GetProcessHeap(), 0, info);
+            goto done;
+        }
+
+        /* pre-multiply by alpha */
+        for (ptr = bits; ptr < ((BYTE*)bits + size); ptr += 4)
+        {
+            unsigned int alpha = ptr[3];
+            ptr[0] = (ptr[0] * alpha) / 255;
+            ptr[1] = (ptr[1] * alpha) / 255;
+            ptr[2] = (ptr[2] * alpha) / 255;
+        }
+
+        /* Directly create a 32-bits DDB (thanks to undocumented CreateDIBitmap flag). */
+        alpha = CreateDIBitmap(hdc, NULL, CBM_INIT | 2, bits, info, DIB_RGB_COLORS);
+
+        HeapFree(GetProcessHeap(), 0, info);
+    }
+    else
+    {
+        WORD bpp;
+        DWORD compr;
+        LONG orig_width, orig_height;
+
+        TRACE("Creating alpha bitmap from bitmap info.\n");
+
+        if(!bmi_has_alpha(src_info, color_bits))
+            goto done;
+
+        if(!DIB_GetBitmapInfo(&src_info->bmiHeader, &orig_width, &orig_height, &bpp, &compr))
+            goto done;
+        if(bpp != 32)
+            goto done;
+
+        size = get_dib_image_size(orig_width, orig_height, bpp);
+        bits = HeapAlloc(GetProcessHeap(), 0, size);
         if(!bits)
             goto done;
-        if(!GetDIBits( hdc, color, 0, bm.bmHeight, bits, info, DIB_RGB_COLORS ))
-            goto done;
-        if (!bmi_has_alpha( info, bits ))
-            goto done;
-        width = bm.bmWidth;
-        height = bm.bmHeight;
-    }
+        CopyMemory(bits, color_bits, size);
+        /* pre-multiply by alpha */
+        for (ptr = bits; ptr < ((BYTE*)bits + size); ptr += 4)
+        {
+            unsigned int alpha = ptr[3];
+            ptr[0] = (ptr[0] * alpha) / 255;
+            ptr[1] = (ptr[1] * alpha) / 255;
+            ptr[2] = (ptr[2] * alpha) / 255;
+        }
 
-    /* pre-multiply by alpha */
-    for (i = 0, ptr = bits; i < width * height; i++, ptr += 4)
-    {
-        unsigned int alpha = ptr[3];
-        ptr[0] = ptr[0] * alpha / 255;
-        ptr[1] = ptr[1] * alpha / 255;
-        ptr[2] = ptr[2] * alpha / 255;
+        /* Create the bitmap. Set the bitmap info to have the right width and height */
+        if(src_info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+        {
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcWidth = width;
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcHeight = height;
+        }
+        else
+        {
+            src_info->bmiHeader.biWidth = width;
+            src_info->bmiHeader.biHeight = height;
+        }
+        /* Directly create a 32-bits DDB (thanks to undocumented CreateDIBitmap flag). */
+        alpha = CreateDIBitmap(hdcScreen, NULL, 2, NULL, src_info, DIB_RGB_COLORS);
+        /* Restore values */
+        if(src_info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+        {
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcWidth = orig_width;
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcHeight = orig_height;
+        }
+        else
+        {
+            src_info->bmiHeader.biWidth = orig_width;
+            src_info->bmiHeader.biHeight = orig_height;
+        }
+        if(!alpha)
+            goto done;
+        hbmpOld = SelectObject(hdc, alpha);
+        if(!hbmpOld)
+        {
+            DeleteObject(alpha);
+            alpha = NULL;
+            goto done;
+        }
+        if(!StretchDIBits( hdc, 0, 0, width, height,
+                   0, 0, orig_width, orig_height,
+                   bits, src_info, DIB_RGB_COLORS, SRCCOPY ))
+        {
+            SelectObject(hdc, hbmpOld);
+            hbmpOld = NULL;
+            DeleteObject(alpha);
+            alpha = NULL;
+        }
+        else
+        {
+            SelectObject(hdc, hbmpOld);
+        }
     }
-    
-    /* Create the bitmap */
-    alpha = CreateCompatibleBitmap(hdcScreen, bm.bmWidth, bm.bmHeight);
-    if(!alpha)
-        goto done;
-    hbmpOld = SelectObject(hdc, alpha);
-    if(!hbmpOld)
-        goto done;
-    if(!StretchDIBits( hdc, 0, 0, bm.bmWidth, bm.bmHeight,
-               0, 0, width, height,
-               bits, src_info ? src_info : info, DIB_RGB_COLORS, SRCCOPY ))
-    {
-        SelectObject(hdc, hbmpOld);
-        hbmpOld = NULL;
-        DeleteObject(alpha);
-        alpha = NULL;
-    }
-    SelectObject(hdc, hbmpOld);
 
 done:
     DeleteDC(hdcScreen);
-    if(hdc) DeleteDC( hdc );
-    if(info) HeapFree( GetProcessHeap(), 0, info );
+    DeleteDC( hdc );
     if(bits) HeapFree(GetProcessHeap(), 0, bits);
     
     TRACE("Returning 0x%08x.\n", alpha); 
@@ -442,7 +501,10 @@ get_best_icon_file_entry(
         /* Let's assume there's always one plane */
         fakeEntry->wPlanes = 1;
         /* We must get the bitcount from the BITMAPINFOHEADER itself */
-        fakeEntry->wBitCount = ((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biBitCount;
+        if (((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biSize == sizeof(BITMAPCOREHEADER))
+            fakeEntry->wBitCount = ((BITMAPCOREHEADER *)((char *)dir + entry->dwDIBOffset))->bcBitCount;
+        else
+            fakeEntry->wBitCount = ((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biBitCount;
         fakeEntry->dwBytesInRes = entry->dwDIBSize;
         fakeEntry->wResId = i + 1;
     }
@@ -571,8 +633,7 @@ static BOOL CURSORICON_GetCursorDataFromBMI(
                   pvColor, pbmiCopy, DIB_RGB_COLORS, SRCCOPY))
             goto done;
         pdata->bpp = GetDeviceCaps(hdcScreen, BITSPIXEL);
-        if(pdata->bpp == 32)
-            pdata->hbmAlpha = create_alpha_bitmap(pdata->hbmColor, pbmiCopy, pvColor);
+        pdata->hbmAlpha = create_alpha_bitmap(NULL, pbmiCopy, pvColor, pdata->cx, pdata->cy);
         
         /* Now convert the info to monochrome for the mask bits */
         if (pbmiCopy->bmiHeader.biSize != sizeof(BITMAPCOREHEADER))
@@ -673,7 +734,7 @@ static BOOL CURSORICON_GetCursorDataFromIconInfo(
         pCursorData->cx = bm.bmWidth;
         pCursorData->cy = bm.bmHeight;
         if(pCursorData->bpp == 32)
-            pCursorData->hbmAlpha = create_alpha_bitmap(pCursorData->hbmColor, NULL, NULL);
+            pCursorData->hbmAlpha = create_alpha_bitmap(pCursorData->hbmColor, NULL, NULL, 0, 0);
     }
     else
     {

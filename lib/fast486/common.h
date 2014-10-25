@@ -44,7 +44,7 @@
 if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
 {\
     Fast486Exception(State, FAST486_EXCEPTION_UD);\
-    return FALSE;\
+    return;\
 }
 
 #define TOGGLE_OPSIZE(x)\

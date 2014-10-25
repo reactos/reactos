@@ -6,7 +6,7 @@ Description = MiKTeX is an up-to-date implementation of TeX/LaTeX and related pr
 Size = 163.18 MB
 Category = 6
 URLSite = http://www.miktex.org/
-URLDownload = http://mirrors.ctan.org/systems/win32/miktex/setup/basic-miktex-2.9.5105.exe
+URLDownload = http://ftp.gwdg.de/pub/ctan/systems/win32/miktex/setup/basic-miktex-2.9.5105.exe
 CDPath = none
 
 [Section.0407]
