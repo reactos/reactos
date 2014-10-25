@@ -1359,8 +1359,22 @@ IntCreateDIBitmap(
     {
         if (init & CBM_CREATDIB)
         {
+            PSURFACE Surface;
+            PPALETTE Palette;
+
             /* Undocumented flag which creates a DDB of the format specified by the bitmap info. */
             handle = IntCreateCompatibleBitmap(Dc, width, height, planes, bpp);
+            if (!handle)
+                return NULL;
+            /* The palette must also match the given data */
+            Surface = SURFACE_ShareLockSurface(handle);
+            ASSERT(Surface);
+            Palette = CreateDIBPalette(data, Dc, coloruse);
+            ASSERT(Palette);
+            SURFACE_vSetPalette(Surface, Palette);
+
+            PALETTE_ShareUnlockPalette(Palette);
+            SURFACE_ShareUnlockSurface(Surface);
         }
         else
         {
@@ -1382,45 +1396,6 @@ IntCreateDIBitmap(
 
     if ((NULL != handle) && (CBM_INIT & init))
     {
-        if (init & CBM_CREATDIB)
-        {
-            PSURFACE Surface;
-            PPALETTE Palette;
-            NTSTATUS Status = STATUS_SUCCESS;
-
-            Surface = SURFACE_ShareLockSurface(handle);
-            ASSERT(Surface);
-
-            Palette = CreateDIBPalette(data, Dc, coloruse);
-            ASSERT(Palette);
-            SURFACE_vSetPalette(Surface, Palette);
-            PALETTE_ShareUnlockPalette(Palette);
-
-            if (Surface->SurfObj.pvBits)
-            {
-                _SEH2_TRY
-                {
-                    RtlCopyMemory(Surface->SurfObj.pvBits, bits,
-                        abs(Surface->sizlDim.cy * Surface->SurfObj.lDelta));
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END
-            }
-
-            SURFACE_ShareUnlockSurface(Surface);
-
-            if (!NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                GreDeleteObject(handle);
-                handle = NULL;
-            }
-            return handle;
-        }
-
         IntSetDIBits(Dc, handle, 0, height, bits, data, coloruse);
     }
 
@@ -1544,13 +1519,13 @@ GreCreateDIBitmapInternal(
         {
             BITMAPCOREHEADER* CoreHeader = (BITMAPCOREHEADER*)&pbmi->bmiHeader;
             bpp = CoreHeader->bcBitCount;
-            planes = CoreHeader->bcPlanes;
+            planes = CoreHeader->bcPlanes ? CoreHeader->bcPlanes : 1;
             compression = BI_RGB;
         }
         else
         {
             bpp = pbmi->bmiHeader.biBitCount;
-            planes = pbmi->bmiHeader.biPlanes;
+            planes = pbmi->bmiHeader.biPlanes ? pbmi->bmiHeader.biPlanes : 1;
             compression = pbmi->bmiHeader.biCompression;
         }
     }
