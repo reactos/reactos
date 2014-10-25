@@ -263,11 +263,9 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
             BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
             EXLATEOBJ exlo;
             EXLATEOBJ_vInitialize(&exlo,
-                pgp->psurfColor->ppal,
+                &gpalRGB,
                 ppdev->ppalSurf,
-                0xFFFFFFFF,
-                0xFFFFFFFF,
-                0);
+                0, 0, 0);
             IntEngAlphaBlend(psoDest,
                              &pgp->psurfColor->SurfObj,
                              NULL,
@@ -373,34 +371,62 @@ EngSetPointerShape(
 
     if (psoColor)
     {
-        /* Color bitmap must have the same format as the dest surface */
-        if (psoColor->iBitmapFormat != pso->iBitmapFormat)
+        if (fl & SPS_ALPHA)
         {
-            /* It's OK if we have an alpha bitmap */
-            if(!(fl & SPS_ALPHA))
+            /* Always store the alpha cursor in RGB. */
+            EXLATEOBJ exloSrcRGB;
+            PEXLATEOBJ pexlo;
+
+            pexlo = CONTAINING_RECORD(pxlo, EXLATEOBJ, xlo);
+            EXLATEOBJ_vInitialize(&exloSrcRGB, pexlo->ppalSrc, &gpalRGB, 0, 0, 0);
+
+            hbmColor = EngCreateBitmap(psoColor->sizlBitmap,
+                WIDTH_BYTES_ALIGN32(sizel.cx, 32),
+                BMF_32BPP,
+                BMF_TOPDOWN | BMF_NOZEROINIT,
+                NULL);
+            psurfColor = SURFACE_ShareLockSurface(hbmColor);
+            if (!psurfColor) goto failure;
+
+            /* Now copy the given bitmap. */
+            rectl.bottom = psoColor->sizlBitmap.cy;
+            IntEngCopyBits(&psurfColor->SurfObj,
+                           psoColor,
+                           NULL,
+                           &exloSrcRGB.xlo,
+                           &rectl,
+                           (POINTL*)&rectl);
+
+            EXLATEOBJ_vCleanup(&exloSrcRGB);
+        }
+        else
+        {
+            /* Color bitmap must have the same format as the dest surface */
+            if (psoColor->iBitmapFormat != pso->iBitmapFormat)
             {
                 DPRINT1("Screen surface and cursor color bitmap format don't match!.\n");
                 goto failure;
             }
+
+            /* Create a bitmap to copy the color bitmap to */
+            hbmColor = EngCreateBitmap(psoColor->sizlBitmap,
+                               lDelta,
+                               pso->iBitmapFormat,
+                               BMF_TOPDOWN | BMF_NOZEROINIT,
+                               NULL);
+            psurfColor = SURFACE_ShareLockSurface(hbmColor);
+            if (!psurfColor) goto failure;
+
+            /* Now copy the given bitmap. */
+            rectl.bottom = psoColor->sizlBitmap.cy;
+            IntEngCopyBits(&psurfColor->SurfObj,
+                           psoColor,
+                           NULL,
+                           pxlo,
+                           &rectl,
+                           (POINTL*)&rectl);
         }
 
-        /* Create a bitmap to copy the color bitmap to */
-        hbmColor = EngCreateBitmap(psoColor->sizlBitmap,
-                           lDelta,
-                           pso->iBitmapFormat,
-                           BMF_TOPDOWN | BMF_NOZEROINIT,
-                           NULL);
-        psurfColor = SURFACE_ShareLockSurface(hbmColor);
-        if (!psurfColor) goto failure;
-
-        /* Now copy the given bitmap */
-        rectl.bottom = psoColor->sizlBitmap.cy;
-        IntEngCopyBits(&psurfColor->SurfObj,
-                       psoColor,
-                       NULL,
-                       pxlo,
-                       &rectl,
-                       (POINTL*)&rectl);
     }
 
     /* Create a mask surface */
@@ -408,6 +434,8 @@ EngSetPointerShape(
     {
         EXLATEOBJ exlo;
         PPALETTE ppal;
+
+        lDelta = WIDTH_BYTES_ALIGN32(sizel.cx, BitsPerFormat(pso->iBitmapFormat));
 
         /* Create a bitmap for the mask */
         hbmMask = EngCreateBitmap(psoMask->sizlBitmap,
