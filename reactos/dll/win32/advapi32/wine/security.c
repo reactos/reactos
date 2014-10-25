@@ -364,28 +364,29 @@ OpenProcessToken(HANDLE ProcessHandle,
     return TRUE;
 }
 
-/*
- * @implemented
+/******************************************************************************
+ * OpenThreadToken [ADVAPI32.@]
+ *
+ * Opens the access token associated with a thread handle.
+ *
+ * PARAMS
+ *   ThreadHandle  [I] Handle to process
+ *   DesiredAccess [I] Desired access to the thread
+ *   OpenAsSelf    [I] ???
+ *   TokenHandle   [O] Destination for the token handle
+ *
+ * RETURNS
+ *  Success: TRUE. TokenHandle contains the access token.
+ *  Failure: FALSE.
+ *
+ * NOTES
+ *  See NtOpenThreadToken.
  */
 BOOL WINAPI
-OpenThreadToken(HANDLE ThreadHandle,
-                DWORD DesiredAccess,
-                BOOL OpenAsSelf,
-                PHANDLE TokenHandle)
+OpenThreadToken( HANDLE ThreadHandle, DWORD DesiredAccess,
+		 BOOL OpenAsSelf, HANDLE *TokenHandle)
 {
-    NTSTATUS Status;
-
-    Status = NtOpenThreadToken(ThreadHandle,
-                               DesiredAccess,
-                               OpenAsSelf,
-                               TokenHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+	return set_ntstatus( NtOpenThreadToken(ThreadHandle, DesiredAccess, OpenAsSelf, TokenHandle));
 }
 
 /*
