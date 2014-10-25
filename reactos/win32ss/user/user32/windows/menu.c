@@ -43,7 +43,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(menu);
 #define MENU_COL_SPACE 4
 
 /*  top and bottom margins for popup menus */
-#define MENU_TOP_MARGIN 3
+#define MENU_TOP_MARGIN 2 //3
 #define MENU_BOTTOM_MARGIN 2
 
 #define MENU_TYPE_MASK (MF_STRING | MF_BITMAP | MF_OWNERDRAW | MF_SEPARATOR)
@@ -395,7 +395,7 @@ MenuGetRosMenuInfo(PROSMENUINFO MenuInfo, HMENU Menu)
   MenuInfo->cyMenu = pMenu->cyMenu;
   MenuInfo->spwndNotify = pMenu->spwndNotify;
   MenuInfo->cxTextAlign = pMenu->cxTextAlign;
-  MenuInfo->iTop = pMenu->iMaxTop;
+  MenuInfo->iTop = pMenu->iTop;
   MenuInfo->iMaxTop = pMenu->iMaxTop;
   MenuInfo->dwArrowsOn = pMenu->dwArrowsOn;
 
@@ -1301,7 +1301,7 @@ static void FASTCALL MenuPopupMenuCalcSize(PROSMENUINFO MenuInfo, HWND WndOwner)
       orgX = maxX;
       //if( lpitem.fType & (MF_MENUBREAK | MF_MENUBARBREAK))
       //    orgX += MENU_COL_SPACE;
-      orgY = 2;//MENU_TOP_MARGIN;
+      orgY = MENU_TOP_MARGIN;
 
       maxTab = maxTabWidth = 0;
       /* Parse items until column break or end of menu */
