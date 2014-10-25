@@ -264,8 +264,8 @@ static const ACEFLAG AceRights[] =
 /* used for functions that are a simple wrapper around the corresponding ntdll API */
 static __inline BOOL set_ntstatus( NTSTATUS status )
 {
-    if (status) SetLastError( RtlNtStatusToDosError( status ));
-    return !status;
+    if (!NT_SUCCESS(status)) SetLastError( RtlNtStatusToDosError( status ));
+    return NT_SUCCESS(status);
 }
 
 static const RECORD SidTable[] =
