@@ -10,7 +10,7 @@ Description = A text editor.
 Size = 4.46 MB
 Category = 6
 URLSite = http://www.pspad.com
-URLDownload = http://www.fosshub.com/download/pspad458instim_en.exe
+URLDownload = http://pspad.poradna.net/release/pspad458insti_en.exe
 CDPath = none
 
 [Section.0407]

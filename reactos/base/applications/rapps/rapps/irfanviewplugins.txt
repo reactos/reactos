@@ -9,7 +9,7 @@ Description = Additional Plugins for supporting more file types.
 Size = 10.24 MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://www.irfanview.info/files/irfanview_plugins_438_setup.exe
+URLDownload = http://files.netmediaeurope.com/de-nmi/downloads/2014_download/irfanview_plugins_438_setup.exe
 CDPath = none
 
 [Section.0407]

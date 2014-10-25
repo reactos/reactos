@@ -3,13 +3,13 @@
 
 [Section]
 Name = Double Commander
-Version = 0.5.10 Beta
+Version = 0.5.11 Beta
 Licence = GPL
 Description = Double Commander is an open source file manager with two panels side by side. You need 7-Zip or a similar Utility to extract it.
-Size = 7.6 MB
+Size = 8.0 MB
 Category = 12
 URLSite = http://doublecmd.sourceforge.net/
-URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.5.10%20beta/doublecmd-0.5.10.i386-win32.exe
+URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windows%2032%20bit/Double%20Commander%200.5.11%20beta/doublecmd-0.5.11.i386-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -26,7 +26,7 @@ Description = Double Commander to menedżer plików, o otwartym źródle, z klas
 
 [Section.0418]
 Description = Double Commander este un gestionar (cu surse deschise) de fișiere după modelul «două paneluri alăturate».  Este necesar 7-Zip sau un utilitar similar de dezarhivare pentru a-l putea extrage.
-Size = 7,6 Mo
+Size = 8,0 Mo
 
 [Section.0419]
 Description = Double Commander - это открытый двухпанельный файловый менеджер. Вам нужен 7-Zip или подобная утилита для его распаковки.
@@ -34,7 +34,7 @@ Description = Double Commander - это открытый двухпанельн�
 [Section.041f]
 Version = 0.5.8 Gelişme
 Description = Double Commander, yan yana iki bölmeli bir açık kaynak kütük yöneticisidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
-Size = 7,6 MB
+Size = 8,0 MB
 
 [Section.0422]
 Description = Double Commander - це відкритий двопанельний файловий менеджер. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.
