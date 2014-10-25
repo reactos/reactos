@@ -38,8 +38,8 @@ EnumerateLocalGroups(VOID)
     if (Status != NERR_Success)
         return Status;
 
-    printf("\nAliases for \\\\%S\n\n", pServer->sv100_name);
-    printf("------------------------------------------\n");
+    PrintToConsole(L"\nAliases for \\\\%s\n\n", pServer->sv100_name);
+    PrintToConsole(L"------------------------------------------\n");
 
     NetApiBufferFree(pServer);
 
@@ -58,12 +58,10 @@ EnumerateLocalGroups(VOID)
           sizeof(PLOCALGROUP_INFO_0),
           CompareInfo);
 
-//    printf("dwRead: %lu  dwTotal: %lu\n", dwRead, dwTotal);
     for (i = 0; i < dwRead; i++)
     {
-//        printf("%p\n", pBuffer[i].lgrpi0_name);
          if (pBuffer[i].lgrpi0_name)
-            printf("*%S\n", pBuffer[i].lgrpi0_name);
+            PrintToConsole(L"*%s\n", pBuffer[i].lgrpi0_name);
     }
 
     NetApiBufferFree(pBuffer);
@@ -129,17 +127,17 @@ DisplayLocalGroup(LPWSTR lpGroupName)
              pNames[i] = pMembers[i].lgrmi3_domainandname;
     }
 
-    printf("Alias name        %S\n", pGroupInfo->lgrpi1_name);
-    printf("Comment           %S\n", pGroupInfo->lgrpi1_comment);
-    printf("\n");
-    printf("Members\n");
-    printf("\n");
-    printf("------------------------------------------\n");
+    PrintToConsole(L"Alias name        %s\n", pGroupInfo->lgrpi1_name);
+    PrintToConsole(L"Comment           %s\n", pGroupInfo->lgrpi1_comment);
+    PrintToConsole(L"\n");
+    PrintToConsole(L"Members\n");
+    PrintToConsole(L"\n");
+    PrintToConsole(L"------------------------------------------\n");
 
     for (i = 0; i < dwRead; i++)
     {
-         if (pNames[i])
-            printf("%S\n", pNames[i]);
+        if (pNames[i])
+            PrintToConsole(L"%s\n", pNames[i]);
     }
 
 done:

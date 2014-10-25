@@ -37,11 +37,11 @@ EnumerateUsers(VOID)
     if (Status != NERR_Success)
         return Status;
 
-    printf("\nUser accounts for \\\\%S\n\n", pServer->sv100_name);
+    PrintToConsole(L"\nUser accounts for \\\\%s\n\n", pServer->sv100_name);
 
     NetApiBufferFree(pServer);
 
-    printf("------------------------------------------\n");
+    PrintToConsole(L"------------------------------------------\n");
 
     Status = NetUserEnum(NULL,
                          0,
@@ -64,7 +64,7 @@ EnumerateUsers(VOID)
     {
 //        printf("%p\n", pBuffer[i].lgrpi0_name);
          if (pBuffer[i].usri0_name)
-            printf("%S\n", pBuffer[i].usri0_name);
+            PrintToConsole(L"%s\n", pBuffer[i].usri0_name);
     }
 
     NetApiBufferFree(pBuffer);
@@ -102,7 +102,7 @@ PrintDateTime(DWORD dwSeconds)
                    TimeBuffer,
                    80);
 
-    printf("%S %S\n", DateBuffer, TimeBuffer);
+    PrintToConsole(L"%s %s\n", DateBuffer, TimeBuffer);
 }
 
 
@@ -110,6 +110,7 @@ static
 NET_API_STATUS
 DisplayUser(LPWSTR lpUserName)
 {
+    PUSER_MODALS_INFO_0 pUserModals = NULL;
     PUSER_INFO_4 pUserInfo = NULL;
     NET_API_STATUS Status;
 
@@ -121,39 +122,56 @@ DisplayUser(LPWSTR lpUserName)
     if (Status != NERR_Success)
         return Status;
 
-    printf("User name                    %S\n", pUserInfo->usri4_name);
-    printf("Full name                    %S\n", pUserInfo->usri4_full_name);
-    printf("Comment                      %S\n", pUserInfo->usri4_comment);
-    printf("User comment                 %S\n", pUserInfo->usri4_usr_comment);
-    printf("Country code                 %03ld ()\n", pUserInfo->usri4_country_code);
-    printf("Account active               %S\n", (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)? L"No" : ((pUserInfo->usri4_flags & UF_LOCKOUT) ? L"Locked" : L"Yes"));
-    printf("Account expires              ");
+    Status = NetUserModalsGet(NULL,
+                              0,
+                              (LPBYTE*)&pUserModals);
+    if (Status != NERR_Success)
+        goto done;
+
+    PrintToConsole(L"User name                    %s\n", pUserInfo->usri4_name);
+    PrintToConsole(L"Full name                    %s\n", pUserInfo->usri4_full_name);
+    PrintToConsole(L"Comment                      %s\n", pUserInfo->usri4_comment);
+    PrintToConsole(L"User comment                 %s\n", pUserInfo->usri4_usr_comment);
+    PrintToConsole(L"Country code                 %03ld ()\n", pUserInfo->usri4_country_code);
+    PrintToConsole(L"Account active               %s\n", (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)? L"No" : ((pUserInfo->usri4_flags & UF_LOCKOUT) ? L"Locked" : L"Yes"));
+    PrintToConsole(L"Account expires              ");
     if (pUserInfo->usri4_acct_expires == TIMEQ_FOREVER)
-        printf("Never\n");
+        PrintToConsole(L"Never\n");
     else
         PrintDateTime(pUserInfo->usri4_acct_expires);
 
-    printf("\n");
-    printf("Password last set            \n");
-    printf("Password expires             \n");
-    printf("Password changeable          \n");
-    printf("Password required            \n");
-    printf("User may change password     \n");
-    printf("\n");
-    printf("Workstation allowed          %S\n", pUserInfo->usri4_workstations);
-    printf("Logon script                 %S\n", pUserInfo->usri4_script_path);
-    printf("User profile                 %S\n", pUserInfo->usri4_profile);
-    printf("Home directory               %S\n", pUserInfo->usri4_home_dir);
-    printf("Last logon                   ");
+    PrintToConsole(L"\n");
+    PrintToConsole(L"Password last set            \n");
+
+    PrintToConsole(L"Password expires             ");
+    if (pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
+        PrintToConsole(L"Never\n");
+    else
+        PrintDateTime(pUserInfo->usri4_acct_expires);
+
+    PrintToConsole(L"Password changeable          \n");
+    PrintToConsole(L"Password required            \n");
+    PrintToConsole(L"User may change password     \n");
+
+    PrintToConsole(L"\n");
+    PrintToConsole(L"Workstation allowed          %s\n", pUserInfo->usri4_workstations);
+    PrintToConsole(L"Logon script                 %s\n", pUserInfo->usri4_script_path);
+    PrintToConsole(L"User profile                 %s\n", pUserInfo->usri4_profile);
+    PrintToConsole(L"Home directory               %s\n", pUserInfo->usri4_home_dir);
+    PrintToConsole(L"Last logon                   ");
     if (pUserInfo->usri4_last_logon == 0)
-        printf("Never\n");
+        PrintToConsole(L"Never\n");
     else
         PrintDateTime(pUserInfo->usri4_last_logon);
-    printf("\n");
-    printf("Logon hours allowed          \n");
-    printf("\n");
-    printf("Local group memberships      \n");
-    printf("Global group memberships     \n");
+    PrintToConsole(L"\n");
+    PrintToConsole(L"Logon hours allowed          \n");
+    PrintToConsole(L"\n");
+    PrintToConsole(L"Local group memberships      \n");
+    PrintToConsole(L"Global group memberships     \n");
+
+done:
+    if (pUserModals != NULL)
+        NetApiBufferFree(pUserModals);
 
     if (pUserInfo != NULL)
         NetApiBufferFree(pUserInfo);

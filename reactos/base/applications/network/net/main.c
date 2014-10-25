@@ -51,13 +51,70 @@ PrintResourceString(
     INT resID,
     ...)
 {
-    WCHAR szMsgBuf[MAX_BUFFER_SIZE];
+    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
+    WCHAR szOutBuffer[MAX_BUFFER_SIZE];
     va_list arg_ptr;
 
     va_start(arg_ptr, resID);
-    LoadStringW(GetModuleHandle(NULL), resID, szMsgBuf, MAX_BUFFER_SIZE);
-    vwprintf(szMsgBuf, arg_ptr);
+    LoadStringW(GetModuleHandle(NULL), resID, szMsgBuffer, MAX_BUFFER_SIZE);
+    _vsnwprintf(szOutBuffer, MAX_BUFFER_SIZE, szMsgBuffer, arg_ptr);
     va_end(arg_ptr);
+
+    WriteToConsole(szOutBuffer);
+}
+
+
+VOID
+PrintToConsole(
+    LPWSTR lpFormat,
+    ...)
+{
+    WCHAR szBuffer[MAX_BUFFER_SIZE];
+    va_list arg_ptr;
+
+    va_start(arg_ptr, lpFormat);
+    _vsnwprintf(szBuffer, MAX_BUFFER_SIZE, lpFormat, arg_ptr);
+    va_end(arg_ptr);
+
+    WriteToConsole(szBuffer);
+}
+
+
+VOID
+WriteToConsole(
+    LPWSTR lpString)
+{
+    CHAR szOemBuffer[MAX_BUFFER_SIZE * 2];
+    HANDLE hOutput;
+    DWORD dwLength;
+
+    dwLength = wcslen(lpString);
+
+    hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((GetFileType(hOutput) & ~FILE_TYPE_REMOTE) == FILE_TYPE_CHAR)
+    {
+        WriteConsoleW(hOutput,
+                      lpString,
+                      dwLength,
+                      &dwLength,
+                      NULL);
+    }
+    else
+    {
+        dwLength = WideCharToMultiByte(CP_OEMCP,
+                                       0,
+                                       lpString,
+                                       dwLength,
+                                       szOemBuffer,
+                                       MAX_BUFFER_SIZE * 2,
+                                       NULL,
+                                       NULL);
+        WriteFile(hOutput,
+                  szOemBuffer,
+                  dwLength,
+                  &dwLength,
+                  NULL);
+    }
 }
 
 

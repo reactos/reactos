@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
+#include <wincon.h>
 #include <winuser.h>
 #include <winsvc.h>
 #include <stdio.h>
@@ -28,6 +29,15 @@ VOID
 PrintResourceString(
     INT resID,
     ...);
+
+VOID
+PrintToConsole(
+    LPWSTR lpFormat,
+    ...);
+
+VOID
+WriteToConsole(
+    LPWSTR lpString);
 
 VOID help(VOID);
 INT unimplemented(INT argc, WCHAR **argv);
