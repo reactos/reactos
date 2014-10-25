@@ -580,42 +580,36 @@ BOOL WINAPI CreateRestrictedToken(
     return DuplicateTokenEx( baseToken, MAXIMUM_ALLOWED, NULL, level, type, newToken );
 }
 
-/*
- * @implemented
+/******************************************************************************
+ * AllocateAndInitializeSid [ADVAPI32.@]
+ *
+ * PARAMS
+ *   pIdentifierAuthority []
+ *   nSubAuthorityCount   []
+ *   nSubAuthority0       []
+ *   nSubAuthority1       []
+ *   nSubAuthority2       []
+ *   nSubAuthority3       []
+ *   nSubAuthority4       []
+ *   nSubAuthority5       []
+ *   nSubAuthority6       []
+ *   nSubAuthority7       []
+ *   pSid                 []
  */
 BOOL WINAPI
-AllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
-                         BYTE nSubAuthorityCount,
-                         DWORD dwSubAuthority0,
-                         DWORD dwSubAuthority1,
-                         DWORD dwSubAuthority2,
-                         DWORD dwSubAuthority3,
-                         DWORD dwSubAuthority4,
-                         DWORD dwSubAuthority5,
-                         DWORD dwSubAuthority6,
-                         DWORD dwSubAuthority7,
-                         PSID *pSid)
+AllocateAndInitializeSid( PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
+                          BYTE nSubAuthorityCount,
+                          DWORD nSubAuthority0, DWORD nSubAuthority1,
+                          DWORD nSubAuthority2, DWORD nSubAuthority3,
+                          DWORD nSubAuthority4, DWORD nSubAuthority5,
+                          DWORD nSubAuthority6, DWORD nSubAuthority7,
+                          PSID *pSid )
 {
-    NTSTATUS Status;
-
-    Status = RtlAllocateAndInitializeSid(pIdentifierAuthority,
-                                         nSubAuthorityCount,
-                                         dwSubAuthority0,
-                                         dwSubAuthority1,
-                                         dwSubAuthority2,
-                                         dwSubAuthority3,
-                                         dwSubAuthority4,
-                                         dwSubAuthority5,
-                                         dwSubAuthority6,
-                                         dwSubAuthority7,
-                                         pSid);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+    return set_ntstatus( RtlAllocateAndInitializeSid(
+                             pIdentifierAuthority, nSubAuthorityCount,
+                             nSubAuthority0, nSubAuthority1, nSubAuthority2, nSubAuthority3,
+                             nSubAuthority4, nSubAuthority5, nSubAuthority6, nSubAuthority7,
+                             pSid ));
 }
 
 /*
