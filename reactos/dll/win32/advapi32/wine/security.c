@@ -325,12 +325,12 @@ BOOL ADVAPI_IsLocalComputer(LPCWSTR ServerName)
     if (!ServerName || !ServerName[0])
         return TRUE;
 
-    buf = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+    buf = heap_alloc(dwSize * sizeof(WCHAR));
     Result = GetComputerNameW(buf,  &dwSize);
     if (Result && (ServerName[0] == '\\') && (ServerName[1] == '\\'))
         ServerName += 2;
     Result = Result && !lstrcmpW(ServerName, buf);
-    HeapFree(GetProcessHeap(), 0, buf);
+    heap_free(buf);
 
     return Result;
 }
