@@ -72,6 +72,93 @@ EnumerateLocalGroups(VOID)
 }
 
 
+static
+NET_API_STATUS
+DisplayLocalGroup(LPWSTR lpGroupName)
+{
+    PLOCALGROUP_INFO_1 pGroupInfo = NULL;
+    PLOCALGROUP_MEMBERS_INFO_3 pMembers = NULL;
+    PSERVER_INFO_100 pServer = NULL;
+    LPWSTR *pNames = NULL;
+    DWORD dwRead = 0;
+    DWORD dwTotal = 0;
+    DWORD_PTR ResumeHandle = 0;
+    DWORD i;
+    DWORD len;
+    NET_API_STATUS Status;
+
+    Status = NetLocalGroupGetInfo(NULL,
+                                  lpGroupName,
+                                  1,
+                                  (LPBYTE*)&pGroupInfo);
+    if (Status != NERR_Success)
+        return Status;
+
+    Status = NetLocalGroupGetMembers(NULL,
+                                     lpGroupName,
+                                     3,
+                                     (LPBYTE*)&pMembers,
+                                     MAX_PREFERRED_LENGTH,
+                                     &dwRead,
+                                     &dwTotal,
+                                     &ResumeHandle);
+    if (Status != NERR_Success)
+        goto done;
+
+    Status = NetServerGetInfo(NULL,
+                              100,
+                              (LPBYTE*)&pServer);
+    if (Status != NERR_Success)
+        goto done;
+
+    pNames = RtlAllocateHeap(RtlGetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             dwRead * sizeof(LPWSTR));
+    if (pNames == NULL)
+    {
+        Status = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    len = wcslen(pServer->sv100_name);
+    for (i = 0; i < dwRead; i++)
+    {
+         if (!wcsncmp(pMembers[i].lgrmi3_domainandname, pServer->sv100_name, len))
+             pNames[i] = &pMembers[i].lgrmi3_domainandname[len + 1];
+         else
+             pNames[i] = pMembers[i].lgrmi3_domainandname;
+    }
+
+    printf("Alias name        %S\n", pGroupInfo->lgrpi1_name);
+    printf("Comment           %S\n", pGroupInfo->lgrpi1_comment);
+    printf("\n");
+    printf("Members\n");
+    printf("\n");
+    printf("------------------------------------------\n");
+
+    for (i = 0; i < dwRead; i++)
+    {
+         if (pNames[i])
+            printf("%S\n", pNames[i]);
+    }
+
+done:
+    if (pNames != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pNames);
+
+    if (pServer != NULL)
+        NetApiBufferFree(pServer);
+
+    if (pMembers != NULL)
+        NetApiBufferFree(pMembers);
+
+    if (pGroupInfo != NULL)
+        NetApiBufferFree(pGroupInfo);
+
+    return Status;
+}
+
+
 INT
 cmdLocalGroup(
     INT argc,
@@ -96,6 +183,12 @@ cmdLocalGroup(
     if (argc == 2)
     {
         Status = EnumerateLocalGroups();
+        printf("Status: %lu\n", Status);
+        return 0;
+    }
+    else if (argc == 3)
+    {
+        Status = DisplayLocalGroup(argv[2]);
         printf("Status: %lu\n", Status);
         return 0;
     }
