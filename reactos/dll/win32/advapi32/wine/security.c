@@ -115,26 +115,28 @@ static const WELLKNOWNSID WellKnownSids[] =
     { {'S','I'}, WinSystemLabelSid, { SID_REVISION, 1, { SECURITY_MANDATORY_LABEL_AUTHORITY}, { SECURITY_MANDATORY_SYSTEM_RID } } },
 };
 
+/* these SIDs must be constructed as relative to some domain - only the RID is well-known */
 typedef struct WELLKNOWNRID
 {
+    WCHAR wstr[2];
     WELL_KNOWN_SID_TYPE Type;
     DWORD Rid;
 } WELLKNOWNRID;
 
 static const WELLKNOWNRID WellKnownRids[] = {
-    { WinAccountAdministratorSid,    DOMAIN_USER_RID_ADMIN },
-    { WinAccountGuestSid,            DOMAIN_USER_RID_GUEST },
-    { WinAccountKrbtgtSid,           DOMAIN_USER_RID_KRBTGT },
-    { WinAccountDomainAdminsSid,     DOMAIN_GROUP_RID_ADMINS },
-    { WinAccountDomainUsersSid,      DOMAIN_GROUP_RID_USERS },
-    { WinAccountDomainGuestsSid,     DOMAIN_GROUP_RID_GUESTS },
-    { WinAccountComputersSid,        DOMAIN_GROUP_RID_COMPUTERS },
-    { WinAccountControllersSid,      DOMAIN_GROUP_RID_CONTROLLERS },
-    { WinAccountCertAdminsSid,       DOMAIN_GROUP_RID_CERT_ADMINS },
-    { WinAccountSchemaAdminsSid,     DOMAIN_GROUP_RID_SCHEMA_ADMINS },
-    { WinAccountEnterpriseAdminsSid, DOMAIN_GROUP_RID_ENTERPRISE_ADMINS },
-    { WinAccountPolicyAdminsSid,     DOMAIN_GROUP_RID_POLICY_ADMINS },
-    { WinAccountRasAndIasServersSid, DOMAIN_ALIAS_RID_RAS_SERVERS },
+    { {'L','A'}, WinAccountAdministratorSid,    DOMAIN_USER_RID_ADMIN },
+    { {'L','G'}, WinAccountGuestSid,            DOMAIN_USER_RID_GUEST },
+    { {0,0}, WinAccountKrbtgtSid,           DOMAIN_USER_RID_KRBTGT },
+    { {0,0}, WinAccountDomainAdminsSid,     DOMAIN_GROUP_RID_ADMINS },
+    { {0,0}, WinAccountDomainUsersSid,      DOMAIN_GROUP_RID_USERS },
+    { {0,0}, WinAccountDomainGuestsSid,     DOMAIN_GROUP_RID_GUESTS },
+    { {0,0}, WinAccountComputersSid,        DOMAIN_GROUP_RID_COMPUTERS },
+    { {0,0}, WinAccountControllersSid,      DOMAIN_GROUP_RID_CONTROLLERS },
+    { {0,0}, WinAccountCertAdminsSid,       DOMAIN_GROUP_RID_CERT_ADMINS },
+    { {0,0}, WinAccountSchemaAdminsSid,     DOMAIN_GROUP_RID_SCHEMA_ADMINS },
+    { {0,0}, WinAccountEnterpriseAdminsSid, DOMAIN_GROUP_RID_ENTERPRISE_ADMINS },
+    { {0,0}, WinAccountPolicyAdminsSid,     DOMAIN_GROUP_RID_POLICY_ADMINS },
+    { {0,0}, WinAccountRasAndIasServersSid, DOMAIN_ALIAS_RID_RAS_SERVERS },
 };
 
 static const SID sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
@@ -299,6 +301,24 @@ BOOL ADVAPI_IsLocalComputer(LPCWSTR ServerName)
     heap_free(buf);
 
     return Result;
+}
+
+/************************************************************
+ *                ADVAPI_GetComputerSid
+ */
+BOOL ADVAPI_GetComputerSid(PSID sid)
+{
+    static const struct /* same fields as struct SID */
+    {
+        BYTE Revision;
+        BYTE SubAuthorityCount;
+        SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+        DWORD SubAuthority[4];
+    } computer_sid =
+    { SID_REVISION, 4, { SECURITY_NT_AUTHORITY }, { SECURITY_NT_NON_UNIQUE, 0, 0, 0 } };
+
+    memcpy( sid, &computer_sid, sizeof(computer_sid) );
+    return TRUE;
 }
 
 /* Exported functions */
@@ -3621,6 +3641,15 @@ static DWORD ComputeStringSidSize(LPCWSTR StringSid)
         for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
             if (!strncmpW(WellKnownSids[i].wstr, StringSid, 2))
                 return GetSidLengthRequired(WellKnownSids[i].Sid.SubAuthorityCount);
+
+        for (i = 0; i < sizeof(WellKnownRids)/sizeof(WellKnownRids[0]); i++)
+            if (!strncmpW(WellKnownRids[i].wstr, StringSid, 2))
+            {
+                MAX_SID local;
+                ADVAPI_GetComputerSid(&local);
+                return GetSidLengthRequired(*GetSidSubAuthorityCount(&local) + 1);
+            }
+
     }
 
     return GetSidLengthRequired(0);
@@ -3648,7 +3677,7 @@ static BOOL ParseStringSidToSid(LPCWSTR StringSid, PSID pSid, LPDWORD cBytes)
     *cBytes = ComputeStringSidSize(StringSid);
     if (!pisid) /* Simply compute the size */
     {
-        TRACE("only size requested, returning TRUE\n");
+        TRACE("only size requested, returning TRUE with %d\n", *cBytes);
         return TRUE;
     }
 
@@ -3724,6 +3753,15 @@ static BOOL ParseStringSidToSid(LPCWSTR StringSid, PSID pSid, LPDWORD cBytes)
                 pisid->IdentifierAuthority = WellKnownSids[i].Sid.IdentifierAuthority;
                 for (j = 0; j < WellKnownSids[i].Sid.SubAuthorityCount; j++)
                     pisid->SubAuthority[j] = WellKnownSids[i].Sid.SubAuthority[j];
+                bret = TRUE;
+            }
+
+        for (i = 0; i < sizeof(WellKnownRids)/sizeof(WellKnownRids[0]); i++)
+            if (!strncmpW(WellKnownRids[i].wstr, StringSid, 2))
+            {
+                ADVAPI_GetComputerSid(pisid);
+                pisid->SubAuthority[pisid->SubAuthorityCount] = WellKnownRids[i].Rid;
+                pisid->SubAuthorityCount++;
                 bret = TRUE;
             }
 
