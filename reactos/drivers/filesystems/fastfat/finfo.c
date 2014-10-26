@@ -455,7 +455,7 @@ NTSTATUS
 VfatSetRenameInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_EXTENSION DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_RENAME_INFORMATION RenameInfo,
     PFILE_OBJECT TargetFileObject)
 {
@@ -474,7 +474,7 @@ VfatSetRenameInformation(
     HANDLE TargetHandle;
     BOOLEAN DeletedTarget;
 
-    DPRINT("VfatSetRenameInfo(%p, %p, %p, %p, %p)\n", FileObject, FCB, DeviceObject, RenameInfo, TargetFileObject);
+    DPRINT("VfatSetRenameInfo(%p, %p, %p, %p, %p)\n", FileObject, FCB, DeviceExt, RenameInfo, TargetFileObject);
 
     /* Disallow renaming root */
     if (vfatFCBIsRoot(FCB))
@@ -691,8 +691,8 @@ VfatSetRenameInformation(
 
         if (FsRtlAreNamesEqual(&SourceFile, &NewFile, TRUE, NULL))
         {
-            FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                        &(DeviceObject->NotifyList),
+            FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                        &(DeviceExt->NotifyList),
                                         (PSTRING)&FCB->PathNameU,
                                         FCB->PathNameU.Length - FCB->LongNameU.Length,
                                         NULL,
@@ -701,11 +701,11 @@ VfatSetRenameInformation(
                                         FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                         FILE_ACTION_RENAMED_OLD_NAME,
                                         NULL);
-            Status = vfatRenameEntry(DeviceObject, FCB, &NewFile, TRUE);
+            Status = vfatRenameEntry(DeviceExt, FCB, &NewFile, TRUE);
             if (NT_SUCCESS(Status))
             {
-                FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                            &(DeviceObject->NotifyList),
+                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                            &(DeviceExt->NotifyList),
                                             (PSTRING)&FCB->PathNameU,
                                             FCB->PathNameU.Length - FCB->LongNameU.Length,
                                             NULL,
@@ -720,8 +720,8 @@ VfatSetRenameInformation(
         {
             /* Try to find target */
             ParentFCB = FCB->parentFcb;
-            vfatGrabFCB(DeviceObject, ParentFCB);
-            Status = vfatPrepareTargetForRename(DeviceObject,
+            vfatGrabFCB(DeviceExt, ParentFCB);
+            Status = vfatPrepareTargetForRename(DeviceExt,
                                                 &ParentFCB,
                                                 &NewFile,
                                                 RenameInfo->ReplaceIfExists,
@@ -732,8 +732,8 @@ VfatSetRenameInformation(
                 goto Cleanup;
             }
 
-            FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                        &(DeviceObject->NotifyList),
+            FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                        &(DeviceExt->NotifyList),
                                         (PSTRING)&FCB->PathNameU,
                                         FCB->PathNameU.Length - FCB->LongNameU.Length,
                                         NULL,
@@ -742,13 +742,13 @@ VfatSetRenameInformation(
                                         FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                         (DeletedTarget ? FILE_ACTION_REMOVED : FILE_ACTION_RENAMED_OLD_NAME),
                                         NULL);
-            Status = vfatRenameEntry(DeviceObject, FCB, &NewFile, FALSE);
+            Status = vfatRenameEntry(DeviceExt, FCB, &NewFile, FALSE);
             if (NT_SUCCESS(Status))
             {
                 if (DeletedTarget)
                 {
-                    FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                                &(DeviceObject->NotifyList),
+                    FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                                &(DeviceExt->NotifyList),
                                                 (PSTRING)&FCB->PathNameU,
                                                 FCB->PathNameU.Length - FCB->LongNameU.Length,
                                                 NULL,
@@ -760,8 +760,8 @@ VfatSetRenameInformation(
                 }
                 else
                 {
-                    FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                                &(DeviceObject->NotifyList),
+                    FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                                &(DeviceExt->NotifyList),
                                                 (PSTRING)&FCB->PathNameU,
                                                 FCB->PathNameU.Length - FCB->LongNameU.Length,
                                                 NULL,
@@ -778,7 +778,7 @@ VfatSetRenameInformation(
     {
         /* Try to find target */
         ParentFCB = NULL;
-        Status = vfatPrepareTargetForRename(DeviceObject,
+        Status = vfatPrepareTargetForRename(DeviceExt,
                                             &ParentFCB,
                                             &NewName,
                                             RenameInfo->ReplaceIfExists,
@@ -789,8 +789,8 @@ VfatSetRenameInformation(
             goto Cleanup;
         }
 
-        FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                    &(DeviceObject->NotifyList),
+        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                    &(DeviceExt->NotifyList),
                                     (PSTRING)&FCB->PathNameU,
                                     FCB->PathNameU.Length - FCB->LongNameU.Length,
                                     NULL,
@@ -799,13 +799,13 @@ VfatSetRenameInformation(
                                     FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                     FILE_ACTION_REMOVED,
                                     NULL);
-        Status = VfatMoveEntry(DeviceObject, FCB, &NewFile, ParentFCB);
+        Status = VfatMoveEntry(DeviceExt, FCB, &NewFile, ParentFCB);
         if (NT_SUCCESS(Status))
         {
             if (DeletedTarget)
             {
-                FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                            &(DeviceObject->NotifyList),
+                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                            &(DeviceExt->NotifyList),
                                             (PSTRING)&FCB->PathNameU,
                                             FCB->PathNameU.Length - FCB->LongNameU.Length,
                                             NULL,
@@ -817,8 +817,8 @@ VfatSetRenameInformation(
             }
             else
             {
-                FsRtlNotifyFullReportChange(DeviceObject->NotifySync,
-                                            &(DeviceObject->NotifyList),
+                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                            &(DeviceExt->NotifyList),
                                             (PSTRING)&FCB->PathNameU,
                                             FCB->PathNameU.Length - FCB->LongNameU.Length,
                                             NULL,
@@ -832,7 +832,7 @@ VfatSetRenameInformation(
     }
 
 Cleanup:
-    if (ParentFCB != NULL) vfatReleaseFCB(DeviceObject, ParentFCB);
+    if (ParentFCB != NULL) vfatReleaseFCB(DeviceExt, ParentFCB);
     if (NewName.Buffer != NULL) ExFreePoolWithTag(NewName.Buffer, TAG_VFAT);
     if (RenameInfo->RootDirectory != NULL) ObDereferenceObject(RootFileObject);
 
