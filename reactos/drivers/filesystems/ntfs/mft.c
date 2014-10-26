@@ -631,9 +631,9 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 IndexBuffer = (PINDEX_BUFFER)IndexRecord;
                 ASSERT(IndexBuffer->Ntfs.Type == 'XDNI');
                 ASSERT(IndexBuffer->Header.AllocatedSize + 0x18 == IndexBlockSize);
-                IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)(&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
-                IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
-                //ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize)); FIXME: Why doesn't it work?
+                IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
+                IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
+                ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
 
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
@@ -653,6 +653,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                     }
 
                     ++CurrentEntry;
+                    ASSERT(IndexEntry->Length >= sizeof(INDEX_ENTRY_ATTRIBUTE));
                     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
                 }
 
