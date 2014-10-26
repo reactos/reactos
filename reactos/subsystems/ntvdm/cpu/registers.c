@@ -39,6 +39,7 @@ getIntelRegistersPointer(VOID)
         IntelRegPtr.Dr7 = EmulatorContext.DebugRegisters[FAST486_REG_DR7];
     }
 
+#ifndef FAST486_NO_FPU
     if (IntelRegPtr.ContextFlags & CONTEXT_FLOATING_POINT)
     {
         // IntelRegPtr.FloatSave = ;
@@ -52,6 +53,7 @@ getIntelRegistersPointer(VOID)
         // IntelRegPtr.FloatSave.RegisterArea  = ; // This is a region of size SIZE_OF_80387_REGISTERS == 80 bytes
         // IntelRegPtr.FloatSave.Cr0NpxState   = ;
     }
+#endif
 
     if (IntelRegPtr.ContextFlags & CONTEXT_SEGMENTS)
     {
