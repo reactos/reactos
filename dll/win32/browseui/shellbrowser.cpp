@@ -1179,8 +1179,6 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     VARIANT                                 vaIn;
     HRESULT                                 hResult;
 
-    __debugbreak();
-
     hResult = GetBaseBar(vertical, (IUnknown **)&theBaseBar);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
