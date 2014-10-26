@@ -37,7 +37,7 @@ typedef struct _EMULATOR_IO_HANDLERS
 
 typedef struct _EMULATOR_IOPORT_HANDLERS
 {
-    HANDLE hVdd; // == 0 if unused,
+    HANDLE hVdd; // == NULL if unused,
                  //    INVALID_HANDLE_VALUE if handled internally,
                  //    a valid VDD handle   if handled externally.
     union
@@ -65,7 +65,7 @@ IOReadB(USHORT Port)
     {
         return IoPortProc[Port].IoHandlers.InB(Port);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.inb_handler)
     {
         UCHAR Data;
@@ -91,7 +91,7 @@ IOReadStrB(USHORT Port,
     {
         IoPortProc[Port].IoHandlers.InsB(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.insb_handler)
     {
         ASSERT(Port  <= MAXWORD);
@@ -113,7 +113,7 @@ IOWriteB(USHORT Port,
     {
         IoPortProc[Port].IoHandlers.OutB(Port, Buffer);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outb_handler)
     {
         ASSERT(Port <= MAXWORD);
@@ -136,7 +136,7 @@ IOWriteStrB(USHORT Port,
     {
         IoPortProc[Port].IoHandlers.OutsB(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outsb_handler)
     {
         ASSERT(Port  <= MAXWORD);
@@ -157,7 +157,7 @@ IOReadW(USHORT Port)
     {
         return IoPortProc[Port].IoHandlers.InW(Port);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.inw_handler)
     {
         USHORT Data;
@@ -186,7 +186,7 @@ IOReadStrW(USHORT  Port,
     {
         IoPortProc[Port].IoHandlers.InsW(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.insw_handler)
     {
         ASSERT(Port  <= MAXWORD);
@@ -208,7 +208,7 @@ IOWriteW(USHORT Port,
     {
         IoPortProc[Port].IoHandlers.OutW(Port, Buffer);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outw_handler)
     {
         ASSERT(Port <= MAXWORD);
@@ -232,7 +232,7 @@ IOWriteStrW(USHORT  Port,
     {
         IoPortProc[Port].IoHandlers.OutsW(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outsw_handler)
     {
         ASSERT(Port  <= MAXWORD);
@@ -501,8 +501,8 @@ VDDInstallIOHook(HANDLE            hVdd,
                  PVDD_IO_PORTRANGE pPortRange,
                  PVDD_IO_HANDLERS  IOhandler)
 {
-    /* Check possible validity of the VDD handle */
-    if (hVdd == 0 || hVdd == INVALID_HANDLE_VALUE) return FALSE;
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return FALSE;
 
     /* Loop for each range of I/O ports */
     while (cPortRange--)
@@ -516,7 +516,7 @@ VDDInstallIOHook(HANDLE            hVdd,
              * Don't do anything if the I/O port is already
              * handled internally or externally.
              */
-            if (IoPortProc[i].hVdd != 0)
+            if (IoPortProc[i].hVdd != NULL)
             {
                 DPRINT1("IoPortProc[0x%X] already registered\n", i);
                 continue;
@@ -560,8 +560,8 @@ VDDDeInstallIOHook(HANDLE            hVdd,
                    WORD              cPortRange,
                    PVDD_IO_PORTRANGE pPortRange)
 {
-    /* Check possible validity of the VDD handle */
-    if (hVdd == 0 || hVdd == INVALID_HANDLE_VALUE) return;
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return;
 
     /* Loop for each range of I/O ports */
     while (cPortRange--)
