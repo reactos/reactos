@@ -85,6 +85,12 @@ static VOID PicWriteCommand(BYTE Port, BYTE Value)
             /* Otherwise, clear all of them */
             Pic->InServiceRegister = 0;
         }
+
+        if (MasterPic.IntRequestRegister || SlavePic.IntRequestRegister)
+        {
+            /* Signal the next IRQ */
+            EmulatorInterruptSignal();
+        }
     }
 }
 
