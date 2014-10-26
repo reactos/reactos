@@ -2296,8 +2296,15 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 {
     BYTE Page;
     COORD Resolution;
-    BOOLEAN DoNotClear = !!(ModeNumber & 0x80);
     PVGA_REGISTERS VgaMode;
+
+    /*
+     * IBM standard modes do not clear the screen if the
+     * high bit of AL is set (EGA or higher only).
+     * See Ralf Brown: http://www.ctyme.com/intr/rb-0069.htm
+     * for more information.
+     */
+    BOOLEAN DoNotClear = !!(ModeNumber & 0x80);
 
     /* Retrieve the real mode number and check its validity */
     ModeNumber &= 0x7F;
@@ -2308,8 +2315,13 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
         return FALSE;
     }
 
-    /* Check if this is the same mode */
-    if (ModeNumber == Bda->VideoMode) return TRUE;
+    /* Check if this is the current mode */
+    if (ModeNumber == Bda->VideoMode)
+    {
+        /* Just clear the VGA memory if needed */
+        if (!DoNotClear) VgaClearMemory();
+        return TRUE;
+    }
 
     VgaMode = VideoModes[ModeNumber];
 
@@ -2320,12 +2332,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 
     VgaChangePalette(ModeNumber);
 
-    /*
-     * IBM standard modes do not clear the screen if the
-     * high bit of AL is set (EGA or higher only).
-     * See Ralf Brown: http://www.ctyme.com/intr/rb-0069.htm
-     * for more information.
-     */
+    /* Clear the VGA memory if needed */
     if (!DoNotClear) VgaClearMemory();
 
     // Bda->CrtModeControl;
