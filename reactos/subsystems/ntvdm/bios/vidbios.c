@@ -2308,6 +2308,9 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
         return FALSE;
     }
 
+    /* Check if this is the same mode */
+    if (ModeNumber == Bda->VideoMode) return TRUE;
+
     VgaMode = VideoModes[ModeNumber];
 
     DPRINT1("Switching to mode %02Xh %s clearing the screen; VgaMode = 0x%p\n",
