@@ -46,7 +46,7 @@ BEGIN
     AUTOCHECKBOX "&İleride, Olmayan Geçekleri Deneme", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Onayla", 1, 135, 242, 60, 14
     PUSHBUTTON "&Ertele", 2, 201, 242, 60, 14
-    LTEXT "Eğer yalnızca bir tek geçek bağlıysa sunucu çoklu bağlantılı aramaları kabul etmeye yapılandırılmamış olabilir. Böyle bir durumda gereksiz bağlantı görevlerinden kaçınmak için ""İleride, Olmayan Geçekleri Deneme""yi imleyiniz.", -1, 37, 36, 224, 44
+    LTEXT "Eğer yalnızca bir tek geçek bağlıysa sunucu çoklu bağlantılı aramaları kabul etmeye yapılandırılmamış olabilir. Böyle bir durumda gereksiz bağlantı yüklerinden kaçınmak için ""İleride, Olmayan Geçekleri Deneme""yi imleyiniz.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
@@ -366,145 +366,145 @@ END
 
 125 DIALOGEX 12, 16, 261, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Modem Configuration"
+CAPTION "Çevirge Yapılandırılması"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 15102, 1238, 7, 7, 20, 20
-    LTEXT "Modem", -1, 25, 27, 24, 8, NOT WS_VISIBLE | NOT WS_GROUP
+    LTEXT "Çevirge", -1, 25, 27, 24, 8, NOT WS_VISIBLE | NOT WS_GROUP
     EDITTEXT 1235, 40, 7, 214, 16, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
-    LTEXT "&Maximum speed (bps):", 1243, 7, 36, 110, 8
+    LTEXT "E&n Çok Hız (bps):", 1243, 7, 36, 110, 8
     COMBOBOX 1239, 119, 34, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Modem &protocol", 1244, 7, 52, 111, 8
+    LTEXT "&Çevirge İletişim Kâidesi", 1244, 7, 52, 111, 8
     COMBOBOX 1245, 119, 50, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    GROUPBOX "Hardware features", 1237, 6, 70, 248, 61, WS_GROUP
-    AUTOCHECKBOX "E&nable hardware flow control", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "En&able modem error control", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Enable m&odem compression", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Show terminal window", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Enable mo&dem speaker", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "OK", 1, 129, 171, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 194, 171, 60, 14
+    GROUPBOX "Donanım Husûsiyetleri", 1237, 6, 70, 248, 61, WS_GROUP
+    AUTOCHECKBOX "&Donanım Akış Denetimini Etkinleştir", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Ç&evirge Yanlışlık Denetimini Etkinleştir", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Çe&virge Sıkıştırmasını Etkinleştir", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Uçbirim Penceresini Göster", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Çev&irge Hoparlörünü Etkinleştir", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "Tamam", 1, 129, 171, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 194, 171, 60, 14
 END
 
 126 DIALOGEX 0, 0, 270, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Select Network Component Type"
+CAPTION "Ağ Bileşeni Türünü Seç"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Click the type of network component you want to install:", -1, 8, 7, 258, 8
+    LTEXT "Kurmak istediğiniz ağ bileşeninin türünü tıklayınız:", -1, 8, 7, 258, 8
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 8, 20, 188, 58
     GROUPBOX "", -1, 8, 81, 188, 30
     LTEXT "", 1250, 12, 90, 177, 17
-    DEFPUSHBUTTON "&Add...", 1252, 205, 20, 60, 14
-    PUSHBUTTON "Cancel", 2, 205, 38, 60, 14
+    DEFPUSHBUTTON "&Ekle...", 1252, 205, 20, 60, 14
+    PUSHBUTTON "İptal", 2, 205, 38, 60, 14
 END
 
 127 DIALOGEX 16, 20, 260, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "NetWare or Compatible Connections"
+CAPTION "NetWare veyâ Uyumlu Bağlantılar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
-    LTEXT "You have connections to a NetWare compatible network.  These connections will be closed when the PPP IPX connection is established.", 1279, 42, 7, 215, 37
-    LTEXT "Before dialing, to avoid data loss, either close all files using these connections or uncheck IPX on this entry's Network Protocol settings.", 1280, 42, 46, 215, 38, NOT WS_GROUP
-    AUTOCHECKBOX "&Do not display this message in the future", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "OK", 1, 65, 112, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 134, 112, 60, 14
+    LTEXT "Bir NetWare uyumlu ağ için bağlantılarınız var. PPP IPX bağlantısı kurulduğunda bu bağlantılar kapatılacaktır.", 1279, 42, 7, 215, 37
+    LTEXT "Çevirmeden önce veri yitiminden kaçınmak için ya bu bağlantıları kullanan tüm kütükleri siliniz ya da bu girişin Ağ İletişim Kâidesi ayarlarında IPX'in imini kaldırınız.", 1280, 42, 46, 215, 38, NOT WS_GROUP
+    AUTOCHECKBOX "&Gelecekte Bu İletiyi Gösterme", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "Tamam", 1, 65, 112, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 134, 112, 60, 14
 END
 
 128 DIALOGEX 7, 22, 236, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Manual Dial"
+CAPTION "Elle Çevir"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Pick up the handset and dial (or ask the operator to dial).  After dialing is complete, click OK.  Listen to handset until silent, and then hang up.", 1281, 8, 8, 219, 32
-    LTEXT "Phone number:", 1282, 8, 46, 91, 8
+    LTEXT "Almacı kaldırınız ve çeviriniz (ya da çevirmek için işletmene sorunuz). Çevirme bitirildikten sonra Tamam'a tıklayınız. Almacı, sessiz olana dek dinleyniz, sonra erteleyiniz.", 1281, 8, 8, 219, 32
+    LTEXT "Telefon Numarası:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
-    DEFPUSHBUTTON "OK", 1, 104, 70, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 168, 70, 60, 14
+    DEFPUSHBUTTON "Tamam", 1, 104, 70, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 168, 70, 60, 14
 END
 
 129 DIALOGEX 6, 20, 260, 85
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Network Protocol Connection Result"
+CAPTION "Ağ İletişim Kâidesi Bağlantı Sonucu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1328, 7, 7, 21, 20, WS_GROUP
     LTEXT "", 1329, 38, 7, 216, 24, NOT WS_GROUP
-    AUTOCHECKBOX "&Do not request the failed protocols next time", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    PUSHBUTTON "&Accept", 1, 129, 64, 60, 14
-    PUSHBUTTON "&Hang Up", 2, 193, 64, 60, 14
+    AUTOCHECKBOX "O&lmayan İletişim Kâidelerini Bir Dahaki Kezde İsteme", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "&Onayla", 1, 129, 64, 60, 14
+    PUSHBUTTON "&Ertele", 2, 193, 64, 60, 14
 END
 
 133 DIALOGEX 6, 18, 231, 211
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "X.25 Logon Settings"
+CAPTION "X.25 Oturum Açma Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select your X.25 network provider and type the X.121 address of the remote server:", 1408, 7, 4, 220, 27
-    LTEXT "&Network:", 1410, 9, 35, 213, 8, NOT WS_GROUP
+    LTEXT "X.25 ağ sağlayıcınızı seçiniz ve uzak sunucunun X.121 adresini yazınız:", 1408, 7, 4, 220, 27
+    LTEXT "&Ağ:", 1410, 9, 35, 213, 8, NOT WS_GROUP
     COMBOBOX 1406, 9, 46, 215, 125, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "X.121&address:", 1407, 9, 66, 213, 8, NOT WS_GROUP
+    LTEXT "&X.121 Adresi:", 1407, 9, 66, 213, 8, NOT WS_GROUP
     EDITTEXT 1402, 8, 77, 215, 14, ES_AUTOHSCROLL
-    GROUPBOX "Optional", 1405, 8, 95, 215, 79
-    LTEXT "&User data:", 1411, 19, 109, 182, 8, NOT WS_GROUP
+    GROUPBOX "Seçimlik", 1405, 8, 95, 215, 79
+    LTEXT "&Kullanıcı Verisi:", 1411, 19, 109, 182, 8, NOT WS_GROUP
     EDITTEXT 1404, 19, 120, 193, 14, ES_AUTOHSCROLL
-    LTEXT "&Facilities:", 1409, 19, 138, 182, 8, NOT WS_GROUP
+    LTEXT "&Olanaklar:", 1409, 19, 138, 182, 8, NOT WS_GROUP
     EDITTEXT 1403, 19, 149, 193, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", 1, 100, 189, 60, 14
-    PUSHBUTTON "Cancel", 2, 164, 189, 60, 14
+    DEFPUSHBUTTON "Tamam", 1, 100, 189, 60, 14
+    PUSHBUTTON "İptal", 2, 164, 189, 60, 14
 END
 
 146 DIALOGEX 6, 18, 230, 210
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Autodial"
+CAPTION "Kendiliğinden Çevirme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "If you are disconnected from a network, autodial attempts to connect to a network whenever you try to access remote information.", -1, 7, 4, 219, 32
-    LTEXT "&Enable autodial by location:", 1006, 8, 42, 213, 8
+    LTEXT "Bir ağdan ayrıysanız ne zaman uzak bilgiye erişmeye çalıştığınız bir ağ için kendiliğinden çevirme bağlanmaya girişir.", -1, 7, 4, 219, 32
+    LTEXT "&Şu Konuma Göre Kendiliğinden Çevirmeyi Etkinleştir:", 1006, 8, 42, 213, 8
     CONTROL "", 1004, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000C401, 7, 53, 216, 109
-    AUTOCHECKBOX "Al&ways ask me before autodialing", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Disable autodial while I am logged on", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Kendiliğinden Çevirmeden Önce Tüm Zamanlarda Bana Sor", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Ben Oturum Açtığım Sürede Kendiliğinden Çevirmeyi Edilginleştir", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
 END
 
 147 DIALOGEX 6, 18, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Dialing"
+CAPTION "Çevirme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These preferences apply to 'Login using Dial-Up Networking' at Ctrl-Alt-Del login.  You, as an administrator, have access to this sheet.", 1007, 7, 4, 221, 40, NOT WS_GROUP
-    LTEXT "&Number of redial attempts:", 1005, 7, 55, 154, 8
+    LTEXT "Bu yeğlemeler; Denetim, Seçenek ve Silme oturum açmada ""Çevirmeli Ağ'ı kullanan oturum açmaya"" uygulanır. Sizin bir yönetici olarak bu sayfaya erişiminiz var.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "&Yeniden Çevirme Girişimlerinin Sayısı:", 1005, 7, 55, 154, 8
     EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
-    LTEXT "&Seconds between redial attempts:", 1009, 7, 73, 156, 8, NOT WS_GROUP
+    LTEXT "Y&eniden Çevirme Girişimleri Arasındaki Sâniyeler:", 1009, 7, 73, 156, 8, NOT WS_GROUP
     EDITTEXT 1003, 164, 70, 60, 14, ES_AUTOHSCROLL
-    LTEXT "I&dle seconds before hanging up:", 1008, 7, 91, 154, 8, NOT WS_GROUP
+    LTEXT "E&rtelemeden Önce Boşta Kalma Sâniyeleri:", 1008, 7, 91, 154, 8, NOT WS_GROUP
     EDITTEXT 1002, 164, 88, 60, 14, ES_AUTOHSCROLL
 END
 
 148 DIALOGEX 6, 18, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Callback"
+CAPTION "Geri Arama"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "When you dial into a server, it may offer to call you back to reduce your phone charges.  Specify whether you want callback.  (Callback is not supported for virtual private network (VPN) connections.)", 1043, 8, 4, 219, 43
-    AUTORADIOBUTTON "&No callback", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "A&sk me during dialing when the server offers", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
-    AUTORADIOBUTTON "Al&ways call me back at the number(s) below:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Bir sunucuya çevirdiğinizde o, telefonunuzun yükünü azaltmaya sizi yeniden aramak için sağlayabilir. Geri arama isteseniz de istemeseniz de belirtiniz. (Geri arama farazî ve şahsî ağ (VPN) bağlantıları için desteklenmiyor.)", 1043, 8, 4, 219, 43
+    AUTORADIOBUTTON "&Geri Arama Yok", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "S&unucu Sunduğunda Çevirme Esnâsında Bana Sor", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "&Beni Tüm Zamanalarda Aşağıdaki Numaralardan Geri Ara:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
     CONTROL "", 1037, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 16, 88, 204, 94
-    PUSHBUTTON "&Edit...", 1039, 96, 190, 60, 14
-    PUSHBUTTON "&Delete", 1038, 159, 190, 60, 14
+    PUSHBUTTON "&Düzenle...", 1039, 96, 190, 60, 14
+    PUSHBUTTON "&Sil", 1038, 159, 190, 60, 14
 END
 
 149 DIALOGEX 6, 18, 317, 142
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "You need to set the dial-in credentials that remote routers will use when connecting to this interface. A user account will be created on this router with the information that you enter here.", 1094, 8, 5, 307, 35
-    LTEXT "&User name:", 1078, 8, 47, 124, 8, NOT WS_GROUP
+    LTEXT "Bu arayüz için bağlandığında kullanılacak uzak yönlendiriciler arama kimlik bilgilerini ayarlamaya gerksiniminiz var. Bu yönlendiricide buraya girdiğiniz bilgiyle bir kullanıcı hesâbı oluşturulacaktır.", 1094, 8, 5, 307, 35
+    LTEXT "&Kullanıcı Adı:", 1078, 8, 47, 124, 8, NOT WS_GROUP
     EDITTEXT 1074, 135, 45, 175, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "&Password:", 1077, 8, 68, 124, 8, NOT WS_GROUP
+    LTEXT "&Şifre:", 1077, 8, 68, 124, 8, NOT WS_GROUP
     EDITTEXT 1073, 135, 66, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirm password:", 1075, 8, 90, 124, 8, NOT WS_GROUP
+    LTEXT "Ş&ifreyi Doğrula:", 1075, 8, 90, 124, 8, NOT WS_GROUP
     EDITTEXT 1071, 135, 87, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
 END
 
@@ -512,14 +512,14 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "You need to set the dial out credentials that this interface will use when connecting to the remote router.  These credentials must match the dial in credentials configured on the remote router.", 1094, 8, 5, 308, 33
-    LTEXT "&User name:", 1096, 8, 43, 130, 8, NOT WS_GROUP
+    LTEXT "Uzak yönlendiriciye bağlanırken bu arayüzün kullanacağı dışarıya arama kimlik bilgilerini ayarlamaya gereksiniminiz var. Bu kimlik bilgileri, uzak yönlendiricide yapılandırılmış içeriye arama kimlik bilgileriyle eşleşmelidir.", 1094, 8, 5, 308, 33
+    LTEXT "&Kullanıcı Adı:", 1096, 8, 43, 130, 8, NOT WS_GROUP
     EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
-    LTEXT "&Domain:", 1093, 8, 63, 130, 8, NOT WS_GROUP
+    LTEXT "&Etki Alanı:", 1093, 8, 63, 130, 8, NOT WS_GROUP
     EDITTEXT 1089, 140, 60, 175, 12, ES_UPPERCASE | ES_AUTOHSCROLL
-    LTEXT "&Password:", 1095, 8, 81, 130, 8, NOT WS_GROUP
+    LTEXT "&Şifre:", 1095, 8, 81, 130, 8, NOT WS_GROUP
     EDITTEXT 1090, 140, 78, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirm password:", 1092, 8, 99, 130, 8, NOT WS_GROUP
+    LTEXT "Ş&ifreyi Doğrula:", 1092, 8, 99, 130, 8, NOT WS_GROUP
     EDITTEXT 1088, 140, 96, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
 END
 
@@ -527,140 +527,140 @@ END
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type a name you want for this connection:", -1, 8, 4, 190, 8
+    LTEXT "Bu bağlantı için istediğiniz bir ad yazınız:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
-    LTEXT "Click Finish to save it in the Network Connections folder.", -1, 8, 38, 193, 8
-    LTEXT "To edit this connection later, select it, click the File menu, and then click Properties.", -1, 8, 58, 193, 16
+    LTEXT "Onu Ağ Bağlantıları dizini içine kaydetmek için Bitir'e tıklayınız.", -1, 8, 38, 193, 8
+    LTEXT "Bu bağlantıyı daha sonra düzenlemek için onu seçiniz, Kütük seçkesine tıklayınız, sonra Husûsiyetler'e tıklayınız.", -1, 8, 58, 193, 16
 END
 
 155 DIALOGEX 0, 0, 231, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Connec&t using:", 1124, 7, 5, 219, 8
+    LTEXT "&Bağlanırken Kullan:", 1124, 7, 5, 219, 8
     CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 198, 44, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Up", 1132, 210, 18, 16, 14, BS_ICON
-    PUSHBUTTON "&Down", 1131, 210, 36, 16, 14, BS_ICON
-    AUTOCHECKBOX "A&ll devices call the same numbers", 1119, 9, 66, 133, 14, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "C&onfigure...", 1130, 144, 66, 60, 14
-    GROUPBOX "Sample type", 1125, 8, 84, 215, 100, WS_GROUP
-    LTEXT "Ar&ea code:", 1133, 17, 102, 52, 8
+    PUSHBUTTON "&Yukarı", 1132, 210, 18, 16, 14, BS_ICON
+    PUSHBUTTON "&Aşağı", 1131, 210, 36, 16, 14, BS_ICON
+    AUTOCHECKBOX "&Tüm Aygıtlar Aynı Numaralardan Arasın", 1119, 9, 66, 133, 14, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Ya&pılandır...", 1130, 144, 66, 60, 14
+    GROUPBOX "Örnek Tür", 1125, 8, 84, 215, 100, WS_GROUP
+    LTEXT "A&lan Kodu:", 1133, 17, 102, 52, 8
     COMBOBOX 1122, 17, 112, 52, 110, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Phone number:", 1135, 71, 102, 139, 8
+    LTEXT "T&elefon Numarası:", 1135, 71, 102, 139, 8
     EDITTEXT 1123, 73, 112, 79, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Alter&nates", 1129, 154, 112, 60, 14
-    LTEXT "Country/re&gion code:", 1134, 17, 132, 197, 8
+    PUSHBUTTON "Ba&şkaları", 1129, 154, 112, 60, 14
+    LTEXT "&Ülke ya da Bölge Kodu:", 1134, 17, 132, 197, 8
     COMBOBOX 1126, 17, 143, 193, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "U&se dialing rules", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Dialing &Rules", 1136, 151, 161, 60, 14
-    AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 10, 192, 214, 19, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Çevirme Kâidelerini Kullan", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Çe&virme Kâideleri", 1136, 151, 161, 60, 14
+    AUTOCHECKBOX "Ba&ğlandığında Bildirim Alanında Simge Göster", 1120, 10, 192, 214, 19, BS_TOP | BS_MULTILINE
 END
 
 156 DIALOGEX 0, 0, 231, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "C&onfigure...", 1130, 164, 38, 60, 14
-    GROUPBOX "Sample text", 1125, 8, 55, 217, 100, WS_GROUP
-    LTEXT "Ar&ea code:", 1133, 17, 72, 48, 8
+    PUSHBUTTON "&Yapılandır...", 1130, 164, 38, 60, 14
+    GROUPBOX "Örnek Metin", 1125, 8, 55, 217, 100, WS_GROUP
+    LTEXT "A&lan Kodu:", 1133, 17, 72, 48, 8
     COMBOBOX 1122, 17, 83, 48, 119, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Phone number:", 1135, 71, 72, 146, 8
+    LTEXT "T&elefon Numarası:", 1135, 71, 72, 146, 8
     EDITTEXT 1123, 71, 83, 81, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Alter&nates", 1129, 155, 83, 63, 14
-    LTEXT "Country/re&gion code:", 1134, 17, 103, 193, 8
+    PUSHBUTTON "Ba&şkaları", 1129, 155, 83, 63, 14
+    LTEXT "&Ülke ya da Bölge Kodu:", 1134, 17, 103, 193, 8
     COMBOBOX 1126, 17, 114, 201, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "U&se dialing rules", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Dialing &Rules", 1136, 157, 132, 60, 14
-    AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 12, 164, 209, 18, BS_TOP | BS_MULTILINE
-    LTEXT "Connect using:", 1124, 8, 5, 217, 8
+    AUTOCHECKBOX "&Çevirme Kâidelerini Kullan", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Çe&virme Kâideleri", 1136, 157, 132, 60, 14
+    AUTOCHECKBOX "Ba&ğlandığında Bildirim Alanında Simge Göster", 1120, 12, 164, 209, 18, BS_TOP | BS_MULTILINE
+    LTEXT "&Bağlanırken Kullan:", 1124, 8, 5, 217, 8
     CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 217, 15
 END
 
 157 DIALOGEX 6, 18, 235, 160
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Appearance"
+CAPTION "Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Preview phone numbers before dialing", 1142, 8, 10, 224, 10, WS_GROUP
-    AUTOCHECKBOX "Show &location setting before dialing", 1139, 8, 27, 224, 10
-    AUTOCHECKBOX "Allo&w location edits during login", 1140, 21, 43, 212, 10
-    AUTOCHECKBOX "Show &connection progress while dialing", 1143, 8, 59, 224, 10
-    AUTOCHECKBOX "Clo&se on dial", 1137, 8, 76, 224, 10
-    AUTOCHECKBOX "All&ow phonebook edits during login", 1141, 8, 94, 224, 10
-    AUTOCHECKBOX "&Use wizard to create new phonebook entries", 1144, 22, 111, 210, 10
+    AUTOCHECKBOX "&Çevirmeden Önce Telefon Numaralarını Önceden Göster", 1142, 8, 10, 224, 10, WS_GROUP
+    AUTOCHECKBOX "Ç&evirmeden Önce Koum Ayârını Göster", 1139, 8, 27, 224, 10
+    AUTOCHECKBOX "&Oturum Açma Esnâsında Konum Düzenlemelerine İzin Ver", 1140, 21, 43, 212, 10
+    AUTOCHECKBOX "Çe&virirken Bağlantı İlerlemesini Göster", 1143, 8, 59, 224, 10
+    AUTOCHECKBOX "&Aramada Kapat", 1137, 8, 76, 224, 10
+    AUTOCHECKBOX "O&turum Açma Esnâsında Telefon Defteri Düzenlemelerine İzin Ver", 1141, 8, 94, 224, 10
+    AUTOCHECKBOX "&Yeni Telefon Defteri Girişlerini Oluşturmak İçin Yardımcı Kullan", 1144, 22, 111, 210, 10
 END
 
 158 DIALOGEX 6, 18, 235, 160
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Appearance"
+CAPTION "Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Preview phone numbers before dialing", 1142, 8, 10, 223, 10, WS_GROUP
-    AUTOCHECKBOX "Show &location setting before dialing", 1139, 8, 27, 206, 10
-    AUTOCHECKBOX "Start dial-up networking &monitor before dialing", 1138, 8, 44, 226, 10
-    AUTOCHECKBOX "Show &connection progress while dialing", 1143, 8, 61, 224, 10
-    AUTOCHECKBOX "Clo&se on dial", 1137, 8, 79, 220, 10
-    AUTOCHECKBOX "&Use wizard to create new phonebook entries", 1144, 8, 97, 220, 10
-    AUTOCHECKBOX "Always prompt &before auto-dialing", 1136, 8, 114, 220, 10
+    AUTOCHECKBOX "&Çevirmeden Önce Telefon Numaralarını Önceden Göster", 1142, 8, 10, 223, 10, WS_GROUP
+    AUTOCHECKBOX "Ç&evirmeden Önce Koum Ayârını Göster", 1139, 8, 27, 206, 10
+    AUTOCHECKBOX "Çev&irmeden Önce Çevirmeli Ağ İzlemesini Başlat", 1138, 8, 44, 226, 10
+    AUTOCHECKBOX "Çe&virirken Bağlantı İlerlemesini Göster", 1143, 8, 61, 224, 10
+    AUTOCHECKBOX "&Aramada Kapat", 1137, 8, 79, 220, 10
+    AUTOCHECKBOX "&Yeni Telefon Defteri Girişlerini Oluşturmak İçin Yardımcı Kullan", 1144, 8, 97, 220, 10
+    AUTOCHECKBOX "&Kendiliğinden Çevirmeden Önce Tüm Zamanlarda Sor", 1136, 8, 114, 220, 10
 END
 
 160 DIALOGEX 6, 18, 320, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select a name for this demand dial interface.  A common practice is to name interfaces after the network or router to which they connect.", 1158, 7, 5, 309, 29
-    LTEXT "&Interface name:", 1159, 17, 41, 285, 8, NOT WS_GROUP
+    LTEXT "Bu çevirme arayüzü isteği için bir ad seçiniz. Bağlanan yönlendirici ya da ağdan sonra arayüzleri adlandırmak bilinen bir uygulamadır.", 1158, 7, 5, 309, 29
+    LTEXT "&Arayüz Adı:", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "I &know all about demand-dial interfaces and would rather edit the properties directly", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "&Çevirme Arayüzleri İsteği Üzerine Tüm Şeyleri Biliyorum ve Husûsiyetleri Doğrudan Düzenlemeyi Yeğliyorum", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
 
 162 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Security"
+CAPTION "Güvenlik"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Security options", 1580, 8, 3, 215, 139
-    AUTORADIOBUTTON "&Typical (recommended settings)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 102, 198, 8, BS_NOTIFY
-    LTEXT "&Validate my identity as follows:", 1537, 26, 29, 187, 8, NOT WS_GROUP
+    GROUPBOX "Güvenlik Seçenekleri", 1580, 8, 3, 215, 139
+    AUTORADIOBUTTON "&Tipik (Önerilen Ayarlar)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "&Gelişmiş (Husûsî Ayarlar)", 1541, 14, 102, 198, 8, BS_NOTIFY
+    LTEXT "&Kimliğimi Aşağıdaki Gibi Onayla:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and  password (and domain if any)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
-    LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 15, 114, 134, 20
-    PUSHBUTTON "&Settings...", 1180, 151, 115, 60, 14
-    GROUPBOX "Interactive logon and scripting", 1177, 8, 146, 215, 62, WS_GROUP
-    AUTOCHECKBOX "S&how terminal window", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Run script:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&ReactOS Oturum Açma Adımı ve Şifremi Kendiliğinden Kullan (Eğer Varsa Etki Alanını Da)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Veri Sıkıştırmasını Gerektir (Eğer Yoksa Bağlantıyı Kes)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Bu ayarları kullanmak güvenlik iletişim kâidelerinin bir bilgisini gerektirir.", 1539, 15, 114, 134, 20
+    PUSHBUTTON "&Ayarlar...", 1180, 151, 115, 60, 14
+    GROUPBOX "Etkileşimli Oturum Açma ve Betikleme", 1177, 8, 146, 215, 62, WS_GROUP
+    AUTOCHECKBOX "&Uçbirim Penceresini Göster", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Betiği Çalıştır:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
     COMBOBOX 1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Edit...", 1182, 87, 187, 60, 14
-    PUSHBUTTON "&Browse...", 1181, 151, 187, 60, 14
+    PUSHBUTTON "&Düzenle...", 1182, 87, 187, 60, 14
+    PUSHBUTTON "G&öz At...", 1181, 151, 187, 60, 14
 END
 
 163 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "You have more than one dial-up device on your computer.", -1, 6, 3, 307, 13
-    LTEXT "&Select the devices to use in this connection:", -1, 6, 15, 307, 11
+    LTEXT "Bilgisayarınızda birden çok çevirme aygıtınız var.", -1, 6, 3, 307, 13
+    LTEXT "&Bu bağlantıda kullanmak için aygıtları seçiniz:", -1, 6, 15, 307, 11
     CONTROL "", 1228, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 7, 28, 304, 77
 END
 
 165 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Networking"
+CAPTION "Ağ Kurma"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Typ&e of dial-up server I am calling:", 1583, 7, 4, 219, 8
+    LTEXT "&Aradığım Çevirme Sunucusunun Türü:", 1583, 7, 4, 219, 8
     COMBOBOX 1418, 7, 17, 215, 46, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Settings", 1419, 160, 35, 60, 14
-    LTEXT "This c&onnection uses the following items:", 1684, 8, 64, 219, 10
+    PUSHBUTTON "A&yarlar", 1419, 160, 35, 60, 14
+    LTEXT "&Bu Bağlantı Aşağıdaki Öğeleri Kullanır:", 1684, 8, 64, 219, 10
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C40D, 7, 75, 216, 53
-    PUSHBUTTON "I&nstall...", 1252, 7, 133, 67, 14
-    PUSHBUTTON "&Uninstall", 1254, 80, 133, 67, 14
-    PUSHBUTTON "P&roperties", 1253, 153, 133, 67, 14
-    GROUPBOX "Description", 1585, 9, 158, 213, 43
+    PUSHBUTTON "&Kur...", 1252, 7, 133, 67, 14
+    PUSHBUTTON "Ka&ldır", 1254, 80, 133, 67, 14
+    PUSHBUTTON "&Husûsiyetler", 1253, 153, 133, 67, 14
+    GROUPBOX "Tanım", 1585, 9, 158, 213, 43
     LTEXT "", 1250, 18, 167, 195, 25
 END
 
