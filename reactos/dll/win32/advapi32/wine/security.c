@@ -2335,6 +2335,9 @@ static BYTE ParseAceStringType(LPCWSTR* StringAcl)
     LPCWSTR szAcl = *StringAcl;
     const ACEFLAG *lpaf = AceType;
 
+    while (*szAcl == ' ')
+        szAcl++;
+
     while (lpaf->wstr &&
         (len = strlenW(lpaf->wstr)) &&
         strncmpW(lpaf->wstr, szAcl, len))
@@ -2343,7 +2346,7 @@ static BYTE ParseAceStringType(LPCWSTR* StringAcl)
     if (!lpaf->wstr)
         return 0;
 
-    *StringAcl += len;
+    *StringAcl = szAcl + len;
     return lpaf->value;
 }
 
@@ -2369,6 +2372,9 @@ static BYTE ParseAceStringFlags(LPCWSTR* StringAcl)
     BYTE flags = 0;
     LPCWSTR szAcl = *StringAcl;
 
+    while (*szAcl == ' ')
+        szAcl++;
+
     while (*szAcl != ';')
     {
         const ACEFLAG *lpaf = AceFlags;
@@ -2381,7 +2387,7 @@ static BYTE ParseAceStringFlags(LPCWSTR* StringAcl)
         if (!lpaf->wstr)
             return 0;
 
-        flags |= lpaf->value;
+	flags |= lpaf->value;
         szAcl += len;
     }
 
@@ -2399,19 +2405,22 @@ static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
     DWORD rights = 0;
     LPCWSTR szAcl = *StringAcl;
 
+    while (*szAcl == ' ')
+        szAcl++;
+
     if ((*szAcl == '0') && (*(szAcl + 1) == 'x'))
     {
         LPCWSTR p = szAcl;
 
-        while (*p && *p != ';')
+	while (*p && *p != ';')
             p++;
 
-        if (p - szAcl <= 10 /* 8 hex digits + "0x" */ )
-        {
-            rights = strtoulW(szAcl, NULL, 16);
-            szAcl = p;
-        }
-        else
+	if (p - szAcl <= 10 /* 8 hex digits + "0x" */ )
+	{
+	    rights = strtoulW(szAcl, NULL, 16);
+	    szAcl = p;
+	}
+	else
             WARN("Invalid rights string format: %s\n", debugstr_wn(szAcl, p - szAcl));
     }
     else
@@ -2421,16 +2430,16 @@ static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
             const ACEFLAG *lpaf = AceRights;
 
             while (lpaf->wstr &&
-                   (len = strlenW(lpaf->wstr)) &&
-                   strncmpW(lpaf->wstr, szAcl, len))
-            {
-                lpaf++;
-            }
+               (len = strlenW(lpaf->wstr)) &&
+               strncmpW(lpaf->wstr, szAcl, len))
+	    {
+               lpaf++;
+	    }
 
             if (!lpaf->wstr)
                 return 0;
 
-            rights |= lpaf->value;
+	    rights |= lpaf->value;
             szAcl += len;
         }
     }
@@ -2445,11 +2454,8 @@ static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
  * 
  * dacl_flags(string_ace1)(string_ace2)... (string_acen) 
  */
-static BOOL
-ParseStringAclToAcl(LPCWSTR StringAcl,
-                    LPDWORD lpdwFlags, 
-                    PACL pAcl,
-                    LPDWORD cBytes)
+static BOOL ParseStringAclToAcl(LPCWSTR StringAcl, LPDWORD lpdwFlags, 
+    PACL pAcl, LPDWORD cBytes)
 {
     DWORD val;
     DWORD sidlen;
@@ -2457,11 +2463,12 @@ ParseStringAclToAcl(LPCWSTR StringAcl,
     DWORD acesize = 0;
     DWORD acecount = 0;
     PACCESS_ALLOWED_ACE pAce = NULL; /* pointer to current ACE */
+    DWORD error = ERROR_INVALID_ACL;
 
     TRACE("%s\n", debugstr_w(StringAcl));
 
     if (!StringAcl)
-        return FALSE;
+	return FALSE;
 
     if (pAcl) /* pAce is only useful if we're setting values */
         pAce = (PACCESS_ALLOWED_ACE) (pAcl + 1);
@@ -2476,29 +2483,34 @@ ParseStringAclToAcl(LPCWSTR StringAcl,
 
         /* Parse ACE type */
         val = ParseAceStringType(&StringAcl);
-        if (pAce)
+	if (pAce)
             pAce->Header.AceType = (BYTE) val;
         if (*StringAcl != ';')
+        {
+            error = RPC_S_INVALID_STRING_UUID;
             goto lerr;
+        }
         StringAcl++;
 
         /* Parse ACE flags */
-        val = ParseAceStringFlags(&StringAcl);
-        if (pAce)
+	val = ParseAceStringFlags(&StringAcl);
+	if (pAce)
             pAce->Header.AceFlags = (BYTE) val;
         if (*StringAcl != ';')
             goto lerr;
         StringAcl++;
 
         /* Parse ACE rights */
-        val = ParseAceStringRights(&StringAcl);
-        if (pAce)
+	val = ParseAceStringRights(&StringAcl);
+	if (pAce)
             pAce->Mask = val;
         if (*StringAcl != ';')
             goto lerr;
         StringAcl++;
 
         /* Parse ACE object guid */
+        while (*StringAcl == ' ')
+            StringAcl++;
         if (*StringAcl != ';')
         {
             FIXME("Support for *_OBJECT_ACE_TYPE not implemented\n");
@@ -2507,6 +2519,8 @@ ParseStringAclToAcl(LPCWSTR StringAcl,
         StringAcl++;
 
         /* Parse ACE inherit object guid */
+        while (*StringAcl == ' ')
+            StringAcl++;
         if (*StringAcl != ';')
         {
             FIXME("Support for *_OBJECT_ACE_TYPE not implemented\n");
@@ -2516,10 +2530,10 @@ ParseStringAclToAcl(LPCWSTR StringAcl,
 
         /* Parse ACE account sid */
         if (ParseStringSidToSid(StringAcl, pAce ? &pAce->SidStart : NULL, &sidlen))
-        {
+	{
             while (*StringAcl && *StringAcl != ')')
                 StringAcl++;
-        }
+	}
 
         if (*StringAcl != ')')
             goto lerr;
@@ -2554,7 +2568,7 @@ ParseStringAclToAcl(LPCWSTR StringAcl,
     return TRUE;
 
 lerr:
-    SetLastError(ERROR_INVALID_ACL);
+    SetLastError(error);
     WARN("Invalid ACE string format\n");
     return FALSE;
 }
@@ -2563,10 +2577,10 @@ lerr:
 /******************************************************************************
  * ParseStringSecurityDescriptorToSecurityDescriptor
  */
-static BOOL
-ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescriptor,
-                                                  SECURITY_DESCRIPTOR_RELATIVE* SecurityDescriptor,
-                                                  LPDWORD cBytes)
+static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
+    LPCWSTR StringSecurityDescriptor,
+    SECURITY_DESCRIPTOR_RELATIVE* SecurityDescriptor,
+    LPDWORD cBytes)
 {
     BOOL bret = FALSE;
     WCHAR toktype;
@@ -2580,25 +2594,28 @@ ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescript
     if (SecurityDescriptor)
         lpNext = (LPBYTE)(SecurityDescriptor + 1);
 
+    while (*StringSecurityDescriptor == ' ')
+        StringSecurityDescriptor++;
+
     while (*StringSecurityDescriptor)
     {
         toktype = *StringSecurityDescriptor;
 
-        /* Expect char identifier followed by ':' */
-        StringSecurityDescriptor++;
+	/* Expect char identifier followed by ':' */
+	StringSecurityDescriptor++;
         if (*StringSecurityDescriptor != ':')
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             goto lend;
         }
-        StringSecurityDescriptor++;
+	StringSecurityDescriptor++;
 
-        /* Extract token */
-        lptoken = StringSecurityDescriptor;
-        while (*lptoken && *lptoken != ':')
+	/* Extract token */
+	lptoken = StringSecurityDescriptor;
+	while (*lptoken && *lptoken != ':')
             lptoken++;
 
-        if (*lptoken)
+	if (*lptoken)
             lptoken--;
 
         len = lptoken - StringSecurityDescriptor;
@@ -2606,7 +2623,7 @@ ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescript
         tok[len] = 0;
 
         switch (toktype)
-        {
+	{
             case 'O':
             {
                 DWORD bytes;
@@ -2620,7 +2637,7 @@ ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescript
                     lpNext += bytes; /* Advance to next token */
                 }
 
-                *cBytes += bytes;
+		*cBytes += bytes;
 
                 break;
             }
@@ -2638,13 +2655,13 @@ ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescript
                     lpNext += bytes; /* Advance to next token */
                 }
 
-                *cBytes += bytes;
+		*cBytes += bytes;
 
                 break;
             }
 
             case 'D':
-            {
+	    {
                 DWORD flags;
                 DWORD bytes;
 
@@ -2656,11 +2673,11 @@ ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescript
                     SecurityDescriptor->Control |= SE_DACL_PRESENT | flags;
                     SecurityDescriptor->Dacl = lpNext - (LPBYTE)SecurityDescriptor;
                     lpNext += bytes; /* Advance to next token */
-                }
+		}
 
-                *cBytes += bytes;
+		*cBytes += bytes;
 
-                break;
+		break;
             }
 
             case 'S':
@@ -2676,18 +2693,18 @@ ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescript
                     SecurityDescriptor->Control |= SE_SACL_PRESENT | flags;
                     SecurityDescriptor->Sacl = lpNext - (LPBYTE)SecurityDescriptor;
                     lpNext += bytes; /* Advance to next token */
-                }
+		}
 
-                *cBytes += bytes;
+		*cBytes += bytes;
 
-                break;
+		break;
             }
 
             default:
                 FIXME("Unknown token\n");
                 SetLastError(ERROR_INVALID_PARAMETER);
-                goto lend;
-        }
+		goto lend;
+	}
 
         StringSecurityDescriptor = lptoken;
     }
