@@ -447,6 +447,27 @@ UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+static void
+UserPaintCaption(HWND hwnd)
+{
+    /* FIXME: this is not 100% correct */
+
+    /* 
+     * When themes are not enabled we can go on and paint the non client area.
+     * However if we do that with themes enabled we will draw a classic frame.
+     * This is sovled by sending a themes specific message to notify the themes
+     * engine that the caption needs to be redrawn 
+     */
+    if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
+    {
+        SendMessage(hwnd, WM_NCUAHDRAWCAPTION,0,0);
+    }
+    else
+    {
+        DefWndNCPaint(hwnd, HRGN_WINDOW, -1);
+    }
+}
+
 // WM_SETICON
 LRESULT FASTCALL
 DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
@@ -481,7 +502,7 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     NtUserSetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp, hIconSmall);
 
     if ((pWnd->style & WS_CAPTION ) == WS_CAPTION)
-       DefWndNCPaint(UserHMGetHandle(pWnd), HRGN_WINDOW, -1);  /* Repaint caption */
+       UserPaintCaption(UserHMGetHandle(pWnd));  /* Repaint caption */
 
     return (LRESULT)hIconOld;
 }
@@ -1454,17 +1475,7 @@ RealDefWindowProcA(HWND hWnd,
             DefSetText(hWnd, (PCWSTR)lParam, TRUE);
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
-            {
-                /* FIXME: this is not 100% correct */
-                if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
-                {
-                    SendMessage(hWnd, WM_NCUAHDRAWCAPTION,0,0);
-                }
-                else
-                {
-                    DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
-                }
-            }
+                UserPaintCaption(hWnd);
             Result = 1;
             break;
         }
@@ -1626,17 +1637,7 @@ RealDefWindowProcW(HWND hWnd,
             DefSetText(hWnd, (PCWSTR)lParam, FALSE);
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
-            {
-                /* FIXME: this is not 100% correct */
-                if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
-                {
-                    SendMessage(hWnd, WM_NCUAHDRAWCAPTION,0,0);
-                }
-                else
-                {
-                    DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
-                }
-            }
+                UserPaintCaption(hWnd);
             Result = 1;
             break;
         }
