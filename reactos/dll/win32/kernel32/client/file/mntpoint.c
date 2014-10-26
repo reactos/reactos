@@ -118,14 +118,15 @@ GetVolumeNameForVolumeMountPointW(IN LPCWSTR VolumeMountPoint,
                                      NULL, 0, MountDevName, BufferLength);
       if (!NT_SUCCESS(Status))
       {
-         RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
          if (Status == STATUS_BUFFER_OVERFLOW)
          {
             BufferLength = sizeof(MOUNTDEV_NAME) + MountDevName->NameLength;
+            RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
             continue;
          }
          else
          {
+            RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
             NtClose(FileHandle);
             BaseSetLastNTError(Status);
             return FALSE;
