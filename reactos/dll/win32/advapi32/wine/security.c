@@ -1100,29 +1100,17 @@ BOOL WINAPI GetAce(PACL pAcl,DWORD dwAceIndex,LPVOID *pAce )
     return set_ntstatus(RtlGetAce(pAcl, dwAceIndex, pAce));
 }
 
-/*
- * @implemented
+/******************************************************************************
+ * GetAclInformation [ADVAPI32.@]
  */
-BOOL
-WINAPI
-GetAclInformation(PACL pAcl,
-                  LPVOID pAclInformation,
-                  DWORD nAclInformationLength,
-                  ACL_INFORMATION_CLASS dwAclInformationClass)
+BOOL WINAPI GetAclInformation(
+  PACL pAcl,
+  LPVOID pAclInformation,
+  DWORD nAclInformationLength,
+  ACL_INFORMATION_CLASS dwAclInformationClass)
 {
-    NTSTATUS Status;
-
-    Status = RtlQueryInformationAcl(pAcl,
-                                    pAclInformation,
-                                    nAclInformationLength,
-                                    dwAclInformationClass);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+    return set_ntstatus(RtlQueryInformationAcl(pAcl, pAclInformation,
+                                               nAclInformationLength, dwAclInformationClass));
 }
 
 /*
