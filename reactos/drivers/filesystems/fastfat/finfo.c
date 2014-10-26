@@ -400,6 +400,7 @@ vfatPrepareTargetForRename(
             /* If that's a directory or a read-only file, we're not allowed */
             if (vfatFCBIsDirectory(TargetFcb) || ((*TargetFcb->Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY));
             {
+                vfatReleaseFCB(DeviceExt, *ParentFCB);
                 *ParentFCB = NULL;
                 vfatReleaseFCB(DeviceExt, TargetFcb);
                 return STATUS_OBJECT_NAME_COLLISION;
@@ -408,6 +409,7 @@ vfatPrepareTargetForRename(
             /* Attempt to flush (might close the file) */
             if (!MmFlushImageSection(TargetFcb->FileObject->SectionObjectPointer, MmFlushForDelete))
             {
+                vfatReleaseFCB(DeviceExt, *ParentFCB);
                 *ParentFCB = NULL;
                 vfatReleaseFCB(DeviceExt, TargetFcb);
                 return STATUS_ACCESS_DENIED;
@@ -416,6 +418,7 @@ vfatPrepareTargetForRename(
             /* If we are, ensure the file isn't open by anyone! */
             if (TargetFcb->OpenHandleCount != 0)
             {
+                vfatReleaseFCB(DeviceExt, *ParentFCB);
                 *ParentFCB = NULL;
                 vfatReleaseFCB(DeviceExt, TargetFcb);
                 return STATUS_ACCESS_DENIED;
@@ -429,6 +432,7 @@ vfatPrepareTargetForRename(
         }
         else
         {
+            vfatReleaseFCB(DeviceExt, *ParentFCB);
             *ParentFCB = NULL;
             vfatReleaseFCB(DeviceExt, TargetFcb);
             return STATUS_OBJECT_NAME_COLLISION;
