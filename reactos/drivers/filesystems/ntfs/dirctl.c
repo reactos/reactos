@@ -242,12 +242,13 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
                                 ULONG BufferLength)
 {
     ULONG Length;
-    PFILENAME_ATTRIBUTE FileName;
+    PFILENAME_ATTRIBUTE FileName, ShortFileName;
 
     DPRINT("NtfsGetBothDirectoryInformation() called\n");
 
     FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
     ASSERT(FileName != NULL);
+    ShortFileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
 
     Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
@@ -257,6 +258,19 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     Info->NextEntryOffset =
         ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, sizeof(ULONG));
     RtlCopyMemory(Info->FileName, FileName->Name, Length);
+
+    if (ShortFileName)
+    {
+        /* Should we upcase the filename? */
+        ASSERT(ShortFileName->NameLength <= ARRAYSIZE(Info->ShortName));
+        Info->ShortNameLength = ShortFileName->NameLength * sizeof(WCHAR);
+        RtlCopyMemory(Info->ShortName, ShortFileName->Name, Info->ShortNameLength);
+    }
+    else
+    {
+        Info->ShortName[0] = 0;
+        Info->ShortNameLength = 0;
+    }
 
     Info->CreationTime.QuadPart = FileName->CreationTime;
     Info->LastAccessTime.QuadPart = FileName->LastAccessTime;
@@ -271,9 +285,6 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 
 //  Info->FileIndex=;
     Info->EaSize = 0;
-
-    Info->ShortName[0] = 0;
-    Info->ShortNameLength = 0;
 
     return STATUS_SUCCESS;
 }
