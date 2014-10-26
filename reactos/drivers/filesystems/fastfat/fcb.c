@@ -288,6 +288,14 @@ vfatFCBIsRoot(
 }
 
 VOID
+vfatGrabFCB(
+    PDEVICE_EXTENSION pVCB,
+    PVFATFCB pFCB)
+{
+    ++pFCB->RefCount;
+}
+
+VOID
 vfatReleaseFCB(
     PDEVICE_EXTENSION pVCB,
     PVFATFCB pFCB)
@@ -338,7 +346,7 @@ vfatAddFCBToTable(
     }
     if (pFCB->parentFcb)
     {
-        pFCB->parentFcb->RefCount++;
+        vfatGrabFCB(pVCB, pFCB->parentFcb);
     }
 }
 
@@ -403,12 +411,6 @@ vfatUpdateFCB(
      */
     vfatReleaseFCB(pVCB, OldParent);
 
-    /* In case we were moving accross directories, reset caching on old parent */
-    //if (OldParent != ParentFcb)
-    //{
-    //    CcUninitializeCacheMap(OldParent->FileObject, NULL, NULL);
-    //}
-
     return STATUS_SUCCESS;
 }
 
@@ -455,7 +457,7 @@ vfatGrabFCBFromTable(
                 DPRINT("'%wZ' '%wZ'\n", &FileNameU, FcbNameU);
                 if (RtlEqualUnicodeString(&FileNameU, FcbNameU, TRUE))
                 {
-                    rcFCB->RefCount++;
+                    vfatGrabFCB(pVCB, rcFCB);
                     return rcFCB;
                 }
             }
@@ -489,7 +491,7 @@ vfatFCBInitializeCacheFromVolume(
     fileObject->FsContext = fcb;
     fileObject->FsContext2 = newCCB;
     fcb->FileObject = fileObject;
-    fcb->RefCount++;
+    vfatGrabFCB(vcb, fcb);
 
     _SEH2_TRY
     {
@@ -655,7 +657,7 @@ vfatMakeFCBFromDirEntry(
     rcFCB->RFCB.FileSize.QuadPart = Size;
     rcFCB->RFCB.ValidDataLength.QuadPart = Size;
     rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
-    rcFCB->RefCount++;
+    vfatGrabFCB(vcb, rcFCB);
     if (vfatFCBIsDirectory(rcFCB))
     {
         vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
@@ -817,7 +819,7 @@ vfatGetFCBForFile(
         {
             *pFCB = FCB;
             *pParentFCB = FCB->parentFcb;
-            (*pParentFCB)->RefCount++;
+            vfatGrabFCB(pVCB, *pParentFCB);
             return STATUS_SUCCESS;
         }
 

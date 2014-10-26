@@ -426,7 +426,7 @@ vfatPrepareTargetForRename(
 
             /* Effectively delete old file to allow renaming */
             VfatDelEntry(DeviceExt, TargetFcb, NULL);
-            (*ParentFCB)->RefCount++;
+            vfatGrabFCB(DeviceExt, *ParentFCB);
             vfatReleaseFCB(DeviceExt, TargetFcb);
             *Deleted = TRUE;
         }
@@ -720,7 +720,7 @@ VfatSetRenameInformation(
         {
             /* Try to find target */
             ParentFCB = FCB->parentFcb;
-            ParentFCB->RefCount++;
+            vfatGrabFCB(DeviceObject, ParentFCB);
             Status = vfatPrepareTargetForRename(DeviceObject,
                                                 &ParentFCB,
                                                 &NewFile,

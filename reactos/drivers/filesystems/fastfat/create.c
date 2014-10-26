@@ -365,7 +365,7 @@ VfatOpenFile(
         DPRINT("'%wZ'\n", &FileObject->RelatedFileObject->FileName);
 
         *ParentFcb = FileObject->RelatedFileObject->FsContext;
-        (*ParentFcb)->RefCount++;
+        vfatGrabFCB(DeviceExt, *ParentFcb);
     }
     else
     {
@@ -391,7 +391,7 @@ VfatOpenFile(
 
     if (*ParentFcb)
     {
-        (*ParentFcb)->RefCount++;
+        vfatGrabFCB(DeviceExt, *ParentFcb);
     }
 
     /*  try first to find an existing FCB in memory  */
@@ -497,7 +497,7 @@ VfatCreateFile(
 
         pFcb = DeviceExt->VolumeFcb;
         vfatAttachFCBToFileObject(DeviceExt, pFcb, FileObject);
-        pFcb->RefCount++;
+        vfatGrabFCB(DeviceExt, pFcb);
 
         Irp->IoStatus.Information = FILE_OPENED;
         return STATUS_SUCCESS;
@@ -562,7 +562,7 @@ VfatCreateFile(
 
         if (Status == STATUS_SUCCESS)
         {
-            ParentFcb->RefCount++;
+            vfatGrabFCB(DeviceExt, ParentFcb);
             vfatReleaseFCB(DeviceExt, TargetFcb);
             Irp->IoStatus.Information = FILE_EXISTS;
         }
