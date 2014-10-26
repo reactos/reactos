@@ -1092,28 +1092,12 @@ FindFirstFreeAce(PACL pAcl,
                            (PACE*)pAce);
 }
 
-
-/*
- * @implemented
+/******************************************************************************
+ * GetAce [ADVAPI32.@]
  */
-BOOL
-WINAPI
-GetAce(PACL pAcl,
-       DWORD dwAceIndex,
-       LPVOID *pAce)
+BOOL WINAPI GetAce(PACL pAcl,DWORD dwAceIndex,LPVOID *pAce )
 {
-    NTSTATUS Status;
-
-    Status = RtlGetAce(pAcl,
-                       dwAceIndex,
-                       pAce);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+    return set_ntstatus(RtlGetAce(pAcl, dwAceIndex, pAce));
 }
 
 /*
