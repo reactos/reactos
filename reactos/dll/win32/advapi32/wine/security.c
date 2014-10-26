@@ -627,26 +627,18 @@ FreeSid(PSID pSid)
     return RtlFreeSid(pSid);
 }
 
-/*
- * @implemented
+/******************************************************************************
+ * CopySid [ADVAPI32.@]
+ *
+ * PARAMS
+ *   nDestinationSidLength []
+ *   pDestinationSid       []
+ *   pSourceSid            []
  */
 BOOL WINAPI
-CopySid(DWORD nDestinationSidLength,
-        PSID pDestinationSid,
-        PSID pSourceSid)
+CopySid( DWORD nDestinationSidLength, PSID pDestinationSid, PSID pSourceSid )
 {
-    NTSTATUS Status;
-
-    Status = RtlCopySid(nDestinationSidLength,
-                        pDestinationSid,
-                        pSourceSid);
-    if (!NT_SUCCESS (Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-  return TRUE;
+	return set_ntstatus(RtlCopySid(nDestinationSidLength, pDestinationSid, pSourceSid));
 }
 
 /*
