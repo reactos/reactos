@@ -70,10 +70,6 @@ if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
 #define GET_ADDR_PTE(x) (((x) >> 12) & 0x3FF)
 #define INVALID_TLB_FIELD 0xFFFFFFFF
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE   4096
-#endif
-
 typedef struct _FAST486_MOD_REG_RM
 {
     FAST486_GEN_REGS Register;

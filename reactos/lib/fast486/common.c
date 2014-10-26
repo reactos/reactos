@@ -95,8 +95,40 @@ Fast486ReadMemory(PFAST486_STATE State,
     /* Find the linear address */
     LinearAddress = CachedDescriptor->Base + Offset;
 
-    /* Read from the linear address */
-    return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size);
+#ifndef FAST486_NO_PREFETCH
+    if (InstFetch && ((Offset + FAST486_CACHE_SIZE - 1) <= CachedDescriptor->Limit))
+    {
+        State->PrefetchAddress = LinearAddress;
+
+        if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PG)
+            && (PAGE_OFFSET(State->PrefetchAddress) > (FAST486_PAGE_SIZE - FAST486_CACHE_SIZE)))
+        {
+            /* We mustn't prefetch across a page boundary */
+            State->PrefetchAddress = PAGE_ALIGN(State->PrefetchAddress)
+                                     | (FAST486_PAGE_SIZE - FAST486_CACHE_SIZE);
+        }
+
+        /* Prefetch */
+        if (Fast486ReadLinearMemory(State,
+                                    State->PrefetchAddress,
+                                    State->PrefetchCache,
+                                    FAST486_CACHE_SIZE))
+        {
+            State->PrefetchValid = TRUE;
+
+            RtlMoveMemory(Buffer,
+                          &State->PrefetchCache[LinearAddress - State->PrefetchAddress],
+                          Size);
+            return TRUE;
+        }
+        else return FALSE;
+    }
+    else
+#endif
+    {
+        /* Read from the linear address */
+        return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size);
+    }
 }
 
 BOOLEAN
@@ -155,6 +187,18 @@ Fast486WriteMemory(PFAST486_STATE State,
 
     /* Find the linear address */
     LinearAddress = CachedDescriptor->Base + Offset;
+
+#ifndef FAST486_NO_PREFETCH
+    if (State->PrefetchValid
+        && (LinearAddress >= State->PrefetchAddress)
+        && ((LinearAddress + Size) <= (State->PrefetchAddress + FAST486_CACHE_SIZE)))
+    {
+        /* Update the prefetch */
+        RtlMoveMemory(&State->PrefetchCache[LinearAddress - State->PrefetchAddress],
+                      Buffer,
+                      min(Size, FAST486_CACHE_SIZE + State->PrefetchAddress - LinearAddress));
+    }
+#endif
 
     /* Write to the linear address */
     return Fast486WriteLinearMemory(State, LinearAddress, Buffer, Size);

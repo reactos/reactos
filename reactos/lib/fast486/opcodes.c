@@ -4240,6 +4240,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
         {
             UCHAR BopCode;
 
+#ifndef FAST486_NO_PREFETCH
+            /* Invalidate the prefetch since BOP handlers can alter the memory */
+            State->PrefetchValid = FALSE;
+#endif
+
             /* Fetch the BOP code */
             if (!Fast486FetchByte(State, &BopCode))
             {

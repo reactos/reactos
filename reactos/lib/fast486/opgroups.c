@@ -2177,7 +2177,31 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F01)
         /* INVLPG */
         case 7:
         {
-            UNIMPLEMENTED;
+#ifndef FAST486_NO_PREFETCH
+            /* Invalidate the prefetch */
+            State->PrefetchValid = FALSE;
+#endif
+
+            /* This is a privileged instruction */
+            if (Fast486GetCurrentPrivLevel(State) != 0)
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                return;
+            }
+
+            if (!ModRegRm.Memory)
+            {
+                /* The second operand must be a memory location */
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return;
+            }
+
+            if (State->Tlb != NULL)
+            {
+                /* Clear the TLB entry */
+                State->Tlb[ModRegRm.MemoryAddress >> 12] = INVALID_TLB_FIELD;
+            }
+
             break;
         }
 

@@ -686,6 +686,11 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
         }
     }
 
+#ifndef FAST486_NO_PREFETCH
+    /* Changing CR0 or CR3 can interfere with prefetching (because of paging) */
+    State->PrefetchValid = FALSE;
+#endif
+
     /* Load a value to the control register */
     State->ControlRegisters[ModRegRm.Register] = Value;
 }

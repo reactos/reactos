@@ -93,6 +93,18 @@
 
 #define FAST486_FPU_DEFAULT_CONTROL 0x037F
 
+#define FAST486_PAGE_SIZE 4096
+#define FAST486_CACHE_SIZE 32
+
+/*
+ * These are condiciones sine quibus non that should be respected, because
+ * otherwise when fetching DWORDs you would read extra garbage bytes
+ * (by reading outside of the prefetch buffer). The prefetch cache must
+ * also not cross a page boundary.
+ */
+C_ASSERT((FAST486_CACHE_SIZE >= sizeof(DWORD))
+         && (FAST486_CACHE_SIZE <= FAST486_PAGE_SIZE));
+
 struct _FAST486_STATE;
 typedef struct _FAST486_STATE FAST486_STATE, *PFAST486_STATE;
 
@@ -486,6 +498,11 @@ struct _FAST486_STATE
     FAST486_INT_STATUS IntStatus;
     UCHAR PendingIntNum;
     PULONG Tlb;
+#ifndef FAST486_NO_PREFETCH
+    BOOLEAN PrefetchValid;
+    ULONG PrefetchAddress;
+    UCHAR PrefetchCache[FAST486_CACHE_SIZE];
+#endif
 #ifndef FAST486_NO_FPU
     FAST486_FPU_DATA_REG FpuRegisters[FAST486_NUM_FPU_REGS];
     FAST486_FPU_STATUS_REG FpuStatus;
