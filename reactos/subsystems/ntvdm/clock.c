@@ -149,7 +149,7 @@ VOID ClockUpdate(VOID)
 #ifdef IPS_DISPLAY
     if ((CurrentTickCount - LastCyclePrintout) >= 1000)
     {
-        DPRINT1("NTVDM: %lu Instructions Per Second; TimerTicks = %I64d\n", Cycles * 1000 / (CurrentTickCount - LastCyclePrintout), TimerTicks);
+        DPRINT1("NTVDM: %I64u Instructions Per Second; TimerTicks = %I64d\n", Cycles * 1000 / (CurrentTickCount - LastCyclePrintout), TimerTicks);
         LastCyclePrintout = CurrentTickCount;
         Cycles = 0;
     }
