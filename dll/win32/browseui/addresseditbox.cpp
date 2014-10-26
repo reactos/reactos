@@ -149,30 +149,72 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 {
     HRESULT hr;
 
+    /* 
+     * Parse the path is it wasn't parsed
+     */
+    if (!pidlLastParsed)
+        ParseNow(0);
+
     if (!pidlLastParsed)
         return E_FAIL;
 
+    /* 
+     * Get the IShellBrowser and IBrowserService interfaces of the shell browser 
+     */
     CComPtr<IShellBrowser> pisb;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IBrowserService> pbs;
+    pisb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs));
+    if (FAILED(hr))
+        return hr;
+
+    /*
+     * Get the current pidl of the shellbrowser and check if it is the same with the parsed one
+     */
+    PIDLIST_ABSOLUTE pidl;
+    hr = pbs->GetPidl(&pidl);
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IShellFolder> psf;
+    hr = SHGetDesktopFolder(&psf);
+    if (FAILED(hr))
+        return hr;
+
+    hr = psf->CompareIDs(0, pidl, pidlLastParsed);
+
+    SHFree(pidl);
+    if (hr == 0)
+        return S_OK;
+
+    /* 
+     * Attempt to browse to the parsed pidl 
+     */
+    hr = pisb->BrowseObject(pidlLastParsed, 0);
     if (SUCCEEDED(hr))
-    {
-        hr = pisb->BrowseObject(pidlLastParsed, 0);
-        if (FAILED_UNEXPECTEDLY(hr))
-        {
-            HWND topLevelWindow;
-            LPCITEMIDLIST pidlChild;
-            CComPtr<IShellFolder> sf;
-            CComPtr<IShellBrowser> pisb;
+        return hr;
 
-            hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+    /* 
+     * Browsing to the pidl failed so it's not a folder. So invoke its defaule command.
+     */
+    HWND topLevelWindow;
+    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
+    if (FAILED(hr))
+        return hr;
 
-            IUnknown_GetWindow(pisb, &topLevelWindow);
+    LPCITEMIDLIST pidlChild;
+    CComPtr<IShellFolder> sf;
+    hr = SHBindToParent(pidlLastParsed, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+    if (FAILED(hr))
+        return hr;
 
-            hr = SHBindToParent(pidlLastParsed, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+    hr = SHInvokeDefaultCommand(topLevelWindow, sf, pidlChild);
+    if (FAILED(hr))
+        return hr;
 
-            SHInvokeDefaultCommand(topLevelWindow, sf, pidlChild);
-        }
-    }
     return hr;
 }
 
@@ -194,7 +236,15 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
         hdr = (LPNMHDR) lParam;
         if (hdr->code == CBEN_ENDEDIT)
         {
-            ParseNow(0);
+            NMCBEENDEDITW *endEdit = (NMCBEENDEDITW*) lParam;
+            if (endEdit->iWhy == CBENF_RETURN)
+            {
+                Execute(0);
+            }
+            else if (endEdit->iWhy == CBENF_ESCAPE)
+            {
+                /* Reset the contents of the combo box */
+            }
         }
         break;
     }

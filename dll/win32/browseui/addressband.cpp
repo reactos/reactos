@@ -489,12 +489,17 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Invoke(DISPID dispIdMember, REFIID riid,
 
         oldIndex = SendMessage(m_hWnd, CB_GETCURSEL, 0, 0);
 
+        itemExists = FALSE;
+        pidlPrevious = NULL;
+
+        ZeroMemory(&item, sizeof(item));
         item.mask = CBEIF_LPARAM;
         item.iItem = 0;
-        itemExists = SendMessage(m_hWnd, CBEM_GETITEM, 0, reinterpret_cast<LPARAM>(&item));
-        if (itemExists)
+        if (SendMessage(m_hWnd, CBEM_GETITEM, 0, reinterpret_cast<LPARAM>(&item)))
         {
             pidlPrevious = reinterpret_cast<LPITEMIDLIST>(item.lParam);
+            if (pidlPrevious)
+                itemExists = TRUE;
         }
 
         hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
@@ -520,6 +525,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::Invoke(DISPID dispIdMember, REFIID riid,
         if (itemExists)
         {
             result = SendMessage(m_hWnd, CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+            oldIndex = 0;
 
             if (result)
             {
