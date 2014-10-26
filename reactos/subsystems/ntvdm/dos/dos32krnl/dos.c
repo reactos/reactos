@@ -20,6 +20,9 @@
 
 #include "bios/bios.h"
 
+#include "io.h"
+#include "hardware/ps2.h"
+
 /* PRIVATE VARIABLES **********************************************************/
 
 CALLBACK16 DosContext;
@@ -1163,6 +1166,12 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
 
     /* Attach to the console */
     VidBiosAttachToConsole(); // FIXME: And in fact, attach the full NTVDM UI to the console
+
+    // HACK: Simulate a ENTER key release scancode on the PS/2 port because
+    // some apps expect to read a key release scancode (> 0x80) when they
+    // are started.
+    IOWriteB(PS2_CONTROL_PORT, 0xD2);     // Next write is for the first PS/2 port
+    IOWriteB(PS2_DATA_PORT, 0x80 | 0x1C); // ENTER key release
 
     /* Start simulation */
     SetEvent(VdmTaskEvent);

@@ -47,7 +47,7 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
 
 BOOLEAN KeyboardInit(BYTE PS2Connector)
 {
-    /* Finish to plug the mouse to the specified PS/2 port */
+    /* Finish to plug the keyboard to the specified PS/2 port */
     PS2Port = PS2Connector;
     PS2SetDeviceCmdProc(PS2Port, NULL, KeyboardCommand);
 

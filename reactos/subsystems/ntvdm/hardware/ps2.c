@@ -80,11 +80,14 @@ static BYTE WINAPI PS2ReadPort(USHORT Port)
         if (StatusRegister &   (1 << 0)) // || StatusRegister &   (1 << 5) for second PS/2 port
             StatusRegister &= ~(1 << 0); //    StatusRegister &= ~(1 << 5);
 
+        // FIXME: We may check there whether there is data latched in
+        // PS2 ports 1 or 2 (keyboard or mouse) and retrieve it there...
+
         /* Always return the available byte stored in the output buffer */
         return OutputBuffer;
     }
 
-    return 0;
+    return 0x00;
 }
 
 static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
@@ -270,7 +273,18 @@ static BOOLEAN PS2PortQueueRead(BYTE PS2Port)
     if (!Port->IsEnabled) return FALSE;
 
     /* Make sure the queue is not empty (fast check) */
-    if (Port->QueueEmpty) return FALSE;
+    if (Port->QueueEmpty)
+    {
+        /* Only the keyboard should have its last data latched */
+        // FIXME: Alternatively this can be done in PS2ReadPort when
+        // we read PS2_DATA_PORT. What is the best solution??
+        if (PS2Port == 0)
+        {
+            OutputBuffer = Port->Queue[(Port->QueueStart - 1) % BUFFER_SIZE];
+        }
+
+        return FALSE;
+    }
 
     WaitForSingleObject(Port->QueueMutex, INFINITE);
 
@@ -337,7 +351,7 @@ BOOLEAN PS2QueuePush(BYTE PS2Port, BYTE Data)
     Port->QueueEnd++;
     Port->QueueEnd %= BUFFER_SIZE;
 
-    /* Since we inserted a value, it's not empty anymore */
+    /* The queue is not empty anymore */
     Port->QueueEmpty = FALSE;
 
 /*
