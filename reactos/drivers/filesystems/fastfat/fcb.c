@@ -292,6 +292,8 @@ vfatGrabFCB(
     PDEVICE_EXTENSION pVCB,
     PVFATFCB pFCB)
 {
+    ASSERT(ExIsResourceAcquiredExclusive(&pVCB->DirResource));
+
     ++pFCB->RefCount;
 }
 
@@ -304,6 +306,8 @@ vfatReleaseFCB(
 
     DPRINT("releasing FCB at %p: %wZ, refCount:%d\n",
            pFCB, &pFCB->PathNameU, pFCB->RefCount);
+
+    ASSERT(ExIsResourceAcquiredExclusive(&pVCB->DirResource));
 
     while (pFCB)
     {
