@@ -1072,25 +1072,12 @@ AddAce(PACL pAcl,
     return TRUE;
 }
 
-/*
- * @implemented
+/******************************************************************************
+ * DeleteAce [ADVAPI32.@]
  */
-BOOL
-WINAPI
-DeleteAce(PACL pAcl,
-          DWORD dwAceIndex)
+BOOL WINAPI DeleteAce(PACL pAcl, DWORD dwAceIndex)
 {
-    NTSTATUS Status;
-
-    Status = RtlDeleteAce(pAcl,
-                          dwAceIndex);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
+    return set_ntstatus(RtlDeleteAce(pAcl, dwAceIndex));
 }
 
 /*
