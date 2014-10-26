@@ -226,40 +226,6 @@ static const char * debugstr_sid(PSID sid)
     return "(too-big)";
 }
 
-static const ACEFLAG AceRights[] =
-{
-    { SDDL_GENERIC_ALL,     GENERIC_ALL },
-    { SDDL_GENERIC_READ,    GENERIC_READ },
-    { SDDL_GENERIC_WRITE,   GENERIC_WRITE },
-    { SDDL_GENERIC_EXECUTE, GENERIC_EXECUTE },
-
-    { SDDL_READ_CONTROL,    READ_CONTROL },
-    { SDDL_STANDARD_DELETE, DELETE },
-    { SDDL_WRITE_DAC,       WRITE_DAC },
-    { SDDL_WRITE_OWNER,     WRITE_OWNER },
-
-    { SDDL_READ_PROPERTY,   ADS_RIGHT_DS_READ_PROP},
-    { SDDL_WRITE_PROPERTY,  ADS_RIGHT_DS_WRITE_PROP},
-    { SDDL_CREATE_CHILD,    ADS_RIGHT_DS_CREATE_CHILD},
-    { SDDL_DELETE_CHILD,    ADS_RIGHT_DS_DELETE_CHILD},
-    { SDDL_LIST_CHILDREN,   ADS_RIGHT_ACTRL_DS_LIST},
-    { SDDL_SELF_WRITE,      ADS_RIGHT_DS_SELF},
-    { SDDL_LIST_OBJECT,     ADS_RIGHT_DS_LIST_OBJECT},
-    { SDDL_DELETE_TREE,     ADS_RIGHT_DS_DELETE_TREE},
-    { SDDL_CONTROL_ACCESS,  ADS_RIGHT_DS_CONTROL_ACCESS},
-
-    { SDDL_FILE_ALL,        FILE_ALL_ACCESS },
-    { SDDL_FILE_READ,       FILE_GENERIC_READ },
-    { SDDL_FILE_WRITE,      FILE_GENERIC_WRITE },
-    { SDDL_FILE_EXECUTE,    FILE_GENERIC_EXECUTE },
-
-    { SDDL_KEY_ALL,         KEY_ALL_ACCESS },
-    { SDDL_KEY_READ,        KEY_READ },
-    { SDDL_KEY_WRITE,       KEY_WRITE },
-    { SDDL_KEY_EXECUTE,     KEY_EXECUTE },
-    { NULL, 0 },
-};
-
 /* set last error code from NT status and get the proper boolean return value */
 /* used for functions that are a simple wrapper around the corresponding ntdll API */
 static __inline BOOL set_ntstatus( NTSTATUS status )
@@ -2399,6 +2365,40 @@ static BYTE ParseAceStringFlags(LPCWSTR* StringAcl)
 /******************************************************************************
  * ParseAceStringRights
  */
+static const ACEFLAG AceRights[] =
+{
+    { SDDL_GENERIC_ALL,     GENERIC_ALL },
+    { SDDL_GENERIC_READ,    GENERIC_READ },
+    { SDDL_GENERIC_WRITE,   GENERIC_WRITE },
+    { SDDL_GENERIC_EXECUTE, GENERIC_EXECUTE },
+
+    { SDDL_READ_CONTROL,    READ_CONTROL },
+    { SDDL_STANDARD_DELETE, DELETE },
+    { SDDL_WRITE_DAC,       WRITE_DAC },
+    { SDDL_WRITE_OWNER,     WRITE_OWNER },
+
+    { SDDL_READ_PROPERTY,   ADS_RIGHT_DS_READ_PROP},
+    { SDDL_WRITE_PROPERTY,  ADS_RIGHT_DS_WRITE_PROP},
+    { SDDL_CREATE_CHILD,    ADS_RIGHT_DS_CREATE_CHILD},
+    { SDDL_DELETE_CHILD,    ADS_RIGHT_DS_DELETE_CHILD},
+    { SDDL_LIST_CHILDREN,   ADS_RIGHT_ACTRL_DS_LIST},
+    { SDDL_SELF_WRITE,      ADS_RIGHT_DS_SELF},
+    { SDDL_LIST_OBJECT,     ADS_RIGHT_DS_LIST_OBJECT},
+    { SDDL_DELETE_TREE,     ADS_RIGHT_DS_DELETE_TREE},
+    { SDDL_CONTROL_ACCESS,  ADS_RIGHT_DS_CONTROL_ACCESS},
+
+    { SDDL_FILE_ALL,        FILE_ALL_ACCESS },
+    { SDDL_FILE_READ,       FILE_GENERIC_READ },
+    { SDDL_FILE_WRITE,      FILE_GENERIC_WRITE },
+    { SDDL_FILE_EXECUTE,    FILE_GENERIC_EXECUTE },
+
+    { SDDL_KEY_ALL,         KEY_ALL_ACCESS },
+    { SDDL_KEY_READ,        KEY_READ },
+    { SDDL_KEY_WRITE,       KEY_WRITE },
+    { SDDL_KEY_EXECUTE,     KEY_EXECUTE },
+    { NULL, 0 },
+};
+
 static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
 {
     UINT len = 0;
