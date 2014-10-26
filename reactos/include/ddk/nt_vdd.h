@@ -45,14 +45,14 @@ VDDTerminateVDM(VOID);
  * I/O Port services
  */
 
-typedef VOID (*PFNVDD_INB)   (WORD iport, PBYTE data);
-typedef VOID (*PFNVDD_INW)   (WORD iport, PWORD data);
-typedef VOID (*PFNVDD_INSB)  (WORD iport, PBYTE data, WORD count);
-typedef VOID (*PFNVDD_INSW)  (WORD iport, PWORD data, WORD count);
-typedef VOID (*PFNVDD_OUTB)  (WORD iport, BYTE  data);
-typedef VOID (*PFNVDD_OUTW)  (WORD iport, WORD  data);
-typedef VOID (*PFNVDD_OUTSB) (WORD iport, PBYTE data, WORD count);
-typedef VOID (*PFNVDD_OUTSW) (WORD iport, PWORD data, WORD count);
+typedef VOID (WINAPI *PFNVDD_INB)   (WORD iport, PBYTE data);
+typedef VOID (WINAPI *PFNVDD_INW)   (WORD iport, PWORD data);
+typedef VOID (WINAPI *PFNVDD_INSB)  (WORD iport, PBYTE data, WORD count);
+typedef VOID (WINAPI *PFNVDD_INSW)  (WORD iport, PWORD data, WORD count);
+typedef VOID (WINAPI *PFNVDD_OUTB)  (WORD iport, BYTE  data);
+typedef VOID (WINAPI *PFNVDD_OUTW)  (WORD iport, WORD  data);
+typedef VOID (WINAPI *PFNVDD_OUTSB) (WORD iport, PBYTE data, WORD count);
+typedef VOID (WINAPI *PFNVDD_OUTSW) (WORD iport, PWORD data, WORD count);
 
 typedef struct _VDD_IO_HANDLERS
 {
