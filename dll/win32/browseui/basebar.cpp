@@ -296,7 +296,7 @@ HRESULT STDMETHODCALLTYPE CBaseBar::HasFocusIO()
 HRESULT STDMETHODCALLTYPE CBaseBar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
     // forward to contained bar
-    return S_OK;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)
