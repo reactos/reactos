@@ -448,7 +448,7 @@ VOID
 NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 
 PFILENAME_ATTRIBUTE
-GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord);
+GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType);
 
 /* blockdev.c */
 
