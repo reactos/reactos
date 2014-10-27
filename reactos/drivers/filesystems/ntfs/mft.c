@@ -469,7 +469,7 @@ CompareFileName(PUNICODE_STRING FileName,
 
     EntryName.Buffer = IndexEntry->FileName.Name;
     EntryName.Length = 
-    EntryName.MaximumLength = IndexEntry->FileName.NameLength;
+    EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
 
     if (DirSearch)
     {
@@ -477,7 +477,7 @@ CompareFileName(PUNICODE_STRING FileName,
     }
     else
     {
-        return (RtlCompareUnicodeString(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)) == TRUE);
+        return (RtlCompareUnicodeString(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)) == 0);
     }
 }
 
@@ -702,7 +702,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
         }
 
         if (Remaining.Length == 0)
-            return STATUS_OBJECT_PATH_NOT_FOUND;
+            break;
 
         FsRtlDissectName(Current, &Current, &Remaining);
     }
