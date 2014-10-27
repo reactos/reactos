@@ -121,7 +121,11 @@ Fast486ReadMemory(PFAST486_STATE State,
                           Size);
             return TRUE;
         }
-        else return FALSE;
+        else
+        {
+            State->PrefetchValid = FALSE;
+            return FALSE;
+        }
     }
     else
 #endif
