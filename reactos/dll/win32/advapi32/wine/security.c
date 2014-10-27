@@ -16,26 +16,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
-static DWORD ComputeStringSidSize(LPCWSTR StringSid);
 static BOOL ParseStringSidToSid(LPCWSTR StringSid, PSID pSid, LPDWORD cBytes);
 
-#define MAX_GUID_STRING_LEN 39
-
-BOOL WINAPI
-AddAuditAccessAceEx(PACL pAcl,
-                    DWORD dwAceRevision,
-                    DWORD AceFlags,
-                    DWORD dwAccessMask,
-                    PSID pSid,
-                    BOOL bAuditSuccess,
-                    BOOL bAuditFailure);
-
-typedef struct RECORD
+typedef struct _ACEFLAG
 {
-    LPCWSTR key;
-    DWORD value;
-} RECORD;
-
+   LPCWSTR wstr;
+   DWORD value;
+} ACEFLAG, *LPACEFLAG;
 
 typedef struct _MAX_SID
 {
@@ -52,12 +39,6 @@ typedef struct WELLKNOWNSID
     WELL_KNOWN_SID_TYPE Type;
     MAX_SID Sid;
 } WELLKNOWNSID;
-
-typedef struct _ACEFLAG
-{
-   LPCWSTR wstr;
-   DWORD value;
-} ACEFLAG, *LPACEFLAG;
 
 static const WELLKNOWNSID WellKnownSids[] =
 {
