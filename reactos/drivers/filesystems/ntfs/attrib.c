@@ -287,16 +287,25 @@ NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord)
 }
 
 PFILENAME_ATTRIBUTE
-GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord)
+GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType)
 {
     PNTFS_ATTR_RECORD Attribute;
+    PFILENAME_ATTRIBUTE Name;
 
     Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
     while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
            Attribute->Type != AttributeEnd)
     {
         if (Attribute->Type == AttributeFileName)
-            return (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+        {
+            Name = (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+            if (Name->NameType == NameType ||
+                (Name->NameType == NTFS_FILE_NAME_WIN32_AND_DOS && NameType == NTFS_FILE_NAME_WIN32) ||
+                (Name->NameType == NTFS_FILE_NAME_WIN32_AND_DOS && NameType == NTFS_FILE_NAME_DOS))
+            {
+                return Name;
+            }
+        }
 
         Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
     }
