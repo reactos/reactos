@@ -27,8 +27,6 @@ class CControlPanelFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder2,
-    public IShellExecuteHookA,
-    public IShellExecuteHookW,
     public IContextMenu2
 {
     private:
@@ -75,12 +73,6 @@ class CControlPanelFolder :
         // IPersistFolder2
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
 
-        // IShellExecuteHookW
-        virtual HRESULT WINAPI Execute(LPSHELLEXECUTEINFOW psei);
-
-        // IShellExecuteHookA
-        virtual HRESULT WINAPI Execute(LPSHELLEXECUTEINFOA psei);
-
         // IContextMenu
         virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
         virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
@@ -100,8 +92,6 @@ class CControlPanelFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_IShellExecuteHookA, IShellExecuteHookA)
-        COM_INTERFACE_ENTRY_IID(IID_IShellExecuteHookW, IShellExecuteHookW)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         END_COM_MAP()
