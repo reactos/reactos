@@ -443,9 +443,9 @@ VfatCreateFile(
     PVFATFCB pFcb = NULL;
     PVFATFCB ParentFcb = NULL;
     PWCHAR c, last;
-    BOOLEAN PagingFileCreate = FALSE;
+    BOOLEAN PagingFileCreate;
     BOOLEAN Dots;
-    BOOLEAN OpenTargetDir = FALSE;
+    BOOLEAN OpenTargetDir;
     UNICODE_STRING FileNameU;
     UNICODE_STRING PathNameU;
     ULONG Attributes;
@@ -633,6 +633,7 @@ VfatCreateFile(
                                             FALSE);
                 if (!NT_SUCCESS(Status))
                 {
+                    vfatReleaseFCB(DeviceExt, ParentFcb);
                     VfatCloseFile(DeviceExt, FileObject);
                     return Status;
                 }
