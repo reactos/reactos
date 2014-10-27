@@ -2037,25 +2037,32 @@ BuildTrusteeWithNameW(PTRUSTEE_W pTrustee,
     pTrustee->ptstrName = name;
 }
 
-/******************************************************************************
- * GetTrusteeFormW [ADVAPI32.@]
- */
-TRUSTEE_FORM WINAPI
-GetTrusteeFormA(PTRUSTEE_A pTrustee)
-{
-    return pTrustee->TrusteeForm;
-}
-
-
-/******************************************************************************
- * GetTrusteeFormW [ADVAPI32.@]
- */
-TRUSTEE_FORM WINAPI
-GetTrusteeFormW(PTRUSTEE_W pTrustee)
-{
-    return pTrustee->TrusteeForm;
-}
-
+/****************************************************************************** 
+ * GetTrusteeFormA [ADVAPI32.@] 
+ */ 
+TRUSTEE_FORM WINAPI GetTrusteeFormA(PTRUSTEEA pTrustee) 
+{  
+    TRACE("(%p)\n", pTrustee); 
+  
+    if (!pTrustee) 
+        return TRUSTEE_BAD_FORM; 
+  
+    return pTrustee->TrusteeForm; 
+}  
+  
+/****************************************************************************** 
+ * GetTrusteeFormW [ADVAPI32.@] 
+ */ 
+TRUSTEE_FORM WINAPI GetTrusteeFormW(PTRUSTEEW pTrustee) 
+{  
+    TRACE("(%p)\n", pTrustee); 
+  
+    if (!pTrustee) 
+        return TRUSTEE_BAD_FORM; 
+  
+    return pTrustee->TrusteeForm; 
+}  
+  
 /******************************************************************************
  * GetTrusteeNameA [ADVAPI32.@]
  */
