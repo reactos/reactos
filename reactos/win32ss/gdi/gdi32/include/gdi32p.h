@@ -236,11 +236,20 @@ ConvertBitmapInfo(
 
 DWORD
 WINAPI
-GetAndSetDCDWord( HDC, INT, DWORD, DWORD, DWORD, DWORD );
+GetAndSetDCDWord(
+    _In_ HDC hdc,
+    _In_ UINT u,
+    _In_ DWORD dwIn,
+    _In_ ULONG ulMFId,
+    _In_ USHORT usMF16Id,
+    _In_ DWORD dwError);
 
 DWORD
 WINAPI
-GetDCDWord( HDC, INT, DWORD);
+GetDCDWord(
+    _In_ HDC hdc,
+    _In_ UINT u,
+    _In_ DWORD dwError);
 
 HGDIOBJ
 WINAPI
