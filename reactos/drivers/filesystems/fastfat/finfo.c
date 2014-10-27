@@ -473,6 +473,8 @@ VfatSetRenameInformation(
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE TargetHandle;
     BOOLEAN DeletedTarget;
+    ULONG OldReferences, NewReferences;
+    PVFATFCB OldParent;
 
     DPRINT("VfatSetRenameInfo(%p, %p, %p, %p, %p)\n", FileObject, FCB, DeviceExt, RenameInfo, TargetFileObject);
 
@@ -481,6 +483,8 @@ VfatSetRenameInformation(
     {
         return STATUS_INVALID_PARAMETER;
     }
+
+    OldReferences = FCB->parentFcb->RefCount;
 
     /* If we are performing relative opening for rename, get FO for getting FCB and path name */
     if (RenameInfo->RootDirectory != NULL)
@@ -686,6 +690,7 @@ VfatSetRenameInformation(
         if (FsRtlAreNamesEqual(&SourceFile, &NewFile, FALSE, NULL))
         {
             Status = STATUS_SUCCESS;
+            ASSERT(OldReferences == FCB->parentFcb->RefCount);
             goto Cleanup;
         }
 
@@ -729,6 +734,8 @@ VfatSetRenameInformation(
                                                 &DeletedTarget);
             if (!NT_SUCCESS(Status))
             {
+                ASSERT(OldReferences == FCB->parentFcb->RefCount - 1);
+                ASSERT(OldReferences == ParentFCB->RefCount - 1);
                 goto Cleanup;
             }
 
@@ -773,11 +780,16 @@ VfatSetRenameInformation(
                 }
             }
         }
+
+        ASSERT(OldReferences == FCB->parentFcb->RefCount - 1); // extra grab
+        ASSERT(OldReferences == ParentFCB->RefCount - 1); // extra grab
     }
     else
     {
+
         /* Try to find target */
         ParentFCB = NULL;
+        OldParent = FCB->parentFcb;
         Status = vfatPrepareTargetForRename(DeviceExt,
                                             &ParentFCB,
                                             &NewName,
@@ -786,8 +798,11 @@ VfatSetRenameInformation(
                                             &DeletedTarget);
         if (!NT_SUCCESS(Status))
         {
+            ASSERT(OldReferences == FCB->parentFcb->RefCount);
             goto Cleanup;
         }
+
+        NewReferences = ParentFCB->RefCount;
 
         FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
                                     &(DeviceExt->NotifyList),
@@ -831,6 +846,8 @@ VfatSetRenameInformation(
         }
     }
 
+    ASSERT(OldReferences == OldParent->RefCount + 1); // removed file
+    ASSERT(NewReferences == ParentFCB->RefCount - 1); // new file
 Cleanup:
     if (ParentFCB != NULL) vfatReleaseFCB(DeviceExt, ParentFCB);
     if (NewName.Buffer != NULL) ExFreePoolWithTag(NewName.Buffer, TAG_VFAT);
