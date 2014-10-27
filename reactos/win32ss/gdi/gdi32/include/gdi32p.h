@@ -395,4 +395,20 @@ _lrintf(float f)
 #endif
 }
 
+HGDIOBJ
+WINAPI
+GdiInsertClientObj(
+    _In_ PVOID pvObject,
+    _In_ GDILOOBJTYPE eObjType);
+
+PVOID
+WINAPI
+GdiGetClientObject(
+    _In_ HGDIOBJ hobj);
+
+PVOID
+WINAPI
+GdiRemoveClientObject(
+    _In_ HGDIOBJ hobj);
+
 /* EOF */

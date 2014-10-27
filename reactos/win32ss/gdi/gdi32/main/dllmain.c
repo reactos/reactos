@@ -10,6 +10,7 @@ PDEVCAPS GdiDevCaps = NULL;
 PGDIHANDLECACHE GdiHandleCache = NULL;
 BOOL gbLpk = FALSE;
 RTL_CRITICAL_SECTION semLocal;
+extern CRITICAL_SECTION gcsClientObjLinks;
 
 /*
  * GDI32.DLL does have an entry point for disable threadlibrarycall,. The initialization is done by a call
@@ -49,6 +50,7 @@ GdiProcessSetup (VOID)
     GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
     GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
     RtlInitializeCriticalSection(&semLocal);
+    InitializeCriticalSection(&gcsClientObjLinks);
 }
 
 
