@@ -236,49 +236,6 @@ static __inline BOOL set_ntstatus( NTSTATUS status )
     return NT_SUCCESS(status);
 }
 
-static const RECORD SidTable[] =
-{
-	{ SDDL_ACCOUNT_OPERATORS, WinBuiltinAccountOperatorsSid },
-	{ SDDL_ALIAS_PREW2KCOMPACC, WinBuiltinPreWindows2000CompatibleAccessSid },
-	{ SDDL_ANONYMOUS, WinAnonymousSid },
-	{ SDDL_AUTHENTICATED_USERS, WinAuthenticatedUserSid },
-	{ SDDL_BUILTIN_ADMINISTRATORS, WinBuiltinAdministratorsSid },
-	{ SDDL_BUILTIN_GUESTS, WinBuiltinGuestsSid },
-	{ SDDL_BACKUP_OPERATORS, WinBuiltinBackupOperatorsSid },
-	{ SDDL_BUILTIN_USERS, WinBuiltinUsersSid },
-	{ SDDL_CERT_SERV_ADMINISTRATORS, WinAccountCertAdminsSid /* FIXME: DOMAIN_GROUP_RID_CERT_ADMINS */ },
-	{ SDDL_CREATOR_GROUP, WinCreatorGroupSid },
-	{ SDDL_CREATOR_OWNER, WinCreatorOwnerSid },
-	{ SDDL_DOMAIN_ADMINISTRATORS, WinAccountDomainAdminsSid /* FIXME: DOMAIN_GROUP_RID_ADMINS */ },
-	{ SDDL_DOMAIN_COMPUTERS, WinAccountComputersSid /* FIXME: DOMAIN_GROUP_RID_COMPUTERS */ },
-	{ SDDL_DOMAIN_DOMAIN_CONTROLLERS, WinAccountControllersSid /* FIXME: DOMAIN_GROUP_RID_CONTROLLERS */ },
-	{ SDDL_DOMAIN_GUESTS, WinAccountDomainGuestsSid /* FIXME: DOMAIN_GROUP_RID_GUESTS */ },
-	{ SDDL_DOMAIN_USERS, WinAccountDomainUsersSid /* FIXME: DOMAIN_GROUP_RID_USERS */ },
-	{ SDDL_ENTERPRISE_ADMINS, WinAccountEnterpriseAdminsSid /* FIXME: DOMAIN_GROUP_RID_ENTERPRISE_ADMINS */ },
-	{ SDDL_ENTERPRISE_DOMAIN_CONTROLLERS, WinEnterpriseControllersSid },
-	{ SDDL_EVERYONE, WinWorldSid },
-	{ SDDL_GROUP_POLICY_ADMINS, WinAccountPolicyAdminsSid /* FIXME: DOMAIN_GROUP_RID_POLICY_ADMINS */ },
-	{ SDDL_INTERACTIVE, WinInteractiveSid },
-	{ SDDL_LOCAL_ADMIN, WinAccountAdministratorSid /* FIXME: DOMAIN_USER_RID_ADMIN */ },
-	{ SDDL_LOCAL_GUEST, WinAccountGuestSid /* FIXME: DOMAIN_USER_RID_GUEST */ },
-	{ SDDL_LOCAL_SERVICE, WinLocalServiceSid },
-	{ SDDL_LOCAL_SYSTEM, WinLocalSystemSid },
-	{ SDDL_NETWORK, WinNetworkSid },
-	{ SDDL_NETWORK_CONFIGURATION_OPS, WinBuiltinNetworkConfigurationOperatorsSid },
-	{ SDDL_NETWORK_SERVICE, WinNetworkServiceSid },
-	{ SDDL_PRINTER_OPERATORS, WinBuiltinPrintOperatorsSid },
-	{ SDDL_PERSONAL_SELF, WinSelfSid },
-	{ SDDL_POWER_USERS, WinBuiltinPowerUsersSid },
-	{ SDDL_RAS_SERVERS, WinAccountRasAndIasServersSid /* FIXME: DOMAIN_ALIAS_RID_RAS_SERVERS */ },
-	{ SDDL_REMOTE_DESKTOP, WinBuiltinRemoteDesktopUsersSid },
-	{ SDDL_REPLICATOR, WinBuiltinReplicatorSid },
-	{ SDDL_RESTRICTED_CODE, WinRestrictedCodeSid },
-	{ SDDL_SCHEMA_ADMINISTRATORS, WinAccountSchemaAdminsSid /* FIXME: DOMAIN_GROUP_RID_SCHEMA_ADMINS */ },
-	{ SDDL_SERVER_OPERATORS, WinBuiltinSystemOperatorsSid },
-	{ SDDL_SERVICE, WinServiceSid },
-	{ NULL, 0 },
-};
-
 static LPWSTR SERV_dup( LPCSTR str )
 {
     UINT len;
