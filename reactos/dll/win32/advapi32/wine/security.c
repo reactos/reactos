@@ -3533,6 +3533,9 @@ static BOOL ParseStringSidToSid(LPCWSTR StringSid, PSID pSid, LPDWORD cBytes)
     while (*StringSid == ' ')
         StringSid++;
 
+    if (!*StringSid)
+        goto lend; /* ERROR_INVALID_SID */
+
     *cBytes = ComputeStringSidSize(StringSid);
     if (!pisid) /* Simply compute the size */
     {
