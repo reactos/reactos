@@ -851,6 +851,17 @@ co_IntPeekMessage( PMSG Msg,
             return TRUE;
         }
 
+        if ((ProcessMask & QS_MOUSE) &&
+            co_MsqPeekMouseMove( pti,
+                                 RemoveMessages,
+                                 Window,
+                                 MsgFilterMin,
+                                 MsgFilterMax,
+                                 Msg ))
+        {
+            return TRUE;
+        }
+
         /* Check for hardware events. */
         if ((ProcessMask & QS_INPUT) &&
             co_MsqPeekHardwareMessage( pti,
@@ -860,17 +871,6 @@ co_IntPeekMessage( PMSG Msg,
                                        MsgFilterMax,
                                        ProcessMask,
                                        Msg))
-        {
-            return TRUE;
-        }
-
-        if ((ProcessMask & QS_MOUSE) &&
-            co_MsqPeekMouseMove( pti,
-                                 RemoveMessages,
-                                 Window,
-                                 MsgFilterMin,
-                                 MsgFilterMax,
-                                 Msg ))
         {
             return TRUE;
         }
