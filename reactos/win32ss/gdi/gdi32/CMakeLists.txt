@@ -14,22 +14,20 @@ list(APPEND SOURCE
     main/dllmain.c
     misc/heap.c
     misc/gdientry.c
-    #misc/hacks.c
     misc/historic.c
     misc/misc.c
-    misc/stubs.c
-    misc/stubsa.c
-    misc/stubsw.c
     misc/wingl.c
     objects/arc.c
     objects/bitmap.c
     objects/brush.c
     objects/clientobj.c
+    objects/colorspace.c
     objects/coord.c
     objects/dc.c
     objects/eng.c
     objects/enhmfile.c
     objects/font.c
+    objects/gdiobj.c
     objects/icm.c
     objects/linedda.c
     objects/metafile.c

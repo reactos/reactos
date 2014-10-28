@@ -50,6 +50,34 @@ TextOutW(
 
 
 /*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PolyTextOutA( HDC hdc, const POLYTEXTA *pptxt, INT cStrings )
+{
+    for (; cStrings>0; cStrings--, pptxt++)
+        if (!ExtTextOutA( hdc, pptxt->x, pptxt->y, pptxt->uiFlags, &pptxt->rcl, pptxt->lpstr, pptxt->n, pptxt->pdx ))
+            return FALSE;
+    return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PolyTextOutW( HDC hdc, const POLYTEXTW *pptxt, INT cStrings )
+{
+    for (; cStrings>0; cStrings--, pptxt++)
+        if (!ExtTextOutW( hdc, pptxt->x, pptxt->y, pptxt->uiFlags, &pptxt->rcl, pptxt->lpstr, pptxt->n, pptxt->pdx ))
+            return FALSE;
+    return TRUE;
+}
+
+
+/*
  * @implemented
  */
 DWORD
@@ -204,6 +232,22 @@ GetTextExtentExPointW(
                hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetTextExtentExPointWPri(HDC hdc,
+                         LPWSTR lpwsz,
+                         ULONG cwc,
+                         ULONG dxMax,
+                         ULONG *pcCh,
+                         PULONG pdxOut,
+                         LPSIZE psize)
+{
+    return NtGdiGetTextExtentExW(hdc,lpwsz,cwc,dxMax,pcCh,pdxOut,psize,0);
+}
 
 /*
  * @implemented
@@ -688,3 +732,75 @@ SetTextJustification(
         Dc_Attr->lBreakExtra = extra;
         return TRUE;
     }
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetStringBitmapA(HDC hdc,
+                 LPSTR psz,
+                 BOOL DoCall,
+                 UINT cj,
+                 BYTE *lpSB)
+{
+
+    NTSTATUS Status;
+    PWSTR pwsz;
+    UINT retValue = 0;
+
+    if (DoCall)
+    {
+        Status = HEAP_strdupA2W ( &pwsz, psz );
+        if ( !NT_SUCCESS (Status) )
+        {
+            SetLastError (RtlNtStatusToDosError(Status));
+        }
+        else
+        {
+            retValue = NtGdiGetStringBitmapW(hdc, pwsz, 1, lpSB, cj);
+            HEAP_free ( pwsz );
+        }
+    }
+
+    return retValue;
+
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetStringBitmapW(HDC hdc,
+                 LPWSTR pwsz,
+                 BOOL doCall,
+                 UINT cj,
+                 BYTE *lpSB)
+{
+    UINT retValue = 0;
+
+    if (doCall)
+    {
+        retValue = NtGdiGetStringBitmapW(hdc, pwsz, 1, lpSB, cj);
+    }
+
+    return retValue;
+
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetETM(HDC hdc,
+       EXTTEXTMETRIC *petm)
+{
+    BOOL Ret = NtGdiGetETM(hdc, petm);
+
+    if (Ret && petm)
+        petm->emKernPairs = (WORD)GetKerningPairsA(hdc, 0, 0);
+
+    return Ret;
+}

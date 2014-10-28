@@ -34,41 +34,299 @@ PGDI_TABLE_ENTRY GdiHandleTable = NULL;
 PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable = NULL;
 HANDLE CurrentProcessId = NULL;
 DWORD GDI_BatchLimit = 1;
+extern PGDIHANDLECACHE GdiHandleCache;
 
-
+/*
+ * @implemented
+ */
 BOOL
 WINAPI
-GdiAlphaBlend(
-    HDC hDCDst,
-    int DstX,
-    int DstY,
-    int DstCx,
-    int DstCy,
-    HDC hDCSrc,
-    int SrcX,
-    int SrcY,
-    int SrcCx,
-    int SrcCy,
-    BLENDFUNCTION BlendFunction
-)
+GdiFlush()
 {
-    if ( hDCSrc == NULL ) return FALSE;
+    NtGdiFlush();
+    return TRUE;
+}
 
-    if (GDI_HANDLE_GET_TYPE(hDCSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
+{
+    int retValue = SP_ERROR;
+    HGDIOBJ hObject = hdc;
+    UINT Type = 0;
+    LPVOID pUserData = NULL;
 
-    return NtGdiAlphaBlend(
-               hDCDst,
-               DstX,
-               DstY,
-               DstCx,
-               DstCy,
-               hDCSrc,
-               SrcX,
-               SrcY,
-               SrcCx,
-               SrcCy,
-               BlendFunction,
-               0 );
+    Type = GDI_HANDLE_GET_TYPE(hObject);
+
+    if (Type == GDI_OBJECT_TYPE_METADC)
+    {
+        /* FIXME we do not support metafile */
+        UNIMPLEMENTED;
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+    else
+    {
+        switch (nEscape)
+        {
+        case ABORTDOC:
+            /* Note Winodws check see if the handle have any user data for ABORTDOC command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+                retValue = FALSE;
+            }
+            else
+            {
+                retValue = AbortDoc(hdc);
+            }
+            break;
+
+        case DRAFTMODE:
+        case FLUSHOUTPUT:
+        case SETCOLORTABLE:
+            /* Note 1: DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE is outdated and been replace with other api */
+            /* Note 2: Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+            }
+            retValue = FALSE;
+            break;
+
+        case SETABORTPROC:
+            /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+                retValue = FALSE;
+            }
+            retValue = SetAbortProc(hdc, (ABORTPROC)lpvInData);
+            break;
+
+        case GETCOLORTABLE:
+            retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
+            if ( !retValue )
+            {
+                retValue = SP_ERROR;
+            }
+            break;
+
+        case ENDDOC:
+            /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+                retValue = FALSE;
+            }
+            retValue = EndDoc(hdc);
+            break;
+
+
+        case GETSCALINGFACTOR:
+            /* Note GETSCALINGFACTOR is outdated have been replace by GetDeviceCaps */
+            if ( Type == GDI_OBJECT_TYPE_DC )
+            {
+                if ( lpvOutData )
+                {
+                    PPOINT ptr = (PPOINT) lpvOutData;
+                    ptr->x = 0;
+                    ptr->y = 0;
+                }
+            }
+            retValue = FALSE;
+            break;
+
+        case GETEXTENDEDTEXTMETRICS:
+            retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
+            break;
+
+        case  STARTDOC:
+        {
+            DOCINFOA *pUserDatalpdi;
+            DOCINFOA lpdi;
+
+            /* Note : Winodws check see if the handle have any user data for STARTDOC command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserDatalpdi)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+                retValue = FALSE;
+            }
+
+            lpdi.cbSize = sizeof(DOCINFOA);
+
+            /* NOTE lpszOutput will be store in handle userdata */
+            lpdi.lpszOutput = 0;
+
+            lpdi.lpszDatatype = 0;
+            lpdi.fwType = 0;
+            lpdi.lpszDocName = lpvInData;
+
+            /* NOTE : doc for StartDocA/W at msdn http://msdn2.microsoft.com/en-us/library/ms535793(VS.85).aspx */
+            retValue = StartDocA(hdc, &lpdi);
+
+            /* StartDocA fail */
+            if (retValue < 0)
+            {
+                /* check see if outbuffer contain any data, if it does abort */
+                if  ( (pUserDatalpdi->lpszOutput != 0) &&
+                        ( (*(WCHAR *)pUserDatalpdi->lpszOutput) != UNICODE_NULL) )
+                {
+                    retValue = SP_APPABORT;
+                }
+                else
+                {
+                    retValue = GetLastError();
+
+                    /* Translate StartDocA error code to STARTDOC error code
+                     * see msdn http://msdn2.microsoft.com/en-us/library/ms535472.aspx
+                     */
+                    switch(retValue)
+                    {
+                    case ERROR_NOT_ENOUGH_MEMORY:
+                        retValue = SP_OUTOFMEMORY;
+                        break;
+
+                    case ERROR_PRINT_CANCELLED:
+                        retValue = SP_USERABORT;
+                        break;
+
+                    case ERROR_DISK_FULL:
+                        retValue = SP_OUTOFDISK;
+                        break;
+
+                    default:
+                        retValue = SP_ERROR;
+                        break;
+                    }
+                }
+            }
+        }
+        break;
+
+
+
+
+        default:
+            UNIMPLEMENTED;
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        }
+    }
+
+    return retValue;
+}
+
+INT
+WINAPI
+ExtEscape(HDC hDC,
+          int nEscape,
+          int cbInput,
+          LPCSTR lpszInData,
+          int cbOutput,
+          LPSTR lpszOutData)
+{
+    return NtGdiExtEscape(hDC, NULL, 0, nEscape, cbInput, (LPSTR)lpszInData, cbOutput, lpszOutData);
+}
+
+INT
+WINAPI
+NamedEscape(HDC hdc,
+            PWCHAR pDriver,
+            INT iEsc,
+            INT cjIn,
+            LPSTR pjIn,
+            INT cjOut,
+            LPSTR pjOut)
+{
+    /* FIXME metadc, metadc are done most in user mode, and we do not support it
+     * Windows 2000/XP/Vista ignore the current hdc, that are being pass and always set hdc to NULL
+     * when it calls to NtGdiExtEscape from NamedEscape
+     */
+    return NtGdiExtEscape(NULL,pDriver,wcslen(pDriver),iEsc,cjIn,pjIn,cjOut,pjOut);
+}
+
+/*
+ * @implemented
+ */
+int
+WINAPI
+DrawEscape(HDC  hDC,
+           INT nEscape,
+           INT cbInput,
+           LPCSTR lpszInData)
+{
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+        return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
+    {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( pLDC )
+        {
+            if (pLDC->Flags & LDC_META_PRINT)
+            {
+//           if (nEscape != QUERYESCSUPPORT)
+//              return EMFDRV_WriteEscape(hDC, nEscape, cbInput, lpszInData, EMR_DRAWESCAPE);
+
+                return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+            }
+        }
+        SetLastError(ERROR_INVALID_HANDLE);
+    }
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiDrawStream(HDC dc, ULONG l, VOID *v) // See Bug 4784
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GdiValidateHandle(HGDIOBJ hobj)
+{
+    PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hobj);
+    if ( (Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
+            ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) ==
+            GDI_HANDLE_GET_TYPE(hobj) )
+    {
+        HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+        if(pid == NULL || pid == CurrentProcessId)
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+
 }
 
 /*
@@ -227,27 +485,6 @@ GdiGetBatchLimit()
     return GDI_BatchLimit;
 }
 
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GdiReleaseDC(HDC hdc)
-{
-    return 0;
-}
-
-INT
-WINAPI
-ExtEscape(HDC hDC,
-          int nEscape,
-          int cbInput,
-          LPCSTR lpszInData,
-          int cbOutput,
-          LPSTR lpszOutData)
-{
-    return NtGdiExtEscape(hDC, NULL, 0, nEscape, cbInput, (LPSTR)lpszInData, cbOutput, lpszOutData);
-}
 
 /*
  * @implemented
@@ -258,16 +495,6 @@ GdiSetLastError(DWORD dwErrCode)
 {
     NtCurrentTeb()->LastErrorValue = (ULONG) dwErrCode;
 }
-
-BOOL
-WINAPI
-GdiAddGlsBounds(HDC hdc,LPRECT prc)
-{
-    //FIXME: Lookup what 0x8000 means
-    return NtGdiSetBoundsRect(hdc, prc, 0x8000 |  DCB_ACCUMULATE ) ? TRUE : FALSE;
-}
-
-extern PGDIHANDLECACHE GdiHandleCache;
 
 HGDIOBJ
 FASTCALL
@@ -340,5 +567,109 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
     }
     (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
     return Handle;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unknown)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+DEVMODEW *
+WINAPI
+GdiConvertToDevmodeW(const DEVMODEA *dmA)
+{
+    DEVMODEW *dmW;
+    WORD dmW_size, dmA_size;
+
+    dmA_size = dmA->dmSize;
+
+    /* this is the minimal dmSize that XP accepts */
+    if (dmA_size < FIELD_OFFSET(DEVMODEA, dmFields))
+        return NULL;
+
+    if (dmA_size > sizeof(DEVMODEA))
+        dmA_size = sizeof(DEVMODEA);
+
+    dmW_size = dmA_size + CCHDEVICENAME;
+    if (dmA_size >= FIELD_OFFSET(DEVMODEA, dmFormName) + CCHFORMNAME)
+        dmW_size += CCHFORMNAME;
+
+    dmW = HeapAlloc(GetProcessHeap(), 0, dmW_size + dmA->dmDriverExtra);
+    if (!dmW) return NULL;
+
+    MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmDeviceName, CCHDEVICENAME,
+                        dmW->dmDeviceName, CCHDEVICENAME);
+    /* copy slightly more, to avoid long computations */
+    memcpy(&dmW->dmSpecVersion, &dmA->dmSpecVersion, dmA_size - CCHDEVICENAME);
+
+    if (dmA_size >= FIELD_OFFSET(DEVMODEA, dmFormName) + CCHFORMNAME)
+    {
+        MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmFormName, CCHFORMNAME,
+                            dmW->dmFormName, CCHFORMNAME);
+        if (dmA_size > FIELD_OFFSET(DEVMODEA, dmLogPixels))
+            memcpy(&dmW->dmLogPixels, &dmA->dmLogPixels, dmA_size - FIELD_OFFSET(DEVMODEA, dmLogPixels));
+    }
+
+    if (dmA->dmDriverExtra)
+        memcpy((char *)dmW + dmW_size, (const char *)dmA + dmA_size, dmA->dmDriverExtra);
+
+    dmW->dmSize = dmW_size;
+
+    return dmW;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiRealizationInfo(HDC hdc,
+                   PREALIZATION_INFO pri)
+{
+    // ATM we do not support local font data and Language Pack.
+    return NtGdiGetRealizationInfo(hdc, pri, (HFONT) NULL);
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID WINAPI GdiInitializeLanguagePack(DWORD InitParam)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+BOOL
+WINAPI
+GdiAddGlsBounds(HDC hdc,LPRECT prc)
+{
+    //FIXME: Lookup what 0x8000 means
+    return NtGdiSetBoundsRect(hdc, prc, 0x8000 |  DCB_ACCUMULATE ) ? TRUE : FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiAddGlsRecord(HDC hdc,
+                DWORD unknown1,
+                LPCSTR unknown2,
+                LPRECT unknown3)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 

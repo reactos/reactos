@@ -427,3 +427,68 @@ SetBrushOrgEx(HDC hdc,
     /* Fall back to the slower kernel path */
     return NtGdiSetBrushOrg(hdc, nXOrg, nYOrg, lppt);
 }
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetBrushAttributes(HBRUSH hbr)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HBRUSH
+WINAPI
+SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HBRUSH
+WINAPI
+ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+UnrealizeObject(HGDIOBJ  hgdiobj)
+{
+    BOOL retValue = TRUE;
+    /*
+       Win 2k Graphics API, Black Book. by coriolis.com
+       Page 62, Note that Steps 3, 5, and 6 are not required for Windows NT(tm)
+       and Windows 2000(tm).
+
+       Step 5. UnrealizeObject(hTrackBrush);
+     */
+    /*
+        msdn.microsoft.com,
+        "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
+        and the function returns TRUE. Use SetBrushOrgEx to set the origin of
+        a brush."
+     */
+    if (GDI_HANDLE_GET_TYPE(hgdiobj) != GDI_OBJECT_TYPE_BRUSH)
+    {
+        retValue = NtGdiUnrealizeObject(hgdiobj);
+    }
+
+    return retValue;
+}

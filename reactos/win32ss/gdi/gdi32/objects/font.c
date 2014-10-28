@@ -1039,6 +1039,25 @@ GetGlyphOutlineW(
     return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetGlyphOutlineWow(
+    DWORD	a0,
+    DWORD	a1,
+    DWORD	a2,
+    DWORD	a3,
+    DWORD	a4,
+    DWORD	a5,
+    DWORD	a6
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
 
 /*
  * @implemented
@@ -2160,3 +2179,243 @@ NewEnumFontFamiliesExW(
 
     return ret;
 }
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+GdiAddFontResourceW(
+    LPCWSTR lpszFilename,
+    FLONG fl,
+    DESIGNVECTOR *pdv)
+{
+    return NtGdiAddFontResourceW((PWSTR)lpszFilename, 0, 0, fl, 0, pdv);
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+AddFontMemResourceEx(
+    PVOID pbFont,
+    DWORD cbFont,
+    PVOID pdv,
+    DWORD *pcFonts
+)
+{
+    if ( pbFont && cbFont && pcFonts)
+    {
+        return NtGdiAddFontMemResourceEx(pbFont, cbFont, NULL, 0, pcFonts);
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return NULL;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+RemoveFontMemResourceEx(HANDLE fh)
+{
+    if (fh)
+    {
+        return NtGdiRemoveFontMemResourceEx(fh);
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+AddFontResourceTracking(
+    LPCSTR lpString,
+    int unknown
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+RemoveFontResourceTracking(LPCSTR lpString,int unknown)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+BOOL
+WINAPI
+CreateScalableFontResourceW(
+    DWORD fdwHidden,
+    LPCWSTR lpszFontRes,
+    LPCWSTR lpszFontFile,
+    LPCWSTR lpszCurrentPath
+)
+{
+    HANDLE f;
+
+    UNIMPLEMENTED;
+
+    /* fHidden=1 - only visible for the calling app, read-only, not
+     * enumerated with EnumFonts/EnumFontFamilies
+     * lpszCurrentPath can be NULL
+     */
+
+    /* If the output file already exists, return the ERROR_FILE_EXISTS error as specified in MSDN */
+    if ((f = CreateFileW(lpszFontRes, 0, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)) != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(f);
+        SetLastError(ERROR_FILE_EXISTS);
+        return FALSE;
+    }
+    return FALSE; /* create failed */
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+WINAPI
+GetEUDCTimeStamp(VOID)
+{
+    return NtGdiGetEudcTimeStampEx(NULL,0,TRUE);
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetEUDCTimeStampExW(LPWSTR lpBaseFaceName)
+{
+    DWORD retValue = 0;
+
+    if (!lpBaseFaceName)
+    {
+        retValue = NtGdiGetEudcTimeStampEx(NULL,0,FALSE);
+    }
+    else
+    {
+        retValue = NtGdiGetEudcTimeStampEx(lpBaseFaceName, wcslen(lpBaseFaceName), FALSE);
+    }
+
+    return retValue;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+WINAPI
+GetFontAssocStatus(HDC hdc)
+{
+    ULONG retValue = 0;
+
+    if (hdc)
+    {
+        retValue = NtGdiQueryFontAssocInfo(hdc);
+    }
+
+    return retValue;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+QueryFontAssocStatus(VOID)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+WINAPI
+UnloadNetworkFonts(DWORD unknown)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/*
+ * @implemented
+ *
+ */
+DWORD
+WINAPI
+GetFontData(HDC hdc,
+            DWORD dwTable,
+            DWORD dwOffset,
+            LPVOID lpvBuffer,
+            DWORD cbData)
+{
+    if (!lpvBuffer)
+    {
+        cbData = 0;
+    }
+    return NtGdiGetFontData(hdc, dwTable, dwOffset, lpvBuffer, cbData);
+}
+
+DWORD
+WINAPI
+cGetTTFFromFOT(DWORD x1 ,DWORD x2 ,DWORD x3, DWORD x4, DWORD x5, DWORD x6, DWORD x7)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+

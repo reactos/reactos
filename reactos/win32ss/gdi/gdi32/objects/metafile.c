@@ -1,4 +1,5 @@
 #include <precomp.h>
+#include <debug.h>
 
 /* DEFINES *******************************************************************/
 
@@ -271,3 +272,219 @@ GetMetaFileA(
 }
 
 
+/*
+ * @unimplemented
+ */
+UINT
+WINAPI
+GetMetaFileBitsEx(
+    HMETAFILE	a0,
+    UINT		a1,
+    LPVOID		a2
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HMETAFILE
+WINAPI
+SetMetaFileBitsEx(
+    UINT		size,
+    CONST BYTE	*lpData
+)
+{
+    const METAHEADER *mh_in = (const METAHEADER *)lpData;
+
+    if (size & 1) return 0;
+
+    if (!size || mh_in->mtType != METAFILE_MEMORY || mh_in->mtVersion != 0x300 ||
+            mh_in->mtHeaderSize != sizeof(METAHEADER) / 2)
+    {
+        DPRINT1("SetMetaFileBitsEx failed: %lu,%lu,0x&lx,%lu\n",
+                size, mh_in->mtType, mh_in->mtVersion, mh_in->mtHeaderSize);
+        SetLastError(ERROR_INVALID_DATA);
+        return 0;
+    }
+
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GdiIsPlayMetafileDC(HDC hDC)
+{
+    PLDC pLDC = GdiGetLDC(hDC);
+    if ( pLDC )
+    {
+        if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
+    }
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PlayMetaFile(
+    HDC		a0,
+    HMETAFILE	a1
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PlayMetaFileRecord(
+    HDC		a0,
+    LPHANDLETABLE	a1,
+    LPMETARECORD	a2,
+    UINT		a3
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+EnumMetaFile(
+    HDC			a0,
+    HMETAFILE		a1,
+    MFENUMPROC		a2,
+    LPARAM			a3
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+WINAPI
+GetWinMetaFileBits(
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPBYTE		a2,
+    INT		a3,
+    HDC		a4
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HENHMETAFILE
+WINAPI
+SetWinMetaFileBits(
+    UINT			a0,
+    CONST BYTE		*a1,
+    HDC			a2,
+    CONST METAFILEPICT	*a3)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GdiIsMetaFileDC(HDC hDC)
+{
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+    {
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return TRUE;
+        else
+        {
+            PLDC pLDC = GdiGetLDC(hDC);
+            if ( !pLDC )
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                return FALSE;
+            }
+            if ( pLDC->iType == LDC_EMFLDC) return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GdiIsMetaPrintDC(HDC hDC)
+{
+
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+    {
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return FALSE;
+        else
+        {
+            PLDC pLDC = GdiGetLDC(hDC);
+            if ( !pLDC )
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                return FALSE;
+            }
+            if ( pLDC->Flags & LDC_META_PRINT) return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+METAFILEPICT *
+WINAPI
+GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+GdiConvertMetaFilePict(HGLOBAL hMem)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}

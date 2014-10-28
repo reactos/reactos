@@ -3,8 +3,6 @@
 #define NDEBUG
 #include <debug.h>
 
-HGDIOBJ stock_objects[NB_STOCK_OBJECTS]; // temp location.
-
 HDC
 FASTCALL
 IntCreateDICW(
@@ -320,86 +318,63 @@ DeleteDC(HDC hdc)
     return bResult;
 }
 
+
+/*
+ * @unimplemented
+ */
+INT
+WINAPI
+SaveDC(IN HDC hdc)
+{
+    /* FIXME Sharememory */
+    return NtGdiSaveDC(hdc);
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+RestoreDC(IN HDC hdc,
+          IN INT iLevel)
+{
+    /* FIXME Sharememory */
+    return NtGdiRestoreDC(hdc, iLevel);
+}
+
+
 /*
  * @implemented
  */
 BOOL
 WINAPI
-DeleteObject(HGDIOBJ hObject)
+CancelDC(HDC hDC)
 {
-    DWORD dwType = 0;
+    PDC_ATTR pDc_Attr;
 
-    /* From Wine: DeleteObject does not SetLastError() on a null object */
-    if(!hObject) return FALSE;
-
-    if ((DWORD)hObject & GDI_HANDLE_STOCK_MASK)
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC &&
+            GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC )
     {
-        // Relax! This is a normal return!
-        DPRINT("Trying to delete system object 0x%p\n", hObject);
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+        /* If a document has started set it to die. */
+        if (pLDC->Flags & LDC_INIT_DOCUMENT) pLDC->Flags |= LDC_KILL_DOCUMENT;
+
+        return NtGdiCancelDC(hDC);
+    }
+
+    if (GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &pDc_Attr))
+    {
+        pDc_Attr->ulDirty_ &= ~DC_PLAYMETAFILE;
         return TRUE;
     }
 
-    // If you dont own it?! Get OUT!
-    if(!GdiIsHandleValid(hObject)) return FALSE;
-
-    dwType = GDI_HANDLE_GET_TYPE(hObject);
-
-    if ((dwType == GDI_OBJECT_TYPE_METAFILE) ||
-        (dwType == GDI_OBJECT_TYPE_ENHMETAFILE))
-        return FALSE;
-
-    switch (dwType)
-    {
-    case GDI_OBJECT_TYPE_DC:
-        return DeleteDC((HDC) hObject);
-    case GDI_OBJECT_TYPE_COLORSPACE:
-        return NtGdiDeleteColorSpace((HCOLORSPACE) hObject);
-    case GDI_OBJECT_TYPE_REGION:
-        return DeleteRegion((HRGN) hObject);
-#if 0
-    case GDI_OBJECT_TYPE_METADC:
-        return MFDRV_DeleteObject( hObject );
-    case GDI_OBJECT_TYPE_EMF:
-    {
-        PLDC pLDC = GdiGetLDC(hObject);
-        if ( !pLDC ) return FALSE;
-        return EMFDRV_DeleteObject( hObject );
-    }
-#endif
-    case GDI_OBJECT_TYPE_FONT:
-        break;
-
-    case GDI_OBJECT_TYPE_BRUSH:
-    case GDI_OBJECT_TYPE_EXTPEN:
-    case GDI_OBJECT_TYPE_PEN:
-    {
-        PBRUSH_ATTR Brh_Attr;
-        PTEB pTeb;
-        PGDIBSOBJECT pgO;
-
-        if ((!GdiGetHandleUserData(hObject, dwType, (PVOID*)&Brh_Attr)) ||
-            (Brh_Attr == NULL)) break;
-
-        pTeb = NtCurrentTeb();
-
-        if (pTeb->Win32ThreadInfo == NULL) break;
-
-        pgO = GdiAllocBatchCommand(NULL, GdiBCDelObj);
-        if (pgO)
-        {
-            pgO->hgdiobj = hObject;
-            return TRUE;
-        }
-
-        break;
-    }
-
-    case GDI_OBJECT_TYPE_BITMAP:
-    default:
-        break;
-    }
-
-    return NtGdiDeleteObjectApp(hObject);
+    return FALSE;
 }
 
 INT
@@ -419,6 +394,54 @@ SetArcDirection(
 {
     return GetAndSetDCDWord(hdc, GdiGetSetArcDirection, nDirection, 0, 0, 0);
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiReleaseDC(HDC hdc)
+{
+    return 0;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GdiCleanCacheDC(HDC hdc)
+{
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_DC_TYPE)
+        return TRUE;
+    SetLastError(ERROR_INVALID_HANDLE);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+HDC
+WINAPI
+GdiConvertAndCheckDC(HDC hdc)
+{
+    PLDC pldc;
+    ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
+    if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
+        return hdc;
+    pldc = GdiGetLDC(hdc);
+    if (pldc)
+    {
+        if (pldc->Flags & LDC_SAPCALLBACK) GdiSAPCallback(pldc);
+        if (pldc->Flags & LDC_KILL_DOCUMENT) return NULL;
+        if (pldc->Flags & LDC_STARTPAGE) StartPage(hdc);
+        return hdc;
+    }
+    SetLastError(ERROR_INVALID_HANDLE);
+    return NULL;
+}
+
 
 /*
  * @implemented
@@ -480,6 +503,67 @@ GetCurrentObject(
     /* Pass the request to win32k */
     return NtGdiGetDCObject(hdc, uObjectType);
 }
+
+
+/*
+ * @implemented
+ */
+int
+WINAPI
+EnumObjects(HDC hdc,
+            int nObjectType,
+            GOBJENUMPROC lpObjectFunc,
+            LPARAM lParam)
+{
+    ULONG ObjectsCount;
+    ULONG Size;
+    PVOID Buffer = NULL;
+    DWORD_PTR EndOfBuffer;
+    int Result = 0;
+
+    switch (nObjectType)
+    {
+    case OBJ_BRUSH:
+        Size = sizeof(LOGBRUSH);
+        break;
+
+    case OBJ_PEN:
+        Size = sizeof(LOGPEN);
+        break;
+
+    default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    ObjectsCount = NtGdiEnumObjects(hdc, nObjectType, 0, NULL);
+    if (!ObjectsCount) return 0;
+
+    Buffer = HeapAlloc(GetProcessHeap(), 0, ObjectsCount * Size);
+    if (!Buffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    if (!NtGdiEnumObjects(hdc, nObjectType, ObjectsCount * Size, Buffer))
+    {
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        return 0;
+    }
+
+    EndOfBuffer = (DWORD_PTR)Buffer + (ObjectsCount * Size);
+    while ((DWORD_PTR)Buffer < EndOfBuffer)
+    {
+        Result = lpObjectFunc(Buffer, lParam);
+        if (!Result) break;
+        Buffer = (PVOID)((DWORD_PTR)Buffer + Size);
+    }
+
+    HeapFree(GetProcessHeap(), 0, Buffer);
+    return Result;
+}
+
 
 /*
  * @implemented
@@ -769,198 +853,42 @@ GetAspectRatioFilterEx(
 /*
  * @implemented
  */
-BOOL
+UINT
 WINAPI
-GetDCOrgEx(
-    HDC hdc,
-    LPPOINT lpPoint)
+GetBoundsRect(
+    HDC	hdc,
+    LPRECT	lprcBounds,
+    UINT	flags
+)
 {
-    return NtGdiGetDCPoint( hdc, GdiGetDCOrg, (PPOINTL)lpPoint );
+    return NtGdiGetBoundsRect(hdc,lprcBounds,flags & DCB_RESET);
 }
 
 
 /*
  * @implemented
  */
-LONG
+UINT
 WINAPI
-GetDCOrg(
-    HDC hdc)
+SetBoundsRect(HDC hdc,
+              CONST RECT *prc,
+              UINT flags)
 {
-    // Officially obsolete by Microsoft
-    POINT Pt;
-    if (!GetDCOrgEx(hdc, &Pt))
-        return 0;
-    return(MAKELONG(Pt.x, Pt.y));
+    /* FIXME add check for validate the flags */
+    return NtGdiSetBoundsRect(hdc, (LPRECT)prc, flags);
 }
 
 
 /*
  * @implemented
- */
-int
-WINAPI
-GetObjectW(
-    _In_ HGDIOBJ hGdiObj,
-    _In_ int cbSize,
-    _Out_ LPVOID lpBuffer)
-{
-    DWORD dwType;
-    INT cbResult = 0;
-
-    /* Fixup handles with upper 16 bits masked */
-    hGdiObj = GdiFixUpHandle(hGdiObj);
-
-    /* Get the object type */
-    dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
-
-    /* Check what kind of object we have */
-    switch (dwType)
-    {
-        case GDI_OBJECT_TYPE_PEN:
-            if (!lpBuffer) return sizeof(LOGPEN);
-            break;
-
-        case GDI_OBJECT_TYPE_BRUSH:
-            if (!lpBuffer || !cbSize) return sizeof(LOGBRUSH);
-            break;
-
-        case GDI_OBJECT_TYPE_BITMAP:
-            if (!lpBuffer) return sizeof(BITMAP);
-            break;
-
-        case GDI_OBJECT_TYPE_PALETTE:
-            if (!lpBuffer) return sizeof(WORD);
-            break;
-
-        case GDI_OBJECT_TYPE_FONT:
-            if (!lpBuffer) return sizeof(LOGFONTW);
-            break;
-
-        case GDI_OBJECT_TYPE_EXTPEN:
-            /* we don't know the size, ask win32k */
-            break;
-
-        case GDI_OBJECT_TYPE_COLORSPACE:
-            if ((cbSize < 328) || !lpBuffer)
-            {
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                return 0;
-            }
-            break;
-
-        case GDI_OBJECT_TYPE_DC:
-        case GDI_OBJECT_TYPE_REGION:
-        case GDI_OBJECT_TYPE_EMF:
-        case GDI_OBJECT_TYPE_METAFILE:
-        case GDI_OBJECT_TYPE_ENHMETAFILE:
-            SetLastError(ERROR_INVALID_HANDLE);
-        default:
-            return 0;
-    }
-
-    /* Call win32k */
-    cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-
-    /* Handle error */
-    if (cbResult == 0)
-    {
-        if (!GdiIsHandleValid(hGdiObj))
-        {
-            if ((dwType == GDI_OBJECT_TYPE_PEN) ||
-                (dwType == GDI_OBJECT_TYPE_EXTPEN) ||
-                (dwType == GDI_OBJECT_TYPE_BRUSH) ||
-                (dwType == GDI_OBJECT_TYPE_COLORSPACE))
-            {
-                SetLastError(ERROR_INVALID_PARAMETER);
-            }
-        }
-        else
-        {
-            if ((dwType == GDI_OBJECT_TYPE_PEN) ||
-                (dwType == GDI_OBJECT_TYPE_BRUSH) ||
-                (dwType == GDI_OBJECT_TYPE_COLORSPACE) ||
-                ( (dwType == GDI_OBJECT_TYPE_EXTPEN) &&
-                    ( (cbSize >= sizeof(EXTLOGPEN)) || (cbSize == 0) ) ) ||
-                ( (dwType == GDI_OBJECT_TYPE_BITMAP) && (cbSize >= sizeof(BITMAP)) ))
-            {
-                SetLastError(ERROR_NOACCESS);
-            }
-        }
-    }
-
-    return cbResult;
-}
-
-
-ULONG
-WINAPI
-GetFontObjectA(
-    _In_ HGDIOBJ hfont,
-    _In_ ULONG cbSize,
-    _Out_ LPVOID lpBuffer)
-{
-    ENUMLOGFONTEXDVW elfedvW;
-    ENUMLOGFONTEXDVA elfedvA;
-    ULONG cbResult;
-
-    /* Check if size only is requested */
-    if (!lpBuffer) return sizeof(LOGFONTA);
-
-    /* Check for size 0 */
-    if (cbSize == 0)
-    {
-        /* Windows does not SetLastError() */
-        return 0;
-    }
-
-    /* Windows does this ... */
-    if (cbSize == sizeof(LOGFONTW)) cbSize = sizeof(LOGFONTA);
-
-    /* Call win32k to get the logfont (widechar) */
-    cbResult = NtGdiExtGetObjectW(hfont, sizeof(ENUMLOGFONTEXDVW), &elfedvW);
-    if (cbResult == 0)
-    {
-        return 0;
-    }
-
-    /* Convert the logfont from widechar to ansi */
-    EnumLogFontExW2A(&elfedvA.elfEnumLogfontEx, &elfedvW.elfEnumLogfontEx);
-    elfedvA.elfDesignVector = elfedvW.elfDesignVector;
-
-    /* Don't copy more than maximum */
-    if (cbSize > sizeof(ENUMLOGFONTEXDVA)) cbSize = sizeof(ENUMLOGFONTEXDVA);
-
-    /* Copy the number of bytes requested */
-    memcpy(lpBuffer, &elfedvA, cbSize);
-
-    /* Return the number of bytes copied */
-    return cbSize;
-}
-
-
-/*
- * @implemented
+ *
  */
 int
 WINAPI
-GetObjectA(
-    _In_ HGDIOBJ hGdiObj,
-    _In_ int cbSize,
-    _Out_ LPVOID lpBuffer)
+GetClipBox(HDC hdc,
+           LPRECT lprc)
 {
-    DWORD dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
-
-    /* Chjeck if this is anything else but a font */
-    if (dwType == GDI_OBJECT_TYPE_FONT)
-    {
-        return GetFontObjectA(hGdiObj, cbSize, lpBuffer);
-    }
-    else
-    {
-        /* Simply pass it to the widechar version */
-        return GetObjectW(hGdiObj, cbSize, lpBuffer);
-    }
+    return  NtGdiGetAppClipBox(hdc, lprc);
 }
 
 
@@ -1402,109 +1330,6 @@ ResetDCA(
 }
 
 
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetObjectType(
-    HGDIOBJ h)
-{
-    DWORD Ret = 0;
-
-    if (GdiIsHandleValid(h))
-    {
-        LONG Type = GDI_HANDLE_GET_TYPE(h);
-        switch(Type)
-        {
-        case GDI_OBJECT_TYPE_PEN:
-            Ret = OBJ_PEN;
-            break;
-        case GDI_OBJECT_TYPE_BRUSH:
-            Ret = OBJ_BRUSH;
-            break;
-        case GDI_OBJECT_TYPE_BITMAP:
-            Ret = OBJ_BITMAP;
-            break;
-        case GDI_OBJECT_TYPE_FONT:
-            Ret = OBJ_FONT;
-            break;
-        case GDI_OBJECT_TYPE_PALETTE:
-            Ret = OBJ_PAL;
-            break;
-        case GDI_OBJECT_TYPE_REGION:
-            Ret = OBJ_REGION;
-            break;
-        case GDI_OBJECT_TYPE_DC:
-            if ( GetDCDWord( h, GdiGetIsMemDc, 0))
-            {
-                Ret = OBJ_MEMDC;
-            }
-            else
-                Ret = OBJ_DC;
-            break;
-        case GDI_OBJECT_TYPE_COLORSPACE:
-            Ret = OBJ_COLORSPACE;
-            break;
-        case GDI_OBJECT_TYPE_METAFILE:
-            Ret = OBJ_METAFILE;
-            break;
-        case GDI_OBJECT_TYPE_ENHMETAFILE:
-            Ret = OBJ_ENHMETAFILE;
-            break;
-        case GDI_OBJECT_TYPE_METADC:
-            Ret = OBJ_METADC;
-            break;
-        case GDI_OBJECT_TYPE_EXTPEN:
-            Ret = OBJ_EXTPEN;
-            break;
-
-        case GDILoObjType_LO_ALTDC_TYPE:
-            // FIXME: could be something else?
-            Ret = OBJ_ENHMETADC;
-            break;
-
-        default:
-            DPRINT1("GetObjectType: Magic 0x%08x not implemented\n", Type);
-            break;
-        }
-    }
-    else
-        /* From Wine: GetObjectType does SetLastError() on a null object */
-        SetLastError(ERROR_INVALID_HANDLE);
-    return Ret;
-}
-
-
-/*
- * @implemented
- */
-HGDIOBJ
-WINAPI
-GetStockObject(
-    INT fnObject)
-{
-    HGDIOBJ hobj;
-
-    if ((fnObject < 0) || (fnObject >= NB_STOCK_OBJECTS))
-        return NULL;
-
-    hobj = stock_objects[fnObject];
-    if (hobj == NULL)
-    {
-        hobj = NtGdiGetStockObject(fnObject);
-
-        if (!GdiIsHandleValid(hobj))
-        {
-            return NULL;
-        }
-
-        stock_objects[fnObject] = hobj;
-    }
-
-    return hobj;
-}
-
 /* FIXME: include correct header */
 HPALETTE WINAPI NtUserSelectPalette(HDC  hDC,
                                     HPALETTE  hpal,
@@ -1538,68 +1363,6 @@ SelectPalette(
     }
 #endif
     return NtUserSelectPalette(hdc, hpal, bForceBackground);
-}
-
-/*
- * @implemented
- *
- */
-int
-WINAPI
-GetMapMode(HDC hdc)
-{
-    PDC_ATTR pdcattr;
-
-    /* Get the DC attribute */
-    pdcattr = GdiGetDcAttr(hdc);
-    if (pdcattr == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    return pdcattr->iMapMode;
-}
-
-/*
- * @implemented
- */
-INT
-WINAPI
-SetMapMode(
-    _In_ HDC hdc,
-    _In_ INT iMode)
-{
-    PDC_ATTR pdcattr;
-
-    /* Get the DC attribute */
-    pdcattr = GdiGetDcAttr(hdc);
-    if (pdcattr == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetMapMode(hdc, iMode);
-        else
-        {
-            SetLastError(ERROR_INVALID_HANDLE);
-            return 0;
-        }
-    }
-#endif
-    /* Force change if Isotropic is set for recompute. */
-    if ((iMode != pdcattr->iMapMode) || (iMode == MM_ISOTROPIC))
-    {
-        pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-        return GetAndSetDCDWord( hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
-    }
-
-    return pdcattr->iMapMode;
 }
 
 /*
@@ -1693,6 +1456,7 @@ GetHFONT(HDC hdc)
     /* Return the current font */
     return pdcattr->hlfntNew;
 }
+
 
 
 HBITMAP
@@ -1854,3 +1618,4 @@ SelectObject(
 
     return NULL;
 }
+

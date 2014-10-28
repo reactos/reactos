@@ -105,6 +105,69 @@ CombineTransform(
 }
 
 
+/*
+ * @implemented
+ *
+ */
+int
+WINAPI
+GetMapMode(HDC hdc)
+{
+    PDC_ATTR pdcattr;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return pdcattr->iMapMode;
+}
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+SetMapMode(
+    _In_ HDC hdc,
+    _In_ INT iMode)
+{
+    PDC_ATTR pdcattr;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+#if 0
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+    {
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+            return MFDRV_SetMapMode(hdc, iMode);
+        else
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return 0;
+        }
+    }
+#endif
+    /* Force change if Isotropic is set for recompute. */
+    if ((iMode != pdcattr->iMapMode) || (iMode == MM_ISOTROPIC))
+    {
+        pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+        return GetAndSetDCDWord( hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
+    }
+
+    return pdcattr->iMapMode;
+}
+
+
 BOOL
 WINAPI
 DPtoLP(HDC hdc, LPPOINT lpPoints, INT nCount)
@@ -744,6 +807,35 @@ SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
             (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return GDI_ERROR;
     return NtGdiSetLayout( hdc, wox, dwLayout);
 }
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetDCOrgEx(
+    HDC hdc,
+    LPPOINT lpPoint)
+{
+    return NtGdiGetDCPoint( hdc, GdiGetDCOrg, (PPOINTL)lpPoint );
+}
+
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+GetDCOrg(
+    HDC hdc)
+{
+    // Officially obsolete by Microsoft
+    POINT Pt;
+    if (!GetDCOrgEx(hdc, &Pt))
+        return 0;
+    return(MAKELONG(Pt.x, Pt.y));
+}
+
 
 /*
  * @implemented

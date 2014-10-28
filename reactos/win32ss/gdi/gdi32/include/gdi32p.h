@@ -279,6 +279,11 @@ EnumLogFontExW2A(
     LPENUMLOGFONTEXA fontA,
     CONST ENUMLOGFONTEXW *fontW );
 
+BOOL
+WINAPI
+GetETM(HDC hdc,
+       EXTTEXTMETRIC *petm);
+
 /* FIXME: Put in some public header */
 UINT
 WINAPI
