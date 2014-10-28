@@ -1155,22 +1155,28 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
                     break;
                 case ITID_TOOLBARBANDSHOWN: // toolbar visibility
-                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
+                    if (fControlsBar)
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_ADDRESSBANDSHOWN: // address bar visibility
-                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
+                    if (fNavigationBar)
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_LINKSBANDSHOWN:   // links bar visibility
                     prgCmds->cmdf = 0;
                     break;
                 case ITID_MENUBANDSHOWN:    // Menubar band visibility
-                    prgCmds->cmdf = 0;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
+                    if (fMenuBar)
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_AUTOHIDEENABLED:  // Auto hide enabled/disabled
                     prgCmds->cmdf = 0;
                     break;
                 case ITID_CUSTOMIZEENABLED: // customize enabled
-                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
                     break;
                 case ITID_TOOLBARLOCKED:    // lock toolbars
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
@@ -1796,12 +1802,18 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         default:
             break;
     }
+    
+    // TODO: Implement show/hide toolbars
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, FALSE);
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, FALSE);
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
 
-    MENUITEMINFO mii;
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_STATE;
-    mii.fState = fLocked ? MFS_CHECKED : MFS_UNCHECKED;
-    SetMenuItemInfo(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, FALSE, &mii);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, fControlsBar != NULL);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, fNavigationBar != NULL);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, fLocked);
 
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,

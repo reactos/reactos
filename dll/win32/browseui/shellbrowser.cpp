@@ -1570,10 +1570,16 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         RemoveMenu(toolbarMenuBar, 0, MF_BYPOSITION);
         DestroyMenu(toolbarMenuBar);
 
-        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_STANDARDBUTTONS, commandList[0].cmdf);
-        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_ADDRESSBAR, commandList[1].cmdf & OLECMDF_ENABLED);
-        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_LINKSBAR, commandList[2].cmdf & OLECMDF_ENABLED);
-        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_LOCKTOOLBARS, commandList[3].cmdf & OLECMDF_ENABLED);
+        // TODO: Implement
+        SHEnableMenuItem(toolbarMenu, IDM_TOOLBARS_STANDARDBUTTONS, commandList[0].cmdf & OLECMDF_ENABLED);
+        SHEnableMenuItem(toolbarMenu, IDM_TOOLBARS_ADDRESSBAR, commandList[1].cmdf & OLECMDF_ENABLED);
+        SHEnableMenuItem(toolbarMenu, IDM_TOOLBARS_LINKSBAR, commandList[2].cmdf & OLECMDF_ENABLED);
+        SHEnableMenuItem(toolbarMenu, IDM_TOOLBARS_CUSTOMIZE, commandList[4].cmdf & OLECMDF_ENABLED);
+
+        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_STANDARDBUTTONS, commandList[0].cmdf & OLECMDF_LATCHED);
+        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_ADDRESSBAR, commandList[1].cmdf & OLECMDF_LATCHED);
+        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_LINKSBAR, commandList[2].cmdf & OLECMDF_LATCHED);
+        SHCheckMenuItem(toolbarMenu, IDM_TOOLBARS_LOCKTOOLBARS, commandList[3].cmdf & OLECMDF_LATCHED);
         if ((commandList[4].cmdf & OLECMDF_ENABLED) == 0)
             DeleteMenu(toolbarMenu, IDM_TOOLBARS_CUSTOMIZE, MF_BYCOMMAND);
         DeleteMenu(toolbarMenu, IDM_TOOLBARS_TEXTLABELS, MF_BYCOMMAND);
@@ -1585,6 +1591,9 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
     SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, fStatusBarVisible ? TRUE : FALSE);
+
+    // TODO: Implement
+    SHEnableMenuItem(theMenu, IDM_VIEW_EXPLORERBAR, FALSE);
 }
 
 bool IUnknownIsEqual(IUnknown *int1, IUnknown *int2)
