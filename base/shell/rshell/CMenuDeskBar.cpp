@@ -45,6 +45,7 @@ CMenuDeskBar::CMenuDeskBar() :
 
 CMenuDeskBar::~CMenuDeskBar()
 {
+    m_ShowFlags = 0;
 }
 
 LRESULT CMenuDeskBar::_OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -57,7 +58,6 @@ LRESULT CMenuDeskBar::_OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
 void CMenuDeskBar::OnFinalMessage(HWND /* hWnd */)
 {
-    this->Release();
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)
