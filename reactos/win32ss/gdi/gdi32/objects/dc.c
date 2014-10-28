@@ -1695,26 +1695,23 @@ GetHFONT(HDC hdc)
 }
 
 
-/*
- * @implemented
- *
- */
-HGDIOBJ
+HBITMAP
 WINAPI
-SelectObject(
+GdiSelectBitmap(
     _In_ HDC hdc,
-    _In_ HGDIOBJ hGdiObj)
+    _In_ HBITMAP hbmp)
+{
+    return NtGdiSelectBitmap(hdc, hbmp);
+}
+
+HBRUSH
+WINAPI
+GdiSelectBrush(
+    _In_ HDC hdc,
+    _In_ HBRUSH hbr)
 {
     PDC_ATTR pdcattr;
-    HGDIOBJ hOldObj = NULL;
-    UINT uType;
-
-    /* Fix up 16 bit handles */
-    hGdiObj = GdiFixUpHandle(hGdiObj);
-    if (!GdiIsHandleValid(hGdiObj))
-    {
-        return NULL;
-    }
+    HBRUSH hbrOld;
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -1724,68 +1721,133 @@ SelectObject(
         return NULL;
     }
 
-    uType = GDI_HANDLE_GET_TYPE(hGdiObj);
+    /* Get the current brush. If it matches the new brush, we're done */
+    hbrOld = pdcattr->hbrush;
+    if (hbrOld == hbr)
+        return hbrOld;
 
-    switch (uType)
+    /* Set the new brush and update dirty flags */
+    pdcattr->hbrush = hbr;
+    pdcattr->ulDirty_ |= DC_BRUSH_DIRTY;
+    return hbrOld;
+}
+
+HPEN
+WINAPI
+GdiSelectPen(
+    _In_ HDC hdc,
+    _In_ HPEN hpen)
+{
+    PDC_ATTR pdcattr;
+    HPEN hpenOld;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
     {
-        case GDI_OBJECT_TYPE_REGION:
-            return (HGDIOBJ)ExtSelectClipRgn(hdc, hGdiObj, RGN_COPY);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
-        case GDI_OBJECT_TYPE_BITMAP:
-            return NtGdiSelectBitmap(hdc, hGdiObj);
+    /* Get the current pen. If it matches the new pen, we're done */
+    hpenOld = pdcattr->hpen;
+    if (hpenOld == hpen)
+        return hpenOld;
 
-        case GDI_OBJECT_TYPE_BRUSH:
-            hOldObj = pdcattr->hbrush;
-            pdcattr->ulDirty_ |= DC_BRUSH_DIRTY;
-            pdcattr->hbrush = hGdiObj;
-            return hOldObj;
-//            return NtGdiSelectBrush(hdc, hGdiObj);
+    /* Set the new pen and update dirty flags */
+    pdcattr->ulDirty_ |= DC_PEN_DIRTY;
+    pdcattr->hpen = hpen;
+    return hpenOld;
+}
 
-        case GDI_OBJECT_TYPE_PEN:
-        case GDI_OBJECT_TYPE_EXTPEN:
-            hOldObj = pdcattr->hpen;
-            pdcattr->ulDirty_ |= DC_PEN_DIRTY;
-            pdcattr->hpen = hGdiObj;
-            return hOldObj;
-//            return NtGdiSelectPen(hdc, hGdiObj);
+HFONT
+WINAPI
+GdiSelectFont(
+    _In_ HDC hdc,
+    _In_ HFONT hfont)
+{
+    PDC_ATTR pdcattr;
+    HFONT hfontOld;
 
-        case GDI_OBJECT_TYPE_FONT:
-            hOldObj = pdcattr->hlfntNew;
-            if (hOldObj == hGdiObj) return hOldObj;
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
-            pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-            pdcattr->ulDirty_ |= DIRTY_CHARSET;
-            pdcattr->hlfntNew = hGdiObj;
+    /* Get the current font. If it matches the new font, we're done */
+    hfontOld = pdcattr->hlfntNew;
+    if (hfontOld == hfont)
+        return hfontOld;
 
-            if (!(pdcattr->ulDirty_ & DC_DIBSECTION))
-            {
-                PGDIBSOBJECT pgO;
+    /* Set the new font and update dirty flags */
+    pdcattr->hlfntNew = hfont;
+    pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+    pdcattr->ulDirty_ |= DIRTY_CHARSET;
 
-                pgO = GdiAllocBatchCommand(hdc, GdiBCSelObj);
-                if (pgO)
-                {
-                    pgO->hgdiobj = hGdiObj;
-                    return hOldObj;
-                }
-            }
+    /* If the DC does not have a DIB section selected, try a batch command */
+    if (!(pdcattr->ulDirty_ & DC_DIBSECTION))
+    {
+        PGDIBSOBJECT pgO;
 
-            // default for select object font
-            return NtGdiSelectFont(hdc, hGdiObj);
+        pgO = GdiAllocBatchCommand(hdc, GdiBCSelObj);
+        if (pgO)
+        {
+            pgO->hgdiobj = hfont;
+            return hfontOld;
+        }
+    }
 
-#if 0
-        case GDI_OBJECT_TYPE_METADC:
-            return MFDRV_SelectObject(hdc, hGdiObj);
-        case GDI_OBJECT_TYPE_EMF:
-            PLDC pLDC = GdiGetLDC(hdc);
-            if (!pLDC) return NULL;
-            return EMFDRV_SelectObject(hdc, hGdiObj);
-#endif
-        case GDI_OBJECT_TYPE_COLORSPACE:
-            SetColorSpace(hdc, (HCOLORSPACE) hGdiObj);
-            return NULL;
+    /* We could not use the batch command, call win32k */
+    return NtGdiSelectFont(hdc, hfont);
+}
 
-        case GDI_OBJECT_TYPE_PALETTE:
+
+/*
+ * @implemented
+ *
+ */
+HGDIOBJ
+WINAPI
+SelectObject(
+    _In_ HDC hdc,
+    _In_ HGDIOBJ hobj)
+{
+    /* Fix up 16 bit handles */
+    hobj = GdiFixUpHandle(hobj);
+    if (!GdiIsHandleValid(hobj))
+    {
+        return NULL;
+    }
+
+    /* Call the appropriate select function */
+    switch (GDI_HANDLE_GET_TYPE(hobj))
+    {
+        case GDILoObjType_LO_REGION_TYPE:
+            return (HGDIOBJ)ExtSelectClipRgn(hdc, hobj, RGN_COPY);
+
+        case GDILoObjType_LO_BITMAP_TYPE:
+        case GDILoObjType_LO_DIBSECTION_TYPE:
+            return GdiSelectBitmap(hdc, hobj);
+
+        case GDILoObjType_LO_BRUSH_TYPE:
+            return GdiSelectBrush(hdc, hobj);
+
+        case GDILoObjType_LO_PEN_TYPE:
+        case GDILoObjType_LO_EXTPEN_TYPE:
+            return GdiSelectPen(hdc, hobj);
+
+        case GDILoObjType_LO_FONT_TYPE:
+            return GdiSelectFont(hdc, hobj);
+
+        case GDILoObjType_LO_ICMLCS_TYPE:
+            return SetColorSpace(hdc, hobj);
+
+        case GDILoObjType_LO_PALETTE_TYPE:
             SetLastError(ERROR_INVALID_FUNCTION);
+
         default:
             return NULL;
     }
