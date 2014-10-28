@@ -1115,7 +1115,7 @@ CDefaultContextMenu::DoCreateLink(
         return hr;
     }
 
-    psfTarget->QueryInterface(IID_PPV_ARG(IDropTarget, &pDT));
+    hr = psfTarget->QueryInterface(IID_PPV_ARG(IDropTarget, &pDT));
     if (FAILED(hr))
     {
         ERR("no IDropTarget Interface\n");
