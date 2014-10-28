@@ -36,8 +36,67 @@ static
 ULONGLONG
 NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
 {
-    UNIMPLEMENTED;
-    return 0;
+    NTSTATUS Status;
+    PFILE_RECORD_HEADER BitmapRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONGLONG BitmapDataSize;
+    PCHAR BitmapData;
+    ULONGLONG FreeClusters = 0;
+    ULONG Read = 0;
+    RTL_BITMAP Bitmap;
+
+    DPRINT1("NtfsGetFreeClusters(%p)\n", DeviceExt);
+
+    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                         DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                         TAG_NTFS);
+    if (BitmapRecord == NULL)
+    {
+        return 0;
+    }
+
+    Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return 0;
+    }
+
+    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return 0;
+    }
+
+    BitmapDataSize = AttributeDataLength(&DataContext->Record);
+    ASSERT((BitmapDataSize * 8) >= (DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster));
+    BitmapData = ExAllocatePoolWithTag(NonPagedPool, BitmapDataSize, TAG_NTFS);
+    if (BitmapData == NULL)
+    {
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return 0;
+    }
+
+    /* FIXME: Totally underoptimized! */
+    for (; Read < BitmapDataSize; Read += DeviceExt->NtfsInfo.BytesPerSector)
+    {
+        ReadAttribute(DeviceExt, DataContext, Read, (PCHAR)((ULONG_PTR)BitmapData + Read), DeviceExt->NtfsInfo.BytesPerSector);
+    }
+    ReleaseAttributeContext(DataContext);
+
+    DPRINT1("Total clusters: %I64x\n", DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster);
+    DPRINT1("Total clusters in bitmap: %I64x\n", BitmapDataSize * 8);
+    DPRINT1("Diff in size: %I64d B\n", ((BitmapDataSize * 8) - (DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster)) * DeviceExt->NtfsInfo.SectorsPerCluster * DeviceExt->NtfsInfo.BytesPerSector);
+
+    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster);
+    FreeClusters = RtlNumberOfClearBits(&Bitmap);
+
+    ExFreePoolWithTag(BitmapData, TAG_NTFS);
+    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+
+    return FreeClusters;
 }
 
 static
