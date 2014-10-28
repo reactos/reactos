@@ -2635,7 +2635,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopSs)
     }
 
     /* Call the internal API */
-    Fast486LoadSegment(State, FAST486_REG_SS, LOWORD(NewSelector));
+    if (Fast486LoadSegment(State, FAST486_REG_SS, LOWORD(NewSelector)))
+    {
+        /* Inhibit all interrupts until the next instruction */
+        State->DoNotInterrupt = TRUE;
+    }
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
@@ -3953,7 +3957,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
             return;
         }
 
-        Fast486LoadSegment(State, ModRegRm.Register, LOWORD(Selector));
+        if (!Fast486LoadSegment(State, ModRegRm.Register, LOWORD(Selector)))
+        {
+            /* Exception occurred */
+            return;
+        }
     }
     else
     {
@@ -3965,7 +3973,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
             return;
         }
 
-        Fast486LoadSegment(State, ModRegRm.Register, Selector);
+        if (Fast486LoadSegment(State, ModRegRm.Register, Selector))
+        {
+            /* Exception occurred */
+            return;
+        }
+    }
+
+    if ((INT)ModRegRm.Register == FAST486_REG_SS)
+    {
+        /* Inhibit all interrupts until the next instruction */
+        State->DoNotInterrupt = TRUE;
     }
 }
 
@@ -4261,10 +4279,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
              * changes the CS:IP, the interrupt handler won't execute and the
              * stack pointer will never be restored.
              */
-            if (State->IntStatus == FAST486_INT_EXECUTE)
-            {
-                State->IntStatus = FAST486_INT_DELAYED;
-            }
+            State->DoNotInterrupt = TRUE;
 
             return;
         }

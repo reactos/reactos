@@ -250,12 +250,6 @@ VOID EmulatorTerminate(VOID)
     VdmRunning = FALSE;
 }
 
-VOID EmulatorInterrupt(BYTE Number)
-{
-    /* Call the Fast486 API */
-    Fast486Interrupt(&EmulatorContext, Number);
-}
-
 VOID EmulatorInterruptSignal(VOID)
 {
     /* Call the Fast486 API */
