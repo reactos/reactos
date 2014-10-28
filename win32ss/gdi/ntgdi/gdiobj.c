@@ -1272,6 +1272,15 @@ NtGdiCreateClientObj(
     POBJ pObject;
     HANDLE handle;
 
+    /* Check if ulType is valid */
+    if ((ulType != GDILoObjType_LO_METAFILE16_TYPE) &&
+        (ulType != GDILoObjType_LO_METAFILE_TYPE) &&
+        (ulType != GDILoObjType_LO_METADC16_TYPE))
+    {
+        DPRINT1("NtGdiCreateClientObj: Invalid object type 0x%lx.\n", ulType);
+        return NULL;
+    }
+
     /* Allocate a new object */
     pObject = GDIOBJ_AllocateObject(GDIObjType_CLIENTOBJ_TYPE,
                                     sizeof(CLIENTOBJ),
@@ -1281,9 +1290,6 @@ NtGdiCreateClientObj(
         DPRINT1("NtGdiCreateClientObj: Could not allocate a clientobj.\n");
         return NULL;
     }
-
-    /* Mask out everything that would change the type in a wrong manner */
-    ulType &= (GDI_HANDLE_TYPE_MASK & ~GDI_HANDLE_BASETYPE_MASK);
 
     /* Set the real object type */
     pObject->hHmgr = UlongToHandle(ulType | GDILoObjType_LO_CLIENTOBJ_TYPE);

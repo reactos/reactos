@@ -85,7 +85,12 @@ NextInst:
          * Check if there is an interrupt to execute, or a hardware interrupt signal
          * while interrupts are enabled.
          */
-        if (State->Flags.Tf && !State->Halted)
+        if (State->DoNotInterrupt)
+        {
+            /* Clear the interrupt delay flag */
+            State->DoNotInterrupt = FALSE;
+        }
+        else if (State->Flags.Tf && !State->Halted)
         {
             /* Perform the interrupt */
             Fast486PerformInterrupt(State, 0x01);
@@ -99,29 +104,16 @@ NextInst:
              */
             State->Flags.Tf = FALSE;
         }
-        else if (State->IntStatus == FAST486_INT_EXECUTE)
+        else if (State->Flags.If && State->IntSignaled)
         {
             /* No longer halted */
             State->Halted = FALSE;
 
-            /* Perform the interrupt */
-            Fast486PerformInterrupt(State, State->PendingIntNum);
+            /* Acknowledge the interrupt and perform it */
+            Fast486PerformInterrupt(State, State->IntAckCallback(State));
 
             /* Clear the interrupt status */
-            State->IntStatus = FAST486_INT_NONE;
-        }
-        else if (State->Flags.If && (State->IntStatus == FAST486_INT_SIGNAL))
-        {
-            /* Acknowledge the interrupt to get the number */
-            State->PendingIntNum = State->IntAckCallback(State);
-
-            /* Set the interrupt status to execute on the next instruction */
-            State->IntStatus = FAST486_INT_EXECUTE;
-        }
-        else if (State->IntStatus == FAST486_INT_DELAYED)
-        {
-            /* Restore the old state */
-            State->IntStatus = FAST486_INT_EXECUTE;
+            State->IntSignaled = FALSE;
         }
     }
     while ((Command == FAST486_CONTINUE) ||
@@ -286,19 +278,9 @@ Fast486Reset(PFAST486_STATE State)
 
 VOID
 NTAPI
-Fast486Interrupt(PFAST486_STATE State, UCHAR Number)
-{
-    /* Set the interrupt status and the number */
-    State->IntStatus = FAST486_INT_EXECUTE;
-    State->PendingIntNum = Number;
-}
-
-VOID
-NTAPI
 Fast486InterruptSignal(PFAST486_STATE State)
 {
-    /* Set the interrupt status */
-    State->IntStatus = FAST486_INT_SIGNAL;
+    State->IntSignaled = TRUE;
 }
 
 VOID

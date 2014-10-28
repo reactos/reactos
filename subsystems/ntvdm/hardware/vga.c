@@ -1200,16 +1200,16 @@ static VOID VgaUpdateFramebuffer(VOID)
                     {
                         /* One byte per pixel */
                         PixelData = VgaMemory[(j % VGA_NUM_BANKS) * VGA_BANK_SIZE
-                                              + (Address + (j / VGA_NUM_BANKS))
-                                                * AddressSize];
+                                              + LOWORD((Address + (j / VGA_NUM_BANKS))
+                                              * AddressSize)];
                     }
                     else
                     {
                         /* 4-bits per pixel */
 
                         PixelData = VgaMemory[(j % VGA_NUM_BANKS) * VGA_BANK_SIZE
-                                              + (Address + (j / (VGA_NUM_BANKS * 2)))
-                                                * AddressSize];
+                                              + LOWORD((Address + (j / (VGA_NUM_BANKS * 2)))
+                                              * AddressSize)];
 
                         /* Check if we should use the highest 4 bits or lowest 4 */
                         if (((j / VGA_NUM_BANKS) % 2) == 0)
@@ -1240,8 +1240,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                          */
                         DWORD BankNumber = (j / 4) % 2;
                         DWORD Offset = Address + (j / 8);
-                        BYTE LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + Offset * AddressSize];
-                        BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + Offset * AddressSize];
+                        BYTE LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
+                        BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
 
                         /* Extract the two bits from each plane */
                         LowPlaneData = (LowPlaneData >> (6 - ((j % 4) * 2))) & 3;
@@ -1264,8 +1264,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                         {
                             /* The data is on plane k, 4 pixels per byte */
                             BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + (Address + (j / VGA_NUM_BANKS))
-                                                         * AddressSize];
+                                                       + LOWORD((Address + (j / VGA_NUM_BANKS))
+                                                       * AddressSize)];
 
                             /* The mask of the first bit in the pair */
                             BYTE BitMask = 1 << (((3 - (j % VGA_NUM_BANKS)) * 2) + 1);
@@ -1284,8 +1284,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                         for (k = 0; k < VGA_NUM_BANKS; k++)
                         {
                             BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + (Address + (j / (VGA_NUM_BANKS * 2)))
-                                                         * AddressSize];
+                                                       + LOWORD((Address + (j / (VGA_NUM_BANKS * 2)))
+                                                       * AddressSize)];
 
                             /* If the bit on that plane is set, set it */
                             if (PlaneData & (1 << (7 - (j % 8)))) PixelData |= 1 << k;
@@ -1866,15 +1866,15 @@ VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
     {
         VideoAddress = VgaTranslateReadAddress(Address + i);
 
-        /* Load the latch registers */
-        VgaLatchRegisters[0] = VgaMemory[LOWORD(VideoAddress)];
-        VgaLatchRegisters[1] = VgaMemory[VGA_BANK_SIZE + LOWORD(VideoAddress)];
-        VgaLatchRegisters[2] = VgaMemory[(2 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
-        VgaLatchRegisters[3] = VgaMemory[(3 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
-
         /* Copy the value to the buffer */
         Buffer[i] = VgaMemory[VideoAddress];
     }
+
+    /* Load the latch registers */
+    VgaLatchRegisters[0] = VgaMemory[LOWORD(VideoAddress)];
+    VgaLatchRegisters[1] = VgaMemory[VGA_BANK_SIZE + LOWORD(VideoAddress)];
+    VgaLatchRegisters[2] = VgaMemory[(2 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
+    VgaLatchRegisters[3] = VgaMemory[(3 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
 }
 
 VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)

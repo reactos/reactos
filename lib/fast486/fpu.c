@@ -32,6 +32,8 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#ifndef FAST486_NO_FPU
+
 static ULONGLONG
 UnsignedMult128(ULONGLONG Multiplicand,
                 ULONGLONG Multiplier,
@@ -302,6 +304,8 @@ Fast486FpuDivide(PFAST486_STATE State,
     UNREFERENCED_PARAMETER(TempResult);
     UNIMPLEMENTED;
 }
+
+#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

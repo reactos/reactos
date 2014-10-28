@@ -25,6 +25,10 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 
 /* GLOBALS *******************************************************************/
 
+/* These can be changed via csrss startup, these are defaults */
+DWORD gdwDesktopSectionSize = 512;
+DWORD gdwNOIOSectionSize    = 128; // A guess, for one or more of the first three system desktops.
+
 /* Currently active desktop */
 PDESKTOP gpdeskInputDesktop = NULL;
 HDC ScreenDeviceContext = NULL;
@@ -1194,7 +1198,7 @@ static NTSTATUS
 UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta)
 {
     PVOID DesktopHeapSystemBase = NULL;
-    ULONG_PTR HeapSize = 400 * 1024;
+    ULONG_PTR HeapSize = gdwDesktopSectionSize * 1024;
     SIZE_T DesktopInfoSize;
     ULONG i;
 

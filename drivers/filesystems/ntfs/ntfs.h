@@ -448,7 +448,7 @@ VOID
 NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 
 PFILENAME_ATTRIBUTE
-GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord);
+GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType);
 
 /* blockdev.c */
 
@@ -600,6 +600,9 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
 
 /* mft.c */
+VOID
+ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context);
+
 ULONG
 ReadAttribute(PDEVICE_EXTENSION Vcb,
               PNTFS_ATTR_CONTEXT Context,

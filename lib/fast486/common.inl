@@ -163,9 +163,9 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
-             Page += PAGE_SIZE)
+             Page += FAST486_PAGE_SIZE)
         {
-            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
+            ULONG PageOffset = 0, PageLength = FAST486_PAGE_SIZE;
 
             /* Get the table entry */
             TableEntry.Value = Fast486GetPageTableEntry(State, Page, FALSE);
@@ -230,9 +230,9 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
 
         for (Page = PAGE_ALIGN(LinearAddress);
              Page <= PAGE_ALIGN(LinearAddress + Size - 1);
-             Page += PAGE_SIZE)
+             Page += FAST486_PAGE_SIZE)
         {
-            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
+            ULONG PageOffset = 0, PageLength = FAST486_PAGE_SIZE;
 
             /* Get the table entry */
             TableEntry.Value = Fast486GetPageTableEntry(State, Page, TRUE);
@@ -522,6 +522,11 @@ Fast486LoadSegment(PFAST486_STATE State,
         {
             /* Loading the code segment */
 
+#ifndef FAST486_NO_PREFETCH
+            /* Invalidate the prefetch */
+            State->PrefetchValid = FALSE;
+#endif
+
             if (GET_SEGMENT_INDEX(Selector) == 0)
             {
                 Fast486Exception(State, FAST486_EXCEPTION_GP);
@@ -641,21 +646,39 @@ Fast486FetchByte(PFAST486_STATE State,
                  PUCHAR Data)
 {
     PFAST486_SEG_REG CachedDescriptor;
+    ULONG Offset;
+#ifndef FAST486_NO_PREFETCH
+    ULONG LinearAddress;
+#endif
 
     /* Get the cached descriptor of CS */
     CachedDescriptor = &State->SegmentRegs[FAST486_REG_CS];
 
-    /* Read from memory */
-    if (!Fast486ReadMemory(State,
-                           FAST486_REG_CS,
-                           (CachedDescriptor->Size) ? State->InstPtr.Long
-                                                    : State->InstPtr.LowWord,
-                           TRUE,
-                           Data,
-                           sizeof(UCHAR)))
+    Offset = (CachedDescriptor->Size) ? State->InstPtr.Long
+                                      : State->InstPtr.LowWord;
+#ifndef FAST486_NO_PREFETCH
+    LinearAddress = CachedDescriptor->Base + Offset;
+
+    if (State->PrefetchValid
+        && (LinearAddress >= State->PrefetchAddress)
+        && ((LinearAddress + sizeof(UCHAR)) <= (State->PrefetchAddress + FAST486_CACHE_SIZE)))
     {
-        /* Exception occurred during instruction fetch */
-        return FALSE;
+        *Data = *(PUCHAR)&State->PrefetchCache[LinearAddress - State->PrefetchAddress];
+    }
+    else
+#endif
+    {
+        /* Read from memory */
+        if (!Fast486ReadMemory(State,
+                               FAST486_REG_CS,
+                               Offset,
+                               TRUE,
+                               Data,
+                               sizeof(UCHAR)))
+        {
+            /* Exception occurred during instruction fetch */
+            return FALSE;
+        }
     }
 
     /* Advance the instruction pointer */
@@ -672,22 +695,41 @@ Fast486FetchWord(PFAST486_STATE State,
                  PUSHORT Data)
 {
     PFAST486_SEG_REG CachedDescriptor;
+    ULONG Offset;
+#ifndef FAST486_NO_PREFETCH
+    ULONG LinearAddress;
+#endif
 
     /* Get the cached descriptor of CS */
     CachedDescriptor = &State->SegmentRegs[FAST486_REG_CS];
 
-    /* Read from memory */
-    // FIXME: Fix byte order on big-endian machines
-    if (!Fast486ReadMemory(State,
-                           FAST486_REG_CS,
-                           (CachedDescriptor->Size) ? State->InstPtr.Long
-                                                    : State->InstPtr.LowWord,
-                           TRUE,
-                           Data,
-                           sizeof(USHORT)))
+    Offset = (CachedDescriptor->Size) ? State->InstPtr.Long
+                                      : State->InstPtr.LowWord;
+
+#ifndef FAST486_NO_PREFETCH
+    LinearAddress = CachedDescriptor->Base + Offset;
+
+    if (State->PrefetchValid
+        && (LinearAddress >= State->PrefetchAddress)
+        && ((LinearAddress + sizeof(USHORT)) <= (State->PrefetchAddress + FAST486_CACHE_SIZE)))
     {
-        /* Exception occurred during instruction fetch */
-        return FALSE;
+        *Data = *(PUSHORT)&State->PrefetchCache[LinearAddress - State->PrefetchAddress];
+    }
+    else
+#endif
+    {
+        /* Read from memory */
+        // FIXME: Fix byte order on big-endian machines
+        if (!Fast486ReadMemory(State,
+                               FAST486_REG_CS,
+                               Offset,
+                               TRUE,
+                               Data,
+                               sizeof(USHORT)))
+        {
+            /* Exception occurred during instruction fetch */
+            return FALSE;
+        }
     }
 
     /* Advance the instruction pointer */
@@ -704,22 +746,41 @@ Fast486FetchDword(PFAST486_STATE State,
                   PULONG Data)
 {
     PFAST486_SEG_REG CachedDescriptor;
+    ULONG Offset;
+#ifndef FAST486_NO_PREFETCH
+    ULONG LinearAddress;
+#endif
 
     /* Get the cached descriptor of CS */
     CachedDescriptor = &State->SegmentRegs[FAST486_REG_CS];
 
-    /* Read from memory */
-    // FIXME: Fix byte order on big-endian machines
-    if (!Fast486ReadMemory(State,
-                           FAST486_REG_CS,
-                           (CachedDescriptor->Size) ? State->InstPtr.Long
-                                                    : State->InstPtr.LowWord,
-                           TRUE,
-                           Data,
-                           sizeof(ULONG)))
+    Offset = (CachedDescriptor->Size) ? State->InstPtr.Long
+                                      : State->InstPtr.LowWord;
+
+#ifndef FAST486_NO_PREFETCH
+    LinearAddress = CachedDescriptor->Base + Offset;
+
+    if (State->PrefetchValid
+        && (LinearAddress >= State->PrefetchAddress)
+        && ((LinearAddress + sizeof(ULONG)) <= (State->PrefetchAddress + FAST486_CACHE_SIZE)))
     {
-        /* Exception occurred during instruction fetch */
-        return FALSE;
+        *Data = *(PULONG)&State->PrefetchCache[LinearAddress - State->PrefetchAddress];
+    }
+    else
+#endif
+    {
+        /* Read from memory */
+        // FIXME: Fix byte order on big-endian machines
+        if (!Fast486ReadMemory(State,
+                               FAST486_REG_CS,
+                               Offset,
+                               TRUE,
+                               Data,
+                               sizeof(ULONG)))
+        {
+            /* Exception occurred during instruction fetch */
+            return FALSE;
+        }
     }
 
     /* Advance the instruction pointer */

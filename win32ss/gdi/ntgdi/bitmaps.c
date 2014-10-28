@@ -239,6 +239,12 @@ IntCreateCompatibleBitmap(
                               Planes ? Planes : 1,
                               Bpp ? Bpp : Dc->ppdev->gdiinfo.cBitsPixel,
                               NULL);
+        if (Bmp == NULL)
+        {
+            DPRINT1("Failed to allocate a bitmap!\n");
+            return NULL;
+        }
+
         psurf = SURFACE_ShareLockSurface(Bmp);
         ASSERT(psurf);
 

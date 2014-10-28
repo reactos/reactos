@@ -18,8 +18,6 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#define OLD_ACCESS_CHECK
-
 BOOLEAN NTAPI
 SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
@@ -47,6 +45,8 @@ SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     PSID Sid;
     NTSTATUS Status;
     PAGED_CODE();
+
+    DPRINT("SepAccessCheckEx()\n");
 
     /* Check for no access desired */
     if (!DesiredAccess)
@@ -210,11 +210,6 @@ SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             {
                 if (SepSidInToken(Token, Sid))
                 {
-#ifdef OLD_ACCESS_CHECK
-                    PreviouslyGrantedAccess = 0;
-                    Status = STATUS_ACCESS_DENIED;
-                    goto ReturnCommonStatus;
-#else
                     /* Map access rights from the ACE */
                     TempAccess = CurrentAce->AccessMask;
                     RtlMapGenericMask(&TempAccess, GenericMapping);
@@ -222,25 +217,21 @@ SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                     /* Leave if a remaining right must be denied */
                     if (RemainingAccess & TempAccess)
                         break;
-#endif
                 }
             }
             else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
             {
                 if (SepSidInToken(Token, Sid))
                 {
-#ifdef OLD_ACCESS_CHECK
-                    TempAccess = CurrentAce->AccessMask;
-                    RtlMapGenericMask(&TempAccess, GenericMapping);
-                    PreviouslyGrantedAccess |= TempAccess;
-#else
                     /* Map access rights from the ACE */
                     TempAccess = CurrentAce->AccessMask;
+                    DPRINT("TempAccess 0x%08lx\n", TempAccess);
                     RtlMapGenericMask(&TempAccess, GenericMapping);
 
                     /* Remove granted rights */
+                    DPRINT("RemainingAccess 0x%08lx  TempAccess 0x%08lx\n", RemainingAccess, TempAccess);
                     RemainingAccess &= ~TempAccess;
-#endif
+                    DPRINT("RemainingAccess 0x%08lx\n", RemainingAccess);
                 }
             }
             else
@@ -253,58 +244,35 @@ SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
 
-#ifdef OLD_ACCESS_CHECK
-    DPRINT("PreviouslyGrantedAccess %08lx\n DesiredAccess %08lx\n",
-           PreviouslyGrantedAccess, DesiredAccess);
-
-    PreviouslyGrantedAccess &= DesiredAccess;
-
-    if ((PreviouslyGrantedAccess & ~VALID_INHERIT_FLAGS) ==
-        (DesiredAccess & ~VALID_INHERIT_FLAGS))
-    {
-        Status = STATUS_SUCCESS;
-        goto ReturnCommonStatus;
-    }
-    else
-    {
-        DPRINT1("HACK: Should deny access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p).\n",
-                PreviouslyGrantedAccess, DesiredAccess, GenericMapping);
-        //*AccessStatus = STATUS_ACCESS_DENIED;
-        //return FALSE;
-        PreviouslyGrantedAccess = DesiredAccess;
-        Status = STATUS_SUCCESS;
-        goto ReturnCommonStatus;
-    }
-#else
     DPRINT("DesiredAccess %08lx\nPreviouslyGrantedAccess %08lx\nRemainingAccess %08lx\n",
            DesiredAccess, PreviouslyGrantedAccess, RemainingAccess);
 
     /* Fail if some rights have not been granted */
     if (RemainingAccess != 0)
     {
-        *GrantedAccess = 0;
+        DPRINT1("HACK: RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", RemainingAccess, DesiredAccess);
+#if 0
+        /* HACK HACK HACK */
         Status = STATUS_ACCESS_DENIED;
         goto ReturnCommonStatus;
+#endif
     }
 
     /* Set granted access rights */
     PreviouslyGrantedAccess |= DesiredAccess;
 
-    DPRINT("GrantedAccess %08lx\n", *GrantedAccess);
-
     /* Fail if no rights have been granted */
     if (PreviouslyGrantedAccess == 0)
     {
+        DPRINT1("PreviouslyGrantedAccess == 0  DesiredAccess = %08lx\n", DesiredAccess);
         Status = STATUS_ACCESS_DENIED;
         goto ReturnCommonStatus;
     }
 
     Status = STATUS_SUCCESS;
     goto ReturnCommonStatus;
-#endif
 
 ReturnCommonStatus:
-
     ResultListLength = UseResultList ? ObjectTypeListLength : 1;
     for (i = 0; i < ResultListLength; i++)
     {

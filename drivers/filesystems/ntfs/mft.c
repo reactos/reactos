@@ -85,7 +85,7 @@ FindAttributeHelper(PDEVICE_EXTENSION Vcb,
                     PCWSTR Name,
                     ULONG NameLength)
 {
-    DPRINT1("FindAttributeHelper(%p, %p, %p, 0x%x, %S, %u)\n", Vcb, AttrRecord, AttrRecordEnd, Type, Name, NameLength);
+    DPRINT("FindAttributeHelper(%p, %p, %p, 0x%x, %S, %u)\n", Vcb, AttrRecord, AttrRecordEnd, Type, Name, NameLength);
 
     while (AttrRecord < AttrRecordEnd)
     {
@@ -146,7 +146,7 @@ FindAttributeHelper(PDEVICE_EXTENSION Vcb,
                 PWCHAR AttrName;
 
                 AttrName = (PWCHAR)((PCHAR)AttrRecord + AttrRecord->NameOffset);
-                DPRINT("%s, %s\n", AttrName, Name);
+                DPRINT("%.*S, %.*S\n", AttrRecord->NameLength, AttrName, NameLength, Name);
                 if (RtlCompareMemory(AttrName, Name, NameLength << 1) == (NameLength << 1))
                 {
                     /* Found it, fill up the context and return. */
@@ -180,7 +180,7 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
     PNTFS_ATTR_RECORD AttrRecord;
     PNTFS_ATTR_RECORD AttrRecordEnd;
 
-    DPRINT1("FindAttribute(%p, %p, %u, %S, %u, %p)\n", Vcb, MftRecord, Type, Name, NameLength, AttrCtx);
+    DPRINT("FindAttribute(%p, %p, 0x%x, %S, %u, %p)\n", Vcb, MftRecord, Type, Name, NameLength, AttrCtx);
 
     AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + MftRecord->AttributeOffset);
     AttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + Vcb->NtfsInfo.BytesPerFileRecord);
@@ -397,12 +397,12 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
 {
     ULONGLONG BytesRead;
 
-    DPRINT1("ReadFileRecord(%p, %I64x, %p)\n", Vcb, index, file);
+    DPRINT("ReadFileRecord(%p, %I64x, %p)\n", Vcb, index, file);
 
     BytesRead = ReadAttribute(Vcb, Vcb->MFTContext, index * Vcb->NtfsInfo.BytesPerFileRecord, (PCHAR)file, Vcb->NtfsInfo.BytesPerFileRecord);
     if (BytesRead != Vcb->NtfsInfo.BytesPerFileRecord)
     {
-        DPRINT1("ReadFileRecord failed: %u read, %u expected\n", BytesRead, Vcb->NtfsInfo.BytesPerFileRecord);
+        DPRINT1("ReadFileRecord failed: %I64u read, %u expected\n", BytesRead, Vcb->NtfsInfo.BytesPerFileRecord);
         return STATUS_PARTIAL_COPY;
     }
 
@@ -469,7 +469,7 @@ CompareFileName(PUNICODE_STRING FileName,
 
     EntryName.Buffer = IndexEntry->FileName.Name;
     EntryName.Length = 
-    EntryName.MaximumLength = IndexEntry->FileName.NameLength;
+    EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
 
     if (DirSearch)
     {
@@ -477,7 +477,7 @@ CompareFileName(PUNICODE_STRING FileName,
     }
     else
     {
-        return (RtlCompareUnicodeString(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)) == TRUE);
+        return (RtlCompareUnicodeString(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)) == 0);
     }
 }
 
@@ -507,7 +507,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     ULONG CurrentEntry = 0;
 
-    DPRINT1("NtfsFindMftRecord(%p, %I64d, %wZ, %p, %u, %p)\n", Vcb, MFTIndex, FileName, FirstEntry, DirSearch, OutMFTIndex);
+    DPRINT("NtfsFindMftRecord(%p, %I64d, %wZ, %p, %u, %p)\n", Vcb, MFTIndex, FileName, FirstEntry, DirSearch, OutMFTIndex);
 
     MftRecord = ExAllocatePoolWithTag(NonPagedPool,
                                       Vcb->NtfsInfo.BytesPerFileRecord,
@@ -631,9 +631,9 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 IndexBuffer = (PINDEX_BUFFER)IndexRecord;
                 ASSERT(IndexBuffer->Ntfs.Type == 'XDNI');
                 ASSERT(IndexBuffer->Header.AllocatedSize + 0x18 == IndexBlockSize);
-                IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)(&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
-                IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
-                //ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize)); FIXME: Why doesn't it work?
+                IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
+                IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
+                ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
 
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
@@ -653,6 +653,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                     }
 
                     ++CurrentEntry;
+                    ASSERT(IndexEntry->Length >= sizeof(INDEX_ENTRY_ATTRIBUTE));
                     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
                 }
 
@@ -686,13 +687,13 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     ULONG FirstEntry = 0;
 
-    DPRINT1("NtfsLookupFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, PathName, FileRecord, DataContext, CurrentMFTIndex);
+    DPRINT("NtfsLookupFileAt(%p, %wZ, %p, %p, %I64x)\n", Vcb, PathName, FileRecord, DataContext, CurrentMFTIndex);
 
     FsRtlDissectName(*PathName, &Current, &Remaining);
 
     while (Current.Length != 0)
     {
-        DPRINT1("Current: %wZ\n", &Current);
+        DPRINT("Current: %wZ\n", &Current);
 
         Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex);
         if (!NT_SUCCESS(Status))
@@ -701,7 +702,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
         }
 
         if (Remaining.Length == 0)
-            return STATUS_OBJECT_PATH_NOT_FOUND;
+            break;
 
         FsRtlDissectName(Current, &Current, &Remaining);
     }
@@ -762,11 +763,12 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
 {
     NTSTATUS Status;
 
-    DPRINT1("NtfsFindFileAt(%p, %wZ, %p, %p, %p, %p, %I64x)\n", Vcb, SearchPattern, FirstEntry, FileRecord, DataContext, MFTIndex, CurrentMFTIndex);
+    DPRINT("NtfsFindFileAt(%p, %wZ, %p, %p, %p, %p, %I64x)\n", Vcb, SearchPattern, FirstEntry, FileRecord, DataContext, MFTIndex, CurrentMFTIndex);
 
     Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT("NtfsFindFileAt: NtfsFindMftRecord() failed with status 0x%08lx\n", Status);
         return Status;
     }
 

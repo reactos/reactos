@@ -93,6 +93,18 @@
 
 #define FAST486_FPU_DEFAULT_CONTROL 0x037F
 
+#define FAST486_PAGE_SIZE 4096
+#define FAST486_CACHE_SIZE 32
+
+/*
+ * These are condiciones sine quibus non that should be respected, because
+ * otherwise when fetching DWORDs you would read extra garbage bytes
+ * (by reading outside of the prefetch buffer). The prefetch cache must
+ * also not cross a page boundary.
+ */
+C_ASSERT((FAST486_CACHE_SIZE >= sizeof(DWORD))
+         && (FAST486_CACHE_SIZE <= FAST486_PAGE_SIZE));
+
 struct _FAST486_STATE;
 typedef struct _FAST486_STATE FAST486_STATE, *PFAST486_STATE;
 
@@ -156,14 +168,6 @@ typedef enum _FAST486_EXCEPTIONS
     FAST486_EXCEPTION_AC = 0x11,
     FAST486_EXCEPTION_MC = 0x12
 } FAST486_EXCEPTIONS, *PFAST486_EXCEPTIONS;
-
-typedef enum _FAST486_INT_STATUS
-{
-    FAST486_INT_NONE = 0,
-    FAST486_INT_EXECUTE = 1,
-    FAST486_INT_SIGNAL = 2,
-    FAST486_INT_DELAYED = 3
-} FAST486_INT_STATUS, *PFAST486_INT_STATUS;
 
 typedef
 VOID
@@ -483,9 +487,14 @@ struct _FAST486_STATE
     ULONG PrefixFlags;
     FAST486_SEG_REGS SegmentOverride;
     BOOLEAN Halted;
-    FAST486_INT_STATUS IntStatus;
-    UCHAR PendingIntNum;
+    BOOLEAN IntSignaled;
+    BOOLEAN DoNotInterrupt;
     PULONG Tlb;
+#ifndef FAST486_NO_PREFETCH
+    BOOLEAN PrefetchValid;
+    ULONG PrefetchAddress;
+    UCHAR PrefetchCache[FAST486_CACHE_SIZE];
+#endif
 #ifndef FAST486_NO_FPU
     FAST486_FPU_DATA_REG FpuRegisters[FAST486_NUM_FPU_REGS];
     FAST486_FPU_STATUS_REG FpuStatus;
@@ -530,10 +539,6 @@ Fast486StepOut(PFAST486_STATE State);
 VOID
 NTAPI
 Fast486DumpState(PFAST486_STATE State);
-
-VOID
-NTAPI
-Fast486Interrupt(PFAST486_STATE State, UCHAR Number);
 
 VOID
 NTAPI

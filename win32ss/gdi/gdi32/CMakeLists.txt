@@ -24,6 +24,7 @@ list(APPEND SOURCE
     objects/arc.c
     objects/bitmap.c
     objects/brush.c
+    objects/clientobj.c
     objects/coord.c
     objects/dc.c
     objects/eng.c
