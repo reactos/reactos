@@ -632,6 +632,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
         case SMC_GETSFOBJECT:
             break;
         case SMC_SFEXEC:
+            SHInvokeDefaultCommand(psmd->hwnd, psmd->psf, psmd->pidlItem);
             break;
         case SMC_SFSELECTITEM:
             break;
