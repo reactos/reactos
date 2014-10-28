@@ -909,6 +909,7 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
 
 HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
 {
+    CComPtr<CMenuBand> safeThis = this;
     HRESULT hr;
 
     if (m_dwFlags & SMINIT_VERTICAL)
@@ -951,6 +952,7 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
         {
             m_subMenuParent->OnSelect(changeType);
         }
+        TRACE("Menu closed, executing item...\n");
         m_hotBar->ExecuteItem(m_hotItem);
         break;
 

@@ -131,11 +131,15 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nC
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
+    HRESULT hr;
+
     if (IsEqualGUID(guidService, SID_SMenuPopup) ||
         IsEqualGUID(guidService, SID_SMenuBandParent) ||
         IsEqualGUID(guidService, SID_STopLevelBrowser))
     {
-        return this->QueryInterface(riid, ppvObject);
+        hr = this->QueryInterface(riid, ppvObject);
+        if (SUCCEEDED(hr))
+            return hr;
     }
 
     if (IsEqualGUID(guidService, SID_SMenuBandBottom) ||
@@ -145,7 +149,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(REFGUID guidService, REFIID
         if (m_Client == NULL)
             return E_NOINTERFACE;
 
-        return IUnknown_QueryService(m_Client, guidService, riid, ppvObject);
+        hr = IUnknown_QueryService(m_Client, guidService, riid, ppvObject);
+        if (SUCCEEDED(hr))
+            return hr;
     }
 
 
@@ -484,6 +490,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
      *
      */
 
+    CComPtr<IMenuPopup> oldParent = m_SubMenuParent;
+
     switch (dwSelectType)
     {
     case MPOS_EXECUTE:
@@ -498,8 +506,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
     case MPOS_SELECTLEFT:
     case MPOS_SELECTRIGHT:
     case MPOS_CHILDTRACKING:
-        if (m_SubMenuParent)
-            return m_SubMenuParent->OnSelect(dwSelectType);
+        if (oldParent)
+            return oldParent->OnSelect(dwSelectType);
         break;
     }
 

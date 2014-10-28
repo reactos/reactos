@@ -626,6 +626,9 @@ class CComDebugObject : public Base
 public:
     CComDebugObject(void * = NULL)
     {
+#if DEBUG_CCOMOBJECT_CREATION
+        DbgPrint("%S, this=%08p\n", __FUNCTION__, static_cast<Base*>(this));
+#endif
         _pAtlModule->Lock();
     }
 
@@ -638,25 +641,28 @@ public:
     STDMETHOD_(ULONG, AddRef)()
     {
         int rc = this->InternalAddRef();
-        DbgPrint("RefCount is now %d(++)! %s\n", rc, __FUNCTION__);
+#if DEBUG_CCOMOBJECT_REFCOUNTING
+        DbgPrint("%s, RefCount is now %d(--)! \n", __FUNCTION__, rc);
+#endif
         return rc;
     }
 
     STDMETHOD_(ULONG, Release)()
     {
-        ULONG								newRefCount;
+        int rc = this->InternalRelease();
 
-        newRefCount = this->InternalRelease();
-        if (newRefCount == 0)
+#if DEBUG_CCOMOBJECT_REFCOUNTING
+        DbgPrint("%s, RefCount is now %d(--)! \n", __FUNCTION__, rc);
+#endif
+
+        if (rc == 0)
         {
-            DbgPrint("RefCount is now 0! Deleting! %s\n", newRefCount, __FUNCTION__);
+#if DEBUG_CCOMOBJECT_DESTRUCTION
+            DbgPrint("%s, RefCount reached 0 Deleting!\n", __FUNCTION__);
+#endif
             delete this;
         }
-        else
-        {
-            DbgPrint("RefCount is now %d(--)! %s\n", newRefCount, __FUNCTION__);
-        }
-        return newRefCount;
+        return rc;
     }
 
     STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
@@ -675,9 +681,9 @@ public:
 
         hResult = E_OUTOFMEMORY;
         newInstance = NULL;
-        ATLTRY(newInstance = new CComDebugObject<Base>())
-            if (newInstance != NULL)
-            {
+        ATLTRY(newInstance = new CComDebugObject<Base>());
+        if (newInstance != NULL)
+        {
             newInstance->SetVoid(NULL);
             newInstance->InternalFinalConstructAddRef();
             hResult = newInstance->_AtlInitialConstruct();
@@ -691,7 +697,7 @@ public:
                 delete newInstance;
                 newInstance = NULL;
             }
-            }
+        }
         *pp = newInstance;
         return hResult;
     }

@@ -832,6 +832,11 @@ HRESULT CMenuFocusManager::PopMenuBar(CMenuBand * mb)
 
     DbgPrint("PopMenuBar %p\n", mb);
 
+    if (m_current == m_entryUnderMouse)
+    {
+        m_entryUnderMouse = NULL;
+    }
+
     hr = PopFromArray(&type, &mbc, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
     {
@@ -870,6 +875,11 @@ HRESULT CMenuFocusManager::PopMenuPopup(CMenuBand * mb)
     HRESULT hr;
 
     DbgPrint("PopMenuPopup %p\n", mb);
+
+    if (m_current == m_entryUnderMouse)
+    {
+        m_entryUnderMouse = NULL;
+    }
 
     hr = PopFromArray(&type, &mbc, NULL);
     if (FAILED_UNEXPECTEDLY(hr))

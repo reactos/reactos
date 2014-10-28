@@ -37,6 +37,11 @@
 
 #define COBJMACROS
 
+//#define DEBUG_CCOMOBJECT
+//#define DEBUG_CCOMOBJECT_CREATION 1
+//#define DEBUG_CCOMOBJECT_DESTRUCTION 1
+//#define DEBUG_CCOMOBJECT_REFCOUNTING 0
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
