@@ -438,9 +438,12 @@ GetCurrentObject(
         (uObjectType == OBJ_BRUSH) ||
         (uObjectType == OBJ_COLORSPACE))
     {
-        /* Get the dc attribute */
+        /* Get the DC attribute */
         pdcattr = GdiGetDcAttr(hdc);
-        if (!pdcattr) return NULL;
+        if (pdcattr == NULL)
+        {
+            return NULL;
+        }
     }
 
     /* Check what object was requested */
@@ -519,8 +522,14 @@ GetDeviceCaps(
     }
     else
     {
-        if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+        /* Get the DC attribute */
+        pdcattr = GdiGetDcAttr(hdc);
+        if (pdcattr == NULL)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
             return 0;
+        }
+
         if (!(pdcattr->ulDirty_ & DC_PRIMARY_DISPLAY) )
             return NtGdiGetDeviceCaps(hdc, nIndex);
     }
@@ -966,8 +975,12 @@ GetDCBrushColor(
     PDC_ATTR pdcattr;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return CLR_INVALID;
+    }
 
     return pdcattr->ulBrushClr;
 }
@@ -982,8 +995,13 @@ GetDCPenColor(
 {
     PDC_ATTR pdcattr;
 
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return CLR_INVALID;
+    }
 
     return pdcattr->ulPenClr;
 }
@@ -1001,8 +1019,12 @@ SetDCBrushColor(
     COLORREF crOldColor;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return CLR_INVALID;
+    }
 
     /* Get old color and store the new */
     crOldColor = pdcattr->ulBrushClr;
@@ -1062,8 +1084,12 @@ GetBkColor(
     PDC_ATTR pdcattr;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
-        return 0;
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Don't set LastError here! */
+        return CLR_INVALID;
+    }
 
     return pdcattr->ulBackgroundClr;
 }
@@ -1081,8 +1107,12 @@ SetBkColor(
     COLORREF crOldColor;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return CLR_INVALID;
+    }
 
 #if 0
     if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
@@ -1129,8 +1159,12 @@ GetBkMode(HDC hdc)
     PDC_ATTR pdcattr;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Don't set LastError here! */
         return 0;
+    }
 
     return pdcattr->lBkMode;
 }
@@ -1149,8 +1183,13 @@ SetBkMode(
     INT iOldMode;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
+    }
+
 #if 0
     if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
     {
@@ -1193,6 +1232,7 @@ GetPolyFillMode(HDC hdc)
     pdcattr = GdiGetDcAttr(hdc);
     if (pdcattr == NULL)
     {
+        /* Don't set LastError here! */
         return 0;
     }
 
@@ -1233,9 +1273,11 @@ SetPolyFillMode(
            }
 #endif
 
-    /* Get DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
     {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
@@ -1264,9 +1306,11 @@ GetGraphicsMode(HDC hdc)
 {
     PDC_ATTR pdcattr;
 
-    /* Get DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
     {
+        /* Don't set LastError here! */
         return 0;
     }
 
@@ -1293,9 +1337,11 @@ SetGraphicsMode(
         return 0;
     }
 
-    /* Get DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
     {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
@@ -1505,8 +1551,12 @@ GetMapMode(HDC hdc)
     PDC_ATTR pdcattr;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
+    }
 
     return pdcattr->iMapMode;
 }
@@ -1563,8 +1613,12 @@ GetStretchBltMode(HDC hdc)
     PDC_ATTR pdcattr;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Don't set LastError here! */
         return 0;
+    }
 
     return pdcattr->lStretchBltMode;
 }
@@ -1600,8 +1654,13 @@ SetStretchBltMode(
         }
     }
 #endif
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
+    }
 
     iOldMode = pdcattr->lStretchBltMode;
     pdcattr->lStretchBltMode = iStretchMode;
@@ -1624,8 +1683,10 @@ GetHFONT(HDC hdc)
     PDC_ATTR pdcattr;
 
     /* Get the DC attribute */
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
     {
+        /* Don't set LastError here! */
         return NULL;
     }
 
@@ -1648,15 +1709,18 @@ SelectObject(
     HGDIOBJ hOldObj = NULL;
     UINT uType;
 
-    if(!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr))
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return NULL;
-    }
-
+    /* Fix up 16 bit handles */
     hGdiObj = GdiFixUpHandle(hGdiObj);
     if (!GdiIsHandleValid(hGdiObj))
     {
+        return NULL;
+    }
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
 
