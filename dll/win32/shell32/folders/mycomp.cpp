@@ -491,7 +491,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
             clsid = _ILGetGUIDPointer (pidl);
             if (clsid)
             {
-                if (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING)
+                if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
                 {
                     static const WCHAR clsidW[] = L"CLSID\\";
                     static const WCHAR shellfolderW[] = L"\\shellfolder";

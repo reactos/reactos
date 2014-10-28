@@ -679,7 +679,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
 
         if ((clsid = _ILGetGUIDPointer (pidl)))
         {
-            if (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING)
+            if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING)
             {
                 int bWantsForParsing;
 
