@@ -948,14 +948,18 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     switch (changeType)
     {
     case MPOS_EXECUTE:
+    {
+        CMenuToolbarBase * tb = m_hotBar;
+        int item = m_hotItem;
+        tb->PrepareExecuteItem(item);
         if (m_subMenuParent)
         {
             m_subMenuParent->OnSelect(changeType);
         }
         TRACE("Menu closed, executing item...\n");
-        m_hotBar->ExecuteItem(m_hotItem);
+        tb->ExecuteItem();
         break;
-
+    }
     case MPOS_SELECTLEFT:
         if (m_parentBand && m_parentBand->_IsPopup()==S_FALSE)
             return m_parentBand->_MenuItemHotTrack(VK_LEFT);

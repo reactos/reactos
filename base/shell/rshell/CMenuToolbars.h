@@ -51,6 +51,10 @@ protected:
     DWORD m_initFlags;
     BOOL m_isTrackingPopup;
 
+    INT m_executeIndex;
+    INT m_executeItem;
+    DWORD_PTR m_executeData;
+
 private:
     static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -77,7 +81,8 @@ public:
 
     HRESULT KeyboardItemChange(DWORD changeType);
 
-    HRESULT ExecuteItem(INT iItem);
+    HRESULT PrepareExecuteItem(INT iItem);
+    HRESULT ExecuteItem();
 
     HRESULT IsTrackedItem(INT index);
     HRESULT ChangeTrackedItem(INT index, BOOL wasTracking, BOOL mouse);

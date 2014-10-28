@@ -846,16 +846,17 @@ HRESULT CMenuToolbarBase::MenuBarMouseUp(INT iIndex)
     return ProcessClick(btn.idCommand);
 }
 
-HRESULT CMenuToolbarBase::ExecuteItem(INT iItem)
+HRESULT CMenuToolbarBase::PrepareExecuteItem(INT iItem)
 {
     this->m_menuBand->_KillPopupTimers();
 
-    INT index;
-    DWORD_PTR data;
+    m_executeItem = iItem;
+    return GetDataFromId(iItem, &m_executeIndex, &m_executeData);
+}
 
-    GetDataFromId(iItem, &index, &data);
-
-    return InternalExecuteItem(iItem, index, data);
+HRESULT CMenuToolbarBase::ExecuteItem()
+{
+    return InternalExecuteItem(m_executeItem, m_executeItem, m_executeData);
 }
 
 HRESULT CMenuToolbarBase::OnContextMenu(NMMOUSE * rclick)
