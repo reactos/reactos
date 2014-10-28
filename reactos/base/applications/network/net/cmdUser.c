@@ -86,6 +86,7 @@ PrintDateTime(DWORD dwSeconds)
     RtlSecondsSince1970ToTime(dwSeconds, &Time);
     FileTime.dwLowDateTime = Time.u.LowPart;
     FileTime.dwHighDateTime = Time.u.HighPart;
+    FileTimeToLocalFileTime(&FileTime, &FileTime);
     FileTimeToSystemTime(&FileTime, &SystemTime);
 
     GetDateFormatW(LOCALE_USER_DEFAULT,
@@ -107,11 +108,29 @@ PrintDateTime(DWORD dwSeconds)
 
 
 static
+DWORD
+GetTimeInSeconds(VOID)
+{
+    LARGE_INTEGER Time;
+    FILETIME FileTime;
+    DWORD dwSeconds;
+
+    GetSystemTimeAsFileTime(&FileTime);
+    Time.u.LowPart = FileTime.dwLowDateTime;
+    Time.u.HighPart = FileTime.dwHighDateTime;
+    RtlTimeToSecondsSince1970(&Time, &dwSeconds);
+
+    return dwSeconds;
+}
+
+
+static
 NET_API_STATUS
 DisplayUser(LPWSTR lpUserName)
 {
     PUSER_MODALS_INFO_0 pUserModals = NULL;
     PUSER_INFO_4 pUserInfo = NULL;
+    DWORD dwLastSet;
     NET_API_STATUS Status;
 
     /* Modify the user */
@@ -141,17 +160,22 @@ DisplayUser(LPWSTR lpUserName)
         PrintDateTime(pUserInfo->usri4_acct_expires);
 
     PrintToConsole(L"\n");
-    PrintToConsole(L"Password last set            \n");
 
     PrintToConsole(L"Password expires             ");
-    if (pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
+    dwLastSet = GetTimeInSeconds() - pUserInfo->usri4_password_age;
+    PrintDateTime(dwLastSet);
+
+    PrintToConsole(L"Password expires             ");
+    if ((pUserInfo->usri4_flags & UF_DONT_EXPIRE_PASSWD) || pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
         PrintToConsole(L"Never\n");
     else
-        PrintDateTime(pUserInfo->usri4_acct_expires);
+        PrintDateTime(dwLastSet + pUserModals->usrmod0_max_passwd_age);
 
-    PrintToConsole(L"Password changeable          \n");
-    PrintToConsole(L"Password required            \n");
-    PrintToConsole(L"User may change password     \n");
+    PrintToConsole(L"Password changeable          ");
+    PrintDateTime(dwLastSet + pUserModals->usrmod0_min_passwd_age);
+
+    PrintToConsole(L"Password required            %s\n", (pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? L"No" : L"Yes");
+    PrintToConsole(L"User may change password     %s\n", (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? L"No" : L"Yes");
 
     PrintToConsole(L"\n");
     PrintToConsole(L"Workstation allowed          %s\n", pUserInfo->usri4_workstations);
@@ -196,6 +220,7 @@ cmdUser(
     LPWSTR lpPassword = NULL;
     PUSER_INFO_4 pUserInfo = NULL;
     USER_INFO_4 UserInfo;
+    LPWSTR p;
     NET_API_STATUS Status;
 
     if (argc == 2)
@@ -281,6 +306,21 @@ cmdUser(
     {
         if (_wcsnicmp(argv[j], L"/active:", 8) == 0)
         {
+            p = &argv[i][8];
+            if (_wcsicmp(p, L"yes") == 0)
+            {
+
+            }
+            else if (_wcsicmp(p, L"no") == 0)
+            {
+
+            }
+            else
+            {
+                PrintToConsole(L"You entered an invalid value for the /ACTIVE option.\n");
+                result = 1;
+                goto done;
+            }
         }
         else if (_wcsnicmp(argv[j], L"/comment:", 9) == 0)
         {
