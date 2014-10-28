@@ -3170,6 +3170,8 @@ LRESULT CShellBrowser::OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &b
 LRESULT CShellBrowser::OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT hResult = DoFolderOptions();
+    if (FAILED(hResult))
+        TRACE("DoFolderOptions failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
@@ -3198,24 +3200,32 @@ LRESULT CShellBrowser::OnAboutReactOS(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 LRESULT CShellBrowser::OnGoBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT hResult = GoBack();
+    if (FAILED(hResult))
+        TRACE("GoBack failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
 LRESULT CShellBrowser::OnGoForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT hResult = GoForward();
+    if (FAILED(hResult))
+        TRACE("GoForward failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
 LRESULT CShellBrowser::OnGoUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT hResult = NavigateToParent();
+    if (FAILED(hResult))
+        TRACE("NavigateToParent failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
 LRESULT CShellBrowser::OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT hResult = GoHome();
+    if (FAILED(hResult))
+        TRACE("GoHome failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
@@ -3223,6 +3233,8 @@ LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 {
     // FIXME: This does not appear to be what windows does.
     HRESULT hResult = NavigateToParent();
+    if (FAILED(hResult))
+        TRACE("NavigateToParent failed with hResult=%08lx\n", hResult);
     return 0;
 }
 
