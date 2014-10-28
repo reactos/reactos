@@ -450,7 +450,7 @@ GetProcessorInformation(VOID)
     LPWSTR ProcessorVendorIdentifier = NULL;
     LPWSTR HardwareIdsBuffer = NULL;
     HANDLE ProcessorHandle = NULL;
-    ULONG Length, Level1Length = 0, Level2Length = 0, Level3Length = 0;
+    ULONG Length = 0, Level1Length = 0, Level2Length = 0, Level3Length = 0;
     SIZE_T HardwareIdsLength = 0;
     SIZE_T VendorIdentifierLength;
     ULONG i;
