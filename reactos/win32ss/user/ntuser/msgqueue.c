@@ -1676,8 +1676,21 @@ co_MsqPeekMouseMove(IN PTHREADINFO pti,
     MSG msg;
     PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
 
+    // First look for any buttons downs or ups before testing for the move.
+    if (pti->nCntsQBits[QSRosMouseButton])
+    {
+        if (co_MsqPeekHardwareMessage( pti,
+                                       Remove,
+                                       Window,
+                                       MsgFilterLow,
+                                       MsgFilterHigh,
+                                       QS_MOUSEBUTTON,
+                                       pMsg))
+           return TRUE; // Have one and return.
+    }
+
     if(!(MessageQueue->MouseMoved))
-        return FALSE;
+       return FALSE;
 
     if (!MessageQueue->ptiSysLock)
     {
