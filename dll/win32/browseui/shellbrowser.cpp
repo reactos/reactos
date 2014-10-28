@@ -3152,6 +3152,11 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     }
     else if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_TOOLS))
     {
+        // FIXME: Remove once implemented
+        SHEnableMenuItem(theMenu, IDM_TOOLS_MAPNETWORKDRIVE, FALSE);
+        SHEnableMenuItem(theMenu, IDM_TOOLS_DISCONNECTNETWORKDRIVE, FALSE);
+        SHEnableMenuItem(theMenu, IDM_TOOLS_SYNCHRONIZE, FALSE);
+        SHEnableMenuItem(theMenu, IDM_TOOLS_FOLDEROPTIONS, FALSE);
         menuIndex = 4;
     }
     else if (theMenu == SHGetMenuFromID(fCurrentMenuBar, FCIDM_MENU_HELP))
