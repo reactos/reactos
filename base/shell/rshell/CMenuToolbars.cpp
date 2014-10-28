@@ -1374,6 +1374,7 @@ HRESULT CMenuSFToolbar::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIST *ppidl, REF
             pidl = ILClone(m_idList);
             if (!pidl)
             {
+                ERR("ILClone failed!\n");
                 (*reinterpret_cast<IUnknown**>(ppv))->Release();
                 return E_FAIL;
             }

@@ -39,7 +39,8 @@ CMenuDeskBar::CMenuDeskBar() :
     m_IconSize(0),
     m_Banner(NULL),
     m_Shown(FALSE),
-    m_ShowFlags(0)
+    m_ShowFlags(0),
+    m_didAddRef(FALSE)
 {
 }
 
@@ -49,7 +50,11 @@ CMenuDeskBar::~CMenuDeskBar()
 
 LRESULT CMenuDeskBar::_OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    this->AddRef();
+    if (!m_didAddRef)
+    {
+        this->AddRef();
+        m_didAddRef = TRUE;
+    }
 
     bHandled = FALSE;
     return 0;
@@ -57,6 +62,11 @@ LRESULT CMenuDeskBar::_OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
 void CMenuDeskBar::OnFinalMessage(HWND /* hWnd */)
 {
+    if (m_didAddRef)
+    {
+        this->Release();
+        m_didAddRef = FALSE;
+    }
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Initialize(THIS)

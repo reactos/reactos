@@ -628,21 +628,22 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
         return S_OK;
     }
 
-    HRESULT hr = punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
-
-    return hr;
+    return punkClient->QueryInterface(IID_PPV_ARG(IMenuPopup, &m_subMenuChild));
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
 {
     // HACK, so I can test for a submenu in the DeskBar
-    if (ppunkClient)
+    if (!ppunkClient)
+        return E_POINTER;
+    *ppunkClient = NULL;
+
+    if (m_subMenuChild)
     {
-        if (m_subMenuChild)
-            *ppunkClient = m_subMenuChild;
-        else
-            *ppunkClient = NULL;
+        m_subMenuChild->AddRef();
+        *ppunkClient = m_subMenuChild;
     }
+
     return S_OK;
 }
 

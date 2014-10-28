@@ -50,6 +50,8 @@ private:
     BOOL  m_Shown;
     DWORD m_ShowFlags;
 
+    BOOL m_didAddRef;
+
     virtual void OnFinalMessage(HWND hWnd);
 public:
     CMenuDeskBar();

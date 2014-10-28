@@ -731,6 +731,24 @@ void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
 }
 
 template<class T, class R>
+HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
+{
+    CComPtr<T>       obj;
+    HRESULT          hResult;
+
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY(obj = new CComDebugObject<T>);
+    if (obj.p == NULL)
+        return E_OUTOFMEMORY;
+    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+    if (FAILED(hResult))
+        return hResult;
+    return S_OK;
+}
+
+template<class T, class R>
 HRESULT inline ShellObjectCreator(REFIID riid, R ** ppv)
 {
     CComPtr<T>       obj;

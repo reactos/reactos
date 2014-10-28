@@ -262,16 +262,13 @@ public:
         IBandSite* pBandSite,
         IDeskBar* pDeskBar)
     {
-        m_pShellMenu.Attach(pShellMenu);
-        m_pBandSite.Attach(pBandSite);
-        m_pDeskBar.Attach(pDeskBar);
+        m_pShellMenu = pShellMenu;
+        m_pBandSite = pBandSite;
+        m_pDeskBar = pDeskBar;
     }
 
     ~CShellMenuCallback()
     {
-        m_pShellMenu.Release();
-        m_pBandSite.Release();
-        m_pDeskBar.Release();
     }
 
     HRESULT _SetProgramsFolder(IShellFolder * psf, LPITEMIDLIST pidl)
