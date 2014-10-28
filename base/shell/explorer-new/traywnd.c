@@ -2889,9 +2889,13 @@ HandleTrayContextMenu:
                     break;
 
                 if (IsWindowVisible(hwndStartMenu))
-                    SetWindowPos(hwndStartMenu, 0,0,0,0,0, SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+                {
+                    IMenuPopup_OnSelect(This->StartMenuPopup, MPOS_CANCELLEVEL);
+                }
                 else
+                {
                     SendMessage(This->hWnd, WM_COMMAND, MAKEWPARAM(BN_CLICKED, IDC_STARTBTN), (LPARAM)This->hwndStart);
+                }
 
                 break;
             }
