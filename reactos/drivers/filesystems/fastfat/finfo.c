@@ -16,6 +16,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define NASSERTS_RENAME
+
 /* GLOBALS ******************************************************************/
 
 const char* FileInformationClassNames[] =
@@ -459,6 +461,11 @@ VfatSetRenameInformation(
     PFILE_RENAME_INFORMATION RenameInfo,
     PFILE_OBJECT TargetFileObject)
 {
+#ifdef NASSERTS_RENAME
+#pragma push_macro("ASSERT")
+#undef ASSERT
+#define ASSERT(x) ((VOID) 0)
+#endif
     NTSTATUS Status;
     UNICODE_STRING NewName;
     UNICODE_STRING SourcePath;
@@ -485,6 +492,9 @@ VfatSetRenameInformation(
     }
 
     OldReferences = FCB->parentFcb->RefCount;
+#ifdef NASSERTS_RENAME
+    UNREFERENCED_PARAMETER(OldReferences);
+#endif
 
     /* If we are performing relative opening for rename, get FO for getting FCB and path name */
     if (RenameInfo->RootDirectory != NULL)
@@ -790,6 +800,9 @@ VfatSetRenameInformation(
         /* Try to find target */
         ParentFCB = NULL;
         OldParent = FCB->parentFcb;
+#ifdef NASSERTS_RENAME
+        UNREFERENCED_PARAMETER(OldParent);
+#endif
         Status = vfatPrepareTargetForRename(DeviceExt,
                                             &ParentFCB,
                                             &NewName,
@@ -803,6 +816,9 @@ VfatSetRenameInformation(
         }
 
         NewReferences = ParentFCB->RefCount;
+#ifdef NASSERTS_RENAME
+        UNREFERENCED_PARAMETER(NewReferences);
+#endif
 
         FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
                                     &(DeviceExt->NotifyList),
@@ -854,6 +870,9 @@ Cleanup:
     if (RenameInfo->RootDirectory != NULL) ObDereferenceObject(RootFileObject);
 
     return Status;
+#ifdef NASSERTS_RENAME
+#pragma pop_macro("ASSERT")
+#endif
 }
 
 /*
