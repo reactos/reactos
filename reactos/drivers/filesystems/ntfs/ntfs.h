@@ -600,6 +600,9 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
 
 /* mft.c */
+VOID
+ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context);
+
 ULONG
 ReadAttribute(PDEVICE_EXTENSION Vcb,
               PNTFS_ATTR_CONTEXT Context,
