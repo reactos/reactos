@@ -417,14 +417,16 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
             }
             else
             {
+
+                /* FIXME: Update work area */
+#if 0
                 RECT rcDesktop;
 
                 rcDesktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
                 rcDesktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
                 rcDesktop.right = GetSystemMetrics(SM_CXVIRTUALSCREEN);
                 rcDesktop.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-                /* FIXME: Update work area */
+#endif
             }
             break;
 

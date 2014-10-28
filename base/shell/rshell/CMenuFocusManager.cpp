@@ -396,12 +396,10 @@ LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
 
     TRACE("MouseDown %d\n", m_isLButtonDown);
 
-    BOOL isTracking = FALSE;
     if (entry)
     {
         ScreenToClient(child, &pt);
         iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
-        isTracking = entry->mb->_IsTracking();
 
         if (iHitTestResult >= 0)
         {
@@ -448,12 +446,10 @@ LRESULT CMenuFocusManager::ProcessMouseUp(MSG* msg)
 
     TRACE("MouseUp %d\n", m_isLButtonDown);
 
-    BOOL isTracking = FALSE;
     if (entry)
     {
         ScreenToClient(child, &pt);
         iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
-        isTracking = entry->mb->_IsTracking();
 
         if (iHitTestResult >= 0)
         {
