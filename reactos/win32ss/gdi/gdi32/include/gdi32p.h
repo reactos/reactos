@@ -213,6 +213,10 @@ PLDC
 FASTCALL
 GdiGetLDC(HDC hDC);
 
+BOOL
+FASTCALL
+GdiSetLDC(HDC hdc, PVOID pvLDC);
+
 HGDIOBJ
 WINAPI
 GdiFixUpHandle(HGDIOBJ hGO);
@@ -369,9 +373,23 @@ FORCEINLINE
 PDC_ATTR
 GdiGetDcAttr(HDC hdc)
 {
+    GDILOOBJTYPE eDcObjType;
     PDC_ATTR pdcattr;
 
-    if (!GdiGetHandleUserData((HGDIOBJ)hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr)) return NULL;
+    /* Check DC object type */
+    eDcObjType = GDI_HANDLE_GET_TYPE(hdc);
+    if ((eDcObjType != GDILoObjType_LO_DC_TYPE) &&
+        (eDcObjType != GDILoObjType_LO_ALTDC_TYPE))
+    {
+        return NULL;
+    }
+
+    /* Get the DC attribute */
+    if (!GdiGetHandleUserData((HGDIOBJ)hdc, eDcObjType, (PVOID*)&pdcattr))
+    {
+        return NULL;
+    }
+
     return pdcattr;
 }
 

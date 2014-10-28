@@ -145,40 +145,39 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 
 PLDC
 FASTCALL
-GdiGetLDC(HDC hDC)
+GdiGetLDC(HDC hdc)
 {
-    PDC_ATTR Dc_Attr;
-    PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
-    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-    // Don't check the mask, just the object type.
-    if ( Entry->ObjectType == GDIObjType_DC_TYPE &&
-            (pid == NULL || pid == CurrentProcessId) )
-    {
-        BOOL Result = TRUE;
-        if (Entry->UserData)
-        {
-            volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-            _SEH2_TRY
-            {
-                *Current = *Current;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Result = FALSE;
-            }
-            _SEH2_END
-        }
-        else
-            Result = FALSE;
+    PDC_ATTR pdcattr;
 
-        if (Result)
-        {
-            Dc_Attr = (PDC_ATTR)Entry->UserData;
-            return Dc_Attr->pvLDC;
-        }
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        return NULL;
     }
-    return NULL;
+
+    /* Return the LDC pointer */
+    return pdcattr->pvLDC;
 }
+
+BOOL
+FASTCALL
+GdiSetLDC(HDC hdc, PVOID pvLDC)
+{
+    PDC_ATTR pdcattr;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Set the LDC pointer */
+    pdcattr->pvLDC = pvLDC;
+    return TRUE;
+}
+
 
 VOID GdiSAPCallback(PLDC pldc)
 {
