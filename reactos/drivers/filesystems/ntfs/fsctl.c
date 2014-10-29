@@ -526,6 +526,34 @@ NtfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
 }
 
 
+static
+NTSTATUS
+NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
+                  PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+
+    DPRINT1("NtfsUserFsRequest(%p, %p)\n", DeviceObject, Irp);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    switch (Stack->Parameters.FileSystemControl.FsControlCode)
+    {
+        case FSCTL_GET_NTFS_VOLUME_DATA:
+            UNIMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            DPRINT1("Invalid user request: %x\n", Stack->Parameters.FileSystemControl.FsControlCode);
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
+    }
+
+    return Status;
+}
+
+
 NTSTATUS
 NTAPI
 NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
@@ -541,9 +569,12 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
     switch (Stack->MinorFunction)
     {
         case IRP_MN_KERNEL_CALL:
-        case IRP_MN_USER_FS_REQUEST:
-            DPRINT("NTFS: IRP_MN_USER_FS_REQUEST/IRP_MN_KERNEL_CALL\n");
+            DPRINT1("NTFS: IRP_MN_USER_FS_REQUEST\n");
             Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
+
+        case IRP_MN_USER_FS_REQUEST:
+            Status = NtfsUserFsRequest(DeviceObject, Irp);
             break;
 
         case IRP_MN_MOUNT_VOLUME:
@@ -557,7 +588,7 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
             break;
 
         default:
-            DPRINT("NTFS FSC: MinorFunction %d\n", Stack->MinorFunction);
+            DPRINT1("NTFS FSC: MinorFunction %d\n", Stack->MinorFunction);
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
     }
