@@ -501,6 +501,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 
     CComPtr<IMenuPopup> oldParent = m_SubMenuParent;
 
+    TRACE("OnSelect dwSelectType=%d\n", this, dwSelectType);
     switch (dwSelectType)
     {
     case MPOS_EXECUTE:
@@ -705,9 +706,11 @@ LRESULT CMenuDeskBar::_OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CMenuDeskBar::_OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+#if 0
     if (wParam == 0 && m_Shown)
     {
         OnSelect(MPOS_FULLCANCEL);
     }
+#endif
     return 0;
 }
