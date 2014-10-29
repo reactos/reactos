@@ -533,6 +533,9 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION Stack;
+    PDEVICE_EXTENSION DeviceExt;
+    PNTFS_VOLUME_DATA_BUFFER DataBuffer;
+    PNTFS_ATTR_RECORD Attribute;
 
     DPRINT1("NtfsUserFsRequest(%p, %p)\n", DeviceObject, Irp);
 
@@ -540,8 +543,56 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
     switch (Stack->Parameters.FileSystemControl.FsControlCode)
     {
         case FSCTL_GET_NTFS_VOLUME_DATA:
-            UNIMPLEMENTED;
-            Status = STATUS_NOT_IMPLEMENTED;
+            DeviceExt = DeviceObject->DeviceExtension;
+            DataBuffer = (PNTFS_VOLUME_DATA_BUFFER)Irp->UserBuffer;
+
+            if (Stack->Parameters.FileSystemControl.OutputBufferLength < sizeof(NTFS_VOLUME_DATA_BUFFER) ||
+                Irp->UserBuffer == NULL)
+            {
+                DPRINT1("Invalid output! %d %p\n", Stack->Parameters.FileSystemControl.OutputBufferLength, Irp->UserBuffer);
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            DataBuffer->VolumeSerialNumber.QuadPart = DeviceExt->NtfsInfo.SerialNumber;
+            DataBuffer->NumberSectors.QuadPart = DeviceExt->NtfsInfo.SectorCount;
+            DataBuffer->TotalClusters.QuadPart = DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster;
+            DataBuffer->FreeClusters.QuadPart = NtfsGetFreeClusters(DeviceExt);
+            DataBuffer->TotalReserved.QuadPart = 0LL; // FIXME
+            DataBuffer->BytesPerSector = DeviceExt->NtfsInfo.BytesPerSector;
+            DataBuffer->BytesPerCluster = DeviceExt->NtfsInfo.BytesPerCluster;
+            DataBuffer->BytesPerFileRecordSegment = DeviceExt->NtfsInfo.BytesPerFileRecord;
+            DataBuffer->ClustersPerFileRecordSegment = DeviceExt->NtfsInfo.BytesPerFileRecord / DeviceExt->NtfsInfo.BytesPerCluster;
+            DataBuffer->MftStartLcn.QuadPart = DeviceExt->NtfsInfo.MftStart.QuadPart;
+            DataBuffer->Mft2StartLcn.QuadPart = DeviceExt->NtfsInfo.MftMirrStart.QuadPart;
+            DataBuffer->MftZoneStart.QuadPart = 0; // FIXME
+            DataBuffer->MftZoneEnd.QuadPart = 0; // FIXME
+
+            Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DeviceExt->MasterFileTable + DeviceExt->MasterFileTable->AttributeOffset);
+            while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)DeviceExt->MasterFileTable + DeviceExt->MasterFileTable->BytesInUse) &&
+                   Attribute->Type != AttributeEnd)
+            {
+                if (Attribute->Type == AttributeData)
+                {
+                    ASSERT(Attribute->IsNonResident);
+                    DataBuffer->MftValidDataLength.QuadPart = Attribute->NonResident.DataSize;
+
+                    break;
+                }
+
+                Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+            }
+
+            if (Stack->Parameters.FileSystemControl.OutputBufferLength >= sizeof(NTFS_EXTENDED_VOLUME_DATA) + sizeof(NTFS_VOLUME_DATA_BUFFER))
+            {
+                PNTFS_EXTENDED_VOLUME_DATA ExtendedData = (PNTFS_EXTENDED_VOLUME_DATA)((ULONG_PTR)Irp->UserBuffer + sizeof(NTFS_VOLUME_DATA_BUFFER));
+
+                ExtendedData->ByteCount = sizeof(NTFS_EXTENDED_VOLUME_DATA);
+                ExtendedData->MajorVersion = DeviceExt->NtfsInfo.MajorVersion;
+                ExtendedData->MinorVersion = DeviceExt->NtfsInfo.MinorVersion;
+            }
+
+            Status = STATUS_SUCCESS;
             break;
 
         default:
