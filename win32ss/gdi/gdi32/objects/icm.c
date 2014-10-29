@@ -128,3 +128,195 @@ SetColorSpace(
     return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetICMProfileA(
+    HDC		hdc,
+    LPDWORD pBufSize,
+    LPSTR		pszFilename
+)
+{
+    WCHAR filenameW[MAX_PATH];
+    DWORD buflen = MAX_PATH;
+    BOOL ret = FALSE;
+
+    if (!hdc || !pBufSize || !pszFilename) return FALSE;
+
+    if (GetICMProfileW(hdc, &buflen, filenameW))
+    {
+        ULONG len = WideCharToMultiByte(CP_ACP, 0, filenameW, -1, NULL, 0, NULL, NULL);
+        if (*pBufSize >= len)
+        {
+            WideCharToMultiByte(CP_ACP, 0, filenameW, -1, pszFilename, *pBufSize, NULL, NULL);
+            ret = TRUE;
+        }
+        else SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        *pBufSize = len;
+    }
+
+    return ret;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetICMProfileW(
+    HDC		hdc,
+    LPDWORD		size,
+    LPWSTR		filename
+)
+{
+    if (!hdc || !size || !filename) return FALSE;
+
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetICMProfileA(
+    HDC	a0,
+    LPSTR	a1
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetICMProfileW(
+    HDC	a0,
+    LPWSTR	a1
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+EnumICMProfilesA(
+    HDC		a0,
+    ICMENUMPROCA	a1,
+    LPARAM		a2
+)
+{
+    /*
+     * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
+     * to find out how big a buffer we need. Then allocate that buffer
+     * and call NtGdiEnumICMProfiles again to have the buffer filled.
+     *
+     * Finally, step through the buffer ( MULTI-SZ recommended for format ),
+     * and convert each string to ANSI, calling the user's callback function
+     * until we run out of strings or the user returns FALSE
+     */
+
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+EnumICMProfilesW(
+    HDC		hDC,
+    ICMENUMPROCW	lpEnumICMProfilesFunc,
+    LPARAM		lParam
+)
+{
+    /*
+     * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
+     * to find out how big a buffer we need. Then allocate that buffer
+     * and call NtGdiEnumICMProfiles again to have the buffer filled.
+     *
+     * Finally, step through the buffer ( MULTI-SZ recommended for format ),
+     * and call the user's callback function until we run out of strings or
+     * the user returns FALSE
+     */
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+UpdateICMRegKeyA(
+    DWORD	a0,
+    LPSTR	a1,
+    LPSTR	a2,
+    UINT	a3
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+UpdateICMRegKeyW(
+    DWORD	a0,
+    LPWSTR	a1,
+    LPWSTR	a2,
+    UINT	a3
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+SetICMMode(
+    HDC	hdc,
+    int	iEnableICM
+)
+{
+    /*FIXME:  Assume that ICM is always off, and cannot be turned on */
+    if (iEnableICM == ICM_OFF) return ICM_OFF;
+    if (iEnableICM == ICM_ON) return 0;
+    if (iEnableICM == ICM_QUERY) return ICM_OFF;
+
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}

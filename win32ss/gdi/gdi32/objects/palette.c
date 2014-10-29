@@ -202,4 +202,16 @@ UpdateColors(
     return NtGdiUpdateColors(hdc);
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEntries)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
 /* EOF */

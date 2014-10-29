@@ -2143,9 +2143,13 @@ BOOL UserDrawCaption(
          UserDrawIconEx(hDc, x, y, pIcon, cx, cy, 0, NULL, DI_NORMAL);
          UserDereferenceObject(pIcon);
       }
+      else
+      {
+          HasIcon = FALSE;
+      }
    }
 
-   if (hIcon)
+   if (HasIcon)
       Rect.left += Rect.bottom - Rect.top;
 
    if((uFlags & DC_TEXT))

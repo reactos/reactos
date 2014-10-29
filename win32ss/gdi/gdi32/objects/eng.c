@@ -237,9 +237,6 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
     RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
 }
 
-
-
-
 /*
  * @implemented
  */
@@ -254,3 +251,14 @@ EngWideCharToMultiByte( UINT CodePage,
     return WideCharToMultiByte(CodePage, 0, WideCharString, (BytesInWideCharString/sizeof(WCHAR)),
                                MultiByteString, BytesInMultiByteString, NULL, NULL);
 }
+
+/*
+ * @unimplemented
+ */
+ULONG *
+WINAPI
+XLATEOBJ_piVector(XLATEOBJ *XlateObj)
+{
+    return XlateObj->pulXlate;
+}
+

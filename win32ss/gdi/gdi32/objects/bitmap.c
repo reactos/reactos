@@ -243,60 +243,6 @@ CreateDIBSection(
     return hBitmap;
 }
 
-/*
- * @implemented
- */
-BOOL
-WINAPI
-BitBlt(
-    HDC hdcDest, /* handle to destination DC */
-    int nXOriginDest, /* x-coord of destination upper-left corner */
-    int nYOriginDest, /* y-coord of destination upper-left corner */
-    int nWidthDest, /* width of destination rectangle */
-    int nHeightDest, /* height of destination rectangle */
-    HDC hdcSrc, /* handle to source DC */
-    int nXSrc, /* x-coordinate of source upper-left corner */
-    int nYSrc, /* y-coordinate of source upper-left corner */
-    DWORD dwRop) /* raster operation code */
-{
-    /* use patBlt for no source blt  Like windows does */
-    if (!ROP_USES_SOURCE(dwRop))
-    {
-        return PatBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, dwRop);
-    }
-
-    return NtGdiBitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hdcSrc, nXSrc,
-        nYSrc, dwRop, 0, 0);
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-StretchBlt(
-    HDC hdcDest, /* handle to destination DC */
-    int nXOriginDest, /* x-coord of destination upper-left corner */
-    int nYOriginDest, /* y-coord of destination upper-left corner */
-    int nWidthDest, /* width of destination rectangle */
-    int nHeightDest, /* height of destination rectangle */
-    HDC hdcSrc, /* handle to source DC */
-    int nXOriginSrc, /* x-coord of source upper-left corner */
-    int nYOriginSrc, /* y-coord of source upper-left corner */
-    int nWidthSrc, /* width of source rectangle */
-    int nHeightSrc, /* height of source rectangle */
-    DWORD dwRop) /* raster operation code */
-
-{
-    if ((nWidthDest != nWidthSrc) || (nHeightDest != nHeightSrc))
-    {
-        return NtGdiStretchBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hdcSrc,
-            nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc, dwRop, 0);
-    }
-
-    return NtGdiBitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hdcSrc,
-        nXOriginSrc, nYOriginSrc, dwRop, 0, 0);
-}
 
 /*
  * @implemented
@@ -923,5 +869,64 @@ StretchDIBits(
         RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
 
     return LinesCopied;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetBitmapAttributes(HBITMAP hbm)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HBITMAP
+WINAPI
+SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HBITMAP
+WINAPI
+ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ *
+ */
+HBITMAP
+WINAPI
+GdiConvertBitmapV5(
+    HBITMAP in_format_BitMap,
+    HBITMAP src_BitMap,
+    INT bpp,
+    INT unuse)
+{
+    /* FIXME guessing the prototypes */
+
+    /*
+     * it have create a new bitmap with desired in format,
+     * then convert it src_bitmap to new format
+     * and return it as HBITMAP
+     */
+
+    return FALSE;
 }
 

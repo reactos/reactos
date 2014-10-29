@@ -310,6 +310,11 @@ ResetScsiBus(
     IN PDEVICE_OBJECT DeviceObject
     );
 
+NTSTATUS
+NTAPI
+ScsiDiskFileSystemControl(PDEVICE_OBJECT DeviceObject,
+                          PIRP Irp);
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, DriverEntry)
 #pragma alloc_text(PAGE, FindScsiDisks)
@@ -379,6 +384,11 @@ Return Value:
     InitializationData.ClassDeviceControl = ScsiDiskDeviceControl;
     InitializationData.ClassShutdownFlush = ScsiDiskShutdownFlush;
     InitializationData.ClassCreateClose = NULL;
+
+    //
+    // HACK! Please check below to the implementation of the function
+    //
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = ScsiDiskFileSystemControl;
 
     //
     // Call the class init routine
@@ -5202,3 +5212,56 @@ Return Value:
     }
 
 } // end UpdateDeviceObjects()
+
+//
+// This function is supposed only to support NTFS tools
+// from M. Russinovich. This is kind of huge hack and is
+// totally undocumented :-).
+//
+NTSTATUS
+NtfsRussinovichism(PDEVICE_OBJECT DeviceObject,
+                   PIRP Irp)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+//
+// Hack: this function is not supposed to be implemented
+// Even though it's required to enable some M. Russinovich
+// to directly request disks so that they can dump NTFS data
+// without going through the driver.
+// We don't expect doing more from here, hence the limited
+// implementation and support.
+//
+NTSTATUS
+NTAPI
+ScsiDiskFileSystemControl(PDEVICE_OBJECT DeviceObject,
+                          PIRP Irp)
+{
+    PIO_STACK_LOCATION Stack;
+    NTSTATUS Status;
+
+    DPRINT1("ScsiDiskFileSystemControl(%p, %p)\n", DeviceObject, Irp);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    switch (Stack->MinorFunction)
+    {
+        case IRP_MN_USER_FS_REQUEST:
+            Status = NtfsRussinovichism(DeviceObject, Irp);
+            break;
+
+        default:
+            DPRINT("MinorFunction %d\n", Stack->MinorFunction);
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+}
