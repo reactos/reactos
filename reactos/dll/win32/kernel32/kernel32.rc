@@ -11,14 +11,15 @@
 
 /* UTF-8 */
 #pragma code_page(65001)
-
+#ifdef LANGUAGE_CS_CZ
+    #include "winnls/lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "winnls/lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "winnls/lang/en-US.rc"
 #endif
-#pragma code_page(65001)
 #ifdef LANGUAGE_ES_ES
     #include "winnls/lang/es-ES.rc"
 #endif
