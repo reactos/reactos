@@ -446,14 +446,29 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
 
     hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidlUserFavorites);
     if (FAILED(hr))
-        return hr;
-
-    if (FAILED(SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &pidlCommonFavorites)))
     {
-        hr = BindToDesktop(pidlUserFavorites, ppsfFavorites);
-        *ppidl = pidlUserFavorites;
+        WARN("Failed to get the USER favorites folder. Trying to run with just the COMMON one.\n");
+
+        hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &pidlCommonFavorites);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        TRACE("COMMON start menu obtained.\n");
+        *ppidl = pidlCommonFavorites;
+        hr = BindToDesktop(pidlCommonFavorites, ppsfFavorites);
         return hr;
     }
+
+    hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &pidlCommonFavorites);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        WARN("Failed to get the COMMON favorites folder. Will use only the USER contents.\n");
+        *ppidl = pidlCommonFavorites;
+        hr = BindToDesktop(pidlUserFavorites, ppsfFavorites);
+        return hr;
+    }
+
+    TRACE("Both COMMON and USER favorites folders obtained, merging them...\n");
 
     hr = BindToDesktop(pidlUserFavorites, &psfUserFavorites);
     if (FAILED_UNEXPECTEDLY(hr))

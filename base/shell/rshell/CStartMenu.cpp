@@ -21,6 +21,8 @@
 
 #include "CMergedFolder.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(CStartMenu);
+
 // TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
 IID IID_IAugmentedShellFolder = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
 IID IID_IAugmentedShellFolder2 = { 0x8DB3B3F4, 0x6CFE, 0x11D1, { 0x8A, 0xE9, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0 } };
@@ -336,14 +338,29 @@ static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
 
     hr = SHGetSpecialFolderLocation(NULL, CSIDL_STARTMENU, &pidlUserStartMenu);
     if (FAILED(hr))
-        return hr;
-
-    if (FAILED(SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_STARTMENU, &pidlCommonStartMenu)))
     {
+        WARN("Failed to get the USER start menu folder. Trying to run with just the COMMON one.\n");
+
+        hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_STARTMENU, &pidlCommonStartMenu);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        TRACE("COMMON start menu obtained.\n");
+        hr = BindToDesktop(pidlCommonStartMenu, ppsfStartMenu);
+        ILFree(pidlCommonStartMenu);
+        return hr;
+    }
+
+    hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_STARTMENU, &pidlCommonStartMenu);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        WARN("Failed to get the COMMON start menu folder. Will use only the USER contents.\n");
         hr = BindToDesktop(pidlUserStartMenu, ppsfStartMenu);
         ILFree(pidlUserStartMenu);
         return hr;
     }
+
+    TRACE("Both COMMON and USER statr menu folders obtained, merging them...\n");
 
     hr = BindToDesktop(pidlUserStartMenu, &psfUserStartMenu);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -353,7 +370,7 @@ static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if 1
+#if !USE_SYSTEM_MERGED_FOLDERS
     hr = CMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
 #else
     hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
@@ -447,8 +464,13 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
         return hr;
 
     hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (FAILED(hr))
+    {
+        WARN("USER Programs folder not found.");
+        hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_PROGRAMS, &pidlProgramsAbsolute);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
 
     pidlPrograms = ILClone(ILFindLastID(pidlProgramsAbsolute));
     ILFree(pidlProgramsAbsolute);
