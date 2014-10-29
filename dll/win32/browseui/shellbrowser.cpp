@@ -3252,16 +3252,9 @@ LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     return 0;
 }
 
-HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, long param10, DWORD dwFlags);
-
 LRESULT CShellBrowser::OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    LPITEMIDLIST desktopPIDL;
-    HRESULT hResult = SHGetFolderLocation(NULL, CSIDL_DESKTOP, NULL, 0, &desktopPIDL);
-    if (SUCCEEDED(hResult))
-    {
-        hResult = SHOpenNewFrame(desktopPIDL, NULL, -1, 1);
-    }
+    ShellExecute(m_hWnd, NULL, L"https://reactos.org/user-faq", NULL, NULL, SW_SHOWNORMAL);
     return 0;
 }
 

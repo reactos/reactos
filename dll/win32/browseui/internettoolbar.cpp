@@ -453,7 +453,7 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        TRACE("COMMON start menu obtained.\n");
+        TRACE("COMMON favorites obtained.\n");
         *ppidl = pidlCommonFavorites;
         hr = BindToDesktop(pidlCommonFavorites, ppsfFavorites);
         return hr;
