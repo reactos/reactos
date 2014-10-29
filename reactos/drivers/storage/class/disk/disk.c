@@ -1555,6 +1555,7 @@ Return Value:
             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
         }
 
+        DPRINT1("STATUS_INVALID_PARAMETER\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -5222,8 +5223,69 @@ NTSTATUS
 NtfsRussinovichism(PDEVICE_OBJECT DeviceObject,
                    PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+#define FSCTL_GET_VOLUME_INFORMATION 0x90064
+    typedef struct {   
+        LARGE_INTEGER       SerialNumber;   
+        LARGE_INTEGER       NumberOfSectors;   
+        LARGE_INTEGER       TotalClusters;   
+        LARGE_INTEGER       FreeClusters;   
+        LARGE_INTEGER       Reserved;   
+        ULONG               BytesPerSector;   
+        ULONG               BytesPerCluster;   
+        ULONG               BytesPerMFTRecord;   
+        ULONG               ClustersPerMFTRecord;   
+        LARGE_INTEGER       MFTLength;   
+        LARGE_INTEGER       MFTStart;   
+        LARGE_INTEGER       MFTMirrorStart;   
+        LARGE_INTEGER       MFTZoneStart;   
+        LARGE_INTEGER       MFTZoneEnd;   
+    } NTFS_VOLUME_DATA_BUFFER, *PNTFS_VOLUME_DATA_BUFFER;
+
+    PIO_STACK_LOCATION Stack;
+    NTSTATUS Status;
+    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData;
+
+    DPRINT1("NtfsRussinovichism(%p, %p)\n", DeviceObject, Irp);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    switch (Stack->Parameters.FileSystemControl.FsControlCode)
+    {
+        case FSCTL_GET_VOLUME_INFORMATION:
+            //
+            // Check we received something we understand
+            //
+            if (Stack->Parameters.FileSystemControl.OutputBufferLength < sizeof(NTFS_VOLUME_DATA_BUFFER) ||
+                Irp->UserBuffer == NULL)
+            {
+                DPRINT1("Invalid output! %d %p\n", Stack->Parameters.FileSystemControl.OutputBufferLength, Irp->UserBuffer);
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            //
+            // Now, quickly check we are supposed to have a NTFS volume
+            //
+            diskData = (PDISK_DATA)(deviceExtension + 1);
+            if (diskData->PartitionType != PARTITION_IFS)
+            {
+                DPRINT1("Invalid partition type! %x\n", diskData->PartitionType);
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            UNIMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
+    }
+
+    return Status;
+#undef FSCTL_GET_VOLUME_INFORMATION
 }
 
 //
