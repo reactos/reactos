@@ -1111,7 +1111,8 @@ HRESULT CMenuToolbarBase::PopupItem(INT iItem, BOOL keyInitiated)
 
 CMenuStaticToolbar::CMenuStaticToolbar(CMenuBand *menuBand) :
     CMenuToolbarBase(menuBand, FALSE),
-    m_hmenu(NULL)
+    m_hmenu(NULL),
+    m_hwndMenu(NULL)
 {
 }
 
@@ -1127,7 +1128,7 @@ HRESULT  CMenuStaticToolbar::GetMenu(
     if (phmenu)
         *phmenu = m_hmenu;
     if (phwnd)
-        *phwnd = NULL;
+        *phwnd = m_hwndMenu;
     if (pdwFlags)
         *pdwFlags = m_dwMenuFlags;
 
@@ -1140,6 +1141,7 @@ HRESULT  CMenuStaticToolbar::SetMenu(
     DWORD dwFlags)
 {
     m_hmenu = hmenu;
+    m_hwndMenu = hwnd;
     m_dwMenuFlags = dwFlags;
 
     return S_OK;

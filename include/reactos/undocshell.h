@@ -532,6 +532,9 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE);
 /* Utility functions */
 #include <stdio.h>
 
+#define SMC_EXEC 4
+extern "C" INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
+
 static inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {

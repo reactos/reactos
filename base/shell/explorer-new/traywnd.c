@@ -2929,7 +2929,7 @@ HandleTrayContextMenu:
                         {
                             /* TODO: Implement properly */
 
-                            LPCWSTR strSite = L"http://www.reactos.org/";
+                            LPCWSTR strSite = L"https://www.reactos.org/";
 
                             /* TODO: Make localizable */
                             LPCWSTR strCaption = L"Sorry";

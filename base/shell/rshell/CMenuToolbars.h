@@ -137,6 +137,7 @@ class CMenuStaticToolbar :
 {
 private:
     HMENU m_hmenu;
+    HWND m_hwndMenu;
 
 public:
     CMenuStaticToolbar(CMenuBand *menuBand);

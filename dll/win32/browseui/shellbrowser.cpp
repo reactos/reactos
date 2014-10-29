@@ -22,6 +22,7 @@
 
 #include <shellapi.h>
 #include <htiframe.h>
+#include <strsafe.h>
 
 extern "C"
 BOOL WINAPI Shell_GetImageLists(
@@ -633,6 +634,7 @@ public:
     LRESULT OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarLock(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarBandVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -672,6 +674,7 @@ public:
         COMMAND_ID_HANDLER(IDM_GOTO_FORWARD, OnGoForward)
         COMMAND_ID_HANDLER(IDM_GOTO_UPONELEVEL, OnGoUpLevel)
         COMMAND_ID_HANDLER(IDM_GOTO_HOMEPAGE, OnGoHome)
+        COMMAND_ID_HANDLER(IDM_FAVORITES_ORGANIZEFAVORITES, OnOrganizeFavorites)
         COMMAND_ID_HANDLER(IDM_HELP_ISTHISCOPYLEGAL, OnIsThisLegal)
         COMMAND_ID_HANDLER(IDM_VIEW_STATUSBAR, OnToggleStatusBarVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LOCKTOOLBARS, OnToggleToolbarLock)
@@ -1871,7 +1874,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetMenuSB(HMENU hmenuShared, HOLEMENU h
     hResult = GetMenuBand(IID_PPV_ARG(IShellMenu, &shellMenu));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = shellMenu->SetMenu(hmenuShared, NULL, SMSET_DONTOWN);
+    hResult = shellMenu->SetMenu(hmenuShared, m_hWnd, SMSET_DONTOWN);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     fCurrentMenuBar = hmenuShared;
@@ -3252,9 +3255,54 @@ LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     return 0;
 }
 
+LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    CComPtr<IShellFolder> psfDesktop;
+    LPITEMIDLIST pidlFavs;
+    HRESULT hr;
+    hr = SHGetSpecialFolderLocation(m_hWnd, CSIDL_FAVORITES, &pidlFavs);
+    if (FAILED(hr))
+    {
+        hr = SHGetSpecialFolderLocation(m_hWnd, CSIDL_COMMON_FAVORITES, &pidlFavs);
+        if (FAILED(hr))
+            return 0;
+    }
+
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    hr = SHInvokeDefaultCommand(m_hWnd, psfDesktop, pidlFavs);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    return 0;
+}
+
 LRESULT CShellBrowser::OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    ShellExecute(m_hWnd, NULL, L"https://reactos.org/user-faq", NULL, NULL, SW_SHOWNORMAL);
+    /* TODO: Implement properly */
+
+    LPCWSTR strSite = L"https://www.reactos.org/user-faq";
+
+    /* TODO: Make localizable */
+    LPCWSTR strCaption = L"Sorry";
+    LPCWSTR strMessage = L"ReactOS could not browse to '%s' (error %d). Please make sure there is a web browser installed.";
+    WCHAR tmpMessage[512];
+
+    /* TODO: Read from the registry */
+    LPCWSTR strVerb = NULL; /* default */
+    LPCWSTR strPath = strSite;
+    LPCWSTR strParams = NULL;
+
+    /* The return value is defined as HINSTANCE for backwards compatibility only, the cast is needed */
+    int result = (int) ShellExecuteW(m_hWnd, strVerb, strPath, strParams, NULL, SW_SHOWNORMAL);
+    if (result <= 32)
+    {
+        StringCchPrintfW(tmpMessage, 512, strMessage, strSite, result);
+        MessageBoxExW(m_hWnd, tmpMessage, strCaption, MB_OK, 0);
+    }
+
     return 0;
 }
 

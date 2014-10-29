@@ -738,18 +738,14 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     if (!m_psmc)
         return S_FALSE;
 
-    HWND hwnd;
-    GetWindow(&hwnd);
-
     SMDATA smData = { 0 };
     smData.punk = static_cast<IShellMenu2*>(this);
     smData.uId = id;
     smData.uIdParent = m_uId;
     smData.uIdAncestor = m_uIdAncestor;
     smData.pidlItem = pidl;
-    smData.hwnd = hwnd;
-    if (m_hmenu)
-        smData.hmenu = m_hmenu;
+    smData.hwnd = m_menuOwner ? m_menuOwner : m_topLevelWindow;
+    smData.hmenu = m_hmenu;
     smData.pvUserData = NULL;
     if (m_SFToolbar)
         m_SFToolbar->GetShellFolder(NULL, &smData.pidlFolder, IID_PPV_ARG(IShellFolder, &smData.psf));
