@@ -296,6 +296,9 @@ typedef struct DEVICE_EXTENSION
     /* Notifications */
     LIST_ENTRY NotifyList;
     PNOTIFY_SYNC NotifySync;
+
+    /* Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP */
+    ULONG OpenHandleCount;
 } DEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct

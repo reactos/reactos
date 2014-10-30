@@ -612,6 +612,8 @@ VfatMount(
     FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
     InitializeListHead(&DeviceExt->NotifyList);
 
+    DPRINT1("Mount success\n");
+
     Status = STATUS_SUCCESS;
 
 ByeBye:
@@ -855,6 +857,72 @@ VfatMarkVolumeDirty(
     return Status;
 }
 
+static
+NTSTATUS
+VfatLockOrUnlockVolume(
+    PVFAT_IRP_CONTEXT IrpContext,
+    BOOLEAN Lock)
+{
+    PFILE_OBJECT FileObject;
+    PDEVICE_EXTENSION DeviceExt;
+
+    DPRINT1("VfatLockOrUnlockVolume(%p, %d)\n", IrpContext, Lock);
+
+    DeviceExt = IrpContext->DeviceExt;
+    FileObject = IrpContext->FileObject;
+
+    /* Only allow locking with the volume open */
+    if (FileObject->FsContext != DeviceExt->VolumeFcb)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Bail out if it's already in the demanded state */
+    if (((DeviceExt->Flags & VCB_VOLUME_LOCKED) && Lock) ||
+        (!(DeviceExt->Flags & VCB_VOLUME_LOCKED) && !Lock))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Deny locking if we're not alone */
+    if (Lock && DeviceExt->OpenHandleCount != 1)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Finally, proceed */
+    if (Lock)
+    {
+        DeviceExt->Flags |= VCB_VOLUME_LOCKED;
+    }
+    else
+    {
+        DeviceExt->Flags &= ~VCB_VOLUME_LOCKED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+VfatDismountVolume(
+    PVFAT_IRP_CONTEXT IrpContext)
+{
+    PDEVICE_EXTENSION DeviceExt;
+
+    DPRINT1("VfatDismountVolume(%p)\n", IrpContext);
+
+    DeviceExt = IrpContext->DeviceExt;
+
+    if (!(DeviceExt->Flags & VCB_VOLUME_LOCKED))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
  * FUNCTION: File system control
  */
@@ -896,6 +964,18 @@ VfatFileSystemControl(
 
                 case FSCTL_MARK_VOLUME_DIRTY:
                     Status = VfatMarkVolumeDirty(IrpContext);
+                    break;
+
+                case FSCTL_LOCK_VOLUME:
+                    Status = VfatLockOrUnlockVolume(IrpContext, TRUE);
+                    break;
+
+                case FSCTL_UNLOCK_VOLUME:
+                    Status = VfatLockOrUnlockVolume(IrpContext, FALSE);
+                    break;
+
+                case FSCTL_DISMOUNT_VOLUME:
+                    Status = VfatDismountVolume(IrpContext);
                     break;
 
                 default:

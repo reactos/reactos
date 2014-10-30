@@ -473,10 +473,18 @@ VfatCreateFile(
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Deny create if the volume is locked */
+    if (DeviceExt->Flags & VCB_VOLUME_LOCKED)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
     /* This a open operation for the volume itself */
     if (FileObject->FileName.Length == 0 &&
         (FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
     {
+        DPRINT1("Volume opening\n");
+
         if (RequestedDisposition != FILE_OPEN &&
             RequestedDisposition != FILE_OPEN_IF)
         {
@@ -497,6 +505,7 @@ VfatCreateFile(
 
         pFcb = DeviceExt->VolumeFcb;
         vfatAttachFCBToFileObject(DeviceExt, pFcb, FileObject);
+        DeviceExt->OpenHandleCount++;
 
         Irp->IoStatus.Information = FILE_OPENED;
         return STATUS_SUCCESS;
@@ -639,6 +648,7 @@ VfatCreateFile(
             }
 
             pFcb->OpenHandleCount++;
+            DeviceExt->OpenHandleCount++;
         }
         else if (ParentFcb != NULL)
         {
@@ -884,6 +894,7 @@ VfatCreateFile(
     }
 
     pFcb->OpenHandleCount++;
+    DeviceExt->OpenHandleCount++;
 
     /* FIXME : test write access if requested */
 
