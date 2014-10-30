@@ -1246,7 +1246,6 @@ TrayClockWndProc(IN HWND hwnd,
                  IN LPARAM lParam)
 {
     PTRAY_CLOCK_WND_DATA This = NULL;
-    LRESULT Ret = FALSE;
 
     if (uMsg != WM_NCCREATE)
     {
