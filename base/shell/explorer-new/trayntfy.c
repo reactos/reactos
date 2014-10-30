@@ -353,10 +353,10 @@ SysPagerWnd_ToolbarSubclassedProc(IN HWND hWnd,
     {
         HWND parent = GetParent(hWnd);
 
-        if (!parent)
-            return 0;
-
-        SendMessage(parent, msg, wParam, lParam);
+        if (parent)
+        {
+            SendMessage(parent, msg, wParam, lParam);
+        }
     }
 
     return DefSubclassProc(hWnd, msg, wParam, lParam);
@@ -544,8 +544,11 @@ SysPagerWndProc(IN HWND hwnd,
         switch (uMsg)
         {
             case WM_ERASEBKGND:
-                SysPagerWnd_DrawBackground(hwnd,(HDC)wParam);
-                return 0;
+                if (!IsAppThemed())
+                    break;
+
+                SysPagerWnd_DrawBackground(hwnd, (HDC) wParam);
+                return TRUE;
 
             case WM_NCCREATE:
             {
@@ -556,9 +559,7 @@ SysPagerWndProc(IN HWND hwnd,
                 This->ButtonCount = 0;
                 This->VisibleButtonCount = 0;
 
-                SetWindowLongPtr(hwnd,
-                                 0,
-                                 (LONG_PTR)This);
+                SetWindowLongPtr(hwnd, 0, (LONG_PTR) This);
 
                 return TRUE;
             }
@@ -604,22 +605,14 @@ SysPagerWndProc(IN HWND hwnd,
                 szClient.cx = LOWORD(lParam);
                 szClient.cy = HIWORD(lParam);
 
-                Ret = DefWindowProc(hwnd,
-                                    uMsg,
-                                    wParam,
-                                    lParam);
-
+                Ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
 
                 if (This->hWndToolbar != NULL && This->hWndToolbar != hwnd)
                 {
-                    SetWindowPos(This->hWndToolbar,
-                                 NULL,
-                                 0,
-                                 0,
-                                 szClient.cx,
-                                 szClient.cy,
-                                 SWP_NOZORDER);
+                    SetWindowPos(This->hWndToolbar, NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
                 }
+
+                return Ret;
             }
 
             default:
@@ -644,15 +637,11 @@ SysPagerWndProc(IN HWND hwnd,
                     return 0;
                 }
 
-                Ret = DefWindowProc(hwnd,
-                                    uMsg,
-                                    wParam,
-                                    lParam);
                 break;
         }
     }
 
-    return Ret;
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 static HWND
@@ -1273,8 +1262,11 @@ TrayClockWndProc(IN HWND hwnd,
                 TrayClockWnd_UpdateTheme(This);
                 break;
             case WM_ERASEBKGND:
-                TrayClockWnd_DrawBackground(hwnd, (HDC)wParam);
-                break;
+                if (!IsAppThemed())
+                    break;
+
+                TrayClockWnd_DrawBackground(hwnd, (HDC) wParam);
+                return TRUE;
             case WM_PAINT:
             case WM_PRINTCLIENT:
             {
@@ -1283,19 +1275,16 @@ TrayClockWndProc(IN HWND hwnd,
 
                 if (wParam == 0)
                 {
-                    hDC = BeginPaint(This->hWnd,
-                                     &ps);
+                    hDC = BeginPaint(This->hWnd, &ps);
                 }
 
                 if (hDC != NULL)
                 {
-                    TrayClockWnd_Paint(This,
-                                       hDC);
+                    TrayClockWnd_Paint(This, hDC);
 
                     if (wParam == 0)
                     {
-                        EndPaint(This->hWnd,
-                                 &ps);
+                        EndPaint(This->hWnd, &ps);
                     }
                 }
                 break;
@@ -1316,23 +1305,18 @@ TrayClockWndProc(IN HWND hwnd,
 
             case WM_NCHITTEST:
                 /* We want the user to be able to drag the task bar when clicking the clock */
-                Ret = HTTRANSPARENT;
-                break;
+                return HTTRANSPARENT;
 
             case TCWM_GETMINIMUMSIZE:
             {
                 This->IsHorizontal = (BOOL)wParam;
 
-                Ret = (LRESULT)TrayClockWnd_GetMinimumSize(This,
-                                                           (BOOL)wParam,
-                                                           (PSIZE)lParam) != 0;
-                break;
+                return (LRESULT) TrayClockWnd_GetMinimumSize(This, (BOOL) wParam, (PSIZE) lParam) != 0;
             }
 
             case TCWM_UPDATETIME:
             {
-                Ret = (LRESULT)TrayClockWnd_ResetTime(This);
-                break;
+                return (LRESULT)TrayClockWnd_ResetTime(This);
             }
 
             case WM_NCCREATE:
@@ -1342,9 +1326,7 @@ TrayClockWndProc(IN HWND hwnd,
                 This->hWnd = hwnd;
                 This->hWndNotify = CreateStruct->hwndParent;
 
-                SetWindowLongPtr(hwnd,
-                                 0,
-                                 (LONG_PTR)This);
+                SetWindowLongPtr(hwnd, 0, (LONG_PTR) This);
                 TrayClockWnd_UpdateTheme(This);
 
                 return TRUE;
@@ -1382,17 +1364,10 @@ TrayClockWndProc(IN HWND hwnd,
                                TRUE);
                 break;
             }
-
-            default:
-                Ret = DefWindowProc(hwnd,
-                                    uMsg,
-                                    wParam,
-                                    lParam);
-                break;
         }
     }
 
-    return Ret;
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 static HWND
@@ -1747,7 +1722,6 @@ TrayNotifyWndProc(IN HWND hwnd,
                   IN LPARAM lParam)
 {
     PTRAY_NOTIFY_WND_DATA This = NULL;
-    LRESULT Ret = FALSE;
 
     if (uMsg != WM_NCCREATE)
     {
@@ -1764,17 +1738,11 @@ TrayNotifyWndProc(IN HWND hwnd,
                 return 0;
             case WM_ERASEBKGND:
                 if (!This->TrayTheme)
-                    goto HandleDefaultMessage;
-                return TrayNotifyWnd_DrawBackground(hwnd,
-                                                    uMsg,
-                                                    wParam,
-                                                    lParam);
+                    break;
+                return TrayNotifyWnd_DrawBackground(hwnd, uMsg, wParam, lParam);
             case TNWM_GETMINIMUMSIZE:
             {
-                Ret = (LRESULT)TrayNotifyWnd_GetMinimumSize(This,
-                                                            (BOOL)wParam,
-                                                            (PSIZE)lParam);
-                break;
+                return (LRESULT) TrayNotifyWnd_GetMinimumSize(This, (BOOL) wParam, (PSIZE) lParam);
             }
 
             case TNWM_UPDATETIME:
@@ -1782,12 +1750,9 @@ TrayNotifyWndProc(IN HWND hwnd,
                 if (This->hWndTrayClock != NULL)
                 {
                     /* Forward the message to the tray clock window procedure */
-                    Ret = TrayClockWndProc(This->hWndTrayClock,
-                                           TCWM_UPDATETIME,
-                                           wParam,
-                                           lParam);
+                    return TrayClockWndProc(This->hWndTrayClock, TCWM_UPDATETIME, wParam, lParam);
                 }
-                break;
+                return 0;
             }
 
             case WM_SIZE:
@@ -1799,15 +1764,13 @@ TrayNotifyWndProc(IN HWND hwnd,
 
                 TrayNotifyWnd_Size(This,
                                    &szClient);
-                break;
+                return 0;
             }
 
             case WM_NCHITTEST:
                 /* We want the user to be able to drag the task bar when clicking the
                    tray notification window */
-                Ret = HTTRANSPARENT;
-                break;
-
+                return HTTRANSPARENT;
             case TNWM_SHOWCLOCK:
             {
                 BOOL PrevHidden = This->HideClock;
@@ -1819,8 +1782,7 @@ TrayNotifyWndProc(IN HWND hwnd,
                                This->HideClock ? SW_HIDE : SW_SHOW);
                 }
 
-                Ret = (LRESULT)(!PrevHidden);
-                break;
+                return (LRESULT) (!PrevHidden);
             }
 
             case WM_NOTIFY:
@@ -1830,12 +1792,9 @@ TrayNotifyWndProc(IN HWND hwnd,
                 if (nmh->hwndFrom == This->hWndTrayClock)
                 {
                     /* Pass down notifications */
-                    Ret = SendMessage(This->hWndNotify,
-                                      WM_NOTIFY,
-                                      wParam,
-                                      lParam);
+                    return SendMessage(This->hWndNotify, WM_NOTIFY, wParam, lParam);
                 }
-                break;
+                return 0;
             }
 
             case WM_SETFONT:
@@ -1847,7 +1806,7 @@ TrayNotifyWndProc(IN HWND hwnd,
                                 wParam,
                                 lParam);
                 }
-                goto HandleDefaultMessage;
+                break;
             }
 
             case WM_NCCREATE:
@@ -1857,32 +1816,22 @@ TrayNotifyWndProc(IN HWND hwnd,
                 This->hWnd = hwnd;
                 This->hWndNotify = CreateStruct->hwndParent;
 
-                SetWindowLongPtr(hwnd,
-                                 0,
-                                 (LONG_PTR)This);
+                SetWindowLongPtr(hwnd, 0, (LONG_PTR) This);
 
                 return TRUE;
             }
 
             case WM_CREATE:
                 TrayNotifyWnd_Create(This);
-                break;
+                return 0;
 
             case WM_NCDESTROY:
                 TrayNotifyWnd_NCDestroy(This);
-                break;
-
-            default:
-HandleDefaultMessage:
-                Ret = DefWindowProc(hwnd,
-                                    uMsg,
-                                    wParam,
-                                    lParam);
-                break;
+                return 0;
         }
     }
 
-    return Ret;
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 HWND

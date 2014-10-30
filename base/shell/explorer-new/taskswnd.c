@@ -1443,9 +1443,8 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
                                        TOOLBARCLASSNAME,
                                        szRunningApps,
                                        WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
-                                           TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_LIST |
-                                           TBSTYLE_TRANSPARENT |
-                                           CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER,
+                                       TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_LIST | TBSTYLE_TRANSPARENT |
+                                       CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER,
                                        0,
                                        0,
                                        0,
@@ -1942,8 +1941,7 @@ TaskSwitchWndProc(IN HWND hwnd,
 
     if (uMsg != WM_NCCREATE)
     {
-        This = (PTASK_SWITCH_WND)GetWindowLongPtr(hwnd,
-                                                  0);
+        This = (PTASK_SWITCH_WND)GetWindowLongPtr(hwnd, 0);
     }
 
     if (This != NULL || uMsg == WM_NCCREATE)
@@ -1954,8 +1952,10 @@ TaskSwitchWndProc(IN HWND hwnd,
                 TaskSwitchWnd_UpdateTheme(This);
                 break;
             case WM_ERASEBKGND:
-                TaskSwitchWnd_DrawBackground(hwnd, (HDC)wParam);
-                break;
+                if (!This->TaskBandTheme)
+                    break;
+                TaskSwitchWnd_DrawBackground(hwnd, (HDC) wParam);
+                return TRUE;
             case WM_SIZE:
             {
                 SIZE szClient;
@@ -1972,8 +1972,7 @@ TaskSwitchWndProc(IN HWND hwnd,
                                  szClient.cy,
                                  SWP_NOZORDER);
 
-                    TaskSwitchWnd_UpdateButtonsSize(This,
-                                                    FALSE);
+                    TaskSwitchWnd_UpdateButtonsSize(This, FALSE);
                 }
                 break;
             }
@@ -1982,21 +1981,17 @@ TaskSwitchWndProc(IN HWND hwnd,
             {
                 /* We want the tray window to be draggable everywhere, so make the control
                    appear transparent */
-                Ret = DefWindowProc(hwnd,
-                                    uMsg,
-                                    wParam,
-                                    lParam);
+                Ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
                 if (Ret != HTVSCROLL && Ret != HTHSCROLL)
-                    Ret = HTTRANSPARENT;
-                break;
+                    return HTTRANSPARENT;
+                return Ret;
             }
 
             case WM_COMMAND:
             {
                 if (lParam != 0 && (HWND)lParam == This->hWndToolbar)
                 {
-                    TaskSwitchWnd_HandleButtonClick(This,
-                                                    LOWORD(wParam));
+                    TaskSwitchWnd_HandleButtonClick(This, LOWORD(wParam));
                 }
                 break;
             }
@@ -2007,10 +2002,9 @@ TaskSwitchWndProc(IN HWND hwnd,
 
                 if (nmh->hwndFrom == This->hWndToolbar)
                 {
-                    Ret = TaskSwitchWnd_HandleToolbarNotification(This,
-                                                                  nmh);
+                    return TaskSwitchWnd_HandleToolbarNotification(This, nmh);
                 }
-                break;
+                return 0;
             }
 
             case TSWM_ENABLEGROUPING:
@@ -2021,16 +2015,13 @@ TaskSwitchWndProc(IN HWND hwnd,
                     TaskSwitchWnd_EnableGrouping(This,
                                                  (BOOL)wParam);
                 }
-                break;
+                return Ret;
             }
 
             case TSWM_UPDATETASKBARPOS:
             {
                 /* Update the button spacing */
-                TaskSwitchWnd_UpdateTbButtonSpacing(This,
-                                                    ITrayWindow_IsHorizontal(This->Tray),
-                                                    0,
-                                                    0);
+                TaskSwitchWnd_UpdateTbButtonSpacing(This, ITrayWindow_IsHorizontal(This->Tray), 0, 0);
                 break;
             }
 
@@ -2044,19 +2035,12 @@ TaskSwitchWndProc(IN HWND hwnd,
                     pt.x = (LONG)LOWORD(lParam);
                     pt.y = (LONG)HIWORD(lParam);
 
-                    MapWindowPoints(NULL,
-                                    This->hWndToolbar,
-                                    &pt,
-                                    1);
+                    MapWindowPoints(NULL, This->hWndToolbar, &pt, 1);
 
-                    iBtn = (INT_PTR)SendMessage(This->hWndToolbar,
-                                                TB_HITTEST,
-                                                0,
-                                                (LPARAM)&pt);
+                    iBtn = (INT_PTR) SendMessage(This->hWndToolbar, TB_HITTEST, 0, (LPARAM) &pt);
                     if (iBtn >= 0)
                     {
-                        TaskSwitchWnd_HandleButtonRightClick(This,
-                                                    iBtn);
+                        TaskSwitchWnd_HandleButtonRightClick(This, iBtn);
                     }
                     else
                         goto ForwardContextMenuMsg;
@@ -2065,10 +2049,7 @@ TaskSwitchWndProc(IN HWND hwnd,
                 {
 ForwardContextMenuMsg:
                     /* Forward message */
-                    Ret = SendMessage(ITrayWindow_GetHWND(This->Tray),
-                                      uMsg,
-                                      wParam,
-                                      lParam);
+                    Ret = SendMessage(ITrayWindow_GetHWND(This->Tray), uMsg, wParam, lParam);
                 }
                 break;
             }
@@ -2097,10 +2078,7 @@ ForwardContextMenuMsg:
                 TaskSwitchWnd_Create(This);
 
 #if DUMP_TASKS != 0
-                SetTimer(hwnd,
-                         1,
-                         5000,
-                         NULL);
+                SetTimer(hwnd, 1, 5000, NULL);
 #endif
 
                 break;
@@ -2119,12 +2097,8 @@ ForwardContextMenuMsg:
 
             case WM_NCDESTROY:
                 TaskSwitchWnd_NCDestroy(This);
-                HeapFree(hProcessHeap,
-                         0,
-                         This);
-                SetWindowLongPtr(hwnd,
-                                 0,
-                                 0);
+                HeapFree(hProcessHeap, 0, This);
+                SetWindowLongPtr(hwnd, 0, 0);
                 break;
 
 #if DUMP_TASKS != 0
@@ -2161,28 +2135,14 @@ ForwardContextMenuMsg:
                 if (uMsg == This->ShellHookMsg && This->ShellHookMsg != 0)
                 {
                     /* Process shell messages */
-                    Ret = (LRESULT)TaskSwitchWnd_HandleShellHookMsg(This,
-                                                                    wParam,
-                                                                    lParam);
-                    break;
+                    return (LRESULT) TaskSwitchWnd_HandleShellHookMsg(This, wParam, lParam);
                 }
 
-                Ret = DefWindowProc(hwnd,
-                                    uMsg,
-                                    wParam,
-                                    lParam);
                 break;
         }
     }
-    else
-    {
-        Ret = DefWindowProc(hwnd,
-                            uMsg,
-                            wParam,
-                            lParam);
-    }
 
-    return Ret;
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 

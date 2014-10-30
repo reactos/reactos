@@ -2449,8 +2449,7 @@ TrayWndProc(IN HWND hwnd,
             case WM_ERASEBKGND:
                 if (!This->TaskbarTheme)
                     goto DefHandler;
-                return ITrayWindowImpl_DrawBackground(This,
-                                                      (HDC)wParam);
+                return ITrayWindowImpl_DrawBackground(This, (HDC)wParam);
             case WM_CTLCOLORBTN:
                 SetBkMode((HDC)wParam, TRANSPARENT);
                 return (LRESULT)GetStockObject(HOLLOW_BRUSH);
