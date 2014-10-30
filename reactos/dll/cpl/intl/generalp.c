@@ -234,7 +234,9 @@ LocationsEnumProc(GEOID gId)
     TCHAR loc[MAX_STR_SIZE];
     INT index;
 
-    GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT);
+    if(GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
+        return TRUE;
+
     index = (INT)SendMessage(hGeoList,
                              CB_ADDSTRING,
                              0,
