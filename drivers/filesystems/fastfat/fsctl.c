@@ -89,7 +89,6 @@ VfatHasFileSystem(
             return Status;
         }
 
-        PartitionInfoIsValid = TRUE;
         DPRINT("Partition Information:\n");
         DPRINT("StartingOffset      %I64x\n", PartitionInfo.StartingOffset.QuadPart  / 512);
         DPRINT("PartitionLength     %I64x\n", PartitionInfo.PartitionLength.QuadPart / 512);
@@ -108,6 +107,7 @@ VfatHasFileSystem(
                 PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
                 PartitionInfo.PartitionType == PARTITION_XINT13)
             {
+                 PartitionInfoIsValid = TRUE;
                 *RecognizedFS = TRUE;
             }
         }
@@ -117,6 +117,7 @@ VfatHasFileSystem(
                  PartitionInfo.PartitionLength.QuadPart > 0)
         {
             /* This is possible a removable media formated as super floppy */
+            PartitionInfoIsValid = TRUE;
             *RecognizedFS = TRUE;
         }
     }

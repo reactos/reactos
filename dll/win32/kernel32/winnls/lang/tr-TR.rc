@@ -1,7 +1,4 @@
 /* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-#pragma code_page(1252)
-
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE

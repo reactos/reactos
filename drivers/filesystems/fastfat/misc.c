@@ -95,6 +95,16 @@ Fail:
 
 static
 NTSTATUS
+VfatDeviceControl(
+    IN PVFAT_IRP_CONTEXT IrpContext)
+{
+    IoSkipCurrentIrpStackLocation(IrpContext->Irp);
+
+    return IoCallDriver(IrpContext->DeviceExt->StorageDevice, IrpContext->Irp);
+}
+
+static
+NTSTATUS
 VfatDispatchRequest(
     IN PVFAT_IRP_CONTEXT IrpContext)
 {
@@ -127,6 +137,8 @@ VfatDispatchRequest(
             return VfatSetVolumeInformation(IrpContext);
         case IRP_MJ_LOCK_CONTROL:
             return VfatLockControl(IrpContext);
+        case IRP_MJ_DEVICE_CONTROL:
+            return VfatDeviceControl(IrpContext);
         case IRP_MJ_CLEANUP:
             return VfatCleanup(IrpContext);
         case IRP_MJ_FLUSH_BUFFERS:

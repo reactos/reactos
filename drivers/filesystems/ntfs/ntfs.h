@@ -715,6 +715,9 @@ NtfsFsdWrite(PDEVICE_OBJECT DeviceObject,
 
 /* volinfo.c */
 
+ULONGLONG
+NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt);
+
 NTSTATUS
 NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);
 

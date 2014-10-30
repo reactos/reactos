@@ -32,7 +32,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static
 ULONGLONG
 NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
 {
