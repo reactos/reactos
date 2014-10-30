@@ -1984,7 +1984,7 @@ FinishDlgProc(HWND hwndDlg,
             PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 
             /* Run the Wine Gecko prompt */
-            Control_RunDLLW(GetDesktopWindow(), 0, L"appwiz.cpl install_gecko", SW_SHOW);
+            Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl install_gecko", SW_SHOW);
 
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
