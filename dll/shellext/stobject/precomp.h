@@ -36,7 +36,7 @@
 
 extern HINSTANCE g_hInstance;
 
-#define ID_ICON_VOLUME 0x4CB
+#define ID_ICON_VOLUME (WM_APP + 0x4CB)
 
 #include "csystray.h"
 

@@ -22,6 +22,7 @@ CSysTray::~CSysTray() {}
 
 HRESULT CSysTray::InitIcons()
 {
+    TRACE("Initializing Notification icons...\n");
     for (int i = 0; i < g_NumIcons; i++)
     {
         HRESULT hr = g_IconHandlers[i].pfnInit(this);
@@ -34,6 +35,7 @@ HRESULT CSysTray::InitIcons()
 
 HRESULT CSysTray::ShutdownIcons()
 {
+    TRACE("Shutting down Notification icons...\n");
     for (int i = 0; i < g_NumIcons; i++)
     {
         HRESULT hr = g_IconHandlers[i].pfnShutdown(this);
@@ -46,6 +48,7 @@ HRESULT CSysTray::ShutdownIcons()
 
 HRESULT CSysTray::UpdateIcons()
 {
+    TRACE("Updating Notification icons...\n");
     for (int i = 0; i < g_NumIcons; i++)
     {
         HRESULT hr = g_IconHandlers[i].pfnUpdate(this);
@@ -73,9 +76,12 @@ HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip)
 {
-    NOTIFYICONDATA nim;
+    NOTIFYICONDATA nim = { 0 };
+
+    TRACE("NotifyIcon code=%d, uId=%d, hIcon=%p, szTip=%S\n", code, uId, hIcon, szTip);
+
     nim.cbSize = sizeof(NOTIFYICONDATA);
-    nim.uFlags = NIF_ICON | NIF_STATE | NIF_TIP;
+    nim.uFlags = NIF_MESSAGE | NIF_ICON | NIF_STATE | NIF_TIP;
     nim.hIcon = hIcon;
     nim.uID = uId;
     nim.uCallbackMessage = uId;

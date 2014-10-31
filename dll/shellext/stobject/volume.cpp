@@ -163,8 +163,7 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
     else
         icon = g_hIconVolume;
 
-    pSysTray->NotifyIcon(NIM_ADD, ID_ICON_VOLUME, icon, L"Placeholder");
-    return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_VOLUME, icon, L"Placeholder");
+    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_VOLUME, icon, L"Volume Control");
 }
 
 HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
@@ -200,11 +199,13 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
         return Volume_OnDeviceChange(pSysTray, wParam, lParam);
 
     if (uMsg != ID_ICON_VOLUME)
+    {
+        TRACE("Volume_Message received for unknown ID %d, ignoring.\n");
         return S_FALSE;
+    }
 
-    TRACE("Volume_Message\n");
+    TRACE("Volume_Message uMsg=%d, w=%x, l=%x\n", uMsg, wParam, lParam);
 
-    TRACE("Calling update...\n");
     Volume_Update(pSysTray);
 
     switch (lParam)

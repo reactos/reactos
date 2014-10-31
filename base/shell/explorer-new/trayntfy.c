@@ -1671,22 +1671,17 @@ TrayNotifyWnd_Size(IN OUT PTRAY_NOTIFY_WND_DATA This,
     }
 }
 
-static LRESULT
+static VOID
 TrayNotifyWnd_DrawBackground(IN HWND hwnd,
-                             IN UINT uMsg,
-                             IN WPARAM wParam,
-                             IN LPARAM lParam)
+                             IN HDC hdc)
 {
     PTRAY_NOTIFY_WND_DATA This = (PTRAY_NOTIFY_WND_DATA)GetWindowLongPtr(hwnd, 0);
     RECT rect;
-    HDC hdc = (HDC)wParam;
 
     GetClientRect(hwnd, &rect);
 
     DrawThemeParentBackground(hwnd, hdc, &rect);
     DrawThemeBackground(This->TrayTheme, hdc, TNP_BACKGROUND, 0, &rect, 0);
-
-    return 0;
 }
 
 VOID
@@ -1724,8 +1719,7 @@ TrayNotifyWndProc(IN HWND hwnd,
 
     if (uMsg != WM_NCCREATE)
     {
-        This = (PTRAY_NOTIFY_WND_DATA)GetWindowLongPtr(hwnd,
-                                                       0);
+        This = (PTRAY_NOTIFY_WND_DATA)GetWindowLongPtr(hwnd, 0);
     }
 
     if (This != NULL || uMsg == WM_NCCREATE)
@@ -1738,7 +1732,8 @@ TrayNotifyWndProc(IN HWND hwnd,
             case WM_ERASEBKGND:
                 if (!This->TrayTheme)
                     break;
-                return TrayNotifyWnd_DrawBackground(hwnd, uMsg, wParam, lParam);
+                TrayNotifyWnd_DrawBackground(hwnd, (HDC) wParam);
+                return 0;
             case TNWM_GETMINIMUMSIZE:
             {
                 return (LRESULT) TrayNotifyWnd_GetMinimumSize(This, (BOOL) wParam, (PSIZE) lParam);
@@ -1761,8 +1756,7 @@ TrayNotifyWndProc(IN HWND hwnd,
                 szClient.cx = LOWORD(lParam);
                 szClient.cy = HIWORD(lParam);
 
-                TrayNotifyWnd_Size(This,
-                                   &szClient);
+                TrayNotifyWnd_Size(This, &szClient);
                 return 0;
             }
 

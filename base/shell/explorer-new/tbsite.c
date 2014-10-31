@@ -135,22 +135,18 @@ ITrayBandSiteImpl_QueryInterface(IN OUT ITrayBandSite *iface,
 
     This = ITrayBandSiteImpl_from_ITrayBandSite(iface);
 
-    if (IsEqualIID(riid,
-                   &IID_IUnknown) ||
-        IsEqualIID(riid,
-                   &IID_IBandSiteStreamCallback))
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IBandSiteStreamCallback))
     {
         /* NOTE: IID_IBandSiteStreamCallback is queried by the shell, we
                  implement this interface directly */
         *ppvObj = IUnknown_from_ITrayBandSiteImpl(This);
     }
-    else if (IsEqualIID(riid,
-                        &IID_IBandSite))
+    else if (IsEqualIID(riid, &IID_IBandSite))
     {
         *ppvObj = IBandSite_from_ITrayBandSiteImpl(This);
     }
-    else if (IsEqualIID(riid,
-                        &IID_IWinEventHandler))
+    else if (IsEqualIID(riid, &IID_IWinEventHandler))
     {
         TRACE("ITaskBandSite: IWinEventHandler queried!\n");
         *ppvObj = NULL;
