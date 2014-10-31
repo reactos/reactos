@@ -89,9 +89,10 @@ BOOL ParseCommandLine(int argc, TCHAR *argv[])
 			}
 		default:
 			//Invalid parameter detected
-			if (AllocAndLoadString(&lpIllegalMsg, GetModuleHandle(NULL), IDS_ILLEGAL_PARAM))
-			_putts(lpIllegalMsg);
-			LocalFree(lpIllegalMsg);
+			if (AllocAndLoadString(&lpIllegalMsg, GetModuleHandle(NULL), IDS_ILLEGAL_PARAM)) {
+				_putts(lpIllegalMsg);
+				LocalFree(lpIllegalMsg);
+			}
 			return FALSE;
 		}
 	}
