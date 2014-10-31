@@ -92,6 +92,7 @@ VfatCleanupFile(
                 pFcb->FileObject = NULL;
                 CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
                 ObDereferenceObject(tmpFileObject);
+                vfatReleaseFCB(IrpContext->DeviceExt, pFcb);
             }
 
             CcPurgeCacheSection(FileObject->SectionObjectPointer, NULL, 0, FALSE);

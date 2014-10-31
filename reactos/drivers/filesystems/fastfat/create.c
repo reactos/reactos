@@ -365,7 +365,6 @@ VfatOpenFile(
         DPRINT("'%wZ'\n", &FileObject->RelatedFileObject->FileName);
 
         *ParentFcb = FileObject->RelatedFileObject->FsContext;
-        vfatGrabFCB(DeviceExt, *ParentFcb);
     }
     else
     {
