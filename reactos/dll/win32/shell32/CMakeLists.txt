@@ -42,7 +42,6 @@ list(APPEND SOURCE
     shellord.cpp
     shellpath.cpp
     shellreg.cpp
-    shellstring.cpp
     folders/desktop.cpp
     folders/fs.cpp
     folders/mycomp.cpp
@@ -76,6 +75,7 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED
     ${SOURCE}
+    shellstring.c
     vista.c
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
