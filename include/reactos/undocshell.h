@@ -533,7 +533,7 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE);
 #include <stdio.h>
 
 #define SMC_EXEC 4
-extern "C" INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
+INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
 
 static inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
@@ -574,13 +574,14 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 static inline void DbgDumpMenuInternal(HMENU hmenu, char* padding, int padlevel)
 {
     WCHAR label[128];
+    int i;
+    int count = GetMenuItemCount(hmenu);
 
     padding[padlevel] = '.';
     padding[padlevel + 1] = '.';
     padding[padlevel + 2] = 0;
 
-    int count = GetMenuItemCount(hmenu);
-    for (int i = 0; i < count; i++)
+    for (i = 0; i < count; i++)
     {
         MENUITEMINFOW mii = { 0 };
 
