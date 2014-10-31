@@ -1704,6 +1704,16 @@ GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
                             (LPWSTR)RT_STRING,
                             MAKEINTRESOURCEW((dwId >> 4) + 1),
                             langId);
+
+    /* english fallback */
+    if(!hrsrc)
+    {
+        hrsrc = FindResourceExW(hCurrentModule,
+                            (LPWSTR)RT_STRING,
+                            MAKEINTRESOURCEW((dwId >> 4) + 1),
+                            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
+    }
+
     if (hrsrc)
     {
         HGLOBAL hmem = LoadResource(hCurrentModule, hrsrc);
