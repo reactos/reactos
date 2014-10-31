@@ -30,6 +30,7 @@ static void PrintUsage() {
 
 	if (AllocAndLoadString(&lpUsage, GetModuleHandle(NULL), IDS_USAGE)) {
 		_putts(lpUsage);
+		LocalFree(lpUsage);
 	}
 
 }
@@ -90,6 +91,7 @@ BOOL ParseCommandLine(int argc, TCHAR *argv[])
 			//Invalid parameter detected
 			if (AllocAndLoadString(&lpIllegalMsg, GetModuleHandle(NULL), IDS_ILLEGAL_PARAM))
 			_putts(lpIllegalMsg);
+			LocalFree(lpIllegalMsg);
 			return FALSE;
 		}
 	}
