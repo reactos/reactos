@@ -230,12 +230,6 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
-        // H   H   A    CCC  K   K  ! ! !
-        // H   H  A A  C   C K  K   ! ! !
-        // HHHHH AAAAA C     KKK    ! ! !
-        // H   H A   A C   C K  K   ! ! !
-        // H   H A   A  CCC  K   K  . . .
-        //
         // HACK: Instead of running explorer.exe with the path, we should be using ShellExecute to "open" the path directly!
         // Remove once ShellExecute can handle CLSID path components.
 
@@ -244,7 +238,7 @@ private:
         else if (psmd->uId == IDM_NETWORKCONNECTIONS)
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, SW_SHOWNORMAL);
         else if (psmd->uId == IDM_PRINTERSANDFAXES)
-            {}/* FIXME: crashes: ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, SW_SHOWNORMAL);*/
+            ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, SW_SHOWNORMAL);
         else
             PostMessageW(m_hwndTray, WM_COMMAND, psmd->uId, 0);
 
