@@ -232,6 +232,7 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
                 }
 
                 if (ConType) CharToOem(ConTypeTmp, ConType);
+                HeapFree(ProcessHeap, 0, ConTypeTmp);
             }
         }
     }
@@ -366,6 +367,7 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
                                    (PBYTE)lpConDesc,
                                    &dwDataSize) != ERROR_SUCCESS)
                 {
+                    HeapFree(ProcessHeap, 0, lpConDesc);
                     lpConDesc = NULL;
                     goto CLEANUP;
                 }
@@ -382,9 +384,9 @@ CLEANUP:
         RegCloseKey(hBaseKey);
     if (hClassKey != NULL)
         RegCloseKey(hClassKey);
-    if (lpConDesc != NULL)
+    if (lpPath != NULL)
         HeapFree(ProcessHeap, 0, lpPath);
-    if (lpConDesc != NULL)
+    if (lpKeyClass != NULL)
         HeapFree(ProcessHeap, 0, lpKeyClass);
 
     return lpConDesc;
@@ -714,7 +716,9 @@ VOID Usage(VOID)
                            Size))
             {
                 _tprintf(_T("%s"), lpUsage);
-            }            
+            }
+
+            HeapFree(ProcessHeap, 0, lpUsage);
         }
     }
 
