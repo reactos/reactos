@@ -419,28 +419,6 @@ IopParseDevice(IN PVOID ParseObject,
         DirectOpen = TRUE;
     }
 
-#if 0
-    /* FIXME: Small hack still exists, have to check why...
-     * This is triggered multiple times by usetup and then once per boot.
-     */
-    if (!(DirectOpen) &&
-        !(RemainingName->Length) &&
-        !(OpenPacket->RelatedFileObject) &&
-        ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
-         (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
-        !(UseDummyFile))
-    {
-        DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
-        DesiredAccess & ~(SYNCHRONIZE |
-                          FILE_READ_ATTRIBUTES |
-                          READ_CONTROL |
-                          ACCESS_SYSTEM_SECURITY |
-                          WRITE_OWNER |
-                          WRITE_DAC));
-        DirectOpen = TRUE;
-    }
-#endif
-
     /* Check if we have a related FO that wasn't a direct open */
     if ((OpenPacket->RelatedFileObject) &&
         !(OpenPacket->RelatedFileObject->Flags & FO_DIRECT_DEVICE_OPEN))
