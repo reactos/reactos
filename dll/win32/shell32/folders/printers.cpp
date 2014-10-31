@@ -430,7 +430,6 @@ HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPV
         if (pShellView)
         {
             hr = pShellView->QueryInterface(riid, ppvOut);
-            pShellView->Release();
         }
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
