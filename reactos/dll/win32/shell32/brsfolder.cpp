@@ -354,11 +354,11 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
     tvi.cChildren= pEnumIL ? 1 : 0;
     tvi.mask |= TVIF_CHILDREN;
 
-    lptvid = (TV_ITEMDATA *)SHAlloc( sizeof(TV_ITEMDATA) );
-    if (!lptvid)
+    if (!GetName(lpsf, pidl, SHGDN_NORMAL, szBuff))
         return NULL;
 
-    if (!GetName(lpsf, pidl, SHGDN_NORMAL, szBuff))
+    lptvid = (TV_ITEMDATA *)SHAlloc( sizeof(TV_ITEMDATA) );
+    if (!lptvid)
         return NULL;
 
     tvi.pszText    = szBuff;
