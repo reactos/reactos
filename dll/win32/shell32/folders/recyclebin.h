@@ -25,6 +25,9 @@
 DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter);
 HRESULT WINAPI DoDeleteDataObject(IDataObject *pda);
 
+BOOL TRASH_CanTrashFile(LPCWSTR wszPath);
+BOOL TRASH_TrashFile(LPCWSTR wszPath);
+
 class CRecycleBin :
     public CComCoClass<CRecycleBin, &CLSID_RecycleBin>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,

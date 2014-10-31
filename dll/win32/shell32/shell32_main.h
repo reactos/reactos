@@ -30,7 +30,7 @@ extern HINSTANCE shell32_hInstance;
 extern HIMAGELIST	ShellSmallIconList;
 extern HIMAGELIST	ShellBigIconList;
 
-extern "C" BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
+BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
 /* Iconcache */
 #define INVALID_INDEX -1
@@ -128,7 +128,7 @@ BOOL SHELL_ConfirmYesNoW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir);
 void WINAPI _InsertMenuItemW (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
 			UINT wID, UINT fType, LPCWSTR dwTypeData, UINT fState);
 
-static BOOL __inline SHELL_OsIsUnicode(void)
+static __inline BOOL SHELL_OsIsUnicode(void)
 {
     /* if high-bit of version is 0, we are emulating NT */
     return !(GetVersion() & 0x80000000);
@@ -139,26 +139,26 @@ static BOOL __inline SHELL_OsIsUnicode(void)
 	  SHFree(*ptr); \
 	  *ptr = NULL; \
 	};
-static void __inline __SHCloneStrA(char **target, const char *source)
+static __inline void __SHCloneStrA(char **target, const char *source)
 {
 	*target = (char *)SHAlloc(strlen(source) + 1);
 	strcpy(*target, source);
 }
 
-static void __inline __SHCloneStrWtoA(char **target, const WCHAR *source)
+static __inline void __SHCloneStrWtoA(char **target, const WCHAR *source)
 {
 	int len = WideCharToMultiByte(CP_ACP, 0, source, -1, NULL, 0, NULL, NULL);
 	*target = (char *)SHAlloc(len);
 	WideCharToMultiByte(CP_ACP, 0, source, -1, *target, len, NULL, NULL);
 }
 
-static void __inline __SHCloneStrW(WCHAR **target, const WCHAR *source)
+static __inline void __SHCloneStrW(WCHAR **target, const WCHAR *source)
 {
 	*target = (WCHAR *)SHAlloc((lstrlenW(source) + 1) * sizeof(WCHAR) );
 	lstrcpyW(*target, source);
 }
 
-static LPWSTR __inline __SHCloneStrAtoW(WCHAR **target, const char *source)
+static __inline LPWSTR __SHCloneStrAtoW(WCHAR **target, const char *source)
 {
 	int len = MultiByteToWideChar(CP_ACP, 0, source, -1, NULL, 0);
 	*target = (WCHAR *)SHAlloc(len * sizeof(WCHAR));

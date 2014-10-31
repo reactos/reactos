@@ -397,7 +397,7 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     return FALSE;
 }
 
-BOOL install_addon(addon_t addon_type)
+BOOL install_addon(addon_t addon_type, HWND hwnd_parent)
 {
 
     if(!*ARCH_STRING)
@@ -411,7 +411,7 @@ BOOL install_addon(addon_t addon_type)
      * - download the package
      */
     if (install_from_registered_dir() == INSTALL_NEXT)
-        DialogBoxW(hApplet, addon->dialog_template, 0, installer_proc);
+        DialogBoxW(hApplet, addon->dialog_template, hwnd_parent, installer_proc);
 
     return TRUE;
 }

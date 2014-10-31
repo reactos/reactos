@@ -396,30 +396,41 @@ vfatPrepareTargetForRename(
     /* If it exists */
     if (NT_SUCCESS(Status))
     {
+        DPRINT("Target file %wZ exists. FCB Flags %08x\n", NewName, TargetFcb->Flags);
         /* Check whether we are allowed to replace */
         if (ReplaceIfExists)
         {
             /* If that's a directory or a read-only file, we're not allowed */
-            if (vfatFCBIsDirectory(TargetFcb) || ((*TargetFcb->Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY));
+            if (vfatFCBIsDirectory(TargetFcb) || ((*TargetFcb->Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY))
             {
+                DPRINT("And this is a readonly file!\n");
                 vfatReleaseFCB(DeviceExt, *ParentFCB);
                 *ParentFCB = NULL;
                 vfatReleaseFCB(DeviceExt, TargetFcb);
                 return STATUS_OBJECT_NAME_COLLISION;
             }
 
-            /* Attempt to flush (might close the file) */
-            if (!MmFlushImageSection(TargetFcb->FileObject->SectionObjectPointer, MmFlushForDelete))
+
+            /* If we still have a file object, close it. */
+            if (TargetFcb->FileObject)
             {
-                vfatReleaseFCB(DeviceExt, *ParentFCB);
-                *ParentFCB = NULL;
-                vfatReleaseFCB(DeviceExt, TargetFcb);
-                return STATUS_ACCESS_DENIED;
+                if (!MmFlushImageSection(TargetFcb->FileObject->SectionObjectPointer, MmFlushForDelete))
+                {
+                    DPRINT("MmFlushImageSection failed.\n");
+                    vfatReleaseFCB(DeviceExt, *ParentFCB);
+                    *ParentFCB = NULL;
+                    vfatReleaseFCB(DeviceExt, TargetFcb);
+                    return STATUS_ACCESS_DENIED;
+                }
+
+                TargetFcb->FileObject->DeletePending = TRUE;
+                VfatCloseFile(DeviceExt, TargetFcb->FileObject);
             }
 
-            /* If we are, ensure the file isn't open by anyone! */
+            /* If we are here, ensure the file isn't open by anyone! */
             if (TargetFcb->OpenHandleCount != 0)
             {
+                DPRINT("There are still open handles for this file.\n");
                 vfatReleaseFCB(DeviceExt, *ParentFCB);
                 *ParentFCB = NULL;
                 vfatReleaseFCB(DeviceExt, TargetFcb);
@@ -427,10 +438,11 @@ vfatPrepareTargetForRename(
             }
 
             /* Effectively delete old file to allow renaming */
+            DPRINT("Effectively deleting the file.\n");
             VfatDelEntry(DeviceExt, TargetFcb, NULL);
-            vfatGrabFCB(DeviceExt, *ParentFCB);
             vfatReleaseFCB(DeviceExt, TargetFcb);
             *Deleted = TRUE;
+            return STATUS_SUCCESS;
         }
         else
         {

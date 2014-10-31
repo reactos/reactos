@@ -3365,6 +3365,11 @@ GreExtTextOutW(
     BrushOrigin.x = 0;
     BrushOrigin.y = 0;
 
+    psurf = dc->dclevel.pSurface ;
+
+    if(!psurf) 
+        psurf = psurfDefaultBitmap;
+
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
         DestRect.left   = lprc->left;
@@ -3383,7 +3388,7 @@ GreExtTextOutW(
             DC_vUpdateBackgroundBrush(dc);
 
         IntEngBitBlt(
-            &dc->dclevel.pSurface->SurfObj,
+            &psurf->SurfObj,
             NULL,
             NULL,
             &dc->co.ClipObj,
@@ -3573,8 +3578,6 @@ GreExtTextOutW(
     /* Lock blit with a dummy rect */
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
-    psurf = dc->dclevel.pSurface ;
-    if(!psurf) psurf = psurfDefaultBitmap;
     SurfObj = &psurf->SurfObj ;
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
