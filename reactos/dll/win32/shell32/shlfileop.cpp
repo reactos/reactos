@@ -23,8 +23,6 @@
 
 #include "precomp.h"
 
-#include "xdg.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define IsAttrib(x, y)  ((INVALID_FILE_ATTRIBUTES != (x)) && ((x) & (y)))
