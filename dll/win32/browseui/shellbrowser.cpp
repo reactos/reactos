@@ -3309,7 +3309,11 @@ LRESULT CShellBrowser::OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     fStatusBarVisible = !fStatusBarVisible;
-    // TODO: trigger a relayout of contained items
+    if (fStatusBar)
+    {
+        ::ShowWindow(fStatusBar, fStatusBarVisible ? SW_SHOW : SW_HIDE);
+        RepositionBars();
+    }
     return 0;
 }
 
