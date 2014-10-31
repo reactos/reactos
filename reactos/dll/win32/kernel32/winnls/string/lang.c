@@ -33,6 +33,8 @@ DEBUG_CHANNEL(nls);
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
 extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);
 extern int wine_compare_string(int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2);
+extern DWORD GetLocalisedText(DWORD dwResId, WCHAR *lpszDest, DWORD dwDestSize);
+#define NLSRC_OFFSET 5000 /* FIXME */
 
 extern HMODULE kernel32_handle;
 
@@ -2992,77 +2994,33 @@ BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags
 static int
 NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
 {
-    HANDLE hKey;
-    WCHAR szPath[MAX_PATH];
-    UNICODE_STRING ValueName;
-    KEY_VALUE_PARTIAL_INFORMATION *info;
-    const int info_size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    LPWSTR szBuffer;
     DWORD dwSize;
-    NTSTATUS Status;
-    int Ret;
 
-    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%lu", Location);
+    /* FIXME: move *.nls resources out of kernel32 into locale.nls */
+    Location += NLSRC_OFFSET;
 
-    hKey = NLS_RegOpenKey(0, szPath);
-    if (!hKey)
+    if(cchData == 0)
+        return GetLocalisedText(Location, NULL, 0);
+
+    dwSize = cchData * sizeof(WCHAR);
+    szBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
+
+    if (!szBuffer)
     {
-        WARN("NLS_RegOpenKey() failed\n");
-        return 0;
-    }
-
-    dwSize = info_size + cchData * sizeof(WCHAR);
-
-    if (!(info = HeapAlloc(GetProcessHeap(), 0, dwSize)))
-    {
-        NtClose(hKey);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
-    RtlInitUnicodeString(&ValueName, L"Name");
-
-    Status = NtQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
-                             (LPBYTE)info, dwSize, &dwSize);
-
-    if (!Status)
+    if(GetLocalisedText(Location, szBuffer, dwSize))
     {
-        Ret = (dwSize - info_size) / sizeof(WCHAR);
-
-        if (!Ret || ((WCHAR *)info->Data)[Ret-1])
-        {
-            if (Ret < cchData || !szFriendlyName) Ret++;
-            else
-            {
-                WARN("ERROR_INSUFFICIENT_BUFFER\n");
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                Ret = 0;
-            }
-        }
-
-        if (Ret && szFriendlyName)
-        {
-            memcpy(szFriendlyName, info->Data, (Ret-1) * sizeof(WCHAR));
-            szFriendlyName[Ret-1] = 0;
-        }
-    }
-    else if (Status == STATUS_BUFFER_OVERFLOW && !szFriendlyName)
-    {
-        Ret = (dwSize - info_size) / sizeof(WCHAR) + 1;
-    }
-    else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-        Ret = -1;
-    }
-    else
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        Ret = 0;
+        memcpy(szFriendlyName, szBuffer, dwSize);
+        HeapFree(GetProcessHeap(), 0, szBuffer);
+        return strlenW(szFriendlyName) + 1;
     }
 
-    NtClose(hKey);
-    HeapFree(GetProcessHeap(), 0, info);
-
-    return Ret;
+    HeapFree(GetProcessHeap(), 0, szBuffer);
+    return 0;
 }
 
 static const struct geoinfo_t *get_geoinfo_dataptr(GEOID geoid)

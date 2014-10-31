@@ -1679,8 +1679,8 @@ static INT WideCharToUtf7(LPCWSTR pszWide, INT cchWide, LPSTR pszUtf7, INT cchUt
     return c;
 }
 
-static BOOL
-GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
+DWORD
+GetLocalisedText(DWORD dwResId, WCHAR *lpszDest, DWORD dwDestSize)
 {
     HRSRC hrsrc;
     LCID lcid;
@@ -1722,18 +1722,32 @@ GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
         {
             const WCHAR *p;
             unsigned int i;
+            unsigned int len;
 
             p = LockResource(hmem);
+
             for (i = 0; i < (dwId & 0x0f); i++) p += *p + 1;
 
-            memcpy(lpszDest, p + 1, *p * sizeof(WCHAR));
+            if(dwDestSize == 0)
+                return *p + 1;
+
+            len = *p * sizeof(WCHAR);
+
+            if(len + sizeof(WCHAR) > dwDestSize)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+
+            memcpy(lpszDest, p + 1, len);
             lpszDest[*p] = '\0';
 
             return TRUE;
         }
     }
 
-    DPRINT1("Could not get codepage name. dwResId = %lu\n", dwResId);
+    DPRINT1("Resource not found: dwResId = %lu\n", dwResId);
+    SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
 }
 
@@ -1809,7 +1823,7 @@ GetCPInfoExW(UINT CodePage,
         {
             lpCPInfoEx->CodePage = CP_UTF7;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
         }
         break;
 
@@ -1817,7 +1831,7 @@ GetCPInfoExW(UINT CodePage,
         {
             lpCPInfoEx->CodePage = CP_UTF8;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
         }
 
         default:
@@ -1834,7 +1848,7 @@ GetCPInfoExW(UINT CodePage,
 
             lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
             lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
-            return GetLocalisedText(CodePageEntry->CodePageTable.CodePage, lpCPInfoEx->CodePageName);
+            return GetLocalisedText(CodePageEntry->CodePageTable.CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
         }
         break;
     }
