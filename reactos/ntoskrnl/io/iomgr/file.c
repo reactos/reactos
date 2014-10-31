@@ -419,7 +419,7 @@ IopParseDevice(IN PVOID ParseObject,
         DirectOpen = TRUE;
     }
 
-#if 1
+#if 0
     /* FIXME: Small hack still exists, have to check why...
      * This is triggered multiple times by usetup and then once per boot.
      */
