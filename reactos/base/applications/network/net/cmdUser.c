@@ -161,7 +161,7 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintToConsole(L"\n");
 
-    PrintToConsole(L"Password expires             ");
+    PrintToConsole(L"Password last set            ");
     dwLastSet = GetTimeInSeconds() - pUserInfo->usri4_password_age;
     PrintDateTime(dwLastSet);
 
@@ -178,7 +178,7 @@ DisplayUser(LPWSTR lpUserName)
     PrintToConsole(L"User may change password     %s\n", (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? L"No" : L"Yes");
 
     PrintToConsole(L"\n");
-    PrintToConsole(L"Workstation allowed          %s\n", pUserInfo->usri4_workstations);
+    PrintToConsole(L"Workstations allowed         %s\n", (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0) ? L"All" : pUserInfo->usri4_workstations);
     PrintToConsole(L"Logon script                 %s\n", pUserInfo->usri4_script_path);
     PrintToConsole(L"User profile                 %s\n", pUserInfo->usri4_profile);
     PrintToConsole(L"Home directory               %s\n", pUserInfo->usri4_home_dir);
@@ -288,7 +288,12 @@ cmdUser(
                                 lpUserName,
                                 4,
                                 (LPBYTE*)&pUserInfo);
-        printf("Status: %lu\n", Status);
+        if (Status != NERR_Success)
+        {
+            printf("Status: %lu\n", Status);
+            result = 1;
+            goto done;
+        }
     }
     else if (bAdd && !bDelete)
     {
@@ -309,11 +314,11 @@ cmdUser(
             p = &argv[i][8];
             if (_wcsicmp(p, L"yes") == 0)
             {
-
+                UserInfo.usri4_flags &= ~UF_ACCOUNTDISABLE;
             }
             else if (_wcsicmp(p, L"no") == 0)
             {
-
+                UserInfo.usri4_flags |= UF_ACCOUNTDISABLE;
             }
             else
             {
