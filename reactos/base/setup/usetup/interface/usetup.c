@@ -2757,7 +2757,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 #if 0
             else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
             {
-                PartEntry->PartInfo[PartNum].PartitionType = PARTITION_EXT2;
+                PartEntry->PartitionType = PARTITION_EXT2;
                 DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
             }
 #endif
