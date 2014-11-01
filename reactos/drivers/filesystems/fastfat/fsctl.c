@@ -909,18 +909,77 @@ VfatDismountVolume(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExt;
+    PLIST_ENTRY NextEntry;
+    PVFATFCB Fcb;
 
     DPRINT1("VfatDismountVolume(%p)\n", IrpContext);
 
     DeviceExt = IrpContext->DeviceExt;
 
+    /* We HAVE to be locked. Windows also allows dismount with no lock
+     * but we're here mainly for 1st stage, so KISS
+     */
     if (!(DeviceExt->Flags & VCB_VOLUME_LOCKED))
     {
         return STATUS_ACCESS_DENIED;
     }
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Race condition? */
+    if (DeviceExt->Flags & VCB_DISMOUNT_PENDING)
+    {
+        return STATUS_VOLUME_DISMOUNTED;
+    }
+
+    /* Notify we'll dismount. Pass that point there's no reason we fail */
+    FsRtlNotifyVolumeEvent(IrpContext->Stack->FileObject, FSRTL_VOLUME_DISMOUNT);
+
+    ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
+
+    /* Browse all the available FCBs first, and force data writing to disk */
+    for (NextEntry = DeviceExt->FcbListHead.Flink;
+         NextEntry != &DeviceExt->FcbListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        Fcb = CONTAINING_RECORD(NextEntry, VFATFCB, FcbListEntry);
+
+        ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
+        ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
+
+        if (Fcb->FileObject)
+        {
+            if (Fcb->Flags & FCB_IS_DIRTY)
+            {
+                VfatUpdateEntry(Fcb);
+            }
+
+            CcPurgeCacheSection(Fcb->FileObject->SectionObjectPointer, NULL, 0, FALSE);
+            CcUninitializeCacheMap(Fcb->FileObject, &Fcb->RFCB.FileSize, NULL);
+        }
+
+        ExReleaseResourceLite(&Fcb->PagingIoResource);
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
+
+    /* Rebrowse the FCB in order to free them now */
+    while (!IsListEmpty(&DeviceExt->FcbListHead))
+    {
+        NextEntry = RemoveHeadList(&DeviceExt->FcbListHead);
+        Fcb = CONTAINING_RECORD(NextEntry, VFATFCB, FcbListEntry);
+        vfatDestroyFCB(Fcb);
+    }
+
+    /* Mark we're being dismounted */
+    DeviceExt->Flags |= VCB_DISMOUNT_PENDING;
+    IrpContext->DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
+
+    ExReleaseResourceLite(&DeviceExt->FatResource);
+
+    /* Release a few resources and quit, we're done */
+    ExDeleteResourceLite(&DeviceExt->DirResource);
+    ExDeleteResourceLite(&DeviceExt->FatResource);
+    ObDereferenceObject(DeviceExt->FATFileObject);
+
+    return STATUS_SUCCESS;
 }
 
 /*
