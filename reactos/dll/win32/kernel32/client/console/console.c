@@ -392,6 +392,7 @@ IntCheckForConsoleFileName(IN LPCWSTR pszName,
  */
 HMENU
 WINAPI
+DECLSPEC_HOTPATCH
 ConsoleMenuControl(HANDLE hConsoleOutput,
                    DWORD dwCmdIdLow,
                    DWORD dwCmdIdHigh)
@@ -419,6 +420,7 @@ ConsoleMenuControl(HANDLE hConsoleOutput,
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 DuplicateConsoleHandle(HANDLE hConsole,
                        DWORD dwDesiredAccess,
                        BOOL bInheritHandle,
@@ -571,6 +573,7 @@ GetConsoleFontInfo(HANDLE hConsoleOutput,
  */
 COORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleFontSize(HANDLE hConsoleOutput,
                    DWORD nFont)
 {
@@ -652,6 +655,7 @@ GetCurrentConsoleFont(HANDLE hConsoleOutput,
  */
 ULONG
 WINAPI
+DECLSPEC_HOTPATCH
 GetNumberOfConsoleFonts(VOID)
 {
     DPRINT1("GetNumberOfConsoleFonts() UNIMPLEMENTED!\n");
@@ -757,6 +761,7 @@ OpenConsoleW(LPCWSTR wsName,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleCursor(HANDLE  hConsoleOutput,
                  HCURSOR hCursor)
 {
@@ -822,6 +827,7 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleFont(HANDLE hConsoleOutput,
                DWORD nFont)
 {
@@ -869,6 +875,7 @@ SetConsoleHardwareState(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleKeyShortcuts(DWORD Unknown0,
                        DWORD Unknown1,
                        DWORD Unknown2,
@@ -901,6 +908,7 @@ SetConsoleMaximumWindowSize(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleMenuClose(BOOL bEnable)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -930,6 +938,7 @@ SetConsoleMenuClose(BOOL bEnable)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsolePalette(HANDLE hConsoleOutput,
                   HPALETTE hPalette,
                   UINT dwUsage)
@@ -961,6 +970,7 @@ SetConsolePalette(HANDLE hConsoleOutput,
  */
 INT
 WINAPI
+DECLSPEC_HOTPATCH
 ShowConsoleCursor(HANDLE hConsoleOutput,
                   BOOL bShow)
 {
@@ -997,6 +1007,7 @@ ShowConsoleCursor(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 VerifyConsoleIoHandle(HANDLE hIoHandle)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -1028,6 +1039,7 @@ VerifyConsoleIoHandle(HANDLE hIoHandle)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 CloseConsoleHandle(HANDLE hHandle)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -1055,6 +1067,7 @@ CloseConsoleHandle(HANDLE hHandle)
  */
 HANDLE
 WINAPI
+DECLSPEC_HOTPATCH
 GetStdHandle(DWORD nStdHandle)
 /*
  * FUNCTION: Get a handle for the standard input, standard output
@@ -1097,6 +1110,7 @@ GetStdHandle(DWORD nStdHandle)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetStdHandle(DWORD  nStdHandle,
              HANDLE hHandle)
 /*
@@ -1249,6 +1263,7 @@ Quit:
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 AllocConsole(VOID)
 {
     BOOL Success;
@@ -1331,6 +1346,7 @@ Quit:
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 FreeConsole(VOID)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -1419,6 +1435,7 @@ GetConsoleScreenBufferInfo(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleCursorPosition(HANDLE hConsoleOutput,
                          COORD dwCursorPosition)
 {
@@ -1484,6 +1501,7 @@ GetConsoleMode(HANDLE hConsoleHandle,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleMode(HANDLE hConsoleHandle,
                DWORD dwMode)
 {
@@ -1550,6 +1568,7 @@ GetNumberOfConsoleInputEvents(HANDLE hConsoleInput,
  */
 COORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetLargestConsoleWindowSize(HANDLE hConsoleOutput)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -1675,6 +1694,7 @@ GetNumberOfConsoleMouseButtons(LPDWORD lpNumberOfMouseButtons)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleActiveScreenBuffer(HANDLE hConsoleOutput)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -1702,6 +1722,7 @@ SetConsoleActiveScreenBuffer(HANDLE hConsoleOutput)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 FlushConsoleInputBuffer(HANDLE hConsoleInput)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -1729,6 +1750,7 @@ FlushConsoleInputBuffer(HANDLE hConsoleInput)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleScreenBufferSize(HANDLE hConsoleOutput,
                            COORD dwSize)
 {
@@ -1802,6 +1824,7 @@ IntScrollConsoleScreenBuffer(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ScrollConsoleScreenBufferA(HANDLE hConsoleOutput,
                            CONST SMALL_RECT* lpScrollRectangle,
                            CONST SMALL_RECT* lpClipRectangle,
@@ -1822,6 +1845,7 @@ ScrollConsoleScreenBufferA(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 ScrollConsoleScreenBufferW(HANDLE hConsoleOutput,
                            CONST SMALL_RECT *lpScrollRectangle,
                            CONST SMALL_RECT *lpClipRectangle,
@@ -1879,6 +1903,7 @@ SetConsoleWindowInfo(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleTextAttribute(HANDLE hConsoleOutput,
                         WORD wAttributes)
 {
@@ -1979,6 +2004,7 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
                       BOOL Add)
 {
@@ -2004,6 +2030,7 @@ SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GenerateConsoleCtrlEvent(DWORD dwCtrlEvent,
                          DWORD dwProcessGroupId)
 {
@@ -2093,6 +2120,7 @@ IntGetConsoleTitle(LPVOID lpConsoleTitle, DWORD dwNumChars, BOOLEAN bUnicode)
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleTitleW(LPWSTR lpConsoleTitle,
                  DWORD nSize)
 {
@@ -2105,6 +2133,7 @@ GetConsoleTitleW(LPWSTR lpConsoleTitle,
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleTitleA(LPSTR lpConsoleTitle,
                  DWORD nSize)
 {
@@ -2159,6 +2188,7 @@ IntSetConsoleTitle(CONST VOID *lpConsoleTitle, BOOLEAN bUnicode)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleTitleW(LPCWSTR lpConsoleTitle)
 {
     return IntSetConsoleTitle(lpConsoleTitle, TRUE);
@@ -2170,6 +2200,7 @@ SetConsoleTitleW(LPCWSTR lpConsoleTitle)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleTitleA(LPCSTR lpConsoleTitle)
 {
     return IntSetConsoleTitle(lpConsoleTitle, FALSE);
@@ -2258,6 +2289,7 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleCP(VOID)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -2286,6 +2318,7 @@ GetConsoleCP(VOID)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleCP(UINT wCodePageID)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -2316,6 +2349,7 @@ SetConsoleCP(UINT wCodePageID)
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleOutputCP(VOID)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -2344,6 +2378,7 @@ GetConsoleOutputCP(VOID)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleOutputCP(UINT wCodePageID)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -2594,6 +2629,7 @@ Quit:
  */
 HWND
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleWindow(VOID)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -2620,6 +2656,7 @@ GetConsoleWindow(VOID)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleIcon(HICON hIcon)
 {
     CONSOLE_API_MESSAGE ApiMessage;
@@ -2652,6 +2689,7 @@ SetConsoleIcon(HICON hIcon)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleInputExeNameW(IN LPWSTR lpExeName)
 {
     DWORD ExeLength;
@@ -2691,6 +2729,7 @@ SetConsoleInputExeNameW(IN LPWSTR lpExeName)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleInputExeNameA(IN LPSTR lpExeName)
 {
     NTSTATUS Status;
@@ -2766,6 +2805,7 @@ SetConsoleInputExeNameA(IN LPSTR lpExeName)
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleInputExeNameW(IN DWORD nBufferLength,
                         OUT LPWSTR lpExeName)
 {
@@ -2804,6 +2844,7 @@ GetConsoleInputExeNameW(IN DWORD nBufferLength,
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleInputExeNameA(IN DWORD nBufferLength,
                         OUT LPSTR lpExeName)
 {
@@ -2850,6 +2891,7 @@ GetConsoleCharType(HANDLE hConsole, COORD Coord, PDWORD Type)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleCursorMode(HANDLE hConsole, PBOOL pUnknown1, PBOOL pUnknown2)
 {
     STUB;
@@ -2858,6 +2900,7 @@ GetConsoleCursorMode(HANDLE hConsole, PBOOL pUnknown1, PBOOL pUnknown2)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleCursorMode(HANDLE hConsole, BOOL Unknown1, BOOL Unknown2)
 {
     STUB;
@@ -2866,6 +2909,7 @@ SetConsoleCursorMode(HANDLE hConsole, BOOL Unknown1, BOOL Unknown2)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleNlsMode(HANDLE hConsole, LPDWORD lpMode)
 {
     STUB;
@@ -2874,6 +2918,7 @@ GetConsoleNlsMode(HANDLE hConsole, LPDWORD lpMode)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleNlsMode(HANDLE hConsole, DWORD dwMode)
 {
     STUB;
@@ -2882,6 +2927,7 @@ SetConsoleNlsMode(HANDLE hConsole, DWORD dwMode)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
 {
     STUB;
@@ -2890,6 +2936,7 @@ SetConsoleLocalEUDC(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknow
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 RegisterConsoleIME(HWND hWnd, LPDWORD ThreadId)
 {
     STUB;
@@ -2898,6 +2945,7 @@ RegisterConsoleIME(HWND hWnd, LPDWORD ThreadId)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 RegisterConsoleOS2(BOOL bUnknown)
 {
     STUB;
@@ -2906,6 +2954,7 @@ RegisterConsoleOS2(BOOL bUnknown)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetConsoleOS2OemFormat(BOOL bUnknown)
 {
     STUB;
@@ -2914,6 +2963,7 @@ SetConsoleOS2OemFormat(BOOL bUnknown)
 
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 UnregisterConsoleIME(VOID)
 {
     STUB;
@@ -2921,6 +2971,7 @@ UnregisterConsoleIME(VOID)
 }
 
 
+static
 BOOL
 IntGetConsoleKeyboardLayoutName(OUT PVOID pszLayoutName,
                                 IN BOOL bAnsi)
@@ -2969,6 +3020,7 @@ IntGetConsoleKeyboardLayoutName(OUT PVOID pszLayoutName,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleKeyboardLayoutNameA(OUT LPSTR pszLayoutName)
 {
     return IntGetConsoleKeyboardLayoutName(pszLayoutName, TRUE);
@@ -2979,6 +3031,7 @@ GetConsoleKeyboardLayoutNameA(OUT LPSTR pszLayoutName)
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 GetConsoleKeyboardLayoutNameW(OUT LPWSTR pszLayoutName)
 {
     return IntGetConsoleKeyboardLayoutName(pszLayoutName, FALSE);
