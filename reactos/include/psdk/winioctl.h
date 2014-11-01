@@ -556,6 +556,19 @@ typedef struct {
   LARGE_INTEGER MftZoneStart;
   LARGE_INTEGER MftZoneEnd;
 } NTFS_VOLUME_DATA_BUFFER, *PNTFS_VOLUME_DATA_BUFFER;
+typedef struct {
+  ULONG ByteCount;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+} NTFS_EXTENDED_VOLUME_DATA, *PNTFS_EXTENDED_VOLUME_DATA;
+typedef struct {
+  LARGE_INTEGER FileReferenceNumber;
+} NTFS_FILE_RECORD_INPUT_BUFFER, *PNTFS_FILE_RECORD_INPUT_BUFFER;
+typedef struct {
+  LARGE_INTEGER FileReferenceNumber;
+  ULONG FileRecordLength;
+  UCHAR FileRecordBuffer[1];
+} NTFS_FILE_RECORD_OUTPUT_BUFFER, *PNTFS_FILE_RECORD_OUTPUT_BUFFER;
 
 #define IsRecognizedPartition(t)\
   (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\
