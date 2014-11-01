@@ -608,7 +608,7 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (Stack->Parameters.FileSystemControl.OutputBufferLength < sizeof(NTFS_FILE_RECORD_OUTPUT_BUFFER) ||
+    if (Stack->Parameters.FileSystemControl.OutputBufferLength < (FIELD_OFFSET(NTFS_FILE_RECORD_OUTPUT_BUFFER, FileRecordBuffer) + DeviceExt->NtfsInfo.BytesPerFileRecord) ||
         Irp->AssociatedIrp.SystemBuffer == NULL)
     {
         DPRINT1("Invalid output! %d %p\n", Stack->Parameters.FileSystemControl.OutputBufferLength, Irp->AssociatedIrp.SystemBuffer);
@@ -634,17 +634,10 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    if (Stack->Parameters.FileSystemControl.OutputBufferLength < (FIELD_OFFSET(NTFS_FILE_RECORD_OUTPUT_BUFFER, FileRecordBuffer) + FileRecord->BytesInUse))
-    {
-        DPRINT1("Buffer too small: %lu vs %lu\n", Stack->Parameters.FileSystemControl.OutputBufferLength, FileRecord->BytesInUse);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
-        return STATUS_BUFFER_TOO_SMALL;
-    }
-
     OutputBuffer = (PNTFS_FILE_RECORD_OUTPUT_BUFFER)Irp->AssociatedIrp.SystemBuffer;
     OutputBuffer->FileReferenceNumber.QuadPart = MFTRecord;
-    OutputBuffer->FileRecordLength = FileRecord->BytesInUse;
-    RtlCopyMemory(OutputBuffer->FileRecordBuffer, FileRecord, FileRecord->BytesInUse);
+    OutputBuffer->FileRecordLength = DeviceExt->NtfsInfo.BytesPerFileRecord;
+    RtlCopyMemory(OutputBuffer->FileRecordBuffer, FileRecord, DeviceExt->NtfsInfo.BytesPerFileRecord);
 
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
