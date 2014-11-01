@@ -545,11 +545,14 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
                    HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
                    SWP_NOZORDER|SWP_NOACTIVATE);
 
-    while (NewPos < SPLIT_WIDTH + GetWindowHeight(hToolBar))
+    if(wParam != SIZE_MINIMIZED)
     {
-        RichPos--;
-        NewPos = HIWORD(lParam) - (RichPos +
-                 SPLIT_WIDTH + GetWindowHeight(hStatusBar));
+        while (NewPos < SPLIT_WIDTH + GetWindowHeight(hToolBar))
+        {
+            RichPos--;
+            NewPos = HIWORD(lParam) - (RichPos +
+                     SPLIT_WIDTH + GetWindowHeight(hStatusBar));
+        }
     }
     SetHSplitterPos(NewPos);
 
