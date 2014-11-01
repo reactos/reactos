@@ -130,7 +130,12 @@ DisplayUser(LPWSTR lpUserName)
 {
     PUSER_MODALS_INFO_0 pUserModals = NULL;
     PUSER_INFO_4 pUserInfo = NULL;
+    PLOCALGROUP_USERS_INFO_0 pLocalGroupInfo = NULL;
+    PGROUP_USERS_INFO_0 pGroupInfo = NULL;
+    DWORD dwLocalGroupRead, dwLocalGroupTotal;
+    DWORD dwGroupRead, dwGroupTotal;
     DWORD dwLastSet;
+    DWORD i;
     NET_API_STATUS Status;
 
     /* Modify the user */
@@ -144,6 +149,27 @@ DisplayUser(LPWSTR lpUserName)
     Status = NetUserModalsGet(NULL,
                               0,
                               (LPBYTE*)&pUserModals);
+    if (Status != NERR_Success)
+        goto done;
+
+    Status = NetUserGetLocalGroups(NULL,
+                                   lpUserName,
+                                   0,
+                                   0,
+                                   (LPBYTE*)&pLocalGroupInfo,
+                                   MAX_PREFERRED_LENGTH,
+                                   &dwLocalGroupRead,
+                                   &dwLocalGroupTotal);
+    if (Status != NERR_Success)
+        goto done;
+
+    Status = NetUserGetGroups(NULL,
+                              lpUserName,
+                              0,
+                              (LPBYTE*)&pGroupInfo,
+                              MAX_PREFERRED_LENGTH,
+                              &dwGroupRead,
+                              &dwGroupTotal);
     if (Status != NERR_Success)
         goto done;
 
@@ -188,12 +214,49 @@ DisplayUser(LPWSTR lpUserName)
     else
         PrintDateTime(pUserInfo->usri4_last_logon);
     PrintToConsole(L"\n");
-    PrintToConsole(L"Logon hours allowed          \n");
+    PrintToConsole(L"Logon hours allowed          ");
+    if (pUserInfo->usri4_logon_hours == NULL)
+        PrintToConsole(L"All\n");
     PrintToConsole(L"\n");
-    PrintToConsole(L"Local group memberships      \n");
-    PrintToConsole(L"Global group memberships     \n");
+
+    PrintToConsole(L"\n");
+    PrintToConsole(L"Local group memberships      ");
+    if (dwLocalGroupTotal != 0 && pLocalGroupInfo != NULL)
+    {
+        for (i = 0; i < dwLocalGroupTotal; i++)
+        {
+            if (i != 0)
+                PrintToConsole(L"                             ");
+            PrintToConsole(L"*%s\n", pLocalGroupInfo[i].lgrui0_name);
+        }
+    }
+    else
+    {
+        PrintToConsole(L"\n");
+    }
+
+    PrintToConsole(L"Global group memberships     ");
+    if (dwGroupTotal != 0 && pGroupInfo != NULL)
+    {
+        for (i = 0; i < dwGroupTotal; i++)
+        {
+            if (i != 0)
+                PrintToConsole(L"                             ");
+            PrintToConsole(L"*%s\n", pGroupInfo[i].grui0_name);
+        }
+    }
+    else
+    {
+        PrintToConsole(L"\n");
+    }
 
 done:
+    if (pGroupInfo != NULL)
+        NetApiBufferFree(pGroupInfo);
+
+    if (pLocalGroupInfo != NULL)
+        NetApiBufferFree(pLocalGroupInfo);
+
     if (pUserModals != NULL)
         NetApiBufferFree(pUserModals);
 
