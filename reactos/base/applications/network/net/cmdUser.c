@@ -284,6 +284,8 @@ cmdUser(
     PUSER_INFO_4 pUserInfo = NULL;
     USER_INFO_4 UserInfo;
     LPWSTR p;
+    LPWSTR endptr;
+    DWORD value;
     NET_API_STATUS Status;
 
     if (argc == 2)
@@ -377,11 +379,11 @@ cmdUser(
             p = &argv[i][8];
             if (_wcsicmp(p, L"yes") == 0)
             {
-                UserInfo.usri4_flags &= ~UF_ACCOUNTDISABLE;
+                pUserInfo->usri4_flags &= ~UF_ACCOUNTDISABLE;
             }
             else if (_wcsicmp(p, L"no") == 0)
             {
-                UserInfo.usri4_flags |= UF_ACCOUNTDISABLE;
+                pUserInfo->usri4_flags |= UF_ACCOUNTDISABLE;
             }
             else
             {
@@ -396,6 +398,18 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/countrycode:", 13) == 0)
         {
+            p = &argv[i][13];
+            value = wcstoul(p, &endptr, 10);
+            if (*endptr != 0)
+            {
+                PrintToConsole(L"You entered an invalid value for the /COUNTRYCODE option.\n");
+                result = 1;
+                goto done;
+            }
+
+            /* FIXME: verify the country code */
+
+            pUserInfo->usri4_country_code = value;
         }
         else if (_wcsnicmp(argv[j], L"/expires:", 9) == 0)
         {
@@ -410,9 +424,39 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/passwordchg:", 13) == 0)
         {
+            p = &argv[i][13];
+            if (_wcsicmp(p, L"yes") == 0)
+            {
+                pUserInfo->usri4_flags &= ~UF_PASSWD_CANT_CHANGE;
+            }
+            else if (_wcsicmp(p, L"no") == 0)
+            {
+                pUserInfo->usri4_flags |= UF_PASSWD_CANT_CHANGE;
+            }
+            else
+            {
+                PrintToConsole(L"You entered an invalid value for the /PASSWORDCHG option.\n");
+                result = 1;
+                goto done;
+            }
         }
         else if (_wcsnicmp(argv[j], L"/passwordreq:", 13) == 0)
         {
+            p = &argv[i][13];
+            if (_wcsicmp(p, L"yes") == 0)
+            {
+                pUserInfo->usri4_flags &= ~UF_PASSWD_NOTREQD;
+            }
+            else if (_wcsicmp(p, L"no") == 0)
+            {
+                pUserInfo->usri4_flags |= UF_PASSWD_NOTREQD;
+            }
+            else
+            {
+                PrintToConsole(L"You entered an invalid value for the /PASSWORDREQ option.\n");
+                result = 1;
+                goto done;
+            }
         }
         else if (_wcsnicmp(argv[j], L"/profilepath:", 13) == 0)
         {
