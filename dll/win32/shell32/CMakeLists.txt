@@ -29,7 +29,12 @@ list(APPEND SOURCE
     dde.cpp
     debughlp.cpp
     desktop.cpp
-    dialogs.cpp
+    dialogs/dialogs.cpp
+    dialogs/drive.cpp
+    dialogs/drvdefext.cpp
+    dialogs/folder_options.cpp
+    dialogs/filedefext.cpp
+    dialogs/fprop.cpp
     dragdrophelper.cpp
     enumidlist.cpp
     extracticon.cpp
@@ -63,15 +68,10 @@ list(APPEND SOURCE
     shpolicy.cpp
     stubs.cpp
     systray.cpp
-    fprop.cpp
-    drive.cpp
     defcontextmenu.cpp
     openwithmenu.cpp
     newmenu.cpp
     startmenu.cpp
-    folder_options.cpp
-    filedefext.cpp
-    drvdefext.cpp
     precomp.h)
 
 add_library(shell32 SHARED
