@@ -310,7 +310,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_CONTEXT DataContext;
-    ULONGLONG MFTRecord;
+    ULONGLONG MFTRecord, OldMFTRecord = 0;
     UNICODE_STRING Pattern;
 
     DPRINT1("NtfsQueryDirectory() called\n");
@@ -405,10 +405,21 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                                 &DataContext,
                                 &MFTRecord,
                                 Fcb->MFTIndex);
-      //DPRINT("Found %S, Status=%x, entry %x\n", TempFcb.ObjectName, Status, Ccb->Entry);
 
         if (NT_SUCCESS(Status))
         {
+            /* HACK: files with both a short name and a long name are present twice in the index.
+             * Ignore the second entry, if it is immediately following the first one.
+             */
+            if (MFTRecord == OldMFTRecord)
+            {
+                DPRINT("Ignoring duplicate MFT entry 0x%x\n", MFTRecord);
+                Ccb->Entry++;
+                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                continue;
+            }
+            OldMFTRecord = MFTRecord;
+
             switch (FileInformationClass)
             {
                 case FileNameInformation:
