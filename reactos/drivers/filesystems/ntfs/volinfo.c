@@ -70,7 +70,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
 
     BitmapDataSize = AttributeDataLength(&DataContext->Record);
     ASSERT((BitmapDataSize * 8) >= (DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster));
-    BitmapData = ExAllocatePoolWithTag(NonPagedPool, BitmapDataSize, TAG_NTFS);
+    BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, DeviceExt->NtfsInfo.BytesPerSector), TAG_NTFS);
     if (BitmapData == NULL)
     {
         ReleaseAttributeContext(DataContext);
