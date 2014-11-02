@@ -305,6 +305,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
     PNTFS_FCB Fcb;
     PNTFS_CCB Ccb;
     BOOLEAN First = FALSE;
+    BOOLEAN WildCard;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -364,6 +365,16 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
     }
 
     RtlInitUnicodeString(&Pattern, Ccb->DirectorySearchPattern);
+    WildCard = FsRtlDoesNameContainWildCards(&Pattern);
+    if (WildCard)
+    {
+        Status = RtlUpcaseUnicodeString(&Pattern, &Pattern, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("RtlUpcaseUnicodeString('%wZ') failed with status 0x%08lx\n", &Pattern, Status);
+            return Status;
+        }
+    }
 
     DPRINT1("Search pattern '%S'\n", Ccb->DirectorySearchPattern);
     DPRINT1("In: '%S'\n", Fcb->PathName);
