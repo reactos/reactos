@@ -162,11 +162,14 @@ NtfsReleaseFCB(PNTFS_VCB Vcb,
     if (Fcb->RefCount <= 0 && !NtfsFCBIsDirectory(Fcb))
     {
         RemoveEntryList(&Fcb->FcbListEntry);
+        KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
         CcUninitializeCacheMap(Fcb->FileObject, NULL, NULL);
         NtfsDestroyFCB(Fcb);
     }
-
-    KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+    else
+    {
+        KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+    }
 }
 
 
