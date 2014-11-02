@@ -143,7 +143,7 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
                        PFILE_NAME_INFORMATION NameInfo,
                        PULONG BufferLength)
 {
-    ULONG NameLength;
+    ULONG BytesToCopy;
 
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(DeviceObject);
@@ -153,18 +153,30 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
     ASSERT(NameInfo != NULL);
     ASSERT(Fcb != NULL);
 
-    NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
-//  NameLength = 2;
-    if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength)
+    /* If buffer can't hold at least the file name length, bail out */
+    if (*BufferLength < (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
         return STATUS_BUFFER_OVERFLOW;
 
-    NameInfo->FileNameLength = NameLength;
-    memcpy(NameInfo->FileName,
-           Fcb->PathName,
-           NameLength + sizeof(WCHAR));
-//  wcscpy(NameInfo->FileName, L"\\");
+    /* Save file name length, and as much file len, as buffer length allows */
+    NameInfo->FileNameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
 
-    *BufferLength -= (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
+    /* Calculate amount of bytes to copy not to overflow the buffer */
+    BytesToCopy = min(NameInfo->FileNameLength,
+                      *BufferLength - FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]));
+
+    /* Fill in the bytes */
+    RtlCopyMemory(NameInfo->FileName, Fcb->PathName, BytesToCopy);
+
+    /* Check if we could write more but are not able to */
+    if (*BufferLength < NameInfo->FileNameLength + (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
+    {
+        /* Return number of bytes written */
+        *BufferLength -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + BytesToCopy;
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* We filled up as many bytes, as needed */
+    *BufferLength -= (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + NameInfo->FileNameLength);
 
     return STATUS_SUCCESS;
 }
