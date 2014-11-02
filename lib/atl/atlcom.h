@@ -521,6 +521,11 @@ public:																			\
 #define COM_INTERFACE_ENTRY_IID(iid, x)											\
 	{&iid, offsetofclass(x, _ComMapClass), _ATL_SIMPLEMAPENTRY},
 
+#define COM_INTERFACE_ENTRY(x)                                                  \
+	{&_ATL_IIDOF(x),                                                            \
+	offsetofclass(x, _ComMapClass),                                             \
+	_ATL_SIMPLEMAPENTRY},
+
 #define COM_INTERFACE_ENTRY2_IID(iid, x, x2)									\
 	{&iid,																		\
 			reinterpret_cast<DWORD_PTR>(static_cast<x *>(static_cast<x2 *>(reinterpret_cast<_ComMapClass *>(_ATL_PACKING)))) - _ATL_PACKING,	\
@@ -578,6 +583,11 @@ public:																			\
 #define DECLARE_POLY_AGGREGATABLE(x)											\
 public:																			\
 	typedef ATL::CComCreator<ATL::CComPolyObject<x> > _CreatorClass;
+
+#define COM_INTERFACE_ENTRY_AGGREGATE(iid, punk)                                \
+	{&iid,                                                                      \
+	(DWORD_PTR)offsetof(_ComMapClass, punk),                                    \
+	_Delegate},
 
 #define DECLARE_GET_CONTROLLING_UNKNOWN()										\
 public:																			\
