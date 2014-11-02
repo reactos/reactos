@@ -26,10 +26,8 @@ BOOL WINAPI SetShellWindowEx(HWND, HWND);
 
 #define SHDESK_TAG 0x4b534544
 
-static const WCHAR szProgmanClassName [] = { 'P', 'r', 'o', 'g', 'm', 'a', 'n' };
-static const WCHAR szProgmanWindowName [] = {
-    'P', 'r', 'o', 'g', 'r', 'a', 'm', ' ', 'M', 'a', 'n', 'a', 'g', 'e', 'r'
-};
+static const WCHAR szProgmanClassName [] = L"Progman";
+static const WCHAR szProgmanWindowName [] = L"Program Manager";
 
 class CDesktopBrowser :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -542,7 +540,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
         rcDesk.bottom = GetSystemMetrics(SM_CYSCREEN);
     }
 
-    hWndDesk = CreateWindowExW(0, szProgmanClassName, szProgmanWindowName,
+    hWndDesk = CreateWindowExW(WS_EX_TOOLWINDOW, szProgmanClassName, szProgmanWindowName,
         WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         rcDesk.left, rcDesk.top, rcDesk.right, rcDesk.bottom,
         NULL, NULL, shell32_hInstance, reinterpret_cast<LPVOID>(ShellDesk));

@@ -194,6 +194,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         UpdateIcons();
         return TRUE;
     case WM_DESTROY:
+        KillTimer(1);
         ShutdownIcons();
         return TRUE;
     }

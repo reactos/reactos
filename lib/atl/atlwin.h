@@ -696,6 +696,10 @@ public:																														\
 		{																													\
 		case 0:
 
+#define ALT_MSG_MAP(map)																		\
+            break;																				\
+        case map:
+
 #define END_MSG_MAP()																			\
 			break;																				\
 		default:																				\

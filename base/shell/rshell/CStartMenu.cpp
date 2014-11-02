@@ -85,13 +85,20 @@ private:
             return S_OK;
 
         hr = IUnknown_GetSite(m_pDeskBar, IID_PPV_ARG(ITrayPriv, &m_pTrayPriv));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
         hr = IUnknown_GetWindow(m_pTrayPriv, &m_hwndTray);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
         hr = m_pTrayPriv->AppendMenuW(&hmenu);
-#ifndef TEST_TRACKPOPUPMENU_SUBMENUS
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
         hr = m_pShellMenu->SetMenu(hmenu, NULL, SMSET_BOTTOM);
-#else
-        hr = m_pShellMenu->SetMenu(hmenu, m_hwndTray, SMSET_BOTTOM);
-#endif
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
         return hr;
     }
