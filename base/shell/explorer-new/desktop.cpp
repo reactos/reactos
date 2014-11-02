@@ -20,112 +20,125 @@
 
 #include "precomp.h"
 
-typedef struct _DESKCREATEINFO
-{
-    HANDLE hEvent;
-    ITrayWindow *Tray;
-    HANDLE hDesktop;
-} DESKCREATEINFO, *PDESKCREATEINFO;
-
 HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
 BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
 
-static DWORD CALLBACK
-DesktopThreadProc(IN OUT LPVOID lpParameter)
+class CDesktopThread
 {
-    volatile DESKCREATEINFO *DeskCreateInfo = (volatile DESKCREATEINFO *)lpParameter;
-    CComPtr<IShellDesktopTray> pSdt;
+    HANDLE hEvent;
     HANDLE hDesktop;
-    HRESULT hRet;
+    CComPtr<ITrayWindow> Tray;
 
-    OleInitialize(NULL);
-
-    hRet = DeskCreateInfo->Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
-    if (!SUCCEEDED(hRet))
-        return 1;
-
-    hDesktop = _SHCreateDesktop(pSdt);
-
-    if (hDesktop == NULL)
-        return 1;
-
-    (void)InterlockedExchangePointer(&DeskCreateInfo->hDesktop, hDesktop);
-
-    if (!SetEvent(DeskCreateInfo->hEvent))
+    DWORD DesktopThreadProc()
     {
-        /* Failed to notify that we initialized successfully, kill ourselves
-           to make the main thread wake up! */
-        return 1;
+        CComPtr<IShellDesktopTray> pSdt;
+        HANDLE hDesktop;
+        HRESULT hRet;
+
+        OleInitialize(NULL);
+
+        hRet = Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
+        if (!SUCCEEDED(hRet))
+            return 1;
+
+        hDesktop = _SHCreateDesktop(pSdt);
+        if (hDesktop == NULL)
+            return 1;
+
+        if (!SetEvent(hEvent))
+        {
+            /* Failed to notify that we initialized successfully, kill ourselves
+            to make the main thread wake up! */
+            return 1;
+        }
+
+        _SHDesktopMessageLoop(hDesktop);
+
+        /* FIXME: Properly rundown the main thread! */
+        ExitProcess(0);
+
+        return 0;
     }
 
-    _SHDesktopMessageLoop(hDesktop);
+    static DWORD CALLBACK s_DesktopThreadProc(IN OUT LPVOID lpParameter)
+    {
+        return reinterpret_cast<CDesktopThread*>(lpParameter)->DesktopThreadProc();
+    }
 
-    /* FIXME: Properly rundown the main thread! */
-    ExitProcess(0);
+public:
+    CDesktopThread() :
+        hEvent(NULL),
+        hDesktop(NULL),
+        Tray(NULL)
+    {
+    }
 
-    return 0;
-}
+    HANDLE Initialize(IN OUT ITrayWindow *pTray)
+    {
+        HANDLE hThread;
+        HANDLE Handles[2];
+
+        Tray = pTray;
+
+        hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (!hEvent)
+            return NULL;
+
+        hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (PVOID)this, 0, NULL);
+        if (!hThread)
+        {
+            CloseHandle(hEvent);
+            return NULL;
+        }
+
+        Handles[0] = hThread;
+        Handles[1] = hEvent;
+
+        for (;;)
+        {
+            DWORD WaitResult = MsgWaitForMultipleObjects(_countof(Handles), Handles, FALSE, INFINITE, QS_ALLEVENTS);
+            if (WaitResult == WAIT_OBJECT_0 + _countof(Handles))
+            {
+                TrayProcessMessages(Tray);
+            }
+            else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
+            {
+                break;
+            }
+        }
+
+        CloseHandle(hThread);
+        CloseHandle(hEvent);
+
+        return hDesktop;
+    }
+
+    void Destroy()
+    {
+        return;
+    }
+
+} * g_pDesktopWindowInstance;
 
 HANDLE
 DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 {
-    HANDLE hThread;
-    HANDLE hEvent;
-    DWORD DesktopThreadId;
-    HANDLE hDesktop = NULL;
-    HANDLE Handles[2];
-    DWORD WaitResult;
-
-    hEvent = CreateEvent(NULL,
-                         FALSE,
-                         FALSE,
-                         NULL);
-    if (hEvent != NULL)
+    if (!g_pDesktopWindowInstance)
     {
-        volatile DESKCREATEINFO DeskCreateInfo;
-
-        DeskCreateInfo.hEvent = hEvent;
-        DeskCreateInfo.Tray = Tray;
-        DeskCreateInfo.hDesktop = NULL;
-
-        hThread = CreateThread(NULL,
-                               0,
-                               DesktopThreadProc,
-                               (PVOID)&DeskCreateInfo,
-                               0,
-                               &DesktopThreadId);
-        if (hThread != NULL)
-        {
-            Handles[0] = hThread;
-            Handles[1] = hEvent;
-
-            for (;;)
-            {
-                WaitResult = MsgWaitForMultipleObjects(sizeof(Handles) / sizeof(Handles[0]),
-                                                       Handles,
-                                                       FALSE,
-                                                       INFINITE,
-                                                       QS_ALLEVENTS);
-                if (WaitResult == WAIT_OBJECT_0 + (sizeof(Handles) / sizeof(Handles[0])))
-                    TrayProcessMessages(Tray);
-                else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
-                {
-                    hDesktop = DeskCreateInfo.hDesktop;
-                    break;
-                }
-            }
-
-            CloseHandle(hThread);
-        }
-
-        CloseHandle(hEvent);
+        g_pDesktopWindowInstance = new CDesktopThread();
     }
+    
+    if (!g_pDesktopWindowInstance)
+        return NULL;
 
-    return hDesktop;
+    return g_pDesktopWindowInstance->Initialize(Tray);
 }
 
 VOID
 DesktopDestroyShellWindow(IN HANDLE hDesktop)
 {
-    return;
+    if (g_pDesktopWindowInstance)
+    {
+        g_pDesktopWindowInstance->Destroy();
+    }
 }
