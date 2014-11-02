@@ -204,6 +204,31 @@ NtfsGetInternalInformation(PNTFS_FCB Fcb,
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
+                              PDEVICE_EXTENSION DeviceExt,
+                              PFILE_NETWORK_OPEN_INFORMATION NetworkInfo,
+                              PULONG BufferLength)
+{
+    PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
+
+    if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
+        return(STATUS_BUFFER_OVERFLOW);
+
+    NetworkInfo->CreationTime.QuadPart = FileName->CreationTime;
+    NetworkInfo->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    NetworkInfo->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    NetworkInfo->ChangeTime.QuadPart = FileName->ChangeTime;
+
+    NetworkInfo->EndOfFile.QuadPart = FileName->AllocatedSize;
+    NetworkInfo->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
+
+    NtfsFileFlagsToAttributes(FileName->FileAttributes, &NetworkInfo->FileAttributes);
+
+    *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
+    return STATUS_SUCCESS;
+}
 
 /*
  * FUNCTION: Retrieve the specified file information
@@ -266,6 +291,13 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
             Status = NtfsGetInternalInformation(Fcb,
                                                 SystemBuffer,
                                                 &BufferLength);
+            break;
+
+        case FileNetworkOpenInformation:
+            Status = NtfsGetNetworkOpenInformation(Fcb,
+                                                   DeviceObject->DeviceExtension,
+                                                   SystemBuffer,
+                                                   &BufferLength);
             break;
 
         case FileAlternateNameInformation:
