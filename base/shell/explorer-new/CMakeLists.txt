@@ -11,7 +11,9 @@ list(APPEND SOURCE
     rshell.cpp
     settings.cpp
     shellservice.cpp
+    startctxmnu.cpp
     startmnu.cpp
+    startmnusite.cpp
     startup.cpp
     taskband.cpp
     taskswnd.cpp

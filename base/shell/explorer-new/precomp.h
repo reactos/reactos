@@ -243,7 +243,7 @@ IN PCTSTR pszValueName,
 IN DWORD dwValue);
 
 /*
- * startup.c
+ * startup.cpp
  */
 
 int
@@ -257,7 +257,7 @@ VOID
 DisplayTrayProperties(IN HWND hwndOwner);
 
 /*
- * desktop.c
+ * desktop.cpp
  */
 HANDLE
 DesktopCreateWindow(IN OUT ITrayWindow *Tray);
@@ -266,7 +266,7 @@ VOID
 DesktopDestroyShellWindow(IN HANDLE hDesktop);
 
 /*
- * taskband.c
+ * taskband.cpp
  */
 
 /* Internal Task Band CLSID */
@@ -297,7 +297,7 @@ ITaskBand *
 CreateTaskBand(IN OUT ITrayWindow *Tray);
 
 /*
- * tbsite.c
+ * tbsite.cpp
  */
 
 #define INTERFACE ITrayBandSite
@@ -339,7 +339,7 @@ OUT HWND *phWndRebar,
 OUT HWND *phWndTaskSwitch);
 
 /*
- * startmnu.c
+ * startmnu.cpp
  */
 
 extern const TRAYWINDOW_CTXMENU StartMenuBtnCtxMenu;
@@ -373,6 +373,13 @@ HRESULT
 UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
 IN HBITMAP hbmBanner  OPTIONAL,
 IN BOOL bSmallIcons);
+
+/*
+* startmnusite.cpp
+*/
+
+HRESULT 
+CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*
  * trayntfy.c
