@@ -47,7 +47,7 @@ DumpPartitionTable(
     for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
     {
         PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
-        DbgPrint("%lu: %12I64u  %12I64u  %10lu  %2lu  %2x  %c  %c\n",
+        DPRINT("\n%lu: %12I64u  %12I64u  %10lu  %2lu  %2x  %c  %c\n",
                 i,
                 PartitionInfo->StartingOffset.QuadPart,
                 PartitionInfo->PartitionLength.QuadPart,
@@ -638,7 +638,7 @@ ScanForUnpartitionedDiskSpace(
     PPARTENTRY NewPartEntry;
     PLIST_ENTRY Entry;
 
-    DPRINT1("ScanForUnpartitionedDiskSpace()\n");
+    DPRINT("ScanForUnpartitionedDiskSpace()\n");
 
     if (IsListEmpty(&DiskEntry->PrimaryPartListHead))
     {
@@ -741,9 +741,9 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
             NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
             NewPartEntry->SectorCount.QuadPart = Align(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
                                                  NewPartEntry->StartSector.QuadPart;
-DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+            DPRINT("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
+            DPRINT("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+            DPRINT("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
             NewPartEntry->FormatState = Unformatted;
 
@@ -819,9 +819,9 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
                     NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
                     NewPartEntry->SectorCount.QuadPart = Align(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
                                                          NewPartEntry->StartSector.QuadPart;
-DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+                    DPRINT("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
+                    DPRINT("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+                    DPRINT("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
                     NewPartEntry->FormatState = Unformatted;
 
@@ -859,9 +859,9 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
                 NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
                 NewPartEntry->SectorCount.QuadPart = Align(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
                                                      NewPartEntry->StartSector.QuadPart;
-DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+                DPRINT("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
+                DPRINT("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+                DPRINT("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
                 NewPartEntry->FormatState = Unformatted;
 
@@ -872,7 +872,7 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
         }
     }
 
-    DPRINT1("ScanForUnpartitionedDiskSpace() done\n");
+    DPRINT("ScanForUnpartitionedDiskSpace() done\n");
 }
 
 
@@ -1132,8 +1132,8 @@ AddDiskToList(
 
     DiskEntry->SectorAlignment = DiskGeometry.SectorsPerTrack;
 
-    DPRINT1("SectorCount %I64u\n", DiskEntry->SectorCount);
-    DPRINT1("SectorAlignment %lu\n", DiskEntry->SectorAlignment);
+    DPRINT("SectorCount %I64u\n", DiskEntry->SectorCount);
+    DPRINT("SectorAlignment %lu\n", DiskEntry->SectorAlignment);
 
     DiskEntry->DiskNumber = DiskNumber;
     DiskEntry->Port = ScsiAddress.PortNumber;
@@ -1145,7 +1145,7 @@ AddDiskToList(
     InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
     /*
-     * Allocate a buffer for 26 logical drives (2 entries each == 52) 
+     * Allocate a buffer for 26 logical drives (2 entries each == 52)
      * plus the main partiton table (4 entries). Total 56 entries.
      */
     LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
@@ -1180,7 +1180,7 @@ AddDiskToList(
         {
             if ((DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector) % DiskEntry->SectorsPerTrack == 0)
             {
-                DPRINT1("Use %lu Sector alignment!\n", DiskEntry->SectorsPerTrack);
+                DPRINT("Use %lu Sector alignment!\n", DiskEntry->SectorsPerTrack);
             }
             else if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart % 1048756 == 0)
             {

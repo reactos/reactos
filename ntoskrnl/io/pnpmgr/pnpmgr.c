@@ -390,7 +390,7 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
                             continue;
                         }
 
-                        DPRINT1("Installed service '%S' for critical device '%wZ'\n", PartialInfo->Data, &ChildIdNameU);
+                        DPRINT("Installed service '%S' for critical device '%wZ'\n", PartialInfo->Data, &ChildIdNameU);
                     }
                     else
                     {
@@ -3212,7 +3212,7 @@ IopIsFirmwareMapperDisabled(VOID)
        DPRINT1("ZwOpenKey(%wZ) failed with status 0x%08lx\n", &KeyPathU, Status);
    }
 
-   DPRINT1("Firmware mapper is %s\n", KeyValue != 0 ? "disabled" : "enabled");
+   DPRINT("Firmware mapper is %s\n", KeyValue != 0 ? "disabled" : "enabled");
 
    return (KeyValue != 0) ? TRUE : FALSE;
 }

@@ -197,7 +197,7 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
     {
         ERR("NtDeviceIoControlFile() failed, ignored\n");
     }
-    ERR("Keyboard type %d, subtype %d and number of func keys %d\n",
+    TRACE("Keyboard type %d, subtype %d and number of func keys %d\n",
              gKeyboardInfo.KeyboardIdentifier.Type,
              gKeyboardInfo.KeyboardIdentifier.Subtype,
              gKeyboardInfo.NumberOfFunctionKeys);
@@ -820,7 +820,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         TRACE("HotKey Processed\n");
         bPostMsg = FALSE;
     }
- 
+
     wFixedVk = IntFixVk(wSimpleVk, bExt); /* LSHIFT + EXT = RSHIFT */
     if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
         bExt = FALSE;

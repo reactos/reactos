@@ -280,7 +280,9 @@ PopulateCustomPathCombo(
         TRACE("RegQueryValueEx() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
-    Buffer[dwPathLength] = Buffer[dwPathLength + 1] = '\0';
+
+    Buffer[dwPathLength / sizeof(WCHAR)] = UNICODE_NULL;
+    Buffer[dwPathLength / sizeof(WCHAR) + 1] = UNICODE_NULL;
 
     /* Populate combo box */
     for (Path = Buffer; *Path; Path += wcslen(Path) + 1)
@@ -305,7 +307,7 @@ SaveCustomPath(
     LPWSTR Buffer = NULL;
     LPWSTR pBuffer; /* Pointer into Buffer */
     int ItemsCount, Length;
-    DWORD i;
+    int i;
     DWORD TotalLength = 0;
     BOOL UseCustomPath = TRUE;
     HKEY hKey = NULL;

@@ -9,6 +9,9 @@
 
 #include "winnls/locale_rc.rc"
 
+/* FIXME */
+#define NLSRC_OFFSET 5000
+
 /* UTF-8 */
 #pragma code_page(65001)
 #ifdef LANGUAGE_CS_CZ

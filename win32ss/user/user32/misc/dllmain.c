@@ -250,7 +250,7 @@ ClientThreadSetup(VOID)
     // CsrConnectToUser, we'll pretend we "did something" here. Then the rest will
     // continue as normal.
     //
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
     return TRUE;
 }
 
@@ -258,7 +258,7 @@ BOOL
 Init(VOID)
 {
    USERCONNECT UserCon;
- 
+
    /* Set PEB data */
    NtCurrentPeb()->KernelCallbackTable = apfnDispatch;
    NtCurrentPeb()->PostProcessInitRoutine = NULL;
@@ -379,7 +379,7 @@ GetConnected(VOID)
   g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
   gpsi = SharedPtrToUser(UserCon.siClient.psi);
   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-  gHandleEntries = SharedPtrToUser(gHandleTable->handles);  
+  gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 
 }
 
@@ -387,9 +387,9 @@ NTSTATUS
 WINAPI
 User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
-  ERR("ClientThreadSetup\n");
+  TRACE("ClientThreadSetup\n");
   ClientThreadSetup();
-  return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);  
+  return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -403,7 +403,7 @@ User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength)
 
   Ret = TranslateCharsetInfo((DWORD *)pgci->Locale, &pgci->Cs, TCI_SRCLOCALE);
 
-  return ZwCallbackReturn(Arguments, ArgumentLength, Ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);  
+  return ZwCallbackReturn(Arguments, ArgumentLength, Ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS

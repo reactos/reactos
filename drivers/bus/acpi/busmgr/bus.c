@@ -24,7 +24,7 @@
 
  /*
   * Modified for ReactOS and latest ACPICA
-  * Copyright (C)2009  Samuel Serapion 
+  * Copyright (C)2009  Samuel Serapion
   */
 
 #include <precomp.h>
@@ -219,11 +219,11 @@ acpi_bus_get_power (
 	}
 	else {
 		/*
-		 * Get the device's power state either directly (via _PSC) or 
+		 * Get the device's power state either directly (via _PSC) or
 		 * indirectly (via power resources).
 		 */
 		if (device->power.flags.explicit_get) {
-			status = acpi_evaluate_integer(device->handle, "_PSC", 
+			status = acpi_evaluate_integer(device->handle, "_PSC",
 				NULL, &psc);
 			if (ACPI_FAILURE(status))
 				return_VALUE(AE_NOT_FOUND);
@@ -305,7 +305,7 @@ acpi_bus_set_power (
 	 * On transitions to a high-powered state we first apply power (via
 	 * power resources) then evalute _PSx.  Conversly for transitions to
 	 * a lower-powered state.
-	 */ 
+	 */
 	if (state < device->power.state) {
 		if (device->power.flags.power_resources) {
 			result = acpi_power_transition(device, state);
@@ -313,7 +313,7 @@ acpi_bus_set_power (
 				goto end;
 		}
 		if (device->power.states[state].flags.explicit_set) {
-			status = AcpiEvaluateObject(device->handle, 
+			status = AcpiEvaluateObject(device->handle,
 				object_name, NULL, NULL);
 			if (ACPI_FAILURE(status)) {
 				result = AE_NOT_FOUND;
@@ -323,7 +323,7 @@ acpi_bus_set_power (
 	}
 	else {
 		if (device->power.states[state].flags.explicit_set) {
-			status = AcpiEvaluateObject(device->handle, 
+			status = AcpiEvaluateObject(device->handle,
 				object_name, NULL, NULL);
 			if (ACPI_FAILURE(status)) {
 				result = AE_NOT_FOUND;
@@ -464,11 +464,11 @@ acpi_bus_generate_event_dpc(PKDPC Dpc,
     struct acpi_device *device = SystemArgument1;
     ULONG_PTR TypeData = (ULONG_PTR)SystemArgument2;
 	KIRQL OldIrql;
-    
+
     event = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_bus_event), 'IPCA');
 	if (!event)
 		return;
-    
+
 	sprintf(event->device_class, "%s", device->pnp.device_class);
 	sprintf(event->bus_id, "%s", device->pnp.bus_id);
 	event->type = (TypeData & 0xFF000000) >> 24;
@@ -497,10 +497,10 @@ acpi_bus_generate_event (
 	/* drop event on the floor if no one's listening */
 	if (!event_is_open)
 		return_VALUE(0);
-    
+
     /* Data shouldn't even get near 24 bits */
     ASSERT(!(data & 0xFF000000));
-    
+
     TypeData = data;
     TypeData |= type << 24;
 
@@ -573,9 +573,9 @@ acpi_bus_receive_event (
  */
 static int
 acpi_bus_walk (
-	struct acpi_device	*start, 
-	acpi_bus_walk_callback	callback, 
-	int			direction, 
+	struct acpi_device	*start,
+	acpi_bus_walk_callback	callback,
+	int			direction,
 	void			*data)
 {
 	int			result = 0;
@@ -707,7 +707,7 @@ acpi_bus_check_scope (ACPI_HANDLE handle)
  * ---------------
  * Callback for all 'system-level' device notifications (values 0x00-0x7F).
  */
-static void 
+static void
 acpi_bus_notify (
 	ACPI_HANDLE             handle,
 	UINT32                     type,
@@ -724,27 +724,27 @@ acpi_bus_notify (
 	switch (type) {
 
 	case ACPI_NOTIFY_BUS_CHECK:
-		DPRINT("Received BUS CHECK notification for device [%s]\n", 
+		DPRINT("Received BUS CHECK notification for device [%s]\n",
 			device->pnp.bus_id);
 		acpi_bus_check_scope(handle);
-		/* 
+		/*
 		 * TBD: We'll need to outsource certain events to non-ACPI
 		 *	drivers via the device manager (device.c).
 		 */
 		break;
 
 	case ACPI_NOTIFY_DEVICE_CHECK:
-		DPRINT("Received DEVICE CHECK notification for device [%s]\n", 
+		DPRINT("Received DEVICE CHECK notification for device [%s]\n",
 			device->pnp.bus_id);
 		acpi_bus_check_device(handle);
-		/* 
+		/*
 		 * TBD: We'll need to outsource certain events to non-ACPI
 		 *	drivers via the device manager (device.c).
 		 */
 		break;
 
 	case ACPI_NOTIFY_DEVICE_WAKE:
-		DPRINT("Received DEVICE WAKE notification for device [%s]\n", 
+		DPRINT("Received DEVICE WAKE notification for device [%s]\n",
 			device->pnp.bus_id);
 		acpi_bus_check_device(handle);
 		/*
@@ -754,37 +754,37 @@ acpi_bus_notify (
 		break;
 
 	case ACPI_NOTIFY_EJECT_REQUEST:
-		DPRINT1("Received EJECT REQUEST notification for device [%s]\n", 
+		DPRINT1("Received EJECT REQUEST notification for device [%s]\n",
 			device->pnp.bus_id);
 		/* TBD */
 		break;
 
 	case ACPI_NOTIFY_DEVICE_CHECK_LIGHT:
-		DPRINT1("Received DEVICE CHECK LIGHT notification for device [%s]\n", 
+		DPRINT1("Received DEVICE CHECK LIGHT notification for device [%s]\n",
 			device->pnp.bus_id);
 		/* TBD: Exactly what does 'light' mean? */
 		break;
 
 	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
-		DPRINT1("Received FREQUENCY MISMATCH notification for device [%s]\n", 
+		DPRINT1("Received FREQUENCY MISMATCH notification for device [%s]\n",
 			device->pnp.bus_id);
 		/* TBD */
 		break;
 
 	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
-		DPRINT1("Received BUS MODE MISMATCH notification for device [%s]\n", 
+		DPRINT1("Received BUS MODE MISMATCH notification for device [%s]\n",
 			device->pnp.bus_id);
 		/* TBD */
 		break;
 
 	case ACPI_NOTIFY_POWER_FAULT:
-		DPRINT1("Received POWER FAULT notification for device [%s]\n", 
+		DPRINT1("Received POWER FAULT notification for device [%s]\n",
 			device->pnp.bus_id);
 		/* TBD */
 		break;
 
 	default:
-		DPRINT1("Received unknown/unsupported notification [%08x]\n", 
+		DPRINT1("Received unknown/unsupported notification [%08x]\n",
 			type);
 		break;
 	}
@@ -810,7 +810,7 @@ static FAST_MUTEX acpi_bus_drivers_lock;
 
 
 /**
- * acpi_bus_match 
+ * acpi_bus_match
  * --------------
  * Checks the device's hardware (_HID) or compatible (_CID) ids to see if it
  * matches the specified driver's criteria.
@@ -840,20 +840,20 @@ acpi_bus_match (
 	error = -2;
 
  Done:
-	
+
 	return error;
 }
 
 
 /**
- * acpi_bus_driver_init 
+ * acpi_bus_driver_init
  * --------------------
- * Used to initialize a device via its device driver.  Called whenever a 
+ * Used to initialize a device via its device driver.  Called whenever a
  * driver is bound to a device.  Invokes the driver's add() and start() ops.
  */
 static int
 acpi_bus_driver_init (
-	struct acpi_device	*device, 
+	struct acpi_device	*device,
 	struct acpi_driver	*driver)
 {
 	int			result = 0;
@@ -896,15 +896,15 @@ acpi_bus_driver_init (
 
 
 /**
- * acpi_bus_attach 
+ * acpi_bus_attach
  * -------------
- * Callback for acpi_bus_walk() used to find devices that match a specific 
+ * Callback for acpi_bus_walk() used to find devices that match a specific
  * driver's criteria and then attach the driver.
  */
 static int
 acpi_bus_attach (
-	struct acpi_device	*device, 
-	int			level, 
+	struct acpi_device	*device,
+	int			level,
 	void			*data)
 {
 	int			result = 0;
@@ -927,7 +927,7 @@ acpi_bus_attach (
 
 	DPRINT("Found driver [%s] for device [%s]\n",
 		driver->name, device->pnp.bus_id);
-	
+
 	result = acpi_bus_driver_init(device, driver);
 	if (result)
 		return_VALUE(result);
@@ -941,15 +941,15 @@ acpi_bus_attach (
 
 
 /**
- * acpi_bus_unattach 
+ * acpi_bus_unattach
  * -----------------
- * Callback for acpi_bus_walk() used to find devices that match a specific 
+ * Callback for acpi_bus_walk() used to find devices that match a specific
  * driver's criteria and unattach the driver.
  */
 static int
 acpi_bus_unattach (
-	struct acpi_device	*device, 
-	int			level, 
+	struct acpi_device	*device,
+	int			level,
 	void			*data)
 {
 	int			result = 0;
@@ -980,7 +980,7 @@ acpi_bus_unattach (
 
 
 /**
- * acpi_bus_find_driver 
+ * acpi_bus_find_driver
  * --------------------
  * Parses the list of registered drivers looking for a driver applicable for
  * the specified device.
@@ -1019,8 +1019,8 @@ acpi_bus_find_driver (
 
 
 /**
- * acpi_bus_register_driver 
- * ------------------------ 
+ * acpi_bus_register_driver
+ * ------------------------
  * Registers a driver with the ACPI bus.  Searches the namespace for all
  * devices that match the driver's criteria and binds.
  */
@@ -1038,7 +1038,7 @@ acpi_bus_register_driver (
 	list_add_tail(&driver->node, &acpi_bus_drivers);
 	up(&acpi_bus_drivers_lock);
 
-	acpi_bus_walk(acpi_root, acpi_bus_attach, 
+	acpi_bus_walk(acpi_root, acpi_bus_attach,
 		WALK_DOWN, driver);
 
 	return_VALUE(driver->references);
@@ -1046,7 +1046,7 @@ acpi_bus_register_driver (
 
 
 /**
- * acpi_bus_unregister_driver 
+ * acpi_bus_unregister_driver
  * --------------------------
  * Unregisters a driver with the ACPI bus.  Searches the namespace for all
  * devices that match the driver's criteria and unbinds.
@@ -1075,7 +1075,7 @@ acpi_bus_unregister_driver (
                                  Device Enumeration
    -------------------------------------------------------------------------- */
 
-static int 
+static int
 acpi_bus_get_flags (
 	struct acpi_device	*device)
 {
@@ -1125,7 +1125,7 @@ acpi_bus_get_flags (
 }
 
 
-int 
+int
 acpi_bus_add (
 	struct acpi_device	**child,
 	struct acpi_device	*parent,
@@ -1180,7 +1180,7 @@ acpi_bus_add (
 		buffer.Pointer = bus_id;
 		AcpiGetName(handle, ACPI_SINGLE_NAME, &buffer);
 
-			
+
 		/* Clean up trailing underscores (if any) */
 		for (i = 3; i > 1; i--) {
 			if (bus_id[i] == '_')
@@ -1194,7 +1194,7 @@ acpi_bus_add (
         /* HACK: Skip HPET */
         if (strstr(device->pnp.bus_id, "HPET"))
         {
-            DPRINT1("Using HPET hack\n");
+            DPRINT("Using HPET hack\n");
             result = -1;
             goto end;
         }
@@ -1314,7 +1314,7 @@ acpi_bus_add (
 		break;
 	}
 
-	/* 
+	/*
 	 * \_SB
 	 * ----
 	 * Fix for the system root bus device -- the only root-level device.
@@ -1411,7 +1411,7 @@ acpi_bus_add (
 	/*
 	 * Bind _ADR-Based Devices
 	 * -----------------------
-	 * If there's a a bus address (_ADR) then we utilize the parent's 
+	 * If there's a a bus address (_ADR) then we utilize the parent's
 	 * 'bind' function (if exists) to bind the ACPI- and natively-
 	 * enumerated device representations.
 	 */
@@ -1451,7 +1451,7 @@ end:
 
 static int
 acpi_bus_remove (
-	struct acpi_device	*device, 
+	struct acpi_device	*device,
 	int			type)
 {
 
@@ -1490,7 +1490,7 @@ acpi_bus_scan (
 
 	parent = start;
 	phandle = start->handle;
-	
+
 	/*
 	 * Parse through the ACPI namespace, identify all 'devices', and
 	 * create a new 'struct acpi_device' for each.
@@ -1591,7 +1591,7 @@ acpi_bus_scan_fixed (
 	 * power button is present.
 	 */
 	if (AcpiGbl_FADT.Flags & ACPI_FADT_POWER_BUTTON)
-		result = acpi_bus_add(&device, acpi_root, 
+		result = acpi_bus_add(&device, acpi_root,
 			NULL, ACPI_BUS_TYPE_POWER_BUTTON);
 	else
 	{
@@ -1610,7 +1610,7 @@ acpi_bus_scan_fixed (
 	 * the we have a control method button just like above.
 	 */
 	if (AcpiGbl_FADT.Flags & ACPI_FADT_SLEEP_BUTTON)
-		result = acpi_bus_add(&device, acpi_root, 
+		result = acpi_bus_add(&device, acpi_root,
 			NULL, ACPI_BUS_TYPE_SLEEP_BUTTON);
 	else
 	{
@@ -1635,7 +1635,7 @@ acpi_bus_init (void)
 	int			result = 0;
 	ACPI_STATUS		status = AE_OK;
 
-	DPRINT1("acpi_bus_init\n");
+	DPRINT("acpi_bus_init\n");
 
         KeInitializeDpc(&event_dpc, acpi_bus_generate_event_dpc, NULL);
 
@@ -1682,7 +1682,7 @@ acpi_bus_init (void)
 	/*
 	 * Create the root device in the bus's device tree
 	 */
-	result = acpi_bus_add(&acpi_root, NULL, ACPI_ROOT_OBJECT, 
+	result = acpi_bus_add(&acpi_root, NULL, ACPI_ROOT_OBJECT,
 		ACPI_BUS_TYPE_SYSTEM);
 	if (result)
 		goto error2;

@@ -350,7 +350,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
                               &DeviceNode->InstancePath);
 
-    DPRINT1("Reported device: %S (%wZ)\n", HardwareId, &DeviceNode->InstancePath);
+    DPRINT("Reported device: %S (%wZ)\n", HardwareId, &DeviceNode->InstancePath);
 
     /* Return the PDO */
     if (DeviceObject) *DeviceObject = Pdo;

@@ -132,11 +132,12 @@ IopFindPortResource(
         }
         else
         {
-            DPRINT1("Satisfying port requirement with 0x%I64x (length: 0x%x)\n", Start, CmDesc->u.Port.Length);
+            DPRINT("Satisfying port requirement with 0x%I64x (length: 0x%x)\n", Start, CmDesc->u.Port.Length);
             return TRUE;
         }
    }
 
+   DPRINT1("IopFindPortResource failed!\n");
    return FALSE;
 }
 

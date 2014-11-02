@@ -294,6 +294,7 @@ vfatGrabFCB(
 {
     ASSERT(ExIsResourceAcquiredExclusive(&pVCB->DirResource));
 
+    ASSERT(pFCB != pVCB->VolumeFcb);
     ++pFCB->RefCount;
 }
 
@@ -311,6 +312,7 @@ vfatReleaseFCB(
 
     while (pFCB)
     {
+        ASSERT(pFCB != pVCB->VolumeFcb);
         pFCB->RefCount--;
         if (pFCB->RefCount == 0)
         {

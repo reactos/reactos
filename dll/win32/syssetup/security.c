@@ -35,7 +35,7 @@ SetAccountDomain(LPCWSTR DomainName,
 
     NTSTATUS Status;
 
-    DPRINT1("SYSSETUP: SetAccountDomain\n");
+    DPRINT("SYSSETUP: SetAccountDomain\n");
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);

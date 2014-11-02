@@ -41,8 +41,7 @@ VfatCloseFile(
 
     if (pFcb->Flags & FCB_IS_VOLUME)
     {
-        DPRINT1("Volume\n");
-        pFcb->RefCount--;
+        DPRINT("Volume\n");
         FileObject->FsContext2 = NULL;
     }
     else

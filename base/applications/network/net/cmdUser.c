@@ -130,7 +130,12 @@ DisplayUser(LPWSTR lpUserName)
 {
     PUSER_MODALS_INFO_0 pUserModals = NULL;
     PUSER_INFO_4 pUserInfo = NULL;
+    PLOCALGROUP_USERS_INFO_0 pLocalGroupInfo = NULL;
+    PGROUP_USERS_INFO_0 pGroupInfo = NULL;
+    DWORD dwLocalGroupRead, dwLocalGroupTotal;
+    DWORD dwGroupRead, dwGroupTotal;
     DWORD dwLastSet;
+    DWORD i;
     NET_API_STATUS Status;
 
     /* Modify the user */
@@ -144,6 +149,27 @@ DisplayUser(LPWSTR lpUserName)
     Status = NetUserModalsGet(NULL,
                               0,
                               (LPBYTE*)&pUserModals);
+    if (Status != NERR_Success)
+        goto done;
+
+    Status = NetUserGetLocalGroups(NULL,
+                                   lpUserName,
+                                   0,
+                                   0,
+                                   (LPBYTE*)&pLocalGroupInfo,
+                                   MAX_PREFERRED_LENGTH,
+                                   &dwLocalGroupRead,
+                                   &dwLocalGroupTotal);
+    if (Status != NERR_Success)
+        goto done;
+
+    Status = NetUserGetGroups(NULL,
+                              lpUserName,
+                              0,
+                              (LPBYTE*)&pGroupInfo,
+                              MAX_PREFERRED_LENGTH,
+                              &dwGroupRead,
+                              &dwGroupTotal);
     if (Status != NERR_Success)
         goto done;
 
@@ -161,7 +187,7 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintToConsole(L"\n");
 
-    PrintToConsole(L"Password expires             ");
+    PrintToConsole(L"Password last set            ");
     dwLastSet = GetTimeInSeconds() - pUserInfo->usri4_password_age;
     PrintDateTime(dwLastSet);
 
@@ -178,7 +204,7 @@ DisplayUser(LPWSTR lpUserName)
     PrintToConsole(L"User may change password     %s\n", (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? L"No" : L"Yes");
 
     PrintToConsole(L"\n");
-    PrintToConsole(L"Workstation allowed          %s\n", pUserInfo->usri4_workstations);
+    PrintToConsole(L"Workstations allowed         %s\n", (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0) ? L"All" : pUserInfo->usri4_workstations);
     PrintToConsole(L"Logon script                 %s\n", pUserInfo->usri4_script_path);
     PrintToConsole(L"User profile                 %s\n", pUserInfo->usri4_profile);
     PrintToConsole(L"Home directory               %s\n", pUserInfo->usri4_home_dir);
@@ -188,12 +214,49 @@ DisplayUser(LPWSTR lpUserName)
     else
         PrintDateTime(pUserInfo->usri4_last_logon);
     PrintToConsole(L"\n");
-    PrintToConsole(L"Logon hours allowed          \n");
+    PrintToConsole(L"Logon hours allowed          ");
+    if (pUserInfo->usri4_logon_hours == NULL)
+        PrintToConsole(L"All\n");
     PrintToConsole(L"\n");
-    PrintToConsole(L"Local group memberships      \n");
-    PrintToConsole(L"Global group memberships     \n");
+
+    PrintToConsole(L"\n");
+    PrintToConsole(L"Local group memberships      ");
+    if (dwLocalGroupTotal != 0 && pLocalGroupInfo != NULL)
+    {
+        for (i = 0; i < dwLocalGroupTotal; i++)
+        {
+            if (i != 0)
+                PrintToConsole(L"                             ");
+            PrintToConsole(L"*%s\n", pLocalGroupInfo[i].lgrui0_name);
+        }
+    }
+    else
+    {
+        PrintToConsole(L"\n");
+    }
+
+    PrintToConsole(L"Global group memberships     ");
+    if (dwGroupTotal != 0 && pGroupInfo != NULL)
+    {
+        for (i = 0; i < dwGroupTotal; i++)
+        {
+            if (i != 0)
+                PrintToConsole(L"                             ");
+            PrintToConsole(L"*%s\n", pGroupInfo[i].grui0_name);
+        }
+    }
+    else
+    {
+        PrintToConsole(L"\n");
+    }
 
 done:
+    if (pGroupInfo != NULL)
+        NetApiBufferFree(pGroupInfo);
+
+    if (pLocalGroupInfo != NULL)
+        NetApiBufferFree(pLocalGroupInfo);
+
     if (pUserModals != NULL)
         NetApiBufferFree(pUserModals);
 
@@ -221,6 +284,8 @@ cmdUser(
     PUSER_INFO_4 pUserInfo = NULL;
     USER_INFO_4 UserInfo;
     LPWSTR p;
+    LPWSTR endptr;
+    DWORD value;
     NET_API_STATUS Status;
 
     if (argc == 2)
@@ -288,7 +353,12 @@ cmdUser(
                                 lpUserName,
                                 4,
                                 (LPBYTE*)&pUserInfo);
-        printf("Status: %lu\n", Status);
+        if (Status != NERR_Success)
+        {
+            printf("Status: %lu\n", Status);
+            result = 1;
+            goto done;
+        }
     }
     else if (bAdd && !bDelete)
     {
@@ -309,11 +379,11 @@ cmdUser(
             p = &argv[i][8];
             if (_wcsicmp(p, L"yes") == 0)
             {
-
+                pUserInfo->usri4_flags &= ~UF_ACCOUNTDISABLE;
             }
             else if (_wcsicmp(p, L"no") == 0)
             {
-
+                pUserInfo->usri4_flags |= UF_ACCOUNTDISABLE;
             }
             else
             {
@@ -328,6 +398,18 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/countrycode:", 13) == 0)
         {
+            p = &argv[i][13];
+            value = wcstoul(p, &endptr, 10);
+            if (*endptr != 0)
+            {
+                PrintToConsole(L"You entered an invalid value for the /COUNTRYCODE option.\n");
+                result = 1;
+                goto done;
+            }
+
+            /* FIXME: verify the country code */
+
+            pUserInfo->usri4_country_code = value;
         }
         else if (_wcsnicmp(argv[j], L"/expires:", 9) == 0)
         {
@@ -342,9 +424,39 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/passwordchg:", 13) == 0)
         {
+            p = &argv[i][13];
+            if (_wcsicmp(p, L"yes") == 0)
+            {
+                pUserInfo->usri4_flags &= ~UF_PASSWD_CANT_CHANGE;
+            }
+            else if (_wcsicmp(p, L"no") == 0)
+            {
+                pUserInfo->usri4_flags |= UF_PASSWD_CANT_CHANGE;
+            }
+            else
+            {
+                PrintToConsole(L"You entered an invalid value for the /PASSWORDCHG option.\n");
+                result = 1;
+                goto done;
+            }
         }
         else if (_wcsnicmp(argv[j], L"/passwordreq:", 13) == 0)
         {
+            p = &argv[i][13];
+            if (_wcsicmp(p, L"yes") == 0)
+            {
+                pUserInfo->usri4_flags &= ~UF_PASSWD_NOTREQD;
+            }
+            else if (_wcsicmp(p, L"no") == 0)
+            {
+                pUserInfo->usri4_flags |= UF_PASSWD_NOTREQD;
+            }
+            else
+            {
+                PrintToConsole(L"You entered an invalid value for the /PASSWORDREQ option.\n");
+                result = 1;
+                goto done;
+            }
         }
         else if (_wcsnicmp(argv[j], L"/profilepath:", 13) == 0)
         {

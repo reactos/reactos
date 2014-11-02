@@ -270,23 +270,23 @@ ACPIDispatchDeviceControl(
                    */
                   if (power_button)
                   {
-                      DPRINT1("Fixed power button reported to power manager\n");
+                      DPRINT("Fixed power button reported to power manager\n");
                       Caps |= SYS_BUTTON_POWER;
                   }
                   if (sleep_button)
                   {
-                      DPRINT1("Fixed sleep button reported to power manager\n");
+                      DPRINT("Fixed sleep button reported to power manager\n");
                       Caps |= SYS_BUTTON_SLEEP;
                   }
               }
               else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C"))
               {
-                  DPRINT1("Control method power button reported to power manager\n");
+                  DPRINT("Control method power button reported to power manager\n");
                   Caps |= SYS_BUTTON_POWER;
               }
               else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0E"))
               {
-                  DPRINT1("Control method sleep reported to power manager\n");
+                  DPRINT("Control method sleep reported to power manager\n");
                   Caps |= SYS_BUTTON_SLEEP;
               }
               else

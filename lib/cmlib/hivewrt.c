@@ -22,8 +22,12 @@ HvpWriteLog(
    ULONG LastIndex;
    PVOID BlockPtr;
    BOOLEAN Success;
+   static ULONG PrintCount = 0;
 
-   UNIMPLEMENTED;
+   if (PrintCount++ == 0)
+   {
+      UNIMPLEMENTED;
+   }
    return TRUE;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);

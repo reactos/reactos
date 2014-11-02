@@ -1683,7 +1683,7 @@ PNP_CreateDevInst(
             dwInstanceNumber++;
         }
         while (ret == CR_ALREADY_SUCH_DEVINST);
-        
+
         if (ret == CR_SUCCESS)
         {
             /* pszDeviceID is an out parameter too for generated IDs */
@@ -3106,7 +3106,10 @@ cleanup:
     if(ProcessInfo.hThread)
         CloseHandle(ProcessInfo.hThread);
 
-    DPRINT1("Success? %d\n", DeviceInstalled);
+    if (!DeviceInstalled)
+    {
+        DPRINT1("InstallDevice failed for DeviceInstance '%ws'\n", DeviceInstance);
+    }
 
     return DeviceInstalled;
 }

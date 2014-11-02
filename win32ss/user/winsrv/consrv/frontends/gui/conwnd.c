@@ -261,7 +261,7 @@ CreateSysMenu(HWND hWnd)
     if (hMenu != NULL)
     {
         mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_STRING;   
+        mii.fMask = MIIM_STRING;
         mii.dwTypeData = szMenuStringBack;
         mii.cch = sizeof(szMenuStringBack)/sizeof(WCHAR);
 
@@ -711,7 +711,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
     WORD ActivationState = LOWORD(wParam);
 
-    DPRINT1("WM_ACTIVATE - ActivationState = %d\n");
+    DPRINT("WM_ACTIVATE - ActivationState = %d\n");
 
     if ( ActivationState == WA_ACTIVE ||
          ActivationState == WA_CLICKACTIVE )

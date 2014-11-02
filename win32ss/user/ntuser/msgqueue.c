@@ -2068,7 +2068,7 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
            IntGetSysCursorInfo()->CurrentCursorObject = NULL;
        }
 
-       ERR("DereferenceObject pCursor\n");
+       TRACE("DereferenceObject pCursor\n");
        UserDereferenceObject(pCursor);
    }
 
@@ -2200,7 +2200,7 @@ MsqSetStateWindow(PTHREADINFO pti, ULONG Type, HWND hWnd)
 {
    HWND Prev;
    PUSER_MESSAGE_QUEUE MessageQueue;
-   
+
    MessageQueue = pti->MessageQueue;
 
    switch(Type)

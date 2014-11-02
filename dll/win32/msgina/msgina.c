@@ -30,6 +30,7 @@
 #include <winsvc.h>
 #include <userenv.h>
 #include <ndk/sefuncs.h>
+#include <strsafe.h>
 
 HINSTANCE hDllInstance;
 
@@ -778,15 +779,19 @@ CreateProfile(
     pProfile->dwType = WLX_PROFILE_TYPE_V2_0;
     pProfile->pszProfile = ProfilePath;
 
-    lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                              (wcslen(pgContext->Domain)+ 14 + 1) * sizeof(WCHAR));
+    cbSize = sizeof(L"LOGONSERVER=\\\\") +
+             wcslen(pgContext->Domain) * sizeof(WCHAR) +
+             sizeof(UNICODE_NULL);
+    lpEnvironment = HeapAlloc(GetProcessHeap(), 0, cbSize);
     if (!lpEnvironment)
     {
         WARN("HeapAlloc() failed\n");
         goto cleanup;
     }
 
-    wsprintfW(lpEnvironment, L"LOGONSERVER=\\\\%s", pgContext->Domain);
+    StringCbPrintfW(lpEnvironment, cbSize, L"LOGONSERVER=\\\\%ls", pgContext->Domain);
+    ASSERT(wcslen(lpEnvironment) == cbSize / sizeof(WCHAR) - 2);
+    lpEnvironment[cbSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
 
     pProfile->pszEnvironment = lpEnvironment;
 

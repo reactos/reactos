@@ -312,7 +312,7 @@ CHubController::QueryStatusChangeEndpoint(
     // Get the number of ports and check each one for device connected
     //
     m_Hardware->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
-    DPRINT1("[%s] SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", m_USBType, Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
+    DPRINT("[%s] SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", m_USBType, Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
 
     TransferBuffer = (PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer;
 
@@ -323,7 +323,7 @@ CHubController::QueryStatusChangeEndpoint(
     {
         m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
 
-        DPRINT1("[%s] Port %d: Status %x, Change %x\n", m_USBType, PortId, PortStatus, PortChange);
+        DPRINT("[%s] Port %d: Status %x, Change %x\n", m_USBType, PortId, PortStatus, PortChange);
 
 
         //
@@ -3935,7 +3935,7 @@ CHubController::CreatePDO(
         }
     }
 
-    DPRINT1("CHubController::CreatePDO: DeviceName %wZ\n", &DeviceName);
+    DPRINT("CHubController::CreatePDO: DeviceName %wZ\n", &DeviceName);
 
     //
     // fixup device stack voodoo part #1

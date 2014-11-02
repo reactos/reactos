@@ -131,7 +131,7 @@ VerifyVersionInfoW(IN LPOSVERSIONINFOEXW lpVersionInformation,
             return FALSE;
 
         case STATUS_REVISION_MISMATCH:
-            DPRINT1("ReactOS returning version mismatch. Investigate!\n");
+            DPRINT1("VerifyVersionInfo -- Version mismatch\n");
             SetLastError(ERROR_OLD_WIN_VERSION);
             return FALSE;
 

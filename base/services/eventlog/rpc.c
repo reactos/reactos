@@ -118,6 +118,14 @@ ElfCreateEventLogHandle(PLOGHANDLE *LogHandle,
         if (lpLogHandle->LogFile == NULL)
         {
             lpLogHandle->LogFile = LogfListItemByName(L"Application");
+
+            if (lpLogHandle->LogFile == NULL)
+            {
+                DPRINT1("Application log is missing!\n");
+                Status = STATUS_UNSUCCESSFUL;
+                goto Done;
+            }
+
             lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
         }
     }

@@ -822,7 +822,7 @@ NTAPI
 HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
-    DPRINT1("HAL: PnP Driver Power!\n");
+    DPRINT("HAL: PnP Driver Power!\n");
     return STATUS_SUCCESS;
 }
 

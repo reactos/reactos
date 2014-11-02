@@ -1334,6 +1334,14 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     pidlFolder2 = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
     pidlChild = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
 
+    if (!_ILIsValue(pidlChild))
+    {
+        TRACE("pidl is not a file\n");
+        GlobalUnlock(medium.hGlobal);
+        GlobalFree(medium.hGlobal);
+        return E_FAIL;
+    }
+
     pidl = ILCombine(pidlFolder2, pidlChild);
 
     GlobalUnlock(medium.hGlobal);
@@ -1343,12 +1351,6 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     {
         ERR("no mem\n");
         return E_OUTOFMEMORY;
-    }
-    if (!_ILIsValue(pidlChild))
-    {
-        TRACE("pidl is not a file\n");
-        SHFree((void*)pidl);
-        return E_FAIL;
     }
 
     if (!SHGetPathFromIDListW(pidl, m_wszPath))

@@ -1134,8 +1134,11 @@ SeValidSecurityDescriptor(IN ULONG Length,
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeDeassignSecurity(
+    _Inout_ PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     PAGED_CODE();
 
@@ -1149,36 +1152,22 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 }
 
 
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
-                   IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
-                   OUT PSECURITY_DESCRIPTOR *NewDescriptor,
-                   IN GUID *ObjectType OPTIONAL,
-                   IN BOOLEAN IsDirectoryObject,
-                   IN ULONG AutoInheritFlags,
-                   IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                   IN PGENERIC_MAPPING GenericMapping,
-                   IN POOL_TYPE PoolType)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
-                 PSECURITY_DESCRIPTOR _ExplicitDescriptor OPTIONAL,
-                 PSECURITY_DESCRIPTOR *NewDescriptor,
-                 BOOLEAN IsDirectoryObject,
-                 PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                 PGENERIC_MAPPING GenericMapping,
-                 POOL_TYPE PoolType)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeAssignSecurityEx(
+    _In_opt_ PSECURITY_DESCRIPTOR _ParentDescriptor,
+    _In_opt_ PSECURITY_DESCRIPTOR _ExplicitDescriptor,
+    _Out_ PSECURITY_DESCRIPTOR *NewDescriptor,
+    _In_opt_ GUID *ObjectType,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ ULONG AutoInheritFlags,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ POOL_TYPE PoolType)
 {
     PISECURITY_DESCRIPTOR ParentDescriptor = _ParentDescriptor;
     PISECURITY_DESCRIPTOR ExplicitDescriptor = _ExplicitDescriptor;
@@ -1195,6 +1184,11 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
     PSID Group = NULL;
     PACL Dacl = NULL;
     PACL Sacl = NULL;
+
+    DBG_UNREFERENCED_PARAMETER(ObjectType);
+    DBG_UNREFERENCED_PARAMETER(AutoInheritFlags);
+    DBG_UNREFERENCED_PARAMETER(GenericMapping);
+    UNREFERENCED_PARAMETER(PoolType);
 
     PAGED_CODE();
 
@@ -1327,7 +1321,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
     if (Descriptor == NULL)
     {
         DPRINT1("ExAlloctePool() failed\n");
-        /* FIXME: Unlock subject context */
+        SeUnlockSubjectContext(SubjectContext);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1375,10 +1369,38 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
 
     *NewDescriptor = Descriptor;
 
-    DPRINT("Descrptor %p\n", Descriptor);
+    DPRINT("Descriptor %p\n", Descriptor);
     ASSERT(RtlLengthSecurityDescriptor(Descriptor));
 
     return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeAssignSecurity(
+    _In_opt_ PSECURITY_DESCRIPTOR ParentDescriptor,
+    _In_opt_ PSECURITY_DESCRIPTOR ExplicitDescriptor,
+    _Out_ PSECURITY_DESCRIPTOR *NewDescriptor,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ POOL_TYPE PoolType)
+{
+    PAGED_CODE();
+
+    return SeAssignSecurityEx(ParentDescriptor,
+                              ExplicitDescriptor,
+                              NewDescriptor,
+                              NULL,
+                              IsDirectoryObject,
+                              0,
+                              SubjectContext,
+                              GenericMapping,
+                              PoolType);
 }
 
 /* EOF */

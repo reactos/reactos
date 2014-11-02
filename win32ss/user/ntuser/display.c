@@ -75,8 +75,8 @@ InitDisplayDriver(
     DEVMODEW dmDefault;
     DWORD dwVga;
 
-    ERR("InitDisplayDriver(%S, %S);\n",
-            pwszDeviceName, pwszRegKey);
+    TRACE("InitDisplayDriver(%S, %S);\n",
+          pwszDeviceName, pwszRegKey);
 
     /* Open the driver's registry key */
     Status = RegOpenKey(pwszRegKey, &hkey);
