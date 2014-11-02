@@ -176,7 +176,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         goto end;
     }
 
-    szCmdLine = HeapAlloc(hProcessHeap,
+    szCmdLine = (WCHAR*)HeapAlloc(hProcessHeap,
                           0,
                           cbMaxCmdLine);
     if (szCmdLine == NULL)
@@ -188,7 +188,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     }
 
     ++cchMaxValue;
-    szValue = HeapAlloc(hProcessHeap,
+    szValue = (WCHAR*)HeapAlloc(hProcessHeap,
                         0,
                         cchMaxValue * sizeof(*szValue));
     if (szValue == NULL)

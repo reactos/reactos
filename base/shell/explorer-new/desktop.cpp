@@ -27,30 +27,29 @@ typedef struct _DESKCREATEINFO
     HANDLE hDesktop;
 } DESKCREATEINFO, *PDESKCREATEINFO;
 
+HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
+BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
+
 static DWORD CALLBACK
 DesktopThreadProc(IN OUT LPVOID lpParameter)
 {
     volatile DESKCREATEINFO *DeskCreateInfo = (volatile DESKCREATEINFO *)lpParameter;
-    IShellDesktopTray *pSdt;
+    CComPtr<IShellDesktopTray> pSdt;
     HANDLE hDesktop;
     HRESULT hRet;
 
     OleInitialize(NULL);
 
-    hRet = ITrayWindow_QueryInterface(DeskCreateInfo->Tray,
-                                      &IID_IShellDesktopTray,
-                                      (PVOID*)&pSdt);
+    hRet = DeskCreateInfo->Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
     if (!SUCCEEDED(hRet))
         return 1;
 
-    hDesktop = SHCreateDesktop(pSdt);
+    hDesktop = _SHCreateDesktop(pSdt);
 
-    IShellDesktopTray_Release(pSdt);
     if (hDesktop == NULL)
         return 1;
 
-    (void)InterlockedExchangePointer(&DeskCreateInfo->hDesktop,
-                                     hDesktop);
+    (void)InterlockedExchangePointer(&DeskCreateInfo->hDesktop, hDesktop);
 
     if (!SetEvent(DeskCreateInfo->hEvent))
     {
@@ -59,7 +58,7 @@ DesktopThreadProc(IN OUT LPVOID lpParameter)
         return 1;
     }
 
-    SHDesktopMessageLoop(hDesktop);
+    _SHDesktopMessageLoop(hDesktop);
 
     /* FIXME: Properly rundown the main thread! */
     ExitProcess(0);

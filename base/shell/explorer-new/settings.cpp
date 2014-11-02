@@ -21,8 +21,7 @@
 #include "precomp.h"
 
 ADVANCED_SETTINGS AdvancedSettings;
-const TCHAR szAdvancedSettingsKey[] = TEXT("Software\\ReactOS\\Features\\Explorer");
-
+const WCHAR szAdvancedSettingsKey[] = TEXT("Software\\ReactOS\\Features\\Explorer");
 
 VOID
 LoadAdvancedSettings(VOID)

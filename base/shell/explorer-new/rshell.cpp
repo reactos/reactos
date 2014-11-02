@@ -24,7 +24,7 @@ static HINSTANCE hRShell = NULL;
 
 typedef HRESULT(WINAPI * PSTARTMENU_CONSTRUCTOR)(REFIID riid, void **ppv);
 
-HRESULT CStartMenu_Constructor(REFIID riid, void **ppv)
+HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv)
 {
     if (!hRShell)
     {
@@ -40,7 +40,7 @@ HRESULT CStartMenu_Constructor(REFIID riid, void **ppv)
         }
     }
 
-    return CoCreateInstance(&CLSID_StartMenu,
+    return CoCreateInstance(CLSID_StartMenu,
                             NULL,
                             CLSCTX_INPROC_SERVER,
                             riid,
@@ -49,7 +49,7 @@ HRESULT CStartMenu_Constructor(REFIID riid, void **ppv)
 
 typedef HANDLE(WINAPI * PSHCREATEDESKTOP)(IShellDesktopTray *ShellDesk);
 
-HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
+HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {
     HINSTANCE hFallback;
 
@@ -83,7 +83,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 
 typedef BOOL(WINAPI *PSHDESKTOPMESSAGELOOP)(HANDLE hDesktop);
 
-BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
+BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop)
 {
     HINSTANCE hFallback;
 
@@ -117,7 +117,7 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
 
 typedef DWORD(WINAPI* PWINLIST_INIT)(void);
 
-DWORD WINAPI WinList_Init(void)
+DWORD WINAPI _WinList_Init(void)
 {
     HINSTANCE hFallback;
 
@@ -151,7 +151,7 @@ DWORD WINAPI WinList_Init(void)
 
 typedef void (WINAPI *PSHELLDDEINIT)(BOOL bInit);
 
-void WINAPI ShellDDEInit(BOOL bInit)
+void WINAPI _ShellDDEInit(BOOL bInit)
 {
     HINSTANCE hFallback;
 

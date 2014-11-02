@@ -25,26 +25,26 @@ extern HRESULT ShutdownShellServices(HDPA hdpa);
 
 static int CALLBACK InitializeAllCallback(void* pItem, void* pData)
 {
-    IOleCommandTarget * pOct = pItem;
-    HRESULT * phr = pData;
+    IOleCommandTarget * pOct = reinterpret_cast<IOleCommandTarget *>(pItem);
+    HRESULT * phr = reinterpret_cast<HRESULT *>(pData);
     TRACE("Initializing SSO %p\n", pOct);
-    *phr = IOleCommandTarget_Exec(pOct, &CGID_ShellServiceObject, OLECMDID_NEW, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    *phr = pOct->Exec(&CGID_ShellServiceObject, OLECMDID_NEW, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     return SUCCEEDED(*phr);
 }
 
 static int CALLBACK ShutdownAllCallback(void* pItem, void* pData)
 {
-    IOleCommandTarget * pOct = pItem;
+    IOleCommandTarget * pOct = reinterpret_cast<IOleCommandTarget *>(pItem);
     TRACE("Shutting down SSO %p\n", pOct);
-    IOleCommandTarget_Exec(pOct, &CGID_ShellServiceObject, OLECMDID_SAVE, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    pOct->Exec(&CGID_ShellServiceObject, OLECMDID_SAVE, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     return TRUE;
 }
 
 static int CALLBACK DeleteAllEnumCallback(void* pItem, void* pData)
 {
-    IOleCommandTarget * pOct = pItem;
+    IOleCommandTarget * pOct = reinterpret_cast<IOleCommandTarget *>(pItem);
     TRACE("Releasing SSO %p\n", pOct);
-    IUnknown_Release(pOct);
+    pOct->Release();
     return TRUE;
 }
 
@@ -92,14 +92,14 @@ HRESULT InitShellServices(HDPA * phdpa)
         }
 
         hr = CLSIDFromString(value, &clsid);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
         {
             ERR("CLSIDFromString failed %08x.\n", hr);
             goto cleanup;
         }
 
-        hr = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IOleCommandTarget, (VOID**) &pOct);
-        if (FAILED(hr))
+        hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IOleCommandTarget, &pOct));
+        if (FAILED_UNEXPECTEDLY(hr))
         {
             ERR("CoCreateInstance failed %08x.\n", hr);
             goto cleanup;
@@ -122,7 +122,7 @@ HRESULT InitShellServices(HDPA * phdpa)
 
     /* Initialize */
     DPA_EnumCallback(hdpa, InitializeAllCallback, &hr);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         goto cleanup;
 
     *phdpa = hdpa;

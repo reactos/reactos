@@ -78,7 +78,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
                 DeleteObject(pPropInfo->hTaskbarBitmap);
             }
 
-            pPropInfo->hTaskbarBitmap = LoadImage(hExplorerInstance,
+            pPropInfo->hTaskbarBitmap = (HBITMAP)LoadImage(hExplorerInstance,
                                                   lpImageName,
                                                   IMAGE_BITMAP,
                                                   0,
@@ -367,7 +367,7 @@ DisplayTrayProperties(IN HWND hwndOwner)
     PROPSHEET_INFO propInfo;
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[5];
-    TCHAR szCaption[256];
+    WCHAR szCaption[256];
 
     if (!LoadString(hExplorerInstance,
                     IDS_TASKBAR_STARTMENU_PROP_CAPTION,
