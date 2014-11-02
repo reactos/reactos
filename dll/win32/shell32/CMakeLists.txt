@@ -76,7 +76,7 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED
     ${SOURCE}
-    shellstring.c
+    wine/shellstring.c
     vista.c
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
