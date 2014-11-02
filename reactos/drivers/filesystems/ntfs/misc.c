@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2008 ReactOS Team
+ *  Copyright (C) 2008, 2014 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

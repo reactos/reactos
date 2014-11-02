@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2014 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,8 +20,9 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/mft.c
  * PURPOSE:          NTFS filesystem driver
- * PROGRAMMER:       Eric Kohl
- *                   Updated by Valentin Verkhovsky  2003/09/12
+ * PROGRAMMERS:      Eric Kohl
+ *                   Valentin Verkhovsky
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/

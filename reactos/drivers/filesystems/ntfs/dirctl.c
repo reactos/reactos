@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002,2003 ReactOS Team
+ *  Copyright (C) 2002, 2003, 2014 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/dirctl.c
  * PURPOSE:          NTFS filesystem driver
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMERS:      Eric Kohl
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
