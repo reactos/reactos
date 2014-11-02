@@ -52,84 +52,116 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
              ULONG IrpFlags,
              PULONG LengthRead)
 {
-#if 0
-  NTSTATUS Status = STATUS_SUCCESS;
-  PUCHAR TempBuffer;
-  ULONG TempLength;
-  PCCB Ccb;
-  PFCB Fcb;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PNTFS_FCB Fcb;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONG RealLength;
+    ULONG RealReadOffset;
+    ULONG RealLengthRead;
+    ULONG ToRead;
+    BOOLEAN AllocatedBuffer = FALSE;
+    PCHAR ReadBuffer = (PCHAR)Buffer;
 
-  DPRINT("CdfsReadFile(ReadOffset %lu  Length %lu)\n", ReadOffset, Length);
+    DPRINT1("NtfsReadFile(%p, %p, %p, %u, %u, %x, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
 
-  *LengthRead = 0;
-
-  if (Length == 0)
-    return(STATUS_SUCCESS);
-
-  Ccb = (PCCB)FileObject->FsContext2;
-  Fcb = (PFCB)FileObject->FsContext;
-
-  if (ReadOffset >= Fcb->Entry.DataLengthL)
-    return(STATUS_END_OF_FILE);
-
-  DPRINT("Reading %d bytes at %d\n", Length, ReadOffset);
-
-  if (!(IrpFlags & (IRP_NOCACHE|IRP_PAGING_IO)))
-    {
-      LARGE_INTEGER FileOffset;
-      IO_STATUS_BLOCK IoStatus;
-
-      if (ReadOffset + Length > Fcb->Entry.DataLengthL)
-         Length = Fcb->Entry.DataLengthL - ReadOffset;
-      if (FileObject->PrivateCacheMap == NULL)
-      {
-	  CcRosInitializeFileCache(FileObject, PAGE_SIZE);
-      }
-
-      FileOffset.QuadPart = (LONGLONG)ReadOffset;
-      CcCopyRead(FileObject,
-		 &FileOffset,
-		 Length,
-		 TRUE,
-		 Buffer,
-		 &IoStatus);
-      *LengthRead = IoStatus.Information;
-
-      return(IoStatus.Status);
-    }
-
-  if ((ReadOffset % BLOCKSIZE) != 0 || (Length % BLOCKSIZE) != 0)
-    {
-      return STATUS_INVALID_PARAMETER;
-    }
-  if (ReadOffset + Length > ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE))
-    Length = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE) - ReadOffset;
-
-  Status = CdfsReadSectors(DeviceExt->StorageDevice,
-			   Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
-			   Length / BLOCKSIZE,
-			   Buffer);
-  if (NT_SUCCESS(Status))
-    {
-      *LengthRead = Length;
-      if (Length + ReadOffset > Fcb->Entry.DataLengthL)
-      {
-	memset(Buffer + Fcb->Entry.DataLengthL - ReadOffset,
-	       0, Length + ReadOffset - Fcb->Entry.DataLengthL);
-      }
-    }
-
-  return(Status);
-#else
-    UNREFERENCED_PARAMETER(DeviceExt);
-    UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(Buffer);
-    UNREFERENCED_PARAMETER(Length);
-    UNREFERENCED_PARAMETER(ReadOffset);
-    UNREFERENCED_PARAMETER(IrpFlags);
     *LengthRead = 0;
-    return STATUS_END_OF_FILE;
-#endif
+
+    if (Length == 0)
+    {
+        DPRINT1("Null read!\n");
+        return STATUS_SUCCESS;
+    }
+
+    Fcb = (PNTFS_FCB)FileObject->FsContext;
+
+    if (ReadOffset >= Fcb->Entry.AllocatedSize)
+    {
+        DPRINT1("Reading beyond file end!\n");
+        return STATUS_END_OF_FILE;
+    }
+
+    ToRead = Length;
+    if (ReadOffset + Length > Fcb->Entry.AllocatedSize)
+        ToRead = Fcb->Entry.AllocatedSize - ReadOffset;
+
+    RealReadOffset = ReadOffset;
+    RealLength = ToRead;
+
+    if ((ReadOffset % DeviceExt->NtfsInfo.BytesPerSector) != 0 || (ToRead % DeviceExt->NtfsInfo.BytesPerSector) != 0)
+    {
+        RealReadOffset = ROUND_DOWN(ReadOffset, DeviceExt->NtfsInfo.BytesPerSector);
+        RealLength = ROUND_UP(ToRead, DeviceExt->NtfsInfo.BytesPerSector);
+
+        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + DeviceExt->NtfsInfo.BytesPerSector, TAG_NTFS);
+        if (ReadBuffer == NULL)
+        {
+            DPRINT1("Not enough memory!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        AllocatedBuffer = TRUE;
+    }
+
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (FileRecord == NULL)
+    {
+        DPRINT1("Not enough memory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(DeviceExt, Fcb->MFTIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't find record!\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, L"", 0, &DataContext);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("No data associated with file!\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    DPRINT1("Effective read: %lu at %lu\n", RealLength, RealReadOffset);
+    RealLengthRead = ReadAttribute(DeviceExt, DataContext, RealReadOffset, (PCHAR)ReadBuffer, RealLength);
+    if (RealLengthRead != RealLength)
+    {
+        DPRINT1("Read failure!\n");
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        if (AllocatedBuffer)
+        {
+            ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+        }
+        return Status;
+    }
+
+    ReleaseAttributeContext(DataContext);
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+    *LengthRead = ToRead;
+
+    DPRINT1("%lu got read\n", *LengthRead);
+
+    if (AllocatedBuffer)
+    {
+        RtlCopyMemory(Buffer, ReadBuffer + (ReadOffset - RealReadOffset), ToRead);
+    }
+
+    if (ToRead != Length)
+    {
+        RtlZeroMemory(Buffer + ToRead, Length - ToRead);
+    }
+
+    if (AllocatedBuffer)
+    {
+        ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
