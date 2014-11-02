@@ -22,6 +22,7 @@
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMERS:      Eric Kohl
  *                   Pierre Schweitzer (pierre@reactos.org)
+ *                   Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/

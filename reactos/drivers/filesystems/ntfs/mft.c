@@ -23,6 +23,7 @@
  * PROGRAMMERS:      Eric Kohl
  *                   Valentin Verkhovsky
  *                   Pierre Schweitzer (pierre@reactos.org)
+ *                   Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
