@@ -473,7 +473,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
    }
    else
    {
-       ERR("Got handle: %p\n", Ret);
+       TRACE("Got handle: %p\n", Ret);
    }
 
    return Ret;

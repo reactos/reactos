@@ -575,7 +575,7 @@ co_IntMouseActivateWindow(PWND Wnd)
       }
       return FALSE;
    }
-   ERR("Mouse Active\n");
+   TRACE("Mouse Active\n");
    co_IntSetForegroundAndFocusWindow(Wnd, TRUE);
    return TRUE;
 }
@@ -763,7 +763,7 @@ UserSetActiveWindow(PWND Wnd)
   }
   /*
      Yes your eye are not deceiving you~!
-  
+
      First part of wines Win.c test_SetActiveWindow:
 
      flush_events( TRUE );

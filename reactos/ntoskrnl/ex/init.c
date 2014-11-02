@@ -668,52 +668,52 @@ ExpInitSystemPhase1(VOID)
         DPRINT1("Executive: Event Pair initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize mutants */
     if (ExpInitializeMutantImplementation() == FALSE)
     {
         DPRINT1("Executive: Mutant initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize callbacks */
     if (ExpInitializeCallbacks() == FALSE)
     {
         DPRINT1("Executive: Callback initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize semaphores */
     if (ExpInitializeSemaphoreImplementation() == FALSE)
     {
         DPRINT1("Executive: Semaphore initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize timers */
     if (ExpInitializeTimerImplementation() == FALSE)
     {
         DPRINT1("Executive: Timer initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize profiling */
     if (ExpInitializeProfileImplementation() == FALSE)
     {
         DPRINT1("Executive: Profile initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize UUIDs */
     ExpInitUuids();
-    
+
     /* Initialize keyed events */
     if (ExpInitializeKeyedEventImplementation() == FALSE)
     {
         DPRINT1("Executive: Keyed event initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize Win32K */
     if (ExpWin32kInit() == FALSE)
     {
@@ -1956,7 +1956,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvEnableDisplayString(TRUE);
 
     /* Launch initial process */
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
+    DPRINT("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
 
@@ -1998,7 +1998,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Free the boot buffer */
     ExFreePoolWithTag(InitBuffer, TAG_INIT);
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
+    DPRINT("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 }
 
 VOID

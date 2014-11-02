@@ -36,7 +36,7 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
     LSA_API_MSG ApiMessage;
     NTSTATUS Status;
 
-    DPRINT1("LsaDeregisterLogonProcess()\n");
+    DPRINT("LsaDeregisterLogonProcess()\n");
 
     ApiMessage.ApiNumber = LSASS_REQUEST_DEREGISTER_LOGON_PROCESS;
     ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.DeregisterLogonProcess);
@@ -60,7 +60,7 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
 
     NtClose(LsaHandle);
 
-    DPRINT1("LsaDeregisterLogonProcess() done (Status 0x%08lx)\n", Status);
+    DPRINT("LsaDeregisterLogonProcess() done (Status 0x%08lx)\n", Status);
 
     return Status;
 }
@@ -79,7 +79,7 @@ LsaConnectUntrusted(PHANDLE LsaHandle)
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
     NTSTATUS Status;
 
-    DPRINT1("LsaConnectUntrusted(%p)\n", LsaHandle);
+    DPRINT("LsaConnectUntrusted(%p)\n", LsaHandle);
 
     RtlInitUnicodeString(&PortName,
                          L"\\LsaAuthenticationPort");
@@ -311,7 +311,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
     NTSTATUS Status;
 
-    DPRINT1("LsaRegisterLogonProcess()\n");
+    DPRINT("LsaRegisterLogonProcess()\n");
 
     /* Check the logon process name length */
     if (LsaLogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)

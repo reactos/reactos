@@ -633,8 +633,8 @@ IntCreateRegistryPath(
         RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
     }
 
-    DbgPrint("Formatted registry key '%wZ' -> '%wZ'\n",
-             DriverRegistryPath, DeviceRegistryPath);
+    DPRINT("Formatted registry key '%wZ' -> '%wZ'\n",
+           DriverRegistryPath, DeviceRegistryPath);
 
     return STATUS_SUCCESS;
 }

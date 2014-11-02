@@ -15,6 +15,12 @@
 #define NDEBUG
 #include <debug.h>
 
+#if 0
+#define DBGPRINT(...) DbgPrint(__VA_ARGS__)
+#else
+#define DBGPRINT(...)
+#endif
+
 /*** PRIVATE *****************************************************************/
 
 static NTSTATUS
@@ -1266,7 +1272,7 @@ PdoStartDevice(
 
             if (RawPartialDesc->Type == CmResourceTypeInterrupt)
             {
-                DPRINT1("Assigning IRQ %u to PCI device 0x%x on bus 0x%x\n",
+                DPRINT("Assigning IRQ %u to PCI device 0x%x on bus 0x%x\n",
                         RawPartialDesc->u.Interrupt.Vector,
                         DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                         DeviceExtension->PciDevice->BusNumber);
@@ -1284,30 +1290,30 @@ PdoStartDevice(
 
     Command = 0;
 
-    DPRINT1("Enabling command flags for PCI device 0x%x on bus 0x%x: ",
+    DBGPRINT("pci!PdoStartDevice: Enabling command flags for PCI device 0x%x on bus 0x%x: ",
             DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
             DeviceExtension->PciDevice->BusNumber);
     if (DeviceExtension->PciDevice->EnableBusMaster)
     {
         Command |= PCI_ENABLE_BUS_MASTER;
-        DbgPrint("[Bus master] ");
+        DBGPRINT("[Bus master] ");
     }
 
     if (DeviceExtension->PciDevice->EnableMemorySpace)
     {
         Command |= PCI_ENABLE_MEMORY_SPACE;
-        DbgPrint("[Memory space enable] ");
+        DBGPRINT("[Memory space enable] ");
     }
 
     if (DeviceExtension->PciDevice->EnableIoSpace)
     {
         Command |= PCI_ENABLE_IO_SPACE;
-        DbgPrint("[I/O space enable] ");
+        DBGPRINT("[I/O space enable] ");
     }
 
     if (Command != 0)
     {
-        DbgPrint("\n");
+        DBGPRINT("\n");
 
         /* OR with the previous value */
         Command |= DeviceExtension->PciDevice->PciConfig.Command;

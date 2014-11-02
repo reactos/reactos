@@ -612,7 +612,7 @@ VfatMount(
     FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
     InitializeListHead(&DeviceExt->NotifyList);
 
-    DPRINT1("Mount success\n");
+    DPRINT("Mount success\n");
 
     Status = STATUS_SUCCESS;
 
@@ -866,7 +866,7 @@ VfatLockOrUnlockVolume(
     PFILE_OBJECT FileObject;
     PDEVICE_EXTENSION DeviceExt;
 
-    DPRINT1("VfatLockOrUnlockVolume(%p, %d)\n", IrpContext, Lock);
+    DPRINT("VfatLockOrUnlockVolume(%p, %d)\n", IrpContext, Lock);
 
     DeviceExt = IrpContext->DeviceExt;
     FileObject = IrpContext->FileObject;
@@ -912,7 +912,7 @@ VfatDismountVolume(
     PLIST_ENTRY NextEntry;
     PVFATFCB Fcb;
 
-    DPRINT1("VfatDismountVolume(%p)\n", IrpContext);
+    DPRINT("VfatDismountVolume(%p)\n", IrpContext);
 
     DeviceExt = IrpContext->DeviceExt;
 

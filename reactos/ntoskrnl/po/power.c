@@ -46,10 +46,10 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION Stack;
     PREQUEST_POWER_ITEM RequestPowerItem;
-  
+
     Stack = IoGetNextIrpStackLocation(Irp);
     RequestPowerItem = (PREQUEST_POWER_ITEM)Context;
-  
+
     RequestPowerItem->CompletionRoutine(DeviceObject,
                                         Stack->MinorFunction,
                                         RequestPowerItem->PowerState,
@@ -161,12 +161,12 @@ PopQuerySystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
 {
     PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
     NTSTATUS Status;
-    
+
     DPRINT("PopQuerySystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
-    
+
     if (DeviceNode == IopRootDeviceNode)
         return STATUS_SUCCESS;
-    
+
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         return STATUS_SUCCESS;
 
@@ -177,7 +177,7 @@ PopQuerySystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
     {
         DPRINT1("Device '%wZ' failed IRP_MN_QUERY_POWER\n", &DeviceNode->InstancePath);
     }
-    
+
 #if 0
     return Status;
 #else
@@ -191,15 +191,15 @@ PopSetSystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
 {
     PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
     NTSTATUS Status;
-    
+
     DPRINT("PopSetSystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
-    
+
     if (DeviceNode == IopRootDeviceNode)
         return STATUS_SUCCESS;
-    
+
     if (DeviceNode->PhysicalDeviceObject == PowerStateContext->PowerDevice)
         return STATUS_SUCCESS;
-    
+
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         return STATUS_SUCCESS;
 
@@ -210,7 +210,7 @@ PopSetSystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
     {
         DPRINT1("Device '%wZ' failed IRP_MN_SET_POWER\n", &DeviceNode->InstancePath);
     }
-    
+
 #if 0
     return Status;
 #else
@@ -227,7 +227,7 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState, POWER_ACTION PowerAction)
     NTSTATUS Status;
     DEVICETREE_TRAVERSE_CONTEXT Context;
     POWER_STATE_TRAVERSE_CONTEXT PowerContext;
-    
+
     Status = IopGetSystemPowerDeviceObject(&DeviceObject);
     if (!NT_SUCCESS(Status))
     {
@@ -243,34 +243,34 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState, POWER_ACTION PowerAction)
             return STATUS_UNSUCCESSFUL;
         }
     }
-    
+
     /* Set up context */
     PowerContext.PowerAction = PowerAction;
     PowerContext.SystemPowerState = PowerState;
     PowerContext.PowerDevice = Fdo;
-    
+
     /* Query for system power change */
     IopInitDeviceTreeTraverseContext(&Context,
                                      IopRootDeviceNode,
                                      PopQuerySystemPowerStateTraverse,
                                      &PowerContext);
-    
+
     Status = IopTraverseDeviceTree(&Context);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Query system power state failed; changing state anyway\n");
     }
-    
+
     /* Set system power change */
     IopInitDeviceTreeTraverseContext(&Context,
                                      IopRootDeviceNode,
                                      PopSetSystemPowerStateTraverse,
                                      &PowerContext);
-    
+
     IopTraverseDeviceTree(&Context);
 
     if (!PopAcpiPresent) return STATUS_NOT_IMPLEMENTED;
-    
+
     if (Fdo != NULL)
     {
         if (PowerAction != PowerActionShutdownReset)
@@ -303,7 +303,7 @@ PoInitSystem(IN ULONG BootPhase)
                                        PopAddRemoveSysCapsCallback,
                                        NULL,
                                        &NotificationEntry);
-        
+
         /* Register lid notification */
         IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                        PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
@@ -336,11 +336,11 @@ PoInitSystem(IN ULONG BootPhase)
         PopAcpiPresent = KeLoaderBlock->Extension->AcpiTable != NULL ? TRUE : FALSE;
     }
 
-    
+
     /* Initialize volume support */
     InitializeListHead(&PopVolumeDevices);
     KeInitializeGuardedMutex(&PopVolumeLock);
-    
+
     /* Initialize support for dope */
     KeInitializeSpinLock(&PopDopeGlobalLock);
 
@@ -522,19 +522,19 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     PIRP Irp;
     PREQUEST_POWER_ITEM RequestPowerItem;
-  
+
     if (MinorFunction != IRP_MN_QUERY_POWER
         && MinorFunction != IRP_MN_SET_POWER
         && MinorFunction != IRP_MN_WAIT_WAKE)
         return STATUS_INVALID_PARAMETER_2;
-  
+
     RequestPowerItem = ExAllocatePool(NonPagedPool, sizeof(REQUEST_POWER_ITEM));
     if (!RequestPowerItem)
         return STATUS_INSUFFICIENT_RESOURCES;
-  
+
     /* Always call the top of the device stack */
     TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
-  
+
     Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_POWER,
                                         TopDeviceObject,
                                         NULL,
@@ -547,12 +547,12 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
         ExFreePool(RequestPowerItem);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-  
+
     /* POWER IRPs are always initialized with a status code of
        STATUS_NOT_IMPLEMENTED */
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     Irp->IoStatus.Information = 0;
-  
+
     Stack = IoGetNextIrpStackLocation(Irp);
     Stack->MinorFunction = MinorFunction;
     if (MinorFunction == IRP_MN_WAIT_WAKE)
@@ -562,18 +562,18 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
         Stack->Parameters.Power.Type = DevicePowerState;
         Stack->Parameters.Power.State = PowerState;
     }
-  
+
     RequestPowerItem->CompletionRoutine = CompletionFunction;
     RequestPowerItem->PowerState = PowerState;
     RequestPowerItem->Context = Context;
     RequestPowerItem->TopDeviceObject = TopDeviceObject;
-  
+
     if (pIrp != NULL)
         *pIrp = Irp;
-  
+
     IoSetCompletionRoutine(Irp, PopRequestPowerIrpCompletion, RequestPowerItem, TRUE, TRUE, TRUE);
     PoCallDriver(TopDeviceObject, Irp);
-  
+
     /* Always return STATUS_PENDING. The completion routine
      * will call CompletionFunction and complete the Irp.
      */
@@ -663,7 +663,7 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
            PowerInformationLevel,
            InputBuffer, InputBufferLength,
            OutputBuffer, OutputBufferLength);
-    
+
     switch (PowerInformationLevel)
     {
         case SystemBatteryState:
@@ -841,7 +841,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
     if (SystemAction == PowerActionShutdown) PopReadShutdownPolicy();
 
     /* Disable lazy flushing of registry */
-    DPRINT1("Stopping lazy flush\n");
+    DPRINT("Stopping lazy flush\n");
     CmSetLazyFlushState(FALSE);
 
     /* Setup the power action */
@@ -849,13 +849,13 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
     Action.Flags = Flags;
 
     /* Notify callbacks */
-    DPRINT1("Notifying callbacks\n");
+    DPRINT("Notifying callbacks\n");
     ExNotifyCallback(PowerStateCallback, (PVOID)3, NULL);
- 
+
     /* Swap in any worker thread stacks */
-    DPRINT1("Swapping worker threads\n");
+    DPRINT("Swapping worker threads\n");
     ExSwapinWorkerThreads(FALSE);
-    
+
     /* Make our action global */
     PopAction = Action;
 
@@ -884,7 +884,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 
         /* Check if we're still in an invalid status */
         if (!NT_SUCCESS(Status)) break;
-        
+
 #ifndef NEWCC
         /* Flush dirty cache pages */
         CcRosFlushDirtyPages(-1, &Dummy, FALSE); //HACK: We really should wait here!
@@ -893,14 +893,14 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 #endif
 
         /* Flush all volumes and the registry */
-        DPRINT1("Flushing volumes, cache flushed %lu pages\n", Dummy);
+        DPRINT("Flushing volumes, cache flushed %lu pages\n", Dummy);
         PopFlushVolumes(PopAction.Shutdown);
 
         /* Set IRP for drivers */
         PopAction.IrpMinor = IRP_MN_SET_POWER;
         if (PopAction.Shutdown)
         {
-            DPRINT1("Queueing shutdown thread\n");
+            DPRINT("Queueing shutdown thread\n");
             /* Check if we are running in the system context */
             if (PsGetCurrentProcess() != PsInitialSystemProcess)
             {
@@ -910,7 +910,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
                                      NULL);
 
                 ExQueueWorkItem(&PopShutdownWorkItem, CriticalWorkQueue);
-                                
+
                 /* Spend us -- when we wake up, the system is good to go down */
                 KeSuspendThread(KeGetCurrentThread());
                 Status = STATUS_SYSTEM_SHUTDOWN;
@@ -923,7 +923,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
                 PopGracefulShutdown(NULL);
             }
         }
-        
+
         /* You should not have made it this far */
         ASSERTMSG("System is still up and running?!", FALSE);
         break;

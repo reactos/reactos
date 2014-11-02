@@ -482,7 +482,7 @@ VfatCreateFile(
     if (FileObject->FileName.Length == 0 &&
         (FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
     {
-        DPRINT1("Volume opening\n");
+        DPRINT("Volume opening\n");
 
         if (RequestedDisposition != FILE_OPEN &&
             RequestedDisposition != FILE_OPEN_IF)

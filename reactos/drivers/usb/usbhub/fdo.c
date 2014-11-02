@@ -245,7 +245,7 @@ DeviceStatusChangeThread(
         if (PortStatus.Change & USB_PORT_STATUS_CONNECT)
         {
             //
-            // Clear Port Connect 
+            // Clear Port Connect
             //
             Status = ClearPortFeature(RootHubDeviceObject, PortId, C_PORT_CONNECTION);
             if (!NT_SUCCESS(Status))
@@ -794,7 +794,7 @@ IsCompositeDevice(
         return TRUE;
     }
 
-    if (DeviceDescriptor->bDeviceClass == 0xEF && 
+    if (DeviceDescriptor->bDeviceClass == 0xEF &&
         DeviceDescriptor->bDeviceSubClass == 0x02 &&
         DeviceDescriptor->bDeviceProtocol == 0x01)
     {
@@ -888,7 +888,7 @@ CreateDeviceIds(
 
         if (DeviceDescriptor->bDeviceClass == 0)
         {
-            Index += swprintf(&Buffer[Index], 
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
                           InterfaceDescriptor->bInterfaceClass, InterfaceDescriptor->bInterfaceSubClass, InterfaceDescriptor->bInterfaceProtocol) + 1;
             Index += swprintf(&Buffer[Index],
@@ -900,7 +900,7 @@ CreateDeviceIds(
         }
         else
         {
-            Index += swprintf(&Buffer[Index], 
+            Index += swprintf(&Buffer[Index],
                           L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
                           DeviceDescriptor->bDeviceClass, DeviceDescriptor->bDeviceSubClass, DeviceDescriptor->bDeviceProtocol) + 1;
             Index += swprintf(&Buffer[Index],
@@ -964,7 +964,7 @@ CreateDeviceIds(
     // Construct HardwareIds
     //
     Index = 0;
-    Index += swprintf(&Buffer[Index], 
+    Index += swprintf(&Buffer[Index],
                       L"USB\\Vid_%04x&Pid_%04x&Rev_%04x",
                       UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct, UsbChildExtension->DeviceDesc.bcdDevice) + 1;
     Index += swprintf(&Buffer[Index],
@@ -1146,7 +1146,7 @@ CreateUsbChildDeviceObject(
     RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
     HubInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
     //
-    // Find an empty slot in the child device array 
+    // Find an empty slot in the child device array
     //
     for (ChildDeviceCount = 0; ChildDeviceCount < USB_MAXCHILDREN; ChildDeviceCount++)
     {
@@ -1318,7 +1318,7 @@ CreateUsbChildDeviceObject(
     }
 
     // query device details
-    Status = HubInterface->QueryDeviceInformation(HubInterfaceBusContext, 
+    Status = HubInterface->QueryDeviceInformation(HubInterfaceBusContext,
                                          UsbChildExtension->UsbDeviceHandle,
                                          &UsbChildExtension->DeviceInformation,
                                          sizeof(USB_DEVICE_INFORMATION_0),
@@ -1638,13 +1638,13 @@ USBHUB_FdoStartDevice(
                                                                         sizeof(USB_DEVICE_INFORMATION_0),
                                                                         &Result);
 
-    DPRINT1("Status %x, Result 0x%08lx\n", Status, Result);
-    DPRINT1("InformationLevel %x\n", HubDeviceExtension->DeviceInformation.InformationLevel);
-    DPRINT1("ActualLength %x\n", HubDeviceExtension->DeviceInformation.ActualLength);
-    DPRINT1("PortNumber %x\n", HubDeviceExtension->DeviceInformation.PortNumber);
-    DPRINT1("DeviceDescriptor %x\n", HubDeviceExtension->DeviceInformation.DeviceDescriptor);
-    DPRINT1("HubAddress %x\n", HubDeviceExtension->DeviceInformation.HubAddress);
-    DPRINT1("NumberofPipes %x\n", HubDeviceExtension->DeviceInformation.NumberOfOpenPipes);
+    DPRINT("Status %x, Result 0x%08lx\n", Status, Result);
+    DPRINT("InformationLevel %x\n", HubDeviceExtension->DeviceInformation.InformationLevel);
+    DPRINT("ActualLength %x\n", HubDeviceExtension->DeviceInformation.ActualLength);
+    DPRINT("PortNumber %x\n", HubDeviceExtension->DeviceInformation.PortNumber);
+    DPRINT("DeviceDescriptor %x\n", HubDeviceExtension->DeviceInformation.DeviceDescriptor);
+    DPRINT("HubAddress %x\n", HubDeviceExtension->DeviceInformation.HubAddress);
+    DPRINT("NumberofPipes %x\n", HubDeviceExtension->DeviceInformation.NumberOfOpenPipes);
 
     // Get Root Hubs Device Descriptor
     UsbBuildGetDescriptorRequest(Urb,
@@ -1737,7 +1737,7 @@ USBHUB_FdoStartDevice(
         return STATUS_UNSUCCESSFUL;
     }
 
-    DPRINT1("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
+    DPRINT("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
 
     // Build hub descriptor request
     UsbBuildVendorRequest(Urb,
@@ -2222,7 +2222,7 @@ USBHUB_FdoHandleDeviceControl(
     }
     else
     {
-        DPRINT1("UNIMPLEMENTED FdoHandleDeviceControl IoCtl %x InputBufferLength %x OutputBufferLength %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, 
+        DPRINT1("UNIMPLEMENTED FdoHandleDeviceControl IoCtl %x InputBufferLength %x OutputBufferLength %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode,
            IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
     }
 

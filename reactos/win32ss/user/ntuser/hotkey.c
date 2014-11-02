@@ -52,7 +52,7 @@ StartDebugHotKeys(VOID)
     }
     UserRegisterHotKey(PWND_BOTTOM, IDHK_SHIFTF12, MOD_SHIFT, vk);
     UserRegisterHotKey(PWND_BOTTOM, IDHK_F12, 0, vk);
-    ERR("Start up the debugger hotkeys!! Should see this once!\n");
+    TRACE("Start up the debugger hotkeys!! If you see this you eneabled debugprints. Congrats!\n");
 }
 
 /*
@@ -248,8 +248,8 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                if (pHotKey->pWnd == PWND_BOTTOM)
                {
                    if (gpqForeground != NULL)
-                   { 
-                      pWnd = gpqForeground->spwndFocus; 
+                   {
+                      pWnd = gpqForeground->spwndFocus;
                    }
                    else
                       return FALSE;
@@ -354,7 +354,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
             pHotKey = pHotKey->pNext;
         }
     }
-    
+
     pHotKey = gphkFirst;
     pLink = &gphkFirst;
     while (pHotKey)
