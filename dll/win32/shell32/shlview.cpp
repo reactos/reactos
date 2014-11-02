@@ -1106,7 +1106,7 @@ UINT CDefView::GetSelections()
 
     TRACE("-- Items selected =%u\n", m_cidl);
 
-    int i = 0;
+    UINT i = 0;
     int lvIndex = -1;
     while ((lvIndex = m_ListView.GetNextItem(lvIndex,  LVNI_SELECTED)) > -1)
     {
