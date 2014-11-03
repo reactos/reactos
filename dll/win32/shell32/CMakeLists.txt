@@ -41,6 +41,7 @@ list(APPEND SOURCE
     folders.cpp
     iconcache.cpp
     pidl.cpp
+    shell32.cpp
     shell32_main.cpp
     shellitem.cpp
     shelllink.cpp

@@ -25,12 +25,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const WCHAR sShell32[12] = {'S','H','E','L','L','3','2','.','D','L','L','\0'};
 
-/**************************************************************************
- * Default ClassFactory types
- */
-typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
-HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInst, IClassFactory **theFactory);
-
 /* FIXME: this should be SHLWAPI.24 since we can't yet import by ordinal */
 
 DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
@@ -272,120 +266,6 @@ void WINAPI SHFree(LPVOID pv)
 {
     TRACE("%p\n",pv);
     CoTaskMemFree(pv);
-}
-
-/**************************************************************************
- * Default ClassFactory Implementation
- *
- * SHCreateDefClassObject
- *
- * NOTES
- *  Helper function for dlls without their own classfactory.
- *  A generic classfactory is returned.
- *  When the CreateInstance of the cf is called the callback is executed.
- */
-
-class IDefClFImpl :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IClassFactory
-{
-private:
-    CLSID                    *rclsid;
-    LPFNCREATEINSTANCE        lpfnCI;
-    const IID                *riidInst;
-    LONG                    *pcRefDll;        /* pointer to refcounter in external dll (ugrrr...) */
-public:
-    IDefClFImpl();
-    HRESULT Initialize(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInstx);
-
-    // IClassFactory
-    virtual HRESULT WINAPI CreateInstance(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject);
-    virtual HRESULT WINAPI LockServer(BOOL fLock);
-
-BEGIN_COM_MAP(IDefClFImpl)
-    COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)
-END_COM_MAP()
-};
-
-IDefClFImpl::IDefClFImpl()
-{
-    lpfnCI = NULL;
-    riidInst = NULL;
-    pcRefDll = NULL;
-    rclsid = NULL;
-}
-
-HRESULT IDefClFImpl::Initialize(LPFNCREATEINSTANCE lpfnCIx, PLONG pcRefDllx, const IID *riidInstx)
-{
-    lpfnCI = lpfnCIx;
-    riidInst = riidInstx;
-    pcRefDll = pcRefDllx;
-
-    if (pcRefDll)
-        InterlockedIncrement(pcRefDll);
-
-    TRACE("(%p)%s\n", this, shdebugstr_guid(riidInst));
-    return S_OK;
-}
-
-/******************************************************************************
- * IDefClF_fnCreateInstance
- */
-HRESULT WINAPI IDefClFImpl::CreateInstance(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject)
-{
-    TRACE("%p->(%p,%s,%p)\n", this, pUnkOuter, shdebugstr_guid(&riid), ppvObject);
-
-    *ppvObject = NULL;
-
-    if (riidInst == NULL || IsEqualCLSID(riid, *riidInst) || IsEqualCLSID(riid, IID_IUnknown))
-    {
-        return lpfnCI(pUnkOuter, riid, ppvObject);
-    }
-
-    ERR("unknown IID requested %s\n", shdebugstr_guid(&riid));
-    return E_NOINTERFACE;
-}
-
-/******************************************************************************
- * IDefClF_fnLockServer
- */
-HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
-{
-    TRACE("%p->(0x%x), not implemented\n", this, fLock);
-    return E_NOTIMPL;
-}
-
-/**************************************************************************
- *  IDefClF_fnConstructor
- */
-
-HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInst, IClassFactory **theFactory)
-{
-    return ShellObjectCreatorInit<IDefClFImpl>(lpfnCI, pcRefDll, riidInst, IID_IClassFactory, theFactory);
-}
-
-/******************************************************************************
- * SHCreateDefClassObject            [SHELL32.70]
- */
-HRESULT WINAPI SHCreateDefClassObject(
-    REFIID    riid,
-    LPVOID*    ppv,
-    LPFNCREATEINSTANCE lpfnCI,    /* [in] create instance callback entry */
-    LPDWORD    pcRefDll,        /* [in/out] ref count of the dll */
-    REFIID    riidInst)        /* [in] optional interface to the instance */
-{
-    IClassFactory                *pcf;
-    HRESULT                        hResult;
-
-    TRACE("%s %p %p %p %s\n", shdebugstr_guid(&riid), ppv, lpfnCI, pcRefDll, shdebugstr_guid(&riidInst));
-
-    if (!IsEqualCLSID(riid, IID_IClassFactory))
-        return E_NOINTERFACE;
-    hResult = IDefClF_fnConstructor(lpfnCI, (PLONG)pcRefDll, &riidInst, &pcf);
-    if (FAILED(hResult))
-        return hResult;
-    *ppv = pcf;
-    return S_OK;
 }
 
 /*************************************************************************
