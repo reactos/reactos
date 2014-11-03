@@ -233,8 +233,6 @@ STDAPI DllGetVersion(DLLVERSIONINFO *pdvi)
  *
  */
 HINSTANCE    shell32_hInstance;
-HIMAGELIST   ShellSmallIconList = 0;
-HIMAGELIST   ShellBigIconList = 0;
 
 void *operator new (size_t, void *buf)
 {

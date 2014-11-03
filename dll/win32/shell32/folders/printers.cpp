@@ -125,17 +125,20 @@ HRESULT WINAPI CPrintersExtractIconW::Extract(LPCWSTR pszFile,
         HICON *phiconSmall, UINT nIconSize)
 {
     int index;
+    HIMAGELIST big_icons, small_icons;
 
     FIXME("(%p) (file=%p index=%d %p %p size=%x) semi-stub\n", this, debugstr_w(pszFile),
           (signed)nIconIndex, phiconLarge, phiconSmall, nIconSize);
 
     index = SIC_GetIconIndex(pszFile, nIconIndex, 0);
 
+    Shell_GetImageLists(&big_icons, &small_icons);
+
     if (phiconLarge)
-        *phiconLarge = ImageList_GetIcon(ShellBigIconList, index, ILD_TRANSPARENT);
+        *phiconLarge = ImageList_GetIcon(big_icons, index, ILD_TRANSPARENT);
 
     if (phiconSmall)
-        *phiconSmall = ImageList_GetIcon(ShellSmallIconList, index, ILD_TRANSPARENT);
+        *phiconSmall = ImageList_GetIcon(small_icons, index, ILD_TRANSPARENT);
 
     return S_OK;
 }

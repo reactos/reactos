@@ -587,6 +587,7 @@ BOOL CDefView::InitList()
 {
     SHELLDETAILS    sd;
     WCHAR    szTemp[50];
+    HIMAGELIST big_icons, small_icons;
 
     TRACE("%p\n", this);
 
@@ -608,8 +609,9 @@ BOOL CDefView::InitList()
         FIXME("no SF2\n");
     }
 
-    m_ListView.SetImageList(ShellBigIconList, LVSIL_NORMAL);
-    m_ListView.SetImageList(ShellSmallIconList, LVSIL_SMALL);
+    Shell_GetImageLists(&big_icons, &small_icons);
+    m_ListView.SetImageList(big_icons, LVSIL_NORMAL);
+    m_ListView.SetImageList(small_icons, LVSIL_SMALL);
 
     return TRUE;
 }

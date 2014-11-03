@@ -419,6 +419,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     HRESULT hr = S_OK;
     BOOL IconNotYetLoaded=TRUE;
     UINT uGilFlags = 0;
+    HIMAGELIST big_icons, small_icons;
 
     TRACE("%s fattr=0x%x sfi=%p(attr=0x%08x) size=0x%x flags=0x%x\n",
           (flags & SHGFI_PIDL)? "pidl" : debugstr_w(path), dwFileAttributes,
@@ -557,6 +558,9 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     }
 
     /* ### icons ###*/
+
+    Shell_GetImageLists( &big_icons, &small_icons );
+
     if (flags & SHGFI_OPENICON)
         uGilFlags |= GIL_OPENICON;
 
@@ -701,9 +705,9 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         if (ret && (flags & SHGFI_SYSICONINDEX))
         {
             if (flags & SHGFI_SMALLICON)
-                ret = (DWORD_PTR) ShellSmallIconList;
+                ret = (DWORD_PTR)small_icons;
             else
-                ret = (DWORD_PTR) ShellBigIconList;
+                ret = (DWORD_PTR)big_icons;
         }
     }
 
@@ -711,9 +715,9 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     if (SUCCEEDED(hr) && (flags & SHGFI_ICON) && IconNotYetLoaded)
     {
         if (flags & SHGFI_SMALLICON)
-            psfi->hIcon = ImageList_GetIcon( ShellSmallIconList, psfi->iIcon, ILD_NORMAL);
+            psfi->hIcon = ImageList_GetIcon( small_icons, psfi->iIcon, ILD_NORMAL);
         else
-            psfi->hIcon = ImageList_GetIcon( ShellBigIconList, psfi->iIcon, ILD_NORMAL);
+            psfi->hIcon = ImageList_GetIcon( big_icons, psfi->iIcon, ILD_NORMAL);
     }
 
     if (flags & ~SHGFI_KNOWN_FLAGS)

@@ -37,6 +37,9 @@ typedef struct
 
 static HDPA        sic_hdpa = 0;
 
+static HIMAGELIST ShellSmallIconList;
+static HIMAGELIST ShellBigIconList;
+
 namespace
 {
 extern CRITICAL_SECTION SHELL32_SicCS;

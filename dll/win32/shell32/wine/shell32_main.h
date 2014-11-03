@@ -31,8 +31,6 @@ extern "C" {
 */
 extern HMODULE	huser32;
 extern HINSTANCE shell32_hInstance;
-extern HIMAGELIST	ShellSmallIconList;
-extern HIMAGELIST	ShellBigIconList;
 
 BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
