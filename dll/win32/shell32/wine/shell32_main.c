@@ -19,7 +19,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <wine/config.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <shellapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+
+#include "undocshell.h"
+#include "pidl.h"
+#include "shell32_main.h"
+#include "shresdef.h"
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 #include <reactos/version.h>
 
@@ -27,7 +45,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 const char * const SHELL_Authors[] = { "Copyright 1993-"COPYRIGHT_YEAR" WINE team", "Copyright 1998-"COPYRIGHT_YEAR" ReactOS Team", 0 };
 
-#define MORE_DEBUG 1
 /*************************************************************************
  * CommandLineToArgvW            [SHELL32.@]
  *
@@ -75,11 +92,11 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         /* Return the path to the executable */
         DWORD len, deslen=MAX_PATH, size;
 
-        size = sizeof(LPWSTR) + deslen*sizeof(WCHAR) + sizeof(LPWSTR);
+        size = sizeof(LPWSTR)*2 + deslen*sizeof(WCHAR);
         for (;;)
         {
-            if (!(argv = (LPWSTR *)LocalAlloc(LMEM_FIXED, size))) return NULL;
-            len = GetModuleFileNameW(0, (LPWSTR)(argv+1), deslen);
+            if (!(argv = LocalAlloc(LMEM_FIXED, size))) return NULL;
+            len = GetModuleFileNameW(0, (LPWSTR)(argv+2), deslen);
             if (!len)
             {
                 LocalFree(argv);
@@ -87,10 +104,11 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             }
             if (len < deslen) break;
             deslen*=2;
-            size = sizeof(LPWSTR) + deslen*sizeof(WCHAR) + sizeof(LPWSTR);
+            size = sizeof(LPWSTR)*2 + deslen*sizeof(WCHAR);
             LocalFree( argv );
         }
-        argv[0]=(LPWSTR)(argv+1);
+        argv[0]=(LPWSTR)(argv+2);
+        argv[1]=NULL;
         *numargs=1;
 
         return argv;
@@ -168,10 +186,10 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
      * with it. This way the caller can make a single LocalFree() call to free
      * both, as per MSDN.
      */
-    argv=(LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(strlenW(lpCmdline)+1)*sizeof(WCHAR));
+    argv=LocalAlloc(LMEM_FIXED, (argc+1)*sizeof(LPWSTR)+(strlenW(lpCmdline)+1)*sizeof(WCHAR));
     if (!argv)
         return NULL;
-    cmdline=(LPWSTR)(argv+argc);
+    cmdline=(LPWSTR)(argv+argc+1);
     strcpyW(cmdline, lpCmdline);
 
     /* --- Then split and copy the arguments */
@@ -209,6 +227,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     if (!*s)
     {
         /* There are no parameters so we are all done */
+        argv[argc]=NULL;
         *numargs=argc;
         return argv;
     }
@@ -280,6 +299,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         }
     }
     *d='\0';
+    argv[argc]=NULL;
     *numargs=argc;
 
     return argv;
@@ -319,20 +339,17 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
 
     SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
     ReadFile( hfile, magic, sizeof(magic), &len, NULL );
-
     if ( *(DWORD*)magic == IMAGE_NT_SIGNATURE )
     {
         SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
         ReadFile( hfile, &nt, sizeof(nt), &len, NULL );
         CloseHandle( hfile );
-
         /* DLL files are not executable and should return 0 */
         if (nt.FileHeader.Characteristics & IMAGE_FILE_DLL)
             return 0;
-
         if (nt.OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
         {
-             return IMAGE_NT_SIGNATURE |
+             return IMAGE_NT_SIGNATURE | 
                    (nt.OptionalHeader.MajorSubsystemVersion << 24) |
                    (nt.OptionalHeader.MinorSubsystemVersion << 16);
         }
@@ -344,7 +361,6 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
         SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET );
         ReadFile( hfile, &ne, sizeof(ne), &len, NULL );
         CloseHandle( hfile );
-
         if (ne.ne_exetyp == 2)
             return IMAGE_OS2_SIGNATURE | (ne.ne_expver << 16);
         return 0;
@@ -354,7 +370,7 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
 }
 
 /*************************************************************************
- * SHELL_IsShortcut        [internal]
+ * SHELL_IsShortcut		[internal]
  *
  * Decide if an item id list points to a shell shortcut
  */
@@ -397,8 +413,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     int iIndex;
     DWORD_PTR ret = TRUE;
     DWORD dwAttributes = 0;
-    CComPtr<IShellFolder>        psfParent;
-    CComPtr<IExtractIconW>        pei;
+    IShellFolder * psfParent = NULL;
+    IExtractIconW * pei = NULL;
     LPITEMIDLIST    pidlLast = NULL, pidl = NULL;
     HRESULT hr = S_OK;
     BOOL IconNotYetLoaded=TRUE;
@@ -409,7 +425,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
           psfi, psfi->dwAttributes, sizeofpsfi, flags);
 
     if (!path)
-         return FALSE;
+        return FALSE;
 
     /* windows initializes these values regardless of the flags */
     if (psfi != NULL)
@@ -467,7 +483,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         /* get the parent shellfolder */
         if (pidl)
         {
-            hr = SHBindToParent( pidl, IID_PPV_ARG(IShellFolder, &psfParent),
+            hr = SHBindToParent( pidl, &IID_IShellFolder, (LPVOID*)&psfParent,
                                 (LPCITEMIDLIST*)&pidlLast );
             if (SUCCEEDED(hr))
                 pidlLast = ILClone(pidlLast);
@@ -487,22 +503,22 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         {
             psfi->dwAttributes = 0xffffffff;
         }
-        if (psfParent != NULL)
-            psfParent->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlLast,
+        if (psfParent)
+            IShellFolder_GetAttributesOf( psfParent, 1, (LPCITEMIDLIST*)&pidlLast,
                                       &(psfi->dwAttributes) );
     }
 
     /* get the displayname */
     if (SUCCEEDED(hr) && (flags & SHGFI_DISPLAYNAME))
     {
-        if (flags & SHGFI_USEFILEATTRIBUTES)
+        if (flags & SHGFI_USEFILEATTRIBUTES && !(flags & SHGFI_PIDL))
         {
-            wcscpy (psfi->szDisplayName, PathFindFileNameW(szFullPath));
+            lstrcpyW (psfi->szDisplayName, PathFindFileNameW(szFullPath));
         }
         else
         {
             STRRET str;
-            hr = psfParent->GetDisplayNameOf(pidlLast,
+            hr = IShellFolder_GetDisplayNameOf( psfParent, pidlLast,
                                                 SHGDN_INFOLDER, &str);
             StrRetToStrNW (psfi->szDisplayName, MAX_PATH, &str, pidlLast);
         }
@@ -514,7 +530,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         static const WCHAR szFile[] = { 'F','i','l','e',0 };
         static const WCHAR szDashFile[] = { '-','f','i','l','e',0 };
 
-        if (!(flags & SHGFI_USEFILEATTRIBUTES))
+        if (!(flags & SHGFI_USEFILEATTRIBUTES) || (flags & SHGFI_PIDL))
         {
             char ftype[80];
 
@@ -524,17 +540,17 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         else
         {
             if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                wcscat (psfi->szTypeName, szFile);
-            else
+                strcatW (psfi->szTypeName, szFile);
+            else 
             {
                 WCHAR sTemp[64];
 
-                wcscpy(sTemp,PathFindExtensionW(szFullPath));
+                lstrcpyW(sTemp,PathFindExtensionW(szFullPath));
                 if (!( HCR_MapTypeToValueW(sTemp, sTemp, 64, TRUE) &&
                     HCR_MapTypeToValueW(sTemp, psfi->szTypeName, 80, FALSE )))
                 {
                     lstrcpynW (psfi->szTypeName, sTemp, 64);
-                    wcscat (psfi->szTypeName, szDashFile);
+                    strcatW (psfi->szTypeName, szDashFile);
                 }
             }
         }
@@ -565,13 +581,13 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     /* get the iconlocation */
     if (SUCCEEDED(hr) && (flags & SHGFI_ICONLOCATION ))
     {
-        UINT uFlags;
+        UINT uDummy,uFlags;
 
-        if (flags & SHGFI_USEFILEATTRIBUTES)
+        if (flags & SHGFI_USEFILEATTRIBUTES && !(flags & SHGFI_PIDL))
         {
             if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
-                wcscpy(psfi->szDisplayName, swShell32Name);
+                lstrcpyW(psfi->szDisplayName, swShell32Name);
                 psfi->iIcon = -IDI_SHELL_FOLDER;
             }
             else
@@ -587,11 +603,11 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                      HCR_GetIconW(sTemp, sTemp, NULL, MAX_PATH, &psfi->iIcon))
                 {
                     if (lstrcmpW(p1W, sTemp))
-                        wcscpy(psfi->szDisplayName, sTemp);
+                        strcpyW(psfi->szDisplayName, sTemp);
                     else
                     {
                         /* the icon is in the file */
-                        wcscpy(psfi->szDisplayName, szFullPath);
+                        strcpyW(psfi->szDisplayName, szFullPath);
                     }
                 }
                 else
@@ -600,20 +616,22 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         }
         else
         {
-            hr = psfParent->GetUIObjectOf(0, 1,
-                (LPCITEMIDLIST*)&pidlLast, IID_NULL_PPV_ARG(IExtractIconW, &pei));
+            hr = IShellFolder_GetUIObjectOf(psfParent, 0, 1,
+                (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconW,
+                &uDummy, (LPVOID*)&pei);
             if (SUCCEEDED(hr))
             {
-                hr = pei->GetIconLocation(uGilFlags,
+                hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
                     szLocation, MAX_PATH, &iIndex, &uFlags);
 
                 if (uFlags & GIL_NOTFILENAME)
                     ret = FALSE;
                 else
                 {
-                    wcscpy (psfi->szDisplayName, szLocation);
+                    lstrcpyW (psfi->szDisplayName, szLocation);
                     psfi->iIcon = iIndex;
                 }
+                IExtractIconW_Release(pei);
             }
         }
     }
@@ -642,15 +660,15 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                      HCR_GetIconW(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))
                 {
                     if (!lstrcmpW(p1W,sTemp))            /* icon is in the file */
-                        wcscpy(sTemp, szFullPath);
+                        strcpyW(sTemp, szFullPath);
 
-                    if (flags & SHGFI_SYSICONINDEX)
+                    if (flags & SHGFI_SYSICONINDEX) 
                     {
                         psfi->iIcon = SIC_GetIconIndex(sTemp,icon_idx,0);
                         if (psfi->iIcon == -1)
                             psfi->iIcon = 0;
                     }
-                    else
+                    else 
                     {
                         UINT ret;
                         if (flags & SHGFI_SMALLICON)
@@ -663,8 +681,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                                 GetSystemMetrics( SM_CXICON),
                                 GetSystemMetrics( SM_CYICON),
                                 &psfi->hIcon, 0, 1, 0);
-
-                        if (ret != 0 && ret != 0xFFFFFFFF)
+                        if (ret != 0 && ret != (UINT)-1)
                         {
                             IconNotYetLoaded=FALSE;
                             psfi->iIcon = icon_idx;
@@ -707,11 +724,9 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     SHFree(pidlLast);
 
-#ifdef MORE_DEBUG
     TRACE ("icon=%p index=0x%08x attr=0x%08x name=%s type=%s ret=0x%08lx\n",
            psfi->hIcon, psfi->iIcon, psfi->dwAttributes,
            debugstr_w(psfi->szDisplayName), debugstr_w(psfi->szTypeName), ret);
-#endif
 
     return ret;
 }
@@ -731,7 +746,7 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
     INT len;
     LPWSTR temppath = NULL;
     LPCWSTR pathW;
-    DWORD ret;
+    DWORD_PTR ret;
     SHFILEINFOW temppsfi;
 
     if (flags & SHGFI_PIDL)
@@ -742,7 +757,7 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
     else
     {
         len = MultiByteToWideChar(CP_ACP, 0, path, -1, NULL, 0);
-        temppath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        temppath = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, path, -1, temppath, len);
         pathW = temppath;
     }
@@ -783,7 +798,7 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
 /*************************************************************************
  * DuplicateIcon            [SHELL32.@]
  */
-EXTERN_C HICON WINAPI DuplicateIcon( HINSTANCE hInstance, HICON hIcon)
+HICON WINAPI DuplicateIcon( HINSTANCE hInstance, HICON hIcon)
 {
     ICONINFO IconInfo;
     HICON hDupIcon = 0;
@@ -806,10 +821,10 @@ EXTERN_C HICON WINAPI DuplicateIcon( HINSTANCE hInstance, HICON hIcon)
  * ExtractIconA                [SHELL32.@]
  */
 HICON WINAPI ExtractIconA(HINSTANCE hInstance, LPCSTR lpszFile, UINT nIconIndex)
-{
+{   
     HICON ret;
     INT len = MultiByteToWideChar(CP_ACP, 0, lpszFile, -1, NULL, 0);
-    LPWSTR lpwstrFile = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    LPWSTR lpwstrFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
 
     TRACE("%p %s %d\n", hInstance, lpszFile, nIconIndex);
 
@@ -831,17 +846,17 @@ HICON WINAPI ExtractIconW(HINSTANCE hInstance, LPCWSTR lpszFile, UINT nIconIndex
 
     TRACE("%p %s %d\n", hInstance, debugstr_w(lpszFile), nIconIndex);
 
-    if (nIconIndex == 0xFFFFFFFF)
+    if (nIconIndex == (UINT)-1)
     {
         ret = PrivateExtractIconsW(lpszFile, 0, cx, cy, NULL, NULL, 0, LR_DEFAULTCOLOR);
-        if (ret != 0xFFFFFFFF && ret)
+        if (ret != (UINT)-1 && ret)
             return (HICON)(UINT_PTR)ret;
         return NULL;
     }
     else
         ret = PrivateExtractIconsW(lpszFile, nIconIndex, cx, cy, &hIcon, NULL, 1, LR_DEFAULTCOLOR);
 
-    if (ret == 0xFFFFFFFF)
+    if (ret == (UINT)-1)
         return (HICON)1;
     else if (ret > 0 && hIcon)
         return hIcon;
@@ -852,7 +867,7 @@ HICON WINAPI ExtractIconW(HINSTANCE hInstance, LPCWSTR lpszFile, UINT nIconIndex
 /*************************************************************************
  * Printer_LoadIconsW        [SHELL32.205]
  */
-EXTERN_C VOID WINAPI Printer_LoadIconsW(LPCWSTR wsPrinterName, HICON * pLargeIcon, HICON * pSmallIcon)
+VOID WINAPI Printer_LoadIconsW(LPCWSTR wsPrinterName, HICON * pLargeIcon, HICON * pSmallIcon)
 {
     INT iconindex=IDI_SHELL_PRINTERS_FOLDER;
 
@@ -870,12 +885,12 @@ EXTERN_C VOID WINAPI Printer_LoadIconsW(LPCWSTR wsPrinterName, HICON * pLargeIco
     }
 
     if(pLargeIcon != NULL)
-        *pLargeIcon = (HICON)LoadImageW(shell32_hInstance,
+        *pLargeIcon = LoadImageW(shell32_hInstance,
                                  (LPCWSTR) MAKEINTRESOURCE(iconindex), IMAGE_ICON,
                                  0, 0, LR_DEFAULTCOLOR|LR_DEFAULTSIZE);
 
     if(pSmallIcon != NULL)
-        *pSmallIcon = (HICON)LoadImageW(shell32_hInstance,
+        *pSmallIcon = LoadImageW(shell32_hInstance,
                                  (LPCWSTR) MAKEINTRESOURCE(iconindex), IMAGE_ICON,
                                  16, 16, LR_DEFAULTCOLOR);
 }
@@ -883,10 +898,10 @@ EXTERN_C VOID WINAPI Printer_LoadIconsW(LPCWSTR wsPrinterName, HICON * pLargeIco
 /*************************************************************************
  * Printers_RegisterWindowW        [SHELL32.213]
  * used by "printui.dll":
- * find the Window of the given Type for the specific Printer and
+ * find the Window of the given Type for the specific Printer and 
  * return the already existent hwnd or open a new window
  */
-EXTERN_C BOOL WINAPI Printers_RegisterWindowW(LPCWSTR wsPrinter, DWORD dwType,
+BOOL WINAPI Printers_RegisterWindowW(LPCWSTR wsPrinter, DWORD dwType,
             HANDLE * phClassPidl, HWND * phwnd)
 {
     FIXME("(%s, %x, %p (%p), %p (%p)) stub!\n", debugstr_w(wsPrinter), dwType,
@@ -894,12 +909,12 @@ EXTERN_C BOOL WINAPI Printers_RegisterWindowW(LPCWSTR wsPrinter, DWORD dwType,
                 phwnd, (phwnd != NULL) ? *(phwnd) : NULL);
 
     return FALSE;
-}
+} 
 
 /*************************************************************************
  * Printers_UnregisterWindow      [SHELL32.214]
  */
-EXTERN_C VOID WINAPI Printers_UnregisterWindow(HANDLE hClassPidl, HWND hwnd)
+VOID WINAPI Printers_UnregisterWindow(HANDLE hClassPidl, HWND hwnd)
 {
     FIXME("(%p, %p) stub!\n", hClassPidl, hwnd);
 }
@@ -983,7 +998,7 @@ UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
  * SHHelpShortcuts_RunDLLA        [SHELL32.@]
  *
  */
-EXTERN_C DWORD WINAPI SHHelpShortcuts_RunDLLA(DWORD dwArg1, DWORD dwArg2, DWORD dwArg3, DWORD dwArg4)
+DWORD WINAPI SHHelpShortcuts_RunDLLA(DWORD dwArg1, DWORD dwArg2, DWORD dwArg3, DWORD dwArg4)
 {
     FIXME("(%x, %x, %x, %x) stub!\n", dwArg1, dwArg2, dwArg3, dwArg4);
     return 0;
@@ -993,7 +1008,7 @@ EXTERN_C DWORD WINAPI SHHelpShortcuts_RunDLLA(DWORD dwArg1, DWORD dwArg2, DWORD 
  * SHHelpShortcuts_RunDLLA        [SHELL32.@]
  *
  */
-EXTERN_C DWORD WINAPI SHHelpShortcuts_RunDLLW(DWORD dwArg1, DWORD dwArg2, DWORD dwArg3, DWORD dwArg4)
+DWORD WINAPI SHHelpShortcuts_RunDLLW(DWORD dwArg1, DWORD dwArg2, DWORD dwArg3, DWORD dwArg4)
 {
     FIXME("(%x, %x, %x, %x) stub!\n", dwArg1, dwArg2, dwArg3, dwArg4);
     return 0;
@@ -1004,13 +1019,13 @@ EXTERN_C DWORD WINAPI SHHelpShortcuts_RunDLLW(DWORD dwArg1, DWORD dwArg2, DWORD 
  * Create an instance of specified object class from within
  * the shell process and release it immediately
  */
-EXTERN_C HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
+HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
 {
-    CComPtr<IUnknown>            ptr;
+    void *ptr = NULL;
 
-    TRACE("%s\n", debugstr_guid(&rclsid));
+    TRACE("%s\n", debugstr_guid(rclsid));
 
-    CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void **)&ptr);
+    CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown,&ptr);
     if (ptr)
         return S_OK;
     return DISP_E_MEMBERNOTFOUND;
@@ -1260,7 +1275,7 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             break;
     }
 
-    return FALSE;
+    return 0;
 }
 
 
@@ -1276,13 +1291,13 @@ BOOL WINAPI ShellAboutA( HWND hWnd, LPCSTR szApp, LPCSTR szOtherStuff, HICON hIc
     if (szApp)
     {
         len = MultiByteToWideChar(CP_ACP, 0, szApp, -1, NULL, 0);
-        appW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        appW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, szApp, -1, appW, len);
     }
     if (szOtherStuff)
     {
         len = MultiByteToWideChar(CP_ACP, 0, szOtherStuff, -1, NULL, 0);
-        otherW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        otherW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, szOtherStuff, -1, otherW, len);
     }
 
@@ -1328,7 +1343,7 @@ BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
 /*************************************************************************
  * FreeIconList (SHELL32.@)
  */
-EXTERN_C void WINAPI FreeIconList( DWORD dw )
+void WINAPI FreeIconList( DWORD dw )
 {
     FIXME("%x: stub\n",dw);
 }
@@ -1336,7 +1351,7 @@ EXTERN_C void WINAPI FreeIconList( DWORD dw )
 /*************************************************************************
  * SHLoadNonloadedIconOverlayIdentifiers (SHELL32.@)
  */
-EXTERN_C HRESULT WINAPI SHLoadNonloadedIconOverlayIdentifiers(VOID)
+HRESULT WINAPI SHLoadNonloadedIconOverlayIdentifiers( VOID )
 {
     FIXME("stub\n");
     return S_OK;

@@ -22,6 +22,10 @@
 #ifndef __WINE_SHELL_MAIN_H
 #define __WINE_SHELL_MAIN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*******************************************
 *  global SHELL32.DLL variables
 */
@@ -179,7 +183,7 @@ extern const GUID CLSID_UnixFolder;
 extern const GUID CLSID_UnixDosFolder;
 
 /* Default shell folder value registration */
-EXTERN_C HRESULT SHELL_RegisterShellFolders(void);
+HRESULT SHELL_RegisterShellFolders(void);
 
 /* Detect Shell Links */
 BOOL SHELL_IsShortcut(LPCITEMIDLIST);
@@ -193,7 +197,11 @@ BOOL SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEM
 BOOL SH_ShowFolderProperties(LPWSTR pwszFolder, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl);
 LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT cchBuf);
 
-EXTERN_C HRESULT WINAPI DoRegisterServer(void);
-EXTERN_C HRESULT WINAPI DoUnregisterServer(void);
+HRESULT WINAPI DoRegisterServer(void);
+HRESULT WINAPI DoUnregisterServer(void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __WINE_SHELL_MAIN_H */

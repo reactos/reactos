@@ -37,7 +37,7 @@
 #include "pidl.h"
 #include "debughlp.h"
 #include "undocshell.h"
-#include "shell32_main.h"
+#include "wine/shell32_main.h"
 #include "shresdef.h"
 #include "cpanel.h"
 #include "enumidlist.h"

@@ -42,7 +42,6 @@ list(APPEND SOURCE
     iconcache.cpp
     pidl.cpp
     shell32.cpp
-    shell32_main.cpp
     shellitem.cpp
     shelllink.cpp
     shellord.cpp
@@ -76,6 +75,7 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED
     ${SOURCE}
+    wine/shell32_main.c
     wine/shellole.c
     wine/shellstring.c
     vista.c
