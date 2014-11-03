@@ -21,8 +21,6 @@
 #include "precomp.h"
 //#include <docobj.h>
 
-typedef unsigned short USHORT;
-
 /*
  * SysPagerWnd
  */
@@ -35,87 +33,6 @@ typedef struct _SYS_PAGER_COPY_DATA
     DWORD           notify_code;
     NOTIFYICONDATA  nicon_data;
 } SYS_PAGER_COPY_DATA, *PSYS_PAGER_COPY_DATA;
-
-template<typename TItemData>
-class CToolbar :
-    public CWindowImpl < CToolbar<TItemData>, CWindow, CControlWinTraits>
-{
-
-public:
-    int GetItemCount()
-    {
-        return this->SendMessageW(TB_BUTTONCOUNT);
-    }
-
-    DWORD GetButton(int index, TBBUTTON * btn)
-    {
-        return this->SendMessageW(TB_GETBUTTON, index, (LPARAM) btn);
-    }
-
-    DWORD AddButton(TBBUTTON * btn)
-    {
-        return this->SendMessageW(TB_ADDBUTTONS, 1, (LPARAM) btn);
-    }
-
-    DWORD AddButtons(int count, TBBUTTON * buttons)
-    {
-        return this->SendMessageW(TB_ADDBUTTONS, count, (LPARAM) buttons);
-    }
-
-    DWORD InsertButton(int insertAt, TBBUTTON * btn)
-    {
-        return this->SendMessageW(TB_INSERTBUTTON, insertAt, (LPARAM) btn);
-    }
-
-    DWORD MoveButton(int oldIndex, int newIndex)
-    {
-        return this->SendMessageW(TB_MOVEBUTTON, oldIndex, newIndex);
-    }
-
-    DWORD DeleteButton(int index)
-    {
-        return this->SendMessageW(TB_DELETEBUTTON, index, 0);
-    }
-
-    DWORD GetButtonInfo(int cmdId, TBBUTTONINFO * info)
-    {
-        return this->SendMessageW(TB_GETBUTTONINFO, cmdId, (LPARAM) info);
-    }
-    
-    DWORD SetButtonInfo(int cmdId, TBBUTTONINFO * info)
-    {
-        return this->SendMessageW(TB_SETBUTTONINFO, cmdId, (LPARAM) info);
-    }
-
-public:
-    DWORD SetButtonSize(int w, int h)
-    {
-        return this->SendMessageW(TB_SETBUTTONSIZE, 0, MAKELONG(w, h));
-    }
-
-public:
-    DWORD AutoSize()
-    {
-        return this->SendMessageW(TB_AUTOSIZE);
-    }
-
-public:
-    TItemData * GetItemData(int index)
-    {
-        TBBUTTON btn;
-        GetButton(index, &btn);
-        return (TItemData*) btn.dwData;
-    }
-
-    DWORD SetItemData(int index, TItemData * data)
-    {
-        TBBUTTONINFOW info = { 0 };
-        info.cbSize = sizeof(info);
-        info.dwMask = TBIF_BYINDEX | TBIF_LPARAM;
-        info.lParam = (DWORD_PTR) data;
-        return SetButtonInfo(index, &info);
-    }
-};
 
 class CNotifyToolbar :
     public CToolbar<NOTIFYICONDATA>
@@ -136,14 +53,14 @@ public:
     {
     }
 
-    int GetVisibleItemCount()
+    int GetVisibleButtonCount()
     {
         return VisibleButtonCount;
     }
 
     int FindItemByIconData(IN CONST NOTIFYICONDATA *iconData, NOTIFYICONDATA ** pdata)
     {
-        int count = GetItemCount();
+        int count = GetButtonCount();
 
         for (int i = 0; i < count; i++)
         {
@@ -179,7 +96,7 @@ public:
         tbBtn.fsStyle = BTNS_NOPREFIX;
         tbBtn.dwData = (DWORD_PTR)notifyItem;
         tbBtn.iString = (INT_PTR) text;
-        tbBtn.idCommand = GetItemCount();
+        tbBtn.idCommand = GetButtonCount();
 
         if (iconData->uFlags & NIF_MESSAGE)
         {
@@ -228,9 +145,6 @@ public:
         }
 
         tbbi.cbSize = sizeof(tbbi);
-        tbbi.dwMask = TBIF_BYINDEX | TBIF_STATE;
-        GetButtonInfo(index, &tbbi);
-
         tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
         tbbi.idCommand = index;
 
@@ -258,19 +172,13 @@ public:
                 tbbi.dwMask |= TBIF_STATE;
                 if (iconData->dwState & NIS_HIDDEN)
                 {
-                    if ((tbbi.fsState & TBSTATE_HIDDEN) == 0)
-                    {
-                        tbbi.fsState |= TBSTATE_HIDDEN;
-                        VisibleButtonCount--;
-                    }
+                    tbbi.fsState |= TBSTATE_HIDDEN;
+                    VisibleButtonCount--;
                 }
                 else
                 {
-                    if ((tbbi.fsState & TBSTATE_HIDDEN) != 0)
-                    {
-                        tbbi.fsState &= ~TBSTATE_HIDDEN;
-                        VisibleButtonCount++;
-                    }
+                    tbbi.fsState &= ~TBSTATE_HIDDEN;
+                    VisibleButtonCount++;
                 }
             }
 
@@ -389,34 +297,15 @@ public:
             WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
             TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
             CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
-        DWORD exStyles = WS_EX_TOOLWINDOW;
 
-        HWND hWndToolbar = CreateWindowEx(exStyles,
-                                          TOOLBARCLASSNAME,
-                                          NULL,
-                                          styles,
-                                          0,
-                                          0,
-                                          0,
-                                          0,
-                                          hWndParent,
-                                          NULL,
-                                          hExplorerInstance,
-                                          NULL);
-        if (hWndToolbar != NULL)
-        {
-            SubclassWindow(hWndToolbar);
+        Create(hWndParent, styles);
 
-            SetWindowTheme(hWndToolbar, L"TrayNotify", NULL);
+        SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
-            /* Identify the version we're using */
-            SendMessageW(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+        SysIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+        SetImageList(SysIcons);
 
-            SysIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
-            SendMessageW(TB_SETIMAGELIST, 0, (LPARAM) SysIcons);
-
-            SetButtonSize(ICON_SIZE, ICON_SIZE);
-        }
+        SetButtonSize(ICON_SIZE, ICON_SIZE);
     }
 };
 
@@ -424,14 +313,11 @@ class CSysPagerWnd :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl < CSysPagerWnd, CWindow, CControlWinTraits >
 {
-    CNotifyToolbar * Toolbar;
+    CNotifyToolbar Toolbar;
 
 public:
-    CSysPagerWnd() :
-        Toolbar(NULL)
-    {
-    }
-    virtual ~CSysPagerWnd() { }
+    CSysPagerWnd() {}
+    virtual ~CSysPagerWnd() {}
 
     LRESULT DrawBackground(HDC hdc)
     {
@@ -458,8 +344,7 @@ public:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        Toolbar = new CNotifyToolbar();
-        Toolbar->Initialize(m_hWnd);
+        Toolbar.Initialize(m_hWnd);
         return TRUE;
     }
 
@@ -483,17 +368,17 @@ public:
             {
             case NIM_ADD:
             {
-                Toolbar->AddButton(iconData);
+                Toolbar.AddButton(iconData);
                 break;
             }
             case NIM_MODIFY:
             {
-                Toolbar->UpdateButton(iconData);
+                Toolbar.UpdateButton(iconData);
                 break;
             }
             case NIM_DELETE:
             {
-                Toolbar->RemoveButton(iconData);
+                Toolbar.RemoveButton(iconData);
                 break;
             }
             default:
@@ -514,7 +399,7 @@ public:
     {
         INT rows = 0;
         TBMETRICS tbm;
-        int VisibleButtonCount = Toolbar->GetVisibleItemCount();
+        int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
         if (wParam) /* horizontal */
         {
@@ -537,13 +422,13 @@ public:
         tbm.cxButtonSpacing = 0;
         tbm.cyButtonSpacing = 0;
 
-        Toolbar->SendMessageW(TB_SETMETRICS, 0, (LPARAM) &tbm);
+        Toolbar.SetMetrics(&tbm);
     }
 
     LRESULT OnGetInfoTip(INT uCode, LPNMHDR hdr, BOOL& bHandled)
     {
         NMTBGETINFOTIPW * nmtip = (NMTBGETINFOTIPW *) hdr;
-        Toolbar->GetTooltip(nmtip->iItem, nmtip->pszText, nmtip->cchTextMax);
+        Toolbar.GetTooltip(nmtip->iItem, nmtip->pszText, nmtip->cchTextMax);
         return TRUE;
     }
 
@@ -572,19 +457,18 @@ public:
 
         if (Toolbar)
         {
-            Toolbar->SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
-
-            Toolbar->AutoSize();
+            Toolbar.SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
+            Toolbar.AutoSize();
 
             RECT rc;
-            Toolbar->GetClientRect(&rc);
+            Toolbar.GetClientRect(&rc);
 
             SIZE szBar = { rc.right - rc.left, rc.bottom - rc.top };
 
             INT xOff = (szClient.cx - szBar.cx) / 2;
             INT yOff = (szClient.cy - szBar.cy) / 2;
 
-            Toolbar->SetWindowPos(NULL, xOff, yOff, szBar.cx, szBar.cy, SWP_NOZORDER);
+            Toolbar.SetWindowPos(NULL, xOff, yOff, szBar.cx, szBar.cy, SWP_NOZORDER);
         }
         return Ret;
     }

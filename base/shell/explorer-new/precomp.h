@@ -30,6 +30,7 @@
 #include <strsafe.h>
 #include <undocuser.h>
 #include <undocshell.h>
+#include <rosctrls.h>
 
 #include "tmschema.h"
 #include "resource.h"

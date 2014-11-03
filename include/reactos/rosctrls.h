@@ -196,3 +196,134 @@ public:
     }
 
 };
+
+template<typename TItemData>
+class CToolbar :
+    public CWindow
+{
+public: // Configuration methods
+
+    HWND Create(HWND hWndParent, DWORD dwStyles = 0, DWORD dwExStyles = 0)
+    {
+        if (!dwStyles)
+        {
+            dwStyles = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN;
+        }
+
+        if (!dwExStyles)
+        {
+            dwExStyles = WS_EX_TOOLWINDOW;
+        }
+
+        m_hWnd = CreateWindowEx(dwExStyles,
+                                TOOLBARCLASSNAME,
+                                NULL,
+                                dwStyles,
+                                0,
+                                0,
+                                0,
+                                0,
+                                hWndParent,
+                                NULL,
+                                _AtlBaseModule.GetModuleInstance(),
+                                NULL);
+
+        if (!m_hWnd)
+            return NULL;
+
+        /* Identify the version we're using */
+        SetButtonStructSize();
+
+        return m_hWnd;
+    }
+
+    DWORD SetButtonStructSize()
+    {
+        return SendMessageW(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+    }
+
+public: // Button list management methods
+    int GetButtonCount()
+    {
+        return SendMessageW(TB_BUTTONCOUNT);
+    }
+
+    DWORD GetButton(int index, TBBUTTON * btn)
+    {
+        return SendMessageW(TB_GETBUTTON, index, (LPARAM) btn);
+    }
+
+    DWORD AddButton(TBBUTTON * btn)
+    {
+        return SendMessageW(TB_ADDBUTTONS, 1, (LPARAM) btn);
+    }
+
+    DWORD AddButtons(int count, TBBUTTON * buttons)
+    {
+        return SendMessageW(TB_ADDBUTTONS, count, (LPARAM) buttons);
+    }
+
+    DWORD InsertButton(int insertAt, TBBUTTON * btn)
+    {
+        return SendMessageW(TB_INSERTBUTTON, insertAt, (LPARAM) btn);
+    }
+
+    DWORD MoveButton(int oldIndex, int newIndex)
+    {
+        return SendMessageW(TB_MOVEBUTTON, oldIndex, newIndex);
+    }
+
+    DWORD DeleteButton(int index)
+    {
+        return SendMessageW(TB_DELETEBUTTON, index, 0);
+    }
+
+    DWORD GetButtonInfo(int cmdId, TBBUTTONINFO * info)
+    {
+        return SendMessageW(TB_GETBUTTONINFO, cmdId, (LPARAM) info);
+    }
+
+    DWORD SetButtonInfo(int cmdId, TBBUTTONINFO * info)
+    {
+        return SendMessageW(TB_SETBUTTONINFO, cmdId, (LPARAM) info);
+    }
+
+public: // Layout management methods
+    DWORD SetButtonSize(int w, int h)
+    {
+        return SendMessageW(TB_SETBUTTONSIZE, 0, MAKELONG(w, h));
+    }
+
+    DWORD AutoSize()
+    {
+        return SendMessageW(TB_AUTOSIZE);
+    }
+
+public: // Image list management methods
+    DWORD SetImageList(HIMAGELIST himl)
+    {
+        return SendMessageW(TB_SETIMAGELIST, 0, (LPARAM) himl);
+    }
+
+    DWORD SetMetrics(TBMETRICS * tbm)
+    {
+        return SendMessageW(TB_SETMETRICS, 0, (LPARAM) tbm);
+    }
+
+public: // Utility methods
+    TItemData * GetItemData(int index)
+    {
+        TBBUTTON btn;
+        GetButton(index, &btn);
+        return (TItemData*) btn.dwData;
+    }
+
+    DWORD SetItemData(int index, TItemData * data)
+    {
+        TBBUTTONINFOW info = { 0 };
+        info.cbSize = sizeof(info);
+        info.dwMask = TBIF_BYINDEX | TBIF_LPARAM;
+        info.lParam = (DWORD_PTR) data;
+        return SetButtonInfo(index, &info);
+    }
+};
