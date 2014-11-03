@@ -45,7 +45,6 @@ list(APPEND SOURCE
     shell32_main.cpp
     shellitem.cpp
     shelllink.cpp
-    shellole.cpp
     shellord.cpp
     shellpath.cpp
     shellreg.cpp
@@ -77,6 +76,7 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED
     ${SOURCE}
+    wine/shellole.c
     wine/shellstring.c
     vista.c
     shell32.rc
