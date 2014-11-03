@@ -327,11 +327,11 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
             DriverState.GraphicsCursor.HotSpot.X = getBX();
             DriverState.GraphicsCursor.HotSpot.Y = getCX();
 
-            RtlMoveMemory(DriverState.GraphicsCursor.ScreenMask,
+            RtlCopyMemory(DriverState.GraphicsCursor.ScreenMask,
                           MaskBitmap,
                           sizeof(DriverState.GraphicsCursor.ScreenMask));
 
-            RtlMoveMemory(DriverState.GraphicsCursor.CursorMask,
+            RtlCopyMemory(DriverState.GraphicsCursor.CursorMask,
                           &MaskBitmap[16],
                           sizeof(DriverState.GraphicsCursor.CursorMask));
 

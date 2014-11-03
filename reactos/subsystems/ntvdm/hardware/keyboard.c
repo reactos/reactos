@@ -41,8 +41,6 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
     }
 
     DPRINT("Press 0x%X\n", ScanCode);
-
-    // PicInterruptRequest(1);
 }
 
 BOOLEAN KeyboardInit(BYTE PS2Connector)

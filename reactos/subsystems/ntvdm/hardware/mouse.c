@@ -317,7 +317,6 @@ VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
     MouseBiosUpdateButtons(LOWORD(MouseEvent->dwButtonState));
 
     // PS2QueuePush(PS2Port, Data);
-    // PicInterruptRequest(12);
 }
 
 BOOLEAN MouseInit(BYTE PS2Connector)
