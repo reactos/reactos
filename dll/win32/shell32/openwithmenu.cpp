@@ -29,7 +29,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 // "NoInternetOpenWith"=dword:00000001
 //
 
-BOOL PathIsExeW(LPCWSTR lpszPath);
+EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
 class COpenWithList
 {

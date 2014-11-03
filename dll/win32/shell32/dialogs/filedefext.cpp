@@ -23,7 +23,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-BOOL PathIsExeW(LPCWSTR lpszPath);
+EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
 BOOL CFileVersionInfo::Load(LPCWSTR pwszPath)
 {

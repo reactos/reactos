@@ -35,6 +35,10 @@
 #ifndef __WINE_PIDL_H
 #define __WINE_PIDL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 * the pidl does cache fileattributes to speed up SHGetAttributes when
 * displaying a big number of files.
@@ -213,8 +217,8 @@ DWORD   _ILSimpleGetText    (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 DWORD   _ILSimpleGetTextW   (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize);
 BOOL    _ILGetFileDate      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 DWORD   _ILGetFileSize      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-EXTERN_C BOOL    _ILGetExtension     (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-EXTERN_C void    _ILGetFileType      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
+BOOL    _ILGetExtension     (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
+void    _ILGetFileType      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 DWORD   _ILGetFileAttributes    (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 
 BOOL    _ILGetFileDateTime  (LPCITEMIDLIST pidl, FILETIME *ft);
@@ -300,5 +304,9 @@ LPITEMIDLIST * _ILCopyaPidl(const LPCITEMIDLIST * apidlsrc, UINT cidl);
 LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida);
 
 BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __WINE_PIDL_H */
