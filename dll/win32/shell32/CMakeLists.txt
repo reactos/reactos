@@ -63,7 +63,6 @@ list(APPEND SOURCE
     shlfsbind.cpp
     shlmenu.cpp
     shlview.cpp
-    shpolicy.cpp
     stubs.cpp
     systray.cpp
     defcontextmenu.cpp
@@ -78,6 +77,7 @@ add_library(shell32 SHARED
     wine/shellole.c
     wine/shellpath.c
     wine/shellstring.c
+    wine/shpolicy.c
     vista.c
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
