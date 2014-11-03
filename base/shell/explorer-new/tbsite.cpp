@@ -30,7 +30,7 @@
 
 // WARNING: Can't use ATL for this class due to our ATL not fully supporting the AGGREGATION functions needed for this class to be an "outer" class
 // it works just fine this way.
-class ITrayBandSiteImpl :
+class CTrayBandSite :
     public ITrayBandSite,
     public IBandSite,
     public IBandSiteStreamCallback
@@ -109,13 +109,13 @@ public:
     }
 
 public:
-    ITrayBandSiteImpl() :
+    CTrayBandSite() :
         m_RefCount(0),
         hWndRebar(NULL)
     {
     }
 
-    virtual ~ITrayBandSiteImpl() { }
+    virtual ~CTrayBandSite() { }
 
     virtual HRESULT STDMETHODCALLTYPE OnLoad(
         IN OUT IStream *pStm,
@@ -816,7 +816,7 @@ OUT HWND *phWndTaskSwitch)
 {
     HRESULT hr;
 
-    ITrayBandSiteImpl * tb = new ITrayBandSiteImpl();
+    CTrayBandSite * tb = new CTrayBandSite();
 
     if (!tb)
         return NULL;

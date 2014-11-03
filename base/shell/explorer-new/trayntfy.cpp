@@ -28,14 +28,6 @@ typedef unsigned short USHORT;
  */
 static const WCHAR szSysPagerWndClass [] = TEXT("SysPager");
 
-typedef struct _NOTIFY_ITEM
-{
-    struct _NOTIFY_ITEM *next;
-    INT Index;
-    INT IconIndex;
-    NOTIFYICONDATA iconData;
-} NOTIFY_ITEM, *PNOTIFY_ITEM, **PPNOTIFY_ITEM;
-
 // Data comes from shell32/systray.cpp -> TrayNotifyCDS_Dummy
 typedef struct _SYS_PAGER_COPY_DATA
 {
@@ -44,180 +36,172 @@ typedef struct _SYS_PAGER_COPY_DATA
     NOTIFYICONDATA  nicon_data;
 } SYS_PAGER_COPY_DATA, *PSYS_PAGER_COPY_DATA;
 
-class CSysPagerWnd :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public CWindowImpl < CSysPagerWnd, CWindow, CControlWinTraits >
+template<typename TItemData>
+class CToolbar :
+    public CWindowImpl < CToolbar<TItemData>, CWindow, CControlWinTraits>
 {
-    CContainedWindow NotificationBar;
-
-    HWND hWndToolbar;
-    HIMAGELIST SysIcons;
-    PNOTIFY_ITEM NotifyItems;
-    INT ButtonCount;
-    INT VisibleButtonCount;
 
 public:
-    CSysPagerWnd() :
-        NotificationBar(this, 1),
-        hWndToolbar(NULL),
+    int GetItemCount()
+    {
+        return SendMessage(TB_BUTTONCOUNT);
+    }
+
+    DWORD GetButton(int index, TBBUTTON * btn)
+    {
+        return SendMessage(TB_GETBUTTON, index, (LPARAM)btn);
+    }
+
+    DWORD AddButton(TBBUTTON * btn)
+    {
+        return SendMessage(TB_ADDBUTTONS, 1, (LPARAM) btn);
+    }
+
+    DWORD AddButtons(int count, TBBUTTON * buttons)
+    {
+        return SendMessage(TB_ADDBUTTONS, count, (LPARAM) btn);
+    }
+
+    DWORD InsertButton(int insertAt, TBBUTTON * btn)
+    {
+        return SendMessage(TB_INSERTBUTTON, insertAt, (LPARAM) btn);
+    }
+
+    DWORD MoveButton(int oldIndex, int newIndex)
+    {
+        return SendMessage(TB_MOVEBUTTON, oldIndex, newIndex);
+    }
+
+    DWORD DeleteButton(int index)
+    {
+        return SendMessage(TB_DELETEBUTTON, index, 0);
+    }
+
+    DWORD GetButtonInfo(int cmdId, TBBUTTONINFO * info)
+    {
+        return SendMessage(TB_GETBUTTONINFO, cmdId, (LPARAM) info);
+    }
+    
+    DWORD SetButtonInfo(int cmdId, TBBUTTONINFO * info)
+    {
+        return SendMessage(TB_SETBUTTONINFO, cmdId, (LPARAM) info);
+    }
+
+public:
+    DWORD SetButtonSize(int w, int h)
+    {
+        return SendMessage(TB_SETBUTTONSIZE, 0, MAKELONG(w, h));
+    }
+
+public:
+    DWORD AutoSize()
+    {
+        return SendMessage(TB_AUTOSIZE);
+    }
+
+public:
+    TItemData * GetItemData(int index)
+    {
+        TBBUTTON btn;
+        GetButton(index, &btn);
+        return (TItemData*) btn.dwData;
+    }
+
+    DWORD SetItemData(int index, TItemData * data)
+    {
+        TBBUTTONINFO info = { 0 };
+        info.cbSize = sizeof(info);
+        info.dwMask = TBIF_BYINDEX | TBIF_LPARAM;
+        info.lParam = (DWORD_PTR) data;
+        return SetButtonInfo(index, &info);
+    }
+};
+
+class CNotifyToolbar :
+    public CToolbar<NOTIFYICONDATA>
+{
+    const int ICON_SIZE = 16;
+
+    HIMAGELIST SysIcons;
+    int VisibleButtonCount;
+
+public:
+    CNotifyToolbar() :
         SysIcons(NULL),
-        NotifyItems(NULL),
-        ButtonCount(0),
         VisibleButtonCount(0)
     {
     }
-    virtual ~CSysPagerWnd() { }
 
-    PNOTIFY_ITEM CreateNotifyItemData()
+    ~CNotifyToolbar()
     {
-        PNOTIFY_ITEM *findNotifyPointer = &NotifyItems;
-        PNOTIFY_ITEM notifyItem;
-
-        notifyItem = (PNOTIFY_ITEM) HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(*notifyItem));
-        if (notifyItem == NULL)
-            return NULL;
-
-        notifyItem->next = NULL;
-
-        while (*findNotifyPointer != NULL)
-        {
-            findNotifyPointer = &(*findNotifyPointer)->next;
-        }
-
-        *findNotifyPointer = notifyItem;
-
-        return notifyItem;
     }
 
-    PPNOTIFY_ITEM FindPPNotifyItemByIconData(IN CONST NOTIFYICONDATA *iconData)
+    int GetVisibleItemCount()
     {
-        PPNOTIFY_ITEM findNotifyPointer = &NotifyItems;
-
-        while (*findNotifyPointer != NULL)
-        {
-            if ((*findNotifyPointer)->iconData.hWnd == iconData->hWnd &&
-                (*findNotifyPointer)->iconData.uID == iconData->uID)
-            {
-                return findNotifyPointer;
-            }
-            findNotifyPointer = &(*findNotifyPointer)->next;
-        }
-
-        return NULL;
+        return VisibleButtonCount;
     }
 
-    PPNOTIFY_ITEM FindPPNotifyItemByIndex(IN WORD wIndex)
+    int FindItemByIconData(IN CONST NOTIFYICONDATA *iconData, NOTIFYICONDATA ** pdata)
     {
-        PPNOTIFY_ITEM findNotifyPointer = &NotifyItems;
+        int count = GetItemCount();
 
-        while (*findNotifyPointer != NULL)
+        for (int i = 0; i < count; i++)
         {
-            if ((*findNotifyPointer)->Index == wIndex)
+            NOTIFYICONDATA * data;
+
+            data = GetItemData(i);
+
+            if (data->hWnd == iconData->hWnd &&
+                data->uID == iconData->uID)
             {
-                return findNotifyPointer;
+                if (pdata)
+                    *pdata = data;
+                return i;
             }
-            findNotifyPointer = &(*findNotifyPointer)->next;
         }
 
-        return NULL;
-    }
-
-    VOID UpdateButton(IN CONST NOTIFYICONDATA *iconData)
-    {
-        TBBUTTONINFO tbbi = { 0 };
-        PNOTIFY_ITEM notifyItem;
-        PPNOTIFY_ITEM NotifyPointer;
-
-        NotifyPointer = FindPPNotifyItemByIconData(iconData);
-        notifyItem = *NotifyPointer;
-
-        tbbi.cbSize = sizeof(tbbi);
-        tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
-        tbbi.idCommand = notifyItem->Index;
-
-        if (iconData->uFlags & NIF_MESSAGE)
-        {
-            notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
-        }
-
-        if (iconData->uFlags & NIF_ICON)
-        {
-            tbbi.dwMask |= TBIF_IMAGE;
-            notifyItem->IconIndex = tbbi.iImage = ImageList_AddIcon(SysIcons, iconData->hIcon);
-        }
-
-        if (iconData->uFlags & NIF_TIP)
-        {
-            StringCchCopy(notifyItem->iconData.szTip, _countof(notifyItem->iconData.szTip), iconData->szTip);
-        }
-
-        if (iconData->uFlags & NIF_STATE)
-        {
-            if (iconData->dwStateMask & NIS_HIDDEN &&
-                (notifyItem->iconData.dwState & NIS_HIDDEN) != (iconData->dwState & NIS_HIDDEN))
-            {
-                tbbi.dwMask |= TBIF_STATE;
-                if (iconData->dwState & NIS_HIDDEN)
-                {
-                    tbbi.fsState |= TBSTATE_HIDDEN;
-                    VisibleButtonCount--;
-                }
-                else
-                {
-                    tbbi.fsState &= ~TBSTATE_HIDDEN;
-                    VisibleButtonCount++;
-                }
-            }
-
-            notifyItem->iconData.dwState &= ~iconData->dwStateMask;
-            notifyItem->iconData.dwState |= (iconData->dwState & iconData->dwStateMask);
-        }
-
-        /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
-
-        NotificationBar.SendMessageW(TB_SETBUTTONINFO, (WPARAM) notifyItem->Index, (LPARAM) &tbbi);
+        return -1;
     }
 
     VOID AddButton(IN CONST NOTIFYICONDATA *iconData)
     {
         TBBUTTON tbBtn;
-        PNOTIFY_ITEM notifyItem;
+        NOTIFYICONDATA * notifyItem;
         WCHAR text [] = TEXT("");
 
-        notifyItem = CreateNotifyItemData();
+        notifyItem = new NOTIFYICONDATA();
+        ZeroMemory(notifyItem, sizeof(*notifyItem));
 
-        notifyItem->next = NULL;
-        notifyItem->Index = ButtonCount;
-        ButtonCount++;
-        VisibleButtonCount++;
-
-        notifyItem->iconData.hWnd = iconData->hWnd;
-        notifyItem->iconData.uID = iconData->uID;
+        notifyItem->hWnd = iconData->hWnd;
+        notifyItem->uID = iconData->uID;
 
         tbBtn.fsState = TBSTATE_ENABLED;
         tbBtn.fsStyle = BTNS_NOPREFIX;
-        tbBtn.dwData = notifyItem->Index;
-
+        tbBtn.dwData = (DWORD_PTR)notifyItem;
         tbBtn.iString = (INT_PTR) text;
-        tbBtn.idCommand = notifyItem->Index;
+        tbBtn.idCommand = GetItemCount();
 
         if (iconData->uFlags & NIF_MESSAGE)
         {
-            notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+            notifyItem->uCallbackMessage = iconData->uCallbackMessage;
         }
 
         if (iconData->uFlags & NIF_ICON)
         {
-            notifyItem->IconIndex = tbBtn.iBitmap = ImageList_AddIcon(SysIcons, iconData->hIcon);
+            tbBtn.iBitmap = ImageList_AddIcon(SysIcons, iconData->hIcon);
         }
 
-        /* TODO: support NIF_TIP */
+        if (iconData->uFlags & NIF_TIP)
+        {
+            StringCchCopy(notifyItem->szTip, _countof(notifyItem->szTip), iconData->szTip);
+        }
 
+        VisibleButtonCount++;
         if (iconData->uFlags & NIF_STATE)
         {
-            notifyItem->iconData.dwState &= ~iconData->dwStateMask;
-            notifyItem->iconData.dwState |= (iconData->dwState & iconData->dwStateMask);
-            if (notifyItem->iconData.dwState & NIS_HIDDEN)
+            notifyItem->dwState &= ~iconData->dwStateMask;
+            notifyItem->dwState |= (iconData->dwState & iconData->dwStateMask);
+            if (notifyItem->dwState & NIS_HIDDEN)
             {
                 tbBtn.fsState |= TBSTATE_HIDDEN;
                 VisibleButtonCount--;
@@ -227,52 +211,106 @@ public:
 
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
 
-        NotificationBar.SendMessageW(TB_INSERTBUTTON, notifyItem->Index, (LPARAM) &tbBtn);
+        CToolbar::AddButton(&tbBtn);
+        SetButtonSize(ICON_SIZE, ICON_SIZE);
+    }
 
-        NotificationBar.SendMessageW(TB_SETBUTTONSIZE, 0, MAKELONG(16, 16));
+    VOID UpdateButton(IN CONST NOTIFYICONDATA *iconData)
+    {
+        NOTIFYICONDATA * notifyItem;
+        TBBUTTONINFO tbbi = { 0 };
+
+        int index = FindItemByIconData(iconData, &notifyItem);
+        if (index < 0)
+        {
+            AddButton(iconData);
+            return;
+        }
+
+        tbbi.cbSize = sizeof(tbbi);
+        tbbi.dwMask = TBIF_BYINDEX | TBIF_STATE;
+        GetButtonInfo(index, &tbbi);
+
+        tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
+        tbbi.idCommand = index;
+
+        if (iconData->uFlags & NIF_MESSAGE)
+        {
+            notifyItem->uCallbackMessage = iconData->uCallbackMessage;
+        }
+
+        if (iconData->uFlags & NIF_ICON)
+        {
+            tbbi.dwMask |= TBIF_IMAGE;
+            tbbi.iImage = ImageList_AddIcon(SysIcons, iconData->hIcon);
+        }
+
+        if (iconData->uFlags & NIF_TIP)
+        {
+            StringCchCopy(notifyItem->szTip, _countof(notifyItem->szTip), iconData->szTip);
+        }
+
+        if (iconData->uFlags & NIF_STATE)
+        {
+            if (iconData->dwStateMask & NIS_HIDDEN &&
+                (notifyItem->dwState & NIS_HIDDEN) != (iconData->dwState & NIS_HIDDEN))
+            {
+                tbbi.dwMask |= TBIF_STATE;
+                if (iconData->dwState & NIS_HIDDEN)
+                {
+                    if ((tbbi.fsState & TBSTATE_HIDDEN) == 0)
+                    {
+                        tbbi.fsState |= TBSTATE_HIDDEN;
+                        VisibleButtonCount--;
+                    }
+                }
+                else
+                {
+                    if ((tbbi.fsState & TBSTATE_HIDDEN) != 0)
+                    {
+                        tbbi.fsState &= ~TBSTATE_HIDDEN;
+                        VisibleButtonCount++;
+                    }
+                }
+            }
+
+            notifyItem->dwState &= ~iconData->dwStateMask;
+            notifyItem->dwState |= (iconData->dwState & iconData->dwStateMask);
+        }
+
+        /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
+
+        SetButtonInfo(index, &tbbi);
     }
 
     VOID RemoveButton(IN CONST NOTIFYICONDATA *iconData)
     {
-        PPNOTIFY_ITEM NotifyPointer;
+        NOTIFYICONDATA * notifyItem;
+        TBBUTTONINFO tbbi = { 0 };
 
-        NotifyPointer = FindPPNotifyItemByIconData(iconData);
-        if (NotifyPointer)
+        int index = FindItemByIconData(iconData, &notifyItem);
+        if (index < 0)
+            return;
+
+        DeleteButton(index);
+        delete notifyItem;
+    }
+
+    VOID GetTooltip(int index, LPTSTR szTip, DWORD cchTip)
+    {
+        NOTIFYICONDATA * notifyItem;
+        notifyItem = GetItemData(index);
+
+        if (notifyItem)
         {
-            PNOTIFY_ITEM deleteItem;
-            PNOTIFY_ITEM updateItem;
-            deleteItem = *NotifyPointer;
-
-            NotificationBar.SendMessageW(TB_DELETEBUTTON, deleteItem->Index, 0);
-
-            *NotifyPointer = updateItem = deleteItem->next;
-
-            if (!(deleteItem->iconData.dwState & NIS_HIDDEN))
-                VisibleButtonCount--;
-            HeapFree(hProcessHeap,
-                0,
-                deleteItem);
-            ButtonCount--;
-
-            while (updateItem != NULL)
-            {
-                TBBUTTONINFO tbbi;
-                updateItem->Index--;
-                tbbi.cbSize = sizeof(tbbi);
-                tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
-                tbbi.idCommand = updateItem->Index;
-
-                NotificationBar.SendMessageW(TB_SETBUTTONINFO, updateItem->Index, (LPARAM) &tbbi);
-
-                updateItem = updateItem->next;
-            }
+            StringCchCopy(szTip, cchTip, notifyItem->szTip);
         }
     }
 
+private:
+
     VOID SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wParam)
     {
-        PPNOTIFY_ITEM NotifyPointer;
-
         static LPCWSTR eventNames [] = {
             L"WM_MOUSEMOVE",
             L"WM_LBUTTONDOWN",
@@ -290,41 +328,111 @@ public:
             L"WM_XBUTTONDBLCLK"
         };
 
-        NotifyPointer = FindPPNotifyItemByIndex(wIndex);
-        if (!NotifyPointer)
-            return;
+        NOTIFYICONDATA * notifyItem = GetItemData(wIndex);
 
-        PNOTIFY_ITEM notifyItem = *NotifyPointer;
-
-        if (!::IsWindow(notifyItem->iconData.hWnd))
+        if (!::IsWindow(notifyItem->hWnd))
             return;
 
         if (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST)
         {
             DbgPrint("Sending message %S from button %d to %p (msg=%x, w=%x, l=%x)...\n",
                      eventNames[uMsg - WM_MOUSEFIRST], wIndex,
-                     notifyItem->iconData.hWnd, notifyItem->iconData.uCallbackMessage, notifyItem->iconData.uID, uMsg);
+                     notifyItem->hWnd, notifyItem->uCallbackMessage, notifyItem->uID, uMsg);
         }
 
         DWORD pid;
-        GetWindowThreadProcessId(notifyItem->iconData.hWnd, &pid);
+        GetWindowThreadProcessId(notifyItem->hWnd, &pid);
 
         if (pid == GetCurrentProcessId() ||
             (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST))
         {
-            PostMessage(notifyItem->iconData.hWnd,
-                notifyItem->iconData.uCallbackMessage,
-                notifyItem->iconData.uID,
-                uMsg);
+            PostMessage(notifyItem->hWnd,
+                        notifyItem->uCallbackMessage,
+                        notifyItem->uID,
+                        uMsg);
         }
         else
         {
-            SendMessage(notifyItem->iconData.hWnd,
-                notifyItem->iconData.uCallbackMessage,
-                notifyItem->iconData.uID,
-                uMsg);
+            SendMessage(notifyItem->hWnd,
+                        notifyItem->uCallbackMessage,
+                        notifyItem->uID,
+                        uMsg);
         }
     }
+
+    LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        POINT pt;
+        INT iBtn;
+
+        pt.x = LOWORD(lParam);
+        pt.y = HIWORD(lParam);
+
+        iBtn = (INT) SendMessageW(TB_HITTEST, 0, (LPARAM) &pt);
+
+        if (iBtn >= 0)
+        {
+            SendMouseEvent(iBtn, uMsg, wParam);
+        }
+
+        bHandled = FALSE;
+        return FALSE;
+    }
+
+public:
+    BEGIN_MSG_MAP(CNotifyToolbar)
+        MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
+    END_MSG_MAP()
+
+    void Initialize(HWND hWndParent)
+    {
+        DWORD styles =
+            WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
+            TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
+            CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
+        DWORD exStyles = WS_EX_TOOLWINDOW;
+
+        HWND hWndToolbar = CreateWindowEx(exStyles,
+                                          TOOLBARCLASSNAME,
+                                          NULL,
+                                          styles,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          hWndParent,
+                                          NULL,
+                                          hExplorerInstance,
+                                          NULL);
+        if (hWndToolbar != NULL)
+        {
+            SubclassWindow(hWndToolbar);
+
+            SetWindowTheme(hWndToolbar, L"TrayNotify", NULL);
+
+            /* Identify the version we're using */
+            SendMessageW(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+            SysIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+            SendMessageW(TB_SETIMAGELIST, 0, (LPARAM) SysIcons);
+
+            SetButtonSize(ICON_SIZE, ICON_SIZE);
+        }
+    }
+};
+
+class CSysPagerWnd :
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public CWindowImpl < CSysPagerWnd, CWindow, CControlWinTraits >
+{
+    CNotifyToolbar * Toolbar;
+
+public:
+    CSysPagerWnd() :
+        Toolbar(NULL)
+    {
+    }
+    virtual ~CSysPagerWnd() { }
 
     LRESULT DrawBackground(HDC hdc)
     {
@@ -351,43 +459,8 @@ public:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        DWORD styles =
-            WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
-            TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
-            CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
-        DWORD exStyles = WS_EX_TOOLWINDOW;
-
-        hWndToolbar = CreateWindowEx(exStyles,
-            TOOLBARCLASSNAME,
-            NULL,
-            styles,
-            0,
-            0,
-            0,
-            0,
-            m_hWnd,
-            NULL,
-            hExplorerInstance,
-            NULL);
-        if (hWndToolbar != NULL)
-        {
-            SIZE BtnSize;
-
-            NotificationBar.SubclassWindow(hWndToolbar);
-
-            SetWindowTheme(hWndToolbar, L"TrayNotify", NULL);
-
-            /* Identify the version we're using */
-            NotificationBar.SendMessageW(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-
-            SysIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
-            NotificationBar.SendMessageW(TB_SETIMAGELIST, 0, (LPARAM) SysIcons);
-
-            BtnSize.cx = BtnSize.cy = 18;
-            NotificationBar.SendMessageW(TB_SETBUTTONSIZE, 0, MAKELONG(BtnSize.cx, BtnSize.cy));
-
-        }
-
+        Toolbar = new CNotifyToolbar();
+        Toolbar->Initialize(m_hWnd);
         return TRUE;
     }
 
@@ -411,33 +484,17 @@ public:
             {
             case NIM_ADD:
             {
-                PPNOTIFY_ITEM NotifyPointer;
-
-                NotifyPointer = FindPPNotifyItemByIconData(iconData);
-                if (!NotifyPointer)
-                {
-                    AddButton(iconData);
-                }
+                Toolbar->AddButton(iconData);
                 break;
             }
             case NIM_MODIFY:
             {
-                PPNOTIFY_ITEM NotifyPointer;
-
-                NotifyPointer = FindPPNotifyItemByIconData(iconData);
-                if (!NotifyPointer)
-                {
-                    AddButton(iconData);
-                }
-                else
-                {
-                    UpdateButton(iconData);
-                }
+                Toolbar->UpdateButton(iconData);
                 break;
             }
             case NIM_DELETE:
             {
-                RemoveButton(iconData);
+                Toolbar->RemoveButton(iconData);
                 break;
             }
             default:
@@ -458,6 +515,7 @@ public:
     {
         INT rows = 0;
         TBMETRICS tbm;
+        int VisibleButtonCount = Toolbar->GetVisibleItemCount();
 
         if (wParam) /* horizontal */
         {
@@ -480,23 +538,13 @@ public:
         tbm.cxButtonSpacing = 0;
         tbm.cyButtonSpacing = 0;
 
-        NotificationBar.SendMessageW(TB_SETMETRICS, 0, (LPARAM) &tbm);
-    }
-
-    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        return TRUE;
+        Toolbar->SendMessageW(TB_SETMETRICS, 0, (LPARAM) &tbm);
     }
 
     LRESULT OnGetInfoTip(INT uCode, LPNMHDR hdr, BOOL& bHandled)
     {
         NMTBGETINFOTIPW * nmtip = (NMTBGETINFOTIPW *) hdr;
-        PPNOTIFY_ITEM ptr = FindPPNotifyItemByIndex(nmtip->iItem);
-        if (ptr)
-        {
-            PNOTIFY_ITEM item = *ptr;
-            StringCchCopy(nmtip->pszText, nmtip->cchTextMax, item->iconData.szTip);
-        }
+        Toolbar->GetTooltip(nmtip->iItem, nmtip->pszText, nmtip->cchTextMax);
         return TRUE;
     }
 
@@ -523,41 +571,23 @@ public:
 
         Ret = DefWindowProc(uMsg, wParam, lParam);
 
-        if (hWndToolbar != NULL && hWndToolbar != m_hWnd)
+        if (Toolbar)
         {
-            NotificationBar.SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
+            Toolbar->SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
 
-            NotificationBar.SendMessageW(TB_AUTOSIZE);
+            Toolbar->AutoSize();
 
             RECT rc;
-            NotificationBar.GetClientRect(&rc);
+            Toolbar->GetClientRect(&rc);
 
             SIZE szBar = { rc.right - rc.left, rc.bottom - rc.top };
 
             INT xOff = (szClient.cx - szBar.cx) / 2;
             INT yOff = (szClient.cy - szBar.cy) / 2;
 
-            NotificationBar.SetWindowPos(NULL, xOff, yOff, szBar.cx, szBar.cy, SWP_NOZORDER);
+            Toolbar->SetWindowPos(NULL, xOff, yOff, szBar.cx, szBar.cy, SWP_NOZORDER);
         }
         return Ret;
-    }
-
-    LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        POINT pt;
-        INT iBtn;
-
-        pt.x = LOWORD(lParam);
-        pt.y = HIWORD(lParam);
-
-        iBtn = (INT) NotificationBar.SendMessageW(TB_HITTEST, 0, (LPARAM) &pt);
-
-        if (iBtn >= 0)
-        {
-            SendMouseEvent(iBtn, uMsg, wParam);
-        }
-
-        return FALSE;
     }
 
     DECLARE_WND_CLASS_EX(szSysPagerWndClass, CS_DBLCLKS, COLOR_3DFACE)
@@ -568,17 +598,11 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
-    ALT_MSG_MAP(1)
-        MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
     END_MSG_MAP()
 
     HWND _Init(IN HWND hWndParent, IN BOOL bVisible)
     {
         DWORD dwStyle;
-
-        NotifyItems = NULL;
-        ButtonCount = 0;
-        VisibleButtonCount = 0;
 
         /* Create the window. The tray window is going to move it to the correct
             position and resize it as needed. */

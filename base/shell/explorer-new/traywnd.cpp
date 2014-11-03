@@ -53,10 +53,10 @@ static const WCHAR szTrayWndClass [] = TEXT("Shell_TrayWnd");
 
 const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
-class ITrayWindowImpl :
-    public CComCoClass<ITrayWindowImpl>,
+class CTrayWindow :
+    public CComCoClass<CTrayWindow>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public CWindowImpl < ITrayWindowImpl, CWindow, CControlWinTraits >,
+    public CWindowImpl < CTrayWindow, CWindow, CControlWinTraits >,
     public ITrayWindow,
     public IShellDesktopTray
 {
@@ -119,7 +119,7 @@ class ITrayWindowImpl :
     HDPA hdpaShellServices;
 
 public:
-    ITrayWindowImpl() :
+    CTrayWindow() :
         TaskbarTheme(NULL),
         hWndDesktop(NULL),
         hwndStart(NULL),
@@ -151,7 +151,7 @@ public:
         ZeroMemory(&MouseTrackingInfo, sizeof(MouseTrackingInfo));
     }
 
-    virtual ~ITrayWindowImpl()
+    virtual ~CTrayWindow()
     {
         (void) InterlockedExchangePointer((PVOID*) &m_hWnd, NULL);
 
@@ -1683,7 +1683,7 @@ SetStartBtnImage:
 
     static DWORD WINAPI s_TrayPropertiesThread(IN OUT PVOID pParam)
     {
-        ITrayWindowImpl *This = (ITrayWindowImpl*) pParam;
+        CTrayWindow *This = (CTrayWindow*) pParam;
 
         return This->TrayPropertiesThread();
     }
@@ -1950,7 +1950,7 @@ SetStartBtnImage:
 
     static DWORD WINAPI s_RunFileDlgThread(IN OUT PVOID pParam)
     {
-        ITrayWindowImpl * This = (ITrayWindowImpl*) pParam;
+        CTrayWindow * This = (CTrayWindow*) pParam;
         return This->RunFileDlgThread();
     }
 
@@ -2790,7 +2790,7 @@ HandleTrayContextMenu:
 
     DECLARE_WND_CLASS_EX(szTrayWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
-    BEGIN_MSG_MAP(ITrayWindowImpl)
+    BEGIN_MSG_MAP(CTrayWindow)
         if (StartMenuBand != NULL)
         {
             MSG Msg;
@@ -2848,7 +2848,7 @@ HandleTrayContextMenu:
                                              IN PVOID *ppcmContext,
                                              IN PVOID Context OPTIONAL)
     {
-        ITrayWindowImpl *This = (ITrayWindowImpl *) Context;
+        CTrayWindow *This = (CTrayWindow *) Context;
         IContextMenu *pcm = NULL;
         HMENU hPopup;
 
@@ -2892,7 +2892,7 @@ HandleTrayContextMenu:
                                                IN PVOID pcmContext OPTIONAL,
                                                IN PVOID Context OPTIONAL)
     {
-        ITrayWindowImpl *This = (ITrayWindowImpl *) Context;
+        CTrayWindow *This = (CTrayWindow *) Context;
         IContextMenu *pcm = (IContextMenu *) pcmContext;
 
         if (uiCmdId != 0)
@@ -3035,21 +3035,21 @@ HandleTrayContextMenu:
         Position = (DWORD) -1;
     }
 
-    DECLARE_NOT_AGGREGATABLE(ITrayWindowImpl)
+    DECLARE_NOT_AGGREGATABLE(CTrayWindow)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
-    BEGIN_COM_MAP(ITrayWindowImpl)
+    BEGIN_COM_MAP(CTrayWindow)
         /*COM_INTERFACE_ENTRY_IID(IID_ITrayWindow, ITrayWindow)*/
         COM_INTERFACE_ENTRY_IID(IID_IShellDesktopTray, IShellDesktopTray)
     END_COM_MAP()
 };
 
 const TRAYWINDOW_CTXMENU TrayWindowCtxMenu = {
-    ITrayWindowImpl::CreateTrayWindowContextMenu,
-    ITrayWindowImpl::OnTrayWindowContextMenuCommand
+    CTrayWindow::CreateTrayWindowContextMenu,
+    CTrayWindow::OnTrayWindowContextMenuCommand
 };
 
-ITrayWindowImpl * g_TrayWindow;
+CTrayWindow * g_TrayWindow;
 
 HRESULT
 Tray_OnStartMenuDismissed()
@@ -3060,7 +3060,7 @@ Tray_OnStartMenuDismissed()
 
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray)
 {
-    CComPtr<ITrayWindowImpl> Tray = new CComObject<ITrayWindowImpl>();
+    CComPtr<CTrayWindow> Tray = new CComObject<CTrayWindow>();
     if (Tray == NULL)
         return E_OUTOFMEMORY;
 

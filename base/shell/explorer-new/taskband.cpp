@@ -26,8 +26,8 @@
 
 const GUID CLSID_ITaskBand = { 0x68284FAA, 0x6A48, 0x11D0, { 0x8C, 0x78, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xB4 } };
 
-class ITaskBandImpl :
-    public CComCoClass<ITaskBandImpl>,
+class CTaskBand :
+    public CComCoClass<CTaskBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
     public ITaskBand,
@@ -44,14 +44,14 @@ class ITaskBandImpl :
     DWORD dwBandID;
 
 public:
-    ITaskBandImpl() :
+    CTaskBand() :
         hWnd(NULL),
         dwBandID(0)
     {
 
     }
 
-    virtual ~ITaskBandImpl() { }
+    virtual ~CTaskBand() { }
 
     virtual HRESULT STDMETHODCALLTYPE GetRebarBandID(
         OUT DWORD *pdwBandID)
@@ -386,10 +386,10 @@ public:
         return S_OK;
     }
 
-    DECLARE_NOT_AGGREGATABLE(ITaskBandImpl)
+    DECLARE_NOT_AGGREGATABLE(CTaskBand)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
-    BEGIN_COM_MAP(ITaskBandImpl)
+    BEGIN_COM_MAP(CTaskBand)
         COM_INTERFACE_ENTRY2_IID(IID_IOleWindow, IOleWindow, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
@@ -404,7 +404,7 @@ ITaskBand * CreateTaskBand(IN OUT ITrayWindow *Tray)
 {
     HRESULT hr;
 
-    ITaskBandImpl * tb = new CComObject<ITaskBandImpl>();
+    CTaskBand * tb = new CComObject<CTaskBand>();
 
     if (!tb)
         return NULL;
