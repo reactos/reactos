@@ -120,7 +120,7 @@ public:
 class CNotifyToolbar :
     public CToolbar<NOTIFYICONDATA>
 {
-    const int ICON_SIZE = 16;
+    static const int ICON_SIZE = 16;
 
     HIMAGELIST SysIcons;
     int VisibleButtonCount;
