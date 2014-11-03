@@ -43,7 +43,6 @@ list(APPEND SOURCE
     shell32.cpp
     shellitem.cpp
     shelllink.cpp
-    shellord.cpp
     shellreg.cpp
     folders/desktop.cpp
     folders/fs.cpp
@@ -75,6 +74,7 @@ add_library(shell32 SHARED
     wine/control.c
     wine/shell32_main.c
     wine/shellole.c
+    wine/shellord.c
     wine/shellpath.c
     wine/shellstring.c
     wine/shpolicy.c

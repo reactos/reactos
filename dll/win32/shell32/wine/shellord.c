@@ -20,19 +20,50 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <wine/config.h>
 
-#include <mmsystem.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <winternl.h>
+#include <shlobj.h>
+#include <undocshell.h>
+#include <shlwapi.h>
+#include <commdlg.h>
 #include <commoncontrols.h>
+#include <recyclebin.h>
+#include <mmsystem.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+#include "pidl.h"
+#include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 WINE_DECLARE_DEBUG_CHANNEL(pidl);
 
-/* FIXME: !!! move flags to header file !!! */
+/* FIXME: !!! move CREATEMRULIST and flags to header file !!! */
+/*        !!! it is in both here and comctl32undoc.c      !!! */
+typedef struct tagCREATEMRULIST
+{
+    DWORD  cbSize;        /* size of struct */
+    DWORD  nMaxItems;     /* max no. of items in list */
+    DWORD  dwFlags;       /* see below */
+    HKEY   hKey;          /* root reg. key under which list is saved */
+    LPCSTR lpszSubKey;    /* reg. subkey */
+    int (CALLBACK *lpfnCompare)(LPCVOID, LPCVOID, DWORD); /* item compare proc */
+} CREATEMRULISTA, *LPCREATEMRULISTA;
+
 /* dwFlags */
 #define MRUF_STRING_LIST  0 /* list will contain strings */
 #define MRUF_BINARY_LIST  1 /* list will contain binary data */
 #define MRUF_DELAYED_SAVE 2 /* only save list order to reg. is FreeMRUList */
+
+VOID WINAPI FreeMRUList(HANDLE);
 
 EXTERN_C HANDLE WINAPI CreateMRUListA(LPCREATEMRULISTA lpcml);
 EXTERN_C INT    WINAPI AddMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData);
@@ -52,7 +83,6 @@ EXTERN_C INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer,
 
 /* Function pointers for GET_FUNC macro */
 static HMODULE SHELL32_hshlwapi=NULL;
-
 
 /*************************************************************************
  * ParseFieldA                    [internal]
@@ -668,7 +698,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     CHAR new_lnk_filepath[MAX_PATH];
     CHAR new_lnk_name[MAX_PATH];
     CHAR * ext;
-    CComPtr<IMalloc>        ppM;
+    IMalloc *ppM;
     LPITEMIDLIST pidl;
     HWND hwnd = 0;       /* FIXME:  get real window handle */
     INT ret;
@@ -727,7 +757,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     if (SUCCEEDED(SHGetSpecialFolderLocation(hwnd, CSIDL_RECENT,
                          &pidl))) {
         SHGetPathFromIDListA(pidl, link_dir);
-        ppM->Free(pidl);
+        IMalloc_Free(ppM, pidl);
     }
     else {
         /* serious issues */
@@ -805,9 +835,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     ext = strrchr(doc_name, '.');
     if (!lstrcmpiA(ext, ".lnk"))
     {
-        CComPtr<IShellLinkA> ShellLink;
-        IShellLink_ConstructFromFile(NULL, IID_IShellLinkA, (LPCITEMIDLIST)SHSimpleIDListFromPathA(doc_name), (LPVOID*)&ShellLink);
-        ShellLink->GetPath(doc_name, MAX_PATH, NULL, 0);
+        IShellLinkA* ShellLink;
+        IShellLink_ConstructFromFile(NULL, &IID_IShellLinkA, (LPCITEMIDLIST)SHSimpleIDListFromPathA(doc_name), (LPVOID*)&ShellLink);
+        IShellLinkA_GetPath(ShellLink, doc_name, MAX_PATH, NULL, 0);
+        IShellLinkA_Release(ShellLink);
     }
 
     ext = strrchr(doc_name, '.');
@@ -847,7 +878,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     mymru.dwFlags = MRUF_BINARY_LIST | MRUF_DELAYED_SAVE;
     mymru.hKey = HCUbasekey;
     mymru.lpszSubKey = "RecentDocs";
-    mymru.lpfnCompare = (PROC)SHADD_compare_mru;
+    mymru.lpfnCompare = SHADD_compare_mru;
     mruhandle = CreateMRUListA(&mymru);
     if (!mruhandle) {
         /* MRU failed */
@@ -931,21 +962,22 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
      *      uFlags[in]  -  flags on call to SHAddToRecentDocs
     *      pv[in]      -  document path/pidl on call to SHAddToRecentDocs
     */
-    CComPtr<IShellLinkA>        psl;
-    CComPtr<IPersistFile>        pPf;
+    IShellLinkA *psl = NULL;
+    IPersistFile *pPf = NULL;
     HRESULT hres;
     CHAR desc[MAX_PATH];
     WCHAR widelink[MAX_PATH];
 
     CoInitialize(0);
 
-    hres = CoCreateInstance(CLSID_ShellLink,
+    hres = CoCreateInstance(&CLSID_ShellLink,
                  NULL,
                  CLSCTX_INPROC_SERVER,
-                 IID_PPV_ARG(IShellLinkA,&psl));
+                 &IID_IShellLinkA,
+                 (LPVOID )&psl);
     if(SUCCEEDED(hres)) {
 
-        hres = psl->QueryInterface(IID_PPV_ARG(IPersistFile,&pPf));
+        hres = IShellLinkA_QueryInterface(psl, &IID_IPersistFile, (LPVOID *)&pPf);
         if(FAILED(hres)) {
         /* bombed */
         ERR("failed QueryInterface for IPersistFile %08x\n", hres);
@@ -954,9 +986,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 
         /* Set the document path or pidl */
         if (uFlags == SHARD_PIDL) {
-        hres = psl->SetIDList((LPCITEMIDLIST) pv);
+        hres = IShellLinkA_SetIDList(psl, pv);
         } else {
-        hres = psl->SetPath((LPCSTR) pv);
+        hres = IShellLinkA_SetPath(psl, pv);
         }
         if(FAILED(hres)) {
         /* bombed */
@@ -966,7 +998,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 
         lstrcpyA(desc, "Shortcut to ");
         lstrcatA(desc, doc_name);
-        hres = psl->SetDescription(desc);
+        hres = IShellLinkA_SetDescription(psl, desc);
         if(FAILED(hres)) {
         /* bombed */
         ERR("failed SetDescription %08x\n", hres);
@@ -976,13 +1008,13 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         MultiByteToWideChar(CP_ACP, 0, new_lnk_filepath, -1,
                 widelink, MAX_PATH);
         /* create the short cut */
-        hres = pPf->Save(widelink, TRUE);
+        hres = IPersistFile_Save(pPf, widelink, TRUE);
         if(FAILED(hres)) {
         /* bombed */
         ERR("failed IPersistFile::Save %08x\n", hres);
         goto fail;
         }
-        hres = pPf->SaveCompleted(widelink);
+        hres = IPersistFile_SaveCompleted(pPf, widelink);
         TRACE("shortcut %s has been created, result=%08x\n",
           new_lnk_filepath, hres);
     }
@@ -1015,7 +1047,7 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
     LPCSFV psvcbi,    /* [in] shelltemplate struct */
     IShellView **ppv) /* [out] IShellView pointer */
 {
-    CComPtr<IShellView> psf;
+    IShellView * psf;
     HRESULT hRes;
 
     TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
@@ -1027,7 +1059,7 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
     if (FAILED(hRes))
         return hRes;
 
-    hRes = psf->QueryInterface(IID_PPV_ARG(IShellView, ppv));
+    hRes = IShellView_QueryInterface(psf, &IID_IShellView, (LPVOID *)ppv);
 
     return hRes;
 }
@@ -1074,7 +1106,7 @@ HRESULT WINAPI SHGetInstanceExplorer (IUnknown **lpUnknown)
     if (!SHELL32_IExplorerInterface)
       return E_FAIL;
 
-    SHELL32_IExplorerInterface->AddRef();
+    IUnknown_AddRef(SHELL32_IExplorerInterface);
     return S_OK;
 }
 /*************************************************************************
@@ -1341,7 +1373,7 @@ BOOL WINAPI IsUserAnAdmin(VOID)
  *
  * See shlwapi.SHAllocShared
  */
-HANDLE WINAPI SHAllocShared(LPVOID lpvData, DWORD dwSize, DWORD dwProcId)
+HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
 {
     typedef HANDLE (WINAPI *SHAllocSharedProc)(LPCVOID, DWORD, DWORD);
     static SHAllocSharedProc        pSHAllocShared;
@@ -1689,7 +1721,7 @@ UINT WINAPI SHAddFromPropSheetExtArray(HPSXA hpsxa, LPFNADDPROPSHEETPAGE lpfnAdd
         /* Call the AddPage method of all registered IShellPropSheetExt interfaces */
         for (i = 0; i != psxa->uiCount; i++)
         {
-            psxa->pspsx[i]->AddPages(PsxaCall, (LPARAM)&Call);
+            psxa->pspsx[i]->lpVtbl->AddPages(psxa->pspsx[i], PsxaCall, (LPARAM)&Call);
         }
 
         return Call.uiCount;
@@ -1772,20 +1804,20 @@ EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, 
                 }
                 if (SUCCEEDED(hr))
                 {
-                    CComPtr<IShellExtInit>            psxi;
-                    CComPtr<IShellPropSheetExt>        pspsx;
+                    IShellExtInit *psxi;
+                    IShellPropSheetExt *pspsx;
 
                    /* Attempt to get an IShellPropSheetExt and an IShellExtInit instance.
                        Only if both interfaces are supported it's a real shell extension.
                        Then call IShellExtInit's Initialize method. */
-                    if (SUCCEEDED(CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, IID_PPV_ARG(IShellPropSheetExt, &pspsx))))
+                    if (SUCCEEDED(CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, &IID_IShellPropSheetExt, (LPVOID *)&pspsx)))
                     {
-                        if (SUCCEEDED(pspsx->QueryInterface(IID_PPV_ARG(IShellExtInit, &psxi))))
+                        if (SUCCEEDED(pspsx->lpVtbl->QueryInterface(pspsx, &IID_IShellExtInit, (PVOID *)&psxi)))
                         {
-                            if (SUCCEEDED(psxi->Initialize(NULL, pDataObj, hKey)))
+                            if (SUCCEEDED(psxi->lpVtbl->Initialize(psxi, NULL, pDataObj, hKey)))
                             {
                                 /* Add the IShellPropSheetExt instance to the array */
-                                psxa->pspsx[psxa->uiCount++] = pspsx.Detach();
+                                psxa->pspsx[psxa->uiCount++] = pspsx;
                             }
                         }
                     }
@@ -1829,7 +1861,7 @@ UINT WINAPI SHReplaceFromPropSheetExtArray(HPSXA hpsxa, UINT uPageID, LPFNADDPRO
         for (i = 0; i != psxa->uiCount; i++)
         {
             Call.bCalled = FALSE;
-            psxa->pspsx[i]->ReplacePage(uPageID, PsxaCall, (LPARAM)&Call);
+            psxa->pspsx[i]->lpVtbl->ReplacePage(psxa->pspsx[i], uPageID, PsxaCall, (LPARAM)&Call);
         }
 
         return Call.uiCount;
@@ -1852,7 +1884,7 @@ void WINAPI SHDestroyPropSheetExtArray(HPSXA hpsxa)
     {
         for (i = 0; i != psxa->uiCount; i++)
         {
-            psxa->pspsx[i]->Release();
+            psxa->pspsx[i]->lpVtbl->Release(psxa->pspsx[i]);
         }
 
         LocalFree((HLOCAL)psxa);
@@ -1896,7 +1928,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
     const FORMATETC *lpFormats,
     LPENUMFORMATETC *ppenumFormatetc)
 {
-    CComPtr<IEnumFORMATETC> pef;
+    IEnumFORMATETC *pef;
     HRESULT hRes;
     TRACE("cf=%d fe=%p pef=%p\n", cFormats, lpFormats, ppenumFormatetc);
 
@@ -1904,8 +1936,8 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
     if (FAILED(hRes))
         return hRes;
 
-    pef->AddRef();
-    hRes = pef->QueryInterface(IID_PPV_ARG(IEnumFORMATETC, ppenumFormatetc));
+    IEnumFORMATETC_AddRef(pef);
+    hRes = IEnumFORMATETC_QueryInterface(pef, &IID_IEnumFORMATETC, (LPVOID*)ppenumFormatetc);
 
     return hRes;
 }
@@ -1916,7 +1948,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
  */
 HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
-    CComPtr<IShellView> psf;
+    IShellView *psf;
     HRESULT hRes;
 
     *ppsv = NULL;
@@ -1930,7 +1962,7 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **pps
     if (FAILED(hRes))
         return hRes;
 
-    hRes = psf->QueryInterface(IID_PPV_ARG(IShellView, ppsv));
+    hRes = IShellView_QueryInterface(psf, &IID_IShellView, (LPVOID *)ppsv);
 
     return hRes;
 }
@@ -2267,20 +2299,22 @@ EXTERN_C HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
     }
 
     Shell_GetImageLists(&hLarge, &hSmall);
-
-    // Duplicating the imagelist causes the start menu items not to draw on the first show.
-    // Was the Duplicate necessary for some reason? I believe Windows returns the raw pointer here.
-    hNew = /*ImageList_Duplicate*/(iImageList == SHIL_LARGE ? hLarge : hSmall);
+#ifndef __REACTOS__
+    hNew = ImageList_Duplicate(iImageList == SHIL_LARGE ? hLarge : hSmall);
 
     /* Get the interface for the new image list */
     if (hNew)
     {
-        IImageList *imageList = reinterpret_cast<IImageList*>(hNew);
-        ret = imageList->QueryInterface(riid, ppv);
-
-        // Since we are not duplicating, destroying makes no sense.
-        /* ImageList_Destroy(hNew); */
+        ret = HIMAGELIST_QueryInterface(hNew, riid, ppv);
+        ImageList_Destroy(hNew);
     }
+#else
+    /* Duplicating the imagelist causes the start menu items not to draw on
+     * the first show. Was the Duplicate necessary for some reason? I believe
+     * Windows returns the raw pointer here. */
+    hNew = (iImageList == SHIL_LARGE ? hLarge : hSmall);
+    ret = IImageList2_QueryInterface((IImageList2 *) hNew, riid, ppv);
+#endif
 
     return ret;
 }
@@ -2291,7 +2325,7 @@ EXTERN_C HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
 EXTERN_C HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
 {
-    CComPtr<IShellFolder>        psfDesktop;
+    IShellFolder *psfDesktop;
     HRESULT         hr=E_FAIL;
     ULONG           dwAttr=sfgaoIn;
 
@@ -2311,9 +2345,9 @@ EXTERN_C HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
         return hr;
     }
 
-    hr = psfDesktop->ParseDisplayName((HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
+    hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
 
-    psfDesktop->Release();
+    IShellFolder_Release(psfDesktop);
 
     if (SUCCEEDED(hr))
         *psfgaoOut = dwAttr;
