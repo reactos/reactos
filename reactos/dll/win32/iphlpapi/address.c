@@ -1,0 +1,514 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/iphlpapi/address.c
+ * PURPOSE:         iphlpapi implementation - Adapter Address APIs
+ * PROGRAMMERS:     Jérôme Gardou (jerome.gardou@reactos.org)
+ */
+
+#include "iphlpapi_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
+
+/* Helper for GetAdaptersAddresses:
+ * Retrieves the list of network adapters from tcpip.sys */
+static
+NTSTATUS
+GetInterfacesList(
+    _In_ HANDLE TcpFile,
+    _Out_ TDIEntityID **EntityList,
+    _Out_ ULONG* InterfaceCount)
+{
+
+    TCP_REQUEST_QUERY_INFORMATION_EX TcpQueryInfo;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
+    ULONG_PTR BufferSize;
+
+    ZeroMemory(&TcpQueryInfo, sizeof(TcpQueryInfo));
+    TcpQueryInfo.ID.toi_class = INFO_CLASS_GENERIC;
+    TcpQueryInfo.ID.toi_type = INFO_TYPE_PROVIDER;
+    TcpQueryInfo.ID.toi_id = ENTITY_LIST_ID;
+    TcpQueryInfo.ID.toi_entity.tei_entity = GENERIC_ENTITY;
+    TcpQueryInfo.ID.toi_entity.tei_instance = 0;
+
+    Status = NtDeviceIoControlFile(
+        TcpFile,
+        NULL,
+        NULL,
+        NULL,
+        &StatusBlock,
+        IOCTL_TCP_QUERY_INFORMATION_EX,
+        &TcpQueryInfo,
+        sizeof(TcpQueryInfo),
+        NULL,
+        0);
+    if (Status == STATUS_PENDING)
+    {
+        /* So we have to wait a bit */
+        Status = NtWaitForSingleObject(TcpFile, FALSE, NULL);
+        if (NT_SUCCESS(Status))
+            Status = StatusBlock.Status;
+    }
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    BufferSize = StatusBlock.Information;
+    *EntityList = HeapAlloc(GetProcessHeap(), 0, BufferSize);
+    if (!*EntityList)
+        return STATUS_NO_MEMORY;
+
+    /* Do the real call */
+    Status = NtDeviceIoControlFile(
+        TcpFile,
+        NULL,
+        NULL,
+        NULL,
+        &StatusBlock,
+        IOCTL_TCP_QUERY_INFORMATION_EX,
+        &TcpQueryInfo,
+        sizeof(TcpQueryInfo),
+        *EntityList,
+        BufferSize);
+    if (Status == STATUS_PENDING)
+    {
+        /* So we have to wait a bit */
+        Status = NtWaitForSingleObject(TcpFile, FALSE, NULL);
+        if (NT_SUCCESS(Status))
+            Status = StatusBlock.Status;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GetProcessHeap(), 0, *EntityList);
+        return Status;
+    }
+
+    *InterfaceCount = BufferSize / sizeof(TDIEntityID);
+    return Status;
+}
+
+#if 0
+static
+NTSTATUS
+GetSnmpInfo(
+    _In_ HANDLE TcpFile,
+    _In_ TDIEntityID InterfaceID,
+    _Out_ IPSNMPInfo* Info)
+{
+    TCP_REQUEST_QUERY_INFORMATION_EX TcpQueryInfo;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
+
+    ZeroMemory(&TcpQueryInfo, sizeof(TcpQueryInfo));
+    TcpQueryInfo.ID.toi_class = INFO_CLASS_PROTOCOL;
+    TcpQueryInfo.ID.toi_type = INFO_TYPE_PROVIDER;
+    TcpQueryInfo.ID.toi_id = IP_MIB_STATS_ID;
+    TcpQueryInfo.ID.toi_entity = InterfaceID;
+
+    Status = NtDeviceIoControlFile(
+        TcpFile,
+        NULL,
+        NULL,
+        NULL,
+        &StatusBlock,
+        IOCTL_TCP_QUERY_INFORMATION_EX,
+        &TcpQueryInfo,
+        sizeof(TcpQueryInfo),
+        Info,
+        sizeof(*Info));
+    if (Status == STATUS_PENDING)
+    {
+        /* So we have to wait a bit */
+        Status = NtWaitForSingleObject(TcpFile, FALSE, NULL);
+        if (NT_SUCCESS(Status))
+            Status = StatusBlock.Status;
+    }
+
+    return Status;
+}
+#endif
+
+/*
+ * Fills the IFEntry buffer from tcpip.sys.
+ * The buffer size MUST be FIELD_OFFSET(IFEntry, if_descr[MAX_ADAPTER_DESCRIPTION_LENGTH + 1]).
+ * See MSDN IFEntry struct definition if you don't believe me. ;-)
+ */
+static
+NTSTATUS
+GetInterfaceEntry(
+    _In_ HANDLE TcpFile,
+    _In_ TDIEntityID InterfaceID,
+    _Out_ IFEntry* Entry)
+{
+    TCP_REQUEST_QUERY_INFORMATION_EX TcpQueryInfo;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
+
+    ZeroMemory(&TcpQueryInfo, sizeof(TcpQueryInfo));
+    TcpQueryInfo.ID.toi_class = INFO_CLASS_PROTOCOL;
+    TcpQueryInfo.ID.toi_type = INFO_TYPE_PROVIDER;
+    TcpQueryInfo.ID.toi_id = IP_MIB_STATS_ID;
+    TcpQueryInfo.ID.toi_entity = InterfaceID;
+
+    Status = NtDeviceIoControlFile(
+        TcpFile,
+        NULL,
+        NULL,
+        NULL,
+        &StatusBlock,
+        IOCTL_TCP_QUERY_INFORMATION_EX,
+        &TcpQueryInfo,
+        sizeof(TcpQueryInfo),
+        Entry,
+        FIELD_OFFSET(IFEntry, if_descr[MAX_ADAPTER_DESCRIPTION_LENGTH + 1]));
+    if (Status == STATUS_PENDING)
+    {
+        /* So we have to wait a bit */
+        Status = NtWaitForSingleObject(TcpFile, FALSE, NULL);
+        if (NT_SUCCESS(Status))
+            Status = StatusBlock.Status;
+    }
+
+    return Status;
+}
+
+/* Helpers to get the list of DNS for an interface */
+static
+VOID
+EnumerateServerNameSize(
+    _In_ PWCHAR Interface,
+    _In_ PWCHAR NameServer,
+    _Inout_ PVOID Data)
+{
+    ULONG* BufferSize = Data;
+
+    /* This is just sizing here */
+    UNREFERENCED_PARAMETER(Interface);
+    UNREFERENCED_PARAMETER(NameServer);
+
+    *BufferSize += sizeof(IP_ADAPTER_DNS_SERVER_ADDRESS) + sizeof(SOCKADDR);
+}
+
+static
+VOID
+EnumerateServerName(
+    _In_ PWCHAR Interface,
+    _In_ PWCHAR NameServer,
+    _Inout_ PVOID Data)
+{
+    PIP_ADAPTER_DNS_SERVER_ADDRESS** Ptr = Data;
+    PIP_ADAPTER_DNS_SERVER_ADDRESS ServerAddress = **Ptr;
+
+    UNREFERENCED_PARAMETER(Interface);
+
+    ServerAddress->Length = sizeof(IP_ADAPTER_DNS_SERVER_ADDRESS);
+    ServerAddress->Address.lpSockaddr = (PVOID)(ServerAddress + 1);
+    ServerAddress->Address.iSockaddrLength = sizeof(SOCKADDR);
+
+
+    /* Get the address from the server name string */
+    //FIXME: Only ipv4 for now...
+    if (WSAStringToAddressW(
+        NameServer,
+        AF_INET,
+        NULL,
+        ServerAddress->Address.lpSockaddr,
+        &ServerAddress->Address.iSockaddrLength))
+    {
+        /* Pass along, name conversion failed */
+        ERR("%S is not a valid IP address\n", NameServer);
+        return;
+    }
+
+    /* Go to next item */
+    ServerAddress->Next = (PVOID)(ServerAddress->Address.lpSockaddr + 1);
+    *Ptr = &ServerAddress->Next;
+}
+
+DWORD
+WINAPI
+DECLSPEC_HOTPATCH
+GetAdaptersAddresses(
+    _In_ ULONG Family,
+    _In_ ULONG Flags,
+    _In_ PVOID Reserved,
+    _Inout_ PIP_ADAPTER_ADDRESSES pAdapterAddresses,
+    _Inout_ PULONG pOutBufLen)
+{
+    NTSTATUS Status;
+    HANDLE TcpFile;
+    TDIEntityID* InterfacesList;
+    ULONG InterfacesCount;
+    ULONG AdaptersCount = 0;
+    ULONG i;
+    ULONG TotalSize = 0, RemainingSize;
+    BYTE* Ptr = (BYTE*)pAdapterAddresses;
+
+    FIXME("GetAdaptersAddresses - Semi Stub: Family %u, Flags 0x%08x, Reserved %p, pAdapterAddress %p, pOutBufLen %p.\n",
+        Family, Flags, Reserved, pAdapterAddresses, pOutBufLen);
+
+    if (!pOutBufLen)
+        return ERROR_INVALID_PARAMETER;
+
+    if ((Family == AF_INET6) || (Family == AF_UNSPEC))
+    {
+        /* One day maybe... */
+        FIXME("IPv6 is not supported in ReactOS!\n");
+        if (Family == AF_INET6)
+        {
+            /* We got nothing to say in this case */
+            return ERROR_NO_DATA;
+        }
+    }
+
+    RemainingSize = *pOutBufLen;
+    if (Ptr)
+        ZeroMemory(Ptr, RemainingSize);
+
+    /* open the tcpip driver */
+    Status = openTcpFile(&TcpFile);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open handle to tcpip.sys. Status %08x\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    /* Get the interfaces list */
+    Status = GetInterfacesList(TcpFile, &InterfacesList, &InterfacesCount);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not get adapters list. Status %08x\n", Status);
+        NtClose(TcpFile);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    /* Let's see if we got any adapter. */
+    for (i = 0; i < InterfacesCount; i++)
+    {
+        PIP_ADAPTER_ADDRESSES CurrentAA = (PIP_ADAPTER_ADDRESSES)Ptr, PreviousAA = NULL;
+        ULONG CurrentAASize = 0;
+
+        if (InterfacesList[i].tei_entity == IF_ENTITY)
+        {
+            BYTE EntryBuffer[FIELD_OFFSET(IFEntry, if_descr[MAX_ADAPTER_DESCRIPTION_LENGTH + 1])];
+            IFEntry* Entry = (IFEntry*)EntryBuffer;
+
+            /* Remember we got one */
+            AdaptersCount++;
+
+            /* Of course we need some space for the base structure. */
+            CurrentAASize = sizeof(IP_ADAPTER_ADDRESSES);
+
+            /* Get the entry */
+            Status = GetInterfaceEntry(TcpFile, InterfacesList[i], Entry);
+            if (!NT_SUCCESS(Status))
+                goto Error;
+
+            TRACE("Got entity %*s, index %u.\n",
+                Entry->if_descrlen, &Entry->if_descr[0], Entry->if_index);
+
+            /* Add the adapter name */
+            CurrentAASize += Entry->if_descrlen + sizeof(CHAR);
+
+            /* Add the DNS suffix */
+            CurrentAASize += sizeof(WCHAR);
+
+            /* Add the description. */
+            CurrentAASize += sizeof(WCHAR);
+
+            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+            {
+                /* Just an empty string for now. */
+                FIXME("Should get adapter friendly name.\n");
+                CurrentAASize += sizeof(WCHAR);
+            }
+
+            if (!(Flags & GAA_FLAG_SKIP_DNS_SERVER))
+            {
+                /* Enumerate the name servers */
+                HKEY InterfaceKey;
+                CHAR KeyName[256];
+
+                snprintf(KeyName, 256,
+                    "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+                    Entry->if_descrlen, &Entry->if_descr[0]);
+
+                if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) != ERROR_SUCCESS)
+                {
+                    ERR("Failed opening interface key for interface %*s\n", Entry->if_descrlen, &Entry->if_descr[0]);
+                    Flags |= GAA_FLAG_SKIP_DNS_SERVER;
+                }
+                else
+                {
+                    EnumNameServers(InterfaceKey, NULL, &CurrentAASize, EnumerateServerNameSize);
+                    RegCloseKey(InterfaceKey);
+                }
+            }
+
+            /* This is part of what we will need */
+            TotalSize += CurrentAASize;
+
+            /* Fill in the data */
+            if ((CurrentAA) && (RemainingSize >= CurrentAASize))
+            {
+                CurrentAA->Length = sizeof(IP_ADAPTER_ADDRESSES);
+                CurrentAA->IfIndex = Entry->if_index;
+                CopyMemory(CurrentAA->PhysicalAddress, Entry->if_physaddr, Entry->if_physaddrlen);
+                CurrentAA->PhysicalAddressLength = Entry->if_physaddrlen;
+                CurrentAA->Flags = 0; // FIXME!
+                CurrentAA->Mtu = Entry->if_mtu;
+                CurrentAA->IfType = Entry->if_type;
+                CurrentAA->OperStatus = Entry->if_operstatus;
+                CurrentAA->Next = PreviousAA;
+                /* Next items */
+                Ptr = (BYTE*)(CurrentAA + 1);
+
+                /* Now fill in the name */
+                CopyMemory(Ptr, &Entry->if_descr[0], Entry->if_descrlen);
+                CurrentAA->AdapterName = (PCHAR)Ptr;
+                CurrentAA->AdapterName[Entry->if_descrlen] = '\0';
+                /* Next items */
+                Ptr = (BYTE*)(CurrentAA->AdapterName + Entry->if_descrlen + 1);
+
+                /* The DNS suffix */
+                CurrentAA->DnsSuffix = (PWCHAR)Ptr;
+                CurrentAA->DnsSuffix[0] = L'\0';
+                /* Next items */
+                Ptr = (BYTE*)(CurrentAA->DnsSuffix + 1);
+
+                /* The description */
+                CurrentAA->Description = (PWCHAR)Ptr;
+                CurrentAA->Description[0] = L'\0';
+                /* Next items */
+                Ptr = (BYTE*)(CurrentAA->Description + 1);
+
+                /* The friendly name */
+                if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+                {
+                    CurrentAA->FriendlyName = (PWCHAR)Ptr;
+                    CurrentAA->FriendlyName[0] = L'\0';
+                    /* Next items */
+                    Ptr = (BYTE*)(CurrentAA->FriendlyName + 1);
+                }
+
+                /* The DNS Servers */
+                if (!(Flags & GAA_FLAG_SKIP_DNS_SERVER))
+                {
+                    /* Enumerate the name servers */
+                    HKEY InterfaceKey;
+                    CHAR KeyName[256];
+
+                    snprintf(KeyName, 256,
+                        "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+                        Entry->if_descrlen, &Entry->if_descr[0]);
+
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) != ERROR_SUCCESS)
+                    {
+                        ERR("Failed opening interface key for interface %*s\n", Entry->if_descrlen, &Entry->if_descr[0]);
+                    }
+                    else
+                    {
+                        PIP_ADAPTER_DNS_SERVER_ADDRESS* ServerAddressPtr;
+
+                        CurrentAA->FirstDnsServerAddress = (PIP_ADAPTER_DNS_SERVER_ADDRESS)Ptr;
+                        ServerAddressPtr = &CurrentAA->FirstDnsServerAddress;
+
+                        EnumNameServers(InterfaceKey, NULL, &ServerAddressPtr, EnumerateServerName);
+                        RegCloseKey(InterfaceKey);
+
+                        /* Set the last entry in the list as having NULL next member */
+                        Ptr = (BYTE*)*ServerAddressPtr;
+                        *ServerAddressPtr = NULL;
+                    }
+                }
+
+                /* We're done for this interface */
+                PreviousAA = CurrentAA;
+                RemainingSize -= CurrentAASize;
+            }
+        }
+    }
+
+    if (AdaptersCount == 0)
+    {
+        /* Uh? Not even localhost ?! */
+        ERR("No Adapters found!\n");
+        *pOutBufLen = 0;
+        return ERROR_NO_DATA;
+    }
+
+/* Disabled for now until someone knows how to differentiate unicast/multicast whatver adresses */
+#if 0
+    /* See what we will fill our buffer with */
+    for (i = 0; i < InterfacesCount; i++)
+    {
+        /* Look for network layers */
+        if ((InterfacesList[i].tei_entity == CL_TL_ENTITY)
+                || (InterfacesList[i].tei_entity == CO_TL_ENTITY))
+        {
+            IPSNMPInfo SnmpInfo;
+            PIP_ADAPTER_ADDRESSES CurrentAA = NULL;
+            IPAddrEntry* AddrEntries;
+            ULONG j;
+
+            /* Get its SNMP info */
+            Status = GetSnmpInfo(TcpFile, InterfacesList[i], &SnmpInfo);
+            if (!NT_SUCCESS(Status))
+                goto Error;
+
+            /* Allocate the address entry array and get them */
+            AddrEntries = HeapAlloc(GetProcessHeap(),
+                HEAP_ZERO_MEMORY,
+                SnmpInfo.ipsi_numaddr * sizeof(AddrEntries[0]));
+            if (!AddrEntries)
+            {
+                Status = STATUS_NO_MEMORY;
+                goto Error;
+            }
+            Status = GetAddrEntries(TcpFile, InterfacesList[i], AddrEntries, SnmpInfo.ipsi_numaddr);
+            if (!NT_SUCCESS(Status))
+            {
+                HeapFree(GetProcessHeap(), 0, AddrEntries);
+                goto Error;
+            }
+
+            for (j = 0; j < SnmpInfo.ipsi_numaddr; j++)
+            {
+                /* Find the adapters struct for this address. */
+                if (pAdapterAddresses)
+                {
+                    CurrentAA = pAdapterAddresses;
+                    while (CurrentAA)
+                    {
+                        if (CurrentAA->IfIndex == AddrEntries[j].iae_index)
+                            break;
+                    }
+
+                    if (!CurrentAA)
+                    {
+                        ERR("Got address for interface %u but no adapter was found for it.\n", AddrEntries[j].iae_index);
+                        /* Go to the next address */
+                        continue;
+                    }
+                }
+            }
+
+        }
+    }
+#endif
+
+    /* We're done */
+    HeapFree(GetProcessHeap(), 0, InterfacesList);
+    NtClose(TcpFile);
+    *pOutBufLen = TotalSize;
+    return ERROR_SUCCESS;
+
+Error:
+    ERR("Failed! Status 0x%08x\n", Status);
+    *pOutBufLen = 0;
+    HeapFree(GetProcessHeap(), 0, InterfacesList);
+    NtClose(TcpFile);
+    return RtlNtStatusToDosError(Status);
+}
