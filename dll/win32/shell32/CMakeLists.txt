@@ -39,7 +39,6 @@ list(APPEND SOURCE
     extracticon.cpp
     folders.cpp
     iconcache.cpp
-    pidl.cpp
     shell32.cpp
     shellitem.cpp
     shelllink.cpp
@@ -71,6 +70,7 @@ list(APPEND SOURCE
 add_library(shell32 SHARED
     ${SOURCE}
     wine/control.c
+    wine/pidl.c
     wine/shell32_main.c
     wine/shellole.c
     wine/shellord.c

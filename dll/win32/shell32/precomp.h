@@ -34,7 +34,7 @@
 
 //#include "base/shell/explorer-new/todo.h"
 //#include "dlgs.h"
-#include "pidl.h"
+#include "wine/pidl.h"
 #include "debughlp.h"
 #include "undocshell.h"
 #include "wine/shell32_main.h"
