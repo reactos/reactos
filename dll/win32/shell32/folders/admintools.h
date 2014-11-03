@@ -29,19 +29,16 @@ class CAdminToolsFolder :
     public IPersistFolder2
 {
     private:
-        CLSID *pclsid;
-
-        LPITEMIDLIST pidlRoot;  /* absolute pidl */
+        CComPtr<IShellFolder> m_pisfInner;
+        CComPtr<IShellFolder2> m_pisf2Inner;
         LPWSTR szTarget;
-
-        int dwAttributes;        /* attributes returned by GetAttributesOf FIXME: use it */
     public:
         CAdminToolsFolder();
         ~CAdminToolsFolder();
         HRESULT WINAPI FinalConstruct();
 
         // IShellFolder
-        virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
+        virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes);
         virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
         virtual HRESULT WINAPI BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
         virtual HRESULT WINAPI BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);

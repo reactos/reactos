@@ -36,304 +36,100 @@ This folder should not exist. It is just a file system folder...
  *     AdminTools folder implementation
  */
 
-class CDesktopFolderEnumY :
-    public IEnumIDListImpl
-{
-    private:
-    public:
-        CDesktopFolderEnumY();
-        ~CDesktopFolderEnumY();
-        HRESULT WINAPI Initialize(LPWSTR szTarget, DWORD dwFlags);
-
-        BEGIN_COM_MAP(CDesktopFolderEnumY)
-        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
-        END_COM_MAP()
-};
-
-static const shvheader AdminToolsSFHeader[] = {
-    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
-    {IDS_SHV_COLUMN2, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN4, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 12}
-};
-
-#define COLUMN_NAME                0
-#define COLUMN_SIZE                1
-#define COLUMN_TYPE                2
-#define COLUMN_DATE                3
-
-#define AdminToolsHELLVIEWCOLUMNS (4)
-
-CDesktopFolderEnumY::CDesktopFolderEnumY()
-{
-}
-
-CDesktopFolderEnumY::~CDesktopFolderEnumY()
-{
-}
-
-HRESULT WINAPI CDesktopFolderEnumY::Initialize(LPWSTR szTarget, DWORD dwFlags)
-{
-    TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
-    /* enumerate the elements in %windir%\desktop */
-    return CreateFolderEnumList(szTarget, dwFlags);
-}
-
 CAdminToolsFolder::CAdminToolsFolder()
 {
-    pclsid = NULL;
+    m_pisfInner = NULL;
+    m_pisf2Inner = NULL;
 
-    pidlRoot = NULL;  /* absolute pidl */
     szTarget = NULL;
-
-    dwAttributes = 0;        /* attributes returned by GetAttributesOf FIXME: use it */
 }
 
 CAdminToolsFolder::~CAdminToolsFolder()
 {
-    TRACE ("-- destroying IShellFolder(%p)\n", this);
-    if (pidlRoot)
-        SHFree(pidlRoot);
     HeapFree(GetProcessHeap(), 0, szTarget);
+    m_pisfInner.Release();
+    m_pisf2Inner.Release();
 }
 
 HRESULT WINAPI CAdminToolsFolder::FinalConstruct()
 {
+    HRESULT hr;
+    CComPtr<IPersistFolder3> ppf3;
+    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_pisfInner));
+    if (FAILED(hr))
+        return hr;
+
+    hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IShellFolder2, &m_pisf2Inner));
+    if (FAILED(hr))
+        return hr;
+
+    hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
+    if (FAILED(hr))
+        return hr;
+
+    PERSIST_FOLDER_TARGET_INFO info;
+    ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
+    info.csidl = CSIDL_COMMON_ADMINTOOLS;
+    hr = ppf3->InitializeEx(NULL, _ILCreateAdminTools(), &info);
+
     szTarget = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
     if (szTarget == NULL)
         return E_OUTOFMEMORY;
     if (!SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_COMMON_ADMINTOOLS, FALSE))
         return E_FAIL;
 
-    pidlRoot = _ILCreateAdminTools();    /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
     return S_OK;
 }
 
-/**************************************************************************
- *    CAdminToolsFolder::ParseDisplayName
- *
- */
 HRESULT WINAPI CAdminToolsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
-        DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
+        ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
 {
-    TRACE("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
-          this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
-          pchEaten, ppidl, pdwAttributes);
-
-    *ppidl = 0;
-    if (pchEaten)
-        *pchEaten = 0;
-
-    MessageBoxW(NULL, lpszDisplayName, L"ParseDisplayName", MB_OK);
-
-    return E_NOTIMPL;
+    return m_pisfInner->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
 }
 
-/**************************************************************************
- *        CAdminToolsFolder::EnumObjects
- */
 HRESULT WINAPI CAdminToolsFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CDesktopFolderEnumY>(szTarget, dwFlags, IID_IEnumIDList, ppEnumIDList);
+    return m_pisfInner->EnumObjects(hwndOwner, dwFlags, ppEnumIDList);
 }
 
-/**************************************************************************
- *        CAdminToolsFolder::BindToObject
- */
 HRESULT WINAPI CAdminToolsFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
-    TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
-           pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
-
-    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
+    return m_pisfInner->BindToObject(pidl, pbcReserved, riid, ppvOut);
 }
 
-/**************************************************************************
- *    CAdminToolsFolder::BindToStorage
- */
 HRESULT WINAPI CAdminToolsFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
-    FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n",
-           this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
-
-    *ppvOut = NULL;
-    return E_NOTIMPL;
+    return m_pisfInner->BindToStorage(pidl, pbcReserved, riid, ppvOut);
 }
 
-/**************************************************************************
- *     CAdminToolsFolder::CompareIDs
- */
 HRESULT WINAPI CAdminToolsFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    int nReturn;
-
-    TRACE ("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
-    nReturn = SHELL32_CompareIDs (this, lParam, pidl1, pidl2);
-    TRACE ("-- %i\n", nReturn);
-    return nReturn;
+    return m_pisfInner->CompareIDs(lParam, pidl1, pidl2);
 }
 
-/**************************************************************************
- *    CAdminToolsFolder::CreateViewObject
- */
 HRESULT WINAPI CAdminToolsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
-    CComPtr<IShellView>                    pShellView;
-    HRESULT                                hr = E_INVALIDARG;
-
-    TRACE ("(%p)->(hwnd=%p,%s,%p)\n", this,
-           hwndOwner, shdebugstr_guid (&riid), ppvOut);
-
-    if (!ppvOut)
-        return hr;
-
-    *ppvOut = NULL;
-
-    if (IsEqualIID (riid, IID_IDropTarget))
-    {
-        WARN ("IDropTarget not implemented\n");
-        hr = E_NOTIMPL;
-    }
-    else if (IsEqualIID (riid, IID_IShellView))
-    {
-        hr = IShellView_Constructor ((IShellFolder *)this, &pShellView);
-        if (pShellView)
-            hr = pShellView->QueryInterface(riid, ppvOut);
-    }
-    TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
-    return hr;
+    return m_pisfInner->CreateViewObject(hwndOwner, riid, ppvOut);
 }
 
-/**************************************************************************
- *  ISF_AdminTools_fnGetAttributesOf
- */
 HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
-    HRESULT hr = S_OK;
-    static const DWORD dwAdminToolsAttributes =
-        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM;
-
-    TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
-           this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
-
-    if (!rgfInOut)
-        return E_INVALIDARG;
-    if (cidl && !apidl)
-        return E_INVALIDARG;
-
-    if (*rgfInOut == 0)
-        *rgfInOut = ~0;
-
-    if(cidl == 0) {
-        *rgfInOut &= dwAdminToolsAttributes;
-    } else {
-        while (cidl > 0 && *apidl) {
-            pdump (*apidl);
-            if (_ILIsAdminTools(*apidl)) {
-                *rgfInOut &= dwAdminToolsAttributes;
-            } else {
-                SHELL32_GetItemAttributes (this, *apidl, rgfInOut);
-            }
-            apidl++;
-            cidl--;
-        }
-    }
-    /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
-    *rgfInOut &= ~SFGAO_VALIDATE;
-
-    TRACE ("-- result=0x%08x\n", *rgfInOut);
-
-    return hr;
+    return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
 }
 
-/**************************************************************************
- *    CAdminToolsFolder::GetUIObjectOf
- *
- * PARAMETERS
- *  HWND           hwndOwner, //[in ] Parent window for any output
- *  UINT           cidl,      //[in ] array size
- *  LPCITEMIDLIST* apidl,     //[in ] simple pidl array
- *  REFIID         riid,      //[in ] Requested Interface
- *  UINT*          prgfInOut, //[   ] reserved
- *  LPVOID*        ppvObject) //[out] Resulting Interface
- *
- */
 HRESULT WINAPI CAdminToolsFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
-    LPITEMIDLIST pidl;
-    CComPtr<IUnknown>                    pObj;
-    HRESULT hr = E_INVALIDARG;
-
-    TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
-           this, hwndOwner, cidl, apidl, shdebugstr_guid (&riid), prgfInOut, ppvOut);
-
-    if (!ppvOut)
-        return hr;
-
-    *ppvOut = NULL;
-
-    if (IsEqualIID (riid, IID_IContextMenu))
-    {
-        IContextMenu  * pCm = NULL;
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, 0, NULL, &pCm);
-        pObj = pCm;
-    }
-    else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
-    {
-        IDataObject * pDo = NULL;
-        hr = IDataObject_Constructor(hwndOwner, pidlRoot, apidl, cidl, &pDo);
-        pObj = pDo;
-    }
-    else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconA_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
-    }
-    else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconW_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
-    }
-    else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
-    {
-        IDropTarget * pDt = NULL;
-        hr = this->QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
-        pObj = pDt;
-    }
-    else if ((IsEqualIID(riid, IID_IShellLinkW) ||
-              IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        hr = IShellLink_ConstructFromFile(NULL, riid, pidl, reinterpret_cast<LPVOID*>(&pObj));
-        SHFree (pidl);
-    }
-    else
-        hr = E_NOINTERFACE;
-
-    if (SUCCEEDED(hr) && !pObj)
-        hr = E_OUTOFMEMORY;
-
-    *ppvOut = pObj.Detach();
-    TRACE ("(%p)->hr=0x%08x\n", this, hr);
-    return hr;
+    return m_pisfInner->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, ppvOut);
 }
 
-/**************************************************************************
- *    CAdminToolsFolder::GetDisplayNameOf
- *
- */
 HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
+    if (!_ILIsSpecialFolder(pidl))
+        return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
+
     HRESULT hr = S_OK;
-    LPWSTR pszPath, pOffset;
+    LPWSTR pszPath;
 
     TRACE ("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
     pdump (pidl);
@@ -355,58 +151,6 @@ HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD d
         else if (!HCR_GetClassNameW(CLSID_AdminFolderShortcut, pszPath, MAX_PATH))
             hr = E_FAIL;
     }
-    else if (_ILIsPidlSimple(pidl))
-    {
-        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
-                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
-                szTarget)
-        {
-            wcscpy(pszPath, szTarget);
-            pOffset = PathAddBackslashW(pszPath);
-            if (pOffset)
-            {
-                if (!_ILSimpleGetTextW(pidl, pOffset, MAX_PATH + 1 - (pOffset - pszPath)))
-                    hr = E_FAIL;
-            }
-            else
-                hr = E_FAIL;
-        }
-        else
-        {
-            if (_ILSimpleGetTextW(pidl, pszPath, MAX_PATH + 1))
-            {
-                if (SHELL_FS_HideExtension(pszPath))
-                    PathRemoveExtensionW(pszPath);
-            }
-            else
-                hr = E_FAIL;
-        }
-    }
-    else if (_ILIsSpecialFolder(pidl))
-    {
-        BOOL bSimplePidl = _ILIsPidlSimple(pidl);
-
-        if (bSimplePidl)
-        {
-            if (!_ILSimpleGetTextW(pidl, pszPath, MAX_PATH))
-                hr = E_FAIL;
-        }
-        else if ((dwFlags & SHGDN_FORPARSING) && !bSimplePidl)
-        {
-            int len = 0;
-
-            wcscpy(pszPath, szTarget);
-            PathAddBackslashW(pszPath);
-            len = wcslen(pszPath);
-
-            if (!SUCCEEDED(SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags | SHGDN_INFOLDER, pszPath + len, MAX_PATH + 1 - len)))
-            {
-                CoTaskMemFree(pszPath);
-                return E_OUTOFMEMORY;
-            }
-
-        }
-    }
 
     if (SUCCEEDED(hr))
     {
@@ -420,111 +164,45 @@ HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD d
     return hr;
 }
 
-/**************************************************************************
- *  CAdminToolsFolder::SetNameOf
- *  Changes the name of a file object or subfolder, possibly changing its item
- *  identifier in the process.
- *
- * PARAMETERS
- *  HWND          hwndOwner,  //[in ] Owner window for output
- *  LPCITEMIDLIST pidl,       //[in ] simple pidl of item to change
- *  LPCOLESTR     lpszName,   //[in ] the items new display name
- *  DWORD         dwFlags,    //[in ] SHGNO formatting flags
- *  LPITEMIDLIST* ppidlOut)   //[out] simple pidl returned
- */
 HRESULT WINAPI CAdminToolsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
         LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
-    FIXME ("(%p)->(%p,pidl=%p,%s,%lu,%p)\n", this, hwndOwner, pidl,
-           debugstr_w (lpName), dwFlags, pPidlOut);
-
-    return E_FAIL;
+    return m_pisfInner->SetNameOf(hwndOwner, pidl, lpName, dwFlags, pPidlOut);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDefaultSearchGUID(GUID *pguid)
 {
-    FIXME ("(%p)\n", this);
-    return E_NOTIMPL;
+    return m_pisf2Inner->GetDefaultSearchGUID(pguid);
 }
 
 HRESULT WINAPI CAdminToolsFolder::EnumSearches(IEnumExtraSearch ** ppenum)
 {
-    FIXME ("(%p)\n", this);
-    return E_NOTIMPL;
+    return m_pisf2Inner->EnumSearches(ppenum);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
-    if (pSort)
-        *pSort = 0;
-    if (pDisplay)
-        *pDisplay = 0;
-
-    return S_OK;
+    return m_pisf2Inner->GetDefaultColumn(dwRes, pSort, pDisplay);
 }
+
 HRESULT WINAPI CAdminToolsFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    if (!pcsFlags || iColumn >= AdminToolsHELLVIEWCOLUMNS)
-        return E_INVALIDARG;
-    *pcsFlags = AdminToolsSFHeader[iColumn].pcsFlags;
-    return S_OK;
-
+    return m_pisf2Inner->GetDefaultColumnState(iColumn, pcsFlags);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    FIXME ("(%p): stub\n", this);
-
-    return E_NOTIMPL;
+    return m_pisf2Inner->GetDetailsEx(pidl, pscid, pv);
 }
 
 HRESULT WINAPI CAdminToolsFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    WCHAR buffer[MAX_PATH] = {0};
-    HRESULT hr = E_FAIL;
-
-    TRACE("(%p)->(%p %i %p): stub\n", this, pidl, iColumn, psd);
-
-    if (iColumn >= AdminToolsHELLVIEWCOLUMNS)
-        return E_FAIL;
-
-    psd->fmt = AdminToolsSFHeader[iColumn].fmt;
-    psd->cxChar = AdminToolsSFHeader[iColumn].cxChar;
-    if (pidl == NULL)
-    {
-        psd->str.uType = STRRET_WSTR;
-        if (LoadStringW(shell32_hInstance, AdminToolsSFHeader[iColumn].colnameid, buffer, MAX_PATH))
-            hr = SHStrDupW(buffer, &psd->str.pOleStr);
-
-        return hr;
-    }
-
-    psd->str.uType = STRRET_CSTR;
-    switch (iColumn)
-    {
-        case COLUMN_NAME:
-            psd->str.uType = STRRET_WSTR;
-            hr = GetDisplayNameOf(pidl,
-                                  SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-            break;
-        case COLUMN_SIZE:
-            _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case COLUMN_TYPE:
-            _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case COLUMN_DATE:
-            _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
-            break;
-    }
-
-    return hr;
+    return m_pisf2Inner->GetDetailsOf(pidl, iColumn, psd);
 }
 
 HRESULT WINAPI CAdminToolsFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 {
-    FIXME ("(%p): stub\n", this);
-    return E_NOTIMPL;
+    return m_pisf2Inner->MapColumnToSCID(column, pscid);
 }
 
 /************************************************************************
@@ -545,10 +223,6 @@ HRESULT WINAPI CAdminToolsFolder::GetClassID(CLSID *lpClassId)
  */
 HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    if (pidlRoot)
-        SHFree((LPVOID)pidlRoot);
-
-    pidlRoot = ILClone(pidl);
     return S_OK;
 }
 
@@ -557,8 +231,7 @@ HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
  */
 HRESULT WINAPI CAdminToolsFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
-    TRACE ("(%p)->(%p)\n", this, pidl);
-
-    *pidl = ILClone (pidlRoot);
-    return S_OK;
+    CComPtr<IPersistFolder2> ppf2;
+    m_pisfInner->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+    return ppf2->GetCurFolder(pidl);
 }
