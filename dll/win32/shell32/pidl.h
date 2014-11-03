@@ -213,8 +213,8 @@ DWORD   _ILSimpleGetText    (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 DWORD   _ILSimpleGetTextW   (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize);
 BOOL    _ILGetFileDate      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 DWORD   _ILGetFileSize      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-BOOL    _ILGetExtension     (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-void    _ILGetFileType      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
+EXTERN_C BOOL    _ILGetExtension     (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
+EXTERN_C void    _ILGetFileType      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 DWORD   _ILGetFileAttributes    (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
 
 BOOL    _ILGetFileDateTime  (LPCITEMIDLIST pidl, FILETIME *ft);
@@ -238,15 +238,14 @@ BOOL    _ILIsValue      (LPCITEMIDLIST pidl);
 BOOL    _ILIsSpecialFolder  (LPCITEMIDLIST pidl);
 BOOL    _ILIsPidlSimple     (LPCITEMIDLIST pidl);
 BOOL    _ILIsCPanelStruct   (LPCITEMIDLIST pidl);
-static BOOL __inline _ILIsEqualSimple        (LPCITEMIDLIST pidlA, LPCITEMIDLIST pidlB)
+static __inline
+BOOL    _ILIsEqualSimple        (LPCITEMIDLIST pidlA, LPCITEMIDLIST pidlB)
 {
     return (pidlA->mkid.cb > 0 && !memcmp(pidlA, pidlB, pidlA->mkid.cb)) ||
-           (!pidlA->mkid.cb && !pidlB->mkid.cb);
+            (!pidlA->mkid.cb && !pidlB->mkid.cb);
 }
-static
-BOOL  __inline _ILIsEmpty              (LPCITEMIDLIST pidl) {
-    return _ILIsDesktop(pidl);
-}
+static __inline
+BOOL    _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl); }
 
 /*
  * simple pidls
