@@ -1508,3 +1508,19 @@ HRESULT WINAPI CDesktopFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut
 
     return hr;
 }
+
+/*************************************************************************
+ * SHGetDesktopFolder            [SHELL32.@]
+ */
+HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
+{
+    HRESULT    hres = S_OK;
+    TRACE("\n");
+
+    if(!psf) return E_INVALIDARG;
+    *psf = NULL;
+    hres = CDesktopFolder::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellFolder, psf));
+
+    TRACE("-- %p->(%p)\n",psf, *psf);
+    return hres;
+}
