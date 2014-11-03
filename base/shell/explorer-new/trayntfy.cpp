@@ -44,59 +44,59 @@ class CToolbar :
 public:
     int GetItemCount()
     {
-        return SendMessage(TB_BUTTONCOUNT);
+        return this->SendMessageW(TB_BUTTONCOUNT);
     }
 
     DWORD GetButton(int index, TBBUTTON * btn)
     {
-        return SendMessage(TB_GETBUTTON, index, (LPARAM)btn);
+        return this->SendMessageW(TB_GETBUTTON, index, (LPARAM) btn);
     }
 
     DWORD AddButton(TBBUTTON * btn)
     {
-        return SendMessage(TB_ADDBUTTONS, 1, (LPARAM) btn);
+        return this->SendMessageW(TB_ADDBUTTONS, 1, (LPARAM) btn);
     }
 
     DWORD AddButtons(int count, TBBUTTON * buttons)
     {
-        return SendMessage(TB_ADDBUTTONS, count, (LPARAM) btn);
+        return this->SendMessageW(TB_ADDBUTTONS, count, (LPARAM) buttons);
     }
 
     DWORD InsertButton(int insertAt, TBBUTTON * btn)
     {
-        return SendMessage(TB_INSERTBUTTON, insertAt, (LPARAM) btn);
+        return this->SendMessageW(TB_INSERTBUTTON, insertAt, (LPARAM) btn);
     }
 
     DWORD MoveButton(int oldIndex, int newIndex)
     {
-        return SendMessage(TB_MOVEBUTTON, oldIndex, newIndex);
+        return this->SendMessageW(TB_MOVEBUTTON, oldIndex, newIndex);
     }
 
     DWORD DeleteButton(int index)
     {
-        return SendMessage(TB_DELETEBUTTON, index, 0);
+        return this->SendMessageW(TB_DELETEBUTTON, index, 0);
     }
 
     DWORD GetButtonInfo(int cmdId, TBBUTTONINFO * info)
     {
-        return SendMessage(TB_GETBUTTONINFO, cmdId, (LPARAM) info);
+        return this->SendMessageW(TB_GETBUTTONINFO, cmdId, (LPARAM) info);
     }
     
     DWORD SetButtonInfo(int cmdId, TBBUTTONINFO * info)
     {
-        return SendMessage(TB_SETBUTTONINFO, cmdId, (LPARAM) info);
+        return this->SendMessageW(TB_SETBUTTONINFO, cmdId, (LPARAM) info);
     }
 
 public:
     DWORD SetButtonSize(int w, int h)
     {
-        return SendMessage(TB_SETBUTTONSIZE, 0, MAKELONG(w, h));
+        return this->SendMessageW(TB_SETBUTTONSIZE, 0, MAKELONG(w, h));
     }
 
 public:
     DWORD AutoSize()
     {
-        return SendMessage(TB_AUTOSIZE);
+        return this->SendMessageW(TB_AUTOSIZE);
     }
 
 public:
@@ -109,7 +109,7 @@ public:
 
     DWORD SetItemData(int index, TItemData * data)
     {
-        TBBUTTONINFO info = { 0 };
+        TBBUTTONINFOW info = { 0 };
         info.cbSize = sizeof(info);
         info.dwMask = TBIF_BYINDEX | TBIF_LPARAM;
         info.lParam = (DWORD_PTR) data;
@@ -286,7 +286,6 @@ public:
     VOID RemoveButton(IN CONST NOTIFYICONDATA *iconData)
     {
         NOTIFYICONDATA * notifyItem;
-        TBBUTTONINFO tbbi = { 0 };
 
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
