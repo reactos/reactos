@@ -26,10 +26,12 @@ class CFontsFolder :
     public CComCoClass<CFontsFolder, &CLSID_FontsFolderShortcut>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2,
-    public IContextMenu2
+    public IPersistFolder2
 {
     private:
+        CComPtr<IShellFolder> m_pisfInner;
+        CComPtr<IShellFolder2> m_pisf2Inner;
+
         /* both paths are parsible from the desktop */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
         LPCITEMIDLIST apidl;    /* currently focused font item */
@@ -68,14 +70,6 @@ class CFontsFolder :
         // IPersistFolder2
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST *pidl);
 
-        // IContextMenu
-        virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-        virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-        virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
-
-        // IContextMenu2
-        virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
         DECLARE_REGISTRY_RESOURCEID(IDR_FONTSFOLDERSHORTCUT)
         DECLARE_NOT_AGGREGATABLE(CFontsFolder)
 
@@ -87,8 +81,6 @@ class CFontsFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         END_COM_MAP()
 };
 
