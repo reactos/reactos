@@ -1,6 +1,7 @@
 /* Control Panel management
  *
  * Copyright 2001 Eric Pouech
+ * Copyright 2008 Owen Rudge
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <assert.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <windef.h>
+#include <winbase.h>
+#define NO_SHLWAPI_REG
+#include <shlwapi.h>
+#include <wine/debug.h>
+
+#include "cpanel.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 
@@ -349,12 +361,14 @@ static void Control_DoWindow(CPanel *panel, HWND hWnd, HINSTANCE hInst)
 
 static void Control_DoLaunch(CPanel *pPanel, HWND hWnd, LPCWSTR pwszCmd)
 {
+    HANDLE hMutex;
+
     /* Make a pwszCmd copy so we can modify it */
     LPWSTR pwszCmdCopy = _wcsdup(pwszCmd);
-    if (!pwszCmdCopy)
-        return;
 
     LPWSTR pwszPath = pwszCmdCopy, pwszArg = NULL, pwszArg2 = NULL;
+    if (!pwszCmdCopy)
+        return;
 
     /* Path can be quoted */
     if (pwszPath[0] == L'"')
@@ -391,7 +405,7 @@ static void Control_DoLaunch(CPanel *pPanel, HWND hWnd, LPCWSTR pwszCmd)
     TRACE("Launch %ls, arg %ls, arg2 %ls\n", pwszPath, pwszArg, pwszArg2);
 
     /* Create a mutex to disallow running multiple instances */
-    HANDLE hMutex = CreateMutexW(NULL, TRUE, PathFindFileNameW(pwszPath));
+    hMutex = CreateMutexW(NULL, TRUE, PathFindFileNameW(pwszPath));
     if (!hMutex || GetLastError() == ERROR_ALREADY_EXISTS)
     {
         TRACE("Next instance disallowed\n");
@@ -405,13 +419,13 @@ static void Control_DoLaunch(CPanel *pPanel, HWND hWnd, LPCWSTR pwszCmd)
     Control_LoadApplet(hWnd, pwszPath, pPanel);
     if (pPanel->first)
     {
+        INT i = 0;
         /* First pPanel applet is the new one */
         CPlApplet *pApplet = pPanel->first;
         assert(pApplet && pApplet->next == NULL);
         TRACE("pApplet->count %d\n", pApplet->count);
 
         /* Note: if there is only one applet, first argument is ignored */
-        INT i = 0;
         if (pApplet->count > 1 && pwszArg && pwszArg[0])
         {
             /* If arg begins with '@', number specifies applet index */
@@ -454,7 +468,7 @@ EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DW
     CPanel Panel;
 
     TRACE("(%p, %p, %s, 0x%08x)\n",
-      hWnd, hInst, debugstr_w(cmd), nCmdShow);
+	  hWnd, hInst, debugstr_w(cmd), nCmdShow);
 
     memset(&Panel, 0, sizeof(Panel));
 
@@ -471,37 +485,35 @@ EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DW
 }
 
 /*************************************************************************
- * Control_RunDLLA            [SHELL32.@]
+ * Control_RunDLLA			[SHELL32.@]
  *
  */
-EXTERN_C void WINAPI Control_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
+void WINAPI Control_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
 {
     DWORD len = MultiByteToWideChar(CP_ACP, 0, cmd, -1, NULL, 0 );
-    LPWSTR wszCmd = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    
+    LPWSTR wszCmd = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (wszCmd && MultiByteToWideChar(CP_ACP, 0, cmd, -1, wszCmd, len ))
     {
         Control_RunDLLW(hWnd, hInst, wszCmd, nCmdShow);
     }
-    
     HeapFree(GetProcessHeap(), 0, wszCmd);
 }
 
 /*************************************************************************
- * Control_FillCache_RunDLLW            [SHELL32.@]
+ * Control_FillCache_RunDLLW			[SHELL32.@]
  *
  */
-EXTERN_C HRESULT WINAPI Control_FillCache_RunDLLW(HWND hWnd, HANDLE hModule, DWORD w, DWORD x)
+HRESULT WINAPI Control_FillCache_RunDLLW(HWND hWnd, HANDLE hModule, DWORD w, DWORD x)
 {
     FIXME("%p %p 0x%08x 0x%08x stub\n", hWnd, hModule, w, x);
-    return 0;
+    return S_OK;
 }
 
 /*************************************************************************
- * Control_FillCache_RunDLLA            [SHELL32.@]
+ * Control_FillCache_RunDLLA			[SHELL32.@]
  *
  */
-EXTERN_C HRESULT WINAPI Control_FillCache_RunDLLA(HWND hWnd, HANDLE hModule, DWORD w, DWORD x)
+HRESULT WINAPI Control_FillCache_RunDLLA(HWND hWnd, HANDLE hModule, DWORD w, DWORD x)
 {
     return Control_FillCache_RunDLLW(hWnd, hModule, w, x);
 }

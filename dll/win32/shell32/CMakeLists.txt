@@ -22,7 +22,6 @@ list(APPEND SOURCE
     changenotify.cpp
     classes.cpp
     clipboard.cpp
-    control.cpp
     CMenuBand.cpp
     CMenuDeskBar.cpp
     dataobject.cpp
@@ -73,6 +72,7 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED
     ${SOURCE}
+    wine/control.c
     wine/shell32_main.c
     wine/shellole.c
     wine/shellpath.c
