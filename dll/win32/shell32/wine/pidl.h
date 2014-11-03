@@ -94,13 +94,13 @@ extern "C" {
 #define PT_FOLDER	0x31
 #define PT_VALUE	0x32
 #define PT_VALUEW	0x34
+#define PT_FOLDERW	0x35
 #define PT_WORKGRP	0x41
 #define PT_COMP		0x42
 #define PT_NETPROVIDER	0x46
 #define PT_NETWORK	0x47
 #define PT_IESPECIAL1	0x61
 #define PT_YAGUID	0x70 /* yet another guid.. */
-#define PT_CPEXT    0x71
 #define PT_IESPECIAL2	0xb1
 #define PT_SHARE	0xc3
 
@@ -115,6 +115,8 @@ typedef struct tagPIDLCPanelStruct
     WORD offsComment;		/*08*/
     CHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
 } PIDLCPanelStruct;
+
+#ifdef __REACTOS__
 
 typedef struct tagPIDLFontStruct
 {
@@ -140,6 +142,8 @@ typedef struct tagPIDLRecycleStruct
     DWORD Attributes;
     WCHAR szName[1];
 } PIDLRecycleStruct;
+
+#endif /* !__REACTOS__ */
 
 typedef struct tagGUIDStruct
 {
@@ -202,9 +206,11 @@ typedef struct tagPIDLDATA
 	  } htmlhelp;
 	  struct tagPIDLCPanelStruct cpanel;
           struct tagValueW valueW;
-        struct tagPIDLFontStruct cfont;
-        struct tagPIDLPrinterStruct cprinter;
-        struct tagPIDLRecycleStruct crecycle;
+#ifdef __REACTOS__
+          struct tagPIDLFontStruct cfont;
+          struct tagPIDLPrinterStruct cprinter;
+          struct tagPIDLRecycleStruct crecycle;
+#endif
 	}u;
 } PIDLDATA, *LPPIDLDATA;
 #include "poppack.h"
@@ -212,42 +218,44 @@ typedef struct tagPIDLDATA
 /*
  * getting special values from simple pidls
  */
-DWORD   _ILSimpleGetText    (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-DWORD   _ILSimpleGetTextW   (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize);
-BOOL    _ILGetFileDate      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-DWORD   _ILGetFileSize      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-BOOL    _ILGetExtension     (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-void    _ILGetFileType      (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
-DWORD   _ILGetFileAttributes    (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize);
+DWORD	_ILSimpleGetText	(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
+DWORD	_ILSimpleGetTextW	(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
+BOOL	_ILGetFileDate 		(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
+DWORD	_ILGetFileSize		(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
+BOOL	_ILGetExtension		(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
+void	_ILGetFileType		(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
+DWORD	_ILGetFileAttributes	(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
 
-BOOL    _ILGetFileDateTime  (LPCITEMIDLIST pidl, FILETIME *ft);
-DWORD   _ILGetDrive     (LPCITEMIDLIST, LPSTR, UINT);
+BOOL	_ILGetFileDateTime	(LPCITEMIDLIST pidl, FILETIME *ft) DECLSPEC_HIDDEN;
+DWORD	_ILGetDrive		(LPCITEMIDLIST, LPSTR, UINT) DECLSPEC_HIDDEN;
 
 /*
  * testing simple pidls
  */
-BOOL    _ILIsUnicode        (LPCITEMIDLIST pidl);
-BOOL    _ILIsDesktop        (LPCITEMIDLIST pidl);
-BOOL    _ILIsMyComputer     (LPCITEMIDLIST pidl);
-BOOL    _ILIsPrinter        (LPCITEMIDLIST pidl);
-BOOL    _ILIsMyDocuments       (LPCITEMIDLIST pidl);
-BOOL    _ILIsControlPanel       (LPCITEMIDLIST pidl);
-BOOL    _ILIsBitBucket      (LPCITEMIDLIST pidl);
-BOOL    _ILIsAdminTools (LPCITEMIDLIST pidl);
-BOOL    _ILIsNetHood      (LPCITEMIDLIST pidl);
-BOOL    _ILIsDrive      (LPCITEMIDLIST pidl);
-BOOL    _ILIsFolder     (LPCITEMIDLIST pidl);
-BOOL    _ILIsValue      (LPCITEMIDLIST pidl);
-BOOL    _ILIsSpecialFolder  (LPCITEMIDLIST pidl);
-BOOL    _ILIsPidlSimple     (LPCITEMIDLIST pidl);
-BOOL    _ILIsCPanelStruct   (LPCITEMIDLIST pidl);
-static __inline
+BOOL	_ILIsUnicode		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	_ILIsDesktop		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	_ILIsMyComputer		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+#ifdef __REACTOS__
+BOOL	_ILIsPrinter		(LPCITEMIDLIST pidl);
+BOOL	_ILIsMyDocuments	(LPCITEMIDLIST pidl);
+BOOL	_ILIsControlPanel	(LPCITEMIDLIST pidl);
+BOOL	_ILIsBitBucket		(LPCITEMIDLIST pidl);
+BOOL	_ILIsAdminTools		(LPCITEMIDLIST pidl);
+BOOL	_ILIsNetHood		(LPCITEMIDLIST pidl);
+#endif
+BOOL	_ILIsDrive		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	_ILIsFolder		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	_ILIsValue		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	_ILIsSpecialFolder	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	_ILIsPidlSimple		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+static inline 
 BOOL    _ILIsEqualSimple        (LPCITEMIDLIST pidlA, LPCITEMIDLIST pidlB)
 {
     return (pidlA->mkid.cb > 0 && !memcmp(pidlA, pidlB, pidlA->mkid.cb)) ||
             (!pidlA->mkid.cb && !pidlB->mkid.cb);
 }
-static __inline
+static inline
 BOOL    _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl); }
 
 /*
@@ -257,52 +265,55 @@ BOOL    _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl)
 /* Creates a PIDL with guid format and type type, which must be one of PT_GUID,
  * PT_SHELLEXT, or PT_YAGUID.
  */
-LPITEMIDLIST    _ILCreateGuid(PIDLTYPE type, REFIID guid);
+LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid) DECLSPEC_HIDDEN;
 
 /* Like _ILCreateGuid, but using the string szGUID. */
-LPITEMIDLIST    _ILCreateGuidFromStrA(LPCSTR szGUID);
-LPITEMIDLIST    _ILCreateGuidFromStrW(LPCWSTR szGUID);
+LPITEMIDLIST	_ILCreateGuidFromStrA(LPCSTR szGUID) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateGuidFromStrW(LPCWSTR szGUID) DECLSPEC_HIDDEN;
 
 /* Commonly used PIDLs representing file system objects. */
-LPITEMIDLIST    _ILCreateDesktop    (void);
-LPITEMIDLIST    _ILCreateFromFindDataW(const WIN32_FIND_DATAW *stffile);
-HRESULT     _ILCreateFromPathW  (LPCWSTR szPath, LPITEMIDLIST* ppidl);
+LPITEMIDLIST	_ILCreateDesktop	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateFromFindDataW(const WIN32_FIND_DATAW *stffile) DECLSPEC_HIDDEN;
+HRESULT		_ILCreateFromPathW	(LPCWSTR szPath, LPITEMIDLIST* ppidl) DECLSPEC_HIDDEN;
 
 /* Other helpers */
-LPITEMIDLIST    _ILCreateMyComputer (void);
-LPITEMIDLIST    _ILCreateMyDocuments    (void);
-LPITEMIDLIST    _ILCreateIExplore   (void);
-LPITEMIDLIST    _ILCreateControlPanel   (void);
-LPITEMIDLIST    _ILCreatePrinters   (void);
-LPITEMIDLIST    _ILCreateNetwork    (void);
-LPITEMIDLIST    _ILCreateNetHood    (void);
-LPITEMIDLIST    _ILCreateAdminTools (void);
-LPITEMIDLIST    _ILCreateFont       (void);
-LPITEMIDLIST    _ILCreateBitBucket  (void);
-LPITEMIDLIST    _ILCreateDrive      (LPCWSTR);
+LPITEMIDLIST	_ILCreateMyComputer	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateMyDocuments	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateIExplore	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateControlPanel	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreatePrinters	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateNetwork	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateNetHood	(void) DECLSPEC_HIDDEN;
+#ifdef __REACTOS__
+LPITEMIDLIST	_ILCreateAdminTools	(void);
+LPITEMIDLIST	_ILCreateFont		(void);
+#endif
+LPITEMIDLIST	_ILCreateBitBucket	(void) DECLSPEC_HIDDEN;
+LPITEMIDLIST	_ILCreateDrive		(LPCWSTR) DECLSPEC_HIDDEN;
+LPITEMIDLIST    _ILCreateEntireNetwork  (void) DECLSPEC_HIDDEN;
 
 /*
  * helper functions (getting struct-pointer)
  */
-LPPIDLDATA  _ILGetDataPointer   (LPCITEMIDLIST);
-LPSTR       _ILGetTextPointer   (LPCITEMIDLIST);
-IID     *_ILGetGUIDPointer  (LPCITEMIDLIST pidl);
-FileStructW     *_ILGetFileStructW      (LPCITEMIDLIST pidl);
+LPPIDLDATA	_ILGetDataPointer	(LPCITEMIDLIST) DECLSPEC_HIDDEN;
+LPSTR		_ILGetTextPointer	(LPCITEMIDLIST) DECLSPEC_HIDDEN;
+IID		*_ILGetGUIDPointer	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+FileStructW     *_ILGetFileStructW      (LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 
 /*
  * debug helper
  */
-void    pdump   (LPCITEMIDLIST pidl);
-BOOL    pcheck  (LPCITEMIDLIST pidl);
+void	pdump	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
+BOOL	pcheck	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 
 /*
  * aPidl helper
  */
-void _ILFreeaPidl(LPITEMIDLIST * apidl, UINT cidl);
-LPITEMIDLIST * _ILCopyaPidl(const LPCITEMIDLIST * apidlsrc, UINT cidl);
-LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida);
+void _ILFreeaPidl(LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
+LPITEMIDLIST * _ILCopyaPidl(const LPCITEMIDLIST * apidlsrc, UINT cidl) DECLSPEC_HIDDEN;
+LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida) DECLSPEC_HIDDEN;
 
-BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type);
+BOOL ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type) DECLSPEC_HIDDEN;
 
 #ifdef __cplusplus
 } /* extern "C" */
