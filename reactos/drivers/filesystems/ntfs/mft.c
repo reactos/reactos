@@ -106,37 +106,43 @@ FindAttributeHelper(PDEVICE_EXTENSION Vcb,
             PNTFS_ATTR_RECORD ListAttrRecordEnd;
 
             // Do not handle non-resident yet
-            ASSERT(!(AttrRecord->IsNonResident & 1));
-
-            ListContext = PrepareAttributeContext(AttrRecord);
-
-            ListSize = AttributeDataLength(&ListContext->Record);
-            if(ListSize <= 0xFFFFFFFF)
-                ListBuffer = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
-            else
-                ListBuffer = NULL;
-
-            if(!ListBuffer)
+            if (AttrRecord->IsNonResident)
             {
-                DPRINT("Failed to allocate memory: %x\n", (ULONG)ListSize);
+                UNIMPLEMENTED;
                 continue;
             }
-
-            ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
-            ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
-
-            if (ReadAttribute(Vcb, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
+            else
             {
-                Context = FindAttributeHelper(Vcb, ListAttrRecord, ListAttrRecordEnd,
-                                              Type, Name, NameLength);
+                ListContext = PrepareAttributeContext(AttrRecord);
 
-                ReleaseAttributeContext(ListContext);
-                ExFreePoolWithTag(ListBuffer, TAG_NTFS);
+                ListSize = AttributeDataLength(&ListContext->Record);
+                if(ListSize <= 0xFFFFFFFF)
+                    ListBuffer = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
+                else
+                    ListBuffer = NULL;
 
-                if (Context != NULL)
+                if(!ListBuffer)
                 {
-                    DPRINT("Found context = %p\n", Context);
-                    return Context;
+                    DPRINT("Failed to allocate memory: %x\n", (ULONG)ListSize);
+                    continue;
+                }
+
+                ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
+                ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
+
+                if (ReadAttribute(Vcb, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
+                {
+                    Context = FindAttributeHelper(Vcb, ListAttrRecord, ListAttrRecordEnd,
+                                                  Type, Name, NameLength);
+
+                    ReleaseAttributeContext(ListContext);
+                    ExFreePoolWithTag(ListBuffer, TAG_NTFS);
+
+                    if (Context != NULL)
+                    {
+                        DPRINT("Found context = %p\n", Context);
+                        return Context;
+                    }
                 }
             }
         }
@@ -310,6 +316,7 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
     Status = NtfsReadDisk(Vcb->StorageDevice,
                           DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster + Offset - CurrentOffset,
                           ReadLength,
+                          Vcb->NtfsInfo.BytesPerSector,
                           (PVOID)Buffer,
                           FALSE);
     if (NT_SUCCESS(Status))
@@ -344,6 +351,7 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
                 Status = NtfsReadDisk(Vcb->StorageDevice,
                                       DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster,
                                       ReadLength,
+                                      Vcb->NtfsInfo.BytesPerSector,
                                       (PVOID)Buffer,
                                       FALSE);
                 if (!NT_SUCCESS(Status))

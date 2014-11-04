@@ -36,6 +36,7 @@ NTSTATUS
 NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
              IN LONGLONG StartingOffset,
              IN ULONG Length,
+             IN ULONG SectorSize,
              IN OUT PUCHAR Buffer,
              IN BOOLEAN Override)
 {
@@ -45,20 +46,41 @@ NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
     KEVENT Event;
     PIRP Irp;
     NTSTATUS Status;
+    ULONGLONG RealReadOffset;
+    ULONG RealLength;
+    BOOLEAN AllocatedBuffer = FALSE;
+    PUCHAR ReadBuffer = Buffer;
 
-    DPRINT("NtfsReadDisk(%p, %I64x, %u, %p, %d)\n", DeviceObject, StartingOffset, Length, Buffer, Override);
+    DPRINT("NtfsReadDisk(%p, %I64x, %u, %u, %p, %d)\n", DeviceObject, StartingOffset, Length, SectorSize, Buffer, Override);
 
     KeInitializeEvent(&Event,
                       NotificationEvent,
                       FALSE);
 
-    Offset.QuadPart = StartingOffset;
+    RealReadOffset = (ULONGLONG)StartingOffset;
+    RealLength = Length;
+
+    if ((RealReadOffset % SectorSize) != 0 || (RealLength % SectorSize) != 0)
+    {
+        RealReadOffset = ROUND_DOWN(StartingOffset, SectorSize);
+        RealLength = ROUND_UP(Length, SectorSize);
+
+        ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength + SectorSize, TAG_NTFS);
+        if (ReadBuffer == NULL)
+        {
+            DPRINT1("Not enough memory!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        AllocatedBuffer = TRUE;
+    }
+
+    Offset.QuadPart = RealReadOffset;
 
     DPRINT("Building synchronous FSD Request...\n");
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
                                        DeviceObject,
-                                       Buffer,
-                                       Length,
+                                       ReadBuffer,
+                                       RealLength,
                                        &Offset,
                                        &Event,
                                        &IoStatus);
@@ -86,6 +108,12 @@ NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
         Status = IoStatus.Status;
     }
 
+    if (NT_SUCCESS(Status) && AllocatedBuffer)
+    {
+        RtlCopyMemory(Buffer, ReadBuffer + (StartingOffset - RealReadOffset), Length);
+        ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
+    }
+
     DPRINT("NtfsReadDisk() done (Status %x)\n", Status);
 
     return Status;
@@ -105,7 +133,7 @@ NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
     Offset = (LONGLONG)DiskSector * (LONGLONG)SectorSize;
     BlockSize = SectorCount * SectorSize;
 
-    return NtfsReadDisk(DeviceObject, Offset, BlockSize, Buffer, Override);
+    return NtfsReadDisk(DeviceObject, Offset, BlockSize, SectorSize, Buffer, Override);
 }
 
 

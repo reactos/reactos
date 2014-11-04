@@ -10,6 +10,7 @@
 #define TAG_NTFS 'SFTN'
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 #define DEVICE_NAME L"\\Ntfs"
 
@@ -456,6 +457,7 @@ NTSTATUS
 NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
              IN LONGLONG StartingOffset,
              IN ULONG Length,
+             IN ULONG SectorSize,
              IN OUT PUCHAR Buffer,
              IN BOOLEAN Override);
 
