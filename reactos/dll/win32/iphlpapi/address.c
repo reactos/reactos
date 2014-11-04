@@ -89,7 +89,6 @@ GetInterfacesList(
     return Status;
 }
 
-#if 0
 static
 NTSTATUS
 GetSnmpInfo(
@@ -128,7 +127,46 @@ GetSnmpInfo(
 
     return Status;
 }
-#endif
+
+static
+NTSTATUS
+GetAddrEntries(
+    _In_ HANDLE TcpFile,
+    _In_ TDIEntityID InterfaceID,
+    _Out_ IPAddrEntry* Entries,
+    _In_ ULONG NumEntries)
+{
+    TCP_REQUEST_QUERY_INFORMATION_EX TcpQueryInfo;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
+
+    ZeroMemory(&TcpQueryInfo, sizeof(TcpQueryInfo));
+    TcpQueryInfo.ID.toi_class = INFO_CLASS_PROTOCOL;
+    TcpQueryInfo.ID.toi_type = INFO_TYPE_PROVIDER;
+    TcpQueryInfo.ID.toi_id = IP_MIB_ADDRTABLE_ENTRY_ID;
+    TcpQueryInfo.ID.toi_entity = InterfaceID;
+
+    Status = NtDeviceIoControlFile(
+        TcpFile,
+        NULL,
+        NULL,
+        NULL,
+        &StatusBlock,
+        IOCTL_TCP_QUERY_INFORMATION_EX,
+        &TcpQueryInfo,
+        sizeof(TcpQueryInfo),
+        Entries,
+        NumEntries * sizeof(Entries[0]));
+    if (Status == STATUS_PENDING)
+    {
+        /* So we have to wait a bit */
+        Status = NtWaitForSingleObject(TcpFile, FALSE, NULL);
+        if (NT_SUCCESS(Status))
+            Status = StatusBlock.Status;
+    }
+
+    return Status;
+}
 
 /*
  * Fills the IFEntry buffer from tcpip.sys.
@@ -439,14 +477,17 @@ GetAdaptersAddresses(
         return ERROR_NO_DATA;
     }
 
-/* Disabled for now until someone knows how to differentiate unicast/multicast whatver adresses */
-#if 0
-    /* See what we will fill our buffer with */
+    /* See if we have anything to add */
+    // FIXME: Anycast and multicast
+    if ((Flags & (GAA_FLAG_SKIP_UNICAST | GAA_FLAG_INCLUDE_PREFIX)) == GAA_FLAG_SKIP_UNICAST)
+        goto Success;
+
+    /* Now fill in the addresses */
     for (i = 0; i < InterfacesCount; i++)
     {
         /* Look for network layers */
-        if ((InterfacesList[i].tei_entity == CL_TL_ENTITY)
-                || (InterfacesList[i].tei_entity == CO_TL_ENTITY))
+        if ((InterfacesList[i].tei_entity == CL_NL_ENTITY)
+                || (InterfacesList[i].tei_entity == CO_NL_ENTITY))
         {
             IPSNMPInfo SnmpInfo;
             PIP_ADAPTER_ADDRESSES CurrentAA = NULL;
@@ -457,6 +498,9 @@ GetAdaptersAddresses(
             Status = GetSnmpInfo(TcpFile, InterfacesList[i], &SnmpInfo);
             if (!NT_SUCCESS(Status))
                 goto Error;
+
+            if (SnmpInfo.ipsi_numaddr == 0)
+                continue;
 
             /* Allocate the address entry array and get them */
             AddrEntries = HeapAlloc(GetProcessHeap(),
@@ -493,12 +537,81 @@ GetAdaptersAddresses(
                         continue;
                     }
                 }
+
+                ERR("address is 0x%08x, mask is 0x%08x\n", AddrEntries[j].iae_addr, AddrEntries[j].iae_mask);
+
+                //FIXME: For now reactos only supports unicast addresses
+                if (!(Flags & GAA_FLAG_SKIP_UNICAST))
+                {
+                    ULONG Size = sizeof(IP_ADAPTER_UNICAST_ADDRESS) + sizeof(SOCKADDR);
+
+                    if (Ptr && (RemainingSize >= Size))
+                    {
+                        PIP_ADAPTER_UNICAST_ADDRESS UnicastAddress = (PIP_ADAPTER_UNICAST_ADDRESS)Ptr;
+
+                        /* Fill in the structure */
+                        UnicastAddress->Length = sizeof(IP_ADAPTER_UNICAST_ADDRESS);
+                        UnicastAddress->Next = CurrentAA->FirstUnicastAddress;
+
+                        // FIXME: Put meaningful value here
+                        UnicastAddress->Flags = 0;
+                        UnicastAddress->PrefixOrigin = IpPrefixOriginOther;
+                        UnicastAddress->SuffixOrigin = IpSuffixOriginOther;
+                        UnicastAddress->DadState = IpDadStatePreferred;
+                        UnicastAddress->ValidLifetime = 0xFFFFFFFF;
+                        UnicastAddress->PreferredLifetime = 0xFFFFFFFF;
+
+                        /* Set the address */
+                        //FIXME: ipv4 only (again...)
+                        UnicastAddress->Address.lpSockaddr = (LPSOCKADDR)(UnicastAddress + 1);
+                        UnicastAddress->Address.iSockaddrLength = sizeof(AddrEntries[j].iae_addr);
+                        UnicastAddress->Address.lpSockaddr->sa_family = AF_INET;
+                        memcpy(UnicastAddress->Address.lpSockaddr->sa_data, &AddrEntries[j].iae_addr, sizeof(AddrEntries[j].iae_addr));
+
+                        CurrentAA->FirstUnicastAddress = UnicastAddress;
+                        Ptr += Size;
+                        RemainingSize -= Size;
+                    }
+
+                    TotalSize += Size;
+                }
+
+                if (Flags & GAA_FLAG_INCLUDE_PREFIX)
+                {
+                    ULONG Size = sizeof(IP_ADAPTER_PREFIX) + sizeof(SOCKADDR);
+
+                    if (Ptr && (RemainingSize >= Size))
+                    {
+                        PIP_ADAPTER_PREFIX Prefix = (PIP_ADAPTER_PREFIX)Ptr;
+
+                        /* Fill in the structure */
+                        Prefix->Length = sizeof(IP_ADAPTER_PREFIX);
+                        Prefix->Next = CurrentAA->FirstPrefix;
+
+                        /* Set the address */
+                        //FIXME: ipv4 only (again...)
+                        Prefix->Address.lpSockaddr = (LPSOCKADDR)(Prefix + 1);
+                        Prefix->Address.iSockaddrLength = sizeof(AddrEntries[j].iae_mask);
+                        Prefix->Address.lpSockaddr->sa_family = AF_INET;
+                        memcpy(Prefix->Address.lpSockaddr->sa_data, &AddrEntries[j].iae_mask, sizeof(AddrEntries[j].iae_mask));
+
+                        /* Compute the prefix size */
+                        _BitScanReverse(&Prefix->PrefixLength, AddrEntries[j].iae_mask);
+
+                        CurrentAA->FirstPrefix = Prefix;
+                        Ptr += Size;
+                        RemainingSize -= Size;
+                    }
+
+                    TotalSize += Size;
+                }
             }
 
+            HeapFree(GetProcessHeap(), 0, AddrEntries);
         }
     }
-#endif
 
+Success:
     /* We're done */
     HeapFree(GetProcessHeap(), 0, InterfacesList);
     NtClose(TcpFile);
