@@ -195,7 +195,7 @@ static void InitializeTreeView( browse_info *info )
     HIMAGELIST hImageList;
     HRESULT hr;
     IShellFolder *lpsfParent, *lpsfRoot;
-    IEnumIDList * pEnumChildren;
+    IEnumIDList * pEnumChildren = NULL;
     HTREEITEM item;
     DWORD flags;
     LPCITEMIDLIST root = info->lpBrowseInfo->pidlRoot;
@@ -245,14 +245,16 @@ static void InitializeTreeView( browse_info *info )
         return;
     }
 
-    if (pidlChild && pidlChild->mkid.cb) {
+    if (!_ILIsEmpty(pidlChild)) {
         hr = IShellFolder_BindToObject(lpsfParent, pidlChild, 0, &IID_IShellFolder, (LPVOID*)&lpsfRoot);
     } else {
         lpsfRoot = lpsfParent;
+        hr = IShellFolder_AddRef(lpsfParent);
     }
 
     if (FAILED(hr)) {
         WARN("Could not bind to root shell folder! hr = %08x\n", hr);
+        IShellFolder_Release(lpsfParent);
         ILFree(pidlChild);
         ILFree(pidlParent);
         return;
@@ -262,6 +264,8 @@ static void InitializeTreeView( browse_info *info )
     hr = IShellFolder_EnumObjects( lpsfRoot, info->hWnd, flags, &pEnumChildren );
     if (FAILED(hr)) {
         WARN("Could not get child iterator! hr = %08x\n", hr);
+        IShellFolder_Release(lpsfParent);
+        IShellFolder_Release(lpsfRoot);
         ILFree(pidlChild);
         ILFree(pidlParent);
         return;
@@ -274,6 +278,8 @@ static void InitializeTreeView( browse_info *info )
 
     ILFree(pidlChild);
     ILFree(pidlParent);
+    IShellFolder_Release(lpsfRoot);
+    IShellFolder_Release(lpsfParent);
 }
 
 static int GetIcon(LPCITEMIDLIST lpi, UINT uFlags)
@@ -423,8 +429,8 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
     while (S_OK == IEnumIDList_Next(lpe,1,&pidlTemp,&ulFetched))
     {
         ULONG ulAttrs = SFGAO_HASSUBFOLDER | SFGAO_FOLDER;
-        IEnumIDList* pEnumIL;
-        IShellFolder* pSFChild;
+	    IEnumIDList* pEnumIL = NULL;
+	    IShellFolder* pSFChild = NULL;
         IShellFolder_GetAttributesOf(lpsf, 1, (LPCITEMIDLIST*)&pidlTemp, &ulAttrs);
         if (ulAttrs & SFGAO_FOLDER)
         {
@@ -438,9 +444,11 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                         if ((IEnumIDList_Skip(pEnumIL, 1) != S_OK) ||
                              FAILED(IEnumIDList_Reset(pEnumIL)))
                         {
+                            IEnumIDList_Release(pEnumIL);
                             pEnumIL = NULL;
                         }
                     }
+                    IShellFolder_Release(pSFChild);
                 }
         }
 
@@ -519,7 +527,7 @@ static LRESULT BrsFolder_Treeview_Delete( browse_info *info, NMTREEVIEWW *pnmtv 
 
 static LRESULT BrsFolder_Treeview_Expand( browse_info *info, NMTREEVIEWW *pnmtv )
 {
-    IShellFolder *lpsf2;
+    IShellFolder *lpsf2 = NULL;
     LPTV_ITEMDATA lptvid = (LPTV_ITEMDATA) pnmtv->itemNew.lParam;
     HRESULT r;
 
@@ -528,7 +536,7 @@ static LRESULT BrsFolder_Treeview_Expand( browse_info *info, NMTREEVIEWW *pnmtv 
     if ((pnmtv->itemNew.state & TVIS_EXPANDEDONCE))
         return 0;
 
-    if (lptvid->lpi && lptvid->lpi->mkid.cb) {
+    if (!_ILIsEmpty(lptvid->lpi)) {
         r = IShellFolder_BindToObject(lptvid->lpsfParent, lptvid->lpi, 0, &IID_IShellFolder, (void**)&lpsf2);
     } else {
         lpsf2 = lptvid->lpsfParent;
@@ -564,7 +572,7 @@ static HRESULT BrsFolder_Treeview_Changed( browse_info *info, NMTREEVIEWW *pnmtv
     browsefolder_callback( info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED,
                            (LPARAM)info->pidlRet );
     BrsFolder_CheckValidSelection( info, lptvid );
-    return 0;
+    return S_OK;
 }
 
 static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv)
@@ -745,6 +753,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(FAILED(hr))
         return hr;
     hr = IShellFolder_BindToObject(desktop, info->pidlRet, 0, &IID_IShellFolder, (void**)&cur);
+    IShellFolder_Release(desktop);
     if(FAILED(hr))
         return hr;
 
@@ -760,6 +769,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(len<MAX_PATH)
         name[len++] = '\\';
     hr = ISFHelper_GetUniqueName(sfhelper, &name[len], MAX_PATH-len);
+    ISFHelper_Release(sfhelper);
     if(FAILED(hr))
         goto cleanup;
 
@@ -801,6 +811,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
         goto cleanup;
 
     added = InsertTreeViewItem(info, cur, new_item, item_data->lpifq, NULL, parent);
+    IShellFolder_Release(cur);
     SHFree(new_item);
 
     SendMessageW(info->hwndTreeView, TVM_SORTCHILDREN, FALSE, (LPARAM)parent);
@@ -859,6 +870,7 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
 
         hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL, (LPOLESTR)selection,
                                            NULL, &pidlSelection, NULL);
+        IShellFolder_Release(psfDesktop);
         if (FAILED(hr))
             goto done;
     }
