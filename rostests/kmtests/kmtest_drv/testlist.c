@@ -50,6 +50,7 @@ KMT_TESTFUNC Test_ObTypeClean;
 KMT_TESTFUNC Test_ObTypeNoClean;
 KMT_TESTFUNC Test_ObTypes;
 KMT_TESTFUNC Test_PsNotify;
+KMT_TESTFUNC Test_SeInheritance;
 KMT_TESTFUNC Test_SeQueryInfoToken;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
@@ -107,6 +108,7 @@ const KMT_TEST TestList[] =
     { "-ObTypeNoClean",                     Test_ObTypeNoClean },
     { "ObTypes",                            Test_ObTypes },
     { "PsNotify",                           Test_PsNotify },
+    { "SeInheritance",                      Test_SeInheritance },
     { "-SeQueryInfoToken",                  Test_SeQueryInfoToken },
     { "RtlAvlTreeKM",                       Test_RtlAvlTree },
     { "RtlExceptionKM",                     Test_RtlException },
