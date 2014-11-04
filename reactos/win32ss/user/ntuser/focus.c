@@ -25,6 +25,9 @@ IsFGLocked(VOID)
    return (gppiLockSFW || guSFWLockCount);
 }
 
+/*
+  Get capture window via foreground Queue.
+*/
 HWND FASTCALL
 IntGetCaptureWindow(VOID)
 {
@@ -701,7 +704,7 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
         (Wnd && !VerifyWnd(Wnd)) ||
         ThreadQueue != pti->MessageQueue )
    {
-      ERR("SetActiveWindow: Summery ERROR, active state changed!\n");
+      ERR("SetActiveWindow: Summary ERROR, active state changed!\n");
       return FALSE;
    }
 
@@ -937,6 +940,7 @@ co_UserSetCapture(HWND hWnd)
    {
       if (Window->head.pti->MessageQueue != ThreadQueue)
       {
+         ERR("Window Thread dos not match Current!\n");
          return NULL;
       }
    }
@@ -957,13 +961,10 @@ co_UserSetCapture(HWND hWnd)
    {
       if (ThreadQueue->MenuOwner && Window) ThreadQueue->QF_flags |= QF_CAPTURELOCKED;
 
-      //co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
       co_IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
 
       ThreadQueue->QF_flags &= ~QF_CAPTURELOCKED;
    }
-
-   ThreadQueue->spwndCapture = Window;
 
    if (hWnd == NULL) // Release mode.
    {
