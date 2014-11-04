@@ -634,7 +634,7 @@ SeQuerySecurityDescriptorInfo(
     ULONG GroupLength = 0;
     ULONG DaclLength = 0;
     ULONG SaclLength = 0;
-    ULONG Control = 0;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
     ULONG_PTR Current;
     ULONG SdLength;
 
@@ -711,7 +711,7 @@ SeQuerySecurityDescriptorInfo(
     /* Build the new security descrtiptor */
     RtlCreateSecurityDescriptorRelative(RelSD,
                                         SECURITY_DESCRIPTOR_REVISION);
-    RelSD->Control = (USHORT)Control;
+    RelSD->Control = Control;
 
     Current = (ULONG_PTR)(RelSD + 1);
 
@@ -826,16 +826,15 @@ SeSetSecurityDescriptorInfoEx(
     PISECURITY_DESCRIPTOR_RELATIVE ObjectSd;
     PISECURITY_DESCRIPTOR_RELATIVE NewSd;
     PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
-    PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
-    PSID Owner = 0;
-    PSID Group = 0;
-    PACL Dacl = 0;
-    PACL Sacl = 0;
-    ULONG OwnerLength = 0;
-    ULONG GroupLength = 0;
-    ULONG DaclLength = 0;
-    ULONG SaclLength = 0;
-    ULONG Control = 0;
+    PSID Owner;
+    PSID Group;
+    PACL Dacl;
+    PACL Sacl;
+    ULONG OwnerLength;
+    ULONG GroupLength;
+    ULONG DaclLength;
+    ULONG SaclLength;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
     ULONG Current;
     SECURITY_INFORMATION SecurityInformation;
 
@@ -854,116 +853,62 @@ SeSetSecurityDescriptorInfoEx(
     /* Get owner and owner size */
     if (SecurityInformation & OWNER_SECURITY_INFORMATION)
     {
-        if (SecurityDescriptor->Owner != NULL)
-        {
-            if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
-                Owner = (PSID)((ULONG_PTR)RelSD->Owner +
-                               (ULONG_PTR)SecurityDescriptor);
-            else
-                Owner = (PSID)SecurityDescriptor->Owner;
-            OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
-        }
-
+        Owner = SepGetOwnerFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & SE_OWNER_DEFAULTED);
     }
     else
     {
-        if (ObjectSd->Owner)
-        {
-            Owner = (PSID)((ULONG_PTR)ObjectSd->Owner + (ULONG_PTR)ObjectSd);
-            OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
-        }
-
+        Owner = SepGetOwnerFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
     }
+    OwnerLength = Owner ? RtlLengthSid(Owner) : 0;
+    NT_ASSERT(OwnerLength % sizeof(ULONG) == 0);
 
     /* Get group and group size */
     if (SecurityInformation & GROUP_SECURITY_INFORMATION)
     {
-        if (SecurityDescriptor->Group != NULL)
-        {
-            if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-                Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
-                               (ULONG_PTR)SecurityDescriptor);
-            else
-                Group = (PSID)SecurityDescriptor->Group;
-            GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
-        }
-
+        Group = SepGetGroupFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & SE_GROUP_DEFAULTED);
     }
     else
     {
-        if (ObjectSd->Group)
-        {
-            Group = (PSID)((ULONG_PTR)ObjectSd->Group + (ULONG_PTR)ObjectSd);
-            GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
-        }
-
+        Group = SepGetGroupFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
     }
+    GroupLength = Group ? RtlLengthSid(Group) : 0;
+    NT_ASSERT(GroupLength % sizeof(ULONG) == 0);
 
     /* Get DACL and DACL size */
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
     {
-        if ((SecurityDescriptor->Control & SE_DACL_PRESENT) &&
-            (SecurityDescriptor->Dacl != NULL))
-        {
-            if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-                Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl +
-                              (ULONG_PTR)SecurityDescriptor);
-            else
-                Dacl = (PACL)SecurityDescriptor->Dacl;
-
-            DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
-        }
-
+        Dacl = SepGetDaclFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
     }
     else
     {
-        if ((ObjectSd->Control & SE_DACL_PRESENT) && (ObjectSd->Dacl))
-        {
-            Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
-            DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
-        }
-
+        Dacl = SepGetDaclFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
     }
+    DaclLength = Dacl ? ROUND_UP((ULONG)Dacl->AclSize, 4) : 0;
 
     /* Get SACL and SACL size */
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
-        if ((SecurityDescriptor->Control & SE_SACL_PRESENT) &&
-            (SecurityDescriptor->Sacl != NULL))
-        {
-            if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-                Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl +
-                              (ULONG_PTR)SecurityDescriptor);
-            else
-                Sacl = (PACL)SecurityDescriptor->Sacl;
-            SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
-        }
-
+        Sacl = SepGetSaclFromDescriptor(SecurityDescriptor);
         Control |= (SecurityDescriptor->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
     }
     else
     {
-        if ((ObjectSd->Control & SE_SACL_PRESENT) && (ObjectSd->Sacl))
-        {
-            Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
-            SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
-        }
-
+        Sacl = SepGetSaclFromDescriptor(ObjectSd);
         Control |= (ObjectSd->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
     }
+    SaclLength = Sacl ? ROUND_UP((ULONG)Sacl->AclSize, 4) : 0;
 
     NewSd = ExAllocatePool(NonPagedPool,
                            sizeof(SECURITY_DESCRIPTOR_RELATIVE) + OwnerLength + GroupLength +
                            DaclLength + SaclLength);
     if (NewSd == NULL)
     {
-        ObDereferenceObject(Object);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -971,7 +916,7 @@ SeSetSecurityDescriptorInfoEx(
                                 SECURITY_DESCRIPTOR_REVISION1);
 
     /* We always build a self-relative descriptor */
-    NewSd->Control = (USHORT)Control | SE_SELF_RELATIVE;
+    NewSd->Control = Control | SE_SELF_RELATIVE;
 
     Current = sizeof(SECURITY_DESCRIPTOR);
 
