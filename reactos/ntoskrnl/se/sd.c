@@ -1173,12 +1173,12 @@ SeAssignSecurityEx(
     PISECURITY_DESCRIPTOR ExplicitDescriptor = _ExplicitDescriptor;
     PISECURITY_DESCRIPTOR_RELATIVE Descriptor;
     PTOKEN Token;
-    ULONG OwnerLength = 0;
-    ULONG GroupLength = 0;
-    ULONG DaclLength = 0;
-    ULONG SaclLength = 0;
-    ULONG Length = 0;
-    ULONG Control = 0;
+    ULONG OwnerLength;
+    ULONG GroupLength;
+    ULONG DaclLength;
+    ULONG SaclLength;
+    ULONG Length;
+    SECURITY_DESCRIPTOR_CONTROL Control = 0;
     ULONG Current;
     PSID Owner = NULL;
     PSID Group = NULL;
@@ -1191,6 +1191,13 @@ SeAssignSecurityEx(
     UNREFERENCED_PARAMETER(PoolType);
 
     PAGED_CODE();
+
+    *NewDescriptor = NULL;
+
+    if (!ARGUMENT_PRESENT(SubjectContext))
+    {
+        return STATUS_NO_TOKEN;
+    }
 
     /* Lock subject context */
     SeLockSubjectContext(SubjectContext);
@@ -1210,48 +1217,33 @@ SeAssignSecurityEx(
         DPRINT("Use explicit owner sid!\n");
         Owner = SepGetOwnerFromDescriptor(ExplicitDescriptor);
     }
-
     if (!Owner)
     {
-        if (Token != NULL)
-        {
-            DPRINT("Use token owner sid!\n");
-            Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
-        }
-        else
-        {
-            DPRINT("Use default owner sid!\n");
-            Owner = SeLocalSystemSid;
-        }
-
-        Control |= SE_OWNER_DEFAULTED;
+        DPRINT("Use token owner sid!\n");
+        Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
     }
 
-    OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+    OwnerLength = RtlLengthSid(Owner);
+    NT_ASSERT(OwnerLength % sizeof(ULONG) == 0);
 
     /* Inherit the Group SID */
     if (ExplicitDescriptor != NULL)
     {
         Group = SepGetGroupFromDescriptor(ExplicitDescriptor);
     }
-
     if (!Group)
     {
-        if (Token != NULL)
-        {
-            DPRINT("Use token group sid!\n");
-            Group = Token->PrimaryGroup;
-        }
-        else
-        {
-            DPRINT("Use default group sid!\n");
-            Group = SeLocalSystemSid;
-        }
-
-        Control |= SE_GROUP_DEFAULTED;
+        DPRINT("Use token group sid!\n");
+        Group = Token->PrimaryGroup;
+    }
+    if (!Group)
+    {
+        SeUnlockSubjectContext(SubjectContext);
+        return STATUS_INVALID_PRIMARY_GROUP;
     }
 
-    GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+    GroupLength = RtlLengthSid(Group);
+    NT_ASSERT(GroupLength % sizeof(ULONG) == 0);
 
     /* Inherit the DACL */
     if (ExplicitDescriptor != NULL &&
@@ -1268,23 +1260,17 @@ SeAssignSecurityEx(
         DPRINT("Use parent DACL!\n");
         /* FIXME: Inherit */
         Dacl = SepGetDaclFromDescriptor(ParentDescriptor);
-        Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
+        Control |= SE_DACL_PRESENT;
     }
-    else if (Token != NULL && Token->DefaultDacl != NULL)
+    else if (Token->DefaultDacl)
     {
         DPRINT("Use token default DACL!\n");
-        /* FIXME: Inherit */
         Dacl = Token->DefaultDacl;
-        Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
-    }
-    else
-    {
-        DPRINT("Use NULL DACL!\n");
-        Dacl = NULL;
-        Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
+        Control |= SE_DACL_PRESENT;
     }
 
-    DaclLength = (Dacl != NULL) ? ROUND_UP(Dacl->AclSize, 4) : 0;
+    DaclLength = (Dacl != NULL) ? Dacl->AclSize : 0;
+    NT_ASSERT(DaclLength % sizeof(ULONG) == 0);
 
     /* Inherit the SACL */
     if (ExplicitDescriptor != NULL &&
@@ -1301,10 +1287,11 @@ SeAssignSecurityEx(
         DPRINT("Use parent SACL!\n");
         /* FIXME: Inherit */
         Sacl = SepGetSaclFromDescriptor(ParentDescriptor);
-        Control |= (SE_SACL_PRESENT | SE_SACL_DEFAULTED);
+        Control |= SE_SACL_PRESENT;
     }
 
-    SaclLength = (Sacl != NULL) ? ROUND_UP(Sacl->AclSize, 4) : 0;
+    SaclLength = (Sacl != NULL) ? Sacl->AclSize : 0;
+    NT_ASSERT(SaclLength % sizeof(ULONG) == 0);
 
     /* Allocate and initialize the new security descriptor */
     Length = sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
@@ -1328,7 +1315,7 @@ SeAssignSecurityEx(
     RtlZeroMemory(Descriptor, Length);
     RtlCreateSecurityDescriptor(Descriptor, SECURITY_DESCRIPTOR_REVISION);
 
-    Descriptor->Control = (USHORT)Control | SE_SELF_RELATIVE;
+    Descriptor->Control = Control | SE_SELF_RELATIVE;
 
     Current = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
 
