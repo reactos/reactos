@@ -105,44 +105,35 @@ FindAttributeHelper(PDEVICE_EXTENSION Vcb,
             PNTFS_ATTR_RECORD ListAttrRecord;
             PNTFS_ATTR_RECORD ListAttrRecordEnd;
 
-            // Do not handle non-resident yet
-            if (AttrRecord->IsNonResident)
+            ListContext = PrepareAttributeContext(AttrRecord);
+
+            ListSize = AttributeDataLength(&ListContext->Record);
+            if(ListSize <= 0xFFFFFFFF)
+                ListBuffer = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
+            else
+                ListBuffer = NULL;
+
+            if(!ListBuffer)
             {
-                UNIMPLEMENTED;
+                DPRINT("Failed to allocate memory: %x\n", (ULONG)ListSize);
                 continue;
             }
-            else
+
+            ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
+            ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
+
+            if (ReadAttribute(Vcb, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
             {
-                ListContext = PrepareAttributeContext(AttrRecord);
+                Context = FindAttributeHelper(Vcb, ListAttrRecord, ListAttrRecordEnd,
+                                              Type, Name, NameLength);
 
-                ListSize = AttributeDataLength(&ListContext->Record);
-                if(ListSize <= 0xFFFFFFFF)
-                    ListBuffer = ExAllocatePoolWithTag(NonPagedPool, (ULONG)ListSize, TAG_NTFS);
-                else
-                    ListBuffer = NULL;
+                ReleaseAttributeContext(ListContext);
+                ExFreePoolWithTag(ListBuffer, TAG_NTFS);
 
-                if(!ListBuffer)
+                if (Context != NULL)
                 {
-                    DPRINT("Failed to allocate memory: %x\n", (ULONG)ListSize);
-                    continue;
-                }
-
-                ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
-                ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
-
-                if (ReadAttribute(Vcb, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
-                {
-                    Context = FindAttributeHelper(Vcb, ListAttrRecord, ListAttrRecordEnd,
-                                                  Type, Name, NameLength);
-
-                    ReleaseAttributeContext(ListContext);
-                    ExFreePoolWithTag(ListBuffer, TAG_NTFS);
-
-                    if (Context != NULL)
-                    {
-                        DPRINT("Found context = %p\n", Context);
-                        return Context;
-                    }
+                    if (AttrRecord->IsNonResident) DPRINT("Found context = %p\n", Context);
+                    return Context;
                 }
             }
         }
