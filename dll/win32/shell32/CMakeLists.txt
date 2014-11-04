@@ -16,55 +16,54 @@ include_directories(
     ${REACTOS_SOURCE_DIR})
 
 list(APPEND SOURCE
-    #authors.cpp
-    autocomplete.cpp
+    CAutoComplete.cpp
     brsfolder.cpp
     changenotify.cpp
     classes.cpp
     clipboard.cpp
     CMenuBand.cpp
     CMenuDeskBar.cpp
-    dataobject.cpp
+    CIDLDataObj.cpp
     dde.cpp
     debughlp.cpp
-    desktop.cpp
+    CDesktopBrowser.cpp
     dialogs/dialogs.cpp
     dialogs/drive.cpp
     dialogs/drvdefext.cpp
     dialogs/folder_options.cpp
     dialogs/filedefext.cpp
     dialogs/fprop.cpp
-    dragdrophelper.cpp
-    enumidlist.cpp
-    extracticon.cpp
+    CDropTargetHelper.cpp
+    CEnumIDListBase.cpp
+    CExtractIcon.cpp
     folders.cpp
     iconcache.cpp
     shell32.cpp
-    shellitem.cpp
-    shelllink.cpp
-    folders/desktop.cpp
-    folders/fs.cpp
-    folders/mycomp.cpp
-    folders/mydocuments.cpp
-    folders/printers.cpp
-    folders/admintools.cpp
-    folders/netplaces.cpp
-    folders/fonts.cpp
-    folders/cpanel.cpp
-    folders/recyclebin.cpp
+    CShellItem.cpp
+    CShellLink.cpp
+    folders/CDesktopFolder.cpp
+    folders/CFSFolder.cpp
+    folders/CDrivesFolder.cpp
+    folders/CMyDocsFolder.cpp
+    folders/CPrinterFolder.cpp
+    folders/CAdminToolsFolder.cpp
+    folders/CNetFolder.cpp
+    folders/CFontsFolder.cpp
+    folders/CControlPanelFolder.cpp
+    folders/CRecycleBin.cpp
     droptargets/CexeDropHandler.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp
-    shlfsbind.cpp
+    CFileSysBindData.cpp
     shlmenu.cpp
-    shlview.cpp
+    CDefView.cpp
     stubs.cpp
     systray.cpp
-    defcontextmenu.cpp
-    openwithmenu.cpp
-    newmenu.cpp
-    startmenu.cpp
+    CDefaultContextMenu.cpp
+    COpenWithMenu.cpp
+    CNewMenu.cpp
+    CStartMenu.cpp
     precomp.h)
 
 add_library(shell32 SHARED
