@@ -1030,7 +1030,7 @@ HRESULT WINAPI CFSFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
  * copies items to this folder
  */
 HRESULT WINAPI CFSFolder::CopyItems(IShellFolder * pSFFrom, UINT cidl,
-                                    LPCITEMIDLIST * apidl, bool bCopy)
+                                    LPCITEMIDLIST * apidl, BOOL bCopy)
 {
     CComPtr<IPersistFolder2> ppf2 = NULL;
     WCHAR szSrcPath[MAX_PATH];

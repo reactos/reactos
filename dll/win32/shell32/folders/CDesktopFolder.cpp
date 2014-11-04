@@ -1189,7 +1189,7 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
     return ret;
 }
 
-HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, bool bCopy)
+HRESULT WINAPI CDesktopFolder::CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy)
 {
     CComPtr<IPersistFolder2> ppf2;
     WCHAR szSrcPath[MAX_PATH];
