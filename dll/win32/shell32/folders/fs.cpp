@@ -36,7 +36,7 @@ be inserted in a removable drive.
 */
 
 class CFileSysEnum :
-    public IEnumIDListImpl
+    public CEnumIDListBase
 {
     private:
     public:

@@ -63,7 +63,7 @@ static const columninfo RecycleBinColumns[] =
  */
 
 class CRecycleBinEnum :
-    public IEnumIDListImpl
+    public CEnumIDListBase
 {
     private:
     public:

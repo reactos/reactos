@@ -17,7 +17,7 @@ struct IconLocation
     UINT index;
 };
 
-class IconExtraction :
+class CExtractIcon :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDefaultExtractIconInit,
     public IExtractIconW,
@@ -31,8 +31,8 @@ private:
     struct IconLocation openIcon;
     struct IconLocation shortcutIcon;
 public:
-    IconExtraction();
-    ~IconExtraction();
+    CExtractIcon();
+    ~CExtractIcon();
 
     // IDefaultExtractIconInit
     virtual HRESULT STDMETHODCALLTYPE SetDefaultIcon(LPCWSTR pszFile, int iIcon);
@@ -60,7 +60,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SaveCompleted(LPCOLESTR pszFileName);
     virtual HRESULT STDMETHODCALLTYPE GetCurFile(LPOLESTR *ppszFileName);
 
-BEGIN_COM_MAP(IconExtraction)
+BEGIN_COM_MAP(CExtractIcon)
     COM_INTERFACE_ENTRY_IID(IID_IDefaultExtractIconInit, IDefaultExtractIconInit)
     COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
     COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
@@ -85,7 +85,7 @@ VOID DuplicateString(
     CopyMemory(*Destination, Source, cb);
 }
 
-IconExtraction::IconExtraction()
+CExtractIcon::CExtractIcon()
 {
     flags = 0;
     memset(&defaultIcon, 0, sizeof(defaultIcon));
@@ -94,7 +94,7 @@ IconExtraction::IconExtraction()
     memset(&shortcutIcon, 0, sizeof(shortcutIcon));
 }
 
-IconExtraction::~IconExtraction()
+CExtractIcon::~CExtractIcon()
 {
     if (defaultIcon.file) CoTaskMemFree(defaultIcon.file);
     if (normalIcon.file) CoTaskMemFree(normalIcon.file);
@@ -102,7 +102,7 @@ IconExtraction::~IconExtraction()
     if (shortcutIcon.file) CoTaskMemFree(shortcutIcon.file);
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::SetDefaultIcon(
+HRESULT STDMETHODCALLTYPE CExtractIcon::SetDefaultIcon(
     LPCWSTR pszFile,
     int iIcon)
 {
@@ -115,7 +115,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::SetDefaultIcon(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::SetFlags(
+HRESULT STDMETHODCALLTYPE CExtractIcon::SetFlags(
     UINT uFlags)
 {
     TRACE("(%p, 0x%x)\n", this, uFlags);
@@ -124,7 +124,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::SetFlags(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::SetKey(
+HRESULT STDMETHODCALLTYPE CExtractIcon::SetKey(
     HKEY hkey)
 {
     FIXME("(%p, %p)\n", this, hkey);
@@ -132,7 +132,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::SetKey(
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::SetNormalIcon(
+HRESULT STDMETHODCALLTYPE CExtractIcon::SetNormalIcon(
     LPCWSTR pszFile,
     int iIcon)
 {
@@ -145,7 +145,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::SetNormalIcon(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::SetOpenIcon(
+HRESULT STDMETHODCALLTYPE CExtractIcon::SetOpenIcon(
     LPCWSTR pszFile,
     int iIcon)
 {
@@ -158,7 +158,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::SetOpenIcon(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::SetShortcutIcon(
+HRESULT STDMETHODCALLTYPE CExtractIcon::SetShortcutIcon(
     LPCWSTR pszFile,
     int iIcon)
 {
@@ -171,7 +171,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::SetShortcutIcon(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::GetIconLocation(
+HRESULT STDMETHODCALLTYPE CExtractIcon::GetIconLocation(
     UINT uFlags,
     LPWSTR szIconFile,
     UINT cchMax,
@@ -207,7 +207,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::GetIconLocation(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::Extract(
+HRESULT STDMETHODCALLTYPE CExtractIcon::Extract(
     LPCWSTR pszFile,
     UINT nIconIndex,
     HICON *phiconLarge,
@@ -220,7 +220,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::Extract(
     return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::GetIconLocation(
+HRESULT STDMETHODCALLTYPE CExtractIcon::GetIconLocation(
     UINT uFlags,
     LPSTR szIconFile,
     UINT cchMax,
@@ -248,7 +248,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::GetIconLocation(
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::Extract(
+HRESULT STDMETHODCALLTYPE CExtractIcon::Extract(
     LPCSTR pszFile,
     UINT nIconIndex,
     HICON *phiconLarge,
@@ -282,7 +282,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::Extract(
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::GetClassID(
+HRESULT STDMETHODCALLTYPE CExtractIcon::GetClassID(
     CLSID *pClassID)
 {
     TRACE("(%p, %p)\n", this, pClassID);
@@ -294,14 +294,14 @@ HRESULT STDMETHODCALLTYPE IconExtraction::GetClassID(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::IsDirty()
+HRESULT STDMETHODCALLTYPE CExtractIcon::IsDirty()
 {
     FIXME("(%p)\n", this);
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::Load(
+HRESULT STDMETHODCALLTYPE CExtractIcon::Load(
     LPCOLESTR pszFileName,
     DWORD dwMode)
 {
@@ -310,7 +310,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::Load(
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::Save(
+HRESULT STDMETHODCALLTYPE CExtractIcon::Save(
     LPCOLESTR pszFileName,
     BOOL fRemember)
 {
@@ -319,7 +319,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::Save(
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::SaveCompleted(
+HRESULT STDMETHODCALLTYPE CExtractIcon::SaveCompleted(
     LPCOLESTR pszFileName)
 {
     FIXME("(%p, %s)\n", this, debugstr_w(pszFileName));
@@ -327,7 +327,7 @@ HRESULT STDMETHODCALLTYPE IconExtraction::SaveCompleted(
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE IconExtraction::GetCurFile(
+HRESULT STDMETHODCALLTYPE CExtractIcon::GetCurFile(
     LPOLESTR *ppszFileName)
 {
     FIXME("(%p, %p)\n", this, ppszFileName);
@@ -337,5 +337,5 @@ HRESULT STDMETHODCALLTYPE IconExtraction::GetCurFile(
 
 HRESULT WINAPI SHCreateDefaultExtractIcon(REFIID riid, void **ppv)
 {
-    return ShellObjectCreator<IconExtraction>(riid, ppv);
+    return ShellObjectCreator<CExtractIcon>(riid, ppv);
 }

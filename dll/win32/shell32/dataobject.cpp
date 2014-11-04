@@ -140,7 +140,7 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 /* number of supported formats */
 #define MAX_FORMATS 5
 
-class IDataObjectImpl :
+class CIDLDataObj :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject,
     public IAsyncOperation 
@@ -158,8 +158,8 @@ private:
     UINT        cfPreferredDropEffect;
     BOOL        doasync;
 public:
-    IDataObjectImpl();
-    ~IDataObjectImpl();
+    CIDLDataObj();
+    ~CIDLDataObj();
     HRESULT WINAPI Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidlx, UINT cidlx);
 
     ///////////
@@ -178,13 +178,13 @@ public:
     virtual HRESULT WINAPI StartOperation(IBindCtx *pbcReserved);
     virtual HRESULT WINAPI EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects);
 
-BEGIN_COM_MAP(IDataObjectImpl)
+BEGIN_COM_MAP(CIDLDataObj)
     COM_INTERFACE_ENTRY_IID(IID_IDataObject, IDataObject)
     COM_INTERFACE_ENTRY_IID(IID_IAsyncOperation,  IAsyncOperation)
 END_COM_MAP()
 };
 
-IDataObjectImpl::IDataObjectImpl()
+CIDLDataObj::CIDLDataObj()
 {
     pidl = NULL;
     apidl = NULL;
@@ -197,14 +197,14 @@ IDataObjectImpl::IDataObjectImpl()
     doasync = FALSE;
 }
 
-IDataObjectImpl::~IDataObjectImpl()
+CIDLDataObj::~CIDLDataObj()
 {
     TRACE(" destroying IDataObject(%p)\n",this);
     _ILFreeaPidl(apidl, cidl);
     ILFree(pidl);
 }
 
-HRESULT WINAPI IDataObjectImpl::Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidlx, UINT cidlx)
+HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidlx, UINT cidlx)
 {
     pidl = ILClone(pMyPidl);
     apidl = _ILCopyaPidl(apidlx, cidlx);
@@ -228,7 +228,7 @@ HRESULT WINAPI IDataObjectImpl::Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl
 /**************************************************************************
 * IDataObject_fnGetData
 */
-HRESULT WINAPI IDataObjectImpl::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium)
+HRESULT WINAPI CIDLDataObj::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium)
 {
     char    szTemp[256];
 
@@ -274,13 +274,13 @@ HRESULT WINAPI IDataObjectImpl::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pme
     return E_OUTOFMEMORY;
 }
 
-HRESULT WINAPI IDataObjectImpl::GetDataHere(LPFORMATETC pformatetc, STGMEDIUM *pmedium)
+HRESULT WINAPI CIDLDataObj::GetDataHere(LPFORMATETC pformatetc, STGMEDIUM *pmedium)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDataObjectImpl::QueryGetData(LPFORMATETC pformatetc)
+HRESULT WINAPI CIDLDataObj::QueryGetData(LPFORMATETC pformatetc)
 {
     UINT i;
 
@@ -302,13 +302,13 @@ HRESULT WINAPI IDataObjectImpl::QueryGetData(LPFORMATETC pformatetc)
     return DV_E_TYMED;
 }
 
-HRESULT WINAPI IDataObjectImpl::GetCanonicalFormatEtc(LPFORMATETC pformatectIn, LPFORMATETC pformatetcOut)
+HRESULT WINAPI CIDLDataObj::GetCanonicalFormatEtc(LPFORMATETC pformatectIn, LPFORMATETC pformatetcOut)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDataObjectImpl::SetData(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease)
+HRESULT WINAPI CIDLDataObj::SetData(LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease)
 {
     if (pformatetc->cfFormat == cfPreferredDropEffect)
     {
@@ -327,7 +327,7 @@ HRESULT WINAPI IDataObjectImpl::SetData(LPFORMATETC pformatetc, STGMEDIUM *pmedi
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDataObjectImpl::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc)
+HRESULT WINAPI CIDLDataObj::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc)
 {
     TRACE("(%p)->()\n", this);
     *ppenumFormatEtc = NULL;
@@ -341,48 +341,48 @@ HRESULT WINAPI IDataObjectImpl::EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC 
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDataObjectImpl::DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection)
+HRESULT WINAPI CIDLDataObj::DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDataObjectImpl::DUnadvise(DWORD dwConnection)
+HRESULT WINAPI CIDLDataObj::DUnadvise(DWORD dwConnection)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDataObjectImpl::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
+HRESULT WINAPI CIDLDataObj::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI IDataObjectImpl::GetAsyncMode(BOOL *pfIsOpAsync)
+HRESULT WINAPI CIDLDataObj::GetAsyncMode(BOOL *pfIsOpAsync)
 {
     TRACE("(%p)->()\n", this);
     *pfIsOpAsync = doasync;
     return S_OK;
 }
-HRESULT WINAPI IDataObjectImpl::InOperation(BOOL *pfInAsyncOp)
+HRESULT WINAPI CIDLDataObj::InOperation(BOOL *pfInAsyncOp)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
-HRESULT WINAPI IDataObjectImpl::SetAsyncMode(BOOL fDoOpAsync) 
+HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync) 
 {
     TRACE("(%p)->()\n", this);
     doasync = fDoOpAsync;
     return S_OK;
 }
 
-HRESULT WINAPI IDataObjectImpl::StartOperation(IBindCtx *pbcReserved)
+HRESULT WINAPI CIDLDataObj::StartOperation(IBindCtx *pbcReserved)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
-HRESULT WINAPI IDataObjectImpl::EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects)
+HRESULT WINAPI CIDLDataObj::EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects)
 {
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
@@ -395,7 +395,7 @@ HRESULT WINAPI IDataObjectImpl::EndOperation(HRESULT hResult, IBindCtx *pbcReser
 */
 HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LPCITEMIDLIST * apidl, UINT cidl, IDataObject **dataObject)
 {
-    return ShellObjectCreatorInit<IDataObjectImpl>(hwndOwner, pMyPidl, apidl, cidl, IID_IDataObject, dataObject);
+    return ShellObjectCreatorInit<CIDLDataObj>(hwndOwner, pMyPidl, apidl, cidl, IID_IDataObject, dataObject);
 }
 
 /*************************************************************************

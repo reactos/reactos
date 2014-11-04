@@ -195,7 +195,7 @@ static HRESULT WINAPI IEI_Printers_Constructor(LPCITEMIDLIST pidl, REFIID riid, 
  *     Printers folder implementation
  */
 
-class CPrintersEnum: public IEnumIDListImpl
+class CPrintersEnum: public CEnumIDListBase
 {
     public:
         CPrintersEnum();

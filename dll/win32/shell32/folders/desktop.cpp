@@ -51,7 +51,7 @@ extern "C" HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpsz
 class CDesktopFolder;
 
 class CDesktopFolderEnum :
-    public IEnumIDListImpl
+    public CEnumIDListBase
 {
     private:
 //    CComPtr                                fDesktopEnumerator;

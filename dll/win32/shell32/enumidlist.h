@@ -23,7 +23,7 @@ struct ENUMLIST
 	LPITEMIDLIST			pidl;
 };
 
-class IEnumIDListImpl :
+class CEnumIDListBase :
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IEnumIDList
 {
@@ -32,8 +32,8 @@ private:
 	ENUMLIST				*mpLast;
 	ENUMLIST				*mpCurrent;
 public:
-	IEnumIDListImpl();
-	~IEnumIDListImpl();
+	CEnumIDListBase();
+	~CEnumIDListBase();
 	BOOL AddToEnumList(LPITEMIDLIST pidl);
 	BOOL DeleteList();
 	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);
@@ -45,7 +45,7 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE Reset();
 	virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
 
-BEGIN_COM_MAP(IEnumIDListImpl)
+BEGIN_COM_MAP(CEnumIDListBase)
 	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()
 };

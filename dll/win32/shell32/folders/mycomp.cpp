@@ -40,7 +40,7 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 */
 
 class CDrivesFolderEnum :
-    public IEnumIDListImpl
+    public CEnumIDListBase
 {
     public:
         CDrivesFolderEnum();

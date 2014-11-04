@@ -34,7 +34,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 */
 
 class CControlPanelEnum :
-    public IEnumIDListImpl
+    public CEnumIDListBase
 {
     public:
         CControlPanelEnum();

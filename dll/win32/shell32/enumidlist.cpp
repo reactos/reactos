@@ -22,21 +22,21 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-IEnumIDListImpl::IEnumIDListImpl()
+CEnumIDListBase::CEnumIDListBase()
 {
     mpFirst = NULL;
     mpLast = NULL;
     mpCurrent = NULL;
 }
 
-IEnumIDListImpl::~IEnumIDListImpl()
+CEnumIDListBase::~CEnumIDListBase()
 {
 }
 
 /**************************************************************************
  *  AddToEnumList()
  */
-BOOL IEnumIDListImpl::AddToEnumList(LPITEMIDLIST pidl)
+BOOL CEnumIDListBase::AddToEnumList(LPITEMIDLIST pidl)
 {
     ENUMLIST *pNew;
 
@@ -76,7 +76,7 @@ BOOL IEnumIDListImpl::AddToEnumList(LPITEMIDLIST pidl)
 /**************************************************************************
 *   DeleteList()
 */
-BOOL IEnumIDListImpl::DeleteList()
+BOOL CEnumIDListBase::DeleteList()
 {
     ENUMLIST                    *pDelete;
 
@@ -98,7 +98,7 @@ BOOL IEnumIDListImpl::DeleteList()
 /**************************************************************************
  *  HasItemWithCLSID()
  */
-BOOL IEnumIDListImpl::HasItemWithCLSID(LPITEMIDLIST pidl)
+BOOL CEnumIDListBase::HasItemWithCLSID(LPITEMIDLIST pidl)
 {
     ENUMLIST *pCur;
     IID *ptr = _ILGetGUIDPointer(pidl);
@@ -126,7 +126,7 @@ BOOL IEnumIDListImpl::HasItemWithCLSID(LPITEMIDLIST pidl)
 /**************************************************************************
  *  CreateFolderEnumList()
  */
-BOOL IEnumIDListImpl::CreateFolderEnumList(
+BOOL CEnumIDListBase::CreateFolderEnumList(
     LPCWSTR lpszPath,
     DWORD dwFlags)
 {
@@ -193,7 +193,7 @@ BOOL IEnumIDListImpl::CreateFolderEnumList(
  *  IEnumIDList_fnNext
  */
 
-HRESULT WINAPI IEnumIDListImpl::Next(
+HRESULT WINAPI CEnumIDListBase::Next(
     ULONG celt,
     LPITEMIDLIST * rgelt,
     ULONG *pceltFetched)
@@ -238,7 +238,7 @@ HRESULT WINAPI IEnumIDListImpl::Next(
 /**************************************************************************
 *  IEnumIDList_fnSkip
 */
-HRESULT WINAPI IEnumIDListImpl::Skip(
+HRESULT WINAPI CEnumIDListBase::Skip(
     ULONG celt)
 {
     DWORD    dwIndex;
@@ -259,7 +259,7 @@ HRESULT WINAPI IEnumIDListImpl::Skip(
 /**************************************************************************
 *  IEnumIDList_fnReset
 */
-HRESULT WINAPI IEnumIDListImpl::Reset()
+HRESULT WINAPI CEnumIDListBase::Reset()
 {
     TRACE("(%p)\n", this);
     mpCurrent = mpFirst;
@@ -269,7 +269,7 @@ HRESULT WINAPI IEnumIDListImpl::Reset()
 /**************************************************************************
 *  IEnumIDList_fnClone
 */
-HRESULT WINAPI IEnumIDListImpl::Clone(LPENUMIDLIST *ppenum)
+HRESULT WINAPI CEnumIDListBase::Clone(LPENUMIDLIST *ppenum)
 {
     TRACE("(%p)->() to (%p)->() E_NOTIMPL\n", this, ppenum);
     return E_NOTIMPL;
@@ -281,5 +281,5 @@ HRESULT WINAPI IEnumIDListImpl::Clone(LPENUMIDLIST *ppenum)
  */
 HRESULT IEnumIDList_Constructor(IEnumIDList **enumerator)
 {
-    return ShellObjectCreator<IEnumIDListImpl>(IID_IEnumIDList, enumerator);
+    return ShellObjectCreator<CEnumIDListBase>(IID_IEnumIDList, enumerator);
 }
