@@ -615,11 +615,14 @@ SeCaptureSecurityDescriptor(
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
-                              IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-                              IN OUT PULONG Length,
-                              IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor OPTIONAL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeQuerySecurityDescriptorInfo(
+    _In_ PSECURITY_INFORMATION SecurityInformation,
+    _Out_writes_bytes_(*Length) PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Inout_ PULONG Length,
+    _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor)
 {
     PISECURITY_DESCRIPTOR ObjectSd;
     PISECURITY_DESCRIPTOR_RELATIVE RelSD;
@@ -634,6 +637,8 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
     ULONG Control = 0;
     ULONG_PTR Current;
     ULONG SdLength;
+
+    PAGED_CODE();
 
     RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
 
@@ -781,13 +786,42 @@ SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
-                            IN PSECURITY_INFORMATION _SecurityInformation,
-                            IN PSECURITY_DESCRIPTOR _SecurityDescriptor,
-                            IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-                            IN POOL_TYPE PoolType,
-                            IN PGENERIC_MAPPING GenericMapping)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeSetSecurityDescriptorInfo(
+    _In_opt_ PVOID Object,
+    _In_ PSECURITY_INFORMATION SecurityInformation,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+    _In_ POOL_TYPE PoolType,
+    _In_ PGENERIC_MAPPING GenericMapping)
+{
+    PAGED_CODE();
+
+    return SeSetSecurityDescriptorInfoEx(Object,
+                                         SecurityInformation,
+                                         SecurityDescriptor,
+                                         ObjectsSecurityDescriptor,
+                                         0,
+                                         PoolType,
+                                         GenericMapping);
+}
+
+/*
+ * @implemented
+ */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+NTAPI
+SeSetSecurityDescriptorInfoEx(
+    _In_opt_ PVOID Object,
+    _In_ PSECURITY_INFORMATION _SecurityInformation,
+    _In_ PSECURITY_DESCRIPTOR _SecurityDescriptor,
+    _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+    _In_ ULONG AutoInheritFlags,
+    _In_ POOL_TYPE PoolType,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PISECURITY_DESCRIPTOR_RELATIVE ObjectSd;
     PISECURITY_DESCRIPTOR_RELATIVE NewSd;
@@ -804,6 +838,8 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
     ULONG Control = 0;
     ULONG Current;
     SECURITY_INFORMATION SecurityInformation;
+
+    PAGED_CODE();
 
     ObjectSd = *ObjectsSecurityDescriptor;
 
@@ -969,29 +1005,6 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
 
     *ObjectsSecurityDescriptor = NewSd;
     return STATUS_SUCCESS;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-SeSetSecurityDescriptorInfoEx(IN PVOID Object OPTIONAL,
-                              IN PSECURITY_INFORMATION SecurityInformation,
-                              IN PSECURITY_DESCRIPTOR ModificationDescriptor,
-                              IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-                              IN ULONG AutoInheritFlags,
-                              IN POOL_TYPE PoolType,
-                              IN PGENERIC_MAPPING GenericMapping)
-{
-    PISECURITY_DESCRIPTOR ObjectSd = *ObjectsSecurityDescriptor;
-
-    /* The object does not have a security descriptor. */
-    if (!ObjectSd)
-        return STATUS_NO_SECURITY_ON_OBJECT;
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 
