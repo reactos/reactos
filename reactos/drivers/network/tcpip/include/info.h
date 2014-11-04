@@ -12,32 +12,6 @@
 #define MAX_PHYSADDR_LEN 8
 #define MAX_IFDESCR_LEN  256
 
-typedef struct IPSNMP_INFO {
-	ULONG Forwarding;
-	ULONG DefaultTTL;
-	ULONG InReceives;
-	ULONG InHdrErrors;
-	ULONG InAddrErrors;
-	ULONG ForwDatagrams;
-	ULONG InUnknownProtos;
-	ULONG InDiscards;
-	ULONG InDelivers;
-	ULONG OutRequests;
-	ULONG RoutingDiscards;
-	ULONG OutDiscards;
-	ULONG OutNoRoutes;
-	ULONG ReasmTimeout;
-	ULONG ReasmReqds;
-	ULONG ReasmOks;
-	ULONG ReasmFails;
-	ULONG FragOks;
-	ULONG FragFails;
-	ULONG FragCreates;
-	ULONG NumIf;
-	ULONG NumAddr;
-	ULONG NumRoutes;
-} IPSNMP_INFO, *PIPSNMP_INFO;
-
 typedef struct IPADDR_ENTRY {
 	ULONG  Addr;
 	ULONG  Index;
