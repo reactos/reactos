@@ -1420,6 +1420,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
                 return;
             }
 
+            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            {
+                if (!Fast486ProcessGate(State, Selector, Value, TRUE))
+                {
+                    /* Gate processed or exception occurred */
+                    return;
+                }
+            }
+
             /* Push the current value of CS */
             if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector))
             {
@@ -1471,6 +1480,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupFF)
             {
                 /* Exception occurred */
                 return;
+            }
+
+            if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+            {
+                if (!Fast486ProcessGate(State, Selector, Value, FALSE))
+                {
+                    /* Gate processed or exception occurred */
+                    return;
+                }
             }
 
             /* Load the new code segment */
@@ -1712,6 +1730,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
         /* LLDT */
         case 2:
         {
+            BOOLEAN Valid;
             USHORT Selector;
             FAST486_SYSTEM_DESCRIPTOR GdtEntry;
 
@@ -1739,21 +1758,26 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 return;
             }
 
-            /* Make sure the GDT contains the entry */
-            if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+            if (Selector & SEGMENT_TABLE_INDICATOR)
             {
+                /* This selector doesn't point to the GDT */
                 Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return;
             }
 
-            /* Read the GDT */
-            if (!Fast486ReadLinearMemory(State,
-                                         State->Gdtr.Address
-                                         + GET_SEGMENT_INDEX(Selector),
-                                         &GdtEntry,
-                                         sizeof(GdtEntry)))
+            if (Fast486ReadDescriptorEntry(State,
+                                           Selector,
+                                           &Valid,
+                                           (PFAST486_GDT_ENTRY)&GdtEntry))
             {
                 /* Exception occurred */
+                return;
+            }
+
+            if (!Valid)
+            {
+                /* Invalid selector */
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return;
             }
 
@@ -1788,6 +1812,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
         /* LTR */
         case 3:
         {
+            BOOLEAN Valid;
             USHORT Selector;
             FAST486_SYSTEM_DESCRIPTOR GdtEntry;
 
@@ -1815,21 +1840,26 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 return;
             }
 
-            /* Make sure the GDT contains the entry */
-            if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+            if (Selector & SEGMENT_TABLE_INDICATOR)
             {
+                /* This selector doesn't point to the GDT */
                 Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return;
             }
 
-            /* Read the GDT */
-            if (!Fast486ReadLinearMemory(State,
-                                         State->Gdtr.Address
-                                         + GET_SEGMENT_INDEX(Selector),
-                                         &GdtEntry,
-                                         sizeof(GdtEntry)))
+            if (Fast486ReadDescriptorEntry(State,
+                                           Selector,
+                                           &Valid,
+                                           (PFAST486_GDT_ENTRY)&GdtEntry))
             {
                 /* Exception occurred */
+                return;
+            }
+
+            if (!Valid)
+            {
+                /* Invalid selector */
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
                 return;
             }
 
@@ -1857,7 +1887,6 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
             State->TaskReg.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
             State->TaskReg.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
             if (GdtEntry.Granularity) State->TaskReg.Limit <<= 12;
-            State->TaskReg.Busy = TRUE;
 
             break;
         }
@@ -1867,6 +1896,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
         case 5:
         {
             USHORT Selector;
+            BOOLEAN Valid;
             FAST486_GDT_ENTRY GdtEntry;
 
             /* Not recognized in real mode or virtual 8086 mode */
@@ -1893,47 +1923,17 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 return;
             }
 
-            if (!(Selector & SEGMENT_TABLE_INDICATOR))
+            if (!Fast486ReadDescriptorEntry(State, Selector, &Valid, &GdtEntry))
             {
-                /* Make sure the GDT contains the entry */
-                if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
-                {
-                    /* Clear ZF */
-                    State->Flags.Zf = FALSE;
-                    return;
-                }
-
-                /* Read the GDT */
-                if (!Fast486ReadLinearMemory(State,
-                                             State->Gdtr.Address
-                                             + GET_SEGMENT_INDEX(Selector),
-                                             &GdtEntry,
-                                             sizeof(GdtEntry)))
-                {
-                    /* Exception occurred */
-                    return;
-                }
+                /* Exception occurred */
+                return;
             }
-            else
-            {
-                /* Make sure the LDT contains the entry */
-                if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
-                {
-                    /* Clear ZF */
-                    State->Flags.Zf = FALSE;
-                    return;
-                }
 
-                /* Read the LDT */
-                if (!Fast486ReadLinearMemory(State,
-                                             State->Ldtr.Base
-                                             + GET_SEGMENT_INDEX(Selector),
-                                             &GdtEntry,
-                                             sizeof(GdtEntry)))
-                {
-                    /* Exception occurred */
-                    return;
-                }
+            if (!Valid)
+            {
+                /* Clear ZF */
+                State->Flags.Zf = FALSE;
+                return;
             }
 
             /* Set ZF if it is valid and accessible */

@@ -426,11 +426,68 @@ Fast486StackPop(PFAST486_STATE State,
 FORCEINLINE
 BOOLEAN
 FASTCALL
-Fast486LoadSegment(PFAST486_STATE State,
-                   FAST486_SEG_REGS Segment,
-                   USHORT Selector)
+Fast486ReadDescriptorEntry(PFAST486_STATE State,
+                           USHORT Selector,
+                           PBOOLEAN EntryValid,
+                           PFAST486_GDT_ENTRY Entry)
+{
+    if (!(Selector & SEGMENT_TABLE_INDICATOR))
+    {
+        /* Make sure the GDT contains the entry */
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+        {
+            *EntryValid = FALSE;
+            return TRUE;
+        }
+
+        /* Read the GDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Gdtr.Address
+                                     + GET_SEGMENT_INDEX(Selector),
+                                     Entry,
+                                     sizeof(*Entry)))
+        {
+            /* Exception occurred */
+            *EntryValid = FALSE;
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Make sure the LDT contains the entry */
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
+        {
+            *EntryValid = FALSE;
+            return TRUE;
+        }
+
+        /* Read the LDT */
+        if (!Fast486ReadLinearMemory(State,
+                                     State->Ldtr.Base
+                                     + GET_SEGMENT_INDEX(Selector),
+                                     Entry,
+                                     sizeof(*Entry)))
+        {
+            /* Exception occurred */
+            *EntryValid = FALSE;
+            return FALSE;
+        }
+    }
+
+    *EntryValid = TRUE;
+    return TRUE;
+}
+
+FORCEINLINE
+BOOLEAN
+FASTCALL
+Fast486LoadSegmentInternal(PFAST486_STATE State,
+                           FAST486_SEG_REGS Segment,
+                           USHORT Selector,
+                           FAST486_EXCEPTIONS Exception)
 {
     PFAST486_SEG_REG CachedDescriptor;
+    BOOLEAN Valid;
     FAST486_GDT_ENTRY GdtEntry;
 
     ASSERT(Segment < FAST486_NUM_SEG_REGS);
@@ -441,45 +498,16 @@ Fast486LoadSegment(PFAST486_STATE State,
     /* Check for protected mode */
     if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
-        if (!(Selector & SEGMENT_TABLE_INDICATOR))
+        if (!Fast486ReadDescriptorEntry(State, Selector, &Valid, &GdtEntry))
         {
-            /* Make sure the GDT contains the entry */
-            if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
-            {
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
-                return FALSE;
-            }
-
-            /* Read the GDT */
-            if (!Fast486ReadLinearMemory(State,
-                                         State->Gdtr.Address
-                                         + GET_SEGMENT_INDEX(Selector),
-                                         &GdtEntry,
-                                         sizeof(GdtEntry)))
-            {
-                /* Exception occurred */
-                return FALSE;
-            }
+            /* Exception occurred */
+            return FALSE;
         }
-        else
-        {
-            /* Make sure the LDT contains the entry */
-            if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
-            {
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
-                return FALSE;
-            }
 
-            /* Read the LDT */
-            if (!Fast486ReadLinearMemory(State,
-                                         State->Ldtr.Base
-                                         + GET_SEGMENT_INDEX(Selector),
-                                         &GdtEntry,
-                                         sizeof(GdtEntry)))
-            {
-                /* Exception occurred */
-                return FALSE;
-            }
+        if (!Valid)
+        {
+            /* Invalid selector */
+            Fast486ExceptionWithErrorCode(State, Exception, Selector);
         }
 
         if (Segment == FAST486_REG_SS)
@@ -488,27 +516,27 @@ Fast486LoadSegment(PFAST486_STATE State,
 
             if (GET_SEGMENT_INDEX(Selector) == 0)
             {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486Exception(State, Exception);
                 return FALSE;
             }
 
             if (!GdtEntry.SystemType)
             {
                 /* This is a special descriptor */
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                Fast486ExceptionWithErrorCode(State, Exception, Selector);
                 return FALSE;
             }
 
             if (GdtEntry.Executable || !GdtEntry.ReadWrite)
             {
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                Fast486ExceptionWithErrorCode(State, Exception, Selector);
                 return FALSE;
             }
 
             if ((GET_SEGMENT_RPL(Selector) != Fast486GetCurrentPrivLevel(State))
                 || (GET_SEGMENT_RPL(Selector) != GdtEntry.Dpl))
             {
-                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                Fast486ExceptionWithErrorCode(State, Exception, Selector);
                 return FALSE;
             }
 
@@ -529,55 +557,53 @@ Fast486LoadSegment(PFAST486_STATE State,
 
             if (GET_SEGMENT_INDEX(Selector) == 0)
             {
-                Fast486Exception(State, FAST486_EXCEPTION_GP);
+                Fast486Exception(State, Exception);
                 return FALSE;
             }
 
             if (!GdtEntry.SystemType)
             {
-                // TODO: Call/interrupt/task gates NOT IMPLEMENTED!
-                UNIMPLEMENTED;
+                /* Must be a segment descriptor */
+                Fast486ExceptionWithErrorCode(State, Exception, Selector);
+            }
+
+            if (!GdtEntry.Present)
+            {
+                Fast486ExceptionWithErrorCode(State, Exception, Selector);
+                return FALSE;
+            }
+
+            if (!GdtEntry.Executable)
+            {
+                Fast486ExceptionWithErrorCode(State, Exception, Selector);
+                return FALSE;
+            }
+
+            if (GdtEntry.DirConf)
+            {
+                /* Conforming Code Segment */
+
+                if (GdtEntry.Dpl > Fast486GetCurrentPrivLevel(State))
+                {
+                    /* Must be accessed from lower-privileged code */
+                    Fast486ExceptionWithErrorCode(State, Exception, Selector);
+                    return FALSE;
+                }
             }
             else
             {
-                if (!GdtEntry.Present)
+                /* Regular code segment */
+
+                if ((GET_SEGMENT_RPL(Selector) > Fast486GetCurrentPrivLevel(State))
+                    || (Fast486GetCurrentPrivLevel(State) != GdtEntry.Dpl))
                 {
-                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
+                    Fast486ExceptionWithErrorCode(State, Exception, Selector);
                     return FALSE;
                 }
-
-                if (!GdtEntry.Executable)
-                {
-                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
-                    return FALSE;
-                }
-
-                if (GdtEntry.DirConf)
-                {
-                    /* Conforming Code Segment */
-
-                    if (GdtEntry.Dpl > Fast486GetCurrentPrivLevel(State))
-                    {
-                        /* Must be accessed from lower-privileged code */
-                        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
-                        return FALSE;
-                    }
-                }
-                else
-                {
-                    /* Regular code segment */
-
-                    if ((GET_SEGMENT_RPL(Selector) > Fast486GetCurrentPrivLevel(State))
-                        || (Fast486GetCurrentPrivLevel(State) != GdtEntry.Dpl))
-                    {
-                        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
-                        return FALSE;
-                    }
-                }
-
-                /* Update CPL */
-                State->Cpl = GET_SEGMENT_RPL(Selector);
             }
+
+            /* Update CPL */
+            State->Cpl = GET_SEGMENT_RPL(Selector);
         }
         else
         {
@@ -588,20 +614,20 @@ Fast486LoadSegment(PFAST486_STATE State,
                 if (!GdtEntry.SystemType)
                 {
                     /* This is a special descriptor */
-                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                    Fast486ExceptionWithErrorCode(State, Exception, Selector);
                     return FALSE;
                 }
 
                 if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
                     || (Fast486GetCurrentPrivLevel(State) > GdtEntry.Dpl))
                 {
-                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                    Fast486ExceptionWithErrorCode(State, Exception, Selector);
                     return FALSE;
                 }
 
                 if (!GdtEntry.Present)
                 {
-                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
+                    Fast486ExceptionWithErrorCode(State, Exception, Selector);
                     return FALSE;
                 }
             }
@@ -634,6 +660,64 @@ Fast486LoadSegment(PFAST486_STATE State,
         /* Update the selector and base */
         CachedDescriptor->Selector = Selector;
         CachedDescriptor->Base = Selector << 4;
+    }
+
+    return TRUE;
+}
+
+FORCEINLINE
+BOOLEAN
+FASTCALL
+Fast486LoadSegment(PFAST486_STATE State,
+                   FAST486_SEG_REGS Segment,
+                   USHORT Selector)
+{
+    return Fast486LoadSegmentInternal(State,
+                                      Segment,
+                                      Selector,
+                                      FAST486_EXCEPTION_GP);
+}
+
+FORCEINLINE
+BOOLEAN
+FASTCALL
+Fast486ProcessGate(PFAST486_STATE State, USHORT Selector, ULONG Offset, BOOLEAN Call)
+{
+    BOOLEAN Valid;
+    FAST486_SYSTEM_DESCRIPTOR Descriptor;
+
+    if (!Fast486ReadDescriptorEntry(State,
+                                    Selector,
+                                    &Valid,
+                                    (PFAST486_GDT_ENTRY)&Descriptor))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Valid)
+    {
+        /* Invalid selector */
+        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+        return FALSE;
+    }
+
+    if (Descriptor.Signature == FAST486_TASK_GATE_SIGNATURE)
+    {
+        /* Task gate */
+
+        Fast486TaskSwitch(State,
+                          Call ? FAST486_TASK_CALL : FAST486_TASK_JUMP,
+                          ((PFAST486_IDT_ENTRY)&Descriptor)->Selector);
+
+        return FALSE;
+    }
+    else if (Descriptor.Signature == FAST486_CALL_GATE_SIGNATURE)
+    {
+        /* Call gate */
+
+        // TODO: NOT IMPLEMENTED
+        UNIMPLEMENTED;
     }
 
     return TRUE;

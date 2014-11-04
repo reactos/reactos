@@ -69,6 +69,7 @@ if (State->PrefixFlags & FAST486_PREFIX_LOCK)\
 #define GET_ADDR_PDE(x) ((x) >> 22)
 #define GET_ADDR_PTE(x) (((x) >> 12) & 0x3FF)
 #define INVALID_TLB_FIELD 0xFFFFFFFF
+#define NUM_TLB_ENTRIES 0x100000
 
 typedef struct _FAST486_MOD_REG_RM
 {
@@ -80,6 +81,13 @@ typedef struct _FAST486_MOD_REG_RM
         ULONG MemoryAddress;
     };
 } FAST486_MOD_REG_RM, *PFAST486_MOD_REG_RM;
+
+typedef enum _FAST486_TASK_SWITCH_TYPE
+{
+    FAST486_TASK_JUMP,
+    FAST486_TASK_CALL,
+    FAST486_TASK_RETURN
+} FAST486_TASK_SWITCH_TYPE, *PFAST486_TASK_SWITCH_TYPE;
 
 #include <pshpack1.h>
 
@@ -164,6 +172,15 @@ Fast486ExceptionWithErrorCode
     PFAST486_STATE State,
     FAST486_EXCEPTIONS ExceptionCode,
     ULONG ErrorCode
+);
+
+BOOLEAN
+FASTCALL
+Fast486TaskSwitch
+(
+    PFAST486_STATE State,
+    FAST486_TASK_SWITCH_TYPE Type,
+    USHORT Selector
 );
 
 /* INLINED FUNCTIONS **********************************************************/

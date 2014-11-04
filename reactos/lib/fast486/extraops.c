@@ -320,6 +320,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLar)
 {
     BOOLEAN OperandSize, AddressSize;
     FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN Valid;
     USHORT Selector;
     FAST486_GDT_ENTRY GdtEntry;
     DWORD AccessRights;
@@ -368,45 +369,16 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLar)
         }
     }
 
-    if (!(Selector & SEGMENT_TABLE_INDICATOR))
+    if (!Fast486ReadDescriptorEntry(State, Selector, &Valid, &GdtEntry))
     {
-        /* Check if the GDT contains the entry */
-        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
-        {
-            State->Flags.Zf = FALSE;
-            return;
-        }
-
-        /* Read the GDT */
-        if (!Fast486ReadLinearMemory(State,
-                                     State->Gdtr.Address
-                                     + GET_SEGMENT_INDEX(Selector),
-                                     &GdtEntry,
-                                     sizeof(GdtEntry)))
-        {
-            /* Exception occurred */
-            return;
-        }
+        /* Exception occurred */
+        return;
     }
-    else
-    {
-        /* Check if the LDT contains the entry */
-        if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
-        {
-            State->Flags.Zf = FALSE;
-            return;
-        }
 
-        /* Read the LDT */
-        if (!Fast486ReadLinearMemory(State,
-                                     State->Ldtr.Base
-                                     + GET_SEGMENT_INDEX(Selector),
-                                     &GdtEntry,
-                                     sizeof(GdtEntry)))
-        {
-            /* Exception occurred */
-            return;
-        }
+    if (!Valid)
+    {
+        State->Flags.Zf = FALSE;
+        return;
     }
 
     /* Privilege check */
@@ -432,6 +404,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
 {
     BOOLEAN OperandSize, AddressSize;
     FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN Valid;
     USHORT Selector;
     ULONG Limit;
     FAST486_GDT_ENTRY GdtEntry;
@@ -480,45 +453,16 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
         }
     }
 
-    if (!(Selector & SEGMENT_TABLE_INDICATOR))
+    if (!Fast486ReadDescriptorEntry(State, Selector, &Valid, &GdtEntry))
     {
-        /* Check if the GDT contains the entry */
-        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
-        {
-            State->Flags.Zf = FALSE;
-            return;
-        }
-
-        /* Read the GDT */
-        if (!Fast486ReadLinearMemory(State,
-                                     State->Gdtr.Address
-                                     + GET_SEGMENT_INDEX(Selector),
-                                     &GdtEntry,
-                                     sizeof(GdtEntry)))
-        {
-            /* Exception occurred */
-            return;
-        }
+        /* Exception occurred */
+        return;
     }
-    else
-    {
-        /* Check if the LDT contains the entry */
-        if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
-        {
-            State->Flags.Zf = FALSE;
-            return;
-        }
 
-        /* Read the LDT */
-        if (!Fast486ReadLinearMemory(State,
-                                     State->Ldtr.Base
-                                     + GET_SEGMENT_INDEX(Selector),
-                                     &GdtEntry,
-                                     sizeof(GdtEntry)))
-        {
-            /* Exception occurred */
-            return;
-        }
+    if (!Valid)
+    {
+        State->Flags.Zf = FALSE;
+        return;
     }
 
     /* Privilege check */
@@ -690,6 +634,12 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
     /* Changing CR0 or CR3 can interfere with prefetching (because of paging) */
     State->PrefetchValid = FALSE;
 #endif
+
+    if (State->Tlb && (ModRegRm.Register == (INT)FAST486_REG_CR3))
+    {
+        /* Flush the TLB */
+        RtlZeroMemory(State->Tlb, NUM_TLB_ENTRIES * sizeof(ULONG));
+    }
 
     /* Load a value to the control register */
     State->ControlRegisters[ModRegRm.Register] = Value;
