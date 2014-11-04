@@ -211,15 +211,4 @@ TriggerWork(
     IN PTHREAD_CONTEXT Context,
     IN ULONG MilliSeconds);
 
-
-PKTHREAD
-KmtStartThread(
-    IN PKSTART_ROUTINE StartRoutine,
-    IN PVOID StartContext OPTIONAL);
-
-VOID
-KmtFinishThread(
-    IN PKTHREAD Thread OPTIONAL,
-    IN PKEVENT Event OPTIONAL);
-
 #endif /* !defined _KMTEST_NPFS_H_ */

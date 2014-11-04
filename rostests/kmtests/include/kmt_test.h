@@ -132,6 +132,8 @@ VOID KmtSetIrql(IN KIRQL NewIrql);
 BOOLEAN KmtAreInterruptsEnabled(VOID);
 ULONG KmtGetPoolTag(PVOID Memory);
 USHORT KmtGetPoolType(PVOID Memory);
+PKTHREAD KmtStartThread(IN PKSTART_ROUTINE StartRoutine, IN PVOID StartContext OPTIONAL);
+VOID KmtFinishThread(IN PKTHREAD Thread OPTIONAL, IN PKEVENT Event OPTIONAL);
 #elif defined KMT_USER_MODE
 DWORD KmtRunKernelTest(IN PCSTR TestName);
 
@@ -242,143 +244,9 @@ VOID KmtFreeGuarded(PVOID Pointer);
 #if defined KMT_DEFINE_TEST_FUNCTIONS
 
 #if defined KMT_KERNEL_MODE
-BOOLEAN KmtIsCheckedBuild;
-BOOLEAN KmtIsMultiProcessorBuild;
-PCSTR KmtMajorFunctionNames[] =
-{
-    "Create",
-    "CreateNamedPipe",
-    "Close",
-    "Read",
-    "Write",
-    "QueryInformation",
-    "SetInformation",
-    "QueryEa",
-    "SetEa",
-    "FlushBuffers",
-    "QueryVolumeInformation",
-    "SetVolumeInformation",
-    "DirectoryControl",
-    "FileSystemControl",
-    "DeviceControl",
-    "InternalDeviceControl/Scsi",
-    "Shutdown",
-    "LockControl",
-    "Cleanup",
-    "CreateMailslot",
-    "QuerySecurity",
-    "SetSecurity",
-    "Power",
-    "SystemControl",
-    "DeviceChange",
-    "QueryQuota",
-    "SetQuota",
-    "Pnp/PnpPower"
-};
-
-VOID KmtSetIrql(IN KIRQL NewIrql)
-{
-    KIRQL Irql = KeGetCurrentIrql();
-    if (Irql > NewIrql)
-        KeLowerIrql(NewIrql);
-    else if (Irql < NewIrql)
-        KeRaiseIrql(NewIrql, &Irql);
-}
-
-BOOLEAN KmtAreInterruptsEnabled(VOID)
-{
-    return (__readeflags() & (1 << 9)) != 0;
-}
-
-typedef struct _POOL_HEADER
-{
-    union
-    {
-        struct
-        {
-#ifdef _M_AMD64
-            USHORT PreviousSize:8;
-            USHORT PoolIndex:8;
-            USHORT BlockSize:8;
-            USHORT PoolType:8;
-#else
-            USHORT PreviousSize:9;
-            USHORT PoolIndex:7;
-            USHORT BlockSize:9;
-            USHORT PoolType:7;
-#endif
-        };
-        ULONG Ulong1;
-    };
-#ifdef _M_AMD64
-    ULONG PoolTag;
-#endif
-    union
-    {
-#ifdef _M_AMD64
-        PEPROCESS ProcessBilled;
-#else
-        ULONG PoolTag;
-#endif
-        struct
-        {
-            USHORT AllocatorBackTraceIndex;
-            USHORT PoolTagHash;
-        };
-    };
-} POOL_HEADER, *PPOOL_HEADER;
-
-ULONG KmtGetPoolTag(PVOID Memory)
-{
-    PPOOL_HEADER Header;
-
-    /* it's not so easy for allocations of PAGE_SIZE */
-    if (((ULONG_PTR)Memory & (PAGE_SIZE - 1)) == 0)
-        return 'TooL';
-
-    Header = Memory;
-    Header--;
-
-    return Header->PoolTag;
-}
-
-USHORT KmtGetPoolType(PVOID Memory)
-{
-    PPOOL_HEADER Header;
-
-    /* it's not so easy for allocations of PAGE_SIZE */
-    if (((ULONG_PTR)Memory & (PAGE_SIZE - 1)) == 0)
-        return 0;
-
-    Header = Memory;
-    Header--;
-
-    return Header->PoolType;
-}
-
-INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);
+#include "kmt_test_kernel.h"
 #elif defined KMT_USER_MODE
-static PKMT_RESULTBUFFER KmtAllocateResultBuffer(SIZE_T ResultBufferSize)
-{
-    PKMT_RESULTBUFFER Buffer = HeapAlloc(GetProcessHeap(), 0, ResultBufferSize);
-    if (!Buffer)
-        return NULL;
-
-    Buffer->Successes = 0;
-    Buffer->Failures = 0;
-    Buffer->Skipped = 0;
-    Buffer->LogBufferLength = 0;
-    Buffer->LogBufferMaxLength = (ULONG)ResultBufferSize - FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer);
-
-    return Buffer;
-}
-
-static VOID KmtFreeResultBuffer(PKMT_RESULTBUFFER Buffer)
-{
-    HeapFree(GetProcessHeap(), 0, Buffer);
-}
-
-#define KmtVSNPrintF vsnprintf
+#include "kmt_test_user.h"
 #endif /* defined KMT_USER_MODE */
 
 PKMT_RESULTBUFFER ResultBuffer = NULL;
