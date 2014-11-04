@@ -17,7 +17,6 @@ include_directories(
 
 list(APPEND SOURCE
     CAutoComplete.cpp
-    brsfolder.cpp
     changenotify.cpp
     classes.cpp
     clipboard.cpp
@@ -68,6 +67,7 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED
     ${SOURCE}
+    wine/brsfolder.c
     wine/control.c
     wine/pidl.c
     wine/shell32_main.c
