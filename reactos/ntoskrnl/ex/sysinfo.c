@@ -1788,9 +1788,22 @@ SSI_DEF(SystemExtendServiceTableInformation)
 /* Class 39 - Priority Separation */
 SSI_DEF(SystemPrioritySeperation)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemPrioritySeperation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* Check if the size is correct */
+    if (Size != sizeof(ULONG))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* We need the TCB privilege */
+    if (!SeSinglePrivilegeCheck(SeTcbPrivilege, ExGetPreviousMode()))
+    {
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    /* Modify the quantum table */
+    PsChangeQuantumTable(TRUE, *(PULONG)Buffer);
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 40 - Plug Play Bus Information */

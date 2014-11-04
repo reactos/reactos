@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* This is the size that we can expect from the win 2003 loader */
+#define LOADER_PARAMETER_EXTENSION_MIN_SIZE \
+    RTL_SIZEOF_THROUGH_FIELD(LOADER_PARAMETER_EXTENSION, AcpiTableSize)
+
 /* Temporary hack */
 BOOLEAN
 NTAPI
@@ -759,8 +763,8 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Get the loader extension */
     Extension = LoaderBlock->Extension;
 
-    /* Validate the size (larger structures are OK, we'll just ignore them) */
-    if (Extension->Size < sizeof(LOADER_PARAMETER_EXTENSION)) return FALSE;
+    /* Validate the size (Windows 2003 loader doesn't provide more) */
+    if (Extension->Size < LOADER_PARAMETER_EXTENSION_MIN_SIZE) return FALSE;
 
     /* Don't validate upper versions */
     if (Extension->MajorVersion > VER_PRODUCTMAJORVERSION) return TRUE;
