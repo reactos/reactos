@@ -1109,7 +1109,6 @@ SeDeassignSecurity(
     return STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
@@ -1140,12 +1139,20 @@ SeAssignSecurityEx(
     ULONG Current;
     PSID Owner = NULL;
     PSID Group = NULL;
+    PACL ExplicitAcl;
+    BOOLEAN ExplicitPresent;
+    BOOLEAN ExplicitDefaulted;
+    PACL ParentAcl;
     PACL Dacl = NULL;
     PACL Sacl = NULL;
+    BOOLEAN DaclIsInherited;
+    BOOLEAN SaclIsInherited;
+    BOOLEAN DaclPresent;
+    BOOLEAN SaclPresent;
+    NTSTATUS Status;
 
     DBG_UNREFERENCED_PARAMETER(ObjectType);
     DBG_UNREFERENCED_PARAMETER(AutoInheritFlags);
-    DBG_UNREFERENCED_PARAMETER(GenericMapping);
     UNREFERENCED_PARAMETER(PoolType);
 
     PAGED_CODE();
@@ -1180,7 +1187,6 @@ SeAssignSecurityEx(
         DPRINT("Use token owner sid!\n");
         Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
     }
-
     OwnerLength = RtlLengthSid(Owner);
     NT_ASSERT(OwnerLength % sizeof(ULONG) == 0);
 
@@ -1199,56 +1205,77 @@ SeAssignSecurityEx(
         SeUnlockSubjectContext(SubjectContext);
         return STATUS_INVALID_PRIMARY_GROUP;
     }
-
     GroupLength = RtlLengthSid(Group);
     NT_ASSERT(GroupLength % sizeof(ULONG) == 0);
 
     /* Inherit the DACL */
+    DaclLength = 0;
+    ExplicitAcl = NULL;
+    ExplicitPresent = FALSE;
+    ExplicitDefaulted = FALSE;
     if (ExplicitDescriptor != NULL &&
-        (ExplicitDescriptor->Control & SE_DACL_PRESENT) &&
-        !(ExplicitDescriptor->Control & SE_DACL_DEFAULTED))
+        (ExplicitDescriptor->Control & SE_DACL_PRESENT))
     {
-        DPRINT("Use explicit DACL!\n");
-        Dacl = SepGetDaclFromDescriptor(ExplicitDescriptor);
-        Control |= SE_DACL_PRESENT;
+        ExplicitAcl = SepGetDaclFromDescriptor(ExplicitDescriptor);
+        ExplicitPresent = TRUE;
+        if (ExplicitDescriptor->Control & SE_DACL_DEFAULTED)
+            ExplicitDefaulted = TRUE;
     }
-    else if (ParentDescriptor != NULL &&
-             (ParentDescriptor->Control & SE_DACL_PRESENT))
+    ParentAcl = NULL;
+    if (ParentDescriptor != NULL &&
+        (ParentDescriptor->Control & SE_DACL_PRESENT))
     {
-        DPRINT("Use parent DACL!\n");
-        /* FIXME: Inherit */
-        Dacl = SepGetDaclFromDescriptor(ParentDescriptor);
-        Control |= SE_DACL_PRESENT;
+        ParentAcl = SepGetDaclFromDescriptor(ParentDescriptor);
     }
-    else if (Token->DefaultDacl)
-    {
-        DPRINT("Use token default DACL!\n");
-        Dacl = Token->DefaultDacl;
+    Dacl = SepSelectAcl(ExplicitAcl,
+                        ExplicitPresent,
+                        ExplicitDefaulted,
+                        ParentAcl,
+                        Token->DefaultDacl,
+                        &DaclLength,
+                        Owner,
+                        Group,
+                        &DaclPresent,
+                        &DaclIsInherited,
+                        IsDirectoryObject,
+                        GenericMapping);
+    if (DaclPresent)
         Control |= SE_DACL_PRESENT;
-    }
-
-    DaclLength = (Dacl != NULL) ? Dacl->AclSize : 0;
     NT_ASSERT(DaclLength % sizeof(ULONG) == 0);
 
     /* Inherit the SACL */
+    SaclLength = 0;
+    ExplicitAcl = NULL;
+    ExplicitPresent = FALSE;
+    ExplicitDefaulted = FALSE;
     if (ExplicitDescriptor != NULL &&
-        (ExplicitDescriptor->Control & SE_SACL_PRESENT) &&
-        !(ExplicitDescriptor->Control & SE_SACL_DEFAULTED))
+        (ExplicitDescriptor->Control & SE_SACL_PRESENT))
     {
-        DPRINT("Use explicit SACL!\n");
-        Sacl = SepGetSaclFromDescriptor(ExplicitDescriptor);
-        Control |= SE_SACL_PRESENT;
+        ExplicitAcl = SepGetSaclFromDescriptor(ExplicitDescriptor);
+        ExplicitPresent = TRUE;
+        if (ExplicitDescriptor->Control & SE_SACL_DEFAULTED)
+            ExplicitDefaulted = TRUE;
     }
-    else if (ParentDescriptor != NULL &&
-             (ParentDescriptor->Control & SE_SACL_PRESENT))
+    ParentAcl = NULL;
+    if (ParentDescriptor != NULL &&
+        (ParentDescriptor->Control & SE_SACL_PRESENT))
     {
-        DPRINT("Use parent SACL!\n");
-        /* FIXME: Inherit */
-        Sacl = SepGetSaclFromDescriptor(ParentDescriptor);
-        Control |= SE_SACL_PRESENT;
+        ParentAcl = SepGetSaclFromDescriptor(ParentDescriptor);
     }
-
-    SaclLength = (Sacl != NULL) ? Sacl->AclSize : 0;
+    Sacl = SepSelectAcl(ExplicitAcl,
+                        ExplicitPresent,
+                        ExplicitDefaulted,
+                        ParentAcl,
+                        NULL,
+                        &SaclLength,
+                        Owner,
+                        Group,
+                        &SaclPresent,
+                        &SaclIsInherited,
+                        IsDirectoryObject,
+                        GenericMapping);
+    if (SaclPresent)
+        Control |= SE_SACL_PRESENT;
     NT_ASSERT(SaclLength % sizeof(ULONG) == 0);
 
     /* Allocate and initialize the new security descriptor */
@@ -1279,14 +1306,30 @@ SeAssignSecurityEx(
 
     if (SaclLength != 0)
     {
-        RtlCopyMemory((PUCHAR)Descriptor + Current, Sacl, SaclLength);
+        Status = SepPropagateAcl((PACL)((PUCHAR)Descriptor + Current),
+                                 &SaclLength,
+                                 Sacl,
+                                 Owner,
+                                 Group,
+                                 SaclIsInherited,
+                                 IsDirectoryObject,
+                                 GenericMapping);
+        NT_ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Sacl = Current;
         Current += SaclLength;
     }
 
     if (DaclLength != 0)
     {
-        RtlCopyMemory((PUCHAR)Descriptor + Current, Dacl, DaclLength);
+        Status = SepPropagateAcl((PACL)((PUCHAR)Descriptor + Current),
+                                 &DaclLength,
+                                 Dacl,
+                                 Owner,
+                                 Group,
+                                 DaclIsInherited,
+                                 IsDirectoryObject,
+                                 GenericMapping);
+        NT_ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Dacl = Current;
         Current += DaclLength;
     }

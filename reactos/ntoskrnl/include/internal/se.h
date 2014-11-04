@@ -489,6 +489,32 @@ SepReleaseAcl(
 );
 
 NTSTATUS
+SepPropagateAcl(
+    _Out_writes_bytes_opt_(DaclLength) PACL AclDest,
+    _Inout_ PULONG AclLength,
+    _In_reads_bytes_(AclSource->AclSize) PACL AclSource,
+    _In_ PSID Owner,
+    _In_ PSID Group,
+    _In_ BOOLEAN IsInherited,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PGENERIC_MAPPING GenericMapping);
+    
+PACL
+SepSelectAcl(
+    _In_opt_ PACL ExplicitAcl,
+    _In_ BOOLEAN ExplicitPresent,
+    _In_ BOOLEAN ExplicitDefaulted,
+    _In_opt_ PACL ParentAcl,
+    _In_opt_ PACL DefaultAcl,
+    _Out_ PULONG AclLength,
+    _In_ PSID Owner,
+    _In_ PSID Group,
+    _Out_ PBOOLEAN AclPresent,
+    _Out_ PBOOLEAN IsInherited,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PGENERIC_MAPPING GenericMapping);
+
+NTSTATUS
 NTAPI
 SeDefaultObjectMethod(
     PVOID Object,
