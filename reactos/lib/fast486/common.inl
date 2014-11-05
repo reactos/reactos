@@ -175,7 +175,7 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
                 /* Exception */
                 Fast486ExceptionWithErrorCode(State,
                                               FAST486_EXCEPTION_PF,
-                                              TableEntry.Value & 0x07);
+                                              TableEntry.Present | (State->Cpl ? 0x04 : 0));
                 return FALSE;
             }
 
@@ -244,7 +244,7 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
                 /* Exception */
                 Fast486ExceptionWithErrorCode(State,
                                               FAST486_EXCEPTION_PF,
-                                              TableEntry.Value & 0x07);
+                                              TableEntry.Present | 0x02 | (State->Cpl ? 0x04 : 0));
                 return FALSE;
             }
 
