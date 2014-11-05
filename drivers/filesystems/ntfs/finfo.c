@@ -20,7 +20,8 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/dirctl.c
  * PURPOSE:          NTFS filesystem driver
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMERS:      Eric Kohl
+ *                   Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -142,7 +143,7 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
                        PFILE_NAME_INFORMATION NameInfo,
                        PULONG BufferLength)
 {
-    ULONG NameLength;
+    ULONG BytesToCopy;
 
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(DeviceObject);
@@ -152,18 +153,30 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
     ASSERT(NameInfo != NULL);
     ASSERT(Fcb != NULL);
 
-    NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
-//  NameLength = 2;
-    if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength)
+    /* If buffer can't hold at least the file name length, bail out */
+    if (*BufferLength < (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
         return STATUS_BUFFER_OVERFLOW;
 
-    NameInfo->FileNameLength = NameLength;
-    memcpy(NameInfo->FileName,
-           Fcb->PathName,
-           NameLength + sizeof(WCHAR));
-//  wcscpy(NameInfo->FileName, L"\\");
+    /* Save file name length, and as much file len, as buffer length allows */
+    NameInfo->FileNameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
 
-    *BufferLength -= (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
+    /* Calculate amount of bytes to copy not to overflow the buffer */
+    BytesToCopy = min(NameInfo->FileNameLength,
+                      *BufferLength - FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]));
+
+    /* Fill in the bytes */
+    RtlCopyMemory(NameInfo->FileName, Fcb->PathName, BytesToCopy);
+
+    /* Check if we could write more but are not able to */
+    if (*BufferLength < NameInfo->FileNameLength + (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
+    {
+        /* Return number of bytes written */
+        *BufferLength -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + BytesToCopy;
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* We filled up as many bytes, as needed */
+    *BufferLength -= (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + NameInfo->FileNameLength);
 
     return STATUS_SUCCESS;
 }
@@ -191,6 +204,31 @@ NtfsGetInternalInformation(PNTFS_FCB Fcb,
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
+                              PDEVICE_EXTENSION DeviceExt,
+                              PFILE_NETWORK_OPEN_INFORMATION NetworkInfo,
+                              PULONG BufferLength)
+{
+    PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
+
+    if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
+        return(STATUS_BUFFER_OVERFLOW);
+
+    NetworkInfo->CreationTime.QuadPart = FileName->CreationTime;
+    NetworkInfo->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    NetworkInfo->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    NetworkInfo->ChangeTime.QuadPart = FileName->ChangeTime;
+
+    NetworkInfo->EndOfFile.QuadPart = FileName->AllocatedSize;
+    NetworkInfo->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
+
+    NtfsFileFlagsToAttributes(FileName->FileAttributes, &NetworkInfo->FileAttributes);
+
+    *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
+    return STATUS_SUCCESS;
+}
 
 /*
  * FUNCTION: Retrieve the specified file information
@@ -253,6 +291,13 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
             Status = NtfsGetInternalInformation(Fcb,
                                                 SystemBuffer,
                                                 &BufferLength);
+            break;
+
+        case FileNetworkOpenInformation:
+            Status = NtfsGetNetworkOpenInformation(Fcb,
+                                                   DeviceObject->DeviceExtension,
+                                                   SystemBuffer,
+                                                   &BufferLength);
             break;
 
         case FileAlternateNameInformation:

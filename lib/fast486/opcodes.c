@@ -4079,6 +4079,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
         return;
     }
 
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    {
+        if (!Fast486ProcessGate(State, Segment, Offset, TRUE))
+        {
+            /* Gate processed or exception occurred */
+            return;
+        }
+    }
+
     /* Push the current code segment selector */
     if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector))
     {
@@ -4538,6 +4547,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
     NO_LOCK_PREFIX();
     TOGGLE_OPSIZE(Size);
 
+    /* Check if this is a nested task return */
+    if (State->Flags.Nt && (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE))
+    {
+        /* Clear the NT flag of the current task */
+        State->Flags.Nt = FALSE;
+
+        /* Switch to the old task */
+        Fast486TaskSwitch(State, FAST486_TASK_RETURN, 0);
+        return;
+    }
+
     /* Pop EIP */
     if (!Fast486StackPop(State, &InstPtr))
     {
@@ -4594,14 +4614,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
                 return;
             }
 
-            return;
-        }
-
-        if (State->Flags.Nt)
-        {
-            /* Nested task return */
-
-            UNIMPLEMENTED;
             return;
         }
 
@@ -5019,6 +5031,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
     {
         /* Exception occurred */
         return;
+    }
+
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    {
+        if (!Fast486ProcessGate(State, Segment, Offset, FALSE))
+        {
+            /* Gate processed or exception occurred */
+            return;
+        }
     }
 
     /* Load the new CS */

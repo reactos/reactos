@@ -1517,7 +1517,17 @@ VOID
 FASTCALL
 KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
 {
+    PKTHREAD Thread;
     NTSTATUS Status;
+
+    /* Save the SEH chain, NtCallbackReturn will restore this */
+    TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
+
+    /* Set thread fields */
+    Thread = KeGetCurrentThread();
+    Thread->TrapFrame = TrapFrame;
+    Thread->PreviousMode = KiUserTrap(TrapFrame);
+    NT_ASSERT(Thread->PreviousMode != KernelMode);
 
     /* Pass the register parameters to NtCallbackReturn.
        Result pointer is in ecx, result length in edx, status in eax */

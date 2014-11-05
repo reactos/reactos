@@ -577,7 +577,7 @@ REGION_SetExtents(ROSRGNDATA *pReg)
     pReg->rdh.iType = RDH_RECTANGLES;
 }
 
-// FIXME: This seems to be wrong
+// FIXME: This function needs review and testing
 /***********************************************************************
  *           REGION_CropAndOffsetRegion
  */
@@ -649,82 +649,106 @@ REGION_CropAndOffsetRegion(
     else // Region box and clipping rect appear to intersect
     {
         PRECTL lpr, rpr;
-        ULONG i, j, clipa, clipb;
-        INT left = rgnSrc->rdh.rcBound.right + off->x;
-        INT right = rgnSrc->rdh.rcBound.left + off->x;
+        ULONG i, j, clipa, clipb, nRgnSize;
+        INT left = MAXLONG;
+        INT right = MINLONG;
+        INT top = MAXLONG;
+        INT bottom = MINLONG;
 
-        for (clipa = 0; (rgnSrc->Buffer + clipa)->bottom <= rect->top; clipa++)
-            // Region and rect intersect so we stop before clipa > rgnSrc->rdh.nCount
-            ; // skip bands above the clipping rectangle
+        /* Skip all rects that are completely above our intersect rect */
+        for (clipa = 0; clipa < rgnSrc->rdh.nCount; clipa++)
+        {
+            /* bottom is exclusive, so break when we go above it */
+            if (rgnSrc->Buffer[clipa].bottom > rect->top) break;
+        }
 
+        /* Bail out, if there is nothing left */
+        if (clipa == rgnSrc->rdh.nCount) goto empty;
+
+        /* Find the last rect that is still within the intersect rect (exclusive) */
         for (clipb = clipa; clipb < rgnSrc->rdh.nCount; clipb++)
-            if ((rgnSrc->Buffer + clipb)->top >= rect->bottom)
-                break;    // and below it
+        {
+            /* bottom is exclusive, so stop, when we start at that y pos */
+            if (rgnSrc->Buffer[clipb].top >= rect->bottom) break;
+        }
+
+        /* Bail out, if there is nothing left */
+        if (clipb == clipa) goto empty;
 
         // clipa - index of the first rect in the first intersecting band
-        // clipb - index of the last rect in the last intersecting band
+        // clipb - index of the last rect in the last intersecting band plus 1
 
-        if ((rgnDst != rgnSrc) && (rgnDst->rdh.nCount < (i = (clipb - clipa))))
+        /* Check if the buffer in the dest region is large enough,
+           otherwise allocate a new one */
+        nRgnSize = (clipb - clipa) * sizeof(RECT);
+        if ((rgnDst != rgnSrc) && (rgnDst->rdh.nRgnSize < nRgnSize))
         {
             PRECTL temp;
-            temp = ExAllocatePoolWithTag(PagedPool, i * sizeof(RECT), TAG_REGION);
+            temp = ExAllocatePoolWithTag(PagedPool, nRgnSize, TAG_REGION);
             if (!temp)
                 return ERROR;
 
-            if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
-                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); // free the old buffer
+            /* Free the old buffer */
+            if (rgnDst->Buffer && (rgnDst->Buffer != &rgnDst->rdh.rcBound))
+                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION);
+
             rgnDst->Buffer = temp;
-            rgnDst->rdh.nCount = i;
-            rgnDst->rdh.nRgnSize = i * sizeof(RECT);
+            rgnDst->rdh.nCount = 0;
+            rgnDst->rdh.nRgnSize = nRgnSize;
+            rgnDst->rdh.iType = RDH_RECTANGLES;
         }
 
+        /* Loop all rects within the intersect rect from the y perspective */
         for (i = clipa, j = 0; i < clipb ; i++)
         {
             // i - src index, j - dst index, j is always <= i for obvious reasons
 
-            lpr = rgnSrc->Buffer + i;
+            lpr = &rgnSrc->Buffer[i];
 
-            if (lpr->left < rect->right && lpr->right > rect->left)
+            /* Make sure the source rect is not retarded */
+            ASSERT(lpr->bottom > rect->top);
+            ASSERT(lpr->right > rect->left);
+
+            /* We already checked above, this should hold true */
+            ASSERT(lpr->bottom > rect->top);
+            ASSERT(lpr->top < rect->bottom);
+
+            /* Check if this rect is really inside the intersect rect */
+            if ((lpr->left < rect->right) && (lpr->right > rect->left))
             {
-                rpr = rgnDst->Buffer + j;
+                rpr = &rgnDst->Buffer[j];
 
-                rpr->top = lpr->top + off->y;
-                rpr->bottom = lpr->bottom + off->y;
-                rpr->left = ((lpr->left > rect->left) ? lpr->left : rect->left) + off->x;
-                rpr->right = ((lpr->right < rect->right) ? lpr->right : rect->right) + off->x;
+                /* Crop the rect with the intersect rect and add offset */
+                rpr->top = max(lpr->top, rect->top) + off->y;
+                rpr->bottom = min(lpr->bottom, rect->bottom) + off->y;
+                rpr->left = max(lpr->left, rect->left) + off->x;
+                rpr->right = min(lpr->right, rect->right) + off->y;
 
+                /* Make sure the resulting rect is not retarded */
+                ASSERT(lpr->bottom > rect->top);
+                ASSERT(lpr->right > rect->left);
+
+                /* Track new bounds */
                 if (rpr->left < left) left = rpr->left;
                 if (rpr->right > right) right = rpr->right;
+                if (rpr->top < top) top = rpr->top;
+                if (rpr->bottom > bottom) bottom = rpr->bottom;
 
+                /* Next target rect */
                 j++;
             }
         }
 
         if (j == 0) goto empty;
 
+        /* Update the bounds rect */
         rgnDst->rdh.rcBound.left = left;
         rgnDst->rdh.rcBound.right = right;
+        rgnDst->rdh.rcBound.top = top;
+        rgnDst->rdh.rcBound.bottom = bottom;
 
-        left = rect->top + off->y;
-        right = rect->bottom + off->y;
-
-        rgnDst->rdh.nCount = j--;
-        for (i = 0; i <= j; i++) // Fixup top band
-            if ((rgnDst->Buffer + i)->top < left)
-                (rgnDst->Buffer + i)->top = left;
-            else
-                break;
-
-        for (i = j; i > 0; i--) // Fixup bottom band
-            if ((rgnDst->Buffer + i)->bottom > right)
-                (rgnDst->Buffer + i)->bottom = right;
-            else
-                break;
-
-        rgnDst->rdh.rcBound.top = (rgnDst->Buffer)->top;
-        rgnDst->rdh.rcBound.bottom = (rgnDst->Buffer + j)->bottom;
-
-        rgnDst->rdh.iType = RDH_RECTANGLES;
+        /* Set new rect count */
+        rgnDst->rdh.nCount = j;
     }
 
     return REGION_Complexity(rgnDst);
@@ -732,15 +756,9 @@ REGION_CropAndOffsetRegion(
 empty:
     if (!rgnDst->Buffer)
     {
-        rgnDst->Buffer = ExAllocatePoolWithTag(PagedPool, RGN_DEFAULT_RECTS * sizeof(RECT), TAG_REGION);
-        if (rgnDst->Buffer)
-        {
-            rgnDst->rdh.nCount = RGN_DEFAULT_RECTS;
-            rgnDst->rdh.nRgnSize = RGN_DEFAULT_RECTS * sizeof(RECT);
-        }
-        else
-            return ERROR;
+        rgnDst->Buffer = &rgnDst->rdh.rcBound;
     }
+
     EMPTY_REGION(rgnDst);
     return NULLREGION;
 }
@@ -4004,6 +4022,7 @@ NtGdiGetRegionData(
                 ProbeForWrite(lpRgnData, cjSize, sizeof(ULONG));
                 RtlCopyMemory(lpRgnData, &prgn->rdh, sizeof(RGNDATAHEADER));
                 RtlCopyMemory(lpRgnData->Buffer, prgn->Buffer, cjRects);
+                lpRgnData->rdh.iType = RDH_RECTANGLES;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

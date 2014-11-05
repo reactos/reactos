@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002,2003 ReactOS Team
+ *  Copyright (C) 2002, 2003, 2014 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,9 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/dirctl.c
  * PURPOSE:          NTFS filesystem driver
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMERS:      Eric Kohl
+ *                   Pierre Schweitzer (pierre@reactos.org)
+ *                   Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -135,7 +137,15 @@ NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetNameInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
+    if (FileName == NULL)
+    {
+        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+        if (FileName == NULL)
+        {
+            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
+        }
+    }
     ASSERT(FileName != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
@@ -163,7 +173,15 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetDirectoryInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
+    if (FileName == NULL)
+    {
+        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+        if (FileName == NULL)
+        {
+            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
+        }
+    }
     ASSERT(FileName != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
@@ -204,7 +222,15 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetFullDirectoryInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
+    if (FileName == NULL)
+    {
+        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+        if (FileName == NULL)
+        {
+            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
+        }
+    }
     ASSERT(FileName != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
@@ -246,7 +272,15 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetBothDirectoryInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
+    if (FileName == NULL)
+    {
+        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+        if (FileName == NULL)
+        {
+            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
+        }
+    }
     ASSERT(FileName != NULL);
     ShortFileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
 
@@ -310,7 +344,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_CONTEXT DataContext;
-    ULONGLONG MFTRecord;
+    ULONGLONG MFTRecord, OldMFTRecord = 0;
     UNICODE_STRING Pattern;
 
     DPRINT1("NtfsQueryDirectory() called\n");
@@ -337,16 +371,23 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         if (!Ccb->DirectorySearchPattern)
         {
             First = TRUE;
-            Ccb->DirectorySearchPattern =
-                ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), TAG_NTFS);
+            Pattern.Length = 0;
+            Pattern.MaximumLength = SearchPattern->Length + sizeof(WCHAR);
+            Ccb->DirectorySearchPattern = Pattern.Buffer =
+                ExAllocatePoolWithTag(NonPagedPool, Pattern.MaximumLength, TAG_NTFS);
             if (!Ccb->DirectorySearchPattern)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            memcpy(Ccb->DirectorySearchPattern,
-                   SearchPattern->Buffer,
-                   SearchPattern->Length);
+            Status = RtlUpcaseUnicodeString(&Pattern, SearchPattern, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("RtlUpcaseUnicodeString('%wZ') failed with status 0x%08lx\n", &Pattern, Status);
+                ExFreePoolWithTag(Ccb->DirectorySearchPattern, TAG_NTFS);
+                Ccb->DirectorySearchPattern = NULL;
+                return Status;
+            }
             Ccb->DirectorySearchPattern[SearchPattern->Length / sizeof(WCHAR)] = 0;
         }
     }
@@ -364,9 +405,8 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
     }
 
     RtlInitUnicodeString(&Pattern, Ccb->DirectorySearchPattern);
-
-    DPRINT1("Search pattern '%S'\n", Ccb->DirectorySearchPattern);
-    DPRINT1("In: '%S'\n", Fcb->PathName);
+    DPRINT("Search pattern '%S'\n", Ccb->DirectorySearchPattern);
+    DPRINT("In: '%S'\n", Fcb->PathName);
 
     /* Determine directory index */
     if (Stack->Flags & SL_INDEX_SPECIFIED)
@@ -399,10 +439,21 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                                 &DataContext,
                                 &MFTRecord,
                                 Fcb->MFTIndex);
-      //DPRINT("Found %S, Status=%x, entry %x\n", TempFcb.ObjectName, Status, Ccb->Entry);
 
         if (NT_SUCCESS(Status))
         {
+            /* HACK: files with both a short name and a long name are present twice in the index.
+             * Ignore the second entry, if it is immediately following the first one.
+             */
+            if (MFTRecord == OldMFTRecord)
+            {
+                DPRINT("Ignoring duplicate MFT entry 0x%x\n", MFTRecord);
+                Ccb->Entry++;
+                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                continue;
+            }
+            OldMFTRecord = MFTRecord;
+
             switch (FileInformationClass)
             {
                 case FileNameInformation:

@@ -696,8 +696,10 @@ KiSetAffinityThread(IN PKTHREAD Thread,
     /* Check if system affinity is disabled */
     if (!Thread->SystemAffinityActive)
     {
+#ifdef CONFIG_SMP
         /* FIXME: TODO */
         DPRINT1("Affinity support disabled!\n");
+#endif
     }
 
     /* Return the old affinity */

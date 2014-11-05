@@ -292,14 +292,13 @@ PsReturnProcessPageFileQuota(IN PEPROCESS Process,
 NTSTATUS
 NTAPI
 PspSetQuotaLimits(
-    _In_ HANDLE ProcessHandle,
+    _In_ PEPROCESS Process,
     _In_ ULONG Unused,
     _In_ PVOID QuotaLimits,
     _In_ ULONG QuotaLimitsLength,
     _In_ KPROCESSOR_MODE PreviousMode)
 {
     QUOTA_LIMITS_EX CapturedQuotaLimits;
-    PEPROCESS Process;
     PEPROCESS_QUOTA_BLOCK QuotaBlock, OldQuotaBlock;
     BOOLEAN IncreaseOkay;
     KAPC_STATE SavedApcState;
@@ -368,19 +367,6 @@ PspSetQuotaLimits(
     }
     _SEH2_END;
 
-    /* Reference the process */
-    Status = ObReferenceObjectByHandle(ProcessHandle,
-                                       PROCESS_SET_QUOTA,
-                                       PsProcessType,
-                                       PreviousMode,
-                                       (PVOID*)&Process,
-                                       NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to reference process handle: 0x%lx\n", Status);
-        return Status;
-    }
-
     /* Check the caller changes the working set size limits */
     if ((CapturedQuotaLimits.MinimumWorkingSetSize != 0) &&
         (CapturedQuotaLimits.MaximumWorkingSetSize != 0))
@@ -418,7 +404,6 @@ PspSetQuotaLimits(
         /* Check if the caller has the required privilege */
         if (!SeSinglePrivilegeCheck(SeIncreaseQuotaPrivilege, PreviousMode))
         {
-            ObDereferenceObject(Process);
             return STATUS_PRIVILEGE_NOT_HELD;
         }
 
@@ -460,8 +445,6 @@ PspSetQuotaLimits(
         Status = STATUS_SUCCESS;
     }
 
-    /* Dereference the process and return the status */
-    ObDereferenceObject(Process);
     return Status;
 }
 

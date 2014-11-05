@@ -166,7 +166,9 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
              * See Ralf Brown: http://www.ctyme.com/intr/rb-1525.htm
              * for more information.
              */
-            Sleep(MAKELONG(getDX(), getCX()));
+
+            // HACK: For now, use the Win32 API (that takes time in milliseconds).
+            Sleep(MAKELONG(getDX(), getCX()) / 1000);
 
             /* Clear CF */
             Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
@@ -471,20 +473,23 @@ static VOID BiosHwSetup(VOID)
     IOWriteB(PIC_SLAVE_DATA , 0xFF);
 
 
-    /* Initialize PIT Counter 0 */
+    /* Initialize PIT Counter 0 - Mode 2, 16bit binary count */
+    // NOTE: Some BIOSes set it to Mode 3 instead.
     IOWriteB(PIT_COMMAND_PORT, 0x34);
+    // 18.2Hz refresh rate
     IOWriteB(PIT_DATA_PORT(0), 0x00);
     IOWriteB(PIT_DATA_PORT(0), 0x00);
 
-    /* Initialize PIT Counter 1 */
-    IOWriteB(PIT_COMMAND_PORT, 0x74);
-    IOWriteB(PIT_DATA_PORT(1), 0x00);
-    IOWriteB(PIT_DATA_PORT(1), 0x00);
+    /* Initialize PIT Counter 1 - Mode 2, 8bit binary count */
+    IOWriteB(PIT_COMMAND_PORT, 0x54);
+    // DRAM refresh every 15ms: http://www.cs.dartmouth.edu/~spl/Academic/Organization/docs/PC%20Timer%208253.html
+    IOWriteB(PIT_DATA_PORT(1),   18);
 
-    /* Initialize PIT Counter 2 */
-    IOWriteB(PIT_COMMAND_PORT, 0xB4);
-    IOWriteB(PIT_DATA_PORT(2), 0x00);
-    IOWriteB(PIT_DATA_PORT(2), 0x00);
+    /* Initialize PIT Counter 2 - Mode 3, 16bit binary count */
+    IOWriteB(PIT_COMMAND_PORT, 0xB6);
+    // Count for 440Hz
+    IOWriteB(PIT_DATA_PORT(2), 0x97);
+    IOWriteB(PIT_DATA_PORT(2), 0x0A);
 
     EnableHwIRQ(0, BiosTimerIrq);
 }

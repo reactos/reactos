@@ -768,7 +768,7 @@ NTSTATUS TdiQueryAddress(
     TDIEntityID *Entities;
     ULONG EntityCount;
     ULONG EntityType;
-    IPSNMP_INFO SnmpInfo;
+    IPSNMPInfo SnmpInfo;
     PIPADDR_ENTRY IpAddress;
     ULONG BufferSize;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -832,15 +832,15 @@ NTSTATUS TdiQueryAddress(
                                            IP_MIB_STATS_ID,             /* Entity id */
                                            &SnmpInfo,                   /* Output buffer */
                                            &BufferSize);                /* Output buffer size */
-            if (!NT_SUCCESS(Status) || (SnmpInfo.NumAddr == 0)) {
+            if (!NT_SUCCESS(Status) || (SnmpInfo.ipsi_numaddr == 0)) {
                 AFD_DbgPrint(MIN_TRACE, ("Unable to get SNMP information or no IP addresses available (Status = 0x%X).\n", Status));
                 break;
             }
 
             /* Query device for all IP addresses */
 
-            if (SnmpInfo.NumAddr != 0) {
-                BufferSize = SnmpInfo.NumAddr * sizeof(IPADDR_ENTRY);
+            if (SnmpInfo.ipsi_numaddr != 0) {
+                BufferSize = SnmpInfo.ipsi_numaddr * sizeof(IPADDR_ENTRY);
                 IpAddress = (PIPADDR_ENTRY)ExAllocatePool(NonPagedPool, BufferSize);
                 if (!IpAddress) {
                     AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -861,7 +861,7 @@ NTSTATUS TdiQueryAddress(
                     break;
                 }
 
-                if (SnmpInfo.NumAddr != 1) {
+                if (SnmpInfo.ipsi_numaddr != 1) {
                     /* Skip loopback address */
                     *Address = DN2H(IpAddress[1].Addr);
                 } else {

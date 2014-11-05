@@ -367,4 +367,280 @@ SepReleaseAcl(IN PACL CapturedAcl,
     }
 }
 
+BOOLEAN
+SepShouldPropagateAce(
+    _In_ UCHAR AceFlags,
+    _Out_ PUCHAR NewAceFlags,
+    _In_ BOOLEAN IsInherited,
+    _In_ BOOLEAN IsDirectoryObject)
+{
+    if (!IsInherited)
+    {
+        *NewAceFlags = AceFlags;
+        return TRUE;
+    }
+
+    if (!IsDirectoryObject)
+    {
+        if (AceFlags & OBJECT_INHERIT_ACE)
+        {
+            *NewAceFlags = AceFlags & ~VALID_INHERIT_FLAGS;
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    if (AceFlags & NO_PROPAGATE_INHERIT_ACE)
+    {
+        if (AceFlags & CONTAINER_INHERIT_ACE)
+        {
+            *NewAceFlags = AceFlags & ~VALID_INHERIT_FLAGS;
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    if (AceFlags & CONTAINER_INHERIT_ACE)
+    {
+        *NewAceFlags = CONTAINER_INHERIT_ACE | (AceFlags & OBJECT_INHERIT_ACE) | (AceFlags & ~VALID_INHERIT_FLAGS);
+        return TRUE;
+    }
+
+    if (AceFlags & OBJECT_INHERIT_ACE)
+    {
+        *NewAceFlags = INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE | (AceFlags & ~VALID_INHERIT_FLAGS);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+NTSTATUS
+SepPropagateAcl(
+    _Out_writes_bytes_opt_(DaclLength) PACL AclDest,
+    _Inout_ PULONG AclLength,
+    _In_reads_bytes_(AclSource->AclSize) PACL AclSource,
+    _In_ PSID Owner,
+    _In_ PSID Group,
+    _In_ BOOLEAN IsInherited,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PGENERIC_MAPPING GenericMapping)
+{
+    ACCESS_MASK Mask;
+    PACCESS_ALLOWED_ACE AceSource;
+    PACCESS_ALLOWED_ACE AceDest;
+    PUCHAR CurrentDest;
+    PUCHAR CurrentSource;
+    ULONG i;
+    ULONG Written;
+    UCHAR AceFlags;
+    USHORT AceSize;
+    USHORT AceCount = 0;
+    PSID Sid;
+    BOOLEAN WriteTwoAces;
+
+    if (AclSource->AclRevision != ACL_REVISION)
+    {
+        NT_ASSERT(AclSource->AclRevision == ACL_REVISION);
+        return STATUS_UNKNOWN_REVISION;
+    }
+
+    NT_ASSERT(AclSource->AclSize % sizeof(ULONG) == 0);
+    NT_ASSERT(AclSource->Sbz1 == 0);
+    NT_ASSERT(AclSource->Sbz2 == 0);
+
+    Written = 0;
+    if (*AclLength >= Written + sizeof(ACL))
+    {
+        RtlCopyMemory(AclDest,
+                      AclSource,
+                      sizeof(ACL));
+    }
+    Written += sizeof(ACL);
+
+    CurrentDest = (PUCHAR)(AclDest + 1);
+    CurrentSource = (PUCHAR)(AclSource + 1);
+    for (i = 0; i < AclSource->AceCount; i++)
+    {
+        NT_ASSERT((ULONG_PTR)CurrentDest % sizeof(ULONG) == 0);
+        NT_ASSERT((ULONG_PTR)CurrentSource % sizeof(ULONG) == 0);
+        AceDest = (PACCESS_ALLOWED_ACE)CurrentDest;
+        AceSource = (PACCESS_ALLOWED_ACE)CurrentSource;
+
+        /* These all have the same structure */
+        NT_ASSERT(AceSource->Header.AceType == ACCESS_ALLOWED_ACE_TYPE ||
+                  AceSource->Header.AceType == ACCESS_DENIED_ACE_TYPE ||
+                  AceSource->Header.AceType == SYSTEM_AUDIT_ACE_TYPE);
+
+        NT_ASSERT(AceSource->Header.AceSize % sizeof(ULONG) == 0);
+        NT_ASSERT(AceSource->Header.AceSize >= sizeof(*AceSource));
+        if (!SepShouldPropagateAce(AceSource->Header.AceFlags,
+                                   &AceFlags,
+                                   IsInherited,
+                                   IsDirectoryObject))
+        {
+            CurrentSource += AceSource->Header.AceSize;
+            continue;
+        }
+
+        /* FIXME: filter out duplicate ACEs */
+        AceSize = AceSource->Header.AceSize;
+        Mask = AceSource->Mask;
+        Sid = (PSID)&AceSource->SidStart;
+        NT_ASSERT(AceSize >= FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(Sid));
+
+        WriteTwoAces = FALSE;
+        /* Map effective ACE to specific rights */
+        if (!(AceFlags & INHERIT_ONLY_ACE))
+        {
+            RtlMapGenericMask(&Mask, GenericMapping);
+            Mask &= GenericMapping->GenericAll;
+
+            if (IsInherited)
+            {
+                if (RtlEqualSid(Sid, SeCreatorOwnerSid))
+                    Sid = Owner;
+                else if (RtlEqualSid(Sid, SeCreatorGroupSid))
+                    Sid = Group;
+                AceSize = FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(Sid);
+
+                /*
+                 * A generic container ACE becomes two ACEs:
+                 * - a specific effective ACE with no inheritance flags
+                 * - an inherit-only ACE that keeps the generic rights
+                 */
+                if (IsDirectoryObject &&
+                    (AceFlags & CONTAINER_INHERIT_ACE) &&
+                    (Mask != AceSource->Mask || Sid != (PSID)&AceSource->SidStart))
+                {
+                    WriteTwoAces = TRUE;
+                }
+            }
+        }
+
+        while (1)
+        {
+            if (*AclLength >= Written + AceSize)
+            {
+                AceDest->Header.AceType = AceSource->Header.AceType;
+                AceDest->Header.AceFlags = WriteTwoAces ? AceFlags & ~VALID_INHERIT_FLAGS
+                                                        : AceFlags;
+                AceDest->Header.AceSize = AceSize;
+                AceDest->Mask = Mask;
+                RtlCopySid(AceSize - FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart),
+                           (PSID)&AceDest->SidStart,
+                           Sid);
+            }
+            Written += AceSize;
+
+            AceCount++;
+            CurrentDest += AceSize;
+
+            if (!WriteTwoAces)
+                break;
+
+            /* Second ACE keeps all the generics from the source ACE */
+            WriteTwoAces = FALSE;
+            AceDest = (PACCESS_ALLOWED_ACE)CurrentDest;
+            AceSize = AceSource->Header.AceSize;
+            Mask = AceSource->Mask;
+            Sid = (PSID)&AceSource->SidStart;
+            AceFlags |= INHERIT_ONLY_ACE;
+        }
+
+        CurrentSource += AceSource->Header.AceSize;
+    }
+
+    if (*AclLength >= sizeof(ACL))
+    {
+        AclDest->AceCount = AceCount;
+        AclDest->AclSize = Written;
+    }
+
+    if (Written > *AclLength)
+    {
+        *AclLength = Written;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+    *AclLength = Written;
+    return STATUS_SUCCESS;
+}
+
+PACL
+SepSelectAcl(
+    _In_opt_ PACL ExplicitAcl,
+    _In_ BOOLEAN ExplicitPresent,
+    _In_ BOOLEAN ExplicitDefaulted,
+    _In_opt_ PACL ParentAcl,
+    _In_opt_ PACL DefaultAcl,
+    _Out_ PULONG AclLength,
+    _In_ PSID Owner,
+    _In_ PSID Group,
+    _Out_ PBOOLEAN AclPresent,
+    _Out_ PBOOLEAN IsInherited,
+    _In_ BOOLEAN IsDirectoryObject,
+    _In_ PGENERIC_MAPPING GenericMapping)
+{
+    PACL Acl;
+    NTSTATUS Status;
+
+    *AclPresent = TRUE;
+    if (ExplicitPresent && !ExplicitDefaulted)
+    {
+        Acl = ExplicitAcl;
+    }
+    else
+    {
+        if (ParentAcl)
+        {
+            *IsInherited = TRUE;
+            *AclLength = 0;
+            Status = SepPropagateAcl(NULL,
+                                     AclLength,
+                                     ParentAcl,
+                                     Owner,
+                                     Group,
+                                     *IsInherited,
+                                     IsDirectoryObject,
+                                     GenericMapping);
+            NT_ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
+
+            /* Use the parent ACL only if it's not empty */
+            if (*AclLength != sizeof(ACL))
+                return ParentAcl;
+        }
+
+        if (ExplicitPresent)
+        {
+            Acl = ExplicitAcl;
+        }
+        else if (DefaultAcl)
+        {
+            Acl = DefaultAcl;
+        }
+        else
+        {
+            *AclPresent = FALSE;
+            Acl = NULL;
+        }
+    }
+
+    *IsInherited = FALSE;
+    *AclLength = 0;
+    if (Acl)
+    {
+        /* Get the length */
+        Status = SepPropagateAcl(NULL,
+                                 AclLength,
+                                 Acl,
+                                 Owner,
+                                 Group,
+                                 *IsInherited,
+                                 IsDirectoryObject,
+                                 GenericMapping);
+        NT_ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
+    }
+    return Acl;
+}
+
 /* EOF */

@@ -1327,7 +1327,7 @@ PdoStartDevice(
     }
     else
     {
-        DbgPrint("None\n");
+        DBGPRINT("None\n");
     }
 
     return STATUS_SUCCESS;

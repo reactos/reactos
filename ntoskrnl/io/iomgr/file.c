@@ -1580,6 +1580,8 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (OpenPacket.ParseCheck != TRUE)
     {
         /* Parse failed */
+        DPRINT1("IopQueryAttributesFile failed for '%wZ' with 0x%lx\n",
+                ObjectAttributes->ObjectName, Status);
         return Status;
     }
     else
@@ -1802,6 +1804,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
+                DPRINT1("Invalid parameter: ExtraCreateParameters == 0!\n");
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1815,6 +1818,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 (CreateOptions & ~FILE_VALID_PIPE_OPTION_FLAGS))
             {
                 /* Invalid named pipe create */
+                DPRINT1("Invalid named pipe create\n");
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -1823,6 +1827,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
+                DPRINT1("Invalid parameter: ExtraCreateParameters == 0!\n");
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1833,6 +1838,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 (CreateOptions & ~FILE_VALID_MAILSLOT_OPTION_FLAGS))
             {
                 /* Invalid mailslot create */
+                DPRINT1("Invalid mailslot create\n");
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -1936,6 +1942,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             if (!OpenPacket->EaBuffer)
             {
                 ExFreePool(OpenPacket);
+                DPRINT1("Failed to allocate open packet EA buffer\n");
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 

@@ -14,6 +14,7 @@
 #include <ntifs.h>
 #include <ndk/obtypes.h>
 #include <tdi.h>
+#include <tcpioctl.h>
 #define _WINBASE_
 #define _WINDOWS_H
 #define _INC_WINDOWS
@@ -30,38 +31,9 @@
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #endif
 
-#define IOCTL_TCP_QUERY_INFORMATION_EX \
-	CTL_CODE(FILE_DEVICE_NETWORK, 0, METHOD_NEITHER, FILE_ANY_ACCESS)
-
 #define TL_INSTANCE 0
 #define	IP_MIB_STATS_ID 1
 #define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
-
-typedef struct IPSNMP_INFO {
-	ULONG Forwarding;
-	ULONG DefaultTTL;
-	ULONG InReceives;
-	ULONG InHdrErrors;
-	ULONG InAddrErrors;
-	ULONG ForwDatagrams;
-	ULONG InUnknownProtos;
-	ULONG InDiscards;
-	ULONG InDelivers;
-	ULONG OutRequests;
-	ULONG RoutingDiscards;
-	ULONG OutDiscards;
-	ULONG OutNoRoutes;
-	ULONG ReasmTimeout;
-	ULONG ReasmReqds;
-	ULONG ReasmOks;
-	ULONG ReasmFails;
-	ULONG FragOks;
-	ULONG FragFails;
-	ULONG FragCreates;
-	ULONG NumIf;
-	ULONG NumAddr;
-	ULONG NumRoutes;
-} IPSNMP_INFO, *PIPSNMP_INFO;
 
 typedef struct IPADDR_ENTRY {
 	ULONG  Addr;

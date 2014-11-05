@@ -12,32 +12,6 @@
 #define MAX_PHYSADDR_LEN 8
 #define MAX_IFDESCR_LEN  256
 
-typedef struct IPSNMP_INFO {
-	ULONG Forwarding;
-	ULONG DefaultTTL;
-	ULONG InReceives;
-	ULONG InHdrErrors;
-	ULONG InAddrErrors;
-	ULONG ForwDatagrams;
-	ULONG InUnknownProtos;
-	ULONG InDiscards;
-	ULONG InDelivers;
-	ULONG OutRequests;
-	ULONG RoutingDiscards;
-	ULONG OutDiscards;
-	ULONG OutNoRoutes;
-	ULONG ReasmTimeout;
-	ULONG ReasmReqds;
-	ULONG ReasmOks;
-	ULONG ReasmFails;
-	ULONG FragOks;
-	ULONG FragFails;
-	ULONG FragCreates;
-	ULONG NumIf;
-	ULONG NumAddr;
-	ULONG NumRoutes;
-} IPSNMP_INFO, *PIPSNMP_INFO;
-
 typedef struct IPADDR_ENTRY {
 	ULONG  Addr;
 	ULONG  Index;
@@ -76,31 +50,6 @@ typedef struct IPROUTE_ENTRY {
     ULONG Metric5;
     ULONG Info;
 } IPROUTE_ENTRY, *PIPROUTE_ENTRY;
-
-typedef struct IFENTRY {
-    ULONG Index;
-    ULONG Type;
-    ULONG Mtu;
-    ULONG Speed;
-    ULONG PhysAddrLen;
-    UCHAR PhysAddr[MAX_PHYSADDR_LEN];
-    ULONG AdminStatus;
-    ULONG OperStatus;
-    ULONG LastChange;
-    ULONG InOctets;
-    ULONG InUcastPackets;
-    ULONG InNUcastPackets;
-    ULONG InDiscards;
-    ULONG InErrors;
-    ULONG InUnknownProtos;
-    ULONG OutOctets;
-    ULONG OutUcastPackets;
-    ULONG OutNUcastPackets;
-    ULONG OutDiscards;
-    ULONG OutErrors;
-    ULONG OutQLen;
-    ULONG DescrLen;
-} IFENTRY, *PIFENTRY;
 
 /* Only UDP is supported */
 #define TDI_SERVICE_FLAGS (TDI_SERVICE_CONNECTIONLESS_MODE | \

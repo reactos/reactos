@@ -15,6 +15,7 @@
 
 BOOLEAN CmBootAcceptFirstTime = TRUE;
 BOOLEAN CmFirstTime = TRUE;
+extern ULONG InitSafeBootMode;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -947,7 +948,7 @@ NtInitializeRegistry(IN USHORT Flag)
 
     /* Enough of the system has booted by now */
     Ki386PerfEnd();
-            
+
     /* Validate flag */
     if (Flag > CM_BOOT_FLAG_MAX) return STATUS_INVALID_PARAMETER;
 
@@ -1016,13 +1017,52 @@ NtCompressKey(IN HANDLE Key)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+// FIXME: different for different windows versions!
+#define PRODUCT_ACTIVATION_VERSION 7749
+
 NTSTATUS
 NTAPI
 NtLockProductActivationKeys(IN PULONG pPrivateVer,
                             IN PULONG pSafeMode)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KPROCESSOR_MODE PreviousMode;
+
+    PreviousMode = ExGetPreviousMode();
+    _SEH2_TRY
+    {
+        /* Check if the caller asked for the version */
+        if (pPrivateVer != NULL)
+        {
+            /* For user mode, probe it */
+            if (PreviousMode != KernelMode)
+            {
+                ProbeForRead(pPrivateVer, sizeof(ULONG), sizeof(ULONG));
+            }
+
+            /* Return the expected version */
+            *pPrivateVer = PRODUCT_ACTIVATION_VERSION;
+        }
+
+        /* Check if the caller asked for safe mode mode state */
+        if (pSafeMode != NULL)
+        {
+            /* For user mode, probe it */
+            if (PreviousMode != KernelMode)
+            {
+                ProbeForRead(pSafeMode, sizeof(ULONG), sizeof(ULONG));
+            }
+
+            /* Return the safe boot mode state */
+            *pSafeMode = InitSafeBootMode;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

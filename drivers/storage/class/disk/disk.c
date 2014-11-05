@@ -1515,6 +1515,15 @@ Return Value:
     LARGE_INTEGER startingOffset;
 
     //
+    // HACK: How can we end here with null sector size?!
+    //
+
+    if (deviceExtension->DiskGeometry->Geometry.BytesPerSector == 0) {
+        DPRINT1("Hack! Received invalid sector size\n");
+        deviceExtension->DiskGeometry->Geometry.BytesPerSector = 512;
+    }
+
+    //
     // Verify parameters of this request.
     // Check that ending sector is within partition and
     // that number of bytes to transfer is a multiple of
@@ -1550,7 +1559,18 @@ Return Value:
             Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
         }
 
-        DPRINT1("STATUS_INVALID_PARAMETER\n");
+        if (startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) {
+            DPRINT1("Reading beyond partition end! startingOffset: %I64d, PartitionLength: %I64d\n", startingOffset.QuadPart, deviceExtension->PartitionLength.QuadPart);
+        }
+
+        if (transferByteCount & (deviceExtension->DiskGeometry->Geometry.BytesPerSector - 1)) {
+            DPRINT1("Not reading sectors! TransferByteCount: %lu, BytesPerSector: %lu\n", transferByteCount, deviceExtension->DiskGeometry->Geometry.BytesPerSector);
+        }
+
+        if (Irp->IoStatus.Status == STATUS_DEVICE_NOT_READY) {
+            DPRINT1("Failing due to device not ready!\n");
+        }
+
         return STATUS_INVALID_PARAMETER;
     }
 

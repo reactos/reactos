@@ -11,6 +11,7 @@
 #include "fdc.h"
 
 #include <stdio.h>
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/
@@ -89,7 +90,7 @@ FdcFdoStartDevice(
 //    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorTranslated;
     ULONG i;
 
-    DPRINT1("FdcFdoStartDevice called\n");
+    DPRINT("FdcFdoStartDevice called\n");
 
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -129,7 +130,7 @@ FdcFdoStartDevice(
         switch (PartialDescriptor->Type)
         {
             case CmResourceTypePort:
-                DPRINT1("Port: 0x%lx (%lu)\n",
+                DPRINT("Port: 0x%lx (%lu)\n",
                         PartialDescriptor->u.Port.Start.u.LowPart,
                         PartialDescriptor->u.Port.Length);
                 if (PartialDescriptor->u.Port.Length >= 6)
@@ -137,7 +138,7 @@ FdcFdoStartDevice(
                 break;
 
             case CmResourceTypeInterrupt:
-                DPRINT1("Interrupt: Level %lu  Vector %lu\n",
+                DPRINT("Interrupt: Level %lu  Vector %lu\n",
                         PartialDescriptor->u.Interrupt.Level,
                         PartialDescriptor->u.Interrupt.Vector);
 /*
@@ -153,7 +154,7 @@ FdcFdoStartDevice(
                 break;
 
             case CmResourceTypeDma:
-                DPRINT1("Dma: Channel %lu\n",
+                DPRINT("Dma: Channel %lu\n",
                         PartialDescriptor->u.Dma.Channel);
                 break;
         }
@@ -190,7 +191,7 @@ FdcFdoConfigCallback(
     BOOLEAN ControllerFound = FALSE;
     ULONG i;
 
-    DPRINT1("FdcFdoConfigCallback() called\n");
+    DPRINT("FdcFdoConfigCallback() called\n");
 
     DeviceExtension = (PFDO_DEVICE_EXTENSION)Context;
 
@@ -256,7 +257,7 @@ FdcFdoConfigCallback(
 
     DeviceExtension->ControllerInfo.Populated = TRUE;
 
-    DPRINT1("Detected %lu floppy drives!\n",
+    DPRINT("Detected %lu floppy drives!\n",
             DeviceExtension->ControllerInfo.NumberOfDrives);
 
     return STATUS_SUCCESS;
@@ -341,7 +342,7 @@ FdcFdoQueryBusRelations(
     ULONG i;
     NTSTATUS Status;
 
-    DPRINT1("FdcFdoQueryBusRelations() called\n");
+    DPRINT("FdcFdoQueryBusRelations() called\n");
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -376,7 +377,7 @@ FdcFdoQueryBusRelations(
             {
                 swprintf(DeviceNameBuffer, L"\\Device\\FloppyPDO%lu", DeviceNumber++);
                 RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
-                DPRINT1("Device name: %S\n", DeviceNameBuffer);
+                DPRINT("Device name: %S\n", DeviceNameBuffer);
 
                 /* Create physical device object */
                 Status = IoCreateDevice(FdoDeviceExtension->Common.DeviceObject->DriverObject,
@@ -395,7 +396,7 @@ FdcFdoQueryBusRelations(
                 goto done;
             }
 
-            DPRINT1("PDO created: %S\n", DeviceNameBuffer);
+            DPRINT("PDO created: %S\n", DeviceNameBuffer);
 
             DriveInfo->DeviceObject = Pdo;
 
@@ -415,7 +416,7 @@ FdcFdoQueryBusRelations(
             /* Add Device ID string */
             RtlCreateUnicodeString(&PdoDeviceExtension->DeviceId,
                                    L"FDC\\GENERIC_FLOPPY_DRIVE");
-            DPRINT1("DeviceID: %S\n", PdoDeviceExtension->DeviceId.Buffer);
+            DPRINT("DeviceID: %S\n", PdoDeviceExtension->DeviceId.Buffer);
 
             /* Add Hardware IDs string */
             Status = PciCreateHardwareIDsString(&PdoDeviceExtension->HardwareIds);
@@ -496,14 +497,14 @@ FdcFdoPnp(
     ULONG_PTR Information = 0;
     NTSTATUS Status = STATUS_NOT_SUPPORTED;
 
-    DPRINT1("FdcFdoPnp()\n");
+    DPRINT("FdcFdoPnp()\n");
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     switch (IrpSp->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
-            DPRINT1("  IRP_MN_START_DEVICE received\n");
+            DPRINT("  IRP_MN_START_DEVICE received\n");
             /* Call lower driver */
             Status = ForwardIrpAndWait(DeviceObject, Irp);
             if (NT_SUCCESS(Status))
@@ -515,53 +516,53 @@ FdcFdoPnp(
             break;
 
         case IRP_MN_QUERY_REMOVE_DEVICE:
-            DPRINT1("  IRP_MN_QUERY_REMOVE_DEVICE\n");
+            DPRINT("  IRP_MN_QUERY_REMOVE_DEVICE\n");
             break;
 
         case IRP_MN_REMOVE_DEVICE:
-            DPRINT1("  IRP_MN_REMOVE_DEVICE received\n");
+            DPRINT("  IRP_MN_REMOVE_DEVICE received\n");
             break;
 
         case IRP_MN_CANCEL_REMOVE_DEVICE:
-            DPRINT1("  IRP_MN_CANCEL_REMOVE_DEVICE\n");
+            DPRINT("  IRP_MN_CANCEL_REMOVE_DEVICE\n");
             break;
 
         case IRP_MN_STOP_DEVICE:
-            DPRINT1("  IRP_MN_STOP_DEVICE received\n");
+            DPRINT("  IRP_MN_STOP_DEVICE received\n");
             break;
 
         case IRP_MN_QUERY_STOP_DEVICE:
-            DPRINT1("  IRP_MN_QUERY_STOP_DEVICE received\n");
+            DPRINT("  IRP_MN_QUERY_STOP_DEVICE received\n");
             break;
 
         case IRP_MN_CANCEL_STOP_DEVICE:
-            DPRINT1("  IRP_MN_CANCEL_STOP_DEVICE\n");
+            DPRINT("  IRP_MN_CANCEL_STOP_DEVICE\n");
             break;
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
-            DPRINT1("  IRP_MN_QUERY_DEVICE_RELATIONS\n");
+            DPRINT("  IRP_MN_QUERY_DEVICE_RELATIONS\n");
 
             switch (IrpSp->Parameters.QueryDeviceRelations.Type)
             {
                 case BusRelations:
-                    DPRINT1("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+                    DPRINT("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
                     Status = FdcFdoQueryBusRelations(DeviceObject, &DeviceRelations);
                     Information = (ULONG_PTR)DeviceRelations;
                     break;
 
                 case RemovalRelations:
-                    DPRINT1("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+                    DPRINT("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
                     return ForwardIrpAndForget(DeviceObject, Irp);
 
                 default:
-                    DPRINT1("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+                    DPRINT("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                             IrpSp->Parameters.QueryDeviceRelations.Type);
                     return ForwardIrpAndForget(DeviceObject, Irp);
             }
             break;
 
         case IRP_MN_SURPRISE_REMOVAL:
-            DPRINT1("  IRP_MN_SURPRISE_REMOVAL received\n");
+            DPRINT("  IRP_MN_SURPRISE_REMOVAL received\n");
             break;
 
         default:

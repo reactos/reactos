@@ -1528,6 +1528,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Validate the number */
             if ((BasePriority > HIGH_PRIORITY) || (BasePriority <= LOW_PRIORITY))
             {
+                ObDereferenceObject(Process);
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1918,11 +1919,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessQuotaLimits:
 
-            return PspSetQuotaLimits(ProcessHandle,
+            Status = PspSetQuotaLimits(Process,
                                      1,
                                      ProcessInformation,
                                      ProcessInformationLength,
                                      PreviousMode);
+            break;
 
         case ProcessWorkingSetWatch:
             DPRINT1("WS watch not implemented\n");
