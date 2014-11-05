@@ -197,9 +197,9 @@ public:
 
 };
 
-template<typename TItemData>
+template<typename TItemData = DWORD_PTR>
 class CToolbar :
-    public CWindow
+    public CWindowImplBaseT<CWindow>
 {
 public: // Configuration methods
 
@@ -215,15 +215,11 @@ public: // Configuration methods
             dwExStyles = WS_EX_TOOLWINDOW;
         }
 
-        m_hWnd = CreateWindowEx(dwExStyles,
+        m_hWnd = CreateWindowExW(dwExStyles,
                                 TOOLBARCLASSNAME,
                                 NULL,
                                 dwStyles,
-                                0,
-                                0,
-                                0,
-                                0,
-                                hWndParent,
+                                0, 0, 0, 0, hWndParent,
                                 NULL,
                                 _AtlBaseModule.GetModuleInstance(),
                                 NULL);
@@ -240,6 +236,21 @@ public: // Configuration methods
     DWORD SetButtonStructSize()
     {
         return SendMessageW(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+    }
+
+    HWND GetTooltip()
+    {
+        return (HWND)SendMessageW(TB_GETTOOLTIPS);
+    }
+
+    DWORD SetTooltip(HWND hWndTooltip)
+    {
+        return SendMessageW(TB_SETTOOLTIPS, hWndTooltip, 0);
+    }
+
+    INT GetHotItem()
+    {
+        return SendMessageW(TB_GETHOTITEM);
     }
 
 public: // Button list management methods
@@ -299,15 +310,36 @@ public: // Layout management methods
         return SendMessageW(TB_AUTOSIZE);
     }
 
+    DWORD GetMetrics(TBMETRICS * tbm)
+    {
+        return SendMessageW(TB_GETMETRICS, 0, (LPARAM) tbm);
+    }
+
+    DWORD SetMetrics(TBMETRICS * tbm)
+    {
+        return SendMessageW(TB_SETMETRICS, 0, (LPARAM) tbm);
+    }
+
+    DWORD GetItemRect(int index, LPRECT prcItem)
+    {
+        return SendMessageW(TB_GETITEMRECT, index, (LPARAM) prcItem);
+    }
+
+    DWORD SetRedraw(BOOL bEnable)
+    {
+        return SendMessageW(WM_SETREDRAW, bEnable);
+    }
+
 public: // Image list management methods
     DWORD SetImageList(HIMAGELIST himl)
     {
         return SendMessageW(TB_SETIMAGELIST, 0, (LPARAM) himl);
     }
 
-    DWORD SetMetrics(TBMETRICS * tbm)
+public: // Other methods
+    INT HitTest(PPOINT ppt)
     {
-        return SendMessageW(TB_SETMETRICS, 0, (LPARAM) tbm);
+        return (INT) SendMessageW(TB_HITTEST, 0, (LPARAM) ppt);
     }
 
 public: // Utility methods

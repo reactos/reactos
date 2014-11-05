@@ -100,10 +100,82 @@ typedef struct _TASK_ITEM
 
 #define TASK_ITEM_ARRAY_ALLOC   64
 
+class CTaskToolbar :
+    public CToolbar<TASK_ITEM>
+{
+public:
+    INT UpdateTbButtonSpacing(IN BOOL bHorizontal, IN BOOL bThemed, IN UINT uiRows = 0, IN UINT uiBtnsPerLine = 0)
+    {
+        TBMETRICS tbm;
+
+        tbm.cbSize = sizeof(tbm);
+        tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
+
+        tbm.cxBarPad = tbm.cyBarPad = 0;
+
+        if (bThemed)
+        {
+            tbm.cxButtonSpacing = 0;
+            tbm.cyButtonSpacing = 0;
+        }
+        else
+        {
+            if (bHorizontal || uiBtnsPerLine > 1)
+                tbm.cxButtonSpacing = (3 * GetSystemMetrics(SM_CXEDGE) / 2);
+            else
+                tbm.cxButtonSpacing = 0;
+
+            if (!bHorizontal || uiRows > 1)
+                tbm.cyButtonSpacing = (3 * GetSystemMetrics(SM_CYEDGE) / 2);
+            else
+                tbm.cyButtonSpacing = 0;
+        }
+
+        SetMetrics(&tbm);
+
+        return tbm.cxButtonSpacing;
+    }
+
+    VOID BeginUpdate()
+    {
+        SetRedraw(FALSE);
+    }
+
+    VOID EndUpdate()
+    {
+        SendMessageW(WM_SETREDRAW, TRUE);
+        InvalidateRect(NULL, TRUE);
+    }
+
+    BOOL SetButtonCommandId(IN INT iButtonIndex, IN INT iCommandId)
+    {
+        TBBUTTONINFO tbbi;
+
+        tbbi.cbSize = sizeof(tbbi);
+        tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
+        tbbi.idCommand = iCommandId;
+
+        return SetButtonInfo(iButtonIndex, &tbbi) != 0;
+    }
+
+public:
+    BEGIN_MSG_MAP(CNotifyToolbar)
+    END_MSG_MAP()
+
+    BOOL Initialize(HWND hWndParent)
+    {
+        DWORD styles = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
+            TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_LIST | TBSTYLE_TRANSPARENT |
+            CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER;
+
+        return SubclassWindow(Create(hWndParent, styles));
+    }
+};
+
 class CTaskSwitchWnd :
     public CWindowImpl < CTaskSwitchWnd, CWindow, CControlWinTraits >
 {
-    CContainedWindow TaskBar;
+    CTaskToolbar TaskBar;
 
     HWND hWndNotify;
 
@@ -118,11 +190,10 @@ class CTaskSwitchWnd :
     PTASK_ITEM ActiveTaskItem;
 
     HTHEME TaskBandTheme;
-    HWND hWndToolbar;
     UINT TbButtonsPerLine;
     WORD ToolbarBtnCount;
 
-    IImageList * TaskIcons;
+    HIMAGELIST TaskIcons;
 
     BOOL IsGroupingEnabled;
     BOOL IsDestroying;
@@ -132,7 +203,6 @@ class CTaskSwitchWnd :
 
 public:
     CTaskSwitchWnd() :
-        TaskBar(this, 1),
         hWndNotify(NULL),
         ShellHookMsg(NULL),
         TaskGroups(NULL),
@@ -141,10 +211,11 @@ public:
         TaskItems(0),
         ActiveTaskItem(0),
         TaskBandTheme(NULL),
-        hWndToolbar(NULL),
         TbButtonsPerLine(0),
         ToolbarBtnCount(0),
-        TaskIcons(NULL)
+        TaskIcons(NULL),
+        IsGroupingEnabled(FALSE),
+        IsDestroying(FALSE)
     {
         ZeroMemory(&ButtonSize, sizeof(ButtonSize));
         szBuf[0] = 0;
@@ -153,11 +224,9 @@ public:
 
 #define MAX_TASKS_COUNT (0x7FFF)
 
-    VOID TaskSwitchWnd_UpdateButtonsSize(
-        IN BOOL bRedrawDisabled);
+    VOID TaskSwitchWnd_UpdateButtonsSize(IN BOOL bRedrawDisabled);
 
-    LPTSTR GetWndTextFromTaskItem(
-        IN PTASK_ITEM TaskItem)
+    LPTSTR GetWndTextFromTaskItem(IN PTASK_ITEM TaskItem)
     {
         /* Get the window text without sending a message so we don't hang if an
            application isn't responding! */
@@ -224,47 +293,13 @@ public:
     }
 #endif
 
-    VOID BeginUpdate()
-    {
-        ::SendMessage(hWndToolbar,
-            WM_SETREDRAW,
-            FALSE,
-            0);
-    }
-
-    VOID EndUpdate()
-    {
-        ::SendMessage(hWndToolbar,
-            WM_SETREDRAW,
-            TRUE,
-            0);
-        ::InvalidateRect(hWndToolbar,
-            NULL,
-            TRUE);
-    }
-
-    BOOL SetToolbarButtonCommandId(
-        IN INT iButtonIndex,
-        IN INT iCommandId)
-    {
-        TBBUTTONINFO tbbi;
-
-        tbbi.cbSize = sizeof(tbbi);
-        tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
-        tbbi.idCommand = iCommandId;
-
-        return SendMessage(hWndToolbar,
-            TB_SETBUTTONINFO,
-            (WPARAM) iButtonIndex,
-            (LPARAM) &tbbi) != 0;
-    }
-
-    VOID UpdateIndexesAfterButtonInserted(
-        IN INT iIndex)
+    VOID UpdateIndexesAfter(IN INT iIndex, BOOL bInserted)
     {
         PTASK_GROUP CurrentGroup;
         PTASK_ITEM CurrentTaskItem, LastTaskItem;
         INT NewIndex;
+
+        int offset = bInserted ? +1 : -1;
 
         if (IsGroupingEnabled)
         {
@@ -276,10 +311,8 @@ public:
                     CurrentGroup->Index >= iIndex)
                 {
                     /* Update the toolbar buttons */
-                    NewIndex = CurrentGroup->Index + 1;
-                    if (SetToolbarButtonCommandId(
-                        CurrentGroup->Index + 1,
-                        NewIndex))
+                    NewIndex = CurrentGroup->Index + offset;
+                    if (TaskBar.SetButtonCommandId(CurrentGroup->Index + offset, NewIndex))
                     {
                         CurrentGroup->Index = NewIndex;
                     }
@@ -309,10 +342,8 @@ public:
             {
             UpdateTaskItemBtn:
                 /* Update the toolbar buttons */
-                NewIndex = CurrentTaskItem->Index + 1;
-                if (SetToolbarButtonCommandId(
-                    CurrentTaskItem->Index + 1,
-                    NewIndex))
+                NewIndex = CurrentTaskItem->Index + offset;
+                if (TaskBar.SetButtonCommandId(CurrentTaskItem->Index + offset, NewIndex))
                 {
                     CurrentTaskItem->Index = NewIndex;
                 }
@@ -324,73 +355,8 @@ public:
         }
     }
 
-    VOID UpdateIndexesAfterButtonDeleted(
-        IN INT iIndex)
-    {
-        PTASK_GROUP CurrentGroup;
-        PTASK_ITEM CurrentTaskItem, LastTaskItem;
-        INT NewIndex;
 
-        if (IsGroupingEnabled)
-        {
-            /* Update all affected groups */
-            CurrentGroup = TaskGroups;
-            while (CurrentGroup != NULL)
-            {
-                if (CurrentGroup->IsCollapsed &&
-                    CurrentGroup->Index > iIndex)
-                {
-                    /* Update the toolbar buttons */
-                    NewIndex = CurrentGroup->Index - 1;
-                    if (SetToolbarButtonCommandId(
-                        CurrentGroup->Index - 1,
-                        NewIndex))
-                    {
-                        CurrentGroup->Index = NewIndex;
-                    }
-                    else
-                        CurrentGroup->Index = -1;
-                }
-
-                CurrentGroup = CurrentGroup->Next;
-            }
-        }
-
-        /* Update all affected task items */
-        CurrentTaskItem = TaskItems;
-        LastTaskItem = CurrentTaskItem + TaskItemCount;
-        while (CurrentTaskItem != LastTaskItem)
-        {
-            CurrentGroup = CurrentTaskItem->Group;
-            if (CurrentGroup != NULL)
-            {
-                if (!CurrentGroup->IsCollapsed &&
-                    CurrentTaskItem->Index > iIndex)
-                {
-                    goto UpdateTaskItemBtn;
-                }
-            }
-            else if (CurrentTaskItem->Index > iIndex)
-            {
-            UpdateTaskItemBtn:
-                /* Update the toolbar buttons */
-                NewIndex = CurrentTaskItem->Index - 1;
-                if (SetToolbarButtonCommandId(
-                    CurrentTaskItem->Index - 1,
-                    NewIndex))
-                {
-                    CurrentTaskItem->Index = NewIndex;
-                }
-                else
-                    CurrentTaskItem->Index = -1;
-            }
-
-            CurrentTaskItem++;
-        }
-    }
-
-    INT UpdateTaskGroupButton(
-        IN PTASK_GROUP TaskGroup)
+    INT UpdateTaskGroupButton(IN PTASK_GROUP TaskGroup)
     {
         ASSERT(TaskGroup->Index >= 0);
 
@@ -399,8 +365,7 @@ public:
         return TaskGroup->Index;
     }
 
-    VOID ExpandTaskGroup(
-        IN PTASK_GROUP TaskGroup)
+    VOID ExpandTaskGroup(IN PTASK_GROUP TaskGroup)
     {
         ASSERT(TaskGroup->dwTaskCount > 0);
         ASSERT(TaskGroup->IsCollapsed);
@@ -414,21 +379,26 @@ public:
         HICON hIcon = 0;
 
         SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        if (hIcon)
+            return hIcon;
 
-        if (!hIcon)
-            SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        if (hIcon)
+            return hIcon;
 
-        if (!hIcon)
-            SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
-
-        if (!hIcon)
-            hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICONSM);
-
-        if (!hIcon)
-            hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICON);
+        SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        if (hIcon)
+            return hIcon;
+        
+        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICONSM);
+        if (hIcon)
+            return hIcon;
+        
+        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICON);
 
         return hIcon;
     }
+
     INT UpdateTaskItemButton(IN PTASK_ITEM TaskItem)
     {
         TBBUTTONINFO tbbi;
@@ -447,23 +417,19 @@ public:
 
         /* Check if we're updating a button that is the last one in the
            line. If so, we need to set the TBSTATE_WRAP flag! */
-        if (TbButtonsPerLine != 0 &&
-            (TaskItem->Index + 1) % TbButtonsPerLine == 0)
+        if (!Tray->IsHorizontal() || (TbButtonsPerLine != 0 &&
+            (TaskItem->Index + 1) % TbButtonsPerLine == 0))
         {
             tbbi.fsState |= TBSTATE_WRAP;
         }
 
-        tbbi.pszText = GetWndTextFromTaskItem(
-            TaskItem);
+        tbbi.pszText = GetWndTextFromTaskItem(TaskItem);
 
         icon = GetWndIcon(TaskItem->hWnd);
-        TaskIcons->ReplaceIcon(TaskItem->IconIndex, icon, &TaskItem->IconIndex);
+        TaskItem->IconIndex = ImageList_ReplaceIcon(TaskIcons, TaskItem->IconIndex, icon);
         tbbi.iImage = TaskItem->IconIndex;
 
-        if (!SendMessage(hWndToolbar,
-            TB_SETBUTTONINFO,
-            (WPARAM) TaskItem->Index,
-            (LPARAM) &tbbi))
+        if (!TaskBar.SetButtonInfo(TaskItem->Index, &tbbi))
         {
             TaskItem->Index = -1;
             return -1;
@@ -473,8 +439,7 @@ public:
         return TaskItem->Index;
     }
 
-    VOID RemoveIcon(
-        IN PTASK_ITEM TaskItem)
+    VOID RemoveIcon(IN PTASK_ITEM TaskItem)
     {
         TBBUTTONINFO tbbi;
         PTASK_ITEM currentTaskItem, LastItem;
@@ -494,15 +459,12 @@ public:
                 currentTaskItem->IconIndex--;
                 tbbi.iImage = currentTaskItem->IconIndex;
 
-                SendMessage(hWndToolbar,
-                    TB_SETBUTTONINFO,
-                    currentTaskItem->Index,
-                    (LPARAM) &tbbi);
+                TaskBar.SetButtonInfo(currentTaskItem->Index, &tbbi);
             }
             currentTaskItem++;
         }
 
-        TaskIcons->Remove(TaskItem->IconIndex);
+        ImageList_Remove(TaskIcons, TaskItem->IconIndex);
     }
 
     PTASK_ITEM FindLastTaskItemOfGroup(
@@ -543,8 +505,7 @@ public:
         return FoundTaskItem;
     }
 
-    INT CalculateTaskItemNewButtonIndex(
-        IN PTASK_ITEM TaskItem)
+    INT CalculateTaskItemNewButtonIndex(IN PTASK_ITEM TaskItem)
     {
         PTASK_GROUP TaskGroup;
         PTASK_ITEM LastTaskItem;
@@ -561,9 +522,7 @@ public:
 
                 if (TaskGroup->dwTaskCount > 1)
                 {
-                    LastTaskItem = FindLastTaskItemOfGroup(
-                        TaskGroup,
-                        TaskItem);
+                    LastTaskItem = FindLastTaskItemOfGroup(TaskGroup, TaskItem);
                     if (LastTaskItem != NULL)
                     {
                         /* Since the group is expanded the task items must have an index */
@@ -577,9 +536,7 @@ public:
             {
                 /* Find the last NULL group button. NULL groups are added at the end of the
                    task item list when grouping is enabled */
-                LastTaskItem = FindLastTaskItemOfGroup(
-                    NULL,
-                    TaskItem);
+                LastTaskItem = FindLastTaskItemOfGroup(NULL, TaskItem);
                 if (LastTaskItem != NULL)
                 {
                     ASSERT(LastTaskItem->Index >= 0);
@@ -592,8 +549,7 @@ public:
         return ToolbarBtnCount;
     }
 
-    INT AddTaskItemButton(
-        IN OUT PTASK_ITEM TaskItem)
+    INT AddTaskItemButton(IN OUT PTASK_ITEM TaskItem)
     {
         TBBUTTON tbBtn;
         INT iIndex;
@@ -601,44 +557,36 @@ public:
 
         if (TaskItem->Index >= 0)
         {
-            return UpdateTaskItemButton(
-                TaskItem);
+            return UpdateTaskItemButton(TaskItem);
         }
 
         if (TaskItem->Group != NULL &&
             TaskItem->Group->IsCollapsed)
         {
             /* The task group is collapsed, we only need to update the group button */
-            return UpdateTaskGroupButton(
-                TaskItem->Group);
+            return UpdateTaskGroupButton(TaskItem->Group);
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
-        TaskIcons->ReplaceIcon(-1, icon, &TaskItem->IconIndex);
+        TaskItem->IconIndex = ImageList_ReplaceIcon(TaskIcons, -1, icon);
 
         tbBtn.iBitmap = TaskItem->IconIndex;
         tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;
         tbBtn.fsStyle = BTNS_CHECK | BTNS_NOPREFIX | BTNS_SHOWTEXT;
         tbBtn.dwData = TaskItem->Index;
 
-        tbBtn.iString = (DWORD_PTR) GetWndTextFromTaskItem(
-            TaskItem);
+        tbBtn.iString = (DWORD_PTR) GetWndTextFromTaskItem(TaskItem);
 
         /* Find out where to insert the new button */
-        iIndex = CalculateTaskItemNewButtonIndex(
-            TaskItem);
+        iIndex = CalculateTaskItemNewButtonIndex(TaskItem);
         ASSERT(iIndex >= 0);
         tbBtn.idCommand = iIndex;
 
-        BeginUpdate();
+        TaskBar.BeginUpdate();
 
-        if (SendMessage(hWndToolbar,
-            TB_INSERTBUTTON,
-            (WPARAM) iIndex,
-            (LPARAM) &tbBtn))
+        if (TaskBar.InsertButton(iIndex, &tbBtn))
         {
-            UpdateIndexesAfterButtonInserted(
-                iIndex);
+            UpdateIndexesAfter(iIndex, TRUE);
 
             TRACE("Added button %d for hwnd 0x%p\n", iIndex, TaskItem->hWnd);
 
@@ -650,13 +598,12 @@ public:
             return iIndex;
         }
 
-        EndUpdate();
+        TaskBar.EndUpdate();
 
         return -1;
     }
 
-    BOOL DeleteTaskItemButton(
-        IN OUT PTASK_ITEM TaskItem)
+    BOOL DeleteTaskItemButton(IN OUT PTASK_ITEM TaskItem)
     {
         PTASK_GROUP TaskGroup;
         INT iIndex;
@@ -668,36 +615,30 @@ public:
             if ((TaskGroup != NULL && !TaskGroup->IsCollapsed) ||
                 TaskGroup == NULL)
             {
-                BeginUpdate();
+                TaskBar.BeginUpdate();
 
                 RemoveIcon(TaskItem);
                 iIndex = TaskItem->Index;
-                if (SendMessage(hWndToolbar,
-                    TB_DELETEBUTTON,
-                    (WPARAM) iIndex,
-                    0))
+                if (TaskBar.DeleteButton(iIndex))
                 {
                     TaskItem->Index = -1;
                     ToolbarBtnCount--;
 
-                    UpdateIndexesAfterButtonDeleted(
-                        iIndex);
+                    UpdateIndexesAfter(iIndex, FALSE);
 
                     /* Update button sizes and fix the button wrapping */
-                    UpdateButtonsSize(
-                        TRUE);
+                    UpdateButtonsSize(TRUE);
                     return TRUE;
                 }
 
-                EndUpdate();
+                TaskBar.EndUpdate();
             }
         }
 
         return FALSE;
     }
 
-    PTASK_GROUP AddToTaskGroup(
-        IN HWND hWnd)
+    PTASK_GROUP AddToTaskGroup(IN HWND hWnd)
     {
         DWORD dwProcessId;
         PTASK_GROUP TaskGroup, *PrevLink;
@@ -741,8 +682,7 @@ public:
         return TaskGroup;
     }
 
-    VOID RemoveTaskFromTaskGroup(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID RemoveTaskFromTaskGroup(IN OUT PTASK_ITEM TaskItem)
     {
         PTASK_GROUP TaskGroup, CurrentGroup, *PrevLink;
 
@@ -777,21 +717,18 @@ public:
                 {
                     /* FIXME: Check if we should expand the group */
                     /* Update the task group button */
-                    UpdateTaskGroupButton(
-                        TaskGroup);
+                    UpdateTaskGroupButton(TaskGroup);
                 }
                 else
                 {
                     /* Expand the group of one task button to a task button */
-                    ExpandTaskGroup(
-                        TaskGroup);
+                    ExpandTaskGroup(TaskGroup);
                 }
             }
         }
     }
 
-    PTASK_ITEM FindTaskItem(
-        IN HWND hWnd)
+    PTASK_ITEM FindTaskItem(IN HWND hWnd)
     {
         PTASK_ITEM TaskItem, LastItem;
 
@@ -808,15 +745,13 @@ public:
         return NULL;
     }
 
-    PTASK_ITEM FindOtherTaskItem(
-        IN HWND hWnd)
+    PTASK_ITEM FindOtherTaskItem(IN HWND hWnd)
     {
         PTASK_ITEM LastItem, TaskItem;
         PTASK_GROUP TaskGroup;
         DWORD dwProcessId;
 
-        if (!GetWindowThreadProcessId(hWnd,
-            &dwProcessId))
+        if (!GetWindowThreadProcessId(hWnd, &dwProcessId))
         {
             return NULL;
         }
@@ -903,8 +838,7 @@ public:
         return TaskItems + TaskItemCount++;
     }
 
-    VOID FreeTaskItem(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID FreeTaskItem(IN OUT PTASK_ITEM TaskItem)
     {
         WORD wIndex;
 
@@ -922,27 +856,22 @@ public:
         TaskItemCount--;
     }
 
-    VOID DeleteTaskItem(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID DeleteTaskItem(IN OUT PTASK_ITEM TaskItem)
     {
         if (!IsDestroying)
         {
             /* Delete the task button from the toolbar */
-            DeleteTaskItemButton(
-                TaskItem);
+            DeleteTaskItemButton(TaskItem);
         }
 
         /* Remove the task from it's group */
-        RemoveTaskFromTaskGroup(
-            TaskItem);
+        RemoveTaskFromTaskGroup(TaskItem);
 
         /* Free the task item */
-        FreeTaskItem(
-            TaskItem);
+        FreeTaskItem(TaskItem);
     }
 
-    VOID CheckActivateTaskItem(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID CheckActivateTaskItem(IN OUT PTASK_ITEM TaskItem)
     {
         PTASK_ITEM CurrentTaskItem;
         PTASK_GROUP TaskGroup = NULL;
@@ -1000,9 +929,7 @@ public:
         }
     }
 
-    PTASK_ITEM
-        FindTaskItemByIndex(
-        IN INT Index)
+    PTASK_ITEM FindTaskItemByIndex(IN INT Index)
     {
         PTASK_ITEM TaskItem, LastItem;
 
@@ -1019,9 +946,7 @@ public:
         return NULL;
     }
 
-    PTASK_GROUP
-        FindTaskGroupByIndex(
-        IN INT Index)
+    PTASK_GROUP FindTaskGroupByIndex(IN INT Index)
     {
         PTASK_GROUP CurrentGroup;
 
@@ -1055,13 +980,11 @@ public:
                     sizeof(*TaskItem));
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
-                TaskItem->Group = AddToTaskGroup(
-                    hWnd);
+                TaskItem->Group = AddToTaskGroup(hWnd);
 
                 if (!IsDestroying)
                 {
-                    AddTaskItemButton(
-                        TaskItem);
+                    AddTaskItemButton(TaskItem);
                 }
             }
         }
@@ -1069,8 +992,7 @@ public:
         return TaskItem != NULL;
     }
 
-    BOOL ActivateTaskItem(
-        IN OUT PTASK_ITEM TaskItem  OPTIONAL)
+    BOOL ActivateTaskItem(IN OUT PTASK_ITEM TaskItem  OPTIONAL)
     {
         if (TaskItem != NULL)
         {
@@ -1082,8 +1004,7 @@ public:
         return FALSE;
     }
 
-    BOOL ActivateTask(
-        IN HWND hWnd)
+    BOOL ActivateTask(IN HWND hWnd)
     {
         PTASK_ITEM TaskItem;
 
@@ -1092,12 +1013,10 @@ public:
             return ActivateTaskItem(NULL);
         }
 
-        TaskItem = FindTaskItem(
-            hWnd);
+        TaskItem = FindTaskItem(hWnd);
         if (TaskItem == NULL)
         {
-            TaskItem = FindOtherTaskItem(
-                hWnd);
+            TaskItem = FindOtherTaskItem(hWnd);
         }
 
         if (TaskItem == NULL)
@@ -1109,18 +1028,15 @@ public:
         return ActivateTaskItem(TaskItem);
     }
 
-    BOOL DeleteTask(
-        IN HWND hWnd)
+    BOOL DeleteTask(IN HWND hWnd)
     {
         PTASK_ITEM TaskItem;
 
-        TaskItem = FindTaskItem(
-            hWnd);
+        TaskItem = FindTaskItem(hWnd);
         if (TaskItem != NULL)
         {
             TRACE("Delete window 0x%p on button %d\n", hWnd, TaskItem->Index);
-            DeleteTaskItem(
-                TaskItem);
+            DeleteTaskItem(TaskItem);
             return TRUE;
         }
         //else
@@ -1138,40 +1054,33 @@ public:
             CurrentTask = TaskItems + TaskItemCount;
             do
             {
-                DeleteTaskItem(
-                    --CurrentTask);
+                DeleteTaskItem(--CurrentTask);
             } while (CurrentTask != TaskItems);
         }
     }
 
-    VOID FlashTaskItem(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID FlashTaskItem(IN OUT PTASK_ITEM TaskItem)
     {
         TaskItem->RenderFlashed = 1;
-        UpdateTaskItemButton(
-            TaskItem);
+        UpdateTaskItemButton(TaskItem);
     }
 
-    BOOL FlashTask(
-        IN HWND hWnd)
+    BOOL FlashTask(IN HWND hWnd)
     {
         PTASK_ITEM TaskItem;
 
-        TaskItem = FindTaskItem(
-            hWnd);
+        TaskItem = FindTaskItem(hWnd);
         if (TaskItem != NULL)
         {
             TRACE("Flashing window 0x%p on button %d\n", hWnd, TaskItem->Index);
-            FlashTaskItem(
-                TaskItem);
+            FlashTaskItem(TaskItem);
             return TRUE;
         }
 
         return FALSE;
     }
 
-    VOID RedrawTaskItem(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID RedrawTaskItem(IN OUT PTASK_ITEM TaskItem)
     {
         PTASK_GROUP TaskGroup;
 
@@ -1180,8 +1089,7 @@ public:
         {
             if (TaskGroup->IsCollapsed && TaskGroup->Index >= 0)
             {
-                UpdateTaskGroupButton(
-                    TaskGroup);
+                UpdateTaskGroupButton(TaskGroup);
             }
             else if (TaskItem->Index >= 0)
             {
@@ -1192,59 +1100,24 @@ public:
         {
         UpdateTaskItem:
             TaskItem->RenderFlashed = 0;
-            UpdateTaskItemButton(
-                TaskItem);
+            UpdateTaskItemButton(TaskItem);
         }
     }
 
 
-    BOOL RedrawTask(
-        IN HWND hWnd)
+    BOOL RedrawTask(IN HWND hWnd)
     {
         PTASK_ITEM TaskItem;
 
-        TaskItem = FindTaskItem(
-            hWnd);
+        TaskItem = FindTaskItem(hWnd);
         if (TaskItem != NULL)
         {
-            RedrawTaskItem(
-                TaskItem);
+            RedrawTaskItem(TaskItem);
             return TRUE;
         }
 
         return FALSE;
     }
-
-    INT UpdateTbButtonSpacing(
-        IN BOOL bHorizontal,
-        IN UINT uiRows,
-        IN UINT uiBtnsPerLine)
-    {
-        TBMETRICS tbm;
-
-        tbm.cbSize = sizeof(tbm);
-        tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
-
-        tbm.cxBarPad = tbm.cyBarPad = 0;
-
-        if (bHorizontal || uiBtnsPerLine > 1)
-            tbm.cxButtonSpacing = (3 * GetSystemMetrics(SM_CXEDGE) / 2);
-        else
-            tbm.cxButtonSpacing = 0;
-
-        if (!bHorizontal || uiRows > 1)
-            tbm.cyButtonSpacing = (3 * GetSystemMetrics(SM_CYEDGE) / 2);
-        else
-            tbm.cyButtonSpacing = 0;
-
-        SendMessage(hWndToolbar,
-            TB_SETMETRICS,
-            0,
-            (LPARAM) &tbm);
-
-        return tbm.cxButtonSpacing;
-    }
-
 
     VOID UpdateButtonsSize(IN BOOL bRedrawDisabled)
     {
@@ -1252,75 +1125,89 @@ public:
         UINT uiRows, uiMax, uiMin, uiBtnsPerLine, ui;
         LONG NewBtnSize;
         BOOL Horizontal;
-        TBBUTTONINFO tbbi;
-        TBMETRICS tbm;
 
-        if (GetClientRect(&rcClient) &&
-            !IsRectEmpty(&rcClient))
+        if (GetClientRect(&rcClient) && !IsRectEmpty(&rcClient))
         {
             if (ToolbarBtnCount > 0)
             {
-                ZeroMemory(&tbm, sizeof(tbm));
-                tbm.cbSize = sizeof(tbm);
-                tbm.dwMask = TBMF_BUTTONSPACING;
-                SendMessage(hWndToolbar,
-                    TB_GETMETRICS,
-                    0,
-                    (LPARAM) &tbm);
-
-                uiRows = (rcClient.bottom + tbm.cyButtonSpacing) / (ButtonSize.cy + tbm.cyButtonSpacing);
-                if (uiRows == 0)
-                    uiRows = 1;
-
-                uiBtnsPerLine = (ToolbarBtnCount + uiRows - 1) / uiRows;
-
                 Horizontal = Tray->IsHorizontal();
 
+                if (Horizontal)
+                {
+                    DbgPrint("HORIZONTAL!\n");
+                    TBMETRICS tbm = { 0 };
+                    tbm.cbSize = sizeof(tbm);
+                    tbm.dwMask = TBMF_BUTTONSPACING;
+                    TaskBar.GetMetrics(&tbm);
+
+                    uiRows = (rcClient.bottom + tbm.cyButtonSpacing) / (ButtonSize.cy + tbm.cyButtonSpacing);
+                    if (uiRows == 0)
+                        uiRows = 1;
+
+                    uiBtnsPerLine = (ToolbarBtnCount + uiRows - 1) / uiRows;
+                }
+                else
+                {
+                    DbgPrint("VERTICAL!\n");
+                    uiBtnsPerLine = 1;
+                    uiRows = ToolbarBtnCount;
+                }
+
                 if (!bRedrawDisabled)
-                    BeginUpdate();
+                    TaskBar.BeginUpdate();
 
                 /* We might need to update the button spacing */
-                tbm.cxButtonSpacing = UpdateTbButtonSpacing(
-                    Horizontal,
-                    uiRows,
-                    uiBtnsPerLine);
-
-                /* Calculate the ideal width and make sure it's within the allowed range */
-                NewBtnSize = (rcClient.right - (uiBtnsPerLine * tbm.cxButtonSpacing)) / uiBtnsPerLine;
+                int cxButtonSpacing = TaskBar.UpdateTbButtonSpacing(
+                    Horizontal, TaskBandTheme != NULL,
+                    uiRows, uiBtnsPerLine);
 
                 /* Determine the minimum and maximum width of a button */
-                if (Horizontal)
-                    uiMax = GetSystemMetrics(SM_CXMINIMIZED);
-                else
-                    uiMax = rcClient.right;
-
                 uiMin = GetSystemMetrics(SM_CXSIZE) + (2 * GetSystemMetrics(SM_CXEDGE));
+                if (Horizontal)
+                {
+                    uiMax = GetSystemMetrics(SM_CXMINIMIZED);
 
-                if (NewBtnSize < (LONG) uiMin)
-                    NewBtnSize = uiMin;
-                if (NewBtnSize > (LONG)uiMax)
-                    NewBtnSize = uiMax;
+                    /* Calculate the ideal width and make sure it's within the allowed range */
+                    NewBtnSize = (rcClient.right - (uiBtnsPerLine * cxButtonSpacing)) / uiBtnsPerLine;
+
+                    if (NewBtnSize < (LONG) uiMin)
+                        NewBtnSize = uiMin;
+                    if (NewBtnSize >(LONG)uiMax)
+                        NewBtnSize = uiMax;
+
+                    /* Recalculate how many buttons actually fit into one line */
+                    uiBtnsPerLine = rcClient.right / (NewBtnSize + cxButtonSpacing);
+                    if (uiBtnsPerLine == 0)
+                        uiBtnsPerLine++;
+                }
+                else
+                {
+                    NewBtnSize = uiMax = rcClient.right;
+                }
 
                 ButtonSize.cx = NewBtnSize;
 
-                /* Recalculate how many buttons actually fit into one line */
-                uiBtnsPerLine = rcClient.right / (NewBtnSize + tbm.cxButtonSpacing);
-                if (uiBtnsPerLine == 0)
-                    uiBtnsPerLine++;
                 TbButtonsPerLine = uiBtnsPerLine;
-
-                tbbi.cbSize = sizeof(tbbi);
-                tbbi.dwMask = TBIF_BYINDEX | TBIF_SIZE | TBIF_STATE;
-                tbbi.cx = (INT) NewBtnSize;
 
                 for (ui = 0; ui != ToolbarBtnCount; ui++)
                 {
+                    TBBUTTONINFOW tbbi = { 0 };
+                    tbbi.cbSize = sizeof(tbbi);
+                    tbbi.dwMask = TBIF_BYINDEX | TBIF_SIZE | TBIF_STATE;
+                    tbbi.cx = (INT) NewBtnSize;
                     tbbi.fsState = TBSTATE_ENABLED;
 
                     /* Check if we're updating a button that is the last one in the
                        line. If so, we need to set the TBSTATE_WRAP flag! */
-                    if ((ui + 1) % uiBtnsPerLine == 0)
+                    if (Horizontal)
+                    {
+                        if ((ui + 1) % uiBtnsPerLine == 0)
+                            tbbi.fsState |= TBSTATE_WRAP;
+                    }
+                    else
+                    {
                         tbbi.fsState |= TBSTATE_WRAP;
+                    }
 
                     if (ActiveTaskItem != NULL &&
                         ActiveTaskItem->Index == (INT)ui)
@@ -1328,33 +1215,19 @@ public:
                         tbbi.fsState |= TBSTATE_CHECKED;
                     }
 
-                    SendMessage(hWndToolbar,
-                        TB_SETBUTTONINFO,
-                        (WPARAM) ui,
-                        (LPARAM) &tbbi);
+                    TaskBar.SetButtonInfo(ui, &tbbi);
                 }
-
-#if 0
-                /* FIXME: Force the window to the correct position in case some idiot
-                          did something to us */
-                SetWindowPos(hWndToolbar,
-                    NULL,
-                    0,
-                    0,
-                    rcClient.right, /* FIXME */
-                    rcClient.bottom, /* FIXME */
-                    SWP_NOACTIVATE | SWP_NOZORDER);
-#endif
             }
             else
             {
                 TbButtonsPerLine = 0;
                 ButtonSize.cx = 0;
             }
-            }
-
-        EndUpdate();
         }
+
+        // FIXME: This seems to be enabling redraws prematurely, but moving it to its right place doesn't work!
+        TaskBar.EndUpdate();
+    }
 
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
     {
@@ -1377,8 +1250,7 @@ public:
         return TRUE;
     }
 
-    static BOOL CALLBACK s_EnumWindowsProc(IN HWND hWnd,
-        IN LPARAM lParam)
+    static BOOL CALLBACK s_EnumWindowsProc(IN HWND hWnd, IN LPARAM lParam)
     {
         CTaskSwitchWnd * This = (CTaskSwitchWnd *) lParam;
 
@@ -1394,6 +1266,8 @@ public:
 
     LRESULT OnThemeChanged()
     {
+        TRACE("OmThemeChanged\n");
+
         if (TaskBandTheme)
             CloseThemeData(TaskBandTheme);
 
@@ -1401,6 +1275,7 @@ public:
             TaskBandTheme = OpenThemeData(m_hWnd, L"TaskBand");
         else
             TaskBandTheme = NULL;
+
         return TRUE;
     }
 
@@ -1411,80 +1286,46 @@ public:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        hWndToolbar = CreateWindowEx(0,
-            TOOLBARCLASSNAME,
-            szRunningApps,
-            WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
-            TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_LIST | TBSTYLE_TRANSPARENT |
-            CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER,
-            0,
-            0,
-            0,
-            0,
-            m_hWnd,
-            NULL,
-            hExplorerInstance,
-            NULL);
+        if (!TaskBar.Initialize(m_hWnd))
+            return FALSE;
 
-        if (hWndToolbar != NULL)
+        SetWindowTheme(TaskBar.m_hWnd, L"TaskBand", NULL);
+        OnThemeChanged();
+
+        TaskIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+        TaskBar.SetImageList(TaskIcons);
+
+        /* Calculate the default button size. Don't save this in ButtonSize.cx so that
+        the actual button width gets updated correctly on the first recalculation */
+        int cx = GetSystemMetrics(SM_CXMINIMIZED);
+        int cy = ButtonSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
+        TaskBar.SetButtonSize(cx, cy);
+
+        /* Set proper spacing between buttons */
+        TaskBar.UpdateTbButtonSpacing(Tray->IsHorizontal(), TaskBandTheme != NULL);
+
+        /* Register the shell hook */
+        ShellHookMsg = RegisterWindowMessage(TEXT("SHELLHOOK"));
+
+        TRACE("ShellHookMsg got assigned number %d\n", ShellHookMsg);
+
+        HMODULE hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
+        if (hShell32 != NULL)
         {
-            HMODULE hShell32;
-            SIZE BtnSize;
+            REGSHELLHOOK RegShellHook;
 
-            TaskBar.SubclassWindow(hWndToolbar);
-
-            SetWindowTheme(hWndToolbar, L"TaskBand", NULL);
-            OnThemeChanged();
-
-            /* Identify the version we're using */
-            SendMessage(hWndToolbar,
-                TB_BUTTONSTRUCTSIZE,
-                sizeof(TBBUTTON),
-                0);
-
-            TaskIcons = (IImageList*) ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
-            SendMessage(hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM) TaskIcons);
-
-            /* Calculate the default button size. Don't save this in ButtonSize.cx so that
-               the actual button width gets updated correctly on the first recalculation */
-            BtnSize.cx = GetSystemMetrics(SM_CXMINIMIZED);
-            ButtonSize.cy = BtnSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
-            SendMessage(hWndToolbar, TB_SETBUTTONSIZE, 0, (LPARAM) MAKELONG(BtnSize.cx, BtnSize.cy));
-
-            /* We don't want to see partially clipped buttons...not that we could see them... */
-#if 0
-            SendMessage(hWndToolbar,
-                TB_SETEXTENDEDSTYLE,
-                0,
-                TBSTYLE_EX_HIDECLIPPEDBUTTONS);
-#endif
-
-            /* Set proper spacing between buttons */
-            UpdateTbButtonSpacing(Tray->IsHorizontal(), 0, 0);
-
-            /* Register the shell hook */
-            ShellHookMsg = RegisterWindowMessage(TEXT("SHELLHOOK"));
-
-            DbgPrint("ShellHookMsg got assigned number %d\n", ShellHookMsg);
-
-            hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-            if (hShell32 != NULL)
+            /* RegisterShellHook */
+            RegShellHook = (REGSHELLHOOK) GetProcAddress(hShell32, (LPCSTR) ((LONG) 181));
+            if (RegShellHook != NULL)
             {
-                REGSHELLHOOK RegShellHook;
-
-                /* RegisterShellHook */
-                RegShellHook = (REGSHELLHOOK) GetProcAddress(hShell32, (LPCSTR) ((LONG) 181));
-                if (RegShellHook != NULL)
-                {
-                    RegShellHook(m_hWnd, 3); /* 1 if no NT! We're targeting NT so we don't care! */
-                }
+                RegShellHook(m_hWnd, 3); /* 1 if no NT! We're targeting NT so we don't care! */
             }
-
-            RefreshWindowList();
-
-            /* Recalculate the button size */
-            UpdateButtonsSize(FALSE);
         }
+
+        RefreshWindowList();
+
+        /* Recalculate the button size */
+        UpdateButtonsSize(FALSE);
 
 #if DUMP_TASKS != 0
         SetTimer(hwnd, 1, 5000, NULL);
@@ -1519,9 +1360,7 @@ public:
         return TRUE;
     }
 
-    BOOL HandleAppCommand(
-        IN WPARAM wParam,
-        IN LPARAM lParam)
+    BOOL HandleAppCommand(IN WPARAM wParam, IN LPARAM lParam)
     {
         BOOL Ret = FALSE;
 
@@ -1553,20 +1392,17 @@ public:
             return 0;
         }
 
-        DbgPrint("Received shell hook message: wParam=%08lx, lParam=%08lx\n", wParam, lParam);
+        TRACE("Received shell hook message: wParam=%08lx, lParam=%08lx\n", wParam, lParam);
 
         switch ((INT) wParam)
         {
         case HSHELL_APPCOMMAND:
-            HandleAppCommand(
-                wParam,
-                lParam);
+            HandleAppCommand(wParam, lParam);
             Ret = TRUE;
             break;
 
         case HSHELL_WINDOWCREATED:
-            Ret = AddTask(
-                (HWND) lParam);
+            Ret = AddTask((HWND) lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
@@ -1630,18 +1466,15 @@ public:
         return Ret;
     }
 
-    VOID EnableGrouping(
-        IN BOOL bEnable)
+    VOID EnableGrouping(IN BOOL bEnable)
     {
         IsGroupingEnabled = bEnable;
 
         /* Collapse or expand groups if neccessary */
-        UpdateButtonsSize(
-            FALSE);
+        UpdateButtonsSize(FALSE);
     }
 
-    VOID HandleTaskItemClick(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID HandleTaskItemClick(IN OUT PTASK_ITEM TaskItem)
     {
         BOOL bIsMinimized;
         BOOL bIsActive;
@@ -1683,14 +1516,12 @@ public:
         }
     }
 
-    VOID HandleTaskGroupClick(
-        IN OUT PTASK_GROUP TaskGroup)
+    VOID HandleTaskGroupClick(IN OUT PTASK_GROUP TaskGroup)
     {
         /* TODO: Show task group menu */
     }
 
-    BOOL HandleButtonClick(
-        IN WORD wIndex)
+    BOOL HandleButtonClick(IN WORD wIndex)
     {
         PTASK_ITEM TaskItem;
         PTASK_GROUP TaskGroup;
@@ -1700,8 +1531,7 @@ public:
             TaskGroup = FindTaskGroupByIndex((INT) wIndex);
             if (TaskGroup != NULL && TaskGroup->IsCollapsed)
             {
-                HandleTaskGroupClick(
-                    TaskGroup);
+                HandleTaskGroupClick(TaskGroup);
                 return TRUE;
             }
         }
@@ -1709,8 +1539,7 @@ public:
         TaskItem = FindTaskItemByIndex((INT) wIndex);
         if (TaskItem != NULL)
         {
-            HandleTaskItemClick(
-                TaskItem);
+            HandleTaskItemClick(TaskItem);
             return TRUE;
         }
 
@@ -1718,32 +1547,31 @@ public:
     }
 
 
-    VOID HandleTaskItemRightClick(
-        IN OUT PTASK_ITEM TaskItem)
+    VOID HandleTaskItemRightClick(IN OUT PTASK_ITEM TaskItem)
     {
 
         HMENU hmenu = GetSystemMenu(TaskItem->hWnd, FALSE);
 
-        if (hmenu) {
+        if (hmenu) 
+        {
             POINT pt;
             int cmd;
             GetCursorPos(&pt);
-            cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hWndToolbar, NULL);
-            if (cmd) {
+            cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, TaskBar.m_hWnd, NULL);
+            if (cmd)
+            {
                 SetForegroundWindow(TaskItem->hWnd);    // reactivate window after the context menu has closed
                 PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
             }
         }
     }
 
-    VOID HandleTaskGroupRightClick(
-        IN OUT PTASK_GROUP TaskGroup)
+    VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)
     {
         /* TODO: Show task group right click menu */
     }
 
-    BOOL HandleButtonRightClick(
-        IN WORD wIndex)
+    BOOL HandleButtonRightClick(IN WORD wIndex)
     {
         PTASK_ITEM TaskItem;
         PTASK_GROUP TaskGroup;
@@ -1752,8 +1580,7 @@ public:
             TaskGroup = FindTaskGroupByIndex((INT) wIndex);
             if (TaskGroup != NULL && TaskGroup->IsCollapsed)
             {
-                HandleTaskGroupRightClick(
-                    TaskGroup);
+                HandleTaskGroupRightClick(TaskGroup);
                 return TRUE;
             }
         }
@@ -1762,8 +1589,7 @@ public:
 
         if (TaskItem != NULL)
         {
-            HandleTaskItemRightClick(
-                TaskItem);
+            HandleTaskItemRightClick(TaskItem);
             return TRUE;
         }
 
@@ -1828,8 +1654,7 @@ public:
             {
 
             case CDDS_ITEMPREPAINT:
-                Ret = HandleItemPaint(
-                    nmtbcd);
+                Ret = HandleItemPaint(nmtbcd);
                 break;
 
             case CDDS_PREPAINT:
@@ -1876,18 +1701,11 @@ public:
 
         szClient.cx = LOWORD(lParam);
         szClient.cy = HIWORD(lParam);
-        if (hWndToolbar != NULL)
+        if (TaskBar.m_hWnd != NULL)
         {
-            ::SetWindowPos(hWndToolbar,
-                NULL,
-                0,
-                0,
-                szClient.cx,
-                szClient.cy,
-                SWP_NOZORDER);
+            TaskBar.SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
 
-            UpdateButtonsSize(
-                FALSE);
+            UpdateButtonsSize(FALSE);
         }
         return TRUE;
     }
@@ -1926,10 +1744,9 @@ public:
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret = TRUE;
-        if (lParam != 0 && (HWND) lParam == hWndToolbar)
+        if (lParam != 0 && (HWND) lParam == TaskBar.m_hWnd)
         {
-            HandleButtonClick(
-                LOWORD(wParam));
+            HandleButtonClick(LOWORD(wParam));
         }
         return Ret;
     }
@@ -1939,10 +1756,9 @@ public:
         LRESULT Ret = TRUE;
         const NMHDR *nmh = (const NMHDR *) lParam;
 
-        if (nmh->hwndFrom == hWndToolbar)
+        if (nmh->hwndFrom == TaskBar.m_hWnd)
         {
-            Ret = HandleToolbarNotification(
-                nmh);
+            Ret = HandleToolbarNotification(nmh);
         }
         return Ret;
     }
@@ -1960,37 +1776,27 @@ public:
     LRESULT OnUpdateTaskbarPos(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         /* Update the button spacing */
-        UpdateTbButtonSpacing(
-            Tray->IsHorizontal(),
-            0,
-            0);
+        TaskBar.UpdateTbButtonSpacing(Tray->IsHorizontal(), TaskBandTheme != NULL);
         return TRUE;
     }
 
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret;
-        if (hWndToolbar != NULL)
+        if (TaskBar.m_hWnd != NULL)
         {
             POINT pt;
             INT_PTR iBtn;
 
-            pt.x = (LONG) LOWORD(lParam);
-            pt.y = (LONG) HIWORD(lParam);
+            pt.x = GET_X_LPARAM(lParam);
+            pt.y = GET_Y_LPARAM(lParam);
 
-            MapWindowPoints(NULL,
-                hWndToolbar,
-                &pt,
-                1);
+            ::ScreenToClient(TaskBar.m_hWnd, &pt);
 
-            iBtn = (INT_PTR) SendMessage(hWndToolbar,
-                TB_HITTEST,
-                0,
-                (LPARAM) &pt);
+            iBtn = TaskBar.HitTest(&pt);
             if (iBtn >= 0)
             {
-                HandleButtonRightClick(
-                    iBtn);
+                HandleButtonRightClick(iBtn);
             }
             else
                 goto ForwardContextMenuMsg;
@@ -1999,10 +1805,7 @@ public:
         {
         ForwardContextMenuMsg:
             /* Forward message */
-            Ret = SendMessage(Tray->GetHWND(),
-                uMsg,
-                wParam,
-                lParam);
+            Ret = SendMessage(Tray->GetHWND(), uMsg, wParam, lParam);
         }
         return Ret;
     }
@@ -2014,8 +1817,8 @@ public:
         {
             RECT* prcMinRect = (RECT*) lParam;
             RECT rcItem, rcToolbar;
-            SendMessageW(hWndToolbar, TB_GETITEMRECT, TaskItem->Index, (LPARAM) &rcItem);
-            GetWindowRect(hWndToolbar, &rcToolbar);
+            TaskBar.GetItemRect(TaskItem->Index, &rcItem);
+            GetWindowRect(TaskBar.m_hWnd, &rcToolbar);
 
             OffsetRect(&rcItem, rcToolbar.left, rcToolbar.top);
 

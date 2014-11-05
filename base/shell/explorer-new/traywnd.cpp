@@ -60,10 +60,10 @@ class CTrayWindow :
     public ITrayWindow,
     public IShellDesktopTray
 {
+    CContainedWindow StartButton;
+
     HTHEME TaskbarTheme;
     HWND hWndDesktop;
-
-    HWND hwndStart;
 
     IImageList * himlStartBtn;
     SIZE StartBtnSize;
@@ -120,9 +120,9 @@ class CTrayWindow :
 
 public:
     CTrayWindow() :
+        StartButton(this, 1),
         TaskbarTheme(NULL),
         hWndDesktop(NULL),
-        hwndStart(NULL),
         himlStartBtn(NULL),
         hStartBtnFont(NULL),
         hCaptionFont(NULL),
@@ -815,8 +815,7 @@ ChangePos:
 
         ResizeWorkArea();
 
-        ApplyClipping(
-            TRUE);
+        ApplyClipping(TRUE);
     }
 
     typedef struct _TW_STUCKRECTS2
@@ -1058,20 +1057,14 @@ ChangePos:
         SIZE Size = { 0, 0 };
 
         if (himlStartBtn == NULL ||
-            !SendMessage(hwndStart,
-            BCM_GETIDEALSIZE,
-            0,
-            (LPARAM) &Size))
+            !StartButton.SendMessage(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
         {
             Size.cx = GetSystemMetrics(SM_CXEDGE);
             Size.cy = GetSystemMetrics(SM_CYEDGE);
 
             if (hbmStart == NULL)
             {
-                hbmStart = (HBITMAP) SendMessage(hwndStart,
-                                                 BM_GETIMAGE,
-                                                 IMAGE_BITMAP,
-                                                 0);
+                hbmStart = (HBITMAP) StartButton.SendMessage(BM_GETIMAGE, IMAGE_BITMAP, 0);
             }
 
             if (hbmStart != NULL)
@@ -1139,11 +1132,11 @@ DefSize:
         if (StartSize.cx > rcClient.right)
             StartSize.cx = rcClient.right;
 
-        if (hwndStart != NULL)
+        if (StartButton.m_hWnd != NULL)
         {
             /* Resize and reposition the button */
             dwp = DeferWindowPos(dwp,
-                                 hwndStart,
+                                 StartButton.m_hWnd,
                                  NULL,
                                  0,
                                  0,
@@ -1407,6 +1400,15 @@ Cleanup:
         else
             TaskbarTheme = NULL;
 
+        if (TaskbarTheme)
+        {
+            SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
+        }
+        else
+        {
+            SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
+        }
+
         return TRUE;
     }
 
@@ -1461,26 +1463,24 @@ Cleanup:
         }
 
         /* Create the Start button */
-        hwndStart = CreateWindowEx(0,
-                                   WC_BUTTON,
-                                   szStartCaption,
-                                   WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-                                   BS_PUSHBUTTON | BS_CENTER | BS_VCENTER | BS_BITMAP,
-                                   0,
-                                   0,
-                                   0,
-                                   0,
-                                   m_hWnd,
-                                   (HMENU) IDC_STARTBTN,
-                                   hExplorerInstance,
-                                   NULL);
-        if (hwndStart)
+        StartButton.SubclassWindow(CreateWindowEx(
+            0,
+            WC_BUTTON,
+            szStartCaption,
+            WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+            BS_PUSHBUTTON | BS_CENTER | BS_VCENTER | BS_BITMAP,
+            0,
+            0,
+            0,
+            0,
+            m_hWnd,
+            (HMENU) IDC_STARTBTN,
+            hExplorerInstance,
+            NULL));
+        if (StartButton.m_hWnd)
         {
-            SetWindowTheme(hwndStart, L"Start", NULL);
-            SendMessage(hwndStart,
-                        WM_SETFONT,
-                        (WPARAM) hStartBtnFont,
-                        FALSE);
+            SetWindowTheme(StartButton.m_hWnd, L"Start", NULL);
+            StartButton.SendMessage(WM_SETFONT, (WPARAM) hStartBtnFont, FALSE);
 
             if (CreateStartBtnImageList())
             {
@@ -1493,10 +1493,7 @@ Cleanup:
                 bil.margin.top = bil.margin.bottom = 1;
                 bil.uAlign = BUTTON_IMAGELIST_ALIGN_LEFT;
 
-                if (!SendMessage(hwndStart,
-                    BCM_SETIMAGELIST,
-                    0,
-                    (LPARAM) &bil))
+                if (!StartButton.SendMessage(BCM_SETIMAGELIST, 0, (LPARAM) &bil))
                 {
                     /* Fall back to the deprecated method on older systems that don't
                        support Common Controls 6.0 */
@@ -1508,12 +1505,9 @@ Cleanup:
 
                 /* We're using the image list, remove the BS_BITMAP style and
                    don't center it horizontally */
-                SetWindowStyle(hwndStart,
-                               BS_BITMAP | BS_RIGHT,
-                               0);
+                SetWindowStyle(StartButton.m_hWnd, BS_BITMAP | BS_RIGHT, 0);
 
-                UpdateStartButton(
-                    NULL);
+                UpdateStartButton(NULL);
             }
             else
             {
@@ -1523,13 +1517,9 @@ SetStartBtnImage:
                 hbmStart = CreateStartButtonBitmap();
                 if (hbmStart != NULL)
                 {
-                    UpdateStartButton(
-                        hbmStart);
+                    UpdateStartButton(hbmStart);
 
-                    hbmOld = (HBITMAP) SendMessage(hwndStart,
-                                                   BM_SETIMAGE,
-                                                   IMAGE_BITMAP,
-                                                   (LPARAM) hbmStart);
+                    hbmOld = (HBITMAP) StartButton.SendMessage(BM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbmStart);
 
                     if (hbmOld != NULL)
                         DeleteObject(hbmOld);
@@ -1657,7 +1647,7 @@ SetStartBtnImage:
         HWND hwnd;
         RECT posRect;
 
-        GetWindowRect(hwndStart, &posRect);
+        GetWindowRect(StartButton.m_hWnd, &posRect);
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
                               NULL,
@@ -1920,7 +1910,7 @@ SetStartBtnImage:
         HWND hwnd;
         RECT posRect;
 
-        GetWindowRect(hwndStart, &posRect);
+        GetWindowRect(StartButton.m_hWnd, &posRect);
 
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
@@ -1979,8 +1969,7 @@ SetStartBtnImage:
             RECTL rcExclude;
             DWORD dwFlags = 0;
 
-            if (GetWindowRect(hwndStart,
-                (RECT*) &rcExclude))
+            if (GetWindowRect(StartButton.m_hWnd, (RECT*) &rcExclude))
             {
                 switch (Position)
                 {
@@ -2007,7 +1996,7 @@ SetStartBtnImage:
                     &rcExclude,
                     dwFlags);
 
-                SendMessageW(hwndStart, BM_SETSTATE, TRUE, 0);
+                StartButton.SendMessageW(BM_SETSTATE, TRUE, 0);
             }
         }
     }
@@ -2023,7 +2012,7 @@ SetStartBtnImage:
         GetWindowRect(m_hWnd, &rcCurrent);
         over = PtInRect(&rcCurrent, pt);
 
-        if (SendMessage(hwndStart, BM_GETSTATE, 0, 0) != BST_UNCHECKED)
+        if (StartButton.SendMessage( BM_GETSTATE, 0, 0) != BST_UNCHECKED)
         {
             over = TRUE;
         }
@@ -2434,7 +2423,7 @@ SetStartBtnImage:
                 uId = TrackMenu(
                     hSysMenu,
                     NULL,
-                    hwndStart,
+                    StartButton.m_hWnd,
                     Position != ABE_TOP,
                     FALSE);
                 if (uId != 0)
@@ -2483,16 +2472,13 @@ SetStartBtnImage:
         if (pt.x != -1 || pt.y != -1)
             ppt = &pt;
         else
-            hWndExclude = hwndStart;
+            hWndExclude = StartButton.m_hWnd;
 
-        if ((HWND) wParam == hwndStart)
+        if ((HWND) wParam == StartButton.m_hWnd)
         {
             /* Make sure we can't track the context menu if the start
             menu is currently being shown */
-            if (!(SendMessage(hwndStart,
-                BM_GETSTATE,
-                0,
-                0) & BST_PUSHED))
+            if (!(StartButton.SendMessage(BM_GETSTATE, 0, 0) & BST_PUSHED))
             {
                 TrackCtxMenu(
                     &StartMenuBtnCtxMenu,
@@ -2511,27 +2497,18 @@ SetStartBtnImage:
                 POINT ptClient = *ppt;
 
                 /* Convert the coordinates to client-coordinates */
-                MapWindowPoints(NULL,
-                                m_hWnd,
-                                &ptClient,
-                                1);
+                MapWindowPoints(NULL, m_hWnd, &ptClient, 1);
 
-                hWndAtPt = ChildWindowFromPoint(m_hWnd,
-                                                ptClient);
+                hWndAtPt = ChildWindowFromPoint(m_hWnd, ptClient);
                 if (hWndAtPt != NULL &&
                     (hWndAtPt == hwndRebar || IsChild(hwndRebar,
                     hWndAtPt)))
                 {
                     /* Check if the user clicked on the task switch window */
                     ptClient = *ppt;
-                    MapWindowPoints(NULL,
-                                    hwndRebar,
-                                    &ptClient,
-                                    1);
+                    MapWindowPoints(NULL, hwndRebar, &ptClient, 1);
 
-                    hWndAtPt = ChildWindowFromPointEx(hwndRebar,
-                                                      ptClient,
-                                                      CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
+                    hWndAtPt = ChildWindowFromPointEx(hwndRebar, ptClient, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
                     if (hWndAtPt == hwndTaskSwitch)
                         goto HandleTrayContextMenu;
 
@@ -2572,7 +2549,7 @@ HandleTrayContextMenu:
                 return Ret;
         }
 
-        if (TrayBandSite == NULL || FAILED_UNEXPECTEDLY(hr))
+        if (TrayBandSite == NULL || FAILED(hr))
         {
             const NMHDR *nmh = (const NMHDR *) lParam;
 
@@ -2628,7 +2605,7 @@ HandleTrayContextMenu:
         }
         else
         {
-            SendMessage(m_hWnd, WM_COMMAND, MAKEWPARAM(BN_CLICKED, IDC_STARTBTN), reinterpret_cast<LPARAM>(hwndStart));
+            PopupStartMenu();
         }
 
         return TRUE;
@@ -2638,7 +2615,7 @@ HandleTrayContextMenu:
     {
         LRESULT Ret = FALSE;
 
-        if ((HWND) lParam == hwndStart)
+        if ((HWND) lParam == StartButton.m_hWnd)
         {
             PopupStartMenu();
             return FALSE;
@@ -2801,9 +2778,7 @@ HandleTrayContextMenu:
             Msg.wParam = wParam;
             Msg.lParam = lParam;
 
-            if (StartMenuBand->TranslateMenuMessage(
-                &Msg,
-                &lRet) == S_OK)
+            if (StartMenuBand->TranslateMenuMessage(&Msg, &lRet) == S_OK)
             {
                 return lRet;
             }
@@ -2812,32 +2787,33 @@ HandleTrayContextMenu:
             lParam = Msg.lParam;
         }
         MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
-            NOTIFY_CODE_HANDLER(RBN_AUTOSIZE, OnRebarAutoSize) // Doesn't quite work ;P
-            MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
-            MESSAGE_HANDLER(WM_SIZE, OnSize)
-            MESSAGE_HANDLER(WM_CREATE, OnCreate)
-            /*MESSAGE_HANDLER(WM_DESTROY, OnDestroy)*/
-            MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
-            MESSAGE_HANDLER(WM_COMMAND, OnCommand)
-            MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-            MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
-            MESSAGE_HANDLER(WM_TIMER, OnTimer)
-            MESSAGE_HANDLER(WM_DISPLAYCHANGE, OnDisplayChange)
-            MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
-            MESSAGE_HANDLER(WM_NCPAINT, OnNcPaint)
-            MESSAGE_HANDLER(WM_CTLCOLORBTN, OnCtlColorBtn)
-            MESSAGE_HANDLER(WM_MOVING, OnMoving)
-            MESSAGE_HANDLER(WM_SIZING, OnSizing)
-            MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChange)
-            MESSAGE_HANDLER(WM_ENTERSIZEMOVE, OnEnterSizeMove)
-            MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
-            MESSAGE_HANDLER(WM_SYSCHAR, OnSysChar)
-            MESSAGE_HANDLER(WM_NCRBUTTONUP, OnNcRButtonUp)
-            MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnNcLButtonDblClick)
-            MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-            MESSAGE_HANDLER(WM_NCMOUSEMOVE, OnMouseMove)
-            MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
-            MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
+        NOTIFY_CODE_HANDLER(RBN_AUTOSIZE, OnRebarAutoSize) // Doesn't quite work ;P
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_CREATE, OnCreate)
+        /*MESSAGE_HANDLER(WM_DESTROY, OnDestroy)*/
+        MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
+        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_DISPLAYCHANGE, OnDisplayChange)
+        MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
+        MESSAGE_HANDLER(WM_NCPAINT, OnNcPaint)
+        MESSAGE_HANDLER(WM_CTLCOLORBTN, OnCtlColorBtn)
+        MESSAGE_HANDLER(WM_MOVING, OnMoving)
+        MESSAGE_HANDLER(WM_SIZING, OnSizing)
+        MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChange)
+        MESSAGE_HANDLER(WM_ENTERSIZEMOVE, OnEnterSizeMove)
+        MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
+        MESSAGE_HANDLER(WM_SYSCHAR, OnSysChar)
+        MESSAGE_HANDLER(WM_NCRBUTTONUP, OnNcRButtonUp)
+        MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnNcLButtonDblClick)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_NCMOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
+        MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
+    ALT_MSG_MAP(1)
     END_MSG_MAP()
 
     /*
@@ -2959,10 +2935,7 @@ HandleTrayContextMenu:
 
         while (1)
         {
-            Ret = GetMessage(&Msg,
-                             NULL,
-                             0,
-                             0);
+            Ret = GetMessage(&Msg, NULL, 0, 0);
 
             if (!Ret || Ret == -1)
                 break;
@@ -3026,7 +2999,7 @@ HandleTrayContextMenu:
 
     virtual HRESULT RaiseStartButton()
     {
-        SendMessageW(hwndStart, BM_SETSTATE, FALSE, 0);
+        StartButton.SendMessageW(BM_SETSTATE, FALSE, 0);
         return S_OK;
     }
 

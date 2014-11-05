@@ -262,13 +262,10 @@ public:
             return E_FAIL;
 
         /*TRACE("Calling IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p) hWndRebar=0x%p\n", hWnd, uMsg, wParam, lParam, plResult, hWndRebar);*/
-        hRet = WindowEventHandler->OnWinEvent(
-            hWnd,
-            uMsg,
-            wParam,
-            lParam,
-            plResult);
-        if (FAILED_UNEXPECTEDLY(hRet))
+        hRet = WindowEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, plResult);
+
+#if 0
+        if (FAILED(hRet))
         {
             if (uMsg == WM_NOTIFY)
             {
@@ -280,6 +277,7 @@ public:
                 ERR("ITrayBandSite->IWinEventHandler::ProcessMessage(0x%p,0x%x,0x%p,0x%p,0x%p->0x%p) returned: 0x%x\n", hWnd, uMsg, wParam, lParam, plResult, *plResult, hRet);
             }
         }
+#endif
 
         return hRet;
     }

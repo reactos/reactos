@@ -19,7 +19,9 @@
  */
 
 #include "precomp.h"
-//#include <docobj.h>
+
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 /*
  * SysPagerWnd
@@ -85,6 +87,13 @@ public:
         TBBUTTON tbBtn;
         NOTIFYICONDATA * notifyItem;
         WCHAR text [] = TEXT("");
+
+        int index = FindItemByIconData(iconData, &notifyItem);
+        if (index >= 0)
+        {
+            UpdateButton(iconData);
+            return;
+        }
 
         notifyItem = new NOTIFYICONDATA();
         ZeroMemory(notifyItem, sizeof(*notifyItem));
@@ -203,7 +212,7 @@ public:
         delete notifyItem;
     }
 
-    VOID GetTooltip(int index, LPTSTR szTip, DWORD cchTip)
+    VOID GetTooltipText(int index, LPTSTR szTip, DWORD cchTip)
     {
         NOTIFYICONDATA * notifyItem;
         notifyItem = GetItemData(index);
@@ -242,7 +251,7 @@ private:
 
         if (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST)
         {
-            DbgPrint("Sending message %S from button %d to %p (msg=%x, w=%x, l=%x)...\n",
+            TRACE("Sending message %S from button %d to %p (msg=%x, w=%x, l=%x)...\n",
                      eventNames[uMsg - WM_MOUSEFIRST], wIndex,
                      notifyItem->hWnd, notifyItem->uCallbackMessage, notifyItem->uID, uMsg);
         }
@@ -269,13 +278,9 @@ private:
 
     LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        POINT pt;
-        INT iBtn;
-
-        pt.x = LOWORD(lParam);
-        pt.y = HIWORD(lParam);
-
-        iBtn = (INT) SendMessageW(TB_HITTEST, 0, (LPARAM) &pt);
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        
+        INT iBtn = HitTest(&pt);
 
         if (iBtn >= 0)
         {
@@ -286,9 +291,64 @@ private:
         return FALSE;
     }
 
+    LRESULT OnTooltipShow(INT uCode, LPNMHDR hdr, BOOL& bHandled)
+    {
+        RECT rcTip, rcItem;
+        GetWindowRect(hdr->hwndFrom, &rcTip);
+
+        SIZE szTip = { rcTip.right - rcTip.left, rcTip.bottom - rcTip.top };
+
+        INT iBtn = GetHotItem();
+
+        if (iBtn >= 0)
+        {
+            MONITORINFO monInfo = { 0 };
+            HMONITOR hMon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+
+            monInfo.cbSize = sizeof(monInfo);
+
+            if (hMon)
+                GetMonitorInfo(hMon, &monInfo);
+            else
+                GetWindowRect(GetDesktopWindow(), &monInfo.rcMonitor);
+
+            GetItemRect(iBtn, &rcItem);
+
+            POINT ptItem = { rcItem.left, rcItem.top };
+            SIZE szItem = { rcItem.right - rcItem.left, rcItem.bottom - rcItem.top };
+            ClientToScreen(m_hWnd, &ptItem);
+
+            ptItem.x += szItem.cx / 2;
+            ptItem.y -= szTip.cy;
+
+            if (ptItem.x + szTip.cx > monInfo.rcMonitor.right)
+                ptItem.x = monInfo.rcMonitor.right - szTip.cx;
+
+            if (ptItem.y + szTip.cy > monInfo.rcMonitor.bottom)
+                ptItem.y = monInfo.rcMonitor.bottom - szTip.cy;
+
+            if (ptItem.x < monInfo.rcMonitor.left)
+                ptItem.x = monInfo.rcMonitor.left;
+
+            if (ptItem.y < monInfo.rcMonitor.top)
+                ptItem.y = monInfo.rcMonitor.top;
+
+            TRACE("ptItem { %d, %d }\n", ptItem.x, ptItem.y);
+
+            ::SetWindowPos(hdr->hwndFrom, NULL, ptItem.x, ptItem.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+            return TRUE;
+        }
+
+        bHandled = FALSE;
+        return 0;
+    }
+
+
 public:
     BEGIN_MSG_MAP(CNotifyToolbar)
         MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
+        NOTIFY_CODE_HANDLER(TTN_SHOW, OnTooltipShow)
     END_MSG_MAP()
 
     void Initialize(HWND hWndParent)
@@ -298,7 +358,7 @@ public:
             TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
             CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
 
-        Create(hWndParent, styles);
+        SubclassWindow(Create(hWndParent, styles));
 
         SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
@@ -398,7 +458,6 @@ public:
     void GetSize(IN WPARAM wParam, IN PSIZE size)
     {
         INT rows = 0;
-        TBMETRICS tbm;
         int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
         if (wParam) /* horizontal */
@@ -415,20 +474,12 @@ public:
                 rows++;
             size->cy = (VisibleButtonCount + rows - 1) / rows * 24;
         }
-
-        tbm.cbSize = sizeof(tbm);
-        tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
-        tbm.cxBarPad = tbm.cyBarPad = 0;
-        tbm.cxButtonSpacing = 0;
-        tbm.cyButtonSpacing = 0;
-
-        Toolbar.SetMetrics(&tbm);
     }
 
     LRESULT OnGetInfoTip(INT uCode, LPNMHDR hdr, BOOL& bHandled)
     {
         NMTBGETINFOTIPW * nmtip = (NMTBGETINFOTIPW *) hdr;
-        Toolbar.GetTooltip(nmtip->iItem, nmtip->pszText, nmtip->cchTextMax);
+        Toolbar.GetTooltipText(nmtip->iItem, nmtip->pszText, nmtip->cchTextMax);
         return TRUE;
     }
 
@@ -457,6 +508,15 @@ public:
 
         if (Toolbar)
         {
+            TBMETRICS tbm;
+            tbm.cbSize = sizeof(tbm);
+            tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
+            tbm.cxBarPad = tbm.cyBarPad = 0;
+            tbm.cxButtonSpacing = 0;
+            tbm.cyButtonSpacing = 0;
+
+            Toolbar.SetMetrics(&tbm);
+
             Toolbar.SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
             Toolbar.AutoSize();
 

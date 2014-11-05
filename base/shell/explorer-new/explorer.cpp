@@ -218,7 +218,7 @@ _tWinMain(IN HINSTANCE hInstance,
 #if !WIN7_COMPAT_MODE
     BOOL CreateShellDesktop = FALSE;
 
-    DbgPrint("Explorer starting... Commandline: %S\n", lpCmdLine);
+    TRACE("Explorer starting... Commandline: %S\n", lpCmdLine);
 
     /*
     * Set our shutdown parameters: we want to shutdown the very last,
