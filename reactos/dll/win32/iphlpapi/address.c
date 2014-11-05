@@ -330,7 +330,8 @@ GetAdaptersAddresses(
 
         if (InterfacesList[i].tei_entity == IF_ENTITY)
         {
-            BYTE EntryBuffer[FIELD_OFFSET(IFEntry, if_descr[MAX_ADAPTER_DESCRIPTION_LENGTH + 1])];
+            BYTE EntryBuffer[FIELD_OFFSET(IFEntry, if_descr) +
+                             RTL_FIELD_SIZE(IFEntry, if_descr[0]) * (MAX_ADAPTER_DESCRIPTION_LENGTH + 1)];
             IFEntry* Entry = (IFEntry*)EntryBuffer;
 
             /* Remember we got one */
