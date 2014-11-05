@@ -565,11 +565,14 @@ VfatCreateFile(
         LONG idx, FileNameLen;
 
         ParentFcb = (FileObject->RelatedFileObject != NULL) ? FileObject->RelatedFileObject->FsContext : NULL;
-        Status = vfatGetFCBForFile(DeviceExt, &ParentFcb, &TargetFcb, &PathNameU);
-
-        if (Status == STATUS_SUCCESS)
+        if (ParentFcb)
         {
             vfatGrabFCB(DeviceExt, ParentFcb);
+        }
+        Status = vfatGetFCBForFile(DeviceExt, &ParentFcb, &TargetFcb, &PathNameU);
+
+        if (NT_SUCCESS(Status))
+        {
             vfatReleaseFCB(DeviceExt, TargetFcb);
             Irp->IoStatus.Information = FILE_EXISTS;
         }
@@ -623,6 +626,7 @@ VfatCreateFile(
         if (NT_SUCCESS(Status))
         {
             pFcb = FileObject->FsContext;
+            ASSERT(pFcb == ParentFcb);
 
             if (pFcb->OpenHandleCount == 0)
             {
@@ -640,7 +644,6 @@ VfatCreateFile(
                                             FALSE);
                 if (!NT_SUCCESS(Status))
                 {
-                    vfatReleaseFCB(DeviceExt, ParentFcb);
                     VfatCloseFile(DeviceExt, FileObject);
                     return Status;
                 }
