@@ -702,25 +702,37 @@ Fast486ProcessGate(PFAST486_STATE State, USHORT Selector, ULONG Offset, BOOLEAN 
         return FALSE;
     }
 
-    if (Descriptor.Signature == FAST486_TASK_GATE_SIGNATURE)
+    switch (Descriptor.Signature)
     {
-        /* Task gate */
+        case FAST486_TASK_GATE_SIGNATURE:
+        {
+            Fast486TaskSwitch(State,
+                              Call ? FAST486_TASK_CALL : FAST486_TASK_JUMP,
+                              ((PFAST486_IDT_ENTRY)&Descriptor)->Selector);
 
-        Fast486TaskSwitch(State,
-                          Call ? FAST486_TASK_CALL : FAST486_TASK_JUMP,
-                          ((PFAST486_IDT_ENTRY)&Descriptor)->Selector);
+            return FALSE;
+        }
 
-        return FALSE;
+        case FAST486_TSS_SIGNATURE:
+        {
+            Fast486TaskSwitch(State,
+                              Call ? FAST486_TASK_CALL : FAST486_TASK_JUMP,
+                              Selector);
+
+            return FALSE;
+        }
+
+        case FAST486_CALL_GATE_SIGNATURE:
+        {
+            // TODO: NOT IMPLEMENTED
+            UNIMPLEMENTED;
+        }
+
+        default:
+        {
+            return TRUE;
+        }
     }
-    else if (Descriptor.Signature == FAST486_CALL_GATE_SIGNATURE)
-    {
-        /* Call gate */
-
-        // TODO: NOT IMPLEMENTED
-        UNIMPLEMENTED;
-    }
-
-    return TRUE;
 }
 
 FORCEINLINE
