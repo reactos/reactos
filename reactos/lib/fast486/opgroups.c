@@ -1847,7 +1847,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 return;
             }
 
-            if (Fast486ReadDescriptorEntry(State,
+            if (!Fast486ReadDescriptorEntry(State,
                                            Selector,
                                            &Valid,
                                            (PFAST486_GDT_ENTRY)&GdtEntry))
