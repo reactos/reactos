@@ -1689,7 +1689,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
 
     for (i = 0; i < DataSize; i++)
     {
-        if(Value & (1 << i))
+        if (Value & (1 << i))
         {
             /* Save the bit number */
             BitNumber = i;
@@ -1758,7 +1758,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsr)
 
     for (i = DataSize - 1; i >= 0; i--)
     {
-        if(Value & (1 << i))
+        if (Value & (1 << i))
         {
             /* Save the bit number */
             BitNumber = i;

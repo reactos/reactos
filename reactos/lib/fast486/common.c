@@ -700,9 +700,9 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         }
 
         if (!Fast486ReadDescriptorEntry(State,
-                                       NewTss.Ldtr,
-                                       &Valid,
-                                       (PFAST486_GDT_ENTRY)&GdtEntry))
+                                        NewTss.Ldtr,
+                                        &Valid,
+                                        (PFAST486_GDT_ENTRY)&GdtEntry))
         {
             /* Exception occurred */
             return FALSE;

@@ -1765,10 +1765,10 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
                 return;
             }
 
-            if (Fast486ReadDescriptorEntry(State,
-                                           Selector,
-                                           &Valid,
-                                           (PFAST486_GDT_ENTRY)&GdtEntry))
+            if (!Fast486ReadDescriptorEntry(State,
+                                            Selector,
+                                            &Valid,
+                                            (PFAST486_GDT_ENTRY)&GdtEntry))
             {
                 /* Exception occurred */
                 return;
@@ -1848,9 +1848,9 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
             }
 
             if (!Fast486ReadDescriptorEntry(State,
-                                           Selector,
-                                           &Valid,
-                                           (PFAST486_GDT_ENTRY)&GdtEntry))
+                                            Selector,
+                                            &Valid,
+                                            (PFAST486_GDT_ENTRY)&GdtEntry))
             {
                 /* Exception occurred */
                 return;
