@@ -1132,7 +1132,7 @@ NtGdiExtFloodFill(
             goto cleanup;
     }
     else
-        RECTL_vSetRect(&DestRect, 0, psurf->SurfObj.sizlBitmap.cx, 0, psurf->SurfObj.sizlBitmap.cy);
+        RECTL_vSetRect(&DestRect, 0, 0, psurf->SurfObj.sizlBitmap.cx, psurf->SurfObj.sizlBitmap.cy);
 
     DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
