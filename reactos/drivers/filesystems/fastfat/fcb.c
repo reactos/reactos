@@ -295,6 +295,7 @@ vfatGrabFCB(
     ASSERT(ExIsResourceAcquiredExclusive(&pVCB->DirResource));
 
     ASSERT(pFCB != pVCB->VolumeFcb);
+    ASSERT(pFCB->RefCount > 0);
     ++pFCB->RefCount;
 }
 
@@ -313,6 +314,7 @@ vfatReleaseFCB(
     while (pFCB)
     {
         ASSERT(pFCB != pVCB->VolumeFcb);
+        ASSERT(pFCB->RefCount > 0);
         pFCB->RefCount--;
         if (pFCB->RefCount == 0)
         {
@@ -497,7 +499,6 @@ vfatFCBInitializeCacheFromVolume(
     fileObject->FsContext = fcb;
     fileObject->FsContext2 = newCCB;
     fcb->FileObject = fileObject;
-    vfatGrabFCB(vcb, fcb);
 
     _SEH2_TRY
     {
@@ -510,7 +511,6 @@ vfatFCBInitializeCacheFromVolume(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         status = _SEH2_GetExceptionCode();
-        fcb->RefCount--;
         fcb->FileObject = NULL;
         ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, newCCB);
         ObDereferenceObject(fileObject);
@@ -518,6 +518,7 @@ vfatFCBInitializeCacheFromVolume(
     }
     _SEH2_END;
 
+    vfatGrabFCB(vcb, fcb);
     fcb->Flags |= FCB_CACHE_INITIALIZED;
     return STATUS_SUCCESS;
 }
@@ -663,7 +664,7 @@ vfatMakeFCBFromDirEntry(
     rcFCB->RFCB.FileSize.QuadPart = Size;
     rcFCB->RFCB.ValidDataLength.QuadPart = Size;
     rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
-    vfatGrabFCB(vcb, rcFCB);
+    rcFCB->RefCount = 1;
     if (vfatFCBIsDirectory(rcFCB))
     {
         vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
