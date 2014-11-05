@@ -106,6 +106,13 @@ Fast486ReadMemory(PFAST486_STATE State,
             /* We mustn't prefetch across a page boundary */
             State->PrefetchAddress = PAGE_ALIGN(State->PrefetchAddress)
                                      | (FAST486_PAGE_SIZE - FAST486_CACHE_SIZE);
+
+            if ((LinearAddress - State->PrefetchAddress + Size) >= FAST486_CACHE_SIZE)
+            {
+                /* We can't prefetch without possibly violating page permissions */
+                State->PrefetchValid = FALSE;
+                return Fast486ReadLinearMemory(State, LinearAddress, Buffer, Size);
+            }
         }
 
         /* Prefetch */
