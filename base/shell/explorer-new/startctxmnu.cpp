@@ -24,240 +24,222 @@
  * Start menu button context menu
  */
 
-// TODO: Convert into an IContextMenu
-
-typedef struct _STARTMNU_CTMENU_CTX
+class CStartMenuBtnCtxMenu :
+    public CComCoClass<CStartMenuBtnCtxMenu>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IContextMenu
 {
-    IContextMenu *pcm;
+    HWND hWndOwner;
+    CComPtr<ITrayWindow> TrayWnd;
+    CComPtr<IContextMenu> pcm;
+    CComPtr<IShellFolder> psf;
     LPITEMIDLIST pidl;
-} STARTMNU_CTMENU_CTX, *PSTARTMNU_CTMENU_CTX;
 
-static HMENU
-CreateStartContextMenu(IN HWND hWndOwner,
-                       IN PVOID *ppcmContext,
-                       IN PVOID Context  OPTIONAL);
-
-static VOID
-OnStartContextMenuCommand(IN HWND hWndOwner,
-                          IN UINT uiCmdId,
-                          IN PVOID pcmContext  OPTIONAL,
-                          IN PVOID Context  OPTIONAL);
-
-const TRAYWINDOW_CTXMENU StartMenuBtnCtxMenu = {
-    CreateStartContextMenu,
-    OnStartContextMenuCommand
-};
-
-static HMENU
-CreateContextMenuFromShellFolderPidl(IN HWND hWndOwner,
-                                     IN OUT IShellFolder *psf,
-                                     IN OUT LPITEMIDLIST pidl,
-                                     OUT IContextMenu **ppcm)
-{
-    CComPtr<IContextMenu> pcm;
-    HRESULT hRet;
-    HMENU hPopup;
-
-    hRet = psf->GetUIObjectOf(hWndOwner, 1, (LPCITEMIDLIST *) &pidl, IID_NULL_PPV_ARG(IContextMenu, &pcm));
-    if (SUCCEEDED(hRet))
+    HRESULT CreateContextMenuFromShellFolderPidl(HMENU hPopup)
     {
-        hPopup = CreatePopupMenu();
+        CComPtr<IContextMenu> pcm;
+        HRESULT hRet;
 
-        if (hPopup != NULL)
+        hRet = psf->GetUIObjectOf(hWndOwner, 1, (LPCITEMIDLIST *) &pidl, IID_NULL_PPV_ARG(IContextMenu, &pcm));
+        if (SUCCEEDED(hRet))
         {
-            hRet = pcm->QueryContextMenu(
-                hPopup,
-                0,
-                ID_SHELL_CMD_FIRST,
-                ID_SHELL_CMD_LAST,
-                CMF_VERBSONLY);
-
-            if (SUCCEEDED(hRet))
+            if (hPopup != NULL)
             {
-                *ppcm = pcm;
-                return hPopup;
-            }
+                hRet = pcm->QueryContextMenu(
+                    hPopup,
+                    0,
+                    ID_SHELL_CMD_FIRST,
+                    ID_SHELL_CMD_LAST,
+                    CMF_VERBSONLY);
 
-            DestroyMenu(hPopup);
-        }
-    }
-
-    return NULL;
-}
-
-static VOID
-OnStartContextMenuCommand(IN HWND hWndOwner,
-                          IN UINT uiCmdId,
-                          IN PVOID pcmContext  OPTIONAL,
-                          IN PVOID Context  OPTIONAL)
-{
-    PSTARTMNU_CTMENU_CTX psmcmc = (PSTARTMNU_CTMENU_CTX) pcmContext;
-
-    if (uiCmdId != 0)
-    {
-        if ((uiCmdId >= ID_SHELL_CMD_FIRST) && (uiCmdId <= ID_SHELL_CMD_LAST))
-        {
-            CMINVOKECOMMANDINFO cmici = { 0 };
-            CHAR szDir[MAX_PATH];
-
-            /* Setup and invoke the shell command */
-            cmici.cbSize = sizeof(cmici);
-            cmici.hwnd = hWndOwner;
-            cmici.lpVerb = (LPCSTR) MAKEINTRESOURCE(uiCmdId - ID_SHELL_CMD_FIRST);
-            cmici.nShow = SW_NORMAL;
-
-            /* FIXME: Support Unicode!!! */
-            if (SHGetPathFromIDListA(psmcmc->pidl,
-                szDir))
-            {
-                cmici.lpDirectory = szDir;
-            }
-
-            psmcmc->pcm->InvokeCommand(&cmici);
-        }
-        else
-        {
-            ITrayWindow * TrayWnd = (ITrayWindow *) Context;
-            TrayWnd->ExecContextMenuCmd(uiCmdId);
-        }
-    }
-
-    psmcmc->pcm->Release();
-
-    HeapFree(hProcessHeap, 0, psmcmc);
-}
-
-static VOID
-AddStartContextMenuItems(IN HWND hWndOwner, IN HMENU hPopup)
-{
-    WCHAR szBuf[MAX_PATH];
-    HRESULT hRet;
-
-    /* Add the "Open All Users" menu item */
-    if (LoadString(hExplorerInstance,
-        IDS_PROPERTIES,
-        szBuf,
-        sizeof(szBuf) / sizeof(szBuf[0])))
-    {
-        AppendMenu(hPopup,
-                   MF_STRING,
-                   ID_SHELL_CMD_PROPERTIES,
-                   szBuf);
-    }
-
-    if (!SHRestricted(REST_NOCOMMONGROUPS))
-    {
-        /* Check if we should add menu items for the common start menu */
-        hRet = SHGetFolderPath(hWndOwner,
-                               CSIDL_COMMON_STARTMENU,
-                               NULL,
-                               SHGFP_TYPE_CURRENT,
-                               szBuf);
-        if (SUCCEEDED(hRet) && hRet != S_FALSE)
-        {
-            /* The directory exists, but only show the items if the
-               user can actually make any changes to the common start
-               menu. This is most likely only the case if the user
-               has administrative rights! */
-            if (IsUserAnAdmin())
-            {
-                AppendMenu(hPopup,
-                           MF_SEPARATOR,
-                           0,
-                           NULL);
-
-                /* Add the "Open All Users" menu item */
-                if (LoadString(hExplorerInstance,
-                    IDS_OPEN_ALL_USERS,
-                    szBuf,
-                    sizeof(szBuf) / sizeof(szBuf[0])))
-                {
-                    AppendMenu(hPopup,
-                               MF_STRING,
-                               ID_SHELL_CMD_OPEN_ALL_USERS,
-                               szBuf);
-                }
-
-                /* Add the "Explore All Users" menu item */
-                if (LoadString(hExplorerInstance,
-                    IDS_EXPLORE_ALL_USERS,
-                    szBuf,
-                    sizeof(szBuf) / sizeof(szBuf[0])))
-                {
-                    AppendMenu(hPopup,
-                               MF_STRING,
-                               ID_SHELL_CMD_EXPLORE_ALL_USERS,
-                               szBuf);
-                }
-            }
-        }
-    }
-}
-
-static HMENU
-CreateStartContextMenu(IN HWND hWndOwner,
-                       IN PVOID *ppcmContext,
-                       IN PVOID Context  OPTIONAL)
-{
-    LPITEMIDLIST pidlStart, pidlLast;
-    CComPtr<IShellFolder> psfStart;
-    CComPtr<IShellFolder> psfDesktop;
-    CComPtr<IContextMenu> pcm;
-    HRESULT hRet;
-    HMENU hPopup;
-
-    pidlStart = SHCloneSpecialIDList(hWndOwner,
-                                     CSIDL_STARTMENU,
-                                     TRUE);
-
-    if (pidlStart != NULL)
-    {
-        pidlLast = ILClone(ILFindLastID(pidlStart));
-        ILRemoveLastID(pidlStart);
-
-        if (pidlLast != NULL)
-        {
-            hRet = SHGetDesktopFolder(&psfDesktop);
-            if (SUCCEEDED(hRet))
-            {
-                hRet = psfDesktop->BindToObject(pidlStart, NULL, IID_PPV_ARG(IShellFolder, &psfStart));
                 if (SUCCEEDED(hRet))
                 {
-                    hPopup = CreateContextMenuFromShellFolderPidl(hWndOwner,
-                                                                  psfStart,
-                                                                  pidlLast,
-                                                                  &pcm);
+                    return hRet;
+                }
 
-                    if (hPopup != NULL)
+                DestroyMenu(hPopup);
+            }
+        }
+
+        return E_FAIL;
+    }
+
+    VOID AddStartContextMenuItems(IN HMENU hPopup)
+    {
+        WCHAR szBuf[MAX_PATH];
+        HRESULT hRet;
+
+        /* Add the "Open All Users" menu item */
+        if (LoadString(hExplorerInstance,
+            IDS_PROPERTIES,
+            szBuf,
+            sizeof(szBuf) / sizeof(szBuf[0])))
+        {
+            AppendMenu(hPopup,
+                       MF_STRING,
+                       ID_SHELL_CMD_PROPERTIES,
+                       szBuf);
+        }
+
+        if (!SHRestricted(REST_NOCOMMONGROUPS))
+        {
+            /* Check if we should add menu items for the common start menu */
+            hRet = SHGetFolderPath(hWndOwner,
+                                   CSIDL_COMMON_STARTMENU,
+                                   NULL,
+                                   SHGFP_TYPE_CURRENT,
+                                   szBuf);
+            if (SUCCEEDED(hRet) && hRet != S_FALSE)
+            {
+                /* The directory exists, but only show the items if the
+                user can actually make any changes to the common start
+                menu. This is most likely only the case if the user
+                has administrative rights! */
+                if (IsUserAnAdmin())
+                {
+                    AppendMenu(hPopup,
+                               MF_SEPARATOR,
+                               0,
+                               NULL);
+
+                    /* Add the "Open All Users" menu item */
+                    if (LoadString(hExplorerInstance,
+                        IDS_OPEN_ALL_USERS,
+                        szBuf,
+                        sizeof(szBuf) / sizeof(szBuf[0])))
                     {
-                        PSTARTMNU_CTMENU_CTX psmcmc;
+                        AppendMenu(hPopup,
+                                   MF_STRING,
+                                   ID_SHELL_CMD_OPEN_ALL_USERS,
+                                   szBuf);
+                    }
 
-                        psmcmc = (PSTARTMNU_CTMENU_CTX) HeapAlloc(hProcessHeap, 0, sizeof(*psmcmc));
-                        if (psmcmc != NULL)
-                        {
-                            psmcmc->pcm = pcm;
-                            psmcmc->pidl = pidlLast;
+                    /* Add the "Explore All Users" menu item */
+                    if (LoadString(hExplorerInstance,
+                        IDS_EXPLORE_ALL_USERS,
+                        szBuf,
+                        sizeof(szBuf) / sizeof(szBuf[0])))
+                    {
+                        AppendMenu(hPopup,
+                                   MF_STRING,
+                                   ID_SHELL_CMD_EXPLORE_ALL_USERS,
+                                   szBuf);
+                    }
+                }
+            }
+        }
+    }
 
-                            AddStartContextMenuItems(hWndOwner,
-                                                     hPopup);
+public:
+    HRESULT Initialize(ITrayWindow * pTrayWnd, IN HWND hWndOwner)
+    {
+        this->TrayWnd = pTrayWnd;
+        this->hWndOwner = hWndOwner;
+        return S_OK;
+    }
 
-                            *ppcmContext = psmcmc;
-                            return hPopup;
-                        }
-                        else
-                        {
-                            DestroyMenu(hPopup);
-                            hPopup = NULL;
-                        }
+    virtual HRESULT STDMETHODCALLTYPE
+        QueryContextMenu(HMENU hPopup,
+                         UINT indexMenu,
+                         UINT idCmdFirst,
+                         UINT idCmdLast,
+                         UINT uFlags)
+    {
+        LPITEMIDLIST pidlStart;
+        CComPtr<IShellFolder> psfDesktop;
+        HRESULT hRet;
+
+        psfDesktop = NULL;
+        pcm = NULL;
+
+        pidlStart = SHCloneSpecialIDList(hWndOwner, CSIDL_STARTMENU, TRUE);
+
+        if (pidlStart != NULL)
+        {
+            pidl = ILClone(ILFindLastID(pidlStart));
+            ILRemoveLastID(pidlStart);
+
+            if (pidl != NULL)
+            {
+                hRet = SHGetDesktopFolder(&psfDesktop);
+                if (SUCCEEDED(hRet))
+                {
+                    hRet = psfDesktop->BindToObject(pidlStart, NULL, IID_PPV_ARG(IShellFolder, &psf));
+                    if (SUCCEEDED(hRet))
+                    {
+                        CreateContextMenuFromShellFolderPidl(hPopup);
+                        AddStartContextMenuItems(hPopup);
                     }
                 }
             }
 
-            ILFree(pidlLast);
+            ILFree(pidlStart);
         }
 
-        ILFree(pidlStart);
+        return NULL;
     }
 
-    return NULL;
+    virtual HRESULT STDMETHODCALLTYPE
+        InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+    {
+        UINT uiCmdId = (UINT)lpici->lpVerb;
+        if (uiCmdId != 0)
+        {
+            if ((uiCmdId >= ID_SHELL_CMD_FIRST) && (uiCmdId <= ID_SHELL_CMD_LAST))
+            {
+                CMINVOKECOMMANDINFO cmici = { 0 };
+                CHAR szDir[MAX_PATH];
+
+                /* Setup and invoke the shell command */
+                cmici.cbSize = sizeof(cmici);
+                cmici.hwnd = hWndOwner;
+                cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - ID_SHELL_CMD_FIRST);
+                cmici.nShow = SW_NORMAL;
+
+                /* FIXME: Support Unicode!!! */
+                if (SHGetPathFromIDListA(pidl, szDir))
+                {
+                    cmici.lpDirectory = szDir;
+                }
+
+                pcm->InvokeCommand(&cmici);
+            }
+            else
+            {
+                TrayWnd->ExecContextMenuCmd(uiCmdId);
+            }
+        }
+        return S_OK;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE 
+        GetCommandString(UINT_PTR idCmd,
+                         UINT uType,
+                         UINT *pwReserved,
+                         LPSTR pszName,
+                         UINT cchMax)
+    {
+        return E_NOTIMPL;
+    }
+
+    CStartMenuBtnCtxMenu()
+    {
+    }
+
+    virtual ~CStartMenuBtnCtxMenu()
+    {
+        if (pidl)
+            ILFree(pidl);
+    }
+
+    BEGIN_COM_MAP(CStartMenuBtnCtxMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    END_COM_MAP()
+};
+HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu)
+{
+    CStartMenuBtnCtxMenu * mnu = new CComObject<CStartMenuBtnCtxMenu>();
+    mnu->Initialize(TrayWnd, hWndOwner);
+    *ppCtxMenu = mnu;
+    return S_OK;
 }

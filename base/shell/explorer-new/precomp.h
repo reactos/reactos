@@ -155,20 +155,6 @@ _CStartMenu_Constructor(REFIID riid, void **ppv);
 
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 
-typedef HMENU(*PCREATECTXMENU)(IN HWND hWndOwner,
-                               IN PVOID *ppcmContext,
-                               IN PVOID Context  OPTIONAL);
-typedef VOID(*PCTXMENUCOMMAND)(IN HWND hWndOwner,
-                               IN UINT uiCmdId,
-                               IN PVOID pcmContext  OPTIONAL,
-                               IN PVOID Context  OPTIONAL);
-
-typedef struct _TRAYWINDOW_CTXMENU
-{
-    PCREATECTXMENU CreateCtxMenu;
-    PCTXMENUCOMMAND CtxMenuCommand;
-} TRAYWINDOW_CTXMENU, *PTRAYWINDOW_CTXMENU;
-
 extern const GUID IID_IShellDesktopTray;
 
 #define INTERFACE ITrayWindow
@@ -343,7 +329,7 @@ OUT HWND *phWndTaskSwitch);
  * startmnu.cpp
  */
 
-extern const TRAYWINDOW_CTXMENU StartMenuBtnCtxMenu;
+HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 #define INTERFACE IStartMenuSite
 DECLARE_INTERFACE_(IStartMenuSite, IUnknown)

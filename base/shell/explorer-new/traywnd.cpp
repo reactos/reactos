@@ -24,7 +24,7 @@
 extern HRESULT InitShellServices(HDPA * phdpa);
 extern HRESULT ShutdownShellServices(HDPA hdpa);
 
-extern const TRAYWINDOW_CTXMENU TrayWindowCtxMenu;
+HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)
 
@@ -70,7 +70,6 @@ class CTrayWindow :
     HFONT hStartBtnFont;
     HFONT hCaptionFont;
 
-    CComPtr<ITrayBandSite> TrayBandSite;
     HWND hwndRebar;
     HWND hwndTaskSwitch;
     HWND hwndTrayNotify;
@@ -84,23 +83,6 @@ class CTrayWindow :
     RECT rcTrayWnd[4];
     RECT rcNewPosSize;
     SIZE TraySize;
-    union
-    {
-        DWORD Flags;
-        struct
-        {
-            DWORD AutoHide : 1;
-            DWORD AlwaysOnTop : 1;
-            DWORD SmSmallIcons : 1;
-            DWORD HideClock : 1;
-            DWORD Locked : 1;
-
-            /* UI Status */
-            DWORD InSizeMove : 1;
-            DWORD IsDragging : 1;
-            DWORD NewPosSize : 1;
-        };
-    };
 
     NONCLIENTMETRICS ncm;
     HFONT hFont;
@@ -119,6 +101,26 @@ class CTrayWindow :
     HDPA hdpaShellServices;
 
 public:
+    CComPtr<ITrayBandSite> TrayBandSite;
+    union
+    {
+        DWORD Flags;
+        struct
+        {
+            DWORD AutoHide : 1;
+            DWORD AlwaysOnTop : 1;
+            DWORD SmSmallIcons : 1;
+            DWORD HideClock : 1;
+            DWORD Locked : 1;
+
+            /* UI Status */
+            DWORD InSizeMove : 1;
+            DWORD IsDragging : 1;
+            DWORD NewPosSize : 1;
+        };
+    };
+
+public:
     CTrayWindow() :
         StartButton(this, 1),
         TaskbarTheme(NULL),
@@ -134,13 +136,13 @@ public:
         PreviousMonitor(NULL),
         DraggingPosition(0),
         DraggingMonitor(NULL),
-        Flags(0),
         hFont(NULL),
         hbmStartMenu(NULL),
         hwndTrayPropertiesOwner(NULL),
         hwndRunFileDlgOwner(NULL),
         AutoHideState(NULL),
-        hdpaShellServices(NULL)
+        hdpaShellServices(NULL),
+        Flags(0)
     {
         ZeroMemory(&StartBtnSize, sizeof(StartBtnSize));
         ZeroMemory(&rcTrayWnd, sizeof(rcTrayWnd));
@@ -1017,38 +1019,51 @@ ChangePos:
         return cmdId;
     }
 
-    UINT TrackCtxMenu(
-        IN const TRAYWINDOW_CTXMENU *pMenu,
+    HRESULT TrackCtxMenu(
+        IN IContextMenu * contextMenu,
         IN POINT *ppt OPTIONAL,
         IN HWND hwndExclude OPTIONAL,
         IN BOOL TrackUp,
         IN PVOID Context OPTIONAL)
     {
-        HMENU hPopup;
-        UINT cmdId = 0;
-        PVOID pcmContext = NULL;
+        INT x = ppt->x;
+        INT y = ppt->y;
+        HRESULT hr;
+        UINT uCommand;
+        HMENU popup = CreatePopupMenu();
 
-        hPopup = pMenu->CreateCtxMenu(m_hWnd,
-                                      &pcmContext,
-                                      Context);
-        if (hPopup != NULL)
+        if (popup == NULL)
+            return E_FAIL;
+
+        TRACE("Before Query\n");
+        hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, CMF_NORMAL);
+        if (FAILED_UNEXPECTEDLY(hr))
         {
-            cmdId = TrackMenu(
-                hPopup,
-                ppt,
-                hwndExclude,
-                TrackUp,
-                TRUE);
+            TRACE("Query failed\n");
+            DestroyMenu(popup);
+            return hr;
+        }
+        
+        TRACE("Before Tracking\n");
+        uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, m_hWnd, NULL);
 
-            pMenu->CtxMenuCommand(m_hWnd,
-                                  cmdId,
-                                  pcmContext,
-                                  Context);
-
-            DestroyMenu(hPopup);
+        if (uCommand != 0)
+        {
+            TRACE("Before InvokeCommand\n");
+            CMINVOKECOMMANDINFO cmi = { 0 };
+            cmi.cbSize = sizeof(cmi);
+            cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
+            cmi.hwnd = m_hWnd;
+            hr = contextMenu->InvokeCommand(&cmi);
+        }
+        else
+        {
+            TRACE("TrackPopupMenu failed. Code=%d, LastError=%d\n", uCommand, GetLastError());
+            hr = S_FALSE;
         }
 
-        return cmdId;
+        DestroyMenu(popup);
+        return hr;
     }
 
 
@@ -2480,12 +2495,9 @@ SetStartBtnImage:
             menu is currently being shown */
             if (!(StartButton.SendMessage(BM_GETSTATE, 0, 0) & BST_PUSHED))
             {
-                TrackCtxMenu(
-                    &StartMenuBtnCtxMenu,
-                    ppt,
-                    hWndExclude,
-                    Position == ABE_BOTTOM,
-                    this);
+                CComPtr<IContextMenu> ctxMenu;
+                StartMenuBtnCtxMenuCreator(this, m_hWnd, &ctxMenu);
+                TrackCtxMenu(ctxMenu, ppt, hWndExclude, Position == ABE_BOTTOM, this);
             }
         }
         else
@@ -2522,12 +2534,9 @@ SetStartBtnImage:
             {
 HandleTrayContextMenu:
                 /* Tray the default tray window context menu */
-                TrackCtxMenu(
-                    &TrayWindowCtxMenu,
-                    ppt,
-                    NULL,
-                    FALSE,
-                    this);
+                CComPtr<IContextMenu> ctxMenu;
+                TrayWindowCtxMenuCreator(this, m_hWnd, &ctxMenu);
+                TrackCtxMenu(ctxMenu, ppt, NULL, FALSE, this);
             }
         }
         return Ret;
@@ -2816,89 +2825,6 @@ HandleTrayContextMenu:
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
-    /*
-     * Tray Window Context Menu
-     */
-
-    static HMENU CreateTrayWindowContextMenu(IN HWND hWndOwner,
-                                             IN PVOID *ppcmContext,
-                                             IN PVOID Context OPTIONAL)
-    {
-        CTrayWindow *This = (CTrayWindow *) Context;
-        IContextMenu *pcm = NULL;
-        HMENU hPopup;
-
-        hPopup = LoadPopupMenu(hExplorerInstance,
-                               MAKEINTRESOURCE(IDM_TRAYWND));
-
-        if (hPopup != NULL)
-        {
-            if (SHRestricted(REST_CLASSICSHELL) != 0)
-            {
-                DeleteMenu(hPopup,
-                           ID_LOCKTASKBAR,
-                           MF_BYCOMMAND);
-            }
-
-            CheckMenuItem(hPopup,
-                          ID_LOCKTASKBAR,
-                          MF_BYCOMMAND | (This->Locked ? MF_CHECKED : MF_UNCHECKED));
-
-            if (This->TrayBandSite != NULL)
-            {
-                if (SUCCEEDED(This->TrayBandSite->AddContextMenus(
-                    hPopup,
-                    0,
-                    ID_SHELL_CMD_FIRST,
-                    ID_SHELL_CMD_LAST,
-                    CMF_NORMAL,
-                    &pcm)))
-                {
-                    TRACE("ITrayBandSite::AddContextMenus succeeded!\n");
-                    *(IContextMenu **) ppcmContext = pcm;
-                }
-            }
-        }
-
-        return hPopup;
-    }
-
-    static VOID OnTrayWindowContextMenuCommand(IN HWND hWndOwner,
-                                               IN UINT uiCmdId,
-                                               IN PVOID pcmContext OPTIONAL,
-                                               IN PVOID Context OPTIONAL)
-    {
-        CTrayWindow *This = (CTrayWindow *) Context;
-        IContextMenu *pcm = (IContextMenu *) pcmContext;
-
-        if (uiCmdId != 0)
-        {
-            if (uiCmdId >= ID_SHELL_CMD_FIRST && uiCmdId <= ID_SHELL_CMD_LAST)
-            {
-                CMINVOKECOMMANDINFO cmici = { 0 };
-
-                if (pcm != NULL)
-                {
-                    /* Setup and invoke the shell command */
-                    cmici.cbSize = sizeof(cmici);
-                    cmici.hwnd = hWndOwner;
-                    cmici.lpVerb = (LPCSTR) MAKEINTRESOURCE(uiCmdId - ID_SHELL_CMD_FIRST);
-                    cmici.nShow = SW_NORMAL;
-
-                    pcm->InvokeCommand(
-                        &cmici);
-                }
-            }
-            else
-            {
-                This->ExecContextMenuCmd(uiCmdId);
-            }
-        }
-
-        if (pcm != NULL)
-            pcm->Release();
-    }
-
     /*****************************************************************************/
 
     VOID TrayProcessMessages()
@@ -3017,10 +2943,147 @@ HandleTrayContextMenu:
     END_COM_MAP()
 };
 
-const TRAYWINDOW_CTXMENU TrayWindowCtxMenu = {
-    CTrayWindow::CreateTrayWindowContextMenu,
-    CTrayWindow::OnTrayWindowContextMenuCommand
+class CTrayWindowCtxMenu :
+    public CComCoClass<CTrayWindowCtxMenu>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IContextMenu
+{
+    HWND hWndOwner;
+    CComPtr<CTrayWindow> TrayWnd;
+    CComPtr<IContextMenu> pcm;
+
+public:
+    HRESULT Initialize(ITrayWindow * pTrayWnd, IN HWND hWndOwner)
+    {
+        this->TrayWnd = (CTrayWindow *) pTrayWnd;
+        this->hWndOwner = hWndOwner;
+        return S_OK;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE 
+        QueryContextMenu(HMENU hPopup,
+                         UINT indexMenu,
+                         UINT idCmdFirst,
+                         UINT idCmdLast,
+                         UINT uFlags)
+    {
+        HMENU menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCE(IDM_TRAYWND));
+
+        if (menubase)
+        {
+            int count = ::GetMenuItemCount(menubase);
+
+            for (int i = 0; i < count; i++)
+            {
+                WCHAR label[128];
+
+                MENUITEMINFOW mii = { 0 };
+                mii.cbSize = sizeof(mii);
+                mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS 
+                    | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
+                mii.dwTypeData = label;
+                mii.cch = _countof(label);
+                ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
+
+                TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
+
+                mii.fType |= MFT_RADIOCHECK;
+
+                ::InsertMenuItemW(hPopup, i + 1, TRUE, &mii);
+            }
+
+            ::DestroyMenu(menubase);
+
+            if (SHRestricted(REST_CLASSICSHELL) != 0)
+            {
+                DeleteMenu(hPopup,
+                           ID_LOCKTASKBAR,
+                           MF_BYCOMMAND);
+            }
+
+            CheckMenuItem(hPopup,
+                          ID_LOCKTASKBAR,
+                          MF_BYCOMMAND | (TrayWnd->Locked ? MF_CHECKED : MF_UNCHECKED));
+
+            if (TrayWnd->TrayBandSite != NULL)
+            {
+                if (SUCCEEDED(TrayWnd->TrayBandSite->AddContextMenus(
+                    hPopup,
+                    0,
+                    ID_SHELL_CMD_FIRST,
+                    ID_SHELL_CMD_LAST,
+                    CMF_NORMAL,
+                    &pcm)))
+                {
+                    return S_OK;
+                }
+            }
+
+        }
+
+        return E_FAIL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE
+        InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+    {
+        UINT uiCmdId = (UINT) lpici->lpVerb;
+        if (uiCmdId != 0)
+        {
+            if (uiCmdId >= ID_SHELL_CMD_FIRST && uiCmdId <= ID_SHELL_CMD_LAST)
+            {
+                CMINVOKECOMMANDINFO cmici = { 0 };
+
+                if (pcm != NULL)
+                {
+                    /* Setup and invoke the shell command */
+                    cmici.cbSize = sizeof(cmici);
+                    cmici.hwnd = hWndOwner;
+                    cmici.lpVerb = (LPCSTR) MAKEINTRESOURCE(uiCmdId - ID_SHELL_CMD_FIRST);
+                    cmici.nShow = SW_NORMAL;
+
+                    pcm->InvokeCommand(&cmici);
+                }
+            }
+            else
+            {
+                TrayWnd->ExecContextMenuCmd(uiCmdId);
+            }
+        }
+
+        return S_OK;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE
+        GetCommandString(UINT_PTR idCmd,
+        UINT uType,
+        UINT *pwReserved,
+        LPSTR pszName,
+        UINT cchMax)
+    {
+        return E_NOTIMPL;
+    }
+
+    CTrayWindowCtxMenu()
+    {
+    }
+
+    virtual ~CTrayWindowCtxMenu()
+    {
+    }
+
+    BEGIN_COM_MAP(CTrayWindowCtxMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    END_COM_MAP()
 };
+
+HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu)
+{
+    CTrayWindowCtxMenu * mnu = new CComObject<CTrayWindowCtxMenu>();
+    mnu->Initialize(TrayWnd, hWndOwner);
+    *ppCtxMenu = mnu;
+    return S_OK;
+}
 
 CTrayWindow * g_TrayWindow;
 
