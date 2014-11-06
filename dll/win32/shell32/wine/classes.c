@@ -48,7 +48,7 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL 
 	HKEY	hkey;
 	WCHAR	szTemp[MAX_EXTENSION_LENGTH + 2];
 
-    TRACE("%s %p\n", debugstr_w(szExtension), debugstr_w(szFileType));
+	TRACE("%s %p\n", debugstr_w(szExtension), szFileType);
 
         /* added because we do not want to have double dots */
         if (szExtension[0] == '.')
@@ -59,10 +59,12 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL 
 
 	lstrcpynW(szTemp + (bPrependDot?1:0), szExtension, MAX_EXTENSION_LENGTH);
 
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szTemp, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
-        return FALSE;
+	if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szTemp, 0, KEY_READ, &hkey))
+	{ 
+	  return FALSE;
+	}
 
-    if (RegQueryValueW(hkey, NULL, szFileType, &len) != ERROR_SUCCESS)
+	if (RegQueryValueW(hkey, NULL, szFileType, &len))
 	{ 
 	  RegCloseKey(hkey);
 	  return FALSE;
@@ -96,11 +98,13 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	  return FALSE;
 	}
 
-    if (RegLoadMUIStringA(hkey, "FriendlyTypeName", szFileType, len, NULL, 0, NULL) == ERROR_SUCCESS)
-    {
-        RegCloseKey(hkey);
-        return TRUE;
-    }
+#ifdef __REACTOS__
+        if (!RegLoadMUIStringA(hkey, "FriendlyTypeName", szFileType, len, NULL, 0, NULL))
+        {
+            RegCloseKey(hkey);
+            return TRUE;
+        }
+#endif
 
 	if (RegQueryValueA(hkey, NULL, szFileType, &len))
 	{ 
@@ -115,9 +119,9 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	return TRUE;
 }
 
-static const WCHAR swShell[] = L"shell\\";
-static const WCHAR swOpen[] = L"open";
-static const WCHAR swCommand[] = L"\\command";
+static const WCHAR swShell[] = {'s','h','e','l','l','\\',0};
+static const WCHAR swOpen[] = {'o','p','e','n',0};
+static const WCHAR swCommand[] = {'\\','c','o','m','m','a','n','d',0};
 
 BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len )
 {
@@ -135,13 +139,13 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
 
         size=len;
         *szDest='\0';
-    if (RegQueryValueW(hkeyClass, L"shell", szDest, &size) == ERROR_SUCCESS && *szDest)
+        if (!RegQueryValueW(hkeyClass, swShell, szDest, &size) && *szDest)
         {
             /* The MSDN says to first try the default verb */
-        wcscpy(sTemp, swShell);
-        wcscat(sTemp, szDest);
-        wcscat(sTemp, swCommand);
-        if (RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey) == ERROR_SUCCESS)
+            lstrcpyW(sTemp, swShell);
+            lstrcatW(sTemp, szDest);
+            lstrcatW(sTemp, swCommand);
+            if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
             {
                 RegCloseKey(hkey);
                 TRACE("default verb=%s\n", debugstr_w(szDest));
@@ -150,10 +154,10 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         }
 
         /* then fallback to 'open' */
-    wcscpy(sTemp, swShell);
-    wcscat(sTemp, swOpen);
-    wcscat(sTemp, swCommand);
-    if (RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey) == ERROR_SUCCESS)
+        lstrcpyW(sTemp, swShell);
+        lstrcatW(sTemp, swOpen);
+        lstrcatW(sTemp, swCommand);
+        if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
         {
             RegCloseKey(hkey);
             lstrcpynW(szDest, swOpen, len);
@@ -162,17 +166,24 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         }
 
         /* and then just use the first verb on Windows >= 2000 */
-    if (RegOpenKeyExW(hkeyClass, L"shell", 0, KEY_READ, &hkey) == ERROR_SUCCESS)
-    {
-        if (RegEnumKeyW(hkey, 0, szDest, len) == ERROR_SUCCESS && *szDest)
+#ifdef __REACTOS__
+        if (!RegOpenKeyExW(hkeyClass, L"shell", 0, KEY_READ, &hkey))
+        {
+            if (!RegEnumKeyW(hkey, 0, szDest, len) && *szDest)
+            {
+                TRACE("default verb=first verb=%s\n", debugstr_w(szDest));
+                RegCloseKey(hkey);
+                return TRUE;
+            }
+            RegCloseKey(hkey);
+        }
+#else
+        if (!RegEnumKeyW(hkeyClass, 0, szDest, len) && *szDest)
         {
             TRACE("default verb=first verb=%s\n", debugstr_w(szDest));
-            RegCloseKey(hkey);
             return TRUE;
         }
-        RegCloseKey(hkey);
-    }
-
+#endif
 
         TRACE("no default verb!\n");
 	return FALSE;
@@ -194,9 +205,9 @@ BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LP
         if (HCR_GetDefaultVerbW(hkeyClass, szVerb, sTempVerb, sizeof(sTempVerb)/sizeof(sTempVerb[0])))
         {
             WCHAR sTemp[MAX_PATH];
-        wcscpy(sTemp, swShell);
-        wcscat(sTemp, sTempVerb);
-        wcscat(sTemp, swCommand);
+            lstrcpyW(sTemp, swShell);
+            lstrcatW(sTemp, sTempVerb);
+            lstrcatW(sTemp, swCommand);
             ret = (ERROR_SUCCESS == SHGetValueW(hkeyClass, sTemp, NULL, NULL, szDest, &len));
         }
         if (szClass)
@@ -221,7 +232,7 @@ static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 
  	TRACE("%s\n",xriid );
 
-    return (RegOpenKeyExA(HKEY_CLASSES_ROOT, xriid, 0, KEY_READ, hkey) == ERROR_SUCCESS);
+	return !RegOpenKeyExA(HKEY_CLASSES_ROOT, xriid, 0, KEY_READ, hkey);
 }
 
 static BOOL HCR_RegGetIconW(HKEY hkey, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
@@ -254,7 +265,7 @@ static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPCSTR szName, DWORD len, i
 	char sTemp[MAX_PATH];
 	char  sNum[5];
 
-    if (!RegQueryValueExA(hkey, szName, 0, &dwType, (LPBYTE)szDest, &len))
+	if (!RegQueryValueExA(hkey, szName, 0, &dwType, (LPBYTE)szDest, &len))
 	{
           if (dwType == REG_EXPAND_SZ)
 	  {
@@ -274,20 +285,20 @@ static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPCSTR szName, DWORD len, i
 
 BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
-    static const WCHAR swDefaultIcon[] = L"\\DefaultIcon";
-    HKEY hKey;
+        static const WCHAR swDefaultIcon[] = {'\\','D','e','f','a','u','l','t','I','c','o','n',0};
+	HKEY	hkey;
 	WCHAR	sTemp[MAX_PATH];
 	BOOL	ret = FALSE;
 
 	TRACE("%s\n",debugstr_w(szClass) );
 
 	lstrcpynW(sTemp, szClass, MAX_PATH);
-    wcscat(sTemp, swDefaultIcon);
+	lstrcatW(sTemp, swDefaultIcon);
 
-    if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hKey))
+	if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hkey))
 	{
-        ret = HCR_RegGetIconW(hKey, szDest, szName, len, picon_idx);
-        RegCloseKey(hKey);
+	  ret = HCR_RegGetIconW(hkey, szDest, szName, len, picon_idx);
+	  RegCloseKey(hkey);
 	}
 
         if(ret)
@@ -300,7 +311,7 @@ BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
 
 BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
 {
-    HKEY hKey;
+	HKEY	hkey;
 	char	sTemp[MAX_PATH];
 	BOOL	ret = FALSE;
 
@@ -308,27 +319,13 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
 
 	sprintf(sTemp, "%s\\DefaultIcon",szClass);
 
-    if (!RegOpenKeyExA(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hKey))
+	if (!RegOpenKeyExA(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hkey))
 	{
-        ret = HCR_RegGetIconA(hKey, szDest, szName, len, picon_idx);
-        RegCloseKey(hKey);
+	  ret = HCR_RegGetIconA(hkey, szDest, szName, len, picon_idx);
+	  RegCloseKey(hkey);
 	}
 	TRACE("-- %s %i\n", szDest, *picon_idx);
 	return ret;
-}
-
-BOOL HCR_GetIconFromGUIDW(REFIID riid, LPWSTR szDest, LPWSTR szName, DWORD len, int* picon_idx)
-{
-    HKEY hKey;
-    BOOL ret = FALSE;
-
-    if (HCR_RegOpenClassIDKey(riid, &hKey))
-    {
-        ret = HCR_RegGetIconW(hKey, szDest, szName, len, picon_idx);
-        RegCloseKey(hKey);
-    }
-    TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
-    return ret;
 }
 
 /***************************************************************************************
@@ -340,34 +337,40 @@ static const WCHAR swEmpty[] = {0};
 
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 {	
-    HKEY hKey;
+	HKEY	hkey;
 	BOOL ret = FALSE;
 	DWORD buflen = len;
-    WCHAR szName[100];
-    LPOLESTR pStr;
+#ifdef __REACTOS__
+        WCHAR szName[100];
+        LPOLESTR pStr;
+#endif
 
  	szDest[0] = 0;
 
-    if (StringFromCLSID(riid, &pStr) == S_OK)
-    {
-        DWORD dwLen = buflen * sizeof(WCHAR);
-        swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
-        if (RegGetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szDest, &dwLen) == ERROR_SUCCESS)
+#ifdef __REACTOS__
+        if (StringFromCLSID(riid, &pStr) == S_OK)
         {
-            ret = TRUE;
+            DWORD dwLen = buflen * sizeof(WCHAR);
+            swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
+            if (!RegGetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szDest, &dwLen))
+            {
+                ret = TRUE;
+            }
+            CoTaskMemFree(pStr);
         }
-        CoTaskMemFree(pStr);
-    }
-    if (!ret && HCR_RegOpenClassIDKey(riid, &hKey))
+        if (!ret && HCR_RegOpenClassIDKey(riid, &hkey))
+#else
+	if (HCR_RegOpenClassIDKey(riid, &hkey))
+#endif
 	{
-        static const WCHAR wszLocalizedString[] = L"LocalizedString";
-
-        if (RegLoadMUIStringW(hKey, wszLocalizedString, szDest, len, NULL, 0, NULL) == ERROR_SUCCESS ||
-            RegQueryValueExW(hKey, swEmpty, 0, NULL, (LPBYTE)szDest, &len) == ERROR_SUCCESS)
+          static const WCHAR wszLocalizedString[] = 
+            { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
+          if (!RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) ||
+              !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len))
           {
 	    ret = TRUE;
 	  }
-        RegCloseKey(hKey);
+	  RegCloseKey(hkey);
 	}
 
 	if (!ret || !szDest[0])
@@ -382,46 +385,47 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 	    if(LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szDest, buflen))
 	      ret = TRUE;
 	  }
-        else if (IsEqualIID(riid, &CLSID_MyDocuments))
-        {
-            if(LoadStringW(shell32_hInstance, IDS_PERSONAL, szDest, buflen))
-                ret = TRUE;
+#ifdef __REACTOS__
+          else if (IsEqualIID(riid, &CLSID_MyDocuments))
+          {
+              if(LoadStringW(shell32_hInstance, IDS_PERSONAL, szDest, buflen))
+                  ret = TRUE;
+          }
+          else if (IsEqualIID(riid, &CLSID_RecycleBin))
+          {
+              if(LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_FOLDER_NAME, szDest, buflen))
+                  ret = TRUE;
+          }
+          else if (IsEqualIID(riid, &CLSID_ControlPanel))
+          {
+              if(LoadStringW(shell32_hInstance, IDS_CONTROLPANEL, szDest, buflen))
+                  ret = TRUE;
+          }
+          else if (IsEqualIID(riid, &CLSID_AdminFolderShortcut))
+          {
+              if(LoadStringW(shell32_hInstance, IDS_ADMINISTRATIVETOOLS, szDest, buflen))
+                  ret = TRUE;
+          }
+#endif
 	}
-        else if (IsEqualIID(riid, &CLSID_RecycleBin))
-        {
-            if(LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_FOLDER_NAME, szDest, buflen))
-                ret = TRUE;
-        }
-        else if (IsEqualIID(riid, &CLSID_ControlPanel))
-        {
-            if(LoadStringW(shell32_hInstance, IDS_CONTROLPANEL, szDest, buflen))
-                ret = TRUE;
-        }
-        else if (IsEqualIID(riid, &CLSID_AdminFolderShortcut))
-        {
-            if(LoadStringW(shell32_hInstance, IDS_ADMINISTRATIVETOOLS, szDest, buflen))
-                ret = TRUE;
-        }
-    }
-
 	TRACE("-- %s\n", debugstr_w(szDest));
 	return ret;
 }
 
 BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
-{   HKEY hKey;
+{	HKEY	hkey;
 	BOOL ret = FALSE;
 	DWORD buflen = len;
 
 	szDest[0] = 0;
-    if (HCR_RegOpenClassIDKey(riid, &hKey))
+	if (HCR_RegOpenClassIDKey(riid, &hkey))
 	{
-        if (!RegLoadMUIStringA(hKey, "LocalizedString", szDest, len, NULL, 0, NULL) ||
-            !RegQueryValueExA(hKey, "", 0, NULL, (LPBYTE)szDest, &len))
+          if (!RegLoadMUIStringA(hkey,"LocalizedString",szDest,len,NULL,0,NULL) ||
+              !RegQueryValueExA(hkey,"",0,NULL,(LPBYTE)szDest,&len))
           {
 	    ret = TRUE;
 	  }
-        RegCloseKey(hKey);
+	  RegCloseKey(hkey);
 	}
 
 	if (!ret || !szDest[0])
@@ -476,7 +480,11 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
     TRACE("(pidlFolder=%p, pdwAttributes=%p)\n", pidlFolder, pdwAttributes);
        
     if (!_ILIsPidlSimple(pidlFolder)) { 
-        ERR("should be called for simple PIDL's only!\n");
+        static BOOL firstHit = TRUE;
+        if (firstHit) {
+            ERR("should be called for simple PIDL's only!\n");
+            firstHit = FALSE;
+        }
         return FALSE;
     }
     
@@ -487,17 +495,20 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
     }
     
     lResult = RegOpenKeyExW(HKEY_CLASSES_ROOT, wszShellFolderKey, 0, KEY_READ, &hSFKey);
+#ifdef __REACTOS__
     if (lResult != ERROR_SUCCESS)
     {
         ERR("Cannot open key: %ls\n", wszShellFolderKey);
         return FALSE;
     }
+#else
+    if (lResult != ERROR_SUCCESS) return FALSE;
+#endif
     
     dwLen = sizeof(DWORD);
     lResult = RegQueryValueExW(hSFKey, wszCallForAttributes, 0, NULL, (LPBYTE)&dwTemp, &dwLen);
     if ((lResult == ERROR_SUCCESS) && (dwTemp & *pdwAttributes)) {
-        IShellFolder *psfDesktop;
-        IShellFolder *psfFolder;
+        LPSHELLFOLDER psfDesktop, psfFolder;
         HRESULT hr;
 
         RegCloseKey(hSFKey);
@@ -505,8 +516,11 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
         if (SUCCEEDED(hr)) {
             hr = IShellFolder_BindToObject(psfDesktop, pidlFolder, NULL, &IID_IShellFolder, 
                                            (LPVOID*)&psfFolder);
-            if (SUCCEEDED(hr))
+            if (SUCCEEDED(hr)) { 
                 hr = IShellFolder_GetAttributesOf(psfFolder, 0, NULL, pdwAttributes);
+                IShellFolder_Release(psfFolder);
+            }
+            IShellFolder_Release(psfDesktop);
         }
         if (FAILED(hr)) return FALSE;
     } else {
