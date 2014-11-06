@@ -18,9 +18,7 @@
  * FIXME:
  *  - many memory leaks
  *  - many flags unimplemented
- *    - implement new dialog style "make new folder" button
  *    - implement editbox
- *    - implement new dialog style resizing
  */
 
 #define WIN32_NO_STATUS
@@ -387,7 +385,9 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 	tvi.lParam = (LPARAM)lptvid;
 
 	IShellFolder_AddRef(lpsf);
-    IEnumIDList_AddRef(pEnumIL);
+#ifdef __REACTOS__
+        IEnumIDList_AddRef(pEnumIL);
+#endif
 	lptvid->lpsfParent = lpsf;
 	lptvid->lpi	= ILClone(pidl);
 	lptvid->lpifq	= pidlParent ? ILCombine(pidlParent, pidl) : ILClone(pidl);
@@ -543,7 +543,8 @@ static LRESULT BrsFolder_Treeview_Expand( browse_info *info, NMTREEVIEWW *pnmtv 
                                        &IID_IShellFolder, (void**)&lpsf2 );
     } else {
         lpsf2 = lptvid->lpsfParent;
-        r = IShellFolder_AddRef(lpsf2);
+        IShellFolder_AddRef(lpsf2);
+        r = S_OK;
     }
 
     if (SUCCEEDED(r))
@@ -831,8 +832,10 @@ static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
     switch (id)
     {
     case IDOK:
+#ifdef __REACTOS__
         /* The original pidl is owned by the treeview and will be free'd. */
         info->pidlRet = ILClone(info->pidlRet);
+#endif
         if (info->pidlRet == NULL) /* A null pidl would mean a cancel */
             info->pidlRet = _ILCreateDesktop();
         pdump( info->pidlRet );
@@ -1054,8 +1057,12 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
     return FALSE;
 }
 
-
-
+#ifndef __REACTOS__
+static const WCHAR swBrowseTemplateName[] = {
+    'S','H','B','R','S','F','O','R','F','O','L','D','E','R','_','M','S','G','B','O','X',0};
+static const WCHAR swNewBrowseTemplateName[] = {
+    'S','H','N','E','W','B','R','S','F','O','R','F','O','L','D','E','R','_','M','S','G','B','O','X',0};
+#endif
 
 /*************************************************************************
  * SHBrowseForFolderA [SHELL32.@]
@@ -1115,12 +1122,23 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
     browse_info info;
     DWORD r;
     HRESULT hr;
+#ifdef __REACTOS__
     WORD wDlgId;
+#else
+    const WCHAR * templateName;
+    INITCOMMONCONTROLSEX icex;
+#endif
 
     info.hWnd = 0;
     info.pidlRet = NULL;
     info.lpBrowseInfo = lpbi;
     info.hwndTreeView = NULL;
+
+#ifndef __REACTOS__
+    icex.dwSize = sizeof( icex );
+    icex.dwICC = ICC_TREEVIEW_CLASSES;
+    InitCommonControlsEx( &icex );
+#endif
 
     hr = OleInitialize(NULL);
 
