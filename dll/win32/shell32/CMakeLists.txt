@@ -17,7 +17,6 @@ include_directories(
 
 list(APPEND SOURCE
     CAutoComplete.cpp
-    clipboard.cpp
     CMenuBand.cpp
     CMenuDeskBar.cpp
     CIDLDataObj.cpp
@@ -67,6 +66,7 @@ add_library(shell32 SHARED
     wine/brsfolder.c
     wine/changenotify.c
     wine/classes.c
+    wine/clipboard.c
     wine/control.c
     wine/pidl.c
     wine/shell32_main.c

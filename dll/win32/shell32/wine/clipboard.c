@@ -35,7 +35,13 @@
  *
  */
 
-#include "precomp.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <windef.h>
+#include <winbase.h>
+#include <shlobj.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
