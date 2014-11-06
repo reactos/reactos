@@ -19,7 +19,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <wine/config.h>
+
+#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <shlobj.h>
+#include <shlguid_undoc.h>
+#include <shlwapi.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+#include "pidl.h"
+#include "shell32_main.h"
+#include "shresdef.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -190,15 +208,15 @@ BOOL HCR_GetExecuteCommandW(HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPW
 
 static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 {
-    WCHAR xriid[50];
-    swprintf(xriid, L"CLSID\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-             riid.Data1, riid.Data2, riid.Data3,
-             riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3],
-             riid.Data4[4], riid.Data4[5], riid.Data4[6], riid.Data4[7] );
+    char xriid[50];
+    sprintf(xriid, "CLSID\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+             riid->Data1, riid->Data2, riid->Data3,
+             riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
+             riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7] );
 
-    TRACE("%S\n", xriid);
+    TRACE("%s\n", xriid);
 
-    return (RegOpenKeyExW(HKEY_CLASSES_ROOT, xriid, 0, KEY_READ, hkey) == ERROR_SUCCESS);
+    return (RegOpenKeyExA(HKEY_CLASSES_ROOT, xriid, 0, KEY_READ, hkey) == ERROR_SUCCESS);
 }
 
 /***************************************************************************************
@@ -354,32 +372,32 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 
     if (!ret || !szDest[0])
     {
-        if(IsEqualIID(riid, CLSID_ShellDesktop))
+        if(IsEqualIID(riid, &CLSID_ShellDesktop))
         {
             if (LoadStringW(shell32_hInstance, IDS_DESKTOP, szDest, buflen))
                 ret = TRUE;
         }
-        else if (IsEqualIID(riid, CLSID_MyComputer))
+        else if (IsEqualIID(riid, &CLSID_MyComputer))
         {
             if(LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szDest, buflen))
                 ret = TRUE;
         }
-        else if (IsEqualIID(riid, CLSID_MyDocuments))
+        else if (IsEqualIID(riid, &CLSID_MyDocuments))
         {
             if(LoadStringW(shell32_hInstance, IDS_PERSONAL, szDest, buflen))
                 ret = TRUE;
         }
-        else if (IsEqualIID(riid, CLSID_RecycleBin))
+        else if (IsEqualIID(riid, &CLSID_RecycleBin))
         {
             if(LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_FOLDER_NAME, szDest, buflen))
                 ret = TRUE;
         }
-        else if (IsEqualIID(riid, CLSID_ControlPanel))
+        else if (IsEqualIID(riid, &CLSID_ControlPanel))
         {
             if(LoadStringW(shell32_hInstance, IDS_CONTROLPANEL, szDest, buflen))
                 ret = TRUE;
         }
-        else if (IsEqualIID(riid, CLSID_AdminFolderShortcut))
+        else if (IsEqualIID(riid, &CLSID_AdminFolderShortcut))
         {
             if(LoadStringW(shell32_hInstance, IDS_ADMINISTRATIVETOOLS, szDest, buflen))
                 ret = TRUE;
@@ -408,12 +426,12 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
 
     if (!ret || !szDest[0])
     {
-        if(IsEqualIID(riid, CLSID_ShellDesktop))
+        if(IsEqualIID(riid, &CLSID_ShellDesktop))
         {
             if (LoadStringA(shell32_hInstance, IDS_DESKTOP, szDest, buflen))
                 ret = TRUE;
         }
-        else if (IsEqualIID(riid, CLSID_MyComputer))
+        else if (IsEqualIID(riid, &CLSID_MyComputer))
         {
             if(LoadStringA(shell32_hInstance, IDS_MYCOMPUTER, szDest, buflen))
                 ret = TRUE;
@@ -462,7 +480,7 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
 
     if (!_ILIsDesktop(pidlFolder))
     {
-        if (FAILED(StringFromCLSID(*_ILGetGUIDPointer(pidlFolder), &pwszCLSID)))
+        if (FAILED(StringFromCLSID(_ILGetGUIDPointer(pidlFolder), &pwszCLSID)))
             return FALSE;
         memcpy(&wszShellFolderKey[6], pwszCLSID, 38 * sizeof(WCHAR));
         CoTaskMemFree(pwszCLSID);
@@ -479,17 +497,17 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
     lResult = RegQueryValueExW(hSFKey, wszCallForAttributes, 0, NULL, (LPBYTE)&dwTemp, &dwLen);
     if ((lResult == ERROR_SUCCESS) && (dwTemp & *pdwAttributes))
     {
-        CComPtr<IShellFolder> psfDesktop;
-        CComPtr<IShellFolder> psfFolder;
+        IShellFolder *psfDesktop;
+        IShellFolder *psfFolder;
         HRESULT hr;
 
         RegCloseKey(hSFKey);
         hr = SHGetDesktopFolder(&psfDesktop);
         if (SUCCEEDED(hr))
         {
-            hr = psfDesktop->BindToObject(pidlFolder, NULL, IID_PPV_ARG(IShellFolder,&psfFolder));
+            hr = IShellFolder_BindToObject(psfDesktop, pidlFolder, NULL, &IID_IShellFolder, (LPVOID*)&psfFolder);
             if (SUCCEEDED(hr))
-                hr = psfFolder->GetAttributesOf(0, NULL, pdwAttributes);
+                hr = IShellFolder_GetAttributesOf(psfFolder, 0, NULL, pdwAttributes);
         }
         if (FAILED(hr))
             return FALSE;
