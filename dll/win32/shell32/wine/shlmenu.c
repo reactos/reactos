@@ -33,8 +33,6 @@
 #include "pidl.h"
 #include "shell32_main.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shellmenu);
-
 #ifdef FM_SEPARATOR
 #undef FM_SEPARATOR
 #endif
@@ -70,6 +68,8 @@ typedef struct
 static BOOL bAbortInit;
 
 #define	CCH_MAXITEMTEXT 256
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static LPFMINFO FM_GetMenuInfo(HMENU hmenu)
 {
@@ -127,9 +127,7 @@ static LPFMINFO FM_SetMenuParameter(
  *
  */
 static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
-{
-    IShellFolder *lpsf;
-    IShellFolder *lpsf2;
+{	IShellFolder	*lpsf, *lpsf2;
 	ULONG		ulItemAttr = SFGAO_FOLDER;
 	UINT		uID, uEnumFlags;
 	LPFNFMCALLBACK	lpfnCallback;
@@ -173,7 +171,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 	{
 	  if (SUCCEEDED(IShellFolder_BindToObject(lpsf, pidl,0,&IID_IShellFolder,(LPVOID *)&lpsf2)))
 	  {
-            IEnumIDList *lpe;
+	    IEnumIDList	*lpe = NULL;
 
 	    if (SUCCEEDED (IShellFolder_EnumObjects(lpsf2, 0, uEnumFlags, &lpe )))
 	    {
@@ -194,7 +192,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 		    MENUINFO MenuInfo;
 		    HMENU hMenuPopup = CreatePopupMenu();
 
-                            lpFmMi = (LPFMINFO) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
+		    lpFmMi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
 
 		    lpFmMi->pidl = ILCombine(pidl, pidlTemp);
 		    lpFmMi->uEnumFlags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
@@ -224,8 +222,11 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 
 		NumberOfItems++;
 	      }
+	      IEnumIDList_Release (lpe);
 	    }
+	    IShellFolder_Release(lpsf2);
 	  }
+	  IShellFolder_Release(lpsf);
 	}
 
 	if ( GetMenuItemCount (hmenu) == 0 )
@@ -262,7 +263,7 @@ HMENU WINAPI FileMenu_Create (
 	TRACE("0x%08x 0x%08x %p 0x%08x 0x%08x  hMenu=%p\n",
 	crBorderColor, nBorderWidth, hBorderBmp, nSelHeight, uFlags, hMenu);
 
-    menudata = (LPFMINFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
+	menudata = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
 	menudata->crBorderColor = crBorderColor;
 	menudata->nBorderWidth = nBorderWidth;
 	menudata->hBorderBmp = hBorderBmp;
@@ -326,8 +327,8 @@ static BOOL FileMenu_AppendItemW(
 	if (lpText != FM_SEPARATOR)
 	{
 	  int len = strlenW (lpText);
-      myItem = (LPFMITEM)SHAlloc(sizeof(FMITEM) + len*sizeof(WCHAR));
-      wcscpy (myItem->szItemText, lpText);
+          myItem = SHAlloc(sizeof(FMITEM) + len*sizeof(WCHAR));
+	  strcpyW (myItem->szItemText, lpText);
 	  myItem->cchItemText = len;
 	  myItem->iIconIndex = icon;
 	  myItem->hMenu = hMenu;
@@ -378,7 +379,7 @@ static BOOL FileMenu_AppendItemW(
 
 /**********************************************************************/
 
-EXTERN_C BOOL WINAPI FileMenu_AppendItemAW(
+BOOL WINAPI FileMenu_AppendItemAW(
 	HMENU hMenu,
 	LPCVOID lpText,
 	UINT uID,
@@ -391,13 +392,13 @@ EXTERN_C BOOL WINAPI FileMenu_AppendItemAW(
         if (!lpText) return FALSE;
 
 	if (SHELL_OsIsUnicode() || lpText == FM_SEPARATOR)
-      ret = FileMenu_AppendItemW(hMenu, (LPWSTR)lpText, uID, icon, hMenuPopup, nItemHeight);
+	  ret = FileMenu_AppendItemW(hMenu, lpText, uID, icon, hMenuPopup, nItemHeight);
         else
 	{
-      DWORD len = MultiByteToWideChar( CP_ACP, 0, (LPSTR)lpText, -1, NULL, 0 );
-      LPWSTR lpszText = (LPWSTR)HeapAlloc ( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+	  DWORD len = MultiByteToWideChar( CP_ACP, 0, lpText, -1, NULL, 0 );
+	  LPWSTR lpszText = HeapAlloc ( GetProcessHeap(), 0, len*sizeof(WCHAR) );
 	  if (!lpszText) return FALSE;
-      MultiByteToWideChar( CP_ACP, 0, (LPSTR)lpText, -1, lpszText, len );
+	  MultiByteToWideChar( CP_ACP, 0, lpText, -1, lpszText, len );
 	  ret = FileMenu_AppendItemW(hMenu, lpszText, uID, icon, hMenuPopup, nItemHeight);
 	  HeapFree( GetProcessHeap(), 0, lpszText );
 	}
@@ -747,7 +748,7 @@ BOOL WINAPI FileMenu_DeleteItemByIndex ( HMENU hMenu, UINT uPos)
 /*************************************************************************
  * FileMenu_DeleteItemByFirstID			[SHELL32.141]
  */
-EXTERN_C BOOL WINAPI FileMenu_DeleteItemByFirstID(
+BOOL WINAPI FileMenu_DeleteItemByFirstID(
 	HMENU	hMenu,
 	UINT	uID)
 {
@@ -854,8 +855,7 @@ static BOOL _SHIsMenuSeparator(HMENU hm, int i)
  * Shell_MergeMenus				[SHELL32.67]
  */
 UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags)
-{
-    int            nItem;
+{	int		nItem;
 	HMENU		hmSubMenu;
 	BOOL		bAlreadySeparated;
 	MENUITEMINFOW	miiSrc;
