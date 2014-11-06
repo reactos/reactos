@@ -1,5 +1,5 @@
 /*
- *    shell change notification
+ *	shell change notification
  *
  * Copyright 2000 Juergen Schmied
  *
@@ -29,6 +29,7 @@
 #include <undocshell.h>
 #include <shlwapi.h>
 #include <wine/debug.h>
+#include <wine/list.h>
 
 #include "pidl.h"
 
@@ -48,20 +49,18 @@ typedef SHChangeNotifyEntry *LPNOTIFYREGISTER;
 /* internal list of notification clients (internal) */
 typedef struct _NOTIFICATIONLIST
 {
-    struct _NOTIFICATIONLIST *next;
-    struct _NOTIFICATIONLIST *prev;
+	struct list entry;
 	HWND hwnd;		/* window to notify */
 	DWORD uMsg;		/* message to send */
 	LPNOTIFYREGISTER apidl; /* array of entries to watch*/
 	UINT cidl;		/* number of pidls in array */
 	LONG wEventMask;	/* subscribed events */
-    LONG wSignalledEvent;   /* event that occurred */
 	DWORD dwFlags;		/* client flags */
-    LPCITEMIDLIST pidlSignaled; /*pidl of the path that caused the signal*/
-
+	ULONG id;
 } NOTIFICATIONLIST, *LPNOTIFICATIONLIST;
 
-static NOTIFICATIONLIST *head, *tail;
+static struct list notifications = LIST_INIT( notifications );
+static LONG next_id;
 
 #define SHCNE_NOITEMEVENTS ( \
    SHCNE_ASSOCCHANGED )
@@ -121,44 +120,14 @@ static const char * NodeName(const NOTIFICATIONLIST *item)
     return str;
 }
 
-static void AddNode(LPNOTIFICATIONLIST item)
-{
-    TRACE("item %p\n", item );
-
-    /* link items */
-    item->prev = tail;
-    item->next = NULL;
-    if( tail )
-        tail->next = item;
-    else
-        head = item;
-    tail = item;
-}
-
-static LPNOTIFICATIONLIST FindNode( HANDLE hitem )
-{
-    LPNOTIFICATIONLIST ptr;
-    for( ptr = head; ptr; ptr = ptr->next )
-        if( ptr == (LPNOTIFICATIONLIST) hitem )
-            return ptr;
-    return NULL;
-}
-
 static void DeleteNode(LPNOTIFICATIONLIST item)
 {
     UINT i;
 
-    TRACE("item=%p prev=%p next=%p\n", item, item->prev, item->next);
+    TRACE("item=%p\n", item);
 
     /* remove item from list */
-    if( item->prev )
-        item->prev->next = item->next;
-    else
-        head = item->next;
-    if( item->next )
-        item->next->prev = item->prev;
-    else
-        tail = item->prev;
+    list_remove( &item->entry );
 
     /* free the item */
     for (i=0; i<item->cidl; i++)
@@ -173,16 +142,18 @@ void InitChangeNotifications(void)
 
 void FreeChangeNotifications(void)
 {
+    LPNOTIFICATIONLIST ptr, next;
+
     TRACE("\n");
 
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
 
-    while( head )
-        DeleteNode( head );
+    LIST_FOR_EACH_ENTRY_SAFE( ptr, next, &notifications, NOTIFICATIONLIST, entry )
+        DeleteNode( ptr );
 
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
 
-    // DeleteCriticalSection(&SHELL32_ChangenotifyCS); // static
+    DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
 /*************************************************************************
@@ -201,15 +172,13 @@ SHChangeNotifyRegister(
     LPNOTIFICATIONLIST item;
     int i;
 
-    item = (NOTIFICATIONLIST *)SHAlloc(sizeof(NOTIFICATIONLIST));
+    item = SHAlloc(sizeof(NOTIFICATIONLIST));
 
     TRACE("(%p,0x%08x,0x%08x,0x%08x,%d,%p) item=%p\n",
 	hwnd, fSources, wEventMask, uMsg, cItems, lpItems, item);
 
-    item->next = NULL;
-    item->prev = NULL;
     item->cidl = cItems;
-    item->apidl = (SHChangeNotifyEntry *)SHAlloc(sizeof(SHChangeNotifyEntry) * cItems);
+    item->apidl = SHAlloc(sizeof(SHChangeNotifyEntry) * cItems);
     for(i=0;i<cItems;i++)
     {
         item->apidl[i].pidl = ILClone(lpItems[i].pidl);
@@ -218,18 +187,18 @@ SHChangeNotifyRegister(
     item->hwnd = hwnd;
     item->uMsg = uMsg;
     item->wEventMask = wEventMask;
-    item->wSignalledEvent = 0;
     item->dwFlags = fSources;
+    item->id = InterlockedIncrement( &next_id );
 
     TRACE("new node: %s\n", NodeName( item ));
 
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
 
-    AddNode(item);
+    list_add_tail( &notifications, &item->entry );
 
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
 
-    return (ULONG)item;
+    return item->id;
 }
 
 /*************************************************************************
@@ -243,25 +212,39 @@ BOOL WINAPI SHChangeNotifyDeregister(ULONG hNotify)
 
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
 
-    node = FindNode((HANDLE)hNotify);
-    if( node )
-        DeleteNode(node);
-
+    LIST_FOR_EACH_ENTRY( node, &notifications, NOTIFICATIONLIST, entry )
+    {
+        if (node->id == hNotify)
+        {
+            DeleteNode( node );
+            LeaveCriticalSection(&SHELL32_ChangenotifyCS);
+            return TRUE;
+        }
+    }
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
-    return node?TRUE:FALSE;
+    return FALSE;
 }
 
 /*************************************************************************
  * SHChangeNotifyUpdateEntryList       		[SHELL32.5]
  */
-EXTERN_C BOOL WINAPI SHChangeNotifyUpdateEntryList(DWORD unknown1, DWORD unknown2,
+BOOL WINAPI SHChangeNotifyUpdateEntryList(DWORD unknown1, DWORD unknown2,
 			      DWORD unknown3, DWORD unknown4)
 {
     FIXME("(0x%08x, 0x%08x, 0x%08x, 0x%08x)\n",
           unknown1, unknown2, unknown3, unknown4);
 
-    return -1;
+    return TRUE;
 }
+
+struct new_delivery_notification
+{
+    LONG event;
+    DWORD pidl1_size;
+    DWORD pidl2_size;
+    LPITEMIDLIST pidls[2];
+    BYTE data[1];
+};
 
 static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL sub )
 {
@@ -270,8 +253,9 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
         return FALSE;
     if (ILIsEqual( watched, changed ) )
         return TRUE;
-    if( sub && ILIsParent( watched, changed, TRUE ) )
+    if( sub && ILIsParent( watched, changed, FALSE ) )
         return TRUE;
+#ifdef __REACTOS__
     if (sub && _ILIsDesktop(watched)) {
         LPITEMIDLIST deskpidl;
         WCHAR wszPath[MAX_PATH];
@@ -292,6 +276,7 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
         }
         ILFree(deskpidl);
     }
+#endif
     return FALSE;
 }
 
@@ -300,14 +285,25 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
  */
 void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
 {
+    struct notification_recipients {
+        struct list entry;
+        HWND hwnd;
+        DWORD msg;
+        DWORD flags;
+    } *cur, *next;
+
+    HANDLE shared_data = NULL;
     LPITEMIDLIST Pidls[2];
     LPNOTIFICATIONLIST ptr;
-    UINT typeFlag = uFlags & SHCNF_TYPE;
+    struct list recipients;
 
     Pidls[0] = NULL;
     Pidls[1] = NULL;
 
-    TRACE("(0x%08x,0x%08x,%p,%p):stub.\n", wEventId, uFlags, dwItem1, dwItem2);
+    TRACE("(0x%08x,0x%08x,%p,%p)\n", wEventId, uFlags, dwItem1, dwItem2);
+
+    if(uFlags & ~(SHCNF_TYPE|SHCNF_FLUSH))
+        FIXME("ignoring unsupported flags: %x\n", uFlags);
 
     if( ( wEventId & SHCNE_NOITEMEVENTS ) && ( dwItem1 || dwItem2 ) )
     {
@@ -335,15 +331,16 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     }
 
     /* convert paths in IDLists*/
-    switch (typeFlag)
+    switch (uFlags & SHCNF_TYPE)
     {
     case SHCNF_PATHA:
-        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathA((LPCSTR)dwItem1); //FIXME
-        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA((LPCSTR)dwItem2); //FIXME
+        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathA(dwItem1); //FIXME
+        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA(dwItem2); //FIXME
         break;
     case SHCNF_PATHW:
-        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathW((LPCWSTR)dwItem1);
-        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathW((LPCWSTR)dwItem2);
+        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathW(dwItem1);
+        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathW(dwItem2);
+#ifdef __REACTOS__
         if (wEventId & (SHCNE_MKDIR | SHCNE_RMDIR | SHCNE_UPDATEDIR | SHCNE_RENAMEFOLDER))
         {
             /*
@@ -379,10 +376,11 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
                 ILFree(oldpidl);
             }
         }
+#endif
         break;
     case SHCNF_IDLIST:
-        Pidls[0] = (LPITEMIDLIST)dwItem1;
-        Pidls[1] = (LPITEMIDLIST)dwItem2;
+        Pidls[0] = ILClone(dwItem1);
+        Pidls[1] = ILClone(dwItem2);
         break;
     case SHCNF_PRINTERA:
     case SHCNF_PRINTERW:
@@ -390,31 +388,17 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
         return;
     case SHCNF_DWORD:
     default:
-        FIXME("unknown type %08x\n",typeFlag);
+        FIXME("unknown type %08x\n", uFlags & SHCNF_TYPE);
         return;
     }
 
-    {
-        WCHAR path[MAX_PATH];
-
-        if( Pidls[0] && SHGetPathFromIDListW(Pidls[0], path ))
-            TRACE("notify %08x on item1 = %s\n", wEventId, debugstr_w(path));
-
-        if( Pidls[1] && SHGetPathFromIDListW(Pidls[1], path ))
-            TRACE("notify %08x on item2 = %s\n", wEventId, debugstr_w(path));
-    }
-
+    list_init(&recipients);
     EnterCriticalSection(&SHELL32_ChangenotifyCS);
-
-    /* loop through the list */
-    for( ptr = head; ptr; ptr = ptr->next )
+    LIST_FOR_EACH_ENTRY( ptr, &notifications, NOTIFICATIONLIST, entry )
     {
-        BOOL notify;
+        struct notification_recipients *item;
+        BOOL notify = FALSE;
         DWORD i;
-
-        notify = FALSE;
-
-        TRACE("trying %p\n", ptr);
 
         for( i=0; (i<ptr->cidl) && !notify ; i++ )
         {
@@ -437,31 +421,71 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
         if( !notify )
             continue;
 
-        ptr->pidlSignaled = ILClone(Pidls[0]);
+        item = SHAlloc(sizeof(struct notification_recipients));
+        if(!item) {
+            ERR("out of memory\n");
+            continue;
+        }
 
-        TRACE("notifying %s, event %s(%x) before\n", NodeName( ptr ), DumpEvent(
-               wEventId ),wEventId );
-
-        ptr->wSignalledEvent |= wEventId;
-
-        if (ptr->dwFlags  & SHCNRF_NewDelivery)
-            SendMessageW(ptr->hwnd, ptr->uMsg, (WPARAM) ptr, (LPARAM) GetCurrentProcessId());
-        else
-            SendMessageW(ptr->hwnd, ptr->uMsg, (WPARAM)Pidls, wEventId);
-
-        TRACE("notifying %s, event %s(%x) after\n", NodeName( ptr ), DumpEvent(
-                wEventId ),wEventId );
-
+        item->hwnd = ptr->hwnd;
+        item->msg = ptr->uMsg;
+        item->flags = ptr->dwFlags;
+        list_add_tail(&recipients, &item->entry);
     }
-    TRACE("notify Done\n");
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
 
-    /* if we allocated it, free it. The ANSI flag is also set in its Unicode sibling. */
-    if ((typeFlag & SHCNF_PATHA) || (typeFlag & SHCNF_PRINTERA))
+    LIST_FOR_EACH_ENTRY_SAFE(cur, next, &recipients, struct notification_recipients, entry)
     {
-        SHFree((LPITEMIDLIST)Pidls[0]);
-        SHFree((LPITEMIDLIST)Pidls[1]);
+        TRACE("notifying %p, event %s(%x)\n", cur->hwnd, DumpEvent(wEventId), wEventId);
+
+        if (cur->flags  & SHCNRF_NewDelivery) {
+            if(!shared_data) {
+                struct new_delivery_notification *notification;
+                UINT size1 = ILGetSize(Pidls[0]), size2 = ILGetSize(Pidls[1]);
+                UINT offset = (size1+sizeof(int)-1)/sizeof(int)*sizeof(int);
+
+                notification = SHAlloc(sizeof(struct new_delivery_notification)+offset+size2);
+                if(!notification) {
+                    ERR("out of memory\n");
+                } else {
+                    notification->event = wEventId;
+                    notification->pidl1_size = size1;
+                    notification->pidl2_size = size2;
+                    if(size1)
+                        memcpy(notification->data, Pidls[0], size1);
+                    if(size2)
+                        memcpy(notification->data+offset, Pidls[1], size2);
+
+                    shared_data = SHAllocShared(notification,
+                        sizeof(struct new_delivery_notification)+size1+size2,
+                        GetCurrentProcessId());
+                    SHFree(notification);
+                }
+            }
+
+            if(shared_data)
+                SendMessageA(cur->hwnd, cur->msg, (WPARAM)shared_data, GetCurrentProcessId());
+            else
+                ERR("out of memory\n");
+        } else {
+            SendMessageA(cur->hwnd, cur->msg, (WPARAM)Pidls, wEventId);
+        }
+
+        list_remove(&cur->entry);
+        SHFree(cur);
     }
+    SHFreeShared(shared_data, GetCurrentProcessId());
+    SHFree(Pidls[0]);
+    SHFree(Pidls[1]);
+
+#ifndef __REACTOS__
+    if (wEventId & SHCNE_ASSOCCHANGED)
+    {
+        static const WCHAR args[] = {' ','-','a',0 };
+        TRACE("refreshing file type associations\n");
+        run_winemenubuilder( args );
+    }
+#endif
 }
 
 /*************************************************************************
@@ -492,26 +516,28 @@ HANDLE WINAPI SHChangeNotification_Lock(
 	LPITEMIDLIST **lppidls,
 	LPLONG lpwEventId)
 {
-    DWORD i;
-    LPNOTIFICATIONLIST node;
-    LPCITEMIDLIST *idlist;
+    struct new_delivery_notification *ndn;
+    UINT offset;
 
     TRACE("%p %08x %p %p\n", hChange, dwProcessId, lppidls, lpwEventId);
 
-    node = FindNode( hChange );
-    if( node )
-    {
-        idlist = (LPCITEMIDLIST *)SHAlloc( sizeof(LPCITEMIDLIST *) * node->cidl );
-        for(i=0; i<node->cidl; i++)
-            idlist[i] = (LPCITEMIDLIST)node->pidlSignaled;
-        *lpwEventId = node->wSignalledEvent;
-        *lppidls = (LPITEMIDLIST*)idlist;
-        node->wSignalledEvent = 0;
+    ndn = SHLockShared(hChange, dwProcessId);
+    if(!ndn) {
+        WARN("SHLockShared failed\n");
+        return NULL;
     }
-    else
-        ERR("Couldn't find %p\n", hChange );
 
-    return (HANDLE) node;
+    if(lppidls) {
+        offset = (ndn->pidl1_size+sizeof(int)-1)/sizeof(int)*sizeof(int);
+        ndn->pidls[0] = ndn->pidl1_size ? (LPITEMIDLIST)ndn->data : NULL;
+        ndn->pidls[1] = ndn->pidl2_size ? (LPITEMIDLIST)(ndn->data+offset) : NULL;
+        *lppidls = ndn->pidls;
+    }
+
+    if(lpwEventId)
+        *lpwEventId = ndn->event;
+
+    return ndn;
 }
 
 /*************************************************************************
@@ -519,14 +545,14 @@ HANDLE WINAPI SHChangeNotification_Lock(
  */
 BOOL WINAPI SHChangeNotification_Unlock ( HANDLE hLock)
 {
-    TRACE("\n");
-    return 1;
+    TRACE("%p\n", hLock);
+    return SHUnlockShared(hLock);
 }
 
 /*************************************************************************
  * NTSHChangeNotifyDeregister			[SHELL32.641]
  */
-EXTERN_C DWORD WINAPI NTSHChangeNotifyDeregister(ULONG x1)
+DWORD WINAPI NTSHChangeNotifyDeregister(ULONG x1)
 {
     FIXME("(0x%08x):semi stub.\n",x1);
 
