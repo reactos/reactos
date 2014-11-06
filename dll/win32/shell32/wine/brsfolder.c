@@ -1073,10 +1073,7 @@ LPITEMIDLIST WINAPI SHBrowseForFolderA (LPBROWSEINFOA lpbi)
     bi.hwndOwner = lpbi->hwndOwner;
     bi.pidlRoot = lpbi->pidlRoot;
     if (lpbi->pszDisplayName)
-    {
         bi.pszDisplayName = HeapAlloc( GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, lpbi->pszDisplayName, -1, bi.pszDisplayName, MAX_PATH );
-    }
     else
         bi.pszDisplayName = NULL;
 
