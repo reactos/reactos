@@ -221,7 +221,7 @@ static UINT ICO_ExtractIconExW(
 	LPBYTE		pData;
 	DWORD		sig;
 	HANDLE		hFile;
-	UINT16		iconDirCount = 0; //,iconCount = 0;
+	UINT16		iconDirCount = 0, iconCount = 0;
 	LPBYTE		peimage;
 	HANDLE		fmapping;
 	DWORD		fsizeh,fsizel;
@@ -360,12 +360,48 @@ static UINT ICO_ExtractIconExW(
 	    }
 	  }
 	}
+#else
+    if (sig == 1) /* .ICO file */
+    {
+        TRACE("-- icon Signature (0x%08x)\n", sig);
+
+        if (pData == (BYTE*)-1)
+        {
+            INT dataOffset;
+            LPICONIMAGE entry;
+            CURSORICONDIR *lpcid = (CURSORICONDIR*)peimage;
+            INT cx[2] = {cx1, cx2}, cy[2] = {cy1, cy2};
+            INT index;
+
+            if (lpcid->idType != 1)
+                return 0;
+
+            for(index = 0; index < 2; index++)
+            {
+                dataOffset = LookupIconIdFromDirectoryEx(peimage, TRUE, cx[index], cy[index], flags);
+
+                if (dataOffset)
+                {
+                    HICON icon;
+                    entry = (LPICONIMAGE)(peimage + dataOffset);
+                    icon = CreateIconFromResourceEx(peimage + dataOffset, entry->icHeader.biSizeImage, TRUE, 0x00030000, cx[index], cy[index], flags);
+
+                    if (icon)
+                    {
+                        RetPtr[index] = icon;
+                        iconCount = 1;
+                    }
+                }
+            }
+
+        }
+        ret = iconCount;	/* return number of retrieved icons */
+    }
+#endif
 /* end ico file */
 
 /* exe/dll */
 	else if( sig == IMAGE_NT_SIGNATURE )
-#endif
-	if( sig == IMAGE_NT_SIGNATURE )
 	{
         BYTE *idata, *igdata;
         const IMAGE_RESOURCE_DIRECTORY *rootresdir, *iconresdir, *icongroupresdir;
