@@ -583,7 +583,7 @@ VfatCreateFile(
 
         idx = FileObject->FileName.Length / sizeof(WCHAR) - 1;
 
-        /* Skip tailing \ - if any */
+        /* Skip trailing \ - if any */
         if (PathNameU.Buffer[idx] == L'\\')
         {
             --idx;
