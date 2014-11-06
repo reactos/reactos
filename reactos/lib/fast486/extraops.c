@@ -475,7 +475,12 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
 
     /* Calculate the limit */
     Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
-    if (GdtEntry.Granularity) Limit <<= 12;
+
+    if (GdtEntry.Granularity)
+    {
+        Limit <<= 12;
+        Limit |= 0x00000FFF;
+    }
 
     /* Set ZF */
     State->Flags.Zf = TRUE;

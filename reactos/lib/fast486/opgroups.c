@@ -1804,7 +1804,12 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
             State->Ldtr.Selector = Selector;
             State->Ldtr.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
             State->Ldtr.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
-            if (GdtEntry.Granularity) State->Ldtr.Limit <<= 12;
+
+            if (GdtEntry.Granularity)
+            {
+                State->Ldtr.Limit <<= 12;
+                State->Ldtr.Limit |= 0x00000FFF;
+            }
 
             break;
         }
@@ -1886,7 +1891,12 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeGroup0F00)
             State->TaskReg.Selector = Selector;
             State->TaskReg.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
             State->TaskReg.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
-            if (GdtEntry.Granularity) State->TaskReg.Limit <<= 12;
+
+            if (GdtEntry.Granularity)
+            {
+                State->TaskReg.Limit <<= 12;
+                State->TaskReg.Limit |= 0x00000FFF;
+            }
 
             break;
         }

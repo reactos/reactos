@@ -553,7 +553,12 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
 
     /* Calculate the limit of the new TSS */
     NewTssLimit = NewTssDescriptor.Limit | (NewTssDescriptor.LimitHigh << 16);
-    if (NewTssDescriptor.Granularity) NewTssLimit <<= 12;
+
+    if (NewTssDescriptor.Granularity)
+    {
+        NewTssLimit <<= 12;
+        NewTssLimit |= 0x00000FFF;
+    }
 
     if (NewTssLimit < sizeof(FAST486_TSS))
     {
@@ -739,7 +744,12 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         State->Ldtr.Selector = NewTss.Ldtr;
         State->Ldtr.Base = GdtEntry.Base | (GdtEntry.BaseMid << 16) | (GdtEntry.BaseHigh << 24);
         State->Ldtr.Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
-        if (GdtEntry.Granularity) State->Ldtr.Limit <<= 12;
+
+        if (GdtEntry.Granularity)
+        {
+            State->Ldtr.Limit <<= 12;
+            State->Ldtr.Limit |= 0x00000FFF;
+        }
     }
     else
     {

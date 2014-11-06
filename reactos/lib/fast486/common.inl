@@ -594,16 +594,12 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
             {
                 /* Regular code segment */
 
-                if ((GET_SEGMENT_RPL(Selector) > Fast486GetCurrentPrivLevel(State))
-                    || (Fast486GetCurrentPrivLevel(State) != GdtEntry.Dpl))
+                if ((GET_SEGMENT_RPL(Selector) < Fast486GetCurrentPrivLevel(State)))
                 {
                     Fast486ExceptionWithErrorCode(State, Exception, Selector);
                     return FALSE;
                 }
             }
-
-            /* Update CPL */
-            State->Cpl = GET_SEGMENT_RPL(Selector);
         }
         else
         {
@@ -653,7 +649,11 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
         CachedDescriptor->Size = GdtEntry.Size;
 
         /* Check for page granularity */
-        if (GdtEntry.Granularity) CachedDescriptor->Limit <<= 12;
+        if (GdtEntry.Granularity)
+        {
+            CachedDescriptor->Limit <<= 12;
+            CachedDescriptor->Limit |= 0x00000FFF;
+        }
     }
     else
     {
@@ -730,6 +730,13 @@ Fast486ProcessGate(PFAST486_STATE State, USHORT Selector, ULONG Offset, BOOLEAN 
 
         default:
         {
+            /* Security check for jumps and calls only */
+            if (State->Cpl != Descriptor.Dpl)
+            {
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
+                return FALSE;
+            }
+
             return TRUE;
         }
     }

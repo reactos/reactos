@@ -4474,6 +4474,63 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
         return;
     }
 
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
+    {
+        INT i;
+        INT OldCpl = Fast486GetCurrentPrivLevel(State);
+        ULONG StackPtr;
+        ULONG StackSel;
+        
+        if (GET_SEGMENT_RPL(Segment) > OldCpl)
+        {
+            /* Pop ESP */
+            if (!Fast486StackPop(State, &StackPtr))
+            {
+                /* Exception */
+                return;
+            }
+
+            /* Pop SS */
+            if (!Fast486StackPop(State, &StackSel))
+            {
+                /* Exception */
+                return;
+            }
+
+            /* Load new SS */
+            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel))
+            {
+                /* Exception */
+                return;
+            }
+
+            /* Set ESP */
+            if (Size) State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
+            else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
+        }
+
+        /* Update the CPL */
+        State->Cpl = GET_SEGMENT_RPL(Segment);
+
+        if (State->Cpl > OldCpl)
+        {
+            /* Check segment security */
+            for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
+            {
+                /* Don't check CS or SS */
+                if ((i == FAST486_REG_CS) || (i == FAST486_REG_SS)) continue;
+
+                if ((State->Cpl > State->SegmentRegs[i].Dpl)
+                    && (!State->SegmentRegs[i].Executable
+                    || !State->SegmentRegs[i].DirConf))
+                {
+                    /* Load the NULL descriptor in the segment */
+                    if (!Fast486LoadSegment(State, i, 0)) return;
+                }
+            }
+        }
+    }
+
     /* Load new (E)IP, and if necessary, pop the parameters */
     if (Size)
     {
@@ -4582,7 +4639,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
-        INT Cpl = Fast486GetCurrentPrivLevel(State);
+        INT OldCpl = Fast486GetCurrentPrivLevel(State);
 
         if (State->Flags.Vm)
         {
@@ -4660,7 +4717,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
         if (Size) State->InstPtr.Long = InstPtr;
         else State->InstPtr.LowWord = LOWORD(InstPtr);
 
-        if (GET_SEGMENT_RPL(CodeSel) > Cpl)
+        if (GET_SEGMENT_RPL(CodeSel) > OldCpl)
         {
             /* Pop ESP */
             if (!Fast486StackPop(State, &StackPtr))
@@ -4688,27 +4745,27 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
         }
 
+        /* Update the CPL */
+        State->Cpl = GET_SEGMENT_RPL(CodeSel);
+
         /* Set the new flags */
         if (Size) State->Flags.Long = NewFlags.Long & PROT_MODE_FLAGS_MASK;
         else State->Flags.LowWord = NewFlags.LowWord & PROT_MODE_FLAGS_MASK;
         State->Flags.AlwaysSet = TRUE;
 
         /* Set additional flags */
-        if (Cpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
-        if (Cpl == 0) State->Flags.Iopl = NewFlags.Iopl;
+        if (OldCpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
+        if (OldCpl == 0) State->Flags.Iopl = NewFlags.Iopl;
 
-        if (GET_SEGMENT_RPL(CodeSel) > Cpl)
+        if (State->Cpl > OldCpl)
         {
-            /* Update the CPL */
-            Cpl = Fast486GetCurrentPrivLevel(State);
-
             /* Check segment security */
             for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
             {
                 /* Don't check CS or SS */
                 if ((i == FAST486_REG_CS) || (i == FAST486_REG_SS)) continue;
 
-                if ((Cpl > State->SegmentRegs[i].Dpl)
+                if ((State->Cpl > State->SegmentRegs[i].Dpl)
                     && (!State->SegmentRegs[i].Executable
                     || !State->SegmentRegs[i].DirConf))
                 {
