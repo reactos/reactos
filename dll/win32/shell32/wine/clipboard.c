@@ -54,56 +54,91 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 {
 	UINT i;
-    int size = 0;
+#ifdef __REACTOS__
+        int size = 0;
+#else
+	int rootlen = 0,size = 0;
+	WCHAR wszRootPath[MAX_PATH];
+#endif
 	WCHAR wszFileName[MAX_PATH];
-    HGLOBAL hGlobal = NULL;
+	HGLOBAL hGlobal = NULL;
 	DROPFILES *pDropFiles;
 	int offset;
-    LPITEMIDLIST *pidls;
+#ifdef __REACTOS__
+        LPITEMIDLIST *pidls;
+#endif
 
 	TRACE("(%p,%p,%u)\n", pidlRoot, apidl, cidl);
 
-    pidls = (LPITEMIDLIST *)HeapAlloc(GetProcessHeap(), 0, cidl * sizeof(*pidls));
-    if (!pidls)
-        goto cleanup;
+#ifdef __REACTOS__
+        pidls = (LPITEMIDLIST *)HeapAlloc(GetProcessHeap(), 0, cidl * sizeof(*pidls));
+        if (!pidls)
+            goto cleanup;
+#endif
 
 	/* get the size needed */
 	size = sizeof(DROPFILES);
 
+#ifndef __REACTOS__
+	SHGetPathFromIDListW(pidlRoot, wszRootPath);
+	PathAddBackslashW(wszRootPath);
+	rootlen = strlenW(wszRootPath);
+#endif
+
 	for (i=0; i<cidl;i++)
 	{
-      pidls[i] = ILCombine(pidlRoot, apidl[i]);
-      SHGetPathFromIDListW(pidls[i], wszFileName);
-      size += (wcslen(wszFileName) + 1) * sizeof(WCHAR);
+#ifdef __REACTOS__
+          pidls[i] = ILCombine(pidlRoot, apidl[i]);
+          SHGetPathFromIDListW(pidls[i], wszFileName);
+          size += (wcslen(wszFileName) + 1) * sizeof(WCHAR);
+#else
+	  _ILSimpleGetTextW(apidl[i], wszFileName, MAX_PATH);
+	  size += (rootlen + strlenW(wszFileName) + 1) * sizeof(WCHAR);
+#endif
 	}
 
 	size += sizeof(WCHAR);
 
 	/* Fill the structure */
 	hGlobal = GlobalAlloc(GHND|GMEM_SHARE, size);
-    if(!hGlobal)
-        goto cleanup;
+#ifdef __REACTOS__
+        if(!hGlobal) goto cleanup;
+#else
+	if(!hGlobal) return hGlobal;
+#endif
 
-        pDropFiles = (DROPFILES *)GlobalLock(hGlobal);
+        pDropFiles = GlobalLock(hGlobal);
 	offset = (sizeof(DROPFILES) + sizeof(WCHAR) - 1) / sizeof(WCHAR);
         pDropFiles->pFiles = offset * sizeof(WCHAR);
         pDropFiles->fWide = TRUE;
 
+#ifndef __REACTOS__
+	strcpyW(wszFileName, wszRootPath);
+#endif
+
 	for (i=0; i<cidl;i++)
 	{
 
-      SHGetPathFromIDListW(pidls[i], wszFileName);
-      wcscpy(((WCHAR*)pDropFiles)+offset, wszFileName);
-      offset += wcslen(wszFileName) + 1;
-      ILFree(pidls[i]);
+#ifdef __REACTOS__
+          SHGetPathFromIDListW(pidls[i], wszFileName);
+          wcscpy(((WCHAR*)pDropFiles)+offset, wszFileName);
+          offset += wcslen(wszFileName) + 1;
+          ILFree(pidls[i]);
+#else
+	  _ILSimpleGetTextW(apidl[i], wszFileName + rootlen, MAX_PATH - rootlen);
+	  strcpyW(((WCHAR*)pDropFiles)+offset, wszFileName);
+	  offset += strlenW(wszFileName) + 1;
+#endif
 	}
 
 	((WCHAR*)pDropFiles)[offset] = 0;
 	GlobalUnlock(hGlobal);
 
+#ifdef __REACTOS__
 cleanup:
     if(pidls)
         HeapFree(GetProcessHeap(), 0, pidls);
+#endif
 
 	return hGlobal;
 }
@@ -148,24 +183,6 @@ HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cid
 
 	GlobalUnlock(hGlobal);
 	return hGlobal;
-}
-
-HGLOBAL RenderSHELLIDLISTOFFSET (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
-{
-    FIXME("\n");
-    return 0;
-}
-
-HGLOBAL RenderFILECONTENTS (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
-{
-    FIXME("\n");
-    return 0;
-}
-
-HGLOBAL RenderFILEDESCRIPTOR (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
-{
-    FIXME("\n");
-    return 0;
 }
 
 HGLOBAL RenderFILENAMEA (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
@@ -230,19 +247,4 @@ HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 	GlobalUnlock(hGlobal);
 
 	return hGlobal;
-}
-
-HGLOBAL RenderPREFEREDDROPEFFECT (DWORD dwFlags)
-{
-    DWORD * pdwFlag;
-    HGLOBAL hGlobal;
-
-    TRACE("(0x%08x)\n", dwFlags);
-
-    hGlobal = GlobalAlloc(GHND|GMEM_SHARE, sizeof(DWORD));
-    if(!hGlobal) return hGlobal;
-        pdwFlag = (DWORD*)GlobalLock(hGlobal);
-    *pdwFlag = dwFlags;
-    GlobalUnlock(hGlobal);
-    return hGlobal;
 }

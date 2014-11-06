@@ -225,6 +225,21 @@ HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, LPCITEMIDLIST pMyPidl, LP
     return S_OK;
 }
 
+static HGLOBAL RenderPREFEREDDROPEFFECT (DWORD dwFlags)
+{
+    DWORD * pdwFlag;
+    HGLOBAL hGlobal;
+
+    TRACE("(0x%08x)\n", dwFlags);
+
+    hGlobal = GlobalAlloc(GHND|GMEM_SHARE, sizeof(DWORD));
+    if(!hGlobal) return hGlobal;
+        pdwFlag = (DWORD*)GlobalLock(hGlobal);
+    *pdwFlag = dwFlags;
+    GlobalUnlock(hGlobal);
+    return hGlobal;
+}
+
 /**************************************************************************
 * IDataObject_fnGetData
 */
