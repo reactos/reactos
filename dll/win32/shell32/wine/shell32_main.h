@@ -29,33 +29,34 @@ extern "C" {
 /*******************************************
 *  global SHELL32.DLL variables
 */
-extern HMODULE	huser32;
-extern HINSTANCE shell32_hInstance;
+extern HMODULE	huser32 DECLSPEC_HIDDEN;
+extern HINSTANCE shell32_hInstance DECLSPEC_HIDDEN;
 
 BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
 /* Iconcache */
 #define INVALID_INDEX -1
 BOOL SIC_Initialize(void);
-void SIC_Destroy(void);
-BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT uFlags, int * pIndex);
-INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags );
+void SIC_Destroy(void) DECLSPEC_HIDDEN;
+BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT uFlags, int * pIndex) DECLSPEC_HIDDEN;
+INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags ) DECLSPEC_HIDDEN;
 
 /* Classes Root */
-BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot);
-BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
-BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
+BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot) DECLSPEC_HIDDEN;
+BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len ) DECLSPEC_HIDDEN;
+BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len ) DECLSPEC_HIDDEN;
 BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx);
-BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len);
+BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len) DECLSPEC_HIDDEN;
 
 /* ANSI versions of above functions, supposed to go away as soon as they are not used anymore */
-BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot);
+BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot) DECLSPEC_HIDDEN;
 BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR sName, DWORD len, int* picon_idx);
-BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len);
+BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len) DECLSPEC_HIDDEN;
 
-BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD dwAttributes);
-DWORD WINAPI ParseFieldA(LPCSTR src, DWORD nField, LPSTR dst, DWORD len);
-DWORD WINAPI ParseFieldW(LPCWSTR src, DWORD nField, LPWSTR dst, DWORD len);
+BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD dwAttributes) DECLSPEC_HIDDEN;
+
+DWORD WINAPI ParseFieldA(LPCSTR src, DWORD nField, LPSTR dst, DWORD len) DECLSPEC_HIDDEN;
+DWORD WINAPI ParseFieldW(LPCWSTR src, DWORD nField, LPWSTR dst, DWORD len) DECLSPEC_HIDDEN;
 
 /****************************************************************************
  * Class constructors
@@ -72,12 +73,12 @@ HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newVie
 
 HRESULT WINAPI IShellLink_ConstructFromFile(IUnknown * pUnkOuter, REFIID riid, LPCITEMIDLIST pidl, LPVOID * ppv);
 HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC *ppV);
-extern HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST, LPWSTR, UINT, int*);
-HRESULT WINAPI CPanel_ExtractIconA(LPITEMIDLIST pidl, LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
-HRESULT WINAPI CPanel_ExtractIconW(LPITEMIDLIST pidl, LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+extern HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST, LPWSTR, UINT, int*) DECLSPEC_HIDDEN;
+HRESULT WINAPI CPanel_ExtractIconA(LPITEMIDLIST pidl, LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) DECLSPEC_HIDDEN;
+HRESULT WINAPI CPanel_ExtractIconW(LPITEMIDLIST pidl, LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) DECLSPEC_HIDDEN;
 
-LPEXTRACTICONA	IExtractIconA_Constructor(LPCITEMIDLIST);
-LPEXTRACTICONW	IExtractIconW_Constructor(LPCITEMIDLIST);
+LPEXTRACTICONA	IExtractIconA_Constructor(LPCITEMIDLIST) DECLSPEC_HIDDEN;
+LPEXTRACTICONW	IExtractIconW_Constructor(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 
 /* initialisation for FORMATETC */
 #define InitFormatEtc(fe, cf, med) \
@@ -96,14 +97,14 @@ LPEXTRACTICONW	IExtractIconW_Constructor(LPCITEMIDLIST);
     DROPEFFECT_NONE)))
 
 
-HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
-HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
-HGLOBAL RenderFILENAMEA (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
-HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
+HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
+HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
+HGLOBAL RenderFILENAMEA (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
+HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 
 /* Change Notification */
-void InitChangeNotifications(void);
-void FreeChangeNotifications(void);
+void InitChangeNotifications(void) DECLSPEC_HIDDEN;
+void FreeChangeNotifications(void) DECLSPEC_HIDDEN;
 void InitIconOverlays(void);
 
 /* file operation */
@@ -169,17 +170,17 @@ static __inline LPWSTR __SHCloneStrAtoW(WCHAR **target, const char *source)
 #define HINSTANCE_32(h16)	((HINSTANCE)(ULONG_PTR)(h16))
 #define HINSTANCE_16(h32)	(LOWORD(h32))
 
-extern WCHAR swShell32Name[MAX_PATH];
+extern WCHAR swShell32Name[MAX_PATH] DECLSPEC_HIDDEN;
 
-BOOL UNIXFS_is_rooted_at_desktop(void);
-extern const GUID CLSID_UnixFolder;
-extern const GUID CLSID_UnixDosFolder;
+BOOL UNIXFS_is_rooted_at_desktop(void) DECLSPEC_HIDDEN;
+extern const GUID CLSID_UnixFolder DECLSPEC_HIDDEN;
+extern const GUID CLSID_UnixDosFolder DECLSPEC_HIDDEN;
 
 /* Default shell folder value registration */
-HRESULT SHELL_RegisterShellFolders(void);
+HRESULT SHELL_RegisterShellFolders(void) DECLSPEC_HIDDEN;
 
 /* Detect Shell Links */
-BOOL SHELL_IsShortcut(LPCITEMIDLIST);
+BOOL SHELL_IsShortcut(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 
 INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
