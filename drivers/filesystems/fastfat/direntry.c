@@ -201,12 +201,6 @@ FATGetNextDirEntry(
             CcUnpinData(*pContext);
         }
 
-        if (!pDirFcb->FileObject)
-        {
-            DPRINT1("Buggy FCB (cleaned up)! %S (%d / %u)\n", pDirFcb->PathNameBuffer, pDirFcb->RefCount, pDirFcb->OpenHandleCount);
-            return STATUS_NO_MORE_ENTRIES;
-        }
-
         if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
             !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
         {

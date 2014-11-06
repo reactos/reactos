@@ -1580,8 +1580,8 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (OpenPacket.ParseCheck != TRUE)
     {
         /* Parse failed */
-        DPRINT1("IopQueryAttributesFile failed for '%wZ' with 0x%lx\n",
-                ObjectAttributes->ObjectName, Status);
+        DPRINT("IopQueryAttributesFile failed for '%wZ' with 0x%lx\n",
+               ObjectAttributes->ObjectName, Status);
         return Status;
     }
     else

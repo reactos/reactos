@@ -371,6 +371,13 @@ vfatUpdateFCB(
 
     DPRINT("vfatUpdateFCB(%p, %p, %wZ, %wZ, %p)\n", pVCB, Fcb, LongName, ShortName, ParentFcb);
 
+    /* Get full path name */
+    Status = vfatMakeFullName(ParentFcb, LongName, ShortName, &Fcb->PathNameU);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
     /* Delete old name */
     if (Fcb->PathNameBuffer)
     {
@@ -379,13 +386,6 @@ vfatUpdateFCB(
 
     /* Delete from table */
     vfatDelFCBFromTable(pVCB, Fcb);
-
-    /* Get full path name */
-    Status = vfatMakeFullName(ParentFcb, LongName, ShortName, &Fcb->PathNameU);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
 
     /* Split it properly */
     Fcb->PathNameBuffer = Fcb->PathNameU.Buffer;
@@ -414,8 +414,8 @@ vfatUpdateFCB(
     /* Add to the table */
     vfatAddFCBToTable(pVCB, Fcb);
 
-    /* If we moved accross directories, dereferenced our old parent
-     * We also derefence in case we're just renaming since AddFCBToTable references it
+    /* If we moved across directories, dereference our old parent
+     * We also dereference in case we're just renaming since AddFCBToTable references it
      */
     vfatReleaseFCB(pVCB, OldParent);
 
@@ -887,7 +887,7 @@ vfatGetFCBForFile(
         if (parentFCB)
         {
             vfatReleaseFCB(pVCB, parentFCB);
-            parentFCB = 0;
+            parentFCB = NULL;
         }
         //  fail if element in FCB is not a directory
         if (!vfatFCBIsDirectory(FCB))
@@ -910,6 +910,8 @@ vfatGetFCBForFile(
                 if (FileNameU.Length + parentFCB->LongNameU.Length - Length > FileNameU.MaximumLength)
                 {
                     vfatReleaseFCB(pVCB, parentFCB);
+                    *pParentFCB = NULL;
+                    *pFCB = NULL;
                     return STATUS_OBJECT_NAME_INVALID;
                 }
                 RtlMoveMemory(prev + parentFCB->LongNameU.Length / sizeof(WCHAR), curr,

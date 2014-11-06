@@ -167,11 +167,6 @@ vfatFindDirSpace(
             {
                 CcUnpinData(Context);
             }
-            if (!pDirFcb->FileObject)
-            {
-                DPRINT1("Buggy FCB (cleaned up)! %S (%d / %u)\n", pDirFcb->PathNameBuffer, pDirFcb->RefCount, pDirFcb->OpenHandleCount);
-                return FALSE;
-            }
             if (!CcPinRead(pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster,
                       TRUE, &Context, (PVOID*)&pFatEntry))
             {
