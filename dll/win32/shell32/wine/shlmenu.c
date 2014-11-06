@@ -18,7 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <shlobj.h>
+#include <undocshell.h>
+#include <shlwapi.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+#include "pidl.h"
+#include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shellmenu);
 
@@ -115,8 +128,8 @@ static LPFMINFO FM_SetMenuParameter(
  */
 static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 {
-    CComPtr<IShellFolder> lpsf;
-    CComPtr<IShellFolder> lpsf2;
+    IShellFolder *lpsf;
+    IShellFolder *lpsf2;
     ULONG        ulItemAttr = SFGAO_FOLDER;
     UINT        uID, uEnumFlags;
     LPFNFMCALLBACK    lpfnCallback;
@@ -158,19 +171,19 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 
     if (SUCCEEDED(SHGetDesktopFolder(&lpsf)))
     {
-        if (SUCCEEDED(lpsf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &lpsf2))))
+        if (SUCCEEDED(IShellFolder_BindToObject(lpsf, pidl,0,&IID_IShellFolder,(LPVOID *)&lpsf2)))
         {
-            CComPtr<IEnumIDList> lpe;
+            IEnumIDList *lpe;
 
-            if (SUCCEEDED(lpsf2->EnumObjects(0, uEnumFlags, &lpe)))
+            if (SUCCEEDED (IShellFolder_EnumObjects(lpsf2, 0, uEnumFlags, &lpe )))
             {
 
                 LPITEMIDLIST pidlTemp = NULL;
                 ULONG ulFetched;
 
-                while ((!bAbortInit) && (S_OK == lpe->Next(1, &pidlTemp, &ulFetched)))
+                while ((!bAbortInit) && (S_OK == IEnumIDList_Next(lpe,1,&pidlTemp,&ulFetched)))
                 {
-                    if (SUCCEEDED(lpsf->GetAttributesOf(1, (LPCITEMIDLIST*) &pidlTemp, &ulItemAttr)))
+                    if (SUCCEEDED (IShellFolder_GetAttributesOf(lpsf, 1, (LPCITEMIDLIST*)&pidlTemp, &ulItemAttr)))
                     {
                         ILGetDisplayNameExW(NULL, pidlTemp, sTemp, ILGDN_FORPARSING);
                         if (!(PidlToSicIndex(lpsf, pidlTemp, FALSE, 0, &iIcon)))

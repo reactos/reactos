@@ -55,7 +55,6 @@ list(APPEND SOURCE
     shlfileop.cpp
     shlfolder.cpp
     CFileSysBindData.cpp
-    shlmenu.cpp
     CDefView.cpp
     stubs.cpp
     systray.cpp
@@ -76,6 +75,7 @@ add_library(shell32 SHARED
     wine/shellpath.c
     wine/shellreg.c
     wine/shellstring.c
+    wine/shlmenu.c
     wine/shpolicy.c
     vista.c
     shell32.rc
