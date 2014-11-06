@@ -4496,7 +4496,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
                 /* Exception */
                 return;
             }
+        }
 
+        /* Update the CPL */
+        State->Cpl = GET_SEGMENT_RPL(Segment);
+
+        if (State->Cpl > OldCpl)
+        {
             /* Load new SS */
             if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel))
             {
@@ -4507,13 +4513,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
             /* Set ESP */
             if (Size) State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
             else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
-        }
 
-        /* Update the CPL */
-        State->Cpl = GET_SEGMENT_RPL(Segment);
-
-        if (State->Cpl > OldCpl)
-        {
             /* Check segment security */
             for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
             {
@@ -4732,17 +4732,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
                 /* Exception */
                 return;
             }
-
-            /* Load new SS */
-            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel))
-            {
-                /* Exception */
-                return;
-            }
-
-            /* Set ESP */
-            if (Size) State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
-            else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
         }
 
         /* Update the CPL */
@@ -4759,6 +4748,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
 
         if (State->Cpl > OldCpl)
         {
+            /* Load new SS */
+            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel))
+            {
+                /* Exception */
+                return;
+            }
+
+            /* Set ESP */
+            if (Size) State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
+            else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
+
             /* Check segment security */
             for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
             {
