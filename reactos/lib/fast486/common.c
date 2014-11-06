@@ -310,8 +310,11 @@ Fast486InterruptInternal(PFAST486_STATE State,
                 goto Cleanup;
             }
 
+            /* Switch to the new privilege level */
+            State->Cpl = GET_SEGMENT_RPL(SegmentSelector);
+
             /* Check the new (higher) privilege level */
-            switch (GET_SEGMENT_RPL(SegmentSelector))
+            switch (State->Cpl)
             {
                 case 0:
                 {
