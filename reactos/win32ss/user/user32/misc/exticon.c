@@ -44,6 +44,16 @@ static void dumpIcoDir ( LPicoICONDIR entry )
 }
 #endif
 
+#ifndef WINE
+DWORD get_best_icon_file_offset(const LPBYTE dir,
+                                DWORD dwFileSize,
+                                int cxDesired,
+                                int cyDesired,
+                                BOOL bIcon,
+                                DWORD fuLoad,
+                                POINT *ptHotSpot);
+#endif 
+
 /**********************************************************************
  *  find_entry_by_id
  *
@@ -99,10 +109,10 @@ static DWORD USER32_GetResourceTable(LPBYTE peimage,DWORD pesize,LPBYTE *retptr)
 
 	if (mz_header->e_magic != IMAGE_DOS_SIGNATURE)
 	{
-	  if (mz_header->e_cblp == 1)	/* .ICO file ? */
+	  if (mz_header->e_cblp == 1 || mz_header->e_cblp == 2)	/* .ICO or .CUR file ? */
 	  {
 	    *retptr = (LPBYTE)-1;	/* ICONHEADER.idType, must be 1 */
-	    return 1;
+	    return mz_header->e_cblp;
 	  }
 	  else
 	    return 0; /* failed */
@@ -361,36 +371,58 @@ static UINT ICO_ExtractIconExW(
 	  }
 	}
 #else
-    if (sig == 1) /* .ICO file */
+    if (sig == 1 || sig == 2) /* .ICO or .CUR file */
     {
         TRACE("-- icon Signature (0x%08x)\n", sig);
 
         if (pData == (BYTE*)-1)
         {
-            INT dataOffset;
-            LPICONIMAGE entry;
-            CURSORICONDIR *lpcid = (CURSORICONDIR*)peimage;
             INT cx[2] = {cx1, cx2}, cy[2] = {cy1, cy2};
             INT index;
 
-            if (lpcid->idType != 1)
-                return 0;
-
             for(index = 0; index < 2; index++)
             {
-                dataOffset = LookupIconIdFromDirectoryEx(peimage, TRUE, cx[index], cy[index], flags);
+                DWORD dataOffset;
+                LPBYTE imageData;
+                POINT hotSpot;
+                LPICONIMAGE entry;
+
+                dataOffset = get_best_icon_file_offset(peimage, fsizel, cx[index], cy[index], sig == 1, flags, sig == 1 ? NULL : &hotSpot);
 
                 if (dataOffset)
                 {
                     HICON icon;
-                    entry = (LPICONIMAGE)(peimage + dataOffset);
-                    icon = CreateIconFromResourceEx(peimage + dataOffset, entry->icHeader.biSizeImage, TRUE, 0x00030000, cx[index], cy[index], flags);
+                    WORD *cursorData = NULL;
+
+                    imageData = peimage + dataOffset;
+                    entry = (LPICONIMAGE)(imageData);
+
+                    if(sig == 2)
+                    {
+                        /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
+                        cursorData = HeapAlloc(GetProcessHeap(), 0, entry->icHeader.biSizeImage + 2 * sizeof(WORD));
+
+                        if(!cursorData)
+                            continue;
+
+                        cursorData[0] = hotSpot.x;
+                        cursorData[1] = hotSpot.y;
+
+                        memcpy(cursorData + 2, imageData, entry->icHeader.biSizeImage);
+
+                        imageData = (LPBYTE)cursorData;
+                    }
+
+                    icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
 
                     if (icon)
                     {
                         RetPtr[index] = icon;
                         iconCount = 1;
                     }
+
+                    if(cursorData != NULL)
+                        HeapFree(GetProcessHeap(), 0, cursorData);
                 }
             }
 

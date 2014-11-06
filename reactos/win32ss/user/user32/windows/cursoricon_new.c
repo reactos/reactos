@@ -436,7 +436,6 @@ typedef struct
 
 #include "poppack.h"
 
-static
 const CURSORICONFILEDIRENTRY*
 get_best_icon_file_entry(
     _In_ const CURSORICONFILEDIR* dir,
@@ -521,6 +520,33 @@ get_best_icon_file_entry(
 
     /* We found it */
     return &dir->idEntries[i-1];
+}
+
+DWORD
+get_best_icon_file_offset(
+    _In_ const LPBYTE dir,
+    _In_ DWORD dwFileSize,
+    _In_ int cxDesired,
+    _In_ int cyDesired,
+    _In_ BOOL bIcon,
+    _In_ DWORD fuLoad,
+    _Out_ POINT *ptHotSpot
+)
+{
+    const CURSORICONFILEDIRENTRY *entry;
+
+    entry = get_best_icon_file_entry((CURSORICONFILEDIR *) dir, dwFileSize, cxDesired, cyDesired, bIcon, fuLoad);
+
+    if(ptHotSpot)
+    {
+        ptHotSpot->x = entry->xHotspot;
+        ptHotSpot->y = entry->yHotspot;
+    }
+
+    if(entry)
+        return entry->dwDIBOffset;
+
+    return 0;
 }
     
     
