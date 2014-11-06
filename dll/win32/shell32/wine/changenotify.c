@@ -18,21 +18,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <windef.h>
+#include <winbase.h>
+#include <shlobj.h>
+#include <undocshell.h>
+#include <shlwapi.h>
+#include <wine/debug.h>
+
+#include "pidl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-namespace
+static CRITICAL_SECTION SHELL32_ChangenotifyCS;
+static CRITICAL_SECTION_DEBUG critsect_debug =
 {
-    extern CRITICAL_SECTION SHELL32_ChangenotifyCS;
-    CRITICAL_SECTION_DEBUG critsect_debug =
-    {
-        0, 0, &SHELL32_ChangenotifyCS,
-        { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-          0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_ChangenotifyCS") }
-    };
-    CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
-}
+    0, 0, &SHELL32_ChangenotifyCS,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_ChangenotifyCS") }
+};
+static CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 typedef SHChangeNotifyEntry *LPNOTIFYREGISTER;
 
@@ -265,9 +274,10 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
     if( sub && ILIsParent( watched, changed, TRUE ) )
         return TRUE;
     if (sub && _ILIsDesktop(watched)) {
+        LPITEMIDLIST deskpidl;
         WCHAR wszPath[MAX_PATH];
         SHGetSpecialFolderPathW(0, wszPath, CSIDL_DESKTOPDIRECTORY, FALSE);
-        LPITEMIDLIST deskpidl = SHSimpleIDListFromPathW(wszPath);
+        deskpidl = SHSimpleIDListFromPathW(wszPath);
         if (ILIsParent(deskpidl, changed, TRUE))
         {
             ILFree(deskpidl);
@@ -342,26 +352,28 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
              * entry, and create a new one using a find data struct.
              */
             if (dwItem1 && Pidls[0]){
-                ILRemoveLastID(Pidls[0]);
                 WIN32_FIND_DATAW wfd;
+                LPITEMIDLIST oldpidl, newpidl;
                 LPWSTR p = PathFindFileNameW((LPCWSTR)dwItem1);
+                ILRemoveLastID(Pidls[0]);
                 lstrcpynW(&wfd.cFileName[0], p, MAX_PATH);
                 wfd.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-                LPITEMIDLIST newpidl = _ILCreateFromFindDataW(&wfd);
-                LPITEMIDLIST oldpidl = ILClone(Pidls[0]);
+                newpidl = _ILCreateFromFindDataW(&wfd);
+                oldpidl = ILClone(Pidls[0]);
                 ILFree(Pidls[0]);
                 Pidls[0] = ILCombine(oldpidl, newpidl);
                 ILFree(newpidl);
                 ILFree(oldpidl);
             }
             if (dwItem2 && Pidls[1]){
-                ILRemoveLastID(Pidls[1]);
                 WIN32_FIND_DATAW wfd;
+                LPITEMIDLIST oldpidl, newpidl;
                 LPWSTR p = PathFindFileNameW((LPCWSTR)dwItem2);
+                ILRemoveLastID(Pidls[1]);
                 lstrcpynW(&wfd.cFileName[0], p, MAX_PATH);
                 wfd.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-                LPITEMIDLIST newpidl = _ILCreateFromFindDataW(&wfd);
-                LPITEMIDLIST oldpidl = ILClone(Pidls[0]);
+                newpidl = _ILCreateFromFindDataW(&wfd);
+                oldpidl = ILClone(Pidls[0]);
                 ILFree(Pidls[1]);
                 Pidls[1] = ILCombine(oldpidl, newpidl);
                 ILFree(newpidl);
