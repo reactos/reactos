@@ -865,14 +865,16 @@ VfatLockOrUnlockVolume(
 {
     PFILE_OBJECT FileObject;
     PDEVICE_EXTENSION DeviceExt;
+    PVFATFCB Fcb;
 
     DPRINT("VfatLockOrUnlockVolume(%p, %d)\n", IrpContext, Lock);
 
     DeviceExt = IrpContext->DeviceExt;
     FileObject = IrpContext->FileObject;
+    Fcb = FileObject->FsContext;
 
     /* Only allow locking with the volume open */
-    if (FileObject->FsContext != DeviceExt->VolumeFcb)
+    if (!(Fcb->Flags & FCB_IS_VOLUME))
     {
         return STATUS_ACCESS_DENIED;
     }
