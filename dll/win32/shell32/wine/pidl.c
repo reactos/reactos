@@ -107,47 +107,44 @@ BOOL ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWO
             return FALSE;
     }
 
-    if (type <= 2)
+    switch (type)
     {
-        switch (type)
-        {
-            case ILGDN_FORPARSING:
-                flag = SHGDN_FORPARSING | SHGDN_FORADDRESSBAR;
-                break;
-            case ILGDN_NORMAL:
-                flag = SHGDN_NORMAL;
-                break;
-            case ILGDN_INFOLDER:
-                flag = SHGDN_INFOLDER;
-                break;
-            default:
-                FIXME("Unknown type parameter = %x\n", type);
-                flag = SHGDN_FORPARSING | SHGDN_FORADDRESSBAR;
-                break;
-        }
+    case ILGDN_FORPARSING:
+        flag = SHGDN_FORPARSING | SHGDN_FORADDRESSBAR;
+        break;
+    case ILGDN_NORMAL:
+        flag = SHGDN_NORMAL;
+        break;
+    case ILGDN_INFOLDER:
+        flag = SHGDN_INFOLDER;
+        break;
+    default:
+        FIXME("Unknown type parameter = %x\n", type);
+        flag = SHGDN_FORPARSING | SHGDN_FORADDRESSBAR;
+        break;
+    }
 
-        if (!*(const WORD*)pidl || type == ILGDN_FORPARSING)
+    if (!*(const WORD*)pidl || type == ILGDN_FORPARSING)
+    {
+        ret = IShellFolder_GetDisplayNameOf(lsf, pidl, flag, &strret);
+        if (SUCCEEDED(ret))
         {
-            ret = IShellFolder_GetDisplayNameOf(lsf, pidl, flag, &strret);
+            if(!StrRetToStrNW(path, MAX_PATH, &strret, pidl))
+                ret = E_FAIL;
+        }
+    }
+    else
+    {
+        ret = SHBindToParent(pidl, &IID_IShellFolder, (LPVOID*)&psfParent, &pidllast);
+        if (SUCCEEDED(ret))
+        {
+            ret = IShellFolder_GetDisplayNameOf(psfParent, pidllast, flag, &strret);
             if (SUCCEEDED(ret))
             {
-                if(!StrRetToStrNW(path, MAX_PATH, &strret, pidl))
+                if(!StrRetToStrNW(path, MAX_PATH, &strret, pidllast))
                     ret = E_FAIL;
             }
-        }
-        else
-        {
-            ret = SHBindToParent(pidl, &IID_IShellFolder, (LPVOID*)&psfParent, &pidllast);
-            if (SUCCEEDED(ret))
-            {
-                ret = IShellFolder_GetDisplayNameOf(psfParent, pidllast, flag, &strret);
-                if (SUCCEEDED(ret))
-                {
-                    if(!StrRetToStrNW(path, MAX_PATH, &strret, pidllast))
-                        ret = E_FAIL;
-                }
-                IShellFolder_Release(psfParent);
-            }
+            IShellFolder_Release(psfParent);
         }
     }
 
@@ -1849,17 +1846,6 @@ BOOL _ILIsMyDocuments(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
-BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
-{
-    IID *iid = _ILGetGUIDPointer(pidl);
-
-    TRACE("(%p)\n", pidl);
-
-    if (iid)
-        return IsEqualIID(iid, &CLSID_ControlPanel);
-    return FALSE;
-}
-
 BOOL _ILIsNetHood(LPCITEMIDLIST pidl)
 {
     IID *iid = _ILGetGUIDPointer(pidl);
@@ -1869,17 +1855,6 @@ BOOL _ILIsNetHood(LPCITEMIDLIST pidl)
     if (iid)
         return IsEqualIID(iid, &CLSID_NetworkPlaces);
     return FALSE;
-}
-
-
-LPITEMIDLIST _ILCreateNetHood(void)
-{
-    return _ILCreateGuid(PT_GUID, &CLSID_NetworkPlaces);
-}
-
-LPITEMIDLIST _ILCreateFont(void)
-{
-    return _ILCreateGuid(PT_GUID, &CLSID_FontsFolderShortcut);
 }
 
 BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
@@ -1893,17 +1868,6 @@ BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
-BOOL _ILIsPrinter(LPCITEMIDLIST pidl)
-{
-    IID *iid = _ILGetGUIDPointer(pidl);
-
-    TRACE("(%p)\n", pidl);
-
-    if (iid)
-        return IsEqualIID(iid, &CLSID_Printers);
-    return FALSE;
-}
-
 BOOL _ILIsBitBucket(LPCITEMIDLIST pidl)
 {
     IID *iid = _ILGetGUIDPointer(pidl);
@@ -1913,18 +1877,6 @@ BOOL _ILIsBitBucket(LPCITEMIDLIST pidl)
     if (iid)
         return IsEqualIID(iid, &CLSID_RecycleBin);
     return FALSE;
-}
-
-BOOL _ILIsAdminTools(LPCITEMIDLIST pidl)
-{
-    IID *iid = _ILGetGUIDPointer(pidl);
-
-    TRACE("(%p)\n", pidl);
-
-    if (iid)
-        return IsEqualIID(iid, &CLSID_AdminFolderShortcut);
-    else
-        return FALSE;
 }
 
 BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)
@@ -2258,8 +2210,10 @@ LPSTR _ILGetTextPointer(LPCITEMIDLIST pidl)
     case PT_SHARE:
         return pdata->u.network.szNames;
 
+#ifdef __REACTOS__ /* r54423 */
     case PT_CPLAPPLET:
         return pdata->u.cpanel.szName;
+#endif
     }
     return NULL;
 }
@@ -2506,7 +2460,9 @@ BOOL _ILGetExtension (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
  */
 void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
 {
+#ifdef __REACTOS__ /* r32966 */
     char sType[64];
+#endif
 
     if(_ILIsValue(pidl))
     {
@@ -2514,6 +2470,7 @@ void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
 
         if(uOutSize > 0)
             pOut[0] = 0;
+#ifdef __REACTOS__ /* r32966 */
         if (_ILGetExtension (pidl, sType, 64))
         {
             if (HCR_MapTypeToValueA(sType, sTemp, 64, TRUE))
@@ -2534,14 +2491,29 @@ void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
                 strcat(pOut, sTemp);
             }
         }
+#else
+        if (_ILGetExtension (pidl, sTemp, 64))
+        {
+            if (!( HCR_MapTypeToValueA(sTemp, sTemp, 64, TRUE)
+                && HCR_MapTypeToValueA(sTemp, pOut, uOutSize, FALSE )))
+            {
+                lstrcpynA (pOut, sTemp, uOutSize - 6);
+                strcat (pOut, "-file");
+            }
+        }
+#endif
     }
     else
+#ifdef __REACTOS__ /* r32966 */
     {
         pOut[0] = '\0';
         LoadStringA(shell32_hInstance, IDS_DIRECTORY, pOut, uOutSize);
         /* make sure its null terminated */
         pOut[uOutSize-1] = '\0';
     }
+#else
+        lstrcpynA(pOut, "Folder", uOutSize);
+#endif
 }
 
 /*************************************************************************

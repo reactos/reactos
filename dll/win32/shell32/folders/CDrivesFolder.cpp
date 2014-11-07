@@ -330,6 +330,17 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     return hr;
 }
 
+static BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
+{
+    IID *iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n", pidl);
+
+    if (iid)
+        return IsEqualIID(iid, CLSID_ControlPanel);
+    return FALSE;
+}
+
 /**************************************************************************
 *  CDrivesFolder::GetAttributesOf
 */

@@ -56,7 +56,7 @@ CNetFolder::~CNetFolder()
 
 HRESULT WINAPI CNetFolder::FinalConstruct()
 {
-    pidlRoot = _ILCreateNetHood();    /* my qualified pidl */
+    pidlRoot = _ILCreateGuid(PT_GUID, CLSID_NetworkPlaces); /* my qualified pidl */
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
     return S_OK;

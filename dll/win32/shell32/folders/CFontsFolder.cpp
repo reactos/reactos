@@ -49,6 +49,11 @@ CFontsFolder::~CFontsFolder()
     SHFree(pidlRoot);
 }
 
+static LPITEMIDLIST _ILCreateFont(void)
+{
+    return _ILCreateGuid(PT_GUID, CLSID_FontsFolderShortcut);
+}
+
 HRESULT WINAPI CFontsFolder::FinalConstruct()
 {
     HRESULT hr;
@@ -72,7 +77,6 @@ HRESULT WINAPI CFontsFolder::FinalConstruct()
 
     return hr;
 }
-
 
 HRESULT WINAPI CFontsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
         ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
