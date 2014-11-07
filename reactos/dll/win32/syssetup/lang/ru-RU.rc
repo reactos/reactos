@@ -103,7 +103,7 @@ BEGIN
     LTEXT "Завершение мастера установки ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Вы успешно закончили установку ReactOS.\n\nНажмите ""Готово"" для перезагрузки вашего компьютера.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Если в CD находится в приводе, нужно извлечь его. Для перезагрузки компьютера нажмите ""Готово"".", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Если CD находится в приводе, нужно извлечь его. Для перезагрузки компьютера нажмите ""Готово"".", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

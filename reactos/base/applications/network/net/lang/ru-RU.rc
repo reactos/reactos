@@ -1,17 +1,18 @@
-/* Russian translation by Kudratov Olimjon, 2014.09.25 */
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_SYNTAX "Использование:\nNET ACCOUNTS [/FORCELOGOFF:{Минуты | NO}] [/MINPWLEN: Длина]\n\
-             [/MAXPWAGE:{Дни | UNLIMITED}] [/MINPWAGE:Дни]\n\
-             [/UNIQUEPW:Число] [/DOMAIN]\n"
+    IDS_ACCOUNTS_SYNTAX "Использование:\nNET ACCOUNTS [/FORCELOGOFF:{минуты | NO}] [/MINPWLEN:длина]\n\
+             [/MAXPWAGE:{дни | UNLIMITED}] [/MINPWAGE:дни]\n\
+             [/UNIQUEPW:число] [/DOMAIN]\n"
     IDS_ACCOUNTS_HELP "ACCOUNTS\n..."
     IDS_COMPUTER_SYNTAX "Использование:\nNET COMPUTER ..."
     IDS_COMPUTER_HELP "COMPUTER\n..."
     IDS_CONFIG_SYNTAX "Использование:\nNET CONFIG ..."
     IDS_CONFIG_HELP "CONFIG\n..."
-    IDS_CONTINUE_SYNTAX "Использование:\nNET CONTINUE <Имя службы>"
+    IDS_CONTINUE_SYNTAX "Использование:\nNET CONTINUE <имя_службы>"
     IDS_CONTINUE_HELP "CONTINUE\n..."
     IDS_FILE_SYNTAX "Использование:\nNET FILE ..."
     IDS_FILE_HELP "FILE\n..."
@@ -19,15 +20,15 @@ BEGIN
     IDS_GROUP_HELP "GROUP\n..."
     IDS_HELPMSG_SYNTAX "Использование:\nNET HELPMSG <Код ошибки>"
     IDS_HELPMSG_HELP "HELPMSG\n..."
-    IDS_LOCALGROUP_SYNTAX "Использование:\nNET LOCALGROUP [groupname [/COMMENT:""text""]] [/DOMAIN]\n\
-               groupname {/ADD [/COMMENT:""text""] | /DELETE} [/DOMAIN]\n\
-               groupname name [...] {/ADD | /DELETE} [/DOMAIN]"
+    IDS_LOCALGROUP_SYNTAX "Использование:\nNET LOCALGROUP [имя_группы [/COMMENT:""текст""]] [/DOMAIN]\n\
+               имя_группы {/ADD [/COMMENT:""текст""] | /DELETE}  [/DOMAIN]\n\
+               имя_группы имя [...] {/ADD | /DELETE} [/DOMAIN]"
     IDS_LOCALGROUP_HELP "LOCALGROUP\n..."
     IDS_NAME_SYNTAX "Использование:\nNET NAME ..."
     IDS_NAME_HELP "NAME\n..."
     IDS_PRINT_SYNTAX  "Использование:\nNET PRINT ..."
     IDS_PRINT_HELP "PRINT\n..."
-    IDS_PAUSE_SYNTAX "Использование:\nNET PAUSE <Имя службы>"
+    IDS_PAUSE_SYNTAX "Использование:\nNET PAUSE <имя_службы>"
     IDS_PAUSE_HELP "PAUSE\n..."
     IDS_SEND_SYNTAX "Использование:\nNET SEND ..."
     IDS_SEND_HELP "SEND\n..."
@@ -39,15 +40,15 @@ BEGIN
     IDS_START_HELP "START\n..."
     IDS_STATISTICS_SYNTAX "Использование:\nNET STATISTICS ..."
     IDS_STATISTICS_HELP "STATISTICS\n..."
-    IDS_STOP_SYNTAX "Использование:\nNET STOP <Имя службы>"
+    IDS_STOP_SYNTAX "Использование:\nNET STOP <имя_службы>"
     IDS_STOP_HELP "STOP\n..."
     IDS_TIME_SYNTAX "Использование:\nNET TIME ..."
     IDS_TIME_HELP "TIME\n..."
     IDS_USE_SYNTAX "Использование:\nNET USE ..."
     IDS_USE_HELP "USE\n..."
-    IDS_USER_SYNTAX "Использование:\nNET USER [username [password | *] [options]] [/DOMAIN]\n\
-         username {password | *} /ADD [options] [/DOMAIN]\n\
-         username [/DELETE] [/DOMAIN]"
+    IDS_USER_SYNTAX "Использование:\nNET USER [имя_пользователя [пароль | *] [параметры]] [/DOMAIN]\n\
+         имя_пользователя {пароль | *} /ADD [параметры] [/DOMAIN]\n\
+         имя_пользователя [/DELETE] [/DOMAIN]"
     IDS_USER_HELP "USER\n..."
     IDS_VIEW_SYNTAX "Использование:\nNET VIEW ..."
     IDS_VIEW_HELP "VIEW\n..."

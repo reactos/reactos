@@ -1,5 +1,7 @@
 /*
- * Copyright 2008 Vitaliy Margolen
+ * cryptdlg dll resources
+ *
+ * Copyright 2008 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,6 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
 
 /* UTF-8 */
 #pragma code_page(65001)
@@ -23,6 +26,15 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_NAME "Видео кодек Cinepak"
-    IDS_DESCRIPTION "Видео кодек Cinepak"
+    IDS_CERT_POLICY "Политика сертификата"
+    IDS_POLICY_ID "Идентификатор политики: "
+    IDS_POLICY_QUALIFIER_INFO "Policy Qualifier Info"
+    IDS_POLICY_QUALIFIER_ID "Policy Qualifier Id="
+    IDS_CPS "CPS" /* Certification Practice Statement */
+    IDS_USER_NOTICE "Пользовательское уведомление"
+    IDS_QUALIFIER "Спецификатор"
+    IDS_NOTICE_REF "Notice Reference"
+    IDS_ORGANIZATION "Организация="
+    IDS_NOTICE_NUM "Номер уведомления="
+    IDS_NOTICE_TEXT "Текст уведомления="
 }

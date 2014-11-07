@@ -65,6 +65,9 @@
 #ifdef LANGUAGE_RO_RO
     #include "lang/cryptdlg_Ro.rc"
 #endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/cryptdlg_Ru.rc"
+#endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/cryptdlg_Sq.rc"
 #endif

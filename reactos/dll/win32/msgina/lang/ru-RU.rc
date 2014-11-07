@@ -1,4 +1,4 @@
-/* Russian translation by Dmitry Chapyshev, 2007.06.17 */
+/* Russian translation by Dmitry Chapyshev, 2007.06.17, Kudratov Olimjon (olim98@bk.ru) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -27,7 +27,7 @@ CAPTION "Вход"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "Имя пользователя:", IDC_STATIC, 6, 60, 52, 8
+    LTEXT "Пользователь:", IDC_STATIC, 6, 60, 52, 8
     EDITTEXT IDC_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
     LTEXT "Пароль:", IDC_STATIC, 6, 78, 52, 8
     EDITTEXT IDC_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
@@ -44,16 +44,16 @@ CAPTION "Безопасность"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    GROUPBOX "Вход в систему", IDC_STATIC, 7, 61, 261, 52
+    GROUPBOX "Информация о входе в систему", IDC_STATIC, 7, 61, 261, 52
     LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
     LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
     CTEXT "Выберите необходимое действие:", IDC_STATIC, 10, 119, 255, 8
-    PUSHBUTTON "Заблокировать", IDC_LOCK, 7, 135, 86, 14
-    PUSHBUTTON "Завершение сеанса", IDC_LOGOFF, 102, 135, 86, 14
-    PUSHBUTTON "Выключение", IDC_SHUTDOWN, 198, 135, 70, 14
-    PUSHBUTTON "Смена пароля", IDC_CHANGEPWD, 7, 155, 86, 14
-    PUSHBUTTON "Диспетчер задач", IDC_TASKMGR, 102, 154, 86, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 198, 154, 70, 14
+    PUSHBUTTON "Заблокировать", IDC_LOCK, 7, 135, 80, 14
+    PUSHBUTTON "Завершение сеанса", IDC_LOGOFF, 98, 135, 80, 14
+    PUSHBUTTON "Завершение работы", IDC_SHUTDOWN, 188, 135, 80, 14
+    PUSHBUTTON "Смена пароля", IDC_CHANGEPWD, 7, 155, 80, 14
+    PUSHBUTTON "Диспетчер задач", IDC_TASKMGR, 98, 154, 80, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 188, 154, 80, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0, 0, 275, 121
@@ -65,7 +65,7 @@ BEGIN
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
     LTEXT "Этот компьютер используется и заблокирован.", IDC_STATIC, 37, 61, 231, 8
     LTEXT "Сообщение", IDC_LOCKMSG, 37, 75, 231, 26
-    LTEXT "Нажмите Ctrl-Alt-Del, чтобы разблокировать.", IDC_STATIC, 37, 106, 231, 8
+    LTEXT "Нажмите Ctrl-Alt-Del, чтобы разблокировать компьютер.", IDC_STATIC, 37, 106, 231, 8
 END
 
 IDD_UNLOCK_DLG DIALOGEX 0, 0, 275, 179
@@ -78,9 +78,9 @@ BEGIN
     LTEXT "Этот компьютер используется и заблокирован.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "Сообщение", IDC_LOCKMSG, 36, 75, 232, 26
     LTEXT "По&льзователь:", IDC_STATIC, 36, 107, 51, 8
-    EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
-    LTEXT "&Пароль:", IDC_STATIC, 33, 125, 42, 8
-    EDITTEXT IDC_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    EDITTEXT IDC_USERNAME, 95, 104, 110, 14, ES_AUTOHSCROLL
+    LTEXT "&Пароль:", IDC_STATIC, 36, 125, 42, 8
+    EDITTEXT IDC_PASSWORD, 95, 123, 110, 14, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Отмена", IDCANCEL, 144, 154, 50, 14
 END
@@ -91,7 +91,7 @@ CAPTION "Смена пароля"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "Имя:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Пользователь:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
     LTEXT "Войти на:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT
@@ -99,7 +99,7 @@ BEGIN
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     LTEXT "Новый пароль:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Подтвердите пароль:", IDC_STATIC, 7, 127, 78, 20
+    LTEXT "Подтвердите пароль:", IDC_STATIC, 7, 127, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Отмена", IDCANCEL, 218, 145, 50, 14
@@ -144,7 +144,7 @@ BEGIN
     IDS_LOGGEDOUTSAS "Добро пожаловать!"
     IDS_LOCKEDSAS "Этот компьютер сейчас заблокирован."
     IDS_PRESSCTRLALTDELETE "Нажмите клавиши Ctrl-Alt-Del для входа."
-    IDS_ASKFORUSER "Имя пользователя: "
+    IDS_ASKFORUSER "Пользователь: "
     IDS_ASKFORPASSWORD "Пароль: "
     IDS_FORCELOGOFF "При регистрации нового пользователя все несохраненные данные будут утеряны. Продолжить?"
     IDS_LOCKMSG "Только %s или Администратор могут разблокировать этот компьютер."
@@ -154,7 +154,7 @@ BEGIN
     IDS_LOCKEDWRONGPASSWORD "Неверный пароль. Пожалуйста, введите пароль еще раз. Символы в пароле вводятся с учетом регистра."
     IDS_LOCKEDWRONGUSER "Этот компьютер сейчас заблокирован. Только %s\\%s или Администратор могут разблокировать этот компьютер."
     IDS_CHANGEPWDTITLE "Сменить пароль"
-    IDS_NONMATCHINGPASSWORDS "Введенные пароли не совпадают. Введите пароль в оба поля"
+    IDS_NONMATCHINGPASSWORDS "Введенные пароли не совпадают. Введите одинаковый пароль в оба поля"
     IDS_PASSWORDCHANGED "Ваш пароль был изменен."
     IDS_LOGONTITLE "Logon Message"
     IDS_LOGONWRONGUSERORPWD "Системе не удается войти. Проверьте правильность имени пользователя и домена и повторите ввод. Пароли вводятся с учетом регистра"
