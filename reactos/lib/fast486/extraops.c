@@ -752,7 +752,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBitTest)
          * For memory operands, add the bit offset divided by
          * the data size to the address
          */
-        ModRegRm.MemoryAddress += BitNumber / DataSize;
+        ModRegRm.MemoryAddress += (BitNumber / DataSize) * (DataSize / 8);
     }
 
     /* Normalize the bit number */
@@ -936,7 +936,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBts)
          * For memory operands, add the bit offset divided by
          * the data size to the address
          */
-        ModRegRm.MemoryAddress += BitNumber / DataSize;
+        ModRegRm.MemoryAddress += (BitNumber / DataSize) * (DataSize / 8);
     }
 
     /* Normalize the bit number */
@@ -1378,7 +1378,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtr)
          * For memory operands, add the bit offset divided by
          * the data size to the address
          */
-        ModRegRm.MemoryAddress += BitNumber / DataSize;
+        ModRegRm.MemoryAddress += (BitNumber / DataSize) * (DataSize / 8);
     }
 
     /* Normalize the bit number */
@@ -1592,7 +1592,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc)
          * For memory operands, add the bit offset divided by
          * the data size to the address
          */
-        ModRegRm.MemoryAddress += BitNumber / DataSize;
+        ModRegRm.MemoryAddress += (BitNumber / DataSize) * (DataSize / 8);
     }
 
     /* Normalize the bit number */
