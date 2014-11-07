@@ -119,7 +119,7 @@
 151 stdcall SHLoadOLE(long)
 152 stdcall ILGetSize(ptr)
 153 stdcall ILGetNext(ptr)
-154 stdcall ILAppendID(long long long) ILAppend
+154 stdcall ILAppendID(long long long)
 155 stdcall ILFree(ptr)
 156 stdcall -noname ILGlobalFree(ptr)
 157 stdcall ILCreateFromPath(ptr) ILCreateFromPathAW

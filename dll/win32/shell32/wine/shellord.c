@@ -2201,44 +2201,6 @@ BOOL WINAPI PathIsTemporaryA(LPSTR Str)
 }
 
 /*************************************************************************
- *    SHParseDisplayName        [shell version 6.0]
- */
-HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
-    LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
-{
-    IShellFolder *psfDesktop;
-    HRESULT         hr=E_FAIL;
-    ULONG           dwAttr=sfgaoIn;
-
-    if(!ppidl)
-        return E_INVALIDARG;
-
-    if (!pszName || !psfgaoOut)
-    {
-        *ppidl = NULL;
-        return E_INVALIDARG;
-    }
-
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED(hr))
-    {
-        *ppidl = NULL;
-        return hr;
-    }
-
-    hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
-
-    IShellFolder_Release(psfDesktop);
-
-    if (SUCCEEDED(hr))
-        *psfgaoOut = dwAttr;
-    else
-        *ppidl = NULL;
-
-    return hr;
-}
-
-/*************************************************************************
  *              SHEmptyRecycleBinA (SHELL32.@)
  */
 HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)

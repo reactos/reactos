@@ -47,8 +47,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 WINE_DECLARE_DEBUG_CHANNEL(shell);
 
 /* from comctl32.dll */
-EXTERN_C LPVOID WINAPI Alloc(INT);
-EXTERN_C BOOL WINAPI Free(LPVOID);
+extern LPVOID WINAPI Alloc(INT);
+extern BOOL WINAPI Free(LPVOID);
 
 static LPSTR _ILGetSTextPointer(LPCITEMIDLIST pidl);
 static LPWSTR _ILGetTextPointerW(LPCITEMIDLIST pidl);
@@ -125,6 +125,7 @@ BOOL ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWO
                 flag = SHGDN_FORPARSING | SHGDN_FORADDRESSBAR;
                 break;
         }
+
         if (!*(const WORD*)pidl || type == ILGDN_FORPARSING)
         {
             ret = IShellFolder_GetDisplayNameOf(lsf, pidl, flag, &strret);
@@ -145,12 +146,15 @@ BOOL ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWO
                     if(!StrRetToStrNW(path, MAX_PATH, &strret, pidllast))
                         ret = E_FAIL;
                 }
+                IShellFolder_Release(psfParent);
             }
         }
     }
 
     TRACE("%p %p %s\n", psf, pidl, debugstr_w(path));
 
+    if (!psf)
+        IShellFolder_Release(lsf);
     return SUCCEEDED(ret);
 }
 
@@ -211,7 +215,7 @@ BOOL WINAPI ILRemoveLastID(LPITEMIDLIST pidl)
 {
     TRACE_(shell)("pidl=%p\n",pidl);
 
-    if (!pidl || !pidl->mkid.cb)
+    if (_ILIsEmpty(pidl))
         return FALSE;
     ILFindLastID(pidl)->mkid.cb = 0;
     return TRUE;
@@ -566,11 +570,11 @@ BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL b
     }
 
     /* child has shorter name than parent */
-    if (pParent->mkid.cb || !pChild->mkid.cb)
+    if (pParent->mkid.cb)
         return FALSE;
 
     /* not immediate descent */
-    if ( ILGetNext(pChild)->mkid.cb && bImmediate)
+    if ((!pChild->mkid.cb || ILGetNext(pChild)->mkid.cb) && bImmediate)
         return FALSE;
 
     return TRUE;
@@ -831,7 +835,7 @@ LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST pidl)
 }
 
 /*************************************************************************
- * ILAppend                  [SHELL32.154]
+ * ILAppendID                [SHELL32.154]
  *
  * Adds the single ItemID item to the ItemIDList indicated by pidl.
  * If bEnd is FALSE, inserts the item in the front of the list,
@@ -845,26 +849,27 @@ LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST pidl)
  * NOTES
  *  Destroys the passed in idlist! (???)
  */
-LPITEMIDLIST WINAPI ILAppend(LPITEMIDLIST pidl, LPCITEMIDLIST item, BOOL bEnd)
+LPITEMIDLIST WINAPI ILAppendID(LPITEMIDLIST pidl, LPCSHITEMID item, BOOL bEnd)
 {
     LPITEMIDLIST idlRet;
+    LPCITEMIDLIST itemid = (LPCITEMIDLIST)item;
 
-    WARN("(pidl=%p,pidl=%p,%08u)semi-stub\n", pidl, item, bEnd);
+    WARN("(pidl=%p,pidl=%p,%08u)semi-stub\n",pidl,item,bEnd);
 
     pdump (pidl);
-    pdump (item);
+    pdump (itemid);
 
     if (_ILIsDesktop(pidl))
     {
-        idlRet = ILClone(item);
+        idlRet = ILClone(itemid);
         SHFree (pidl);
         return idlRet;
     }
 
     if (bEnd)
-        idlRet = ILCombine(pidl, item);
+        idlRet = ILCombine(pidl, itemid);
     else
-        idlRet = ILCombine(item, pidl);
+        idlRet = ILCombine(itemid, pidl);
 
     SHFree(pidl);
     return idlRet;
@@ -1095,7 +1100,7 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathAW(LPCVOID lpszPath)
  *  the pidl can be a simple one. since we can't get the path out of the pidl
  *  we have to take all data from the pidl
  */
-HRESULT WINAPI SHGetDataFromIDListA(IShellFolder * psf, LPCITEMIDLIST pidl,
+HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
                                     int nFormat, LPVOID dest, int len)
 {
     LPSTR filename, shortname;
@@ -1110,12 +1115,12 @@ HRESULT WINAPI SHGetDataFromIDListA(IShellFolder * psf, LPCITEMIDLIST pidl,
     switch (nFormat)
     {
     case SHGDFIL_FINDDATA:
-            pfd = (WIN32_FIND_DATAA *)dest;
+        pfd = dest;
 
         if (_ILIsDrive(pidl) || _ILIsSpecialFolder(pidl))
             return E_INVALIDARG;
 
-            if (len < (int)sizeof(WIN32_FIND_DATAA))
+        if (len < sizeof(WIN32_FIND_DATAA))
             return E_INVALIDARG;
 
         ZeroMemory(pfd, sizeof (WIN32_FIND_DATAA));
@@ -1157,7 +1162,7 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
                                     int nFormat, LPVOID dest, int len)
 {
     LPSTR filename, shortname;
-    WIN32_FIND_DATAW * pfd = (WIN32_FIND_DATAW *)dest;
+    WIN32_FIND_DATAW * pfd = dest;
 
     TRACE_(shell)("sf=%p pidl=%p 0x%04x %p 0x%04x stub\n",psf,pidl,nFormat,dest,len);
 
@@ -1169,12 +1174,12 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
     switch (nFormat)
     {
     case SHGDFIL_FINDDATA:
-            pfd = (WIN32_FIND_DATAW *)dest;
+        pfd = dest;
 
         if (_ILIsDrive(pidl))
             return E_INVALIDARG;
 
-            if (len < (int)sizeof(WIN32_FIND_DATAW))
+        if (len < sizeof(WIN32_FIND_DATAW))
             return E_INVALIDARG;
 
         ZeroMemory(pfd, sizeof (WIN32_FIND_DATAW));
@@ -1263,8 +1268,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
 
     dwAttributes = SFGAO_FILESYSTEM;
     hr = IShellFolder_GetAttributesOf(psfFolder, 1, &pidlLast, &dwAttributes);
-    if (FAILED(hr) || !(dwAttributes & SFGAO_FILESYSTEM))
-    {
+    if (FAILED(hr) || !(dwAttributes & SFGAO_FILESYSTEM)) {
         WARN("Wrong dwAttributes or GetAttributesOf failed: %x\n", hr);
         IShellFolder_Release(psfFolder);
         return FALSE;
@@ -1323,6 +1327,185 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
     TRACE_(shell)("-- psf=%p pidl=%p ret=0x%08x\n", *ppv, (ppidlLast)?*ppidlLast:NULL, hr);
     return hr;
 }
+
+/*************************************************************************
+ *    SHParseDisplayName        [shell version 6.0]
+ */
+HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
+    LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
+{
+    IShellFolder *psfDesktop;
+    HRESULT         hr=E_FAIL;
+    ULONG           dwAttr=sfgaoIn;
+
+    if(!ppidl)
+        return E_INVALIDARG;
+
+    if (!pszName || !psfgaoOut)
+    {
+        *ppidl = NULL;
+        return E_INVALIDARG;
+    }
+
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+    {
+        *ppidl = NULL;
+        return hr;
+    }
+
+    hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
+
+    IShellFolder_Release(psfDesktop);
+
+    if (SUCCEEDED(hr))
+        *psfgaoOut = dwAttr;
+    else
+        *ppidl = NULL;
+
+    return hr;
+}
+
+#ifndef __REACTOS__
+
+/*************************************************************************
+ * SHGetNameFromIDList             [SHELL32.@]
+ */
+HRESULT WINAPI SHGetNameFromIDList(PCIDLIST_ABSOLUTE pidl, SIGDN sigdnName, PWSTR *ppszName)
+{
+    IShellFolder *psfparent;
+    LPCITEMIDLIST child_pidl;
+    STRRET disp_name;
+    HRESULT ret;
+
+    TRACE("%p 0x%08x %p\n", pidl, sigdnName, ppszName);
+
+    *ppszName = NULL;
+    ret = SHBindToParent(pidl, &IID_IShellFolder, (void**)&psfparent, &child_pidl);
+    if(SUCCEEDED(ret))
+    {
+        switch(sigdnName)
+        {
+                                                /* sigdnName & 0xffff */
+        case SIGDN_NORMALDISPLAY:               /* SHGDN_NORMAL */
+        case SIGDN_PARENTRELATIVEPARSING:       /* SHGDN_INFOLDER | SHGDN_FORPARSING */
+        case SIGDN_PARENTRELATIVEEDITING:       /* SHGDN_INFOLDER | SHGDN_FOREDITING */
+        case SIGDN_DESKTOPABSOLUTEPARSING:      /* SHGDN_FORPARSING */
+        case SIGDN_DESKTOPABSOLUTEEDITING:      /* SHGDN_FOREDITING | SHGDN_FORADDRESSBAR*/
+        case SIGDN_PARENTRELATIVEFORADDRESSBAR: /* SIGDN_INFOLDER | SHGDN_FORADDRESSBAR */
+        case SIGDN_PARENTRELATIVE:              /* SIGDN_INFOLDER */
+
+            disp_name.uType = STRRET_WSTR;
+            ret = IShellFolder_GetDisplayNameOf(psfparent, child_pidl,
+                                                sigdnName & 0xffff,
+                                                &disp_name);
+            if(SUCCEEDED(ret))
+                ret = StrRetToStrW(&disp_name, pidl, ppszName);
+
+            break;
+
+        case SIGDN_FILESYSPATH:
+            *ppszName = CoTaskMemAlloc(sizeof(WCHAR)*MAX_PATH);
+            if(SHGetPathFromIDListW(pidl, *ppszName))
+            {
+                TRACE("Got string %s\n", debugstr_w(*ppszName));
+                ret = S_OK;
+            }
+            else
+            {
+                CoTaskMemFree(*ppszName);
+                ret = E_INVALIDARG;
+            }
+            break;
+
+        case SIGDN_URL:
+        default:
+            FIXME("Unsupported SIGDN %x\n", sigdnName);
+            ret = E_FAIL;
+        }
+
+        IShellFolder_Release(psfparent);
+    }
+    return ret;
+}
+
+/*************************************************************************
+ * SHGetIDListFromObject             [SHELL32.@]
+ */
+HRESULT WINAPI SHGetIDListFromObject(IUnknown *punk, PIDLIST_ABSOLUTE *ppidl)
+{
+    IPersistIDList *ppersidl;
+    IPersistFolder2 *ppf2;
+    IDataObject *pdo;
+    IFolderView *pfv;
+    HRESULT ret;
+
+    if(!punk)
+        return E_NOINTERFACE;
+
+    *ppidl = NULL;
+
+    /* Try IPersistIDList */
+    ret = IUnknown_QueryInterface(punk, &IID_IPersistIDList, (void**)&ppersidl);
+    if(SUCCEEDED(ret))
+    {
+        TRACE("IPersistIDList (%p)\n", ppersidl);
+        ret = IPersistIDList_GetIDList(ppersidl, ppidl);
+        IPersistIDList_Release(ppersidl);
+        if(SUCCEEDED(ret))
+            return ret;
+    }
+
+    /* Try IPersistFolder2 */
+    ret = IUnknown_QueryInterface(punk, &IID_IPersistFolder2, (void**)&ppf2);
+    if(SUCCEEDED(ret))
+    {
+        TRACE("IPersistFolder2 (%p)\n", ppf2);
+        ret = IPersistFolder2_GetCurFolder(ppf2, ppidl);
+        IPersistFolder2_Release(ppf2);
+        if(SUCCEEDED(ret))
+            return ret;
+    }
+
+    /* Try IDataObject */
+    ret = IUnknown_QueryInterface(punk, &IID_IDataObject, (void**)&pdo);
+    if(SUCCEEDED(ret))
+    {
+        IShellItem *psi;
+        TRACE("IDataObject (%p)\n", pdo);
+        ret = SHGetItemFromDataObject(pdo, DOGIF_ONLY_IF_ONE,
+                                      &IID_IShellItem, (void**)&psi);
+        if(SUCCEEDED(ret))
+        {
+            ret = SHGetIDListFromObject((IUnknown*)psi, ppidl);
+            IShellItem_Release(psi);
+        }
+        IDataObject_Release(pdo);
+
+        if(SUCCEEDED(ret))
+            return ret;
+    }
+
+    /* Try IFolderView */
+    ret = IUnknown_QueryInterface(punk, &IID_IFolderView, (void**)&pfv);
+    if(SUCCEEDED(ret))
+    {
+        IShellFolder *psf;
+        TRACE("IFolderView (%p)\n", pfv);
+        ret = IFolderView_GetFolder(pfv, &IID_IShellFolder, (void**)&psf);
+        if(SUCCEEDED(ret))
+        {
+            /* We might be able to get IPersistFolder2 from a shellfolder. */
+            ret = SHGetIDListFromObject((IUnknown*)psf, ppidl);
+        }
+        IFolderView_Release(pfv);
+        return ret;
+    }
+
+    return ret;
+}
+
+#endif /* !__REACTOS__ */
 
 /**************************************************************************
  *
@@ -1587,6 +1770,23 @@ LPITEMIDLIST _ILCreateDrive(LPCWSTR lpszNew)
     return pidlOut;
 }
 
+LPITEMIDLIST _ILCreateEntireNetwork(void)
+{
+    LPITEMIDLIST pidlOut;
+
+    TRACE("\n");
+
+    pidlOut = _ILAlloc(PT_NETWORK, FIELD_OFFSET(PIDLDATA, u.network.szNames[sizeof("Entire Network")]));
+    if (pidlOut)
+    {
+        LPPIDLDATA pData = _ILGetDataPointer(pidlOut);
+
+        pData->u.network.dummy = 0;
+        strcpy(pData->u.network.szNames, "Entire Network");
+    }
+    return pidlOut;
+}
+
 /**************************************************************************
  *  _ILGetDrive()
  *
@@ -1635,7 +1835,7 @@ BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
 {
     TRACE("(%p)\n",pidl);
 
-    return pidl && pidl->mkid.cb ? 0 : 1;
+    return !pidl || !pidl->mkid.cb;
 }
 
 BOOL _ILIsMyDocuments(LPCITEMIDLIST pidl)
@@ -1963,7 +2163,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
  */
 LPPIDLDATA _ILGetDataPointer(LPCITEMIDLIST pidl)
 {
-    if(pidl && pidl->mkid.cb != 0x00)
+    if(!_ILIsEmpty(pidl))
         return (LPPIDLDATA)pidl->mkid.abID;
     return NULL;
 }
@@ -2058,8 +2258,8 @@ LPSTR _ILGetTextPointer(LPCITEMIDLIST pidl)
     case PT_SHARE:
         return pdata->u.network.szNames;
 
-        case PT_CPLAPPLET:
-            return pdata->u.cpanel.szName;
+    case PT_CPLAPPLET:
+        return pdata->u.cpanel.szName;
     }
     return NULL;
 }
