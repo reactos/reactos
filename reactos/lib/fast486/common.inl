@@ -170,21 +170,23 @@ Fast486ReadLinearMemory(PFAST486_STATE State,
             /* Get the table entry */
             TableEntry.Value = Fast486GetPageTableEntry(State, Page, FALSE);
 
-            if (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
-            {
-                /* Exception */
-                Fast486ExceptionWithErrorCode(State,
-                                              FAST486_EXCEPTION_PF,
-                                              TableEntry.Present | (State->Cpl ? 0x04 : 0));
-                return FALSE;
-            }
-
             /* Check if this is the first page */
             if (Page == PAGE_ALIGN(LinearAddress))
             {
                 /* Start reading from the offset from the beginning of the page */
                 PageOffset = PAGE_OFFSET(LinearAddress);
                 PageLength -= PageOffset;
+            }
+
+            if (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+            {
+                State->ControlRegisters[FAST486_REG_CR2] = Page + PageOffset;
+
+                /* Exception */
+                Fast486ExceptionWithErrorCode(State,
+                                              FAST486_EXCEPTION_PF,
+                                              TableEntry.Present | (State->Cpl ? 0x04 : 0));
+                return FALSE;
             }
 
             /* Check if this is the last page */
@@ -237,23 +239,25 @@ Fast486WriteLinearMemory(PFAST486_STATE State,
             /* Get the table entry */
             TableEntry.Value = Fast486GetPageTableEntry(State, Page, TRUE);
 
-            if ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
-                || ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_WP)
-                && !TableEntry.Writeable))
-            {
-                /* Exception */
-                Fast486ExceptionWithErrorCode(State,
-                                              FAST486_EXCEPTION_PF,
-                                              TableEntry.Present | 0x02 | (State->Cpl ? 0x04 : 0));
-                return FALSE;
-            }
-
             /* Check if this is the first page */
             if (Page == PAGE_ALIGN(LinearAddress))
             {
                 /* Start writing from the offset from the beginning of the page */
                 PageOffset = PAGE_OFFSET(LinearAddress);
                 PageLength -= PageOffset;
+            }
+
+            if ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+                || ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_WP)
+                && !TableEntry.Writeable))
+            {
+                State->ControlRegisters[FAST486_REG_CR2] = Page + PageOffset;
+
+                /* Exception */
+                Fast486ExceptionWithErrorCode(State,
+                                              FAST486_EXCEPTION_PF,
+                                              TableEntry.Present | 0x02 | (State->Cpl ? 0x04 : 0));
+                return FALSE;
             }
 
             /* Check if this is the last page */
