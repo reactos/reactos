@@ -31,6 +31,10 @@ PrintResourceString(
     ...);
 
 VOID
+PrintPaddedResourceString(
+    INT resID);
+
+VOID
 PrintToConsole(
     LPWSTR lpFormat,
     ...);

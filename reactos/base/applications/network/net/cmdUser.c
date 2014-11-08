@@ -173,13 +173,25 @@ DisplayUser(LPWSTR lpUserName)
     if (Status != NERR_Success)
         goto done;
 
-    PrintToConsole(L"User name                    %s\n", pUserInfo->usri4_name);
-    PrintToConsole(L"Full name                    %s\n", pUserInfo->usri4_full_name);
-    PrintToConsole(L"Comment                      %s\n", pUserInfo->usri4_comment);
-    PrintToConsole(L"User comment                 %s\n", pUserInfo->usri4_usr_comment);
-    PrintToConsole(L"Country code                 %03ld ()\n", pUserInfo->usri4_country_code);
-    PrintToConsole(L"Account active               %s\n", (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)? L"No" : ((pUserInfo->usri4_flags & UF_LOCKOUT) ? L"Locked" : L"Yes"));
-    PrintToConsole(L"Account expires              ");
+    PrintPaddedResourceString(IDS_USER_NAME);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_name);
+
+    PrintPaddedResourceString(IDS_USER_FULL_NAME);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_full_name);
+
+    PrintPaddedResourceString(IDS_USER_COMMENT);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_comment);
+
+    PrintPaddedResourceString(IDS_USER_USER_COMMENT);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_usr_comment);
+
+    PrintPaddedResourceString(IDS_USER_COUNTRY_CODE);
+    PrintToConsole(L"%03ld ()\n", pUserInfo->usri4_country_code);
+
+    PrintPaddedResourceString(IDS_USER_ACCOUNT_ACTIVE);
+    PrintToConsole(L"%s\n", (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)? L"No" : ((pUserInfo->usri4_flags & UF_LOCKOUT) ? L"Locked" : L"Yes"));
+
+    PrintPaddedResourceString(IDS_USER_ACCOUNT_EXPIRES);
     if (pUserInfo->usri4_acct_expires == TIMEQ_FOREVER)
         PrintToConsole(L"Never\n");
     else
@@ -187,40 +199,55 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintToConsole(L"\n");
 
-    PrintToConsole(L"Password last set            ");
+    PrintPaddedResourceString(IDS_USER_PW_LAST_SET);
     dwLastSet = GetTimeInSeconds() - pUserInfo->usri4_password_age;
     PrintDateTime(dwLastSet);
 
-    PrintToConsole(L"Password expires             ");
+    PrintPaddedResourceString(IDS_USER_PW_EXPIRES);
     if ((pUserInfo->usri4_flags & UF_DONT_EXPIRE_PASSWD) || pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
         PrintToConsole(L"Never\n");
     else
         PrintDateTime(dwLastSet + pUserModals->usrmod0_max_passwd_age);
 
-    PrintToConsole(L"Password changeable          ");
+    PrintPaddedResourceString(IDS_USER_PW_CHANGEABLE);
     PrintDateTime(dwLastSet + pUserModals->usrmod0_min_passwd_age);
 
-    PrintToConsole(L"Password required            %s\n", (pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? L"No" : L"Yes");
-    PrintToConsole(L"User may change password     %s\n", (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? L"No" : L"Yes");
+    PrintPaddedResourceString(IDS_USER_PW_REQUIRED);
+    PrintToConsole(L"%s\n", (pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? L"No" : L"Yes");
+
+    PrintPaddedResourceString(IDS_USER_CHANGE_PW);
+    PrintToConsole(L"%s\n", (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? L"No" : L"Yes");
 
     PrintToConsole(L"\n");
-    PrintToConsole(L"Workstations allowed         %s\n", (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0) ? L"All" : pUserInfo->usri4_workstations);
-    PrintToConsole(L"Logon script                 %s\n", pUserInfo->usri4_script_path);
-    PrintToConsole(L"User profile                 %s\n", pUserInfo->usri4_profile);
-    PrintToConsole(L"Home directory               %s\n", pUserInfo->usri4_home_dir);
-    PrintToConsole(L"Last logon                   ");
+
+    PrintPaddedResourceString(IDS_USER_WORKSTATIONS);
+    PrintToConsole(L"%s\n", (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0) ? L"All" : pUserInfo->usri4_workstations);
+
+    PrintPaddedResourceString(IDS_USER_LOGON_SCRIPT);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_script_path);
+
+    PrintPaddedResourceString(IDS_USER_PROFILE);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_profile);
+
+    PrintPaddedResourceString(IDS_USER_HOME_DIR);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_home_dir);
+
+    PrintPaddedResourceString(IDS_USER_LAST_LOGON);
     if (pUserInfo->usri4_last_logon == 0)
         PrintToConsole(L"Never\n");
     else
         PrintDateTime(pUserInfo->usri4_last_logon);
+
     PrintToConsole(L"\n");
-    PrintToConsole(L"Logon hours allowed          ");
+
+    PrintPaddedResourceString(IDS_USER_LOGON_HOURS);
     if (pUserInfo->usri4_logon_hours == NULL)
         PrintToConsole(L"All\n");
+
     PrintToConsole(L"\n");
 
     PrintToConsole(L"\n");
-    PrintToConsole(L"Local group memberships      ");
+    PrintPaddedResourceString(IDS_USER_LOCAL_GROUPS);
     if (dwLocalGroupTotal != 0 && pLocalGroupInfo != NULL)
     {
         for (i = 0; i < dwLocalGroupTotal; i++)
@@ -235,7 +262,7 @@ DisplayUser(LPWSTR lpUserName)
         PrintToConsole(L"\n");
     }
 
-    PrintToConsole(L"Global group memberships     ");
+    PrintPaddedResourceString(IDS_USER_GLOBAL_GROUPS);
     if (dwGroupTotal != 0 && pGroupInfo != NULL)
     {
         for (i = 0; i < dwGroupTotal; i++)
@@ -279,31 +306,35 @@ ReadPassword(
 
     *lpAllocated = FALSE;
 
-    printf("Enter the password for user xxx: ");
-    ReadFromConsole(szPassword1, PWLEN + 1, FALSE);
-    printf("\n");
-
-    printf("Enter the password again: ");
-    ReadFromConsole(szPassword2, PWLEN + 1, FALSE);
-    printf("\n");
-
-    if (wcslen(szPassword1) == wcslen(szPassword2) &&
-        wcscmp(szPassword1, szPassword2) == 0)
+    while (TRUE)
     {
-        ptr = HeapAlloc(GetProcessHeap(),
-                        0,
-                        (wcslen(szPassword1) + 1) * sizeof(WCHAR));
-        if (ptr != NULL)
+        PrintResourceString(IDS_USER_ENTER_PASSWORD1);
+        ReadFromConsole(szPassword1, PWLEN + 1, FALSE);
+        printf("\n");
+
+        PrintResourceString(IDS_USER_ENTER_PASSWORD2);
+        ReadFromConsole(szPassword2, PWLEN + 1, FALSE);
+        printf("\n");
+
+        if (wcslen(szPassword1) == wcslen(szPassword2) &&
+            wcscmp(szPassword1, szPassword2) == 0)
         {
-            wcscpy(ptr, szPassword1);
-            *lpPassword = ptr;
-            *lpAllocated = TRUE;
+            ptr = HeapAlloc(GetProcessHeap(),
+                            0,
+                            (wcslen(szPassword1) + 1) * sizeof(WCHAR));
+            if (ptr != NULL)
+            {
+                wcscpy(ptr, szPassword1);
+                *lpPassword = ptr;
+                *lpAllocated = TRUE;
+                return;
+            }
         }
-    }
-    else
-    {
-        printf("The passwords do not match!");
-        *lpPassword = NULL;
+        else
+        {
+            PrintResourceString(IDS_USER_NO_PASSWORD_MATCH);
+            *lpPassword = NULL;
+        }
     }
 }
 

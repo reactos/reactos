@@ -65,6 +65,25 @@ PrintResourceString(
 
 
 VOID
+PrintPaddedResourceString(
+    INT resID)
+{
+    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
+    INT nLength, nPaddedLength = 29, i;
+
+    nLength = LoadStringW(GetModuleHandle(NULL), resID, szMsgBuffer, MAX_BUFFER_SIZE);
+    if (nLength < nPaddedLength)
+    {
+        for (i = nLength; i < nPaddedLength; i++)
+            szMsgBuffer[i] = L' ';
+        szMsgBuffer[nPaddedLength] = UNICODE_NULL;
+    }
+
+    WriteToConsole(szMsgBuffer);
+}
+
+
+VOID
 PrintToConsole(
     LPWSTR lpFormat,
     ...)

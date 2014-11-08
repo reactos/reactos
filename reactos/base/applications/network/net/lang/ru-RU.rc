@@ -67,6 +67,31 @@ BEGIN
       HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
       SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
 
+   IDS_USER_NAME "User name"
+   IDS_USER_FULL_NAME "Full name"
+   IDS_USER_COMMENT "Comment"
+   IDS_USER_USER_COMMENT "User comment"
+   IDS_USER_COUNTRY_CODE "Country code"
+   IDS_USER_ACCOUNT_ACTIVE "Account active"
+   IDS_USER_ACCOUNT_EXPIRES "Account expires"
+   IDS_USER_PW_LAST_SET "Password last set"
+   IDS_USER_PW_EXPIRES "Password expires"
+   IDS_USER_PW_CHANGEABLE "Password changeable"
+   IDS_USER_PW_REQUIRED "Password required"
+   IDS_USER_CHANGE_PW "User may change password"
+   IDS_USER_WORKSTATIONS "Workstations allowed"
+   IDS_USER_LOGON_SCRIPT "Logon script"
+   IDS_USER_PROFILE "User profile"
+   IDS_USER_HOME_DIR "Home directory"
+   IDS_USER_LAST_LOGON "Last logon"
+   IDS_USER_LOGON_HOURS "Logon hours allowed"
+   IDS_USER_LOCAL_GROUPS "Local group memberships"
+   IDS_USER_GLOBAL_GROUPS "Global group memberships"
+
+   IDS_USER_ENTER_PASSWORD1 "Enter a new password for the user: "
+   IDS_USER_ENTER_PASSWORD2 "Enter the password again: "
+   IDS_USER_NO_PASSWORD_MATCH "\nThe passwords do not match!\n"
+
    IDS_ERROR_OPTION_NOT_SUPPORTED "The %s option is not supported yet.\n"
    IDS_ERROR_INVALID_OPTION_VALUE "You entered an invalid value for the %s option.\n"
 END

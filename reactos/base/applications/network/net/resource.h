@@ -45,5 +45,30 @@
 #define IDS_HELP_SYNTAX       142
 #define IDS_NET_SYNTAX        143
 
+#define IDS_USER_NAME                  450
+#define IDS_USER_FULL_NAME             451
+#define IDS_USER_COMMENT               452
+#define IDS_USER_USER_COMMENT          453
+#define IDS_USER_COUNTRY_CODE          454
+#define IDS_USER_ACCOUNT_ACTIVE        455
+#define IDS_USER_ACCOUNT_EXPIRES       456
+#define IDS_USER_PW_LAST_SET           457
+#define IDS_USER_PW_EXPIRES            458
+#define IDS_USER_PW_CHANGEABLE         459
+#define IDS_USER_PW_REQUIRED           460
+#define IDS_USER_CHANGE_PW             461
+#define IDS_USER_WORKSTATIONS          462
+#define IDS_USER_LOGON_SCRIPT          463
+#define IDS_USER_PROFILE               464
+#define IDS_USER_HOME_DIR              465
+#define IDS_USER_LAST_LOGON            466
+#define IDS_USER_LOGON_HOURS           467
+#define IDS_USER_LOCAL_GROUPS          468
+#define IDS_USER_GLOBAL_GROUPS         469
+
+#define IDS_USER_ENTER_PASSWORD1       490
+#define IDS_USER_ENTER_PASSWORD2       491
+#define IDS_USER_NO_PASSWORD_MATCH     492
+
 #define IDS_ERROR_OPTION_NOT_SUPPORTED 500
 #define IDS_ERROR_INVALID_OPTION_VALUE 501
