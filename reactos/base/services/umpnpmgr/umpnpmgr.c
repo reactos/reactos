@@ -1230,11 +1230,11 @@ PNP_GetInterfaceDeviceList(
     DWORD ret = CR_SUCCESS;
 
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulFlags);
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
 
+    PlugPlayData.Flags = ulFlags;
     PlugPlayData.FilterGuid = InterfaceGuid;
     PlugPlayData.Buffer = Buffer;
     PlugPlayData.BufferSize = *pulLength;
@@ -1271,7 +1271,6 @@ PNP_GetInterfaceDeviceListSize(
     DWORD ret = CR_SUCCESS;
 
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetInterfaceDeviceListSize() called\n");
 
@@ -1281,6 +1280,7 @@ PNP_GetInterfaceDeviceListSize(
     PlugPlayData.FilterGuid = InterfaceGuid;
     PlugPlayData.Buffer = NULL;
     PlugPlayData.BufferSize = 0;
+    PlugPlayData.Flags = ulFlags;
 
     Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceList,
                                (PVOID)&PlugPlayData,
