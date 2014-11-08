@@ -414,6 +414,7 @@ USBHUB_PdoStartDevice(
     // register device interface
     //
     IoRegisterDeviceInterface(DeviceObject, &GUID_DEVINTERFACE_USB_DEVICE, NULL, &ChildDeviceExtension->SymbolicLinkName);
+    IoSetDeviceInterfaceState(&ChildDeviceExtension->SymbolicLinkName, TRUE);
 
     UNIMPLEMENTED
     return STATUS_SUCCESS;
