@@ -4035,7 +4035,7 @@ StartScan:
     if (lpCurrentDirectory)
     {
         /* Allocate a buffer so we can keep a Unicode copy */
-        DPRINT1("Current directory: %S\n", lpCurrentDirectory);
+        DPRINT("Current directory: %S\n", lpCurrentDirectory);
         CurrentDirectory = RtlAllocateHeap(RtlGetProcessHeap(),
                                            0,
                                            (MAX_PATH * sizeof(WCHAR)) +

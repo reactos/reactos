@@ -286,7 +286,7 @@ SendMenuEvent(PCONSRV_CONSOLE Console, UINT CmdId)
 {
     INPUT_RECORD er;
 
-    DPRINT1("Menu item ID: %d\n", CmdId);
+    DPRINT("Menu item ID: %d\n", CmdId);
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 

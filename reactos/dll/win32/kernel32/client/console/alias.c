@@ -124,7 +124,7 @@ AddConsoleAliasW(LPCWSTR lpSource,
     USHORT SourceBufferLength = (USHORT)wcslen(lpSource) * sizeof(WCHAR);
     USHORT TargetBufferLength = (USHORT)(lpTarget ? wcslen(lpTarget) * sizeof(WCHAR) : 0);
 
-    DPRINT1("AddConsoleAliasW entered with lpSource '%S' lpTarget '%S' lpExeName '%S'\n",
+    DPRINT("AddConsoleAliasW entered with lpSource '%S' lpTarget '%S' lpExeName '%S'\n",
             lpSource, lpTarget, lpExeName);
 
     return IntAddConsoleAlias(lpSource,
@@ -149,7 +149,7 @@ AddConsoleAliasA(LPCSTR lpSource,
     USHORT SourceBufferLength = (USHORT)strlen(lpSource) * sizeof(CHAR);
     USHORT TargetBufferLength = (USHORT)(lpTarget ? strlen(lpTarget) * sizeof(CHAR) : 0);
 
-    DPRINT1("AddConsoleAliasA entered with lpSource '%s' lpTarget '%s' lpExeName '%s'\n",
+    DPRINT("AddConsoleAliasA entered with lpSource '%s' lpTarget '%s' lpExeName '%s'\n",
             lpSource, lpTarget, lpExeName);
 
     return IntAddConsoleAlias(lpSource,
@@ -262,7 +262,7 @@ GetConsoleAliasW(LPWSTR lpSource,
                  DWORD TargetBufferLength,
                  LPWSTR lpExeName)
 {
-    DPRINT1("GetConsoleAliasW entered with lpSource '%S' lpExeName '%S'\n",
+    DPRINT("GetConsoleAliasW entered with lpSource '%S' lpExeName '%S'\n",
             lpSource, lpExeName);
 
     return IntGetConsoleAlias(lpSource,
@@ -285,7 +285,7 @@ GetConsoleAliasA(LPSTR lpSource,
                  DWORD TargetBufferLength,
                  LPSTR lpExeName)
 {
-    DPRINT1("GetConsoleAliasA entered with lpSource '%s' lpExeName '%s'\n",
+    DPRINT("GetConsoleAliasA entered with lpSource '%s' lpExeName '%s'\n",
             lpSource, lpExeName);
 
     return IntGetConsoleAlias(lpSource,
@@ -377,7 +377,7 @@ GetConsoleAliasesW(LPWSTR AliasBuffer,
                    DWORD AliasBufferLength,
                    LPWSTR ExeName)
 {
-    DPRINT1("GetConsoleAliasesW entered with lpExeName '%S'\n",
+    DPRINT("GetConsoleAliasesW entered with lpExeName '%S'\n",
             ExeName);
 
     return IntGetConsoleAliases(AliasBuffer,
@@ -397,7 +397,7 @@ GetConsoleAliasesA(LPSTR AliasBuffer,
                    DWORD AliasBufferLength,
                    LPSTR ExeName)
 {
-    DPRINT1("GetConsoleAliasesA entered with lpExeName '%s'\n",
+    DPRINT("GetConsoleAliasesA entered with lpExeName '%s'\n",
             ExeName);
 
     return IntGetConsoleAliases(AliasBuffer,
@@ -535,7 +535,7 @@ DECLSPEC_HOTPATCH
 GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
                      DWORD ExeNameBufferLength)
 {
-    DPRINT1("GetConsoleAliasExesW called\n");
+    DPRINT("GetConsoleAliasExesW called\n");
     return IntGetConsoleAliasExes(lpExeNameBuffer, ExeNameBufferLength, TRUE);
 }
 
@@ -549,7 +549,7 @@ DECLSPEC_HOTPATCH
 GetConsoleAliasExesA(LPSTR lpExeNameBuffer,
                      DWORD ExeNameBufferLength)
 {
-    DPRINT1("GetConsoleAliasExesA called\n");
+    DPRINT("GetConsoleAliasExesA called\n");
     return IntGetConsoleAliasExes(lpExeNameBuffer, ExeNameBufferLength, FALSE);
 }
 
@@ -585,7 +585,7 @@ WINAPI
 DECLSPEC_HOTPATCH
 GetConsoleAliasExesLengthW(VOID)
 {
-    DPRINT1("GetConsoleAliasExesLengthW called\n");
+    DPRINT("GetConsoleAliasExesLengthW called\n");
     return IntGetConsoleAliasExesLength(TRUE);
 }
 
@@ -598,7 +598,7 @@ WINAPI
 DECLSPEC_HOTPATCH
 GetConsoleAliasExesLengthA(VOID)
 {
-    DPRINT1("GetConsoleAliasExesLengthA called\n");
+    DPRINT("GetConsoleAliasExesLengthA called\n");
     return IntGetConsoleAliasExesLength(FALSE);
 }
 
