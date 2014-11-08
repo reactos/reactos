@@ -61,6 +61,12 @@ ULONG LenBits[] =
 /* FUNCTIONS ******************************************************************/
 
 VOID
+FrLdrCheckCpuCompatiblity(VOID)
+{
+    /* Nothing for now */
+}
+
+VOID
 ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
 {
     /* Remember the pointer */

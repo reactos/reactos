@@ -37,6 +37,9 @@ VOID BootMain(LPSTR CmdLine)
 
     TRACE("BootMain() called.\n");
 
+	/* Check if the CPU is new enough */
+	FrLdrCheckCpuCompatiblity();
+
     if (!UiInitialize(FALSE))
     {
         UiMessageBoxCritical("Unable to initialize UI.\n");
@@ -50,10 +53,10 @@ VOID BootMain(LPSTR CmdLine)
     }
 
 #ifdef _M_IX86
-    HalpInitializePciStubs();
-    HalpInitBusHandler();
+	HalpInitializePciStubs();
+	HalpInitBusHandler();
 #endif
-    RunLoader();
+	RunLoader();
 
 quit:
     /* If we reach this point, something went wrong before, therefore reboot */
