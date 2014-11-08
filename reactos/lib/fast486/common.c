@@ -290,11 +290,8 @@ Fast486InterruptInternal(PFAST486_STATE State,
         
         if (GateSize != (State->SegmentRegs[FAST486_REG_CS].Size))
         {
-            /*
-             * The gate size doesn't match the current operand size, so toggle
-             * the OPSIZE flag.
-             */
-            State->PrefixFlags ^= FAST486_PREFIX_OPSIZE;
+            /* The gate size doesn't match the current operand size, so set the OPSIZE flag. */
+            State->PrefixFlags |= FAST486_PREFIX_OPSIZE;
         }
 
         /* Check if the interrupt handler is more privileged */
@@ -469,6 +466,9 @@ Fast486ExceptionWithErrorCode(PFAST486_STATE State,
         return;
     }
 
+    /* Clear the prefix flags */
+    State->PrefixFlags = 0;
+
     /* Restore the IP to the saved IP */
     State->InstPtr = State->SavedInstPtr;
 
@@ -566,7 +566,8 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     if (NewTssLimit < sizeof(FAST486_TSS))
     {
         /* TSS limit too small */
-        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, Selector); 
+        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, Selector);
+        return FALSE;
     }
 
     /*
