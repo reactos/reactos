@@ -37,8 +37,8 @@ VOID BootMain(LPSTR CmdLine)
 
     TRACE("BootMain() called.\n");
 
-	/* Check if the CPU is new enough */
-	FrLdrCheckCpuCompatiblity();
+    /* Check if the CPU is new enough */
+    FrLdrCheckCpuCompatiblity();
 
     if (!UiInitialize(FALSE))
     {
