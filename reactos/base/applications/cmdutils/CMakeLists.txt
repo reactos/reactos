@@ -1,4 +1,5 @@
 add_subdirectory(comp)
+add_subdirectory(cscript)
 add_subdirectory(dbgprint)
 add_subdirectory(doskey)
 add_subdirectory(find)
