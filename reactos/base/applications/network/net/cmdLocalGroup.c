@@ -248,7 +248,7 @@ cmdLocalGroup(
         }
         else if (_wcsicmp(argv[i], L"/domain") == 0)
         {
-            printf("The /DOMAIN option is not supported yet!\n");
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
 #if 0
             bDomain = TRUE;
 #endif

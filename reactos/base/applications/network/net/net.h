@@ -39,6 +39,12 @@ VOID
 WriteToConsole(
     LPWSTR lpString);
 
+VOID
+ReadFromConsole(
+    LPWSTR lpInput,
+    DWORD dwLength,
+    BOOL bEcho);
+
 VOID help(VOID);
 INT unimplemented(INT argc, WCHAR **argv);
 

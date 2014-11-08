@@ -34,7 +34,7 @@ BEGIN
     IDS_SESSION_HELP "SESSION\n..."
     IDS_SHARE_SYNTAX "Usage:\nNET SHARE ..."
     IDS_SHARE_HELP "SHARE\n..."
-    IDS_START_SYNTAX "Usage:\nNET START ..."
+    IDS_START_SYNTAX "Usage:\nNET START <Service name>"
     IDS_START_HELP "START\n..."
     IDS_STATISTICS_SYNTAX "Usage:\nNET STATISTICS ..."
     IDS_STATISTICS_HELP "STATISTICS\n..."
@@ -64,4 +64,7 @@ BEGIN
     IDS_NET_SYNTAX "Usage:\nNET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
       HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
       SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
+
+   IDS_ERROR_OPTION_NOT_SUPPORTED "The %s option is not supported yet.\n"
+   IDS_ERROR_INVALID_OPTION_VALUE "You entered an invalid value for the %s option.\n"
 END

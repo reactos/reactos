@@ -118,6 +118,43 @@ WriteToConsole(
 }
 
 
+VOID
+ReadFromConsole(
+    LPWSTR lpInput,
+    DWORD dwLength,
+    BOOL bEcho)
+{
+    DWORD dwOldMode;
+    DWORD dwRead = 0;
+    HANDLE hFile;
+    LPWSTR p;
+    PCHAR pBuf;
+
+    pBuf = HeapAlloc(GetProcessHeap(), 0, dwLength - 1);
+    ZeroMemory(lpInput, dwLength * sizeof(WCHAR));
+    hFile = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(hFile, &dwOldMode);
+
+    SetConsoleMode(hFile, ENABLE_LINE_INPUT | (bEcho ? ENABLE_ECHO_INPUT : 0));
+
+    ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
+
+    MultiByteToWideChar(CP_OEMCP, 0, pBuf, dwRead, lpInput, dwLength - 1);
+    HeapFree(GetProcessHeap(), 0, pBuf);
+
+    for (p = lpInput; *p; p++)
+    {
+        if (*p == L'\x0d')
+        {
+            *p = L'\0';
+            break;
+        }
+    }
+
+    SetConsoleMode(hFile, dwOldMode);
+}
+
+
 int wmain(int argc, WCHAR **argv)
 {
     PCOMMAND cmdptr;

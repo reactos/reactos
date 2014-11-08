@@ -70,4 +70,7 @@ BEGIN
     IDS_NET_SYNTAX "Utilizare:\nNET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
       HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
       SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
+
+   IDS_ERROR_OPTION_NOT_SUPPORTED "The %s option is not supported yet.\n"
+   IDS_ERROR_INVALID_OPTION_VALUE "You entered an invalid value for the %s option.\n"
 END

@@ -48,7 +48,7 @@ cmdAccounts(
 
         if (_wcsicmp(argv[i], L"/domain") == 0)
         {
-            PrintToConsole(L"The /DOMAIN option is not supported yet!\n");
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
 #if 0
             Domain = TRUE;
 #endif
@@ -74,7 +74,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    PrintToConsole(L"You entered an invalid value for the /FORCELOGOFF option.\n");
+                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/FORCELOGOFF");
                     result = 1;
                     goto done;
                 }
@@ -89,7 +89,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                    PrintToConsole(L"You entered an invalid value for the /MINPWLEN option.\n");
+                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWLEN");
                     result = 1;
                     goto done;
             }
@@ -111,7 +111,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    PrintToConsole(L"You entered an invalid value for the /MAXPWAGE option.\n");
+                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MAXPWLEN");
                     result = 1;
                     goto done;
                 }
@@ -126,7 +126,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintToConsole(L"You entered an invalid value for the /MINPWAGE option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWAGE");
                 result = 1;
                 goto done;
             }
@@ -140,7 +140,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintToConsole(L"You entered an invalid value for the /UNIQUEPW option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/UNIQUEPW");
                 result = 1;
                 goto done;
             }
@@ -168,32 +168,32 @@ cmdAccounts(
 
         RtlGetNtProductType(&ProductType);
 
-        PrintToConsole(L"Force logoff after: ");
+        PrintToConsole(L"Force logoff after:                                       ");
         if (Info0->usrmod0_force_logoff == TIMEQ_FOREVER)
             PrintToConsole(L"Never\n");
         else
             PrintToConsole(L"%lu seconds\n", Info0->usrmod0_force_logoff);
 
-        PrintToConsole(L"Minimum password age (in days): %lu\n", Info0->usrmod0_min_passwd_age / 86400);
-        PrintToConsole(L"Maximum password age (in days): %lu\n", Info0->usrmod0_max_passwd_age / 86400);
-        PrintToConsole(L"Minimum password length: %lu\n", Info0->usrmod0_min_passwd_len);
+        PrintToConsole(L"Minimum password age (in days):                           %lu\n", Info0->usrmod0_min_passwd_age / 86400);
+        PrintToConsole(L"Maximum password age (in days):                           %lu\n", Info0->usrmod0_max_passwd_age / 86400);
+        PrintToConsole(L"Minimum password length:                                  %lu\n", Info0->usrmod0_min_passwd_len);
 
-        PrintToConsole(L"Password history length: ");
+        PrintToConsole(L"Password history length:                                  ");
         if (Info0->usrmod0_password_hist_len == 0)
             PrintToConsole(L"None\n");
         else
             PrintToConsole(L"%lu\n", Info0->usrmod0_password_hist_len);
 
-        PrintToConsole(L"Lockout threshold: ");
+        PrintToConsole(L"Lockout threshold:                                        ");
         if (Info3->usrmod3_lockout_threshold == 0)
             PrintToConsole(L"Never\n");
         else
             PrintToConsole(L"%lu\n", Info3->usrmod3_lockout_threshold);
 
-        PrintToConsole(L"Lockout duration (in minutes): %lu\n", Info3->usrmod3_lockout_duration / 60);
-        PrintToConsole(L"Lockout observation window (in minutes): %lu\n", Info3->usrmod3_lockout_observation_window / 60);
+        PrintToConsole(L"Lockout duration (in minutes):                            %lu\n", Info3->usrmod3_lockout_duration / 60);
+        PrintToConsole(L"Lockout observation window (in minutes):                  %lu\n", Info3->usrmod3_lockout_observation_window / 60);
 
-        PrintToConsole(L"Computer role: ");
+        PrintToConsole(L"Computer role:                                            ");
 
         if (Info1->usrmod1_role == UAS_ROLE_PRIMARY)
         {

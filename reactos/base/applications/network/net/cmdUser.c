@@ -267,6 +267,47 @@ done:
 }
 
 
+static
+VOID
+ReadPassword(
+    LPWSTR *lpPassword,
+    LPBOOL lpAllocated)
+{
+    WCHAR szPassword1[PWLEN + 1];
+    WCHAR szPassword2[PWLEN + 1];
+    LPWSTR ptr;
+
+    *lpAllocated = FALSE;
+
+    printf("Enter the password for user xxx: ");
+    ReadFromConsole(szPassword1, PWLEN + 1, FALSE);
+    printf("\n");
+
+    printf("Enter the password again: ");
+    ReadFromConsole(szPassword2, PWLEN + 1, FALSE);
+    printf("\n");
+
+    if (wcslen(szPassword1) == wcslen(szPassword2) &&
+        wcscmp(szPassword1, szPassword2) == 0)
+    {
+        ptr = HeapAlloc(GetProcessHeap(),
+                        0,
+                        (wcslen(szPassword1) + 1) * sizeof(WCHAR));
+        if (ptr != NULL)
+        {
+            wcscpy(ptr, szPassword1);
+            *lpPassword = ptr;
+            *lpAllocated = TRUE;
+        }
+    }
+    else
+    {
+        printf("The passwords do not match!");
+        *lpPassword = NULL;
+    }
+}
+
+
 INT
 cmdUser(
     INT argc,
@@ -286,6 +327,7 @@ cmdUser(
     LPWSTR p;
     LPWSTR endptr;
     DWORD value;
+    BOOL bPasswordAllocated = FALSE;
     NET_API_STATUS Status;
 
     if (argc == 2)
@@ -305,14 +347,14 @@ cmdUser(
     if (argv[i][0] != L'/')
     {
         lpUserName = argv[i];
-        printf("User: %S\n", lpUserName);
+//        printf("User: %S\n", lpUserName);
         i++;
     }
 
     if (argv[i][0] != L'/')
     {
         lpPassword = argv[i];
-        printf("Password: %S\n", lpPassword);
+//        printf("Password: %S\n", lpPassword);
         i++;
     }
 
@@ -333,7 +375,7 @@ cmdUser(
         }
         else if (_wcsicmp(argv[j], L"/domain") == 0)
         {
-            printf("The /DOMAIN option is not supported yet!\n");
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
 #if 0
             bDomain = TRUE;
 #endif
@@ -344,6 +386,13 @@ cmdUser(
     {
         result = 1;
         goto done;
+    }
+
+    /* Interactive password input */
+    if (lpPassword != NULL && wcscmp(lpPassword, L"*") == 0)
+    {
+        ReadPassword(&lpPassword,
+                     &bPasswordAllocated);
     }
 
     if (!bAdd && !bDelete)
@@ -387,7 +436,7 @@ cmdUser(
             }
             else
             {
-                PrintToConsole(L"You entered an invalid value for the /ACTIVE option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/ACTIVE");
                 result = 1;
                 goto done;
             }
@@ -402,7 +451,7 @@ cmdUser(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintToConsole(L"You entered an invalid value for the /COUNTRYCODE option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/COUNTRYCODE");
                 result = 1;
                 goto done;
             }
@@ -413,6 +462,16 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/expires:", 9) == 0)
         {
+            p = &argv[i][9];
+            if (_wcsicmp(p, L"never") == 0)
+            {
+                pUserInfo->usri4_acct_expires = TIMEQ_FOREVER;
+            }
+            else
+            {
+                /* FIXME: Parse the date */
+                PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/EXPIRES");
+            }
         }
         else if (_wcsnicmp(argv[j], L"/fullname:", 10) == 0)
         {
@@ -435,7 +494,7 @@ cmdUser(
             }
             else
             {
-                PrintToConsole(L"You entered an invalid value for the /PASSWORDCHG option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/PASSWORDCHG");
                 result = 1;
                 goto done;
             }
@@ -453,7 +512,7 @@ cmdUser(
             }
             else
             {
-                PrintToConsole(L"You entered an invalid value for the /PASSWORDREQ option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/PASSWORDREQ");
                 result = 1;
                 goto done;
             }
@@ -468,6 +527,8 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/times:", 7) == 0)
         {
+            /* FIXME */
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/TIMES");
         }
         else if (_wcsnicmp(argv[j], L"/usercomment:", 13) == 0)
         {
@@ -475,6 +536,8 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/workstations:", 14) == 0)
         {
+            /* FIXME */
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/WORKSTATIONS");
         }
     }
 
@@ -506,6 +569,9 @@ cmdUser(
     }
 
 done:
+    if (bPasswordAllocated == TRUE && lpPassword != NULL)
+        HeapFree(GetProcessHeap(), 0, lpPassword);
+
     if (!bAdd && !bDelete && pUserInfo != NULL)
         NetApiBufferFree(pUserInfo);
 
