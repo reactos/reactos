@@ -84,10 +84,20 @@ DWORD
 WINAPI
 GdiGetCodePage(HDC hdc)
 {
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-    if (Dc_Attr->ulDirty_ & DIRTY_CHARSET) return LOWORD(NtGdiGetCharSet(hdc));
-    return LOWORD(Dc_Attr->iCS_CP);
+    PDC_ATTR pdcattr;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (pdcattr->ulDirty_ & DIRTY_CHARSET)
+        return LOWORD(NtGdiGetCharSet(hdc));
+
+    return LOWORD(pdcattr->iCS_CP);
 }
 
 
@@ -97,14 +107,20 @@ GdiGetCodePage(HDC hdc)
 int
 WINAPI
 GetTextCharacterExtra(
-    HDC	hDc
+    HDC	hdc
 )
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
 
-    if (!GdiGetHandleUserData((HGDIOBJ) hDc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-    return Dc_Attr->lTextExtra;
-// return GetDCDWord( hDc, GdiGetTextCharExtra, 0);
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Do not set LastError here! */
+        return 0x8000000;
+    }
+
+    return pdcattr->lTextExtra;
 }
 
 
@@ -133,7 +149,7 @@ GetTextMetricsA(
 {
     TMW_INTERNAL tmwi;
 
-    if (! NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
+    if (!NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
     {
         return FALSE;
     }
@@ -544,38 +560,46 @@ GetFontResourceInfoW(
 int
 WINAPI
 SetTextCharacterExtra(
-    HDC	hDC,
+    HDC	hdc,
     int	CharExtra
 )
 {
-    INT cExtra = 0x80000000;
-    PDC_ATTR Dc_Attr;
+    INT cExtra;
+    PDC_ATTR pdcattr;
 
-    if (CharExtra == cExtra)
+    if (CharExtra == 0x80000000)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return cExtra;
+        return 0x80000000;
     }
+
 #if 0
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
     {
-        return MFDRV_SetTextCharacterExtra( hDC, CharExtra ); // Wine port.
+        return MFDRV_SetTextCharacterExtra( hdc, CharExtra ); // Wine port.
     }
 #endif
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return cExtra;
 
-    if (NtCurrentTeb()->GdiTebBatch.HDC == hDC)
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
     {
-        if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0x8000000;
+    }
+
+    if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
+    {
+        if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
         {
-            NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
-            Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+            NtGdiFlush(); // Sync up pdcattr from Kernel space.
+            pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
         }
     }
-    cExtra = Dc_Attr->lTextExtra;
-    Dc_Attr->lTextExtra = CharExtra;
+
+    cExtra = pdcattr->lTextExtra;
+    pdcattr->lTextExtra = CharExtra;
     return cExtra;
-// return GetAndSetDCDWord( hDC, GdiGetSetTextCharExtra, CharExtra, 0, 0, 0 );
 }
 
 /*
@@ -586,9 +610,17 @@ UINT
 WINAPI
 GetTextAlign(HDC hdc)
 {
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-    return Dc_Attr->lTextAlign;
+    PDC_ATTR pdcattr;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Do not set LastError here! */
+        return GDI_ERROR;
+    }
+
+    return pdcattr->lTextAlign;
 }
 
 
@@ -600,11 +632,18 @@ COLORREF
 WINAPI
 GetTextColor(HDC hdc)
 {
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-    return Dc_Attr->ulForegroundClr;
-}
+    PDC_ATTR pdcattr;
 
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Do not set LastError here! */
+        return CLR_INVALID;
+    }
+
+    return pdcattr->ulForegroundClr;
+}
 
 
 /*
@@ -615,8 +654,17 @@ WINAPI
 SetTextAlign(HDC hdc,
              UINT fMode)
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     INT OldMode;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return GDI_ERROR;
+    }
+
 #if 0
     if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
@@ -624,7 +672,7 @@ SetTextAlign(HDC hdc,
             return MFDRV_SetTextAlign( hdc, fMode )
                    else
             {
-                PLDC pLDC = Dc_Attr->pvLDC;
+                PLDC pLDC = pdcattr->pvLDC;
                 if ( !pLDC )
                 {
                     SetLastError(ERROR_INVALID_HANDLE);
@@ -637,15 +685,15 @@ SetTextAlign(HDC hdc,
                       }
               }
 #endif
-              if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return GDI_ERROR;
 
-    OldMode = Dc_Attr->lTextAlign;
-    Dc_Attr->lTextAlign = fMode; // Raw
-    if (Dc_Attr->dwLayout & LAYOUT_RTL)
+    OldMode = pdcattr->lTextAlign;
+    pdcattr->lTextAlign = fMode; // Raw
+    if (pdcattr->dwLayout & LAYOUT_RTL)
     {
         if ((fMode & TA_CENTER) != TA_CENTER) fMode ^= TA_RIGHT;
     }
-    Dc_Attr->flTextAlign = fMode & TA_MASK;
+
+    pdcattr->flTextAlign = fMode & TA_MASK;
     return OldMode;
 }
 
@@ -660,8 +708,17 @@ SetTextColor(
     COLORREF crColor
 )
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
     COLORREF OldColor = CLR_INVALID;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return GDI_ERROR;
+    }
+
 #if 0
     if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
@@ -669,7 +726,7 @@ SetTextColor(
             return MFDRV_SetTextColor( hDC, crColor );
         else
         {
-            PLDC pLDC = Dc_Attr->pvLDC;
+            PLDC pLDC = pdcattr->pvLDC;
             if ( !pLDC )
             {
                 SetLastError(ERROR_INVALID_HANDLE);
@@ -682,15 +739,14 @@ SetTextColor(
         }
     }
 #endif
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldColor;
 
-    OldColor = (COLORREF) Dc_Attr->ulForegroundClr;
-    Dc_Attr->ulForegroundClr = (ULONG) crColor;
+    OldColor = (COLORREF) pdcattr->ulForegroundClr;
+    pdcattr->ulForegroundClr = (ULONG) crColor;
 
-    if ( Dc_Attr->crForegroundClr != crColor )
+    if ( pdcattr->crForegroundClr != crColor )
     {
-        Dc_Attr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
-        Dc_Attr->crForegroundClr = crColor;
+        pdcattr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
+        pdcattr->crForegroundClr = crColor;
     }
     return OldColor;
 }
@@ -706,7 +762,16 @@ SetTextJustification(
     int	breaks
 )
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Do not set LastError here! */
+        return GDI_ERROR;
+    }
+
 #if 0
     if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
@@ -718,20 +783,20 @@ SetTextJustification(
                 return FALSE;
             }
 #endif
-        if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
 
-        if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
+    if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
+    {
+        if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
         {
-            if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
-            {
-                NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
-                Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
-            }
+            NtGdiFlush(); // Sync up pdcattr from Kernel space.
+            pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
         }
-        Dc_Attr->cBreak = breaks;
-        Dc_Attr->lBreakExtra = extra;
-        return TRUE;
     }
+
+    pdcattr->cBreak = breaks;
+    pdcattr->lBreakExtra = extra;
+    return TRUE;
+}
 
 /*
  * @implemented
