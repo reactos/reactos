@@ -209,6 +209,70 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
 }
 
 static NTSTATUS
+IopGetInterfaceDeviceList(PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA DeviceList)
+{
+    NTSTATUS Status;
+    UNICODE_STRING DeviceInstance;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    ULONG BufferSize = 0;
+    GUID FilterGuid;
+    PZZWSTR SymbolicLinkList = NULL, LinkList;
+    ULONG TotalLength = 0;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(DeviceList->FilterGuid, sizeof(GUID), sizeof(UCHAR));
+        RtlCopyMemory(&FilterGuid, DeviceList->FilterGuid, sizeof(GUID));
+
+        if (DeviceList->Buffer != NULL && DeviceList->BufferSize != 0)
+        {
+            BufferSize = DeviceList->BufferSize;
+            ProbeForWrite(DeviceList->Buffer, BufferSize, sizeof(UCHAR));
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+
+    Status = IopCaptureUnicodeString(&DeviceInstance, &DeviceList->DeviceInstance);
+    if (NT_SUCCESS(Status))
+    {
+        /* Get the device object */
+        DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
+        ExFreePool(DeviceInstance.Buffer);
+    }
+
+    Status = IoGetDeviceInterfaces(&FilterGuid, DeviceObject, DeviceList->Flags, &SymbolicLinkList);
+    ObDereferenceObject(DeviceObject);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        return Status;
+    }
+
+    LinkList = SymbolicLinkList;
+    while (*SymbolicLinkList != UNICODE_NULL)
+    {
+        TotalLength += (wcslen(SymbolicLinkList) + 1) * sizeof(WCHAR);
+        SymbolicLinkList += wcslen(SymbolicLinkList) + (sizeof(UNICODE_NULL) / sizeof(WCHAR));
+    }
+    TotalLength += sizeof(UNICODE_NULL);
+
+    if (BufferSize >= TotalLength)
+    {
+        RtlCopyMemory(DeviceList->Buffer, SymbolicLinkList, TotalLength * sizeof(WCHAR));
+    }
+    DeviceList->BufferSize = TotalLength;
+    ExFreePool(LinkList);
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
 IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
 {
     PDEVICE_OBJECT DeviceObject = NULL;
@@ -864,6 +928,11 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
             if (Buffer || BufferLength != 0)
                 return STATUS_INVALID_PARAMETER;
             return IopRemovePlugPlayEvent();
+
+        case PlugPlayControlGetInterfaceDeviceList:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopGetInterfaceDeviceList((PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA)Buffer);
 
         case PlugPlayControlProperty:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_PROPERTY_DATA))
