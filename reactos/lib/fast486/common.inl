@@ -112,13 +112,12 @@ Fast486GetPageTableEntry(PFAST486_STATE State,
     /* Make sure it is present */
     if (!TableEntry.Present) return 0;
 
-    if (MarkAsDirty) TableEntry.Dirty = TRUE;
-
-    /* Was the table entry accessed before? */
-    if (!TableEntry.Accessed)
+    /* Do we need to change any flags? */
+    if (!TableEntry.Accessed || (MarkAsDirty && !TableEntry.Dirty))
     {
-        /* Well, it is now */
+        /* Mark it as accessed and optionally dirty too */
         TableEntry.Accessed = TRUE;
+        if (MarkAsDirty) TableEntry.Dirty = TRUE;
 
         /* Write back the table entry */
         State->MemWriteCallback(State,
@@ -512,6 +511,7 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
         {
             /* Invalid selector */
             Fast486ExceptionWithErrorCode(State, Exception, Selector);
+            return FALSE;
         }
 
         if (Segment == FAST486_REG_SS)
@@ -569,6 +569,7 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
             {
                 /* Must be a segment descriptor */
                 Fast486ExceptionWithErrorCode(State, Exception, Selector);
+                return FALSE;
             }
 
             if (!GdtEntry.Present)
