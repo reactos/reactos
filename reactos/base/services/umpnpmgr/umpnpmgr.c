@@ -169,6 +169,8 @@ NtStatusToCrError(NTSTATUS Status)
     {
         case STATUS_NO_SUCH_DEVICE:
             return CR_NO_SUCH_DEVINST;
+        case STATUS_NOT_IMPLEMENTED:
+            return CR_CALL_NOT_IMPLEMENTED;
 
         default:
             /* FIXME: add more mappings */
@@ -1223,8 +1225,34 @@ PNP_GetInterfaceDeviceList(
     PNP_RPC_BUFFER_SIZE *pulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA PlugPlayData;
+    DWORD ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDeviceID);
+
+    PlugPlayData.FilterGuid = InterfaceGuid;
+    PlugPlayData.Buffer = Buffer;
+    PlugPlayData.BufferSize = *pulLength;
+
+    Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceList,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.BufferSize;
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    DPRINT("PNP_GetInterfaceDeviceListSize() done (returns %lx)\n", ret);
+    return ret;
 }
 
 
@@ -1238,8 +1266,36 @@ PNP_GetInterfaceDeviceListSize(
     LPWSTR pszDeviceID,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA PlugPlayData;
+    DWORD ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT("PNP_GetInterfaceDeviceListSize() called\n");
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDeviceID);
+
+    PlugPlayData.FilterGuid = InterfaceGuid;
+    PlugPlayData.Buffer = NULL;
+    PlugPlayData.BufferSize = 0;
+
+    Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceList,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLen = PlugPlayData.BufferSize;
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    DPRINT("PNP_GetInterfaceDeviceListSize() done (returns %lx)\n", ret);
+    return ret;
 }
 
 
