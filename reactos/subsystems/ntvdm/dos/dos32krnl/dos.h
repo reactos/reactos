@@ -239,11 +239,6 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
 
-VOID WINAPI DosInt20h(LPWORD Stack);
-VOID WINAPI DosInt21h(LPWORD Stack);
-VOID WINAPI DosBreakInterrupt(LPWORD Stack);
-VOID WINAPI DosInt2Fh(LPWORD Stack);
-
 BOOLEAN DosKRNLInitialize(VOID);
 
 #endif // _DOS_H_

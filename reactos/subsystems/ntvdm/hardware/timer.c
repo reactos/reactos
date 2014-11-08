@@ -20,7 +20,6 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static PIT_CHANNEL PitChannels[PIT_CHANNELS];
-PPIT_CHANNEL PitChannel2 = &PitChannels[2];
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -471,22 +470,19 @@ VOID PitSetGate(BYTE Channel, BOOLEAN State)
     PitChannels[Channel].Gate = State;
 }
 
-VOID PitClock(DWORD Count)
+WORD PitGetReloadValue(BYTE Channel)
 {
-    UINT i;
+    if (Channel >= PIT_CHANNELS) return 0xFFFF;
 
-    if (Count == 0) return;
-
-    for (i = 0; i < PIT_CHANNELS; i++)
-    {
-        // if (!PitChannels[i].Counting) continue;
-        PitDecrementCount(&PitChannels[i], Count);
-    }
+    if (PitChannels[Channel].ReloadValue == 0)
+        return 0xFFFF;
+    else
+        return PitChannels[Channel].ReloadValue;
 }
 
 DWORD PitGetResolution(VOID)
 {
-    INT i;
+    UCHAR i;
     DWORD MinReloadValue = 65536;
 
     for (i = 0; i < PIT_CHANNELS; i++)
@@ -501,6 +497,19 @@ DWORD PitGetResolution(VOID)
 
     /* Return the frequency resolution */
     return PIT_BASE_FREQUENCY / MinReloadValue;
+}
+
+VOID PitClock(DWORD Count)
+{
+    UCHAR i;
+
+    if (Count == 0) return;
+
+    for (i = 0; i < PIT_CHANNELS; i++)
+    {
+        // if (!PitChannels[i].Counting) continue;
+        PitDecrementCount(&PitChannels[i], Count);
+    }
 }
 
 VOID PitInitialize(VOID)
