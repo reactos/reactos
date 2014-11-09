@@ -126,7 +126,7 @@ void Test_RectRegions()
 
             ok(GetRgnBox(hrgnRes, &rc), "GetRgnBox failed!\n");
             ok(EqualRect(&rc, &aRectTests[i].res[iCombine-1].rcDstBounds),
-               "#%u (%s), Bounding box does not match: expected {%i,%i,%i,%i} got {%i,%i,%i,%i}\n",
+               "#%u (%s), Bounding box does not match: expected {%ld,%ld,%ld,%ld} got {%ld,%ld,%ld,%ld}\n",
                i, apszRgnOp[iCombine],
                aRectTests[i].res[iCombine-1].rcDstBounds.left, aRectTests[i].res[iCombine-1].rcDstBounds.top,
                aRectTests[i].res[iCombine-1].rcDstBounds.right, aRectTests[i].res[iCombine-1].rcDstBounds.bottom,
