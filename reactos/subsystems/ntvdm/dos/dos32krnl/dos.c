@@ -403,7 +403,7 @@ static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
     Mcb->OwnerPsp = NewOwner;
 }
 
-static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
+static WORD DosCopyEnvironmentBlock(LPCSTR Environment, LPCSTR ProgramName)
 {
     PCHAR Ptr, DestBuffer = NULL;
     ULONG TotalSize = 0;
@@ -412,12 +412,8 @@ static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
     Ptr = (PCHAR)Environment;
 
     /* Calculate the size of the environment block */
-    while (*Ptr)
-    {
-        TotalSize += strlen(Ptr) + 1;
-        Ptr += strlen(Ptr) + 1;
-    }
-    TotalSize++;
+    while (*Ptr) Ptr += strlen(Ptr) + 1;
+    TotalSize = (ULONG_PTR)Ptr - (ULONG_PTR)Environment + 1; // Add final NULL-terminator
 
     /* Add the string buffer size */
     TotalSize += strlen(ProgramName) + 1;
@@ -434,19 +430,16 @@ static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
     DestBuffer = (PCHAR)SEG_OFF_TO_PTR(DestSegment, 0);
     while (*Ptr)
     {
-        /* Copy the string */
+        /* Copy the string and NULL-terminate it */
         strcpy(DestBuffer, Ptr);
-
-        /* Advance to the next string */
         DestBuffer += strlen(Ptr);
+        *(DestBuffer++) = '\0';
+
+        /* Move to the next string */
         Ptr += strlen(Ptr) + 1;
-
-        /* Put a zero after the string */
-        *(DestBuffer++) = 0;
     }
-
-    /* Set the final zero */
-    *(DestBuffer++) = 0;
+    /* NULL-terminate the environment block */
+    *(DestBuffer++) = '\0';
 
     /* Store the special program name tag */
     *(DestBuffer++) = LOBYTE(DOS_PROGRAM_NAME_TAG);
@@ -907,7 +900,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
 DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
                         IN LPCSTR ExecutablePath,
                         IN LPCSTR CommandLine,
-                        IN PVOID Environment,
+                        IN LPCSTR Environment,
                         OUT PDWORD StackLocation OPTIONAL,
                         OUT PDWORD EntryPoint OPTIONAL)
 {
@@ -1151,7 +1144,7 @@ Cleanup:
 
 DWORD DosStartProcess(IN LPCSTR ExecutablePath,
                       IN LPCSTR CommandLine,
-                      IN PVOID Environment)
+                      IN LPCSTR Environment)
 {
     DWORD Result;
 

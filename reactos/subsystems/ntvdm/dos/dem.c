@@ -462,7 +462,7 @@ static VOID WINAPI DosStart(LPWORD Stack)
     DPRINT1("Starting '%s' ('%s')...\n", ApplicationName, CommandLine);
     Result = DosStartProcess(ApplicationName,
                              CommandLine,
-                             GetEnvironmentStrings());
+                             SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0));
     if (Result != ERROR_SUCCESS)
     {
         DisplayMessage(L"Could not start '%S'. Error: %u", ApplicationName, Result);

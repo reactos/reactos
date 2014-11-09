@@ -14,8 +14,18 @@
 #include "int32.h"
 
 #include "dos.h"
-
 #include "bios/bios.h"
+
+// This is needed because on UNICODE this symbol is redirected to
+// GetEnvironmentStringsW whereas on ANSI it corresponds to the real
+// "ANSI" function (and GetEnvironmentStringsA is aliased to it).
+#undef GetEnvironmentStrings
+
+// Symmetrize the dumbness of the previous symbol: on UNICODE
+// FreeEnvironmentStrings aliases to FreeEnvironmentStringsW but
+// on "ANSI" FreeEnvironmentStrings aliases to FreeEnvironmentStringsA
+#undef FreeEnvironmentStrings
+#define FreeEnvironmentStrings FreeEnvironmentStringsA
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -81,9 +91,7 @@ BOOLEAN DosBIOSInitialize(VOID)
 {
     PDOS_MCB Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT);
 
-    LPWSTR SourcePtr, Environment;
-    LPSTR AsciiString;
-    DWORD AsciiSize;
+    LPSTR SourcePtr, Environment;
     LPSTR DestPtr = (LPSTR)SEG_OFF_TO_PTR(SYSTEM_ENV_BLOCK, 0);
 
 #if 0
@@ -114,55 +122,46 @@ BOOLEAN DosBIOSInitialize(VOID)
     Mcb->OwnerPsp = 0;
 
     /* Get the environment strings */
-    SourcePtr = Environment = GetEnvironmentStringsW();
+    SourcePtr = Environment = GetEnvironmentStrings();
     if (Environment == NULL) return FALSE;
 
     /* Fill the DOS system environment block */
     while (*SourcePtr)
     {
-        /* Get the size of the ASCII string */
-        AsciiSize = WideCharToMultiByte(CP_ACP,
-                                        0,
-                                        SourcePtr,
-                                        -1,
-                                        NULL,
-                                        0,
-                                        NULL,
-                                        NULL);
-
-        /* Allocate memory for the ASCII string */
-        AsciiString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, AsciiSize);
-        if (AsciiString == NULL)
+        /*
+         * - Ignore environment strings starting with a '=',
+         *   they describe current directories.
+         * - Ignore also the WINDIR environment variable since
+         *   DOS apps should ignore that we started from ReactOS.
+         * - Upper-case the environment names, not their values.
+         */
+        if (*SourcePtr != '=' && _strnicmp(SourcePtr, "WINDIR", 6) != 0)
         {
-            FreeEnvironmentStringsW(Environment);
-            return FALSE;
+            PCHAR Delim = NULL;
+
+            /* Copy the environment string */
+            strcpy(DestPtr, SourcePtr);
+
+            /* Upper-case the environment name */
+            Delim = strchr(DestPtr, '='); // Find the '=' delimiter
+            if (Delim) *Delim = '\0';     // Temporarily replace it by NULL
+            _strupr(DestPtr);             // Upper-case
+            if (Delim) *Delim = '=';      // Restore the delimiter
+
+            DestPtr += strlen(SourcePtr);
+
+            /* NULL-terminate the environment string */
+            *(DestPtr++) = '\0';
         }
 
-        /* Convert to ASCII */
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            SourcePtr,
-                            -1,
-                            AsciiString,
-                            AsciiSize,
-                            NULL,
-                            NULL);
-
-        /* Copy the string into DOS memory */
-        strcpy(DestPtr, AsciiString);
-
         /* Move to the next string */
-        SourcePtr += wcslen(SourcePtr) + 1;
-        DestPtr += strlen(AsciiString);
-        *(DestPtr++) = 0;
-
-        /* Free the memory */
-        HeapFree(GetProcessHeap(), 0, AsciiString);
+        SourcePtr += strlen(SourcePtr) + 1;
     }
-    *DestPtr = 0;
+    /* NULL-terminate the environment block */
+    *DestPtr = '\0';
 
     /* Free the memory allocated for environment strings */
-    FreeEnvironmentStringsW(Environment);
+    FreeEnvironmentStrings(Environment);
 
 
 #if 0
