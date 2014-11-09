@@ -1,0 +1,70 @@
+/* Spanish Language resource file.
+ * Translated by: Ismael Ferreras Morezuelas <2014-11-07> */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_ACCOUNTS_SYNTAX "Uso:\nNET ACCOUNTS [/FORCELOGOFF:{minutos | NO}] [/MINPWLEN:longitud]\n\
+             [/MAXPWAGE:{días | UNLIMITED}] [/MINPWAGE:días]\n\
+             [/UNIQUEPW:número] [/DOMAIN]\n"
+    IDS_ACCOUNTS_HELP "ACCOUNTS\n..."
+    IDS_COMPUTER_SYNTAX "Uso:\nNET COMPUTER ..."
+    IDS_COMPUTER_HELP "COMPUTER\n..."
+    IDS_CONFIG_SYNTAX "Uso:\nNET CONFIG ..."
+    IDS_CONFIG_HELP "CONFIG\n..."
+    IDS_CONTINUE_SYNTAX "Uso:\nNET CONTINUE <nombre del servicio>"
+    IDS_CONTINUE_HELP "CONTINUE\n..."
+    IDS_FILE_SYNTAX "Uso:\nNET FILE ..."
+    IDS_FILE_HELP "FILE\n..."
+    IDS_GROUP_SYNTAX "Uso:\nNET GROUP ..."
+    IDS_GROUP_HELP "GROUP\n..."
+    IDS_HELPMSG_SYNTAX "Uso:\nNET HELPMSG <código de error>"
+    IDS_HELPMSG_HELP "HELPMSG\n..."
+    IDS_LOCALGROUP_SYNTAX "Uso:\nNET LOCALGROUP [grupo [/COMMENT:""texto""]] [/DOMAIN]\n\
+               grupo {/ADD [/COMMENT:""texto""] | /DELETE} [/DOMAIN]\n\
+               grupo nombre [...] {/ADD | /DELETE} [/DOMAIN]"
+    IDS_LOCALGROUP_HELP "LOCALGROUP\n..."
+    IDS_NAME_SYNTAX "Uso:\nNET NAME ..."
+    IDS_NAME_HELP "NAME\n..."
+    IDS_PRINT_SYNTAX  "Uso:\nNET PRINT ..."
+    IDS_PRINT_HELP "PRINT\n..."
+    IDS_PAUSE_SYNTAX "Uso:\nNET PAUSE <nombre del servicio>"
+    IDS_PAUSE_HELP "PAUSE\n..."
+    IDS_SEND_SYNTAX "Uso:\nNET SEND ..."
+    IDS_SEND_HELP "SEND\n..."
+    IDS_SESSION_SYNTAX "Uso:\nNET SESSION ..."
+    IDS_SESSION_HELP "SESSION\n..."
+    IDS_SHARE_SYNTAX "Uso:\nNET SHARE ..."
+    IDS_SHARE_HELP "SHARE\n..."
+    IDS_START_SYNTAX "Uso:\nNET START ..."
+    IDS_START_HELP "START\n..."
+    IDS_STATISTICS_SYNTAX "Uso:\nNET STATISTICS ..."
+    IDS_STATISTICS_HELP "STATISTICS\n..."
+    IDS_STOP_SYNTAX "Uso:\nNET STOP <nombre del servicio>"
+    IDS_STOP_HELP "STOP\n..."
+    IDS_TIME_SYNTAX "Uso:\nNET TIME ..."
+    IDS_TIME_HELP "TIME\n..."
+    IDS_USE_SYNTAX "Uso:\nNET USE ..."
+    IDS_USE_HELP "USE\n..."
+    IDS_USER_SYNTAX "Uso:\nNET USER [usuario [contraseña | *] [opciones]] [/DOMAIN]\n\
+         usuario {contraseña | *} /ADD [opciones] [/DOMAIN]\n\
+         usuario [/DELETE] [/DOMAIN]"
+    IDS_USER_HELP "USER\n..."
+    IDS_VIEW_SYNTAX "Uso:\nNET VIEW ..."
+    IDS_VIEW_HELP "VIEW\n..."
+    IDS_HELP_SYNTAX "Uso:\nNET HELP <comando>\n   - o -\nNET <comando> /HELP\n\n\
+   Éstos son los argumentos de línea de comandos disponibles:\n\n\
+   NET ACCOUNTS             NET HELP                 NET SHARE\n\
+   NET COMPUTER             NET HELPMSG              NET START\n\
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS\n\
+   NET CONFIG SERVER        NET NAME                 NET STOP\n\
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME\n\
+   NET CONTINUE             NET PRINT                NET USE\n\
+   NET FILE                 NET SEND                 NET USER\n\
+   NET GROUP                NET SESSION              NET VIEW\n\n\
+   ..."
+    IDS_NET_SYNTAX "Uso:\nNET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
+      SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
+END

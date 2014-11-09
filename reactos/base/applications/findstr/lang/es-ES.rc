@@ -1,13 +1,16 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FIND: Imprime todas las líneas de un fichero que contiene una cadena.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""cadena"" [ fichero... ]\n\
+    IDS_USAGE "FIND: Muestra todas las líneas de un archivo que contenga una cadena.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""cadena"" [ archivo... ]\n\
     /C  Cuenta el número de líneas que contienen la cadena de caracteres\n\
     /I  Ignora mayúsculas y minúsculas\n\
-    /N  Numero de líneas a mostrar en pantalla, a partir de la primera\n\
+    /N  Número de líneas a mostrar en pantalla, a partir de la primera\n\
     /V  Muestra las líneas que no contienen la cadena de caracteres."
-    IDS_NO_SUCH_FILE "FIND: %s: No se encontró el fichero\n"
-    IDS_CANNOT_OPEN "FIND: %s: No se pudo abrir el fichero\n"
+    IDS_NO_SUCH_FILE "FIND: %s: No se encontró el archivo\n"
+    IDS_CANNOT_OPEN "FIND: %s: No se pudo abrir el arvhivo\n"
 END

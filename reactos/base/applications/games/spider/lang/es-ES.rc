@@ -4,6 +4,7 @@
  * FILE:        base/applications/games/spider/lang/es-ES.rc
  * PURPOSE:     Spanish Language File for Spider Solitaire
  * TRANSLATORS: Javier Fernandez & Gabriel ilardi
+ * PROOFREAD:   Ismael Ferreras Morezuelas
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -11,7 +12,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Escoge Reverso de Carta"
+CAPTION "Selecciona el reverso de una carta"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -36,9 +37,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Dificultad"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Fácil: &Un Palo", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Medio: &Dos Palos", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
-    AUTORADIOBUTTON "Difícil: &Cuatro Palos", IDC_DIF_FOURCOLORS, 8, 36, 90, 10
+    AUTORADIOBUTTON "Fácil: &Un palo", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Medio: &Dos palos", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
+    AUTORADIOBUTTON "Difícil: &Cuatro palos", IDC_DIF_FOURCOLORS, 8, 36, 90, 10
     DEFPUSHBUTTON "Aceptar", IDOK, 8, 58, 40, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 58, 58, 40, 14
 END
@@ -48,9 +49,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider"
-    IDS_SPI_ABOUT "Solitario Spider por Gregor Schneider\n\nCardLib version 1.0"
+    IDS_SPI_ABOUT "Solitario Spider por Gregor Schneider\n\nCardLib versión 1.0"
     IDS_SPI_QUIT "¿Salir del juego actual?"
-    IDS_SPI_WIN "¡Enhorabuena, ganaste!"
+    IDS_SPI_WIN "¡Enhorabuena, has ganado!"
     IDS_SPI_DEAL "¿Jugar de nuevo?"
 END
 
@@ -60,13 +61,13 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&Juego"
     BEGIN
-        MENUITEM "&Nuevo Juego\tF2", IDM_GAME_NEW
+        MENUITEM "&Nuevo juego\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Mazo...", IDM_GAME_DECK
         MENUITEM SEPARATOR
         MENUITEM "&Salir", IDM_GAME_EXIT
     END
-    POPUP "&Ayuda"
+    POPUP "Ay&uda"
     BEGIN
         MENUITEM "&Contenidos\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Acerca de", IDM_HELP_ABOUT

@@ -1,4 +1,4 @@
-/* Spanish Language resource file. Traducido por: Javier Remacha 2008 */
+/* Spanish Language resource file. Traducido por: Javier Remacha <2008> e Ismael Ferreras Morezuelas <2014> */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -19,10 +19,10 @@ IDD_SYSTEM_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Esta herramienta reporta información detallada acerca de los componentes de ReactX y controladores instalados en su equipo.", -1, 10, 10, 443, 17
-    LTEXT "Si sabe que área está causando el problema, presione la pestaña superior apropiada. Si no puede usar el botón ""Siguiente página"" para visitar las páginas en secuencia.", -1, 10, 30, 443, 25
+    LTEXT "Esta herramienta informa detalladamente acerca de los componentes y controladores de ReactX instalados en su equipo.", -1, 10, 10, 443, 17
+    LTEXT "Si sabe la causa del problema, presione la pestaña superior apropiada. De lo contrario, puede usar el botón ""Siguiente página"" para visitar las páginas en secuencia.", -1, 10, 30, 443, 25
     GROUPBOX "Información del sistema ", -1, 10, 55, 443, 130, SS_RIGHT
-    LTEXT "Fecha/hora actual:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Fecha y hora actual:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Nombre del equipo:", -1, 70, 80, 80, 10, SS_RIGHT
     LTEXT "Sistema operativo:", -1, 70, 90, 80, 10, SS_RIGHT
     LTEXT "Idioma:", -1, 70, 100, 80, 10, SS_RIGHT
@@ -50,11 +50,11 @@ IDD_DISPLAY_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Dispositivo ", -1, 10, 10, 250, 100
+    GROUPBOX "Dispositivo", -1, 10, 10, 250, 100
     RTEXT "Nombre:", -1, 20, 25, 70, 10
     RTEXT "Fabricante:", -1, 20, 35, 70, 10
-    RTEXT "Tipo de Chip:", -1, 20, 45, 70, 10
-    RTEXT "Ipo de DAC:", -1, 20, 55, 70, 10
+    RTEXT "Tipo de chip:", -1, 20, 45, 70, 10
+    RTEXT "Tipo de DAC:", -1, 20, 55, 70, 10
     RTEXT "Memoria total aprox.:", -1, 14, 65, 75, 10
     RTEXT "Resolución actual:", -1, 14, 75, 75, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
@@ -65,13 +65,13 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
-    GROUPBOX "Controlador ", -1, 270, 10, 190, 100
+    GROUPBOX "Controladores ", -1, 270, 10, 190, 100
     RTEXT "Controlador:", -1, 275, 25, 55, 10
     RTEXT "Versión:", -1, 275, 35, 55, 10
     RTEXT "Fecha:", -1, 275, 45, 55, 10
-    RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
+    RTEXT "Logo WHQL:", -1, 275, 55, 55, 10
     RTEXT "Mini-VDD:", -1, 275, 65, 55, 10
-    RTEXT " vvdddVDD:", -1, 275, 75, 55, 10
+    RTEXT "vvdddVDD:", -1, 275, 75, 55, 10
     RTEXT "Versión DDI:", -1, 275, 85, 55, 10
     LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 335, 35, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_VERSION, 335, 35, 100, 10
@@ -82,16 +82,16 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
     GROUPBOX "Características ReactX ", -1, 10, 115, 450, 60
     RTEXT "Aceleración DirectDraw:", -1, 15, 130, 110, 12
-    RTEXT "AceleraciónDirect3D:", -1, 15, 145, 110, 12
+    RTEXT "Aceleración Direct3D:", -1, 15, 145, 110, 12
     RTEXT "Aceleración texturas AGP:", -1, 15, 160, 110, 12
     LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
     LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
     LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
-    PUSHBUTTON "Permita", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
-    PUSHBUTTON "Permita", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
-    PUSHBUTTON "Permita", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
-    PUSHBUTTON "Test DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Test Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
+    PUSHBUTTON "Habilitar", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "Habilitar", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "Habilitar", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "Probar DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
+    PUSHBUTTON "Probar Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
     GROUPBOX "Notas ", -1, 10, 180, 450, 40
     EDITTEXT IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
@@ -117,7 +117,7 @@ BEGIN
     RTEXT "Nombre:", -1, 275, 25, 55, 10
     RTEXT "Versión:", -1, 275, 35, 55, 10
     RTEXT "Fecha:", -1, 275, 45, 55, 10
-    RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
+    RTEXT "Logo WHQL:", -1, 275, 55, 55, 10
     RTEXT "Otros archivos:", -1, 275, 65, 55, 10
     RTEXT "Proveedor:", -1, 275, 75, 55, 10
     LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
@@ -129,7 +129,7 @@ BEGIN
     GROUPBOX "Características ReactX ", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
     RTEXT "Sonido Hardware\nNivel de aceleración:", -1, 20, 135, 90, 20
-    PUSHBUTTON "Test DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
+    PUSHBUTTON "Probar DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Notas", -1, 10, 180, 450, 40
     EDITTEXT IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
@@ -157,7 +157,7 @@ IDD_NETWORK_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Proveedores servicios DirectPlay registrados", -1, 10, 10, 452, 80
+    GROUPBOX "Proveedores de servicios DirectPlay registrados", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
 END
 
@@ -190,7 +190,7 @@ BEGIN
     IDS_DEVICE_CONTROLLER "ID del controlador"
     IDS_DEVICE_MANUFACTURER "ID del fabricante"
     IDS_DEVICE_PRODUCT "ID del producto"
-    IDS_DEVICE_FORCEFEEDBACK "Forzar recuperación del controlador"
+    IDS_DEVICE_FORCEFEEDBACK "Controlador de vibración"
     IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Sí"
     IDS_DIRECTPLAY_COL_NAME1 "Nombre"
@@ -207,17 +207,17 @@ BEGIN
     IDS_DIRECTPLAY_SERIALCONN "Conexión serie para DirectPlay"
     IDS_REG_SUCCESS "Aceptar"
     IDS_REG_FAIL "Error"
-    IDS_DDTEST_ERROR "¡El test ha fallado!"
-    IDS_DDTEST_DESCRIPTION "Va ha comenzar el test de interface DirecDraw. ¿Desea continuar?"
-    IDS_DDPRIMARY_DESCRIPTION "Este test usará DirectDraw para dibujar en la pantalla principal. Deben dibujarse rectángulos blancos y negros. ¿Desea continuar?"
+    IDS_DDTEST_ERROR "¡La prueba ha fallado!"
+    IDS_DDTEST_DESCRIPTION "Va ha comenzar la prueba del interfaz DirecDraw. ¿Desea continuar?"
+    IDS_DDPRIMARY_DESCRIPTION "Esta prueba usará DirectDraw para dibujar en la pantalla principal. Deben aparecer rectángulos blancos y negros. ¿Desea continuar?"
     IDS_DDPRIMARY_RESULT "¿Ve rectángulos blancos y negros?"
-    IDS_DDOFFSCREEN_DESCRIPTION "Este test usará DirectDraw para dibujar en pantalla. Un rectángulo blanco moviendose debe dibujarse. ¿Desea continuar?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Esta prueba usará DirectDraw para dibujar en pantalla. Debe aparecer un rectángulo blanco en movimiento. ¿Desea continuar?"
     IDS_DDOFFSCREEN_RESULT "¿Ve un rectángulo blanco moviendose?"
-    IDS_DDFULLSCREEN_DESCRIPTION "Este test usará DirectDraw para dibujar en pantalla completa. Un rectángulo blanco moviendose debe dibujarse. ¿Desea continuar?"
-    IDS_DDFULLSCREEN_RESULT "¿Ve un rectángulo blanco moviendose en pantalla completa?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Esta prueba usará DirectDraw para dibujar en pantalla completa. Debe aparecer un rectángulo blanco en movimiento. ¿Desea continuar?"
+    IDS_DDFULLSCREEN_RESULT "¿Ve un rectángulo blanco moviéndose en pantalla completa?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
     IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
     IDS_OPTION_NO "No"
-    IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
-    IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
+    IDS_D3DTEST_DESCRIPTION "Va a comenzar la prueba del interfaz Direct3D. ¿Desea continuar?"
+    IDS_D3DTEST_D3Dx "Esta prueba utilizará un interfaz Direct3D %u acelerado por hardware."
 END

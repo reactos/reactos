@@ -1,8 +1,11 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 273, 178
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configuración del Salvapantallas Texto en 3D"
+CAPTION "Configuración del Salvapantallas de texto en 3D"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Aceptar", IDOK, 216, 7, 50, 14
@@ -13,5 +16,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "Salvapantallas Texto en 3D"
+    IDS_DESCRIPTION "Salvapantallas de texto en 3D"
 END

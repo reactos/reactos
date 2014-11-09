@@ -1,21 +1,24 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_CHARMAP DIALOGEX 6, 6, 292, 224
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
-    LTEXT "Fuente :", IDC_STATIC, 6, 7, 24, 9
+    LTEXT "Fuente:", IDC_STATIC, 6, 7, 24, 9
     COMBOBOX IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE |
              WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
     PUSHBUTTON "Ayuda", IDC_CMHELP, 249, 5, 35, 13
     CONTROL "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
             WS_VSCROLL, 20, 22, 266, 156
-    LTEXT "Caracteres a copiar :", IDC_STATIC, 6, 188, 66, 9
+    LTEXT "Caracteres a copiar:", IDC_STATIC, 6, 188, 66, 9
     CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
     DEFPUSHBUTTON "Seleccionar", IDC_SELECT, 194, 186, 44, 13
     PUSHBUTTON "Copiar", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
-    CONTROL "Advanced view", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Vista avanzada", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 8, 208, 95, 10
 END
 
@@ -23,23 +26,23 @@ IDD_ADVANCED DIALOGEX 0, 0, 292, 64
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Charset:", IDC_STATIC, 8, 8, 48, 8
-    COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Group by:", IDC_STATIC, 8, 28, 50, 8
-    COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Search", IDC_BUTTON_SEARCH, 200, 44, 50, 14
-    EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
-    LTEXT "Search for:", IDC_STATIC, 8, 48, 42, 8
+    LTEXT "Juego de caracteres:", IDC_STATIC, 2, 7, 68, 8, SS_RIGHT
+    COMBOBOX IDC_COMBO_CHARSET, 74, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Agrupar:", IDC_STATIC, 2, 26, 68, 8, SS_RIGHT
+    COMBOBOX IDC_COMBO_GROUPBY, 74, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Buscar", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+    EDITTEXT IDC_EDIT_SEARCH, 74, 44, 116, 14, ES_AUTOHSCROLL
+    LTEXT "Buscar por:", IDC_STATIC, 2, 47, 68, 8, SS_RIGHT
     LTEXT "Unicode:", IDC_STATIC, 200, 8, 30, 8
     EDITTEXT IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
-CAPTION "Acerca de  Character Map"
+CAPTION "Acerca del Mapa de caracteres"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Character Map v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+    LTEXT "Mapa de caracteres v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
     PUSHBUTTON "Cerrar", IDOK, 75, 162, 44, 15
     ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL |
@@ -48,7 +51,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los términos de la GNU General Public License tal y como se publica por la Free Software Foundation; ya sea la versión 2 de la Licencia, o (bajo tu discreción) cualquier versión posterior.\r\n\r\nEste programa se distribuye con el fin de ser útil, pero viene SIN NINGUNA GARANTÍA; sin tan siquiera la garantía implícita de COMERCIALIZACIÓN o la de IDONEIDAD PARA UN PROPÓSITO CONCRETO. Para más información lee la GNU General Public License.\r\n\r\nDeberías de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
     IDS_ABOUT "&Acerca de ..."
-    IDS_TITLE "Character Map"
+    IDS_TITLE "Mapa de caracteres"
 END

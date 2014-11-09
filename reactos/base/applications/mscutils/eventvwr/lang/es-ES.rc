@@ -1,14 +1,14 @@
-/* Spanish translation by Marc Piulachs */
+/* Spanish translation by Marc Piulachs, proofread by Ismael Ferreras Morezuelas */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDC_EVENTVWR MENU
 BEGIN
-    POPUP "&Log"
+    POPUP "&Registro"
     BEGIN
-        MENUITEM "Save &Protocol...", ID_SAVE_PROTOCOL, GRAYED
+        MENUITEM "Guardar &protocolo...", ID_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "C&lear all Events", ID_CLEAR_EVENTS, GRAYED
+        MENUITEM "&Borrar todos los eventos", ID_CLEAR_EVENTS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "S&alir", IDM_EXIT
     END
@@ -17,9 +17,9 @@ BEGIN
         MENUITEM "&Actualizar", IDM_REFRESH
     END
     MENUITEM "&Opciones", ID_OPTIONS
-    POPUP "A&yuda"
+    POPUP "Ay&uda"
     BEGIN
-        MENUITEM "A&yuda", IDM_HELP
+        MENUITEM "Ay&uda", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Acerca de...", IDM_ABOUT
     END
@@ -37,23 +37,23 @@ CAPTION "Acerca de"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
-    LTEXT "ReactOS Visor de sucesos Versión 1.0", IDC_STATIC, 49, 10, 124, 8, SS_NOPREFIX
+    LTEXT "Visor de eventos de ReactOS. Versión 1.0", IDC_STATIC, 49, 10, 124, 8, SS_NOPREFIX
     LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 119, 22
     DEFPUSHBUTTON "Aceptar", IDOK, 90, 48, 42, 16, WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
-CAPTION "Espere.."
+CAPTION "Espere..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    CTEXT "Recuperando eventos. Por favor, espere ...", IDC_STATIC, 0, 15, 230, 8, SS_NOPREFIX
+    CTEXT "Recuperando eventos. Espere un momento...", IDC_STATIC, 0, 15, 230, 8, SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Detalles del Evento"
+CAPTION "Detalles del evento"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "&Cerrar", IDOK, 12, 258, 50, 14
@@ -70,7 +70,7 @@ BEGIN
     EDITTEXT IDC_EVENTUSERSTATIC, 56, 41, 72, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Equipo:", IDC_STATIC, 14, 54, 36, 8
     EDITTEXT IDC_EVENTCOMPUTERSTATIC, 56, 54, 72, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "ID de suceso:", IDC_STATIC, 133, 15, 36, 8
+    LTEXT "ID de evento:", IDC_STATIC, 133, 15, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 175, 15, 87, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Origen:", IDC_STATIC, 133, 28, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 175, 28, 87, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -86,19 +86,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Visor de sucesos"
-    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s)"
-    IDS_EVENTSTRINGIDNOTFOUND "La descripción para el evento con ID ( %lu ) y origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la información necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
+    IDS_APP_TITLE "Visor de eventos"
+    IDS_APP_TITLE_EX "%s - Registro de %s en \\\\"
+    IDS_STATUS_MSG "%s tiene %lu evento(s)"
+    IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID (%lu) y origen (%s). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto."
     IDS_EVENTLOG_ERROR_TYPE "Error"
     IDS_EVENTLOG_WARNING_TYPE "Advertencia"
     IDS_EVENTLOG_INFORMATION_TYPE "Información"
-    IDS_EVENTLOG_AUDIT_SUCCESS "Auditoria Satisfactoria"
-    IDS_EVENTLOG_AUDIT_FAILURE "Auditoria Fallida"
-    IDS_EVENTLOG_SUCCESS "Acierto"
-    IDS_EVENTLOG_UNKNOWN_TYPE "Evento Desconocido"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
-    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+    IDS_EVENTLOG_AUDIT_SUCCESS "Auditoría completada"
+    IDS_EVENTLOG_AUDIT_FAILURE "Auditoría fallida"
+    IDS_EVENTLOG_SUCCESS "Completado"
+    IDS_EVENTLOG_UNKNOWN_TYPE "Evento desconocido"
+    IDS_CLEAREVENTS_MSG "¿Desea guardar este registro de eventos antes de borrarlo?"
+    IDS_SAVE_FILTER "Registro de eventos (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE
@@ -110,12 +110,12 @@ BEGIN
     IDS_COLUMNCATEGORY "Categoría"
     IDS_COLUMNEVENT "Evento"
     IDS_COLUMNUSER "Usuario"
-    IDS_COLUMNCOMPUTER "Computadora"
+    IDS_COLUMNCOMPUTER "Equipo"
     IDS_COLUMNEVENTDATA "Datos del evento"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "Ninguna"
-    IDS_NOT_AVAILABLE "N/A"
+    IDS_NONE "Ninguno"
+    IDS_NOT_AVAILABLE "N/D"
 END

@@ -29,7 +29,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Configurar &página...", CMD_PAGE_SETUP
         MENUITEM "&Imprimir\tCtrl+P", CMD_PRINT
-        MENUITEM "Configuración &impresora...", CMD_PRINTER_SETUP
+        MENUITEM "A&justes de impresión...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Salir", CMD_EXIT
     END
@@ -132,7 +132,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los términos de la GNU General Public License tal y como fueron publicados por la Free Software Foundation; ya sea la versión 2 de la Licencia, o (bajo tu discreción) cualquier versión posterior.\r\n\r\nEste programa se distribuye con el fin de ser útil, pero viene SIN NINGUNA GARANTÍA; sin tan siquiera la garantía implícita de COMERCIALIZACIÓN o la de IDONEIDAD PARA UN PROPÓSITO CONCRETO. Para más información lee la GNU General Public License.\r\n\r\nDeberías de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
 END
 
 STRINGTABLE
