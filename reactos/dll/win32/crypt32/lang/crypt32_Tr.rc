@@ -220,7 +220,7 @@ STRINGTABLE
     IDS_NON_REPUDIATION "Geri Çevrilmiş Olmayan"
     IDS_KEY_ENCIPHERMENT "Anahtar Şifreleme"
     IDS_DATA_ENCIPHERMENT "Veri Şifreleme"
-    IDS_KEY_AGREEMENT "Anahtar Onaylanması"
+    IDS_KEY_AGREEMENT "Anahtar Kabûlü"
     IDS_CERT_SIGN "Onay Belgesi İmzâlama"
     IDS_OFFLINE_CRL_SIGN "Çevrim Dışı CRL İmzâlama"
     IDS_CRL_SIGN "CRL İmzâlama"
