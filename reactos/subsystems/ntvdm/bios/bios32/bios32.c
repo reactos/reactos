@@ -298,7 +298,7 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
      * just call the DOS 32-bit initialization code.
      */
 
-    DPRINT1("BiosBootstrapLoader -->\n");
+    DPRINT("BiosBootstrapLoader -->\n");
 
     /* Load DOS */
     DosBootsectorInitialize();
@@ -315,7 +315,7 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
     Stack[STACK_CS] = 0x0000;
     Stack[STACK_IP] = 0x7C00;
 
-    DPRINT1("<-- BiosBootstrapLoader\n");
+    DPRINT("<-- BiosBootstrapLoader\n");
 }
 
 static VOID WINAPI BiosTimeService(LPWORD Stack)

@@ -916,7 +916,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     PWORD RelocWord;
     LPSTR CmdLinePtr = (LPSTR)CommandLine;
 
-    DPRINT1("DosLoadExecutable(%d, %s, %s, %s, 0x%08X, 0x%08X)\n",
+    DPRINT("DosLoadExecutable(%d, %s, %s, %s, 0x%08X, 0x%08X)\n",
             LoadType,
             ExecutablePath,
             CommandLine,

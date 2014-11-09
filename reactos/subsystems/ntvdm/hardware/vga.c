@@ -1452,7 +1452,7 @@ static VOID VgaUpdateTextCursor(VOID)
     Position.X = (SHORT)(Location % ScanlineSize);
     Position.Y = (SHORT)(Location / ScanlineSize);
 
-    DPRINT1("VgaUpdateTextCursor: X = %d ; Y = %d\n", Position.X, Position.Y);
+    DPRINT("VgaUpdateTextCursor: X = %d ; Y = %d\n", Position.X, Position.Y);
 
     /* Update the physical cursor */
     SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);

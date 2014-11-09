@@ -246,7 +246,7 @@ Command:
         }
 
         /* Start the process from the command line */
-        DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
+        DPRINT("Starting '%s' ('%s')...\n", AppName, CmdLine);
         Result = DosStartProcess(AppName, CmdLine, Env);
         if (Result != ERROR_SUCCESS)
         {
@@ -294,7 +294,7 @@ VOID DosBootsectorInitialize(VOID)
     ULONG_PTR Address = (ULONG_PTR)SEG_OFF_TO_PTR(0x0000, 0x7C00);
     CHAR DosKernelFileName[] = ""; // No DOS file name, therefore we'll load DOS32
 
-    DPRINT1("DosBootsectorInitialize\n");
+    DPRINT("DosBootsectorInitialize\n");
 
     /* Write the "bootsector" */
     RtlCopyMemory((PVOID)Address, Bootsector1, sizeof(Bootsector1));
@@ -330,7 +330,7 @@ static VOID WINAPI DosInitialize(LPWORD Stack)
     LPCSTR DosKernelFileName = (LPCSTR)SEG_OFF_TO_PTR(getCS(), getIP());
     setIP(getIP() + strlen(DosKernelFileName) + 1); // Skip it
 
-    DPRINT1("DosInitialize('%s')\n", DosKernelFileName);
+    DPRINT("DosInitialize('%s')\n", DosKernelFileName);
 
     /* Register the DOS BOPs */
     RegisterBop(BOP_DOS, DosSystemBop        );
@@ -414,7 +414,7 @@ static VOID WINAPI DosStart(LPWORD Stack)
     CHAR CommandLine[DOS_CMDLINE_LENGTH];
 #endif
 
-    DPRINT1("DosStart\n");
+    DPRINT("DosStart\n");
 
     /*
      * We succeeded, deregister the DOS Starting BOP
