@@ -572,7 +572,7 @@ BOOL OnCreate(HWND hWnd)
     RECT    rc;
     WCHAR   szTemp[256];
     WCHAR   szLogOffItem[MAX_PATH];
-    LPTSTR  lpUserName;
+    LPWSTR  lpUserName;
     TCITEM  item;
     DWORD   len = 0;
 
