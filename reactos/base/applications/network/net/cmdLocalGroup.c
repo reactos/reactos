@@ -38,7 +38,9 @@ EnumerateLocalGroups(VOID)
     if (Status != NERR_Success)
         return Status;
 
-    PrintToConsole(L"\nAliases for \\\\%s\n\n", pServer->sv100_name);
+    PrintToConsole(L"\n");
+    PrintResourceString(IDS_LOCALGROUP_ALIASES, pServer->sv100_name);
+    PrintToConsole(L"\n\n");
     PrintToConsole(L"------------------------------------------\n");
 
     NetApiBufferFree(pServer);
@@ -83,6 +85,7 @@ DisplayLocalGroup(LPWSTR lpGroupName)
     DWORD_PTR ResumeHandle = 0;
     DWORD i;
     DWORD len;
+    INT nPaddedLength = 18;
     NET_API_STATUS Status;
 
     Status = NetLocalGroupGetInfo(NULL,
@@ -127,11 +130,17 @@ DisplayLocalGroup(LPWSTR lpGroupName)
              pNames[i] = pMembers[i].lgrmi3_domainandname;
     }
 
-    PrintToConsole(L"Alias name        %s\n", pGroupInfo->lgrpi1_name);
-    PrintToConsole(L"Comment           %s\n", pGroupInfo->lgrpi1_comment);
+    PrintPaddedResourceString(IDS_LOCALGROUP_ALIAS_NAME, nPaddedLength);
+    PrintToConsole(L"%s\n", pGroupInfo->lgrpi1_name);
+
+    PrintPaddedResourceString(IDS_LOCALGROUP_COMMENT, nPaddedLength);
+    PrintToConsole(L"%s\n", pGroupInfo->lgrpi1_comment);
+
     PrintToConsole(L"\n");
-    PrintToConsole(L"Members\n");
-    PrintToConsole(L"\n");
+
+    PrintResourceString(IDS_LOCALGROUP_MEMBERS);
+    PrintToConsole(L"\n\n");
+
     PrintToConsole(L"------------------------------------------\n");
 
     for (i = 0; i < dwRead; i++)

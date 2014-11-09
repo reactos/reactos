@@ -37,11 +37,12 @@ EnumerateUsers(VOID)
     if (Status != NERR_Success)
         return Status;
 
-    PrintToConsole(L"\nUser accounts for \\\\%s\n\n", pServer->sv100_name);
+    PrintToConsole(L"\n");
+    PrintResourceString(IDS_USER_ACCOUNTS, pServer->sv100_name);
+    PrintToConsole(L"\n\n");
+    PrintToConsole(L"------------------------------------------\n");
 
     NetApiBufferFree(pServer);
-
-    PrintToConsole(L"------------------------------------------\n");
 
     Status = NetUserEnum(NULL,
                          0,
@@ -103,7 +104,7 @@ PrintDateTime(DWORD dwSeconds)
                    TimeBuffer,
                    80);
 
-    PrintToConsole(L"%s %s\n", DateBuffer, TimeBuffer);
+    PrintToConsole(L"%s %s", DateBuffer, TimeBuffer);
 }
 
 
@@ -136,6 +137,7 @@ DisplayUser(LPWSTR lpUserName)
     DWORD dwGroupRead, dwGroupTotal;
     DWORD dwLastSet;
     DWORD i;
+    INT nPaddedLength = 29;
     NET_API_STATUS Status;
 
     /* Modify the user */
@@ -173,81 +175,89 @@ DisplayUser(LPWSTR lpUserName)
     if (Status != NERR_Success)
         goto done;
 
-    PrintPaddedResourceString(IDS_USER_NAME);
+    PrintPaddedResourceString(IDS_USER_NAME, nPaddedLength);
     PrintToConsole(L"%s\n", pUserInfo->usri4_name);
 
-    PrintPaddedResourceString(IDS_USER_FULL_NAME);
+    PrintPaddedResourceString(IDS_USER_FULL_NAME, nPaddedLength);
     PrintToConsole(L"%s\n", pUserInfo->usri4_full_name);
 
-    PrintPaddedResourceString(IDS_USER_COMMENT);
+    PrintPaddedResourceString(IDS_USER_COMMENT, nPaddedLength);
     PrintToConsole(L"%s\n", pUserInfo->usri4_comment);
 
-    PrintPaddedResourceString(IDS_USER_USER_COMMENT);
+    PrintPaddedResourceString(IDS_USER_USER_COMMENT, nPaddedLength);
     PrintToConsole(L"%s\n", pUserInfo->usri4_usr_comment);
 
-    PrintPaddedResourceString(IDS_USER_COUNTRY_CODE);
+    PrintPaddedResourceString(IDS_USER_COUNTRY_CODE, nPaddedLength);
     PrintToConsole(L"%03ld ()\n", pUserInfo->usri4_country_code);
 
-    PrintPaddedResourceString(IDS_USER_ACCOUNT_ACTIVE);
-    PrintToConsole(L"%s\n", (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)? L"No" : ((pUserInfo->usri4_flags & UF_LOCKOUT) ? L"Locked" : L"Yes"));
-
-    PrintPaddedResourceString(IDS_USER_ACCOUNT_EXPIRES);
-    if (pUserInfo->usri4_acct_expires == TIMEQ_FOREVER)
-        PrintToConsole(L"Never\n");
+    PrintPaddedResourceString(IDS_USER_ACCOUNT_ACTIVE, nPaddedLength);
+    if (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)
+        PrintResourceString(IDS_GENERIC_NO);
+    else if (pUserInfo->usri4_flags & UF_LOCKOUT)
+        PrintResourceString(IDS_GENERIC_LOCKED);
     else
-        PrintDateTime(pUserInfo->usri4_acct_expires);
-
+        PrintResourceString(IDS_GENERIC_YES);
     PrintToConsole(L"\n");
 
-    PrintPaddedResourceString(IDS_USER_PW_LAST_SET);
+    PrintPaddedResourceString(IDS_USER_ACCOUNT_EXPIRES, nPaddedLength);
+    if (pUserInfo->usri4_acct_expires == TIMEQ_FOREVER)
+        PrintResourceString(IDS_GENERIC_NEVER);
+    else
+        PrintDateTime(pUserInfo->usri4_acct_expires);
+    PrintToConsole(L"\n\n");
+
+    PrintPaddedResourceString(IDS_USER_PW_LAST_SET, nPaddedLength);
     dwLastSet = GetTimeInSeconds() - pUserInfo->usri4_password_age;
     PrintDateTime(dwLastSet);
 
-    PrintPaddedResourceString(IDS_USER_PW_EXPIRES);
+    PrintPaddedResourceString(IDS_USER_PW_EXPIRES, nPaddedLength);
     if ((pUserInfo->usri4_flags & UF_DONT_EXPIRE_PASSWD) || pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
-        PrintToConsole(L"Never\n");
+        PrintResourceString(IDS_GENERIC_NEVER);
     else
         PrintDateTime(dwLastSet + pUserModals->usrmod0_max_passwd_age);
+    PrintToConsole(L"\n");
 
-    PrintPaddedResourceString(IDS_USER_PW_CHANGEABLE);
+    PrintPaddedResourceString(IDS_USER_PW_CHANGEABLE, nPaddedLength);
     PrintDateTime(dwLastSet + pUserModals->usrmod0_min_passwd_age);
 
-    PrintPaddedResourceString(IDS_USER_PW_REQUIRED);
-    PrintToConsole(L"%s\n", (pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? L"No" : L"Yes");
-
-    PrintPaddedResourceString(IDS_USER_CHANGE_PW);
-    PrintToConsole(L"%s\n", (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? L"No" : L"Yes");
-
+    PrintPaddedResourceString(IDS_USER_PW_REQUIRED, nPaddedLength);
+    PrintResourceString((pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? IDS_GENERIC_NO : IDS_GENERIC_YES);
     PrintToConsole(L"\n");
 
-    PrintPaddedResourceString(IDS_USER_WORKSTATIONS);
-    PrintToConsole(L"%s\n", (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0) ? L"All" : pUserInfo->usri4_workstations);
+    PrintPaddedResourceString(IDS_USER_CHANGE_PW, nPaddedLength);
+    PrintResourceString((pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? IDS_GENERIC_NO : IDS_GENERIC_YES);
+    PrintToConsole(L"\n\n");
 
-    PrintPaddedResourceString(IDS_USER_LOGON_SCRIPT);
+    PrintPaddedResourceString(IDS_USER_WORKSTATIONS, nPaddedLength);
+    if (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0)
+        PrintResourceString(IDS_GENERIC_ALL);
+    else
+        PrintToConsole(L"%s", pUserInfo->usri4_workstations);
+    PrintToConsole(L"\n");
+
+    PrintPaddedResourceString(IDS_USER_LOGON_SCRIPT, nPaddedLength);
     PrintToConsole(L"%s\n", pUserInfo->usri4_script_path);
 
-    PrintPaddedResourceString(IDS_USER_PROFILE);
+    PrintPaddedResourceString(IDS_USER_PROFILE, nPaddedLength);
     PrintToConsole(L"%s\n", pUserInfo->usri4_profile);
 
-    PrintPaddedResourceString(IDS_USER_HOME_DIR);
+    PrintPaddedResourceString(IDS_USER_HOME_DIR, nPaddedLength);
     PrintToConsole(L"%s\n", pUserInfo->usri4_home_dir);
 
-    PrintPaddedResourceString(IDS_USER_LAST_LOGON);
+    PrintPaddedResourceString(IDS_USER_LAST_LOGON, nPaddedLength);
     if (pUserInfo->usri4_last_logon == 0)
-        PrintToConsole(L"Never\n");
+        PrintResourceString(IDS_GENERIC_NEVER);
     else
         PrintDateTime(pUserInfo->usri4_last_logon);
+    PrintToConsole(L"\n\n");
 
-    PrintToConsole(L"\n");
-
-    PrintPaddedResourceString(IDS_USER_LOGON_HOURS);
+    PrintPaddedResourceString(IDS_USER_LOGON_HOURS, nPaddedLength);
     if (pUserInfo->usri4_logon_hours == NULL)
-        PrintToConsole(L"All\n");
+        PrintResourceString(IDS_GENERIC_ALL);
+    PrintToConsole(L"\n\n");
 
     PrintToConsole(L"\n");
-
-    PrintToConsole(L"\n");
-    PrintPaddedResourceString(IDS_USER_LOCAL_GROUPS);
+    PrintPaddedResourceString(IDS_USER_LOCAL_GROUPS, nPaddedLength);
     if (dwLocalGroupTotal != 0 && pLocalGroupInfo != NULL)
     {
         for (i = 0; i < dwLocalGroupTotal; i++)
@@ -262,7 +272,7 @@ DisplayUser(LPWSTR lpUserName)
         PrintToConsole(L"\n");
     }
 
-    PrintPaddedResourceString(IDS_USER_GLOBAL_GROUPS);
+    PrintPaddedResourceString(IDS_USER_GLOBAL_GROUPS, nPaddedLength);
     if (dwGroupTotal != 0 && pGroupInfo != NULL)
     {
         for (i = 0; i < dwGroupTotal; i++)
@@ -310,11 +320,11 @@ ReadPassword(
     {
         PrintResourceString(IDS_USER_ENTER_PASSWORD1);
         ReadFromConsole(szPassword1, PWLEN + 1, FALSE);
-        printf("\n");
+        PrintToConsole(L"\n");
 
         PrintResourceString(IDS_USER_ENTER_PASSWORD2);
         ReadFromConsole(szPassword2, PWLEN + 1, FALSE);
-        printf("\n");
+        PrintToConsole(L"\n");
 
         if (wcslen(szPassword1) == wcslen(szPassword2) &&
             wcscmp(szPassword1, szPassword2) == 0)
@@ -332,7 +342,9 @@ ReadPassword(
         }
         else
         {
+            PrintToConsole(L"\n");
             PrintResourceString(IDS_USER_NO_PASSWORD_MATCH);
+            PrintToConsole(L"\n");
             *lpPassword = NULL;
         }
     }

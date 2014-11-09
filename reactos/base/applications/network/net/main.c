@@ -66,10 +66,11 @@ PrintResourceString(
 
 VOID
 PrintPaddedResourceString(
-    INT resID)
+    INT resID,
+    INT nPaddedLength)
 {
     WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
-    INT nLength, nPaddedLength = 29, i;
+    INT nLength, i;
 
     nLength = LoadStringW(GetModuleHandle(NULL), resID, szMsgBuffer, MAX_BUFFER_SIZE);
     if (nLength < nPaddedLength)

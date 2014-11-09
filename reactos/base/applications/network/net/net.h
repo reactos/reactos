@@ -32,7 +32,8 @@ PrintResourceString(
 
 VOID
 PrintPaddedResourceString(
-    INT resID);
+    INT resID,
+    INT nPaddedLength);
 
 VOID
 PrintToConsole(

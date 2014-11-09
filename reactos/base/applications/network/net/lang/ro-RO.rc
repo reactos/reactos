@@ -71,6 +71,27 @@ BEGIN
       HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
       SHARE | START | STATISTICS | STOP | TIME | USE | NET USER | VIEW ]\n"
 
+    IDS_ACCOUNTS_FORCE_LOGOFF "Force logoff after"
+    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu seconds"
+    IDS_ACCOUNTS_MIN_PW_AGE "Minimum password age (in days)"
+    IDS_ACCOUNTS_MAX_PW_AGE "Maximum password age (in days)"
+    IDS_ACCOUNTS_MIN_PW_LENGTH "Minimum password length"
+    IDS_ACCOUNTS_PW_HIST_LENGTH "Password history length"
+    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "Lockout threshold"
+    IDS_ACCOUNTS_LOCKOUT_DURATION "Lockout duration (in minutes)"
+    IDS_ACCOUNTS_LOCKOUT_WINDOW "Lockout observation window (in minutes)"
+    IDS_ACCOUNTS_COMPUTER_ROLE "Computer role"
+    IDS_ACCOUNTS_PRIMARY_SERVER "Primary server"
+    IDS_ACCOUNTS_BACKUP_SERVER "Backup server"
+    IDS_ACCOUNTS_STANDALONE_SERVER "Standalone server"
+    IDS_ACCOUNTS_WORKSTATION "Workstation"
+
+    IDS_LOCALGROUP_ALIASES "Aliases for \\\\%s"
+    IDS_LOCALGROUP_ALIAS_NAME "Alias name"
+    IDS_LOCALGROUP_COMMENT "Comment"
+    IDS_LOCALGROUP_MEMBERS "Members"
+
+    IDS_USER_ACCOUNTS "User accounts for \\\\%s"
    IDS_USER_NAME "User name"
    IDS_USER_FULL_NAME "Full name"
    IDS_USER_COMMENT "Comment"
@@ -94,7 +115,14 @@ BEGIN
 
    IDS_USER_ENTER_PASSWORD1 "Enter a new password for the user: "
    IDS_USER_ENTER_PASSWORD2 "Enter the password again: "
-   IDS_USER_NO_PASSWORD_MATCH "\nThe passwords do not match!\n"
+   IDS_USER_NO_PASSWORD_MATCH "The passwords do not match!"
+
+    IDS_GENERIC_YES "Yes"
+    IDS_GENERIC_NO "No"
+    IDS_GENERIC_NEVER "Never"
+    IDS_GENERIC_NONE "None"
+    IDS_GENERIC_ALL "All"
+    IDS_GENERIC_LOCKED "Locked"
 
    IDS_ERROR_OPTION_NOT_SUPPORTED "The %s option is not supported yet.\n"
    IDS_ERROR_INVALID_OPTION_VALUE "You entered an invalid value for the %s option.\n"
