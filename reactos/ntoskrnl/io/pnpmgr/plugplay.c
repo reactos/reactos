@@ -199,8 +199,7 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (Name.Buffer)
-            ExFreePool(Name.Buffer);
+        if (Name.Buffer) ExFreePool(Name.Buffer);
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
@@ -232,7 +231,6 @@ IopGetInterfaceDeviceList(PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA DeviceLis
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ExFreePool(DeviceInstance.Buffer);
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -533,7 +531,9 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 
     Status = IopCaptureUnicodeString(&DeviceInstance, &StatusData->DeviceInstance);
     if (!NT_SUCCESS(Status))
+    {
         return Status;
+    }
     DPRINT("Device name: '%wZ'\n", &DeviceInstance);
 
     _SEH2_TRY
@@ -547,7 +547,7 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (DeviceInstance.Buffer) ExFreePool(DeviceInstance.Buffer);
+        ExFreePool(DeviceInstance.Buffer);
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -556,7 +556,9 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
     if (DeviceObject == NULL)
+    {
         return STATUS_NO_SUCH_DEVICE;
+    }
 
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
@@ -618,7 +620,9 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
     if (DeviceObject == NULL)
+    {
         return STATUS_NO_SUCH_DEVICE;
+    }
 
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
@@ -648,15 +652,18 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
 
     Status = IopCaptureUnicodeString(&DeviceInstance, &ResetDeviceData->DeviceInstance);
     if (!NT_SUCCESS(Status))
+    {
         return Status;
-
+    }
     DPRINT("IopResetDevice(%wZ)\n", &DeviceInstance);
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
     if (DeviceObject == NULL)
+    {
         return STATUS_NO_SUCH_DEVICE;
+    }
 
     /* Get the device node */
     DeviceNode = IopGetDeviceNode(DeviceObject);
