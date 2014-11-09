@@ -462,6 +462,8 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
     PKEY_BASIC_INFORMATION ReferenceBi = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION bip = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
+    PUNICODE_STRING InstanceDevicePath = NULL;
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     BOOLEAN FoundRightPDO = FALSE;
@@ -470,6 +472,29 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
     NTSTATUS Status;
 
     PAGED_CODE();
+
+    if (PhysicalDeviceObject != NULL)
+    {
+        /* Parameters must pass three border of checks */
+        DeviceObjectExtension = (PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension;
+
+        /* 1st level: Presence of a Device Node */
+        if (DeviceObjectExtension->DeviceNode == NULL)
+        {
+            DPRINT("PhysicalDeviceObject 0x%p doesn't have a DeviceNode\n", PhysicalDeviceObject);
+            return STATUS_INVALID_DEVICE_REQUEST;
+        }
+
+        /* 2nd level: Presence of an non-zero length InstancePath */
+        if (DeviceObjectExtension->DeviceNode->InstancePath.Length == 0)
+        {
+            DPRINT("PhysicalDeviceObject 0x%p's DOE has zero-length InstancePath\n", PhysicalDeviceObject);
+            return STATUS_INVALID_DEVICE_REQUEST;
+        }
+
+        InstanceDevicePath = &DeviceObjectExtension->DeviceNode->InstancePath;
+    }
+
 
     Status = IopOpenInterfaceKey(InterfaceClassGuid, KEY_ENUMERATE_SUB_KEYS, &InterfaceKey);
     if (!NT_SUCCESS(Status))
@@ -542,10 +567,46 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             /* Check if we are on the right physical device object,
             * by reading the DeviceInstance string
             */
-            DPRINT1("PhysicalDeviceObject != NULL. Case not implemented.\n");
-            //FoundRightPDO = TRUE;
-            Status = STATUS_NOT_IMPLEMENTED;
-            goto cleanup;
+            RtlInitUnicodeString(&KeyName, L"DeviceInstance");
+            Status = ZwQueryValueKey(DeviceKey, &KeyName, KeyValuePartialInformation, NULL, 0, &NeededLength);
+            if (Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                ActualLength = NeededLength;
+                PartialInfo = ExAllocatePool(NonPagedPool, ActualLength);
+                if (!PartialInfo)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto cleanup;
+                }
+
+                Status = ZwQueryValueKey(DeviceKey, &KeyName, KeyValuePartialInformation, PartialInfo, ActualLength, &NeededLength);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ZwQueryValueKey #2 failed (%x)\n", Status);
+                    ExFreePool(PartialInfo);
+                    goto cleanup;
+                }
+                if (PartialInfo->DataLength == InstanceDevicePath->Length)
+                {
+                    if (RtlCompareMemory(PartialInfo->Data, InstanceDevicePath->Buffer, InstanceDevicePath->Length) == InstanceDevicePath->Length)
+                    {
+                        /* found right pdo */
+                        FoundRightPDO = TRUE;
+                    }
+                }
+                ExFreePool(PartialInfo);
+                PartialInfo = NULL;
+                if (!FoundRightPDO)
+                {
+                    /* not yet found */
+                    continue;
+                }
+            }
+            else
+            {
+                /* error */
+                break;
+            }
         }
 
         /* Enumerate subkeys (ie the different reference strings) */
