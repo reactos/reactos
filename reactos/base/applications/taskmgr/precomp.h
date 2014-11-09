@@ -5,6 +5,7 @@
 #error Task-Manager uses NDK functions, so it can only be compiled with Unicode support enabled!
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 

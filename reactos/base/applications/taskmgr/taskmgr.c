@@ -564,13 +564,17 @@ BOOL OnCreate(HWND hWnd)
     HMENU   hMenu;
     HMENU   hEditMenu;
     HMENU   hViewMenu;
+    HMENU   hShutMenu;
     HMENU   hUpdateSpeedMenu;
     HMENU   hCPUHistoryMenu;
     int     nActivePage;
     int     nParts[3];
     RECT    rc;
     WCHAR   szTemp[256];
+    WCHAR   szLogOffItem[MAX_PATH];
+    LPTSTR  lpUserName;
     TCITEM  item;
+    DWORD   len = 0;
 
     SendMessageW(hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_TASKMANAGER)));
 
@@ -653,8 +657,9 @@ BOOL OnCreate(HWND hWnd)
     hMenu = GetMenu(hWnd);
     hEditMenu = GetSubMenu(hMenu, 1);
     hViewMenu = GetSubMenu(hMenu, 2);
+    hShutMenu = GetSubMenu(hMenu, 4);
     hUpdateSpeedMenu = GetSubMenu(hViewMenu, 1);
-    hCPUHistoryMenu = GetSubMenu(hViewMenu, 7);
+    hCPUHistoryMenu  = GetSubMenu(hViewMenu, 7);
 
     /* Check or uncheck the always on top menu item */
     if (TaskManagerSettings.AlwaysOnTop) {
@@ -703,6 +708,35 @@ BOOL OnCreate(HWND hWnd)
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 1);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 2);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, nActivePage);
+
+    /* Set the username in the "Log Off %s" item of the Shutdown menu */
+
+    /* 1- Get the menu item text and store it temporarily */
+    GetMenuStringW(hShutMenu, ID_SHUTDOWN_LOGOFF, szTemp, 256, MF_BYCOMMAND);
+
+    /* 2- Retrieve the username length first, then allocate a buffer for it and call it again */
+    if (!GetUserNameW(NULL, &len) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        lpUserName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
+        if (lpUserName && GetUserNameW(lpUserName, &len))
+        {
+            _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, lpUserName);
+            szLogOffItem[sizeof(szLogOffItem)/sizeof(szLogOffItem[0]) - 1] = UNICODE_NULL;
+        }
+        else
+        {
+            _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, L"n/a");
+        }
+
+        if (lpUserName) HeapFree(GetProcessHeap(), 0, lpUserName);
+    }
+    else
+    {
+        _snwprintf(szLogOffItem, sizeof(szLogOffItem)/sizeof(szLogOffItem[0]), szTemp, L"n/a");
+    }
+
+    /* 3- Set the menu item text to its formatted counterpart */
+    ModifyMenuW(hShutMenu, ID_SHUTDOWN_LOGOFF, MF_BYCOMMAND | MF_STRING, ID_SHUTDOWN_LOGOFF, szLogOffItem);
 
     /* Setup update speed */
     SetUpdateSpeed(hWnd);
