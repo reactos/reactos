@@ -171,7 +171,7 @@ cmdAccounts(
 
         PrintPaddedResourceString(IDS_ACCOUNTS_FORCE_LOGOFF, nPaddedLength);
         if (Info0->usrmod0_force_logoff == TIMEQ_FOREVER)
-            PrintToConsole(L"Never");
+            PrintResourceString(IDS_GENERIC_NEVER);
         else
             PrintResourceString(IDS_ACCOUNTS_LOGOFF_SECONDS, Info0->usrmod0_force_logoff);
         PrintToConsole(L"\n");
