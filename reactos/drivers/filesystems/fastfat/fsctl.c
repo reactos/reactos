@@ -521,6 +521,14 @@ VfatMount(
     /* Initialize this resource early ... it's used in VfatCleanup */
     ExInitializeResourceLite(&DeviceExt->DirResource);
 
+    DeviceExt->IoVPB = DeviceObject->Vpb;
+    DeviceExt->SpareVPB = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), TAG_VFAT);
+    if (DeviceExt->SpareVPB == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto ByeBye;
+    }
+
     DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
     Fcb = vfatNewFCB(DeviceExt, &NameU);
     if (Fcb == NULL)
@@ -622,6 +630,8 @@ ByeBye:
         /* Cleanup */
         if (DeviceExt && DeviceExt->FATFileObject)
             ObDereferenceObject (DeviceExt->FATFileObject);
+        if (DeviceExt && DeviceExt->SpareVPB)
+            ExFreePoolWithTag(DeviceExt->SpareVPB, TAG_VFAT);
         if (Fcb)
             vfatDestroyFCB(Fcb);
         if (Ccb)

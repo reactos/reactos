@@ -299,6 +299,10 @@ typedef struct DEVICE_EXTENSION
 
     /* Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP */
     ULONG OpenHandleCount;
+
+    /* VPBs for dismount */
+    PVPB IoVPB;
+    PVPB SpareVPB;
 } DEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct
