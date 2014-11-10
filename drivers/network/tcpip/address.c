@@ -55,7 +55,8 @@ ReceiveDatagram(
     LIST_ENTRY* ListEntry;
     RECEIVE_DATAGRAM_REQUEST* Request;
     ip_addr_t RequestAddr;
-    BOOLEAN Result = FALSE;
+
+    DPRINT1("Receiving datagram for addr 0x%08x on port %u.\n", ip4_addr_get_u32(addr), port);
 
     /* Block any cancellation that could occur */
     IoAcquireCancelSpinLock(&OldIrql);
@@ -74,16 +75,26 @@ ReceiveDatagram(
                         ((Request->RemoteAddress.sin_port == port) || !port)))
         {
             PTA_IP_ADDRESS ReturnAddress;
+            PIRP Irp;
+
+            DPRINT1("Found a corresponding IRP.\n");
+
+            Irp = Request->Irp;
 
             /* We found a request for this one */
-            IoSetCancelRoutine(Request->Irp, NULL);
+            IoSetCancelRoutine(Irp, NULL);
             RemoveEntryList(&Request->ListEntry);
 
             KeReleaseSpinLockFromDpcLevel(&AddressFile->RequestLock);
             IoReleaseCancelSpinLock(OldIrql);
 
-            /* Return what we have to */
-            pbuf_copy_partial(p, Request->Buffer, Request->BufferLength, 0);
+            /* In case of UDP, lwip provides a pbuf directly pointing to the data.
+             * In other case, we must skip the IP header */
+            Irp->IoStatus.Information = pbuf_copy_partial(
+                p,
+                Request->Buffer,
+                Request->BufferLength,
+                AddressFile->Protocol == IPPROTO_UDP ? 0 : IP_HLEN);
             ReturnAddress = Request->ReturnInfo->RemoteAddress;
             ReturnAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
             ReturnAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
@@ -92,27 +103,22 @@ ReceiveDatagram(
             RtlZeroMemory(ReturnAddress->Address->Address->sin_zero,
                 sizeof(ReturnAddress->Address->Address->sin_zero));
 
-            Request->Irp->IoStatus.Status = STATUS_SUCCESS;
-
-            Result = TRUE;
-
-            IoCompleteRequest(Request->Irp, IO_NETWORK_INCREMENT);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
             ExFreePoolWithTag(Request, TAG_ADDRESS_FILE);
+            pbuf_free(p);
 
-            /* Restart from the beginning of the list */
-            IoAcquireCancelSpinLock(&OldIrql);
-            KeAcquireSpinLockAtDpcLevel(&AddressFile->RequestLock);
-            ListEntry = AddressFile->RequestListHead.Flink;
+            return TRUE;
         }
     }
 
     KeReleaseSpinLockFromDpcLevel(&AddressFile->RequestLock);
     IoReleaseCancelSpinLock(OldIrql);
-    if (Result || MustFree)
+    if (MustFree)
         pbuf_free(p);
 
-    return Result;
+    return FALSE;
 }
 
 static
@@ -581,4 +587,55 @@ Finish:
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     return Status;
+}
+
+NTSTATUS
+AddressSetIpDontFragment(
+    _In_ TDIEntityID ID,
+    _In_ PVOID InBuffer,
+    _In_ ULONG BufferSize)
+{
+    /* Silently ignore.
+     * lwip doesn't have such thing, and already tries to fragment data as less as possible */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+AddressSetTtl(
+    _In_ TDIEntityID ID,
+    _In_ PVOID InBuffer,
+    _In_ ULONG BufferSize)
+{
+    ADDRESS_FILE* AddressFile;
+    TCPIP_INSTANCE* Instance;
+    NTSTATUS Status;
+    ULONG Value;
+
+    if (BufferSize < sizeof(ULONG))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    /* Get the address file */
+    Status = GetInstance(ID, &Instance);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    AddressFile = CONTAINING_RECORD(Instance, ADDRESS_FILE, Instance);
+
+    /* Get the value */
+    Value = *((ULONG*)InBuffer);
+
+    switch (AddressFile->Protocol)
+    {
+        case IPPROTO_TCP:
+            DPRINT1("TCP not supported yet.\n");
+            break;
+        case IPPROTO_UDP:
+            AddressFile->lwip_udp_pcb->ttl = Value;
+            break;
+        default:
+            AddressFile->lwip_raw_pcb->ttl = Value;
+            break;
+    }
+
+    return STATUS_SUCCESS;
 }

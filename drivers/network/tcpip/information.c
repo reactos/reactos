@@ -30,9 +30,11 @@ struct
 
 } InfoHandlers[] =
 {
-    { GENERIC_ENTITY,   INFO_CLASS_GENERIC,     INFO_TYPE_PROVIDER,     ENTITY_LIST_ID,             QueryEntityList,            NULL },
-    { IF_ENTITY,        INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,     IP_MIB_STATS_ID,            QueryInterfaceEntry,        NULL },
-    { CL_NL_ENTITY,     INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,     IP_MIB_ADDRTABLE_ENTRY_ID,  QueryInterfaceAddrTable,    NULL },
+    { GENERIC_ENTITY,   INFO_CLASS_GENERIC,     INFO_TYPE_PROVIDER,         ENTITY_LIST_ID,             QueryEntityList,            NULL                     },
+    { IF_ENTITY,        INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,         IP_MIB_STATS_ID,            QueryInterfaceEntry,        NULL                     },
+    { CL_NL_ENTITY,     INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,         IP_MIB_ADDRTABLE_ENTRY_ID,  QueryInterfaceAddrTable,    NULL                     },
+    { ER_ENTITY,        INFO_CLASS_PROTOCOL,    INFO_TYPE_ADDRESS_OBJECT,   AO_OPTION_TTL,              NULL,                       AddressSetTtl },
+    { ER_ENTITY,        INFO_CLASS_PROTOCOL,    INFO_TYPE_ADDRESS_OBJECT,   AO_OPTION_IP_DONTFRAGMENT,  NULL,                       AddressSetIpDontFragment },
     { (ULONG)-1, (ULONG)-1, (ULONG)-1, (ULONG)-1, NULL }
 };
 

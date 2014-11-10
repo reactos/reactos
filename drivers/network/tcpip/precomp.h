@@ -18,6 +18,7 @@ typedef unsigned short u_short;
 
 #include <pseh/pseh2.h>
 
+#include <lwip/ip.h>
 #include <lwip/tcpip.h>
 #include <lwip/snmp.h>
 #include <lwip/raw.h>

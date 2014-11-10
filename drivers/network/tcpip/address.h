@@ -39,3 +39,15 @@ TcpIpReceiveDatagram(
 NTSTATUS
 TcpIpSendDatagram(
     _Inout_ PIRP Irp);
+
+NTSTATUS
+AddressSetIpDontFragment(
+    _In_ TDIEntityID ID,
+    _In_ PVOID InBuffer,
+    _In_ ULONG BufferSize);
+
+NTSTATUS
+AddressSetTtl(
+    _In_ TDIEntityID ID,
+    _In_ PVOID InBuffer,
+    _In_ ULONG BufferSize);
