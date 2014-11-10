@@ -10,8 +10,6 @@ static LIST_ENTRY ThreadListHead;
 static KSPIN_LOCK ThreadListLock;
 
 KEVENT TerminationEvent;
-NPAGED_LOOKASIDE_LIST MessageLookasideList;
-NPAGED_LOOKASIDE_LIST QueueEntryLookasideList;
 
 static LARGE_INTEGER StartTime;
 
@@ -340,7 +338,4 @@ sys_shutdown(void)
             ZwClose(Container->Handle);
         }
     }
-    
-    ExDeleteNPagedLookasideList(&MessageLookasideList);
-    ExDeleteNPagedLookasideList(&QueueEntryLookasideList);
 }
