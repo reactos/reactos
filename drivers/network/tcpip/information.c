@@ -16,17 +16,23 @@ typedef NTSTATUS (*QUERY_INFO_HANDLER)(
     _Out_opt_ PVOID OutBuffer,
     _Inout_ ULONG* BufferSize);
 
+typedef NTSTATUS (*SET_INFO_HANDLER)(
+    _In_ TDIEntityID ID,
+    _In_ PVOID InBuffer,
+    _In_ ULONG BufferSize);
+
 static
 struct
 {
     ULONG Entity, Class, Type, Id;
-    QUERY_INFO_HANDLER Handler;
+    QUERY_INFO_HANDLER QueryHandler;
+    SET_INFO_HANDLER SetHandler;
 
 } InfoHandlers[] =
 {
-    { GENERIC_ENTITY,   INFO_CLASS_GENERIC,     INFO_TYPE_PROVIDER,     ENTITY_LIST_ID,             QueryEntityList },
-    { IF_ENTITY,        INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,     IP_MIB_STATS_ID,            QueryInterfaceEntry},
-    { CL_NL_ENTITY,     INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,     IP_MIB_ADDRTABLE_ENTRY_ID,  QueryInterfaceAddrTable},
+    { GENERIC_ENTITY,   INFO_CLASS_GENERIC,     INFO_TYPE_PROVIDER,     ENTITY_LIST_ID,             QueryEntityList,            NULL },
+    { IF_ENTITY,        INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,     IP_MIB_STATS_ID,            QueryInterfaceEntry,        NULL },
+    { CL_NL_ENTITY,     INFO_CLASS_PROTOCOL,    INFO_TYPE_PROVIDER,     IP_MIB_ADDRTABLE_ENTRY_ID,  QueryInterfaceAddrTable,    NULL },
     { (ULONG)-1, (ULONG)-1, (ULONG)-1, (ULONG)-1, NULL }
 };
 
@@ -95,14 +101,14 @@ TcpIpQueryInformation(
     }
 
     /* Find the handler for this particular query */
-    for (i = 0; InfoHandlers[i].Handler != NULL; i++)
+    for (i = 0; InfoHandlers[i].Entity != (ULONG)-1; i++)
     {
         if ((InfoHandlers[i].Entity == Query->ID.toi_entity.tei_entity) &&
                 (InfoHandlers[i].Class == Query->ID.toi_class) &&
                 (InfoHandlers[i].Type == Query->ID.toi_type) &&
                 (InfoHandlers[i].Id == Query->ID.toi_id))
         {
-            Handler = InfoHandlers[i].Handler;
+            Handler = InfoHandlers[i].QueryHandler;
             break;
         }
     }
@@ -175,5 +181,46 @@ TcpIpQueryKernelInformation(
 
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+TcpIpSetInformation(
+    _Inout_ PIRP Irp
+)
+{
+    TCP_REQUEST_SET_INFORMATION_EX* Query;
+    SET_INFO_HANDLER Handler = NULL;
+    NTSTATUS Status;
+    ULONG i;
+
+    /* Get the input buffer */
+    Query = Irp->AssociatedIrp.SystemBuffer;
+
+    /* Find the handler for this particular query */
+    for (i = 0; InfoHandlers[i].Entity != (ULONG)-1; i++)
+    {
+        if ((InfoHandlers[i].Entity == Query->ID.toi_entity.tei_entity) &&
+                (InfoHandlers[i].Class == Query->ID.toi_class) &&
+                (InfoHandlers[i].Type == Query->ID.toi_type) &&
+                (InfoHandlers[i].Id == Query->ID.toi_id))
+        {
+            Handler = InfoHandlers[i].SetHandler;
+            break;
+        }
+    }
+
+    if (!Handler)
+    {
+        DPRINT1("TCPIP - Unknown query: entity 0x%x, class 0x%x, type 0x%x, Id 0x%x.\n",
+            Query->ID.toi_entity.tei_entity, Query->ID.toi_class, Query->ID.toi_type, Query->ID.toi_id);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    Status = Handler(Query->ID.toi_entity, &Query->Buffer, Query->BufferSize);
+
+    if (NT_SUCCESS(Status))
+        Irp->IoStatus.Information = Query->BufferSize;
+
     return Status;
 }

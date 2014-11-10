@@ -455,8 +455,7 @@ TcpIpDispatch(
         break;
 
       case IOCTL_TCP_SET_INFORMATION_EX:
-          DPRINT1("TCPIP: Should handle IOCTL_TCP_SET_INFORMATION_EX.\n");
-          Status = STATUS_NOT_IMPLEMENTED;
+          Status = TcpIpSetInformation(Irp);
       break;
 
       case IOCTL_SET_IP_ADDRESS:
