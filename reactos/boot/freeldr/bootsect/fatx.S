@@ -30,7 +30,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
-#include "../freeldr/include/arch/pc/x86common.h"
+#include <freeldr/include/arch/pc/x86common.h>
 
 #define ADDRESS_FOR_DIRENTRIES HEX(10000)
 

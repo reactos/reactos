@@ -39,7 +39,7 @@
 // boots dramatically.
 
 #include <asm.inc>
-#include "../freeldr/include/arch/pc/x86common.h"
+#include <freeldr/include/arch/pc/x86common.h>
 
 #define BP_REL(x) [bp+x-offset start]
 
