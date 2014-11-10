@@ -1175,6 +1175,27 @@ UserDrawIconEx(
         if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
         return FALSE;
     }
+
+    /* Fix width parameter, if needed */
+    if (!cxWidth)
+    {
+        if(diFlags & DI_DEFAULTSIZE)
+            cxWidth = is_icon(pIcon) ? 
+                UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
+        else
+            cxWidth = pIcon->cx;
+    }
+
+    /* Fix height parameter, if needed */
+    if (!cyHeight)
+    {
+        if(diFlags & DI_DEFAULTSIZE)
+            cyHeight = is_icon(pIcon) ? 
+                UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
+        else
+            cyHeight = pIcon->cy;
+    }
+
     /* Calculate destination rectangle */
     RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
     IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
@@ -1198,26 +1219,6 @@ UserDrawIconEx(
     
     /* Set source rect */
     RECTL_vSetRect(&rcSrc, 0, 0, pIcon->cx, pIcon->cy);
-
-    /* Fix width parameter, if needed */
-    if (!cxWidth)
-    {
-        if(diFlags & DI_DEFAULTSIZE)
-            cxWidth = is_icon(pIcon) ? 
-                UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
-        else
-            cxWidth = pIcon->cx;
-    }
-    
-    /* Fix height parameter, if needed */
-    if (!cyHeight)
-    {
-        if(diFlags & DI_DEFAULTSIZE)
-            cyHeight = is_icon(pIcon) ? 
-                UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
-        else
-            cyHeight = pIcon->cy;
-    }
 
     /* Should we render off-screen? */
     bOffScreen = hbrFlickerFreeDraw && 
