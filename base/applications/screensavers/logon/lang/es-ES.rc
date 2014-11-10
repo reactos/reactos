@@ -1,7 +1,10 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "Logotipo ReactOS"
-    IDS_TEXT "Ninguna opción necesita ser configurada."
+    IDS_DESCRIPTION "Logotipo de ReactOS"
+    IDS_TEXT "No se necesita configurar ninguna opción."
 END

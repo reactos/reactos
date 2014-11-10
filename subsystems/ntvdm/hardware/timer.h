@@ -73,15 +73,14 @@ typedef struct _PIT_CHANNEL
 
 } PIT_CHANNEL, *PPIT_CHANNEL;
 
-extern PPIT_CHANNEL PitChannel2;    // Needed for PC Speaker
-
 /* FUNCTIONS ******************************************************************/
 
 VOID PitSetOutFunction(BYTE Channel, LPVOID Param, PIT_OUT_FUNCTION OutFunction);
 VOID PitSetGate(BYTE Channel, BOOLEAN State);
+WORD PitGetReloadValue(BYTE Channel);
 
-VOID PitClock(DWORD Count);
 DWORD PitGetResolution(VOID);
+VOID PitClock(DWORD Count);
 
 VOID PitInitialize(VOID);
 

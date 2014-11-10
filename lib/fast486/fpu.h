@@ -28,7 +28,7 @@
 
 /* DEFINES ********************************************************************/
 
-#define FPU_CHECK() if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_EM) \
+#define FPU_CHECK() if (State->ControlRegisters[FAST486_REG_CR0] & (FAST486_CR0_EM | FAST486_CR0_TS)) \
                     { \
                         Fast486Exception(State, FAST486_EXCEPTION_NM); \
                         return; \

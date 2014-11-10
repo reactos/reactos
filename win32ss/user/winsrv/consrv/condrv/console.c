@@ -44,7 +44,7 @@ InsertConsole(IN PCONSOLE Console)
     /* All went right, so add the console to the list */
     ConDrvLockConsoleListExclusive();
 
-    DPRINT1("Insert in the list\n");
+    DPRINT("Insert in the list\n");
     InsertTailList(&ConsoleList, &Console->ListEntry);
 
     // FIXME: Move this code to the caller function!!

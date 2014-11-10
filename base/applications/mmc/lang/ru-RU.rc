@@ -1,4 +1,4 @@
-/* Russian language resource file (Dmitry Chapyshev, 2007-06-10) */
+/* Russian language resource file by Dmitry Chapyshev, 2007-06-10, Kudratov Olimjon (olim98@bk.ru) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -6,7 +6,7 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
@@ -20,13 +20,13 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "&Окно"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "Сверху вниз", IDM_WINDOWS_LIST
     END
     POPUP "&Справка"
     BEGIN

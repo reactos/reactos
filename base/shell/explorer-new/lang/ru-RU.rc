@@ -47,7 +47,7 @@ BEGIN
             MENUITEM "&Безопасность...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Сетевые подключения", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Принтеры и факсы", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Панель задач и меню пуск", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "Панель &задач и меню ""Пуск""", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "П&оиск", IDM_SEARCH
         BEGIN
@@ -86,8 +86,8 @@ BEGIN
     AUTORADIOBUTTON "М&еню ""Пуск""", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
     LTEXT "Этот стиль меню обеспечивает удобный доступ к папкам, часто используемым программам и поиску.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
     PUSHBUTTON "&Настроить...", IDC_TASKBARPROP_STARTMENUCUST, 192, 4, 53, 14, WS_DISABLED
-    AUTORADIOBUTTON "&Классичесское меню ""Пуск""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
-    LTEXT "Классичесский стиль отображения меню ""Пуск"".", -1, 20, 57, 150, 24, WS_DISABLED
+    AUTORADIOBUTTON "&Классическое меню ""Пуск""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
+    LTEXT "Классический стиль отображения меню ""Пуск"".", -1, 20, 57, 150, 24, WS_DISABLED
     PUSHBUTTON "Н&астроить...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 44, 53, 14, WS_DISABLED
     GROUPBOX "Конфиденциальность", IDC_STATIC, 7, 100, 238, 50
     AUTOCHECKBOX "Хранить и отображать список недавно открывавшихся фа&йлов", IDC_TASKBARPROP_RECENTFILES, 14, 114, 227, 10, WS_DISABLED
@@ -127,7 +127,7 @@ CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Дополнительные настройки", IDC_STATIC, 6, 6, 240, 121
-    AUTOCHECKBOX "Показывать с&екунды", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    AUTOCHECKBOX "Отображать с&екунды", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
     AUTOCHECKBOX "Отобра&жать образцы окон (эскизы)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 

@@ -2175,7 +2175,7 @@ ftGdiGetGlyphOutline(
             break;
         if (needed > cjBuf)
             return GDI_ERROR;
-                                                
+
         get_bezier_glyph_outline(outline, cjBuf, pvBuf);
         break;
     }
@@ -3367,7 +3367,7 @@ GreExtTextOutW(
 
     psurf = dc->dclevel.pSurface;
 
-    if(!psurf) 
+    if(!psurf)
         psurf = psurfDefaultBitmap;
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
@@ -3719,7 +3719,7 @@ GreExtTextOutW(
             DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
         }
         MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-        IntEngMaskBlt(
+        if (!IntEngMaskBlt(
             SurfObj,
             SourceGlyphSurf,
             &dc->co.ClipObj,
@@ -3728,7 +3728,11 @@ GreExtTextOutW(
             &DestRect,
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
-            &BrushOrigin);
+            &BrushOrigin))
+        {
+            DPRINT1("Failed to MaskBlt a glyph!\n");
+        }
+
         MouseSafetyOnDrawEnd(dc->ppdev) ;
 
         EngUnlockSurface(SourceGlyphSurf);
@@ -3750,7 +3754,7 @@ GreExtTextOutW(
             Scale = pdcattr->mxWorldToDevice.efM11;
             if (_FLOATOBJ_Equal0(&Scale))
                 FLOATOBJ_Set1(&Scale);
- 
+
             FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); // do the shift before multiplying to preserve precision
             TextLeft += FLOATOBJ_GetLong(&Scale);
             DPRINT("New TextLeft2: %I64d\n", TextLeft);

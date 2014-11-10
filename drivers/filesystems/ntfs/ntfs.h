@@ -208,6 +208,7 @@ typedef struct
 
 /* NTFS_RECORD_HEADER.Type */
 #define NRH_FILE_TYPE  0x454C4946  /* 'FILE' */
+#define NRH_INDX_TYPE  0x58444E49  /* 'INDX' */
 
 
 typedef struct _FILE_RECORD_HEADER

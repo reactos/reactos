@@ -31,6 +31,9 @@
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 
+/* Extra PSDK/NDK Headers */
+#include <ndk/kefuncs.h>
+
 /* PRIVATE VARIABLES **********************************************************/
 
 CALLBACK16 BiosContext;
@@ -166,9 +169,11 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
              * See Ralf Brown: http://www.ctyme.com/intr/rb-1525.htm
              * for more information.
              */
+            LARGE_INTEGER TimeOut;
+            TimeOut.QuadPart = MAKELONG(getDX(), getCX()) * -10LL;
 
-            // HACK: For now, use the Win32 API (that takes time in milliseconds).
-            Sleep(MAKELONG(getDX(), getCX()) / 1000);
+            // HACK: For now, use the NT API (time in hundreds of nanoseconds).
+            NtDelayExecution(FALSE, &TimeOut);
 
             /* Clear CF */
             Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
@@ -293,7 +298,7 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
      * just call the DOS 32-bit initialization code.
      */
 
-    DPRINT1("BiosBootstrapLoader -->\n");
+    DPRINT("BiosBootstrapLoader -->\n");
 
     /* Load DOS */
     DosBootsectorInitialize();
@@ -310,7 +315,7 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
     Stack[STACK_CS] = 0x0000;
     Stack[STACK_IP] = 0x7C00;
 
-    DPRINT1("<-- BiosBootstrapLoader\n");
+    DPRINT("<-- BiosBootstrapLoader\n");
 }
 
 static VOID WINAPI BiosTimeService(LPWORD Stack)

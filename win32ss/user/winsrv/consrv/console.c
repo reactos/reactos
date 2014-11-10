@@ -61,7 +61,7 @@ InsertConsole(OUT PHANDLE Handle,
 
     /* All went right, so add the console to the list */
     ConSrvLockConsoleListExclusive();
-    DPRINT1("Insert in the list\n");
+    DPRINT("Insert in the list\n");
 
     if (ConsoleList)
     {
@@ -73,7 +73,7 @@ InsertConsole(OUT PHANDLE Handle,
 
     if (i >= ConsoleListSize)
     {
-        DPRINT1("Creation of a new handles table\n");
+        DPRINT("Creation of a new handles table\n");
         /* Allocate a new handles table */
         Block = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
                                  (ConsoleListSize +
@@ -393,7 +393,7 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_INFO ConsoleInfo,
         /* Get a pointer to the IShellLink interface */
         IShellLinkW* pshl = NULL;
         hRes = CoCreateInstance(&CLSID_ShellLink,
-                                NULL, 
+                                NULL,
                                 CLSCTX_INPROC_SERVER,
                                 &IID_IShellLinkW,
                                 (LPVOID*)&pshl);
@@ -476,8 +476,8 @@ Finish:
 
             // ConsoleInitInfo->ConsoleStartInfo->IconIndex = 0;
         }
-        DPRINT1("IconPath = '%S' ; IconIndex = %lu\n",
-                IconPath, ConsoleInitInfo->ConsoleStartInfo->IconIndex);
+        DPRINT("IconPath = '%S' ; IconIndex = %lu\n",
+               IconPath, ConsoleInitInfo->ConsoleStartInfo->IconIndex);
         if (IconPath && *IconPath)
         {
             HICON hIcon = NULL, hIconSm = NULL;
@@ -486,7 +486,7 @@ Finish:
                                   &hIcon,
                                   &hIconSm,
                                   1);
-            DPRINT1("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
+            DPRINT("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
             if (hIcon   != NULL) ConsoleInitInfo->ConsoleStartInfo->hIcon   = hIcon;
             if (hIconSm != NULL) ConsoleInitInfo->ConsoleStartInfo->hIconSm = hIconSm;
         }

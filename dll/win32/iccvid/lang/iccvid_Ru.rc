@@ -23,6 +23,6 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_NAME "Видео кодер-декодер Cinepak"
-    IDS_DESCRIPTION "Видео кодер-декодер Cinepak"
+    IDS_NAME "Видео кодек Cinepak"
+    IDS_DESCRIPTION "Видео кодек Cinepak"
 }

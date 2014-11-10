@@ -146,23 +146,23 @@ STRINGTABLE
 
 OPEN_FILE DIALOG 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Открыть"
+CAPTION "Открытие файла"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Имя файла:", stc3, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Каталоги:", -1, 110, 6, 92, 9
+ LTEXT "&Папки:", -1, 110, 6, 92, 9
  LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Показывать файлы &типа:", stc2, 6, 104, 90, 9
+ LTEXT "&Типы файлов:", stc2, 6, 104, 90, 9
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "&Диски:", stc4, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Открыть", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Отмена", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Справка", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "&Только для чтения", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Только &чтение", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -195,18 +195,18 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Принтер:", stc1, 6, 6, 40, 9
  LTEXT "", stc2, 60, 6, 150, 9
- GROUPBOX "Печатать", grp1, 6, 30, 160, 65, BS_GROUPBOX
- RADIOBUTTON "&Весь реестр", rad1, 16, 45, 60, 12
+ GROUPBOX "Диапазон печати", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Все", rad1, 16, 45, 60, 12
  RADIOBUTTON "В&ыделенный фрагмент", rad2, 16, 60, 60, 12
- RADIOBUTTON "&Страницы", rad3, 16, 75, 60, 12
- DEFPUSHBUTTON "Печать", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ RADIOBUTTON "С&траницы", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Отмена", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Сво&йства", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&с:", stc3, 60, 80, 30, 9
  LTEXT "&по:", stc4, 120, 80, 30, 9
  LTEXT "&Качество печати:", stc5, 6, 100, 76, 9
  COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "П&ечать в файл", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Пе&чать в файл", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Сжато", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -231,7 +231,7 @@ FONT 8, "MS Shell Dlg"
  ICON "PORTRAIT", stc11, 10, 95, 32, 32
  GROUPBOX "Бумага", grp3, 116, 82, 178, 50, BS_GROUPBOX
  LTEXT "Ра&змер", stc2, 126, 95, 35, 9
- LTEXT "&Источник", stc3, 126, 110, 35, 9
+ LTEXT "&Подача", stc3, 126, 110, 35, 9
  COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
@@ -350,41 +350,41 @@ FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "ОК",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "Отмена", IDCANCEL, 230,164, 50,14, WS_GROUP
-    PUSHBUTTON      "&Справка",  pshHelp,  50, 161, 50,14, WS_GROUP
+    PUSHBUTTON      "Спр&авка",  pshHelp,  50, 161, 50,14, WS_GROUP
 
     GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "Печать в фай&л", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
-    PUSHBUTTON      "&Свойства",    psh2, 212, 17,  60,14, WS_GROUP
+    CONTROL         "Пе&чать в файл", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "Сво&йства...",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Имя:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Статус:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "Состояние:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Тип:",          stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Место:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примечание:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Комментарий:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Копии",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Число &копий:",stc5,168,105,68,8
     ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "&Разбить",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "&Разобрать по копиям",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Печатать",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Весь реестр",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&Страницы",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Выделение",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "Диапазон печати",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Все",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "С&траницы",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "В&ыделенный фрагмент",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&от:",         stc2,  52,124,  20,8
-    RTEXT           "&до:",           stc3,  99,124,  20,8
+    RTEXT           "&с:",         stc2,  52,124,  20,8
+    RTEXT           "&по:",           stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Настройка принтера"
+CAPTION "Настройка печати"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "ОК", IDOK, 176, 156, 50, 14, WS_GROUP
@@ -395,25 +395,25 @@ BEGIN
     PUSHBUTTON      "&Свойства",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Имя:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Статус:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "Состояние:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Тип:",          stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Место:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примечание:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Комментарий:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Бумага",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "Размер:",         stc2,  16,108,  36, 8
+    LTEXT           "Ра&змер:",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Источник:",       stc3,  16,128,  36, 8
+    LTEXT           "Пода&ча:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "Ориентация",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Портрет",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "Л&андшафт",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "&Книжная",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "&Альбомная",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -433,11 +433,11 @@ BEGIN
   AUTORADIOBUTTON "&Книжная", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "&Альбомная", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Поля", grp4, 80, 156, 152, 56, BS_GROUPBOX
-  LTEXT "&Слева:", stc15, 88, 172, 30, 8
+  LTEXT "&Левое:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Правое:", stc16, 159, 172, 30, 8
   EDITTEXT edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "Спр&ава:", stc17, 88, 192, 30, 8
+  LTEXT "&Верхнее:", stc17, 88, 192, 30, 8
   EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Нижнее:", stc18, 159, 192, 30, 8
   EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

@@ -27,6 +27,7 @@ cmdAccounts(
 #if 0
     BOOL Domain = FALSE;
 #endif
+    INT nPaddedLength = 58;
     NET_API_STATUS Status;
     INT result = 0;
 
@@ -48,7 +49,7 @@ cmdAccounts(
 
         if (_wcsicmp(argv[i], L"/domain") == 0)
         {
-            PrintToConsole(L"The /DOMAIN option is not supported yet!\n");
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
 #if 0
             Domain = TRUE;
 #endif
@@ -74,7 +75,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    PrintToConsole(L"You entered an invalid value for the /FORCELOGOFF option.\n");
+                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/FORCELOGOFF");
                     result = 1;
                     goto done;
                 }
@@ -89,7 +90,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                    PrintToConsole(L"You entered an invalid value for the /MINPWLEN option.\n");
+                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWLEN");
                     result = 1;
                     goto done;
             }
@@ -111,7 +112,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    PrintToConsole(L"You entered an invalid value for the /MAXPWAGE option.\n");
+                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MAXPWLEN");
                     result = 1;
                     goto done;
                 }
@@ -126,7 +127,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintToConsole(L"You entered an invalid value for the /MINPWAGE option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWAGE");
                 result = 1;
                 goto done;
             }
@@ -140,7 +141,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintToConsole(L"You entered an invalid value for the /UNIQUEPW option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/UNIQUEPW");
                 result = 1;
                 goto done;
             }
@@ -168,52 +169,63 @@ cmdAccounts(
 
         RtlGetNtProductType(&ProductType);
 
-        PrintToConsole(L"Force logoff after: ");
+        PrintPaddedResourceString(IDS_ACCOUNTS_FORCE_LOGOFF, nPaddedLength);
         if (Info0->usrmod0_force_logoff == TIMEQ_FOREVER)
-            PrintToConsole(L"Never\n");
+            PrintResourceString(IDS_GENERIC_NEVER);
         else
-            PrintToConsole(L"%lu seconds\n", Info0->usrmod0_force_logoff);
+            PrintResourceString(IDS_ACCOUNTS_LOGOFF_SECONDS, Info0->usrmod0_force_logoff);
+        PrintToConsole(L"\n");
 
-        PrintToConsole(L"Minimum password age (in days): %lu\n", Info0->usrmod0_min_passwd_age / 86400);
-        PrintToConsole(L"Maximum password age (in days): %lu\n", Info0->usrmod0_max_passwd_age / 86400);
-        PrintToConsole(L"Minimum password length: %lu\n", Info0->usrmod0_min_passwd_len);
+        PrintPaddedResourceString(IDS_ACCOUNTS_MIN_PW_AGE, nPaddedLength);
+        PrintToConsole(L"%lu\n", Info0->usrmod0_min_passwd_age / 86400);
 
-        PrintToConsole(L"Password history length: ");
+        PrintPaddedResourceString(IDS_ACCOUNTS_MAX_PW_AGE, nPaddedLength);
+        PrintToConsole(L"%lu\n", Info0->usrmod0_max_passwd_age / 86400);
+
+        PrintPaddedResourceString(IDS_ACCOUNTS_MIN_PW_LENGTH, nPaddedLength);
+        PrintToConsole(L"%lu\n", Info0->usrmod0_min_passwd_len);
+
+        PrintPaddedResourceString(IDS_ACCOUNTS_PW_HIST_LENGTH, nPaddedLength);
         if (Info0->usrmod0_password_hist_len == 0)
-            PrintToConsole(L"None\n");
+            PrintResourceString(IDS_GENERIC_NONE);
         else
-            PrintToConsole(L"%lu\n", Info0->usrmod0_password_hist_len);
+            PrintToConsole(L"%lu", Info0->usrmod0_password_hist_len);
+        PrintToConsole(L"\n");
 
-        PrintToConsole(L"Lockout threshold: ");
+        PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_THRESHOLD, nPaddedLength);
         if (Info3->usrmod3_lockout_threshold == 0)
-            PrintToConsole(L"Never\n");
+            PrintResourceString(IDS_GENERIC_NEVER);
         else
-            PrintToConsole(L"%lu\n", Info3->usrmod3_lockout_threshold);
+            PrintToConsole(L"%lu", Info3->usrmod3_lockout_threshold);
+        PrintToConsole(L"\n");
 
-        PrintToConsole(L"Lockout duration (in minutes): %lu\n", Info3->usrmod3_lockout_duration / 60);
-        PrintToConsole(L"Lockout observation window (in minutes): %lu\n", Info3->usrmod3_lockout_observation_window / 60);
+        PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_DURATION, nPaddedLength);
+        PrintToConsole(L"%lu\n", Info3->usrmod3_lockout_duration / 60);
 
-        PrintToConsole(L"Computer role: ");
+        PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_WINDOW, nPaddedLength);
+        PrintToConsole(L"%lu\n", Info3->usrmod3_lockout_observation_window / 60);
 
+        PrintPaddedResourceString(IDS_ACCOUNTS_COMPUTER_ROLE, nPaddedLength);
         if (Info1->usrmod1_role == UAS_ROLE_PRIMARY)
         {
             if (ProductType == NtProductLanManNt)
             {
-                PrintToConsole(L"Primary server\n");
+                PrintResourceString(IDS_ACCOUNTS_PRIMARY_SERVER);
             }
             else if (ProductType == NtProductServer)
             {
-                PrintToConsole(L"Standalone server\n");
+                PrintResourceString(IDS_ACCOUNTS_STANDALONE_SERVER);
             }
             else
             {
-                PrintToConsole(L"Workstation\n");
+                PrintResourceString(IDS_ACCOUNTS_WORKSTATION);
             }
         }
         else
         {
-            PrintToConsole(L"Backup server\n");
+            PrintResourceString(IDS_ACCOUNTS_BACKUP_SERVER);
         }
+        PrintToConsole(L"\n");
     }
 
 done:

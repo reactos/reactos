@@ -675,7 +675,7 @@ GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
         hPalette = ActiveBuffer->PaletteHandle;
     }
 
-    DPRINT1("GuiSetActiveScreenBuffer using palette 0x%p\n", hPalette);
+    DPRINT("GuiSetActiveScreenBuffer using palette 0x%p\n", hPalette);
 
     /* Set the new palette for the framebuffer */
     SelectPalette(GuiData->hMemDC, hPalette, FALSE);

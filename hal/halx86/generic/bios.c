@@ -60,9 +60,14 @@ BOOLEAN
 FASTCALL
 HalpOpcodeInvalid(IN PHAL_BIOS_FRAME BiosFrame)
 {
+    PUCHAR Inst = (PUCHAR)(BiosFrame->CsBase + BiosFrame->Eip);
+
     /* Print error message */
-    DPRINT1("HAL: An invalid V86 opcode was encountered at address %x:%x\n",
-            BiosFrame->SegCs, BiosFrame->Eip);
+    DPRINT1("HAL: An invalid V86 opcode was encountered at address %X:%X\n",
+            "Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+            BiosFrame->SegCs, BiosFrame->Eip,
+            Inst[0], Inst[1], Inst[2], Inst[3], Inst[4],
+            Inst[5], Inst[6], Inst[7], Inst[8], Inst[9]);
 
     /* Break */
     DbgBreakPoint();

@@ -65,6 +65,26 @@ PrintResourceString(
 
 
 VOID
+PrintPaddedResourceString(
+    INT resID,
+    INT nPaddedLength)
+{
+    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
+    INT nLength, i;
+
+    nLength = LoadStringW(GetModuleHandle(NULL), resID, szMsgBuffer, MAX_BUFFER_SIZE);
+    if (nLength < nPaddedLength)
+    {
+        for (i = nLength; i < nPaddedLength; i++)
+            szMsgBuffer[i] = L' ';
+        szMsgBuffer[nPaddedLength] = UNICODE_NULL;
+    }
+
+    WriteToConsole(szMsgBuffer);
+}
+
+
+VOID
 PrintToConsole(
     LPWSTR lpFormat,
     ...)
@@ -115,6 +135,43 @@ WriteToConsole(
                   &dwLength,
                   NULL);
     }
+}
+
+
+VOID
+ReadFromConsole(
+    LPWSTR lpInput,
+    DWORD dwLength,
+    BOOL bEcho)
+{
+    DWORD dwOldMode;
+    DWORD dwRead = 0;
+    HANDLE hFile;
+    LPWSTR p;
+    PCHAR pBuf;
+
+    pBuf = HeapAlloc(GetProcessHeap(), 0, dwLength - 1);
+    ZeroMemory(lpInput, dwLength * sizeof(WCHAR));
+    hFile = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(hFile, &dwOldMode);
+
+    SetConsoleMode(hFile, ENABLE_LINE_INPUT | (bEcho ? ENABLE_ECHO_INPUT : 0));
+
+    ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
+
+    MultiByteToWideChar(CP_OEMCP, 0, pBuf, dwRead, lpInput, dwLength - 1);
+    HeapFree(GetProcessHeap(), 0, pBuf);
+
+    for (p = lpInput; *p; p++)
+    {
+        if (*p == L'\x0d')
+        {
+            *p = L'\0';
+            break;
+        }
+    }
+
+    SetConsoleMode(hFile, dwOldMode);
 }
 
 

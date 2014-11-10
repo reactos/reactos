@@ -1,0 +1,40 @@
+/* Spanish Language resource file.
+ * Translated by: Ismael Ferreras Morezuelas <2014-11-07> */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nConfigura un adaptador inalámbrico.\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\tConectarse al SSID especificado,\n\
+\t-w WEP\t\tEspecifica una clave WEP con la que conectarse.\n\
+\t-a\t\tEspecifica que la red a conectarse es de punto a punto (ad-hoc)\n\
+\t-d\t\tDesconectarse de la red inalámbrica actual.\n\
+\t-s\t\tBusca y muestra una lista con las redes inalámbricas disponibles\n\
+\t\t\tin range.\n\n\
+Si no se pasa ningún parámetro se mostrará información sobre la conexión inalámbrica actual\n"
+    IDS_NO_NETWORK               "No se han encontrado redes disponibles en las cercanías\n"
+    IDS_NO_WLAN_ADAPTER          "No se ha encontrado ningún adaptador inalámbrico en el equipo\n"
+    IDS_SUCCESS                  "La operación se ha completado correctamente.\n"
+    IDS_WLAN_DISCONNECT          "\nAdaptador inalámbrico desconectado\n"
+    IDS_MSG_WEP_ENABLED          "WEP activado: %s\n"
+    IDS_MSG_NETWORK_MODE         "Modo de red: %s\n"
+    IDS_MSG_CURRENT_WIRELESS     "\nInformación de la configuración inalámbrica actual:\n\n"
+    IDS_MSG_ENCRYPTED            "Cifrado: %s\n"
+    IDS_MSG_NETWORK_TYPE         "Tipo de red: %s\n"
+    IDS_MSG_RSSI                 "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE         "Tasas de transferencia soportadas (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER   "Potencia de transmisión: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT        "Número de antenas: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA     "Antena de transmisión: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antena de transmisión: Cualquiera\n"
+    IDS_MSG_RECEIVE_ANTENNA      "Antena de recepción: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY  "Antena de recepción: Cualquiera\n"
+    IDS_MSG_FRAGMENT_THRESHOLD   "Nivel de fragmentación: %d bytes\n"
+    IDS_MSG_RTS_THRESHOLD        "Nivel RTS: %d bytes\n"
+    IDS_YES                      "Sí"
+    IDS_NO                       "No"
+    IDS_ADHOC                    "Punto a punto (Adhoc)"
+    IDS_INFRASTRUCTURE           "Infrastructura"
+END

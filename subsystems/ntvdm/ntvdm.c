@@ -185,13 +185,48 @@ static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
 VOID
 DisplayMessage(LPCWSTR Format, ...)
 {
-    WCHAR Buffer[256];
+#ifndef WIN2K_COMPLIANT
+    WCHAR  StaticBuffer[256];
+    LPWSTR Buffer = StaticBuffer; // Use the static buffer by default.
+#else
+    WCHAR  Buffer[2048]; // Large enough. If not, increase it by hand.
+#endif
+    size_t MsgLen;
     va_list Parameters;
 
     va_start(Parameters, Format);
-    _vsnwprintf(Buffer, 256, Format, Parameters);
+
+#ifndef WIN2K_COMPLIANT
+    /*
+     * Retrieve the message length and if it is too long, allocate
+     * an auxiliary buffer; otherwise use the static buffer.
+     */
+    MsgLen = _vscwprintf(Format, Parameters) + 1; // NULL-terminated
+    if (MsgLen > sizeof(StaticBuffer)/sizeof(StaticBuffer[0]))
+    {
+        Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MsgLen * sizeof(WCHAR));
+        if (Buffer == NULL)
+        {
+            /* Allocation failed, use the static buffer and display a suitable error message */
+            Buffer = StaticBuffer;
+            Format = L"DisplayMessage()\nOriginal message is too long and allocating an auxiliary buffer failed.";
+            MsgLen = wcslen(Format);
+        }
+    }
+#else
+    MsgLen = sizeof(Buffer)/sizeof(Buffer[0]);
+#endif
+
+    /* Display the message */
+    _vsnwprintf(Buffer, MsgLen, Format, Parameters);
     DPRINT1("\n\nNTVDM Subsystem\n%S\n\n", Buffer);
     MessageBoxW(NULL, Buffer, L"NTVDM Subsystem", MB_OK);
+
+#ifndef WIN2K_COMPLIANT
+    /* Free the buffer if needed */
+    if (Buffer != StaticBuffer) HeapFree(GetProcessHeap(), 0, Buffer);
+#endif
+
     va_end(Parameters);
 }
 
@@ -205,8 +240,8 @@ ConsoleCtrlHandler(DWORD ControlType)
         case CTRL_BREAK_EVENT:
         {
             /* HACK: Stop the VDM */
+            DPRINT1("Ctrl-C/Break: Stop the VDM\n");
             EmulatorTerminate();
-
             break;
         }
         case CTRL_LAST_CLOSE_EVENT:

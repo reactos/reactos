@@ -1,3 +1,6 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
@@ -8,56 +11,56 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Acerca de Grabadora de sonidos ReactOS"
+CAPTION "Acerca de la Grabadora de sonidos de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
-    LTEXT "Grabadora de sonidos ReactOS, version 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Grabadora de sonidos de ReactOS, versión 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
     LTEXT "Copyright (C) 2009", IDC_STATIC, 56, 25, 114, 8
     DEFPUSHBUTTON "Aceptar", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "Archivo"
+    POPUP "&Archivo"
     BEGIN
-        MENUITEM "Nuevo", ID_FILE_NEW
-        MENUITEM "Abrir...", ID_FILE_OPEN
-        MENUITEM "Guardar", ID_FILE_SAVE, GRAYED
-        MENUITEM "Guardar como...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "&Nuevo", ID_FILE_NEW
+        MENUITEM "&Abrir...", ID_FILE_OPEN
+        MENUITEM "&Guardar", ID_FILE_SAVE, GRAYED
+        MENUITEM "Guardar &como...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Restaurar...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Propiedades", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "Salir", ID_FILE_EXIT
+        MENUITEM "&Salir", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&Edición"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
-        MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
-        MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "&Copiar", ID_EDIT_COPY
+        MENUITEM "&Pegar insertando", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Pegar me&zclando", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Insert File...", ID_EDIT_INSERTFILE
-        MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
+        MENUITEM "&Insertar archivo...", ID_EDIT_INSERTFILE
+        MENUITEM "&Mezclar con archivo...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "&Borrar antes de la posición actual",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Borrar &tras la posición actual",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&udio Properties", ID_EDIT_AUDIOPROPS
+        MENUITEM "Propiedades de a&udio", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Effect&s"
+    POPUP "Efecto&s"
     BEGIN
-        MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
+        MENUITEM "&Subir volumen (un 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "&Bajar volumen", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "Subir &velocidad (un 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "Ba&jar velocidad", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Add Echo", ID_EFFECTS_ECHO
-        MENUITEM "&Reverse", ID_EFFECTS_REVERSE
+        MENUITEM "&Añadir eco", ID_EFFECTS_ECHO
+        MENUITEM "&Invertir", ID_EFFECTS_REVERSE
     END
     POPUP "?"
     BEGIN
-        MENUITEM "Acerca de...", ID_ABOUT
+        MENUITEM "&Acerca de...", ID_ABOUT
     END
 END
 
@@ -69,11 +72,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STRPOS "Position: %.2f s"
-    IDS_STRDUR "Length: %.2f s"
-    IDS_STRBUF "Buffer: %.2f kb"
+    IDS_STRPOS "Posición: %.2f s"
+    IDS_STRDUR "Longitud: %.2f s"
+    IDS_STRBUF "Búfer: %.2f kb"
     IDS_STRFMT "%.1f kHz %u bits"
     IDS_STRMONO "mono"
-    IDS_STRSTEREO "stereo"
+    IDS_STRSTEREO "estéreo"
     IDS_STRCHAN "%s"
 END

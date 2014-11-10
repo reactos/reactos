@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
 
 /* UTF-8 */
 #pragma code_page(65001)
@@ -24,22 +25,22 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Ошибка конвертирования объекта в примитивный тип"
-    IDS_INVALID_CALL_ARG    "Неверный вызов процедуры или аргумент"
+    IDS_INVALID_CALL_ARG    "Недопустимый вызов или аргумент процедуры"
     IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
-    IDS_OBJECT_REQUIRED     "Object required"
+    IDS_OBJECT_REQUIRED     "Требуется объект"
     IDS_CREATE_OBJ_ERROR    "Сервер автоматизации не может создать объект"
     IDS_NO_PROPERTY         "Объект не поддерживает это свойство или метод"
-    IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
+    IDS_UNSUPPORTED_ACTION  "Объект не поддерживает это действие"
     IDS_ARG_NOT_OPT         "Отсутствует обязательный аргумент"
     IDS_SYNTAX_ERROR        "Синтаксическая ошибка"
-    IDS_SEMICOLON           "Ожидается ';'"
-    IDS_LBRACKET            "Ожидается '('"
-    IDS_RBRACKET            "Ожидается ')'"
-    IDS_INVALID_CHAR        "Invalid character"
+    IDS_SEMICOLON           "Предполагается наличие ';'"
+    IDS_LBRACKET            "Предполагается наличие '('"
+    IDS_RBRACKET            "Предполагается наличие ')'"
+    IDS_INVALID_CHAR        "Недопустимый символ"
     IDS_UNTERMINATED_STR    "Незавершённая строковая константа"
-    IDS_MISPLACED_RETURN    "'return' statement outside of function"
-    IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
-    IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
+    IDS_MISPLACED_RETURN    "Инструкция 'return' вне функции"
+    IDS_INVALID_BREAK       "Инструкция 'break' не может находиться вне блока loop"
+    IDS_INVALID_CONTINUE    "Инструкция 'continue' не может находиться вне блока loop"
     IDS_LABEL_REDEFINED     "Label redefined"
     IDS_LABEL_NOT_FOUND     "Label not found"
     IDS_DISABLED_CC         "Conditional compilation is turned off"
@@ -50,14 +51,14 @@ STRINGTABLE
     IDS_ILLEGAL_ASSIGN      "Неверное присваивание"
     IDS_UNDEFINED           "'|' не определён"
     IDS_NOT_BOOL            "Ожидается объект типа 'bool'"
-    IDS_INVALID_DELETE      "Cannot delete '|'"
-    IDS_NOT_VBARRAY         "VBArray object expected"
-    IDS_JSCRIPT_EXPECTED    "Ожидается объект типа 'JScript'"
+    IDS_INVALID_DELETE      "Не удается удалить '|'"
+    IDS_NOT_VBARRAY         "Предполагается наличие VBArray"
+    IDS_JSCRIPT_EXPECTED    "Предполагается наличие объекта 'JScript'"
     IDS_REGEXP_SYNTAX_ERROR "Синтаксическая ошибка в регулярном выражении"
-    IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
-    IDS_URI_INVALID_CHAR    "URI содержит неверные символы"
+    IDS_URI_INVALID_CODING  "Обнаружена недопустимая кодировка при попытке декодирования URI"
+    IDS_URI_INVALID_CHAR    "Обнаружен недопустимый знак при попытке кодирования URI"
     IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
     IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
     IDS_INVALID_LENGTH      "Длиной массива должно быть конечное положительное число"
-    IDS_ARRAY_EXPECTED      "Ожидается объект типа 'Array'"
+    IDS_ARRAY_EXPECTED      "Предполагается наличие объекта 'Array'"
 }

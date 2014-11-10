@@ -30,11 +30,11 @@ BEGIN
     IDS_CPL_INFO        "Настроить Wine Интернет-Браузер и настройки, связанные с"
     IDS_SEC_SETTINGS    "Параметры безопасности этой зоны: "
     IDS_SEC_LEVEL0      "Пользовательские"
-    IDS_SEC_LEVEL1      "Очень Низкая"
-    IDS_SEC_LEVEL2      "Низкая"
-    IDS_SEC_LEVEL3      "Средняя"
-    IDS_SEC_LEVEL4      "Увеличенная"
-    IDS_SEC_LEVEL5      "Высокая"
+    IDS_SEC_LEVEL1      "Низкий"
+    IDS_SEC_LEVEL2      "Ниже среднего"
+    IDS_SEC_LEVEL3      "Средний"
+    IDS_SEC_LEVEL4      "Выше среднего"
+    IDS_SEC_LEVEL5      "Высокий"
 END
 
 /* "General" propsheet */

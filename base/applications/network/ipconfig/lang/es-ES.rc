@@ -1,23 +1,26 @@
+/* Spanish Language resource file.
+ * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_BCAST "Broadcast"
-    IDS_P2P "Peer To Peer"
-    IDS_MIXED "Mixto"
-    IDS_HYBRID "Híbrido"
-    IDS_UNKNOWN "Deconocido"
+    IDS_BCAST   "Difusión"
+    IDS_P2P     "Punto a punto"
+    IDS_MIXED   "Mixto"
+    IDS_HYBRID  "Híbrido"
+    IDS_UNKNOWN "Desconocido"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OTHER "Otro Tipo de Adaptador"
-    IDS_ETH "Adaptador Ethernet"
-    IDS_TOKEN "Adaptador Token Ring"
-    IDS_FDDI "Adaptador FDDI"
-    IDS_PPP "Adaptador PPP"
-    IDS_LOOP "Adaptador Loopback"
-    IDS_SLIP "Adaptador SLIP"
+    IDS_OTHER "Otro tipo de adaptador"
+    IDS_ETH   "Adaptador Ethernet"
+    IDS_TOKEN "Adaptador de red en anillo"
+    IDS_FDDI  "Adaptador FDDI"
+    IDS_PPP   "Adaptador PPP"
+    IDS_LOOP  "Adaptador de bucle invertido"
+    IDS_SLIP  "Adaptador SLIP"
 END
 
 STRINGTABLE
@@ -30,36 +33,38 @@ BEGIN
                   /showclassid adaptador |\n \
                   /setclassid adaptador [classid] ]\n \
     \n \
-    En la cual\n \
+    donde\n \
         adaptador       Nombre de la conexión\n \
-                       (caracteres especiales * and ? autorizados, ver ejemplos)\n \
+                       (los caracteres comodín * y ? están permitidos, ver ejemplos)\n \
     \n \
-        Optiones:\n \
+        Opciones:\n \
            /?           Muestra este mensaje de ayuda\n \
-           /all         Muestra todas las informaciones de configuración.\n \
+           /all         Muestra la información de configuración.\n \
            /release     Libera la dirección IP para el adaptador especificado.\n \
            /renew       Renueva la dirección IP para el adaptador especificado.\n \
-           /flushdns    Purga la cache de Resolución DNS.\n \
-           /registerdns Actualiza todas las concesiones DHCP y registra de nuevo nombres DNS.\n \
-           /displaydns  Muestra el contenido del cache de Resolución DNS.\n \
-           /showclassid Muestra todos los class IDs dhcp concedidos al adaptador.\n \
-           /setclassid  Modifica el class id dhcp.\n \
+           /flushdns    Purga la caché de resolución DNS.\n \
+           /registerdns Actualiza todas las concesiones DHCP y registran \n \
+		                de nuevo los nombres DNS.\n \
+           /displaydns  Muestra el contenido de la caché de resolución DNS.\n \
+           /showclassid Muestra todos los id. de clase DHCP permitidos al adaptador.\n \
+           /setclassid  Modifica el id. de clase DHCP.\n \
     \n \
-    Generalmente se muestra solamente la dirección IP, la máscara de red y\n \
-    la puerta de enlace predefinidas de cada adaptador relacionado a TCP/IP.\n \
+    Normalmente se muestra sólo la dirección IP, la máscara de red y\n \
+    la puerta de enlace predeterminada de cada adaptador enlazado a TCP/IP.\n \
     \n \
-    Para los parámetros Release y Renew, si no se especifica un adaptador, entonces la(s) dirección(es)\n \
-    IP asignada(s) para todos los adaptadores relacionados a TCP/IP serán liberadas o renovadas.\n \
+    Para los parámetros Release y Renew, si no se especifica un adaptador,\n \
+    se liberan o renuevan las concesiones de dirección IP para todos\n \
+	los adaptadores enlazados por TCP/IP.\n \
     \n \
-    Para Setclassid, si no se especifica algún ClassId, este será removido.\n \
+    Para Setclassid, si no se especifica algún classid, se quita.\n \
     \n \
     Ejemplos:\n \
-        > ipconfig                   ... Muestra informaciones.\n \
-        > ipconfig /all              ... Muestra informaciones detalladas\n \
-        > ipconfig /renew            ... Renueva todos los adaptadores\n \
+        > ipconfig                   ... Muestra información.\n \
+        > ipconfig /all              ... Muestra información detallada.\n \
+        > ipconfig /renew            ... Renueva todos los adaptadores.\n \
         > ipconfig /renew EL*        ... Renueva todas las direcciones IP de los adaptadores\n \
-                                         cuyo nombre comienza con EL\n \
-        > ipconfig /release *Con*    ... Libera todas las conexiones concernidas,\n \
-                                         ej. ""Conexión al area local 1"" o\n \
-                                             ""Conexión al area local 2""\n"
+                                         cuyo nombre comienza con EL.\n \
+        > ipconfig /release *Con*    ... Libera todas las conexiones coincidentes,\n \
+                                         por ejemplo. ""Conexión de área local 1"" o\n \
+                                                      ""Conexión de área local 2"".\n"
 END

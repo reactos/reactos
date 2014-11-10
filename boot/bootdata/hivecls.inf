@@ -492,4 +492,9 @@ CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
 CPLFILE="Extensie pentru panou de control"
 CPLFILE_OPENWITH="Deschide în panou de control"
 
+; LANG_RUSSIAN SUBLANG_NEUTRAL
+[Strings.0019]
+CPLFILE="Элемент панели управления"
+CPLFILE_OPENWITH="Открыть с помощью Панели управления"
+
 ; EOF

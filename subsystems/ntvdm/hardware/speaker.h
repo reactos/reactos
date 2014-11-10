@@ -17,7 +17,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID SpeakerChange(VOID);
+VOID SpeakerChange(UCHAR Port61hValue);
 
 VOID SpeakerInitialize(VOID);
 VOID SpeakerCleanup(VOID);

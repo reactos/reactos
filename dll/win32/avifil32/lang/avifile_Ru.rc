@@ -40,10 +40,10 @@ BEGIN
     LTEXT           "&Выберите поток:",-1,5,5,154,10
     COMBOBOX        IDC_STREAM,5,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
-    PUSHBUTTON      "&Параметры...",IDC_OPTIONS,170,17,50,14
+    PUSHBUTTON      "&Параметры",IDC_OPTIONS,170,17,50,14
     AUTOCHECKBOX    "&Прослаивать каждые",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
     EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
-    LTEXT           "фрейма",-1,129,43,36,9
+    LTEXT           "кадров",-1,129,43,36,9
     LTEXT           "Текущий формат:",-1,5,56,73,9
     LTEXT           "",IDC_FORMATTEXT,80,56,88,26
     DEFPUSHBUTTON   "ОК",IDOK,170,42,50,14

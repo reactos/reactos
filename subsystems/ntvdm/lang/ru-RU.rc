@@ -9,7 +9,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_DUMPMEM_TXT,    "Dump Memory (&Text)"
-    IDS_VDM_DUMPMEM_BIN,    "Dump Memory (&Binary)"
+    IDS_VDM_DUMPMEM_TXT,    "Дамп памяти (&Текстовый)"
+    IDS_VDM_DUMPMEM_BIN,    "Дамп памяти (&Бинарный)"
     IDS_VDM_QUIT       ,    "&Выйти из ReactOS VDM"
 END

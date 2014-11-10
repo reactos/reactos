@@ -3,7 +3,8 @@
  *
  * Copyright 1996 Ulrich Schmid
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- * Copyright 2003, 2004 JosÈ Manuel Ferrer Ortiz
+ * Copyright 2003, 2004 Jos√© Manuel Ferrer Ortiz
+ * Copyright 2014 Ismael Ferreras Morezuelas
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,31 +29,31 @@ MAIN_MENU MENU
   MENUITEM "A&brir...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Imprimir", MNID_FILE_PRINT
-  MENUITEM "&ConfiguraciÛn impresora...", MNID_FILE_SETUP
+  MENUITEM "&Ajustes de impresi√≥n...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&Salir", MNID_FILE_EXIT
+  MENUITEM "&Salir",        MNID_FILE_EXIT
  }
  POPUP "&Editar" {
-   MENUITEM "&Copiar...", MNID_EDIT_COPYDLG
+   MENUITEM "&Copiar...",   MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Anotar...", MNID_EDIT_ANNOTATE
+   MENUITEM "&Anotar...",   MNID_EDIT_ANNOTATE
  }
  POPUP "&Marcador" {
-   MENUITEM "&Definir...", MNID_BKMK_DEFINE
+   MENUITEM "&Definir...",  MNID_BKMK_DEFINE
  }
  POPUP "&Opciones" {
-  MENUITEM "Historial",		MNID_OPTS_HISTORY
-  POPUP    "Fuentes"
+  MENUITEM "Historial",     MNID_OPTS_HISTORY
+  POPUP    "Tama√±o de letra"
   BEGIN
-    MENUITEM "PequeÒa",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Peque√±a",     MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",      MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Grande",      MNID_OPTS_FONTS_LARGE
   END
  }
  POPUP "A&yuda" {
-   MENUITEM "&Ayuda sobre la ayuda", MNID_HELP_HELPON
-   MENUITEM "&Siempre visible", MNID_HELP_HELPTOP
-   MENUITEM "&Info...", MNID_HELP_ABOUT
+   MENUITEM "&Ayuda sobre la ayuda",          MNID_HELP_HELPON
+   MENUITEM "&Siempre visible",               MNID_HELP_HELPTOP
+   MENUITEM "&Acerca de la Ayuda de Wine...", MNID_HELP_ABOUT
  }
 }
 
@@ -60,40 +61,40 @@ CONTEXT_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "Annotation...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Copy",                MNID_CTXT_COPY
-		MENUITEM "Print...",            MNID_CTXT_PRINT
-		POPUP    "Fonts"
+		MENUITEM "Anotar...",        MNID_CTXT_ANNOTATE
+		MENUITEM "Copiar",           MNID_CTXT_COPY
+		MENUITEM "Imprimir...",      MNID_CTXT_PRINT
+		POPUP    "Tama√±o de letra"
 		BEGIN
-			MENUITEM "Small",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Large",       MNID_CTXT_FONTS_LARGE
+			MENUITEM "Peque√±a",      MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",       MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Grande",       MNID_CTXT_FONTS_LARGE
 		END
 	END
 END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Ayuda de Wine"
-STID_WHERROR, 		"ERROR"
-STID_WARNING,  		"ADVERTENCIA"
-STID_INFO,  		"InformaciÛn"
-STID_NOT_IMPLEMENTED, 	"A˙n no implementado"
-STID_HLPFILE_ERROR_s, 	"Error al leer el archivo de ayuda `%s'"
-STID_INDEX, 		"&Õndice"
-STID_CONTENTS,		"Resumen"
-STID_BACK, 		"&Anterior"
-STID_ALL_FILES, 	"Todos los archivos (*.*)"
-STID_HELP_FILES_HLP, 	"Archivos de ayuda (*.hlp)"
-STID_FILE_NOT_FOUND_s	"No se pudo encontrar '%s'. øDesea buscar este archivo usted mismo?"
-STID_NO_RICHEDIT	"No se pudo encontrar una implementaciÛn de richedit... Abortando"
-STID_PSH_INDEX,		"Temas de ayuda: "
+STID_WINE_HELP,        "Ayuda de Wine"
+STID_WHERROR,          "ERROR"
+STID_WARNING,          "ADVERTENCIA"
+STID_INFO,             "Informaci√≥n"
+STID_NOT_IMPLEMENTED,  "A√∫n no implementado"
+STID_HLPFILE_ERROR_s,  "Error al leer el archivo de ayuda `%s'"
+STID_INDEX,            "&√çndice"
+STID_CONTENTS,         "Resumen"
+STID_BACK,             "&Anterior"
+STID_ALL_FILES,        "Todos los archivos (*.*)"
+STID_HELP_FILES_HLP,   "Archivos de ayuda (*.hlp)"
+STID_FILE_NOT_FOUND_s  "No se pudo encontrar '%s'. ¬øDesea buscar este archivo por s√≠ mismo?"
+STID_NO_RICHEDIT       "No se pudo encontrar una implementaci√≥n de RichEdit... Cancelando."
+STID_PSH_INDEX,        "Temas de ayuda: "
 }
 
 IDD_INDEX DIALOG 0, 0, 200, 190
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Õndice"
+CAPTION "√çndice"
 {
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
@@ -103,5 +104,5 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Buscar"
 {
-    LTEXT  "A˙n no implementado", -1, 10, 10, 180, 150
+    LTEXT  "A√∫n no implementado", -1, 10, 10, 180, 150
 }

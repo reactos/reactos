@@ -37,11 +37,12 @@ EnumerateUsers(VOID)
     if (Status != NERR_Success)
         return Status;
 
-    PrintToConsole(L"\nUser accounts for \\\\%s\n\n", pServer->sv100_name);
+    PrintToConsole(L"\n");
+    PrintResourceString(IDS_USER_ACCOUNTS, pServer->sv100_name);
+    PrintToConsole(L"\n\n");
+    PrintToConsole(L"------------------------------------------\n");
 
     NetApiBufferFree(pServer);
-
-    PrintToConsole(L"------------------------------------------\n");
 
     Status = NetUserEnum(NULL,
                          0,
@@ -103,7 +104,7 @@ PrintDateTime(DWORD dwSeconds)
                    TimeBuffer,
                    80);
 
-    PrintToConsole(L"%s %s\n", DateBuffer, TimeBuffer);
+    PrintToConsole(L"%s %s", DateBuffer, TimeBuffer);
 }
 
 
@@ -136,6 +137,7 @@ DisplayUser(LPWSTR lpUserName)
     DWORD dwGroupRead, dwGroupTotal;
     DWORD dwLastSet;
     DWORD i;
+    INT nPaddedLength = 29;
     NET_API_STATUS Status;
 
     /* Modify the user */
@@ -173,54 +175,89 @@ DisplayUser(LPWSTR lpUserName)
     if (Status != NERR_Success)
         goto done;
 
-    PrintToConsole(L"User name                    %s\n", pUserInfo->usri4_name);
-    PrintToConsole(L"Full name                    %s\n", pUserInfo->usri4_full_name);
-    PrintToConsole(L"Comment                      %s\n", pUserInfo->usri4_comment);
-    PrintToConsole(L"User comment                 %s\n", pUserInfo->usri4_usr_comment);
-    PrintToConsole(L"Country code                 %03ld ()\n", pUserInfo->usri4_country_code);
-    PrintToConsole(L"Account active               %s\n", (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)? L"No" : ((pUserInfo->usri4_flags & UF_LOCKOUT) ? L"Locked" : L"Yes"));
-    PrintToConsole(L"Account expires              ");
-    if (pUserInfo->usri4_acct_expires == TIMEQ_FOREVER)
-        PrintToConsole(L"Never\n");
-    else
-        PrintDateTime(pUserInfo->usri4_acct_expires);
+    PrintPaddedResourceString(IDS_USER_NAME, nPaddedLength);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_name);
 
+    PrintPaddedResourceString(IDS_USER_FULL_NAME, nPaddedLength);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_full_name);
+
+    PrintPaddedResourceString(IDS_USER_COMMENT, nPaddedLength);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_comment);
+
+    PrintPaddedResourceString(IDS_USER_USER_COMMENT, nPaddedLength);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_usr_comment);
+
+    PrintPaddedResourceString(IDS_USER_COUNTRY_CODE, nPaddedLength);
+    PrintToConsole(L"%03ld ()\n", pUserInfo->usri4_country_code);
+
+    PrintPaddedResourceString(IDS_USER_ACCOUNT_ACTIVE, nPaddedLength);
+    if (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)
+        PrintResourceString(IDS_GENERIC_NO);
+    else if (pUserInfo->usri4_flags & UF_LOCKOUT)
+        PrintResourceString(IDS_GENERIC_LOCKED);
+    else
+        PrintResourceString(IDS_GENERIC_YES);
     PrintToConsole(L"\n");
 
-    PrintToConsole(L"Password last set            ");
+    PrintPaddedResourceString(IDS_USER_ACCOUNT_EXPIRES, nPaddedLength);
+    if (pUserInfo->usri4_acct_expires == TIMEQ_FOREVER)
+        PrintResourceString(IDS_GENERIC_NEVER);
+    else
+        PrintDateTime(pUserInfo->usri4_acct_expires);
+    PrintToConsole(L"\n\n");
+
+    PrintPaddedResourceString(IDS_USER_PW_LAST_SET, nPaddedLength);
     dwLastSet = GetTimeInSeconds() - pUserInfo->usri4_password_age;
     PrintDateTime(dwLastSet);
 
-    PrintToConsole(L"Password expires             ");
+    PrintPaddedResourceString(IDS_USER_PW_EXPIRES, nPaddedLength);
     if ((pUserInfo->usri4_flags & UF_DONT_EXPIRE_PASSWD) || pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
-        PrintToConsole(L"Never\n");
+        PrintResourceString(IDS_GENERIC_NEVER);
     else
         PrintDateTime(dwLastSet + pUserModals->usrmod0_max_passwd_age);
+    PrintToConsole(L"\n");
 
-    PrintToConsole(L"Password changeable          ");
+    PrintPaddedResourceString(IDS_USER_PW_CHANGEABLE, nPaddedLength);
     PrintDateTime(dwLastSet + pUserModals->usrmod0_min_passwd_age);
 
-    PrintToConsole(L"Password required            %s\n", (pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? L"No" : L"Yes");
-    PrintToConsole(L"User may change password     %s\n", (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? L"No" : L"Yes");
-
+    PrintPaddedResourceString(IDS_USER_PW_REQUIRED, nPaddedLength);
+    PrintResourceString((pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? IDS_GENERIC_NO : IDS_GENERIC_YES);
     PrintToConsole(L"\n");
-    PrintToConsole(L"Workstations allowed         %s\n", (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0) ? L"All" : pUserInfo->usri4_workstations);
-    PrintToConsole(L"Logon script                 %s\n", pUserInfo->usri4_script_path);
-    PrintToConsole(L"User profile                 %s\n", pUserInfo->usri4_profile);
-    PrintToConsole(L"Home directory               %s\n", pUserInfo->usri4_home_dir);
-    PrintToConsole(L"Last logon                   ");
+
+    PrintPaddedResourceString(IDS_USER_CHANGE_PW, nPaddedLength);
+    PrintResourceString((pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? IDS_GENERIC_NO : IDS_GENERIC_YES);
+    PrintToConsole(L"\n\n");
+
+    PrintPaddedResourceString(IDS_USER_WORKSTATIONS, nPaddedLength);
+    if (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0)
+        PrintResourceString(IDS_GENERIC_ALL);
+    else
+        PrintToConsole(L"%s", pUserInfo->usri4_workstations);
+    PrintToConsole(L"\n");
+
+    PrintPaddedResourceString(IDS_USER_LOGON_SCRIPT, nPaddedLength);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_script_path);
+
+    PrintPaddedResourceString(IDS_USER_PROFILE, nPaddedLength);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_profile);
+
+    PrintPaddedResourceString(IDS_USER_HOME_DIR, nPaddedLength);
+    PrintToConsole(L"%s\n", pUserInfo->usri4_home_dir);
+
+    PrintPaddedResourceString(IDS_USER_LAST_LOGON, nPaddedLength);
     if (pUserInfo->usri4_last_logon == 0)
-        PrintToConsole(L"Never\n");
+        PrintResourceString(IDS_GENERIC_NEVER);
     else
         PrintDateTime(pUserInfo->usri4_last_logon);
-    PrintToConsole(L"\n");
-    PrintToConsole(L"Logon hours allowed          ");
+    PrintToConsole(L"\n\n");
+
+    PrintPaddedResourceString(IDS_USER_LOGON_HOURS, nPaddedLength);
     if (pUserInfo->usri4_logon_hours == NULL)
-        PrintToConsole(L"All\n");
-    PrintToConsole(L"\n");
+        PrintResourceString(IDS_GENERIC_ALL);
+    PrintToConsole(L"\n\n");
 
     PrintToConsole(L"\n");
-    PrintToConsole(L"Local group memberships      ");
+    PrintPaddedResourceString(IDS_USER_LOCAL_GROUPS, nPaddedLength);
     if (dwLocalGroupTotal != 0 && pLocalGroupInfo != NULL)
     {
         for (i = 0; i < dwLocalGroupTotal; i++)
@@ -235,7 +272,7 @@ DisplayUser(LPWSTR lpUserName)
         PrintToConsole(L"\n");
     }
 
-    PrintToConsole(L"Global group memberships     ");
+    PrintPaddedResourceString(IDS_USER_GLOBAL_GROUPS, nPaddedLength);
     if (dwGroupTotal != 0 && pGroupInfo != NULL)
     {
         for (i = 0; i < dwGroupTotal; i++)
@@ -267,6 +304,53 @@ done:
 }
 
 
+static
+VOID
+ReadPassword(
+    LPWSTR *lpPassword,
+    LPBOOL lpAllocated)
+{
+    WCHAR szPassword1[PWLEN + 1];
+    WCHAR szPassword2[PWLEN + 1];
+    LPWSTR ptr;
+
+    *lpAllocated = FALSE;
+
+    while (TRUE)
+    {
+        PrintResourceString(IDS_USER_ENTER_PASSWORD1);
+        ReadFromConsole(szPassword1, PWLEN + 1, FALSE);
+        PrintToConsole(L"\n");
+
+        PrintResourceString(IDS_USER_ENTER_PASSWORD2);
+        ReadFromConsole(szPassword2, PWLEN + 1, FALSE);
+        PrintToConsole(L"\n");
+
+        if (wcslen(szPassword1) == wcslen(szPassword2) &&
+            wcscmp(szPassword1, szPassword2) == 0)
+        {
+            ptr = HeapAlloc(GetProcessHeap(),
+                            0,
+                            (wcslen(szPassword1) + 1) * sizeof(WCHAR));
+            if (ptr != NULL)
+            {
+                wcscpy(ptr, szPassword1);
+                *lpPassword = ptr;
+                *lpAllocated = TRUE;
+                return;
+            }
+        }
+        else
+        {
+            PrintToConsole(L"\n");
+            PrintResourceString(IDS_USER_NO_PASSWORD_MATCH);
+            PrintToConsole(L"\n");
+            *lpPassword = NULL;
+        }
+    }
+}
+
+
 INT
 cmdUser(
     INT argc,
@@ -286,6 +370,7 @@ cmdUser(
     LPWSTR p;
     LPWSTR endptr;
     DWORD value;
+    BOOL bPasswordAllocated = FALSE;
     NET_API_STATUS Status;
 
     if (argc == 2)
@@ -305,14 +390,14 @@ cmdUser(
     if (argv[i][0] != L'/')
     {
         lpUserName = argv[i];
-        printf("User: %S\n", lpUserName);
+//        printf("User: %S\n", lpUserName);
         i++;
     }
 
     if (argv[i][0] != L'/')
     {
         lpPassword = argv[i];
-        printf("Password: %S\n", lpPassword);
+//        printf("Password: %S\n", lpPassword);
         i++;
     }
 
@@ -333,7 +418,7 @@ cmdUser(
         }
         else if (_wcsicmp(argv[j], L"/domain") == 0)
         {
-            printf("The /DOMAIN option is not supported yet!\n");
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
 #if 0
             bDomain = TRUE;
 #endif
@@ -344,6 +429,13 @@ cmdUser(
     {
         result = 1;
         goto done;
+    }
+
+    /* Interactive password input */
+    if (lpPassword != NULL && wcscmp(lpPassword, L"*") == 0)
+    {
+        ReadPassword(&lpPassword,
+                     &bPasswordAllocated);
     }
 
     if (!bAdd && !bDelete)
@@ -387,7 +479,7 @@ cmdUser(
             }
             else
             {
-                PrintToConsole(L"You entered an invalid value for the /ACTIVE option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/ACTIVE");
                 result = 1;
                 goto done;
             }
@@ -402,7 +494,7 @@ cmdUser(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintToConsole(L"You entered an invalid value for the /COUNTRYCODE option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/COUNTRYCODE");
                 result = 1;
                 goto done;
             }
@@ -413,6 +505,16 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/expires:", 9) == 0)
         {
+            p = &argv[i][9];
+            if (_wcsicmp(p, L"never") == 0)
+            {
+                pUserInfo->usri4_acct_expires = TIMEQ_FOREVER;
+            }
+            else
+            {
+                /* FIXME: Parse the date */
+                PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/EXPIRES");
+            }
         }
         else if (_wcsnicmp(argv[j], L"/fullname:", 10) == 0)
         {
@@ -435,7 +537,7 @@ cmdUser(
             }
             else
             {
-                PrintToConsole(L"You entered an invalid value for the /PASSWORDCHG option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/PASSWORDCHG");
                 result = 1;
                 goto done;
             }
@@ -453,7 +555,7 @@ cmdUser(
             }
             else
             {
-                PrintToConsole(L"You entered an invalid value for the /PASSWORDREQ option.\n");
+                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/PASSWORDREQ");
                 result = 1;
                 goto done;
             }
@@ -468,6 +570,8 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/times:", 7) == 0)
         {
+            /* FIXME */
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/TIMES");
         }
         else if (_wcsnicmp(argv[j], L"/usercomment:", 13) == 0)
         {
@@ -475,6 +579,8 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/workstations:", 14) == 0)
         {
+            /* FIXME */
+            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/WORKSTATIONS");
         }
     }
 
@@ -506,6 +612,9 @@ cmdUser(
     }
 
 done:
+    if (bPasswordAllocated == TRUE && lpPassword != NULL)
+        HeapFree(GetProcessHeap(), 0, lpPassword);
+
     if (!bAdd && !bDelete && pUserInfo != NULL)
         NetApiBufferFree(pUserInfo);
 

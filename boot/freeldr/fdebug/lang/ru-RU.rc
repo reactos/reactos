@@ -7,8 +7,8 @@ IDC_FDEBUG MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Соединение", IDM_FILE_CONNECT
-        MENUITEM "&Отключение", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Подключить", IDM_FILE_CONNECT
+        MENUITEM "&Отключить", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "О&чистить экран", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
@@ -50,9 +50,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройки соединения"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Введите COM-порт (e.g. COM1):", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "Введите COM-порт (напр. COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Введите скорость передачи (e.g. 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "Введите скорость передачи (напр. 115200):", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 45, 79, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 100, 79, 50, 14

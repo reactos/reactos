@@ -29,7 +29,7 @@ STRINGTABLE
     ROLE_SYSTEM_GRIP        "tutacak"
     ROLE_SYSTEM_SOUND       "ses"
     ROLE_SYSTEM_CURSOR      "imleç"
-    ROLE_SYSTEM_CARET       "düzeltme imi"
+    ROLE_SYSTEM_CARET       "şapka"
     ROLE_SYSTEM_ALERT       "uyarı"
     ROLE_SYSTEM_WINDOW      "pencere"
     ROLE_SYSTEM_CLIENT      "istemci"

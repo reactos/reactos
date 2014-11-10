@@ -293,8 +293,8 @@ static VOID WINAPI Port61hWrite(USHORT Port, BYTE Data)
         DPRINT("Speaker %s\n", Port61hState & 0x02 ? "on" : "off");
         // SpeakerStateChange = TRUE;
     }
-    // if (SpeakerStateChange) SpeakerChange();
-    SpeakerChange();
+    // if (SpeakerStateChange) SpeakerChange(Port61hState);
+    SpeakerChange(Port61hState);
 }
 
 static VOID WINAPI PitChan0Out(LPVOID Param, BOOLEAN State)
@@ -347,7 +347,7 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
     if ((OldPort61hState ^ Port61hState) & 0x20)
     {
         DPRINT("PitChan2Out -- Port61hState changed\n");
-        SpeakerChange();
+        SpeakerChange(Port61hState);
     }
 }
 

@@ -12,18 +12,18 @@ BEGIN
   BEGIN
     MENUITEM "Печать",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Свойства",              IDC_PROP, GRAYED
+    MENUITEM "Свойства",                 IDC_PROP, GRAYED
   END
   POPUP "Вид"
   BEGIN
-    MENUITEM "Устройства по типу",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Устройства по подключению",   IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по типу",       IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по подключению", IDC_STATIC, GRAYED
+    MENUITEM "Устройства по типу",       IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Устройства по подключению",IDC_STATIC, GRAYED
+    MENUITEM "Ресурсы по типу",          IDC_STATIC, GRAYED
+    MENUITEM "Ресурсы по подключению",   IDC_STATIC, GRAYED
   END
   POPUP "Справка"
   BEGIN
-    MENUITEM "О программе",                   IDC_ABOUT
+    MENUITEM "О программе",              IDC_ABOUT
   END
 END
 
@@ -31,7 +31,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Свойства",              IDC_PROP, GRAYED
+    MENUITEM "Свойства",                 IDC_PROP, GRAYED
   END
 END
 
@@ -68,9 +68,9 @@ BEGIN
   IDS_HINT_REFRESH      " Обновить список."
   IDS_HINT_PROP         " Открыть свойства для выбранного элемента."
   IDS_HINT_HELP         " Показать окно справки."
-  IDS_HINT_ABOUT        " О ReactOS Device Manager."
+  IDS_HINT_ABOUT        " О Диспетчере устройств ReactOS ."
 
-  IDS_HINT_SYS_RESTORE  " Востановить нормальный размер этого окна."
+  IDS_HINT_SYS_RESTORE  " Восстановить нормальный размер этого окна."
   IDS_HINT_SYS_MOVE     " Переместить это окно."
   IDS_HINT_SYS_SIZE     " Изменить размер этого окна."
   IDS_HINT_SYS_MINIMIZE " Свернуть это окно в значок."

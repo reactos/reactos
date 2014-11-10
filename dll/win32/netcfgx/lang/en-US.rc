@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
     CONTROL "Obtain the DNS server address automatically", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "&Use the following DNS server addresses", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    CONTROL "&Use the following DNS server addresses:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
     LTEXT "Preferred DNS server:", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
     LTEXT "Alternate DNS server:", -1, 14, 186, 135, 8

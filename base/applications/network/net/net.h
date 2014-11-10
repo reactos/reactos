@@ -31,6 +31,11 @@ PrintResourceString(
     ...);
 
 VOID
+PrintPaddedResourceString(
+    INT resID,
+    INT nPaddedLength);
+
+VOID
 PrintToConsole(
     LPWSTR lpFormat,
     ...);
@@ -38,6 +43,12 @@ PrintToConsole(
 VOID
 WriteToConsole(
     LPWSTR lpString);
+
+VOID
+ReadFromConsole(
+    LPWSTR lpInput,
+    DWORD dwLength,
+    BOOL bEcho);
 
 VOID help(VOID);
 INT unimplemented(INT argc, WCHAR **argv);

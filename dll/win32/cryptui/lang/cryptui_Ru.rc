@@ -26,85 +26,85 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_CERTIFICATE "Certificate"
-    IDS_CERTIFICATEINFORMATION "Certificate Information"
+    IDS_CERTIFICATE "Сертификат"
+    IDS_CERTIFICATEINFORMATION "Информация о сертификате"
     IDS_CERT_INFO_BAD_SIG "This certificate has an invalid signature. The certificate may have been altered or corrupted."
     IDS_CERT_INFO_UNTRUSTED_CA "This root certificate is not trusted. To trust it, add it to your system's trusted root certificate store."
     IDS_CERT_INFO_UNTRUSTED_ROOT "This certificate could not be validated to a trusted root certificate."
     IDS_CERT_INFO_PARTIAL_CHAIN "This certificate's issuer could not be found."
     IDS_CERT_INFO_BAD_PURPOSES "All the intended purposes of this certificate could not be verified."
     IDS_CERT_INFO_PURPOSES "This certificate is intended for the following purposes:"
-    IDS_SUBJECT_HEADING "Issued to: "
-    IDS_ISSUER_HEADING "Issued by: "
-    IDS_VALID_FROM "Valid from "
-    IDS_VALID_TO " to "
-    IDS_CERTIFICATE_BAD_SIGNATURE "This certificate has an invalid signature."
-    IDS_CERTIFICATE_BAD_TIME "This certificate has expired or is not yet valid."
+    IDS_SUBJECT_HEADING "Кому выдан: "
+    IDS_ISSUER_HEADING "Кем выдан: "
+    IDS_VALID_FROM "Действителен с "
+    IDS_VALID_TO " по "
+    IDS_CERTIFICATE_BAD_SIGNATURE "Данный сертификат имеет неверную подпись."
+    IDS_CERTIFICATE_BAD_TIME "Срок действия данного сертификата истек."
     IDS_CERTIFICATE_BAD_TIMENEST "This certificate's validity period exceeds that of its issuer."
     IDS_CERTIFICATE_REVOKED "This certificate was revoked by its issuer."
     IDS_CERTIFICATE_VALID "This certificate is OK."
-    IDS_FIELD "Field"
-    IDS_VALUE "Value"
-    IDS_FIELDS_ALL "<All>"
-    IDS_FIELDS_V1 "Version 1 Fields Only"
-    IDS_FIELDS_EXTENSIONS "Extensions Only"
-    IDS_FIELDS_CRITICAL_EXTENSIONS "Critical Extensions Only"
-    IDS_FIELDS_PROPERTIES "Properties Only"
-    IDS_FIELD_VERSION "Version"
-    IDS_FIELD_SERIAL_NUMBER "Serial number"
-    IDS_FIELD_ISSUER "Issuer"
-    IDS_FIELD_VALID_FROM "Valid from"
-    IDS_FIELD_VALID_TO "Valid to"
-    IDS_FIELD_SUBJECT "Subject"
-    IDS_FIELD_PUBLIC_KEY "Public key"
+    IDS_FIELD "Поле"
+    IDS_VALUE "Значение"
+    IDS_FIELDS_ALL "<Все>"
+    IDS_FIELDS_V1 "Только поля V1"
+    IDS_FIELDS_EXTENSIONS "Только расширения"
+    IDS_FIELDS_CRITICAL_EXTENSIONS "Только критические расширения"
+    IDS_FIELDS_PROPERTIES "Только свойства"
+    IDS_FIELD_VERSION "Версия"
+    IDS_FIELD_SERIAL_NUMBER "Серийный номер"
+    IDS_FIELD_ISSUER "Издатель"
+    IDS_FIELD_VALID_FROM "Действителен с"
+    IDS_FIELD_VALID_TO "Действителен по"
+    IDS_FIELD_SUBJECT "Субъект"
+    IDS_FIELD_PUBLIC_KEY "Открытый ключ"
     IDS_FIELD_PUBLIC_KEY_FORMAT "%1 (%2!d! bits)"
     IDS_PROP_HASH "SHA1 hash"
     IDS_PROP_ENHKEY_USAGE "Enhanced key usage (property)"
-    IDS_PROP_FRIENDLY_NAME "Friendly name"
-    IDS_PROP_DESCRIPTION "Description"
-    IDS_CERTIFICATE_PROPERTIES "Certificate Properties"
-    IDS_CERTIFICATE_PURPOSE_ERROR "Please enter an OID in the form 1.2.3.4"
-    IDS_CERTIFICATE_PURPOSE_EXISTS "The OID you entered already exists."
-    IDS_SELECT_STORE_TITLE "Select Certificate Store"
-    IDS_SELECT_STORE "Please select a certificate store."
-    IDS_IMPORT_WIZARD "Certificate Import Wizard"
+    IDS_PROP_FRIENDLY_NAME "Понятное имя"
+    IDS_PROP_DESCRIPTION "Описание"
+    IDS_CERTIFICATE_PROPERTIES "Свойства сертификата"
+    IDS_CERTIFICATE_PURPOSE_ERROR "Пожалуйста, введите OID в форму 1.2.3.4"
+    IDS_CERTIFICATE_PURPOSE_EXISTS "Введенный OID уже существует."
+    IDS_SELECT_STORE_TITLE "Выберите хранилище сертификата"
+    IDS_SELECT_STORE "Пожалуйста, выберите хранилище сертификата"
+    IDS_IMPORT_WIZARD "Мастер импорта сертификатов"
     IDS_IMPORT_TYPE_MISMATCH "The file contains objects that do not match the given criteria. Please select another file."
-    IDS_IMPORT_FILE_TITLE "File to Import"
-    IDS_IMPORT_FILE_SUBTITLE "Specify the file you want to import."
-    IDS_IMPORT_STORE_TITLE "Certificate Store"
+    IDS_IMPORT_FILE_TITLE "Файл для импорта"
+    IDS_IMPORT_FILE_SUBTITLE "Укажите файл для импорта."
+    IDS_IMPORT_STORE_TITLE "Хранилище сертификата"
     IDS_IMPORT_STORE_SUBTITLE "Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists."
-    IDS_IMPORT_FILTER_CERT "X.509 Certificate (*.cer; *.crt)"
-    IDS_IMPORT_FILTER_PFX "Personal Information Exchange (*.pfx; *.p12)"
-    IDS_IMPORT_FILTER_CRL "Certificate Revocation List (*.crl)"
-    IDS_IMPORT_FILTER_CTL "Certificate Trust List (*.stl)"
-    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft Serialized Certificate Store (*.sst)"
-    IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 Messages (*.spc; *.p7b)"
-    IDS_IMPORT_FILTER_ALL "All files (*.*)"
-    IDS_IMPORT_EMPTY_FILE "Please select a file."
+    IDS_IMPORT_FILTER_CERT "Сертификат X.509 (*.cer; *.crt)"
+    IDS_IMPORT_FILTER_PFX "Файлы обмена личной информацией (*.pfx; *.p12)"
+    IDS_IMPORT_FILTER_CRL "Список отзыва сертификатов (*.crl)"
+    IDS_IMPORT_FILTER_CTL "Список доверия сертификатов (*.stl)"
+    IDS_IMPORT_FILTER_SERIALIZED_STORE "Хранилище сериализованных сертификатов (*.sst)"
+    IDS_IMPORT_FILTER_CMS "Сертификаты PKCS #7 (*.spc; *.p7b)"
+    IDS_IMPORT_FILTER_ALL "Все файлы (*.*)"
+    IDS_IMPORT_EMPTY_FILE "Пожалуйста, выберите файл."
     IDS_IMPORT_BAD_FORMAT "The file format is not recognized. Please select another file."
     IDS_IMPORT_OPEN_FAILED "Could not open "
     IDS_IMPORT_DEST_DETERMINED "Determined by the program"
-    IDS_IMPORT_SELECT_STORE "Please select a store"
-    IDS_IMPORT_STORE_SELECTION "Certificate Store Selected"
+    IDS_IMPORT_SELECT_STORE "Пожалуйста, выберите хранилище сертификатов"
+    IDS_IMPORT_STORE_SELECTION "Хранилище сертификатов выбрано"
     IDS_IMPORT_DEST_AUTOMATIC "Automatically determined by the program"
-    IDS_IMPORT_FILE "File"
+    IDS_IMPORT_FILE "Файл"
     IDS_IMPORT_CONTENT "Content"
-    IDS_IMPORT_CONTENT_CERT "Certificate"
+    IDS_IMPORT_CONTENT_CERT "Сертификат"
     IDS_IMPORT_CONTENT_CRL "Certificate Revocation List"
     IDS_IMPORT_CONTENT_CTL "Certificate Trust List"
     IDS_IMPORT_CONTENT_CMS "CMS/PKCS #7 Message"
     IDS_IMPORT_CONTENT_PFX "Personal Information Exchange"
-    IDS_IMPORT_CONTENT_STORE "Certificate Store"
-    IDS_IMPORT_SUCCEEDED "The import was successful."
-    IDS_IMPORT_FAILED "The import failed."
+    IDS_IMPORT_CONTENT_STORE "Хранилище сертификатов"
+    IDS_IMPORT_SUCCEEDED "Импорт был успешен."
+    IDS_IMPORT_FAILED "Ошибка импорта."
     IDS_WIZARD_TITLE_FONT "Arial"
-    IDS_PURPOSE_ALL "<All>"
+    IDS_PURPOSE_ALL "<Все>"
     IDS_PURPOSE_ADVANCED "<Advanced Purposes>"
-    IDS_SUBJECT_COLUMN "Issued To"
-    IDS_ISSUER_COLUMN "Issued By"
-    IDS_EXPIRATION_COLUMN "Expiration Date"
+    IDS_SUBJECT_COLUMN "Кому выдан"
+    IDS_ISSUER_COLUMN "Кем выдан"
+    IDS_EXPIRATION_COLUMN "Срок действия"
     IDS_FRIENDLY_NAME_COLUMN "Friendly Name"
-    IDS_ALLOWED_PURPOSE_ALL "<All>"
+    IDS_ALLOWED_PURPOSE_ALL "<Все>"
     IDS_ALLOWED_PURPOSE_NONE "<None>"
     IDS_WARN_REMOVE_MY "You will no longer be able to decrypt messages with this certificate, or sign messages with it.\nAre you sure you want to remove this certificate?"
     IDS_WARN_REMOVE_PLURAL_MY "You will no longer be able to decrypt messages with these certificates, or sign messages with them.\nAre you sure you want to remove these certificates?"
@@ -116,9 +116,9 @@ STRINGTABLE
     IDS_WARN_REMOVE_PLURAL_ROOT "Certificates issued by these root certification authorities, or any certification authorities they issued, will no longer be trusted.\nAre you sure you want to remove these trusted root certificates?"
     IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software signed by this publisher will no longer be trusted.\nAre you sure you want to remove this certificate?"
     IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software signed by these publishers will no longer be trusted.\nAre you sure you want to remove these certificates?"
-    IDS_WARN_REMOVE_DEFAULT "Are you sure you want to remove this certificate?"
-    IDS_WARN_REMOVE_PLURAL_DEFAULT "Are you sure you want to remove these certificates?"
-    IDS_CERT_MGR "Certificates"
+    IDS_WARN_REMOVE_DEFAULT "Вы хотите удалить этот сертификат?"
+    IDS_WARN_REMOVE_PLURAL_DEFAULT "Вы хотите удалить эти сертификаты?"
+    IDS_CERT_MGR "Сертификаты"
     IDS_FRIENDLY_NAME_NONE "<None>"
     IDS_PURPOSE_SERVER_AUTH "Ensures the identity of a remote computer"
     IDS_PURPOSE_CLIENT_AUTH "Proves your identity to a remote computer"
@@ -146,31 +146,31 @@ STRINGTABLE
     IDS_PURPOSE_CA_EXCHANGE "Private Key Archival"
     IDS_PURPOSE_KEY_RECOVERY_AGENT "Key Recovery Agent"
     IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory Service Email Replication"
-    IDS_EXPORT_WIZARD "Certificate Export Wizard"
+    IDS_EXPORT_WIZARD "Мастер экспорта сертификатов"
     IDS_EXPORT_FORMAT_TITLE "Export Format"
     IDS_EXPORT_FORMAT_SUBTITLE "Choose the format in which the content will be saved."
     IDS_EXPORT_FILE_TITLE "Export Filename"
     IDS_EXPORT_FILE_SUBTITLE "Specify the name of the file in which the content will be saved."
-    IDS_EXPORT_FILE_EXISTS "The specified file already exists. Do you want to replace it?"
-    IDS_EXPORT_FILTER_CERT "DER-Encoded Binary X.509 (*.cer)"
-    IDS_EXPORT_FILTER_BASE64_CERT "Base64-Encoded X.509 (*.cer)"
-    IDS_EXPORT_FILTER_CRL "Certificate Revocation List (*.crl)"
-    IDS_EXPORT_FILTER_CTL "Certificate Trust List (*.stl)"
-    IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 Messages (*.p7b)"
-    IDS_EXPORT_FILTER_PFX "Personal Information Exchange (*.pfx)"
-    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Microsoft Serialized Certificate Store (*.sst)"
-    IDS_EXPORT_FORMAT "File Format"
+    IDS_EXPORT_FILE_EXISTS "Указанный файл уже существует. Заменить его?"
+    IDS_EXPORT_FILTER_CERT "Двоичные файлы X.509 в кодировке DER (*.cer)"
+    IDS_EXPORT_FILTER_BASE64_CERT "Двоичные файлы X.509 в кодировке BASE64 (*.cer)"
+    IDS_EXPORT_FILTER_CRL "Список отзыва сертификатов (*.crl)"
+    IDS_EXPORT_FILTER_CTL "Список доверия сертификатов (*.stl)"
+    IDS_EXPORT_FILTER_CMS "Сертификаты PKCS #7 (*.p7b)"
+    IDS_EXPORT_FILTER_PFX "Файлы обмена личной информацией (*.pfx)"
+    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Хранилище сериализованных сертификатов (*.sst)"
+    IDS_EXPORT_FORMAT "Формат файла"
     IDS_EXPORT_INCLUDE_CHAIN "Include all certificates in certificate path"
-    IDS_EXPORT_KEYS "Export keys"
-    IDS_YES "Yes"
-    IDS_NO "No"
-    IDS_EXPORT_SUCCEEDED "The export was successful."
-    IDS_EXPORT_FAILED "The export failed."
-    IDS_EXPORT_PRIVATE_KEY_TITLE "Export Private Key"
+    IDS_EXPORT_KEYS "Экспорт ключей"
+    IDS_YES "Да"
+    IDS_NO "Нет"
+    IDS_EXPORT_SUCCEEDED "Экспорт выполнен успешно."
+    IDS_EXPORT_FAILED "Ошибка экспорта."
+    IDS_EXPORT_PRIVATE_KEY_TITLE "Экспорт закрытых ключей"
     IDS_EXPORT_PRIVATE_KEY_SUBTITLE "The certificate contains a private key which may be exported along with the certificate."
-    IDS_EXPORT_PASSWORD_TITLE "Enter Password"
+    IDS_EXPORT_PASSWORD_TITLE "Введите пароль"
     IDS_EXPORT_PASSWORD_SUBTITLE "You may password-protect a private key."
-    IDS_EXPORT_PASSWORD_MISMATCH "The passwords do not match."
+    IDS_EXPORT_PASSWORD_MISMATCH "Пароли не совпадают."
     IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Note: The private key for this certificate could not be opened."
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Note: The private key for this certificate is not exportable."
 }
@@ -214,7 +214,7 @@ BEGIN
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
     13,22,231,130
   PUSHBUTTON "&Просмотр сертификата", IDC_VIEWCERTIFICATE,155,156,90,14
-  LTEXT "Состо&яние сертификата", IDC_CERTIFICATESTATUS,6,183,200,14
+  LTEXT "Состо&яние сертификата:", IDC_CERTIFICATESTATUS,6,183,200,14
   CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
@@ -249,7 +249,7 @@ BEGIN
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     24,100,220,106
-  PUSHBUTTON "Добавить &назначение...", IDC_ADD_PURPOSE,174,212,70,14
+  PUSHBUTTON "Добавить &назначение...", IDC_ADD_PURPOSE,154,212,90,14
 END
 
 IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
@@ -270,7 +270,7 @@ BEGIN
   LTEXT "Выберите хранилище сертификата:", IDC_STORE_TEXT, 6,6,190,28
   CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
     6,28,188,70
-  CHECKBOX "&Хранилища сертификатов", IDC_SHOW_PHYSICAL_STORES, 6,102,180,14, BS_AUTOCHECKBOX|WS_TABSTOP
+  CHECKBOX "&Показать физические хранилища", IDC_SHOW_PHYSICAL_STORES, 6,102,180,14, BS_AUTOCHECKBOX|WS_TABSTOP
   PUSHBUTTON "OK", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "Отмена", IDCANCEL, 144,118,50,14
 END
@@ -310,7 +310,7 @@ BEGIN
   LTEXT "Выбор хранилища может быть произведен ReactOS автоматически, или же можно указать размещение сертификата вручную.",
     -1, 21,1,220,25
   AUTORADIOBUTTON "&Автоматически выбрать хранилище на основе типа сертификата",
-    IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_IMPORT_AUTO_STORE, 31,28,235,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "&Поместить все сертификаты в следующее хранилище",
     IDC_IMPORT_SPECIFY_STORE, 31,42,220,12, BS_AUTORADIOBUTTON
   EDITTEXT IDC_IMPORT_STORE, 44,61,185,14, ES_READONLY
@@ -333,36 +333,36 @@ BEGIN
 END
 
 IDD_CERT_MGR DIALOG 0,0,335,270
-CAPTION "Certificates"
+CAPTION "Сертификаты"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "I&ntended purpose:", -1, 7,9,100,12
+  LTEXT "&Назначение:", -1, 7,9,100,12
   COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_MGR_STORES, "SysTabControl32", WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
   CONTROL "", IDC_MGR_CERTS, "SysListView32", LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
-  PUSHBUTTON "&Import...", IDC_MGR_IMPORT, 7,172,65,14
-  PUSHBUTTON "&Export...", IDC_MGR_EXPORT, 76,172,65,14, WS_DISABLED
-  PUSHBUTTON "&Remove", IDC_MGR_REMOVE, 145,172,65,14, WS_DISABLED
-  PUSHBUTTON "&Advanced...", IDC_MGR_ADVANCED, 263,172,65,14
-  GROUPBOX "Certificate intended purposes", -1,7,194,321,47, BS_GROUPBOX
+  PUSHBUTTON "&Импорт...", IDC_MGR_IMPORT, 7,172,65,14
+  PUSHBUTTON "&Экспорт...", IDC_MGR_EXPORT, 76,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Удалить", IDC_MGR_REMOVE, 145,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Дополнительно", IDC_MGR_ADVANCED, 263,172,65,14
+  GROUPBOX "Назначения сертификата", -1,7,194,321,47, BS_GROUPBOX
   LTEXT "", IDC_MGR_PURPOSES, 13,206,252,32
-  PUSHBUTTON "&View", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
-  PUSHBUTTON "&Close", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "&Просмотр", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
+  PUSHBUTTON "&Закрыть", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
 IDD_CERT_MGR_ADVANCED DIALOG 0,0,248,176
-CAPTION "Advanced Options"
+CAPTION "Дополнительные параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Certificate purpose", -1, 7,7,234,141, BS_GROUPBOX
-  LTEXT "Select one or more purposes to be listed when Advanced Purposes is selected.",
+  GROUPBOX "Назначение сертификата", -1, 7,7,234,141, BS_GROUPBOX
+  LTEXT "Выберите одно или более назначений, перечисленных в разделе расширенных назначений.",
     -1, 14,18,220,16
-  LTEXT "&Certificate purposes:", -1, 14,41,90,12, WS_TABSTOP
+  LTEXT "На&значения сертификата:", -1, 14,41,90,12, WS_TABSTOP
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     14,51,220,90
   PUSHBUTTON "OK", IDOK, 132,155,51,14, BS_DEFPUSHBUTTON
-  PUSHBUTTON "Cancel", IDCANCEL, 190,155,51,14
+  PUSHBUTTON "Отмена", IDCANCEL, 190,155,51,14
 END
 
 IDD_EXPORT_WELCOME DIALOG 0,0,317,143
@@ -381,7 +381,7 @@ CAPTION "Мастер экспорта сертификатов"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Закрытые ключи защищены паролем. Чтобы экспортировать закрытый ключ вместе с сертификатом, нужно будет указать пароль.", -1, 21,1,195,25
-  LTEXT "Экспортировать закрытый ключ вместе с сертификатом?", -1, 21,27,195,10
+  LTEXT "Экспортировать закрытый ключ вместе с сертификатом?", -1, 21,27,200,10
   AUTORADIOBUTTON "Д&а, экспортировать закрытый ключ",
     IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "Н&ет, не экспортировать закрытый ключ",

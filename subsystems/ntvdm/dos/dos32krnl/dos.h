@@ -224,7 +224,7 @@ DWORD DosLoadExecutable(
     IN DOS_EXEC_TYPE LoadType,
     IN LPCSTR ExecutablePath,
     IN LPCSTR CommandLine,
-    IN PVOID Environment,
+    IN LPCSTR Environment,
     OUT PDWORD StackLocation OPTIONAL,
     OUT PDWORD EntryPoint OPTIONAL
 );
@@ -233,16 +233,13 @@ WORD DosCreateProcess(
     LPCSTR ProgramName,
     PDOS_EXEC_PARAM_BLOCK Parameters
 );
-DWORD DosStartProcess(IN LPCSTR ExecutablePath,
-                      IN LPCSTR CommandLine,
-                      IN PVOID Environment);
+DWORD DosStartProcess(
+    IN LPCSTR ExecutablePath,
+    IN LPCSTR CommandLine,
+    IN LPCSTR Environment
+);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
-
-VOID WINAPI DosInt20h(LPWORD Stack);
-VOID WINAPI DosInt21h(LPWORD Stack);
-VOID WINAPI DosBreakInterrupt(LPWORD Stack);
-VOID WINAPI DosInt2Fh(LPWORD Stack);
 
 BOOLEAN DosKRNLInitialize(VOID);
 

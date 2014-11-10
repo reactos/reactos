@@ -237,7 +237,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
             }
 
             /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
-            if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcscmp(wallpaperFilename, filename) != 0))
+            if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcsicmp(wallpaperFilename, filename) != 0))
             {
                 himl = (HIMAGELIST)SHGetFileInfo(filename,
                                                 0,

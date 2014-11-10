@@ -404,6 +404,27 @@ IopParseDevice(IN PVOID ParseObject,
     /* Check if we can simply use a dummy file */
     UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
 
+    /* FIXME: Small hack still exists, have to check why...
+     * This is triggered multiple times by usetup and then once per boot.
+     */
+    if (ExpInTextModeSetup &&
+        !(DirectOpen) &&
+        !(RemainingName->Length) &&
+        !(OpenPacket->RelatedFileObject) &&
+        ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
+        (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
+        !(UseDummyFile))
+    {
+        DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
+        DesiredAccess & ~(SYNCHRONIZE |
+                          FILE_READ_ATTRIBUTES |
+                          READ_CONTROL |
+                          ACCESS_SYSTEM_SECURITY |
+                          WRITE_OWNER |
+                          WRITE_DAC));
+        DirectOpen = TRUE;
+    }
+
     /* Check if this is a direct open */
     if (!(RemainingName->Length) &&
         !(OpenPacket->RelatedFileObject) &&

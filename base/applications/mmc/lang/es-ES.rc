@@ -1,6 +1,7 @@
 /*
  * Spanish Language resource file
  * Traducido por: Javier Remacha 2007-12-18
+ * Corregido por: Ismael Ferreras Morezuelas 2014-11-07
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -9,13 +10,13 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Archivo"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Nuevo\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Sa&lir\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Ayuda"
     BEGIN
-        MENUITEM "&Acerca de la Consola de Administración de ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&Acerca de la Consola de administración de ReactOS...", IDM_HELP_ABOUT
     END
 END
 
@@ -23,22 +24,22 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Archivo"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Nuevo\tCtrl+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "Sa&lir\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "&Ventana"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "Lista", IDM_WINDOWS_LIST
     END
     POPUP "&Ayuda"
     BEGIN
-        MENUITEM "&Acerca de la Consola de Administración de ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&Acerca de la Consola de administración de ReactOS...", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Consola de Administración de ReactOS"
+    IDS_APPTITLE "Consola de administración de ReactOS"
     IDS_CONSOLETITLE "Consola%1!u!"
 END

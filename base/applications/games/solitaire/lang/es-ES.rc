@@ -5,6 +5,7 @@
  * PURPOSE:     Spanish Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  * ACTUALIZADO: Javier Remacha - 13/01/09
+ *              Ismael Ferreras Morezuelas - 2014/11/07
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -17,21 +18,21 @@ CAPTION "Opciones"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Cartas", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Sacar &Una", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Sacar &Tres", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Sacar &una", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Sacar &tres", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    GROUPBOX "Estilo de juego", -1, 100, 7, 75, 53
+    AUTORADIOBUTTON "&Normal", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    AUTORADIOBUTTON "&Sin puntuar", IDC_OPT_NOSCORE, 107, 45, 60, 10
     AUTOCHECKBOX "&Mostrar tiempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "&Barra de estado", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Mantener puntuación", IDC_OPT_KEEPSCORE, 100, 66, 83, 10, WS_TABSTOP
     DEFPUSHBUTTON "Aceptar", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Seleccionar el reverso"
+CAPTION "Selecciona el reverso de una carta"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -48,20 +49,20 @@ BEGIN
     CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 232, 89, 50, 71
     CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 289, 89, 50, 71
     DEFPUSHBUTTON "Aceptar", IDOK, 114, 165, 54, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 176, 165, 54, 14
+    PUSHBUTTON    "Cancelar", IDCANCEL, 176, 165, 54, 14
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME "Solitario"
-    IDS_SOL_ABOUT "Solitario por J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT "¿Finalizar el juego actual?"
-    IDS_SOL_WIN "Felicidades, ¡¡Has ganado!!"
-    IDS_SOL_DEAL "¿Repartir de nuevo?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    IDS_SOL_NAME  "Solitario"
+    IDS_SOL_ABOUT "Solitario por J Brown\n\nCardLib versión 1.0."
+    IDS_SOL_QUIT  "¿Salir del juego actual?"
+    IDS_SOL_WIN   "¡Enhorabuena, has ganado!"
+    IDS_SOL_DEAL  "¿Jugar de nuevo?"
+    IDS_SOL_SCORE "Puntuación: %d"
+    IDS_SOL_TIME  "Tiempo: %d"
 END
 
 /* Menus */
@@ -77,7 +78,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Salir", IDM_GAME_EXIT
     END
-    POPUP "&Ayuda"
+    POPUP "Ay&uda"
     BEGIN
         MENUITEM "&Temas de ayuda\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Acerca de", IDM_HELP_ABOUT

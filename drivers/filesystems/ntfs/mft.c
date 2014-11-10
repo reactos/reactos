@@ -492,7 +492,6 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   ULONGLONG *OutMFTIndex)
 {
     PFILE_RECORD_HEADER MftRecord;
-    //ULONG Magic;
     PNTFS_ATTR_CONTEXT IndexRootCtx;
     PNTFS_ATTR_CONTEXT IndexBitmapCtx;
     PNTFS_ATTR_CONTEXT IndexAllocationCtx;
@@ -520,7 +519,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
 
     if (NT_SUCCESS(ReadFileRecord(Vcb, MFTIndex, MftRecord)))
     {
-        //Magic = MftRecord->Magic;
+        ASSERT(MftRecord->Ntfs.Type == NRH_FILE_TYPE);
 
         Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx);
         if (!NT_SUCCESS(Status))
@@ -630,7 +629,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 }
 
                 IndexBuffer = (PINDEX_BUFFER)IndexRecord;
-                ASSERT(IndexBuffer->Ntfs.Type == 'XDNI');
+                ASSERT(IndexBuffer->Ntfs.Type == NRH_INDX_TYPE);
                 ASSERT(IndexBuffer->Header.AllocatedSize + 0x18 == IndexBlockSize);
                 IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
                 IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
