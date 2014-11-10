@@ -913,10 +913,12 @@ VfatDismountVolume(
     PDEVICE_EXTENSION DeviceExt;
     PLIST_ENTRY NextEntry;
     PVFATFCB Fcb;
+    PFILE_OBJECT FileObject;
 
     DPRINT("VfatDismountVolume(%p)\n", IrpContext);
 
     DeviceExt = IrpContext->DeviceExt;
+    FileObject = IrpContext->FileObject;
 
     /* We HAVE to be locked. Windows also allows dismount with no lock
      * but we're here mainly for 1st stage, so KISS
@@ -937,30 +939,8 @@ VfatDismountVolume(
 
     ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
 
-    /* Browse all the available FCBs first, and force data writing to disk */
-    for (NextEntry = DeviceExt->FcbListHead.Flink;
-         NextEntry != &DeviceExt->FcbListHead;
-         NextEntry = NextEntry->Flink)
-    {
-        Fcb = CONTAINING_RECORD(NextEntry, VFATFCB, FcbListEntry);
-
-        ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
-        ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
-
-        if (Fcb->FileObject)
-        {
-            if (Fcb->Flags & FCB_IS_DIRTY)
-            {
-                VfatUpdateEntry(Fcb);
-            }
-
-            CcPurgeCacheSection(Fcb->FileObject->SectionObjectPointer, NULL, 0, FALSE);
-            CcUninitializeCacheMap(Fcb->FileObject, &Fcb->RFCB.FileSize, NULL);
-        }
-
-        ExReleaseResourceLite(&Fcb->PagingIoResource);
-        ExReleaseResourceLite(&Fcb->MainResource);
-    }
+    /* Flush volume & files */
+    VfatFlushVolume(DeviceExt, (PVFATFCB)FileObject->FsContext);
 
     /* Rebrowse the FCB in order to free them now */
     while (!IsListEmpty(&DeviceExt->FcbListHead))
