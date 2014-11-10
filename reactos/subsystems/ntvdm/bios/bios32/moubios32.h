@@ -77,6 +77,6 @@ VOID MouseBiosUpdateButtons(WORD ButtonStatus);
 BOOLEAN MouseBios32Initialize(VOID);
 VOID MouseBios32Cleanup(VOID);
 
-#endif // _MOUBIOS32_H_
+#endif /* _MOUBIOS32_H_ */
 
 /* EOF */

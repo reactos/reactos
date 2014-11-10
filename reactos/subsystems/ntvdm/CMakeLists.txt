@@ -1,8 +1,5 @@
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486
-    ntvdm)
-
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
 spec2def(ntvdm.exe ntvdm.spec)
 
 list(APPEND SOURCE

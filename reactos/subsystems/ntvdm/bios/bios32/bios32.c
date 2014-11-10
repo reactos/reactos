@@ -18,8 +18,8 @@
 #include "cpu/bop.h"
 #include "int32.h"
 
-#include "../bios.h"
-#include "../rom.h"
+#include <bios/bios.h>
+#include <bios/rom.h>
 #include "bios32.h"
 #include "bios32p.h"
 #include "kbdbios32.h"

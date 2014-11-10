@@ -12,7 +12,7 @@
 
 #include "emulator.h"
 #include "vga.h"
-#include "../bios/vidbios.h"
+#include <bios/vidbios.h>
 
 #include "io.h"
 

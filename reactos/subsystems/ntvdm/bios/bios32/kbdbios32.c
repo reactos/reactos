@@ -15,7 +15,7 @@
 #include "int32.h"
 
 #include "kbdbios32.h"
-#include "../kbdbios.h"
+#include <bios/kbdbios.h>
 #include "bios32p.h"
 
 #include "io.h"

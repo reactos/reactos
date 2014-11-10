@@ -12,7 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "ntvdm.h"
-#include "../bios.h"
+#include <bios/bios.h>
 
 /**/ #include "int32.h" /**/
 
