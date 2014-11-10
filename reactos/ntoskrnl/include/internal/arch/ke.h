@@ -20,15 +20,15 @@
 #pragma once
 
 #ifdef _M_IX86
-#include "../i386/ke.h"
+#include <internal/i386/ke.h>
 #elif defined(_M_PPC)
-#include "../powerpc/ke.h"
+#include <internal/powerpc/ke.h>
 #elif defined(_M_MIPS)
-#include "../mips/ke.h"
+#include <internal/mips/ke.h>
 #elif defined(_M_ARM)
-#include "../arm/ke.h"
+#include <internal/arm/ke.h>
 #elif defined(_M_AMD64)
-#include "../amd64/ke.h"
+#include <internal/amd64/ke.h>
 #else
 #error "Unknown processor"
 #endif

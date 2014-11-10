@@ -13,7 +13,7 @@
 #include <ntoskrnl.h>
 
 #define NDEBUG
-#include "../cache/section/newmm.h"
+#include <cache/section/newmm.h>
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/

@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
