@@ -4,8 +4,6 @@
 #include "lwip/pbuf.h"
 #include "lwip/err.h"
 
-#include "rosip.h"
-
 #include <debug.h>
 
 static LIST_ENTRY ThreadListHead;
@@ -315,22 +313,6 @@ sys_init(void)
     KeQuerySystemTime(&StartTime);
     
     KeInitializeEvent(&TerminationEvent, NotificationEvent, FALSE);
-    
-    ExInitializeNPagedLookasideList(&MessageLookasideList,
-                                    NULL,
-                                    NULL,
-                                    0,
-                                    sizeof(struct lwip_callback_msg),
-                                    LWIP_TAG,
-                                    0);
-    
-    ExInitializeNPagedLookasideList(&QueueEntryLookasideList,
-                                    NULL,
-                                    NULL,
-                                    0,
-                                    sizeof(QUEUE_ENTRY),
-                                    LWIP_TAG,
-                                    0);
 }
 
 void

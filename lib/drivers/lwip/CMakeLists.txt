@@ -10,8 +10,6 @@ include_directories(
     src/include/ipv4)
 
 list(APPEND SOURCE
-    src/rosip.c
-    src/rostcp.c
     src/rosmem.c
     src/sys_arch.c
     src/api/api_lib.c
