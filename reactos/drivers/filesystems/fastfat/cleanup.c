@@ -38,7 +38,6 @@ VfatCleanupFile(
     if (pFcb->Flags & FCB_IS_VOLUME)
     {
         pFcb->OpenHandleCount--;
-        DeviceExt->OpenHandleCount--;
 
         if (pFcb->OpenHandleCount != 0)
         {
@@ -109,6 +108,11 @@ VfatCleanupFile(
 
         ExReleaseResourceLite(&pFcb->PagingIoResource);
         ExReleaseResourceLite(&pFcb->MainResource);
+    }
+
+    if (DeviceExt->Flags & VCB_DISMOUNT_PENDING)
+    {
+        VfatCheckForDismount(DeviceExt, FALSE);
     }
 
     return STATUS_SUCCESS;

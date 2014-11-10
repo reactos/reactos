@@ -312,3 +312,90 @@ VfatLockUserBuffer(
 
     return STATUS_SUCCESS;
 }
+
+BOOLEAN
+VfatCheckForDismount(
+    IN PDEVICE_EXTENSION DeviceExt,
+    IN BOOLEAN Create)
+{
+    KIRQL OldIrql;
+    PVPB Vpb;
+    BOOLEAN Delete;
+
+    DPRINT1("VfatCheckForDismount(%p, %u)\n", DeviceExt, Create);
+
+    /* Lock VPB */
+    IoAcquireVpbSpinLock(&OldIrql);
+
+    /* Reference it and check if a create is being done */
+    Vpb = DeviceExt->IoVPB;
+    if (Vpb->ReferenceCount != Create)
+    {
+        /* Copy the VPB to our local own to prepare later dismount */
+        if (DeviceExt->SpareVPB != NULL)
+        {
+            RtlZeroMemory(DeviceExt->SpareVPB, sizeof(VPB));
+            DeviceExt->SpareVPB->Type = IO_TYPE_VPB;
+            DeviceExt->SpareVPB->Size = sizeof(VPB);
+            DeviceExt->SpareVPB->RealDevice = DeviceExt->IoVPB->RealDevice;
+            DeviceExt->SpareVPB->DeviceObject = NULL;
+            DeviceExt->SpareVPB->Flags = DeviceExt->IoVPB->Flags & VPB_REMOVE_PENDING;
+            DeviceExt->IoVPB->RealDevice->Vpb = DeviceExt->SpareVPB;
+            DeviceExt->SpareVPB = NULL;
+            DeviceExt->IoVPB->Flags |= VPB_PERSISTENT;
+        }
+
+        /* Don't do anything */
+        Delete = FALSE;
+    }
+    else
+    {
+        /* Otherwise, delete the volume */
+        Delete = TRUE;
+
+        /* Check if it has a VPB and unmount it */
+        if (Vpb->RealDevice->Vpb == Vpb)
+        {
+            Vpb->DeviceObject = NULL;
+            Vpb->Flags &= ~VPB_MOUNTED;
+        }
+    }
+
+    /* Release lock and return status */
+    IoReleaseVpbSpinLock(OldIrql);
+
+    /* If we were to delete, delete volume */
+    if (Delete)
+    {
+        PVPB DelVpb;
+
+        /* If we have a local VPB, we'll have to delete it
+         * but we won't dismount us - something went bad before
+         */
+        if (DeviceExt->SpareVPB)
+        {
+            DelVpb = DeviceExt->SpareVPB;
+        }
+        /* Otherwise, dismount our device if possible */
+        else
+        {
+            if (DeviceExt->IoVPB->ReferenceCount)
+            {
+                ObfDereferenceObject(DeviceExt->StorageDevice);
+                IoDeleteDevice(DeviceExt->VolumeDevice);
+                return Delete;
+            }
+
+            DelVpb = DeviceExt->IoVPB;
+        }
+
+        /* Delete any of the available VPB and dismount */
+        ExFreePool(DelVpb);
+        ObfDereferenceObject(DeviceExt->StorageDevice);
+        IoDeleteDevice(DeviceExt->VolumeDevice);
+
+        return Delete;
+    }
+
+    return Delete;
+}        

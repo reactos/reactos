@@ -447,6 +447,7 @@ VfatMount(
     RtlZeroMemory(DeviceExt, ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize);
     DeviceExt->FcbHashTable = (HASHENTRY**)((ULONG_PTR)DeviceExt + ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)));
     DeviceExt->HashTableSize = HashTableSize;
+    DeviceExt->VolumeDevice = DeviceObject;
 
     /* use same vpb as device disk */
     DeviceObject->Vpb = Vpb;
@@ -962,7 +963,6 @@ VfatDismountVolume(
 
     /* Mark we're being dismounted */
     DeviceExt->Flags |= VCB_DISMOUNT_PENDING;
-    IrpContext->DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
 
     ExReleaseResourceLite(&DeviceExt->FatResource);
 
