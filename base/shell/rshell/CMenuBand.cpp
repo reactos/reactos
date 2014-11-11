@@ -389,14 +389,14 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::ShowDW(BOOL fShow)
 
     if (m_staticToolbar != NULL)
     {
-        hr = m_staticToolbar->ShowWindow(fShow);
+        hr = m_staticToolbar->ShowDW(fShow);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 
     if (m_SFToolbar != NULL)
     {
-        hr = m_SFToolbar->ShowWindow(fShow);
+        hr = m_SFToolbar->ShowDW(fShow);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
@@ -1058,6 +1058,15 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
 
     popup->Popup(pAt, pExclude, flags);
 
+    return S_OK;
+}
+
+HRESULT CMenuBand::_BeforeCancelPopup()
+{
+    if (m_staticToolbar)
+        m_staticToolbar->BeforeCancelPopup();
+    if (m_SFToolbar)
+        m_SFToolbar->BeforeCancelPopup();
     return S_OK;
 }
 

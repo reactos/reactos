@@ -383,8 +383,10 @@ LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
     // Don't do anything if another window is capturing the mouse.
     HWND cCapture = ::GetCapture();
     if (cCapture && cCapture != m_captureHwnd && m_current->type != TrackedMenuEntry)
+    {
+        TRACE("Foreign capture active.\n");
         return TRUE;
-
+    }
 
     POINT pt = msg->pt;
 
@@ -392,9 +394,21 @@ LRESULT CMenuFocusManager::ProcessMouseDown(MSG* msg)
 
     StackEntry * entry = NULL;
     if (IsTrackedWindow(child, &entry) != S_OK)
+    {
+        TRACE("Foreign window detected.\n");
         return TRUE;
+    }
 
     TRACE("MouseDown %d\n", m_isLButtonDown);
+
+    if (entry->type == MenuBarEntry)
+    {
+        if (entry != m_current)
+        {
+            TRACE("Menubar with popup active.\n");
+            return TRUE;
+        }
+    }
 
     if (entry)
     {
@@ -473,33 +487,17 @@ LRESULT CMenuFocusManager::MsgFilterHook(INT nCode, WPARAM hookWParam, LPARAM ho
 
         switch (msg->message)
         {
-        case WM_NCLBUTTONDOWN:
         case WM_LBUTTONDOWN:
-        case WM_NCRBUTTONDOWN:
         case WM_RBUTTONDOWN:
-            if (m_menuBar)
+            if (m_menuBar && m_current->type == TrackedMenuEntry)
             {
                 POINT pt = msg->pt;
                 HWND child = WindowFromPoint(pt);
                 BOOL hoveringMenuBar = m_menuBar->mb->IsWindowOwner(child) == S_OK;
                 if (hoveringMenuBar)
                 {
-                    m_menuBar->mb->_DisableMouseTrack(TRUE);
-                    if (m_current->type == TrackedMenuEntry)
-                    {
-                        SendMessage(m_parent->hwnd, WM_CANCELMODE, 0, 0);
-                        msg->message = WM_NULL;
-                    }
+                    m_menuBar->mb->_BeforeCancelPopup();
                 }
-            }
-            break;
-        case WM_NCLBUTTONUP:
-        case WM_LBUTTONUP:
-        case WM_NCRBUTTONUP:
-        case WM_RBUTTONUP:
-            if (m_current && m_current->type != TrackedMenuEntry)
-            {
-                msg->message = WM_NULL;
             }
             break;
         case WM_MOUSEMOVE:
@@ -564,6 +562,18 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
             // fallthrough;
         case WM_NCRBUTTONDOWN:
         case WM_RBUTTONDOWN:
+            if (m_menuBar && m_current->type == MenuPopupEntry)
+            {
+                POINT pt = msg->pt;
+                HWND child = WindowFromPoint(pt);
+                BOOL hoveringMenuBar = m_menuBar->mb->IsWindowOwner(child) == S_OK;
+                if (hoveringMenuBar)
+                {
+                    m_current->mb->_MenuItemHotTrack(MPOS_FULLCANCEL);
+                    break;
+                }
+            }
+
             if (m_current->type == MenuPopupEntry)
             {
                 HWND child = WindowFromPoint(pt);

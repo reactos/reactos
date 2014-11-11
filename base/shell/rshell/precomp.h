@@ -58,7 +58,10 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <atlwin.h>
 #include <undocshell.h>
+
+#include <rosctrls.h>
 
 #include <wine/debug.h>
 

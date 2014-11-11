@@ -25,11 +25,11 @@ class CMenuFocusManager;
 #define WM_USER_ISTRACKEDITEM (WM_APP+41)
 #define WM_USER_CHANGETRACKEDITEM (WM_APP+42)
 
-class CMenuToolbarBase
+class CMenuToolbarBase :
+    public CToolbar<DWORD_PTR>
 {
+    CContainedWindow m_pager;
 private:
-    HWND    m_hwnd;        // May be the pager
-    HWND    m_hwndToolbar;
     HFONT   m_marlett;
     BOOL    m_useFlatMenus;
     WNDPROC m_SubclassOld;
@@ -55,10 +55,7 @@ protected:
     INT m_executeItem;
     DWORD_PTR m_executeData;
 
-private:
-    static LRESULT CALLBACK s_SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    LRESULT SubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    BOOL m_cancelingPopup;
 
 public:
     CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager);
@@ -67,7 +64,7 @@ public:
     HRESULT IsWindowOwner(HWND hwnd);
     HRESULT CreateToolbar(HWND hwndParent, DWORD dwFlags);
     HRESULT GetWindow(HWND *phwnd);
-    HRESULT ShowWindow(BOOL fShow);
+    HRESULT ShowDW(BOOL fShow);
     HRESULT Close();
 
     HRESULT OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
@@ -83,9 +80,6 @@ public:
 
     HRESULT PrepareExecuteItem(INT iItem);
     HRESULT ExecuteItem();
-
-    HRESULT IsTrackedItem(INT index);
-    HRESULT ChangeTrackedItem(INT index, BOOL wasTracking, BOOL mouse);
 
     HRESULT GetSizes(SIZE* pMinSize, SIZE* pMaxSize, SIZE* pIntegralSize);
     HRESULT SetPosSize(int x, int y, int cx, int cy);
@@ -105,6 +99,7 @@ public:
     HRESULT MenuBarMouseDown(INT iIndex);
     HRESULT MenuBarMouseUp(INT iIndex);
     HRESULT ProcessClick(INT iItem);
+    HRESULT BeforeCancelPopup();
 
 protected:
     virtual HRESULT OnDeletingButton(const NMTOOLBAR * tb) = 0;
@@ -120,16 +115,28 @@ protected:
     HRESULT AddPlaceholder();
     HRESULT ClearToolbar();
 
-    HWND GetToolbar() { return m_hwndToolbar; }
+    HWND GetToolbar() { return m_hWnd; }
 
 private:
     HRESULT UpdateImageLists();
 
     HRESULT OnPagerCalcSize(LPNMPGCALCSIZE csize);
-    HRESULT OnPopupTimer(DWORD timerId);
     HRESULT OnContextMenu(NMMOUSE * rclick);
     HRESULT OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult);
     HRESULT OnGetInfoTip(NMTBGETINFOTIP * tip);
+
+    LRESULT IsTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT ChangeTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnWinEventWrap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    HRESULT OnPopupTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    BEGIN_MSG_MAP(CMenuToolbarBase)
+        MESSAGE_HANDLER(WM_USER_ISTRACKEDITEM, IsTrackedItem)
+        MESSAGE_HANDLER(WM_USER_CHANGETRACKEDITEM, ChangeTrackedItem)
+        MESSAGE_HANDLER(WM_COMMAND, OnWinEventWrap)
+        MESSAGE_HANDLER(WM_NOTIFY, OnWinEventWrap)
+        MESSAGE_HANDLER(WM_TIMER, OnPopupTimer)
+    END_MSG_MAP()
 };
 
 class CMenuStaticToolbar :

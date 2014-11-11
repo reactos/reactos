@@ -253,6 +253,11 @@ public: // Configuration methods
         return SendMessageW(TB_GETHOTITEM);
     }
 
+    DWORD SetHotItem(INT item)
+    {
+        return SendMessageW(TB_SETHOTITEM, item);
+    }
+
 public: // Button list management methods
     int GetButtonCount()
     {
@@ -261,22 +266,22 @@ public: // Button list management methods
 
     DWORD GetButton(int index, TBBUTTON * btn)
     {
-        return SendMessageW(TB_GETBUTTON, index, (LPARAM) btn);
+        return SendMessageW(TB_GETBUTTON, index, reinterpret_cast<LPARAM>(btn));
     }
 
     DWORD AddButton(TBBUTTON * btn)
     {
-        return SendMessageW(TB_ADDBUTTONS, 1, (LPARAM) btn);
+        return SendMessageW(TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(btn));
     }
 
     DWORD AddButtons(int count, TBBUTTON * buttons)
     {
-        return SendMessageW(TB_ADDBUTTONS, count, (LPARAM) buttons);
+        return SendMessageW(TB_ADDBUTTONS, count, reinterpret_cast<LPARAM>(buttons));
     }
 
     DWORD InsertButton(int insertAt, TBBUTTON * btn)
     {
-        return SendMessageW(TB_INSERTBUTTON, insertAt, (LPARAM) btn);
+        return SendMessageW(TB_INSERTBUTTON, insertAt, reinterpret_cast<LPARAM>(btn));
     }
 
     DWORD MoveButton(int oldIndex, int newIndex)
@@ -291,18 +296,28 @@ public: // Button list management methods
 
     DWORD GetButtonInfo(int cmdId, TBBUTTONINFO * info)
     {
-        return SendMessageW(TB_GETBUTTONINFO, cmdId, (LPARAM) info);
+        return SendMessageW(TB_GETBUTTONINFO, cmdId, reinterpret_cast<LPARAM>(info));
     }
 
     DWORD SetButtonInfo(int cmdId, TBBUTTONINFO * info)
     {
-        return SendMessageW(TB_SETBUTTONINFO, cmdId, (LPARAM) info);
+        return SendMessageW(TB_SETBUTTONINFO, cmdId, reinterpret_cast<LPARAM>(info));
+    }
+
+    DWORD CheckButton(int cmdId, BOOL bCheck)
+    {
+        return SendMessageW(TB_CHECKBUTTON, cmdId, MAKELPARAM(bCheck, 0));
     }
 
 public: // Layout management methods
+    DWORD GetButtonSize()
+    {
+        return SendMessageW(TB_GETBUTTONSIZE);
+    }
+
     DWORD SetButtonSize(int w, int h)
     {
-        return SendMessageW(TB_SETBUTTONSIZE, 0, MAKELONG(w, h));
+        return SendMessageW(TB_SETBUTTONSIZE, 0, MAKELPARAM(w, h));
     }
 
     DWORD AutoSize()
@@ -310,19 +325,29 @@ public: // Layout management methods
         return SendMessageW(TB_AUTOSIZE);
     }
 
+    DWORD GetMaxSize(LPSIZE size)
+    {
+        return SendMessageW(TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(size));
+    }
+
+    DWORD GetIdealSize(BOOL useHeight, LPSIZE size)
+    {
+        return SendMessageW(TB_GETIDEALSIZE, useHeight, reinterpret_cast<LPARAM>(size));
+    }
+
     DWORD GetMetrics(TBMETRICS * tbm)
     {
-        return SendMessageW(TB_GETMETRICS, 0, (LPARAM) tbm);
+        return SendMessageW(TB_GETMETRICS, 0, reinterpret_cast<LPARAM>(tbm));
     }
 
     DWORD SetMetrics(TBMETRICS * tbm)
     {
-        return SendMessageW(TB_SETMETRICS, 0, (LPARAM) tbm);
+        return SendMessageW(TB_SETMETRICS, 0, reinterpret_cast<LPARAM>(tbm));
     }
 
     DWORD GetItemRect(int index, LPRECT prcItem)
     {
-        return SendMessageW(TB_GETITEMRECT, index, (LPARAM) prcItem);
+        return SendMessageW(TB_GETITEMRECT, index, reinterpret_cast<LPARAM>(prcItem));
     }
 
     DWORD SetRedraw(BOOL bEnable)
@@ -330,16 +355,26 @@ public: // Layout management methods
         return SendMessageW(WM_SETREDRAW, bEnable);
     }
 
+    DWORD GetPadding()
+    {
+        return SendMessageW(TB_GETPADDING);
+    }
+
+    DWORD SetPadding(int x, int y)
+    {
+        return SendMessageW(TB_SETPADDING, 0, MAKELPARAM(x, y));
+    }
+
 public: // Image list management methods
     DWORD SetImageList(HIMAGELIST himl)
     {
-        return SendMessageW(TB_SETIMAGELIST, 0, (LPARAM) himl);
+        return SendMessageW(TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(himl));
     }
 
 public: // Other methods
     INT HitTest(PPOINT ppt)
     {
-        return (INT) SendMessageW(TB_HITTEST, 0, (LPARAM) ppt);
+        return (INT) SendMessageW(TB_HITTEST, 0, reinterpret_cast<LPARAM>(ppt));
     }
 
 public: // Utility methods

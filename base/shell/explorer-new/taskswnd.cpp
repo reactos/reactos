@@ -27,10 +27,12 @@
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
 #define DUMP_TASKS  0
+#define DEBUG_SHELL_HOOK 0
 
 const WCHAR szTaskSwitchWndClass [] = TEXT("MSTaskSwWClass");
 const WCHAR szRunningApps [] = TEXT("Running Applications");
 
+#if DEBUG_SHELL_HOOK
 const struct {
     INT msg;
     LPCWSTR msg_name;
@@ -51,6 +53,7 @@ const struct {
         { HSHELL_WINDOWREPLACING, L"HSHELL_WINDOWREPLACING" },
         { HSHELL_RUDEAPPACTIVATED, L"HSHELL_RUDEAPPACTIVATED" },
 };
+#endif
 
 typedef struct _TASK_GROUP
 {
@@ -1445,6 +1448,7 @@ public:
         case HSHELL_GETMINRECT:
         default:
         {
+#if DEBUG_SHELL_HOOK
             int i, found;
             for (i = 0, found = 0; i != sizeof(hshell_msg) / sizeof(hshell_msg[0]); i++)
             {
@@ -1455,10 +1459,10 @@ public:
                     break;
                 }
             }
-            if (!found)
-            {
-                TRACE("Shell message %d unhandled (lParam = 0x%p)!\n", (INT) wParam, lParam);
-            }
+            if (found)
+                break;
+#endif
+            TRACE("Shell message %d unhandled (lParam = 0x%p)!\n", (INT) wParam, lParam);
             break;
         }
         }
