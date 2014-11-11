@@ -48,13 +48,15 @@ ReceiveDatagram(
     ADDRESS_FILE* AddressFile,
     struct pbuf *p,
     ip_addr_t *addr,
-    u16_t port,
-    BOOLEAN MustFree)
+    u16_t port)
 {
     KIRQL OldIrql;
     LIST_ENTRY* ListEntry;
     RECEIVE_DATAGRAM_REQUEST* Request;
     ip_addr_t RequestAddr;
+    BOOLEAN Result = FALSE;
+
+    NT_ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 
     DPRINT1("Receiving datagram for addr 0x%08x on port %u.\n", ip4_addr_get_u32(addr), port);
 
@@ -84,6 +86,7 @@ ReceiveDatagram(
             /* We found a request for this one */
             IoSetCancelRoutine(Irp, NULL);
             RemoveEntryList(&Request->ListEntry);
+            Result = TRUE;
 
             KeReleaseSpinLockFromDpcLevel(&AddressFile->RequestLock);
             IoReleaseCancelSpinLock(OldIrql);
@@ -94,7 +97,7 @@ ReceiveDatagram(
                 p,
                 Request->Buffer,
                 Request->BufferLength,
-                AddressFile->Protocol == IPPROTO_UDP ? 0 : IP_HLEN);
+                0);
             ReturnAddress = Request->ReturnInfo->RemoteAddress;
             ReturnAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
             ReturnAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
@@ -103,22 +106,24 @@ ReceiveDatagram(
             RtlZeroMemory(ReturnAddress->Address->Address->sin_zero,
                 sizeof(ReturnAddress->Address->Address->sin_zero));
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            if (Request->BufferLength < p->tot_len)
+                Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+            else
+                Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
             ExFreePoolWithTag(Request, TAG_ADDRESS_FILE);
-            pbuf_free(p);
 
-            return TRUE;
+            /* Start again from the beginning */
+            IoAcquireCancelSpinLock(&OldIrql);
+            KeAcquireSpinLockAtDpcLevel(&AddressFile->RequestLock);
         }
     }
 
     KeReleaseSpinLockFromDpcLevel(&AddressFile->RequestLock);
     IoReleaseCancelSpinLock(OldIrql);
-    if (MustFree)
-        pbuf_free(p);
 
-    return FALSE;
+    return Result;
 }
 
 static
@@ -132,7 +137,8 @@ lwip_udp_ReceiveDatagram_callback(
 {
     UNREFERENCED_PARAMETER(pcb);
 
-    ReceiveDatagram(arg, p, addr, port, TRUE);
+    ReceiveDatagram(arg, p, addr, port);
+    pbuf_free(p);
 }
 
 static
@@ -143,9 +149,41 @@ lwip_raw_ReceiveDatagram_callback(
     struct pbuf *p,
     ip_addr_t *addr)
 {
+    BOOLEAN Result;
+    ADDRESS_FILE* AddressFile = arg;
+
     UNREFERENCED_PARAMETER(pcb);
 
-    return ReceiveDatagram(arg, p, addr, 0, FALSE);
+    /* If this is for ICMP, only process the "echo received" packets.
+     * The rest is processed by lwip. */
+    if (AddressFile->Protocol == IPPROTO_ICMP)
+    {
+        /* See icmp_input */
+        s16_t hlen;
+        struct ip_hdr *iphdr;
+
+        iphdr = (struct ip_hdr *)p->payload;
+        hlen = IPH_HL(iphdr) * 4;
+
+        /* Adjust the pbuf to skip the IP header */
+        if (pbuf_header(p, -hlen))
+            return FALSE;
+
+        if (*((u8_t*)p->payload) != ICMP_ER)
+        {
+            pbuf_header(p, hlen);
+            return FALSE;
+        }
+
+        pbuf_header(p, hlen);
+    }
+
+    Result = ReceiveDatagram(arg, p, addr, 0);
+
+    if (Result)
+        pbuf_free(p);
+
+    return Result;
 }
 
 NTSTATUS
@@ -246,7 +284,7 @@ TcpIpCreateAddress(
     KeInitializeSpinLock(&AddressFile->RequestLock);
     InitializeListHead(&AddressFile->RequestListHead);
 
-    /* Give it an entity ID and open a PCB is needed. */
+    /* Give it an entity ID and open a PCB if needed. */
     switch (Protocol)
     {
         case IPPROTO_TCP:
@@ -314,11 +352,18 @@ TcpIpCloseAddress(
         return STATUS_SUCCESS;
     }
 
+    /* remove the lwip pcb */
+    if (AddressFile->Protocol == IPPROTO_UDP)
+        udp_remove(AddressFile->lwip_udp_pcb);
+    else if (AddressFile->Protocol != IPPROTO_TCP)
+        raw_remove(AddressFile->lwip_raw_pcb);
+
     /* Remove from the list and free the structure */
     RemoveEntryList(&AddressFile->ListEntry);
     KeReleaseSpinLock(&AddressListLock, OldIrql);
 
     RemoveEntityInstance(&AddressFile->Instance);
+
     ExFreePoolWithTag(AddressFile, TAG_ADDRESS_FILE);
 
 
@@ -363,8 +408,8 @@ CancelReceiveDatagram(
     PIO_STACK_LOCATION IrpSp;
     ADDRESS_FILE* AddressFile;
     RECEIVE_DATAGRAM_REQUEST* Request;
-    KIRQL OldIrql;
     LIST_ENTRY* ListEntry;
+    KIRQL OldIrql;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -448,6 +493,9 @@ TcpIpReceiveDatagram(
         if (!NT_SUCCESS(Status))
             goto Failure;
     }
+
+    DPRINT1("Queuing datagram receive on address 0x%08x, port %u.\n",
+        Request->RemoteAddress.in_addr, Request->RemoteAddress.sin_port);
 
     /* Get the buffer */
     Request->Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
@@ -534,6 +582,8 @@ TcpIpSendDatagram(
         ip_addr_set_any(&IpAddr);
         Port = 0;
     }
+
+    DPRINT1("Sending datagram to address 0x%08x, port %u\n", ip4_addr_get_u32(&IpAddr), Port);
 
     /* Get the buffer */
     Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
