@@ -2166,6 +2166,9 @@ static DWORD try_start_stop(SC_HANDLE svc_handle, const char* name, DWORD is_nt4
     DWORD le1, le2;
     SERVICE_STATUS status;
 
+#ifdef __REACTOS__
+    fprintf(stdout, "ROSTESTS-56: Hello sysreg, I am awake\n");
+#endif
     ret = StartServiceA(svc_handle, 0, NULL);
     le1 = GetLastError();
     ok(!ret, "%s: StartServiceA() should have failed\n", name);
@@ -2260,12 +2263,6 @@ static void test_start_stop(void)
          * insanely long timeout: 120s. So skip the rest of the tests.
          */
         win_skip("Skip some service start/stop tests on NT4\n");
-        goto cleanup;
-    }
-
-    if (!winetest_interactive)
-    {
-        skip("ROSTESTS-56: Skipping service start timeout tests!\n");
         goto cleanup;
     }
 
