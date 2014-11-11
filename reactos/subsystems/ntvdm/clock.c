@@ -21,6 +21,9 @@
 #include "hardware/timer.h"
 #include "hardware/vga.h"
 
+/* Extra PSDK/NDK Headers */
+#include <ndk/kefuncs.h>
+
 /* DEFINES ********************************************************************/
 
 /*
@@ -43,20 +46,19 @@
 
 /* VARIABLES ******************************************************************/
 
-LARGE_INTEGER StartPerfCount, Frequency;
+static LARGE_INTEGER StartPerfCount, Frequency;
 
-LARGE_INTEGER LastTimerTick, LastRtcTick, Counter;
-LONGLONG TimerTicks;
-DWORD StartTickCount, CurrentTickCount;
-DWORD LastClockUpdate;
-DWORD LastVerticalRefresh;
+static LARGE_INTEGER LastTimerTick, LastRtcTick, Counter;
+static LONGLONG TimerTicks;
+static DWORD StartTickCount, CurrentTickCount;
+static DWORD LastClockUpdate;
+static DWORD LastVerticalRefresh;
 
-UINT Irq1Counter = 0;
-UINT Irq12Counter = 0;
+static DWORD LastIrq1Tick = 0, LastIrq12Tick = 0;
 
 #ifdef IPS_DISPLAY
-    DWORD LastCyclePrintout;
-    ULONGLONG Cycles = 0;
+    static DWORD LastCyclePrintout;
+    static ULONGLONG Cycles = 0;
 #endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -65,11 +67,20 @@ VOID ClockUpdate(VOID)
 {
     extern BOOLEAN CpuRunning;
     UINT i;
+    // LARGE_INTEGER Counter;
 
 #ifdef WORKING_TIMER
-    DWORD PitResolution = PitGetResolution();
+    DWORD PitResolution;
 #endif
-    DWORD RtcFrequency = RtcGetTicksPerSecond();
+    DWORD RtcFrequency;
+
+    while (VdmRunning && CpuRunning)
+    {
+
+#ifdef WORKING_TIMER
+    PitResolution = PitGetResolution();
+#endif
+    RtcFrequency = RtcGetTicksPerSecond();
 
     /* Get the current number of ticks */
     CurrentTickCount = GetTickCount();
@@ -86,7 +97,9 @@ VOID ClockUpdate(VOID)
 #endif
     {
         /* Get the current performance counter value */
-        QueryPerformanceCounter(&Counter);
+        /// DWORD_PTR oldmask = SetThreadAffinityMask(GetCurrentThread(), 0);
+        NtQueryPerformanceCounter(&Counter, NULL);
+        /// SetThreadAffinityMask(GetCurrentThread(), oldmask);
     }
 
     /* Get the number of PIT ticks that have passed */
@@ -122,16 +135,16 @@ VOID ClockUpdate(VOID)
         LastVerticalRefresh = CurrentTickCount;
     }
 
-    if (++Irq1Counter == IRQ1_CYCLES)
+    if ((CurrentTickCount - LastIrq1Tick) >= IRQ1_CYCLES)
     {
         GenerateIrq1();
-        Irq1Counter = 0;
+        LastIrq1Tick = CurrentTickCount;
     }
 
-    if (++Irq12Counter == IRQ12_CYCLES)
+    if ((CurrentTickCount - LastIrq12Tick) >= IRQ12_CYCLES)
     {
         GenerateIrq12();
-        Irq12Counter = 0;
+        LastIrq12Tick = CurrentTickCount;
     }
 
     /* Horizontal retrace occurs as fast as possible */
@@ -154,20 +167,23 @@ VOID ClockUpdate(VOID)
         Cycles = 0;
     }
 #endif
+
+    }
 }
 
 BOOLEAN ClockInitialize(VOID)
 {
     /* Initialize the performance counter (needed for hardware timers) */
-    if (!QueryPerformanceFrequency(&Frequency))
+    /* Find the starting performance */
+    NtQueryPerformanceCounter(&StartPerfCount, &Frequency);
+    if (Frequency.QuadPart == 0)
     {
         wprintf(L"FATAL: Performance counter not available\n");
         return FALSE;
     }
 
-    /* Find the starting performance and tick count */
+    /* Find the starting tick count */
     StartTickCount = GetTickCount();
-    QueryPerformanceCounter(&StartPerfCount);
 
     /* Set the different last counts to the starting count */
     LastClockUpdate = LastVerticalRefresh =
