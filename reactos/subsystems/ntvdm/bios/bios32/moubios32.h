@@ -15,7 +15,7 @@
 
 /* DEFINES ********************************************************************/
 
-#define BIOS_MOUSE_INTERRUPT 0x33
+#if 0 // This code is for the MOUSE.COM driver
 
 enum
 {
@@ -70,10 +70,12 @@ typedef struct _MOUSE_DRIVER_STATE
     } GraphicsCursor;
 } MOUSE_DRIVER_STATE, *PMOUSE_DRIVER_STATE;
 
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
-VOID MouseBiosUpdatePosition(PCOORD NewPosition);
-VOID MouseBiosUpdateButtons(WORD ButtonStatus);
+VOID BiosMousePs2Interface(LPWORD Stack);
+
 BOOLEAN MouseBios32Initialize(VOID);
 VOID MouseBios32Cleanup(VOID);
 

@@ -264,7 +264,7 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
         /* Pointing Device BIOS Interface (PS) */
         case 0xC2:
         {
-            DPRINT1("INT 15h, AH = C2h must be implemented in order to support vendor mouse drivers\n");
+            BiosMousePs2Interface(Stack);
             break;
         }
 
@@ -442,8 +442,8 @@ static VOID WINAPI BiosTimerIrq(LPWORD Stack)
      * because some programs may hook only BIOS_SYS_TIMER_INTERRUPT
      * for their purpose...
      */
-    /** EmulatorInterrupt(BIOS_SYS_TIMER_INTERRUPT); **/
     Int32Call(&BiosContext, BIOS_SYS_TIMER_INTERRUPT);
+    // BiosSystemTimerInterrupt(Stack);
     PicIRQComplete(Stack);
 }
 
@@ -581,9 +581,11 @@ static VOID InitializeBiosInfo(VOID)
 VOID
 Bios32Post(VOID)
 {
+#if 0
     BOOLEAN Success;
+#endif
 
-    DPRINT1("Bios32Post\n");
+    DPRINT("Bios32Post\n");
 
     /* Initialize the stack */
     // That's what says IBM... (stack at 30:00FF going downwards)
@@ -631,9 +633,11 @@ Bios32Post(VOID)
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
+#if 0
     /* Load some ROMs */
     Success = LoadRom("boot.bin", (PVOID)0xE0000, NULL);
     DPRINT1("Test ROM loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+#endif
 
     SearchAndInitRoms(&BiosContext);
 
@@ -646,7 +650,7 @@ Bios32Post(VOID)
 
 static VOID WINAPI Bios32ResetBop(LPWORD Stack)
 {
-    DPRINT1("Bios32ResetBop\n");
+    DPRINT("Bios32ResetBop\n");
 
     /* Disable interrupts */
     setIF(0);

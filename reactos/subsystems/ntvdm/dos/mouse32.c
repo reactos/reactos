@@ -25,6 +25,11 @@
 static BOOLEAN DriverEnabled = TRUE;
 static MOUSE_DRIVER_STATE DriverState;
 
+/**/
+COORD DosNewPosition;
+WORD  DosButtonState;
+/**/
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID PaintMouseCursor(VOID)
@@ -81,7 +86,6 @@ static VOID EraseMouseCursor(VOID)
 
 static VOID CallMouseUserHandlers(USHORT CallMask)
 {
-#if 0
     USHORT i;
     USHORT AX, BX, CX, DX, SI, DI;
 
@@ -109,10 +113,10 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
         setSI(DriverState.MickeysPerCellHoriz);
         setDI(DriverState.MickeysPerCellVert);
 
-        DPRINT1("Calling Handler0 %04X:%04X with CallMask 0x%04X\n",
-                HIWORD(DriverState.Handler0.Callback),
-                LOWORD(DriverState.Handler0.Callback),
-                CallMask);
+        DPRINT("Calling Handler0 %04X:%04X with CallMask 0x%04X\n",
+               HIWORD(DriverState.Handler0.Callback),
+               LOWORD(DriverState.Handler0.Callback),
+               CallMask);
 
         /* Call the callback */
         RunCallback16(&DosContext, DriverState.Handler0.Callback);
@@ -168,12 +172,11 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
             setDI(DI);
         }
     }
-#endif
 }
 
-static VOID WINAPI BiosMouseService(LPWORD Stack)
+static VOID WINAPI DosMouseService(LPWORD Stack)
 {
-    switch (getAX())
+    switch (getAL())
     {
         /* Reset Driver */
         case 0x00:
@@ -598,14 +601,14 @@ static VOID WINAPI BiosMouseService(LPWORD Stack)
 
         default:
         {
-            DPRINT1("BIOS Function INT 33h, AX = 0x%04X NOT IMPLEMENTED\n", getAX());
+            DPRINT1("BIOS Function INT 33h, AL = 0x%02X NOT IMPLEMENTED\n", getAL());
         }
     }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID MouseBiosUpdatePosition(PCOORD NewPosition)
+VOID DosMouseUpdatePosition(PCOORD NewPosition)
 {
     SHORT DeltaX = NewPosition->X - DriverState.Position.X;
     SHORT DeltaY = NewPosition->Y - DriverState.Position.Y;
@@ -615,18 +618,16 @@ VOID MouseBiosUpdatePosition(PCOORD NewPosition)
     DriverState.HorizCount += (DeltaX * (SHORT)DriverState.MickeysPerCellHoriz) / 8;
     DriverState.VertCount  += (DeltaY * (SHORT)DriverState.MickeysPerCellVert ) / 8;
 
-    if (DriverState.ShowCount > 0)
-    {
-        EraseMouseCursor();
-        DriverState.Position = *NewPosition;
-        PaintMouseCursor();
-    }
+    if (DriverState.ShowCount > 0) EraseMouseCursor();
+    DriverState.Position = *NewPosition;
+    if (DriverState.ShowCount > 0) PaintMouseCursor();
 
     /* Call the mouse handlers */
+    // if (DeltaX || DeltaY)
     CallMouseUserHandlers(0x0001); // We use MS MOUSE v1.0+ format
 }
 
-VOID MouseBiosUpdateButtons(WORD ButtonState)
+VOID DosMouseUpdateButtons(WORD ButtonState)
 {
     USHORT i;
     USHORT CallMask = 0x0000; // We use MS MOUSE v1.0+ format
@@ -668,7 +669,7 @@ BOOLEAN DosMouseInitialize(VOID)
     RtlZeroMemory(&DriverState, sizeof(DriverState));
 
     /* Initialize the interrupt handler */
-    RegisterDosInt32(BIOS_MOUSE_INTERRUPT, BiosMouseService);
+    RegisterDosInt32(DOS_MOUSE_INTERRUPT, DosMouseService);
 
     return TRUE;
 }

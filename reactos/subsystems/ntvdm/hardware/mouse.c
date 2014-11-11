@@ -14,9 +14,6 @@
 #include "ps2.h"
 // #include "pic.h"
 
-// HACK: For the PS/2 bypass and MOUSE.COM driver direct call
-#include "dos/mouse32.h"
-
 /* PRIVATE VARIABLES **********************************************************/
 
 static MOUSE_MODE Mode, PreviousMode;
@@ -310,11 +307,16 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
 
 VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
 {
+extern COORD DosNewPosition;
+extern WORD  DosButtonState;
+
     // FIXME: Sync our private data
+    MouseUpdatePosition(&MouseEvent->dwMousePosition);
+    MouseUpdateButtons(MouseEvent->dwButtonState);
 
     // HACK: Bypass PS/2 and instead, notify the MOUSE.COM driver directly
-    MouseBiosUpdatePosition(&MouseEvent->dwMousePosition);
-    MouseBiosUpdateButtons(LOWORD(MouseEvent->dwButtonState));
+    DosNewPosition = MouseEvent->dwMousePosition;
+    DosButtonState = LOWORD(MouseEvent->dwButtonState);
 
     // PS2QueuePush(PS2Port, Data);
 }
