@@ -176,7 +176,7 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
 
 static VOID WINAPI DosMouseService(LPWORD Stack)
 {
-    switch (getAL())
+    switch (getAX())
     {
         /* Reset Driver */
         case 0x00:
@@ -601,7 +601,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
 
         default:
         {
-            DPRINT1("BIOS Function INT 33h, AL = 0x%02X NOT IMPLEMENTED\n", getAL());
+            DPRINT1("BIOS Function INT 33h, AX = 0x%04X NOT IMPLEMENTED\n", getAX());
         }
     }
 }
