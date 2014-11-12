@@ -547,18 +547,19 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
     if (psmd->uId != FCIDM_MENU_FAVORITES)
         return E_FAIL;
 
+    // create favorites menu
+    hResult = psmd->punk->QueryInterface(IID_PPV_ARG(IShellMenu, &parentMenu));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = parentMenu->GetMenu(&parentHMenu, &ownerWindow, NULL);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    favoritesHMenu = GetSubMenu(parentHMenu, 3);
+    if (favoritesHMenu == NULL)
+        return E_FAIL;
+
     if (fFavoritesMenu.p == NULL)
     {
-        // create favorites menu
-        hResult = psmd->punk->QueryInterface(IID_PPV_ARG(IShellMenu, &parentMenu));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-        hResult = parentMenu->GetMenu(&parentHMenu, &ownerWindow, NULL);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-        favoritesHMenu = GetSubMenu(parentHMenu, 3);
-        if (favoritesHMenu == NULL)
-            return E_FAIL;
 #if USE_CUSTOM_MENUBAND
         if (!hRShell)
         {
@@ -588,9 +589,6 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         hResult = newMenu->Initialize(this, FCIDM_MENU_FAVORITES, -1, SMINIT_VERTICAL | SMINIT_CACHED);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        hResult = newMenu->SetMenu(favoritesHMenu, ownerWindow, SMSET_TOP | SMSET_DONTOWN);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
 
         RegCreateKeyEx(HKEY_CURRENT_USER, szFavoritesKey,
                 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &orderRegKey, &disposition);
@@ -608,6 +606,10 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
             
         fFavoritesMenu = newMenu;
     }
+
+    hResult = fFavoritesMenu->SetMenu(favoritesHMenu, ownerWindow, SMSET_TOP | SMSET_DONTOWN);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
 
     return fFavoritesMenu->QueryInterface(riid, ppvObject);
 }
@@ -794,7 +796,16 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
 
-        hResult = menubar->SetMenu((HMENU) V_INTREF(&menuOut), ownerWindow, SMSET_DONTOWN);
+        HMENU hMenuBar = (HMENU) V_INTREF(&menuOut);
+
+        // FIXME: Figure out the proper way to do this.
+        HMENU hMenuFavs = GetSubMenu(hMenuBar, 3);
+        if (hMenuFavs)
+        {
+            DeleteMenu(hMenuFavs, IDM_FAVORITES_EMPTY, MF_BYCOMMAND);
+        }
+
+        hResult = menubar->SetMenu(hMenuBar, ownerWindow, SMSET_DONTOWN);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
     }

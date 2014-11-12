@@ -25,6 +25,8 @@
 #include "CMenuBand.h"
 #include "CMenuToolbars.h"
 
+#define IDS_MENU_EMPTY 34561
+
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
@@ -425,13 +427,18 @@ HRESULT CMenuToolbarBase::GetSizes(SIZE* pMinSize, SIZE* pMaxSize, SIZE* pIntegr
     if (m_hasSizes)
         return S_OK;
 
+    TRACE("Sizes out of date, recalculating.\n");
+
     if (!m_hWnd)
+    {
         return S_OK;
+    }
 
     // Obtain the ideal size, to be used as min and max
-    AutoSize();
     GetMaxSize(&m_idealSize);
     GetIdealSize((m_initFlags & SMINIT_VERTICAL) != 0, &m_idealSize);
+
+    TRACE("Ideal Size: (%d, %d) for %d buttons\n", m_idealSize, GetButtonCount());
 
     // Obtain the button size, to be used as the integral size
     DWORD size = GetButtonSize();
@@ -1004,7 +1011,9 @@ HRESULT CMenuToolbarBase::AddSeparator(BOOL last)
 HRESULT CMenuToolbarBase::AddPlaceholder()
 {
     TBBUTTON tbb = { 0 };
-    PCWSTR MenuString = L"(Empty)"; // FIXME: Make localizable
+    WCHAR MenuString[128];
+    
+    LoadStringW(GetModuleHandle(L"shell32.dll"), IDS_MENU_EMPTY, MenuString, _countof(MenuString));
 
     tbb.fsState = 0;
     tbb.fsStyle = 0;
@@ -1130,6 +1139,8 @@ HRESULT  CMenuStaticToolbar::SetMenu(
     m_hmenu = hmenu;
     m_hwndMenu = hwnd;
     m_dwMenuFlags = dwFlags;
+
+    ClearToolbar();
 
     return S_OK;
 }
@@ -1340,6 +1351,9 @@ HRESULT CMenuSFToolbar::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFold
     m_idList = ILClone(pidlFolder);
     m_hKey = hKey;
     m_dwMenuFlags = dwFlags;
+
+    ClearToolbar();
+
     return S_OK;
 }
 

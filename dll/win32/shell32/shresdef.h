@@ -202,6 +202,8 @@
 #define IDS_DESCRIPTION          331
 #define IDS_COPY_OF              332
 
+#define IDS_MENU_EMPTY           34561
+
 /* Note: those strings are referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME 8964
 #define IDS_ADMINISTRATIVETOOLS    22982

@@ -798,4 +798,6 @@ BEGIN
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Unknown application"
     IDS_EXE_DESCRIPTION "Description:"
+
+    IDS_MENU_EMPTY "(Empty)"
 END

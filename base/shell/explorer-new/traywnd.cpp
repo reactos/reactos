@@ -1345,8 +1345,7 @@ DefSize:
         /* Make sure the height is at least the size of a caption icon. */
         if (hIconStart != NULL)
             Size.cx += SmallIcon.cx + 4;
-        Size.cy = max(Size.cy,
-                      SmallIcon.cy);
+        Size.cy = max(Size.cy, SmallIcon.cy);
 
         /* Create the bitmap */
         hbmp = CreateCompatibleBitmap(hDCScreen,

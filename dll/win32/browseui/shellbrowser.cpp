@@ -1874,6 +1874,17 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetMenuSB(HMENU hmenuShared, HOLEMENU h
     hResult = GetMenuBand(IID_PPV_ARG(IShellMenu, &shellMenu));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
+    if (hmenuShared)
+    {
+        // FIXME: Figure out the proper way to do this.
+        HMENU hMenuFavs = GetSubMenu(hmenuShared, 3);
+        if (hMenuFavs)
+        {
+            DeleteMenu(hMenuFavs, IDM_FAVORITES_EMPTY, MF_BYCOMMAND);
+        }
+    }
+
     hResult = shellMenu->SetMenu(hmenuShared, m_hWnd, SMSET_DONTOWN);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;

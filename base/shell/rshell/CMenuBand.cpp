@@ -132,7 +132,7 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
 
     BOOL created = FALSE;
 
-    if (m_hmenu)
+    if (m_hmenu && m_hmenu != hmenu)
     {
         DestroyMenu(m_hmenu);
         m_hmenu = NULL;
