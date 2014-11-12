@@ -309,9 +309,11 @@ GetInstance(
             return STATUS_SUCCESS;
         }
 
+#if 0
         /* The list is sorted, so we can cut the loop a bit */
         if (ID.tei_instance < Instance->InstanceId.tei_instance)
             break;
+#endif
 
         ListEntry = ListEntry->Flink;
     }
