@@ -74,7 +74,7 @@ ReceiveDatagram(
 
         if ((RequestAddr.addr == IPADDR_ANY) ||
                 (ip_addr_cmp(&RequestAddr, addr) &&
-                        ((Request->RemoteAddress.sin_port == port) || !port)))
+                        ((Request->RemoteAddress.sin_port == lwip_htons(port)) || !port)))
         {
             PTA_IP_ADDRESS ReturnAddress;
             PIRP Irp;
@@ -101,7 +101,7 @@ ReceiveDatagram(
             ReturnAddress = Request->ReturnInfo->RemoteAddress;
             ReturnAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
             ReturnAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
-            ReturnAddress->Address->Address->sin_port = port;
+            ReturnAddress->Address->Address->sin_port = lwip_htons(port);
             ReturnAddress->Address->Address->in_addr = ip4_addr_get_u32(addr);
             RtlZeroMemory(ReturnAddress->Address->Address->sin_zero,
                 sizeof(ReturnAddress->Address->Address->sin_zero));
@@ -224,7 +224,7 @@ TcpIpCreateAddress(
                 return STATUS_ADDRESS_ALREADY_EXISTS;
             }
         }
-        else if ((AddressFile->Address.sin_port == Port)
+        else if ((AddressFile->Address.sin_port == lwip_htons(Port))
                 && AddressFile->Protocol == Protocol)
         {
             Port++;
@@ -278,7 +278,7 @@ TcpIpCreateAddress(
     RtlCopyMemory(&AddressFile->Address, Address, sizeof(*Address));
     AddressFile->Protocol = Protocol;
     if (!Address->sin_port)
-        AddressFile->Address.sin_port = Port;
+        AddressFile->Address.sin_port = lwip_htons(Port);
 
     /* Initialize the datagram request stuff */
     KeInitializeSpinLock(&AddressFile->RequestLock);
@@ -296,7 +296,7 @@ TcpIpCreateAddress(
             ip4_addr_set_u32(&IpAddr, AddressFile->Address.in_addr);
             InsertEntityInstance(CL_TL_ENTITY, &AddressFile->Instance);
             AddressFile->lwip_udp_pcb = udp_new();
-            udp_bind(AddressFile->lwip_udp_pcb, &IpAddr, AddressFile->Address.sin_port);
+            udp_bind(AddressFile->lwip_udp_pcb, &IpAddr, lwip_ntohs(AddressFile->Address.sin_port));
             ip_set_option(AddressFile->lwip_udp_pcb, SOF_BROADCAST);
             /* Register our recv handler to lwip */
             udp_recv(
@@ -575,7 +575,7 @@ TcpIpSendDatagram(
         if (!NT_SUCCESS(Status))
             goto Finish;
         ip4_addr_set_u32(&IpAddr, Address.in_addr);
-        Port = Address.sin_port;
+        Port = lwip_ntohs(Address.sin_port);
     }
     else
     {
@@ -602,7 +602,7 @@ TcpIpSendDatagram(
         case IPPROTO_UDP:
             if (((ip4_addr_get_u32(&IpAddr) == IPADDR_ANY) ||
                     (ip4_addr_get_u32(&IpAddr) == IPADDR_BROADCAST)) &&
-                    (Port == lwip_ntohs(67)) && AddressFile->Address.in_addr == 0)
+                    (Port == 67) && (AddressFile->Address.in_addr == 0))
             {
                 struct netif* lwip_netif = netif_list;
 
