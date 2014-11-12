@@ -26,6 +26,7 @@ extern void func_EngReleaseSemaphore(void);
 extern void func_EnumFontFamilies(void);
 extern void func_ExcludeClipRect(void);
 extern void func_ExtCreatePen(void);
+extern void func_ExtCreateRegion(void);
 extern void func_GdiConvertBitmap(void);
 extern void func_GdiConvertBrush(void);
 extern void func_GdiConvertDC(void);
@@ -89,6 +90,7 @@ const struct test winetest_testlist[] =
     { "EnumFontFamilies", func_EnumFontFamilies },
     { "ExcludeClipRect", func_ExcludeClipRect },
     { "ExtCreatePen", func_ExtCreatePen },
+    { "ExtCreateRegion", func_ExtCreateRegion },
     { "GdiConvertBitmap", func_GdiConvertBitmap },
     { "GdiConvertBrush", func_GdiConvertBrush },
     { "GdiConvertDC", func_GdiConvertDC },

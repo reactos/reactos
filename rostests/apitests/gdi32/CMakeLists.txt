@@ -25,6 +25,7 @@ list(APPEND SOURCE
     EnumFontFamilies.c
     ExcludeClipRect.c
     ExtCreatePen.c
+    ExtCreateRegion.c
     GdiConvertBitmap.c
     GdiConvertBrush.c
     GdiConvertDC.c
