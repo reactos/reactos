@@ -24,7 +24,7 @@ InitializeInterface(
 {
     NDIS_STATUS Status;
     NDIS_REQUEST Request;
-    UINT MTU;
+    UINT MTU, Speed;
     NDIS_OID QueryAddrOid;
     UINT PacketFilter;
 
@@ -76,17 +76,20 @@ InitializeInterface(
     /* Get the link speed */
     Request.RequestType = NdisRequestQueryInformation;
     Request.DATA.QUERY_INFORMATION.Oid = OID_GEN_LINK_SPEED;
-    Request.DATA.QUERY_INFORMATION.InformationBuffer = &Interface->Speed;
-    Request.DATA.QUERY_INFORMATION.InformationBufferLength = sizeof(ULONG);
+    Request.DATA.QUERY_INFORMATION.InformationBuffer = &Speed;
+    Request.DATA.QUERY_INFORMATION.InformationBufferLength = sizeof(UINT);
     NdisRequest(&Status, Interface->NdisContext, &Request);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not get link speed NIC driver!\n");
         /* Good old 10Mb/s as default */
-        Interface->Speed = 100000;
+        Speed = 100000;
     }
     /* NDIS drivers give it in 100bps unit */
-    Interface->Speed *= 100;
+    Speed *= 100;
+
+    /* Initialize lwip SNMP module */
+    NETIF_INIT_SNMP(&Interface->lwip_netif, snmp_ifType_ethernet_csmacd, Speed);
 
     /* Set the packet filter */
     Request.RequestType = NdisRequestSetInformation;
@@ -97,6 +100,22 @@ InitializeInterface(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not get HW address from the NIC driver!\n");
+        return Status;
+    }
+
+    /* Initialize the packet pool */
+    NdisAllocatePacketPool(&Status, &Interface->PacketPool, TCPIP_PACKETPOOL_SIZE, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not allocate a packet pool.\n");
+        return Status;
+    }
+
+    /* Initialize the buffer pool */
+    NdisAllocateBufferPool(&Status, &Interface->BufferPool, TCPIP_BUFFERPOOL_SIZE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not allocate a buffer pool.\n");
         return Status;
     }
 
@@ -160,6 +179,22 @@ ProtocolRequestComplete(
 }
 
 static
+NDIS_STATUS
+NTAPI
+ProtocolReceive(
+    _In_  NDIS_HANDLE ProtocolBindingContext,
+    _In_  NDIS_HANDLE MacReceiveContext,
+    _In_  PVOID HeaderBuffer,
+    _In_  UINT HeaderBufferSize,
+    _In_  PVOID LookAheadBuffer,
+    _In_  UINT LookaheadBufferSize,
+    _In_  UINT PacketSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+static
 VOID
 NTAPI
 ProtocolReceiveComplete(
@@ -177,6 +212,17 @@ ProtocolStatusComplete(
     UNIMPLEMENTED
 }
 
+static
+INT
+NTAPI
+ProtocolReceivePacket(
+    _In_  NDIS_HANDLE ProtocolBindingContext,
+    _In_  PNDIS_PACKET Packet)
+{
+    UNIMPLEMENTED
+    return 0;
+}
+
 /* bridge between NDIS and lwip: send data to the adapter */
 static
 err_t
@@ -184,7 +230,80 @@ lwip_netif_linkoutput(
     struct netif *netif,
     struct pbuf *p)
 {
-    UNIMPLEMENTED
+    TCPIP_INTERFACE* Interface = CONTAINING_RECORD(netif, TCPIP_INTERFACE, lwip_netif);
+    NDIS_STATUS Status;
+    PNDIS_PACKET Packet;
+    PNDIS_BUFFER Buffer;
+    PVOID PayloadCopy = NULL;
+
+    NT_ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+
+    /* Allocate a packet */
+    NdisAllocatePacket(&Status, &Packet, Interface->PacketPool);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not allocate a packet from packet pool!\n");
+        return ERR_MEM;
+    }
+
+    /* Map pbuf to a NDIS buffer chain, if possible (== allocated from non paged pool). */
+    if ((p->type == PBUF_POOL) || (p->type == PBUF_RAM))
+    {
+        while (p)
+        {
+            NdisAllocateBuffer(&Status, &Buffer, Interface->BufferPool, p->payload, p->len);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Could not allocate a buffer!\n");
+                return ERR_MEM;
+            }
+            NdisChainBufferAtBack(Packet, Buffer);
+            p = p->next;
+            if (p)
+            {
+                DPRINT1("More than one buffer in the chain!\n");
+            }
+        }
+    }
+    else
+    {
+        PayloadCopy = ExAllocatePoolWithTag(NonPagedPool, p->tot_len, TAG_INTERFACE);
+        if (!PayloadCopy)
+        {
+            NdisFreePacket(Packet);
+            return ERR_MEM;
+        }
+        pbuf_copy_partial(p, PayloadCopy, p->tot_len, 0);
+        NdisAllocateBuffer(&Status, &Buffer, Interface->BufferPool, p->payload, p->len);
+        NdisChainBufferAtFront(Packet, Buffer);
+    }
+
+    /* Call ndis */
+    NdisSend(&Status, Interface->NdisContext, Packet);
+
+    DPRINT1("NdisSend: got status 0x%08x.\n", Status);
+
+    /* Free the buffer chain */
+    if (Status != NDIS_STATUS_PENDING)
+    {
+        NdisUnchainBufferAtFront(Packet, &Buffer);
+        while (Buffer)
+        {
+            NdisFreeBuffer(Buffer);
+            NdisUnchainBufferAtFront(Packet, &Buffer);
+        }
+        NdisFreePacket(Packet);
+
+        if (PayloadCopy)
+            ExFreePoolWithTag(PayloadCopy, TAG_INTERFACE);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NdisSend returned status 0x%08x.\n", Status);
+        return ERR_CONN;
+    }
+
     return ERR_OK;
 }
 
@@ -319,8 +438,10 @@ TcpIpRegisterNdisProtocol(void)
     ProtocolCharacteristics.CloseAdapterCompleteHandler = ProtocolCloseAdapterComplete;
     ProtocolCharacteristics.ResetCompleteHandler = ProtocolResetComplete;
     ProtocolCharacteristics.RequestCompleteHandler = ProtocolRequestComplete;
+    ProtocolCharacteristics.ReceiveHandler = ProtocolReceive;
     ProtocolCharacteristics.ReceiveCompleteHandler = ProtocolReceiveComplete;
     ProtocolCharacteristics.StatusCompleteHandler = ProtocolStatusComplete;
+    ProtocolCharacteristics.ReceivePacketHandler = ProtocolReceivePacket;
     ProtocolCharacteristics.BindAdapterHandler = ProtocolBindAdapter;
     ProtocolCharacteristics.UnbindAdapterHandler = ProtocolUnbindAdapter;
     RtlInitUnicodeString(&ProtocolCharacteristics.Name, L"TcpIp");

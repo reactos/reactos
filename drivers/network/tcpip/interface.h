@@ -3,6 +3,9 @@
 
 #define TAG_INTERFACE 'fIpI'
 
+#define TCPIP_PACKETPOOL_SIZE 200
+#define TCPIP_BUFFERPOOL_SIZE 800
+
 typedef struct
 {
     struct netif lwip_netif;
@@ -11,6 +14,8 @@ typedef struct
     TCPIP_INSTANCE ClNlInstance;
     UNICODE_STRING DeviceName;
     NDIS_HANDLE NdisContext;
+    NDIS_HANDLE PacketPool;
+    NDIS_HANDLE BufferPool;
     UINT MediumIndex;
     ULONG Speed;
 } TCPIP_INTERFACE;
