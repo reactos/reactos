@@ -259,10 +259,6 @@ lwip_netif_linkoutput(
             }
             NdisChainBufferAtBack(Packet, Buffer);
             p = p->next;
-            if (p)
-            {
-                DPRINT1("More than one buffer in the chain!\n");
-            }
         }
     }
     else
