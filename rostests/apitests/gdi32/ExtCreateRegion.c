@@ -40,7 +40,7 @@ void Test_ExtCreateRegion_Parameters()
 do { \
     ok(((prect)->left == _left) && ((prect)->top == _top) && \
        ((prect)->right == _right) && ((prect)->bottom == _bottom), \
-       "Region does not match, expected (%ld,%ld,%ld,%ld) got (%ld,%ld,%ld,%ld)\n", \
+       "Region does not match, expected (%d,%d,%d,%d) got (%ld,%ld,%ld,%ld)\n", \
        _left, _top, _right, _bottom, \
        (prect)->left, (prect)->top, (prect)->right, (prect)->bottom); \
 } while (0)
