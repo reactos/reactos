@@ -583,7 +583,7 @@ TcpIpSendDatagram(
         Port = 0;
     }
 
-    DPRINT1("Sending datagram to address 0x%08x, port %u\n", ip4_addr_get_u32(&IpAddr), Port);
+    DPRINT1("Sending datagram to address 0x%08x, port %u\n", ip4_addr_get_u32(&IpAddr), lwip_ntohs(Port));
 
     /* Get the buffer */
     Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
@@ -600,7 +600,39 @@ TcpIpSendDatagram(
     switch (AddressFile->Protocol)
     {
         case IPPROTO_UDP:
-            lwip_error = udp_sendto(AddressFile->lwip_udp_pcb, p, &IpAddr, Port);
+            if (((ip4_addr_get_u32(&IpAddr) == IPADDR_ANY) ||
+                    (ip4_addr_get_u32(&IpAddr) == IPADDR_BROADCAST)) &&
+                    (Port == lwip_ntohs(67)) && AddressFile->Address.in_addr == 0)
+            {
+                struct netif* lwip_netif = netif_list;
+
+                /*
+                 * This is a DHCP packet for an address file with address 0.0.0.0.
+                 * Try to find an ethernet interface with no address set,
+                 * and send the packet through it.
+                 */
+                while (lwip_netif != NULL)
+                {
+                    if (ip4_addr_get_u32(&lwip_netif->ip_addr) == 0)
+                        break;
+                    lwip_netif = lwip_netif->next;
+                }
+
+                if (lwip_netif == NULL)
+                {
+                    /* Do a regular send. (This will most likely fail) */
+                    lwip_error = udp_sendto(AddressFile->lwip_udp_pcb, p, &IpAddr, Port);
+                }
+                else
+                {
+                    /* We found an interface with address being 0.0.0.0 */
+                    lwip_error = udp_sendto_if(AddressFile->lwip_udp_pcb, p, &IpAddr, Port, lwip_netif);
+                }
+            }
+            else
+            {
+                lwip_error = udp_sendto(AddressFile->lwip_udp_pcb, p, &IpAddr, Port);
+            }
             break;
         default:
             lwip_error = raw_sendto(AddressFile->lwip_raw_pcb, p, &IpAddr);
