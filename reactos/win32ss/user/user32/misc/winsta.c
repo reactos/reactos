@@ -372,7 +372,7 @@ OpenWindowStationW(LPCWSTR lpszWinSta,
                              hWindowStationsDir,
                              0);
 
-  if( fInherit == TRUE )
+  if( fInherit )
   {
       ObjectAttributes.Attributes |= OBJ_INHERIT;
   }

@@ -2087,7 +2087,7 @@ NtUserGetMessage(PMSG pMsg,
 
     UserLeave();
 
-    if (Ret == TRUE)
+    if (Ret)
     {
         _SEH2_TRY
         {
