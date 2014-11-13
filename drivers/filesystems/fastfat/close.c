@@ -75,10 +75,16 @@ VfatCloseFile(
     FileObject->FsContext2 = NULL;
     FileObject->FsContext = NULL;
     FileObject->SectionObjectPointer = NULL;
+    DeviceExt->OpenHandleCount--;
 
     if (pCcb)
     {
         vfatDestroyCCB(pCcb);
+    }
+
+    if (DeviceExt->OpenHandleCount == 0)
+    {
+        VfatCheckForDismount(DeviceExt, FALSE);
     }
 
     return Status;

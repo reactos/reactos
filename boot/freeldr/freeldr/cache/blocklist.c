@@ -149,7 +149,7 @@ BOOLEAN CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
     // that isn't forced to be in the cache and remove
     // it from the list
     CacheBlockToFree = CONTAINING_RECORD(CacheDrive->CacheBlockHead.Blink, CACHE_BLOCK, ListEntry);
-    while (&CacheBlockToFree->ListEntry != &CacheDrive->CacheBlockHead && CacheBlockToFree->LockedInCache == TRUE)
+    while (&CacheBlockToFree->ListEntry != &CacheDrive->CacheBlockHead && CacheBlockToFree->LockedInCache)
     {
         CacheBlockToFree = CONTAINING_RECORD(CacheBlockToFree->ListEntry.Blink, CACHE_BLOCK, ListEntry);
     }

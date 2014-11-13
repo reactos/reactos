@@ -53,7 +53,7 @@ CSR_API(SrvRegisterServicesProcess)
 {
     PUSER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterServicesProcessRequest;
 
-    if (ServicesProcessIdValid == TRUE)
+    if (ServicesProcessIdValid)
     {
         /* Only accept a single call */
         return STATUS_INVALID_PARAMETER;

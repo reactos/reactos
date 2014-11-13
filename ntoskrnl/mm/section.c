@@ -45,8 +45,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include "../cache/newcc.h"
-#include "../cache/section/newmm.h"
+#include <cache/newcc.h>
+#include <cache/section/newmm.h>
 #define NDEBUG
 #include <debug.h>
 #include <reactos/exeformat.h>

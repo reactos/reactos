@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #ifdef NEWCC
-#include "../cache/newcc.h"
+#include <cache/newcc.h>
 #endif
 #define NDEBUG
 #include <debug.h>

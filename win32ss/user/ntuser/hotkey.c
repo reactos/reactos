@@ -212,7 +212,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         if (!bIsDown)
         {
             /* WIN and F12 keys are not hardcoded here. See comments on top of this file. */
-            if (pHotKey->id == IDHK_WINKEY && bWinHotkeyActive == TRUE)
+            if (pHotKey->id == IDHK_WINKEY && bWinHotkeyActive)
             {
                 pWnd = ValidateHwndNoErr(InputWindowStation->ShellWindow);
                 if (pWnd)

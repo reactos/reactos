@@ -1784,7 +1784,7 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 Copy(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 
@@ -1814,7 +1814,7 @@ GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 Paste(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 

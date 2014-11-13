@@ -805,7 +805,7 @@ co_MsqDispatchOneSentMessage(PTHREADINFO pti)
       *Message->Result = Result;
    }
 
-   if (Message->HasPackedLParam == TRUE)
+   if (Message->HasPackedLParam)
    {
       if (Message->Msg.lParam)
          ExFreePool((PVOID)Message->Msg.lParam);
@@ -887,7 +887,7 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
             KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
          }
 
-         if (SentMessage->HasPackedLParam == TRUE)
+         if (SentMessage->HasPackedLParam)
          {
             if (SentMessage->Msg.lParam)
                ExFreePool((PVOID)SentMessage->Msg.lParam);
@@ -1966,7 +1966,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
          KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
 
-      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      if (CurrentSentMessage->HasPackedLParam)
       {
          if (CurrentSentMessage->Msg.lParam)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
@@ -1998,7 +1998,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
          KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
 
-      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      if (CurrentSentMessage->HasPackedLParam)
       {
          if (CurrentSentMessage->Msg.lParam)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);

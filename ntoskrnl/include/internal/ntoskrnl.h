@@ -80,7 +80,7 @@
 #include "lpc.h"
 #include "rtl.h"
 #ifdef KDBG
-#include "../kdbg/kdb.h"
+#include <kdbg/kdb.h>
 #endif
 #include "dbgk.h"
 #include "spinlock.h"

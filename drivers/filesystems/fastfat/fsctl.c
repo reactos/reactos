@@ -447,6 +447,7 @@ VfatMount(
     RtlZeroMemory(DeviceExt, ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize);
     DeviceExt->FcbHashTable = (HASHENTRY**)((ULONG_PTR)DeviceExt + ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)));
     DeviceExt->HashTableSize = HashTableSize;
+    DeviceExt->VolumeDevice = DeviceObject;
 
     /* use same vpb as device disk */
     DeviceObject->Vpb = Vpb;
@@ -520,6 +521,14 @@ VfatMount(
 
     /* Initialize this resource early ... it's used in VfatCleanup */
     ExInitializeResourceLite(&DeviceExt->DirResource);
+
+    DeviceExt->IoVPB = DeviceObject->Vpb;
+    DeviceExt->SpareVPB = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), TAG_VFAT);
+    if (DeviceExt->SpareVPB == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto ByeBye;
+    }
 
     DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
     Fcb = vfatNewFCB(DeviceExt, &NameU);
@@ -622,6 +631,8 @@ ByeBye:
         /* Cleanup */
         if (DeviceExt && DeviceExt->FATFileObject)
             ObDereferenceObject (DeviceExt->FATFileObject);
+        if (DeviceExt && DeviceExt->SpareVPB)
+            ExFreePoolWithTag(DeviceExt->SpareVPB, TAG_VFAT);
         if (Fcb)
             vfatDestroyFCB(Fcb);
         if (Ccb)
@@ -952,7 +963,6 @@ VfatDismountVolume(
 
     /* Mark we're being dismounted */
     DeviceExt->Flags |= VCB_DISMOUNT_PENDING;
-    IrpContext->DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
 
     ExReleaseResourceLite(&DeviceExt->FatResource);
 

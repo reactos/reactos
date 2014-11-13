@@ -271,6 +271,7 @@ typedef struct DEVICE_EXTENSION
     ULONG HashTableSize;
     struct _HASHENTRY **FcbHashTable;
 
+    PDEVICE_OBJECT VolumeDevice;
     PDEVICE_OBJECT StorageDevice;
     PFILE_OBJECT FATFileObject;
     FATINFO FatInfo;
@@ -297,8 +298,12 @@ typedef struct DEVICE_EXTENSION
     LIST_ENTRY NotifyList;
     PNOTIFY_SYNC NotifySync;
 
-    /* Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP */
+    /* Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLOSE */
     ULONG OpenHandleCount;
+
+    /* VPBs for dismount */
+    PVPB IoVPB;
+    PVPB SpareVPB;
 } DEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct
@@ -923,6 +928,11 @@ VfatLockUserBuffer(
     IN PIRP,
     IN ULONG,
     IN LOCK_OPERATION);
+
+BOOLEAN
+VfatCheckForDismount(
+    IN PDEVICE_EXTENSION DeviceExt,
+    IN BOOLEAN Create);
 
 /* pnp.c */
 

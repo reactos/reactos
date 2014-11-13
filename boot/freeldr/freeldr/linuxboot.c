@@ -451,7 +451,7 @@ BOOLEAN LinuxCheckKernelVersion(VOID)
         LinuxSetupSector->LoadFlags |= LINUX_FLAG_CAN_USE_HEAP;
     }
 
-    if ((NewStyleLinuxKernel == FALSE) && (LinuxHasInitrd == TRUE))
+    if ((NewStyleLinuxKernel == FALSE) && (LinuxHasInitrd))
     {
         UiMessageBox("Error: Cannot load a ramdisk (initrd) with an old kernel image.");
         return FALSE;

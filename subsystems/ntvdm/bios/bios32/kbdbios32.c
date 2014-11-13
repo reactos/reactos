@@ -15,7 +15,7 @@
 #include "int32.h"
 
 #include "kbdbios32.h"
-#include "../kbdbios.h"
+#include <bios/kbdbios.h>
 #include "bios32p.h"
 
 #include "io.h"
@@ -302,15 +302,16 @@ BOOLEAN KbdBios32Initialize(VOID)
     Bda->KeybdBufferEnd   = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
     Bda->KeybdBufferHead  = Bda->KeybdBufferTail = Bda->KeybdBufferStart;
 
-    // FIXME: Fill the keyboard buffer with invalid values, for diagnostic purposes...
-    RtlFillMemory(((LPVOID)((ULONG_PTR)Bda + Bda->KeybdBufferStart)), BIOS_KBD_BUFFER_SIZE * sizeof(WORD), 'A');
+    // FIXME: Fill the keyboard buffer with invalid values for diagnostic purposes...
+    RtlFillMemory(((LPVOID)((ULONG_PTR)Bda + Bda->KeybdBufferStart)),
+                  BIOS_KBD_BUFFER_SIZE * sizeof(WORD), 'A');
 
-    /* Register the BIOS 32-bit Interrupts */
-
-    /* Initialize software vector handlers */
+    /*
+     * Register the BIOS 32-bit Interrupts:
+     * - Software vector handler
+     * - HW vector interrupt
+     */
     RegisterBiosInt32(BIOS_KBD_INTERRUPT, BiosKeyboardService);
-
-    /* Set up the HW vector interrupts */
     EnableHwIRQ(1, BiosKeyboardIrq);
 
     return TRUE;

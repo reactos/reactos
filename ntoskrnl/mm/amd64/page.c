@@ -13,7 +13,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #undef InterlockedExchangePte
 #define InterlockedExchangePte(pte1, pte2) \

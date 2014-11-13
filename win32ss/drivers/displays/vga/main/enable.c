@@ -302,7 +302,7 @@ DrvAssertMode(IN DHPDEV DPev,
     PPDEV ppdev = (PPDEV)DPev;
     ULONG returnedDataLength;
 
-    if(Enable==TRUE)
+    if (Enable)
     {
         /* Reenable our graphics mode */
         if (!InitPointer(ppdev))

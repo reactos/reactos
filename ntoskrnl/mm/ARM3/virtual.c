@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #define MI_MAPPED_COPY_PAGES  14
 #define MI_POOL_COPY_BYTES    512

@@ -2289,7 +2289,8 @@ VOID VidBiosSyncCursorPosition(VOID)
 
 BYTE VidBiosGetVideoMode(VOID)
 {
-    return Bda->VideoMode;
+    /* Bit 7 of VideoMode is determined by bit 7 of VGAOptions */
+    return Bda->VideoMode | (Bda->VGAOptions & 0x80);
 }
 
 static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
@@ -2297,6 +2298,8 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     BYTE Page;
     COORD Resolution;
     PVGA_REGISTERS VgaMode;
+
+    BYTE OrgModeNumber = ModeNumber;
 
     /*
      * IBM standard modes do not clear the screen if the
@@ -2315,18 +2318,10 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
         return FALSE;
     }
 
-    /* Check if this is the current mode */
-    if (ModeNumber == Bda->VideoMode)
-    {
-        /* Just clear the VGA memory if needed */
-        if (!DoNotClear) VgaClearMemory();
-        return TRUE;
-    }
-
     VgaMode = VideoModes[ModeNumber];
 
-    DPRINT1("Switching to mode %02Xh %s clearing the screen; VgaMode = 0x%p\n",
-            ModeNumber, (DoNotClear ? "without" : "and"), VgaMode);
+    DPRINT1("Switching to mode %02Xh (%02Xh) %s clearing the screen; VgaMode = 0x%p\n",
+            ModeNumber, OrgModeNumber, (DoNotClear ? "without" : "and"), VgaMode);
 
     if (!VgaSetRegisters(VgaMode)) return FALSE;
 
@@ -2345,6 +2340,9 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     Bda->VideoPageSize   = VideoModePageSize[ModeNumber];
     Bda->VideoPage       = 0;
     Bda->VideoPageOffset = Bda->VideoPage * Bda->VideoPageSize;
+
+    /* 256 KB Video RAM; set bit 7 if we do not clear the screen */
+    Bda->VGAOptions      = 0x60 | (DoNotClear ? 0x80 : 0x00);
 
     /* Set the start address in the CRTC */
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_START_ADDR_LOW_REG);
@@ -2738,8 +2736,8 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Get Current Video Mode */
         case 0x0F:
         {
-            setAX(MAKEWORD(Bda->VideoMode, Bda->ScreenColumns));
-            setBX(MAKEWORD(getBL(), Bda->VideoPage));
+            setAX(MAKEWORD(VidBiosGetVideoMode(), Bda->ScreenColumns));
+            setBH(Bda->VideoPage);
             break;
         }
 
@@ -2939,23 +2937,100 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         {
             switch (getAL())
             {
+                /* Set User 8x8 Graphics Chars (Setup INT 1Fh Vector) */
+                case 0x20:
+                {
+                    /* Update the BIOS INT 1Fh vector to user-defined ES:BP pointer */
+                    // Far pointer to the 8x8 characters 80h-FFh
+                    ((PULONG)BaseAddress)[0x1F] = MAKELONG(getBP(), getES());
+                    break;
+                }
+
+                /* Setup ROM 8x8 Font for Graphics Mode */
+                case 0x23:
+                {
+                    // FIXME: Use BL and DL for the number of screen rows
+
+                    /* Write the default font to the VGA font plane */
+                    VgaWriteFont(0, Font8x8, sizeof(Font8x8)/sizeof(Font8x8[0]) / VGA_FONT_CHARACTERS);
+
+                    /* Update the BIOS INT 43h vector */
+                    // Far pointer to the 8x8 characters 00h-...
+                    ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
+
+                    break;
+                }
+
+                /* Setup ROM 8x16 Font for Graphics Mode */
+                case 0x24:
+                {
+                    // FIXME: Use BL and DL for the number of screen rows
+
+                    /* Write the default font to the VGA font plane */
+                    VgaWriteFont(0, Font8x16, sizeof(Font8x16)/sizeof(Font8x16[0]) / VGA_FONT_CHARACTERS);
+
+                    /* Update the BIOS INT 43h vector */
+                    // Far pointer to the 8x16 characters 00h-...
+                    ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
+
+                    break;
+                }
+
+                /* Get Current Character Font Information */
                 case 0x30:
                 {
-                    USHORT Offsets[] =
+                    ULONG Address = (ULONG)NULL;
+
+                    switch (getBH())
                     {
-                        FONT_8x8_HIGH_OFFSET,   /* 00h - INT 0x1F pointer */
-                        0,                      /* 01h - NOT IMPLEMENTED - INT 0x43 pointer */
-                        FONT_8x14_OFFSET,       /* 02h - NOT IMPLEMENTED - 8x14 font */
-                        FONT_8x8_OFFSET,        /* 03h - 8x8 font */
-                        FONT_8x8_HIGH_OFFSET,   /* 04h - 8x8 font, upper half */
-                        0,                      /* 05h - NOT IMPLEMENTED - 9x14 font */
-                        FONT_8x16_OFFSET,       /* 06h - 8x16 font */
-                        0,                      /* 07h - NOT IMPLEMENTED - 9x16 font */
-                    };
+                        /* 00h - INT 0x1F pointer */
+                        case 0x00:
+                            Address = ((PULONG)BaseAddress)[0x1F];
+                            break;
+
+                        /* 01h - INT 0x43 pointer */
+                        case 0x01:
+                            Address = ((PULONG)BaseAddress)[0x43];
+                            break;
+
+                        /* 02h - 8x14 font */
+                        case 0x02:
+                            Address = MAKELONG(FONT_8x14_OFFSET, VIDEO_BIOS_DATA_SEG);
+                            break;
+
+                        /* 03h - 8x8 font */
+                        case 0x03:
+                            Address = MAKELONG(FONT_8x8_OFFSET, VIDEO_BIOS_DATA_SEG);
+                            break;
+
+                        /* 04h - 8x8 font, upper half */
+                        case 0x04:
+                            Address = MAKELONG(FONT_8x8_HIGH_OFFSET, VIDEO_BIOS_DATA_SEG);
+                            break;
+
+                        /* 05h - NOT IMPLEMENTED - 9x14 font */
+                        case 0x05:
+                            break;
+
+                        /* 06h - 8x16 font */
+                        case 0x06:
+                            Address = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
+                            break;
+
+                        /* 07h - NOT IMPLEMENTED - 9x16 font */
+                        case 0x07:
+                            break;
+
+                        default:
+                            DPRINT1("INT 10h, AL=30h Function BH = 0x%02X NOT IMPLEMENTED\n",
+                                    getBH());
+                    }
 
                     /* Return the data */
-                    setES(VIDEO_BIOS_DATA_SEG);
-                    setBP(Offsets[getBH() & 7]);
+                    setES(HIWORD(Address));
+                    setBP(LOWORD(Address));
+                    setCX(Bda->CharacterHeight);
+                    setDL(Bda->ScreenRows);
 
                     break;
                 }
@@ -3045,27 +3120,27 @@ BOOLEAN VidBiosInitialize(VOID)
 {
     /* Some interrupts are in fact addresses to tables */
     ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL;
+    // Far pointer to the 8x8 characters 80h-FFh
     ((PULONG)BaseAddress)[0x1F] = MAKELONG(FONT_8x8_HIGH_OFFSET, VIDEO_BIOS_DATA_SEG);
     // ((PULONG)BaseAddress)[0x42] = (ULONG)NULL;
-    ((PULONG)BaseAddress)[0x43] = (ULONG)NULL;
+    // Far pointer to the 8x16 characters 00h-...
+    ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
     ((PULONG)BaseAddress)[0x44] = (ULONG)NULL;
+    // ((PULONG)BaseAddress)[0x6D] = (ULONG)NULL;
 
     /* Fill the tables */
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x8_OFFSET),
-                  Font8x8,
-                  sizeof(Font8x8));
+                  Font8x8, sizeof(Font8x8));
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x16_OFFSET),
-                  Font8x16,
-                  sizeof(Font8x16));
+                  Font8x16, sizeof(Font8x16));
     RtlMoveMemory(SEG_OFF_TO_PTR(VIDEO_BIOS_DATA_SEG, FONT_8x14_OFFSET),
-                  Font8x14,
-                  sizeof(Font8x14));
+                  Font8x14, sizeof(Font8x14));
 
     /* Write the default font to the VGA font plane */
-    VgaWriteFont(0, Font8x16, 16);
+    VgaWriteFont(0, Font8x16, sizeof(Font8x16)/sizeof(Font8x16[0]) / VGA_FONT_CHARACTERS);
 
     /* Initialize the VGA BDA data */
-    Bda->VGAOptions  = 0x30;    /* 256 KB Video RAM */
+    Bda->VGAOptions  = 0x60;    /* 256 KB Video RAM */
     Bda->VGASwitches = 0x09;    /* High-resolution  */
 
     //

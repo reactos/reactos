@@ -41,6 +41,6 @@
 BOOLEAN KbdBios32Initialize(VOID);
 VOID KbdBios32Cleanup(VOID);
 
-#endif // _KBDBIOS32_H_
+#endif /* _KBDBIOS32_H_ */
 
 /* EOF */

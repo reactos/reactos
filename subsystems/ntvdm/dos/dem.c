@@ -246,7 +246,7 @@ Command:
         }
 
         /* Start the process from the command line */
-        DPRINT("Starting '%s' ('%s')...\n", AppName, CmdLine);
+        DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
         Result = DosStartProcess(AppName, CmdLine, Env);
         if (Result != ERROR_SUCCESS)
         {

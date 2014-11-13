@@ -1,6 +1,7 @@
 
 include(../ntos.cmake)
 
+include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl)
 spec2def(ntkrnlmp.exe ../ntoskrnl.spec)
 
 if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))

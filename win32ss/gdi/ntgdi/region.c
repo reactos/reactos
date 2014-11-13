@@ -3668,8 +3668,8 @@ NtGdiExtCreateRegion(
             XFORMOBJ_vInit(&xo, &matrix);
             ret = XFORMOBJ_iSetXform(&xo, (XFORML*)Xform);
 
-            /* Check for error, also no scale and shear allowed */
-            if (ret != DDI_ERROR && ret != GX_GENERAL)
+            /* Check for error */
+            if (ret != DDI_ERROR)
             {
                 /* Apply the coordinate transformation on the rects */
                 if (XFORMOBJ_bApplyXform(&xo,

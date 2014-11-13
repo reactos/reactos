@@ -14,6 +14,9 @@
 
 #include <winreg.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msafd);
+
 CRITICAL_SECTION HelperDLLDatabaseLock;
 LIST_ENTRY HelperDLLDatabaseListHead;
 
@@ -37,7 +40,8 @@ SockGetTdiName(
     PLIST_ENTRY	        Helpers;
     INT                 Status;
 
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    TRACE("AddressFamily %p, SocketType %p, Protocol %p, Group %u, Flags %lx, TransportName %wZ, HelperDllContext %p, HeplperDllData %p, Events %p\n",
+        AddressFamily, SocketType, Protocol, Group, Flags, TransportName, HelperDllContext, HelperDllData, Events);
 
     /* Check in our Current Loaded Helpers */
     for (Helpers = SockHelpersListHead.Flink;
@@ -86,7 +90,7 @@ SockGetTdiName(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Can't get transport list\n"));
+        WARN("Can't get transport list\n");
         return Status;
     }
 
@@ -94,14 +98,14 @@ SockGetTdiName(
     for (Transport = Transports;
          *Transports != 0;
          Transport += wcslen(Transport) + 1) {
-	AFD_DbgPrint(MID_TRACE, ("Transport: %S\n", Transports));
+        TRACE("Transport: %S\n", Transports);
 
         /* See what mapping this Transport supports */
         Status = SockLoadTransportMapping(Transport, &Mapping);
 
         /* Check for error */
         if (Status) {
-            AFD_DbgPrint(MIN_TRACE, ("Can't get mapping\n"));
+            ERR("Can't get mapping for %S\n", Transports);
             HeapFree(GlobalHeap, 0, Transports);
             return Status;
         }
@@ -114,7 +118,7 @@ SockGetTdiName(
 
             /* Check for error */
             if (Status) {
-                AFD_DbgPrint(MIN_TRACE, ("Can't load helper DLL\n"));
+                ERR("Can't load helper DLL for Transport %S.\n", Transport);
                 HeapFree(GlobalHeap, 0, Transports);
                 HeapFree(GlobalHeap, 0, Mapping);
                 return Status;
@@ -144,7 +148,7 @@ SockGetTdiName(
 
             /* Return the Helper Pointers */
             *HelperDllData = HelperData;
-	    /* We actually cache these ... the can't be freed yet */
+            /* We actually cache these ... the can't be freed yet */
             /*HeapFree(GlobalHeap, 0, Transports);*/
             /*HeapFree(GlobalHeap, 0, Mapping);*/
             return NO_ERROR;
@@ -166,14 +170,14 @@ SockLoadTransportMapping(
     ULONG               MappingSize;
     LONG                Status;
 
-    AFD_DbgPrint(MID_TRACE,("Called: TransportName %ws\n", TransportName));
+    TRACE("TransportName %ws\n", TransportName);
 
     /* Allocate a Buffer */
     TransportKey = HeapAlloc(GlobalHeap, 0, (54 + wcslen(TransportName)) * sizeof(WCHAR));
 
     /* Check for error */
     if (TransportKey == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        ERR("Buffer allocation failed\n");
         return WSAEINVAL;
     }
 
@@ -190,7 +194,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
+        ERR("Error reading transport mapping registry\n");
         return WSAEINVAL;
     }
 
@@ -199,7 +203,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
+        ERR("Error reading transport mapping registry\n");
         return WSAEINVAL;
     }
 
@@ -208,7 +212,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (*Mapping == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        ERR("Buffer allocation failed\n");
         return WSAEINVAL;
     }
 
@@ -217,7 +221,7 @@ SockLoadTransportMapping(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading transport mapping registry\n"));
+        ERR("Error reading transport mapping registry\n");
         HeapFree(GlobalHeap, 0, *Mapping);
         return WSAEINVAL;
     }
@@ -235,7 +239,7 @@ SockLoadTransportList(
     HKEY	KeyHandle;
     LONG	Status;
 
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    TRACE("Called\n");
 
     /* Open the Transports Key */
     Status = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
@@ -246,7 +250,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
+        ERR("Error reading transport list registry\n");
         return WSAEINVAL;
     }
 
@@ -260,7 +264,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
+        ERR("Error reading transport list registry\n");
         return WSAEINVAL;
     }
 
@@ -269,7 +273,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (*TransportList == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        ERR("Buffer allocation failed\n");
         return WSAEINVAL;
     }
 
@@ -283,7 +287,7 @@ SockLoadTransportList(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading transport list registry\n"));
+        ERR("Error reading transport list registry\n");
         HeapFree(GlobalHeap, 0, *TransportList);
         return WSAEINVAL;
     }
@@ -312,7 +316,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (HelperData == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        ERR("Buffer allocation failed\n");
         return WSAEINVAL;
     }
 
@@ -321,7 +325,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (HelperKey == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        ERR("Buffer allocation failed\n");
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
@@ -338,7 +342,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading helper DLL parameters\n"));
+        ERR("Error reading helper DLL parameters\n");
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
@@ -380,7 +384,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (HelperDllName == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        ERR("Buffer allocation failed\n");
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
@@ -389,7 +393,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (FullHelperDllName == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Buffer allocation failed\n"));
+        ERR("Buffer allocation failed\n");
         HeapFree(GlobalHeap, 0, HelperDllName);
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
@@ -406,7 +410,7 @@ SockLoadHelperDll(
 
     /* Check for error */
     if (Status) {
-        AFD_DbgPrint(MIN_TRACE, ("Error reading helper DLL parameters\n"));
+        ERR("Error reading helper DLL parameters\n");
         HeapFree(GlobalHeap, 0, FullHelperDllName);
         HeapFree(GlobalHeap, 0, HelperDllName);
         HeapFree(GlobalHeap, 0, HelperData);
@@ -425,7 +429,7 @@ SockLoadHelperDll(
     HeapFree(GlobalHeap, 0, FullHelperDllName);
 
     if (HelperData->hInstance == NULL) {
-        AFD_DbgPrint(MIN_TRACE, ("Error loading helper DLL\n"));
+        ERR("Error loading helper DLL\n");
         HeapFree(GlobalHeap, 0, HelperData);
         return WSAEINVAL;
     }
@@ -495,25 +499,25 @@ SockIsTripleInMapping(
     /* The Windows version returns more detailed information on which of the 3 parameters failed...we should do this later */
     ULONG    Row;
 
-    AFD_DbgPrint(MID_TRACE,("Called, Mapping rows = %d\n", Mapping->Rows));
+    TRACE("Called, Mapping rows = %d\n", Mapping->Rows);
 
     /* Loop through Mapping to Find a matching one */
     for (Row = 0; Row < Mapping->Rows; Row++) {
-	AFD_DbgPrint(MID_TRACE,("Examining: row %d: AF %d type %d proto %d\n",
+        TRACE("Examining: row %d: AF %d type %d proto %d\n",
 				Row,
 				(INT)Mapping->Mapping[Row].AddressFamily,
 				(INT)Mapping->Mapping[Row].SocketType,
-				(INT)Mapping->Mapping[Row].Protocol));
+				(INT)Mapping->Mapping[Row].Protocol);
 
         /* Check of all three values Match */
         if (((INT)Mapping->Mapping[Row].AddressFamily == AddressFamily) &&
             ((INT)Mapping->Mapping[Row].SocketType == SocketType) &&
             ((INT)Mapping->Mapping[Row].Protocol == Protocol)) {
-	    AFD_DbgPrint(MID_TRACE,("Found\n"));
+            TRACE("Found\n");
             return TRUE;
         }
     }
-    AFD_DbgPrint(MID_TRACE,("Not found\n"));
+    WARN("Not found\n");
     return FALSE;
 }
 

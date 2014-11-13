@@ -15,7 +15,7 @@
 
 /* DEFINES ********************************************************************/
 
-#define BIOS_MOUSE_INTERRUPT 0x33
+#define DOS_MOUSE_INTERRUPT 0x33
 
 enum
 {
@@ -72,8 +72,8 @@ typedef struct _MOUSE_DRIVER_STATE
 
 /* FUNCTIONS ******************************************************************/
 
-VOID MouseBiosUpdatePosition(PCOORD NewPosition);
-VOID MouseBiosUpdateButtons(WORD ButtonStatus);
+VOID DosMouseUpdatePosition(PCOORD NewPosition);
+VOID DosMouseUpdateButtons(WORD ButtonStatus);
 
 BOOLEAN DosMouseInitialize(VOID);
 VOID DosMouseCleanup(VOID);

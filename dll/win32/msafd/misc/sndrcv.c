@@ -12,6 +12,9 @@
 
 #include <msafd.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msafd);
+
 INT
 WSPAPI
 WSPAsyncSelect(IN  SOCKET Handle,
@@ -113,7 +116,7 @@ WSPRecv(SOCKET Handle,
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
 
-    AFD_DbgPrint(MID_TRACE,("Called (%x)\n", Handle));
+    TRACE("Called (%x)\n", Handle);
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -215,7 +218,7 @@ WSPRecv(SOCKET Handle,
 
     NtClose( SockEvent );
 
-    AFD_DbgPrint(MID_TRACE,("Status %x Information %d\n", Status, IOSB->Information));
+    TRACE("Status %x Information %d\n", Status, IOSB->Information);
 
     /* Return the Flags */
     *ReceiveFlags = 0;
@@ -448,7 +451,7 @@ WSPSend(SOCKET Handle,
     if( !NT_SUCCESS(Status) )
         return -1;
 
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    TRACE("Called\n");
 
     /* Set up the Send Structure */
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
@@ -524,14 +527,14 @@ WSPSend(SOCKET Handle,
 
     if (Status == STATUS_PENDING)
     {
-        AFD_DbgPrint(MID_TRACE,("Leaving (Pending)\n"));
+        TRACE("Leaving (Pending)\n");
         return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
     }
 
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
-    AFD_DbgPrint(MID_TRACE,("Leaving (Success, %d)\n", IOSB->Information));
+    TRACE("Leaving (Success, %d)\n", IOSB->Information);
 
     return MsafdReturnWithErrno( Status, lpErrno, IOSB->Information, lpNumberOfBytesSent );
 }
@@ -710,7 +713,7 @@ WSPRecvDisconnect(IN  SOCKET s,
                   OUT LPWSABUF lpInboundDisconnectData,
                   OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -722,7 +725,7 @@ WSPSendDisconnect(IN  SOCKET s,
                   IN  LPWSABUF lpOutboundDisconnectData,
                   OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 

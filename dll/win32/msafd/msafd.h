@@ -27,9 +27,7 @@
 #include <wsahelp.h>
 #include <tdi.h>
 #include <afd/shared.h>
-#include <helpers.h>
-
-#include <debug.h>
+#include "include/helpers.h"
 
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;

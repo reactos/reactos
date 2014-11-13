@@ -119,7 +119,7 @@ RegInitCurrentControlSet(
         return Error;
     }
 
-    CurrentSet = (LastKnownGood == TRUE) ? LastKnownGoodSet : DefaultSet;
+    CurrentSet = (LastKnownGood) ? LastKnownGoodSet : DefaultSet;
     wcscpy(ControlSetKeyName, L"ControlSet");
     switch(CurrentSet)
     {

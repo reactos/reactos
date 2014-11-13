@@ -522,7 +522,7 @@ LRESULT WINAPI SwitchWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
          return TRUE;
 
       case WM_SHOWWINDOW:
-         if (wParam == TRUE)
+         if (wParam)
          {
             PrepareWindow();
             ati = (PALTTABINFO)GetWindowLongPtrW(hWnd, 0);
