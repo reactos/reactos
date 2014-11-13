@@ -13,7 +13,7 @@
 #include <debug.h>
 
 C_ASSERT(sizeof(FIX) == sizeof(LONG));
-#define FIX2LONG(x) ((x) >> 4)
+#define FIX2LONG(x) (((x) + 8) >> 4)
 #define LONG2FIX(x) ((x) << 4)
 
 #define FLOATOBJ_Equal _FLOATOBJ_Equal
