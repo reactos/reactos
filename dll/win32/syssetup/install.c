@@ -262,7 +262,7 @@ static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
         if (!SetupGetStringFieldW(&Context, 2, szFolder, MAX_PATH, NULL))
             continue;
 
-        if (!SHGetSpecialFolderPathW(0, szPath, csidl, TRUE))
+        if (FAILED(SHGetFolderPathW(NULL, csidl|CSIDL_FLAG_CREATE, (HANDLE)-1, SHGFP_TYPE_DEFAULT, szPath)))
             continue;
 
         p = PathAddBackslash(szPath);
@@ -487,7 +487,7 @@ RegisterTypeLibraries (HINF hinf, LPCWSTR szSection)
         hret = SHGetFolderPathW(NULL, csidl, NULL, 0, szPath);
         if (FAILED(hret))
         {
-            FatalError("SHGetSpecialFolderPathW failed hret=0x%d\n", hret);
+            FatalError("SHGetFolderPathW failed hret=0x%d\n", hret);
             continue;
         }
 
