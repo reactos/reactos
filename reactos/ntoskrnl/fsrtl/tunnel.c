@@ -104,8 +104,7 @@ VOID
 NTAPI
 FsRtlDeleteTunnelCache(IN PTUNNEL Cache)
 {
-    /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
 }
 
 /*++
@@ -173,8 +172,7 @@ VOID
 NTAPI
 FsRtlInitializeTunnelCache(IN PTUNNEL Cache)
 {
-    /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
 }
 
 /* EOF */
