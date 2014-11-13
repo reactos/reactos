@@ -241,7 +241,6 @@ static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
     WCHAR szFolder[MAX_PATH];
     WCHAR szFolderSection[MAX_PATH];
     INT csidl;
-    LPWSTR p;
 
     CoInitialize(NULL);
 
@@ -262,19 +261,8 @@ static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
         if (!SetupGetStringFieldW(&Context, 2, szFolder, MAX_PATH, NULL))
             continue;
 
-        if (FAILED(SHGetFolderPathW(NULL, csidl|CSIDL_FLAG_CREATE, (HANDLE)-1, SHGFP_TYPE_DEFAULT, szPath)))
+        if (FAILED(SHGetFolderPathAndSubDirW(NULL, csidl|CSIDL_FLAG_CREATE, (HANDLE)-1, SHGFP_TYPE_DEFAULT, szFolder, szPath)))
             continue;
-
-        p = PathAddBackslash(szPath);
-        _tcscpy(p, szFolder);
-
-        if (!CreateDirectory(szPath, NULL))
-        {
-            if (GetLastError() != ERROR_ALREADY_EXISTS) 
-            {
-                continue;
-            }
-        }
 
         CreateShortcutsFromSection(hinf, szFolderSection, szPath);
 
