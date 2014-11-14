@@ -78,7 +78,7 @@ const KMT_TEST TestList[] =
     { "Example",                            Test_Example },
     { "FsRtlExpression",                    Test_FsRtlExpression },
     /* Skipped on testman. See ROSTESTS-106. */
-    { "-FsRtlMcb",                          Test_FsRtlMcb },
+    { "FsRtlMcb",                           Test_FsRtlMcb },
     { "-FsRtlTunnel",                       Test_FsRtlTunnel },
     { "IoCreateFile",                       Test_IoCreateFile },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
