@@ -39,6 +39,8 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
+#include <userenv.h>
+
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shresdef.h"
@@ -46,6 +48,30 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const BOOL is_win64 = sizeof(void *) > sizeof(int);
+
+typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+
+static LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+
+BOOL IsWow64()
+{
+    BOOL bIsWow64 = FALSE;
+
+    if (!fnIsWow64Process)
+    {
+        fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+    }
+
+    if (!fnIsWow64Process)
+        return FALSE;
+
+    if (!fnIsWow64Process(GetCurrentProcess(), &bIsWow64))
+        return FALSE;
+
+    return bIsWow64;
+}
+
 
 /*
 	########## Combining and Constructing paths ##########
@@ -1429,6 +1455,27 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
     return hr;
 }
 
+BOOL _SHGetUserProfileDirectoryW(HANDLE hToken, LPWSTR szPath, LPDWORD lpcchPath)
+{
+    BOOL result;
+    if (!hToken)
+    {
+        OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
+        result = GetUserProfileDirectoryW(hToken, szPath, lpcchPath);
+        CloseHandle(hToken);
+    }
+    else if ((INT) hToken == -1)
+    {
+        result = GetDefaultUserProfileDirectoryW(szPath, lpcchPath);
+    }
+    else
+    {
+        result = GetUserProfileDirectoryW(hToken, szPath, lpcchPath);
+    }
+    DbgPrint("_SHGetUserProfileDirectoryW returning %S\n", szPath);
+    return result;
+}
+
 /* Gets a 'semi-expanded' default value of the CSIDL with index folder into
  * pszPath, based on the entries in CSIDL_Data.  By semi-expanded, I mean:
  * - The entry's szDefaultPath may be either a string value or an integer
@@ -1443,13 +1490,11 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
  *   CSIDL_Type_CurrVer:  %SystemDrive%
  *   (Others might make sense too, but as yet are unneeded.)
  */
-static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
+static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
 {
-    DWORD dwSize;
+    DWORD cchSize;
     HRESULT hr;
-    HKEY hKey;
     WCHAR resourcePath[MAX_PATH];
-    LPCWSTR pDefaultPath = NULL;
 
     TRACE("0x%02x,%p\n", folder, pszPath);
 
@@ -1458,80 +1503,58 @@ static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
     if (!pszPath)
         return E_INVALIDARG;
 
-    if (!is_win64)
+    switch (folder)
     {
-        BOOL is_wow64;
-
-        switch (folder)
-        {
-        case CSIDL_PROGRAM_FILES:
-        case CSIDL_PROGRAM_FILESX86:
-            IsWow64Process( GetCurrentProcess(), &is_wow64 );
-            folder = is_wow64 ? CSIDL_PROGRAM_FILESX86 : CSIDL_PROGRAM_FILES;
-            break;
-        case CSIDL_PROGRAM_FILES_COMMON:
-        case CSIDL_PROGRAM_FILES_COMMONX86:
-            IsWow64Process( GetCurrentProcess(), &is_wow64 );
-            folder = is_wow64 ? CSIDL_PROGRAM_FILES_COMMONX86 : CSIDL_PROGRAM_FILES_COMMON;
-            break;
-        }
+    case CSIDL_PROGRAM_FILES:
+        if (IsWow64())
+            folder = CSIDL_PROGRAM_FILESX86;
+        break;
+    case CSIDL_PROGRAM_FILES_COMMON:
+        if (IsWow64())
+            folder = CSIDL_PROGRAM_FILESX86;
+        break;
     }
 
-#ifdef __REACTOS__ /* FIXME: Inspect */
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    switch (CSIDL_Data[folder].type)
     {
-        /* FIXME assume MAX_PATH size */
-        dwSize = MAX_PATH * sizeof(WCHAR);
-        if (RegQueryValueExW(hKey, CSIDL_Data[folder].szValueName, NULL, NULL, (LPBYTE)pszPath, &dwSize) == ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            return S_OK;
-        }
-        RegCloseKey(hKey);
+    case CSIDL_Type_User:
+        cchSize = MAX_PATH;
+        if (!_SHGetUserProfileDirectoryW(hToken, pszPath, &cchSize))
+            return HRESULT_FROM_WIN32(GetLastError());
+        break;
+    case CSIDL_Type_AllUsers:
+        cchSize = MAX_PATH;
+        if (!GetAllUsersProfileDirectoryW(pszPath, &cchSize))
+            return HRESULT_FROM_WIN32(GetLastError());
+        break;
+    case CSIDL_Type_CurrVer:
+        strcpyW(pszPath, SystemDriveW);
+        break;
+    default:
+        ; /* no corresponding env. var, do nothing */
     }
-#endif
 
-    if (CSIDL_Data[folder].szDefaultPath &&
-     IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))
+    if (CSIDL_Data[folder].szDefaultPath)
     {
-        if (LoadStringW(shell32_hInstance,
-         LOWORD(CSIDL_Data[folder].szDefaultPath), resourcePath, MAX_PATH))
+        if (IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))
         {
-            hr = S_OK;
-            pDefaultPath = resourcePath;
+            if (LoadStringW(shell32_hInstance,
+                LOWORD(CSIDL_Data[folder].szDefaultPath), resourcePath, MAX_PATH))
+            {
+                hr = S_OK;
+                PathAppendW(pszPath, resourcePath);
+            }
+            else
+            {
+                FIXME("(%d,%s), LoadString failed, missing translation?\n", folder,
+                      debugstr_w(pszPath));
+                hr = E_FAIL;
+            }
         }
         else
         {
-            FIXME("(%d,%s), LoadString failed, missing translation?\n", folder,
-             debugstr_w(pszPath));
-            hr = E_FAIL;
-        }
-    }
-    else
-    {
-        hr = S_OK;
-        pDefaultPath = CSIDL_Data[folder].szDefaultPath;
-    }
-    if (SUCCEEDED(hr))
-    {
-        switch (CSIDL_Data[folder].type)
-        {
-            case CSIDL_Type_User:
-                strcpyW(pszPath, UserProfileW);
-                break;
-            case CSIDL_Type_AllUsers:
-                strcpyW(pszPath, AllUsersProfileW);
-                break;
-            case CSIDL_Type_CurrVer:
-                strcpyW(pszPath, SystemDriveW);
-                break;
-            default:
-                ; /* no corresponding env. var, do nothing */
-        }
-        if (pDefaultPath)
-        {
-            PathAddBackslashW(pszPath);
-            strcatW(pszPath, pDefaultPath);
+            hr = S_OK;
+            PathAppendW(pszPath, CSIDL_Data[folder].szDefaultPath);
         }
     }
     TRACE("returning 0x%08x\n", hr);
@@ -1559,7 +1582,7 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
         return E_INVALIDARG;
 
     if (dwFlags & SHGFP_TYPE_DEFAULT)
-        hr = _SHGetDefaultValue(folder, pszPath);
+        hr = _SHGetDefaultValue(NULL, folder, pszPath);
     else
     {
         HKEY hKey;
@@ -1574,7 +1597,7 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
              &dwType, (LPBYTE)pszPath, &dwPathLen) ||
              (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
             {
-                hr = _SHGetDefaultValue(folder, pszPath);
+                hr = _SHGetDefaultValue(NULL, folder, pszPath);
                 dwType = REG_EXPAND_SZ;
                 switch (folder)
                 {
@@ -1664,12 +1687,7 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
 
     if (dwFlags & SHGFP_TYPE_DEFAULT)
     {
-        if (hToken != NULL && hToken != (HANDLE)-1)
-        {
-            FIXME("unsupported for user other than current or default\n");
-            return E_FAIL;
-        }
-        hr = _SHGetDefaultValue(folder, pszPath);
+        hr = _SHGetDefaultValue(hToken, folder, pszPath);
     }
     else
     {
@@ -1706,7 +1724,7 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
         if (FAILED(hr) && hRootKey != HKEY_LOCAL_MACHINE)
             hr = _SHGetUserShellFolderPath(HKEY_LOCAL_MACHINE, NULL, szValueName, pszPath);
         if (FAILED(hr))
-            hr = _SHGetDefaultValue(folder, pszPath);
+            hr = _SHGetDefaultValue(hToken, folder, pszPath);
         if (userPrefix != NULL && userPrefix != DefaultW)
             LocalFree((HLOCAL) userPrefix);
     }
@@ -1735,13 +1753,13 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
         return E_INVALIDARG;
 
     if (dwFlags & SHGFP_TYPE_DEFAULT)
-        hr = _SHGetDefaultValue(folder, pszPath);
+        hr = _SHGetDefaultValue(NULL, folder, pszPath);
     else
     {
         hr = _SHGetUserShellFolderPath(HKEY_LOCAL_MACHINE, NULL,
          CSIDL_Data[folder].szValueName, pszPath);
         if (FAILED(hr))
-            hr = _SHGetDefaultValue(folder, pszPath);
+            hr = _SHGetDefaultValue(NULL, folder, pszPath);
     }
     TRACE("returning 0x%08x (output path is %s)\n", hr, debugstr_w(pszPath));
     return hr;

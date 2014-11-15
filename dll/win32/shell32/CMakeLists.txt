@@ -84,7 +84,7 @@ add_library(shell32 SHARED
 
 set_module_type(shell32 win32dll UNICODE HOTPATCHABLE)
 target_link_libraries(shell32 atlnew wine uuid recyclebin)
-add_delay_importlibs(shell32 ole32 version fmifs)
+add_delay_importlibs(shell32 ole32 userenv version fmifs)
 add_importlibs(shell32 advapi32 browseui gdi32 user32 powrprof comctl32 comdlg32 shdocvw shlwapi devmgr winspool winmm msvcrt kernel32 ntdll)
 add_pch(shell32 precomp.h SOURCE)
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
