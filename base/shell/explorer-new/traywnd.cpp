@@ -19,7 +19,7 @@
  */
 
 #include "precomp.h"
-#include <CommonControls.h>
+#include <commoncontrols.h>
 
 extern HRESULT InitShellServices(HDPA * phdpa);
 extern HRESULT ShutdownShellServices(HDPA hdpa);
