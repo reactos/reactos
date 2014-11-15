@@ -33,6 +33,10 @@
 #include "vddsup.h"
 #include "io.h"
 
+/* Extra PSDK/NDK Headers */
+#include <ndk/psfuncs.h>
+#include <ndk/mmfuncs.h>
+
 /* PRIVATE VARIABLES **********************************************************/
 
 LPVOID  BaseAddress = NULL;
@@ -554,6 +558,8 @@ VOID DumpMemory(BOOLEAN TextFormat)
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
+#ifdef STANDALONE
+
     /* Allocate memory for the 16-bit address space */
     BaseAddress = HeapAlloc(GetProcessHeap(), /*HEAP_ZERO_MEMORY*/ 0, MAX_ADDRESS);
     if (BaseAddress == NULL)
@@ -561,6 +567,30 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         wprintf(L"FATAL: Failed to allocate VDM memory.\n");
         return FALSE;
     }
+
+#else
+
+    NTSTATUS Status;
+    SIZE_T MemorySize = MAX_ADDRESS;
+
+    /* The reserved region starts from the very first page */
+    BaseAddress = NULL;
+
+    /* Commit the reserved memory */
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &MemorySize,
+                                     MEM_COMMIT,
+                                     PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        wprintf(L"FATAL: Failed to commit VDM memory.\n");
+        return FALSE;
+    }
+
+#endif
+
     /*
      * For diagnostics purposes, we fill the memory with INT 0x03 codes
      * so that if a program wants to execute random code in memory, we can
