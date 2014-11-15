@@ -51,9 +51,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Downloading..."
-    IDS_INSTALLING      "Installing..."
-    IDS_INVALID_SHA     "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+    IDS_DOWNLOADING "Downloading..."
+    IDS_INSTALLING "Installing..."
+    IDS_INVALID_SHA "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Създаване на връзка"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1", -1, 115, 15, 160, 24
-	LTEXT "Text2", -1, 115, 35, 160, 17
+    LTEXT "Text1", -1, 115, 15, 160, 24
+    LTEXT "Text2", -1, 115, 35, 160, 17
 END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -14,9 +14,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Създаване на връзка"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1",-1,10,0,225,40
-	LTEXT "Text2",-1,10,40,120,20
-	LTEXT "Text3",-1,10,55,120,20
+    LTEXT "Text1",-1,10,0,225,40
+    LTEXT "Text2",-1,10,40,120,20
+    LTEXT "Text3",-1,10,55,120,20
 END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
@@ -24,11 +24,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Създаване на препратка"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Вълшебникът ви помага за създаването на препратки към местни или мрежови приложения, файлове, папки, компютри или адреси в интернет.", -1, 120, 15, 200, 32
-  LTEXT "Напишете местоположението на предмета:", -1, 120, 50, 160, 10
-  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "Обзор...", IDC_SHORTCUT_BROWSE, 275, 65, 55, 15, ES_LEFT
-  LTEXT "Натиснете ""Напред"" за продължаване.", -1, 120, 100, 160, 10
+    LTEXT "Вълшебникът ви помага за създаването на препратки към местни или мрежови приложения, файлове, папки, компютри или адреси в интернет.", -1, 120, 15, 200, 32
+    LTEXT "Напишете местоположението на предмета:", -1, 120, 50, 160, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "Обзор...", IDC_SHORTCUT_BROWSE, 275, 65, 55, 15, ES_LEFT
+    LTEXT "Натиснете ""Напред"" за продължаване.", -1, 120, 100, 160, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -36,24 +36,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Изберете заглавие за приложението"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Напишете име за препратката:", -1, 120, 15, 150, 10
-  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Натиснете ""Край"" за създаване на препратка.", -1, 120, 50, 170, 10
+    LTEXT "&Напишете име за препратката:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Натиснете ""Край"" за създаване на препратка.", -1, 120, 50, 170, 10
 END
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "Добавяне/премахване на приложения"
-	IDS_CPLSYSTEMDESCRIPTION "Слага приложения и създава препратки."
+    IDS_CPLSYSTEMNAME "Добавяне/премахване на приложения"
+    IDS_CPLSYSTEMDESCRIPTION "Слага приложения и създава препратки."
     IDS_CREATE_SHORTCUT "Създаване на препратка"
     IDS_ERROR_NOT_FOUND "Не бе открит файл %s."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Downloading..."
-    IDS_INSTALLING      "Installing..."
-    IDS_INVALID_SHA     "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+    IDS_DOWNLOADING "Downloading..."
+    IDS_INSTALLING "Installing..."
+    IDS_INVALID_SHA "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

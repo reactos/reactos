@@ -55,9 +55,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Shkarkim..."
-    IDS_INSTALLING      "Instalim..."
-    IDS_INVALID_SHA     "Kontroll i papritur ne shkarkimin e skedarit. Duke lënë instalimin e dokumentave të korruptuar."
+    IDS_DOWNLOADING "Shkarkim..."
+    IDS_INSTALLING "Instalim..."
+    IDS_INVALID_SHA "Kontroll i papritur ne shkarkimin e skedarit. Duke lënë instalimin e dokumentave të korruptuar."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
