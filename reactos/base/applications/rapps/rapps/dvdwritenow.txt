@@ -33,5 +33,5 @@ URLSite = http://dwn.alter.org.ua/ru/
 
 [Section.041f]
 Licence = Ücretsiz
-Description = Ücretsiz bir doğrudan CD/DVD kaydedici yazılımı. Kurulduktan sonra CD/DVD RW'lerinizi, USB Flash veyâ çıkarılabilir sâbit disk sürücüleri olarak kullanabilirsiniz. Bununla birlikte UDF kütük dizgesiyle kaydedilmiş CD/DVD RW'lere yazabilirsiniz. Ayrıca Microsoft DVD−ROM'ları, Ahead InCD ile kaydedilmiş RW diskleri gibi başka yazılımlarla oluşturulmuş UDF diskleri okuyabilirsiniz. Kurmak için bir ZIP çıkartma izlencesi gerekir.
+Description = Ücretsiz bir doğrudan CD/DVD saklayıcı yazılımı. Kurulduktan sonra CD/DVD RW'lerinizi, USB Flash veyâ çıkarılabilir sâbit disk sürücüleri olarak kullanabilirsiniz. Bununla birlikte UDF kütük dizgesiyle saklanmış CD/DVD RW'lere yazabilirsiniz. Ayrıca Microsoft DVD−ROM'ları, Ahead InCD ile saklanmış RW diskleri gibi başka yazılımlarla oluşturulmuş UDF diskleri okuyabilirsiniz. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 1,2 MB
