@@ -302,6 +302,9 @@ error:
     if( Socket )
         HeapFree(GlobalHeap, 0, Socket);
 
+    if( EABuffer )
+        HeapFree(GlobalHeap, 0, EABuffer);
+
     if( lpErrno )
         *lpErrno = Status;
 
