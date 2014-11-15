@@ -1183,7 +1183,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
             /* Is there still a PFN for this page? */
-            if (MI_IS_PFN_DELETED(Pfn1) == TRUE)
+            if (MI_IS_PFN_DELETED(Pfn1))
             {
                 /* Clear the last reference */
                 Pfn1->u3.e2.ReferenceCount = 0;

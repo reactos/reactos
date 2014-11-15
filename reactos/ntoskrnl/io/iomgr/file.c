@@ -2104,7 +2104,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
     }
 
     /* Check if we were 100% successful */
-    if ((OpenPacket->ParseCheck == TRUE) && (OpenPacket->FileObject))
+    if ((OpenPacket->ParseCheck != FALSE) && (OpenPacket->FileObject))
     {
         /* Dereference the File Object */
         ObDereferenceObject(OpenPacket->FileObject);
@@ -2375,7 +2375,7 @@ IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                 DesiredAccess,
                                 &OpenPacket,
                                 &Handle);
-    if (OpenPacket.ParseCheck != TRUE)
+    if (OpenPacket.ParseCheck == FALSE)
     {
         /* Parse failed */
         IoStatus->Status = Status;
@@ -3188,7 +3188,7 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
                                 DELETE,
                                 &OpenPacket,
                                 &Handle);
-    if (OpenPacket.ParseCheck != TRUE) return Status;
+    if (OpenPacket.ParseCheck == FALSE) return Status;
 
     /* Retrn the Io status */
     return OpenPacket.FinalStatus;

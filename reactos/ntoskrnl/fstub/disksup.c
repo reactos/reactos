@@ -672,7 +672,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Search for bootable partition */
             for (j = 0; j < NUM_PARTITION_TABLE_ENTRIES && j < LayoutArray[DiskNumber]->PartitionCount; j++)
             {
-                if ((LayoutArray[DiskNumber]->PartitionEntry[j].BootIndicator == TRUE) &&
+                if ((LayoutArray[DiskNumber]->PartitionEntry[j].BootIndicator != FALSE) &&
                     IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType))
                 {
                     if (LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition == FALSE)

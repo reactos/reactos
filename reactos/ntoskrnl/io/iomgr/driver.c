@@ -127,7 +127,7 @@ IopGetDriverObject(
     DriverName.Length = 0;
     DriverName.MaximumLength = sizeof(NameBuffer);
 
-    if (FileSystem == TRUE)
+    if (FileSystem != FALSE)
         RtlAppendUnicodeToString(&DriverName, FILESYSTEM_ROOT_NAME);
     else
         RtlAppendUnicodeToString(&DriverName, DRIVER_ROOT_NAME);
@@ -494,7 +494,7 @@ IopInitializeDriverModule(
     /* Create ModuleName string */
     if (ServiceName && ServiceName->Length > 0)
     {
-        if (FileSystemDriver == TRUE)
+        if (FileSystemDriver != FALSE)
             wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
         else
             wcscpy(NameBuffer, DRIVER_ROOT_NAME);
