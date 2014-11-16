@@ -85,6 +85,22 @@ PrintPaddedResourceString(
 
 
 VOID
+PrintPadding(
+    WCHAR chr,
+    INT nPaddedLength)
+{
+    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
+    INT i;
+
+    for (i = 0; i < nPaddedLength; i++)
+         szMsgBuffer[i] = chr;
+    szMsgBuffer[nPaddedLength] = UNICODE_NULL;
+
+    WriteToConsole(szMsgBuffer);
+}
+
+
+VOID
 PrintToConsole(
     LPWSTR lpFormat,
     ...)

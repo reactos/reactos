@@ -40,7 +40,8 @@ EnumerateUsers(VOID)
     PrintToConsole(L"\n");
     PrintResourceString(IDS_USER_ACCOUNTS, pServer->sv100_name);
     PrintToConsole(L"\n\n");
-    PrintToConsole(L"------------------------------------------\n");
+    PrintPadding(L'-', 79);
+    PrintToConsole(L"\n");
 
     NetApiBufferFree(pServer);
 
@@ -263,7 +264,7 @@ DisplayUser(LPWSTR lpUserName)
         for (i = 0; i < dwLocalGroupTotal; i++)
         {
             if (i != 0)
-                PrintToConsole(L"                             ");
+                PrintPadding(L' ', nPaddedLength);
             PrintToConsole(L"*%s\n", pLocalGroupInfo[i].lgrui0_name);
         }
     }
@@ -278,7 +279,7 @@ DisplayUser(LPWSTR lpUserName)
         for (i = 0; i < dwGroupTotal; i++)
         {
             if (i != 0)
-                PrintToConsole(L"                             ");
+                PrintPadding(L' ', nPaddedLength);
             PrintToConsole(L"*%s\n", pGroupInfo[i].grui0_name);
         }
     }
