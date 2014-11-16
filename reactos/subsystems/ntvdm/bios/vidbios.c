@@ -50,7 +50,7 @@ static VGA_REGISTERS VideoMode_40x25_text =
     /* Sequencer Registers */
     {0x00, 0x08, 0x03, 0x00, 0x02},
 
-    /* CRTC Registers */
+    /* CRTC Registers */                /* CGA-compatible: 0xC7, 0x06, 0x07 */
     {0x2D, 0x27, 0x28, 0x90, 0x2B, 0xA0, 0xBF, 0x1F, 0x00, 0x4F, 0x0D, 0x0E,
      0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x14, 0x1F, 0x96, 0xB9, 0xA3,
      0xFF},
@@ -71,7 +71,7 @@ static VGA_REGISTERS VideoMode_80x25_text =
     /* Sequencer Registers */
     {0x00, 0x00, 0x03, 0x00, 0x02},
 
-    /* CRTC Registers */
+    /* CRTC Registers */                /* CGA-compatible: 0xC7, 0x06, 0x07 */
     {0x5F, 0x4F, 0x50, 0x82, 0x55, 0x81, 0xBF, 0x1F, 0x00, 0x4F, 0x0D, 0x0E,
      0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x28, 0x1F, 0x96, 0xB9, 0xA3,
      0xFF},
@@ -2100,19 +2100,25 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
      */
     Bda->CrtBasePort = (Registers->Misc & 0x01) ? VGA_CRTC_INDEX_COLOR
                                                 : VGA_CRTC_INDEX_MONO;
+    /* Bit 1 indicates whether display is color (0) or monochrome (1) */
+    Bda->VGAOptions  = (Bda->VGAOptions & 0xFD) | (!(Registers->Misc & 0x01) << 1);
+
+    /* Turn the video off */
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_CLOCK_REG);
+    IOWriteB(VGA_SEQ_DATA , IOReadB(VGA_SEQ_DATA) | VGA_SEQ_CLOCK_SD);
 
     /* Write the misc register */
     IOWriteB(VGA_MISC_WRITE, Registers->Misc);
 
     /* Synchronous reset on */
     IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_RESET_REG);
-    IOWriteB(VGA_SEQ_DATA , VGA_SEQ_RESET_AR);
+    IOWriteB(VGA_SEQ_DATA , VGA_SEQ_RESET_AR );
 
     /* Write the sequencer registers */
     for (i = 1; i < VGA_SEQ_MAX_REG; i++)
     {
         IOWriteB(VGA_SEQ_INDEX, i);
-        IOWriteB(VGA_SEQ_DATA, Registers->Sequencer[i]);
+        IOWriteB(VGA_SEQ_DATA , Registers->Sequencer[i]);
     }
 
     /* Synchronous reset off */
@@ -2121,9 +2127,9 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
 
     /* Unlock CRTC registers 0-7 */
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_END_HORZ_BLANKING_REG);
-    IOWriteB(VGA_CRTC_DATA, IOReadB(VGA_CRTC_DATA) | 0x80);
+    IOWriteB(VGA_CRTC_DATA , IOReadB(VGA_CRTC_DATA) | 0x80);
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_VERT_RETRACE_END_REG);
-    IOWriteB(VGA_CRTC_DATA, IOReadB(VGA_CRTC_DATA) & ~0x80);
+    IOWriteB(VGA_CRTC_DATA , IOReadB(VGA_CRTC_DATA) & ~0x80);
     // Make sure they remain unlocked
     Registers->CRT[VGA_CRTC_END_HORZ_BLANKING_REG] |= 0x80;
     Registers->CRT[VGA_CRTC_VERT_RETRACE_END_REG] &= ~0x80;
@@ -2132,24 +2138,21 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
     for (i = 0; i < VGA_CRTC_MAX_REG; i++)
     {
         IOWriteB(VGA_CRTC_INDEX, i);
-        IOWriteB(VGA_CRTC_DATA, Registers->CRT[i]);
+        IOWriteB(VGA_CRTC_DATA , Registers->CRT[i]);
     }
 
     /* Write the GC registers */
     for (i = 0; i < VGA_GC_MAX_REG; i++)
     {
         IOWriteB(VGA_GC_INDEX, i);
-        IOWriteB(VGA_GC_DATA, Registers->Graphics[i]);
+        IOWriteB(VGA_GC_DATA , Registers->Graphics[i]);
     }
 
     /* Write the AC registers */
-    // DbgPrint("\n");
     for (i = 0; i < VGA_AC_MAX_REG; i++)
     {
         VgaSetSinglePaletteRegister(i, Registers->Attribute[i]);
-        // DbgPrint("Registers->Attribute[%d] = %d\n", i, Registers->Attribute[i]);
     }
-    // DbgPrint("\n");
 
     /* Set the PEL mask */
     IOWriteB(VGA_DAC_MASK, 0xFF);
@@ -2157,6 +2160,10 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
     /* Enable screen and disable palette access */
     IOReadB(VGA_INSTAT1_READ); // Put the AC register into index state
     IOWriteB(VGA_AC_INDEX, 0x20);
+
+    /* Turn the video on */
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_CLOCK_REG);
+    IOWriteB(VGA_SEQ_DATA , IOReadB(VGA_SEQ_DATA) & ~VGA_SEQ_CLOCK_SD);
 
     /* Enable interrupts */
     setIF(1);
@@ -2263,6 +2270,53 @@ static VOID VidBiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
     }
 }
 
+static VOID VidBiosSetCursorShape(WORD CursorStartEnd)
+{
+    /* Only valid in text-mode */
+    if ((Bda->VideoMode > 0x03) && (Bda->VideoMode != 0x07)) return;
+
+    /* Update the BDA */
+    Bda->CursorStartLine = HIBYTE(CursorStartEnd) & 0x1F;
+    Bda->CursorEndLine   = LOBYTE(CursorStartEnd) & 0x1F;
+
+    /*
+     * In cursor emulation mode, we suppose the cursor scanlines
+     * to be in CGA mode, so that we need to adjust them
+     *
+     * WARNING!!
+     * =========
+     * Contrary to what is mentioned in lots of literature out there, e.g. in:
+     * http://webpages.charter.net/danrollins/techhelp/0072.HTM
+     * http://www.bioscentral.com/misc/bda.htm
+     * and in other various places, bit 0 of Bda->VGAOptions is 0 when
+     * cursor emulation is ENABLED, and is 1 when it is DISABLED.
+     *
+     * The following documentation is right about this fact:
+     * http://www.cs.nyu.edu/~mwalfish/classes/ut/s12-cs372h/ref/hardware/vgadoc/VGABIOS.TXT
+     * https://sites.google.com/site/pcdosretro/biosdata
+     *
+     * A proof that it is OK is that in the following code samples it is
+     * explicitely mentioned that setting bit 0 disables cursor emulation:
+     * - Code snippets in PC Magazine vol.5 num.15 of 16/09/1986, p.291-292;
+     * - CardFile DOS utility (Jeff Prosise, PC Magazine vol.6 num.17 of 13/10/1987, p.403-416):
+     *   https://ia600700.us.archive.org/1/items/srccode-00000020/cardfile.asm.txt
+     *   (function 'show_cursor', "or ega_info,1    ;disable EGA cursor emulation")
+     */
+    if (!(Bda->VGAOptions & 0x01))
+    {
+        // HACK: Quick "fix" for cursor scanline adjustment. This must be reworked.
+        DPRINT1("HACK: Using HACK for cursor scanlines adjustment\n");
+        CursorStartEnd = MAKEWORD((LOBYTE(CursorStartEnd) & 0x1F) * 2,
+                                  (HIBYTE(CursorStartEnd) & 0x1F) * 2 | (HIBYTE(CursorStartEnd) & 0xE0));
+    }
+
+    /* Modify the CRTC registers */
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_START_REG);
+    IOWriteB(VGA_CRTC_DATA , HIBYTE(CursorStartEnd));
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_END_REG);
+    IOWriteB(VGA_CRTC_DATA , LOBYTE(CursorStartEnd));
+}
+
 VOID VidBiosSyncCursorPosition(VOID)
 {
     BYTE Row, Column;
@@ -2340,7 +2394,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     Bda->VideoPageOffset = Bda->VideoPage * Bda->VideoPageSize;
 
     /* 256 KB Video RAM; set bit 7 if we do not clear the screen */
-    Bda->VGAOptions      = 0x60 | (DoNotClear ? 0x80 : 0x00);
+    Bda->VGAOptions      = 0x60 | (Bda->VGAOptions & 0x7F) | (DoNotClear ? 0x80 : 0x00);
     Bda->VGASwitches     = 0xF9;    /* High-resolution  */
 
     /* Set the start address in the CRTC */
@@ -2357,6 +2411,15 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     Resolution = VgaGetDisplayResolution();
     Bda->ScreenColumns = Resolution.X;
     Bda->ScreenRows    = Resolution.Y - 1;
+
+    /*
+     * Update the cursor shape (text-mode only).
+     * Use the default CGA cursor scanline values,
+     * see: http://vitaly_filatov.tripod.com/ng/asm/asm_023.2.html
+     */
+    if ((ModeNumber >= 0x00 && ModeNumber <= 0x03) || (ModeNumber == 0x07))
+        // FIXME: we might read the CRT registers and do the adjustment?
+        VidBiosSetCursorShape(MAKEWORD(0x07, 0x06));
 
     /* Set the cursor position for each page */
     for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
@@ -2519,18 +2582,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Set Text-Mode Cursor Shape */
         case 0x01:
         {
-            WORD CursorStartEnd = getCX();
-
-            /* Update the BDA */
-            Bda->CursorStartLine = HIBYTE(CursorStartEnd) & 0x1F;
-            Bda->CursorEndLine   = LOBYTE(CursorStartEnd) & 0x1F;
-
-            /* Modify the CRTC registers */
-            IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_START_REG);
-            IOWriteB(VGA_CRTC_DATA , HIBYTE(CursorStartEnd));
-            IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_END_REG);
-            IOWriteB(VGA_CRTC_DATA , Bda->CursorEndLine);
-
+            VidBiosSetCursorShape(getCX());
             break;
         }
 
@@ -2548,7 +2600,6 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             if (getBH() >= BIOS_MAX_PAGES) break;
 
             /* Return the result */
-            setAX(0);
             setCX(MAKEWORD(Bda->CursorEndLine, Bda->CursorStartLine));
             setDX(Bda->CursorPosition[getBH()]);
             break;
@@ -2650,7 +2701,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Set Video Colors */
         case 0x0B:
         {
-            if (Bda->VideoMode < 4 || Bda->VideoMode > 6)
+            if (Bda->VideoMode < 0x04 || Bda->VideoMode > 0x06)
             {
                 DPRINT1("BIOS Function INT 10h, AH = 0Bh, BH = 0x%02X is unsupported for non-CGA modes\n",
                         getBH());
@@ -2673,7 +2724,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     VgaSetSinglePaletteRegister(VGA_AC_OVERSCAN_REG, Index);
 
                     /* Don't set any extra colors when in text mode */
-                    if (Bda->VideoMode <= 3) break;
+                    if (Bda->VideoMode <= 0x03) break;
 
                     VgaSetSinglePaletteRegister(0x00, Index);
 
@@ -2704,7 +2755,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     Bda->CrtColorPaletteMask = (Bda->CrtColorPaletteMask & 0xDF) | ((Index & 1) ? 0x20 : 0x00);
 
                     /* Don't set any extra colors when in text mode */
-                    if (Bda->VideoMode <= 3) break;
+                    if (Bda->VideoMode <= 0x03) break;
 
                     Index = (Bda->CrtColorPaletteMask & 0x10) | 0x02 | Index;
 
@@ -3051,8 +3102,71 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Alternate Function Select */
         case 0x12:
         {
-            DPRINT1("BIOS Function INT 10h, AH = 12h (Alternate Function Select), BX = 0x%04X NOT IMPLEMENTED\n",
-                    getBX());
+            switch (getBL())
+            {
+                /* Get EGA/VGA Information */
+                case 0x10:
+                {
+                    setBH((Bda->VGAOptions  & 0x02) >> 1);  /* Color (0) or monochrome (1) display */
+                    setBL((Bda->VGAOptions  & 0x60) >> 5);  /* Video RAM size */
+                    setCH((Bda->VGASwitches & 0xF0) >> 4);  /* Features settings */
+                    setCL( Bda->VGASwitches & 0x0F);        /* Switches settings */
+                    break;
+                }
+
+                /* Enable/Disable Cursor Emulation */
+                case 0x34:
+                {
+                    BYTE State = getAL();
+
+                    /* Check for validity */
+                    if (State > 1) break;
+
+                    /*
+                     * Enable (State == 0) or disable (State == 1) cursor emulation.
+                     * Please read the WARNING in the 'VidBiosSetCursorShape'
+                     * function for more details.
+                     */
+                    Bda->VGAOptions = (Bda->VGAOptions & 0xFE) | (State & 0x01);
+
+                    /* Return success */
+                    setAL(0x12);
+                    break;
+                }
+
+                /* Enable/Disable screen refresh */
+                case 0x36:
+                {
+                    BYTE State = getAL();
+                    BYTE Clocking;
+
+                    /* Check for validity */
+                    if (State > 1) break;
+
+                    /* Turn the video on (State == 0) or off (State == 1) */
+                    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_CLOCK_REG);
+                    Clocking = IOReadB(VGA_SEQ_DATA);
+
+                    if (State == 0)
+                        Clocking &= ~VGA_SEQ_CLOCK_SD;
+                    else
+                        Clocking |= VGA_SEQ_CLOCK_SD;
+
+                    IOWriteB(VGA_SEQ_DATA, Clocking);
+
+                    /* Return success */
+                    setAL(0x12);
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT1("BIOS Function INT 10h, AH = 12h (Alternate Function Select), BX = 0x%04X NOT IMPLEMENTED\n",
+                            getBX());
+                    break;
+                }
+            }
+
             break;
         }
 
