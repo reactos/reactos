@@ -268,19 +268,20 @@ static BOOLEAN VgaAcPalDisable = TRUE;
 static BYTE VgaAcIndex = VGA_AC_PAL_0_REG;
 static BYTE VgaAcRegisters[VGA_AC_MAX_REG];
 
-// static VGA_REGISTERS VgaRegisters;
+static BYTE VgaDacMask  = 0xFF;
 
-static BYTE VgaDacMask = 0xFF;
-static WORD VgaDacIndex = 0;
 static BOOLEAN VgaDacReadWrite = FALSE;
+static WORD VgaDacIndex = 0;
 static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
 
-static BOOLEAN InVerticalRetrace = FALSE;
+// static VGA_REGISTERS VgaRegisters;
+
+static BOOLEAN InVerticalRetrace   = FALSE;
 static BOOLEAN InHorizontalRetrace = FALSE;
 
 static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = FALSE;
-static BOOLEAN CursorMoved = FALSE;
+static BOOLEAN CursorChanged  = FALSE;
 static BOOLEAN PaletteChanged = FALSE;
 
 static
@@ -610,13 +611,13 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
     if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
     {
         /* The lowest two bits are the plane number */
-        Plane = Offset & 3;
+        Plane = Offset & 0x03;
         Offset >>= 2;
     }
     else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
     {
         /* The LSB is the plane number */
-        Plane = Offset & 1;
+        Plane = Offset & 0x01;
         Offset >>= 1;
     }
     else
@@ -656,7 +657,7 @@ static inline DWORD VgaTranslateWriteAddress(DWORD Address)
 
 static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
 {
-    BYTE WriteMode = VgaGcRegisters[VGA_GC_MODE_REG] & 3;
+    BYTE WriteMode = VgaGcRegisters[VGA_GC_MODE_REG] & 0x03;
     BYTE BitMask = VgaGcRegisters[VGA_GC_BITMASK_REG];
 
     if (WriteMode == 1)
@@ -668,7 +669,7 @@ static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
     if (WriteMode != 2)
     {
         /* Write modes 0 and 3 rotate the data to the right first */
-        BYTE RotateCount = VgaGcRegisters[VGA_GC_ROTATE_REG] & 7;
+        BYTE RotateCount = VgaGcRegisters[VGA_GC_ROTATE_REG] & 0x07;
         Data = LOBYTE(((DWORD)Data >> RotateCount) | ((DWORD)Data << (8 - RotateCount)));
     }
     else
@@ -693,7 +694,7 @@ static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
     if (WriteMode != 3)
     {
         /* Write modes 0 and 2 then perform a logical operation on the data and latch */
-        BYTE LogicalOperation = (VgaGcRegisters[VGA_GC_ROTATE_REG] >> 3) & 3;
+        BYTE LogicalOperation = (VgaGcRegisters[VGA_GC_ROTATE_REG] >> 3) & 0x03;
 
         if (LogicalOperation == 1) Data &= VgaLatchRegisters[Plane];
         else if (LogicalOperation == 2) Data |= VgaLatchRegisters[Plane];
@@ -774,6 +775,7 @@ static VOID VgaWriteCrtc(BYTE Data)
         case VGA_CRTC_END_HORZ_DISP_REG:
         case VGA_CRTC_VERT_DISP_END_REG:
         case VGA_CRTC_OVERFLOW_REG:
+        case VGA_CRTC_MAX_SCAN_LINE_REG:
         {
             /* The video mode has changed */
             ModeChanged = TRUE;
@@ -785,8 +787,8 @@ static VOID VgaWriteCrtc(BYTE Data)
         case VGA_CRTC_CURSOR_START_REG:
         case VGA_CRTC_CURSOR_END_REG:
         {
-            /* Set the cursor moved flag */
-            CursorMoved = TRUE;
+            /* Set the cursor changed flag */
+            CursorChanged = TRUE;
             break;
         }
     }
@@ -1244,8 +1246,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                         BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
 
                         /* Extract the two bits from each plane */
-                        LowPlaneData = (LowPlaneData >> (6 - ((j % 4) * 2))) & 3;
-                        HighPlaneData = (HighPlaneData >> (6 - ((j % 4) * 2))) & 3;
+                        LowPlaneData  = (LowPlaneData  >> (6 - ((j % 4) * 2))) & 0x03;
+                        HighPlaneData = (HighPlaneData >> (6 - ((j % 4) * 2))) & 0x03;
 
                         /* Combine them into the pixel */
                         PixelData = LowPlaneData | (HighPlaneData << 2);
@@ -1422,8 +1424,11 @@ static VOID VgaUpdateTextCursor(VOID)
 {
     COORD Position;
     CONSOLE_CURSOR_INFO CursorInfo;
-    BYTE CursorStart = VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x3F;
-    BYTE CursorEnd = VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] & 0x1F;
+
+    BOOL CursorVisible = !(VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x20);
+    BYTE CursorStart   =   VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x1F;
+    BYTE CursorEnd     =   VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG]   & 0x1F;
+
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
     BYTE TextSize = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
     WORD Location = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG],
@@ -1435,18 +1440,18 @@ static VOID VgaUpdateTextCursor(VOID)
     if (CursorStart < CursorEnd)
     {
         /* Visible cursor */
-        CursorInfo.bVisible = TRUE;
-        CursorInfo.dwSize = (100 * (CursorEnd - CursorStart)) / TextSize;
+        CursorInfo.bVisible = CursorVisible;
+        CursorInfo.dwSize   = (100 * (CursorEnd - CursorStart)) / TextSize;
     }
     else
     {
-        /* No cursor */
+        /* Hidden cursor */
         CursorInfo.bVisible = FALSE;
-        CursorInfo.dwSize = 0;
+        CursorInfo.dwSize   = 1; // The size needs to be non-null in order SetConsoleCursorInfo to succeed.
     }
 
     /* Add the cursor skew to the location */
-    Location += (VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] >> 5) & 3;
+    Location += (VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] >> 5) & 0x03;
 
     /* Find the coordinates of the new position */
     Position.X = (SHORT)(Location % ScanlineSize);
@@ -1458,8 +1463,8 @@ static VOID VgaUpdateTextCursor(VOID)
     SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
     SetConsoleCursorPosition(TextConsoleBuffer, Position);
 
-    /* Reset the cursor move flag */
-    CursorMoved = FALSE;
+    /* Reset the cursor changed flag */
+    CursorChanged = FALSE;
 }
 
 static BYTE WINAPI VgaReadPort(USHORT Port)
@@ -1704,7 +1709,7 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
         }
 
         default:
-            DPRINT1("VgaWritePort: Unknown port 0x%X\n", Port);
+            DPRINT1("VgaWritePort: Unknown port 0x%X, Data 0x%02X\n", Port, Data);
             break;
     }
 }
@@ -1778,14 +1783,14 @@ VOID VgaRefreshDisplay(VOID)
     InVerticalRetrace = TRUE;
 
     /* If nothing has changed, just return */
-    // if (!ModeChanged && !CursorMoved && !PaletteChanged && !NeedsUpdate)
+    // if (!ModeChanged && !CursorChanged && !PaletteChanged && !NeedsUpdate)
         // return;
 
     /* Change the display mode */
     if (ModeChanged) VgaChangeMode();
 
-    /* Change the text cursor location */
-    if (CursorMoved) VgaUpdateTextCursor();
+    /* Change the text cursor appearance */
+    if (CursorChanged) VgaUpdateTextCursor();
 
     /* Retrieve the current resolution */
     Resolution = VgaGetDisplayResolution();
@@ -1903,7 +1908,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
             /* Check if this is chain-4 mode */
             if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
             {
-                if (((Address + i) & 3) != j)
+                if (((Address + i) & 0x03) != j)
                 {
                     /* This plane will not be accessed */
                     continue;
@@ -1913,7 +1918,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
             /* Check if this is odd-even mode */
             if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
             {
-                if (((Address + i) & 1) != (j & 1))
+                if (((Address + i) & 0x01) != (j & 1))
                 {
                     /* This plane will not be accessed */
                     continue;
@@ -2069,6 +2074,10 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     RegisterIoPort(0x3C9, VgaReadPort, VgaWritePort);   // VGA_DAC_DATA
     RegisterIoPort(0x3CE, VgaReadPort, VgaWritePort);   // VGA_GC_INDEX
     RegisterIoPort(0x3CF, VgaReadPort, VgaWritePort);   // VGA_GC_DATA
+
+    /* CGA ports for compatibility, unimplemented */
+    RegisterIoPort(0x3D8, VgaReadPort, VgaWritePort);   // CGA_MODE_CTRL_REG
+    RegisterIoPort(0x3D9, VgaReadPort, VgaWritePort);   // CGA_PAL_CTRL_REG
 
     /* Return success */
     return TRUE;
