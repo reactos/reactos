@@ -83,7 +83,7 @@ void msvcrt_free_mt_locks(void)
   /* Uninitialize the table */
   for( i=0; i < _TOTAL_LOCKS; i++ )
   {
-    if( lock_table[ i ].bInit == TRUE )
+    if( lock_table[ i ].bInit )
     {
       msvcrt_uninitialize_mlock( i );
     }
