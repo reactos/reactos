@@ -214,8 +214,8 @@ typedef struct _CHAR_CELL
 C_ASSERT(sizeof(CHAR_CELL) == 2);
 
 static LPVOID ConsoleFramebuffer = NULL; // Active framebuffer, points to
-                                         // either TextFramebuffer or a valid
-                                         // graphics framebuffer.
+                                         // either TextFramebuffer or a
+                                         // valid graphics framebuffer.
 static HPALETTE TextPaletteHandle = NULL;
 static HPALETTE PaletteHandle = NULL;
 
@@ -229,8 +229,8 @@ static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
 
 /*
  * Text mode -- we always keep a valid text mode framebuffer
- * even if we are in graphics mode. This is needed in order to
- * keep a consistent VGA state.
+ * even if we are in graphics mode. This is needed in order
+ * to keep a consistent VGA state.
  */
 static CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
 static COORD  TextResolution = {0};
@@ -456,8 +456,8 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
      * in the two following APIs:
      * SrvRegisterConsoleVDM  (corresponding Win32 API: RegisterConsoleVDM)
      * SrvVDMConsoleOperation (corresponding Win32 API: )
-     * to check whether the current process is a VDM process, and fails otherwise with the
-     * error 0xC0000022 ().
+     * to check whether the current process is a VDM process, and fails otherwise
+     * with the error 0xC0000022 (STATUS_ACCESS_DENIED).
      *
      * It is worth it to notice that also basesrv.dll does the same only for the
      * BaseSrvIsFirstVDM API...
@@ -735,137 +735,6 @@ static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
     NeedsUpdate = TRUE;
 }
 
-static VOID VgaWriteSequencer(BYTE Data)
-{
-    ASSERT(VgaSeqIndex < VGA_SEQ_MAX_REG);
-
-    /* Save the value */
-    VgaSeqRegisters[VgaSeqIndex] = Data;
-}
-
-static VOID VgaWriteGc(BYTE Data)
-{
-    ASSERT(VgaGcIndex < VGA_GC_MAX_REG);
-
-    /* Save the value */
-    VgaGcRegisters[VgaGcIndex] = Data;
-
-    /* Check the index */
-    switch (VgaGcIndex)
-    {
-        case VGA_GC_MISC_REG:
-        {
-            /* The GC misc register decides if it's text or graphics mode */
-            ModeChanged = TRUE;
-            break;
-        }
-    }
-}
-
-static VOID VgaWriteCrtc(BYTE Data)
-{
-    ASSERT(VgaGcIndex < VGA_CRTC_MAX_REG);
-
-    /* Save the value */
-    VgaCrtcRegisters[VgaCrtcIndex] = Data;
-
-    /* Check the index */
-    switch (VgaCrtcIndex)
-    {
-        case VGA_CRTC_END_HORZ_DISP_REG:
-        case VGA_CRTC_VERT_DISP_END_REG:
-        case VGA_CRTC_OVERFLOW_REG:
-        case VGA_CRTC_MAX_SCAN_LINE_REG:
-        {
-            /* The video mode has changed */
-            ModeChanged = TRUE;
-            break;
-        }
-
-        case VGA_CRTC_CURSOR_LOC_LOW_REG:
-        case VGA_CRTC_CURSOR_LOC_HIGH_REG:
-        case VGA_CRTC_CURSOR_START_REG:
-        case VGA_CRTC_CURSOR_END_REG:
-        {
-            /* Set the cursor changed flag */
-            CursorChanged = TRUE;
-            break;
-        }
-    }
-}
-
-static VOID VgaWriteDac(BYTE Data)
-{
-    INT i, PaletteIndex;
-    PALETTEENTRY Entry;
-
-    /* Set the value */
-    VgaDacRegisters[VgaDacIndex] = Data;
-
-    /* Find the palette index */
-    PaletteIndex = VgaDacIndex / 3;
-
-    /* Fill the entry structure */
-    Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3]);
-    Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 1]);
-    Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 2]);
-    Entry.peFlags = 0;
-
-    /* Update the palette entry */
-    SetPaletteEntries(PaletteHandle, PaletteIndex, 1, &Entry);
-
-    /* Check which text palette entries are affected */
-    for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
-    {
-        if (VgaAcRegisters[i] == PaletteIndex)
-        {
-            /* Update the text palette entry */
-            SetPaletteEntries(TextPaletteHandle, i, 1, &Entry);
-        }
-    }
-
-    /* Set the palette changed flag */
-    PaletteChanged = TRUE;
-
-    /* Update the index */
-    VgaDacIndex++;
-    VgaDacIndex %= VGA_PALETTE_SIZE;
-}
-
-static VOID VgaWriteAc(BYTE Data)
-{
-    PALETTEENTRY Entry;
-
-    ASSERT(VgaAcIndex < VGA_AC_MAX_REG);
-
-    /* Save the value */
-    if (VgaAcIndex <= VGA_AC_PAL_F_REG)
-    {
-        if (VgaAcPalDisable) return;
-
-        // DbgPrint("    AC Palette Writing %d to index %d\n", Data, VgaAcIndex);
-        if (VgaAcRegisters[VgaAcIndex] != Data)
-        {
-            /* Update the AC register */
-            VgaAcRegisters[VgaAcIndex] = Data;
-
-            /* Fill the entry structure */
-            Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3]);
-            Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 1]);
-            Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 2]);
-            Entry.peFlags = 0;
-
-            /* Update the palette entry and set the palette change flag */
-            SetPaletteEntries(TextPaletteHandle, VgaAcIndex, 1, &Entry);
-            PaletteChanged = TRUE;
-        }
-    }
-    else
-    {
-        VgaAcRegisters[VgaAcIndex] = Data;
-    }
-}
-
 static VOID VgaRestoreDefaultPalette(PPALETTEENTRY Entries, USHORT NumOfEntries)
 {
     USHORT i;
@@ -944,6 +813,16 @@ Cleanup:
     }
 
     return Result;
+}
+
+static VOID VgaResetPalette(VOID)
+{
+    PALETTEENTRY Entries[VGA_MAX_COLORS];
+
+    /* Restore the default palette */
+    VgaRestoreDefaultPalette(Entries, VGA_MAX_COLORS);
+    SetPaletteEntries(PaletteHandle, 0, VGA_MAX_COLORS, Entries);
+    PaletteChanged = TRUE;
 }
 
 static VOID VgaSetActiveScreenBuffer(HANDLE ScreenBuffer)
@@ -1559,6 +1438,137 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
     return 0;
 }
 
+static inline VOID VgaWriteSequencer(BYTE Data)
+{
+    ASSERT(VgaSeqIndex < VGA_SEQ_MAX_REG);
+
+    /* Save the value */
+    VgaSeqRegisters[VgaSeqIndex] = Data;
+}
+
+static inline VOID VgaWriteGc(BYTE Data)
+{
+    ASSERT(VgaGcIndex < VGA_GC_MAX_REG);
+
+    /* Save the value */
+    VgaGcRegisters[VgaGcIndex] = Data;
+
+    /* Check the index */
+    switch (VgaGcIndex)
+    {
+        case VGA_GC_MISC_REG:
+        {
+            /* The GC misc register decides if it's text or graphics mode */
+            ModeChanged = TRUE;
+            break;
+        }
+    }
+}
+
+static inline VOID VgaWriteCrtc(BYTE Data)
+{
+    ASSERT(VgaGcIndex < VGA_CRTC_MAX_REG);
+
+    /* Save the value */
+    VgaCrtcRegisters[VgaCrtcIndex] = Data;
+
+    /* Check the index */
+    switch (VgaCrtcIndex)
+    {
+        case VGA_CRTC_END_HORZ_DISP_REG:
+        case VGA_CRTC_VERT_DISP_END_REG:
+        case VGA_CRTC_OVERFLOW_REG:
+        case VGA_CRTC_MAX_SCAN_LINE_REG:
+        {
+            /* The video mode has changed */
+            ModeChanged = TRUE;
+            break;
+        }
+
+        case VGA_CRTC_CURSOR_LOC_LOW_REG:
+        case VGA_CRTC_CURSOR_LOC_HIGH_REG:
+        case VGA_CRTC_CURSOR_START_REG:
+        case VGA_CRTC_CURSOR_END_REG:
+        {
+            /* Set the cursor changed flag */
+            CursorChanged = TRUE;
+            break;
+        }
+    }
+}
+
+static inline VOID VgaWriteDac(BYTE Data)
+{
+    INT i, PaletteIndex;
+    PALETTEENTRY Entry;
+
+    /* Set the value */
+    VgaDacRegisters[VgaDacIndex] = Data;
+
+    /* Find the palette index */
+    PaletteIndex = VgaDacIndex / 3;
+
+    /* Fill the entry structure */
+    Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3]);
+    Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 1]);
+    Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 2]);
+    Entry.peFlags = 0;
+
+    /* Update the palette entry */
+    SetPaletteEntries(PaletteHandle, PaletteIndex, 1, &Entry);
+
+    /* Check which text palette entries are affected */
+    for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
+    {
+        if (VgaAcRegisters[i] == PaletteIndex)
+        {
+            /* Update the text palette entry */
+            SetPaletteEntries(TextPaletteHandle, i, 1, &Entry);
+        }
+    }
+
+    /* Set the palette changed flag */
+    PaletteChanged = TRUE;
+
+    /* Update the index */
+    VgaDacIndex++;
+    VgaDacIndex %= VGA_PALETTE_SIZE;
+}
+
+static inline VOID VgaWriteAc(BYTE Data)
+{
+    PALETTEENTRY Entry;
+
+    ASSERT(VgaAcIndex < VGA_AC_MAX_REG);
+
+    /* Save the value */
+    if (VgaAcIndex <= VGA_AC_PAL_F_REG)
+    {
+        if (VgaAcPalDisable) return;
+
+        // DbgPrint("    AC Palette Writing %d to index %d\n", Data, VgaAcIndex);
+        if (VgaAcRegisters[VgaAcIndex] != Data)
+        {
+            /* Update the AC register */
+            VgaAcRegisters[VgaAcIndex] = Data;
+
+            /* Fill the entry structure */
+            Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3]);
+            Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 1]);
+            Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 2]);
+            Entry.peFlags = 0;
+
+            /* Update the palette entry and set the palette change flag */
+            SetPaletteEntries(TextPaletteHandle, VgaAcIndex, 1, &Entry);
+            PaletteChanged = TRUE;
+        }
+    }
+    else
+    {
+        VgaAcRegisters[VgaAcIndex] = Data;
+    }
+}
+
 static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
 {
     DPRINT("VgaWritePort: Port 0x%X, Data 0x%02X\n", Port, Data);
@@ -1936,17 +1946,7 @@ VOID VgaClearMemory(VOID)
     RtlZeroMemory(VgaMemory, sizeof(VgaMemory));
 }
 
-VOID VgaResetPalette(VOID)
-{
-    PALETTEENTRY Entries[VGA_MAX_COLORS];
-
-    /* Restore the default palette */
-    VgaRestoreDefaultPalette(Entries, VGA_MAX_COLORS);
-    SetPaletteEntries(PaletteHandle, 0, VGA_MAX_COLORS, Entries);
-    PaletteChanged = TRUE;
-}
-
-VOID VgaWriteFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height)
+VOID VgaWriteFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
 {
     UINT i, j;
     PUCHAR FontMemory = (PUCHAR)&VgaMemory[VGA_BANK_SIZE * VGA_FONT_BANK + (FontNumber * VGA_FONT_SIZE)];
