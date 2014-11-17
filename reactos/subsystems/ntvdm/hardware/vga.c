@@ -1057,8 +1057,8 @@ static VOID VgaUpdateFramebuffer(VOID)
      */
     if (ConsoleFramebuffer == NULL) return;
 
-    /* Check if this is text mode or graphics mode */
-    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+    /* Check if we are in text or graphics mode */
+    if (ScreenMode == GRAPHICS_MODE)
     {
         /* Graphics mode */
         PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
@@ -1333,7 +1333,7 @@ static VOID VgaUpdateTextCursor(VOID)
                              VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG]);
 
     /* Just return if we are not in text mode */
-    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA) return;
+    if (ScreenMode != TEXT_MODE) return;
 
     if (CursorStart < CursorEnd)
     {
@@ -1844,8 +1844,8 @@ VOID VgaRefreshDisplay(VOID)
            UpdateRectangle.Right,
            UpdateRectangle.Bottom);
 
-    /* Check if this is text mode or graphics mode */
-    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+    /* Check if we are in text or graphics mode */
+    if (ScreenMode == GRAPHICS_MODE)
     {
         /* Graphics mode */
         ConsoleBufferHandle = GraphicsConsoleBuffer;
