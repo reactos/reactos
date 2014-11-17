@@ -1038,8 +1038,6 @@ DriverEntry(
     IN PUNICODE_STRING RegPath)
 {
     /* initialize driver object */
-    DriverObject->DriverUnload = KbdHid_Unload;
-    DriverObject->DriverExtension->AddDevice = KbdHid_AddDevice;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = KbdHid_Create;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = KbdHid_Close;
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = KbdHid_Flush;

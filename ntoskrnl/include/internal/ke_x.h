@@ -514,7 +514,7 @@ KiTryThreadLock(IN PKTHREAD Thread)
     Value = InterlockedExchange((PLONG)&Thread->ThreadLock, Value);
 
     /* Return the lock state */
-    return (Value == TRUE);
+    return (Value == 1);
 }
 
 FORCEINLINE

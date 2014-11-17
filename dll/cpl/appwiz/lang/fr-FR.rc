@@ -51,9 +51,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Téléchargement..."
-    IDS_INSTALLING      "Installation..."
-    IDS_INVALID_SHA     "La somme de contrôle du fichier téléchargé est erronée. Abandon de l'installation du fichier corrompu."
+    IDS_DOWNLOADING "Téléchargement..."
+    IDS_INSTALLING "Installation..."
+    IDS_INVALID_SHA "La somme de contrôle du fichier téléchargé est erronée. Abandon de l'installation du fichier corrompu."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

@@ -3,7 +3,7 @@
 
 [Section]
 Name = Microsoft Excel Viewer
-Version = 2010
+Version = 2007
 Licence = Unknown
 Description = Microsoft Excel Viewer
 Size = 74.14 MB

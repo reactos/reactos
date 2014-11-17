@@ -1,0 +1,18 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Precise Calculator
+Version = 2.5
+Licence = GPLv3
+Description = Precise Calculator is a free and open source scientific calculator for Windows. You need a ZIP decompression program to install it.
+Size = 151 kB
+Category = 11
+URLSite = http://preccalc.sourceforge.net
+URLDownload = http://download.sourceforge.net/preccalc/preccalc-32bit.zip
+CDPath = none
+
+[Section.041f]
+Licence = GPL 3. sürüm
+Description = Precise Hesap Makinesi, Windows için özgür ve açık kaynak bir bilimlik hesap makinesidir. Kurmak için bir ZIP çıkartma izlencesi gerekir.
+Size = 151 KB

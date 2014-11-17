@@ -2188,7 +2188,7 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
                         /* Count the current hash entry if it is in use */
                         SubKeys++;
                     }
-                    else if ((CachedKcb->RefCount == 0) && (RemoveEmptyCacheEntries == TRUE))
+                    else if ((CachedKcb->RefCount == 0) && (RemoveEmptyCacheEntries != FALSE))
                     {
                         /* Remove the current key from the delayed close list */
                         CmpRemoveFromDelayedClose(CachedKcb);

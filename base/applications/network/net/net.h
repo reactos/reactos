@@ -36,6 +36,11 @@ PrintPaddedResourceString(
     INT nPaddedLength);
 
 VOID
+PrintPadding(
+    WCHAR chr,
+    INT nPaddedLength);
+
+VOID
 PrintToConsole(
     LPWSTR lpFormat,
     ...);

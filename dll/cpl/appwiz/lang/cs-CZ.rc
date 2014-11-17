@@ -56,9 +56,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Stahování..."
-    IDS_INSTALLING      "Instalace..."
-    IDS_INVALID_SHA     "Stažený soubor má neplatný kontrolní součet. Instalace poškozeného souboru bude přerušena."
+    IDS_DOWNLOADING "Stahování..."
+    IDS_INSTALLING "Instalace..."
+    IDS_INVALID_SHA "Stažený soubor má neplatný kontrolní součet. Instalace poškozeného souboru bude přerušena."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

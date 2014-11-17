@@ -519,7 +519,7 @@ MiSessionInitializeWorkingSetList(VOID)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Check if we need a page table */
-    if (AllocatedPageTable == TRUE)
+    if (AllocatedPageTable != FALSE)
     {
         /* Get a zeroed colored zero page */
         Color = MI_GET_NEXT_COLOR();

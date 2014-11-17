@@ -53,9 +53,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "İndiriliyor..."
-    IDS_INSTALLING      "Kuruluyor..."
-    IDS_INVALID_SHA     "İndirilen kütüğün sağlama toplamı beklenmeyen. Bozuk kütüğün kurulumu iptal ediliyor."
+    IDS_DOWNLOADING "İndiriliyor..."
+    IDS_INSTALLING "Kuruluyor..."
+    IDS_INVALID_SHA "İndirilen kütüğün sağlama toplamı beklenmeyen. Bozuk kütüğün kurulumu iptal ediliyor."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

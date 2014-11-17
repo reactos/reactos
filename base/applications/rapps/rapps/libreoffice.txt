@@ -3,13 +3,13 @@
 
 [Section]
 Name = LibreOffice
-Version = 4.3.2
+Version = 4.3.4
 Licence = LGPL
 Description = A powerful and open source office suite. It has been forked from OpenOffice.
-Size = 214.49 MB
+Size = 215.23 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.2/win/x86/LibreOffice_4.3.2_Win_x86.msi
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.4/win/x86/LibreOffice_4.3.4_Win_x86.msi
 CDPath = none
 
 [Section.0407]
@@ -20,7 +20,7 @@ Description = La suite de ofimática de código abierto.
 
 [Section.040c]
 Description = Précédemment appelé OpenOffice. Suite bureautique open source.
-Size = 214,49 Mo
+Size = 215,23 Mo
 
 [Section.0410]
 Description = Precedentemente chiamato OpenOffice. Open Source Office Suite.
@@ -33,11 +33,11 @@ Description = Otwarty pakiet biurowy.
 
 [Section.0418]
 Description = O suită office completă, cu surse deschise. Reprezintă o bifurcare a dezvoltării OpenOffice.
-Size = 214,49 Mo
+Size = 215,23 Mo
 
 [Section.041f]
 Description = Güçlü ve açık kaynak bir ofis paketi. OpenOffice'ten çatallanılmıştır.
-Size = 214,49 MB
+Size = 215,23 MB
 
 [Section.0422]
 Description = Відкритий офісний пакет.

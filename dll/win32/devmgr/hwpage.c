@@ -1065,6 +1065,7 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
                                  (LPARAM)hpd);
         if (hWnd != NULL)
         {
+            HeapFree(GetProcessHeap(), 0, hpd);
             return hWnd;
         }
         else

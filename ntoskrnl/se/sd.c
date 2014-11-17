@@ -986,7 +986,7 @@ SeValidSecurityDescriptor(IN ULONG Length,
     SdLength = sizeof(SECURITY_DESCRIPTOR);
 
     /* Check Owner SID */
-    if (SecurityDescriptor->Owner)
+    if (!SecurityDescriptor->Owner)
     {
         DPRINT1("No Owner SID\n");
         return FALSE;

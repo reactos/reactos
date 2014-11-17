@@ -76,7 +76,7 @@
 #define VGA_MISC_RAM_ENABLED    (1 << 1)
 // #define VGA_MISC_CSEL1         (1 << 2)
 // #define VGA_MISC_CSEL2         (1 << 3)
-#define VGA_MISC_OE_INVERT      (1 << 5)
+#define VGA_MISC_OE_PAGESEL     (1 << 5)
 #define VGA_MISC_HSYNCP         (1 << 6)
 #define VGA_MISC_VSYNCP         (1 << 7)
 
@@ -102,7 +102,7 @@
 
 /* Sequencer memory register bits */
 #define VGA_SEQ_MEM_EXT     (1 << 1)
-#define VGA_SEQ_MEM_OE      (1 << 2)
+#define VGA_SEQ_MEM_OE_DIS  (1 << 2)
 #define VGA_SEQ_MEM_C4      (1 << 3)
 
 enum

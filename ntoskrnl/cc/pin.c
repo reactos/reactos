@@ -165,7 +165,7 @@ CcPreparePinWrite (
     /*
      * FIXME: This is function is similar to CcPinRead, but doesn't
      * read the data if they're not present. Instead it should just
-     * prepare the VACBs and zero them out if Zero == TRUE.
+     * prepare the VACBs and zero them out if Zero != FALSE.
      *
      * For now calling CcPinRead is better than returning error or
      * just having UNIMPLEMENTED here.

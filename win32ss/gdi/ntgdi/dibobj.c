@@ -1101,6 +1101,7 @@ NtGdiGetDIBitsInternal(
         _SEH2_TRY
         {
             /* Copy the data back */
+            cjMaxInfo = DIB_BitmapInfoSize(pbmi, (WORD)iUsage);
             ProbeForWrite(pbmiUser, cjMaxInfo, 1);
             RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
         }

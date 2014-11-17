@@ -41,7 +41,8 @@ EnumerateLocalGroups(VOID)
     PrintToConsole(L"\n");
     PrintResourceString(IDS_LOCALGROUP_ALIASES, pServer->sv100_name);
     PrintToConsole(L"\n\n");
-    PrintToConsole(L"------------------------------------------\n");
+    PrintPadding(L'-', 79);
+    PrintToConsole(L"\n");
 
     NetApiBufferFree(pServer);
 
@@ -62,7 +63,7 @@ EnumerateLocalGroups(VOID)
 
     for (i = 0; i < dwRead; i++)
     {
-         if (pBuffer[i].lgrpi0_name)
+        if (pBuffer[i].lgrpi0_name)
             PrintToConsole(L"*%s\n", pBuffer[i].lgrpi0_name);
     }
 
@@ -141,7 +142,8 @@ DisplayLocalGroup(LPWSTR lpGroupName)
     PrintResourceString(IDS_LOCALGROUP_MEMBERS);
     PrintToConsole(L"\n\n");
 
-    PrintToConsole(L"------------------------------------------\n");
+    PrintPadding(L'-', 79);
+    PrintToConsole(L"\n");
 
     for (i = 0; i < dwRead; i++)
     {

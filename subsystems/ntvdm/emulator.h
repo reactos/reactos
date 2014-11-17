@@ -23,7 +23,7 @@
 #define TO_LINEAR(seg, off) (((seg) << 4) + (off))
 #define MAX_SEGMENT 0xFFFF
 #define MAX_OFFSET  0xFFFF
-#define MAX_ADDRESS 0x1000000 // 16 MB of RAM
+#define MAX_ADDRESS 0x1000000 // 16 MB of RAM; see also: kernel32/client/vdm.c!BaseGetVdmConfigInfo
 
 #define FAR_POINTER(x)  \
     (PVOID)((ULONG_PTR)BaseAddress + TO_LINEAR(HIWORD(x), LOWORD(x)))

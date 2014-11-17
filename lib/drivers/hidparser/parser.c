@@ -570,7 +570,7 @@ HidParser_InitReportItem(
     ReportItem->BitCount = GlobalItemState->ReportSize;
     ReportItem->HasData = (ItemData->DataConstant == FALSE);
     ReportItem->Array = (ItemData->ArrayVariable == 0);
-    ReportItem->Relative = (ItemData->Relative == TRUE);
+    ReportItem->Relative = (ItemData->Relative != FALSE);
     ReportItem->Minimum = LogicalMinimum;
     ReportItem->Maximum = LogicalMaximum;
     ReportItem->UsageMinimum = UsageMinimum;

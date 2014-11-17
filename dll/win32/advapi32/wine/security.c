@@ -3061,14 +3061,8 @@ static BOOL DumpSacl(PSECURITY_DESCRIPTOR SecurityDescriptor, WCHAR **pwptr, ULO
 
 /******************************************************************************
  * ConvertSecurityDescriptorToStringSecurityDescriptorW [ADVAPI32.@]
- * @implemented
  */
-BOOL WINAPI
-ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                                     DWORD SDRevision,
-                                                     SECURITY_INFORMATION SecurityInformation,
-                                                     LPWSTR *OutputString,
-                                                     PULONG OutputLen)
+BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR SecurityDescriptor, DWORD SDRevision, SECURITY_INFORMATION RequestedInformation, LPWSTR *OutputString, PULONG OutputLen)
 {
     ULONG len;
     WCHAR *wptr, *wstr;
@@ -3081,35 +3075,45 @@ ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR Securi
     }
 
     len = 0;
-    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    if (RequestedInformation & OWNER_SECURITY_INFORMATION)
         if (!DumpOwner(SecurityDescriptor, NULL, &len))
             return FALSE;
-    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+    if (RequestedInformation & GROUP_SECURITY_INFORMATION)
         if (!DumpGroup(SecurityDescriptor, NULL, &len))
             return FALSE;
-    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    if (RequestedInformation & DACL_SECURITY_INFORMATION)
         if (!DumpDacl(SecurityDescriptor, NULL, &len))
             return FALSE;
-    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    if (RequestedInformation & SACL_SECURITY_INFORMATION)
         if (!DumpSacl(SecurityDescriptor, NULL, &len))
             return FALSE;
 
     wstr = wptr = LocalAlloc(0, (len + 1)*sizeof(WCHAR));
+#ifdef __REACTOS__
     if (wstr == NULL)
         return FALSE;
-        
-    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
-        if (!DumpOwner(SecurityDescriptor, &wptr, NULL))
+#endif
+
+    if (RequestedInformation & OWNER_SECURITY_INFORMATION)
+        if (!DumpOwner(SecurityDescriptor, &wptr, NULL)) {
+            LocalFree (wstr);
             return FALSE;
-    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
-        if (!DumpGroup(SecurityDescriptor, &wptr, NULL))
+        }
+    if (RequestedInformation & GROUP_SECURITY_INFORMATION)
+        if (!DumpGroup(SecurityDescriptor, &wptr, NULL)) {
+            LocalFree (wstr);
             return FALSE;
-    if (SecurityInformation & DACL_SECURITY_INFORMATION)
-        if (!DumpDacl(SecurityDescriptor, &wptr, NULL))
+        }
+    if (RequestedInformation & DACL_SECURITY_INFORMATION)
+        if (!DumpDacl(SecurityDescriptor, &wptr, NULL)) {
+            LocalFree (wstr);
             return FALSE;
-    if (SecurityInformation & SACL_SECURITY_INFORMATION)
-        if (!DumpSacl(SecurityDescriptor, &wptr, NULL))
+        }
+    if (RequestedInformation & SACL_SECURITY_INFORMATION)
+        if (!DumpSacl(SecurityDescriptor, &wptr, NULL)) {
+            LocalFree (wstr);
             return FALSE;
+        }
     *wptr = 0;
 
     TRACE("ret: %s, %d\n", wine_dbgstr_w(wstr), len);
@@ -3121,30 +3125,25 @@ ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR Securi
 
 /******************************************************************************
  * ConvertSecurityDescriptorToStringSecurityDescriptorA [ADVAPI32.@]
- * @implemented
  */
-BOOL WINAPI
-ConvertSecurityDescriptorToStringSecurityDescriptorA(PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                                     DWORD SDRevision,
-                                                     SECURITY_INFORMATION Information,
-                                                     LPSTR *OutputString,
-                                                     PULONG OutputLen)
+BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorA(PSECURITY_DESCRIPTOR SecurityDescriptor, DWORD SDRevision, SECURITY_INFORMATION Information, LPSTR *OutputString, PULONG OutputLen)
 {
     LPWSTR wstr;
     ULONG len;
-
     if (ConvertSecurityDescriptorToStringSecurityDescriptorW(SecurityDescriptor, SDRevision, Information, &wstr, &len))
     {
         int lenA;
 
         lenA = WideCharToMultiByte(CP_ACP, 0, wstr, len, NULL, 0, NULL, NULL);
-        *OutputString = HeapAlloc(GetProcessHeap(), 0, lenA);
+        *OutputString = heap_alloc(lenA);
+#ifdef __REACTOS__
         if (*OutputString == NULL)
         {
             LocalFree(wstr);
             *OutputLen = 0;
             return FALSE;
         }
+#endif
         WideCharToMultiByte(CP_ACP, 0, wstr, len, *OutputString, lenA, NULL, NULL);
         LocalFree(wstr);
 
@@ -3328,20 +3327,18 @@ CreateProcessWithLogonW(LPCWSTR lpUsername,
     return FALSE;
 }
 
-BOOL
-WINAPI
-CreateProcessWithTokenW(IN HANDLE hToken,
-                        IN DWORD dwLogonFlags,
-                        IN LPCWSTR lpApplicationName OPTIONAL,
-                        IN OUT LPWSTR lpCommandLine OPTIONAL,
-                        IN DWORD dwCreationFlags,
-                        IN LPVOID lpEnvironment OPTIONAL,
-                        IN LPCWSTR lpCurrentDirectory OPTIONAL,
-                        IN LPSTARTUPINFOW lpStartupInfo,
-                        OUT LPPROCESS_INFORMATION lpProcessInfo)
+BOOL WINAPI CreateProcessWithTokenW(HANDLE token, DWORD logon_flags, LPCWSTR application_name, LPWSTR command_line,
+        DWORD creation_flags, void *environment, LPCWSTR current_directory, STARTUPINFOW *startup_info,
+        PROCESS_INFORMATION *process_information )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    FIXME("%p 0x%08x %s %s 0x%08x %p %s %p %p - semi-stub\n", token,
+          logon_flags, debugstr_w(application_name), debugstr_w(command_line),
+          creation_flags, environment, debugstr_w(current_directory),
+          startup_info, process_information);
+
+    /* FIXME: check if handles should be inherited */
+    return CreateProcessW( application_name, command_line, NULL, NULL, FALSE, creation_flags, environment,
+                           current_directory, startup_info, process_information );
 }
 
 /*

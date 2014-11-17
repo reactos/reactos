@@ -33,6 +33,10 @@
 #include "vddsup.h"
 #include "io.h"
 
+/* Extra PSDK/NDK Headers */
+#include <ndk/psfuncs.h>
+#include <ndk/mmfuncs.h>
+
 /* PRIVATE VARIABLES **********************************************************/
 
 LPVOID  BaseAddress = NULL;
@@ -554,13 +558,50 @@ VOID DumpMemory(BOOLEAN TextFormat)
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
-    /* Allocate memory for the 16-bit address space */
+#ifdef STANDALONE
+
+    /* Allocate 16 MB memory for the 16-bit address space */
     BaseAddress = HeapAlloc(GetProcessHeap(), /*HEAP_ZERO_MEMORY*/ 0, MAX_ADDRESS);
     if (BaseAddress == NULL)
     {
         wprintf(L"FATAL: Failed to allocate VDM memory.\n");
         return FALSE;
     }
+
+#else
+
+    NTSTATUS Status;
+    SIZE_T MemorySize = MAX_ADDRESS; // See: kernel32/client/vdm.c!BaseGetVdmConfigInfo
+
+    /*
+     * The reserved region starts from the very first page.
+     * We need to commit the reserved first 16 MB virtual address.
+     */
+    BaseAddress = (PVOID)1; // NULL has another signification for NtAllocateVirtualMemory
+
+    /*
+     * Since to get NULL, we allocated from 0x1, account for this.
+     * See also: kernel32/client/proc.c!CreateProcessInternalW
+     */
+    MemorySize -= 1;
+
+    /* Commit the reserved memory */
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &MemorySize,
+                                     MEM_COMMIT,
+                                     PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        wprintf(L"FATAL: Failed to commit VDM memory, Status 0x%08lx\n", Status);
+        return FALSE;
+    }
+
+    ASSERT(BaseAddress == NULL);
+
+#endif
+
     /*
      * For diagnostics purposes, we fill the memory with INT 0x03 codes
      * so that if a program wants to execute random code in memory, we can
@@ -577,20 +618,12 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     if (!ClockInitialize())
     {
         wprintf(L"FATAL: Failed to initialize the clock\n");
+        EmulatorCleanup();
         return FALSE;
     }
 
     /* Initialize the CPU */
     CpuInitialize();
-    // Fast486Initialize(&EmulatorContext,
-                      // EmulatorReadMemory,
-                      // EmulatorWriteMemory,
-                      // EmulatorReadIo,
-                      // EmulatorWriteIo,
-                      // NULL,
-                      // EmulatorBiosOperation,
-                      // EmulatorIntAcknowledge,
-                      // NULL /* TODO: Use a TLB */);
 
     /* Initialize DMA */
 
@@ -629,6 +662,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     if (InputThread == NULL)
     {
         DisplayMessage(L"Failed to create the console input thread.");
+        EmulatorCleanup();
         return FALSE;
     }
     /************************************************************/
@@ -637,6 +671,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     if (!VgaInitialize(ConsoleOutput))
     {
         DisplayMessage(L"Failed to initialize VGA support.");
+        EmulatorCleanup();
         return FALSE;
     }
 
@@ -653,6 +688,11 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
 VOID EmulatorCleanup(VOID)
 {
+#ifndef STANDALONE
+    NTSTATUS Status;
+    SIZE_T MemorySize = MAX_ADDRESS;
+#endif
+
     VgaCleanup();
 
     /* Close the input thread handle */
@@ -668,8 +708,28 @@ VOID EmulatorCleanup(VOID)
 
     CpuCleanup();
 
+#ifdef STANDALONE
+
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
+
+#else
+
+    /* The reserved region starts from the very first page */
+    // BaseAddress = (PVOID)1;
+
+    /* Since to get NULL, we allocated from 0x1, account for this */
+    MemorySize -= 1;
+
+    Status = NtFreeVirtualMemory(NtCurrentProcess(),
+                                 &BaseAddress,
+                                 &MemorySize,
+                                 MEM_DECOMMIT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NTVDM: Failed to decommit VDM memory, Status 0x%08lx\n", Status);
+    }
+#endif
 }
 
 

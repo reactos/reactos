@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Opprett lenke"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1", -1, 115, 15, 160, 24
-	LTEXT "Text2", -1, 115, 35, 160, 17
+    LTEXT "Text1", -1, 115, 15, 160, 24
+    LTEXT "Text2", -1, 115, 35, 160, 17
 END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -14,9 +14,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Opprett lenke"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1",-1,10,0,225,40
-	LTEXT "Text2",-1,10,40,120,20
-	LTEXT "Text3",-1,10,55,120,20
+    LTEXT "Text1",-1,10,0,225,40
+    LTEXT "Text2",-1,10,40,120,20
+    LTEXT "Text3",-1,10,55,120,20
 END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
@@ -24,11 +24,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Opprett snarvei"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Denne veiviseren vil hjelper deg å lage snarvei til en lokal eller \nnettverk programmer, filer, mapper, datamaskiner, eller internett\nadresse.", -1, 120, 15, 200, 30
-  LTEXT "Velg din lagring plassering:", -1, 120, 50, 120, 10
-  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "Bla gjennom...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Trykk på neste for å fortsette.", -1, 120, 97, 162, 10
+    LTEXT "Denne veiviseren vil hjelper deg å lage snarvei til en lokal eller \nnettverk programmer, filer, mapper, datamaskiner, eller internett\nadresse.", -1, 120, 15, 200, 30
+    LTEXT "Velg din lagring plassering:", -1, 120, 50, 120, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "Bla gjennom...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Trykk på neste for å fortsette.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -36,24 +36,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Velg en tittel for programmet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Skriv inn et navn for denne snarveien:", -1, 120, 15, 150, 10
-  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Trykk på fullført for å opprette snarveien.", -1, 118, 97, 178, 17
+    LTEXT "&Skriv inn et navn for denne snarveien:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Trykk på fullført for å opprette snarveien.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Legg til/Fjern Programmer"
-	IDS_CPLSYSTEMDESCRIPTION "Sett opp programmer og opprett snarveier."
+    IDS_CPLSYSTEMNAME "Legg til/Fjern Programmer"
+    IDS_CPLSYSTEMDESCRIPTION "Sett opp programmer og opprett snarveier."
     IDS_CREATE_SHORTCUT "Opprett snarveier"
     IDS_ERROR_NOT_FOUND "Filen %s ble ikke funnet."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Downloading..."
-    IDS_INSTALLING      "Installing..."
-    IDS_INVALID_SHA     "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+    IDS_DOWNLOADING "Downloading..."
+    IDS_INSTALLING "Installing..."
+    IDS_INVALID_SHA "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

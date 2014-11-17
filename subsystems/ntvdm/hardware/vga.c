@@ -214,8 +214,8 @@ typedef struct _CHAR_CELL
 C_ASSERT(sizeof(CHAR_CELL) == 2);
 
 static LPVOID ConsoleFramebuffer = NULL; // Active framebuffer, points to
-                                         // either TextFramebuffer or a valid
-                                         // graphics framebuffer.
+                                         // either TextFramebuffer or a
+                                         // valid graphics framebuffer.
 static HPALETTE TextPaletteHandle = NULL;
 static HPALETTE PaletteHandle = NULL;
 
@@ -229,8 +229,8 @@ static CONSOLE_SCREEN_BUFFER_INFO  OrgConsoleBufferInfo;
 
 /*
  * Text mode -- we always keep a valid text mode framebuffer
- * even if we are in graphics mode. This is needed in order to
- * keep a consistent VGA state.
+ * even if we are in graphics mode. This is needed in order
+ * to keep a consistent VGA state.
  */
 static CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
 static COORD  TextResolution = {0};
@@ -268,27 +268,30 @@ static BOOLEAN VgaAcPalDisable = TRUE;
 static BYTE VgaAcIndex = VGA_AC_PAL_0_REG;
 static BYTE VgaAcRegisters[VGA_AC_MAX_REG];
 
-// static VGA_REGISTERS VgaRegisters;
+static BYTE VgaDacMask  = 0xFF;
 
-static BYTE VgaDacMask = 0xFF;
-static WORD VgaDacIndex = 0;
 static BOOLEAN VgaDacReadWrite = FALSE;
+static WORD VgaDacIndex = 0;
 static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
 
-static BOOLEAN InVerticalRetrace = FALSE;
+// static VGA_REGISTERS VgaRegisters;
+
+static BOOLEAN InVerticalRetrace   = FALSE;
 static BOOLEAN InHorizontalRetrace = FALSE;
 
 static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = FALSE;
-static BOOLEAN CursorMoved = FALSE;
+static BOOLEAN CursorChanged  = FALSE;
 static BOOLEAN PaletteChanged = FALSE;
 
-static
-enum SCREEN_MODE
+typedef enum _SCREEN_MODE
 {
     TEXT_MODE,
     GRAPHICS_MODE
-} ScreenMode = TEXT_MODE;
+} SCREEN_MODE, *PSCREEN_MODE;
+
+static SCREEN_MODE ScreenMode = TEXT_MODE;
+static COORD CurrResolution   = {0};
 
 static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 
@@ -455,8 +458,8 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
      * in the two following APIs:
      * SrvRegisterConsoleVDM  (corresponding Win32 API: RegisterConsoleVDM)
      * SrvVDMConsoleOperation (corresponding Win32 API: )
-     * to check whether the current process is a VDM process, and fails otherwise with the
-     * error 0xC0000022 ().
+     * to check whether the current process is a VDM process, and fails otherwise
+     * with the error 0xC0000022 (STATUS_ACCESS_DENIED).
      *
      * It is worth it to notice that also basesrv.dll does the same only for the
      * BaseSrvIsFirstVDM API...
@@ -610,13 +613,13 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
     if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
     {
         /* The lowest two bits are the plane number */
-        Plane = Offset & 3;
+        Plane = Offset & 0x03;
         Offset >>= 2;
     }
     else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
     {
         /* The LSB is the plane number */
-        Plane = Offset & 1;
+        Plane = Offset & 0x01;
         Offset >>= 1;
     }
     else
@@ -656,7 +659,7 @@ static inline DWORD VgaTranslateWriteAddress(DWORD Address)
 
 static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
 {
-    BYTE WriteMode = VgaGcRegisters[VGA_GC_MODE_REG] & 3;
+    BYTE WriteMode = VgaGcRegisters[VGA_GC_MODE_REG] & 0x03;
     BYTE BitMask = VgaGcRegisters[VGA_GC_BITMASK_REG];
 
     if (WriteMode == 1)
@@ -668,7 +671,7 @@ static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
     if (WriteMode != 2)
     {
         /* Write modes 0 and 3 rotate the data to the right first */
-        BYTE RotateCount = VgaGcRegisters[VGA_GC_ROTATE_REG] & 7;
+        BYTE RotateCount = VgaGcRegisters[VGA_GC_ROTATE_REG] & 0x07;
         Data = LOBYTE(((DWORD)Data >> RotateCount) | ((DWORD)Data << (8 - RotateCount)));
     }
     else
@@ -693,7 +696,7 @@ static inline BYTE VgaTranslateByteForWriting(BYTE Data, BYTE Plane)
     if (WriteMode != 3)
     {
         /* Write modes 0 and 2 then perform a logical operation on the data and latch */
-        BYTE LogicalOperation = (VgaGcRegisters[VGA_GC_ROTATE_REG] >> 3) & 3;
+        BYTE LogicalOperation = (VgaGcRegisters[VGA_GC_ROTATE_REG] >> 3) & 0x03;
 
         if (LogicalOperation == 1) Data &= VgaLatchRegisters[Plane];
         else if (LogicalOperation == 2) Data |= VgaLatchRegisters[Plane];
@@ -732,136 +735,6 @@ static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
 
     /* Set the update request flag */
     NeedsUpdate = TRUE;
-}
-
-static VOID VgaWriteSequencer(BYTE Data)
-{
-    ASSERT(VgaSeqIndex < VGA_SEQ_MAX_REG);
-
-    /* Save the value */
-    VgaSeqRegisters[VgaSeqIndex] = Data;
-}
-
-static VOID VgaWriteGc(BYTE Data)
-{
-    ASSERT(VgaGcIndex < VGA_GC_MAX_REG);
-
-    /* Save the value */
-    VgaGcRegisters[VgaGcIndex] = Data;
-
-    /* Check the index */
-    switch (VgaGcIndex)
-    {
-        case VGA_GC_MISC_REG:
-        {
-            /* The GC misc register decides if it's text or graphics mode */
-            ModeChanged = TRUE;
-            break;
-        }
-    }
-}
-
-static VOID VgaWriteCrtc(BYTE Data)
-{
-    ASSERT(VgaGcIndex < VGA_CRTC_MAX_REG);
-
-    /* Save the value */
-    VgaCrtcRegisters[VgaCrtcIndex] = Data;
-
-    /* Check the index */
-    switch (VgaCrtcIndex)
-    {
-        case VGA_CRTC_END_HORZ_DISP_REG:
-        case VGA_CRTC_VERT_DISP_END_REG:
-        case VGA_CRTC_OVERFLOW_REG:
-        {
-            /* The video mode has changed */
-            ModeChanged = TRUE;
-            break;
-        }
-
-        case VGA_CRTC_CURSOR_LOC_LOW_REG:
-        case VGA_CRTC_CURSOR_LOC_HIGH_REG:
-        case VGA_CRTC_CURSOR_START_REG:
-        case VGA_CRTC_CURSOR_END_REG:
-        {
-            /* Set the cursor moved flag */
-            CursorMoved = TRUE;
-            break;
-        }
-    }
-}
-
-static VOID VgaWriteDac(BYTE Data)
-{
-    INT i, PaletteIndex;
-    PALETTEENTRY Entry;
-
-    /* Set the value */
-    VgaDacRegisters[VgaDacIndex] = Data;
-
-    /* Find the palette index */
-    PaletteIndex = VgaDacIndex / 3;
-
-    /* Fill the entry structure */
-    Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3]);
-    Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 1]);
-    Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 2]);
-    Entry.peFlags = 0;
-
-    /* Update the palette entry */
-    SetPaletteEntries(PaletteHandle, PaletteIndex, 1, &Entry);
-
-    /* Check which text palette entries are affected */
-    for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
-    {
-        if (VgaAcRegisters[i] == PaletteIndex)
-        {
-            /* Update the text palette entry */
-            SetPaletteEntries(TextPaletteHandle, i, 1, &Entry);
-        }
-    }
-
-    /* Set the palette changed flag */
-    PaletteChanged = TRUE;
-
-    /* Update the index */
-    VgaDacIndex++;
-    VgaDacIndex %= VGA_PALETTE_SIZE;
-}
-
-static VOID VgaWriteAc(BYTE Data)
-{
-    PALETTEENTRY Entry;
-
-    ASSERT(VgaAcIndex < VGA_AC_MAX_REG);
-
-    /* Save the value */
-    if (VgaAcIndex <= VGA_AC_PAL_F_REG)
-    {
-        if (VgaAcPalDisable) return;
-
-        // DbgPrint("    AC Palette Writing %d to index %d\n", Data, VgaAcIndex);
-        if (VgaAcRegisters[VgaAcIndex] != Data)
-        {
-            /* Update the AC register */
-            VgaAcRegisters[VgaAcIndex] = Data;
-
-            /* Fill the entry structure */
-            Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3]);
-            Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 1]);
-            Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 2]);
-            Entry.peFlags = 0;
-
-            /* Update the palette entry and set the palette change flag */
-            SetPaletteEntries(TextPaletteHandle, VgaAcIndex, 1, &Entry);
-            PaletteChanged = TRUE;
-        }
-    }
-    else
-    {
-        VgaAcRegisters[VgaAcIndex] = Data;
-    }
 }
 
 static VOID VgaRestoreDefaultPalette(PPALETTEENTRY Entries, USHORT NumOfEntries)
@@ -942,6 +815,16 @@ Cleanup:
     }
 
     return Result;
+}
+
+static VOID VgaResetPalette(VOID)
+{
+    PALETTEENTRY Entries[VGA_MAX_COLORS];
+
+    /* Restore the default palette */
+    VgaRestoreDefaultPalette(Entries, VGA_MAX_COLORS);
+    SetPaletteEntries(PaletteHandle, 0, VGA_MAX_COLORS, Entries);
+    PaletteChanged = TRUE;
 }
 
 static VOID VgaSetActiveScreenBuffer(HANDLE ScreenBuffer)
@@ -1039,8 +922,6 @@ static VOID VgaLeaveGraphicsMode(VOID)
 
 static BOOL VgaEnterTextMode(PCOORD Resolution)
 {
-    DPRINT1("VgaEnterTextMode\n");
-
     /* Switch to the text buffer */
     VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
@@ -1096,7 +977,20 @@ static VOID VgaLeaveTextMode(VOID)
 
 static VOID VgaChangeMode(VOID)
 {
-    COORD Resolution = VgaGetDisplayResolution();
+    COORD NewResolution = VgaGetDisplayResolution();
+    SCREEN_MODE NewScreenMode =
+        !(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA) ? TEXT_MODE
+                                                                 : GRAPHICS_MODE;
+
+    /*
+     * No need to switch to a different screen mode + resolution
+     * if the new ones are the same as the old ones.
+     */
+    if ((ScreenMode == NewScreenMode) &&
+        (CurrResolution.X == NewResolution.X && CurrResolution.Y == NewResolution.Y))
+    {
+        goto Quit;
+    }
 
     if (ScreenMode == GRAPHICS_MODE)
     {
@@ -1109,11 +1003,16 @@ static VOID VgaChangeMode(VOID)
         VgaLeaveTextMode();
     }
 
+    /* Update the current resolution */
+    CurrResolution = NewResolution;
+
+    /* The new screen mode will be updated via the VgaEnterText/GraphicsMode functions */
+
     /* Check if the new mode is alphanumeric */
-    if (!(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA))
+    if (NewScreenMode == TEXT_MODE)
     {
         /* Enter new text mode */
-        if (!VgaEnterTextMode(&Resolution))
+        if (!VgaEnterTextMode(&CurrResolution))
         {
             DisplayMessage(L"An unexpected VGA error occurred while switching into text mode. Error: %u", GetLastError());
             EmulatorTerminate();
@@ -1123,7 +1022,7 @@ static VOID VgaChangeMode(VOID)
     else
     {
         /* Enter graphics mode */
-        if (!VgaEnterGraphicsMode(&Resolution))
+        if (!VgaEnterGraphicsMode(&CurrResolution))
         {
             DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode. Error: %u", GetLastError());
             EmulatorTerminate();
@@ -1131,12 +1030,14 @@ static VOID VgaChangeMode(VOID)
         }
     }
 
+Quit:
+
     /* Trigger a full update of the screen */
     NeedsUpdate = TRUE;
     UpdateRectangle.Left = 0;
-    UpdateRectangle.Top = 0;
-    UpdateRectangle.Right = Resolution.X;
-    UpdateRectangle.Bottom = Resolution.Y;
+    UpdateRectangle.Top  = 0;
+    UpdateRectangle.Right  = CurrResolution.X;
+    UpdateRectangle.Bottom = CurrResolution.Y;
 
     /* Reset the mode change flag */
     ModeChanged = FALSE;
@@ -1145,7 +1046,6 @@ static VOID VgaChangeMode(VOID)
 static VOID VgaUpdateFramebuffer(VOID)
 {
     SHORT i, j, k;
-    COORD Resolution = VgaGetDisplayResolution();
     DWORD AddressSize = VgaGetAddressSize();
     DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG]);
@@ -1157,8 +1057,8 @@ static VOID VgaUpdateFramebuffer(VOID)
      */
     if (ConsoleFramebuffer == NULL) return;
 
-    /* Check if this is text mode or graphics mode */
-    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+    /* Check if we are in text or graphics mode */
+    if (ScreenMode == GRAPHICS_MODE)
     {
         /* Graphics mode */
         PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
@@ -1177,7 +1077,7 @@ static VOID VgaUpdateFramebuffer(VOID)
         }
 
         /* Loop through the scanlines */
-        for (i = 0; i < Resolution.Y; i++)
+        for (i = 0; i < CurrResolution.Y; i++)
         {
             if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) && (i & 1))
             {
@@ -1186,7 +1086,7 @@ static VOID VgaUpdateFramebuffer(VOID)
             }
 
             /* Loop through the pixels */
-            for (j = 0; j < Resolution.X; j++)
+            for (j = 0; j < CurrResolution.X; j++)
             {
                 BYTE PixelData = 0;
 
@@ -1244,8 +1144,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                         BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
 
                         /* Extract the two bits from each plane */
-                        LowPlaneData = (LowPlaneData >> (6 - ((j % 4) * 2))) & 3;
-                        HighPlaneData = (HighPlaneData >> (6 - ((j % 4) * 2))) & 3;
+                        LowPlaneData  = (LowPlaneData  >> (6 - ((j % 4) * 2))) & 0x03;
+                        HighPlaneData = (HighPlaneData >> (6 - ((j % 4) * 2))) & 0x03;
 
                         /* Combine them into the pixel */
                         PixelData = LowPlaneData | (HighPlaneData << 2);
@@ -1308,13 +1208,13 @@ static VOID VgaUpdateFramebuffer(VOID)
                 if (DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2)] != PixelData)
+                    if (GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1323,11 +1223,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 else if (DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * Resolution.X * 2) + (j * 2)] != PixelData)
+                    if (GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * Resolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[(i * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1336,11 +1236,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 else if (!DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * 2 * Resolution.X) + j] != PixelData)
+                    if (GraphicsBuffer[(i * 2 * CurrResolution.X) + j] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * 2 * Resolution.X) + j] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * Resolution.X) + j] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X) + j] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X) + j] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1349,10 +1249,10 @@ static VOID VgaUpdateFramebuffer(VOID)
                 else // if (!DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[i * Resolution.X + j] != PixelData)
+                    if (GraphicsBuffer[i * CurrResolution.X + j] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[i * Resolution.X + j] = PixelData;
+                        GraphicsBuffer[i * CurrResolution.X + j] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1387,10 +1287,10 @@ static VOID VgaUpdateFramebuffer(VOID)
         CHAR_CELL CharInfo;
 
         /* Loop through the scanlines */
-        for (i = 0; i < Resolution.Y; i++)
+        for (i = 0; i < CurrResolution.Y; i++)
         {
             /* Loop through the characters */
-            for (j = 0; j < Resolution.X; j++)
+            for (j = 0; j < CurrResolution.X; j++)
             {
                 CurrentAddr = LOWORD((Address + j) * AddressSize);
 
@@ -1401,11 +1301,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 CharInfo.Attributes = VgaMemory[CurrentAddr + VGA_BANK_SIZE];
 
                 /* Now check if the resulting character data has changed */
-                if ((CharBuffer[i * Resolution.X + j].Char != CharInfo.Char) ||
-                    (CharBuffer[i * Resolution.X + j].Attributes != CharInfo.Attributes))
+                if ((CharBuffer[i * CurrResolution.X + j].Char != CharInfo.Char) ||
+                    (CharBuffer[i * CurrResolution.X + j].Attributes != CharInfo.Attributes))
                 {
                     /* Yes, write the new value */
-                    CharBuffer[i * Resolution.X + j] = CharInfo;
+                    CharBuffer[i * CurrResolution.X + j] = CharInfo;
 
                     /* Mark the specified cell as changed */
                     VgaMarkForUpdate(i, j);
@@ -1422,31 +1322,34 @@ static VOID VgaUpdateTextCursor(VOID)
 {
     COORD Position;
     CONSOLE_CURSOR_INFO CursorInfo;
-    BYTE CursorStart = VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x3F;
-    BYTE CursorEnd = VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] & 0x1F;
+
+    BOOL CursorVisible = !(VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x20);
+    BYTE CursorStart   =   VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x1F;
+    BYTE CursorEnd     =   VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG]   & 0x1F;
+
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
     BYTE TextSize = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
     WORD Location = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG]);
 
     /* Just return if we are not in text mode */
-    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA) return;
+    if (ScreenMode != TEXT_MODE) return;
 
     if (CursorStart < CursorEnd)
     {
         /* Visible cursor */
-        CursorInfo.bVisible = TRUE;
-        CursorInfo.dwSize = (100 * (CursorEnd - CursorStart)) / TextSize;
+        CursorInfo.bVisible = CursorVisible;
+        CursorInfo.dwSize   = (100 * (CursorEnd - CursorStart)) / TextSize;
     }
     else
     {
-        /* No cursor */
+        /* Hidden cursor */
         CursorInfo.bVisible = FALSE;
-        CursorInfo.dwSize = 0;
+        CursorInfo.dwSize   = 1; // The size needs to be non-null in order SetConsoleCursorInfo to succeed.
     }
 
     /* Add the cursor skew to the location */
-    Location += (VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] >> 5) & 3;
+    Location += (VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] >> 5) & 0x03;
 
     /* Find the coordinates of the new position */
     Position.X = (SHORT)(Location % ScanlineSize);
@@ -1458,8 +1361,8 @@ static VOID VgaUpdateTextCursor(VOID)
     SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
     SetConsoleCursorPosition(TextConsoleBuffer, Position);
 
-    /* Reset the cursor move flag */
-    CursorMoved = FALSE;
+    /* Reset the cursor changed flag */
+    CursorChanged = FALSE;
 }
 
 static BYTE WINAPI VgaReadPort(USHORT Port)
@@ -1552,6 +1455,137 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
     }
 
     return 0;
+}
+
+static inline VOID VgaWriteSequencer(BYTE Data)
+{
+    ASSERT(VgaSeqIndex < VGA_SEQ_MAX_REG);
+
+    /* Save the value */
+    VgaSeqRegisters[VgaSeqIndex] = Data;
+}
+
+static inline VOID VgaWriteGc(BYTE Data)
+{
+    ASSERT(VgaGcIndex < VGA_GC_MAX_REG);
+
+    /* Save the value */
+    VgaGcRegisters[VgaGcIndex] = Data;
+
+    /* Check the index */
+    switch (VgaGcIndex)
+    {
+        case VGA_GC_MISC_REG:
+        {
+            /* The GC misc register decides if it's text or graphics mode */
+            ModeChanged = TRUE;
+            break;
+        }
+    }
+}
+
+static inline VOID VgaWriteCrtc(BYTE Data)
+{
+    ASSERT(VgaGcIndex < VGA_CRTC_MAX_REG);
+
+    /* Save the value */
+    VgaCrtcRegisters[VgaCrtcIndex] = Data;
+
+    /* Check the index */
+    switch (VgaCrtcIndex)
+    {
+        case VGA_CRTC_END_HORZ_DISP_REG:
+        case VGA_CRTC_VERT_DISP_END_REG:
+        case VGA_CRTC_OVERFLOW_REG:
+        case VGA_CRTC_MAX_SCAN_LINE_REG:
+        {
+            /* The video mode has changed */
+            ModeChanged = TRUE;
+            break;
+        }
+
+        case VGA_CRTC_CURSOR_LOC_LOW_REG:
+        case VGA_CRTC_CURSOR_LOC_HIGH_REG:
+        case VGA_CRTC_CURSOR_START_REG:
+        case VGA_CRTC_CURSOR_END_REG:
+        {
+            /* Set the cursor changed flag */
+            CursorChanged = TRUE;
+            break;
+        }
+    }
+}
+
+static inline VOID VgaWriteDac(BYTE Data)
+{
+    INT i, PaletteIndex;
+    PALETTEENTRY Entry;
+
+    /* Set the value */
+    VgaDacRegisters[VgaDacIndex] = Data;
+
+    /* Find the palette index */
+    PaletteIndex = VgaDacIndex / 3;
+
+    /* Fill the entry structure */
+    Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3]);
+    Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 1]);
+    Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[PaletteIndex * 3 + 2]);
+    Entry.peFlags = 0;
+
+    /* Update the palette entry */
+    SetPaletteEntries(PaletteHandle, PaletteIndex, 1, &Entry);
+
+    /* Check which text palette entries are affected */
+    for (i = 0; i <= VGA_AC_PAL_F_REG; i++)
+    {
+        if (VgaAcRegisters[i] == PaletteIndex)
+        {
+            /* Update the text palette entry */
+            SetPaletteEntries(TextPaletteHandle, i, 1, &Entry);
+        }
+    }
+
+    /* Set the palette changed flag */
+    PaletteChanged = TRUE;
+
+    /* Update the index */
+    VgaDacIndex++;
+    VgaDacIndex %= VGA_PALETTE_SIZE;
+}
+
+static inline VOID VgaWriteAc(BYTE Data)
+{
+    PALETTEENTRY Entry;
+
+    ASSERT(VgaAcIndex < VGA_AC_MAX_REG);
+
+    /* Save the value */
+    if (VgaAcIndex <= VGA_AC_PAL_F_REG)
+    {
+        if (VgaAcPalDisable) return;
+
+        // DbgPrint("    AC Palette Writing %d to index %d\n", Data, VgaAcIndex);
+        if (VgaAcRegisters[VgaAcIndex] != Data)
+        {
+            /* Update the AC register */
+            VgaAcRegisters[VgaAcIndex] = Data;
+
+            /* Fill the entry structure */
+            Entry.peRed = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3]);
+            Entry.peGreen = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 1]);
+            Entry.peBlue = VGA_DAC_TO_COLOR(VgaDacRegisters[Data * 3 + 2]);
+            Entry.peFlags = 0;
+
+            /* Update the palette entry and set the palette change flag */
+            SetPaletteEntries(TextPaletteHandle, VgaAcIndex, 1, &Entry);
+            PaletteChanged = TRUE;
+        }
+    }
+    else
+    {
+        VgaAcRegisters[VgaAcIndex] = Data;
+    }
 }
 
 static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
@@ -1704,7 +1738,7 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
         }
 
         default:
-            DPRINT1("VgaWritePort: Unknown port 0x%X\n", Port);
+            DPRINT1("VgaWritePort: Unknown port 0x%X, Data 0x%02X\n", Port, Data);
             break;
     }
 }
@@ -1772,32 +1806,28 @@ COORD VgaGetDisplayResolution(VOID)
 VOID VgaRefreshDisplay(VOID)
 {
     HANDLE ConsoleBufferHandle = NULL;
-    COORD Resolution;
 
     /* Set the vertical retrace flag */
     InVerticalRetrace = TRUE;
 
     /* If nothing has changed, just return */
-    // if (!ModeChanged && !CursorMoved && !PaletteChanged && !NeedsUpdate)
+    // if (!ModeChanged && !CursorChanged && !PaletteChanged && !NeedsUpdate)
         // return;
 
     /* Change the display mode */
     if (ModeChanged) VgaChangeMode();
 
-    /* Change the text cursor location */
-    if (CursorMoved) VgaUpdateTextCursor();
-
-    /* Retrieve the current resolution */
-    Resolution = VgaGetDisplayResolution();
+    /* Change the text cursor appearance */
+    if (CursorChanged) VgaUpdateTextCursor();
 
     if (PaletteChanged)
     {
         /* Trigger a full update of the screen */
         NeedsUpdate = TRUE;
         UpdateRectangle.Left = 0;
-        UpdateRectangle.Top = 0;
-        UpdateRectangle.Right = Resolution.X;
-        UpdateRectangle.Bottom = Resolution.Y;
+        UpdateRectangle.Top  = 0;
+        UpdateRectangle.Right  = CurrResolution.X;
+        UpdateRectangle.Bottom = CurrResolution.Y;
 
         PaletteChanged = FALSE;
     }
@@ -1814,8 +1844,8 @@ VOID VgaRefreshDisplay(VOID)
            UpdateRectangle.Right,
            UpdateRectangle.Bottom);
 
-    /* Check if this is text mode or graphics mode */
-    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+    /* Check if we are in text or graphics mode */
+    if (ScreenMode == GRAPHICS_MODE)
     {
         /* Graphics mode */
         ConsoleBufferHandle = GraphicsConsoleBuffer;
@@ -1903,7 +1933,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
             /* Check if this is chain-4 mode */
             if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
             {
-                if (((Address + i) & 3) != j)
+                if (((Address + i) & 0x03) != j)
                 {
                     /* This plane will not be accessed */
                     continue;
@@ -1913,7 +1943,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
             /* Check if this is odd-even mode */
             if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
             {
-                if (((Address + i) & 1) != (j & 1))
+                if (((Address + i) & 0x01) != (j & 1))
                 {
                     /* This plane will not be accessed */
                     continue;
@@ -1931,17 +1961,7 @@ VOID VgaClearMemory(VOID)
     RtlZeroMemory(VgaMemory, sizeof(VgaMemory));
 }
 
-VOID VgaResetPalette(VOID)
-{
-    PALETTEENTRY Entries[VGA_MAX_COLORS];
-
-    /* Restore the default palette */
-    VgaRestoreDefaultPalette(Entries, VGA_MAX_COLORS);
-    SetPaletteEntries(PaletteHandle, 0, VGA_MAX_COLORS, Entries);
-    PaletteChanged = TRUE;
-}
-
-VOID VgaWriteFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height)
+VOID VgaWriteFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
 {
     UINT i, j;
     PUCHAR FontMemory = (PUCHAR)&VgaMemory[VGA_BANK_SIZE * VGA_FONT_BANK + (FontNumber * VGA_FONT_SIZE)];
@@ -2069,6 +2089,10 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     RegisterIoPort(0x3C9, VgaReadPort, VgaWritePort);   // VGA_DAC_DATA
     RegisterIoPort(0x3CE, VgaReadPort, VgaWritePort);   // VGA_GC_INDEX
     RegisterIoPort(0x3CF, VgaReadPort, VgaWritePort);   // VGA_GC_DATA
+
+    /* CGA ports for compatibility, unimplemented */
+    RegisterIoPort(0x3D8, VgaReadPort, VgaWritePort);   // CGA_MODE_CTRL_REG
+    RegisterIoPort(0x3D9, VgaReadPort, VgaWritePort);   // CGA_PAL_CTRL_REG
 
     /* Return success */
     return TRUE;

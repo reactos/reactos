@@ -67,7 +67,7 @@ KiPcToFileHeader(IN PVOID Pc,
             i++;
 
             /* Check if this is a kernel entry and we only want drivers */
-            if ((i <= 2) && (DriversOnly == TRUE))
+            if ((i <= 2) && (DriversOnly != FALSE))
             {
                 /* Skip it */
                 NextEntry = NextEntry->Flink;

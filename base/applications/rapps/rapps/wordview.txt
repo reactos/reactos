@@ -3,7 +3,7 @@
 
 [Section]
 Name = Microsoft Word Viewer
-Version = 2010
+Version = 2003
 Licence = Unknown
 Description = Microsoft Word Viewer
 Size = 24.5 MB

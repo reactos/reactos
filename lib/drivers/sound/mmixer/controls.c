@@ -1586,7 +1586,7 @@ MMixerHandleAlternativeMixers(
         MMixerIsTopologyPinReserved(Topology, Index, &Reserved);
 
         /* check if it has already been reserved */
-        if (Reserved == TRUE)
+        if (Reserved)
         {
             /* pin has already been reserved */
             continue;

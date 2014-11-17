@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Verknüpfung erstellen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1", -1, 115, 15, 160, 24
-	LTEXT "Text2", -1, 115, 35, 160, 17
+    LTEXT "Text1", -1, 115, 15, 160, 24
+    LTEXT "Text2", -1, 115, 35, 160, 17
 END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -14,9 +14,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Verknüpfung erstellen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1",-1,10,0,225,40
-	LTEXT "Text2",-1,10,40,120,20
-	LTEXT "Text3",-1,10,55,120,20
+    LTEXT "Text1",-1,10,0,225,40
+    LTEXT "Text2",-1,10,40,120,20
+    LTEXT "Text3",-1,10,55,120,20
 END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
@@ -24,11 +24,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Verknüpfung erstellen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Mit diesem Assistenten können Sie Verknüpfungen mit lokalen oder vernetzten Programmen, Dateien, Ordnern, Computern oder Internetadressen erstellen.", -1, 120, 15, 200, 30
-  LTEXT "&Geben Sie den Speicherort des Elements ein:", -1, 120, 50, 150, 10
-  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "&Durchsuchen...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Klicken Sie auf Weiter, um fortzufahren.", -1, 120, 97, 162, 10
+    LTEXT "Mit diesem Assistenten können Sie Verknüpfungen mit lokalen oder vernetzten Programmen, Dateien, Ordnern, Computern oder Internetadressen erstellen.", -1, 120, 15, 200, 30
+    LTEXT "&Geben Sie den Speicherort des Elements ein:", -1, 120, 50, 150, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "&Durchsuchen...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Klicken Sie auf Weiter, um fortzufahren.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -36,24 +36,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Programmbezeichnung auswählen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Geben Sie den Namen für die Verknüpfung ein:", -1, 120, 15, 150, 10
-  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Klicken Sie auf Fertig stellen, um die Verknüpfung zu erstellen.", -1, 118, 97, 178, 17
+    LTEXT "&Geben Sie den Namen für die Verknüpfung ein:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Klicken Sie auf Fertig stellen, um die Verknüpfung zu erstellen.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Programme hinzufügen/entfernen"
-	IDS_CPLSYSTEMDESCRIPTION "Installiert Programme und erstellt Verknüpfungen."
+    IDS_CPLSYSTEMNAME "Programme hinzufügen/entfernen"
+    IDS_CPLSYSTEMDESCRIPTION "Installiert Programme und erstellt Verknüpfungen."
     IDS_CREATE_SHORTCUT "Verknüpfung erstellen"
     IDS_ERROR_NOT_FOUND "Die Datei %s konnte nicht gefunden werden."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Lade herunter..."
-    IDS_INSTALLING      "Installiere..."
-    IDS_INVALID_SHA     "Die heruntergeladene Datei hat eine unerwartete Prüfsumme. Abbruch der Installation aufgrund beschädigter Datei."
+    IDS_DOWNLOADING "Lade herunter..."
+    IDS_INSTALLING "Installiere..."
+    IDS_INVALID_SHA "Die heruntergeladene Datei hat eine unerwartete Prüfsumme. Abbruch der Installation aufgrund beschädigter Datei."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

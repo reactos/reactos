@@ -105,7 +105,7 @@ start:
             goto done;
         }
 wait:
-        if (Wait == TRUE)
+        if (Wait)
         {
             Resource->ExclusiveWaiters++;
 
@@ -120,10 +120,10 @@ wait:
     }
     else  /* one or more shared locks are in progress */
     {
-        if (Wait == TRUE)
+        if (Wait)
             goto wait;
     }
-    if (retVal == TRUE)
+    if (retVal)
         Resource->OwningThread = NtCurrentTeb()->ClientId.UniqueThread;
 done:
     RtlLeaveCriticalSection(&Resource->Lock);
@@ -154,7 +154,7 @@ start:
             goto done;
         }
 
-        if (Wait == TRUE)
+        if (Wait)
         {
             Resource->SharedWaiters++;
             RtlLeaveCriticalSection(&Resource->Lock);
