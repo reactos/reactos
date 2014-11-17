@@ -4,7 +4,7 @@
 [Section]
 Name = Miranda IM
 Version = 0.10.24
-Licence = GPL
+License = GPL
 Description = Open source multiprotocol instant messaging application - May not work completely.
 Size = 3.77 MB
 Category = 5

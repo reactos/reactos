@@ -4,7 +4,7 @@
 [Section]
 Name = SciTE
 Version = 3.5.1
-Licence = Freeware
+License = Freeware
 Description = SciTE is a SCIntilla based text editor. Originally built to demonstrate Scintilla, it has grown to be a generally useful editor with facilities for building and running programs.
 Size = 744 kB
 Category = 7
@@ -32,12 +32,12 @@ Description = SciTE is een tekstbewerker gebaseerd op SCIntilla. Origineel bedoe
 Description = SciTE to edytor tekstu bazowany na SCIntilla. Oryginalnie stworzony aby pokazać Scintille, stał sie ogólnie przydatnym edytorem z infrastrukturą potrzebną do tworzenia i uruchamiania programów.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = SciTE este un editor de text bazat pe SCIntilla. Construit inițial pentru a demonstra Scintilla, a crescut ulterior într-un editor de uz general cu funcționalități de compilare și execuție a programelor.
 Size = 744 ko
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = SciTE, bir Scintilla tabanlı metin düzenleyicisidir. İlk başta Scintilla'yı göstermek için yapıldı; izlenceleri yapmak ve çalıştırmak yetenekleriyle, umûmiyetle kullanışlı bir düzenleyici olmak için gelişti.
 Size = 744 KB
 

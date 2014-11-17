@@ -4,7 +4,7 @@
 [Section]
 Name = Christmas Bound
 Version = 1.4
-Licence = Freeware
+License = Freeware
 Description = A game similar Frozen Fruits.
 Size = 892 kB
 Category = 4
@@ -19,11 +19,11 @@ Description = Ein Spiel, ähnlich zu Frozen Fruits.
 Description = Un gioco simile a Frozen Fuits.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Un joc similar jocului Frozen Fruits.
 Size = 892 ko
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Frozen Fruits benzeri bir oyun.
 Size = 892 KB

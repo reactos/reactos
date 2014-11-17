@@ -155,7 +155,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nOpis: "
     IDS_AINFO_SIZE "\nRozmiar: "
     IDS_AINFO_URLSITE "\nStrona: "
-    IDS_AINFO_LICENCE "\nLicencja: "
+    IDS_AINFO_LICENSE "\nLicencja: "
 END
 
 STRINGTABLE

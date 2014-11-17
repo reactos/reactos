@@ -4,7 +4,7 @@
 [Section]
 Name = DosBlaster
 Version = 2.5
-Licence = GPL
+License = GPL
 Description = DosBlaster is a shell extension which makes it possible to open any DOS executable in DOSBox via right click. This version contains DOSBox 0.70, but can be simply updated by installing a newer DOSBox into the DosBlaster folders.
 Size = 2.05 MB
 Category = 15

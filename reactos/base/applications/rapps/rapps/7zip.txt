@@ -4,7 +4,7 @@
 [Section]
 Name = 7-Zip
 Version = 9.34a
-Licence = LGPL
+License = LGPL
 Description = A file archiving utility with support for 7zip, zip, tar, rar and many other archive formats.
 Size = 1.14 MB
 Category = 12

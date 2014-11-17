@@ -4,7 +4,7 @@
 [Section]
 Name = Fox Audio Player
 Version = 0.10.2
-Licence = GPL
+License = GPL
 Description = Simple and lightweight audio player.
 Size = 1.9 MB
 Category = 1

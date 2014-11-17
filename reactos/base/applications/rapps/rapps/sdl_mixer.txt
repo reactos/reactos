@@ -4,7 +4,7 @@
 [Section]
 Name = Simple Direct Media Layer (SDL) Mixer
 Version = 1.2.12
-Licence = LGPL
+License = LGPL
 Description = Needed for some open source games to run. You need 7-Zip or a similar utility to extract it.
 Size = 548.02 kB
 Category = 14

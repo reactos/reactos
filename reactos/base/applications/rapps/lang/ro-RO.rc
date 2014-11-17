@@ -153,7 +153,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nDescriere: "
     IDS_AINFO_SIZE "\nDimensiune: "
     IDS_AINFO_URLSITE "\nPagină web: "
-    IDS_AINFO_LICENCE "\nLicență: "
+    IDS_AINFO_LICENSE "\nLicență: "
 END
 
 STRINGTABLE

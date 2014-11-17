@@ -29,7 +29,7 @@ ShowAvailableAppInfo(INT Index)
     } \
 
     ADD_TEXT(IDS_AINFO_VERSION, Info->szVersion, CFE_BOLD, 0);
-    ADD_TEXT(IDS_AINFO_LICENCE, Info->szLicence, CFE_BOLD, 0);
+    ADD_TEXT(IDS_AINFO_LICENSE, Info->szLicense, CFE_BOLD, 0);
     ADD_TEXT(IDS_AINFO_SIZE, Info->szSize, CFE_BOLD, 0);
     ADD_TEXT(IDS_AINFO_URLSITE, Info->szUrlSite, CFE_BOLD, CFE_LINK);
     ADD_TEXT(IDS_AINFO_DESCRIPTION, Info->szDesc, CFE_BOLD, 0);
@@ -217,7 +217,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
 
         GET_STRING2(L"RegName", Info.szRegName);
         GET_STRING2(L"Version", Info.szVersion);
-        GET_STRING2(L"Licence", Info.szLicence);
+        GET_STRING2(L"License", Info.szLicense);
         GET_STRING2(L"Description", Info.szDesc);
         GET_STRING2(L"Size", Info.szSize);
         GET_STRING2(L"URLSite", Info.szUrlSite);

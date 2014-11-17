@@ -4,7 +4,7 @@
 [Section]
 Name = Diablo II
 Version = 1.4
-Licence = Shareware
+License = Shareware
 Description = Diablo 2 Shareware. zeckensack's glide wrapper is required to run it.
 Size = 131.9 MB
 Category = 4
@@ -32,12 +32,12 @@ Description = Diablo 2 Shareware. Maakt gebruik van zeckensack's glide wrapper.
 Description = Diablo 2 Shareware. Do poprawnego działania wymagany jest zainstalowany zeckensacks glide wrapper.
 
 [Section.0418]
-Licence = Versiune de evaluare
+License = Versiune de evaluare
 Description = Diablo 2 Shareware. Pentru execuție este necesar (pachetul) zeckensack's glide wrapper.
 Size = 131,9 Mo
 
 [Section.041f]
-Licence = Paylaşımlı
+License = Paylaşımlı
 Description = Diablo 2 Paylaşımlı. Çalıştırmak için zeckensack'ın glide wrapper'ı gereklidir.
 Size = 131,9 MB
 

@@ -4,7 +4,7 @@
 [Section]
 Name = ReactOS Build Environment AMD64 Addon
 Version = 1.3
-Licence = GPL
+License = GPL
 Description = Allows you to build the ReactOS AMD64 Source. For more instructions see ReactOS wiki.
 Size = 15.83 MB
 Category = 7

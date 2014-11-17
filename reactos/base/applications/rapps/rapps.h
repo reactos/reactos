@@ -73,7 +73,7 @@ typedef struct
     WCHAR szName[MAX_PATH];
     WCHAR szRegName[MAX_PATH];
     WCHAR szVersion[MAX_PATH];
-    WCHAR szLicence[MAX_PATH];
+    WCHAR szLicense[MAX_PATH];
     WCHAR szDesc[MAX_PATH];
     WCHAR szSize[MAX_PATH];
     WCHAR szUrlSite[MAX_PATH];

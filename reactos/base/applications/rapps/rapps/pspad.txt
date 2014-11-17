@@ -5,7 +5,7 @@
 [Section]
 Name = PSPad
 Version = 4.5.8
-Licence = Freeware
+License = Freeware
 Description = A text editor.
 Size = 4.46 MB
 Category = 6
@@ -37,7 +37,7 @@ Description = Een teksteditor.
 Description = Edytor tekstu.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Un editor de text.
 Size = 4,46 Mo
 
@@ -50,7 +50,7 @@ Description = Textový editor.
 URLSite = http://www.pspad.com/sk/
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Bir metin düzenleyicisi.
 Size = 4,46 MB
 

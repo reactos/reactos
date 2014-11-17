@@ -147,7 +147,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION   "\n概要: "
     IDS_AINFO_SIZE          "\nサイズ: "
     IDS_AINFO_URLSITE       "\nホームページ: "
-    IDS_AINFO_LICENCE       "\nライセンス: "
+    IDS_AINFO_LICENSE       "\nライセンス: "
 END
 
 STRINGTABLE

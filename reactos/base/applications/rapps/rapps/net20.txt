@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft .NET Framework Version 2.0 Redistributable Package
 Version = 2.0
-Licence = Unknown
+License = Unknown
 Description = Microsoft .NET Framework Version 2.0 - Redistributable Package.
 Size = 22.42 MB
 Category = 14
@@ -30,12 +30,12 @@ Size = 22.42 MB
 Description = Microsoft .NET Framework Wersja 2.0 - Pakiet Dystrybucyjny.
 
 [Section.0418]
-Licence = Nespecificată
+License = Nespecificată
 Description = Platforma Microsoft .NET versiunea 2.0 - Pachet redistributabl.
 Size = 22,42 Mo
 
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 2.0 Yeniden Dağıtılabilir Paket
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Microsoft .NET Çatısı Sürüm 2.0 - Yeniden Dağıtılabilir Paket
 Size = 22,42 MB

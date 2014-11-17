@@ -4,7 +4,7 @@
 [Section]
 Name = NirLauncher
 Version = 1.19.5
-Licence = Freeware
+License = Freeware
 Description = A package of more than 180 utilities for Windows.
 Size = 20.2 MB
 Category = 12
@@ -16,5 +16,5 @@ CDPath = none
 Description = Ein Paket von mehr als 180 Utilities für Windows.
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Windows için 180 araçtan daha çoğunun bir paketi.

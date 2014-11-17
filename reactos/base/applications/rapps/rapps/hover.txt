@@ -5,7 +5,7 @@
 [Section]
 Name = Hover!
 Version = 1.0
-Licence = MS EULA
+License = MS EULA
 Description = The classic Hover CTF game which was found on the Windows 95 CD.
 Size = 6.2 MB
 Category = 4

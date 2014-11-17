@@ -4,7 +4,7 @@
 [Section]
 Name = Midnight Commander for Windows
 Version = Build 185 (4.8.12)
-Licence = GPLv3
+License = GPLv3
 Description = 32-bit Windows port of GNU Midnight Commander.
 Size = 2.35 MB
 Category = 12
@@ -15,12 +15,12 @@ CDPath = none
 [Section.0410]
 Name = Midnight Commander per Windows
 Version = Revisione 185 (4.8.12)
-Licence = GPL versione 3
+License = GPL versione 3
 Description = Un porting Windows 32bit di Midnight Commander.
 
 [Section.0415]
 Name = Midnight Commander dla Windows
-Licence = GPL wersja 3
+License = GPL wersja 3
 Description = 32-bitowy port GNU Midnight Commander dla Windows.
 
 [Section.0418]
@@ -32,6 +32,6 @@ Size = 2,35 Mo
 [Section.041f]
 Name = Midnight Commander (Windows için)
 Version = Yapı 185 (4.8.12)
-Licence = GPL 3. sürüm
+License = GPL 3. sürüm
 Description = GNU Midnight Commander'ın 32 bitlik Windows uyarlamasıdır.
 Size = 2,35 MB

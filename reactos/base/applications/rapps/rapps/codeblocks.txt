@@ -4,7 +4,7 @@
 [Section]
 Name = Code::Blocks (without compiler)
 Version = 13.12
-Licence = GPLv3
+License = GPLv3
 Description = A open source, cross-platform, powerful IDE. It doesn't contain a compiler.
 Size = 29.2 MB
 Category = 7
@@ -25,6 +25,6 @@ Size = 29,2 Mo
 
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)
-Licence = GPL 3. sürüm
+License = GPL 3. sürüm
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. Bir derleyici içermez.
 Size = 29,2 MB

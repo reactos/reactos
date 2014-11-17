@@ -151,7 +151,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nPershkrimi: "
     IDS_AINFO_SIZE "\nMasa: "
     IDS_AINFO_URLSITE "\nHome Page: "
-    IDS_AINFO_LICENCE "\nLicenca: "
+    IDS_AINFO_LICENSE "\nLicenca: "
 END
 
 STRINGTABLE

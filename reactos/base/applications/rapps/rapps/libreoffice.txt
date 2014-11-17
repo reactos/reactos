@@ -4,7 +4,7 @@
 [Section]
 Name = LibreOffice
 Version = 4.3.4
-Licence = LGPL
+License = LGPL
 Description = A powerful and open source office suite. It has been forked from OpenOffice.
 Size = 215.23 MB
 Category = 6

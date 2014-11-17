@@ -152,7 +152,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nPopis: "
     IDS_AINFO_SIZE "\nVeľkosť: "
     IDS_AINFO_URLSITE "\nDomovská stránka: "
-    IDS_AINFO_LICENCE "\nLicencia: "
+    IDS_AINFO_LICENSE "\nLicencia: "
 END
 
 STRINGTABLE

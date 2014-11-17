@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft Word Viewer
 Version = 2003
-Licence = Unknown
+License = Unknown
 Description = Microsoft Word Viewer
 Size = 24.5 MB
 Category = 6
@@ -13,53 +13,53 @@ URLDownload = http://download.microsoft.com/download/6/a/6/6a689355-b155-4fa7-ad
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
+License = Unbekannt
 Size = 24.56 MB
 URLDownload = http://download.microsoft.com/download/d/4/b/d4b23f0e-c8b6-4383-878d-1a8184b7db56/wordview_de-de.exe
 
 [Section.040a]
-Licence = Desconocida
+License = Desconocida
 Size = 24.53 MB
 URLDownload = http://download.microsoft.com/download/4/4/c/44c2d552-8b40-464f-8470-b4976d7ba60b/wordview_es-es.exe
 
 [Section.040c]
-Licence = Inconnue
+License = Inconnue
 Size = 24,55 Mo
 URLDownload = http://download.microsoft.com/download/b/f/3/bf36c75d-2e93-4db1-ace2-1425e5219260/wordview_fr-fr.exe
 
 [Section.0410]
-Licence = Sconosciuta
+License = Sconosciuta
 Size = 24.52 MB
 URLDownload = http://download.microsoft.com/download/f/8/e/f8e9dadd-70bd-4317-a7fe-25d7bfb54b71/wordview_it-it.exe
 
 [Section.0413]
-Licence = Ongekend
+License = Ongekend
 Size = 24.54 MB
 URLDownload = http://download.microsoft.com/download/c/1/0/c10e009e-61e2-4b54-8d21-aff378679527/wordview_nl-nl.exe
 
 [Section.0415]
-Licence = Nieznana
+License = Nieznana
 Size = 24.58 MB
 URLDownload = http://download.microsoft.com/download/c/e/1/ce1e1286-67a2-4069-a8c4-b3552f18dfa8/wordview_pl-pl.exe
 
 [Section.0418]
-Licence = Necunoscută
+License = Necunoscută
 Size = 24,56 Mo
 URLDownload = http://download.microsoft.com/download/1/2/3/123d3dc8-6f3f-473f-ac1d-3e38969605e8/wordview_ro-ro.exe
 
 [Section.041f]
 Name = Microsoft Word Görüntüleyici
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Microsoft Word Görüntüleyici
 Size = 24,55 MB
 URLDownload = http://download.microsoft.com/download/7/6/e/76efefb4-9575-4903-ac2a-180c280ab6c7/wordview_tr-tr.exe
 
 [Section.0422]
-Licence = Невідома
+License = Невідома
 Size = 24.56 MB
 URLDownload = http://download.microsoft.com/download/2/b/d/2bd08f27-822b-4c20-936a-0f1d91cb9e69/wordview_uk-ua.exe
 
 [Section.0813]
-Licence = Ongekend
+License = Ongekend
 Size = 24.54 MB
 URLDownload = http://download.microsoft.com/download/c/1/0/c10e009e-61e2-4b54-8d21-aff378679527/wordview_nl-nl.exe

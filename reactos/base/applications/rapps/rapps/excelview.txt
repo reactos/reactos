@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft Excel Viewer
 Version = 2007
-Licence = Unknown
+License = Unknown
 Description = Microsoft Excel Viewer
 Size = 74.14 MB
 Category = 6
@@ -13,53 +13,53 @@ URLDownload = http://download.microsoft.com/download/e/a/9/ea913c8b-51a7-41b7-86
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
+License = Unbekannt
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/F/8/8/F88CB355-ECAA-4B74-87D6-C05C81D215BF/ExcelViewer.exe
 
 [Section.040a]
-Licence = Desconocida
+License = Desconocida
 Size = 51.11 MB
 URLDownload = http://download.microsoft.com/download/5/D/9/5D9E41A4-22CE-4497-BD7D-368883EF92F7/ExcelViewer.exe
 
 [Section.040c]
-Licence = Inconnue
+License = Inconnue
 Size = 51,13 Mo
 URLDownload = http://download.microsoft.com/download/0/0/E/00EE9DCF-7BCA-4414-837E-BC3AA23DCC8D/ExcelViewer.exe
 
 [Section.0410]
-Licence = Sconosciuta
+License = Sconosciuta
 Size = 51.1 MB
 URLDownload = http://download.microsoft.com/download/0/C/2/0C2ED9D9-6961-47F3-91E0-916E19F330E2/ExcelViewer.exe
 
 [Section.0413]
-Licence = Ongekend
+License = Ongekend
 Size = 50.97 MB
 URLDownload = http://download.microsoft.com/download/C/C/6/CC663715-AB58-4CDE-90F1-5A8CF7472500/ExcelViewer.exe
 
 [Section.0415]
-Licence = Nieznana
+License = Nieznana
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/5/B/A/5BAB0B5A-706D-444C-B90A-1D97DB4C43A8/ExcelViewer.exe
 
 [Section.0418]
-Licence = Necunoscută
+License = Necunoscută
 Size = 51,14 Mo
 URLDownload = http://download.microsoft.com/download/D/D/2/DD28D077-97F3-47C0-9389-0B987918888B/ExcelViewer.exe
 
 [Section.041f]
 Name = Microsoft Excel Görüntüleyici
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Microsoft Excel Görüntüleyici
 Size = 51,1 MB
 URLDownload = http://download.microsoft.com/download/8/5/D/85DCDD24-8237-4334-866D-417F74F37C47/ExcelViewer.exe
 
 [Section.0422]
-Licence = Невідома
+License = Невідома
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/7/4/9/749A8D59-A2D5-4A64-99CF-5FF4DD7C5AC6/ExcelViewer.exe
 
 [Section.0813]
-Licence = Ongekend
+License = Ongekend
 Size = 50.97 MB
 URLDownload = http://download.microsoft.com/download/C/C/6/CC663715-AB58-4CDE-90F1-5A8CF7472500/ExcelViewer.exe

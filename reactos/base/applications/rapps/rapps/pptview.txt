@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft Powerpoint Viewer
 Version = 2010
-Licence = Unknown
+License = Unknown
 Description = Microsoft Powerpoint Viewer
 Size = 60.28 MB
 Category = 6
@@ -13,55 +13,55 @@ URLDownload = http://download.microsoft.com/download/E/6/7/E675FFFC-2A6D-4AB0-B3
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
+License = Unbekannt
 Size = 60.43 MB
 URLDownload = http://download.microsoft.com/download/9/F/7/9F742C8F-8C70-4498-B4D1-539BE36A1077/PowerPointViewer.exe
 
 [Section.040a]
-Licence = Desconocida
+License = Desconocida
 Size = 60.48 MB
 URLDownload = http://download.microsoft.com/download/C/1/A/C1AAD042-4407-4470-97CB-863B869F9EDF/PowerPointViewer.exe
 
 [Section.040c]
-Licence = Inconnue
+License = Inconnue
 Size = 60,41 Mo
 URLDownload = http://download.microsoft.com/download/6/B/4/6B4CA627-C0CD-4B27-BE31-0B87AE10F46B/PowerPointViewer.exe
 
 [Section.0410]
-Licence = Sconosciuta
+License = Sconosciuta
 Size = 60.38 MB
 URLDownload = http://download.microsoft.com/download/3/F/A/3FA9171A-B310-4F0D-A33A-B16827536FAE/PowerPointViewer.exe
 
 [Section.0413]
-Licence = Ongekend
+License = Ongekend
 Size = 60.33 MB
 URLDownload = http://download.microsoft.com/download/9/A/8/9A89B545-E4F4-498C-B265-D74CBB89F4D9/PowerPointViewer.exe
 
 [Section.0415]
-Licence = Nieznana
+License = Nieznana
 Size = 60.43 MB
 URLDownload = http://download.microsoft.com/download/9/E/4/9E4A5F9A-210D-44B7-ADA2-F47CE00541ED/PowerPointViewer.exe
 
 [Section.0418]
 Name = Lector Microsoft Powerpoint
-Licence = Necunoscută
+License = Necunoscută
 Description = Lector Microsoft Powerpoint
 Size = 60,4 Mo
 URLDownload = http://download.microsoft.com/download/5/6/E/56E4DBA3-D725-43EA-B1E5-DC148022999C/PowerPointViewer.exe
 
 [Section.041f]
 Name = Microsoft Powerpoint Görüntüleyici
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Microsoft Powerpoint Görüntüleyici
 Size = 60,4 MB
 URLDownload = http://download.microsoft.com/download/4/6/4/4641DACB-5DE8-4E3A-B8F4-39A1C73889D3/PowerPointViewer.exe
 
 [Section.0422]
-Licence = Невідома
+License = Невідома
 Size = 60.52 MB
 URLDownload = http://download.microsoft.com/download/C/E/8/CE879E6E-D3F3-4234-A968-9651A3A85D98/PowerPointViewer.exe
 
 [Section.0813]
-Licence = Ongekend
+License = Ongekend
 Size = 60.33 MB
 URLDownload = http://download.microsoft.com/download/9/A/8/9A89B545-E4F4-498C-B265-D74CBB89F4D9/PowerPointViewer.exe

@@ -4,7 +4,7 @@
 [Section]
 Name = Total Commander
 Version = 8.51a
-Licence = Shareware
+License = Shareware
 Description = Total Commander is a file manager with two panels side by side.
 Size = 3.55 MB
 Category = 12
@@ -26,12 +26,12 @@ Description = Total Commander is een bestandsbeheerder met twee panelen zij aan 
 Description = Total Commander to popularny menedżer plików z dwoma panelami, ustawionymi obok siebie.
 
 [Section.0418]
-Licence = Versiune de evaluare
+License = Versiune de evaluare
 Description = Total Commander este un gestionar de fișiere după modelul «două paneluri alăturate».
 Size = 3,55 Mo
 
 [Section.041f]
-Licence = Paylaşımlı
+License = Paylaşımlı
 Description = Total Commander, yan yana iki bölmeli bir kütük yöneticisidir.
 Size = 3,55 MB
 

@@ -4,7 +4,7 @@
 [Section]
 Name = IrfanView Plugins
 Version = 4.38
-Licence = Freeware (for personal use)
+License = Freeware (for personal use)
 Description = Additional Plugins for supporting more file types.
 Size = 10.24 MB
 Category = 3
@@ -13,45 +13,45 @@ URLDownload = http://files.netmediaeurope.com/de-nmi/downloads/2014_download/irf
 CDPath = none
 
 [Section.0407]
-Licence = Freeware für nichtkommerzielle Nutzung
+License = Freeware für nichtkommerzielle Nutzung
 Description = Zusätzlich Plugins zur Unterstützung von weiteren Dateitypen.
 
 [Section.040a]
-Licence = Gratuito (para uso personal)
+License = Gratuito (para uso personal)
 Description = Complementos adicionales para soportar más formatos.
 
 [Section.040c]
-Licence = Gratuit (pour un usage personnel)
+License = Gratuit (pour un usage personnel)
 Description = Modules additionnels pour supporter plus de types de fichiers.
 Size = 10,24 Mo
 
 [Section.0410]
-Licence = Gratuita (per uso personale)
+License = Gratuita (per uso personale)
 Description = Plugins addizionale per il supporto di molti tipi di file.
 
 [Section.0413]
-Licence = Freeware (voor persoonlijk gebruik)
+License = Freeware (voor persoonlijk gebruik)
 Description = Toegevoegde plugins voor ondersteuning van extra bestandstypes.
 
 [Section.0415]
-Licence = Freeware (dla użytku domowego)
+License = Freeware (dla użytku domowego)
 Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
 
 [Section.0418]
-Licence = Gratuită (pentru uz personal)
+License = Gratuită (pentru uz personal)
 Description = Extensii adiționale pentru a spori numărul de formate de fișiere recunoscute.
 Size = 10,24 Mo
 
 [Section.041f]
 Name = IrfanView Eklentileri
-Licence = Şahsî kullanım için ücretsiz.
+License = Şahsî kullanım için ücretsiz.
 Description = Daha çok kütük türü desteklemek için eklentiler.
 Size = 10,24 MB
 
 [Section.0422]
-Licence = Freeware (для домашнього використання)
+License = Freeware (для домашнього використання)
 Description = Додаткові плагіни для підтримки більшої кількості файлових типів.
 
 [Section.0813]
-Licence = Freeware (voor persoonlijk gebruik)
+License = Freeware (voor persoonlijk gebruik)
 Description = Toegevoegde plugins voor ondersteuning van extra bestandstypes.

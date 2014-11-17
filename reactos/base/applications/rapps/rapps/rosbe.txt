@@ -4,7 +4,7 @@
 [Section]
 Name = ReactOS Build Environment
 Version = 2.1.1
-Licence = GPL
+License = GPL
 Description = Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.
 Size = 28.3 MB
 Category = 7

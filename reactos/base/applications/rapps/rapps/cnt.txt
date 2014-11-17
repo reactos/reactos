@@ -4,7 +4,7 @@
 [Section]
 Name = Click-N-Type Virtual Keyboard
 Version = 3.03
-Licence = Freeware
+License = Freeware
 Description = Freeware virtual keyboard application.
 Size = 1.3 MB
 Category = 12
@@ -16,19 +16,19 @@ CDPath = none
 Description = Kostenlose virtuelle Tastatur.
 
 [Section.0410]
-Licence = Gratuita
+License = Gratuita
 Description = Applicazione gratuita per la simulazione della tastiera.
 
 [Section.0415]
 Description = Wirtualna klawiatura ekranowa.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Aplicație gratuită pentru simularea unei tastaturi fizice.
 Size = 1,3 Mo
 
 [Section.041f]
 Name = Click-N-Type Farazî Düğme Takımı
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Ücretsiz farazî düğme takımı uygulaması.
 Size = 1,3 MB

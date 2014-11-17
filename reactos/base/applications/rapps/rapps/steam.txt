@@ -3,7 +3,7 @@
 
 [Section]
 Name = Steam
-Licence = Freeware
+License = Freeware
 Description = The Steam gaming platform used by many games these days.
 Size = 1.59 MB
 Category = 4
@@ -37,13 +37,13 @@ Description = Steam - platforma, którą używa obecnie wiele gier.
 URLSite = http://store.steampowered.com/?l=polish
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Platforma de joc Steam, utilizată de multe jocuri în zilele de astăzi.
 Size = 1,59 Mo
 URLSite = http://store.steampowered.com/?l=romanian
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Bugünlerde Steam oyun platformu birçok oyun eliyle kullanılmaktadır.
 Size = 1,59 MB
 URLSite = http://store.steampowered.com/?l=turkish

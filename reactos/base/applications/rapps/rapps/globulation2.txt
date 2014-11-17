@@ -5,7 +5,7 @@
 [Section]
 Name = Globulation2
 Version = 0.9.4.4
-Licence = GPL
+License = GPL
 Description = Globulation 2 is a real-time strategy game. The game minimizes gaming micromanagement by automatically assigning tasks to units.
 Size = 13.5 MB
 Category = 4 

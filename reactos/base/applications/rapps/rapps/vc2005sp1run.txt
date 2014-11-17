@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft Visual C++ 2005 SP1 Redistributable Package
 Version = 7.1
-Licence = Unknown
+License = Unknown
 Description = Microsoft Visual Studio 2005 Runtime SP1. Contains: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2.6 MB
 Category = 14
@@ -13,45 +13,45 @@ URLDownload = http://download.microsoft.com/download/e/1/c/e1c773de-73ba-494a-a5
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
+License = Unbekannt
 Description = Microsoft Visual Studio 2005 Laufzeitsystem SP1. Beinhaltet: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
 [Section.040a]
-Licence = Desconocida
+License = Desconocida
 Description = Librerias Microsoft Visual Studio 2005 SP1. Incluye: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
 [Section.040c]
-Licence = Inconnue
+License = Inconnue
 Description = Bibliothèque Microsoft Visual Studio 2005 SP1. Contient: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2,6 Mo
 
 [Section.0410]
-Licence = Sconosciuta
+License = Sconosciuta
 Description = Microsoft Visual Studio 2005 Runtime SP1. Contiene: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
 [Section.0413]
-Licence = Ongekend
+License = Ongekend
 Description = Microsoft Visual Studio 2005 Runtime SP1. Bevat: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
 [Section.0415]
-Licence = Nieznana
+License = Nieznana
 Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2005 SP1. Zawiera: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
 [Section.0418]
-Licence = Necunoscută
+License = Necunoscută
 Description = Microsoft Visual Studio 2005 Runtime SP1. Conține: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2,6 Mo
 
 [Section.041f]
 Name = Microsoft Visual C++ 2005 SP1 Yeniden Dağıtılabilir Paket
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Microsoft Visual Studio 2005 Yürütücü SP1. Şunları içerir: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2,6 MB
 
 [Section.0422]
-Licence = Невідома
+License = Невідома
 Description = Бібліотеки Microsoft Visual Studio 2005 SP1. включає: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
 [Section.0813]
-Licence = Ongekend
+License = Ongekend
 Description = Microsoft Visual Studio 2005 Runtime SP1. Bevat: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.

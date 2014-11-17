@@ -4,7 +4,7 @@
 [Section]
 Name = Mono .NET Development Framework
 Version = 3.2.3
-Licence = Unknown
+License = Unknown
 Description = Open-source .NET Framework.
 Size = 98.49 MB
 Category = 14
@@ -29,13 +29,13 @@ Description = Versione Open-source di .NET Framework.
 Description = Pakiet Mono .NET Framework dla Programistów.
 
 [Section.0418]
-Licence = Nespecificată
+License = Nespecificată
 Description = Platformă .NET (cu surse deschise).
 Size = 98,49 Mo
 
 [Section.041f]
 Name = Mono .NET Geliştirme Çatısı
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Açık kaynak .NET Çatısı.
 Size = 98,49 MB
 

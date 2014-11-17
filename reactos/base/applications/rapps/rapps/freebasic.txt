@@ -4,7 +4,7 @@
 [Section]
 Name = FreeBASIC
 Version = 1.00.0
-Licence = GPL/LGPL
+License = GPL/LGPL
 Description = Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.
 Size = 9.0 MB
 Category = 7

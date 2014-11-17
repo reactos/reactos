@@ -4,7 +4,7 @@
 [Section]
 Name = LMarbles
 Version = 1.0.6
-Licence = GPL
+License = GPL
 Description = Atomix Clone using SDL libs.
 Size = 1.39 MB
 Category = 4

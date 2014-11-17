@@ -5,7 +5,7 @@
 [Section]
 Name = IndiFTPD
 Version = 1.0.9 Beta
-Licence = GPL
+License = GPL
 Description = IndiFTPD is a standalone FTP server that functions as a single executable. It is designed for situations when a user does not want to install/configure a server on the system (or does not have permission to do so) and wants to quickly get a server running.
 Size = 556 kB
 Category = 5

@@ -4,7 +4,7 @@
 [Section]
 Name = Double Commander
 Version = 0.5.11 Beta
-Licence = GPL
+License = GPL
 Description = Double Commander is an open source file manager with two panels side by side. You need 7-Zip or a similar Utility to extract it.
 Size = 8.0 MB
 Category = 12

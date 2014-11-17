@@ -4,7 +4,7 @@
 [Section]
 Name = IrfanView
 Version = 4.38
-Licence = Freeware (for personal use)
+License = Freeware (for personal use)
 Description = Viewer for all kinds of graphics/audio files/video files.
 Size = 1.81 MB
 Category = 3
@@ -13,44 +13,44 @@ URLDownload = http://img.cs.montana.edu/windows/iview438_setup.exe
 CDPath = none
 
 [Section.0407]
-Licence = Freeware für nichtkommerzielle Nutzung
+License = Freeware für nichtkommerzielle Nutzung
 Description = Anzeigeprogramm für alle Arten von Grafik-/Audio- oder Video-Dateien.
 
 [Section.040a]
-Licence = Gratuito (para uso personal)
+License = Gratuito (para uso personal)
 Description = Visor para toda clase de archivos de imagen,audio y video.
 
 [Section.040c]
-Licence = Gratuit (pour un usage personnel)
+License = Gratuit (pour un usage personnel)
 Description = Visionneur pour tous les types de fichiers graphiques/audio/vidéo.
 Size = 1,81 Mo
 
 [Section.0410]
-Licence = Gratuita (per uso personale)
+License = Gratuita (per uso personale)
 Description = Viewer per tutti i tipi di grafici / file audio / file video.
 
 [Section.0413]
-Licence = Freeware (voor persoonlijk gebruik)
+License = Freeware (voor persoonlijk gebruik)
 Description = Weergave voor allerhande bestandstypes voor audio, video, grafiek.
 
 [Section.0415]
-Licence = Freeware (dla użytku domowego)
+License = Freeware (dla użytku domowego)
 Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz wideo.
 
 [Section.0418]
-Licence = Gratuită (pentru uz personal)
+License = Gratuită (pentru uz personal)
 Description = Lector pentru multiple formaturi de fișiere grafice/audio/video.
 Size = 1,81 Mo
 
 [Section.041f]
-Licence = Şahsî kullanım için ücretsiz.
+License = Şahsî kullanım için ücretsiz.
 Description = Çizgelerin, ses kütüklerinin, vidyo kütüklerinin tüm türleri için görüntüleyici.
 Size = 1,81 MB
 
 [Section.0422]
-Licence = Freeware (для домашнього використання)
+License = Freeware (для домашнього використання)
 Description = Переглядач для всіх видів графічних та аудіо/відео файлів.
 
 [Section.0813]
-Licence = Freeware (voor persoonlijk gebruik)
+License = Freeware (voor persoonlijk gebruik)
 Description = Weergave voor allerhande bestandstypes voor audio, video, grafiek.

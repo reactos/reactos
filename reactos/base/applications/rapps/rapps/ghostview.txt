@@ -4,7 +4,7 @@
 [Section]
 Name = GSview
 Version = 5.0
-Licence = Aladdin Free Public Licence
+License = Aladdin Free Public License
 Description = A graphical interface for Ghostscript.
 Size = 1.94 MB
 Category = 6
@@ -16,11 +16,11 @@ CDPath = none
 Description = Ein grafisches Interface für Ghostscript.
 
 [Section.0418]
-Licence = Licență publică gratuită „Aladdin”
+License = Licență publică gratuită „Aladdin”
 Description = O interfață grafică pentru GhostScript.
 Size = 1,94 Mo
 
 [Section.041f]
-Licence = Aladdin Özgür Kamu Ruhsatı
+License = Aladdin Özgür Kamu Ruhsatı
 Description = Ghostscript için bir çizgelik arayüz.
 Size = 1,94 MB

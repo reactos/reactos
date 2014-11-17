@@ -4,7 +4,7 @@
 [Section]
 Name = ReMooD
 Version = 0.8a
-Licence = GPL
+License = GPL
 Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy experience with new features and more stability.
 Size = 1.15 MB
 Category = 4
