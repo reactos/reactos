@@ -284,12 +284,14 @@ static BOOLEAN ModeChanged = FALSE;
 static BOOLEAN CursorChanged  = FALSE;
 static BOOLEAN PaletteChanged = FALSE;
 
-static
-enum SCREEN_MODE
+typedef enum _SCREEN_MODE
 {
     TEXT_MODE,
     GRAPHICS_MODE
-} ScreenMode = TEXT_MODE;
+} SCREEN_MODE, *PSCREEN_MODE;
+
+static SCREEN_MODE ScreenMode = TEXT_MODE;
+static COORD CurrResolution   = {0};
 
 static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 
@@ -920,8 +922,6 @@ static VOID VgaLeaveGraphicsMode(VOID)
 
 static BOOL VgaEnterTextMode(PCOORD Resolution)
 {
-    DPRINT1("VgaEnterTextMode\n");
-
     /* Switch to the text buffer */
     VgaSetActiveScreenBuffer(TextConsoleBuffer);
 
@@ -977,7 +977,20 @@ static VOID VgaLeaveTextMode(VOID)
 
 static VOID VgaChangeMode(VOID)
 {
-    COORD Resolution = VgaGetDisplayResolution();
+    COORD NewResolution = VgaGetDisplayResolution();
+    SCREEN_MODE NewScreenMode =
+        !(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA) ? TEXT_MODE
+                                                                 : GRAPHICS_MODE;
+
+    /*
+     * No need to switch to a different screen mode + resolution
+     * if the new ones are the same as the old ones.
+     */
+    if ((ScreenMode == NewScreenMode) &&
+        (CurrResolution.X == NewResolution.X && CurrResolution.Y == NewResolution.Y))
+    {
+        goto Quit;
+    }
 
     if (ScreenMode == GRAPHICS_MODE)
     {
@@ -990,11 +1003,16 @@ static VOID VgaChangeMode(VOID)
         VgaLeaveTextMode();
     }
 
+    /* Update the current resolution */
+    CurrResolution = NewResolution;
+
+    /* The new screen mode will be updated via the VgaEnterText/GraphicsMode functions */
+
     /* Check if the new mode is alphanumeric */
-    if (!(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA))
+    if (NewScreenMode == TEXT_MODE)
     {
         /* Enter new text mode */
-        if (!VgaEnterTextMode(&Resolution))
+        if (!VgaEnterTextMode(&CurrResolution))
         {
             DisplayMessage(L"An unexpected VGA error occurred while switching into text mode. Error: %u", GetLastError());
             EmulatorTerminate();
@@ -1004,7 +1022,7 @@ static VOID VgaChangeMode(VOID)
     else
     {
         /* Enter graphics mode */
-        if (!VgaEnterGraphicsMode(&Resolution))
+        if (!VgaEnterGraphicsMode(&CurrResolution))
         {
             DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode. Error: %u", GetLastError());
             EmulatorTerminate();
@@ -1012,12 +1030,14 @@ static VOID VgaChangeMode(VOID)
         }
     }
 
+Quit:
+
     /* Trigger a full update of the screen */
     NeedsUpdate = TRUE;
     UpdateRectangle.Left = 0;
-    UpdateRectangle.Top = 0;
-    UpdateRectangle.Right = Resolution.X;
-    UpdateRectangle.Bottom = Resolution.Y;
+    UpdateRectangle.Top  = 0;
+    UpdateRectangle.Right  = CurrResolution.X;
+    UpdateRectangle.Bottom = CurrResolution.Y;
 
     /* Reset the mode change flag */
     ModeChanged = FALSE;
@@ -1026,7 +1046,6 @@ static VOID VgaChangeMode(VOID)
 static VOID VgaUpdateFramebuffer(VOID)
 {
     SHORT i, j, k;
-    COORD Resolution = VgaGetDisplayResolution();
     DWORD AddressSize = VgaGetAddressSize();
     DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG]);
@@ -1058,7 +1077,7 @@ static VOID VgaUpdateFramebuffer(VOID)
         }
 
         /* Loop through the scanlines */
-        for (i = 0; i < Resolution.Y; i++)
+        for (i = 0; i < CurrResolution.Y; i++)
         {
             if ((VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) && (i & 1))
             {
@@ -1067,7 +1086,7 @@ static VOID VgaUpdateFramebuffer(VOID)
             }
 
             /* Loop through the pixels */
-            for (j = 0; j < Resolution.X; j++)
+            for (j = 0; j < CurrResolution.X; j++)
             {
                 BYTE PixelData = 0;
 
@@ -1189,13 +1208,13 @@ static VOID VgaUpdateFramebuffer(VOID)
                 if (DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2)] != PixelData)
+                    if (GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[(i * 2 * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1204,11 +1223,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 else if (DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * Resolution.X * 2) + (j * 2)] != PixelData)
+                    if (GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * Resolution.X * 2) + (j * 2)] = PixelData;
-                        GraphicsBuffer[(i * Resolution.X * 2) + (j * 2 + 1)] = PixelData;
+                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2)] = PixelData;
+                        GraphicsBuffer[(i * CurrResolution.X * 2) + (j * 2 + 1)] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1217,11 +1236,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 else if (!DoubleWidth && DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[(i * 2 * Resolution.X) + j] != PixelData)
+                    if (GraphicsBuffer[(i * 2 * CurrResolution.X) + j] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[(i * 2 * Resolution.X) + j] = PixelData;
-                        GraphicsBuffer[((i * 2 + 1) * Resolution.X) + j] = PixelData;
+                        GraphicsBuffer[(i * 2 * CurrResolution.X) + j] = PixelData;
+                        GraphicsBuffer[((i * 2 + 1) * CurrResolution.X) + j] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1230,10 +1249,10 @@ static VOID VgaUpdateFramebuffer(VOID)
                 else // if (!DoubleWidth && !DoubleHeight)
                 {
                     /* Now check if the resulting pixel data has changed */
-                    if (GraphicsBuffer[i * Resolution.X + j] != PixelData)
+                    if (GraphicsBuffer[i * CurrResolution.X + j] != PixelData)
                     {
                         /* Yes, write the new value */
-                        GraphicsBuffer[i * Resolution.X + j] = PixelData;
+                        GraphicsBuffer[i * CurrResolution.X + j] = PixelData;
 
                         /* Mark the specified pixel as changed */
                         VgaMarkForUpdate(i, j);
@@ -1268,10 +1287,10 @@ static VOID VgaUpdateFramebuffer(VOID)
         CHAR_CELL CharInfo;
 
         /* Loop through the scanlines */
-        for (i = 0; i < Resolution.Y; i++)
+        for (i = 0; i < CurrResolution.Y; i++)
         {
             /* Loop through the characters */
-            for (j = 0; j < Resolution.X; j++)
+            for (j = 0; j < CurrResolution.X; j++)
             {
                 CurrentAddr = LOWORD((Address + j) * AddressSize);
 
@@ -1282,11 +1301,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 CharInfo.Attributes = VgaMemory[CurrentAddr + VGA_BANK_SIZE];
 
                 /* Now check if the resulting character data has changed */
-                if ((CharBuffer[i * Resolution.X + j].Char != CharInfo.Char) ||
-                    (CharBuffer[i * Resolution.X + j].Attributes != CharInfo.Attributes))
+                if ((CharBuffer[i * CurrResolution.X + j].Char != CharInfo.Char) ||
+                    (CharBuffer[i * CurrResolution.X + j].Attributes != CharInfo.Attributes))
                 {
                     /* Yes, write the new value */
-                    CharBuffer[i * Resolution.X + j] = CharInfo;
+                    CharBuffer[i * CurrResolution.X + j] = CharInfo;
 
                     /* Mark the specified cell as changed */
                     VgaMarkForUpdate(i, j);
@@ -1787,7 +1806,6 @@ COORD VgaGetDisplayResolution(VOID)
 VOID VgaRefreshDisplay(VOID)
 {
     HANDLE ConsoleBufferHandle = NULL;
-    COORD Resolution;
 
     /* Set the vertical retrace flag */
     InVerticalRetrace = TRUE;
@@ -1802,17 +1820,14 @@ VOID VgaRefreshDisplay(VOID)
     /* Change the text cursor appearance */
     if (CursorChanged) VgaUpdateTextCursor();
 
-    /* Retrieve the current resolution */
-    Resolution = VgaGetDisplayResolution();
-
     if (PaletteChanged)
     {
         /* Trigger a full update of the screen */
         NeedsUpdate = TRUE;
         UpdateRectangle.Left = 0;
-        UpdateRectangle.Top = 0;
-        UpdateRectangle.Right = Resolution.X;
-        UpdateRectangle.Bottom = Resolution.Y;
+        UpdateRectangle.Top  = 0;
+        UpdateRectangle.Right  = CurrResolution.X;
+        UpdateRectangle.Bottom = CurrResolution.Y;
 
         PaletteChanged = FALSE;
     }
