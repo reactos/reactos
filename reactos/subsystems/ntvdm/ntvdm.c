@@ -14,11 +14,7 @@
 #include "emulator.h"
 #include "cpu/cpu.h"
 
-#include "clock.h"
-#include "hardware/ps2.h"
-#include "hardware/vga.h"
 #include "bios/bios.h"
-#include "dos/dem.h"
 
 #include "resource.h"
 

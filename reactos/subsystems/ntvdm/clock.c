@@ -18,8 +18,8 @@
 
 #include "hardware/cmos.h"
 #include "hardware/ps2.h"
-#include "hardware/timer.h"
-#include "hardware/vga.h"
+#include "hardware/pit.h"
+#include "hardware/video/vga.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/kefuncs.h>

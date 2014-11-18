@@ -24,9 +24,9 @@
 #include "hardware/mouse.h"
 #include "hardware/pic.h"
 #include "hardware/ps2.h"
-#include "hardware/speaker.h"
-#include "hardware/timer.h"
-#include "hardware/vga.h"
+#include "hardware/sound/speaker.h"
+#include "hardware/pit.h"
+#include "hardware/video/vga.h"
 
 #include "io.h"
 

@@ -19,7 +19,7 @@
 // #include "vidbios.h"
 
 #include "io.h"
-#include "hardware/vga.h"
+#include "hardware/video/vga.h"
 
 /* DEFINES ********************************************************************/
 

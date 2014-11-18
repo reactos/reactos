@@ -1,5 +1,8 @@
 
+PROJECT(NTVDM)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
+
 spec2def(ntvdm.exe ntvdm.spec)
 
 list(APPEND SOURCE
@@ -19,10 +22,10 @@ list(APPEND SOURCE
     hardware/keyboard.c
     hardware/mouse.c
     hardware/pic.c
+    hardware/pit.c
     hardware/ps2.c
-    hardware/speaker.c
-    hardware/timer.c
-    hardware/vga.c
+    hardware/sound/speaker.c
+    hardware/video/vga.c
     dos/dos32krnl/bios.c
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c

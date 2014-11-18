@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            timer.c
+ * FILE:            pit.c
  * PURPOSE:         Programmable Interval Timer emulation -
  *                  i82C54/8254 compatible
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -14,7 +14,7 @@
 
 #include "emulator.h"
 #include "io.h"
-#include "timer.h"
+#include "pit.h"
 #include "pic.h"
 
 /* PRIVATE VARIABLES **********************************************************/

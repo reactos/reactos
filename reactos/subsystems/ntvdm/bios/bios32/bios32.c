@@ -29,7 +29,7 @@
 #include "io.h"
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
-#include "hardware/timer.h"
+#include "hardware/pit.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/kefuncs.h>
