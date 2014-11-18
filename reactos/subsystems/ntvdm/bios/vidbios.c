@@ -2339,7 +2339,7 @@ VOID VidBiosSyncCursorPosition(VOID)
     VidBiosSetCursorPosition(Row, Column, Bda->VideoPage);
 }
 
-static BYTE VidBiosGetVideoMode(VOID)
+static inline BYTE VidBiosGetVideoMode(VOID)
 {
     /* Bit 7 of VideoMode is determined by bit 7 of VGAOptions */
     return Bda->VideoMode | (Bda->VGAOptions & 0x80);
@@ -3177,12 +3177,12 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
             break;
         }
 
-        /* Display combination code */
+        /* Get/Set Display combination code */
         case 0x1A:
         {
             switch (getAL())
             {
-                case 0x00: /* Get Display combiantion code */
+                case 0x00: /* Get Display combination code */
                    setAX(MAKEWORD(0x1A, 0x1A));
                    setBX(MAKEWORD(0x08, 0x00)); /* VGA w/ color analog display */
                    break;
