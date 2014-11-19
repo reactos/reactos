@@ -475,9 +475,6 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
     NTSTATUS Status;
     PMSGMEMORY MsgMemoryEntry;
     UINT Size;
-    PTHREADINFO pti;
-    
-    pti = PsGetCurrentThreadWin32Thread();
 
     /* See if this message type is present in the table */
     MsgMemoryEntry = FindMsgMemory(UserModeMsg->message);
@@ -492,7 +489,6 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
 
     if (0 != Size)
     {
-        PWND pWnd = ValidateHwndNoErr(KernelModeMsg->hwnd);
         /* Copy data if required */
         if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_WRITE))
         {
@@ -504,11 +500,10 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
                 return Status;
             }
         }
-        if (pWnd && KernelModeMsg->message == WM_COPYDATA)
+        if (KernelModeMsg->message == WM_COPYDATA)
         {
            // Only the current process or thread can free the message lParam pointer.
-           if (pWnd->head.pti->MessageQueue != pti->MessageQueue)
-              return STATUS_SUCCESS;
+           return STATUS_SUCCESS;
         }
         ExFreePool((PVOID) KernelModeMsg->lParam);
     }
