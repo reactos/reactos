@@ -199,7 +199,10 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        if (Name.Buffer) ExFreePool(Name.Buffer);
+        if (Name.Buffer)
+        {
+            ExFreePool(Name.Buffer);
+        }
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
