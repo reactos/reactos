@@ -54,8 +54,6 @@ typedef struct _USER_MESSAGE_QUEUE
   /* True if a WM_MOUSEMOVE is pending */
   BOOLEAN MouseMoved;
   /* Current WM_MOUSEMOVE message */
-  MSG MouseMoveMsg;
-  /* Last click message for translating double clicks */
   MSG msgDblClk;
   /* Current capture window for this queue. */
   PWND spwndCapture;
@@ -142,13 +140,6 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
 	                      IN UINT MsgFilterHigh,
 	                      IN UINT QSflags,
 	                      OUT MSG* pMsg);
-BOOL APIENTRY
-co_MsqPeekMouseMove(IN PTHREADINFO pti,
-                    IN BOOL Remove,
-                    IN PWND Window,
-                    IN UINT MsgFilterLow,
-                    IN UINT MsgFilterHigh,
-                    OUT MSG* pMsg);
 BOOLEAN FASTCALL MsqInitializeMessageQueue(PTHREADINFO, PUSER_MESSAGE_QUEUE);
 PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(PTHREADINFO);
 VOID FASTCALL MsqCleanupThreadMsgs(PTHREADINFO);

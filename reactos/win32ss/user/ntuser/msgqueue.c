@@ -38,44 +38,6 @@ MsqInitializeImpl(VOID)
 }
 
 PWND FASTCALL
-IntChildrenWindowFromPoint(PWND pWndTop, INT x, INT y)
-{
-    PWND pWnd, pWndChild;
-
-    if ( !pWndTop )
-    {
-       pWndTop = UserGetDesktopWindow();
-       if ( !pWndTop ) return NULL;
-    }
-
-    if (!(pWndTop->style & WS_VISIBLE)) return NULL;
-    if ((pWndTop->style & WS_DISABLED)) return NULL;
-    if (!IntPtInWindow(pWndTop, x, y)) return NULL;
-
-    if (RECTL_bPointInRect(&pWndTop->rcClient, x, y))
-    {
-       for (pWnd = pWndTop->spwndChild;
-            pWnd != NULL;
-            pWnd = pWnd->spwndNext)
-       {
-           if (pWnd->state2 & WNDS2_INDESTROY || pWnd->state & WNDS_DESTROYED )
-           {
-               TRACE("The Window is in DESTROY!\n");
-               continue;
-           }
-
-           pWndChild = IntChildrenWindowFromPoint(pWnd, x, y);
-
-           if (pWndChild)
-           {
-              return pWndChild;
-           }
-       }
-    }
-    return pWndTop;
-}
-
-PWND FASTCALL
 IntTopLevelWindowFromPoint(INT x, INT y)
 {
     PWND pWnd, pwndDesktop;
@@ -446,9 +408,16 @@ ClearMsgBitsMask(PTHREADINFO pti, UINT MessageBits)
    }
    if (MessageBits & QS_MOUSEMOVE) // ReactOS hard coded.
    {  // Account for tracking mouse moves..
-      if (--pti->nCntsQBits[QSRosMouseMove] == 0) ClrMask |= QS_MOUSEMOVE;
+      if (pti->nCntsQBits[QSRosMouseMove]) 
+      {
+         pti->nCntsQBits[QSRosMouseMove] = 0; // Throttle down count. Up to > 3:1 entries are ignored.
+      }
       // Handle mouse move bits here.
-      if (Queue->MouseMoved) ClrMask |= QS_MOUSEMOVE;
+      if (Queue->MouseMoved)
+      {
+         ClrMask |= QS_MOUSEMOVE;
+         Queue->MouseMoved = FALSE;
+      }
    }
    if (MessageBits & QS_MOUSEBUTTON)
    {
@@ -502,12 +471,34 @@ MsqDecPaintCountQueue(PTHREADINFO pti)
    ClearMsgBitsMask(pti, QS_PAINT);
 }
 
+/*
+    Post Mouse Move.
+ */
 VOID FASTCALL
 MsqPostMouseMove(PTHREADINFO pti, MSG* Msg)
 {
-    pti->MessageQueue->MouseMoveMsg = *Msg;
-    pti->MessageQueue->MouseMoved = TRUE;
-    MsqWakeQueue(pti, QS_MOUSEMOVE, TRUE);
+    PUSER_MESSAGE Message;
+    PLIST_ENTRY ListHead;
+    PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
+
+    ListHead = &MessageQueue->HardwareMessagesListHead;
+
+    MessageQueue->MouseMoved = TRUE;
+
+    if (!IsListEmpty(ListHead->Flink))
+    {  // Look at the end of the list,
+       Message = CONTAINING_RECORD(ListHead->Blink, USER_MESSAGE, ListEntry);
+       // If the mouse move message is existing,
+       if (Message->Msg.message == WM_MOUSEMOVE)
+       {
+          TRACE("Post Old MM Message in Q\n");
+          Message->Msg = *Msg; // Overwrite the message with updated data!
+          MsqWakeQueue(pti, QS_MOUSEMOVE, TRUE);
+          return;
+       }
+    }
+    TRACE("Post New MM Message to Q\n");
+    MsqPostMessage(pti, Msg, TRUE, QS_MOUSEMOVE, 0);
 }
 
 VOID FASTCALL
@@ -581,13 +572,14 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    {
        pti = pwnd->head.pti;
        MessageQueue = pti->MessageQueue;
-       // MessageQueue->ptiMouse = pti;
 
-       if ( pti->TIF_flags & TIF_INCLEANUP || MessageQueue->QF_flags & QF_INDESTROY)
+       if (MessageQueue->QF_flags & QF_INDESTROY)
        {
-          ERR("Mouse is over the Window Thread is Dead!\n");
+          ERR("Mouse is over a Window with a Dead Message Queue!\n");
           return;
        }
+
+       MessageQueue->ptiMouse = pti;
 
        if (Msg->message == WM_MOUSEMOVE)
        {
@@ -642,6 +634,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
            {
              // ERR("ptiLastInput is set\n");
              // ptiLastInput = pti; // Once this is set during Reboot or Shutdown, this prevents the exit window having foreground.
+             // Find all the Move Mouse calls and fix mouse set active focus issues......
            }
            TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0);
@@ -1675,51 +1668,6 @@ BOOL co_IntProcessHardwareMessage(MSG* Msg, BOOL* RemoveMessages, UINT first, UI
     }
 
     return TRUE;
-}
-
-BOOL APIENTRY
-co_MsqPeekMouseMove(IN PTHREADINFO pti,
-                   IN BOOL Remove,
-                   IN PWND Window,
-                   IN UINT MsgFilterLow,
-                   IN UINT MsgFilterHigh,
-                   OUT MSG* pMsg)
-{
-    BOOL AcceptMessage;
-    MSG msg;
-    PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
-
-    if(!(MessageQueue->MouseMoved))
-        return FALSE;
-
-    if (!MessageQueue->ptiSysLock)
-    {
-       MessageQueue->ptiSysLock = pti;
-       pti->pcti->CTI_flags |= CTI_THREADSYSLOCK;
-    }
-
-    if (MessageQueue->ptiSysLock != pti)
-    {
-       ERR("MsqPeekMouseMove: Thread Q is locked to another pti!\n");
-       return FALSE;
-    }
-
-    msg = MessageQueue->MouseMoveMsg;
-
-    AcceptMessage = co_IntProcessMouseMessage(&msg, &Remove, MsgFilterLow, MsgFilterHigh);
-
-    if(AcceptMessage)
-        *pMsg = msg;
-
-    if(Remove)
-    {
-        ClearMsgBitsMask(pti, QS_MOUSEMOVE);
-        MessageQueue->MouseMoved = FALSE;
-    }
-
-    MessageQueue->ptiSysLock = NULL;
-    pti->pcti->CTI_flags &= ~CTI_THREADSYSLOCK;
-    return AcceptMessage;
 }
 
 /* check whether a message filter contains at least one potential hardware message */

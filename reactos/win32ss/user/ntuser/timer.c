@@ -315,7 +315,7 @@ SystemTimerProc(HWND hwnd,
           if ( pDesk->dwDTFlags & DF_TME_HOVER &&
                pWnd == pDesk->spwndTrack )
           {
-             Point = pWnd->head.pti->MessageQueue->MouseMoveMsg.pt;
+             Point = gpsi->ptCursor;
              if ( RECTL_bPointInRect(&pDesk->rcMouseHover, Point.x, Point.y) )
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
