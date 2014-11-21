@@ -33,27 +33,27 @@ _main(
 static
 VOID FASTCALL EnvironmentStringToUnicodeString (PWCHAR wsIn, PUNICODE_STRING usOut)
 {
-   if (wsIn)
-   {
-      PWCHAR CurrentChar = wsIn;
-      
-      while (*CurrentChar)
-      {
-         while(*CurrentChar++);
-      }
-      /* double nullterm at end */
-      CurrentChar++;
+    if (wsIn)
+    {
+        PWCHAR CurrentChar = wsIn;
 
-      usOut->Buffer = wsIn;
-      /* FIXME: the last (double) nullterm should perhaps not be included in Length
-       * but only in MaximumLength. -Gunnar */
-      usOut->MaximumLength = usOut->Length =  (CurrentChar-wsIn) * sizeof(WCHAR);
-   }
-   else
-   {
-      usOut->Buffer = NULL;
-      usOut->Length =  usOut->MaximumLength = 0;
-   }
+        while (*CurrentChar)
+        {
+            while(*CurrentChar++);
+        }
+        /* double nullterm at end */
+        CurrentChar++;
+
+        usOut->Buffer = wsIn;
+        /* FIXME: the last (double) nullterm should perhaps not be included in Length
+        * but only in MaximumLength. -Gunnar */
+        usOut->MaximumLength = usOut->Length =  (CurrentChar-wsIn) * sizeof(WCHAR);
+    }
+    else
+    {
+        usOut->Buffer = NULL;
+        usOut->Length =  usOut->MaximumLength = 0;
+    }
 }
 
 
@@ -91,9 +91,9 @@ NtProcessStartup(PPEB Peb)
     ArgumentList = RtlAllocateHeap(RtlGetProcessHeap(), 0, 512 * sizeof(PCHAR));
     if (!ArgumentList)
     {
-       DPRINT1("ERR: no mem!");
-       Status = STATUS_NO_MEMORY;
-       goto fail;
+        DPRINT1("ERR: no mem!");
+        Status = STATUS_NO_MEMORY;
+        goto fail;
     }
 
     /* Use a null pointer as default */
@@ -117,8 +117,8 @@ NtProcessStartup(PPEB Peb)
     Status = RtlUnicodeStringToAnsiString(&AnsiCmdLine, CmdLineString, TRUE);
     if (!NT_SUCCESS(Status))
     {
-       DPRINT1("ERR: no mem(guess)\n");
-       goto fail;
+        DPRINT1("ERR: no mem(guess)\n");
+        goto fail;
     }
 
     /* Save parameters for parsing */
@@ -130,12 +130,12 @@ NtProcessStartup(PPEB Peb)
     {
         /* Allocate a buffer for the destination */
         Destination = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length + sizeof(WCHAR));
-       if (!Destination)
-       {
-          DPRINT1("ERR: no mem!");
-          Status = STATUS_NO_MEMORY;
-          goto fail;
-       }
+        if (!Destination)
+        {
+            DPRINT1("ERR: no mem!");
+            Status = STATUS_NO_MEMORY;
+            goto fail;
+        }
 
         /* Start parsing */
         while (*Source)
@@ -164,33 +164,33 @@ NtProcessStartup(PPEB Peb)
     /* Null terminate the token pointer list */
     *ArgumentList++ = NULL;
 
-    /* Now handle the enviornment, point the envp at our current list location. */
+    /* Now handle the environment, point the envp at our current list location. */
     envp = ArgumentList;
 
     if (ProcessParameters->Environment)
     {
-      EnvironmentStringToUnicodeString(ProcessParameters->Environment, &UnicodeEnvironment);
-      Status = RtlUnicodeStringToAnsiString (& AnsiEnvironment, & UnicodeEnvironment, TRUE);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("ERR: no mem(guess)\n");
-         goto fail;
-      }
+        EnvironmentStringToUnicodeString(ProcessParameters->Environment, &UnicodeEnvironment);
+        Status = RtlUnicodeStringToAnsiString (& AnsiEnvironment, & UnicodeEnvironment, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERR: no mem(guess)\n");
+            goto fail;
+        }
 
-      ASSERT(AnsiEnvironment.Buffer);
+        ASSERT(AnsiEnvironment.Buffer);
 
-      Source = AnsiEnvironment.Buffer;
-      while (*Source)
-     	{
-     		/* Save a pointer to this token */
-    		*ArgumentList++ = Source;
+        Source = AnsiEnvironment.Buffer;
+        while (*Source)
+        {
+            /* Save a pointer to this token */
+            *ArgumentList++ = Source;
 
-   		/* Keep looking for another variable */
-         while (*Source++);
-	   }
+            /* Keep looking for another variable */
+            while (*Source++);
+        }
 
-    	/* Null terminate the list again */
-    	*ArgumentList++ = NULL;
+        /* Null terminate the list again */
+        *ArgumentList++ = NULL;
     }
     /* Breakpoint if we were requested to do so */
     if (ProcessParameters->DebugFlags) DbgBreakPoint();
