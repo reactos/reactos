@@ -317,15 +317,19 @@ Fast486StackPush(PFAST486_STATE State,
             return FALSE;
         }
 
+        /* Store the value in SS:[ESP - 4] */
+        if (!Fast486WriteMemory(State,
+                                FAST486_REG_SS,
+                                State->GeneralRegs[FAST486_REG_ESP].Long - sizeof(ULONG),
+                                &Value,
+                                sizeof(ULONG)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
         /* Subtract ESP by 4 */
         State->GeneralRegs[FAST486_REG_ESP].Long -= sizeof(ULONG);
-
-        /* Store the value in SS:ESP */
-        return Fast486WriteMemory(State,
-                                  FAST486_REG_SS,
-                                  State->GeneralRegs[FAST486_REG_ESP].Long,
-                                  &Value,
-                                  sizeof(ULONG));
     }
     else
     {
@@ -339,16 +343,22 @@ Fast486StackPush(PFAST486_STATE State,
             return FALSE;
         }
 
+        /* Store the value in SS:[SP - 2] */
+        if (!Fast486WriteMemory(State,
+                                FAST486_REG_SS,
+                                LOWORD(State->GeneralRegs[FAST486_REG_ESP].LowWord - sizeof(USHORT)),
+                                &ShortValue,
+                                sizeof(USHORT)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
         /* Subtract SP by 2 */
         State->GeneralRegs[FAST486_REG_ESP].LowWord -= sizeof(USHORT);
-
-        /* Store the value in SS:SP */
-        return Fast486WriteMemory(State,
-                                  FAST486_REG_SS,
-                                  State->GeneralRegs[FAST486_REG_ESP].LowWord,
-                                  &ShortValue,
-                                  sizeof(USHORT));
     }
+
+    return TRUE;
 }
 
 FORCEINLINE
