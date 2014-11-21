@@ -19,6 +19,7 @@ list(APPEND SOURCE
     cpu/cpu.c
     cpu/registers.c
     hardware/cmos.c
+    hardware/dma.c
     hardware/keyboard.c
     hardware/mouse.c
     hardware/pic.c

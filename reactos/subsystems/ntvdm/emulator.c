@@ -22,6 +22,7 @@
 #include "clock.h"
 #include "bios/rom.h"
 #include "hardware/cmos.h"
+#include "hardware/dma.h"
 #include "hardware/keyboard.h"
 #include "hardware/mouse.h"
 #include "hardware/pic.h"
@@ -626,6 +627,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     CpuInitialize();
 
     /* Initialize DMA */
+    DmaInitialize();
 
     /* Initialize the PIC, the PIT, the CMOS and the PC Speaker */
     PicInitialize();
@@ -705,6 +707,8 @@ VOID EmulatorCleanup(VOID)
     CmosCleanup();
     // PitCleanup();
     // PicCleanup();
+
+    // DmaCleanup();
 
     CpuCleanup();
 
