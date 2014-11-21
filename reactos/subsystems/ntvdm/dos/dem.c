@@ -423,7 +423,7 @@ static VOID WINAPI DosStart(LPWORD Stack)
     RegisterBop(BOP_START_DOS, NULL);
 
     /* Load the mouse driver */
-    DosMouseInitialize();
+    // DosMouseInitialize();
 
 #ifndef STANDALONE
 
