@@ -403,40 +403,60 @@ static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
     Mcb->OwnerPsp = NewOwner;
 }
 
-static WORD DosCopyEnvironmentBlock(LPCSTR Environment, LPCSTR ProgramName)
+static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
+                                    LPCSTR ProgramName)
 {
     PCHAR Ptr, DestBuffer = NULL;
     ULONG TotalSize = 0;
     WORD DestSegment;
 
-    Ptr = (PCHAR)Environment;
+    /* If we have an environment strings list, compute its size */
+    if (Environment)
+    {
+        /* Calculate the size of the environment block */
+        Ptr = (PCHAR)Environment;
+        while (*Ptr) Ptr += strlen(Ptr) + 1;
+        TotalSize = (ULONG_PTR)Ptr - (ULONG_PTR)Environment;
+    }
+    else
+    {
+        /* Empty environment string */
+        TotalSize = 1;
+    }
+    /* Add the final environment block NULL-terminator */
+    TotalSize++;
 
-    /* Calculate the size of the environment block */
-    while (*Ptr) Ptr += strlen(Ptr) + 1;
-    TotalSize = (ULONG_PTR)Ptr - (ULONG_PTR)Environment + 1; // Add final NULL-terminator
+    /* Add the two bytes for the program name tag */
+    TotalSize += 2;
 
     /* Add the string buffer size */
     TotalSize += strlen(ProgramName) + 1;
-
-    /* Add the two extra bytes */
-    TotalSize += 2;
 
     /* Allocate the memory for the environment block */
     DestSegment = DosAllocateMemory((WORD)((TotalSize + 0x0F) >> 4), NULL);
     if (!DestSegment) return 0;
 
-    Ptr = (PCHAR)Environment;
-
     DestBuffer = (PCHAR)SEG_OFF_TO_PTR(DestSegment, 0);
-    while (*Ptr)
-    {
-        /* Copy the string and NULL-terminate it */
-        strcpy(DestBuffer, Ptr);
-        DestBuffer += strlen(Ptr);
-        *(DestBuffer++) = '\0';
 
-        /* Move to the next string */
-        Ptr += strlen(Ptr) + 1;
+    /* If we have an environment strings list, copy it */
+    if (Environment)
+    {
+        Ptr = (PCHAR)Environment;
+        while (*Ptr)
+        {
+            /* Copy the string and NULL-terminate it */
+            strcpy(DestBuffer, Ptr);
+            DestBuffer += strlen(Ptr);
+            *(DestBuffer++) = '\0';
+
+            /* Move to the next string */
+            Ptr += strlen(Ptr) + 1;
+        }
+    }
+    else
+    {
+        /* Empty environment string */
+        *(DestBuffer++) = '\0';
     }
     /* NULL-terminate the environment block */
     *(DestBuffer++) = '\0';
@@ -900,7 +920,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
 DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
                         IN LPCSTR ExecutablePath,
                         IN LPCSTR CommandLine,
-                        IN LPCSTR Environment,
+                        IN LPCSTR Environment OPTIONAL,
                         OUT PDWORD StackLocation OPTIONAL,
                         OUT PDWORD EntryPoint OPTIONAL)
 {
@@ -920,7 +940,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             LoadType,
             ExecutablePath,
             CommandLine,
-            Environment,
+            Environment ? Environment : "n/a",
             StackLocation,
             EntryPoint);
 
@@ -1144,7 +1164,7 @@ Cleanup:
 
 DWORD DosStartProcess(IN LPCSTR ExecutablePath,
                       IN LPCSTR CommandLine,
-                      IN LPCSTR Environment)
+                      IN LPCSTR Environment OPTIONAL)
 {
     DWORD Result;
 
