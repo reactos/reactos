@@ -236,7 +236,7 @@ Command:
             {
                 /* Expand the environment size */
                 EnvSize = CommandInfo.EnvLen;
-                Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
+                CommandInfo.Env = Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
 
                 /* Repeat the request */
                 goto Command;
