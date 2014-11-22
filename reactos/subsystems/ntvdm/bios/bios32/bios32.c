@@ -151,6 +151,19 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
 {
     switch (getAH())
     {
+        /* OS Hooks for Multitasking */
+        case 0x80:  // Device Open
+        case 0x81:  // Device Close
+        case 0x82:  // Program Termination
+        case 0x90:  // Device Busy
+        case 0x91:  // Device POST
+        {
+            /* Return success by default */
+            setAH(0x00);
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            break;
+        }
+
         /* Keyboard intercept */
         case 0x4F:
         {
@@ -234,6 +247,15 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        /* Switch to Protected Mode */
+        case 0x89:
+        {
+            DPRINT1("BIOS INT 15h, AH=89h \"Switch to Protected Mode\" is UNIMPLEMENTED");
+
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+            break;
+        }
+
         /* Get Configuration */
         case 0xC0:
         {
@@ -254,6 +276,8 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
         {
             // Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             // setES(???);
+
+            UNIMPLEMENTED;
 
             /* We do not support EBDA yet */
             Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
