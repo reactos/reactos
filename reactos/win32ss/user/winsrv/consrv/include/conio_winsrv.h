@@ -139,6 +139,8 @@ typedef struct _WINSRV_CONSOLE
     // CRITICAL_SECTION Lock;
     // CONSOLE_STATE State;                    /* State of the console */
 
+    HANDLE InitEvents[MAX_INIT_EVENTS];         /* Initialization events */
+
     FRONTEND FrontEndIFace;                     /* Frontend-specific interface */
 
 /******************************* Process support ******************************/

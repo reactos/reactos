@@ -663,7 +663,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     {
         DPRINT1("GuiConsoleNcCreate: InitFonts failed\n");
         GuiData->hWindow = NULL;
-        SetEvent(GuiData->hGuiInitEvent);
+        NtSetEvent(GuiData->hGuiInitEvent, NULL);
         return FALSE;
     }
 
@@ -691,7 +691,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     //CreateSysMenu(GuiData->hWindow);
 
     DPRINT("OnNcCreate - setting start event\n");
-    SetEvent(GuiData->hGuiInitEvent);
+    NtSetEvent(GuiData->hGuiInitEvent, NULL);
 
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }

@@ -521,6 +521,36 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
         return Status;
     }
 
+    /* Duplicate the Initialization Events */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InitEvents[INIT_SUCCESS],
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS],
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
+        ConSrvFreeHandlesTable(ProcessData);
+        ConSrvDeleteConsole(Console);
+        ProcessData->ConsoleHandle = NULL;
+        return Status;
+    }
+
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InitEvents[INIT_FAILURE],
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_FAILURE],
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
+        NtClose(ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
+        ConSrvFreeHandlesTable(ProcessData);
+        ConSrvDeleteConsole(Console);
+        ProcessData->ConsoleHandle = NULL;
+        return Status;
+    }
+
     /* Duplicate the Input Event */
     Status = NtDuplicateObject(NtCurrentProcess(),
                                Console->InputBuffer.ActiveEvent,
@@ -529,7 +559,9 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                EVENT_ALL_ACCESS, 0, 0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
+        DPRINT1("NtDuplicateObject(InputWaitHandle) failed: %lu\n", Status);
+        NtClose(ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_FAILURE]);
+        NtClose(ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
         ConSrvFreeHandlesTable(ProcessData);
         ConSrvDeleteConsole(Console);
         ProcessData->ConsoleHandle = NULL;
@@ -554,7 +586,8 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                      BOOLEAN CreateNewHandlesTable,
                      PHANDLE pInputHandle,
                      PHANDLE pOutputHandle,
-                     PHANDLE pErrorHandle)
+                     PHANDLE pErrorHandle,
+                     PCONSOLE_START_INFO ConsoleStartInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE Console;
@@ -599,6 +632,34 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
         }
     }
 
+    /* Duplicate the Initialization Events */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InitEvents[INIT_SUCCESS],
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleStartInfo->InitEvents[INIT_SUCCESS],
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
+        ConSrvFreeHandlesTable(ProcessData);
+        ProcessData->ConsoleHandle = NULL;
+        goto Quit;
+    }
+
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InitEvents[INIT_FAILURE],
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleStartInfo->InitEvents[INIT_FAILURE],
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
+        NtClose(ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
+        ConSrvFreeHandlesTable(ProcessData);
+        ProcessData->ConsoleHandle = NULL;
+        goto Quit;
+    }
+
     /* Duplicate the Input Event */
     Status = NtDuplicateObject(NtCurrentProcess(),
                                Console->InputBuffer.ActiveEvent,
@@ -607,7 +668,9 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                EVENT_ALL_ACCESS, 0, 0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
+        DPRINT1("NtDuplicateObject(InputWaitHandle) failed: %lu\n", Status);
+        NtClose(ConsoleStartInfo->InitEvents[INIT_FAILURE]);
+        NtClose(ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
         ConSrvFreeHandlesTable(ProcessData); // NOTE: Always free the handles table.
         ProcessData->ConsoleHandle = NULL;
         goto Quit;

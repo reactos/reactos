@@ -1166,9 +1166,7 @@ IntAllocConsole(LPWSTR Title,
                 PCONSOLE_START_INFO ConsoleStartInfo)
 {
     BOOL Success = TRUE;
-#ifdef USE_CONSOLE_INIT_HANDLES
     NTSTATUS Status;
-#endif
 
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_ALLOCCONSOLE AllocConsoleRequest = &ApiMessage.Data.AllocConsoleRequest;
@@ -1229,9 +1227,9 @@ IntAllocConsole(LPWSTR Title,
         goto Quit;
     }
 
-#ifdef USE_CONSOLE_INIT_HANDLES
-    // Is AllocConsoleRequest->ConsoleStartInfo->Events aligned on handle boundary ????
-    Status = NtWaitForMultipleObjects(2, AllocConsoleRequest->ConsoleStartInfo->Events,
+    // Is AllocConsoleRequest->ConsoleStartInfo->InitEvents aligned on handle boundary ????
+    Status = NtWaitForMultipleObjects(MAX_INIT_EVENTS,
+                                      AllocConsoleRequest->ConsoleStartInfo->InitEvents,
                                       WaitAny, FALSE, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1240,15 +1238,14 @@ IntAllocConsole(LPWSTR Title,
         goto Quit;
     }
 
-    NtClose(AllocConsoleRequest->ConsoleStartInfo->Events[0]);
-    NtClose(AllocConsoleRequest->ConsoleStartInfo->Events[1]);
-    if (Status != STATUS_SUCCESS)
+    NtClose(AllocConsoleRequest->ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
+    NtClose(AllocConsoleRequest->ConsoleStartInfo->InitEvents[INIT_FAILURE]);
+    if (Status != INIT_SUCCESS)
     {
         NtCurrentPeb()->ProcessParameters->ConsoleHandle = NULL;
         Success = FALSE;
     }
     else
-#endif
     {
         RtlCopyMemory(ConsoleStartInfo,
                       AllocConsoleRequest->ConsoleStartInfo,
@@ -2505,9 +2502,7 @@ IntAttachConsole(DWORD ProcessId,
                  PCONSOLE_START_INFO ConsoleStartInfo)
 {
     BOOL Success = TRUE;
-#ifdef USE_CONSOLE_INIT_HANDLES
     NTSTATUS Status;
-#endif
 
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_ATTACHCONSOLE AttachConsoleRequest = &ApiMessage.Data.AttachConsoleRequest;
@@ -2541,9 +2536,9 @@ IntAttachConsole(DWORD ProcessId,
         goto Quit;
     }
 
-#ifdef USE_CONSOLE_INIT_HANDLES
-    // Is AttachConsoleRequest->ConsoleStartInfo->Events aligned on handle boundary ????
-    Status = NtWaitForMultipleObjects(2, AttachConsoleRequest->ConsoleStartInfo->Events,
+    // Is AttachConsoleRequest->ConsoleStartInfo->InitEvents aligned on handle boundary ????
+    Status = NtWaitForMultipleObjects(MAX_INIT_EVENTS,
+                                      AttachConsoleRequest->ConsoleStartInfo->InitEvents,
                                       WaitAny, FALSE, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -2552,15 +2547,14 @@ IntAttachConsole(DWORD ProcessId,
         goto Quit;
     }
 
-    NtClose(AttachConsoleRequest->ConsoleStartInfo->Events[0]);
-    NtClose(AttachConsoleRequest->ConsoleStartInfo->Events[1]);
-    if (Status != STATUS_SUCCESS)
+    NtClose(AttachConsoleRequest->ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
+    NtClose(AttachConsoleRequest->ConsoleStartInfo->InitEvents[INIT_FAILURE]);
+    if (Status != INIT_SUCCESS)
     {
         NtCurrentPeb()->ProcessParameters->ConsoleHandle = NULL;
         Success = FALSE;
     }
     else
-#endif
     {
         RtlCopyMemory(ConsoleStartInfo,
                       AttachConsoleRequest->ConsoleStartInfo,

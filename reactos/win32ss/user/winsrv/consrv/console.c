@@ -663,6 +663,27 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     /* Colour table */
     memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
 
+    /* Create the Initialization Events */
+    Status = NtCreateEvent(&Console->InitEvents[INIT_SUCCESS], EVENT_ALL_ACCESS,
+                           NULL, NotificationEvent, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateEvent(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
+        ConDrvDeleteConsole(Console);
+        ConSrvDeinitTerminal(&Terminal);
+        return Status;
+    }
+    Status = NtCreateEvent(&Console->InitEvents[INIT_FAILURE], EVENT_ALL_ACCESS,
+                           NULL, NotificationEvent, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateEvent(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
+        NtClose(Console->InitEvents[INIT_SUCCESS]);
+        ConDrvDeleteConsole(Console);
+        ConSrvDeinitTerminal(&Terminal);
+        return Status;
+    }
+
     /*
      * Attach the ConSrv terminal to the console.
      * This call makes a copy of our local Terminal variable.
@@ -671,6 +692,8 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to register terminal to the given console, Status = 0x%08lx\n", Status);
+        NtClose(Console->InitEvents[INIT_FAILURE]);
+        NtClose(Console->InitEvents[INIT_SUCCESS]);
         ConDrvDeleteConsole(Console);
         ConSrvDeinitTerminal(&Terminal);
         return Status;
@@ -679,6 +702,10 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     /* All went right, so add the console to the list */
     Status = InsertConsole(&ConsoleHandle, Console);
+
+    // FIXME! We do not support at all asynchronous console creation!
+    NtSetEvent(Console->InitEvents[INIT_SUCCESS], NULL);
+    // NtSetEvent(Console->InitEvents[INIT_FAILURE], NULL);
 
     /* Return the newly created console to the caller and a success code too */
     *NewConsoleHandle = ConsoleHandle;
@@ -695,6 +722,10 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
 
     /* Remove the console from the list */
     RemoveConsoleByPointer(Console);
+
+    /* Destroy the Initialization Events */
+    NtClose(Console->InitEvents[INIT_FAILURE]);
+    NtClose(Console->InitEvents[INIT_SUCCESS]);
 
     /* Clean the Input Line Discipline */
     if (Console->LineBuffer) ConsoleFreeHeap(Console->LineBuffer);
@@ -999,7 +1030,8 @@ CSR_API(SrvAttachConsole)
                                   TRUE,
                                   &AttachConsoleRequest->ConsoleStartInfo->InputHandle,
                                   &AttachConsoleRequest->ConsoleStartInfo->OutputHandle,
-                                  &AttachConsoleRequest->ConsoleStartInfo->ErrorHandle);
+                                  &AttachConsoleRequest->ConsoleStartInfo->ErrorHandle,
+                                  AttachConsoleRequest->ConsoleStartInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console inheritance failed\n");

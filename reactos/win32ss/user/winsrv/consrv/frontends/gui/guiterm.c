@@ -149,12 +149,12 @@ GuiConsoleInputThread(PVOID Data)
     MSG msg;
 
     /*
-     * This thread dispatches all the console notifications to the notify window.
-     * It is common for all the console windows.
+     * This thread dispatches all the console notifications to the
+     * notification window. It is common for all the console windows.
      */
 
     /* The thread has been initialized, set the event */
-    SetEvent(*GraphicsStartupEvent);
+    NtSetEvent(*GraphicsStartupEvent, NULL);
 
     while (GetMessageW(&msg, NULL, 0, 0))
     {
@@ -250,7 +250,7 @@ GuiConsoleInputThread(PVOID Data)
                 DestroyWindow(GuiData->hWindow);
                 PrivateCsrssManualGuiCheck(+1); // RemoveGuiApp
 
-                SetEvent(GuiData->hGuiTermEvent);
+                NtSetEvent(GuiData->hGuiTermEvent, NULL);
 
                 if (InterlockedDecrement(&WindowCount) == 0)
                 {
@@ -295,8 +295,12 @@ GuiInit(VOID)
      */
     if (hInputThread == NULL)
     {
-        HANDLE GraphicsStartupEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-        if (GraphicsStartupEvent == NULL) return FALSE;
+        HANDLE GraphicsStartupEvent;
+        NTSTATUS Status;
+
+        Status = NtCreateEvent(&GraphicsStartupEvent, EVENT_ALL_ACCESS,
+                               NULL, SynchronizationEvent, FALSE);
+        if (!NT_SUCCESS(Status)) return FALSE;
 
         hInputThread = CreateThread(NULL,
                                     0,
@@ -306,7 +310,7 @@ GuiInit(VOID)
                                     &dwInputThreadId);
         if (hInputThread == NULL)
         {
-            CloseHandle(GraphicsStartupEvent);
+            NtClose(GraphicsStartupEvent);
             DPRINT1("CONSRV: Failed to create graphics console thread.\n");
             return FALSE;
         }
@@ -314,7 +318,7 @@ GuiInit(VOID)
         CloseHandle(hInputThread);
 
         WaitForSingleObject(GraphicsStartupEvent, INFINITE);
-        CloseHandle(GraphicsStartupEvent);
+        NtClose(GraphicsStartupEvent);
     }
 
     // ConsInitialized = TRUE;
@@ -471,8 +475,10 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
      * Ideally we could use SendNotifyMessage for this but its not
      * yet implemented.
      */
-    GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-    GuiData->hGuiTermEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    NtCreateEvent(&GuiData->hGuiInitEvent, EVENT_ALL_ACCESS,
+                  NULL, SynchronizationEvent, FALSE);
+    NtCreateEvent(&GuiData->hGuiTermEvent, EVENT_ALL_ACCESS,
+                  NULL, SynchronizationEvent, FALSE);
 
     DPRINT("GUI - Checkpoint\n");
 
@@ -482,7 +488,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     /* Wait until initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
     DPRINT("OK we created the console window\n");
-    CloseHandle(GuiData->hGuiInitEvent);
+    NtClose(GuiData->hGuiInitEvent);
     GuiData->hGuiInitEvent = NULL;
 
     /* Check whether we really succeeded in initializing the terminal window */
@@ -505,7 +511,7 @@ GuiDeinitFrontEnd(IN OUT PFRONTEND This)
     PostThreadMessageW(dwInputThreadId, PM_DESTROY_CONSOLE, 0, (LPARAM)GuiData);
     WaitForSingleObject(GuiData->hGuiTermEvent, INFINITE);
     DPRINT("hGuiTermEvent set\n");
-    CloseHandle(GuiData->hGuiTermEvent);
+    NtClose(GuiData->hGuiTermEvent);
     GuiData->hGuiTermEvent = NULL;
 
     DPRINT("Destroying icons !! - GuiData->hIcon = 0x%p ; ghDefaultIcon = 0x%p ; GuiData->hIconSm = 0x%p ; ghDefaultIconSm = 0x%p\n",

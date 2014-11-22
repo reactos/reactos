@@ -18,5 +18,6 @@ NTSTATUS ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                               BOOLEAN CreateNewHandlesTable,
                               PHANDLE pInputHandle,
                               PHANDLE pOutputHandle,
-                              PHANDLE pErrorHandle);
+                              PHANDLE pErrorHandle,
+                              PCONSOLE_START_INFO ConsoleStartInfo);
 VOID ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData);

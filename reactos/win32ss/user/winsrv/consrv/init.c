@@ -480,9 +480,10 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
         Status = ConSrvInheritConsole(ProcessData,
                                       ConnectInfo->ConsoleStartInfo.ConsoleHandle,
                                       FALSE,
-                                      NULL,  // &ConnectInfo->ConsoleStartInfo.InputHandle,
-                                      NULL,  // &ConnectInfo->ConsoleStartInfo.OutputHandle,
-                                      NULL); // &ConnectInfo->ConsoleStartInfo.ErrorHandle);
+                                      NULL, // &ConnectInfo->ConsoleStartInfo.InputHandle,
+                                      NULL, // &ConnectInfo->ConsoleStartInfo.OutputHandle,
+                                      NULL, // &ConnectInfo->ConsoleStartInfo.ErrorHandle,
+                                      &ConnectInfo->ConsoleStartInfo);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console inheritance failed\n");
