@@ -4679,7 +4679,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             /* Return to VM86 mode */
             ULONG Es, Ds, Fs, Gs;
 
-            /* Pop ESP, SS, ES, FS, GS */
+            /* Pop ESP, SS, ES, DS, FS, GS */
             if (!Fast486StackPop(State, &StackPtr)) return;
             if (!Fast486StackPop(State, &StackSel)) return;
             if (!Fast486StackPop(State, &Es)) return;

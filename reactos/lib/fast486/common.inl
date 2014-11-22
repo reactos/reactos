@@ -303,7 +303,7 @@ Fast486StackPush(PFAST486_STATE State,
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* The OPSIZE prefix toggles the size */
-    if (State->PrefixFlags & FAST486_PREFIX_OPSIZE) Size = !Size;
+    TOGGLE_OPSIZE(Size);
 
     if (Size)
     {
