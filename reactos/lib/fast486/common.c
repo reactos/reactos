@@ -294,8 +294,9 @@ Fast486InterruptInternal(PFAST486_STATE State,
             State->PrefixFlags |= FAST486_PREFIX_OPSIZE;
         }
 
-        /* Check if the interrupt handler is more privileged */
-        if (Fast486GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
+        /* Check if the interrupt handler is more privileged or if we're in V86 mode */
+        if ((Fast486GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
+            || State->Flags.Vm)
         {
             /* Read the TSS */
             if (!Fast486ReadLinearMemory(State,
@@ -309,6 +310,24 @@ Fast486InterruptInternal(PFAST486_STATE State,
 
             /* Switch to the new privilege level */
             State->Cpl = GET_SEGMENT_RPL(SegmentSelector);
+
+            if (State->Flags.Vm)
+            {
+                /* Clear the VM flag */
+                State->Flags.Vm = FALSE;
+
+                /* Push GS, FS, DS and ES */
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_GS].Selector)) goto Cleanup;
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_FS].Selector)) goto Cleanup;
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_DS].Selector)) goto Cleanup;
+                if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_ES].Selector)) goto Cleanup;
+
+                /* Now load them with NULL selectors, since they are useless in protected mode */
+                if (!Fast486LoadSegment(State, FAST486_REG_GS, 0)) goto Cleanup;
+                if (!Fast486LoadSegment(State, FAST486_REG_FS, 0)) goto Cleanup;
+                if (!Fast486LoadSegment(State, FAST486_REG_DS, 0)) goto Cleanup;
+                if (!Fast486LoadSegment(State, FAST486_REG_ES, 0)) goto Cleanup;
+            }
 
             /* Check the new (higher) privilege level */
             switch (State->Cpl)
