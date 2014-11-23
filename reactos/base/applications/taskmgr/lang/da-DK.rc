@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Unable to Change Priority"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Usage: %d%%"
-    IDS_STATUS_MEMUSAGE "Mem Usage: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Mem Usage: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "CPU Usage: %3d%%"
     IDS_STATUS_PROCESSES "Processes: %d"
     IDS_NOT_RESPONDING "Not Responding"

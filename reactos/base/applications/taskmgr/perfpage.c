@@ -21,6 +21,7 @@
  */
 
 #include "precomp.h"
+#include <shlwapi.h>
 
 TGraphCtrl PerformancePageCpuUsageHistoryGraph;
 TGraphCtrl PerformancePageMemUsageHistoryGraph;
@@ -311,20 +312,20 @@ void RefreshPerformancePage(void)
 
 DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 {
-    ULONG  CommitChargeTotal;
-    ULONG  CommitChargeLimit;
-    ULONG  CommitChargePeak;
+    ULONGLONG  CommitChargeTotal;
+    ULONGLONG  CommitChargeLimit;
+    ULONGLONG  CommitChargePeak;
 
     ULONG  CpuUsage;
     ULONG  CpuKernelUsage;
 
-    ULONG  KernelMemoryTotal;
-    ULONG  KernelMemoryPaged;
-    ULONG  KernelMemoryNonPaged;
+    ULONGLONG  KernelMemoryTotal;
+    ULONGLONG  KernelMemoryPaged;
+    ULONGLONG  KernelMemoryNonPaged;
 
-    ULONG  PhysicalMemoryTotal;
-    ULONG  PhysicalMemoryAvailable;
-    ULONG  PhysicalMemorySystemCache;
+    ULONGLONG  PhysicalMemoryTotal;
+    ULONGLONG  PhysicalMemoryAvailable;
+    ULONGLONG  PhysicalMemorySystemCache;
 
     ULONG  TotalHandles;
     ULONG  TotalThreads;
@@ -342,6 +343,9 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
         int nBarsUsed1;
         int nBarsUsed2;
 
+        WCHAR szChargeTotalFormat[256];
+        WCHAR szChargeLimitFormat[256];
+
         /*  Wait for an the event or application close */
         if (GetMessage(&msg, NULL, 0, 0) <= 0)
             return 0;
@@ -353,14 +357,25 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
              */
             CommitChargeTotal = PerfDataGetCommitChargeTotalK();
             CommitChargeLimit = PerfDataGetCommitChargeLimitK();
-            CommitChargePeak = PerfDataGetCommitChargePeakK();
+            CommitChargePeak  = PerfDataGetCommitChargePeakK();
             _ultow(CommitChargeTotal, Text, 10);
             SetWindowTextW(hPerformancePageCommitChargeTotalEdit, Text);
             _ultow(CommitChargeLimit, Text, 10);
             SetWindowTextW(hPerformancePageCommitChargeLimitEdit, Text);
             _ultow(CommitChargePeak, Text, 10);
             SetWindowTextW(hPerformancePageCommitChargePeakEdit, Text);
-            wsprintfW(Text, szMemUsage, CommitChargeTotal, CommitChargeLimit);
+
+            StrFormatByteSizeW(CommitChargeTotal * 1024,
+                               szChargeTotalFormat,
+                               sizeof(szChargeTotalFormat));
+
+            StrFormatByteSizeW(CommitChargeLimit * 1024,
+                               szChargeLimitFormat,
+                               sizeof(szChargeLimitFormat));
+
+            wsprintfW(Text, szMemUsage, szChargeTotalFormat, szChargeLimitFormat,
+                      (UINT)((CommitChargeTotal * 100) / CommitChargeLimit));
+
             SendMessageW(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
 
             /*

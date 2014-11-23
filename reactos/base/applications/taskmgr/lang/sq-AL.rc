@@ -435,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "E pamundur ndryshimi i prioritetit"
     IDS_MSG_WARNINGCHANGEPRIORITY "KUJDES: Ndryshimi i klases se prioritetit te ketij procesi mund te \nsjell rrezultate te padeshirushme ne stabilitetin e sistemit. Jeni i sigurt\nper ndryshimin e klases se prioriteteve?"
     IDS_MSG_TRAYICONCPUUSAGE "Perdorimi i CPU: %d%%"
-    IDS_STATUS_MEMUSAGE "Perdorimi i  Mem: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Perdorimi i  Mem: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Perdorimi i CPU: %3d%%"
     IDS_STATUS_PROCESSES "Proceset: %d"
     IDS_NOT_RESPONDING "Nuk pergjigjet"

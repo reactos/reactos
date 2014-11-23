@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Неможливо змінити пріоритет"
     IDS_MSG_WARNINGCHANGEPRIORITY "УВАГА! Зміна класу пріоритету цього процесу може призвести до \nнебажаних наслідків, включаючи нестабільну роботу \nсистеми.  Ви дійсно бажаєте змінити пріоритет класу?"
     IDS_MSG_TRAYICONCPUUSAGE "Використання ЦП: %d%%"
-    IDS_STATUS_MEMUSAGE "Пам'ять: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Пам'ять: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Використання ЦП: %3d%%"
     IDS_STATUS_PROCESSES "Процесів: %d"
     IDS_NOT_RESPONDING "Не відповідає"

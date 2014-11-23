@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Ikke i stand til endre prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "ADVARSEL: Endring av prioritet klasse av denne prosess kan\nforutsake uønsket resultat inkluderer systemet kan bli ustabilt. Er du\nsikker på at du vil endre prioritet klassen?"
     IDS_MSG_TRAYICONCPUUSAGE "Prosessorbruk: %d%%"
-    IDS_STATUS_MEMUSAGE "Tildelt minne: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Tildelt minne: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Prosessorbruk: %3d%%"
     IDS_STATUS_PROCESSES "Prosesser: %d"
     IDS_NOT_RESPONDING "Ingen reaksjon"

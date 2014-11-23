@@ -23,6 +23,6 @@ list(APPEND SOURCE
 
 add_executable(taskmgr ${SOURCE} taskmgr.rc)
 set_module_type(taskmgr win32gui UNICODE)
-add_importlibs(taskmgr advapi32 user32 gdi32 shell32 comctl32 msvcrt kernel32 ntdll)
+add_importlibs(taskmgr advapi32 user32 gdi32 shell32 shlwapi comctl32 msvcrt kernel32 ntdll)
 add_pch(taskmgr precomp.h SOURCE)
 add_cd_file(TARGET taskmgr DESTINATION reactos/system32 FOR all)

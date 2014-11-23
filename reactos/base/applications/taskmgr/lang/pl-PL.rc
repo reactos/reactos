@@ -441,7 +441,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Nie można zmienić priorytetu"
     IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu może przynieść\nniepożądane skutki, w tym również niestabilność systemu.\nCzy na pewno chcesz zmieni priorytet?"
     IDS_MSG_TRAYICONCPUUSAGE "Użycie procesora: %d%%"
-    IDS_STATUS_MEMUSAGE "Pam. zadeklar.: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Pam. zadeklar.: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Użycie procesora: %3d%%"
     IDS_STATUS_PROCESSES "Procesy: %d"
     IDS_NOT_RESPONDING "Nie odpowiada"

@@ -435,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Nem lehetséges a prioritás megváltoztatása"
     IDS_MSG_WARNINGCHANGEPRIORITY "FIGYELEM: A prioritás megváltoztatása\nkellemetlenségeket, akár rendszer instabilitást is okozhat.\nBiztosan megakarod változtatni a prioritást?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU használat: %d%%"
-    IDS_STATUS_MEMUSAGE "Mem használat: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Mem használat: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "CPU használat: %3d%%"
     IDS_STATUS_PROCESSES "Folyamatok: %d"
     IDS_NOT_RESPONDING "Nem válaszol"

@@ -439,7 +439,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Nu se poate schimba prioritatea"
     IDS_MSG_WARNINGCHANGEPRIORITY "Schimbarea priorității poate duce la efecte colaterale\nprecum instabilitatea sistemului.\nSigur doriți schimbarea priorității procesului?"
     IDS_MSG_TRAYICONCPUUSAGE "Utilizare procesor: %d%%"
-    IDS_STATUS_MEMUSAGE "Utilizare memorie: %dko/%dko"
+    IDS_STATUS_MEMUSAGE "Utilizare memorie: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Utilizare procesor: %3d%%"
     IDS_STATUS_PROCESSES "Procese: %d"
     IDS_NOT_RESPONDING "EXECUȚIE ANORMALĂ"

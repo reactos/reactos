@@ -435,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Не удалось изменить приоритет"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Изменение приоритета этого процесса может привести к нежелательным результатам, в том числе к нестабильной работе системы.\nВы действительно хотите изменить класс приоритета?"
     IDS_MSG_TRAYICONCPUUSAGE "Загрузка ЦП: %d%%"
-    IDS_STATUS_MEMUSAGE "Выделение памяти: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Выделение памяти: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Загрузка ЦП: %3d%%"
     IDS_STATUS_PROCESSES "Процессов: %d"
     IDS_NOT_RESPONDING "Не отвечает"

@@ -435,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "No se pudo cambiar la prioridad"
     IDS_MSG_WARNINGCHANGEPRIORITY "Advertencia: El cambio de prioridad en ciertos procesos podría provocar la inestabilidad del sistema.\n¿Seguro que desea cambiar la prioridad?"
     IDS_MSG_TRAYICONCPUUSAGE "Promedio CPU: %d%%"
-    IDS_STATUS_MEMUSAGE "Uso de memoria: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Uso de memoria: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Uso de CPU: %3d%%"
     IDS_STATUS_PROCESSES "Procesos: %d"
     IDS_NOT_RESPONDING "No responde"

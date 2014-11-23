@@ -435,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Unable to Change Priority"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
     IDS_MSG_TRAYICONCPUUSAGE "Pemakaian CPU: %d%%"
-    IDS_STATUS_MEMUSAGE "Pemakaian Mem: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Pemakaian Mem: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Pemakaian CPU: %3d%%"
     IDS_STATUS_PROCESSES "Proses: %d"
     IDS_NOT_RESPONDING "Tidak Merespon"

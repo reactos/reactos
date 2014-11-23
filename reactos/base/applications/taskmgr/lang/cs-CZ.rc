@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Není možné změnit prioritu"
     IDS_MSG_WARNINGCHANGEPRIORITY "Upozornění: Změna priority procesu může\nzpůsobit nestabilitu systému a jiné nepředvídatelné problémy. Jste si jisti\nse změnou priority procesu?"
     IDS_MSG_TRAYICONCPUUSAGE "Využití CPU: %d%%"
-    IDS_STATUS_MEMUSAGE "Využití paměti: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Využití paměti: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Využití CPU: %3d%%"
     IDS_STATUS_PROCESSES "Procesy: %d"
     IDS_NOT_RESPONDING "Neodpovídá"

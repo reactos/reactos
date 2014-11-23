@@ -439,7 +439,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Unable to Change Priority"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情况: %d%%"
-    IDS_STATUS_MEMUSAGE "内存使用情况: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "内存使用情况: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "CPU 使用情况: %3d%%"
     IDS_STATUS_PROCESSES "處理程序: %d"
     IDS_NOT_RESPONDING "没有回应"

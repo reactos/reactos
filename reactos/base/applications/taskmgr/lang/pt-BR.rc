@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Não é possível alterar a prioridade"
     IDS_MSG_WARNINGCHANGEPRIORITY "AVISO: a alteração da classe de prioridade do processo\npode causar efeitos indesejáveis, inclusive a instabilidade do sistema. Tem\ncerteza de que deseja alterar a classe de prioridade?"
     IDS_MSG_TRAYICONCPUUSAGE "Uso de CPU: %d%%"
-    IDS_STATUS_MEMUSAGE "Uso de Memória: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Uso de Memória: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Uso de CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processo: %d"
     IDS_NOT_RESPONDING "Não respondendo"

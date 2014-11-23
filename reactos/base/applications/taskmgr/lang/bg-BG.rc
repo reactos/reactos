@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Невъзможно намаляване на първенство"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Промяната на първенството на това действие може да\nпричини нежелани последствия, включително неустойчивост на системата. Сигурен ли сте, \nче искате да смените старшинството?"
     IDS_MSG_TRAYICONCPUUSAGE "Заетост на ЦПУ: %d%%"
-    IDS_STATUS_MEMUSAGE "Заета памет: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Заета памет: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Заетост на ЦПУ: %3d%%"
     IDS_STATUS_PROCESSES "Действия: %d"
     IDS_NOT_RESPONDING "Не отговаря"

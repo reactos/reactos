@@ -435,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Impossible de changer la priorité"
     IDS_MSG_WARNINGCHANGEPRIORITY "ATTENTION : Changer la priorité du processus peut causer des\neffets indésirables comme l'instabilité du système.\nÊtes-vous sûr de vouloir changer la priorité ?"
     IDS_MSG_TRAYICONCPUUSAGE "UC utilisée : %d%%"
-    IDS_STATUS_MEMUSAGE "Fichier d'échange utilisé : %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Fichier d'échange utilisé : %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "UC utilisée : %3d%%"
     IDS_STATUS_PROCESSES "Processus : %d"
     IDS_NOT_RESPONDING "Ne répond pas"

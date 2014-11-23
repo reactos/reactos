@@ -435,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Kunde inte ändra prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "VARNING: Ändring av prioritetsklassen hos den här processen kan\norsaka oönskade effekter och påverka systemets stabilitet. Är du\nsäker på att du vill ändra prioritetsklassen?"
     IDS_MSG_TRAYICONCPUUSAGE "Processoranvändning: %d%%"
-    IDS_STATUS_MEMUSAGE "Minnesanv: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Minnesanv: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Processoranv: %3d%%"
     IDS_STATUS_PROCESSES "Processer: %d"
     IDS_NOT_RESPONDING "Svarar inte"

@@ -433,7 +433,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Önceliğin Değiştirilememesi"
     IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: Bu işlemin öncelik sınıfının değiştirilmesi, dizge\nkararsızlığını içeren istenmeyen sonuçlara neden olabilir. Öncelik \nsınıfını değiştirmek istediğinizden emin misiniz?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Kullanımı: %%%d"
-    IDS_STATUS_MEMUSAGE "Bellek Kullanımı: %d KB / %d KB"
+    IDS_STATUS_MEMUSAGE "Bellek Kullanımı: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "CPU Kullanımı: %%%3d"
     IDS_STATUS_PROCESSES "İşlem: %d"
     IDS_NOT_RESPONDING "Yanıt Vermiyor"
