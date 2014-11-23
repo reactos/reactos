@@ -59,7 +59,7 @@ NtfsGetStandardInformation(PNTFS_FCB Fcb,
 
     StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
     StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
-    StandardInfo->NumberOfLinks = 0;
+    StandardInfo->NumberOfLinks = 0; /* FIXME */
     StandardInfo->DeletePending = FALSE;
     StandardInfo->Directory = NtfsFCBIsDirectory(Fcb);
 
@@ -75,15 +75,12 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
                            PFILE_POSITION_INFORMATION PositionInfo,
                            PULONG BufferLength)
 {
-    UNREFERENCED_PARAMETER(FileObject);
-
     DPRINT("NtfsGetPositionInformation() called\n");
 
     if (*BufferLength < sizeof(FILE_POSITION_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-    PositionInfo->CurrentByteOffset.QuadPart = 0;
-//    FileObject->CurrentByteOffset.QuadPart;
+    PositionInfo->CurrentByteOffset.QuadPart = FileObject->CurrentByteOffset.QuadPart;
 
     DPRINT("Getting position %I64x\n",
            PositionInfo->CurrentByteOffset.QuadPart);
@@ -102,29 +99,19 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
                         PFILE_BASIC_INFORMATION BasicInfo,
                         PULONG BufferLength)
 {
+    PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
+
     DPRINT("NtfsGetBasicInformation() called\n");
 
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-#if 0
-    CdfsDateTimeToFileTime(Fcb,
-                           &BasicInfo->CreationTime);
-    CdfsDateTimeToFileTime(Fcb,
-                           &BasicInfo->LastAccessTime);
-    CdfsDateTimeToFileTime(Fcb,
-                           &BasicInfo->LastWriteTime);
-    CdfsDateTimeToFileTime(Fcb,
-                           &BasicInfo->ChangeTime);
+    BasicInfo->CreationTime.QuadPart = FileName->CreationTime;
+    BasicInfo->LastAccessTime.QuadPart = FileName->LastAccessTime;
+    BasicInfo->LastWriteTime.QuadPart = FileName->LastWriteTime;
+    BasicInfo->ChangeTime.QuadPart = FileName->ChangeTime;
 
-    CdfsFileFlagsToAttributes(Fcb,
-                              &BasicInfo->FileAttributes);
-#else
-    UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(Fcb);
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(BasicInfo);
-#endif
+    NtfsFileFlagsToAttributes(FileName->FileAttributes, &BasicInfo->FileAttributes);
 
     *BufferLength -= sizeof(FILE_BASIC_INFORMATION);
 
