@@ -143,7 +143,7 @@ CcPinRead (
         if (CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
             return TRUE;
         else
-            CcUnpinData(Bcb);
+            CcUnpinData(*Bcb);
     }
     return FALSE;
 }
