@@ -480,6 +480,8 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             TaskManagerSettings.Maximized = TRUE;
         else
             TaskManagerSettings.Maximized = FALSE;
+        /* Get rid of the allocated command line cache, if any */
+        PerfDataDeallocCommandLineCache();
         return DefWindowProcW(hDlg, message, wParam, lParam);
 
     case WM_TIMER:
@@ -1140,7 +1142,7 @@ LPWSTR GetLastErrorText(LPWSTR lpszBuf, DWORD dwSize)
     DWORD  dwRet;
     LPWSTR lpszTemp = NULL;
 
-    dwRet = FormatMessageW( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |FORMAT_MESSAGE_ARGUMENT_ARRAY,
+    dwRet = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY,
                            NULL,
                            GetLastError(),
                            LANG_NEUTRAL,

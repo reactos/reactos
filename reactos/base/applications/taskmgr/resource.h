@@ -113,6 +113,7 @@
 #define IDC_IOOTHERBYTES                 1047
 #define IDC_CPU_USAGE_GRAPH              1047
 #define IDC_CPU29                        1048
+#define IDC_COMMANDLINE                  1048
 #define IDC_MEM_USAGE_GRAPH2             1048
 #define IDC_MEM_USAGE_GRAPH              1048
 #define IDC_CPU30                        1049
@@ -222,6 +223,7 @@
 #define IDS_TAB_IOREADBYTES   337
 #define IDS_TAB_IOWRITESBYTES 338
 #define IDS_TAB_IOOTHERBYTES  339
+#define IDS_TAB_COMMANDLINE   368
 
 #define IDS_MENU_SELECTCOLUMNS   340
 #define IDS_MENU_16BITTASK       341

@@ -315,6 +315,7 @@ BEGIN
     CONTROL "Bytes de gravação de E/S", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 127, 97, 10
     CONTROL "Outras E/S", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 138, 47, 10
     CONTROL "Outros bytes de E/S", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 149, 77, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 160, 95, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Bytes de leitura de E/S"
     IDS_TAB_IOWRITESBYTES "Bytes de gravação de E/S"
     IDS_TAB_IOOTHERBYTES "Outros Bytes de E/S"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Selecionar colunas..."
     IDS_MENU_16BITTASK "&Exibir tarefas de 16 bits"
     IDS_MENU_WINDOWS "&Janelas"

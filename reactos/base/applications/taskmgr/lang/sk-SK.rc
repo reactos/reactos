@@ -317,6 +317,7 @@ BEGIN
     CONTROL "Vstup a výstup - zapísané bajty", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 127, 112, 10
     CONTROL "Vstup a výstup - iné", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 138, 77, 10
     CONTROL "Vstup a výstup - iné bajty", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 149, 97, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 160, 95, 10
 END
 
 /* String Tables */
@@ -412,6 +413,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Vstup a výstup - prečítané bajty"
     IDS_TAB_IOWRITESBYTES "Vstup a výstup - zapísané bajty"
     IDS_TAB_IOOTHERBYTES "Vstup a výstup - iné bajty"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Vybrať stĺpce..."
     IDS_MENU_16BITTASK "&Zobraziť 16-bitové úlohy"
     IDS_MENU_WINDOWS "&Okna"

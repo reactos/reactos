@@ -317,6 +317,7 @@ BEGIN
     CONTROL "Shkruan I/O Bytes", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "I/O te tjere", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "I/O Byte te tjere", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -412,6 +413,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O Lexo Bytes"
     IDS_TAB_IOWRITESBYTES "I/O Shkruaj Bytes"
     IDS_TAB_IOOTHERBYTES "I/O te tjere Bytes"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "Zgjidh kolonat..."
     IDS_MENU_16BITTASK "&Shfaq 16-bit tasks"
     IDS_MENU_WINDOWS "Dritare"

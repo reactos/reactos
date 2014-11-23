@@ -315,6 +315,7 @@ BEGIN
     CONTROL "Scritture I/O Byte", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 69, 10
     CONTROL "Altro I/O", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "Altro I/O  Bytes", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "&Linea di comando", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O Letture Bytes"
     IDS_TAB_IOWRITESBYTES "I/O Scritture Bytes"
     IDS_TAB_IOOTHERBYTES "I/O Altro Bytes"
+    IDS_TAB_COMMANDLINE "Linea di comando"
     IDS_MENU_SELECTCOLUMNS "&Selezione Colonne..."
     IDS_MENU_16BITTASK "&Mostra task 16-bit"
     IDS_MENU_WINDOWS "&Finestre"

@@ -315,6 +315,7 @@ BEGIN
     CONTROL "I/O zapsané bajty", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 72, 10
     CONTROL "I/O ostatní", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 48, 10
     CONTROL "I/O ostatní bajty", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O přečtené bajty"
     IDS_TAB_IOWRITESBYTES "I/O zapsané bajty"
     IDS_TAB_IOOTHERBYTES "I/O ostatní bajty"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Vybrat sloupce..."
     IDS_MENU_16BITTASK "&Zobrazit 16-bitové úlohy"
     IDS_MENU_WINDOWS "&Okna"

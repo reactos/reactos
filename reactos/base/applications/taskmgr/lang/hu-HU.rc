@@ -317,6 +317,7 @@ BEGIN
     CONTROL "I/O Írott bájtok", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "Egyéb I/O    mûveletek", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "Egyéb I/O mûveletek bájtjai", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -412,6 +413,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O Olvasott bájtok"
     IDS_TAB_IOWRITESBYTES "I/O Írott bájtok"
     IDS_TAB_IOOTHERBYTES "Egyéb I/O bájtok"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Oszlopok kiválasztása..."
     IDS_MENU_16BITTASK "&16bites feladatok megjelenítése"
     IDS_MENU_WINDOWS "&Ablak"

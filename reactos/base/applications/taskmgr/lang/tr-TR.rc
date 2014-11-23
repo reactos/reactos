@@ -315,6 +315,7 @@ BEGIN
     CONTROL "G/Ç Yazma Çokluları", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "G/Ç Başka", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "G/Ç Başka Çoklular", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "G/Ç Okuma Çokluları"
     IDS_TAB_IOWRITESBYTES "G/Ç Yazma Çokluları"
     IDS_TAB_IOOTHERBYTES "G/Ç Başka Çoklular"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Dikeçleri Seç..."
     IDS_MENU_16BITTASK "&16 Bitlik Görevleri Göster"
     IDS_MENU_WINDOWS "&Pencereler"

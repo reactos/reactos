@@ -292,7 +292,7 @@ BEGIN
     DEFPUSHBUTTON "Aceptar", IDOK, 126, 178, 50, 14 // 84
     PUSHBUTTON "Cancelar", IDCANCEL, 180, 178, 50, 14 // 138
     LTEXT "Seleccione las columnas que aparecerán en la página de Procesos del Administrador de tareas.", IDC_STATIC, 7, 7, 221, 17 // 181
-    CONTROL "Nombre de ruta de la &imagen", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 88, 10 // 56
+    CONTROL "Nombre de ruta de la &imagen", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 105, 10 // 56
     CONTROL "Identificador de proceso (&PID)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 120, 10 // 88
     CONTROL "Uso de &CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
     CONTROL "Ti&empo de CPU", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 65, 10 // 48
@@ -301,8 +301,8 @@ BEGIN
     CONTROL "Uso má&ximo de la memoria", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 120, 10 // 82
     CONTROL "Err&ores de página", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 80, 10 // 53
     CONTROL "O&bjetos de USUARIO", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 80, 10 // 62
-    CONTROL "Lecturas de E/S", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 60, 10 // 49
-    CONTROL "Bytes de lectura de E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 65, 10
+    CONTROL "Lecturas de E/S", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 70, 10 // 49
+    CONTROL "Bytes de lectura de E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 85, 10
     CONTROL "I&d. de sesión", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 65, 10 // 50
     CONTROL "&Nombre de usuario", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 75, 10 // 51
     CONTROL "Diferencia de erro&res de página", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 28, 120, 10 // 107, 60
@@ -310,13 +310,14 @@ BEGIN
     CONTROL "B&loque paginado", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 50, 67, 10 // 107, 53
     CONTROL "Blo&que no paginado", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 61, 115, 10 // 107
     CONTROL "P&rioridad base", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 72, 80, 10 // 107
-    CONTROL "&Recuento de identificadores", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 83, 59, 10 // 107
-    CONTROL "Nú&mero de subprocesos", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 94, 59, 10 // 107
+    CONTROL "&Recuento de identificadores", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 83, 105, 10 // 107
+    CONTROL "Nú&mero de subprocesos", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 94, 85, 10 // 107
     CONTROL "Objetos &GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 105, 55, 10 // 107
     CONTROL "Escrituras de E/S", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 116, 90, 10 // 107
     CONTROL "Bytes de escritura de E/S", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 127, 105, 10 // 107
     CONTROL "Otros de E/S", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 138, 60, 10
     CONTROL "Otros bytes de E/S", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 149, 75, 10
+    CONTROL "&Línea de comandos", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 160, 75, 10
 END
 
 /* String Tables */
@@ -412,6 +413,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Bytes de lectura de E/S"
     IDS_TAB_IOWRITESBYTES "Bytes de escritura de E/S"
     IDS_TAB_IOOTHERBYTES "Otros bytes de E/S"
+    IDS_TAB_COMMANDLINE "Línea de comandos"
     IDS_MENU_SELECTCOLUMNS "&Seleccionar columnas..."
     IDS_MENU_16BITTASK "Mos&trar tareas de 16-bit"
     IDS_MENU_WINDOWS "&Ventanas"

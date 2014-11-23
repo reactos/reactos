@@ -317,6 +317,7 @@ BEGIN
     CONTROL "Записано байт", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "Прочий ввод-вывод", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 90, 10
     CONTROL "Прочих байт при вводе-выводе", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 122, 10
+    CONTROL "Коммандная строка", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 90, 10
 END
 
 /* String Tables */
@@ -412,6 +413,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Прочитано байт"
     IDS_TAB_IOWRITESBYTES "Записано байт"
     IDS_TAB_IOOTHERBYTES "Прочих байт при вводе-выводе"
+    IDS_TAB_COMMANDLINE "Коммандная строка"
     IDS_MENU_SELECTCOLUMNS "В&ыбрать столбцы..."
     IDS_MENU_16BITTASK "&Отображать 16-разрядные задачи"
     IDS_MENU_WINDOWS "&Окна"

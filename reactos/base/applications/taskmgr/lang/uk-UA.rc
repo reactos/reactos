@@ -315,6 +315,7 @@ BEGIN
     CONTROL "Записано байтів", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 67, 10
     CONTROL "Інший ввід-вивід", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 71, 10
     CONTROL "Інших байтів при вводі-виводі", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 114, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Прочитано байтів"
     IDS_TAB_IOWRITESBYTES "Записано байтів"
     IDS_TAB_IOOTHERBYTES "Інших байтів під час вводу-виводу"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "В&ибрати стовпці..."
     IDS_MENU_16BITTASK "&Відображати 16-розрядні завдання"
     IDS_MENU_WINDOWS "В&ікна"
