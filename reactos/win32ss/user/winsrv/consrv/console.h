@@ -11,6 +11,7 @@
 typedef struct _CONSOLE_INIT_INFO
 {
     PCONSOLE_START_INFO ConsoleStartInfo;
+    BOOLEAN IsWindowVisible;
 
     ULONG  TitleLength;
     PWCHAR ConsoleTitle;

@@ -39,6 +39,7 @@ typedef struct _GUI_INIT_INFO
     PCONSOLE_INFO ConsoleInfo;
     PCONSOLE_START_INFO ConsoleStartInfo;
     ULONG ProcessId;
+    BOOLEAN IsWindowVisible;
 } GUI_INIT_INFO, *PGUI_INIT_INFO;
 
 static BOOL    ConsInitialized = FALSE;
@@ -179,7 +180,7 @@ GuiConsoleInputThread(PVOID Data)
                                             CW_USEDEFAULT,
                                             CW_USEDEFAULT,
                                             CW_USEDEFAULT,
-                                            NULL,
+                                            GuiData->IsWindowVisible ? HWND_DESKTOP : HWND_MESSAGE,
                                             NULL,
                                             ConSrvDllInstance,
                                             (PVOID)GuiData);
@@ -204,22 +205,33 @@ GuiConsoleInputThread(PVOID Data)
                 GuiData->GuiInfo.WindowOrigin.x = rcWnd.left;
                 GuiData->GuiInfo.WindowOrigin.y = rcWnd.top;
 
-                /* Move and resize the window to the user's values */
-                /* CAN WE DEADLOCK ?? */
-                GuiConsoleMoveWindow(GuiData); // FIXME: This MUST be done via the CreateWindowExW call.
-                SendMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
+                if (GuiData->IsWindowVisible)
+                {
+                    /* Move and resize the window to the user's values */
+                    /* CAN WE DEADLOCK ?? */
+                    GuiConsoleMoveWindow(GuiData); // FIXME: This MUST be done via the CreateWindowExW call.
+                    SendMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
+                }
 
                 // FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
                 CreateSysMenu(GuiData->hWindow);
 
-                /* Switch to full-screen mode if necessary */
-                // FIXME: Move elsewhere, it cause misdrawings of the window.
-                if (GuiData->GuiInfo.FullScreen) SwitchFullScreen(GuiData, TRUE);
+                if (GuiData->IsWindowVisible)
+                {
+                    /* Switch to full-screen mode if necessary */
+                    // FIXME: Move elsewhere, it cause misdrawings of the window.
+                    if (GuiData->GuiInfo.FullScreen) SwitchFullScreen(GuiData, TRUE);
 
-                DPRINT("PM_CREATE_CONSOLE -- showing window\n");
-                // ShowWindow(NewWindow, (int)GuiData->GuiInfo.ShowWindow);
-                ShowWindowAsync(NewWindow, (int)GuiData->GuiInfo.ShowWindow);
-                DPRINT("Window showed\n");
+                    DPRINT("PM_CREATE_CONSOLE -- showing window\n");
+                    // ShowWindow(NewWindow, (int)GuiData->GuiInfo.ShowWindow);
+                    ShowWindowAsync(NewWindow, (int)GuiData->GuiInfo.ShowWindow);
+                    DPRINT("Window showed\n");
+                }
+                else
+                {
+                    DPRINT("PM_CREATE_CONSOLE -- hidden window\n");
+                    ShowWindowAsync(NewWindow, SW_HIDE);
+                }
 
                 continue;
             }
@@ -369,6 +381,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     GuiData->Console      = Console;
     GuiData->ActiveBuffer = Console->ActiveBuffer;
     GuiData->hWindow = NULL;
+    GuiData->IsWindowVisible = GuiInitInfo->IsWindowVisible;
 
     /* The console can be resized */
     Console->FixedSize = FALSE;
@@ -383,33 +396,36 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     /* 1. Load the default settings */
     GuiConsoleGetDefaultSettings(&TermInfo, GuiInitInfo->ProcessId);
 
-    /* 3. Load the remaining console settings via the registry */
-    if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
+    if (GuiData->IsWindowVisible)
     {
-        /* Load the terminal infos from the registry */
-        GuiConsoleReadUserSettings(&TermInfo,
-                                   ConsoleInfo->ConsoleTitle,
-                                   GuiInitInfo->ProcessId);
+        /* 2. Load the remaining console settings via the registry */
+        if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
+        {
+            /* Load the terminal infos from the registry */
+            GuiConsoleReadUserSettings(&TermInfo,
+                                       ConsoleInfo->ConsoleTitle,
+                                       GuiInitInfo->ProcessId);
 
-        /*
-         * Now, update them with the properties the user might gave to us
-         * via the STARTUPINFO structure before calling CreateProcess
-         * (and which was transmitted via the ConsoleStartInfo structure).
-         * We therefore overwrite the values read in the registry.
-         */
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USESHOWWINDOW)
-        {
-            TermInfo.ShowWindow = ConsoleStartInfo->wShowWindow;
-        }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USEPOSITION)
-        {
-            TermInfo.AutoPosition = FALSE;
-            TermInfo.WindowOrigin.x = ConsoleStartInfo->dwWindowOrigin.X;
-            TermInfo.WindowOrigin.y = ConsoleStartInfo->dwWindowOrigin.Y;
-        }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
-        {
-            TermInfo.FullScreen = TRUE;
+            /*
+             * Now, update them with the properties the user might gave to us
+             * via the STARTUPINFO structure before calling CreateProcess
+             * (and which was transmitted via the ConsoleStartInfo structure).
+             * We therefore overwrite the values read in the registry.
+             */
+            if (ConsoleStartInfo->dwStartupFlags & STARTF_USESHOWWINDOW)
+            {
+                TermInfo.ShowWindow = ConsoleStartInfo->wShowWindow;
+            }
+            if (ConsoleStartInfo->dwStartupFlags & STARTF_USEPOSITION)
+            {
+                TermInfo.AutoPosition = FALSE;
+                TermInfo.WindowOrigin.x = ConsoleStartInfo->dwWindowOrigin.X;
+                TermInfo.WindowOrigin.y = ConsoleStartInfo->dwWindowOrigin.Y;
+            }
+            if (ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
+            {
+                TermInfo.FullScreen = TRUE;
+            }
         }
     }
 
@@ -539,6 +555,10 @@ GuiDrawRegion(IN OUT PFRONTEND This,
               SMALL_RECT* Region)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     DrawRegion(GuiData, Region);
 }
 
@@ -557,6 +577,9 @@ GuiWriteStream(IN OUT PFRONTEND This,
     RECT ScrollRect;
 
     if (NULL == GuiData || NULL == GuiData->hWindow) return;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
 
     Buff = GuiData->ActiveBuffer;
     if (GetType(Buff) != TEXTMODE_BUFFER) return;
@@ -617,6 +640,9 @@ GuiSetCursorInfo(IN OUT PFRONTEND This,
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return TRUE;
+
     if (GuiData->ActiveBuffer == Buff)
     {
         InvalidateCell(GuiData, Buff->CursorPosition.X, Buff->CursorPosition.Y);
@@ -632,6 +658,9 @@ GuiSetScreenInfo(IN OUT PFRONTEND This,
                  SHORT OldCursorY)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return TRUE;
 
     if (GuiData->ActiveBuffer == Buff)
     {
@@ -935,6 +964,9 @@ GuiSetDisplayMode(IN OUT PFRONTEND This,
     if (NewMode & ~(CONSOLE_FULLSCREEN_MODE | CONSOLE_WINDOWED_MODE))
         return FALSE;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return TRUE;
+
     FullScreen = ((NewMode & CONSOLE_FULLSCREEN_MODE) != 0);
 
     if (FullScreen != GuiData->GuiInfo.FullScreen)
@@ -951,12 +983,15 @@ GuiShowMouseCursor(IN OUT PFRONTEND This,
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
 
-    /* Set the reference count */
-    if (Show) ++GuiData->MouseCursorRefCount;
-    else      --GuiData->MouseCursorRefCount;
+    if (GuiData->IsWindowVisible)
+    {
+        /* Set the reference count */
+        if (Show) ++GuiData->MouseCursorRefCount;
+        else      --GuiData->MouseCursorRefCount;
 
-    /* Effectively show (or hide) the cursor (use special values for (w|l)Param) */
-    PostMessageW(GuiData->hWindow, WM_SETCURSOR, -1, -1);
+        /* Effectively show (or hide) the cursor (use special values for (w|l)Param) */
+        PostMessageW(GuiData->hWindow, WM_SETCURSOR, -1, -1);
+    }
 
     return GuiData->MouseCursorRefCount;
 }
@@ -966,6 +1001,9 @@ GuiSetMouseCursor(IN OUT PFRONTEND This,
                   HCURSOR CursorHandle)
 {
     PGUI_CONSOLE_DATA GuiData = This->Data;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return TRUE;
 
     /*
      * Set the cursor's handle. If the given handle is NULL,
@@ -1068,6 +1106,7 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
     GuiInitInfo->ConsoleInfo      = ConsoleInfo;
     GuiInitInfo->ConsoleStartInfo = ConsoleInitInfo->ConsoleStartInfo;
     GuiInitInfo->ProcessId        = ProcessId;
+    GuiInitInfo->IsWindowVisible  = ConsoleInitInfo->IsWindowVisible;
 
     /* Finally, initialize the frontend structure */
     FrontEnd->Vtbl    = &GuiVtbl;

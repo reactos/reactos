@@ -686,7 +686,11 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     SetWindowLongPtrW(GuiData->hWindow, GWLP_USERDATA, (DWORD_PTR)GuiData);
 
-    SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
+    if (GuiData->IsWindowVisible)
+    {
+        SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
+    }
+
     // FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
     //CreateSysMenu(GuiData->hWindow);
 
@@ -1048,6 +1052,9 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
     PAINTSTRUCT ps;
     RECT rcPaint;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     BeginPaint(GuiData->hWindow, &ps);
     if (ps.hdc != NULL &&
         ps.rcPaint.left < ps.rcPaint.right &&
@@ -1095,6 +1102,9 @@ static VOID
 OnPaletteChanged(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
 
     // See WM_PALETTECHANGED message
     // if ((HWND)wParam == hWnd) break;
@@ -1306,6 +1316,9 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
     PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
@@ -1431,7 +1444,11 @@ OnNcDestroy(HWND hWnd)
 {
     PGUI_CONSOLE_DATA GuiData = GuiGetGuiData(hWnd);
 
-    KillTimer(hWnd, CONGUI_UPDATE_TIMER);
+    if (GuiData->IsWindowVisible)
+    {
+        KillTimer(hWnd, CONGUI_UPDATE_TIMER);
+    }
+
     GetSystemMenu(hWnd, TRUE);
 
     if (GuiData)
@@ -1868,6 +1885,9 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
     PCONSRV_CONSOLE Console = GuiData->Console;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
     if ((GuiData->WindowSizeLock == FALSE) &&
@@ -2191,6 +2211,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_SETCURSOR:
         {
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) goto Default;
+
             /*
              * The message was sent because we are manually triggering a change.
              * Check whether the mouse is indeed present on this console window
@@ -2263,6 +2286,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_CONTEXTMENU:
         {
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) break;
+
             if (DefWindowProcW(hWnd /*GuiData->hWindow*/, WM_NCHITTEST, 0, lParam) == HTCLIENT)
             {
                 HMENU hMenu = CreatePopupMenu();
@@ -2390,6 +2416,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             DWORD Width, Height;
             UINT  WidthUnit, HeightUnit;
+
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) break;
 
             GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
 

@@ -434,6 +434,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
     /* Initialize the console initialization info structure */
     ConsoleInitInfo.ConsoleStartInfo = &ConnectInfo->ConsoleStartInfo;
+    ConsoleInitInfo.IsWindowVisible  = ConnectInfo->IsWindowVisible;
     ConsoleInitInfo.TitleLength      = ConnectInfo->TitleLength;
     ConsoleInitInfo.ConsoleTitle     = ConnectInfo->ConsoleTitle;
     ConsoleInitInfo.DesktopLength    = ConnectInfo->DesktopLength;

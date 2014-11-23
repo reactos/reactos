@@ -40,6 +40,8 @@ typedef struct _GUI_CONSOLE_DATA
     HANDLE hGuiInitEvent;
     HANDLE hGuiTermEvent;
 
+    BOOLEAN IsWindowVisible;
+
     POINT OldCursor;
 
     LONG_PTR WndStyle;

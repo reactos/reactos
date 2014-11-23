@@ -922,6 +922,7 @@ CSR_API(SrvAllocConsole)
 
     /* Initialize the console initialization info structure */
     ConsoleInitInfo.ConsoleStartInfo = AllocConsoleRequest->ConsoleStartInfo;
+    ConsoleInitInfo.IsWindowVisible  = TRUE; // The console window is always visible.
     ConsoleInitInfo.TitleLength      = AllocConsoleRequest->TitleLength;
     ConsoleInitInfo.ConsoleTitle     = AllocConsoleRequest->ConsoleTitle;
     ConsoleInitInfo.DesktopLength    = AllocConsoleRequest->DesktopLength;
