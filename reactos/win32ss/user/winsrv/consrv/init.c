@@ -548,7 +548,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     LoadedServerDll->DisconnectCallback = ConSrvDisconnect;
     LoadedServerDll->NewProcessCallback = ConSrvNewProcess;
     // LoadedServerDll->HardErrorCallback = ConSrvHardError;
-    LoadedServerDll->ShutdownProcessCallback = NULL;
+    LoadedServerDll->ShutdownProcessCallback = ConsoleClientShutdown;
 
     ConSrvDllInstance = LoadedServerDll->ServerHandle;
 

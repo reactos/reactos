@@ -12,8 +12,6 @@
 
 #include "consrv.h"
 
-#include <ndk/psfuncs.h>
-
 /* This is for COM usage */
 #define COBJMACROS
 #include <shlobj.h>
