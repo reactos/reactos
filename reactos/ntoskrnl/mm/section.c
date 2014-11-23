@@ -904,17 +904,16 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
     if (SHARE_COUNT_FROM_SSE(Entry) == 0)
     {
         PFILE_OBJECT FileObject;
-#ifndef NEWCC
-        PROS_SHARED_CACHE_MAP SharedCacheMap;
-#endif
         SWAPENTRY SavedSwapEntry;
         PFN_NUMBER Page;
+#ifndef NEWCC
+        PROS_SHARED_CACHE_MAP SharedCacheMap;
         BOOLEAN IsImageSection;
         LARGE_INTEGER FileOffset;
 
         FileOffset.QuadPart = Offset->QuadPart + Segment->Image.FileOffset;
-
         IsImageSection = Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+#endif
 
         Page = PFN_FROM_SSE(Entry);
         FileObject = Section->FileObject;
@@ -1873,14 +1872,14 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     PFN_NUMBER Page;
     MM_SECTION_PAGEOUT_CONTEXT Context;
     SWAPENTRY SwapEntry;
-    ULONGLONG FileOffset;
     NTSTATUS Status;
-    PFILE_OBJECT FileObject;
 #ifndef NEWCC
+    ULONGLONG FileOffset;
+    PFILE_OBJECT FileObject;
     PROS_SHARED_CACHE_MAP SharedCacheMap = NULL;
+    BOOLEAN IsImageSection;
 #endif
     BOOLEAN DirectMapped;
-    BOOLEAN IsImageSection;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
     KIRQL OldIrql;
 
@@ -1896,16 +1895,16 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 
     Context.Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                               + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-    FileOffset = Context.Offset.QuadPart + Context.Segment->Image.FileOffset;
 
-    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
-
-    FileObject = Context.Section->FileObject;
     DirectMapped = FALSE;
 
     MmLockSectionSegment(Context.Segment);
 
 #ifndef NEWCC
+    FileOffset = Context.Offset.QuadPart + Context.Segment->Image.FileOffset;
+    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+    FileObject = Context.Section->FileObject;
+
     if (FileObject != NULL &&
             !(Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
     {
@@ -2284,7 +2283,9 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     BOOLEAN Private;
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
+#ifndef NEWCC
     PROS_SHARED_CACHE_MAP SharedCacheMap = NULL;
+#endif
     BOOLEAN DirectMapped;
     BOOLEAN IsImageSection;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -2306,7 +2307,9 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     if (FileObject != NULL &&
             !(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
     {
+#ifndef NEWCC
         SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+#endif
 
         /*
          * If the file system is letting us go directly to the cache and the
@@ -3987,8 +3990,10 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                   PFN_NUMBER Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
     ULONG_PTR Entry;
+#ifndef NEWCC
     PFILE_OBJECT FileObject;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
+#endif
     LARGE_INTEGER Offset;
     SWAPENTRY SavedSwapEntry;
     PROS_SECTION_OBJECT Section;
@@ -4028,9 +4033,9 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     {
         if (Page == PFN_FROM_SSE(Entry) && Dirty)
         {
+#ifndef NEWCC
             FileObject = MemoryArea->Data.SectionData.Section->FileObject;
             SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-#ifndef NEWCC
             CcRosMarkDirtyVacb(SharedCacheMap, Offset.QuadPart + Segment->Image.FileOffset);
 #endif
             ASSERT(SwapEntry == 0);

@@ -300,7 +300,9 @@ NTAPI
 MmMpwThreadMain(PVOID Parameter)
 {
     NTSTATUS Status;
+#ifndef NEWCC
     ULONG PagesWritten;
+#endif
     LARGE_INTEGER Timeout;
 
     UNREFERENCED_PARAMETER(Parameter);
@@ -321,9 +323,9 @@ MmMpwThreadMain(PVOID Parameter)
             return;
         }
 
+#ifndef NEWCC
         PagesWritten = 0;
 
-#ifndef NEWCC
         // XXX arty -- we flush when evicting pages or destorying cache
         // sections.
         CcRosFlushDirtyPages(128, &PagesWritten, FALSE);
