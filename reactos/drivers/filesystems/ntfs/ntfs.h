@@ -195,6 +195,7 @@ typedef enum
 #define NTFS_FILE_TYPE_HIDDEN     0x2
 #define NTFS_FILE_TYPE_SYSTEM     0x4
 #define NTFS_FILE_TYPE_ARCHIVE    0x20
+#define NTFS_FILE_TYPE_REPARSE    0x400
 #define NTFS_FILE_TYPE_COMPRESSED 0x800
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
 
@@ -308,7 +309,15 @@ typedef struct
     ULONGLONG AllocatedSize;
     ULONGLONG DataSize;
     ULONG FileAttributes;
-    ULONG AlignmentOrReserved;
+    union
+    {
+        struct
+        {
+            USHORT PackedEaSize;
+            USHORT AlignmentOrReserved;
+        } EaInfo;
+        ULONG ReparseTag;
+    } Extended;
     UCHAR NameLength;
     UCHAR NameType;
     WCHAR Name[1];
