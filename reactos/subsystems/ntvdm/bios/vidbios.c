@@ -1943,132 +1943,153 @@ static CONST UCHAR Font8x16[VGA_FONT_CHARACTERS * 16] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID VidBiosReadWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
-{
-    INT i, j;
-    INT Counter = 0;
-    WORD Character;
-    DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
-
-    for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
-    {
-        for (j = Rectangle.Left; j <= Rectangle.Right; j++)
-        {
-            /* Read from video memory */
-            EmulatorReadMemory(&EmulatorContext,
-                               VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
-                               (LPVOID)&Character,
-                               sizeof(WORD));
-
-            /* Write the data to the buffer in row order */
-            Buffer[Counter++] = Character;
-        }
-    }
-}
-
-static VOID VidBiosWriteWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
-{
-    INT i, j;
-    INT Counter = 0;
-    WORD Character;
-    DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
-
-    for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
-    {
-        for (j = Rectangle.Left; j <= Rectangle.Right; j++)
-        {
-            Character = Buffer[Counter++];
-
-            /* Write to video memory */
-            EmulatorWriteMemory(&EmulatorContext,
-                                VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
-                                (LPVOID)&Character,
-                                sizeof(WORD));
-        }
-    }
-}
-
-static BOOLEAN VidBiosScrollWindow(INT Direction,
+static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
                                    DWORD Amount,
                                    SMALL_RECT Rectangle,
                                    BYTE Page,
                                    BYTE FillAttribute)
 {
-    DWORD i;
-    LPWORD WindowData;
-    WORD WindowWidth = Rectangle.Right - Rectangle.Left + 1;
-    WORD WindowHeight = Rectangle.Bottom - Rectangle.Top + 1;
-    DWORD WindowSize = WindowWidth * WindowHeight;
+    INT i, j;
+    DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
+    WORD FillCharacter = MAKEWORD(' ', FillAttribute);
 
-    /* Allocate a buffer for the window */
-    WindowData = (LPWORD)HeapAlloc(GetProcessHeap(),
-                                   HEAP_ZERO_MEMORY,
-                                   WindowSize * sizeof(WORD));
-    if (WindowData == NULL) return FALSE;
+    WORD WindowWidth, WindowHeight;
 
-    /* Read the window data */
-    VidBiosReadWindow(WindowData, Rectangle, Page);
+    /* Fixup the rectangle if needed */
+    Rectangle.Left   = min(max(Rectangle.Left  , 0), Bda->ScreenColumns - 1);
+    Rectangle.Right  = min(max(Rectangle.Right , 0), Bda->ScreenColumns - 1);
+    Rectangle.Top    = min(max(Rectangle.Top   , 0), Bda->ScreenRows);
+    Rectangle.Bottom = min(max(Rectangle.Bottom, 0), Bda->ScreenRows);
 
-    if ((Amount == 0)
-        || (((Direction == SCROLL_DIRECTION_UP)
-        || (Direction == SCROLL_DIRECTION_DOWN))
-        && (Amount >= WindowHeight))
-        || (((Direction == SCROLL_DIRECTION_LEFT)
-        || (Direction == SCROLL_DIRECTION_RIGHT))
-        && (Amount >= WindowWidth)))
+    WindowWidth  = Rectangle.Right  - Rectangle.Left + 1;
+    WindowHeight = Rectangle.Bottom - Rectangle.Top  + 1;
+
+    /* Amount == 0 means we clear all the rectangle */
+    if ((Amount == 0) ||
+        (((Direction == SCROLL_UP  ) || (Direction == SCROLL_DOWN )) && (Amount >= WindowHeight)) ||
+        (((Direction == SCROLL_LEFT) || (Direction == SCROLL_RIGHT)) && (Amount >= WindowWidth )))
     {
-        /* Fill the window */
-        for (i = 0; i < WindowSize; i++)
+        /* Fill the rectangle */
+        for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
         {
-            WindowData[i] = MAKEWORD(' ', FillAttribute);
+            for (j = Rectangle.Left; j <= Rectangle.Right; j++)
+            {
+                EmulatorWriteMemory(&EmulatorContext,
+                                    VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                    (LPVOID)&FillCharacter,
+                                    sizeof(FillCharacter));
+            }
         }
 
-        goto Done;
+        return TRUE;
     }
 
     switch (Direction)
     {
-        case SCROLL_DIRECTION_UP:
+        case SCROLL_UP:
         {
-            RtlMoveMemory(WindowData,
-                          &WindowData[WindowWidth * Amount],
-                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
-
-            for (i = 0; i < Amount * WindowWidth; i++)
+            /* Move text lines up */
+            for (i = Rectangle.Top + Amount; i <= Rectangle.Bottom; i++)
             {
-                WindowData[WindowSize - i - 1] = MAKEWORD(' ', FillAttribute);
+                EmulatorWriteMemory(&EmulatorContext,
+                                    VideoAddress + ((i - Amount) * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
+                       REAL_TO_PHYS(VideoAddress + ( i           * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD)),
+                                    (Rectangle.Right - Rectangle.Left + 1) * sizeof(WORD));
+            }
+
+            /* Fill the bottom of the rectangle */
+            for (i = Rectangle.Bottom - Amount + 1; i <= Rectangle.Bottom; i++)
+            {
+                for (j = Rectangle.Left; j <= Rectangle.Right; j++)
+                {
+                    EmulatorWriteMemory(&EmulatorContext,
+                                        VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                        (LPVOID)&FillCharacter,
+                                        sizeof(FillCharacter));
+                }
             }
 
             break;
         }
 
-        case SCROLL_DIRECTION_DOWN:
+        case SCROLL_DOWN:
         {
-            RtlMoveMemory(&WindowData[WindowWidth * Amount],
-                          WindowData,
-                          (WindowSize - WindowWidth * Amount) * sizeof(WORD));
-
-            for (i = 0; i < Amount * WindowWidth; i++)
+            /* Move text lines down */
+            for (i = Rectangle.Bottom - Amount; i >= Rectangle.Top; i--)
             {
-                WindowData[i] = MAKEWORD(' ', FillAttribute);
+                EmulatorWriteMemory(&EmulatorContext,
+                                    VideoAddress + ((i + Amount) * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD),
+                       REAL_TO_PHYS(VideoAddress + ( i           * Bda->ScreenColumns + Rectangle.Left) * sizeof(WORD)),
+                                    (Rectangle.Right - Rectangle.Left + 1) * sizeof(WORD));
+            }
+
+            /* Fill the top of the rectangle */
+            for (i = Rectangle.Top; i <= Rectangle.Top + Amount - 1; i++)
+            {
+                for (j = Rectangle.Left; j <= Rectangle.Right; j++)
+                {
+                    EmulatorWriteMemory(&EmulatorContext,
+                                        VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                        (LPVOID)&FillCharacter,
+                                        sizeof(FillCharacter));
+                }
             }
 
             break;
         }
 
-        default:
+        case SCROLL_LEFT:
         {
-            // TODO: NOT IMPLEMENTED!
-            UNIMPLEMENTED;
+            /* Move text lines left */
+            for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
+            {
+                EmulatorWriteMemory(&EmulatorContext,
+                                    VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left         ) * sizeof(WORD),
+                       REAL_TO_PHYS(VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left + Amount) * sizeof(WORD)),
+                                    (Rectangle.Right - Rectangle.Left - Amount + 1) * sizeof(WORD));
+            }
+
+            /* Fill the right of the rectangle */
+            for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
+            {
+                for (j = Rectangle.Right - Amount + 1; j <= Rectangle.Right; j++)
+                {
+                    EmulatorWriteMemory(&EmulatorContext,
+                                        VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                        (LPVOID)&FillCharacter,
+                                        sizeof(FillCharacter));
+                }
+            }
+
+            break;
+        }
+
+        case SCROLL_RIGHT:
+        {
+            /* Move text lines right */
+            for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
+            {
+                EmulatorWriteMemory(&EmulatorContext,
+                                    VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left + Amount) * sizeof(WORD),
+                       REAL_TO_PHYS(VideoAddress + (i * Bda->ScreenColumns + Rectangle.Left         ) * sizeof(WORD)),
+                                    (Rectangle.Right - Rectangle.Left - Amount + 1) * sizeof(WORD));
+            }
+
+            /* Fill the left of the rectangle */
+            for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
+            {
+                for (j = Rectangle.Left; j <= Rectangle.Left + Amount - 1; j++)
+                {
+                    EmulatorWriteMemory(&EmulatorContext,
+                                        VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                        (LPVOID)&FillCharacter,
+                                        sizeof(FillCharacter));
+                }
+            }
+
+            break;
         }
     }
-
-Done:
-    /* Write back the window data */
-    VidBiosWriteWindow(WindowData, Rectangle, Page);
-
-    /* Free the window buffer */
-    HeapFree(GetProcessHeap(), 0, WindowData);
 
     return TRUE;
 }
@@ -2427,6 +2448,31 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 
     // FIXME: We need to reset the fonts and the font vectors. (INT 1Fh and 43h).
 
+    // HACK: We clear here all the text memory. TODO: Do it better!
+    if (!DoNotClear && ((ModeNumber >= 0x00 && ModeNumber <= 0x03) || (ModeNumber == 0x07)))
+    {
+        INT i, j;
+        DWORD VideoAddress;
+        WORD FillCharacter = MAKEWORD(' ', DEFAULT_ATTRIBUTE);
+
+        for (Page = 0; Page < BIOS_MAX_PAGES; ++Page)
+        {
+            VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
+
+            for (i = 0; i <= Bda->ScreenRows; i++)
+            {
+                for (j = 0; j <= Bda->ScreenColumns - 1; j++)
+                {
+                    /* Write to video memory */
+                    EmulatorWriteMemory(&EmulatorContext,
+                                        VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                                        (LPVOID)&FillCharacter,
+                                        sizeof(FillCharacter));
+                }
+            }
+        }
+    }
+
     /* Refresh display */
     VgaRefreshDisplay();
 
@@ -2552,13 +2598,7 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
     {
         /* The screen must be scrolled up */
         SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
-
-        VidBiosScrollWindow(SCROLL_DIRECTION_UP,
-                            1,
-                            Rectangle,
-                            Page,
-                            DEFAULT_ATTRIBUTE);
-
+        VidBiosScrollWindow(SCROLL_UP, 1, Rectangle, Page, DEFAULT_ATTRIBUTE/*Attribute*/);
         Row--;
     }
 
@@ -2629,13 +2669,8 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         {
             SMALL_RECT Rectangle = { getCL(), getCH(), getDL(), getDH() };
 
-            /* Call the internal function */
-            VidBiosScrollWindow((getAH() == 0x06) ? SCROLL_DIRECTION_UP
-                                                  : SCROLL_DIRECTION_DOWN,
-                                getAL(),
-                                Rectangle,
-                                Bda->VideoPage,
-                                getBH());
+            VidBiosScrollWindow((getAH() == 0x06) ? SCROLL_UP : SCROLL_DOWN,
+                                getAL(), Rectangle, Bda->VideoPage, getBH());
 
             break;
         }
