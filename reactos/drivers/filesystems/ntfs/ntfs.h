@@ -452,6 +452,9 @@ NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 PFILENAME_ATTRIBUTE
 GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType);
 
+PFILENAME_ATTRIBUTE
+GetBestFileNameFromRecord(PFILE_RECORD_HEADER FileRecord);
+
 /* blockdev.c */
 
 NTSTATUS
