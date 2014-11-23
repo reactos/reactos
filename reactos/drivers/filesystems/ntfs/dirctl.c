@@ -348,14 +348,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            Status = RtlUpcaseUnicodeString(&Pattern, SearchPattern, FALSE);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("RtlUpcaseUnicodeString('%wZ') failed with status 0x%08lx\n", &Pattern, Status);
-                ExFreePoolWithTag(Ccb->DirectorySearchPattern, TAG_NTFS);
-                Ccb->DirectorySearchPattern = NULL;
-                return Status;
-            }
+            memcpy(Ccb->DirectorySearchPattern, SearchPattern->Buffer, SearchPattern->Length);
             Ccb->DirectorySearchPattern[SearchPattern->Length / sizeof(WCHAR)] = 0;
         }
     }

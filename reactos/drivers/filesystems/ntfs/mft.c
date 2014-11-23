@@ -466,6 +466,7 @@ CompareFileName(PUNICODE_STRING FileName,
                 PINDEX_ENTRY_ATTRIBUTE IndexEntry,
                 BOOLEAN DirSearch)
 {
+    BOOLEAN Ret, Alloc = FALSE;
     UNICODE_STRING EntryName;
 
     EntryName.Buffer = IndexEntry->FileName.Name;
@@ -474,7 +475,25 @@ CompareFileName(PUNICODE_STRING FileName,
 
     if (DirSearch)
     {
-        return FsRtlIsNameInExpression(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX), NULL);
+        UNICODE_STRING IntFileName;
+        if (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)
+        {
+            ASSERT(NT_SUCCESS(RtlUpcaseUnicodeString(&IntFileName, FileName, TRUE)));
+            Alloc = TRUE;
+        }
+        else
+        {
+            IntFileName = *FileName;
+        }
+
+        Ret = FsRtlIsNameInExpression(&IntFileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX), NULL);
+
+        if (Alloc)
+        {
+            RtlFreeUnicodeString(&IntFileName);
+        }
+
+        return Ret;
     }
     else
     {
