@@ -1,0 +1,3 @@
+LIBRARY vmssrv.dll
+EXPORTS
+ServerDllInitialization@4
