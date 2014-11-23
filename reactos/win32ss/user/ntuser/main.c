@@ -213,10 +213,8 @@ DestroyProcessInfo(PEPROCESS Process)
     /*
      * Deregister logon application automatically
      */
-    if(LogonProcess == ppiCurrent)
-    {
-        LogonProcess = NULL;
-    }
+    if (gpidLogon == ppiCurrent->peProcess->UniqueProcessId)
+        gpidLogon = 0;
 
     /* Close the current window station */
     UserSetProcessWindowStation(NULL);
@@ -409,7 +407,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
 
     /* Assign a default window station and desktop to the process */
     /* Do not try to open a desktop or window station before winlogon initializes */
-    if(ptiCurrent->ppi->hdeskStartup == NULL && LogonProcess != NULL)
+    if (ptiCurrent->ppi->hdeskStartup == NULL && gpidLogon != 0)
     {
         HWINSTA hWinSta = NULL;
         HDESK hDesk = NULL;
@@ -749,17 +747,23 @@ DriverEntry(
     /* Register Object Manager Callbacks */
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
-    CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
-    CalloutData.WindowStationDeleteProcedure = IntWinStaObjectDelete;
-    CalloutData.WindowStationOkToCloseProcedure = IntWinstaOkToClose;
-    CalloutData.DesktopOkToCloseProcedure = IntDesktopOkToClose;
-    CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
-    CalloutData.DesktopCloseProcedure = IntDesktopObjectClose;
-    CalloutData.DesktopOpenProcedure = IntDesktopObjectOpen;
+    // CalloutData.GlobalAtomTableCallout = NULL;
+    // CalloutData.PowerEventCallout = NULL;
+    // CalloutData.PowerStateCallout = NULL;
+    // CalloutData.JobCallout = NULL;
     CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
+    CalloutData.DesktopOpenProcedure = IntDesktopObjectOpen;
+    CalloutData.DesktopOkToCloseProcedure = IntDesktopOkToClose;
+    CalloutData.DesktopCloseProcedure = IntDesktopObjectClose;
+    CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
+    CalloutData.WindowStationOkToCloseProcedure = IntWinstaOkToClose;
+    // CalloutData.WindowStationCloseProcedure = NULL;
+    CalloutData.WindowStationDeleteProcedure = IntWinStaObjectDelete;
+    CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
+    // CalloutData.WindowStationOpenProcedure = NULL;
 
     /* Register our per-process and per-thread structures. */
-    PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
+    PsEstablishWin32Callouts(&CalloutData);
 
     /* Register service hook callbacks */
 #if DBG
