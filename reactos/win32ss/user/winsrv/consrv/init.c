@@ -353,7 +353,6 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     /* Initialize the new (target) process */
     RtlZeroMemory(TargetProcessData, sizeof(*TargetProcessData));
     TargetProcessData->Process = TargetProcess;
-    TargetProcessData->InputWaitHandle = NULL;
     TargetProcessData->ConsoleHandle = NULL;
     TargetProcessData->ConsoleApp = FALSE;
 
@@ -491,14 +490,6 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
         }
     }
 
-    /* Mark the process as having a console */
-    ProcessData->ConsoleApp = TRUE;
-    // ProcessData->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle and the input wait handle to the caller */
-    ConnectInfo->ConsoleStartInfo.ConsoleHandle   = ProcessData->ConsoleHandle;
-    ConnectInfo->ConsoleStartInfo.InputWaitHandle = ProcessData->InputWaitHandle;
-
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropRoutine = ConnectInfo->PropRoutine;
     ProcessData->CtrlRoutine = ConnectInfo->CtrlRoutine;
@@ -521,10 +512,6 @@ ConSrvDisconnect(PCSR_PROCESS Process)
     {
         DPRINT("ConSrvDisconnect - calling ConSrvRemoveConsole\n");
         ConSrvRemoveConsole(ProcessData);
-
-        /* Mark the process as not having a console anymore */
-        ProcessData->ConsoleApp = FALSE;
-        Process->Flags &= ~CsrProcessIsConsoleApp;
     }
 
     RtlDeleteCriticalSection(&ProcessData->HandleTableLock);

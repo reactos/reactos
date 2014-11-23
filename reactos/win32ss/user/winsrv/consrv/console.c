@@ -283,8 +283,6 @@ ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
     ASSERT(Console);
     *Console = NULL;
 
-    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
     if (ConSrvValidateConsole(&GrabConsole,
                               ProcessData->ConsoleHandle,
                               CONSOLE_RUNNING,
@@ -295,7 +293,6 @@ ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
         Status = STATUS_SUCCESS;
     }
 
-    // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return Status;
 }
 
@@ -948,14 +945,6 @@ CSR_API(SrvAllocConsole)
         return Status;
     }
 
-    /* Mark the process as having a console */
-    ProcessData->ConsoleApp = TRUE;
-    CsrProcess->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle and the input wait handle to the caller */
-    AllocConsoleRequest->ConsoleStartInfo->ConsoleHandle   = ProcessData->ConsoleHandle;
-    AllocConsoleRequest->ConsoleStartInfo->InputWaitHandle = ProcessData->InputWaitHandle;
-
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropRoutine = AllocConsoleRequest->PropRoutine;
     ProcessData->CtrlRoutine = AllocConsoleRequest->CtrlRoutine;
@@ -1038,14 +1027,6 @@ CSR_API(SrvAttachConsole)
         goto Quit;
     }
 
-    /* Mark the process as having a console */
-    TargetProcessData->ConsoleApp = TRUE;
-    TargetProcess->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle and the input wait handle to the caller */
-    AttachConsoleRequest->ConsoleStartInfo->ConsoleHandle   = TargetProcessData->ConsoleHandle;
-    AttachConsoleRequest->ConsoleStartInfo->InputWaitHandle = TargetProcessData->InputWaitHandle;
-
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     TargetProcessData->PropRoutine = AttachConsoleRequest->PropRoutine;
     TargetProcessData->CtrlRoutine = AttachConsoleRequest->CtrlRoutine;
@@ -1060,16 +1041,7 @@ Quit:
 
 CSR_API(SrvFreeConsole)
 {
-    PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
-
-    ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
-
-    /* Mark the process as not having a console anymore */
-    ProcessData->ConsoleApp = FALSE;
-    CsrProcess->Flags &= ~CsrProcessIsConsoleApp;
-
-    return STATUS_SUCCESS;
+    return ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
 }
 
 NTSTATUS NTAPI
