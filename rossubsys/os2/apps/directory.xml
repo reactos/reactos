@@ -1,0 +1,5 @@
+<group>
+	<directory name="bepslep">
+		<xi:include href="bepslep/bepslep.xml" />
+	</directory>
+</group>

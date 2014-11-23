@@ -1,0 +1,5 @@
+<group>
+	<directory name="doscalls">
+		<xi:include href="doscalls/doscalls.xml" />
+	</directory>
+</group>

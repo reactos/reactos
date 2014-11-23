@@ -1,0 +1,23 @@
+<module name="doscalls" type="nativedll">
+	<importlibrary definition="doscalls.def" />
+	<include base="doscalls">../../include</include>
+	<linkerflag>-lgcc</linkerflag>
+	<directory name="devices">
+		<file>devices.cpp</file>
+		<file>ioctl_async.cpp</file>
+	</directory>
+	<directory name="file">
+		<file>directory.cpp</file>
+		<file>openclose.cpp</file>
+	</directory>
+	<directory name="memory">
+		<file>memory.cpp</file>
+	</directory>
+	<directory name="misc">
+		<file>doscalls.cpp</file>
+		<file>error.cpp</file>
+	</directory>
+	<directory name="run">
+		<file>process.cpp</file>
+	</directory>
+</module>
