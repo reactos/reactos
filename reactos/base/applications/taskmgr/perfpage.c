@@ -374,7 +374,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
                                sizeof(szChargeLimitFormat));
 
             wsprintfW(Text, szMemUsage, szChargeTotalFormat, szChargeLimitFormat,
-                      (UINT)((CommitChargeTotal * 100) / CommitChargeLimit));
+                      (CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0));
 
             SendMessageW(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
 
