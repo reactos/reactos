@@ -566,6 +566,14 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
         while (IndexEntry < IndexEntryEnd &&
                !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
         {
+            UNICODE_STRING EntryName;
+            EntryName.Buffer = IndexEntry->FileName.Name;
+            EntryName.Length = 
+            EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
+
+            if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+                DPRINT1("Warning: sub-node browsing unimplemented! (%wZ)\n", &EntryName);
+
             if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
                 CurrentEntry >= *FirstEntry &&
                 CompareFileName(FileName, IndexEntry, DirSearch))
@@ -657,6 +665,14 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
                 {
+                    UNICODE_STRING EntryName;
+                    EntryName.Buffer = IndexEntry->FileName.Name;
+                    EntryName.Length = 
+                    EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
+
+                    if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+                        DPRINT1("Warning: sub-node browsing unimplemented! (%wZ)\n", &EntryName);
+
                     if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
                         CurrentEntry >= *FirstEntry &&
                         CompareFileName(FileName, IndexEntry, DirSearch))
