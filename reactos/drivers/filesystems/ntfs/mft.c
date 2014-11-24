@@ -478,7 +478,7 @@ CompareFileName(PUNICODE_STRING FileName,
         UNICODE_STRING IntFileName;
         if (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)
         {
-            ASSERT(NT_SUCCESS(RtlUpcaseUnicodeString(&IntFileName, FileName, TRUE)));
+            NT_VERIFY(NT_SUCCESS(RtlUpcaseUnicodeString(&IntFileName, FileName, TRUE)));
             Alloc = TRUE;
         }
         else
