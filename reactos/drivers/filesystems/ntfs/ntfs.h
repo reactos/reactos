@@ -380,6 +380,13 @@ typedef struct
     ULONG Unknown2;
 } VOLINFO_ATTRIBUTE, *PVOLINFO_ATTRIBUTE;
 
+typedef struct {
+    ULONG ReparseTag;
+    USHORT DataLength;
+    USHORT Reserved;
+    UCHAR Data[1];
+} REPARSE_POINT_ATTRIBUTE, *PREPARSE_POINT_ATTRIBUTE;
+
 typedef struct
 {
     NTFSIDENTIFIER Identifier;
