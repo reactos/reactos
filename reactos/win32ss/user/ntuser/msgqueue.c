@@ -15,6 +15,9 @@ DBG_DEFAULT_CHANNEL(UserMsgQ);
 
 static PPAGED_LOOKASIDE_LIST pgMessageLookasideList;
 PUSER_MESSAGE_QUEUE gpqCursor;
+ULONG_PTR gdwMouseMoveExtraInfo = 0;
+DWORD gdwMouseMoveTimeStamp = 0;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -311,6 +314,36 @@ UpdateKeyStateFromMsg(PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg)
     }
 }
 
+/*
+    Get down key states from the queue of prior processed input message key states.
+
+    This fixes the left button dragging on the desktop and release sticking outline issue.
+    USB Tablet pointer seems to stick the most and leaves the box outline displayed.
+ */
+WPARAM FASTCALL
+MsqGetDownKeyState(PUSER_MESSAGE_QUEUE MessageQueue)
+{
+    WPARAM ret = 0;
+
+    if (gspv.bMouseBtnSwap)
+    {
+       if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_RBUTTON)) ret |= MK_LBUTTON;
+       if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_LBUTTON)) ret |= MK_RBUTTON;
+    }
+    else
+    {
+       if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_LBUTTON)) ret |= MK_LBUTTON;
+       if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_RBUTTON)) ret |= MK_RBUTTON;
+    }
+
+    if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_MBUTTON))  ret |= MK_MBUTTON;
+    if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_SHIFT))    ret |= MK_SHIFT;
+    if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_CONTROL))  ret |= MK_CONTROL;
+    if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_XBUTTON1)) ret |= MK_XBUTTON1;
+    if (IS_KEY_DOWN(MessageQueue->afKeyState, VK_XBUTTON2)) ret |= MK_XBUTTON2;
+    return ret;
+}
+
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask)
 {
@@ -397,26 +430,18 @@ MsqWakeQueue(PTHREADINFO pti, DWORD MessageBits, BOOL KeyEvent)
 VOID FASTCALL
 ClearMsgBitsMask(PTHREADINFO pti, UINT MessageBits)
 {
-   PUSER_MESSAGE_QUEUE Queue;
    UINT ClrMask = 0;
-
-   Queue = pti->MessageQueue;
 
    if (MessageBits & QS_KEY)
    {
       if (--pti->nCntsQBits[QSRosKey] == 0) ClrMask |= QS_KEY;
    }
-   if (MessageBits & QS_MOUSEMOVE) // ReactOS hard coded.
+   if (MessageBits & QS_MOUSEMOVE)
    {  // Account for tracking mouse moves..
       if (pti->nCntsQBits[QSRosMouseMove]) 
       {
          pti->nCntsQBits[QSRosMouseMove] = 0; // Throttle down count. Up to > 3:1 entries are ignored.
-      }
-      // Handle mouse move bits here.
-      if (Queue->MouseMoved)
-      {
          ClrMask |= QS_MOUSEMOVE;
-         Queue->MouseMoved = FALSE;
       }
    }
    if (MessageBits & QS_MOUSEBUTTON)
@@ -472,10 +497,11 @@ MsqDecPaintCountQueue(PTHREADINFO pti)
 }
 
 /*
-    Post Mouse Move.
+    Post the move or update the message still pending to be processed.
+    Do not overload the queue with mouse move messages.
  */
 VOID FASTCALL
-MsqPostMouseMove(PTHREADINFO pti, MSG* Msg)
+MsqPostMouseMove(PTHREADINFO pti, MSG* Msg, LONG_PTR ExtraInfo)
 {
     PUSER_MESSAGE Message;
     PLIST_ENTRY ListHead;
@@ -483,22 +509,59 @@ MsqPostMouseMove(PTHREADINFO pti, MSG* Msg)
 
     ListHead = &MessageQueue->HardwareMessagesListHead;
 
-    MessageQueue->MouseMoved = TRUE;
-
+    // Do nothing if empty.
     if (!IsListEmpty(ListHead->Flink))
-    {  // Look at the end of the list,
+    {
+       // Look at the end of the list,
        Message = CONTAINING_RECORD(ListHead->Blink, USER_MESSAGE, ListEntry);
-       // If the mouse move message is existing,
+
+       // If the mouse move message is existing on the list,
        if (Message->Msg.message == WM_MOUSEMOVE)
        {
-          TRACE("Post Old MM Message in Q\n");
-          Message->Msg = *Msg; // Overwrite the message with updated data!
+          // Overwrite the message with updated data!
+          Message->Msg = *Msg;
+
           MsqWakeQueue(pti, QS_MOUSEMOVE, TRUE);
           return;
        }
     }
-    TRACE("Post New MM Message to Q\n");
-    MsqPostMessage(pti, Msg, TRUE, QS_MOUSEMOVE, 0);
+
+    MsqPostMessage(pti, Msg, TRUE, QS_MOUSEMOVE, 0, ExtraInfo);
+}
+
+/*
+    Bring together the mouse move message.
+    Named "Coalesce" from Amine email ;^) (jt).
+ */
+VOID FASTCALL
+IntCoalesceMouseMove(PTHREADINFO pti)
+{
+    MSG Msg;
+    LARGE_INTEGER LargeTickCount;
+
+    // Force time stamp to update, keeping message time in sync.
+    if (gdwMouseMoveTimeStamp == 0)
+    {
+       KeQueryTickCount(&LargeTickCount);
+       gdwMouseMoveTimeStamp = MsqCalculateMessageTime(&LargeTickCount);
+    }
+
+    // Build mouse move message.
+    Msg.hwnd    = NULL;
+    Msg.message = WM_MOUSEMOVE;
+    Msg.wParam  = 0;
+    Msg.lParam  = MAKELONG(gpsi->ptCursor.x, gpsi->ptCursor.y);
+    Msg.time    = gdwMouseMoveTimeStamp;
+    Msg.pt      = gpsi->ptCursor;
+
+    // Post the move.
+    MsqPostMouseMove(pti, &Msg, gdwMouseMoveExtraInfo);
+
+    // Zero the time stamp.
+    gdwMouseMoveTimeStamp = 0;
+
+    // Clear flag since the move was posted.
+    pti->MessageQueue->QF_flags &= ~QF_MOUSEMOVED;
 }
 
 VOID FASTCALL
@@ -626,7 +689,10 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
            gpqCursor = MessageQueue;
 
            /* Mouse move is a special case */
-           MsqPostMouseMove(pti, Msg);
+           MessageQueue->QF_flags |= QF_MOUSEMOVED;
+           gdwMouseMoveExtraInfo = dwExtraInfo;
+           gdwMouseMoveTimeStamp = Msg->time;
+           MsqWakeQueue(pti, QS_MOUSEMOVE, TRUE);
        }
        else
        {
@@ -636,8 +702,15 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
              // ptiLastInput = pti; // Once this is set during Reboot or Shutdown, this prevents the exit window having foreground.
              // Find all the Move Mouse calls and fix mouse set active focus issues......
            }
+
+           // Post mouse move before posting mouse buttons, keep it in sync.
+           if (pti->MessageQueue->QF_flags & QF_MOUSEMOVED)
+           {
+              IntCoalesceMouseMove(pti);
+           }
+
            TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
-           MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0);
+           MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0, dwExtraInfo);
        }
    }
    else if (hdcScreen)
@@ -1207,7 +1280,8 @@ MsqPostMessage(PTHREADINFO pti,
                MSG* Msg,
                BOOLEAN HardwareMessage,
                DWORD MessageBits,
-               DWORD dwQEvent)
+               DWORD dwQEvent,
+               LONG_PTR ExtraInfo)
 {
    PUSER_MESSAGE Message;
    PUSER_MESSAGE_QUEUE MessageQueue;
@@ -1244,6 +1318,7 @@ MsqPostMessage(PTHREADINFO pti,
 
    if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
    Message->dwQEvent = dwQEvent;
+   Message->ExtraInfo = ExtraInfo;
    Message->QS_Flags = MessageBits;
    Message->pti = pti;
    MsqWakeQueue(pti, MessageBits, TRUE);
@@ -1375,12 +1450,13 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
     else
     {
-        pwndMsg = co_WinPosWindowFromPoint(NULL, &msg->pt, &hittest, FALSE);//TRUE);
+        pwndMsg = co_WinPosWindowFromPoint(pwndMsg, &msg->pt, &hittest, FALSE);
     }
 
     TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);
 
-    if (pwndMsg == NULL || pwndMsg->head.pti != pti)
+    // Null window or not the same "Hardware" message queue.
+    if (pwndMsg == NULL || pwndMsg->head.pti->MessageQueue != pti->MessageQueue)
     {
         /* Remove and ignore the message */
         *RemoveMessages = TRUE;
@@ -1469,6 +1545,12 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         {
             TRACE("Message out of range!!!\n");
             RETURN(FALSE);
+        }
+
+        // Update mouse move down keys.
+        if (message == WM_MOUSEMOVE)
+        {
+           msg->wParam = MsqGetDownKeyState(MessageQueue);
         }
     }
 
@@ -1739,7 +1821,8 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
  */
       if ( ( !Window || // 1
             ( Window == PWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
-            ( Window != PWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
+            ( Window != PWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) || // 3
+            ( CurrentMessage->Msg.message == WM_MOUSEMOVE ) ) && // Null window for mouse moves.
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
         {

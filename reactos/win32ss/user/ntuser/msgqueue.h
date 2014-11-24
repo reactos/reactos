@@ -51,9 +51,7 @@ typedef struct _USER_MESSAGE_QUEUE
 
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
-  /* True if a WM_MOUSEMOVE is pending */
-  BOOLEAN MouseMoved;
-  /* Current WM_MOUSEMOVE message */
+  /* Last click message for translating double clicks */
   MSG msgDblClk;
   /* Current capture window for this queue. */
   PWND spwndCapture;
@@ -92,7 +90,7 @@ typedef struct _USER_MESSAGE_QUEUE
 #define QF_FMENUSTATUSBREAK       0x00000004
 #define QF_FMENUSTATUS            0x00000008
 #define QF_FF10STATUS             0x00000010
-#define QF_MOUSEMOVED             0x00000020 // See MouseMoved.
+#define QF_MOUSEMOVED             0x00000020
 #define QF_ACTIVATIONCHANGE       0x00000040
 #define QF_TABSWITCHING           0x00000080
 #define QF_KEYSTATERESET          0x00000100
@@ -122,7 +120,7 @@ NTSTATUS FASTCALL co_MsqSendMessage(PTHREADINFO ptirec,
            UINT uTimeout, BOOL Block, INT HookMessage, ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL MsqDestroyMessage(PUSER_MESSAGE Message);
-VOID FASTCALL MsqPostMessage(PTHREADINFO, MSG*, BOOLEAN, DWORD, DWORD);
+VOID FASTCALL MsqPostMessage(PTHREADINFO, MSG*, BOOLEAN, DWORD, DWORD, LONG_PTR);
 VOID FASTCALL MsqPostQuitMessage(PTHREADINFO pti, ULONG ExitCode);
 BOOLEAN APIENTRY
 MsqPeekMessage(IN PTHREADINFO pti,
@@ -186,6 +184,7 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
                        BOOL HasPackedLParam,
                        INT HookMessage);
 
+VOID FASTCALL IntCoalesceMouseMove(PTHREADINFO);
 LRESULT FASTCALL IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL IntTranslateKbdMessage(LPMSG lpMsg, UINT flags);
 VOID FASTCALL co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
@@ -246,6 +245,7 @@ BOOL FASTCALL co_MsqReplyMessage(LRESULT);
 VOID FASTCALL MsqWakeQueue(PTHREADINFO,DWORD,BOOL);
 VOID FASTCALL ClearMsgBitsMask(PTHREADINFO,UINT);
 BOOL FASTCALL IntCallMsgFilter(LPMSG,INT);
+WPARAM FASTCALL MsqGetDownKeyState(PUSER_MESSAGE_QUEUE);
 
 int UserShowCursor(BOOL bShow);
 PCURICON_OBJECT

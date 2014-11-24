@@ -936,10 +936,16 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
                 Msg.lParam |= KF_MENUMODE << 16;
         }
 
+        // Post mouse move before posting key buttons, to keep it syned.
+        if (pFocusQueue->QF_flags & QF_MOUSEMOVED)
+        {
+           IntCoalesceMouseMove(pti);
+        }
+
         /* Post a keyboard message */
         TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
         if (!Wnd) {ERR("Window is NULL\n");}
-        MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0);
+        MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0, dwExtraInfo);
     }
 
     return TRUE;
@@ -1154,7 +1160,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
         NewMsg.wParam = HIWORD(lpMsg->lParam);
         NewMsg.lParam = LOWORD(lpMsg->lParam);
-        MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
+        MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0, 0);
         return TRUE;
     }
 
@@ -1183,7 +1189,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         {
             TRACE("Msg: %x '%lc' (%04x) %08x\n", NewMsg.message, wch[i], wch[i], NewMsg.lParam);
             NewMsg.wParam = wch[i];
-            MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
+            MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0, 0);
         }
         bResult = TRUE;
     }

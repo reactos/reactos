@@ -320,7 +320,7 @@ SystemTimerProc(HWND hwnd,
              {
                 if (pDesk->htEx == HTCLIENT) // In a client area.
                 {
-                   wParam = UserGetMouseButtonsState();
+                   wParam = MsqGetDownKeyState(pWnd->head.pti->MessageQueue);
                    Msg = WM_MOUSEHOVER;
 
                    if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
@@ -405,7 +405,7 @@ PostTimerMessages(PWND Window)
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
 
-           MsqPostMessage(pti, &Msg, FALSE, (QS_POSTMESSAGE|QS_ALLPOSTMESSAGE), 0);
+           MsqPostMessage(pti, &Msg, FALSE, (QS_POSTMESSAGE|QS_ALLPOSTMESSAGE), 0, 0);
            pTmr->flags &= ~TMRF_READY;
            ClearMsgBitsMask(pti, QS_TIMER);
            Hit = TRUE;

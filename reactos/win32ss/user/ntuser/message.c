@@ -802,6 +802,12 @@ co_IntPeekMessage( PMSG Msg,
         pti->timeLast = LargeTickCount.u.LowPart;
         pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
 
+        // Post mouse moves while looping through peek messages.
+        if (pti->MessageQueue->QF_flags & QF_MOUSEMOVED)
+        {
+           IntCoalesceMouseMove(pti);
+        }
+
         /* Dispatch sent messages here. */
         while ( co_MsqDispatchOneSentMessage(pti) )
         {
@@ -1087,7 +1093,7 @@ UserPostThreadMessage( PTHREADINFO pti,
 
     KeQueryTickCount(&LargeTickCount);
     Message.time = MsqCalculateMessageTime(&LargeTickCount);
-    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
     return TRUE;
 }
 
@@ -1218,7 +1224,7 @@ UserPostMessage( HWND Wnd,
         }
         else
         {
-            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
         }
     }
     return TRUE;
@@ -1411,6 +1417,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
 CLEANUP:
     if (Window) UserDerefObjectCo(Window);
+    // Current Thread and it's a Copy Data message, then free kernel memory.
     if ( !ptiSendTo && Msg == WM_COPYDATA )
     {
        ExFreePool((PVOID) lParam);
@@ -1677,7 +1684,7 @@ CLEANUP:
     END_CLEANUP;
 }
 
-
+#if 0
 /*
   This HACK function posts a message if the destination's message queue belongs to
   another thread, otherwise it sends the message. It does not support broadcast
@@ -1721,6 +1728,7 @@ co_IntPostOrSendMessage( HWND hWnd,
 
     return (LRESULT)Result;
 }
+#endif
 
 static LRESULT FASTCALL
 co_IntDoSendMessage( HWND hWnd,
