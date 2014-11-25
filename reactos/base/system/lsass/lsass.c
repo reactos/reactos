@@ -28,6 +28,7 @@
 #define NTOS_MODE_USER
 
 #include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #include <lsass/lsasrv.h>
 #include <samsrv/samsrv.h>
