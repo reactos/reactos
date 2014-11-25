@@ -1105,7 +1105,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
         }
         if (fs.fsCsb[0] == 0)
         { /* Let's see if we can find any interesting cmaps */
-            for (i = 0; i < FontGDI->face->num_charmaps; i++)
+            for (i = 0; i < (UINT)FontGDI->face->num_charmaps; i++)
             {
                 switch (FontGDI->face->charmaps[i]->encoding)
                 {
@@ -1501,7 +1501,7 @@ static unsigned int get_native_glyph_outline(FT_Outline *outline, unsigned int b
 {
     TTPOLYGONHEADER *pph;
     TTPOLYCURVE *ppc;
-    unsigned int needed = 0, point = 0, contour, first_pt;
+    int needed = 0, point = 0, contour, first_pt;
     unsigned int pph_start, cpfx;
     DWORD type;
 
@@ -2073,7 +2073,7 @@ ftGdiGetGlyphOutline(
             INT x;
             while (h--)
             {
-                for (x = 0; x < pitch; x++)
+                for (x = 0; (UINT)x < pitch; x++)
                 {
                     if (x < ft_face->glyph->bitmap.width)
                         dst[x] = (src[x / 8] & (1 << ( (7 - (x % 8))))) ? 0xff : 0;
@@ -2346,7 +2346,8 @@ ftGdiGetTextCharsetInfo(
     DWORD dwFlags)
 {
     PDC_ATTR pdcattr;
-    UINT Ret = DEFAULT_CHARSET, i;
+    UINT Ret = DEFAULT_CHARSET;
+    INT i;
     HFONT hFont;
     PTEXTOBJ TextObj;
     PFONTGDI FontGdi;
@@ -3752,7 +3753,7 @@ GreExtTextOutW(
         {
             // FIXME this should probably be a matrix transform with TextTop as well.
             Scale = pdcattr->mxWorldToDevice.efM11;
-            if (_FLOATOBJ_Equal0(&Scale))
+            if (FLOATOBJ_Equal0(&Scale))
                 FLOATOBJ_Set1(&Scale);
 
             FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); // do the shift before multiplying to preserve precision
@@ -4029,7 +4030,7 @@ NtGdiGetCharABCWidthsW(
     face = FontGDI->face;
     if (face->charmap == NULL)
     {
-        for (i = 0; i < face->num_charmaps; i++)
+        for (i = 0; i < (UINT)face->num_charmaps; i++)
         {
             charmap = face->charmaps[i];
             if (charmap->encoding != 0)
@@ -4227,7 +4228,7 @@ NtGdiGetCharWidthW(
     face = FontGDI->face;
     if (face->charmap == NULL)
     {
-        for (i = 0; i < face->num_charmaps; i++)
+        for (i = 0; i < (UINT)face->num_charmaps; i++)
         {
             charmap = face->charmaps[i];
             if (charmap->encoding != 0)
