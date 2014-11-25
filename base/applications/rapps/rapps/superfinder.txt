@@ -4,7 +4,7 @@
 [Section]
 Name = Super Finder XT
 Version = 1.6.3.2
-Licence = Freeware
+License = Freeware
 Description = A fast and feature rich search application.
 Size = 4.94 MB
 Category = 12
@@ -32,12 +32,12 @@ Description = Een snelle zoekapplicatie rijk aan mogelijkheden.
 Description = Szybka i bogata w opcje aplikacja szukająca.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Aplicație rapidă de căutări complexe de text.
 Size = 4,94 Mo
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Hızlı ve husûsiyet zengini bir arama uygulaması.
 Size = 4,94 MB
 

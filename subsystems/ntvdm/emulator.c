@@ -22,13 +22,14 @@
 #include "clock.h"
 #include "bios/rom.h"
 #include "hardware/cmos.h"
+#include "hardware/dma.h"
 #include "hardware/keyboard.h"
 #include "hardware/mouse.h"
 #include "hardware/pic.h"
 #include "hardware/ps2.h"
-#include "hardware/speaker.h"
-#include "hardware/timer.h"
-#include "hardware/vga.h"
+#include "hardware/sound/speaker.h"
+#include "hardware/pit.h"
+#include "hardware/video/vga.h"
 
 #include "vddsup.h"
 #include "io.h"
@@ -626,6 +627,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     CpuInitialize();
 
     /* Initialize DMA */
+    DmaInitialize();
 
     /* Initialize the PIC, the PIT, the CMOS and the PC Speaker */
     PicInitialize();
@@ -705,6 +707,8 @@ VOID EmulatorCleanup(VOID)
     CmosCleanup();
     // PitCleanup();
     // PicCleanup();
+
+    // DmaCleanup();
 
     CpuCleanup();
 

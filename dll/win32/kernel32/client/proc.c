@@ -3992,7 +3992,7 @@ StartScan:
         if (!NT_SUCCESS(Status))
         {
             /* Bail out on failure */
-            DPRINT1("Failed to reserved memory for VDM: %lx\n", Status);
+            DPRINT1("Failed to reserve memory for VDM: %lx\n", Status);
             BaseSetLastNTError(Status);
             Result = FALSE;
             goto Quickie;

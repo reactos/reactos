@@ -947,7 +947,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
    TRACE("About to set process window station with handle (%p)\n",
          hWindowStation);
 
-   if(PsGetCurrentProcessWin32Process() != LogonProcess)
+   if (gpidLogon != PsGetCurrentProcessId())
    {
       ERR("Unauthorized process attempted to lock the window station!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
@@ -992,7 +992,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    TRACE("About to set process window station with handle (%p)\n",
          hWindowStation);
 
-   if(PsGetCurrentProcessWin32Process() != LogonProcess)
+   if (gpidLogon != PsGetCurrentProcessId())
    {
       ERR("Unauthorized process attempted to unlock the window station!\n");
       EngSetLastError(ERROR_ACCESS_DENIED);
@@ -1338,12 +1338,12 @@ NtUserBuildNameList(
 BOOL APIENTRY
 NtUserSetLogonNotifyWindow(HWND hWnd)
 {
-    if(LogonProcess != PsGetCurrentProcessWin32Process())
+    if (gpidLogon != PsGetCurrentProcessId())
     {
         return FALSE;
     }
 
-    if(!IntIsWindow(hWnd))
+    if (!IntIsWindow(hWnd))
     {
         return FALSE;
     }

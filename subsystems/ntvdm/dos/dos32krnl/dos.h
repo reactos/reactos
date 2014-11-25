@@ -224,7 +224,7 @@ DWORD DosLoadExecutable(
     IN DOS_EXEC_TYPE LoadType,
     IN LPCSTR ExecutablePath,
     IN LPCSTR CommandLine,
-    IN LPCSTR Environment,
+    IN LPCSTR Environment OPTIONAL,
     OUT PDWORD StackLocation OPTIONAL,
     OUT PDWORD EntryPoint OPTIONAL
 );
@@ -236,7 +236,7 @@ WORD DosCreateProcess(
 DWORD DosStartProcess(
     IN LPCSTR ExecutablePath,
     IN LPCSTR CommandLine,
-    IN LPCSTR Environment
+    IN LPCSTR Environment OPTIONAL
 );
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);

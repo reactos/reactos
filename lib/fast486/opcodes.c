@@ -754,7 +754,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearInt)
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Check IOPL */
-        if (State->Flags.Iopl >= State->SegmentRegs[FAST486_REG_CS].Dpl)
+        if (State->Flags.Iopl >= Fast486GetCurrentPrivLevel(State))
         {
             /* Clear the interrupt flag */
             State->Flags.If = FALSE;
@@ -789,7 +789,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetInt)
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Check IOPL */
-        if (State->Flags.Iopl >= State->SegmentRegs[FAST486_REG_CS].Dpl)
+        if (State->Flags.Iopl >= Fast486GetCurrentPrivLevel(State))
         {
             /* Set the interrupt flag */
             State->Flags.If = TRUE;
@@ -4548,6 +4548,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
 {
     UCHAR IntNum;
 
+    /* Check for V86 mode */
+    if (State->Flags.Vm && (State->Flags.Iopl != 3))
+    {
+        /* Call the V86 monitor */
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return;
+    }
+
     switch (Opcode)
     {
         case 0xCC:  // INT 3
@@ -4679,7 +4687,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             /* Return to VM86 mode */
             ULONG Es, Ds, Fs, Gs;
 
-            /* Pop ESP, SS, ES, FS, GS */
+            /* Pop ESP, SS, ES, DS, FS, GS */
             if (!Fast486StackPop(State, &StackPtr)) return;
             if (!Fast486StackPop(State, &StackSel)) return;
             if (!Fast486StackPop(State, &Es)) return;

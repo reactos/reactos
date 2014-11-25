@@ -349,4 +349,24 @@ call_ica_hw_interrupt(INT  ms,
     }
 }
 
+WORD
+WINAPI
+VDDReserveIrqLine(IN HANDLE hVdd,
+                  IN WORD   IrqLine)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0xFFFF;
+}
+
+BOOL
+WINAPI
+VDDReleaseIrqLine(IN HANDLE hVdd,
+                  IN WORD   IrqLine)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
 /* EOF */

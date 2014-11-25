@@ -3,7 +3,7 @@
 
 [Section]
 Name = Bound Around (Demo)
-Licence = Shareware
+License = Shareware
 Description = A game similar Frozen Fruits.
 Size = 1.95 MB
 Category = 4
@@ -19,12 +19,12 @@ Name = Bound Around (Versione di prova)
 Description = Un gioco simile a Frozen Fruits.
 
 [Section.0418]
-Licence = Versiune de evaluare
+License = Versiune de evaluare
 Description = Un joc similar jocului Frozen Fruits.
 Size = 1,95 Mo
 
 [Section.041f]
 Name = Bound Around (Göstermelik)
-Licence = Paylaşımlı
+License = Paylaşımlı
 Description = Frozen Fruits benzeri bir oyun.
 Size = 1,95 MB

@@ -466,6 +466,7 @@ CompareFileName(PUNICODE_STRING FileName,
                 PINDEX_ENTRY_ATTRIBUTE IndexEntry,
                 BOOLEAN DirSearch)
 {
+    BOOLEAN Ret, Alloc = FALSE;
     UNICODE_STRING EntryName;
 
     EntryName.Buffer = IndexEntry->FileName.Name;
@@ -474,7 +475,25 @@ CompareFileName(PUNICODE_STRING FileName,
 
     if (DirSearch)
     {
-        return FsRtlIsNameInExpression(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX), NULL);
+        UNICODE_STRING IntFileName;
+        if (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)
+        {
+            NT_VERIFY(NT_SUCCESS(RtlUpcaseUnicodeString(&IntFileName, FileName, TRUE)));
+            Alloc = TRUE;
+        }
+        else
+        {
+            IntFileName = *FileName;
+        }
+
+        Ret = FsRtlIsNameInExpression(&IntFileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX), NULL);
+
+        if (Alloc)
+        {
+            RtlFreeUnicodeString(&IntFileName);
+        }
+
+        return Ret;
     }
     else
     {
@@ -547,6 +566,14 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
         while (IndexEntry < IndexEntryEnd &&
                !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
         {
+            UNICODE_STRING EntryName;
+            EntryName.Buffer = IndexEntry->FileName.Name;
+            EntryName.Length = 
+            EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
+
+            if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+                DPRINT1("Warning: sub-node browsing unimplemented! (%wZ)\n", &EntryName);
+
             if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
                 CurrentEntry >= *FirstEntry &&
                 CompareFileName(FileName, IndexEntry, DirSearch))
@@ -638,6 +665,14 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
                 {
+                    UNICODE_STRING EntryName;
+                    EntryName.Buffer = IndexEntry->FileName.Name;
+                    EntryName.Length = 
+                    EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
+
+                    if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+                        DPRINT1("Warning: sub-node browsing unimplemented! (%wZ)\n", &EntryName);
+
                     if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
                         CurrentEntry >= *FirstEntry &&
                         CompareFileName(FileName, IndexEntry, DirSearch))

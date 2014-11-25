@@ -1,7 +1,7 @@
 ﻿[Section]
 Name = Inkscape
 Version = 0.48.5
-Licence = GPL
+License = GPL
 Description = Inkscape is a vector graphics editor licensed under the GNU General Public License.
 Size = 32.9 MB
 Category = 3

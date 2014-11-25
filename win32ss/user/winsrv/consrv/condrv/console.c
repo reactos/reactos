@@ -80,7 +80,10 @@ VOID NTAPI
 ConDrvPause(PCONSOLE Console)
 {
     if (!Console->UnpauseEvent)
-        Console->UnpauseEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    {
+        NtCreateEvent(&Console->UnpauseEvent, EVENT_ALL_ACCESS,
+                      NULL, NotificationEvent, FALSE);
+    }
 }
 
 VOID NTAPI
@@ -88,8 +91,8 @@ ConDrvUnpause(PCONSOLE Console)
 {
     if (Console->UnpauseEvent)
     {
-        SetEvent(Console->UnpauseEvent);
-        CloseHandle(Console->UnpauseEvent);
+        NtSetEvent(Console->UnpauseEvent, NULL);
+        NtClose(Console->UnpauseEvent);
         Console->UnpauseEvent = NULL;
     }
 }

@@ -4,7 +4,7 @@
 [Section]
 Name = Tile World
 Version = 1.3.0
-Licence = GPL
+License = GPL
 Description = Nice clone of Chip's Challenge originally made for the Atari Lynx. Includes free CCLP2 Graphics Pack, so you dont need the copyrighted original.
 Size = 1.16 MB
 Category = 4

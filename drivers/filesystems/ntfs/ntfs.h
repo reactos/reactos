@@ -195,6 +195,7 @@ typedef enum
 #define NTFS_FILE_TYPE_HIDDEN     0x2
 #define NTFS_FILE_TYPE_SYSTEM     0x4
 #define NTFS_FILE_TYPE_ARCHIVE    0x20
+#define NTFS_FILE_TYPE_REPARSE    0x400
 #define NTFS_FILE_TYPE_COMPRESSED 0x800
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
 
@@ -308,7 +309,15 @@ typedef struct
     ULONGLONG AllocatedSize;
     ULONGLONG DataSize;
     ULONG FileAttributes;
-    ULONG AlignmentOrReserved;
+    union
+    {
+        struct
+        {
+            USHORT PackedEaSize;
+            USHORT AlignmentOrReserved;
+        } EaInfo;
+        ULONG ReparseTag;
+    } Extended;
     UCHAR NameLength;
     UCHAR NameType;
     WCHAR Name[1];
@@ -370,6 +379,13 @@ typedef struct
     USHORT Flags;
     ULONG Unknown2;
 } VOLINFO_ATTRIBUTE, *PVOLINFO_ATTRIBUTE;
+
+typedef struct {
+    ULONG ReparseTag;
+    USHORT DataLength;
+    USHORT Reserved;
+    UCHAR Data[1];
+} REPARSE_POINT_ATTRIBUTE, *PREPARSE_POINT_ATTRIBUTE;
 
 typedef struct
 {
@@ -451,6 +467,9 @@ NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 
 PFILENAME_ATTRIBUTE
 GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType);
+
+PFILENAME_ATTRIBUTE
+GetBestFileNameFromRecord(PFILE_RECORD_HEADER FileRecord);
 
 /* blockdev.c */
 

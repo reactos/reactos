@@ -323,6 +323,7 @@ BEGIN
     CONTROL "Zapisy We/Wy w bajtach", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "Inne We/Wy", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "Inne We/Wy w bajtach", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Linia poleceń", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -418,6 +419,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "Odczyty We/Wy w bajtach"
     IDS_TAB_IOWRITESBYTES "Zapisy We/Wy w bajtach"
     IDS_TAB_IOOTHERBYTES "Inne We/Wy w bajtach"
+    IDS_TAB_COMMANDLINE "Linia poleceń"
     IDS_MENU_SELECTCOLUMNS "Wybierz &kolumny..."
     IDS_MENU_16BITTASK "Pokaż 16-&bitowe zadania"
     IDS_MENU_WINDOWS "O&kna"
@@ -441,7 +443,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Nie można zmienić priorytetu"
     IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu może przynieść\nniepożądane skutki, w tym również niestabilność systemu.\nCzy na pewno chcesz zmieni priorytet?"
     IDS_MSG_TRAYICONCPUUSAGE "Użycie procesora: %d%%"
-    IDS_STATUS_MEMUSAGE "Pam. zadeklar.: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Pam. zadeklar.: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Użycie procesora: %3d%%"
     IDS_STATUS_PROCESSES "Procesy: %d"
     IDS_NOT_RESPONDING "Nie odpowiada"

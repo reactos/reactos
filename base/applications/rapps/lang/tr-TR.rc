@@ -149,7 +149,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nAçıklaması: "
     IDS_AINFO_SIZE "\nBüyüklüğü: "
     IDS_AINFO_URLSITE "\nAna Sayfası: "
-    IDS_AINFO_LICENCE "\nRuhsatı: "
+    IDS_AINFO_LICENSE "\nRuhsatı: "
 END
 
 STRINGTABLE

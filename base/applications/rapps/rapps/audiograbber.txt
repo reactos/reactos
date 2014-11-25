@@ -4,7 +4,7 @@
 [Section]
 Name = Audio Grabber
 Version = 1.83 SE
-Licence = Freeware
+License = Freeware
 Description = A very good CD Ripper/Audio File Converter.
 Size = 3.43 MB
 Category = 1
@@ -35,12 +35,12 @@ Description = Een goede CD Ripper/Audio-bestandsomzetter.
 Description = Bardzo dobry CD Ripper/konwerter plików audio.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Program de extragere conținuturi CD audio și de conversie a fișierelor de sunet.
 Size = 3,43 Mo
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Çok iyi bir CD ripleyicisi ve ses kütüğü dönüştürücüsü.
 Size = 3,43 MB
 

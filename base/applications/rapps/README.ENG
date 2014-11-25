@@ -14,7 +14,7 @@ The File Overview:
 Name = program name
 RegName = Name in registry
 Version = 1.1.1
-Licence = GPL
+License = GPL
 Description = Description
 Size = 10 mb
 Category = 5

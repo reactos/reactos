@@ -1,15 +1,15 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            timer.h
+ * FILE:            pit.h
  * PURPOSE:         Programmable Interval Timer emulation -
  *                  i82C54/8254 compatible
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#ifndef _TIMER_H_
-#define _TIMER_H_
+#ifndef _PIT_H_
+#define _PIT_H_
 
 /* INCLUDES *******************************************************************/
 
@@ -84,6 +84,6 @@ VOID PitClock(DWORD Count);
 
 VOID PitInitialize(VOID);
 
-#endif // _TIMER_H_
+#endif // _PIT_H_
 
 /* EOF */

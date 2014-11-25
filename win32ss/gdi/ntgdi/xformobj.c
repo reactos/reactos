@@ -297,10 +297,10 @@ XFORMOBJ_iInverse(
     return XFORMOBJ_UpdateAccel(pxoDst);
 }
 
-
-BOOL
+static
+VOID
 NTAPI
-XFORMOBJ_bXformFixPoints(
+XFORMOBJ_vXformFixPoints(
     IN XFORMOBJ  *pxo,
     IN ULONG  cPoints,
     IN PPOINTL  pptIn,
@@ -426,8 +426,6 @@ XFORMOBJ_bXformFixPoints(
         }
         while (--i >= 0);
     }
-
-    return TRUE;
 }
 
 /** Public functions **********************************************************/
@@ -500,7 +498,7 @@ XFORMOBJ_bApplyXform(
 {
     MATRIX mx;
     XFORMOBJ xoInv;
-    POINTL *pptl;
+    PPOINTL pptlIn, pptlOut;
     INT i;
 
     /* Check parameters */
@@ -523,28 +521,29 @@ XFORMOBJ_bApplyXform(
     /* Convert POINTL to POINTFIX? */
     if (iMode == XF_LTOFX || iMode == XF_LTOL || iMode == XF_INV_LTOL)
     {
-        pptl = pvIn;
+        pptlIn = pvIn;
+        pptlOut = pvOut;
         for (i = cPoints - 1; i >= 0; i--)
         {
-            pptl[i].x = LONG2FIX(pptl[i].x);
-            pptl[i].y = LONG2FIX(pptl[i].y);
+            pptlOut[i].x = LONG2FIX(pptlIn[i].x);
+            pptlOut[i].y = LONG2FIX(pptlIn[i].y);
         }
+
+        /* The input is in the out buffer now! */
+        pvIn = pvOut;
     }
 
     /* Do the actual fixpoint transformation */
-    if (!XFORMOBJ_bXformFixPoints(pxo, cPoints, pvIn, pvOut))
-    {
-        return FALSE;
-    }
+    XFORMOBJ_vXformFixPoints(pxo, cPoints, pvIn, pvOut);
 
     /* Convert POINTFIX to POINTL? */
     if (iMode == XF_INV_FXTOL || iMode == XF_INV_LTOL || iMode == XF_LTOL)
     {
-        pptl = pvOut;
+        pptlOut = pvOut;
         for (i = cPoints - 1; i >= 0; i--)
         {
-            pptl[i].x = FIX2LONG(pptl[i].x);
-            pptl[i].y = FIX2LONG(pptl[i].y);
+            pptlOut[i].x = FIX2LONG(pptlOut[i].x);
+            pptlOut[i].y = FIX2LONG(pptlOut[i].y);
         }
     }
 

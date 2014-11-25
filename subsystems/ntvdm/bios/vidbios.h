@@ -33,13 +33,13 @@
 #define FONT_8x16_OFFSET        0x0800
 #define FONT_8x14_OFFSET        0x1800
 
-enum
+typedef enum
 {
-    SCROLL_DIRECTION_UP,
-    SCROLL_DIRECTION_DOWN,
-    SCROLL_DIRECTION_LEFT,
-    SCROLL_DIRECTION_RIGHT
-};
+    SCROLL_UP,
+    SCROLL_DOWN,
+    SCROLL_LEFT,
+    SCROLL_RIGHT
+} SCROLL_DIRECTION;
 
 /* FUNCTIONS ******************************************************************/
 

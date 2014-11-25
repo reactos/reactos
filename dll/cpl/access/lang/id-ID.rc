@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "&Gunakan StickyKeys", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Setelan", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "FilterKeys", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Gunakan FilterKeys jika anda ingin Reactos untuk mengabaikan atau tombol berulang, atau rata-rata ulangan lambat.",
+    LTEXT "Gunakan FilterKeys jika anda ingin ReactOS untuk mengabaikan atau tombol berulang, atau rata-rata ulangan lambat.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Gunakan &FilterKeys", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "S&etelan", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -32,7 +32,7 @@ CAPTION "Suara"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "SoundSentry", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Gunakan SoundSentry jika anda ingin Reactos untuk membuat peringatan visual ketika sistem anda membuat suara.",
+    LTEXT "Gunakan SoundSentry jika anda ingin ReactOS untuk membuat peringatan visual ketika sistem anda membuat suara.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Gunakan &SoundSentry", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "User the following warning:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -50,7 +50,7 @@ CAPTION "Tampilan"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Kontras Tinggi", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Gunakan opsi ini jika anda ingin Reactos untuk memakai warna dan font yang didesain guna memudahkan pembacaan.",
+    LTEXT "Gunakan opsi ini jika anda ingin ReactOS untuk memakai warna dan font yang didesain guna memudahkan pembacaan.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Gunakan Kontras Tinggi", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Setelan", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

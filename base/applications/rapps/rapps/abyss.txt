@@ -4,7 +4,7 @@
 [Section]
 Name = Abyss Web server X1
 Version = 2.9.3.5
-Licence = Freeware
+License = Freeware
 Description = Abyss Web Server enables you to host your Web sites on your computer. It supports secure SSL/TLS connections (HTTPS) as well as a wide range of Web technologies. It can also run advanced PHP, Perl, Python, ASP, ASP.NET, and Ruby on Rails Web applications, which can be backed by databases such as MySQL, SQLite, MS SQL Server, MS Access, or Oracle.
 Size = 2.06 MB
 Category = 5
@@ -34,13 +34,13 @@ Może także uruchamiać zaawansowane aplikacje internetowe takie jak PHP, Perl,
 Mogą one zostać oparte o MySQL, SQLite, MS SQL Server, MS Access, lub Oracle.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Abyss Web Server vă permite găzduirea de pagini Web pe calculatorul dumneavoastră. Oferă conexiuni securizate SSL/TLS (HTTPS) și multe alte tehnologii Web. Poate executa aplicații Web avansate ]n PHP, Perl, Python, ASP, ASP.NET și Ruby on Rails, ce pot fi susținute de baze de date ca MySQL, SQLite, MS SQL Server, MS Access, sau Oracle.
 Size = 2,06 Mo
 
 [Section.041f]
 Name = Abyss Umûmî Ağ Sunucusu X1
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Abyss Umûmî Ağ Sunucusu, bilgisayarınızda Umûmî Ağ sitelerinizin barındırılmasına olanak sağlar. Umûmî Ağ uygulayım biliminin bir geniş yelpâzesiyle birlikte güvenli SSL/TLS bağlantılarını (HTTPS) destekler. Ayrıca MySQL, SQLite, MS SQL Server, MS Access, ve Oracle gibi veri tabanlarıyla desteklenebilen gelişmiş PHP, Perl, Python, ASP, ASP.NET ve Rails üzerinde Ruby Umûmî Ağ uygulamalarını çalıştırabilir.
 Size = 2,06 MB
 

@@ -1701,7 +1701,7 @@ NtUserSwitchDesktop(HDESK hdesk)
     * is the logon application itself
     */
    if((pdesk->rpwinstaParent->Flags & WSS_LOCKED) &&
-      LogonProcess != PsGetCurrentProcessWin32Process())
+      gpidLogon != PsGetCurrentProcessId())
    {
       ObDereferenceObject(pdesk);
       ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);

@@ -4,7 +4,7 @@
 [Section]
 Name = Windows Media Encoder 9
 Version = 9.0
-Licence = Unknown
+License = Unknown
 Description = Windows Media Encoder 9
 Size = 9.46 MB
 Category = 14
@@ -13,26 +13,26 @@ URLDownload = http://download.microsoft.com/download/8/1/f/81f9402f-efdd-439d-b2
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
+License = Unbekannt
 
 [Section.040a]
-Licence = Desconocida
+License = Desconocida
 
 [Section.040c]
-Licence = Inconnue
+License = Inconnue
 Size = 9,46 Mo
 
 [Section.0410]
-Licence = Sconosciuta
+License = Sconosciuta
 
 [Section.0413]
 License = Ongekend
 
 [Section.0415]
-Licence = Nieznana
+License = Nieznana
 
 [Section.0418]
-Licence = Necunoscută
+License = Necunoscută
 Size = 9,46 Mo
 
 [Section.041b]
@@ -40,12 +40,12 @@ Description = Neznáma
 
 [Section.041f]
 Name = Windows Ortam Kodlayıcısı 9
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Windows Ortam Kodlayıcısı 9
 Size = 9,46 MB
 
 [Section.0422]
-Licence = Невідома
+License = Невідома
 
 [Section.0813]
 License = Ongekend

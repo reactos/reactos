@@ -54,6 +54,7 @@ const PresetColumnEntry ColumnPresets[COLUMN_NMAX] = {
     DECLARE_COLUMN_PRESET(IOREADBYTES,       70, FALSE)
     DECLARE_COLUMN_PRESET(IOWRITEBYTES,      70, FALSE)
     DECLARE_COLUMN_PRESET(IOOTHERBYTES,      70, FALSE)
+    DECLARE_COLUMN_PRESET(COMMANDLINE,      450, FALSE)
 };
 
 static int          InsertColumn(int nCol, LPCWSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);

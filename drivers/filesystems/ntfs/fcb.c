@@ -396,7 +396,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
 
     DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p)\n", Vcb, DirectoryFCB, Name, Record, fileFCB);
 
-    FileName = GetFileNameFromRecord(Record, NTFS_FILE_NAME_WIN32);
+    FileName = GetBestFileNameFromRecord(Record);
     if (!FileName)
     {
         return STATUS_OBJECT_NAME_NOT_FOUND; // Not sure that's the best here

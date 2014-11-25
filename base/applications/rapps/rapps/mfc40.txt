@@ -4,7 +4,7 @@
 [Section]
 Name = OLE Viewer and Microsoft Foundation Classes version 4
 Version = 4.0
-Licence = Unknown
+License = Unknown
 Description = MFC 4 is needed by some applications. Contains: mfc40.dll, msvcrt40.dll.
 Size = 865.04 kB
 Category = 14
@@ -14,49 +14,49 @@ CDPath = none
 
 [Section.0407]
 Name = OLE Anzeige und Microsoft Foundation Classes Version 4
-Licence = Unbekannt
+License = Unbekannt
 Description = MFC 4 wird von einigen Anwendungen benötigt. Beinhaltet: mfc40.dll, msvcrt40.dll.
 
 [Section.040a]
 Name = Visor OLE y Microsoft Foundation Classes Version 4
-Licence = Desconocida
+License = Desconocida
 Description = MFC 4 es necesario para varias aplicaciones. Incluye: mfc40.dll, msvcrt40.dll.
 
 [Section.040c]
 Name = Visionneur OLE et Microsoft Foundation Classes version 4
-Licence = Inconnue
+License = Inconnue
 Description = MFC 4 est nécessaire pour certaines applications. Contient: mfc40.dll, msvcrt40.dll.
 Size = 865,04 ko
 
 [Section.0410]
-Licence = Sconosciuta
+License = Sconosciuta
 Description = MFC 4 è necessario per alcune applicazioni. Contiene: mfc40.dll, msvcrt40.dll.
 
 [Section.0413]
-Licence = Ongekend
+License = Ongekend
 Description = MFC 4 is nodig voor bepaalde applicaties. Bevat: mfc40.dll, msvcrt40.dll.
 
 [Section.0415]
 Name = Przeglądarka OLE oraz MFC (Microsoft Foundation Classes) wersja 4
-Licence = Nieznana
+License = Nieznana
 Description = Biblioteka MFC 4 jest używana przez część aplikacji. Zawiera: mfc40.dll, msvcrt40.dll.
 
 [Section.0418]
-Licence = Nespecificată
+License = Nespecificată
 Description = MFC 4 este necesară unor aplicații. Conține: mfc40.dll, msvcrt40.dll.
 Size = 865,04 ko
 
 [Section.041f]
 Name = OLE Görüntüleyicisi ve Microsoft Ana Sınıfları (MFC) Sürüm 4
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = MFC 4, birtakım uygulamalar için gereklidir. Şunları içerir: mfc40.dll, msvcrt40.dll.
 Size = 865,04 KB
 
 [Section.0422]
 Name = Переглядач OLE та MFC (Microsoft Foundation Classes) версія 4
-Licence = Невідома
+License = Невідома
 Description = Бібліотека MFC 4 необхідна декотрим програмам. включає: mfc40.dll, msvcrt40.dll.
 
 [Section.0813]
-Licence = Ongekend
+License = Ongekend
 Description = MFC 4 is nodig voor bepaalde applicaties. Bevat: mfc40.dll, msvcrt40.dll.

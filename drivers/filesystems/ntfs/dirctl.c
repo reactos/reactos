@@ -137,15 +137,7 @@ NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetNameInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
-    if (FileName == NULL)
-    {
-        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
-        if (FileName == NULL)
-        {
-            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
-        }
-    }
+    FileName = GetBestFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
@@ -173,15 +165,7 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetDirectoryInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
-    if (FileName == NULL)
-    {
-        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
-        if (FileName == NULL)
-        {
-            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
-        }
-    }
+    FileName = GetBestFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
@@ -222,15 +206,7 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetFullDirectoryInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
-    if (FileName == NULL)
-    {
-        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
-        if (FileName == NULL)
-        {
-            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
-        }
-    }
+    FileName = GetBestFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
@@ -272,15 +248,7 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("NtfsGetBothDirectoryInformation() called\n");
 
-    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
-    if (FileName == NULL)
-    {
-        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
-        if (FileName == NULL)
-        {
-            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
-        }
-    }
+    FileName = GetBestFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
     ShortFileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
 
@@ -380,14 +348,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            Status = RtlUpcaseUnicodeString(&Pattern, SearchPattern, FALSE);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("RtlUpcaseUnicodeString('%wZ') failed with status 0x%08lx\n", &Pattern, Status);
-                ExFreePoolWithTag(Ccb->DirectorySearchPattern, TAG_NTFS);
-                Ccb->DirectorySearchPattern = NULL;
-                return Status;
-            }
+            memcpy(Ccb->DirectorySearchPattern, SearchPattern->Buffer, SearchPattern->Length);
             Ccb->DirectorySearchPattern[SearchPattern->Length / sizeof(WCHAR)] = 0;
         }
     }

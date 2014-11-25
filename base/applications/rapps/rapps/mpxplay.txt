@@ -5,7 +5,7 @@
 [Section]
 Name = Mpxplay
 Version = 1.60b
-Licence = GPL
+License = GPL
 Description = Mpxplay is a 32-bit console audio player for Windows. You need 7-Zip or a similar Utility to extract it.
 Size = 520 kB
 Category = 1

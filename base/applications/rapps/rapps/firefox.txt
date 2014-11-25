@@ -4,7 +4,7 @@
 [Section]
 Name = Mozilla Firefox 33
 Version = 33.0
-Licence = MPL/GPL/LGPL
+License = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
 Size = 34.76 MB
 Category = 5

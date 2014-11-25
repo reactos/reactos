@@ -314,4 +314,22 @@ GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType)
     return NULL;
 }
 
+PFILENAME_ATTRIBUTE
+GetBestFileNameFromRecord(PFILE_RECORD_HEADER FileRecord)
+{
+    PFILENAME_ATTRIBUTE FileName;
+
+    FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_POSIX);
+    if (FileName == NULL)
+    {
+        FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_WIN32);
+        if (FileName == NULL)
+        {
+            FileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
+        }
+    }
+
+    return FileName;
+}
+
 /* EOF */

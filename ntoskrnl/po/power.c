@@ -682,7 +682,8 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
             Status = STATUS_SUCCESS;
             break;
         }
-		case SystemPowerCapabilities:
+
+        case SystemPowerCapabilities:
         {
             PSYSTEM_POWER_CAPABILITIES PowerCapabilities = (PSYSTEM_POWER_CAPABILITIES)OutputBuffer;
 
@@ -794,8 +795,8 @@ NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
 NTSTATUS
 NTAPI
 NtSetSystemPowerState(IN POWER_ACTION SystemAction,
-		              IN SYSTEM_POWER_STATE MinSystemState,
-		              IN ULONG Flags)
+                      IN SYSTEM_POWER_STATE MinSystemState,
+                      IN ULONG Flags)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     POP_POWER_ACTION Action = {0};
@@ -834,7 +835,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         }
 
         /* Do it as a kernel-mode caller for consistency with system state */
-        return ZwSetSystemPowerState (SystemAction, MinSystemState, Flags);
+        return ZwSetSystemPowerState(SystemAction, MinSystemState, Flags);
     }
 
     /* Read policy settings (partial shutdown vs. full shutdown) */

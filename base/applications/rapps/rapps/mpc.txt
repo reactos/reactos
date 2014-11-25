@@ -4,7 +4,7 @@
 [Section]
 Name = Media Player Classic Home Cinema
 Version = 1.7.7
-Licence = GPL
+License = GPL
 Description = A media player.
 Size = 10.7 MB
 Category = 2

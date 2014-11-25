@@ -12,8 +12,8 @@
 
 DBG_DEFAULT_CHANNEL(UserMisc);
 
-/* registered Logon process */
-PPROCESSINFO LogonProcess = NULL;
+/* Registered logon process ID */
+HANDLE gpidLogon = 0;
 
 BOOL FASTCALL
 co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
@@ -21,38 +21,33 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
    NTSTATUS Status;
    PEPROCESS Process;
 
-   Status = PsLookupProcessByProcessId(ProcessId,
-                                       &Process);
+   Status = PsLookupProcessByProcessId(ProcessId, &Process);
    if (!NT_SUCCESS(Status))
    {
       EngSetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
    }
 
+   ProcessId = Process->UniqueProcessId;
+
+   ObDereferenceObject(Process);
+
    if (Register)
    {
       /* Register the logon process */
-      if (LogonProcess != NULL)
-      {
-         ObDereferenceObject(Process);
+      if (gpidLogon != 0)
          return FALSE;
-      }
 
-      LogonProcess = (PPROCESSINFO)Process->Win32Process;
+      gpidLogon = ProcessId;
    }
    else
    {
       /* Deregister the logon process */
-      if (LogonProcess != (PPROCESSINFO)Process->Win32Process)
-      {
-         ObDereferenceObject(Process);
+      if (gpidLogon != ProcessId)
          return FALSE;
-      }
 
-      LogonProcess = NULL;
+      gpidLogon = 0;
    }
-
-   ObDereferenceObject(Process);
 
    return TRUE;
 }
@@ -450,7 +445,6 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
          STUB
          RETURN( 0);
-
 
       case TWOPARAM_ROUTINE_SETCARETPOS:
          RETURN( (DWORD_PTR)co_IntSetCaretPos((int)Param1, (int)Param2));

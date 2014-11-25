@@ -128,7 +128,7 @@
 #define IDS_AINFO_DESCRIPTION    351
 #define IDS_AINFO_SIZE           352
 #define IDS_AINFO_URLSITE        353
-#define IDS_AINFO_LICENCE        354
+#define IDS_AINFO_LICENSE        354
 
 /* Names of categories */
 #define IDS_CAT_AUDIO            700

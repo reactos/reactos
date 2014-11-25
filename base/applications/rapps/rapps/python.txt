@@ -4,7 +4,7 @@
 [Section]
 Name = Python 3
 Version = 3.4.2
-Licence = GPL/LGPL
+License = GPL/LGPL
 Description = A remarkably powerful dynamic programming language.
 Size = 23.39 MB
 Category = 7

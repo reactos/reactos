@@ -405,7 +405,7 @@ BEGIN
     BEGIN
         MENUITEM "Emner i hjelp", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om Reactos Kalkulator", IDM_HELP_ABOUT
+        MENUITEM "Om ReactOS Kalkulator", IDM_HELP_ABOUT
     END
 END
 

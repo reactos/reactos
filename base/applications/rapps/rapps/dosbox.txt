@@ -4,7 +4,7 @@
 [Section]
 Name = DOSBox
 Version = 0.74
-Licence = GPL
+License = GPL
 Description = DOSBox is a DOS emulator.
 Size = 1.38 MB
 Category = 15

@@ -213,7 +213,10 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                 break;
 
             case WM_COPYDATA:
-                Size = sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
+                {
+                COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
+                Size = sizeof(COPYDATASTRUCT) + cds->cbData;
+                }
                 break;
 
             default:
@@ -497,7 +500,11 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
                 return Status;
             }
         }
-
+        if (KernelModeMsg->message == WM_COPYDATA)
+        {
+           // Only the current process or thread can free the message lParam pointer.
+           return STATUS_SUCCESS;
+        }
         ExFreePool((PVOID) KernelModeMsg->lParam);
     }
 
@@ -795,6 +802,12 @@ co_IntPeekMessage( PMSG Msg,
         pti->timeLast = LargeTickCount.u.LowPart;
         pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
 
+        // Post mouse moves while looping through peek messages.
+        if (pti->MessageQueue->QF_flags & QF_MOUSEMOVED)
+        {
+           IntCoalesceMouseMove(pti);
+        }
+
         /* Dispatch sent messages here. */
         while ( co_MsqDispatchOneSentMessage(pti) )
         {
@@ -848,17 +861,6 @@ co_IntPeekMessage( PMSG Msg,
                 pti->pcti->fsWakeBits &= ~QS_ALLPOSTMESSAGE;
                 pti->pcti->fsChangeBits &= ~QS_ALLPOSTMESSAGE;
             }
-            return TRUE;
-        }
-
-        if ((ProcessMask & QS_MOUSE) &&
-            co_MsqPeekMouseMove( pti,
-                                 RemoveMessages,
-                                 Window,
-                                 MsgFilterMin,
-                                 MsgFilterMax,
-                                 Msg ))
-        {
             return TRUE;
         }
 
@@ -1091,7 +1093,7 @@ UserPostThreadMessage( PTHREADINFO pti,
 
     KeQueryTickCount(&LargeTickCount);
     Message.time = MsqCalculateMessageTime(&LargeTickCount);
-    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
     return TRUE;
 }
 
@@ -1222,7 +1224,7 @@ UserPostMessage( HWND Wnd,
         }
         else
         {
-            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
         }
     }
     return TRUE;
@@ -1415,6 +1417,11 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
 CLEANUP:
     if (Window) UserDerefObjectCo(Window);
+    // Current Thread and it's a Copy Data message, then free kernel memory.
+    if ( !ptiSendTo && Msg == WM_COPYDATA )
+    {
+       ExFreePool((PVOID) lParam);
+    }
     END_CLEANUP;
 }
 
@@ -1677,7 +1684,7 @@ CLEANUP:
     END_CLEANUP;
 }
 
-
+#if 0
 /*
   This HACK function posts a message if the destination's message queue belongs to
   another thread, otherwise it sends the message. It does not support broadcast
@@ -1721,6 +1728,7 @@ co_IntPostOrSendMessage( HWND hWnd,
 
     return (LRESULT)Result;
 }
+#endif
 
 static LRESULT FASTCALL
 co_IntDoSendMessage( HWND hWnd,

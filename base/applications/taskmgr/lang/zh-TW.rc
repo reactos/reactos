@@ -323,6 +323,7 @@ BEGIN
     CONTROL "I/O 寫入位元組", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "其他 I/O", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "其他 I/O 位元組", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -418,6 +419,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O 讀取位元組"
     IDS_TAB_IOWRITESBYTES "I/O 寫入位元組"
     IDS_TAB_IOOTHERBYTES "其他 I/O 位元組"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "選擇列(&S)..."
     IDS_MENU_16BITTASK "顯示 16 位工作(&S)"
     IDS_MENU_WINDOWS "窗口(&W)"
@@ -441,7 +443,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "無法更改優先順序"
     IDS_MSG_WARNINGCHANGEPRIORITY "警告: 更改此程序的優先順序可能導致系統不穩定。\n你是否確定要更改優先順序？"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情況: %d%%"
-    IDS_STATUS_MEMUSAGE "記憶體使用情況: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "記憶體使用情況: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "CPU 使用情況: %3d%%"
     IDS_STATUS_PROCESSES "處理程序: %d"
     IDS_NOT_RESPONDING "沒有回應"

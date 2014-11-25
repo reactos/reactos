@@ -20,11 +20,11 @@
 NTSTATUS
 NTAPI
 RtlFindMessage(
-    PVOID BaseAddress,
-    ULONG Type,
-    ULONG Language,
-    ULONG MessageId,
-    PMESSAGE_RESOURCE_ENTRY *MessageResourceEntry)
+    IN PVOID BaseAddress,
+    IN ULONG Type,
+    IN ULONG Language,
+    IN ULONG MessageId,
+    OUT PMESSAGE_RESOURCE_ENTRY* MessageResourceEntry)
 {
     LDR_RESOURCE_INFO ResourceInfo;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
@@ -122,41 +122,47 @@ RtlFindMessage(
     return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 RtlFormatMessageEx(
-    PWSTR Message,
-    UCHAR MaxWidth,
-    BOOLEAN IgnoreInserts,
-    BOOLEAN Ansi,
-    BOOLEAN ArgumentIsArray,
-    va_list *Arguments,
-    PWSTR Buffer,
-    ULONG BufferSize,
-    ULONG Flags)
+    IN PWSTR Message,
+    IN ULONG MaxWidth OPTIONAL,
+    IN BOOLEAN IgnoreInserts,
+    IN BOOLEAN ArgumentsAreAnsi,
+    IN BOOLEAN ArgumentsAreAnArray,
+    IN va_list* Arguments,
+    OUT PWSTR Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnLength OPTIONAL,
+    IN ULONG Flags)
 {
-    DPRINT1("RtlFormatMessage(%S, %u, %s, %s, %s, %s, %p, %lu %lx)\n",
-            Message, MaxWidth, IgnoreInserts ? "TRUE" : "FALSE", Ansi ? "TRUE" : "FALSE",
-            ArgumentIsArray ? "TRUE" : "FALSE", (PSTR)Arguments, Buffer, BufferSize, Flags);
+    DPRINT1("RtlFormatMessage(%S, %lu, %s, %s, %s, %p, %p, %lu, %p, %lx)\n",
+            Message, MaxWidth, IgnoreInserts ? "TRUE" : "FALSE", ArgumentsAreAnsi ? "TRUE" : "FALSE",
+            ArgumentsAreAnArray ? "TRUE" : "FALSE", Arguments, Buffer, BufferSize,
+            ReturnLength, Flags);
 
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 /**********************************************************************
- *	RtlFormatMessage  (NTDLL.@)
+ *  RtlFormatMessage  (NTDLL.@)
  *
  * Formats a message (similar to sprintf).
  *
  * PARAMS
- *   Message          [I] Message to format.
- *   MaxWidth         [I] Maximum width in characters of each output line.
- *   IgnoreInserts    [I] Whether to copy the message without processing inserts.
- *   Ansi             [I] Whether Arguments may have ANSI strings.
- *   ArgumentsIsArray [I] Whether Arguments is actually an array rather than a va_list *.
- *   Arguments        [I]
- *   Buffer           [O] Buffer to store processed message in.
- *   BufferSize       [I] Size of Buffer (in bytes?).
+ *   Message             [I] Message to format.
+ *   MaxWidth            [I] Maximum width in characters of each output line (optional).
+ *   IgnoreInserts       [I] Whether to copy the message without processing inserts.
+ *   ArgumentsAreAnsi    [I] Whether Arguments may have ANSI strings.
+ *   ArgumentsAreAnArray [I] Whether Arguments is actually an array rather than a va_list *.
+ *   Arguments           [I]
+ *   Buffer              [O] Buffer to store processed message in.
+ *   BufferSize          [I] Size of Buffer (in bytes).
+ *   ReturnLength        [O] Size of the formatted message (in bytes; optional).
  *
  * RETURNS
  *      NTSTATUS code.
@@ -166,16 +172,27 @@ RtlFormatMessageEx(
 NTSTATUS
 NTAPI
 RtlFormatMessage(
-    PWSTR Message,
-    UCHAR MaxWidth,
-    BOOLEAN IgnoreInserts,
-    BOOLEAN Ansi,
-    BOOLEAN ArgumentIsArray,
-    va_list *Arguments,
-    PWSTR Buffer,
-    ULONG BufferSize)
+    IN PWSTR Message,
+    IN ULONG MaxWidth OPTIONAL,
+    IN BOOLEAN IgnoreInserts,
+    IN BOOLEAN ArgumentsAreAnsi,
+    IN BOOLEAN ArgumentsAreAnArray,
+    IN va_list* Arguments,
+    OUT PWSTR Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnLength OPTIONAL)
 {
-    return RtlFormatMessageEx(Message, MaxWidth, IgnoreInserts, Ansi, ArgumentIsArray, Arguments, Buffer, BufferSize, 0);
+    /* Call the extended API */
+    return RtlFormatMessageEx(Message,
+                              MaxWidth,
+                              IgnoreInserts,
+                              ArgumentsAreAnsi,
+                              ArgumentsAreAnArray,
+                              Arguments,
+                              Buffer,
+                              BufferSize,
+                              ReturnLength,
+                              0);
 }
 
 /* EOF */

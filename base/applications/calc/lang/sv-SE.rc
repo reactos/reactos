@@ -412,7 +412,7 @@ BEGIN
     BEGIN
         MENUITEM "Visa hjälp", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om Reactos Kalkylator", IDM_HELP_ABOUT
+        MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
     END
 END
 

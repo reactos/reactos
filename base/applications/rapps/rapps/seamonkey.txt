@@ -4,7 +4,7 @@
 [Section]
 Name = Mozilla SeaMonkey
 Version = 2.30
-Licence = MPL/GPL/LGPL
+License = MPL/GPL/LGPL
 Description = Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.
 Size = 30.05 MB
 Category = 5

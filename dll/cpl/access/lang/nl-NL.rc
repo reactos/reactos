@@ -15,7 +15,7 @@ BEGIN
     AUTOCHECKBOX "&Plaktoetsen Gebruiken", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Instellingen...", IDC_STICKY_BUTTON, PROPSHEETWIDTH_NL - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "Filtertoetsen", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "U kunt Filtertoetsen gebruiken als u wilt dat Reactos korte of herhaalde toetsaanslagen negeert, of als u de herhaalsnelheid wilt verlagen.",
+    LTEXT "U kunt Filtertoetsen gebruiken als u wilt dat ReactOS korte of herhaalde toetsaanslagen negeert, of als u de herhaalsnelheid wilt verlagen.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Filtertoetsen gebruiken", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
     PUSHBUTTON "Inst&ellingen...", IDC_FILTER_BUTTON, PROPSHEETWIDTH_NL - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -34,7 +34,7 @@ CAPTION "Geluid"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Geluidswaarschuwingen", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Schakel Geluidswaarschuwingen gebruiken in als u wilt dat Reactos een visuele waarschuwing weergeeft wanneer het systeem een geluid laat horen.",
+    LTEXT "Schakel Geluidswaarschuwingen gebruiken in als u wilt dat ReactOS een visuele waarschuwing weergeeft wanneer het systeem een geluid laat horen.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Geluidswaarschuwingen gebruiken", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "Use the following warning:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -52,7 +52,7 @@ CAPTION "Weergave"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Hoog Contrast", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH_NL - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "U kunt deze optie gebruiken als u wilt dat Reactos kleuren en lettertypen zodanig instelt dat deze gemakkelijk te lezen zijn.",
+    LTEXT "U kunt deze optie gebruiken als u wilt dat ReactOS kleuren en lettertypen zodanig instelt dat deze gemakkelijk te lezen zijn.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH_NL - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Hoog contrast gebruiken", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH_NL - PROPSHEETPADDING(20), 14
     PUSHBUTTON "I&nstellingen...", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH_NL - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

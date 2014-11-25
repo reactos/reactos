@@ -5,7 +5,7 @@
 [Section]
 Name = Zaz
 Version = 1.0.0
-Licence = GPL
+License = GPL
 Description = Zaz is a free arcade action puzzle computer game, a little bit like Frozen Bubble.
 Size = 21.0 MB
 Category = 4

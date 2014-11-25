@@ -5,7 +5,7 @@
 [Section]
 Name = Kyodai Mahjongg
 Version = 21.42
-Licence = Shareware
+License = Shareware
 Description = One of the best Mahjongg Solitaire games out there.
 Size = 13.8 MB
 Category = 4
@@ -23,11 +23,11 @@ Description = Uno dei migliori giochi di Mahjongg Solitaire.
 Description = Jedna z najlepszych gier Mahjongg Solitaire.
 
 [Section.0418]
-Licence = Versiune de evaluare
+License = Versiune de evaluare
 Description = Unul dintre cele mai bune jocuri de pasiență Mahjongg.
 Size = 13,8 Mo
 
 [Section.041f]
-Licence = Paylaşımlı
+License = Paylaşımlı
 Description = Mahjong solitaire oyunları arasında en iyilerinden biri.
 Size = 13,8 MB

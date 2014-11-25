@@ -5,7 +5,7 @@
 [Section]
 Name = PhotoFiltre 7
 Version = 7.1.2
-Licence = Freeware
+License = Freeware
 Description = This version with layers but more limited than the Studio X version. PhotoFiltre Studio is a complete image retouching program.
 Size = 4.99 MB
 Category = 3
@@ -23,11 +23,11 @@ Description = Ta wersja obsługuje warstwy, ale ma większe ograniczenia od Stud
 Description = Questa versione con pannelli ma più limitata della versione Studio X. PhotoFiltre Studio è un programma di fotoritocco completo.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = PhotoFiltre Studio este o aplicație completă de retușare a imaginilor.
 Size = 4,99 Mo
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Bu sürüm, katmanlarla gelmektedir ancak Studio X sürümünden daha kısıtlıdır. PhotoFiltre Studio eksiksiz bir resim düzeltme yazılımıdır.
 Size = 4,99 MB

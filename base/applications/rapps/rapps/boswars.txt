@@ -5,7 +5,7 @@
 [Section]
 Name = Bos Wars
 Version = 2.6.1
-Licence = GPL
+License = GPL
 Description = Bos Wars is a futuristic real time strategy game. To start the game, install Microsoft Visual C++ 2008 runtime.
 Size = 62.3 MB
 Category = 4

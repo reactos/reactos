@@ -151,7 +151,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nОписание: "
     IDS_AINFO_SIZE "\nРазмер: "
     IDS_AINFO_URLSITE "\nДомашна страница: "
-    IDS_AINFO_LICENCE "\nРазрешително: "
+    IDS_AINFO_LICENSE "\nРазрешително: "
 END
 
 STRINGTABLE

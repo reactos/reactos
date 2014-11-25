@@ -4,7 +4,7 @@
 [Section]
 Name = Ghostscript
 Version = 9.15
-Licence = AGPL
+License = AGPL
 Description = An open interpreter for the PostScript language and for PDF.
 Size = 12.65 MB
 Category = 6

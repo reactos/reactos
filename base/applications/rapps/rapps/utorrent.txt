@@ -4,7 +4,7 @@
 [Section]
 Name = µTorrent
 Version = 3.4.2
-Licence = Freeware for non-commercial uses
+License = Freeware for non-commercial uses
 Description = Small and fast BitTorrent Client.
 Size = 1.61 MB
 Category = 5
@@ -13,52 +13,52 @@ URLDownload = http://download-new.utorrent.com/endpoint/utorrent/os/windows/trac
 CDPath = none
 
 [Section.0407]
-Licence = Freeware für nichtkommerzielle Nutzung
+License = Freeware für nichtkommerzielle Nutzung
 Description = Kleiner und schneller BitTorrent Client.
 
 [Section.040a]
-Licence = Gratuito para uso no comercial
+License = Gratuito para uso no comercial
 Description = Pequeño y rápido cliente BitTorrent.
 
 [Section.040c]
-Licence = Gratuit pour une utilisation non-commerciale
+License = Gratuit pour une utilisation non-commerciale
 Description = Client BitTorrent petit et rapide.
 Size = 1,61 Mo
 
 [Section.040c]
-Licence = Gratita per un uso non-commerciale
+License = Gratita per un uso non-commerciale
 Description = Piccolo e rapido Client BitTorrent.
 
 [Section.0410]
-Licence = Gratuita per un uso non-commerciale
+License = Gratuita per un uso non-commerciale
 Description = Piccolo e rapido Client BitTorrent.
 
 [Section.0413]
-Licence = Freeware voor niet-commerciëel gebruik
+License = Freeware voor niet-commerciëel gebruik
 Description = Kleine en snelle BitTorrent afnemer.
 
 [Section.0415]
-Licence = Freeware (do użytku domowego)
+License = Freeware (do użytku domowego)
 Description = Mały i szybki klient BitTorrent.
 
 [Section.0418]
-Licence = Gratuită pentru uz necomercial
+License = Gratuită pentru uz necomercial
 Description = Client BitTorrent, mic și rapid.
 Size = 1,61 Mo
 
 [Section.0419]
-Licence = Бесплатная для некоммерческого использования
+License = Бесплатная для некоммерческого использования
 Description = Маленький и быстрый клиент BitTorrent.
 
 [Section.041f]
-Licence = Tecimlik olmayan kullanımlar için ücretsiz.
+License = Tecimlik olmayan kullanımlar için ücretsiz.
 Description = Küçük ve hızlı BitTorrent istemcisi.
 Size = 1,61 MB
 
 [Section.0422]
-Licence = Безплатна для некомерційного використання
+License = Безплатна для некомерційного використання
 Description = Маленький і швидкий клієнт BitTorrent.
 
 [Section.0813]
-Licence = Freeware voor niet-commerciëel gebruik
+License = Freeware voor niet-commerciëel gebruik
 Description = Kleine en snelle BitTorrent afnemer.

@@ -358,6 +358,10 @@
 #define THREAD_BASE_PRIORITY_MAX    2
 #define THREAD_BASE_PRIORITY_MIN    (-2)
 #define THREAD_BASE_PRIORITY_IDLE    (-15)
+
+#define PROCESS_SET_LIMITED_INFORMATION 0x2000
+#define THREAD_RESUME 0x1000
+
 /*
  * To prevent gcc compiler warnings, bracket these defines when initialising
  * a  SID_IDENTIFIER_AUTHORITY, eg.

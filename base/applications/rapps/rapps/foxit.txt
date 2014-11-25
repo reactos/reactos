@@ -4,7 +4,7 @@
 [Section]
 Name = Foxit Reader
 Version = 6.2.3.815
-Licence = Freeware
+License = Freeware
 Description = The best PDF reader next to Adobe Reader itself.
 Size = 36.0 MB
 Category = 6
@@ -20,7 +20,7 @@ URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/6.x/6.
 
 [Section.041f]
 Version = 6.1.5.0624
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Adobe Okuyucu'nun kendisine yakın en iyi PDF okuyucusu.
 Size = 36,0 MB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/6.x/6.1/L10N/FoxitReader615.0624_prom_L10N_Setup.exe

@@ -4,7 +4,7 @@
 [Section]
 Name = Code::Blocks TDM-GCC (version 4.8.1, 32 bit)
 Version = 13.12
-Licence = GPLv3
+License = GPLv3
 Description = A open source, cross-platform, powerful IDE. It contains TDM-GCC (version 4.8.1, 32 bit) compiler.
 Size = 100 MB
 Category = 7
@@ -25,6 +25,6 @@ Size = 100 Mo
 
 [Section.041f]
 Name = Code::Blocks TDM-GCC (sürüm 4.8.1, 32 bitlik)
-Licence = GPL 3. sürüm
+License = GPL 3. sürüm
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. TDM-GCC (sürüm 4.8.1, 32 bitlik) derleyicisini içerir.
 Size = 100 MB

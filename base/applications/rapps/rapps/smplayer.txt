@@ -4,7 +4,7 @@
 [Section]
 Name = SMPlayer
 Version = 14.9.0
-Licence = GPL
+License = GPL
 Description = Graphical Frontend for MPlayer.
 Size = 20.7 MB
 Category = 2

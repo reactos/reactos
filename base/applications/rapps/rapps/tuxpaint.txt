@@ -4,7 +4,7 @@
 [Section]
 Name = TuxPaint
 Version = 0.9.22
-Licence = GPL
+License = GPL
 Description = An open source bitmap graphics editor geared towards young children.
 Size = 13.5 MB
 Category = 3

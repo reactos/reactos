@@ -12,7 +12,7 @@
 
 #include "emulator.h"
 #include "speaker.h"
-#include "timer.h"
+#include "hardware/pit.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/iofuncs.h>

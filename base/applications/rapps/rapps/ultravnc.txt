@@ -4,7 +4,7 @@
 [Section]
 Name = UltraVNC
 Version = 1.2.0.3
-Licence = GPL
+License = GPL
 Description = Open source VNC client/server.
 Size = 3.22 MB
 Category = 5

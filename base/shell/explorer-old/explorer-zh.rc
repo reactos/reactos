@@ -232,7 +232,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "Reactos 浏览器"
+    IDS_TITLE "ReactOS 浏览器"
     IDS_START "开始"
     IDS_LOGOFF "注销..."
     IDS_SHUTDOWN "关闭..."

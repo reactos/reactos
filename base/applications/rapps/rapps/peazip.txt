@@ -4,7 +4,7 @@
 [Section]
 Name = PeaZip
 Version = 5.5.0
-Licence = LGPL v3, OpenCandy EULA
+License = LGPL v3, OpenCandy EULA
 Description = PeaZip is a free, cross-platform, open source file and archive manager. It supports over 150 archive formats.
 Size = 5.9 MB
 Category = 12
@@ -26,6 +26,6 @@ Description = PeaZip este un gestionar de fișiere și arhive gratuit, multi-pla
 Size = 5,9 Mo
 
 [Section.041f]
-Licence = LGPL 3. sürüm, OpenCandy EULA
+License = LGPL 3. sürüm, OpenCandy EULA
 Description = PeaZip; ücretsiz, çapraz platform, açık kaynak kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
 Size = 5,9 MB

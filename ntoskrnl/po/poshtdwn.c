@@ -277,9 +277,9 @@ PopGracefulShutdown(IN PVOID Context)
 
     /* Note that modified pages should be written here (MiShutdownSystem) */
 #ifdef NEWCC
-	/* Flush all user files before we start shutting down IO */
-	/* This is where modified pages are written back by the IO manager */
-	CcShutdownSystem();
+    /* Flush all user files before we start shutting down IO */
+    /* This is where modified pages are written back by the IO manager */
+    CcShutdownSystem();
 #endif
 
     /* In this step, the I/O manager does last-chance shutdown notification */

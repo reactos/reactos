@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "Utilizar &StickyKeys ", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Configuración", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "FilterKeys", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Use FilterKeys si desea que Reactos omita la pulsaciones repetidas o breves, o reducir la velocidad de repetición.",
+    LTEXT "Use FilterKeys si desea que ReactOS omita la pulsaciones repetidas o breves, o reducir la velocidad de repetición.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Utilizar &FilterKeys", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "Co&nfiguración", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -32,7 +32,7 @@ CAPTION "Sonido"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vigilante Auditivo ", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Use el Vigilante Auditivo si desea que Reactos genere avisos visuales cuando el sistema emita un sonido.",
+    LTEXT "Use el Vigilante Auditivo si desea que ReactOS genere avisos visuales cuando el sistema emita un sonido.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Utilizar Vigilante Auditivo", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "Elija la advertencia visual:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -50,7 +50,7 @@ CAPTION "Pantalla"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Contraste alto ", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Use esta opción si desea que Reactos use colores y letras diseñadas para una lectura más cómoda.",
+    LTEXT "Use esta opción si desea que ReactOS use colores y letras diseñadas para una lectura más cómoda.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Utilizar Contraste alto", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "C&onfiguración", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

@@ -4,7 +4,7 @@
 [Section]
 Name = Python 2
 Version = 2.7.8
-Licence = GPL/LGPL
+License = GPL/LGPL
 Description = A remarkably powerful dynamic programming language.
 Size = 15.93 MB
 Category = 7

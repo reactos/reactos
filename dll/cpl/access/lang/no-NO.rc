@@ -11,7 +11,7 @@ BEGIN
     AUTOCHECKBOX "&Bruk Trege taster", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Innstillinger", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "Filtertaster", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Bruk filtertaster hvis du vil at Reactos skal ignorere lette eller gjentatte tastetrykk, eller senke repetisjonshastigheten.",
+    LTEXT "Bruk filtertaster hvis du vil at ReactOS skal ignorere lette eller gjentatte tastetrykk, eller senke repetisjonshastigheten.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Bruk &filtertaster", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "I&nnstillinger", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -30,7 +30,7 @@ CAPTION "Lyd"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Skjermsignal", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Bruk skjermsignal hvis du vil at Reactos skal gi en visuell varsling når systemet lager lyd.",
+    LTEXT "Bruk skjermsignal hvis du vil at ReactOS skal gi en visuell varsling når systemet lager lyd.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Bruk &skjermsignal", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "Velg følgende varsling:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -48,7 +48,7 @@ CAPTION "Skjerm"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Høykontrast", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Velg dette alternativet hvis du vil at Reactos skal bruke farger og skrifter som er laget for å gjøre det lett leselig.",
+    LTEXT "Velg dette alternativet hvis du vil at ReactOS skal bruke farger og skrifter som er laget for å gjøre det lett leselig.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Bruk høykontrast", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Innstillinger", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

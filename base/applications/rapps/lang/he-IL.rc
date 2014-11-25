@@ -149,7 +149,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nתיאור: "
     IDS_AINFO_SIZE "\nגודל: "
     IDS_AINFO_URLSITE "\nדף בית: "
-    IDS_AINFO_LICENCE "\nרישיון: "
+    IDS_AINFO_LICENSE "\nרישיון: "
 END
 
 STRINGTABLE

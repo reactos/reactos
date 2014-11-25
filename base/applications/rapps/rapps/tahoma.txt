@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft Tahoma Font
 Version = 1.0
-Licence = Unknown
+License = Unknown
 Description = Tahoma Font pack needed by some apps (Steam). Contains: Tahoma.ttf, Tahomabd.ttf.
 Size = 305.12 kB
 Category = 14
@@ -13,15 +13,15 @@ URLDownload = http://download.microsoft.com/download/office97pro/fonts/1/w95/en-
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
+License = Unbekannt
 Description = Tahoma Font Pack, der von einigen Anwendungen benötigt wird (Steam). Beinhaltet: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.040a]
-Licence = Desconocida
+License = Desconocida
 Description = Paquete de fuente Tahoma, necesaria para ciertas aplicaciones (Steam). Incluye: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.040c]
-Licence = Inconnue
+License = Inconnue
 Description = Package pour la police Tahoma, nécessaire pour certaines applications (Steam). Contient: Tahoma.ttf, Tahomabd.ttf.
 Size = 305,12 ko
 
@@ -29,27 +29,27 @@ Size = 305,12 ko
 Description = Il font pack Tahoma è richiesto da alcune applicazioni (Steam). Contiene: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.0413]
-Licence = Ongekend
+License = Ongekend
 Description = Tahoma lettertypes gebruikt door een aantal programma's (Steam). Bevat: Tahoma.ttf, Tahomabt.ttf.
 
 [Section.0415]
 Description = Pakiet Czcionki Tahoma wymagany przez niektóre programy (np. Steam). Zawiera: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.0418]
-Licence = Necunoscută
+License = Necunoscută
 Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: Tahoma.ttf, Tahomabd.ttf.
 Size = 305,12 ko
 
 [Section.041f]
 Name = Microsoft Tahoma Yazı Tipi
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Tahoma Yazı Tipi paketi, Steam gibi birtakım uygulamalar için gereklidir. Şunları içerir: Tahoma.ttf, Tahomabd.ttf.
 Size = 305,12 KB
 
 [Section.0422]
-Licence = Невідома
+License = Невідома
 Description = Пакет шрифтів Tahoma, що необхідні деяким програмам (Steam). включає: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.0813]
-Licence = Ongekend
+License = Ongekend
 Description = Tahoma lettertypes gebruikt door een aantal programma's (Steam). Bevat: Tahoma.ttf, Tahomabt.ttf.

@@ -54,7 +54,7 @@ CAPTION "Ekran"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Wysoki Kontrast", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Użyj tej funkcji, jeśli chcesz, żeby Reactos używał kolorów i czcionek zaprojektowanych do łatwego czytania",
+    LTEXT "Użyj tej funkcji, jeśli chcesz, żeby ReactOS używał kolorów i czcionek zaprojektowanych do łatwego czytania",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Użyj funkcji Wysoki Kontrast", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "U&stawienia", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

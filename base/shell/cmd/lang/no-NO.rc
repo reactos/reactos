@@ -411,7 +411,7 @@ VERIFY [ON | OFF]\n\n\
 Skriv VERIFY uten parametre for å vise gjeldende VERIFY innstillinger.\n"
     STRING_VERIFY_HELP2 "VERIFY er %s.\n"
     STRING_VERIFY_HELP3 "Må spesifisere ON eller OFF."
-    STRING_VERSION_HELP1 "Vis Reactos versjonen\n\n\
+    STRING_VERSION_HELP1 "Vis ReactOS versjonen\n\n\
 VER [/C][/R][/W]\n\n\
   /C  Vis anerkjennelse.\n\
   /R  Vis videreformidlingsinformasjon.\n\
