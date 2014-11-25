@@ -318,6 +318,10 @@ WinMain(
 
     hAppInstance = hInstance;
 
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+    RtlSetThreadIsCritical(TRUE, NULL, FALSE);
+
     if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
     {
         ERR("WL: Could not register logon process\n");

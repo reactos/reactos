@@ -46,6 +46,9 @@ wWinMain(IN HINSTANCE hInstance,
     DPRINT("Local Security Authority Subsystem\n");
     DPRINT("  Initializing...\n");
 
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, TRUE);
+
     /* Initialize the LSA server DLL. */
     Status = LsapInitLsa();
     if (!NT_SUCCESS(Status))

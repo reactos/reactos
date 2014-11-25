@@ -316,6 +316,9 @@ wWinMain(HINSTANCE hInstance,
 
     DPRINT("SERVICES: Service Control Manager\n");
 
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, TRUE);
+
     /* We are initializing ourselves */
     ScmInitialize = TRUE;
 
